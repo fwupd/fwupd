@@ -1153,15 +1153,15 @@ fu_release_ensure_trust_flags(FuRelease *self, XbNode *rel, GError **error)
 		if (fwupd_remote_get_keyring_kind(self->remote) == FWUPD_KEYRING_KIND_NONE &&
 		    (fwupd_remote_get_kind(self->remote) == FWUPD_REMOTE_KIND_LOCAL ||
 		     fwupd_remote_get_kind(self->remote) == FWUPD_REMOTE_KIND_DIRECTORY)) {
-			g_info("remote %s has kind=%s and Keyring=none and so marking as trusted",
-			       fwupd_remote_get_id(self->remote),
-			       fwupd_remote_kind_to_string(fwupd_remote_get_kind(self->remote)));
+			g_debug("remote %s has kind=%s and Keyring=none and so marking as trusted",
+				fwupd_remote_get_id(self->remote),
+				fwupd_remote_kind_to_string(fwupd_remote_get_kind(self->remote)));
 			fu_release_add_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD);
 			fu_release_add_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_METADATA);
 		} else if (fwupd_remote_get_keyring_kind(self->remote) != FWUPD_KEYRING_KIND_NONE) {
-			g_info("remote %s has kind=%s and so marking as trusted",
-			       fwupd_remote_get_id(self->remote),
-			       fwupd_remote_kind_to_string(fwupd_remote_get_kind(self->remote)));
+			g_debug("remote %s has kind=%s and so marking as trusted",
+				fwupd_remote_get_id(self->remote),
+				fwupd_remote_kind_to_string(fwupd_remote_get_kind(self->remote)));
 			fu_release_add_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_METADATA);
 		}
 	}
