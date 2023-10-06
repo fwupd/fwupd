@@ -321,6 +321,10 @@ done
 %postun
 %systemd_postun_with_restart fwupd.service fwupd-refresh.timer
 
+%triggerun -- fedora-release-common < 39-0.28
+# For upgrades from versions before fwupd-refresh.timer was enabled by default
+systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
+
 %files -f %{name}.lang
 %doc README.md
 %license COPYING
