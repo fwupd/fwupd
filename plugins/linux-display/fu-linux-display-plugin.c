@@ -26,10 +26,8 @@ fu_linux_display_plugin_get_display_state(FuLinuxDisplayPlugin *self)
 
 	/* any connected display is good enough */
 	for (guint i = 0; i < self->devices->len; i++) {
-		FuDevice *device = g_ptr_array_index(self->devices, i);
-		const gchar *status =
-		    fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "status", NULL);
-		if (g_strcmp0(status, "connected") == 0) {
+		FuDrmDevice *drm_device = g_ptr_array_index(self->devices, i);
+		if (fu_drm_device_get_state(drm_device) == FU_DISPLAY_STATE_CONNECTED) {
 			display_state = FU_DISPLAY_STATE_CONNECTED;
 			break;
 		}
@@ -83,9 +81,7 @@ fu_linux_display_plugin_plugin_backend_device_changed(FuPlugin *plugin,
 						      GError **error)
 {
 	FuLinuxDisplayPlugin *self = FU_LINUX_DISPLAY_PLUGIN(plugin);
-	if (!FU_IS_UDEV_DEVICE(device))
-		return TRUE;
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "drm") != 0)
+	if (!FU_IS_DRM_DEVICE(device))
 		return TRUE;
 	fu_linux_display_plugin_ensure_display_state(self);
 	return TRUE;

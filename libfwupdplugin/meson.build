@@ -76,6 +76,7 @@ fwupdplugin_src = [
   'fu-device-progress.c',
   'fu-dfu-firmware.c', # fuzzing
   'fu-dfuse-firmware.c', # fuzzing
+  'fu-drm-device.c',
   'fu-dump.c', # fuzzing
   'fu-edid.c', # fuzzing
   'fu-efi-common.c', # fuzzing
@@ -200,6 +201,7 @@ fwupdplugin_headers = [
   'fu-device-progress.h',
   'fu-dfu-firmware.h',
   'fu-dfuse-firmware.h',
+  'fu-drm-device.h',
   'fu-dump.h',
   'fu-edid.h',
   'fu-efi-common.h',

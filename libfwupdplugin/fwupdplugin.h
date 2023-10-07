@@ -34,6 +34,7 @@
 #include <libfwupdplugin/fu-device.h>
 #include <libfwupdplugin/fu-dfu-firmware.h>
 #include <libfwupdplugin/fu-dfuse-firmware.h>
+#include <libfwupdplugin/fu-drm-device.h>
 #include <libfwupdplugin/fu-dump.h>
 #include <libfwupdplugin/fu-edid.h>
 #include <libfwupdplugin/fu-efi-device-path-list.h>
