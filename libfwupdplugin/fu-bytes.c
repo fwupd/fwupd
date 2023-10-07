@@ -76,7 +76,7 @@ fu_bytes_get_contents(const gchar *filename, GError **error)
 
 	/* try as a mapped file, falling back to reading it as a blob instead */
 	mapped_file = g_mapped_file_new(filename, FALSE, &error_local);
-	if (mapped_file == NULL) {
+	if (mapped_file == NULL || g_mapped_file_get_length(mapped_file) == 0) {
 		gchar *data = NULL;
 		gsize len = 0;
 		if (!g_file_get_contents(filename, &data, &len, error))
@@ -85,12 +85,8 @@ fu_bytes_get_contents(const gchar *filename, GError **error)
 			"so reading %s of size 0x%" G_GSIZE_FORMAT "x: %s",
 			filename,
 			len,
-			error_local->message);
+			error_local != NULL ? error_local->message : "zero size");
 		return g_bytes_new_take(data, len);
-	}
-	if (g_mapped_file_get_length(mapped_file) == 0) {
-		const guint8 buf[] = {};
-		return g_bytes_new_static(buf, 0);
 	}
 	g_debug("mapped file %s of size 0x%" G_GSIZE_FORMAT "x",
 		filename,
