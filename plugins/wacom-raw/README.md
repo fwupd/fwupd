@@ -11,6 +11,9 @@ connected using I²C and not USB.
 
 The HID DeviceInstanceId values are used, e.g. `HIDRAW\VEN_056A&DEV_4875`.
 
+To recover panels that have been flashed with the wrong firmware version, the panel may have a
+parent device with GUID constructed from the EDID, e.g. `DRM\VEN_BOE&DEV_086E`.
+
 ## Firmware Format
 
 The daemon will decompress the cabinet archive and extract a firmware blob in
