@@ -35,6 +35,7 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 		const gchar *subsystem;
 		GType gtype;
 	} subsystem_gtype_map[] = {{"mei", FU_TYPE_MEI_DEVICE},
+				   {"drm", FU_TYPE_DRM_DEVICE},
 				   {"i2c", FU_TYPE_I2C_DEVICE},
 				   {"i2c-dev", FU_TYPE_I2C_DEVICE},
 				   {NULL, G_TYPE_INVALID}};
