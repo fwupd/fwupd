@@ -3102,6 +3102,8 @@ fu_engine_install_release(FuEngine *self,
 				g_warning("failed to publish firmware to Passim: %s",
 					  error_passim->message);
 			}
+		} else {
+			g_debug("published %s to Passim", passim_item_get_hash(passim_item));
 		}
 	}
 #endif
@@ -4844,6 +4846,8 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 				g_warning("failed to publish metadata to Passim: %s",
 					  error_passim->message);
 			}
+		} else {
+			g_debug("published %s to Passim", passim_item_get_hash(passim_item));
 		}
 	}
 #endif
