@@ -744,7 +744,7 @@ msgstr "加密内存"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
-msgstr "清楚所有固件更新历史"
+msgstr "清除所有固件更新历史"
 
 #. TRANSLATORS: erasing contents of the flash chips
 msgid "Erasing…"
