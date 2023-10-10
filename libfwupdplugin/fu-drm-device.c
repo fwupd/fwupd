@@ -50,7 +50,7 @@ fu_drm_device_get_state(FuDrmDevice *self)
 {
 	const gchar *tmp;
 	g_return_val_if_fail(FU_IS_DRM_DEVICE(self), FU_DISPLAY_STATE_UNKNOWN);
-	tmp = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(self), "tmp", NULL);
+	tmp = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(self), "status", NULL);
 	if (g_strcmp0(tmp, "connected") == 0)
 		return FU_DISPLAY_STATE_CONNECTED;
 	if (g_strcmp0(tmp, "disconnected") == 0)
