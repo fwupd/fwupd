@@ -131,6 +131,29 @@ fu_drm_device_read_edid(FuDrmDevice *self, GError **error)
 	return g_steal_pointer(&edid);
 }
 
+static gboolean
+fu_drm_device_probe(FuDevice *device, GError **error)
+{
+	const gchar *sysfs_path = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
+	g_autofree gchar *physical_id = g_path_get_basename(sysfs_path);
+
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS(fu_drm_device_parent_class)->probe(device, error))
+		return FALSE;
+
+	/* this is a heuristic */
+	if (physical_id != NULL) {
+		g_auto(GStrv) parts = g_strsplit(physical_id, "-", -1);
+		for (guint i = 0; parts[i] != NULL; i++) {
+			if (g_strcmp0(parts[i], "eDP") == 0)
+				fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_drm_device_init(FuDrmDevice *self)
 {
@@ -140,5 +163,6 @@ static void
 fu_drm_device_class_init(FuDrmDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	klass_device->probe = fu_drm_device_probe;
 	klass_device->to_string = fu_drm_device_to_string;
 }
