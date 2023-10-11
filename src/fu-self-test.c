@@ -1218,6 +1218,78 @@ fu_engine_requirements_parent_device_func(gconstpointer user_data)
 }
 
 static void
+fu_engine_requirements_child_device_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device1 = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new(self->ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+	const gchar *xml =
+	    "<component>"
+	    "  <requires>"
+	    "    <firmware depth=\"-1\">1ff60ab2-3905-06a1-b476-0371f00c9e9b</firmware>"
+	    "  </requires>"
+	    "  <provides>"
+	    "    <firmware type=\"flashed\">12345678-1234-1234-1234-123456789012</firmware>"
+	    "  </provides>"
+	    "  <releases>"
+	    "    <release version=\"4.5.7\">"
+	    "      <checksum type=\"sha1\" filename=\"bios.bin\" target=\"content\"/>"
+	    "    </release>"
+	    "  </releases>"
+	    "</component>";
+
+	/* no metadata in daemon */
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* set up a parent device */
+	fu_device_set_id(device1, "parent");
+	fu_device_add_vendor_id(device1, "USB:FFFF");
+	fu_device_add_protocol(device1, "com.acme");
+	fu_device_set_name(device1, "parent");
+	fu_device_set_version_format(device1, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version(device1, "1.2.3");
+	fu_device_add_guid(device1, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+
+	/* set up child device */
+	fu_device_set_id(device2, "child");
+	fu_device_set_name(device2, "child");
+	fu_device_set_version_format(device2, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version(device2, "4.5.6");
+	fu_device_add_guid(device2, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
+	fu_device_add_child(device1, device2);
+
+	fu_engine_add_device(engine, device1);
+
+	/* import firmware metainfo */
+	silo = xb_silo_new_from_xml(xml, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	component = xb_silo_query_first(silo, "component", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(component);
+
+	/* check this passes */
+	fu_release_set_device(release, device1);
+	fu_release_set_request(release, request);
+	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
 fu_engine_device_parent_guid_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -5353,6 +5425,9 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/engine{requirements-parent-device}",
 			     self,
 			     fu_engine_requirements_parent_device_func);
+	g_test_add_data_func("/fwupd/engine{requirements-child-device}",
+			     self,
+			     fu_engine_requirements_child_device_func);
 	g_test_add_data_func("/fwupd/engine{requirements_protocol_check_func}",
 			     self,
 			     fu_engine_requirements_protocol_check_func);
