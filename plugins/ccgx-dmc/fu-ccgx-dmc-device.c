@@ -194,20 +194,26 @@ fu_ccgx_dmc_device_send_sort_reset(FuCcgxDmcDevice *self, gboolean reset_later, 
 
 static gboolean
 fu_ccgx_dmc_device_send_start_upgrade(FuCcgxDmcDevice *self,
-				      const guint8 *custom_meta_data,
-				      guint16 custom_meta_bufsz,
+				      const guint8 *buf,
+				      guint16 bufsz,
 				      GError **error)
 {
 	guint16 value = 0;
-	if (custom_meta_bufsz > 0)
+	g_autofree guint8 *buf_mut = NULL;
+
+	buf_mut = fu_memdup_safe(buf, bufsz, error);
+	if (buf_mut == NULL)
+		return FALSE;
+
+	if (bufsz > 0)
 		value = 1;
 
-	if (custom_meta_bufsz > 0 && custom_meta_data == NULL) {
+	if (bufsz > 0 && buf == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "invalid metadata, buffer is NULL but size = %d",
-			    custom_meta_bufsz);
+			    bufsz);
 		return FALSE;
 	}
 	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
@@ -216,10 +222,10 @@ fu_ccgx_dmc_device_send_start_upgrade(FuCcgxDmcDevice *self,
 					   G_USB_DEVICE_RECIPIENT_DEVICE,
 					   FU_CCGX_DMC_RQT_CODE_UPGRADE_START, /* request */
 					   value,			       /* value */
-					   1,			       /* index, forced update */
-					   (guint8 *)custom_meta_data, /* data */
-					   custom_meta_bufsz,	       /* length */
-					   NULL,		       /* actual length */
+					   1,	    /* index, forced update */
+					   buf_mut, /* data */
+					   bufsz,   /* length */
+					   NULL,    /* actual length */
 					   DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
 					   NULL,
 					   error)) {
