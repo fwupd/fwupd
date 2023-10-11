@@ -264,6 +264,8 @@ fu_vli_pd_device_spi_write_data(FuVliDevice *self,
 	guint8 spi_cmd = 0x0;
 	guint16 value;
 	guint16 index;
+	g_autofree guint8 *buf_mut = NULL;
+
 	if (!fu_cfi_device_get_cmd(fu_vli_device_get_cfi_device(self),
 				   FU_CFI_DEVICE_CMD_PAGE_PROG,
 				   &spi_cmd,
@@ -271,6 +273,10 @@ fu_vli_pd_device_spi_write_data(FuVliDevice *self,
 		return FALSE;
 	value = ((addr << 8) & 0xff00) | spi_cmd;
 	index = addr >> 8;
+
+	buf_mut = fu_memdup_safe(buf, bufsz, error);
+	if (buf_mut == NULL)
+		return FALSE;
 	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -278,7 +284,7 @@ fu_vli_pd_device_spi_write_data(FuVliDevice *self,
 					   0xdc,
 					   value,
 					   index,
-					   (guint8 *)buf,
+					   buf_mut,
 					   bufsz,
 					   NULL,
 					   FU_VLI_DEVICE_TIMEOUT,
