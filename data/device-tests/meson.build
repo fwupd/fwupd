@@ -39,7 +39,6 @@ install_data([
     'realtek-rts5423.json',
     'realtek-rts5855.json',
     'synaptics-prometheus.json',
-    'system76-thelio.json',
     'ugreen-cm260.json',
     'wacom-intuos-bt-m.json',
     'wacom-intuos-bt-s.json',

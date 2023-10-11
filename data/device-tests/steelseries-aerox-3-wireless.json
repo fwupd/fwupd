@@ -3,10 +3,10 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/dee6986d0faf769bf57869ee2b61118c8142e4a0017dbfc3bb0da24fb6dcfb06-SteelSeries_Aerox_3_Wireless_Dongle_1.2.17.cab",
+      "url": "https://fwupd.org/downloads/41e25df1ee09f3c05a4799e4fc325115bd5ba9490309c76c545f3e3a88c1c9b9-aerox-3-wireless-dongle.cab",
       "components": [
         {
-          "version": "1.2.17",
+          "version": "1.4.2",
           "guids": [
             "291b0582-8d08-5714-88db-986911c744d9",
             "df0cb7f0-be88-532f-87f9-65662da376b9"
@@ -15,10 +15,10 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/35883a1f60f9a171451ccd8ca9e3d89cfaedd99cc1325410465e30d180bcb47a-SteelSeries_Aerox_3_Wireless_Mouse_1.8.1.cab",
+      "url": "https://fwupd.org/downloads/de803999ea8f8c71268bb8ed771c230907b78e9ca8435212f977bfa859cc5f2b-aerox-3-wireless-mouse.cab",
       "components": [
         {
-          "version": "1.8.1",
+          "version": "1.10.9",
           "guids": [
             "541b2713-d367-5240-a443-bed07f09ffbf",
             "4f3fac7c-981b-58cc-bb58-8a3b90f31c9c",
@@ -28,10 +28,10 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/fb8e8253a6c4426233ff88a58ae9323f1a7b9002fe6f68541c2e886cded04d38-SteelSeries_Aerox_3_Wireless_Dongle_1.3.1.cab",
+      "url": "https://fwupd.org/downloads/596d1032e7c916822ffae84a48d5f84d641808be761723536c0d82bb83ac077f-aerox-3-wireless-dongle.cab",
       "components": [
         {
-          "version": "1.3.1",
+          "version": "1.11.4",
           "guids": [
             "291b0582-8d08-5714-88db-986911c744d9",
             "df0cb7f0-be88-532f-87f9-65662da376b9"
@@ -40,10 +40,10 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/60627b15b7c1499fcd6a882ef02743f358812fcfc9ed3d1b200f55b91c554796-SteelSeries_Aerox_3_Wireless_Mouse_1.9.3.cab",
+      "url": "https://fwupd.org/downloads/f1453976fe7ea27522524872327ad5aab6fba0c962df719ac05253439d7d72a9-aerox-3-wireless-mouse.cab",
       "components": [
         {
-          "version": "1.9.3",
+          "version": "1.11.4",
           "guids": [
             "541b2713-d367-5240-a443-bed07f09ffbf",
             "4f3fac7c-981b-58cc-bb58-8a3b90f31c9c",

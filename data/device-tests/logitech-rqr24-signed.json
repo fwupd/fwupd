@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/b30e729cc544c711a6ad947cef9ce6614b394a7b-Logitech-Unifying-RQR24.11_B0036.cab",
+      "url": "https://fwupd.org/downloads/6a0134766c26c73cc08f3d30f0bb84d94d035b50f702e39506abdcab9a8f658f-Logitech-Unifying-RQR24.11_B0036.cab",
       "components": [
         {
           "version": "RQR24.11_B0036",
