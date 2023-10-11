@@ -93,6 +93,86 @@ fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError *
 }
 
 /**
+ * fu_strtoll:
+ * @str: a string, e.g. `0x1234`, `-12345`
+ * @value: (out) (nullable): parsed value
+ * @min: minimum acceptable value, typically 0
+ * @max: maximum acceptable value, typically G_MAXINT64
+ * @error: (nullable): optional return location for an error
+ *
+ * Converts a string value to an integer. Values are assumed base 10, unless
+ * prefixed with "0x" where they are parsed as base 16.
+ *
+ * Returns: %TRUE if the value was parsed correctly, or %FALSE for error
+ *
+ * Since: 1.9.7
+ **/
+gboolean
+fu_strtoll(const gchar *str, gint64 *value, gint64 min, gint64 max, GError **error)
+{
+	gchar *endptr = NULL;
+	gint64 value_tmp;
+	guint base = 10;
+
+	/* sanity check */
+	if (str == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "cannot parse NULL");
+		return FALSE;
+	}
+
+	/* detect hex */
+	if (g_str_has_prefix(str, "0x")) {
+		str += 2;
+		base = 16;
+	}
+
+	/* convert */
+	value_tmp = g_ascii_strtoll(str, &endptr, base);
+	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "cannot parse %s", str);
+		return FALSE;
+	}
+
+	/* overflow check */
+	if (value_tmp == G_MAXINT64) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "cannot parse %s as caused overflow",
+			    str);
+		return FALSE;
+	}
+
+	/* range check */
+	if (value_tmp < min) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "value %" G_GINT64_FORMAT " was below minimum %" G_GINT64_FORMAT,
+			    value_tmp,
+			    min);
+		return FALSE;
+	}
+	if (value_tmp > max) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "value %" G_GINT64_FORMAT " was above maximum %" G_GINT64_FORMAT,
+			    value_tmp,
+			    max);
+		return FALSE;
+	}
+
+	/* success */
+	if (value != NULL)
+		*value = value_tmp;
+	return TRUE;
+}
+
+/**
  * fu_strtobool:
  * @str: a string, e.g. `true`
  * @value: (out) (nullable): parsed value

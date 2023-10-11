@@ -1946,6 +1946,38 @@ fu_strtoull_func(void)
 }
 
 static void
+fu_strtoll_func(void)
+{
+	gboolean ret;
+	gint64 val = 0;
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_strtoll("123", &val, 123, 200, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(val, ==, 123);
+
+	ret = fu_strtoll("-123\n", &val, -123, 200, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(val, ==, -123);
+
+	ret = fu_strtoll("0x123", &val, 0, 0x123, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(val, ==, 0x123);
+
+	ret = fu_strtoll(NULL, &val, 0, G_MAXINT32, NULL);
+	g_assert_false(ret);
+	ret = fu_strtoll("", &val, 120, 123, NULL);
+	g_assert_false(ret);
+	ret = fu_strtoll("124", &val, 120, 123, NULL);
+	g_assert_false(ret);
+	ret = fu_strtoll("-124", &val, -123, 123, NULL);
+	g_assert_false(ret);
+}
+
+static void
 fu_common_version_func(void)
 {
 	guint i;
@@ -4479,6 +4511,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{string-append-kv}", fu_string_append_func);
 	g_test_add_func("/fwupd/common{version-guess-format}", fu_version_guess_format_func);
 	g_test_add_func("/fwupd/common{strtoull}", fu_strtoull_func);
+	g_test_add_func("/fwupd/common{strtoll}", fu_strtoll_func);
 	g_test_add_func("/fwupd/common{version}", fu_common_version_func);
 	g_test_add_func("/fwupd/common{version-semver}", fu_version_semver_func);
 	g_test_add_func("/fwupd/common{vercmp}", fu_common_vercmp_func);

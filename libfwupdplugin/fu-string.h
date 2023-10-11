@@ -22,6 +22,8 @@ fu_strsafe(const gchar *str, gsize maxsz);
 gboolean
 fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError **error);
 gboolean
+fu_strtoll(const gchar *str, gint64 *value, gint64 min, gint64 max, GError **error);
+gboolean
 fu_strtobool(const gchar *str, gboolean *value, GError **error);
 gchar *
 fu_strstrip(const gchar *str);
