@@ -253,12 +253,17 @@ fu_ccgx_dmc_device_send_download_trigger(FuCcgxDmcDevice *self, guint16 trigger,
 
 static gboolean
 fu_ccgx_dmc_device_send_fwct(FuCcgxDmcDevice *self,
-			     const guint8 *fwct_buf,
-			     guint16 fwct_sz,
+			     const guint8 *buf,
+			     guint16 bufsz,
 			     GError **error)
 {
-	g_return_val_if_fail(fwct_buf != NULL, FALSE);
+	g_autofree guint8 *buf_mut = NULL;
 
+	g_return_val_if_fail(buf != NULL, FALSE);
+
+	buf_mut = fu_memdup_safe(buf, bufsz, error);
+	if (buf_mut == NULL)
+		return FALSE;
 	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -266,8 +271,8 @@ fu_ccgx_dmc_device_send_fwct(FuCcgxDmcDevice *self,
 					   FU_CCGX_DMC_RQT_CODE_FWCT_WRITE, /* request */
 					   0,				    /* value */
 					   0,				    /* index */
-					   (guint8 *)fwct_buf,		    /* data */
-					   fwct_sz,			    /* length */
+					   buf_mut,			    /* data */
+					   bufsz,			    /* length */
 					   NULL,			    /* actual length */
 					   DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
 					   NULL,
