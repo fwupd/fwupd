@@ -82,12 +82,13 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuDfuTargetAvr, fu_dfu_target_avr, FU_TYPE_DFU_TARGET
 static gboolean
 fu_dfu_target_avr_mass_erase(FuDfuTarget *target, FuProgress *progress, GError **error)
 {
-	g_autoptr(GBytes) data_in = NULL;
-	const guint8 buf[] = {DFU_AVR32_GROUP_EXEC, DFU_AVR32_CMD_ERASE, 0xFF};
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* format buffer */
-	data_in = g_bytes_new_static(buf, sizeof(buf));
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, 5000, progress, error)) {
+	fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_EXEC);
+	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_ERASE);
+	fu_byte_array_append_uint8(buf, 0xFF);
+	if (!fu_dfu_target_download_chunk(target, 0, buf, 5000, progress, error)) {
 		g_prefix_error(error, "cannot mass-erase: ");
 		return FALSE;
 	}
@@ -97,12 +98,9 @@ fu_dfu_target_avr_mass_erase(FuDfuTarget *target, FuProgress *progress, GError *
 static gboolean
 fu_dfu_target_avr_attach(FuDfuTarget *target, FuProgress *progress, GError **error)
 {
-	g_autoptr(GBytes) data_empty = NULL;
-	g_autoptr(GBytes) data_in = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf_empty = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
-	const guint8 buf[] = {DFU_AVR32_GROUP_EXEC,
-			      DFU_AVR32_CMD_START_APPLI,
-			      DFU_AVR32_START_APPLI_RESET};
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -110,10 +108,12 @@ fu_dfu_target_avr_attach(FuDfuTarget *target, FuProgress *progress, GError **err
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 50, "download-zero");
 
 	/* format buffer */
-	data_in = g_bytes_new_static(buf, sizeof(buf));
+	fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_EXEC);
+	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_START_APPLI);
+	fu_byte_array_append_uint8(buf, DFU_AVR32_START_APPLI_RESET);
 	if (!fu_dfu_target_download_chunk(target,
 					  0,
-					  data_in,
+					  buf,
 					  0, /* timeout default */
 					  fu_progress_get_child(progress),
 					  &error_local)) {
@@ -130,10 +130,9 @@ fu_dfu_target_avr_attach(FuDfuTarget *target, FuProgress *progress, GError **err
 	fu_progress_step_done(progress);
 
 	/* do zero-sized download to initiate the reset */
-	data_empty = g_bytes_new(NULL, 0);
 	if (!fu_dfu_target_download_chunk(target,
 					  0,
-					  data_empty,
+					  buf_empty,
 					  0, /* timeout default */
 					  fu_progress_get_child(progress),
 					  &error_local)) {
@@ -167,11 +166,7 @@ fu_dfu_target_avr_select_memory_unit(FuDfuTarget *target,
 				     FuProgress *progress,
 				     GError **error)
 {
-	g_autoptr(GBytes) data_in = NULL;
-	const guint8 buf[] = {DFU_AVR32_GROUP_SELECT,
-			      DFU_AVR32_CMD_SELECT_MEMORY,
-			      DFU_AVR32_MEMORY_UNIT,
-			      memory_unit};
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* check legacy protocol quirk */
 	if (fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(target)),
@@ -181,9 +176,12 @@ fu_dfu_target_avr_select_memory_unit(FuDfuTarget *target,
 	}
 
 	/* format buffer */
-	data_in = g_bytes_new_static(buf, sizeof(buf));
+	fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_SELECT);
+	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_SELECT_MEMORY);
+	fu_byte_array_append_uint8(buf, DFU_AVR32_MEMORY_UNIT);
+	fu_byte_array_append_uint8(buf, memory_unit);
 	g_debug("selecting memory unit 0x%02x", (guint)memory_unit);
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, 0, progress, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, buf, 0, progress, error)) {
 		g_prefix_error(error, "cannot select memory unit: ");
 		return FALSE;
 	}
@@ -206,8 +204,7 @@ fu_dfu_target_avr_select_memory_page(FuDfuTarget *target,
 				     FuProgress *progress,
 				     GError **error)
 {
-	g_autoptr(GBytes) data_in = NULL;
-	const guint8 buf[] = {DFU_AVR_CMD_CHANGE_BASE_ADDR, 0x03, 0x00, memory_page & 0xFF};
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* check page not too large for protocol */
 	if (memory_page > 0xff) {
@@ -221,9 +218,12 @@ fu_dfu_target_avr_select_memory_page(FuDfuTarget *target,
 	}
 
 	/* format buffer */
-	data_in = g_bytes_new_static(buf, sizeof(buf));
+	fu_byte_array_append_uint8(buf, DFU_AVR_CMD_CHANGE_BASE_ADDR);
+	fu_byte_array_append_uint8(buf, 0x03);
+	fu_byte_array_append_uint8(buf, 0x00);
+	fu_byte_array_append_uint8(buf, memory_page & 0xFF);
 	g_debug("selecting memory page 0x%01x", (guint)memory_page);
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, 0, progress, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, buf, 0, progress, error)) {
 		g_prefix_error(error, "cannot select memory page: ");
 		return FALSE;
 	}
@@ -246,16 +246,15 @@ fu_dfu_target_avr32_select_memory_page(FuDfuTarget *target,
 				       FuProgress *progress,
 				       GError **error)
 {
-	g_autoptr(GBytes) data_in = NULL;
-	guint8 buf[5] = {DFU_AVR32_GROUP_SELECT,
-			 DFU_AVR32_CMD_SELECT_MEMORY,
-			 DFU_AVR32_MEMORY_PAGE};
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* format buffer */
-	fu_memwrite_uint16(&buf[3], memory_page, G_BIG_ENDIAN);
-	data_in = g_bytes_new_static(buf, sizeof(buf));
+	fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_SELECT);
+	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_SELECT_MEMORY);
+	fu_byte_array_append_uint8(buf, DFU_AVR32_MEMORY_PAGE);
+	fu_byte_array_append_uint16(buf, memory_page, G_BIG_ENDIAN);
 	g_debug("selecting memory page 0x%02x", (guint)memory_page);
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, 0, progress, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, buf, 0, progress, error)) {
 		g_prefix_error(error, "cannot select memory page: ");
 		return FALSE;
 	}
@@ -280,15 +279,15 @@ fu_dfu_target_avr_read_memory(FuDfuTarget *target,
 			      FuProgress *progress,
 			      GError **error)
 {
-	g_autoptr(GBytes) data_in = NULL;
-	guint8 buf[6] = {DFU_AVR32_GROUP_UPLOAD, DFU_AVR32_CMD_READ_MEMORY};
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* format buffer */
-	fu_memwrite_uint16(&buf[2], addr_start, G_BIG_ENDIAN);
-	fu_memwrite_uint16(&buf[4], addr_end, G_BIG_ENDIAN);
-	data_in = g_bytes_new_static(buf, sizeof(buf));
+	fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_UPLOAD);
+	fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_READ_MEMORY);
+	fu_byte_array_append_uint16(buf, addr_start, G_BIG_ENDIAN);
+	fu_byte_array_append_uint16(buf, addr_end, G_BIG_ENDIAN);
 	g_debug("reading memory from 0x%04x to 0x%04x", (guint)addr_start, (guint)addr_end);
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, 0, progress, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, buf, 0, progress, error)) {
 		g_prefix_error(error,
 			       "cannot read memory 0x%04x to 0x%04x: ",
 			       (guint)addr_start,
@@ -315,13 +314,14 @@ fu_dfu_target_avr_read_command(FuDfuTarget *target,
 			       FuProgress *progress,
 			       GError **error)
 {
-	g_autoptr(GBytes) data_in = NULL;
-	const guint8 buf[] = {DFU_AVR_CMD_READ_COMMAND, page, addr};
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* format buffer */
-	data_in = g_bytes_new_static(buf, sizeof(buf));
+	fu_byte_array_append_uint8(buf, DFU_AVR_CMD_READ_COMMAND);
+	fu_byte_array_append_uint8(buf, page);
+	fu_byte_array_append_uint8(buf, addr);
 	g_debug("read command page:0x%02x addr:0x%02x", (guint)page, (guint)addr);
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, 0, progress, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, buf, 0, progress, error)) {
 		g_prefix_error(error, "cannot read command page: ");
 		return FALSE;
 	}
@@ -582,8 +582,8 @@ fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		g_autofree guint8 *buf = NULL;
-		g_autoptr(GBytes) chunk_tmp = NULL;
+		g_autoptr(GByteArray) buf = g_byte_array_new();
+		g_autoptr(GBytes) chunk_tmp = fu_chunk_get_bytes(chk);
 
 		/* select page if required */
 		if (fu_chunk_get_page(chk) != *page_last) {
@@ -606,24 +606,22 @@ fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
 		}
 
 		/* create chunk with header and footer */
-		buf = g_malloc0(fu_chunk_get_data_sz(chk) + header_sz + sizeof(footer));
-		buf[0] = DFU_AVR32_GROUP_DOWNLOAD;
-		buf[1] = DFU_AVR32_CMD_PROGRAM_START;
-		fu_memwrite_uint16(&buf[2], fu_chunk_get_address(chk), G_BIG_ENDIAN);
-		fu_memwrite_uint16(&buf[4],
-				   fu_chunk_get_address(chk) + fu_chunk_get_data_sz(chk) - 1,
-				   G_BIG_ENDIAN);
-		memcpy(&buf[header_sz], fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
-		memcpy(&buf[header_sz + fu_chunk_get_data_sz(chk)], footer, sizeof(footer));
+		fu_byte_array_append_uint8(buf, DFU_AVR32_GROUP_DOWNLOAD);
+		fu_byte_array_append_uint8(buf, DFU_AVR32_CMD_PROGRAM_START);
+		fu_byte_array_append_uint16(buf, fu_chunk_get_address(chk), G_BIG_ENDIAN);
+		fu_byte_array_append_uint16(buf,
+					    fu_chunk_get_address(chk) + fu_chunk_get_data_sz(chk) -
+						1,
+					    G_BIG_ENDIAN);
+		fu_byte_array_set_size(buf, header_sz, 0x0);
+		fu_byte_array_append_bytes(buf, chunk_tmp);
+		g_byte_array_append(buf, footer, sizeof(footer));
 
 		/* download data */
-		chunk_tmp =
-		    g_bytes_new_static(buf, fu_chunk_get_data_sz(chk) + header_sz + sizeof(footer));
-		g_debug("sending %" G_GSIZE_FORMAT " bytes to the hardware",
-			g_bytes_get_size(chunk_tmp));
+		g_debug("sending 0x%x bytes to the hardware", buf->len);
 		if (!fu_dfu_target_download_chunk(target,
 						  i,
-						  chunk_tmp,
+						  buf,
 						  0, /* timeout default */
 						  fu_progress_get_child(progress),
 						  error))

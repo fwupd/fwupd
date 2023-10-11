@@ -29,9 +29,9 @@ fu_dfu_target_stm_attach(FuDfuTarget *target, FuProgress *progress, GError **err
 {
 	/* downloading empty payload will cause a dfu to leave,
 	 * the returned status will be dfuMANIFEST and expect the device to disconnect */
-	g_autoptr(GBytes) bytes_tmp = g_bytes_new(NULL, 0);
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
-	if (!fu_dfu_target_download_chunk(target, 2, bytes_tmp, 0, progress, &error_local)) {
+	if (!fu_dfu_target_download_chunk(target, 2, buf, 0, progress, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_debug("ignoring: %s", error_local->message);
 			return TRUE;
@@ -45,13 +45,11 @@ fu_dfu_target_stm_attach(FuDfuTarget *target, FuProgress *progress, GError **err
 static gboolean
 fu_dfu_target_stm_mass_erase(FuDfuTarget *target, FuProgress *progress, GError **error)
 {
-	GBytes *data_in;
-	guint8 buf[1];
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* format buffer */
-	buf[0] = DFU_STM_CMD_ERASE;
-	data_in = g_bytes_new_static(buf, sizeof(buf));
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, 35000, progress, error)) {
+	fu_byte_array_append_uint8(buf, DFU_STM_CMD_ERASE);
+	if (!fu_dfu_target_download_chunk(target, 0, buf, 35000, progress, error)) {
 		g_prefix_error(error, "cannot mass-erase: ");
 		return FALSE;
 	}
@@ -67,14 +65,12 @@ fu_dfu_target_stm_set_address(FuDfuTarget *target,
 			      FuProgress *progress,
 			      GError **error)
 {
-	GBytes *data_in;
-	guint8 buf[5];
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* format buffer */
-	buf[0] = DFU_STM_CMD_SET_ADDRESS_POINTER;
-	memcpy(buf + 1, &address, 4);
-	data_in = g_bytes_new_static(buf, sizeof(buf));
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, 0, progress, error)) {
+	fu_byte_array_append_uint8(buf, DFU_STM_CMD_SET_ADDRESS_POINTER);
+	fu_byte_array_append_uint32(buf, address, G_LITTLE_ENDIAN);
+	if (!fu_dfu_target_download_chunk(target, 0, buf, 0, progress, error)) {
 		g_prefix_error(error, "cannot set address 0x%x: ", address);
 		return FALSE;
 	}
@@ -234,14 +230,12 @@ fu_dfu_target_stm_erase_address(FuDfuTarget *target,
 				FuProgress *progress,
 				GError **error)
 {
-	GBytes *data_in;
-	guint8 buf[5];
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* format buffer */
-	buf[0] = DFU_STM_CMD_ERASE;
-	memcpy(buf + 1, &address, 4);
-	data_in = g_bytes_new_static(buf, sizeof(buf));
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, 0, progress, error)) {
+	fu_byte_array_append_uint8(buf, DFU_STM_CMD_ERASE);
+	fu_byte_array_append_uint32(buf, address, G_LITTLE_ENDIAN);
+	if (!fu_dfu_target_download_chunk(target, 0, buf, 0, progress, error)) {
 		g_prefix_error(error, "cannot erase address 0x%x: ", address);
 		return FALSE;
 	}
@@ -354,6 +348,7 @@ fu_dfu_target_stm_download_element3(FuDfuTarget *target,
 		g_autoptr(FuChunk) chk_tmp = fu_chunk_array_index(chunks, i);
 		FuDfuSector *sector;
 		guint32 offset_dev = fu_chunk_get_address(chk_tmp);
+		g_autoptr(GByteArray) buf = g_byte_array_new();
 		g_autoptr(GBytes) bytes_tmp = NULL;
 
 		/* for DfuSe devices we need to set the address manually */
@@ -384,10 +379,12 @@ fu_dfu_target_stm_download_element3(FuDfuTarget *target,
 		g_debug("writing sector at 0x%04x (0x%" G_GSIZE_FORMAT ")",
 			offset_dev,
 			g_bytes_get_size(bytes_tmp));
+
 		/* ST uses wBlockNum=0 for DfuSe commands and wBlockNum=1 is reserved */
+		fu_byte_array_append_bytes(buf, bytes_tmp);
 		if (!fu_dfu_target_download_chunk(target,
 						  (i + 2),
-						  bytes_tmp,
+						  buf,
 						  0, /* timeout default */
 						  fu_progress_get_child(progress),
 						  error))

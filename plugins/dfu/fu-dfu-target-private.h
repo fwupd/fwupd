@@ -24,7 +24,7 @@ fu_dfu_target_upload_chunk(FuDfuTarget *self,
 gboolean
 fu_dfu_target_download_chunk(FuDfuTarget *self,
 			     guint16 index,
-			     GBytes *bytes,
+			     GByteArray *buf,
 			     guint timeout_ms,
 			     FuProgress *progress,
 			     GError **error);

@@ -658,7 +658,7 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error)
 gboolean
 fu_dfu_target_download_chunk(FuDfuTarget *self,
 			     guint16 index,
-			     GBytes *bytes,
+			     GByteArray *buf,
 			     guint timeout_ms,
 			     FuProgress *progress,
 			     GError **error)
@@ -673,7 +673,7 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 		timeout_ms = fu_dfu_device_get_timeout(device);
 
 	/* low level packet debugging */
-	fu_dump_bytes(G_LOG_DOMAIN, "Message", bytes);
+	fu_dump_raw(G_LOG_DOMAIN, "Message", buf->data, buf->len);
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					   G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -681,8 +681,8 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 					   FU_DFU_REQUEST_DNLOAD,
 					   index,
 					   fu_dfu_device_get_interface(device),
-					   (guint8 *)g_bytes_get_data(bytes, NULL),
-					   g_bytes_get_size(bytes),
+					   buf->data,
+					   buf->len,
 					   &actual_length,
 					   timeout_ms,
 					   NULL,
@@ -705,7 +705,7 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 	}
 
 	/* wait for the device to write contents to the EEPROM */
-	if (g_bytes_get_size(bytes) == 0 && fu_dfu_device_get_download_timeout(device) > 0)
+	if (buf->len == 0 && fu_dfu_device_get_download_timeout(device) > 0)
 		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 	if (fu_dfu_device_get_download_timeout(device) > 0) {
 		g_debug("sleeping for %ums…", fu_dfu_device_get_download_timeout(device));
@@ -718,7 +718,7 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 		return FALSE;
 	}
 
-	g_assert_cmpint(actual_length, ==, g_bytes_get_size(bytes));
+	g_assert_cmpint(actual_length, ==, buf->len);
 	return TRUE;
 }
 
@@ -1056,26 +1056,24 @@ fu_dfu_target_download_element_dfu(FuDfuTarget *self,
 	for (guint32 i = 0; i < nr_chunks + 1; i++) {
 		gsize length;
 		guint32 offset;
-		g_autoptr(GBytes) bytes_tmp = NULL;
+		g_autoptr(GByteArray) buf = g_byte_array_new();
 
 		/* calculate the offset into the chunk data */
 		offset = i * transfer_size;
 
 		/* we have to write one final zero-sized chunk for EOF */
 		if (i < nr_chunks) {
+			g_autoptr(GBytes) bytes_tmp = NULL;
 			length = g_bytes_get_size(bytes) - offset;
 			if (length > transfer_size)
 				length = transfer_size;
 			bytes_tmp = fu_bytes_new_offset(bytes, offset, length, error);
 			if (bytes_tmp == NULL)
 				return FALSE;
-		} else {
-			bytes_tmp = g_bytes_new(NULL, 0);
+			fu_byte_array_append_bytes(buf, bytes_tmp);
 		}
-		g_debug("writing #%04x chunk of size %" G_GSIZE_FORMAT,
-			i,
-			g_bytes_get_size(bytes_tmp));
-		if (!fu_dfu_target_download_chunk(self, i, bytes_tmp, 0, progress, error))
+		g_debug("writing #%04x chunk of size 0x%x", i, buf->len);
+		if (!fu_dfu_target_download_chunk(self, i, buf, 0, progress, error))
 			return FALSE;
 
 		/* update UI */
