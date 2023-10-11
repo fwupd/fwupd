@@ -1735,22 +1735,25 @@ fu_engine_check_requirement_firmware(FuEngine *self,
 				     GError **error)
 {
 	const gchar *version;
-	guint64 depth;
+	const gchar *depth_str;
+	gint64 depth = G_MAXINT64;
 	g_autoptr(FuDevice) device_actual = g_object_ref(device);
 	g_autoptr(GError) error_local = NULL;
 	g_auto(GStrv) guids = NULL;
 
 	/* look at the parent device */
-	depth = xb_node_get_attr_as_uint(req, "depth");
-	if (depth != G_MAXUINT64) {
-		for (guint64 i = 0; i < depth; i++) {
+	depth_str = xb_node_get_attr(req, "depth");
+	if (depth_str != NULL) {
+		if (!fu_strtoll(depth_str, &depth, -1, 10, error))
+			return FALSE;
+		for (gint64 i = 0; i < depth; i++) {
 			FuDevice *device_tmp = fu_device_get_parent(device_actual);
 			if (device_tmp == NULL) {
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "No parent device for %s "
-					    "(%" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT ")",
+					    "(%" G_GINT64_FORMAT "/%" G_GINT64_FORMAT ")",
 					    fu_device_get_name(device_actual),
 					    i,
 					    depth);
@@ -1840,7 +1843,7 @@ fu_engine_check_requirement_firmware(FuEngine *self,
 	}
 
 	/* find if any of the other devices exists */
-	if (depth == G_MAXUINT64) {
+	if (depth == G_MAXINT64) {
 		g_autoptr(FuDevice) device_tmp = NULL;
 		for (guint i = 0; guids[i] != NULL; i++) {
 			device_tmp = fu_device_list_get_by_guid(self->device_list, guids[i], NULL);
@@ -1857,6 +1860,28 @@ fu_engine_check_requirement_firmware(FuEngine *self,
 		}
 		g_set_object(&device_actual, device_tmp);
 
+	} else if (depth == -1) {
+		GPtrArray *children;
+		FuDevice *child = NULL;
+
+		/* look for a child */
+		children = fu_device_get_children(device);
+		for (guint i = 0; i < children->len; i++) {
+			child = g_ptr_array_index(children, i);
+			if (fu_device_has_guids_any(child, guids))
+				break;
+			child = NULL;
+		}
+		if (child == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "No child found with GUID of %s",
+				    xb_node_get_text(req));
+			return FALSE;
+		}
+		g_set_object(&device_actual, child);
+
 		/* look for a sibling */
 	} else if (depth == 0) {
 		FuDevice *child = NULL;
@@ -1869,7 +1894,7 @@ fu_engine_check_requirement_firmware(FuEngine *self,
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "No GUID of %s on self device %s",
+					    "No GUID of %s on device %s",
 					    xb_node_get_text(req),
 					    fu_device_get_name(device_actual));
 				return FALSE;
