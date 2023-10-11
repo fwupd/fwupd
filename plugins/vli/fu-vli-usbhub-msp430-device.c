@@ -83,7 +83,12 @@ fu_vli_usbhub_device_i2c_write_data(FuVliUsbhubDevice *self,
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint16 value = (((guint16)disable_start_bit) << 8) | disable_end_bit;
+	g_autofree guint8 *buf_mut = NULL;
+
 	fu_dump_raw(G_LOG_DOMAIN, "I2cWriteData", buf, bufsz);
+	buf_mut = fu_memdup_safe(buf, bufsz, error);
+	if (buf_mut == NULL)
+		return FALSE;
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -91,7 +96,7 @@ fu_vli_usbhub_device_i2c_write_data(FuVliUsbhubDevice *self,
 					   I2C_W_VDR,
 					   value,
 					   0x0,
-					   (guint8 *)buf,
+					   buf_mut,
 					   bufsz,
 					   NULL,
 					   FU_VLI_DEVICE_TIMEOUT,
