@@ -6524,6 +6524,23 @@ fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 		}
 	}
 	if (fu_device_get_parent(device) == NULL) {
+		for (guint i = 0; i < devices->len; i++) {
+			FuDevice *device_tmp = g_ptr_array_index(devices, i);
+			if (!fu_device_has_internal_flag(
+				device_tmp,
+				FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN))
+				continue;
+			if (fu_device_get_backend_id(device_tmp) == NULL)
+				continue;
+			if (fu_device_has_parent_backend_id(device,
+							    fu_device_get_backend_id(device_tmp))) {
+				fu_device_set_parent(device, device_tmp);
+				fu_engine_ensure_device_supported(self, device_tmp);
+				break;
+			}
+		}
+	}
+	if (fu_device_get_parent(device) == NULL) {
 		guids = fu_device_get_parent_guids(device);
 		for (guint j = 0; j < guids->len; j++) {
 			const gchar *guid = g_ptr_array_index(guids, j);
@@ -6550,6 +6567,20 @@ fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 		for (guint i = 0; i < parent_physical_ids->len; i++) {
 			const gchar *parent_physical_id = g_ptr_array_index(parent_physical_ids, i);
 			if (g_strcmp0(parent_physical_id, fu_device_get_physical_id(device)) == 0)
+				fu_device_set_parent(device_tmp, device);
+		}
+	}
+	for (guint j = 0; j < devices->len; j++) {
+		GPtrArray *parent_backend_ids = NULL;
+		FuDevice *device_tmp = g_ptr_array_index(devices, j);
+		if (fu_device_get_parent(device_tmp) != NULL)
+			continue;
+		parent_backend_ids = fu_device_get_parent_backend_ids(device_tmp);
+		if (parent_backend_ids == NULL)
+			continue;
+		for (guint i = 0; i < parent_backend_ids->len; i++) {
+			const gchar *parent_backend_id = g_ptr_array_index(parent_backend_ids, i);
+			if (g_strcmp0(parent_backend_id, fu_device_get_backend_id(device)) == 0)
 				fu_device_set_parent(device_tmp, device);
 		}
 	}

@@ -24,6 +24,10 @@ GPtrArray *
 fu_device_get_parent_physical_ids(FuDevice *self);
 gboolean
 fu_device_has_parent_physical_id(FuDevice *self, const gchar *physical_id);
+GPtrArray *
+fu_device_get_parent_backend_ids(FuDevice *self);
+gboolean
+fu_device_has_parent_backend_id(FuDevice *self, const gchar *backend_id);
 void
 fu_device_set_parent(FuDevice *self, FuDevice *parent);
 gint

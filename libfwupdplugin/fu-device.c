@@ -57,6 +57,7 @@ typedef struct {
 	GHashTable *metadata; /* (nullable) */
 	GPtrArray *parent_guids;
 	GPtrArray *parent_physical_ids; /* (nullable) */
+	GPtrArray *parent_backend_ids;	/* (nullable) */
 	guint remove_delay;		/* ms */
 	guint acquiesce_delay;		/* ms */
 	guint request_cnts[FWUPD_REQUEST_KIND_LAST];
@@ -1700,6 +1701,86 @@ fu_device_add_parent_physical_id(FuDevice *self, const gchar *physical_id)
 	if (fu_device_has_parent_physical_id(self, physical_id))
 		return;
 	g_ptr_array_add(priv->parent_physical_ids, g_strdup(physical_id));
+}
+
+/**
+ * fu_device_get_parent_backend_ids:
+ * @self: a #FuDevice
+ *
+ * Gets any parent device IDs. If a device is added to the daemon that matches
+ * the physical ID added from fu_device_add_parent_backend_id() then this
+ * device is marked the parent of @self.
+ *
+ * Returns: (transfer none) (element-type utf8) (nullable): a list of IDs
+ *
+ * Since: 1.9.7
+ **/
+GPtrArray *
+fu_device_get_parent_backend_ids(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	return priv->parent_backend_ids;
+}
+
+/**
+ * fu_device_has_parent_backend_id:
+ * @self: a #FuDevice
+ * @backend_id: a device physical ID
+ *
+ * Searches the list of parent IDs for a string match.
+ *
+ * Returns: %TRUE if the parent ID exists
+ *
+ * Since: 1.9.7
+ **/
+gboolean
+fu_device_has_parent_backend_id(FuDevice *self, const gchar *backend_id)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(backend_id != NULL, FALSE);
+
+	if (priv->parent_backend_ids == NULL)
+		return FALSE;
+	for (guint i = 0; i < priv->parent_backend_ids->len; i++) {
+		const gchar *tmp = g_ptr_array_index(priv->parent_backend_ids, i);
+		if (g_strcmp0(tmp, backend_id) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * fu_device_add_parent_backend_id:
+ * @self: a #FuDevice
+ * @backend_id: a device physical ID
+ *
+ * Sets any parent device using the physical ID. An parent device is logically
+ * linked to the primary device in some way and can be added before or after @self.
+ *
+ * The IDs are searched in order, and so the order of adding IDs may be
+ * important if more than one parent device might match.
+ *
+ * Since: 1.9.7
+ **/
+void
+fu_device_add_parent_backend_id(FuDevice *self, const gchar *backend_id)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(backend_id != NULL);
+
+	/* ensure exists */
+	if (priv->parent_backend_ids == NULL)
+		priv->parent_backend_ids = g_ptr_array_new_with_free_func(g_free);
+
+	/* already present */
+	if (fu_device_has_parent_backend_id(self, backend_id))
+		return;
+	g_ptr_array_add(priv->parent_backend_ids, g_strdup(backend_id));
 }
 
 static gboolean
@@ -4056,6 +4137,10 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 		g_autofree gchar *flags = fu_strjoin(",", priv->parent_physical_ids);
 		fu_string_append(str, idt + 1, "ParentPhysicalIds", flags);
 	}
+	if (priv->parent_backend_ids != NULL && priv->parent_backend_ids->len > 0) {
+		g_autofree gchar *flags = fu_strjoin(",", priv->parent_backend_ids);
+		fu_string_append(str, idt + 1, "ParentBackendIds", flags);
+	}
 	if (priv->internal_flags != FU_DEVICE_INTERNAL_FLAG_NONE) {
 		g_autoptr(GString) tmp2 = g_string_new("");
 		for (guint i = 0; i < 64; i++) {
@@ -5257,6 +5342,7 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 	GPtrArray *instance_ids = fu_device_get_instance_ids(donor);
 	GPtrArray *parent_guids = fu_device_get_parent_guids(donor);
 	GPtrArray *parent_physical_ids = fu_device_get_parent_physical_ids(donor);
+	GPtrArray *parent_backend_ids = fu_device_get_parent_backend_ids(donor);
 	GHashTableIter iter;
 	gpointer key, value;
 
@@ -5291,6 +5377,12 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 		for (guint i = 0; i < parent_physical_ids->len; i++) {
 			const gchar *tmp = g_ptr_array_index(parent_physical_ids, i);
 			fu_device_add_parent_physical_id(self, tmp);
+		}
+	}
+	if (parent_backend_ids != NULL) {
+		for (guint i = 0; i < parent_backend_ids->len; i++) {
+			const gchar *tmp = g_ptr_array_index(parent_backend_ids, i);
+			fu_device_add_parent_backend_id(self, tmp);
 		}
 	}
 	if (priv->metadata != NULL) {
@@ -6294,6 +6386,8 @@ fu_device_finalize(GObject *object)
 		g_hash_table_unref(priv->inhibits);
 	if (priv->parent_physical_ids != NULL)
 		g_ptr_array_unref(priv->parent_physical_ids);
+	if (priv->parent_backend_ids != NULL)
+		g_ptr_array_unref(priv->parent_backend_ids);
 	if (priv->private_flag_items != NULL)
 		g_ptr_array_unref(priv->private_flag_items);
 	g_ptr_array_unref(priv->parent_guids);
