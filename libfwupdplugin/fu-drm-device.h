@@ -23,4 +23,4 @@ fu_drm_device_get_state(FuDrmDevice *self);
 const gchar *
 fu_drm_device_get_connector_id(FuDrmDevice *self);
 FuEdid *
-fu_drm_device_read_edid(FuDrmDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_drm_device_get_edid(FuDrmDevice *self);
