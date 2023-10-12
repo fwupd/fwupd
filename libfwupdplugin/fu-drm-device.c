@@ -179,6 +179,8 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 			return FALSE;
 		if (fu_edid_get_eisa_id(edid) != NULL)
 			fu_device_set_name(device, fu_edid_get_eisa_id(edid));
+		if (fu_edid_get_serial_number(edid) != NULL)
+			fu_device_set_serial(device, fu_edid_get_serial_number(edid));
 	}
 
 	/* success */
