@@ -166,6 +166,21 @@ fu_edid_set_product_code(FuEdid *self, guint16 product_code)
 	self->product_code = product_code;
 }
 
+/* return as soon as the first non-printable char is encountered */
+static gchar *
+fu_edid_strsafe(const guint8 *buf, gsize bufsz)
+{
+	g_autoptr(GString) str = g_string_new(NULL);
+	for (gsize i = 0; i < bufsz; i++) {
+		if (!g_ascii_isprint((gchar)buf[i]))
+			break;
+		g_string_append_c(str, (gchar)buf[i]);
+	}
+	if (str->len == 0)
+		return NULL;
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
 static gboolean
 fu_edid_parse_descriptor(FuEdid *self, GBytes *fw, gsize offset, GError **error)
 {
@@ -187,15 +202,15 @@ fu_edid_parse_descriptor(FuEdid *self, GBytes *fw, gsize offset, GError **error)
 	buf2 = fu_struct_edid_descriptor_get_data(st, &buf2sz);
 	if (fu_struct_edid_descriptor_get_tag(st) == FU_EDID_DESCRIPTOR_TAG_DISPLAY_PRODUCT_NAME) {
 		g_free(self->product_name);
-		self->product_name = fu_strsafe((const gchar *)buf2, buf2sz);
+		self->product_name = fu_edid_strsafe(buf2, buf2sz);
 	} else if (fu_struct_edid_descriptor_get_tag(st) ==
 		   FU_EDID_DESCRIPTOR_TAG_DISPLAY_PRODUCT_SERIAL_NUMBER) {
 		g_free(self->serial_number);
-		self->serial_number = fu_strsafe((const gchar *)buf2, buf2sz);
+		self->serial_number = fu_edid_strsafe(buf2, buf2sz);
 	} else if (fu_struct_edid_descriptor_get_tag(st) ==
 		   FU_EDID_DESCRIPTOR_TAG_ALPHANUMERIC_DATA_STRING) {
 		g_free(self->eisa_id);
-		self->eisa_id = fu_strsafe((const gchar *)buf2, buf2sz);
+		self->eisa_id = fu_edid_strsafe(buf2, buf2sz);
 	}
 
 	/* success */
