@@ -607,6 +607,8 @@ fu_device_add_parent_guid(FuDevice *self, const gchar *guid);
 void
 fu_device_add_parent_physical_id(FuDevice *self, const gchar *physical_id);
 void
+fu_device_add_parent_backend_id(FuDevice *self, const gchar *backend_id);
+void
 fu_device_add_counterpart_guid(FuDevice *self, const gchar *guid);
 FuDevice *
 fu_device_get_proxy(FuDevice *self);

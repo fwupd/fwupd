@@ -1351,6 +1351,7 @@ fu_engine_device_parent_id_func(gconstpointer user_data)
 	g_autoptr(FuDevice) device2 = fu_device_new(self->ctx);
 	g_autoptr(FuDevice) device3 = fu_device_new(self->ctx);
 	g_autoptr(FuDevice) device4 = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) device5 = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new();
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
@@ -1372,6 +1373,7 @@ fu_engine_device_parent_id_func(gconstpointer user_data)
 	/* parent */
 	fu_device_set_id(device2, "parent");
 	fu_device_set_name(device2, "Parent");
+	fu_device_set_backend_id(device2, "/sys/devices/foo/bar/baz");
 	fu_device_set_physical_id(device2, "parent-ID");
 	fu_device_add_vendor_id(device2, "USB:FFFF");
 	fu_device_add_protocol(device2, "com.acme");
@@ -1406,9 +1408,24 @@ fu_engine_device_parent_id_func(gconstpointer user_data)
 	/* this is normally done by fu_plugin_device_add() */
 	fu_engine_add_device(engine, device4);
 
+	/* add child with the parent backend ID */
+	fu_device_set_id(device5, "child5");
+	fu_device_set_name(device5, "Child5");
+	fu_device_set_physical_id(device5, "child-ID5");
+	fu_device_add_vendor_id(device5, "USB:FFFF");
+	fu_device_add_protocol(device5, "com.acme");
+	fu_device_add_instance_id(device5, "child-GUID-5");
+	fu_device_add_parent_backend_id(device5, "/sys/devices/foo/bar/baz");
+	fu_device_convert_instance_ids(device5);
+	fu_engine_add_device(engine, device5);
+
+	/* this is normally done by fu_plugin_device_add() */
+	fu_engine_add_device(engine, device5);
+
 	/* verify both children were adopted */
 	g_assert_true(fu_device_get_parent(device3) == device2);
 	g_assert_true(fu_device_get_parent(device4) == device2);
+	g_assert_true(fu_device_get_parent(device5) == device2);
 	g_assert_true(fu_device_get_parent(device1) == device2);
 	g_assert_cmpstr(fu_device_get_vendor(device3), ==, "oem");
 }
