@@ -11,9 +11,9 @@
 
 #include "config.h"
 
-#include <drm/amdgpu_drm.h>
 #include <fcntl.h>
 #include <glib/gstdio.h>
+#include <libdrm/amdgpu_drm.h>
 
 #include "fu-amd-gpu-atom-firmware.h"
 #include "fu-amd-gpu-device.h"
