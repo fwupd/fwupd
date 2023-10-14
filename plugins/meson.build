@@ -9,6 +9,7 @@ plugin_deps = [
   libarchive,
   libjsonglib,
   libxmlb,
+  libdrm_amdgpu,
   protobufc,
   fwupdplugin_rs_dep,
 ]

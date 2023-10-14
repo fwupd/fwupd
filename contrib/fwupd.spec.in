@@ -91,6 +91,7 @@ BuildRequires: kernel-headers
 %if 0%{?have_flashrom}
 BuildRequires: flashrom-devel >= 1.2-2
 %endif
+BuildRequires: libdrm-devel
 
 %if 0%{?have_modem_manager}
 BuildRequires: ModemManager-glib-devel >= 1.10.0

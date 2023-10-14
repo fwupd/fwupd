@@ -1,4 +1,4 @@
-if get_option('plugin_amdgpu').disable_auto_if(not gudev.found() or not amdgpu).allowed()
+if gudev.found() and libdrm_amdgpu.found() and get_option('plugin_amdgpu').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginAmdGpu"']
 
 plugin_quirks += files('amd-gpu.quirk')

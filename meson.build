@@ -537,7 +537,9 @@ configure_file(
   configuration: conf
 )
 
-amdgpu = cc.has_header_symbol('drm/amdgpu_drm.h', 'AMDGPU_INFO_VBIOS_INFO', required: get_option('plugin_amdgpu'))
+libdrm_amdgpu = dependency('libdrm_amdgpu',
+                           version: '>= 2.4.113',
+                           required: get_option('plugin_amdgpu'))
 protobufc = dependency('libprotobuf-c', required: get_option('plugin_logitech_bulkcontroller'))
 protoc = find_program('protoc', 'protoc-c', required: get_option('plugin_logitech_bulkcontroller'))
 
