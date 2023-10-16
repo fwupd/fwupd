@@ -87,7 +87,6 @@ BuildRequires: json-glib-devel >= %{json_glib_version}
 BuildRequires: vala
 BuildRequires: bash-completion
 BuildRequires: git-core
-BuildRequires: kernel-headers
 %if 0%{?have_flashrom}
 BuildRequires: flashrom-devel >= 1.2-2
 %endif
