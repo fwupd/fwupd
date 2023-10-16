@@ -55,7 +55,7 @@ fu_wacom_raw_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "WacomI2cFlashSize");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_WACOM_AES_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_WACOM_EMR_DEVICE);
-	fu_plugin_add_device_udev_subsystem(plugin, "hidraw");
+	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 }
 
 static void
