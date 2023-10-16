@@ -149,6 +149,9 @@
     </distro>
   </dependency>
   <dependency id="libdrm-dev">
+    <distro id="arch">
+      <package variant="x86_64">libdrm</package>
+    </distro>
     <distro id="fedora">
       <package variant="x86_64">libdrm-devel</package>
       <package variant="aarch64">libdrm-devel</package>
