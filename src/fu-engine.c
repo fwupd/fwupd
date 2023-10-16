@@ -2804,9 +2804,9 @@ fu_engine_add_release_metadata(FuEngine *self, FuRelease *release, FuPlugin *plu
 								 plugin_name,
 								 &error_local);
 			if (plugin_tmp == NULL) {
-				g_warning("could not add metadata for %s: %s",
-					  plugin_name,
-					  error_local->message);
+				g_debug("could not add metadata for %s: %s",
+					plugin_name,
+					error_local->message);
 				continue;
 			}
 			if (fu_plugin_get_report_metadata(plugin_tmp) != NULL) {
