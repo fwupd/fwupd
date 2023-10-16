@@ -48,12 +48,18 @@ fu_uefi_bootmgr_add_to_boot_order(guint16 boot_entry, GError **error)
 	i = boot_order_size / sizeof(guint16);
 	new_boot_order[i] = boot_entry;
 	boot_order_size += sizeof(guint16);
-	return fu_efivar_set_data(FU_EFIVAR_GUID_EFI_GLOBAL,
+	if (!fu_efivar_set_data(FU_EFIVAR_GUID_EFI_GLOBAL,
 				  "BootOrder",
 				  (guint8 *)new_boot_order,
 				  boot_order_size,
 				  attr,
-				  error);
+				  error)) {
+		g_prefix_error(error, "could not set BootOrder(%u): ", boot_entry);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static guint16

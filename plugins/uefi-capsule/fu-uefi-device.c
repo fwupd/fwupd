@@ -283,13 +283,19 @@ fu_uefi_device_clear_status(FuUefiDevice *self, GError **error)
 	/* just copy the new EfiUpdateInfo and save it back */
 	fu_struct_efi_update_info_set_status(st_inf, FU_UEFI_UPDATE_INFO_STATUS_UNKNOWN);
 	memcpy(data, st_inf->data, st_inf->len);
-	return fu_efivar_set_data(FU_EFIVAR_GUID_FWUPDATE,
+	if (!fu_efivar_set_data(FU_EFIVAR_GUID_FWUPDATE,
 				  varname,
 				  data,
 				  datasz,
 				  FU_EFIVAR_ATTR_NON_VOLATILE | FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
 				      FU_EFIVAR_ATTR_RUNTIME_ACCESS,
-				  error);
+				  error)) {
+		g_prefix_error(error, "could not set EfiUpdateInfo: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 FuEfiDevicePathList *
@@ -401,13 +407,19 @@ fu_uefi_device_write_update_info(FuUefiDevice *self,
 	fu_struct_efi_update_info_set_status(st_inf, FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE);
 	fu_struct_efi_update_info_set_guid(st_inf, &guid);
 	fu_byte_array_append_bytes(st_inf, dp_blob);
-	return fu_efivar_set_data(FU_EFIVAR_GUID_FWUPDATE,
+	if (!fu_efivar_set_data(FU_EFIVAR_GUID_FWUPDATE,
 				  varname,
 				  st_inf->data,
 				  st_inf->len,
 				  FU_EFIVAR_ATTR_NON_VOLATILE | FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
 				      FU_EFIVAR_ATTR_RUNTIME_ACCESS,
-				  error);
+				  error)) {
+		g_prefix_error(error, "could not set DP_BUF with %s: ", capsule_path);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
