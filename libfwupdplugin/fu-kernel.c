@@ -305,6 +305,7 @@ fu_kernel_parse_config(const gchar *buf, gsize bufsz, GError **error)
 	return g_steal_pointer(&hash);
 }
 
+#ifdef __linux__
 static gchar *
 fu_kernel_get_config_path(GError **error)
 {
@@ -331,6 +332,7 @@ fu_kernel_get_config_path(GError **error)
 	return NULL;
 #endif
 }
+#endif
 
 /**
  * fu_kernel_get_config:
