@@ -81,6 +81,7 @@ parts:
     plugin: meson
     meson-parameters: [--prefix=/,
                        -Defi_binary=false,
+                       -Ddocs=disabled,
                        -Dtests=false,
                        -Dbuild=all,
                        -Dintrospection=disabled,
