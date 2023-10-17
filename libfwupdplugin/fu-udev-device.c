@@ -99,7 +99,7 @@ fu_udev_device_get_sysfs_attr_as_uint32(GUdevDevice *udev_device, const gchar *n
 	tmp = g_udev_device_get_sysfs_attr(udev_device, name);
 	if (tmp == NULL)
 		return 0x0;
-	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT32 - 1, &error_local)) {
+	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT32, &error_local)) {
 		g_warning("reading %s for %s was invalid: %s", name, tmp, error_local->message);
 		return 0x0;
 	}
@@ -116,7 +116,7 @@ fu_udev_device_get_sysfs_attr_as_uint16(GUdevDevice *udev_device, const gchar *n
 	tmp = g_udev_device_get_sysfs_attr(udev_device, name);
 	if (tmp == NULL)
 		return 0x0;
-	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT16 - 1, &error_local)) {
+	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT16, &error_local)) {
 		g_warning("reading %s for %s was invalid: %s", name, tmp, error_local->message);
 		return 0x0;
 	}
@@ -133,7 +133,7 @@ fu_udev_device_get_sysfs_attr_as_uint8(GUdevDevice *udev_device, const gchar *na
 	tmp = g_udev_device_get_sysfs_attr(udev_device, name);
 	if (tmp == NULL)
 		return 0x0;
-	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT8 - 1, &error_local)) {
+	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT8, &error_local)) {
 		g_warning("reading %s for %s was invalid: %s",
 			  name,
 			  g_udev_device_get_sysfs_path(udev_device),
