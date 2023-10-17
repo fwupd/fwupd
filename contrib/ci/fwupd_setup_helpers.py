@@ -16,9 +16,6 @@ ENDC = "\033[0m"
 # Minimum version of markdown required
 MINIMUM_MARKDOWN = (3, 2, 0)
 
-# Minimum meson required
-MINIMUM_MESON = "0.61.0"
-
 
 def get_possible_profiles():
     return ["fedora", "centos", "debian", "ubuntu", "arch", "void"]
@@ -65,11 +62,23 @@ def test_markdown(debug):
         pip_install_package(debug, "markdown")
 
 
+def get_minimum_meson_version():
+    import re
+
+    directory = os.path.join(os.path.dirname(sys.argv[0]), "..", "..")
+
+    with open(os.path.join(directory, "meson.build"), "r") as f:
+        for line in f:
+            if "meson_version" in line:
+                return re.search(r"(\d+\.\d+\.\d+)", line).group(1)
+
+
 def test_meson(debug):
     from importlib.metadata import version, PackageNotFoundError
 
+    minimum = get_minimum_meson_version()
     try:
-        new_enough = version("meson") >= MINIMUM_MESON
+        new_enough = version("meson") >= minimum
     except PackageNotFoundError:
         import subprocess
 
@@ -77,7 +86,7 @@ def test_meson(debug):
             ver = (
                 subprocess.check_output(["meson", "--version"]).strip().decode("utf-8")
             )
-            new_enough = ver >= MINIMUM_MESON
+            new_enough = ver >= minimum
         except FileNotFoundError:
             new_enough = False
     if not new_enough:
