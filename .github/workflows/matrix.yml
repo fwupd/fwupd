@@ -30,7 +30,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
-          python3 -m pip install --user "meson >= 0.60.0"
+          sudo ./contrib/ci/fwupd_setup_helpers.py test-meson
       - name: Build
         run: |
           ./contrib/build-openbmc.sh --prefix=/home/runner/.root
