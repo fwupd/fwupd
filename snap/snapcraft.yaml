@@ -103,6 +103,7 @@ parts:
     source: .
     source-type: git
     override-build: |
+      ${CRAFT_PART_SRC}/contrib/ci/fwupd_setup_helpers.py test-meson
       craftctl default
       for name in ${CRAFT_PART_INSTALL}/lib/*/fwupd-*/libfwupd*; do
         mv ${name} `dirname ${name}`/.. ;\
