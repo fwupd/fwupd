@@ -86,6 +86,7 @@ parts:
                        -Dbuild=all,
                        -Dintrospection=disabled,
                        -Dman=false,
+                       -Dpython=/usr/bin/python3,
                        -Dplugin_flashrom=disabled,
                        -Dplugin_powerd=disabled,
                        -Dudevdir=$CRAFT_STAGE/lib/udev,
@@ -160,6 +161,7 @@ parts:
       - meson
       - modemmanager
       - pkg-config
+      - python3-pip
       - python3-cairo
       - python3-gi
       - python3-jinja2
