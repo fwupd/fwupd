@@ -1,5 +1,5 @@
 {
-  "id": "org.fwupd.hsi.Amd.PlatformRollbackProtection",
+  "id": "org.fwupd.hsi.Amd.RollbackProtection",
   "name": "AMD Secure Processor Rollback protection",
   "description": [
     "AMD SOCs include the ability to prevent a rollback attack by a rollback protection feature on the secure processor.",
