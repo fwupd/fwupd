@@ -41,6 +41,9 @@ enum { PROP_0, PROP_USB_DEVICE, PROP_LAST };
 
 #define GET_PRIVATE(o) (fu_usb_device_get_instance_private(o))
 
+#define FU_USB_DEVICE_CLAIM_INTERFACE_RETRIES 5
+#define FU_USB_DEVICE_CLAIM_INTERFACE_DELAY   500 /* ms */
+
 static void
 fu_usb_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -252,6 +255,18 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 					   "HUB",
 					   NULL);
 }
+
+static gboolean
+fu_usb_device_claim_interface_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuUsbDevice *self = FU_USB_DEVICE(device);
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	FuUsbDeviceInterface *iface = (FuUsbDeviceInterface *)user_data;
+	return g_usb_device_claim_interface(priv->usb_device,
+					    iface->number,
+					    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+					    error);
+}
 #endif
 
 static gboolean
@@ -286,10 +301,12 @@ fu_usb_device_open(FuDevice *device, GError **error)
 	/* claim interfaces */
 	for (guint i = 0; priv->interfaces != NULL && i < priv->interfaces->len; i++) {
 		FuUsbDeviceInterface *iface = g_ptr_array_index(priv->interfaces, i);
-		if (!g_usb_device_claim_interface(priv->usb_device,
-						  iface->number,
-						  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-						  error)) {
+		if (!fu_device_retry_full(device,
+					  fu_usb_device_claim_interface_cb,
+					  FU_USB_DEVICE_CLAIM_INTERFACE_RETRIES,
+					  FU_USB_DEVICE_CLAIM_INTERFACE_DELAY,
+					  iface,
+					  error)) {
 			g_prefix_error(error, "failed to claim interface 0x%02x: ", iface->number);
 			return FALSE;
 		}
