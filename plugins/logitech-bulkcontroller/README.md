@@ -27,6 +27,12 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 
 This plugin uses the following plugin-specific quirks:
 
+### `Flags=check-buffer-size`
+
+Query the device at startup to see if we can use a larger buffer size.
+
+Since: 1.9.7
+
 ## Update Behavior
 
 The peripheral firmware is deployed when the device is in normal runtime mode,
