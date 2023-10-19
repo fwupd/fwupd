@@ -15,13 +15,14 @@
 #include "fu-logitech-bulkcontroller-struct.h"
 
 #define HASH_TIMEOUT		      30000
-#define MAX_DATA_SIZE		      8192 /* 8k for both interfaces */
 #define UPD_INTERFACE_SUBPROTOCOL_ID  117
 #define SYNC_INTERFACE_SUBPROTOCOL_ID 118
 #define BULK_TRANSFER_TIMEOUT	      2500
 #define HASH_VALUE_SIZE		      16
 #define MAX_RETRIES		      5
 #define MAX_WAIT_COUNT		      150
+
+#define FU_LOGITECH_BULKCONTROLLER_DEVICE_CHECK_BUFFER_SIZE (1 << 0)
 
 enum { EP_OUT, EP_IN, EP_LAST };
 
@@ -38,6 +39,7 @@ struct _FuLogitechBulkcontrollerDevice {
 	guint update_progress; /* percentage value */
 	gboolean is_sync_transfer_in_progress;
 	GString *device_info_response_json;
+	gsize transfer_bufsz;
 };
 
 G_DEFINE_TYPE(FuLogitechBulkcontrollerDevice, fu_logitech_bulkcontroller_device, FU_TYPE_USB_DEVICE)
@@ -46,6 +48,7 @@ static void
 fu_logitech_bulkcontroller_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
+	fu_string_append_kx(str, idt, "BufferSize", self->transfer_bufsz);
 	fu_string_append_kx(str, idt, "SyncIface", self->sync_iface);
 	fu_string_append_kx(str, idt, "UpdateIface", self->update_iface);
 	fu_string_append(str,
@@ -271,19 +274,22 @@ static FuLogitechBulkcontrollerResponse *
 fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *self,
 						GError **error)
 {
-	guint8 buf[MAX_DATA_SIZE] = {0x0};
+	g_autofree guint8 *buf = g_malloc0(self->transfer_bufsz);
 	g_autoptr(GByteArray) st = NULL;
 	g_autoptr(FuLogitechBulkcontrollerResponse) response =
 	    fu_logitech_bulkcontroller_response_new();
 
 	if (!fu_logitech_bulkcontroller_device_recv(self,
 						    buf,
-						    sizeof(buf),
+						    self->transfer_bufsz,
 						    BULK_INTERFACE_SYNC,
 						    BULK_TRANSFER_TIMEOUT,
 						    error))
 		return NULL;
-	st = fu_struct_logitech_bulkcontroller_send_sync_res_parse(buf, sizeof(buf), 0x0, error);
+	st = fu_struct_logitech_bulkcontroller_send_sync_res_parse(buf,
+								   self->transfer_bufsz,
+								   0x0,
+								   error);
 	if (st == NULL)
 		return NULL;
 	response->cmd = fu_struct_logitech_bulkcontroller_send_sync_res_get_cmd(st);
@@ -592,8 +598,8 @@ fu_logitech_bulkcontroller_device_upd_send_cmd(FuLogitechBulkcontrollerDevice *s
 					       guint timeout,
 					       GError **error)
 {
-	guint8 buf_tmp[MAX_DATA_SIZE] = {0x0};
-	GByteArray buf_ack = {.data = buf_tmp, .len = sizeof(buf_tmp)};
+	g_autofree guint8 *buf_tmp = g_malloc0(self->transfer_bufsz);
+	GByteArray buf_ack = {.data = buf_tmp, .len = self->transfer_bufsz};
 	g_autoptr(GByteArray) buf_pkt = fu_struct_logitech_bulkcontroller_update_req_new();
 
 	fu_struct_logitech_bulkcontroller_update_req_set_cmd(buf_pkt, cmd);
@@ -613,7 +619,7 @@ fu_logitech_bulkcontroller_device_upd_send_cmd(FuLogitechBulkcontrollerDevice *s
 	/* receiving INIT ACK */
 	if (!fu_logitech_bulkcontroller_device_recv(self,
 						    buf_tmp,
-						    sizeof(buf_tmp),
+						    self->transfer_bufsz,
 						    BULK_INTERFACE_UPD,
 						    timeout,
 						    error))
@@ -832,7 +838,7 @@ fu_logitech_bulkcontroller_device_write_fw(FuLogitechBulkcontrollerDevice *self,
 	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(
 	    fw,
 	    0x0,
-	    MAX_DATA_SIZE - FU_STRUCT_LOGITECH_BULKCONTROLLER_UPDATE_REQ_SIZE);
+	    self->transfer_bufsz - FU_STRUCT_LOGITECH_BULKCONTROLLER_UPDATE_REQ_SIZE);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
@@ -1126,12 +1132,12 @@ fu_logitech_bulkcontroller_device_clear_queue_cb(FuDevice *device,
 						 GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
-	guint8 buf[MAX_DATA_SIZE] = {0x0};
+	g_autofree guint8 *buf = g_malloc0(self->transfer_bufsz);
 	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_logitech_bulkcontroller_device_recv(self,
 						    buf,
-						    sizeof(buf),
+						    self->transfer_bufsz,
 						    BULK_INTERFACE_SYNC,
 						    250, /* ms */
 						    &error_local)) {
@@ -1166,6 +1172,7 @@ fu_logitech_bulkcontroller_device_check_buffer_size(FuLogitechBulkcontrollerDevi
 						    GError **error)
 {
 	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_logitech_bulkcontroller_device_sync_send_cmd(
 		self,
@@ -1180,9 +1187,12 @@ fu_logitech_bulkcontroller_device_check_buffer_size(FuLogitechBulkcontrollerDevi
 	    self,
 	    FU_LOGITECH_BULKCONTROLLER_CMD_CHECK_BUFFERSIZE,
 	    0x0, /* always zero */
-	    error);
-	if (buf == NULL)
-		return FALSE;
+	    &error_local);
+	if (buf != NULL) {
+		self->transfer_bufsz = 16 * 1024;
+	} else {
+		g_debug("sticking to 8k buffersize: %s", error_local->message);
+	}
 
 	/* success */
 	return TRUE;
@@ -1206,10 +1216,13 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* Logitech Sync seems to do this as a sanity check */
-	if (!fu_logitech_bulkcontroller_device_check_buffer_size(self, error)) {
-		g_prefix_error(error, "failed to check buffer size: ");
-		return FALSE;
+	/* check if the device supports a 16kb transfer buffer */
+	if (fu_device_has_private_flag(device,
+				       FU_LOGITECH_BULKCONTROLLER_DEVICE_CHECK_BUFFER_SIZE)) {
+		if (!fu_logitech_bulkcontroller_device_check_buffer_size(self, error)) {
+			g_prefix_error(error, "failed to check buffer size: ");
+			return FALSE;
+		}
 	}
 
 	/* device supports modes of Device (supported), Appliance and BYOD (both unsupported) */
@@ -1247,6 +1260,7 @@ fu_logitech_bulkcontroller_device_set_progress(FuDevice *self, FuProgress *progr
 static void
 fu_logitech_bulkcontroller_device_init(FuLogitechBulkcontrollerDevice *self)
 {
+	self->transfer_bufsz = 8 * 1024;
 	self->device_info_response_json = g_string_new(NULL);
 	fu_device_add_protocol(FU_DEVICE(self), "com.logitech.vc.proto");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
@@ -1254,6 +1268,9 @@ fu_logitech_bulkcontroller_device_init(FuLogitechBulkcontrollerDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10 * 60 * 1000); /* >1 min to finish init */
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_LOGITECH_BULKCONTROLLER_DEVICE_CHECK_BUFFER_SIZE,
+					"check-buffer-size");
 
 	/* these are unrecoverable */
 	fu_device_retry_add_recovery(FU_DEVICE(self),
