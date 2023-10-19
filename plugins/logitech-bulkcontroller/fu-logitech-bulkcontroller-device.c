@@ -727,9 +727,11 @@ fu_logitech_bulkcontroller_device_json_parser(FuLogitechBulkcontrollerDevice *se
 	if (json_object_has_member(json_device, "sw"))
 		fu_device_set_version(FU_DEVICE(self),
 				      json_object_get_string_member(json_device, "sw"));
-	if (json_object_has_member(json_device, "type"))
-		fu_device_add_instance_id(FU_DEVICE(self),
-					  json_object_get_string_member(json_device, "type"));
+	if (json_object_has_member(json_device, "type")) {
+		fu_device_add_instance_id_full(FU_DEVICE(self),
+					       json_object_get_string_member(json_device, "type"),
+					       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+	}
 	if (json_object_has_member(json_device, "status"))
 		self->status = json_object_get_int_member(json_device, "status");
 	if (json_object_has_member(json_device, "updateStatus"))
