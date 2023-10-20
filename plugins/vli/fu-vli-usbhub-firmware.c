@@ -52,6 +52,7 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 	gsize bufsz = 0;
 	guint16 adr_ofs = 0;
 	guint16 version = 0x0;
+	guint32 adr_ofs32 = 0;
 	guint8 tmp = 0x0;
 	guint8 fwtype = 0x0;
 	guint8 strapping1;
@@ -94,6 +95,28 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 		version |= (strapping1 >> 4) & 0x07;
 		if ((version & 0x0f) == 0x04)
 			version += 1;
+		break;
+	case 0x0566:
+		/* U4ID_Address_In_FW_Zone */
+		if (!fu_memread_uint24_safe(buf,
+					    bufsz,
+					    0x3F80,
+					    &adr_ofs32,
+					    G_LITTLE_ENDIAN,
+					    error)) {
+			g_prefix_error(error, "failed to get offset addr: ");
+			return FALSE;
+		}
+		if (!fu_memread_uint16_safe(buf,
+					    bufsz,
+					    adr_ofs32 - 0x20000 + 0x2000 + 4,
+					    &version,
+					    G_LITTLE_ENDIAN,
+					    error)) {
+			g_prefix_error(error, "failed to get offset version: ");
+			return FALSE;
+		}
+		version |= (strapping1 >> 4) & 0x07;
 		break;
 	default:
 		/* U3ID_Address_In_FW_Zone */
@@ -263,6 +286,35 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 		/* VL122 == VT3592 */
 		self->device_kind = FU_VLI_DEVICE_KIND_VL122;
 		break;
+	case 0x0566: {
+		/* VL830 VL832 = VT3566 */
+		guint32 binveraddr = 0;
+		guint8 binver = 0;
+		if (!fu_memread_uint24_safe(buf,
+					    bufsz,
+					    0x3FBC,
+					    &binveraddr,
+					    G_LITTLE_ENDIAN,
+					    error)) {
+			g_prefix_error(error, "failed to get binveraddr: ");
+			return FALSE;
+		}
+		if (!fu_memread_uint8_safe(buf,
+					   bufsz,
+					   binveraddr - 0x20000 + 0x2000,
+					   &binver,
+					   error)) {
+			g_prefix_error(error, "failed to get binver2: ");
+			return FALSE;
+		}
+
+		/* VL813 == VT3470 */
+		if (binver <= 0xC0)
+			self->device_kind = FU_VLI_DEVICE_KIND_VL830;
+		else
+			self->device_kind = FU_VLI_DEVICE_KIND_VL832;
+		break;
+	}
 	default:
 		break;
 	}
