@@ -798,8 +798,8 @@ fu_logitech_bulkcontroller_device_ensure_info(FuLogitechBulkcontrollerDevice *se
 	 * upgrade
 	 */
 	if (send_req) {
-		g_autoptr(GByteArray) device_request = g_byte_array_new();
-		device_request = proto_manager_generate_get_device_info_request();
+		g_autoptr(GByteArray) device_request =
+		    proto_manager_generate_get_device_info_request();
 		buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
 		if (buf == NULL)
 			return FALSE;
