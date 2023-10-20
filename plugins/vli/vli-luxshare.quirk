@@ -15,3 +15,8 @@ Plugin = vli
 GType = FuVliPdDevice
 Flags = skips-rom
 VliDeviceKind = vl105
+# VL830 USB4 Hub
+[USB\VID_208E&PID_2830]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2

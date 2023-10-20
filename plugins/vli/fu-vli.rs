@@ -17,7 +17,8 @@ struct VliUsbhubHdr {
     usb2_fw_addr: u16be,
     usb2_fw_sz: u16be,
     usb3_fw_addr_high: u8,
-    _unknown_0d: [u8; 3],
+    usb3_fw_sz_high: u8,
+    _unknown_0e: [u8; 2],
     usb2_fw_addr_high: u8,
     _unknown_11: [u8; 10],
     inverse_pe41: u8,
@@ -67,6 +68,7 @@ enum VliDeviceKind {
     Vl822q8 = 0xb822, // guessed
     Vl822t = 0xc822, // guessed
     Vl830 = 0x0830,
+    Vl832 = 0x0832,
     Msp430 = 0xf430,  // guessed
     Ps186 = 0xf186,   // guessed
     Rtd21xx = 0xff00, // guessed

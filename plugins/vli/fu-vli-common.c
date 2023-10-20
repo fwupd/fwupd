@@ -57,37 +57,39 @@ fu_vli_common_device_kind_get_size(FuVliDeviceKind device_kind)
 	if (device_kind == FU_VLI_DEVICE_KIND_VL813)
 		return 0x8000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL815)
-		return 0x20000 * 2;
+		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL817)
-		return 0x20000 * 2;
+		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL817S)
-		return 0x20000 * 2;
+		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL819Q7)
-		return 0x20000 * 2;
+		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL819Q8)
-		return 0x20000 * 2;
+		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL820Q7)
-		return 0x20000 * 2;
+		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL820Q8)
-		return 0x20000 * 2;
+		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL821Q7)
-		return 0x20000 * 2;
+		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL821Q8)
-		return 0x20000 * 2;
+		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL822T)
-		return 0x20000 * 2;
+		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL822Q5)
-		return 0x20000 * 2;
+		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL822Q7)
-		return 0x20000 * 2;
+		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL822Q8)
-		return 0x20000 * 2;
+		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_PS186)
 		return 0x40000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL650)
 		return 0x40000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL830)
-		return 0x100000;
+		return 0x20000;
+	if (device_kind == FU_VLI_DEVICE_KIND_VL832)
+		return 0x28000;
 	return 0x0;
 }
 
