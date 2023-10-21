@@ -1070,7 +1070,7 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency id="policykit-1">
+  <dependency id="polkitd">
     <distro id="arch">
       <package variant="x86_64">polkit</package>
     </distro>
@@ -1085,17 +1085,11 @@
       <package variant="x86_64">polkit</package>
     </distro>
     <distro id="debian">
-      <control>
-        <version>(>> 0.105-14)</version>
-      </control>
       <package variant="x86_64" />
       <package variant="s390x" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
-      <control>
-        <version>(>> 0.105-14)</version>
-      </control>
       <package variant="x86_64" />
     </distro>
   </dependency>
