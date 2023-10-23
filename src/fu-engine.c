@@ -5011,9 +5011,10 @@ fu_engine_get_silo_from_blob(FuEngine *self, GBytes *blob_cab, GError **error)
 
 	/* load file */
 	fu_engine_set_status(self, FWUPD_STATUS_DECOMPRESSING);
-	fu_cabinet_set_size_max(cabinet, fu_engine_config_get_archive_size_max(self->config));
+	fu_firmware_set_size_max(FU_FIRMWARE(cabinet),
+				 fu_engine_config_get_archive_size_max(self->config));
 	fu_cabinet_set_jcat_context(cabinet, self->jcat_context);
-	if (!fu_cabinet_parse(cabinet, blob_cab, FU_CABINET_PARSE_FLAG_NONE, error))
+	if (!fu_firmware_parse(FU_FIRMWARE(cabinet), blob_cab, FWUPD_INSTALL_FLAG_NONE, error))
 		return NULL;
 	return fu_cabinet_get_silo(cabinet);
 }
@@ -8704,6 +8705,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 
 	/* add the "built-in" firmware types */
 	fu_context_add_firmware_gtype(self->ctx, "raw", FU_TYPE_FIRMWARE);
+	fu_context_add_firmware_gtype(self->ctx, "cab", FU_TYPE_CAB_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "dfu", FU_TYPE_DFU_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "fdt", FU_TYPE_FDT_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "csv", FU_TYPE_CSV_FIRMWARE);

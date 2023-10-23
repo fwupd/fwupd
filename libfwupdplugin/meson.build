@@ -1,7 +1,3 @@
-if get_option('tests')
-subdir('tests')
-endif
-
 fwupdplugin_version_h = configure_file(
   input: 'fu-version.h.in',
   output: 'fu-version.h',
@@ -10,6 +6,7 @@ fwupdplugin_version_h = configure_file(
 
 fwupdplugin_structs = [
   'fu-acpi-table.rs', # fuzzing
+  'fu-cab.rs', # fuzzing
   'fu-cfu-firmware.rs', # fuzzing
   'fu-coswid.rs', # fuzzing
   'fu-dfu-firmware.rs', # fuzzing
@@ -57,6 +54,8 @@ fwupdplugin_src = [
   'fu-bluez-device.c',
   'fu-byte-array.c', # fuzzing
   'fu-bytes.c', # fuzzing
+  'fu-cab-firmware.c', # fuzzing
+  'fu-cab-image.c', # fuzzing
   'fu-cabinet.c',
   'fu-cfi-device.c',
   'fu-cfu-offer.c', # fuzzing
@@ -178,6 +177,8 @@ fwupdplugin_headers = [
   'fu-bluez-device.h',
   'fu-byte-array.h',
   'fu-bytes.h',
+  'fu-cab-firmware.h',
+  'fu-cab-image.h',
   'fu-cabinet.h',
   'fu-cfi-device.h',
   'fu-cfu-offer.h',
@@ -284,7 +285,6 @@ pkgg_requires = [ 'gio-2.0',
                   'fwupd',
                   'json-glib-1.0',
                   'libarchive',
-                  'libgcab-1.0',
                   'xmlb',
                   'jcat',
                   'gusb'
@@ -294,7 +294,7 @@ library_deps = [
   introspection_deps,
   gmodule,
   libjsonglib,
-  libgcab,
+  zlib,
   valgrind,
   libjcat,
   lzma,
@@ -379,6 +379,28 @@ if introspection.allowed()
     ],
     install: false
   )
+endif
+
+gcab = executable(
+  'gcab',
+  sources: [
+    'fu-gcab.c',
+  ],
+  include_directories: [
+    root_incdir,
+    fwupd_incdir,
+  ],
+  dependencies: [
+    library_deps
+  ],
+  link_with: [
+    fwupd,
+    fwupdplugin
+  ],
+)
+
+if get_option('tests')
+  subdir('tests')
 endif
 
 if get_option('tests')

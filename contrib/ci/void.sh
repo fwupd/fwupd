@@ -21,7 +21,6 @@ xbps-install -Suy python3
 rm -rf build
 meson build \
  -Dgusb:tests=false \
- -Dgcab:docs=false \
  -Dconsolekit=disabled \
  -Dsystemd=disabled \
  -Doffline=disabled \

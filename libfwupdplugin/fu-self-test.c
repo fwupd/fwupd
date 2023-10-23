@@ -9,7 +9,6 @@
 #include <fwupdplugin.h>
 
 #include <glib/gstdio.h>
-#include <libgcab.h>
 #include <string.h>
 
 #include "fwupd-bios-setting-private.h"
@@ -3919,6 +3918,10 @@ fu_firmware_builder_round_trip_func(void)
 		const gchar *xml_fn;
 		const gchar *checksum;
 	} map[] = {
+	    {FU_TYPE_CAB_FIRMWARE, "cab.builder.xml", "a708f47b1a46377f1ea420597641ffe9a40abd75"},
+	    {FU_TYPE_CAB_FIRMWARE,
+	     "cab-compressed.builder.xml",
+	     "d46cddf2179b42213e67b482de55d8ea935b38f8"},
 	    {FU_TYPE_DFUSE_FIRMWARE,
 	     "dfuse.builder.xml",
 	     "c1ff429f0e381c8fe8e1b2ee41a5a9a79e2f2ff7"},

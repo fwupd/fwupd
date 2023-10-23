@@ -9,7 +9,6 @@
 #include <fwupdplugin.h>
 
 #include <glib/gstdio.h>
-#include <libgcab.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -1624,12 +1623,6 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 	g_autoptr(XbSilo) silo = NULL;
 
-#if defined(__s390x__)
-	/* See https://github.com/fwupd/fwupd/issues/318 for more information */
-	g_test_skip("Skipping HWID test on s390x due to known problem with gcab");
-	return;
-#endif
-
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
 
@@ -1703,12 +1696,6 @@ fu_engine_get_details_added_func(gconstpointer user_data)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
-#if defined(__s390x__)
-	/* See https://github.com/fwupd/fwupd/issues/318 for more information */
-	g_test_skip("Skipping HWID test on s390x due to known problem with gcab");
-	return;
-#endif
-
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
 
@@ -1762,12 +1749,6 @@ fu_engine_get_details_missing_func(gconstpointer user_data)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
-
-#if defined(__s390x__)
-	/* See https://github.com/fwupd/fwupd/issues/318 for more information */
-	g_test_skip("Skipping HWID test on s390x due to known problem with gcab");
-	return;
-#endif
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
@@ -4011,28 +3992,21 @@ fu_history_func(gconstpointer user_data)
 }
 
 static GBytes *
-_build_cab(GCabCompression compression, ...)
+_build_cab(gboolean compressed, ...)
 {
-	gboolean ret;
 	va_list args;
-	g_autoptr(GCabCabinet) cabinet = NULL;
-	g_autoptr(GCabFolder) cabfolder = NULL;
+	g_autoptr(FuCabFirmware) cabinet = fu_cab_firmware_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GOutputStream) op = NULL;
+	g_autoptr(GBytes) cabinet_blob = NULL;
 
-	/* create a new archive */
-	cabinet = gcab_cabinet_new();
-	cabfolder = gcab_folder_new(compression);
-	ret = gcab_cabinet_add_folder(cabinet, cabfolder, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	fu_cab_firmware_set_compressed(cabinet, compressed);
 
 	/* add each file */
-	va_start(args, compression);
+	va_start(args, compressed);
 	do {
 		const gchar *fn;
 		const gchar *text;
-		g_autoptr(GCabFile) cabfile = NULL;
+		g_autoptr(FuCabImage) img = fu_cab_image_new();
 		g_autoptr(GBytes) blob = NULL;
 
 		/* get filename */
@@ -4048,22 +4022,17 @@ _build_cab(GCabCompression compression, ...)
 
 		/* add a GCabFile to the cabinet */
 		blob = g_bytes_new_static(text, strlen(text));
-		cabfile = gcab_file_new_with_bytes(fn, blob);
-		ret = gcab_folder_add_file(cabfolder, cabfile, FALSE, NULL, &error);
-		g_assert_no_error(error);
-		g_assert_true(ret);
+		fu_firmware_set_id(FU_FIRMWARE(img), fn);
+		fu_firmware_set_bytes(FU_FIRMWARE(img), blob);
+		fu_firmware_add_image(FU_FIRMWARE(cabinet), FU_FIRMWARE(img));
 	} while (TRUE);
 	va_end(args);
 
 	/* write the archive to a blob */
-	op = g_memory_output_stream_new_resizable();
-	ret = gcab_cabinet_write_simple(cabinet, op, NULL, NULL, NULL, &error);
+	cabinet_blob = fu_firmware_write(FU_FIRMWARE(cabinet), &error);
 	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = g_output_stream_close(op, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	return g_memory_output_stream_steal_as_bytes(G_MEMORY_OUTPUT_STREAM(op));
+	g_assert_nonnull(cabinet_blob);
+	return g_steal_pointer(&cabinet_blob);
 }
 
 static void
@@ -4110,7 +4079,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 
 	/* create CAB file */
 	blob = _build_cab(
-	    GCAB_COMPRESSION_NONE,
+	    FALSE,
 	    "acme.metainfo.xml",
 	    "<component type=\"firmware\">\n"
 	    "  <id>com.acme.example.firmware</id>\n"
@@ -4730,7 +4699,7 @@ fu_common_store_cab_func(void)
 
 	/* create silo */
 	blob = _build_cab(
-	    GCAB_COMPRESSION_NONE,
+	    FALSE,
 	    "acme.metainfo.xml",
 	    "<component type=\"firmware\">\n"
 	    "  <id>com.acme.example.firmware</id>\n"
@@ -4798,7 +4767,7 @@ fu_common_store_cab_artifact_func(void)
 
 	/* create silo (sha256, using artifacts object) */
 	blob1 = _build_cab(
-	    GCAB_COMPRESSION_NONE,
+	    FALSE,
 	    "acme.metainfo.xml",
 	    "<component type=\"firmware\">\n"
 	    "  <id>com.acme.example.firmware</id>\n"
@@ -4826,7 +4795,7 @@ fu_common_store_cab_artifact_func(void)
 	g_clear_object(&silo);
 
 	/* create silo (sha1, using artifacts object; mixed case) */
-	blob2 = _build_cab(GCAB_COMPRESSION_NONE,
+	blob2 = _build_cab(FALSE,
 			   "acme.metainfo.xml",
 			   "<component type=\"firmware\">\n"
 			   "  <id>com.acme.example.firmware</id>\n"
@@ -4855,7 +4824,7 @@ fu_common_store_cab_artifact_func(void)
 
 	/* create silo (sha512, using artifacts object; lower case) */
 	blob3 =
-	    _build_cab(GCAB_COMPRESSION_NONE,
+	    _build_cab(FALSE,
 		       "acme.metainfo.xml",
 		       "<component type=\"firmware\">\n"
 		       "  <id>com.acme.example.firmware</id>\n"
@@ -4885,7 +4854,7 @@ fu_common_store_cab_artifact_func(void)
 	g_clear_object(&silo);
 
 	/* create silo (legacy release object) */
-	blob4 = _build_cab(GCAB_COMPRESSION_NONE,
+	blob4 = _build_cab(FALSE,
 			   "acme.metainfo.xml",
 			   "<component type=\"firmware\">\n"
 			   "  <id>com.acme.example.firmware</id>\n"
@@ -4922,7 +4891,7 @@ fu_common_store_cab_unsigned_func(void)
 	g_autoptr(XbQuery) query = NULL;
 
 	/* create silo */
-	blob = _build_cab(GCAB_COMPRESSION_NONE,
+	blob = _build_cab(FALSE,
 			  "acme.metainfo.xml",
 			  "<component type=\"firmware\">\n"
 			  "  <id>com.acme.example.firmware</id>\n"
@@ -4969,7 +4938,7 @@ fu_common_store_cab_sha256_func(void)
 
 	/* create silo */
 	blob = _build_cab(
-	    GCAB_COMPRESSION_NONE,
+	    FALSE,
 	    "acme.metainfo.xml",
 	    "<component type=\"firmware\">\n"
 	    "  <id>com.acme.example.firmware</id>\n"
@@ -5001,7 +4970,7 @@ fu_common_store_cab_folder_func(void)
 	g_autoptr(XbQuery) query = NULL;
 
 	/* create silo */
-	blob = _build_cab(GCAB_COMPRESSION_NONE,
+	blob = _build_cab(FALSE,
 			  "lvfs\\acme.metainfo.xml",
 			  "<component type=\"firmware\">\n"
 			  "  <id>com.acme.example.firmware</id>\n"
@@ -5044,7 +5013,7 @@ fu_common_store_cab_error_no_metadata_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	blob = _build_cab(GCAB_COMPRESSION_NONE, "foo.txt", "hello", "bar.txt", "world", NULL);
+	blob = _build_cab(FALSE, "foo.txt", "hello", "bar.txt", "world", NULL);
 	silo = fu_cabinet_build_silo(blob, 10240, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null(silo);
@@ -5057,7 +5026,7 @@ fu_common_store_cab_error_wrong_size_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	blob = _build_cab(GCAB_COMPRESSION_NONE,
+	blob = _build_cab(FALSE,
 			  "acme.metainfo.xml",
 			  "<component type=\"firmware\">\n"
 			  "  <id>com.acme.example.firmware</id>\n"
@@ -5084,7 +5053,7 @@ fu_common_store_cab_error_missing_file_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	blob = _build_cab(GCAB_COMPRESSION_NONE,
+	blob = _build_cab(FALSE,
 			  "acme.metainfo.xml",
 			  "<component type=\"firmware\">\n"
 			  "  <id>com.acme.example.firmware</id>\n"
@@ -5109,7 +5078,7 @@ fu_common_store_cab_error_size_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	blob = _build_cab(GCAB_COMPRESSION_NONE,
+	blob = _build_cab(FALSE,
 			  "acme.metainfo.xml",
 			  "<component type=\"firmware\">\n"
 			  "  <id>com.acme.example.firmware</id>\n"
@@ -5132,7 +5101,7 @@ fu_common_store_cab_error_wrong_checksum_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	blob = _build_cab(GCAB_COMPRESSION_NONE,
+	blob = _build_cab(FALSE,
 			  "acme.metainfo.xml",
 			  "<component type=\"firmware\">\n"
 			  "  <id>com.acme.example.firmware</id>\n"

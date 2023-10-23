@@ -131,7 +131,6 @@ parts:
       - fwupd-unsigned
       - git
       - gettext
-      - gcab
       - gnu-efi
       - fwupd-unsigned-dev
       - libcurl4-openssl-dev
@@ -139,7 +138,6 @@ parts:
       - libcbor-dev
       - libcairo-dev
       - libgudev-1.0-dev
-      - libgcab-dev
       - libglib2.0-dev
       - libgnutls28-dev
       - libgpgme11-dev
@@ -175,7 +173,6 @@ parts:
       - libnghttp2-14
       - libpsl5
       - librtmp1
-      - libgcab-1.0-0
       - libarchive13
       - libcurl4
       - libcbor0.8

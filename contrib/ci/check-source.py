@@ -23,14 +23,18 @@ def test_files() -> int:
         if fn.startswith("contrib/ci"):
             continue
         with open(fn, "rb") as f:
-            src = f.read().decode()
-        for token, msg in {
-            "g_error(": "Use GError instead",
-            "g_byte_array_free_to_bytes(": "Use g_bytes_new() instead",
-        }.items():
-            if src.find(token) != -1:
-                print(f"{fn} contains blocked token {token}: {msg}")
-                rc = 1
+            for line in f.read().decode().split("\n"):
+                if line.find("nocheck") != -1:
+                    continue
+                for token, msg in {
+                    "g_error(": "Use GError instead",
+                    "g_byte_array_free_to_bytes(": "Use g_bytes_new() instead",
+                }.items():
+                    if line.find(token) != -1:
+                        print(
+                            f"{fn} contains blocked token {token}: {msg} -- use a nocheck comment to ignore"
+                        )
+                        rc = 1
     return rc
 
 

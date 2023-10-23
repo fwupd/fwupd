@@ -40,7 +40,7 @@ jobs:
     steps:
     - name: install dependencies
       run: |
-        brew install meson gcab libgusb gobject-introspection sqlite libarchive json-glib curl gnutls protobuf-c vala gi-docgen
+        brew install meson libgusb gobject-introspection sqlite libarchive json-glib curl gnutls protobuf-c vala gi-docgen
         python3 -m pip install --user jinja2
     - uses: actions/checkout@v4
     - name: configure

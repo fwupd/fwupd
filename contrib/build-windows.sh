@@ -27,11 +27,6 @@ meson setup .. \
     -Dfirmware-packager=false \
     -Dmetainfo=false \
     -Dcompat_cli=false \
-    -Dgcab:introspection=false \
-    -Dgcab:docs=false \
-    -Dgcab:nls=false \
-    -Dgcab:vapi=false \
-    -Dgcab:tests=false \
     -Dlibxmlb:introspection=false \
     -Dlibxmlb:gtkdoc=false \
     -Dlibjcat:man=false \
@@ -44,7 +39,7 @@ meson setup .. \
     -Dgusb:vapi=false
 
 # run tests
-export WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/;$build/libfwupd/;$build/libfwupdplugin/;$build/subprojects/libxmlb/src/;$build/subprojects/gcab/libgcab/;$build/subprojects/libjcat/libjcat/;$build/subprojects/gusb/gusb/"
+export WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/;$build/libfwupd/;$build/libfwupdplugin/;$build/subprojects/libxmlb/src/;$build/subprojects/libjcat/libjcat/;$build/subprojects/gusb/gusb/"
 ninja -C "$build" install
 ninja -C "$build" test
 

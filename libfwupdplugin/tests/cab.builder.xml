@@ -1,0 +1,11 @@
+<firmware gtype="FuCabFirmware">
+  <compressed>false</compressed>
+  <firmware gtype="FuCabImage">
+    <id>hello.txt</id>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+  <firmware gtype="FuCabImage">
+    <id>goodbye.txt</id>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+</firmware>

@@ -8,13 +8,11 @@
 
 #include "config.h"
 
-#include <gio/gio.h>
-#include <libgcab.h>
-
 #include "fwupd-common.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
 
+#include "fu-cab-image.h"
 #include "fu-cabinet.h"
 #include "fu-common.h"
 #include "fu-string.h"
@@ -28,9 +26,7 @@
  */
 
 struct _FuCabinet {
-	GObject parent_instance;
-	guint64 size_max;
-	GCabCabinet *gcab_cabinet;
+	FuCabFirmware parent_instance;
 	gchar *container_checksum;
 	gchar *container_checksum_alt;
 	XbBuilder *builder;
@@ -39,66 +35,7 @@ struct _FuCabinet {
 	JcatFile *jcat_file;
 };
 
-G_DEFINE_TYPE(FuCabinet, fu_cabinet, G_TYPE_OBJECT)
-
-static void
-fu_cabinet_finalize(GObject *obj)
-{
-	FuCabinet *self = FU_CABINET(obj);
-	if (self->silo != NULL)
-		g_object_unref(self->silo);
-	if (self->builder != NULL)
-		g_object_unref(self->builder);
-	g_free(self->container_checksum);
-	g_free(self->container_checksum_alt);
-	g_object_unref(self->gcab_cabinet);
-	g_object_unref(self->jcat_context);
-	g_object_unref(self->jcat_file);
-	G_OBJECT_CLASS(fu_cabinet_parent_class)->finalize(obj);
-}
-
-static void
-fu_cabinet_class_init(FuCabinetClass *klass)
-{
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->finalize = fu_cabinet_finalize;
-}
-
-static void
-fu_cabinet_init(FuCabinet *self)
-{
-	self->size_max = 1024 * 1024 * 100;
-	self->gcab_cabinet = gcab_cabinet_new();
-#ifdef HAVE_GCAB_CABINET_ADD_ALLOWED_COMPRESSION
-	gcab_cabinet_add_allowed_compression(self->gcab_cabinet, GCAB_COMPRESSION_NONE);
-	gcab_cabinet_add_allowed_compression(self->gcab_cabinet, GCAB_COMPRESSION_MSZIP);
-#endif
-	self->builder = xb_builder_new();
-	self->jcat_file = jcat_file_new();
-	self->jcat_context = jcat_context_new();
-#if LIBJCAT_CHECK_VERSION(0, 1, 13)
-	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA256);
-	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA512);
-	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_PKCS7);
-	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_GPG);
-#endif
-}
-
-/**
- * fu_cabinet_set_size_max:
- * @self: a #FuCabinet
- * @size_max: size in bytes
- *
- * Sets the maximum size of the decompressed cabinet file.
- *
- * Since: 1.4.0
- **/
-void
-fu_cabinet_set_size_max(FuCabinet *self, guint64 size_max)
-{
-	g_return_if_fail(FU_IS_CABINET(self));
-	self->size_max = size_max;
-}
+G_DEFINE_TYPE(FuCabinet, fu_cabinet, FU_TYPE_CAB_FIRMWARE)
 
 /**
  * fu_cabinet_set_jcat_context: (skip):
@@ -138,19 +75,6 @@ fu_cabinet_get_silo(FuCabinet *self)
 	return g_object_ref(self->silo);
 }
 
-static GCabFile *
-fu_cabinet_get_file_by_name(FuCabinet *self, const gchar *basename)
-{
-	GPtrArray *folders = gcab_cabinet_get_folders(self->gcab_cabinet);
-	for (guint i = 0; i < folders->len; i++) {
-		GCabFolder *cabfolder = GCAB_FOLDER(g_ptr_array_index(folders, i));
-		GCabFile *cabfile = gcab_folder_get_file_by_name(cabfolder, basename);
-		if (cabfile != NULL)
-			return cabfile;
-	}
-	return NULL;
-}
-
 /**
  * fu_cabinet_add_file:
  * @self: a #FuCabinet
@@ -164,36 +88,15 @@ fu_cabinet_get_file_by_name(FuCabinet *self, const gchar *basename)
 void
 fu_cabinet_add_file(FuCabinet *self, const gchar *basename, GBytes *data)
 {
-	GPtrArray *folders;
-	GCabFile *gcab_file_old;
-	g_autoptr(GCabFolder) gcab_folder = NULL;
-	g_autoptr(GCabFile) gcab_file = NULL;
+	g_autoptr(FuCabImage) img = fu_cab_image_new();
 
 	g_return_if_fail(FU_IS_CABINET(self));
 	g_return_if_fail(basename != NULL);
 	g_return_if_fail(data != NULL);
 
-	/* existing file? */
-	gcab_file_old = fu_cabinet_get_file_by_name(self, basename);
-	if (gcab_file_old != NULL) {
-#ifdef HAVE_GCAB_FILE_SET_BYTES
-		gcab_file_set_bytes(gcab_file_old, data);
-#else
-		g_object_set(gcab_file_old, "bytes", data, NULL);
-#endif
-		return;
-	}
-
-	/* new file, in a possibly new folder */
-	folders = gcab_cabinet_get_folders(self->gcab_cabinet);
-	if (folders->len == 0) {
-		gcab_folder = gcab_folder_new(GCAB_COMPRESSION_NONE);
-		gcab_cabinet_add_folder(self->gcab_cabinet, gcab_folder, NULL);
-	} else {
-		gcab_folder = g_object_ref(GCAB_FOLDER(g_ptr_array_index(folders, 0)));
-	}
-	gcab_file = gcab_file_new_with_bytes(basename, data);
-	gcab_folder_add_file(gcab_folder, gcab_file, FALSE, NULL, NULL);
+	fu_firmware_set_bytes(FU_FIRMWARE(img), data);
+	fu_firmware_set_id(FU_FIRMWARE(img), basename);
+	fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(img));
 }
 
 /**
@@ -211,37 +114,27 @@ fu_cabinet_add_file(FuCabinet *self, const gchar *basename, GBytes *data)
 GBytes *
 fu_cabinet_get_file(FuCabinet *self, const gchar *basename, GError **error)
 {
-	GCabFile *cabfile;
-	GBytes *blob;
+	g_autoptr(FuFirmware) img = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_CABINET(self), NULL);
 	g_return_val_if_fail(basename != NULL, NULL);
 
-	cabfile = fu_cabinet_get_file_by_name(self, basename);
-	if (cabfile == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "cannot find %s in archive",
-			    basename);
-		return NULL;
-	}
-	blob = gcab_file_get_bytes(cabfile);
-	if (blob == NULL) {
+	img = fu_firmware_get_image_by_id(FU_FIRMWARE(self), basename, &error_local);
+	if (img == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "no GBytes from GCabFile firmware");
+				    error_local->message);
 		return NULL;
 	}
-	return g_bytes_ref(blob);
+	return fu_firmware_get_bytes(img, error);
 }
 
 /* sets the firmware and signature blobs on XbNode */
 static gboolean
 fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 {
-	GCabFile *cabfile;
 	GBytes *blob;
 	const gchar *csum_filename = NULL;
 	g_autofree gchar *basename = NULL;
@@ -278,23 +171,9 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 
 	/* get the main firmware file */
 	basename = g_path_get_basename(csum_filename);
-	cabfile = fu_cabinet_get_file_by_name(self, basename);
-	if (cabfile == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "cannot find %s in archive",
-			    basename);
+	blob = fu_cabinet_get_file(self, basename, error);
+	if (blob == NULL)
 		return FALSE;
-	}
-	blob = gcab_file_get_bytes(cabfile);
-	if (blob == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "no GBytes from GCabFile firmware");
-		return FALSE;
-	}
 
 	/* set the blob */
 	xb_node_set_data(release, "fwupd::FirmwareBlob", blob);
@@ -359,23 +238,21 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 		/* legacy GPG detached signature */
 	} else {
 		g_autofree gchar *basename_sig = NULL;
+		g_autoptr(FuFirmware) img_sig = NULL;
+
 		basename_sig = g_strdup_printf("%s.asc", basename);
-		cabfile = fu_cabinet_get_file_by_name(self, basename_sig);
-		if (cabfile != NULL) {
-			GBytes *data_sig;
+		img_sig = fu_firmware_get_image_by_id(FU_FIRMWARE(FU_CAB_FIRMWARE(self)),
+						      basename_sig,
+						      NULL);
+		if (img_sig != NULL) {
 			g_autoptr(JcatResult) jcat_result = NULL;
 			g_autoptr(JcatBlob) jcat_blob = NULL;
+			g_autoptr(GBytes) data_sig = NULL;
 			g_autoptr(GError) error_local = NULL;
 
-			data_sig = gcab_file_get_bytes(cabfile);
-			if (data_sig == NULL) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "no GBytes from GCabFile %s",
-					    basename_sig);
+			data_sig = fu_firmware_get_bytes(img_sig, error);
+			if (data_sig == NULL)
 				return FALSE;
-			}
 			jcat_blob = jcat_blob_new(JCAT_BLOB_KIND_GPG, data_sig);
 			jcat_result = jcat_context_verify_blob(self->jcat_context,
 							       blob,
@@ -543,10 +420,10 @@ fu_cabinet_fixup_strip_inner_text_cb(XbBuilderFixup *self,
 	return TRUE;
 }
 
-/* adds each GCabFile to the silo */
+/* adds each image to the silo */
 static gboolean
 fu_cabinet_build_silo_file(FuCabinet *self,
-			   GCabFile *cabfile,
+			   FuFirmware *img,
 			   FwupdReleaseFlags release_flags,
 			   GError **error)
 {
@@ -558,21 +435,16 @@ fu_cabinet_build_silo_file(FuCabinet *self,
 	/* indicate the metainfo file was signed */
 	if (release_flags & FWUPD_RELEASE_FLAG_TRUSTED_METADATA)
 		xb_builder_node_insert_text(bn_info, "metadata_trust", NULL, NULL);
-	xb_builder_node_insert_text(bn_info, "filename", gcab_file_get_name(cabfile), NULL);
+	xb_builder_node_insert_text(bn_info, "filename", fu_firmware_get_id(img), NULL);
 	xb_builder_source_set_info(source, bn_info);
 
 	/* rewrite to be under a components root */
 	xb_builder_source_set_prefix(source, "components");
 
 	/* parse file */
-	blob = gcab_file_get_bytes(cabfile);
-	if (blob == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "no GBytes from GCabFile");
+	blob = fu_firmware_get_bytes(img, error);
+	if (blob == NULL)
 		return FALSE;
-	}
 	if (!xb_builder_source_load_bytes(source,
 					  blob,
 					  XB_BUILDER_SOURCE_FLAG_NONE,
@@ -591,10 +463,10 @@ fu_cabinet_build_silo_file(FuCabinet *self,
 }
 
 static gboolean
-fu_cabinet_build_silo_metainfo(FuCabinet *self, GCabFile *cabfile, GError **error)
+fu_cabinet_build_silo_metainfo(FuCabinet *self, FuFirmware *img, GError **error)
 {
 	FwupdReleaseFlags release_flags = FWUPD_RELEASE_FLAG_NONE;
-	const gchar *fn = gcab_file_get_extract_name(cabfile);
+	const gchar *fn = fu_firmware_get_id(img);
 	g_autoptr(JcatItem) item = NULL;
 
 	/* validate against the Jcat file */
@@ -604,8 +476,13 @@ fu_cabinet_build_silo_metainfo(FuCabinet *self, GCabFile *cabfile, GError **erro
 	} else {
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) results = NULL;
+		g_autoptr(GBytes) blob = NULL;
+
+		blob = fu_firmware_get_bytes(img, error);
+		if (blob == NULL)
+			return FALSE;
 		results = jcat_context_verify_item(self->jcat_context,
-						   gcab_file_get_bytes(cabfile),
+						   blob,
 						   item,
 						   JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
 						       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
@@ -620,10 +497,8 @@ fu_cabinet_build_silo_metainfo(FuCabinet *self, GCabFile *cabfile, GError **erro
 
 	/* actually parse the XML now */
 	g_info("processing file: %s", fn);
-	if (!fu_cabinet_build_silo_file(self, cabfile, release_flags, error)) {
-		g_prefix_error(error,
-			       "%s could not be loaded: ",
-			       gcab_file_get_extract_name(cabfile));
+	if (!fu_cabinet_build_silo_file(self, img, release_flags, error)) {
+		g_prefix_error(error, "%s could not be loaded: ", fn);
 		return FALSE;
 	}
 
@@ -633,52 +508,47 @@ fu_cabinet_build_silo_metainfo(FuCabinet *self, GCabFile *cabfile, GError **erro
 
 /* load the firmware.jcat files if included */
 static gboolean
-fu_cabinet_build_jcat_folder(FuCabinet *self, GCabFolder *cabfolder, GError **error)
+fu_cabinet_build_jcat_folder(FuCabinet *self, FuFirmware *img, GError **error)
 {
-	g_autoptr(GSList) cabfiles = gcab_folder_get_files(cabfolder);
-	for (GSList *l = cabfiles; l != NULL; l = l->next) {
-		GCabFile *cabfile = GCAB_FILE(l->data);
-		const gchar *fn = gcab_file_get_extract_name(cabfile);
-		if (fn == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "no extraction name set");
+	const gchar *fn = fu_firmware_get_id(img);
+	if (fn == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no extraction name set");
+		return FALSE;
+	}
+	if (g_str_has_suffix(fn, ".jcat")) {
+		g_autoptr(GBytes) data_jcat = NULL;
+		g_autoptr(GInputStream) istream = NULL;
+		data_jcat = fu_firmware_get_bytes(img, error);
+		if (data_jcat == NULL)
 			return FALSE;
-		}
-		if (g_str_has_suffix(fn, ".jcat")) {
-			GBytes *data_jcat = gcab_file_get_bytes(cabfile);
-			g_autoptr(GInputStream) istream = NULL;
-			istream = g_memory_input_stream_new_from_bytes(data_jcat);
-			if (!jcat_file_import_stream(self->jcat_file,
-						     istream,
-						     JCAT_IMPORT_FLAG_NONE,
-						     NULL,
-						     error))
-				return FALSE;
-		}
+		istream = g_memory_input_stream_new_from_bytes(data_jcat);
+		if (!jcat_file_import_stream(self->jcat_file,
+					     istream,
+					     JCAT_IMPORT_FLAG_NONE,
+					     NULL,
+					     error))
+			return FALSE;
 	}
 	return TRUE;
 }
 
-/* adds each GCabFolder to the silo */
+/* adds each image to the silo */
 static gboolean
-fu_cabinet_build_silo_folder(FuCabinet *self, GCabFolder *cabfolder, GError **error)
+fu_cabinet_build_silo_folder(FuCabinet *self, FuFirmware *img, GError **error)
 {
-	g_autoptr(GSList) cabfiles = gcab_folder_get_files(cabfolder);
-	for (GSList *l = cabfiles; l != NULL; l = l->next) {
-		GCabFile *cabfile = GCAB_FILE(l->data);
-		const gchar *fn = gcab_file_get_extract_name(cabfile);
-		if (fn == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "no extraction name set");
-			return FALSE;
-		}
-		if (!g_str_has_suffix(fn, ".metainfo.xml"))
-			continue;
-		if (!fu_cabinet_build_silo_metainfo(self, cabfile, error))
+	const gchar *fn = fu_firmware_get_id(img);
+	if (fn == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no extraction name set");
+		return FALSE;
+	}
+	if (g_str_has_suffix(fn, ".metainfo.xml")) {
+		if (!fu_cabinet_build_silo_metainfo(self, img, error))
 			return FALSE;
 	}
 	return TRUE;
@@ -687,7 +557,7 @@ fu_cabinet_build_silo_folder(FuCabinet *self, GCabFolder *cabfolder, GError **er
 static gboolean
 fu_cabinet_build_silo(FuCabinet *self, GError **error)
 {
-	GPtrArray *folders;
+	g_autoptr(GPtrArray) imgs = NULL;
 	g_autoptr(XbBuilderFixup) fixup1 = NULL;
 	g_autoptr(XbBuilderFixup) fixup2 = NULL;
 	g_autoptr(XbBuilderFixup) fixup3 = NULL;
@@ -701,19 +571,19 @@ fu_cabinet_build_silo(FuCabinet *self, GError **error)
 	}
 
 	/* load Jcat */
-	folders = gcab_cabinet_get_folders(self->gcab_cabinet);
+	imgs = fu_firmware_get_images(FU_FIRMWARE(FU_CAB_FIRMWARE(self)));
 	if (self->jcat_context != NULL) {
-		for (guint i = 0; i < folders->len; i++) {
-			GCabFolder *cabfolder = GCAB_FOLDER(g_ptr_array_index(folders, i));
-			if (!fu_cabinet_build_jcat_folder(self, cabfolder, error))
+		for (guint i = 0; i < imgs->len; i++) {
+			FuFirmware *img = g_ptr_array_index(imgs, i);
+			if (!fu_cabinet_build_jcat_folder(self, img, error))
 				return FALSE;
 		}
 	}
 
 	/* adds each metainfo file to the silo */
-	for (guint i = 0; i < folders->len; i++) {
-		GCabFolder *cabfolder = GCAB_FOLDER(g_ptr_array_index(folders, i));
-		if (!fu_cabinet_build_silo_folder(self, cabfolder, error))
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *img = g_ptr_array_index(imgs, i);
+		if (!fu_cabinet_build_silo_folder(self, img, error))
 			return FALSE;
 	}
 
@@ -750,144 +620,6 @@ fu_cabinet_build_silo(FuCabinet *self, GError **error)
 
 	/* success */
 	return TRUE;
-}
-
-typedef struct {
-	FuCabinet *self;
-	guint64 size_total;
-	GError *error;
-} FuCabinetDecompressHelper;
-
-static gboolean
-fu_cabinet_decompress_file_cb(GCabFile *file, gpointer user_data)
-{
-	FuCabinetDecompressHelper *helper = (FuCabinetDecompressHelper *)user_data;
-	FuCabinet *self = FU_CABINET(helper->self);
-	g_autofree gchar *basename = NULL;
-	g_autofree gchar *name = NULL;
-
-	/* already failed */
-	if (helper->error != NULL)
-		return FALSE;
-
-	/* check the size of the compressed file */
-	if (gcab_file_get_size(file) > self->size_max) {
-		g_autofree gchar *sz_val = g_format_size(gcab_file_get_size(file));
-		g_autofree gchar *sz_max = g_format_size(self->size_max);
-		g_set_error(&helper->error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "file %s was too large (%s, limit %s)",
-			    gcab_file_get_name(file),
-			    sz_val,
-			    sz_max);
-		return FALSE;
-	}
-
-	/* check the total size of all the compressed files */
-	helper->size_total += gcab_file_get_size(file);
-	if (helper->size_total > self->size_max) {
-		g_autofree gchar *sz_val = g_format_size(helper->size_total);
-		g_autofree gchar *sz_max = g_format_size(self->size_max);
-		g_set_error(&helper->error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "uncompressed data too large (%s, limit %s)",
-			    sz_val,
-			    sz_max);
-		return FALSE;
-	}
-
-	/* convert to UNIX paths */
-	name = g_strdup(gcab_file_get_name(file));
-	g_strdelimit(name, "\\", '/');
-
-	/* ignore the dirname completely */
-	basename = g_path_get_basename(name);
-	gcab_file_set_extract_name(file, basename);
-	return TRUE;
-}
-
-static gboolean
-fu_cabinet_decompress(FuCabinet *self, GBytes *data, GError **error)
-{
-	FuCabinetDecompressHelper helper = {
-	    .self = self,
-	    .size_total = 0,
-	    .error = NULL,
-	};
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GInputStream) istream = NULL;
-
-	/* load from a seekable stream */
-	istream = g_memory_input_stream_new_from_bytes(data);
-	if (!gcab_cabinet_load(self->gcab_cabinet, istream, NULL, error))
-		return FALSE;
-
-	/* check the size is sane */
-	if (gcab_cabinet_get_size(self->gcab_cabinet) > self->size_max) {
-		g_autofree gchar *sz_val = g_format_size(gcab_cabinet_get_size(self->gcab_cabinet));
-		g_autofree gchar *sz_max = g_format_size(self->size_max);
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "archive too large (%s, limit %s)",
-			    sz_val,
-			    sz_max);
-		return FALSE;
-	}
-
-	/* decompress the file to memory */
-	if (!gcab_cabinet_extract_simple(self->gcab_cabinet,
-					 NULL,
-					 fu_cabinet_decompress_file_cb,
-					 &helper,
-					 NULL,
-					 &error_local)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    error_local->message);
-		return FALSE;
-	}
-
-	/* the file callback set an error */
-	if (helper.error != NULL) {
-		g_propagate_error(error, helper.error);
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-/**
- * fu_cabinet_export:
- * @self: a #FuCabinet
- * @flags: export flags, e.g. %FU_CABINET_EXPORT_FLAG_NONE
- * @error: (nullable): optional return location for an error
- *
- * Exports the cabinet archive.
- *
- * Returns: (transfer full): a data blob
- *
- * Since: 1.6.0
- **/
-GBytes *
-fu_cabinet_export(FuCabinet *self, FuCabinetExportFlags flags, GError **error)
-{
-	g_autoptr(GOutputStream) op = NULL;
-	op = g_memory_output_stream_new_resizable();
-	if (!gcab_cabinet_write_simple(self->gcab_cabinet,
-				       op,
-				       NULL,
-				       NULL, /* progress */
-				       NULL,
-				       error))
-		return NULL;
-	if (!g_output_stream_close(op, NULL, error))
-		return NULL;
-	return g_memory_output_stream_steal_as_bytes(G_MEMORY_OUTPUT_STREAM(op));
 }
 
 static gboolean
@@ -1059,22 +791,15 @@ fu_cabinet_sign(FuCabinet *self,
 	return TRUE;
 }
 
-/**
- * fu_cabinet_parse:
- * @self: a #FuCabinet
- * @data: (nullable): optional cabinet archive data
- * @flags: parse flags, e.g. %FU_CABINET_PARSE_FLAG_NONE
- * @error: (nullable): optional return location for an error
- *
- * Parses the cabinet archive.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.4.0
- **/
-gboolean
-fu_cabinet_parse(FuCabinet *self, GBytes *data, FuCabinetParseFlags flags, GError **error)
+static gboolean
+fu_cabinet_parse(FuFirmware *firmware,
+		 GBytes *fw,
+		 gsize offset,
+		 FwupdInstallFlags flags,
+		 GError **error)
 {
+	FuCabinet *self = FU_CABINET(firmware);
+
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(XbQuery) query = NULL;
@@ -1084,12 +809,12 @@ fu_cabinet_parse(FuCabinet *self, GBytes *data, FuCabinetParseFlags flags, GErro
 	g_return_val_if_fail(self->silo == NULL, FALSE);
 
 	/* decompress and calculate container hashes */
-	if (data != NULL) {
-		if (!fu_cabinet_decompress(self, data, error))
+	if (fw != NULL) {
+		if (!FU_FIRMWARE_CLASS(fu_cabinet_parent_class)
+			 ->parse(firmware, fw, offset, flags, error))
 			return FALSE;
-		self->container_checksum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data);
-		self->container_checksum_alt =
-		    g_compute_checksum_for_bytes(G_CHECKSUM_SHA256, data);
+		self->container_checksum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, fw);
+		self->container_checksum_alt = g_compute_checksum_for_bytes(G_CHECKSUM_SHA256, fw);
 	}
 
 	/* build xmlb silo */
@@ -1140,6 +865,46 @@ fu_cabinet_parse(FuCabinet *self, GBytes *data, FuCabinetParseFlags flags, GErro
 
 	/* success */
 	return TRUE;
+}
+
+static void
+fu_cabinet_init(FuCabinet *self)
+{
+	fu_cab_firmware_set_only_basename(FU_CAB_FIRMWARE(self), TRUE);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 1024 * 1024 * 100);
+	self->builder = xb_builder_new();
+	self->jcat_file = jcat_file_new();
+	self->jcat_context = jcat_context_new();
+#if LIBJCAT_CHECK_VERSION(0, 1, 13)
+	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA256);
+	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA512);
+	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_PKCS7);
+	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_GPG);
+#endif
+}
+
+static void
+fu_cabinet_finalize(GObject *obj)
+{
+	FuCabinet *self = FU_CABINET(obj);
+	if (self->silo != NULL)
+		g_object_unref(self->silo);
+	if (self->builder != NULL)
+		g_object_unref(self->builder);
+	g_free(self->container_checksum);
+	g_free(self->container_checksum_alt);
+	g_object_unref(self->jcat_context);
+	g_object_unref(self->jcat_file);
+	G_OBJECT_CLASS(fu_cabinet_parent_class)->finalize(obj);
+}
+
+static void
+fu_cabinet_class_init(FuCabinetClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	object_class->finalize = fu_cabinet_finalize;
+	klass_firmware->parse = fu_cabinet_parse;
 }
 
 /**
