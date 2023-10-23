@@ -57,7 +57,6 @@ Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{version}.
 BuildRequires: gettext
 BuildRequires: glib2-devel >= %{glib2_version}
 BuildRequires: libxmlb-devel >= %{libxmlb_version}
-BuildRequires: libgcab1-devel
 BuildRequires: libgudev1-devel
 BuildRequires: libgusb-devel >= %{libgusb_version}
 BuildRequires: libcurl-devel >= %{libcurl_version}
@@ -74,7 +73,6 @@ BuildRequires: libcbor-devel
 BuildRequires: passim-devel
 %endif
 BuildRequires: gobject-introspection-devel
-BuildRequires: gcab
 %ifarch %{valgrind_arches}
 BuildRequires: valgrind
 BuildRequires: valgrind-devel

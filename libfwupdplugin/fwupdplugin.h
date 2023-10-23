@@ -17,6 +17,8 @@
 #include <libfwupdplugin/fu-bluez-device.h>
 #include <libfwupdplugin/fu-byte-array.h>
 #include <libfwupdplugin/fu-bytes.h>
+#include <libfwupdplugin/fu-cab-firmware.h>
+#include <libfwupdplugin/fu-cab-image.h>
 #include <libfwupdplugin/fu-cfi-device.h>
 #include <libfwupdplugin/fu-cfu-offer.h>
 #include <libfwupdplugin/fu-cfu-payload.h>

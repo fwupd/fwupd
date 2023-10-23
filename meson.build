@@ -265,15 +265,7 @@ if build_daemon
   endif
 endif
 libm = cc.find_library('m', required: false)
-libgcab = dependency('libgcab-1.0', version: '>= 1.0', fallback: ['gcab', 'gcab_dep'])
-if libgcab.type_name() == 'pkgconfig'
-  if cc.has_function('gcab_file_set_bytes', dependencies: libgcab)
-    conf.set('HAVE_GCAB_FILE_SET_BYTES', '1')
-  endif
-  if cc.has_function('gcab_cabinet_add_allowed_compression', dependencies: libgcab)
-    conf.set('HAVE_GCAB_CABINET_ADD_ALLOWED_COMPRESSION', '1')
-  endif
-endif
+zlib = dependency('zlib')
 
 bashcomp = dependency('bash-completion', required: false)
 python3path = get_option('python')
@@ -603,10 +595,9 @@ if polkit.found()
 endif
 if build_standalone
   plugin_quirks = []
-  gcab = find_program('gcab', required: get_option('tests'))
+  subdir('libfwupdplugin')
   subdir('data')
   subdir('po')
-  subdir('libfwupdplugin')
   subdir('contrib')
 
   # common to all plugins

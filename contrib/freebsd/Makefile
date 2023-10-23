@@ -18,7 +18,6 @@ BUILD_DEPENDS=	gi-docgen:textproc/gi-docgen \
 		${PYTHON_PKGNAMEPREFIX}gobject3>0:devel/py-gobject3@${PY_FLAVOR}
 LIB_DEPENDS=	libcurl.so:ftp/curl \
 		libefiboot.so:devel/libefiboot \
-		libgcab-1.0.so:archivers/gcab \
 		libgnutls.so:security/gnutls \
 		libgpg-error.so:security/libgpg-error \
 		libgpgme.so:security/gpgme \

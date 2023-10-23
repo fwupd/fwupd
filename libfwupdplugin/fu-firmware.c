@@ -38,6 +38,7 @@ typedef struct {
 	guint64 addr;
 	guint64 offset;
 	gsize size;
+	gsize size_max;
 	guint images_max;
 	GPtrArray *chunks;  /* nullable, element-type FuChunk */
 	GPtrArray *patches; /* nullable, element-type FuFirmwarePatch */
@@ -477,6 +478,43 @@ fu_firmware_get_size(FuFirmware *self)
 }
 
 /**
+ * fu_firmware_set_size_max:
+ * @self: a #FuPlugin
+ * @size_max: integer, or 0 for no limit
+ *
+ * Sets the maximum size of the image allowed during parsing.
+ * Implementations should query fu_firmware_get_size_max() during parsing when adding images to
+ * ensure the limit is not exceeded.
+ *
+ * Since: 1.9.7
+ **/
+void
+fu_firmware_set_size_max(FuFirmware *self, gsize size_max)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_FIRMWARE(self));
+	priv->size_max = size_max;
+}
+
+/**
+ * fu_firmware_get_size_max:
+ * @self: a #FuPlugin
+ *
+ * Gets the maximum size of the image allowed during parsing.
+ *
+ * Returns: integer, or 0 if not set
+ *
+ * Since: 1.9.7
+ **/
+gsize
+fu_firmware_get_size_max(FuFirmware *self)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), G_MAXSIZE);
+	return priv->size_max;
+}
+
+/**
  * fu_firmware_set_idx:
  * @self: a #FuPlugin
  * @idx: integer
@@ -902,6 +940,17 @@ fu_firmware_parse_full(FuFirmware *self,
 				    "invalid firmware as zero sized");
 		return FALSE;
 	}
+	if (priv->size_max > 0 && g_bytes_get_size(fw) > priv->size_max) {
+		g_autofree gchar *sz_val = g_format_size(g_bytes_get_size(fw));
+		g_autofree gchar *sz_max = g_format_size(priv->size_max);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware is too large (%s, limit %s)",
+			    sz_val,
+			    sz_max);
+		return FALSE;
+	}
 
 	/* any FuFirmware subclass that gets past this point might have allocated memory in
 	 * ->tokenize() or ->parse() and needs to be destroyed before parsing again */
@@ -1053,6 +1102,9 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 	tmpval = xb_node_query_text_as_uint(n, "size", NULL);
 	if (tmpval != G_MAXUINT64)
 		fu_firmware_set_size(self, tmpval);
+	tmpval = xb_node_query_text_as_uint(n, "size_max", NULL);
+	if (tmpval != G_MAXUINT64)
+		fu_firmware_set_size_max(self, tmpval);
 	tmpval = xb_node_query_text_as_uint(n, "alignment", NULL);
 	if (tmpval != G_MAXUINT64) {
 		if (tmpval > FU_FIRMWARE_ALIGNMENT_2G) {
@@ -1922,6 +1974,7 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 	fu_xmlb_builder_insert_kx(bn, "offset", priv->offset);
 	fu_xmlb_builder_insert_kx(bn, "alignment", priv->alignment);
 	fu_xmlb_builder_insert_kx(bn, "size", priv->size);
+	fu_xmlb_builder_insert_kx(bn, "size_max", priv->size_max);
 	fu_xmlb_builder_insert_kv(bn, "filename", priv->filename);
 	if (priv->bytes != NULL) {
 		gsize bufsz = 0;

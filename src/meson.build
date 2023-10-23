@@ -8,7 +8,6 @@ engine_dep = [
   libarchive,
   libjcat,
   libxmlb,
-  libgcab,
   giounix,
   gmodule,
   gudev,
@@ -253,7 +252,6 @@ fwupdtool = executable(
   ],
   dependencies: [
     libfwupd_deps,
-    libgcab,
     libarchive,
     client_dep,
     valgrind,

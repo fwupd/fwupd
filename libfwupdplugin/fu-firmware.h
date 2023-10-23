@@ -263,6 +263,10 @@ fu_firmware_get_size(FuFirmware *self);
 void
 fu_firmware_set_size(FuFirmware *self, gsize size);
 void
+fu_firmware_set_size_max(FuFirmware *self, gsize size_max);
+gsize
+fu_firmware_get_size_max(FuFirmware *self);
+void
 fu_firmware_set_images_max(FuFirmware *self, guint images_max);
 guint
 fu_firmware_get_images_max(FuFirmware *self);

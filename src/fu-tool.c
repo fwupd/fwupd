@@ -1058,11 +1058,14 @@ fu_util_firmware_sign(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* load, sign, export */
-	if (!fu_cabinet_parse(cabinet, archive_blob_old, FU_CABINET_PARSE_FLAG_NONE, error))
+	if (!fu_firmware_parse(FU_FIRMWARE(cabinet),
+			       archive_blob_old,
+			       FWUPD_INSTALL_FLAG_NONE,
+			       error))
 		return FALSE;
 	if (!fu_cabinet_sign(cabinet, cert, privkey, FU_CABINET_SIGN_FLAG_NONE, error))
 		return FALSE;
-	archive_blob_new = fu_cabinet_export(cabinet, FU_CABINET_EXPORT_FLAG_NONE, error);
+	archive_blob_new = fu_firmware_write(FU_FIRMWARE(cabinet), error);
 	if (archive_blob_new == NULL)
 		return FALSE;
 	return fu_bytes_set_contents(values[0], archive_blob_new, error);
@@ -3711,11 +3714,11 @@ fu_util_build_cabinet(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* sanity check JCat and XML MetaInfo files */
-	if (!fu_cabinet_parse(cab_file, NULL, FU_CABINET_PARSE_FLAG_NONE, error))
+	if (!fu_firmware_parse(FU_FIRMWARE(cab_file), NULL, FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
 
 	/* export */
-	cab_blob = fu_cabinet_export(cab_file, FU_CABINET_EXPORT_FLAG_NONE, error);
+	cab_blob = fu_firmware_write(FU_FIRMWARE(cab_file), error);
 	if (cab_blob == NULL)
 		return FALSE;
 	return fu_bytes_set_contents(values[0], cab_blob, error);
