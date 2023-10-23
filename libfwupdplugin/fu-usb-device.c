@@ -41,6 +41,12 @@ enum { PROP_0, PROP_USB_DEVICE, PROP_LAST };
 
 #define GET_PRIVATE(o) (fu_usb_device_get_instance_private(o))
 
+#define FU_USB_DEVICE_CLAIM_INTERFACE_RETRIES 5
+#define FU_USB_DEVICE_CLAIM_INTERFACE_DELAY   500 /* ms */
+
+#define FU_USB_DEVICE_OPEN_RETRIES 5
+#define FU_USB_DEVICE_OPEN_DELAY   50 /* ms */
+
 static void
 fu_usb_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -252,6 +258,44 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 					   "HUB",
 					   NULL);
 }
+
+static gboolean
+fu_usb_device_claim_interface_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuUsbDevice *self = FU_USB_DEVICE(device);
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	FuUsbDeviceInterface *iface = (FuUsbDeviceInterface *)user_data;
+	return g_usb_device_claim_interface(priv->usb_device,
+					    iface->number,
+					    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+					    error);
+}
+
+static gboolean
+fu_usb_device_open_internal_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuUsbDevice *self = FU_USB_DEVICE(device);
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	return g_usb_device_open(priv->usb_device, error);
+}
+
+static gboolean
+fu_usb_device_open_internal(FuUsbDevice *self, GError **error)
+{
+	return fu_device_retry_full(FU_DEVICE(self),
+				    fu_usb_device_open_internal_cb,
+				    FU_USB_DEVICE_OPEN_RETRIES,
+				    FU_USB_DEVICE_OPEN_DELAY,
+				    NULL,
+				    error);
+}
+
+static gboolean
+fu_usb_device_close_internal(FuUsbDevice *self, GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	return g_usb_device_close(priv->usb_device, error);
+}
 #endif
 
 static gboolean
@@ -270,26 +314,35 @@ fu_usb_device_open(FuDevice *device, GError **error)
 		return TRUE;
 
 	/* open */
-	locker = fu_device_locker_new(priv->usb_device, error);
-	if (locker == NULL)
+	locker = fu_device_locker_new_full(self,
+					   (FuDeviceLockerFunc)fu_usb_device_open_internal,
+					   (FuDeviceLockerFunc)fu_usb_device_close_internal,
+					   error);
+	if (locker == NULL) {
+		g_prefix_error(error, "failed to open device: ");
 		return FALSE;
+	}
 
 	/* success */
 	priv->usb_device_locker = g_steal_pointer(&locker);
 
 	/* if set */
 	if (priv->configuration >= 0) {
-		if (!g_usb_device_set_configuration(priv->usb_device, priv->configuration, error))
+		if (!g_usb_device_set_configuration(priv->usb_device, priv->configuration, error)) {
+			g_prefix_error(error, "failed to set configuration: ");
 			return FALSE;
+		}
 	}
 
 	/* claim interfaces */
 	for (guint i = 0; priv->interfaces != NULL && i < priv->interfaces->len; i++) {
 		FuUsbDeviceInterface *iface = g_ptr_array_index(priv->interfaces, i);
-		if (!g_usb_device_claim_interface(priv->usb_device,
-						  iface->number,
-						  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-						  error)) {
+		if (!fu_device_retry_full(device,
+					  fu_usb_device_claim_interface_cb,
+					  FU_USB_DEVICE_CLAIM_INTERFACE_RETRIES,
+					  FU_USB_DEVICE_CLAIM_INTERFACE_DELAY,
+					  iface,
+					  error)) {
 			g_prefix_error(error, "failed to claim interface 0x%02x: ", iface->number);
 			return FALSE;
 		}
@@ -427,8 +480,10 @@ fu_usb_device_ready(FuDevice *device, GError **error)
 
 	/* get the interface GUIDs */
 	intfs = g_usb_device_get_interfaces(priv->usb_device, error);
-	if (intfs == NULL)
+	if (intfs == NULL) {
+		g_prefix_error(error, "failed to get interfaces: ");
 		return FALSE;
+	}
 
 	/* add fallback icon if there is nothing added already */
 	if (fu_device_get_icons(device)->len == 0) {
@@ -546,8 +601,10 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 
 	/* add the interface GUIDs */
 	intfs = g_usb_device_get_interfaces(priv->usb_device, error);
-	if (intfs == NULL)
+	if (intfs == NULL) {
+		g_prefix_error(error, "failed to get interfaces: ");
 		return FALSE;
+	}
 	for (guint i = 0; i < intfs->len; i++) {
 		GUsbInterface *intf = g_ptr_array_index(intfs, i);
 		fu_device_add_instance_u8(device, "CLASS", g_usb_interface_get_class(intf));
