@@ -4350,6 +4350,7 @@ static void
 fu_engine_ensure_device_supported(FuEngine *self, FuDevice *device)
 {
 	gboolean is_supported = FALSE;
+	gboolean update_pending = FALSE;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
 	g_autoptr(FuEngineRequest) request = NULL;
@@ -4372,6 +4373,19 @@ fu_engine_ensure_device_supported(FuEngine *self, FuDevice *device)
 	} else {
 		if (releases->len > 0)
 			is_supported = TRUE;
+		for (guint i = 0; i < releases->len; i++) {
+			FuRelease *release = FU_RELEASE(g_ptr_array_index(releases, i));
+			if (fu_release_has_flag(release, FWUPD_RELEASE_FLAG_IS_UPGRADE)) {
+				update_pending = TRUE;
+				break;
+			}
+		}
+		if (update_pending) {
+			fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_UPDATE_PENDING);
+		} else {
+			fu_device_remove_internal_flag(device,
+						       FU_DEVICE_INTERNAL_FLAG_UPDATE_PENDING);
+		}
 	}
 
 	/* was supported, now unsupported */

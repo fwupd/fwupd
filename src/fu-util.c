@@ -2854,8 +2854,16 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 			rel = g_object_ref(rel_tmp);
 			break;
 		}
-		if (!fu_util_update_device_with_release(priv, dev, rel, error))
+		if (!fu_util_update_device_with_release(priv, dev, rel, &error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+				g_debug("ignoring %s: %s",
+					fwupd_device_get_id(dev),
+					error_local->message);
+				continue;
+			}
+			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
+		}
 
 		fu_util_display_current_message(priv);
 
@@ -3765,8 +3773,16 @@ fu_util_sync_bkc(FuUtilPrivate *priv, gchar **values, GError **error)
 			fwupd_device_get_id(dev),
 			fwupd_device_get_version(dev),
 			fwupd_release_get_version(rel));
-		if (!fu_util_update_device_with_release(priv, dev, rel, error))
+		if (!fu_util_update_device_with_release(priv, dev, rel, &error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+				g_debug("ignoring %s: %s",
+					fwupd_device_get_id(dev),
+					error_local->message);
+				continue;
+			}
+			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
+		}
 		fu_util_display_current_message(priv);
 		cnt++;
 	}
