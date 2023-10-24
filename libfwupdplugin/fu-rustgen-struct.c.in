@@ -163,9 +163,14 @@
 {%- for item in obj.items | selectattr('enabled') | rejectattr('constant') %}
 {%- if not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64] %}
 {%- if item.enum_obj %}
-    g_string_append_printf(str, "  {{item.element_id}}: 0x%x [%s]\n",
-                           (guint) {{item.c_getter}}(st),
-                           {{item.enum_obj.c_method('ToString')}}({{item.c_getter}}(st)));
+    {
+        const gchar *tmp = {{item.enum_obj.c_method('ToString')}}({{item.c_getter}}(st));
+        if (tmp != NULL) {
+            g_string_append_printf(str, "  {{item.element_id}}: 0x%x [%s]\n", (guint) {{item.c_getter}}(st), tmp);
+        } else {
+            g_string_append_printf(str, "  {{item.element_id}}: 0x%x\n", (guint) {{item.c_getter}}(st));
+        }
+    }
 {%- else %}
     g_string_append_printf(str, "  {{item.element_id}}: 0x%x\n",
                            (guint) {{item.c_getter}}(st));
@@ -178,7 +183,8 @@
 {%- elif item.type == Type.STRING %}
     {
         g_autofree gchar *tmp = {{item.c_getter}}(st);
-        g_string_append_printf(str, "  {{item.element_id}}: %s\n", tmp);
+        if (tmp != NULL)
+            g_string_append_printf(str, "  {{item.element_id}}: %s\n", tmp);
     }
 {%- elif item.struct_obj %}
     {
