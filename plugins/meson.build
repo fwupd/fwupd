@@ -73,6 +73,7 @@ plugins = [
   'logind',
   'logitech-hidpp',
   'logitech-bulkcontroller',
+  'logitech-rallysystem',
   'logitech-scribe',
   'logitech-tap',
   'mediatek-scaler',
