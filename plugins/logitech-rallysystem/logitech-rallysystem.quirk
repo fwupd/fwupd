@@ -1,0 +1,10 @@
+# Logitech Rally System Audio, resides in TVHub
+[HIDRAW\VEN_046D&DEV_0885]
+Plugin = logitech_rallysystem
+GType = FuLogitechRallysystemAudioDevice
+
+# Logitech Rally System TableHub
+[USB\VID_046D&PID_088F]
+Plugin = logitech_rallysystem
+GType = FuLogitechRallysystemTablehubDevice
+Flags = signed-paylod
