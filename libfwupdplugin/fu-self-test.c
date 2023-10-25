@@ -731,6 +731,12 @@ fu_plugin_config_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 
+#ifdef _WIN32
+	/* the Windows file permission model is different than a simple octal value */
+	g_test_skip("chmod not supported on Windows");
+	return;
+#endif
+
 	/* this is a build file */
 	testdatadir = g_test_build_filename(G_TEST_BUILT, "tests", NULL);
 	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
