@@ -87,6 +87,18 @@ fu_efivar_exists_impl(const gchar *guid, const gchar *name)
 	return fu_efivar_get_data_impl(guid, name, NULL, NULL, NULL, NULL);
 }
 
+static gboolean
+fu_efivar_is_running_under_wine(void)
+{
+	HKEY hKey = NULL;
+	LONG lResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\Wine", 0, KEY_READ, &hKey);
+	if (lResult == ERROR_SUCCESS) {
+		RegCloseKey(hKey);
+		return TRUE;
+	}
+	return FALSE;
+}
+
 gboolean
 fu_efivar_get_data_impl(const gchar *guid,
 			const gchar *name,
@@ -98,6 +110,16 @@ fu_efivar_get_data_impl(const gchar *guid,
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autofree gchar *guid_win32 = g_strdup_printf("{%s}", guid);
 	fu_byte_array_set_size(buf, 0x1000, 0xFF);
+
+	/* unimplemented function KERNEL32.dll.GetFirmwareEnvironmentVariableExA on wine */
+	if (fu_efivar_is_running_under_wine()) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "GetFirmwareEnvironmentVariableExA is not implemented");
+		return FALSE;
+	}
+
 	do {
 		DWORD dwAttribubutes = 0;
 		DWORD rc = GetFirmwareEnvironmentVariableExA(name,
@@ -244,6 +266,15 @@ fu_efivar_set_data_impl(const gchar *guid,
 			GError **error)
 {
 	g_autofree gchar *guid_win32 = g_strdup_printf("{%s}", guid);
+
+	/* unimplemented function KERNEL32.dll.SetFirmwareEnvironmentVariableExA on wine */
+	if (fu_efivar_is_running_under_wine()) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "SetFirmwareEnvironmentVariableExA is not implemented");
+		return FALSE;
+	}
 	if (!SetFirmwareEnvironmentVariableExA(name, guid_win32, (PVOID)data, sz, attr)) {
 		g_set_error(error,
 			    G_IO_ERROR,
