@@ -41,7 +41,7 @@ struct TpmEventLog2 {
     digest_count: u32le,
 }
 
-#[derive(Parse)]
+#[derive(ParseBytes)]
 struct TpmEfiStartupLocalityEvent {
     signature: [char; 16] == "StartupLocality",
     locality: u8,    // from which TPM2_Startup() was issued -- which is the initial value of PCR0

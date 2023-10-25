@@ -40,7 +40,7 @@ enum EfiFileType {
     FfsPad = 0xF0,
 }
 
-#[derive(New, Validate, Parse)]
+#[derive(New, Validate, ParseBytes)]
 struct EfiFile {
     name: Guid,
     hdr_checksum: u8,
@@ -71,18 +71,18 @@ enum EfiSectionType {
     MmDepex = 0x1C,
 }
 
-#[derive(New, Validate, Parse)]
+#[derive(New, Validate, ParseBytes)]
 struct EfiSection {
     size: u24le,
     type: EfiSectionType,
 }
-#[derive(New, Validate, Parse)]
+#[derive(New, Validate, ParseBytes)]
 struct EfiSectionGuidDefined {
     name: Guid,
     offset: u16le,
     attr: u16le,
 }
-#[derive(New, Validate, Parse)]
+#[derive(New, ValidateBytes, ParseBytes)]
 struct EfiVolume {
     zero_vector: Guid,
     guid: Guid,
@@ -95,7 +95,7 @@ struct EfiVolume {
     reserved: u8,
     revision: u8 == 0x02,
 }
-#[derive(New, Validate, Parse)]
+#[derive(New, Validate, ParseBytes)]
 struct EfiVolumeBlockMap {
     num_blocks: u32le,
     length: u32le,
@@ -118,7 +118,7 @@ enum EfiLoadOptionAttrs {
     CategoryAp = 0x100,
 }
 
-#[derive(Parse, New)]
+#[derive(ParseBytes, New)]
 struct EfiLoadOption {
     attrs: EfiLoadOptionAttrs,
     dp_size: u16le,
@@ -134,7 +134,7 @@ enum EfiDevicePathType {
     End = 0x7F,
 }
 
-#[derive(Parse, New)]
+#[derive(ParseBytes, New)]
 struct EfiDevicePath {
     type: EfiDevicePathType,
     subtype: u8 = 0xFF,
@@ -169,7 +169,7 @@ enum EfiHardDriveDevicePathSignatureType {
     Guid,
 }
 
-#[derive(Parse, New)]
+#[derive(ParseBytes, New)]
 struct EfiHardDriveDevicePath {
     type: EfiDevicePathType == Media,
     subtype: EfiHardDriveDevicePathSubtype = HardDrive,

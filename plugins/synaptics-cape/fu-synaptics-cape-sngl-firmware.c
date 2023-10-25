@@ -44,7 +44,7 @@ fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* unpack */
-	st = fu_struct_synaptics_cape_sngl_hdr_parse(buf, bufsz, offset, error);
+	st = fu_struct_synaptics_cape_sngl_hdr_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 	if (fu_struct_synaptics_cape_sngl_hdr_get_file_size(st) != bufsz) {

@@ -65,14 +65,12 @@ fu_sbatlevel_section_parse(FuFirmware *firmware,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	gsize header_offset = offset + FU_STRUCT_SBAT_LEVEL_SECTION_HEADER_OFFSET_PREVIOUS;
 	guint32 previous_addr;
 	guint32 latest_addr;
 	g_autoptr(GByteArray) st = NULL;
 
-	st = fu_struct_sbat_level_section_header_parse(buf, bufsz, offset, error);
+	st = fu_struct_sbat_level_section_header_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 

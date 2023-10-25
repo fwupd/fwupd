@@ -130,7 +130,9 @@ class StructObj:
         self.items: List[StructItem] = []
         self._exports: Dict[str, Export] = {
             "Validate": Export.NONE,
+            "ValidateBytes": Export.NONE,
             "Parse": Export.NONE,
+            "ParseBytes": Export.NONE,
             "New": Export.NONE,
             "ToString": Export.NONE,
         }
@@ -169,11 +171,15 @@ class StructObj:
                     item.add_private_export("Getters")
                 if item.struct_obj:
                     item.struct_obj.add_private_export("Validate")
-        if derive == "ToString":
+        elif derive == "ValidateBytes":
+            self.add_private_export("Validate")
+        elif derive == "ToString":
             for item in self.items:
                 if item.enum_obj and not item.constant:
                     item.enum_obj.add_private_export("ToString")
-        if derive == "Parse":
+        elif derive == "ParseBytes":
+            self.add_private_export("Parse")
+        elif derive == "Parse":
             self.add_private_export("ToString")
             for item in self.items:
                 if (
@@ -184,7 +190,7 @@ class StructObj:
                     item.add_private_export("Getters")
                 if item.struct_obj:
                     item.struct_obj.add_private_export("Validate")
-        if derive == "New":
+        elif derive == "New":
             for item in self.items:
                 if item.constant and not (item.type == Type.U8 and item.multiplier):
                     item.add_private_export("Setters")
@@ -201,7 +207,7 @@ class StructObj:
             self._exports[derive] = Export.PUBLIC
 
         # for convenience
-        if derive == "Parse":
+        if derive in ["Parse", "ParseBytes"]:
             self.add_public_export("Getters")
         if derive == "New":
             self.add_public_export("Setters")

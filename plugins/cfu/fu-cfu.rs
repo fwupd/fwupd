@@ -2,14 +2,14 @@
 // Copyright (C) 2021 Michael Cheng <michael.cheng@emc.com.tw>
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(New, Validate, Parse)]
+#[derive(New, Parse)]
 struct CfuGetVersionRsp {
     component_cnt: u8,
     _reserved: u16le,
     flags: u8,
 }
 
-#[derive(New, Validate, Parse)]
+#[derive(New, Parse)]
 struct CfuGetVersionRspComponent {
     fw_version: u32le,
     flags: u8,

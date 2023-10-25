@@ -45,10 +45,7 @@ fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 static gboolean
 fu_efi_firmware_volume_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	return fu_struct_efi_volume_validate(g_bytes_get_data(fw, NULL),
-					     g_bytes_get_size(fw),
-					     offset,
-					     error);
+	return fu_struct_efi_volume_validate_bytes(fw, offset, error);
 }
 
 static gboolean
@@ -72,7 +69,7 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	g_autoptr(GByteArray) st_hdr = NULL;
 
 	/* parse */
-	st_hdr = fu_struct_efi_volume_parse(buf, bufsz, offset, error);
+	st_hdr = fu_struct_efi_volume_parse_bytes(fw, offset, error);
 	if (st_hdr == NULL)
 		return FALSE;
 
@@ -154,7 +151,7 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 		guint32 num_blocks;
 		guint32 length;
 		g_autoptr(GByteArray) st_blk = NULL;
-		st_blk = fu_struct_efi_volume_block_map_parse(buf, bufsz, offset, error);
+		st_blk = fu_struct_efi_volume_block_map_parse_bytes(fw, offset, error);
 		if (st_blk == NULL)
 			return FALSE;
 		num_blocks = fu_struct_efi_volume_block_map_get_num_blocks(st_blk);

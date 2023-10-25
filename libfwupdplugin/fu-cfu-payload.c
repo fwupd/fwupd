@@ -35,8 +35,7 @@ fu_cfu_payload_parse(FuFirmware *firmware,
 		     FwupdInstallFlags flags,
 		     GError **error)
 {
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	gsize bufsz = g_bytes_get_size(fw);
 
 	/* process into chunks */
 	while (offset < bufsz) {
@@ -45,7 +44,7 @@ fu_cfu_payload_parse(FuFirmware *firmware,
 		g_autoptr(GBytes) blob = NULL;
 		g_autoptr(GByteArray) st = NULL;
 
-		st = fu_struct_cfu_payload_parse(buf, bufsz, offset, error);
+		st = fu_struct_cfu_payload_parse_bytes(fw, offset, error);
 		if (st == NULL)
 			return FALSE;
 		offset += st->len;

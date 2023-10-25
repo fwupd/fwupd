@@ -51,14 +51,13 @@ fu_ifwi_cpd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 static gboolean
 fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GBytes *fw, GError **error)
 {
-	gsize bufsz = 0;
+	gsize bufsz = g_bytes_get_size(fw);
 	guint32 size;
 	gsize offset = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st_mhd = NULL;
 
 	/* raw version */
-	st_mhd = fu_struct_ifwi_cpd_manifest_parse(buf, bufsz, offset, error);
+	st_mhd = fu_struct_ifwi_cpd_manifest_parse_bytes(fw, offset, error);
 	if (st_mhd == NULL)
 		return FALSE;
 	fu_firmware_set_version_raw(firmware, fu_struct_ifwi_cpd_manifest_get_version(st_mhd));
@@ -85,7 +84,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GBytes *fw, GError **e
 		g_autoptr(GBytes) blob = NULL;
 
 		/* set the extension type as the index */
-		st_mex = fu_struct_ifwi_cpd_manifest_ext_parse(buf, bufsz, offset, error);
+		st_mex = fu_struct_ifwi_cpd_manifest_ext_parse_bytes(fw, offset, error);
 		if (st_mex == NULL)
 			return FALSE;
 		extension_type = fu_struct_ifwi_cpd_manifest_ext_get_extension_type(st_mex);
@@ -127,10 +126,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GBytes *fw, GError **e
 static gboolean
 fu_ifwi_cpd_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	return fu_struct_ifwi_cpd_validate(g_bytes_get_data(fw, NULL),
-					   g_bytes_get_size(fw),
-					   offset,
-					   error);
+	return fu_struct_ifwi_cpd_validate_bytes(fw, offset, error);
 }
 
 static gboolean
@@ -143,12 +139,10 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 	FuIfwiCpdFirmware *self = FU_IFWI_CPD_FIRMWARE(firmware);
 	FuIfwiCpdFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GByteArray) st_hdr = NULL;
-	gsize bufsz = 0;
 	guint32 num_of_entries;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* other header fields */
-	st_hdr = fu_struct_ifwi_cpd_parse(buf, bufsz, offset, error);
+	st_hdr = fu_struct_ifwi_cpd_parse_bytes(fw, offset, error);
 	if (st_hdr == NULL)
 		return FALSE;
 	priv->header_version = fu_struct_ifwi_cpd_get_header_version(st_hdr);
@@ -177,7 +171,7 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 		/* the IDX is the position in the file */
 		fu_firmware_set_idx(img, i);
 
-		st_ent = fu_struct_ifwi_cpd_entry_parse(buf, bufsz, offset, error);
+		st_ent = fu_struct_ifwi_cpd_entry_parse_bytes(fw, offset, error);
 		if (st_ent == NULL)
 			return FALSE;
 

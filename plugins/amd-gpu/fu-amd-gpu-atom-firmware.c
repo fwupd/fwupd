@@ -64,17 +64,14 @@ fu_amd_gpu_atom_firmware_export(FuFirmware *firmware,
 static gboolean
 fu_amd_gpu_atom_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) atom = NULL;
 
-	atom = fu_struct_atom_image_parse(buf, bufsz, offset, error);
+	atom = fu_struct_atom_image_parse_bytes(fw, offset, error);
 	if (atom == NULL)
 		return FALSE;
-	return fu_struct_atom_rom21_header_validate(buf,
-						    bufsz,
-						    fu_struct_atom_image_get_rom_loc(atom),
-						    error);
+	return fu_struct_atom_rom21_header_validate_bytes(fw,
+							  fu_struct_atom_image_get_rom_loc(atom),
+							  error);
 }
 
 const gchar *
@@ -277,7 +274,7 @@ fu_amd_gpu_atom_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* atom rom image */
-	atom_image = fu_struct_atom_image_parse(buf, bufsz, offset, error);
+	atom_image = fu_struct_atom_image_parse_bytes(fw, offset, error);
 	if (atom_image == NULL)
 		return FALSE;
 
@@ -286,7 +283,7 @@ fu_amd_gpu_atom_firmware_parse(FuFirmware *firmware,
 
 	/* atom rom header */
 	loc = fu_struct_atom_image_get_rom_loc(atom_image) + offset;
-	atom_rom = fu_struct_atom_rom21_header_parse(buf, bufsz, loc, error);
+	atom_rom = fu_struct_atom_rom21_header_parse_bytes(fw, loc, error);
 	if (atom_rom == NULL)
 		return FALSE;
 

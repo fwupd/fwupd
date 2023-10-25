@@ -128,7 +128,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 				    error))
 		return FALSE;
 	g_debug("v10 RmiContainerDescriptor at 0x%x", cntr_addr);
-	st_dsc = fu_struct_rmi_container_descriptor_parse(buf, bufsz, cntr_addr, error);
+	st_dsc = fu_struct_rmi_container_descriptor_parse_bytes(fw, cntr_addr, error);
 	if (st_dsc == NULL) {
 		g_prefix_error(error, "RmiContainerDescriptor invalid: ");
 		return FALSE;
@@ -175,7 +175,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 			return FALSE;
 		g_debug("parsing RmiContainerDescriptor at 0x%x", addr);
 
-		st_dsc2 = fu_struct_rmi_container_descriptor_parse(buf, bufsz, addr, error);
+		st_dsc2 = fu_struct_rmi_container_descriptor_parse_bytes(fw, addr, error);
 		if (st_dsc2 == NULL)
 			return FALSE;
 		container_id = fu_struct_rmi_container_descriptor_get_container_id(st_dsc2);
@@ -334,12 +334,10 @@ fu_synaptics_rmi_firmware_parse_v0x(FuFirmware *firmware, GBytes *fw, GError **e
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
 	guint32 cfg_sz;
 	guint32 img_sz;
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st_img = NULL;
 
 	/* main firmware */
-	st_img = fu_struct_rmi_img_parse(buf, bufsz, 0x0, error);
+	st_img = fu_struct_rmi_img_parse_bytes(fw, 0x0, error);
 	if (st_img == NULL)
 		return FALSE;
 	img_sz = fu_struct_rmi_img_get_image_size(st_img);
@@ -391,7 +389,7 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GByteArray) st_img = NULL;
 
 	/* sanity check */
-	st_img = fu_struct_rmi_img_parse(buf, bufsz, 0x0, error);
+	st_img = fu_struct_rmi_img_parse_bytes(fw, 0x0, error);
 	if (st_img == NULL)
 		return FALSE;
 	if (bufsz % 2 != 0) {

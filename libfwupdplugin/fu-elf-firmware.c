@@ -28,10 +28,7 @@ G_DEFINE_TYPE(FuElfFirmware, fu_elf_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_elf_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	return fu_struct_elf_file_header64le_validate(g_bytes_get_data(fw, NULL),
-						      g_bytes_get_size(fw),
-						      offset,
-						      error);
+	return fu_struct_elf_file_header64le_validate_bytes(fw, offset, error);
 }
 
 static gboolean
@@ -41,20 +38,18 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {
-	gsize bufsz = 0;
 	gsize offset_secthdr = offset;
 	gsize offset_proghdr = offset;
 	guint16 phentsize;
 	guint16 phnum;
 	guint16 shnum;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st_fhdr = NULL;
 	g_autoptr(GBytes) shstrndx_blob = NULL;
 	g_autoptr(GPtrArray) sections =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_byte_array_unref);
 
 	/* file header */
-	st_fhdr = fu_struct_elf_file_header64le_parse(buf, bufsz, offset, error);
+	st_fhdr = fu_struct_elf_file_header64le_parse_bytes(fw, offset, error);
 	if (st_fhdr == NULL)
 		return FALSE;
 
@@ -64,7 +59,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 	phnum = fu_struct_elf_file_header64le_get_phnum(st_fhdr);
 	for (guint i = 0; i < phnum; i++) {
 		g_autoptr(GByteArray) st_phdr =
-		    fu_struct_elf_program_header64le_parse(buf, bufsz, offset_proghdr, error);
+		    fu_struct_elf_program_header64le_parse_bytes(fw, offset_proghdr, error);
 		if (st_phdr == NULL)
 			return FALSE;
 		offset_proghdr += phentsize;
@@ -75,7 +70,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 	shnum = fu_struct_elf_file_header64le_get_shnum(st_fhdr);
 	for (guint i = 0; i < shnum; i++) {
 		g_autoptr(GByteArray) st_shdr =
-		    fu_struct_elf_section_header64le_parse(buf, bufsz, offset_secthdr, error);
+		    fu_struct_elf_section_header64le_parse_bytes(fw, offset_secthdr, error);
 		if (st_shdr == NULL)
 			return FALSE;
 		g_ptr_array_add(sections, g_steal_pointer(&st_shdr));

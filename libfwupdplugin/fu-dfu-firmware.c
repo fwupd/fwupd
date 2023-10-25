@@ -199,10 +199,9 @@ fu_dfu_firmware_set_version(FuDfuFirmware *self, guint16 version)
 static gboolean
 fu_dfu_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	return fu_struct_dfu_ftr_validate(g_bytes_get_data(fw, NULL),
-					  g_bytes_get_size(fw),
-					  g_bytes_get_size(fw) - FU_STRUCT_DFU_FTR_SIZE,
-					  error);
+	return fu_struct_dfu_ftr_validate_bytes(fw,
+						g_bytes_get_size(fw) - FU_STRUCT_DFU_FTR_SIZE,
+						error);
 }
 
 gboolean

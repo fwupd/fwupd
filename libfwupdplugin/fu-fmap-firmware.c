@@ -27,10 +27,7 @@ G_DEFINE_TYPE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_fmap_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	return fu_struct_fmap_validate(g_bytes_get_data(fw, NULL),
-				       g_bytes_get_size(fw),
-				       offset,
-				       error);
+	return fu_struct_fmap_validate_bytes(fw, offset, error);
 }
 
 static gboolean
@@ -41,24 +38,22 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		       GError **error)
 {
 	FuFmapFirmwareClass *klass_firmware = FU_FMAP_FIRMWARE_GET_CLASS(firmware);
-	gsize bufsz;
 	guint32 nareas;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st_hdr = NULL;
 
 	/* parse */
-	st_hdr = fu_struct_fmap_parse(buf, bufsz, offset, error);
+	st_hdr = fu_struct_fmap_parse_bytes(fw, offset, error);
 	if (st_hdr == NULL)
 		return FALSE;
 	fu_firmware_set_addr(firmware, fu_struct_fmap_get_base(st_hdr));
 
-	if (fu_struct_fmap_get_size(st_hdr) != bufsz) {
+	if (fu_struct_fmap_get_size(st_hdr) != g_bytes_get_size(fw)) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "file size incorrect, expected 0x%04x got 0x%04x",
 			    fu_struct_fmap_get_size(st_hdr),
-			    (guint)bufsz);
+			    (guint)g_bytes_get_size(fw));
 		return FALSE;
 	}
 	nareas = fu_struct_fmap_get_nareas(st_hdr);
@@ -79,7 +74,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		g_autoptr(GBytes) bytes = NULL;
 
 		/* load area */
-		st_area = fu_struct_fmap_area_parse(buf, bufsz, offset, error);
+		st_area = fu_struct_fmap_area_parse_bytes(fw, offset, error);
 		if (st_area == NULL)
 			return FALSE;
 		area_size = fu_struct_fmap_area_get_size(st_area);

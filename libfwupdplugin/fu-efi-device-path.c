@@ -78,14 +78,13 @@ fu_efi_device_path_parse(FuFirmware *firmware,
 {
 	FuEfiDevicePath *self = FU_EFI_DEVICE_PATH(firmware);
 	FuEfiDevicePathPrivate *priv = GET_PRIVATE(self);
-	gsize bufsz = 0;
+	gsize bufsz = g_bytes_get_size(fw);
 	gsize dp_length;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st = NULL;
 	g_autoptr(GBytes) payload = NULL;
 
 	/* parse */
-	st = fu_struct_efi_device_path_parse(buf, bufsz, offset, error);
+	st = fu_struct_efi_device_path_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 	if (fu_struct_efi_device_path_get_length(st) < FU_STRUCT_EFI_DEVICE_PATH_SIZE) {

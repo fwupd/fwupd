@@ -29,15 +29,12 @@ fu_efi_device_path_list_parse(FuFirmware *firmware,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-
 	while (offset < g_bytes_get_size(fw)) {
 		g_autoptr(FuEfiDevicePath) efi_dp = NULL;
 		g_autoptr(GByteArray) st_dp = NULL;
 
 		/* parse the header so we can work out what GType to create */
-		st_dp = fu_struct_efi_device_path_parse(buf, bufsz, offset, error);
+		st_dp = fu_struct_efi_device_path_parse_bytes(fw, offset, error);
 		if (st_dp == NULL)
 			return FALSE;
 		if (fu_struct_efi_device_path_get_type(st_dp) == FU_EFI_DEVICE_PATH_TYPE_END)

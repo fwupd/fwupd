@@ -1920,11 +1920,7 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 		g_autofree gchar *dev_e = NULL;
 
 		/* parse and validate */
-		st_codesign =
-		    fu_struct_genesys_fw_codesign_info_rsa_parse(g_bytes_get_data(blob, NULL),
-								 g_bytes_get_size(blob),
-								 0x0,
-								 error);
+		st_codesign = fu_struct_genesys_fw_codesign_info_rsa_parse_bytes(blob, 0x0, error);
 		if (st_codesign == NULL) {
 			g_prefix_error(error,
 				       "failed to parse %s codesgin: ",
@@ -1971,10 +1967,7 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 
 		/* parse and validate */
 		st_codesign =
-		    fu_struct_genesys_fw_codesign_info_ecdsa_parse(g_bytes_get_data(blob, NULL),
-								   g_bytes_get_size(blob),
-								   0x0,
-								   error);
+		    fu_struct_genesys_fw_codesign_info_ecdsa_parse_bytes(blob, 0x0, error);
 		if (st_codesign == NULL) {
 			g_prefix_error(error,
 				       "failed to parse %s codesgin: ",
@@ -2763,10 +2756,7 @@ fu_genesys_usbhub_device_examine_fw_codesign_hw(FuGenesysUsbhubDevice *self,
 	blob = fu_firmware_get_bytes(codesign_img, error);
 	if (blob == NULL)
 		return FALSE;
-	st_codesign = fu_struct_genesys_fw_codesign_info_ecdsa_parse(g_bytes_get_data(blob, NULL),
-								     g_bytes_get_size(blob),
-								     0x0,
-								     error);
+	st_codesign = fu_struct_genesys_fw_codesign_info_ecdsa_parse_bytes(blob, 0x0, error);
 	if (st_codesign == NULL)
 		return FALSE;
 

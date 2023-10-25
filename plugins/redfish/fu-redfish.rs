@@ -1,7 +1,7 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(New, Parse)]
+#[derive(New, ParseBytes)]
 struct RedfishProtocolOverIp {
     service_uuid: Guid,
     host_ip_assignment_type: u8,
@@ -44,7 +44,7 @@ enum RedfishControllerInterfaceType {
     NetworkHost = 0x40,
 }
 
-#[derive(Parse)]
+#[derive(ParseBytes)]
 struct RedfishSmbiosType42 {
     type: u8 == 42,
     length: u8,

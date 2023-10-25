@@ -49,8 +49,7 @@ fu_{{vendor}}_{{example}}_check_magic(FuFirmware *firmware,
 					GError **error)
 {
 	const guint8 magic[4] = "TODO";
-	//return fu_struct_{{vendor}}_{{example}}_header_validate(g_bytes_get_data(fw, NULL),
-	//					     g_bytes_get_size(fw),
+	//return fu_struct_{{vendor}}_{{example}}_header_validate_bytes(fw,
 	//					     offset,
 	//					     error);
 	return fu_memcmp_safe(g_bytes_get_data(fw, NULL),

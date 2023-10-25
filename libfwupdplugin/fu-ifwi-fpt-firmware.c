@@ -36,10 +36,7 @@ G_DEFINE_TYPE(FuIfwiFptFirmware, fu_ifwi_fpt_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_ifwi_fpt_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	return fu_struct_ifwi_fpt_validate(g_bytes_get_data(fw, NULL),
-					   g_bytes_get_size(fw),
-					   offset,
-					   error);
+	return fu_struct_ifwi_fpt_validate_bytes(fw, offset, error);
 }
 
 static gboolean
@@ -49,13 +46,11 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
-	gsize bufsz = 0;
 	guint32 num_of_entries;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st_hdr = NULL;
 
 	/* sanity check */
-	st_hdr = fu_struct_ifwi_fpt_parse(buf, bufsz, offset, error);
+	st_hdr = fu_struct_ifwi_fpt_parse_bytes(fw, offset, error);
 	if (st_hdr == NULL)
 		return FALSE;
 	num_of_entries = fu_struct_ifwi_fpt_get_num_of_entries(st_hdr);
@@ -89,7 +84,7 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 		g_autoptr(GByteArray) st_ent = NULL;
 
 		/* read IDX */
-		st_ent = fu_struct_ifwi_fpt_entry_parse(buf, bufsz, offset, error);
+		st_ent = fu_struct_ifwi_fpt_entry_parse_bytes(fw, offset, error);
 		if (st_ent == NULL)
 			return FALSE;
 		partition_name = fu_struct_ifwi_fpt_entry_get_partition_name(st_ent);

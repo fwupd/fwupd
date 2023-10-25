@@ -28,10 +28,7 @@ fu_dfu_csr_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, Xb
 static gboolean
 fu_dfu_csr_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	return fu_struct_dfu_csr_file_validate(g_bytes_get_data(fw, NULL),
-					       g_bytes_get_size(fw),
-					       offset,
-					       error);
+	return fu_struct_dfu_csr_file_validate_bytes(fw, offset, error);
 }
 
 static gboolean
@@ -42,12 +39,10 @@ fu_dfu_csr_firmware_parse(FuFirmware *firmware,
 			  GError **error)
 {
 	FuDfuCsrFirmware *self = FU_DFU_CSR_FIRMWARE(firmware);
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st_hdr = NULL;
 
 	/* parse file header */
-	st_hdr = fu_struct_dfu_csr_file_parse(buf, bufsz, offset, error);
+	st_hdr = fu_struct_dfu_csr_file_parse_bytes(fw, offset, error);
 	if (st_hdr == NULL)
 		return FALSE;
 	self->total_sz = fu_struct_dfu_csr_file_get_file_len(st_hdr);

@@ -265,7 +265,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	default:
 		break;
 	}
-	self->st_static_ts = fu_struct_genesys_ts_static_parse(buf, bufsz, static_ts_offset, error);
+	self->st_static_ts = fu_struct_genesys_ts_static_parse_bytes(fw, static_ts_offset, error);
 
 	/* deduce code size */
 	switch (self->chip.model) {

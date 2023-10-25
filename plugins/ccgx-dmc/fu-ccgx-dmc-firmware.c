@@ -261,10 +261,7 @@ fu_ccgx_dmc_firmware_parse_image(FuFirmware *firmware,
 static gboolean
 fu_ccgx_dmc_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	return fu_struct_ccgx_dmc_fwct_info_validate(g_bytes_get_data(fw, NULL),
-						     g_bytes_get_size(fw),
-						     offset,
-						     error);
+	return fu_struct_ccgx_dmc_fwct_info_validate_bytes(fw, offset, error);
 }
 
 static gboolean

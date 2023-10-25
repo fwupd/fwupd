@@ -76,15 +76,13 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 {
 	FuEfiFirmwareFile *self = FU_EFI_FIRMWARE_FILE(firmware);
 	FuEfiFirmwareFilePrivate *priv = GET_PRIVATE(self);
-	gsize bufsz = 0;
 	guint32 size = 0x0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *guid_str = NULL;
 	g_autoptr(GByteArray) st = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
 	/* parse */
-	st = fu_struct_efi_file_parse(buf, bufsz, offset, error);
+	st = fu_struct_efi_file_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 	priv->type = fu_struct_efi_file_get_type(st);

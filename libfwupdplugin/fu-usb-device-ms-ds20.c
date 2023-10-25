@@ -57,16 +57,13 @@ fu_usb_device_ms_ds20_parse(FuUsbDeviceDs20 *self,
 			    FuUsbDevice *device,
 			    GError **error)
 {
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
-
 	/* get length and type only */
-	for (gsize offset = 0; offset < bufsz;) {
+	for (gsize offset = 0; offset < g_bytes_get_size(blob);) {
 		guint16 desc_sz;
 		guint16 desc_type;
 		g_autoptr(GByteArray) st = NULL;
 
-		st = fu_struct_ms_ds20_parse(buf, bufsz, offset, error);
+		st = fu_struct_ms_ds20_parse_bytes(blob, offset, error);
 		if (st == NULL)
 			return FALSE;
 		desc_sz = fu_struct_ms_ds20_get_size(st);

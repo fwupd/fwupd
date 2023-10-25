@@ -56,14 +56,12 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 {
 	FuEfiFirmwareSection *self = FU_EFI_FIRMWARE_SECTION(firmware);
 	FuEfiFirmwareSectionPrivate *priv = GET_PRIVATE(self);
-	gsize bufsz = 0;
 	guint32 size;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GByteArray) st = NULL;
 
 	/* parse */
-	st = fu_struct_efi_section_parse(buf, bufsz, offset, error);
+	st = fu_struct_efi_section_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 	size = fu_struct_efi_section_get_size(st);
@@ -81,7 +79,7 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 	if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED) {
 		g_autofree gchar *guid_str = NULL;
 		g_autoptr(GByteArray) st_def = NULL;
-		st_def = fu_struct_efi_section_guid_defined_parse(buf, bufsz, st->len, error);
+		st_def = fu_struct_efi_section_guid_defined_parse_bytes(fw, st->len, error);
 		if (st_def == NULL)
 			return FALSE;
 		guid_str = fwupd_guid_to_string(fu_struct_efi_section_guid_defined_get_name(st_def),

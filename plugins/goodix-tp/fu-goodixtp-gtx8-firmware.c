@@ -37,7 +37,7 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st = NULL;
 
-	st = fu_struct_goodix_gtx8_hdr_parse(buf, bufsz, 0x0, error);
+	st = fu_struct_goodix_gtx8_hdr_parse_bytes(fw, 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	firmware_size = fu_struct_goodix_gtx8_hdr_get_firmware_size(st);
@@ -173,7 +173,7 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 		guint32 img_size;
 		g_autoptr(GByteArray) st_img = NULL;
 
-		st_img = fu_struct_goodix_gtx8_img_parse(buf, bufsz, offset_hdr, error);
+		st_img = fu_struct_goodix_gtx8_img_parse_bytes(fw, offset_hdr, error);
 		if (st_img == NULL)
 			return FALSE;
 		img_size = fu_struct_goodix_gtx8_img_get_size(st_img);

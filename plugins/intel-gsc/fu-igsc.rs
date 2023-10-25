@@ -16,19 +16,19 @@ struct IgscFwVersion {
     build: u16le,
 }
 
-#[derive(Parse)]
+#[derive(ParseBytes)]
 struct IgscOpromSubsystemDeviceId {
     subsys_vendor_id: u16le,
     subsys_device_id: u16le,
 }
-#[derive(Parse)]
+#[derive(ParseBytes)]
 struct IgscOpromSubsystemDevice4Id {
     vendor_id: u16le,
     device_id: u16le,
     subsys_vendor_id: u16le,
     subsys_device_id: u16le,
 }
-#[derive(Parse)]
+#[derive(ParseBytes)]
 struct IgscFwuGwsImageInfo {
     format_version: u32le == 0x1,
     instance_id: u32le,
@@ -60,7 +60,7 @@ struct IgscFwuIupData {
 struct IgscFwuHeciImageMetadata {
     version_format: u32le = 0x1,
 }
-#[derive(Parse)]
+#[derive(ParseBytes)]
 struct IgscFwuImageMetadataV1 {
     version_format: u32le = 0x1,  // struct IgscFwuHeciImageMetadata
     project: [char; 4],

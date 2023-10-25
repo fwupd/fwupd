@@ -425,16 +425,14 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 {
 	FuCfuOffer *self = FU_CFU_OFFER(firmware);
 	FuCfuOfferPrivate *priv = GET_PRIVATE(self);
-	gsize bufsz = 0;
 	guint8 flags1;
 	guint8 flags2;
 	guint8 flags3;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st = NULL;
 	g_autofree gchar *version = NULL;
 
 	/* parse */
-	st = fu_struct_cfu_offer_parse(buf, bufsz, offset, error);
+	st = fu_struct_cfu_offer_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 	priv->segment_number = fu_struct_cfu_offer_get_segment_number(st);

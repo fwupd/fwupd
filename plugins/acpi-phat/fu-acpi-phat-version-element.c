@@ -37,12 +37,10 @@ fu_acpi_phat_version_element_parse(FuFirmware *firmware,
 				   GError **error)
 {
 	FuAcpiPhatVersionElement *self = FU_ACPI_PHAT_VERSION_ELEMENT(firmware);
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st = NULL;
 
 	/* unpack */
-	st = fu_struct_acpi_phat_version_element_parse(buf, bufsz, offset, error);
+	st = fu_struct_acpi_phat_version_element_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 	fu_firmware_set_size(firmware, st->len);
