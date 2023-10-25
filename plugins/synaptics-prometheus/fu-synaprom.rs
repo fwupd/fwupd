@@ -27,7 +27,7 @@ struct SynapromHdr {
     bufsz: u32le,
 }
 
-#[derive(Parse)]
+#[derive(ParseBytes)]
 struct SynapromCfgHdr {
     product: u32le = 65, // Prometheus (b1422)
     id1: u32le,

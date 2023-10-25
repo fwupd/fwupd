@@ -41,14 +41,13 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 				 GError **error)
 {
 	FuAcpiPhatHealthRecord *self = FU_ACPI_PHAT_HEALTH_RECORD(firmware);
-	gsize bufsz = 0;
+	gsize bufsz = g_bytes_get_size(fw);
 	guint16 rcdlen;
 	guint32 dataoff;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st = NULL;
 
 	/* sanity check record length */
-	st = fu_struct_acpi_phat_health_record_parse(buf, bufsz, offset, error);
+	st = fu_struct_acpi_phat_health_record_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 	rcdlen = fu_struct_acpi_phat_health_record_get_rcdlen(st);

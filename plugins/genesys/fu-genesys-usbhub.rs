@@ -15,7 +15,7 @@ enum GenesysTsVersion {
     Dynamic_13Byte,
     BrandProject,
 }
-#[derive(ToString, Parse, New)]
+#[derive(ToString, Parse, ParseBytes, New)]
 struct GenesysTsStatic {
     tool_string_version: GenesysTsVersion,
 
@@ -190,7 +190,7 @@ enum GenesysFwCodesign {
     Ecdsa,
 }
 
-#[derive(Parse, Validate)]
+#[derive(ParseBytes, ValidateBytes)]
 struct GenesysFwCodesignInfoRsa {
     tag_n: u32be == 0x4E203D20, // 'N = '
     text_n: [char; 512],
@@ -210,7 +210,7 @@ struct GenesysFwRsaPublicKeyText {
     end_e: u16be == 0x0D0A,
 }
 
-#[derive(Parse, Validate)]
+#[derive(Parse, ParseBytes, Validate, ValidateBytes)]
 struct GenesysFwCodesignInfoEcdsa {
     hash: [u8; 32],
     key: [u8; 64],

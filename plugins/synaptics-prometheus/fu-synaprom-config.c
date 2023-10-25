@@ -131,10 +131,7 @@ fu_synaprom_config_prepare_firmware(FuDevice *device,
 	blob = fu_firmware_get_image_by_id_bytes(firmware, "cfg-update-header", error);
 	if (blob == NULL)
 		return NULL;
-	st_hdr = fu_struct_synaprom_cfg_hdr_parse(g_bytes_get_data(blob, NULL),
-						  g_bytes_get_size(blob),
-						  0x0,
-						  error);
+	st_hdr = fu_struct_synaprom_cfg_hdr_parse_bytes(blob, 0x0, error);
 	if (st_hdr == NULL) {
 		g_prefix_error(error, "CFG metadata is invalid: ");
 		return NULL;

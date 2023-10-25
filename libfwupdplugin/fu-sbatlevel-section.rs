@@ -1,7 +1,7 @@
 // Copyright (C) 2023 Canonical Ltd
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(Parse, Validate)]
+#[derive(ParseBytes)]
 struct SbatLevelSectionHeader {
     version: u32 == 0x0,
     previous: u32,

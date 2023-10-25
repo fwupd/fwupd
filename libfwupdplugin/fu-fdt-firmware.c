@@ -296,18 +296,14 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GBytes *strtab,
 }
 
 static gboolean
-fu_fdt_firmware_parse_mem_rsvmap(FuFdtFirmware *self,
-				 const guint8 *buf,
-				 gsize bufsz,
-				 gsize offset,
-				 GError **error)
+fu_fdt_firmware_parse_mem_rsvmap(FuFdtFirmware *self, GBytes *fw, gsize offset, GError **error)
 {
 	/* parse */
-	for (; offset < bufsz; offset += FU_STRUCT_FDT_RESERVE_ENTRY_SIZE) {
+	for (; offset < g_bytes_get_size(fw); offset += FU_STRUCT_FDT_RESERVE_ENTRY_SIZE) {
 		guint64 address = 0;
 		guint64 size = 0;
 		g_autoptr(GByteArray) st_res = NULL;
-		st_res = fu_struct_fdt_reserve_entry_parse(buf, bufsz, offset, error);
+		st_res = fu_struct_fdt_reserve_entry_parse_bytes(fw, offset, error);
 		if (st_res == NULL)
 			return FALSE;
 		address = fu_struct_fdt_reserve_entry_get_address(st_res);
@@ -324,10 +320,7 @@ fu_fdt_firmware_parse_mem_rsvmap(FuFdtFirmware *self,
 static gboolean
 fu_fdt_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	return fu_struct_fdt_validate(g_bytes_get_data(fw, NULL),
-				      g_bytes_get_size(fw),
-				      offset,
-				      error);
+	return fu_struct_fdt_validate_bytes(fw, offset, error);
 }
 
 static gboolean
@@ -340,13 +333,12 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	FuFdtFirmware *self = FU_FDT_FIRMWARE(firmware);
 	FuFdtFirmwarePrivate *priv = GET_PRIVATE(self);
 	guint32 totalsize;
-	gsize bufsz = 0;
+	gsize bufsz = g_bytes_get_size(fw);
 	guint32 off_mem_rsvmap = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st_hdr = NULL;
 
 	/* sanity check */
-	st_hdr = fu_struct_fdt_parse(buf, bufsz, offset, error);
+	st_hdr = fu_struct_fdt_parse_bytes(fw, offset, error);
 	if (st_hdr == NULL)
 		return FALSE;
 	totalsize = fu_struct_fdt_get_totalsize(st_hdr);
@@ -365,11 +357,7 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	priv->cpuid = fu_struct_fdt_get_boot_cpuid_phys(st_hdr);
 	off_mem_rsvmap = fu_struct_fdt_get_off_mem_rsvmap(st_hdr);
 	if (off_mem_rsvmap != 0x0) {
-		if (!fu_fdt_firmware_parse_mem_rsvmap(self,
-						      buf,
-						      bufsz,
-						      offset + off_mem_rsvmap,
-						      error))
+		if (!fu_fdt_firmware_parse_mem_rsvmap(self, fw, offset + off_mem_rsvmap, error))
 			return FALSE;
 	}
 	if (fu_struct_fdt_get_last_comp_version(st_hdr) < FDT_LAST_COMP_VERSION) {

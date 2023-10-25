@@ -164,7 +164,6 @@ static gboolean
 fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, GError **error)
 {
 	FuCcgxFirmwareRecord *rcd;
-	const guint8 *buf;
 	gsize bufsz = 0;
 	gsize md_offset = 0;
 	guint32 fw_size = 0;
@@ -184,7 +183,7 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, G
 
 	/* read metadata from correct offset */
 	rcd = g_ptr_array_index(self->records, self->records->len - 1);
-	buf = g_bytes_get_data(rcd->data, &bufsz);
+	bufsz = g_bytes_get_size(rcd->data);
 	if (bufsz == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -204,7 +203,7 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, G
 	}
 
 	/* parse */
-	st_metadata = fu_struct_ccgx_metadata_hdr_parse(buf, bufsz, md_offset, error);
+	st_metadata = fu_struct_ccgx_metadata_hdr_parse_bytes(rcd->data, md_offset, error);
 	if (st_metadata == NULL)
 		return FALSE;
 	if (fu_struct_ccgx_metadata_hdr_get_metadata_valid(st_metadata) !=
@@ -249,6 +248,7 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, G
 	rcd_version_idx = CCGX_APP_VERSION_OFFSET / bufsz;
 	if (rcd_version_idx < self->records->len) {
 		g_autofree gchar *version_str = NULL;
+		const guint8 *buf;
 		rcd = g_ptr_array_index(self->records, rcd_version_idx);
 		buf = g_bytes_get_data(rcd->data, &bufsz);
 		if (bufsz == 0) {

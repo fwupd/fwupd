@@ -32,10 +32,7 @@ G_DEFINE_TYPE(FuPefileFirmware, fu_pefile_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_pefile_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	return fu_struct_pe_dos_header_validate(g_bytes_get_data(fw, NULL),
-						g_bytes_get_size(fw),
-						offset,
-						error);
+	return fu_struct_pe_dos_header_validate_bytes(fw, offset, error);
 }
 
 static gboolean
@@ -55,7 +52,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	g_autoptr(GByteArray) st = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
-	st = fu_struct_pe_coff_section_parse(buf, bufsz, hdr_offset, error);
+	st = fu_struct_pe_coff_section_parse_bytes(fw, hdr_offset, error);
 	if (st == NULL)
 		return FALSE;
 	sect_id_tmp = fu_struct_pe_coff_section_get_name(st);
@@ -122,19 +119,17 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
-	gsize bufsz = 0;
 	gsize strtab_offset;
 	guint32 nr_sections;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st_coff = NULL;
 	g_autoptr(GByteArray) st_doshdr = NULL;
 
 	/* parse the DOS header to get the COFF header */
-	st_doshdr = fu_struct_pe_dos_header_parse(buf, bufsz, offset, error);
+	st_doshdr = fu_struct_pe_dos_header_parse_bytes(fw, offset, error);
 	if (st_doshdr == NULL)
 		return FALSE;
 	offset += fu_struct_pe_dos_header_get_lfanew(st_doshdr);
-	st_coff = fu_struct_pe_coff_file_header_parse(buf, bufsz, offset, error);
+	st_coff = fu_struct_pe_coff_file_header_parse_bytes(fw, offset, error);
 	if (st_coff == NULL)
 		return FALSE;
 	offset += st_coff->len;
@@ -142,7 +137,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 	/* verify optional extra header */
 	if (fu_struct_pe_coff_file_header_get_size_of_optional_header(st_coff) > 0) {
 		g_autoptr(GByteArray) st_opt =
-		    fu_struct_pe_coff_optional_header64_parse(buf, bufsz, offset, error);
+		    fu_struct_pe_coff_optional_header64_parse_bytes(fw, offset, error);
 		if (st_opt == NULL)
 			return FALSE;
 		offset += fu_struct_pe_coff_file_header_get_size_of_optional_header(st_coff);

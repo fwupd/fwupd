@@ -1,7 +1,7 @@
 // Copyright (C) 2023 Advanced Micro Devices Inc.
 // SPDX-License-Identifier: LGPL-2.1+ OR MIT
 
-#[derive(Parse)]
+#[derive(ParseBytes)]
 struct Efs {
     signature: u32le = 0x55aa55aa,
     reserved: [u32le; 4],
@@ -14,7 +14,7 @@ struct Efs {
     _rom_strap_b_loc: u32le,
 }
 
-#[derive(Validate, Getters)]
+#[derive(ValidateBytes, Getters)]
 struct PspDir {
     cookie: [char; 4] == "$PSP",
     checksum: u32le,
@@ -22,14 +22,14 @@ struct PspDir {
     reserved: u32le,
 }
 
-#[derive(Parse)]
+#[derive(ParseBytes)]
 struct PspDirTable {
     fw_id: u32le,
     size: u32le,
     loc: u64le,
 }
 
-#[derive(Parse)]
+#[derive(ParseBytes)]
 struct ImageSlotHeader {
     checksum: u32le,
     boot_priority: u32le,

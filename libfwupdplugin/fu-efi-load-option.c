@@ -118,7 +118,7 @@ fu_efi_load_option_parse(FuFirmware *firmware,
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* parse header */
-	st = fu_struct_efi_load_option_parse(buf, bufsz, offset, error);
+	st = fu_struct_efi_load_option_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 	self->attrs = fu_struct_efi_load_option_get_attrs(st);

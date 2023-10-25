@@ -37,8 +37,6 @@ fu_igsc_code_firmware_get_hw_sku(FuIgscCodeFirmware *self)
 static gboolean
 fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GBytes *fw, GError **error)
 {
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st_inf = NULL;
 
 	/* the command is only supported on DG2 */
@@ -46,7 +44,7 @@ fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GBytes *fw, GError **
 		return TRUE;
 
 	/* get hw_sku */
-	st_inf = fu_struct_igsc_fwu_gws_image_info_parse(buf, bufsz, 0x0, error);
+	st_inf = fu_struct_igsc_fwu_gws_image_info_parse_bytes(fw, 0x0, error);
 	if (st_inf == NULL)
 		return FALSE;
 	self->hw_sku = fu_struct_igsc_fwu_gws_image_info_get_instance_id(st_inf);
@@ -61,8 +59,6 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 			    GError **error)
 {
 	FuIgscCodeFirmware *self = FU_IGSC_CODE_FIRMWARE(firmware);
-	const guint8 *buf;
-	gsize bufsz = 0;
 	g_autofree gchar *project = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(GBytes) fw_info = NULL;
@@ -91,8 +87,7 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* check metadata header format */
-	buf = g_bytes_get_data(fw_info, &bufsz);
-	st_md1 = fu_struct_igsc_fwu_image_metadata_v1_parse(buf, bufsz, 0x0, error);
+	st_md1 = fu_struct_igsc_fwu_image_metadata_v1_parse_bytes(fw_info, 0x0, error);
 	if (st_md1 == NULL)
 		return FALSE;
 	if (fu_struct_igsc_fwu_image_metadata_v1_get_version_format(st_md1) != 0x01) {

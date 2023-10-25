@@ -130,7 +130,7 @@ fu_usb_device_ds20_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, G
 	g_autofree gchar *guid_str = NULL;
 
 	/* matches the correct UUID */
-	st = fu_struct_ds20_parse(g_bytes_get_data(fw, NULL), g_bytes_get_size(fw), offset, error);
+	st = fu_struct_ds20_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 	guid_str = fwupd_guid_to_string(fu_struct_ds20_get_guid(st), FWUPD_GUID_FLAG_MIXED_ENDIAN);
@@ -168,17 +168,15 @@ fu_usb_device_ds20_parse(FuFirmware *firmware,
 {
 	FuUsbDeviceDs20 *self = FU_USB_DEVICE_DS20(firmware);
 	FuUsbDeviceDs20Private *priv = GET_PRIVATE(self);
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	guint version_lowest = fu_firmware_get_version_raw(firmware);
 	g_autoptr(GPtrArray) dsinfos = g_ptr_array_new_with_free_func(g_free);
 
-	for (gsize off = 0; off < bufsz; off += FU_STRUCT_DS20_SIZE) {
+	for (gsize off = 0; off < g_bytes_get_size(fw); off += FU_STRUCT_DS20_SIZE) {
 		g_autofree FuUsbDeviceDs20Item *dsinfo = g_new0(FuUsbDeviceDs20Item, 1);
 		g_autoptr(GByteArray) st = NULL;
 
 		/* parse */
-		st = fu_struct_ds20_parse(buf, bufsz, off, error);
+		st = fu_struct_ds20_parse_bytes(fw, off, error);
 		if (st == NULL)
 			return FALSE;
 		dsinfo->platform_ver = fu_struct_ds20_get_platform_ver(st);

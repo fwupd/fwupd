@@ -57,14 +57,12 @@ fu_firmware_image_chunk_parse(FuDfuseFirmware *self, GBytes *bytes, gsize *offse
 static FuFirmware *
 fu_dfuse_firmware_image_parse(FuDfuseFirmware *self, GBytes *bytes, gsize *offset, GError **error)
 {
-	gsize bufsz = 0;
 	guint chunks;
-	const guint8 *buf = g_bytes_get_data(bytes, &bufsz);
 	g_autoptr(FuFirmware) image = fu_firmware_new();
 	g_autoptr(GByteArray) st_img = NULL;
 
 	/* verify image signature */
-	st_img = fu_struct_dfuse_image_parse(buf, bufsz, *offset, error);
+	st_img = fu_struct_dfuse_image_parse_bytes(bytes, *offset, error);
 	if (st_img == NULL)
 		return NULL;
 
@@ -102,10 +100,7 @@ fu_dfuse_firmware_image_parse(FuDfuseFirmware *self, GBytes *bytes, gsize *offse
 static gboolean
 fu_dfuse_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	return fu_struct_dfuse_hdr_validate(g_bytes_get_data(fw, NULL),
-					    g_bytes_get_size(fw),
-					    offset,
-					    error);
+	return fu_struct_dfuse_hdr_validate_bytes(fw, offset, error);
 }
 
 static gboolean
@@ -116,9 +111,8 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 			GError **error)
 {
 	FuDfuFirmware *dfu_firmware = FU_DFU_FIRMWARE(firmware);
-	gsize bufsz = 0;
+	gsize bufsz = g_bytes_get_size(fw);
 	guint8 targets = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st_hdr = NULL;
 
 	/* DFU footer first */
@@ -126,7 +120,7 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* parse */
-	st_hdr = fu_struct_dfuse_hdr_parse(buf, bufsz, offset, error);
+	st_hdr = fu_struct_dfuse_hdr_parse_bytes(fw, offset, error);
 	if (st_hdr == NULL)
 		return FALSE;
 

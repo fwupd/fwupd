@@ -24,12 +24,10 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
-	gsize bufsz = 0;
 	guint32 record_count = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st = NULL;
 
-	st = fu_struct_acpi_phat_version_record_parse(buf, bufsz, offset, error);
+	st = fu_struct_acpi_phat_version_record_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 	record_count = fu_struct_acpi_phat_version_record_get_record_count(st);

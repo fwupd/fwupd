@@ -66,12 +66,10 @@ fu_efi_hard_drive_device_path_parse(FuFirmware *firmware,
 				    GError **error)
 {
 	FuEfiHardDriveDevicePath *self = FU_EFI_HARD_DRIVE_DEVICE_PATH(firmware);
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st = NULL;
 
 	/* re-parse */
-	st = fu_struct_efi_hard_drive_device_path_parse(buf, bufsz, offset, error);
+	st = fu_struct_efi_hard_drive_device_path_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 	self->partition_number = fu_struct_efi_hard_drive_device_path_get_partition_number(st);

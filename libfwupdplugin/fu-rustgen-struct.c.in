@@ -253,6 +253,20 @@
 }
 {%- endif %}
 
+{%- set export = obj.export('ParseBytes') %}
+{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+/**
+ * {{obj.c_method('ParseBytes')}}: (skip):
+ **/
+{{export.value}}GByteArray *
+{{obj.c_method('ParseBytes')}}(GBytes *blob, gsize offset, GError **error)
+{
+    gsize bufsz = 0;
+    const guint8 *buf = g_bytes_get_data(blob, &bufsz);
+    return {{obj.c_method('Parse')}}(buf, bufsz, offset, error);
+}
+{%- endif %}
+
 {%- set export = obj.export('Validate') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
 /**
@@ -290,5 +304,19 @@
     }
 {%- endfor %}
     return TRUE;
+}
+{%- endif %}
+
+{%- set export = obj.export('ValidateBytes') %}
+{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+/**
+ * {{obj.c_method('ValidateBytes')}}: (skip):
+ **/
+{{export.value}}gboolean
+{{obj.c_method('ValidateBytes')}}(GBytes *blob, gsize offset, GError **error)
+{
+    gsize bufsz = 0;
+    const guint8 *buf = g_bytes_get_data(blob, &bufsz);
+    return {{obj.c_method('Validate')}}(buf, bufsz, offset, error);
 }
 {%- endif %}

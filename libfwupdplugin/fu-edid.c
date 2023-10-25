@@ -185,12 +185,10 @@ static gboolean
 fu_edid_parse_descriptor(FuEdid *self, GBytes *fw, gsize offset, GError **error)
 {
 	gsize buf2sz = 0;
-	gsize bufsz = 0;
 	const guint8 *buf2;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st = NULL;
 
-	st = fu_struct_edid_descriptor_parse(buf, bufsz, offset, error);
+	st = fu_struct_edid_descriptor_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 
@@ -225,14 +223,12 @@ fu_edid_parse(FuFirmware *firmware,
 	      GError **error)
 {
 	FuEdid *self = FU_EDID(firmware);
-	gsize bufsz = 0;
 	const guint8 *manu_id;
 	g_autofree gchar *pnp_id = NULL;
 	g_autoptr(GByteArray) st = NULL;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* parse header */
-	st = fu_struct_edid_parse(buf, bufsz, offset, error);
+	st = fu_struct_edid_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 

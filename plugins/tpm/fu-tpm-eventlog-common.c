@@ -107,11 +107,9 @@ fu_tpm_eventlog_calc_checksums(GPtrArray *items, guint8 pcr, GError **error)
 		if (item->kind == FU_TPM_EVENTLOG_ITEM_KIND_EV_NO_ACTION && item->pcr == 0 &&
 		    item->blob != NULL && i == 0) {
 			g_autoptr(GByteArray) st_loc = NULL;
-			st_loc = fu_struct_tpm_efi_startup_locality_event_parse(
-			    g_bytes_get_data(item->blob, NULL),
-			    g_bytes_get_size(item->blob),
-			    0x0,
-			    NULL);
+			st_loc = fu_struct_tpm_efi_startup_locality_event_parse_bytes(item->blob,
+										      0x0,
+										      NULL);
 			if (st_loc != NULL) {
 				guint8 locality =
 				    fu_struct_tpm_efi_startup_locality_event_get_locality(st_loc);

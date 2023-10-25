@@ -23,9 +23,7 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 			 GError **error)
 {
 	guint32 payload_len;
-	gsize bufsz = 0;
 	guint32 version;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *version_str = NULL;
 	g_autoptr(FuFirmware) img_hdr = fu_firmware_new();
 	g_autoptr(GByteArray) st = NULL;
@@ -33,7 +31,7 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GBytes) fw_payload = NULL;
 
 	/* check the file size */
-	st = fu_struct_ebitdo_hdr_parse(buf, bufsz, offset, error);
+	st = fu_struct_ebitdo_hdr_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 	payload_len = (guint32)(g_bytes_get_size(fw) - st->len);

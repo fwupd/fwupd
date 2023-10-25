@@ -214,7 +214,7 @@ fu_redfish_smbios_parse_over_ip(FuRedfishSmbios *self, GBytes *fw, gsize offset,
 	g_autoptr(GByteArray) st = NULL;
 
 	/* port + IP address */
-	st = fu_struct_redfish_protocol_over_ip_parse(buf, bufsz, offset, error);
+	st = fu_struct_redfish_protocol_over_ip_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 	fu_redfish_smbios_set_port(self,
@@ -283,7 +283,7 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 	}
 
 	/* parse */
-	st = fu_struct_redfish_smbios_type42_parse(buf, bufsz, offset, error);
+	st = fu_struct_redfish_smbios_type42_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
 
