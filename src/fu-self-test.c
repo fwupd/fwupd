@@ -5168,6 +5168,11 @@ fu_engine_modify_bios_settings_func(void)
 	g_autoptr(GHashTable) bios_settings =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
+#ifdef _WIN32
+	g_test_skip("BIOS settings not supported on Windows");
+	return;
+#endif
+
 	/* Load contrived attributes */
 	test_dir = g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
