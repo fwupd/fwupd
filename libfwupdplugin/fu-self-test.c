@@ -3481,6 +3481,12 @@ fu_bios_settings_load_func(void)
 	g_autoptr(GPtrArray) p620_6_3_items = NULL;
 	g_autoptr(GPtrArray) xps9310_items = NULL;
 
+#ifdef _WIN32
+	/* the "AlarmDate(MM\DD\YYYY)" setting really confuses wine for obvious reasons */
+	g_test_skip("BIOS settings not supported on Windows");
+	return;
+#endif
+
 	/* load BIOS settings from a Lenovo P620 (with thinklmi driver problems) */
 	test_dir = g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", "lenovo-p620", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
