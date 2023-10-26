@@ -194,7 +194,6 @@ fu_vli_pd_device_spi_write_enable(FuVliDevice *self, GError **error)
 					   FU_VLI_DEVICE_TIMEOUT,
 					   NULL,
 					   error)) {
-		g_prefix_error(error, "failed to write enable SPI: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -595,8 +594,10 @@ fu_vli_pd_device_write_firmware(FuDevice *device,
 	/* erase */
 	if (!fu_vli_device_spi_erase_all(FU_VLI_DEVICE(self),
 					 fu_progress_get_child(progress),
-					 error))
+					 error)) {
+		g_prefix_error(error, "failed to erase all: ");
 		return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* write in chunks */
