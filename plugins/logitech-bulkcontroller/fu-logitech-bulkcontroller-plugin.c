@@ -37,6 +37,11 @@ fu_logitech_bulkcontroller_plugin_write_firmware(FuPlugin *plugin,
 						 GError **error)
 {
 	FuLogitechBulkcontrollerPlugin *self = FU_LOGITECH_BULKCONTROLLER_PLUGIN(plugin);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	locker = fu_device_locker_new(device, error);
+	if (locker == NULL)
+		return FALSE;
 	if (!fu_device_write_firmware(device, blob_fw, progress, flags, error))
 		return FALSE;
 	self->post_install = TRUE;
