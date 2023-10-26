@@ -23,6 +23,7 @@
 #define MAX_WAIT_COUNT		      150
 
 #define FU_LOGITECH_BULKCONTROLLER_DEVICE_CHECK_BUFFER_SIZE (1 << 0)
+#define FU_LOGITECH_BULKCONTROLLER_DEVICE_DELAY_SETUP_POST_INSTALL (1 << 1)
 
 enum { EP_OUT, EP_IN, EP_LAST };
 
@@ -1029,6 +1030,8 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 
 	/* success! */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_add_private_flag(device,
+				   FU_LOGITECH_BULKCONTROLLER_DEVICE_DELAY_SETUP_POST_INSTALL);
 	return TRUE;
 }
 
@@ -1203,6 +1206,16 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
 
+	/* the hardware is unable to handle requests -- firmware issue */
+	if (fu_device_has_private_flag(
+		device,
+		FU_LOGITECH_BULKCONTROLLER_DEVICE_DELAY_SETUP_POST_INSTALL)) {
+		fu_device_sleep(device, 60 * 1000);
+		fu_device_remove_private_flag(
+		    device,
+		    FU_LOGITECH_BULKCONTROLLER_DEVICE_DELAY_SETUP_POST_INSTALL);
+	}
+
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_logitech_bulkcontroller_device_parent_class)
 		 ->setup(device, error)) {
@@ -1271,6 +1284,9 @@ fu_logitech_bulkcontroller_device_init(FuLogitechBulkcontrollerDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_LOGITECH_BULKCONTROLLER_DEVICE_CHECK_BUFFER_SIZE,
 					"check-buffer-size");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_LOGITECH_BULKCONTROLLER_DEVICE_DELAY_SETUP_POST_INSTALL,
+					"delay-setup-post-install");
 
 	/* these are unrecoverable */
 	fu_device_retry_add_recovery(FU_DEVICE(self),
