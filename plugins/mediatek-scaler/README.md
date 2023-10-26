@@ -62,3 +62,4 @@ Anyone can submit a pull request to modify this plugin, but the following people
 consulted before making major or functional changes:
 
 * Crag Wang: @CragW
+* Greg Lo: @GregLo007

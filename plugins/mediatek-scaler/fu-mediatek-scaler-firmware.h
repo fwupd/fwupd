@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Crag Wang <crag.wang@dell.com>
+ * Copyright (C) 2023 Dell Technologies
  * Copyright (C) 2023 Mediatek Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1+
