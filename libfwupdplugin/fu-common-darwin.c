@@ -40,3 +40,13 @@ fu_common_get_kernel_cmdline_impl(GError **error)
 	sysctlbyname("kern.bootargs", cmdline, &cmdlinesz, NULL, 0);
 	return g_strndup(cmdline, sizeof(cmdline));
 }
+
+gchar *
+fu_common_get_olson_timezone_id_impl(GError **error)
+{
+	g_set_error(error,
+		    G_IO_ERROR,
+		    G_IO_ERROR_NOT_SUPPORTED,
+		    "getting the Olson timezone ID is not supported on Darwin");
+	return NULL;
+}

@@ -48,6 +48,7 @@
  * @FU_PATH_KIND_HOSTFS_ROOT:		The root of the host filesystem (IE /)
  * @FU_PATH_KIND_HOSTFS_BOOT:		The host boot directory, (IE /boot)
  * @FU_PATH_KIND_DEVFS: 		The host dev directory, (IE /dev)
+ * @FU_PATH_KIND_LOCALTIME:		The timezone symlink (IE /etc/localtime)
  *
  * Path types to use when dynamically determining a path at runtime
  **/
@@ -81,6 +82,7 @@ typedef enum {
 	FU_PATH_KIND_HOSTFS_ROOT,
 	FU_PATH_KIND_HOSTFS_BOOT,
 	FU_PATH_KIND_DEVFS,
+	FU_PATH_KIND_LOCALTIME,
 	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;

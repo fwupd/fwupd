@@ -106,6 +106,8 @@ gchar *
 fu_common_get_kernel_cmdline(GError **error);
 gboolean
 fu_common_check_full_disk_encryption(GError **error);
+gchar *
+fu_common_get_olson_timezone_id(GError **error);
 
 gsize
 fu_common_align_up(gsize value, guint8 alignment);

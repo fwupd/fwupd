@@ -198,6 +198,22 @@ fu_common_check_full_disk_encryption(GError **error)
 }
 
 /**
+ * fu_common_get_olson_timezone_id:
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the system Olson timezone ID, as used in the CLDR and ICU specifications.
+ *
+ * Returns: timezone string, e.g. `Europe/London` or %NULL on error
+ *
+ * Since: 1.9.7
+ **/
+gchar *
+fu_common_get_olson_timezone_id(GError **error)
+{
+	return fu_common_get_olson_timezone_id_impl(error);
+}
+
+/**
  * fu_common_align_up:
  * @value: value to align
  * @alignment: align to this power of 2, where 0x1F is the maximum value of 2GB
