@@ -597,6 +597,22 @@ fu_strsplit_func(void)
 }
 
 static void
+fu_common_olson_timezone_id_func(void)
+{
+	g_autofree gchar *timezone_id = NULL;
+	g_autoptr(GError) error = NULL;
+
+	timezone_id = fu_common_get_olson_timezone_id(&error);
+	g_assert_no_error(error);
+#ifdef _WIN32
+	/* we do not emulate this on Windows, so just check for anything */
+	g_assert_nonnull(timezone_id);
+#else
+	g_assert_cmpstr(timezone_id, ==, "America/New_York");
+#endif
+}
+
+static void
 fu_strsafe_func(void)
 {
 	struct {
@@ -4494,6 +4510,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/struct{wrapped}", fu_plugin_struct_wrapped_func);
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/common{strnsplit}", fu_strsplit_func);
+	g_test_add_func("/fwupd/common{olson-timezone-id}", fu_common_olson_timezone_id_func);
 	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);
 	if (g_test_slow())
 		g_test_add_func("/fwupd/progress", fu_progress_func);

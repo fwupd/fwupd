@@ -19,3 +19,5 @@ guint64
 fu_common_get_memory_size_impl(void);
 gchar *
 fu_common_get_kernel_cmdline_impl(GError **error);
+gchar *
+fu_common_get_olson_timezone_id_impl(GError **error);
