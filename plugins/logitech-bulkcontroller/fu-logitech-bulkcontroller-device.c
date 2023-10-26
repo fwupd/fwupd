@@ -21,8 +21,7 @@
 #define HASH_VALUE_SIZE		      16
 #define MAX_RETRIES		      5
 #define MAX_WAIT_COUNT		      150
-
-#define FU_LOGITECH_BULKCONTROLLER_DEVICE_CHECK_BUFFER_SIZE (1 << 0)
+#define POST_INSTALL_SLEEP_DURATION   80 * 1000 /* ms */
 
 enum { EP_OUT, EP_IN, EP_LAST };
 
@@ -1220,7 +1219,7 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 
 	/* check if the device supports a 16kb transfer buffer */
 	if (fu_device_has_private_flag(device,
-				       FU_LOGITECH_BULKCONTROLLER_DEVICE_CHECK_BUFFER_SIZE)) {
+				       FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_CHECK_BUFFER_SIZE)) {
 		if (!fu_logitech_bulkcontroller_device_check_buffer_size(self, error)) {
 			g_prefix_error(error, "failed to check buffer size: ");
 			return FALSE;
@@ -1231,6 +1230,14 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 	if (!fu_logitech_bulkcontroller_device_transition_to_device_mode(self, error)) {
 		g_prefix_error(error, "failed to transition to device_mode: ");
 		return FALSE;
+	}
+
+	/* the hardware is unable to handle requests -- firmware issue */
+	if (fu_device_has_private_flag(device,
+				       FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL)) {
+		fu_device_sleep(device, POST_INSTALL_SLEEP_DURATION);
+		fu_device_remove_private_flag(device,
+					      FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL);
 	}
 
 	/* set device time */
@@ -1271,8 +1278,11 @@ fu_logitech_bulkcontroller_device_init(FuLogitechBulkcontrollerDevice *self)
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10 * 60 * 1000); /* >1 min to finish init */
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_BULKCONTROLLER_DEVICE_CHECK_BUFFER_SIZE,
+					FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_CHECK_BUFFER_SIZE,
 					"check-buffer-size");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL,
+					"post-install");
 
 	/* these are unrecoverable */
 	fu_device_retry_add_recovery(FU_DEVICE(self),
