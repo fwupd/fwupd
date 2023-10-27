@@ -198,6 +198,80 @@ fu_common_check_full_disk_encryption(GError **error)
 }
 
 /**
+ * fu_common_get_olson_location:
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the system Olson location, colloquially known as as a timezone.
+ *
+ * Returns: timesoze string, e.g. `Europe/London` or %NULL on error
+ *
+ * Since: 1.9.7
+ **/
+gchar *
+fu_common_get_olson_location(GError **error)
+{
+	g_autoptr(GFile) file_lz = g_file_new_for_path("/etc/localtime");
+	g_autoptr(GFile) file_tz = g_file_new_for_path("/etc/timezone");
+
+	/* old Ubuntu, or no systemd */
+	if (g_file_query_exists(file_tz, NULL)) {
+		gsize bufsz = 0;
+		g_autofree gchar *buf = NULL;
+		g_auto(GStrv) lines = NULL;
+		if (!g_file_load_contents(file_tz, NULL, &buf, &bufsz, NULL, error))
+			return NULL;
+		lines = fu_strsplit(buf, bufsz, "\n", -1);
+		for (guint i = 0; lines[i] != NULL; i++) {
+			if (lines[i][0] == '\0')
+				continue;
+			if (g_str_has_prefix(lines[i], "#"))
+				continue;
+			return g_strdup(lines[i]);
+		}
+	}
+
+	/* Red Hat and *BSD use the last two sections of the symlink target */
+	if (g_file_query_file_type(file_lz, G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS, NULL) ==
+	    G_FILE_TYPE_SYMBOLIC_LINK) {
+		g_autofree gchar *target = NULL;
+		g_autoptr(GFileInfo) info = NULL;
+
+		info = g_file_query_info(file_lz,
+					 G_FILE_ATTRIBUTE_STANDARD_SYMLINK_TARGET,
+					 G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS,
+					 NULL,
+					 error);
+		if (info == NULL)
+			return NULL;
+		target =
+		    g_file_info_get_attribute_as_string(info,
+							G_FILE_ATTRIBUTE_STANDARD_SYMLINK_TARGET);
+		if (target != NULL) {
+			g_auto(GStrv) sections = g_strsplit(target, "/", -1);
+			guint sections_len = g_strv_length(sections);
+			if (sections_len < 2) {
+				g_set_error(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_INVALID_FILENAME,
+					    "invalid symlink target: %s",
+					    target);
+				return NULL;
+			}
+			return g_strdup_printf("%s/%s",
+					       sections[sections_len - 2],
+					       sections[sections_len - 1]);
+		}
+	}
+
+	/* failed */
+	g_set_error_literal(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "no timezone or localtime is available");
+	return NULL;
+}
+
+/**
  * fu_common_align_up:
  * @value: value to align
  * @alignment: align to this power of 2, where 0x1F is the maximum value of 2GB

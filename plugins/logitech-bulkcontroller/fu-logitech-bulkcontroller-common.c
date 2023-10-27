@@ -74,21 +74,26 @@ proto_manager_generate_transition_to_device_mode_request(void)
 }
 
 GByteArray *
-proto_manager_generate_set_device_time_request(void)
+proto_manager_generate_set_device_time_request(GError **error)
 {
-	GByteArray *buf = g_byte_array_new();
-	g_autoptr(GTimeZone) tz = g_time_zone_new_local();
-
+	g_autofree gchar *olson_location = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 	Logi__Device__Proto__Header header_msg = LOGI__DEVICE__PROTO__HEADER__INIT;
 	Logi__Device__Proto__SetDeviceTimeRequest set_devicetime_msg =
 	    LOGI__DEVICE__PROTO__SET_DEVICE_TIME_REQUEST__INIT;
 	Logi__Device__Proto__UsbMsg usb_msg = LOGI__DEVICE__PROTO__USB_MSG__INIT;
 	Logi__Device__Proto__Request request_msg = LOGI__DEVICE__PROTO__REQUEST__INIT;
+
+	/* the device expects an olson_location, not a timezone */
+	olson_location = fu_common_get_olson_location(error);
+	if (olson_location == NULL)
+		return NULL;
+
 	request_msg.payload_case = LOGI__DEVICE__PROTO__REQUEST__PAYLOAD_SET_DEVICE_TIME_REQUEST;
 	request_msg.set_device_time_request = &set_devicetime_msg;
 
 	set_devicetime_msg.ts = (g_get_real_time() / 1000) + SET_TIME_DELAY_MS;
-	set_devicetime_msg.time_zone = g_strdup_printf("%s", g_time_zone_get_identifier(tz));
+	set_devicetime_msg.time_zone = olson_location;
 	proto_manager_set_header(&header_msg);
 	usb_msg.header = &header_msg;
 	usb_msg.message_case = LOGI__DEVICE__PROTO__USB_MSG__MESSAGE_REQUEST;
@@ -98,8 +103,7 @@ proto_manager_generate_set_device_time_request(void)
 	logi__device__proto__usb_msg__pack(&usb_msg, (unsigned char *)buf->data);
 	g_free(header_msg.id);
 	g_free(header_msg.timestamp);
-	g_free(set_devicetime_msg.time_zone);
-	return buf;
+	return g_steal_pointer(&buf);
 }
 
 GByteArray *
