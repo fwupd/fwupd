@@ -604,7 +604,7 @@ fu_common_olson_location_func(void)
 
 	location = fu_common_get_olson_location(&error);
 	g_assert_no_error(error);
-	g_assert_nonnull(location);
+	g_assert_cmpstr(location, ==, "America/New_York");
 }
 
 static void

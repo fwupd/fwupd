@@ -14,6 +14,7 @@
 
 #include "fu-common-private.h"
 #include "fu-firmware.h"
+#include "fu-path.h"
 #include "fu-string.h"
 
 /**
@@ -203,15 +204,18 @@ fu_common_check_full_disk_encryption(GError **error)
  *
  * Gets the system Olson location, colloquially known as as a timezone.
  *
- * Returns: timesoze string, e.g. `Europe/London` or %NULL on error
+ * Returns: timezone string, e.g. `Europe/London` or %NULL on error
  *
  * Since: 1.9.7
  **/
 gchar *
 fu_common_get_olson_location(GError **error)
 {
-	g_autoptr(GFile) file_lz = g_file_new_for_path("/etc/localtime");
-	g_autoptr(GFile) file_tz = g_file_new_for_path("/etc/timezone");
+	g_autofree gchar *sysconfdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR);
+	g_autofree gchar *fn_lz = fu_path_from_kind(FU_PATH_KIND_TIMEZONE_LOCALTIME);
+	g_autofree gchar *fn_tz = g_build_filename(sysconfdir, "timezone", NULL);
+	g_autoptr(GFile) file_lz = g_file_new_for_path(fn_lz);
+	g_autoptr(GFile) file_tz = g_file_new_for_path(fn_tz);
 
 	/* old Ubuntu, or no systemd */
 	if (g_file_query_exists(file_tz, NULL)) {
@@ -233,7 +237,7 @@ fu_common_get_olson_location(GError **error)
 	/* Red Hat and *BSD use the last two sections of the symlink target */
 	if (g_file_query_file_type(file_lz, G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS, NULL) ==
 	    G_FILE_TYPE_SYMBOLIC_LINK) {
-		g_autofree gchar *target = NULL;
+		const gchar *target = NULL;
 		g_autoptr(GFileInfo) info = NULL;
 
 		info = g_file_query_info(file_lz,
@@ -243,9 +247,7 @@ fu_common_get_olson_location(GError **error)
 					 error);
 		if (info == NULL)
 			return NULL;
-		target =
-		    g_file_info_get_attribute_as_string(info,
-							G_FILE_ATTRIBUTE_STANDARD_SYMLINK_TARGET);
+		target = g_file_info_get_symlink_target(info);
 		if (target != NULL) {
 			g_auto(GStrv) sections = g_strsplit(target, "/", -1);
 			guint sections_len = g_strv_length(sections);
