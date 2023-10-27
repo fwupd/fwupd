@@ -21,6 +21,7 @@
 #define HASH_VALUE_SIZE		      16
 #define MAX_RETRIES		      5
 #define MAX_WAIT_COUNT		      150
+#define POST_INSTALL_SLEEP_DURATION   80 * 1000 /* ms */
 
 enum { EP_OUT, EP_IN, EP_LAST };
 
@@ -1206,7 +1207,7 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 	/* the hardware is unable to handle requests -- firmware issue */
 	if (fu_device_has_private_flag(device,
 				       FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL)) {
-		fu_device_sleep(device, 60 * 1000);
+		fu_device_sleep(device, POST_INSTALL_SLEEP_DURATION);
 		fu_device_remove_private_flag(device,
 					      FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL);
 	}
