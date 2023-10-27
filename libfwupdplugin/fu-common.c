@@ -263,6 +263,11 @@ fu_common_get_olson_location(GError **error)
 		}
 	}
 
+#ifdef _WIN32
+	/* there does not appear to be any API for this */
+	return g_strdup("Europe/London");
+#endif
+
 	/* failed */
 	g_set_error_literal(error,
 			    G_IO_ERROR,
