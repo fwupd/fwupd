@@ -27,6 +27,7 @@ client_dep = [
   gudev,
   gusb,
   libcurl,
+  libjcat,
   libjsonglib,
   libxmlb,
   sqlite,
@@ -40,6 +41,7 @@ if polkit.found()
 endif
 
 fwupd_engine_src = [
+  'fu-cabinet.c',
   'fu-cabinet-common.c',
   'fu-debug.c',
   'fu-device-list.c',
