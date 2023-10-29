@@ -1045,7 +1045,9 @@ fu_logitech_fu_logitech_bulkcontroller_device_set_time_cb(FuDevice *device,
 	g_autoptr(GByteArray) buf = NULL;
 
 	/* send SetDeviceTimeRequest to sync device clock with host */
-	device_request = proto_manager_generate_set_device_time_request();
+	device_request = proto_manager_generate_set_device_time_request(error);
+	if (device_request == NULL)
+		return FALSE;
 	buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
 	if (buf == NULL)
 		return FALSE;
