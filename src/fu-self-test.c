@@ -20,6 +20,7 @@
 #include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
 #include "fu-cabinet-common.h"
+#include "fu-cabinet.h"
 #include "fu-console.h"
 #include "fu-context-private.h"
 #include "fu-device-list.h"
@@ -4311,6 +4312,34 @@ fu_security_attr_func(gconstpointer user_data)
 }
 
 static void
+fu_common_cabinet_func(void)
+{
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
+	g_autoptr(GBytes) blob1 = NULL;
+	g_autoptr(GBytes) blob2 = NULL;
+	g_autoptr(GBytes) jcat_blob1 = g_bytes_new_static("hello", 6);
+	g_autoptr(GBytes) jcat_blob2 = g_bytes_new_static("hellX", 6);
+	g_autoptr(GError) error = NULL;
+
+	/* add */
+	fu_cabinet_add_file(cabinet, "firmware.jcat", jcat_blob1);
+
+	/* replace */
+	fu_cabinet_add_file(cabinet, "firmware.jcat", jcat_blob2);
+
+	/* get data */
+	blob1 = fu_cabinet_get_file(cabinet, "firmware.jcat", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob1);
+	g_assert_cmpstr(g_bytes_get_data(blob1, NULL), ==, "hellX");
+
+	/* get data that does not exist */
+	blob2 = fu_cabinet_get_file(cabinet, "foo.jcat", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null(blob2);
+}
+
+static void
 fu_memcpy_func(gconstpointer user_data)
 {
 	const guint8 src[] = {'a', 'b', 'c', 'd', 'e'};
@@ -5334,6 +5363,7 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/backend{usb-invalid}", self, fu_backend_usb_invalid_func);
 	g_test_add_data_func("/fwupd/plugin{module}", self, fu_plugin_module_func);
 	g_test_add_data_func("/fwupd/memcpy", self, fu_memcpy_func);
+	g_test_add_func("/fwupd/cabinet", fu_common_cabinet_func);
 	g_test_add_data_func("/fwupd/security-attr", self, fu_security_attr_func);
 	g_test_add_data_func("/fwupd/device-list", self, fu_device_list_func);
 	g_test_add_data_func("/fwupd/device-list{delay}", self, fu_device_list_delay_func);

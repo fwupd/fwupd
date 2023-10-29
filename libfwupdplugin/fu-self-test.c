@@ -15,7 +15,6 @@
 #include "fwupd-security-attr-private.h"
 
 #include "fu-bios-settings-private.h"
-#include "fu-cabinet.h"
 #include "fu-common-private.h"
 #include "fu-context-private.h"
 #include "fu-coswid-firmware.h"
@@ -1237,34 +1236,6 @@ fu_common_endian_func(void)
 	g_assert_cmpint(buf[1], ==, 0x34);
 	g_assert_cmpint(buf[2], ==, 0x56);
 	g_assert_cmpint(fu_memread_uint24(buf, G_BIG_ENDIAN), ==, 0x123456);
-}
-
-static void
-fu_common_cabinet_func(void)
-{
-	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
-	g_autoptr(GBytes) blob1 = NULL;
-	g_autoptr(GBytes) blob2 = NULL;
-	g_autoptr(GBytes) jcat_blob1 = g_bytes_new_static("hello", 6);
-	g_autoptr(GBytes) jcat_blob2 = g_bytes_new_static("hellX", 6);
-	g_autoptr(GError) error = NULL;
-
-	/* add */
-	fu_cabinet_add_file(cabinet, "firmware.jcat", jcat_blob1);
-
-	/* replace */
-	fu_cabinet_add_file(cabinet, "firmware.jcat", jcat_blob2);
-
-	/* get data */
-	blob1 = fu_cabinet_get_file(cabinet, "firmware.jcat", &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(blob1);
-	g_assert_cmpstr(g_bytes_get_data(blob1, NULL), ==, "hellX");
-
-	/* get data that does not exist */
-	blob2 = fu_cabinet_get_file(cabinet, "foo.jcat", &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert_null(blob2);
 }
 
 static void
@@ -4548,7 +4519,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{vercmp}", fu_common_vercmp_func);
 	g_test_add_func("/fwupd/common{strstrip}", fu_strstrip_func);
 	g_test_add_func("/fwupd/common{endian}", fu_common_endian_func);
-	g_test_add_func("/fwupd/common{cabinet}", fu_common_cabinet_func);
 	g_test_add_func("/fwupd/common{bytes-get-data}", fu_common_bytes_get_data_func);
 	g_test_add_func("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);

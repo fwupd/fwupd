@@ -56,7 +56,6 @@ fwupdplugin_src = [
   'fu-bytes.c', # fuzzing
   'fu-cab-firmware.c', # fuzzing
   'fu-cab-image.c', # fuzzing
-  'fu-cabinet.c',
   'fu-cfi-device.c',
   'fu-cfu-offer.c', # fuzzing
   'fu-cfu-payload.c', # fuzzing
@@ -179,7 +178,6 @@ fwupdplugin_headers = [
   'fu-bytes.h',
   'fu-cab-firmware.h',
   'fu-cab-image.h',
-  'fu-cabinet.h',
   'fu-cfi-device.h',
   'fu-cfu-offer.h',
   'fu-cfu-payload.h',
@@ -273,7 +271,6 @@ fwupdplugin_headers = [
 
 introspection_deps = [
   libxmlb,
-  libjcat,
   giounix,
   gusb,
   gudev,
@@ -286,7 +283,6 @@ pkgg_requires = [ 'gio-2.0',
                   'json-glib-1.0',
                   'libarchive',
                   'xmlb',
-                  'jcat',
                   'gusb'
 ]
 
@@ -296,7 +292,6 @@ library_deps = [
   libjsonglib,
   zlib,
   valgrind,
-  libjcat,
   lzma,
   libarchive,
   cbor,
