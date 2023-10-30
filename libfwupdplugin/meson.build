@@ -298,6 +298,20 @@ library_deps = [
   platform_deps,
 ]
 
+if rust_support
+  fwupdpluginrs = static_library(
+    'fwupdpluginrs',
+    sources: [
+      'fu-crc.rs',
+    ],
+    rust_crate_type: 'staticlib',
+  )
+  rust = import('rust')
+  rust.test('fwupdpluginrs', fwupdpluginrs)
+else
+  fwupdpluginrs = []
+endif
+
 fwupdplugin = library(
   'fwupdplugin',
   fwupdplugin_rs_targets,
@@ -314,6 +328,7 @@ fwupdplugin = library(
   ],
   link_with: [
     fwupd,
+    fwupdpluginrs,
   ],
   install_dir: libdir_pkg,
   install: true

@@ -11,7 +11,7 @@ license=('GPL2')
 depends=('libgusb' 'modemmanager' 'tpm2-tss')
 makedepends=('meson' 'valgrind' 'gobject-introspection' 'gi-docgen' 'git'
              'python-cairo' 'noto-fonts' 'noto-fonts-cjk' 'python-gobject' 'vala'
-             'libdrm' 'curl' 'polkit' 'xz')
+             'libdrm' 'curl' 'polkit' 'rust' 'xz')
 
 pkgver() {
     cd ${pkgname}

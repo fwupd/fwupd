@@ -23,6 +23,7 @@
  *
  * Since: 1.8.2
  **/
+#ifndef HAVE_RUST
 guint8
 fu_crc8_full(const guint8 *buf, gsize bufsz, guint8 crc_init, guint8 polynomial)
 {
@@ -37,6 +38,7 @@ fu_crc8_full(const guint8 *buf, gsize bufsz, guint8 crc_init, guint8 polynomial)
 	}
 	return ~((guint8)(crc >> 8));
 }
+#endif
 
 /**
  * fu_crc8:
@@ -68,6 +70,7 @@ fu_crc8(const guint8 *buf, gsize bufsz)
  *
  * Since: 1.8.2
  **/
+#ifndef HAVE_RUST
 guint16
 fu_crc16_full(const guint8 *buf, gsize bufsz, guint16 crc, guint16 polynomial)
 {
@@ -83,6 +86,7 @@ fu_crc16_full(const guint8 *buf, gsize bufsz, guint16 crc, guint16 polynomial)
 	}
 	return ~crc;
 }
+#endif
 
 /**
  * fu_crc16:
@@ -114,6 +118,7 @@ fu_crc16(const guint8 *buf, gsize bufsz)
  *
  * Since: 1.8.2
  **/
+#ifndef HAVE_RUST
 guint32
 fu_crc32_full(const guint8 *buf, gsize bufsz, guint32 crc, guint32 polynomial)
 {
@@ -127,6 +132,7 @@ fu_crc32_full(const guint8 *buf, gsize bufsz, guint32 crc, guint32 polynomial)
 	}
 	return ~crc;
 }
+#endif
 
 /**
  * fu_crc32:
