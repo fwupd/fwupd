@@ -71,7 +71,7 @@ override_dh_install:
 	rm -f debian/fwupd/etc/fwupd/remotes.d/fwupd-tests.conf
 
 	# avoid shipping an empty directory
-	find debian/fwupd/lib/systemd -type d -empty -delete
+	[ ! -d debian/fwupd/lib/systemd ] || find debian/fwupd/lib/systemd -type d -empty -delete
 
 override_dh_strip_nondeterminism:
 	dh_strip_nondeterminism -Xfirmware-example.xml.gz

@@ -30,7 +30,7 @@ fi
 
 # Clean up from fwupdate->fwupd transition
 # This can be removed after bullseye and focal are released
-EFIDIR=$(awk '/^ID=/ {gsub(/"/,""); split($$0,a,"="); print tolower(a[2])}' /etc/os-release)
+EFIDIR=$(awk '/^ID=/ {gsub(/"/,""); split($0,a,"="); print tolower(a[2])}' /etc/os-release)
 if [ "${DPKG_MAINTSCRIPT_ARCH}" = "amd64" ]; then
 	EFI_NAME=x64
 elif [ "${DPKG_MAINTSCRIPT_ARCH}" = "i386" ]; then
