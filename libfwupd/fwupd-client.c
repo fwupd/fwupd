@@ -3624,7 +3624,7 @@ fwupd_client_get_daemon_version(FwupdClient *self)
  * fwupd_client_get_host_bkc:
  * @self: a #FwupdClient
  *
- * Gets the daemon version number.
+ * Gets the host best known configuration, e.g. `vendor-factory-2021q1,mycompany-2023`.
  *
  * Returns: a string, or %NULL for unknown.
  *

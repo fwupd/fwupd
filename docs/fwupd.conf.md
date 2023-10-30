@@ -114,7 +114,8 @@ The `[fwupd]` section can contain the following parameters:
 
 **HostBkc={{FU_DAEMON_CONFIG_DEFAULT_HOST_BKC}}**
 
-  A host best known configuration is used when using `fwupdmgr sync` which can downgrade firmware to factory versions or upgrade firmware to a supported config level. e.g. **vendor-factory-2021q1**
+  Comma separated list of best known configuration IDs to be used when using `fwupdmgr sync`.
+  This can downgrade firmware to factory versions or upgrade firmware to a supported config level. e.g. **vendor-factory-2021q1,mycompany-2023**
 
 **ReleaseDedupe={{FU_DAEMON_CONFIG_DEFAULT_RELEASE_DEDUPE}}**
 
