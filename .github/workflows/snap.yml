@@ -23,6 +23,10 @@ jobs:
         else
           echo "::set-output name=channel::edge"
         fi
+    - id: prep
+      run: |
+        mkdir -p snap
+        ln -s ../contrib/snap/snapcraft.yaml snap/snapcraft.yaml
     - uses: snapcore/action-build@v1
       id: snapcraft
     - uses: actions/upload-artifact@v3
