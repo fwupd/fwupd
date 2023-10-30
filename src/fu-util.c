@@ -2518,10 +2518,11 @@ fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
 static FwupdRelease *
 fu_util_get_release_with_tag(FuUtilPrivate *priv,
 			     FwupdDevice *dev,
-			     const gchar *tag,
+			     const gchar *host_bkc,
 			     GError **error)
 {
 	g_autoptr(GPtrArray) rels = NULL;
+	g_auto(GStrv) host_bkcs = g_strsplit(host_bkc, ",", -1);
 
 	/* find the newest release that matches */
 	rels = fwupd_client_get_releases(priv->client,
@@ -2536,8 +2537,10 @@ fu_util_get_release_with_tag(FuUtilPrivate *priv,
 					       priv->filter_release_include,
 					       priv->filter_release_exclude))
 			continue;
-		if (fwupd_release_has_tag(rel, tag))
-			return g_object_ref(rel);
+		for (guint j = 0; host_bkcs[j] != NULL; j++) {
+			if (fwupd_release_has_tag(rel, host_bkcs[j]))
+				return g_object_ref(rel);
+		}
 	}
 
 	/* no match */

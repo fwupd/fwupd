@@ -22,10 +22,11 @@ static FwupdRelease *
 fu_engine_get_release_with_tag(FuEngine *self,
 			       FuEngineRequest *request,
 			       FwupdDevice *dev,
-			       const gchar *tag,
+			       const gchar *host_bkc,
 			       GError **error)
 {
 	g_autoptr(GPtrArray) rels = NULL;
+	g_auto(GStrv) host_bkcs = g_strsplit(host_bkc, ",", -1);
 
 	/* find the newest release that matches */
 	rels = fu_engine_get_releases(self, request, fwupd_device_get_id(dev), error);
@@ -33,8 +34,10 @@ fu_engine_get_release_with_tag(FuEngine *self,
 		return NULL;
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel = g_ptr_array_index(rels, i);
-		if (fwupd_release_has_tag(rel, tag))
-			return g_object_ref(rel);
+		for (guint j = 0; host_bkcs[j] != NULL; j++) {
+			if (fwupd_release_has_tag(rel, host_bkcs[j]))
+				return g_object_ref(rel);
+		}
 	}
 
 	/* no match */
