@@ -15,6 +15,7 @@
 
 struct _FuPciPspDevice {
 	FuUdevDevice parent_instance;
+	gboolean supported;
 };
 
 G_DEFINE_TYPE(FuPciPspDevice, fu_pci_psp_device, FU_TYPE_UDEV_DEVICE)
@@ -69,6 +70,23 @@ fu_pci_psp_device_get_attr(FwupdSecurityAttr *attr,
 }
 
 static void
+fu_pci_psp_device_set_valid_data(FuDevice *device, FuSecurityAttrs *attrs)
+{
+	FuPciPspDevice *self = FU_PCI_PSP_DEVICE(device);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	if (self->supported)
+		return;
+
+	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU);
+	fwupd_security_attr_add_obsolete(attr, "cpu");
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attrs_append(attrs, attr);
+	self->supported = TRUE;
+}
+
+static void
 fu_pci_psp_device_add_security_attrs_tsme(FuDevice *device,
 					  const gchar *path,
 					  FuSecurityAttrs *attrs)
@@ -82,9 +100,12 @@ fu_pci_psp_device_add_security_attrs_tsme(FuDevice *device,
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "tsme_status", &val, &error_local)) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		g_debug("%s", error_local->message);
 		return;
 	}
+
+	fu_pci_psp_device_set_valid_data(device, attrs);
 
 	/* BIOS knob used on Lenovo systems */
 	fu_security_attr_add_bios_target_value(attr, "com.thinklmi.TSME", "enable");
@@ -113,9 +134,12 @@ fu_pci_psp_device_add_security_attrs_fused_part(FuDevice *device,
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "fused_part", &val, &error_local)) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		g_debug("%s", error_local->message);
 		return;
 	}
+
+	fu_pci_psp_device_set_valid_data(device, attrs);
 
 	if (!val) {
 		g_debug("part is not fused");
@@ -142,9 +166,12 @@ fu_pci_psp_device_add_security_attrs_debug_locked_part(FuDevice *device,
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "debug_lock_on", &val, &error_local)) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		g_debug("%s", error_local->message);
 		return;
 	}
+
+	fu_pci_psp_device_set_valid_data(device, attrs);
 
 	if (!val) {
 		g_debug("debug lock disabled");
@@ -171,9 +198,12 @@ fu_pci_psp_device_add_security_attrs_rollback_protection(FuDevice *device,
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "anti_rollback_status", &val, &error_local)) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		g_debug("%s", error_local->message);
 		return;
 	}
+
+	fu_pci_psp_device_set_valid_data(device, attrs);
 
 	if (!val) {
 		g_debug("rollback protection not enforced");
@@ -201,9 +231,12 @@ fu_pci_psp_device_add_security_attrs_rom_armor(FuDevice *device,
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "rom_armor_enforced", &val, &error_local)) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		g_debug("%s", error_local->message);
 		return;
 	}
+
+	fu_pci_psp_device_set_valid_data(device, attrs);
 
 	if (!val) {
 		g_debug("ROM armor not enforced");
@@ -232,9 +265,12 @@ fu_pci_psp_device_add_security_attrs_rpmc(FuDevice *device,
 	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "rpmc_spirom_available", &val, &error_local)) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		g_debug("%s", error_local->message);
 		return;
 	}
+
+	fu_pci_psp_device_set_valid_data(device, attrs);
 
 	if (!val) {
 		g_debug("no RPMC compatible SPI rom present");
@@ -262,32 +298,15 @@ fu_pci_psp_device_add_security_attrs_rpmc(FuDevice *device,
 }
 
 static void
-fu_pci_psp_device_set_missing_data(FuDevice *device, FuSecurityAttrs *attrs)
-{
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
-
-	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU);
-	fwupd_security_attr_add_obsolete(attr, "cpu");
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
-	fu_security_attrs_append(attrs, attr);
-}
-
-static void
 fu_pci_psp_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 {
 	const gchar *sysfs_path = NULL;
-	g_autofree gchar *test_file = NULL;
 
-	/* ccp not loaded */
-	if (device != NULL) {
+	if (device != NULL)
 		sysfs_path = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
-		test_file = g_build_filename(sysfs_path, "tsme_status", NULL);
-	}
-	if (sysfs_path == NULL || !g_file_test(test_file, G_FILE_TEST_EXISTS)) {
-		fu_pci_psp_device_set_missing_data(device, attrs);
+	/* ccp not loaded */
+	if (sysfs_path == NULL)
 		return;
-	}
 
 	fu_pci_psp_device_add_security_attrs_tsme(device, sysfs_path, attrs);
 	fu_pci_psp_device_add_security_attrs_fused_part(device, sysfs_path, attrs);

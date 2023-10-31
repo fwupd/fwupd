@@ -412,14 +412,9 @@ fu_cpu_device_add_supported_cpu_attribute(FuCpuDevice *self, FuSecurityAttrs *at
 
 	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU);
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
-	switch (fu_cpu_get_vendor()) {
-	case FU_CPU_VENDOR_INTEL:
-	case FU_CPU_VENDOR_AMD:
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-		break;
-	default:
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
-	}
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 	fu_security_attrs_append(attrs, attr);
 }
 
