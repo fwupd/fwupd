@@ -40,6 +40,8 @@ fu_vli_pd_firmware_validate_header(FuVliPdFirmware *self)
 		return TRUE;
 	if (self->vid == 0x0BF8)
 		return TRUE;
+	if (self->vid == 0x208E)
+		return TRUE;
 	return FALSE;
 }
 
