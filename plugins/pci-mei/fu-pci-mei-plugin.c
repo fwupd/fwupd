@@ -536,9 +536,17 @@ fu_plugin_add_security_attrs_mei_version(FuPlugin *plugin, FuSecurityAttrs *attr
 static void
 fu_pci_mei_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
 	/* only Intel */
 	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_INTEL)
 		return;
+
+	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU);
+	fwupd_security_attr_add_obsolete(attr, "cpu");
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fu_security_attrs_append(attrs, attr);
 
 	fu_plugin_add_security_attrs_manufacturing_mode(plugin, attrs);
 	fu_plugin_add_security_attrs_override_strap(plugin, attrs);
