@@ -2324,7 +2324,7 @@ fu_security_attr_get_result(FwupdSecurityAttr *attr)
 	}
 
 	/* TRANSLATORS: Suffix: the fallback HSI result */
-	return _("Failed");
+	return _("Unknown");
 }
 
 static void
