@@ -2644,6 +2644,8 @@ fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags s
 			fu_security_attr_append_str(attr, str, strflags);
 			/* make sure they have at least HSI-1 */
 			if (j < FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT &&
+			    !fwupd_security_attr_has_flag(attr,
+							  FWUPD_SECURITY_ATTR_FLAG_OBSOLETED) &&
 			    !fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
 				low_help = TRUE;
 
