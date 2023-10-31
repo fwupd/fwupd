@@ -258,8 +258,6 @@ fu_security_attrs_calculate_hsi(FuSecurityAttrs *self, FuSecurityAttrsFlags flag
 		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE) &&
 		    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
 			continue;
-		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA))
-			return g_strdup("HSI:INVALID:missing-data");
 
 		attr_flags |= fwupd_security_attr_get_flags(attr);
 	}

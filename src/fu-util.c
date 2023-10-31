@@ -3911,25 +3911,6 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (attrs == NULL)
 		return FALSE;
 
-	for (guint j = 0; j < attrs->len; j++) {
-		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, j);
-		g_autofree gchar *err_str = NULL;
-
-		if (!fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA))
-			continue;
-#ifndef SUPPORTED_BUILD
-		if (priv->flags & FWUPD_INSTALL_FLAG_FORCE)
-			continue;
-#endif
-		err_str = g_strdup_printf(
-		    "\n%s\n » %s",
-		    /* TRANSLATORS: error message to tell someone they can't use this feature */
-		    _("Not enough data was provided by the platform to make an HSI calculation."),
-		    "https://fwupd.github.io/hsi.html#not-enough-info");
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, err_str);
-		return FALSE;
-	}
-
 	/* the "when" */
 	events = fwupd_client_get_host_security_events(priv->client,
 						       10,
