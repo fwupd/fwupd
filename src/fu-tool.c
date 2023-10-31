@@ -3172,24 +3172,6 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	attrs = fu_engine_get_host_security_attrs(priv->engine);
 	items = fu_security_attrs_get_all(attrs);
-	for (guint j = 0; j < items->len; j++) {
-		FwupdSecurityAttr *attr = g_ptr_array_index(items, j);
-		g_autofree gchar *err_str = NULL;
-
-		if (!fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA))
-			continue;
-#ifndef SUPPORTED_BUILD
-		if (priv->flags & FWUPD_INSTALL_FLAG_FORCE)
-			continue;
-#endif
-		err_str = g_strdup_printf(
-		    "\n%s\n » %s",
-		    /* TRANSLATORS: error message to tell someone they can't use this feature */
-		    _("Not enough data was provided by the platform to make an HSI calculation."),
-		    "https://fwupd.github.io/hsi.html#not-enough-info");
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, err_str);
-		return FALSE;
-	}
 
 	/* print the "why" */
 	if (priv->as_json) {
