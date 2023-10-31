@@ -783,11 +783,13 @@ fu_logitech_bulkcontroller_device_parse_info(FuLogitechBulkcontrollerDevice *sel
 }
 
 static gboolean
-fu_logitech_bulkcontroller_device_ensure_info(FuLogitechBulkcontrollerDevice *self,
-					      gboolean send_req,
-					      GError **error)
+fu_logitech_bulkcontroller_device_ensure_info_cb(FuDevice *device,
+						 gpointer user_data,
+						 GError **error)
 {
+	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
 	g_autoptr(GByteArray) buf = NULL;
+	gboolean send_req = *(gboolean *)user_data;
 
 	/* sending GetDeviceInfoRequest. Device reports quite a few matrix, including status,
 	 * progress etc
@@ -813,6 +815,18 @@ fu_logitech_bulkcontroller_device_ensure_info(FuLogitechBulkcontrollerDevice *se
 			return FALSE;
 	}
 	return fu_logitech_bulkcontroller_device_parse_info(self, buf, error);
+}
+
+static gboolean
+fu_logitech_bulkcontroller_device_ensure_info(FuLogitechBulkcontrollerDevice *self,
+					      gboolean send_req,
+					      GError **error)
+{
+	return fu_device_retry(FU_DEVICE(self),
+			       fu_logitech_bulkcontroller_device_ensure_info_cb,
+			       MAX_RETRIES,
+			       &send_req,
+			       error);
 }
 
 static gboolean
