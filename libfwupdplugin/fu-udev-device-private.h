@@ -10,3 +10,5 @@
 
 void
 fu_udev_device_emit_changed(FuUdevDevice *self);
+void
+fu_udev_device_set_io_channel(FuUdevDevice *self, FuIOChannel *io_channel);

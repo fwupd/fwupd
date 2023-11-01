@@ -361,12 +361,13 @@ fu_mei_device_read(FuMeiDevice *self,
 		   GError **error)
 {
 	gssize rc;
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 
 	g_return_val_if_fail(FU_IS_MEI_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	rc = read(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)), buf, bufsz);
+	rc = read(fu_io_channel_unix_get_fd(io_channel), buf, bufsz);
 	if (rc < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -408,7 +409,8 @@ fu_mei_device_write(FuMeiDevice *self,
 	gssize written;
 	gssize rc;
 	fd_set set;
-	guint fd = fu_udev_device_get_fd(FU_UDEV_DEVICE(self));
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	guint fd = fu_io_channel_unix_get_fd(io_channel);
 
 	g_return_val_if_fail(FU_IS_MEI_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
