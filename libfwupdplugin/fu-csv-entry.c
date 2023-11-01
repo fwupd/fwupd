@@ -224,7 +224,8 @@ fu_csv_entry_write(FuFirmware *firmware, GError **error)
 		const gchar *value = g_ptr_array_index(priv->values, i);
 		if (str->len > 0)
 			g_string_append(str, ",");
-		g_string_append(str, value);
+		if (value != NULL)
+			g_string_append(str, value);
 	}
 	g_string_append(str, "\n");
 	g_byte_array_append(buf, (const guint8 *)str->str, str->len);
