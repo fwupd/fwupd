@@ -437,20 +437,17 @@ fu_io_channel_read_raw(FuIOChannel *self,
 		       FuIOChannelFlags flags,
 		       GError **error)
 {
-	const guint8 *tmpbuf = NULL;
-	gsize bytes_read_tmp;
-	g_autoptr(GBytes) tmp = NULL;
+	g_autoptr(GByteArray) tmp = NULL;
 
 	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), FALSE);
 
-	tmp = fu_io_channel_read_bytes(self, bufsz, timeout_ms, flags, error);
+	tmp = fu_io_channel_read_byte_array(self, bufsz, timeout_ms, flags, error);
 	if (tmp == NULL)
 		return FALSE;
-	tmpbuf = g_bytes_get_data(tmp, &bytes_read_tmp);
-	if (tmpbuf != NULL)
-		memcpy(buf, tmpbuf, bytes_read_tmp);
+	if (buf != NULL)
+		memcpy(buf, tmp->data, MIN(tmp->len, bufsz));
 	if (bytes_read != NULL)
-		*bytes_read = bytes_read_tmp;
+		*bytes_read = tmp->len;
 	return TRUE;
 }
 
