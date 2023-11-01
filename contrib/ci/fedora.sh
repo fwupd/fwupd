@@ -32,7 +32,6 @@ meson setup \
     -Dcompat_cli=true \
     -Db_sanitize=undefined \
     -Dgusb:tests=false \
-    -Dplugin_dummy=true \
     -Dplugin_flashrom=enabled \
     -Dplugin_modem_manager=disabled \
     -Dplugin_uefi_capsule=enabled \

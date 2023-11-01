@@ -14,7 +14,6 @@
 
 %global enable_ci 0
 %global enable_tests 1
-%global enable_dummy 1
 %global __meson_wrap_mode nodownload
 
 # fwupd.efi is only available on these arches
@@ -237,11 +236,6 @@ fwupd wrapper for Qubes OS
     -Dtests=true \
 %else
     -Dtests=false \
-%endif
-%if 0%{?enable_dummy}
-    -Dplugin_dummy=true \
-%else
-    -Dplugin_dummy=false \
 %endif
 %if 0%{?have_flashrom}
     -Dplugin_flashrom=enabled \

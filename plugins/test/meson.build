@@ -1,10 +1,5 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginTest"']
 
-install_dummy = false
-if get_option('plugin_dummy')
-  install_dummy = true
-endif
-
 if bluez.allowed()
   plugin_quirks += files('test-ble.quirk')
 endif

@@ -174,11 +174,6 @@ option('plugin_cpu',
     'false': 'disabled',
   },
 )
-option('plugin_dummy',
-  type: 'boolean',
-  value: false,
-  description: 'enable the dummy device',
-)
 option('plugin_emmc',
   type: 'feature',
   description: 'eMMC support',
