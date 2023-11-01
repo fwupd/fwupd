@@ -68,13 +68,13 @@ fu_io_channel_write_byte_array(FuIOChannel *self,
 			       GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GBytes *
 fu_io_channel_read_bytes(FuIOChannel *self,
-			 gssize max_size,
+			 gssize count,
 			 guint timeout_ms,
 			 FuIOChannelFlags flags,
 			 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GByteArray *
 fu_io_channel_read_byte_array(FuIOChannel *self,
-			      gssize max_size,
+			      gssize count,
 			      guint timeout_ms,
 			      FuIOChannelFlags flags,
 			      GError **error) G_GNUC_WARN_UNUSED_RESULT;
