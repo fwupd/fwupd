@@ -257,26 +257,26 @@ fu_io_channel_write_raw(FuIOChannel *self,
 /**
  * fu_io_channel_read_bytes:
  * @self: a #FuIOChannel
- * @max_size: maximum size of the returned blob, or -1 for no limit
+ * @count: number of bytes to read, or -1 for no limit
  * @timeout_ms: timeout in ms
  * @flags: channel flags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
  * @error: (nullable): optional return location for an error
  *
  * Reads bytes from the TTY, that will fail if exceeding @timeout_ms.
  *
- * Returns: a #GBytes, or %NULL for error
+ * Returns: a #GBytes (which may be bigger than @count), or %NULL for error
  *
  * Since: 1.2.2
  **/
 GBytes *
 fu_io_channel_read_bytes(FuIOChannel *self,
-			 gssize max_size,
+			 gssize count,
 			 guint timeout_ms,
 			 FuIOChannelFlags flags,
 			 GError **error)
 {
 	g_autoptr(GByteArray) buf =
-	    fu_io_channel_read_byte_array(self, max_size, timeout_ms, flags, error);
+	    fu_io_channel_read_byte_array(self, count, timeout_ms, flags, error);
 	if (buf == NULL)
 		return NULL;
 	return g_bytes_new(buf->data, buf->len);
@@ -285,20 +285,20 @@ fu_io_channel_read_bytes(FuIOChannel *self,
 /**
  * fu_io_channel_read_byte_array:
  * @self: a #FuIOChannel
- * @max_size: maximum size of the returned blob, or -1 for no limit
+ * @count: number of bytes to read, or -1 for no limit
  * @timeout_ms: timeout in ms
  * @flags: channel flags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
  * @error: (nullable): optional return location for an error
  *
  * Reads bytes from the TTY, that will fail if exceeding @timeout_ms.
  *
- * Returns: (transfer full): a #GByteArray, or %NULL for error
+ * Returns: (transfer full): a #GByteArray (which may be bigger than @count), or %NULL for error
  *
  * Since: 1.3.2
  **/
 GByteArray *
 fu_io_channel_read_byte_array(FuIOChannel *self,
-			      gssize max_size,
+			      gssize count,
 			      guint timeout_ms,
 			      FuIOChannelFlags flags,
 			      GError **error)
@@ -369,7 +369,7 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 				g_byte_array_append(buf2, buf, len);
 
 			/* check maximum size */
-			if (max_size > 0 && buf2->len >= (guint)max_size)
+			if (count > 0 && buf2->len >= (guint)count)
 				break;
 			if (flags & FU_IO_CHANNEL_FLAG_SINGLE_SHOT)
 				break;
