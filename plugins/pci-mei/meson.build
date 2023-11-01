@@ -1,5 +1,6 @@
 if hsi
 cargs = ['-DG_LOG_DOMAIN="FuPluginPciMei"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('pci-mei.quirk')
 plugin_builtins += static_library('fu_plugin_pci_mei',

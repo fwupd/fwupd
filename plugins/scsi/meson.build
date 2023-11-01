@@ -1,6 +1,7 @@
 if get_option('plugin_scsi').require(gudev.found(),
     error_message: 'gudev is needed for plugin_scsi').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginScsi"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('scsi.quirk')
 plugin_builtins += static_library('fu_plugin_scsi',

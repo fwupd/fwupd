@@ -1,5 +1,6 @@
 if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginElantp"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('elantp.quirk')
 plugin_builtin_elantp = static_library('fu_plugin_elantp',

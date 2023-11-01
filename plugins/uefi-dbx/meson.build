@@ -1,4 +1,5 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiDbx"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('uefi-dbx.quirk')
 plugin_builtin_uefi_dbx = static_library('fu_plugin_uefi_dbx',

@@ -2,6 +2,7 @@ if get_option('plugin_parade_lspcon').require(gudev.found(),
     error_message: 'gudev is needed for plugin_parade_lspcon').allowed()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginParadeLspcon"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('parade-lspcon.quirk')
 plugin_builtins += static_library('fu_plugin_parade_lspcon',

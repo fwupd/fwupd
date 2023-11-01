@@ -1,5 +1,6 @@
 if host_machine.system() == 'linux' and hsi
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxSwap"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_builtin_linux_swap = static_library('fu_plugin_linux_swap',
   sources: [

@@ -2,6 +2,7 @@ if get_option('plugin_igsc').require(gudev.found(),
     error_message: 'gudev is needed for plugin_igsc').allowed()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginIgsc"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('igsc.quirk')
 plugin_builtins += static_library('fu_plugin_igsc',

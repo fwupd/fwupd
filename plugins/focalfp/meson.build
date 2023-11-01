@@ -1,5 +1,6 @@
 if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginFocalfp"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('focalfp.quirk')
 plugin_builtins += static_library('fu_plugin_focalfp',

@@ -2,6 +2,7 @@ gpio_header = cc.has_header_symbol('linux/gpio.h', 'GPIO_V2_LINE_FLAG_OUTPUT', r
 
 if gpio_header and gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginGpio"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('gpio.quirk')
 plugin_builtins += static_library('fu_plugin_gpio',

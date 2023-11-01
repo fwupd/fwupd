@@ -1,3 +1,4 @@
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 cargs = ['-DG_LOG_DOMAIN="FuPluginVbe"']
 
 plugin_builtins += static_library('fu_plugin_vbe',

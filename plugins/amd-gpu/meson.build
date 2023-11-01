@@ -1,5 +1,6 @@
 if gudev.found() and libdrm_amdgpu.found() and get_option('plugin_amdgpu').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginAmdGpu"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('amd-gpu.quirk')
 plugin_builtins += static_library('fu_plugin_amd_gpu',

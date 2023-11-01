@@ -1,6 +1,7 @@
 if get_option('plugin_cpu').disable_auto_if(host_machine.system() != 'linux').require(hsi,
     error_message: 'plugin_cpu needs hsi to be set').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginCpu"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('cpu.quirk')
 plugin_builtins += static_library('fu_plugin_cpu',

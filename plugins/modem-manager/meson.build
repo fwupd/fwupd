@@ -10,6 +10,7 @@ if libmm_glib.found() and \
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginMm"']
 cargs +=['-DMM_REQUIRED_VERSION="1.10.0"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('modem-manager.quirk')
 

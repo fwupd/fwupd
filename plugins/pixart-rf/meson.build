@@ -1,5 +1,6 @@
 if get_option('plugin_pixart_rf').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginPixartRf"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('pixart-rf.quirk')
 plugin_builtin_pxi = static_library('fu_plugin_pxi',

@@ -1,5 +1,6 @@
 if get_option('plugin_acpi_phat').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiPhat"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_builtin_acpi_phat = static_library('fu_plugin_acpi_phat',
   rustgen.process(

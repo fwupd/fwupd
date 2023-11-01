@@ -1,6 +1,7 @@
 if get_option('plugin_uefi_capsule').disable_auto_if(host_machine.system() not in ['linux', 'freebsd']).allowed()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiCapsule"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 efi_os_dir = get_option('efi_os_dir')
 if efi_os_dir != ''
@@ -177,4 +178,10 @@ install_data([
 )
 endif
 
+summary({
+  'efi_os_dir': efi_os_dir,
+  'efi binary': get_option('efi_binary'),
+  'capsule splash': get_option('plugin_uefi_capsule_splash'),
+}, section:'uefi capsule options')
 endif
+

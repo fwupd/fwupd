@@ -1,6 +1,6 @@
 plugin_readme_targets = []
 plugin_readme_outputs = []
-foreach plugin: plugins
+foreach plugin, enabled: plugins
   plugin_readme_output = '@0@-README.md'.format(plugin)
   plugin_readme_targets += custom_target('doc-plugin-@0@'.format(plugin),
     input: join_paths(meson.project_source_root(), 'plugins', plugin, 'README.md'),

@@ -1,5 +1,6 @@
 if gudev.found() and gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechRallysystem"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('logitech-rallysystem.quirk')
 

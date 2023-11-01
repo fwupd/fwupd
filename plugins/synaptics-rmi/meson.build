@@ -3,6 +3,7 @@ if get_option('plugin_synaptics_rmi').require(gnutls.found(),
    get_option('plugin_synaptics_rmi').require(gudev.found(),
     error_message: 'gudev is needed for plugin_synaptics_rmi').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsRmi"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('synaptics-rmi.quirk')
 plugin_builtin_synaptics_rmi = static_library('fu_plugin_synaptics_rmi',

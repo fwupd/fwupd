@@ -1,5 +1,6 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginCcgxDmc"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files(['ccgx-dmc.quirk'])
 plugin_builtin_ccgx_dmc = static_library('fu_plugin_ccgx_dmc',
