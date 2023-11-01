@@ -405,30 +405,6 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency id="gcab">
-    <distro id="centos">
-      <package variant="x86_64" />
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-      <!-- need native until meson includes https://github.com/mesonbuild/meson/pull/10291 -->
-      <package variant="mingw64">gcab</package>
-    </distro>
-    <distro id="void">
-      <package variant="x86_64" />
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency id="gettext">
     <distro id="centos">
       <package variant="x86_64" />
