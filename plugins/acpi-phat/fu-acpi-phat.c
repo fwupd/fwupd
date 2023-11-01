@@ -80,7 +80,8 @@ fu_acpi_phat_record_parse(FuFirmware *firmware,
 		fu_firmware_set_version_raw(firmware_rcd, revision);
 		if (!fu_firmware_parse(firmware_rcd, fw_tmp, flags, error))
 			return FALSE;
-		fu_firmware_add_image(firmware, firmware_rcd);
+		if (!fu_firmware_add_image_full(firmware, firmware_rcd, error))
+			return FALSE;
 	}
 
 	*offset += record_length;
@@ -317,6 +318,7 @@ fu_acpi_phat_to_report_string(FuAcpiPhat *self)
 static void
 fu_acpi_phat_init(FuAcpiPhat *self)
 {
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 }
 
