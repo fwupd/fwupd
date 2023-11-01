@@ -313,7 +313,7 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 
 	/* blocking IO */
 	if (flags & FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO) {
-		guint8 buf[1024];
+		guint8 buf[1024] = {0x0};
 		gssize len = read(self->fd, buf, sizeof(buf));
 		if (len < 0) {
 			g_set_error(error,
@@ -350,7 +350,7 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 
 		/* we have data to read */
 		if (fds.revents & G_IO_IN) {
-			guint8 buf[1024];
+			guint8 buf[1024] = {0x0};
 			gssize len = read(self->fd, buf, sizeof(buf));
 			if (len < 0) {
 				if (errno == EINTR)
