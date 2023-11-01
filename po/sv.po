@@ -487,6 +487,10 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Autentisering krävs för att nedgradera den fasta programvaran på denna maskin"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to fix a host security issue"
+msgstr "Autentisering krävs för att fixa ett säkerhetsproblem på värden"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
 msgstr "Autentisering krävs för att ändra BIOS-inställningar"
 
@@ -515,6 +519,10 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "Autentisering krävs för att växla till den nya fasta programvaruversionen"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to undo the fix for a host security issue"
+msgstr "Autentisering krävs för att återställa fixen för ett säkerhetsproblem på värden"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
 msgstr "Autentisering krävs för att låsa upp en enhet"
 
@@ -538,9 +546,17 @@ msgstr "Automatisk rapportering"
 msgid "Automatically upload every time?"
 msgstr "Skicka automatiskt varje gång?"
 
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS Firmware Updates"
+msgstr "Uppdateringar för fast BIOS-programvara"
+
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS Rollback Protection"
 msgstr "BIOS-tillbakarullningsskydd"
+
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS firmware updates"
+msgstr "Uppdateringar för fast BIOS-programvara"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS rollback protection"
@@ -822,6 +838,10 @@ msgstr "Enhet borttagen:"
 msgid "Device requires AC power to be connected"
 msgstr "Enheten behöver vara ansluten till nätspänning"
 
+#. TRANSLATORS: device does not have a display connected
+msgid "Device requires a display to be plugged in"
+msgstr "Enheten kräver att en skärm är inpluggad"
+
 #. TRANSLATORS: The device cannot be updated due to missing vendor's license."
 msgid "Device requires a software license to update"
 msgstr "Enheten kräver en programvarulicens för att uppdateras"
@@ -1073,6 +1093,10 @@ msgstr "Aktiverad om hårdvaran matchar"
 msgid "Enables a given remote"
 msgstr "Aktiverar en given fjärrkälla"
 
+#. TRANSLATORS: longer description
+msgid "Enabling firmware updates for the BIOS allows fixing security issues."
+msgstr "Aktivering av fasta programvaruuppdateringar för BIOS möjliggör fixande av säkerhetsproblem."
+
 msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
 msgstr "Att aktivera denna funktionalitet görs på egen risk, vilket betyder att du måste kontakta den ursprungliga tillverkaren av din utrustning om problem som orsakas av dessa uppdateringar. Endast problem med själva uppdateringsprocessen ska rapporteras på $OS_RELEASE:BUG_REPORT_URL$."
 
@@ -1172,7 +1196,6 @@ msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "FILNAMN|KONTROLLSUMMA1[,KONTROLLSUMMA2][,KONTROLLSUMMA3]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Misslyckades"
 
@@ -1373,6 +1396,18 @@ msgstr "Uppdateringar av fast programvara stöds på denna maskin."
 #. TRANSLATORS: user needs to run a command
 msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "Uppdateringar för fast programvara är inaktiverade; kör ”fwupdmgr unlock” för att aktivera"
+
+#. TRANSLATORS: command description
+msgid "Fix a specific host security attribute"
+msgstr "Fixa ett specifikt säkerhetsattribut på värden"
+
+#. TRANSLATORS: we've fixed a security problem on the machine
+msgid "Fix reverted successfully"
+msgstr "Fixen återställdes"
+
+#. TRANSLATORS: we've fixed a security problem on the machine
+msgid "Fixed successfully"
+msgstr "Fixades"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -1754,6 +1789,11 @@ msgstr "Ogiltiga argument"
 msgid "Invalid arguments, expected GUID"
 msgstr "Ogiltiga argument, GUID förväntades"
 
+#. TRANSLATOR: This is the error message for
+#. * incorrect parameter
+msgid "Invalid arguments, expected an AppStream ID"
+msgstr "Ogiltiga argument, ett AppStream-ID förväntades"
+
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Ogiltiga argument, förväntade åtminstone ARKIV FAST_PROGRAMVARA METAINFO"
@@ -2072,10 +2112,6 @@ msgstr "Inga uppdateringar applicerades"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Inte godkänd"
-
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided by the platform to make an HSI calculation."
-msgstr "För lite data tillhandahölls av plattformen för att göra en HSI-beräkning."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2424,6 +2460,10 @@ msgstr "Kör uppstädningssammansättningsrutin för insticksmodulen när instal
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Kör förberedelsesammansättningsrutin för insticksmodulen när install-blob används"
 
+#. TRANSLATORS: command description
+msgid "Run the post-reboot cleanup action"
+msgstr "Kör upprensningsåtgärden efter uppstart"
+
 #. TRANSLATORS: tell a user how to get information
 #, c-format
 msgid "Run without '%s' to see"
@@ -2500,6 +2540,9 @@ msgstr "Secure Boot inaktiverad"
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot enabled"
 msgstr "Secure Boot aktiverad"
+
+msgid "Security hardening for HSI"
+msgstr "Säkerhetsskärpning för HSI"
 
 #. TRANSLATORS: the %1 is a URL to a wiki page
 #, c-format
@@ -2987,11 +3030,21 @@ msgstr "Detta verktyg låter en administratör ställa frågor till och styra fw
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Detta verktyg tillåter en administratör att använda fwupd-insticksmoduler utan att dessa är installerade på värdsystemet."
 
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can add a kernel argument of '%s', but it will only be active after restarting the computer."
+msgstr "Detta verktyg kan lägga till ett kärnargument ”%s”, men det kommer aktiveras först efter att datorn startats om."
+
 #. TRANSLATORS: the %1 is a BIOS setting name.
 #. * %2 and %3 are the values, e.g. "True" or "Windows10"
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
 msgstr "Detta verktyg kan automatiskt ändra BIOS-inställningen ”%s” från ”%s” till ”%s”, men den kommer aktiveras först efter att datorn startats om."
+
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can change the kernel argument from '%s' to '%s', but it will only be active after restarting the computer."
+msgstr "Detta verktyg kan ändra kärnargumentet från ”%s” till ”%s”, men det kommer aktiveras först efter att datorn startats om."
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
@@ -3097,6 +3150,10 @@ msgstr "Avblockera fast programvara:"
 msgid "Unblocks a specific firmware from being installed"
 msgstr "Avblockerar en specifik fast programvara från att installeras"
 
+#. TRANSLATORS: command description
+msgid "Undo the host security attribute fix"
+msgstr "Ångra säkerhetsattributfixen på värden"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
 msgstr "Okrypterad"
@@ -3108,6 +3165,7 @@ msgstr "Släpp systemets hindrande så uppgraderingar tillåts"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Okänd"
 
@@ -3334,6 +3392,10 @@ msgid "Writing…"
 msgstr "Skriver…"
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
+msgid "You should ensure you are comfortable restoring the setting from a recovery or installation disk, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "Du bör säkerställa att du är bekväm med att återställa inställningen från en återställnings- eller installationsdisk, då denna ändring kan få systemet att inte kunna starta Linux eller orsaka annan systeminstabilitet."
+
+#. TRANSLATORS: the user has to manually recover; we can't do it
 msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
 msgstr "Du bör säkerställa att du är bekväm med att återställa inställningen från systemets konfiguration för fast programvara, då denna ändring kan få systemet att inte kunna starta Linux eller orsaka annan systeminstabilitet."
 
@@ -3354,6 +3416,10 @@ msgid "Your system is set up to the BKC of %s."
 msgstr "Ditt system är inställt till BKC för %s."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[APPSTREAM_ID]"
+msgstr "[APPSTREAM-ID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"
 msgstr "[KONTROLLSUMMA]"
 
@@ -3368,6 +3434,10 @@ msgstr "[ENHETS-ID|GUID] [GREN]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [VERSION]"
 msgstr "[ENHETS-ID|GUID] [VERSION]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE]"
+msgstr "[ENHET]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"

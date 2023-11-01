@@ -332,6 +332,10 @@ msgstr "(obsoleto)"
 msgid "A TPM PCR is now an invalid value"
 msgstr "Un PCR TPM è ora un valore non valido"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "AMD Firmware Replay Protection"
+msgstr "Protezione replay firmware AMD"
+
 #. TRANSLATORS: Title: if hardware enforces control of SPI writes
 msgid "AMD Firmware Write Protection"
 msgstr "Protezione scrittura firmware AMD"
@@ -1129,7 +1133,6 @@ msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "NOMEFILE|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Non riuscito"
 
@@ -1593,6 +1596,14 @@ msgstr "Mitigazione GDS Intel"
 msgid "Intel Management Engine Manufacturing Mode"
 msgstr "Modalità costruttore Intel Management Engine"
 
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is
+#. enabled
+#. * with a jumper -- luckily it is probably not accessible to end users on
+#. consumer
+#. * boards
+msgid "Intel Management Engine Override"
+msgstr "Disabilitazione Intel Management Engine"
+
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Version"
 msgstr "Versione Intel Management Engine"
@@ -1942,6 +1953,14 @@ msgstr "Output in formato JSON"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Sovrascrive il percorso ESP predefinito"
+
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Firmware"
+msgstr "Firmware P2P"
+
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Metadata"
+msgstr "Metadati P2P"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
@@ -2807,6 +2826,7 @@ msgstr "Non cifrato"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Sconosciuto"
 

@@ -811,7 +811,6 @@ msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "FILNAVN-KILDE FILNAVN-DST [FIRMWARETYPE-KILDE] [FIRMWARE-TYPE-DST]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Mislykkedes"
 
@@ -1978,6 +1977,7 @@ msgstr "Dekrypteret"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Ukendt"
 

@@ -1122,7 +1122,6 @@ msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "NAMABERKAS|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Gagal"
 
@@ -2813,6 +2812,7 @@ msgstr "Tidak terenkripsi"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Tidak diketahui"
 

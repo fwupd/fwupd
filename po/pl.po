@@ -499,6 +499,10 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Wymagane jest uwierzytelnienie, aby zainstalować poprzednią wersję oprogramowania sprzętowego tego komputera"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to fix a host security issue"
+msgstr "Wymagane jest uwierzytelnienie, aby naprawić problem z zabezpieczeniami komputera"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
 msgstr "Wymagane jest uwierzytelnienie, aby zmodyfikować ustawienia BIOS-u"
 
@@ -527,6 +531,10 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "Wymagane jest uwierzytelnienie, aby przełączyć na nową wersję oprogramowania sprzętowego"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to undo the fix for a host security issue"
+msgstr "Wymagane jest uwierzytelnienie, aby wycofać poprawkę problemu z zabezpieczeniami komputera"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
 msgstr "Wymagane jest uwierzytelnienie, aby odblokować urządzenie"
 
@@ -550,9 +558,17 @@ msgstr "Automatyczne zgłaszanie"
 msgid "Automatically upload every time?"
 msgstr "Automatycznie wysyłać za każdym razem?"
 
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS Firmware Updates"
+msgstr "Aktualizacje oprogramowania sprzętowego BIOS-u"
+
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS Rollback Protection"
 msgstr "Ochrona BIOS-u przed wycofaniem"
+
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS firmware updates"
+msgstr "Aktualizacje oprogramowania sprzętowego BIOS-u"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS rollback protection"
@@ -829,6 +845,10 @@ msgstr "Usunięto urządzenie:"
 #. TRANSLATORS: as in, wired mains power for a laptop
 msgid "Device requires AC power to be connected"
 msgstr "Urządzenie wymaga podłączenia do prądu"
+
+#. TRANSLATORS: device does not have a display connected
+msgid "Device requires a display to be plugged in"
+msgstr "Urządzenie wymaga, aby ekran był podłączony"
 
 #. TRANSLATORS: The device cannot be updated due to missing vendor's license."
 msgid "Device requires a software license to update"
@@ -1169,7 +1189,6 @@ msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "NAZWA-PLIKU|SUMA-KONTROLNA1[,SUMA-KONTROLNA2][,SUMA-KONTROLNA3]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Nie powiodło się"
 
@@ -1353,6 +1372,18 @@ msgstr "Aktualizacje oprogramowania sprzętowego są obsługiwane na tym kompute
 #. TRANSLATORS: user needs to run a command
 msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "Aktualizacje oprogramowania sprzętowego są wyłączone; wykonanie polecenia „fwupdmgr unlock” je włączy"
+
+#. TRANSLATORS: command description
+msgid "Fix a specific host security attribute"
+msgstr "Naprawia podany atrybut zabezpieczeń komputera"
+
+#. TRANSLATORS: we've fixed a security problem on the machine
+msgid "Fix reverted successfully"
+msgstr "Pomyślnie wycofano poprawkę"
+
+#. TRANSLATORS: we've fixed a security problem on the machine
+msgid "Fixed successfully"
+msgstr "Pomyślnie naprawiono"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -1713,6 +1744,11 @@ msgstr "Nieprawidłowe parametry"
 msgid "Invalid arguments, expected GUID"
 msgstr "Nieprawidłowe parametry, oczekiwano GUID"
 
+#. TRANSLATOR: This is the error message for
+#. * incorrect parameter
+msgid "Invalid arguments, expected an AppStream ID"
+msgstr "Nieprawidłowe parametry, oczekiwano identyfikatora AppStream"
+
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Nieprawidłowe parametry, oczekiwano co najmniej ARCHIWUM OPROGRAMOWANIE-SPRZĘTOWE METAINFO"
@@ -2019,10 +2055,6 @@ msgstr "Nie zastosowano żadnych aktualizacji"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Niezatwierdzone"
-
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided by the platform to make an HSI calculation."
-msgstr "Platforma dostarczyła za mało danych, aby wykonać obliczenie HSI."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2435,6 +2467,9 @@ msgstr "Wyłączono Secure Boot"
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot enabled"
 msgstr "Włączono Secure Boot"
+
+msgid "Security hardening for HSI"
+msgstr "Wzmacnianie zabezpieczeń dla HSI"
 
 #. TRANSLATORS: the %1 is a URL to a wiki page
 #, c-format
@@ -2894,11 +2929,21 @@ msgstr "To narzędzie umożliwia administratorowi odpytywanie i sterowanie usł
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "To narzędzie umożliwia administratorowi używanie wtyczek fwupd bez ich instalacji na komputerze."
 
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can add a kernel argument of '%s', but it will only be active after restarting the computer."
+msgstr "To narzędzie może dodać parametr jądra „%s”, ale zmiana będzie aktywna dopiero po ponownym uruchomieniu komputera."
+
 #. TRANSLATORS: the %1 is a BIOS setting name.
 #. * %2 and %3 are the values, e.g. "True" or "Windows10"
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
 msgstr "To narzędzie może automatycznie zmienić ustawienie BIOS-u „%s” z „%s” na „%s”, ale zmiana będzie aktywna dopiero po ponownym uruchomieniu komputera."
+
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can change the kernel argument from '%s' to '%s', but it will only be active after restarting the computer."
+msgstr "To narzędzie może zmienić parametr jądra z „%s” na „%s”, ale zmiana będzie aktywna dopiero po ponownym uruchomieniu komputera."
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
@@ -2996,6 +3041,10 @@ msgstr "Odblokowywanie oprogramowania sprzętowego:"
 msgid "Unblocks a specific firmware from being installed"
 msgstr "Odblokowuje możliwość instalacji podanego oprogramowania sprzętowego"
 
+#. TRANSLATORS: command description
+msgid "Undo the host security attribute fix"
+msgstr "Wycofuje poprawkę atrybutu zabezpieczeń komputera"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
 msgstr "Niezaszyfrowane"
@@ -3007,6 +3056,7 @@ msgstr "Kończy wstrzymanie systemu, aby zezwolić na aktualizacje"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Nieznane"
 
@@ -3233,6 +3283,10 @@ msgid "Writing…"
 msgstr "Zapisywanie…"
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
+msgid "You should ensure you are comfortable restoring the setting from a recovery or installation disk, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "Należy się upewnić, że użytkownik jest w stanie przywrócić ustawienia z dysku przywracania lub instalacji, ponieważ ta zmiana może spowodować, że komputer nie będzie mógł uruchomić systemu Linux lub spowodować inny rodzaj niestabilności komputera."
+
+#. TRANSLATORS: the user has to manually recover; we can't do it
 msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
 msgstr "Należy się upewnić, że użytkownik jest w stanie przywrócić ustawienia w konfiguracji oprogramowania sprzętowego komputera, ponieważ ta zmiana może spowodować, że komputer nie będzie mógł uruchomić systemu Linux lub spowodować inny rodzaj niestabilności komputera."
 
@@ -3251,6 +3305,10 @@ msgstr "Sprzęt może zostać uszkodzony przez użycie tego oprogramowania sprz�
 #, c-format
 msgid "Your system is set up to the BKC of %s."
 msgstr "Komputer jest skonfigurowany według BKC %s."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[APPSTREAM_ID]"
+msgstr "[IDENTYFIKATOR_APPSTREAM]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"

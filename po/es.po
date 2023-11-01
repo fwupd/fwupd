@@ -1179,7 +1179,6 @@ msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "ID-ARCHIVO|COMPROBANTE1[,COMPROBANTE2][,COMPROBANTE3]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Erróneo"
 
@@ -2082,10 +2081,6 @@ msgstr "Ninguna actualización fue aplicada"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "No aprovado"
-
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided by the platform to make an HSI calculation."
-msgstr "Sin datos suficientes que fueron proporcionados por la plataforma para hacer un cálculo HSI."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -3120,6 +3115,7 @@ msgstr "Desinhibe el sistema para permitir actualizaciones"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Desconocido/a"
 

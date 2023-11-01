@@ -839,7 +839,6 @@ msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "NOME-DE-FICHEIRO-ORIG NOME-DE-FICHEIRO-DEST [TIPO-FIRMWARE-ORIG] [TIPO-FIRMWARE-DEST]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Falhou"
 
@@ -2066,6 +2065,7 @@ msgstr "Descriptografado"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Desconhecido"
 

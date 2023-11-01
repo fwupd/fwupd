@@ -482,6 +482,10 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Authentication is required to downgrade the firmware on this machine"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to fix a host security issue"
+msgstr "Authentication is required to fix a host security issue"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
 msgstr "Authentication is required to modify BIOS settings"
 
@@ -510,6 +514,10 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "Authentication is required to switch to the new firmware version"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to undo the fix for a host security issue"
+msgstr "Authentication is required to undo the fix for a host security issue"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
 msgstr "Authentication is required to unlock a device"
 
@@ -533,9 +541,17 @@ msgstr "Automatic Reporting"
 msgid "Automatically upload every time?"
 msgstr "Automatically upload every time?"
 
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS Firmware Updates"
+msgstr "BIOS Firmware Updates"
+
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS Rollback Protection"
 msgstr "BIOS Rollback Protection"
+
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS firmware updates"
+msgstr "BIOS firmware updates"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS rollback protection"
@@ -817,6 +833,10 @@ msgstr "Device removed:"
 msgid "Device requires AC power to be connected"
 msgstr "Device requires AC power to be connected"
 
+#. TRANSLATORS: device does not have a display connected
+msgid "Device requires a display to be plugged in"
+msgstr "Device requires a display to be plugged in"
+
 #. TRANSLATORS: The device cannot be updated due to missing vendor's license."
 msgid "Device requires a software license to update"
 msgstr "Device requires a software license to update"
@@ -1068,6 +1088,10 @@ msgstr "Enabled if hardware matches"
 msgid "Enables a given remote"
 msgstr "Enables a given remote"
 
+#. TRANSLATORS: longer description
+msgid "Enabling firmware updates for the BIOS allows fixing security issues."
+msgstr "Enabling firmware updates for the BIOS allows fixing security issues."
+
 msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
 msgstr "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
 
@@ -1167,7 +1191,6 @@ msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Failed"
 
@@ -1368,6 +1391,18 @@ msgstr "Firmware updates are supported on this machine."
 #. TRANSLATORS: user needs to run a command
 msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
+
+#. TRANSLATORS: command description
+msgid "Fix a specific host security attribute"
+msgstr "Fix a specific host security attribute"
+
+#. TRANSLATORS: we've fixed a security problem on the machine
+msgid "Fix reverted successfully"
+msgstr "Fix reverted successfully"
+
+#. TRANSLATORS: we've fixed a security problem on the machine
+msgid "Fixed successfully"
+msgstr "Fixed successfully"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -1749,6 +1784,11 @@ msgstr "Invalid arguments"
 msgid "Invalid arguments, expected GUID"
 msgstr "Invalid arguments, expected GUID"
 
+#. TRANSLATOR: This is the error message for
+#. * incorrect parameter
+msgid "Invalid arguments, expected an AppStream ID"
+msgstr "Invalid arguments, expected an AppStream ID"
+
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
@@ -2067,10 +2107,6 @@ msgstr "No updates were applied"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Not approved"
-
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided by the platform to make an HSI calculation."
-msgstr "Not enough data was provided by the platform to make an HSI calculation."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2495,6 +2531,9 @@ msgstr "Secure Boot disabled"
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot enabled"
 msgstr "Secure Boot enabled"
+
+msgid "Security hardening for HSI"
+msgstr "Security hardening for HSI"
 
 #. TRANSLATORS: the %1 is a URL to a wiki page
 #, c-format
@@ -2982,11 +3021,21 @@ msgstr "This tool allows an administrator to query and control the fwupd daemon,
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "This tool allows an administrator to use the fwupd plug-ins without being installed on the host system."
 
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can add a kernel argument of '%s', but it will only be active after restarting the computer."
+msgstr "This tool can add a kernel argument of '%s', but it will only be active after restarting the computer."
+
 #. TRANSLATORS: the %1 is a BIOS setting name.
 #. * %2 and %3 are the values, e.g. "True" or "Windows10"
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
 msgstr "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
+
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can change the kernel argument from '%s' to '%s', but it will only be active after restarting the computer."
+msgstr "This tool can change the kernel argument from '%s' to '%s', but it will only be active after restarting the computer."
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
@@ -3092,6 +3141,10 @@ msgstr "Unblocking firmware:"
 msgid "Unblocks a specific firmware from being installed"
 msgstr "Unblocks a specific firmware from being installed"
 
+#. TRANSLATORS: command description
+msgid "Undo the host security attribute fix"
+msgstr "Undo the host security attribute fix"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
 msgstr "Unencrypted"
@@ -3103,6 +3156,7 @@ msgstr "Uninhibit the system to allow upgrades"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Unknown"
 
@@ -3329,6 +3383,10 @@ msgid "Writing…"
 msgstr "Writing…"
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
+msgid "You should ensure you are comfortable restoring the setting from a recovery or installation disk, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "You should ensure you are comfortable restoring the setting from a recovery or installation disk, as this change may cause the system to not boot into Linux or cause other system instability."
+
+#. TRANSLATORS: the user has to manually recover; we can't do it
 msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
 msgstr "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
 
@@ -3347,6 +3405,10 @@ msgstr "Your hardware may be damaged using this firmware, and installing this re
 #, c-format
 msgid "Your system is set up to the BKC of %s."
 msgstr "Your system is set up to the BKC of %s."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[APPSTREAM_ID]"
+msgstr "[APPSTREAM_ID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"

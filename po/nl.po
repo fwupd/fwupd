@@ -694,7 +694,6 @@ msgid "FILENAME [DEVICE-ID|GUID]"
 msgstr "BESTANDSNAAM [APPARAAT-ID|GUID]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Mislukt"
 
@@ -1590,6 +1589,7 @@ msgstr "Niet-versleuteld"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Onbekend"
 

@@ -482,6 +482,10 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Es requereix autenticació per a desactualitzar el microprogramari en aquesta màquina"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to fix a host security issue"
+msgstr "Cal autenticació per a solucionar un problema de seguretat a l'amfitrió"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
 msgstr "Cal autenticació per a modificar les opcions de configuració del BIOS"
 
@@ -510,6 +514,10 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "Es requereix autenticació per a canviar a la nova versió del microprogramari"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to undo the fix for a host security issue"
+msgstr "Cal autenticació per a desfer la solució d'un problema de seguretat a l'amfitrió"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
 msgstr "Es requereix autenticació per a desbloquejar un dispositiu"
 
@@ -533,9 +541,17 @@ msgstr "Informa automàticament"
 msgid "Automatically upload every time?"
 msgstr "Voleu pujar-lo automàticament cada vegada?"
 
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS Firmware Updates"
+msgstr "Actualitzacions de microprogramari del BIOS"
+
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS Rollback Protection"
 msgstr "Protecció contra la reversió del BIOS"
+
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS firmware updates"
+msgstr "Actualitzacions de microprogramari del BIOS"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS rollback protection"
@@ -817,6 +833,10 @@ msgstr "S'ha eliminat el dispositiu:"
 msgid "Device requires AC power to be connected"
 msgstr "El dispositiu requereix que es connecti l'alimentació"
 
+#. TRANSLATORS: device does not have a display connected
+msgid "Device requires a display to be plugged in"
+msgstr "El dispositiu requereix que hi hagi connectada una pantalla"
+
 #. TRANSLATORS: The device cannot be updated due to missing vendor's license."
 msgid "Device requires a software license to update"
 msgstr "El dispositiu requereix una llicència de programari per a actualitzar"
@@ -1068,6 +1088,10 @@ msgstr "Activat si hi ha cap coincidència de maquinari"
 msgid "Enables a given remote"
 msgstr "Habilita un remot indicat."
 
+#. TRANSLATORS: longer description
+msgid "Enabling firmware updates for the BIOS allows fixing security issues."
+msgstr "Habilitar actualitzacions de microprogramari per al BIOS permet solucionar problemes de seguretat."
+
 msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
 msgstr "Si habiliteu aquesta funcionalitat, ho fareu sota el vostre propi risc, el qual significa que haureu de posar-vos en contacte amb el fabricant original de l'equip quant a qualsevol problema causat per aquestes actualitzacions. A $OS_RELEASE:BUG_REPORT_URL$, només s'han de presentar els problemes amb el procés d'actualització."
 
@@ -1167,7 +1191,6 @@ msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "NOM_DE_FITXER|SUMA_DE_VERIFICACIÓ_1[,SUMA_DE_VERIFICACIÓ_2][,SUMA_DE_VERIFICACIÓ_3]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Ha fallat"
 
@@ -1368,6 +1391,18 @@ msgstr "Les actualitzacions de microprogramari estan admeses en aquesta màquina
 #. TRANSLATORS: user needs to run a command
 msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "Actualitzacions de microprogramari inhabilitades: executeu «fwupdmgr unlock» per a habilitar-les"
+
+#. TRANSLATORS: command description
+msgid "Fix a specific host security attribute"
+msgstr "Corregeix un atribut de seguretat específic de l'amfitrió"
+
+#. TRANSLATORS: we've fixed a security problem on the machine
+msgid "Fix reverted successfully"
+msgstr "Solució revertida amb èxit"
+
+#. TRANSLATORS: we've fixed a security problem on the machine
+msgid "Fixed successfully"
+msgstr "S'ha solucionat correctament"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -1749,6 +1784,11 @@ msgstr "Arguments no vàlids"
 msgid "Invalid arguments, expected GUID"
 msgstr "Arguments no vàlids, GUID esperat"
 
+#. TRANSLATOR: This is the error message for
+#. * incorrect parameter
+msgid "Invalid arguments, expected an AppStream ID"
+msgstr "Arguments no vàlids, s'esperava un ID d'AppStream"
+
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Arguments no vàlids, com a mínim s'esperaven ARXIU MICROPROGRAMARI METAINFO"
@@ -2067,10 +2107,6 @@ msgstr "No s'han aplicat les actualitzacions"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "No aprovada"
-
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided by the platform to make an HSI calculation."
-msgstr "La plataforma no ha proporcionat prou dades per a fer un càlcul HSI."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2495,6 +2531,9 @@ msgstr "Està inhabilitada l'arrencada segura"
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot enabled"
 msgstr "Està habilitada l'arrencada segura"
+
+msgid "Security hardening for HSI"
+msgstr "Reforç de la seguretat per a HSI"
 
 #. TRANSLATORS: the %1 is a URL to a wiki page
 #, c-format
@@ -2982,11 +3021,21 @@ msgstr "Aquesta eina permet que un administrador consulti i controli el dimoni �
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Aquesta eina permet a un administrador usar els connectors de «fwupd» sense estar instal·lats en el sistema amfitrió."
 
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can add a kernel argument of '%s', but it will only be active after restarting the computer."
+msgstr "Aquesta eina pot afegir un argument del nucli de «%s», però només estarà actiu després de reiniciar l'ordinador."
+
 #. TRANSLATORS: the %1 is a BIOS setting name.
 #. * %2 and %3 are the values, e.g. "True" or "Windows10"
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
 msgstr "Aquesta eina pot canviar la configuració del BIOS «%s» des de «%s» a «%s» de forma automàtica, però només estarà activa una vegada es reiniciï l'ordinador."
+
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can change the kernel argument from '%s' to '%s', but it will only be active after restarting the computer."
+msgstr "Aquesta eina pot canviar l'argument del nucli des de «%s» a «%s», però només estarà actiu després de reiniciar l'ordinador."
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
@@ -3092,6 +3141,10 @@ msgstr "Microprogramari desbloquejat:"
 msgid "Unblocks a specific firmware from being installed"
 msgstr "Desbloqueja la instal·lació d'un microprogramari específic."
 
+#. TRANSLATORS: command description
+msgid "Undo the host security attribute fix"
+msgstr "Desfés la correcció de l'atribut de seguretat de l'amfitrió"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
 msgstr "No està encriptada"
@@ -3103,6 +3156,7 @@ msgstr "Desinhibeix el sistema per a permetre actualitzacions"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Desconegut"
 
@@ -3329,6 +3383,10 @@ msgid "Writing…"
 msgstr "S'està escrivint..."
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
+msgid "You should ensure you are comfortable restoring the setting from a recovery or installation disk, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "Hauríeu d'assegurar-vos que us sentiu còmode restaurant la configuració des d'un disc de recuperació o instal·lació, ja que aquest canvi pot provocar que el sistema no arrenqui a Linux o provocar una altra inestabilitat del sistema."
+
+#. TRANSLATORS: the user has to manually recover; we can't do it
 msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
 msgstr "Heu d'assegurar-vos que esteu còmode restablint la configuració des de la configuració del microprogramari del sistema, ja que aquest canvi pot fer que el sistema no arrenqui a Linux o que causi alguna altra inestabilitat en el sistema."
 
@@ -3347,6 +3405,10 @@ msgstr "El vostre maquinari pot danyar-se amb aquest microprogramari, i la insta
 #, c-format
 msgid "Your system is set up to the BKC of %s."
 msgstr "El vostre sistema està establert a la BKC de %s."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[APPSTREAM_ID]"
+msgstr "[ID_APPSTREAM]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"

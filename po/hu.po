@@ -1172,7 +1172,6 @@ msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "FÁJLNÉV|ELLENŐRZŐÖSSZEG1[,ELLENŐRZŐÖSSZEG2][,ELLENŐRZŐÖSSZEG3]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Sikertelen"
 
@@ -2072,10 +2071,6 @@ msgstr "Nem lett frissítés alkalmazva"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Nincs jóváhagyva"
-
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided by the platform to make an HSI calculation."
-msgstr "A platform nem szolgáltatott elegendő adatot a HSI-számítás elvégzéséhez."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -3108,6 +3103,7 @@ msgstr "A rendszer gátlásának megszüntetése a frissítések lehetővé tét
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Ismeretlen"
 

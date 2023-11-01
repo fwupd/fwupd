@@ -9,6 +9,7 @@
 # Mingcong Bai <jeffbai@aosc.xyz>, 2017-2018
 # Mingye Wang <arthur200126@gmail.com>, 2016
 # Mingye Wang <arthur2e5@aosc.xyz>, 2015
+# Richard Hughes <richard@hughsie.com>, 2023
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -744,7 +745,7 @@ msgstr "加密内存"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
-msgstr "清楚所有固件更新历史"
+msgstr "清除所有固件更新历史"
 
 #. TRANSLATORS: erasing contents of the flash chips
 msgid "Erasing…"
@@ -807,7 +808,6 @@ msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "源文件名 目标文件名 [源固件类型] [目标固件类型]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "已失败"
 
@@ -2011,6 +2011,7 @@ msgstr "未加密"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "未知"
 

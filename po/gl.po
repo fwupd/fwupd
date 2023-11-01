@@ -286,7 +286,6 @@ msgid "Exit after the engine has loaded"
 msgstr "Saír despois de que se cargue o motor"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Fallido"
 
@@ -847,6 +846,7 @@ msgstr "Descifrado"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Descoñecido"
 

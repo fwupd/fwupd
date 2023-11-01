@@ -537,7 +537,6 @@ msgid "FILENAME [DEVICE-ID|GUID]"
 msgstr "DOSYAADI [AYGIT-KİMLİĞİ|GUID]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Başarısız"
 
@@ -1398,6 +1397,7 @@ msgstr "Şifrelenmemiş"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Bilinmeyen"
 

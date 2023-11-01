@@ -6,7 +6,7 @@
 # dhead666 <myfoolishgames@gmail.com>, 2015
 # gk <genghiskhan@gmx.ca>, 2015
 # 63f334ffc0709ba0fc2361b80bf3c0f0_00ffd1e <ab96c93ca0ac55ba7fa06385427e60dd_878890>, 2021
-# Yaron Shahrabani <sh.yaron@gmail.com>, 2021
+# Yaron Shahrabani <sh.yaron@gmail.com>, 2021,2023
 # Yosef Or Boczko <yoseforb@gmail.com>, 2023
 msgid ""
 msgstr ""
@@ -282,6 +282,14 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "נדרש אימות כדי לשנמך את הקושחה במכונה הזאת"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to fix a host security issue"
+msgstr "נדרש אימות כדי לתקן תקלות אבטחה במארח"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify BIOS settings"
+msgstr "נדרש אימות כדי לשנות הגדרות BIOS"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "נדרש אימות כדי לשנות מרוחק מוגדר לעדכוני קושחה"
 
@@ -306,6 +314,10 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "נדרש אימות כדי לעבור לגרסת הקושחה החדשה"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to undo the fix for a host security issue"
+msgstr "נדרש אימות כדי לבטל את התיקון לתקלת אבטחת המארח"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
 msgstr "נדרש אימות כדי לשחרר התקן"
 
@@ -328,6 +340,13 @@ msgstr "דיווח אוטומטי"
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "להעלות אוטומטית בכל פעם?"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "BIOS updates delivered via LVFS or Windows Update"
+msgstr "עדכוני ה־BIOS מועברים דרך LVFS או Windows Update"
+
+msgid "BYTES"
+msgstr "בתים"
 
 #. TRANSLATORS: command description
 msgid "Bind new kernel driver"
@@ -362,6 +381,14 @@ msgstr "ביטול"
 msgid "Cancelled"
 msgstr "בוטל"
 
+#. TRANSLATORS: same or newer update already applied
+msgid "Cannot apply as dbx update has already been applied."
+msgstr "לא ניתן להחיל כיוון שכבר חל עדכון dbx."
+
+#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
+msgid "Cannot apply updates on live media"
+msgstr "לא ניתן להחיל עדכונים על מדיה להפעלה חיה"
+
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "השתנה"
@@ -374,6 +401,10 @@ msgstr "בודק שהגיבוב הקריפטוגרפי תואם לקושחה"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "סכום ביקורת"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose the ESP:"
+msgstr "נא לבחור את ה־ESP:"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
@@ -491,6 +522,9 @@ msgstr "התקנים עם גרסת הקושחה העדכנית ביותר שזמ
 msgid "Disabled"
 msgstr "מושבת"
 
+msgid "Disabled fwupdate debugging"
+msgstr "ניפוי תקלות ב־fwupdate מושבת"
+
 #. TRANSLATORS: command description
 msgid "Disables a given remote"
 msgstr "משבית מרוחק מסוים"
@@ -514,6 +548,10 @@ msgstr "לא לבדוק אם המרוחקים שהתקבלו אמורים להי
 #. TRANSLATORS: command line option
 msgid "Do not check or prompt for reboot after update"
 msgstr "לא לבדוק או לבקש הפעלה מחדש לאחר עדכון"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Do not include timestamp prefix"
+msgstr "לא לכלול קידומת חותמת זמן"
 
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
@@ -586,6 +624,13 @@ msgstr "משך"
 msgid "ESP specified was not valid"
 msgstr "ה־ESP שצוין לא היה תקף"
 
+msgid "Enable"
+msgstr "הפעלה"
+
+#. TRANSLATORS: command line option
+msgid "Enable firmware update support on supported systems"
+msgstr "יש להפעיל תמיכה בעדכוני קושחה במערכות נתמכות"
+
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
 msgstr "להפעיל מרוחק חדש?"
@@ -599,6 +644,9 @@ msgstr "להפעיל את המרוחק הזה?"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "מופעל"
+
+msgid "Enabled fwupdate debugging"
+msgstr "ניפוי תקלות ב־fwupdate פעיל"
 
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
@@ -643,8 +691,19 @@ msgstr "ייצוא מבנה קובצי הקושחה ל־XML"
 msgid "Extract a firmware blob to images"
 msgstr "חילוץ מקטע בינרי מהקושחה לקובצי דמות"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME"
+msgstr "שם-קובץ"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
+msgstr "שם-קובץ שם-חלופי-להתקן|מזהה-חלופי-להתקן"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
+msgstr "שם-קובץ שם-חלופי-להתקן|מזהה-חלופי-להתקן [שם-חלופי-לדמות|מזהה-חלופי-לדמות]"
+
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "נכשל"
 
@@ -705,6 +764,11 @@ msgstr "הפעלה מחדש נכשלה"
 #. TRANSLATORS: we could not talk to plymouth
 msgid "Failed to set splash mode"
 msgstr "הגדרת מצב מסך הכניסה נכשלה"
+
+#. TRANSLATORS: something with a blocked hash exists
+#. * in the users ESP -- which would be bad!
+msgid "Failed to validate ESP contents"
+msgstr "אימות תוכן ה־ESP נכשל"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -770,6 +834,19 @@ msgstr "אילוץ הפעולה תוך התעלמות מכל האזהרות"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
 msgstr "נמצא"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "מזהה-קבוצה"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "מזהה-קבוצה"
+
+msgid "Get BIOS settings"
+msgstr "משיכת הגדרות ה־BIOS"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -1098,6 +1175,14 @@ msgstr "מותר עדכוני גרסאות בלבד"
 msgid "Output in JSON format"
 msgstr "פלט במבנה JSON"
 
+#. TRANSLATORS: command line option
+msgid "Override the default ESP path"
+msgstr "מעקף נתיב ה־ESP כברירת מחדל"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "PATH"
+msgstr "נתיב"
+
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"
 msgstr "פענוח והצגת פרטים על קובץ קושחה"
@@ -1130,6 +1215,11 @@ msgstr "לבצע פעולה?"
 msgid "Please enter a number from 0 to %u: "
 msgstr "נא למלא מספר מ־0 עד %u:"
 
+#. TRANSLATORS: the user isn't reading the question -- please don't translate
+#. * 'Y' or 'N' as these are hardcoded
+msgid "Please enter either Y or N: "
+msgstr "נא להקליד Y או N:"
+
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "תלויות התוסף חסרות"
@@ -1140,6 +1230,9 @@ msgstr "גרסה קודמת"
 
 msgid "Print the version number"
 msgstr "הצגת מספר הגרסה"
+
+msgid "Print verbose debug statements"
+msgstr "הצגת מפרט ניפוי תקלות"
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
@@ -1227,6 +1320,10 @@ msgstr "כתובת לדיווח"
 msgid "Reported to remote server"
 msgstr "דווח לשרת המרוחק"
 
+#. TRANSLATORS: we asked the user to choose an option and they declined
+msgid "Request canceled"
+msgstr "הבקשה בוטלה"
+
 #. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
 msgid "Required efivarfs filesystem was not found"
 msgstr "מערכת קבצים efivarfs נחוצה לא נמצאה"
@@ -1279,6 +1376,9 @@ msgstr "כתיבת SPI"
 msgid "Scheduling…"
 msgstr "מתבצע תזמון…"
 
+msgid "Security hardening for HSI"
+msgstr "הקשחת אבטחת מידע ל־HSI"
+
 #. TRANSLATORS: %s is a link to a website
 #, c-format
 msgid "See %s for more information."
@@ -1296,9 +1396,20 @@ msgstr "כרך נבחר"
 msgid "Serial Number"
 msgstr "מספר סידורי"
 
+msgid "Set one or more BIOS settings"
+msgstr "שינוי הגדרה אחת או יותר ב־BIOS"
+
+#. TRANSLATORS: command line option
+msgid "Set the debugging flag during update"
+msgstr "הגדרת דגלון ניפוי התקלות במהלך עדכון"
+
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "הגדרת רשימת הקושחות המותרות"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "Settings will apply after system reboots"
+msgstr "ההגדרות תוחלנה לאחר הפעלת המערכת מחדש"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -1311,6 +1422,10 @@ msgstr "הצגת כל התוצאות"
 #. TRANSLATORS: command line option
 msgid "Show client and daemon versions"
 msgstr "הצגת גרסאות לקוח וסוכן"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all domains"
+msgstr "להציג פרטי ניפוי תקלות לכל שמות התחום"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
@@ -1331,6 +1446,10 @@ msgstr "הצגת היסטוריית עדכוני קושחה"
 #. TRANSLATORS: command line option
 msgid "Show the calculated version of the dbx"
 msgstr "הצגת הגרסה המחושבת של ה־dbx"
+
+#. TRANSLATORS: command line option
+msgid "Show the debug log from the last attempted update"
+msgstr "הצגת תיעוד ניפוי השגיאות מניסיון העדכון האחרון"
 
 #. TRANSLATORS: command line option
 msgid "Show the information of firmware update status"
@@ -1366,6 +1485,9 @@ msgstr "גודל"
 #. TRANSLATORS: source (as in code) link
 msgid "Source"
 msgstr "מקור"
+
+msgid "Specify Vendor/Product ID(s) of DFU device"
+msgstr "ציון מזהה יצרן/מוצר של התקן DFU"
 
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
@@ -1471,6 +1593,10 @@ msgstr "אין קושחה שעברה אימות."
 msgid "This package has not been validated, it may not work properly."
 msgstr "החבילה לא עברה אימות, יכול להיות שלא תעבוד כראוי."
 
+#. TRANSLATORS: we're poking around as a power user
+msgid "This program may only work correctly as root"
+msgstr "כנראה שתוכנית זו תעבוד כראוי רק עם משתמש על (root)"
+
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "צד מרוחק זה כולל קושחה שלא נפסלה אך עדיין נבדקת על ידי ספק החומרה. עליך לוודא שיש לך דרך ידנית לשנמך את הקושחה במקרה שעדכון הקושחה נכשל."
 
@@ -1553,6 +1679,7 @@ msgstr "לא מוצפן"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "לא ידוע"
 
@@ -1574,6 +1701,10 @@ msgstr "משחרר את חסימת ההתקן לגישת קושחה"
 #. TRANSLATORS: command description
 msgid "Unmounts the ESP"
 msgstr "מנתק את ה־ESP"
+
+#. TRANSLATORS: command line option
+msgid "Unset the debugging flag during update"
+msgstr "ביטול הגדרת דגלון ניפוי התקלות במהלך עדכון"
 
 #. TRANSLATORS: error message
 #, c-format
@@ -1657,6 +1788,9 @@ msgstr "נשלחה הודעה למשתמש"
 msgid "Username"
 msgstr "שם משתמש"
 
+msgid "VID:PID"
+msgstr "VID:PID"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
 msgstr "תקף"
@@ -1680,6 +1814,10 @@ msgstr "מתבצע אימות…"
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "גרסה"
+
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING"
+msgstr "אזהרה"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
@@ -1713,6 +1851,10 @@ msgstr "יכול להיות שהחומרה שלך תיפגע עקב השימוש
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"
 msgstr "בררת מחדל"
+
+#. TRANSLATORS: program name
+msgid "fwupd TPM event log utility"
+msgstr "כלי לתיעוד אירועי TPM של fwupd"
 
 #. TRANSLATORS: Title: if the fwupd plugins are all present and correct
 msgid "fwupd plugins"

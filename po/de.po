@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
+# Christian <Christian.Kirbach@googlemail.com>, 2023
 # Ettore Atalan <atalanttore@googlemail.com>, 2018,2021-2023
 # Marco Tedaldi <tedaldi@hifo.uzh.ch>, 2015
 # Wolfgang Stöggl <c72578@yahoo.de>, 2015
@@ -483,6 +484,10 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Für eine Herabstufung der Firmware auf diesem System ist eine Authentifizierung erforderlich"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to fix a host security issue"
+msgstr "Legitimierung ist erforderlich zum Beheben eines Sicherheitsproblems der Maschine"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
 msgstr "Zum Ändern der BIOS-Einstellungen ist eine Authentifizierung erforderlich"
 
@@ -511,6 +516,10 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "Für den Wechsel zur neuen Firmware-Version ist eine Authentifizierung erforderlich"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to undo the fix for a host security issue"
+msgstr "Legitimierung ist erforderlich zum Zurücknehmen der Beheben eines Sicherheitsproblems der Maschine"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
 msgstr "Legitimation ist zum Entsperren eines Geräts erforderlich"
 
@@ -534,9 +543,17 @@ msgstr "Automatische Berichterstattung"
 msgid "Automatically upload every time?"
 msgstr "Jedes Mal automatisch hochladen?"
 
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS Firmware Updates"
+msgstr "BIOS Firmware-Aktualisierungen"
+
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS Rollback Protection"
 msgstr "BIOS-Rückrollschutz"
+
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS firmware updates"
+msgstr "BIOS Firmware-Aktualisierungen"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS rollback protection"
@@ -940,7 +957,7 @@ msgstr "Beim Parsen die Firmware nicht durchsuchen"
 
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "Do not turn off your computer or remove the AC adaptor while the update is in progress."
-msgstr "Schalten Sie Ihren Computer nicht aus und entfernen Sie nicht den Netzadapter, während die Aktualisierung durchgeführt wird."
+msgstr "Schalten Sie Ihren Rechner nicht aus und entfernen Sie nicht den Netzadapter, während die Aktualisierung durchgeführt wird."
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -1065,6 +1082,10 @@ msgstr "Aktiviert, wenn die Hardware passt"
 msgid "Enables a given remote"
 msgstr "Aktiviert eine gegebene Gegenstelle"
 
+#. TRANSLATORS: longer description
+msgid "Enabling firmware updates for the BIOS allows fixing security issues."
+msgstr "Das Aktivieren von Firmware-Aktualisierungen für das BIOS ermöglicht das Beheben von Sicherheitsproblemen."
+
 msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
 msgstr "Die Aktivierung dieser Funktionalität erfolgt auf eigene Gefahr, d.h. Sie müssen sich bei Problemen, die durch diese Aktualisierungen verursacht werden, an Ihren Erstausrüster wenden. Nur Probleme mit dem Aktualisierungsprozess selbst sollten unter $OS_RELEASE:BUG_REPORT_URL$ eingereicht werden."
 
@@ -1164,7 +1185,6 @@ msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "DATEINAME|PRÜFSUMME1[,PRÜFSUMME2][,PRÜFSUMME3]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Fehlgeschlagen"
 
@@ -1213,6 +1233,13 @@ msgstr "Parsen der Argumente ist fehlgeschlagen"
 #. TRANSLATORS: failed to read measurements file
 msgid "Failed to parse file"
 msgstr "Parsen der Datei ist fehlgeschlagen"
+
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse flags for --filter"
+msgstr "Das Auswerten der Schalter von »--filter« ist fehlgeschlagen"
+
+msgid "Failed to parse flags for --filter-release"
+msgstr "Das Auswerten der Schalter von »--filter-release« ist fehlgeschlagen"
 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
@@ -1349,7 +1376,15 @@ msgstr "Firmware-Aktualisierungen werden auf diesem System unterstützt."
 
 #. TRANSLATORS: user needs to run a command
 msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Firmware-Aktualisierungen deaktiviert; zum Aktivieren 'fwupdmgr unlock' ausführen"
+msgstr "Firmware-Aktualisierungen ist deaktiviert; zum Aktivieren »fwupdmgr unlock« ausführen"
+
+#. TRANSLATORS: we've fixed a security problem on the machine
+msgid "Fix reverted successfully"
+msgstr "Korrektur erfolgreich zurückgenommen"
+
+#. TRANSLATORS: we've fixed a security problem on the machine
+msgid "Fixed successfully"
+msgstr "Erfolgreich korrigiert"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -1613,6 +1648,11 @@ msgstr "Intel BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
+msgid "Intel BootGuard ACM Protected"
+msgstr "Geschützt mit Intel BootGuard ACM"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * ACM means to verify the integrity of Initial Boot Block
 msgid "Intel BootGuard ACM protected"
 msgstr "Intel BootGuard ACM-geschützt"
 
@@ -1652,6 +1692,10 @@ msgstr "Intel BootGuard verhindert, dass nicht autorisierte Gerätesoftware beim
 msgid "Intel BootGuard verified boot"
 msgstr "Verifizierter Start mit Intel BootGuard"
 
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
+msgid "Intel CET"
+msgstr "Intel CET"
+
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * active means being used by the OS
 msgid "Intel CET Active"
@@ -1661,6 +1705,10 @@ msgstr "Intel CET aktiv"
 #. * enabled means supported by the processor
 msgid "Intel CET Enabled"
 msgstr "Intel CET aktiviert"
+
+#. TRANSLATORS: longer description
+msgid "Intel Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
+msgstr "»Intel Control-Flow Enforcement Technology« erkennt und verhindert bestimmte Möglichkeiten, bösartige Software auf dem Gerät auszuführen"
 
 #. TRANSLATORS: Title: GDS is where the CPU leaks information
 msgid "Intel GDS Mitigation"
@@ -1673,6 +1721,14 @@ msgstr "Intel GDS-Milderung"
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Manufacturing Mode"
 msgstr "Herstellungsmodus der Intel Management Engine"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is
+#. enabled
+#. * with a jumper -- luckily it is probably not accessible to end users on
+#. consumer
+#. * boards
+msgid "Intel Management Engine Override"
+msgstr "Übergehen der »Intel Management Engine«"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Version"
@@ -1697,6 +1753,11 @@ msgstr "Ungültige Argumente"
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected GUID"
 msgstr "Ungültige Argumente, erwartete GUID"
+
+#. TRANSLATOR: This is the error message for
+#. * incorrect parameter
+msgid "Invalid arguments, expected an AppStream ID"
+msgstr "Ungültige Argumente. Es wurde eine AppStream-Kennung erwartet."
 
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
@@ -2012,10 +2073,6 @@ msgstr "Es wurden keine Aktualisierungen angewendet"
 msgid "Not approved"
 msgstr "Nicht genehmigt"
 
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided by the platform to make an HSI calculation."
-msgstr "Die von der Plattform bereitgestellten Daten reichten nicht aus, um eine HSI-Berechnung durchzuführen."
-
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
 msgstr "Nicht gefunden"
@@ -2108,6 +2165,10 @@ msgstr "Operation durchführen?"
 msgid "Platform Debugging"
 msgstr "Plattform-Debugging"
 
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform debugging"
+msgstr "Fehlerdiagnose der Plattform"
+
 #. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 #. metal thing
 msgid "Please ensure you have the volume recovery key before continuing."
@@ -2117,6 +2178,11 @@ msgstr "Bitte stellen Sie sicher, dass Sie den Wiederherstellungsschlüssel für
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Bitte geben Sie eine Zahl von 0 bis %u ein: "
+
+#. TRANSLATORS: the user isn't reading the question -- please don't translate
+#. * 'Y' or 'N' as these are hardcoded
+msgid "Please enter either Y or N: "
+msgstr "Bitte geben Sie entweder »Y« oder »N« ein: "
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -2144,7 +2210,7 @@ msgstr "DMA-Schutz vor dem Booten ist aktiviert"
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
-msgstr "Der DMA-Schutz vor dem Booten verhindert, dass Geräte auf den Systemspeicher zugreifen, nachdem sie an den Computer angeschlossen wurden."
+msgstr "Der DMA-Schutz vor dem Booten verhindert, dass Geräte auf den Systemspeicher zugreifen, nachdem sie an den Rechner angeschlossen wurden."
 
 #. TRANSLATORS: warning message
 msgid "Press unlock on the device to continue the update process."
@@ -2330,6 +2396,10 @@ msgstr "Der Rückrollschutz verhindert, dass die Gerätesoftware auf eine älter
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Führen Sie `fwupdmgr get-upgrades` für weitere Informationen aus."
 
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr sync-bkc` to complete this action."
+msgstr "Führen Sie »fwupdmgr sync-bkc« zum Abschliessen des Vorgangs aus."
+
 #. TRANSLATORS: The kernel does not support this plugin
 msgid "Running kernel is too old"
 msgstr "Laufender Kernel ist zu alt"
@@ -2402,6 +2472,9 @@ msgstr "Secure Boot deaktiviert"
 msgid "Secure Boot enabled"
 msgstr "Secure Boot aktiviert"
 
+msgid "Security hardening for HSI"
+msgstr "Strengere Sicherheit für HSI"
+
 #. TRANSLATORS: the %1 is a URL to a wiki page
 #, c-format
 msgid "See %s for more details."
@@ -2424,12 +2497,21 @@ msgstr "Ausgewählter Datenträger"
 msgid "Serial Number"
 msgstr "Seriennummer"
 
+#. TRANSLATORS: Configured a BIOS setting to a value
+#, c-format
+msgid "Set BIOS setting '%s' using '%s'."
+msgstr "BIOS-Einstellung »%s« mittels »%s« festlegen."
+
 #. TRANSLATORS: command description
 msgid "Set a BIOS setting"
 msgstr "Eine BIOS-Einstellung festlegen"
 
 msgid "Set one or more BIOS settings"
 msgstr "Eine oder mehrere BIOS-Einstellungen festlegen"
+
+#. TRANSLATORS: command line option
+msgid "Set the debugging flag during update"
+msgstr "Den Schalter für Fehlerdiagnose während der Aktualisierung setzen"
 
 #. TRANSLATORS: command description
 msgid "Sets one or more BIOS settings"
@@ -2688,7 +2770,7 @@ msgstr "TEXT"
 
 #. TRANSLATORS: longer description
 msgid "TPM (Trusted Platform Module) is a computer chip that detects when hardware components have been tampered with."
-msgstr "TPM (Trusted Platform Module) ist ein Computerchip, der erkennt, wenn Hardwarekomponenten manipuliert wurden."
+msgstr "TPM (Trusted Platform Module) ist ein Rechner-Chip, der erkennt, wenn Hardware-Komponenten manipuliert wurden."
 
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
@@ -2725,6 +2807,10 @@ msgid "Tag"
 msgid_plural "Tags"
 msgstr[0] "Kennzeichen"
 msgstr[1] "Kennzeichen"
+
+#. TRANSLATORS: we're saving all USB events for emulation
+msgid "Tagged for emulation"
+msgstr "Zur Emulation markiert"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"
@@ -2871,11 +2957,21 @@ msgstr "Mit diesem Werkzeug kann ein Administrator den fwupd-Daemon abfragen und
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Dieses Werkzeug ermöglicht es einem Administrator, die fwupd-Plugins zu verwenden, ohne auf dem Host-System installiert sein zu müssen."
 
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can add a kernel argument of '%s', but it will only be active after restarting the computer."
+msgstr "Dieses Werkzeug kann den Kernel-Parameter »%s« hinzufügen, aber dieser wird erst nach einem Neustart des Rechners aktiv."
+
 #. TRANSLATORS: the %1 is a BIOS setting name.
 #. * %2 and %3 are the values, e.g. "True" or "Windows10"
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
-msgstr "Dieses Werkzeug kann die BIOS-Einstellung ‚%s‘% automatisch von ‚%s‘ auf ‚%s‘ ändern, aber sie wird erst nach einem Neustart des Computers aktiv."
+msgstr "Dieses Werkzeug kann die BIOS-Einstellung »%s« automatisch von »%s« auf »%s« ändern, aber sie wird erst nach einem Neustart des Rechners aktiv."
+
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can change the kernel argument from '%s' to '%s', but it will only be active after restarting the computer."
+msgstr "Dieses Werkzeug kann den Kernel-Parameter von »%s« auf »%s« ändern, aber dieser wird erst nach einem Neustart des Rechners aktiv."
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
@@ -2992,6 +3088,7 @@ msgstr "System entblocken, um Aktualisierungen zu ermöglichen"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Unbekannt"
 
@@ -3017,6 +3114,10 @@ msgstr "Hängt das ESP aus"
 #. TRANSLATORS: message shown after device has been marked for emulation
 msgid "Unplug and replug the device, then install the firmware."
 msgstr "Stecken Sie das Gerät aus und wieder ein, und installieren Sie dann die Firmware."
+
+#. TRANSLATORS: command line option
+msgid "Unset the debugging flag during update"
+msgstr "Den Schalter für Fehlerdiagnose während der Aktualisierung ausstellen"
 
 #. TRANSLATORS: firmware payload is unsigned and it is possible to modify it
 msgid "Unsigned Payload"
@@ -3214,6 +3315,10 @@ msgid "Writing…"
 msgstr "Schreiben …"
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
+msgid "You should ensure you are comfortable restoring the setting from a recovery or installation disk, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "Sie sollten sich vergewissern, dass Sie die Einstellung aus einer Wiederherstellung oder von Installations-Disketten zurückspielen können, weil diese Änderung dazu führen kann, dass das System nicht mehr Linux startet oder andere Systeminstabilitäten verursacht."
+
+#. TRANSLATORS: the user has to manually recover; we can't do it
 msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
 msgstr "Sie sollten sich vergewissern, dass Sie die Einstellung aus der System-Firmware-Einrichtung wiederherstellen können, da diese Änderung dazu führen kann, dass das System nicht in Linux startet oder andere Systeminstabilitäten verursacht."
 
@@ -3232,6 +3337,10 @@ msgstr "Ihre Hardware kann durch die Verwendung dieser Firmware beschädigt werd
 #, c-format
 msgid "Your system is set up to the BKC of %s."
 msgstr "Ihr System ist auf die BKC von %s eingestellt."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[APPSTREAM_ID]"
+msgstr "[APPSTREAM_KENNUNG]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"

@@ -1158,7 +1158,6 @@ msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "<파일이름>|<체크섬1>[,<체크섬2>][,<체크섬3>]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "실패함"
 
@@ -2055,10 +2054,6 @@ msgstr "적용된 업데이트 없음"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "승인 안함"
-
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided by the platform to make an HSI calculation."
-msgstr "HSI 계산 값을 산출하기에 불충분한 데이터를 플랫폼에서 제공했습니다."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -3081,6 +3076,7 @@ msgstr "업그레이드를 허용하도록 시스템 억제를 해제합니다"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "알 수 없음"
 

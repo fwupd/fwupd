@@ -1153,7 +1153,6 @@ msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Epäonnistui"
 
@@ -2040,10 +2039,6 @@ msgstr "Päivityksiä ei toteutettu"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Hylätty"
-
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided by the platform to make an HSI calculation."
-msgstr "Alusta ei anna riittäviä tietoja HSI:n laskemiseksi."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -3051,6 +3046,7 @@ msgstr "Poista päivitysten esto käytöstä"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Tuntematon"
 

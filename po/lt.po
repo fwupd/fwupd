@@ -568,7 +568,6 @@ msgid "FILENAME [FIRMWARE-TYPE]"
 msgstr "FAILO-PAVADINIMAS [PROGRAMINĖS-APARATINĖS-ĮRANGOS-TIPAS]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Patyrė nesėkmę"
 
@@ -1255,6 +1254,7 @@ msgstr "Nešifruotas"
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Nežinoma"
 

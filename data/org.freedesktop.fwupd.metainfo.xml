@@ -33,6 +33,42 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.7" date="2023-11-01">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add support for child device requirements in metadata</li>
+          <li>Allow to have more than one host BKC</li>
+          <li>Delete BootNext as a post-reboot action to work around broken firmware</li>
+          <li>Parse cabinet archives internally without libgcab</li>
+          <li>Use close-ended mode for eMMC FFU to speed up firmware updates</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Do not abort 'fwupdmgr update' when one updatable device has a problem</li>
+          <li>Do not call unimplemented functions when running under Wine</li>
+          <li>Do not modify the BootOrder by default to work around broken firmware</li>
+          <li>Do not treat an immutable buffer as mutable in the vli plugin</li>
+          <li>Drop the concept of HSI:INVALID:missing-data and just show HSI-0</li>
+          <li>Fix a small memory leak in bulkcontroller when getting the device info</li>
+          <li>Inhibit the Nordic HID dongle when there are peripheral updates pending</li>
+          <li>Retry claiming the interface if the USB device returns BUSY</li>
+          <li>Send the Olson location to bulkcontroller rather than the timezone</li>
+          <li>Use a longer timeout for the post-erase STM32 GetStatus</li>
+          <li>Wait 60 seconds for the bulkcontroller device after writing firmware</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Logitech Rally System devices</li>
+          <li>More PixartRF HPAC devices</li>
+          <li>More Synaptics Prometheus fingerprint readers</li>
+          <li>Some Western Digital eMMC devices</li>
+          <li>VIA VL830 and VL832</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.6" date="2023-10-06">
       <description>
         <p>

@@ -502,6 +502,10 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "K návratu na starší verzi firmwaru na tomto počítači je vyžadováno ověření se"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to fix a host security issue"
+msgstr "Pro opravu problému se zabezpečením stroje je třeba se ověřit"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
 msgstr "Pro změnu BIOS nastavení je třeba se ověřit"
 
@@ -530,6 +534,10 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "Pro přepnutí na novou verzi firmwaru je vyžadováno ověření se"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to undo the fix for a host security issue"
+msgstr "Pro vrácení do stavu před opravou problému se zabezpečením stroje je třeba se ověřit"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
 msgstr "Pro odemknutí zařízení je požadováno ověření se"
 
@@ -553,9 +561,17 @@ msgstr "Automatické odesílání hlášení"
 msgid "Automatically upload every time?"
 msgstr "Pokaždé automaticky odeslat?"
 
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS Firmware Updates"
+msgstr "Aktualizace BIOS firmwaru"
+
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS Rollback Protection"
 msgstr "Zamezení instalace starší verze BIOS"
+
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS firmware updates"
+msgstr "Aktualizace BIOS firmwaru"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS rollback protection"
@@ -837,6 +853,10 @@ msgstr "Odebráno zařízení:"
 msgid "Device requires AC power to be connected"
 msgstr "Zařízení vyžaduje, aby bylo připojeno napájení z elektrické zásuvky"
 
+#. TRANSLATORS: device does not have a display connected
+msgid "Device requires a display to be plugged in"
+msgstr "Zařízení vyžaduje aby byla připojená obrazovka"
+
 #. TRANSLATORS: The device cannot be updated due to missing vendor's license."
 msgid "Device requires a software license to update"
 msgstr "Aby ho bylo možné zaktualizovat, zařízení vyžaduje softwarovou licenci"
@@ -1088,6 +1108,10 @@ msgstr "Zapnuto pokud je odpovídající hardware"
 msgid "Enables a given remote"
 msgstr "Povolit zadaný vzdálený zdroj"
 
+#. TRANSLATORS: longer description
+msgid "Enabling firmware updates for the BIOS allows fixing security issues."
+msgstr "Zapnutí aktualizací firmware pro BIOS umožňuje opravovat problémy se zabezpečením."
+
 msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
 msgstr "Zapnutí této funkce je na vaše vlastní riziko. To znamená, že v případě problémů způsobených aktualizací je třeba, abyste se obrátili přímo na výrobce daného vybavení. Na adresu $OS_RELEASE:BUG_REPORT_URL$ by měly být hlášeny pouze problémy s aktualizačním procesem jako takovým."
 
@@ -1187,7 +1211,6 @@ msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 msgstr "SOUBOR|KONTROLNÍ-SOUČET1[,KONTROLNÍ-SOUČET2][,KONTROLNÍ-SOUČET3]"
 
 #. TRANSLATORS: the update state of the specific device
-#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Nezdařilo se"
 
@@ -1390,6 +1413,18 @@ msgstr "Aktualizace firmwaru jsou na tomto počítači podporované."
 #. TRANSLATORS: user needs to run a command
 msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "Aktualizace firmware jsou zakázané. Pokud je chcete povolit, spusťte „fwupdmgr unlock“"
+
+#. TRANSLATORS: command description
+msgid "Fix a specific host security attribute"
+msgstr "Opravit konkrétní atribut zabezpečení stroje"
+
+#. TRANSLATORS: we've fixed a security problem on the machine
+msgid "Fix reverted successfully"
+msgstr "Úspěšně vráceno do stavu před opravou"
+
+#. TRANSLATORS: we've fixed a security problem on the machine
+msgid "Fixed successfully"
+msgstr "Úspěšně opraveno"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -1773,6 +1808,11 @@ msgstr "Neplatné argumenty"
 msgid "Invalid arguments, expected GUID"
 msgstr "Neplatný argument – očekáváno GUID"
 
+#. TRANSLATOR: This is the error message for
+#. * incorrect parameter
+msgid "Invalid arguments, expected an AppStream ID"
+msgstr "Neplatný argument – očekáván AppStream identif."
+
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Neplatný argument – očekáváno přinjemenším ARCHIVE FIRMWARE METAINFO"
@@ -2093,10 +2133,6 @@ msgstr "Nebyly provedeny žádné aktualizace"
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Neschváleno"
-
-#. TRANSLATORS: error message to tell someone they can't use this feature
-msgid "Not enough data was provided by the platform to make an HSI calculation."
-msgstr "Platforma neposkytla dostatek údajů pro provedení výpočtu HSI."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -2445,6 +2481,10 @@ msgstr "Při použití install-blob spustit zásuvný modul rutina vyčištění
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Při použití install-blob spustit zásuvný modul rutina připravení složeného"
 
+#. TRANSLATORS: command description
+msgid "Run the post-reboot cleanup action"
+msgstr "Spustit akci čištění po restartu"
+
 #. TRANSLATORS: tell a user how to get information
 #, c-format
 msgid "Run without '%s' to see"
@@ -2521,6 +2561,9 @@ msgstr "Secure Boot vypnut"
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot enabled"
 msgstr "Secure Boot zapnut"
+
+msgid "Security hardening for HSI"
+msgstr "Posílení zabezpečení pro HSI"
 
 #. TRANSLATORS: the %1 is a URL to a wiki page
 #, c-format
@@ -3012,11 +3055,21 @@ msgstr "Tento nástroj správci umožňuje dotazovat a ovládat proces služby f
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Tento nástroj správci umožňuje použít zásuvné moduly pro fwupd bez toho, aby se instalovaly na hostitelský systém."
 
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can add a kernel argument of '%s', but it will only be active after restarting the computer."
+msgstr "Tento nástroj může přidat argument jádra systému „%s“, ale toto se projeví až po restartu počítače."
+
 #. TRANSLATORS: the %1 is a BIOS setting name.
 #. * %2 and %3 are the values, e.g. "True" or "Windows10"
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
-msgstr "Tento nástroj může změnit nastavení BIOS „%s“ z „%sȜ na „%s“ automaticky, ale toto se projeví až po restartu počítače."
+msgstr "Tento nástroj může změnit nastavení BIOS „%s“ z „%s“ na „%s“ automaticky, ale toto se projeví až po restartu počítače."
+
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can change the kernel argument from '%s' to '%s', but it will only be active after restarting the computer."
+msgstr "Tento nástroj může změnit argument jádra systému z „%s“ na „%s“, ale toto se projeví až po restartu počítače."
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
@@ -3122,6 +3175,10 @@ msgstr "Odblokovává se firmware:"
 msgid "Unblocks a specific firmware from being installed"
 msgstr "Odblokovat instalaci konkrétního firmwaru"
 
+#. TRANSLATORS: command description
+msgid "Undo the host security attribute fix"
+msgstr "Vrátit do stavu před opravou atributu zabezpečení stroje"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
 msgstr "Nešifrováno"
@@ -3133,6 +3190,7 @@ msgstr "Zrušit inhibování systému a umožnit tak přechody na novější ver
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Unknown"
 msgstr "Neznámo"
 
@@ -3359,6 +3417,10 @@ msgid "Writing…"
 msgstr "Zapisování…"
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
+msgid "You should ensure you are comfortable restoring the setting from a recovery or installation disk, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "Měli byste ověřit že dokážete vrátit nastavení zpět ze záchranného nebo instalačního média, protože tato změna může způsobit že systém nenastartuje do Linuxu nebo způsobí jiné nestability systému."
+
+#. TRANSLATORS: the user has to manually recover; we can't do it
 msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
 msgstr "Měli byste ověřit že dokážete vrátit nastavení zpět z rozhraní firmware, protože tato změna může způsobit že systém nenastartuje do Linuxu nebo způsobí jiné nestability systému."
 
@@ -3379,6 +3441,10 @@ msgid "Your system is set up to the BKC of %s."
 msgstr "Váš systém má osvědčené uspořádání %s."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[APPSTREAM_ID]"
+msgstr "[APPSTREAM_IDENTIF]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"
 msgstr "[KONTROLNÍ-SOUČET]"
 
@@ -3393,6 +3459,10 @@ msgstr "[IDENTIF-ZAŘÍZENÍ|GUID] [VĚTEV]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [VERSION]"
 msgstr "[IDENTIF-ZAŘÍZENÍ|GUID] [VERZE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE]"
+msgstr "[ZAŘÍZENÍ]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"
