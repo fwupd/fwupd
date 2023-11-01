@@ -2,6 +2,7 @@ if get_option('plugin_emmc').require(gudev.found(),
     error_message: 'gudev is needed for plugin_emmc').allowed()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginEmmc"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('emmc.quirk')
 plugin_builtins += static_library('fu_plugin_emmc',

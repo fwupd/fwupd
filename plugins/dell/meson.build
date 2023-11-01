@@ -1,6 +1,7 @@
 if get_option('plugin_uefi_capsule').disable_auto_if(host_machine.system() != 'linux').allowed()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginDell"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('dell.quirk')
 

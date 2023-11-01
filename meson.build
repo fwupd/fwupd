@@ -110,7 +110,8 @@ warning_flags = [
   '-Wvla',
   '-Wwrite-strings'
 ]
-if get_option('static_analysis') and host_machine.system() != 'windows'
+static_analysis = get_option('static_analysis') and host_machine.system() != 'windows'
+if static_analysis
   warning_flags += ['-fanalyzer', '-Wno-analyzer-null-dereference']
 endif
 cc = meson.get_compiler('c')
@@ -410,9 +411,17 @@ if host_machine.system() == 'freebsd'
   endif
 endif
 
+launchctl = find_program('launchctl',
+  required: get_option('launchd').disable_auto_if(host_machine.system() != 'darwin').allowed(),
+)
+
 # this is way less hassle than including TargetConditionals.h and looking for TARGET_OS_MAC=1
 if host_machine.system() == 'darwin'
   conf.set('HOST_MACHINE_SYSTEM_DARWIN', '1')
+  summary({
+    'launchd': launchctl,
+    'launchd_agent_dir': get_option('launchd_agent_dir'),
+  }, section: 'Darwin options')
 endif
 
 # EFI
@@ -468,15 +477,13 @@ if elogind.found()
   conf.set('HAVE_LOGIND' , '1')
 endif
 
-launchctl = find_program('launchctl',
-    required: get_option('launchd').disable_auto_if(host_machine.system() != 'darwin').allowed(),
-)
-
-if get_option('consolekit').disable_auto_if(host_machine.system() != 'linux').allowed()
+consolekit = get_option('consolekit').disable_auto_if(host_machine.system() != 'linux').allowed()
+if consolekit
   conf.set('HAVE_CONSOLEKIT' , '1')
 endif
 
-if get_option('supported_build').disable_auto_if(not tag).allowed()
+supported_build = get_option('supported_build').disable_auto_if(not tag).allowed()
+if supported_build
     conf.set('SUPPORTED_BUILD', '1')
 endif
 
@@ -634,4 +641,52 @@ if build_daemon and libsystemd.found() and offline.allowed()
     install_dir: join_paths(systemdunitdir, 'system-update.target.wants'),
     pointing_to: join_paths('..', 'fwupd-offline-update.service')
   )
+endif
+
+if libsystemd.found()
+  summary({
+    'systemd_unit_user': get_option('systemd_unit_user'),
+    'systemd unit dir': systemdunitdir,
+    'systemd shutdown dir': systemd_shutdown_dir,
+    'systemd modules dir': systemd_modules_load_dir,
+    'systemd sysusers dir': systemd_sysusers_dir,
+  }, section: 'systemd options')
+endif
+
+summary({
+  'fwupdtool': build_standalone,
+  'fwupd (daemon)': build_daemon
+}, section: 'build targets')
+
+summary({
+  'cbor': cbor,
+  'consolekit': consolekit,
+  'dbus_socket_address': get_option('dbus_socket_address'),
+  'docs': build_docs,
+  'elogind': elogind,
+  'gnutls': gnutls,
+  'introspection': introspection.allowed(),
+  'libcurl': libcurl,
+  'lzma': lzma,
+  'polkit': polkit,
+  'python3': python3,
+  'supported_build': supported_build,
+  'static_analysis': static_analysis,
+  'tests': get_option('tests'),
+}, section: 'project features')
+
+if build_daemon
+  summary({
+    'bluez': bluez.allowed(),
+    'compat_cli': get_option('compat_cli'),
+    'gusb': gusb,
+    'gudev': gudev,
+    'hsi': hsi,
+    'libarchive': libarchive.found(),
+    'offline': offline.allowed(),
+    'passim': passim,
+    'sqlite': sqlite,
+    'thinklmi_compat': get_option('thinklmi_compat'),
+  }, section: 'daemon features')
+  summary(plugins, section: 'plugins')
 endif

@@ -1,5 +1,6 @@
 if gudev.found() and gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginNordicHid"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('nordic-hid.quirk')
 plugin_builtins += static_library('fu_plugin_nordic_hid',

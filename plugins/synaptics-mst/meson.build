@@ -1,6 +1,7 @@
 if get_option('plugin_synaptics_mst').require(gudev.found(),
     error_message: 'gudev is needed for plugin_synaptics_mst').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsMST"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('synaptics-mst.quirk')
 

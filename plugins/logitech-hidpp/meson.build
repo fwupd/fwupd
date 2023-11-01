@@ -1,5 +1,6 @@
 if gudev.found() and gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechHidpp"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('logitech-hidpp.quirk')
 plugin_builtin_logitech_hidpp = static_library('fu_plugin_logitech_hidpp',

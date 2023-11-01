@@ -1,4 +1,5 @@
 if gusb.found()
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 cargs = ['-DG_LOG_DOMAIN="FuPluginVliUsbhub"']
 
 plugin_quirks += files([

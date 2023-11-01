@@ -1,6 +1,7 @@
 if get_option('plugin_android_boot').require(gudev.found(),
     error_message: 'gudev is needed for plugin_android_boot').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginAndroidBoot"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('android-boot.quirk')
 plugin_builtins += static_library('fu_plugin_android_boot',

@@ -1,6 +1,7 @@
 if get_option('plugin_redfish').require(libcurl.found(),
     error_message: 'curl is needed for plugin_redfish').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginRedfish"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('redfish.quirk')
 

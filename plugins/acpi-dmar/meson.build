@@ -1,4 +1,5 @@
 if hsi and (host_cpu == 'x86' or host_cpu == 'x86_64')
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiDmar"']
 
 plugin_builtin_acpi_dmar = static_library('fu_plugin_acpi_dmar',

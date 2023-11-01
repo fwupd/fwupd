@@ -5,6 +5,7 @@ if hsi and \
    get_option('plugin_tpm').require(gudev.found(),
     error_message: 'gudev is needed for plugin_tpm').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginTpm"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_builtin_tpm = static_library('fu_plugin_tpm',
   rustgen.process('fu-tpm.rs'),

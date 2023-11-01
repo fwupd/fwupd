@@ -1,5 +1,6 @@
 if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginGenesysGl32xx"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('genesys-gl32xx.quirk')
 plugin_builtins += static_library('fu_plugin_genesys_gl32xx',

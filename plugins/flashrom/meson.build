@@ -1,6 +1,7 @@
 if get_option('plugin_flashrom').enabled() or \
    (get_option('plugin_flashrom').auto() and libflashrom.found())
 cargs = ['-DG_LOG_DOMAIN="FuPluginFlashrom"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('flashrom.quirk')
 

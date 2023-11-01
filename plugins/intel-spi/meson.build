@@ -6,6 +6,7 @@ if not lzma.found() or \
     error('unsupported configuration for intel_spi')
 endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginIntelSpi"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('intel-spi.quirk')
 plugin_builtins += static_library('fu_plugin_intel_spi',

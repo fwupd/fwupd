@@ -1,5 +1,6 @@
 if get_option('plugin_mtd').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginMtd"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('mtd.quirk')
 plugin_builtin_mtd = static_library('fu_plugin_mtd',

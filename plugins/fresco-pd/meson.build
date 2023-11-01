@@ -1,5 +1,6 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginFrescoPd"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('fresco-pd.quirk')
 plugin_builtins += static_library('fu_plugin_fresco_pd',

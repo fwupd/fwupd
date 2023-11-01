@@ -1,6 +1,7 @@
 if gusb.found() and protobufc.found() and protoc.found()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechBulkController"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('logitech-bulkcontroller.quirk')
 

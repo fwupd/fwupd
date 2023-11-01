@@ -5,6 +5,7 @@ if gudev.found()
 {%- endif %}
 cargs = ['-DG_LOG_DOMAIN="FuPlugin{{Vendor}}{{Example}}"']
 
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 plugin_quirks += files('{{vendor}}-{{example}}.quirk')
 plugin_builtins += static_library('fu_plugin_{{vendor}}_{{example}}',
   rustgen.process('fu-{{vendor}}-{{example}}.rs'),

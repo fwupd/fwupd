@@ -4,6 +4,7 @@ if nvme_header and \
    get_option('plugin_nvme').require(gudev.found(),
     error_message: 'gudev is needed for plugin_nvme').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginNvme"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('nvme.quirk')
 plugin_builtin_nvme = static_library('fu_plugin_nvme',

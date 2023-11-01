@@ -1,5 +1,6 @@
 if hsi and (host_cpu == 'x86' or host_cpu == 'x86_64')
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiFacp"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_builtin_acpi_facp = static_library('fu_plugin_acpi_facp',
   sources: [

@@ -1,5 +1,6 @@
 if get_option('plugin_ep963x').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginEp963x"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('ep963x.quirk')
 plugin_builtins += static_library('fu_plugin_ep963x',

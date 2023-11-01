@@ -1,5 +1,6 @@
 if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginCfu"']
+plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 # do not use structgen as these files are used in the elanfp plugin too...
 cfu_rs = custom_target('fu-cfu-rs',
