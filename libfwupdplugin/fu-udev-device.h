@@ -20,6 +20,7 @@
 #define GUsbDevice  GObject
 #endif
 
+#include "fu-io-channel.h"
 #include "fu-plugin.h"
 
 #define FU_TYPE_UDEV_DEVICE (fu_udev_device_get_type())
@@ -154,10 +155,8 @@ fu_udev_device_set_logical_id(FuUdevDevice *self,
 void
 fu_udev_device_set_flags(FuUdevDevice *self, FuUdevDeviceFlags flags);
 
-gint
-fu_udev_device_get_fd(FuUdevDevice *self);
-void
-fu_udev_device_set_fd(FuUdevDevice *self, gint fd);
+FuIOChannel *
+fu_udev_device_get_io_channel(FuUdevDevice *self);
 gboolean
 fu_udev_device_ioctl(FuUdevDevice *self,
 		     gulong request,

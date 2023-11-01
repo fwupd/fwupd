@@ -13,7 +13,6 @@
 
 struct _FuSynapticsRmiPs2Device {
 	FuSynapticsRmiDevice parent_instance;
-	FuIOChannel *io_channel;
 };
 
 G_DEFINE_TYPE(FuSynapticsRmiPs2Device, fu_synaptics_rmi_ps2_device, FU_TYPE_SYNAPTICS_RMI_DEVICE)
@@ -104,9 +103,10 @@ enum EStickDeviceType {
 static gboolean
 fu_synaptics_rmi_ps2_device_read_ack(FuSynapticsRmiPs2Device *self, guint8 *pbuf, GError **error)
 {
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	for (guint i = 0; i < 60; i++) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_io_channel_read_raw(self->io_channel,
+		if (!fu_io_channel_read_raw(io_channel,
 					    pbuf,
 					    0x1,
 					    NULL,
@@ -134,8 +134,9 @@ fu_synaptics_rmi_ps2_device_read_byte(FuSynapticsRmiPs2Device *self,
 				      guint timeout,
 				      GError **error)
 {
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_return_val_if_fail(timeout > 0, FALSE);
-	return fu_io_channel_read_raw(self->io_channel,
+	return fu_io_channel_read_raw(io_channel,
 				      pbuf,
 				      0x1,
 				      NULL,
@@ -152,13 +153,14 @@ fu_synaptics_rmi_ps2_device_write_byte(FuSynapticsRmiPs2Device *self,
 				       FuSynapticsRmiDeviceFlags flags,
 				       GError **error)
 {
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	gboolean do_write = TRUE;
 	g_return_val_if_fail(timeout > 0, FALSE);
 	for (guint i = 0;; i++) {
 		guint8 res = 0;
 		g_autoptr(GError) error_local = NULL;
 		if (do_write) {
-			if (!fu_io_channel_write_raw(self->io_channel,
+			if (!fu_io_channel_write_raw(io_channel,
 						     &buf,
 						     sizeof(buf),
 						     timeout,
@@ -796,9 +798,6 @@ fu_synaptics_rmi_ps2_device_open(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_synaptics_rmi_ps2_device_parent_class)->open(device, error))
 		return FALSE;
 
-	/* create channel */
-	self->io_channel = fu_io_channel_unix_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(device)));
-
 	/* in serio_raw mode */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		/* clear out any data in the serio_raw queue */
@@ -847,17 +846,6 @@ fu_synaptics_rmi_ps2_device_open(FuDevice *device, GError **error)
 
 	/* success */
 	return TRUE;
-}
-
-static gboolean
-fu_synaptics_rmi_ps2_device_close(FuDevice *device, GError **error)
-{
-	FuSynapticsRmiPs2Device *self = FU_SYNAPTICS_RMI_PS2_DEVICE(device);
-	fu_udev_device_set_fd(FU_UDEV_DEVICE(device), -1);
-	g_clear_object(&self->io_channel);
-
-	/* FuUdevDevice->close */
-	return FU_DEVICE_CLASS(fu_synaptics_rmi_ps2_device_parent_class)->close(device, error);
 }
 
 static gboolean
@@ -998,7 +986,6 @@ fu_synaptics_rmi_ps2_device_class_init(FuSynapticsRmiPs2DeviceClass *klass)
 	klass_device->setup = fu_synaptics_rmi_ps2_device_setup;
 	klass_device->probe = fu_synaptics_rmi_ps2_device_probe;
 	klass_device->open = fu_synaptics_rmi_ps2_device_open;
-	klass_device->close = fu_synaptics_rmi_ps2_device_close;
 	klass_rmi->read = fu_synaptics_rmi_ps2_device_read;
 	klass_rmi->write = fu_synaptics_rmi_ps2_device_write;
 	klass_rmi->set_page = fu_synaptics_rmi_ps2_device_set_page;

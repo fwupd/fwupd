@@ -18,6 +18,7 @@
 
 #include "fu-i2c-device.h"
 #include "fu-string.h"
+#include "fu-udev-device-private.h"
 
 /**
  * FuI2cDevice
@@ -83,6 +84,7 @@ fu_i2c_device_open(FuDevice *device, GError **error)
 	FuI2cDevicePrivate *priv = GET_PRIVATE(self);
 	gint bus_fd;
 	g_autofree gchar *bus_path = NULL;
+	g_autoptr(FuIOChannel) io_channel = NULL;
 
 	/* open the bus, not the device represented by self */
 	bus_path = g_strdup_printf("/dev/i2c-%u", priv->bus_number);
@@ -98,7 +100,8 @@ fu_i2c_device_open(FuDevice *device, GError **error)
 			    bus_path);
 		return FALSE;
 	}
-	fu_udev_device_set_fd(FU_UDEV_DEVICE(self), bus_fd);
+	io_channel = fu_io_channel_unix_new(bus_fd);
+	fu_udev_device_set_io_channel(FU_UDEV_DEVICE(self), io_channel);
 	fu_udev_device_set_flags(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_NONE);
 #endif
 

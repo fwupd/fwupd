@@ -143,13 +143,14 @@ fu_synaptics_mst_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_synaptics_mst_device_enable_rc(FuSynapticsMstDevice *self, GError **error)
 {
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 
 	/* in test mode */
 	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) == NULL)
 		return TRUE;
 
-	connection = fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
+	connection = fu_synaptics_mst_connection_new(fu_io_channel_unix_get_fd(io_channel),
 						     self->layer,
 						     self->rad);
 	return fu_synaptics_mst_connection_enable_rc(connection, error);
@@ -158,13 +159,14 @@ fu_synaptics_mst_device_enable_rc(FuSynapticsMstDevice *self, GError **error)
 static gboolean
 fu_synaptics_mst_device_disable_rc(FuSynapticsMstDevice *self, GError **error)
 {
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 
 	/* in test mode */
 	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) == NULL)
 		return TRUE;
 
-	connection = fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
+	connection = fu_synaptics_mst_connection_new(fu_io_channel_unix_get_fd(io_channel),
 						     self->layer,
 						     self->rad);
 	return fu_synaptics_mst_connection_disable_rc(connection, error);
@@ -194,11 +196,12 @@ fu_synaptics_mst_device_get_flash_checksum(FuSynapticsMstDevice *self,
 					   guint32 *checksum,
 					   GError **error)
 {
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 
 	g_return_val_if_fail(length > 0, FALSE);
 
-	connection = fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
+	connection = fu_synaptics_mst_connection_new(fu_io_channel_unix_get_fd(io_channel),
 						     self->layer,
 						     self->rad);
 	if (!fu_synaptics_mst_connection_rc_special_get_command(connection,
@@ -222,10 +225,11 @@ fu_synaptics_mst_device_set_flash_sector_erase(FuSynapticsMstDevice *self,
 					       guint16 offset,
 					       GError **error)
 {
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	guint16 us_data;
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 
-	connection = fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
+	connection = fu_synaptics_mst_connection_new(fu_io_channel_unix_get_fd(io_channel),
 						     self->layer,
 						     self->rad);
 	/* Need to add Wp control ? */
@@ -345,6 +349,7 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 				   FuProgress *progress,
 				   GError **error)
 {
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	guint32 flash_checksum = 0;
 	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
 
@@ -366,10 +371,9 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 	}
 	g_debug("ESM checksum %x doesn't match expected %x", flash_checksum, helper->checksum);
 
-	helper->connection =
-	    fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
-					    self->layer,
-					    self->rad);
+	helper->connection = fu_synaptics_mst_connection_new(fu_io_channel_unix_get_fd(io_channel),
+							     self->layer,
+							     self->rad);
 	helper->progress = g_object_ref(progress);
 	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw, EEPROM_ESM_OFFSET, BLOCK_UNIT);
 	return fu_device_retry(FU_DEVICE(self),
@@ -450,12 +454,12 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 						   FuProgress *progress,
 						   GError **error)
 {
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
 
-	helper->connection =
-	    fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
-					    self->layer,
-					    self->rad);
+	helper->connection = fu_synaptics_mst_connection_new(fu_io_channel_unix_get_fd(io_channel),
+							     self->layer,
+							     self->rad);
 	helper->fw = g_bytes_ref(fw);
 	helper->checksum = fu_sum32_bytes(fw);
 	helper->progress = g_object_ref(progress);
@@ -470,11 +474,12 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 static gboolean
 fu_synaptics_mst_device_get_active_bank_panamera(FuSynapticsMstDevice *self, GError **error)
 {
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 	guint32 buf[16];
 
 	/* get used bank */
-	connection = fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
+	connection = fu_synaptics_mst_connection_new(fu_io_channel_unix_get_fd(io_channel),
 						     self->layer,
 						     self->rad);
 	if (!fu_synaptics_mst_connection_rc_get_command(connection,
@@ -696,6 +701,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 						 FuProgress *progress,
 						 GError **error)
 {
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	guint32 fw_size = 0;
 	guint8 checksum8 = 0;
 	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
@@ -730,10 +736,9 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 		fw_size = PANAMERA_FIRMWARE_SIZE;
 	g_debug("calculated fw size as %u", fw_size);
 
-	helper->connection =
-	    fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
-					    self->layer,
-					    self->rad);
+	helper->connection = fu_synaptics_mst_connection_new(fu_io_channel_unix_get_fd(io_channel),
+							     self->layer,
+							     self->rad);
 	helper->fw = fu_bytes_new_offset(fw, 0x0, fw_size, error);
 	if (helper->fw == NULL)
 		return FALSE;
@@ -782,12 +787,13 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 static gboolean
 fu_synaptics_mst_device_panamera_prepare_write(FuSynapticsMstDevice *self, GError **error)
 {
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	guint32 buf[4] = {0};
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 
 	/* Need to detect flash mode and ESM first ? */
 	/* disable flash Quad mode and ESM/HDCP2.2*/
-	connection = fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
+	connection = fu_synaptics_mst_connection_new(fu_io_channel_unix_get_fd(io_channel),
 						     self->layer,
 						     self->rad);
 
@@ -929,12 +935,12 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 						FuProgress *progress,
 						GError **error)
 {
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
 
-	helper->connection =
-	    fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
-					    self->layer,
-					    self->rad);
+	helper->connection = fu_synaptics_mst_connection_new(fu_io_channel_unix_get_fd(io_channel),
+							     self->layer,
+							     self->rad);
 	helper->fw = fu_bytes_new_offset(fw, 0x0, CAYENNE_FIRMWARE_SIZE, error);
 	if (helper->fw == NULL)
 		return FALSE;
@@ -966,6 +972,7 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 static gboolean
 fu_synaptics_mst_device_restart(FuSynapticsMstDevice *self, GError **error)
 {
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 	guint8 buf[4] = {0xF5, 0, 0, 0};
 	gint offset;
@@ -989,7 +996,7 @@ fu_synaptics_mst_device_restart(FuSynapticsMstDevice *self, GError **error)
 		return FALSE;
 	}
 	/* issue the reboot command, ignore return code (triggers before returning) */
-	connection = fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
+	connection = fu_synaptics_mst_connection_new(fu_io_channel_unix_get_fd(io_channel),
 						     self->layer,
 						     self->rad);
 	if (!fu_synaptics_mst_connection_rc_set_command(connection,
@@ -1211,6 +1218,8 @@ fu_synaptics_mst_device_read_board_id(FuSynapticsMstDevice *self,
 static gboolean
 fu_synaptics_mst_device_scan_cascade(FuSynapticsMstDevice *self, guint8 layer, GError **error)
 {
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+
 	/* in test mode we skip this */
 	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) == NULL)
 		return TRUE;
@@ -1236,10 +1245,9 @@ fu_synaptics_mst_device_scan_cascade(FuSynapticsMstDevice *self, guint8 layer, G
 			g_debug("no cascade device found: %s", error_local->message);
 			continue;
 		}
-		connection =
-		    fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
-						    layer + 1,
-						    rad);
+		connection = fu_synaptics_mst_connection_new(fu_io_channel_unix_get_fd(io_channel),
+							     layer + 1,
+							     rad);
 		if (!fu_synaptics_mst_connection_read(connection,
 						      REG_RC_CAP,
 						      byte,
@@ -1274,6 +1282,7 @@ static gboolean
 fu_synaptics_mst_device_rescan(FuDevice *device, GError **error)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	guint8 buf_vid[4];
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -1289,8 +1298,7 @@ fu_synaptics_mst_device_rescan(FuDevice *device, GError **error)
 	FuDevice *parent;
 
 	/* read vendor ID */
-	connection =
-	    fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)), 0, 0);
+	connection = fu_synaptics_mst_connection_new(fu_io_channel_unix_get_fd(io_channel), 0, 0);
 	if (!fu_synaptics_mst_connection_read(connection, REG_RC_CAP, buf_vid, 1, error)) {
 		g_prefix_error(error, "failed to read device: ");
 		return FALSE;
