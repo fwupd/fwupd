@@ -861,6 +861,8 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 		priv->subsystem_model = priv_donor->subsystem_model;
 	if (priv->revision == 0x0 && priv_donor->revision != 0x0)
 		priv->revision = priv_donor->revision;
+	if (priv->io_channel == NULL && priv_donor->io_channel != 0x0)
+		priv->io_channel = g_object_ref(priv_donor->io_channel);
 }
 
 /**
