@@ -41,7 +41,9 @@
 
 #define FLASH_SETTLE_TIME 5000 /* ms */
 
-#define CAYENNE_FIRMWARE_SIZE 0x50000 /* bytes */
+#define FU_SYNAPTICS_MST_DEVICE_READ_TIMEOUT 2000 /* ms */
+
+#define CAYENNE_FIRMWARE_SIZE  0x50000 /* bytes */
 #define PANAMERA_FIRMWARE_SIZE 0x1A000 /* bytes */
 
 /**
@@ -52,7 +54,7 @@
 #define FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID (1 << 0)
 
 struct _FuSynapticsMstDevice {
-	FuUdevDevice parent_instance;
+	FuDpauxDevice parent_instance;
 	gchar *device_kind;
 	gchar *system_type;
 	guint64 write_block_size;
@@ -65,7 +67,7 @@ struct _FuSynapticsMstDevice {
 	guint16 chip_id;
 };
 
-G_DEFINE_TYPE(FuSynapticsMstDevice, fu_synaptics_mst_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE(FuSynapticsMstDevice, fu_synaptics_mst_device, FU_TYPE_DPAUX_DEVICE)
 
 static void
 fu_synaptics_mst_device_finalize(GObject *object)
@@ -123,7 +125,7 @@ fu_synaptics_mst_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
 
-	/* FuUdevDevice->to_string */
+	/* FuDpauxDevice->to_string */
 	FU_DEVICE_CLASS(fu_synaptics_mst_device_parent_class)->to_string(device, idt, str);
 
 	fu_string_append(str, idt, "DeviceKind", self->device_kind);
@@ -1106,7 +1108,7 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 }
 
 FuSynapticsMstDevice *
-fu_synaptics_mst_device_new(FuUdevDevice *device)
+fu_synaptics_mst_device_new(FuDpauxDevice *device)
 {
 	FuSynapticsMstDevice *self = g_object_new(FU_TYPE_SYNAPTICS_MST_DEVICE, NULL);
 	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(device));
@@ -1211,7 +1213,7 @@ fu_synaptics_mst_device_scan_cascade(FuSynapticsMstDevice *self, guint8 layer, G
 		g_autoptr(GError) error_local = NULL;
 
 		/* enable remote control and disable on exit */
-		device_tmp = fu_synaptics_mst_device_new(FU_UDEV_DEVICE(self));
+		device_tmp = fu_synaptics_mst_device_new(FU_DPAUX_DEVICE(self));
 		device_tmp->layer = layer;
 		device_tmp->rad = rad;
 		locker = fu_device_locker_new_full(
@@ -1259,7 +1261,7 @@ fu_synaptics_mst_device_rescan(FuDevice *device, GError **error)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
 	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
-	guint8 buf_vid[4];
+	guint8 rc_cap = 0x0;
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autofree gchar *version = NULL;
@@ -1270,26 +1272,22 @@ fu_synaptics_mst_device_rescan(FuDevice *device, GError **error)
 	g_autofree gchar *name = NULL;
 	const gchar *name_parent = NULL;
 	const gchar *name_family;
-	guint8 buf_ver[16];
+	guint8 buf_ver[16] = {0x0};
 	FuDevice *parent;
 
 	/* read vendor ID */
-	connection = fu_synaptics_mst_connection_new(io_channel, 0, 0);
-	if (!fu_synaptics_mst_connection_read(connection, REG_RC_CAP, buf_vid, 1, error)) {
+	if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(device),
+				  REG_RC_CAP,
+				  &rc_cap,
+				  sizeof(rc_cap),
+				  FU_SYNAPTICS_MST_DEVICE_READ_TIMEOUT,
+				  error)) {
 		g_prefix_error(error, "failed to read device: ");
 		return FALSE;
 	}
-	if (buf_vid[0] & 0x04) {
-		if (!fu_synaptics_mst_connection_read(connection,
-						      REG_VENDOR_ID,
-						      buf_vid,
-						      3,
-						      error)) {
-			g_prefix_error(error, "failed to read vendor ID: ");
-			return FALSE;
-		}
+	if (rc_cap & 0x04) {
 		/* not a correct device */
-		if (buf_vid[0] != 0x90 || buf_vid[1] != 0xCC || buf_vid[2] != 0x24) {
+		if (fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)) != 0x90CC24) {
 			g_set_error_literal(error,
 					    G_IO_ERROR,
 					    G_IO_ERROR_INVALID_DATA,
@@ -1311,15 +1309,27 @@ fu_synaptics_mst_device_rescan(FuDevice *device, GError **error)
 	if (locker == NULL)
 		return FALSE;
 
-	/* read firmware version */
-	if (!fu_synaptics_mst_connection_read(connection, REG_FIRMWARE_VERSION, buf_ver, 3, error))
+	/* read firmware version: the third byte is vendor-specific usage */
+	if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(device),
+				  REG_FIRMWARE_VERSION,
+				  buf_ver,
+				  3,
+				  FU_SYNAPTICS_MST_DEVICE_READ_TIMEOUT,
+				  error)) {
+		g_prefix_error(error, "failed to read firmware version: ");
 		return FALSE;
+	}
 
 	version = g_strdup_printf("%1d.%02d.%02d", buf_ver[0], buf_ver[1], buf_ver[2]);
 	fu_device_set_version(FU_DEVICE(self), version);
 
 	/* read board chip_id */
-	if (!fu_synaptics_mst_connection_read(connection, REG_CHIP_ID, buf_ver, 2, error)) {
+	if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(device),
+				  REG_CHIP_ID,
+				  buf_ver,
+				  2,
+				  FU_SYNAPTICS_MST_DEVICE_READ_TIMEOUT,
+				  error)) {
 		g_prefix_error(error, "failed to read chip id: ");
 		return FALSE;
 	}
@@ -1353,6 +1363,7 @@ fu_synaptics_mst_device_rescan(FuDevice *device, GError **error)
 	}
 
 	/* read board ID */
+	connection = fu_synaptics_mst_connection_new(io_channel, 0, 0);
 	if (!fu_synaptics_mst_device_read_board_id(self, connection, buf_ver, error))
 		return FALSE;
 	self->board_id = fu_memread_uint16(buf_ver, G_BIG_ENDIAN);

@@ -36,7 +36,6 @@ G_DECLARE_FINAL_TYPE(FuSynapticsMstConnection,
 #define REG_RC_OFFSET 0x4BC
 #define REG_RC_DATA   0x4C0
 
-#define REG_VENDOR_ID	     0x500
 #define REG_CHIP_ID	     0x507
 #define REG_FIRMWARE_VERSION 0x50A
 

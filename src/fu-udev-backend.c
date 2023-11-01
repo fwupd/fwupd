@@ -38,6 +38,7 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 				   {"drm", FU_TYPE_DRM_DEVICE},
 				   {"i2c", FU_TYPE_I2C_DEVICE},
 				   {"i2c-dev", FU_TYPE_I2C_DEVICE},
+				   {"drm_dp_aux_dev", FU_TYPE_DPAUX_DEVICE},
 				   {NULL, G_TYPE_INVALID}};
 
 	/* create the correct object depending on the subsystem */

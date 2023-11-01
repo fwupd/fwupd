@@ -97,9 +97,10 @@ fu_synaptics_mst_plugin_backend_device_added(FuPlugin *plugin,
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuSynapticsMstDevice) dev = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* interesting device? */
-	if (!FU_IS_UDEV_DEVICE(device))
+	if (!FU_IS_DPAUX_DEVICE(device))
 		return TRUE;
 
 	/* progress */
@@ -107,10 +108,17 @@ fu_synaptics_mst_plugin_backend_device_added(FuPlugin *plugin,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "open");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 99, "rescan");
 
-	dev = fu_synaptics_mst_device_new(FU_UDEV_DEVICE(device));
-	locker = fu_device_locker_new(dev, error);
-	if (locker == NULL)
+	dev = fu_synaptics_mst_device_new(FU_DPAUX_DEVICE(device));
+	locker = fu_device_locker_new(dev, &error_local);
+	if (locker == NULL) {
+		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED) ||
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {
+			g_debug("no device found: %s", error_local->message);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* for SynapticsMstDeviceKind=system devices */

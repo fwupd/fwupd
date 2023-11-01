@@ -46,7 +46,7 @@ _test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 		g_autoptr(FuUdevDevice) dev = NULL;
 		if (!g_str_has_prefix(basename, "drm_dp_aux"))
 			continue;
-		dev = g_object_new(FU_TYPE_UDEV_DEVICE,
+		dev = g_object_new(FU_TYPE_DPAUX_DEVICE,
 				   "context",
 				   ctx,
 				   "physical-id",
