@@ -171,23 +171,6 @@ fu_synaptics_mst_device_disable_rc(FuSynapticsMstDevice *self, GError **error)
 }
 
 static gboolean
-fu_synaptics_mst_device_probe(FuDevice *device, GError **error)
-{
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_synaptics_mst_device_parent_class)->probe(device, error))
-		return FALSE;
-
-	/* get from sysfs if not set from tests */
-	if (fu_device_get_logical_id(device) == NULL) {
-		g_autofree gchar *logical_id = NULL;
-		logical_id =
-		    g_path_get_basename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
-		fu_device_set_logical_id(device, logical_id);
-	}
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci,drm_dp_aux_dev", error);
-}
-
-static gboolean
 fu_synaptics_mst_device_get_flash_checksum(FuSynapticsMstDevice *self,
 					   guint32 offset,
 					   guint32 length,
@@ -1499,6 +1482,5 @@ fu_synaptics_mst_device_class_init(FuSynapticsMstDeviceClass *klass)
 	klass_device->rescan = fu_synaptics_mst_device_rescan;
 	klass_device->write_firmware = fu_synaptics_mst_device_write_firmware;
 	klass_device->prepare_firmware = fu_synaptics_mst_device_prepare_firmware;
-	klass_device->probe = fu_synaptics_mst_device_probe;
 	klass_device->set_progress = fu_synaptics_mst_device_set_progress;
 }
