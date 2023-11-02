@@ -652,6 +652,8 @@ fu_device_set_version_bootloader(FuDevice *self, const gchar *version);
 void
 fu_device_set_version_from_uint16(FuDevice *self, guint16 version_raw);
 void
+fu_device_set_version_from_uint24(FuDevice *self, guint32 version_raw);
+void
 fu_device_set_version_from_uint32(FuDevice *self, guint32 version_raw);
 void
 fu_device_set_version_from_uint64(FuDevice *self, guint64 version_raw);
