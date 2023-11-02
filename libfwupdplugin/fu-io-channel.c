@@ -365,6 +365,8 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 					    strerror(errno));
 				return NULL;
 			}
+			if (len == 0)
+				break;
 			if (len > 0)
 				g_byte_array_append(buf2, buf, len);
 
