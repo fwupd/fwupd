@@ -114,6 +114,7 @@ fu_synaptics_mst_plugin_backend_device_added(FuPlugin *plugin,
 		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {
 			g_debug("no device found: %s", error_local->message);
+			fu_progress_finished(progress);
 			return TRUE;
 		}
 		g_propagate_error(error, g_steal_pointer(&error_local));
