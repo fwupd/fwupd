@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <gio/gio.h>
+#include <fwupdplugin.h>
 
 #define FU_TYPE_SYNAPTICS_MST_CONNECTION (fu_synaptics_mst_connection_get_type())
 G_DECLARE_FINAL_TYPE(FuSynapticsMstConnection,
@@ -69,7 +69,7 @@ typedef enum {
 } SynapticsMstUpdcCmd;
 
 FuSynapticsMstConnection *
-fu_synaptics_mst_connection_new(gint fd, guint8 layer, guint rad);
+fu_synaptics_mst_connection_new(FuIOChannel *io_channel, guint8 layer, guint rad);
 
 gboolean
 fu_synaptics_mst_connection_read(FuSynapticsMstConnection *self,
