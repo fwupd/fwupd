@@ -87,7 +87,7 @@ GType = FuWacAndroidDevice
 GType = FuWacDevice
 Plugin = wacom_usb
 
-# Cintiq Pro 27 (USB) [DTH-271]
+# Cintiq Pro 27 (USB) [DTH271]
 [USB\VID_056A&PID_03C0]
 Plugin = wacom_usb
 GType = FuWacDevice
@@ -131,5 +131,15 @@ Flags = no-serial-number
 
 # Wacom One Pen tablet medium (USB) [CTC6110WL - Android Mode]
 [USB\VID_0531&PID_0105]
+Plugin = wacom_usb
+GType = FuWacDevice
+
+# Cintiq Pro 17 (USB) [DTH172]
+[USB\VID_056A&PID_03C4]
+Plugin = wacom_usb
+GType = FuWacDevice
+
+# Cintiq Pro 22 (USB) [DTH227]
+[USB\VID_056A&PID_03D0]
 Plugin = wacom_usb
 GType = FuWacDevice
