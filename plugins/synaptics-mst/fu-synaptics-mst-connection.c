@@ -18,7 +18,7 @@
 
 struct _FuSynapticsMstConnection {
 	GObject parent_instance;
-	gint fd; /* not owned by the connection */
+	FuIOChannel *io_channel;
 	guint8 layer;
 	guint8 remain_layer;
 	guint8 rad;
@@ -32,8 +32,19 @@ fu_synaptics_mst_connection_init(FuSynapticsMstConnection *self)
 }
 
 static void
+fu_synaptics_mst_connection_finalize(GObject *object)
+{
+	FuSynapticsMstConnection *self = FU_SYNAPTICS_MST_CONNECTION(object);
+	if (self->io_channel != NULL)
+		g_object_unref(self->io_channel);
+	G_OBJECT_CLASS(fu_synaptics_mst_connection_parent_class)->finalize(object);
+}
+
+static void
 fu_synaptics_mst_connection_class_init(FuSynapticsMstConnectionClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_synaptics_mst_connection_finalize;
 }
 
 static gboolean
@@ -44,7 +55,7 @@ fu_synaptics_mst_connection_aux_node_read(FuSynapticsMstConnection *self,
 					  GError **error)
 {
 	g_autofree gchar *title = g_strdup_printf("read@0x%x", offset);
-	if (lseek(self->fd, offset, SEEK_SET) != offset) {
+	if (lseek(fu_io_channel_unix_get_fd(self->io_channel), offset, SEEK_SET) != offset) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
@@ -55,7 +66,7 @@ fu_synaptics_mst_connection_aux_node_read(FuSynapticsMstConnection *self,
 		return FALSE;
 	}
 
-	if (read(self->fd, buf, bufsz) != (gssize)bufsz) {
+	if (read(fu_io_channel_unix_get_fd(self->io_channel), buf, bufsz) != (gssize)bufsz) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
@@ -79,7 +90,7 @@ fu_synaptics_mst_connection_aux_node_write(FuSynapticsMstConnection *self,
 {
 	g_autofree gchar *title = g_strdup_printf("write@0x%x", offset);
 	fu_dump_raw(G_LOG_DOMAIN, title, buf, bufsz);
-	if (lseek(self->fd, offset, SEEK_SET) != offset) {
+	if (lseek(fu_io_channel_unix_get_fd(self->io_channel), offset, SEEK_SET) != offset) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
@@ -90,7 +101,7 @@ fu_synaptics_mst_connection_aux_node_write(FuSynapticsMstConnection *self,
 		return FALSE;
 	}
 
-	if (write(self->fd, buf, bufsz) != (gssize)bufsz) {
+	if (write(fu_io_channel_unix_get_fd(self->io_channel), buf, bufsz) != (gssize)bufsz) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
@@ -125,10 +136,10 @@ fu_synaptics_mst_connection_bus_write(FuSynapticsMstConnection *self,
 }
 
 FuSynapticsMstConnection *
-fu_synaptics_mst_connection_new(gint fd, guint8 layer, guint rad)
+fu_synaptics_mst_connection_new(FuIOChannel *io_channel, guint8 layer, guint rad)
 {
 	FuSynapticsMstConnection *self = g_object_new(FU_TYPE_SYNAPTICS_MST_CONNECTION, NULL);
-	self->fd = fd;
+	self->io_channel = g_object_ref(io_channel);
 	self->layer = layer;
 	self->remain_layer = layer;
 	self->rad = rad;
@@ -432,7 +443,7 @@ fu_synaptics_mst_connection_enable_rc(FuSynapticsMstConnection *self, GError **e
 
 	for (gint i = 0; i <= self->layer; i++) {
 		g_autoptr(FuSynapticsMstConnection) connection_tmp = NULL;
-		connection_tmp = fu_synaptics_mst_connection_new(self->fd, i, self->rad);
+		connection_tmp = fu_synaptics_mst_connection_new(self->io_channel, i, self->rad);
 		if (!fu_synaptics_mst_connection_rc_set_command(connection_tmp,
 								UPDC_ENABLE_RC,
 								0,
@@ -452,7 +463,7 @@ fu_synaptics_mst_connection_disable_rc(FuSynapticsMstConnection *self, GError **
 {
 	for (gint i = self->layer; i >= 0; i--) {
 		g_autoptr(FuSynapticsMstConnection) connection_tmp = NULL;
-		connection_tmp = fu_synaptics_mst_connection_new(self->fd, i, self->rad);
+		connection_tmp = fu_synaptics_mst_connection_new(self->io_channel, i, self->rad);
 		if (!fu_synaptics_mst_connection_rc_set_command(connection_tmp,
 								UPDC_DISABLE_RC,
 								0,
