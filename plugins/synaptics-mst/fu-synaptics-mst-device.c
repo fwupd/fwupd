@@ -1422,17 +1422,10 @@ fu_synaptics_mst_device_rescan(FuDevice *device, GError **error)
 	switch (self->family) {
 	case FU_SYNAPTICS_MST_FAMILY_TESLA:
 		fu_device_set_firmware_size_max(device, 0x10000);
-		fu_device_add_instance_id_full(device, "MST-tesla", FU_DEVICE_INSTANCE_FLAG_QUIRKS);
-		break;
-	case FU_SYNAPTICS_MST_FAMILY_LEAF:
 		fu_device_set_firmware_size_max(device, 0x10000);
-		fu_device_add_instance_id_full(device, "MST-leaf", FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 		break;
 	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
 		fu_device_set_firmware_size_max(device, 0x80000);
-		fu_device_add_instance_id_full(device,
-					       "MST-panamera",
-					       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 		break;
 	default:
@@ -1445,7 +1438,7 @@ fu_synaptics_mst_device_rescan(FuDevice *device, GError **error)
 	guid2 = g_strdup_printf("MST-%s-%u", name_family, self->board_id);
 	fu_device_add_instance_id(FU_DEVICE(self), guid2);
 	guid3 = g_strdup_printf("MST-%s", name_family);
-	fu_device_add_instance_id(FU_DEVICE(self), guid3);
+	fu_device_add_instance_id_full(FU_DEVICE(self), guid3, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 
 	/* this is not a valid customer ID */
 	if ((self->board_id >> 8) == 0x0) {
