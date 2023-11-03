@@ -419,7 +419,12 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 	/* add instance ID */
 	chip_id = g_strdup_printf("CX%u", self->chip_id);
 	fu_device_add_instance_str(device, "ID", chip_id);
-	if (!fu_device_build_instance_id_quirk(device, error, "SYNAPTICS_CXAUDIO", "ID", NULL))
+	if (!fu_device_build_instance_id_full(device,
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "SYNAPTICS_CXAUDIO",
+					      "ID",
+					      NULL))
 		return FALSE;
 
 	/* set summary */

@@ -129,7 +129,14 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 	/* i2c devices all expose a name */
 	tmp = g_udev_device_get_sysfs_attr(udev_device, "name");
 	fu_device_add_instance_strsafe(device, "NAME", tmp);
-	if (!fu_device_build_instance_id(device, error, "I2C", "NAME", NULL))
+	if (!fu_device_build_instance_id_full(device,
+					      FU_DEVICE_INSTANCE_FLAG_GENERIC |
+						  FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+						  FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "I2C",
+					      "NAME",
+					      NULL))
 		return FALSE;
 
 	/* get bus number out of sysfs path */

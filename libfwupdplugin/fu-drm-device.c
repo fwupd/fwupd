@@ -182,7 +182,15 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 		/* add instance ID */
 		fu_device_add_instance_str(device, "VEN", fu_edid_get_pnp_id(edid));
 		fu_device_add_instance_u16(device, "DEV", fu_edid_get_product_code(edid));
-		if (!fu_device_build_instance_id(device, error, "DRM", "VEN", "DEV", NULL))
+		if (!fu_device_build_instance_id_full(device,
+						      FU_DEVICE_INSTANCE_FLAG_GENERIC |
+							  FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+							  FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						      error,
+						      "DRM",
+						      "VEN",
+						      "DEV",
+						      NULL))
 			return FALSE;
 		if (fu_edid_get_eisa_id(edid) != NULL)
 			fu_device_set_name(device, fu_edid_get_eisa_id(edid));

@@ -388,6 +388,7 @@ fu_genesys_hubhid_device_init(FuGenesysHubhidDevice *self)
 	self->support_report_pack = TRUE;
 	self->report_length = GENESYS_HUBHID_REPORT_BYTE_LENGTH;
 	self->max_report_pack_data_length = self->report_length - sizeof(FuGenesysUsbSetup);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS);
 }
 
 static void

@@ -319,7 +319,14 @@ fu_udev_device_probe_serio(FuUdevDevice *self, GError **error)
 		if (g_str_has_prefix(tmp, "PNP: "))
 			tmp += 5;
 		fu_device_add_instance_strsafe(FU_DEVICE(self), "FWID", tmp);
-		if (!fu_device_build_instance_id(FU_DEVICE(self), error, "SERIO", "FWID", NULL))
+		if (!fu_device_build_instance_id_full(FU_DEVICE(self),
+						      FU_DEVICE_INSTANCE_FLAG_GENERIC |
+							  FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+							  FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						      error,
+						      "SERIO",
+						      "FWID",
+						      NULL))
 			return FALSE;
 	}
 	return TRUE;
@@ -526,20 +533,56 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_u8(device, "REV", priv->revision);
 	}
 
-	fu_device_build_instance_id_quirk(device, NULL, subsystem, "VEN", NULL);
-	fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", NULL);
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV))
-		fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", "REV", NULL);
-	fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", "SUBSYS", NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 subsystem,
+					 "VEN",
+					 NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 subsystem,
+					 "VEN",
+					 "DEV",
+					 NULL);
 	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV)) {
-		fu_device_build_instance_id(device,
-					    NULL,
-					    subsystem,
-					    "VEN",
-					    "DEV",
-					    "SUBSYS",
-					    "REV",
-					    NULL);
+		fu_device_build_instance_id_full(device,
+						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+						     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						 NULL,
+						 subsystem,
+						 "VEN",
+						 "DEV",
+						 "REV",
+						 NULL);
+	}
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 subsystem,
+					 "VEN",
+					 "DEV",
+					 "SUBSYS",
+					 NULL);
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV)) {
+		fu_device_build_instance_id_full(device,
+						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+						     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						 NULL,
+						 subsystem,
+						 "VEN",
+						 "DEV",
+						 "SUBSYS",
+						 "REV",
+						 NULL);
 	}
 
 	/* set serial */
@@ -557,21 +600,46 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	if (tmp != NULL && g_str_has_prefix(tmp, "0x"))
 		tmp += 2;
 	fu_device_add_instance_strup(device, "CLASS", tmp);
-	fu_device_build_instance_id_quirk(device, NULL, subsystem, "VEN", "CLASS", NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 subsystem,
+					 "VEN",
+					 "CLASS",
+					 NULL);
 
 	/* add devtype */
 	fu_device_add_instance_strup(device, "TYPE", g_udev_device_get_devtype(priv->udev_device));
-	fu_device_build_instance_id_quirk(device, NULL, subsystem, "TYPE", NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 subsystem,
+					 "TYPE",
+					 NULL);
 
 	/* add the driver */
 	fu_device_add_instance_str(device, "DRIVER", priv->driver);
-	fu_device_build_instance_id_quirk(device, NULL, subsystem, "DRIVER", NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 subsystem,
+					 "DRIVER",
+					 NULL);
 
 	/* add the modalias */
 	fu_device_add_instance_strsafe(device,
 				       "MODALIAS",
 				       g_udev_device_get_property(priv->udev_device, "MODALIAS"));
-	fu_device_build_instance_id_quirk(device, NULL, subsystem, "MODALIAS", NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 subsystem,
+					 "MODALIAS",
+					 NULL);
 
 	/* add firmware_id */
 	if (g_strcmp0(g_udev_device_get_subsystem(priv->udev_device), "serio") == 0) {

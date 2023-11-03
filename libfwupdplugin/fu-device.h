@@ -93,6 +93,7 @@ struct _FuDeviceClass {
  * @FU_DEVICE_INSTANCE_FLAG_NONE:		No flags set
  * @FU_DEVICE_INSTANCE_FLAG_VISIBLE:		Show to the user
  * @FU_DEVICE_INSTANCE_FLAG_QUIRKS:		Match against quirk files
+ * @FU_DEVICE_INSTANCE_FLAG_GENERIC:		Generic GUID added by a baseclass
  *
  * The flags to use when interacting with a device instance
  **/
@@ -100,6 +101,7 @@ typedef enum {
 	FU_DEVICE_INSTANCE_FLAG_NONE = 0,
 	FU_DEVICE_INSTANCE_FLAG_VISIBLE = 1 << 0,
 	FU_DEVICE_INSTANCE_FLAG_QUIRKS = 1 << 1,
+	FU_DEVICE_INSTANCE_FLAG_GENERIC = 1 << 2,
 	/*< private >*/
 	FU_DEVICE_INSTANCE_FLAG_LAST
 } FuDeviceInstanceFlags;
@@ -574,6 +576,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_UPDATE_PENDING (1ull << 35)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS:
+ *
+ * Do not add generic GUIDs from outside the plugin.
+ *
+ * Since: 1.9.8
+ */
+#define FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS (1ull << 36)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);
@@ -873,7 +884,10 @@ gboolean
 fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsystem, ...)
     G_GNUC_NULL_TERMINATED;
 gboolean
-fu_device_build_instance_id_quirk(FuDevice *self, GError **error, const gchar *subsystem, ...)
-    G_GNUC_NULL_TERMINATED;
+fu_device_build_instance_id_full(FuDevice *self,
+				 FuDeviceInstanceFlags flags,
+				 GError **error,
+				 const gchar *subsystem,
+				 ...) G_GNUC_NULL_TERMINATED;
 FuDeviceLocker *
 fu_device_poll_locker_new(FuDevice *self, GError **error);

@@ -281,6 +281,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "display-required";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_UPDATE_PENDING)
 		return "update-pending";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS)
+		return "no-generic-guids";
 	return NULL;
 }
 
@@ -369,6 +371,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_DISPLAY_REQUIRED;
 	if (g_strcmp0(flag, "update-pending") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_UPDATE_PENDING;
+	if (g_strcmp0(flag, "no-generic-guids") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -2334,6 +2338,10 @@ fu_device_add_instance_id_full(FuDevice *self,
 	guid = fwupd_guid_hash_string(instance_id);
 	if (flags & FU_DEVICE_INSTANCE_FLAG_QUIRKS)
 		fu_device_add_guid_quirks(self, guid);
+	if ((flags & FU_DEVICE_INSTANCE_FLAG_GENERIC) > 0 &&
+	    fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS)) {
+		flags &= ~FU_DEVICE_INSTANCE_FLAG_VISIBLE;
+	}
 	if (flags & FU_DEVICE_INSTANCE_FLAG_VISIBLE)
 		fwupd_device_add_instance_id(FWUPD_DEVICE(self), instance_id);
 
@@ -5440,6 +5448,10 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER))
 		fwupd_device_set_serial(FWUPD_DEVICE(self), NULL);
 
+	/* remove the baseclass-added GUIDs */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS))
+		g_ptr_array_set_size(fwupd_device_get_instance_ids(FWUPD_DEVICE(self)), 0);
+
 	/* set by the superclass */
 	if (fu_device_get_id(self) != NULL)
 		priv->device_id_valid = TRUE;
@@ -6097,21 +6109,26 @@ fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsyst
 }
 
 /**
- * fu_device_build_instance_id_quirk:
+ * fu_device_build_instance_id_full:
  * @self: a #FuDevice
+ * @flags: instance ID flags, e.g. %FU_DEVICE_INSTANCE_FLAG_QUIRKS
  * @error: (nullable): optional return location for an error
  * @subsystem: (not nullable): subsystem, e.g. `NVME`
  * @...: pairs of string key values, ending with %NULL
  *
- * Creates an quirk-only instance ID from a prefix and some key values. If any of the key values
- * are unset then no instance ID is added.
+ * Creates an instance ID with specific flags from a prefix and some key values. If any of the key
+ * values are unset then no instance ID is added.
  *
  * Returns: %TRUE if the instance ID was added.
  *
- * Since: 1.7.7
+ * Since: 1.9.8
  **/
 gboolean
-fu_device_build_instance_id_quirk(FuDevice *self, GError **error, const gchar *subsystem, ...)
+fu_device_build_instance_id_full(FuDevice *self,
+				 FuDeviceInstanceFlags flags,
+				 GError **error,
+				 const gchar *subsystem,
+				 ...)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	gboolean ret = TRUE;
@@ -6147,7 +6164,7 @@ fu_device_build_instance_id_quirk(FuDevice *self, GError **error, const gchar *s
 		return FALSE;
 
 	/* success */
-	fu_device_add_instance_id_full(self, str->str, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+	fu_device_add_instance_id_full(self, str->str, flags);
 	return TRUE;
 }
 

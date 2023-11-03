@@ -137,7 +137,12 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 		if (checksum == NULL)
 			return FALSE;
 		fu_device_add_instance_strup(device, "CRT", checksum);
-		fu_device_build_instance_id_quirk(device, NULL, "UEFI", "CRT", NULL);
+		fu_device_build_instance_id_full(device,
+						 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						 NULL,
+						 "UEFI",
+						 "CRT",
+						 NULL);
 		fu_device_build_instance_id(device, NULL, "UEFI", "CRT", "ARCH", NULL);
 	}
 	return fu_uefi_dbx_device_set_version_number(device, error);

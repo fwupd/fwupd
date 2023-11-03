@@ -115,7 +115,12 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_strsafe(device, "VEN", fu_device_get_vendor(device));
 	fu_device_add_instance_strsafe(device, "DEV", fu_device_get_name(device));
 	fu_device_add_instance_strsafe(device, "REV", fu_device_get_version(device));
-	if (!fu_device_build_instance_id_quirk(device, error, "SCSI", "VEN", NULL))
+	if (!fu_device_build_instance_id_full(device,
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "SCSI",
+					      "VEN",
+					      NULL))
 		return FALSE;
 	if (!fu_device_build_instance_id(device, error, "SCSI", "VEN", "DEV", NULL))
 		return FALSE;
