@@ -284,8 +284,24 @@ fu_ccgx_dmc_devx_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_u16(device, "VID", fu_usb_device_get_vid(FU_USB_DEVICE(proxy)));
 	fu_device_add_instance_u16(device, "PID", fu_usb_device_get_pid(FU_USB_DEVICE(proxy)));
 	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "CID", NULL);
-	fu_device_build_instance_id_quirk(device, NULL, "USB", "VID", "PID", "CID", "TYPE", NULL);
-	fu_device_build_instance_id_quirk(device, NULL, "USB", "VID", "PID", "CID", "VER", NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "USB",
+					 "VID",
+					 "PID",
+					 "CID",
+					 "TYPE",
+					 NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "USB",
+					 "VID",
+					 "PID",
+					 "CID",
+					 "VER",
+					 NULL);
 
 	/* success */
 	return TRUE;

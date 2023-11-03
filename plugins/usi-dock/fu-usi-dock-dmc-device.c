@@ -42,14 +42,15 @@ fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpo
 
 		/* this might match Flags=set-chip-type */
 		fu_device_add_instance_str(parent, "DMCVER", fu_device_get_version(device));
-		if (!fu_device_build_instance_id_quirk(parent,
-						       &error,
-						       "USB",
-						       "VID",
-						       "PID",
-						       "CID",
-						       "DMCVER",
-						       NULL)) {
+		if (!fu_device_build_instance_id_full(parent,
+						      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						      &error,
+						      "USB",
+						      "VID",
+						      "PID",
+						      "CID",
+						      "DMCVER",
+						      NULL)) {
 			g_warning("failed to build MCU DMC Instance ID: %s", error->message);
 			return;
 		}

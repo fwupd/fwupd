@@ -174,7 +174,13 @@ fu_steelseries_fizz_tunnel_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_u16(device, "VID", g_usb_device_get_vid(usb_device));
 	fu_device_add_instance_u16(device, "PID", g_usb_device_get_pid(usb_device));
 	fu_device_add_instance_u16(device, "REV", release);
-	fu_device_build_instance_id_quirk(device, NULL, "STEELSERIES", "VID", "PROTOCOL", NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "STEELSERIES",
+					 "VID",
+					 "PROTOCOL",
+					 NULL);
 	fu_device_build_instance_id(device, NULL, "STEELSERIES", "VID", "PID", "PROTOCOL", NULL);
 	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV)) {
 		fu_device_build_instance_id(device,

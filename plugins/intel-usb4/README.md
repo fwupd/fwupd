@@ -18,7 +18,11 @@ This plugin supports the following protocol ID:
 
 ## GUID Generation
 
-These devices use a custom generation scheme, which is quite intentionally identical to thunderbolt
+These devices use the standard USB DeviceInstanceId values for the USB Hub, e.g.
+
+* `USB\VID_8087&PID_0B40` (quirk-only)
+
+These devices also use a custom InstanceId, which is quite intentionally identical to thunderbolt
 plugin:
 
 * `TBT-{nvm_vendor_id}{nvm_product_id}`

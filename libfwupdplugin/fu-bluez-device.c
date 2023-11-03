@@ -178,17 +178,34 @@ fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 	if (pid != 0x0)
 		fu_device_add_instance_u16(FU_DEVICE(self), "PID", pid);
 	fu_device_add_instance_u16(FU_DEVICE(self), "REV", rev);
-	fu_device_build_instance_id_quirk(FU_DEVICE(self), NULL, "BLUETOOTH", "VID", NULL);
-	fu_device_build_instance_id(FU_DEVICE(self), NULL, "BLUETOOTH", "VID", "PID", NULL);
+	fu_device_build_instance_id_full(FU_DEVICE(self),
+					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "BLUETOOTH",
+					 "VID",
+					 NULL);
+	fu_device_build_instance_id_full(FU_DEVICE(self),
+					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "BLUETOOTH",
+					 "VID",
+					 "PID",
+					 NULL);
 	if (fu_device_has_internal_flag(FU_DEVICE(self),
 					FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV)) {
-		fu_device_build_instance_id(FU_DEVICE(self),
-					    NULL,
-					    "BLUETOOTH",
-					    "VID",
-					    "PID",
-					    "REV",
-					    NULL);
+		fu_device_build_instance_id_full(FU_DEVICE(self),
+						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+						     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						 NULL,
+						 "BLUETOOTH",
+						 "VID",
+						 "PID",
+						 "REV",
+						 NULL);
 	}
 
 	/* set vendor ID */

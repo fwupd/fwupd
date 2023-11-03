@@ -64,7 +64,12 @@ fu_uf2_device_probe_current_fw(FuDevice *device, GBytes *fw, GError **error)
 					   "FAMILY",
 					   (guint32)fu_firmware_get_idx(firmware));
 	}
-	(void)fu_device_build_instance_id_quirk(device, NULL, "UF2", "FAMILY", NULL);
+	(void)fu_device_build_instance_id_full(device,
+					       FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					       NULL,
+					       "UF2",
+					       "FAMILY",
+					       NULL);
 
 	/* add device checksum */
 	fw_raw = fu_firmware_get_bytes(firmware, error);
@@ -350,7 +355,12 @@ fu_uf2_device_probe(FuDevice *device, GError **error)
 		pid = g_ascii_strtoull(tmp, NULL, 16);
 	if (pid != 0x0)
 		fu_device_add_instance_u16(device, "PID", pid);
-	if (!fu_device_build_instance_id_quirk(device, error, "USB", "VID", NULL))
+	if (!fu_device_build_instance_id_full(device,
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "USB",
+					      "VID",
+					      NULL))
 		return FALSE;
 	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", NULL))
 		return FALSE;

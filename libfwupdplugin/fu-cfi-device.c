@@ -320,7 +320,13 @@ fu_cfi_device_setup(FuDevice *device, GError **error)
 	for (guint i = 0; i < flash_idsz; i += 2) {
 		g_autofree gchar *flash_id = g_strndup(priv->flash_id, i + 2);
 		fu_device_add_instance_str(device, "FLASHID", flash_id);
-		if (!fu_device_build_instance_id_quirk(device, error, "CFI", "FLASHID", NULL))
+		if (!fu_device_build_instance_id_full(device,
+						      FU_DEVICE_INSTANCE_FLAG_GENERIC |
+							  FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						      error,
+						      "CFI",
+						      "FLASHID",
+						      NULL))
 			return FALSE;
 	}
 

@@ -346,7 +346,14 @@ fu_nvme_device_setup(FuDevice *device, GError **error)
 
 	/* add one extra instance ID so that we can match bad firmware */
 	fu_device_add_instance_strsafe(device, "VER", fu_device_get_version(device));
-	fu_device_build_instance_id_quirk(device, NULL, "NVME", "VEN", "DEV", "VER", NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "NVME",
+					 "VEN",
+					 "DEV",
+					 "VER",
+					 NULL);
 
 	/* success */
 	return TRUE;

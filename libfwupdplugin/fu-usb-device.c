@@ -250,13 +250,16 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 	}
 	if (hub->len > 0)
 		fu_device_add_instance_str(FU_DEVICE(self), "HUB", hub->str);
-	return fu_device_build_instance_id(FU_DEVICE(self),
-					   error,
-					   "USB",
-					   "VID",
-					   "PID",
-					   "HUB",
-					   NULL);
+	return fu_device_build_instance_id_full(FU_DEVICE(self),
+						FU_DEVICE_INSTANCE_FLAG_GENERIC |
+						    FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+						    FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						error,
+						"USB",
+						"VID",
+						"PID",
+						"HUB",
+						NULL);
 }
 
 static gboolean
@@ -594,10 +597,34 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_u16(device, "VID", g_usb_device_get_vid(priv->usb_device));
 	fu_device_add_instance_u16(device, "PID", g_usb_device_get_pid(priv->usb_device));
 	fu_device_add_instance_u16(device, "REV", release);
-	fu_device_build_instance_id_quirk(device, NULL, "USB", "VID", NULL);
-	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", NULL);
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV))
-		fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "REV", NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "USB",
+					 "VID",
+					 NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "USB",
+					 "VID",
+					 "PID",
+					 NULL);
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV)) {
+		fu_device_build_instance_id_full(device,
+						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+						     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						 NULL,
+						 "USB",
+						 "VID",
+						 "PID",
+						 "REV",
+						 NULL);
+	}
 
 	/* add the interface GUIDs */
 	intfs = g_usb_device_get_interfaces(priv->usb_device, error);
@@ -610,15 +637,30 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_u8(device, "CLASS", g_usb_interface_get_class(intf));
 		fu_device_add_instance_u8(device, "SUBCLASS", g_usb_interface_get_subclass(intf));
 		fu_device_add_instance_u8(device, "PROT", g_usb_interface_get_protocol(intf));
-		fu_device_build_instance_id_quirk(device, NULL, "USB", "CLASS", NULL);
-		fu_device_build_instance_id_quirk(device, NULL, "USB", "CLASS", "SUBCLASS", NULL);
-		fu_device_build_instance_id_quirk(device,
-						  NULL,
-						  "USB",
-						  "CLASS",
-						  "SUBCLASS",
-						  "PROT",
-						  NULL);
+		fu_device_build_instance_id_full(device,
+						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						 NULL,
+						 "USB",
+						 "CLASS",
+						 NULL);
+		fu_device_build_instance_id_full(device,
+						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						 NULL,
+						 "USB",
+						 "CLASS",
+						 "SUBCLASS",
+						 NULL);
+		fu_device_build_instance_id_full(device,
+						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						 NULL,
+						 "USB",
+						 "CLASS",
+						 "SUBCLASS",
+						 "PROT",
+						 NULL);
 	}
 
 	/* add 2 levels of parent IDs */

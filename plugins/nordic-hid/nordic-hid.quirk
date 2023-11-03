@@ -1,6 +1,7 @@
 # Nordic Semiconductor ASA HID Devices
 [HIDRAW\VEN_1915]
 Plugin = nordic_hid
+Flags = no-generic-guids
 GType = FuNordicHidCfgChannel
 NordicHidBootloader = B0
 NordicHidGeneration = default

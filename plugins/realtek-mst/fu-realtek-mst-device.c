@@ -394,7 +394,13 @@ fu_realtek_mst_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_str(device,
 				   "FAMILY",
 				   fu_context_get_hwid_value(context, FU_HWIDS_KEY_FAMILY));
-	if (!fu_device_build_instance_id_quirk(device, error, "I2C", "NAME", "FAMILY", NULL))
+	if (!fu_device_build_instance_id_full(device,
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "I2C",
+					      "NAME",
+					      "FAMILY",
+					      NULL))
 		return FALSE;
 
 	/* having loaded quirks, check this device is supported */
@@ -928,6 +934,7 @@ fu_realtek_mst_device_init(FuRealtekMstDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS);
 	fu_device_add_protocol(FU_DEVICE(self), "com.realtek.rtd2142");
 	fu_device_set_vendor(FU_DEVICE(self), "Realtek");
 	fu_device_add_vendor_id(FU_DEVICE(self), "PCI:0x10EC");

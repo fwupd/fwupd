@@ -88,6 +88,7 @@ fu_parade_lspcon_device_init(FuParadeLspconDevice *self)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS);
 	fu_device_set_firmware_size(device, 0x10000);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
 }
@@ -130,7 +131,13 @@ fu_parade_lspcon_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_str(device,
 				   "FAMILY",
 				   fu_context_get_hwid_value(context, FU_HWIDS_KEY_FAMILY));
-	if (!fu_device_build_instance_id_quirk(device, error, "I2C", "NAME", "FAMILY", NULL))
+	if (!fu_device_build_instance_id_full(device,
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "I2C",
+					      "NAME",
+					      "FAMILY",
+					      NULL))
 		return FALSE;
 
 	/* should know which aux device over which we read DPCD version */
