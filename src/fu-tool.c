@@ -335,7 +335,7 @@ fu_util_private_free(FuUtilPrivate *priv)
 		g_object_unref(priv->progress);
 	if (priv->context != NULL)
 		g_option_context_free(priv->context);
-	if (priv->lock_fd != 0)
+	if (priv->lock_fd >= 0)
 		g_close(priv->lock_fd, NULL);
 	g_ptr_array_unref(priv->post_requests);
 	g_free(priv);
@@ -3965,6 +3965,7 @@ main(int argc, char *argv[])
 	textdomain(GETTEXT_PACKAGE);
 
 	/* create helper object */
+	priv->lock_fd = -1;
 	priv->main_ctx = g_main_context_new();
 	priv->loop = g_main_loop_new(priv->main_ctx, FALSE);
 	priv->console = fu_console_new();
