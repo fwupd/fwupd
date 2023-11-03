@@ -391,7 +391,7 @@ fu_backend_set_enabled(FuBackend *self, gboolean enabled)
 /**
  * fu_backend_lookup_by_id:
  * @self: a #FuBackend
- * @device_id: a DeviceID
+ * @backend_id: a device backend ID
  *
  * Gets a device previously added by the backend.
  *
@@ -400,11 +400,12 @@ fu_backend_set_enabled(FuBackend *self, gboolean enabled)
  * Since: 1.6.1
  **/
 FuDevice *
-fu_backend_lookup_by_id(FuBackend *self, const gchar *device_id)
+fu_backend_lookup_by_id(FuBackend *self, const gchar *backend_id)
 {
 	FuBackendPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_BACKEND(self), NULL);
-	return g_hash_table_lookup(priv->devices, device_id);
+	g_return_val_if_fail(backend_id != NULL, NULL);
+	return g_hash_table_lookup(priv->devices, backend_id);
 }
 
 static gint
