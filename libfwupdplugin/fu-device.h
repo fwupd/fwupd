@@ -585,6 +585,16 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS (1ull << 36)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES:
+ *
+ * The device uses a generic instance ID and firmware requires a parent, child, sibling or CHID
+ * requirement.
+ *
+ * Since: 1.9.8
+ */
+#define FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES (1ull << 37)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);
