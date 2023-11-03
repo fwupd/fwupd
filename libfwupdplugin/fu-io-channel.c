@@ -58,7 +58,7 @@ fu_io_channel_unix_get_fd(FuIOChannel *self)
  * @self: a #FuIOChannel
  * @error: (nullable): optional return location for an error
  *
- * Closes the file descriptor for the device.
+ * Closes the file descriptor for the device if open.
  *
  * Returns: %TRUE if all the FD was closed.
  *
@@ -69,9 +69,12 @@ fu_io_channel_shutdown(FuIOChannel *self, GError **error)
 {
 	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-	if (!g_close(self->fd, error))
-		return FALSE;
-	self->fd = -1;
+
+	if (self->fd != -1) {
+		if (!g_close(self->fd, error))
+			return FALSE;
+		self->fd = -1;
+	}
 	return TRUE;
 }
 
