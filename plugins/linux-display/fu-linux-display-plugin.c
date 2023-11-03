@@ -74,7 +74,6 @@ fu_linux_display_plugin_plugin_backend_device_removed(FuPlugin *plugin,
 						      GError **error)
 {
 	FuLinuxDisplayPlugin *self = FU_LINUX_DISPLAY_PLUGIN(plugin);
-	fu_plugin_device_remove(plugin, device);
 	fu_linux_display_plugin_ensure_display_state(self);
 	return TRUE;
 }
