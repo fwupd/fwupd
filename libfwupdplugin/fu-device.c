@@ -283,6 +283,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "update-pending";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS)
 		return "no-generic-guids";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES)
+		return "enforce-requires";
 	return NULL;
 }
 
@@ -373,6 +375,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_UPDATE_PENDING;
 	if (g_strcmp0(flag, "no-generic-guids") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS;
+	if (g_strcmp0(flag, "enforce-requires") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 

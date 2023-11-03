@@ -2175,13 +2175,26 @@ fu_engine_check_soft_requirement(FuEngine *self,
 	return TRUE;
 }
 
+static gboolean
+fu_engine_requirement_is_specific(XbNode *req)
+{
+	if (g_strcmp0(xb_node_get_element(req), "firmware") == 0 &&
+	    xb_node_get_attr(req, "depth") != NULL)
+		return TRUE;
+	if (g_strcmp0(xb_node_get_element(req), "hardware") == 0)
+		return TRUE;
+	return FALSE;
+}
+
 gboolean
 fu_engine_check_requirements(FuEngine *self,
 			     FuRelease *release,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
+	FuDevice *device = fu_release_get_device(release);
 	GPtrArray *reqs;
+	gboolean has_specific_requirement = FALSE;
 
 	/* hard requirements */
 	reqs = fu_release_get_hard_reqs(release);
@@ -2190,7 +2203,34 @@ fu_engine_check_requirements(FuEngine *self,
 			XbNode *req = g_ptr_array_index(reqs, i);
 			if (!fu_engine_check_requirement(self, release, req, flags, error))
 				return FALSE;
+			if (fu_engine_requirement_is_specific(req))
+				has_specific_requirement = TRUE;
 		}
+	}
+
+	/* if a device uses a generic ID (i.e. not matching the OEM) then check to make sure the
+	 * firmware is specific enough, e.g. by using a CHID or depth requirement */
+	if (device != NULL &&
+	    fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES) &&
+	    !has_specific_requirement) {
+#ifdef SUPPORTED_BUILD
+		g_set_error_literal(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "generic GUID requires a CHID, child, parent or sibling requirement");
+		return FALSE;
+#else
+		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "generic GUID requires --force, a CHID, child, parent "
+					    "or sibling requirement");
+			return FALSE;
+		}
+		g_info("ignoring enforce-requires requirement due to --force");
+#endif
 	}
 
 	/* soft requirements */

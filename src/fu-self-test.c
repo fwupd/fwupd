@@ -724,6 +724,19 @@ fu_engine_requirements_device_func(gconstpointer user_data)
 	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+
+	/* check this fails, as the wrong requirement is specified */
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
+	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_nonnull(g_strstr_len(error->message, -1, "child, parent or sibling requirement"));
+	g_assert_false(ret);
+
+	/* we can force this */
+	g_clear_error(&error);
+	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_FORCE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
@@ -982,6 +995,12 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	ret = fu_release_load(release2, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	ret = fu_engine_check_requirements(engine, release2, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* check this still works, as a child requirement is specified */
+	fu_device_add_internal_flag(device1, FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
 	ret = fu_engine_check_requirements(engine, release2, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
