@@ -20,9 +20,65 @@ struct _FuUdevBackend {
 	FuBackend parent_instance;
 	GUdevClient *gudev_client;
 	GHashTable *changed_idle_ids; /* sysfs:FuUdevBackendHelper */
+	GPtrArray *dpaux_devices;     /* of FuDpauxDevice */
+	guint dpaux_devices_rescan_id;
 };
 
 G_DEFINE_TYPE(FuUdevBackend, fu_udev_backend, FU_TYPE_BACKEND)
+
+#define FU_UDEV_BACKEND_DPAUX_RESCAN_DELAY 5 /* s */
+
+static void
+fu_udev_backend_rescan_dpaux_device(FuUdevBackend *self, FuDevice *dpaux_device)
+{
+	FuDevice *device_tmp;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* find the device we enumerated */
+	g_debug("looking for %s", fu_device_get_backend_id(dpaux_device));
+	device_tmp =
+	    fu_backend_lookup_by_id(FU_BACKEND(self), fu_device_get_backend_id(dpaux_device));
+
+	/* open */
+	fu_device_probe_invalidate(dpaux_device);
+	locker = fu_device_locker_new(dpaux_device, &error_local);
+	if (locker == NULL) {
+		g_debug("failed to open device %s: %s",
+			fu_device_get_backend_id(dpaux_device),
+			error_local->message);
+		if (device_tmp != NULL)
+			fu_backend_device_removed(FU_BACKEND(self), FU_DEVICE(device_tmp));
+		return;
+	}
+	if (device_tmp == NULL) {
+		fu_backend_device_added(FU_BACKEND(self), FU_DEVICE(dpaux_device));
+		return;
+	}
+}
+
+static gboolean
+fu_udev_backend_rescan_dpaux_devices_cb(gpointer user_data)
+{
+	FuUdevBackend *self = FU_UDEV_BACKEND(user_data);
+	for (guint i = 0; i < self->dpaux_devices->len; i++) {
+		FuDevice *dpaux_device = g_ptr_array_index(self->dpaux_devices, i);
+		fu_udev_backend_rescan_dpaux_device(self, dpaux_device);
+	}
+	self->dpaux_devices_rescan_id = 0;
+	return FALSE;
+}
+
+static void
+fu_udev_backend_rescan_dpaux_devices(FuUdevBackend *self)
+{
+	if (self->dpaux_devices_rescan_id != 0)
+		g_source_remove(self->dpaux_devices_rescan_id);
+	self->dpaux_devices_rescan_id =
+	    g_timeout_add_seconds(FU_UDEV_BACKEND_DPAUX_RESCAN_DELAY,
+				  fu_udev_backend_rescan_dpaux_devices_cb,
+				  self);
+}
 
 static void
 fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
@@ -70,6 +126,28 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 		}
 	}
 
+	/* DP AUX devices are *weird* and can only read the DPCD when a DRM device is attached */
+	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "drm_dp_aux_dev") == 0) {
+		g_autoptr(FuDeviceLocker) locker = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* add and rescan, regardless of if we can open it */
+		g_ptr_array_add(self->dpaux_devices, g_object_ref(device));
+		fu_udev_backend_rescan_dpaux_devices(self);
+
+		/* open -- this might seem redundant, but it means the device is added at daemon
+		 * coldplug rather than a few seconds later */
+		locker = fu_device_locker_new(device, &error_local);
+		if (locker == NULL) {
+			g_debug("failed to open device %s: %s",
+				fu_device_get_backend_id(FU_DEVICE(device)),
+				error_local->message);
+			return;
+		}
+		fu_backend_device_added(FU_BACKEND(self), FU_DEVICE(device));
+		return;
+	}
+
 	/* success */
 	fu_backend_device_added(FU_BACKEND(self), FU_DEVICE(device));
 }
@@ -85,6 +163,12 @@ fu_udev_backend_device_remove(FuUdevBackend *self, GUdevDevice *udev_device)
 	if (device_tmp != NULL) {
 		g_debug("UDEV %s removed", g_udev_device_get_sysfs_path(udev_device));
 		fu_backend_device_removed(FU_BACKEND(self), device_tmp);
+
+		/* rescan all the DP AUX devices if it or any DRM device disappears */
+		if (g_ptr_array_remove(self->dpaux_devices, device_tmp) ||
+		    g_strcmp0(g_udev_device_get_subsystem(udev_device), "drm") == 0) {
+			fu_udev_backend_rescan_dpaux_devices(self);
+		}
 	}
 }
 
@@ -118,6 +202,8 @@ fu_udev_backend_device_changed_cb(gpointer user_data)
 {
 	FuUdevBackendHelper *helper = (FuUdevBackendHelper *)user_data;
 	fu_backend_device_changed(FU_BACKEND(helper->self), helper->device);
+	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(helper->device)), "drm") != 0)
+		fu_udev_backend_rescan_dpaux_devices(helper->self);
 	helper->idle_id = 0;
 	g_hash_table_remove(helper->self->changed_idle_ids,
 			    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(helper->device)));
@@ -228,15 +314,19 @@ static void
 fu_udev_backend_finalize(GObject *object)
 {
 	FuUdevBackend *self = FU_UDEV_BACKEND(object);
+	if (self->dpaux_devices_rescan_id != 0)
+		g_source_remove(self->dpaux_devices_rescan_id);
 	if (self->gudev_client != NULL)
 		g_object_unref(self->gudev_client);
 	g_hash_table_unref(self->changed_idle_ids);
+	g_ptr_array_unref(self->dpaux_devices);
 	G_OBJECT_CLASS(fu_udev_backend_parent_class)->finalize(object);
 }
 
 static void
 fu_udev_backend_init(FuUdevBackend *self)
 {
+	self->dpaux_devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->changed_idle_ids =
 	    g_hash_table_new_full(g_str_hash,
 				  g_str_equal,

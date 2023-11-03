@@ -1243,9 +1243,20 @@ static gboolean
 fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
-	guint8 rc_cap = 0x0;
+	FuDevice *parent;
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	const gchar *name_family;
+	const gchar *name_parent = NULL;
 	guint8 buf_ver[3] = {0x0};
+	guint8 rc_cap = 0x0;
+	g_autofree gchar *guid0 = NULL;
+	g_autofree gchar *guid1 = NULL;
+	g_autofree gchar *guid2 = NULL;
+	g_autofree gchar *guid3 = NULL;
+	g_autofree gchar *name = NULL;
 	g_autofree gchar *version = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 
 	/* FuDpauxDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_synaptics_mst_device_parent_class)->setup(device, error))
@@ -1277,6 +1288,14 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	self->layer = 0;
 	self->rad = 0;
 
+	/* enable remote control and disable on exit */
+	locker = fu_device_locker_new_full(self,
+					   (FuDeviceLockerFunc)fu_synaptics_mst_device_enable_rc,
+					   (FuDeviceLockerFunc)fu_synaptics_mst_device_disable_rc,
+					   error);
+	if (locker == NULL)
+		return FALSE;
+
 	/* read firmware version: the third byte is vendor-specific usage */
 	if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(device),
 				  REG_FIRMWARE_VERSION,
@@ -1287,6 +1306,7 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to read firmware version: ");
 		return FALSE;
 	}
+
 	version = g_strdup_printf("%1d.%02d.%02d", buf_ver[0], buf_ver[1], buf_ver[2]);
 	fu_device_set_version(FU_DEVICE(self), version);
 
@@ -1322,35 +1342,6 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 		g_warning("family 0x%02x does not indicate unsigned/signed payload", self->family);
 		break;
 	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_synaptics_mst_device_rescan(FuDevice *device, GError **error)
-{
-	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
-	FuDevice *parent;
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
-	const gchar *name_family;
-	const gchar *name_parent = NULL;
-	guint8 buf_ver[2] = {0x0};
-	g_autofree gchar *guid0 = NULL;
-	g_autofree gchar *guid1 = NULL;
-	g_autofree gchar *guid2 = NULL;
-	g_autofree gchar *guid3 = NULL;
-	g_autofree gchar *name = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuSynapticsMstConnection) connection = NULL;
-
-	/* enable remote control and disable on exit */
-	locker = fu_device_locker_new_full(self,
-					   (FuDeviceLockerFunc)fu_synaptics_mst_device_enable_rc,
-					   (FuDeviceLockerFunc)fu_synaptics_mst_device_disable_rc,
-					   error);
-	if (locker == NULL)
-		return FALSE;
 
 	/* check the active bank for debugging */
 	if (self->family == FU_SYNAPTICS_MST_FAMILY_PANAMERA) {
@@ -1446,8 +1437,6 @@ fu_synaptics_mst_device_rescan(FuDevice *device, GError **error)
 				  "invalid-customer-id",
 				  "cannot update as CustomerID is unset");
 	}
-
-	/* success */
 	return TRUE;
 }
 
@@ -1488,7 +1477,6 @@ fu_synaptics_mst_device_class_init(FuSynapticsMstDeviceClass *klass)
 	klass_device->to_string = fu_synaptics_mst_device_to_string;
 	klass_device->set_quirk_kv = fu_synaptics_mst_device_set_quirk_kv;
 	klass_device->setup = fu_synaptics_mst_device_setup;
-	klass_device->rescan = fu_synaptics_mst_device_rescan;
 	klass_device->write_firmware = fu_synaptics_mst_device_write_firmware;
 	klass_device->prepare_firmware = fu_synaptics_mst_device_prepare_firmware;
 	klass_device->set_progress = fu_synaptics_mst_device_set_progress;
