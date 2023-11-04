@@ -336,13 +336,13 @@ fu_genesys_gl32xx_device_ensure_version(FuGenesysGl32xxDevice *self, GError **er
 	if (version_prefix == NULL)
 		return FALSE;
 	fu_device_add_instance_str(FU_DEVICE(self), "VER", version_prefix);
-	return fu_device_build_instance_id(FU_DEVICE(self),
-					   error,
-					   "BLOCK",
-					   "VEN",
-					   "DEV",
-					   "VER",
-					   NULL);
+	return fu_device_build_instance_id_quirk(FU_DEVICE(self),
+						 error,
+						 "BLOCK",
+						 "VEN",
+						 "DEV",
+						 "VER",
+						 NULL);
 }
 
 static gboolean
