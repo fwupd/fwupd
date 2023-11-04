@@ -16,7 +16,6 @@ is entered into the nitrokey-app tool. This cannot be automated.
 These devices use the standard USB DeviceInstanceId values, e.g.
 
 * `USB\VID_20A0&PID_4109`
-* `USB\VID_20A0`
 
 ## Update Behavior
 

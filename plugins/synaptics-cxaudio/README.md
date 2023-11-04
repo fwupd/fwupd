@@ -21,12 +21,10 @@ This plugin supports the following protocol ID:
 These devices use the standard USB DeviceInstanceId values, e.g.
 
 * `USB\VID_17EF&PID_3083`
-* `USB\VID_17EF`
 
 These devices also use custom GUID values, e.g.
 
-* `SYNAPTICS_CXAUDIO\CX2198X`
-* `SYNAPTICS_CXAUDIO\CX21985`
+* `SYNAPTICS_CXAUDIO\CX2198X` (only-quirk)
 
 ## Update Behavior
 

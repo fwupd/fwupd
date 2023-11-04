@@ -37,7 +37,6 @@ The Unifying receivers and peripherals use the standard USB
 DeviceInstanceId values when in DFU mode:
 
 * `USB\VID_046D&PID_AAAA`
-* `USB\VID_046D`
 
 When in runtime mode, the HID raw DeviceInstanceId values are used:
 
@@ -45,7 +44,6 @@ When in runtime mode, the HID raw DeviceInstanceId values are used:
 * `HIDRAW\VEN_046D&MOD_B33B405B0000&ENT_05`
 * `HIDRAW\VEN_046D&DEV_C52B`
 * `HIDRAW\VEN_046D&DEV_C52B&ENT_05`
-* `HIDRAW\VEN_046D`
 
 One additional legacy instance ID is added for peripherals:
 

@@ -25,7 +25,6 @@ This plugin supports the following protocol ID:
 These device use the NVMe DeviceInstanceId values, e.g.
 
 * `NVME\VEN_1179&DEV_010F`
-* `NVME\VEN_1179`
 
 The FRU globally unique identifier (FGUID) is also added from the CNS if set.
 Please refer to this document for more details on how to add support for
