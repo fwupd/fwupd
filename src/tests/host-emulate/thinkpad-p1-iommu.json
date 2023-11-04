@@ -501,7 +501,6 @@
       "Name": "TPM",
       "DeviceId": "c6a80ac3a22083423992a3cb15018989f37834d6",
       "InstanceIds": [
-        "system-tpm",
         "TPM\\VEN_STM&DEV_0001",
         "TPM\\VEN_STM&MOD_",
         "TPM\\VEN_STM&DEV_0001&VER_2.0",
