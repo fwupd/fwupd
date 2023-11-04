@@ -28,7 +28,7 @@ This plugin supports the following protocol ID:
 These devices use the GUID constructed of the uppercase SHA256 of the X509
 certificates found in the system KEK and optionally the EFI architecture. e.g.
 
-* `UEFI\CRT_{sha256}`
+* `UEFI\CRT_{sha256}` (quirk-only)
 * `UEFI\CRT_{sha256}&ARCH_{arch}`
 
 ...where `arch` is typically one of `IA32`, `X64`, `ARM` or `AA64`
