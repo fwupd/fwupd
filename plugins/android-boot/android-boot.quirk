@@ -1,6 +1,3 @@
-[BLOCK]
-Plugin = android_boot
-
 # SHIFT6mq ABL A
 [DRIVE\UUID_c49183ed-aaec-9bf5-760a-66330fbcffc1&LABEL_abl-a]
 Flags = updatable,signed-payload
