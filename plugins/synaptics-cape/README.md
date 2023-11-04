@@ -22,8 +22,7 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 
 These devices also use custom GUID values, e.g.
 
-* `SYNAPTICS_CAPE\CX31993`
-* `SYNAPTICS_CAPE\CX31988`
+* `SYNAPTICS_CAPE\CX31993` (only-quirk)
 
 ## Update Behavior
 

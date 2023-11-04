@@ -21,7 +21,6 @@ This plugin supports the following protocol ID:
 These devices use the standard USB DeviceInstanceId values, e.g.
 
 * `USB\VID_046D&PID_089B`
-* `USB\VID_046D&PID_08D3`
 
 ## Quirk Use
 

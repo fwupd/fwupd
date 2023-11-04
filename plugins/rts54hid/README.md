@@ -24,7 +24,6 @@ This plugin supports the following protocol ID:
 These devices use the standard USB DeviceInstanceId values, e.g.
 
 * `USB\VID_0BDA&PID_1100`
-* `USB\VID_0BDA`
 
 Child I²C devices are created using the device number as a suffix, for instance:
 

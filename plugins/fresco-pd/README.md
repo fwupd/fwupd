@@ -20,7 +20,6 @@ This plugin supports the following protocol ID:
 These devices use the standard USB DeviceInstanceId values, e.g.
 
 * `USB\VID_1D5C&PID_7102`
-* `USB\VID_1D5C`
 
 These devices also use custom GUID values, e.g.
 
