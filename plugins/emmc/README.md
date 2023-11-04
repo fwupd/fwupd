@@ -17,7 +17,7 @@ These devices use the following instance values:
 
 * `EMMC\NAME_%name%`
 * `EMMC\NAME_%name%&REV_%rev%`
-* `EMMC\MAN_%manfid%&OEM_%oemid%`
+* `EMMC\MAN_%manfid%&OEM_%oemid%` (only-quirk)
 * `EMMC\MAN_%manfid%&OEM_%oemid%&NAME_%name%`
 * `EMMC\MAN_%manfid%&NAME_%name%&REV_%rev%`
 * `EMMC\MAN_%manfid%&OEM_%oemid%&NAME_%name%&REV_%rev%`

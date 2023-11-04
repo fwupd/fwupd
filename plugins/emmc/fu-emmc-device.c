@@ -219,7 +219,7 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	fu_device_add_instance_u16(device, "MAN", manfid);
 	fu_device_add_instance_u16(device, "OEM", oemid);
-	fu_device_build_instance_id(device, NULL, "EMMC", "MAN", "OEM", NULL);
+	fu_device_build_instance_id_quirk(device, NULL, "EMMC", "MAN", "OEM", NULL);
 	fu_device_build_instance_id(device, NULL, "EMMC", "MAN", "OEM", "NAME", NULL);
 	fu_device_build_instance_id(device, NULL, "EMMC", "MAN", "NAME", "REV", NULL);
 	fu_device_build_instance_id(device, NULL, "EMMC", "MAN", "OEM", "NAME", "REV", NULL);
