@@ -20,7 +20,7 @@ These devices use the standard UDEV DeviceInstanceId values, e.g.
 
 These devices also use custom GUID values, e.g.
 
-* `BLOCK\VEN_05E3&DEV_XXXX&VER_YY`
+* `BLOCK\VEN_05E3&DEV_XXXX&VER_YY` (quirk-only)
 
 Additional GUID values based on customer ID read from the device, e.g.
 
