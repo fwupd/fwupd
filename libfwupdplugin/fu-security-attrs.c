@@ -488,6 +488,8 @@ fu_security_attrs_to_json(FuSecurityAttrs *self, JsonBuilder *builder)
 	for (guint i = 0; i < items->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(items, i);
 		guint64 created = fwupd_security_attr_get_created(attr);
+		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
+			continue;
 		json_builder_begin_object(builder);
 		fwupd_security_attr_set_created(attr, 0);
 		fwupd_security_attr_to_json(attr, builder);
@@ -587,6 +589,8 @@ fu_security_attrs_from_json(FuSecurityAttrs *self, JsonNode *json_node, GError *
 		g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new(NULL);
 		if (!fwupd_security_attr_from_json(attr, node_tmp, error))
 			return FALSE;
+		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
+			continue;
 		fu_security_attrs_append(self, attr);
 	}
 
