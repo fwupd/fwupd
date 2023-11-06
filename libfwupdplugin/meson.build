@@ -379,26 +379,25 @@ if introspection.allowed()
   )
 endif
 
-gcab = executable(
-  'gcab',
-  sources: [
-    'fu-gcab.c',
-  ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-  ],
-  dependencies: [
-    library_deps,
-    fwupdplugin_rs_dep,
-  ],
-  link_with: [
-    fwupd,
-    fwupdplugin
-  ],
-)
-
 if get_option('tests')
+  gcab = executable(
+    'gcab',
+    sources: [
+      'fu-gcab.c',
+    ],
+    include_directories: [
+      root_incdir,
+      fwupd_incdir,
+    ],
+    dependencies: [
+      library_deps,
+      fwupdplugin_rs_dep,
+    ],
+    link_with: [
+      fwupd,
+      fwupdplugin
+    ],
+  )
   subdir('tests')
 endif
 
