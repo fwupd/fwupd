@@ -21,7 +21,7 @@ struct _FuSynapticsMstConnection {
 	FuIOChannel *io_channel;
 	guint8 layer;
 	guint8 remain_layer;
-	guint8 rad;
+	guint8 relative_addr;
 };
 
 G_DEFINE_TYPE(FuSynapticsMstConnection, fu_synaptics_mst_connection, G_TYPE_OBJECT)
@@ -59,10 +59,10 @@ fu_synaptics_mst_connection_aux_node_read(FuSynapticsMstConnection *self,
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
-			    "failed to lseek to 0x%x on layer:%u, rad:0x%x",
+			    "failed to lseek to 0x%x on layer:%u, relative_addr:0x%x",
 			    offset,
 			    self->layer,
-			    self->rad);
+			    self->relative_addr);
 		return FALSE;
 	}
 
@@ -70,10 +70,10 @@ fu_synaptics_mst_connection_aux_node_read(FuSynapticsMstConnection *self,
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
-			    "failed to read 0x%x bytes on layer:%u, rad:0x%x",
+			    "failed to read 0x%x bytes on layer:%u, relative_addr:0x%x",
 			    (guint)bufsz,
 			    self->layer,
-			    self->rad);
+			    self->relative_addr);
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, title, buf, bufsz);
@@ -94,10 +94,10 @@ fu_synaptics_mst_connection_aux_node_write(FuSynapticsMstConnection *self,
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
-			    "failed to lseek to 0x%x on layer:%u, rad:0x%x",
+			    "failed to lseek to 0x%x on layer:%u, relative_addr:0x%x",
 			    offset,
 			    self->layer,
-			    self->rad);
+			    self->relative_addr);
 		return FALSE;
 	}
 
@@ -105,10 +105,10 @@ fu_synaptics_mst_connection_aux_node_write(FuSynapticsMstConnection *self,
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
-			    "failed to write 0x%x bytes on layer:%u, rad:0x%x",
+			    "failed to write 0x%x bytes on layer:%u, relative_addr:0x%x",
 			    (guint)bufsz,
 			    self->layer,
-			    self->rad);
+			    self->relative_addr);
 		return FALSE;
 	}
 
@@ -136,13 +136,13 @@ fu_synaptics_mst_connection_bus_write(FuSynapticsMstConnection *self,
 }
 
 FuSynapticsMstConnection *
-fu_synaptics_mst_connection_new(FuIOChannel *io_channel, guint8 layer, guint rad)
+fu_synaptics_mst_connection_new(FuIOChannel *io_channel, guint8 layer, guint relative_addr)
 {
 	FuSynapticsMstConnection *self = g_object_new(FU_TYPE_SYNAPTICS_MST_CONNECTION, NULL);
 	self->io_channel = g_object_ref(io_channel);
 	self->layer = layer;
 	self->remain_layer = layer;
-	self->rad = rad;
+	self->relative_addr = relative_addr;
 	return self;
 }
 
@@ -158,7 +158,7 @@ fu_synaptics_mst_connection_read(FuSynapticsMstConnection *self,
 		gboolean result;
 
 		self->remain_layer--;
-		node = (self->rad >> self->remain_layer * 2) & 0x03;
+		node = (self->relative_addr >> self->remain_layer * 2) & 0x03;
 		result = fu_synaptics_mst_connection_rc_get_command(self,
 								    UPDC_READ_FROM_TX_DPCD + node,
 								    offset,
@@ -184,7 +184,7 @@ fu_synaptics_mst_connection_write(FuSynapticsMstConnection *self,
 		gboolean result;
 
 		self->remain_layer--;
-		node = (self->rad >> self->remain_layer * 2) & 0x03;
+		node = (self->relative_addr >> self->remain_layer * 2) & 0x03;
 		result = fu_synaptics_mst_connection_rc_set_command(self,
 								    UPDC_WRITE_TO_TX_DPCD + node,
 								    offset,
@@ -443,7 +443,8 @@ fu_synaptics_mst_connection_enable_rc(FuSynapticsMstConnection *self, GError **e
 
 	for (gint i = 0; i <= self->layer; i++) {
 		g_autoptr(FuSynapticsMstConnection) connection_tmp = NULL;
-		connection_tmp = fu_synaptics_mst_connection_new(self->io_channel, i, self->rad);
+		connection_tmp =
+		    fu_synaptics_mst_connection_new(self->io_channel, i, self->relative_addr);
 		if (!fu_synaptics_mst_connection_rc_set_command(connection_tmp,
 								UPDC_ENABLE_RC,
 								0,
@@ -463,7 +464,8 @@ fu_synaptics_mst_connection_disable_rc(FuSynapticsMstConnection *self, GError **
 {
 	for (gint i = self->layer; i >= 0; i--) {
 		g_autoptr(FuSynapticsMstConnection) connection_tmp = NULL;
-		connection_tmp = fu_synaptics_mst_connection_new(self->io_channel, i, self->rad);
+		connection_tmp =
+		    fu_synaptics_mst_connection_new(self->io_channel, i, self->relative_addr);
 		if (!fu_synaptics_mst_connection_rc_set_command(connection_tmp,
 								UPDC_DISABLE_RC,
 								0,
