@@ -88,10 +88,6 @@ fu_dpaux_device_setup(FuDevice *device, GError **error)
 	if (st == NULL)
 		return FALSE;
 	priv->dpcd_ieee_oui = fu_struct_dpaux_dpcd_get_ieee_oui(st);
-	if (priv->dpcd_ieee_oui == 0x0) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no IEEE OUI set");
-		return FALSE;
-	}
 	priv->dpcd_hw_rev = fu_struct_dpaux_dpcd_get_hw_rev(st);
 	priv->dpcd_dev_id = fu_struct_dpaux_dpcd_get_dev_id(st);
 	fu_device_set_version_from_uint24(device, fu_struct_dpaux_dpcd_get_fw_ver(st));
