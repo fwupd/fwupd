@@ -486,7 +486,10 @@ Flags = detach-for-attach,ignore-upload,enforce-requires
 # FPC Fingerprint Reader
 [USB\VID_10A5&PID_FFE0]
 DfuForceVersion = 0x0
+Flags = enforce-requires
 [USB\VID_10A5&PID_FFE1]
 DfuForceVersion = 0x0
+Flags = enforce-requires
 [USB\VID_10A5&PID_9800]
 DfuForceVersion = 0x0
+Flags = enforce-requires
