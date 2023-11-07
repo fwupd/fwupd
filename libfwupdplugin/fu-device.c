@@ -5436,6 +5436,10 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 	/* now the base class, where all the interesting bits are */
 	fwupd_device_incorporate(FWUPD_DEVICE(self), FWUPD_DEVICE(donor));
 
+	/* remove the baseclass-added serial number if set */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER))
+		fwupd_device_set_serial(FWUPD_DEVICE(self), NULL);
+
 	/* set by the superclass */
 	if (fu_device_get_id(self) != NULL)
 		priv->device_id_valid = TRUE;
