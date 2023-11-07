@@ -36,7 +36,6 @@
 struct _FuMediatekScalerDevice {
 	FuUdevDevice parent_instance;
 	FuUdevDevice *i2c_dev;
-	gchar *dp_aux_dev_name;
 };
 
 G_DEFINE_TYPE(FuMediatekScalerDevice, fu_mediatek_scaler_device, FU_TYPE_UDEV_DEVICE)
@@ -45,13 +44,16 @@ static void
 fu_mediatek_scaler_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
+
+	/* FuUdevDevice->to_string */
+	FU_DEVICE_CLASS(fu_mediatek_scaler_device_parent_class)->to_string(device, idt, str);
+
 	if (self->i2c_dev != NULL) {
 		fu_string_append(str,
 				 idt,
 				 "I2cDeviceFile",
 				 fu_udev_device_get_device_file(FU_UDEV_DEVICE(self->i2c_dev)));
 	}
-	fu_string_append(str, idt, "DpAuxDevName", self->dp_aux_dev_name);
 }
 
 static gboolean
@@ -109,8 +111,6 @@ fu_mediatek_scaler_device_use_aux_dev(FuDevice *device, GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
 	g_autoptr(GPtrArray) i2c_devices = NULL;
-
-	self->dp_aux_dev_name = g_strdup(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)));
 	i2c_devices = fu_udev_device_get_siblings_with_subsystem(FU_UDEV_DEVICE(device), "i2c");
 	return fu_mediatek_scaler_device_set_i2c_dev(self, i2c_devices, error);
 }
@@ -285,7 +285,7 @@ fu_mediatek_scaler_display_is_connected(FuDevice *device, GError **error)
 	}
 
 	g_info("found mediatek display controller: %s, i2c-dev: %s",
-	       self->dp_aux_dev_name,
+	       fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)),
 	       fu_udev_device_get_device_file(FU_UDEV_DEVICE(self->i2c_dev)));
 	return TRUE;
 }
@@ -911,20 +911,9 @@ fu_mediatek_scaler_device_init(FuMediatekScalerDevice *self)
 }
 
 static void
-fu_mediatek_scaler_device_finalize(GObject *object)
-{
-	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(object);
-	g_free(self->dp_aux_dev_name);
-	G_OBJECT_CLASS(fu_mediatek_scaler_device_parent_class)->finalize(object);
-}
-
-static void
 fu_mediatek_scaler_device_class_init(FuMediatekScalerDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	GObjectClass *klass_object = G_OBJECT_CLASS(klass);
-
-	klass_object->finalize = fu_mediatek_scaler_device_finalize;
 	klass_device->to_string = fu_mediatek_scaler_device_to_string;
 	klass_device->probe = fu_mediatek_scaler_device_probe;
 	klass_device->setup = fu_mediatek_scaler_device_get_firmware_version;
