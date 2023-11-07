@@ -493,16 +493,7 @@ fu_genesys_gl32xx_device_ensure_cid(FuGenesysGl32xxDevice *self, GError **error)
 	cid = fu_memread_uint32(data, G_BIG_ENDIAN);
 	fu_device_add_instance_u32(FU_DEVICE(self), "CID", cid);
 
-	/* additional GUIDs with customer ID suffix */
-	if (!fu_device_build_instance_id(FU_DEVICE(self),
-					 error,
-					 "BLOCK",
-					 "VEN",
-					 "DEV",
-					 "CID",
-					 NULL))
-		return FALSE;
-
+	/* valid GUID with the pair of FW version stream and customer ID */
 	return fu_device_build_instance_id(FU_DEVICE(self),
 					   error,
 					   "BLOCK",
