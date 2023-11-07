@@ -1,9 +1,10 @@
 # FPC Fingerprint sensor
 [USB\VID_10A5&PID_FFE0]
 Plugin = fpc
+Flags = enforce-requires
 [USB\VID_10A5&PID_FFE1]
 Plugin = fpc
-Flags = moh-device,rts
+Flags = moh-device,rts,enforce-requires
 [USB\VID_10A5&PID_9800]
 Plugin = fpc
-Flags = moh-device,rts,lenfy
+Flags = moh-device,rts,lenfy,enforce-requires
