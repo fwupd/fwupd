@@ -1,6 +1,7 @@
 # Realtek USBHub (HID Device)
 [USB\VID_0BDA&PID_5A00]
 Plugin = rts54hid
+Flags = enforce-requires
 GType = FuRts54HidDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x40000
