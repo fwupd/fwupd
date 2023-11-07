@@ -460,7 +460,9 @@ fu_nordic_hid_cfg_channel_add_peer(FuNordicHidCfgChannel *self, guint8 peer_id)
 	peer = fu_nordic_hid_cfg_channel_new(peer_id, self);
 
 	/* ensure that the general quirk content for Nordic HID devices is applied */
-	fu_device_add_instance_id(FU_DEVICE(peer), "HIDRAW\\VEN_1915");
+	fu_device_add_instance_id_full(FU_DEVICE(peer),
+				       "HIDRAW\\VEN_1915",
+				       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 
 	if (!fu_device_setup(FU_DEVICE(peer), &error_local)) {
 		g_debug("failed to discover peer 0x%02x: %s", peer_id, error_local->message);
