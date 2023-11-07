@@ -2551,11 +2551,44 @@ fu_util_get_release_with_tag(FuUtilPrivate *priv,
 	return NULL;
 }
 
+static FwupdRelease *
+fu_util_get_release_with_branch(FuUtilPrivate *priv,
+				FwupdDevice *dev,
+				const gchar *branch,
+				GError **error)
+{
+	g_autoptr(GPtrArray) rels = NULL;
+
+	/* find the newest release that matches */
+	rels = fwupd_client_get_releases(priv->client,
+					 fwupd_device_get_id(dev),
+					 priv->cancellable,
+					 error);
+	if (rels == NULL)
+		return NULL;
+	for (guint i = 0; i < rels->len; i++) {
+		FwupdRelease *rel = g_ptr_array_index(rels, i);
+		if (!fwupd_release_match_flags(rel,
+					       priv->filter_release_include,
+					       priv->filter_release_exclude))
+			continue;
+		if (g_strcmp0(branch, fwupd_release_get_branch(rel)) == 0)
+			return g_object_ref(rel);
+	}
+
+	/* no match */
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no matching releases for device");
+	return NULL;
+}
+
 static gboolean
 fu_util_prompt_warning_bkc(FuUtilPrivate *priv, FwupdDevice *dev, FwupdRelease *rel, GError **error)
 {
 	const gchar *host_bkc = fwupd_client_get_host_bkc(priv->client);
-	g_autofree gchar *cmd = g_strdup_printf("%s sync-bkc", g_get_prgname());
+	g_autofree gchar *cmd = g_strdup_printf("%s sync", g_get_prgname());
 	g_autoptr(FwupdRelease) rel_bkc = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -2587,7 +2620,7 @@ fu_util_prompt_warning_bkc(FuUtilPrivate *priv, FwupdDevice *dev, FwupdRelease *
 	g_string_append_printf(
 	    str,
 	    /* TRANSLATORS: %1 is the current device version number, and %2 is the
-	       command name, e.g. `fwupdmgr sync-bkc` */
+	       command name, e.g. `fwupdmgr sync` */
 	    _("This device will be reverted back to %s when the %s command is performed."),
 	    fwupd_release_get_version(rel),
 	    cmd);
@@ -3728,7 +3761,7 @@ fu_util_security_as_json(FuUtilPrivate *priv,
 }
 
 static gboolean
-fu_util_sync_bkc(FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_sync(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	const gchar *host_bkc = fwupd_client_get_host_bkc(priv->client);
 	guint cnt = 0;
@@ -3738,14 +3771,6 @@ fu_util_sync_bkc(FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 
-	/* for each device, find the release that matches the tag */
-	if (host_bkc == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "No HostBkc set in fwupd.conf");
-		return FALSE;
-	}
 	devices = fwupd_client_get_devices(priv->client, NULL, error);
 	if (devices == NULL)
 		return FALSE;
@@ -3754,7 +3779,20 @@ fu_util_sync_bkc(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_autoptr(FwupdRelease) rel = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		rel = fu_util_get_release_with_tag(priv, dev, host_bkc, &error_local);
+		/* find the release that matches the tag */
+		if (host_bkc != NULL) {
+			rel = fu_util_get_release_with_tag(priv, dev, host_bkc, &error_local);
+		} else if (fu_device_get_branch(dev) != NULL) {
+			rel = fu_util_get_release_with_branch(priv,
+							      dev,
+							      fu_device_get_branch(dev),
+							      &error_local);
+		} else {
+			g_set_error_literal(&error_local,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "No device branch or system HostBkc set");
+		}
 		if (rel == NULL) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
 			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
@@ -3795,8 +3833,7 @@ fu_util_sync_bkc(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOTHING_TO_DO,
-			    "No devices require modifications for target %s",
-			    host_bkc);
+			    "No devices required modification");
 		return FALSE;
 	}
 
@@ -5032,11 +5069,11 @@ main(int argc, char *argv[])
 			      _("Gets the host security attributes"),
 			      fu_util_security);
 	fu_util_cmd_array_add(cmd_array,
-			      "sync-bkc",
+			      "sync,sync-bkc",
 			      NULL,
 			      /* TRANSLATORS: command description */
-			      _("Sync firmware versions to the host best known configuration"),
-			      fu_util_sync_bkc);
+			      _("Sync firmware versions to the chosen configuration"),
+			      fu_util_sync);
 	fu_util_cmd_array_add(cmd_array,
 			      "block-firmware",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
