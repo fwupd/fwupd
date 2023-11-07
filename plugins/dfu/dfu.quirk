@@ -10,13 +10,16 @@ Vendor = GDMicroelectronics
 
 # Realtek USB camera
 [USB\VID_0BDA&PID_5850]
+Flags = enforce-requires
 CounterpartGuid = USB\VID_0BDA&PID_5800
 [USB\VID_0BDA&PID_5855]
+Flags = enforce-requires
 CounterpartGuid = USB\VID_0BDA&PID_5800
 [USB\VID_0BDA&PID_58FE]
+Flags = enforce-requires
 CounterpartGuid = USB\VID_0BDA&PID_5800
 [USB\VID_0BDA&PID_5800]
-Flags = detach-for-attach
+Flags = detach-for-attach,enforce-requires
 
 # Openmoko Freerunner / GTA02
 [USB\VID_1D50&PID_5119]
