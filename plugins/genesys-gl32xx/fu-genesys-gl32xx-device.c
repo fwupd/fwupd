@@ -22,6 +22,7 @@ struct _FuGenesysGl32xxDevice {
 	FuUdevDevice parent_instance;
 	gchar *chip_name;
 	guint32 packetsz;
+	guint32 customer_id;
 };
 
 G_DEFINE_TYPE(FuGenesysGl32xxDevice, fu_genesys_gl32xx_device, FU_TYPE_UDEV_DEVICE)
@@ -457,6 +458,27 @@ fu_genesys_gl32xx_device_verify_chip_id(FuGenesysGl32xxDevice *self, GError **er
 	return TRUE;
 }
 
+static void
+fu_genesys_gl32xx_device_ensure_enforce_requires(FuGenesysGl32xxDevice *self)
+{
+	const gchar *version = fu_device_get_version(FU_DEVICE(self));
+	const guint16 model = fu_udev_device_get_model(FU_UDEV_DEVICE(self));
+
+	/* GL3224 */
+	if (model == 0x0749 && self->customer_id == 0xFFFFFFFF && g_str_has_prefix(version, "15")) {
+		fu_device_add_internal_flag(FU_DEVICE(self),
+					    FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
+		return;
+	}
+
+	/* GL323X */
+	if (model == 0x0764 && self->customer_id == 0x22FFFFFF && g_str_has_prefix(version, "29")) {
+		fu_device_add_internal_flag(FU_DEVICE(self),
+					    FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
+		return;
+	}
+}
+
 static gboolean
 fu_genesys_gl32xx_device_ensure_cid(FuGenesysGl32xxDevice *self, GError **error)
 {
@@ -465,7 +487,6 @@ fu_genesys_gl32xx_device_ensure_cid(FuGenesysGl32xxDevice *self, GError **error)
 	const guint8 *cmd = NULL;
 	const guint16 model = fu_udev_device_get_model(FU_UDEV_DEVICE(self));
 	guint8 data[4] = {0};
-	guint32 cid = 0;
 
 	switch (model) {
 	case 0x0749:
@@ -490,9 +511,8 @@ fu_genesys_gl32xx_device_ensure_cid(FuGenesysGl32xxDevice *self, GError **error)
 					     sizeof(data),
 					     error))
 		return FALSE;
-
-	cid = fu_memread_uint32(data, G_BIG_ENDIAN);
-	fu_device_add_instance_u32(FU_DEVICE(self), "CID", cid);
+	self->customer_id = fu_memread_uint32(data, G_BIG_ENDIAN);
+	fu_device_add_instance_u32(FU_DEVICE(self), "CID", self->customer_id);
 
 	/* valid GUID with the pair of FW version stream and customer ID */
 	return fu_device_build_instance_id(FU_DEVICE(self),
@@ -585,6 +605,7 @@ fu_genesys_gl32xx_device_to_string(FuDevice *device, guint idt, GString *str)
 	FU_DEVICE_CLASS(fu_genesys_gl32xx_device_parent_class)->to_string(device, idt, str);
 	fu_string_append(str, idt, "ChipName", self->chip_name);
 	fu_string_append_kx(str, idt, "BlockTransferSize", self->packetsz);
+	fu_string_append_kx(str, idt, "CustomerId", self->customer_id);
 }
 
 static gboolean
@@ -666,6 +687,7 @@ fu_genesys_gl32xx_device_setup(FuDevice *device, GError **error)
 
 	if (!fu_genesys_gl32xx_device_ensure_cid(self, error))
 		return FALSE;
+	fu_genesys_gl32xx_device_ensure_enforce_requires(self);
 
 	/* success */
 	return TRUE;
