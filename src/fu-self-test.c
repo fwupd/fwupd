@@ -732,11 +732,13 @@ fu_engine_requirements_device_func(gconstpointer user_data)
 	g_assert_nonnull(g_strstr_len(error->message, -1, "child, parent or sibling requirement"));
 	g_assert_false(ret);
 
+#ifndef SUPPORTED_BUILD
 	/* we can force this */
 	g_clear_error(&error);
 	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_FORCE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+#endif
 }
 
 static void
