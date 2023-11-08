@@ -188,13 +188,15 @@ fu_test_plugin_verify(FuPlugin *plugin,
 static gchar *
 fu_test_plugin_get_version(GBytes *blob_fw)
 {
-	const gchar *str = g_bytes_get_data(blob_fw, NULL);
+	gsize bufsz = 0;
+	const gchar *buf = g_bytes_get_data(blob_fw, &bufsz);
 	guint64 val = 0;
 	g_autoptr(GError) error_local = NULL;
+	g_autofree gchar *str_safe = fu_strsafe(buf, bufsz);
 
-	if (str == NULL)
+	if (str_safe == NULL)
 		return NULL;
-	if (!fu_strtoull(str, &val, 0, G_MAXUINT32, &error_local)) {
+	if (!fu_strtoull(str_safe, &val, 0, G_MAXUINT32, &error_local)) {
 		g_debug("invalid version specified: %s", error_local->message);
 		return NULL;
 	}
