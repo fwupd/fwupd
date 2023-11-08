@@ -135,9 +135,9 @@ fu_cabinet_get_file(FuCabinet *self, const gchar *basename, GError **error)
 static gboolean
 fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 {
-	GBytes *blob;
 	const gchar *csum_filename = NULL;
 	g_autofree gchar *basename = NULL;
+	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(XbNode) artifact = NULL;
 	g_autoptr(XbNode) csum_tmp = NULL;
 	g_autoptr(XbNode) metadata_trust = NULL;
@@ -427,7 +427,7 @@ fu_cabinet_build_silo_file(FuCabinet *self,
 			   FwupdReleaseFlags release_flags,
 			   GError **error)
 {
-	GBytes *blob;
+	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
 	g_autoptr(XbBuilderNode) bn_info = xb_builder_node_new("info");
