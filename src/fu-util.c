@@ -481,23 +481,46 @@ fu_util_modify_remote_warning(FuUtilPrivate *priv, FwupdRemote *remote, GError *
 }
 
 static void
-fu_util_build_device_tree(FuUtilPrivate *priv, GNode *root, GPtrArray *devs, FwupdDevice *dev)
+fu_util_build_device_tree_node(FuUtilPrivate *priv, GNode *root, FwupdDevice *dev)
 {
+	GNode *root_child;
+
+	if (!fwupd_device_match_flags(dev,
+				      priv->filter_device_include,
+				      priv->filter_device_exclude))
+		return;
+	if (!priv->show_all && !fu_util_is_interesting_device(dev))
+		return;
+	root_child = g_node_append_data(root, dev);
+	if (fwupd_device_get_release_default(dev) != NULL)
+		g_node_append_data(root_child, fwupd_device_get_release_default(dev));
+}
+
+static void
+fu_util_build_device_tree(FuUtilPrivate *priv, GNode *root, GPtrArray *devs)
+{
+	/* add the top-level parents */
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev_tmp = g_ptr_array_index(devs, i);
-		if (!fwupd_device_match_flags(dev_tmp,
-					      priv->filter_device_include,
-					      priv->filter_device_exclude))
+		if (fwupd_device_get_parent(dev_tmp) != NULL)
 			continue;
-		if (!priv->show_all && !fu_util_is_interesting_device(dev_tmp))
+		fu_util_build_device_tree_node(priv, root, dev_tmp);
+	}
+
+	/* children */
+	for (guint i = 0; i < devs->len; i++) {
+		FwupdDevice *dev_tmp = g_ptr_array_index(devs, i);
+		GNode *root_parent;
+
+		if (fwupd_device_get_parent(dev_tmp) == NULL)
 			continue;
-		if (fwupd_device_get_parent(dev_tmp) == dev) {
-			FwupdRelease *rel = fwupd_device_get_release_default(dev_tmp);
-			GNode *child = g_node_append_data(root, dev_tmp);
-			if (rel != NULL)
-				g_node_append_data(child, rel);
-			fu_util_build_device_tree(priv, child, devs, dev_tmp);
-		}
+		root_parent = g_node_find(root,
+					  G_PRE_ORDER,
+					  G_TRAVERSE_ALL,
+					  fwupd_device_get_parent(dev_tmp));
+		if (root_parent == NULL)
+			continue;
+		fu_util_build_device_tree_node(priv, root_parent, dev_tmp);
 	}
 }
 
@@ -590,7 +613,7 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* print */
 	if (devs->len > 0)
-		fu_util_build_device_tree(priv, root, devs, NULL);
+		fu_util_build_device_tree(priv, root, devs);
 	if (g_node_n_children(root) == 0) {
 		fu_console_print_literal(priv->console,
 					 /* TRANSLATORS: nothing attached that can be upgraded */
@@ -1428,7 +1451,7 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (priv->as_json)
 		return fu_util_get_details_as_json(priv, array, error);
 
-	fu_util_build_device_tree(priv, root, array, NULL);
+	fu_util_build_device_tree(priv, root, array);
 	fu_util_print_tree(priv->console, priv->client, root);
 
 	return TRUE;
