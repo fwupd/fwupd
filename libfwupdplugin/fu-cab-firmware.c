@@ -111,8 +111,10 @@ typedef struct {
 static void
 fu_cab_firmware_parse_helper_free(FuCabFirmwareParseHelper *helper)
 {
-	g_bytes_unref(helper->fw);
-	g_ptr_array_unref(helper->folder_data);
+	if (helper->fw != NULL)
+		g_bytes_unref(helper->fw);
+	if (helper->fw != NULL)
+		g_ptr_array_unref(helper->folder_data);
 	g_free(helper);
 }
 
@@ -476,8 +478,6 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuCabFirmwareParseHelper) helper = g_new0(FuCabFirmwareParseHelper, 1);
 
 	/* parse header */
-	helper->fw = g_bytes_ref(fw);
-	helper->install_flags = flags;
 	st = fu_struct_cab_header_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
@@ -515,6 +515,11 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 
+	/* create helper */
+	helper->fw = g_bytes_ref(fw);
+	helper->install_flags = flags;
+	helper->folder_data = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
+
 	/* reserved sizes */
 	offset += st->len;
 	if (fu_struct_cab_header_get_flags(st) & 0x0004) {
@@ -529,7 +534,6 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* parse CFFOLDER */
-	helper->folder_data = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
 	for (guint i = 0; i < fu_struct_cab_header_get_nr_folders(st); i++) {
 		g_autoptr(GByteArray) folder_data = g_byte_array_new();
 		if (!fu_cab_firmware_parse_folder(self, helper, i, offset, folder_data, error))
