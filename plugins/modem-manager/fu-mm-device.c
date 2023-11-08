@@ -41,6 +41,14 @@
  */
 #define FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE (1 << 0)
 
+/**
+ * FU_MM_DEVICE_FLAG_USE_BRANCH
+ *
+ * Use the carrier (e.g. `VODAFONE`) as the device branch name so that `fwupdmgr sync` can
+ * upgrade or downgrade the firmware as required.
+ */
+#define FU_MM_DEVICE_FLAG_USE_BRANCH (1 << 1)
+
 struct _FuMmDevice {
 	FuDevice parent_instance;
 	MMManager *manager;
@@ -154,6 +162,30 @@ validate_firmware_update_method(MMModemFirmwareUpdateMethod methods, GError **er
 		    "invalid firmware update combination: %s",
 		    methods_str);
 	return FALSE;
+}
+
+static void
+fu_mm_device_add_instance_id(FuDevice *dev, const gchar *device_id)
+{
+	if (g_pattern_match_simple("???\\VID_????", device_id)) {
+		fu_device_add_instance_id_full(dev, device_id, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+		return;
+	}
+	if (g_pattern_match_simple("???\\VID_????&PID_????", device_id)) {
+		fu_device_add_instance_id_full(dev, device_id, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+		return;
+	}
+	if (g_pattern_match_simple("???\\VID_????&PID_????&REV_????", device_id)) {
+		if (fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV))
+			fu_device_add_instance_id(dev, device_id);
+		return;
+	}
+	if (g_pattern_match_simple("???\\VID_????&PID_????&REV_????&CARRIER_*", device_id)) {
+		if (!fu_device_has_private_flag(dev, FU_MM_DEVICE_FLAG_USE_BRANCH))
+			fu_device_add_instance_id(dev, device_id);
+		return;
+	}
+	g_warning("failed to add instance ID %s", device_id);
 }
 
 static gboolean
@@ -437,9 +469,17 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 		fu_device_set_vendor(device, mm_modem_get_manufacturer(modem));
 	if (mm_modem_get_model(modem) != NULL)
 		fu_device_set_name(device, mm_modem_get_model(modem));
+
+	/* only for modems that opt-in */
+	if (fu_device_has_private_flag(device, FU_MM_DEVICE_FLAG_USE_BRANCH))
+		fu_device_set_branch(device, mm_modem_get_carrier_configuration(modem));
+
 	fu_device_set_version(device, version);
+
+	/* filter these */
 	for (guint i = 0; device_ids[i] != NULL; i++)
-		fu_device_add_instance_id(device, device_ids[i]);
+		fu_mm_device_add_instance_id(device, device_ids[i]);
+
 	vendors = fu_device_get_vendor_ids(device);
 	if (vendors == NULL || vendors->len == 0) {
 		g_autofree gchar *path = NULL;
@@ -1925,6 +1965,9 @@ fu_mm_device_init(FuMmDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT,
 					"uninhibit-modemmanager-after-fastboot-reboot");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_MM_DEVICE_FLAG_USE_BRANCH,
+					"use-branch");
 }
 
 static void

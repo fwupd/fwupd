@@ -10,17 +10,12 @@ This plugin adds support for devices managed by ModemManager.
 
 These device use the ModemManager "Firmware Device IDs" as the GUID, e.g.
 
-* `USB\VID_413C&PID_81D7&REV_0318&CARRIER_VODAFONE`
+* `USB\VID_413C&PID_81D7&REV_0318&CARRIER_VODAFONE` (only if not using `Flags=use-branch`)
 * `USB\VID_413C&PID_81D7&REV_0318`
 * `USB\VID_413C&PID_81D7`
-* `USB\VID_413C`
-* `PCI\VID_105B&PID_E0AB&REV_0000&CARRIER_VODAFONE`
+* `PCI\VID_105B&PID_E0AB&REV_0000&CARRIER_VODAFONE` (only if not using `Flags=use-branch`)
 * `PCI\VID_105B&PID_E0AB&REV_0000`
 * `PCI\VID_105B&PID_E0AB`
-* `PCI\VID_105B`
-* `PCI\VID_1EAC&PID_1001`
-* `PCI\VID_1EAC&PID_1002`
-* `PCI\VID_1EAC`
 
 ## Quirk Use
 
@@ -37,6 +32,16 @@ Since: 1.7.4
 Firehose program file to use during the switch to EDL (Emergency Download) mode.
 
 Since: 1.8.10
+
+### Flags=use-branch
+
+Use the carrier (e.g. `VODAFONE`) as the device branch name so that `fwupdmgr sync` can downgrade
+the firmware as required.
+
+This is now the recommended mode for all modem devices with a carrier-specific firmware image,
+although it requires that the firmware branch is also set in the firmware metadata.
+
+Since: 1.9.8
 
 ## Vendor ID Security
 
