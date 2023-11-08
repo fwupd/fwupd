@@ -109,7 +109,7 @@ typedef enum {
  *
  * Since 0.1.3
  */
-#define FWUPD_DEVICE_FLAG_INTERNAL (1llu << 0)
+#define FWUPD_DEVICE_FLAG_INTERNAL (1ull << 0)
 /**
  * FWUPD_DEVICE_FLAG_UPDATABLE:
  *
@@ -117,7 +117,7 @@ typedef enum {
  *
  * Since 0.9.7
  */
-#define FWUPD_DEVICE_FLAG_UPDATABLE (1llu << 1)
+#define FWUPD_DEVICE_FLAG_UPDATABLE (1ull << 1)
 /**
  * FWUPD_DEVICE_FLAG_ONLY_OFFLINE:
  *
@@ -125,7 +125,7 @@ typedef enum {
  *
  * Since 0.9.7
  */
-#define FWUPD_DEVICE_FLAG_ONLY_OFFLINE (1llu << 2)
+#define FWUPD_DEVICE_FLAG_ONLY_OFFLINE (1ull << 2)
 /**
  * FWUPD_DEVICE_FLAG_REQUIRE_AC:
  *
@@ -134,7 +134,7 @@ typedef enum {
  *
  * Since 0.6.3
  */
-#define FWUPD_DEVICE_FLAG_REQUIRE_AC (1llu << 3)
+#define FWUPD_DEVICE_FLAG_REQUIRE_AC (1ull << 3)
 /**
  * FWUPD_DEVICE_FLAG_LOCKED:
  *
@@ -142,7 +142,7 @@ typedef enum {
  *
  * Since 0.6.3
  */
-#define FWUPD_DEVICE_FLAG_LOCKED (1llu << 4)
+#define FWUPD_DEVICE_FLAG_LOCKED (1ull << 4)
 /**
  * FWUPD_DEVICE_FLAG_SUPPORTED:
  *
@@ -150,7 +150,7 @@ typedef enum {
  *
  * Since 0.7.1
  */
-#define FWUPD_DEVICE_FLAG_SUPPORTED (1llu << 5)
+#define FWUPD_DEVICE_FLAG_SUPPORTED (1ull << 5)
 /**
  * FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER:
  *
@@ -158,7 +158,7 @@ typedef enum {
  *
  * Since 0.7.3
  */
-#define FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER (1llu << 6)
+#define FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER (1ull << 6)
 /**
  * FWUPD_DEVICE_FLAG_REGISTERED:
  *
@@ -166,7 +166,7 @@ typedef enum {
  *
  * Since 0.9.7
  */
-#define FWUPD_DEVICE_FLAG_REGISTERED (1llu << 7)
+#define FWUPD_DEVICE_FLAG_REGISTERED (1ull << 7)
 /**
  * FWUPD_DEVICE_FLAG_NEEDS_REBOOT:
  *
@@ -174,7 +174,7 @@ typedef enum {
  *
  * Since 0.9.7
  */
-#define FWUPD_DEVICE_FLAG_NEEDS_REBOOT (1llu << 8)
+#define FWUPD_DEVICE_FLAG_NEEDS_REBOOT (1ull << 8)
 /**
  * FWUPD_DEVICE_FLAG_REPORTED:
  *
@@ -182,7 +182,7 @@ typedef enum {
  *
  * Since: 1.0.4
  */
-#define FWUPD_DEVICE_FLAG_REPORTED (1llu << 9)
+#define FWUPD_DEVICE_FLAG_REPORTED (1ull << 9)
 /**
  * FWUPD_DEVICE_FLAG_NOTIFIED:
  *
@@ -190,7 +190,7 @@ typedef enum {
  *
  * Since: 1.0.5
  */
-#define FWUPD_DEVICE_FLAG_NOTIFIED (1llu << 10)
+#define FWUPD_DEVICE_FLAG_NOTIFIED (1ull << 10)
 /**
  * FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION:
  *
@@ -198,7 +198,7 @@ typedef enum {
  *
  * Since: 1.0.6
  */
-#define FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION (1llu << 11)
+#define FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION (1ull << 11)
 /**
  * FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST:
  *
@@ -207,7 +207,7 @@ typedef enum {
  *
  * Since: 1.0.8
  */
-#define FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST (1llu << 12)
+#define FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST (1ull << 12)
 /**
  * FWUPD_DEVICE_FLAG_IS_BOOTLOADER:
  *
@@ -215,7 +215,7 @@ typedef enum {
  *
  * Since: 1.0.8
  */
-#define FWUPD_DEVICE_FLAG_IS_BOOTLOADER (1llu << 13)
+#define FWUPD_DEVICE_FLAG_IS_BOOTLOADER (1ull << 13)
 /**
  * FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG:
  *
@@ -223,7 +223,7 @@ typedef enum {
  *
  * Since: 1.1.2
  */
-#define FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG (1llu << 14)
+#define FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG (1ull << 14)
 /**
  * FWUPD_DEVICE_FLAG_IGNORE_VALIDATION:
  *
@@ -231,7 +231,7 @@ typedef enum {
  *
  * Since: 1.1.2
  */
-#define FWUPD_DEVICE_FLAG_IGNORE_VALIDATION (1llu << 15)
+#define FWUPD_DEVICE_FLAG_IGNORE_VALIDATION (1ull << 15)
 /**
  * FWUPD_DEVICE_FLAG_TRUSTED:
  *
@@ -240,7 +240,7 @@ typedef enum {
  *
  * Since: 1.1.2
  */
-#define FWUPD_DEVICE_FLAG_TRUSTED (1llu << 16)
+#define FWUPD_DEVICE_FLAG_TRUSTED (1ull << 16)
 /**
  * FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN:
  *
@@ -248,7 +248,7 @@ typedef enum {
  *
  * Since: 1.2.4
  */
-#define FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN (1llu << 17)
+#define FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN (1ull << 17)
 /**
  * FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED:
  *
@@ -256,7 +256,7 @@ typedef enum {
  *
  * Since: 1.2.5
  */
-#define FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED (1llu << 18)
+#define FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED (1ull << 18)
 /**
  * FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS:
  *
@@ -265,7 +265,7 @@ typedef enum {
  * Since: 1.2.5
  * Deprecated 1.5.5
  */
-#define FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS (1llu << 19)
+#define FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS (1ull << 19)
 /**
  * FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION:
  *
@@ -275,7 +275,7 @@ typedef enum {
  *
  * Since: 1.2.6
  */
-#define FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION (1llu << 20)
+#define FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION (1ull << 20)
 /**
  * FWUPD_DEVICE_FLAG_ENSURE_SEMVER:
  *
@@ -284,7 +284,7 @@ typedef enum {
  * Since: 1.2.9
  * Deprecate: 1.5.5
  */
-#define FWUPD_DEVICE_FLAG_ENSURE_SEMVER (1llu << 21)
+#define FWUPD_DEVICE_FLAG_ENSURE_SEMVER (1ull << 21)
 /**
  * FWUPD_DEVICE_FLAG_HISTORICAL:
  *
@@ -292,7 +292,7 @@ typedef enum {
  *
  * Since: 1.3.2
  */
-#define FWUPD_DEVICE_FLAG_HISTORICAL (1llu << 22)
+#define FWUPD_DEVICE_FLAG_HISTORICAL (1ull << 22)
 /**
  * FWUPD_DEVICE_FLAG_ONLY_SUPPORTED:
  *
@@ -301,7 +301,7 @@ typedef enum {
  * Since: 1.3.3
  * Deprecated 1.5.5
  */
-#define FWUPD_DEVICE_FLAG_ONLY_SUPPORTED (1llu << 23)
+#define FWUPD_DEVICE_FLAG_ONLY_SUPPORTED (1ull << 23)
 /**
  * FWUPD_DEVICE_FLAG_WILL_DISAPPEAR:
  *
@@ -310,7 +310,7 @@ typedef enum {
  *
  * Since: 1.3.3
  */
-#define FWUPD_DEVICE_FLAG_WILL_DISAPPEAR (1llu << 24)
+#define FWUPD_DEVICE_FLAG_WILL_DISAPPEAR (1ull << 24)
 /**
  * FWUPD_DEVICE_FLAG_CAN_VERIFY:
  *
@@ -318,7 +318,7 @@ typedef enum {
  *
  * Since: 1.3.3
  */
-#define FWUPD_DEVICE_FLAG_CAN_VERIFY (1llu << 25)
+#define FWUPD_DEVICE_FLAG_CAN_VERIFY (1ull << 25)
 /**
  * FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE:
  *
@@ -326,7 +326,7 @@ typedef enum {
  *
  * Since: 1.3.3
  */
-#define FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE (1llu << 26)
+#define FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE (1ull << 26)
 /**
  * FWUPD_DEVICE_FLAG_DUAL_IMAGE:
  *
@@ -335,7 +335,7 @@ typedef enum {
  *
  * Since: 1.3.3
  */
-#define FWUPD_DEVICE_FLAG_DUAL_IMAGE (1llu << 27)
+#define FWUPD_DEVICE_FLAG_DUAL_IMAGE (1ull << 27)
 /**
  * FWUPD_DEVICE_FLAG_SELF_RECOVERY:
  *
@@ -344,7 +344,7 @@ typedef enum {
  *
  * Since: 1.3.3
  */
-#define FWUPD_DEVICE_FLAG_SELF_RECOVERY (1llu << 28)
+#define FWUPD_DEVICE_FLAG_SELF_RECOVERY (1ull << 28)
 /**
  * FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE:
  *
@@ -353,7 +353,7 @@ typedef enum {
  *
  * Since: 1.3.3
  */
-#define FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE (1llu << 29)
+#define FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE (1ull << 29)
 /**
  * FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED:
  *
@@ -361,7 +361,7 @@ typedef enum {
  *
  * Since: 1.3.7
  */
-#define FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED (1llu << 30)
+#define FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED (1ull << 30)
 /**
  * FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES:
  *
@@ -369,7 +369,7 @@ typedef enum {
  *
  * Since: 1.3.7
  */
-#define FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES (1llu << 31)
+#define FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES (1ull << 31)
 /**
  * FWUPD_DEVICE_FLAG_MD_SET_NAME:
  *
@@ -378,7 +378,7 @@ typedef enum {
  * Since: 1.4.0
  * Deprecated 1.5.5
  */
-#define FWUPD_DEVICE_FLAG_MD_SET_NAME (1llu << 32)
+#define FWUPD_DEVICE_FLAG_MD_SET_NAME (1ull << 32)
 /**
  * FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY:
  *
@@ -387,7 +387,7 @@ typedef enum {
  * Since: 1.4.0
  * Deprecated 1.5.5
  */
-#define FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY (1llu << 33)
+#define FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY (1ull << 33)
 /**
  * FWUPD_DEVICE_FLAG_MD_SET_VERFMT:
  *
@@ -396,7 +396,7 @@ typedef enum {
  * Since: 1.4.0
  * Deprecated 1.5.5
  */
-#define FWUPD_DEVICE_FLAG_MD_SET_VERFMT (1llu << 34)
+#define FWUPD_DEVICE_FLAG_MD_SET_VERFMT (1ull << 34)
 /**
  * FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS:
  *
@@ -405,7 +405,7 @@ typedef enum {
  *
  * Since: 1.4.0
  */
-#define FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS (1llu << 35)
+#define FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS (1ull << 35)
 /**
  * FWUPD_DEVICE_FLAG_NO_GUID_MATCHING:
  *
@@ -414,7 +414,7 @@ typedef enum {
  * Since: 1.4.1
  * Deprecated 1.5.8
  */
-#define FWUPD_DEVICE_FLAG_NO_GUID_MATCHING (1llu << 36)
+#define FWUPD_DEVICE_FLAG_NO_GUID_MATCHING (1ull << 36)
 /**
  * FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN:
  *
@@ -423,7 +423,7 @@ typedef enum {
  *
  * Since: 1.4.1
  */
-#define FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN (1llu << 37)
+#define FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN (1ull << 37)
 /**
  * FWUPD_DEVICE_FLAG_SKIPS_RESTART:
  *
@@ -431,7 +431,7 @@ typedef enum {
  *
  * Since: 1.5.0
  */
-#define FWUPD_DEVICE_FLAG_SKIPS_RESTART (1llu << 38)
+#define FWUPD_DEVICE_FLAG_SKIPS_RESTART (1ull << 38)
 /**
  * FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES:
  *
@@ -439,7 +439,7 @@ typedef enum {
  *
  * Since: 1.5.0
  */
-#define FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES (1llu << 39)
+#define FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES (1ull << 39)
 /**
  * FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL:
  *
@@ -447,7 +447,7 @@ typedef enum {
  *
  * Since: 1.5.0
  */
-#define FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL (1llu << 40)
+#define FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL (1ull << 40)
 /**
  * FWUPD_DEVICE_FLAG_MD_SET_ICON:
  *
@@ -456,7 +456,7 @@ typedef enum {
  * Since: 1.5.2
  * Deprecated 1.5.5
  */
-#define FWUPD_DEVICE_FLAG_MD_SET_ICON (1llu << 41)
+#define FWUPD_DEVICE_FLAG_MD_SET_ICON (1ull << 41)
 /**
  * FWUPD_DEVICE_FLAG_WILDCARD_INSTALL:
  *
@@ -468,7 +468,7 @@ typedef enum {
  *
  * Since: 1.6.2
  */
-#define FWUPD_DEVICE_FLAG_WILDCARD_INSTALL (1llu << 42)
+#define FWUPD_DEVICE_FLAG_WILDCARD_INSTALL (1ull << 42)
 /**
  * FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE:
  *
@@ -476,7 +476,7 @@ typedef enum {
  *
  * Since 1.6.2
  */
-#define FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE (1llu << 43)
+#define FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE (1ull << 43)
 /**
  * FWUPD_DEVICE_FLAG_UNREACHABLE:
  *
@@ -485,7 +485,7 @@ typedef enum {
  *
  * Since 1.7.0
  */
-#define FWUPD_DEVICE_FLAG_UNREACHABLE (1llu << 44)
+#define FWUPD_DEVICE_FLAG_UNREACHABLE (1ull << 44)
 /**
  * FWUPD_DEVICE_FLAG_AFFECTS_FDE:
  *
@@ -498,7 +498,7 @@ typedef enum {
  *
  * Since: 1.7.1
  */
-#define FWUPD_DEVICE_FLAG_AFFECTS_FDE (1llu << 45)
+#define FWUPD_DEVICE_FLAG_AFFECTS_FDE (1ull << 45)
 /**
  * FWUPD_DEVICE_FLAG_END_OF_LIFE:
  *
@@ -507,7 +507,7 @@ typedef enum {
  *
  * Since: 1.7.5
  */
-#define FWUPD_DEVICE_FLAG_END_OF_LIFE (1llu << 46)
+#define FWUPD_DEVICE_FLAG_END_OF_LIFE (1ull << 46)
 /**
  * FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD:
  *
@@ -518,7 +518,7 @@ typedef enum {
  *
  * Since: 1.7.6
  */
-#define FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD (1llu << 47)
+#define FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD (1ull << 47)
 /**
  * FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD:
  *
@@ -526,7 +526,7 @@ typedef enum {
  *
  * Since: 1.7.6
  */
-#define FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD (1llu << 48)
+#define FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD (1ull << 48)
 /**
  * FWUPD_DEVICE_FLAG_EMULATED:
  *
@@ -534,7 +534,7 @@ typedef enum {
  *
  * Since: 1.8.11
  */
-#define FWUPD_DEVICE_FLAG_EMULATED (1llu << 49)
+#define FWUPD_DEVICE_FLAG_EMULATED (1ull << 49)
 /**
  * FWUPD_DEVICE_FLAG_EMULATION_TAG:
  *
@@ -542,7 +542,7 @@ typedef enum {
  *
  * Since: 1.8.11
  */
-#define FWUPD_DEVICE_FLAG_EMULATION_TAG (1llu << 50)
+#define FWUPD_DEVICE_FLAG_EMULATION_TAG (1ull << 50)
 /**
  * FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES:
  *
@@ -552,7 +552,7 @@ typedef enum {
  *
  * Since: 1.9.3
  */
-#define FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES (1llu << 51)
+#define FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES (1ull << 51)
 /**
  * FWUPD_DEVICE_FLAG_UNKNOWN:
  *
@@ -584,7 +584,7 @@ typedef guint64 FwupdDeviceFlags;
  *
  * Since 1.8.1
  */
-#define FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW (1llu << 0)
+#define FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW (1ull << 0)
 /**
  * FWUPD_DEVICE_PROBLEM_UNREACHABLE:
  *
@@ -592,7 +592,7 @@ typedef guint64 FwupdDeviceFlags;
  *
  * Since 1.8.1
  */
-#define FWUPD_DEVICE_PROBLEM_UNREACHABLE (1llu << 1)
+#define FWUPD_DEVICE_PROBLEM_UNREACHABLE (1ull << 1)
 /**
  * FWUPD_DEVICE_PROBLEM_POWER_TOO_LOW:
  *
@@ -600,7 +600,7 @@ typedef guint64 FwupdDeviceFlags;
  *
  * Since 1.8.1
  */
-#define FWUPD_DEVICE_PROBLEM_POWER_TOO_LOW (1llu << 2)
+#define FWUPD_DEVICE_PROBLEM_POWER_TOO_LOW (1ull << 2)
 /**
  * FWUPD_DEVICE_PROBLEM_UPDATE_PENDING:
  *
@@ -608,7 +608,7 @@ typedef guint64 FwupdDeviceFlags;
  *
  * Since 1.8.1
  */
-#define FWUPD_DEVICE_PROBLEM_UPDATE_PENDING (1llu << 3)
+#define FWUPD_DEVICE_PROBLEM_UPDATE_PENDING (1ull << 3)
 /**
  * FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER:
  *
@@ -616,7 +616,7 @@ typedef guint64 FwupdDeviceFlags;
  *
  * Since 1.8.1
  */
-#define FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER (1llu << 4)
+#define FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER (1ull << 4)
 /**
  * FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED:
  *
@@ -624,7 +624,7 @@ typedef guint64 FwupdDeviceFlags;
  *
  * Since 1.8.1
  */
-#define FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED (1llu << 5)
+#define FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED (1ull << 5)
 /**
  * FWUPD_DEVICE_PROBLEM_IS_EMULATED:
  *
@@ -632,7 +632,7 @@ typedef guint64 FwupdDeviceFlags;
  *
  * Since 1.8.3
  */
-#define FWUPD_DEVICE_PROBLEM_IS_EMULATED (1llu << 6)
+#define FWUPD_DEVICE_PROBLEM_IS_EMULATED (1ull << 6)
 /**
  * FWUPD_DEVICE_PROBLEM_MISSING_LICENSE:
  *
@@ -640,7 +640,7 @@ typedef guint64 FwupdDeviceFlags;
  *
  * Since 1.8.6
  */
-#define FWUPD_DEVICE_PROBLEM_MISSING_LICENSE (1llu << 7)
+#define FWUPD_DEVICE_PROBLEM_MISSING_LICENSE (1ull << 7)
 /**
  * FWUPD_DEVICE_PROBLEM_SYSTEM_INHIBIT:
  *
@@ -648,7 +648,7 @@ typedef guint64 FwupdDeviceFlags;
  *
  * Since 1.8.10
  */
-#define FWUPD_DEVICE_PROBLEM_SYSTEM_INHIBIT (1llu << 8)
+#define FWUPD_DEVICE_PROBLEM_SYSTEM_INHIBIT (1ull << 8)
 /**
  * FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS:
  *
@@ -656,7 +656,7 @@ typedef guint64 FwupdDeviceFlags;
  *
  * Since 1.8.11
  */
-#define FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS (1llu << 9)
+#define FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS (1ull << 9)
 /**
  * FWUPD_DEVICE_PROBLEM_IN_USE:
  *
@@ -664,7 +664,7 @@ typedef guint64 FwupdDeviceFlags;
  *
  * Since 1.9.1
  */
-#define FWUPD_DEVICE_PROBLEM_IN_USE (1llu << 10)
+#define FWUPD_DEVICE_PROBLEM_IN_USE (1ull << 10)
 /**
  * FWUPD_DEVICE_PROBLEM_DISPLAY_REQUIRED:
  *
@@ -672,7 +672,7 @@ typedef guint64 FwupdDeviceFlags;
  *
  * Since 1.9.6
  */
-#define FWUPD_DEVICE_PROBLEM_DISPLAY_REQUIRED (1llu << 11)
+#define FWUPD_DEVICE_PROBLEM_DISPLAY_REQUIRED (1ull << 11)
 /**
  * FWUPD_DEVICE_PROBLEM_UNKNOWN:
  *
@@ -706,7 +706,7 @@ typedef guint64 FwupdDeviceProblem;
  *
  * Since: 1.2.6
  */
-#define FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD (1llu << 0)
+#define FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD (1ull << 0)
 /**
  * FWUPD_RELEASE_FLAG_TRUSTED_METADATA:
  *
@@ -714,7 +714,7 @@ typedef guint64 FwupdDeviceProblem;
  *
  * Since: 1.2.6
  */
-#define FWUPD_RELEASE_FLAG_TRUSTED_METADATA (1llu << 1)
+#define FWUPD_RELEASE_FLAG_TRUSTED_METADATA (1ull << 1)
 /**
  * FWUPD_RELEASE_FLAG_IS_UPGRADE:
  *
@@ -722,7 +722,7 @@ typedef guint64 FwupdDeviceProblem;
  *
  * Since: 1.2.6
  */
-#define FWUPD_RELEASE_FLAG_IS_UPGRADE (1llu << 2)
+#define FWUPD_RELEASE_FLAG_IS_UPGRADE (1ull << 2)
 /**
  * FWUPD_RELEASE_FLAG_IS_DOWNGRADE:
  *
@@ -730,7 +730,7 @@ typedef guint64 FwupdDeviceProblem;
  *
  * Since: 1.2.6
  */
-#define FWUPD_RELEASE_FLAG_IS_DOWNGRADE (1llu << 3)
+#define FWUPD_RELEASE_FLAG_IS_DOWNGRADE (1ull << 3)
 /**
  * FWUPD_RELEASE_FLAG_BLOCKED_VERSION:
  *
@@ -738,7 +738,7 @@ typedef guint64 FwupdDeviceProblem;
  *
  * Since: 1.2.6
  */
-#define FWUPD_RELEASE_FLAG_BLOCKED_VERSION (1llu << 4)
+#define FWUPD_RELEASE_FLAG_BLOCKED_VERSION (1ull << 4)
 /**
  * FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL:
  *
@@ -746,7 +746,7 @@ typedef guint64 FwupdDeviceProblem;
  *
  * Since: 1.2.6
  */
-#define FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL (1llu << 5)
+#define FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL (1ull << 5)
 /**
  * FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH:
  *
@@ -754,7 +754,7 @@ typedef guint64 FwupdDeviceProblem;
  *
  * Since: 1.5.0
  */
-#define FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH (1llu << 6)
+#define FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH (1ull << 6)
 /**
  * FWUPD_RELEASE_FLAG_IS_COMMUNITY:
  *
@@ -762,7 +762,7 @@ typedef guint64 FwupdDeviceProblem;
  *
  * Since: 1.7.5
  */
-#define FWUPD_RELEASE_FLAG_IS_COMMUNITY (1llu << 7)
+#define FWUPD_RELEASE_FLAG_IS_COMMUNITY (1ull << 7)
 /**
  * FWUPD_RELEASE_FLAG_TRUSTED_REPORT:
  *
@@ -770,7 +770,7 @@ typedef guint64 FwupdDeviceProblem;
  *
  * Since: 1.9.1
  */
-#define FWUPD_RELEASE_FLAG_TRUSTED_REPORT (1llu << 8)
+#define FWUPD_RELEASE_FLAG_TRUSTED_REPORT (1ull << 8)
 /**
  * FWUPD_RELEASE_FLAG_UNKNOWN:
  *
@@ -821,7 +821,7 @@ typedef enum {
  *
  * Since: 1.5.0
  */
-#define FWUPD_PLUGIN_FLAG_DISABLED (1llu << 0)
+#define FWUPD_PLUGIN_FLAG_DISABLED (1ull << 0)
 /**
  * FWUPD_PLUGIN_FLAG_USER_WARNING:
  *
@@ -829,7 +829,7 @@ typedef enum {
  *
  * Since: 1.5.0
  */
-#define FWUPD_PLUGIN_FLAG_USER_WARNING (1llu << 1)
+#define FWUPD_PLUGIN_FLAG_USER_WARNING (1ull << 1)
 /**
  * FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE:
  *
@@ -838,7 +838,7 @@ typedef enum {
  *
  * Since: 1.5.0
  */
-#define FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE (1llu << 2)
+#define FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE (1ull << 2)
 /**
  * FWUPD_PLUGIN_FLAG_NO_HARDWARE:
  *
@@ -848,7 +848,7 @@ typedef enum {
  *
  * Since: 1.5.0
  */
-#define FWUPD_PLUGIN_FLAG_NO_HARDWARE (1llu << 3)
+#define FWUPD_PLUGIN_FLAG_NO_HARDWARE (1ull << 3)
 /**
  * FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED:
  *
@@ -857,7 +857,7 @@ typedef enum {
  *
  * Since: 1.5.0
  */
-#define FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED (1llu << 4)
+#define FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED (1ull << 4)
 /**
  * FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED:
  *
@@ -866,7 +866,7 @@ typedef enum {
  *
  * Since: 1.5.0
  */
-#define FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED (1llu << 5)
+#define FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED (1ull << 5)
 /**
  * FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED:
  *
@@ -875,7 +875,7 @@ typedef enum {
  *
  * Since: 1.5.0
  */
-#define FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED (1llu << 6)
+#define FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED (1ull << 6)
 /**
  * FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND:
  *
@@ -884,7 +884,7 @@ typedef enum {
  *
  * Since: 1.5.0
  */
-#define FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND (1llu << 7)
+#define FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND (1ull << 7)
 /**
  * FWUPD_PLUGIN_FLAG_LEGACY_BIOS:
  *
@@ -893,7 +893,7 @@ typedef enum {
  *
  * Since: 1.5.0
  */
-#define FWUPD_PLUGIN_FLAG_LEGACY_BIOS (1llu << 8)
+#define FWUPD_PLUGIN_FLAG_LEGACY_BIOS (1ull << 8)
 /**
  * FWUPD_PLUGIN_FLAG_FAILED_OPEN:
  *
@@ -902,7 +902,7 @@ typedef enum {
  *
  * Since: 1.5.0
  */
-#define FWUPD_PLUGIN_FLAG_FAILED_OPEN (1llu << 9)
+#define FWUPD_PLUGIN_FLAG_FAILED_OPEN (1ull << 9)
 /**
  * FWUPD_PLUGIN_FLAG_REQUIRE_HWID:
  *
@@ -910,7 +910,7 @@ typedef enum {
  *
  * Since: 1.5.8
  */
-#define FWUPD_PLUGIN_FLAG_REQUIRE_HWID (1llu << 10)
+#define FWUPD_PLUGIN_FLAG_REQUIRE_HWID (1ull << 10)
 /**
  * FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD:
  *
@@ -918,7 +918,7 @@ typedef enum {
  *
  * Since: 1.6.2
  */
-#define FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD (1llu << 11)
+#define FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD (1ull << 11)
 /**
  * FWUPD_PLUGIN_FLAG_AUTH_REQUIRED:
  *
@@ -927,7 +927,7 @@ typedef enum {
  *
  * Since: 1.6.2
  */
-#define FWUPD_PLUGIN_FLAG_AUTH_REQUIRED (1llu << 12)
+#define FWUPD_PLUGIN_FLAG_AUTH_REQUIRED (1ull << 12)
 /**
  * FWUPD_PLUGIN_FLAG_SECURE_CONFIG:
  *
@@ -936,7 +936,7 @@ typedef enum {
  *
  * Since: 1.8.5
  */
-#define FWUPD_PLUGIN_FLAG_SECURE_CONFIG (1llu << 13)
+#define FWUPD_PLUGIN_FLAG_SECURE_CONFIG (1ull << 13)
 /**
  * FWUPD_PLUGIN_FLAG_MODULAR:
  *
@@ -944,7 +944,7 @@ typedef enum {
  *
  * Since: 1.8.6
  */
-#define FWUPD_PLUGIN_FLAG_MODULAR (1llu << 14)
+#define FWUPD_PLUGIN_FLAG_MODULAR (1ull << 14)
 /**
  * FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY:
  *
@@ -952,7 +952,7 @@ typedef enum {
  *
  * Since: 1.8.7
  */
-#define FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY (1llu << 15)
+#define FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY (1ull << 15)
 /**
  * FWUPD_PLUGIN_FLAG_ESP_NOT_VALID:
  *
@@ -961,7 +961,7 @@ typedef enum {
  *
  * Since: 1.9.3
  */
-#define FWUPD_PLUGIN_FLAG_ESP_NOT_VALID (1llu << 16)
+#define FWUPD_PLUGIN_FLAG_ESP_NOT_VALID (1ull << 16)
 /**
  * FWUPD_PLUGIN_FLAG_READY:
  *
@@ -969,7 +969,7 @@ typedef enum {
  *
  * Since: 1.9.6
  */
-#define FWUPD_PLUGIN_FLAG_READY (1llu << 17)
+#define FWUPD_PLUGIN_FLAG_READY (1ull << 17)
 /**
  * FWUPD_PLUGIN_FLAG_UNKNOWN:
  *

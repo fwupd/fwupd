@@ -417,7 +417,7 @@ typedef guint64 FuDeviceInternalFlags;
  *
  * Since 1.7.3
  */
-#define FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE (1llu << 19)
+#define FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE (1ull << 19)
 
 /**
  * FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR:
