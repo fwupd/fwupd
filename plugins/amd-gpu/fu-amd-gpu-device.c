@@ -101,8 +101,6 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 		fu_device_add_protocol(device, "com.amd.pspvbflash");
 	}
 
-	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN);
-
 	return TRUE;
 }
 
@@ -266,6 +264,8 @@ fu_amd_gpu_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_amd_gpu_device_init(FuAmdGpuDevice *self)
 {
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS);
 }
 
 static void
