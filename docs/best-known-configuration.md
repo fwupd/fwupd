@@ -32,12 +32,15 @@ let us know by [opening an issue](https://gitlab.com/fwupd/lvfs-website/-/issues
 
 When provisioning the client machine, we can set the BKC by setting `HostBkc=vendor-2021q1` in
 `/etc/fwupd/fwupd.conf`.
-Then any invocation of `fwupdmgr sync-bkc` will install or downgrade firmware on all compatible
-devices (UEFI, RAID, network adapter, & SAS HBA etc.) to make the system match a compatible set.
 
-Updating or downgrading firmware away from the *Best Known Configuration* is allowed, but the UI
-shows a warning.
-Using `fwupdmgr sync-bkc` will undo any manual changes and bring the machine back to the BKC.
+Any invocation of `fwupdmgr sync` will install or downgrade firmware on all compatible devices
+(e.g. UEFI, RAID, network adapter, & SAS HBA) to make the system match a compatible set.
+The `fwupdmgr sync` command will also ensure that firmware is installed that matches the device
+branch, if the device has one assigned.
+
+Updating or downgrading firmware away from the *Best Known Configuration* or to different branches
+is allowed, but the UI shows a warning.
+Using `fwupdmgr sync` will undo any manual changes and bring the machine back to the BKC.
 
 ## Local metadata
 
@@ -95,7 +98,7 @@ This then appears when getting the releases for that specific GUID:
 
 ..and can be synced on the command line:
 
-    $ fwupdmgr sync-bkc
+    $ fwupdmgr sync
     ╔══════════════════════════════════════════════════════════════════════════════╗
     ║ Downgrade System Firmware from 225.52.1521 to 225.53.1649?                   ║
     ╠══════════════════════════════════════════════════════════════════════════════╣

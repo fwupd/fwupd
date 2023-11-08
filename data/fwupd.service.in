@@ -6,7 +6,7 @@ Before=display-manager.service
 ConditionVirtualization=!container
 
 [Service]
-Type=dbus
+Type=simple
 TimeoutSec=180
 RuntimeDirectory=@motd_dir@
 RuntimeDirectoryPreserve=yes

@@ -1,0 +1,18 @@
+[Unit]
+Description=Synchronize device firmware with fwupd
+Documentation=man:fwupdmgr(1)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=exec
+CacheDirectory=fwupdmgr
+StandardError=null
+@user@
+RestrictAddressFamilies=AF_NETLINK AF_UNIX AF_INET AF_INET6
+SystemCallFilter=~@mount
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictRealtime=yes
+SuccessExitStatus=2
+ExecStart=@bindir@/fwupdmgr sync wait

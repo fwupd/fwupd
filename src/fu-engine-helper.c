@@ -126,7 +126,7 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 		g_string_append_printf(str,
 				       "\n%s\n\n",
 				       /* TRANSLATORS: this is shown in the MOTD */
-				       _("Run `fwupdmgr sync-bkc` to complete this action."));
+				       _("Run `fwupdmgr sync` to complete this action."));
 	} else if (upgrade_count > 0) {
 		g_string_append(str, "\n");
 		g_string_append_printf(str,
