@@ -41,7 +41,7 @@ struct _FwupdReportClass {
  *
  * Since: 1.9.1
  */
-#define FWUPD_REPORT_FLAG_FROM_OEM (1llu << 0)
+#define FWUPD_REPORT_FLAG_FROM_OEM (1ull << 0)
 
 /**
  * FWUPD_REPORT_FLAG_UNKNOWN:
