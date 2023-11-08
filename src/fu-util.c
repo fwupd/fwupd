@@ -483,17 +483,37 @@ fu_util_modify_remote_warning(FuUtilPrivate *priv, FwupdRemote *remote, GError *
 static void
 fu_util_build_device_tree_node(FuUtilPrivate *priv, GNode *root, FwupdDevice *dev)
 {
-	GNode *root_child;
+	GNode *root_child = g_node_append_data(root, dev);
+	if (fwupd_device_get_release_default(dev) != NULL)
+		g_node_append_data(root_child, fwupd_device_get_release_default(dev));
+}
 
+static gboolean
+fu_util_build_device_tree_cb(GNode *n, gpointer user_data)
+{
+	FuUtilPrivate *priv = (FuUtilPrivate *)user_data;
+	FwupdDevice *dev = n->data;
+
+	/* root node */
+	if (dev == NULL)
+		return FALSE;
+
+	/* an interesting child, so include the parent */
+	for (GNode *c = n->children; c != NULL; n = c->next) {
+		if (c->data != NULL)
+			return FALSE;
+	}
+
+	/* not interesting, clear the node data */
 	if (!fwupd_device_match_flags(dev,
 				      priv->filter_device_include,
 				      priv->filter_device_exclude))
-		return;
-	if (!priv->show_all && !fu_util_is_interesting_device(dev))
-		return;
-	root_child = g_node_append_data(root, dev);
-	if (fwupd_device_get_release_default(dev) != NULL)
-		g_node_append_data(root_child, fwupd_device_get_release_default(dev));
+		n->data = NULL;
+	else if (!priv->show_all && !fu_util_is_interesting_device(dev))
+		n->data = NULL;
+
+	/* continue */
+	return FALSE;
 }
 
 static void
@@ -522,6 +542,9 @@ fu_util_build_device_tree(FuUtilPrivate *priv, GNode *root, GPtrArray *devs)
 			continue;
 		fu_util_build_device_tree_node(priv, root_parent, dev_tmp);
 	}
+
+	/* prune children that are not updatable */
+	g_node_traverse(root, G_POST_ORDER, G_TRAVERSE_ALL, -1, fu_util_build_device_tree_cb, priv);
 }
 
 static gboolean
