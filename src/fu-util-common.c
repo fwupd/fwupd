@@ -121,7 +121,7 @@ fu_util_traverse_tree(GNode *n, gpointer data)
 	}
 
 	/* root node */
-	if (n->data == NULL && g_getenv("FWUPD_VERBOSE") == NULL) {
+	if (n->parent == NULL && g_getenv("FWUPD_VERBOSE") == NULL) {
 		g_autofree gchar *str =
 		    g_strdup_printf("%s %s",
 				    fwupd_client_get_host_vendor(helper->client),
