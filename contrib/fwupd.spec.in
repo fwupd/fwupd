@@ -368,6 +368,8 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %{_unitdir}/fwupd.service
 %{_unitdir}/fwupd-refresh.service
 %{_unitdir}/fwupd-refresh.timer
+%{_unitdir}/fwupd-sync.service
+%{_unitdir}/system-update.target.wants/
 %dir %{_localstatedir}/lib/fwupd
 %dir %{_localstatedir}/cache/fwupd
 %dir %{_datadir}/fwupd/quirks.d

@@ -17,6 +17,7 @@ endif
 
 if build_daemon
 subdir('motd')
+subdir('sync')
 endif
 
 if get_option('tests')

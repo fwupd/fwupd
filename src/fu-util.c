@@ -3829,70 +3829,126 @@ fu_util_security_as_json(FuUtilPrivate *priv,
 }
 
 static gboolean
-fu_util_sync(FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_sync_device(FuUtilPrivate *priv, FwupdDevice *dev, guint *cnt, GError **error)
 {
 	const gchar *host_bkc = fwupd_client_get_host_bkc(priv->client);
+	g_autoptr(FwupdRelease) rel = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* find the release that matches the tag */
+	if (host_bkc != NULL) {
+		rel = fu_util_get_release_with_tag(priv, dev, host_bkc, &error_local);
+	} else if (fu_device_get_branch(dev) != NULL) {
+		rel = fu_util_get_release_with_branch(priv,
+						      dev,
+						      fu_device_get_branch(dev),
+						      &error_local);
+	} else {
+		g_set_error_literal(&error_local,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "No device branch or system HostBkc set");
+	}
+	if (rel == NULL) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+			g_debug("ignoring %s: %s", fwupd_device_get_id(dev), error_local->message);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+
+	/* ignore if already on that release */
+	if (g_strcmp0(fwupd_device_get_version(dev), fwupd_release_get_version(rel)) == 0)
+		return TRUE;
+
+	/* install this new release */
+	g_debug("need to move %s from %s to %s",
+		fwupd_device_get_id(dev),
+		fwupd_device_get_version(dev),
+		fwupd_release_get_version(rel));
+	if (!fu_util_update_device_with_release(priv, dev, rel, &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+			g_debug("ignoring %s: %s", fwupd_device_get_id(dev), error_local->message);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+	fu_util_display_current_message(priv);
+
+	/* success */
+	(*cnt)++;
+	return TRUE;
+}
+
+typedef struct {
+	FuUtilPrivate *priv;
+	guint *cnt;
+} FuUtilSyncHelper;
+
+static void
+fu_util_sync_device_added_cb(FwupdClient *client, FwupdDevice *device, FuUtilSyncHelper *helper)
+{
+	FuUtilPrivate *priv = helper->priv;
+	g_autoptr(GError) error_local = NULL;
+	if (!fu_util_sync_device(priv, device, helper->cnt, &error_local)) {
+		g_autoptr(GString) str = g_string_new(NULL);
+		g_string_append_printf(str,
+				       "%s: ",
+				       /* TRANSLATORS: the device firmware could not be
+					* installed automatically */
+				       _("Failed to install the correct firmware for the device"));
+		g_string_append(str, error_local->message);
+		fu_console_print_literal(priv->console, str->str);
+	}
+}
+
+static gboolean
+fu_util_sync(FuUtilPrivate *priv, gchar **values, GError **error)
+{
 	guint cnt = 0;
+	gboolean do_wait = FALSE;
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 
+	if (g_strv_length(values) > 0) {
+		if (g_strcmp0(values[0], "wait") != 0) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_NOT_SUPPORTED,
+					    "unknown argument, expected 'wait'");
+			return FALSE;
+		}
+		do_wait = TRUE;
+	}
+
 	devices = fwupd_client_get_devices(priv->client, NULL, error);
 	if (devices == NULL)
 		return FALSE;
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
-		g_autoptr(FwupdRelease) rel = NULL;
-		g_autoptr(GError) error_local = NULL;
-
-		/* find the release that matches the tag */
-		if (host_bkc != NULL) {
-			rel = fu_util_get_release_with_tag(priv, dev, host_bkc, &error_local);
-		} else if (fu_device_get_branch(dev) != NULL) {
-			rel = fu_util_get_release_with_branch(priv,
-							      dev,
-							      fu_device_get_branch(dev),
-							      &error_local);
-		} else {
-			g_set_error_literal(&error_local,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "No device branch or system HostBkc set");
-		}
-		if (rel == NULL) {
-			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
-			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
-				g_debug("ignoring %s: %s",
-					fwupd_device_get_id(dev),
-					error_local->message);
-				continue;
-			}
-			g_propagate_error(error, g_steal_pointer(&error_local));
+		if (!fu_util_sync_device(priv, dev, &cnt, error))
 			return FALSE;
-		}
+	}
 
-		/* ignore if already on that release */
-		if (g_strcmp0(fwupd_device_get_version(dev), fwupd_release_get_version(rel)) == 0)
-			continue;
+	/* just wait for devices */
+	if (do_wait) {
+		FuUtilSyncHelper helper = {.priv = priv, .cnt = &cnt};
+		fu_console_set_progress(priv->console, FWUPD_STATUS_IDLE, 0);
+		/* TRANSLATORS: we're running in a service waiting for devices to be inserted */
+		fu_console_print_literal(priv->console, _("Waiting for devices to appear…"));
+		g_signal_connect(FWUPD_CLIENT(priv->client),
+				 "device-added",
+				 G_CALLBACK(fu_util_sync_device_added_cb),
+				 &helper);
+		g_main_loop_run(priv->loop);
 
-		/* install this new release */
-		g_debug("need to move %s from %s to %s",
-			fwupd_device_get_id(dev),
-			fwupd_device_get_version(dev),
-			fwupd_release_get_version(rel));
-		if (!fu_util_update_device_with_release(priv, dev, rel, &error_local)) {
-			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
-				g_debug("ignoring %s: %s",
-					fwupd_device_get_id(dev),
-					error_local->message);
-				continue;
-			}
-			g_propagate_error(error, g_steal_pointer(&error_local));
-			return FALSE;
-		}
-		fu_util_display_current_message(priv);
+		/* FIXME: we didn't track this, just assume something happened */
 		cnt++;
 	}
 
@@ -5210,7 +5266,8 @@ main(int argc, char *argv[])
 			      fu_util_security);
 	fu_util_cmd_array_add(cmd_array,
 			      "sync,sync-bkc",
-			      NULL,
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[wait]"),
 			      /* TRANSLATORS: command description */
 			      _("Sync firmware versions to the chosen configuration"),
 			      fu_util_sync);
