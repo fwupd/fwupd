@@ -76,7 +76,7 @@ typedef enum {
  * @FWUPD_FEATURE_FLAG_COMMUNITY_TEXT:		Can show information about community supported
  * @FWUPD_FEATURE_FLAG_SHOW_PROBLEMS:		Can show problems when getting the update list
  * @FWUPD_FEATURE_FLAG_ALLOW_AUTHENTICATION:	Can authenticate with PolicyKit for requests
- * @FWUPD_FEATURE_FLAG_REQUESTS_NON_GENERIC:	Can handle showing non-generic tequest message text
+ * @FWUPD_FEATURE_FLAG_REQUESTS_NON_GENERIC:	Can handle showing non-generic request message text
  *
  * The flags to the feature capabilities of the front-end client.
  **/
