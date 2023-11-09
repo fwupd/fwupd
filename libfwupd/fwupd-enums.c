@@ -672,6 +672,8 @@ fwupd_feature_flag_to_string(FwupdFeatureFlags feature_flag)
 		return "show-problems";
 	if (feature_flag == FWUPD_FEATURE_FLAG_ALLOW_AUTHENTICATION)
 		return "allow-authentication";
+	if (feature_flag == FWUPD_FEATURE_FLAG_REQUESTS_NON_GENERIC)
+		return "requests-non-generic";
 	return NULL;
 }
 
@@ -708,6 +710,8 @@ fwupd_feature_flag_from_string(const gchar *feature_flag)
 		return FWUPD_FEATURE_FLAG_SHOW_PROBLEMS;
 	if (g_strcmp0(feature_flag, "allow-authentication") == 0)
 		return FWUPD_FEATURE_FLAG_ALLOW_AUTHENTICATION;
+	if (g_strcmp0(feature_flag, "requests-non-generic") == 0)
+		return FWUPD_FEATURE_FLAG_REQUESTS_NON_GENERIC;
 	return FWUPD_FEATURE_FLAG_LAST;
 }
 

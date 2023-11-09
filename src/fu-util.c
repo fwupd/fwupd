@@ -5478,8 +5478,9 @@ main(int argc, char *argv[])
 
 	/* send our implemented feature set */
 	if (is_interactive) {
-		feature_flags |= FWUPD_FEATURE_FLAG_REQUESTS | FWUPD_FEATURE_FLAG_UPDATE_ACTION |
-				 FWUPD_FEATURE_FLAG_DETACH_ACTION;
+		feature_flags |=
+		    FWUPD_FEATURE_FLAG_REQUESTS | FWUPD_FEATURE_FLAG_REQUESTS_NON_GENERIC |
+		    FWUPD_FEATURE_FLAG_UPDATE_ACTION | FWUPD_FEATURE_FLAG_DETACH_ACTION;
 		if (!no_authenticate)
 			feature_flags |= FWUPD_FEATURE_FLAG_ALLOW_AUTHENTICATION;
 	}

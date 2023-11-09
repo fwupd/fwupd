@@ -5868,6 +5868,16 @@ fu_engine_get_releases_for_device(FuEngine *self,
 		return NULL;
 	}
 
+	/* only show devices that can be updated */
+	if (!fu_engine_request_has_feature_flag(request, FWUPD_FEATURE_FLAG_REQUESTS_NON_GENERIC) &&
+	    fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "is not updatable as requires a non-generic request");
+		return NULL;
+	}
+
 	/* get all the components that provide any of these GUIDs */
 	device_guids = fu_device_get_guids(device);
 	releases = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
