@@ -70,17 +70,20 @@ fu_dell_supported(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuSmbiosChassisKind chassis_kind = fu_context_get_chassis_kind(ctx);
-	g_autoptr(GBytes) de_table = NULL;
-	g_autoptr(GBytes) da_table = NULL;
+	GBytes *de_blob = NULL;
+	GBytes *da_blob = NULL;
+	g_autoptr(GPtrArray) de_tables = NULL;
+	g_autoptr(GPtrArray) da_tables = NULL;
 	guint8 value = 0;
 	struct da_structure da_values = {0x0};
 
 	/* make sure that Dell SMBIOS methods are available */
-	de_table = fu_context_get_smbios_data(ctx, 0xDE, error);
-	if (de_table == NULL)
+	de_tables = fu_context_get_smbios_data(ctx, 0xDE, error);
+	if (de_tables == NULL)
 		return FALSE;
-	if (!fu_memread_uint8_safe(g_bytes_get_data(de_table, NULL),
-				   g_bytes_get_size(de_table),
+	de_blob = g_ptr_array_index(de_tables, 0);
+	if (!fu_memread_uint8_safe(g_bytes_get_data(de_blob, NULL),
+				   g_bytes_get_size(de_blob),
 				   0x0,
 				   &value,
 				   error)) {
@@ -92,14 +95,15 @@ fu_dell_supported(FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 
-	da_table = fu_context_get_smbios_data(ctx, 0xDA, error);
-	if (da_table == NULL)
+	da_tables = fu_context_get_smbios_data(ctx, 0xDA, error);
+	if (da_tables == NULL)
 		return FALSE;
+	da_blob = g_ptr_array_index(da_tables, 0);
 	if (!fu_memcpy_safe((guint8 *)&da_values,
 			    sizeof(da_values),
 			    0x0, /* dst */
-			    g_bytes_get_data(da_table, NULL),
-			    g_bytes_get_size(da_table),
+			    g_bytes_get_data(da_blob, NULL),
+			    g_bytes_get_size(da_blob),
 			    0x0, /* src */
 			    sizeof(da_values),
 			    error)) {

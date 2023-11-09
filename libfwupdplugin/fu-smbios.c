@@ -445,30 +445,34 @@ fu_smbios_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNod
  * @type: a structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
  * @error: (nullable): optional return location for an error
  *
- * Reads a SMBIOS data blob, which includes the SMBIOS section header.
+ * Reads all the SMBIOS data blobs of a specified type.
  *
- * Returns: (transfer full): a #GBytes, or %NULL if invalid or not found
+ * Returns: (transfer container) (element-type GBytes): a #GBytes, or %NULL if invalid or not found
  *
- * Since: 1.0.0
+ * Since: 1.9.8
  **/
-GBytes *
+GPtrArray *
 fu_smbios_get_data(FuSmbios *self, guint8 type, GError **error)
 {
-	FuSmbiosItem *item;
+	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
 
 	g_return_val_if_fail(FU_IS_SMBIOS(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	item = fu_smbios_get_item_for_type(self, type);
-	if (item == NULL) {
+	for (guint i = 0; i < self->items->len; i++) {
+		FuSmbiosItem *item = g_ptr_array_index(self->items, i);
+		if (item->type == type && item->buf->len > 0)
+			g_ptr_array_add(array, g_bytes_new(item->buf->data, item->buf->len));
+	}
+	if (array->len == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "no structure with type %02x",
+			    "no structures with type %02x",
 			    type);
 		return NULL;
 	}
-	return g_bytes_new(item->buf->data, item->buf->len);
+	return g_steal_pointer(&array);
 }
 
 /**

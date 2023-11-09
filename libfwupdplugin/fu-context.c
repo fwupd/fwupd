@@ -222,17 +222,16 @@ fu_context_get_smbios_string(FuContext *self, guint8 structure_type, guint8 offs
  * @structure_type: a SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
  * @error: (nullable): optional return location for an error
  *
- * Gets a hardware SMBIOS data.
+ * Gets all hardware SMBIOS data for a specific type.
  *
- * Returns: (transfer full): a #GBytes, or %NULL
+ * Returns: (transfer container) (element-type GBytes): a #GBytes, or %NULL if not found
  *
- * Since: 1.6.0
+ * Since: 1.9.8
  **/
-GBytes *
+GPtrArray *
 fu_context_get_smbios_data(FuContext *self, guint8 structure_type, GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GBytes) blob = NULL;
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 
@@ -242,14 +241,7 @@ fu_context_get_smbios_data(FuContext *self, guint8 structure_type, GError **erro
 		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, "no data");
 		return NULL;
 	}
-	blob = fu_smbios_get_data(priv->smbios, structure_type, error);
-	if (blob == NULL)
-		return NULL;
-	if (g_bytes_get_size(blob) == 0) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "no data");
-		return NULL;
-	}
-	return g_steal_pointer(&blob);
+	return fu_smbios_get_data(priv->smbios, structure_type, error);
 }
 
 /**

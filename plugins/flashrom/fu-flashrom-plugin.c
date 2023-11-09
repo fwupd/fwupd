@@ -96,18 +96,20 @@ static gboolean
 fu_flashrom_plugin_device_set_bios_info(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
+	GBytes *bios_blob;
 	const guint8 *buf;
 	gsize bufsz;
 	guint32 bios_char = 0x0;
-	g_autoptr(GBytes) bios_table = NULL;
+	g_autoptr(GPtrArray) bios_tables = NULL;
 
 	/* get SMBIOS info */
-	bios_table = fu_context_get_smbios_data(ctx, FU_SMBIOS_STRUCTURE_TYPE_BIOS, error);
-	if (bios_table == NULL)
+	bios_tables = fu_context_get_smbios_data(ctx, FU_SMBIOS_STRUCTURE_TYPE_BIOS, error);
+	if (bios_tables == NULL)
 		return FALSE;
 
 	/* ROM size if not already been quirked */
-	buf = g_bytes_get_data(bios_table, &bufsz);
+	bios_blob = g_ptr_array_index(bios_tables, 0);
+	buf = g_bytes_get_data(bios_blob, &bufsz);
 	if (fu_device_get_firmware_size_max(device) == 0) {
 		guint8 bios_sz = 0x0;
 		if (fu_memread_uint8_safe(buf, bufsz, 0x9, &bios_sz, NULL)) {

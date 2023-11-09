@@ -117,4 +117,5 @@ Remember: Plugins should be upstream!
 ## 1.9.8
 
 * `fu_device_build_instance_id_quirk": rename to`fu_device_build_instance_id_full()`
+* `fu_smbios_get_data()`: Now returns a array of `GByte`s
 * `fu_udev_device_get_fd()`: Use `fu_udev_device_get_io_channel()` instead

@@ -40,8 +40,19 @@ enum RedfishIpAddressFormat {
 }
 
 #[repr(u8)]
-enum RedfishControllerInterfaceType {
-    NetworkHost = 0x40,
+#[derive(ToString)]
+enum RedfishSmbiosInterfaceType {
+    Unknown = 0x00,
+    Kcs = 0x02,
+    8250Uart = 0x03,
+    16450Uart = 0x04,
+    16550Uart = 0x05,
+    16650Uart = 0x06,
+    16750Uart = 0x07,
+    16850Uart = 0x08,
+    Mctp = 0x3F,
+    Network = 0x40,
+    Oem = 0xF0,
 }
 
 #[derive(ParseBytes)]
@@ -49,7 +60,7 @@ struct RedfishSmbiosType42 {
     type: u8 == 42,
     length: u8,
     handle: u16le,
-    interface_type: RedfishControllerInterfaceType == NetworkHost,
+    interface_type: RedfishSmbiosInterfaceType = Network,
     data_length: u8,
     // data: [u8; data_length],
     // protocol_cnt: u8,
