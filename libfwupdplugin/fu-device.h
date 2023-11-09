@@ -595,6 +595,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES (1ull << 37)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST:
+ *
+ * The device uses a non-generic request that cannot be localized.
+ *
+ * Since: 1.9.8
+ */
+#define FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST (1ull << 38)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);

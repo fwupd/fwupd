@@ -923,6 +923,7 @@ fu_logitech_hidpp_device_detach(FuDevice *device, FuProgress *progress, GError *
 				fu_device_set_update_message(device, str);
 			}
 			fwupd_request_set_message(request, fu_device_get_update_message(device));
+			fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 			fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 			fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
 			fu_device_emit_request(device, request);

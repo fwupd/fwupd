@@ -285,6 +285,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "no-generic-guids";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES)
 		return "enforce-requires";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST)
+		return "non-generic-request";
 	return NULL;
 }
 
@@ -377,6 +379,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS;
 	if (g_strcmp0(flag, "enforce-requires") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES;
+	if (g_strcmp0(flag, "non-generic-request") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -5808,6 +5812,17 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request)
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(FWUPD_IS_REQUEST(request));
+
+#ifndef SUPPORTED_BUILD
+	/* nag the developer */
+	if (!fwupd_request_has_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE) &&
+	    !fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST)) {
+		g_critical("request %s is not a GENERIC_MESSAGE and the device does not set "
+			   "FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST",
+			   fwupd_request_get_id(request));
+		return;
+	}
+#endif
 
 	/* sanity check */
 	if (fwupd_request_get_kind(request) == FWUPD_REQUEST_KIND_UNKNOWN) {
