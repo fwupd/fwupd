@@ -122,13 +122,17 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 
 	/* add simple blob */
 	blob = fu_bytes_new_offset(fw, st->len, size - st->len, error);
-	if (blob == NULL)
+	if (blob == NULL) {
+		g_prefix_error(error, "failed to add payload: ");
 		return FALSE;
+	}
 
 	/* add fv-image */
 	if (priv->type == FU_EFI_FILE_TYPE_FIRMWARE_VOLUME_IMAGE) {
-		if (!fu_efi_firmware_parse_sections(firmware, blob, flags, error))
+		if (!fu_efi_firmware_parse_sections(firmware, blob, flags, error)) {
+			g_prefix_error(error, "failed to add firmware image: ");
 			return FALSE;
+		}
 	} else {
 		fu_firmware_set_bytes(firmware, blob);
 	}
