@@ -94,6 +94,7 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 				    (guint)fu_struct_efi_section_guid_defined_get_offset(st_def));
 			return FALSE;
 		}
+		offset += fu_struct_efi_section_guid_defined_get_offset(st_def) - st->len;
 	}
 
 	/* create blob */

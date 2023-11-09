@@ -189,7 +189,7 @@ fu_efi_firmware_file_write_sections(FuFirmware *firmware, GError **error)
 		if (blob == NULL)
 			return NULL;
 		fu_byte_array_append_bytes(buf, blob);
-		fu_byte_array_align_up(buf, fu_firmware_get_alignment(img), 0xFF);
+		fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_4, 0xFF);
 
 		/* sanity check */
 		if (buf->len > FU_EFI_FIRMWARE_FILE_SIZE_MAX) {
