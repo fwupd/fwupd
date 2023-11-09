@@ -58,16 +58,7 @@ fu_efi_firmware_parse_sections(FuFirmware *firmware,
 			return FALSE;
 
 		/* next! */
-		offset += fu_firmware_get_size(img);
-	}
-	if (offset != g_bytes_get_size(fw)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "EFI sections overflow 0x%x of 0x%x",
-			    (guint)offset,
-			    (guint)g_bytes_get_size(fw));
-		return FALSE;
+		offset += fu_common_align_up(fu_firmware_get_size(img), FU_FIRMWARE_ALIGNMENT_4);
 	}
 
 	/* success */
