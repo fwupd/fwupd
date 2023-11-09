@@ -8,12 +8,16 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-redfish-struct.h"
+
 #define FU_TYPE_REDFISH_SMBIOS (fu_redfish_smbios_get_type())
 G_DECLARE_FINAL_TYPE(FuRedfishSmbios, fu_redfish_smbios, FU, REDFISH_SMBIOS, FuFirmware)
 
 FuRedfishSmbios *
 fu_redfish_smbios_new(void);
 
+FuRedfishSmbiosInterfaceType
+fu_redfish_smbios_get_interface_type(FuRedfishSmbios *self);
 guint16
 fu_redfish_smbios_get_port(FuRedfishSmbios *self);
 guint16

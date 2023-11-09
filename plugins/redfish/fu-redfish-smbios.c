@@ -12,6 +12,7 @@
 
 struct _FuRedfishSmbios {
 	FuFirmwareClass parent_instance;
+	FuRedfishSmbiosInterfaceType interface_type;
 	guint16 port;
 	gchar *hostname;
 	gchar *mac_addr;
@@ -21,6 +22,12 @@ struct _FuRedfishSmbios {
 };
 
 G_DEFINE_TYPE(FuRedfishSmbios, fu_redfish_smbios, FU_TYPE_FIRMWARE)
+
+FuRedfishSmbiosInterfaceType
+fu_redfish_smbios_get_interface_type(FuRedfishSmbios *self)
+{
+	return self->interface_type;
+}
 
 guint16
 fu_redfish_smbios_get_port(FuRedfishSmbios *self)
@@ -89,6 +96,9 @@ static void
 fu_redfish_smbios_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
 	FuRedfishSmbios *self = FU_REDFISH_SMBIOS(firmware);
+	fu_xmlb_builder_insert_kv(bn,
+				  "interface_type",
+				  fu_redfish_smbios_interface_type_to_string(self->interface_type));
 	fu_xmlb_builder_insert_kx(bn, "port", self->port);
 	fu_xmlb_builder_insert_kv(bn, "hostname", self->hostname);
 	fu_xmlb_builder_insert_kv(bn, "mac_addr", self->mac_addr);
@@ -268,7 +278,6 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 {
 	FuRedfishSmbios *self = FU_REDFISH_SMBIOS(firmware);
 	gsize bufsz = 0;
-	guint8 protocol_rcds = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st = NULL;
 
@@ -307,24 +316,28 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 	offset += fu_struct_redfish_smbios_type42_get_data_length(st);
 
 	/* parse protocol records */
-	if (!fu_memread_uint8_safe(buf, bufsz, offset, &protocol_rcds, error))
-		return FALSE;
-	offset += 1;
-	g_debug("protocol_rcds: %u", protocol_rcds);
-	for (guint i = 0; i < protocol_rcds; i++) {
-		guint8 protocol_id = 0;
-		guint8 protocol_sz = 0;
-		if (!fu_memread_uint8_safe(buf, bufsz, offset, &protocol_id, error))
+	self->interface_type = fu_struct_redfish_smbios_type42_get_interface_type(st);
+	if (self->interface_type == FU_REDFISH_SMBIOS_INTERFACE_TYPE_NETWORK) {
+		guint8 protocol_rcds = 0;
+		if (!fu_memread_uint8_safe(buf, bufsz, offset, &protocol_rcds, error))
 			return FALSE;
-		if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x1, &protocol_sz, error))
-			return FALSE;
-		if (protocol_id == REDFISH_PROTOCOL_REDFISH_OVER_IP) {
-			if (!fu_redfish_smbios_parse_over_ip(self, fw, offset + 0x2, error))
+		offset += 1;
+		g_debug("protocol_rcds: %u", protocol_rcds);
+		for (guint i = 0; i < protocol_rcds; i++) {
+			guint8 protocol_id = 0;
+			guint8 protocol_sz = 0;
+			if (!fu_memread_uint8_safe(buf, bufsz, offset, &protocol_id, error))
 				return FALSE;
-		} else {
-			g_debug("ignoring protocol ID 0x%02x", protocol_id);
+			if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x1, &protocol_sz, error))
+				return FALSE;
+			if (protocol_id == REDFISH_PROTOCOL_REDFISH_OVER_IP) {
+				if (!fu_redfish_smbios_parse_over_ip(self, fw, offset + 0x2, error))
+					return FALSE;
+			} else {
+				g_debug("ignoring protocol ID 0x%02x", protocol_id);
+			}
+			offset += protocol_sz + 1;
 		}
-		offset += protocol_sz + 1;
 	}
 
 	/* success */
@@ -344,7 +357,7 @@ fu_redfish_smbios_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_uint8(buf, REDFISH_SMBIOS_TABLE_TYPE);
 	fu_byte_array_append_uint8(buf, 0x6D + hostname_sz);	   /* length */
 	fu_byte_array_append_uint16(buf, 0x1234, G_LITTLE_ENDIAN); /* handle */
-	fu_byte_array_append_uint8(buf, FU_REDFISH_CONTROLLER_INTERFACE_TYPE_NETWORK_HOST);
+	fu_byte_array_append_uint8(buf, FU_REDFISH_SMBIOS_INTERFACE_TYPE_NETWORK);
 	fu_byte_array_append_uint8(buf, 0x09);				     /* iface datalen */
 	fu_byte_array_append_uint8(buf, FU_REDFISH_INTERFACE_TYPE_USB_NETWORK); /* iface */
 	fu_byte_array_append_uint16(buf, self->vid, G_LITTLE_ENDIAN);	     /* iface:VID */

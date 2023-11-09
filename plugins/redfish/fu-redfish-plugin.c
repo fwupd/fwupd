@@ -203,30 +203,48 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *smbios_data_fn;
-	g_autoptr(FuRedfishSmbios) smbios = fu_redfish_smbios_new();
-	g_autoptr(GBytes) smbios_data = NULL;
+	g_autoptr(GPtrArray) type42_tables = NULL;
 
-	/* is optional if not in self tests */
+	/* in self tests */
 	smbios_data_fn = g_getenv("FWUPD_REDFISH_SMBIOS_DATA");
 	if (smbios_data_fn != NULL) {
-		smbios_data = fu_bytes_get_contents(smbios_data_fn, error);
-		if (smbios_data == NULL)
+		g_autoptr(GBytes) type42_blob = fu_bytes_get_contents(smbios_data_fn, error);
+		g_autoptr(FuRedfishSmbios) smbios = fu_redfish_smbios_new();
+		if (type42_blob == NULL)
 			return FALSE;
-	} else {
-		smbios_data = fu_context_get_smbios_data(ctx, REDFISH_SMBIOS_TABLE_TYPE, NULL);
-		if (smbios_data == NULL)
-			return TRUE;
+		if (!fu_firmware_parse(FU_FIRMWARE(smbios),
+				       type42_blob,
+				       FWUPD_INSTALL_FLAG_NO_SEARCH,
+				       error)) {
+			g_prefix_error(error, "failed to parse SMBIOS entry type 42: ");
+			return FALSE;
+		}
+		g_set_object(&self->smbios, smbios);
+		return TRUE;
 	}
-	if (!fu_firmware_parse(FU_FIRMWARE(smbios),
-			       smbios_data,
-			       FWUPD_INSTALL_FLAG_NO_SEARCH,
-			       error)) {
-		g_prefix_error(error, "failed to parse SMBIOS table entry type 42: ");
-		return FALSE;
+
+	/* is optional */
+	type42_tables = fu_context_get_smbios_data(ctx, REDFISH_SMBIOS_TABLE_TYPE, NULL);
+	if (type42_tables == NULL)
+		return TRUE;
+	for (guint i = 0; i < type42_tables->len; i++) {
+		GBytes *type42_blob = g_ptr_array_index(type42_tables, i);
+		g_autoptr(FuRedfishSmbios) smbios = fu_redfish_smbios_new();
+		if (!fu_firmware_parse(FU_FIRMWARE(smbios),
+				       type42_blob,
+				       FWUPD_INSTALL_FLAG_NO_SEARCH,
+				       error)) {
+			g_prefix_error(error, "failed to parse SMBIOS entry type 42: ");
+			return FALSE;
+		}
+		if (fu_redfish_smbios_get_interface_type(smbios) ==
+		    FU_REDFISH_SMBIOS_INTERFACE_TYPE_NETWORK) {
+			g_set_object(&self->smbios, smbios);
+			return TRUE;
+		}
 	}
 
 	/* success */
-	g_set_object(&self->smbios, smbios);
 	return TRUE;
 }
 

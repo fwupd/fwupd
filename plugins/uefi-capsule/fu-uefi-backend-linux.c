@@ -150,10 +150,12 @@ fu_uefi_backend_linux_coldplug(FuBackend *backend, FuProgress *progress, GError 
 static gboolean
 fu_uefi_backend_linux_check_smbios_enabled(FuContext *ctx, GError **error)
 {
+	GBytes *bios_blob;
 	const guint8 *data;
 	gsize sz;
-	g_autoptr(GBytes) bios_information = fu_context_get_smbios_data(ctx, 0, NULL);
-	if (bios_information == NULL) {
+	g_autoptr(GPtrArray) bios_tables = fu_context_get_smbios_data(ctx, 0, NULL);
+
+	if (bios_tables == NULL) {
 		const gchar *tmp = g_getenv("FWUPD_DELL_FAKE_SMBIOS");
 		if (tmp != NULL)
 			return TRUE;
@@ -163,7 +165,8 @@ fu_uefi_backend_linux_check_smbios_enabled(FuContext *ctx, GError **error)
 				    "SMBIOS not supported");
 		return FALSE;
 	}
-	data = g_bytes_get_data(bios_information, &sz);
+	bios_blob = g_ptr_array_index(bios_tables, 0);
+	data = g_bytes_get_data(bios_blob, &sz);
 	if (sz < 0x14) {
 		g_set_error(error,
 			    FWUPD_ERROR,
