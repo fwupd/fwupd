@@ -13,6 +13,7 @@
 #include "fu-efi-firmware-section.h"
 #include "fu-efi-firmware-volume.h"
 #include "fu-efi-struct.h"
+#include "fu-lzma-common.h"
 #include "fu-mem.h"
 
 /**
@@ -119,7 +120,7 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 		g_autoptr(GBytes) blob_uncomp = NULL;
 
 		/* parse all sections */
-		blob_uncomp = fu_efi_firmware_decompress_lzma(blob, error);
+		blob_uncomp = fu_lzma_decompress_bytes(blob, error);
 		if (blob_uncomp == NULL)
 			return FALSE;
 		if (!fu_efi_firmware_parse_sections(firmware, blob_uncomp, flags, error))
