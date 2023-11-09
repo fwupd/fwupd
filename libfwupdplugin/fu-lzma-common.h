@@ -10,3 +10,5 @@
 
 GBytes *
 fu_lzma_decompress_bytes(GBytes *blob, GError **error);
+GBytes *
+fu_lzma_compress_bytes(GBytes *blob, GError **error);
