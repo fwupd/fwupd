@@ -382,7 +382,7 @@ fu_util_perhaps_show_unreported(FuUtilPrivate *priv, GError **error)
 					   TRUE,
 					   "%s (%s)",
 					   /* TRANSLATORS: ask the user to upload */
-					   _("Upload report now?"),
+					   _("Review and upload report now?"),
 					   /* TRANSLATORS: metadata is downloaded */
 					   _("Requires internet connection"))) {
 			if (fu_console_input_bool(priv->console,
