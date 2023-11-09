@@ -113,3 +113,8 @@ Remember: Plugins should be upstream!
 ## 1.9.6
 
 * `fu_security_attrs_get_by_appstream_id()`: Add a `GError`
+
+## 1.9.8
+
+* `fu_device_build_instance_id_quirk": rename to`fu_device_build_instance_id_full()`
+* `fu_udev_device_get_fd()`: Use `fu_udev_device_get_io_channel()` instead
