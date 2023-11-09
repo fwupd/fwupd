@@ -40,12 +40,19 @@ fu_efi_firmware_parse_sections(FuFirmware *firmware,
 
 		/* maximum payload */
 		blob = fu_bytes_new_offset(fw, offset, bufsz - offset, error);
-		if (blob == NULL)
+		if (blob == NULL) {
+			g_prefix_error(error, "failed to build maximum payload: ");
 			return FALSE;
+		}
 
 		/* parse section */
-		if (!fu_firmware_parse(img, blob, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error))
+		if (!fu_firmware_parse(img, blob, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error)) {
+			g_prefix_error(error,
+				       "failed to parse section of size 0x%x: ",
+				       (guint)g_bytes_get_size(blob));
 			return FALSE;
+		}
+
 		fu_firmware_set_offset(img, offset);
 		if (!fu_firmware_add_image_full(firmware, img, error))
 			return FALSE;
