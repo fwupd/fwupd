@@ -132,6 +132,7 @@ if __name__ == "__main__":
             "fu_path_fnmatch": "g_pattern_match_simple",
             "fu_string_replace": "g_string_replace",
             "fu_efi_firmware_decompress_lzma": "fu_lzma_decompress_bytes",
+            "fu_device_build_instance_id_quirk": "fu_device_build_instance_id_full",
         }.items():
             if buf.find(old) == -1:
                 continue
