@@ -553,79 +553,83 @@ fu_redfish_device_poll_set_message_id(FuRedfishDevice *self,
 				      const gchar *message_id)
 {
 	/* ignore */
-	if (g_strcmp0(message_id, "TaskEvent.1.0.TaskProgressChanged") == 0 ||
-	    g_strcmp0(message_id, "TaskEvent.1.0.TaskCompletedWarning") == 0 ||
-	    g_strcmp0(message_id, "TaskEvent.1.0.TaskCompletedOK") == 0 ||
-	    g_strcmp0(message_id, "Base.1.6.Success") == 0)
+	if (g_pattern_match_simple("TaskEvent.*.TaskProgressChanged", message_id) ||
+	    g_pattern_match_simple("TaskEvent.*.TaskCompletedWarning", message_id) ||
+	    g_pattern_match_simple("TaskEvent.*.TaskCompletedOK", message_id) ||
+	    g_pattern_match_simple("Base.*.Success", message_id))
 		return;
 
 	/* set flags */
-	if (g_strcmp0(message_id, "Base.1.10.ResetRequired") == 0) {
+	if (g_pattern_match_simple("Base.*.ResetRequired", message_id)) {
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 		return;
 	}
 
 	/* set error code */
-	if (g_strcmp0(message_id, "Update.1.0.AwaitToActivate") == 0) {
+	if (g_pattern_match_simple("Update.*.AwaitToActivate", message_id)) {
 		ctx->error_code = FWUPD_ERROR_NEEDS_USER_ACTION;
 		return;
 	}
-	if (g_strcmp0(message_id, "Update.1.0.TransferFailed") == 0) {
+	if (g_pattern_match_simple("Update.*.TransferFailed", message_id)) {
 		ctx->error_code = FWUPD_ERROR_WRITE;
 		return;
 	}
-	if (g_strcmp0(message_id, "Update.1.0.ActivateFailed") == 0) {
+	if (g_pattern_match_simple("Update.*.ActivateFailed", message_id)) {
 		ctx->error_code = FWUPD_ERROR_INVALID_FILE;
 		return;
 	}
-	if (g_strcmp0(message_id, "Update.1.0.VerificationFailed") == 0 ||
-	    g_strcmp0(message_id, "LenovoFirmwareUpdateRegistry.1.0.UpdateVerifyFailed") == 0) {
+	if (g_pattern_match_simple("Update.*.VerificationFailed", message_id) ||
+	    g_pattern_match_simple("LenovoFirmwareUpdateRegistry.*.UpdateVerifyFailed",
+				   message_id)) {
 		ctx->error_code = FWUPD_ERROR_INVALID_FILE;
 		return;
 	}
-	if (g_strcmp0(message_id, "Update.1.0.ApplyFailed") == 0) {
+	if (g_pattern_match_simple("Update.*.ApplyFailed", message_id)) {
 		ctx->error_code = FWUPD_ERROR_WRITE;
 		return;
 	}
 
 	/* set status */
-	if (g_strcmp0(message_id, "Update.1.1.TargetDetermined") == 0) {
+	if (g_pattern_match_simple("Update.*.TargetDetermined", message_id)) {
 		fu_progress_set_status(ctx->progress, FWUPD_STATUS_LOADING);
 		return;
 	}
-	if (g_strcmp0(message_id, "LenovoFirmwareUpdateRegistry.1.0.UpdateAssignment") == 0) {
+	if (g_pattern_match_simple("LenovoFirmwareUpdateRegistry.*.UpdateAssignment", message_id)) {
 		fu_progress_set_status(ctx->progress, FWUPD_STATUS_LOADING);
 		return;
 	}
-	if (g_strcmp0(message_id, "LenovoFirmwareUpdateRegistry.1.0.PayloadApplyInProgress") == 0) {
+	if (g_pattern_match_simple("LenovoFirmwareUpdateRegistry.*.PayloadApplyInProgress",
+				   message_id)) {
 		fu_progress_set_status(ctx->progress, FWUPD_STATUS_DEVICE_WRITE);
 		return;
 	}
-	if (g_strcmp0(message_id, "LenovoFirmwareUpdateRegistry.1.0.PayloadApplyCompleted") == 0) {
+	if (g_pattern_match_simple("LenovoFirmwareUpdateRegistry.*.PayloadApplyCompleted",
+				   message_id)) {
 		fu_progress_set_status(ctx->progress, FWUPD_STATUS_IDLE);
 		return;
 	}
-	if (g_strcmp0(message_id, "LenovoFirmwareUpdateRegistry.1.0.UpdateVerifyInProgress") == 0) {
+	if (g_pattern_match_simple("LenovoFirmwareUpdateRegistry.*.UpdateVerifyInProgress",
+				   message_id)) {
 		fu_progress_set_status(ctx->progress, FWUPD_STATUS_DEVICE_VERIFY);
 		return;
 	}
-	if (g_strcmp0(message_id, "Update.1.1.TransferringToComponent") == 0) {
+	if (g_pattern_match_simple("Update.*.TransferringToComponent", message_id)) {
 		fu_progress_set_status(ctx->progress, FWUPD_STATUS_LOADING);
 		return;
 	}
-	if (g_strcmp0(message_id, "Update.1.1.VerifyingAtComponent") == 0) {
+	if (g_pattern_match_simple("Update.*.VerifyingAtComponent", message_id)) {
 		fu_progress_set_status(ctx->progress, FWUPD_STATUS_DEVICE_VERIFY);
 		return;
 	}
-	if (g_strcmp0(message_id, "Update.1.1.UpdateInProgress") == 0) {
+	if (g_pattern_match_simple("Update.*.UpdateInProgress", message_id)) {
 		fu_progress_set_status(ctx->progress, FWUPD_STATUS_DEVICE_WRITE);
 		return;
 	}
-	if (g_strcmp0(message_id, "Update.1.1.UpdateSuccessful") == 0) {
+	if (g_pattern_match_simple("Update.*.UpdateSuccessful", message_id)) {
 		fu_progress_set_status(ctx->progress, FWUPD_STATUS_IDLE);
 		return;
 	}
-	if (g_strcmp0(message_id, "Update.1.1.InstallingOnComponent") == 0) {
+	if (g_pattern_match_simple("Update.*.InstallingOnComponent", message_id)) {
 		fu_progress_set_status(ctx->progress, FWUPD_STATUS_DEVICE_WRITE);
 		return;
 	}
