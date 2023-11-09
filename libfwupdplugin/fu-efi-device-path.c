@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#define G_LOG_DOMAIN "FuFirmware"
+#define G_LOG_DOMAIN "FuEfiDevicePath"
 
 #include "config.h"
 
