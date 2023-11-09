@@ -12,6 +12,7 @@
 #include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-coswid-firmware.h"
+#include "fu-lzma-common.h"
 #include "fu-mem.h"
 #include "fu-string.h"
 #include "fu-uswid-firmware.h"
@@ -27,15 +28,13 @@
 
 typedef struct {
 	guint8 hdrver;
-	gboolean compressed;
+	FuUswidPayloadCompression compression;
 } FuUswidFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuUswidFirmware, fu_uswid_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_uswid_firmware_get_instance_private(o))
 
-#define USWID_HEADER_VERSION_V1 1
-
-#define USWID_HEADER_FLAG_COMPRESSED 0x01
+#define FU_USWID_FIRMARE_MINIMUM_HDRVER 1
 
 static void
 fu_uswid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
@@ -43,7 +42,12 @@ fu_uswid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBu
 	FuUswidFirmware *self = FU_USWID_FIRMWARE(firmware);
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	fu_xmlb_builder_insert_kx(bn, "hdrver", priv->hdrver);
-	fu_xmlb_builder_insert_kb(bn, "compressed", priv->compressed);
+	if (priv->compression != FU_USWID_PAYLOAD_COMPRESSION_NONE) {
+		fu_xmlb_builder_insert_kv(
+		    bn,
+		    "compression",
+		    fu_uswid_payload_compression_to_string(priv->compression));
+	}
 }
 
 static gboolean
@@ -73,7 +77,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 
 	/* hdrver */
 	priv->hdrver = fu_struct_uswid_get_hdrver(st);
-	if (priv->hdrver < USWID_HEADER_VERSION_V1) {
+	if (priv->hdrver < FU_USWID_FIRMARE_MINIMUM_HDRVER) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -94,13 +98,22 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_size(firmware, hdrsz + payloadsz);
 
 	/* flags */
-	if (priv->hdrver >= 0x02) {
-		guint8 uswid_flags = fu_struct_uswid_get_flags(st);
-		priv->compressed = (uswid_flags & USWID_HEADER_FLAG_COMPRESSED) > 0;
+	if (priv->hdrver >= 0x03) {
+		if (fu_struct_uswid_get_flags(st) & FU_USWID_HEADER_FLAG_COMPRESSED) {
+			priv->compression = fu_struct_uswid_get_compression(st);
+		} else {
+			priv->compression = FU_USWID_PAYLOAD_COMPRESSION_NONE;
+		}
+	} else if (priv->hdrver >= 0x02) {
+		priv->compression = fu_struct_uswid_get_flags(st) & FU_USWID_HEADER_FLAG_COMPRESSED
+					? FU_USWID_PAYLOAD_COMPRESSION_ZLIB
+					: FU_USWID_PAYLOAD_COMPRESSION_NONE;
+	} else {
+		priv->compression = FU_USWID_PAYLOAD_COMPRESSION_NONE;
 	}
 
 	/* zlib stream */
-	if (priv->compressed) {
+	if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_ZLIB) {
 		g_autoptr(GBytes) payload_tmp = NULL;
 		g_autoptr(GConverter) conv = NULL;
 		g_autoptr(GInputStream) istream1 = NULL;
@@ -116,10 +129,26 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 		if (payload == NULL)
 			return FALSE;
 		payloadsz = g_bytes_get_size(payload);
-	} else {
+	} else if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_LZMA) {
+		g_autoptr(GBytes) payload_tmp = NULL;
+		payload_tmp = fu_bytes_new_offset(fw, offset + hdrsz, payloadsz, error);
+		if (payload_tmp == NULL)
+			return FALSE;
+		payload = fu_lzma_decompress_bytes(payload_tmp, error);
+		if (payload == NULL)
+			return FALSE;
+		payloadsz = g_bytes_get_size(payload);
+	} else if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_NONE) {
 		payload = fu_bytes_new_offset(fw, offset + hdrsz, payloadsz, error);
 		if (payload == NULL)
 			return FALSE;
+	} else {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "compression format 0x%x is not supported",
+			    priv->compression);
+		return FALSE;
 	}
 
 	/* payload */
@@ -172,7 +201,7 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* zlibify */
-	if (priv->compressed) {
+	if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_ZLIB) {
 		g_autoptr(GConverter) conv = NULL;
 		g_autoptr(GInputStream) istream1 = NULL;
 		g_autoptr(GInputStream) istream2 = NULL;
@@ -183,6 +212,11 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 		payload_blob = fu_bytes_get_contents_stream(istream2, G_MAXSIZE, error);
 		if (payload_blob == NULL)
 			return NULL;
+	} else if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_LZMA) {
+		g_autoptr(GBytes) payload_tmp = g_bytes_new(payload->data, payload->len);
+		payload_blob = fu_lzma_compress_bytes(payload_tmp, error);
+		if (payload_blob == NULL)
+			return NULL;
 	} else {
 		payload_blob = g_bytes_new(payload->data, payload->len);
 	}
@@ -190,13 +224,29 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 	/* pack */
 	fu_struct_uswid_set_hdrver(buf, priv->hdrver);
 	fu_struct_uswid_set_payloadsz(buf, g_bytes_get_size(payload_blob));
-	if (priv->hdrver >= 2) {
+	if (priv->hdrver >= 3) {
 		guint8 flags = 0;
-		if (priv->compressed)
-			flags |= USWID_HEADER_FLAG_COMPRESSED;
+		if (priv->compression != FU_USWID_PAYLOAD_COMPRESSION_NONE)
+			flags |= FU_USWID_HEADER_FLAG_COMPRESSED;
 		fu_struct_uswid_set_flags(buf, flags);
-	} else {
+		fu_struct_uswid_set_compression(buf, priv->compression);
+	} else if (priv->hdrver >= 2) {
+		guint8 flags = 0;
+		if (priv->compression != FU_USWID_PAYLOAD_COMPRESSION_NONE) {
+			if (priv->compression != FU_USWID_PAYLOAD_COMPRESSION_ZLIB) {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_NOT_SUPPORTED,
+						    "hdrver 0x02 only supports zlib compression");
+				return NULL;
+			}
+			flags |= FU_USWID_HEADER_FLAG_COMPRESSED;
+		}
+		fu_struct_uswid_set_flags(buf, flags);
 		g_byte_array_set_size(buf, buf->len - 1);
+		fu_struct_uswid_set_hdrsz(buf, buf->len);
+	} else {
+		g_byte_array_set_size(buf, buf->len - 2);
 		fu_struct_uswid_set_hdrsz(buf, buf->len);
 	}
 	fu_byte_array_append_bytes(buf, payload_blob);
@@ -219,10 +269,19 @@ fu_uswid_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 		priv->hdrver = tmp;
 
 	/* simple properties */
-	str = xb_node_query_text(n, "compressed", NULL);
+	str = xb_node_query_text(n, "compression", NULL);
 	if (str != NULL) {
-		if (!fu_strtobool(str, &priv->compressed, error))
+		priv->compression = fu_uswid_payload_compression_from_string(str);
+		if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_NONE) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "invalid compression type %s",
+				    str);
 			return FALSE;
+		}
+	} else {
+		priv->compression = FU_USWID_PAYLOAD_COMPRESSION_NONE;
 	}
 
 	/* success */
@@ -233,8 +292,8 @@ static void
 fu_uswid_firmware_init(FuUswidFirmware *self)
 {
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
-	priv->hdrver = USWID_HEADER_VERSION_V1;
-	priv->compressed = FALSE;
+	priv->hdrver = FU_USWID_FIRMARE_MINIMUM_HDRVER;
+	priv->compression = FU_USWID_PAYLOAD_COMPRESSION_NONE;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALWAYS_SEARCH);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
