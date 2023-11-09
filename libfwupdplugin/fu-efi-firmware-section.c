@@ -86,8 +86,7 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 		guid_str = fwupd_guid_to_string(fu_struct_efi_section_guid_defined_get_name(st_def),
 						FWUPD_GUID_FLAG_MIXED_ENDIAN);
 		fu_firmware_set_id(firmware, guid_str);
-		if (fu_struct_efi_section_guid_defined_get_offset(st_def) <
-		    FU_STRUCT_EFI_SECTION_SIZE) {
+		if (fu_struct_efi_section_guid_defined_get_offset(st_def) < st_def->len) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
