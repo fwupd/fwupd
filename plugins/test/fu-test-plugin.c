@@ -13,6 +13,7 @@ struct _FuTestPlugin {
 	guint delay_decompress_ms;
 	guint delay_write_ms;
 	guint delay_verify_ms;
+	guint delay_request_ms;
 };
 
 G_DEFINE_TYPE(FuTestPlugin, fu_test_plugin, FU_TYPE_PLUGIN)
@@ -24,6 +25,7 @@ fu_test_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 	fu_string_append_ku(str, idt, "DelayDecompressMs", self->delay_decompress_ms);
 	fu_string_append_ku(str, idt, "DelayWriteMs", self->delay_write_ms);
 	fu_string_append_ku(str, idt, "DelayVerifyMs", self->delay_verify_ms);
+	fu_string_append_ku(str, idt, "DelayRequestMs", self->delay_request_ms);
 }
 
 static gboolean
@@ -33,6 +35,7 @@ fu_test_plugin_load_xml(FuPlugin *plugin, const gchar *xml, GError **error)
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
 	g_autoptr(XbNode) delay_decompress_ms = NULL;
+	g_autoptr(XbNode) delay_request_ms = NULL;
 	g_autoptr(XbNode) delay_verify_ms = NULL;
 	g_autoptr(XbNode) delay_write_ms = NULL;
 	g_autoptr(XbSilo) silo = NULL;
@@ -55,6 +58,9 @@ fu_test_plugin_load_xml(FuPlugin *plugin, const gchar *xml, GError **error)
 	delay_verify_ms = xb_silo_query_first(silo, "config/delay_verify_ms", NULL);
 	if (delay_verify_ms != NULL)
 		self->delay_verify_ms = xb_node_get_text_as_uint(delay_verify_ms);
+	delay_request_ms = xb_silo_query_first(silo, "config/delay_request_ms", NULL);
+	if (delay_request_ms != NULL)
+		self->delay_request_ms = xb_node_get_text_as_uint(delay_request_ms);
 
 	/* success */
 	return TRUE;
@@ -229,6 +235,21 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 		fu_device_sleep(device, 1);
 		fu_progress_set_percentage_full(progress, i, self->delay_decompress_ms);
 	}
+
+	/* send an interactive request, and wait some time */
+	if (g_strcmp0(test, "request") == 0 && self->delay_request_ms > 0) {
+		g_autoptr(FwupdRequest) request = fwupd_request_new();
+		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+		fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+		fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+		fwupd_request_set_message(request,
+					  "Please pretend to remove the device you cannot see or "
+					  "touch and please re-insert it.");
+		if (!fu_device_emit_request(device, request, progress, error))
+			return FALSE;
+		g_usleep(self->delay_request_ms * 1000);
+	}
+
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i <= self->delay_write_ms; i++) {
 		fu_device_sleep(device, 1);
@@ -330,6 +351,7 @@ static void
 fu_test_plugin_init(FuTestPlugin *self)
 {
 	g_debug("init");
+	self->delay_request_ms = 10;
 }
 
 static void

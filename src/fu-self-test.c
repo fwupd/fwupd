@@ -2785,6 +2785,122 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.2");
 }
 
+typedef struct {
+	guint request_cnt;
+	FwupdStatus last_status;
+} FuTestRequestHelper;
+
+static void
+_engine_status_changed_cb(FuProgress *progress, FwupdStatus status, gpointer user_data)
+{
+	FuTestRequestHelper *helper = (FuTestRequestHelper *)user_data;
+	g_debug("status now %s", fwupd_status_to_string(status));
+	helper->last_status = status;
+}
+
+static void
+_engine_request_cb(FuEngine *engine, FwupdRequest *request, gpointer user_data)
+{
+	FuTestRequestHelper *helper = (FuTestRequestHelper *)user_data;
+	g_assert_cmpint(fwupd_request_get_kind(request), ==, FWUPD_REQUEST_KIND_IMMEDIATE);
+	g_assert_cmpstr(fwupd_request_get_id(request), ==, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+	g_assert_true(fwupd_request_has_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE));
+	g_assert_nonnull(fwupd_request_get_message(request));
+	g_assert_cmpint(helper->last_status, ==, FWUPD_STATUS_WAITING_FOR_USER);
+	helper->request_cnt++;
+}
+
+static void
+fu_engine_install_request(gconstpointer user_data)
+{
+	FuTestRequestHelper helper = {.request_cnt = 0, .last_status = FWUPD_STATUS_UNKNOWN};
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new();
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GBytes) blob_cab = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* no metadata in daemon */
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* set up dummy plugin */
+	fu_engine_add_plugin(engine, self->plugin);
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NONE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* add a device so we can get upgrade it */
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version(device, "1.2.2");
+	fu_device_set_id(device, "test_device");
+	fu_device_add_vendor_id(device, "USB:FFFF");
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_set_name(device, "Test Device");
+	fu_device_set_plugin(device, "test");
+	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_set_created(device, 1515338000);
+	fu_engine_add_device(engine, device);
+	devices = fu_engine_get_devices(engine, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(devices);
+	g_assert_cmpint(devices->len, ==, 1);
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
+
+	filename =
+	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
+	blob_cab = fu_bytes_get_contents(filename, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_cab);
+	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+
+	/* get component */
+	component =
+	    xb_silo_query_first(silo,
+				"components/component/id[text()='com.hughski.test.firmware']/..",
+				&error);
+	g_assert_no_error(error);
+	g_assert_nonnull(component);
+
+	/* install it */
+	(void)g_setenv("FWUPD_PLUGIN_TEST", "request", TRUE);
+	fu_release_set_device(release, device);
+	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	g_signal_connect(FU_ENGINE(engine),
+			 "device-request",
+			 G_CALLBACK(_engine_request_cb),
+			 &helper);
+	g_signal_connect(FU_PROGRESS(progress),
+			 "status-changed",
+			 G_CALLBACK(_engine_status_changed_cb),
+			 &helper);
+
+	ret = fu_engine_install_release(engine,
+					release,
+					blob_cab,
+					progress,
+					FWUPD_INSTALL_FLAG_NONE,
+					&error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(helper.request_cnt, ==, 1);
+	g_assert_cmpint(helper.last_status, ==, FWUPD_STATUS_DEVICE_BUSY);
+}
+
 static void
 fu_engine_history_error_func(gconstpointer user_data)
 {
@@ -5421,6 +5537,7 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/engine{multiple-releases}",
 			     self,
 			     fu_engine_multiple_rels_func);
+	g_test_add_data_func("/fwupd/engine{install-request}", self, fu_engine_install_request);
 	g_test_add_data_func("/fwupd/engine{history-success}", self, fu_engine_history_func);
 	g_test_add_data_func("/fwupd/engine{history-modify}", self, fu_engine_history_modify_func);
 	g_test_add_data_func("/fwupd/engine{history-error}", self, fu_engine_history_error_func);
