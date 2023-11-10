@@ -85,6 +85,7 @@ struct _FuDeviceClass {
 			FwupdRequest *request);
 	gboolean (*get_results)(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	void (*set_progress)(FuDevice *self, FuProgress *progress);
+	void (*invalidate)(FuDevice *self);
 #endif
 };
 
