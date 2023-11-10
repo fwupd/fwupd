@@ -83,6 +83,7 @@ typedef struct {
 	gchar *custom_flags;
 	gulong notify_flags_handler_id;
 	GHashTable *instance_hash;
+	FuProgress *progress; /* provided for FuDevice notify callbacks */
 } FuDevicePrivate;
 
 typedef struct {
@@ -4414,6 +4415,7 @@ fu_device_write_firmware(FuDevice *self,
 	g_info("installing onto %s:\n%s", fu_device_get_id(self), str);
 
 	/* call vfunc */
+	g_set_object(&priv->progress, progress);
 	if (!klass->write_firmware(self, firmware, progress, flags, error))
 		return FALSE;
 
@@ -4432,7 +4434,8 @@ fu_device_write_firmware(FuDevice *self,
 		}
 		fwupd_request_set_message(request, fu_device_get_update_message(self));
 		fwupd_request_set_image(request, fu_device_get_update_image(self));
-		fu_device_emit_request(self, request);
+		if (!fu_device_emit_request(self, request, progress, error))
+			return FALSE;
 	}
 
 	/* success */
@@ -4534,6 +4537,7 @@ FuFirmware *
 fu_device_read_firmware(FuDevice *self, FuProgress *progress, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GBytes) fw = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
@@ -4550,6 +4554,7 @@ fu_device_read_firmware(FuDevice *self, FuProgress *progress, GError **error)
 	}
 
 	/* call vfunc */
+	g_set_object(&priv->progress, progress);
 	if (klass->read_firmware != NULL)
 		return klass->read_firmware(self, progress, error);
 
@@ -4579,6 +4584,7 @@ GBytes *
 fu_device_dump_firmware(FuDevice *self, FuProgress *progress, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), NULL);
@@ -4594,6 +4600,7 @@ fu_device_dump_firmware(FuDevice *self, FuProgress *progress, GError **error)
 	}
 
 	/* proxy */
+	g_set_object(&priv->progress, progress);
 	return klass->dump_firmware(self, progress, error);
 }
 
@@ -4631,6 +4638,7 @@ gboolean
 fu_device_detach_full(FuDevice *self, FuProgress *progress, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
@@ -4641,6 +4649,7 @@ fu_device_detach_full(FuDevice *self, FuProgress *progress, GError **error)
 		return TRUE;
 
 	/* call vfunc */
+	g_set_object(&priv->progress, progress);
 	return klass->detach(self, progress, error);
 }
 
@@ -4678,6 +4687,7 @@ gboolean
 fu_device_attach_full(FuDevice *self, FuProgress *progress, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
@@ -4688,6 +4698,7 @@ fu_device_attach_full(FuDevice *self, FuProgress *progress, GError **error)
 		return TRUE;
 
 	/* call vfunc */
+	g_set_object(&priv->progress, progress);
 	return klass->attach(self, progress, error);
 }
 
@@ -4736,6 +4747,7 @@ gboolean
 fu_device_prepare(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
@@ -4746,6 +4758,7 @@ fu_device_prepare(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags,
 		return TRUE;
 
 	/* call vfunc */
+	g_set_object(&priv->progress, progress);
 	return klass->prepare(self, progress, flags, error);
 }
 
@@ -4767,6 +4780,7 @@ gboolean
 fu_device_cleanup(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
@@ -4777,6 +4791,7 @@ fu_device_cleanup(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags,
 		return TRUE;
 
 	/* call vfunc */
+	g_set_object(&priv->progress, progress);
 	return klass->cleanup(self, progress, flags, error);
 }
 
@@ -5192,6 +5207,7 @@ gboolean
 fu_device_activate(FuDevice *self, FuProgress *progress, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
@@ -5199,6 +5215,7 @@ fu_device_activate(FuDevice *self, FuProgress *progress, GError **error)
 
 	/* subclassed */
 	if (klass->activate != NULL) {
+		g_set_object(&priv->progress, progress);
 		if (!klass->activate(self, progress, error))
 			return FALSE;
 	}
@@ -5836,44 +5853,60 @@ fu_device_ensure_from_component(FuDevice *self, XbNode *component)
  * fu_device_emit_request:
  * @self: a device
  * @request: a request
+ * @progress: (nullable): a #FuProgress
+ * @error: (nullable): optional return location for an error
  *
  * Emit a request from a plugin to the client.
  *
  * If the device is emulated then this request is ignored.
  *
- * Since: 1.6.2
+ * Since: 1.9.8
  **/
-void
-fu_device_emit_request(FuDevice *self, FwupdRequest *request)
+gboolean
+fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progress, GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
-	g_return_if_fail(FU_IS_DEVICE(self));
-	g_return_if_fail(FWUPD_IS_REQUEST(request));
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(FWUPD_IS_REQUEST(request), FALSE);
+	g_return_val_if_fail(progress == NULL || FU_IS_PROGRESS(progress), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 #ifndef SUPPORTED_BUILD
 	/* nag the developer */
 	if (!fwupd_request_has_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE) &&
 	    !fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST)) {
-		g_critical("request %s is not a GENERIC_MESSAGE and the device does not set "
-			   "FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST",
-			   fwupd_request_get_id(request));
-		return;
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "request %s is not a GENERIC_MESSAGE and the device does not set "
+			    "FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST",
+			    fwupd_request_get_id(request));
+		return FALSE;
 	}
 #endif
 
 	/* sanity check */
 	if (fwupd_request_get_kind(request) == FWUPD_REQUEST_KIND_UNKNOWN) {
-		g_critical("a request must have an assigned kind");
-		return;
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "a request must have an assigned kind");
+		return FALSE;
 	}
 	if (fwupd_request_get_id(request) == NULL) {
-		g_critical("a request must have an assigned ID");
-		return;
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "a request must have an assigned ID");
+		return FALSE;
 	}
 	if (fwupd_request_get_kind(request) >= FWUPD_REQUEST_KIND_LAST) {
-		g_critical("invalid request kind");
-		return;
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "invalid request kind");
+		return FALSE;
 	}
 
 	/* ignore */
@@ -5881,7 +5914,7 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request)
 		g_info("ignoring device %s request of %s as emulated",
 		       fu_device_get_id(self),
 		       fwupd_request_get_id(request));
-		return;
+		return TRUE;
 	}
 
 	/* ensure set */
@@ -5894,8 +5927,18 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request)
 	}
 
 	/* proxy to the engine */
+	if (progress != NULL) {
+		fu_progress_set_status(progress, FWUPD_STATUS_WAITING_FOR_USER);
+	} else if (priv->progress != NULL) {
+		g_debug("using fallback progress");
+		fu_progress_set_status(priv->progress, FWUPD_STATUS_WAITING_FOR_USER);
+	} else {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no progress");
+		return FALSE;
+	}
 	g_signal_emit(self, signals[SIGNAL_REQUEST], 0, request);
 	priv->request_cnts[fwupd_request_get_kind(request)]++;
+	return TRUE;
 }
 
 static void
@@ -6473,6 +6516,8 @@ fu_device_finalize(GObject *object)
 	FuDevice *self = FU_DEVICE(object);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
+	if (priv->progress != NULL)
+		g_object_unref(priv->progress);
 	if (priv->alternate != NULL)
 		g_object_unref(priv->alternate);
 	if (priv->proxy != NULL)

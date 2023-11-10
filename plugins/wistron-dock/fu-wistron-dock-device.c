@@ -721,6 +721,7 @@ fu_wistron_dock_device_insert_cb(gpointer user_data)
 {
 	FuWistronDockDevice *self = FU_WISTRON_DOCK_DEVICE(user_data);
 	g_autoptr(FwupdRequest) request = fwupd_request_new();
+	g_autoptr(GError) error_local = NULL;
 
 	/* interactive request to start the SPI write */
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
@@ -729,7 +730,8 @@ fu_wistron_dock_device_insert_cb(gpointer user_data)
 	fwupd_request_set_message(
 	    request,
 	    "The update will continue when the device USB cable has been re-inserted.");
-	fu_device_emit_request(FU_DEVICE(self), request);
+	if (!fu_device_emit_request(FU_DEVICE(self), request, NULL, &error_local))
+		g_warning("%s", error_local->message);
 
 	/* success */
 	self->device_insert_id = 0;
@@ -777,7 +779,8 @@ fu_wistron_dock_device_attach(FuDevice *device, FuProgress *progress, GError **e
 	fwupd_request_set_message(
 	    request,
 	    "The update will continue when the device USB cable has been unplugged.");
-	fu_device_emit_request(device, request);
+	if (!fu_device_emit_request(device, request, progress, error))
+		return FALSE;
 
 	/* set a timeout, which will trigger as we're waiting for the device --
 	 * no sync sleep is possible as the device will re-enumerate one more time */
