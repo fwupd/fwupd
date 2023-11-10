@@ -50,6 +50,17 @@ fu_dpaux_device_to_string(FuDevice *device, guint idt, GString *str)
 		fu_string_append(str, idt, "DpcdDevId", priv->dpcd_dev_id);
 }
 
+static void
+fu_dpaux_device_invalidate(FuDevice *device)
+{
+	FuDpauxDevice *self = FU_DPAUX_DEVICE(device);
+	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
+	priv->dpcd_ieee_oui = 0;
+	priv->dpcd_hw_rev = 0;
+	priv->dpcd_dev_id = 0;
+	g_clear_pointer(&priv->dpcd_dev_id, g_free);
+}
+
 static gboolean
 fu_dpaux_device_probe(FuDevice *device, GError **error)
 {
@@ -362,6 +373,7 @@ fu_dpaux_device_class_init(FuDpauxDeviceClass *klass)
 	object_class->finalize = fu_dpaux_device_finalize;
 	klass_device->probe = fu_dpaux_device_probe;
 	klass_device->setup = fu_dpaux_device_setup;
+	klass_device->invalidate = fu_dpaux_device_invalidate;
 	klass_device->to_string = fu_dpaux_device_to_string;
 	klass_device->incorporate = fu_dpaux_device_incorporate;
 }

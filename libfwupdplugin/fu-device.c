@@ -5188,9 +5188,12 @@ void
 fu_device_probe_invalidate(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	priv->done_probe = FALSE;
 	priv->done_setup = FALSE;
+	if (klass->invalidate != NULL)
+		klass->invalidate(self);
 }
 
 /**
