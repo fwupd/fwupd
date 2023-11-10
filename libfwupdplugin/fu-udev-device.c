@@ -1561,6 +1561,7 @@ fu_udev_device_open(FuDevice *device, GError **error)
 	/* open device */
 	if (priv->device_file != NULL && priv->flags != FU_UDEV_DEVICE_FLAG_NONE) {
 		gint flags;
+		g_autoptr(FuIOChannel) io_channel = NULL;
 		if (priv->flags & FU_UDEV_DEVICE_FLAG_OPEN_READ &&
 		    priv->flags & FU_UDEV_DEVICE_FLAG_OPEN_WRITE) {
 			flags = O_RDWR;
@@ -1591,7 +1592,8 @@ fu_udev_device_open(FuDevice *device, GError **error)
 				    strerror(errno));
 			return FALSE;
 		}
-		priv->io_channel = fu_io_channel_unix_new(fd);
+		io_channel = fu_io_channel_unix_new(fd);
+		g_set_object(&priv->io_channel, io_channel);
 	}
 
 	/* success */
