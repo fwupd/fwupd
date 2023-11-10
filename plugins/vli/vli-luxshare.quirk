@@ -1,22 +1,45 @@
 # Luxshare Quad USB4 Dock
-# VL822T USB 3.0 Hub
+[USB\VID_208E&PID_0830]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3
+CounterpartGuid = USB\VID_208E&PID_2830
+[USB\VID_208E&PID_2830]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+ParentGuid = USB\VID_208E&PID_0830
 [USB\VID_208E&PID_0824]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3
-# VL822T USB 2.0 Hub
+ParentGuid = USB\VID_208E&PID_0830
+CounterpartGuid = USB\VID_208E&PID_2824
 [USB\VID_208E&PID_2824]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
+ParentGuid = USB\VID_208E&PID_2830
+
+# Luxshare 7-in-1 Hub
+[USB\VID_208E&PID_0822]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3,has-shared-spi-pd
+CounterpartGuid = USB\VID_208E&PID_2822
+[USB\VID_208E&PID_2822]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+ParentGuid = USB\VID_208E&PID_0822
+
 # VL105 PD Controller
 [USB\VID_208E&PID_0105]
 Plugin = vli
 GType = FuVliPdDevice
 Flags = skips-rom
 VliDeviceKind = vl105
-# VL830 USB4 Hub
-[USB\VID_208E&PID_2830]
+[USB\VID_208E&PID_1105]
 Plugin = vli
-GType = FuVliUsbhubDevice
-Flags = usb2
+GType = FuVliPdDevice
+VliDeviceKind = vl105
