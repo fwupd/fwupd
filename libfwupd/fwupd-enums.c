@@ -49,6 +49,8 @@ fwupd_status_to_string(FwupdStatus status)
 		return "waiting-for-auth";
 	if (status == FWUPD_STATUS_SHUTDOWN)
 		return "shutdown";
+	if (status == FWUPD_STATUS_WAITING_FOR_USER)
+		return "waiting-for-user";
 	return NULL;
 }
 
@@ -93,6 +95,8 @@ fwupd_status_from_string(const gchar *status)
 		return FWUPD_STATUS_WAITING_FOR_AUTH;
 	if (g_strcmp0(status, "shutdown") == 0)
 		return FWUPD_STATUS_SHUTDOWN;
+	if (g_strcmp0(status, "waiting-for-user") == 0)
+		return FWUPD_STATUS_WAITING_FOR_USER;
 	return FWUPD_STATUS_LAST;
 }
 

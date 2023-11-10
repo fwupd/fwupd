@@ -44,6 +44,7 @@ typedef enum {
 	FWUPD_STATUS_WAITING_FOR_AUTH, /* Since: 1.0.0 */
 	FWUPD_STATUS_DEVICE_BUSY,      /* Since: 1.0.1 */
 	FWUPD_STATUS_SHUTDOWN,	       /* Since: 1.2.1 */
+	FWUPD_STATUS_WAITING_FOR_USER, /* Since: 1.9.8 */
 	/*< private >*/
 	FWUPD_STATUS_LAST
 } FwupdStatus;
