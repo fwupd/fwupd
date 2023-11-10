@@ -380,6 +380,7 @@ fu_console_status_to_string(FwupdStatus status)
 		return _("Authenticating…");
 		break;
 	case FWUPD_STATUS_DEVICE_BUSY:
+	case FWUPD_STATUS_WAITING_FOR_USER:
 		/* TRANSLATORS: waiting for device to do something */
 		return _("Waiting…");
 		break;
