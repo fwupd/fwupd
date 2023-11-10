@@ -881,8 +881,8 @@ void
 fu_device_remove_private_flag(FuDevice *self, guint64 flag);
 gboolean
 fu_device_has_private_flag(FuDevice *self, guint64 flag);
-void
-fu_device_emit_request(FuDevice *self, FwupdRequest *request);
+gboolean
+fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progress, GError **error);
 FwupdSecurityAttr *
 fu_device_security_attr_new(FuDevice *self, const gchar *appstream_id);
 

@@ -174,11 +174,11 @@ fu_steelseries_fizz_hid_detach(FuDevice *device, FuProgress *progress, GError **
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 	fwupd_request_set_id(request, FWUPD_REQUEST_ID_PRESS_UNLOCK);
 	fwupd_request_set_message(request, msg);
-	fu_device_emit_request(device, request);
-
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	if (!fu_device_emit_request(device, request, progress, error))
+		return FALSE;
 
 	/* success */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 

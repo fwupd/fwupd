@@ -573,7 +573,10 @@ fu_steelseries_sonic_wait_for_connect_cb(FuDevice *device, gpointer user_data, G
 }
 
 static gboolean
-fu_steelseries_sonic_wait_for_connect(FuDevice *device, guint delay, GError **error)
+fu_steelseries_sonic_wait_for_connect(FuDevice *device,
+				      guint delay,
+				      FuProgress *progress,
+				      GError **error)
 {
 	SteelseriesSonicWirelessStatus wl_status;
 	g_autoptr(FwupdRequest) request = NULL;
@@ -599,7 +602,8 @@ fu_steelseries_sonic_wait_for_connect(FuDevice *device, guint delay, GError **er
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 	fwupd_request_set_id(request, FWUPD_REQUEST_ID_PRESS_UNLOCK);
 	fwupd_request_set_message(request, msg);
-	fu_device_emit_request(device, request);
+	if (!fu_device_emit_request(device, request, progress, error))
+		return FALSE;
 
 	if (!fu_device_retry_full(device,
 				  fu_steelseries_sonic_wait_for_connect_cb,
@@ -653,11 +657,11 @@ fu_steelseries_sonic_attach(FuDevice *device, FuProgress *progress, GError **err
 	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
 	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	fwupd_request_set_message(request, msg);
-	fu_device_emit_request(device, request);
-
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	if (!fu_device_emit_request(device, request, progress, error))
+		return FALSE;
 
 	/* success */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -671,6 +675,7 @@ fu_steelseries_sonic_prepare(FuDevice *device,
 
 	if (!fu_steelseries_sonic_wait_for_connect(device,
 						   fu_device_get_remove_delay(device),
+						   progress,
 						   error))
 		return FALSE;
 
@@ -823,6 +828,7 @@ fu_steelseries_sonic_read_firmware(FuDevice *device, FuProgress *progress, GErro
 
 	if (!fu_steelseries_sonic_wait_for_connect(device,
 						   fu_device_get_remove_delay(device),
+						   progress,
 						   error))
 		return NULL;
 

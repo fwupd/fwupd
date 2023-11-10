@@ -447,7 +447,8 @@ fu_analogix_device_attach(FuDevice *device, FuProgress *progress, GError **error
 	fwupd_request_set_message(request,
 				  "The update will continue when the device USB cable has been "
 				  "unplugged and then re-inserted.");
-	fu_device_emit_request(device, request);
+	if (!fu_device_emit_request(device, request, progress, error))
+		return FALSE;
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
