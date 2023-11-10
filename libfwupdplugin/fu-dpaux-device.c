@@ -81,10 +81,24 @@ fu_dpaux_device_probe(FuDevice *device, GError **error)
 static gboolean
 fu_dpaux_device_setup(FuDevice *device, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(device);
 	FuDpauxDevice *self = FU_DPAUX_DEVICE(device);
 	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
+	const gchar *name = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(self), "name", NULL);
 	guint8 buf[FU_STRUCT_DPAUX_DPCD_SIZE] = {0x0};
 	g_autoptr(GByteArray) st = NULL;
+
+	/* ignore all Framework FRANDGCP07 BIOS version 3.02 */
+	if (name != NULL && g_str_has_prefix(name, "AMDGPU DM") &&
+	    fu_context_has_hwid_guid(ctx, "32d49d99-414b-55d5-813b-12aaf0335b58")) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "reading %s DPCD is broken on this hardware, "
+			    "you need to update the system BIOS",
+			    name);
+		return FALSE;
+	}
 
 	if (!fu_dpaux_device_read(self,
 				  FU_DPAUX_DEVICE_DPCD_OFFSET_BRANCH_DEVICE,
