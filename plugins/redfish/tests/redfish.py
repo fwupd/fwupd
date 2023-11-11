@@ -46,6 +46,7 @@ def index():
 
     res = {
         "@odata.id": "/redfish/v1/",
+        "@odata.etag": "653b835e9ee4af9ea7ea",
         "RedfishVersion": "1.6.0",
         "UUID": "92384634-2938-2342-8820-489239905423",
         "UpdateService": {"@odata.id": "/redfish/v1/UpdateService"},
@@ -59,6 +60,7 @@ def update_service():
     res = {
         "@odata.id": "/redfish/v1/UpdateService",
         "@odata.type": "#UpdateService.v1_8_0.UpdateService",
+        "@odata.etag": "653b835e9ee4af9ea7ea",
         "FirmwareInventory": {
             "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory"
         },
@@ -98,6 +100,7 @@ def firmware_inventory():
     res = {
         "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory",
         "@odata.type": "#SoftwareInventoryCollection.SoftwareInventoryCollection",
+        "@odata.etag": "653b835e9ee4af9ea7ea",
         "Members": [
             {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/BMC"},
             {"@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/BIOS"},
@@ -113,6 +116,7 @@ def firmware_inventory_bmc():
     res = {
         "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/BMC",
         "@odata.type": "#SoftwareInventory.v1_2_3.SoftwareInventory",
+        "@odata.etag": "653b835e9ee4af9ea7ea",
         "Id": "BMC",
         "LowestSupportedVersion": "11A-0.12",
         "Name": "Lenovo BMC Firmware",
@@ -175,6 +179,7 @@ def firmware_systems_slot7():
     res = {
         "SerialNumber": "12345",
         "@odata.id": "/redfish/v1/Chassis/1/PCIeDevices/slot_3",
+        "@odata.etag": "653b835e9ee4af9ea7ea",
         "PCIeFunctions": {
             "@odata.id": "/redfish/v1/Chassis/1/PCIeDevices/slot_3/PCIeFunctions"
         },
@@ -189,6 +194,7 @@ def firmware_inventory_bios():
     res = {
         "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/BIOS",
         "@odata.type": "#SoftwareInventory.v1_2_3.SoftwareInventory",
+        "@odata.etag": "653b835e9ee4af9ea7ea",
         "Id": "BIOS",
         "LowestSupportedVersion": "P79 v1.10",
         "Name": "Contoso BIOS Firmware",
@@ -214,6 +220,7 @@ def task_manager():
     res = {
         "@odata.id": "/redfish/v1/TaskService/999",
         "@odata.type": "#Task.v1_4_3.Task",
+        "@odata.etag": "653b835e9ee4af9ea7ea",
         "Id": "545",
         "Name": "Task 545",
     }
@@ -226,6 +233,7 @@ def task_status_545():
     res = {
         "@odata.id": "/redfish/v1/TaskService/Tasks/545",
         "@odata.type": "#Task.v1_4_3.Task",
+        "@odata.etag": "653b835e9ee4af9ea7ea",
         "Id": "545",
         "Name": "Task 545",
         "PercentComplete": app._percentage545,
@@ -278,6 +286,7 @@ def task_status_546():
     res = {
         "@odata.type": "#Task.v1_4_3.Task",
         "@odata.id": "/redfish/v1/TaskService/Tasks/546",
+        "@odata.etag": "653b835e9ee4af9ea7ea",
         "Id": "546",
         "Name": "BIOS Verify",
         "TaskState": "Running",
@@ -340,6 +349,7 @@ def fwupdate_unlicensed():
     res = {
         "Version": "P79 v1.45",
         "@odata.id": "/redfish/v1/TaskService/Tasks/545",
+        "@odata.etag": "653b835e9ee4af9ea7ea",
         "TaskMonitor": "/redfish/v1/TaskService/999",
     }
     # Location set to the URI of a task monitor.
@@ -428,6 +438,7 @@ def fwupdate():
     res = {
         "Version": "P79 v1.45",
         "@odata.id": "/redfish/v1/TaskService/Tasks/545",
+        "@odata.etag": "653b835e9ee4af9ea7ea",
         "TaskMonitor": "/redfish/v1/TaskService/999",
     }
     # Location set to the URI of a task monitor.

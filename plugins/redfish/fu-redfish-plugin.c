@@ -88,7 +88,8 @@ fu_redfish_plugin_change_expired(FuPlugin *plugin, GError **error)
 					     uri,
 					     "PATCH",
 					     builder,
-					     FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					     FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON |
+						 FU_REDFISH_REQUEST_PERFORM_FLAG_USE_ETAG,
 					     error))
 		return FALSE;
 	fu_redfish_backend_set_password(self->backend, password_new);
@@ -386,7 +387,8 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 					     uri,
 					     "PATCH",
 					     builder,
-					     FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					     FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON |
+						 FU_REDFISH_REQUEST_PERFORM_FLAG_USE_ETAG,
 					     error))
 		return FALSE;
 	fu_redfish_backend_set_password(self->backend, password_new);
