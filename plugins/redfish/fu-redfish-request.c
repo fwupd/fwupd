@@ -203,6 +203,13 @@ fu_redfish_request_perform(FuRedfishRequest *self,
 typedef struct curl_slist _curl_slist;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(_curl_slist, curl_slist_free_all)
 
+static void
+fu_redfish_request_reset(FuRedfishRequest *self)
+{
+	self->status_code = 0;
+	self->json_obj = NULL;
+}
+
 gboolean
 fu_redfish_request_perform_full(FuRedfishRequest *self,
 				const gchar *path,
@@ -211,6 +218,7 @@ fu_redfish_request_perform_full(FuRedfishRequest *self,
 				FuRedfishRequestPerformFlags flags,
 				GError **error)
 {
+	g_autofree gchar *etag_header = NULL;
 	g_autoptr(_curl_slist) hs = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 	g_autoptr(JsonGenerator) json_generator = json_generator_new();
@@ -220,6 +228,27 @@ fu_redfish_request_perform_full(FuRedfishRequest *self,
 	g_return_val_if_fail(path != NULL, FALSE);
 	g_return_val_if_fail(request != NULL, FALSE);
 	g_return_val_if_fail(builder != NULL, FALSE);
+
+	/* get etag */
+	if (flags & FU_REDFISH_REQUEST_PERFORM_FLAG_USE_ETAG) {
+		JsonObject *json_obj;
+		if (!fu_redfish_request_perform(self,
+						path,
+						FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+						error)) {
+			g_prefix_error(error, "failed to request etag: ");
+			return FALSE;
+		}
+		json_obj = fu_redfish_request_get_json_object(self);
+		if (json_object_has_member(json_obj, "@odata.etag")) {
+			etag_header =
+			    g_strdup_printf("If-Match: %s",
+					    json_object_get_string_member(json_obj, "@odata.etag"));
+		}
+
+		/* allow us to re-use the request */
+		fu_redfish_request_reset(self);
+	}
 
 	/* export as a string */
 	json_root = json_builder_get_root(builder);
@@ -233,6 +262,8 @@ fu_redfish_request_perform_full(FuRedfishRequest *self,
 	(void)curl_easy_setopt(self->curl, CURLOPT_POSTFIELDS, str->str);
 	(void)curl_easy_setopt(self->curl, CURLOPT_POSTFIELDSIZE, (long)str->len);
 	hs = curl_slist_append(hs, "Content-Type: application/json");
+	if (etag_header != NULL)
+		hs = curl_slist_append(hs, etag_header);
 	(void)curl_easy_setopt(self->curl, CURLOPT_HTTPHEADER, hs);
 	return fu_redfish_request_perform(self, path, flags, error);
 }
