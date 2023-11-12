@@ -360,7 +360,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					    error))
 			return FALSE;
 		if (ver_raw != 0 && ver_raw != G_MAXUINT32)
-			fu_device_set_version_from_uint32(device_cpu, ver_raw);
+			fu_device_set_version_u32(device_cpu, ver_raw);
 	}
 
 	/* success */

@@ -166,7 +166,7 @@ fu_steelseries_fizz_tunnel_probe(FuDevice *device, GError **error)
 	if (release != 0x0 &&
 	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_BCD);
-		fu_device_set_version_from_uint16(device, release);
+		fu_device_set_version_u16(device, release);
 	}
 
 	/* add GUIDs in order of priority */

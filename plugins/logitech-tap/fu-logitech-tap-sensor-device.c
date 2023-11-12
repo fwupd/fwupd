@@ -245,7 +245,7 @@ fu_logitech_tap_sensor_device_set_version(FuLogitechTapSensorDevice *self, GErro
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
-	fu_device_set_version_from_uint32(FU_DEVICE(self), version);
+	fu_device_set_version_u32(FU_DEVICE(self), version);
 
 	/* success */
 	return TRUE;

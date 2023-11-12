@@ -154,7 +154,6 @@ fu_goodixtp_gtx8_device_send_cmd(FuGoodixtpGtx8Device *self,
 static gboolean
 fu_goodixtp_gtx8_device_ensure_version(FuGoodixtpGtx8Device *self, GError **error)
 {
-	guint32 version;
 	guint8 fw_info[72] = {0};
 	guint8 vice_ver;
 	guint8 inter_ver;
@@ -196,8 +195,7 @@ fu_goodixtp_gtx8_device_ensure_version(FuGoodixtpGtx8Device *self, GError **erro
 	fu_goodixtp_hid_device_set_config_ver(FU_GOODIXTP_HID_DEVICE(self), cfg_ver);
 	vice_ver = fw_info[19];
 	inter_ver = fw_info[20];
-	version = (vice_ver << 16) | (inter_ver << 8) | cfg_ver;
-	fu_device_set_version_from_uint32(FU_DEVICE(self), version);
+	fu_device_set_version_u32(FU_DEVICE(self), (vice_ver << 16) | (inter_ver << 8) | cfg_ver);
 	return TRUE;
 }
 

@@ -253,7 +253,7 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 	}
 
 	/* set display version */
-	fu_device_set_version_from_uint32(FU_DEVICE(self), version);
+	fu_device_set_version_u32(FU_DEVICE(self), version);
 	return TRUE;
 }
 

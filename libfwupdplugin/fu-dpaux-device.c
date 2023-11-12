@@ -115,7 +115,7 @@ fu_dpaux_device_setup(FuDevice *device, GError **error)
 	priv->dpcd_ieee_oui = fu_struct_dpaux_dpcd_get_ieee_oui(st);
 	priv->dpcd_hw_rev = fu_struct_dpaux_dpcd_get_hw_rev(st);
 	priv->dpcd_dev_id = fu_struct_dpaux_dpcd_get_dev_id(st);
-	fu_device_set_version_from_uint24(device, fu_struct_dpaux_dpcd_get_fw_ver(st));
+	fu_device_set_version_u24(device, fu_struct_dpaux_dpcd_get_fw_ver(st));
 	return TRUE;
 }
 

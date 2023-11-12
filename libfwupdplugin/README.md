@@ -118,3 +118,7 @@ Remember: Plugins should be upstream!
 
 * `fu_device_build_instance_id_quirk": rename to`fu_device_build_instance_id_full()`
 * `fu_udev_device_get_fd()`: Use `fu_udev_device_get_io_channel()` instead
+* `fu_device_set_version_from_uint16()`: Use `fu_device_set_version_u16()` instead
+* `fu_device_set_version_from_uint24()`: Use `fu_device_set_version_u24()` instead
+* `fu_device_set_version_from_uint32()`: Use `fu_device_set_version_u32()` instead
+* `fu_device_set_version_from_uint64()`: Use `fu_device_set_version_u64()` instead

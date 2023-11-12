@@ -349,7 +349,7 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	if (!fu_tpm_v2_device_get_uint32(self, TPM2_PT_FIRMWARE_VERSION_2, &version2, error))
 		return FALSE;
 	version_raw = ((guint64)version1) << 32 | ((guint64)version2);
-	fu_device_set_version_from_uint64(device, version_raw);
+	fu_device_set_version_u64(device, version_raw);
 
 	/* get capabilities */
 	if (!fu_tpm_v2_device_ensure_commands(self, error))
