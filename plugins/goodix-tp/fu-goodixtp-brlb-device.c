@@ -153,7 +153,6 @@ fu_goodixtp_brlb_device_ensure_version(FuGoodixtpBrlbDevice *self, GError **erro
 	guint8 vice_ver;
 	guint8 inter_ver;
 	guint8 cfg_ver;
-	guint32 version;
 	guint32 patch_vid_raw;
 	g_autofree gchar *patch_pid = NULL;
 
@@ -182,9 +181,7 @@ fu_goodixtp_brlb_device_ensure_version(FuGoodixtpBrlbDevice *self, GError **erro
 
 	cfg_ver = hidbuf[4];
 	fu_goodixtp_hid_device_set_config_ver(FU_GOODIXTP_HID_DEVICE(self), cfg_ver);
-	version = (vice_ver << 16) | (inter_ver << 8) | cfg_ver;
-	fu_device_set_version_from_uint32(FU_DEVICE(self), version);
-
+	fu_device_set_version_u32(FU_DEVICE(self), (vice_ver << 16) | (inter_ver << 8) | cfg_ver);
 	return TRUE;
 }
 

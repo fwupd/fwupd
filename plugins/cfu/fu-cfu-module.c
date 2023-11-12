@@ -69,9 +69,8 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 	}
 
 	/* version */
-	fu_device_set_version_from_uint32(
-	    device,
-	    fu_struct_cfu_get_version_rsp_component_get_fw_version(st));
+	fu_device_set_version_u32(device,
+				  fu_struct_cfu_get_version_rsp_component_get_fw_version(st));
 
 	/* logical ID */
 	logical_id = g_strdup_printf("CID:0x%02x,BANK:0x%02x", self->component_id, self->bank);

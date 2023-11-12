@@ -101,7 +101,7 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 	fu_device_set_name(device, name);
 
 	/* use header to populate device info */
-	fu_device_set_version_from_uint32(device, fwver);
+	fu_device_set_version_u32(device, fwver);
 
 	/* add standard GUIDs in order of priority */
 	fu_device_add_instance_u16(device, "VID", fu_struct_vli_pd_hdr_get_vid(st));

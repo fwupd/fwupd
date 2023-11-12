@@ -329,7 +329,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	fwver = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (fwver == 0xFFFF || fwver == ETP_CMD_I2C_FW_VERSION)
 		fwver = 0;
-	fu_device_set_version_from_uint16(device, fwver);
+	fu_device_set_version_u16(device, fwver);
 
 	/* get IAP firmware version */
 	if (!fu_elantp_hid_device_read_cmd(self,

@@ -3001,16 +3001,16 @@ fu_device_set_version_raw(FuDevice *self, guint64 version_raw)
 }
 
 /**
- * fu_device_set_version_from_uint16:
+ * fu_device_set_version_u16:
  * @self: a #FuDevice
  * @version_raw: an integer
  *
  * Sets the device version from a integer value and the device version format.
  *
- * Since: 1.8.9
+ * Since: 1.9.8
  **/
 void
-fu_device_set_version_from_uint16(FuDevice *self, guint16 version_raw)
+fu_device_set_version_u16(FuDevice *self, guint16 version_raw)
 {
 	g_autofree gchar *version = NULL;
 	g_return_if_fail(FU_IS_DEVICE(self));
@@ -3020,7 +3020,7 @@ fu_device_set_version_from_uint16(FuDevice *self, guint16 version_raw)
 }
 
 /**
- * fu_device_set_version_from_uint24:
+ * fu_device_set_version_u24:
  * @self: a #FuDevice
  * @version_raw: an integer
  *
@@ -3029,7 +3029,7 @@ fu_device_set_version_from_uint16(FuDevice *self, guint16 version_raw)
  * Since: 1.9.8
  **/
 void
-fu_device_set_version_from_uint24(FuDevice *self, guint32 version_raw)
+fu_device_set_version_u24(FuDevice *self, guint32 version_raw)
 {
 	g_autofree gchar *version = NULL;
 	g_return_if_fail(FU_IS_DEVICE(self));
@@ -3039,16 +3039,16 @@ fu_device_set_version_from_uint24(FuDevice *self, guint32 version_raw)
 }
 
 /**
- * fu_device_set_version_from_uint32:
+ * fu_device_set_version_u32:
  * @self: a #FuDevice
  * @version_raw: an integer
  *
  * Sets the device version from a integer value and the device version format.
  *
- * Since: 1.8.9
+ * Since: 1.9.8
  **/
 void
-fu_device_set_version_from_uint32(FuDevice *self, guint32 version_raw)
+fu_device_set_version_u32(FuDevice *self, guint32 version_raw)
 {
 	g_autofree gchar *version = NULL;
 	g_return_if_fail(FU_IS_DEVICE(self));
@@ -3058,16 +3058,16 @@ fu_device_set_version_from_uint32(FuDevice *self, guint32 version_raw)
 }
 
 /**
- * fu_device_set_version_from_uint64:
+ * fu_device_set_version_u64:
  * @self: a #FuDevice
  * @version_raw: an integer
  *
  * Sets the device version from a integer value and the device version format.
  *
- * Since: 1.8.9
+ * Since: 1.9.8
  **/
 void
-fu_device_set_version_from_uint64(FuDevice *self, guint64 version_raw)
+fu_device_set_version_u64(FuDevice *self, guint64 version_raw)
 {
 	g_autofree gchar *version = NULL;
 	g_return_if_fail(FU_IS_DEVICE(self));

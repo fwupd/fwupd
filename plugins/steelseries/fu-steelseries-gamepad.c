@@ -69,7 +69,7 @@ fu_steelseries_gamepad_setup(FuDevice *device, GError **error)
 
 	if (!fu_memread_uint16_safe(data, sizeof(data), 0x01, &fw_ver, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	fu_device_set_version_from_uint16(FU_DEVICE(device), fw_ver);
+	fu_device_set_version_u16(FU_DEVICE(device), fw_ver);
 
 	if (!fu_memread_uint16_safe(data, sizeof(data), 0x03, &fw_ver, G_LITTLE_ENDIAN, error))
 		return FALSE;

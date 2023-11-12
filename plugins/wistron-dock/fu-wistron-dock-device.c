@@ -641,8 +641,8 @@ fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 		g_warning("unknown status_code 0x%02x", self->status_code);
 
 	/* composite version */
-	fu_device_set_version_from_uint32(FU_DEVICE(self),
-					  fu_struct_wistron_dock_wdit_get_composite_version(st));
+	fu_device_set_version_u32(FU_DEVICE(self),
+				  fu_struct_wistron_dock_wdit_get_composite_version(st));
 
 	/* for debugging only */
 	if (!fu_wistron_dock_device_parse_wdit_img(

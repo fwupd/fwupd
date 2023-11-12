@@ -392,7 +392,7 @@ fu_focalfp_hid_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to read version2: ");
 		return FALSE;
 	}
-	fu_device_set_version_from_uint16(device, fu_memread_uint16(buf, G_BIG_ENDIAN));
+	fu_device_set_version_u16(device, fu_memread_uint16(buf, G_BIG_ENDIAN));
 
 	/* success */
 	return TRUE;

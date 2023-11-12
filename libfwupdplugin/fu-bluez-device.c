@@ -218,7 +218,7 @@ fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 	if (rev != 0x0 &&
 	    fu_device_get_version_format(FU_DEVICE(self)) == FWUPD_VERSION_FORMAT_UNKNOWN) {
 		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
-		fu_device_set_version_from_uint16(FU_DEVICE(self), rev);
+		fu_device_set_version_u16(FU_DEVICE(self), rev);
 	}
 }
 

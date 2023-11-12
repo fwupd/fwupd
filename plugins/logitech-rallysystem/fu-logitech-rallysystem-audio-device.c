@@ -97,7 +97,7 @@ fu_logitech_rallysystem_audio_device_set_version(FuLogitechRallysystemAudioDevic
 		G_BIG_ENDIAN,
 		error))
 		return FALSE;
-	fu_device_set_version_from_uint32(FU_DEVICE(self), fwversion);
+	fu_device_set_version_u32(FU_DEVICE(self), fwversion);
 
 	/* success */
 	return TRUE;
