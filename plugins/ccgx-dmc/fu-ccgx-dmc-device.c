@@ -141,8 +141,6 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 
 	/* success */
 	self->device_status = fu_struct_ccgx_dmc_dock_status_get_device_status(st);
-	fu_device_set_version_raw(FU_DEVICE(self),
-				  fu_struct_ccgx_dmc_dock_status_get_composite_version(st));
 	fu_device_set_version_from_uint32(FU_DEVICE(self),
 					  fu_struct_ccgx_dmc_dock_status_get_composite_version(st));
 	return TRUE;

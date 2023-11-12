@@ -183,7 +183,6 @@ fu_goodixtp_brlb_device_ensure_version(FuGoodixtpBrlbDevice *self, GError **erro
 	cfg_ver = hidbuf[4];
 	fu_goodixtp_hid_device_set_config_ver(FU_GOODIXTP_HID_DEVICE(self), cfg_ver);
 	version = (vice_ver << 16) | (inter_ver << 8) | cfg_ver;
-	fu_device_set_version_raw(FU_DEVICE(self), version);
 	fu_device_set_version_from_uint32(FU_DEVICE(self), version);
 
 	return TRUE;
