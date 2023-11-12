@@ -197,7 +197,6 @@ fu_goodixtp_gtx8_device_ensure_version(FuGoodixtpGtx8Device *self, GError **erro
 	vice_ver = fw_info[19];
 	inter_ver = fw_info[20];
 	version = (vice_ver << 16) | (inter_ver << 8) | cfg_ver;
-	fu_device_set_version_raw(FU_DEVICE(self), version);
 	fu_device_set_version_from_uint32(FU_DEVICE(self), version);
 	return TRUE;
 }
