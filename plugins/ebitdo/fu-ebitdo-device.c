@@ -240,14 +240,10 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 	return FALSE;
 }
 
-static void
-fu_ebitdo_device_set_version(FuEbitdoDevice *self, guint32 version)
+static gchar *
+fu_ebitdo_device_convert_version(FuDevice *device, guint64 version_raw)
 {
-	g_autofree gchar *tmp = NULL;
-	tmp = g_strdup_printf("%u.%02u", version / 100, version % 100);
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
-	fu_device_set_version_raw(FU_DEVICE(self), version);
-	fu_device_set_version(FU_DEVICE(self), tmp);
+	return g_strdup_printf("%u.%02u", (guint)version_raw / 100, (guint)version_raw % 100);
 }
 
 static gboolean
@@ -310,7 +306,6 @@ static gboolean
 fu_ebitdo_device_setup(FuDevice *device, GError **error)
 {
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE(device);
-	gdouble tmp;
 	guint32 version_tmp = 0;
 	guint32 serial_tmp[9] = {0};
 
@@ -335,8 +330,7 @@ fu_ebitdo_device_setup(FuDevice *device, GError **error)
 					      error)) {
 			return FALSE;
 		}
-		tmp = (gdouble)GUINT32_FROM_LE(version_tmp);
-		fu_ebitdo_device_set_version(self, tmp);
+		fu_device_set_version_raw(FU_DEVICE(self), GUINT32_FROM_LE(version_tmp));
 		return TRUE;
 	}
 
@@ -353,8 +347,7 @@ fu_ebitdo_device_setup(FuDevice *device, GError **error)
 	if (!fu_ebitdo_device_receive(self, (guint8 *)&version_tmp, sizeof(version_tmp), error)) {
 		return FALSE;
 	}
-	tmp = (gdouble)GUINT32_FROM_LE(version_tmp);
-	fu_ebitdo_device_set_version(self, tmp);
+	fu_device_set_version_raw(device, GUINT32_FROM_LE(version_tmp));
 
 	/* get verification ID */
 	if (!fu_ebitdo_device_send(self,
@@ -673,6 +666,7 @@ fu_ebitdo_device_init(FuEbitdoDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_EBITDO_FIRMWARE);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static void
@@ -686,4 +680,5 @@ fu_ebitdo_device_class_init(FuEbitdoDeviceClass *klass)
 	klass_device->open = fu_ebitdo_device_open;
 	klass_device->probe = fu_ebitdo_device_probe;
 	klass_device->set_progress = fu_ebitdo_set_progress;
+	klass_device->convert_version = fu_ebitdo_device_convert_version;
 }
