@@ -1385,12 +1385,10 @@ fu_ccgx_hpi_device_ensure_silicon_id(FuCcgxHpiDevice *self, GError **error)
 	return TRUE;
 }
 
-static void
-fu_ccgx_hpi_device_set_version_raw(FuCcgxHpiDevice *self, guint32 version_raw)
+static gchar *
+fu_ccgx_hpi_device_convert_version(FuDevice *device, guint64 version_raw)
 {
-	g_autofree gchar *version = fu_ccgx_version_to_string(version_raw);
-	fu_device_set_version(FU_DEVICE(self), version);
-	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
+	return fu_ccgx_version_to_string(version_raw);
 }
 
 static gboolean
@@ -1478,9 +1476,9 @@ fu_ccgx_hpi_device_setup(FuDevice *device, GError **error)
 
 		/* if running in bootloader force an upgrade to any version */
 		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-			fu_ccgx_hpi_device_set_version_raw(self, 0x0);
+			fu_device_set_version_raw(device, 0x0);
 		} else {
-			fu_ccgx_hpi_device_set_version_raw(self, versions[self->fw_mode]);
+			fu_device_set_version_raw(device, versions[self->fw_mode]);
 		}
 	}
 
@@ -1630,4 +1628,5 @@ fu_ccgx_hpi_device_class_init(FuCcgxHpiDeviceClass *klass)
 	klass_device->set_quirk_kv = fu_ccgx_hpi_device_set_quirk_kv;
 	klass_device->close = fu_ccgx_hpi_device_close;
 	klass_device->set_progress = fu_ccgx_hpi_device_set_progress;
+	klass_device->convert_version = fu_ccgx_hpi_device_convert_version;
 }

@@ -2978,6 +2978,29 @@ fu_device_set_version_bootloader(FuDevice *self, const gchar *version)
 }
 
 /**
+ * fu_device_set_version_raw:
+ * @self: a #FuDevice
+ * @version_raw: an integer
+ *
+ * Sets the raw device version from a integer value and the device version format.
+ *
+ * Since: 1.9.8
+ **/
+void
+fu_device_set_version_raw(FuDevice *self, guint64 version_raw)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+
+	fwupd_device_set_version_raw(FWUPD_DEVICE(self), version_raw);
+	if (klass->convert_version != NULL) {
+		g_autofree gchar *version = klass->convert_version(self, version_raw);
+		if (version != NULL)
+			fu_device_set_version(self, version);
+	}
+}
+
+/**
  * fu_device_set_version_from_uint16:
  * @self: a #FuDevice
  * @version_raw: an integer
