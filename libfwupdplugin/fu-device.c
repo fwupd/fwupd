@@ -3012,11 +3012,14 @@ fu_device_set_version_raw(FuDevice *self, guint64 version_raw)
 void
 fu_device_set_version_u16(FuDevice *self, guint16 version_raw)
 {
-	g_autofree gchar *version = NULL;
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
-	version = fu_version_from_uint16(version_raw, fu_device_get_version_format(self));
-	fwupd_device_set_version_raw(FWUPD_DEVICE(self), version_raw);
-	fwupd_device_set_version(FWUPD_DEVICE(self), version);
+	fu_device_set_version_raw(self, version_raw);
+	if (klass->convert_version == NULL) {
+		g_autofree gchar *version =
+		    fu_version_from_uint16(version_raw, fu_device_get_version_format(self));
+		fwupd_device_set_version(FWUPD_DEVICE(self), version);
+	}
 }
 
 /**
@@ -3031,11 +3034,14 @@ fu_device_set_version_u16(FuDevice *self, guint16 version_raw)
 void
 fu_device_set_version_u24(FuDevice *self, guint32 version_raw)
 {
-	g_autofree gchar *version = NULL;
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
-	version = fu_version_from_uint24(version_raw, fu_device_get_version_format(self));
-	fwupd_device_set_version_raw(FWUPD_DEVICE(self), version_raw);
-	fwupd_device_set_version(FWUPD_DEVICE(self), version);
+	fu_device_set_version_raw(self, version_raw);
+	if (klass->convert_version == NULL) {
+		g_autofree gchar *version =
+		    fu_version_from_uint24(version_raw, fu_device_get_version_format(self));
+		fwupd_device_set_version(FWUPD_DEVICE(self), version);
+	}
 }
 
 /**
@@ -3050,11 +3056,14 @@ fu_device_set_version_u24(FuDevice *self, guint32 version_raw)
 void
 fu_device_set_version_u32(FuDevice *self, guint32 version_raw)
 {
-	g_autofree gchar *version = NULL;
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
-	version = fu_version_from_uint32(version_raw, fu_device_get_version_format(self));
-	fwupd_device_set_version_raw(FWUPD_DEVICE(self), version_raw);
-	fwupd_device_set_version(FWUPD_DEVICE(self), version);
+	fu_device_set_version_raw(self, version_raw);
+	if (klass->convert_version == NULL) {
+		g_autofree gchar *version =
+		    fu_version_from_uint32(version_raw, fu_device_get_version_format(self));
+		fwupd_device_set_version(FWUPD_DEVICE(self), version);
+	}
 }
 
 /**
@@ -3069,11 +3078,14 @@ fu_device_set_version_u32(FuDevice *self, guint32 version_raw)
 void
 fu_device_set_version_u64(FuDevice *self, guint64 version_raw)
 {
-	g_autofree gchar *version = NULL;
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
-	version = fu_version_from_uint64(version_raw, fu_device_get_version_format(self));
-	fwupd_device_set_version_raw(FWUPD_DEVICE(self), version_raw);
-	fwupd_device_set_version(FWUPD_DEVICE(self), version);
+	fu_device_set_version_raw(self, version_raw);
+	if (klass->convert_version == NULL) {
+		g_autofree gchar *version =
+		    fu_version_from_uint64(version_raw, fu_device_get_version_format(self));
+		fwupd_device_set_version(FWUPD_DEVICE(self), version);
+	}
 }
 
 static void
