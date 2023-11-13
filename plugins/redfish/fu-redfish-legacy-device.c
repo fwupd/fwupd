@@ -40,7 +40,8 @@ fu_redfish_legacy_device_detach(FuDevice *dev, FuProgress *progress, GError **er
 					       "/redfish/v1/UpdateService",
 					       "PATCH",
 					       builder,
-					       FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					       FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON |
+						   FU_REDFISH_REQUEST_PERFORM_FLAG_USE_ETAG,
 					       error);
 }
 
@@ -66,7 +67,8 @@ fu_redfish_legacy_device_attach(FuDevice *dev, FuProgress *progress, GError **er
 					       "/redfish/v1/UpdateService",
 					       "PATCH",
 					       builder,
-					       FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					       FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON |
+						   FU_REDFISH_REQUEST_PERFORM_FLAG_USE_ETAG,
 					       error);
 }
 
