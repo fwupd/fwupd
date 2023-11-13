@@ -57,7 +57,6 @@ fu_dpaux_device_invalidate(FuDevice *device)
 	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
 	priv->dpcd_ieee_oui = 0;
 	priv->dpcd_hw_rev = 0;
-	priv->dpcd_dev_id = 0;
 	g_clear_pointer(&priv->dpcd_dev_id, g_free);
 }
 
@@ -112,6 +111,7 @@ fu_dpaux_device_setup(FuDevice *device, GError **error)
 	st = fu_struct_dpaux_dpcd_parse(buf, sizeof(buf), 0x0, error);
 	if (st == NULL)
 		return FALSE;
+	g_clear_pointer(&priv->dpcd_dev_id, g_free);
 	priv->dpcd_ieee_oui = fu_struct_dpaux_dpcd_get_ieee_oui(st);
 	priv->dpcd_hw_rev = fu_struct_dpaux_dpcd_get_hw_rev(st);
 	priv->dpcd_dev_id = fu_struct_dpaux_dpcd_get_dev_id(st);
