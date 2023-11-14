@@ -136,11 +136,13 @@ fu_logitech_hidpp_runtime_open(FuDevice *device, GError **error)
 	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
 	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
 	const gchar *devpath = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
+	g_autoptr(FuIOChannel) io_channel = NULL;
 
 	/* open, but don't block */
-	priv->io_channel = fu_io_channel_new_file(devpath, error);
-	if (priv->io_channel == NULL)
+	io_channel = fu_io_channel_new_file(devpath, error);
+	if (io_channel == NULL)
 		return FALSE;
+	g_set_object(&priv->io_channel, io_channel);
 
 	/* poll for notifications */
 	fu_device_set_poll_interval(device, FU_HIDPP_RECEIVER_RUNTIME_POLLING_INTERVAL);
