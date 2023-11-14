@@ -1483,6 +1483,46 @@ fwupd_remote_build_report_uri(FwupdRemote *self, GError **error)
 }
 
 /**
+ * fwupd_remote_build_metadata_sig_uri:
+ * @self: a #FwupdRemote
+ * @error: (nullable): optional return location for an error
+ *
+ * Builds a URI for the metadata using the username and password set for the remote.
+ *
+ * Returns: (transfer full): a URI, or %NULL for error
+ *
+ * Since: 1.9.8
+ **/
+gchar *
+fwupd_remote_build_metadata_sig_uri(FwupdRemote *self, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return fwupd_remote_build_uri(self, NULL, priv->metadata_uri_sig, error);
+}
+
+/**
+ * fwupd_remote_build_metadata_uri:
+ * @self: a #FwupdRemote
+ * @error: (nullable): optional return location for an error
+ *
+ * Builds a URI for the metadata signature using the username and password set for the remote.
+ *
+ * Returns: (transfer full): a URI, or %NULL for error
+ *
+ * Since: 1.9.8
+ **/
+gchar *
+fwupd_remote_build_metadata_uri(FwupdRemote *self, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return fwupd_remote_build_uri(self, NULL, priv->metadata_uri, error);
+}
+
+/**
  * fwupd_remote_get_report_uri:
  * @self: a #FwupdRemote
  *

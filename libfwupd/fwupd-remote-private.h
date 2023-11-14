@@ -56,6 +56,10 @@ void
 fwupd_remote_set_keyring_kind(FwupdRemote *self, FwupdKeyringKind keyring_kind);
 gboolean
 fwupd_remote_setup(FwupdRemote *self, GError **error);
+gchar *
+fwupd_remote_build_metadata_sig_uri(FwupdRemote *self, GError **error);
+gchar *
+fwupd_remote_build_metadata_uri(FwupdRemote *self, GError **error);
 void
 fwupd_remote_to_json(FwupdRemote *self, JsonBuilder *builder);
 

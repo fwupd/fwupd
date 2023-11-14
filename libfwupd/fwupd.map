@@ -994,3 +994,10 @@ LIBFWUPD_1.9.6 {
     fwupd_security_attr_set_kernel_target_value;
   local: *;
 } LIBFWUPD_1.9.4;
+
+LIBFWUPD_1.9.8 {
+  global:
+    fwupd_remote_build_metadata_sig_uri;
+    fwupd_remote_build_metadata_uri;
+  local: *;
+} LIBFWUPD_1.9.6;
