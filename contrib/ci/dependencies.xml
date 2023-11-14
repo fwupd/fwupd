@@ -1389,15 +1389,15 @@
       <control>
         <version>(>= 231)</version>
       </control>
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
+      <package variant="x86_64">systemd-dev</package>
+      <package variant="s390x">systemd-dev</package>
+      <package variant="i386">systemd-dev</package>
     </distro>
     <distro id="ubuntu">
       <control>
         <version>(>= 231)</version>
       </control>
-      <package variant="x86_64" />
+      <package variant="x86_64">systemd-dev</package>
     </distro>
   </dependency>
   <dependency id="libsystemd-dev">
