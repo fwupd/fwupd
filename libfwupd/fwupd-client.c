@@ -5203,7 +5203,7 @@ fwupd_client_set_user_agent_for_package(FwupdClient *self,
 
 	g_free(priv->package_name);
 	g_free(priv->package_version);
-	priv->package_name = g_strdup(package_name);
+	priv->package_name = g_path_get_basename(package_name);
 	priv->package_version = g_strdup(package_version);
 	fwupd_client_rebuild_user_agent(self);
 }
