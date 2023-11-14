@@ -4031,6 +4031,9 @@ fwupd_client_refresh_remote_metadata_cb(GObject *source, GAsyncResult *res, gpoi
 	/* save metadata */
 	bytes = fwupd_client_download_bytes_finish(FWUPD_CLIENT(source), res, &error);
 	if (bytes == NULL) {
+		g_prefix_error(&error,
+			       "Failed to download metadata for %s: ",
+			       fwupd_remote_get_id(data->remote));
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
@@ -4079,6 +4082,9 @@ fwupd_client_refresh_remote_signature_cb(GObject *source, GAsyncResult *res, gpo
 	/* save signature */
 	bytes = fwupd_client_download_bytes_finish(FWUPD_CLIENT(source), res, &error);
 	if (bytes == NULL) {
+		g_prefix_error(&error,
+			       "Failed to download metadata for %s: ",
+			       fwupd_remote_get_id(data->remote));
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
