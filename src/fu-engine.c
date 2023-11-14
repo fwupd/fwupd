@@ -4931,6 +4931,8 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 #ifdef HAVE_PASSIM
 	/* send to passimd, if enabled and running */
 	if (passim_client_get_version(self->passim_client) != NULL &&
+	    fwupd_remote_get_username(remote) == NULL &&
+	    fwupd_remote_get_password(remote) == NULL &&
 	    fu_engine_config_get_p2p_policy(self->config) & FU_P2P_POLICY_METADATA) {
 		g_autofree gchar *basename =
 		    g_path_get_basename(fwupd_remote_get_filename_cache(remote));

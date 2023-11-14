@@ -4106,7 +4106,9 @@ fwupd_client_refresh_remote_signature_cb(GObject *source, GAsyncResult *res, gpo
 
 	/* maybe get metadata from Passim */
 	if (fwupd_remote_has_flag(data->remote, FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA) &&
-	    fwupd_remote_get_checksum_metadata(data->remote) != NULL) {
+	    fwupd_remote_get_checksum_metadata(data->remote) != NULL &&
+	    fwupd_remote_get_username(data->remote) == NULL &&
+	    fwupd_remote_get_password(data->remote) == NULL) {
 		g_autofree gchar *basename =
 		    g_path_get_basename(fwupd_remote_get_metadata_uri(data->remote));
 		g_ptr_array_add(urls,
