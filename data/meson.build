@@ -74,6 +74,11 @@ if build_daemon
       rw_directories += ['-/boot/efi', '-/efi/EFI', '-/boot/EFI', '-/boot/grub']
     endif
 
+    # not using ConfigurationDirectory further down
+    if get_option('prefix') != '/usr'
+      rw_directories += join_paths(sysconfdir, 'fwupd')
+    endif
+
     dynamic_options = []
     if systemd.version().version_compare('>= 232')
       dynamic_options += 'ProtectControlGroups=yes'
