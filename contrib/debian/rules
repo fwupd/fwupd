@@ -52,6 +52,8 @@ override_dh_install:
 	find debian/tmp/usr -type f -name "*a" -print | xargs rm -f
 	sed -i 's,wheel,sudo,' debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
 	dh_install
+	dh_install -pfwupd $$(pkg-config --variable=systemdsystemunitdir systemd | sed s,^/,,)
+	dh_install -pfwupd $$(pkg-config --variable=udevdir udev | sed s,^/,,)/rules.d
 	#install MSR conf if needed (depending on distro)
 	[ ! -d debian/tmp/usr/lib/modules-load.d ] || dh_install -pfwupd usr/lib/modules-load.d
 	[ ! -d debian/tmp/lib/modules-load.d ] || dh_install -pfwupd lib/modules-load.d
@@ -72,6 +74,7 @@ override_dh_install:
 
 	# avoid shipping an empty directory
 	[ ! -d debian/fwupd/lib/systemd ] || find debian/fwupd/lib/systemd -type d -empty -delete
+	[ ! -d debian/fwupd/usr/lib/systemd ] || find debian/fwupd/usr/lib/systemd -type d -empty -delete
 
 override_dh_strip_nondeterminism:
 	dh_strip_nondeterminism -Xfirmware-example.xml.gz
