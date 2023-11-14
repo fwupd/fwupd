@@ -2407,10 +2407,6 @@ msgstr "A visszaállítási védelem megakadályozza, hogy az eszközszoftvert v
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Futtassa az „fwupdmgr get-upgrades” parancsot a további információkért."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Futtassa az „fwupdmgr sync-bkc” parancsot a művelet befejezéséhez."
-
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "A bővítmény összetett tisztítási rutinjának futtatása az install-blob használatakor"
@@ -2764,10 +2760,6 @@ msgstr "Átváltja a(z) %s ágat %s ágra?"
 msgid "Switch the firmware branch on the device"
 msgstr "A belsővezérlőprogram-ág váltása az eszközön"
 
-#. TRANSLATORS: command description
-msgid "Sync firmware versions to the host best known configuration"
-msgstr "A belsővezérlőprogram-verziók szinkronizálása a gép legismertebb konfigurációjához"
-
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Rendszerfrissítés meggátolva"
@@ -2934,7 +2926,7 @@ msgid "There is no approved firmware."
 msgstr "Nincs jóváhagyott belső vezérlőprogram."
 
 #. TRANSLATORS: %1 is the current device version number, and %2 is the
-#. command name, e.g. `fwupdmgr sync-bkc`
+#. command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "Az eszköz vissza lesz állítva a(z) %s verzióra, ha a(z) %s parancs végrehajtásra kerül."
@@ -3215,10 +3207,6 @@ msgstr "%s frissítése…"
 #, c-format
 msgid "Upgrade %s from %s to %s?"
 msgstr "Frissíti a(z) %s eszközön lévő verziót: %s → %s?"
-
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Feltölti most a jelentést?"
 
 #. TRANSLATORS: ask the user to share, %s is something
 #. * like: "Linux Vendor Firmware Service"

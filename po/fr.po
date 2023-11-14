@@ -768,10 +768,6 @@ msgstr "Redémarrage du périphérique…"
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Exécutez «fwupdmgr get-upgrades» pour plus d'informations."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Exécutez `fwupdmgr sync-bkc` pour terminer cette action."
-
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Planification..."

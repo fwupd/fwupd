@@ -1267,10 +1267,6 @@ msgstr "Torne ducj i ID dal hardware pe machine"
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Eseguìs `fwupdmgr get-upgrades` par vê plui informazions."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Eseguìs `fwupdmgr sync-bkc` par completâ cheste azion."
-
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
 msgstr "Descritôr dal BIOS SPI"
@@ -1693,10 +1689,6 @@ msgstr "Daûr a inzornâ %s…"
 #, c-format
 msgid "Upgrade %s from %s to %s?"
 msgstr "Inzornâ %s de version %s ae %s?"
-
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Inviâ il rapuart cumò?"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

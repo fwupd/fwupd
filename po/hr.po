@@ -2270,10 +2270,6 @@ msgstr "Zaštita od vraćanja na stariju inačicu sprječava softver uređaja da
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Pokrenite `fwupdmgr get-upgrades` za više informacija."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Za završavanje ove radnje pokreni `fwupdmgr sync-bkc`."
-
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Pokreni rutinu čišćenja sastavljanja priključka kada se koristi install-blob"
@@ -2623,10 +2619,6 @@ msgstr "Prebaci ogranak sa %s na %s?"
 msgid "Switch the firmware branch on the device"
 msgstr "Zamijeni ogranak firmvera na uređaju"
 
-#. TRANSLATORS: command description
-msgid "Sync firmware versions to the host best known configuration"
-msgstr "Uskladi inačicu firmvera s najbolje poznatim podešavanjem na poslužitelju"
-
 #. TRANSLATORS: as in laptop battery power
 msgid "System power is too low to perform the update"
 msgstr "Energija sustava je preniska za obavljanje nadopune"
@@ -2786,7 +2778,7 @@ msgid "There is no approved firmware."
 msgstr "Ne postoji odobreni firmver."
 
 #. TRANSLATORS: %1 is the current device version number, and %2 is the
-#. command name, e.g. `fwupdmgr sync-bkc`
+#. command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "Ovaj uređaj će biti vraćen natrag na %s kada se %s naredba pokrene."
@@ -3047,10 +3039,6 @@ msgstr "Nadopunjujem %s…"
 #, c-format
 msgid "Upgrade %s from %s to %s?"
 msgstr "Nadogradi %s sa %s na %s?"
-
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Pošalji izvještaj odmah?"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

@@ -2417,10 +2417,6 @@ msgstr "Retroceder Protección previene software de dispositivo sea degradado a 
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Ejecute `fwupdmgr get-upgrades` para más información."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Ejecute `fwupdmgr sync-bkc` para completar esta operación."
-
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Ejecuta el complemento compuesto vacía rutina cuando utiliza gota de instalación"
@@ -2775,10 +2771,6 @@ msgstr "¿Ramificación intercambiada desde %s hasta %s?"
 msgid "Switch the firmware branch on the device"
 msgstr "Intercambiar rama firmware en el dispositivo"
 
-#. TRANSLATORS: command description
-msgid "Sync firmware versions to the host best known configuration"
-msgstr "Sincroniza versiones firmware a la mejor configuración conocida en el hospedaje"
-
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Actualización de Sistema Inhibido"
@@ -2946,7 +2938,7 @@ msgid "There is no approved firmware."
 msgstr "No hay ningún firmware aprobado."
 
 #. TRANSLATORS: %1 is the current device version number, and %2 is the
-#. command name, e.g. `fwupdmgr sync-bkc`
+#. command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "Este dispositivo será revertido a %s cuando la instrucción %s sea realizada."
@@ -3227,10 +3219,6 @@ msgstr "Actualizando %s…"
 #, c-format
 msgid "Upgrade %s from %s to %s?"
 msgstr "¿Moderniza %s desde %s hasta %s?"
-
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "¿Carga informe ahora?"
 
 #. TRANSLATORS: ask the user to share, %s is something
 #. * like: "Linux Vendor Firmware Service"

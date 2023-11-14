@@ -2396,10 +2396,6 @@ msgstr "Der Rückrollschutz verhindert, dass die Gerätesoftware auf eine älter
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Führen Sie `fwupdmgr get-upgrades` für weitere Informationen aus."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Führen Sie »fwupdmgr sync-bkc« zum Abschliessen des Vorgangs aus."
-
 #. TRANSLATORS: The kernel does not support this plugin
 msgid "Running kernel is too old"
 msgstr "Laufender Kernel ist zu alt"
@@ -2743,10 +2739,6 @@ msgstr "Zweig von %s nach %s wechseln?"
 msgid "Switch the firmware branch on the device"
 msgstr "Den Firmware-Zweig auf dem Gerät wechseln"
 
-#. TRANSLATORS: command description
-msgid "Sync firmware versions to the host best known configuration"
-msgstr "Synchronisierung der Firmware-Versionen mit der besten bekannten Konfiguration des Hosts"
-
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Systemaktualisierung blockiert"
@@ -2913,7 +2905,7 @@ msgid "There is no approved firmware."
 msgstr "Es gibt keine genehmigte Firmware."
 
 #. TRANSLATORS: %1 is the current device version number, and %2 is the
-#. command name, e.g. `fwupdmgr sync-bkc`
+#. command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "Dieses Gerät wird wieder auf %s zurückgesetzt, wenn der Befehl %s ausgeführt wird."
@@ -3200,10 +3192,6 @@ msgstr "%s wird aktualisiert …"
 #, c-format
 msgid "Upgrade %s from %s to %s?"
 msgstr "%s von %s auf %s aktualisieren?"
-
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Bericht jetzt hochladen?"
 
 #. TRANSLATORS: ask the user to share, %s is something
 #. * like: "Linux Vendor Firmware Service"

@@ -449,10 +449,6 @@ msgstr "Ажурирајте причуване податке потврђив�
 msgid "Updating %s from %s to %s... "
 msgstr "Ажурирам %s са %s на %s..."
 
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Отпремити извештај сада?"
-
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Корисничко име"

@@ -2443,10 +2443,6 @@ msgstr "La protecció contra la reversió evita que el programari del dispositiu
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Per a més informació, executeu «fwupdmgr get-upgrades»."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Per a completar aquesta acció, executeu «fwupdmgr sync-bkc»."
-
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Executa la rutina de neteja de la composició del connector en usar install-blob"
@@ -2454,6 +2450,10 @@ msgstr "Executa la rutina de neteja de la composició del connector en usar inst
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Executa la rutina de preparació de la composició del connector en usar install-blob"
+
+#. TRANSLATORS: command description
+msgid "Run the post-reboot cleanup action"
+msgstr "Executa l'acció de neteja posterior al reinici"
 
 #. TRANSLATORS: tell a user how to get information
 #, c-format
@@ -2803,10 +2803,6 @@ msgstr "Voleu canviar la branca des de %s a %s?"
 msgid "Switch the firmware branch on the device"
 msgstr "Canvia la branca de microprogramari en el dispositiu."
 
-#. TRANSLATORS: command description
-msgid "Sync firmware versions to the host best known configuration"
-msgstr "Sincronitza les versions de microprogramari a la millor configuració coneguda de l'amfitrió"
-
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "S'ha inhibit l'actualització del sistema"
@@ -2973,7 +2969,7 @@ msgid "There is no approved firmware."
 msgstr "No hi ha cap microprogramari aprovat."
 
 #. TRANSLATORS: %1 is the current device version number, and %2 is the
-#. command name, e.g. `fwupdmgr sync-bkc`
+#. command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "Aquest dispositiu es revertirà a %s quan es realitzi l'ordre %s."
@@ -3269,10 +3265,6 @@ msgstr "S'està actualitzant %s…"
 msgid "Upgrade %s from %s to %s?"
 msgstr "Voleu actualitzar %s des de %s a %s?"
 
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Voleu enviar l'informe ara?"
-
 #. TRANSLATORS: ask the user to share, %s is something
 #. * like: "Linux Vendor Firmware Service"
 #, c-format
@@ -3425,6 +3417,10 @@ msgstr "[ID_DISPOSITIU|GUID] [BRANCA]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [VERSION]"
 msgstr "[ID_DISPOSITIU|GUID] [VERSIÓ]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE]"
+msgstr "[DISPOSITIU]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"

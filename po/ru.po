@@ -1377,10 +1377,6 @@ msgstr "Показать идентификаторы всех устройст�
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Запустите «fwupdmgr get-upgrades» для получения дополнительной информации."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Запустите команду «fwupdmgr sync-bkc», чтобы завершить действие."
-
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Запустить процедуру очистки составного плагина, используя двоичную установку"
@@ -1825,10 +1821,6 @@ msgstr "Обновление устройства %s…"
 #, c-format
 msgid "Upgrade %s from %s to %s?"
 msgstr "Обновить %s с %s до %s?"
-
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Загрузить отчет сейчас?"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

@@ -2354,10 +2354,6 @@ msgstr "Versiopalautuksen suojaus estää laiteohjelmiston version varhentamisen
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Suorita ”fwupdmgr get-upgrades” saadaksesi lisätietoja."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Suorita ”fwupdmgr sync-bkc” suorittaaksesi tämä toiminto loppuun."
-
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Suorita liitännäisen yhteinen siivousrutiini, kun käytetään komentoa install-blob"
@@ -2707,10 +2703,6 @@ msgstr "Vaihdatko haaran %s haaraksi %s?"
 msgid "Switch the firmware branch on the device"
 msgstr "Vaihda laitteen laiteohjelmiston haaraa"
 
-#. TRANSLATORS: command description
-msgid "Sync firmware versions to the host best known configuration"
-msgstr "Synkronoi laiteohjelmistoversiot tällä koneella parhaan tunnetun konfiguraation kanssa."
-
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Järjestelmäpäivitys on estetty"
@@ -2877,7 +2869,7 @@ msgid "There is no approved firmware."
 msgstr "Hyväksyttyä laiteohjelmistoa ei ole."
 
 #. TRANSLATORS: %1 is the current device version number, and %2 is the
-#. command name, e.g. `fwupdmgr sync-bkc`
+#. command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "Laite palautetaan versioon %s, kun komento %s suoritetaan."
@@ -3158,10 +3150,6 @@ msgstr "Päivittää laitetta %s…"
 #, c-format
 msgid "Upgrade %s from %s to %s?"
 msgstr "Päivitetäänkö laitteen %s laiteohjelmisto versiosta %s versioon %s?"
-
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Lähetetäänkö raportti nyt?"
 
 #. TRANSLATORS: ask the user to share, %s is something
 #. * like: "Linux Vendor Firmware Service"

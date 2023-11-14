@@ -2199,10 +2199,6 @@ msgstr "Memberikan kembalian semua ID perangkat keras bagi mesin"
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Jalankan `fwupdmgr get-upgrade` untuk informasi lebih lanjut."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Jalankan 'fwupdmgr sync-bkc' untuk menyelesaikan tindakan ini."
-
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Menjalankan rutin pembersihan komposit plugin saat menggunakan install-blob"
@@ -2537,10 +2533,6 @@ msgstr "Beralih cabang dari %s ke %s?"
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
 msgstr "Beralih cabang firmware pada perangkat"
-
-#. TRANSLATORS: command description
-msgid "Sync firmware versions to the host best known configuration"
-msgstr "Sinkronkan versi firmware ke konfigurasi host yang paling dikenal"
 
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
@@ -2920,10 +2912,6 @@ msgstr "Memutakhirkan %s…"
 #, c-format
 msgid "Upgrade %s from %s to %s?"
 msgstr "Meningkatkan %s dari %s ke %s?"
-
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Unggah laporan sekarang?"
 
 #. TRANSLATORS: ask the user to share, %s is something
 #. * like: "Linux Vendor Firmware Service"

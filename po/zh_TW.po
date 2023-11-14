@@ -605,10 +605,6 @@ msgstr "更新儲存的裝置核驗資訊"
 msgid "Updating %s from %s to %s... "
 msgstr "正將 %s 從 %s 版升級至 %s 版... "
 
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "是否立刻上傳報告？"
-
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "上傳韌體報告可以協助硬體廠商快速辨識出更新作業在真實裝置上是失敗還成功。"

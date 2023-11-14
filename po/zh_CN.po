@@ -1580,10 +1580,6 @@ msgstr "返回机器的所有硬件 ID"
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "运行 \"fwupdmgr get-upgrades\" 获取更多信息。"
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "运行 `fwupdmgr sync-bkc` 以完成此操作。"
-
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "当使用安装比特块时运行插件组合清理例程"
@@ -2107,10 +2103,6 @@ msgstr "正在更新 %s……"
 #, c-format
 msgid "Upgrade %s from %s to %s?"
 msgstr "升级 %s，从 %s 到 %s？"
-
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "要上传报告吗？"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

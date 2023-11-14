@@ -278,10 +278,6 @@ msgstr "Werk tans %s by vanaf %s na %s… "
 msgid "Updating %s…"
 msgstr "Werk tans %s by…"
 
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Laai verslag nou op?"
-
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Gebruikernaam"

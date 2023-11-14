@@ -1468,10 +1468,6 @@ msgstr "Güncelleniyor %s…"
 msgid "Upgrade %s from %s to %s?"
 msgstr " %s,  %s sürümünden %s sürümüne yükseltilsin mi?"
 
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Rapor şimdi karşıya yüklensin mi?"
-
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"
 msgstr "Donanım yazılımı kurulurken quirk bayraklarını kullan"

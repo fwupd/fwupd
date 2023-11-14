@@ -2224,10 +2224,6 @@ msgstr "Fornisce tutti gli ID hardware per un dispositivo"
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Per maggiori informazioni eseguire «fwupdmgr get-upgrades»."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Eseguire «fwupdmgr sync-bkc» per completare questa azione."
-
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Esegue la procedura di pulizia del plugin quando si utilizza install-blob"
@@ -2561,10 +2557,6 @@ msgstr "Passare dal ramo %s a %s?"
 msgid "Switch the firmware branch on the device"
 msgstr "Cambia il ramo del firmware sul dispositivo"
 
-#. TRANSLATORS: command description
-msgid "Sync firmware versions to the host best known configuration"
-msgstr "Sincronizza le versioni del firmware con quelle migliori note dell'host"
-
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "Il sistema richiede una sorgente elettrica esterna"
@@ -2679,7 +2671,7 @@ msgid "There is no approved firmware."
 msgstr "Non ci sono firmware approvati."
 
 #. TRANSLATORS: %1 is the current device version number, and %2 is the
-#. command name, e.g. `fwupdmgr sync-bkc`
+#. command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "Questo dispositivo verrà retrocesso alla versione %s all'esecuzione del comando %s. "
@@ -2934,10 +2926,6 @@ msgstr "Aggiornamento di %s…"
 #, c-format
 msgid "Upgrade %s from %s to %s?"
 msgstr "Aggiornare %s da %s a %s?"
-
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Caricare il rapporto ora?"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

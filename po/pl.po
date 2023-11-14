@@ -2375,13 +2375,17 @@ msgstr "Pobiera ustawienia BIOS-u. Jeśli żadne parametry nie zostaną przekaza
 msgid "Return all the hardware IDs for the machine"
 msgstr "Zwraca wszystkie identyfikatory sprzętu dla komputera"
 
+#. TRANSLATORS: ask the user to upload
+msgid "Review and upload report now?"
+msgstr "Przejrzeć i wysłać zgłoszenie?"
+
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Polecenie „fwupdmgr get-upgrades” wyświetli więcej informacji."
 
 #. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Polecenie „fwupdmgr sync-bkc” dokończy to działanie."
+msgid "Run `fwupdmgr sync` to complete this action."
+msgstr "Polecenie „fwupdmgr sync” dokończy to działanie."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -2390,6 +2394,10 @@ msgstr "Wykonuje procedurę czyszczenia składania wtyczki podczas używania „
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Wykonuje procedurę przygotowania składania wtyczki podczas używania „install-blob”"
+
+#. TRANSLATORS: command description
+msgid "Run the post-reboot cleanup action"
+msgstr "Wykonuje działanie czyszczenia po ponownym uruchomieniu"
 
 #. TRANSLATORS: tell a user how to get information
 #, c-format
@@ -2734,8 +2742,8 @@ msgid "Switch the firmware branch on the device"
 msgstr "Przełącza gałąź oprogramowania sprzętowego na urządzeniu"
 
 #. TRANSLATORS: command description
-msgid "Sync firmware versions to the host best known configuration"
-msgstr "Synchronizuje wersje oprogramowania sprzętowego do najlepszej znanej konfiguracji komputera"
+msgid "Sync firmware versions to the chosen configuration"
+msgstr "Synchronizuje wersje oprogramowania sprzętowego do wybranej konfiguracji"
 
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
@@ -2881,7 +2889,7 @@ msgid "There is no approved firmware."
 msgstr "Nie ma zatwierdzonego oprogramowania sprzętowego."
 
 #. TRANSLATORS: %1 is the current device version number, and %2 is the
-#. command name, e.g. `fwupdmgr sync-bkc`
+#. command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "To urządzenie zostanie przywrócone do wersji %s po wykonaniu polecenia %s."
@@ -3169,10 +3177,6 @@ msgstr "Aktualizowanie urządzenia %s…"
 msgid "Upgrade %s from %s to %s?"
 msgstr "Zaktualizować urządzenie %s z wersji %s na %s?"
 
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Wysłać zgłoszenie?"
-
 #. TRANSLATORS: ask the user to share, %s is something
 #. * like: "Linux Vendor Firmware Service"
 #, c-format
@@ -3325,6 +3329,10 @@ msgstr "[IDENTYFIKATOR-URZĄDZENIA|GUID] [GAŁĄŹ]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [VERSION]"
 msgstr "[IDENTYFIKATOR-URZĄDZENIA|GUID] [WERSJA]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE]"
+msgstr "[URZĄDZENIE]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"

@@ -2458,6 +2458,10 @@ msgstr "Отримати параметри BIOS. Якщо аргументів 
 msgid "Return all the hardware IDs for the machine"
 msgstr "Повернути усі ідентифікатори апаратного забезпечення комп’ютера"
 
+#. TRANSLATORS: ask the user to upload
+msgid "Review and upload report now?"
+msgstr "Переглянути і вивантажити звіт зараз?"
+
 #. TRANSLATORS: longer description
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "Захист від відновлення попередніх версій запобігає зниженню версій програмного забезпечення до тих, у яких виявлено проблеми із захистом."
@@ -2467,8 +2471,8 @@ msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Віддайте команду «fwupdmgr get-upgrades», щоб дізнатися більше."
 
 #. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Віддайте команду «fwupdmgr sync-bkc», щоб завершити цю дію."
+msgid "Run `fwupdmgr sync` to complete this action."
+msgstr "Віддайте команду «fwupdmgr sync», щоб завершити цю дію."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -2833,8 +2837,8 @@ msgid "Switch the firmware branch on the device"
 msgstr "Перемкнути гілку мікропрограми на пристрої"
 
 #. TRANSLATORS: command description
-msgid "Sync firmware versions to the host best known configuration"
-msgstr "Синхронізувати версії мікропрограм із найкращою відомою конфігурацією вузла"
+msgid "Sync firmware versions to the chosen configuration"
+msgstr "Синхронізувати версії мікропрограм із вибраною конфігурацією"
 
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
@@ -3004,7 +3008,7 @@ msgid "There is no approved firmware."
 msgstr "Немає схвалених мікропрограм."
 
 #. TRANSLATORS: %1 is the current device version number, and %2 is the
-#. command name, e.g. `fwupdmgr sync-bkc`
+#. command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "Цей пристрій буде повернуто до %s у результаті виконання команди %s."
@@ -3299,10 +3303,6 @@ msgstr "Оновлюємо %s…"
 #, c-format
 msgid "Upgrade %s from %s to %s?"
 msgstr "Оновити %s з %s до %s?"
-
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Вивантажити звіт зараз?"
 
 #. TRANSLATORS: ask the user to share, %s is something
 #. * like: "Linux Vendor Firmware Service"

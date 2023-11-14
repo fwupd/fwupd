@@ -1343,10 +1343,6 @@ msgstr "Atnaujinama %s…"
 msgid "Upgrade %s from %s to %s?"
 msgstr "Naujinti %s iš %s į %s?"
 
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Išsiųsti ataskaitą dabar?"
-
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "Programinės aparatinės įrangos ataskaitų išsiuntimas padeda aparatinės įrangos tiekėjams greitai atpažinti nesėkmingus bei sėkmingus atnaujinimus tikruose įrenginiuose."

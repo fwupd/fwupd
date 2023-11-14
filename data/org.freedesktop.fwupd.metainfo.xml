@@ -33,6 +33,43 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.8" date="2023-11-14">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a DP AUX device subclass and port the Synaptics MST plugin to it</li>
+          <li>Add a feature flag for non-generic requests where translations are required</li>
+          <li>Hide generic VID/PIDs to avoid accidental firmware matches</li>
+          <li>Optionally set the modem carrier configuration as the branch name</li>
+          <li>Rename 'fwupdmgr sync-bkc' to 'fwupdmgr sync' and also consider the branch</li>
+          <li>Require additional requirements for devices using non-OEM USB VIDs</li>
+          <li>Set the waiting-for-user status when sending a request</li>
+          <li>Support uSWID SBoM data with LZMA compressed payloads</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Accept any registry versions when parsing Redfish message IDs</li>
+          <li>Do not read the AMDGPU DM DPCD on broken firmware versions</li>
+          <li>Do not save obsoleted HSI attributes into the history database</li>
+          <li>Fix a crash when some DRM devices are hotplugged</li>
+          <li>Fix a possible crash in fu_io_channel_read_raw()</li>
+          <li>Fix parsing LZMA-compressed EFI sections</li>
+          <li>Only use the architecture-specific GUID for UEFI dbx quirk matching</li>
+          <li>Parse all the type 42 SMBIOS tables</li>
+          <li>Prompt the user to reboot after applying internal Wacom firmware</li>
+          <li>Respect no-serial-number flags when using GUID matches</li>
+          <li>Use the etag when patching Redfish resources</li>
+          <li>Use the username and password to get metadata when set</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Kinetic SST/MST DisplayPort converters</li>
+          <li>Wacom Cintiq Pros (DTH172, DTH227)</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.7" date="2023-11-01">
       <description>
         <p>

@@ -1663,10 +1663,6 @@ msgstr "Bezig met bijwerken van %s van %s naar %s..."
 msgid "Updating %s…"
 msgstr "%s bijwerken…"
 
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Rapport nu uploaden?"
-
 #. TRANSLATORS: how important the release is
 msgid "Urgency"
 msgstr "Urgentie"

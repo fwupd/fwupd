@@ -1815,10 +1815,6 @@ msgstr "යන්ත්‍රය සඳහා සියලුම දෘඪාං
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "වැඩි විස්තර සඳහා `fwupdmgr get-upgrades` ධාවනය කරන්න."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "මෙම ක්‍රියාව සම්පූර්ණ කිරීමට `fwupdmgr sync-bkc` ධාවනය කරන්න."
-
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Install-blob භාවිතා කරන විට ප්ලගින සංයුක්ත පිරිසිදු කිරීමේ පුරුද්ද ක්‍රියාත්මක කරන්න"
@@ -2102,10 +2098,6 @@ msgstr "ශාඛාව %s සිට %sදක්වා මාරු කරන්
 msgid "Switch the firmware branch on the device"
 msgstr "උපාංගයේ ස්ථිරාංග ශාඛාව මාරු කරන්න"
 
-#. TRANSLATORS: command description
-msgid "Sync firmware versions to the host best known configuration"
-msgstr "ස්ථිරාංග අනුවාද ධාරක වඩාත් දන්නා වින්‍යාසය වෙත සමමුහුර්ත කරන්න"
-
 #. TRANSLATORS: as in laptop battery power
 msgid "System power is too low to perform the update"
 msgstr "යාවත්කාලීන කිරීම සිදු කිරීමට පද්ධතියේ බලය ඉතා අඩුය"
@@ -2206,7 +2198,7 @@ msgid "There is no approved firmware."
 msgstr "අනුමත ස්ථිරාංග නොමැත."
 
 #. TRANSLATORS: %1 is the current device version number, and %2 is the
-#. command name, e.g. `fwupdmgr sync-bkc`
+#. command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "%s විධානය ක්‍රියාත්මක කරන විට මෙම උපාංගය නැවත %s වෙත ප්‍රතිවර්තනය වේ."
@@ -2433,10 +2425,6 @@ msgstr "%s යාවත්කාල වෙමින්…"
 #, c-format
 msgid "Upgrade %s from %s to %s?"
 msgstr "%s %s සිට %sදක්වා උත්ශ්‍රේණි කරන්නද?"
-
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "වාර්තාව දැන් උඩුගත කරන්නද?"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

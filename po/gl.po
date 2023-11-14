@@ -887,10 +887,6 @@ msgstr "Actualizando %s desde %s a %s... "
 msgid "Updating %s…"
 msgstr "Actualizando %s…"
 
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Desexa subir o informe agora?"
-
 #. TRANSLATORS: explain how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "Usar fwupdtool --help para obter axuda"

@@ -2440,6 +2440,10 @@ msgstr "Erhåll BIOS-inställningar. Om inga argument skickas med returneras all
 msgid "Return all the hardware IDs for the machine"
 msgstr "Returnera alla hårdvaru-ID:n för maskinen"
 
+#. TRANSLATORS: ask the user to upload
+msgid "Review and upload report now?"
+msgstr "Granska och skicka rapport nu?"
+
 #. TRANSLATORS: longer description
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "Tillbakarullningsskydd förhindrar enhetsprogramvara från att nedgraderas till en äldre version som har säkerhetsproblem."
@@ -2449,8 +2453,8 @@ msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Kör ”fwupdmgr get-upgrades” för vidare information."
 
 #. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Kör `fwupdmgr sync-bkc` för att slutföra denna åtgärd."
+msgid "Run `fwupdmgr sync` to complete this action."
+msgstr "Kör `fwupdmgr sync` för att slutföra denna åtgärd."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -2813,8 +2817,8 @@ msgid "Switch the firmware branch on the device"
 msgstr "Byt gren för fast programvara på enheten"
 
 #. TRANSLATORS: command description
-msgid "Sync firmware versions to the host best known configuration"
-msgstr "Synkronisera versioner för fast programvara till den mest kända konfigurationen hos värden"
+msgid "Sync firmware versions to the chosen configuration"
+msgstr "Synkronisera versioner för fast programvara till den valda konfigurationen"
 
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
@@ -2982,7 +2986,7 @@ msgid "There is no approved firmware."
 msgstr "Det finns ingen godkänd fast programvara."
 
 #. TRANSLATORS: %1 is the current device version number, and %2 is the
-#. command name, e.g. `fwupdmgr sync-bkc`
+#. command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "Denna enhet kommer att återställas till %s när kommandot %s körs."
@@ -3277,10 +3281,6 @@ msgstr "Uppdaterar %s…"
 #, c-format
 msgid "Upgrade %s from %s to %s?"
 msgstr "Uppgradera %s från %s till %s?"
-
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Skicka upp rapport nu?"
 
 #. TRANSLATORS: ask the user to share, %s is something
 #. * like: "Linux Vendor Firmware Service"

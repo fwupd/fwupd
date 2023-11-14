@@ -2074,10 +2074,6 @@ msgstr "Opdaterer %s …"
 msgid "Upgrade %s from %s to %s?"
 msgstr "Opgrader %s fra %s til %s?"
 
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Upload rapport nu?"
-
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "Upload af firmwarerapporter hjælper hardwareproducenter til hurtigt at identificere opdateringer som fejlede og lykkedes på rigtigt hardware."

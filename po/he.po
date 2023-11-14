@@ -1768,10 +1768,6 @@ msgstr "%s מתעדכן…"
 msgid "Upgrade %s from %s to %s?"
 msgstr "לשדרג את %s מגרסה %s אל %s?"
 
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "להעלות דוח עכשיו?"
-
 #. TRANSLATORS: how important the release is
 msgid "Urgency"
 msgstr "דחיפות"

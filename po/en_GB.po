@@ -2443,10 +2443,6 @@ msgstr "Rollback Protection prevents device software from being downgraded to an
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Run `fwupdmgr get-upgrades` for more information."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "Run `fwupdmgr sync-bkc` to complete this action."
-
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Run the plug-in composite cleanup routine when using install-blob"
@@ -2803,10 +2799,6 @@ msgstr "Switch branch from %s to %s?"
 msgid "Switch the firmware branch on the device"
 msgstr "Switch the firmware branch on the device"
 
-#. TRANSLATORS: command description
-msgid "Sync firmware versions to the host best known configuration"
-msgstr "Sync firmware versions to the host best known configuration"
-
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "System Update Inhibited"
@@ -2973,7 +2965,7 @@ msgid "There is no approved firmware."
 msgstr "There is no approved firmware."
 
 #. TRANSLATORS: %1 is the current device version number, and %2 is the
-#. command name, e.g. `fwupdmgr sync-bkc`
+#. command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "This device will be reverted back to %s when the %s command is performed."
@@ -3268,10 +3260,6 @@ msgstr "Updating %s…"
 #, c-format
 msgid "Upgrade %s from %s to %s?"
 msgstr "Upgrade %s from %s to %s?"
-
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "Upload report now?"
 
 #. TRANSLATORS: ask the user to share, %s is something
 #. * like: "Linux Vendor Firmware Service"

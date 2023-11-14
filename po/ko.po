@@ -2382,10 +2382,6 @@ msgstr "롤백 보호 정책에서 보안 문제를 야기하는 장치 프로�
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "더 많은 정보를 보려면 `fwupdmgr get-upgrades` 명령을 실행하십시오."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync-bkc` to complete this action."
-msgstr "이 동작을 끝내려면 `fwupdmgr sync-bkc` 명령을 실행하십시오."
-
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "install-blob 사용 시 플러그인 정리 루틴 실행"
@@ -2738,10 +2734,6 @@ msgstr "브랜치를 %s에서 %s(으)로 전환하시겠습니까?"
 msgid "Switch the firmware branch on the device"
 msgstr "장치의 펌웨어 브랜치 전환"
 
-#. TRANSLATORS: command description
-msgid "Sync firmware versions to the host best known configuration"
-msgstr "펌웨어 버전을 호스트에서 알려진 최적의 설정에 맞춤"
-
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "시스템 업데이트 동작을 억제했습니다"
@@ -2907,7 +2899,7 @@ msgid "There is no approved firmware."
 msgstr "허용된 펌웨어가 없습니다."
 
 #. TRANSLATORS: %1 is the current device version number, and %2 is the
-#. command name, e.g. `fwupdmgr sync-bkc`
+#. command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "이 장치는 %s(으)로 %s 명령을 실행하면 되돌립니다."
@@ -3188,10 +3180,6 @@ msgstr "%s 업데이트 중..."
 #, c-format
 msgid "Upgrade %s from %s to %s?"
 msgstr "%s을(를) %s에서 %s(으)로 업그레이드하시겠습니까?"
-
-#. TRANSLATORS: ask the user to upload
-msgid "Upload report now?"
-msgstr "지금 보고서를 업로드하시겠습니까?"
 
 #. TRANSLATORS: ask the user to share, %s is something
 #. * like: "Linux Vendor Firmware Service"
