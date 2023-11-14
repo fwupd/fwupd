@@ -757,31 +757,6 @@
       <package variant="x86_64">libcbor-devel</package>
     </distro>
   </dependency>
-  <dependency id="libgcab-dev">
-    <distro id="arch">
-      <package variant="x86_64">gcab</package>
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64">libgcab1-devel</package>
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64">libgcab1-devel</package>
-      <package variant="aarch64">libgcab1-devel</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libgcab-dev:s390x</package>
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-    <distro id="void">
-      <package variant="x86_64">gcab-devel</package>
-    </distro>
-  </dependency>
   <dependency id="libgirepository1.0-dev">
     <distro id="debian">
       <control />
