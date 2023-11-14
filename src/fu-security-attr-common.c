@@ -402,7 +402,7 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_BIOS_CAPSULE_UPDATES) == 0) {
 		/* TRANSLATORS: Title: Whether BIOS Firmware updates is enabled */
-		return g_strdup(_("BIOS Firmware Updates"));
+		return _("BIOS Firmware Updates");
 	}
 	return NULL;
 }
@@ -590,8 +590,7 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_BIOS_CAPSULE_UPDATES) == 0) {
 		/* TRANSLATORS: longer description */
-		return g_strdup(_("Enabling firmware updates for the BIOS allows fixing security "
-				  "issues."));
+		return _("Enabling firmware updates for the BIOS allows fixing security issues.");
 	}
 
 	return NULL;
