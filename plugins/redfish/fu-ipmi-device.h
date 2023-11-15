@@ -33,3 +33,7 @@ fu_ipmi_device_set_user_priv(FuIpmiDevice *self,
 			     guint8 priv_limit,
 			     guint8 channel,
 			     GError **error);
+gboolean
+fu_redfish_device_set_user_group_redfish_enable_advantech(FuIpmiDevice *self,
+							  guint8 user_id,
+							  GError **error);
