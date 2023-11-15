@@ -365,6 +365,14 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 		return FALSE;
 	if (!fu_ipmi_device_set_user_password(device, user_id, password_tmp, error))
 		return FALSE;
+	/* OEM specific for Advantech manufacture */
+	if (fu_context_has_hwid_guid(fu_plugin_get_context(plugin),
+				     "18789130-a714-53c0-b025-fa93801d3995")) {
+		if (!fu_redfish_device_set_user_group_redfish_enable_advantech(device,
+									       user_id,
+									       error))
+			return FALSE;
+	}
 	fu_redfish_backend_set_username(self->backend, username_fwupd);
 	fu_redfish_backend_set_password(self->backend, password_tmp);
 

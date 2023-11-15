@@ -686,6 +686,37 @@ fu_ipmi_device_set_user_priv(FuIpmiDevice *self,
 	return TRUE;
 }
 
+gboolean
+fu_redfish_device_set_user_group_redfish_enable_advantech(FuIpmiDevice *self,
+							  guint8 user_id,
+							  GError **error)
+{
+	const guint8 req[] = {0x39, 0x28, 0x0, user_id, 0x3, 0x1};
+	guint8 resp[0x3] = {0};
+	gsize resp_len = 0;
+
+	g_return_val_if_fail(FU_IS_IPMI_DEVICE(self), FALSE);
+	g_return_val_if_fail(user_id != 0x0, FALSE);
+
+	/* run transaction */
+	if (!fu_ipmi_device_transaction(self,
+					0x2e,
+					0x08,
+					req,
+					sizeof(req),
+					resp,
+					sizeof(resp),
+					&resp_len,
+					FU_IPMI_DEVICE_TIMEOUT,
+					error)) {
+		g_prefix_error(error, "failed to set user %02x redfish group enable: ", user_id);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_ipmi_device_init(FuIpmiDevice *self)
 {
