@@ -51,6 +51,8 @@ fu_tpm_eventlog_hash_get_size(TPM2_ALG_ID hash_kind)
 		return TPM2_SHA384_DIGEST_SIZE;
 	if (hash_kind == TPM2_ALG_SHA512)
 		return TPM2_SHA512_DIGEST_SIZE;
+	if (hash_kind == TPM2_ALG_SM3_256)
+		return TPM2_SM3_256_DIGEST_SIZE;
 	return 0;
 }
 
