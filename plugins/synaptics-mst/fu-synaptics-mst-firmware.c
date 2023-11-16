@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-synaptics-mst-connection.h"
 #include "fu-synaptics-mst-firmware.h"
 
 struct _FuSynapticsMstFirmware {
@@ -15,6 +14,8 @@ struct _FuSynapticsMstFirmware {
 };
 
 G_DEFINE_TYPE(FuSynapticsMstFirmware, fu_synaptics_mst_firmware, FU_TYPE_FIRMWARE)
+
+#define ADDR_CUSTOMER_ID 0x10E
 
 guint16
 fu_synaptics_mst_firmware_get_board_id(FuSynapticsMstFirmware *self)
