@@ -146,28 +146,54 @@ static gboolean
 fu_synaptics_mst_device_enable_rc(FuSynapticsMstDevice *self, GError **error)
 {
 	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
-	g_autoptr(FuSynapticsMstConnection) connection = NULL;
+	const gchar *sc = "PRIUS";
 
 	/* in test mode */
 	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) == NULL)
 		return TRUE;
 
-	connection = fu_synaptics_mst_connection_new(io_channel, self->layer, self->relative_addr);
-	return fu_synaptics_mst_connection_enable_rc(connection, error);
+	for (gint i = 0; i <= self->layer; i++) {
+		g_autoptr(FuSynapticsMstConnection) connection_tmp = NULL;
+		connection_tmp =
+		    fu_synaptics_mst_connection_new(io_channel, i, self->relative_addr);
+		if (!fu_synaptics_mst_connection_rc_set_command(connection_tmp,
+								FU_SYNAPTICS_MST_UPDC_CMD_ENABLE_RC,
+								0,
+								(guint8 *)sc,
+								5,
+								error)) {
+			g_prefix_error(error, "failed to enable remote control: ");
+			return FALSE;
+		}
+	}
+	return TRUE;
 }
 
 static gboolean
 fu_synaptics_mst_device_disable_rc(FuSynapticsMstDevice *self, GError **error)
 {
 	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
-	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 
 	/* in test mode */
 	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) == NULL)
 		return TRUE;
 
-	connection = fu_synaptics_mst_connection_new(io_channel, self->layer, self->relative_addr);
-	return fu_synaptics_mst_connection_disable_rc(connection, error);
+	for (gint i = self->layer; i >= 0; i--) {
+		g_autoptr(FuSynapticsMstConnection) connection_tmp = NULL;
+		connection_tmp =
+		    fu_synaptics_mst_connection_new(io_channel, i, self->relative_addr);
+		if (!fu_synaptics_mst_connection_rc_set_command(
+			connection_tmp,
+			FU_SYNAPTICS_MST_UPDC_CMD_DISABLE_RC,
+			0,
+			NULL,
+			0,
+			error)) {
+			g_prefix_error(error, "failed to disable remote control: ");
+			return FALSE;
+		}
+	}
+	return TRUE;
 }
 
 static gboolean
