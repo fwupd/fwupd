@@ -25,7 +25,7 @@ These devices use the provided GUID provided in the `SoftwareId` property
 without modification if it is a valid GUID. If the property is not a GUID then
 the vendor instance ID is used instead:
 
-* `REDFISH\\VENDOR_${RedfishManufacturer}&SOFTWAREID_${RedfishSoftwareId}`
+* `REDFISH\VENDOR_${RedfishManufacturer}&SOFTWAREID_${RedfishSoftwareId}`
 
 Additionally, this Instance ID is added for quirk and parent matching:
 
