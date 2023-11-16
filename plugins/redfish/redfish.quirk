@@ -22,3 +22,7 @@ ParentGuid = REDFISH\VENDOR_Lenovo&ID_LXPM
 
 [REDFISH\VENDOR_SMCI&ID_Backup_BIOS]
 Flags = is-backup,no-probe
+
+# Advantech
+[18789130-a714-53c0-b025-fa93801d3995]
+Flags = wildcard-targets,ipmi-create-user
