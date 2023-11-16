@@ -25,5 +25,5 @@ if __name__ == "__main__":
                 if line.startswith("#"):
                     continue
                 lines.append(line)
-    with gzip.open(args.output, "wb") as f:
+    with gzip.GzipFile(args.output, "wb", mtime=0) as f:
         f.write("\n".join(lines).encode())
