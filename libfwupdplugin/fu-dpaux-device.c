@@ -68,7 +68,8 @@ fu_dpaux_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get from sysfs if not set from tests */
-	if (fu_device_get_logical_id(device) == NULL) {
+	if (fu_device_get_logical_id(device) == NULL &&
+	    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)) != NULL) {
 		g_autofree gchar *logical_id = NULL;
 		logical_id =
 		    g_path_get_basename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
