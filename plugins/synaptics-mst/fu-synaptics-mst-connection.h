@@ -66,9 +66,3 @@ fu_synaptics_mst_connection_rc_special_get_command(FuSynapticsMstConnection *sel
 						   guint8 *buf,
 						   gsize bufsz,
 						   GError **error);
-
-gboolean
-fu_synaptics_mst_connection_enable_rc(FuSynapticsMstConnection *self, GError **error);
-
-gboolean
-fu_synaptics_mst_connection_disable_rc(FuSynapticsMstConnection *self, GError **error);

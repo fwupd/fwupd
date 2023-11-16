@@ -47,14 +47,43 @@ fu_synaptics_mst_connection_class_init(FuSynapticsMstConnectionClass *klass)
 	object_class->finalize = fu_synaptics_mst_connection_finalize;
 }
 
-static gboolean
-fu_synaptics_mst_connection_aux_node_read(FuSynapticsMstConnection *self,
-					  guint32 offset,
-					  guint8 *buf,
-					  gsize bufsz,
-					  GError **error)
+FuSynapticsMstConnection *
+fu_synaptics_mst_connection_new(FuIOChannel *io_channel, guint8 layer, guint relative_addr)
+{
+	FuSynapticsMstConnection *self = g_object_new(FU_TYPE_SYNAPTICS_MST_CONNECTION, NULL);
+	self->io_channel = g_object_ref(io_channel);
+	self->layer = layer;
+	self->remain_layer = layer;
+	self->relative_addr = relative_addr;
+	return self;
+}
+
+gboolean
+fu_synaptics_mst_connection_read(FuSynapticsMstConnection *self,
+				 guint32 offset,
+				 guint8 *buf,
+				 gsize bufsz,
+				 GError **error)
 {
 	g_autofree gchar *title = g_strdup_printf("read@0x%x", offset);
+
+	if (self->layer && self->remain_layer) {
+		guint8 node;
+		gboolean result;
+
+		self->remain_layer--;
+		node = (self->relative_addr >> self->remain_layer * 2) & 0x03;
+		result = fu_synaptics_mst_connection_rc_get_command(
+		    self,
+		    FU_SYNAPTICS_MST_UPDC_CMD_READ_FROM_TX_DPCD + node,
+		    offset,
+		    (guint8 *)buf,
+		    bufsz,
+		    error);
+		self->remain_layer++;
+		return result;
+	}
+
 	if (lseek(fu_io_channel_unix_get_fd(self->io_channel), offset, SEEK_SET) != offset) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -82,14 +111,32 @@ fu_synaptics_mst_connection_aux_node_read(FuSynapticsMstConnection *self,
 }
 
 static gboolean
-fu_synaptics_mst_connection_aux_node_write(FuSynapticsMstConnection *self,
-					   guint32 offset,
-					   const guint8 *buf,
-					   gsize bufsz,
-					   GError **error)
+fu_synaptics_mst_connection_write(FuSynapticsMstConnection *self,
+				  guint32 offset,
+				  const guint8 *buf,
+				  gsize bufsz,
+				  GError **error)
 {
 	g_autofree gchar *title = g_strdup_printf("write@0x%x", offset);
 	fu_dump_raw(G_LOG_DOMAIN, title, buf, bufsz);
+
+	if (self->layer && self->remain_layer) {
+		guint8 node;
+		gboolean result;
+
+		self->remain_layer--;
+		node = (self->relative_addr >> self->remain_layer * 2) & 0x03;
+		result = fu_synaptics_mst_connection_rc_set_command(
+		    self,
+		    FU_SYNAPTICS_MST_UPDC_CMD_WRITE_TO_TX_DPCD + node,
+		    offset,
+		    (guint8 *)buf,
+		    bufsz,
+		    error);
+		self->remain_layer++;
+		return result;
+	}
+
 	if (lseek(fu_io_channel_unix_get_fd(self->io_channel), offset, SEEK_SET) != offset) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -113,91 +160,6 @@ fu_synaptics_mst_connection_aux_node_write(FuSynapticsMstConnection *self,
 	}
 
 	return TRUE;
-}
-
-static gboolean
-fu_synaptics_mst_connection_bus_read(FuSynapticsMstConnection *self,
-				     guint32 offset,
-				     guint8 *buf,
-				     gsize bufsz,
-				     GError **error)
-{
-	return fu_synaptics_mst_connection_aux_node_read(self, offset, buf, bufsz, error);
-}
-
-static gboolean
-fu_synaptics_mst_connection_bus_write(FuSynapticsMstConnection *self,
-				      guint32 offset,
-				      const guint8 *buf,
-				      gsize bufsz,
-				      GError **error)
-{
-	return fu_synaptics_mst_connection_aux_node_write(self, offset, buf, bufsz, error);
-}
-
-FuSynapticsMstConnection *
-fu_synaptics_mst_connection_new(FuIOChannel *io_channel, guint8 layer, guint relative_addr)
-{
-	FuSynapticsMstConnection *self = g_object_new(FU_TYPE_SYNAPTICS_MST_CONNECTION, NULL);
-	self->io_channel = g_object_ref(io_channel);
-	self->layer = layer;
-	self->remain_layer = layer;
-	self->relative_addr = relative_addr;
-	return self;
-}
-
-gboolean
-fu_synaptics_mst_connection_read(FuSynapticsMstConnection *self,
-				 guint32 offset,
-				 guint8 *buf,
-				 gsize bufsz,
-				 GError **error)
-{
-	if (self->layer && self->remain_layer) {
-		guint8 node;
-		gboolean result;
-
-		self->remain_layer--;
-		node = (self->relative_addr >> self->remain_layer * 2) & 0x03;
-		result = fu_synaptics_mst_connection_rc_get_command(
-		    self,
-		    FU_SYNAPTICS_MST_UPDC_CMD_READ_FROM_TX_DPCD + node,
-		    offset,
-		    (guint8 *)buf,
-		    bufsz,
-		    error);
-		self->remain_layer++;
-		return result;
-	}
-
-	return fu_synaptics_mst_connection_bus_read(self, offset, buf, bufsz, error);
-}
-
-static gboolean
-fu_synaptics_mst_connection_write(FuSynapticsMstConnection *self,
-				  guint32 offset,
-				  const guint8 *buf,
-				  gsize bufsz,
-				  GError **error)
-{
-	if (self->layer && self->remain_layer) {
-		guint8 node;
-		gboolean result;
-
-		self->remain_layer--;
-		node = (self->relative_addr >> self->remain_layer * 2) & 0x03;
-		result = fu_synaptics_mst_connection_rc_set_command(
-		    self,
-		    FU_SYNAPTICS_MST_UPDC_CMD_WRITE_TO_TX_DPCD + node,
-		    offset,
-		    (guint8 *)buf,
-		    bufsz,
-		    error);
-		self->remain_layer++;
-		return result;
-	}
-
-	return fu_synaptics_mst_connection_bus_write(self, offset, buf, bufsz, error);
 }
 
 static gboolean
@@ -451,50 +413,5 @@ fu_synaptics_mst_connection_rc_special_get_command(FuSynapticsMstConnection *sel
 	}
 
 	/* success */
-	return TRUE;
-}
-
-gboolean
-fu_synaptics_mst_connection_enable_rc(FuSynapticsMstConnection *self, GError **error)
-{
-	const gchar *sc = "PRIUS";
-
-	for (gint i = 0; i <= self->layer; i++) {
-		g_autoptr(FuSynapticsMstConnection) connection_tmp = NULL;
-		connection_tmp =
-		    fu_synaptics_mst_connection_new(self->io_channel, i, self->relative_addr);
-		if (!fu_synaptics_mst_connection_rc_set_command(connection_tmp,
-								FU_SYNAPTICS_MST_UPDC_CMD_ENABLE_RC,
-								0,
-								(guint8 *)sc,
-								5,
-								error)) {
-			g_prefix_error(error, "failed to enable remote control: ");
-			return FALSE;
-		}
-	}
-
-	return TRUE;
-}
-
-gboolean
-fu_synaptics_mst_connection_disable_rc(FuSynapticsMstConnection *self, GError **error)
-{
-	for (gint i = self->layer; i >= 0; i--) {
-		g_autoptr(FuSynapticsMstConnection) connection_tmp = NULL;
-		connection_tmp =
-		    fu_synaptics_mst_connection_new(self->io_channel, i, self->relative_addr);
-		if (!fu_synaptics_mst_connection_rc_set_command(
-			connection_tmp,
-			FU_SYNAPTICS_MST_UPDC_CMD_DISABLE_RC,
-			0,
-			NULL,
-			0,
-			error)) {
-			g_prefix_error(error, "failed to disable remote control: ");
-			return FALSE;
-		}
-	}
-
 	return TRUE;
 }
