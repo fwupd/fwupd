@@ -2,7 +2,7 @@
 [USB\VID_208E&PID_0830]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = usb3
+Flags = usb3,attach-with-power
 CounterpartGuid = USB\VID_208E&PID_2830
 [USB\VID_208E&PID_2830]
 Plugin = vli

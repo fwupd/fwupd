@@ -117,6 +117,14 @@ This flag is used if device has a PS186 attached via I²C.
 
 This flag handles cases to update in firmware mode, skips ROM mode entirely.
 
+### Flags:attach-with-usb
+
+This flag is used if device needs unplug & re-plug usb cable to reset the device.
+
+### Flags:attach-with-power
+
+This flag is used if device needs unplug & re-plug power cord to reset the device.
+
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.
