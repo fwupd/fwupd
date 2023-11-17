@@ -544,7 +544,12 @@ fu_util_build_device_tree(FuUtilPrivate *priv, GNode *root, GPtrArray *devs)
 	}
 
 	/* prune children that are not updatable */
-	g_node_traverse(root, G_POST_ORDER, G_TRAVERSE_ALL, -1, fu_util_build_device_tree_cb, priv);
+	g_node_traverse(root,
+			G_LEVEL_ORDER,
+			G_TRAVERSE_ALL,
+			-1,
+			fu_util_build_device_tree_cb,
+			priv);
 }
 
 static gboolean
