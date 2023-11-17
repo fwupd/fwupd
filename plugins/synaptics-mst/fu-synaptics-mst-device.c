@@ -53,6 +53,13 @@
  */
 #define FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID (1 << 0)
 
+/**
+ * FU_SYNAPTICS_MST_DEVICE_FLAG_SCAN_CASCADE:
+ *
+ * Scan MST controllers for cascade devices.
+ */
+#define FU_SYNAPTICS_MST_DEVICE_FLAG_SCAN_CASCADE (1 << 1)
+
 struct _FuSynapticsMstDevice {
 	FuDpauxDevice parent_instance;
 	gchar *device_kind;
@@ -110,6 +117,9 @@ fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID,
 					"ignore-board-id");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_SYNAPTICS_MST_DEVICE_FLAG_SCAN_CASCADE,
+					"scan-cascade");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
 
@@ -1405,7 +1415,8 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to close parent: ");
 		return FALSE;
 	}
-	if (!fu_synaptics_mst_device_scan_cascade(self, 0, error))
+	if (fu_device_has_private_flag(device, FU_SYNAPTICS_MST_DEVICE_FLAG_SCAN_CASCADE) &&
+	    !fu_synaptics_mst_device_scan_cascade(self, 0, error))
 		return FALSE;
 
 	/* set up the device name and kind via quirks */

@@ -38,6 +38,18 @@ MST device may not enumerate if there is no monitor actually plugged in.
 
 The vendor ID is set from the PCI vendor, for example set to `DRM_DP_AUX_DEV:0x$(vid)`
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### Flags:ignore-board-id
+
+Ignore board ID firmware mismatch.
+
+### Flags:scan-cascade
+
+Scan MST controllers for remote cascade devices.
+
 ## Requirements
 
 ### (Kernel) DP Aux Interface
