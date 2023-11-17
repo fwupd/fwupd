@@ -171,7 +171,7 @@ fu_security_attrs_to_variant(FuSecurityAttrs *self)
  * fu_security_attrs_get_all:
  * @self: a #FuSecurityAttrs
  *
- * Gets all the attributes in the object.
+ * Gets all the non-obsoleted attributes in the object.
  *
  * Returns: (transfer container) (element-type FwupdSecurityAttr): attributes
  *
@@ -180,8 +180,15 @@ fu_security_attrs_to_variant(FuSecurityAttrs *self)
 GPtrArray *
 fu_security_attrs_get_all(FuSecurityAttrs *self)
 {
+	g_autoptr(GPtrArray) all = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(self), NULL);
-	return g_ptr_array_ref(self->attrs);
+	for (guint i = 0; i < self->attrs->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(self->attrs, i);
+		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
+			continue;
+		g_ptr_array_add(all, g_object_ref(attr));
+	}
+	return g_steal_pointer(&all);
 }
 
 /**
@@ -488,8 +495,6 @@ fu_security_attrs_to_json(FuSecurityAttrs *self, JsonBuilder *builder)
 	for (guint i = 0; i < items->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(items, i);
 		guint64 created = fwupd_security_attr_get_created(attr);
-		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
-			continue;
 		json_builder_begin_object(builder);
 		fwupd_security_attr_set_created(attr, 0);
 		fwupd_security_attr_to_json(attr, builder);
