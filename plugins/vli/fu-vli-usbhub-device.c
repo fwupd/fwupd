@@ -69,6 +69,18 @@ G_DEFINE_TYPE(FuVliUsbhubDevice, fu_vli_usbhub_device, FU_TYPE_VLI_DEVICE)
  * Device has a RTD21XX attached via I²C.
  */
 #define FU_VLI_USBHUB_DEVICE_FLAG_HAS_RTD21XX (1 << 6)
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_USB_CABLE:
+ *
+ * Unplug & re-plug USB cable to reset the device.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_USB_CABLE (1 << 7)
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_POWER_CORD:
+ *
+ * Unplug & re-plug power cord to reset the device.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_POWER_CORD (1 << 8)
 
 static void
 fu_vli_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -382,6 +394,36 @@ fu_vli_usbhub_device_attach(FuDevice *device, FuProgress *progress, GError **err
 {
 	FuDevice *proxy = fu_device_get_proxy_with_fallback(device);
 	g_autoptr(GError) error_local = NULL;
+
+	/* the user has to do something */
+	if (fu_device_has_private_flag(device, FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_USB_CABLE)) {
+		g_autoptr(FwupdRequest) request = fwupd_request_new();
+		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+		fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+		fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+		fwupd_request_set_message(
+		    request,
+		    "The update will continue when the device USB cable has been "
+		    "unplugged and then re-inserted.");
+		if (!fu_device_emit_request(device, request, progress, error))
+			return FALSE;
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		return TRUE;
+	}
+	if (fu_device_has_private_flag(device, FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_POWER_CORD)) {
+		g_autoptr(FwupdRequest) request = fwupd_request_new();
+		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+		fwupd_request_set_id(request, FWUPD_REQUEST_ID_REPLUG_POWER);
+		fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+		fwupd_request_set_message(
+		    request,
+		    "The update will continue when the device power cord has been "
+		    "unplugged and then re-inserted.");
+		if (!fu_device_emit_request(device, request, progress, error))
+			return FALSE;
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		return TRUE;
+	}
 
 	/* some hardware has to toggle a GPIO to reset the entire PCB */
 	if (fu_vli_device_get_kind(FU_VLI_DEVICE(proxy)) == FU_VLI_DEVICE_KIND_VL817 &&
@@ -1406,6 +1448,12 @@ fu_vli_usbhub_device_init(FuVliUsbhubDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_VLI_USBHUB_DEVICE_FLAG_HAS_RTD21XX,
 					"has-rtd21xx");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_USB_CABLE,
+					"attach-with-usb");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_POWER_CORD,
+					"attach-with-power");
 }
 
 static void
