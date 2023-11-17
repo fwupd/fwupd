@@ -6,7 +6,6 @@ Uploaders: Steve McIntyre <93sam@debian.org>,
            Mario Limonciello <superm1@gmail.com>
 Build-Depends: %%%DYNAMIC%%%
 Build-Depends-Indep: gi-docgen <!nodoc>,
-                     libglib2.0-doc <!nodoc>,
 Rules-Requires-Root: no
 Standards-Version: 4.6.0.1
 Section: admin
