@@ -111,7 +111,7 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 	struct drm_amdgpu_info_vbios vbios_info;
 	struct drm_amdgpu_info request = {
 	    .query = AMDGPU_INFO_VBIOS,
-	    .return_pointer = (__u64)&vbios_info,
+	    .return_pointer = GPOINTER_TO_UINT(&vbios_info),
 	    .return_size = sizeof(struct drm_amdgpu_info_vbios),
 	    .vbios_info.type = AMDGPU_INFO_VBIOS_INFO,
 	};
