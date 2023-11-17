@@ -111,6 +111,7 @@ typedef struct {
 static void
 fu_cab_firmware_parse_helper_free(FuCabFirmwareParseHelper *helper)
 {
+	inflateEnd(&helper->zstrm);
 	if (helper->fw != NULL)
 		g_bytes_unref(helper->fw);
 	if (helper->fw != NULL)
@@ -155,13 +156,6 @@ zfree(voidpf opaque, voidpf address)
 }
 
 typedef z_stream z_stream_deflater;
-typedef z_stream z_stream_inflater;
-
-static void
-zstream_inflater_free(z_stream_inflater *zstrm)
-{
-	inflateEnd(zstrm);
-}
 
 static void
 zstream_deflater_free(z_stream_deflater *zstrm)
@@ -170,7 +164,6 @@ zstream_deflater_free(z_stream_deflater *zstrm)
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(z_stream_deflater, zstream_deflater_free)
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(z_stream_inflater, zstream_inflater_free)
 
 static gboolean
 fu_cab_firmware_parse_data(FuCabFirmware *self,
@@ -251,7 +244,6 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 		int zret;
 		g_autofree gchar *kind = NULL;
 		g_autoptr(GByteArray) buf = g_byte_array_new();
-		g_autoptr(z_stream_inflater) zstrm_deflater = &helper->zstrm;
 
 		/* check compressed header */
 		kind = fu_memstrsafe(g_bytes_get_data(data_blob, NULL),
@@ -269,36 +261,26 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 				    kind);
 			return FALSE;
 		}
-		zstrm_deflater->zalloc = zalloc;
-		zstrm_deflater->zfree = zfree;
-		zstrm_deflater->avail_in = g_bytes_get_size(data_blob) - 2;
-		zstrm_deflater->next_in = (z_const Bytef *)g_bytes_get_data(data_blob, NULL) + 2;
-		zret = inflateInit2(zstrm_deflater, -MAX_WBITS);
-		if (zret != Z_OK) {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
-				    "failed to initialize inflate: %s",
-				    zError(zret));
-			return FALSE;
-		}
+		helper->zstrm.avail_in = g_bytes_get_size(data_blob) - 2;
+		helper->zstrm.next_in = (z_const Bytef *)g_bytes_get_data(data_blob, NULL) + 2;
 		while (1) {
-			zstrm_deflater->avail_out = sizeof(tmp);
-			zstrm_deflater->next_out = tmp;
+			helper->zstrm.avail_out = sizeof(tmp);
+			helper->zstrm.next_out = tmp;
 			zret = inflate(&helper->zstrm, Z_BLOCK);
 			if (zret == Z_STREAM_END)
 				break;
-			g_byte_array_append(buf, tmp, sizeof(tmp) - zstrm_deflater->avail_out);
+			g_byte_array_append(buf, tmp, sizeof(tmp) - helper->zstrm.avail_out);
 			if (zret != Z_OK) {
 				g_set_error(error,
 					    G_IO_ERROR,
 					    G_IO_ERROR_NOT_SUPPORTED,
-					    "inflate error: %s",
+					    "inflate error @0x%x: %s",
+					    (guint)*offset,
 					    zError(zret));
 				return FALSE;
 			}
 		}
-		zret = inflateReset(zstrm_deflater);
+		zret = inflateReset(&helper->zstrm);
 		if (zret != Z_OK) {
 			g_set_error(error,
 				    G_IO_ERROR,
@@ -307,7 +289,7 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 				    zError(zret));
 			return FALSE;
 		}
-		zret = inflateSetDictionary(zstrm_deflater, buf->data, buf->len);
+		zret = inflateSetDictionary(&helper->zstrm, buf->data, buf->len);
 		if (zret != Z_OK) {
 			g_set_error(error,
 				    G_IO_ERROR,
@@ -465,6 +447,31 @@ fu_cab_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GErr
 	return fu_struct_cab_header_validate_bytes(fw, offset, error);
 }
 
+static FuCabFirmwareParseHelper *
+fu_cab_firmware_parse_helper_new(GBytes *fw, FwupdInstallFlags flags, GError **error)
+{
+	int zret;
+	g_autoptr(FuCabFirmwareParseHelper) helper = g_new0(FuCabFirmwareParseHelper, 1);
+
+	/* zlib */
+	zret = inflateInit2(&helper->zstrm, -MAX_WBITS);
+	if (zret != Z_OK) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "failed to initialize inflate: %s",
+			    zError(zret));
+		return NULL;
+	}
+	helper->zstrm.zalloc = zalloc;
+	helper->zstrm.zfree = zfree;
+
+	helper->fw = g_bytes_ref(fw);
+	helper->install_flags = flags;
+	helper->folder_data = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
+	return g_steal_pointer(&helper);
+}
+
 static gboolean
 fu_cab_firmware_parse(FuFirmware *firmware,
 		      GBytes *fw,
@@ -475,7 +482,7 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 	FuCabFirmware *self = FU_CAB_FIRMWARE(firmware);
 	gsize off_cffile = 0;
 	g_autoptr(GByteArray) st = NULL;
-	g_autoptr(FuCabFirmwareParseHelper) helper = g_new0(FuCabFirmwareParseHelper, 1);
+	g_autoptr(FuCabFirmwareParseHelper) helper = NULL;
 
 	/* parse header */
 	st = fu_struct_cab_header_parse_bytes(fw, offset, error);
@@ -516,9 +523,9 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* create helper */
-	helper->fw = g_bytes_ref(fw);
-	helper->install_flags = flags;
-	helper->folder_data = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
+	helper = fu_cab_firmware_parse_helper_new(fw, flags, error);
+	if (helper == NULL)
+		return FALSE;
 
 	/* reserved sizes */
 	offset += st->len;
