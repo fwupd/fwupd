@@ -196,9 +196,9 @@ fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self, GByteArray *st_
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
-			    "invalid read buffer: size 0x%02x exceeded 0x%02lx.",
+			    "invalid read buffer: size 0x%02x exceeded 0x%02x",
 			    (guint)report_data_sz,
-			    sizeof(buf));
+			    (guint)sizeof(buf));
 		return NULL;
 	}
 
@@ -482,7 +482,8 @@ fu_mediatek_scaler_device_prepare_update_cb(FuDevice *device, gpointer user_data
 		return FALSE;
 	if (fw_sz != (gsize)acksz) {
 		g_prefix_error(error,
-			       "device nak the incoming filesize, requested: %lu, ack: %u",
+			       "device nak the incoming filesize, requested: %" G_GSIZE_FORMAT
+			       ", ack: %u",
 			       fw_sz,
 			       acksz);
 		return FALSE;
@@ -566,7 +567,8 @@ fu_mediatek_scaler_device_check_sent_info(FuMediatekScalerDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
-			    "failed data verification, sent size: %lu, ack size: %u",
+			    "failed data verification, sent size: %" G_GSIZE_FORMAT
+			    ", ack size: %u",
 			    g_bytes_get_size(fwdata),
 			    pktcnt);
 		return FALSE;
