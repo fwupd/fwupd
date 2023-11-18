@@ -2210,7 +2210,7 @@ fu_engine_check_requirements(FuEngine *self,
 
 	/* if a device uses a generic ID (i.e. not matching the OEM) then check to make sure the
 	 * firmware is specific enough, e.g. by using a CHID or depth requirement */
-	if (device != NULL &&
+	if (device != NULL && !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
 	    fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES) &&
 	    !has_specific_requirement) {
 #ifdef SUPPORTED_BUILD
