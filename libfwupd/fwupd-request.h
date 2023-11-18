@@ -96,7 +96,7 @@ typedef enum {
  * FWUPD_REQUEST_ID_REPLUG_INSTALL:
  *
  * Show the user a message to replug the device and then install the firmware, e.g.
- * "Unplug and replug the device, then install the firmware."
+ * "Unplug and replug the device, to continue the update process."
  *
  * Since 1.8.11
  */
