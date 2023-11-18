@@ -50,7 +50,7 @@ fu_bytes_set_contents(const gchar *filename, GBytes *bytes, GError **error)
 			return FALSE;
 	}
 	data = g_bytes_get_data(bytes, &size);
-	g_debug("writing %s with 0x%" G_GSIZE_FORMAT "x bytes", filename, size);
+	g_debug("writing %s with 0x%x bytes", filename, (guint)size);
 	return g_file_set_contents(filename, data, size, error);
 }
 
@@ -82,15 +82,15 @@ fu_bytes_get_contents(const gchar *filename, GError **error)
 		if (!g_file_get_contents(filename, &data, &len, error))
 			return NULL;
 		g_debug("failed to read as mapped file, "
-			"so reading %s of size 0x%" G_GSIZE_FORMAT "x: %s",
+			"so reading %s of size 0x%x: %s",
 			filename,
-			len,
+			(guint)len,
 			error_local != NULL ? error_local->message : "zero size");
 		return g_bytes_new_take(data, len);
 	}
-	g_debug("mapped file %s of size 0x%" G_GSIZE_FORMAT "x",
+	g_debug("mapped file %s of size 0x%x",
 		filename,
-		g_mapped_file_get_length(mapped_file));
+		(guint)g_mapped_file_get_length(mapped_file));
 	return g_mapped_file_get_bytes(mapped_file);
 }
 
