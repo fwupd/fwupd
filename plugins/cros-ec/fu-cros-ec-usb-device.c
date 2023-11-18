@@ -467,6 +467,13 @@ fu_cros_ec_usb_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_cros_ec_usb_device_reload(FuDevice *device, GError **error)
+{
+	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
+	return fu_cros_ec_usb_device_setup(device, error);
+}
+
+static gboolean
 fu_cros_ec_usb_device_transfer_block(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
@@ -1034,4 +1041,5 @@ fu_cros_ec_usb_device_class_init(FuCrosEcUsbDeviceClass *klass)
 	klass_device->write_firmware = fu_cros_ec_usb_device_write_firmware;
 	klass_device->probe = fu_cros_ec_usb_device_probe;
 	klass_device->set_progress = fu_cros_ec_usb_device_set_progress;
+	klass_device->reload = fu_cros_ec_usb_device_reload;
 }
