@@ -1,4 +1,5 @@
-if gudev.found()
+if get_option('plugin_mediatek_scaler').require(gudev.found(),
+    error_message: 'gudev is needed for plugin_mediatek_scaler').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginMediatekScaler"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

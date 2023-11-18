@@ -262,6 +262,11 @@ option('plugin_synaptics_mst',
     'false': 'disabled',
   },
 )
+option('plugin_mediatek_scaler',
+  type: 'feature',
+  description: 'Mediatek scaler support',
+  value: 'disabled',
+)
 option('plugin_synaptics_rmi',
   type: 'feature',
   description: 'Synaptics RMI support',
