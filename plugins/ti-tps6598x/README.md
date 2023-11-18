@@ -21,7 +21,7 @@ This plugin supports the following protocol ID:
 
 These devices use the standard USB DeviceInstanceId values, e.g.
 
-* `USB\VID_0451&PID_ACE1` (quirk-only)
+* `USB\VID_0451&PID_ACE1` (enforce-requires)
 
 Child devices also have an additional instance IDs which corresponds to the index, e.g.
 
