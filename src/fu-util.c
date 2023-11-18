@@ -499,7 +499,7 @@ fu_util_build_device_tree_cb(GNode *n, gpointer user_data)
 		return FALSE;
 
 	/* an interesting child, so include the parent */
-	for (GNode *c = n->children; c != NULL; n = c->next) {
+	for (GNode *c = n->children; c != NULL; c = c->next) {
 		if (c->data != NULL)
 			return FALSE;
 	}
