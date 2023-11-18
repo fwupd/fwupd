@@ -38,6 +38,7 @@ enum DdcI2cAddr{
     Checksum = 0x50,
 }
 
+#[derive(ToString)]
 #[repr(u8)]
 enum DdcciPriority{
     Normal,
