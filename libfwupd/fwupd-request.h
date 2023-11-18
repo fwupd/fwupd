@@ -194,7 +194,7 @@ fwupd_request_add_flag(FwupdRequest *self, FwupdRequestFlags flag);
 void
 fwupd_request_remove_flag(FwupdRequest *self, FwupdRequestFlags flag);
 gboolean
-fwupd_request_has_flag(FwupdRequest *self, FwupdRequestFlags flag);
+fwupd_request_has_flag(FwupdRequest *self, FwupdRequestFlags flag) G_GNUC_WARN_UNUSED_RESULT;
 
 FwupdRequest *
 fwupd_request_from_variant(GVariant *value);

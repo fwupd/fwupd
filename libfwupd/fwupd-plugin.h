@@ -45,7 +45,7 @@ fwupd_plugin_add_flag(FwupdPlugin *self, FwupdPluginFlags flag);
 void
 fwupd_plugin_remove_flag(FwupdPlugin *self, FwupdPluginFlags flag);
 gboolean
-fwupd_plugin_has_flag(FwupdPlugin *self, FwupdPluginFlags flag);
+fwupd_plugin_has_flag(FwupdPlugin *self, FwupdPluginFlags flag) G_GNUC_WARN_UNUSED_RESULT;
 
 FwupdPlugin *
 fwupd_plugin_from_variant(GVariant *value);

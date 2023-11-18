@@ -95,7 +95,8 @@ fwupd_bios_setting_get_description(FwupdBiosSetting *self);
 const gchar *
 fwupd_bios_setting_map_possible_value(FwupdBiosSetting *self, const gchar *key, GError **error);
 gboolean
-fwupd_bios_setting_has_possible_value(FwupdBiosSetting *self, const gchar *val);
+fwupd_bios_setting_has_possible_value(FwupdBiosSetting *self,
+				      const gchar *val) G_GNUC_WARN_UNUSED_RESULT;
 void
 fwupd_bios_setting_add_possible_value(FwupdBiosSetting *self, const gchar *possible_value);
 GPtrArray *
