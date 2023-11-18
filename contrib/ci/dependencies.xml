@@ -334,7 +334,7 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency id="libfreetype6-dev">
+  <dependency id="libfreetype-dev">
     <distro id="centos">
       <package variant="x86_64">freetype</package>
     </distro>
@@ -345,7 +345,7 @@
     <distro id="debian">
       <control />
       <package variant="x86_64" />
-      <package variant="s390x">libfreetype6-dev:s390x</package>
+      <package variant="s390x">libfreetype-dev:s390x</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
