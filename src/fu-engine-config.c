@@ -128,8 +128,13 @@ fu_engine_config_reload(FuEngineConfig *self)
 					   "DisabledPlugins",
 					   FU_DAEMON_CONFIG_DEFAULT_DISABLED_PLUGINS);
 	if (plugins != NULL) {
-		for (guint i = 0; plugins[i] != NULL; i++)
-			g_ptr_array_add(self->disabled_plugins, g_strdup(plugins[i]));
+		for (guint i = 0; plugins[i] != NULL; i++) {
+			g_autofree gchar *plugin_name = fu_strstrip(plugins[i]);
+			if (plugin_name == NULL || plugin_name[0] == '\0')
+				continue;
+			g_strdelimit(plugin_name, "-", '_');
+			g_ptr_array_add(self->disabled_plugins, g_steal_pointer(&plugin_name));
+		}
 	}
 
 	/* get approved firmware */
