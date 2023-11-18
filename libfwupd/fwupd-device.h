@@ -134,7 +134,7 @@ fwupd_device_add_flag(FwupdDevice *self, FwupdDeviceFlags flag);
 void
 fwupd_device_remove_flag(FwupdDevice *self, FwupdDeviceFlags flag);
 gboolean
-fwupd_device_has_flag(FwupdDevice *self, FwupdDeviceFlags flag);
+fwupd_device_has_flag(FwupdDevice *self, FwupdDeviceFlags flag) G_GNUC_WARN_UNUSED_RESULT;
 guint64
 fwupd_device_get_problems(FwupdDevice *self);
 void
@@ -144,7 +144,7 @@ fwupd_device_add_problem(FwupdDevice *self, FwupdDeviceProblem problem);
 void
 fwupd_device_remove_problem(FwupdDevice *self, FwupdDeviceProblem problem);
 gboolean
-fwupd_device_has_problem(FwupdDevice *self, FwupdDeviceProblem problem);
+fwupd_device_has_problem(FwupdDevice *self, FwupdDeviceProblem problem) G_GNUC_WARN_UNUSED_RESULT;
 guint64
 fwupd_device_get_created(FwupdDevice *self);
 void
@@ -158,7 +158,7 @@ fwupd_device_get_checksums(FwupdDevice *self);
 void
 fwupd_device_add_checksum(FwupdDevice *self, const gchar *checksum);
 gboolean
-fwupd_device_has_checksum(FwupdDevice *self, const gchar *checksum);
+fwupd_device_has_checksum(FwupdDevice *self, const gchar *checksum) G_GNUC_WARN_UNUSED_RESULT;
 const gchar *
 fwupd_device_get_plugin(FwupdDevice *self);
 void
@@ -172,7 +172,7 @@ fwupd_device_set_protocol(FwupdDevice *self, const gchar *protocol);
 void
 fwupd_device_add_protocol(FwupdDevice *self, const gchar *protocol);
 gboolean
-fwupd_device_has_protocol(FwupdDevice *self, const gchar *protocol);
+fwupd_device_has_protocol(FwupdDevice *self, const gchar *protocol) G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray *
 fwupd_device_get_protocols(FwupdDevice *self);
 const gchar *
@@ -188,13 +188,13 @@ fwupd_device_set_vendor_id(FwupdDevice *self, const gchar *vendor_id);
 void
 fwupd_device_add_vendor_id(FwupdDevice *self, const gchar *vendor_id);
 gboolean
-fwupd_device_has_vendor_id(FwupdDevice *self, const gchar *vendor_id);
+fwupd_device_has_vendor_id(FwupdDevice *self, const gchar *vendor_id) G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray *
 fwupd_device_get_vendor_ids(FwupdDevice *self);
 void
 fwupd_device_add_guid(FwupdDevice *self, const gchar *guid);
 gboolean
-fwupd_device_has_guid(FwupdDevice *self, const gchar *guid);
+fwupd_device_has_guid(FwupdDevice *self, const gchar *guid) G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray *
 fwupd_device_get_guids(FwupdDevice *self);
 const gchar *
@@ -202,13 +202,13 @@ fwupd_device_get_guid_default(FwupdDevice *self);
 void
 fwupd_device_add_instance_id(FwupdDevice *self, const gchar *instance_id);
 gboolean
-fwupd_device_has_instance_id(FwupdDevice *self, const gchar *instance_id);
+fwupd_device_has_instance_id(FwupdDevice *self, const gchar *instance_id) G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray *
 fwupd_device_get_instance_ids(FwupdDevice *self);
 void
 fwupd_device_add_icon(FwupdDevice *self, const gchar *icon);
 gboolean
-fwupd_device_has_icon(FwupdDevice *self, const gchar *icon);
+fwupd_device_has_icon(FwupdDevice *self, const gchar *icon) G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray *
 fwupd_device_get_icons(FwupdDevice *self);
 GPtrArray *

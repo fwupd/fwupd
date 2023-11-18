@@ -200,7 +200,8 @@ fwupd_security_attr_get_obsoletes(FwupdSecurityAttr *self);
 void
 fwupd_security_attr_add_obsolete(FwupdSecurityAttr *self, const gchar *appstream_id);
 gboolean
-fwupd_security_attr_has_obsolete(FwupdSecurityAttr *self, const gchar *appstream_id);
+fwupd_security_attr_has_obsolete(FwupdSecurityAttr *self,
+				 const gchar *appstream_id) G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray *
 fwupd_security_attr_get_guids(FwupdSecurityAttr *self);
 void
@@ -208,7 +209,7 @@ fwupd_security_attr_add_guid(FwupdSecurityAttr *self, const gchar *guid);
 void
 fwupd_security_attr_add_guids(FwupdSecurityAttr *self, GPtrArray *guids);
 gboolean
-fwupd_security_attr_has_guid(FwupdSecurityAttr *self, const gchar *guid);
+fwupd_security_attr_has_guid(FwupdSecurityAttr *self, const gchar *guid) G_GNUC_WARN_UNUSED_RESULT;
 const gchar *
 fwupd_security_attr_get_metadata(FwupdSecurityAttr *self, const gchar *key);
 void
@@ -222,7 +223,8 @@ fwupd_security_attr_add_flag(FwupdSecurityAttr *self, FwupdSecurityAttrFlags fla
 void
 fwupd_security_attr_remove_flag(FwupdSecurityAttr *self, FwupdSecurityAttrFlags flag);
 gboolean
-fwupd_security_attr_has_flag(FwupdSecurityAttr *self, FwupdSecurityAttrFlags flag);
+fwupd_security_attr_has_flag(FwupdSecurityAttr *self,
+			     FwupdSecurityAttrFlags flag) G_GNUC_WARN_UNUSED_RESULT;
 const gchar *
 fwupd_security_attr_flag_to_string(FwupdSecurityAttrFlags flag);
 FwupdSecurityAttrFlags

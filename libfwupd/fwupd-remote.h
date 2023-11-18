@@ -134,7 +134,7 @@ fwupd_remote_add_flag(FwupdRemote *self, FwupdRemoteFlags flag);
 void
 fwupd_remote_remove_flag(FwupdRemote *self, FwupdRemoteFlags flag);
 gboolean
-fwupd_remote_has_flag(FwupdRemote *self, FwupdRemoteFlags flag);
+fwupd_remote_has_flag(FwupdRemote *self, FwupdRemoteFlags flag) G_GNUC_WARN_UNUSED_RESULT;
 
 gboolean
 fwupd_remote_needs_refresh(FwupdRemote *self);

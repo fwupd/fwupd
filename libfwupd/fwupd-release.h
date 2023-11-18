@@ -54,19 +54,19 @@ fwupd_release_get_categories(FwupdRelease *self);
 void
 fwupd_release_add_category(FwupdRelease *self, const gchar *category);
 gboolean
-fwupd_release_has_category(FwupdRelease *self, const gchar *category);
+fwupd_release_has_category(FwupdRelease *self, const gchar *category) G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray *
 fwupd_release_get_checksums(FwupdRelease *self);
 void
 fwupd_release_add_checksum(FwupdRelease *self, const gchar *checksum);
 gboolean
-fwupd_release_has_checksum(FwupdRelease *self, const gchar *checksum);
+fwupd_release_has_checksum(FwupdRelease *self, const gchar *checksum) G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray *
 fwupd_release_get_tags(FwupdRelease *self);
 void
 fwupd_release_add_tag(FwupdRelease *self, const gchar *tag);
 gboolean
-fwupd_release_has_tag(FwupdRelease *self, const gchar *tag);
+fwupd_release_has_tag(FwupdRelease *self, const gchar *tag) G_GNUC_WARN_UNUSED_RESULT;
 
 GHashTable *
 fwupd_release_get_metadata(FwupdRelease *self);
@@ -168,7 +168,7 @@ fwupd_release_add_flag(FwupdRelease *self, FwupdReleaseFlags flag);
 void
 fwupd_release_remove_flag(FwupdRelease *self, FwupdReleaseFlags flag);
 gboolean
-fwupd_release_has_flag(FwupdRelease *self, FwupdReleaseFlags flag);
+fwupd_release_has_flag(FwupdRelease *self, FwupdReleaseFlags flag) G_GNUC_WARN_UNUSED_RESULT;
 FwupdReleaseUrgency
 fwupd_release_get_urgency(FwupdRelease *self);
 void
