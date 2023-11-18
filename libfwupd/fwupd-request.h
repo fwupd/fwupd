@@ -103,6 +103,16 @@ typedef enum {
 #define FWUPD_REQUEST_ID_REPLUG_INSTALL "org.freedesktop.fwupd.replug-install"
 
 /**
+ * FWUPD_REQUEST_ID_REPLUG_POWER:
+ *
+ * Show the user a message to replug the power connector, e.g.
+ * "The update will continue when the device power cable has been unplugged and then re-inserted."
+ *
+ * Since 1.9.9
+ */
+#define FWUPD_REQUEST_ID_REPLUG_POWER "org.freedesktop.fwupd.replug-power"
+
+/**
  * FWUPD_REQUEST_FLAG_NONE:
  *
  * No flags are set.
