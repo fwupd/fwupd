@@ -1,0 +1,5 @@
+# 5171 devboard
+# Not shown by default to avoid VID/PID sharing.
+[USB\VID_0A12&PID_4007]
+Plugin = audio_s5gen2
+Flags = no-generic-guids
