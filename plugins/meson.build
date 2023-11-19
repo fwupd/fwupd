@@ -26,6 +26,7 @@ plugins = {
   'analogix': false,
   'android-boot': false,
   'ata': false,
+  'audio-s5gen2': false,
   'aver-hid': false,
   'bcm57xx': false,
   'bios': false,
