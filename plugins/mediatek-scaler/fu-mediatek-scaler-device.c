@@ -460,13 +460,17 @@ fu_mediatek_scaler_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* mediatek display is connected */
-	if (!fu_mediatek_scaler_display_is_connected(device, error))
+	if (!fu_mediatek_scaler_display_is_connected(device, error)) {
+		fu_mediatek_scaler_device_set_ddc_priority(device, FU_DDCCI_PRIORITY_NORMAL, error);
 		return FALSE;
+	}
 
 	/* set hardware version */
 	hw_ver = fu_mediatek_scaler_device_get_hardware_version(device, error);
-	if (hw_ver == NULL)
+	if (hw_ver == NULL) {
+		fu_mediatek_scaler_device_set_ddc_priority(device, FU_DDCCI_PRIORITY_NORMAL, error);
 		return FALSE;
+	}
 
 	/* add IDs */
 	vid = g_strdup_printf("%04X", vid_u16);
