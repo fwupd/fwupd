@@ -21,6 +21,9 @@
 #define DDC_DATA_PAGE_SIZE	0x1000 /* 4K bytes for each block page */
 #define DDC_RW_MAX_RETRY_CNT	10
 
+/* supported display controller type */
+#define FU_MEDIATEK_SCALER_SUPPORTED_CONTROLLER_TYPE 0x00005605
+
 /* timeout duration in ms to i2c-dev operation */
 #define FU_MEDIATEK_SCALER_DEVICE_IOCTL_TIMEOUT 5000
 
@@ -373,11 +376,42 @@ fu_mediatek_scaler_device_get_firmware_version(FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_mediatek_scaler_controller_in_display(FuDevice *device, GError **error)
+{
+	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
+	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+	g_autoptr(GByteArray) st_res = NULL;
+	g_autoptr(GError) error_local = NULL;
+	guint32 controller_type = 0;
+
+	fu_struct_ddc_cmd_set_opcode(st_req, FU_DDC_OPCODE_GET_VCP);
+	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_CONTROLLER_TYPE);
+	st_res = fu_mediatek_scaler_device_ddc_read(self, st_req, error);
+	if (st_res == NULL) {
+		g_prefix_error(error, "failed to query display controller type");
+		return FALSE;
+	}
+	if (!fu_memread_uint32_safe(st_res->data,
+				    st_res->len,
+				    st_res->len - 4,
+				    &controller_type,
+				    G_BIG_ENDIAN,
+				    error))
+		return FALSE;
+	fu_device_sleep(device, FU_MEDIATEK_SCALER_DDC_MSG_DELAY_MS);
+
+	/* restrict to specific controller type */
+	return controller_type == FU_MEDIATEK_SCALER_SUPPORTED_CONTROLLER_TYPE;
+}
+
+static gboolean
 fu_mediatek_scaler_device_probe(FuDevice *device, GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
 	g_autoptr(FuUdevDevice) udev_parent = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	guint16 vid_u16 = 0;
+	guint16 pid_u16 = 0;
 	g_autofree gchar *vendor_id = NULL;
 	g_autofree gchar *vid = NULL;
 	g_autofree gchar *pid = NULL;
@@ -402,6 +436,25 @@ fu_mediatek_scaler_device_probe(FuDevice *device, GError **error)
 						      error))
 		return FALSE;
 
+	/* get vid and pid from PCI bus */
+	udev_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "pci");
+	if (udev_parent == NULL)
+		return FALSE;
+
+	if (!fu_device_probe(FU_DEVICE(udev_parent), error))
+		return FALSE;
+
+	vid_u16 = fu_udev_device_get_subsystem_vendor(udev_parent);
+	pid_u16 = fu_udev_device_get_subsystem_model(udev_parent);
+
+	/* supported host system only */
+	if (!(vid_u16 != 0x1028) && ((pid_u16 != 0x0c88) || (pid_u16 == 0x0c8a)))
+		return FALSE;
+
+	/* supported controller type only */
+	if (!fu_mediatek_scaler_controller_in_display(device, error))
+		return FALSE;
+
 	/* prioritize DDC/CI commands in display controller */
 	if (!fu_mediatek_scaler_device_set_ddc_priority(device, FU_DDCCI_PRIORITY_UP, error))
 		return FALSE;
@@ -415,18 +468,10 @@ fu_mediatek_scaler_device_probe(FuDevice *device, GError **error)
 	if (hw_ver == NULL)
 		return FALSE;
 
-	/* set vid and pid from PCI bus */
-	udev_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "pci");
-	if (udev_parent == NULL)
-		return FALSE;
-
-	if (!fu_device_probe(FU_DEVICE(udev_parent), error))
-		return FALSE;
-
-	vid = g_strdup_printf("%04X", fu_udev_device_get_subsystem_vendor(udev_parent));
-	pid = g_strdup_printf("%04X", fu_udev_device_get_subsystem_model(udev_parent));
-
 	/* add IDs */
+	vid = g_strdup_printf("%04X", vid_u16);
+	pid = g_strdup_printf("%04X", pid_u16);
+
 	vendor_id = g_strdup_printf("PCI:0x%s", vid);
 	fu_device_add_vendor_id(device, vendor_id);
 

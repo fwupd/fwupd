@@ -8,6 +8,7 @@
 #[repr(u8)]
 enum DdcOpcode {
     Req = 0xCC, // vendor specific opcode
+    GetVcp = 0x01, // standard get vcp feature
 }
 
 #[repr(u8)]
@@ -23,11 +24,12 @@ enum DdcVcpCode {
     Reboot = 0xFB,
     Sum = 0xFE,
     Version = 0xFF,
+    ControllerType = 0xC8, // standard display controller type
 }
 
 #[derive(New)]
 struct DdcCmd {
-    opcode: DdcOpcode == Req,
+    opcode: DdcOpcode = Req,
     vcp_code: DdcVcpCode,
 }
 
