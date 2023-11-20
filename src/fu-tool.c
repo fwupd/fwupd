@@ -27,6 +27,7 @@
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-plugin-private.h"
+#include "fwupd-remote-private.h"
 
 #include "fu-bios-settings-private.h"
 #include "fu-cabinet.h"
@@ -3029,13 +3030,13 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_refresh_remote(FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
 {
-	const gchar *metadata_uri = NULL;
+	g_autofree gchar *uri_raw = NULL;
+	g_autofree gchar *uri_sig = NULL;
 	g_autoptr(GBytes) bytes_raw = NULL;
 	g_autoptr(GBytes) bytes_sig = NULL;
 
 	/* signature */
-	metadata_uri = fwupd_remote_get_metadata_uri_sig(remote);
-	if (metadata_uri == NULL) {
+	if (fwupd_remote_get_metadata_uri_sig(remote) == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOTHING_TO_DO,
@@ -3043,8 +3044,11 @@ fu_util_refresh_remote(FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
 			    fwupd_remote_get_id(remote));
 		return FALSE;
 	}
+	uri_sig = fwupd_remote_build_metadata_sig_uri(remote, error);
+	if (uri_sig == NULL)
+		return FALSE;
 	bytes_sig = fwupd_client_download_bytes(priv->client,
-						metadata_uri,
+						uri_sig,
 						FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
 						priv->cancellable,
 						error);
@@ -3054,8 +3058,7 @@ fu_util_refresh_remote(FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
 		return FALSE;
 
 	/* payload */
-	metadata_uri = fwupd_remote_get_metadata_uri(remote);
-	if (metadata_uri == NULL) {
+	if (fwupd_remote_get_metadata_uri(remote) == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOTHING_TO_DO,
@@ -3063,8 +3066,11 @@ fu_util_refresh_remote(FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
 			    fwupd_remote_get_id(remote));
 		return FALSE;
 	}
+	uri_raw = fwupd_remote_build_metadata_uri(remote, error);
+	if (uri_raw == NULL)
+		return FALSE;
 	bytes_raw = fwupd_client_download_bytes(priv->client,
-						metadata_uri,
+						uri_raw,
 						FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
 						priv->cancellable,
 						error);
