@@ -4342,6 +4342,14 @@ fu_engine_create_metadata(FuEngine *self, XbBuilder *builder, FwupdRemote *remot
 
 	/* find all files in directory */
 	path = fwupd_remote_get_filename_cache(remote);
+	if (path == NULL) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "no filename cache for %s",
+			    fwupd_remote_get_id(remote));
+		return FALSE;
+	}
 	files = fu_path_get_files(path, error);
 	if (files == NULL)
 		return FALSE;
