@@ -3298,6 +3298,13 @@ fu_util_esp_list(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (locker == NULL)
 		return FALSE;
 	mount_point = fu_volume_get_mount_point(volume);
+	if (mount_point == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "no mountpoint for ESP");
+		return FALSE;
+	}
 	files = fu_path_get_files(mount_point, error);
 	if (files == NULL)
 		return FALSE;

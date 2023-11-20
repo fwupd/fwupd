@@ -571,6 +571,13 @@ fu_uefi_capsule_plugin_is_esp_linux(FuVolume *esp, GError **error)
 		basenames[i] = g_strdup_printf("%s%s.efi", basenames_root[i], efi_suffix);
 
 	/* look for any likely basenames */
+	if (mount_point == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "no mountpoint for ESP");
+		return FALSE;
+	}
 	files = fu_path_get_files(mount_point, error);
 	if (files == NULL)
 		return FALSE;
@@ -1166,6 +1173,13 @@ fu_uefi_capsule_plugin_cleanup_esp(FuUefiCapsulePlugin *self, GError **error)
 	esp_locker = fu_volume_locker(self->esp, error);
 	if (esp_locker == NULL)
 		return FALSE;
+	if (esp_path == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "no mountpoint for ESP");
+		return FALSE;
+	}
 	files = fu_path_get_files(esp_path, error);
 	if (files == NULL)
 		return FALSE;
