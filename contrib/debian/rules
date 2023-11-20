@@ -65,6 +65,10 @@ override_dh_install:
 	#install devices-tests (maybe)
 	[ ! -d debian/tmp/usr/share/fwupd/device-tests/ ] || dh_install -pfwupd-tests usr/share/fwupd/device-tests
 
+	#/usr merge or not (make backporting easier)
+	[ ! -d debian/tmp/lib/systemd ] || dh_install -pfwupd lib/systemd
+	[ ! -d debian/tmp/usr/lib/systemd ] || dh_install -pfwupd usr/lib/systemd
+
 	dh_missing -a --fail-missing
 
 	#this is placed in fwupd-tests

@@ -13,8 +13,6 @@ usr/share/metainfo/*
 usr/libexec/fwupd/*
 usr/lib/sysusers.d/*
 usr/share/man/*
-lib/systemd/system/*
-lib/systemd/system-shutdown/*
 lib/udev/rules.d/*
 data/fwupd.conf etc/fwupd
 debian/fwupd.pkla /var/lib/polkit-1/localauthority/10-vendor.d
