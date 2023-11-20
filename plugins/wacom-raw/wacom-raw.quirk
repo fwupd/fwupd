@@ -22,6 +22,11 @@ Guid[quirk] = WacomAES
 Plugin = wacom_raw
 Guid[quirk] = WacomAES
 
+#Lenovo X1 Yoga Gen7 530E
+[HIDRAW\VEN_056A&DEV_530E]
+Plugin = wacom_raw
+Guid[quirk] = WacomAES
+
 #Lenovo X1 Yoga Gen7 52B5
 [HIDRAW\VEN_056A&DEV_52B5]
 Plugin = wacom_raw
