@@ -12,7 +12,7 @@ the physical CPU at fwupd startup.
 
 These devices add extra instance IDs from the CPUID values, e.g.
 
-* `CPUID\PRO_0&FAM_06`
+* `CPUID\PRO_0&FAM_06` (only-quirk)
 * `CPUID\PRO_0&FAM_06&MOD_0E`
 * `CPUID\PRO_0&FAM_06&MOD_0E&STP_3`
 
