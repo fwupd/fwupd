@@ -1410,6 +1410,10 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	self->board_id = fu_memread_uint16(buf_ver, G_BIG_ENDIAN);
 
+	/* set up the device name and kind via quirks */
+	guid0 = g_strdup_printf("MST-%u", self->board_id);
+	fu_device_add_instance_id(FU_DEVICE(self), guid0);
+
 	/* recursively look for cascade devices */
 	if (!fu_device_locker_close(locker, error)) {
 		g_prefix_error(error, "failed to close parent: ");
@@ -1419,9 +1423,6 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	    !fu_synaptics_mst_device_scan_cascade(self, 0, error))
 		return FALSE;
 
-	/* set up the device name and kind via quirks */
-	guid0 = g_strdup_printf("MST-%u", self->board_id);
-	fu_device_add_instance_id(FU_DEVICE(self), guid0);
 	parent = fu_device_get_parent(FU_DEVICE(self));
 	if (parent != NULL)
 		name_parent = fu_device_get_name(parent);
