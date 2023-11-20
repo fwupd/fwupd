@@ -36,6 +36,8 @@ G_DECLARE_DERIVABLE_TYPE(FuKineticDpDevice,
 #define DPCD_ADDR_BRANCH_HW_REV	    0x00509
 #define DPCD_ADDR_BRANCH_FW_MAJ_REV 0x0050A
 #define DPCD_ADDR_BRANCH_FW_MIN_REV 0x0050B
+#define DPCD_ADDR_CUSTOMER_ID	    0x00515
+#define DPCD_ADDR_CUSTOMER_BOARD    0x0050F
 
 /* vendor-specific DPCD fields defined for Kinetic's usage */
 #define DPCD_ADDR_BRANCH_FW_REV 0x0050C
