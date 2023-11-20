@@ -212,7 +212,7 @@ fwupd_client_context_helper(FwupdClient *self, FwupdClientContextHelper *helper)
 	if (priv->idle_id == 0) {
 		g_autoptr(GSource) source = g_idle_source_new();
 		g_source_set_callback(source, fwupd_client_context_idle_cb, self, NULL);
-		priv->idle_id = g_source_attach(g_steal_pointer(&source), priv->main_ctx);
+		priv->idle_id = g_source_attach(source, priv->main_ctx);
 	}
 
 	/* run in the correct GMainContext and thread */
