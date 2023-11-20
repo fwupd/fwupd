@@ -3,6 +3,7 @@ if get_option('plugin_mediatek_scaler').require(gudev.found(),
 cargs = ['-DG_LOG_DOMAIN="FuPluginMediatekScaler"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
+plugin_quirks += files('mediatek-scaler.quirk')
 plugin_builtins += static_library('fu_plugin_mediatek_scaler',
   rustgen.process(
     'fu-mediatek-scaler.rs', # fuzzing

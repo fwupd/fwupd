@@ -31,6 +31,7 @@ the `Hardware Version`. The hardware version is read from the device.
 
 * `DISPLAY\VID_1028&PID_0C88&HWVER_2.1.2.1`
 * `DISPLAY\VID_1028&PID_0C8A&HWVER_2.1.2.1`
+* `PCI\VID_1028&PID_0C8A` (only-quirks)
 
 ## Update Behavior
 
@@ -40,7 +41,11 @@ MST device may not enumerate if there is no monitor actually plugged in.
 
 ## Quirk Use
 
-This plugin does not use quirks.
+This plugin uses the following plugin-specific quirks:
+
+### Flags:probe-vcp
+
+This flag is used if the VCP should be probed.
 
 ## Vendor ID security
 

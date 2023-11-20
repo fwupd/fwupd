@@ -21,6 +21,9 @@
 #define DDC_DATA_PAGE_SIZE	0x1000 /* 4K bytes for each block page */
 #define DDC_RW_MAX_RETRY_CNT	10
 
+/* supported display controller type */
+#define FU_MEDIATEK_SCALER_SUPPORTED_CONTROLLER_TYPE 0x00005605
+
 /* timeout duration in ms to i2c-dev operation */
 #define FU_MEDIATEK_SCALER_DEVICE_IOCTL_TIMEOUT 5000
 
@@ -32,6 +35,13 @@
 
 /* firmware payload size */
 #define FU_MEDIATEK_SCALER_FW_SIZE_MAX 0x100000
+
+/**
+ * FU_MEDIATEK_SCALER_DEVICE_FLAG_PROBE_VCP:
+ *
+ * Device VCP should be probed.
+ */
+#define FU_MEDIATEK_SCALER_DEVICE_FLAG_PROBE_VCP (1 << 0)
 
 struct _FuMediatekScalerDevice {
 	FuUdevDevice parent_instance;
@@ -393,10 +403,52 @@ fu_mediatek_scaler_device_close(FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_mediatek_scaler_device_verify_controller_type(FuMediatekScalerDevice *self, GError **error)
+{
+	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+	g_autoptr(GByteArray) st_res = NULL;
+	g_autoptr(GError) error_local = NULL;
+	guint32 controller_type = 0;
+
+	fu_struct_ddc_cmd_set_opcode(st_req, FU_DDC_OPCODE_GET_VCP);
+	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_CONTROLLER_TYPE);
+	st_res = fu_mediatek_scaler_device_ddc_read(self, st_req, error);
+	if (st_res == NULL)
+		return FALSE;
+	if (!fu_memread_uint32_safe(st_res->data,
+				    st_res->len,
+				    st_res->len - 4,
+				    &controller_type,
+				    G_BIG_ENDIAN,
+				    error))
+		return FALSE;
+	fu_device_sleep(FU_DEVICE(self), FU_MEDIATEK_SCALER_DDC_MSG_DELAY_MS);
+
+	/* restrict to specific controller type */
+	if (controller_type != FU_MEDIATEK_SCALER_SUPPORTED_CONTROLLER_TYPE) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "0x%x is not supported",
+			    controller_type);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_mediatek_scaler_device_setup(FuDevice *device, GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
 	g_autofree gchar *hw_ver = NULL;
+
+	/* verify the controller type */
+	if (!fu_mediatek_scaler_device_verify_controller_type(self, error)) {
+		g_prefix_error(error, "invalid controller type: ");
+		return FALSE;
+	}
 
 	/* mediatek display is connected */
 	if (!fu_mediatek_scaler_display_is_connected(self, error))
@@ -429,18 +481,36 @@ fu_mediatek_scaler_device_probe(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_mediatek_scaler_device_parent_class)->probe(device, error))
 		return FALSE;
 
-	/* determine the i2c_dev for dp aux dev */
-	if (!fu_mediatek_scaler_device_use_aux_dev(self, error))
-		return FALSE;
-
 	/* set vid and pid from PCI bus */
 	udev_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "pci");
 	if (udev_parent == NULL)
 		return FALSE;
 	if (!fu_device_probe(FU_DEVICE(udev_parent), error))
 		return FALSE;
+
 	fu_device_add_instance_u16(device, "VID", fu_udev_device_get_subsystem_vendor(udev_parent));
 	fu_device_add_instance_u16(device, "PID", fu_udev_device_get_subsystem_model(udev_parent));
+	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "PCI",
+					      "VID",
+					      "PID",
+					      NULL))
+		return FALSE;
+	if (!fu_device_has_private_flag(device, FU_MEDIATEK_SCALER_DEVICE_FLAG_PROBE_VCP)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "%04X:%04X: is not supported",
+			    fu_udev_device_get_subsystem_vendor(udev_parent),
+			    fu_udev_device_get_subsystem_model(udev_parent));
+		return FALSE;
+	}
+
+	/* determine the i2c_dev for dp aux dev */
+	if (!fu_mediatek_scaler_device_use_aux_dev(self, error))
+		return FALSE;
 
 	/* add IDs */
 	vendor_id = g_strdup_printf("PCI:0x%04X", fu_udev_device_get_subsystem_vendor(udev_parent));
@@ -878,6 +948,9 @@ fu_mediatek_scaler_device_init(FuMediatekScalerDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "Display Controller");
 	fu_device_add_icon(FU_DEVICE(self), "video-display");
 	fu_device_set_firmware_size_max(FU_DEVICE(self), FU_MEDIATEK_SCALER_FW_SIZE_MAX);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_MEDIATEK_SCALER_DEVICE_FLAG_PROBE_VCP,
+					"probe-vcp");
 }
 
 static void
