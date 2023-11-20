@@ -19,8 +19,9 @@ This plugin supports the following protocol ID:
 
 These devices use custom GUID values, e.g.
 
-* `MST\VEN_60AD&DEV_KT50X0`
-* `MST\VEN_60AD&FAM_JAGUAR` (only-quirk)
+* `MST\VEN_60AD&DEV_${dev_id}&CID_${customer_id}&CHW_${customer_board}`
+* `MST\VEN_60AD&DEV_${dev_id}&CID_${customer_id}` (only-quirk)
+* `MST\VEN_60AD&FAM_${family_id}` (only-quirk)
 
 ## Vendor ID Security
 

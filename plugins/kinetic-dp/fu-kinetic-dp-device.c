@@ -15,6 +15,8 @@ typedef struct {
 	FuKineticDpFamily family;
 	FuKineticDpChip chip_id;
 	FuKineticDpFwState fw_state;
+	guint8 customer_id;
+	guint8 customer_board;
 } FuKineticDpDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuKineticDpDevice, fu_kinetic_dp_device, FU_TYPE_DPAUX_DEVICE)
@@ -28,6 +30,8 @@ fu_kinetic_dp_device_to_string(FuDevice *device, guint idt, GString *str)
 	fu_string_append(str, idt, "Family", fu_kinetic_dp_family_to_string(priv->family));
 	fu_string_append(str, idt, "ChipId", fu_kinetic_dp_chip_to_string(priv->chip_id));
 	fu_string_append(str, idt, "FwState", fu_kinetic_dp_fw_state_to_string(priv->fw_state));
+	fu_string_append_kx(str, idt, "CustomerId", priv->customer_id);
+	fu_string_append_kx(str, idt, "CustomerBoard", priv->customer_board);
 }
 
 void
@@ -117,6 +121,61 @@ fu_kinetic_dp_device_dpcd_write_oui(FuKineticDpDevice *self, const guint8 *buf, 
 }
 
 static gboolean
+fu_kinetic_dp_device_ensure_customer(FuKineticDpDevice *self, GError **error)
+{
+	FuKineticDpDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* board */
+	if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(self),
+				  DPCD_ADDR_CUSTOMER_BOARD,
+				  &priv->customer_board,
+				  sizeof(priv->customer_board),
+				  FU_KINETIC_DP_DEVICE_TIMEOUT,
+				  error)) {
+		g_prefix_error(error, "aux dpcd read customer board failed: ");
+		return FALSE;
+	}
+	fu_device_add_instance_u8(FU_DEVICE(self), "CHW", priv->customer_board);
+
+	/* id */
+	if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(self),
+				  DPCD_ADDR_CUSTOMER_ID,
+				  &priv->customer_id,
+				  sizeof(priv->customer_id),
+				  FU_KINETIC_DP_DEVICE_TIMEOUT,
+				  error)) {
+		g_prefix_error(error, "aux dpcd read customer ID failed: ");
+		return FALSE;
+	}
+	fu_device_add_instance_u8(FU_DEVICE(self), "CID", priv->customer_id);
+	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "MST",
+					      "VEN",
+					      "DEV",
+					      "CID",
+					      NULL))
+		return FALSE;
+
+	/* Kinetic EV board */
+	if (priv->customer_id == 0x0) {
+		fu_device_add_internal_flag(FU_DEVICE(self),
+					    FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
+	}
+
+	/* success */
+	return fu_device_build_instance_id(FU_DEVICE(self),
+					   error,
+					   "MST",
+					   "VEN",
+					   "DEV",
+					   "CID",
+					   "CHW",
+					   NULL);
+}
+
+static gboolean
 fu_kinetic_dp_device_setup(FuDevice *device, GError **error)
 {
 	FuKineticDpDevice *self = FU_KINETIC_DP_DEVICE(device);
@@ -138,18 +197,19 @@ fu_kinetic_dp_device_setup(FuDevice *device, GError **error)
 	if (chip_id_str != NULL)
 		fu_device_set_name(FU_DEVICE(self), chip_id_str);
 
-	/* detect chip family */
-	priv->family = fu_kinetic_dp_device_chip_id_to_family(priv->chip_id);
-	fu_device_add_instance_strup(FU_DEVICE(self),
-				     "FAM",
-				     fu_kinetic_dp_family_to_string(priv->family));
+	/* use the DPCD for the device */
 	fu_device_add_instance_u16(FU_DEVICE(self),
 				   "VEN",
 				   fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)));
 	fu_device_add_instance_str(FU_DEVICE(self),
 				   "DEV",
 				   fu_dpaux_device_get_dpcd_dev_id(FU_DPAUX_DEVICE(device)));
-	fu_device_add_instance_str(FU_DEVICE(self), "CID", chip_id_str);
+
+	/* detect chip family */
+	priv->family = fu_kinetic_dp_device_chip_id_to_family(priv->chip_id);
+	fu_device_add_instance_strup(FU_DEVICE(self),
+				     "FAM",
+				     fu_kinetic_dp_family_to_string(priv->family));
 	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
 					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					      error,
@@ -158,15 +218,9 @@ fu_kinetic_dp_device_setup(FuDevice *device, GError **error)
 					      "FAM",
 					      NULL))
 		return FALSE;
-	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
-					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
-					      error,
-					      "MST",
-					      "VEN",
-					      "CID",
-					      NULL))
-		return FALSE;
-	if (!fu_device_build_instance_id(FU_DEVICE(self), error, "MST", "VEN", "DEV", NULL))
+
+	/* read customer ID to get a more-specific GUID */
+	if (!fu_kinetic_dp_device_ensure_customer(self, error))
 		return FALSE;
 
 	/* success */
