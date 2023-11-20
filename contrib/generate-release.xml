@@ -1,0 +1,24 @@
+    <release version="{{version}}" date="{{date}}">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+{%- for item in features %}
+          <li>{{item}}</li>
+{%- endfor %}
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+{%- for item in bugs %}
+          <li>{{item}}</li>
+{%- endfor %}
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+{%- for item in devices %}
+          <li>{{item}}</li>
+{%- endfor %}
+        </ul>
+      </description>
+    </release>
