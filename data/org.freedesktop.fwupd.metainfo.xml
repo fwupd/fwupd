@@ -49,12 +49,12 @@
           <li>Fix a potential critical warning when listing the contents of the ESP</li>
           <li>Fix 'fwupdmgr get-devices' with deeply nested devices</li>
           <li>Make the Kinetic DP GUID specific to the customer</li>
-          <li>Only use the USB open-retry behaviour when required</li>
+          <li>Only use the USB open-retry behavior when required</li>
           <li>Remove obsoleted HSI attributes earlier</li>
           <li>Remove the timestamp from gzip to achieve a reproducible build</li>
           <li>Support cabinet archives produced using 'makecab.exe'</li>
           <li>Use metadata authentication when using 'fwupdtool refresh'</li>
-          <li>Use the generic ti-tps6598x GUID and instead enforce requriements</li>
+          <li>Use the generic ti-tps6598x GUID and instead enforce requirements</li>
         </ul>
         <p>This release adds support for the following hardware:</p>
         <ul>
