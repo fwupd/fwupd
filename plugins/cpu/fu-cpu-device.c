@@ -149,7 +149,13 @@ fu_cpu_device_add_instance_ids(FuDevice *device, GError **error)
 	fu_device_add_instance_u8(device, "FAM", family_id);
 	fu_device_add_instance_u8(device, "MOD", model_id);
 	fu_device_add_instance_u4(device, "STP", stepping_id);
-	fu_device_build_instance_id(device, NULL, "CPUID", "PRO", "FAM", NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "CPUID",
+					 "PRO",
+					 "FAM",
+					 NULL);
 	fu_device_build_instance_id(device, NULL, "CPUID", "PRO", "FAM", "MOD", NULL);
 	fu_device_build_instance_id(device, NULL, "CPUID", "PRO", "FAM", "MOD", "STP", NULL);
 
