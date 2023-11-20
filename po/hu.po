@@ -3118,10 +3118,6 @@ msgstr "Feloldja az eszközt a belső vezérlőprogram eléréséhez"
 msgid "Unmounts the ESP"
 msgstr "Leválasztja az ESP-t"
 
-#. TRANSLATORS: message shown after device has been marked for emulation
-msgid "Unplug and replug the device, then install the firmware."
-msgstr "Húzza ki és csatlakoztassa újra az eszközt, majd telepítse a belső vezérlőprogramot."
-
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "A hibakeresési jelző kikapcsolása a frissítés során"

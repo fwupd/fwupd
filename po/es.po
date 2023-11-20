@@ -3130,10 +3130,6 @@ msgstr "Desbloquea el dispositivo para acceso al firmware"
 msgid "Unmounts the ESP"
 msgstr "Desmontajes de ESP"
 
-#. TRANSLATORS: message shown after device has been marked for emulation
-msgid "Unplug and replug the device, then install the firmware."
-msgstr "Desenchufe y vuelva a enchufar el dispositivo, después instale el firmware."
-
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Suelta el indicador de depuración durante actualización"

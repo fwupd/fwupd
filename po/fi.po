@@ -3061,10 +3061,6 @@ msgstr "Avaa laitteen lukituksen, jotta laiteohjelmistoon on pääsy"
 msgid "Unmounts the ESP"
 msgstr "Irrota ESP"
 
-#. TRANSLATORS: message shown after device has been marked for emulation
-msgid "Unplug and replug the device, then install the firmware."
-msgstr "Irrota laite, liitä se uudestaan ja asenna sen jälkeen laiteohjelmisto."
-
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Poista virheenkorjauksen lippu päivityksen aikana"

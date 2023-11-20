@@ -2968,6 +2968,10 @@ msgstr "Uppdateringen kommer fortsätta när enhetens USB-kabel har kopplats fr�
 msgid "The update will continue when the device USB cable has been unplugged."
 msgstr "Uppdateringen kommer fortsätta när enhetens USB-kabel har kopplats från."
 
+#. TRANSLATORS: warning message
+msgid "The update will continue when the device power cable has been removed and re-inserted."
+msgstr "Uppdateringen kommer fortsätta när enhetens strömkabel har dragits ut och stoppats in igen."
+
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
 msgstr "Tillverkaren tillhandahöll inte några kommentarer till utgåvan."
@@ -3193,8 +3197,8 @@ msgid "Unmounts the ESP"
 msgstr "Avmonterar ESP"
 
 #. TRANSLATORS: message shown after device has been marked for emulation
-msgid "Unplug and replug the device, then install the firmware."
-msgstr "Koppla ur och koppla in enheten igen, installera sedan den fasta programvaran."
+msgid "Unplug and replug the device to continue the update process."
+msgstr "Koppla ur och koppla in enheten igen för att fortsätta uppdateringsprocessen."
 
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"

@@ -33,6 +33,36 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.9" date="2023-11-20">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a new generic request for the device power cable</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Disable scanning for synaptics-mst cascade devices until it is more stable</li>
+          <li>Disable the mediatek-scaler plugin by default until we do VCP probing</li>
+          <li>Do not enforce additional requires on emulated devices</li>
+          <li>Fix a potential critical warning when listing the contents of the ESP</li>
+          <li>Fix 'fwupdmgr get-devices' with deeply nested devices</li>
+          <li>Make the Kinetic DP GUID specific to the customer</li>
+          <li>Only use the USB open-retry behaviour when required</li>
+          <li>Remove obsoleted HSI attributes earlier</li>
+          <li>Remove the timestamp from gzip to achieve a reproducible build</li>
+          <li>Support cabinet archives produced using 'makecab.exe'</li>
+          <li>Use metadata authentication when using 'fwupdtool refresh'</li>
+          <li>Use the generic ti-tps6598x GUID and instead enforce requriements</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Lenovo X1 Yoga Gen7 530E</li>
+          <li>Advantech BMC devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.8" date="2023-11-14">
       <description>
         <p>

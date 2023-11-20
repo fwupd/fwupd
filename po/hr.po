@@ -2950,10 +2950,6 @@ msgstr "Otključava uređaj za pristup firmveru"
 msgid "Unmounts the ESP"
 msgstr "Demontira ESP"
 
-#. TRANSLATORS: message shown after device has been marked for emulation
-msgid "Unplug and replug the device, then install the firmware."
-msgstr "Idključi i ponovo uključi urađaj, zatim instaliraj firmver."
-
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Ukloni oznaku otklanjanja grešaka tijekom nadopune"

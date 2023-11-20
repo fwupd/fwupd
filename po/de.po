@@ -3103,10 +3103,6 @@ msgstr "Entsperrt das Gerät für Zugriff auf die Firmware"
 msgid "Unmounts the ESP"
 msgstr "Hängt das ESP aus"
 
-#. TRANSLATORS: message shown after device has been marked for emulation
-msgid "Unplug and replug the device, then install the firmware."
-msgstr "Stecken Sie das Gerät aus und wieder ein, und installieren Sie dann die Firmware."
-
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Den Schalter für Fehlerdiagnose während der Aktualisierung ausstellen"

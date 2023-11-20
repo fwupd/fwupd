@@ -2435,6 +2435,10 @@ msgstr "Es recuperen les opcions de configuració del BIOS. Si no es transmeten 
 msgid "Return all the hardware IDs for the machine"
 msgstr "Retorna tots els ID del maquinari de la màquina."
 
+#. TRANSLATORS: ask the user to upload
+msgid "Review and upload report now?"
+msgstr "Voleu revisar i penjar ara l'informe?"
+
 #. TRANSLATORS: longer description
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "La protecció contra la reversió evita que el programari del dispositiu torni a una versió anterior que potser conté problemes de seguretat."
@@ -2442,6 +2446,10 @@ msgstr "La protecció contra la reversió evita que el programari del dispositiu
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Per a més informació, executeu «fwupdmgr get-upgrades»."
+
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr sync` to complete this action."
+msgstr "Executeu «fwupdmgr sync» per a completar aquesta acció."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -2802,6 +2810,10 @@ msgstr "Voleu canviar la branca des de %s a %s?"
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
 msgstr "Canvia la branca de microprogramari en el dispositiu."
+
+#. TRANSLATORS: command description
+msgid "Sync firmware versions to the chosen configuration"
+msgstr "Sincronitza les versions del microprogramari amb la configuració triada"
 
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
@@ -3174,10 +3186,6 @@ msgstr "Desbloqueja el dispositiu per a accedir al microprogramari."
 #. TRANSLATORS: command description
 msgid "Unmounts the ESP"
 msgstr "Desmunta l'ESP."
-
-#. TRANSLATORS: message shown after device has been marked for emulation
-msgid "Unplug and replug the device, then install the firmware."
-msgstr "Desconnecteu i torneu a connectar el dispositiu i, després instal·leu el microprogramari."
 
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"

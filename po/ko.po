@@ -3091,10 +3091,6 @@ msgstr "펌웨어에 접근할 수 있도록 장치 잠금을 해제"
 msgid "Unmounts the ESP"
 msgstr "ESP 마운트 해제"
 
-#. TRANSLATORS: message shown after device has been marked for emulation
-msgid "Unplug and replug the device, then install the firmware."
-msgstr "장치를 뽑았다가 다시 연결한 후 펌웨어를 설치하십시오."
-
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "업데이트 중 디버깅 플래그 설정 해제"

@@ -2827,10 +2827,6 @@ msgstr "Membuka kunci perangkat bagi akses firmware"
 msgid "Unmounts the ESP"
 msgstr "Lepas kait ESP"
 
-#. TRANSLATORS: message shown after device has been marked for emulation
-msgid "Unplug and replug the device, then install the firmware."
-msgstr "Cabut dan pasang kembali perangkat, lalu pasang firmware."
-
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Batalkan flag debugging selama pembaruan"

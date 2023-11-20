@@ -2435,6 +2435,10 @@ msgstr "Retrieve BIOS settings.  If no arguments are passed all settings are ret
 msgid "Return all the hardware IDs for the machine"
 msgstr "Return all the hardware IDs for the machine"
 
+#. TRANSLATORS: ask the user to upload
+msgid "Review and upload report now?"
+msgstr "Review and upload report now?"
+
 #. TRANSLATORS: longer description
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
@@ -2443,6 +2447,10 @@ msgstr "Rollback Protection prevents device software from being downgraded to an
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Run `fwupdmgr get-upgrades` for more information."
 
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr sync` to complete this action."
+msgstr "Run `fwupdmgr sync` to complete this action."
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Run the plug-in composite cleanup routine when using install-blob"
@@ -2450,6 +2458,10 @@ msgstr "Run the plug-in composite cleanup routine when using install-blob"
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Run the plug-in composite prepare routine when using install-blob"
+
+#. TRANSLATORS: command description
+msgid "Run the post-reboot cleanup action"
+msgstr "Run the post-reboot cleanup action"
 
 #. TRANSLATORS: tell a user how to get information
 #, c-format
@@ -2799,6 +2811,10 @@ msgstr "Switch branch from %s to %s?"
 msgid "Switch the firmware branch on the device"
 msgstr "Switch the firmware branch on the device"
 
+#. TRANSLATORS: command description
+msgid "Sync firmware versions to the chosen configuration"
+msgstr "Sync firmware versions to the chosen configuration"
+
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "System Update Inhibited"
@@ -2946,6 +2962,10 @@ msgstr "The update will continue when the device USB cable has been unplugged an
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "The update will continue when the device USB cable has been unplugged."
 msgstr "The update will continue when the device USB cable has been unplugged."
+
+#. TRANSLATORS: warning message
+msgid "The update will continue when the device power cable has been removed and re-inserted."
+msgstr "The update will continue when the device power cable has been removed and re-inserted."
 
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
@@ -3172,8 +3192,8 @@ msgid "Unmounts the ESP"
 msgstr "Unmounts the ESP"
 
 #. TRANSLATORS: message shown after device has been marked for emulation
-msgid "Unplug and replug the device, then install the firmware."
-msgstr "Unplug and replug the device, then install the firmware."
+msgid "Unplug and replug the device to continue the update process."
+msgstr "Unplug and replug the device to continue the update process."
 
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
@@ -3413,6 +3433,10 @@ msgstr "[DEVICE-ID|GUID] [BRANCH]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [VERSION]"
 msgstr "[DEVICE-ID|GUID] [VERSION]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE]"
+msgstr "[DEVICE]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"

@@ -2990,6 +2990,10 @@ msgstr "Оновлення буде продовжено після того, я
 msgid "The update will continue when the device USB cable has been unplugged."
 msgstr "Оновлення буде продовжено після того, як кабель USB буде вийнято з пристрою."
 
+#. TRANSLATORS: warning message
+msgid "The update will continue when the device power cable has been removed and re-inserted."
+msgstr "Оновлення буде продовжено після того, як кабель живлення буде вийнято з пристрою і вставлено знову."
+
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
 msgstr "Виробником не надано ніяких нотаток щодо випуску."
@@ -3215,8 +3219,8 @@ msgid "Unmounts the ESP"
 msgstr "Демонтує ESP"
 
 #. TRANSLATORS: message shown after device has been marked for emulation
-msgid "Unplug and replug the device, then install the firmware."
-msgstr "Від'єднайте, повторно з'єднайте пристрій, потім встановіть мікропрограму."
+msgid "Unplug and replug the device to continue the update process."
+msgstr "Від'єднайте і повторно з'єднайте пристрій, щоб продовжити процедуру оновлення."
 
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
