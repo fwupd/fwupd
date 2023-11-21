@@ -96,6 +96,10 @@ static void
 fu_engine_finalize(GObject *obj);
 static void
 fu_engine_ensure_security_attrs(FuEngine *self);
+static gboolean
+fu_engine_backends_save_phase(FuEngine *self, GError **error);
+static gboolean
+fu_engine_emulation_load_phase(FuEngine *self, GError **error);
 
 typedef enum {
 	FU_ENGINE_INSTALL_PHASE_SETUP,
@@ -105,6 +109,8 @@ typedef enum {
 	FU_ENGINE_INSTALL_PHASE_PREPARE,
 	FU_ENGINE_INSTALL_PHASE_CLEANUP,
 	FU_ENGINE_INSTALL_PHASE_RELOAD,
+	FU_ENGINE_INSTALL_PHASE_COMPOSITE_PREPARE,
+	FU_ENGINE_INSTALL_PHASE_COMPOSITE_CLEANUP,
 	FU_ENGINE_INSTALL_PHASE_LAST
 } FuEngineInstallPhase;
 
@@ -401,6 +407,10 @@ fu_engine_install_phase_to_string(FuEngineInstallPhase phase)
 		return "cleanup";
 	if (phase == FU_ENGINE_INSTALL_PHASE_RELOAD)
 		return "reload";
+	if (phase == FU_ENGINE_INSTALL_PHASE_COMPOSITE_PREPARE)
+		return "composite-prepare";
+	if (phase == FU_ENGINE_INSTALL_PHASE_COMPOSITE_CLEANUP)
+		return "composite-cleanup";
 	return NULL;
 }
 
@@ -2486,11 +2496,32 @@ gboolean
 fu_engine_composite_prepare(FuEngine *self, GPtrArray *devices, GError **error)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
+	gboolean any_emulated = FALSE;
+
+	/* we are emulating a device */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+			any_emulated = TRUE;
+	}
+	if (any_emulated) {
+		if (!fu_engine_emulation_load_phase(self, error))
+			return FALSE;
+	}
+
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index(plugins, j);
 		if (!fu_plugin_runner_composite_prepare(plugin_tmp, devices, error))
 			return FALSE;
 	}
+
+	/* save to emulated phase */
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) && !any_emulated) {
+		if (!fu_engine_backends_save_phase(self, error))
+			return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -2508,11 +2539,32 @@ gboolean
 fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
+	gboolean any_emulated = FALSE;
+
+	/* we are emulating a device */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+			any_emulated = TRUE;
+	}
+	if (any_emulated) {
+		if (!fu_engine_emulation_load_phase(self, error))
+			return FALSE;
+	}
+
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index(plugins, j);
 		if (!fu_plugin_runner_composite_cleanup(plugin_tmp, devices, error))
 			return FALSE;
 	}
+
+	/* save to emulated phase */
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) && !any_emulated) {
+		if (!fu_engine_backends_save_phase(self, error))
+			return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -2586,6 +2638,7 @@ fu_engine_install_releases(FuEngine *self,
 		       fu_device_get_order(device));
 		g_ptr_array_add(devices, g_object_ref(device));
 	}
+	fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_COMPOSITE_PREPARE);
 	if (!fu_engine_composite_prepare(self, devices, error)) {
 		g_prefix_error(error, "failed to prepare composite action: ");
 		return FALSE;
@@ -2637,6 +2690,7 @@ fu_engine_install_releases(FuEngine *self,
 	}
 
 	/* notify the plugins about the composite action */
+	fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_COMPOSITE_CLEANUP);
 	if (!fu_engine_composite_cleanup(self, devices_new, error)) {
 		g_prefix_error(error, "failed to cleanup composite action: ");
 		return FALSE;
@@ -3242,12 +3296,15 @@ fu_engine_emulation_load_json(FuEngine *self, const gchar *json, GError **error)
 }
 
 static gboolean
-fu_engine_emulation_load_phase(FuEngine *self, FuEngineInstallPhase phase, GError **error)
+fu_engine_emulation_load_phase(FuEngine *self, GError **error)
 {
-	const gchar *json = g_hash_table_lookup(self->emulation_phases, GINT_TO_POINTER(phase));
+	const gchar *json =
+	    g_hash_table_lookup(self->emulation_phases, GINT_TO_POINTER(self->install_phase));
 	if (json == NULL)
 		return TRUE;
-	g_info("loading phase %s: %s", fu_engine_install_phase_to_string(phase), json);
+	g_info("loading phase %s: %s",
+	       fu_engine_install_phase_to_string(self->install_phase),
+	       json);
 	return fu_engine_emulation_load_json(self, json, error);
 }
 
@@ -3440,7 +3497,7 @@ fu_engine_get_device(FuEngine *self, const gchar *device_id, GError **error)
 		device_old = fu_device_list_get_by_id(self->device_list, device_id, NULL);
 		if (device_old != NULL &&
 		    fu_device_has_flag(device_old, FWUPD_DEVICE_FLAG_EMULATED)) {
-			if (!fu_engine_emulation_load_phase(self, self->install_phase, error))
+			if (!fu_engine_emulation_load_phase(self, error))
 				return NULL;
 		}
 	}
