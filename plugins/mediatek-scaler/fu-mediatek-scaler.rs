@@ -7,11 +7,13 @@
 
 #[repr(u8)]
 enum DdcOpcode {
+    GetVcp = 0x01, // standard get vcp feature
     Req = 0xCC, // vendor specific opcode
 }
 
 #[repr(u8)]
 enum DdcVcpCode {
+    ControllerType = 0xC8, // standard display controller type
     Priority = 0x90,
     UpdatePrep = 0xF2,
     UpdateAck = 0xF3,
@@ -27,7 +29,7 @@ enum DdcVcpCode {
 
 #[derive(New)]
 struct DdcCmd {
-    opcode: DdcOpcode == Req,
+    opcode: DdcOpcode = Req,
     vcp_code: DdcVcpCode,
 }
 
@@ -38,6 +40,7 @@ enum DdcI2cAddr{
     Checksum = 0x50,
 }
 
+#[derive(ToString)]
 #[repr(u8)]
 enum DdcciPriority{
     Normal,

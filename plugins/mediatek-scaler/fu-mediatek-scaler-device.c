@@ -21,6 +21,9 @@
 #define DDC_DATA_PAGE_SIZE	0x1000 /* 4K bytes for each block page */
 #define DDC_RW_MAX_RETRY_CNT	10
 
+/* supported display controller type */
+#define FU_MEDIATEK_SCALER_SUPPORTED_CONTROLLER_TYPE 0x00005605
+
 /* timeout duration in ms to i2c-dev operation */
 #define FU_MEDIATEK_SCALER_DEVICE_IOCTL_TIMEOUT 5000
 
@@ -32,6 +35,13 @@
 
 /* firmware payload size */
 #define FU_MEDIATEK_SCALER_FW_SIZE_MAX 0x100000
+
+/**
+ * FU_MEDIATEK_SCALER_DEVICE_FLAG_PROBE_VCP:
+ *
+ * Device VCP should be probed.
+ */
+#define FU_MEDIATEK_SCALER_DEVICE_FLAG_PROBE_VCP (1 << 0)
 
 struct _FuMediatekScalerDevice {
 	FuUdevDevice parent_instance;
@@ -107,11 +117,10 @@ fu_mediatek_scaler_device_set_i2c_dev(FuMediatekScalerDevice *self,
 }
 
 static gboolean
-fu_mediatek_scaler_device_use_aux_dev(FuDevice *device, GError **error)
+fu_mediatek_scaler_device_use_aux_dev(FuMediatekScalerDevice *self, GError **error)
 {
-	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-	g_autoptr(GPtrArray) i2c_devices = NULL;
-	i2c_devices = fu_udev_device_get_siblings_with_subsystem(FU_UDEV_DEVICE(device), "i2c");
+	g_autoptr(GPtrArray) i2c_devices =
+	    fu_udev_device_get_siblings_with_subsystem(FU_UDEV_DEVICE(self), "i2c");
 	return fu_mediatek_scaler_device_set_i2c_dev(self, i2c_devices, error);
 }
 
@@ -226,31 +235,32 @@ fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self, GByteArray *st_
 }
 
 static gboolean
-fu_mediatek_scaler_device_set_ddc_priority(FuDevice *device, guint8 flag, GError **error)
+fu_mediatek_scaler_device_set_ddc_priority(FuMediatekScalerDevice *self,
+					   FuDdcciPriority priority,
+					   GError **error)
 {
-	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
 	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
 	g_autoptr(GError) error_local = NULL;
 
 	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_PRIORITY);
-	fu_byte_array_append_uint8(st_req, flag);
+	fu_byte_array_append_uint8(st_req, priority);
 	if (!fu_mediatek_scaler_device_ddc_write(self, st_req, &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "failed to set priority '0x%u', unsupported display? %s",
-			    flag,
+			    "failed to set priority %s [0x%x], unsupported display: %s",
+			    fu_ddcci_priority_to_string(priority),
+			    priority,
 			    error_local->message);
 		return FALSE;
 	}
-	fu_device_sleep(device, FU_MEDIATEK_SCALER_DDC_MSG_DELAY_MS);
+	fu_device_sleep(FU_DEVICE(self), FU_MEDIATEK_SCALER_DDC_MSG_DELAY_MS);
 	return TRUE;
 }
 
 static gboolean
-fu_mediatek_scaler_display_is_connected(FuDevice *device, GError **error)
+fu_mediatek_scaler_display_is_connected(FuMediatekScalerDevice *self, GError **error)
 {
-	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
 	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
 	g_autoptr(GByteArray) st_res = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -285,7 +295,7 @@ fu_mediatek_scaler_display_is_connected(FuDevice *device, GError **error)
 	}
 
 	g_info("found mediatek display controller: %s, i2c-dev: %s",
-	       fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)),
+	       fu_udev_device_get_device_file(FU_UDEV_DEVICE(self)),
 	       fu_udev_device_get_device_file(FU_UDEV_DEVICE(self->i2c_dev)));
 	return TRUE;
 }
@@ -293,7 +303,8 @@ fu_mediatek_scaler_display_is_connected(FuDevice *device, GError **error)
 static gboolean
 fu_mediatek_scaler_display_is_connected_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	return fu_mediatek_scaler_display_is_connected(device, error);
+	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
+	return fu_mediatek_scaler_display_is_connected(self, error);
 }
 
 static gchar *
@@ -302,19 +313,7 @@ fu_mediatek_scaler_device_get_hardware_version(FuDevice *device, GError **error)
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
 	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
 	g_autoptr(GByteArray) st_res = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
 	guint8 verbuf[4] = {0};
-
-	/* open device */
-	locker = fu_device_locker_new(self->i2c_dev, error);
-	if (locker == NULL)
-		return NULL;
-
-	/* set the target address */
-	if (!fu_mediatek_scaler_ensure_device_address(self,
-						      FU_DDC_I2C_ADDR_DISPLAY_DEVICE >> 1,
-						      error))
-		return NULL;
 
 	/* get the hardware version */
 	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_VERSION);
@@ -334,25 +333,11 @@ fu_mediatek_scaler_device_get_hardware_version(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_mediatek_scaler_device_get_firmware_version(FuDevice *device, GError **error)
+fu_mediatek_scaler_device_ensure_firmware_version(FuMediatekScalerDevice *self, GError **error)
 {
-	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-	guint32 tmpversion = 0x0;
-	g_autofree gchar *fw_version = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
+	guint32 version_raw = 0x0;
 	g_autoptr(GByteArray) st_res = NULL;
 	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
-
-	/* open device */
-	locker = fu_device_locker_new(self->i2c_dev, error);
-	if (locker == NULL)
-		return FALSE;
-
-	/* set the target address */
-	if (!fu_mediatek_scaler_ensure_device_address(self,
-						      FU_DDC_I2C_ADDR_DISPLAY_DEVICE >> 1,
-						      error))
-		return FALSE;
 
 	/* get the installed firmware version */
 	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_VERSION);
@@ -363,38 +348,47 @@ fu_mediatek_scaler_device_get_firmware_version(FuDevice *device, GError **error)
 	if (!fu_memread_uint32_safe(st_res->data,
 				    st_res->len,
 				    2,
-				    &tmpversion,
+				    &version_raw,
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
-	fw_version = mediatek_scaler_device_version_to_string(tmpversion);
-	fu_device_set_version(device, fw_version);
+	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
 	return TRUE;
 }
 
 static gboolean
-fu_mediatek_scaler_device_probe(FuDevice *device, GError **error)
+fu_mediatek_scaler_device_open(FuDevice *device, GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-	g_autoptr(FuUdevDevice) udev_parent = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autofree gchar *vendor_id = NULL;
-	g_autofree gchar *vid = NULL;
-	g_autofree gchar *pid = NULL;
-	g_autofree gchar *hw_ver = NULL;
 
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_mediatek_scaler_device_parent_class)->probe(device, error))
+	/* proxy */
+	if (!fu_device_open(FU_DEVICE(self->i2c_dev), error))
 		return FALSE;
 
-	/* determine the i2c_dev for dp aux dev */
-	if (!fu_mediatek_scaler_device_use_aux_dev(device, error))
+	/* set the target address -- should be safe */
+	if (!fu_mediatek_scaler_ensure_device_address(self,
+						      FU_DDC_I2C_ADDR_DISPLAY_DEVICE >> 1,
+						      error))
 		return FALSE;
 
-	/* open device */
-	locker = fu_device_locker_new(self->i2c_dev, error);
-	if (locker == NULL)
-		return FALSE;
+	/* we know this is a Mediatek scaler now */
+	if (fu_device_get_version_raw(device) != 0x0) {
+		if (!fu_mediatek_scaler_device_set_ddc_priority(self, FU_DDCCI_PRIORITY_UP, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_mediatek_scaler_device_close(FuDevice *device, GError **error)
+{
+	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
+
+	/* do nothing for unsupported devices */
+	if (self->i2c_dev == NULL)
+		return TRUE;
 
 	/* set the target address */
 	if (!fu_mediatek_scaler_ensure_device_address(self,
@@ -402,40 +396,139 @@ fu_mediatek_scaler_device_probe(FuDevice *device, GError **error)
 						      error))
 		return FALSE;
 
-	/* prioritize DDC/CI commands in display controller */
-	if (!fu_mediatek_scaler_device_set_ddc_priority(device, FU_DDCCI_PRIORITY_UP, error))
+	/* reset DDC priority */
+	if (!fu_mediatek_scaler_device_set_ddc_priority(self, FU_DDCCI_PRIORITY_NORMAL, error))
 		return FALSE;
 
+	/* proxy */
+	if (!fu_device_close(FU_DEVICE(self->i2c_dev), error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_mediatek_scaler_device_verify_controller_type(FuMediatekScalerDevice *self, GError **error)
+{
+	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+	g_autoptr(GByteArray) st_res = NULL;
+	g_autoptr(GError) error_local = NULL;
+	guint32 controller_type = 0;
+
+	fu_struct_ddc_cmd_set_opcode(st_req, FU_DDC_OPCODE_GET_VCP);
+	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_CONTROLLER_TYPE);
+	st_res = fu_mediatek_scaler_device_ddc_read(self, st_req, error);
+	if (st_res == NULL)
+		return FALSE;
+	if (!fu_memread_uint32_safe(st_res->data,
+				    st_res->len,
+				    st_res->len - 4,
+				    &controller_type,
+				    G_BIG_ENDIAN,
+				    error))
+		return FALSE;
+
+	/* restrict to specific controller type */
+	if (controller_type != FU_MEDIATEK_SCALER_SUPPORTED_CONTROLLER_TYPE) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "0x%x is not supported",
+			    controller_type);
+		return FALSE;
+	}
+
+	/* success */
+	fu_device_sleep(FU_DEVICE(self), FU_MEDIATEK_SCALER_DDC_MSG_DELAY_MS);
+	return TRUE;
+}
+
+static gboolean
+fu_mediatek_scaler_device_setup(FuDevice *device, GError **error)
+{
+	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
+	g_autofree gchar *hw_ver = NULL;
+
+	/* verify the controller type */
+	if (!fu_mediatek_scaler_device_verify_controller_type(self, error)) {
+		g_prefix_error(error, "invalid controller type: ");
+		return FALSE;
+	}
+
 	/* mediatek display is connected */
-	if (!fu_mediatek_scaler_display_is_connected(device, error))
+	if (!fu_mediatek_scaler_display_is_connected(self, error))
+		return FALSE;
+
+	/* prioritize DDC/CI -- FuDevice->open() did not do this as the version is not set */
+	if (!fu_mediatek_scaler_device_set_ddc_priority(self, FU_DDCCI_PRIORITY_UP, error))
 		return FALSE;
 
 	/* set hardware version */
 	hw_ver = fu_mediatek_scaler_device_get_hardware_version(device, error);
 	if (hw_ver == NULL)
 		return FALSE;
+	fu_device_add_instance_str(device, "HWVER", hw_ver);
+	if (!fu_device_build_instance_id(device, error, "DISPLAY", "VID", "PID", "HWVER", NULL))
+		return FALSE;
+
+	/* get details */
+	if (!fu_mediatek_scaler_device_ensure_firmware_version(self, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_mediatek_scaler_device_probe(FuDevice *device, GError **error)
+{
+	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
+	g_autofree gchar *vendor_id = NULL;
+	g_autoptr(FuUdevDevice) udev_parent = NULL;
+
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS(fu_mediatek_scaler_device_parent_class)->probe(device, error))
+		return FALSE;
 
 	/* set vid and pid from PCI bus */
 	udev_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "pci");
 	if (udev_parent == NULL)
 		return FALSE;
-
 	if (!fu_device_probe(FU_DEVICE(udev_parent), error))
 		return FALSE;
 
-	vid = g_strdup_printf("%04X", fu_udev_device_get_subsystem_vendor(udev_parent));
-	pid = g_strdup_printf("%04X", fu_udev_device_get_subsystem_model(udev_parent));
+	fu_device_add_instance_u16(device, "VID", fu_udev_device_get_subsystem_vendor(udev_parent));
+	fu_device_add_instance_u16(device, "PID", fu_udev_device_get_subsystem_model(udev_parent));
+	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "PCI",
+					      "VID",
+					      "PID",
+					      NULL))
+		return FALSE;
+	if (!fu_device_has_private_flag(device, FU_MEDIATEK_SCALER_DEVICE_FLAG_PROBE_VCP)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "%04X:%04X: is not supported",
+			    fu_udev_device_get_subsystem_vendor(udev_parent),
+			    fu_udev_device_get_subsystem_model(udev_parent));
+		return FALSE;
+	}
+
+	/* determine the i2c_dev for dp aux dev */
+	if (!fu_mediatek_scaler_device_use_aux_dev(self, error))
+		return FALSE;
 
 	/* add IDs */
-	vendor_id = g_strdup_printf("PCI:0x%s", vid);
+	vendor_id = g_strdup_printf("PCI:0x%04X", fu_udev_device_get_subsystem_vendor(udev_parent));
 	fu_device_add_vendor_id(device, vendor_id);
-
-	fu_device_add_instance_str(device, "VID", vid);
-	fu_device_add_instance_str(device, "PID", pid);
-	fu_device_add_instance_str(device, "HWVER", hw_ver);
-
 	fu_device_set_physical_id(device, fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)));
-	return fu_device_build_instance_id(device, error, "DISPLAY", "VID", "PID", "HWVER", NULL);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -679,33 +772,6 @@ fu_mediatek_scaler_device_verify(FuDevice *device, gsize sz, GError **error)
 }
 
 static gboolean
-fu_mediatek_scaler_device_cleanup(FuDevice *device,
-				  FuProgress *progress,
-				  FwupdInstallFlags flags,
-				  GError **error)
-{
-	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	/* open device */
-	locker = fu_device_locker_new(self->i2c_dev, error);
-	if (locker == NULL)
-		return FALSE;
-
-	/* set the target address */
-	if (!fu_mediatek_scaler_ensure_device_address(self,
-						      FU_DDC_I2C_ADDR_DISPLAY_DEVICE >> 1,
-						      error))
-		return FALSE;
-
-	/* reset DDC priority */
-	if (!fu_mediatek_scaler_device_set_ddc_priority(device, FU_DDCCI_PRIORITY_NORMAL, error))
-		return FALSE;
-
-	return TRUE;
-}
-
-static gboolean
 fu_mediatek_scaler_device_chunk_data_is_blank(FuChunk *chk)
 {
 	const guint8 *data = fu_chunk_get_data(chk);
@@ -776,19 +842,7 @@ static gboolean
 fu_mediatek_scaler_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-	g_autoptr(FuDeviceLocker) locker = NULL;
 	guint max_tries = 30;
-
-	/* open device */
-	locker = fu_device_locker_new(self->i2c_dev, error);
-	if (locker == NULL)
-		return FALSE;
-
-	/* set the target address */
-	if (!fu_mediatek_scaler_ensure_device_address(self,
-						      FU_DDC_I2C_ADDR_DISPLAY_DEVICE >> 1,
-						      error))
-		return FALSE;
 
 	/* reboot the device */
 	if (!(fu_mediatek_scaler_device_set_isp_reboot(self, error)))
@@ -818,7 +872,6 @@ fu_mediatek_scaler_device_write_firmware(FuDevice *device,
 					 GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-	g_autoptr(FuDeviceLocker) locker = NULL;
 	gsize fw_size = 0;
 	g_autoptr(GBytes) fw = NULL;
 
@@ -832,17 +885,6 @@ fu_mediatek_scaler_device_write_firmware(FuDevice *device,
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
-		return FALSE;
-
-	/* open device */
-	locker = fu_device_locker_new(self->i2c_dev, error);
-	if (locker == NULL)
-		return FALSE;
-
-	/* set the target address */
-	if (!fu_mediatek_scaler_ensure_device_address(self,
-						      FU_DDC_I2C_ADDR_DISPLAY_DEVICE >> 1,
-						      error))
 		return FALSE;
 
 	/* prepare the device to accept firmware image */
@@ -887,6 +929,12 @@ fu_mediatek_scaler_device_prepare_firmware(FuDevice *device,
 	return g_steal_pointer(&firmware);
 }
 
+static gchar *
+fu_mediatek_scaler_device_convert_version(FuDevice *self, guint64 version_raw)
+{
+	return mediatek_scaler_device_version_to_string(version_raw);
+}
+
 static void
 fu_mediatek_scaler_device_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -910,6 +958,9 @@ fu_mediatek_scaler_device_init(FuMediatekScalerDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "Display Controller");
 	fu_device_add_icon(FU_DEVICE(self), "video-display");
 	fu_device_set_firmware_size_max(FU_DEVICE(self), FU_MEDIATEK_SCALER_FW_SIZE_MAX);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_MEDIATEK_SCALER_DEVICE_FLAG_PROBE_VCP,
+					"probe-vcp");
 }
 
 static void
@@ -917,12 +968,14 @@ fu_mediatek_scaler_device_class_init(FuMediatekScalerDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->to_string = fu_mediatek_scaler_device_to_string;
+	klass_device->convert_version = fu_mediatek_scaler_device_convert_version;
 	klass_device->probe = fu_mediatek_scaler_device_probe;
-	klass_device->setup = fu_mediatek_scaler_device_get_firmware_version;
+	klass_device->setup = fu_mediatek_scaler_device_setup;
+	klass_device->open = fu_mediatek_scaler_device_open;
+	klass_device->close = fu_mediatek_scaler_device_close;
 	klass_device->prepare_firmware = fu_mediatek_scaler_device_prepare_firmware;
 	klass_device->write_firmware = fu_mediatek_scaler_device_write_firmware;
 	klass_device->attach = fu_mediatek_scaler_device_attach;
-	klass_device->reload = fu_mediatek_scaler_device_get_firmware_version;
+	klass_device->reload = fu_mediatek_scaler_device_setup;
 	klass_device->set_progress = fu_mediatek_scaler_device_set_progress;
-	klass_device->cleanup = fu_mediatek_scaler_device_cleanup;
 }
