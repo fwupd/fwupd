@@ -7229,6 +7229,9 @@ fu_engine_security_attrs_depsolve(FuEngine *self)
 {
 	g_autoptr(GPtrArray) items = NULL;
 
+	/* set the obsoletes flag for each attr */
+	fu_security_attrs_depsolve(self->host_security_attrs);
+
 	/* set the fallback names for clients without native translations */
 	items = fu_security_attrs_get_all(self->host_security_attrs);
 	for (guint i = 0; i < items->len; i++) {
@@ -7249,9 +7252,6 @@ fu_engine_security_attrs_depsolve(FuEngine *self)
 							    fu_security_attr_get_description(attr));
 		}
 	}
-
-	/* set the obsoletes flag for each attr */
-	fu_security_attrs_depsolve(self->host_security_attrs);
 
 	/* distil into one simple string */
 	g_free(self->host_security_id);
