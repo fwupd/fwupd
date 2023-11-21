@@ -136,7 +136,8 @@ fu_redfish_network_device_match(FuRedfishNetworkMatchHelper *helper, GError **er
 					 NULL,
 					 &error_local);
 	if (devices == NULL) {
-		if (g_error_matches(error_local, G_DBUS_ERROR, G_DBUS_ERROR_SERVICE_UNKNOWN)) {
+		if (g_error_matches(error_local, G_DBUS_ERROR, G_DBUS_ERROR_SERVICE_UNKNOWN) ||
+		    g_error_matches(error_local, G_DBUS_ERROR, G_DBUS_ERROR_NAME_HAS_NO_OWNER)) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
