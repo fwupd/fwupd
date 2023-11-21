@@ -371,10 +371,6 @@ fu_mediatek_scaler_device_open(FuDevice *device, GError **error)
 						      error))
 		return FALSE;
 
-	/* prioritize DDC/CI commands in display controller */
-	if (!fu_mediatek_scaler_device_set_ddc_priority(self, FU_DDCCI_PRIORITY_UP, error))
-		return FALSE;
-
 	/* success */
 	return TRUE;
 }
@@ -422,7 +418,6 @@ fu_mediatek_scaler_device_verify_controller_type(FuMediatekScalerDevice *self, G
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
-	fu_device_sleep(FU_DEVICE(self), FU_MEDIATEK_SCALER_DDC_MSG_DELAY_MS);
 
 	/* restrict to specific controller type */
 	if (controller_type != FU_MEDIATEK_SCALER_SUPPORTED_CONTROLLER_TYPE) {
@@ -435,6 +430,7 @@ fu_mediatek_scaler_device_verify_controller_type(FuMediatekScalerDevice *self, G
 	}
 
 	/* success */
+	fu_device_sleep(FU_DEVICE(self), FU_MEDIATEK_SCALER_DDC_MSG_DELAY_MS);
 	return TRUE;
 }
 
@@ -452,6 +448,10 @@ fu_mediatek_scaler_device_setup(FuDevice *device, GError **error)
 
 	/* mediatek display is connected */
 	if (!fu_mediatek_scaler_display_is_connected(self, error))
+		return FALSE;
+
+	/* prioritize DDC/CI commands in display controller */
+	if (!fu_mediatek_scaler_device_set_ddc_priority(self, FU_DDCCI_PRIORITY_UP, error))
 		return FALSE;
 
 	/* set hardware version */
