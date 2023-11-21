@@ -540,6 +540,9 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "fwct");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, "img");
 
+	/* this is used in FuDevice->attach */
+	self->update_model = FU_CCGX_DMC_UPDATE_MODEL_NONE;
+
 	/* get fwct record */
 	fwct_blob = fu_ccgx_dmc_firmware_get_fwct_record(FU_CCGX_DMC_FIRMWARE(firmware));
 	fwct_buf = g_bytes_get_data(fwct_blob, &fwct_sz);
@@ -629,7 +632,6 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	self->update_model = FU_CCGX_DMC_UPDATE_MODEL_NONE;
 	if (rqt_data[0] == FU_CCGX_DMC_DEVICE_STATUS_UPDATE_PHASE1_COMPLETE) {
 		self->update_model = FU_CCGX_DMC_UPDATE_MODEL_DOWNLOAD_TRIGGER;
 	} else if (rqt_data[0] == FU_CCGX_DMC_DEVICE_STATUS_FW_DOWNLOADED_UPDATE_PEND) {
@@ -689,9 +691,6 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 
 	manual_replug =
 	    fu_device_has_private_flag(device, FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG);
-
-	if (fu_device_get_update_state(self) != FWUPD_UPDATE_STATE_SUCCESS)
-		return TRUE;
 
 	if (manual_replug) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
