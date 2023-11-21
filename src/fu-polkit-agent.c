@@ -192,7 +192,7 @@ fu_polkit_agent_open(GError **error)
 			    G_IO_ERROR,
 			    G_IO_ERROR_FAILED,
 			    "failed to create pipe: %s",
-			    strerror(-errno));
+			    strerror(errno));
 		return FALSE;
 	}
 
