@@ -339,13 +339,10 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 			user_id = i;
 			continue;
 		}
-		if (g_strcmp0(username, "fwupd") == 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "fwupd user already exists in KCS slot %u",
-				    (guint)i);
-			return FALSE;
+		if (g_strcmp0(username, username_fwupd) == 0) {
+			g_debug("%s user exists in KCS slot %u", username, i);
+			user_id = i;
+			break;
 		}
 	}
 	if (user_id == G_MAXUINT8) {
@@ -417,9 +414,15 @@ static gboolean
 fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
+#ifdef HAVE_LINUX_IPMI_H
+	gboolean credentials_invalid = FALSE;
+#endif
 	g_autofree gchar *password = NULL;
 	g_autofree gchar *redfish_uri = NULL;
 	g_autofree gchar *username = NULL;
+#ifdef HAVE_LINUX_IPMI_H
+	g_autofree gchar *user_uri = NULL;
+#endif
 	g_autoptr(GError) error_uefi = NULL;
 
 	/* optional */
@@ -483,8 +486,29 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 		fu_redfish_backend_set_wildcard_targets(self->backend, TRUE);
 
 #ifdef HAVE_LINUX_IPMI_H
+	/* test if the existing credentials work */
+	user_uri = fu_plugin_get_config_value(plugin, "UserUri", NULL);
+	if (username != NULL && password != NULL && user_uri != NULL) {
+		g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self->backend);
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_redfish_request_perform(request,
+						user_uri,
+						FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+						&error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED)) {
+				credentials_invalid = TRUE;
+			} else {
+				g_propagate_prefixed_error(
+				    error,
+				    g_steal_pointer(&error_local),
+				    "existing username and password did not work: ");
+				return FALSE;
+			}
+		}
+	}
+
 	/* we got neither a type 42 entry or config value, lets try IPMI */
-	if (fu_redfish_backend_get_username(self->backend) == NULL) {
+	if (fu_redfish_backend_get_username(self->backend) == NULL || credentials_invalid) {
 		if (!fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "ipmi-create-user")) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -497,7 +521,7 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 			plugin,
 			"IpmiDisableCreateUser",
 			FU_REDFISH_CONFIG_DEFAULT_IPMI_DISABLE_CREATE_USER)) {
-			g_info("attempting to create user using IPMI");
+			g_info("attempting to [re-]create user using IPMI");
 			if (!fu_redfish_plugin_ipmi_create_user(plugin, error))
 				return FALSE;
 		}
