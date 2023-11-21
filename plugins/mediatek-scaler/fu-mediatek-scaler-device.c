@@ -386,6 +386,10 @@ fu_mediatek_scaler_device_close(FuDevice *device, GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
 
+	/* do nothing for unsupported devices */
+	if (self->i2c_dev == NULL)
+		return TRUE;
+
 	/* set the target address */
 	if (!fu_mediatek_scaler_ensure_device_address(self,
 						      FU_DDC_I2C_ADDR_DISPLAY_DEVICE >> 1,
