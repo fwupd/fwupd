@@ -169,7 +169,7 @@ fu_ccgx_dmc_device_send_reset_state_machine(FuCcgxDmcDevice *self, GError **erro
 }
 
 static gboolean
-fu_ccgx_dmc_device_send_sort_reset(FuCcgxDmcDevice *self, gboolean reset_later, GError **error)
+fu_ccgx_dmc_device_send_soft_reset(FuCcgxDmcDevice *self, gboolean reset_later, GError **error)
 {
 	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -692,36 +692,39 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 	manual_replug =
 	    fu_device_has_private_flag(device, FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG);
 
-	if (manual_replug) {
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
-	} else {
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	}
-
+	/* device action required */
 	if (self->update_model == FU_CCGX_DMC_UPDATE_MODEL_DOWNLOAD_TRIGGER) {
 		if (self->trigger_code > 0) {
 			if (!fu_ccgx_dmc_device_send_download_trigger(self,
 								      self->trigger_code,
 								      error)) {
-				if (manual_replug == FALSE) {
-					fu_device_remove_flag(device,
-							      FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-				}
 				g_prefix_error(error, "download trigger error: ");
 				return FALSE;
 			}
 		}
 	} else if (self->update_model == FU_CCGX_DMC_UPDATE_MODEL_PENDING_RESET) {
-		if (!fu_ccgx_dmc_device_send_sort_reset(self, manual_replug, error)) {
-			if (manual_replug == FALSE) {
-				fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-			}
+		if (!fu_ccgx_dmc_device_send_soft_reset(self, manual_replug, error)) {
 			g_prefix_error(error, "soft reset error: ");
 			return FALSE;
 		}
 	}
 
+	/* the user has to do something */
+	if (manual_replug) {
+		g_autoptr(FwupdRequest) request = fwupd_request_new();
+		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+		fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+		fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+		fwupd_request_set_message(
+		    request,
+		    "The update will continue when the device USB cable has been "
+		    "unplugged and then re-inserted.");
+		if (!fu_device_emit_request(device, request, progress, error))
+			return FALSE;
+	}
+
+	/* success */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
