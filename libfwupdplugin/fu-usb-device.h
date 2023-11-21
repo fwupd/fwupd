@@ -47,6 +47,10 @@ fu_usb_device_set_configuration(FuUsbDevice *device, gint configuration);
 void
 fu_usb_device_add_interface(FuUsbDevice *device, guint8 number);
 void
+fu_usb_device_set_claim_retry_count(FuUsbDevice *self, guint claim_retry_count);
+guint
+fu_usb_device_get_claim_retry_count(FuUsbDevice *self);
+void
 fu_usb_device_set_open_retry_count(FuUsbDevice *self, guint open_retry_count);
 guint
 fu_usb_device_get_open_retry_count(FuUsbDevice *self);
