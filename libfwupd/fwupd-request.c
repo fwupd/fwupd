@@ -347,7 +347,7 @@ fwupd_request_from_key_value(FwupdRequest *self, const gchar *key, GVariant *val
  * fwupd_request_get_message:
  * @self: a #FwupdRequest
  *
- * Gets the update message.
+ * Gets the update message, generating a generic one using the request ID if possible.
  *
  * Returns: the update message, or %NULL if unset
  *
@@ -358,7 +358,29 @@ fwupd_request_get_message(FwupdRequest *self)
 {
 	FwupdRequestPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_REQUEST(self), NULL);
-	return priv->message;
+
+	/* something custom */
+	if (priv->message != NULL)
+		return priv->message;
+
+	/* untranslated canned messages */
+	if (fwupd_request_has_flag(self, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE)) {
+		if (g_strcmp0(priv->id, FWUPD_REQUEST_ID_REMOVE_REPLUG) == 0)
+			return "Please unplug and then re-insert the device USB cable.";
+		if (g_strcmp0(priv->id, FWUPD_REQUEST_ID_INSERT_USB_CABLE) == 0)
+			return "Please re-insert the device USB cable.";
+		if (g_strcmp0(priv->id, FWUPD_REQUEST_ID_REMOVE_USB_CABLE) == 0)
+			return "Please unplug the device USB cable.";
+		if (g_strcmp0(priv->id, FWUPD_REQUEST_ID_REPLUG_POWER) == 0)
+			return "Please unplug and then re-insert the device power cable.";
+		if (g_strcmp0(priv->id, FWUPD_REQUEST_ID_PRESS_UNLOCK) == 0)
+			return "Press unlock on the device.";
+		if (g_strcmp0(priv->id, FWUPD_REQUEST_ID_DO_NOT_POWER_OFF) == 0)
+			return "Do not turn off your computer or remove the AC adaptor.";
+	}
+
+	/* unknown */
+	return NULL;
 }
 
 /**
