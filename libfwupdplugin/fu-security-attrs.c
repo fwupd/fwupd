@@ -160,9 +160,10 @@ fu_security_attrs_to_variant(FuSecurityAttrs *self)
 
 	g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
 	for (guint i = 0; i < self->attrs->len; i++) {
-		FwupdSecurityAttr *security_attr = g_ptr_array_index(self->attrs, i);
-		GVariant *tmp = fwupd_security_attr_to_variant(security_attr);
-		g_variant_builder_add_value(&builder, tmp);
+		FwupdSecurityAttr *attr = g_ptr_array_index(self->attrs, i);
+		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
+			continue;
+		g_variant_builder_add_value(&builder, fwupd_security_attr_to_variant(attr));
 	}
 	return g_variant_new("(aa{sv})", &builder);
 }
