@@ -28,6 +28,7 @@ typedef struct {
 	GUsbDevice *usb_device;
 	gint configuration;
 	GPtrArray *interfaces; /* nullable, element-type FuUsbDeviceInterface */
+	guint claim_retry_count;
 	guint open_retry_count;
 	FuDeviceLocker *usb_device_locker;
 } FuUsbDevicePrivate;
@@ -42,10 +43,8 @@ enum { PROP_0, PROP_USB_DEVICE, PROP_LAST };
 
 #define GET_PRIVATE(o) (fu_usb_device_get_instance_private(o))
 
-#define FU_USB_DEVICE_CLAIM_INTERFACE_RETRIES 5
-#define FU_USB_DEVICE_CLAIM_INTERFACE_DELAY   500 /* ms */
-
-#define FU_USB_DEVICE_OPEN_DELAY   50 /* ms */
+#define FU_USB_DEVICE_CLAIM_INTERFACE_DELAY 500 /* ms */
+#define FU_USB_DEVICE_OPEN_DELAY	    50	/* ms */
 
 static void
 fu_usb_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
@@ -133,6 +132,42 @@ fu_usb_device_constructed(GObject *obj)
 			 G_CALLBACK(fu_usb_device_flags_notify_cb),
 			 NULL);
 #endif
+}
+
+/**
+ * fu_usb_device_set_claim_retry_count:
+ * @self: a #FuUsbDevice
+ * @claim_retry_count: integer
+ *
+ * Sets the number of tries we should attempt when claiming the device.
+ * Applies to all interfaces associated with this device.
+ *
+ * Since: 1.9.10
+ **/
+void
+fu_usb_device_set_claim_retry_count(FuUsbDevice *self, guint claim_retry_count)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_USB_DEVICE(self));
+	priv->claim_retry_count = claim_retry_count;
+}
+
+/**
+ * fu_usb_device_get_claim_retry_count:
+ * @self: a #FuUsbDevice
+ *
+ * Gets the number of tries we should attempt when claiming the device.
+ *
+ * Returns: integer, or `0` if no attempt should be made.
+ *
+ * Since: 1.9.10
+ **/
+guint
+fu_usb_device_get_claim_retry_count(FuUsbDevice *self)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), G_MAXUINT);
+	return priv->claim_retry_count;
 }
 
 /**
@@ -384,14 +419,29 @@ fu_usb_device_open(FuDevice *device, GError **error)
 	/* claim interfaces */
 	for (guint i = 0; priv->interfaces != NULL && i < priv->interfaces->len; i++) {
 		FuUsbDeviceInterface *iface = g_ptr_array_index(priv->interfaces, i);
-		if (!fu_device_retry_full(device,
-					  fu_usb_device_claim_interface_cb,
-					  FU_USB_DEVICE_CLAIM_INTERFACE_RETRIES,
-					  FU_USB_DEVICE_CLAIM_INTERFACE_DELAY,
-					  iface,
-					  error)) {
-			g_prefix_error(error, "failed to claim interface 0x%02x: ", iface->number);
-			return FALSE;
+		if (priv->claim_retry_count > 0) {
+			if (!fu_device_retry_full(device,
+						  fu_usb_device_claim_interface_cb,
+						  priv->claim_retry_count,
+						  FU_USB_DEVICE_CLAIM_INTERFACE_DELAY,
+						  iface,
+						  error)) {
+				g_prefix_error(error,
+					       "failed to claim interface 0x%02x with retries: ",
+					       iface->number);
+				return FALSE;
+			}
+		} else {
+			if (!g_usb_device_claim_interface(
+				priv->usb_device,
+				iface->number,
+				G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+				error)) {
+				g_prefix_error(error,
+					       "failed to claim interface 0x%02x: ",
+					       iface->number);
+				return FALSE;
+			}
 		}
 		iface->claimed = TRUE;
 	}
@@ -1059,6 +1109,8 @@ fu_usb_device_to_string(FuDevice *device, guint idt, GString *str)
 
 	if (priv->configuration > 0)
 		fu_string_append_kx(str, idt, "Configuration", priv->configuration);
+	if (priv->claim_retry_count > 0)
+		fu_string_append_kx(str, idt, "ClaimRetryCount", priv->claim_retry_count);
 	if (priv->open_retry_count > 0)
 		fu_string_append_kx(str, idt, "OpenRetryCount", priv->open_retry_count);
 	for (guint i = 0; priv->interfaces != NULL && i < priv->interfaces->len; i++) {
