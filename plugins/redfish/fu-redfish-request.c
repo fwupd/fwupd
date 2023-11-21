@@ -184,6 +184,15 @@ fu_redfish_request_perform(FuRedfishRequest *self,
 		return FALSE;
 	}
 
+	/* invalid user */
+	if (fu_redfish_request_get_status_code(self) == 401) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_AUTH_FAILED,
+				    "authentication failed");
+		return FALSE;
+	}
+
 	/* load JSON */
 	if (flags & FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON) {
 		if (!fu_redfish_request_load_json(self, self->buf, error)) {
