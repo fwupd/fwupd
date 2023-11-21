@@ -365,11 +365,17 @@ fu_mediatek_scaler_device_open(FuDevice *device, GError **error)
 	if (!fu_device_open(FU_DEVICE(self->i2c_dev), error))
 		return FALSE;
 
-	/* set the target address */
+	/* set the target address -- should be safe */
 	if (!fu_mediatek_scaler_ensure_device_address(self,
 						      FU_DDC_I2C_ADDR_DISPLAY_DEVICE >> 1,
 						      error))
 		return FALSE;
+
+	/* we know this is a Mediatek scaler now */
+	if (fu_device_get_version_raw(device) != 0x0) {
+		if (!fu_mediatek_scaler_device_set_ddc_priority(self, FU_DDCCI_PRIORITY_UP, error))
+			return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -450,7 +456,7 @@ fu_mediatek_scaler_device_setup(FuDevice *device, GError **error)
 	if (!fu_mediatek_scaler_display_is_connected(self, error))
 		return FALSE;
 
-	/* prioritize DDC/CI commands in display controller */
+	/* prioritize DDC/CI -- FuDevice->open() did not do this as the version is not set */
 	if (!fu_mediatek_scaler_device_set_ddc_priority(self, FU_DDCCI_PRIORITY_UP, error))
 		return FALSE;
 
