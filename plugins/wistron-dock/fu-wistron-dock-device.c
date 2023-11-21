@@ -727,9 +727,6 @@ fu_wistron_dock_device_insert_cb(gpointer user_data)
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 	fwupd_request_set_id(request, FWUPD_REQUEST_ID_INSERT_USB_CABLE);
 	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
-	fwupd_request_set_message(
-	    request,
-	    "The update will continue when the device USB cable has been re-inserted.");
 	if (!fu_device_emit_request(FU_DEVICE(self), request, NULL, &error_local))
 		g_warning("%s", error_local->message);
 
@@ -776,9 +773,6 @@ fu_wistron_dock_device_attach(FuDevice *device, FuProgress *progress, GError **e
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_USB_CABLE);
 	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
-	fwupd_request_set_message(
-	    request,
-	    "The update will continue when the device USB cable has been unplugged.");
 	if (!fu_device_emit_request(device, request, progress, error))
 		return FALSE;
 
