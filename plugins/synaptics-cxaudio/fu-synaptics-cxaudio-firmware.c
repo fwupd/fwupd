@@ -9,6 +9,7 @@
 
 #include <string.h>
 
+#include "fu-synaptics-cxaudio-common.h"
 #include "fu-synaptics-cxaudio-firmware.h"
 #include "fu-synaptics-cxaudio-struct.h"
 
@@ -52,8 +53,12 @@ fu_synaptics_cxaudio_firmware_export(FuFirmware *firmware,
 				     XbBuilderNode *bn)
 {
 	FuSynapticsCxaudioFirmware *self = FU_SYNAPTICS_CXAUDIO_FIRMWARE(firmware);
-	fu_xmlb_builder_insert_kx(bn, "file_kind", self->file_kind);
-	fu_xmlb_builder_insert_kx(bn, "device_kind", self->device_kind);
+	fu_xmlb_builder_insert_kv(bn,
+				  "file_kind",
+				  fu_synaptics_cxaudio_file_kind_to_string(self->file_kind));
+	fu_xmlb_builder_insert_kv(bn,
+				  "device_kind",
+				  fu_synaptics_cxaudio_device_kind_to_string(self->device_kind));
 	fu_xmlb_builder_insert_kx(bn, "layout_signature", self->layout_signature);
 	fu_xmlb_builder_insert_kx(bn, "layout_version", self->layout_version);
 	if (self->layout_version >= 1) {
@@ -219,12 +224,12 @@ fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	if (fu_struct_synaptics_cxaudio_validity_signature_get_magic_byte(st_sig) ==
 	    FU_SYNAPTICS_CXAUDIO_SIGNATURE_BYTE) {
-		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2070x;
+		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2070X;
 		self->file_kind = FU_SYNAPTICS_CXAUDIO_FILE_KIND_CX2070X_FW;
 		g_debug("FileKind: CX2070x (FW)");
 	} else if (fu_struct_synaptics_cxaudio_patch_info_get_patch_signature(st_pat) ==
 		   FU_SYNAPTICS_CXAUDIO_SIGNATURE_PATCH_BYTE) {
-		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2070x;
+		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2070X;
 		self->file_kind = FU_SYNAPTICS_CXAUDIO_FILE_KIND_CX2070X_PATCH;
 		g_debug("FileKind: CX2070x (Patch)");
 	} else {
@@ -252,37 +257,37 @@ fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 	case '2': /* fallthrough */ /* CX2070x */
 	case '4':		    /* CX2070x-21Z */
 	case '6':		    /* CX2070x-21Z */
-		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2070x;
+		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2070X;
 		self->file_kind = FU_SYNAPTICS_CXAUDIO_FILE_KIND_CX2070X_PATCH;
 		g_debug("FileKind: CX2070x overwritten from signature");
 		break;
 	case '3':
-		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2077x;
+		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2077X;
 		self->file_kind = FU_SYNAPTICS_CXAUDIO_FILE_KIND_CX2077X_PATCH;
 		g_debug("FileKind: CX2077x overwritten from signature");
 		break;
 	case '5':
-		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2076x;
+		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2076X;
 		self->file_kind = FU_SYNAPTICS_CXAUDIO_FILE_KIND_CX2076X_PATCH;
 		g_debug("FileKind: CX2076x overwritten from signature");
 		break;
 	case '7':
-		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2085x;
+		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2085X;
 		self->file_kind = FU_SYNAPTICS_CXAUDIO_FILE_KIND_CX2085X_PATCH;
 		g_debug("FileKind: CX2085x overwritten from signature");
 		break;
 	case '8':
-		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2089x;
+		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2089X;
 		self->file_kind = FU_SYNAPTICS_CXAUDIO_FILE_KIND_CX2089X_PATCH;
 		g_debug("FileKind: CX2089x overwritten from signature");
 		break;
 	case '9':
-		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2098x;
+		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2098X;
 		self->file_kind = FU_SYNAPTICS_CXAUDIO_FILE_KIND_CX2098X_PATCH;
 		g_debug("FileKind: CX2098x overwritten from signature");
 		break;
 	case 'A':
-		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2198x;
+		self->device_kind = FU_SYNAPTICS_CXAUDIO_DEVICE_KIND_CX2198X;
 		self->file_kind = FU_SYNAPTICS_CXAUDIO_FILE_KIND_CX2198X_PATCH;
 		g_debug("FileKind: CX2198x overwritten from signature");
 		break;
