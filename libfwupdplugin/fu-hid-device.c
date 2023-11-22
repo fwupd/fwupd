@@ -86,34 +86,40 @@ fu_hid_device_set_property(GObject *object, guint prop_id, const GValue *value, 
 }
 
 /**
- * fu_hid_device_parse_descriptor:
+ * fu_hid_device_parse_descriptors:
  * @self: a #FuHidDevice
  * @error: (nullable): optional return location for an error
  *
- * Parses the HID descriptor.
+ * Parses the HID descriptors.
  *
- * Returns: (transfer full): a #FuHidDescriptor, or %NULL for error
+ * Returns: (transfer container) (element-type FuHidDescriptor): descriptors, or %NULL for error
  *
- * Since: 1.9.4
+ * Since: 2.0.0
  **/
-FuHidDescriptor *
-fu_hid_device_parse_descriptor(FuHidDevice *self, GError **error)
+GPtrArray *
+fu_hid_device_parse_descriptors(FuHidDevice *self, GError **error)
 {
 #if G_USB_CHECK_VERSION(0, 4, 7)
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GPtrArray) fws = NULL;
+	g_autoptr(GPtrArray) descriptors =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 
 	g_return_val_if_fail(FU_HID_DEVICE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	fw = g_usb_device_get_hid_descriptor_default(usb_device, error);
-	if (fw == NULL)
+	fws = g_usb_device_get_hid_descriptors(fu_usb_device_get_dev(FU_USB_DEVICE(self)), error);
+	if (fws == NULL)
 		return NULL;
-	fu_dump_bytes(G_LOG_DOMAIN, "HidDescriptor", fw);
-	if (!fu_firmware_parse(descriptor, fw, FWUPD_INSTALL_FLAG_NONE, error))
-		return NULL;
-	return FU_HID_DESCRIPTOR(g_steal_pointer(&descriptor));
+	for (guint i = 0; i < fws->len; i++) {
+		GBytes *fw = g_ptr_array_index(fws, i);
+		g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
+		g_autofree gchar *title = g_strdup_printf("HidDescriptor:0x%x", i);
+		fu_dump_bytes(G_LOG_DOMAIN, title, fw);
+		if (!fu_firmware_parse(descriptor, fw, FWUPD_INSTALL_FLAG_NONE, error))
+			return NULL;
+		g_ptr_array_add(descriptors, g_steal_pointer(&descriptor));
+	}
+	return g_steal_pointer(&descriptors);
 #else
 	g_set_error_literal(error,
 			    G_IO_ERROR,
