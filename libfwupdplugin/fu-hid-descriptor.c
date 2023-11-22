@@ -40,6 +40,7 @@ fu_hid_descriptor_count_table_dupes(GPtrArray *table, FuHidReportItem *item)
 	for (guint i = 0; i < table->len; i++) {
 		FuHidReportItem *item_tmp = g_ptr_array_index(table, i);
 		if (fu_hid_report_item_get_kind(item) == fu_hid_report_item_get_kind(item_tmp) &&
+		    fu_hid_report_item_get_value(item) == fu_hid_report_item_get_value(item_tmp) &&
 		    fu_firmware_get_idx(FU_FIRMWARE(item)) ==
 			fu_firmware_get_idx(FU_FIRMWARE(item_tmp)))
 			cnt++;
@@ -92,11 +93,13 @@ fu_hid_descriptor_parse(FuFirmware *firmware,
 		if (fu_hid_report_item_get_kind(item) == FU_HID_ITEM_KIND_GLOBAL) {
 			if (fu_hid_descriptor_count_table_dupes(table_state, item) >
 			    FU_HID_DESCRIPTOR_TABLE_GLOBAL_DUPES_MAX) {
-				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
-					    "table invalid, too many duplicate global 0x%x tokens",
-					    (guint)fu_firmware_get_idx(FU_FIRMWARE(item)));
+				g_set_error(
+				    error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "table invalid @0x%x, too many duplicate global %s tokens",
+				    (guint)offset,
+				    fu_firmware_get_id(FU_FIRMWARE(item)));
 				return FALSE;
 			}
 			g_ptr_array_add(table_state, g_object_ref(item));
@@ -108,9 +111,11 @@ fu_hid_descriptor_parse(FuFirmware *firmware,
 				    error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
-				    "table invalid, too many duplicate %s:%s tokens",
+				    "table invalid @0x%x, too many duplicate %s %s:0x%x tokens",
+				    (guint)offset,
 				    fu_hid_item_kind_to_string(fu_hid_report_item_get_kind(item)),
-				    fu_firmware_get_id(FU_FIRMWARE(item)));
+				    fu_firmware_get_id(FU_FIRMWARE(item)),
+				    fu_hid_report_item_get_value(item));
 				return FALSE;
 			}
 			g_ptr_array_add(table_local, g_object_ref(item));
