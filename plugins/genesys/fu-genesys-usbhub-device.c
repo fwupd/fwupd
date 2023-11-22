@@ -1494,7 +1494,9 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 							  64,
 							  error);
 	if (static_buf == NULL) {
-		g_prefix_error(error, "failed to get static tool info from device: ");
+		g_prefix_error(error,
+			       "failed to get static tool info from device (idx=0x%02x): ",
+			       static_idx);
 		return FALSE;
 	}
 	if (!fu_genesys_usbhub_device_get_descriptor_data(static_buf, buf, bufsz, error)) {
@@ -1512,7 +1514,9 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 							  64,
 							  error);
 	if (dynamic_buf == NULL) {
-		g_prefix_error(error, "failed to get dynamic tool info from device: ");
+		g_prefix_error(error,
+			       "failed to get dynamic tool info from device (idx=0x%02x): ",
+			       dynamic_idx);
 		return FALSE;
 	}
 	if (!fu_genesys_usbhub_device_get_descriptor_data(dynamic_buf, buf, bufsz, error)) {
