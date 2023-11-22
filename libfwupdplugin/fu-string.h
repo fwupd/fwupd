@@ -19,6 +19,8 @@ fu_string_append_kb(GString *str, guint idt, const gchar *key, gboolean value);
 
 gchar *
 fu_strsafe(const gchar *str, gsize maxsz);
+gchar *
+fu_strpassmask(const gchar *str);
 gboolean
 fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError **error);
 gboolean

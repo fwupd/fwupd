@@ -567,6 +567,26 @@ fu_common_memmem_func(void)
 }
 
 static void
+fu_strpassmask_func(void)
+{
+	struct {
+		const gchar *in;
+		const gchar *op;
+	} strs[] = {{"foo https://test.com/auth bar", "foo https://test.com/auth bar"},
+		    {"foo https://user%40host:SECRET@test.com/auth bar",
+		     "foo https://user%40host:XXXXXX@test.com/auth bar"},
+		    {"foo https://user1%40host:SECRET@test.com/auth "
+		     "https://user2%40host:SECRET2@test.com/auth bar",
+		     "foo https://user1%40host:XXXXXX@test.com/auth "
+		     "https://user2%40host:XXXXXXX@test.com/auth bar"},
+		    {NULL, NULL}};
+	for (guint i = 0; strs[i].in != NULL; i++) {
+		g_autofree gchar *tmp = fu_strpassmask(strs[i].in);
+		g_assert_cmpstr(tmp, ==, strs[i].op);
+	}
+}
+
+static void
 fu_strsplit_func(void)
 {
 	const gchar *str = "123foo123bar123";
@@ -4497,6 +4517,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/struct", fu_plugin_struct_func);
 	g_test_add_func("/fwupd/struct{wrapped}", fu_plugin_struct_wrapped_func);
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
+	g_test_add_func("/fwupd/string{password-mask}", fu_strpassmask_func);
 	g_test_add_func("/fwupd/common{strnsplit}", fu_strsplit_func);
 	g_test_add_func("/fwupd/common{olson-timezone-id}", fu_common_olson_timezone_id_func);
 	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);
