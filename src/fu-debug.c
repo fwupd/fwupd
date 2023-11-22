@@ -8,6 +8,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include <fu-debug.h>
 #include <glib/gi18n.h>
 #include <stdio.h>
@@ -124,16 +126,20 @@ fu_debug_handler_cb(const gchar *log_domain,
 {
 	FuDebug *self = (FuDebug *)user_data;
 	g_autofree gchar *timestamp = NULL;
+	g_autofree gchar *message_safe = NULL;
 	g_autoptr(GString) domain = NULL;
-
-#ifdef _WIN32
-	/* use Windows event log */
-	fu_debug_handler_win32(self, log_level, message);
-#endif
 
 	/* should ignore */
 	if (!fu_debug_filter_cb(self, log_domain, log_level))
 		return;
+
+	/* make sure passwords never appear in logs */
+	message_safe = fu_strpassmask(message);
+
+#ifdef _WIN32
+	/* use Windows event log */
+	fu_debug_handler_win32(self, log_level, message_safe);
+#endif
 
 	/* time header */
 	if (!self->no_timestamp) {
@@ -157,7 +163,7 @@ fu_debug_handler_cb(const gchar *log_domain,
 
 	/* to file */
 	if (!self->console) {
-		g_autofree gchar *ascii_message = g_str_to_ascii(message, NULL);
+		g_autofree gchar *ascii_message = g_str_to_ascii(message_safe, NULL);
 		if (timestamp != NULL)
 			g_printerr("%s ", timestamp);
 		if (domain != NULL)
@@ -172,7 +178,7 @@ fu_debug_handler_cb(const gchar *log_domain,
 			g_printerr("%s ", timestamp);
 		if (domain != NULL)
 			g_printerr("%s ", domain->str);
-		g_printerr("%s\n", message);
+		g_printerr("%s\n", message_safe);
 		return;
 	}
 
@@ -186,7 +192,7 @@ fu_debug_handler_cb(const gchar *log_domain,
 			g_printerr("%c[%dm%s ", 0x1B, 32, timestamp);
 		if (domain != NULL)
 			g_printerr("%s ", domain->str);
-		g_printerr("%c[%dm%s\n%c[%dm", 0x1B, 31, message, 0x1B, 0);
+		g_printerr("%c[%dm%s\n%c[%dm", 0x1B, 31, message_safe, 0x1B, 0);
 		break;
 	default:
 		/* debug in blue */
@@ -194,7 +200,7 @@ fu_debug_handler_cb(const gchar *log_domain,
 			g_printerr("%c[%dm%s ", 0x1B, 32, timestamp);
 		if (domain != NULL)
 			g_printerr("%s ", domain->str);
-		g_printerr("%c[%dm%s\n%c[%dm", 0x1B, 34, message, 0x1B, 0);
+		g_printerr("%c[%dm%s\n%c[%dm", 0x1B, 34, message_safe, 0x1B, 0);
 		break;
 	}
 }

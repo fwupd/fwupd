@@ -581,6 +581,54 @@ fu_strjoin(const gchar *separator, GPtrArray *array)
 }
 
 /**
+ * fu_strpassmask:
+ * @str: (nullable): a string to make safe for printing
+ *
+ * Hides password strings encoded in HTTP requests.
+ *
+ * Returns: a string
+ *
+ * Since: 1.9.10
+ **/
+gchar *
+fu_strpassmask(const gchar *str)
+{
+	g_autoptr(GString) tmp = g_string_new(str);
+	if (tmp->str != NULL && g_strstr_len(tmp->str, -1, "@") != NULL &&
+	    g_strstr_len(tmp->str, -1, ":") != NULL) {
+		gboolean is_password = FALSE;
+		gboolean is_url = FALSE;
+		for (guint i = 0; i < tmp->len; i++) {
+			const gchar *url_prefixes[] = {"http://", "https://", NULL};
+			for (guint j = 0; url_prefixes[j] != NULL; j++) {
+				if (g_str_has_prefix(tmp->str + i, url_prefixes[j])) {
+					is_url = TRUE;
+					i += strlen(url_prefixes[j]);
+					break;
+				}
+			}
+			if (tmp->str[i] == ' ' || tmp->str[i] == '@' || tmp->str[i] == '/') {
+				is_url = FALSE;
+				is_password = FALSE;
+				continue;
+			}
+			if (is_url && tmp->str[i] == ':') {
+				is_password = TRUE;
+				continue;
+			}
+			if (is_url && is_password) {
+				if (tmp->str[i] == '@') {
+					is_password = FALSE;
+					continue;
+				}
+				tmp->str[i] = 'X';
+			}
+		}
+	}
+	return g_string_free(g_steal_pointer(&tmp), FALSE);
+}
+
+/**
  * fu_utf16_to_utf8_byte_array:
  * @array: a #GByteArray
  * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
