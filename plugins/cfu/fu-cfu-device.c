@@ -384,6 +384,32 @@ fu_cfu_device_ensure_map_item(FuHidDescriptor *descriptor, FuCfuDeviceMap *map, 
 }
 
 static gboolean
+fu_cfu_device_verify_descriptor(FuCfuDevice *self, FuHidDescriptor *descriptor, GError **error)
+{
+	if (!fu_cfu_device_ensure_map_item(descriptor, &self->version_get_report, error)) {
+		g_prefix_error(error, "invalid version-get-report: ");
+		return FALSE;
+	}
+	if (!fu_cfu_device_ensure_map_item(descriptor, &self->offer_set_report, error)) {
+		g_prefix_error(error, "invalid offer-set-report: ");
+		return FALSE;
+	}
+	if (!fu_cfu_device_ensure_map_item(descriptor, &self->offer_get_report, error)) {
+		g_prefix_error(error, "invalid offer-get-report: ");
+		return FALSE;
+	}
+	if (!fu_cfu_device_ensure_map_item(descriptor, &self->content_set_report, error)) {
+		g_prefix_error(error, "invalid content-set-report: ");
+		return FALSE;
+	}
+	if (!fu_cfu_device_ensure_map_item(descriptor, &self->content_get_report, error)) {
+		g_prefix_error(error, "invalid content-get-report: ");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_cfu_device_setup(FuDevice *device, GError **error)
 {
 	FuCfuDevice *self = FU_CFU_DEVICE(device);
@@ -392,7 +418,8 @@ fu_cfu_device_setup(FuDevice *device, GError **error)
 	g_autoptr(GHashTable) modules_by_cid = NULL;
 	g_autoptr(GByteArray) st = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(FuHidDescriptor) descriptor = NULL;
+	g_autoptr(GPtrArray) descriptors = NULL;
+	g_autoptr(GString) descriptors_error = g_string_new(NULL);
 
 	/* FuHidDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_cfu_device_parent_class)->setup(device, error))
@@ -404,19 +431,32 @@ fu_cfu_device_setup(FuDevice *device, GError **error)
 					      fu_hid_device_get_ep_addr_in(FU_HID_DEVICE(device)));
 	}
 
-	descriptor = fu_hid_device_parse_descriptor(FU_HID_DEVICE(device), error);
-	if (descriptor == NULL)
+	/* try to parse each HID descriptor -- trying to find a CFU section */
+	descriptors = fu_hid_device_parse_descriptors(FU_HID_DEVICE(device), error);
+	if (descriptors == NULL)
 		return FALSE;
-	if (!fu_cfu_device_ensure_map_item(descriptor, &self->version_get_report, error))
+	for (guint i = 0; i < descriptors->len; i++) {
+		FuHidDescriptor *descriptor = g_ptr_array_index(descriptors, i);
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_cfu_device_verify_descriptor(self, descriptor, &error_local)) {
+			if (descriptors_error->len > 0) {
+				g_string_append(descriptors_error, ", ");
+			}
+			g_string_append_printf(descriptors_error,
+					       "descriptor 0x%x: %s",
+					       i,
+					       error_local->message);
+			continue;
+		}
+	}
+	if (self->content_get_report.ct == 0) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "no CFU descriptor found: %s",
+			    descriptors_error->str);
 		return FALSE;
-	if (!fu_cfu_device_ensure_map_item(descriptor, &self->offer_set_report, error))
-		return FALSE;
-	if (!fu_cfu_device_ensure_map_item(descriptor, &self->offer_get_report, error))
-		return FALSE;
-	if (!fu_cfu_device_ensure_map_item(descriptor, &self->content_set_report, error))
-		return FALSE;
-	if (!fu_cfu_device_ensure_map_item(descriptor, &self->content_get_report, error))
-		return FALSE;
+	}
 
 	/* get version */
 	fu_byte_array_append_uint8(buf, self->version_get_report.id);

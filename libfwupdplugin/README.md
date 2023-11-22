@@ -124,3 +124,7 @@ Remember: Plugins should be upstream!
 * `fu_device_set_version_from_uint24()`: Use `fu_device_set_version_u24()` instead
 * `fu_device_set_version_from_uint32()`: Use `fu_device_set_version_u32()` instead
 * `fu_device_set_version_from_uint64()`: Use `fu_device_set_version_u64()` instead
+
+## 2.0.0
+
+* `fu_hid_device_parse_descriptor()`: Use `fu_hid_device_parse_descriptors()` instead
