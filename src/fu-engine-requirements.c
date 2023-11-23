@@ -499,6 +499,38 @@ fu_engine_requirements_check_hardware(FuEngine *self, XbNode *req, GError **erro
 }
 
 static gboolean
+fu_engine_requirements_check_not_hardware(FuEngine *self, XbNode *req, GError **error)
+{
+	FuContext *ctx = fu_engine_get_context(self);
+	g_auto(GStrv) hwid_split = NULL;
+
+	/* sanity check */
+	if (xb_node_get_text(req) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no requirement value supplied");
+		return FALSE;
+	}
+
+	/* split and treat as OR */
+	hwid_split = g_strsplit(xb_node_get_text(req), "|", -1);
+	for (guint i = 0; hwid_split[i] != NULL; i++) {
+		if (fu_context_has_hwid_guid(ctx, hwid_split[i])) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "%s HWIDs matched",
+				    hwid_split[i]);
+			return FALSE;
+		}
+	}
+
+	/* nothing matched */
+	return TRUE;
+}
+
+static gboolean
 fu_engine_requirements_check_client(FuEngine *self,
 				    FuEngineRequest *request,
 				    XbNode *req,
@@ -574,6 +606,11 @@ fu_engine_requirements_check_hard(FuEngine *self,
 		if (!fu_context_has_flag(ctx, FU_CONTEXT_FLAG_LOADED_HWINFO))
 			return TRUE;
 		return fu_engine_requirements_check_hardware(self, req, error);
+	}
+	if (g_strcmp0(xb_node_get_element(req), "not_hardware") == 0) {
+		if (!fu_context_has_flag(ctx, FU_CONTEXT_FLAG_LOADED_HWINFO))
+			return TRUE;
+		return fu_engine_requirements_check_not_hardware(self, req, error);
 	}
 
 	/* ensure client requirement */
