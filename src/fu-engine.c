@@ -94,6 +94,8 @@
 #define FU_ENGINE_MAX_SIGNATURE_SIZE 0x100000  /* 1MB */
 
 static void
+fu_engine_constructed(GObject *obj);
+static void
 fu_engine_finalize(GObject *obj);
 static void
 fu_engine_ensure_security_attrs(FuEngine *self);
@@ -145,6 +147,8 @@ struct _FuEngine {
 	PassimClient *passim_client;
 #endif
 };
+
+enum { PROP_0, PROP_CONTEXT, PROP_LAST };
 
 enum {
 	SIGNAL_CHANGED,
@@ -8242,10 +8246,49 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 }
 
 static void
+fu_engine_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	FuEngine *self = FU_ENGINE(object);
+	switch (prop_id) {
+	case PROP_CONTEXT:
+		g_value_set_object(value, self->ctx);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fu_engine_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+	FuEngine *self = FU_ENGINE(object);
+	switch (prop_id) {
+	case PROP_CONTEXT:
+		g_set_object(&self->ctx, g_value_get_object(value));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
 fu_engine_class_init(FuEngineClass *klass)
 {
+	GParamSpec *pspec;
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_engine_finalize;
+	object_class->get_property = fu_engine_get_property;
+	object_class->set_property = fu_engine_set_property;
+	object_class->constructed = fu_engine_constructed;
+
+	pspec = g_param_spec_object("context",
+				    NULL,
+				    NULL,
+				    FU_TYPE_CONTEXT,
+				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_CONTEXT, pspec);
 
 	/**
 	 * FuEngine::changed:
@@ -8381,8 +8424,9 @@ fu_engine_idle_status_notify_cb(FuIdle *idle, GParamSpec *pspec, FuEngine *self)
 }
 
 static void
-fu_engine_init(FuEngine *self)
+fu_engine_constructed(GObject *obj)
 {
+	FuEngine *self = FU_ENGINE(obj);
 #ifdef HAVE_UTSNAME_H
 	struct utsname uname_tmp;
 #endif
@@ -8390,33 +8434,12 @@ fu_engine_init(FuEngine *self)
 	g_autofree gchar *pkidir_fw = NULL;
 	g_autofree gchar *pkidir_md = NULL;
 	g_autofree gchar *sysconfdir = NULL;
-	self->percentage = 0;
-	self->config = fu_engine_config_new();
-	self->remote_list = fu_remote_list_new();
-	self->device_list = fu_device_list_new();
-	self->ctx = fu_context_new();
-	self->idle = fu_idle_new();
-	self->history = fu_history_new();
-	self->plugin_list = fu_plugin_list_new();
-	self->plugin_filter = g_ptr_array_new_with_free_func(g_free);
-	self->host_security_attrs = fu_security_attrs_new();
-	self->backends = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	self->local_monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	self->runtime_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	self->compile_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	self->acquiesce_loop = g_main_loop_new(NULL, FALSE);
-	self->emulation_phases = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
-	self->emulation_backend_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-#ifdef HAVE_PASSIM
-	self->passim_client = passim_client_new();
-#endif
 
 	fu_context_set_runtime_versions(self->ctx, self->runtime_versions);
 	fu_context_set_compile_versions(self->ctx, self->compile_versions);
 
 	/* for debugging */
 	g_info("starting fwupd %s…", VERSION);
-
 	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "security-changed",
 			 G_CALLBACK(fu_engine_context_security_changed_cb),
@@ -8538,6 +8561,30 @@ fu_engine_init(FuEngine *self)
 					    XMLB_MAJOR_VERSION,
 					    XMLB_MINOR_VERSION,
 					    XMLB_MICRO_VERSION));
+}
+
+static void
+fu_engine_init(FuEngine *self)
+{
+	self->percentage = 0;
+	self->config = fu_engine_config_new();
+	self->remote_list = fu_remote_list_new();
+	self->device_list = fu_device_list_new();
+	self->idle = fu_idle_new();
+	self->history = fu_history_new();
+	self->plugin_list = fu_plugin_list_new();
+	self->plugin_filter = g_ptr_array_new_with_free_func(g_free);
+	self->host_security_attrs = fu_security_attrs_new();
+	self->backends = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	self->local_monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	self->runtime_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	self->compile_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	self->acquiesce_loop = g_main_loop_new(NULL, FALSE);
+	self->emulation_phases = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
+	self->emulation_backend_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+#ifdef HAVE_PASSIM
+	self->passim_client = passim_client_new();
+#endif
 
 	/* register /org/freedesktop/fwupd globally */
 	g_resources_register(fu_get_resource());
@@ -8553,6 +8600,7 @@ fu_engine_finalize(GObject *obj)
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
 		g_signal_handlers_disconnect_by_data(plugin, self);
 	}
+	g_signal_handlers_disconnect_by_data(self->ctx, self);
 	g_signal_handlers_disconnect_by_data(self->config, self);
 	for (guint i = 0; i < self->local_monitors->len; i++) {
 		GFileMonitor *monitor = g_ptr_array_index(self->local_monitors, i);
@@ -8608,9 +8656,7 @@ fu_engine_finalize(GObject *obj)
 }
 
 FuEngine *
-fu_engine_new(void)
+fu_engine_new(FuContext *ctx)
 {
-	FuEngine *self;
-	self = g_object_new(FU_TYPE_ENGINE, NULL);
-	return FU_ENGINE(self);
+	return FU_ENGINE(g_object_new(FU_TYPE_ENGINE, "context", ctx, NULL));
 }

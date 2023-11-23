@@ -25,6 +25,7 @@
 #include "fwupd-security-attr-private.h"
 
 #include "fu-bios-settings-private.h"
+#include "fu-context-private.h"
 #include "fu-daemon.h"
 #include "fu-device-private.h"
 #include "fu-engine-helper.h"
@@ -2277,6 +2278,7 @@ gboolean
 fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 {
 	const gchar *machine_kind = g_getenv("FWUPD_MACHINE_KIND");
+	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	g_return_val_if_fail(FU_IS_DAEMON(self), FALSE);
@@ -2304,7 +2306,7 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 	}
 
 	/* load engine */
-	self->engine = fu_engine_new();
+	self->engine = fu_engine_new(ctx);
 	g_signal_connect(FU_ENGINE(self->engine),
 			 "changed",
 			 G_CALLBACK(fu_daemon_engine_changed_cb),
