@@ -113,7 +113,6 @@ struct _FuEngine {
 	gboolean only_trusted;
 	gboolean write_history;
 	gboolean host_emulation;
-	gboolean has_hwinfo;
 	guint percentage;
 	FuHistory *history;
 	FuIdle *idle;
@@ -695,13 +694,6 @@ fu_engine_get_remote_id_for_blob(FuEngine *self, GBytes *blob)
 		}
 	}
 	return NULL;
-}
-
-gboolean
-fu_engine_has_hwinfo(FuEngine *self)
-{
-	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
-	return self->has_hwinfo;
 }
 
 /**
@@ -1645,7 +1637,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 		g_hash_table_insert(hash, g_strdup("HostBkc"), g_strdup(tmp));
 
 	/* DMI data */
-	if (self->has_hwinfo) {
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_LOADED_HWINFO)) {
 		struct {
 			const gchar *hwid;
 			const gchar *name;
@@ -8033,7 +8025,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 					    FU_CONTEXT_HWID_FLAG_LOAD_ALL,
 					    error))
 			return FALSE;
-		self->has_hwinfo = TRUE;
 	}
 	fu_progress_step_done(progress);
 
@@ -8150,7 +8141,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_progress_step_done(progress);
 
 	/* set quirks for each hwid */
-	if (self->has_hwinfo) {
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_LOADED_HWINFO)) {
 		GPtrArray *guids = fu_context_get_hwid_guids(self->ctx);
 		for (guint i = 0; i < guids->len; i++) {
 			const gchar *hwid = g_ptr_array_index(guids, i);
@@ -8160,7 +8151,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_progress_step_done(progress);
 
 	/* set up battery threshold */
-	if (self->has_hwinfo)
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_LOADED_HWINFO))
 		fu_engine_context_set_battery_threshold(self->ctx);
 
 	/* watch the device list for updates and proxy */

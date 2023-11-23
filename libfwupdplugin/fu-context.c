@@ -43,7 +43,6 @@ typedef struct {
 	guint battery_level;
 	guint battery_threshold;
 	FuBiosSettings *host_bios_settings;
-	gboolean loaded_hwinfo;
 	FuFirmware *fdt; /* optional */
 } FuContextPrivate;
 
@@ -209,7 +208,7 @@ fu_context_get_smbios_string(FuContext *self, guint8 structure_type, guint8 offs
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
-	if (!priv->loaded_hwinfo) {
+	if (!fu_context_has_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO)) {
 		g_critical("cannot use SMBIOS before calling ->load_hwinfo()");
 		return NULL;
 	}
@@ -236,7 +235,7 @@ fu_context_get_smbios_data(FuContext *self, guint8 structure_type, GError **erro
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 
 	/* must be valid and non-zero length */
-	if (!priv->loaded_hwinfo) {
+	if (!fu_context_has_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO)) {
 		g_critical("cannot use SMBIOS before calling ->load_hwinfo()");
 		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, "no data");
 		return NULL;
@@ -265,7 +264,7 @@ fu_context_get_smbios_integer(FuContext *self, guint8 type, guint8 offset, GErro
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), G_MAXUINT);
-	if (!priv->loaded_hwinfo) {
+	if (!fu_context_has_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO)) {
 		g_critical("cannot use SMBIOS before calling ->load_hwinfo()");
 		return G_MAXUINT;
 	}
@@ -398,7 +397,7 @@ fu_context_has_hwid_guid(FuContext *self, const gchar *guid)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
-	if (!priv->loaded_hwinfo) {
+	if (!fu_context_has_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO)) {
 		g_critical("cannot use HWIDs before calling ->load_hwinfo()");
 		return FALSE;
 	}
@@ -421,7 +420,7 @@ fu_context_get_hwid_guids(FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
-	if (!priv->loaded_hwinfo) {
+	if (!fu_context_has_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO)) {
 		g_critical("cannot use HWIDs before calling ->load_hwinfo()");
 		return NULL;
 	}
@@ -446,7 +445,7 @@ fu_context_get_hwid_value(FuContext *self, const gchar *key)
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 	g_return_val_if_fail(key != NULL, NULL);
-	if (!priv->loaded_hwinfo) {
+	if (!fu_context_has_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO)) {
 		g_critical("cannot use HWIDs before calling ->load_hwinfo()");
 		return NULL;
 	}
@@ -475,7 +474,7 @@ fu_context_get_hwid_replace_value(FuContext *self, const gchar *keys, GError **e
 	g_return_val_if_fail(keys != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	if (!priv->loaded_hwinfo) {
+	if (!fu_context_has_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO)) {
 		g_critical("cannot use HWIDs before calling ->load_hwinfo()");
 		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, "no data");
 		return NULL;
@@ -1008,7 +1007,7 @@ fu_context_load_hwinfo(FuContext *self,
 			}
 		}
 	}
-	priv->loaded_hwinfo = TRUE;
+	fu_context_add_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO);
 	fu_progress_step_done(progress);
 
 	if (!fu_hwids_setup(priv->hwids, &error_hwids))

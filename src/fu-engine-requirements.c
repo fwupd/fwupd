@@ -554,6 +554,7 @@ fu_engine_requirements_check_hard(FuEngine *self,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
+	FuContext *ctx = fu_engine_get_context(self);
 	FuDevice *device = fu_release_get_device(release);
 	FuEngineRequest *request = fu_release_get_request(release);
 
@@ -570,7 +571,7 @@ fu_engine_requirements_check_hard(FuEngine *self,
 
 	/* ensure hardware requirement */
 	if (g_strcmp0(xb_node_get_element(req), "hardware") == 0) {
-		if (!fu_engine_has_hwinfo(self))
+		if (!fu_context_has_flag(ctx, FU_CONTEXT_FLAG_LOADED_HWINFO))
 			return TRUE;
 		return fu_engine_requirements_check_hardware(self, req, error);
 	}
