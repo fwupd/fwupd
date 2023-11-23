@@ -28,3 +28,10 @@ enum EngineInstallPhase {
     CompositeCleanup,
     Last,
 }
+
+#[derive(ToBitString)]
+enum EngineRequestFlag {
+    None = 0,
+    NoRequirements = 1 << 0,
+    AnyRelease = 1 << 1,
+}

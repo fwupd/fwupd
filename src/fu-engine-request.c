@@ -12,7 +12,7 @@
 
 struct _FuEngineRequest {
 	GObject parent_instance;
-	FuEngineRequestFlags flags;
+	FuEngineRequestFlag flags;
 	FwupdFeatureFlags feature_flags;
 	FwupdDeviceFlags device_flags;
 	gchar *locale;
@@ -20,36 +20,12 @@ struct _FuEngineRequest {
 
 G_DEFINE_TYPE(FuEngineRequest, fu_engine_request, G_TYPE_OBJECT)
 
-static const gchar *
-fu_engine_request_flag_to_string(FuEngineRequestFlags flag)
-{
-	if (flag == FU_ENGINE_REQUEST_FLAG_NO_REQUIREMENTS)
-		return "no-requirements";
-	if (flag == FU_ENGINE_REQUEST_FLAG_ANY_RELEASE)
-		return "any-release";
-	return NULL;
-}
-
-static gchar *
-fu_engine_request_flags_to_string(FuEngineRequestFlags flags)
-{
-	g_autoptr(GString) str = g_string_new(NULL);
-	for (guint i = 0; i < 64; i++) {
-		if ((flags & ((guint64)1 << i)) == 0)
-			continue;
-		if (str->len > 0)
-			g_string_append(str, "|");
-		g_string_append(str, fu_engine_request_flag_to_string((guint64)1 << i));
-	}
-	return g_string_free(g_steal_pointer(&str), FALSE);
-}
-
 void
 fu_engine_request_add_string(FuEngineRequest *self, guint idt, GString *str)
 {
 	g_return_if_fail(FU_IS_ENGINE_REQUEST(self));
 	if (self->flags != FU_ENGINE_REQUEST_FLAG_NONE) {
-		g_autofree gchar *flags = fu_engine_request_flags_to_string(self->flags);
+		g_autofree gchar *flags = fu_engine_request_flag_to_string(self->flags);
 		fu_string_append(str, idt, "Flags", flags);
 	}
 	fu_string_append_kx(str, idt, "FeatureFlags", self->feature_flags);
@@ -73,14 +49,14 @@ fu_engine_request_get_locale(FuEngineRequest *self)
 }
 
 void
-fu_engine_request_add_flag(FuEngineRequest *self, FuEngineRequestFlags flag)
+fu_engine_request_add_flag(FuEngineRequest *self, FuEngineRequestFlag flag)
 {
 	g_return_if_fail(FU_IS_ENGINE_REQUEST(self));
 	self->flags |= flag;
 }
 
 gboolean
-fu_engine_request_has_flag(FuEngineRequest *self, FuEngineRequestFlags flag)
+fu_engine_request_has_flag(FuEngineRequest *self, FuEngineRequestFlag flag)
 {
 	g_return_val_if_fail(FU_IS_ENGINE_REQUEST(self), FU_ENGINE_REQUEST_FLAG_NONE);
 	return (self->flags & flag) > 0;
