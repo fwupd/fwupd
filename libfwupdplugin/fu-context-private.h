@@ -35,10 +35,10 @@ fu_context_load_hwinfo(FuContext *self,
 		       GError **error);
 gboolean
 fu_context_load_quirks(FuContext *self, FuQuirksLoadFlags flags, GError **error);
-void
-fu_context_set_runtime_versions(FuContext *self, GHashTable *runtime_versions);
-void
-fu_context_set_compile_versions(FuContext *self, GHashTable *compile_versions);
+GHashTable *
+fu_context_get_runtime_versions(FuContext *self);
+GHashTable *
+fu_context_get_compile_versions(FuContext *self);
 void
 fu_context_add_firmware_gtype(FuContext *self, const gchar *id, GType gtype);
 GPtrArray *

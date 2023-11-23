@@ -531,23 +531,21 @@ fu_context_get_runtime_version(FuContext *self, const gchar *component_id)
 }
 
 /**
- * fu_context_set_runtime_versions:
+ * fu_context_get_runtime_versions:
  * @self: a #FuContext
- * @runtime_versions: (element-type utf8 utf8): dictionary of versions
  *
- * Sets the runtime versions for a plugin.
+ * Gets the runtime versions for the context.
  *
- * Since: 1.6.0
+ * Returns: (transfer none) (element-type utf8 utf8): dictionary of versions
+ *
+ * Since: 1.9.10
  **/
-void
-fu_context_set_runtime_versions(FuContext *self, GHashTable *runtime_versions)
+GHashTable *
+fu_context_get_runtime_versions(FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_CONTEXT(self));
-	g_return_if_fail(runtime_versions != NULL);
-	if (priv->runtime_versions != NULL)
-		g_hash_table_unref(priv->runtime_versions);
-	priv->runtime_versions = g_hash_table_ref(runtime_versions);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	return priv->runtime_versions;
 }
 
 /**
@@ -575,23 +573,21 @@ fu_context_add_compile_version(FuContext *self, const gchar *component_id, const
 }
 
 /**
- * fu_context_set_compile_versions:
+ * fu_context_get_compile_versions:
  * @self: a #FuContext
- * @compile_versions: (element-type utf8 utf8): dictionary of versions
  *
- * Sets the compile time versions for a plugin.
+ * Gets the compile time versions for the context.
  *
- * Since: 1.6.0
+ * Returns: (transfer none) (element-type utf8 utf8): dictionary of versions
+ *
+ * Since: 1.9.10
  **/
-void
-fu_context_set_compile_versions(FuContext *self, GHashTable *compile_versions)
+GHashTable *
+fu_context_get_compile_versions(FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_CONTEXT(self));
-	g_return_if_fail(compile_versions != NULL);
-	if (priv->compile_versions != NULL)
-		g_hash_table_unref(priv->compile_versions);
-	priv->compile_versions = g_hash_table_ref(compile_versions);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	return priv->compile_versions;
 }
 
 static gint
@@ -1514,12 +1510,10 @@ fu_context_finalize(GObject *object)
 	FuContext *self = FU_CONTEXT(object);
 	FuContextPrivate *priv = GET_PRIVATE(self);
 
-	if (priv->runtime_versions != NULL)
-		g_hash_table_unref(priv->runtime_versions);
-	if (priv->compile_versions != NULL)
-		g_hash_table_unref(priv->compile_versions);
 	if (priv->fdt != NULL)
 		g_object_unref(priv->fdt);
+	g_hash_table_unref(priv->runtime_versions);
+	g_hash_table_unref(priv->compile_versions);
 	g_object_unref(priv->hwids);
 	g_object_unref(priv->config);
 	g_hash_table_unref(priv->hwid_flags);
@@ -1680,6 +1674,8 @@ fu_context_init(FuContext *self)
 	priv->quirks = fu_quirks_new();
 	priv->host_bios_settings = fu_bios_settings_new();
 	priv->esp_volumes = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	priv->runtime_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	priv->compile_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
 
 /**
