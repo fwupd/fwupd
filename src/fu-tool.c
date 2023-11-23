@@ -3788,6 +3788,7 @@ main(int argc, char *argv[])
 	gboolean ignore_checksum = FALSE;
 	gboolean ignore_vid_pid = FALSE;
 	g_auto(GStrv) plugin_glob = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
 	g_autoptr(GError) error_console = NULL;
 	g_autoptr(GError) error = NULL;
@@ -4455,7 +4456,7 @@ main(int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_VID_PID;
 
 	/* load engine */
-	priv->engine = fu_engine_new();
+	priv->engine = fu_engine_new(ctx);
 	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
