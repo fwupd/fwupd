@@ -693,6 +693,12 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 		return TRUE;
 	}
 
+	/* VL103 only updates in ROM mode, check other devices for skips-rom flag */
+	if (fu_vli_device_get_kind(FU_VLI_DEVICE(device)) != FU_VLI_DEVICE_KIND_VL103 &&
+	    fu_device_has_private_flag(device, FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM)) {
+		return TRUE;
+	}
+
 	/* write GPIOs */
 	if (!fu_vli_pd_device_write_gpios(self, error))
 		return FALSE;
@@ -709,12 +715,6 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 					gpio_control_a,
 					error))
 		return FALSE;
-
-	/* VL103 only updates in ROM mode, check other devices for skips-rom flag */
-	if (fu_vli_device_get_kind(FU_VLI_DEVICE(device)) != FU_VLI_DEVICE_KIND_VL103 &&
-	    fu_device_has_private_flag(device, FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM)) {
-		return TRUE;
-	}
 
 	/* VL103 set ROM sig does not work, so use alternate function */
 	if ((fu_vli_device_get_kind(FU_VLI_DEVICE(device)) != FU_VLI_DEVICE_KIND_VL100) &&
