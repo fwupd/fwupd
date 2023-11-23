@@ -125,8 +125,6 @@ struct _FuEngine {
 	FuPluginList *plugin_list;
 	GPtrArray *plugin_filter;
 	FuContext *ctx;
-	GHashTable *runtime_versions;
-	GHashTable *compile_versions;
 	GHashTable *approved_firmware; /* (nullable) */
 	GHashTable *blocked_firmware;  /* (nullable) */
 	GHashTable *emulation_phases;  /* (element-type int utf8) */
@@ -1591,27 +1589,29 @@ fu_engine_add_report_metadata_bool(GHashTable *hash, const gchar *key, gboolean 
 GHashTable *
 fu_engine_get_report_metadata(FuEngine *self, GError **error)
 {
+	GHashTable *compile_versions = fu_context_get_compile_versions(self->ctx);
+	GHashTable *runtime_versions = fu_context_get_runtime_versions(self->ctx);
 	const gchar *tmp;
 	gchar *btime;
 #ifdef HAVE_UTSNAME_H
 	struct utsname name_tmp;
 #endif
 	g_autoptr(GHashTable) hash = NULL;
-	g_autoptr(GList) compile_keys = g_hash_table_get_keys(self->compile_versions);
-	g_autoptr(GList) runtime_keys = g_hash_table_get_keys(self->runtime_versions);
+	g_autoptr(GList) compile_keys = g_hash_table_get_keys(compile_versions);
+	g_autoptr(GList) runtime_keys = g_hash_table_get_keys(runtime_versions);
 
 	/* convert all the runtime and compile-time versions */
 	hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	for (GList *l = compile_keys; l != NULL; l = l->next) {
 		const gchar *id = l->data;
-		const gchar *version = g_hash_table_lookup(self->compile_versions, id);
+		const gchar *version = g_hash_table_lookup(compile_versions, id);
 		g_hash_table_insert(hash,
 				    g_strdup_printf("CompileVersion(%s)", id),
 				    g_strdup(version));
 	}
 	for (GList *l = runtime_keys; l != NULL; l = l->next) {
 		const gchar *id = l->data;
-		const gchar *version = g_hash_table_lookup(self->runtime_versions, id);
+		const gchar *version = g_hash_table_lookup(runtime_versions, id);
 		g_hash_table_insert(hash,
 				    g_strdup_printf("RuntimeVersion(%s)", id),
 				    g_strdup(version));
@@ -8426,9 +8426,6 @@ fu_engine_constructed(GObject *obj)
 	g_autofree gchar *pkidir_md = NULL;
 	g_autofree gchar *sysconfdir = NULL;
 
-	fu_context_set_runtime_versions(self->ctx, self->runtime_versions);
-	fu_context_set_compile_versions(self->ctx, self->compile_versions);
-
 	/* for debugging */
 	g_info("starting fwupd %s…", VERSION);
 	g_signal_connect(FU_CONTEXT(self->ctx),
@@ -8521,37 +8518,39 @@ fu_engine_constructed(GObject *obj)
 		fu_engine_add_runtime_version(self, "org.kernel", uname_tmp.release);
 #endif
 
-	g_hash_table_insert(self->compile_versions,
-			    g_strdup("org.freedesktop.fwupd"),
-			    g_strdup(VERSION));
+	fu_context_add_compile_version(self->ctx, "org.freedesktop.fwupd", VERSION);
 #ifdef HAVE_GUSB
-	g_hash_table_insert(self->compile_versions,
-			    g_strdup("org.freedesktop.gusb"),
-			    g_strdup_printf("%i.%i.%i",
-					    G_USB_MAJOR_VERSION,
-					    G_USB_MINOR_VERSION,
-					    G_USB_MICRO_VERSION));
+	{
+		g_autofree gchar *version = g_strdup_printf("%i.%i.%i",
+							    G_USB_MAJOR_VERSION,
+							    G_USB_MINOR_VERSION,
+							    G_USB_MICRO_VERSION);
+		fu_context_add_compile_version(self->ctx, "org.freedesktop.gusb", version);
+	}
 #endif
 #ifdef HAVE_PASSIM
-	g_hash_table_insert(self->compile_versions,
-			    g_strdup("org.freedesktop.Passim"),
-			    g_strdup_printf("%i.%i.%i",
-					    PASSIM_MAJOR_VERSION,
-					    PASSIM_MINOR_VERSION,
-					    PASSIM_MICRO_VERSION));
+	{
+		g_autofree gchar *version = g_strdup_printf("%i.%i.%i",
+							    PASSIM_MAJOR_VERSION,
+							    PASSIM_MINOR_VERSION,
+							    PASSIM_MICRO_VERSION);
+		fu_context_add_compile_version(self->ctx, "org.freedesktop.Passim", version);
+	}
 #endif
-	g_hash_table_insert(self->compile_versions,
-			    g_strdup("com.hughsie.libjcat"),
-			    g_strdup_printf("%i.%i.%i",
-					    JCAT_MAJOR_VERSION,
-					    JCAT_MINOR_VERSION,
-					    JCAT_MICRO_VERSION));
-	g_hash_table_insert(self->compile_versions,
-			    g_strdup("com.hughsie.libxmlb"),
-			    g_strdup_printf("%i.%i.%i",
-					    XMLB_MAJOR_VERSION,
-					    XMLB_MINOR_VERSION,
-					    XMLB_MICRO_VERSION));
+	{
+		g_autofree gchar *version = g_strdup_printf("%i.%i.%i",
+							    JCAT_MAJOR_VERSION,
+							    JCAT_MINOR_VERSION,
+							    JCAT_MICRO_VERSION);
+		fu_context_add_compile_version(self->ctx, "com.hughsie.libjcat", version);
+	}
+	{
+		g_autofree gchar *version = g_strdup_printf("%i.%i.%i",
+							    XMLB_MAJOR_VERSION,
+							    XMLB_MINOR_VERSION,
+							    XMLB_MICRO_VERSION);
+		fu_context_add_compile_version(self->ctx, "com.hughsie.libxmlb", version);
+	}
 }
 
 static void
@@ -8568,8 +8567,6 @@ fu_engine_init(FuEngine *self)
 	self->host_security_attrs = fu_security_attrs_new();
 	self->backends = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->local_monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	self->runtime_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	self->compile_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	self->acquiesce_loop = g_main_loop_new(NULL, FALSE);
 	self->emulation_phases = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
 	self->emulation_backend_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
@@ -8637,8 +8634,6 @@ fu_engine_finalize(GObject *obj)
 	g_ptr_array_unref(self->plugin_filter);
 	g_ptr_array_unref(self->backends);
 	g_ptr_array_unref(self->local_monitors);
-	g_hash_table_unref(self->runtime_versions);
-	g_hash_table_unref(self->compile_versions);
 	g_hash_table_unref(self->emulation_phases);
 	g_hash_table_unref(self->emulation_backend_ids);
 	g_object_unref(self->plugin_list);
