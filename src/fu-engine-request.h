@@ -8,23 +8,19 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-engine-struct.h"
+
 #define FU_TYPE_ENGINE_REQUEST (fu_engine_request_get_type())
 G_DECLARE_FINAL_TYPE(FuEngineRequest, fu_engine_request, FU, ENGINE_REQUEST, GObject)
-
-typedef enum {
-	FU_ENGINE_REQUEST_FLAG_NONE = 0,
-	FU_ENGINE_REQUEST_FLAG_NO_REQUIREMENTS = 1 << 0,
-	FU_ENGINE_REQUEST_FLAG_ANY_RELEASE = 1 << 1,
-} FuEngineRequestFlags;
 
 FuEngineRequest *
 fu_engine_request_new(void);
 void
 fu_engine_request_add_string(FuEngineRequest *self, guint idt, GString *str);
 void
-fu_engine_request_add_flag(FuEngineRequest *self, FuEngineRequestFlags flag);
+fu_engine_request_add_flag(FuEngineRequest *self, FuEngineRequestFlag flag);
 gboolean
-fu_engine_request_has_flag(FuEngineRequest *self, FuEngineRequestFlags flag);
+fu_engine_request_has_flag(FuEngineRequest *self, FuEngineRequestFlag flag);
 FwupdFeatureFlags
 fu_engine_request_get_feature_flags(FuEngineRequest *self);
 void
