@@ -546,6 +546,8 @@ fu_context_set_runtime_versions(FuContext *self, GHashTable *runtime_versions)
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CONTEXT(self));
 	g_return_if_fail(runtime_versions != NULL);
+	if (priv->runtime_versions != NULL)
+		g_hash_table_unref(priv->runtime_versions);
 	priv->runtime_versions = g_hash_table_ref(runtime_versions);
 }
 
@@ -588,6 +590,8 @@ fu_context_set_compile_versions(FuContext *self, GHashTable *compile_versions)
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CONTEXT(self));
 	g_return_if_fail(compile_versions != NULL);
+	if (priv->compile_versions != NULL)
+		g_hash_table_unref(priv->compile_versions);
 	priv->compile_versions = g_hash_table_ref(compile_versions);
 }
 
