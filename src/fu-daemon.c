@@ -27,6 +27,7 @@
 #include "fu-bios-settings-private.h"
 #include "fu-daemon.h"
 #include "fu-device-private.h"
+#include "fu-engine-helper.h"
 #include "fu-engine.h"
 #include "fu-polkit-authority.h"
 #include "fu-release.h"

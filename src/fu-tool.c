@@ -35,6 +35,7 @@
 #include "fu-context-private.h"
 #include "fu-debug.h"
 #include "fu-device-private.h"
+#include "fu-engine-helper.h"
 #include "fu-engine.h"
 #include "fu-history.h"
 #include "fu-plugin-private.h"
