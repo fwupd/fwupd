@@ -18,7 +18,7 @@ enum P2pPolicy {
 #[derive(ToString)]
 enum EngineInstallPhase {
     Setup,
-    Write,
+    Install,
     Attach,
     Detach,
     Prepare,

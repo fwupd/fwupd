@@ -17,3 +17,6 @@ GHashTable *
 fu_engine_integrity_new(GError **error);
 gchar *
 fu_engine_integrity_to_string(GHashTable *self);
+
+GError *
+fu_engine_error_array_get_best(GPtrArray *errors);
