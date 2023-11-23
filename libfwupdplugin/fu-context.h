@@ -64,6 +64,15 @@ typedef void (*FuContextLookupIter)(FuContext *self,
 #define FU_CONTEXT_FLAG_SYSTEM_INHIBIT (1u << 1)
 
 /**
+ * FU_CONTEXT_FLAG_LOADED_HWINFO:
+ *
+ * Hardware information has been loaded with a call to fu_context_load_hwinfo().
+ *
+ * Since: 1.9.10
+ **/
+#define FU_CONTEXT_FLAG_LOADED_HWINFO (1u << 2)
+
+/**
  * FuContextFlags:
  *
  * The context flags.
