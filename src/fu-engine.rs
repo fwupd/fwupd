@@ -14,3 +14,17 @@ enum P2pPolicy {
     Metadata = 0x01,
     Firmware = 0x02,
 }
+
+#[derive(ToString)]
+enum EngineInstallPhase {
+    Setup,
+    Write,
+    Attach,
+    Detach,
+    Prepare,
+    Cleanup,
+    Reload,
+    CompositePrepare,
+    CompositeCleanup,
+    Last,
+}

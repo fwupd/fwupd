@@ -101,19 +101,6 @@ fu_engine_backends_save_phase(FuEngine *self, GError **error);
 static gboolean
 fu_engine_emulation_load_phase(FuEngine *self, GError **error);
 
-typedef enum {
-	FU_ENGINE_INSTALL_PHASE_SETUP,
-	FU_ENGINE_INSTALL_PHASE_WRITE,
-	FU_ENGINE_INSTALL_PHASE_ATTACH,
-	FU_ENGINE_INSTALL_PHASE_DETACH,
-	FU_ENGINE_INSTALL_PHASE_PREPARE,
-	FU_ENGINE_INSTALL_PHASE_CLEANUP,
-	FU_ENGINE_INSTALL_PHASE_RELOAD,
-	FU_ENGINE_INSTALL_PHASE_COMPOSITE_PREPARE,
-	FU_ENGINE_INSTALL_PHASE_COMPOSITE_CLEANUP,
-	FU_ENGINE_INSTALL_PHASE_LAST
-} FuEngineInstallPhase;
-
 struct _FuEngine {
 	GObject parent_instance;
 	GPtrArray *backends;
@@ -388,30 +375,6 @@ fu_engine_device_request_cb(FuDevice *device, FwupdRequest *request, FuEngine *s
 {
 	g_info("Emitting DeviceRequest('Message'='%s')", fwupd_request_get_message(request));
 	g_signal_emit(self, signals[SIGNAL_DEVICE_REQUEST], 0, request);
-}
-
-static const gchar *
-fu_engine_install_phase_to_string(FuEngineInstallPhase phase)
-{
-	if (phase == FU_ENGINE_INSTALL_PHASE_SETUP)
-		return "setup";
-	if (phase == FU_ENGINE_INSTALL_PHASE_WRITE)
-		return "install";
-	if (phase == FU_ENGINE_INSTALL_PHASE_ATTACH)
-		return "attach";
-	if (phase == FU_ENGINE_INSTALL_PHASE_DETACH)
-		return "detach";
-	if (phase == FU_ENGINE_INSTALL_PHASE_PREPARE)
-		return "prepare";
-	if (phase == FU_ENGINE_INSTALL_PHASE_CLEANUP)
-		return "cleanup";
-	if (phase == FU_ENGINE_INSTALL_PHASE_RELOAD)
-		return "reload";
-	if (phase == FU_ENGINE_INSTALL_PHASE_COMPOSITE_PREPARE)
-		return "composite-prepare";
-	if (phase == FU_ENGINE_INSTALL_PHASE_COMPOSITE_CLEANUP)
-		return "composite-cleanup";
-	return NULL;
 }
 
 static void
