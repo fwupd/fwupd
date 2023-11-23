@@ -645,6 +645,7 @@ fu_engine_requirements_func(gconstpointer user_data)
 			   "  <requires>"
 			   "    <id compare=\"ge\" version=\"1.2.3\">org.test.dummy</id>"
 			   "    <hardware>6ff95c9c-ae41-5f59-9d90-3ec1ea66091e</hardware>"
+			   "    <not_hardware>ffffffff-ffff-ffff-ffff-ffffffffffff</not_hardware>"
 			   "  </requires>"
 			   "  <releases>"
 			   "    <release version=\"1.2.3\"/>"
