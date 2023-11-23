@@ -26,6 +26,7 @@
 #include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-engine-config.h"
+#include "fu-engine-requirements.h"
 #include "fu-engine.h"
 #include "fu-history.h"
 #include "fu-plugin-list.h"
@@ -203,7 +204,7 @@ fu_engine_requirements_missing_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_false(ret);
 }
@@ -243,7 +244,7 @@ fu_engine_requirements_soft_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_FORCE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_FORCE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -280,7 +281,7 @@ fu_engine_requirements_client_fail_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false(ret);
 }
@@ -317,7 +318,7 @@ fu_engine_requirements_client_invalid_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_false(ret);
 }
@@ -357,7 +358,7 @@ fu_engine_requirements_client_pass_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -496,7 +497,7 @@ fu_engine_requirements_unsupported_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false(ret);
 }
@@ -556,7 +557,7 @@ fu_engine_requirements_child_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -616,7 +617,7 @@ fu_engine_requirements_child_fail_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_nonnull(
 	    g_strstr_len(error->message, -1, "Not compatible with child device version"));
@@ -659,7 +660,7 @@ fu_engine_requirements_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -721,13 +722,13 @@ fu_engine_requirements_device_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* check this fails, as the wrong requirement is specified */
 	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_nonnull(g_strstr_len(error->message, -1, "child, parent or sibling requirement"));
 	g_assert_false(ret);
@@ -735,7 +736,7 @@ fu_engine_requirements_device_func(gconstpointer user_data)
 #ifndef SUPPORTED_BUILD
 	/* we can force this */
 	g_clear_error(&error);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_FORCE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_FORCE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 #endif
@@ -787,7 +788,7 @@ fu_engine_requirements_device_plain_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -972,7 +973,7 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	ret = fu_release_load(release1, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release1, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release1, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false(ret);
 	g_clear_error(&error);
@@ -997,13 +998,13 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	ret = fu_release_load(release2, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release2, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release2, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* check this still works, as a child requirement is specified */
 	fu_device_add_internal_flag(device1, FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
-	ret = fu_engine_check_requirements(engine, release2, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release2, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -1073,7 +1074,7 @@ fu_engine_requirements_other_device_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -1233,7 +1234,7 @@ fu_engine_requirements_parent_device_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -1305,7 +1306,7 @@ fu_engine_requirements_child_device_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -1691,7 +1692,7 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_check_requirements(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_nonnull(error);
 	g_assert_cmpstr(error->message,

@@ -508,6 +508,30 @@ fu_context_add_runtime_version(FuContext *self, const gchar *component_id, const
 }
 
 /**
+ * fu_context_get_runtime_version:
+ * @self: a #FuContext
+ * @component_id: an AppStream component id, e.g. `org.gnome.Software`
+ *
+ * Sets a runtime version of a specific dependency.
+ *
+ * Returns: a version string, e.g. `1.2.3`, or %NULL
+ *
+ * Since: 1.9.10
+ **/
+const gchar *
+fu_context_get_runtime_version(FuContext *self, const gchar *component_id)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(component_id != NULL, NULL);
+
+	if (priv->runtime_versions == NULL)
+		return NULL;
+	return g_hash_table_lookup(priv->runtime_versions, component_id);
+}
+
+/**
  * fu_context_set_runtime_versions:
  * @self: a #FuContext
  * @runtime_versions: (element-type utf8 utf8): dictionary of versions

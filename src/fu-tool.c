@@ -36,6 +36,7 @@
 #include "fu-debug.h"
 #include "fu-device-private.h"
 #include "fu-engine-helper.h"
+#include "fu-engine-requirements.h"
 #include "fu-engine.h"
 #include "fu-history.h"
 #include "fu-plugin-private.h"
@@ -1356,7 +1357,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 				g_ptr_array_add(errors, g_steal_pointer(&error_local));
 				continue;
 			}
-			if (!fu_engine_check_requirements(priv->engine,
+			if (!fu_engine_requirements_check(priv->engine,
 							  release,
 							  priv->flags,
 							  &error_local)) {

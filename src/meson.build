@@ -53,6 +53,7 @@ fwupd_engine_src = [
   'fu-idle.c',
   'fu-polkit-authority.c',
   'fu-release.c',
+  'fu-engine-requirements.c',
   'fu-release-common.c',
   'fu-plugin-list.c',
   'fu-remote-list.c',
