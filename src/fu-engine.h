@@ -227,10 +227,7 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 gboolean
 fu_engine_check_trust(FuEngine *self, FuRelease *release, GError **error);
 gboolean
-fu_engine_check_requirements(FuEngine *self,
-			     FuRelease *release,
-			     FwupdInstallFlags flags,
-			     GError **error);
+fu_engine_has_hwinfo(FuEngine *self);
 void
 fu_engine_set_silo(FuEngine *self, XbSilo *silo);
 XbNode *

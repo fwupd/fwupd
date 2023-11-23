@@ -28,6 +28,7 @@
 #include "fu-daemon.h"
 #include "fu-device-private.h"
 #include "fu-engine-helper.h"
+#include "fu-engine-requirements.h"
 #include "fu-engine.h"
 #include "fu-polkit-authority.h"
 #include "fu-release.h"
@@ -841,7 +842,7 @@ fu_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 		g_ptr_array_add(helper->errors, g_steal_pointer(&error_local));
 		return TRUE;
 	}
-	if (!fu_engine_check_requirements(self->engine,
+	if (!fu_engine_requirements_check(self->engine,
 					  release,
 					  helper->flags | FWUPD_INSTALL_FLAG_FORCE,
 					  &error_local)) {
@@ -898,7 +899,7 @@ fu_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 	/* make a second pass */
 	for (guint i = 0; i < releases->len; i++) {
 		FuRelease *release_tmp = g_ptr_array_index(releases, i);
-		if (!fu_engine_check_requirements(self->engine,
+		if (!fu_engine_requirements_check(self->engine,
 						  release_tmp,
 						  helper->flags,
 						  &error_local)) {

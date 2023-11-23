@@ -97,6 +97,8 @@ fu_context_get_hwid_replace_value(FuContext *self,
 				  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 void
 fu_context_add_runtime_version(FuContext *self, const gchar *component_id, const gchar *version);
+const gchar *
+fu_context_get_runtime_version(FuContext *self, const gchar *component_id);
 void
 fu_context_add_compile_version(FuContext *self, const gchar *component_id, const gchar *version);
 const gchar *
