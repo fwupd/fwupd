@@ -644,6 +644,7 @@ fu_engine_requirements_func(gconstpointer user_data)
 	const gchar *xml = "<component>"
 			   "  <requires>"
 			   "    <id compare=\"ge\" version=\"1.2.3\">org.test.dummy</id>"
+			   "    <hardware>6ff95c9c-ae41-5f59-9d90-3ec1ea66091e</hardware>"
 			   "  </requires>"
 			   "  <releases>"
 			   "    <release version=\"1.2.3\"/>"
@@ -1657,10 +1658,7 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* load engine to get FuConfig set up */
-	ret = fu_engine_load(engine,
-			     FU_ENGINE_LOAD_FLAG_NO_CACHE | FU_ENGINE_LOAD_FLAG_HWINFO,
-			     progress,
-			     &error);
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -5471,6 +5469,7 @@ main(int argc, char **argv)
 	gboolean ret;
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuTest) self = g_new0(FuTest, 1);
 
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
@@ -5496,6 +5495,11 @@ main(int argc, char **argv)
 	/* do not save silo */
 	self->ctx = fu_context_new();
 	ret = fu_context_load_quirks(self->ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* load dummy hwids */
+	ret = fu_context_load_hwinfo(self->ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
