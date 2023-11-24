@@ -188,8 +188,14 @@ GType = FuPxiBleDevice
 Plugin = pixart_rf
 GType = FuPxiBleDevice
 
-# Twinkies Mouse/KB
-[HIDRAW\VEN_03F0&DEV_114C]
+# Twinkies Mouse
+[HIDRAW\VEN_03F0&DEV_6D4A]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+Flags = is-hpac
+
+# Twinkies Keyboard
+[HIDRAW\VEN_03F0&DEV_7C4A]
 Plugin = pixart_rf
 GType = FuPxiBleDevice
 Flags = is-hpac
