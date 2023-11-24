@@ -9,78 +9,10 @@
 #include <fwupd.h>
 #include <gio/gio.h>
 
+#include "fu-progress-struct.h"
+
 #define FU_TYPE_PROGRESS (fu_progress_get_type())
 G_DECLARE_FINAL_TYPE(FuProgress, fu_progress, FU, PROGRESS, GObject)
-
-/**
- * FuProgressFlags:
- *
- * The progress internal flags.
- **/
-typedef guint64 FuProgressFlags;
-
-/**
- * FU_PROGRESS_FLAG_NONE:
- *
- * No flags set.
- *
- * Since: 1.7.0
- */
-#define FU_PROGRESS_FLAG_NONE (0)
-
-/**
- * FU_PROGRESS_FLAG_UNKNOWN:
- *
- * Unknown flag value.
- *
- * Since: 1.7.0
- */
-#define FU_PROGRESS_FLAG_UNKNOWN G_MAXUINT64
-
-/**
- * FU_PROGRESS_FLAG_GUESSED:
- *
- * The steps have not been measured on real hardware and have been guessed.
- *
- * Since: 1.7.0
- */
-#define FU_PROGRESS_FLAG_GUESSED (1ull << 0)
-
-/**
- * FU_PROGRESS_FLAG_NO_PROFILE:
- *
- * The steps cannot be accurate enough for a profile result.
- *
- * Since: 1.7.0
- */
-#define FU_PROGRESS_FLAG_NO_PROFILE (1ull << 1)
-
-/**
- * FU_PROGRESS_FLAG_CHILD_FINISHED:
- *
- * The child completed all the expected steps.
- *
- * Since: 1.8.2
- */
-#define FU_PROGRESS_FLAG_CHILD_FINISHED (1ull << 2)
-
-/**
- * FU_PROGRESS_FLAG_NO_TRACEBACK:
- *
- * The steps should not be shown in the traceback.
- *
- * Since: 1.8.2
- */
-#define FU_PROGRESS_FLAG_NO_TRACEBACK (1ull << 3)
-
-/**
- * FU_PROGRESS_FLAG_NO_SENDER:
- *
- * The task has no sender and is no longer able to perform requests.
- *
- * Since: 1.9.10
- */
-#define FU_PROGRESS_FLAG_NO_SENDER (1ull << 4)
 
 FuProgress *
 fu_progress_new(const gchar *id);
@@ -92,16 +24,12 @@ const gchar *
 fu_progress_get_name(FuProgress *self);
 void
 fu_progress_set_name(FuProgress *self, const gchar *name);
-const gchar *
-fu_progress_flag_to_string(FuProgressFlags flag);
-FuProgressFlags
-fu_progress_flag_from_string(const gchar *flag);
 void
-fu_progress_add_flag(FuProgress *self, FuProgressFlags flag);
+fu_progress_add_flag(FuProgress *self, FuProgressFlag flag);
 void
-fu_progress_remove_flag(FuProgress *self, FuProgressFlags flag);
+fu_progress_remove_flag(FuProgress *self, FuProgressFlag flag);
 gboolean
-fu_progress_has_flag(FuProgress *self, FuProgressFlags flag);
+fu_progress_has_flag(FuProgress *self, FuProgressFlag flag);
 FwupdStatus
 fu_progress_get_status(FuProgress *self);
 void

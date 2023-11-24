@@ -110,6 +110,13 @@ class EnumItem:
         return f"FU_{name_snake.upper()}_{_camel_to_snake(self.name).replace('-', '_').upper()}"
 
     def parse_default(self, val: str) -> None:
+
+        val = {
+            "u64::MAX": "G_MAXUINT64",
+            "u32::MAX": "G_MAXUINT32",
+            "u16::MAX": "G_MAXUINT16",
+            "u8::MAX": "G_MAXUINT8",
+        }.get(val, val)
         if val.startswith("0x") or val.startswith("0b"):
             val = val.replace("_", "")
         if val.startswith("0b"):

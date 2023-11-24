@@ -61,7 +61,7 @@ struct _FuProgress {
 	GObject parent_instance;
 	gchar *id;
 	gchar *name;
-	FuProgressFlags flags;
+	FuProgressFlag flags;
 	guint percentage;
 	FwupdStatus status;
 	GPtrArray *children; /* of FuProgress */
@@ -192,54 +192,6 @@ fu_progress_get_status(FuProgress *self)
 }
 
 /**
- * fu_progress_flag_to_string:
- * @flag: an internal progress flag, e.g. %FU_PROGRESS_FLAG_GUESSED
- *
- * Converts an progress flag to a string.
- *
- * Returns: identifier string
- *
- * Since: 1.7.0
- **/
-const gchar *
-fu_progress_flag_to_string(FuProgressFlags flag)
-{
-	if (flag == FU_PROGRESS_FLAG_GUESSED)
-		return "guessed";
-	if (flag == FU_PROGRESS_FLAG_NO_PROFILE)
-		return "no-profile";
-	if (flag == FU_PROGRESS_FLAG_NO_TRACEBACK)
-		return "no-traceback";
-	if (flag == FU_PROGRESS_FLAG_NO_SENDER)
-		return "no-sender";
-	return NULL;
-}
-
-/**
- * fu_progress_flag_from_string:
- * @flag: a string, e.g. `guessed`
- *
- * Converts a string to an progress flag.
- *
- * Returns: enumerated value
- *
- * Since: 1.7.0
- **/
-FuProgressFlags
-fu_progress_flag_from_string(const gchar *flag)
-{
-	if (g_strcmp0(flag, "guessed") == 0)
-		return FU_PROGRESS_FLAG_GUESSED;
-	if (g_strcmp0(flag, "no-profile") == 0)
-		return FU_PROGRESS_FLAG_NO_PROFILE;
-	if (g_strcmp0(flag, "no-traceback") == 0)
-		return FU_PROGRESS_FLAG_NO_TRACEBACK;
-	if (g_strcmp0(flag, "no-sender") == 0)
-		return FU_PROGRESS_FLAG_NO_SENDER;
-	return FU_PROGRESS_FLAG_UNKNOWN;
-}
-
-/**
  * fu_progress_add_flag:
  * @self: a #FuProgress
  * @flag: an internal progress flag, e.g. %FU_PROGRESS_FLAG_GUESSED
@@ -249,7 +201,7 @@ fu_progress_flag_from_string(const gchar *flag)
  * Since: 1.7.0
  **/
 void
-fu_progress_add_flag(FuProgress *self, FuProgressFlags flag)
+fu_progress_add_flag(FuProgress *self, FuProgressFlag flag)
 {
 	g_return_if_fail(FU_IS_PROGRESS(self));
 	self->flags |= flag;
@@ -265,7 +217,7 @@ fu_progress_add_flag(FuProgress *self, FuProgressFlags flag)
  * Since: 1.7.0
  **/
 void
-fu_progress_remove_flag(FuProgress *self, FuProgressFlags flag)
+fu_progress_remove_flag(FuProgress *self, FuProgressFlag flag)
 {
 	g_return_if_fail(FU_IS_PROGRESS(self));
 	self->flags &= ~flag;
@@ -281,7 +233,7 @@ fu_progress_remove_flag(FuProgress *self, FuProgressFlags flag)
  * Since: 1.7.0
  **/
 gboolean
-fu_progress_has_flag(FuProgress *self, FuProgressFlags flag)
+fu_progress_has_flag(FuProgress *self, FuProgressFlag flag)
 {
 	g_return_val_if_fail(FU_IS_PROGRESS(self), FALSE);
 	return (self->flags & flag) > 0;
