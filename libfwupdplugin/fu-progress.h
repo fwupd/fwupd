@@ -73,6 +73,15 @@ typedef guint64 FuProgressFlags;
  */
 #define FU_PROGRESS_FLAG_NO_TRACEBACK (1ull << 3)
 
+/**
+ * FU_PROGRESS_FLAG_NO_SENDER:
+ *
+ * The task has no sender and is no longer able to perform requests.
+ *
+ * Since: 1.9.10
+ */
+#define FU_PROGRESS_FLAG_NO_SENDER (1ull << 4)
+
 FuProgress *
 fu_progress_new(const gchar *id);
 const gchar *

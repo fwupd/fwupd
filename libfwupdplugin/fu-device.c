@@ -5909,6 +5909,15 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progre
 		return FALSE;
 	}
 
+	/* already cancelled */
+	if (progress != NULL && fu_progress_has_flag(progress, FU_PROGRESS_FLAG_NO_SENDER)) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_CANCELLED,
+				    "no sender, and so cannot process request");
+		return FALSE;
+	}
+
 	/* ignore */
 	if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED)) {
 		g_info("ignoring device %s request of %s as emulated",

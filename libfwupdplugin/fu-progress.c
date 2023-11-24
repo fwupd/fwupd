@@ -210,6 +210,8 @@ fu_progress_flag_to_string(FuProgressFlags flag)
 		return "no-profile";
 	if (flag == FU_PROGRESS_FLAG_NO_TRACEBACK)
 		return "no-traceback";
+	if (flag == FU_PROGRESS_FLAG_NO_SENDER)
+		return "no-sender";
 	return NULL;
 }
 
@@ -232,6 +234,8 @@ fu_progress_flag_from_string(const gchar *flag)
 		return FU_PROGRESS_FLAG_NO_PROFILE;
 	if (g_strcmp0(flag, "no-traceback") == 0)
 		return FU_PROGRESS_FLAG_NO_TRACEBACK;
+	if (g_strcmp0(flag, "no-sender") == 0)
+		return FU_PROGRESS_FLAG_NO_SENDER;
 	return FU_PROGRESS_FLAG_UNKNOWN;
 }
 
