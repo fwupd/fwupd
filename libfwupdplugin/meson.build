@@ -6,6 +6,7 @@ fwupdplugin_version_h = configure_file(
 
 fwupdplugin_structs = [
   'fu-acpi-table.rs', # fuzzing
+  'fu-archive.rs', # fuzzing
   'fu-cab.rs', # fuzzing
   'fu-cfu-firmware.rs', # fuzzing
   'fu-coswid.rs', # fuzzing
