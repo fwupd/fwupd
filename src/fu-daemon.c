@@ -356,6 +356,8 @@ fu_daemon_result_array_to_variant(GPtrArray *results)
 typedef struct {
 	GDBusMethodInvocation *invocation;
 	FuEngineRequest *request;
+	FuProgress *progress;
+	guint watcher_id;
 	gchar *sender;
 	GPtrArray *releases;
 	GPtrArray *action_ids;
@@ -379,12 +381,16 @@ fu_daemon_auth_helper_free(FuMainAuthHelper *helper)
 	/* always return to IDLE even in event of an auth error */
 	fu_daemon_set_status(helper->self, FWUPD_STATUS_IDLE);
 
+	if (helper->watcher_id > 0)
+		g_bus_unwatch_name(helper->watcher_id);
 	if (helper->blob_cab != NULL)
 		g_bytes_unref(helper->blob_cab);
 	if (helper->silo != NULL)
 		g_object_unref(helper->silo);
 	if (helper->request != NULL)
 		g_object_unref(helper->request);
+	if (helper->progress != NULL)
+		g_object_unref(helper->progress);
 	if (helper->releases != NULL)
 		g_ptr_array_unref(helper->releases);
 	if (helper->action_ids != NULL)
@@ -744,7 +750,6 @@ fu_daemon_authorize_install_queue(FuMainAuthHelper *helper_ref)
 	FuDaemon *self = helper_ref->self;
 	g_autoptr(FuMainAuthHelper) helper = helper_ref;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	gboolean ret;
 
 	/* still more things to to authenticate */
@@ -767,12 +772,12 @@ fu_daemon_authorize_install_queue(FuMainAuthHelper *helper_ref)
 	}
 
 	/* all authenticated, so install all the things */
-	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
-	g_signal_connect(FU_PROGRESS(progress),
+	fu_progress_set_profile(helper->progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	g_signal_connect(FU_PROGRESS(helper->progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_daemon_progress_percentage_changed_cb),
 			 helper->self);
-	g_signal_connect(FU_PROGRESS(progress),
+	g_signal_connect(FU_PROGRESS(helper->progress),
 			 "status-changed",
 			 G_CALLBACK(fu_daemon_progress_status_changed_cb),
 			 helper->self);
@@ -783,7 +788,7 @@ fu_daemon_authorize_install_queue(FuMainAuthHelper *helper_ref)
 					 helper->request,
 					 helper->releases,
 					 helper->blob_cab,
-					 progress,
+					 helper->progress,
 					 helper->flags,
 					 &error);
 	self->update_in_progress = FALSE;
@@ -1086,6 +1091,16 @@ fu_daemon_inhibit_name_vanished_cb(GDBusConnection *connection,
 			break;
 		}
 	}
+}
+
+static void
+fu_daemon_sender_name_vanished_cb(GDBusConnection *connection,
+				  const gchar *name,
+				  gpointer user_data)
+{
+	FuMainAuthHelper *helper = (FuMainAuthHelper *)user_data;
+	g_info("%s vanished before completion of install on %s", name, helper->device_id);
+	fu_progress_add_flag(helper->progress, FU_PROGRESS_FLAG_NO_SENDER);
 }
 
 static void
@@ -1820,6 +1835,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		/* create helper object */
 		helper = g_new0(FuMainAuthHelper, 1);
 		helper->request = g_steal_pointer(&request);
+		helper->progress = fu_progress_new(G_STRLOC);
 		helper->invocation = g_object_ref(invocation);
 		helper->device_id = g_strdup(device_id);
 		helper->self = self;
@@ -1878,6 +1894,14 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 
 		/* install all the things in the store */
 		helper->sender = g_strdup(sender);
+		helper->watcher_id =
+		    g_bus_watch_name_on_connection(self->connection,
+						   sender,
+						   G_BUS_NAME_WATCHER_FLAGS_NONE,
+						   NULL,
+						   fu_daemon_sender_name_vanished_cb,
+						   helper,
+						   NULL);
 		if (!fu_daemon_install_with_helper(g_steal_pointer(&helper), &error)) {
 			g_dbus_method_invocation_return_gerror(invocation, error);
 			return;
