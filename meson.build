@@ -689,6 +689,8 @@ if build_daemon
     'passim': passim,
     'sqlite': sqlite,
     'thinklmi_compat': get_option('thinklmi_compat'),
+    'GPG support': supported_gpg,
+    'PKCS7 support': supported_pkcs7,
   }, section: 'daemon features')
   summary(plugins, section: 'plugins')
 endif
