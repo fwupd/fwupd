@@ -321,13 +321,11 @@
       "Name": "Core\u2122 i7-10850H CPU @ 2.70GHz",
       "DeviceId": "4bde70ba4e39b28f9eab1628f9dd6e6244c03027",
       "InstanceIds": [
-        "cpu",
         "CPUID\\PRO_0&FAM_06",
         "CPUID\\PRO_0&FAM_06&MOD_A5",
         "CPUID\\PRO_0&FAM_06&MOD_A5&STP_2"
       ],
       "Guid": [
-        "b9a2dd81-159e-5537-a7db-e7101d164d3f",
         "30249f37-d140-5d3e-9319-186b1bd5cac3",
         "a45b0522-5722-54bd-b802-86cd044262df",
         "7b9b6e8c-226c-5db6-86cb-ea3187578013"
@@ -425,12 +423,8 @@
     {
       "Name": "System Firmware",
       "DeviceId": "a45df35ac0e948ee180fe216a5f703f32dda163f",
-      "InstanceIds": [
-        "main-system-firmware"
-      ],
       "Guid": [
-        "6e58e73d-8061-44e4-8949-33b7f0d5c726",
-        "230c8b18-8d9b-53ec-838b-6cfc0383493a"
+        "6e58e73d-8061-44e4-8949-33b7f0d5c726"
       ],
       "Summary": "UEFI ESRT device",
       "Protocol": "org.uefi.capsule",

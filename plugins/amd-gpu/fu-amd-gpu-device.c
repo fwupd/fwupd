@@ -75,7 +75,7 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 	/* APUs don't have 'rom' sysfs file */
 	rom = g_build_filename(base, "rom", NULL);
 	if (!g_file_test(rom, G_FILE_TEST_EXISTS)) {
-		fu_device_add_parent_guid(device, "cpu");
+		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD);
 		fu_device_set_name(device, "Graphics Processing Unit (GPU)");
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 	} else {

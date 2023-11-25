@@ -187,7 +187,7 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION);
-	fu_device_add_parent_guid(FU_DEVICE(self), "main-system-firmware");
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE_CHILD);
 	if (!fu_common_is_live_media())
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	g_signal_connect(FWUPD_DEVICE(self),

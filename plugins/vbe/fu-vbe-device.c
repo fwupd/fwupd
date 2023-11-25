@@ -60,6 +60,7 @@ fu_vbe_device_init(FuVbeDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "org.vbe");
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE);
 	fu_device_set_physical_id(FU_DEVICE(self), "vbe");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
@@ -92,13 +93,6 @@ fu_vbe_device_probe(FuDevice *device, GError **error)
 
 	/* success */
 	return TRUE;
-}
-
-static void
-fu_vbe_device_constructed(GObject *obj)
-{
-	FuVbeDevice *self = FU_VBE_DEVICE(obj);
-	fu_device_add_instance_id(FU_DEVICE(self), "main-system-firmware");
 }
 
 static void
@@ -176,7 +170,6 @@ fu_vbe_device_class_init(FuVbeDeviceClass *klass)
 				G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_FDT_NODE, pspec);
 
-	object_class->constructed = fu_vbe_device_constructed;
 	object_class->finalize = fu_vbe_device_finalize;
 	klass_device->to_string = fu_vbe_device_to_string;
 	klass_device->probe = fu_vbe_device_probe;

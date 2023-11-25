@@ -113,7 +113,7 @@ required.
 ## GUID Generation
 
 These devices use the UEFI GUID as provided in the ESRT. Additionally, for the
-system device the `main-system-firmware` GUID is also added.
+system device the `main-system-firmware` internal flag is also added.
 
 For compatibility with Windows 10, the plugin also adds GUIDs of the form
 `UEFI\RES_{$(esrt)}`.

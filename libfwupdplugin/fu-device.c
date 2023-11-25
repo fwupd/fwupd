@@ -24,8 +24,6 @@
 #define FU_DEVICE_RETRY_OPEN_COUNT 5
 #define FU_DEVICE_RETRY_OPEN_DELAY 500 /* ms */
 
-#define FU_DEVICE_GUID_MAIN_SYSTEM_FIRMWARE "230c8b18-8d9b-53ec-838b-6cfc0383493a"
-
 /**
  * FuDevice:
  *
@@ -288,6 +286,14 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "enforce-requires";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST)
 		return "non-generic-request";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE)
+		return "host-firmware";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE_CHILD)
+		return "host-firmware-child";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_HOST_CPU)
+		return "host-cpu";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD)
+		return "host-cpu-child";
 	return NULL;
 }
 
@@ -382,6 +388,14 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES;
 	if (g_strcmp0(flag, "non-generic-request") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST;
+	if (g_strcmp0(flag, "host-firmware") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE;
+	if (g_strcmp0(flag, "host-firmware-child") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE_CHILD;
+	if (g_strcmp0(flag, "host-cpu") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_HOST_CPU;
+	if (g_strcmp0(flag, "host-cpu-child") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -6301,15 +6315,13 @@ fu_device_security_attr_new(FuDevice *self, const gchar *appstream_id)
 	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
 	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
 
-	/* if the device has a parent of main-system-firmware then add those GUIDs too */
-	if (fu_device_has_parent_guid(self, FU_DEVICE_GUID_MAIN_SYSTEM_FIRMWARE)) {
+	/* if the device is a child of the host firmware then add those GUIDs too */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE_CHILD)) {
 		FuDevice *msf_device = fu_device_get_parent(self);
 		if (msf_device != NULL) {
 			GPtrArray *guids = fu_device_get_guids(msf_device);
 			for (guint i = 0; i < guids->len; i++) {
 				const gchar *guid = g_ptr_array_index(guids, i);
-				if (g_strcmp0(guid, FU_DEVICE_GUID_MAIN_SYSTEM_FIRMWARE) == 0)
-					continue;
 				fwupd_security_attr_add_guid(attr, guid);
 			}
 		}

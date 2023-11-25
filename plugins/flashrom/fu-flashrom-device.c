@@ -267,6 +267,7 @@ fu_flashrom_device_init(FuFlashromDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE);
 	fu_device_set_physical_id(FU_DEVICE(self), "flashrom");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
@@ -276,13 +277,6 @@ fu_flashrom_device_init(FuFlashromDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK,
 					"fn-m-me-unlock");
-}
-
-static void
-fu_flashrom_device_constructed(GObject *obj)
-{
-	FuFlashromDevice *self = FU_FLASHROM_DEVICE(obj);
-	fu_device_add_instance_id(FU_DEVICE(self), "main-system-firmware");
 }
 
 static void
@@ -369,7 +363,6 @@ fu_flashrom_device_class_init(FuFlashromDeviceClass *klass)
 				 G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_FLASHCTX, pspec);
 
-	object_class->constructed = fu_flashrom_device_constructed;
 	object_class->finalize = fu_flashrom_device_finalize;
 	klass_device->set_quirk_kv = fu_flashrom_device_set_quirk_kv;
 	klass_device->probe = fu_flashrom_device_probe;

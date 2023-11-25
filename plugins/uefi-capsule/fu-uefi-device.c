@@ -522,7 +522,7 @@ fu_uefi_device_probe(FuDevice *device, GError **error)
 	/* add icons */
 	if (priv->kind == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE) {
 		fu_device_add_icon(device, "computer");
-		fu_device_add_instance_id(device, "main-system-firmware");
+		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE);
 	}
 
 	/* whether to create a missing header */
