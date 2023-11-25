@@ -7,6 +7,7 @@
   </provides>
   <requires>
     <hardware>9342d47a-1bab-5709-9869-c840b2eac501</hardware>
+    <id compare="ge" version="1.0.1">org.freedesktop.fwupd</id>
   </requires>
   <releases>
     <release version="1.2.3" timestamp="1424116753"/>
