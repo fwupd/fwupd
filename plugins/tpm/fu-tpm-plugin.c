@@ -57,7 +57,7 @@ static void
 fu_tpm_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
-	if (fu_device_has_instance_id(device, "main-system-firmware")) {
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE)) {
 		g_set_object(&self->bios_device, device);
 		fu_tpm_plugin_set_bios_pcr0s(plugin);
 	}

@@ -61,7 +61,7 @@ fu_amd_pmc_device_init(FuAmdPmcDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "System Management Unit (SMU)");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
-	fu_device_add_parent_guid(FU_DEVICE(self), "cpu");
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD);
 	fu_device_set_vendor(FU_DEVICE(self), "Advanced Micro Devices, Inc.");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_physical_id(FU_DEVICE(self), "amd-pmc");

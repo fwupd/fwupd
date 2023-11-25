@@ -1495,16 +1495,26 @@ fu_engine_get_boot_time(void)
 	return NULL;
 }
 
+static FuDevice *
+fu_engine_get_cpu_device(FuEngine *self)
+{
+	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_CPU))
+			return g_object_ref(device);
+	}
+	return NULL;
+}
+
 static void
 fu_engine_get_report_metadata_cpu_device(FuEngine *self, GHashTable *hash)
 {
-	g_autofree gchar *guid = fwupd_guid_hash_string("cpu");
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(GError) error_local = NULL;
 
-	device = fu_device_list_get_by_guid(self->device_list, guid, &error_local);
+	device = fu_engine_get_cpu_device(self);
 	if (device == NULL) {
-		g_info("failed to find CPU device: %s", error_local->message);
+		g_info("failed to find CPU device");
 		return;
 	}
 	if (fu_device_get_vendor(device) == NULL || fu_device_get_name(device) == NULL) {
@@ -4839,7 +4849,7 @@ fu_engine_get_history(FuEngine *self, GError **error)
 	/* if this is the system firmware device, add the HSI attrs */
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index(devices, i);
-		if (fu_device_has_instance_id(dev, "main-system-firmware"))
+		if (fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE))
 			fu_engine_get_history_set_hsi_attrs(self, dev);
 	}
 
@@ -5870,12 +5880,45 @@ fu_engine_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer us
 }
 
 static void
+fu_engine_adopt_children_device(FuEngine *self, FuDevice *device, FuDevice *device_tmp)
+{
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE_CHILD) &&
+	    fu_device_has_internal_flag(device_tmp, FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE)) {
+		fu_device_set_parent(device, device_tmp);
+		fu_engine_ensure_device_supported(self, device_tmp);
+		return;
+	}
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE) &&
+	    fu_device_has_internal_flag(device_tmp, FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE_CHILD)) {
+		fu_device_set_parent(device_tmp, device);
+		fu_engine_ensure_device_supported(self, device_tmp);
+		return;
+	}
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD) &&
+	    fu_device_has_internal_flag(device_tmp, FU_DEVICE_INTERNAL_FLAG_HOST_CPU)) {
+		fu_device_set_parent(device, device_tmp);
+		fu_engine_ensure_device_supported(self, device_tmp);
+		return;
+	}
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_CPU) &&
+	    fu_device_has_internal_flag(device_tmp, FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD)) {
+		fu_device_set_parent(device_tmp, device);
+		fu_engine_ensure_device_supported(self, device_tmp);
+		return;
+	}
+}
+
+static void
 fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 {
 	GPtrArray *guids;
 	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
 
 	/* find the parent in any existing device */
+	for (guint i = 0; fu_device_get_parent(device) == NULL && i < devices->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index(devices, i);
+		fu_engine_adopt_children_device(self, device, device_tmp);
+	}
 	if (fu_device_get_parent(device) == NULL) {
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *device_tmp = g_ptr_array_index(devices, i);

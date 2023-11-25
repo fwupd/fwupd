@@ -605,6 +605,42 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST (1ull << 38)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE:
+ *
+ * The device represents the main system host firmware.
+ *
+ * Since: 1.9.10
+ */
+#define FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE (1ull << 39)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE_CHILD:
+ *
+ * The device should be a child of the main system host firmware device.
+ *
+ * Since: 1.9.10
+ */
+#define FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE_CHILD (1ull << 40)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_HOST_CPU:
+ *
+ * The device represents the main CPU device.
+ *
+ * Since: 1.9.10
+ */
+#define FU_DEVICE_INTERNAL_FLAG_HOST_CPU (1ull << 41)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD:
+ *
+ * The device should be a child of the main CPU device.
+ *
+ * Since: 1.9.10
+ */
+#define FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD (1ull << 42)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);

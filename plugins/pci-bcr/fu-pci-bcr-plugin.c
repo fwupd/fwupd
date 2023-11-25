@@ -54,7 +54,7 @@ fu_pci_bcr_plugin_device_registered(FuPlugin *plugin, FuDevice *dev)
 		}
 	}
 	if (g_strcmp0(fu_device_get_plugin(dev), "flashrom") == 0 &&
-	    fu_device_has_instance_id(dev, "main-system-firmware")) {
+	    fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE)) {
 		/* PCI\VEN_8086 added first */
 		if (self->has_device) {
 			fu_pci_bcr_plugin_set_updatable(plugin, dev);

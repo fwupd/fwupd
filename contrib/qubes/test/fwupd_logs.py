@@ -273,7 +273,6 @@ GET_DEVICES = """{
       "Name" : "Intel(R) Core™ i7-7700HQ CPU @ 2.80GHz",
       "DeviceId" : "4bde70ba4e39b28f9eab1628f9dd6e6244c03027",
       "Guid" : [
-        "b9a2dd81-159e-5537-a7db-e7101d164d3f",
         "30249f37-d140-5d3e-9319-186b1bd5cac3",
         "809a0b93-8a12-5338-a571-ad5583acf896",
         "d0f754d5-1395-5573-bc83-85ba955da70a"
@@ -441,9 +440,6 @@ GET_DEVICES_NO_UPDATES = """{
         {
             "Name" : "Intel(R) Core™ i5-8400 CPU @ 2.80GHz",
             "DeviceId" : "4bde70ba4e39b28f9eab1628f9dd6e6244c03027",
-            "Guid" : [
-                "b9a2dd81-159e-5537-a7db-e7101d164d3f"
-            ],
             "Plugin" : "cpu",
             "Flags" : [
                 "internal",
@@ -752,9 +748,6 @@ GET_DEVICES_NO_VERSION = """{
         {
             "Name" : "Intel(R) Core™ i5-8400 CPU @ 2.80GHz",
             "DeviceId" : "4bde70ba4e39b28f9eab1628f9dd6e6244c03027",
-            "Guid" : [
-                "b9a2dd81-159e-5537-a7db-e7101d164d3f"
-            ],
             "Plugin" : "cpu",
             "Flags" : [
                 "internal",

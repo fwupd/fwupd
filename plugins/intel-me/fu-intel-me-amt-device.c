@@ -324,9 +324,6 @@ fu_intel_me_amt_device_setup(FuDevice *device, GError **error)
 		break;
 	}
 
-	/* add guid */
-	fu_device_add_parent_guid(device, "main-system-firmware");
-
 	/* get version numbers */
 	for (guint i = 0; i < ver.count; i++) {
 		if (g_strcmp0(ver.versions[i].description.string, "AMT") == 0) {
@@ -361,6 +358,7 @@ fu_intel_me_amt_device_init(FuIntelMeAmtDevice *self)
 	fu_device_set_logical_id(FU_DEVICE(self), "AMT");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_INTEL_ME);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE_CHILD);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
 	fu_device_set_summary(FU_DEVICE(self),
 			      "Hardware and firmware technology for remote "
