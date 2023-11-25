@@ -812,6 +812,8 @@ fu_engine_requirements_check(FuEngine *self,
 {
 	FuDevice *device = fu_release_get_device(release);
 	GPtrArray *reqs;
+	gboolean has_hardware_req = FALSE;
+	gboolean has_not_hardware_req = FALSE;
 	gboolean has_specific_requirement = FALSE;
 	g_autofree gchar *fwupd_version = NULL;
 
@@ -834,7 +836,21 @@ fu_engine_requirements_check(FuEngine *self,
 				return FALSE;
 			if (fu_engine_requirements_is_specific_req(req))
 				has_specific_requirement = TRUE;
+			if (g_strcmp0(xb_node_get_element(req), "hardware") == 0)
+				has_hardware_req = TRUE;
+			else if (g_strcmp0(xb_node_get_element(req), "not_hardware") == 0)
+				has_not_hardware_req = TRUE;
 		}
+	}
+
+	/* it does not make sense to allowlist and denylist at the same time */
+	if (has_hardware_req && has_not_hardware_req) {
+		g_set_error_literal(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "using hardware and not_hardware at the same time is not supported");
+		return FALSE;
 	}
 
 	/* if a device uses a generic ID (i.e. not matching the OEM) then check to make sure the

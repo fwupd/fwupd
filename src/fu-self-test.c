@@ -371,6 +371,48 @@ fu_engine_requirements_client_pass_func(gconstpointer user_data)
 }
 
 static void
+fu_engine_requirements_not_hardware_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(GError) error = NULL;
+	const gchar *xml = "<component>"
+			   "  <requires>"
+			   "    <not_hardware>ffffffff-ffff-ffff-ffff-ffffffffffff</not_hardware>"
+			   "    <id compare=\"ge\" version=\"1.9.10\">org.freedesktop.fwupd</id>\n"
+			   "  </requires>"
+			   "  <releases>"
+			   "    <release version=\"1.2.3\"/>"
+			   "  </releases>"
+			   "</component>";
+
+	/* set up a dummy version */
+	fu_engine_request_set_feature_flags(request, FWUPD_FEATURE_FLAG_DETACH_ACTION);
+
+	/* make the component require one thing */
+	silo = xb_silo_new_from_xml(xml, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	component = xb_silo_query_first(silo, "component", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(component);
+
+	/* check this passes */
+	fu_release_set_request(release, request);
+	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
 fu_engine_requirements_version_require_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -649,7 +691,6 @@ fu_engine_requirements_func(gconstpointer user_data)
 			   "  <requires>"
 			   "    <id compare=\"ge\" version=\"1.2.3\">org.test.dummy</id>"
 			   "    <hardware>6ff95c9c-ae41-5f59-9d90-3ec1ea66091e</hardware>"
-			   "    <not_hardware>ffffffff-ffff-ffff-ffff-ffffffffffff</not_hardware>"
 			   "    <id compare=\"ge\" version=\"1.0.1\">org.freedesktop.fwupd</id>\n"
 			   "    <id compare=\"ge\" version=\"1.9.10\">org.freedesktop.fwupd</id>\n"
 			   "  </requires>"
@@ -5601,6 +5642,9 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/engine{requirements-client-pass}",
 			     self,
 			     fu_engine_requirements_client_pass_func);
+	g_test_add_data_func("/fwupd/engine{requirements-not-hardware}",
+			     self,
+			     fu_engine_requirements_not_hardware_func);
 	g_test_add_data_func("/fwupd/engine{requirements-version-require}",
 			     self,
 			     fu_engine_requirements_version_require_func);
