@@ -12,6 +12,10 @@ if dpkg-maintscript-helper supports rm_conffile 2>/dev/null; then
 		/etc/dbus-1/system.d/org.freedesktop.fwupd.conf 1.3.2~ -- "$@"
 	dpkg-maintscript-helper rm_conffile \
 		/etc/fwupd/ata.conf 1.5.5~ -- "$@"
+	dpkg-maintscript-helper rm_conffile \
+		/etc/pki/fwupd/GPG-KEY-Hughski-Limited 1.5.8 -- "$@"
+	dpkg-maintscript-helper rm_conffile \
+		/etc/fwupd/upower.conf 1.6.2~ -- "$@"
 fi
 
 #Perform transition from /etc/fwupd/uefi.conf to /etc/fwupd/uefi_capsule.conf
