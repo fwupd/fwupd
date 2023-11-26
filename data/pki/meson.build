@@ -1,11 +1,6 @@
 # only install files that are going to be used
-if libjcat.type_name() != 'internal' and libjcat.version().version_compare('>= 0.1.9')
-  supported_gpg = libjcat.get_variable(pkgconfig: 'supported_gpg') == '1'
-  supported_pkcs7 = libjcat.get_variable(pkgconfig: 'supported_pkcs7') == '1'
-else
-  supported_gpg = host_machine.system() != 'windows'
-  supported_pkcs7 = true
-endif
+supported_gpg = libjcat.get_variable(pkgconfig: 'supported_gpg', default_value: '0') == '1'
+supported_pkcs7 = libjcat.get_variable(pkgconfig: 'supported_pkcs7', default_value: '0') == '1' or host_machine.system() == 'windows'
 
 if supported_gpg
 install_data([
