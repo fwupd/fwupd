@@ -1096,6 +1096,7 @@ fu_daemon_inhibit_name_vanished_cb(GDBusConnection *connection,
 	}
 }
 
+#ifdef HAVE_GIO_UNIX
 static void
 fu_daemon_sender_name_vanished_cb(GDBusConnection *connection,
 				  const gchar *name,
@@ -1105,6 +1106,7 @@ fu_daemon_sender_name_vanished_cb(GDBusConnection *connection,
 	g_info("%s vanished before completion of install on %s", name, helper->device_id);
 	fu_progress_add_flag(helper->progress, FU_PROGRESS_FLAG_NO_SENDER);
 }
+#endif
 
 static void
 fu_daemon_daemon_method_call(GDBusConnection *connection,
