@@ -1,14 +1,41 @@
-# All fastboot devices
-[USB\CLASS_FF&SUBCLASS_42&PROT_03]
-Plugin = fastboot
-
 # Quectel EG25-G modem
 [USB\VID_18D1&PID_D00D]
+Plugin = fastboot
 FastbootBlockSize = 16384
 FastbootOperationDelay = 250
+Summary = Quectel EG25-G modem (fastboot)
+CounterpartGuid = USB\VID_2C7C&PID_0125
+Flags = detach-at-fastboot-has-no-response
+ModemManagerBranchAtCommand = AT+GETFWBRANCH
 
-# Fibocom FM101 in fastboot mode
+# Fibocom FM101
 [USB\VID_2CB7&PID_D00D]
+Plugin = fastboot
 FastbootBlockSize = 16384
 FastbootOperationDelay = 0
+Summary = Fibocom FM101 Modem (fastboot)
+CounterpartGuid = USB\VID_2CB7&PID_01A2
 
+# DW5821e
+[USB\VID_413C&PID_81D6]
+Plugin = fastboot
+Summary = Dell DW5821e LTE (fastboot)
+CounterpartGuid = USB\VID_413C&PID_81D7
+
+# DW5821e/eSIM
+[USB\VID_413C&PID_81E1]
+Plugin = fastboot
+Summary = Dell DW5821e/eSIM LTE modem (fastboot)
+CounterpartGuid = USB\VID_413C&PID_81E0
+
+# T77W968
+[USB\VID_0489&PID_E0B7]
+Plugin = fastboot
+Summary = Foxconn T77w968 LTE modem (fastboot)
+CounterpartGuid = USB\VID_0489&PID_E0B4
+
+# T77W968/eSIM
+[USB\VID_0489&PID_E0B8]
+Plugin = fastboot
+Summary = Foxconn T77w968/eSIM LTE modem (fastboot)
+CounterpartGuid = USB\VID_0489&PID_E0B5

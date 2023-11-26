@@ -4,40 +4,20 @@
 Summary = Dell DW5821e LTE modem
 CounterpartGuid = USB\VID_413C&PID_81D6
 
-# DW5821e in fastboot mode
-[USB\VID_413C&PID_81D6]
-Summary = Dell DW5821e LTE modem (fastboot)
-CounterpartGuid = USB\VID_413C&PID_81D7
-
 # DW5821e/eSIM
 [USB\VID_413C&PID_81E0]
 Summary = Dell DW5821e/eSIM LTE modem
 CounterpartGuid = USB\VID_413C&PID_81E1
-
-# DW5821e/eSIM in fastboot mode
-[USB\VID_413C&PID_81E1]
-Summary = Dell DW5821e/eSIM LTE modem (fastboot)
-CounterpartGuid = USB\VID_413C&PID_81E0
 
 # T77W968
 [USB\VID_0489&PID_E0B4]
 Summary = Foxconn T77w968 LTE modem
 CounterpartGuid = USB\VID_0489&PID_E0B7
 
-# T77W968 in fastboot mode
-[USB\VID_0489&PID_E0B7]
-Summary = Foxconn T77w968 LTE modem (fastboot)
-CounterpartGuid = USB\VID_0489&PID_E0B4
-
 # T77W968/eSIM
 [USB\VID_0489&PID_E0B5]
 Summary = Foxconn T77w968/eSIM LTE modem
 CounterpartGuid = USB\VID_0489&PID_E0B8
-
-# T77W968/eSIM in fastboot mode
-[USB\VID_0489&PID_E0B8]
-Summary = Foxconn T77w968/eSIM LTE modem (fastboot)
-CounterpartGuid = USB\VID_0489&PID_E0B5
 
 # T99W265 with MBIM only
 [USB\VID_0489&PID_E0DA]
@@ -102,13 +82,6 @@ Flags = detach-at-fastboot-has-no-response
 ModemManagerBranchAtCommand = AT+GETFWBRANCH
 Plugin = modem_manager
 
-# Quectel EG25-G in fastboot mode
-[USB\VID_18D1&PID_D00D]
-Summary = Quectel EG25-G modem (fastboot)
-CounterpartGuid = USB\VID_2C7C&PID_0125
-Flags = detach-at-fastboot-has-no-response
-ModemManagerBranchAtCommand = AT+GETFWBRANCH
-
 # Qualcomm Sahara device
 [USB\VID_05C6&PID_9008]
 Summary = Qualcomm based modems in EDL (sahara)
@@ -144,9 +117,3 @@ ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
 Summary = Fibocom FM101-GL Module
 Flags = uninhibit-modemmanager-after-fastboot-reboot,detach-at-fastboot-has-no-response
 CounterpartGuid = USB\VID_2CB7&PID_D00D
-
-# Fibocom FM101 in fastboot mode
-[USB\VID_2CB7&PID_D00D]
-Summary = Fibocom FM101 Modem
-CounterpartGuid = USB\VID_2CB7&PID_01A2
-
