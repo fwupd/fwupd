@@ -643,309 +643,321 @@ typedef guint64 FuDeviceInternalFlags;
 
 /* accessors */
 gchar *
-fu_device_to_string(FuDevice *self);
+fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_add_string(FuDevice *self, guint idt, GString *str);
+fu_device_add_string(FuDevice *self, guint idt, GString *str) G_GNUC_NON_NULL(1, 3);
 const gchar *
-fu_device_get_alternate_id(FuDevice *self);
+fu_device_get_alternate_id(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_set_alternate_id(FuDevice *self, const gchar *alternate_id);
+fu_device_set_alternate_id(FuDevice *self, const gchar *alternate_id) G_GNUC_NON_NULL(1, 2);
 const gchar *
-fu_device_get_equivalent_id(FuDevice *self);
+fu_device_get_equivalent_id(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_set_equivalent_id(FuDevice *self, const gchar *equivalent_id);
+fu_device_set_equivalent_id(FuDevice *self, const gchar *equivalent_id) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_guid(FuDevice *self, const gchar *guid);
+fu_device_add_guid(FuDevice *self, const gchar *guid) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_guid_full(FuDevice *self, const gchar *guid, FuDeviceInstanceFlags flags);
+fu_device_add_guid_full(FuDevice *self, const gchar *guid, FuDeviceInstanceFlags flags)
+    G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_device_has_guid(FuDevice *self, const gchar *guid);
+fu_device_has_guid(FuDevice *self, const gchar *guid) G_GNUC_NON_NULL(1);
 void
-fu_device_add_instance_id(FuDevice *self, const gchar *instance_id);
+fu_device_add_instance_id(FuDevice *self, const gchar *instance_id) G_GNUC_NON_NULL(1);
 void
 fu_device_add_instance_id_full(FuDevice *self,
 			       const gchar *instance_id,
-			       FuDeviceInstanceFlags flags);
+			       FuDeviceInstanceFlags flags) G_GNUC_NON_NULL(1, 2);
 FuDevice *
-fu_device_get_alternate(FuDevice *self);
+fu_device_get_alternate(FuDevice *self) G_GNUC_NON_NULL(1);
 FuDevice *
-fu_device_get_root(FuDevice *self);
+fu_device_get_root(FuDevice *self) G_GNUC_NON_NULL(1);
 FuDevice *
-fu_device_get_parent(FuDevice *self);
+fu_device_get_parent(FuDevice *self) G_GNUC_NON_NULL(1);
 GPtrArray *
-fu_device_get_children(FuDevice *self);
+fu_device_get_children(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_add_child(FuDevice *self, FuDevice *child);
+fu_device_add_child(FuDevice *self, FuDevice *child) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_remove_child(FuDevice *self, FuDevice *child);
+fu_device_remove_child(FuDevice *self, FuDevice *child) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_parent_guid(FuDevice *self, const gchar *guid);
+fu_device_add_parent_guid(FuDevice *self, const gchar *guid) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_parent_physical_id(FuDevice *self, const gchar *physical_id);
+fu_device_add_parent_physical_id(FuDevice *self, const gchar *physical_id) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_parent_backend_id(FuDevice *self, const gchar *backend_id);
+fu_device_add_parent_backend_id(FuDevice *self, const gchar *backend_id) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_counterpart_guid(FuDevice *self, const gchar *guid);
+fu_device_add_counterpart_guid(FuDevice *self, const gchar *guid) G_GNUC_NON_NULL(1, 2);
 FuDevice *
-fu_device_get_proxy(FuDevice *self);
+fu_device_get_proxy(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_set_proxy(FuDevice *self, FuDevice *proxy);
+fu_device_set_proxy(FuDevice *self, FuDevice *proxy) G_GNUC_NON_NULL(1);
 FuDevice *
-fu_device_get_proxy_with_fallback(FuDevice *self);
+fu_device_get_proxy_with_fallback(FuDevice *self) G_GNUC_NON_NULL(1);
 const gchar *
-fu_device_get_metadata(FuDevice *self, const gchar *key);
+fu_device_get_metadata(FuDevice *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_device_get_metadata_boolean(FuDevice *self, const gchar *key);
+fu_device_get_metadata_boolean(FuDevice *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 guint
-fu_device_get_metadata_integer(FuDevice *self, const gchar *key);
+fu_device_get_metadata_integer(FuDevice *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_remove_metadata(FuDevice *self, const gchar *key);
+fu_device_remove_metadata(FuDevice *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_set_metadata(FuDevice *self, const gchar *key, const gchar *value);
+fu_device_set_metadata(FuDevice *self, const gchar *key, const gchar *value) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_set_metadata_boolean(FuDevice *self, const gchar *key, gboolean value);
+fu_device_set_metadata_boolean(FuDevice *self, const gchar *key, gboolean value)
+    G_GNUC_NON_NULL(1, 2);
 void
-fu_device_set_metadata_integer(FuDevice *self, const gchar *key, guint value);
+fu_device_set_metadata_integer(FuDevice *self, const gchar *key, guint value) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_set_id(FuDevice *self, const gchar *id);
+fu_device_set_id(FuDevice *self, const gchar *id) G_GNUC_NON_NULL(1);
 void
-fu_device_set_version_format(FuDevice *self, FwupdVersionFormat fmt);
+fu_device_set_version_format(FuDevice *self, FwupdVersionFormat fmt) G_GNUC_NON_NULL(1);
 void
-fu_device_set_version(FuDevice *self, const gchar *version);
+fu_device_set_version(FuDevice *self, const gchar *version) G_GNUC_NON_NULL(1);
 void
-fu_device_set_version_lowest(FuDevice *self, const gchar *version);
+fu_device_set_version_lowest(FuDevice *self, const gchar *version) G_GNUC_NON_NULL(1);
 void
-fu_device_set_version_bootloader(FuDevice *self, const gchar *version);
+fu_device_set_version_bootloader(FuDevice *self, const gchar *version) G_GNUC_NON_NULL(1);
 void
-fu_device_set_version_raw(FuDevice *self, guint64 version_raw);
+fu_device_set_version_raw(FuDevice *self, guint64 version_raw) G_GNUC_NON_NULL(1);
 void
-fu_device_set_version_u16(FuDevice *self, guint16 version_raw);
+fu_device_set_version_u16(FuDevice *self, guint16 version_raw) G_GNUC_NON_NULL(1);
 void
-fu_device_set_version_u24(FuDevice *self, guint32 version_raw);
+fu_device_set_version_u24(FuDevice *self, guint32 version_raw) G_GNUC_NON_NULL(1);
 void
-fu_device_set_version_u32(FuDevice *self, guint32 version_raw);
+fu_device_set_version_u32(FuDevice *self, guint32 version_raw) G_GNUC_NON_NULL(1);
 void
-fu_device_set_version_u64(FuDevice *self, guint64 version_raw);
+fu_device_set_version_u64(FuDevice *self, guint64 version_raw) G_GNUC_NON_NULL(1);
 void
-fu_device_inhibit(FuDevice *self, const gchar *inhibit_id, const gchar *reason);
+fu_device_inhibit(FuDevice *self, const gchar *inhibit_id, const gchar *reason)
+    G_GNUC_NON_NULL(1, 2);
 void
-fu_device_uninhibit(FuDevice *self, const gchar *inhibit_id);
+fu_device_uninhibit(FuDevice *self, const gchar *inhibit_id) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_problem(FuDevice *self, FwupdDeviceProblem problem);
+fu_device_add_problem(FuDevice *self, FwupdDeviceProblem problem) G_GNUC_NON_NULL(1);
 void
-fu_device_remove_problem(FuDevice *self, FwupdDeviceProblem problem);
+fu_device_remove_problem(FuDevice *self, FwupdDeviceProblem problem) G_GNUC_NON_NULL(1);
 gboolean
-fu_device_has_problem(FuDevice *self, FwupdDeviceProblem problem);
+fu_device_has_problem(FuDevice *self, FwupdDeviceProblem problem) G_GNUC_NON_NULL(1);
 gboolean
-fu_device_has_inhibit(FuDevice *self, const gchar *inhibit_id);
+fu_device_has_inhibit(FuDevice *self, const gchar *inhibit_id) G_GNUC_NON_NULL(1, 2);
 const gchar *
-fu_device_get_physical_id(FuDevice *self);
+fu_device_get_physical_id(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_set_physical_id(FuDevice *self, const gchar *physical_id);
+fu_device_set_physical_id(FuDevice *self, const gchar *physical_id) G_GNUC_NON_NULL(1);
 const gchar *
-fu_device_get_logical_id(FuDevice *self);
+fu_device_get_logical_id(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_set_logical_id(FuDevice *self, const gchar *logical_id);
+fu_device_set_logical_id(FuDevice *self, const gchar *logical_id) G_GNUC_NON_NULL(1);
 const gchar *
-fu_device_get_backend_id(FuDevice *self);
+fu_device_get_backend_id(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_set_backend_id(FuDevice *self, const gchar *backend_id);
+fu_device_set_backend_id(FuDevice *self, const gchar *backend_id) G_GNUC_NON_NULL(1);
 const gchar *
-fu_device_get_proxy_guid(FuDevice *self);
+fu_device_get_proxy_guid(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_set_proxy_guid(FuDevice *self, const gchar *proxy_guid);
+fu_device_set_proxy_guid(FuDevice *self, const gchar *proxy_guid) G_GNUC_NON_NULL(1);
 guint
-fu_device_get_priority(FuDevice *self);
+fu_device_get_priority(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_set_priority(FuDevice *self, guint priority);
+fu_device_set_priority(FuDevice *self, guint priority) G_GNUC_NON_NULL(1);
 void
-fu_device_add_flag(FuDevice *self, FwupdDeviceFlags flag);
+fu_device_add_flag(FuDevice *self, FwupdDeviceFlags flag) G_GNUC_NON_NULL(1);
 void
-fu_device_remove_flag(FuDevice *self, FwupdDeviceFlags flag);
+fu_device_remove_flag(FuDevice *self, FwupdDeviceFlags flag) G_GNUC_NON_NULL(1);
 const gchar *
-fu_device_get_custom_flags(FuDevice *self);
+fu_device_get_custom_flags(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_set_custom_flags(FuDevice *self, const gchar *custom_flags);
+fu_device_set_custom_flags(FuDevice *self, const gchar *custom_flags) G_GNUC_NON_NULL(1);
 void
-fu_device_set_name(FuDevice *self, const gchar *value);
+fu_device_set_name(FuDevice *self, const gchar *value) G_GNUC_NON_NULL(1);
 void
-fu_device_set_vendor(FuDevice *self, const gchar *vendor);
+fu_device_set_vendor(FuDevice *self, const gchar *vendor) G_GNUC_NON_NULL(1);
 guint
-fu_device_get_remove_delay(FuDevice *self);
+fu_device_get_remove_delay(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_set_remove_delay(FuDevice *self, guint remove_delay);
+fu_device_set_remove_delay(FuDevice *self, guint remove_delay) G_GNUC_NON_NULL(1);
 guint
-fu_device_get_acquiesce_delay(FuDevice *self);
+fu_device_get_acquiesce_delay(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_set_acquiesce_delay(FuDevice *self, guint acquiesce_delay);
+fu_device_set_acquiesce_delay(FuDevice *self, guint acquiesce_delay) G_GNUC_NON_NULL(1);
 void
-fu_device_set_firmware_size(FuDevice *self, guint64 size);
+fu_device_set_firmware_size(FuDevice *self, guint64 size) G_GNUC_NON_NULL(1);
 void
-fu_device_set_firmware_size_min(FuDevice *self, guint64 size_min);
+fu_device_set_firmware_size_min(FuDevice *self, guint64 size_min) G_GNUC_NON_NULL(1);
 void
-fu_device_set_firmware_size_max(FuDevice *self, guint64 size_max);
+fu_device_set_firmware_size_max(FuDevice *self, guint64 size_max) G_GNUC_NON_NULL(1);
 guint64
-fu_device_get_firmware_size_min(FuDevice *self);
+fu_device_get_firmware_size_min(FuDevice *self) G_GNUC_NON_NULL(1);
 guint64
-fu_device_get_firmware_size_max(FuDevice *self);
+fu_device_get_firmware_size_max(FuDevice *self) G_GNUC_NON_NULL(1);
 guint
-fu_device_get_battery_level(FuDevice *self);
+fu_device_get_battery_level(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_set_battery_level(FuDevice *self, guint battery_level);
+fu_device_set_battery_level(FuDevice *self, guint battery_level) G_GNUC_NON_NULL(1);
 guint
-fu_device_get_battery_threshold(FuDevice *self);
+fu_device_get_battery_threshold(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_set_battery_threshold(FuDevice *self, guint battery_threshold);
+fu_device_set_battery_threshold(FuDevice *self, guint battery_threshold) G_GNUC_NON_NULL(1);
 void
-fu_device_set_update_state(FuDevice *self, FwupdUpdateState update_state);
+fu_device_set_update_state(FuDevice *self, FwupdUpdateState update_state) G_GNUC_NON_NULL(1);
 void
-fu_device_set_context(FuDevice *self, FuContext *ctx);
+fu_device_set_context(FuDevice *self, FuContext *ctx) G_GNUC_NON_NULL(1);
 FuContext *
-fu_device_get_context(FuDevice *self);
+fu_device_get_context(FuDevice *self) G_GNUC_NON_NULL(1);
 GType
-fu_device_get_specialized_gtype(FuDevice *self);
+fu_device_get_specialized_gtype(FuDevice *self) G_GNUC_NON_NULL(1);
 GType
-fu_device_get_firmware_gtype(FuDevice *self);
+fu_device_get_firmware_gtype(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_set_firmware_gtype(FuDevice *self, GType firmware_gtype);
+fu_device_set_firmware_gtype(FuDevice *self, GType firmware_gtype) G_GNUC_NON_NULL(1);
 void
-fu_device_add_internal_flag(FuDevice *self, FuDeviceInternalFlags flag);
+fu_device_add_internal_flag(FuDevice *self, FuDeviceInternalFlags flag) G_GNUC_NON_NULL(1);
 void
-fu_device_remove_internal_flag(FuDevice *self, FuDeviceInternalFlags flag);
+fu_device_remove_internal_flag(FuDevice *self, FuDeviceInternalFlags flag) G_GNUC_NON_NULL(1);
 gboolean
-fu_device_has_internal_flag(FuDevice *self, FuDeviceInternalFlags flag);
+fu_device_has_internal_flag(FuDevice *self, FuDeviceInternalFlags flag) G_GNUC_NON_NULL(1);
 gboolean
-fu_device_get_results(FuDevice *self, GError **error);
+fu_device_get_results(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_device_write_firmware(FuDevice *self,
 			 GBytes *fw,
 			 FuProgress *progress,
 			 FwupdInstallFlags flags,
-			 GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 FuFirmware *
 fu_device_prepare_firmware(FuDevice *self, GBytes *fw, FwupdInstallFlags flags, GError **error)
-    G_GNUC_WARN_UNUSED_RESULT;
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 FuFirmware *
 fu_device_read_firmware(FuDevice *self,
 			FuProgress *progress,
-			GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 GBytes *
 fu_device_dump_firmware(FuDevice *self,
 			FuProgress *progress,
-			GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_device_attach(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_device_attach(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
-fu_device_detach(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_device_detach(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_device_attach_full(FuDevice *self,
 		      FuProgress *progress,
-		      GError **error) G_GNUC_WARN_UNUSED_RESULT;
+		      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_device_detach_full(FuDevice *self,
 		      FuProgress *progress,
-		      GError **error) G_GNUC_WARN_UNUSED_RESULT;
+		      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_device_reload(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_device_reload(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_device_prepare(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags, GError **error)
-    G_GNUC_WARN_UNUSED_RESULT;
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_device_cleanup(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags, GError **error)
-    G_GNUC_WARN_UNUSED_RESULT;
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 void
-fu_device_incorporate(FuDevice *self, FuDevice *donor);
+fu_device_incorporate(FuDevice *self, FuDevice *donor) G_GNUC_NON_NULL(1);
 void
-fu_device_incorporate_flag(FuDevice *self, FuDevice *donor, FwupdDeviceFlags flag);
+fu_device_incorporate_flag(FuDevice *self, FuDevice *donor, FwupdDeviceFlags flag)
+    G_GNUC_NON_NULL(1);
 gboolean
-fu_device_open(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_device_open(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
-fu_device_close(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_device_close(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
-fu_device_probe(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_device_probe(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
-fu_device_setup(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_device_setup(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
-fu_device_rescan(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_device_rescan(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
-fu_device_activate(FuDevice *self, FuProgress *progress, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_device_activate(FuDevice *self, FuProgress *progress, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 void
-fu_device_probe_invalidate(FuDevice *self);
+fu_device_probe_invalidate(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_probe_complete(FuDevice *self);
+fu_device_probe_complete(FuDevice *self) G_GNUC_NON_NULL(1);
 gboolean
-fu_device_poll(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_device_poll(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 void
-fu_device_set_poll_interval(FuDevice *self, guint interval);
+fu_device_set_poll_interval(FuDevice *self, guint interval) G_GNUC_NON_NULL(1);
 void
-fu_device_retry_set_delay(FuDevice *self, guint delay);
+fu_device_retry_set_delay(FuDevice *self, guint delay) G_GNUC_NON_NULL(1);
 void
-fu_device_retry_add_recovery(FuDevice *self, GQuark domain, gint code, FuDeviceRetryFunc func);
+fu_device_retry_add_recovery(FuDevice *self, GQuark domain, gint code, FuDeviceRetryFunc func)
+    G_GNUC_NON_NULL(1);
 gboolean
 fu_device_retry(FuDevice *self,
 		FuDeviceRetryFunc func,
 		guint count,
 		gpointer user_data,
-		GError **error) G_GNUC_WARN_UNUSED_RESULT;
+		GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_device_retry_full(FuDevice *self,
 		     FuDeviceRetryFunc func,
 		     guint count,
 		     guint delay,
 		     gpointer user_data,
-		     GError **error) G_GNUC_WARN_UNUSED_RESULT;
+		     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 void
-fu_device_sleep(FuDevice *self, guint delay_ms);
+fu_device_sleep(FuDevice *self, guint delay_ms) G_GNUC_NON_NULL(1);
 void
-fu_device_sleep_full(FuDevice *self, guint delay_ms, FuProgress *progress);
+fu_device_sleep_full(FuDevice *self, guint delay_ms, FuProgress *progress) G_GNUC_NON_NULL(1);
 gboolean
 fu_device_bind_driver(FuDevice *self, const gchar *subsystem, const gchar *driver, GError **error)
-    G_GNUC_WARN_UNUSED_RESULT;
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
-fu_device_unbind_driver(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_device_unbind_driver(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 GHashTable *
-fu_device_report_metadata_pre(FuDevice *self);
+fu_device_report_metadata_pre(FuDevice *self) G_GNUC_NON_NULL(1);
 GHashTable *
-fu_device_report_metadata_post(FuDevice *self);
+fu_device_report_metadata_post(FuDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_device_add_security_attrs(FuDevice *self, FuSecurityAttrs *attrs);
+fu_device_add_security_attrs(FuDevice *self, FuSecurityAttrs *attrs) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_register_private_flag(FuDevice *self, guint64 value, const gchar *value_str);
+fu_device_register_private_flag(FuDevice *self, guint64 value, const gchar *value_str)
+    G_GNUC_NON_NULL(1, 3);
 void
-fu_device_add_private_flag(FuDevice *self, guint64 flag);
+fu_device_add_private_flag(FuDevice *self, guint64 flag) G_GNUC_NON_NULL(1);
 void
-fu_device_remove_private_flag(FuDevice *self, guint64 flag);
+fu_device_remove_private_flag(FuDevice *self, guint64 flag) G_GNUC_NON_NULL(1);
 gboolean
-fu_device_has_private_flag(FuDevice *self, guint64 flag);
+fu_device_has_private_flag(FuDevice *self, guint64 flag) G_GNUC_NON_NULL(1);
 gboolean
-fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progress, GError **error);
+fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progress, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 FwupdSecurityAttr *
-fu_device_security_attr_new(FuDevice *self, const gchar *appstream_id);
+fu_device_security_attr_new(FuDevice *self, const gchar *appstream_id) G_GNUC_NON_NULL(1, 2);
 
 const gchar *
-fu_device_get_instance_str(FuDevice *self, const gchar *key);
+fu_device_get_instance_str(FuDevice *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_instance_str(FuDevice *self, const gchar *key, const gchar *value);
+fu_device_add_instance_str(FuDevice *self, const gchar *key, const gchar *value)
+    G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_instance_strsafe(FuDevice *self, const gchar *key, const gchar *value);
+fu_device_add_instance_strsafe(FuDevice *self, const gchar *key, const gchar *value)
+    G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_instance_strup(FuDevice *self, const gchar *key, const gchar *value);
+fu_device_add_instance_strup(FuDevice *self, const gchar *key, const gchar *value)
+    G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_instance_u4(FuDevice *self, const gchar *key, guint8 value);
+fu_device_add_instance_u4(FuDevice *self, const gchar *key, guint8 value) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_instance_u8(FuDevice *self, const gchar *key, guint8 value);
+fu_device_add_instance_u8(FuDevice *self, const gchar *key, guint8 value) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_instance_u16(FuDevice *self, const gchar *key, guint16 value);
+fu_device_add_instance_u16(FuDevice *self, const gchar *key, guint16 value) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_instance_u32(FuDevice *self, const gchar *key, guint32 value);
+fu_device_add_instance_u32(FuDevice *self, const gchar *key, guint32 value) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsystem, ...)
-    G_GNUC_NULL_TERMINATED;
+    G_GNUC_NULL_TERMINATED G_GNUC_NON_NULL(1, 3);
 gboolean
 fu_device_build_instance_id_full(FuDevice *self,
 				 FuDeviceInstanceFlags flags,
 				 GError **error,
 				 const gchar *subsystem,
-				 ...) G_GNUC_NULL_TERMINATED;
+				 ...) G_GNUC_NULL_TERMINATED G_GNUC_NON_NULL(1, 4);
 FuDeviceLocker *
-fu_device_poll_locker_new(FuDevice *self, GError **error);
+fu_device_poll_locker_new(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);

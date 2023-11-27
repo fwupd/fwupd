@@ -6,35 +6,35 @@
 
 #pragma once
 
-#include <gio/gio.h>
+#include <fwupd.h>
 
 gboolean
 fu_firmware_strparse_uint4_safe(const gchar *data,
 				gsize datasz,
 				gsize offset,
 				guint8 *value,
-				GError **error);
+				GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_firmware_strparse_uint8_safe(const gchar *data,
 				gsize datasz,
 				gsize offset,
 				guint8 *value,
-				GError **error);
+				GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_firmware_strparse_uint16_safe(const gchar *data,
 				 gsize datasz,
 				 gsize offset,
 				 guint16 *value,
-				 GError **error);
+				 GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_firmware_strparse_uint24_safe(const gchar *data,
 				 gsize datasz,
 				 gsize offset,
 				 guint32 *value,
-				 GError **error);
+				 GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_firmware_strparse_uint32_safe(const gchar *data,
 				 gsize datasz,
 				 gsize offset,
 				 guint32 *value,
-				 GError **error);
+				 GError **error) G_GNUC_NON_NULL(1);

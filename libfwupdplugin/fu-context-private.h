@@ -32,36 +32,37 @@ gboolean
 fu_context_load_hwinfo(FuContext *self,
 		       FuProgress *progress,
 		       FuContextHwidFlags flags,
-		       GError **error);
+		       GError **error) G_GNUC_NON_NULL(1);
 gboolean
-fu_context_load_quirks(FuContext *self, FuQuirksLoadFlags flags, GError **error);
+fu_context_load_quirks(FuContext *self, FuQuirksLoadFlags flags, GError **error) G_GNUC_NON_NULL(1);
 GHashTable *
-fu_context_get_runtime_versions(FuContext *self);
+fu_context_get_runtime_versions(FuContext *self) G_GNUC_NON_NULL(1);
 GHashTable *
-fu_context_get_compile_versions(FuContext *self);
+fu_context_get_compile_versions(FuContext *self) G_GNUC_NON_NULL(1);
 void
-fu_context_add_firmware_gtype(FuContext *self, const gchar *id, GType gtype);
+fu_context_add_firmware_gtype(FuContext *self, const gchar *id, GType gtype) G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fu_context_get_firmware_gtype_ids(FuContext *self);
+fu_context_get_firmware_gtype_ids(FuContext *self) G_GNUC_NON_NULL(1);
 GArray *
-fu_context_get_firmware_gtypes(FuContext *self);
+fu_context_get_firmware_gtypes(FuContext *self) G_GNUC_NON_NULL(1);
 GType
-fu_context_get_firmware_gtype_by_id(FuContext *self, const gchar *id);
+fu_context_get_firmware_gtype_by_id(FuContext *self, const gchar *id) G_GNUC_NON_NULL(1, 2);
 void
-fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem, const gchar *plugin_name);
+fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem, const gchar *plugin_name)
+    G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fu_context_get_udev_subsystems(FuContext *self);
+fu_context_get_udev_subsystems(FuContext *self) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_context_get_plugin_names_for_udev_subsystem(FuContext *self,
 					       const gchar *subsystem,
-					       GError **error);
+					       GError **error) G_GNUC_NON_NULL(1, 2);
 void
-fu_context_add_esp_volume(FuContext *self, FuVolume *volume);
+fu_context_add_esp_volume(FuContext *self, FuVolume *volume) G_GNUC_NON_NULL(1);
 FuSmbios *
-fu_context_get_smbios(FuContext *self);
+fu_context_get_smbios(FuContext *self) G_GNUC_NON_NULL(1);
 FuHwids *
-fu_context_get_hwids(FuContext *self);
+fu_context_get_hwids(FuContext *self) G_GNUC_NON_NULL(1);
 FuConfig *
-fu_context_get_config(FuContext *self);
+fu_context_get_config(FuContext *self) G_GNUC_NON_NULL(1);
 void
-fu_context_set_chassis_kind(FuContext *self, FuSmbiosChassisKind chassis_kind);
+fu_context_set_chassis_kind(FuContext *self, FuSmbiosChassisKind chassis_kind) G_GNUC_NON_NULL(1);

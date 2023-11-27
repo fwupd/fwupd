@@ -18,13 +18,13 @@ struct _FuCsvEntryClass {
 FuFirmware *
 fu_csv_entry_new(void);
 void
-fu_csv_entry_add_value(FuCsvEntry *self, const gchar *value);
+fu_csv_entry_add_value(FuCsvEntry *self, const gchar *value) G_GNUC_NON_NULL(1);
 const gchar *
-fu_csv_entry_get_value_by_idx(FuCsvEntry *self, guint idx);
+fu_csv_entry_get_value_by_idx(FuCsvEntry *self, guint idx) G_GNUC_NON_NULL(1);
 const gchar *
-fu_csv_entry_get_value_by_column_id(FuCsvEntry *self, const gchar *column_id);
+fu_csv_entry_get_value_by_column_id(FuCsvEntry *self, const gchar *column_id) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_csv_entry_get_value_by_column_id_uint64(FuCsvEntry *self,
 					   const gchar *column_id,
 					   guint64 *value,
-					   GError **error);
+					   GError **error) G_GNUC_NON_NULL(1, 2);

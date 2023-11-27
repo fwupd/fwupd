@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <gio/gio.h>
+#include <fwupd.h>
 
 #define FU_EFIVAR_GUID_EFI_GLOBAL	  "8be4df61-93ca-11d2-aa0d-00e098032b8c"
 #define FU_EFIVAR_GUID_FWUPDATE		  "0abba7dc-e516-4167-bbf5-4d9d1c739416"
@@ -30,16 +30,16 @@ fu_efivar_supported(GError **error);
 guint64
 fu_efivar_space_used(GError **error);
 gboolean
-fu_efivar_exists(const gchar *guid, const gchar *name);
+fu_efivar_exists(const gchar *guid, const gchar *name) G_GNUC_NON_NULL(1);
 GFileMonitor *
-fu_efivar_get_monitor(const gchar *guid, const gchar *name, GError **error);
+fu_efivar_get_monitor(const gchar *guid, const gchar *name, GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_efivar_get_data(const gchar *guid,
 		   const gchar *name,
 		   guint8 **data,
 		   gsize *data_sz,
 		   guint32 *attr,
-		   GError **error) G_GNUC_WARN_UNUSED_RESULT;
+		   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 GBytes *
 fu_efivar_get_data_bytes(const gchar *guid, const gchar *name, guint32 *attr, GError **error)
     G_GNUC_WARN_UNUSED_RESULT;
@@ -49,20 +49,21 @@ fu_efivar_set_data(const gchar *guid,
 		   const guint8 *data,
 		   gsize sz,
 		   guint32 attr,
-		   GError **error) G_GNUC_WARN_UNUSED_RESULT;
+		   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_efivar_set_data_bytes(const gchar *guid,
 			 const gchar *name,
 			 GBytes *bytes,
 			 guint32 attr,
-			 GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_efivar_delete(const gchar *guid, const gchar *name, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_efivar_delete(const gchar *guid, const gchar *name, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_efivar_delete_with_glob(const gchar *guid,
 			   const gchar *name_glob,
-			   GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fu_efivar_get_names(const gchar *guid, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_efivar_get_names(const gchar *guid, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_efivar_secure_boot_enabled(GError **error);

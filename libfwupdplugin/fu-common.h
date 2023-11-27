@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <fwupd.h>
 #include <xmlb.h>
 
 /**
@@ -121,8 +122,9 @@ const gchar *
 fu_display_state_to_string(FuDisplayState display_state);
 
 void
-fu_xmlb_builder_insert_kv(XbBuilderNode *bn, const gchar *key, const gchar *value);
+fu_xmlb_builder_insert_kv(XbBuilderNode *bn, const gchar *key, const gchar *value)
+    G_GNUC_NON_NULL(1);
 void
-fu_xmlb_builder_insert_kx(XbBuilderNode *bn, const gchar *key, guint64 value);
+fu_xmlb_builder_insert_kx(XbBuilderNode *bn, const gchar *key, guint64 value) G_GNUC_NON_NULL(1);
 void
-fu_xmlb_builder_insert_kb(XbBuilderNode *bn, const gchar *key, gboolean value);
+fu_xmlb_builder_insert_kb(XbBuilderNode *bn, const gchar *key, gboolean value) G_GNUC_NON_NULL(1);

@@ -19,8 +19,9 @@ FuEfiFilePathDevicePath *
 fu_efi_file_path_device_path_new(void);
 
 gchar *
-fu_efi_file_path_device_path_get_name(FuEfiFilePathDevicePath *self, GError **error);
+fu_efi_file_path_device_path_get_name(FuEfiFilePathDevicePath *self, GError **error)
+    G_GNUC_NON_NULL(1);
 gboolean
 fu_efi_file_path_device_path_set_name(FuEfiFilePathDevicePath *self,
 				      const gchar *name,
-				      GError **error);
+				      GError **error) G_GNUC_NON_NULL(1);

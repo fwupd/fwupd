@@ -13,13 +13,14 @@
 G_DECLARE_FINAL_TYPE(FuEfiLoadOption, fu_efi_load_option, FU, EFI_LOAD_OPTION, FuFirmware)
 
 GBytes *
-fu_efi_load_option_get_optional_data(FuEfiLoadOption *self);
+fu_efi_load_option_get_optional_data(FuEfiLoadOption *self) G_GNUC_NON_NULL(1);
 void
-fu_efi_load_option_set_optional_data(FuEfiLoadOption *self, GBytes *optional_data);
+fu_efi_load_option_set_optional_data(FuEfiLoadOption *self, GBytes *optional_data)
+    G_GNUC_NON_NULL(1);
 gboolean
 fu_efi_load_option_set_optional_path(FuEfiLoadOption *self,
 				     const gchar *optional_path,
-				     GError **error);
+				     GError **error) G_GNUC_NON_NULL(1);
 
 FuEfiLoadOption *
 fu_efi_load_option_new(void) G_GNUC_WARN_UNUSED_RESULT;

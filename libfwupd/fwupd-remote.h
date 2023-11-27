@@ -79,91 +79,93 @@ fwupd_remote_flag_from_string(const gchar *flag);
 FwupdRemote *
 fwupd_remote_new(void);
 const gchar *
-fwupd_remote_get_id(FwupdRemote *self);
+fwupd_remote_get_id(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_remote_get_title(FwupdRemote *self);
+fwupd_remote_get_title(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_remote_get_agreement(FwupdRemote *self);
+fwupd_remote_get_agreement(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_remote_get_remotes_dir(FwupdRemote *self);
+fwupd_remote_get_remotes_dir(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_remote_get_checksum(FwupdRemote *self);
+fwupd_remote_get_checksum(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_remote_get_checksum_metadata(FwupdRemote *self);
+fwupd_remote_get_checksum_metadata(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_remote_get_username(FwupdRemote *self);
+fwupd_remote_get_username(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_remote_get_password(FwupdRemote *self);
+fwupd_remote_get_password(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_remote_get_filename_cache(FwupdRemote *self);
+fwupd_remote_get_filename_cache(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_remote_get_filename_cache_sig(FwupdRemote *self);
+fwupd_remote_get_filename_cache_sig(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_remote_get_filename_source(FwupdRemote *self);
+fwupd_remote_get_filename_source(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_remote_get_firmware_base_uri(FwupdRemote *self);
+fwupd_remote_get_firmware_base_uri(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_remote_get_report_uri(FwupdRemote *self);
+fwupd_remote_get_report_uri(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_remote_get_security_report_uri(FwupdRemote *self);
+fwupd_remote_get_security_report_uri(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_remote_get_metadata_uri(FwupdRemote *self);
+fwupd_remote_get_metadata_uri(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_remote_get_metadata_uri_sig(FwupdRemote *self);
+fwupd_remote_get_metadata_uri_sig(FwupdRemote *self) G_GNUC_NON_NULL(1);
 G_DEPRECATED_FOR(fwupd_remote_has_flag)
 gboolean
-fwupd_remote_get_enabled(FwupdRemote *self);
+fwupd_remote_get_enabled(FwupdRemote *self) G_GNUC_NON_NULL(1);
 G_DEPRECATED_FOR(fwupd_remote_has_flag)
 gboolean
-fwupd_remote_get_approval_required(FwupdRemote *self);
+fwupd_remote_get_approval_required(FwupdRemote *self) G_GNUC_NON_NULL(1);
 G_DEPRECATED_FOR(fwupd_remote_has_flag)
 gboolean
-fwupd_remote_get_automatic_reports(FwupdRemote *self);
+fwupd_remote_get_automatic_reports(FwupdRemote *self) G_GNUC_NON_NULL(1);
 G_DEPRECATED_FOR(fwupd_remote_has_flag)
 gboolean
-fwupd_remote_get_automatic_security_reports(FwupdRemote *self);
+fwupd_remote_get_automatic_security_reports(FwupdRemote *self) G_GNUC_NON_NULL(1);
 guint64
-fwupd_remote_get_refresh_interval(FwupdRemote *self);
+fwupd_remote_get_refresh_interval(FwupdRemote *self) G_GNUC_NON_NULL(1);
 
 FwupdRemoteFlags
-fwupd_remote_get_flags(FwupdRemote *self);
+fwupd_remote_get_flags(FwupdRemote *self) G_GNUC_NON_NULL(1);
 void
-fwupd_remote_set_flags(FwupdRemote *self, FwupdRemoteFlags flags);
+fwupd_remote_set_flags(FwupdRemote *self, FwupdRemoteFlags flags) G_GNUC_NON_NULL(1);
 void
-fwupd_remote_add_flag(FwupdRemote *self, FwupdRemoteFlags flag);
+fwupd_remote_add_flag(FwupdRemote *self, FwupdRemoteFlags flag) G_GNUC_NON_NULL(1);
 void
-fwupd_remote_remove_flag(FwupdRemote *self, FwupdRemoteFlags flag);
+fwupd_remote_remove_flag(FwupdRemote *self, FwupdRemoteFlags flag) G_GNUC_NON_NULL(1);
 gboolean
-fwupd_remote_has_flag(FwupdRemote *self, FwupdRemoteFlags flag) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_remote_has_flag(FwupdRemote *self, FwupdRemoteFlags flag) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 
 gboolean
-fwupd_remote_needs_refresh(FwupdRemote *self);
+fwupd_remote_needs_refresh(FwupdRemote *self) G_GNUC_NON_NULL(1);
 gint
-fwupd_remote_get_priority(FwupdRemote *self);
+fwupd_remote_get_priority(FwupdRemote *self) G_GNUC_NON_NULL(1);
 guint64
-fwupd_remote_get_age(FwupdRemote *self);
+fwupd_remote_get_age(FwupdRemote *self) G_GNUC_NON_NULL(1);
 FwupdRemoteKind
-fwupd_remote_get_kind(FwupdRemote *self);
+fwupd_remote_get_kind(FwupdRemote *self) G_GNUC_NON_NULL(1);
 FwupdKeyringKind
-fwupd_remote_get_keyring_kind(FwupdRemote *self);
+fwupd_remote_get_keyring_kind(FwupdRemote *self) G_GNUC_NON_NULL(1);
 gchar *
 fwupd_remote_build_firmware_uri(FwupdRemote *self,
 				const gchar *url,
-				GError **error) G_GNUC_WARN_UNUSED_RESULT;
+				GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gchar *
-fwupd_remote_build_report_uri(FwupdRemote *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_remote_build_report_uri(FwupdRemote *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 gboolean
 fwupd_remote_load_signature(FwupdRemote *self,
 			    const gchar *filename,
-			    GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fwupd_remote_load_signature_bytes(FwupdRemote *self,
 				  GBytes *bytes,
-				  GError **error) G_GNUC_WARN_UNUSED_RESULT;
+				  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 
 FwupdRemote *
-fwupd_remote_from_variant(GVariant *value);
+fwupd_remote_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
 GPtrArray *
-fwupd_remote_array_from_variant(GVariant *value);
+fwupd_remote_array_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

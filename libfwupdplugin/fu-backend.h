@@ -47,32 +47,32 @@ struct _FuBackendClass {
 };
 
 const gchar *
-fu_backend_get_name(FuBackend *self);
+fu_backend_get_name(FuBackend *self) G_GNUC_NON_NULL(1);
 FuContext *
-fu_backend_get_context(FuBackend *self);
+fu_backend_get_context(FuBackend *self) G_GNUC_NON_NULL(1);
 gboolean
-fu_backend_get_enabled(FuBackend *self);
+fu_backend_get_enabled(FuBackend *self) G_GNUC_NON_NULL(1);
 void
-fu_backend_set_enabled(FuBackend *self, gboolean enabled);
+fu_backend_set_enabled(FuBackend *self, gboolean enabled) G_GNUC_NON_NULL(1);
 GPtrArray *
-fu_backend_get_devices(FuBackend *self);
+fu_backend_get_devices(FuBackend *self) G_GNUC_NON_NULL(1);
 FuDevice *
-fu_backend_lookup_by_id(FuBackend *self, const gchar *backend_id);
+fu_backend_lookup_by_id(FuBackend *self, const gchar *backend_id) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_backend_setup(FuBackend *self, FuProgress *progress, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_backend_setup(FuBackend *self, FuProgress *progress, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 gboolean
-fu_backend_coldplug(FuBackend *self,
-		    FuProgress *progress,
-		    GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_backend_coldplug(FuBackend *self, FuProgress *progress, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 void
-fu_backend_device_added(FuBackend *self, FuDevice *device);
+fu_backend_device_added(FuBackend *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
 void
-fu_backend_device_removed(FuBackend *self, FuDevice *device);
+fu_backend_device_removed(FuBackend *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
 void
-fu_backend_device_changed(FuBackend *self, FuDevice *device);
+fu_backend_device_changed(FuBackend *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
 void
-fu_backend_registered(FuBackend *self, FuDevice *device);
+fu_backend_registered(FuBackend *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
 void
-fu_backend_invalidate(FuBackend *self);
+fu_backend_invalidate(FuBackend *self) G_GNUC_NON_NULL(1);
 void
-fu_backend_add_string(FuBackend *self, guint idt, GString *str);
+fu_backend_add_string(FuBackend *self, guint idt, GString *str) G_GNUC_NON_NULL(1, 3);

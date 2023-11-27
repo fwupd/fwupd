@@ -12,16 +12,16 @@
 FuHwids *
 fu_hwids_new(void);
 gboolean
-fu_hwids_setup(FuHwids *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_hwids_setup(FuHwids *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
-fu_hwids_config_setup(FuContext *ctx, FuHwids *self, GError **error);
+fu_hwids_config_setup(FuContext *ctx, FuHwids *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
-fu_hwids_dmi_setup(FuContext *ctx, FuHwids *self, GError **error);
+fu_hwids_dmi_setup(FuContext *ctx, FuHwids *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
-fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error);
+fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
-fu_hwids_kenv_setup(FuContext *ctx, FuHwids *self, GError **error);
+fu_hwids_kenv_setup(FuContext *ctx, FuHwids *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
-fu_hwids_darwin_setup(FuContext *ctx, FuHwids *self, GError **error);
+fu_hwids_darwin_setup(FuContext *ctx, FuHwids *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
-fu_hwids_smbios_setup(FuContext *ctx, FuHwids *self, GError **error);
+fu_hwids_smbios_setup(FuContext *ctx, FuHwids *self, GError **error) G_GNUC_NON_NULL(1);

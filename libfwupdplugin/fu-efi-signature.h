@@ -20,6 +20,6 @@ G_DECLARE_FINAL_TYPE(FuEfiSignature, fu_efi_signature, FU, EFI_SIGNATURE, FuFirm
 #define FU_EFI_SIGNATURE_GUID_OVMF_LEGACY "d5c1df0b-1bac-4edf-ba48-08834009ca5a"
 
 FuEfiSignatureKind
-fu_efi_signature_get_kind(FuEfiSignature *self);
+fu_efi_signature_get_kind(FuEfiSignature *self) G_GNUC_NON_NULL(1);
 const gchar *
-fu_efi_signature_get_owner(FuEfiSignature *self);
+fu_efi_signature_get_owner(FuEfiSignature *self) G_GNUC_NON_NULL(1);

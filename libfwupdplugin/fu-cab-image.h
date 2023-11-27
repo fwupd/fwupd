@@ -13,13 +13,13 @@
 G_DECLARE_FINAL_TYPE(FuCabImage, fu_cab_image, FU, CAB_IMAGE, FuFirmware)
 
 const gchar *
-fu_cab_image_get_win32_filename(FuCabImage *self);
+fu_cab_image_get_win32_filename(FuCabImage *self) G_GNUC_NON_NULL(1);
 void
-fu_cab_image_set_win32_filename(FuCabImage *self, const gchar *win32_filename);
+fu_cab_image_set_win32_filename(FuCabImage *self, const gchar *win32_filename) G_GNUC_NON_NULL(1);
 GDateTime *
-fu_cab_image_get_created(FuCabImage *self);
+fu_cab_image_get_created(FuCabImage *self) G_GNUC_NON_NULL(1);
 void
-fu_cab_image_set_created(FuCabImage *self, GDateTime *created);
+fu_cab_image_set_created(FuCabImage *self, GDateTime *created) G_GNUC_NON_NULL(1);
 
 FuCabImage *
 fu_cab_image_new(void) G_GNUC_WARN_UNUSED_RESULT;

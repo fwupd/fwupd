@@ -12,4 +12,4 @@
 #include "fu-volume.h"
 
 FuVolume *
-fu_volume_new_from_mount_path(const gchar *mount_path);
+fu_volume_new_from_mount_path(const gchar *mount_path) G_GNUC_NON_NULL(1);

@@ -107,97 +107,103 @@ typedef enum {
 } FuPciBaseCls;
 
 FuUdevDevice *
-fu_udev_device_new(FuContext *ctx, GUdevDevice *udev_device);
+fu_udev_device_new(FuContext *ctx, GUdevDevice *udev_device) G_GNUC_NON_NULL(1, 2);
 GUdevDevice *
-fu_udev_device_get_dev(FuUdevDevice *self);
+fu_udev_device_get_dev(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_udev_device_set_dev(FuUdevDevice *self, GUdevDevice *udev_device);
+fu_udev_device_set_dev(FuUdevDevice *self, GUdevDevice *udev_device) G_GNUC_NON_NULL(1);
 const gchar *
-fu_udev_device_get_device_file(FuUdevDevice *self);
+fu_udev_device_get_device_file(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_udev_device_set_device_file(FuUdevDevice *self, const gchar *device_file);
+fu_udev_device_set_device_file(FuUdevDevice *self, const gchar *device_file) G_GNUC_NON_NULL(1);
 const gchar *
-fu_udev_device_get_sysfs_path(FuUdevDevice *self);
+fu_udev_device_get_sysfs_path(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 const gchar *
-fu_udev_device_get_subsystem(FuUdevDevice *self);
+fu_udev_device_get_subsystem(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 const gchar *
-fu_udev_device_get_bind_id(FuUdevDevice *self);
+fu_udev_device_get_bind_id(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_udev_device_set_bind_id(FuUdevDevice *self, const gchar *bind_id);
+fu_udev_device_set_bind_id(FuUdevDevice *self, const gchar *bind_id) G_GNUC_NON_NULL(1);
 const gchar *
-fu_udev_device_get_driver(FuUdevDevice *self);
+fu_udev_device_get_driver(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 gboolean
-fu_udev_device_is_pci_base_cls(FuUdevDevice *self, FuPciBaseCls cls);
+fu_udev_device_is_pci_base_cls(FuUdevDevice *self, FuPciBaseCls cls) G_GNUC_NON_NULL(1);
 guint32
-fu_udev_device_get_cls(FuUdevDevice *self);
+fu_udev_device_get_cls(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 guint16
-fu_udev_device_get_vendor(FuUdevDevice *self);
+fu_udev_device_get_vendor(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 guint16
-fu_udev_device_get_model(FuUdevDevice *self);
+fu_udev_device_get_model(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 guint16
-fu_udev_device_get_subsystem_vendor(FuUdevDevice *self);
+fu_udev_device_get_subsystem_vendor(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 guint16
-fu_udev_device_get_subsystem_model(FuUdevDevice *self);
+fu_udev_device_get_subsystem_model(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 guint8
-fu_udev_device_get_revision(FuUdevDevice *self);
+fu_udev_device_get_revision(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 guint64
-fu_udev_device_get_number(FuUdevDevice *self);
+fu_udev_device_get_number(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 guint
-fu_udev_device_get_slot_depth(FuUdevDevice *self, const gchar *subsystem);
+fu_udev_device_get_slot_depth(FuUdevDevice *self, const gchar *subsystem) G_GNUC_NON_NULL(1);
 gboolean
 fu_udev_device_set_physical_id(FuUdevDevice *self,
 			       const gchar *subsystems,
-			       GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_udev_device_set_logical_id(FuUdevDevice *self,
 			      const gchar *subsystem,
-			      GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 void
-fu_udev_device_set_flags(FuUdevDevice *self, FuUdevDeviceFlags flags);
+fu_udev_device_set_flags(FuUdevDevice *self, FuUdevDeviceFlags flags) G_GNUC_NON_NULL(1);
 
 FuIOChannel *
-fu_udev_device_get_io_channel(FuUdevDevice *self);
+fu_udev_device_get_io_channel(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_udev_device_ioctl(FuUdevDevice *self,
 		     gulong request,
 		     guint8 *buf,
 		     gint *rc,
 		     guint timeout,
-		     GError **error) G_GNUC_WARN_UNUSED_RESULT;
+		     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_udev_device_pwrite(FuUdevDevice *self,
 		      goffset port,
 		      const guint8 *buf,
 		      gsize bufsz,
-		      GError **error) G_GNUC_WARN_UNUSED_RESULT;
+		      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz, GError **error)
-    G_GNUC_WARN_UNUSED_RESULT;
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
-fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 const gchar *
-fu_udev_device_get_sysfs_attr(FuUdevDevice *self, const gchar *attr, GError **error);
+fu_udev_device_get_sysfs_attr(FuUdevDevice *self, const gchar *attr, GError **error)
+    G_GNUC_NON_NULL(1);
 gboolean
 fu_udev_device_get_sysfs_attr_uint64(FuUdevDevice *self,
 				     const gchar *attr,
 				     guint64 *value,
-				     GError **error);
+				     GError **error) G_GNUC_NON_NULL(1);
 gchar *
-fu_udev_device_get_parent_name(FuUdevDevice *self);
+fu_udev_device_get_parent_name(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_udev_device_write_sysfs(FuUdevDevice *self,
 			   const gchar *attribute,
 			   const gchar *val,
-			   GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 const gchar *
-fu_udev_device_get_devtype(FuUdevDevice *self);
+fu_udev_device_get_devtype(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 GPtrArray *
-fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self, const gchar *subsystem);
+fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self, const gchar *subsystem)
+    G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fu_udev_device_get_children_with_subsystem(FuUdevDevice *self, const gchar *subsystem);
+fu_udev_device_get_children_with_subsystem(FuUdevDevice *self, const gchar *subsystem)
+    G_GNUC_NON_NULL(1, 2);
 FuUdevDevice *
-fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self, const gchar *subsystem);
+fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self, const gchar *subsystem)
+    G_GNUC_NON_NULL(1);
 
 GUsbDevice *
-fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);

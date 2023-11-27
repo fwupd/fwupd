@@ -14,4 +14,5 @@
 G_DECLARE_FINAL_TYPE(FuDeviceProgress, fu_device_progress, FU, DEVICE_PROGRESS, GObject)
 
 FuDeviceProgress *
-fu_device_progress_new(FuDevice *device, FuProgress *progress) G_GNUC_WARN_UNUSED_RESULT;
+fu_device_progress_new(FuDevice *device, FuProgress *progress) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);

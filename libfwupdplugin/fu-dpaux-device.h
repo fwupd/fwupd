@@ -23,17 +23,17 @@ struct _FuDpauxDeviceClass {
 #define FU_DPAUX_DEVICE_DPCD_OFFSET_BRANCH_DEVICE	0x500
 
 guint32
-fu_dpaux_device_get_dpcd_ieee_oui(FuDpauxDevice *self);
+fu_dpaux_device_get_dpcd_ieee_oui(FuDpauxDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_dpaux_device_set_dpcd_ieee_oui(FuDpauxDevice *self, guint32 dpcd_ieee_oui);
+fu_dpaux_device_set_dpcd_ieee_oui(FuDpauxDevice *self, guint32 dpcd_ieee_oui) G_GNUC_NON_NULL(1);
 guint8
-fu_dpaux_device_get_dpcd_hw_rev(FuDpauxDevice *self);
+fu_dpaux_device_get_dpcd_hw_rev(FuDpauxDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_dpaux_device_set_dpcd_hw_rev(FuDpauxDevice *self, guint8 dpcd_hw_rev);
+fu_dpaux_device_set_dpcd_hw_rev(FuDpauxDevice *self, guint8 dpcd_hw_rev) G_GNUC_NON_NULL(1);
 const gchar *
-fu_dpaux_device_get_dpcd_dev_id(FuDpauxDevice *self);
+fu_dpaux_device_get_dpcd_dev_id(FuDpauxDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_dpaux_device_set_dpcd_dev_id(FuDpauxDevice *self, const gchar *dpcd_dev_id);
+fu_dpaux_device_set_dpcd_dev_id(FuDpauxDevice *self, const gchar *dpcd_dev_id) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_dpaux_device_read(FuDpauxDevice *self,
@@ -41,11 +41,11 @@ fu_dpaux_device_read(FuDpauxDevice *self,
 		     guint8 *buf,
 		     gsize bufsz,
 		     guint timeout_ms,
-		     GError **error) G_GNUC_WARN_UNUSED_RESULT;
+		     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_dpaux_device_write(FuDpauxDevice *self,
 		      goffset offset,
 		      const guint8 *buf,
 		      gsize bufsz,
 		      guint timeout_ms,
-		      GError **error) G_GNUC_WARN_UNUSED_RESULT;
+		      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);

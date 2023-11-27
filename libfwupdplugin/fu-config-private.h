@@ -11,4 +11,4 @@
 FuConfig *
 fu_config_new(void);
 gboolean
-fu_config_load(FuConfig *self, GError **error);
+fu_config_load(FuConfig *self, GError **error) G_GNUC_NON_NULL(1);

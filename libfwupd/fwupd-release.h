@@ -29,178 +29,186 @@ struct _FwupdReleaseClass {
 FwupdRelease *
 fwupd_release_new(void);
 gchar *
-fwupd_release_to_string(FwupdRelease *self);
+fwupd_release_to_string(FwupdRelease *self) G_GNUC_NON_NULL(1);
 
 const gchar *
-fwupd_release_get_version(FwupdRelease *self);
+fwupd_release_get_version(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_version(FwupdRelease *self, const gchar *version);
+fwupd_release_set_version(FwupdRelease *self, const gchar *version) G_GNUC_NON_NULL(1);
 G_DEPRECATED_FOR(fwupd_release_get_locations)
 const gchar *
-fwupd_release_get_uri(FwupdRelease *self);
+fwupd_release_get_uri(FwupdRelease *self) G_GNUC_NON_NULL(1);
 G_DEPRECATED_FOR(fwupd_release_add_location)
 void
-fwupd_release_set_uri(FwupdRelease *self, const gchar *uri);
+fwupd_release_set_uri(FwupdRelease *self, const gchar *uri) G_GNUC_NON_NULL(1);
 GPtrArray *
-fwupd_release_get_locations(FwupdRelease *self);
+fwupd_release_get_locations(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_add_location(FwupdRelease *self, const gchar *location);
+fwupd_release_add_location(FwupdRelease *self, const gchar *location) G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fwupd_release_get_issues(FwupdRelease *self);
+fwupd_release_get_issues(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_add_issue(FwupdRelease *self, const gchar *issue);
+fwupd_release_add_issue(FwupdRelease *self, const gchar *issue) G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fwupd_release_get_categories(FwupdRelease *self);
+fwupd_release_get_categories(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_add_category(FwupdRelease *self, const gchar *category);
+fwupd_release_add_category(FwupdRelease *self, const gchar *category) G_GNUC_NON_NULL(1, 2);
 gboolean
-fwupd_release_has_category(FwupdRelease *self, const gchar *category) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_release_has_category(FwupdRelease *self, const gchar *category) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fwupd_release_get_checksums(FwupdRelease *self);
+fwupd_release_get_checksums(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_add_checksum(FwupdRelease *self, const gchar *checksum);
+fwupd_release_add_checksum(FwupdRelease *self, const gchar *checksum) G_GNUC_NON_NULL(1, 2);
 gboolean
-fwupd_release_has_checksum(FwupdRelease *self, const gchar *checksum) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_release_has_checksum(FwupdRelease *self, const gchar *checksum) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fwupd_release_get_tags(FwupdRelease *self);
+fwupd_release_get_tags(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_add_tag(FwupdRelease *self, const gchar *tag);
+fwupd_release_add_tag(FwupdRelease *self, const gchar *tag) G_GNUC_NON_NULL(1, 2);
 gboolean
-fwupd_release_has_tag(FwupdRelease *self, const gchar *tag) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_release_has_tag(FwupdRelease *self, const gchar *tag) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
 
 GHashTable *
-fwupd_release_get_metadata(FwupdRelease *self);
+fwupd_release_get_metadata(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_add_metadata(FwupdRelease *self, GHashTable *hash);
+fwupd_release_add_metadata(FwupdRelease *self, GHashTable *hash) G_GNUC_NON_NULL(1, 2);
 void
-fwupd_release_add_metadata_item(FwupdRelease *self, const gchar *key, const gchar *value);
+fwupd_release_add_metadata_item(FwupdRelease *self, const gchar *key, const gchar *value)
+    G_GNUC_NON_NULL(1, 2);
 const gchar *
-fwupd_release_get_metadata_item(FwupdRelease *self, const gchar *key);
+fwupd_release_get_metadata_item(FwupdRelease *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 
 const gchar *
-fwupd_release_get_filename(FwupdRelease *self);
+fwupd_release_get_filename(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_filename(FwupdRelease *self, const gchar *filename);
+fwupd_release_set_filename(FwupdRelease *self, const gchar *filename) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_protocol(FwupdRelease *self);
+fwupd_release_get_protocol(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_protocol(FwupdRelease *self, const gchar *protocol);
+fwupd_release_set_protocol(FwupdRelease *self, const gchar *protocol) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_id(FwupdRelease *self);
+fwupd_release_get_id(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_id(FwupdRelease *self, const gchar *id);
+fwupd_release_set_id(FwupdRelease *self, const gchar *id) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_appstream_id(FwupdRelease *self);
+fwupd_release_get_appstream_id(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_appstream_id(FwupdRelease *self, const gchar *appstream_id);
+fwupd_release_set_appstream_id(FwupdRelease *self, const gchar *appstream_id) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_detach_caption(FwupdRelease *self);
+fwupd_release_get_detach_caption(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_detach_caption(FwupdRelease *self, const gchar *detach_caption);
+fwupd_release_set_detach_caption(FwupdRelease *self, const gchar *detach_caption)
+    G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_detach_image(FwupdRelease *self);
+fwupd_release_get_detach_image(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_detach_image(FwupdRelease *self, const gchar *detach_image);
+fwupd_release_set_detach_image(FwupdRelease *self, const gchar *detach_image) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_remote_id(FwupdRelease *self);
+fwupd_release_get_remote_id(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_remote_id(FwupdRelease *self, const gchar *remote_id);
+fwupd_release_set_remote_id(FwupdRelease *self, const gchar *remote_id) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_vendor(FwupdRelease *self);
+fwupd_release_get_vendor(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_vendor(FwupdRelease *self, const gchar *vendor);
+fwupd_release_set_vendor(FwupdRelease *self, const gchar *vendor) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_name(FwupdRelease *self);
+fwupd_release_get_name(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_name(FwupdRelease *self, const gchar *name);
+fwupd_release_set_name(FwupdRelease *self, const gchar *name) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_name_variant_suffix(FwupdRelease *self);
+fwupd_release_get_name_variant_suffix(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_name_variant_suffix(FwupdRelease *self, const gchar *name_variant_suffix);
+fwupd_release_set_name_variant_suffix(FwupdRelease *self, const gchar *name_variant_suffix)
+    G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_summary(FwupdRelease *self);
+fwupd_release_get_summary(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_summary(FwupdRelease *self, const gchar *summary);
+fwupd_release_set_summary(FwupdRelease *self, const gchar *summary) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_branch(FwupdRelease *self);
+fwupd_release_get_branch(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_branch(FwupdRelease *self, const gchar *branch);
+fwupd_release_set_branch(FwupdRelease *self, const gchar *branch) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_description(FwupdRelease *self);
+fwupd_release_get_description(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_description(FwupdRelease *self, const gchar *description);
+fwupd_release_set_description(FwupdRelease *self, const gchar *description) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_homepage(FwupdRelease *self);
+fwupd_release_get_homepage(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_homepage(FwupdRelease *self, const gchar *homepage);
+fwupd_release_set_homepage(FwupdRelease *self, const gchar *homepage) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_details_url(FwupdRelease *self);
+fwupd_release_get_details_url(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_details_url(FwupdRelease *self, const gchar *details_url);
+fwupd_release_set_details_url(FwupdRelease *self, const gchar *details_url) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_source_url(FwupdRelease *self);
+fwupd_release_get_source_url(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_source_url(FwupdRelease *self, const gchar *source_url);
+fwupd_release_set_source_url(FwupdRelease *self, const gchar *source_url) G_GNUC_NON_NULL(1);
 guint64
-fwupd_release_get_size(FwupdRelease *self);
+fwupd_release_get_size(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_size(FwupdRelease *self, guint64 size);
+fwupd_release_set_size(FwupdRelease *self, guint64 size) G_GNUC_NON_NULL(1);
 guint64
-fwupd_release_get_created(FwupdRelease *self);
+fwupd_release_get_created(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_created(FwupdRelease *self, guint64 created);
+fwupd_release_set_created(FwupdRelease *self, guint64 created) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_license(FwupdRelease *self);
+fwupd_release_get_license(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_license(FwupdRelease *self, const gchar *license);
+fwupd_release_set_license(FwupdRelease *self, const gchar *license) G_GNUC_NON_NULL(1);
 G_DEPRECATED_FOR(fwupd_release_get_flags)
 FwupdTrustFlags
-fwupd_release_get_trust_flags(FwupdRelease *self);
+fwupd_release_get_trust_flags(FwupdRelease *self) G_GNUC_NON_NULL(1);
 G_DEPRECATED_FOR(fwupd_release_set_flags)
 void
-fwupd_release_set_trust_flags(FwupdRelease *self, FwupdTrustFlags trust_flags);
+fwupd_release_set_trust_flags(FwupdRelease *self, FwupdTrustFlags trust_flags) G_GNUC_NON_NULL(1);
 FwupdReleaseFlags
-fwupd_release_get_flags(FwupdRelease *self);
+fwupd_release_get_flags(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_flags(FwupdRelease *self, FwupdReleaseFlags flags);
+fwupd_release_set_flags(FwupdRelease *self, FwupdReleaseFlags flags) G_GNUC_NON_NULL(1);
 void
-fwupd_release_add_flag(FwupdRelease *self, FwupdReleaseFlags flag);
+fwupd_release_add_flag(FwupdRelease *self, FwupdReleaseFlags flag) G_GNUC_NON_NULL(1);
 void
-fwupd_release_remove_flag(FwupdRelease *self, FwupdReleaseFlags flag);
+fwupd_release_remove_flag(FwupdRelease *self, FwupdReleaseFlags flag) G_GNUC_NON_NULL(1);
 gboolean
 fwupd_release_has_flag(FwupdRelease *self, FwupdReleaseFlags flag) G_GNUC_WARN_UNUSED_RESULT;
 FwupdReleaseUrgency
-fwupd_release_get_urgency(FwupdRelease *self);
+fwupd_release_get_urgency(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_urgency(FwupdRelease *self, FwupdReleaseUrgency urgency);
+fwupd_release_set_urgency(FwupdRelease *self, FwupdReleaseUrgency urgency) G_GNUC_NON_NULL(1);
 guint32
-fwupd_release_get_install_duration(FwupdRelease *self);
+fwupd_release_get_install_duration(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_install_duration(FwupdRelease *self, guint32 duration);
+fwupd_release_set_install_duration(FwupdRelease *self, guint32 duration) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_update_message(FwupdRelease *self);
+fwupd_release_get_update_message(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_update_message(FwupdRelease *self, const gchar *update_message);
+fwupd_release_set_update_message(FwupdRelease *self, const gchar *update_message)
+    G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_release_get_update_image(FwupdRelease *self);
+fwupd_release_get_update_image(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_set_update_image(FwupdRelease *self, const gchar *update_image);
+fwupd_release_set_update_image(FwupdRelease *self, const gchar *update_image) G_GNUC_NON_NULL(1);
 GPtrArray *
-fwupd_release_get_reports(FwupdRelease *self);
+fwupd_release_get_reports(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
-fwupd_release_add_report(FwupdRelease *self, FwupdReport *report);
+fwupd_release_add_report(FwupdRelease *self, FwupdReport *report) G_GNUC_NON_NULL(1);
 
 gboolean
-fwupd_release_match_flags(FwupdRelease *self, FwupdReleaseFlags include, FwupdReleaseFlags exclude);
+fwupd_release_match_flags(FwupdRelease *self, FwupdReleaseFlags include, FwupdReleaseFlags exclude)
+    G_GNUC_NON_NULL(1);
 GPtrArray *
 fwupd_release_array_filter_flags(GPtrArray *rels,
 				 FwupdReleaseFlags include,
 				 FwupdReleaseFlags exclude,
-				 GError **error);
+				 GError **error) G_GNUC_NON_NULL(1);
 
 FwupdRelease *
-fwupd_release_from_variant(GVariant *value);
+fwupd_release_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
 GPtrArray *
-fwupd_release_array_from_variant(GVariant *value);
+fwupd_release_array_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

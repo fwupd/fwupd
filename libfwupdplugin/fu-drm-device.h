@@ -17,10 +17,10 @@ struct _FuDrmDeviceClass {
 };
 
 gboolean
-fu_drm_device_get_enabled(FuDrmDevice *self);
+fu_drm_device_get_enabled(FuDrmDevice *self) G_GNUC_NON_NULL(1);
 FuDisplayState
-fu_drm_device_get_state(FuDrmDevice *self);
+fu_drm_device_get_state(FuDrmDevice *self) G_GNUC_NON_NULL(1);
 const gchar *
-fu_drm_device_get_connector_id(FuDrmDevice *self);
+fu_drm_device_get_connector_id(FuDrmDevice *self) G_GNUC_NON_NULL(1);
 FuEdid *
-fu_drm_device_get_edid(FuDrmDevice *self);
+fu_drm_device_get_edid(FuDrmDevice *self) G_GNUC_NON_NULL(1);

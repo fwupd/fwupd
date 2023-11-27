@@ -43,21 +43,23 @@ typedef gboolean (*FuArchiveIterateFunc)(FuArchive *self,
 					 const gchar *filename,
 					 GBytes *bytes,
 					 gpointer user_data,
-					 GError **error) G_GNUC_WARN_UNUSED_RESULT;
+					 GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 
 FuArchive *
 fu_archive_new(GBytes *data, FuArchiveFlags flags, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 void
-fu_archive_add_entry(FuArchive *self, const gchar *fn, GBytes *blob);
+fu_archive_add_entry(FuArchive *self, const gchar *fn, GBytes *blob) G_GNUC_NON_NULL(1, 2);
 GBytes *
-fu_archive_lookup_by_fn(FuArchive *self, const gchar *fn, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_archive_lookup_by_fn(FuArchive *self, const gchar *fn, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
 GByteArray *
 fu_archive_write(FuArchive *self,
 		 FuArchiveFormat format,
 		 FuArchiveCompression compression,
-		 GError **error) G_GNUC_WARN_UNUSED_RESULT;
+		 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_archive_iterate(FuArchive *self,
 		   FuArchiveIterateFunc callback,
 		   gpointer user_data,
-		   GError **error) G_GNUC_WARN_UNUSED_RESULT;
+		   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);

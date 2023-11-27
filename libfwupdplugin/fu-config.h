@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fwupd-remote.h"
+#include <fwupd.h>
 
 #define FU_TYPE_CONFIG (fu_config_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuConfig, fu_config, FU, CONFIG, GObject)
@@ -20,24 +20,24 @@ fu_config_set_value(FuConfig *self,
 		    const gchar *section,
 		    const gchar *key,
 		    const gchar *value,
-		    GError **error);
+		    GError **error) G_GNUC_NON_NULL(1, 2);
 gchar *
 fu_config_get_value(FuConfig *self,
 		    const gchar *section,
 		    const gchar *key,
-		    const gchar *value_default);
+		    const gchar *value_default) G_GNUC_NON_NULL(1, 2);
 gchar **
 fu_config_get_value_strv(FuConfig *self,
 			 const gchar *section,
 			 const gchar *key,
-			 const gchar *value_default);
+			 const gchar *value_default) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_config_get_value_bool(FuConfig *self,
 			 const gchar *section,
 			 const gchar *key,
-			 gboolean value_default);
+			 gboolean value_default) G_GNUC_NON_NULL(1, 2);
 guint64
 fu_config_get_value_u64(FuConfig *self,
 			const gchar *section,
 			const gchar *key,
-			guint64 value_default);
+			guint64 value_default) G_GNUC_NON_NULL(1, 2);

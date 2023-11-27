@@ -16,12 +16,16 @@ struct _FuBluezDeviceClass {
 };
 
 GByteArray *
-fu_bluez_device_read(FuBluezDevice *self, const gchar *uuid, GError **error);
+fu_bluez_device_read(FuBluezDevice *self, const gchar *uuid, GError **error) G_GNUC_NON_NULL(1, 2);
 gchar *
-fu_bluez_device_read_string(FuBluezDevice *self, const gchar *uuid, GError **error);
+fu_bluez_device_read_string(FuBluezDevice *self, const gchar *uuid, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, GError **error);
+fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, GError **error)
+    G_GNUC_NON_NULL(1, 2, 3);
 gboolean
-fu_bluez_device_notify_start(FuBluezDevice *self, const gchar *uuid, GError **error);
+fu_bluez_device_notify_start(FuBluezDevice *self, const gchar *uuid, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_bluez_device_notify_stop(FuBluezDevice *self, const gchar *uuid, GError **error);
+fu_bluez_device_notify_stop(FuBluezDevice *self, const gchar *uuid, GError **error)
+    G_GNUC_NON_NULL(1, 2);

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <glib.h>
+#include "fwupd-build.h"
 
 G_BEGIN_DECLS
 
@@ -68,19 +68,20 @@ typedef guint8 fwupd_guid_t[16];
 #endif
 
 const gchar *
-fwupd_checksum_get_best(GPtrArray *checksums);
+fwupd_checksum_get_best(GPtrArray *checksums) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_checksum_get_by_kind(GPtrArray *checksums, GChecksumType kind);
+fwupd_checksum_get_by_kind(GPtrArray *checksums, GChecksumType kind) G_GNUC_NON_NULL(1);
 GChecksumType
-fwupd_checksum_guess_kind(const gchar *checksum);
+fwupd_checksum_guess_kind(const gchar *checksum) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_checksum_type_to_string_display(GChecksumType checksum_type);
 gchar *
-fwupd_checksum_format_for_display(const gchar *checksum);
+fwupd_checksum_format_for_display(const gchar *checksum) G_GNUC_NON_NULL(1);
 
 G_DEPRECATED_FOR(fwupd_client_set_user_agent_for_package)
 gchar *
-fwupd_build_user_agent(const gchar *package_name, const gchar *package_version);
+fwupd_build_user_agent(const gchar *package_name, const gchar *package_version)
+    G_GNUC_NON_NULL(1, 2);
 gchar *
 fwupd_build_machine_id(const gchar *salt, GError **error);
 GHashTable *
@@ -88,17 +89,17 @@ fwupd_get_os_release(GError **error);
 GHashTable *
 fwupd_get_os_release_full(const gchar *filename, GError **error);
 gchar *
-fwupd_build_history_report_json(GPtrArray *devices, GError **error);
+fwupd_build_history_report_json(GPtrArray *devices, GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fwupd_device_id_is_valid(const gchar *device_id);
 #ifndef __GI_SCANNER__
 gchar *
-fwupd_guid_to_string(const fwupd_guid_t *guid, FwupdGuidFlags flags);
+fwupd_guid_to_string(const fwupd_guid_t *guid, FwupdGuidFlags flags) G_GNUC_NON_NULL(1);
 gboolean
 fwupd_guid_from_string(const gchar *guidstr,
 		       fwupd_guid_t *guid,
 		       FwupdGuidFlags flags,
-		       GError **error);
+		       GError **error) G_GNUC_NON_NULL(1);
 #else
 gchar *
 fwupd_guid_to_string(const guint8 guid[16], FwupdGuidFlags flags);
@@ -110,6 +111,6 @@ fwupd_guid_is_valid(const gchar *guid);
 gchar *
 fwupd_guid_hash_string(const gchar *str);
 gchar *
-fwupd_guid_hash_data(const guint8 *data, gsize datasz, FwupdGuidFlags flags);
+fwupd_guid_hash_data(const guint8 *data, gsize datasz, FwupdGuidFlags flags) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

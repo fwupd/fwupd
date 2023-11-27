@@ -18,6 +18,6 @@ struct _FuCsvFirmwareClass {
 FuFirmware *
 fu_csv_firmware_new(void);
 void
-fu_csv_firmware_add_column_id(FuCsvFirmware *self, const gchar *column_id);
+fu_csv_firmware_add_column_id(FuCsvFirmware *self, const gchar *column_id) G_GNUC_NON_NULL(1, 2);
 const gchar *
-fu_csv_firmware_get_column_id(FuCsvFirmware *self, guint idx);
+fu_csv_firmware_get_column_id(FuCsvFirmware *self, guint idx) G_GNUC_NON_NULL(1);

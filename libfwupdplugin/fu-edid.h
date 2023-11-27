@@ -13,21 +13,21 @@
 G_DECLARE_FINAL_TYPE(FuEdid, fu_edid, FU, EDID, FuFirmware)
 
 const gchar *
-fu_edid_get_pnp_id(FuEdid *self);
+fu_edid_get_pnp_id(FuEdid *self) G_GNUC_NON_NULL(1);
 void
-fu_edid_set_pnp_id(FuEdid *self, const gchar *pnp_id);
+fu_edid_set_pnp_id(FuEdid *self, const gchar *pnp_id) G_GNUC_NON_NULL(1);
 const gchar *
-fu_edid_get_eisa_id(FuEdid *self);
+fu_edid_get_eisa_id(FuEdid *self) G_GNUC_NON_NULL(1);
 void
-fu_edid_set_eisa_id(FuEdid *self, const gchar *eisa_id);
+fu_edid_set_eisa_id(FuEdid *self, const gchar *eisa_id) G_GNUC_NON_NULL(1);
 const gchar *
-fu_edid_get_serial_number(FuEdid *self);
+fu_edid_get_serial_number(FuEdid *self) G_GNUC_NON_NULL(1);
 void
-fu_edid_set_serial_number(FuEdid *self, const gchar *serial_number);
+fu_edid_set_serial_number(FuEdid *self, const gchar *serial_number) G_GNUC_NON_NULL(1);
 guint16
-fu_edid_get_product_code(FuEdid *self);
+fu_edid_get_product_code(FuEdid *self) G_GNUC_NON_NULL(1);
 void
-fu_edid_set_product_code(FuEdid *self, guint16 product_code);
+fu_edid_set_product_code(FuEdid *self, guint16 product_code) G_GNUC_NON_NULL(1);
 
 FuEdid *
 fu_edid_new(void) G_GNUC_WARN_UNUSED_RESULT;
