@@ -102,9 +102,18 @@ fu_aver_hid_device_setup(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_aver_hid_device_parent_class)->setup(device, error))
 		return FALSE;
 
-	/* get the version and other properties from the hardware while open */
-	if (!fu_aver_hid_device_ensure_version(self, error))
+	/* using isp status requests as polling device requests */
+	if (!fu_aver_hid_device_poll(device, error))
 		return FALSE;
+
+	/* get the version from the hardware while open */
+	/* set a default version if the hardware is not support the version command, ignore the
+	 * error */
+	if (!fu_aver_hid_device_ensure_version(self, NULL)) {
+		g_autofree gchar *ver = NULL;
+		ver = fu_strsafe((const gchar *)"0.0.0000.00", 11);
+		fu_device_set_version(FU_DEVICE(self), ver);
+	}
 
 	/* success */
 	return TRUE;
@@ -290,6 +299,11 @@ fu_aver_hid_device_wait_for_reboot_cb(FuDevice *device, gpointer user_data, GErr
 				fu_struct_aver_hid_res_isp_status_get_status(res)));
 		return FALSE;
 	}
+
+	/* send ISP_REBOOT, no response expected */
+	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_ISP_REBOOT);
+	fu_aver_hid_device_transfer(self, req, res, error);
+
 	return TRUE;
 }
 

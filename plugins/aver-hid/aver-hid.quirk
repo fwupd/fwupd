@@ -1,3 +1,7 @@
 # AVer Fone540
 [USB\VID_2574&PID_09F0]
 Plugin = aver_hid
+
+# AVer CAM520Pro3
+[USB\VID_2574&PID_0B20]
+Plugin = aver_hid
