@@ -18,7 +18,7 @@ jobs:
 
   build-windows:
     docker:
-      - image: fedora:39
+      - image: fedora:38
     steps:
       - checkout
       - run:
