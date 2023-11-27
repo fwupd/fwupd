@@ -24,30 +24,34 @@ G_DEFINE_TYPE(FuAverHidDevice, fu_aver_hid_device, FU_TYPE_HID_DEVICE)
 static gboolean
 fu_aver_hid_device_transfer(FuAverHidDevice *self, GByteArray *req, GByteArray *res, GError **error)
 {
-	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
-				      req->data[0],
-				      req->data,
-				      req->len,
-				      FU_AVER_HID_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
-				      error)) {
-		g_prefix_error(error, "failed to send packet: ");
-		return FALSE;
+	if (req != NULL) {
+		if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
+					      req->data[0],
+					      req->data,
+					      req->len,
+					      FU_AVER_HID_DEVICE_TIMEOUT,
+					      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
+					      error)) {
+			g_prefix_error(error, "failed to send packet: ");
+			return FALSE;
+		}
 	}
-	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
-				      res->data[0],
-				      res->data,
-				      res->len,
-				      FU_AVER_HID_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
-				      error)) {
-		g_prefix_error(error, "failed to receive packet: ");
-		return FALSE;
+	if (res != NULL) {
+		if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
+					      res->data[0],
+					      res->data,
+					      res->len,
+					      FU_AVER_HID_DEVICE_TIMEOUT,
+					      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
+					      error)) {
+			g_prefix_error(error, "failed to receive packet: ");
+			return FALSE;
+		}
+		g_debug("custom-isp-cmd: %s [0x%x]",
+			fu_aver_hid_custom_isp_cmd_to_string(
+			    fu_struct_aver_hid_res_isp_get_custom_isp_cmd(res)),
+			fu_struct_aver_hid_res_isp_get_custom_isp_cmd(res));
 	}
-	g_debug("custom-isp-cmd: %s [0x%x]",
-		fu_aver_hid_custom_isp_cmd_to_string(
-		    fu_struct_aver_hid_res_isp_get_custom_isp_cmd(res)),
-		fu_struct_aver_hid_res_isp_get_custom_isp_cmd(res));
 	return TRUE;
 }
 
@@ -82,9 +86,19 @@ fu_aver_hid_device_ensure_version(FuAverHidDevice *self, GError **error)
 	g_autofree gchar *ver = NULL;
 	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_device_version_new();
 	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_device_version_new();
+	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_aver_hid_device_transfer(self, req, res, error))
+	if (!fu_aver_hid_device_transfer(self, req, res, &error_local)) {
+		if (g_error_matches(error_local,
+				    G_USB_DEVICE_ERROR,
+				    G_USB_DEVICE_ERROR_TIMED_OUT)) {
+			g_debug("ignoring %s", error_local->message);
+			fu_device_set_version(FU_DEVICE(self), "0.0.0000.00");
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
+	}
 	if (!fu_struct_aver_hid_res_device_version_validate(res->data, res->len, 0x0, error))
 		return FALSE;
 	ver = fu_strsafe((const gchar *)fu_struct_aver_hid_res_device_version_get_ver(res, NULL),
@@ -107,13 +121,8 @@ fu_aver_hid_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get the version from the hardware while open */
-	/* set a default version if the hardware is not support the version command, ignore the
-	 * error */
-	if (!fu_aver_hid_device_ensure_version(self, NULL)) {
-		g_autofree gchar *ver = NULL;
-		ver = fu_strsafe((const gchar *)"0.0.0000.00", 11);
-		fu_device_set_version(FU_DEVICE(self), ver);
-	}
+	if (!fu_aver_hid_device_ensure_version(self, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -268,6 +277,14 @@ fu_aver_hid_device_isp_start(FuAverHidDevice *self, GError **error)
 }
 
 static gboolean
+fu_aver_hid_device_isp_reboot(FuAverHidDevice *self, GError **error)
+{
+	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_new();
+	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_ISP_REBOOT);
+	return fu_aver_hid_device_transfer(self, req, NULL, error);
+}
+
+static gboolean
 fu_aver_hid_device_wait_for_reboot_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
@@ -299,11 +316,6 @@ fu_aver_hid_device_wait_for_reboot_cb(FuDevice *device, gpointer user_data, GErr
 				fu_struct_aver_hid_res_isp_status_get_status(res)));
 		return FALSE;
 	}
-
-	/* send ISP_REBOOT, no response expected */
-	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_ISP_REBOOT);
-	fu_aver_hid_device_transfer(self, req, res, error);
-
 	return TRUE;
 }
 
@@ -393,6 +405,10 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	fu_progress_step_done(progress);
+
+	/* send ISP_REBOOT, no response expected */
+	if (!fu_aver_hid_device_isp_reboot(self, error))
+		return FALSE;
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success! */
