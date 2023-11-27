@@ -13,9 +13,9 @@ if dpkg-maintscript-helper supports rm_conffile 2>/dev/null; then
 	dpkg-maintscript-helper rm_conffile \
 		/etc/fwupd/ata.conf 1.5.5~ -- "$@"
 	dpkg-maintscript-helper rm_conffile \
-		/etc/pki/fwupd/GPG-KEY-Hughski-Limited 1.5.8 -- "$@"
+		/etc/pki/fwupd/GPG-KEY-Hughski-Limited 1.9.10~ -- "$@"
 	dpkg-maintscript-helper rm_conffile \
-		/etc/fwupd/upower.conf 1.6.2~ -- "$@"
+		/etc/fwupd/upower.conf 1.9.10~ -- "$@"
 fi
 
 #Perform transition from /etc/fwupd/uefi.conf to /etc/fwupd/uefi_capsule.conf
