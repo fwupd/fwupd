@@ -24,6 +24,10 @@ enum AverHidCustomIspCmd {
     FileEnd,
     Start,
     Stop,
+    Reserve,
+    LogStart,
+    LogUpload,
+    IspReboot,
 }
 
 #[derive(ToString, Getters, New)]
