@@ -366,7 +366,8 @@ fu_bytes_pad(GBytes *bytes, gsize sz)
 	if (bytes_sz < sz) {
 		const guint8 *data = g_bytes_get_data(bytes, NULL);
 		guint8 *data_new = g_malloc(sz);
-		memcpy(data_new, data, bytes_sz);
+		if (data != NULL)
+			memcpy(data_new, data, bytes_sz);
 		memset(data_new + bytes_sz, 0xff, sz - bytes_sz);
 		return g_bytes_new_take(data_new, sz);
 	}
