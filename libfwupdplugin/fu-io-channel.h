@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <glib-object.h>
+#include <fwupd.h>
 
 #define FU_TYPE_IO_CHANNEL (fu_io_channel_get_type())
 
@@ -33,19 +33,21 @@ typedef enum {
 FuIOChannel *
 fu_io_channel_unix_new(gint fd);
 FuIOChannel *
-fu_io_channel_new_file(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_io_channel_new_file(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 
 gint
-fu_io_channel_unix_get_fd(FuIOChannel *self);
+fu_io_channel_unix_get_fd(FuIOChannel *self) G_GNUC_NON_NULL(1);
 gboolean
-fu_io_channel_shutdown(FuIOChannel *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_io_channel_shutdown(FuIOChannel *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 gboolean
 fu_io_channel_write_raw(FuIOChannel *self,
 			const guint8 *data,
 			gsize datasz,
 			guint timeout_ms,
 			FuIOChannelFlags flags,
-			GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_io_channel_read_raw(FuIOChannel *self,
 		       guint8 *buf,
@@ -53,28 +55,28 @@ fu_io_channel_read_raw(FuIOChannel *self,
 		       gsize *bytes_read,
 		       guint timeout_ms,
 		       FuIOChannelFlags flags,
-		       GError **error) G_GNUC_WARN_UNUSED_RESULT;
+		       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_io_channel_write_bytes(FuIOChannel *self,
 			  GBytes *bytes,
 			  guint timeout_ms,
 			  FuIOChannelFlags flags,
-			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_io_channel_write_byte_array(FuIOChannel *self,
 			       GByteArray *buf,
 			       guint timeout_ms,
 			       FuIOChannelFlags flags,
-			       GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 GBytes *
 fu_io_channel_read_bytes(FuIOChannel *self,
 			 gssize count,
 			 guint timeout_ms,
 			 FuIOChannelFlags flags,
-			 GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 GByteArray *
 fu_io_channel_read_byte_array(FuIOChannel *self,
 			      gssize count,
 			      guint timeout_ms,
 			      FuIOChannelFlags flags,
-			      GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);

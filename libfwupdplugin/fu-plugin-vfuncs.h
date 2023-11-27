@@ -17,4 +17,4 @@
  * Since: 1.7.2
  **/
 void
-fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs);
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs) G_GNUC_NON_NULL(1);

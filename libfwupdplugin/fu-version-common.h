@@ -22,10 +22,10 @@ fu_version_from_uint16(guint16 val, FwupdVersionFormat kind);
 gchar *
 fu_version_parse_from_format(const gchar *version, FwupdVersionFormat fmt);
 gchar *
-fu_version_ensure_semver(const gchar *version, FwupdVersionFormat fmt);
+fu_version_ensure_semver(const gchar *version, FwupdVersionFormat fmt) G_GNUC_NON_NULL(1);
 FwupdVersionFormat
 fu_version_guess_format(const gchar *version);
 gboolean
 fu_version_verify_format(const gchar *version,
 			 FwupdVersionFormat fmt,
-			 GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);

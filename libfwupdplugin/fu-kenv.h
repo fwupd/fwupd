@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <glib.h>
+#include <fwupd.h>
 
 gchar *
-fu_kenv_get_string(const gchar *key, GError **error);
+fu_kenv_get_string(const gchar *key, GError **error) G_GNUC_NON_NULL(1);

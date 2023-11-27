@@ -16,25 +16,26 @@ struct _FuMeiDeviceClass {
 };
 
 gboolean
-fu_mei_device_connect(FuMeiDevice *self, guchar req_protocol_version, GError **error);
+fu_mei_device_connect(FuMeiDevice *self, guchar req_protocol_version, GError **error)
+    G_GNUC_NON_NULL(1);
 gboolean
 fu_mei_device_read(FuMeiDevice *self,
 		   guint8 *buf,
 		   gsize bufsz,
 		   gsize *bytes_read,
 		   guint timeout_ms,
-		   GError **error);
+		   GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_mei_device_write(FuMeiDevice *self,
 		    const guint8 *buf,
 		    gsize bufsz,
 		    guint timeout_ms,
-		    GError **error);
+		    GError **error) G_GNUC_NON_NULL(1);
 guint
-fu_mei_device_get_max_msg_length(FuMeiDevice *self);
+fu_mei_device_get_max_msg_length(FuMeiDevice *self) G_GNUC_NON_NULL(1);
 guint8
-fu_mei_device_get_protocol_version(FuMeiDevice *self);
+fu_mei_device_get_protocol_version(FuMeiDevice *self) G_GNUC_NON_NULL(1);
 gchar *
-fu_mei_device_get_fw_ver(FuMeiDevice *self, guint idx, GError **error);
+fu_mei_device_get_fw_ver(FuMeiDevice *self, guint idx, GError **error) G_GNUC_NON_NULL(1);
 gchar *
-fu_mei_device_get_fw_status(FuMeiDevice *self, guint idx, GError **error);
+fu_mei_device_get_fw_status(FuMeiDevice *self, guint idx, GError **error) G_GNUC_NON_NULL(1);

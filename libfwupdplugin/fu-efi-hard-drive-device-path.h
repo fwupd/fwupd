@@ -19,4 +19,4 @@ G_DECLARE_FINAL_TYPE(FuEfiHardDriveDevicePath,
 FuEfiHardDriveDevicePath *
 fu_efi_hard_drive_device_path_new(void);
 FuEfiHardDriveDevicePath *
-fu_efi_hard_drive_device_path_new_from_volume(FuVolume *volume, GError **error);
+fu_efi_hard_drive_device_path_new_from_volume(FuVolume *volume, GError **error) G_GNUC_NON_NULL(1);

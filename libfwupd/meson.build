@@ -14,6 +14,7 @@ install_headers(
 )
 
 install_headers([
+    'fwupd-build.h',
     'fwupd-client.h',
     'fwupd-client-sync.h',
     'fwupd-common.h',

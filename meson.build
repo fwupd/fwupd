@@ -55,6 +55,7 @@ libfwupd_lt_version = '@0@.@1@.@2@'.format(libfwupd_lt_current, libfwupd_lt_age,
 
 # get supported warning flags
 warning_flags = [
+  '-Wfatal-errors',
   '-Waggregate-return',
   '-Wunused',
   '-Warray-bounds',
@@ -92,6 +93,7 @@ warning_flags = [
   '-Wno-typedef-redefinition',
   '-Wno-unknown-warning-option',
   '-Wno-unused-parameter',
+  '-Wno-nonnull-compare',
   '-Wold-style-definition',
   '-Woverride-init',
   '-Wpointer-arith',

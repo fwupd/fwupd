@@ -465,46 +465,50 @@ typedef struct FuPluginData FuPluginData;
 
 /* for plugins to use */
 const gchar *
-fu_plugin_get_name(FuPlugin *self);
+fu_plugin_get_name(FuPlugin *self) G_GNUC_NON_NULL(1);
 void
-fu_plugin_set_name(FuPlugin *self, const gchar *name);
+fu_plugin_set_name(FuPlugin *self, const gchar *name) G_GNUC_NON_NULL(1);
 FuPluginData *
-fu_plugin_get_data(FuPlugin *self);
+fu_plugin_get_data(FuPlugin *self) G_GNUC_NON_NULL(1);
 FuPluginData *
-fu_plugin_alloc_data(FuPlugin *self, gsize data_sz);
+fu_plugin_alloc_data(FuPlugin *self, gsize data_sz) G_GNUC_NON_NULL(1);
 FuContext *
-fu_plugin_get_context(FuPlugin *self);
+fu_plugin_get_context(FuPlugin *self) G_GNUC_NON_NULL(1);
 void
-fu_plugin_device_add(FuPlugin *self, FuDevice *device);
+fu_plugin_device_add(FuPlugin *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
 void
-fu_plugin_device_remove(FuPlugin *self, FuDevice *device);
+fu_plugin_device_remove(FuPlugin *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
 void
-fu_plugin_device_register(FuPlugin *self, FuDevice *device);
+fu_plugin_device_register(FuPlugin *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
 void
-fu_plugin_add_device_gtype(FuPlugin *self, GType device_gtype);
+fu_plugin_add_device_gtype(FuPlugin *self, GType device_gtype) G_GNUC_NON_NULL(1);
 void
-fu_plugin_add_firmware_gtype(FuPlugin *self, const gchar *id, GType gtype);
+fu_plugin_add_firmware_gtype(FuPlugin *self, const gchar *id, GType gtype) G_GNUC_NON_NULL(1);
 void
-fu_plugin_add_device_udev_subsystem(FuPlugin *self, const gchar *subsystem);
+fu_plugin_add_device_udev_subsystem(FuPlugin *self, const gchar *subsystem) G_GNUC_NON_NULL(1, 2);
 void
-fu_plugin_add_udev_subsystem(FuPlugin *self, const gchar *subsystem);
+fu_plugin_add_udev_subsystem(FuPlugin *self, const gchar *subsystem) G_GNUC_NON_NULL(1, 2);
 gpointer
-fu_plugin_cache_lookup(FuPlugin *self, const gchar *id);
+fu_plugin_cache_lookup(FuPlugin *self, const gchar *id) G_GNUC_NON_NULL(1, 2);
 void
-fu_plugin_cache_remove(FuPlugin *self, const gchar *id);
+fu_plugin_cache_remove(FuPlugin *self, const gchar *id) G_GNUC_NON_NULL(1, 2);
 void
-fu_plugin_cache_add(FuPlugin *self, const gchar *id, gpointer dev);
+fu_plugin_cache_add(FuPlugin *self, const gchar *id, gpointer dev) G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fu_plugin_get_devices(FuPlugin *self);
+fu_plugin_get_devices(FuPlugin *self) G_GNUC_NON_NULL(1);
 void
-fu_plugin_add_rule(FuPlugin *self, FuPluginRule rule, const gchar *name);
+fu_plugin_add_rule(FuPlugin *self, FuPluginRule rule, const gchar *name) G_GNUC_NON_NULL(1, 3);
 void
-fu_plugin_add_report_metadata(FuPlugin *self, const gchar *key, const gchar *value);
+fu_plugin_add_report_metadata(FuPlugin *self, const gchar *key, const gchar *value)
+    G_GNUC_NON_NULL(1, 2, 3);
 gchar *
-fu_plugin_get_config_value(FuPlugin *self, const gchar *key, const gchar *value_default);
+fu_plugin_get_config_value(FuPlugin *self, const gchar *key, const gchar *value_default)
+    G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_plugin_get_config_value_boolean(FuPlugin *self, const gchar *key, gboolean value_default);
+fu_plugin_get_config_value_boolean(FuPlugin *self, const gchar *key, gboolean value_default)
+    G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value, GError **error);
+fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 FwupdSecurityAttr *
-fu_plugin_security_attr_new(FuPlugin *self, const gchar *appstream_id);
+fu_plugin_security_attr_new(FuPlugin *self, const gchar *appstream_id) G_GNUC_NON_NULL(1, 2);

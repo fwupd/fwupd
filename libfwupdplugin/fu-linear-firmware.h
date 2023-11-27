@@ -18,4 +18,4 @@ struct _FuLinearFirmwareClass {
 FuFirmware *
 fu_linear_firmware_new(GType image_gtype);
 GType
-fu_linear_firmware_get_image_gtype(FuLinearFirmware *self);
+fu_linear_firmware_get_image_gtype(FuLinearFirmware *self) G_GNUC_NON_NULL(1);

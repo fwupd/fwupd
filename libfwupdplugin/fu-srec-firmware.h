@@ -61,11 +61,11 @@ typedef struct {
 FuFirmware *
 fu_srec_firmware_new(void);
 void
-fu_srec_firmware_set_addr_min(FuSrecFirmware *self, guint32 addr_min);
+fu_srec_firmware_set_addr_min(FuSrecFirmware *self, guint32 addr_min) G_GNUC_NON_NULL(1);
 void
-fu_srec_firmware_set_addr_max(FuSrecFirmware *self, guint32 addr_max);
+fu_srec_firmware_set_addr_max(FuSrecFirmware *self, guint32 addr_max) G_GNUC_NON_NULL(1);
 GPtrArray *
-fu_srec_firmware_get_records(FuSrecFirmware *self);
+fu_srec_firmware_get_records(FuSrecFirmware *self) G_GNUC_NON_NULL(1);
 GType
 fu_srec_firmware_record_get_type(void);
 FuSrecFirmwareRecord *

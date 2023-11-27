@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#define G_LOG_DOMAIN "FuSelfTest"
+
 #include <fwupdplugin.h>
 
 #include <glib/gstdio.h>

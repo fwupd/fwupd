@@ -5459,9 +5459,9 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 
 	/* copy from donor FuDevice if has not already been set */
 	fu_device_add_internal_flag(self, fu_device_get_internal_flags(donor));
-	if (priv->alternate_id == NULL)
+	if (priv->alternate_id == NULL && fu_device_get_alternate_id(donor) != NULL)
 		fu_device_set_alternate_id(self, fu_device_get_alternate_id(donor));
-	if (priv->equivalent_id == NULL)
+	if (priv->equivalent_id == NULL && fu_device_get_equivalent_id(donor) != NULL)
 		fu_device_set_equivalent_id(self, fu_device_get_equivalent_id(donor));
 	if (priv->physical_id == NULL && priv_donor->physical_id != NULL)
 		fu_device_set_physical_id(self, priv_donor->physical_id);

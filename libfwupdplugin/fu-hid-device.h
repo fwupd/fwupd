@@ -43,23 +43,23 @@ typedef enum {
 } FuHidDeviceFlags;
 
 FuHidDevice *
-fu_hid_device_new(GUsbDevice *usb_device);
+fu_hid_device_new(GUsbDevice *usb_device) G_GNUC_NON_NULL(1);
 void
-fu_hid_device_add_flag(FuHidDevice *self, FuHidDeviceFlags flag);
+fu_hid_device_add_flag(FuHidDevice *self, FuHidDeviceFlags flag) G_GNUC_NON_NULL(1);
 void
-fu_hid_device_set_interface(FuHidDevice *self, guint8 interface_number);
+fu_hid_device_set_interface(FuHidDevice *self, guint8 interface_number) G_GNUC_NON_NULL(1);
 guint8
-fu_hid_device_get_interface(FuHidDevice *self);
+fu_hid_device_get_interface(FuHidDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_hid_device_set_ep_addr_in(FuHidDevice *self, guint8 ep_addr_in);
+fu_hid_device_set_ep_addr_in(FuHidDevice *self, guint8 ep_addr_in) G_GNUC_NON_NULL(1);
 guint8
-fu_hid_device_get_ep_addr_in(FuHidDevice *self);
+fu_hid_device_get_ep_addr_in(FuHidDevice *self) G_GNUC_NON_NULL(1);
 void
-fu_hid_device_set_ep_addr_out(FuHidDevice *self, guint8 ep_addr_out);
+fu_hid_device_set_ep_addr_out(FuHidDevice *self, guint8 ep_addr_out) G_GNUC_NON_NULL(1);
 guint8
-fu_hid_device_get_ep_addr_out(FuHidDevice *self);
+fu_hid_device_get_ep_addr_out(FuHidDevice *self) G_GNUC_NON_NULL(1);
 FuHidDescriptor *
-fu_hid_device_parse_descriptor(FuHidDevice *self, GError **error);
+fu_hid_device_parse_descriptor(FuHidDevice *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_hid_device_set_report(FuHidDevice *self,
 			 guint8 value,
@@ -67,7 +67,7 @@ fu_hid_device_set_report(FuHidDevice *self,
 			 gsize bufsz,
 			 guint timeout,
 			 FuHidDeviceFlags flags,
-			 GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_hid_device_get_report(FuHidDevice *self,
 			 guint8 value,
@@ -75,4 +75,4 @@ fu_hid_device_get_report(FuHidDevice *self,
 			 gsize bufsz,
 			 guint timeout,
 			 FuHidDeviceFlags flags,
-			 GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);

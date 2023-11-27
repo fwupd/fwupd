@@ -30,26 +30,27 @@ struct _FwupdPluginClass {
 FwupdPlugin *
 fwupd_plugin_new(void);
 gchar *
-fwupd_plugin_to_string(FwupdPlugin *self);
+fwupd_plugin_to_string(FwupdPlugin *self) G_GNUC_NON_NULL(1);
 
 const gchar *
-fwupd_plugin_get_name(FwupdPlugin *self);
+fwupd_plugin_get_name(FwupdPlugin *self) G_GNUC_NON_NULL(1);
 void
-fwupd_plugin_set_name(FwupdPlugin *self, const gchar *name);
+fwupd_plugin_set_name(FwupdPlugin *self, const gchar *name) G_GNUC_NON_NULL(1);
 guint64
-fwupd_plugin_get_flags(FwupdPlugin *self);
+fwupd_plugin_get_flags(FwupdPlugin *self) G_GNUC_NON_NULL(1);
 void
-fwupd_plugin_set_flags(FwupdPlugin *self, guint64 flags);
+fwupd_plugin_set_flags(FwupdPlugin *self, guint64 flags) G_GNUC_NON_NULL(1);
 void
-fwupd_plugin_add_flag(FwupdPlugin *self, FwupdPluginFlags flag);
+fwupd_plugin_add_flag(FwupdPlugin *self, FwupdPluginFlags flag) G_GNUC_NON_NULL(1);
 void
-fwupd_plugin_remove_flag(FwupdPlugin *self, FwupdPluginFlags flag);
+fwupd_plugin_remove_flag(FwupdPlugin *self, FwupdPluginFlags flag) G_GNUC_NON_NULL(1);
 gboolean
-fwupd_plugin_has_flag(FwupdPlugin *self, FwupdPluginFlags flag) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_plugin_has_flag(FwupdPlugin *self, FwupdPluginFlags flag) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 
 FwupdPlugin *
-fwupd_plugin_from_variant(GVariant *value);
+fwupd_plugin_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
 GPtrArray *
-fwupd_plugin_array_from_variant(GVariant *value);
+fwupd_plugin_array_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

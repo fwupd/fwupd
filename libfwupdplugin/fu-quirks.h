@@ -49,17 +49,18 @@ fu_quirks_new(void);
 gboolean
 fu_quirks_load(FuQuirks *self,
 	       FuQuirksLoadFlags load_flags,
-	       GError **error) G_GNUC_WARN_UNUSED_RESULT;
+	       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 const gchar *
-fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key);
+fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
+    G_GNUC_NON_NULL(1, 2, 3);
 gboolean
 fu_quirks_lookup_by_id_iter(FuQuirks *self,
 			    const gchar *guid,
 			    const gchar *key,
 			    FuQuirksIter iter_cb,
-			    gpointer user_data);
+			    gpointer user_data) G_GNUC_NON_NULL(1, 2);
 void
-fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key);
+fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON_NULL(1, 2);
 
 /**
  * FU_QUIRKS_PLUGIN:

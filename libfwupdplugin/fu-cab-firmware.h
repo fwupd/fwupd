@@ -17,13 +17,13 @@ struct _FuCabFirmwareClass {
 };
 
 gboolean
-fu_cab_firmware_get_compressed(FuCabFirmware *self);
+fu_cab_firmware_get_compressed(FuCabFirmware *self) G_GNUC_NON_NULL(1);
 void
-fu_cab_firmware_set_compressed(FuCabFirmware *self, gboolean compressed);
+fu_cab_firmware_set_compressed(FuCabFirmware *self, gboolean compressed) G_GNUC_NON_NULL(1);
 gboolean
-fu_cab_firmware_get_only_basename(FuCabFirmware *self);
+fu_cab_firmware_get_only_basename(FuCabFirmware *self) G_GNUC_NON_NULL(1);
 void
-fu_cab_firmware_set_only_basename(FuCabFirmware *self, gboolean only_basename);
+fu_cab_firmware_set_only_basename(FuCabFirmware *self, gboolean only_basename) G_GNUC_NON_NULL(1);
 
 FuCabFirmware *
 fu_cab_firmware_new(void) G_GNUC_WARN_UNUSED_RESULT;

@@ -18,8 +18,8 @@ struct _FuSecurityAttrClass {
 };
 
 FwupdSecurityAttr *
-fu_security_attr_new(FuContext *ctx, const gchar *appstream_id);
+fu_security_attr_new(FuContext *ctx, const gchar *appstream_id) G_GNUC_NON_NULL(1);
 void
 fu_security_attr_add_bios_target_value(FwupdSecurityAttr *attr,
 				       const gchar *id,
-				       const gchar *needle);
+				       const gchar *needle) G_GNUC_NON_NULL(1, 2);

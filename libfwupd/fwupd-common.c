@@ -43,8 +43,7 @@ GChecksumType
 fwupd_checksum_guess_kind(const gchar *checksum)
 {
 	guint len;
-	if (checksum == NULL)
-		return G_CHECKSUM_SHA1;
+	g_return_val_if_fail(checksum != NULL, G_CHECKSUM_SHA1);
 	len = strlen(checksum);
 	if (len == 32)
 		return G_CHECKSUM_MD5;

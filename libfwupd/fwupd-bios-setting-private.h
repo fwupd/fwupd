@@ -11,8 +11,9 @@
 #pragma once
 
 GVariant *
-fwupd_bios_setting_to_variant(FwupdBiosSetting *self, gboolean trusted);
+fwupd_bios_setting_to_variant(FwupdBiosSetting *self, gboolean trusted) G_GNUC_NON_NULL(1);
 void
-fwupd_bios_setting_to_json(FwupdBiosSetting *self, JsonBuilder *builder);
+fwupd_bios_setting_to_json(FwupdBiosSetting *self, JsonBuilder *builder) G_GNUC_NON_NULL(1, 2);
 gboolean
-fwupd_bios_setting_from_json(FwupdBiosSetting *self, JsonNode *json_node, GError **error);
+fwupd_bios_setting_from_json(FwupdBiosSetting *self, JsonNode *json_node, GError **error)
+    G_GNUC_NON_NULL(1, 2);

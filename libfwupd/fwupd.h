@@ -9,6 +9,7 @@
 #define __FWUPD_H_INSIDE__
 
 #include <libfwupd/fwupd-bios-setting.h>
+#include <libfwupd/fwupd-build.h>
 #include <libfwupd/fwupd-client-sync.h>
 #include <libfwupd/fwupd-client.h>
 #include <libfwupd/fwupd-common.h>

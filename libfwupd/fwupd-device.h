@@ -31,236 +31,250 @@ struct _FwupdDeviceClass {
 FwupdDevice *
 fwupd_device_new(void);
 gchar *
-fwupd_device_to_string(FwupdDevice *self);
+fwupd_device_to_string(FwupdDevice *self) G_GNUC_NON_NULL(1);
 
 const gchar *
-fwupd_device_get_id(FwupdDevice *self);
+fwupd_device_get_id(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_id(FwupdDevice *self, const gchar *id);
+fwupd_device_set_id(FwupdDevice *self, const gchar *id) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_device_get_parent_id(FwupdDevice *self);
+fwupd_device_get_parent_id(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_parent_id(FwupdDevice *self, const gchar *parent_id);
+fwupd_device_set_parent_id(FwupdDevice *self, const gchar *parent_id) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_device_get_composite_id(FwupdDevice *self);
+fwupd_device_get_composite_id(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_composite_id(FwupdDevice *self, const gchar *composite_id);
+fwupd_device_set_composite_id(FwupdDevice *self, const gchar *composite_id) G_GNUC_NON_NULL(1);
 FwupdDevice *
-fwupd_device_get_root(FwupdDevice *self);
+fwupd_device_get_root(FwupdDevice *self) G_GNUC_NON_NULL(1);
 FwupdDevice *
-fwupd_device_get_parent(FwupdDevice *self);
+fwupd_device_get_parent(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_parent(FwupdDevice *self, FwupdDevice *parent);
+fwupd_device_set_parent(FwupdDevice *self, FwupdDevice *parent) G_GNUC_NON_NULL(1);
 void
-fwupd_device_add_child(FwupdDevice *self, FwupdDevice *child);
+fwupd_device_add_child(FwupdDevice *self, FwupdDevice *child) G_GNUC_NON_NULL(1, 2);
 void
-fwupd_device_remove_child(FwupdDevice *self, FwupdDevice *child);
+fwupd_device_remove_child(FwupdDevice *self, FwupdDevice *child) G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fwupd_device_get_children(FwupdDevice *self);
+fwupd_device_get_children(FwupdDevice *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_device_get_name(FwupdDevice *self);
+fwupd_device_get_name(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_name(FwupdDevice *self, const gchar *name);
+fwupd_device_set_name(FwupdDevice *self, const gchar *name) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_device_get_serial(FwupdDevice *self);
+fwupd_device_get_serial(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_serial(FwupdDevice *self, const gchar *serial);
+fwupd_device_set_serial(FwupdDevice *self, const gchar *serial) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_device_get_summary(FwupdDevice *self);
+fwupd_device_get_summary(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_summary(FwupdDevice *self, const gchar *summary);
+fwupd_device_set_summary(FwupdDevice *self, const gchar *summary) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_device_get_branch(FwupdDevice *self);
+fwupd_device_get_branch(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_branch(FwupdDevice *self, const gchar *branch);
+fwupd_device_set_branch(FwupdDevice *self, const gchar *branch) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_device_get_description(FwupdDevice *self);
+fwupd_device_get_description(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_description(FwupdDevice *self, const gchar *description);
+fwupd_device_set_description(FwupdDevice *self, const gchar *description) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_device_get_version(FwupdDevice *self);
+fwupd_device_get_version(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_version(FwupdDevice *self, const gchar *version);
+fwupd_device_set_version(FwupdDevice *self, const gchar *version) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_device_get_version_lowest(FwupdDevice *self);
+fwupd_device_get_version_lowest(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_version_lowest(FwupdDevice *self, const gchar *version_lowest);
+fwupd_device_set_version_lowest(FwupdDevice *self, const gchar *version_lowest) G_GNUC_NON_NULL(1);
 guint64
-fwupd_device_get_version_lowest_raw(FwupdDevice *self);
+fwupd_device_get_version_lowest_raw(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_version_lowest_raw(FwupdDevice *self, guint64 version_lowest_raw);
+fwupd_device_set_version_lowest_raw(FwupdDevice *self, guint64 version_lowest_raw)
+    G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_device_get_version_bootloader(FwupdDevice *self);
+fwupd_device_get_version_bootloader(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_version_bootloader(FwupdDevice *self, const gchar *version_bootloader);
+fwupd_device_set_version_bootloader(FwupdDevice *self, const gchar *version_bootloader)
+    G_GNUC_NON_NULL(1);
 guint64
-fwupd_device_get_version_bootloader_raw(FwupdDevice *self);
+fwupd_device_get_version_bootloader_raw(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_version_bootloader_raw(FwupdDevice *self, guint64 version_bootloader_raw);
+fwupd_device_set_version_bootloader_raw(FwupdDevice *self, guint64 version_bootloader_raw)
+    G_GNUC_NON_NULL(1);
 guint64
-fwupd_device_get_version_raw(FwupdDevice *self);
+fwupd_device_get_version_raw(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_version_raw(FwupdDevice *self, guint64 version_raw);
+fwupd_device_set_version_raw(FwupdDevice *self, guint64 version_raw) G_GNUC_NON_NULL(1);
 guint64
-fwupd_device_get_version_build_date(FwupdDevice *self);
+fwupd_device_get_version_build_date(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_version_build_date(FwupdDevice *self, guint64 version_build_date);
+fwupd_device_set_version_build_date(FwupdDevice *self, guint64 version_build_date)
+    G_GNUC_NON_NULL(1);
 FwupdVersionFormat
-fwupd_device_get_version_format(FwupdDevice *self);
+fwupd_device_get_version_format(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_version_format(FwupdDevice *self, FwupdVersionFormat version_format);
+fwupd_device_set_version_format(FwupdDevice *self, FwupdVersionFormat version_format)
+    G_GNUC_NON_NULL(1);
 guint32
-fwupd_device_get_flashes_left(FwupdDevice *self);
+fwupd_device_get_flashes_left(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_flashes_left(FwupdDevice *self, guint32 flashes_left);
+fwupd_device_set_flashes_left(FwupdDevice *self, guint32 flashes_left) G_GNUC_NON_NULL(1);
 guint32
-fwupd_device_get_battery_level(FwupdDevice *self);
+fwupd_device_get_battery_level(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_battery_level(FwupdDevice *self, guint32 battery_level);
+fwupd_device_set_battery_level(FwupdDevice *self, guint32 battery_level) G_GNUC_NON_NULL(1);
 guint32
-fwupd_device_get_battery_threshold(FwupdDevice *self);
+fwupd_device_get_battery_threshold(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_battery_threshold(FwupdDevice *self, guint32 battery_threshold);
+fwupd_device_set_battery_threshold(FwupdDevice *self, guint32 battery_threshold) G_GNUC_NON_NULL(1);
 guint32
-fwupd_device_get_install_duration(FwupdDevice *self);
+fwupd_device_get_install_duration(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_install_duration(FwupdDevice *self, guint32 duration);
+fwupd_device_set_install_duration(FwupdDevice *self, guint32 duration) G_GNUC_NON_NULL(1);
 guint64
-fwupd_device_get_flags(FwupdDevice *self);
+fwupd_device_get_flags(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_flags(FwupdDevice *self, guint64 flags);
+fwupd_device_set_flags(FwupdDevice *self, guint64 flags) G_GNUC_NON_NULL(1);
 void
-fwupd_device_add_flag(FwupdDevice *self, FwupdDeviceFlags flag);
+fwupd_device_add_flag(FwupdDevice *self, FwupdDeviceFlags flag) G_GNUC_NON_NULL(1);
 void
-fwupd_device_remove_flag(FwupdDevice *self, FwupdDeviceFlags flag);
+fwupd_device_remove_flag(FwupdDevice *self, FwupdDeviceFlags flag) G_GNUC_NON_NULL(1);
 gboolean
-fwupd_device_has_flag(FwupdDevice *self, FwupdDeviceFlags flag) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_device_has_flag(FwupdDevice *self, FwupdDeviceFlags flag) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 guint64
-fwupd_device_get_problems(FwupdDevice *self);
+fwupd_device_get_problems(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_problems(FwupdDevice *self, guint64 problems);
+fwupd_device_set_problems(FwupdDevice *self, guint64 problems) G_GNUC_NON_NULL(1);
 void
-fwupd_device_add_problem(FwupdDevice *self, FwupdDeviceProblem problem);
+fwupd_device_add_problem(FwupdDevice *self, FwupdDeviceProblem problem) G_GNUC_NON_NULL(1);
 void
-fwupd_device_remove_problem(FwupdDevice *self, FwupdDeviceProblem problem);
+fwupd_device_remove_problem(FwupdDevice *self, FwupdDeviceProblem problem) G_GNUC_NON_NULL(1);
 gboolean
-fwupd_device_has_problem(FwupdDevice *self, FwupdDeviceProblem problem) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_device_has_problem(FwupdDevice *self, FwupdDeviceProblem problem) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 guint64
-fwupd_device_get_created(FwupdDevice *self);
+fwupd_device_get_created(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_created(FwupdDevice *self, guint64 created);
+fwupd_device_set_created(FwupdDevice *self, guint64 created) G_GNUC_NON_NULL(1);
 guint64
-fwupd_device_get_modified(FwupdDevice *self);
+fwupd_device_get_modified(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_modified(FwupdDevice *self, guint64 modified);
+fwupd_device_set_modified(FwupdDevice *self, guint64 modified) G_GNUC_NON_NULL(1);
 GPtrArray *
-fwupd_device_get_checksums(FwupdDevice *self);
+fwupd_device_get_checksums(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_add_checksum(FwupdDevice *self, const gchar *checksum);
+fwupd_device_add_checksum(FwupdDevice *self, const gchar *checksum) G_GNUC_NON_NULL(1, 2);
 gboolean
-fwupd_device_has_checksum(FwupdDevice *self, const gchar *checksum) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_device_has_checksum(FwupdDevice *self, const gchar *checksum) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
 const gchar *
-fwupd_device_get_plugin(FwupdDevice *self);
+fwupd_device_get_plugin(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_plugin(FwupdDevice *self, const gchar *plugin);
+fwupd_device_set_plugin(FwupdDevice *self, const gchar *plugin) G_GNUC_NON_NULL(1);
 G_DEPRECATED_FOR(fwupd_device_get_protocols)
 const gchar *
-fwupd_device_get_protocol(FwupdDevice *self);
+fwupd_device_get_protocol(FwupdDevice *self) G_GNUC_NON_NULL(1);
 G_DEPRECATED_FOR(fwupd_device_add_protocol)
 void
-fwupd_device_set_protocol(FwupdDevice *self, const gchar *protocol);
+fwupd_device_set_protocol(FwupdDevice *self, const gchar *protocol) G_GNUC_NON_NULL(1);
 void
-fwupd_device_add_protocol(FwupdDevice *self, const gchar *protocol);
+fwupd_device_add_protocol(FwupdDevice *self, const gchar *protocol) G_GNUC_NON_NULL(1, 2);
 gboolean
-fwupd_device_has_protocol(FwupdDevice *self, const gchar *protocol) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_device_has_protocol(FwupdDevice *self, const gchar *protocol) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fwupd_device_get_protocols(FwupdDevice *self);
+fwupd_device_get_protocols(FwupdDevice *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_device_get_vendor(FwupdDevice *self);
+fwupd_device_get_vendor(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_vendor(FwupdDevice *self, const gchar *vendor);
+fwupd_device_set_vendor(FwupdDevice *self, const gchar *vendor) G_GNUC_NON_NULL(1);
 G_DEPRECATED_FOR(fwupd_device_get_vendor_ids)
 const gchar *
-fwupd_device_get_vendor_id(FwupdDevice *self);
+fwupd_device_get_vendor_id(FwupdDevice *self) G_GNUC_NON_NULL(1);
 G_DEPRECATED_FOR(fwupd_device_add_vendor_id)
 void
-fwupd_device_set_vendor_id(FwupdDevice *self, const gchar *vendor_id);
+fwupd_device_set_vendor_id(FwupdDevice *self, const gchar *vendor_id) G_GNUC_NON_NULL(1);
 void
-fwupd_device_add_vendor_id(FwupdDevice *self, const gchar *vendor_id);
+fwupd_device_add_vendor_id(FwupdDevice *self, const gchar *vendor_id) G_GNUC_NON_NULL(1, 2);
 gboolean
-fwupd_device_has_vendor_id(FwupdDevice *self, const gchar *vendor_id) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_device_has_vendor_id(FwupdDevice *self, const gchar *vendor_id) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fwupd_device_get_vendor_ids(FwupdDevice *self);
+fwupd_device_get_vendor_ids(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_add_guid(FwupdDevice *self, const gchar *guid);
+fwupd_device_add_guid(FwupdDevice *self, const gchar *guid) G_GNUC_NON_NULL(1, 2);
 gboolean
-fwupd_device_has_guid(FwupdDevice *self, const gchar *guid) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_device_has_guid(FwupdDevice *self, const gchar *guid) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fwupd_device_get_guids(FwupdDevice *self);
+fwupd_device_get_guids(FwupdDevice *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_device_get_guid_default(FwupdDevice *self);
+fwupd_device_get_guid_default(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_add_instance_id(FwupdDevice *self, const gchar *instance_id);
+fwupd_device_add_instance_id(FwupdDevice *self, const gchar *instance_id) G_GNUC_NON_NULL(1, 2);
 gboolean
-fwupd_device_has_instance_id(FwupdDevice *self, const gchar *instance_id) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_device_has_instance_id(FwupdDevice *self, const gchar *instance_id) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fwupd_device_get_instance_ids(FwupdDevice *self);
+fwupd_device_get_instance_ids(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_add_icon(FwupdDevice *self, const gchar *icon);
+fwupd_device_add_icon(FwupdDevice *self, const gchar *icon) G_GNUC_NON_NULL(1, 2);
 gboolean
-fwupd_device_has_icon(FwupdDevice *self, const gchar *icon) G_GNUC_WARN_UNUSED_RESULT;
+fwupd_device_has_icon(FwupdDevice *self, const gchar *icon) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fwupd_device_get_icons(FwupdDevice *self);
+fwupd_device_get_icons(FwupdDevice *self) G_GNUC_NON_NULL(1);
 GPtrArray *
-fwupd_device_get_issues(FwupdDevice *self);
+fwupd_device_get_issues(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_add_issue(FwupdDevice *self, const gchar *issue);
+fwupd_device_add_issue(FwupdDevice *self, const gchar *issue) G_GNUC_NON_NULL(1, 2);
 
 FwupdUpdateState
-fwupd_device_get_update_state(FwupdDevice *self);
+fwupd_device_get_update_state(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_update_state(FwupdDevice *self, FwupdUpdateState update_state);
+fwupd_device_set_update_state(FwupdDevice *self, FwupdUpdateState update_state) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_device_get_update_error(FwupdDevice *self);
+fwupd_device_get_update_error(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_update_error(FwupdDevice *self, const gchar *update_error);
+fwupd_device_set_update_error(FwupdDevice *self, const gchar *update_error) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_device_get_update_message(FwupdDevice *self);
+fwupd_device_get_update_message(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_update_message(FwupdDevice *self, const gchar *update_message);
+fwupd_device_set_update_message(FwupdDevice *self, const gchar *update_message) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_device_get_update_image(FwupdDevice *self);
+fwupd_device_get_update_image(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_update_image(FwupdDevice *self, const gchar *update_image);
+fwupd_device_set_update_image(FwupdDevice *self, const gchar *update_image) G_GNUC_NON_NULL(1);
 FwupdStatus
-fwupd_device_get_status(FwupdDevice *self);
+fwupd_device_get_status(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_status(FwupdDevice *self, FwupdStatus status);
+fwupd_device_set_status(FwupdDevice *self, FwupdStatus status) G_GNUC_NON_NULL(1);
 guint
-fwupd_device_get_percentage(FwupdDevice *self);
+fwupd_device_get_percentage(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
-fwupd_device_set_percentage(FwupdDevice *self, guint percentage);
+fwupd_device_set_percentage(FwupdDevice *self, guint percentage) G_GNUC_NON_NULL(1);
 void
-fwupd_device_add_release(FwupdDevice *self, FwupdRelease *release);
+fwupd_device_add_release(FwupdDevice *self, FwupdRelease *release) G_GNUC_NON_NULL(1);
 GPtrArray *
-fwupd_device_get_releases(FwupdDevice *self);
+fwupd_device_get_releases(FwupdDevice *self) G_GNUC_NON_NULL(1);
 FwupdRelease *
-fwupd_device_get_release_default(FwupdDevice *self);
+fwupd_device_get_release_default(FwupdDevice *self) G_GNUC_NON_NULL(1);
 gint
-fwupd_device_compare(FwupdDevice *self1, FwupdDevice *self2);
+fwupd_device_compare(FwupdDevice *self1, FwupdDevice *self2) G_GNUC_NON_NULL(1, 2);
 gboolean
-fwupd_device_match_flags(FwupdDevice *self, FwupdDeviceFlags include, FwupdDeviceFlags exclude);
+fwupd_device_match_flags(FwupdDevice *self, FwupdDeviceFlags include, FwupdDeviceFlags exclude)
+    G_GNUC_NON_NULL(1);
 
 FwupdDevice *
-fwupd_device_from_variant(GVariant *value);
+fwupd_device_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
 GPtrArray *
-fwupd_device_array_from_variant(GVariant *value);
+fwupd_device_array_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
 void
-fwupd_device_array_ensure_parents(GPtrArray *devices);
+fwupd_device_array_ensure_parents(GPtrArray *devices) G_GNUC_NON_NULL(1);
 GPtrArray *
 fwupd_device_array_filter_flags(GPtrArray *devices,
 				FwupdDeviceFlags include,
 				FwupdDeviceFlags exclude,
-				GError **error);
+				GError **error) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

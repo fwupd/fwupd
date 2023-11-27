@@ -16,6 +16,6 @@ FuHidReportItem *
 fu_hid_report_item_new(void);
 
 FuHidItemKind
-fu_hid_report_item_get_kind(FuHidReportItem *self);
+fu_hid_report_item_get_kind(FuHidReportItem *self) G_GNUC_NON_NULL(1);
 guint32
-fu_hid_report_item_get_value(FuHidReportItem *self);
+fu_hid_report_item_get_value(FuHidReportItem *self) G_GNUC_NON_NULL(1);

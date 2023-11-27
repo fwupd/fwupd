@@ -118,22 +118,23 @@ G_DECLARE_FINAL_TYPE(FuHwids, fu_hwids, FU, HWIDS, GObject)
 #define FU_HWIDS_KEY_PRODUCT_SKU "ProductSku"
 
 GPtrArray *
-fu_hwids_get_keys(FuHwids *self);
+fu_hwids_get_keys(FuHwids *self) G_GNUC_NON_NULL(1);
 const gchar *
-fu_hwids_get_value(FuHwids *self, const gchar *key);
+fu_hwids_get_value(FuHwids *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 void
-fu_hwids_add_value(FuHwids *self, const gchar *key, const gchar *value);
+fu_hwids_add_value(FuHwids *self, const gchar *key, const gchar *value) G_GNUC_NON_NULL(1, 2);
 const gchar *
-fu_hwids_get_replace_keys(FuHwids *self, const gchar *key);
+fu_hwids_get_replace_keys(FuHwids *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 gchar *
 fu_hwids_get_replace_values(FuHwids *self,
 			    const gchar *keys,
-			    GError **error) G_GNUC_WARN_UNUSED_RESULT;
+			    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gchar *
-fu_hwids_get_guid(FuHwids *self, const gchar *keys, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_hwids_get_guid(FuHwids *self, const gchar *keys, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fu_hwids_get_guids(FuHwids *self);
+fu_hwids_get_guids(FuHwids *self) G_GNUC_NON_NULL(1);
 void
-fu_hwids_add_guid(FuHwids *self, const gchar *guid);
+fu_hwids_add_guid(FuHwids *self, const gchar *guid) G_GNUC_NON_NULL(1);
 gboolean
-fu_hwids_has_guid(FuHwids *self, const gchar *guid);
+fu_hwids_has_guid(FuHwids *self, const gchar *guid) G_GNUC_NON_NULL(1);

@@ -102,8 +102,9 @@ typedef enum {
 } FuSmbiosChassisKind;
 
 const gchar *
-fu_smbios_get_string(FuSmbios *self, guint8 type, guint8 offset, GError **error);
+fu_smbios_get_string(FuSmbios *self, guint8 type, guint8 offset, GError **error) G_GNUC_NON_NULL(1);
 guint
-fu_smbios_get_integer(FuSmbios *self, guint8 type, guint8 offset, GError **error);
+fu_smbios_get_integer(FuSmbios *self, guint8 type, guint8 offset, GError **error)
+    G_GNUC_NON_NULL(1);
 GPtrArray *
-fu_smbios_get_data(FuSmbios *self, guint8 type, GError **error);
+fu_smbios_get_data(FuSmbios *self, guint8 type, GError **error) G_GNUC_NON_NULL(1);

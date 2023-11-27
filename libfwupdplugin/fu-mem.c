@@ -519,7 +519,7 @@ fu_memmem_safe(const guint8 *haystack,
 
 /**
  * fu_memdup_safe:
- * @src: source buffer
+ * @src: (nullable): source buffer
  * @n: number of bytes to copy from @src
  * @error: (nullable): optional return location for an error
  *

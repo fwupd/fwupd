@@ -18,7 +18,7 @@ fwupd_client_download_bytes2_async(FwupdClient *self,
 				   FwupdClientDownloadFlags flags,
 				   GCancellable *cancellable,
 				   GAsyncReadyCallback callback,
-				   gpointer callback_data);
+				   gpointer callback_data) G_GNUC_NON_NULL(1, 2);
 
 #ifdef HAVE_GIO_UNIX
 void
@@ -26,7 +26,7 @@ fwupd_client_get_details_stream_async(FwupdClient *self,
 				      GUnixInputStream *istr,
 				      GCancellable *cancellable,
 				      GAsyncReadyCallback callback,
-				      gpointer callback_data);
+				      gpointer callback_data) G_GNUC_NON_NULL(1, 2);
 void
 fwupd_client_install_stream_async(FwupdClient *self,
 				  const gchar *device_id,
@@ -35,7 +35,7 @@ fwupd_client_install_stream_async(FwupdClient *self,
 				  FwupdInstallFlags install_flags,
 				  GCancellable *cancellable,
 				  GAsyncReadyCallback callback,
-				  gpointer callback_data);
+				  gpointer callback_data) G_GNUC_NON_NULL(1, 2, 3);
 void
 fwupd_client_update_metadata_stream_async(FwupdClient *self,
 					  const gchar *remote_id,
@@ -43,5 +43,5 @@ fwupd_client_update_metadata_stream_async(FwupdClient *self,
 					  GUnixInputStream *istr_sig,
 					  GCancellable *cancellable,
 					  GAsyncReadyCallback callback,
-					  gpointer callback_data);
+					  gpointer callback_data) G_GNUC_NON_NULL(1, 2, 3, 4);
 #endif
