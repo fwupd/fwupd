@@ -508,7 +508,7 @@ conf.set_quoted('FWUPD_LOCALEDIR', localedir)
 
 if build_standalone
 if host_machine.system() == 'windows'
-  libdir_pkg = 'fwupd-@0@'.format(fwupd_version)
+  libdir_pkg = bindir
 else
   libdir_pkg = join_paths(libdir, 'fwupd-@0@'.format(fwupd_version))
 endif
