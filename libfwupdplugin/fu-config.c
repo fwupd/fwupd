@@ -121,6 +121,7 @@ fu_config_reload(FuConfig *self, GError **error)
 				   "uefi_capsule.conf",
 				   NULL};
 
+#ifndef _WIN32
 	/* ensure mutable config files are set to the correct permissions */
 	for (guint i = 0; i < priv->items->len; i++) {
 		FuConfigItem *item = g_ptr_array_index(priv->items, i);
@@ -156,6 +157,7 @@ fu_config_reload(FuConfig *self, GError **error)
 				return FALSE;
 		}
 	}
+#endif
 
 	/* we have to load each file into a buffer as g_key_file_load_from_file() clears the
 	 * GKeyFile state before loading each file, and we want to allow the mutable version to be
