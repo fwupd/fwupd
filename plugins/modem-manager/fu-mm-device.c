@@ -34,21 +34,6 @@
 /* Amount of time for the modem to get firmware version */
 #define MAX_WAIT_TIME_SECS 240 /* s */
 
-/**
- * FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE
- *
- * If no AT response is expected when entering fastboot mode.
- */
-#define FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE (1 << 0)
-
-/**
- * FU_MM_DEVICE_FLAG_USE_BRANCH
- *
- * Use the carrier (e.g. `VODAFONE`) as the device branch name so that `fwupdmgr sync` can
- * upgrade or downgrade the firmware as required.
- */
-#define FU_MM_DEVICE_FLAG_USE_BRANCH (1 << 1)
-
 struct _FuMmDevice {
 	FuDevice parent_instance;
 	MMManager *manager;
