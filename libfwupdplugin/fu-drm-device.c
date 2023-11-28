@@ -131,7 +131,6 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 	FuDrmDevice *self = FU_DRM_DEVICE(device);
 	FuDrmDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *sysfs_path = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
-	const gchar *parent_path;
 	const gchar *tmp;
 	g_autofree gchar *physical_id = g_path_get_basename(sysfs_path);
 
@@ -160,8 +159,8 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 
 	/* set the parent */
 	parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self), "pci");
-	parent_path = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(parent));
-	fu_device_add_parent_backend_id(device, parent_path);
+	if (parent != NULL)
+		fu_device_add_parent_backend_id(device, fu_udev_device_get_sysfs_path(parent));
 
 	/* read EDID and parse it */
 	if (priv->display_state == FU_DISPLAY_STATE_CONNECTED) {
