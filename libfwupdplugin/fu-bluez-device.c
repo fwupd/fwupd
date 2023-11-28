@@ -607,6 +607,9 @@ fu_bluez_device_incorporate(FuDevice *self, FuDevice *donor)
 	FuBluezDevicePrivate *priv = GET_PRIVATE(uself);
 	FuBluezDevicePrivate *privdonor = GET_PRIVATE(udonor);
 
+	g_return_if_fail(FU_IS_BLUEZ_DEVICE(self));
+	g_return_if_fail(FU_IS_BLUEZ_DEVICE(donor));
+
 	if (g_hash_table_size(priv->uuids) == 0) {
 		GHashTableIter iter;
 		gpointer key, value;

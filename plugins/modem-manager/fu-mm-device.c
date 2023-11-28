@@ -1911,6 +1911,9 @@ fu_mm_device_incorporate(FuDevice *device, FuDevice *donor_device)
 	FuMmDevice *self = FU_MM_DEVICE(device);
 	FuMmDevice *donor = FU_MM_DEVICE(donor_device);
 
+	g_return_if_fail(FU_IS_MM_DEVICE(self));
+	g_return_if_fail(FU_IS_MM_DEVICE(donor));
+
 	self->update_methods = fu_mm_device_get_update_methods(donor);
 	self->detach_fastboot_at = g_strdup(donor->detach_fastboot_at);
 	self->inhibition_uid = g_strdup(fu_mm_device_get_inhibition_uid(donor));
