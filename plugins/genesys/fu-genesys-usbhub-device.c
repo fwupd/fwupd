@@ -1650,8 +1650,10 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		fu_device_add_instance_strup(device, "VENDORSUP", guid);
 	}
 
-	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "IC", NULL);
-	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "IC", "BONDING", NULL);
+	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "IC", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "IC", "BONDING", NULL))
+		return FALSE;
 	fu_device_build_instance_id(device,
 				    NULL,
 				    "USB",
