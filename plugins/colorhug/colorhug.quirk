@@ -10,6 +10,7 @@ InstallDuration = 8
 
 # ColorHug1: first batch!
 [USB\VID_04D8&PID_F8DA]
+Plugin = colorhug
 Flags = legacy-vidpid
 
 [USB\VID_273F&PID_1001]
