@@ -220,6 +220,9 @@ fu_corsair_bp_incorporate(FuDevice *self, FuDevice *donor)
 	FuCorsairBp *bp_self = FU_CORSAIR_BP(self);
 	FuCorsairBp *bp_donor = FU_CORSAIR_BP(donor);
 
+	g_return_if_fail(FU_IS_CORSAIR_BP(self));
+	g_return_if_fail(FU_IS_CORSAIR_BP(donor));
+
 	/* FuUsbDevice */
 	FU_DEVICE_CLASS(fu_corsair_bp_parent_class)->incorporate(self, donor);
 
