@@ -7470,7 +7470,7 @@ fu_engine_backend_device_changed_cb(FuBackend *backend, FuDevice *device, FuEngi
 			}
 			g_warning("%s failed to change device %s: %s",
 				  fu_plugin_get_name(plugin_tmp),
-				  fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)),
+				  fu_device_get_id(device),
 				  error->message);
 		}
 	}
