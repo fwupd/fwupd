@@ -1591,14 +1591,16 @@ fu_genesys_scaler_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_str(device, "MSTAR", "TSUM_G");
 	fu_device_add_instance_strup(device, "PUBKEY", guid);
 	fu_device_add_instance_strup(device, "PANELREV", panelrev);
-	fu_device_build_instance_id(device, NULL, "GENESYS_SCALER", "MSTAR", "PUBKEY", NULL);
-	fu_device_build_instance_id(device,
-				    NULL,
-				    "GENESYS_SCALER",
-				    "MSTAR",
-				    "PUBKEY",
-				    "PANELREV",
-				    NULL);
+	if (!fu_device_build_instance_id(device, error, "GENESYS_SCALER", "MSTAR", "PUBKEY", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device,
+					 error,
+					 "GENESYS_SCALER",
+					 "MSTAR",
+					 "PUBKEY",
+					 "PANELREV",
+					 NULL))
+		return FALSE;
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 
