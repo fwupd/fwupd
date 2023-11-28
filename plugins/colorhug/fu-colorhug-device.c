@@ -21,6 +21,15 @@
  */
 #define FU_COLORHUG_DEVICE_FLAG_HALFSIZE (1 << 0)
 
+/**
+ * FU_COLORHUG_DEVICE_FLAG_LEGACY_VIDPID:
+ *
+ * Early devices used the same VID/PID for firmware and bootloader mode.
+ *
+ * Since: 1.9.10
+ */
+#define FU_COLORHUG_DEVICE_FLAG_LEGACY_VIDPID (1 << 1)
+
 struct _FuColorhugDevice {
 	FuUsbDevice parent_instance;
 	guint16 start_addr;
@@ -390,6 +399,23 @@ fu_colorhug_device_setup(FuDevice *device, GError **error)
 			g_debug("obtained fwver using API '%s'", version);
 			fu_device_set_version(device, version);
 			fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+			if (fu_device_has_private_flag(device,
+						       FU_COLORHUG_DEVICE_FLAG_LEGACY_VIDPID)) {
+				if (g_str_has_prefix(version, "0.")) {
+					fu_device_add_instance_id_full(
+					    device,
+					    "USB\\VID_273F&PID_1000",
+					    FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+					fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+				} else {
+					fu_device_add_instance_id_full(
+					    device,
+					    "USB\\VID_273F&PID_1001",
+					    FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+					fu_device_remove_flag(device,
+							      FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+				}
+			}
 		} else {
 			g_warning("failed to get firmware version: %s", error_local->message);
 		}
@@ -585,6 +611,9 @@ fu_colorhug_device_init(FuColorhugDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_COLORHUG_DEVICE_FLAG_HALFSIZE,
 					"halfsize");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_COLORHUG_DEVICE_FLAG_LEGACY_VIDPID,
+					"legacy-vidpid");
 	fu_usb_device_set_configuration(FU_USB_DEVICE(self), CH_USB_CONFIG);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), CH_USB_INTERFACE);
 }
