@@ -16,7 +16,7 @@ struct _FuAverHidDevice {
 
 G_DEFINE_TYPE(FuAverHidDevice, fu_aver_hid_device, FU_TYPE_HID_DEVICE)
 
-#define FU_AVER_HID_DEVICE_TIMEOUT		    5000 /* ms */
+#define FU_AVER_HID_DEVICE_TIMEOUT		    200 /* ms */
 #define FU_AVER_HID_DEVICE_GET_STATUS_POLL_INTERVAL 1000 /* ms */
 #define FU_AVER_HID_DEVICE_POLL_INTERVAL	    5000 /* ms */
 #define FU_AVER_HID_DEVICE_ISP_RETRY_COUNT	    300
