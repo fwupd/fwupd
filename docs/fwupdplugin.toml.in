@@ -45,6 +45,7 @@ content_files = [
   "env.md",
   "tutorial.md",
   "hsi.md",
+  "device-emulation.md",
   "ds20.md",
   "hwids.md",
   "bios-settings.md",
