@@ -382,6 +382,9 @@ fu_vli_usbhub_device_spi_write_data(FuVliDevice *self,
 					   error)) {
 		return FALSE;
 	}
+
+	/* patch for PUYA flash write data command */
+	fu_device_sleep(FU_DEVICE(self), 1); /* ms */
 	return TRUE;
 }
 
@@ -772,6 +775,9 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 	/* FuUsbDevice->ready */
 	if (!FU_DEVICE_CLASS(fu_vli_usbhub_device_parent_class)->ready(device, error))
 		return FALSE;
+
+	/* to expose U3 hub, wait until fw is stable before sending VDR */
+	fu_device_sleep(FU_DEVICE(self), 100); /* ms */
 
 	/* try to read a block of data which will fail for 813-type devices */
 	if (fu_device_has_private_flag(device, FU_VLI_USBHUB_DEVICE_FLAG_UNLOCK_LEGACY813) &&
