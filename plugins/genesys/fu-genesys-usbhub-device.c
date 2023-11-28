@@ -1027,6 +1027,51 @@ fu_genesys_tsdigit_value(gchar c)
 }
 
 static gboolean
+fu_genesys_usbhub_device_validate_token(FuGenesysUsbhubDevice *self, GError **error)
+{
+	const gchar *valid_tokens[] = {"GL 3.0 Hub", "GL 3.1 Hub", NULL};
+	g_autofree gchar *token = NULL;
+	g_autoptr(GBytes) token_blob = NULL;
+	g_autoptr(GBytes) token_blob_trunc = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* get 0x80 string descriptor */
+	token_blob = g_usb_device_get_string_descriptor_bytes_full(
+	    fu_usb_device_get_dev(FU_USB_DEVICE(self)),
+	    0x80,
+	    G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
+	    64,
+	    &error_local);
+	if (token_blob == NULL) {
+		if (g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_IO)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "cannot get 0x80 string descriptor: %s",
+				    error_local->message);
+			return FALSE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+	token_blob_trunc =
+	    fu_bytes_new_offset(token_blob, 0x2, g_bytes_get_size(token_blob) - 0x2, error);
+	if (token_blob_trunc == NULL)
+		return FALSE;
+	token = fu_utf16_to_utf8_bytes(token_blob_trunc, G_LITTLE_ENDIAN, error);
+	if (token == NULL)
+		return FALSE;
+
+	/* supported strings */
+	if (g_strv_contains(valid_tokens, token))
+		return TRUE;
+
+	/* failed */
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "is not a valid hub: %s", token);
+	return FALSE;
+}
+
+static gboolean
 fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 						 const guint8 *buf,
 						 gsize bufsz,
@@ -1399,6 +1444,13 @@ fu_genesys_usbhub_device_probe(FuDevice *device, GError **error)
 				    "is not a usb hub");
 		return FALSE;
 	}
+	if (g_usb_device_get_spec(usb_device) < 0x210) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unsupported USB2 hub");
+		return FALSE;
+	}
 	if (g_usb_device_get_spec(usb_device) >= 0x300) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -1466,6 +1518,10 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "error setting up device: ");
 		return FALSE;
 	}
+
+	/* validate by string token */
+	if (!fu_genesys_usbhub_device_validate_token(self, error))
+		return FALSE;
 
 	/* [DEBUG] - additional info from device:
 	 * release version: g_usb_device_get_release(usb_device)
