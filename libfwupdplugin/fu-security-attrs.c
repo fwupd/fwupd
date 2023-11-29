@@ -248,10 +248,8 @@ fu_security_attrs_calculate_hsi(FuSecurityAttrs *self, FuSecurityAttrsFlags flag
 		}
 
 		/* abort */
-		if (failure_cnt > 0) {
-			hsi_number = j - 1;
+		if (failure_cnt > 0)
 			break;
-		}
 
 		/* we matched at least one thing on this level */
 		if (success_cnt > 0)
