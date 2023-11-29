@@ -357,14 +357,10 @@ fu_colorhug_device_version_notify_cb(FuDevice *device, GParamSpec *pspec, gpoint
 		return;
 	if (fu_device_has_private_flag(device, FU_COLORHUG_DEVICE_FLAG_LEGACY_VIDPID)) {
 		if (g_str_has_prefix(version, "0.")) {
-			fu_device_add_instance_id_full(device,
-						       "USB\\VID_273F&PID_1000",
-						       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+			fu_device_add_instance_id(device, "USB\\VID_273F&PID_1000");
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		} else {
-			fu_device_add_instance_id_full(device,
-						       "USB\\VID_273F&PID_1001",
-						       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+			fu_device_add_instance_id(device, "USB\\VID_273F&PID_1001");
 			fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		}
 	}
