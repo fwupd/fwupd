@@ -1802,19 +1802,7 @@ fu_engine_sort_release_device_order_release_version_cb(gconstpointer a, gconstpo
 {
 	FuRelease *na = *((FuRelease **)a);
 	FuRelease *nb = *((FuRelease **)b);
-	FuDevice *device1 = fu_release_get_device(na);
-	FuDevice *device2 = fu_release_get_device(nb);
-	const gchar *va = fu_release_get_version(na);
-	const gchar *vb = fu_release_get_version(nb);
-
-	/* FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST takes precedence */
-	if (fu_device_get_order(device1) < fu_device_get_order(device2))
-		return -1;
-	if (fu_device_get_order(device1) > fu_device_get_order(device2))
-		return 1;
-
-	/* FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES has to be from oldest to newest */
-	return fu_version_compare(va, vb, fu_device_get_version_format(device1));
+	return fu_release_compare(na, nb);
 }
 
 /**
