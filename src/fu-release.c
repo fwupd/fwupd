@@ -1220,10 +1220,12 @@ fu_release_compare(FuRelease *release1, FuRelease *release2)
 	FuDevice *device2 = fu_release_get_device(release2);
 
 	/* device order, lower is better */
-	if (fu_device_get_order(device1) < fu_device_get_order(device2))
-		return -1;
-	if (fu_device_get_order(device1) > fu_device_get_order(device2))
-		return 1;
+	if (device1 != NULL && device2 != NULL && device1 != device2) {
+		if (fu_device_get_order(device1) < fu_device_get_order(device2))
+			return -1;
+		if (fu_device_get_order(device1) > fu_device_get_order(device2))
+			return 1;
+	}
 
 	/* release priority, higher is better */
 	if (release1->priority > release2->priority)
