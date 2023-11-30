@@ -156,6 +156,11 @@ main(int argc, char *argv[])
 	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 	textdomain(GETTEXT_PACKAGE);
 
+#ifndef SUPPORTED_BUILD
+	/* make critical warnings fatal */
+	(void)g_setenv("G_DEBUG", "fatal-criticals", FALSE);
+#endif
+
 	/* verify this is pointing to our cache */
 	link = g_file_read_link(trigger, NULL);
 	if (link == NULL)

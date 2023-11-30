@@ -760,6 +760,11 @@ main(int argc, char *argv[])
 	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 	textdomain(GETTEXT_PACKAGE);
 
+#ifndef SUPPORTED_BUILD
+	/* make critical warnings fatal */
+	(void)g_setenv("G_DEBUG", "fatal-criticals", FALSE);
+#endif
+
 	/* add commands */
 	self->cmd_array = g_ptr_array_new_with_free_func((GDestroyNotify)fu_dfu_tool_item_free);
 	fu_dfu_tool_add(self->cmd_array,

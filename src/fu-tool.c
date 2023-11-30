@@ -3980,6 +3980,11 @@ main(int argc, char *argv[])
 	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 	textdomain(GETTEXT_PACKAGE);
 
+#ifndef SUPPORTED_BUILD
+	/* make critical warnings fatal */
+	(void)g_setenv("G_DEBUG", "fatal-criticals", FALSE);
+#endif
+
 	/* create helper object */
 	priv->lock_fd = -1;
 	priv->main_ctx = g_main_context_new();
