@@ -412,19 +412,6 @@ fu_cpu_device_add_security_attrs_intel_smap(FuCpuDevice *self, FuSecurityAttrs *
 }
 
 static void
-fu_cpu_device_add_supported_cpu_attribute(FuCpuDevice *self, FuSecurityAttrs *attrs)
-{
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
-
-	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU);
-	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
-	fu_security_attrs_append(attrs, attr);
-}
-
-static void
 fu_cpu_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 {
 	FuCpuDevice *self = FU_CPU_DEVICE(device);
@@ -436,8 +423,6 @@ fu_cpu_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 		fu_cpu_device_add_security_attrs_intel_tme(self, attrs);
 		fu_cpu_device_add_security_attrs_intel_smap(self, attrs);
 	}
-
-	fu_cpu_device_add_supported_cpu_attribute(self, attrs);
 }
 
 static void

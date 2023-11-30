@@ -78,12 +78,13 @@ fu_pci_psp_device_set_valid_data(FuDevice *device, FuSecurityAttrs *attrs)
 	if (self->supported)
 		return;
 
-	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU);
-	fwupd_security_attr_add_obsolete(attr, "cpu");
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
-	fu_security_attrs_append(attrs, attr);
+	/* CPU supported */
 	self->supported = TRUE;
+	attr = fu_security_attrs_get_by_appstream_id(attrs,
+						     FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU,
+						     NULL);
+	if (attr != NULL)
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
 static void
