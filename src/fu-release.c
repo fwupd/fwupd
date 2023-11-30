@@ -834,9 +834,6 @@ fu_release_load(FuRelease *self,
 	tmp = xb_node_query_text(component, "developer_name", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_vendor(FWUPD_RELEASE(self), tmp);
-	tmp64 = xb_node_get_attr_as_uint(component, "priority");
-	if (tmp64 != G_MAXUINT64)
-		fu_release_set_priority(self, tmp64);
 
 	/* use default release */
 	if (rel_optional == NULL) {
@@ -881,6 +878,13 @@ fu_release_load(FuRelease *self,
 			fu_device_ensure_from_component(self->device, component);
 		}
 	}
+
+	/* per-release priority wins, but fallback to per-component priority */
+	tmp64 = xb_node_get_attr_as_uint(rel, "priority");
+	if (tmp64 == G_MAXUINT64)
+		tmp64 = xb_node_get_attr_as_uint(component, "priority");
+	if (tmp64 != G_MAXUINT64)
+		fu_release_set_priority(self, tmp64);
 
 	/* the version is fixed up with the device format */
 	tmp = xb_node_get_attr(rel, "version");
