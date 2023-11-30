@@ -1232,7 +1232,7 @@ fu_release_compare(FuRelease *release1, FuRelease *release2)
 		return 1;
 
 	/* remote priority, higher is better */
-	if (release1->remote != NULL && release2->remote) {
+	if (release1->remote != NULL && release2->remote != NULL) {
 		if (fwupd_remote_get_priority(release1->remote) >
 		    fwupd_remote_get_priority(release2->remote))
 			return -1;
