@@ -498,6 +498,10 @@ fu_util_build_device_tree_cb(GNode *n, gpointer user_data)
 	if (dev == NULL)
 		return FALSE;
 
+	/* release */
+	if (FWUPD_IS_RELEASE(n->data))
+		return FALSE;
+
 	/* an interesting child, so include the parent */
 	for (GNode *c = n->children; c != NULL; c = c->next) {
 		if (c->data != NULL)
