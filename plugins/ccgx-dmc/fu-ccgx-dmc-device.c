@@ -191,35 +191,25 @@ fu_ccgx_dmc_device_send_soft_reset(FuCcgxDmcDevice *self, gboolean reset_later, 
 }
 
 static gboolean
-fu_ccgx_dmc_device_send_start_upgrade(FuCcgxDmcDevice *self,
-				      const guint8 *buf,
-				      guint16 bufsz,
-				      GError **error)
+fu_ccgx_dmc_device_send_start_upgrade(FuCcgxDmcDevice *self, GBytes *fw, GError **error)
 {
-	guint16 value = 0;
+	gsize bufsz = 0;
+	const guint8 *buf = NULL;
 	g_autofree guint8 *buf_mut = NULL;
 
-	buf_mut = fu_memdup_safe(buf, bufsz, error);
-	if (buf_mut == NULL)
-		return FALSE;
-
-	if (bufsz > 0)
-		value = 1;
-
-	if (bufsz > 0 && buf == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "invalid metadata, buffer is NULL but size = %d",
-			    bufsz);
-		return FALSE;
+	if (fw != NULL)
+		buf = g_bytes_get_data(fw, &bufsz);
+	if (bufsz > 0) {
+		buf_mut = fu_memdup_safe(buf, bufsz, error);
+		if (buf_mut == NULL)
+			return FALSE;
 	}
 	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					   G_USB_DEVICE_RECIPIENT_DEVICE,
 					   FU_CCGX_DMC_RQT_CODE_UPGRADE_START, /* request */
-					   value,			       /* value */
+					   bufsz > 0 ? 1 : 0,		       /* value */
 					   1,	    /* index, forced update */
 					   buf_mut, /* data */
 					   bufsz,   /* length */
@@ -523,10 +513,8 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 	GBytes *custom_meta_blob;
 	GBytes *fwct_blob;
 	GPtrArray *image_records;
-	const guint8 *custom_meta_data = NULL;
 	const guint8 *fwct_buf = NULL;
 	const guint8 *rqt_data = NULL;
-	gsize custom_meta_bufsz = 0;
 	gsize fwct_sz = 0;
 	gsize fw_data_size = 0;
 	gsize fw_data_written = 0;
@@ -554,22 +542,15 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	/* get custom meta record */
-	custom_meta_blob =
-	    fu_ccgx_dmc_firmware_get_custom_meta_record(FU_CCGX_DMC_FIRMWARE(firmware));
-	if (custom_meta_blob != NULL)
-		custom_meta_data = g_bytes_get_data(custom_meta_blob, &custom_meta_bufsz);
-
 	/* reset */
 	if (!fu_ccgx_dmc_device_send_reset_state_machine(self, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* start fw upgrade with custom metadata */
-	if (!fu_ccgx_dmc_device_send_start_upgrade(self,
-						   custom_meta_data,
-						   custom_meta_bufsz,
-						   error))
+	custom_meta_blob =
+	    fu_ccgx_dmc_firmware_get_custom_meta_record(FU_CCGX_DMC_FIRMWARE(firmware));
+	if (!fu_ccgx_dmc_device_send_start_upgrade(self, custom_meta_blob, error))
 		return FALSE;
 
 	/* send fwct data */
