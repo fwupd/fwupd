@@ -1934,9 +1934,8 @@ fu_engine_update_release_integrity(FuEngine *self, FwupdRelease *release, const 
 }
 
 static gboolean
-fu_engine_add_release_metadata(FuEngine *self, FuRelease *release, FuPlugin *plugin, GError **error)
+fu_engine_add_release_metadata(FuEngine *self, FuRelease *release, GError **error)
 {
-	GPtrArray *metadata_sources;
 	g_autoptr(GHashTable) metadata_device = NULL;
 	g_autoptr(GHashTable) metadata_hash = NULL;
 
@@ -1945,11 +1944,23 @@ fu_engine_add_release_metadata(FuEngine *self, FuRelease *release, FuPlugin *plu
 	if (metadata_hash == NULL)
 		return FALSE;
 	fu_release_add_metadata(release, metadata_hash);
-	if (fu_plugin_get_report_metadata(plugin) != NULL)
-		fu_release_add_metadata(release, fu_plugin_get_report_metadata(plugin));
 	metadata_device = fu_device_report_metadata_pre(fu_release_get_device(release));
 	if (metadata_device != NULL)
 		fu_release_add_metadata(release, metadata_device);
+	return TRUE;
+}
+
+static gboolean
+fu_engine_add_release_plugin_metadata(FuEngine *self,
+				      FuRelease *release,
+				      FuPlugin *plugin,
+				      GError **error)
+{
+	GPtrArray *metadata_sources;
+
+	/* build the version metadata */
+	if (fu_plugin_get_report_metadata(plugin) != NULL)
+		fu_release_add_metadata(release, fu_plugin_get_report_metadata(plugin));
 
 	/* allow other plugins to contribute metadata too */
 	metadata_sources = fu_plugin_get_rules(plugin, FU_PLUGIN_RULE_METADATA_SOURCE);
@@ -2312,13 +2323,18 @@ fu_engine_install_release(FuEngine *self,
 	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0 && !fu_engine_is_running_offline(self)) {
 		FuPlugin *plugin_tmp =
 		    fu_plugin_list_find_by_name(self->plugin_list, "upower", NULL);
+		if (!fu_engine_add_release_metadata(self, release, error))
+			return FALSE;
 		if (plugin_tmp != NULL) {
 			if (!fu_plugin_runner_prepare(plugin_tmp, device, progress, flags, error))
 				return FALSE;
+			if (!fu_engine_add_release_plugin_metadata(self,
+								   release,
+								   plugin_tmp,
+								   error))
+				return FALSE;
 		}
 		fu_progress_set_status(progress, FWUPD_STATUS_SCHEDULING);
-		if (!fu_engine_add_release_metadata(self, release, plugin_tmp, error))
-			return FALSE;
 		return fu_engine_schedule_update(self,
 						 device,
 						 FWUPD_RELEASE(release),
@@ -2348,7 +2364,9 @@ fu_engine_install_release(FuEngine *self,
 
 	/* add device to database */
 	if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0) {
-		if (!fu_engine_add_release_metadata(self, release, plugin, error))
+		if (!fu_engine_add_release_metadata(self, release, error))
+			return FALSE;
+		if (!fu_engine_add_release_plugin_metadata(self, release, plugin, error))
 			return FALSE;
 		if (!fu_history_add_device(self->history, device, FWUPD_RELEASE(release), error))
 			return FALSE;
