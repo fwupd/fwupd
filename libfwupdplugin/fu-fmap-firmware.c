@@ -158,7 +158,9 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 	/* add the images */
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
-		g_autoptr(GBytes) fw = fu_firmware_get_bytes_with_patches(img, NULL);
+		g_autoptr(GBytes) fw = fu_firmware_get_bytes_with_patches(img, error);
+		if (fw == NULL)
+			return NULL;
 		fu_byte_array_append_bytes(buf, fw);
 	}
 
