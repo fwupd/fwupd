@@ -139,6 +139,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_FLAGS "Flags"
 /**
+ * FWUPD_RESULT_KEY_REQUEST_FLAGS:
+ *
+ * Result key to represent RequestFlags
+ *
+ * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
+ **/
+#define FWUPD_RESULT_KEY_REQUEST_FLAGS "RequestFlags"
+/**
  * FWUPD_RESULT_KEY_FLASHES_LEFT:
  *
  * Result key to represent FlashesLeft

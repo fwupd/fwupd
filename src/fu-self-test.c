@@ -2908,6 +2908,7 @@ fu_engine_install_request(gconstpointer user_data)
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_request_flag(device, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	fu_device_set_created(device, 1515338000);
 	fu_engine_add_device(engine, device);
 	devices = fu_engine_get_devices(engine, &error);

@@ -686,6 +686,7 @@ fu_vli_usbhub_device_guess_kind(FuVliUsbhubDevice *self, GError **error)
 static gboolean
 fu_vli_usbhub_device_probe(FuDevice *device, GError **error)
 {
+	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE(device);
 	guint16 usbver = fu_usb_device_get_spec(FU_USB_DEVICE(device));
 
 	/* quirks now applied... */
@@ -700,6 +701,14 @@ fu_vli_usbhub_device_probe(FuDevice *device, GError **error)
 	} else {
 		fu_device_set_summary(device, "USB hub");
 	}
+
+	/* only some required */
+	if (fu_device_has_private_flag(device, FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_USB_CABLE) ||
+	    fu_device_has_private_flag(device, FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_POWER_CORD)) {
+		fu_device_add_request_flag(FU_DEVICE(self),
+					   FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	}
+
 	return TRUE;
 }
 

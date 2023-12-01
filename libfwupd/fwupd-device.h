@@ -10,6 +10,7 @@
 
 #include "fwupd-enums.h"
 #include "fwupd-release.h"
+#include "fwupd-request.h"
 
 G_BEGIN_DECLS
 
@@ -151,6 +152,19 @@ void
 fwupd_device_remove_problem(FwupdDevice *self, FwupdDeviceProblem problem) G_GNUC_NON_NULL(1);
 gboolean
 fwupd_device_has_problem(FwupdDevice *self, FwupdDeviceProblem problem) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
+guint64
+fwupd_device_get_request_flags(FwupdDevice *self) G_GNUC_NON_NULL(1);
+void
+fwupd_device_set_request_flags(FwupdDevice *self, guint64 request_flags) G_GNUC_NON_NULL(1);
+void
+fwupd_device_add_request_flag(FwupdDevice *self, FwupdRequestFlags request_flag) G_GNUC_NON_NULL(1);
+void
+fwupd_device_remove_request_flag(FwupdDevice *self, FwupdRequestFlags request_flag)
+    G_GNUC_NON_NULL(1);
+gboolean
+fwupd_device_has_request_flag(FwupdDevice *self,
+			      FwupdRequestFlags request_flag) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 guint64
 fwupd_device_get_created(FwupdDevice *self) G_GNUC_NON_NULL(1);

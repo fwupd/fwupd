@@ -751,6 +751,11 @@ fu_ccgx_dmc_device_setup(FuDevice *device, GError **error)
 	else
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 
+	if (fu_device_has_private_flag(device, FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG)) {
+		fu_device_add_request_flag(FU_DEVICE(self),
+					   FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	}
+
 	return TRUE;
 }
 
