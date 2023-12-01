@@ -3379,7 +3379,7 @@ fwupd_device_from_json(FwupdDevice *self, JsonNode *json_node, GError **error)
 		JsonArray *array = json_object_get_array_member(obj, FWUPD_RESULT_KEY_PROBLEMS);
 		for (guint i = 0; i < json_array_get_length(array); i++) {
 			const gchar *tmp = json_array_get_string_element(array, i);
-			fwupd_device_add_problem(self, fwupd_device_flag_from_string(tmp));
+			fwupd_device_add_problem(self, fwupd_device_problem_from_string(tmp));
 		}
 	}
 	if (json_object_has_member(obj, "VendorIds")) {
