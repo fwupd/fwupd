@@ -27,6 +27,9 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuCabFirmware, fu_cab_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_cab_firmware_get_instance_private(o))
 
+#define FU_CAB_FIRMWARE_MAX_FILES   1024
+#define FU_CAB_FIRMWARE_MAX_FOLDERS 64
+
 /**
  * fu_cab_firmware_get_compressed:
  * @self: a #FuCabFirmware
@@ -506,11 +509,30 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 				    "chained archive not supported");
 		return FALSE;
 	}
-	if (fu_struct_cab_header_get_nr_files(st) == 0) {
+	if (fu_struct_cab_header_get_nr_folders(st) == 0 ||
+	    fu_struct_cab_header_get_nr_files(st) == 0) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_NOT_SUPPORTED,
 				    "archive is empty");
+		return FALSE;
+	}
+	if (fu_struct_cab_header_get_nr_folders(st) > FU_CAB_FIRMWARE_MAX_FOLDERS) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "too many CFFOLDERS, parsed %u and limit was %u",
+			    fu_struct_cab_header_get_nr_folders(st),
+			    (guint)FU_CAB_FIRMWARE_MAX_FOLDERS);
+		return FALSE;
+	}
+	if (fu_struct_cab_header_get_nr_files(st) > FU_CAB_FIRMWARE_MAX_FILES) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "too many CFFILES, parsed %u and limit was %u",
+			    fu_struct_cab_header_get_nr_files(st),
+			    (guint)FU_CAB_FIRMWARE_MAX_FILES);
 		return FALSE;
 	}
 	off_cffile = fu_struct_cab_header_get_off_cffile(st);
