@@ -413,9 +413,13 @@ fu_goodixtp_brlb_device_write_image(FuGoodixtpBrlbDevice *self,
 				    FuProgress *progress,
 				    GError **error)
 {
-	g_autoptr(GBytes) blob = fu_firmware_get_bytes(img, NULL);
-	g_autoptr(FuChunkArray) chunks =
-	    fu_chunk_array_new_from_bytes(blob, fu_firmware_get_addr(img), RAM_BUFFER_SIZE);
+	g_autoptr(FuChunkArray) chunks = NULL;
+	g_autoptr(GBytes) blob = NULL;
+
+	blob = fu_firmware_get_bytes(img, error);
+	if (blob == NULL)
+		return FALSE;
+	chunks = fu_chunk_array_new_from_bytes(blob, fu_firmware_get_addr(img), RAM_BUFFER_SIZE);
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
