@@ -1001,3 +1001,13 @@ LIBFWUPD_1.9.8 {
     fwupd_remote_build_metadata_uri;
   local: *;
 } LIBFWUPD_1.9.6;
+
+LIBFWUPD_1.9.10 {
+  global:
+    fwupd_device_add_request_flag;
+    fwupd_device_get_request_flags;
+    fwupd_device_has_request_flag;
+    fwupd_device_remove_request_flag;
+    fwupd_device_set_request_flags;
+  local: *;
+} LIBFWUPD_1.9.8;

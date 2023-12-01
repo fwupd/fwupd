@@ -5171,7 +5171,7 @@ fu_engine_get_releases_for_device(FuEngine *self,
 
 	/* only show devices that can be updated */
 	if (!fu_engine_request_has_feature_flag(request, FWUPD_FEATURE_FLAG_REQUESTS_NON_GENERIC) &&
-	    fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST)) {
+	    fu_device_has_request_flag(device, FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

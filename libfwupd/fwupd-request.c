@@ -105,6 +105,10 @@ fwupd_request_flag_to_string(FwupdRequestFlags flag)
 		return "allow-generic-message";
 	if (flag == FWUPD_REQUEST_FLAG_ALLOW_GENERIC_IMAGE)
 		return "allow-generic-image";
+	if (flag == FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE)
+		return "non-generic-message";
+	if (flag == FWUPD_REQUEST_FLAG_NON_GENERIC_IMAGE)
+		return "non-generic-image";
 	return NULL;
 }
 
@@ -125,6 +129,10 @@ fwupd_request_flag_from_string(const gchar *flag)
 		return FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE;
 	if (g_strcmp0(flag, "allow-generic-image") == 0)
 		return FWUPD_REQUEST_FLAG_ALLOW_GENERIC_IMAGE;
+	if (g_strcmp0(flag, "non-generic-message") == 0)
+		return FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE;
+	if (g_strcmp0(flag, "non-generic-image") == 0)
+		return FWUPD_REQUEST_FLAG_NON_GENERIC_IMAGE;
 	return FWUPD_REQUEST_FLAG_NONE;
 }
 

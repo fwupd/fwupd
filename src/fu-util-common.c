@@ -1236,6 +1236,30 @@ fu_util_device_flag_to_string(guint64 device_flag)
 	return NULL;
 }
 
+static gchar *
+fu_util_request_flag_to_string(guint64 request_flag)
+{
+	if (request_flag == FWUPD_REQUEST_FLAG_NONE)
+		return NULL;
+	if (request_flag == FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE) {
+		/* TRANSLATORS: ask the user to do a simple task which should be translated */
+		return _("Message");
+	}
+	if (request_flag == FWUPD_REQUEST_FLAG_ALLOW_GENERIC_IMAGE) {
+		/* TRANSLATORS: show the user a generic image that can be themed */
+		return _("Image");
+	}
+	if (request_flag == FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE) {
+		/* TRANSLATORS: ask the user a question, and it will not be translated */
+		return _("Message (custom)");
+	}
+	if (request_flag == FWUPD_REQUEST_FLAG_NON_GENERIC_IMAGE) {
+		/* TRANSLATORS: show the user a random image from the internet */
+		return _("Image (custom)");
+	}
+	return NULL;
+}
+
 static const gchar *
 fu_util_update_state_to_string(FwupdUpdateState update_state)
 {
@@ -1582,6 +1606,27 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 		if ((flags & ((guint64)1 << i)) == 0)
 			continue;
 		tmp2 = fu_util_device_flag_to_string((guint64)1 << i);
+		if (tmp2 == NULL)
+			continue;
+		/* header */
+		if (tmp != NULL) {
+			g_autofree gchar *bullet = NULL;
+			bullet = g_strdup_printf("• %s", tmp2);
+			fu_string_append(str, idt + 1, tmp, bullet);
+			tmp = NULL;
+		} else {
+			g_autofree gchar *bullet = NULL;
+			bullet = g_strdup_printf("• %s", tmp2);
+			fu_string_append(str, idt + 1, "", bullet);
+		}
+	}
+
+	/* TRANSLATORS: description of the device requests */
+	tmp = _("Device Requests");
+	for (guint i = 0; i < 64; i++) {
+		if ((flags & ((guint64)1 << i)) == 0)
+			continue;
+		tmp2 = fu_util_request_flag_to_string((guint64)1 << i);
 		if (tmp2 == NULL)
 			continue;
 		/* header */

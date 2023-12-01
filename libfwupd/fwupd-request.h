@@ -140,6 +140,24 @@ typedef enum {
 #define FWUPD_REQUEST_FLAG_ALLOW_GENERIC_IMAGE (1u << 1)
 
 /**
+ * FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE:
+ *
+ * Device requires a non-generic interaction with custom non-translatable text.
+ *
+ * Since: 1.9.10
+ */
+#define FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE (1ull << 2)
+
+/**
+ * FWUPD_REQUEST_FLAG_NON_GENERIC_IMAGE:
+ *
+ * Device requires to show the user a custom image for the action to make sense.
+ *
+ * Since: 1.9.10
+ */
+#define FWUPD_REQUEST_FLAG_NON_GENERIC_IMAGE (1ull << 3)
+
+/**
  * FWUPD_REQUEST_FLAG_UNKNOWN:
  *
  * The request flag is unknown, typically caused by using mismatched client and daemon.

@@ -33,6 +33,7 @@ typedef struct {
 	guint64 created;
 	guint64 modified;
 	guint64 flags;
+	guint64 request_flags;
 	guint64 problems;
 	GPtrArray *guids;
 	GPtrArray *vendor_ids;
@@ -79,6 +80,7 @@ enum {
 	PROP_VERSION,
 	PROP_VERSION_FORMAT,
 	PROP_FLAGS,
+	PROP_REQUEST_FLAGS,
 	PROP_PROTOCOL,
 	PROP_STATUS,
 	PROP_PERCENTAGE,
@@ -1798,6 +1800,107 @@ fwupd_device_has_problem(FwupdDevice *self, FwupdDeviceProblem problem)
 }
 
 /**
+ * fwupd_device_get_request_flags:
+ * @self: a #FwupdDevice
+ *
+ * Gets device request flags.
+ *
+ * Returns: device request flags, or 0 if unset
+ *
+ * Since: 1.9.10
+ **/
+guint64
+fwupd_device_get_request_flags(FwupdDevice *self)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), 0);
+	return priv->request_flags;
+}
+
+/**
+ * fwupd_device_set_request_flags:
+ * @self: a #FwupdDevice
+ * @request_flags: device request flags, e.g. %FWUPD_DEVICE_REQUEST_FLAG_REQUIRE_AC
+ *
+ * Sets device request flags.
+ *
+ * Since: 1.9.10
+ **/
+void
+fwupd_device_set_request_flags(FwupdDevice *self, guint64 request_flags)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+	if (priv->request_flags == request_flags)
+		return;
+	priv->request_flags = request_flags;
+	g_object_notify(G_OBJECT(self), "request-flags");
+}
+
+/**
+ * fwupd_device_add_request_flag:
+ * @self: a #FwupdDevice
+ * @request_flag: the #FwupdRequestFlags
+ *
+ * Adds a specific device request flag to the device.
+ *
+ * Since: 1.9.10
+ **/
+void
+fwupd_device_add_request_flag(FwupdDevice *self, FwupdRequestFlags request_flag)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+	if (request_flag == 0)
+		return;
+	if ((priv->request_flags | request_flag) == priv->request_flags)
+		return;
+	priv->request_flags |= request_flag;
+	g_object_notify(G_OBJECT(self), "request-flags");
+}
+
+/**
+ * fwupd_device_remove_request_flag:
+ * @self: a #FwupdDevice
+ * @request_flag: the #FwupdRequestFlags
+ *
+ * Removes a specific device request flag from the device.
+ *
+ * Since: 1.9.10
+ **/
+void
+fwupd_device_remove_request_flag(FwupdDevice *self, FwupdRequestFlags request_flag)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+	if (request_flag == 0)
+		return;
+	if ((priv->request_flags & request_flag) == 0)
+		return;
+	priv->request_flags &= ~request_flag;
+	g_object_notify(G_OBJECT(self), "request-flags");
+}
+
+/**
+ * fwupd_device_has_request_flag:
+ * @self: a #FwupdDevice
+ * @request_flag: the #FwupdRequestFlags
+ *
+ * Finds if the device has a specific device request flag.
+ *
+ * Returns: %TRUE if the request_flag is set
+ *
+ * Since: 1.9.10
+ **/
+gboolean
+fwupd_device_has_request_flag(FwupdDevice *self, FwupdRequestFlags request_flag)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), FALSE);
+	return (priv->request_flags & request_flag) > 0;
+}
+
+/**
  * fwupd_device_get_created:
  * @self: a #FwupdDevice
  *
@@ -1886,6 +1989,7 @@ fwupd_device_incorporate(FwupdDevice *self, FwupdDevice *donor)
 	g_return_if_fail(FWUPD_IS_DEVICE(donor));
 
 	fwupd_device_add_flag(self, priv_donor->flags);
+	fwupd_device_add_request_flag(self, priv_donor->request_flags);
 	fwupd_device_add_problem(self, priv_donor->problems);
 	if (priv->created == 0)
 		fwupd_device_set_created(self, priv_donor->created);
@@ -2057,6 +2161,12 @@ fwupd_device_to_variant_full(FwupdDevice *self, FwupdDeviceFlags flags)
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FLAGS,
 				      g_variant_new_uint64(priv->flags));
+	}
+	if (priv->request_flags > 0) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_REQUEST_FLAGS,
+				      g_variant_new_uint64(priv->request_flags));
 	}
 	if (priv->problems > 0) {
 		g_variant_builder_add(&builder,
@@ -2328,6 +2438,10 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 		fwupd_device_set_problems(self, g_variant_get_uint64(value));
 		return;
 	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_REQUEST_FLAGS) == 0) {
+		fwupd_device_set_request_flags(self, g_variant_get_uint64(value));
+		return;
+	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CREATED) == 0) {
 		fwupd_device_set_created(self, g_variant_get_uint64(value));
 		return;
@@ -2496,6 +2610,23 @@ fwupd_pad_kv_dfl(GString *str, const gchar *key, guint64 device_flags)
 	}
 	if (tmp->len == 0) {
 		g_string_append(tmp, fwupd_device_flag_to_string(0));
+	} else {
+		g_string_truncate(tmp, tmp->len - 1);
+	}
+	fwupd_pad_kv_str(str, key, tmp->str);
+}
+
+static void
+fwupd_pad_kv_drfl(GString *str, const gchar *key, guint64 request_flags)
+{
+	g_autoptr(GString) tmp = g_string_new("");
+	for (guint i = 0; i < 64; i++) {
+		if ((request_flags & ((guint64)1 << i)) == 0)
+			continue;
+		g_string_append_printf(tmp, "%s|", fwupd_request_flag_to_string((guint64)1 << i));
+	}
+	if (tmp->len == 0) {
+		g_string_append(tmp, fwupd_request_flag_to_string(0));
 	} else {
 		g_string_truncate(tmp, tmp->len - 1);
 	}
@@ -3006,6 +3137,18 @@ fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFl
 		}
 		json_builder_end_array(builder);
 	}
+	if (priv->request_flags != FWUPD_REQUEST_FLAG_NONE) {
+		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_REQUEST_FLAGS);
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < 64; i++) {
+			const gchar *tmp;
+			if ((priv->request_flags & ((guint64)1 << i)) == 0)
+				continue;
+			tmp = fwupd_request_flag_to_string((guint64)1 << i);
+			json_builder_add_string_value(builder, tmp);
+		}
+		json_builder_end_array(builder);
+	}
 	if (priv->problems != FWUPD_DEVICE_PROBLEM_NONE) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_PROBLEMS);
 		json_builder_begin_array(builder);
@@ -3382,6 +3525,14 @@ fwupd_device_from_json(FwupdDevice *self, JsonNode *json_node, GError **error)
 			fwupd_device_add_problem(self, fwupd_device_problem_from_string(tmp));
 		}
 	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_REQUEST_FLAGS)) {
+		JsonArray *array =
+		    json_object_get_array_member(obj, FWUPD_RESULT_KEY_REQUEST_FLAGS);
+		for (guint i = 0; i < json_array_get_length(array); i++) {
+			const gchar *tmp = json_array_get_string_element(array, i);
+			fwupd_device_add_request_flag(self, fwupd_request_flag_from_string(tmp));
+		}
+	}
 	if (json_object_has_member(obj, "VendorIds")) {
 		JsonArray *array = json_object_get_array_member(obj, "VendorIds");
 		for (guint i = 0; i < json_array_get_length(array); i++)
@@ -3535,6 +3686,8 @@ fwupd_device_to_string(FwupdDevice *self)
 	if (priv->problems != FWUPD_DEVICE_PROBLEM_NONE) {
 		fwupd_device_pad_kv_problems(str, FWUPD_RESULT_KEY_PROBLEMS, priv->problems);
 	}
+	if (priv->request_flags > 0)
+		fwupd_pad_kv_drfl(str, FWUPD_RESULT_KEY_REQUEST_FLAGS, priv->request_flags);
 	for (guint i = 0; i < priv->checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index(priv->checksums, i);
 		g_autofree gchar *checksum_display = fwupd_checksum_format_for_display(checksum);
@@ -3619,6 +3772,9 @@ fwupd_device_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_PROBLEMS:
 		g_value_set_uint64(value, priv->problems);
 		break;
+	case PROP_REQUEST_FLAGS:
+		g_value_set_uint64(value, priv->request_flags);
+		break;
 	case PROP_PROTOCOL:
 		g_value_set_string(value, priv->protocol);
 		break;
@@ -3671,6 +3827,9 @@ fwupd_device_set_property(GObject *object, guint prop_id, const GValue *value, G
 		break;
 	case PROP_PROBLEMS:
 		fwupd_device_set_problems(self, g_value_get_uint64(value));
+		break;
+	case PROP_REQUEST_FLAGS:
+		fwupd_device_set_request_flags(self, g_value_get_uint64(value));
 		break;
 	case PROP_PROTOCOL:
 		fwupd_device_add_protocol(self, g_value_get_string(value));
@@ -3779,6 +3938,22 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				    FWUPD_DEVICE_PROBLEM_NONE,
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_PROBLEMS, pspec);
+
+	/**
+	 * FwupdDevice:request-flags:
+	 *
+	 * The device request flags.
+	 *
+	 * Since: 1.9.10
+	 */
+	pspec = g_param_spec_uint64("request-flags",
+				    NULL,
+				    NULL,
+				    FWUPD_REQUEST_FLAG_NONE,
+				    FWUPD_REQUEST_FLAG_UNKNOWN,
+				    FWUPD_REQUEST_FLAG_NONE,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_REQUEST_FLAGS, pspec);
 
 	/**
 	 * FwupdDevice:protocol:

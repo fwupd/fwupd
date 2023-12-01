@@ -284,8 +284,6 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "no-generic-guids";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES)
 		return "enforce-requires";
-	if (flag == FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST)
-		return "non-generic-request";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE)
 		return "host-firmware";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE_CHILD)
@@ -386,8 +384,6 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS;
 	if (g_strcmp0(flag, "enforce-requires") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES;
-	if (g_strcmp0(flag, "non-generic-request") == 0)
-		return FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST;
 	if (g_strcmp0(flag, "host-firmware") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE;
 	if (g_strcmp0(flag, "host-firmware-child") == 0)
@@ -5888,13 +5884,23 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progre
 
 #ifndef SUPPORTED_BUILD
 	/* nag the developer */
+	if (fwupd_request_has_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE) &&
+	    !fu_device_has_request_flag(self, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "request %s emitted but device does not set "
+			    "FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE",
+			    fwupd_request_get_id(request));
+		return FALSE;
+	}
 	if (!fwupd_request_has_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE) &&
-	    !fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST)) {
+	    !fu_device_has_request_flag(self, FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE)) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_NOT_SUPPORTED,
 			    "request %s is not a GENERIC_MESSAGE and the device does not set "
-			    "FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST",
+			    "FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE",
 			    fwupd_request_get_id(request));
 		return FALSE;
 	}

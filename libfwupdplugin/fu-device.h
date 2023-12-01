@@ -145,6 +145,9 @@ fu_device_new(FuContext *ctx);
 
 /* helpful casting macros */
 #define fu_device_has_flag(d, v)	   fwupd_device_has_flag(FWUPD_DEVICE(d), v)
+#define fu_device_has_flag(d, v)	   fwupd_device_has_flag(FWUPD_DEVICE(d), v)
+#define fu_device_has_request_flag(d, v)   fwupd_device_has_request_flag(FWUPD_DEVICE(d), v)
+#define fu_device_add_request_flag(d, v)   fwupd_device_add_request_flag(FWUPD_DEVICE(d), v)
 #define fu_device_has_instance_id(d, v)	   fwupd_device_has_instance_id(FWUPD_DEVICE(d), v)
 #define fu_device_has_vendor_id(d, v)	   fwupd_device_has_vendor_id(FWUPD_DEVICE(d), v)
 #define fu_device_has_protocol(d, v)	   fwupd_device_has_protocol(FWUPD_DEVICE(d), v)
@@ -595,15 +598,6 @@ typedef guint64 FuDeviceInternalFlags;
  * Since: 1.9.8
  */
 #define FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES (1ull << 37)
-
-/**
- * FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST:
- *
- * The device uses a non-generic request that cannot be localized.
- *
- * Since: 1.9.8
- */
-#define FU_DEVICE_INTERNAL_FLAG_NON_GENERIC_REQUEST (1ull << 38)
 
 /**
  * FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE:
