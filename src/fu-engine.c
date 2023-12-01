@@ -4369,7 +4369,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 {
 	g_autofree gchar *description_xpath = NULL;
 	g_autoptr(FuDevice) dev = NULL;
-	g_autoptr(FuRelease) release = NULL;
+	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GError) error_reqs = NULL;
 	g_autoptr(GPtrArray) provides = NULL;
@@ -4429,7 +4429,6 @@ fu_engine_get_result_from_component(FuEngine *self,
 		fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_END_OF_LIFE);
 
 	/* check we can install it */
-	release = fu_release_new();
 	fu_release_set_device(release, dev);
 	fu_release_set_request(release, request);
 	query = xb_query_new_full(xb_node_get_silo(component),
