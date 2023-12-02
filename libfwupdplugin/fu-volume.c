@@ -360,6 +360,31 @@ fu_volume_get_partition_kind(FuVolume *self)
 	return g_variant_dup_string(val, NULL);
 }
 
+/**
+ * fu_volume_get_partition_name:
+ * @self: a @FuVolume
+ *
+ * Gets the partition name of the volume mount point.
+ *
+ * Returns: (transfer full): partition name, e.g 'Recovery Partition'
+ *
+ * Since: 1.9.10
+ **/
+gchar *
+fu_volume_get_partition_name(FuVolume *self)
+{
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail(FU_IS_VOLUME(self), NULL);
+
+	if (self->proxy_part == NULL)
+		return NULL;
+	val = g_dbus_proxy_get_cached_property(self->proxy_part, "Name");
+	if (val == NULL)
+		return NULL;
+	return g_variant_dup_string(val, NULL);
+}
+
 static guint32
 fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **error)
 {
