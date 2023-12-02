@@ -48,6 +48,8 @@ gsize
 fu_volume_get_block_size(FuVolume *self, GError **error) G_GNUC_NON_NULL(1);
 gchar *
 fu_volume_get_partition_kind(FuVolume *self) G_GNUC_NON_NULL(1);
+gchar *
+fu_volume_get_partition_name(FuVolume *self) G_GNUC_NON_NULL(1);
 guint64
 fu_volume_get_partition_size(FuVolume *self) G_GNUC_NON_NULL(1);
 guint64
