@@ -632,6 +632,7 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 		for (guint i = 0; i < esp_volumes->len; i++) {
 			FuVolume *esp = g_ptr_array_index(esp_volumes, i);
 			guint score = 0;
+			g_autofree gchar *name = NULL;
 			g_autoptr(FuDeviceLocker) locker = NULL;
 			g_autoptr(GError) error_local = NULL;
 
@@ -639,6 +640,13 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 			locker = fu_volume_locker(esp, &error_local);
 			if (locker == NULL) {
 				g_warning("failed to mount ESP: %s", error_local->message);
+				continue;
+			}
+
+			/* ignore a partition that claims to be a recovery partition */
+			name = fu_volume_get_partition_name(esp);
+			if (g_strcmp0(name, "Recovery Partition") == 0) {
+				g_debug("skipping partition '%s'", name);
 				continue;
 			}
 
