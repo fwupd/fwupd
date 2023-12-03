@@ -2031,8 +2031,12 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 			continue;
 		download_remote_enabled = TRUE;
 		if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
-		    !fwupd_remote_needs_refresh(remote))
+		    !fwupd_remote_needs_refresh(remote)) {
+			g_debug("skipping as remote %s age is %us",
+				fwupd_remote_get_id(remote),
+				(guint)fwupd_remote_get_age(remote));
 			continue;
+		}
 		fu_console_print(priv->console,
 				 "%s %s",
 				 _("Updating"),
