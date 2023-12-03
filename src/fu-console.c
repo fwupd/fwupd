@@ -576,6 +576,8 @@ fu_console_print(FuConsole *self, const gchar *format, ...)
 void
 fu_console_set_progress_title(FuConsole *self, const gchar *title)
 {
+	if (!self->interactive)
+		return;
 	fu_console_erase_line(self);
 	g_print("%s\n", title);
 	fu_console_refresh(self);
