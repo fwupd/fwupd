@@ -224,6 +224,13 @@ fu_efi_hard_drive_device_path_new_from_volume(FuVolume *volume, GError **error)
 
 	/* set up the rest of the struct */
 	partition_kind = fu_volume_get_partition_kind(volume);
+	if (partition_kind == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "partition kind required");
+		return NULL;
+	}
 	partition_uuid = fu_volume_get_partition_uuid(volume);
 	if (partition_uuid == NULL) {
 		g_set_error_literal(error,

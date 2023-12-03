@@ -856,6 +856,8 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 
 		/* convert reported type to GPT type */
 		part_type = fu_volume_get_partition_kind(vol);
+		if (part_type == NULL)
+			continue;
 		type_str = fu_volume_kind_convert_to_gpt(part_type);
 		id_type = fu_volume_get_id_type(vol);
 		g_debug("device %s, type: %s, internal: %d, fs: %s",
