@@ -10,7 +10,8 @@
 
 /* see https://bugzilla.gnome.org/show_bug.cgi?id=113075 */
 #ifndef G_GNUC_NON_NULL
-#if !defined(_WIN32) && (__GNUC__ > 3) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
+#if !defined(SUPPORTED_BUILD) && !defined(_WIN32) && (__GNUC__ > 3) ||                             \
+    (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)
 #define G_GNUC_NON_NULL(params...) __attribute__((nonnull(params)))
 #else
 #define G_GNUC_NON_NULL(params...)
