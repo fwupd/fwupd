@@ -3110,6 +3110,13 @@ fu_util_refresh(FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		if (fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
 			continue;
+		if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+		    !fwupd_remote_needs_refresh(remote)) {
+			g_debug("skipping as remote %s age is %us",
+				fwupd_remote_get_id(remote),
+				(guint)fwupd_remote_get_age(remote));
+			continue;
+		}
 		if (!fu_util_refresh_remote(priv, remote, error))
 			return FALSE;
 	}
