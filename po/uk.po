@@ -771,6 +771,10 @@ msgstr "Прапорці пристрою"
 msgid "Device ID"
 msgstr "Ід. пристрою"
 
+#. TRANSLATORS: description of the device requests
+msgid "Device Requests"
+msgstr "Запити щодо пристрою"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
 msgstr "Додано пристрій:"
@@ -1607,6 +1611,14 @@ msgstr "Ігнорувати перевірки безпечності"
 msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
 msgstr "Ігноруємо строгі перевірки SSL. Щоб зробити ігнорування у майбутньому автоматичним, експортуйте до вашого середовища змінну DISABLE_SSL_STRICT"
 
+#. TRANSLATORS: show the user a generic image that can be themed
+msgid "Image"
+msgstr "Зображення"
+
+#. TRANSLATORS: show the user a random image from the internet
+msgid "Image (custom)"
+msgstr "Зображення (нетипове)"
+
 #. TRANSLATORS: the inhibit ID is a short string like dbus-123456
 #, c-format
 msgid "Inhibit ID is %s."
@@ -2001,6 +2013,14 @@ msgstr "Максимальне значення"
 #. TRANSLATORS: the release urgency
 msgid "Medium"
 msgstr "Середній"
+
+#. TRANSLATORS: ask the user to do a simple task which should be translated
+msgid "Message"
+msgstr "Повідомлення"
+
+#. TRANSLATORS: ask the user a question, and it will not be translated
+msgid "Message (custom)"
+msgstr "Повідомлення (нетипове)"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"

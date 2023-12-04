@@ -2963,6 +2963,10 @@ msgstr "L'actualització continuarà quan el cable USB del dispositiu s'hagi des
 msgid "The update will continue when the device USB cable has been unplugged."
 msgstr "L'actualització continuarà quan s'hagi desconnectat el cable USB del dispositiu."
 
+#. TRANSLATORS: warning message
+msgid "The update will continue when the device power cable has been removed and re-inserted."
+msgstr "L'actualització continuarà quan s'hagi retirat i tornat a inserir el cable d'alimentació del dispositiu."
+
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
 msgstr "El proveïdor no ha subministrat les notes de llançament."
@@ -3186,6 +3190,10 @@ msgstr "Desbloqueja el dispositiu per a accedir al microprogramari."
 #. TRANSLATORS: command description
 msgid "Unmounts the ESP"
 msgstr "Desmunta l'ESP."
+
+#. TRANSLATORS: message shown after device has been marked for emulation
+msgid "Unplug and replug the device to continue the update process."
+msgstr "Desendolleu i torneu a endollar el dispositiu per a continuar amb el procés d'actualització."
 
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"

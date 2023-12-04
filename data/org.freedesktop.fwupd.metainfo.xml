@@ -33,6 +33,48 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.10" date="2023-12-04">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add support for not_hardware requirements</li>
+          <li>Add support for loongarch64</li>
+          <li>Add support for per-release priority attributes</li>
+          <li>Make USB claim retry count configurable across devices</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Compare the HID report value when checking for duplicates</li>
+          <li>Consider the component priority when installing composite updates</li>
+          <li>Deploy the CCGX firmware correctly the first time</li>
+          <li>Do not export the 'main-system-firmware' and 'cpu' GUIDs</li>
+          <li>Enforce fwupd version requirements client side</li>
+          <li>Fix Genesys 'failed to get static tool info from device' error</li>
+          <li>Fix potential 'dereference before null check' in ccmx-dmc</li>
+          <li>Fix the 'already registered private FuMmDevice flag with value' warning</li>
+          <li>Fix the 'assertion backend_id != NULL failed' runtime warning</li>
+          <li>Fix Wacom USB device emulation by recording the composite phases</li>
+          <li>Generate generic request message text where possible</li>
+          <li>Hide HTTP passwords in fwupd debugging logs</li>
+          <li>Let the client know what interaction is expected</li>
+          <li>Make all critical warnings into backtraces for non-release builds</li>
+          <li>Never obsolete the wrong HSI attribute</li>
+          <li>Never show a HSI index that is impossible</li>
+          <li>Only apply fastboot plugin to modem devices supporting fastboot</li>
+          <li>Only send interactive requests when the sender is alive</li>
+          <li>Remove the now-obsolete Synaptics MST cascade device scanning</li>
+          <li>Replace the Redfish KCS user if required</li>
+          <li>Restrict mediatek-scaler devices on specific hardware only</li>
+          <li>Skip any recovery partitions when detecting ESP</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>AVer CAM520 Pro3</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.9" date="2023-11-20">
       <description>
         <p>

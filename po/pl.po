@@ -2871,6 +2871,10 @@ msgstr "Aktualizacja zostanie kontynuowana po odłączeniu i ponownym podłącz
 msgid "The update will continue when the device USB cable has been unplugged."
 msgstr "Aktualizacja zostanie kontynuowana po odłączeniu kabla USB urządzenia."
 
+#. TRANSLATORS: warning message
+msgid "The update will continue when the device power cable has been removed and re-inserted."
+msgstr "Aktualizacja zostanie kontynuowana po odłączeniu i ponownym podłączeniu kabla zasilającego urządzenia."
+
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
 msgstr "Dostawca nie dostarczył żadnych informacji o wydaniu."
@@ -3086,6 +3090,10 @@ msgstr "Odblokowuje urządzenie"
 #. TRANSLATORS: command description
 msgid "Unmounts the ESP"
 msgstr "Odmontowuje ESP"
+
+#. TRANSLATORS: message shown after device has been marked for emulation
+msgid "Unplug and replug the device to continue the update process."
+msgstr "Proszę odłączyć i ponownie podłączyć urządzenie, aby kontynuować aktualizację."
 
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"

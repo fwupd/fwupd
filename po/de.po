@@ -835,6 +835,10 @@ msgstr "Gerät entfernt:"
 msgid "Device requires AC power to be connected"
 msgstr "Gerät muss an eine Wechselstromquelle angeschlossen werden"
 
+#. TRANSLATORS: device does not have a display connected
+msgid "Device requires a display to be plugged in"
+msgstr "Gerät benötigt einen angeschlossenen Bildschirm"
+
 #. TRANSLATORS: The device cannot be updated due to missing vendor's license."
 msgid "Device requires a software license to update"
 msgstr "Gerät erfordert eine Softwarelizenz für die Aktualisierung"
@@ -2388,6 +2392,10 @@ msgstr "BIOS-Einstellungen abrufen. Wenn keine Argumente übergeben werden, werd
 msgid "Return all the hardware IDs for the machine"
 msgstr "Alle Hardware-Kennungen für das System zurückgeben"
 
+#. TRANSLATORS: ask the user to upload
+msgid "Review and upload report now?"
+msgstr "Bericht jetzt überprüfen und hochladen?"
+
 #. TRANSLATORS: longer description
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "Der Rückrollschutz verhindert, dass die Gerätesoftware auf eine ältere Version heruntergestuft wird, die Sicherheitsprobleme aufweist."
@@ -2739,6 +2747,10 @@ msgstr "Zweig von %s nach %s wechseln?"
 msgid "Switch the firmware branch on the device"
 msgstr "Den Firmware-Zweig auf dem Gerät wechseln"
 
+#. TRANSLATORS: command description
+msgid "Sync firmware versions to the chosen configuration"
+msgstr "Firmware-Versionen mit der ausgewählten Konfiguration synchronisieren"
+
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Systemaktualisierung blockiert"
@@ -2886,6 +2898,10 @@ msgstr "Die Aktualisierung wird fortgesetzt, wenn das USB-Kabel des Geräts abge
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "The update will continue when the device USB cable has been unplugged."
 msgstr "Die Aktualisierung wird fortgesetzt, wenn das USB-Kabel des Geräts abgezogen wurde."
+
+#. TRANSLATORS: warning message
+msgid "The update will continue when the device power cable has been removed and re-inserted."
+msgstr "Die Aktualisierung wird fortgesetzt, wenn das Netzkabel des Geräts entfernt und wieder eingesteckt wird."
 
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
@@ -3102,6 +3118,10 @@ msgstr "Entsperrt das Gerät für Zugriff auf die Firmware"
 #. TRANSLATORS: command description
 msgid "Unmounts the ESP"
 msgstr "Hängt das ESP aus"
+
+#. TRANSLATORS: message shown after device has been marked for emulation
+msgid "Unplug and replug the device to continue the update process."
+msgstr "Stecken Sie das Gerät aus und wieder ein, um den Aktualisierungsvorgang fortzusetzen."
 
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
@@ -3341,6 +3361,10 @@ msgstr "[GERÄTEKENNUNG|GUID] [ZWEIG]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID] [VERSION]"
 msgstr "[GERÄTEKENNUNG|GUID] [VERSION]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE]"
+msgstr "[GERÄT]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"
