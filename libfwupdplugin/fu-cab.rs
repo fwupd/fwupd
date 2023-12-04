@@ -1,7 +1,7 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(ParseBytes, New)]
+#[derive(ParseStream, New)]
 struct CabData {
     checksum: u32le,
     comp: u16le,
@@ -28,7 +28,7 @@ enum CabFileAttribute {
     NameUtf8 = 0x80,
 }
 
-#[derive(ParseBytes, New)]
+#[derive(ParseStream, New)]
 struct CabFile {
     usize: u32le, // uncompressed
     uoffset: u32le, // uncompressed
@@ -38,14 +38,14 @@ struct CabFile {
     fattr: CabFileAttribute,
 }
 
-#[derive(ParseBytes, New)]
+#[derive(ParseStream, New)]
 struct CabFolder {
     offset: u32le,
     ndatab: u16le,
     compression: CabCompression,
 }
 
-#[derive(ParseBytes, ValidateBytes, New)]
+#[derive(ParseStream, ValidateStream, New)]
 struct CabHeader {
     signature: [char; 4] == "MSCF",
     _reserved1: [u8; 4],
@@ -62,7 +62,7 @@ struct CabHeader {
     idx_cabinet: u16le,
 }
 
-#[derive(ParseBytes, New)]
+#[derive(ParseStream, New)]
 struct CabHeaderReserve {
     rsvd_hdr: u16le,
     rsvd_folder: u8,

@@ -133,12 +133,12 @@ fu_aver_hid_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_aver_hid_device_prepare_firmware(FuDevice *device,
-				    GBytes *fw,
+				    GInputStream *stream,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_aver_hid_firmware_new();
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	return g_steal_pointer(&firmware);
 }

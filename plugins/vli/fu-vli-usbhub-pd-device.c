@@ -145,7 +145,7 @@ fu_vli_usbhub_pd_device_reload(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_vli_usbhub_pd_device_prepare_firmware(FuDevice *device,
-					 GBytes *fw,
+					 GInputStream *stream,
 					 FwupdInstallFlags flags,
 					 GError **error)
 {
@@ -154,7 +154,7 @@ fu_vli_usbhub_pd_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_vli_pd_firmware_new();
 
 	/* check is compatible with firmware */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	device_kind = fu_vli_pd_firmware_get_kind(FU_VLI_PD_FIRMWARE(firmware));
 	if (self->device_kind != device_kind) {

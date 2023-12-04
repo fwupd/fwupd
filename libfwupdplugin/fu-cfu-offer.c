@@ -418,7 +418,7 @@ fu_cfu_offer_set_product_id(FuCfuOffer *self, guint16 product_id)
 
 static gboolean
 fu_cfu_offer_parse(FuFirmware *firmware,
-		   GBytes *fw,
+		   GInputStream *stream,
 		   gsize offset,
 		   FwupdInstallFlags flags,
 		   GError **error)
@@ -432,7 +432,7 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 	g_autofree gchar *version = NULL;
 
 	/* parse */
-	st = fu_struct_cfu_offer_parse_bytes(fw, offset, error);
+	st = fu_struct_cfu_offer_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
 	priv->segment_number = fu_struct_cfu_offer_get_segment_number(st);

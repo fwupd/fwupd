@@ -20,7 +20,7 @@ G_DEFINE_TYPE(FuGoodixtpGtx8Firmware, fu_goodixtp_gtx8_firmware, FU_TYPE_GOODIXT
 
 gboolean
 fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
-				GBytes *fw,
+				GInputStream *stream,
 				guint8 sensor_id,
 				GError **error)
 {
@@ -34,10 +34,11 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 	guint sub_cfg_info_pos;
 	guint32 offset_hdr;
 	guint32 offset_payload = GTX8_FW_DATA_OFFSET;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	const guint8 *buf;
 	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(GBytes) fw = NULL;
 
-	st = fu_struct_goodix_gtx8_hdr_parse_bytes(fw, 0x0, error);
+	st = fu_struct_goodix_gtx8_hdr_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	firmware_size = fu_struct_goodix_gtx8_hdr_get_firmware_size(st);
@@ -48,6 +49,13 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 				    "invalid firmware size");
 		return FALSE;
 	}
+
+	/* convert to blob */
+	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+	if (fw == NULL)
+		return FALSE;
+	buf = g_bytes_get_data(fw, &bufsz);
+
 	if ((gsize)firmware_size + 6 != bufsz) {
 		g_debug("check file len unequal 0x%x != 0x%x, this bin may contain config",
 			(guint)firmware_size + 6,
@@ -173,7 +181,7 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 		guint32 img_size;
 		g_autoptr(GByteArray) st_img = NULL;
 
-		st_img = fu_struct_goodix_gtx8_img_parse_bytes(fw, offset_hdr, error);
+		st_img = fu_struct_goodix_gtx8_img_parse_stream(stream, offset_hdr, error);
 		if (st_img == NULL)
 			return FALSE;
 		img_size = fu_struct_goodix_gtx8_img_get_size(st_img);

@@ -359,14 +359,21 @@ fu_superio_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_superio_device_prepare_firmware(FuDevice *device,
-				   GBytes *fw,
+				   GInputStream *stream,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
-	gsize sz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &sz);
 	const guint8 sig1[] = {0xa5, 0xa5, 0xa5, 0xa5, 0xa5, 0xa5};
 	const guint8 sig2[] = {0x85, 0x12, 0x5a, 0x5a, 0xaa};
+	g_autoptr(GBytes) fw = NULL;
+	gsize sz = 0;
+	const guint8 *buf;
+
+	/* convert to blob */
+	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+	if (fw == NULL)
+		return NULL;
+	buf = g_bytes_get_data(fw, &sz);
 
 	/* find signature -- maybe ignore byte 0x14 too? */
 	for (gsize off = 0; off < sz; off += 16) {

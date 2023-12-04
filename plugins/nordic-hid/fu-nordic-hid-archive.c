@@ -22,7 +22,7 @@ G_DEFINE_TYPE(FuNordicHidArchive, fu_nordic_hid_archive, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_nordic_hid_archive_parse(FuFirmware *firmware,
-			    GBytes *fw,
+			    GInputStream *stream,
 			    gsize offset,
 			    FwupdInstallFlags flags,
 			    GError **error)
@@ -37,7 +37,7 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 	g_autoptr(JsonParser) parser = json_parser_new();
 
 	/* load archive */
-	archive = fu_archive_new(fw, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
+	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
 	if (archive == NULL)
 		return FALSE;
 	manifest = fu_archive_lookup_by_fn(archive, "manifest.json", error);

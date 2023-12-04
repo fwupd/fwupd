@@ -26,7 +26,7 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 				   GError **error)
 {
 	FuWacModule *self = FU_WAC_MODULE(device);
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
@@ -39,13 +39,14 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 	g_debug("using element at addr 0x%0x", (guint)fu_firmware_get_addr(firmware));
 
 	/* build each data packet */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL) {
-		g_prefix_error(error, "wacom touch module failed to get bytes: ");
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL) {
+		g_prefix_error(error, "wacom touch module failed to get stream: ");
 		return FALSE;
 	}
-	chunks =
-	    fu_chunk_array_new_from_bytes(fw, fu_firmware_get_addr(firmware), 128); /* packet_sz */
+	chunks = fu_chunk_array_new_from_stream(stream, fu_firmware_get_addr(firmware), 128, error);
+	if (chunks == NULL)
+		return FALSE;
 
 	/* start, which will erase the module */
 	if (!fu_wac_module_set_feature(self,

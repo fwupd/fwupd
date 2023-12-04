@@ -32,7 +32,7 @@ fu_qsi_dock_child_device_to_string(FuDevice *device, guint idt, GString *str)
 /* use the parents parser */
 static FuFirmware *
 fu_qsi_dock_mcu_device_prepare_firmware(FuDevice *device,
-					GBytes *fw,
+					GInputStream *stream,
 					FwupdInstallFlags flags,
 					GError **error)
 {
@@ -41,7 +41,7 @@ fu_qsi_dock_mcu_device_prepare_firmware(FuDevice *device,
 		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no parent");
 		return NULL;
 	}
-	return fu_device_prepare_firmware(parent, fw, flags, error);
+	return fu_device_prepare_firmware(parent, stream, flags, error);
 }
 
 /* only update this specific child component */

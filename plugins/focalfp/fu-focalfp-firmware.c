@@ -37,23 +37,36 @@ fu_focalfp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, Xb
 }
 
 static gboolean
+fu_focalfp_firmware_compute_checksum_cb(const guint8 *buf,
+					gsize bufsz,
+					gpointer user_data,
+					GError **error)
+{
+	guint32 *value = (guint32 *)user_data;
+	for (guint32 i = 0; i < bufsz; i += 4) {
+		guint32 tmp = 0;
+		if (!fu_memread_uint32_safe(buf, bufsz, i, &tmp, G_LITTLE_ENDIAN, error))
+			return FALSE;
+		*value ^= tmp;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_focalfp_firmware_parse(FuFirmware *firmware,
-			  GBytes *fw,
+			  GInputStream *stream,
 			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {
 	FuFocalfpFirmware *self = FU_FOCALFP_FIRMWARE(firmware);
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* start address */
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    FOCAL_NAME_START_ADDR_WRDS,
-				    &self->start_address,
-				    G_BIG_ENDIAN,
-				    error)) {
+	if (!fu_input_stream_read_u16(stream,
+				      FOCAL_NAME_START_ADDR_WRDS,
+				      &self->start_address,
+				      G_BIG_ENDIAN,
+				      error)) {
 		return FALSE;
 	}
 	if (self->start_address != 0x582e) {
@@ -64,13 +77,13 @@ fu_focalfp_firmware_parse(FuFirmware *firmware,
 			    self->start_address);
 		return FALSE;
 	}
+
 	/* calculate checksum */
-	for (guint32 i = 0; i < bufsz; i += 4) {
-		guint32 value = 0;
-		if (!fu_memread_uint32_safe(buf, bufsz, i, &value, G_LITTLE_ENDIAN, error))
-			return FALSE;
-		self->checksum ^= value;
-	}
+	if (!fu_input_stream_chunkify(stream,
+				      fu_focalfp_firmware_compute_checksum_cb,
+				      &self->checksum,
+				      error))
+		return FALSE;
 	self->checksum += 1;
 
 	/* success */

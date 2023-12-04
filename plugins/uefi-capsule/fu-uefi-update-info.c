@@ -36,19 +36,18 @@ fu_uefi_update_info_export(FuFirmware *firmware, FuFirmwareExportFlags flags, Xb
 
 static gboolean
 fu_uefi_update_info_parse(FuFirmware *firmware,
-			  GBytes *fw,
+			  GInputStream *stream,
 			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {
 	FuUefiUpdateInfo *self = FU_UEFI_UPDATE_INFO(firmware);
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	gsize streamsz = 0;
 	g_autoptr(GByteArray) st_inf = NULL;
 
 	g_return_val_if_fail((self), FALSE);
 
-	st_inf = fu_struct_efi_update_info_parse(buf, bufsz, 0x0, error);
+	st_inf = fu_struct_efi_update_info_parse_stream(stream, 0x0, error);
 	if (st_inf == NULL) {
 		g_prefix_error(error, "EFI variable is corrupt: ");
 		return FALSE;
@@ -59,14 +58,16 @@ fu_uefi_update_info_parse(FuFirmware *firmware,
 	self->status = fu_struct_efi_update_info_get_status(st_inf);
 	self->guid = fwupd_guid_to_string(fu_struct_efi_update_info_get_guid(st_inf),
 					  FWUPD_GUID_FLAG_MIXED_ENDIAN);
-	if (bufsz > FU_STRUCT_EFI_UPDATE_INFO_SIZE) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (streamsz > FU_STRUCT_EFI_UPDATE_INFO_SIZE) {
 		g_autoptr(FuFirmware) dp = NULL;
 		g_autoptr(FuEfiDevicePathList) dpbuf = fu_efi_device_path_list_new();
-		if (!fu_firmware_parse_full(FU_FIRMWARE(dpbuf),
-					    fw,
-					    FU_STRUCT_EFI_UPDATE_INFO_SIZE,
-					    FWUPD_INSTALL_FLAG_NONE,
-					    error)) {
+		if (!fu_firmware_parse_stream(FU_FIRMWARE(dpbuf),
+					      stream,
+					      FU_STRUCT_EFI_UPDATE_INFO_SIZE,
+					      FWUPD_INSTALL_FLAG_NONE,
+					      error)) {
 			g_prefix_error(error, "failed to parse dpbuf: ");
 			return FALSE;
 		}

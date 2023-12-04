@@ -12,9 +12,10 @@ static void
 fu_acpi_dmar_opt_in_func(void)
 {
 	const gchar *ci = g_getenv("CI_NETWORK");
-	g_autoptr(FuAcpiDmar) dmar = NULL;
+	gboolean ret;
+	g_autoptr(FuAcpiDmar) dmar = fu_acpi_dmar_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autofree gchar *fn = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "DMAR", NULL);
@@ -22,12 +23,16 @@ fu_acpi_dmar_opt_in_func(void)
 		g_test_skip("Missing DMAR");
 		return;
 	}
-	blob = fu_bytes_get_contents(fn, &error);
+	stream = fu_input_stream_from_path(fn, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob);
-	dmar = fu_acpi_dmar_new(blob, &error);
+	g_assert_nonnull(stream);
+	ret = fu_firmware_parse_stream(FU_FIRMWARE(dmar),
+				       stream,
+				       0x0,
+				       FWUPD_INSTALL_FLAG_NONE,
+				       &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(dmar);
+	g_assert_true(ret);
 	g_assert_true(fu_acpi_dmar_get_opt_in(dmar));
 }
 
@@ -35,9 +40,10 @@ static void
 fu_acpi_dmar_opt_out_func(void)
 {
 	const gchar *ci = g_getenv("CI_NETWORK");
-	g_autoptr(FuAcpiDmar) dmar = NULL;
+	gboolean ret;
+	g_autoptr(FuAcpiDmar) dmar = fu_acpi_dmar_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autofree gchar *fn = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "DMAR-OPTOUT", NULL);
@@ -45,12 +51,16 @@ fu_acpi_dmar_opt_out_func(void)
 		g_test_skip("Missing DMAR-OPTOUT");
 		return;
 	}
-	blob = fu_bytes_get_contents(fn, &error);
+	stream = fu_input_stream_from_path(fn, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob);
-	dmar = fu_acpi_dmar_new(blob, &error);
+	g_assert_nonnull(stream);
+	ret = fu_firmware_parse_stream(FU_FIRMWARE(dmar),
+				       stream,
+				       0x0,
+				       FWUPD_INSTALL_FLAG_NONE,
+				       &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(dmar);
+	g_assert_true(ret);
 	g_assert_false(fu_acpi_dmar_get_opt_in(dmar));
 }
 

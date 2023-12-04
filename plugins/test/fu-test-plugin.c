@@ -203,7 +203,7 @@ fu_test_plugin_get_version(GBytes *blob_fw)
 
 	if (str_safe == NULL)
 		return NULL;
-	if (!fu_strtoull(str_safe, &val, 0, G_MAXUINT32, &error_local)) {
+	if (!fu_strtoull(str_safe, &val, 0, G_MAXSIZE, &error_local)) {
 		g_debug("invalid version specified: %s", error_local->message);
 		return NULL;
 	}
@@ -215,7 +215,7 @@ fu_test_plugin_get_version(GBytes *blob_fw)
 static gboolean
 fu_test_plugin_write_firmware(FuPlugin *plugin,
 			      FuDevice *device,
-			      GBytes *blob_fw,
+			      GInputStream *stream,
 			      FuProgress *progress,
 			      FwupdInstallFlags flags,
 			      GError **error)
@@ -281,7 +281,17 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 	} else if (requires_reboot) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	} else {
-		g_autofree gchar *ver = fu_test_plugin_get_version(blob_fw);
+		gsize streamsz = 0;
+		g_autofree gchar *ver = NULL;
+		g_autoptr(GBytes) blob_fw = NULL;
+
+		/* this should not be required! */
+		if (!fu_input_stream_size(stream, &streamsz, error))
+			return FALSE;
+		blob_fw = fu_input_stream_read_bytes(stream, 0, streamsz, error);
+		if (blob_fw == NULL)
+			return FALSE;
+		ver = fu_test_plugin_get_version(blob_fw);
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 		if (ver != NULL) {
 			fu_device_set_version(device, ver);

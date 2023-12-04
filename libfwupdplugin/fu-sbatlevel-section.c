@@ -10,6 +10,7 @@
 
 #include "fu-bytes.h"
 #include "fu-csv-firmware.h"
+#include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-sbatlevel-section-struct.h"
 #include "fu-sbatlevel-section.h"
@@ -18,7 +19,7 @@ G_DEFINE_TYPE(FuSbatlevelSection, fu_sbatlevel_section, FU_TYPE_FIRMWARE);
 
 static gboolean
 fu_sbatlevel_section_add_entry(FuFirmware *firmware,
-			       GBytes *fw,
+			       GInputStream *stream,
 			       gsize offset,
 			       const gchar *entry_name,
 			       guint64 entry_idx,
@@ -26,10 +27,16 @@ fu_sbatlevel_section_add_entry(FuFirmware *firmware,
 			       GError **error)
 {
 	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	const guint8 *buf;
 	gsize size = 0;
 	g_autoptr(FuFirmware) entry_fw = NULL;
 	g_autoptr(GBytes) entry_blob = NULL;
+	g_autoptr(GBytes) fw = NULL;
+
+	fw = fu_input_stream_read_bytes(stream, offset, G_MAXSIZE, error);
+	if (fw == NULL)
+		return FALSE;
+	buf = g_bytes_get_data(fw, &bufsz);
 
 	/* look for the null terminator */
 	for (size = 0; ((offset + size) < bufsz); ++size) {
@@ -60,7 +67,7 @@ fu_sbatlevel_section_add_entry(FuFirmware *firmware,
 
 static gboolean
 fu_sbatlevel_section_parse(FuFirmware *firmware,
-			   GBytes *fw,
+			   GInputStream *stream,
 			   gsize offset,
 			   FwupdInstallFlags flags,
 			   GError **error)
@@ -70,14 +77,14 @@ fu_sbatlevel_section_parse(FuFirmware *firmware,
 	guint32 latest_addr;
 	g_autoptr(GByteArray) st = NULL;
 
-	st = fu_struct_sbat_level_section_header_parse_bytes(fw, offset, error);
+	st = fu_struct_sbat_level_section_header_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
 
 	previous_addr = fu_struct_sbat_level_section_header_get_previous(st);
 
 	if (!fu_sbatlevel_section_add_entry(firmware,
-					    fw,
+					    stream,
 					    header_offset + previous_addr,
 					    "previous",
 					    0,
@@ -88,7 +95,7 @@ fu_sbatlevel_section_parse(FuFirmware *firmware,
 	latest_addr = fu_struct_sbat_level_section_header_get_latest(st);
 
 	if (!fu_sbatlevel_section_add_entry(firmware,
-					    fw,
+					    stream,
 					    header_offset + latest_addr,
 					    "latest",
 					    1,

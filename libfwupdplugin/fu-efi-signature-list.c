@@ -16,6 +16,7 @@
 #include "fu-efi-signature-list.h"
 #include "fu-efi-signature-private.h"
 #include "fu-efi-struct.h"
+#include "fu-input-stream.h"
 #include "fu-mem.h"
 
 /**
@@ -37,16 +38,13 @@ const guint8 FU_EFI_SIGLIST_HEADER_MAGIC[] = {0x26, 0x16, 0xC4, 0xC1, 0x4C};
 static gboolean
 fu_efi_signature_list_parse_item(FuEfiSignatureList *self,
 				 FuEfiSignatureKind sig_kind,
-				 const guint8 *buf,
-				 gsize bufsz,
+				 GInputStream *stream,
 				 gsize offset,
 				 guint32 size,
 				 GError **error)
 {
 	fwupd_guid_t guid;
-	gsize sig_datasz;
 	g_autofree gchar *sig_owner = NULL;
-	g_autofree guint8 *sig_data = NULL;
 	g_autoptr(FuEfiSignature) sig = NULL;
 	g_autoptr(GBytes) data = NULL;
 
@@ -59,36 +57,29 @@ fu_efi_signature_list_parse_item(FuEfiSignatureList *self,
 			    (guint)size);
 		return FALSE;
 	}
-	sig_datasz = size - sizeof(fwupd_guid_t);
-	sig_data = g_malloc0(sig_datasz);
 
 	/* read both blocks of data */
-	if (!fu_memcpy_safe((guint8 *)&guid,
-			    sizeof(guid),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    offset, /* src */
-			    sizeof(guid),
-			    error)) {
+	if (!fu_input_stream_read_safe(stream,
+				       (guint8 *)&guid,
+				       sizeof(guid),
+				       0x0,
+				       offset,
+				       sizeof(guid),
+				       error)) {
 		g_prefix_error(error, "failed to read signature GUID: ");
 		return FALSE;
 	}
-	if (!fu_memcpy_safe(sig_data,
-			    sig_datasz,
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    offset + sizeof(fwupd_guid_t), /* src */
-			    sig_datasz,
-			    error)) {
+	data = fu_input_stream_read_bytes(stream,
+					  offset + sizeof(fwupd_guid_t),
+					  size - sizeof(fwupd_guid_t),
+					  error);
+	if (data == NULL) {
 		g_prefix_error(error, "failed to read signature data: ");
 		return FALSE;
 	}
 
 	/* create item */
 	sig_owner = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
-	data = g_bytes_new(sig_data, sig_datasz);
 	sig = fu_efi_signature_new(sig_kind, sig_owner);
 	fu_firmware_set_bytes(FU_FIRMWARE(sig), data);
 	return fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(sig), error);
@@ -96,8 +87,7 @@ fu_efi_signature_list_parse_item(FuEfiSignatureList *self,
 
 static gboolean
 fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
-				 const guint8 *buf,
-				 gsize bufsz,
+				 GInputStream *stream,
 				 gsize *offset,
 				 GError **error)
 {
@@ -110,7 +100,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 	g_autoptr(GByteArray) st = NULL;
 
 	/* read EFI_SIGNATURE_LIST */
-	st = fu_struct_efi_signature_list_parse(buf, bufsz, *offset, error);
+	st = fu_struct_efi_signature_list_parse_stream(stream, *offset, error);
 	if (st == NULL)
 		return FALSE;
 	sig_type = fwupd_guid_to_string(fu_struct_efi_signature_list_get_type(st),
@@ -153,8 +143,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 	for (guint i = 0; i < (list_size - 0x1c) / size; i++) {
 		if (!fu_efi_signature_list_parse_item(self,
 						      sig_kind,
-						      buf,
-						      bufsz,
+						      stream,
 						      offset_tmp,
 						      size,
 						      error))
@@ -188,20 +177,21 @@ fu_efi_signature_list_get_version(FuEfiSignatureList *self)
 }
 
 static gboolean
-fu_efi_signature_list_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_efi_signature_list_validate(FuFirmware *firmware,
+			       GInputStream *stream,
+			       gsize offset,
+			       GError **error)
 {
 	fwupd_guid_t guid = {0x0};
 	g_autofree gchar *sig_type = NULL;
 
-	/* read EFI_SIGNATURE_LIST */
-	if (!fu_memcpy_safe((guint8 *)&guid,
-			    sizeof(guid),
-			    0x0, /* dst */
-			    g_bytes_get_data(fw, NULL),
-			    g_bytes_get_size(fw),
-			    offset, /* src */
-			    sizeof(guid),
-			    error)) {
+	if (!fu_input_stream_read_safe(stream,
+				       (guint8 *)&guid,
+				       sizeof(guid),
+				       0,
+				       offset, /* seek */
+				       sizeof(guid),
+				       error)) {
 		g_prefix_error(error, "failed to read magic: ");
 		return FALSE;
 	}
@@ -221,19 +211,20 @@ fu_efi_signature_list_validate(FuFirmware *firmware, GBytes *fw, gsize offset, G
 
 static gboolean
 fu_efi_signature_list_parse(FuFirmware *firmware,
-			    GBytes *fw,
+			    GInputStream *stream,
 			    gsize offset,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {
 	FuEfiSignatureList *self = FU_EFI_SIGNATURE_LIST(firmware);
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	gsize streamsz = 0;
 	g_autofree gchar *version_str = NULL;
 
 	/* parse each EFI_SIGNATURE_LIST */
-	while (offset < bufsz) {
-		if (!fu_efi_signature_list_parse_list(self, buf, bufsz, &offset, error))
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	while (offset < streamsz) {
+		if (!fu_efi_signature_list_parse_list(self, stream, &offset, error))
 			return FALSE;
 	}
 

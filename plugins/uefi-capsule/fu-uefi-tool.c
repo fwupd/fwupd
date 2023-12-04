@@ -456,7 +456,7 @@ main(int argc, char *argv[])
 		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 		g_autoptr(FuUefiDevice) dev = NULL;
 		g_autoptr(GError) error_local = NULL;
-		g_autoptr(GBytes) fw = NULL;
+		g_autoptr(GInputStream) stream = NULL;
 
 		/* progress */
 		fu_progress_set_id(progress, G_STRLOC);
@@ -497,8 +497,8 @@ main(int argc, char *argv[])
 			g_printerr("capsule filename required\n");
 			return EXIT_FAILURE;
 		}
-		fw = fu_bytes_get_contents(argv[1], &error_local);
-		if (fw == NULL) {
+		stream = fu_input_stream_from_path(argv[1], &error_local);
+		if (stream == NULL) {
 			g_printerr("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
@@ -515,7 +515,7 @@ main(int argc, char *argv[])
 		}
 		fu_progress_step_done(progress);
 		if (!fu_device_write_firmware(FU_DEVICE(dev),
-					      fw,
+					      stream,
 					      fu_progress_get_child(progress),
 					      FWUPD_INSTALL_FLAG_NONE,
 					      &error_local)) {

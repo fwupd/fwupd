@@ -1,6 +1,11 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
+#[derive(ValidateStream)]
+struct TiTps6598xFirmwareHdr {
+    magic: u32le == 0xACEF0001,
+}
+
 #[derive(ToString)]
 enum TiTps6598xSfwi {
     Success = 0x0,

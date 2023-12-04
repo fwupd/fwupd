@@ -20,9 +20,9 @@ fu_acpi_dmar_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *path = NULL;
-	g_autoptr(FuAcpiDmar) dmar = NULL;
+	g_autoptr(FuAcpiDmar) dmar = fu_acpi_dmar_new();
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* only Intel */
@@ -37,14 +37,17 @@ fu_acpi_dmar_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	/* load DMAR table */
 	path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
 	fn = g_build_filename(path, "DMAR", NULL);
-	blob = fu_bytes_get_contents(fn, &error_local);
-	if (blob == NULL) {
+	stream = fu_input_stream_from_path(fn, &error_local);
+	if (stream == NULL) {
 		g_debug("failed to load %s: %s", fn, error_local->message);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
-	dmar = fu_acpi_dmar_new(blob, &error_local);
-	if (dmar == NULL) {
+	if (!fu_firmware_parse_stream(FU_FIRMWARE(dmar),
+				      stream,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error_local)) {
 		g_warning("failed to parse %s: %s", fn, error_local->message);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;

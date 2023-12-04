@@ -67,17 +67,17 @@ fu_logitech_hidpp_radio_write_firmware(FuDevice *device,
 {
 	FuDevice *parent = fu_device_get_parent(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* open */
 	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_write_firmware(parent, fw, progress, flags, error);
+	return fu_device_write_firmware(parent, stream, progress, flags, error);
 }
 
 static void

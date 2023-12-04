@@ -1350,7 +1350,7 @@ fu_synaptics_mst_device_restart(FuSynapticsMstDevice *self, GError **error)
 
 static FuFirmware *
 fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
-					 GBytes *fw,
+					 GInputStream *stream,
 					 FwupdInstallFlags flags,
 					 GError **error)
 {
@@ -1361,7 +1361,7 @@ fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
 	fu_synaptics_mst_firmware_set_family(FU_SYNAPTICS_MST_FIRMWARE(firmware), self->family);
 
 	/* check firmware and board ID match */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0 &&
 	    !fu_device_has_private_flag(device, FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID)) {
@@ -1377,7 +1377,7 @@ fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
 			return NULL;
 		}
 	}
-	return fu_firmware_new_from_bytes(fw);
+	return g_steal_pointer(&firmware);
 }
 
 static gboolean

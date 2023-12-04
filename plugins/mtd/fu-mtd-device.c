@@ -223,10 +223,14 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_mtd_device_erase(FuMtdDevice *self, GBytes *fw, FuProgress *progress, GError **error)
+fu_mtd_device_erase(FuMtdDevice *self, GInputStream *stream, FuProgress *progress, GError **error)
 {
 #ifdef HAVE_MTD_USER_H
-	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw, 0x0, self->erasesize);
+	g_autoptr(FuChunkArray) chunks = NULL;
+
+	chunks = fu_chunk_array_new_from_stream(stream, 0x0, self->erasesize, error);
+	if (chunks == NULL)
+		return FALSE;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -349,9 +353,16 @@ fu_mtd_device_verify(FuMtdDevice *self, FuChunkArray *chunks, FuProgress *progre
 }
 
 static gboolean
-fu_mtd_device_write_verify(FuMtdDevice *self, GBytes *fw, FuProgress *progress, GError **error)
+fu_mtd_device_write_verify(FuMtdDevice *self,
+			   GInputStream *stream,
+			   FuProgress *progress,
+			   GError **error)
 {
-	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 10 * 1024);
+	g_autoptr(FuChunkArray) chunks = NULL;
+
+	chunks = fu_chunk_array_new_from_stream(stream, 0x0, 10 * 1024, error);
+	if (chunks == NULL)
+		return FALSE;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -415,25 +426,28 @@ fu_mtd_device_write_firmware(FuDevice *device,
 			     GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
-	g_autoptr(GBytes) fw = NULL;
+	gsize streamsz = 0;
+	g_autoptr(GInputStream) stream = NULL;
 
 	/* get data to write */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
-	if (g_bytes_get_size(fw) > fu_device_get_firmware_size_max(device)) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (streamsz > fu_device_get_firmware_size_max(device)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "firmware too large, got 0x%x, expected <= 0x%x",
-			    (guint)g_bytes_get_size(fw),
+			    (guint)streamsz,
 			    (guint)fu_device_get_firmware_size_max(device));
 		return FALSE;
 	}
 
 	/* just one step required */
 	if (self->erasesize == 0)
-		return fu_mtd_device_write_verify(self, fw, progress, error);
+		return fu_mtd_device_write_verify(self, stream, progress, error);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -442,12 +456,12 @@ fu_mtd_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
 
 	/* erase */
-	if (!fu_mtd_device_erase(self, fw, fu_progress_get_child(progress), error))
+	if (!fu_mtd_device_erase(self, stream, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* write */
-	if (!fu_mtd_device_write_verify(self, fw, fu_progress_get_child(progress), error))
+	if (!fu_mtd_device_write_verify(self, stream, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);
 

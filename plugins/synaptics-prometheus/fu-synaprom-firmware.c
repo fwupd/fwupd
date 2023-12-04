@@ -49,34 +49,36 @@ fu_synaprom_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 
 static gboolean
 fu_synaprom_firmware_parse(FuFirmware *firmware,
-			   GBytes *fw,
+			   GInputStream *stream,
 			   gsize offset,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
 	FuSynapromFirmware *self = FU_SYNAPROM_FIRMWARE(firmware);
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	gsize streamsz = 0;
 
-	if (bufsz < self->signature_size + FU_STRUCT_SYNAPROM_HDR_SIZE) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (streamsz < self->signature_size + FU_STRUCT_SYNAPROM_HDR_SIZE) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
 				    "blob is too small to be firmware");
 		return FALSE;
 	}
-	bufsz -= self->signature_size;
+	streamsz -= self->signature_size;
 
 	/* parse each chunk */
-	while (offset < bufsz) {
+	while (offset < streamsz) {
 		guint32 hdrsz;
 		guint32 tag;
-		g_autoptr(FuFirmware) img = NULL;
+		g_autoptr(FuFirmware) img = fu_firmware_new();
+		g_autoptr(FuFirmware) img_old = NULL;
 		g_autoptr(GByteArray) st_hdr = NULL;
-		g_autoptr(GBytes) bytes = NULL;
+		g_autoptr(GInputStream) partial_stream = NULL;
 
 		/* verify item header */
-		st_hdr = fu_struct_synaprom_hdr_parse(buf, bufsz, offset, error);
+		st_hdr = fu_struct_synaprom_hdr_parse_stream(stream, offset, error);
 		if (st_hdr == NULL)
 			return FALSE;
 		tag = fu_struct_synaprom_hdr_get_tag(st_hdr);
@@ -90,8 +92,8 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 		}
 
 		/* sanity check */
-		img = fu_firmware_get_image_by_idx(firmware, tag, NULL);
-		if (img != NULL) {
+		img_old = fu_firmware_get_image_by_idx(firmware, tag, NULL);
+		if (img_old != NULL) {
 			g_set_error(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
@@ -109,14 +111,13 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		offset += st_hdr->len;
-		bytes = fu_bytes_new_offset(fw, offset, hdrsz, error);
-		if (bytes == NULL)
+		partial_stream = fu_partial_input_stream_new(stream, offset, hdrsz);
+		if (!fu_firmware_parse_stream(img, partial_stream, 0x0, flags, error))
 			return FALSE;
 		g_debug("adding 0x%04x (%s) with size 0x%04x",
 			tag,
 			fu_synaprom_firmware_tag_to_string(tag),
 			hdrsz);
-		img = fu_firmware_new_from_bytes(bytes);
 		fu_firmware_set_idx(img, tag);
 		fu_firmware_set_id(img, fu_synaprom_firmware_tag_to_string(tag));
 		if (!fu_firmware_add_image_full(firmware, img, error))
@@ -126,7 +127,7 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 		if (tag == FU_SYNAPROM_FIRMWARE_TAG_MFW_UPDATE_HEADER) {
 			g_autofree gchar *version = NULL;
 			g_autoptr(GByteArray) st_mfw = NULL;
-			st_mfw = fu_struct_synaprom_mfw_hdr_parse(buf, bufsz, offset, error);
+			st_mfw = fu_struct_synaprom_mfw_hdr_parse_stream(stream, offset, error);
 			if (st_mfw == NULL)
 				return FALSE;
 			self->product_id = fu_struct_synaprom_mfw_hdr_get_product(st_mfw);

@@ -24,23 +24,22 @@ G_DEFINE_TYPE(FuGenesysUsbhubFirmware, fu_genesys_usbhub_firmware, FU_TYPE_FIRMW
 
 static gboolean
 fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
-				    const guint8 *buf,
-				    gsize bufsz,
+				    GInputStream *stream,
 				    gsize offset,
 				    GError **error)
 {
 	guint8 project_ic_type[6];
 
 	/* recognize GL3523 code base product */
-	if (!fu_memcpy_safe(project_ic_type,
-			    sizeof(project_ic_type),
-			    0, /* dst */
-			    buf,
-			    bufsz,
-			    offset + GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3523 +
-				FU_STRUCT_GENESYS_TS_STATIC_OFFSET_MASK_PROJECT_IC_TYPE, /* src */
-			    sizeof(project_ic_type),
-			    error))
+	if (!fu_input_stream_read_safe(
+		stream,
+		project_ic_type,
+		sizeof(project_ic_type),
+		0, /* dst */
+		offset + GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3523 +
+		    FU_STRUCT_GENESYS_TS_STATIC_OFFSET_MASK_PROJECT_IC_TYPE, /* src */
+		sizeof(project_ic_type),
+		error))
 		return FALSE;
 
 	if (memcmp(project_ic_type, "3521", 4) == 0) {
@@ -56,15 +55,15 @@ fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
 	}
 
 	/* recognize GL3590 */
-	if (!fu_memcpy_safe(project_ic_type,
-			    sizeof(project_ic_type),
-			    0, /* dst */
-			    buf,
-			    bufsz,
-			    offset + GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3590 +
-				FU_STRUCT_GENESYS_TS_STATIC_OFFSET_MASK_PROJECT_IC_TYPE, /* src */
-			    sizeof(project_ic_type),
-			    error))
+	if (!fu_input_stream_read_safe(
+		stream,
+		project_ic_type,
+		sizeof(project_ic_type),
+		0, /* dst */
+		offset + GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3590 +
+		    FU_STRUCT_GENESYS_TS_STATIC_OFFSET_MASK_PROJECT_IC_TYPE, /* src */
+		sizeof(project_ic_type),
+		error))
 		return FALSE;
 
 	if (memcmp(project_ic_type, "3590", 4) == 0) {
@@ -74,15 +73,15 @@ fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
 	}
 
 	/* recognize GL3525 first edition */
-	if (!fu_memcpy_safe(project_ic_type,
-			    sizeof(project_ic_type),
-			    0, /* dst */
-			    buf,
-			    bufsz,
-			    offset + GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3525 +
-				FU_STRUCT_GENESYS_TS_STATIC_OFFSET_MASK_PROJECT_IC_TYPE, /* src */
-			    sizeof(project_ic_type),
-			    error))
+	if (!fu_input_stream_read_safe(
+		stream,
+		project_ic_type,
+		sizeof(project_ic_type),
+		0, /* dst */
+		offset + GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3525 +
+		    FU_STRUCT_GENESYS_TS_STATIC_OFFSET_MASK_PROJECT_IC_TYPE, /* src */
+		sizeof(project_ic_type),
+		error))
 		return FALSE;
 
 	if (memcmp(project_ic_type, "3525", 4) == 0) {
@@ -92,15 +91,15 @@ fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
 	}
 
 	/* recognize GL3525 second edition */
-	if (!fu_memcpy_safe(project_ic_type,
-			    sizeof(project_ic_type),
-			    0, /* dst */
-			    buf,
-			    bufsz,
-			    offset + GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3525_V2 +
-				FU_STRUCT_GENESYS_TS_STATIC_OFFSET_MASK_PROJECT_IC_TYPE, /* src */
-			    sizeof(project_ic_type),
-			    error))
+	if (!fu_input_stream_read_safe(
+		stream,
+		project_ic_type,
+		sizeof(project_ic_type),
+		0, /* dst */
+		offset + GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3525_V2 +
+		    FU_STRUCT_GENESYS_TS_STATIC_OFFSET_MASK_PROJECT_IC_TYPE, /* src */
+		sizeof(project_ic_type),
+		error))
 		return FALSE;
 
 	if (memcmp(project_ic_type, "3525", 4) == 0) {
@@ -114,26 +113,29 @@ fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
 }
 
 gboolean
-fu_genesys_usbhub_firmware_verify_checksum(GBytes *fw, GError **error)
+fu_genesys_usbhub_firmware_verify_checksum(GInputStream *stream, GError **error)
 {
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	gsize streamsz = 0;
 	guint16 fw_checksum = 0;
-	guint16 checksum;
+	guint16 checksum = 0;
+	g_autoptr(GInputStream) stream_tmp = NULL;
 
 	/* get checksum */
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    bufsz - sizeof(checksum),
-				    &fw_checksum,
-				    G_BIG_ENDIAN,
-				    error)) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (!fu_input_stream_read_u16(stream,
+				      streamsz - sizeof(checksum),
+				      &fw_checksum,
+				      G_BIG_ENDIAN,
+				      error)) {
 		g_prefix_error(error, "failed to get checksum: ");
 		return FALSE;
 	}
 
 	/* calculate checksum */
-	checksum = fu_sum16(buf, bufsz - sizeof(checksum));
+	stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - sizeof(checksum));
+	if (!fu_input_stream_compute_sum16(stream_tmp, &checksum, error))
+		return FALSE;
 	if (checksum != fw_checksum) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -148,14 +150,16 @@ fu_genesys_usbhub_firmware_verify_checksum(GBytes *fw, GError **error)
 }
 
 gboolean
-fu_genesys_usbhub_firmware_calculate_size(GBytes *fw, gsize offset, gsize *size, GError **error)
+fu_genesys_usbhub_firmware_calculate_size(GInputStream *stream,
+					  gsize offset,
+					  gsize *size,
+					  GError **error)
 {
 	guint8 kbs = 0;
-	if (!fu_memread_uint8_safe(g_bytes_get_data(fw, NULL),
-				   g_bytes_get_size(fw),
-				   offset + GENESYS_USBHUB_CODE_SIZE_OFFSET,
-				   &kbs,
-				   error)) {
+	if (!fu_input_stream_read_u8(stream,
+				     offset + GENESYS_USBHUB_CODE_SIZE_OFFSET,
+				     &kbs,
+				     error)) {
 		g_prefix_error(error, "failed to get codesize: ");
 		return FALSE;
 	}
@@ -197,35 +201,39 @@ fu_genesys_usbhub_firmware_ensure_version(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_genesys_usbhub_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_genesys_usbhub_firmware_validate(FuFirmware *firmware,
+				    GInputStream *stream,
+				    gsize offset,
+				    GError **error)
 {
+	guint8 buf[4] = {0};
 	guint8 magic[4] = GENESYS_USBHUB_FW_SIG_TEXT_HUB;
-	return fu_memcmp_safe(g_bytes_get_data(fw, NULL),
-			      g_bytes_get_size(fw),
-			      offset + GENESYS_USBHUB_FW_SIG_OFFSET,
-			      magic,
-			      sizeof(magic),
-			      0x0,
-			      sizeof(magic),
-			      error);
+	if (!fu_input_stream_read_safe(stream,
+				       buf,
+				       sizeof(buf),
+				       0x0,				      /* offset */
+				       offset + GENESYS_USBHUB_FW_SIG_OFFSET, /* seek */
+				       sizeof(buf),
+				       error))
+		return FALSE;
+	return memcmp(buf, magic, sizeof(magic)) == 0;
 }
 
 static gboolean
 fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
-				 GBytes *fw,
+				 GInputStream *stream,
 				 gsize offset,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
 	FuGenesysUsbhubFirmware *self = FU_GENESYS_USBHUB_FIRMWARE(firmware);
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	gsize code_size = 0;
+	gsize streamsz = 0;
 	guint32 static_ts_offset = 0;
-	g_autoptr(GBytes) fw_trunc = NULL;
+	g_autoptr(GInputStream) stream_trunc = NULL;
 
 	/* get chip */
-	if (!fu_genesys_usbhub_firmware_get_chip(self, buf, bufsz, offset, error)) {
+	if (!fu_genesys_usbhub_firmware_get_chip(self, stream, offset, error)) {
 		g_prefix_error(error, "failed to get chip: ");
 		return FALSE;
 	}
@@ -246,11 +254,10 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 		break;
 	case ISP_MODEL_HUB_GL3525: {
 		guint8 configuration = 0;
-		if (!fu_memread_uint8_safe(buf,
-					   bufsz,
-					   GENESYS_USBHUB_FW_CONFIGURATION_OFFSET,
-					   &configuration,
-					   error))
+		if (!fu_input_stream_read_u8(stream,
+					     GENESYS_USBHUB_FW_CONFIGURATION_OFFSET,
+					     &configuration,
+					     error))
 			return FALSE;
 		if (configuration == GENESYS_USBHUB_FW_CONFIGURATION_NEW_FORMAT ||
 		    configuration == GENESYS_USBHUB_FW_CONFIGURATION_NEW_FORMAT_V2)
@@ -262,7 +269,8 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	default:
 		break;
 	}
-	self->st_static_ts = fu_struct_genesys_ts_static_parse_bytes(fw, static_ts_offset, error);
+	self->st_static_ts =
+	    fu_struct_genesys_ts_static_parse_stream(stream, static_ts_offset, error);
 
 	/* deduce code size */
 	switch (self->chip.model) {
@@ -271,7 +279,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 		break;
 	case ISP_MODEL_HUB_GL3523: {
 		if (self->chip.revision == 50) {
-			if (!fu_genesys_usbhub_firmware_calculate_size(fw,
+			if (!fu_genesys_usbhub_firmware_calculate_size(stream,
 								       offset,
 								       &code_size,
 								       error))
@@ -283,7 +291,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	}
 	case ISP_MODEL_HUB_GL3590:
 	case ISP_MODEL_HUB_GL3525: {
-		if (!fu_genesys_usbhub_firmware_calculate_size(fw, offset, &code_size, error))
+		if (!fu_genesys_usbhub_firmware_calculate_size(stream, offset, &code_size, error))
 			return FALSE;
 		break;
 	}
@@ -292,14 +300,13 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* truncate to correct size */
-	fw_trunc = fu_bytes_new_offset(fw, offset, code_size, error);
-	if (fw_trunc == NULL)
+	stream_trunc = fu_partial_input_stream_new(stream, offset, code_size);
+	if (!fu_firmware_set_stream(firmware, stream_trunc, error))
 		return FALSE;
-	fu_firmware_set_bytes(firmware, fw_trunc);
 
 	/* calculate checksum */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		if (!fu_genesys_usbhub_firmware_verify_checksum(fw_trunc, error))
+		if (!fu_genesys_usbhub_firmware_verify_checksum(stream_trunc, error))
 			return FALSE;
 	}
 
@@ -309,9 +316,11 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 
 	/* parse remaining firmware bytes */
 	offset += code_size;
-	while (offset < bufsz) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	while (offset < streamsz) {
 		g_autoptr(FuFirmware) firmware_sub = NULL;
-		firmware_sub = fu_firmware_new_from_gtypes(fw,
+		firmware_sub = fu_firmware_new_from_gtypes(stream,
 							   offset,
 							   flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
 							   error,

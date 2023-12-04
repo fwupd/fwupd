@@ -131,11 +131,13 @@ fu_logitech_rallysystem_tablehub_device_recv(FuLogitechRallysystemTablehubDevice
 
 static gboolean
 fu_logitech_rallysystem_tablehub_device_write_fw(FuLogitechRallysystemTablehubDevice *self,
-						 GBytes *fw,
+						 GInputStream *stream,
 						 FuProgress *progress,
 						 GError **error)
 {
-	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x200);
+	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_stream(stream, 0x0, 0x200, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
@@ -204,8 +206,9 @@ fu_logitech_rallysystem_tablehub_device_write_firmware(FuDevice *device,
 						       GError **error)
 {
 	FuLogitechRallysystemTablehubDevice *self = FU_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE(device);
+	gsize streamsz = 0;
 	guint8 buf[FU_STRUCT_USB_FIRMWARE_DOWNLOAD_RESPONSE_SIZE] = {0x0};
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GByteArray) st_req = fu_struct_usb_firmware_download_request_new();
 	g_autoptr(GByteArray) st_res = NULL;
 
@@ -217,10 +220,12 @@ fu_logitech_rallysystem_tablehub_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 60, NULL);
 
 	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
-	fu_struct_usb_firmware_download_request_set_len(st_req, g_bytes_get_size(fw));
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	fu_struct_usb_firmware_download_request_set_len(st_req, streamsz);
 	if (!fu_struct_usb_firmware_download_request_set_fw_version(st_req,
 								    fu_device_get_version(device),
 								    error)) {
@@ -249,7 +254,7 @@ fu_logitech_rallysystem_tablehub_device_write_firmware(FuDevice *device,
 
 	/* push each block to device */
 	if (!fu_logitech_rallysystem_tablehub_device_write_fw(self,
-							      fw,
+							      stream,
 							      fu_progress_get_child(progress),
 							      error))
 		return FALSE;

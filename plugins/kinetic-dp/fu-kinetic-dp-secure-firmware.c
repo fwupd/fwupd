@@ -51,13 +51,11 @@ fu_kinetic_dp_secure_firmware_export(FuFirmware *firmware,
 }
 
 static gboolean
-fu_kinetic_dp_secure_firmware_parse_chip_id(GBytes *fw,
+fu_kinetic_dp_secure_firmware_parse_chip_id(GInputStream *stream,
 					    FuKineticDpChip *chip_id,
 					    gboolean *esm_xip_enabled,
 					    GError **error)
 {
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	const struct {
 		FuKineticDpChip chip_id;
 		guint32 offset;
@@ -75,14 +73,16 @@ fu_kinetic_dp_secure_firmware_parse_chip_id(GBytes *fw,
 	};
 
 	for (guint32 i = 0; i < G_N_ELEMENTS(map); i++) {
-		if (fu_memcmp_safe(buf,
-				   bufsz,
-				   map[i].offset,
-				   (const guint8 *)map[i].app_id,
-				   APP_ID_STR_LEN,
-				   0x0,
-				   APP_ID_STR_LEN,
-				   NULL)) {
+		guint8 buf[4] = {APP_ID_STR_LEN};
+		if (!fu_input_stream_read_safe(stream,
+					       buf,
+					       sizeof(buf),
+					       0x0,
+					       map[i].offset,
+					       sizeof(buf),
+					       error))
+			return FALSE;
+		if (memcmp(buf, (const guint8 *)map[i].app_id, sizeof(buf)) == 0) {
 			*chip_id = map[i].chip_id;
 			*esm_xip_enabled = map[i].esm_xip_enabled;
 			return TRUE;
@@ -139,21 +139,24 @@ fu_kinetic_dp_secure_firmware_get_esm_xip_enabled(FuKineticDpSecureFirmware *sel
 
 static gboolean
 fu_kinetic_dp_secure_device_parse_app_fw(FuKineticDpSecureFirmware *self,
-					 GBytes *fw,
+					 GInputStream *stream,
 					 GError **error)
 {
 	FuKineticDpSecureFirmwarePrivate *priv = GET_PRIVATE(self);
+	gsize streamsz = 0;
 	guint32 app_code_block_size;
 	guint32 std_fw_ver = 0;
 	g_autoptr(GByteArray) st = NULL;
 
 	/* sanity check */
-	if (g_bytes_get_size(fw) != STD_FW_PAYLOAD_SIZE) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (streamsz != STD_FW_PAYLOAD_SIZE) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "firmware payload size (0x%x) is not valid",
-			    (guint)g_bytes_get_size(fw));
+			    (guint)streamsz);
 		return FALSE;
 	}
 
@@ -164,7 +167,7 @@ fu_kinetic_dp_secure_device_parse_app_fw(FuKineticDpSecureFirmware *self,
 	}
 
 	/* get FW info embedded in FW file */
-	st = fu_struct_kinetic_dp_jaguar_footer_parse_bytes(fw, SPI_APP_ID_DATA_START, error);
+	st = fu_struct_kinetic_dp_jaguar_footer_parse_stream(stream, SPI_APP_ID_DATA_START, error);
 	if (st == NULL)
 		return FALSE;
 
@@ -183,59 +186,57 @@ fu_kinetic_dp_secure_device_parse_app_fw(FuKineticDpSecureFirmware *self,
 
 static gboolean
 fu_kinetic_dp_secure_firmware_parse(FuFirmware *firmware,
-				    GBytes *fw_bytes,
+				    GInputStream *stream,
 				    gsize offset,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
 	FuKineticDpSecureFirmware *self = FU_KINETIC_DP_SECURE_FIRMWARE(firmware);
 	FuKineticDpSecureFirmwarePrivate *priv = GET_PRIVATE(self);
-	const guint8 *buf;
-	gsize bufsz;
+	gsize streamsz = 0;
 	guint32 app_fw_payload_size = 0;
-	g_autoptr(GBytes) isp_drv_blob = NULL;
-	g_autoptr(GBytes) app_fw_blob = NULL;
-	g_autoptr(FuFirmware) isp_drv_img = NULL;
-	g_autoptr(FuFirmware) app_fw_img = NULL;
+	g_autoptr(GInputStream) isp_drv_stream = NULL;
+	g_autoptr(GInputStream) app_fw_stream = NULL;
+	g_autoptr(FuFirmware) isp_drv_img = fu_firmware_new();
+	g_autoptr(FuFirmware) app_fw_img = fu_firmware_new();
 
 	/* parse firmware according to Kinetic's FW image format
 	 * FW binary = 4 bytes Header(Little-Endian) + ISP driver + App FW
 	 * 4 bytes Header: size of ISP driver */
-	buf = g_bytes_get_data(fw_bytes, &bufsz);
-	if (!fu_memread_uint32_safe(buf, bufsz, 0, &priv->isp_drv_size, G_LITTLE_ENDIAN, error))
+	if (!fu_input_stream_read_u32(stream, 0, &priv->isp_drv_size, G_LITTLE_ENDIAN, error))
 		return FALSE;
 
 	/* app firmware payload size */
-	app_fw_payload_size =
-	    g_bytes_get_size(fw_bytes) - HEADER_LEN_ISP_DRV_SIZE - priv->isp_drv_size;
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	app_fw_payload_size = streamsz - HEADER_LEN_ISP_DRV_SIZE - priv->isp_drv_size;
 
 	/* add ISP driver as a new image into firmware */
-	isp_drv_blob =
-	    fu_bytes_new_offset(fw_bytes, HEADER_LEN_ISP_DRV_SIZE, priv->isp_drv_size, error);
-	if (isp_drv_blob == NULL)
+	isp_drv_stream =
+	    fu_partial_input_stream_new(stream, HEADER_LEN_ISP_DRV_SIZE, priv->isp_drv_size);
+	if (!fu_firmware_parse_stream(isp_drv_img, isp_drv_stream, 0x0, flags, error))
 		return FALSE;
-	isp_drv_img = fu_firmware_new_from_bytes(isp_drv_blob);
 	fu_firmware_set_idx(isp_drv_img, FU_KINETIC_DP_FIRMWARE_IDX_ISP_DRV);
-	fu_firmware_add_image(firmware, isp_drv_img);
+	if (!fu_firmware_add_image_full(firmware, isp_drv_img, error))
+		return FALSE;
 
 	/* add App FW as a new image into firmware */
-	app_fw_blob = fu_bytes_new_offset(fw_bytes,
-					  HEADER_LEN_ISP_DRV_SIZE + priv->isp_drv_size,
-					  app_fw_payload_size,
-					  error);
-	if (app_fw_blob == NULL)
+	app_fw_stream = fu_partial_input_stream_new(stream,
+						    HEADER_LEN_ISP_DRV_SIZE + priv->isp_drv_size,
+						    app_fw_payload_size);
+	if (!fu_firmware_parse_stream(app_fw_img, app_fw_stream, 0x0, flags, error))
 		return FALSE;
-	app_fw_img = fu_firmware_new_from_bytes(app_fw_blob);
 	fu_firmware_set_idx(app_fw_img, FU_KINETIC_DP_FIRMWARE_IDX_APP_FW);
-	fu_firmware_add_image(firmware, app_fw_img);
+	if (!fu_firmware_add_image_full(firmware, app_fw_img, error))
+		return FALSE;
 
 	/* figure out which chip App FW it is for */
-	if (!fu_kinetic_dp_secure_firmware_parse_chip_id(app_fw_blob,
+	if (!fu_kinetic_dp_secure_firmware_parse_chip_id(stream,
 							 &priv->chip_id,
 							 &priv->esm_xip_enabled,
 							 error))
 		return FALSE;
-	if (!fu_kinetic_dp_secure_device_parse_app_fw(self, app_fw_blob, error)) {
+	if (!fu_kinetic_dp_secure_device_parse_app_fw(self, stream, error)) {
 		g_prefix_error(error, "failed to parse info from Jaguar or Mustang App firmware: ");
 		return FALSE;
 	}

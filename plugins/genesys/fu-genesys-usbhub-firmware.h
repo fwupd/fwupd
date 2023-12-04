@@ -18,8 +18,11 @@ G_DECLARE_FINAL_TYPE(FuGenesysUsbhubFirmware,
 FuFirmware *
 fu_genesys_usbhub_firmware_new(void);
 gboolean
-fu_genesys_usbhub_firmware_verify_checksum(GBytes *fw, GError **error);
+fu_genesys_usbhub_firmware_verify_checksum(GInputStream *stream, GError **error);
 gboolean
-fu_genesys_usbhub_firmware_calculate_size(GBytes *fw, gsize offset, gsize *size, GError **error);
+fu_genesys_usbhub_firmware_calculate_size(GInputStream *stream,
+					  gsize offset,
+					  gsize *size,
+					  GError **error);
 gboolean
 fu_genesys_usbhub_firmware_ensure_version(FuFirmware *firmware, GError **error);

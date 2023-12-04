@@ -392,7 +392,7 @@ fu_goodixtp_brlb_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_goodixtp_brlb_device_prepare_firmware(FuDevice *device,
-					 GBytes *fw,
+					 GInputStream *stream,
 					 FwupdInstallFlags flags,
 					 GError **error)
 {
@@ -400,7 +400,7 @@ fu_goodixtp_brlb_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_goodixtp_brlb_firmware_new();
 	if (!fu_goodixtp_brlb_firmware_parse(
 		FU_GOODIXTP_FIRMWARE(firmware),
-		fw,
+		stream,
 		fu_goodixtp_hid_device_get_sensor_id(FU_GOODIXTP_HID_DEVICE(self)),
 		error))
 		return NULL;
@@ -414,12 +414,17 @@ fu_goodixtp_brlb_device_write_image(FuGoodixtpBrlbDevice *self,
 				    GError **error)
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
-	blob = fu_firmware_get_bytes(img, error);
-	if (blob == NULL)
+	stream = fu_firmware_get_stream(img, error);
+	if (stream == NULL)
 		return FALSE;
-	chunks = fu_chunk_array_new_from_bytes(blob, fu_firmware_get_addr(img), RAM_BUFFER_SIZE);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						fu_firmware_get_addr(img),
+						RAM_BUFFER_SIZE,
+						error);
+	if (chunks == NULL)
+		return FALSE;
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));

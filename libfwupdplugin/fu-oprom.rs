@@ -1,7 +1,7 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(New, ValidateBytes, ParseBytes)]
+#[derive(New, ValidateStream, ParseStream)]
 struct Oprom {
     signature: u16le == 0xAA55,
     image_size: u16le,		// of 512 bytes
@@ -14,7 +14,7 @@ struct Oprom {
     pci_header_offset: u16le = $struct_size,
     expansion_header_offset: u16le,
 }
-#[derive(New, ParseBytes)]
+#[derive(New, ParseStream)]
 struct OpromPci {
     signature: u32le == 0x52494350,
     vendor_id: u16le,

@@ -11,6 +11,7 @@
 #include "fu-bytes.h"
 #include "fu-elf-firmware.h"
 #include "fu-elf-struct.h"
+#include "fu-partial-input-stream.h"
 #include "fu-string.h"
 
 /**
@@ -26,14 +27,14 @@
 G_DEFINE_TYPE(FuElfFirmware, fu_elf_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_elf_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_elf_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
 {
-	return fu_struct_elf_file_header64le_validate_bytes(fw, offset, error);
+	return fu_struct_elf_file_header64le_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_elf_firmware_parse(FuFirmware *firmware,
-		      GBytes *fw,
+		      GInputStream *stream,
 		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
@@ -49,7 +50,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_byte_array_unref);
 
 	/* file header */
-	st_fhdr = fu_struct_elf_file_header64le_parse_bytes(fw, offset, error);
+	st_fhdr = fu_struct_elf_file_header64le_parse_stream(stream, offset, error);
 	if (st_fhdr == NULL)
 		return FALSE;
 
@@ -59,7 +60,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 	phnum = fu_struct_elf_file_header64le_get_phnum(st_fhdr);
 	for (guint i = 0; i < phnum; i++) {
 		g_autoptr(GByteArray) st_phdr =
-		    fu_struct_elf_program_header64le_parse_bytes(fw, offset_proghdr, error);
+		    fu_struct_elf_program_header64le_parse_stream(stream, offset_proghdr, error);
 		if (st_phdr == NULL)
 			return FALSE;
 		offset_proghdr += phentsize;
@@ -70,7 +71,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 	shnum = fu_struct_elf_file_header64le_get_shnum(st_fhdr);
 	for (guint i = 0; i < shnum; i++) {
 		g_autoptr(GByteArray) st_shdr =
-		    fu_struct_elf_section_header64le_parse_bytes(fw, offset_secthdr, error);
+		    fu_struct_elf_section_header64le_parse_stream(stream, offset_secthdr, error);
 		if (st_shdr == NULL)
 			return FALSE;
 		g_ptr_array_add(sections, g_steal_pointer(&st_shdr));
@@ -84,14 +85,14 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		guint64 sect_size = fu_struct_elf_section_header64le_get_size(st_shdr);
 		g_autoptr(FuFirmware) img = fu_firmware_new();
 		if (sect_size > 0) {
-			g_autoptr(GBytes) blob =
-			    fu_bytes_new_offset(fw, offset + sect_offset, sect_size, error);
-			if (blob == NULL)
+			g_autoptr(GInputStream) img_stream =
+			    fu_partial_input_stream_new(stream, offset + sect_offset, sect_size);
+			if (fu_firmware_parse_stream(img, img_stream, 0x0, flags, error))
 				return FALSE;
-			fu_firmware_set_bytes(img, blob);
 		}
 		fu_firmware_set_idx(img, i);
-		fu_firmware_add_image(firmware, img);
+		if (!fu_firmware_add_image_full(firmware, img, error))
+			return FALSE;
 	}
 
 	/* fix up the section names */

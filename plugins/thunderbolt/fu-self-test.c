@@ -851,6 +851,7 @@ typedef struct ThunderboltTest {
 	/* if TestParam::firmware_file is nonnull */
 	GMappedFile *fw_file;
 	GBytes *fw_data;
+	GInputStream *fw_stream;
 
 } ThunderboltTest;
 
@@ -955,6 +956,8 @@ test_set_up(ThunderboltTest *tt, gconstpointer params)
 
 		tt->fw_data = g_mapped_file_get_bytes(tt->fw_file);
 		g_assert_nonnull(tt->fw_data);
+		tt->fw_stream = g_memory_input_stream_new_from_bytes(tt->fw_data);
+		g_assert_nonnull(tt->fw_stream);
 	}
 }
 
@@ -971,6 +974,8 @@ test_tear_down(ThunderboltTest *tt, gconstpointer user_data)
 
 	if (tt->fw_data)
 		g_bytes_unref(tt->fw_data);
+	if (tt->fw_stream)
+		g_object_unref(tt->fw_stream);
 
 	if (tt->fw_file)
 		g_mapped_file_unref(tt->fw_file);
@@ -1142,7 +1147,7 @@ test_update_working(ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_nonnull(up_ctx);
 	ret = fu_plugin_runner_write_firmware(plugin,
 					      tree->fu_device,
-					      fw_data,
+					      tt->fw_stream,
 					      progress,
 					      FWUPD_INSTALL_FLAG_NO_SEARCH,
 					      &error);
@@ -1196,7 +1201,7 @@ test_update_wd19(ThunderboltTest *tt, gconstpointer user_data)
 
 	ret = fu_plugin_runner_write_firmware(plugin,
 					      tree->fu_device,
-					      fw_data,
+					      tt->fw_stream,
 					      progress,
 					      FWUPD_INSTALL_FLAG_NO_SEARCH,
 					      &error);
@@ -1234,7 +1239,7 @@ test_update_fail(ThunderboltTest *tt, gconstpointer user_data)
 
 	ret = fu_plugin_runner_write_firmware(plugin,
 					      tree->fu_device,
-					      fw_data,
+					      tt->fw_stream,
 					      progress,
 					      FWUPD_INSTALL_FLAG_NO_SEARCH,
 					      &error);
@@ -1287,7 +1292,7 @@ test_update_fail_nowshow(ThunderboltTest *tt, gconstpointer user_data)
 
 	ret = fu_plugin_runner_write_firmware(plugin,
 					      tree->fu_device,
-					      fw_data,
+					      tt->fw_stream,
 					      progress,
 					      FWUPD_INSTALL_FLAG_NO_SEARCH,
 					      &error);

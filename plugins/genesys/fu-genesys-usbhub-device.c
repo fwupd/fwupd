@@ -863,6 +863,7 @@ fu_genesys_usbhub_device_get_fw_bank_version(FuGenesysUsbhubDevice *self,
 	gsize bufsz = 0;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autofree guint8 *buf = NULL;
 
 	g_return_val_if_fail(fw_type < FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT, FALSE);
@@ -904,7 +905,8 @@ fu_genesys_usbhub_device_get_fw_bank_version(FuGenesysUsbhubDevice *self,
 
 	/* verify bank firmware integrity */
 	blob = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
-	if (!fu_genesys_usbhub_firmware_verify_checksum(blob, &error_local)) {
+	stream = g_memory_input_stream_new_from_bytes(blob);
+	if (!fu_genesys_usbhub_firmware_verify_checksum(stream, &error_local)) {
 		g_debug("ignoring firmware %s bank%d: %s",
 			fu_genesys_fw_type_to_string(fw_type),
 			bank_num + 1,
@@ -1947,7 +1949,7 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 					       GError **error)
 {
 	FuGenesysFwCodesign codesign_type = FU_GENESYS_FW_CODESIGN_NONE;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GByteArray) st_codesign = NULL;
 
 	g_return_val_if_fail(FU_IS_GENESYS_USBHUB_CODESIGN_FIRMWARE(firmware), FALSE);
@@ -1965,8 +1967,8 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 	}
 
 	/* get fw codesign info */
-	blob = fu_firmware_get_bytes(firmware, error);
-	if (blob == NULL) {
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL) {
 		g_prefix_error(error,
 			       "firmware does not have %s bytes: ",
 			       fu_genesys_fw_type_to_string(FU_GENESYS_FW_TYPE_CODESIGN));
@@ -1982,7 +1984,8 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 		g_autofree gchar *dev_e = NULL;
 
 		/* parse and validate */
-		st_codesign = fu_struct_genesys_fw_codesign_info_rsa_parse_bytes(blob, 0x0, error);
+		st_codesign =
+		    fu_struct_genesys_fw_codesign_info_rsa_parse_stream(stream, 0x0, error);
 		if (st_codesign == NULL) {
 			g_prefix_error(error,
 				       "failed to parse %s codesgin: ",
@@ -2029,7 +2032,7 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 
 		/* parse and validate */
 		st_codesign =
-		    fu_struct_genesys_fw_codesign_info_ecdsa_parse_bytes(blob, 0x0, error);
+		    fu_struct_genesys_fw_codesign_info_ecdsa_parse_stream(stream, 0x0, error);
 		if (st_codesign == NULL) {
 			g_prefix_error(error,
 				       "failed to parse %s codesgin: ",
@@ -2146,7 +2149,7 @@ fu_genesys_usbhub_device_adjust_fw_addr(FuGenesysUsbhubDevice *self,
 
 static FuFirmware *
 fu_genesys_usbhub_device_prepare_firmware(FuDevice *device,
-					  GBytes *fw,
+					  GInputStream *stream,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {
@@ -2154,7 +2157,7 @@ fu_genesys_usbhub_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_genesys_usbhub_firmware_new();
 
 	/* parse firmware */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
 	/* has codesign */
@@ -2807,7 +2810,7 @@ fu_genesys_usbhub_device_examine_fw_codesign_hw(FuGenesysUsbhubDevice *self,
 {
 	gsize codesize_to_hash = 0;
 	g_autoptr(FuFirmware) codesign_img = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GByteArray) st_codesign = NULL;
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
@@ -2815,10 +2818,10 @@ fu_genesys_usbhub_device_examine_fw_codesign_hw(FuGenesysUsbhubDevice *self,
 	codesign_img = fu_firmware_get_image_by_idx(firmware, FU_GENESYS_FW_TYPE_CODESIGN, error);
 	if (codesign_img == NULL)
 		return FALSE;
-	blob = fu_firmware_get_bytes(codesign_img, error);
-	if (blob == NULL)
+	stream = fu_firmware_get_stream(codesign_img, error);
+	if (stream == NULL)
 		return FALSE;
-	st_codesign = fu_struct_genesys_fw_codesign_info_ecdsa_parse_bytes(blob, 0x0, error);
+	st_codesign = fu_struct_genesys_fw_codesign_info_ecdsa_parse_stream(stream, 0x0, error);
 	if (st_codesign == NULL)
 		return FALSE;
 

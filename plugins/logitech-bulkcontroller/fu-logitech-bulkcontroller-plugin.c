@@ -31,7 +31,7 @@ fu_logitech_bulkcontroller_plugin_init(FuLogitechBulkcontrollerPlugin *self)
 static gboolean
 fu_logitech_bulkcontroller_plugin_write_firmware(FuPlugin *plugin,
 						 FuDevice *device,
-						 GBytes *blob_fw,
+						 GInputStream *stream,
 						 FuProgress *progress,
 						 FwupdInstallFlags flags,
 						 GError **error)
@@ -42,7 +42,7 @@ fu_logitech_bulkcontroller_plugin_write_firmware(FuPlugin *plugin,
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_device_write_firmware(device, blob_fw, progress, flags, error))
+	if (!fu_device_write_firmware(device, stream, progress, flags, error))
 		return FALSE;
 	self->post_install = TRUE;
 	return TRUE;

@@ -15,7 +15,7 @@ enum EdidDescriptorTag {
     DummyDescriptor = 0x10,
 }
 
-#[derive(ParseBytes, New)]
+#[derive(ParseStream, New)]
 struct EdidDescriptor {
     kind: u16le,
     subkind: u8,
@@ -24,7 +24,7 @@ struct EdidDescriptor {
     data: [u8; 13],
 }
 
-#[derive(New, ParseBytes)]
+#[derive(New, ParseStream)]
 struct Edid {
     header: [u8; 8] == 0x00FFFFFFFFFFFF00,
     manufacturer_name: [u8; 2],

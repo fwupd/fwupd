@@ -449,7 +449,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_elantp_hid_device_prepare_firmware(FuDevice *device,
-				      GBytes *fw,
+				      GInputStream *stream,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
@@ -460,7 +460,7 @@ fu_elantp_hid_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_elantp_firmware_new();
 
 	/* check is compatible with hardware */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	module_id = fu_elantp_firmware_get_module_id(FU_ELANTP_FIRMWARE(firmware));
 	if (self->module_id != module_id) {

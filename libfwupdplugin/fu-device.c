@@ -14,8 +14,10 @@
 #include "fwupd-common.h"
 #include "fwupd-device-private.h"
 
+#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-device-private.h"
+#include "fu-input-stream.h"
 #include "fu-quirks.h"
 #include "fu-security-attr.h"
 #include "fu-string.h"
@@ -4396,7 +4398,7 @@ fu_device_get_results(FuDevice *self, GError **error)
 /**
  * fu_device_write_firmware:
  * @self: a #FuDevice
- * @fw: firmware blob
+ * @stream: #GInputStream firmware
  * @progress: a #FuProgress
  * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: (nullable): optional return location for an error
@@ -4409,7 +4411,7 @@ fu_device_get_results(FuDevice *self, GError **error)
  **/
 gboolean
 fu_device_write_firmware(FuDevice *self,
-			 GBytes *fw,
+			 GInputStream *stream,
 			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error)
@@ -4420,6 +4422,7 @@ fu_device_write_firmware(FuDevice *self,
 	g_autofree gchar *str = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -4434,7 +4437,7 @@ fu_device_write_firmware(FuDevice *self,
 
 	/* prepare (e.g. decompress) firmware */
 	fu_progress_set_status(progress, FWUPD_STATUS_DECOMPRESSING);
-	firmware = fu_device_prepare_firmware(self, fw, flags, error);
+	firmware = fu_device_prepare_firmware(self, stream, flags, error);
 	if (firmware == NULL)
 		return FALSE;
 	str = fu_firmware_to_string(firmware);
@@ -4471,7 +4474,7 @@ fu_device_write_firmware(FuDevice *self,
 /**
  * fu_device_prepare_firmware:
  * @self: a #FuDevice
- * @fw: firmware blob
+ * @stream: a #GInputStream
  * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: (nullable): optional return location for an error
  *
@@ -4488,51 +4491,55 @@ fu_device_write_firmware(FuDevice *self,
  * Since: 1.1.2
  **/
 FuFirmware *
-fu_device_prepare_firmware(FuDevice *self, GBytes *fw, FwupdInstallFlags flags, GError **error)
+fu_device_prepare_firmware(FuDevice *self,
+			   GInputStream *stream,
+			   FwupdInstallFlags flags,
+			   GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(GBytes) fw_def = NULL;
+	gsize fw_size;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-	g_return_val_if_fail(fw != NULL, NULL);
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* optionally subclassed */
 	if (klass->prepare_firmware != NULL) {
-		firmware = klass->prepare_firmware(self, fw, flags, error);
+		firmware = klass->prepare_firmware(self, stream, flags, error);
 		if (firmware == NULL)
 			return NULL;
 	} else if (priv->firmware_gtype != G_TYPE_INVALID) {
 		firmware = g_object_new(priv->firmware_gtype, NULL);
-		if (!fu_firmware_parse(firmware, fw, flags, error))
+		if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 			return NULL;
 	} else {
-		firmware = fu_firmware_new_from_bytes(fw);
+		firmware = fu_firmware_new();
+		if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+			return NULL;
 	}
 
 	/* check size */
-	fw_def = fu_firmware_get_bytes(firmware, NULL);
-	if (fw_def != NULL) {
-		guint64 fw_sz = (guint64)g_bytes_get_size(fw_def);
-		if (priv->size_max > 0 && fw_sz > priv->size_max) {
+	fw_size = fu_firmware_get_size(firmware);
+	if (fw_size != 0) {
+		if (priv->size_max > 0 && fw_size > priv->size_max) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "firmware is 0x%04x bytes larger than the allowed "
 				    "maximum size of 0x%04x bytes",
-				    (guint)(fw_sz - priv->size_max),
+				    (guint)(fw_size - priv->size_max),
 				    (guint)priv->size_max);
 			return NULL;
 		}
-		if (priv->size_min > 0 && fw_sz < priv->size_min) {
+		if (priv->size_min > 0 && fw_size < priv->size_min) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "firmware is %04x bytes smaller than the allowed "
 				    "minimum size of %04x bytes",
-				    (guint)(priv->size_min - fw_sz),
+				    (guint)(priv->size_min - fw_size),
 				    (guint)priv->size_max);
 			return NULL;
 		}

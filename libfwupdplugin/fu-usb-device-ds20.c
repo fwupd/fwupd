@@ -11,6 +11,7 @@
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-dump.h"
+#include "fu-input-stream.h"
 #include "fu-usb-device-ds20-struct.h"
 #include "fu-usb-device-ds20.h"
 
@@ -75,7 +76,7 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 	gsize total_length = fu_firmware_get_size(FU_FIRMWARE(self));
 	guint8 vendor_code = fu_firmware_get_idx(FU_FIRMWARE(self));
 	g_autofree guint8 *buf = g_malloc0(total_length);
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
 	g_return_val_if_fail(FU_IS_USB_DEVICE_DS20(self), FALSE);
 	g_return_val_if_fail(FU_IS_USB_DEVICE(device), FALSE);
@@ -112,8 +113,8 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 	fu_dump_raw(G_LOG_DOMAIN, "PlatformCapabilityOs20", buf, actual_length);
 
 	/* FuUsbDeviceDs20->parse */
-	blob = g_bytes_new_take(g_steal_pointer(&buf), actual_length);
-	return klass->parse(self, blob, device, error);
+	stream = g_memory_input_stream_new_from_data(buf, actual_length, NULL);
+	return klass->parse(self, stream, device, error);
 #else
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -124,13 +125,16 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 }
 
 static gboolean
-fu_usb_device_ds20_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_usb_device_ds20_validate(FuFirmware *firmware,
+			    GInputStream *stream,
+			    gsize offset,
+			    GError **error)
 {
 	g_autoptr(GByteArray) st = NULL;
 	g_autofree gchar *guid_str = NULL;
 
 	/* matches the correct UUID */
-	st = fu_struct_ds20_parse_bytes(fw, offset, error);
+	st = fu_struct_ds20_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
 	guid_str = fwupd_guid_to_string(fu_struct_ds20_get_guid(st), FWUPD_GUID_FLAG_MIXED_ENDIAN);
@@ -161,22 +165,25 @@ fu_usb_device_ds20_sort_by_platform_ver_cb(gconstpointer a, gconstpointer b)
 
 static gboolean
 fu_usb_device_ds20_parse(FuFirmware *firmware,
-			 GBytes *fw,
+			 GInputStream *stream,
 			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	FuUsbDeviceDs20 *self = FU_USB_DEVICE_DS20(firmware);
 	FuUsbDeviceDs20Private *priv = GET_PRIVATE(self);
+	gsize streamsz = 0;
 	guint version_lowest = fu_firmware_get_version_raw(firmware);
 	g_autoptr(GPtrArray) dsinfos = g_ptr_array_new_with_free_func(g_free);
 
-	for (gsize off = 0; off < g_bytes_get_size(fw); off += FU_STRUCT_DS20_SIZE) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	for (gsize off = 0; off < streamsz; off += FU_STRUCT_DS20_SIZE) {
 		g_autofree FuUsbDeviceDs20Item *dsinfo = g_new0(FuUsbDeviceDs20Item, 1);
 		g_autoptr(GByteArray) st = NULL;
 
 		/* parse */
-		st = fu_struct_ds20_parse_bytes(fw, off, error);
+		st = fu_struct_ds20_parse_stream(stream, off, error);
 		if (st == NULL)
 			return FALSE;
 		dsinfo->platform_ver = fu_struct_ds20_get_platform_ver(st);

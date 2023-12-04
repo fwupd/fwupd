@@ -249,7 +249,7 @@ struct _FuPluginClass {
 	 * write_firmware:
 	 * @self: a #FuPlugin
 	 * @dev: a device
-	 * @blob_fw: a data blob
+	 * @stream: a #GInputStream
 	 * @progress: a #FuProgress
 	 * @flags: install flags
 	 * @error: (nullable): optional return location for an error
@@ -260,7 +260,7 @@ struct _FuPluginClass {
 	 **/
 	gboolean (*write_firmware)(FuPlugin *self,
 				   FuDevice *device,
-				   GBytes *blob_fw,
+				   GInputStream *stream,
 				   FuProgress *progress,
 				   FwupdInstallFlags flags,
 				   GError **error);

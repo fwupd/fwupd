@@ -1706,8 +1706,8 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuRelease) release = fu_release_new();
-	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
@@ -1722,10 +1722,10 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	/* get generated file as a blob */
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "hwid-1.2.3.cab", NULL);
-	blob_cab = fu_bytes_get_contents(filename, &error);
+	stream = fu_input_stream_from_path(filename, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob_cab);
-	cabinet = fu_engine_build_cabinet_from_blob(engine, blob_cab, &error);
+	g_assert_nonnull(stream);
+	cabinet = fu_engine_build_cabinet_from_stream(engine, stream, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(cabinet);
 
@@ -1773,8 +1773,8 @@ fu_engine_get_details_added_func(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
@@ -1801,11 +1801,13 @@ fu_engine_get_details_added_func(gconstpointer user_data)
 	/* get details */
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "hwid-1.2.3.cab", NULL);
-	blob_cab = fu_bytes_get_contents(filename, &error);
+	stream = fu_input_stream_from_path(filename, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob_cab);
-	checksum_sha256 = g_compute_checksum_for_bytes(G_CHECKSUM_SHA256, blob_cab);
-	devices = fu_engine_get_details_for_bytes(engine, request, blob_cab, &error);
+	g_assert_nonnull(stream);
+	checksum_sha256 = fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA256, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(checksum_sha256);
+	devices = fu_engine_get_details(engine, request, stream, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
@@ -1828,7 +1830,7 @@ fu_engine_get_details_missing_func(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GBytes) blob_cab = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -1844,10 +1846,10 @@ fu_engine_get_details_missing_func(gconstpointer user_data)
 	/* get details */
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "hwid-1.2.3.cab", NULL);
-	blob_cab = fu_bytes_get_contents(filename, &error);
+	stream = fu_input_stream_from_path(filename, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob_cab);
-	devices = fu_engine_get_details_for_bytes(engine, request, blob_cab, &error);
+	g_assert_nonnull(stream);
+	devices = fu_engine_get_details(engine, request, stream, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
@@ -2362,8 +2364,8 @@ fu_engine_history_func(gconstpointer user_data)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FwupdDevice) device3 = NULL;
 	g_autoptr(FwupdDevice) device4 = NULL;
-	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -2403,10 +2405,10 @@ fu_engine_history_func(gconstpointer user_data)
 
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
-	blob_cab = fu_bytes_get_contents(filename, &error);
+	stream = fu_input_stream_from_path(filename, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob_cab);
-	cabinet = fu_engine_build_cabinet_from_blob(engine, blob_cab, &error);
+	g_assert_nonnull(stream);
+	cabinet = fu_engine_build_cabinet_from_stream(engine, stream, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(cabinet);
 
@@ -2421,12 +2423,12 @@ fu_engine_history_func(gconstpointer user_data)
 
 	/* install it */
 	fu_release_set_device(release, device);
-	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, cabinet, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_install_release(engine,
 					release,
-					blob_cab,
+					stream,
 					progress,
 					FWUPD_INSTALL_FLAG_NONE,
 					&error);
@@ -2450,7 +2452,9 @@ fu_engine_history_func(gconstpointer user_data)
 	fu_device_set_modified(device2, 1514338000);
 	g_hash_table_remove_all(fwupd_release_get_metadata(fu_device_get_release_default(device2)));
 	device_str = fu_device_to_string(device2);
-	checksum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, blob_cab);
+	checksum = fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA1, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(checksum);
 	device_str_expected =
 	    g_strdup_printf("FuDevice:\n"
 			    "  DeviceId:             894e8c17a29428b09d10cd90d1db74ea76fbcfe8\n"
@@ -2503,8 +2507,8 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
@@ -2551,10 +2555,10 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 					 "multiple-rels",
 					 "multiple-rels-1.2.4.cab",
 					 NULL);
-	blob_cab = fu_bytes_get_contents(filename, &error);
+	stream = fu_input_stream_from_path(filename, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob_cab);
-	cabinet = fu_engine_build_cabinet_from_blob(engine, blob_cab, &error);
+	g_assert_nonnull(stream);
+	cabinet = fu_engine_build_cabinet_from_stream(engine, stream, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(cabinet);
 
@@ -2582,8 +2586,12 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 		XbNode *rel = g_ptr_array_index(rels, i);
 		g_autoptr(FuRelease) release = fu_release_new();
 		fu_release_set_device(release, device);
-		ret =
-		    fu_release_load(release, NULL, component, rel, FWUPD_INSTALL_FLAG_NONE, &error);
+		ret = fu_release_load(release,
+				      cabinet,
+				      component,
+				      rel,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
 		g_ptr_array_add(releases, g_object_ref(release));
@@ -2594,7 +2602,7 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	ret = fu_engine_install_releases(engine,
 					 request,
 					 releases,
-					 blob_cab,
+					 cabinet,
 					 progress,
 					 FWUPD_INSTALL_FLAG_NONE,
 					 &error);
@@ -2619,8 +2627,8 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -2666,10 +2674,10 @@ fu_engine_history_inherit(gconstpointer user_data)
 
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
-	blob_cab = fu_bytes_get_contents(filename, &error);
+	stream = fu_input_stream_from_path(filename, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob_cab);
-	cabinet = fu_engine_build_cabinet_from_blob(engine, blob_cab, &error);
+	g_assert_nonnull(stream);
+	cabinet = fu_engine_build_cabinet_from_stream(engine, stream, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(cabinet);
 
@@ -2681,12 +2689,12 @@ fu_engine_history_inherit(gconstpointer user_data)
 	/* install it */
 	(void)g_setenv("FWUPD_PLUGIN_TEST", "requires-activation", TRUE);
 	fu_release_set_device(release, device);
-	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, cabinet, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_install_release(engine,
 					release,
-					blob_cab,
+					stream,
 					progress,
 					FWUPD_INSTALL_FLAG_NONE,
 					&error);
@@ -2713,7 +2721,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	fu_device_set_version(device, "1.2.2");
 	ret = fu_engine_install_release(engine,
 					release,
-					blob_cab,
+					stream,
 					progress,
 					FWUPD_INSTALL_FLAG_NONE,
 					&error);
@@ -2765,8 +2773,8 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -2802,10 +2810,10 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
-	blob_cab = fu_bytes_get_contents(filename, &error);
+	stream = fu_input_stream_from_path(filename, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob_cab);
-	cabinet = fu_engine_build_cabinet_from_blob(engine, blob_cab, &error);
+	g_assert_nonnull(stream);
+	cabinet = fu_engine_build_cabinet_from_stream(engine, stream, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(cabinet);
 
@@ -2817,12 +2825,12 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	/* install it */
 	(void)g_setenv("FWUPD_PLUGIN_TEST", "requires-reboot", TRUE);
 	fu_release_set_device(release, device);
-	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, cabinet, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_install_release(engine,
 					release,
-					blob_cab,
+					stream,
 					progress,
 					FWUPD_INSTALL_FLAG_NONE,
 					&error);
@@ -2872,8 +2880,8 @@ fu_engine_install_request(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -2909,10 +2917,10 @@ fu_engine_install_request(gconstpointer user_data)
 
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
-	blob_cab = fu_bytes_get_contents(filename, &error);
+	stream = fu_input_stream_from_path(filename, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob_cab);
-	cabinet = fu_engine_build_cabinet_from_blob(engine, blob_cab, &error);
+	g_assert_nonnull(stream);
+	cabinet = fu_engine_build_cabinet_from_stream(engine, stream, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(cabinet);
 
@@ -2924,7 +2932,7 @@ fu_engine_install_request(gconstpointer user_data)
 	/* install it */
 	(void)g_setenv("FWUPD_PLUGIN_TEST", "request", TRUE);
 	fu_release_set_device(release, device);
-	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, cabinet, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -2939,7 +2947,7 @@ fu_engine_install_request(gconstpointer user_data)
 
 	ret = fu_engine_install_release(engine,
 					release,
-					blob_cab,
+					stream,
 					progress,
 					FWUPD_INSTALL_FLAG_NONE,
 					&error);
@@ -2965,9 +2973,9 @@ fu_engine_history_error_func(gconstpointer user_data)
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error2 = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -3004,22 +3012,22 @@ fu_engine_history_error_func(gconstpointer user_data)
 	/* install the wrong thing */
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
-	blob_cab = fu_bytes_get_contents(filename, &error);
+	stream = fu_input_stream_from_path(filename, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob_cab);
-	cabinet = fu_engine_build_cabinet_from_blob(engine, blob_cab, &error);
+	g_assert_nonnull(stream);
+	cabinet = fu_engine_build_cabinet_from_stream(engine, stream, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(cabinet);
 	component = fu_cabinet_get_component(cabinet, "com.hughski.test.firmware", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(component);
 	fu_release_set_device(release, device);
-	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, cabinet, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_install_release(engine,
 					release,
-					blob_cab,
+					stream,
 					progress,
 					FWUPD_INSTALL_FLAG_NONE,
 					&error);
@@ -3042,7 +3050,9 @@ fu_engine_history_error_func(gconstpointer user_data)
 	fu_device_set_modified(device2, 1514338000);
 	g_hash_table_remove_all(fwupd_release_get_metadata(fu_device_get_release_default(device2)));
 	device_str = fu_device_to_string(device2);
-	checksum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, blob_cab);
+	checksum = fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA1, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(checksum);
 	device_str_expected =
 	    g_strdup_printf("FuDevice:\n"
 			    "  DeviceId:             894e8c17a29428b09d10cd90d1db74ea76fbcfe8\n"
@@ -3910,6 +3920,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FwupdRelease) release = fwupd_release_new();
 	g_autoptr(GBytes) blob_cab = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GMappedFile) mapped_file = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
@@ -3992,9 +4003,12 @@ fu_plugin_module_func(gconstpointer user_data)
 	/* lets do this online */
 	fu_engine_add_device(engine, device);
 	fu_engine_add_plugin(engine, self->plugin);
+	stream = fu_input_stream_from_path(mapped_file_fn, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream);
 	ret = fu_engine_install_blob(engine,
 				     device,
-				     blob_cab,
+				     stream,
 				     progress,
 				     FWUPD_INSTALL_FLAG_NO_SEARCH,
 				     FWUPD_FEATURE_FLAG_NONE,
@@ -4250,6 +4264,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) releases =
@@ -4361,7 +4376,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 			fu_release_set_device(release, device);
 			fu_release_set_request(release, request);
 			if (!fu_release_load(release,
-					     NULL,
+					     cabinet,
 					     component,
 					     NULL,
 					     FWUPD_INSTALL_FLAG_NONE,
@@ -4388,10 +4403,11 @@ fu_plugin_composite_func(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_logical_id(dev_tmp), ==, NULL);
 
 	/* install the cab */
+	stream = g_memory_input_stream_new_from_bytes(blob);
 	ret = fu_engine_install_releases(engine,
 					 request,
 					 releases,
-					 blob,
+					 cabinet,
 					 progress,
 					 FWUPD_DEVICE_FLAG_NONE,
 					 &error);
@@ -4498,13 +4514,32 @@ fu_security_attr_func(gconstpointer user_data)
 static void
 fu_common_cabinet_func(void)
 {
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(FuFirmware) img1 = NULL;
 	g_autoptr(FuFirmware) img2 = NULL;
-	g_autoptr(GBytes) blob1 = NULL;
+	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) jcat_blob1 = g_bytes_new_static("hello", 6);
 	g_autoptr(GBytes) jcat_blob2 = g_bytes_new_static("hellX", 6);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+
+	filename = g_test_build_filename(G_TEST_BUILT,
+					 "tests",
+					 "multiple-rels",
+					 "multiple-rels-1.2.4.cab",
+					 NULL);
+	stream = fu_input_stream_from_path(filename, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream);
+	ret = fu_firmware_parse_stream(FU_FIRMWARE(cabinet),
+				       stream,
+				       0x0,
+				       FWUPD_INSTALL_FLAG_NONE,
+				       &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* add */
 	fu_cabinet_add_file(cabinet, "firmware.jcat", jcat_blob1);
@@ -4516,10 +4551,10 @@ fu_common_cabinet_func(void)
 	img1 = fu_firmware_get_image_by_id(FU_FIRMWARE(cabinet), "firmware.jcat", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(img1);
-	blob1 = fu_firmware_get_bytes(img1, &error);
+	blob = fu_firmware_get_bytes(FU_FIRMWARE(img1), &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob1);
-	g_assert_cmpstr(g_bytes_get_data(blob1, NULL), ==, "hellX");
+	g_assert_nonnull(blob);
+	g_assert_cmpstr(g_bytes_get_data(blob, NULL), ==, "hellX");
 
 	/* get data that does not exist */
 	img2 = fu_firmware_get_image_by_id(FU_FIRMWARE(cabinet), "foo.jcat", &error);
@@ -4963,7 +4998,7 @@ fu_common_store_cab_func(void)
 	csum = xb_node_query_first(rel, "checksum[@target='content']", &error);
 	g_assert_nonnull(csum);
 	g_assert_cmpstr(xb_node_get_text(csum), ==, "7c211433f02071597741e6ff5a8ea34789abbf43");
-	blob_tmp = xb_node_get_data(rel, "fwupd::FirmwareBlob");
+	blob_tmp = xb_node_get_data(rel, "fwupd::FirmwareBasename");
 	g_assert_nonnull(blob_tmp);
 	req = xb_node_query_first(component, "requires/id", &error);
 	g_assert_no_error(error);
@@ -5139,7 +5174,7 @@ fu_common_store_cab_unsigned_func(void)
 	g_assert_cmpstr(xb_node_get_attr(rel, "version"), ==, "1.2.3");
 	csum = xb_node_query_first(rel, "checksum[@target='content']", &error);
 	g_assert_null(csum);
-	blob_tmp = xb_node_get_data(rel, "fwupd::FirmwareBlob");
+	blob_tmp = xb_node_get_data(rel, "fwupd::FirmwareBasename");
 	g_assert_nonnull(blob_tmp);
 }
 
@@ -5215,7 +5250,7 @@ fu_common_store_cab_folder_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(rel);
 	g_assert_cmpstr(xb_node_get_attr(rel, "version"), ==, "1.2.3");
-	blob_tmp = xb_node_get_data(rel, "fwupd::FirmwareBlob");
+	blob_tmp = xb_node_get_data(rel, "fwupd::FirmwareBasename");
 	g_assert_nonnull(blob_tmp);
 }
 

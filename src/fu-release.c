@@ -26,7 +26,7 @@ struct _FuRelease {
 	FuDevice *device;
 	FwupdRemote *remote;
 	FuEngineConfig *config;
-	GBytes *blob_fw;
+	GInputStream *stream;
 	gchar *update_request_id;
 	GPtrArray *soft_reqs; /* nullable, element-type XbNode */
 	GPtrArray *hard_reqs; /* nullable, element-type XbNode */
@@ -62,8 +62,7 @@ fu_release_to_string(FuRelease *self)
 	if (self->remote != NULL)
 		fu_string_append(str, idt, "Remote", fwupd_remote_get_id(self->remote));
 	fu_string_append_kb(str, idt, "HasConfig", self->config != NULL);
-	if (self->blob_fw != NULL)
-		fu_string_append_kx(str, idt, "BlobFwSz", g_bytes_get_size(self->blob_fw));
+	fu_string_append_kb(str, idt, "HasStream", self->stream != NULL);
 	if (self->update_request_id != NULL)
 		fu_string_append(str, idt, "UpdateRequestId", self->update_request_id);
 	if (self->soft_reqs != NULL)
@@ -134,18 +133,18 @@ fu_release_get_device(FuRelease *self)
 }
 
 /**
- * fu_release_get_fw_blob:
+ * fu_release_get_stream:
  * @self: a #FuRelease
  *
- * Gets the firmware payload to use when installing this release.
+ * Gets the firmware stream to use when installing this release.
  *
  * Returns: (transfer none) (nullable): data
  **/
-GBytes *
-fu_release_get_fw_blob(FuRelease *self)
+GInputStream *
+fu_release_get_stream(FuRelease *self)
 {
 	g_return_val_if_fail(FU_IS_RELEASE(self), NULL);
-	return self->blob_fw;
+	return self->stream;
 }
 
 /**
@@ -788,7 +787,7 @@ fu_release_load(FuRelease *self,
 {
 	const gchar *tmp;
 	guint64 tmp64;
-	GBytes *blob_fw_tmp;
+	GBytes *blob_basename;
 	g_autofree gchar *name_xpath = NULL;
 	g_autofree gchar *namevs_xpath = NULL;
 	g_autofree gchar *summary_xpath = NULL;
@@ -1088,10 +1087,20 @@ fu_release_load(FuRelease *self,
 		}
 	}
 
-	/* get per-release firmware blob */
-	blob_fw_tmp = xb_node_get_data(rel, "fwupd::FirmwareBlob");
-	if (blob_fw_tmp != NULL)
-		self->blob_fw = g_bytes_ref(blob_fw_tmp);
+	/* get per-release firmware stream */
+	blob_basename = xb_node_get_data(rel, "fwupd::FirmwareBasename");
+	if (cabinet != NULL && blob_basename != NULL) {
+		const gchar *basename = (const gchar *)g_bytes_get_data(blob_basename, NULL);
+		g_autoptr(FuFirmware) img = NULL;
+		img = fu_firmware_get_image_by_id(FU_FIRMWARE(cabinet), basename, error);
+		if (img == NULL) {
+			g_prefix_error(error, "failed to find %s: ", basename);
+			return FALSE;
+		}
+		self->stream = fu_firmware_get_stream(img, error);
+		if (self->stream == NULL)
+			return FALSE;
+	}
 
 	/* to build the firmware */
 	tmp = g_object_get_data(G_OBJECT(component), "fwupd::BuilderScript");
@@ -1276,8 +1285,8 @@ fu_release_finalize(GObject *obj)
 		g_object_unref(self->remote);
 	if (self->config != NULL)
 		g_object_unref(self->config);
-	if (self->blob_fw != NULL)
-		g_bytes_unref(self->blob_fw);
+	if (self->stream != NULL)
+		g_object_unref(self->stream);
 	if (self->soft_reqs != NULL)
 		g_ptr_array_unref(self->soft_reqs);
 	if (self->hard_reqs != NULL)

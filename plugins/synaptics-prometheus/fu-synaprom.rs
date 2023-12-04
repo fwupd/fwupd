@@ -1,7 +1,7 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(New, Parse)]
+#[derive(New, ParseStream)]
 struct SynapromMfwHdr {
     product: u32le,
     id: u32le = 0xFF,		// MFW unique id used for compat verification
@@ -21,13 +21,13 @@ enum SynapromFirmwareTag {
     CfgUpdatePayload = 0x0004,
 }
 
-#[derive(New, Parse)]
+#[derive(New, ParseStream)]
 struct SynapromHdr {
     tag: SynapromFirmwareTag,
     bufsz: u32le,
 }
 
-#[derive(ParseBytes)]
+#[derive(ParseStream)]
 struct SynapromCfgHdr {
     product: u32le = 65, // Prometheus (b1422)
     id1: u32le,

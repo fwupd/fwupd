@@ -455,7 +455,7 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 	gsize bufsz = 0;
 	guint32 serial_new[3];
 	g_autoptr(GBytes) fw_hdr = NULL;
-	g_autoptr(GBytes) fw_payload = NULL;
+	g_autoptr(GInputStream) stream_payload = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 	const guint32 app_key_index[16] = {0x186976e5,
@@ -494,8 +494,8 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 	fw_hdr = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_HEADER, error);
 	if (fw_hdr == NULL)
 		return FALSE;
-	fw_payload = fu_firmware_get_bytes(firmware, error);
-	if (fw_payload == NULL)
+	stream_payload = fu_firmware_get_stream(firmware, error);
+	if (stream_payload == NULL)
 		return FALSE;
 
 	/* set up the firmware header */
@@ -517,7 +517,9 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* flash the firmware in 32 byte blocks */
-	chunks = fu_chunk_array_new_from_bytes(fw_payload, 0x0, 32);
+	chunks = fu_chunk_array_new_from_stream(stream_payload, 0x0, 32, error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 

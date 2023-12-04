@@ -1,7 +1,12 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(New, ParseBytes)]
+#[derive(ValidateStream)]
+struct AcpiPhatHdr {
+    magic: [char; 4] == "PHAT",
+}
+
+#[derive(New, ParseStream)]
 struct AcpiPhatHealthRecord {
     signature: u16le = 0x1,
     rcdlen: u16le,
@@ -11,13 +16,13 @@ struct AcpiPhatHealthRecord {
     device_signature: Guid,
     device_specific_data: u32le,
 }
-#[derive(New, ParseBytes)]
+#[derive(New, ParseStream)]
 struct AcpiPhatVersionElement {
     component_id: Guid,
     version_value: u64le,
     producer_id: [char; 4],
 }
-#[derive(New, ParseBytes)]
+#[derive(New, ParseStream)]
 struct AcpiPhatVersionRecord {
     signature: u16le = 0x0,
     rcdlen: u16le,

@@ -35,6 +35,10 @@
 #include "fu-release.h"
 #include "fu-security-attrs-private.h"
 
+#ifdef HAVE_GIO_UNIX
+#include "fu-unix-seekable-input-stream.h"
+#endif
+
 static void
 fu_daemon_finalize(GObject *obj);
 
@@ -367,7 +371,7 @@ typedef struct {
 	GPtrArray *checksums;
 	GPtrArray *errors;
 	guint64 flags;
-	GBytes *blob_cab;
+	GInputStream *stream;
 	FuDaemon *self;
 	gchar *device_id;
 	gchar *remote_id;
@@ -386,10 +390,10 @@ fu_daemon_auth_helper_free(FuMainAuthHelper *helper)
 
 	if (helper->watcher_id > 0)
 		g_bus_unwatch_name(helper->watcher_id);
-	if (helper->blob_cab != NULL)
-		g_bytes_unref(helper->blob_cab);
 	if (helper->cabinet != NULL)
 		g_object_unref(helper->cabinet);
+	if (helper->stream != NULL)
+		g_object_unref(helper->stream);
 	if (helper->request != NULL)
 		g_object_unref(helper->request);
 	if (helper->progress != NULL)
@@ -790,7 +794,7 @@ fu_daemon_authorize_install_queue(FuMainAuthHelper *helper_ref)
 	ret = fu_engine_install_releases(helper->self->engine,
 					 helper->request,
 					 helper->releases,
-					 helper->blob_cab,
+					 helper->cabinet,
 					 helper->progress,
 					 helper->flags,
 					 &error);
@@ -958,7 +962,7 @@ fu_daemon_install_with_helper(FuMainAuthHelper *helper_ref, GError **error)
 	}
 
 	/* parse silo */
-	helper->cabinet = fu_engine_build_cabinet_from_blob(self->engine, helper->blob_cab, error);
+	helper->cabinet = fu_engine_build_cabinet_from_stream(self->engine, helper->stream, error);
 	if (helper->cabinet == NULL)
 		return FALSE;
 
@@ -969,7 +973,7 @@ fu_daemon_install_with_helper(FuMainAuthHelper *helper_ref, GError **error)
 	helper->action_ids = g_ptr_array_new_with_free_func(g_free);
 	helper->releases = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	helper->errors = g_ptr_array_new_with_free_func((GDestroyNotify)g_error_free);
-	helper->remote_id = fu_engine_get_remote_id_for_blob(self->engine, helper->blob_cab);
+	helper->remote_id = fu_engine_get_remote_id_for_stream(self->engine, helper->stream);
 
 	/* do any devices pass the requirements */
 	for (guint i = 0; i < components->len; i++) {
@@ -1824,7 +1828,6 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		const gchar *prop_key;
 		gint32 fd_handle = 0;
 		gint fd;
-		guint64 archive_size_max;
 		GDBusMessage *message;
 		GUnixFDList *fd_list;
 		g_autoptr(FuMainAuthHelper) helper = NULL;
@@ -1883,17 +1886,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 			g_dbus_method_invocation_return_gerror(invocation, error);
 			return;
 		}
-
-		/* parse the cab file before authenticating so we can work out
-		 * what action ID to use, for instance, if this is trusted --
-		 * this will also close the fd when done */
-		archive_size_max =
-		    fu_engine_config_get_archive_size_max(fu_engine_get_config(self->engine));
-		helper->blob_cab = fu_bytes_get_contents_fd(fd, archive_size_max, &error);
-		if (helper->blob_cab == NULL) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
-			return;
-		}
+		helper->stream = fu_unix_seekable_input_stream_new(fd, TRUE);
 
 		/* install all the things in the store */
 		helper->sender = g_strdup(sender);
@@ -1924,6 +1917,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		gint32 fd_handle = 0;
 		gint fd;
 		g_autoptr(GPtrArray) results = NULL;
+		g_autoptr(GInputStream) stream = NULL;
 
 		/* get parameters */
 		g_variant_get(parameters, "(h)", &fd_handle);
@@ -1944,7 +1938,12 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		}
 
 		/* get details about the file (will close the fd when done) */
-		results = fu_engine_get_details(self->engine, request, fd, &error);
+		stream = fu_unix_seekable_input_stream_new(fd, TRUE);
+		if (stream == NULL) {
+			g_dbus_method_invocation_return_gerror(invocation, error);
+			return;
+		}
+		results = fu_engine_get_details(self->engine, request, stream, &error);
 		if (results == NULL) {
 			g_dbus_method_invocation_return_gerror(invocation, error);
 			return;

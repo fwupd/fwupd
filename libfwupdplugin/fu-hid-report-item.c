@@ -11,7 +11,9 @@
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-hid-report-item.h"
+#include "fu-input-stream.h"
 #include "fu-mem-private.h"
+#include "fu-partial-input-stream.h"
 #include "fu-string.h"
 
 /**
@@ -53,62 +55,65 @@ fu_hid_report_item_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 
 static gboolean
 fu_hid_report_item_parse(FuFirmware *firmware,
-			 GBytes *fw,
+			 GInputStream *stream,
 			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	FuHidReportItem *self = FU_HID_REPORT_ITEM(firmware);
 	const guint8 size_lookup[] = {0, 1, 2, 4};
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	guint8 val = buf[offset];
-	guint8 data_size = size_lookup[val & 0b11];
-	guint8 tag = (val & 0b11111100) >> 2;
+	guint8 data_size;
+	guint8 tag;
+	guint8 val = 0;
 
+	if (!fu_input_stream_read_u8(stream, offset, &val, error))
+		return FALSE;
+	data_size = size_lookup[val & 0b11];
+	tag = (val & 0b11111100) >> 2;
 	fu_firmware_set_idx(firmware, tag);
 	fu_firmware_set_id(firmware, fu_hid_item_tag_to_string(tag));
-	if (!fu_memchk_read(bufsz, offset, data_size + 1, error))
-		return FALSE;
+
 	if (tag == FU_HID_ITEM_TAG_LONG && data_size == 2) {
-		if (offset + 1 >= bufsz) {
+		gsize streamsz = 0;
+		if (!fu_input_stream_size(stream, &streamsz, error))
+			return FALSE;
+		if (offset + 1 >= streamsz) {
 			g_set_error_literal(error,
 					    G_IO_ERROR,
 					    G_IO_ERROR_FAILED,
 					    "not enough data to read long tag");
 			return FALSE;
 		}
-		data_size = buf[++offset];
+		if (!fu_input_stream_read_u8(stream, offset + 1, &data_size, error))
+			return FALSE;
 	} else {
 		g_autoptr(GBytes) img = NULL;
+		g_autoptr(GInputStream) partial_stream = NULL;
 		if (data_size == 1) {
 			guint8 value = 0;
-			if (!fu_memread_uint8_safe(buf, bufsz, offset + 1, &value, error))
+			if (!fu_input_stream_read_u8(stream, offset + 1, &value, error))
 				return FALSE;
 			self->value = value;
 		} else if (data_size == 2) {
 			guint16 value = 0;
-			if (!fu_memread_uint16_safe(buf,
-						    bufsz,
-						    offset + 1,
-						    &value,
-						    G_LITTLE_ENDIAN,
-						    error))
+			if (!fu_input_stream_read_u16(stream,
+						      offset + 1,
+						      &value,
+						      G_LITTLE_ENDIAN,
+						      error))
 				return FALSE;
 			self->value = value;
 		} else if (data_size == 4) {
-			if (!fu_memread_uint32_safe(buf,
-						    bufsz,
-						    offset + 1,
-						    &self->value,
-						    G_LITTLE_ENDIAN,
-						    error))
+			if (!fu_input_stream_read_u32(stream,
+						      offset + 1,
+						      &self->value,
+						      G_LITTLE_ENDIAN,
+						      error))
 				return FALSE;
 		}
-		img = fu_bytes_new_offset(fw, offset + 1, data_size, error);
-		if (img == NULL)
+		partial_stream = fu_partial_input_stream_new(stream, offset + 1, data_size);
+		if (!fu_firmware_set_stream(firmware, partial_stream, error))
 			return FALSE;
-		fu_firmware_set_bytes(firmware, img);
 	}
 
 	/* success */

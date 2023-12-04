@@ -14,6 +14,7 @@
 #include "fu-efi-load-option.h"
 #include "fu-efi-struct.h"
 #include "fu-efivar.h"
+#include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-string.h"
 
@@ -104,28 +105,29 @@ fu_efi_load_option_set_optional_path(FuEfiLoadOption *self,
 
 static gboolean
 fu_efi_load_option_parse(FuFirmware *firmware,
-			 GBytes *fw,
+			 GInputStream *stream,
 			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	FuEfiLoadOption *self = FU_EFI_LOAD_OPTION(firmware);
-	gsize bufsz = 0;
+	gsize streamsz = 0;
 	g_autofree gchar *id = NULL;
 	g_autoptr(FuEfiDevicePathList) device_path_list = fu_efi_device_path_list_new();
 	g_autoptr(GByteArray) buf_utf16 = g_byte_array_new();
 	g_autoptr(GByteArray) st = NULL;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* parse header */
-	st = fu_struct_efi_load_option_parse_bytes(fw, offset, error);
+	st = fu_struct_efi_load_option_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
 	self->attrs = fu_struct_efi_load_option_get_attrs(st);
 	offset += st->len;
 
 	/* parse UTF-16 description */
-	for (; offset < bufsz; offset += 2) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	for (; offset < streamsz; offset += 2) {
 		guint16 tmp = 0;
 		if (buf_utf16->len > FU_EFI_LOAD_OPTION_DESCRIPTION_SIZE_MAX) {
 			g_set_error(error,
@@ -135,7 +137,7 @@ fu_efi_load_option_parse(FuFirmware *firmware,
 				    FU_EFI_LOAD_OPTION_DESCRIPTION_SIZE_MAX / 2);
 			return FALSE;
 		}
-		if (!fu_memread_uint16_safe(buf, bufsz, offset, &tmp, G_LITTLE_ENDIAN, error))
+		if (!fu_input_stream_read_u16(stream, offset, &tmp, G_LITTLE_ENDIAN, error))
 			return FALSE;
 		if (tmp == 0)
 			break;
@@ -148,15 +150,16 @@ fu_efi_load_option_parse(FuFirmware *firmware,
 	offset += 2;
 
 	/* parse dp blob */
-	if (!fu_firmware_parse_full(FU_FIRMWARE(device_path_list), fw, offset, flags, error))
+	if (!fu_firmware_parse_stream(FU_FIRMWARE(device_path_list), stream, offset, flags, error))
 		return FALSE;
-	fu_firmware_add_image(firmware, FU_FIRMWARE(device_path_list));
+	if (!fu_firmware_add_image_full(firmware, FU_FIRMWARE(device_path_list), error))
+		return FALSE;
 	offset += fu_struct_efi_load_option_get_dp_size(st);
 
 	/* optional data */
-	if (offset < bufsz) {
+	if (offset < streamsz) {
 		g_autoptr(GBytes) opt_blob = NULL;
-		opt_blob = fu_bytes_new_offset(fw, offset, bufsz - offset, error);
+		opt_blob = fu_input_stream_read_bytes(stream, offset, streamsz - offset, error);
 		if (opt_blob == NULL)
 			return FALSE;
 		fu_efi_load_option_set_optional_data(self, opt_blob);

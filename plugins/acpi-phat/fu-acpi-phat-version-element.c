@@ -31,7 +31,7 @@ fu_acpi_phat_version_element_export(FuFirmware *firmware,
 
 static gboolean
 fu_acpi_phat_version_element_parse(FuFirmware *firmware,
-				   GBytes *fw,
+				   GInputStream *stream,
 				   gsize offset,
 				   FwupdInstallFlags flags,
 				   GError **error)
@@ -40,7 +40,7 @@ fu_acpi_phat_version_element_parse(FuFirmware *firmware,
 	g_autoptr(GByteArray) st = NULL;
 
 	/* unpack */
-	st = fu_struct_acpi_phat_version_element_parse_bytes(fw, offset, error);
+	st = fu_struct_acpi_phat_version_element_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
 	fu_firmware_set_size(firmware, st->len);

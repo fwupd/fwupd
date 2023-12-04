@@ -12,6 +12,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-input-stream.h"
 #include "fu-intel-thunderbolt-firmware.h"
 #include "fu-mem.h"
 
@@ -36,7 +37,7 @@ fu_intel_thunderbolt_nvm_valid_farb_pointer(guint32 pointer)
 
 static gboolean
 fu_intel_thunderbolt_firmware_parse(FuFirmware *firmware,
-				    GBytes *fw,
+				    GInputStream *stream,
 				    gsize offset,
 				    FwupdInstallFlags flags,
 				    GError **error)
@@ -47,12 +48,11 @@ fu_intel_thunderbolt_firmware_parse(FuFirmware *firmware,
 
 	/* get header offset */
 	for (guint i = 0; i < G_N_ELEMENTS(farb_offsets); i++) {
-		if (!fu_memread_uint24_safe(g_bytes_get_data(fw, NULL),
-					    g_bytes_get_size(fw),
-					    offset + farb_offsets[i],
-					    &farb_pointer,
-					    G_LITTLE_ENDIAN,
-					    error))
+		if (!fu_input_stream_read_u24(stream,
+					      offset + farb_offsets[i],
+					      &farb_pointer,
+					      G_LITTLE_ENDIAN,
+					      error))
 			return FALSE;
 		if (fu_intel_thunderbolt_nvm_valid_farb_pointer(farb_pointer)) {
 			valid = TRUE;
@@ -71,7 +71,7 @@ fu_intel_thunderbolt_firmware_parse(FuFirmware *firmware,
 
 	/* FuIntelThunderboltNvm->parse */
 	return FU_FIRMWARE_CLASS(fu_intel_thunderbolt_firmware_parent_class)
-	    ->parse(firmware, fw, offset + farb_pointer, flags, error);
+	    ->parse(firmware, stream, offset + farb_pointer, flags, error);
 }
 
 static GByteArray *

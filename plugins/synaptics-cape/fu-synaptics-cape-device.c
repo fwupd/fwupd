@@ -554,27 +554,21 @@ fu_synaptics_cape_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
-					  GBytes *fw,
+					  GInputStream *stream,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {
 	FuSynapticsCapeDevice *self = FU_SYNAPTICS_CAPE_DEVICE(device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	g_autoptr(FuFirmware) firmware = fu_synaptics_cape_hid_firmware_new();
+	gsize bufsz = 0;
 	gsize offset = 0;
-	g_autoptr(GBytes) new_fw = NULL;
+	g_autoptr(FuFirmware) firmware = fu_synaptics_cape_hid_firmware_new();
+	g_autoptr(GInputStream) stream_fw = NULL;
 
 	/* a "fw" includes two firmware data for each partition, we need to divide a 'fw' into
-	 * two equal parts.
-	 */
-	gsize bufsz = g_bytes_get_size(fw);
-
-	g_return_val_if_fail(FU_IS_SYNAPTICS_CAPE_DEVICE(self), NULL);
-	g_return_val_if_fail(usb_device != NULL, NULL);
-	g_return_val_if_fail(fw != NULL, NULL);
-	g_return_val_if_fail(firmware != NULL, NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
+	 * two equal parts */
+	if (!fu_input_stream_size(stream, &bufsz, error))
+		return NULL;
 	if ((guint32)bufsz % 4 != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -587,10 +581,8 @@ fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
 	if (self->active_partition == 1)
 		offset = bufsz / 2;
 
-	new_fw = fu_bytes_new_offset(fw, offset, bufsz / 2, error);
-	if (new_fw == NULL)
-		return NULL;
-	if (!fu_firmware_parse(firmware, new_fw, flags, error))
+	stream_fw = fu_partial_input_stream_new(stream, offset, bufsz / 2);
+	if (!fu_firmware_parse_stream(firmware, stream_fw, 0x0, flags, error))
 		return NULL;
 
 	/* verify if correct device */
@@ -667,20 +659,19 @@ fu_synaptics_cape_device_write_firmware_header(FuSynapticsCapeDevice *self,
 /* sends firmware image to device */
 static gboolean
 fu_synaptics_cape_device_write_firmware_image(FuSynapticsCapeDevice *self,
-					      GBytes *fw,
+					      GInputStream *stream,
 					      FuProgress *progress,
 					      GError **error)
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	g_return_val_if_fail(FU_IS_SYNAPTICS_CAPE_DEVICE(self), FALSE);
-	g_return_val_if_fail(fw != NULL, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
 	chunks =
-	    fu_chunk_array_new_from_bytes(fw,
-					  0x00,
-					  sizeof(guint32) * FU_SYNAPTICS_CAPE_CMD_WRITE_DATAL_LEN);
+	    fu_chunk_array_new_from_stream(stream,
+					   0x00,
+					   sizeof(guint32) * FU_SYNAPTICS_CAPE_CMD_WRITE_DATAL_LEN,
+					   error);
+	if (chunks == NULL)
+		return FALSE;
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
@@ -733,7 +724,7 @@ fu_synaptics_cape_device_write_firmware(FuDevice *device,
 					GError **error)
 {
 	FuSynapticsCapeDevice *self = FU_SYNAPTICS_CAPE_DEVICE(device);
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GBytes) fw_header = NULL;
 
 	g_return_val_if_fail(FU_IS_SYNAPTICS_CAPE_DEVICE(self), FALSE);
@@ -757,11 +748,11 @@ fu_synaptics_cape_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* performs the actual write */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 	if (!fu_synaptics_cape_device_write_firmware_image(self,
-							   fw,
+							   stream,
 							   fu_progress_get_child(progress),
 							   error)) {
 		g_prefix_error(error, "update image failed: ");

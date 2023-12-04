@@ -17,24 +17,29 @@ G_DEFINE_TYPE(FuSteelseriesFirmware, fu_steelseries_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_steelseries_firmware_parse(FuFirmware *firmware,
-			      GBytes *fw,
+			      GInputStream *stream,
 			      gsize offset,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {
 	FuSteelseriesFirmware *self = FU_STEELSERIES_FIRMWARE(firmware);
-	guint32 checksum_tmp;
-	guint32 checksum;
+	guint32 checksum_tmp = 0;
+	guint32 checksum = 0;
+	gsize streamsz = 0;
+	g_autoptr(GInputStream) stream_tmp = NULL;
 
-	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
-				    g_bytes_get_size(fw),
-				    g_bytes_get_size(fw) - sizeof(checksum),
-				    &checksum,
-				    G_LITTLE_ENDIAN,
-				    error))
+	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	checksum_tmp =
-	    fu_crc32(g_bytes_get_data(fw, NULL), g_bytes_get_size(fw) - sizeof(checksum_tmp));
+	if (!fu_input_stream_read_u32(stream,
+				      streamsz - sizeof(checksum),
+				      &checksum,
+				      G_LITTLE_ENDIAN,
+				      error))
+		return FALSE;
+
+	stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - sizeof(checksum_tmp));
+	if (!fu_input_stream_compute_crc32(stream, &checksum_tmp, 0xEDB88320, error))
+		return FALSE;
 	if (checksum_tmp != checksum) {
 		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 			g_set_error(error,

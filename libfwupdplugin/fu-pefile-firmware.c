@@ -11,7 +11,9 @@
 #include "fu-bytes.h"
 #include "fu-coswid-firmware.h"
 #include "fu-csv-firmware.h"
+#include "fu-input-stream.h"
 #include "fu-mem.h"
+#include "fu-partial-input-stream.h"
 #include "fu-pefile-firmware.h"
 #include "fu-pefile-struct.h"
 #include "fu-sbatlevel-section.h"
@@ -30,29 +32,30 @@
 G_DEFINE_TYPE(FuPefileFirmware, fu_pefile_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_pefile_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_pefile_firmware_validate(FuFirmware *firmware,
+			    GInputStream *stream,
+			    gsize offset,
+			    GError **error)
 {
-	return fu_struct_pe_dos_header_validate_bytes(fw, offset, error);
+	return fu_struct_pe_dos_header_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_pefile_firmware_parse_section(FuFirmware *firmware,
-				 GBytes *fw,
+				 GInputStream *stream,
 				 gsize hdr_offset,
 				 gsize strtab_offset,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
-	gsize bufsz = 0;
 	guint32 sect_offset;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *sect_id = NULL;
 	g_autofree gchar *sect_id_tmp = NULL;
 	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GByteArray) st = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) img_stream = NULL;
 
-	st = fu_struct_pe_coff_section_parse_bytes(fw, hdr_offset, error);
+	st = fu_struct_pe_coff_section_parse_stream(stream, hdr_offset, error);
 	if (st == NULL)
 		return FALSE;
 	sect_id_tmp = fu_struct_pe_coff_section_get_name(st);
@@ -65,11 +68,25 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	}
 	if (sect_id_tmp[0] == '/') {
 		guint64 str_idx = 0x0;
+		guint8 buf[16] = {0};
+		g_autofree gchar *str = NULL;
+
 		if (!fu_strtoull(sect_id_tmp + 1, &str_idx, 0, G_MAXUINT32, error))
 			return FALSE;
-		sect_id = fu_memstrsafe(buf, bufsz, strtab_offset + str_idx, 16, error);
+		if (!fu_input_stream_read_safe(stream,
+					       buf,
+					       sizeof(buf),
+					       0x0,
+					       strtab_offset + str_idx, /* seek */
+					       sizeof(buf),
+					       error))
+			return FALSE;
+		sect_id = fu_strsafe((const gchar *)buf, sizeof(buf));
 		if (sect_id == NULL) {
-			g_prefix_error(error, "no section name: ");
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_INVALID_DATA,
+					    "no section name");
 			return FALSE;
 		}
 	} else {
@@ -97,15 +114,10 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	/* add data */
 	sect_offset = fu_struct_pe_coff_section_get_pointer_to_raw_data(st);
 	fu_firmware_set_offset(img, sect_offset);
-	blob = fu_bytes_new_offset(fw,
-				   sect_offset,
-				   fu_struct_pe_coff_section_get_virtual_size(st),
-				   error);
-	if (blob == NULL) {
-		g_prefix_error(error, "failed to get raw data for %s: ", sect_id);
-		return FALSE;
-	}
-	if (!fu_firmware_parse(img, blob, flags, error)) {
+	img_stream = fu_partial_input_stream_new(stream,
+						 sect_offset,
+						 fu_struct_pe_coff_section_get_virtual_size(st));
+	if (!fu_firmware_parse_stream(img, img_stream, 0x0, flags, error)) {
 		g_prefix_error(error, "failed to parse %s: ", sect_id);
 		return FALSE;
 	}
@@ -114,7 +126,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 
 static gboolean
 fu_pefile_firmware_parse(FuFirmware *firmware,
-			 GBytes *fw,
+			 GInputStream *stream,
 			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
@@ -125,11 +137,11 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GByteArray) st_doshdr = NULL;
 
 	/* parse the DOS header to get the COFF header */
-	st_doshdr = fu_struct_pe_dos_header_parse_bytes(fw, offset, error);
+	st_doshdr = fu_struct_pe_dos_header_parse_stream(stream, offset, error);
 	if (st_doshdr == NULL)
 		return FALSE;
 	offset += fu_struct_pe_dos_header_get_lfanew(st_doshdr);
-	st_coff = fu_struct_pe_coff_file_header_parse_bytes(fw, offset, error);
+	st_coff = fu_struct_pe_coff_file_header_parse_stream(stream, offset, error);
 	if (st_coff == NULL)
 		return FALSE;
 	offset += st_coff->len;
@@ -137,7 +149,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 	/* verify optional extra header */
 	if (fu_struct_pe_coff_file_header_get_size_of_optional_header(st_coff) > 0) {
 		g_autoptr(GByteArray) st_opt =
-		    fu_struct_pe_coff_optional_header64_parse_bytes(fw, offset, error);
+		    fu_struct_pe_coff_optional_header64_parse_stream(stream, offset, error);
 		if (st_opt == NULL)
 			return FALSE;
 		offset += fu_struct_pe_coff_file_header_get_size_of_optional_header(st_coff);
@@ -159,7 +171,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 	/* read out each section */
 	for (guint idx = 0; idx < nr_sections; idx++) {
 		if (!fu_pefile_firmware_parse_section(firmware,
-						      fw,
+						      stream,
 						      offset,
 						      strtab_offset,
 						      flags,

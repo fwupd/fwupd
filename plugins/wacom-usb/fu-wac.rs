@@ -1,6 +1,11 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
+#[derive(ValidateStream)]
+struct WacFirmwareHdr {
+    magic: [char; 5] == "WACOM",
+}
+
 #[derive(Parse)]
 struct WtaBlockHeader {
     block_start: u32le,
@@ -87,7 +92,7 @@ struct Id9SpiCmd {
     size: u16be,                  // sizeof(data) + size of payload
     data: Id9UnknownCmd,
 }
-#[derive(New, Validate)]
+#[derive(New,Validate)]
 struct Id9LoaderCmd {
     command: u8,
     size: u16be,                  // sizeof(data) + size of payload

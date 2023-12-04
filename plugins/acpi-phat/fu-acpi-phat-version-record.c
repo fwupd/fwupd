@@ -19,7 +19,7 @@ G_DEFINE_TYPE(FuAcpiPhatVersionRecord, fu_acpi_phat_version_record, FU_TYPE_FIRM
 
 static gboolean
 fu_acpi_phat_version_record_parse(FuFirmware *firmware,
-				  GBytes *fw,
+				  GInputStream *stream,
 				  gsize offset,
 				  FwupdInstallFlags flags,
 				  GError **error)
@@ -27,24 +27,22 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 	guint32 record_count = 0;
 	g_autoptr(GByteArray) st = NULL;
 
-	st = fu_struct_acpi_phat_version_record_parse_bytes(fw, offset, error);
+	st = fu_struct_acpi_phat_version_record_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
 	record_count = fu_struct_acpi_phat_version_record_get_record_count(st);
 	for (guint32 i = 0; i < record_count; i++) {
 		g_autoptr(FuFirmware) firmware_tmp = fu_acpi_phat_version_element_new();
-		g_autoptr(GBytes) fw_tmp = NULL;
-		fw_tmp = fu_bytes_new_offset(fw,
-					     offset + st->len,
-					     FU_STRUCT_ACPI_PHAT_VERSION_ELEMENT_SIZE,
-					     error);
-		if (fw_tmp == NULL)
-			return FALSE;
+		g_autoptr(GInputStream) stream_tmp = NULL;
+		stream_tmp = fu_partial_input_stream_new(stream,
+							 offset + st->len,
+							 FU_STRUCT_ACPI_PHAT_VERSION_ELEMENT_SIZE);
 		fu_firmware_set_offset(firmware_tmp, offset + st->len);
-		if (!fu_firmware_parse(firmware_tmp,
-				       fw_tmp,
-				       flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
-				       error))
+		if (!fu_firmware_parse_stream(firmware_tmp,
+					      stream_tmp,
+					      0x0,
+					      flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      error))
 			return FALSE;
 		if (!fu_firmware_add_image_full(firmware, firmware_tmp, error))
 			return FALSE;

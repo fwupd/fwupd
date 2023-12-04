@@ -8,7 +8,9 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-input-stream.h"
 #include "fu-linear-firmware.h"
+#include "fu-partial-input-stream.h"
 
 /**
  * FuLinearFirmware:
@@ -82,23 +84,27 @@ fu_linear_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 
 static gboolean
 fu_linear_firmware_parse(FuFirmware *firmware,
-			 GBytes *fw,
+			 GInputStream *stream,
 			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	FuLinearFirmware *self = FU_LINEAR_FIRMWARE(firmware);
 	FuLinearFirmwarePrivate *priv = GET_PRIVATE(self);
-	gsize bufsz = g_bytes_get_size(fw);
+	gsize streamsz = 0;
 
-	while (offset < bufsz) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	while (offset < streamsz) {
 		g_autoptr(FuFirmware) img = g_object_new(priv->image_gtype, NULL);
-		g_autoptr(GBytes) fw_tmp = NULL;
+		g_autoptr(GInputStream) stream_tmp = NULL;
 
-		fw_tmp = fu_bytes_new_offset(fw, offset, bufsz - offset, error);
-		if (fw_tmp == NULL)
-			return FALSE;
-		if (!fu_firmware_parse(img, fw_tmp, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error)) {
+		stream_tmp = fu_partial_input_stream_new(stream, offset, streamsz - offset);
+		if (!fu_firmware_parse_stream(img,
+					      stream_tmp,
+					      0x0,
+					      flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      error)) {
 			g_prefix_error(error, "failed to parse at 0x%x: ", (guint)offset);
 			return FALSE;
 		}

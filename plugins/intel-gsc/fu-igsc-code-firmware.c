@@ -35,7 +35,7 @@ fu_igsc_code_firmware_get_hw_sku(FuIgscCodeFirmware *self)
 }
 
 static gboolean
-fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GBytes *fw, GError **error)
+fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GInputStream *stream, GError **error)
 {
 	g_autoptr(GByteArray) st_inf = NULL;
 
@@ -44,7 +44,7 @@ fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GBytes *fw, GError **
 		return TRUE;
 
 	/* get hw_sku */
-	st_inf = fu_struct_igsc_fwu_gws_image_info_parse_bytes(fw, 0x0, error);
+	st_inf = fu_struct_igsc_fwu_gws_image_info_parse_stream(stream, 0x0, error);
 	if (st_inf == NULL)
 		return FALSE;
 	self->hw_sku = fu_struct_igsc_fwu_gws_image_info_get_instance_id(st_inf);
@@ -53,41 +53,44 @@ fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GBytes *fw, GError **
 
 static gboolean
 fu_igsc_code_firmware_parse(FuFirmware *firmware,
-			    GBytes *fw,
+			    GInputStream *stream,
 			    gsize offset,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {
 	FuIgscCodeFirmware *self = FU_IGSC_CODE_FIRMWARE(firmware);
+	gsize streamsz = 0;
 	g_autofree gchar *project = NULL;
 	g_autofree gchar *version = NULL;
-	g_autoptr(GBytes) fw_info = NULL;
-	g_autoptr(GBytes) fw_imgi = NULL;
 	g_autoptr(GByteArray) st_md1 = NULL;
+	g_autoptr(GInputStream) stream_imgi = NULL;
+	g_autoptr(GInputStream) stream_info = NULL;
 
 	/* sanity check */
-	if (g_bytes_get_size(fw) > FU_IGSC_FIRMWARE_MAX_SIZE) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (streamsz > FU_IGSC_FIRMWARE_MAX_SIZE) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "image size too big: 0x%x",
-			    (guint)g_bytes_get_size(fw));
+			    (guint)streamsz);
 		return FALSE;
 	}
 
 	/* FuIfwiFptFirmware->parse */
 	if (!FU_FIRMWARE_CLASS(fu_igsc_code_firmware_parent_class)
-		 ->parse(firmware, fw, offset, flags, error))
+		 ->parse(firmware, stream, offset, flags, error))
 		return FALSE;
 
-	fw_info = fu_firmware_get_image_by_idx_bytes(FU_FIRMWARE(self),
-						     FU_IFWI_FPT_FIRMWARE_IDX_INFO,
-						     error);
-	if (fw_info == NULL)
+	stream_info = fu_firmware_get_image_by_idx_stream(FU_FIRMWARE(self),
+							  FU_IFWI_FPT_FIRMWARE_IDX_INFO,
+							  error);
+	if (stream_info == NULL)
 		return FALSE;
 
 	/* check metadata header format */
-	st_md1 = fu_struct_igsc_fwu_image_metadata_v1_parse_bytes(fw_info, 0x0, error);
+	st_md1 = fu_struct_igsc_fwu_image_metadata_v1_parse_stream(stream_info, 0x0, error);
 	if (st_md1 == NULL)
 		return FALSE;
 	if (fu_struct_igsc_fwu_image_metadata_v1_get_version_format(st_md1) != 0x01) {
@@ -105,12 +108,12 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_version(FU_FIRMWARE(self), version);
 
 	/* get instance ID for image */
-	fw_imgi = fu_firmware_get_image_by_idx_bytes(FU_FIRMWARE(self),
-						     FU_IFWI_FPT_FIRMWARE_IDX_IMGI,
-						     error);
-	if (fw_imgi == NULL)
+	stream_imgi = fu_firmware_get_image_by_idx_stream(FU_FIRMWARE(self),
+							  FU_IFWI_FPT_FIRMWARE_IDX_IMGI,
+							  error);
+	if (stream_imgi == NULL)
 		return FALSE;
-	if (!fu_igsc_code_firmware_parse_imgi(self, fw_imgi, error))
+	if (!fu_igsc_code_firmware_parse_imgi(self, stream_imgi, error))
 		return FALSE;
 
 	/* success */

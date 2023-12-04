@@ -202,7 +202,7 @@ struct CcgxDmcIntRqt {
 }
 
 // header structure of FWCT
-#[derive(New, Parse, ValidateBytes)]
+#[derive(New, ParseStream, ValidateStream)]
 struct CcgxDmcFwctInfo {
     signature: u32le == 0x54435746, // 'F' 'W' 'C' 'T'
     size: u16le,
@@ -219,7 +219,7 @@ struct CcgxDmcFwctInfo {
     _reserv1: [u8; 3],
 }
 
-#[derive(New, Parse)]
+#[derive(New, ParseStream)]
 struct CcgxDmcFwctImageInfo {
     device_type: u8,
     img_type: u8,
@@ -235,7 +235,7 @@ struct CcgxDmcFwctImageInfo {
     _reserv1: [u8; 3],
 }
 
-#[derive(New, Parse)]
+#[derive(New, ParseStream)]
 struct CcgxDmcFwctSegmentationInfo {
     img_id: u8,
     type: u8,

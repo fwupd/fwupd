@@ -23,6 +23,7 @@ fu_test_mtd_device_func(void)
 	g_autoptr(GBytes) fw2 = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GRand) rand = g_rand_new_with_seed(0);
 	g_autoptr(GUdevClient) udev_client = g_udev_client_new(NULL);
 	g_autoptr(GUdevDevice) udev_device = NULL;
@@ -77,7 +78,8 @@ fu_test_mtd_device_func(void)
 	fw = g_bytes_new(buf->data, buf->len);
 
 	/* write with a verify */
-	ret = fu_device_write_firmware(device, fw, progress, FWUPD_INSTALL_FLAG_NONE, &error);
+	stream = g_memory_input_stream_new_from_bytes(fw);
+	ret = fu_device_write_firmware(device, stream, progress, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

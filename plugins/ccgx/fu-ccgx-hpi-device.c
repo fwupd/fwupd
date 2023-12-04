@@ -1097,7 +1097,7 @@ fu_ccgx_hpi_device_attach(FuDevice *device, FuProgress *progress, GError **error
 
 static FuFirmware *
 fu_ccgx_hpi_device_prepare_firmware(FuDevice *device,
-				    GBytes *fw,
+				    GInputStream *stream,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
@@ -1108,7 +1108,7 @@ fu_ccgx_hpi_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_ccgx_firmware_new();
 
 	/* parse all images */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
 	/* check the silicon ID */

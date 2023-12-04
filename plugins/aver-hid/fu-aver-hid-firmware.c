@@ -32,18 +32,17 @@ fu_aver_hid_firmware_parse_archive_cb(FuArchive *self,
 
 static gboolean
 fu_aver_hid_firmware_parse(FuFirmware *firmware,
-			   GBytes *fw,
+			   GInputStream *stream,
 			   gsize offset,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
 	g_autoptr(FuArchive) archive = NULL;
-	archive = fu_archive_new(fw, FU_ARCHIVE_FLAG_NONE, error);
+	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_NONE, error);
 	if (archive == NULL)
 		return FALSE;
 	if (!fu_archive_iterate(archive, fu_aver_hid_firmware_parse_archive_cb, firmware, error))
 		return FALSE;
-	fu_firmware_set_bytes(firmware, fw);
 	return TRUE;
 }
 

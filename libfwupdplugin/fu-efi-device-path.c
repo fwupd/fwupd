@@ -12,6 +12,7 @@
 #include "fu-bytes.h"
 #include "fu-efi-device-path.h"
 #include "fu-efi-struct.h"
+#include "fu-input-stream.h"
 
 /**
  * FuEfiDevicePath:
@@ -71,20 +72,20 @@ fu_efi_device_path_set_subtype(FuEfiDevicePath *self, guint8 subtype)
 
 static gboolean
 fu_efi_device_path_parse(FuFirmware *firmware,
-			 GBytes *fw,
+			 GInputStream *stream,
 			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	FuEfiDevicePath *self = FU_EFI_DEVICE_PATH(firmware);
 	FuEfiDevicePathPrivate *priv = GET_PRIVATE(self);
-	gsize bufsz = g_bytes_get_size(fw);
 	gsize dp_length;
+	gsize streamsz = 0;
 	g_autoptr(GByteArray) st = NULL;
 	g_autoptr(GBytes) payload = NULL;
 
 	/* parse */
-	st = fu_struct_efi_device_path_parse_bytes(fw, offset, error);
+	st = fu_struct_efi_device_path_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
 	if (fu_struct_efi_device_path_get_length(st) < FU_STRUCT_EFI_DEVICE_PATH_SIZE) {
@@ -99,14 +100,16 @@ fu_efi_device_path_parse(FuFirmware *firmware,
 	priv->subtype = fu_struct_efi_device_path_get_subtype(st);
 
 	/* work around a efiboot bug */
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
 	dp_length = fu_struct_efi_device_path_get_length(st);
-	if (offset + dp_length > bufsz) {
-		dp_length = (bufsz - offset) - 0x4;
+	if (offset + dp_length > streamsz) {
+		dp_length = (streamsz - offset) - 0x4;
 		g_debug("fixing up DP length from 0x%x to 0x%x, because of a bug in efiboot",
 			fu_struct_efi_device_path_get_length(st),
 			(guint)dp_length);
 	}
-	payload = fu_bytes_new_offset(fw, offset + st->len, dp_length - st->len, error);
+	payload = fu_input_stream_read_bytes(stream, offset + st->len, dp_length - st->len, error);
 	if (payload == NULL)
 		return FALSE;
 	fu_firmware_set_offset(firmware, offset);

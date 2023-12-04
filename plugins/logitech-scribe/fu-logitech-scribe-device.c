@@ -215,13 +215,28 @@ fu_logitech_scribe_device_send_upd_cmd(FuLogitechScribeDevice *self,
 	return TRUE;
 }
 
+static gboolean
+fu_logitech_scribe_device_compute_hash_cb(const guint8 *buf,
+					  gsize bufsz,
+					  gpointer user_data,
+					  GError **error)
+{
+	GChecksum *checksum = (GChecksum *)user_data;
+	g_checksum_update(checksum, buf, bufsz);
+	return TRUE;
+}
+
 static gchar *
-fu_logitech_scribe_device_compute_hash(GBytes *data)
+fu_logitech_scribe_device_compute_hash(GInputStream *stream, GError **error)
 {
 	guint8 md5buf[HASH_VALUE_SIZE] = {0};
 	gsize data_len = sizeof(md5buf);
-	GChecksum *checksum = g_checksum_new(G_CHECKSUM_MD5);
-	g_checksum_update(checksum, g_bytes_get_data(data, NULL), g_bytes_get_size(data));
+	g_autoptr(GChecksum) checksum = g_checksum_new(G_CHECKSUM_MD5);
+	if (!fu_input_stream_chunkify(stream,
+				      fu_logitech_scribe_device_compute_hash_cb,
+				      checksum,
+				      error))
+		return NULL;
 	g_checksum_get_digest(checksum, (guint8 *)&md5buf, &data_len);
 	return g_base64_encode(md5buf, sizeof(md5buf));
 }
@@ -361,11 +376,15 @@ fu_logitech_scribe_device_send_upd_init_cmd_cb(FuDevice *device, gpointer user_d
 static gboolean
 fu_logitech_scribe_device_write_fw(FuLogitechScribeDevice *self,
 				   FuUsbDevice *usb_device,
-				   GBytes *fw,
+				   GInputStream *stream,
 				   FuProgress *progress,
 				   GError **error)
 {
-	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw, 0x0, PAYLOAD_SIZE);
+	g_autoptr(FuChunkArray) chunks = NULL;
+
+	chunks = fu_chunk_array_new_from_stream(stream, 0x0, PAYLOAD_SIZE, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
@@ -398,10 +417,11 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 					 GError **error)
 {
 	FuLogitechScribeDevice *self = FU_LOGITECH_SCRIBE_DEVICE(device);
+	gsize streamsz = 0;
 	g_autofree gchar *base64hash = NULL;
 	g_autoptr(GByteArray) end_pkt = g_byte_array_new();
 	g_autoptr(GByteArray) start_pkt = g_byte_array_new();
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GUsbInterface) intf = NULL;
 	g_autoptr(GPtrArray) endpoints = NULL;
@@ -469,8 +489,8 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "uninit");
 
 	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* sending INIT. Retry if device is not in IDLE state to receive the file */
@@ -486,7 +506,9 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* start transfer */
-	fu_byte_array_append_uint64(start_pkt, g_bytes_get_size(fw), G_LITTLE_ENDIAN);
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	fu_byte_array_append_uint64(start_pkt, streamsz, G_LITTLE_ENDIAN);
 	if (!fu_logitech_scribe_device_send_upd_cmd(self,
 						    usb_device,
 						    CMD_START_TRANSFER,
@@ -500,14 +522,16 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	/* push each block to device */
 	if (!fu_logitech_scribe_device_write_fw(self,
 						usb_device,
-						fw,
+						stream,
 						fu_progress_get_child(progress),
 						error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* end transfer */
-	base64hash = fu_logitech_scribe_device_compute_hash(fw);
+	base64hash = fu_logitech_scribe_device_compute_hash(stream, error);
+	if (base64hash == NULL)
+		return FALSE;
 	fu_byte_array_append_uint32(end_pkt, 1, G_LITTLE_ENDIAN); /* update */
 	fu_byte_array_append_uint32(end_pkt, 0, G_LITTLE_ENDIAN); /* force */
 	fu_byte_array_append_uint32(end_pkt,

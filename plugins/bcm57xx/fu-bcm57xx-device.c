@@ -386,7 +386,7 @@ fu_bcm57xx_device_read_firmware(FuDevice *device, FuProgress *progress, GError *
 
 static FuFirmware *
 fu_bcm57xx_device_prepare_firmware(FuDevice *device,
-				   GBytes *fw,
+				   GInputStream *stream,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
@@ -403,7 +403,7 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 	g_autoptr(GPtrArray) images = NULL;
 
 	/* try to parse NVRAM, stage1 or APE */
-	if (!fu_firmware_parse(firmware_tmp, fw, flags, error)) {
+	if (!fu_firmware_parse_stream(firmware_tmp, stream, 0x0, flags, error)) {
 		g_prefix_error(error, "failed to parse new firmware: ");
 		return NULL;
 	}

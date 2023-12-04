@@ -554,7 +554,7 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 					       GError **error)
 {
 	guint8 cmd;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 	guint8 checksum = 0xFF;
 
@@ -608,10 +608,12 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 					 error))
 		return FALSE;
 
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, W25Q16DV_PAGE_SIZE);
+	chunks = fu_chunk_array_new_from_stream(stream, 0x0, W25Q16DV_PAGE_SIZE, error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_usi_dock_mcu_device_write_pages(self,
 						chunks,
 						fu_progress_get_child(progress),

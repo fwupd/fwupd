@@ -67,7 +67,7 @@ fu_engine_is_uid_trusted(FuEngine *self, guint64 calling_uid);
 const gchar *
 fu_engine_get_host_security_id(FuEngine *self);
 FuCabinet *
-fu_engine_build_cabinet_from_blob(FuEngine *self, GBytes *blob_cab, GError **error);
+fu_engine_build_cabinet_from_stream(FuEngine *self, GInputStream *stream, GError **error);
 FuEngineConfig *
 fu_engine_get_config(FuEngine *self);
 GPtrArray *
@@ -165,14 +165,14 @@ fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error);
 gboolean
 fu_engine_install_release(FuEngine *self,
 			  FuRelease *release,
-			  GBytes *blob_cab,
+			  GInputStream *stream,
 			  FuProgress *progress,
 			  FwupdInstallFlags flags,
 			  GError **error);
 gboolean
 fu_engine_install_blob(FuEngine *self,
 		       FuDevice *device,
-		       GBytes *blob_fw,
+		       GInputStream *stream_fw,
 		       FuProgress *progress,
 		       FwupdInstallFlags flags,
 		       FwupdFeatureFlags feature_flags,
@@ -181,12 +181,10 @@ gboolean
 fu_engine_install_releases(FuEngine *self,
 			   FuEngineRequest *request,
 			   GPtrArray *releases,
-			   GBytes *blob_cab,
+			   FuCabinet *cabinet,
 			   FuProgress *progress,
 			   FwupdInstallFlags flags,
 			   GError **error);
-GPtrArray *
-fu_engine_get_details(FuEngine *self, FuEngineRequest *request, gint fd, GError **error);
 gboolean
 fu_engine_activate(FuEngine *self, const gchar *device_id, FuProgress *progress, GError **error);
 GPtrArray *
@@ -221,10 +219,10 @@ fu_engine_add_remote(FuEngine *self, FwupdRemote *remote);
 void
 fu_engine_add_runtime_version(FuEngine *self, const gchar *component_id, const gchar *version);
 GPtrArray *
-fu_engine_get_details_for_bytes(FuEngine *self,
-				FuEngineRequest *request,
-				GBytes *blob,
-				GError **error);
+fu_engine_get_details(FuEngine *self,
+		      FuEngineRequest *request,
+		      GInputStream *stream,
+		      GError **error);
 gboolean
 fu_engine_check_trust(FuEngine *self, FuRelease *release, GError **error);
 void
@@ -232,7 +230,7 @@ fu_engine_set_silo(FuEngine *self, XbSilo *silo);
 XbNode *
 fu_engine_get_component_by_guids(FuEngine *self, FuDevice *device);
 gchar *
-fu_engine_get_remote_id_for_blob(FuEngine *self, GBytes *blob);
+fu_engine_get_remote_id_for_stream(FuEngine *self, GInputStream *stream);
 gboolean
 fu_engine_schedule_update(FuEngine *self,
 			  FuDevice *device,
