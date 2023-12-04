@@ -297,18 +297,18 @@ fu_thunderbolt_device_write_data(FuThunderboltDevice *self,
 
 static FuFirmware *
 fu_thunderbolt_device_prepare_firmware(FuDevice *device,
-				       GBytes *fw,
+				       GInputStream *stream,
 				       FwupdInstallFlags flags,
 				       GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuFirmware) firmware_old = NULL;
-	g_autoptr(GBytes) controller_fw = NULL;
+	g_autoptr(GInputStream) controller_fw = NULL;
 	g_autoptr(GFile) nvmem = NULL;
 
 	/* parse */
-	firmware = fu_firmware_new_from_gtypes(fw,
+	firmware = fu_firmware_new_from_gtypes(stream,
 					       0x0,
 					       flags,
 					       error,
@@ -322,7 +322,7 @@ fu_thunderbolt_device_prepare_firmware(FuDevice *device,
 	nvmem = fu_thunderbolt_device_find_nvmem(self, TRUE, error);
 	if (nvmem == NULL)
 		return NULL;
-	controller_fw = g_file_load_bytes(nvmem, NULL, NULL, error);
+	controller_fw = G_INPUT_STREAM(g_file_read(nvmem, NULL, error));
 	if (controller_fw == NULL)
 		return NULL;
 	firmware_old = fu_firmware_new_from_gtypes(controller_fw,

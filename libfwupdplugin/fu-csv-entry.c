@@ -197,18 +197,13 @@ fu_csv_entry_parse_token_cb(GString *token, guint token_idx, gpointer user_data,
 
 static gboolean
 fu_csv_entry_parse(FuFirmware *firmware,
-		   GBytes *fw,
+		   GInputStream *stream,
 		   gsize offset,
 		   FwupdInstallFlags flags,
 		   GError **error)
 {
 	FuCsvEntry *self = FU_CSV_ENTRY(firmware);
-	return fu_strsplit_full((const gchar *)g_bytes_get_data(fw, NULL),
-				g_bytes_get_size(fw),
-				",",
-				fu_csv_entry_parse_token_cb,
-				self,
-				error);
+	return fu_strsplit_stream(stream, offset, ",", fu_csv_entry_parse_token_cb, self, error);
 }
 
 static GByteArray *

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <glib-object.h>
+#include <gio/gio.h>
 
 #include "fu-archive-struct.h"
 
@@ -48,6 +48,10 @@ typedef gboolean (*FuArchiveIterateFunc)(FuArchive *self,
 
 FuArchive *
 fu_archive_new(GBytes *data, FuArchiveFlags flags, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+FuArchive *
+fu_archive_new_stream(GInputStream *stream,
+		      FuArchiveFlags flags,
+		      GError **error) G_GNUC_WARN_UNUSED_RESULT;
 void
 fu_archive_add_entry(FuArchive *self, const gchar *fn, GBytes *blob) G_GNUC_NON_NULL(1, 2);
 GBytes *

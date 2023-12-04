@@ -1693,7 +1693,7 @@ fu_genesys_scaler_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 
 static FuFirmware *
 fu_genesys_scaler_device_prepare_firmware(FuDevice *device,
-					  GBytes *fw,
+					  GInputStream *stream,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {
@@ -1703,7 +1703,7 @@ fu_genesys_scaler_device_prepare_firmware(FuDevice *device,
 	g_autoptr(GBytes) blob_public_key = NULL;
 
 	/* parse firmware */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
 	/* check public-key */

@@ -1541,11 +1541,11 @@ fu_dfu_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **err
 
 static FuFirmware *
 fu_dfu_device_prepare_firmware(FuDevice *device,
-			       GBytes *fw,
+			       GInputStream *stream,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
-	return fu_firmware_new_from_gtypes(fw,
+	return fu_firmware_new_from_gtypes(stream,
 					   0x0,
 					   flags,
 					   error,

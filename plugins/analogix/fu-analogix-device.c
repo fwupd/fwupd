@@ -278,8 +278,9 @@ fu_analogix_device_write_image(FuAnalogixDevice *self,
 			       GError **error)
 {
 	FuAnalogixUpdateStatus status = FU_ANALOGIX_UPDATE_STATUS_INVALID;
+	gsize streamsz = 0;
 	guint8 buf_init[4] = {0x0};
-	g_autoptr(GBytes) block_bytes = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
@@ -288,12 +289,14 @@ fu_analogix_device_write_image(FuAnalogixDevice *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, NULL);
 
 	/* offset into firmware */
-	block_bytes = fu_firmware_get_bytes(image, error);
-	if (block_bytes == NULL)
+	stream = fu_firmware_get_stream(image, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* initialization */
-	fu_memwrite_uint32(buf_init, g_bytes_get_size(block_bytes), G_LITTLE_ENDIAN);
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	fu_memwrite_uint32(buf_init, streamsz, G_LITTLE_ENDIAN);
 	if (!fu_analogix_device_send(self,
 				     ANX_BB_RQT_SEND_UPDATE_DATA,
 				     req_val,
@@ -309,7 +312,9 @@ fu_analogix_device_write_image(FuAnalogixDevice *self,
 	fu_progress_step_done(progress);
 
 	/* write data */
-	chunks = fu_chunk_array_new_from_bytes(block_bytes, 0x00, BILLBOARD_MAX_PACKET_SIZE);
+	chunks = fu_chunk_array_new_from_stream(stream, 0x00, BILLBOARD_MAX_PACKET_SIZE, error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_analogix_device_write_chunks(self,
 					     chunks,
 					     req_val,

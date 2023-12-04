@@ -17,21 +17,21 @@ G_DEFINE_TYPE(FuBcm57xxStage2Image, fu_bcm57xx_stage2_image, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_bcm57xx_stage2_image_parse(FuFirmware *image,
-			      GBytes *fw,
+			      GInputStream *stream,
 			      gsize offset,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {
-	g_autoptr(GBytes) fw_nocrc = NULL;
+	gsize streamsz = 0;
+	g_autoptr(GInputStream) stream_nocrc = NULL;
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		if (!fu_bcm57xx_verify_crc(fw, error))
+		if (!fu_bcm57xx_verify_crc(stream, error))
 			return FALSE;
 	}
-	fw_nocrc = fu_bytes_new_offset(fw, 0x0, g_bytes_get_size(fw) - sizeof(guint32), error);
-	if (fw_nocrc == NULL)
+	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	fu_firmware_set_bytes(image, fw_nocrc);
-	return TRUE;
+	stream_nocrc = fu_partial_input_stream_new(stream, 0x0, streamsz - sizeof(guint32));
+	return fu_firmware_set_stream(image, stream_nocrc, error);
 }
 
 static GByteArray *

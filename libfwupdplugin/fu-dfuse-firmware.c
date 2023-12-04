@@ -17,6 +17,7 @@
 #include "fu-dfu-firmware-private.h"
 #include "fu-dfu-firmware-struct.h"
 #include "fu-dfuse-firmware.h"
+#include "fu-input-stream.h"
 
 /**
  * FuDfuseFirmware:
@@ -29,21 +30,24 @@
 G_DEFINE_TYPE(FuDfuseFirmware, fu_dfuse_firmware, FU_TYPE_DFU_FIRMWARE)
 
 static FuChunk *
-fu_firmware_image_chunk_parse(FuDfuseFirmware *self, GBytes *bytes, gsize *offset, GError **error)
+fu_dfuse_firmware_image_chunk_parse(FuDfuseFirmware *self,
+				    GInputStream *stream,
+				    gsize *offset,
+				    GError **error)
 {
-	gsize bufsz = 0;
-	gsize ftrlen = fu_dfu_firmware_get_footer_len(FU_DFU_FIRMWARE(self));
-	const guint8 *buf = g_bytes_get_data(bytes, &bufsz);
 	g_autoptr(FuChunk) chk = NULL;
 	g_autoptr(GByteArray) st_ele = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
 	/* create new chunk */
-	st_ele = fu_struct_dfuse_element_parse(buf, bufsz - ftrlen, *offset, error);
+	st_ele = fu_struct_dfuse_element_parse_stream(stream, *offset, error);
 	if (st_ele == NULL)
 		return NULL;
 	*offset += st_ele->len;
-	blob = fu_bytes_new_offset(bytes, *offset, fu_struct_dfuse_element_get_size(st_ele), error);
+	blob = fu_input_stream_read_bytes(stream,
+					  *offset,
+					  fu_struct_dfuse_element_get_size(st_ele),
+					  error);
 	if (blob == NULL)
 		return NULL;
 	chk = fu_chunk_bytes_new(blob);
@@ -55,14 +59,17 @@ fu_firmware_image_chunk_parse(FuDfuseFirmware *self, GBytes *bytes, gsize *offse
 }
 
 static FuFirmware *
-fu_dfuse_firmware_image_parse(FuDfuseFirmware *self, GBytes *bytes, gsize *offset, GError **error)
+fu_dfuse_firmware_image_parse_stream(FuDfuseFirmware *self,
+				     GInputStream *stream,
+				     gsize *offset,
+				     GError **error)
 {
 	guint chunks;
 	g_autoptr(FuFirmware) image = fu_firmware_new();
 	g_autoptr(GByteArray) st_img = NULL;
 
 	/* verify image signature */
-	st_img = fu_struct_dfuse_image_parse_bytes(bytes, *offset, error);
+	st_img = fu_struct_dfuse_image_parse_stream(stream, *offset, error);
 	if (st_img == NULL)
 		return NULL;
 
@@ -87,7 +94,7 @@ fu_dfuse_firmware_image_parse(FuDfuseFirmware *self, GBytes *bytes, gsize *offse
 	*offset += st_img->len;
 	for (guint j = 0; j < chunks; j++) {
 		g_autoptr(FuChunk) chk = NULL;
-		chk = fu_firmware_image_chunk_parse(self, bytes, offset, error);
+		chk = fu_dfuse_firmware_image_chunk_parse(self, stream, offset, error);
 		if (chk == NULL)
 			return NULL;
 		fu_firmware_add_chunk(image, chk);
@@ -98,35 +105,37 @@ fu_dfuse_firmware_image_parse(FuDfuseFirmware *self, GBytes *bytes, gsize *offse
 }
 
 static gboolean
-fu_dfuse_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_dfuse_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
 {
-	return fu_struct_dfuse_hdr_validate_bytes(fw, offset, error);
+	return fu_struct_dfuse_hdr_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_dfuse_firmware_parse(FuFirmware *firmware,
-			GBytes *fw,
+			GInputStream *stream,
 			gsize offset,
 			FwupdInstallFlags flags,
 			GError **error)
 {
 	FuDfuFirmware *dfu_firmware = FU_DFU_FIRMWARE(firmware);
-	gsize bufsz = g_bytes_get_size(fw);
+	gsize streamsz = 0;
 	guint8 targets = 0;
 	g_autoptr(GByteArray) st_hdr = NULL;
 
 	/* DFU footer first */
-	if (!fu_dfu_firmware_parse_footer(dfu_firmware, fw, flags, error))
+	if (!fu_dfu_firmware_parse_footer(dfu_firmware, stream, flags, error))
 		return FALSE;
 
 	/* parse */
-	st_hdr = fu_struct_dfuse_hdr_parse_bytes(fw, offset, error);
+	st_hdr = fu_struct_dfuse_hdr_parse_stream(stream, offset, error);
 	if (st_hdr == NULL)
 		return FALSE;
 
 	/* check image size */
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
 	if (fu_struct_dfuse_hdr_get_image_size(st_hdr) !=
-	    bufsz - fu_dfu_firmware_get_footer_len(dfu_firmware)) {
+	    streamsz - fu_dfu_firmware_get_footer_len(dfu_firmware)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -134,7 +143,7 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 			    "got %" G_GUINT32_FORMAT ", "
 			    "expected %" G_GSIZE_FORMAT,
 			    fu_struct_dfuse_hdr_get_image_size(st_hdr),
-			    bufsz - fu_dfu_firmware_get_footer_len(dfu_firmware));
+			    streamsz - fu_dfu_firmware_get_footer_len(dfu_firmware));
 		return FALSE;
 	}
 
@@ -143,8 +152,10 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 	offset += st_hdr->len;
 	for (guint i = 0; i < targets; i++) {
 		g_autoptr(FuFirmware) image = NULL;
-		image =
-		    fu_dfuse_firmware_image_parse(FU_DFUSE_FIRMWARE(firmware), fw, &offset, error);
+		image = fu_dfuse_firmware_image_parse_stream(FU_DFUSE_FIRMWARE(firmware),
+							     stream,
+							     &offset,
+							     error);
 		if (image == NULL)
 			return FALSE;
 		if (!fu_firmware_add_image_full(firmware, image, error))

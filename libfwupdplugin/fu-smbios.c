@@ -19,7 +19,9 @@
 #include "fwupd-error.h"
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-common.h"
+#include "fu-input-stream.h"
 #include "fu-path.h"
 #include "fu-smbios-private.h"
 #include "fu-smbios-struct.h"
@@ -319,15 +321,20 @@ fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
 
 static gboolean
 fu_smbios_parse(FuFirmware *firmware,
-		GBytes *fw,
+		GInputStream *stream,
 		gsize offset,
 		FwupdInstallFlags flags,
 		GError **error)
 {
 	FuSmbios *self = FU_SMBIOS(firmware);
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	return fu_smbios_setup_from_data(self, buf, bufsz, error);
+	g_autoptr(GBytes) fw = NULL;
+	fw = fu_input_stream_read_bytes(stream, offset, G_MAXSIZE, error);
+	if (fw == NULL)
+		return FALSE;
+	return fu_smbios_setup_from_data(self,
+					 g_bytes_get_data(fw, NULL),
+					 g_bytes_get_size(fw),
+					 error);
 }
 
 #ifdef _WIN32

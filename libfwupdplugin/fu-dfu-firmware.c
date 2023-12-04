@@ -16,6 +16,7 @@
 #include "fu-crc.h"
 #include "fu-dfu-firmware-private.h"
 #include "fu-dfu-firmware-struct.h"
+#include "fu-input-stream.h"
 
 /**
  * FuDfuFirmware:
@@ -197,26 +198,33 @@ fu_dfu_firmware_set_version(FuDfuFirmware *self, guint16 version)
 }
 
 static gboolean
-fu_dfu_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_dfu_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
 {
-	return fu_struct_dfu_ftr_validate_bytes(fw,
-						g_bytes_get_size(fw) - FU_STRUCT_DFU_FTR_SIZE,
-						error);
+	gsize streamsz = 0;
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	return fu_struct_dfu_ftr_validate_stream(stream, streamsz - FU_STRUCT_DFU_FTR_SIZE, error);
 }
 
 gboolean
 fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
-			     GBytes *fw,
+			     GInputStream *stream,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize bufsz;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	const guint8 *buf;
 	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(GBytes) fw = NULL;
+
+	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+	if (fw == NULL)
+		return FALSE;
+	buf = g_bytes_get_data(fw, &bufsz);
 
 	/* parse */
-	st = fu_struct_dfu_ftr_parse(buf, bufsz, bufsz - FU_STRUCT_DFU_FTR_SIZE, error);
+	st = fu_struct_dfu_ftr_parse_stream(stream, bufsz - FU_STRUCT_DFU_FTR_SIZE, error);
 	if (st == NULL)
 		return FALSE;
 	priv->vid = fu_struct_dfu_ftr_get_vid(st);
@@ -256,22 +264,24 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 
 static gboolean
 fu_dfu_firmware_parse(FuFirmware *firmware,
-		      GBytes *fw,
+		      GInputStream *stream,
 		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {
 	FuDfuFirmware *self = FU_DFU_FIRMWARE(firmware);
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE(self);
-	gsize len = g_bytes_get_size(fw);
+	gsize streamsz = 0;
 	g_autoptr(GBytes) contents = NULL;
 
 	/* parse footer */
-	if (!fu_dfu_firmware_parse_footer(self, fw, flags, error))
+	if (!fu_dfu_firmware_parse_footer(self, stream, flags, error))
 		return FALSE;
 
 	/* trim footer off */
-	contents = fu_bytes_new_offset(fw, 0, len - priv->footer_len, error);
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	contents = fu_input_stream_read_bytes(stream, 0, streamsz - priv->footer_len, error);
 	if (contents == NULL)
 		return FALSE;
 	fu_firmware_set_bytes(firmware, contents);

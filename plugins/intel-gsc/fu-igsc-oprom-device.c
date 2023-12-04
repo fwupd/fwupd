@@ -103,7 +103,7 @@ fu_igsc_oprom_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
-				      GBytes *fw,
+				      GInputStream *stream,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
@@ -117,7 +117,7 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) fw_linear = fu_linear_firmware_new(FU_TYPE_IGSC_OPROM_FIRMWARE);
 
 	/* parse container */
-	if (!fu_firmware_parse(fw_linear, fw, flags, error))
+	if (!fu_firmware_parse_stream(fw_linear, stream, 0x0, flags, error))
 		return NULL;
 
 	/* get correct image */
@@ -208,18 +208,18 @@ fu_igsc_oprom_device_write_firmware(FuDevice *device,
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
 	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device));
-	g_autoptr(GBytes) fw_payload = NULL;
+	g_autoptr(GInputStream) stream_payload = NULL;
 
 	/* get image */
-	fw_payload = fu_firmware_get_bytes(firmware, error);
-	if (fw_payload == NULL)
+	stream_payload = fu_firmware_get_stream(firmware, error);
+	if (stream_payload == NULL)
 		return FALSE;
 
 	/* OPROM image doesn't require metadata */
 	return fu_igsc_device_write_blob(igsc_parent,
 					 self->payload_type,
 					 NULL,
-					 fw_payload,
+					 stream_payload,
 					 progress,
 					 error);
 }

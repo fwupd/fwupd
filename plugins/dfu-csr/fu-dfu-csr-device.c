@@ -282,22 +282,25 @@ fu_dfu_csr_device_download(FuDevice *device,
 	FuDfuCsrDevice *self = FU_DFU_CSR_DEVICE(device);
 	guint idx;
 	g_autoptr(GBytes) blob_empty = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* get default image */
-	blob = fu_firmware_get_bytes(firmware, error);
-	if (blob == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* notify UI */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 
 	/* create chunks */
-	chunks = fu_chunk_array_new_from_bytes(blob,
-					       0x0,
-					       FU_DFU_CSR_PACKET_DATA_SIZE -
-						   FU_STRUCT_DFU_CSR_COMMAND_HEADER_SIZE);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						0x0,
+						FU_DFU_CSR_PACKET_DATA_SIZE -
+						    FU_STRUCT_DFU_CSR_COMMAND_HEADER_SIZE,
+						error);
+	if (chunks == NULL)
+		return FALSE;
 	if (fu_chunk_array_length(chunks) > G_MAXUINT16) {
 		g_set_error(error,
 			    FWUPD_ERROR,

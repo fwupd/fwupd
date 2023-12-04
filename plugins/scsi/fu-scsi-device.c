@@ -142,13 +142,13 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_scsi_device_prepare_firmware(FuDevice *device,
-				GBytes *fw,
+				GInputStream *stream,
 				FwupdInstallFlags flags,
 				GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
 	fu_firmware_set_alignment(firmware, FU_FIRMWARE_ALIGNMENT_4K);
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	return g_steal_pointer(&firmware);
 }
@@ -210,16 +210,18 @@ fu_scsi_device_write_firmware(FuDevice *device,
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
 	guint32 chunksz = 0x1000;
 	guint32 offset = 0;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* prepare chunks */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, chunksz);
+	chunks = fu_chunk_array_new_from_stream(stream, 0x00, chunksz, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));

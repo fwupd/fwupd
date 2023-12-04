@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-string.h"
 
@@ -437,6 +438,63 @@ fu_strsplit(const gchar *str, gsize sz, const gchar *delimiter, gint max_tokens)
 		return g_strsplit(str2, delimiter, max_tokens);
 	}
 	return g_strsplit(str, delimiter, max_tokens);
+}
+
+/**
+ * fu_strsplit_stream:
+ * @stream: a #GInputStream to split
+ * @offset: offset into @stream
+ * @delimiter: a string which specifies the places at which to split the string
+ * @callback: (scope call) (closure user_data): a #FuStrsplitFunc.
+ * @user_data: user data
+ * @error: (nullable): optional return location for an error
+ *
+ * Splits the string, calling the given function for each
+ * of the tokens found. If any @callback returns %FALSE scanning is aborted.
+ *
+ * Use this function in preference to fu_strsplit() when the input file is untrusted,
+ * and you don't want to allocate a GStrv with billions of one byte items.
+ *
+ * Returns: %TRUE if no @callback returned FALSE
+ *
+ * Since: 2.0.0
+ */
+gboolean
+fu_strsplit_stream(GInputStream *stream,
+		   gsize offset,
+		   const gchar *delimiter,
+		   FuStrsplitFunc callback,
+		   gpointer user_data,
+		   GError **error)
+{
+	g_autoptr(GBytes) fw = NULL;
+
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(delimiter != NULL && delimiter[0] != '\0', FALSE);
+	g_return_val_if_fail(callback != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* this is dumb */
+	fw = fu_input_stream_read_bytes(stream, offset, G_MAXSIZE, error);
+	if (fw == NULL)
+		return FALSE;
+
+	/* sanity check */
+	if (!g_utf8_validate_len((const gchar *)g_bytes_get_data(fw, NULL),
+				 g_bytes_get_size(fw),
+				 NULL)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "text must be UTF-8");
+		return FALSE;
+	}
+	return fu_strsplit_full((const gchar *)g_bytes_get_data(fw, NULL),
+				(gssize)g_bytes_get_size(fw),
+				delimiter,
+				callback,
+				user_data,
+				error);
 }
 
 /**

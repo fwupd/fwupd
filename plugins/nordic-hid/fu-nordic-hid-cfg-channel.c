@@ -1533,7 +1533,7 @@ fu_nordic_hid_cfg_channel_write_firmware_chunk(FuNordicHidCfgChannel *self,
 
 static gboolean
 fu_nordic_hid_cfg_channel_write_firmware_blob(FuNordicHidCfgChannel *self,
-					      GBytes *blob,
+					      GInputStream *stream,
 					      FuProgress *progress,
 					      GError **error)
 {
@@ -1543,7 +1543,9 @@ fu_nordic_hid_cfg_channel_write_firmware_blob(FuNordicHidCfgChannel *self,
 	if (!fu_nordic_hid_cfg_channel_dfu_sync(self, dfu_info, DFU_STATE_ACTIVE, error))
 		return FALSE;
 
-	chunks = fu_chunk_array_new_from_bytes(blob, 0, dfu_info->sync_buffer_size);
+	chunks = fu_chunk_array_new_from_stream(stream, 0, dfu_info->sync_buffer_size, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 
@@ -1575,10 +1577,11 @@ fu_nordic_hid_cfg_channel_write_firmware(FuDevice *device,
 					 GError **error)
 {
 	FuNordicHidCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(device);
+	gsize streamsz = 0;
 	guint32 checksum;
 	g_autofree gchar *csum_str = NULL;
 	g_autofree gchar *image_id = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuNordicCfgChannelDfuInfo) dfu_info = g_new0(FuNordicCfgChannelDfuInfo, 1);
 
 	/* select correct firmware per target board, bootloader and bank */
@@ -1602,22 +1605,20 @@ fu_nordic_hid_cfg_channel_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, NULL);
 
 	/* TODO: check if there is unfinished operation before? */
-	blob = fu_firmware_get_bytes(firmware, error);
-	if (blob == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 	if (!fu_nordic_hid_cfg_channel_dfu_sync(self, dfu_info, DFU_STATE_INACTIVE, error))
 		return FALSE;
-	if (!fu_nordic_hid_cfg_channel_dfu_start(self,
-						 g_bytes_get_size(blob),
-						 checksum,
-						 0x0 /* offset */,
-						 error))
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (!fu_nordic_hid_cfg_channel_dfu_start(self, streamsz, checksum, 0x0 /* offset */, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* write */
 	if (!fu_nordic_hid_cfg_channel_write_firmware_blob(self,
-							   blob,
+							   stream,
 							   fu_progress_get_child(progress),
 							   error))
 		return FALSE;

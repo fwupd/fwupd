@@ -252,7 +252,10 @@ fu_synaprom_device_setup(FuDevice *device, GError **error)
 }
 
 FuFirmware *
-fu_synaprom_device_prepare_fw(FuDevice *device, GBytes *fw, FwupdInstallFlags flags, GError **error)
+fu_synaprom_device_prepare_firmware(FuDevice *device,
+				    GInputStream *stream,
+				    FwupdInstallFlags flags,
+				    GError **error)
 {
 	guint32 product_id;
 	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new();
@@ -265,7 +268,7 @@ fu_synaprom_device_prepare_fw(FuDevice *device, GBytes *fw, FwupdInstallFlags fl
 	}
 
 	/* check the update header product and version */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	product_id = fu_synaprom_firmware_get_product_id(FU_SYNAPROM_FIRMWARE(firmware));
 	if (product_id != FU_SYNAPROM_PRODUCT_PROMETHEUS &&
@@ -525,7 +528,7 @@ fu_synaprom_device_class_init(FuSynapromDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->write_firmware = fu_synaprom_device_write_firmware;
-	klass_device->prepare_firmware = fu_synaprom_device_prepare_fw;
+	klass_device->prepare_firmware = fu_synaprom_device_prepare_firmware;
 	klass_device->setup = fu_synaprom_device_setup;
 	klass_device->reload = fu_synaprom_device_setup;
 	klass_device->attach = fu_synaprom_device_attach;

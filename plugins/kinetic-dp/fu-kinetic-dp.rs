@@ -51,14 +51,14 @@ enum KineticDpFwState {
     App = 3,
 }
 
-#[derive(ParseBytes)]
+#[derive(ParseStream)]
 struct KineticDpPumaHeader {
     _unknown: u8,
     object_count: u8 == 8,
     // certificate + ESM + Signature + hash + certificate + Puma App + Signature + hash
 }
 
-#[derive(ParseBytes)]
+#[derive(ParseStream)]
 struct KineticDpPumaHeaderInfo {
     type: u8,
     subtype: u8,
@@ -90,7 +90,7 @@ enum KineticDpPumaRequest {
     FwUpdateRequest = 0xFE,
 }
 
-#[derive(ParseBytes)]
+#[derive(ParseStream)]
 struct KineticDpJaguarFooter {
     app_id_struct_ver: u32le,
     app_id: [u8; 4],

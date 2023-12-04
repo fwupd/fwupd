@@ -40,33 +40,33 @@ fu_pxi_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 }
 
 static gboolean
-fu_pxi_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_pxi_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
 {
 	guint64 magic = 0;
 	FuPxiFirmware *self = FU_PXI_FIRMWARE(firmware);
+	gsize streamsz = 0;
 
 	/* is a footer, in normal bin file, the header is starts from the 32nd byte from the end. */
-	if (!fu_memread_uint64_safe(g_bytes_get_data(fw, NULL),
-				    g_bytes_get_size(fw),
-				    g_bytes_get_size(fw) - PIXART_RF_FW_HEADER_SIZE +
-					PIXART_RF_FW_HEADER_TAG_OFFSET,
-				    &magic,
-				    G_BIG_ENDIAN,
-				    error)) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (!fu_input_stream_read_u64(stream,
+				      streamsz - PIXART_RF_FW_HEADER_SIZE +
+					  PIXART_RF_FW_HEADER_TAG_OFFSET,
+				      &magic,
+				      G_BIG_ENDIAN,
+				      error)) {
 		g_prefix_error(error, "failed to read magic: ");
 		return FALSE;
 	}
 	if (magic != PIXART_RF_FW_HEADER_MAGIC) {
 		/* if the magic number is not found, then start from the 821st byte from the end for
 		 * HPAC header */
-		if (!fu_memread_uint64_safe(g_bytes_get_data(fw, NULL),
-					    g_bytes_get_size(fw),
-					    g_bytes_get_size(fw) -
-						PIXART_RF_FW_HEADER_HPAC_POS_FROM_END +
-						PIXART_RF_FW_HEADER_TAG_OFFSET,
-					    &magic,
-					    G_BIG_ENDIAN,
-					    error)) {
+		if (!fu_input_stream_read_u64(stream,
+					      streamsz - PIXART_RF_FW_HEADER_HPAC_POS_FROM_END +
+						  PIXART_RF_FW_HEADER_TAG_OFFSET,
+					      &magic,
+					      G_BIG_ENDIAN,
+					      error)) {
 			g_prefix_error(error, "failed to read magic: ");
 			return FALSE;
 		}
@@ -88,14 +88,13 @@ fu_pxi_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError 
 
 static gboolean
 fu_pxi_firmware_parse(FuFirmware *firmware,
-		      GBytes *fw,
+		      GInputStream *stream,
 		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {
 	FuPxiFirmware *self = FU_PXI_FIRMWARE(firmware);
-	const guint8 *buf;
-	gsize bufsz = 0;
+	gsize streamsz = 0;
 	guint32 version_raw = 0;
 	guint8 fw_header[PIXART_RF_FW_HEADER_SIZE];
 	guint8 model_name[FU_PXI_DEVICE_MODEL_NAME_LEN] = {0x0};
@@ -103,28 +102,27 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 	g_autofree gchar *version = NULL;
 
 	/* get fw header from buf */
-	buf = g_bytes_get_data(fw, &bufsz);
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
 	if (fu_pxi_firmware_is_hpac(self)) {
-		if (!fu_memcpy_safe(fw_header,
-				    sizeof(fw_header),
-				    0x0,
-				    buf,
-				    bufsz,
-				    bufsz - PIXART_RF_FW_HEADER_HPAC_POS_FROM_END,
-				    sizeof(fw_header),
-				    error)) {
+		if (!fu_input_stream_read_safe(stream,
+					       fw_header,
+					       sizeof(fw_header),
+					       0x0,
+					       streamsz - PIXART_RF_FW_HEADER_HPAC_POS_FROM_END,
+					       sizeof(fw_header),
+					       error)) {
 			g_prefix_error(error, "failed to read fw header: ");
 			return FALSE;
 		}
 	} else {
-		if (!fu_memcpy_safe(fw_header,
-				    sizeof(fw_header),
-				    0x0,
-				    buf,
-				    bufsz,
-				    bufsz - sizeof(fw_header),
-				    sizeof(fw_header),
-				    error)) {
+		if (!fu_input_stream_read_safe(stream,
+					       fw_header,
+					       sizeof(fw_header),
+					       0x0,
+					       streamsz - sizeof(fw_header),
+					       sizeof(fw_header),
+					       error)) {
 			g_prefix_error(error, "failed to read fw header: ");
 			return FALSE;
 		}
@@ -134,12 +132,12 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 
 	/* set fw version */
 	if (fu_pxi_firmware_is_hpac(self)) {
-		if (!fu_memread_uint16_safe(buf,
-					    bufsz,
-					    bufsz - PIXART_RF_FW_HEADER_HPAC_VERSION_POS_FROM_END,
-					    &hpac_ver,
-					    G_BIG_ENDIAN,
-					    error))
+		if (!fu_input_stream_read_u16(stream,
+					      streamsz -
+						  PIXART_RF_FW_HEADER_HPAC_VERSION_POS_FROM_END,
+					      &hpac_ver,
+					      G_BIG_ENDIAN,
+					      error))
 			return FALSE;
 
 		version_raw = hpac_ver;

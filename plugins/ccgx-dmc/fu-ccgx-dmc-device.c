@@ -633,7 +633,7 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 
 static FuFirmware *
 fu_ccgx_dmc_device_prepare_firmware(FuDevice *device,
-				    GBytes *fw,
+				    GInputStream *stream,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
@@ -643,7 +643,7 @@ fu_ccgx_dmc_device_prepare_firmware(FuDevice *device,
 	gboolean custom_meta_exist = FALSE;
 
 	/* parse all images */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
 	/* get custom meta record */

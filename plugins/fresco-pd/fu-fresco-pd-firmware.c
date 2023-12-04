@@ -32,26 +32,23 @@ fu_fresco_pd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, 
 
 static gboolean
 fu_fresco_pd_firmware_parse(FuFirmware *firmware,
-			    GBytes *fw,
+			    GInputStream *stream,
 			    gsize offset,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {
 	FuFrescoPdFirmware *self = FU_FRESCO_PD_FIRMWARE(firmware);
 	guint8 ver[4] = {0x0};
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *version = NULL;
 
 	/* read version block */
-	if (!fu_memcpy_safe(ver,
-			    sizeof(ver),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    0x1000, /* src */
-			    sizeof(ver),
-			    error))
+	if (!fu_input_stream_read_safe(stream,
+				       ver,
+				       sizeof(ver),
+				       0x0,    /* dst */
+				       0x1000, /* src */
+				       sizeof(ver),
+				       error))
 		return FALSE;
 
 	/* customer ID is always the 2nd byte */

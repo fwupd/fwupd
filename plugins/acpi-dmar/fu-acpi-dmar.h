@@ -12,6 +12,6 @@
 G_DECLARE_FINAL_TYPE(FuAcpiDmar, fu_acpi_dmar, FU, ACPI_DMAR, FuAcpiTable)
 
 FuAcpiDmar *
-fu_acpi_dmar_new(GBytes *blob, GError **error);
+fu_acpi_dmar_new(void);
 gboolean
 fu_acpi_dmar_get_opt_in(FuAcpiDmar *self);

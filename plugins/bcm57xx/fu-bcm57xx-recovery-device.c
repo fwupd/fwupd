@@ -539,7 +539,7 @@ fu_bcm57xx_recovery_device_dump_firmware(FuDevice *device, FuProgress *progress,
 
 static FuFirmware *
 fu_bcm57xx_recovery_device_prepare_firmware(FuDevice *device,
-					    GBytes *fw,
+					    GInputStream *stream,
 					    FwupdInstallFlags flags,
 					    GError **error)
 {
@@ -547,7 +547,7 @@ fu_bcm57xx_recovery_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware_tmp = fu_bcm57xx_firmware_new();
 
 	/* check is a NVRAM backup */
-	if (!fu_firmware_parse(firmware_tmp, fw, flags, error)) {
+	if (!fu_firmware_parse_stream(firmware_tmp, stream, 0x0, flags, error)) {
 		g_prefix_error(error, "failed to parse new firmware: ");
 		return NULL;
 	}
@@ -558,7 +558,7 @@ fu_bcm57xx_recovery_device_prepare_firmware(FuDevice *device,
 				    "can only recover with backup firmware");
 		return NULL;
 	}
-	if (!fu_firmware_parse(firmware_bin, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware_bin, stream, 0x0, flags, error))
 		return NULL;
 	return g_steal_pointer(&firmware_bin);
 }

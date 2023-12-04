@@ -337,7 +337,7 @@ fu_wistron_dock_device_write_blocks(FuWistronDockDevice *self,
 
 static FuFirmware *
 fu_wistron_dock_device_prepare_firmware(FuDevice *device,
-					GBytes *fw,
+					GInputStream *stream,
 					FwupdInstallFlags flags,
 					GError **error)
 {
@@ -348,7 +348,7 @@ fu_wistron_dock_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) fw_wsig = NULL;
 
 	/* unzip and get images */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	fw_wsig = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware),
 							"*.wdfl.sig",
@@ -402,7 +402,7 @@ fu_wistron_dock_device_write_firmware(FuDevice *device,
 				      GError **error)
 {
 	FuWistronDockDevice *self = FU_WISTRON_DOCK_DEVICE(device);
-	g_autoptr(GBytes) fw_cbin = NULL;
+	g_autoptr(GInputStream) stream_cbin = NULL;
 	g_autoptr(GBytes) fw_wdfl = NULL;
 	g_autoptr(GBytes) fw_wsig = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
@@ -440,10 +440,15 @@ fu_wistron_dock_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write each block */
-	fw_cbin = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_PAYLOAD, error);
-	if (fw_cbin == NULL)
+	stream_cbin = fu_firmware_get_image_by_id_stream(firmware, FU_FIRMWARE_ID_PAYLOAD, error);
+	if (stream_cbin == NULL)
 		return FALSE;
-	chunks = fu_chunk_array_new_from_bytes(fw_cbin, 0x0, FU_WISTRON_DOCK_TRANSFER_BLOCK_SIZE);
+	chunks = fu_chunk_array_new_from_stream(stream_cbin,
+						0x0,
+						FU_WISTRON_DOCK_TRANSFER_BLOCK_SIZE,
+						error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_wistron_dock_device_write_blocks(self,
 						 chunks,
 						 fu_progress_get_child(progress),

@@ -55,39 +55,27 @@ fu_pxi_receiver_device_to_string(FuDevice *device, guint idt, GString *str)
 
 static FuFirmware *
 fu_pxi_receiver_device_prepare_firmware(FuDevice *device,
-					GBytes *fw,
+					GInputStream *stream,
 					FwupdInstallFlags flags,
 					GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_pxi_firmware_new();
+	g_autoptr(FuFirmware) firmware_new = NULL;
 
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
 	if (fu_device_has_private_flag(device, FU_PXI_DEVICE_FLAG_IS_HPAC) &&
 	    fu_pxi_firmware_is_hpac(FU_PXI_FIRMWARE(firmware))) {
-		g_autoptr(GBytes) fw_tmp = NULL;
 		guint32 hpac_fw_size = 0;
-		const guint8 *fw_ptr = g_bytes_get_data(fw, NULL);
+		g_autoptr(GInputStream) stream_fw = NULL;
 
-		if (!fu_memread_uint32_safe(fw_ptr,
-					    g_bytes_get_size(fw),
-					    9,
-					    &hpac_fw_size,
-					    G_LITTLE_ENDIAN,
-					    error))
+		if (!fu_input_stream_read_u32(stream, 9, &hpac_fw_size, G_LITTLE_ENDIAN, error))
 			return NULL;
-		hpac_fw_size += 264;
-		fw_tmp = fu_bytes_new_offset(fw, 9, hpac_fw_size, error);
-		if (fw_tmp == NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "HPAC F/W preparation failed.");
+		stream_fw = fu_partial_input_stream_new(stream, 9, hpac_fw_size + 264);
+		firmware_new = fu_pxi_firmware_new();
+		if (!fu_firmware_parse_stream(firmware, stream_fw, 0x0, flags, error))
 			return NULL;
-		}
-
-		fu_firmware_set_bytes(firmware, fw_tmp);
 	} else if (fu_device_has_private_flag(device, FU_PXI_DEVICE_FLAG_IS_HPAC) !=
 		   fu_pxi_firmware_is_hpac(FU_PXI_FIRMWARE(firmware))) {
 		g_set_error(error,
@@ -95,9 +83,11 @@ fu_pxi_receiver_device_prepare_firmware(FuDevice *device,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "The firmware is incompatible with the device");
 		return NULL;
+	} else {
+		firmware_new = g_object_ref(firmware);
 	}
 
-	return g_steal_pointer(&firmware);
+	return g_steal_pointer(&firmware_new);
 }
 
 static gboolean

@@ -106,7 +106,7 @@ fu_plugin_runner_device_register(FuPlugin *self, FuDevice *device) G_GNUC_NON_NU
 gboolean
 fu_plugin_runner_write_firmware(FuPlugin *self,
 				FuDevice *device,
-				GBytes *blob_fw,
+				GInputStream *stream,
 				FuProgress *progress,
 				FwupdInstallFlags flags,
 				GError **error) G_GNUC_WARN_UNUSED_RESULT

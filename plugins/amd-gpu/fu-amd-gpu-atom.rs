@@ -17,7 +17,7 @@ struct VbiosDate {
     _nullchar: u8,
 }
 
-#[derive(ParseBytes)]
+#[derive(ParseStream)]
 struct AtomImage {
     signature: u16be = 0x55aa,
     size: u16le,
@@ -46,7 +46,7 @@ struct AtomHeaderCommon {
     content_rev: u8,
 }
 
-#[derive(ParseBytes, ValidateBytes)]
+#[derive(ParseStream, ValidateStream)]
 struct AtomRom21Header {
     header: AtomHeaderCommon,
     signature: [char; 4] == "ATOM" ,

@@ -13,6 +13,7 @@
 #include "fu-cfu-firmware-struct.h"
 #include "fu-cfu-payload.h"
 #include "fu-common.h"
+#include "fu-input-stream.h"
 
 /**
  * FuCfuPayload:
@@ -30,21 +31,23 @@ G_DEFINE_TYPE(FuCfuPayload, fu_cfu_payload, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_cfu_payload_parse(FuFirmware *firmware,
-		     GBytes *fw,
+		     GInputStream *stream,
 		     gsize offset,
 		     FwupdInstallFlags flags,
 		     GError **error)
 {
-	gsize bufsz = g_bytes_get_size(fw);
+	gsize streamsz = 0;
 
 	/* process into chunks */
-	while (offset < bufsz) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	while (offset < streamsz) {
 		guint8 chunk_size = 0;
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GBytes) blob = NULL;
 		g_autoptr(GByteArray) st = NULL;
 
-		st = fu_struct_cfu_payload_parse_bytes(fw, offset, error);
+		st = fu_struct_cfu_payload_parse_stream(stream, offset, error);
 		if (st == NULL)
 			return FALSE;
 		offset += st->len;
@@ -56,7 +59,7 @@ fu_cfu_payload_parse(FuFirmware *firmware,
 					    "payload size was invalid");
 			return FALSE;
 		}
-		blob = fu_bytes_new_offset(fw, offset, chunk_size, error);
+		blob = fu_input_stream_read_bytes(stream, offset, chunk_size, error);
 		if (blob == NULL)
 			return FALSE;
 		chk = fu_chunk_bytes_new(blob);

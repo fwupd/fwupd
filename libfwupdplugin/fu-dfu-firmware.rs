@@ -1,7 +1,7 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(New, ValidateBytes, Parse)]
+#[derive(New, ValidateStream, ParseStream)]
 struct DfuFtr {
     release: u16le,
     pid: u16le,
@@ -11,14 +11,14 @@ struct DfuFtr {
     len: u8 = $struct_size,
     crc: u32le,
 }
-#[derive(New, ValidateBytes, ParseBytes)]
+#[derive(New, ValidateStream, ParseStream)]
 struct DfuseHdr {
     sig: [char; 5] == "DfuSe",
     ver: u8 == 0x01,
     image_size: u32le,
     targets: u8,
 }
-#[derive(New, Validate, ParseBytes)]
+#[derive(New, Validate, ParseStream)]
 struct DfuseImage {
     sig: [char; 6] == "Target",
     alt_setting: u8,
@@ -27,7 +27,7 @@ struct DfuseImage {
     target_size: u32le,
     chunks: u32le,
 }
-#[derive(New, Parse)]
+#[derive(New, ParseStream)]
 struct DfuseElement {
     address: u32le,
     size: u32le,

@@ -11,6 +11,8 @@
 #include "fu-common.h"
 #include "fu-fmap-firmware.h"
 #include "fu-fmap-struct.h"
+#include "fu-input-stream.h"
+#include "fu-partial-input-stream.h"
 
 /**
  * FuFmapFirmware:
@@ -25,35 +27,38 @@
 G_DEFINE_TYPE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_fmap_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_fmap_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
 {
-	return fu_struct_fmap_validate_bytes(fw, offset, error);
+	return fu_struct_fmap_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_fmap_firmware_parse(FuFirmware *firmware,
-		       GBytes *fw,
+		       GInputStream *stream,
 		       gsize offset,
 		       FwupdInstallFlags flags,
 		       GError **error)
 {
 	FuFmapFirmwareClass *klass_firmware = FU_FMAP_FIRMWARE_GET_CLASS(firmware);
+	gsize streamsz = 0;
 	guint32 nareas;
 	g_autoptr(GByteArray) st_hdr = NULL;
 
 	/* parse */
-	st_hdr = fu_struct_fmap_parse_bytes(fw, offset, error);
+	st_hdr = fu_struct_fmap_parse_stream(stream, offset, error);
 	if (st_hdr == NULL)
 		return FALSE;
 	fu_firmware_set_addr(firmware, fu_struct_fmap_get_base(st_hdr));
 
-	if (fu_struct_fmap_get_size(st_hdr) != g_bytes_get_size(fw)) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (fu_struct_fmap_get_size(st_hdr) != streamsz) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "file size incorrect, expected 0x%04x got 0x%04x",
 			    fu_struct_fmap_get_size(st_hdr),
-			    (guint)g_bytes_get_size(fw));
+			    (guint)streamsz);
 		return FALSE;
 	}
 	nareas = fu_struct_fmap_get_nareas(st_hdr);
@@ -69,27 +74,28 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		guint32 area_offset;
 		guint32 area_size;
 		g_autofree gchar *area_name = NULL;
-		g_autoptr(FuFirmware) img = NULL;
+		g_autoptr(FuFirmware) img = fu_firmware_new();
 		g_autoptr(GByteArray) st_area = NULL;
-		g_autoptr(GBytes) bytes = NULL;
+		g_autoptr(GInputStream) img_stream = NULL;
 
 		/* load area */
-		st_area = fu_struct_fmap_area_parse_bytes(fw, offset, error);
+		st_area = fu_struct_fmap_area_parse_stream(stream, offset, error);
 		if (st_area == NULL)
 			return FALSE;
 		area_size = fu_struct_fmap_area_get_size(st_area);
 		if (area_size == 0)
 			continue;
 		area_offset = fu_struct_fmap_area_get_offset(st_area);
-		bytes = fu_bytes_new_offset(fw, (gsize)area_offset, (gsize)area_size, error);
-		if (bytes == NULL)
+		img_stream =
+		    fu_partial_input_stream_new(stream, (gsize)area_offset, (gsize)area_size);
+		if (!fu_firmware_parse_stream(img, img_stream, 0x0, flags, error))
 			return FALSE;
 		area_name = fu_struct_fmap_area_get_name(st_area);
-		img = fu_firmware_new_from_bytes(bytes);
 		fu_firmware_set_id(img, area_name);
 		fu_firmware_set_idx(img, i + 1);
 		fu_firmware_set_addr(img, area_offset);
-		fu_firmware_add_image(firmware, img);
+		if (!fu_firmware_add_image_full(firmware, img, error))
+			return FALSE;
 
 		if (g_strcmp0(area_name, FMAP_AREANAME) == 0) {
 			g_autofree gchar *version = NULL;
@@ -103,7 +109,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 
 	/* subclassed */
 	if (klass_firmware->parse != NULL) {
-		if (!klass_firmware->parse(firmware, fw, offset, flags, error))
+		if (!klass_firmware->parse(firmware, stream, offset, flags, error))
 			return FALSE;
 	}
 

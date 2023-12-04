@@ -47,12 +47,17 @@ fu_synaptics_mst_firmware_export(FuFirmware *firmware,
 }
 
 static gboolean
-fu_synaptics_mst_firmware_detect_family(FuSynapticsMstFirmware *self, GBytes *fw, GError **error)
+fu_synaptics_mst_firmware_detect_family(FuSynapticsMstFirmware *self,
+					GInputStream *stream,
+					gsize offset,
+					GError **error)
 {
 	guint16 addrs[] = {ADDR_CONFIG_TESLA, ADDR_CONFIG_CAYENNE};
 	for (guint i = 0; i < G_N_ELEMENTS(addrs); i++) {
 		g_autoptr(GByteArray) st = NULL;
-		st = fu_struct_synaptics_firmware_config_parse_bytes(fw, addrs[i], error);
+		st = fu_struct_synaptics_firmware_config_parse_stream(stream,
+								      offset + addrs[i],
+								      error);
 		if (st == NULL)
 			return FALSE;
 		if ((fu_struct_synaptics_firmware_config_get_magic1(st) & 0x80) &&
@@ -70,19 +75,17 @@ fu_synaptics_mst_firmware_detect_family(FuSynapticsMstFirmware *self, GBytes *fw
 
 static gboolean
 fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
-				GBytes *fw,
+				GInputStream *stream,
 				gsize offset,
 				FwupdInstallFlags flags,
 				GError **error)
 {
 	FuSynapticsMstFirmware *self = FU_SYNAPTICS_MST_FIRMWARE(firmware);
-	const guint8 *buf;
-	gsize bufsz;
 	guint16 addr;
 
 	/* if device family not specified by caller, try to get from firmware file */
 	if (self->family == FU_SYNAPTICS_MST_FAMILY_UNKNOWN) {
-		if (!fu_synaptics_mst_firmware_detect_family(self, fw, error))
+		if (!fu_synaptics_mst_firmware_detect_family(self, stream, offset, error))
 			return FALSE;
 	}
 
@@ -104,8 +107,7 @@ fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
 			    fu_synaptics_mst_family_to_string(self->family));
 		return FALSE;
 	}
-	buf = g_bytes_get_data(fw, &bufsz);
-	if (!fu_memread_uint16_safe(buf, bufsz, addr, &self->board_id, G_BIG_ENDIAN, error))
+	if (!fu_input_stream_read_u16(stream, offset + addr, &self->board_id, G_BIG_ENDIAN, error))
 		return FALSE;
 
 	/* success */

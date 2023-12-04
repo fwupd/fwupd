@@ -605,14 +605,14 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_synaptics_cxaudio_device_prepare_firmware(FuDevice *device,
-					     GBytes *fw,
+					     GInputStream *stream,
 					     FwupdInstallFlags flags,
 					     GError **error)
 {
 	FuSynapticsCxaudioDevice *self = FU_SYNAPTICS_CXAUDIO_DEVICE(device);
 	guint32 chip_id_base;
 	g_autoptr(FuFirmware) firmware = fu_synaptics_cxaudio_firmware_new();
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	chip_id_base =
 	    fu_synaptics_cxaudio_firmware_get_devtype(FU_SYNAPTICS_CXAUDIO_FIRMWARE(firmware));

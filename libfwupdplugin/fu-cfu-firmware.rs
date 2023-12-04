@@ -1,7 +1,7 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(New, ParseBytes)]
+#[derive(New, ParseStream)]
 struct CfuPayload {
     addr: u32le,
     size: u8,
@@ -15,7 +15,7 @@ enum CfuOfferComponentId {
     OfferInformation2 = 0xFE,
 }
 
-#[derive(New, ParseBytes)]
+#[derive(New, ParseStream)]
 struct CfuOffer {
     segment_number: u8,
     flags1: u8,

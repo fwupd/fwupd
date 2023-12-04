@@ -347,7 +347,7 @@ fu_ccgx_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 
 static gboolean
 fu_ccgx_firmware_parse(FuFirmware *firmware,
-		       GBytes *fw,
+		       GInputStream *stream,
 		       gsize offset,
 		       FwupdInstallFlags flags,
 		       GError **error)
@@ -356,12 +356,7 @@ fu_ccgx_firmware_parse(FuFirmware *firmware,
 	FuCcgxFirmwareTokenHelper helper = {.self = self, .flags = flags};
 
 	/* tokenize */
-	if (!fu_strsplit_full(g_bytes_get_data(fw, NULL),
-			      g_bytes_get_size(fw),
-			      "\n",
-			      fu_ccgx_firmware_tokenize_cb,
-			      &helper,
-			      error))
+	if (!fu_strsplit_stream(stream, offset, "\n", fu_ccgx_firmware_tokenize_cb, &helper, error))
 		return FALSE;
 
 	/* address is first data entry */

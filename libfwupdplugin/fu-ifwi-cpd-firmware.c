@@ -15,6 +15,8 @@
 #include "fu-bytes.h"
 #include "fu-ifwi-cpd-firmware.h"
 #include "fu-ifwi-struct.h"
+#include "fu-input-stream.h"
+#include "fu-partial-input-stream.h"
 #include "fu-string.h"
 
 /**
@@ -49,42 +51,44 @@ fu_ifwi_cpd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 }
 
 static gboolean
-fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GBytes *fw, GError **error)
+fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GInputStream *stream, GError **error)
 {
-	gsize bufsz = g_bytes_get_size(fw);
+	gsize streamsz = 0;
 	guint32 size;
 	gsize offset = 0;
 	g_autoptr(GByteArray) st_mhd = NULL;
 
 	/* raw version */
-	st_mhd = fu_struct_ifwi_cpd_manifest_parse_bytes(fw, offset, error);
+	st_mhd = fu_struct_ifwi_cpd_manifest_parse_stream(stream, offset, error);
 	if (st_mhd == NULL)
 		return FALSE;
 	fu_firmware_set_version_raw(firmware, fu_struct_ifwi_cpd_manifest_get_version(st_mhd));
 
 	/* verify the size */
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
 	size = fu_struct_ifwi_cpd_manifest_get_size(st_mhd);
-	if (size * 4 != bufsz) {
+	if (size * 4 != streamsz) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "invalid manifest invalid length, got 0x%x, expected 0x%x",
 			    size * 4,
-			    (guint)bufsz);
+			    (guint)streamsz);
 		return FALSE;
 	}
 
 	/* parse extensions */
 	offset += fu_struct_ifwi_cpd_manifest_get_header_length(st_mhd) * 4;
-	while (offset < bufsz) {
+	while (offset < streamsz) {
 		guint32 extension_type = 0;
 		guint32 extension_length = 0;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
 		g_autoptr(GByteArray) st_mex = NULL;
-		g_autoptr(GBytes) blob = NULL;
+		g_autoptr(GInputStream) partial_stream = NULL;
 
 		/* set the extension type as the index */
-		st_mex = fu_struct_ifwi_cpd_manifest_ext_parse_bytes(fw, offset, error);
+		st_mex = fu_struct_ifwi_cpd_manifest_ext_parse_stream(stream, offset, error);
 		if (st_mex == NULL)
 			return FALSE;
 		extension_type = fu_struct_ifwi_cpd_manifest_ext_get_extension_type(st_mex);
@@ -104,13 +108,15 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GBytes *fw, GError **e
 				    (guint)extension_length);
 			return FALSE;
 		}
-		blob = fu_bytes_new_offset(fw,
-					   offset + st_mex->len,
-					   extension_length - st_mex->len,
-					   error);
-		if (blob == NULL)
+		partial_stream = fu_partial_input_stream_new(stream,
+							     offset + st_mex->len,
+							     extension_length - st_mex->len);
+		if (!fu_firmware_parse_stream(img,
+					      partial_stream,
+					      0x0,
+					      FWUPD_INSTALL_FLAG_NONE,
+					      error))
 			return FALSE;
-		fu_firmware_set_bytes(img, blob);
 
 		/* success */
 		fu_firmware_set_offset(img, offset);
@@ -124,14 +130,17 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GBytes *fw, GError **e
 }
 
 static gboolean
-fu_ifwi_cpd_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_ifwi_cpd_firmware_validate(FuFirmware *firmware,
+			      GInputStream *stream,
+			      gsize offset,
+			      GError **error)
 {
-	return fu_struct_ifwi_cpd_validate_bytes(fw, offset, error);
+	return fu_struct_ifwi_cpd_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
-			   GBytes *fw,
+			   GInputStream *stream,
 			   gsize offset,
 			   FwupdInstallFlags flags,
 			   GError **error)
@@ -142,7 +151,7 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 	guint32 num_of_entries;
 
 	/* other header fields */
-	st_hdr = fu_struct_ifwi_cpd_parse_bytes(fw, offset, error);
+	st_hdr = fu_struct_ifwi_cpd_parse_stream(stream, offset, error);
 	if (st_hdr == NULL)
 		return FALSE;
 	priv->header_version = fu_struct_ifwi_cpd_get_header_version(st_hdr);
@@ -166,12 +175,12 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 		g_autofree gchar *id = NULL;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
 		g_autoptr(GByteArray) st_ent = NULL;
-		g_autoptr(GBytes) img_blob = NULL;
+		g_autoptr(GInputStream) partial_stream = NULL;
 
 		/* the IDX is the position in the file */
 		fu_firmware_set_idx(img, i);
 
-		st_ent = fu_struct_ifwi_cpd_entry_parse_bytes(fw, offset, error);
+		st_ent = fu_struct_ifwi_cpd_entry_parse_stream(stream, offset, error);
 		if (st_ent == NULL)
 			return FALSE;
 
@@ -185,18 +194,18 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_offset(img, img_offset);
 
 		/* copy data */
-		img_blob = fu_bytes_new_offset(fw,
-					       img_offset,
-					       fu_struct_ifwi_cpd_entry_get_length(st_ent),
-					       error);
-		if (img_blob == NULL)
+		partial_stream =
+		    fu_partial_input_stream_new(stream,
+						img_offset,
+						fu_struct_ifwi_cpd_entry_get_length(st_ent));
+		if (!fu_firmware_parse_stream(img, partial_stream, 0x0, flags, error))
 			return FALSE;
-		fu_firmware_set_bytes(img, img_blob);
 
 		/* read the manifest */
 		if (i == FU_IFWI_CPD_FIRMWARE_IDX_MANIFEST &&
-		    g_bytes_get_size(img_blob) > FU_STRUCT_IFWI_CPD_MANIFEST_SIZE) {
-			if (!fu_ifwi_cpd_firmware_parse_manifest(img, img_blob, error))
+		    fu_struct_ifwi_cpd_entry_get_length(st_ent) >
+			FU_STRUCT_IFWI_CPD_MANIFEST_SIZE) {
+			if (!fu_ifwi_cpd_firmware_parse_manifest(img, partial_stream, error))
 				return FALSE;
 		}
 

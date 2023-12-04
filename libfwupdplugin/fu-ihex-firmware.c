@@ -230,21 +230,25 @@ fu_ihex_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 }
 
 static gboolean
-fu_ihex_firmware_tokenize(FuFirmware *firmware, GBytes *fw, FwupdInstallFlags flags, GError **error)
+fu_ihex_firmware_tokenize(FuFirmware *firmware,
+			  GInputStream *stream,
+			  gsize offset,
+			  FwupdInstallFlags flags,
+			  GError **error)
 {
 	FuIhexFirmware *self = FU_IHEX_FIRMWARE(firmware);
 	FuIhexFirmwareTokenHelper helper = {.self = self, .flags = flags};
-	return fu_strsplit_full(g_bytes_get_data(fw, NULL),
-				g_bytes_get_size(fw),
-				"\n",
-				fu_ihex_firmware_tokenize_cb,
-				&helper,
-				error);
+	return fu_strsplit_stream(stream,
+				  offset,
+				  "\n",
+				  fu_ihex_firmware_tokenize_cb,
+				  &helper,
+				  error);
 }
 
 static gboolean
 fu_ihex_firmware_parse(FuFirmware *firmware,
-		       GBytes *fw,
+		       GInputStream *stream,
 		       gsize offset,
 		       FwupdInstallFlags flags,
 		       GError **error)

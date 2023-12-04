@@ -50,12 +50,17 @@ fu_wac_module_bluetooth_id6_calculate_crc(const guint8 *data, gsize sz)
 
 static gboolean
 fu_wac_module_bluetooth_id6_write_blob(FuWacModule *self,
-				       GBytes *fw,
+				       GInputStream *stream,
 				       FuProgress *progress,
 				       GError **error)
 {
 	g_autoptr(FuChunkArray) chunks =
-	    fu_chunk_array_new_from_bytes(fw, 0x0, FU_WAC_MODULE_BLUETOOTH_ID6_PAYLOAD_SZ);
+	    fu_chunk_array_new_from_stream(stream,
+					   0x0,
+					   FU_WAC_MODULE_BLUETOOTH_ID6_PAYLOAD_SZ,
+					   error);
+	if (chunks == NULL)
+		return FALSE;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -109,7 +114,7 @@ fu_wac_module_bluetooth_id6_write_firmware(FuDevice *device,
 	FuWacModule *self = FU_WAC_MODULE(device);
 	const guint8 buf_start[] = {FU_WAC_MODULE_BLUETOOTH_ID6_START_NORMAL};
 	g_autoptr(GBytes) blob_start = g_bytes_new_static(buf_start, sizeof(buf_start));
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -118,9 +123,9 @@ fu_wac_module_bluetooth_id6_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 33, NULL);
 
 	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL) {
-		g_prefix_error(error, "wacom bluetooth-id6 module failed to get bytes: ");
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL) {
+		g_prefix_error(error, "wacom bluetooth-id6 module failed to get stream: ");
 		return FALSE;
 	}
 
@@ -139,7 +144,7 @@ fu_wac_module_bluetooth_id6_write_firmware(FuDevice *device,
 
 	/* data */
 	if (!fu_wac_module_bluetooth_id6_write_blob(self,
-						    fw,
+						    stream,
 						    fu_progress_get_child(progress),
 						    error)) {
 		g_prefix_error(error, "wacom bluetooth-id6 module failed to write: ");

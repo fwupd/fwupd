@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "fu-wac-firmware.h"
+#include "fu-wac-struct.h"
 
 struct _FuWacFirmware {
 	FuFirmware parent_instance;
@@ -257,28 +258,18 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 }
 
 static gboolean
-fu_wac_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_wac_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
 {
-	guint8 magic[5] = "WACOM";
-	return fu_memcmp_safe(g_bytes_get_data(fw, NULL),
-			      g_bytes_get_size(fw),
-			      offset,
-			      magic,
-			      sizeof(magic),
-			      0x0,
-			      sizeof(magic),
-			      error);
+	return fu_struct_wac_firmware_hdr_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_wac_firmware_parse(FuFirmware *firmware,
-		      GBytes *fw,
+		      GInputStream *stream,
 		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GPtrArray) header_infos = g_ptr_array_new_with_free_func(g_free);
 	g_autoptr(GString) image_buffer = g_string_new(NULL);
 	FuWacFirmwareTokenHelper helper = {.firmware = firmware,
@@ -288,12 +279,7 @@ fu_wac_firmware_parse(FuFirmware *firmware,
 					   .images_cnt = 0};
 
 	/* tokenize */
-	if (!fu_strsplit_full((const gchar *)buf + offset,
-			      bufsz - offset,
-			      "\n",
-			      fu_wac_firmware_tokenize_cb,
-			      &helper,
-			      error))
+	if (!fu_strsplit_stream(stream, offset, "\n", fu_wac_firmware_tokenize_cb, &helper, error))
 		return FALSE;
 
 	/* verify data is complete */

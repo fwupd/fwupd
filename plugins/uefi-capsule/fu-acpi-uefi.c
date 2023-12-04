@@ -34,18 +34,18 @@ fu_acpi_uefi_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilder
 }
 
 static gboolean
-fu_acpi_uefi_parse_insyde(FuAcpiUefi *self,
-			  const guint8 *buf,
-			  gsize bufsz,
-			  gsize offset,
-			  GError **error)
+fu_acpi_uefi_parse_insyde(FuAcpiUefi *self, GInputStream *stream, gsize offset, GError **error)
 {
 	const gchar *needle = "$QUIRK";
 	gsize data_offset = 0;
 	g_autoptr(GByteArray) st_qrk = NULL;
+	g_autoptr(GBytes) fw = NULL;
 
-	if (!fu_memmem_safe(buf,
-			    bufsz,
+	fw = fu_input_stream_read_bytes(stream, offset, G_MAXSIZE, error);
+	if (fw == NULL)
+		return FALSE;
+	if (!fu_memmem_safe(g_bytes_get_data(fw, NULL),
+			    g_bytes_get_size(fw),
 			    (const guint8 *)needle,
 			    strlen(needle),
 			    &data_offset,
@@ -56,7 +56,7 @@ fu_acpi_uefi_parse_insyde(FuAcpiUefi *self,
 	offset += data_offset;
 
 	/* parse */
-	st_qrk = fu_struct_acpi_insyde_quirk_parse(buf, bufsz, offset, error);
+	st_qrk = fu_struct_acpi_insyde_quirk_parse_stream(stream, offset, error);
 	if (st_qrk == NULL)
 		return FALSE;
 	if (fu_struct_acpi_insyde_quirk_get_size(st_qrk) < st_qrk->len) {
@@ -73,19 +73,17 @@ fu_acpi_uefi_parse_insyde(FuAcpiUefi *self,
 
 static gboolean
 fu_acpi_uefi_parse(FuFirmware *firmware,
-		   GBytes *fw,
+		   GInputStream *stream,
 		   gsize offset,
 		   FwupdInstallFlags flags,
 		   GError **error)
 {
 	FuAcpiUefi *self = FU_ACPI_UEFI(firmware);
 	fwupd_guid_t guid = {0x0};
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* FuAcpiTable->parse */
 	if (!FU_FIRMWARE_CLASS(fu_acpi_uefi_parent_class)
-		 ->parse(FU_FIRMWARE(self), fw, offset, FWUPD_INSTALL_FLAG_NONE, error))
+		 ->parse(FU_FIRMWARE(self), stream, offset, FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
 
 	/* check signature and read flags */
@@ -99,14 +97,13 @@ fu_acpi_uefi_parse(FuFirmware *firmware,
 	}
 
 	/* GUID for the table */
-	if (!fu_memcpy_safe((guint8 *)guid,
-			    sizeof(guid),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    offset + 0x24, /* src */
-			    sizeof(guid),
-			    error))
+	if (!fu_input_stream_read_safe(stream,
+				       (guint8 *)guid,
+				       sizeof(guid),
+				       0x0,	      /* dst */
+				       offset + 0x24, /* src */
+				       sizeof(guid),
+				       error))
 		return FALSE;
 	self->guid = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 
@@ -114,7 +111,7 @@ fu_acpi_uefi_parse(FuFirmware *firmware,
 	self->is_insyde = (g_strcmp0(self->guid, FU_EFI_INSYDE_GUID) == 0);
 	if (self->is_insyde) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_acpi_uefi_parse_insyde(self, buf, bufsz, offset, &error_local))
+		if (!fu_acpi_uefi_parse_insyde(self, stream, offset, &error_local))
 			g_debug("%s", error_local->message);
 	}
 

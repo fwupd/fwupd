@@ -694,7 +694,7 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GNode) root = g_node_new(NULL);
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
@@ -716,12 +716,12 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->show_all = TRUE;
 
 	/* open file */
-	blob = fu_bytes_get_contents(values[0], error);
-	if (blob == NULL) {
+	stream = fu_input_stream_from_path(values[0], error);
+	if (stream == NULL) {
 		fu_util_maybe_prefix_sandbox_error(values[0], error);
 		return FALSE;
 	}
-	array = fu_engine_get_details_for_bytes(priv->engine, priv->request, blob, error);
+	array = fu_engine_get_details(priv->engine, priv->request, stream, error);
 	if (array == NULL)
 		return FALSE;
 	for (guint i = 0; i < array->len; i++) {
@@ -931,7 +931,7 @@ static gboolean
 fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(GBytes) blob_fw = NULL;
+	g_autoptr(GInputStream) stream_fw = NULL;
 
 	/* progress */
 	fu_progress_set_id(priv->progress, G_STRLOC);
@@ -950,8 +950,8 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* parse blob */
-	blob_fw = fu_bytes_get_contents(values[0], error);
-	if (blob_fw == NULL) {
+	stream_fw = fu_input_stream_from_path(values[0], error);
+	if (stream_fw == NULL) {
 		fu_util_maybe_prefix_sandbox_error(values[0], error);
 		return FALSE;
 	}
@@ -996,7 +996,7 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
 	if (!fu_engine_install_blob(priv->engine,
 				    device,
-				    blob_fw,
+				    stream_fw,
 				    fu_progress_get_child(priv->progress),
 				    priv->flags,
 				    fu_engine_request_get_feature_flags(priv->request),
@@ -1264,7 +1264,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuCabinet) cabinet = NULL;
-	g_autoptr(GBytes) blob_cab = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) devices_possible = NULL;
 	g_autoptr(GPtrArray) errors = NULL;
@@ -1320,12 +1320,12 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* parse silo */
-	blob_cab = fu_bytes_get_contents(filename, error);
-	if (blob_cab == NULL) {
+	stream = fu_input_stream_from_path(filename, error);
+	if (stream == NULL) {
 		fu_util_maybe_prefix_sandbox_error(filename, error);
 		return FALSE;
 	}
-	cabinet = fu_engine_build_cabinet_from_blob(priv->engine, blob_cab, error);
+	cabinet = fu_engine_build_cabinet_from_stream(priv->engine, stream, error);
 	if (cabinet == NULL)
 		return FALSE;
 	components = fu_cabinet_get_components(cabinet, error);
@@ -1400,7 +1400,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_engine_install_releases(priv->engine,
 					priv->request,
 					releases,
-					blob_cab,
+					cabinet,
 					fu_progress_get_child(priv->progress),
 					priv->flags,
 					error))

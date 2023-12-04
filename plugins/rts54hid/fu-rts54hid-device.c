@@ -337,7 +337,7 @@ fu_rts54hid_device_write_firmware(FuDevice *device,
 				  GError **error)
 {
 	FuRts54HidDevice *self = FU_RTS54HID_DEVICE(device);
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
@@ -348,8 +348,8 @@ fu_rts54hid_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reset");
 
 	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* set MCU to high clock rate for better ISP performance */
@@ -362,7 +362,10 @@ fu_rts54hid_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write each block */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, FU_RTS54HID_TRANSFER_BLOCK_SIZE);
+	chunks =
+	    fu_chunk_array_new_from_stream(stream, 0x00, FU_RTS54HID_TRANSFER_BLOCK_SIZE, error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 

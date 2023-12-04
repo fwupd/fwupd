@@ -149,7 +149,7 @@ fu_{{vendor}}_{{example}}_device_cleanup(FuDevice *device,
 
 static FuFirmware *
 fu_{{vendor}}_{{example}}_device_prepare_firmware(FuDevice *device,
-					  GBytes *fw,
+					  GInputStream *stream,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {
@@ -169,7 +169,7 @@ fu_{{vendor}}_{{example}}_device_prepare_firmware(FuDevice *device,
 		return NULL;
 	}
 
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	return g_steal_pointer(&firmware);
 }
@@ -242,7 +242,7 @@ fu_{{vendor}}_{{example}}_device_write_firmware(FuDevice *device,
 					GError **error)
 {
 	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
@@ -252,12 +252,14 @@ fu_{{vendor}}_{{example}}_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 35, NULL);
 
 	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* write each block */
-	chunks = fu_chunk_array_new_from_bytes(fw, self->start_addr, 64 /* block_size */);
+	chunks = fu_chunk_array_new_from_stream(fw, self->start_addr, 64 /* block_size */, error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_{{vendor}}_{{example}}_device_write_blocks(self,
 						   chunks,
 						   fu_progress_get_child(progress),

@@ -10,6 +10,6 @@
 
 gboolean
 fu_efi_firmware_parse_sections(FuFirmware *firmware,
-			       GBytes *fw,
+			       GInputStream *stream,
 			       FwupdInstallFlags flags,
 			       GError **error) G_GNUC_NON_NULL(1, 2);

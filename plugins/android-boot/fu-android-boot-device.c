@@ -260,16 +260,16 @@ fu_android_boot_device_write_firmware(FuDevice *device,
 				      GError **error)
 {
 	FuAndroidBootDevice *self = FU_ANDROID_BOOT_DEVICE(device);
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* get data to write */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
-	fu_dump_bytes(G_LOG_DOMAIN, "write", fw);
-
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 10 * 1024);
+	chunks = fu_chunk_array_new_from_stream(stream, 0x0, 10 * 1024, error);
+	if (chunks == NULL)
+		return FALSE;
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 72, NULL);

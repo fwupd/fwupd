@@ -37,8 +37,8 @@ gchar *
 fu_release_to_string(FuRelease *self);
 FuDevice *
 fu_release_get_device(FuRelease *self);
-GBytes *
-fu_release_get_fw_blob(FuRelease *self);
+GInputStream *
+fu_release_get_stream(FuRelease *self);
 FuEngineRequest *
 fu_release_get_request(FuRelease *self);
 GPtrArray *

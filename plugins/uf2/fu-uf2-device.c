@@ -19,14 +19,15 @@ G_DEFINE_TYPE(FuUf2Device, fu_uf2_device, FU_TYPE_UDEV_DEVICE)
 
 static FuFirmware *
 fu_uf2_device_prepare_firmware(FuDevice *device,
-			       GBytes *fw,
+			       GInputStream *stream,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
 	FuUf2Device *self = FU_UF2_DEVICE(device);
+	g_autoptr(FuFirmware) firmware_raw = fu_firmware_new();
 	g_autoptr(FuFirmware) firmware = fu_uf2_firmware_new();
 
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
 	/* check the family_id matches if we can read the old firmware */
@@ -42,7 +43,9 @@ fu_uf2_device_prepare_firmware(FuDevice *device,
 	}
 
 	/* success: but return the raw data */
-	return fu_firmware_new_from_bytes(fw);
+	if (!fu_firmware_parse_stream(firmware_raw, stream, 0x0, flags, error))
+		return NULL;
+	return g_steal_pointer(&firmware_raw);
 }
 
 static gboolean
@@ -162,15 +165,13 @@ fu_block_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **e
 {
 	FuUf2Device *self = FU_UF2_DEVICE(device);
 	g_autofree gchar *fn = NULL;
-	g_autoptr(GFile) file = NULL;
 	g_autoptr(GInputStream) istr = NULL;
 
 	/* open for reading */
 	fn = fu_block_device_get_full_path(self, "CURRENT.UF2", error);
 	if (fn == NULL)
 		return NULL;
-	file = g_file_new_for_path(fn);
-	istr = G_INPUT_STREAM(g_file_read(file, NULL, error));
+	istr = fu_input_stream_from_path(fn, error);
 	if (istr == NULL)
 		return NULL;
 

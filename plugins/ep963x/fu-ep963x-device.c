@@ -234,7 +234,7 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 				GError **error)
 {
 	FuEp963xDevice *self = FU_EP963X_DEVICE(device);
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuChunkArray) blocks = NULL;
 
@@ -245,8 +245,8 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, NULL);
 
 	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* reset the block index */
@@ -266,7 +266,9 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write each block */
-	blocks = fu_chunk_array_new_from_bytes(fw, 0x00, FU_EP963_TRANSFER_BLOCK_SIZE);
+	blocks = fu_chunk_array_new_from_stream(stream, 0x00, FU_EP963_TRANSFER_BLOCK_SIZE, error);
+	if (blocks == NULL)
+		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(blocks); i++) {
 		guint8 buf[] = {i};
 		g_autoptr(FuChunkArray) chunks = NULL;

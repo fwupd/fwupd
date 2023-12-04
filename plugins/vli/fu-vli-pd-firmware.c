@@ -57,34 +57,45 @@ fu_vli_pd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 }
 
 static gboolean
+fu_vli_pd_firmware_compute_crc16_cb(const guint8 *buf,
+				    gsize bufsz,
+				    gpointer user_data,
+				    GError **error)
+{
+	guint16 *value = (guint16 *)user_data;
+	*value = fu_crc16_full(buf, bufsz, *value, 0xA001);
+	return TRUE;
+}
+
+static gboolean
 fu_vli_pd_firmware_parse(FuFirmware *firmware,
-			 GBytes *fw,
+			 GInputStream *stream,
 			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	FuVliPdFirmware *self = FU_VLI_PD_FIRMWARE(firmware);
-	gsize bufsz = 0;
+	gsize streamsz = 0;
 	guint32 fwver;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *fwver_str = NULL;
 	g_autoptr(GByteArray) st = NULL;
 
 	/* parse */
-	st = fu_struct_vli_pd_hdr_parse(buf, bufsz, VLI_USBHUB_PD_FLASHMAP_ADDR, error);
+	st = fu_struct_vli_pd_hdr_parse_stream(stream, VLI_USBHUB_PD_FLASHMAP_ADDR, error);
 	if (st == NULL) {
 		g_prefix_error(error, "failed to read header: ");
 		return FALSE;
 	}
 	self->vid = fu_struct_vli_pd_hdr_get_vid(st);
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
 
 	/* fall back to legacy location */
 	if (!fu_vli_pd_firmware_validate_header(self)) {
 		g_byte_array_unref(st);
-		st = fu_struct_vli_pd_hdr_parse(buf,
-						bufsz,
-						VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY,
-						error);
+		st = fu_struct_vli_pd_hdr_parse_stream(stream,
+						       VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY,
+						       error);
 		if (st == NULL) {
 			g_prefix_error(error, "failed to read header: ");
 			return FALSE;
@@ -117,30 +128,36 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_version_raw(firmware, fwver);
 
 	/* check size */
-	if (bufsz != fu_vli_common_device_kind_get_size(self->device_kind)) {
+	if (streamsz != fu_vli_common_device_kind_get_size(self->device_kind)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "size invalid, got 0x%x expected 0x%x",
-			    (guint)bufsz,
+			    (guint)streamsz,
 			    fu_vli_common_device_kind_get_size(self->device_kind));
 		return FALSE;
 	}
 
 	/* check CRC */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		guint16 crc_actual;
+		guint16 crc_actual = 0xFFFF;
 		guint16 crc_file = 0x0;
-		if (!fu_memread_uint16_safe(buf,
-					    bufsz,
-					    bufsz - 2,
-					    &crc_file,
-					    G_LITTLE_ENDIAN,
-					    error)) {
+		g_autoptr(GInputStream) stream_tmp = NULL;
+
+		if (!fu_input_stream_read_u16(stream,
+					      streamsz - 2,
+					      &crc_file,
+					      G_LITTLE_ENDIAN,
+					      error)) {
 			g_prefix_error(error, "failed to read file CRC: ");
 			return FALSE;
 		}
-		crc_actual = fu_crc16(buf, bufsz - 2);
+		stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz);
+		if (!fu_input_stream_chunkify(stream_tmp,
+					      fu_vli_pd_firmware_compute_crc16_cb,
+					      &crc_actual,
+					      error))
+			return FALSE;
 		if (crc_actual != crc_file) {
 			g_set_error(error,
 				    FWUPD_ERROR,

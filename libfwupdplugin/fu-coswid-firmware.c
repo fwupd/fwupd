@@ -13,9 +13,11 @@
 #endif
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-coswid-firmware.h"
 #include "fu-coswid-struct.h"
+#include "fu-input-stream.h"
 
 /**
  * FuCoswidFirmware:
@@ -444,7 +446,7 @@ fu_coswid_firmware_parse_entity(FuCoswidFirmware *self,
 
 static gboolean
 fu_coswid_firmware_parse(FuFirmware *firmware,
-			 GBytes *fw,
+			 GInputStream *stream,
 			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
@@ -455,7 +457,11 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 	struct cbor_load_result result = {0x0};
 	struct cbor_pair *pairs = NULL;
 	g_autoptr(cbor_item_t) item = NULL;
+	g_autoptr(GBytes) fw = NULL;
 
+	fw = fu_input_stream_read_bytes(stream, offset, G_MAXSIZE, error);
+	if (fw == NULL)
+		return FALSE;
 	item = cbor_load(g_bytes_get_data(fw, NULL), g_bytes_get_size(fw), &result);
 	if (item == NULL) {
 		g_set_error(error,

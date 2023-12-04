@@ -59,9 +59,9 @@ typedef struct {
 guint32
 fu_bcm57xx_nvram_crc(const guint8 *buf, gsize bufsz);
 gboolean
-fu_bcm57xx_verify_crc(GBytes *fw, GError **error);
+fu_bcm57xx_verify_crc(GInputStream *stream, GError **error);
 gboolean
-fu_bcm57xx_verify_magic(GBytes *fw, gsize offset, GError **error);
+fu_bcm57xx_verify_magic(GInputStream *stream, gsize offset, GError **error);
 
 /* parses stage1 version */
 void

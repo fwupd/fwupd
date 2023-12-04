@@ -81,7 +81,7 @@ fu_igsc_aux_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_igsc_aux_device_prepare_firmware(FuDevice *device,
-				    GBytes *fw,
+				    GInputStream *stream,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
@@ -90,7 +90,7 @@ fu_igsc_aux_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuIgscAuxFirmware) firmware = FU_IGSC_AUX_FIRMWARE(fu_igsc_aux_firmware_new());
 
 	/* parse container */
-	if (!fu_firmware_parse(FU_FIRMWARE(firmware), fw, flags, error))
+	if (!fu_firmware_parse_stream(FU_FIRMWARE(firmware), stream, 0x0, flags, error))
 		return NULL;
 
 	/* search the device list for a match */
@@ -144,21 +144,21 @@ fu_igsc_aux_device_write_firmware(FuDevice *device,
 {
 	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device));
 	g_autoptr(GBytes) fw_info = NULL;
-	g_autoptr(GBytes) fw_payload = NULL;
+	g_autoptr(GInputStream) stream_payload = NULL;
 
 	/* get image */
 	fw_info =
 	    fu_firmware_get_image_by_idx_bytes(firmware, FU_IFWI_FPT_FIRMWARE_IDX_INFO, error);
 	if (fw_info == NULL)
 		return FALSE;
-	fw_payload =
-	    fu_firmware_get_image_by_idx_bytes(firmware, FU_IFWI_FPT_FIRMWARE_IDX_SDTA, error);
-	if (fw_payload == NULL)
+	stream_payload =
+	    fu_firmware_get_image_by_idx_stream(firmware, FU_IFWI_FPT_FIRMWARE_IDX_SDTA, error);
+	if (stream_payload == NULL)
 		return FALSE;
 	return fu_igsc_device_write_blob(igsc_parent,
 					 GSC_FWU_HECI_PAYLOAD_TYPE_FWDATA,
 					 fw_info,
-					 fw_payload,
+					 stream_payload,
 					 progress,
 					 error);
 }

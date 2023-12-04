@@ -12,6 +12,7 @@
 #include "fu-hid-descriptor.h"
 #include "fu-hid-report-item.h"
 #include "fu-hid-struct.h"
+#include "fu-input-stream.h"
 #include "fu-mem.h"
 
 /**
@@ -50,16 +51,19 @@ fu_hid_descriptor_count_table_dupes(GPtrArray *table, FuHidReportItem *item)
 
 static gboolean
 fu_hid_descriptor_parse(FuFirmware *firmware,
-			GBytes *fw,
+			GInputStream *stream,
 			gsize offset,
 			FwupdInstallFlags flags,
 			GError **error)
 {
+	gsize streamsz = 0;
 	g_autoptr(GPtrArray) table_state =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	g_autoptr(GPtrArray) table_local =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	while (offset < g_bytes_get_size(fw)) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	while (offset < streamsz) {
 		g_autofree gchar *itemstr = NULL;
 		g_autoptr(FuHidReportItem) item = fu_hid_report_item_new();
 
@@ -81,7 +85,7 @@ fu_hid_descriptor_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 
-		if (!fu_firmware_parse_full(FU_FIRMWARE(item), fw, offset, flags, error))
+		if (!fu_firmware_parse_stream(FU_FIRMWARE(item), stream, offset, flags, error))
 			return FALSE;
 		offset += fu_firmware_get_size(FU_FIRMWARE(item));
 

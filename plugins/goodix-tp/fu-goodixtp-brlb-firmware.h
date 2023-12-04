@@ -18,7 +18,7 @@ G_DECLARE_FINAL_TYPE(FuGoodixtpBrlbFirmware,
 
 gboolean
 fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
-				GBytes *fw,
+				GInputStream *stream,
 				guint8 sensor_id,
 				GError **error);
 FuFirmware *

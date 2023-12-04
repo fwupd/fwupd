@@ -60,7 +60,7 @@ enum SynapticsMstRegRc {
     Data   = 0x4C0,
 }
 
-#[derive(ParseBytes)]
+#[derive(ParseStream)]
 struct SynapticsFirmwareConfig {
     version: u8,
     reserved: u8,

@@ -35,7 +35,7 @@ typedef struct {
 
 struct _FuCompositeInputStream {
 	GInputStream parent_instance;
-	GPtrArray *items; /* of FuCompositeInputStreamItem */
+	GPtrArray *items;		       /* of FuCompositeInputStreamItem */
 	FuCompositeInputStreamItem *last_item; /* no-ref */
 	goffset pos;
 	goffset pos_offset;

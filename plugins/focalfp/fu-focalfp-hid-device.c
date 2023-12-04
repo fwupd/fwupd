@@ -450,7 +450,7 @@ fu_focalfp_hid_device_write_firmware(FuDevice *device,
 	const guint32 UPGRADE_ID = 0x582E;
 	guint16 us_ic_id = 0;
 	guint32 checksum = 0;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
@@ -462,8 +462,8 @@ fu_focalfp_hid_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5, "reset");
 
 	/* simple image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* check chip id and erase flash */
@@ -488,7 +488,9 @@ fu_focalfp_hid_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* send packet data */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, MAX_USB_PACKET_SIZE);
+	chunks = fu_chunk_array_new_from_stream(stream, 0x0, MAX_USB_PACKET_SIZE, error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_focalfp_hid_device_write_chunks(self,
 						chunks,
 						fu_progress_get_child(progress),

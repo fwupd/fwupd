@@ -677,16 +677,19 @@ fu_engine_get_component_for_checksum(FuEngine *self, const gchar *csum)
 
 /* does this exist in any enabled remote */
 gchar *
-fu_engine_get_remote_id_for_blob(FuEngine *self, GBytes *blob)
+fu_engine_get_remote_id_for_stream(FuEngine *self, GInputStream *stream)
 {
 	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
-	g_return_val_if_fail(blob != NULL, NULL);
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
 
 	for (guint i = 0; checksum_types[i] != 0; i++) {
-		g_autofree gchar *csum = g_compute_checksum_for_bytes(checksum_types[i], blob);
-		g_autoptr(XbNode) component = fu_engine_get_component_for_checksum(self, csum);
+		g_autofree gchar *csum = NULL;
+		g_autoptr(XbNode) component = NULL;
+		csum = fu_input_stream_compute_checksum(stream, checksum_types[i], NULL);
+		if (csum != NULL)
+			component = fu_engine_get_component_for_checksum(self, csum);
 		if (component != NULL) {
 			const gchar *remote_id =
 			    xb_node_query_text(component,
@@ -1815,7 +1818,7 @@ fu_engine_sort_release_device_order_release_version_cb(gconstpointer a, gconstpo
  * @self: a #FuEngine
  * @request: a #FuEngineRequest
  * @releases: (element-type FuRelease): a device
- * @blob_cab: the #GBytes of the .cab file
+ * @cabinet: a #FuCabinet
  * @flags: install flags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
  * @error: (nullable): optional return location for an error
  *
@@ -1831,7 +1834,7 @@ gboolean
 fu_engine_install_releases(FuEngine *self,
 			   FuEngineRequest *request,
 			   GPtrArray *releases,
-			   GBytes *blob_cab,
+			   FuCabinet *cabinet,
 			   FuProgress *progress,
 			   FwupdInstallFlags flags,
 			   GError **error)
@@ -1871,9 +1874,17 @@ fu_engine_install_releases(FuEngine *self,
 	fu_progress_set_steps(progress, releases->len);
 	for (guint i = 0; i < releases->len; i++) {
 		FuRelease *release = g_ptr_array_index(releases, i);
+		GInputStream *stream = fu_release_get_stream(release);
+		if (stream == NULL) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_NOT_SUPPORTED,
+					    "no stream for release");
+			return FALSE;
+		}
 		if (!fu_engine_install_release(self,
 					       release,
-					       blob_cab,
+					       stream,
 					       fu_progress_get_child(progress),
 					       flags,
 					       error)) {
@@ -2251,7 +2262,7 @@ fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
  * fu_engine_install_release:
  * @self: a #FuEngine
  * @release: a #FuRelease
- * @blob_cab: the #GBytes of the .cab file
+ * @stream: the #GInputStream of the .cab file
  * @progress: a #FuProgress
  * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_OLDER
  * @error: (nullable): optional return location for an error
@@ -2267,7 +2278,7 @@ fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
 gboolean
 fu_engine_install_release(FuEngine *self,
 			  FuRelease *release,
-			  GBytes *blob_cab,
+			  GInputStream *stream,
 			  FuProgress *progress,
 			  FwupdInstallFlags flags,
 			  GError **error)
@@ -2277,7 +2288,7 @@ fu_engine_install_release(FuEngine *self,
 	FuPlugin *plugin;
 	FwupdFeatureFlags feature_flags = FWUPD_FEATURE_FLAG_NONE;
 	FwupdVersionFormat fmt;
-	GBytes *blob_fw;
+	GInputStream *stream_fw;
 	const gchar *tmp;
 	const gchar *version_rel;
 	g_autofree gchar *version_orig = NULL;
@@ -2288,7 +2299,7 @@ fu_engine_install_release(FuEngine *self,
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(FU_IS_RELEASE(release), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
-	g_return_val_if_fail(blob_cab != NULL, FALSE);
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* optional for tests */
@@ -2300,7 +2311,9 @@ fu_engine_install_release(FuEngine *self,
 		GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
 		for (guint i = 0; checksum_types[i] != 0; i++) {
 			g_autofree gchar *checksum =
-			    g_compute_checksum_for_bytes(checksum_types[i], blob_cab);
+			    fu_input_stream_compute_checksum(stream, checksum_types[i], error);
+			if (checksum == NULL)
+				return FALSE;
 			fwupd_release_add_checksum(FWUPD_RELEASE(release), checksum);
 		}
 	}
@@ -2319,6 +2332,10 @@ fu_engine_install_release(FuEngine *self,
 
 	/* save to persistent storage so that the device can recover without a network */
 	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE)) {
+		g_autoptr(GBytes) blob_cab =
+		    fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+		if (blob_cab == NULL)
+			return FALSE;
 		if (!fu_engine_save_into_backup_remote(self, blob_cab, error))
 			return FALSE;
 	}
@@ -2328,6 +2345,7 @@ fu_engine_install_release(FuEngine *self,
 	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0 && !fu_engine_is_running_offline(self)) {
 		FuPlugin *plugin_tmp =
 		    fu_plugin_list_find_by_name(self->plugin_list, "upower", NULL);
+		g_autoptr(GBytes) blob_cab = NULL;
 		if (!fu_engine_add_release_metadata(self, release, error))
 			return FALSE;
 		if (plugin_tmp != NULL) {
@@ -2340,6 +2358,9 @@ fu_engine_install_release(FuEngine *self,
 				return FALSE;
 		}
 		fu_progress_set_status(progress, FWUPD_STATUS_SCHEDULING);
+		blob_cab = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+		if (blob_cab == NULL)
+			return FALSE;
 		return fu_engine_schedule_update(self,
 						 device,
 						 FWUPD_RELEASE(release),
@@ -2352,12 +2373,12 @@ fu_engine_install_release(FuEngine *self,
 	self->write_history = (flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0;
 
 	/* get per-release firmware blob */
-	blob_fw = fu_release_get_fw_blob(release);
-	if (blob_fw == NULL) {
+	stream_fw = fu_release_get_stream(release);
+	if (stream_fw == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
-				    "Failed to get firmware blob from release");
+				    "Failed to get firmware stream from release");
 		return FALSE;
 	}
 
@@ -2381,7 +2402,7 @@ fu_engine_install_release(FuEngine *self,
 	version_orig = g_strdup(fu_device_get_version(device));
 	if (!fu_engine_install_blob(self,
 				    device,
-				    blob_fw,
+				    stream_fw,
 				    progress,
 				    flags,
 				    feature_flags,
@@ -2457,7 +2478,28 @@ fu_engine_install_release(FuEngine *self,
 		passim_item_set_max_age(passim_item, 30 * 24 * 60 * 60);
 		passim_item_set_share_limit(passim_item, 50);
 		passim_item_set_basename(passim_item, basename);
-		passim_item_set_bytes(passim_item, blob_cab);
+#if PASSIM_CHECK_VERSION(0, 1, 5)
+		{
+			gsize streamsz = 0;
+			g_autofree gchar *checksum =
+			    fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA256, error);
+			if (checksum == NULL)
+				return FALSE;
+			if (!fu_input_stream_size(stream, &streamsz, error))
+				return FALSE;
+			passim_item_set_size(passim_item, streamsz);
+			passim_item_set_stream(passim_item, stream);
+			passim_item_set_hash(passim_item, checksum);
+		}
+#else
+		{
+			g_autoptr(GBytes) blob_cab = NULL;
+			blob_cab = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+			if (blob_cab == NULL)
+				return FALSE;
+			passim_item_set_bytes(passim_item, blob_cab);
+		}
+#endif
 		if (!passim_client_publish(self->passim_client, passim_item, &error_passim)) {
 			if (!g_error_matches(error_passim, G_IO_ERROR, G_IO_ERROR_EXISTS)) {
 				g_warning("failed to publish firmware to Passim: %s",
@@ -3125,7 +3167,7 @@ fu_engine_reload(FuEngine *self, const gchar *device_id, GError **error)
 static gboolean
 fu_engine_write_firmware(FuEngine *self,
 			 const gchar *device_id,
-			 GBytes *blob_fw,
+			 GInputStream *stream_fw,
 			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error)
@@ -3157,7 +3199,7 @@ fu_engine_write_firmware(FuEngine *self,
 	    fu_plugin_list_find_by_name(self->plugin_list, fu_device_get_plugin(device), error);
 	if (plugin == NULL)
 		return FALSE;
-	if (!fu_plugin_runner_write_firmware(plugin, device, blob_fw, progress, flags, error)) {
+	if (!fu_plugin_runner_write_firmware(plugin, device, stream_fw, progress, flags, error)) {
 		g_autoptr(GError) error_attach = NULL;
 		g_autoptr(GError) error_cleanup = NULL;
 
@@ -3239,13 +3281,14 @@ fu_engine_firmware_read(FuEngine *self,
 gboolean
 fu_engine_install_blob(FuEngine *self,
 		       FuDevice *device,
-		       GBytes *blob_fw,
+		       GInputStream *stream_fw,
 		       FuProgress *progress,
 		       FwupdInstallFlags flags,
 		       FwupdFeatureFlags feature_flags,
 		       GError **error)
 {
 	guint retries = 0;
+	gsize streamsz = 0;
 	g_autofree gchar *device_id = NULL;
 	g_autofree gchar *filename_to_delete = NULL;
 	g_autoptr(GTimer) timer = g_timer_new();
@@ -3261,7 +3304,9 @@ fu_engine_install_blob(FuEngine *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "cleanup");
 
 	/* test the firmware is not an empty blob */
-	if (g_bytes_get_size(blob_fw) == 0) {
+	if (!fu_input_stream_size(stream_fw, &streamsz, error))
+		return FALSE;
+	if (streamsz == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -3337,7 +3382,7 @@ fu_engine_install_blob(FuEngine *self,
 		fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_INSTALL);
 		if (!fu_engine_write_firmware(self,
 					      device_id,
-					      blob_fw,
+					      stream_fw,
 					      fu_progress_get_child(progress_local),
 					      flags,
 					      error))
@@ -3579,16 +3624,13 @@ fu_engine_builder_cabinet_adapter_cb(XbBuilderSource *source,
 				     GError **error)
 {
 	FuEngine *self = FU_ENGINE(user_data);
+	GInputStream *stream = xb_builder_source_ctx_get_stream(ctx);
 	g_autoptr(FuCabinet) cabinet = NULL;
-	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autofree gchar *xml = NULL;
 
 	/* convert the CAB into metadata XML */
-	blob = xb_builder_source_ctx_get_bytes(ctx, cancellable, error);
-	if (blob == NULL)
-		return NULL;
-	cabinet = fu_engine_build_cabinet_from_blob(self, blob, error);
+	cabinet = fu_engine_build_cabinet_from_stream(self, stream, error);
 	if (cabinet == NULL)
 		return NULL;
 	silo = fu_cabinet_get_silo(cabinet, error);
@@ -4334,9 +4376,9 @@ fu_engine_update_metadata(FuEngine *self,
 }
 
 /**
- * fu_engine_build_cabinet_from_blob:
+ * fu_engine_build_cabinet_from_stream:
  * @self: a #FuEngine
- * @blob_cab: a data blob
+ * @stream: a #GInputStream
  * @error: (nullable): optional return location for an error
  *
  * Creates a silo from a .cab file blob.
@@ -4344,12 +4386,12 @@ fu_engine_update_metadata(FuEngine *self,
  * Returns: (transfer container): a #XbSilo, or %NULL
  **/
 FuCabinet *
-fu_engine_build_cabinet_from_blob(FuEngine *self, GBytes *blob_cab, GError **error)
+fu_engine_build_cabinet_from_stream(FuEngine *self, GInputStream *stream, GError **error)
 {
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
-	g_return_val_if_fail(blob_cab != NULL, NULL);
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* load file */
@@ -4357,7 +4399,11 @@ fu_engine_build_cabinet_from_blob(FuEngine *self, GBytes *blob_cab, GError **err
 	fu_firmware_set_size_max(FU_FIRMWARE(cabinet),
 				 fu_engine_config_get_archive_size_max(self->config));
 	fu_cabinet_set_jcat_context(cabinet, self->jcat_context);
-	if (!fu_firmware_parse(FU_FIRMWARE(cabinet), blob_cab, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_stream(FU_FIRMWARE(cabinet),
+				      stream,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      error))
 		return NULL;
 	return g_steal_pointer(&cabinet);
 }
@@ -4489,12 +4535,24 @@ fu_engine_get_details_sort_cb(gconstpointer a, gconstpointer b)
 	return 0;
 }
 
-/* for self tests */
+/**
+ * fu_engine_get_details:
+ * @self: a #FuEngine
+ * @request: a #FuEngineRequest
+ * @stream: a seekable #GInputStream
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the details about a local file.
+ *
+ * Note: this will close the fd when done
+ *
+ * Returns: (transfer container) (element-type FuDevice): results
+ **/
 GPtrArray *
-fu_engine_get_details_for_bytes(FuEngine *self,
-				FuEngineRequest *request,
-				GBytes *blob,
-				GError **error)
+fu_engine_get_details(FuEngine *self,
+		      FuEngineRequest *request,
+		      GInputStream *stream,
+		      GError **error)
 {
 	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
 	g_autoptr(GError) error_local = NULL;
@@ -4504,16 +4562,27 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(XbNode) component_by_csum = NULL;
 
-	cabinet = fu_engine_build_cabinet_from_blob(self, blob, error);
-	if (cabinet == NULL)
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	cabinet = fu_engine_build_cabinet_from_stream(self, stream, error);
+	if (cabinet == NULL) {
+		g_prefix_error(error, "failed to load file: ");
 		return NULL;
+	}
 	components = fu_cabinet_get_components(cabinet, error);
 	if (components == NULL)
 		return NULL;
 
 	/* calculate the checksums of the blob */
-	for (guint i = 0; checksum_types[i] != 0; i++)
-		g_ptr_array_add(checksums, g_compute_checksum_for_bytes(checksum_types[i], blob));
+	for (guint i = 0; checksum_types[i] != 0; i++) {
+		g_autofree gchar *checksum =
+		    fu_input_stream_compute_checksum(stream, checksum_types[i], error);
+		if (checksum == NULL)
+			return NULL;
+		g_ptr_array_add(checksums, g_steal_pointer(&checksum));
+	}
 
 	/* does this exist in any enabled remote */
 	for (guint i = 0; i < checksums->len; i++) {
@@ -4588,37 +4657,6 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 	g_ptr_array_sort(details, fu_engine_get_details_sort_cb);
 
 	return g_steal_pointer(&details);
-}
-
-/**
- * fu_engine_get_details:
- * @self: a #FuEngine
- * @request: a #FuEngineRequest
- * @fd: a file descriptor
- * @error: (nullable): optional return location for an error
- *
- * Gets the details about a local file.
- *
- * Note: this will close the fd when done
- *
- * Returns: (transfer container) (element-type FuDevice): results
- **/
-GPtrArray *
-fu_engine_get_details(FuEngine *self, FuEngineRequest *request, gint fd, GError **error)
-{
-	g_autoptr(GBytes) blob = NULL;
-
-	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
-	g_return_val_if_fail(fd > 0, NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	/* get all components */
-	blob = fu_bytes_get_contents_fd(fd,
-					fu_engine_config_get_archive_size_max(self->config),
-					error);
-	if (blob == NULL)
-		return NULL;
-	return fu_engine_get_details_for_bytes(self, request, blob, error);
 }
 
 static gint

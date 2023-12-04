@@ -14,6 +14,8 @@
 #include "fu-efi-firmware-filesystem.h"
 #include "fu-efi-firmware-volume.h"
 #include "fu-efi-struct.h"
+#include "fu-input-stream.h"
+#include "fu-partial-input-stream.h"
 #include "fu-sum.h"
 
 /**
@@ -45,14 +47,17 @@ fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 }
 
 static gboolean
-fu_efi_firmware_volume_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_efi_firmware_volume_validate(FuFirmware *firmware,
+				GInputStream *stream,
+				gsize offset,
+				GError **error)
 {
-	return fu_struct_efi_volume_validate_bytes(fw, offset, error);
+	return fu_struct_efi_volume_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_efi_firmware_volume_parse(FuFirmware *firmware,
-			     GBytes *fw,
+			     GInputStream *stream,
 			     gsize offset,
 			     FwupdInstallFlags flags,
 			     GError **error)
@@ -60,17 +65,17 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	FuEfiFirmwareVolume *self = FU_EFI_FIRMWARE_VOLUME(firmware);
 	FuEfiFirmwareVolumePrivate *priv = GET_PRIVATE(self);
 	gsize blockmap_sz = 0;
-	gsize bufsz = g_bytes_get_size(fw);
+	gsize streamsz = 0;
 	guint16 hdr_length = 0;
 	guint32 attrs = 0;
 	guint64 fv_length = 0;
 	guint8 alignment;
 	g_autofree gchar *guid_str = NULL;
-	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GByteArray) st_hdr = NULL;
+	g_autoptr(GInputStream) partial_stream = NULL;
 
 	/* parse */
-	st_hdr = fu_struct_efi_volume_parse_bytes(fw, offset, error);
+	st_hdr = fu_struct_efi_volume_parse_stream(stream, offset, error);
 	if (st_hdr == NULL)
 		return FALSE;
 
@@ -80,6 +85,8 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	g_debug("volume GUID: %s [%s]", guid_str, fu_efi_guid_to_name(guid_str));
 
 	/* length */
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
 	fv_length = fu_struct_efi_volume_get_length(st_hdr);
 	if (fv_length == 0x0) {
 		g_set_error_literal(error,
@@ -103,7 +110,7 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	fu_firmware_set_alignment(firmware, alignment);
 	priv->attrs = attrs & 0xffff;
 	hdr_length = fu_struct_efi_volume_get_hdr_len(st_hdr);
-	if (hdr_length < st_hdr->len || hdr_length > fv_length || hdr_length > bufsz ||
+	if (hdr_length < st_hdr->len || hdr_length > fv_length || hdr_length > streamsz ||
 	    hdr_length % 2 != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -118,7 +125,7 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 		guint16 checksum_verify;
 		g_autoptr(GBytes) blob_hdr = NULL;
 
-		blob_hdr = fu_bytes_new_offset(fw, offset, hdr_length, error);
+		blob_hdr = fu_input_stream_read_bytes(stream, offset, hdr_length, error);
 		if (blob_hdr == NULL)
 			return FALSE;
 		checksum_verify = fu_sum16w_bytes(blob_hdr, G_LITTLE_ENDIAN);
@@ -134,9 +141,8 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	}
 
 	/* add image */
-	blob = fu_bytes_new_offset(fw, offset + hdr_length, fv_length - hdr_length, error);
-	if (blob == NULL)
-		return FALSE;
+	partial_stream =
+	    fu_partial_input_stream_new(stream, offset + hdr_length, fv_length - hdr_length);
 	fu_firmware_set_offset(firmware, offset);
 	fu_firmware_set_id(firmware, guid_str);
 	fu_firmware_set_size(firmware, fv_length);
@@ -146,20 +152,25 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	    g_strcmp0(guid_str, FU_EFI_FIRMWARE_VOLUME_GUID_FFS3) == 0) {
 		g_autoptr(FuFirmware) img = fu_efi_firmware_filesystem_new();
 		fu_firmware_set_alignment(img, fu_firmware_get_alignment(firmware));
-		if (!fu_firmware_parse(img, blob, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error))
+		if (!fu_firmware_parse_stream(img,
+					      partial_stream,
+					      0x0,
+					      flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      error))
 			return FALSE;
 		fu_firmware_add_image(firmware, img);
 	} else {
-		fu_firmware_set_bytes(firmware, blob);
+		if (!fu_firmware_set_stream(firmware, partial_stream, error))
+			return FALSE;
 	}
 
 	/* skip the blockmap */
 	offset += st_hdr->len;
-	while (offset < bufsz) {
+	while (offset < streamsz) {
 		guint32 num_blocks;
 		guint32 length;
 		g_autoptr(GByteArray) st_blk = NULL;
-		st_blk = fu_struct_efi_volume_block_map_parse_bytes(fw, offset, error);
+		st_blk = fu_struct_efi_volume_block_map_parse_stream(stream, offset, error);
 		if (st_blk == NULL)
 			return FALSE;
 		num_blocks = fu_struct_efi_volume_block_map_get_num_blocks(st_blk);

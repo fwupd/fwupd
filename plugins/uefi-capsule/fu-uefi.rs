@@ -27,7 +27,7 @@ enum UefiUpdateInfoStatus {
     Attempted,
 }
 
-#[derive(New, Parse)]
+#[derive(New, Parse, ParseStream)]
 struct EfiUpdateInfo {
     version: u32le = 0x7,
     guid: Guid,
@@ -37,7 +37,7 @@ struct EfiUpdateInfo {
     status: UefiUpdateInfoStatus,
     // EFI_DEVICE_PATH goes here
 }
-#[derive(Parse)]
+#[derive(ParseStream)]
 struct AcpiInsydeQuirk {
     signature: [char; 6],
     size: u32le,

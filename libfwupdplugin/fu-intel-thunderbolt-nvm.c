@@ -13,9 +13,11 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-input-stream.h"
 #include "fu-intel-thunderbolt-nvm.h"
 #include "fu-intel-thunderbolt-struct.h"
 #include "fu-mem.h"
+#include "fu-partial-input-stream.h"
 #include "fu-string.h"
 #include "fu-version-common.h"
 
@@ -424,7 +426,7 @@ fu_intel_thunderbolt_nvm_missing_needed_drom(FuIntelThunderboltNvm *self)
 
 static gboolean
 fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
-			       GBytes *fw,
+			       GInputStream *stream,
 			       gsize offset,
 			       FwupdInstallFlags flags,
 			       GError **error)
@@ -460,8 +462,9 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			   {0x1137, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_MAPLE_RIDGE, 2},
 			   {0}};
 	g_autofree gchar *version = NULL;
-	g_autoptr(FuFirmware) img_payload = NULL;
-	g_autoptr(GBytes) fw_payload = NULL;
+	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
+	g_autoptr(GInputStream) stream_payload = NULL;
+	gsize streamsz = 0;
 
 	/* add this straight away */
 	priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] = offset;
@@ -479,7 +482,9 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	priv->is_native = tmp & 0x20;
 
 	/* we're only reading the first chunk */
-	if (g_bytes_get_size(fw) == 0x80)
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (streamsz == 0x80)
 		return TRUE;
 
 	/* host or device */
@@ -605,8 +610,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	}
 
 	/* we're only reading enough to get the vendor-id and model-id */
-	if (offset == 0x0 &&
-	    g_bytes_get_size(fw) < priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_ARC_PARAMS])
+	if (offset == 0x0 && streamsz < priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_ARC_PARAMS])
 		return TRUE;
 
 	/* has PD */
@@ -626,13 +630,12 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 
 	/* as as easy-to-grab payload blob */
 	if (offset > 0) {
-		fw_payload = fu_bytes_new_offset(fw, offset, g_bytes_get_size(fw) - offset, error);
-		if (fw_payload == NULL)
-			return FALSE;
+		stream_payload = fu_partial_input_stream_new(stream, offset, streamsz - offset);
 	} else {
-		fw_payload = g_bytes_ref(fw);
+		stream_payload = g_object_ref(stream);
 	}
-	img_payload = fu_firmware_new_from_bytes(fw_payload);
+	if (!fu_firmware_parse_stream(img_payload, stream_payload, 0x0, flags, error))
+		return FALSE;
 	fu_firmware_set_id(img_payload, FU_FIRMWARE_ID_PAYLOAD);
 	if (!fu_firmware_add_image_full(firmware, img_payload, error))
 		return FALSE;

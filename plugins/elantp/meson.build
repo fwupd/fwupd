@@ -4,6 +4,7 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('elantp.quirk')
 plugin_builtin_elantp = static_library('fu_plugin_elantp',
+  rustgen.process('fu-elantp.rs'),
   sources: [
     'fu-elantp-plugin.c',
     'fu-elantp-firmware.c',   # fuzzing

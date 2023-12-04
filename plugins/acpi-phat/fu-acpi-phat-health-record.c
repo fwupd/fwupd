@@ -35,23 +35,25 @@ fu_acpi_phat_health_record_export(FuFirmware *firmware,
 
 static gboolean
 fu_acpi_phat_health_record_parse(FuFirmware *firmware,
-				 GBytes *fw,
+				 GInputStream *stream,
 				 gsize offset,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
 	FuAcpiPhatHealthRecord *self = FU_ACPI_PHAT_HEALTH_RECORD(firmware);
-	gsize bufsz = g_bytes_get_size(fw);
+	gsize streamsz = 0;
 	guint16 rcdlen;
 	guint32 dataoff;
 	g_autoptr(GByteArray) st = NULL;
 
 	/* sanity check record length */
-	st = fu_struct_acpi_phat_health_record_parse_bytes(fw, offset, error);
+	st = fu_struct_acpi_phat_health_record_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
 	rcdlen = fu_struct_acpi_phat_health_record_get_rcdlen(st);
-	if (rcdlen != bufsz) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (rcdlen != streamsz) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
@@ -66,13 +68,13 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 
 	/* device path */
 	dataoff = fu_struct_acpi_phat_health_record_get_device_specific_data(st);
-	if (bufsz > 28) {
+	if (streamsz > 28) {
 		gsize ubufsz; /* bytes */
 		g_autoptr(GBytes) ubuf = NULL;
 
 		/* header -> devicepath -> data */
 		if (dataoff == 0x0) {
-			ubufsz = bufsz - 28;
+			ubufsz = streamsz - 28;
 		} else {
 			ubufsz = dataoff - 28;
 		}
@@ -86,7 +88,7 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 		}
 
 		/* align and convert */
-		ubuf = fu_bytes_new_offset(fw, 28, ubufsz, error);
+		ubuf = fu_input_stream_read_bytes(stream, offset + 28, ubufsz, error);
 		if (ubuf == NULL)
 			return FALSE;
 		self->device_path = fu_utf16_to_utf8_bytes(ubuf, G_LITTLE_ENDIAN, error);

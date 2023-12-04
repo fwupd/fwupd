@@ -360,18 +360,26 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_tpm_v2_device_upgrade_data(FuTpmV2Device *self, GBytes *fw, FuProgress *progress, GError **error)
+fu_tpm_v2_device_upgrade_data(FuTpmV2Device *self,
+			      GInputStream *stream,
+			      FuProgress *progress,
+			      GError **error)
 {
 	TPMT_HA *first_digest;
 	TPMT_HA *next_digest;
 	TSS2_RC rc;
+	gsize streamsz = 0;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, TPM2_MAX_DIGEST_BUFFER);
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	chunks = fu_chunk_array_new_from_stream(stream, 0x0, TPM2_MAX_DIGEST_BUFFER, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		TPM2B_MAX_BUFFER data = {.size = g_bytes_get_size(fw)};
+		TPM2B_MAX_BUFFER data = {.size = streamsz};
 		g_autoptr(FuChunk) chk = NULL;
 
 		/* prepare chunk */
@@ -424,7 +432,7 @@ fu_tpm_v2_device_write_firmware(FuDevice *device,
 	FuTpmV2Device *self = FU_TPM_V2_DEVICE(device);
 	TPM2B_DIGEST digest = {0x0};
 	TSS2_RC rc;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -459,10 +467,10 @@ fu_tpm_v2_device_write_firmware(FuDevice *device,
 	}
 
 	/* deploy data to device */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
-	if (!fu_tpm_v2_device_upgrade_data(self, fw, fu_progress_get_child(progress), error))
+	if (!fu_tpm_v2_device_upgrade_data(self, stream, fu_progress_get_child(progress), error))
 		return FALSE;
 
 	/* success! */

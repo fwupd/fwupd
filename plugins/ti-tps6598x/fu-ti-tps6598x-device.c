@@ -656,9 +656,9 @@ fu_ti_tps6598x_device_write_firmware(FuDevice *device,
 				     GError **error)
 {
 	FuTiTps6598xDevice *self = FU_TI_TPS6598X_DEVICE(device);
-	g_autoptr(GBytes) fw_sig = NULL;
-	g_autoptr(GBytes) fw_pubkey = NULL;
-	g_autoptr(GBytes) fw_payload = NULL;
+	g_autoptr(GInputStream) stream_sig = NULL;
+	g_autoptr(GInputStream) stream_pubkey = NULL;
+	g_autoptr(GInputStream) stream_payload = NULL;
 	g_autoptr(FuChunkArray) chunks_pubkey = NULL;
 	g_autoptr(FuChunkArray) chunks_sig = NULL;
 	g_autoptr(FuChunkArray) chunks_payload = NULL;
@@ -671,8 +671,9 @@ fu_ti_tps6598x_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 7, NULL);
 
 	/* get payload image */
-	fw_payload = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_PAYLOAD, error);
-	if (fw_payload == NULL)
+	stream_payload =
+	    fu_firmware_get_image_by_id_stream(firmware, FU_FIRMWARE_ID_PAYLOAD, error);
+	if (stream_payload == NULL)
 		return FALSE;
 
 	/* SFWi */
@@ -681,7 +682,9 @@ fu_ti_tps6598x_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write each SFWd block */
-	chunks_payload = fu_chunk_array_new_from_bytes(fw_payload, 0x0, 64);
+	chunks_payload = fu_chunk_array_new_from_stream(stream_payload, 0x0, 64, error);
+	if (chunks_payload == NULL)
+		return FALSE;
 	if (!fu_ti_tps6598x_device_write_chunks(self,
 						chunks_payload,
 						fu_progress_get_child(progress),
@@ -692,10 +695,12 @@ fu_ti_tps6598x_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* SFWs with signature */
-	fw_sig = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_SIGNATURE, error);
-	if (fw_sig == NULL)
+	stream_sig = fu_firmware_get_image_by_id_stream(firmware, FU_FIRMWARE_ID_SIGNATURE, error);
+	if (stream_sig == NULL)
 		return FALSE;
-	chunks_sig = fu_chunk_array_new_from_bytes(fw_sig, 0x0, 64);
+	chunks_sig = fu_chunk_array_new_from_stream(stream_sig, 0x0, 64, error);
+	if (chunks_sig == NULL)
+		return FALSE;
 	if (!fu_ti_tps6598x_device_write_sfws_chunks(self,
 						     chunks_sig,
 						     fu_progress_get_child(progress),
@@ -706,10 +711,12 @@ fu_ti_tps6598x_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* SFWs with pubkey */
-	fw_pubkey = fu_firmware_get_image_by_id_bytes(firmware, "pubkey", error);
-	if (fw_pubkey == NULL)
+	stream_pubkey = fu_firmware_get_image_by_id_stream(firmware, "pubkey", error);
+	if (stream_pubkey == NULL)
 		return FALSE;
-	chunks_pubkey = fu_chunk_array_new_from_bytes(fw_pubkey, 0x0, 64);
+	chunks_pubkey = fu_chunk_array_new_from_stream(stream_pubkey, 0x0, 64, error);
+	if (chunks_pubkey == NULL)
+		return FALSE;
 	if (!fu_ti_tps6598x_device_write_sfws_chunks(self,
 						     chunks_pubkey,
 						     fu_progress_get_child(progress),

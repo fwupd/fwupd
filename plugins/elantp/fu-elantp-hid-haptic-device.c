@@ -620,7 +620,7 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_elantp_hid_haptic_device_prepare_firmware(FuDevice *device,
-					     GBytes *fw,
+					     GInputStream *stream,
 					     FwupdInstallFlags flags,
 					     GError **error)
 {
@@ -629,7 +629,7 @@ fu_elantp_hid_haptic_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_elantp_haptic_firmware_new();
 
 	/* check is compatible with hardware */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	driver_ic = fu_elantp_haptic_firmware_get_driver_ic(FU_ELANTP_HAPTIC_FIRMWARE(firmware));
 	if (driver_ic != self->driver_ic) {

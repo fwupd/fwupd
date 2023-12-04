@@ -209,17 +209,19 @@ fu_rts54hid_module_write_firmware(FuDevice *module,
 				  GError **error)
 {
 	FuRts54HidModule *self = FU_RTS54HID_MODULE(module);
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* build packets */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, FU_RTS54HID_TRANSFER_BLOCK_SIZE);
-
+	chunks =
+	    fu_chunk_array_new_from_stream(stream, 0x00, FU_RTS54HID_TRANSFER_BLOCK_SIZE, error);
+	if (chunks == NULL)
+		return FALSE;
 	if (0) {
 		if (!fu_rts54hid_module_i2c_read(self, 0x0000, NULL, 0, error))
 			return FALSE;

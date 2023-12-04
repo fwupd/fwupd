@@ -107,14 +107,14 @@ fu_oprom_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBu
 }
 
 static gboolean
-fu_oprom_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_oprom_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
 {
-	return fu_struct_oprom_validate_bytes(fw, offset, error);
+	return fu_struct_oprom_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_oprom_firmware_parse(FuFirmware *firmware,
-			GBytes *fw,
+			GInputStream *stream,
 			gsize offset,
 			FwupdInstallFlags flags,
 			GError **error)
@@ -128,7 +128,7 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GByteArray) st_pci = NULL;
 
 	/* parse header */
-	st_hdr = fu_struct_oprom_parse_bytes(fw, offset, error);
+	st_hdr = fu_struct_oprom_parse_stream(stream, offset, error);
 	if (st_hdr == NULL)
 		return FALSE;
 	priv->subsystem = fu_struct_oprom_get_subsystem(st_hdr);
@@ -146,7 +146,7 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* verify signature */
-	st_pci = fu_struct_oprom_pci_parse_bytes(fw, offset + pci_header_offset, error);
+	st_pci = fu_struct_oprom_pci_parse_stream(stream, offset + pci_header_offset, error);
 	if (st_pci == NULL)
 		return FALSE;
 	priv->vendor_id = fu_struct_oprom_pci_get_vendor_id(st_pci);
@@ -165,8 +165,7 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	expansion_header_offset = fu_struct_oprom_get_expansion_header_offset(st_hdr);
 	if (expansion_header_offset != 0x0) {
 		g_autoptr(FuFirmware) img = NULL;
-
-		img = fu_firmware_new_from_gtypes(fw,
+		img = fu_firmware_new_from_gtypes(stream,
 						  offset + expansion_header_offset,
 						  FWUPD_INSTALL_FLAG_NONE,
 						  error,

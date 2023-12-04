@@ -8,7 +8,9 @@
 
 #include "config.h"
 
+#include "fu-bytes.h"
 #include "fu-device-private.h"
+#include "fu-input-stream.h"
 #include "fu-string.h"
 #include "fu-usb-device-fw-ds20.h"
 #include "fu-version.h"
@@ -26,16 +28,23 @@ G_DEFINE_TYPE(FuUsbDeviceFwDs20, fu_usb_device_fw_ds20, FU_TYPE_USB_DEVICE_DS20)
 
 static gboolean
 fu_usb_device_fw_ds20_parse(FuUsbDeviceDs20 *self,
-			    GBytes *blob,
+			    GInputStream *stream,
 			    FuUsbDevice *device,
 			    GError **error)
 {
 	gsize bufsz = 0;
 	gsize bufsz_safe = 0;
-	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
+	const guint8 *buf;
 	g_auto(GStrv) lines = NULL;
+	g_autoptr(GBytes) blob = NULL;
+
+	/* convert to blob */
+	blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+	if (blob == NULL)
+		return FALSE;
 
 	/* only accept Linux line-endings */
+	buf = g_bytes_get_data(blob, &bufsz);
 	if (g_strstr_len((const gchar *)buf, bufsz, "\r") != NULL) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,

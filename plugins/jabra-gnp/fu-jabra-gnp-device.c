@@ -565,7 +565,7 @@ fu_jabra_gnp_device_write_dfu_from_squif(FuJabraGnpDevice *self, GError **error)
 
 static FuFirmware *
 fu_jabra_gnp_device_prepare_firmware(FuDevice *device,
-				     GBytes *fw,
+				     GInputStream *stream,
 				     FwupdInstallFlags flags,
 				     GError **error)
 {
@@ -573,7 +573,7 @@ fu_jabra_gnp_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_jabra_gnp_firmware_new();
 
 	/* unzip and get images */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	if (fu_jabra_gnp_firmware_get_dfu_pid(FU_JABRA_GNP_FIRMWARE(firmware)) != self->dfu_pid) {
 		g_set_error(error,
@@ -630,7 +630,7 @@ fu_jabra_gnp_device_write_image(FuJabraGnpDevice *self,
 {
 	const guint chunk_size = 52;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -642,8 +642,8 @@ fu_jabra_gnp_device_write_image(FuJabraGnpDevice *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "write-version");
 
 	/* write partition */
-	blob = fu_firmware_get_bytes(img, error);
-	if (blob == NULL)
+	stream = fu_firmware_get_stream(img, error);
+	if (stream == NULL)
 		return FALSE;
 	if (!fu_jabra_gnp_device_write_partition(self, fu_firmware_get_idx(img), error))
 		return FALSE;
@@ -660,7 +660,9 @@ fu_jabra_gnp_device_write_image(FuJabraGnpDevice *self,
 	fu_progress_step_done(progress);
 
 	/* write chunks */
-	chunks = fu_chunk_array_new_from_bytes(blob, 0x00, chunk_size);
+	chunks = fu_chunk_array_new_from_stream(stream, 0x00, chunk_size, error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_jabra_gnp_device_write_crc(self,
 					   fu_jabra_gnp_image_get_crc32(FU_JABRA_GNP_IMAGE(img)),
 					   fu_chunk_array_length(chunks),

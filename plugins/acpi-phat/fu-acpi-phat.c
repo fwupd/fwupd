@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "fu-acpi-phat-health-record.h"
+#include "fu-acpi-phat-struct.h"
 #include "fu-acpi-phat-version-record.h"
 #include "fu-acpi-phat.h"
 
@@ -29,27 +30,20 @@ fu_acpi_phat_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilder
 
 static gboolean
 fu_acpi_phat_record_parse(FuFirmware *firmware,
-			  GBytes *fw,
+			  GInputStream *stream,
 			  gsize *offset,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {
-	gsize bufsz = 0;
 	guint16 record_length = 0;
 	guint16 record_type = 0;
 	guint8 revision;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(FuFirmware) firmware_rcd = NULL;
 
 	/* common header */
-	if (!fu_memread_uint16_safe(buf, bufsz, *offset, &record_type, G_LITTLE_ENDIAN, error))
+	if (!fu_input_stream_read_u16(stream, *offset, &record_type, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    *offset + 2,
-				    &record_length,
-				    G_LITTLE_ENDIAN,
-				    error))
+	if (!fu_input_stream_read_u16(stream, *offset + 2, &record_length, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (record_length < 5) {
 		g_set_error(error,
@@ -59,7 +53,7 @@ fu_acpi_phat_record_parse(FuFirmware *firmware,
 			    record_length);
 		return FALSE;
 	}
-	if (!fu_memread_uint8_safe(buf, bufsz, *offset + 4, &revision, error))
+	if (!fu_input_stream_read_u8(stream, *offset + 4, &revision, error))
 		return FALSE;
 
 	/* firmware version data record */
@@ -71,14 +65,12 @@ fu_acpi_phat_record_parse(FuFirmware *firmware,
 
 	/* supported record type */
 	if (firmware_rcd != NULL) {
-		g_autoptr(GBytes) fw_tmp = NULL;
-		fw_tmp = fu_bytes_new_offset(fw, *offset, record_length, error);
-		if (fw_tmp == NULL)
-			return FALSE;
+		g_autoptr(GInputStream) partial_stream = NULL;
+		partial_stream = fu_partial_input_stream_new(stream, *offset, record_length);
 		fu_firmware_set_size(firmware_rcd, record_length);
 		fu_firmware_set_offset(firmware_rcd, *offset);
 		fu_firmware_set_version_raw(firmware_rcd, revision);
-		if (!fu_firmware_parse(firmware_rcd, fw_tmp, flags, error))
+		if (!fu_firmware_parse_stream(firmware_rcd, partial_stream, 0x0, flags, error))
 			return FALSE;
 		if (!fu_firmware_add_image_full(firmware, firmware_rcd, error))
 			return FALSE;
@@ -96,22 +88,14 @@ fu_acpi_phat_set_oem_id(FuAcpiPhat *self, const gchar *oem_id)
 }
 
 static gboolean
-fu_acpi_phat_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_acpi_phat_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
 {
-	const guint8 magic[4] = "PHAT";
-	return fu_memcmp_safe(g_bytes_get_data(fw, NULL),
-			      g_bytes_get_size(fw),
-			      offset,
-			      magic,
-			      sizeof(magic),
-			      0x0,
-			      sizeof(magic),
-			      error);
+	return fu_struct_acpi_phat_hdr_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_acpi_phat_parse(FuFirmware *firmware,
-		   GBytes *fw,
+		   GInputStream *stream,
 		   gsize offset,
 		   FwupdInstallFlags flags,
 		   GError **error)
@@ -119,22 +103,23 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 	FuAcpiPhat *self = FU_ACPI_PHAT(firmware);
 	gchar oem_id[6] = {'\0'};
 	gchar oem_table_id[8] = {'\0'};
-	gsize bufsz = 0;
+	gsize streamsz = 0;
 	guint32 length = 0;
 	guint32 oem_revision = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *oem_id_safe = NULL;
 	g_autofree gchar *oem_table_id_safe = NULL;
 
 	/* parse table */
-	if (!fu_memread_uint32_safe(buf, bufsz, offset + 4, &length, G_LITTLE_ENDIAN, error))
+	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	if (bufsz < length) {
+	if (!fu_input_stream_read_u32(stream, offset + 4, &length, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	if (streamsz < length) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_NOT_SUPPORTED,
 			    "PHAT table invalid size, got 0x%x, expected 0x%x",
-			    (guint)bufsz,
+			    (guint)streamsz,
 			    length);
 		return FALSE;
 	}
@@ -142,7 +127,7 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 	/* spec revision */
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		guint8 revision = 0;
-		if (!fu_memread_uint8_safe(buf, bufsz, offset + 8, &revision, error))
+		if (!fu_input_stream_read_u8(stream, offset + 8, &revision, error))
 			return FALSE;
 		if (revision != FU_ACPI_PHAT_REVISION) {
 			g_set_error(error,
@@ -157,7 +142,10 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 
 	/* verify checksum */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		guint8 checksum = fu_sum8(buf, length);
+		guint8 checksum = 0;
+		g_autoptr(GInputStream) stream_tmp = fu_partial_input_stream_new(stream, 0, length);
+		if (!fu_input_stream_compute_sum8(stream_tmp, &checksum, error))
+			return FALSE;
 		if (checksum != 0x00) {
 			g_set_error(error,
 				    G_IO_ERROR,
@@ -169,37 +157,35 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 	}
 
 	/* OEMID */
-	if (!fu_memcpy_safe((guint8 *)oem_id,
-			    sizeof(oem_id),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    offset + 10, /* src */
-			    sizeof(oem_id),
-			    error))
+	if (!fu_input_stream_read_safe(stream,
+				       (guint8 *)oem_id,
+				       sizeof(oem_id),
+				       0x0,	    /* dst */
+				       offset + 10, /* src */
+				       sizeof(oem_id),
+				       error))
 		return FALSE;
 	oem_id_safe = fu_strsafe((const gchar *)oem_id, sizeof(oem_id));
 	fu_acpi_phat_set_oem_id(self, oem_id_safe);
 
 	/* OEM Table ID */
-	if (!fu_memcpy_safe((guint8 *)oem_table_id,
-			    sizeof(oem_table_id),
-			    0x0, /* dst */
-			    buf,
-			    bufsz,
-			    offset + 16, /* src */
-			    sizeof(oem_table_id),
-			    error))
+	if (!fu_input_stream_read_safe(stream,
+				       (guint8 *)oem_table_id,
+				       sizeof(oem_table_id),
+				       0x0,	    /* dst */
+				       offset + 16, /* src */
+				       sizeof(oem_table_id),
+				       error))
 		return FALSE;
 	oem_table_id_safe = fu_strsafe((const gchar *)oem_table_id, sizeof(oem_table_id));
 	fu_firmware_set_id(firmware, oem_table_id_safe);
-	if (!fu_memread_uint32_safe(buf, bufsz, offset + 24, &oem_revision, G_LITTLE_ENDIAN, error))
+	if (!fu_input_stream_read_u32(stream, offset + 24, &oem_revision, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	fu_firmware_set_version_raw(firmware, oem_revision);
 
 	/* platform telemetry records */
 	for (gsize offset_tmp = offset + 36; offset_tmp < length;) {
-		if (!fu_acpi_phat_record_parse(firmware, fw, &offset_tmp, flags, error))
+		if (!fu_acpi_phat_record_parse(firmware, stream, &offset_tmp, flags, error))
 			return FALSE;
 	}
 
