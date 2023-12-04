@@ -923,7 +923,6 @@ fwupd_security_attr_ensure_result(FwupdSecurityAttr *self)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	if (fwupd_security_attr_has_flag(self, FWUPD_SECURITY_ATTR_FLAG_SUCCESS) &&
-	    priv->result == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN &&
 	    priv->result_success != FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
 		g_debug("auto-setting %s result %s",
 			priv->appstream_id,
