@@ -546,8 +546,10 @@ fu_pci_mei_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	attr = fu_security_attrs_get_by_appstream_id(attrs,
 						     FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU,
 						     NULL);
-	if (attr != NULL)
+	if (attr != NULL) {
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	}
 
 	fu_plugin_add_security_attrs_manufacturing_mode(plugin, attrs);
 	fu_plugin_add_security_attrs_override_strap(plugin, attrs);
