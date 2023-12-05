@@ -47,19 +47,9 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuIfdFirmware, fu_ifd_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_ifd_firmware_get_instance_private(o))
 
 #define FU_IFD_SIZE	 0x1000
-#define FU_IFD_SIGNATURE 0x0FF0A55A
 
-#define FU_IFD_FDBAR_RESERVED	      0x0000
-#define FU_IFD_FDBAR_SIGNATURE	      0x0010
-#define FU_IFD_FDBAR_DESCRIPTOR_MAP0  0x0014
-#define FU_IFD_FDBAR_DESCRIPTOR_MAP1  0x0018
-#define FU_IFD_FDBAR_DESCRIPTOR_MAP2  0x001C
 #define FU_IFD_FDBAR_FLASH_UPPER_MAP1 0x0EFC
 #define FU_IFD_FDBAR_OEM_SECTION      0x0F00
-
-#define FU_IFD_FCBA_FLCOMP 0x0000
-#define FU_IFD_FCBA_FLILL  0x0004
-#define FU_IFD_FCBA_FLILL1 0x0008
 
 #define FU_IFD_FREG_BASE(freg)	(((freg) << 12) & 0x07FFF000)
 #define FU_IFD_FREG_LIMIT(freg) ((((freg) >> 4) & 0x07FFF000) | 0x00000FFF)
@@ -102,29 +92,7 @@ fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 static gboolean
 fu_ifd_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	guint32 magic = 0;
-
-	if (!fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
-				    g_bytes_get_size(fw),
-				    offset + FU_IFD_FDBAR_SIGNATURE,
-				    &magic,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read magic: ");
-		return FALSE;
-	}
-	if (magic != FU_IFD_SIGNATURE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "signature invalid, got 0x%x, expected 0x%x",
-			    magic,
-			    (guint)FU_IFD_SIGNATURE);
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	return fu_struct_ifd_fdbar_validate_bytes(fw, offset, error);
 }
 
 static gboolean
@@ -138,6 +106,8 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 	FuIfdFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	g_autoptr(GByteArray) st_fcba = NULL;
+	g_autoptr(GByteArray) st_fdbar = NULL;
 
 	/* check size */
 	if (bufsz < FU_IFD_SIZE) {
@@ -150,44 +120,29 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* descriptor registers */
-	priv->descriptor_map0 =
-	    fu_memread_uint32(buf + FU_IFD_FDBAR_DESCRIPTOR_MAP0, G_LITTLE_ENDIAN);
+	st_fdbar = fu_struct_ifd_fdbar_parse_bytes(fw, 0x0, error);
+	if (st_fdbar == NULL)
+		return FALSE;
+	priv->descriptor_map0 = fu_struct_ifd_fdbar_get_descriptor_map0(st_fdbar);
 	priv->num_regions = (priv->descriptor_map0 >> 24) & 0b111;
 	if (priv->num_regions == 0)
 		priv->num_regions = 10;
 	priv->num_components = (priv->descriptor_map0 >> 8) & 0b11;
 	priv->flash_component_base_addr = (priv->descriptor_map0 << 4) & 0x00000FF0;
 	priv->flash_region_base_addr = (priv->descriptor_map0 >> 12) & 0x00000FF0;
-	priv->descriptor_map1 =
-	    fu_memread_uint32(buf + FU_IFD_FDBAR_DESCRIPTOR_MAP1, G_LITTLE_ENDIAN);
+	priv->descriptor_map1 = fu_struct_ifd_fdbar_get_descriptor_map1(st_fdbar);
 	priv->flash_master_base_addr = (priv->descriptor_map1 << 4) & 0x00000FF0;
 	priv->flash_ich_strap_base_addr = (priv->descriptor_map1 >> 12) & 0x00000FF0;
-	priv->descriptor_map2 =
-	    fu_memread_uint32(buf + FU_IFD_FDBAR_DESCRIPTOR_MAP2, G_LITTLE_ENDIAN);
+	priv->descriptor_map2 = fu_struct_ifd_fdbar_get_descriptor_map2(st_fdbar);
 	priv->flash_mch_strap_base_addr = (priv->descriptor_map2 << 4) & 0x00000FF0;
 
 	/* FCBA */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    priv->flash_component_base_addr + FU_IFD_FCBA_FLCOMP,
-				    &priv->components_rcd,
-				    G_LITTLE_ENDIAN,
-				    error))
+	st_fcba = fu_struct_ifd_fcba_parse_bytes(fw, priv->flash_component_base_addr, error);
+	if (st_fcba == NULL)
 		return FALSE;
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    priv->flash_component_base_addr + FU_IFD_FCBA_FLILL,
-				    &priv->illegal_jedec,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    priv->flash_component_base_addr + FU_IFD_FCBA_FLILL1,
-				    &priv->illegal_jedec1,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
+	priv->components_rcd = fu_struct_ifd_fcba_get_flcomp(st_fcba);
+	priv->illegal_jedec = fu_struct_ifd_fcba_get_flill(st_fcba);
+	priv->illegal_jedec1 = fu_struct_ifd_fcba_get_flill1(st_fcba);
 
 	/* FMBA */
 	if (!fu_memread_uint32_safe(buf,
@@ -296,6 +251,8 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 	FuIfdFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize bufsz_max = 0x0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) st_fcba = fu_struct_ifd_fcba_new();
+	g_autoptr(GByteArray) st_fdbar = fu_struct_ifd_fdbar_new();
 	g_autoptr(GHashTable) blobs = NULL;
 	g_autoptr(FuFirmware) img_desc = NULL;
 
@@ -346,45 +303,32 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 	}
 	fu_byte_array_set_size(buf, bufsz_max, 0x00);
 
-	/* reserved */
-	for (guint i = 0; i < 0x10; i++)
-		buf->data[FU_IFD_FDBAR_RESERVED + i] = 0xff;
-
-	/* signature */
-	fu_memwrite_uint32(buf->data + FU_IFD_FDBAR_SIGNATURE, FU_IFD_SIGNATURE, G_LITTLE_ENDIAN);
-
 	/* descriptor map */
-	fu_memwrite_uint32(buf->data + FU_IFD_FDBAR_DESCRIPTOR_MAP0,
-			   priv->descriptor_map0,
-			   G_LITTLE_ENDIAN);
-	fu_memwrite_uint32(buf->data + FU_IFD_FDBAR_DESCRIPTOR_MAP1,
-			   priv->descriptor_map1,
-			   G_LITTLE_ENDIAN);
-	fu_memwrite_uint32(buf->data + FU_IFD_FDBAR_DESCRIPTOR_MAP2,
-			   priv->descriptor_map2,
-			   G_LITTLE_ENDIAN);
+	fu_struct_ifd_fdbar_set_descriptor_map0(st_fdbar, priv->descriptor_map0);
+	fu_struct_ifd_fdbar_set_descriptor_map1(st_fdbar, priv->descriptor_map1);
+	fu_struct_ifd_fdbar_set_descriptor_map2(st_fdbar, priv->descriptor_map2);
+	if (!fu_memcpy_safe(buf->data,
+			    buf->len,
+			    0x0,
+			    st_fdbar->data,
+			    st_fdbar->len,
+			    0x0,
+			    st_fdbar->len,
+			    error))
+		return NULL;
 
 	/* FCBA */
-	if (!fu_memwrite_uint32_safe(buf->data,
-				     buf->len,
-				     priv->flash_component_base_addr + FU_IFD_FCBA_FLCOMP,
-				     priv->components_rcd,
-				     G_LITTLE_ENDIAN,
-				     error))
-		return NULL;
-	if (!fu_memwrite_uint32_safe(buf->data,
-				     buf->len,
-				     priv->flash_component_base_addr + FU_IFD_FCBA_FLILL,
-				     priv->illegal_jedec,
-				     G_LITTLE_ENDIAN,
-				     error))
-		return NULL;
-	if (!fu_memwrite_uint32_safe(buf->data,
-				     buf->len,
-				     priv->flash_component_base_addr + FU_IFD_FCBA_FLILL1,
-				     priv->illegal_jedec1,
-				     G_LITTLE_ENDIAN,
-				     error))
+	fu_struct_ifd_fcba_set_flcomp(st_fcba, priv->components_rcd);
+	fu_struct_ifd_fcba_set_flill(st_fcba, priv->illegal_jedec);
+	fu_struct_ifd_fcba_set_flill1(st_fcba, priv->illegal_jedec1);
+	if (!fu_memcpy_safe(buf->data,
+			    buf->len,
+			    priv->flash_component_base_addr,
+			    st_fcba->data,
+			    st_fcba->len,
+			    0x0,
+			    st_fcba->len,
+			    error))
 		return NULL;
 
 	/* FRBA */
