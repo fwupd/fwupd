@@ -34,5 +34,5 @@ fu_cabinet_build_silo(GBytes *blob, guint64 size_max, GError **error)
 	fu_firmware_set_size_max(FU_FIRMWARE(cabinet), size_max);
 	if (!fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, error))
 		return NULL;
-	return fu_cabinet_get_silo(cabinet);
+	return fu_cabinet_get_silo(cabinet, error);
 }

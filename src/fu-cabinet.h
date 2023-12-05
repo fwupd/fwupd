@@ -42,4 +42,4 @@ fu_cabinet_add_file(FuCabinet *self, const gchar *basename, GBytes *data);
 GBytes *
 fu_cabinet_get_file(FuCabinet *self, const gchar *basename, GError **error);
 XbSilo *
-fu_cabinet_get_silo(FuCabinet *self);
+fu_cabinet_get_silo(FuCabinet *self, GError **error);
