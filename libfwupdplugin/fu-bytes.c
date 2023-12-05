@@ -221,18 +221,16 @@ fu_bytes_get_contents_stream_full(GInputStream *stream, gsize offset, gsize coun
 		return NULL;
 	}
 
-	/* seek */
-	if (offset > 0) {
-		if (!g_seekable_can_seek(G_SEEKABLE(stream))) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "input stream is not seekable");
-			return NULL;
-		}
-		if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_SET, NULL, error))
-			return NULL;
+	/* seek back to start */
+	if (!g_seekable_can_seek(G_SEEKABLE(stream))) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "input stream is not seekable");
+		return NULL;
 	}
+	if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_SET, NULL, error))
+		return NULL;
 
 	/* read from stream in 32kB chunks */
 	while (TRUE) {
