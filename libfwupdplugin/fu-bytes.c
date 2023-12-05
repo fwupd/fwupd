@@ -230,7 +230,7 @@ fu_bytes_get_contents_stream_full(GInputStream *stream, gsize offset, gsize coun
 					    "input stream is not seekable");
 			return NULL;
 		}
-		if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_CUR, NULL, error))
+		if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_SET, NULL, error))
 			return NULL;
 	}
 
