@@ -4358,7 +4358,7 @@ fu_engine_get_silo_from_blob(FuEngine *self, GBytes *blob_cab, GError **error)
 	fu_cabinet_set_jcat_context(cabinet, self->jcat_context);
 	if (!fu_firmware_parse(FU_FIRMWARE(cabinet), blob_cab, FWUPD_INSTALL_FLAG_NONE, error))
 		return NULL;
-	return fu_cabinet_get_silo(cabinet);
+	return fu_cabinet_get_silo(cabinet, error);
 }
 
 static FuDevice *

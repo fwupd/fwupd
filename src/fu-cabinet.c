@@ -58,6 +58,7 @@ fu_cabinet_set_jcat_context(FuCabinet *self, JcatContext *jcat_context)
 /**
  * fu_cabinet_get_silo: (skip):
  * @self: a #FuCabinet
+ * @error: (nullable): optional return location for an error
  *
  * Gets the silo that represents the superset metadata of all the metainfo files
  * found in the archive.
@@ -67,11 +68,14 @@ fu_cabinet_set_jcat_context(FuCabinet *self, JcatContext *jcat_context)
  * Since: 1.4.0
  **/
 XbSilo *
-fu_cabinet_get_silo(FuCabinet *self)
+fu_cabinet_get_silo(FuCabinet *self, GError **error)
 {
 	g_return_val_if_fail(FU_IS_CABINET(self), NULL);
-	if (self->silo == NULL)
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	if (self->silo == NULL) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, "no silo");
 		return NULL;
+	}
 	return g_object_ref(self->silo);
 }
 
@@ -661,9 +665,12 @@ fu_cabinet_sign_enumerate_metainfo(FuCabinet *self, GPtrArray *files, GError **e
 {
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) nodes = NULL;
-	g_autoptr(XbSilo) silo = fu_cabinet_get_silo(self);
+	g_autoptr(XbSilo) silo = NULL;
 
 	/* get all the firmware referenced by the metainfo files */
+	silo = fu_cabinet_get_silo(self, error);
+	if (silo == NULL)
+		return FALSE;
 	nodes = xb_silo_query(silo,
 			      "components/component[@type='firmware']/info/filename",
 			      0,
@@ -694,8 +701,11 @@ fu_cabinet_sign_enumerate_firmware(FuCabinet *self, GPtrArray *files, GError **e
 {
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) nodes = NULL;
-	g_autoptr(XbSilo) silo = fu_cabinet_get_silo(self);
+	g_autoptr(XbSilo) silo = NULL;
 
+	silo = fu_cabinet_get_silo(self, error);
+	if (silo == NULL)
+		return FALSE;
 	nodes = xb_silo_query(silo,
 			      "components/component[@type='firmware']/releases/"
 			      "release/checksum[@target='content']",
