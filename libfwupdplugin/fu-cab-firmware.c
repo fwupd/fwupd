@@ -117,7 +117,7 @@ fu_cab_firmware_parse_helper_free(FuCabFirmwareParseHelper *helper)
 	inflateEnd(&helper->zstrm);
 	if (helper->fw != NULL)
 		g_bytes_unref(helper->fw);
-	if (helper->fw != NULL)
+	if (helper->folder_data != NULL)
 		g_ptr_array_unref(helper->folder_data);
 	g_free(helper);
 }
