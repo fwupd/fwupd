@@ -13,6 +13,7 @@
 #include "fu-chunk-private.h"
 #include "fu-common.h"
 #include "fu-firmware.h"
+#include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-string.h"
 
@@ -31,6 +32,7 @@ typedef struct {
 	gchar *version;
 	guint64 version_raw;
 	GBytes *bytes;
+	GInputStream *stream;
 	guint8 alignment;
 	gchar *id;
 	gchar *filename;
@@ -590,11 +592,12 @@ fu_firmware_get_bytes(FuFirmware *self, GError **error)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
-	if (priv->bytes == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no payload set");
-		return NULL;
-	}
-	return g_bytes_ref(priv->bytes);
+	if (priv->stream != NULL)
+		return fu_bytes_get_contents_stream_full(priv->stream, 0x0, G_MAXUINT32, error);
+	if (priv->bytes != NULL)
+		return g_bytes_ref(priv->bytes);
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no payload set");
+	return NULL;
 }
 
 /**
@@ -664,6 +667,46 @@ fu_firmware_set_alignment(FuFirmware *self, guint8 alignment)
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_FIRMWARE(self));
 	priv->alignment = alignment;
+}
+
+/**
+ * fu_firmware_set_stream:
+ * @self: a #FuPlugin
+ * @stream: input stream
+ *
+ * Sets the input stream of the image.
+ *
+ * Since: 1.9.11
+ **/
+void
+fu_firmware_set_stream(FuFirmware *self, GInputStream *stream)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_FIRMWARE(self));
+	g_return_if_fail(G_IS_INPUT_STREAM(stream));
+	g_set_object(&priv->stream, stream);
+}
+
+/**
+ * fu_firmware_get_stream:
+ * @self: a #FuPlugin
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the input stream which was used to parse the firmware.
+ *
+ * Returns: (transfer full): a #GInputStream, or %NULL if the payload has never been set
+ *
+ * Since: 1.9.11
+ **/
+GInputStream *
+fu_firmware_get_stream(FuFirmware *self, GError **error)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	if (priv->stream != NULL)
+		return g_object_ref(priv->stream);
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no stream set");
+	return NULL;
 }
 
 /**
@@ -779,6 +822,8 @@ fu_firmware_get_checksum(FuFirmware *self, GChecksumType csum_kind, GError **err
 	/* internal data */
 	if (priv->bytes != NULL)
 		return g_compute_checksum_for_bytes(csum_kind, priv->bytes);
+	if (priv->stream != NULL)
+		return fu_input_stream_compute_checksum(priv->stream, csum_kind, error);
 
 	/* write */
 	blob = fu_firmware_write(self, error);
@@ -1976,6 +2021,17 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 	fu_xmlb_builder_insert_kx(bn, "size", priv->size);
 	fu_xmlb_builder_insert_kx(bn, "size_max", priv->size_max);
 	fu_xmlb_builder_insert_kv(bn, "filename", priv->filename);
+	if (priv->stream != NULL) {
+		gsize streamsz = 0;
+		g_autofree gchar *dataszstr = NULL;
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_input_stream_size(priv->stream, &streamsz, &error_local)) {
+			g_debug("failed to get stream size: %s", error_local->message);
+			streamsz = G_MAXUINT32;
+		}
+		dataszstr = g_strdup_printf("0x%x", (guint)streamsz);
+		xb_builder_node_insert_text(bn, "data", "[GInputStream]", "size", dataszstr, NULL);
+	}
 	if (priv->bytes != NULL) {
 		gsize bufsz = 0;
 		const guint8 *buf = g_bytes_get_data(priv->bytes, &bufsz);
@@ -2109,6 +2165,8 @@ fu_firmware_finalize(GObject *object)
 	g_free(priv->filename);
 	if (priv->bytes != NULL)
 		g_bytes_unref(priv->bytes);
+	if (priv->stream != NULL)
+		g_object_unref(priv->stream);
 	if (priv->chunks != NULL)
 		g_ptr_array_unref(priv->chunks);
 	if (priv->patches != NULL)
