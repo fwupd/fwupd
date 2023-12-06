@@ -125,25 +125,40 @@ fu_cab_firmware_parse_helper_free(FuCabFirmwareParseHelper *helper)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCabFirmwareParseHelper, fu_cab_firmware_parse_helper_free)
 
 /* compute the MS cabinet checksum */
-static guint32
-fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 seed)
+static gboolean
+fu_cab_firmware_compute_checksum_chunks(FuChunkArray *chunks, guint32 *checksum, GError **error)
 {
-	guint32 csum = seed;
-	for (gsize i = 0; i < bufsz; i += 4) {
+	for (gsize i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		gsize chunksz = fu_chunk_get_data_sz(chk);
+		const guint8 *buf = fu_chunk_get_data(chk);
 		guint32 ul = 0;
-		guint chunksz = MIN(bufsz - i, 4);
 		if (chunksz == 4) {
-			ul = fu_memread_uint32(buf + i, G_LITTLE_ENDIAN);
+			ul = fu_memread_uint32(buf, G_LITTLE_ENDIAN);
 		} else if (chunksz == 3) {
-			ul = fu_memread_uint24(buf + i, G_BIG_ENDIAN); /* err.. */
+			ul = fu_memread_uint24(buf, G_BIG_ENDIAN); /* err.. */
 		} else if (chunksz == 2) {
-			ul = fu_memread_uint16(buf + i, G_BIG_ENDIAN); /* err.. */
+			ul = fu_memread_uint16(buf, G_BIG_ENDIAN); /* err.. */
 		} else if (chunksz == 1) {
-			ul = buf[i];
+			ul = buf[0];
 		}
-		csum ^= ul;
+		*checksum ^= ul;
 	}
-	return csum;
+	return TRUE;
+}
+
+static gboolean
+fu_cab_firmware_compute_checksum_bytes(GBytes *blob, guint32 *checksum, GError **error)
+{
+	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(blob, 0x0, 4);
+	return fu_cab_firmware_compute_checksum_chunks(chunks, checksum, error);
+}
+
+static gboolean
+fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checksum, GError **error)
+{
+	g_autoptr(GBytes) blob = g_bytes_new_static(buf, bufsz);
+	return fu_cab_firmware_compute_checksum_bytes(blob, checksum, error);
 }
 
 static voidpf
@@ -219,15 +234,20 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 	if ((helper->install_flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint32 checksum = fu_struct_cab_data_get_checksum(st);
 		if (checksum != 0) {
-			guint32 checksum_actual =
-			    fu_cab_firmware_compute_checksum(g_bytes_get_data(data_blob, NULL),
-							     g_bytes_get_size(data_blob),
-							     0);
+			guint32 checksum_actual = 0;
 			g_autoptr(GByteArray) hdr = g_byte_array_new();
+
+			if (!fu_cab_firmware_compute_checksum_bytes(data_blob,
+								    &checksum_actual,
+								    error))
+				return FALSE;
 			fu_byte_array_append_uint16(hdr, blob_comp, G_LITTLE_ENDIAN);
 			fu_byte_array_append_uint16(hdr, blob_uncomp, G_LITTLE_ENDIAN);
-			checksum_actual =
-			    fu_cab_firmware_compute_checksum(hdr->data, hdr->len, checksum_actual);
+			if (!fu_cab_firmware_compute_checksum(hdr->data,
+							      hdr->len,
+							      &checksum_actual,
+							      error))
+				return FALSE;
 			if (checksum_actual != checksum) {
 				g_set_error(error,
 					    G_IO_ERROR,
@@ -751,17 +771,22 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 
 	/* create each CFDATA */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		guint32 checksum;
+		guint32 checksum = 0;
 		GByteArray *chunk_zlib = g_ptr_array_index(chunks_zlib, i);
 		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		g_autoptr(GByteArray) hdr = g_byte_array_new();
 		g_autoptr(GByteArray) st_data = fu_struct_cab_data_new();
 
 		/* first do the 'checksum' on the data, then the partial header -- slightly crazy */
-		checksum = fu_cab_firmware_compute_checksum(chunk_zlib->data, chunk_zlib->len, 0);
+		if (!fu_cab_firmware_compute_checksum(chunk_zlib->data,
+						      chunk_zlib->len,
+						      &checksum,
+						      error))
+			return NULL;
 		fu_byte_array_append_uint16(hdr, chunk_zlib->len, G_LITTLE_ENDIAN);
 		fu_byte_array_append_uint16(hdr, fu_chunk_get_data_sz(chk), G_LITTLE_ENDIAN);
-		checksum = fu_cab_firmware_compute_checksum(hdr->data, hdr->len, checksum);
+		if (!fu_cab_firmware_compute_checksum(hdr->data, hdr->len, &checksum, error))
+			return NULL;
 
 		fu_struct_cab_data_set_checksum(st_data, checksum);
 		fu_struct_cab_data_set_comp(st_data, chunk_zlib->len);
