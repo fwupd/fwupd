@@ -4329,6 +4329,70 @@ fu_progress_child_finished(void)
 }
 
 static void
+fu_partial_input_stream_func(void)
+{
+	gboolean ret;
+	gssize rc;
+	guint8 buf[5] = {0x0};
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GBytes) blob = g_bytes_new_static("12345678", 8);
+	/*                                             \--/   */
+	g_autoptr(GBytes) blob2 = NULL;
+	g_autoptr(GInputStream) base_stream = g_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) stream = fu_partial_input_stream_new(base_stream, 2, 4);
+
+	/* seek to non-start */
+	ret = g_seekable_seek(G_SEEKABLE(stream), 0x2, G_SEEK_SET, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream)), ==, 0x2);
+
+	/* read from start */
+	rc = g_input_stream_read(stream, buf, 2, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 2);
+	g_assert_cmpint(buf[0], ==, '5');
+	g_assert_cmpint(buf[1], ==, '6');
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream)), ==, 0x4);
+	rc = g_input_stream_read(stream, buf, 2, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 0);
+
+	/* convert back to bytes */
+	blob2 = fu_bytes_get_contents_stream_full(stream, 0x0, G_MAXUINT32, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob2);
+	g_assert_cmpint(g_bytes_get_size(blob2), ==, 4);
+
+	/* seek to end of base stream */
+	ret = g_seekable_seek(G_SEEKABLE(base_stream), 0x0, G_SEEK_END, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(base_stream)), ==, 0x8);
+	rc = g_input_stream_read(base_stream, buf, 1, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 0);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(base_stream)), ==, 0x8);
+
+	/* seek to end of partial stream */
+	ret = g_seekable_seek(G_SEEKABLE(stream), 0x0, G_SEEK_END, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream)), ==, 0x4);
+	rc = g_input_stream_read(stream, buf, sizeof(buf), NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 0);
+
+	/* attempt an overread of the base stream */
+	ret = g_seekable_seek(G_SEEKABLE(stream), 0x2, G_SEEK_SET, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	rc = g_input_stream_read(stream, buf, sizeof(buf), NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 2);
+}
+
+static void
 fu_input_stream_func(void)
 {
 	gboolean ret;
@@ -4592,6 +4656,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
 
 	g_test_add_func("/fwupd/input-stream", fu_input_stream_func);
+	g_test_add_func("/fwupd/partial-input-stream", fu_partial_input_stream_func);
 	g_test_add_func("/fwupd/struct", fu_plugin_struct_func);
 	g_test_add_func("/fwupd/struct{wrapped}", fu_plugin_struct_wrapped_func);
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);

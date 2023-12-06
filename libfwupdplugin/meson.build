@@ -132,6 +132,7 @@ fwupdplugin_src = [
   'fu-mei-device.c',
   'fu-mem.c', # fuzzing
   'fu-oprom-firmware.c', # fuzzing
+  'fu-partial-input-stream.c', # fuzzing
   'fu-path.c', # fuzzing
   'fu-pefile-firmware.c', # fuzzing
   'fu-plugin.c',
@@ -249,6 +250,7 @@ fwupdplugin_headers = [
   'fu-mem.h',
   'fu-mem-private.h',
   'fu-oprom-firmware.h',
+  'fu-partial-input-stream.h',
   'fu-path.h',
   'fu-pefile-firmware.h',
   'fu-plugin.h',
