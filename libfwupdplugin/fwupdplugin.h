@@ -71,6 +71,7 @@
 #include <libfwupdplugin/fu-ifwi-cpd-firmware.h>
 #include <libfwupdplugin/fu-ifwi-fpt-firmware.h>
 #include <libfwupdplugin/fu-ihex-firmware.h>
+#include <libfwupdplugin/fu-input-stream.h>
 #include <libfwupdplugin/fu-intel-thunderbolt-firmware.h>
 #include <libfwupdplugin/fu-intel-thunderbolt-nvm.h>
 #include <libfwupdplugin/fu-io-channel.h>
