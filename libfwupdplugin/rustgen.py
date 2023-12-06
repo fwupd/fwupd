@@ -140,6 +140,8 @@ class StructObj:
             "ValidateBytes": Export.NONE,
             "Parse": Export.NONE,
             "ParseBytes": Export.NONE,
+            "ParseStream": Export.NONE,
+            "ParseInternal": Export.NONE,
             "New": Export.NONE,
             "ToString": Export.NONE,
         }
@@ -184,9 +186,13 @@ class StructObj:
             for item in self.items:
                 if item.enum_obj and not item.constant:
                     item.enum_obj.add_private_export("ToString")
+        elif derive == "Parse":
+            self.add_private_export("ParseInternal")
+        elif derive == "ParseStream":
+            self.add_private_export("ParseInternal")
         elif derive == "ParseBytes":
             self.add_private_export("Parse")
-        elif derive == "Parse":
+        elif derive == "ParseInternal":
             self.add_private_export("ToString")
             for item in self.items:
                 if (
@@ -214,7 +220,7 @@ class StructObj:
             self._exports[derive] = Export.PUBLIC
 
         # for convenience
-        if derive in ["Parse", "ParseBytes"]:
+        if derive in ["Parse", "ParseBytes", "ParseStream"]:
             self.add_public_export("Getters")
         if derive == "New":
             self.add_public_export("Setters")

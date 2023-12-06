@@ -1,3 +1,4 @@
 /* auto-generated, do not modify */
 #pragma once
 #include <fwupd-common.h>
+#include <gio/gio.h>

@@ -7,6 +7,9 @@ GByteArray *{{obj.c_method('Parse')}}(const guint8 *buf, gsize bufsz, gsize offs
 {%- if obj.export('ParseBytes') == Export.PUBLIC %}
 GByteArray *{{obj.c_method('ParseBytes')}}(GBytes *blob, gsize offset, GError **error);
 {%- endif %}
+{%- if obj.export('ParseStream') == Export.PUBLIC %}
+GByteArray *{{obj.c_method('ParseStream')}}(GInputStream *stream, gsize offset, GError **error);
+{%- endif %}
 {%- if obj.export('Validate') == Export.PUBLIC %}
 gboolean {{obj.c_method('Validate')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error);
 {%- endif %}
