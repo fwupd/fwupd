@@ -42,7 +42,6 @@ endif
 
 fwupd_engine_src = [
   'fu-cabinet.c',
-  'fu-cabinet-common.c',
   'fu-debug.c',
   'fu-device-list.c',
   'fu-engine.c',

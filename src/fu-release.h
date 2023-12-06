@@ -8,6 +8,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-cabinet.h"
 #include "fu-engine-config.h"
 #include "fu-engine-request.h"
 
@@ -58,6 +59,7 @@ fu_release_set_config(FuRelease *self, FuEngineConfig *config);
 
 gboolean
 fu_release_load(FuRelease *self,
+		FuCabinet *cabinet,
 		XbNode *component,
 		XbNode *rel,
 		FwupdInstallFlags flags,

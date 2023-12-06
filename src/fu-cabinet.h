@@ -39,7 +39,9 @@ fu_cabinet_sign(FuCabinet *self,
 		GError **error) G_GNUC_WARN_UNUSED_RESULT;
 void
 fu_cabinet_add_file(FuCabinet *self, const gchar *basename, GBytes *data);
-GBytes *
-fu_cabinet_get_file(FuCabinet *self, const gchar *basename, GError **error);
 XbSilo *
 fu_cabinet_get_silo(FuCabinet *self, GError **error);
+GPtrArray *
+fu_cabinet_get_components(FuCabinet *self, GError **error);
+XbNode *
+fu_cabinet_get_component(FuCabinet *self, const gchar *id, GError **error);

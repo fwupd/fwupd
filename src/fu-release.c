@@ -766,6 +766,7 @@ fu_release_ensure_device_by_checksum(FuRelease *self, XbNode *component, XbNode 
 /**
  * fu_release_load:
  * @self: a #FuRelease
+ * @cabinet: a #FuCabinet
  * @component: (not nullable): a #XbNode
  * @rel_optional: (nullable): a #XbNode
  * @install_flags: a #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
@@ -779,6 +780,7 @@ fu_release_ensure_device_by_checksum(FuRelease *self, XbNode *component, XbNode 
  **/
 gboolean
 fu_release_load(FuRelease *self,
+		FuCabinet *cabinet,
 		XbNode *component,
 		XbNode *rel_optional,
 		FwupdInstallFlags install_flags,
@@ -801,6 +803,7 @@ fu_release_load(FuRelease *self,
 	g_autoptr(GError) error_hard = NULL;
 
 	g_return_val_if_fail(FU_IS_RELEASE(self), FALSE);
+	g_return_val_if_fail(cabinet == NULL || FU_IS_CABINET(cabinet), FALSE);
 	g_return_val_if_fail(XB_IS_NODE(component), FALSE);
 	g_return_val_if_fail(rel_optional == NULL || XB_IS_NODE(rel_optional), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);

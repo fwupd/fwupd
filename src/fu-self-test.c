@@ -19,7 +19,6 @@
 #include "../plugins/test/fu-test-plugin.h"
 #include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
-#include "fu-cabinet-common.h"
 #include "fu-cabinet.h"
 #include "fu-console.h"
 #include "fu-context-private.h"
@@ -202,7 +201,7 @@ fu_engine_requirements_missing_func(gconstpointer user_data)
 
 	/* check this fails */
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -243,7 +242,7 @@ fu_engine_requirements_soft_func(gconstpointer user_data)
 
 	/* check this passes */
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_FORCE, &error);
@@ -281,7 +280,7 @@ fu_engine_requirements_client_fail_func(gconstpointer user_data)
 
 	/* check this fails */
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -320,7 +319,7 @@ fu_engine_requirements_client_invalid_func(gconstpointer user_data)
 
 	/* check this fails */
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -362,7 +361,7 @@ fu_engine_requirements_client_pass_func(gconstpointer user_data)
 
 	/* check this passes */
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -404,7 +403,7 @@ fu_engine_requirements_not_hardware_func(gconstpointer user_data)
 
 	/* check this passes */
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -455,7 +454,7 @@ fu_engine_requirements_version_require_func(gconstpointer user_data)
 	/* check this fails */
 	fu_release_set_device(release, device);
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_true(
 	    g_str_has_prefix(error->message, "device requires firmware with a version check"));
@@ -504,7 +503,7 @@ fu_engine_requirements_version_lowest_func(gconstpointer user_data)
 	/* check this fails */
 	fu_release_set_device(release, device);
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_true(
 	    g_str_has_prefix(error->message, "Specified firmware is older than the minimum"));
@@ -544,7 +543,7 @@ fu_engine_requirements_unsupported_func(gconstpointer user_data)
 
 	/* check this fails */
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -605,7 +604,7 @@ fu_engine_requirements_child_func(gconstpointer user_data)
 	/* check this passes */
 	fu_release_set_device(release, device);
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -666,7 +665,7 @@ fu_engine_requirements_child_fail_func(gconstpointer user_data)
 	/* check this passes */
 	fu_release_set_device(release, device);
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -713,7 +712,7 @@ fu_engine_requirements_func(gconstpointer user_data)
 
 	/* check this passes */
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -776,7 +775,7 @@ fu_engine_requirements_device_func(gconstpointer user_data)
 	/* check this passes */
 	fu_release_set_device(release, device);
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -842,7 +841,7 @@ fu_engine_requirements_device_plain_func(gconstpointer user_data)
 	/* check this passes */
 	fu_release_set_device(release, device);
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -894,7 +893,7 @@ fu_engine_requirements_version_format_func(gconstpointer user_data)
 	/* check this fails */
 	fu_release_set_device(release, device);
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_nonnull(
 	    g_strstr_len(error->message, -1, "Firmware version formats were different"));
@@ -940,7 +939,7 @@ fu_engine_requirements_only_upgrade_func(gconstpointer user_data)
 	/* check this fails */
 	fu_release_set_device(release, device);
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_nonnull(g_strstr_len(error->message, -1, "Device only supports version upgrades"));
 	g_assert_false(ret);
@@ -1028,7 +1027,7 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	/* check this fails */
 	fu_release_set_device(release1, device1);
 	fu_release_set_request(release1, request);
-	ret = fu_release_load(release1, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release1, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release1, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -1053,7 +1052,7 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	/* check this passes */
 	fu_release_set_device(release2, device1);
 	fu_release_set_request(release2, request);
-	ret = fu_release_load(release2, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release2, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release2, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -1130,7 +1129,7 @@ fu_engine_requirements_other_device_func(gconstpointer user_data)
 	/* check this passes */
 	fu_release_set_device(release, device1);
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -1213,7 +1212,7 @@ fu_engine_requirements_protocol_check_func(gconstpointer user_data)
 	/* check this fails */
 	fu_release_set_device(release1, device1);
 	fu_release_set_request(release1, request);
-	ret = fu_release_load(release1, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release1, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false(ret);
 	g_clear_error(&error);
@@ -1221,7 +1220,7 @@ fu_engine_requirements_protocol_check_func(gconstpointer user_data)
 	/* check this passes */
 	fu_release_set_device(release2, device2);
 	fu_release_set_request(release2, request);
-	ret = fu_release_load(release2, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release2, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -1291,7 +1290,7 @@ fu_engine_requirements_parent_device_func(gconstpointer user_data)
 	/* check this passes */
 	fu_release_set_device(release, device2);
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -1364,7 +1363,7 @@ fu_engine_requirements_child_device_func(gconstpointer user_data)
 	/* check this passes */
 	fu_release_set_device(release, device1);
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -1696,6 +1695,7 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
+	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
@@ -1705,7 +1705,6 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
-	g_autoptr(XbSilo) silo = NULL;
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
@@ -1721,9 +1720,9 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	blob_cab = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
-	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
+	cabinet = fu_engine_build_cabinet_from_blob(engine, blob_cab, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
+	g_assert_nonnull(cabinet);
 
 	/* add a dummy device */
 	fu_device_set_id(device, "test_device");
@@ -1737,17 +1736,14 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	fu_engine_add_device(engine, device);
 
 	/* get component */
-	component =
-	    xb_silo_query_first(silo,
-				"components/component/id[text()='com.hughski.test.firmware']/..",
-				&error);
+	component = fu_cabinet_get_component(cabinet, "com.hughski.test.firmware", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(component);
 
 	/* check requirements */
 	fu_release_set_device(release, device);
 	fu_release_set_request(release, request);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -2352,6 +2348,7 @@ fu_engine_history_func(gconstpointer user_data)
 	g_autofree gchar *device_str_expected = NULL;
 	g_autofree gchar *device_str = NULL;
 	g_autofree gchar *filename = NULL;
+	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
@@ -2365,7 +2362,6 @@ fu_engine_history_func(gconstpointer user_data)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
-	g_autoptr(XbSilo) silo = NULL;
 
 	/* ensure empty tree */
 	fu_self_test_mkroot();
@@ -2405,15 +2401,12 @@ fu_engine_history_func(gconstpointer user_data)
 	blob_cab = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
-	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
+	cabinet = fu_engine_build_cabinet_from_blob(engine, blob_cab, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
+	g_assert_nonnull(cabinet);
 
 	/* get component */
-	component =
-	    xb_silo_query_first(silo,
-				"components/component/id[text()='com.hughski.test.firmware']/..",
-				&error);
+	component = fu_cabinet_get_component(cabinet, "com.hughski.test.firmware", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(component);
 
@@ -2423,7 +2416,7 @@ fu_engine_history_func(gconstpointer user_data)
 
 	/* install it */
 	fu_release_set_device(release, device);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_install_release(engine,
@@ -2501,6 +2494,7 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
+	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -2508,7 +2502,6 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
-	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(GPtrArray) releases = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
@@ -2556,15 +2549,12 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	blob_cab = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
-	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
+	cabinet = fu_engine_build_cabinet_from_blob(engine, blob_cab, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
+	g_assert_nonnull(cabinet);
 
 	/* get component */
-	component =
-	    xb_silo_query_first(silo,
-				"components/component/id[text()='com.hughski.test.firmware']/..",
-				&error);
+	component = fu_cabinet_get_component(cabinet, "com.hughski.test.firmware", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(component);
 
@@ -2587,7 +2577,8 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 		XbNode *rel = g_ptr_array_index(rels, i);
 		g_autoptr(FuRelease) release = fu_release_new();
 		fu_release_set_device(release, device);
-		ret = fu_release_load(release, component, rel, FWUPD_INSTALL_FLAG_NONE, &error);
+		ret =
+		    fu_release_load(release, NULL, component, rel, FWUPD_INSTALL_FLAG_NONE, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
 		g_ptr_array_add(releases, g_object_ref(release));
@@ -2618,6 +2609,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *localstatedir = NULL;
 	g_autofree gchar *history_db = NULL;
+	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuRelease) release = fu_release_new();
@@ -2627,7 +2619,6 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
-	g_autoptr(XbSilo) silo = NULL;
 
 #ifndef HAVE_SQLITE
 	g_test_skip("no sqlite support");
@@ -2673,22 +2664,19 @@ fu_engine_history_inherit(gconstpointer user_data)
 	blob_cab = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
-	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
+	cabinet = fu_engine_build_cabinet_from_blob(engine, blob_cab, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
+	g_assert_nonnull(cabinet);
 
 	/* get component */
-	component =
-	    xb_silo_query_first(silo,
-				"components/component/id[text()='com.hughski.test.firmware']/..",
-				&error);
+	component = fu_cabinet_get_component(cabinet, "com.hughski.test.firmware", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(component);
 
 	/* install it */
 	(void)g_setenv("FWUPD_PLUGIN_TEST", "requires-activation", TRUE);
 	fu_release_set_device(release, device);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_install_release(engine,
@@ -2767,6 +2755,7 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
+	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuRelease) release = fu_release_new();
@@ -2776,7 +2765,6 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
-	g_autoptr(XbSilo) silo = NULL;
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
@@ -2812,22 +2800,19 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	blob_cab = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
-	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
+	cabinet = fu_engine_build_cabinet_from_blob(engine, blob_cab, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
+	g_assert_nonnull(cabinet);
 
 	/* get component */
-	component =
-	    xb_silo_query_first(silo,
-				"components/component/id[text()='com.hughski.test.firmware']/..",
-				&error);
+	component = fu_cabinet_get_component(cabinet, "com.hughski.test.firmware", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(component);
 
 	/* install it */
 	(void)g_setenv("FWUPD_PLUGIN_TEST", "requires-reboot", TRUE);
 	fu_release_set_device(release, device);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_install_release(engine,
@@ -2877,6 +2862,7 @@ fu_engine_install_request(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
+	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuRelease) release = fu_release_new();
@@ -2886,7 +2872,6 @@ fu_engine_install_request(gconstpointer user_data)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
-	g_autoptr(XbSilo) silo = NULL;
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
@@ -2922,22 +2907,19 @@ fu_engine_install_request(gconstpointer user_data)
 	blob_cab = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
-	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
+	cabinet = fu_engine_build_cabinet_from_blob(engine, blob_cab, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
+	g_assert_nonnull(cabinet);
 
 	/* get component */
-	component =
-	    xb_silo_query_first(silo,
-				"components/component/id[text()='com.hughski.test.firmware']/..",
-				&error);
+	component = fu_cabinet_get_component(cabinet, "com.hughski.test.firmware", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(component);
 
 	/* install it */
 	(void)g_setenv("FWUPD_PLUGIN_TEST", "request", TRUE);
 	fu_release_set_device(release, device);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -2971,6 +2953,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	g_autofree gchar *device_str_expected = NULL;
 	g_autofree gchar *device_str = NULL;
 	g_autofree gchar *filename = NULL;
+	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
@@ -2983,7 +2966,6 @@ fu_engine_history_error_func(gconstpointer user_data)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
-	g_autoptr(XbSilo) silo = NULL;
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
@@ -3020,17 +3002,14 @@ fu_engine_history_error_func(gconstpointer user_data)
 	blob_cab = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
-	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
+	cabinet = fu_engine_build_cabinet_from_blob(engine, blob_cab, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
-	component =
-	    xb_silo_query_first(silo,
-				"components/component/id[text()='com.hughski.test.firmware']/..",
-				&error);
+	g_assert_nonnull(cabinet);
+	component = fu_cabinet_get_component(cabinet, "com.hughski.test.firmware", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(component);
 	fu_release_set_device(release, device);
-	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_engine_install_release(engine,
@@ -4262,6 +4241,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 	FuDevice *dev_tmp;
 	GError *error = NULL;
 	gboolean ret;
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(GBytes) blob = NULL;
@@ -4318,10 +4298,10 @@ fu_plugin_composite_func(gconstpointer user_data)
 	    "firmware.bin",
 	    "world",
 	    NULL);
-	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
-	components = xb_silo_query(silo, "components/component", 0, &error);
+	g_assert_true(ret);
+	components = fu_cabinet_get_components(cabinet, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(components);
 	g_assert_cmpint(components->len, ==, 3);
@@ -4376,6 +4356,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 			fu_release_set_device(release, device);
 			fu_release_set_request(release, request);
 			if (!fu_release_load(release,
+					     NULL,
 					     component,
 					     NULL,
 					     FWUPD_INSTALL_FLAG_NONE,
@@ -4513,8 +4494,9 @@ static void
 fu_common_cabinet_func(void)
 {
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
+	g_autoptr(FuFirmware) img1 = NULL;
+	g_autoptr(FuFirmware) img2 = NULL;
 	g_autoptr(GBytes) blob1 = NULL;
-	g_autoptr(GBytes) blob2 = NULL;
 	g_autoptr(GBytes) jcat_blob1 = g_bytes_new_static("hello", 6);
 	g_autoptr(GBytes) jcat_blob2 = g_bytes_new_static("hellX", 6);
 	g_autoptr(GError) error = NULL;
@@ -4526,15 +4508,18 @@ fu_common_cabinet_func(void)
 	fu_cabinet_add_file(cabinet, "firmware.jcat", jcat_blob2);
 
 	/* get data */
-	blob1 = fu_cabinet_get_file(cabinet, "firmware.jcat", &error);
+	img1 = fu_firmware_get_image_by_id(FU_FIRMWARE(cabinet), "firmware.jcat", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(img1);
+	blob1 = fu_firmware_get_bytes(img1, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob1);
 	g_assert_cmpstr(g_bytes_get_data(blob1, NULL), ==, "hellX");
 
 	/* get data that does not exist */
-	blob2 = fu_cabinet_get_file(cabinet, "foo.jcat", &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert_null(blob2);
+	img2 = fu_firmware_get_image_by_id(FU_FIRMWARE(cabinet), "foo.jcat", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(img2);
 }
 
 static void
@@ -4914,14 +4899,15 @@ fu_release_no_trusted_report_func(gconstpointer user_data)
 static void
 fu_common_store_cab_func(void)
 {
+	gboolean ret;
 	GBytes *blob_tmp;
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbNode) csum = NULL;
 	g_autoptr(XbNode) rel = NULL;
 	g_autoptr(XbNode) req = NULL;
-	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(XbQuery) query = NULL;
 
 	/* create silo */
@@ -4951,15 +4937,12 @@ fu_common_store_cab_func(void)
 	    "firmware.dfu.asc",
 	    "signature",
 	    NULL);
-	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
+	g_assert_true(ret);
 
 	/* verify */
-	component =
-	    xb_silo_query_first(silo,
-				"components/component/id[text()='com.acme.example.firmware']/..",
-				&error);
+	component = fu_cabinet_get_component(cabinet, "com.acme.example.firmware", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(component);
 	query = xb_query_new_full(xb_node_get_silo(component),
@@ -4985,12 +4968,16 @@ fu_common_store_cab_func(void)
 static void
 fu_common_store_cab_artifact_func(void)
 {
+	gboolean ret;
 	g_autoptr(GBytes) blob1 = NULL;
 	g_autoptr(GBytes) blob2 = NULL;
 	g_autoptr(GBytes) blob3 = NULL;
 	g_autoptr(GBytes) blob4 = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FuCabinet) cabinet1 = fu_cabinet_new();
+	g_autoptr(FuCabinet) cabinet2 = fu_cabinet_new();
+	g_autoptr(FuCabinet) cabinet3 = fu_cabinet_new();
+	g_autoptr(FuCabinet) cabinet4 = fu_cabinet_new();
 
 	/* create silo (sha256, using artifacts object) */
 	blob1 = _build_cab(
@@ -5016,10 +5003,9 @@ fu_common_store_cab_artifact_func(void)
 	    "firmware.dfu.asc",
 	    "signature",
 	    NULL);
-	silo = fu_cabinet_build_silo(blob1, 10240, &error);
+	ret = fu_firmware_parse(FU_FIRMWARE(cabinet1), blob1, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
-	g_clear_object(&silo);
+	g_assert_true(ret);
 
 	/* create silo (sha1, using artifacts object; mixed case) */
 	blob2 = _build_cab(FALSE,
@@ -5044,10 +5030,9 @@ fu_common_store_cab_artifact_func(void)
 			   "firmware.dfu.asc",
 			   "signature",
 			   NULL);
-	silo = fu_cabinet_build_silo(blob2, 10240, &error);
+	ret = fu_firmware_parse(FU_FIRMWARE(cabinet2), blob2, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
-	g_clear_object(&silo);
+	g_assert_true(ret);
 
 	/* create silo (sha512, using artifacts object; lower case) */
 	blob3 =
@@ -5075,10 +5060,9 @@ fu_common_store_cab_artifact_func(void)
 		       "firmware.dfu.asc",
 		       "signature",
 		       NULL);
-	silo = fu_cabinet_build_silo(blob3, 10240, &error);
+	ret = fu_firmware_parse(FU_FIRMWARE(cabinet3), blob3, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
-	g_clear_object(&silo);
+	g_assert_true(ret);
 
 	/* create silo (legacy release object) */
 	blob4 = _build_cab(FALSE,
@@ -5100,21 +5084,22 @@ fu_common_store_cab_artifact_func(void)
 			   "firmware.dfu.asc",
 			   "signature",
 			   NULL);
-	silo = fu_cabinet_build_silo(blob4, 10240, &error);
+	ret = fu_firmware_parse(FU_FIRMWARE(cabinet4), blob4, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
+	g_assert_true(ret);
 }
 
 static void
 fu_common_store_cab_unsigned_func(void)
 {
 	GBytes *blob_tmp;
+	gboolean ret;
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbNode) csum = NULL;
 	g_autoptr(XbNode) rel = NULL;
-	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(XbQuery) query = NULL;
 
 	/* create silo */
@@ -5129,15 +5114,12 @@ fu_common_store_cab_unsigned_func(void)
 			  "firmware.bin",
 			  "world",
 			  NULL);
-	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
+	g_assert_true(ret);
 
 	/* verify */
-	component =
-	    xb_silo_query_first(silo,
-				"components/component/id[text()='com.acme.example.firmware']/..",
-				&error);
+	component = fu_cabinet_get_component(cabinet, "com.acme.example.firmware", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(component);
 	query = xb_query_new_full(xb_node_get_silo(component),
@@ -5159,9 +5141,10 @@ fu_common_store_cab_unsigned_func(void)
 static void
 fu_common_store_cab_sha256_func(void)
 {
+	gboolean ret;
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(XbSilo) silo = NULL;
 
 	/* create silo */
 	blob = _build_cab(
@@ -5180,20 +5163,21 @@ fu_common_store_cab_sha256_func(void)
 	    "firmware.bin",
 	    "world",
 	    NULL);
-	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
+	g_assert_true(ret);
 }
 
 static void
 fu_common_store_cab_folder_func(void)
 {
 	GBytes *blob_tmp;
+	gboolean ret;
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbNode) rel = NULL;
-	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(XbQuery) query = NULL;
 
 	/* create silo */
@@ -5208,15 +5192,12 @@ fu_common_store_cab_folder_func(void)
 			  "lvfs\\firmware.bin",
 			  "world",
 			  NULL);
-	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(silo);
+	g_assert_true(ret);
 
 	/* verify */
-	component =
-	    xb_silo_query_first(silo,
-				"components/component/id[text()='com.acme.example.firmware']/..",
-				&error);
+	component = fu_cabinet_get_component(cabinet, "com.acme.example.firmware", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(component);
 	query = xb_query_new_full(xb_node_get_silo(component),
@@ -5236,20 +5217,22 @@ fu_common_store_cab_folder_func(void)
 static void
 fu_common_store_cab_error_no_metadata_func(void)
 {
-	g_autoptr(XbSilo) silo = NULL;
+	gboolean ret;
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
 	blob = _build_cab(FALSE, "foo.txt", "hello", "bar.txt", "world", NULL);
-	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert_null(silo);
+	g_assert_false(ret);
 }
 
 static void
 fu_common_store_cab_error_wrong_size_func(void)
 {
-	g_autoptr(XbSilo) silo = NULL;
+	gboolean ret;
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -5268,15 +5251,16 @@ fu_common_store_cab_error_wrong_size_func(void)
 			  "firmware.bin",
 			  "world",
 			  NULL);
-	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert_null(silo);
+	g_assert_false(ret);
 }
 
 static void
 fu_common_store_cab_error_missing_file_func(void)
 {
-	g_autoptr(XbSilo) silo = NULL;
+	gboolean ret;
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -5293,15 +5277,16 @@ fu_common_store_cab_error_missing_file_func(void)
 			  "firmware.bin",
 			  "world",
 			  NULL);
-	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert_null(silo);
+	g_assert_false(ret);
 }
 
 static void
 fu_common_store_cab_error_size_func(void)
 {
-	g_autoptr(XbSilo) silo = NULL;
+	gboolean ret;
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -5316,15 +5301,17 @@ fu_common_store_cab_error_size_func(void)
 			  "firmware.bin",
 			  "world",
 			  NULL);
-	silo = fu_cabinet_build_silo(blob, 123, &error);
+	fu_firmware_set_size_max(FU_FIRMWARE(cabinet), 123);
+	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert_null(silo);
+	g_assert_false(ret);
 }
 
 static void
 fu_common_store_cab_error_wrong_checksum_func(void)
 {
-	g_autoptr(XbSilo) silo = NULL;
+	gboolean ret;
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -5342,9 +5329,9 @@ fu_common_store_cab_error_wrong_checksum_func(void)
 			  "firmware.bin",
 			  "world",
 			  NULL);
-	silo = fu_cabinet_build_silo(blob, 10240, &error);
+	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert_null(silo);
+	g_assert_false(ret);
 }
 
 static void
