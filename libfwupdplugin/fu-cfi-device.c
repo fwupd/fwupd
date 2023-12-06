@@ -784,7 +784,12 @@ fu_cfi_device_write_pages(FuCfiDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(pages));
 	for (guint i = 0; i < fu_chunk_array_length(pages); i++) {
-		g_autoptr(FuChunk) page = fu_chunk_array_index(pages, i);
+		g_autoptr(FuChunk) page = NULL;
+
+		/* prepare chunk */
+		page = fu_chunk_array_index(pages, i, error);
+		if (page == NULL)
+			return FALSE;
 		if (!fu_cfi_device_write_page(self, page, fu_progress_get_child(progress), error))
 			return FALSE;
 		fu_progress_step_done(progress);

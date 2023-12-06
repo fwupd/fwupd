@@ -237,11 +237,15 @@ fu_mtd_device_erase(FuMtdDevice *self, GBytes *fw, FuProgress *progress, GError 
 
 	/* erase each chunk */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
-		struct erase_info_user erase = {
-		    .start = fu_chunk_get_address(chk),
-		    .length = fu_chunk_get_data_sz(chk),
-		};
+		struct erase_info_user erase = {0x0};
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		erase.start = fu_chunk_get_address(chk);
+		erase.length = fu_chunk_get_data_sz(chk);
 		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 					  2,
 					  (guint8 *)&erase,
@@ -280,7 +284,12 @@ fu_mtd_device_write(FuMtdDevice *self, FuChunkArray *chunks, FuProgress *progres
 
 	/* write each chunk */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_udev_device_pwrite(FU_UDEV_DEVICE(self),
 					   fu_chunk_get_address(chk),
 					   fu_chunk_get_data(chk),
@@ -307,11 +316,16 @@ fu_mtd_device_verify(FuMtdDevice *self, FuChunkArray *chunks, FuProgress *progre
 
 	/* verify each chunk */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
-		g_autofree guint8 *buf = g_malloc0(fu_chunk_get_data_sz(chk));
-		g_autoptr(GBytes) blob1 = fu_chunk_get_bytes(chk);
+		g_autofree guint8 *buf = NULL;
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob1 = NULL;
 		g_autoptr(GBytes) blob2 = NULL;
 
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		buf = g_malloc0(fu_chunk_get_data_sz(chk));
 		if (!fu_udev_device_pread(FU_UDEV_DEVICE(self),
 					  fu_chunk_get_address(chk),
 					  buf,
@@ -322,6 +336,7 @@ fu_mtd_device_verify(FuMtdDevice *self, FuChunkArray *chunks, FuProgress *progre
 				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
+		blob1 = fu_chunk_get_bytes(chk);
 		blob2 = g_bytes_new_static(buf, fu_chunk_get_data_sz(chk));
 		if (!fu_bytes_compare(blob1, blob2, error)) {
 			g_prefix_error(error,

@@ -214,8 +214,13 @@ fu_synaptics_rmi_v7_device_write_blocks(FuSynapticsRmiDevice *self,
 	/* write FW blocks */
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, flash->block_size);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) req = g_byte_array_new();
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		g_byte_array_append(req, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 		if (!fu_synaptics_rmi_device_write(self,
 						   address,
@@ -286,10 +291,16 @@ fu_synaptics_rmi_v7_device_write_partition_signature(FuSynapticsRmiDevice *self,
 					  0x00,
 					  (gsize)flash->payload_length * (gsize)flash->block_size);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
-		g_autoptr(GBytes) chk_blob = fu_chunk_get_bytes(chk);
-		g_autoptr(GByteArray) req_trans_sz = g_byte_array_new();
+		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) req_cmd = g_byte_array_new();
+		g_autoptr(GByteArray) req_trans_sz = g_byte_array_new();
+		g_autoptr(GBytes) chk_blob = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+
 		fu_byte_array_append_uint16(req_trans_sz,
 					    fu_chunk_get_data_sz(chk) / flash->block_size,
 					    G_LITTLE_ENDIAN);
@@ -310,6 +321,7 @@ fu_synaptics_rmi_v7_device_write_partition_signature(FuSynapticsRmiDevice *self,
 			g_prefix_error(error, "failed to write signature command: ");
 			return FALSE;
 		}
+		chk_blob = fu_chunk_get_bytes(chk);
 		if (!fu_synaptics_rmi_v7_device_write_blocks(self,
 							     f34->data_base + 0x5,
 							     chk_blob,
@@ -368,10 +380,16 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks) + 1);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
-		g_autoptr(GBytes) chk_blob = fu_chunk_get_bytes(chk);
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) chk_blob = NULL;
 		g_autoptr(GByteArray) req_trans_sz = g_byte_array_new();
 		g_autoptr(GByteArray) req_cmd = g_byte_array_new();
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+
 		fu_byte_array_append_uint16(req_trans_sz,
 					    fu_chunk_get_data_sz(chk) / flash->block_size,
 					    G_LITTLE_ENDIAN);
@@ -392,6 +410,7 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 			g_prefix_error(error, "failed to flash command: ");
 			return FALSE;
 		}
+		chk_blob = fu_chunk_get_bytes(chk);
 		if (!fu_synaptics_rmi_v7_device_write_blocks(self,
 							     f34->data_base + 0x5,
 							     chk_blob,

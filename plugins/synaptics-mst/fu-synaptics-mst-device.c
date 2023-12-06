@@ -634,8 +634,13 @@ fu_synaptics_mst_device_update_esm_cb(FuDevice *device, gpointer user_data, GErr
 	fu_progress_set_id(helper->progress, G_STRLOC);
 	fu_progress_set_steps(helper->progress, fu_chunk_array_length(helper->chunks));
 	for (guint i = 0; i < fu_chunk_array_length(helper->chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(helper->chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GError) error_local = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(helper->chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_synaptics_mst_device_rc_set_command(
 			self,
 			FU_SYNAPTICS_MST_UPDC_CMD_WRITE_TO_EEPROM,
@@ -724,9 +729,13 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware_cb(FuDevice *device,
 
 	fu_progress_set_steps(helper->progress, fu_chunk_array_length(helper->chunks));
 	for (guint i = 0; i < fu_chunk_array_length(helper->chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(helper->chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GError) error_local = NULL;
 
+		/* prepare chunk */
+		chk = fu_chunk_array_index(helper->chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_synaptics_mst_device_rc_set_command(
 			self,
 			FU_SYNAPTICS_MST_UPDC_CMD_WRITE_TO_EEPROM,
@@ -842,8 +851,13 @@ fu_synaptics_mst_device_update_panamera_firmware_cb(FuDevice *device,
 	/* write */
 	fu_progress_set_steps(helper->progress, fu_chunk_array_length(helper->chunks));
 	for (guint i = 0; i < fu_chunk_array_length(helper->chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(helper->chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GError) error_local = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(helper->chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_synaptics_mst_device_rc_set_command(
 			self,
 			FU_SYNAPTICS_MST_UPDC_CMD_WRITE_TO_EEPROM,
@@ -1188,9 +1202,13 @@ fu_synaptics_mst_device_update_cayenne_firmware_cb(FuDevice *device,
 
 	fu_progress_set_steps(helper->progress, fu_chunk_array_length(helper->chunks));
 	for (guint i = 0; i < fu_chunk_array_length(helper->chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(helper->chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GError) error_local = NULL;
 
+		/* prepare chunk */
+		chk = fu_chunk_array_index(helper->chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_synaptics_mst_device_rc_set_command(
 			self,
 			FU_SYNAPTICS_MST_UPDC_CMD_WRITE_TO_EEPROM,

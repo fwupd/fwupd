@@ -366,11 +366,17 @@ fu_superio_it55_device_write_attempt(FuDevice *device,
 	/* write everything but the first kilobyte */
 	blocks = fu_chunk_array_new_from_bytes(firmware, 0x00, BLOCK_SIZE);
 	for (guint i = 0; i < fu_chunk_array_length(blocks); ++i) {
-		g_autoptr(FuChunk) block = fu_chunk_array_index(blocks, i);
+		g_autoptr(FuChunk) block = NULL;
 		gboolean first = (i == 0);
 		guint32 offset = 0;
-		guint32 bytes_left = fu_chunk_get_data_sz(block);
-		const guint8 *data = fu_chunk_get_data(block);
+		guint32 bytes_left;
+		const guint8 *data;
+
+		block = fu_chunk_array_index(blocks, i, error);
+		if (block == NULL)
+			return FALSE;
+		bytes_left = fu_chunk_get_data_sz(block);
+		data = fu_chunk_get_data(block);
 
 		if (!fu_superio_device_ec_write_cmd(self, SIO_CMD_EC_WRITE_BLOCK, error) ||
 		    !fu_superio_device_ec_write_cmd(self, 0x00, error) ||

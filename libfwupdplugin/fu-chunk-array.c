@@ -58,7 +58,7 @@ fu_chunk_array_length(FuChunkArray *self)
  * Since: 1.9.6
  **/
 FuChunk *
-fu_chunk_array_index(FuChunkArray *self, guint idx)
+fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error)
 {
 	gsize length;
 	gsize offset;
@@ -69,11 +69,15 @@ fu_chunk_array_index(FuChunkArray *self, guint idx)
 
 	/* calculate offset and length */
 	offset = (gsize)idx * (gsize)self->packet_sz;
-	if (offset >= g_bytes_get_size(self->blob))
+	if (offset >= g_bytes_get_size(self->blob)) {
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "idx %u invalid", idx);
 		return NULL;
+	}
 	length = MIN(self->packet_sz, g_bytes_get_size(self->blob) - offset);
-	if (length == 0)
+	if (length == 0) {
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "idx %u zero sized", idx);
 		return NULL;
+	}
 
 	/* create new chunk */
 	blob_chk = g_bytes_new_from_bytes(self->blob, offset, length);

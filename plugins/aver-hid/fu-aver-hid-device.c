@@ -150,9 +150,14 @@ fu_aver_hid_device_isp_file_dnload(FuAverHidDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_file_dnload_new();
 		g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 
 		/* copy in payload */
 		fu_struct_aver_hid_req_isp_file_dnload_set_custom_isp_cmd(

@@ -395,7 +395,12 @@ fu_nvme_device_write_firmware(FuDevice *device,
 	/* write each block */
 	chunks = fu_chunk_array_new_from_bytes(fw2, 0x00, block_size);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_nvme_device_fw_download(self,
 						fu_chunk_get_address(chk),
 						fu_chunk_get_data(chk),

@@ -418,9 +418,14 @@ fu_colorhug_device_write_blocks(FuColorhugDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		guint8 buf[CH_FLASH_TRANSFER_BLOCK_SIZE + 4];
+		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GError) error_local = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 
 		/* set address, length, checksum, data */
 		fu_memwrite_uint16(buf + 0, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
@@ -469,10 +474,15 @@ fu_colorhug_device_verify_blocks(FuColorhugDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		guint8 buf[3];
 		guint8 buf_out[CH_FLASH_TRANSFER_BLOCK_SIZE + 1];
 		g_autoptr(GError) error_local = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 
 		/* set address */
 		fu_memwrite_uint16(buf + 0, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);

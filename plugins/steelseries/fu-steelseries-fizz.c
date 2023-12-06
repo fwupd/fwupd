@@ -239,9 +239,12 @@ fu_steelseries_fizz_write_fs(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
-		const guint16 size = fu_chunk_get_data_sz(chk);
-		const guint32 offset = fu_chunk_get_address(chk);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 
 		if (!fu_memwrite_uint8_safe(data,
 					    sizeof(data),
@@ -267,7 +270,7 @@ fu_steelseries_fizz_write_fs(FuDevice *device,
 		if (!fu_memwrite_uint16_safe(data,
 					     sizeof(data),
 					     STEELSERIES_FIZZ_WRITE_ACCESS_FILE_SIZE_OFFSET,
-					     size,
+					     fu_chunk_get_data_sz(chk),
 					     G_LITTLE_ENDIAN,
 					     error))
 			return FALSE;
@@ -275,7 +278,7 @@ fu_steelseries_fizz_write_fs(FuDevice *device,
 		if (!fu_memwrite_uint32_safe(data,
 					     sizeof(data),
 					     STEELSERIES_FIZZ_WRITE_ACCESS_FILE_OFFSET_OFFSET,
-					     offset,
+					     fu_chunk_get_address(chk),
 					     G_LITTLE_ENDIAN,
 					     error))
 			return FALSE;

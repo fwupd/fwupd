@@ -531,7 +531,9 @@ fu_firehose_updater_send_program_file(FuFirehoseUpdater *self,
 
 	/* last block needs to be padded to the next sector_size,
 	 * so that we always send full sectors */
-	chk_last = fu_chunk_array_index(chunks, fu_chunk_array_length(chunks) - 1);
+	chk_last = fu_chunk_array_index(chunks, fu_chunk_array_length(chunks) - 1, error);
+	if (chk_last == NULL)
+		return FALSE;
 	if ((fu_chunk_get_data_sz(chk_last) % sector_size) != 0) {
 		g_autoptr(GBytes) padded_bytes = NULL;
 		gsize padded_sz = sector_size * (fu_chunk_get_data_sz(chk_last) / sector_size + 1);
@@ -542,7 +544,12 @@ fu_firehose_updater_send_program_file(FuFirehoseUpdater *self,
 		g_return_val_if_fail(fu_chunk_get_data_sz(chk_last) == padded_sz, FALSE);
 	}
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 
 		/* log only in blocks of 250 plus first/last */
 		if (i == 0 || i == (fu_chunk_array_length(chunks) - 1) || (i + 1) % 250 == 0)

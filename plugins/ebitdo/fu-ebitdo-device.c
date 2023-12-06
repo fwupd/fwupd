@@ -519,7 +519,12 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 	/* flash the firmware in 32 byte blocks */
 	chunks = fu_chunk_array_new_from_bytes(fw_payload, 0x0, 32);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		g_debug("writing %u bytes to 0x%04x of 0x%04x",
 			fu_chunk_get_data_sz(chk),
 			fu_chunk_get_address(chk),

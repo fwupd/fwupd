@@ -20,4 +20,4 @@ fu_chunk_array_new_from_bytes(GBytes *blob, guint32 addr_start, guint32 packet_s
 guint
 fu_chunk_array_length(FuChunkArray *self) G_GNUC_NON_NULL(1);
 FuChunk *
-fu_chunk_array_index(FuChunkArray *self, guint idx) G_GNUC_NON_NULL(1);
+fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error) G_GNUC_NON_NULL(1);

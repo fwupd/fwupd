@@ -424,7 +424,12 @@ fu_goodixtp_brlb_device_write_image(FuGoodixtpBrlbDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_goodixtp_brlb_device_update_process(self, chk, error))
 			return FALSE;
 		fu_device_sleep(FU_DEVICE(self), 20);

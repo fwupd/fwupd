@@ -428,7 +428,12 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, sector_size);
 	while (failure_cnt < 3) {
 		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-			g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+			g_autoptr(FuChunk) chk = NULL;
+
+			/* prepare chunk */
+			chk = fu_chunk_array_index(chunks, i, error);
+			if (chk == NULL)
+				return FALSE;
 
 			mmc_ioc_cmd_set_data(multi_cmd->cmds[2], fu_chunk_get_data(chk));
 

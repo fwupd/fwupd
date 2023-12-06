@@ -358,7 +358,12 @@ fu_kinetic_dp_secure_device_send_chunk(FuKineticDpSecureDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_dpaux_device_write(FU_DPAUX_DEVICE(self),
 					   DPCD_ADDR_KT_AUX_WIN + fu_chunk_get_address(chk),
 					   fu_chunk_get_data(chk),
@@ -390,12 +395,18 @@ fu_kinetic_dp_secure_device_send_payload(FuKineticDpSecureDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) fw_chk = NULL;
 		guint8 buf_crc16[0x4] = {0x0};
 		guint8 status = 0;
-		g_autoptr(GBytes) fw_chk = fu_chunk_get_bytes(chk);
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 
 		/* send a maximum 32KB chunk of payload to AUX window */
+		fw_chk = fu_chunk_get_bytes(chk);
 		if (!fu_kinetic_dp_secure_device_send_chunk(self,
 							    fw_chk,
 							    fu_progress_get_child(progress),

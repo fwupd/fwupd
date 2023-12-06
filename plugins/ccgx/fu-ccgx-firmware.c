@@ -438,7 +438,12 @@ fu_ccgx_firmware_write(FuFirmware *firmware, GError **error)
 		return NULL;
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x100);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return NULL;
 		fu_ccgx_firmware_write_record(str,
 					      0x0,
 					      i,

@@ -116,8 +116,13 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 	/* write */
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, block_size);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) buf = g_byte_array_new();
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 
 		/* write block */
 		fu_byte_array_append_uint8(buf, FU_HAILUCK_REPORT_ID_LONG);

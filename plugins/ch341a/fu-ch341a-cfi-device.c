@@ -221,8 +221,13 @@ fu_ch341a_cfi_device_write_page(FuCh341aCfiDevice *self, FuChunk *page, GError *
 	/* send data */
 	chunks = fu_chunk_array_new_from_bytes(page_blob, 0x0, CH341A_PAYLOAD_SIZE);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		guint8 buf2[CH341A_PAYLOAD_SIZE] = {0x0};
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_memcpy_safe(buf2,
 				    sizeof(buf2),
 				    0x0, /* dst */
@@ -252,7 +257,9 @@ fu_ch341a_cfi_device_write_pages(FuCh341aCfiDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(pages));
 	for (guint i = 0; i < fu_chunk_array_length(pages); i++) {
-		g_autoptr(FuChunk) page = fu_chunk_array_index(pages, i);
+		g_autoptr(FuChunk) page = fu_chunk_array_index(pages, i, error);
+		if (page == NULL)
+			return FALSE;
 		if (!fu_ch341a_cfi_device_write_page(self, page, error))
 			return FALSE;
 		fu_progress_step_done(progress);

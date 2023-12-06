@@ -855,8 +855,14 @@ fu_logitech_bulkcontroller_device_write_fw(FuLogitechBulkcontrollerDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
-		g_autoptr(GBytes) chk_blob = fu_chunk_get_bytes(chk);
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) chk_blob = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		chk_blob = fu_chunk_get_bytes(chk);
 		if (!fu_logitech_bulkcontroller_device_upd_send_cmd(
 			self,
 			FU_LOGITECH_BULKCONTROLLER_CMD_DATA_TRANSFER,

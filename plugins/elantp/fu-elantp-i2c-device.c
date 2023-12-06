@@ -493,11 +493,17 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 		return FALSE;
 	chunks = fu_chunk_array_new_from_bytes(fw2, 0x0, self->fw_page_size);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
-		guint16 csum_tmp =
-		    fu_sum16w(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk), G_LITTLE_ENDIAN);
+		guint16 csum_tmp;
 		gsize blksz = self->fw_page_size + 4;
 		g_autofree guint8 *blk = g_malloc0(blksz);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		csum_tmp =
+		    fu_sum16w(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk), G_LITTLE_ENDIAN);
 
 		/* write block */
 		blk[0] = ETP_I2C_IAP_REG_L;

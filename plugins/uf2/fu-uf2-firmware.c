@@ -182,7 +182,12 @@ fu_uf2_firmware_parse(FuFirmware *firmware,
 	/* read in fixed sized chunks */
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 512);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_uf2_firmware_parse_chunk(self, chk, tmp, error))
 			return FALSE;
 	}
@@ -237,8 +242,13 @@ fu_uf2_firmware_write(FuFirmware *firmware, GError **error)
 	/* write in chunks */
 	chunks = fu_chunk_array_new_from_bytes(fw, fu_firmware_get_addr(firmware), 256);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) tmp = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return NULL;
 		tmp = fu_uf2_firmware_write_chunk(self, chk, fu_chunk_array_length(chunks), error);
 		if (tmp == NULL)
 			return NULL;

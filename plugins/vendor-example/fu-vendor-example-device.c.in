@@ -184,10 +184,14 @@ fu_{{vendor}}_{{example}}_device_write_blocks(Fu{{Vendor}}{{Example}}Device *sel
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 
 		/* TODO: send to hardware */
-		g_assert(chk != NULL);
 
 {%- if Parent == 'Hid' %}
 		guint8 buf[64] = { 0x12, 0x24, 0x0 }; /* TODO: this is the preamble */

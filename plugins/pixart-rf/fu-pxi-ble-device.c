@@ -412,7 +412,12 @@ fu_pxi_ble_device_check_support_resume(FuPxiBleDevice *self,
 
 	/* calculate device current checksum */
 	for (guint i = 0; i < self->fwstate.offset; i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		checksum_tmp += fu_sum16(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 	}
 
@@ -557,7 +562,12 @@ fu_pxi_ble_device_write_chunk(FuPxiBleDevice *self, FuChunk *chk, GError **error
 					       fu_chunk_get_address(chk),
 					       self->fwstate.mtu_size);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk2 = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk2 = NULL;
+
+		/* prepare chunk */
+		chk2 = fu_chunk_array_index(chunks, i, error);
+		if (chk2 == NULL)
+			return FALSE;
 		if (!fu_pxi_ble_device_write_payload(self, chk2, error))
 			return FALSE;
 		prn++;
@@ -784,7 +794,12 @@ fu_pxi_ble_device_write_firmware(FuDevice *device,
 
 	/* write fw into device */
 	for (guint i = self->fwstate.offset; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_pxi_ble_device_write_chunk(self, chk, error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),

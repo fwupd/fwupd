@@ -626,7 +626,12 @@ fu_srec_firmware_write(FuFirmware *firmware, GError **error)
 		g_autoptr(FuChunkArray) chunks =
 		    fu_chunk_array_new_from_bytes(buf_blob, fu_firmware_get_addr(firmware), 64);
 		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-			g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+			g_autoptr(FuChunk) chk = NULL;
+
+			/* prepare chunk */
+			chk = fu_chunk_array_index(chunks, i, error);
+			if (chk == NULL)
+				return NULL;
 			fu_srec_firmware_write_line(str,
 						    kind_data,
 						    fu_chunk_get_address(chk),

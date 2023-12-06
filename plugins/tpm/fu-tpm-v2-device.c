@@ -371,8 +371,13 @@ fu_tpm_v2_device_upgrade_data(FuTpmV2Device *self, GBytes *fw, FuProgress *progr
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 		TPM2B_MAX_BUFFER data = {.size = g_bytes_get_size(fw)};
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_memcpy_safe((guint8 *)data.buffer,
 				    sizeof(data.buffer),
 				    0x0, /* dst */

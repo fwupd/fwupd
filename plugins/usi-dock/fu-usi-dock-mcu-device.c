@@ -433,7 +433,12 @@ fu_usi_dock_mcu_device_write_page(FuUsiDockMcuDevice *self, FuChunk *chk_page, G
 
 	chunks = fu_chunk_array_new_from_bytes(chk_blob, 0x0, FU_STRUCT_USI_DOCK_HID_REQ_SIZE_BUF);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_usi_dock_mcu_device_write_chunk(self, chk, error))
 			return FALSE;
 	}
@@ -449,7 +454,12 @@ fu_usi_dock_mcu_device_write_pages(FuUsiDockMcuDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_usi_dock_mcu_device_write_page(self, chk, error)) {
 			g_prefix_error(error, "failed to write chunk 0x%x: ", i);
 			return FALSE;

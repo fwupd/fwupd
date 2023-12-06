@@ -268,10 +268,10 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 	/* write each block */
 	blocks = fu_chunk_array_new_from_bytes(fw, 0x00, FU_EP963_TRANSFER_BLOCK_SIZE);
 	for (guint i = 0; i < fu_chunk_array_length(blocks); i++) {
-		g_autoptr(FuChunk) chk2 = fu_chunk_array_index(blocks, i);
 		guint8 buf[] = {i};
 		g_autoptr(FuChunkArray) chunks = NULL;
-		g_autoptr(GBytes) chk_blob = fu_chunk_get_bytes(chk2);
+		g_autoptr(FuChunk) chk2 = NULL;
+		g_autoptr(GBytes) chk_blob = NULL;
 
 		/* set the block index */
 		if (!fu_ep963x_device_write(self,
@@ -289,12 +289,21 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 		}
 
 		/* 4 byte chunks */
+		chk2 = fu_chunk_array_index(blocks, i, error);
+		if (chk2 == NULL)
+			return FALSE;
+		chk_blob = fu_chunk_get_bytes(chk2);
 		chunks = fu_chunk_array_new_from_bytes(chk_blob,
 						       fu_chunk_get_address(chk2),
 						       FU_EP963_TRANSFER_CHUNK_SIZE);
 		for (guint j = 0; j < fu_chunk_array_length(chunks); j++) {
-			g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, j);
+			g_autoptr(FuChunk) chk = NULL;
 			g_autoptr(GError) error_loop = NULL;
+
+			/* prepare chunk */
+			chk = fu_chunk_array_index(chunks, j, error);
+			if (chk == NULL)
+				return FALSE;
 
 			/* copy data and write */
 			if (!fu_ep963x_device_write(self,
