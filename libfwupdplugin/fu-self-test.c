@@ -4329,6 +4329,81 @@ fu_progress_child_finished(void)
 }
 
 static void
+fu_input_stream_func(void)
+{
+	gboolean ret;
+	gsize bufsz = 0;
+	gsize streamsz = 0;
+	g_autofree gchar *csum2 = NULL;
+	g_autofree gchar *csum = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autofree guint8 *buf2 = NULL;
+	g_autofree guint8 *buf = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "firmware.bin", NULL);
+	g_assert_nonnull(fn);
+	ret = g_file_get_contents(fn, (gchar **)&buf, &bufsz, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_dump_raw(G_LOG_DOMAIN, "src", buf, bufsz);
+	csum = g_compute_checksum_for_data(G_CHECKSUM_MD5, (const guchar *)buf, bufsz);
+
+	file = g_file_new_for_path(fn);
+	stream = G_INPUT_STREAM(g_file_read(file, NULL, &error));
+	g_assert_no_error(error);
+	g_assert_nonnull(stream);
+
+	/* verify size */
+	ret = fu_input_stream_size(stream, &streamsz, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(streamsz, ==, bufsz);
+
+	/* verify checksum */
+	csum2 = fu_input_stream_compute_checksum(stream, G_CHECKSUM_MD5, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(csum2);
+	g_assert_cmpstr(csum, ==, csum2);
+
+	/* read first byte */
+	buf2 = g_malloc0(bufsz);
+	ret = fu_input_stream_read_safe(stream, buf2, bufsz, 0x0, 0x0, 1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(buf[0], ==, buf2[0]);
+	fu_dump_raw(G_LOG_DOMAIN, "dst", buf2, bufsz);
+
+	/* read bytes 2,3 */
+	ret = fu_input_stream_read_safe(stream,
+					buf2,
+					bufsz,
+					0x1, /* offset */
+					0x1, /* seek */
+					2,   /* count */
+					&error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_dump_raw(G_LOG_DOMAIN, "dst", buf2, bufsz);
+	g_assert_cmpint(buf[1], ==, buf2[1]);
+	g_assert_cmpint(buf[2], ==, buf2[2]);
+
+	/* read past end of stream */
+	ret = fu_input_stream_read_safe(stream,
+					buf2,
+					bufsz,
+					0x0,   /* offset */
+					0x20,  /* seek */
+					bufsz, /* count */
+					&error);
+	fu_dump_raw(G_LOG_DOMAIN, "dst", buf2, bufsz);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_PARTIAL_INPUT);
+	g_assert_false(ret);
+}
+
+static void
 fu_plugin_struct_func(void)
 {
 	gboolean ret;
@@ -4516,6 +4591,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
 
+	g_test_add_func("/fwupd/input-stream", fu_input_stream_func);
 	g_test_add_func("/fwupd/struct", fu_plugin_struct_func);
 	g_test_add_func("/fwupd/struct{wrapped}", fu_plugin_struct_wrapped_func);
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
