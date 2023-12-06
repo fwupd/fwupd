@@ -1263,12 +1263,12 @@ static gboolean
 fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autofree gchar *filename = NULL;
+	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) devices_possible = NULL;
 	g_autoptr(GPtrArray) errors = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
-	g_autoptr(XbSilo) silo = NULL;
 
 	/* progress */
 	fu_progress_set_id(priv->progress, G_STRLOC);
@@ -1325,10 +1325,10 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_maybe_prefix_sandbox_error(filename, error);
 		return FALSE;
 	}
-	silo = fu_engine_get_silo_from_blob(priv->engine, blob_cab, error);
-	if (silo == NULL)
+	cabinet = fu_engine_build_cabinet_from_blob(priv->engine, blob_cab, error);
+	if (cabinet == NULL)
 		return FALSE;
-	components = xb_silo_query(silo, "components/component", 0, error);
+	components = fu_cabinet_get_components(cabinet, error);
 	if (components == NULL)
 		return FALSE;
 
@@ -1347,7 +1347,12 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 			/* is this component valid for the device */
 			fu_release_set_device(release, device);
 			fu_release_set_request(release, priv->request);
-			if (!fu_release_load(release, component, NULL, priv->flags, &error_local)) {
+			if (!fu_release_load(release,
+					     cabinet,
+					     component,
+					     NULL,
+					     priv->flags,
+					     &error_local)) {
 				g_debug("loading release failed on %s:%s failed: %s",
 					fu_device_get_id(device),
 					xb_node_query_text(component, "id", NULL),

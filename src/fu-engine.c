@@ -42,7 +42,6 @@
 
 #include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
-#include "fu-cabinet.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-coswid-firmware.h"
@@ -607,11 +606,14 @@ fu_engine_add_trusted_report(FuEngine *self, FuRelease *release)
 static gboolean
 fu_engine_load_release(FuEngine *self,
 		       FuRelease *release,
+		       FuCabinet *cabinet,
 		       XbNode *component,
 		       XbNode *rel,
 		       FwupdInstallFlags install_flags,
 		       GError **error)
 {
+	g_return_val_if_fail(cabinet == NULL || FU_IS_CABINET(cabinet), FALSE);
+
 	/* load release from XML */
 	fu_release_set_config(release, self->config);
 
@@ -622,7 +624,7 @@ fu_engine_load_release(FuEngine *self,
 			 self);
 
 	/* requirements we can check without the daemon */
-	if (!fu_release_load(release, component, rel, install_flags, error))
+	if (!fu_release_load(release, cabinet, component, rel, install_flags, error))
 		return FALSE;
 
 	/* additional requirements */
@@ -3582,6 +3584,7 @@ fu_engine_builder_cabinet_adapter_cb(XbBuilderSource *source,
 				     GError **error)
 {
 	FuEngine *self = FU_ENGINE(user_data);
+	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autofree gchar *xml = NULL;
@@ -3590,7 +3593,10 @@ fu_engine_builder_cabinet_adapter_cb(XbBuilderSource *source,
 	blob = xb_builder_source_ctx_get_bytes(ctx, cancellable, error);
 	if (blob == NULL)
 		return NULL;
-	silo = fu_engine_get_silo_from_blob(self, blob, error);
+	cabinet = fu_engine_build_cabinet_from_blob(self, blob, error);
+	if (cabinet == NULL)
+		return NULL;
+	silo = fu_cabinet_get_silo(cabinet, error);
 	if (silo == NULL)
 		return NULL;
 	xml = xb_silo_export(silo, XB_NODE_EXPORT_FLAG_NONE, error);
@@ -4333,7 +4339,7 @@ fu_engine_update_metadata(FuEngine *self,
 }
 
 /**
- * fu_engine_get_silo_from_blob:
+ * fu_engine_build_cabinet_from_blob:
  * @self: a #FuEngine
  * @blob_cab: a data blob
  * @error: (nullable): optional return location for an error
@@ -4342,8 +4348,8 @@ fu_engine_update_metadata(FuEngine *self,
  *
  * Returns: (transfer container): a #XbSilo, or %NULL
  **/
-XbSilo *
-fu_engine_get_silo_from_blob(FuEngine *self, GBytes *blob_cab, GError **error)
+FuCabinet *
+fu_engine_build_cabinet_from_blob(FuEngine *self, GBytes *blob_cab, GError **error)
 {
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 
@@ -4358,12 +4364,13 @@ fu_engine_get_silo_from_blob(FuEngine *self, GBytes *blob_cab, GError **error)
 	fu_cabinet_set_jcat_context(cabinet, self->jcat_context);
 	if (!fu_firmware_parse(FU_FIRMWARE(cabinet), blob_cab, FWUPD_INSTALL_FLAG_NONE, error))
 		return NULL;
-	return fu_cabinet_get_silo(cabinet, error);
+	return g_steal_pointer(&cabinet);
 }
 
 static FuDevice *
 fu_engine_get_result_from_component(FuEngine *self,
 				    FuEngineRequest *request,
+				    FuCabinet *cabinet,
 				    XbNode *component,
 				    GError **error)
 {
@@ -4448,6 +4455,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 	}
 	if (!fu_engine_load_release(self,
 				    release,
+				    cabinet,
 				    component,
 				    rel,
 				    FWUPD_INSTALL_FLAG_IGNORE_VID_PID,
@@ -4498,32 +4506,14 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) details = NULL;
 	g_autoptr(GPtrArray) checksums = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(XbNode) component_by_csum = NULL;
-	g_autoptr(XbSilo) silo = NULL;
 
-	silo = fu_engine_get_silo_from_blob(self, blob, error);
-	if (silo == NULL)
+	cabinet = fu_engine_build_cabinet_from_blob(self, blob, error);
+	if (cabinet == NULL)
 		return NULL;
-	components = xb_silo_query(silo, "components/component[@type='firmware']", 0, &error_local);
-	if (components == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "no components: %s",
-			    error_local->message);
-		return NULL;
-	}
-
-	/* build the index */
-	if (!xb_silo_query_build_index(silo,
-				       "components/component[@type='firmware']/provides/firmware",
-				       "type",
-				       error))
-		return NULL;
-	if (!xb_silo_query_build_index(silo,
-				       "components/component[@type='firmware']/provides/firmware",
-				       NULL,
-				       error))
+	components = fu_cabinet_get_components(cabinet, error);
+	if (components == NULL)
 		return NULL;
 
 	/* calculate the checksums of the blob */
@@ -4545,7 +4535,7 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 		FuDevice *dev;
 		g_autoptr(FwupdRelease) rel = fwupd_release_new();
 
-		dev = fu_engine_get_result_from_component(self, request, component, error);
+		dev = fu_engine_get_result_from_component(self, request, cabinet, component, error);
 		if (dev == NULL)
 			return NULL;
 		fu_device_add_release(dev, rel);
@@ -4580,6 +4570,7 @@ fu_engine_get_details_for_bytes(FuEngine *self,
 			fu_release_set_request(release, request);
 			if (!fu_engine_load_release(self,
 						    release,
+						    cabinet,
 						    component,
 						    NULL,
 						    install_flags,
@@ -5022,6 +5013,7 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 		fu_release_set_device(release, device);
 		if (!fu_engine_load_release(self,
 					    release,
+					    NULL, /* cabinet */
 					    component,
 					    rel,
 					    install_flags,
@@ -6179,6 +6171,7 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 				fu_release_set_device(release, device);
 				if (!fu_engine_load_release(self,
 							    release,
+							    NULL, /* cabinet */
 							    component,
 							    rel,
 							    FWUPD_INSTALL_FLAG_NONE,

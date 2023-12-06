@@ -13,6 +13,7 @@
 #include "fwupd-device.h"
 #include "fwupd-enums.h"
 
+#include "fu-cabinet.h"
 #include "fu-engine-config.h"
 #include "fu-release.h"
 
@@ -65,8 +66,8 @@ gboolean
 fu_engine_is_uid_trusted(FuEngine *self, guint64 calling_uid);
 const gchar *
 fu_engine_get_host_security_id(FuEngine *self);
-XbSilo *
-fu_engine_get_silo_from_blob(FuEngine *self, GBytes *blob_cab, GError **error);
+FuCabinet *
+fu_engine_build_cabinet_from_blob(FuEngine *self, GBytes *blob_cab, GError **error);
 FuEngineConfig *
 fu_engine_get_config(FuEngine *self);
 GPtrArray *

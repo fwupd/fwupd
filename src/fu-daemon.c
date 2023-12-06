@@ -373,7 +373,7 @@ typedef struct {
 	gchar *remote_id;
 	gchar *key;
 	gchar *value;
-	XbSilo *silo;
+	FuCabinet *cabinet;
 	GHashTable *bios_settings; /* str:str */
 	gboolean is_fix;
 } FuMainAuthHelper;
@@ -388,8 +388,8 @@ fu_daemon_auth_helper_free(FuMainAuthHelper *helper)
 		g_bus_unwatch_name(helper->watcher_id);
 	if (helper->blob_cab != NULL)
 		g_bytes_unref(helper->blob_cab);
-	if (helper->silo != NULL)
-		g_object_unref(helper->silo);
+	if (helper->cabinet != NULL)
+		g_object_unref(helper->cabinet);
 	if (helper->request != NULL)
 		g_object_unref(helper->request);
 	if (helper->progress != NULL)
@@ -836,6 +836,7 @@ fu_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 		    fu_engine_get_remote_by_id(self->engine, helper->remote_id, NULL));
 	}
 	if (!fu_release_load(release,
+			     helper->cabinet,
 			     component,
 			     NULL,
 			     helper->flags | FWUPD_INSTALL_FLAG_FORCE,
@@ -884,6 +885,7 @@ fu_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 			fu_release_set_device(release2, device);
 			fu_release_set_request(release2, helper->request);
 			if (!fu_release_load(release2,
+					     helper->cabinet,
 					     component,
 					     rel,
 					     helper->flags,
@@ -956,13 +958,12 @@ fu_daemon_install_with_helper(FuMainAuthHelper *helper_ref, GError **error)
 	}
 
 	/* parse silo */
-	helper->silo = fu_engine_get_silo_from_blob(self->engine, helper->blob_cab, error);
-	if (helper->silo == NULL)
+	helper->cabinet = fu_engine_build_cabinet_from_blob(self->engine, helper->blob_cab, error);
+	if (helper->cabinet == NULL)
 		return FALSE;
 
 	/* for each component in the silo */
-	components =
-	    xb_silo_query(helper->silo, "components/component[@type='firmware']", 0, error);
+	components = fu_cabinet_get_components(helper->cabinet, error);
 	if (components == NULL)
 		return FALSE;
 	helper->action_ids = g_ptr_array_new_with_free_func(g_free);
