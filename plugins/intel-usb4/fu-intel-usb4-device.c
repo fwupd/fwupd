@@ -397,7 +397,12 @@ fu_intel_usb4_device_nvm_write(FuDevice *device,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 
 		/* write data to mbox data regs */
 		if (!fu_intel_usb4_device_mbox_data_write(device,

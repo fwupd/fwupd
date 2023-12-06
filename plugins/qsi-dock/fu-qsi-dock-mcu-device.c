@@ -277,11 +277,17 @@ fu_qsi_dock_mcu_device_write_chunk(FuQsiDockMcuDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		guint8 checksum_buf[FU_QSI_DOCK_TX_ISP_LENGTH_MCU] = {0x0};
 		guint8 buf[64] = {FU_QSI_DOCK_REPORT_ID,
 				  FU_QSI_DOCK_CMD1_MASS_SPI,
 				  fu_chunk_get_data_sz(chk)};
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		buf[2] = fu_chunk_get_data_sz(chk);
 
 		/* SetReport */
 		if (!fu_memcpy_safe(buf,
@@ -351,7 +357,12 @@ fu_qsi_dock_mcu_device_write_chunks(FuQsiDockMcuDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_qsi_dock_mcu_device_write_chunk(self,
 							chk,
 							checksum,

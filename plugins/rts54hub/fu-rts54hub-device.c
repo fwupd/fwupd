@@ -474,7 +474,12 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 	/* write each block */
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, FU_RTS54HUB_DEVICE_BLOCK_SIZE);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 
 		/* write chunk */
 		if (!fu_rts54hub_device_write_flash(self,

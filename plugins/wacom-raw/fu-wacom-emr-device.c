@@ -242,7 +242,12 @@ fu_wacom_emr_device_write_firmware(FuDevice *device,
 
 	/* write */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (fu_wacom_common_block_is_empty(fu_chunk_get_data(chk),
 						   fu_chunk_get_data_sz(chk)))
 			continue;

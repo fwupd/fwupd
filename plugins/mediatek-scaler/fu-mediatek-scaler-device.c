@@ -609,9 +609,12 @@ fu_mediatek_scaler_device_set_data(FuMediatekScalerDevice *self, FuChunk *chk, G
 	/* smaller slices to accodomate pch variants */
 	chk_slices = fu_chunk_array_new_from_bytes(chk_bytes, 0x00, DDC_DATA_FRAGEMENT_SIZE);
 	for (guint i = 0; i < fu_chunk_array_length(chk_slices); i++) {
+		g_autoptr(FuChunk) chk_slice = NULL;
 		g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
-		g_autoptr(FuChunk) chk_slice = fu_chunk_array_index(chk_slices, i);
 
+		chk_slice = fu_chunk_array_index(chk_slices, i, error);
+		if (chk_slice == NULL)
+			return FALSE;
 		fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_SET_DATA);
 		g_byte_array_append(st_req,
 				    fu_chunk_get_data(chk_slice),
@@ -803,7 +806,12 @@ fu_mediatek_scaler_device_write_firmware_impl(FuMediatekScalerDevice *self,
 	for (gint retry = 1; retry <= DDC_RW_MAX_RETRY_CNT; retry++) {
 		g_autoptr(GError) error_local = NULL;
 		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-			g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+			g_autoptr(FuChunk) chk = NULL;
+
+			/* prepare chunk */
+			chk = fu_chunk_array_index(chunks, i, error);
+			if (chk == NULL)
+				return FALSE;
 
 			/* fast forward if chunk is empty, otherwise set data per fragment size */
 			if (fu_mediatek_scaler_device_chunk_data_is_blank(chk)) {

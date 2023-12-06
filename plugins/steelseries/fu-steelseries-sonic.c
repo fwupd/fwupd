@@ -335,9 +335,12 @@ fu_steelseries_sonic_write_to_ram(FuDevice *device,
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
-		const guint16 offset = fu_chunk_get_address(chk);
-		const guint16 size = fu_chunk_get_data_sz(chk);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 
 		if (!fu_memwrite_uint16_safe(data,
 					     sizeof(data),
@@ -350,7 +353,7 @@ fu_steelseries_sonic_write_to_ram(FuDevice *device,
 		if (!fu_memwrite_uint16_safe(data,
 					     sizeof(data),
 					     STEELSERIES_SONIC_WRITE_TO_RAM_OFFSET_OFFSET,
-					     offset,
+					     fu_chunk_get_address(chk),
 					     G_LITTLE_ENDIAN,
 					     error))
 			return FALSE;
@@ -358,7 +361,7 @@ fu_steelseries_sonic_write_to_ram(FuDevice *device,
 		if (!fu_memwrite_uint16_safe(data,
 					     sizeof(data),
 					     STEELSERIES_SONIC_WRITE_TO_RAM_SIZE_OFFSET,
-					     size,
+					     fu_chunk_get_data_sz(chk),
 					     G_LITTLE_ENDIAN,
 					     error))
 			return FALSE;
@@ -408,14 +411,18 @@ fu_steelseries_sonic_write_to_flash(FuDevice *device,
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
-		g_autoptr(GBytes) chk_blob = fu_chunk_get_bytes(chk);
-		const guint32 offset = fu_chunk_get_address(chk);
-		const guint16 size = fu_chunk_get_data_sz(chk);
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) chk_blob = NULL;
 
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+
+		chk_blob = fu_chunk_get_bytes(chk);
 		if (!fu_steelseries_sonic_write_to_ram(device,
 						       chip,
-						       offset,
+						       fu_chunk_get_address(chk),
 						       chk_blob,
 						       fu_progress_get_child(progress),
 						       error))
@@ -440,7 +447,7 @@ fu_steelseries_sonic_write_to_flash(FuDevice *device,
 		if (!fu_memwrite_uint32_safe(data,
 					     sizeof(data),
 					     STEELSERIES_SONIC_WRITE_TO_FLASH_OFFSET_OFFSET,
-					     offset,
+					     fu_chunk_get_address(chk),
 					     G_LITTLE_ENDIAN,
 					     error))
 			return FALSE;
@@ -448,7 +455,7 @@ fu_steelseries_sonic_write_to_flash(FuDevice *device,
 		if (!fu_memwrite_uint16_safe(data,
 					     sizeof(data),
 					     STEELSERIES_SONIC_WRITE_TO_FLASH_SIZE_OFFSET,
-					     size,
+					     fu_chunk_get_data_sz(chk),
 					     G_LITTLE_ENDIAN,
 					     error))
 			return FALSE;

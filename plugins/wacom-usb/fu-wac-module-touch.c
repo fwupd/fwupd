@@ -62,9 +62,14 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 
 	/* data */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		guint8 buf[128 + 7] = {0xff};
 		g_autoptr(GBytes) blob_chunk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 
 		/* build G11T data packet */
 		memset(buf, 0xff, sizeof(buf));

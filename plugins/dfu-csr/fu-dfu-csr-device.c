@@ -311,10 +311,16 @@ fu_dfu_csr_device_download(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (idx = 0; idx < fu_chunk_array_length(chunks); idx++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, idx);
-		g_autoptr(GBytes) blob_tmp = fu_chunk_get_bytes(chk);
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob_tmp = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, idx, error);
+		if (chk == NULL)
+			return FALSE;
 
 		/* send packet */
+		blob_tmp = fu_chunk_get_bytes(chk);
 		if (!fu_dfu_csr_device_download_chunk(self, idx, blob_tmp, error))
 			return FALSE;
 

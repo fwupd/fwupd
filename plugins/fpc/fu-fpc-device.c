@@ -448,9 +448,13 @@ fu_fpc_device_write_firmware(FuDevice *device,
 
 	/* write each block */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) req = g_byte_array_new();
 
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		g_byte_array_append(req, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 
 		if (!fu_fpc_device_dfu_cmd(self,

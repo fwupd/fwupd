@@ -680,9 +680,11 @@ fu_elantp_hid_haptic_device_write_chunks_cb(FuDevice *device, gpointer user_data
 		g_autoptr(GError) error_iapctrl = NULL;
 
 		if (i == fu_chunk_array_length(chunks))
-			chk = fu_chunk_array_index(chunks, 0);
+			chk = fu_chunk_array_index(chunks, 0, error);
 		else
-			chk = fu_chunk_array_index(chunks, i);
+			chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 
 		/* write block */
 		blk[0] = 0x0B; /* report ID */

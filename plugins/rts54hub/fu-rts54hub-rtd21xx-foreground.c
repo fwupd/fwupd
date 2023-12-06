@@ -344,7 +344,12 @@ fu_rts54hub_rtd21xx_foreground_write_firmware(FuDevice *device,
 	/* send data */
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, ISP_DATA_BLOCKSIZE);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_rts54hub_rtd21xx_device_read_status(FU_RTS54HUB_RTD21XX_DEVICE(self),
 							    NULL,
 							    error))

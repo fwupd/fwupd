@@ -408,9 +408,13 @@ fu_focalfp_hid_device_write_chunks(FuFocalfpHidDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		guint8 uc_packet_type = MID_PACKET;
 
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (i == 0)
 			uc_packet_type = FIRST_PACKET;
 		else if (i == fu_chunk_array_length(chunks) - 1)

@@ -500,7 +500,9 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 		return FALSE;
 	blocks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x10000);
 	for (guint i = 1; i < fu_chunk_array_length(blocks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(blocks, i);
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(blocks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_vli_pd_parade_device_block_erase(self, fu_chunk_get_idx(chk), error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
@@ -520,7 +522,9 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 
 	/* write blocks */
 	for (guint i = 1; i < fu_chunk_array_length(blocks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(blocks, i);
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(blocks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_vli_pd_parade_device_block_write(self,
 							 fu_chunk_get_idx(chk),
 							 fu_chunk_get_data(chk),
@@ -536,21 +540,27 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 
 	/* add the new boot config into the verify buffer */
 	buf_verify = g_byte_array_sized_new(g_bytes_get_size(fw));
-	chk0 = fu_chunk_array_index(blocks, 0);
+	chk0 = fu_chunk_array_index(blocks, 0, error);
+	if (chk0 == NULL)
+		return FALSE;
 	g_byte_array_append(buf_verify, fu_chunk_get_data(chk0), fu_chunk_get_data_sz(chk0));
 
 	/*  verify SPI ROM, ignoring the boot config */
 	for (guint i = 1; i < fu_chunk_array_length(blocks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(blocks, i);
-		gsize bufsz = fu_chunk_get_data_sz(chk);
-		g_autofree guint8 *vbuf = g_malloc0(bufsz);
+		g_autofree guint8 *vbuf = NULL;
+		g_autoptr(FuChunk) chk = NULL;
+
+		chk = fu_chunk_array_index(blocks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		vbuf = g_malloc0(fu_chunk_get_data_sz(chk));
 		if (!fu_vli_pd_parade_device_block_read(self,
 							fu_chunk_get_idx(chk),
 							vbuf,
-							bufsz,
+							fu_chunk_get_data_sz(chk),
 							error))
 			return FALSE;
-		g_byte_array_append(buf_verify, vbuf, bufsz);
+		g_byte_array_append(buf_verify, vbuf, fu_chunk_get_data_sz(chk));
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						i + 1,
 						fu_chunk_array_length(blocks));

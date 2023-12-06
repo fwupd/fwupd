@@ -129,18 +129,19 @@ static gboolean
 fu_cab_firmware_compute_checksum_chunks(FuChunkArray *chunks, guint32 *checksum, GError **error)
 {
 	for (gsize i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
-		gsize chunksz = fu_chunk_get_data_sz(chk);
-		const guint8 *buf = fu_chunk_get_data(chk);
+		g_autoptr(FuChunk) chk = NULL;
 		guint32 ul = 0;
-		if (chunksz == 4) {
-			ul = fu_memread_uint32(buf, G_LITTLE_ENDIAN);
-		} else if (chunksz == 3) {
-			ul = fu_memread_uint24(buf, G_BIG_ENDIAN); /* err.. */
-		} else if (chunksz == 2) {
-			ul = fu_memread_uint16(buf, G_BIG_ENDIAN); /* err.. */
-		} else if (chunksz == 1) {
-			ul = buf[0];
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		if (fu_chunk_get_data_sz(chk) == 4) {
+			ul = fu_memread_uint32(fu_chunk_get_data(chk), G_LITTLE_ENDIAN);
+		} else if (fu_chunk_get_data_sz(chk) == 3) {
+			ul = fu_memread_uint24(fu_chunk_get_data(chk), G_BIG_ENDIAN); /* err.. */
+		} else if (fu_chunk_get_data_sz(chk) == 2) {
+			ul = fu_memread_uint16(fu_chunk_get_data(chk), G_BIG_ENDIAN); /* err.. */
+		} else if (fu_chunk_get_data_sz(chk) == 1) {
+			ul = fu_chunk_get_data(chk)[0];
 		}
 		*checksum ^= ul;
 	}
@@ -658,9 +659,13 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	    g_byte_array_free_to_bytes(g_steal_pointer(&cfdata_linear)); /* nocheck */
 	chunks = fu_chunk_array_new_from_bytes(cfdata_linear_blob, 0x0, 0x8000);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) chunk_zlib = g_byte_array_new();
 		g_autoptr(GByteArray) buf = g_byte_array_new();
+
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return NULL;
 		fu_byte_array_set_size(chunk_zlib, fu_chunk_get_data_sz(chk) * 2, 0x0);
 		if (priv->compressed) {
 			int zret;
@@ -773,9 +778,14 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		guint32 checksum = 0;
 		GByteArray *chunk_zlib = g_ptr_array_index(chunks_zlib, i);
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) hdr = g_byte_array_new();
 		g_autoptr(GByteArray) st_data = fu_struct_cab_data_new();
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return NULL;
 
 		/* first do the 'checksum' on the data, then the partial header -- slightly crazy */
 		if (!fu_cab_firmware_compute_checksum(chunk_zlib->data,

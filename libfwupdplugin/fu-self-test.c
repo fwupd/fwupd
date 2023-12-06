@@ -1753,35 +1753,40 @@ fu_chunk_array_func(void)
 	g_autoptr(FuChunk) chk2 = NULL;
 	g_autoptr(FuChunk) chk3 = NULL;
 	g_autoptr(FuChunk) chk4 = NULL;
+	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) fw = g_bytes_new_static("hello world", 11);
 	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw, 100, 5);
 
 	g_assert_cmpint(fu_chunk_array_length(chunks), ==, 3);
 
-	chk1 = fu_chunk_array_index(chunks, 0);
+	chk1 = fu_chunk_array_index(chunks, 0, &error);
+	g_assert_no_error(error);
 	g_assert_nonnull(chk1);
 	g_assert_cmpint(fu_chunk_get_idx(chk1), ==, 0x0);
 	g_assert_cmpint(fu_chunk_get_address(chk1), ==, 100);
 	g_assert_cmpint(fu_chunk_get_data_sz(chk1), ==, 0x5);
 	g_assert_cmpint(strncmp((const gchar *)fu_chunk_get_data(chk1), "hello", 5), ==, 0);
 
-	chk2 = fu_chunk_array_index(chunks, 1);
+	chk2 = fu_chunk_array_index(chunks, 1, &error);
+	g_assert_no_error(error);
 	g_assert_nonnull(chk2);
 	g_assert_cmpint(fu_chunk_get_idx(chk2), ==, 0x1);
 	g_assert_cmpint(fu_chunk_get_address(chk2), ==, 105);
 	g_assert_cmpint(fu_chunk_get_data_sz(chk2), ==, 0x5);
 	g_assert_cmpint(strncmp((const gchar *)fu_chunk_get_data(chk2), " world", 5), ==, 0);
 
-	chk3 = fu_chunk_array_index(chunks, 2);
+	chk3 = fu_chunk_array_index(chunks, 2, &error);
+	g_assert_no_error(error);
 	g_assert_nonnull(chk3);
 	g_assert_cmpint(fu_chunk_get_idx(chk3), ==, 0x2);
 	g_assert_cmpint(fu_chunk_get_address(chk3), ==, 110);
 	g_assert_cmpint(fu_chunk_get_data_sz(chk3), ==, 0x1);
 	g_assert_cmpint(strncmp((const gchar *)fu_chunk_get_data(chk3), "d", 1), ==, 0);
 
-	chk4 = fu_chunk_array_index(chunks, 3);
+	chk4 = fu_chunk_array_index(chunks, 3, &error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
 	g_assert_null(chk4);
-	chk4 = fu_chunk_array_index(chunks, 1024);
+	chk4 = fu_chunk_array_index(chunks, 1024, NULL);
 	g_assert_null(chk4);
 }
 

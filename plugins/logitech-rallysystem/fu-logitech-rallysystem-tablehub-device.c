@@ -139,9 +139,13 @@ fu_logitech_rallysystem_tablehub_device_write_fw(FuLogitechRallysystemTablehubDe
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		g_autofree guint8 *data_mut = NULL;
 
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		data_mut = fu_memdup_safe(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk), error);
 		if (data_mut == NULL)
 			return FALSE;

@@ -226,11 +226,15 @@ fu_scsi_device_write_firmware(FuDevice *device,
 
 	/* write each block */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
 		guint8 cdb[WRITE_BUF_CMDLEN] = {WRITE_BUFFER_CMD,
 						BUFFER_FFU_MODE,
 						0x0 /* buf_id */};
 
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		fu_memwrite_uint24(cdb + 3, offset, G_BIG_ENDIAN);
 		fu_memwrite_uint24(cdb + 6, fu_chunk_get_data_sz(chk), G_BIG_ENDIAN);
 		if (!fu_scsi_device_send_scsi_cmd_v3(self,

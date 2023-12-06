@@ -625,7 +625,12 @@ fu_superio_it89_device_write_chunks(FuSuperioDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks) - 1);
 	for (guint i = 0; i < fu_chunk_array_length(chunks) - 1; i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 
 		/* try this many times; the failure-to-flash case leaves you
 		 * without a keyboard and future boot may completely fail */

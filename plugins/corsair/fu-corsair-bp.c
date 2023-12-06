@@ -293,7 +293,12 @@ fu_corsair_bp_write_firmware_chunks(FuCorsairBp *self,
 	fu_progress_step_done(progress);
 
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_corsair_bp_write_chunk(self, chk, error)) {
 			g_prefix_error(error, "cannot write chunk %u: ", i);
 			return FALSE;

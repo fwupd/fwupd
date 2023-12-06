@@ -1548,8 +1548,14 @@ fu_nordic_hid_cfg_channel_write_firmware_blob(FuNordicHidCfgChannel *self,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
-		gboolean is_last = (i == fu_chunk_array_length(chunks) - 1);
+		gboolean is_last;
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		is_last = i == fu_chunk_array_length(chunks) - 1;
 		if (!fu_nordic_hid_cfg_channel_write_firmware_chunk(self, chk, is_last, error)) {
 			g_prefix_error(error, "chunk %u: ", fu_chunk_get_idx(chk));
 			return FALSE;

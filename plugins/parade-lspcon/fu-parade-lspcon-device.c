@@ -444,13 +444,19 @@ fu_parade_lspcon_flash_write(FuParadeLspconDevice *self,
 
 	chunks = fu_chunk_array_new_from_bytes(data, base_address, 256);
 	for (gsize i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chunk = fu_chunk_array_index(chunks, i);
-		guint32 address = fu_chunk_get_address(chunk);
-		guint32 chunk_size = fu_chunk_get_data_sz(chunk);
+		g_autoptr(FuChunk) chunk = NULL;
+		guint32 address;
+		guint32 chunk_size;
 		guint8 write_data[257] = {0x0};
 		g_autoptr(FuParadeLspconI2cAddressGuard) guard = NULL;
 
+		/* prepare chunk */
+		chunk = fu_chunk_array_index(chunks, i, error);
+		if (chunk == NULL)
+			return FALSE;
+
 		/* map target address range in page 7 */
+		address = fu_chunk_get_address(chunk);
 		if (!fu_parade_lspcon_map_page(self, address, error))
 			return FALSE;
 
@@ -461,6 +467,7 @@ fu_parade_lspcon_flash_write(FuParadeLspconDevice *self,
 
 		/* page write is prefixed with an offset:
 		 * we always start from offset 0 */
+		chunk_size = fu_chunk_get_data_sz(chunk);
 		if (!fu_memcpy_safe(write_data,
 				    sizeof(write_data),
 				    1,

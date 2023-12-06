@@ -412,7 +412,13 @@ fu_pxi_receiver_device_write_chunk(FuDevice *device, FuChunk *chk, GError **erro
 					       self->fwstate.mtu_size);
 
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk2 = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk2 = NULL;
+
+		/* prepare chunk */
+		chk2 = fu_chunk_array_index(chunks, i, error);
+		if (chk2 == NULL)
+			return FALSE;
+
 		/* calculate checksum of each payload packet */
 		self->fwstate.checksum +=
 		    fu_sum16(fu_chunk_get_data(chk2), fu_chunk_get_data_sz(chk2));
@@ -595,7 +601,12 @@ fu_pxi_receiver_device_write_firmware(FuDevice *device,
 
 	/* write fw into device */
 	for (guint i = self->fwstate.offset; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_pxi_receiver_device_write_chunk(device, chk, error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),

@@ -417,7 +417,12 @@ fu_jabra_gnp_device_write_chunks(FuJabraGnpDevice *self,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (gint chunk_number = 0; (guint)chunk_number < fu_chunk_array_length(chunks);
 	     chunk_number++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, chunk_number);
+		g_autoptr(FuChunk) chk = NULL;
+
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, chunk_number, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_jabra_gnp_device_write_chunk(self,
 						     chunk_number,
 						     fu_chunk_get_data(chk),

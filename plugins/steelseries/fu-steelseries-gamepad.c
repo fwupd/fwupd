@@ -138,9 +138,14 @@ fu_steelseries_gamepad_write_firmware_chunks(FuDevice *device,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chunk = fu_chunk_array_index(chunks, i);
 		guint16 chunk_checksum;
 		guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0xA3};
+		g_autoptr(FuChunk) chunk = NULL;
+
+		/* prepare chunk */
+		chunk = fu_chunk_array_index(chunks, i, error);
+		if (chunk == NULL)
+			return FALSE;
 
 		/* block ID */
 		if (!fu_memwrite_uint16_safe(data,

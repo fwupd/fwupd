@@ -651,9 +651,16 @@ flash_iface_write(FuRealtekMstDevice *self,
 
 	g_debug("write %#" G_GSIZE_MODIFIER "x bytes at %#08x", total_size, address);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chunk = fu_chunk_array_index(chunks, i);
-		guint32 chunk_address = fu_chunk_get_address(chunk);
-		guint32 chunk_size = fu_chunk_get_data_sz(chunk);
+		g_autoptr(FuChunk) chunk = NULL;
+		guint32 chunk_address;
+		guint32 chunk_size;
+
+		/* prepare chunk */
+		chunk = fu_chunk_array_index(chunks, i, error);
+		if (chunk == NULL)
+			return FALSE;
+		chunk_address = fu_chunk_get_address(chunk);
+		chunk_size = fu_chunk_get_data_sz(chunk);
 
 		/* write opcode */
 		if (!mst_write_register(self, REG_WRITE_OPCODE, CMD_OPCODE_WRITE, error))
