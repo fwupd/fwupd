@@ -52,6 +52,7 @@ content_files = [
   "best-known-configuration.md",
   "only-trusted.md",
   "fwupd.conf.md",
+  "supermicro-license.md",
   @plugin_readme_outputs@,
 ]
 content_images = [
