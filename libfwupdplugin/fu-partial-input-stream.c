@@ -146,6 +146,40 @@ fu_partial_input_stream_new(GInputStream *stream, gsize offset, gsize size)
 	return G_INPUT_STREAM(g_steal_pointer(&self));
 }
 
+/**
+ * fu_partial_input_stream_get_offset:
+ * @self: a #FuPartialInputStream
+ *
+ * Gets the offset of the stream.
+ *
+ * Returns: integer
+ *
+ * Since: 1.9.11
+ **/
+gsize
+fu_partial_input_stream_get_offset(FuPartialInputStream *self)
+{
+	g_return_val_if_fail(FU_IS_PARTIAL_INPUT_STREAM(self), G_MAXSIZE);
+	return self->offset;
+}
+
+/**
+ * fu_partial_input_stream_get_size:
+ * @self: a #FuPartialInputStream
+ *
+ * Gets the offset of the stream.
+ *
+ * Returns: integer
+ *
+ * Since: 1.9.11
+ **/
+gsize
+fu_partial_input_stream_get_size(FuPartialInputStream *self)
+{
+	g_return_val_if_fail(FU_IS_PARTIAL_INPUT_STREAM(self), G_MAXSIZE);
+	return self->size;
+}
+
 static gssize
 fu_partial_input_stream_read(GInputStream *stream,
 			     void *buffer,
