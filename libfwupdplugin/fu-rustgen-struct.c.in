@@ -211,26 +211,15 @@
 }
 {%- endif %}
 
-{%- set export = obj.export('Parse') %}
+{%- set export = obj.export('ParseInternal') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
-/**
- * {{obj.c_method('Parse')}}: (skip):
- **/
-{{export.value}}GByteArray *
-{{obj.c_method('Parse')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
+{{export.value}}gboolean
+{{obj.c_method('ParseInternal')}}(GByteArray *st, GError **error)
 {
-    g_autoptr(GByteArray) st = g_byte_array_new();
     g_autofree gchar *str = NULL;
-    g_return_val_if_fail(buf != NULL, NULL);
-    g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-    if (!fu_memchk_read(bufsz, offset, {{obj.size}}, error)) {
-        g_prefix_error(error, "invalid struct {{obj.name}}: ");
-        return NULL;
-    }
-    g_byte_array_append(st, buf + offset, {{obj.size}});
 {%- for item in obj.items | selectattr('struct_obj') %}
     if (!{{item.struct_obj.c_method('Validate')}}(st->data, st->len, {{item.c_define('OFFSET')}}, error))
-        return NULL;
+        return FALSE;
 {%- endfor %}
 {%- for item in obj.items | selectattr('constant') %}
 {%- if item.type == Type.STRING %}
@@ -244,11 +233,34 @@
                             G_IO_ERROR,
                             G_IO_ERROR_INVALID_DATA,
                             "constant {{obj.name}}.{{item.element_id}} was not valid, expected {{item.constant}}");
-        return NULL;
+        return FALSE;
     }
 {%- endfor %}
     str = {{obj.c_method('ToString')}}(st);
     g_debug("%s", str);
+    return TRUE;
+}
+{%- endif %}
+
+{%- set export = obj.export('Parse') %}
+{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+
+/**
+ * {{obj.c_method('Parse')}}: (skip):
+ **/
+{{export.value}}GByteArray *
+{{obj.c_method('Parse')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
+{
+    g_autoptr(GByteArray) st = g_byte_array_new();
+    g_return_val_if_fail(buf != NULL, NULL);
+    g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+    if (!fu_memchk_read(bufsz, offset, {{obj.size}}, error)) {
+        g_prefix_error(error, "invalid struct {{obj.name}}: ");
+        return NULL;
+    }
+    g_byte_array_append(st, buf + offset, {{obj.size}});
+    if (!{{obj.c_method('ParseInternal')}}(st, error))
+        return NULL;
     return g_steal_pointer(&st);
 }
 {%- endif %}
@@ -264,6 +276,41 @@
     gsize bufsz = 0;
     const guint8 *buf = g_bytes_get_data(blob, &bufsz);
     return {{obj.c_method('Parse')}}(buf, bufsz, offset, error);
+}
+{%- endif %}
+
+{%- set export = obj.export('ParseStream') %}
+{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+/**
+ * {{obj.c_method('ParseStream')}}: (skip):
+ **/
+{{export.value}}GByteArray *
+{{obj.c_method('ParseStream')}}(GInputStream *stream, gsize offset, GError **error)
+{
+    gssize rc;
+    g_autoptr(GByteArray) st = g_byte_array_new();
+    if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_SET, NULL, error)) {
+        g_prefix_error(error, "{{obj.name}} failed seek to 0x%x: ", (guint) offset);
+        return NULL;
+    }
+    g_byte_array_set_size(st, {{obj.size}});
+    rc = g_input_stream_read(stream, st->data, st->len, NULL, error);
+    if (rc == -1) {
+        g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) st->len);
+        return NULL;
+    }
+    if (rc != st->len) {
+        g_set_error(error,
+                    G_IO_ERROR,
+                    G_IO_ERROR_PARTIAL_INPUT,
+                    "{{obj.name}} requested 0x%x and got 0x%x",
+                    (guint) st->len,
+                    (guint) rc);
+        return NULL;
+    }
+    if (!{{obj.c_method('ParseInternal')}}(st, error))
+        return NULL;
+    return g_steal_pointer(&st);
 }
 {%- endif %}
 
