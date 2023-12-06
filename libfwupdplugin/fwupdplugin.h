@@ -80,6 +80,7 @@
 #include <libfwupdplugin/fu-mei-device.h>
 #include <libfwupdplugin/fu-mem.h>
 #include <libfwupdplugin/fu-oprom-firmware.h>
+#include <libfwupdplugin/fu-partial-input-stream.h>
 #include <libfwupdplugin/fu-path.h>
 #include <libfwupdplugin/fu-pefile-firmware.h>
 #include <libfwupdplugin/fu-plugin-vfuncs.h>
