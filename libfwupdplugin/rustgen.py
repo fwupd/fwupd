@@ -138,6 +138,8 @@ class StructObj:
         self._exports: Dict[str, Export] = {
             "Validate": Export.NONE,
             "ValidateBytes": Export.NONE,
+            "ValidateStream": Export.NONE,
+            "ValidateInternal": Export.NONE,
             "Parse": Export.NONE,
             "ParseBytes": Export.NONE,
             "ParseStream": Export.NONE,
@@ -180,6 +182,10 @@ class StructObj:
                     item.add_private_export("Getters")
                 if item.struct_obj:
                     item.struct_obj.add_private_export("Validate")
+            if self.has_constant:
+                self.add_private_export("ValidateInternal")
+        elif derive == "ValidateStream":
+            self.add_private_export("ValidateInternal")
         elif derive == "ValidateBytes":
             self.add_private_export("Validate")
         elif derive == "ToString":
