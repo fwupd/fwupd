@@ -66,6 +66,7 @@ fwupdplugin_src = [
   'fu-chunk-array.c', # fuzzing
   'fu-common.c', # fuzzing
   'fu-common-guid.c',
+  'fu-composite-input-stream.c', # fuzzing
   'fu-config.c', # fuzzing
   'fu-context.c', # fuzzing
   'fu-coswid-firmware.c', # fuzzing
@@ -192,6 +193,7 @@ fwupdplugin_headers = [
   'fu-chunk-array.h',
   'fu-common-guid.h',
   'fu-common.h',
+  'fu-composite-input-stream.h',
   'fu-config.h',
   'fu-config-private.h',
   'fu-context.h',

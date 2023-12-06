@@ -26,6 +26,7 @@
 #include <libfwupdplugin/fu-chunk.h>
 #include <libfwupdplugin/fu-common-guid.h>
 #include <libfwupdplugin/fu-common.h>
+#include <libfwupdplugin/fu-composite-input-stream.h>
 #include <libfwupdplugin/fu-config.h>
 #include <libfwupdplugin/fu-context.h>
 #include <libfwupdplugin/fu-crc.h>
