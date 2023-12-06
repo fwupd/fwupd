@@ -314,6 +314,31 @@
 }
 {%- endif %}
 
+{%- set export = obj.export('ValidateInternal') %}
+{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+{{export.value}}gboolean
+{{obj.c_method('ValidateInternal')}}(GByteArray *st, GError **error)
+{
+{%- for item in obj.items | selectattr('constant') %}
+{%- if item.type == Type.STRING %}
+    if (strncmp((const gchar *) (st->data + {{item.offset}}), "{{item.constant}}", {{item.size}}) != 0) {
+{%- elif item.type == Type.GUID or (item.type == Type.U8 and item.multiplier) %}
+    if (memcmp({{item.c_getter}}(st), "{{item.constant}}", {{item.size}}) != 0) {
+{%- else %}
+    if ({{item.c_getter}}(st) != {{item.constant}}) {
+{%- endif %}
+        g_set_error_literal(error,
+                            G_IO_ERROR,
+                            G_IO_ERROR_INVALID_DATA,
+                            "constant {{obj.name}}.{{item.element_id}} was not valid");
+        return FALSE;
+    }
+{%- endfor %}
+    return TRUE;
+}
+
+{%- endif %}
+
 {%- set export = obj.export('Validate') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
 /**
@@ -335,22 +360,55 @@
     if (!{{item.struct_obj.c_method('Validate')}}(buf, bufsz, offset + {{item.c_define('OFFSET')}}, error))
         return FALSE;
 {%- endfor %}
-{%- for item in obj.items | selectattr('constant') %}
-{%- if item.type == Type.STRING %}
-    if (strncmp((const gchar *) (st.data + {{item.offset}}), "{{item.constant}}", {{item.size}}) != 0) {
-{%- elif item.type == Type.GUID or (item.type == Type.U8 and item.multiplier) %}
-    if (memcmp({{item.c_getter}}(&st), "{{item.constant}}", {{item.size}}) != 0) {
+{%- if obj.has_constant %}
+    return {{obj.c_method('ValidateInternal')}}(&st, error);
 {%- else %}
-    if ({{item.c_getter}}(&st) != {{item.constant}}) {
+    return TRUE;
 {%- endif %}
-        g_set_error_literal(error,
-                            G_IO_ERROR,
-                            G_IO_ERROR_INVALID_DATA,
-                            "constant {{obj.name}}.{{item.element_id}} was not valid");
+}
+{%- endif %}
+
+{%- set export = obj.export('ValidateStream') %}
+{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+/**
+ * {{obj.c_method('ValidateStream')}}: (skip):
+ **/
+{{export.value}}gboolean
+{{obj.c_method('ValidateStream')}}(GInputStream *stream, gsize offset, GError **error)
+{
+{%- if obj.has_constant %}
+    gssize rc;
+    g_autoptr(GByteArray) st = g_byte_array_new();
+{%- endif %}
+    g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+{%- if obj.has_constant %}
+    if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_SET, NULL, error)) {
+        g_prefix_error(error, "{{obj.name}} failed seek to 0x%x: ", (guint) offset);
         return FALSE;
     }
+    g_byte_array_set_size(st, {{obj.size}});
+    rc = g_input_stream_read(stream, st->data, st->len, NULL, error);
+    if (rc == -1) {
+        g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) st->len);
+        return FALSE;
+    }
+    if (rc != st->len) {
+        g_set_error(error,
+                    G_IO_ERROR,
+                    G_IO_ERROR_PARTIAL_INPUT,
+                    "{{obj.name}} requested 0x%x and got 0x%x",
+                    (guint) st->len,
+                    (guint) rc);
+        return FALSE;
+    }
+{%- endif %}
+
+{%- for item in obj.items | selectattr('struct_obj') %}
+    if (!{{item.struct_obj.c_method('ValidateStream')}}(stream, offset + {{item.c_define('OFFSET')}}, error))
+        return FALSE;
 {%- endfor %}
-    return TRUE;
+    return {{obj.c_method('ValidateInternal')}}(st, error);
 }
 {%- endif %}
 
