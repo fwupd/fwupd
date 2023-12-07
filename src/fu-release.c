@@ -863,7 +863,7 @@ fu_release_load(FuRelease *self,
 	if (tmp != NULL)
 		fwupd_release_set_remote_id(FWUPD_RELEASE(self), tmp);
 	tmp = xb_node_query_text(component, "../custom/value[@key='LVFS::Distributor']", NULL);
-	if (g_strcmp0(tmp, "community") == 0)
+	if (tmp != NULL && g_str_has_prefix(tmp, "community"))
 		fwupd_release_add_flag(FWUPD_RELEASE(self), FWUPD_RELEASE_FLAG_IS_COMMUNITY);
 
 	/* use the metadata to set the device attributes */
