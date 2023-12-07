@@ -633,6 +633,7 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 			FuVolume *esp = g_ptr_array_index(esp_volumes, i);
 			guint score = 0;
 			g_autofree gchar *name = NULL;
+			g_autofree gchar *kind = NULL;
 			g_autoptr(FuDeviceLocker) locker = NULL;
 			g_autoptr(GError) error_local = NULL;
 
@@ -652,6 +653,11 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 
 			/* big partitions are better than small partitions */
 			score += fu_volume_get_size(esp) / (1024 * 1024);
+
+			/* prefer partitions with the ESP flag set over msftdata */
+			kind = fu_volume_get_partition_kind(esp);
+			if (g_strcmp0(kind, FU_VOLUME_KIND_ESP) == 0)
+				score += 0x20000;
 
 			/* prefer linux ESP */
 			if (!fu_uefi_capsule_plugin_is_esp_linux(esp, &error_local)) {
