@@ -102,7 +102,7 @@ fu_i2c_device_open(FuDevice *device, GError **error)
 	}
 	io_channel = fu_io_channel_unix_new(bus_fd);
 	fu_udev_device_set_io_channel(FU_UDEV_DEVICE(self), io_channel);
-	fu_udev_device_set_flags(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_NONE);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IGNORE_NONE);
 #endif
 
 	/* FuUdevDevice->open */

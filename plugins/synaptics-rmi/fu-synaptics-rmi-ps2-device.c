@@ -962,8 +962,8 @@ fu_synaptics_rmi_ps2_device_init(FuSynapticsRmiPs2Device *self)
 	fu_device_set_vendor(FU_DEVICE(self), "Synaptics");
 	fu_device_add_vendor_id(FU_DEVICE(self), "HIDRAW:0x06CB");
 	fu_synaptics_rmi_device_set_max_page(FU_SYNAPTICS_RMI_DEVICE(self), 0x1);
-	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
-				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
 }
 
 static gboolean
