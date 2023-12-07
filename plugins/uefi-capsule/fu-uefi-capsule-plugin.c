@@ -619,6 +619,25 @@ static FuVolume *
 fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 {
 	g_autoptr(GPtrArray) esp_volumes = NULL;
+	const gchar *recovery_partitions[] = {
+	    "DellRestore",
+	    "DellUtility",
+	    "DIAGS",
+	    "HP_RECOVERY",
+	    "IBM_SERVICE",
+	    "IntelRST",
+	    "Lenovo_Recovery",
+	    "OS",
+	    "Recovery",
+	    "RECOVERY",
+	    "Recovery_Partition",
+	    "SERVICEV001",
+	    "SERVICEV002",
+	    "System_Reserved",
+	    "SYSTEM_RESERVED",
+	    "WINRE_DRV",
+	    NULL,
+	}; /* from https://github.com/storaged-project/udisks/blob/master/data/80-udisks2.rules */
 
 	/* show which volumes we're choosing from */
 	esp_volumes = fu_context_get_esp_volumes(fu_plugin_get_context(plugin), error);
@@ -646,9 +665,12 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 
 			/* ignore a partition that claims to be a recovery partition */
 			name = fu_volume_get_partition_name(esp);
-			if (g_strcmp0(name, "Recovery Partition") == 0) {
-				g_debug("skipping partition '%s'", name);
-				continue;
+			if (name != NULL) {
+				g_strdelimit(name, " ", '_');
+				if (g_strv_contains(recovery_partitions, name) == 0) {
+					g_debug("skipping partition '%s'", name);
+					continue;
+				}
 			}
 
 			/* big partitions are better than small partitions */
