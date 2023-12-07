@@ -9,10 +9,9 @@ import sys
 
 
 class Chipset:
-    def __init__(self, spibar=None, bios_cntl=0x0, spibar_proxy=None, flags=None):
+    def __init__(self, spibar=None, bios_cntl=0x0, flags=None):
 
         self.bios_cntl = bios_cntl
-        self.spibar_proxy = spibar_proxy
         self.spibar = spibar
         self.flags = flags
 
@@ -24,15 +23,15 @@ if __name__ == "__main__":
         sys.exit(1)
 
     chipsets = {
-        "apl": Chipset(flags="ich", bios_cntl=0xDC, spibar_proxy="00:0d.2"),
-        "c620": Chipset(flags="pch", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
+        "apl": Chipset(flags="ich", bios_cntl=0xDC),
+        "c620": Chipset(flags="pch", bios_cntl=0xDC),
         "ich0": Chipset(flags="ich", bios_cntl=0x4E),
         "ich2345": Chipset(flags="ich", bios_cntl=0x4E),
         "ich6": Chipset(flags="ich", bios_cntl=0xDC),
-        "pch100": Chipset(flags="pch", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
-        "pch200": Chipset(flags="pch", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
-        "pch300": Chipset(flags="pch", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
-        "pch400": Chipset(flags="pch", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
+        "pch100": Chipset(flags="pch", bios_cntl=0xDC),
+        "pch200": Chipset(flags="pch", bios_cntl=0xDC),
+        "pch300": Chipset(flags="pch", bios_cntl=0xDC),
+        "pch400": Chipset(flags="pch", bios_cntl=0xDC),
         "poulsbo": Chipset(flags="ich", bios_cntl=0xD8),
     }
 
@@ -69,8 +68,6 @@ if __name__ == "__main__":
             out_f.write("\n[INTEL_SPI_CHIPSET\\ID_{}]\n".format(kind.upper()))
             if cs.spibar:
                 out_f.write("IntelSpiBar = 0x{:x}\n".format(cs.spibar))
-            if cs.spibar_proxy:
-                out_f.write("IntelSpiBarProxy = {}\n".format(cs.spibar_proxy))
             if cs.bios_cntl:
                 out_f.write("IntelSpiBiosCntl = 0x{:X}\n".format(cs.bios_cntl))
             if cs.flags:

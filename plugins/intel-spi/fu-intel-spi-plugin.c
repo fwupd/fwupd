@@ -40,7 +40,6 @@ fu_intel_spi_plugin_constructed(GObject *obj)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	fu_context_add_quirk_key(ctx, "IntelSpiKind");
 	fu_context_add_quirk_key(ctx, "IntelSpiBar");
-	fu_context_add_quirk_key(ctx, "IntelSpiBarProxy");
 	fu_context_add_quirk_key(ctx, "IntelSpiBiosCntl");
 	fu_plugin_add_udev_subsystem(plugin, "pci");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_INTEL_SPI_DEVICE);
