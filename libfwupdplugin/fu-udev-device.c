@@ -1559,6 +1559,26 @@ fu_udev_device_set_flags(FuUdevDevice *self, FuUdevDeviceFlags flags)
 #endif
 }
 
+/**
+ * fu_udev_device_add_flag:
+ * @self: a #FuUdevDevice
+ * @flag: udev device flag, e.g. %FU_UDEV_DEVICE_FLAG_OPEN_READ
+ *
+ * Adds a flag to use when opening the device.
+ *
+ * For example %FU_UDEV_DEVICE_FLAG_OPEN_READ means that fu_device_open()
+ * would use `O_RDONLY` rather than `O_RDWR` which is the default.
+ *
+ * Since: 1.9.11
+ **/
+void
+fu_udev_device_add_flag(FuUdevDevice *self, FuUdevDeviceFlags flag)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
+	fu_udev_device_set_flags(self, priv->flags | flag);
+}
+
 static gboolean
 fu_udev_device_open(FuDevice *device, GError **error)
 {
