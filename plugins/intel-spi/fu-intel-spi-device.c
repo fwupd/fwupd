@@ -20,12 +20,10 @@
 #include "fu-intel-spi-common.h"
 #include "fu-intel-spi-device.h"
 #include "fu-intel-spi-struct.h"
-#include "fu-pci-device.h"
 
 struct _FuIntelSpiDevice {
 	FuDevice parent_instance;
 	FuIntelSpiKind kind;
-	gchar *spibar_proxy;
 	guint32 phys_spibar;
 	gpointer spibar;
 	guint16 hsfs;
@@ -260,30 +258,6 @@ fu_intel_spi_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* use a hidden PCI device to get the RCBA */
-	if (self->spibar_proxy != NULL) {
-		g_autoptr(FuDevice) pcidev = NULL;
-		g_autoptr(FuDeviceLocker) locker = NULL;
-
-		/* get SPIBAR from a hidden (VID set to 0xFFFF) PCI device */
-		pcidev = fu_pci_device_new(self->spibar_proxy, error);
-		if (pcidev == NULL)
-			return FALSE;
-		locker = fu_device_locker_new(pcidev, error);
-		if (locker == NULL)
-			return FALSE;
-		self->phys_spibar =
-		    fu_pci_device_read_config(FU_PCI_DEVICE(pcidev), PCI_BASE_ADDRESS_0);
-		if (self->phys_spibar == 0 || self->phys_spibar == G_MAXUINT32) {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
-				    "SPIBAR not valid: 0x%x",
-				    self->phys_spibar);
-			return FALSE;
-		}
-	}
-
 	/* specified explicitly as a physical address */
 	if (self->phys_spibar == 0) {
 		g_set_error_literal(error,
@@ -498,20 +472,8 @@ fu_intel_spi_device_set_quirk_kv(FuDevice *device,
 		fu_device_add_instance_strup(device, "ID", value);
 		return fu_device_build_instance_id(device, error, "INTEL_SPI_CHIPSET", "ID", NULL);
 	}
-	if (g_strcmp0(key, "IntelSpiBarProxy") == 0) {
-		self->spibar_proxy = g_strdup(value);
-		return TRUE;
-	}
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no supported");
 	return FALSE;
-}
-
-static void
-fu_intel_spi_device_finalize(GObject *object)
-{
-	FuIntelSpiDevice *self = FU_INTEL_SPI_DEVICE(object);
-	g_free(self->spibar_proxy);
-	G_OBJECT_CLASS(fu_intel_spi_device_parent_class)->finalize(object);
 }
 
 static void
@@ -528,9 +490,7 @@ fu_intel_spi_device_init(FuIntelSpiDevice *self)
 static void
 fu_intel_spi_device_class_init(FuIntelSpiDeviceClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	object_class->finalize = fu_intel_spi_device_finalize;
 	klass_device->to_string = fu_intel_spi_device_to_string;
 	klass_device->probe = fu_intel_spi_device_probe;
 	klass_device->setup = fu_intel_spi_device_setup;

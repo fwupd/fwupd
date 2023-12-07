@@ -404,12 +404,10 @@ IntelSpiKind = pch400
 
 
 [INTEL_SPI_CHIPSET\ID_APL]
-IntelSpiBarProxy = 00:0d.2
 IntelSpiBiosCntl = 0xDC
 Flags = ich
 
 [INTEL_SPI_CHIPSET\ID_C620]
-IntelSpiBarProxy = 00:1f.5
 IntelSpiBiosCntl = 0xDC
 Flags = pch
 
@@ -426,22 +424,18 @@ IntelSpiBiosCntl = 0xDC
 Flags = ich
 
 [INTEL_SPI_CHIPSET\ID_PCH100]
-IntelSpiBarProxy = 00:1f.5
 IntelSpiBiosCntl = 0xDC
 Flags = pch
 
 [INTEL_SPI_CHIPSET\ID_PCH200]
-IntelSpiBarProxy = 00:1f.5
 IntelSpiBiosCntl = 0xDC
 Flags = pch
 
 [INTEL_SPI_CHIPSET\ID_PCH300]
-IntelSpiBarProxy = 00:1f.5
 IntelSpiBiosCntl = 0xDC
 Flags = pch
 
 [INTEL_SPI_CHIPSET\ID_PCH400]
-IntelSpiBarProxy = 00:1f.5
 IntelSpiBiosCntl = 0xDC
 Flags = pch
 
