@@ -1009,7 +1009,10 @@ fu_volume_new_esp_for_path(const gchar *esp_path, GError **error)
 		/* check if it's a valid directory already */
 		if (g_file_test(esp_path, G_FILE_TEST_IS_DIR))
 			return fu_volume_new_from_mount_path(esp_path);
-		g_propagate_error(error, g_steal_pointer(&error_local));
+		g_propagate_prefixed_error(error,
+					   g_steal_pointer(&error_local),
+					   "cannot fall back to %s as not a directory: ",
+					   esp_path);
 		return NULL;
 	}
 	basename = g_path_get_basename(esp_path);
