@@ -40,6 +40,7 @@ struct _FuUdevDeviceClass {
  * @FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK:		Open nonblocking, e.g. O_NONBLOCK
  * @FU_UDEV_DEVICE_FLAG_OPEN_SYNC:		Open sync, e.g. O_SYNC
  * @FU_UDEV_DEVICE_FLAG_IOCTL_RETRY:		Retry the ioctl() call when required
+ * @FU_UDEV_DEVICE_FLAG_IGNORE_NONE:		The device deliberately has no open flags
  *
  * Flags used when opening the device using fu_device_open().
  **/
@@ -52,6 +53,7 @@ typedef enum {
 	FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK = 1 << 4,
 	FU_UDEV_DEVICE_FLAG_OPEN_SYNC = 1 << 5,
 	FU_UDEV_DEVICE_FLAG_IOCTL_RETRY = 1 << 6,
+	FU_UDEV_DEVICE_FLAG_IGNORE_NONE = 1 << 7,
 	/*< private >*/
 	FU_UDEV_DEVICE_FLAG_LAST
 } FuUdevDeviceFlags;
@@ -153,9 +155,9 @@ fu_udev_device_set_logical_id(FuUdevDevice *self,
 			      const gchar *subsystem,
 			      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 void
-fu_udev_device_set_flags(FuUdevDevice *self, FuUdevDeviceFlags flags) G_GNUC_NON_NULL(1);
-void
 fu_udev_device_add_flag(FuUdevDevice *self, FuUdevDeviceFlags flag) G_GNUC_NON_NULL(1);
+void
+fu_udev_device_remove_flag(FuUdevDevice *self, FuUdevDeviceFlags flag) G_GNUC_NON_NULL(1);
 
 FuIOChannel *
 fu_udev_device_get_io_channel(FuUdevDevice *self) G_GNUC_NON_NULL(1);

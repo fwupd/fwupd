@@ -128,3 +128,4 @@ Remember: Plugins should be upstream!
 ## 2.0.0
 
 * `fu_hid_device_parse_descriptor()`: Use `fu_hid_device_parse_descriptors()` instead
+* `fu_udev_device_set_flags()`: Use `fu_udev_device_add_flag()` instead

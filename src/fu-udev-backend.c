@@ -114,6 +114,10 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 			      udev_device,
 			      NULL);
 
+	/* these are used without a subclass */
+	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "msr") == 0)
+		fu_udev_device_add_flag(device, FU_UDEV_DEVICE_FLAG_OPEN_READ);
+
 	/* notify plugins using fu_plugin_add_udev_subsystem() */
 	possible_plugins =
 	    fu_context_get_plugin_names_for_udev_subsystem(ctx,

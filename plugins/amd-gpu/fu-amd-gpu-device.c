@@ -92,9 +92,9 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 	} else {
 		fu_device_set_logical_id(device, "rom");
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-		fu_udev_device_set_flags(FU_UDEV_DEVICE(device),
-					 FU_UDEV_DEVICE_FLAG_OPEN_READ |
-					     FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+		fu_udev_device_add_flag(FU_UDEV_DEVICE(device), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+		fu_udev_device_add_flag(FU_UDEV_DEVICE(device),
+					FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 	}
 
 	/* firmware upgrade support */
