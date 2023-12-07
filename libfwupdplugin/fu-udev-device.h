@@ -154,6 +154,8 @@ fu_udev_device_set_logical_id(FuUdevDevice *self,
 			      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 void
 fu_udev_device_set_flags(FuUdevDevice *self, FuUdevDeviceFlags flags) G_GNUC_NON_NULL(1);
+void
+fu_udev_device_add_flag(FuUdevDevice *self, FuUdevDeviceFlags flag) G_GNUC_NON_NULL(1);
 
 FuIOChannel *
 fu_udev_device_get_io_channel(FuUdevDevice *self) G_GNUC_NON_NULL(1);

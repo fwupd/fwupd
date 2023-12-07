@@ -215,8 +215,10 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 							  error))
 			return FALSE;
 	}
-	if (flags & MTD_WRITEABLE)
+	if (flags & MTD_WRITEABLE) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	}
 #endif
 
 	/* success */
@@ -479,8 +481,7 @@ fu_mtd_device_init(FuMtdDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk-solidstate");
 	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
-				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
-				     FU_UDEV_DEVICE_FLAG_OPEN_SYNC);
+				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_SYNC);
 }
 
 static void
