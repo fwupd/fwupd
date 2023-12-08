@@ -71,7 +71,6 @@ fu_partial_input_stream_seek(GSeekable *seekable,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	self->eof = FALSE;
-	g_debug("seek to 0x%x, resetting eof", (guint)offset);
 	if (type == G_SEEK_CUR) {
 		goffset pos = g_seekable_tell(G_SEEKABLE(self->base_stream));
 		return g_seekable_seek(G_SEEKABLE(self->base_stream),
@@ -188,28 +187,18 @@ fu_partial_input_stream_read(GInputStream *stream,
 			     GError **error)
 {
 	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(stream);
-	gsize count_max;
 	gssize rc;
 	g_return_val_if_fail(FU_IS_PARTIAL_INPUT_STREAM(self), -1);
 	g_return_val_if_fail(error == NULL || *error == NULL, -1);
 
-	if (self->eof) {
-		g_debug("read of 0x0 due to EOF");
+	if (self->eof)
 		return 0;
-	}
-	count_max = self->size - g_seekable_tell(G_SEEKABLE(stream));
-	if (count > count_max) {
-		g_debug("read of 0x%x (truncated to 0x%x)", (guint)count, (guint)count_max);
-		count = count_max;
-	} else {
-		g_debug("read of 0x%x", (guint)count);
-	}
+	count = MIN(count, self->size - g_seekable_tell(G_SEEKABLE(stream)));
 	rc = g_input_stream_read(self->base_stream, buffer, count, cancellable, error);
 	if (rc < 0)
 		return rc;
 	if (count - rc == 0)
 		self->eof = TRUE;
-	g_debug("returned read of 0x%x", (guint)rc);
 	return rc;
 }
 

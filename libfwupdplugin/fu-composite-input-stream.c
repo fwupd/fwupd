@@ -164,7 +164,6 @@ fu_composite_input_stream_seek(GSeekable *seekable,
 	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	g_debug("seek to 0x%x of 0x%x", (guint)offset, (guint)self->total_size);
 	if (type == G_SEEK_CUR) {
 		item = fu_composite_input_stream_get_item_for_offset(self,
 								     (gsize)self->pos + offset,
