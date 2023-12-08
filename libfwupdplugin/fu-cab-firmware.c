@@ -126,22 +126,19 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCabFirmwareParseHelper, fu_cab_firmware_parse_he
 
 /* compute the MS cabinet checksum */
 static gboolean
-fu_cab_firmware_compute_checksum_chunks(FuChunkArray *chunks, guint32 *checksum, GError **error)
+fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checksum, GError **error)
 {
-	for (gsize i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = NULL;
+	for (gsize i = 0; i < bufsz; i += 4) {
 		guint32 ul = 0;
-		chk = fu_chunk_array_index(chunks, i, error);
-		if (chk == NULL)
-			return FALSE;
-		if (fu_chunk_get_data_sz(chk) == 4) {
-			ul = fu_memread_uint32(fu_chunk_get_data(chk), G_LITTLE_ENDIAN);
-		} else if (fu_chunk_get_data_sz(chk) == 3) {
-			ul = fu_memread_uint24(fu_chunk_get_data(chk), G_BIG_ENDIAN); /* err.. */
-		} else if (fu_chunk_get_data_sz(chk) == 2) {
-			ul = fu_memread_uint16(fu_chunk_get_data(chk), G_BIG_ENDIAN); /* err.. */
-		} else if (fu_chunk_get_data_sz(chk) == 1) {
-			ul = fu_chunk_get_data(chk)[0];
+		guint chunksz = MIN(bufsz - i, 4);
+		if (chunksz == 4) {
+			ul = fu_memread_uint32(buf + i, G_LITTLE_ENDIAN);
+		} else if (chunksz == 3) {
+			ul = fu_memread_uint24(buf + i, G_BIG_ENDIAN); /* err.. */
+		} else if (chunksz == 2) {
+			ul = fu_memread_uint16(buf + i, G_BIG_ENDIAN); /* err.. */
+		} else if (chunksz == 1) {
+			ul = buf[i];
 		}
 		*checksum ^= ul;
 	}
@@ -151,15 +148,10 @@ fu_cab_firmware_compute_checksum_chunks(FuChunkArray *chunks, guint32 *checksum,
 static gboolean
 fu_cab_firmware_compute_checksum_bytes(GBytes *blob, guint32 *checksum, GError **error)
 {
-	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(blob, 0x0, 4);
-	return fu_cab_firmware_compute_checksum_chunks(chunks, checksum, error);
-}
-
-static gboolean
-fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checksum, GError **error)
-{
-	g_autoptr(GBytes) blob = g_bytes_new_static(buf, bufsz);
-	return fu_cab_firmware_compute_checksum_bytes(blob, checksum, error);
+	return fu_cab_firmware_compute_checksum(g_bytes_get_data(blob, NULL),
+						g_bytes_get_size(blob),
+						checksum,
+						error);
 }
 
 static voidpf
