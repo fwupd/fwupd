@@ -36,7 +36,7 @@ typedef struct {
 	GHashTable *udev_subsystems; /* utf8:GPtrArray */
 	GPtrArray *esp_volumes;
 	GHashTable *firmware_gtypes; /* utf8:GType */
-	GHashTable *hwid_flags; /* str: */
+	GHashTable *hwid_flags;	     /* str: */
 	FuPowerState power_state;
 	FuLidState lid_state;
 	FuDisplayState display_state;

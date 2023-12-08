@@ -46,7 +46,7 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuIfdFirmware, fu_ifd_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_ifd_firmware_get_instance_private(o))
 
-#define FU_IFD_SIZE	 0x1000
+#define FU_IFD_SIZE 0x1000
 
 #define FU_IFD_FDBAR_FLASH_UPPER_MAP1 0x0EFC
 #define FU_IFD_FDBAR_OEM_SECTION      0x0F00

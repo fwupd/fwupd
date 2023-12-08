@@ -31,7 +31,7 @@
 
 G_DEFINE_TYPE(FuIfwiFptFirmware, fu_ifwi_fpt_firmware, FU_TYPE_FIRMWARE)
 
-#define FU_IFWI_FPT_MAX_ENTRIES	   56
+#define FU_IFWI_FPT_MAX_ENTRIES 56
 
 static gboolean
 fu_ifwi_fpt_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)

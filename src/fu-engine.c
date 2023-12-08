@@ -125,9 +125,9 @@ struct _FuEngine {
 	FuPluginList *plugin_list;
 	GPtrArray *plugin_filter;
 	FuContext *ctx;
-	GHashTable *approved_firmware; /* (nullable) */
-	GHashTable *blocked_firmware;  /* (nullable) */
-	GHashTable *emulation_phases;  /* (element-type int utf8) */
+	GHashTable *approved_firmware;	   /* (nullable) */
+	GHashTable *blocked_firmware;	   /* (nullable) */
+	GHashTable *emulation_phases;	   /* (element-type int utf8) */
 	GHashTable *emulation_backend_ids; /* (element-type str int) */
 	gchar *host_machine_id;
 	JcatContext *jcat_context;
@@ -1672,7 +1672,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 		}
 	}
 
-		/* kernel version is often important for debugging failures */
+	/* kernel version is often important for debugging failures */
 #ifdef HAVE_UTSNAME_H
 	memset(&name_tmp, 0, sizeof(struct utsname));
 	if (uname(&name_tmp) >= 0) {

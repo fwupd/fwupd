@@ -17,8 +17,9 @@ struct _FuIgscCodeFirmware {
 
 G_DEFINE_TYPE(FuIgscCodeFirmware, fu_igsc_code_firmware, FU_TYPE_IFWI_FPT_FIRMWARE)
 
-#define GSC_FWU_IUP_NUM				   2
-#define FU_IGSC_FIRMWARE_MAX_SIZE		   (8 * 1024 * 1024) /* 8M */
+#define GSC_FWU_IUP_NUM 2
+
+#define FU_IGSC_FIRMWARE_MAX_SIZE (8 * 1024 * 1024) /* 8M */
 
 static void
 fu_igsc_code_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
