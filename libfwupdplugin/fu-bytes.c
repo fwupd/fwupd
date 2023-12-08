@@ -249,7 +249,7 @@ fu_bytes_get_contents_stream_full(GInputStream *stream, gsize offset, gsize coun
 		if (buf->len >= count)
 			break;
 	}
-	return g_bytes_new(buf->data, buf->len);
+	return g_bytes_new(buf->data, MIN(buf->len, count));
 }
 
 /**
