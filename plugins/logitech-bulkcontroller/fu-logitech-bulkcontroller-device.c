@@ -1231,6 +1231,14 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	/* the hardware is unable to handle requests -- firmware issue */
+	if (fu_device_has_private_flag(device,
+				       FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL)) {
+		fu_device_sleep(device, POST_INSTALL_SLEEP_DURATION);
+		fu_device_remove_private_flag(device,
+					      FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL);
+	}
+
 	/* empty the queue */
 	if (!fu_logitech_bulkcontroller_device_clear_queue(self, error)) {
 		g_prefix_error(error, "failed to clear queue: ");
@@ -1250,14 +1258,6 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 	if (!fu_logitech_bulkcontroller_device_transition_to_device_mode(self, error)) {
 		g_prefix_error(error, "failed to transition to device_mode: ");
 		return FALSE;
-	}
-
-	/* the hardware is unable to handle requests -- firmware issue */
-	if (fu_device_has_private_flag(device,
-				       FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL)) {
-		fu_device_sleep(device, POST_INSTALL_SLEEP_DURATION);
-		fu_device_remove_private_flag(device,
-					      FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL);
 	}
 
 	/* set device time */
