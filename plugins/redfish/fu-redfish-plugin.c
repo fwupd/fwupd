@@ -209,14 +209,12 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 	/* in self tests */
 	smbios_data_fn = g_getenv("FWUPD_REDFISH_SMBIOS_DATA");
 	if (smbios_data_fn != NULL) {
-		g_autoptr(GBytes) type42_blob = fu_bytes_get_contents(smbios_data_fn, error);
 		g_autoptr(FuRedfishSmbios) smbios = fu_redfish_smbios_new();
-		if (type42_blob == NULL)
-			return FALSE;
-		if (!fu_firmware_parse(FU_FIRMWARE(smbios),
-				       type42_blob,
-				       FWUPD_INSTALL_FLAG_NO_SEARCH,
-				       error)) {
+		g_autoptr(GFile) file = g_file_new_for_path(smbios_data_fn);
+		if (!fu_firmware_parse_file(FU_FIRMWARE(smbios),
+					    file,
+					    FWUPD_INSTALL_FLAG_NO_SEARCH,
+					    error)) {
 			g_prefix_error(error, "failed to parse SMBIOS entry type 42: ");
 			return FALSE;
 		}

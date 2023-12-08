@@ -1035,9 +1035,9 @@ fu_util_firmware_sign(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(GBytes) archive_blob_new = NULL;
-	g_autoptr(GBytes) archive_blob_old = NULL;
 	g_autoptr(GBytes) cert = NULL;
 	g_autoptr(GBytes) privkey = NULL;
+	g_autoptr(GFile) archive_file_old = NULL;
 
 	/* invalid args */
 	if (g_strv_length(values) != 3) {
@@ -1050,9 +1050,6 @@ fu_util_firmware_sign(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* load arguments */
-	archive_blob_old = fu_bytes_get_contents(values[0], error);
-	if (archive_blob_old == NULL)
-		return FALSE;
 	cert = fu_bytes_get_contents(values[1], error);
 	if (cert == NULL)
 		return FALSE;
@@ -1061,10 +1058,11 @@ fu_util_firmware_sign(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* load, sign, export */
-	if (!fu_firmware_parse(FU_FIRMWARE(cabinet),
-			       archive_blob_old,
-			       FWUPD_INSTALL_FLAG_NONE,
-			       error))
+	archive_file_old = g_file_new_for_path(values[0]);
+	if (!fu_firmware_parse_file(FU_FIRMWARE(cabinet),
+				    archive_file_old,
+				    FWUPD_INSTALL_FLAG_NONE,
+				    error))
 		return FALSE;
 	if (!fu_cabinet_sign(cabinet, cert, privkey, FU_CABINET_SIGN_FLAG_NONE, error))
 		return FALSE;
@@ -2321,8 +2319,8 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuContext *ctx = fu_engine_get_context(priv->engine);
 	GType gtype;
-	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autofree gchar *firmware_type = NULL;
 	g_autofree gchar *str = NULL;
 
@@ -2336,8 +2334,8 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* load file */
-	blob = fu_bytes_get_contents(values[0], error);
-	if (blob == NULL)
+	stream = fu_input_stream_from_path(values[0], error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* load engine */
@@ -2378,10 +2376,11 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 			firmware_tmp = g_object_new(gtype_tmp, NULL);
 			if (fu_firmware_has_flag(firmware_tmp, FU_FIRMWARE_FLAG_NO_AUTO_DETECTION))
 				continue;
-			if (!fu_firmware_parse(firmware_tmp,
-					       blob,
-					       FWUPD_INSTALL_FLAG_NO_SEARCH,
-					       &error_local)) {
+			if (!fu_firmware_parse_stream(firmware_tmp,
+						      stream,
+						      0x0,
+						      FWUPD_INSTALL_FLAG_NO_SEARCH,
+						      &error_local)) {
 				g_debug("failed to parse as %s: %s",
 					gtype_id,
 					error_local->message);
@@ -2412,7 +2411,7 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_HAS_STORED_SIZE)) {
 		g_autoptr(FuFirmware) firmware_linear = fu_linear_firmware_new(gtype);
 		g_autoptr(GPtrArray) imgs = NULL;
-		if (!fu_firmware_parse(firmware_linear, blob, priv->flags, error))
+		if (!fu_firmware_parse_stream(firmware_linear, stream, 0x0, priv->flags, error))
 			return FALSE;
 		imgs = fu_firmware_get_images(firmware_linear);
 		if (imgs->len == 1) {
@@ -2421,7 +2420,7 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 			g_set_object(&firmware, firmware_linear);
 		}
 	} else {
-		if (!fu_firmware_parse(firmware, blob, priv->flags, error))
+		if (!fu_firmware_parse_stream(firmware, stream, 0x0, priv->flags, error))
 			return FALSE;
 	}
 
@@ -2436,8 +2435,8 @@ fu_util_firmware_export(FuUtilPrivate *priv, gchar **values, GError **error)
 	FuContext *ctx = fu_engine_get_context(priv->engine);
 	FuFirmwareExportFlags flags = FU_FIRMWARE_EXPORT_FLAG_NONE;
 	GType gtype;
-	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GFile) file = NULL;
 	g_autofree gchar *firmware_type = NULL;
 	g_autofree gchar *str = NULL;
 
@@ -2452,11 +2451,6 @@ fu_util_firmware_export(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	if (g_strv_length(values) == 2)
 		firmware_type = g_strdup(values[1]);
-
-	/* load file */
-	blob = fu_bytes_get_contents(values[0], error);
-	if (blob == NULL)
-		return FALSE;
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
@@ -2482,7 +2476,8 @@ fu_util_firmware_export(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 	firmware = g_object_new(gtype, NULL);
-	if (!fu_firmware_parse(firmware, blob, priv->flags, error))
+	file = g_file_new_for_path(values[0]);
+	if (!fu_firmware_parse_file(firmware, file, priv->flags, error))
 		return FALSE;
 	if (priv->show_all)
 		flags |= FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG;
@@ -2501,7 +2496,7 @@ fu_util_firmware_extract(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autofree gchar *firmware_type = NULL;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GFile) file = NULL;
 	g_autoptr(GPtrArray) images = NULL;
 
 	/* check args */
@@ -2514,11 +2509,6 @@ fu_util_firmware_extract(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 	if (g_strv_length(values) == 2)
 		firmware_type = g_strdup(values[1]);
-
-	/* load file */
-	blob = fu_bytes_get_contents(values[0], error);
-	if (blob == NULL)
-		return FALSE;
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
@@ -2544,7 +2534,8 @@ fu_util_firmware_extract(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 	firmware = g_object_new(gtype, NULL);
-	if (!fu_firmware_parse(firmware, blob, priv->flags, error))
+	file = g_file_new_for_path(values[0]);
+	if (!fu_firmware_parse_file(firmware, file, priv->flags, error))
 		return FALSE;
 	str = fu_firmware_to_string(firmware);
 	fu_console_print_literal(priv->console, str);
@@ -2691,7 +2682,7 @@ fu_util_firmware_convert(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuFirmware) firmware_dst = NULL;
 	g_autoptr(FuFirmware) firmware_src = NULL;
 	g_autoptr(GBytes) blob_dst = NULL;
-	g_autoptr(GBytes) blob_src = NULL;
+	g_autoptr(GFile) file_src = NULL;
 	g_autoptr(GPtrArray) images = NULL;
 
 	/* check args */
@@ -2707,11 +2698,6 @@ fu_util_firmware_convert(FuUtilPrivate *priv, gchar **values, GError **error)
 		firmware_type_src = g_strdup(values[2]);
 	if (g_strv_length(values) > 3)
 		firmware_type_dst = g_strdup(values[3]);
-
-	/* load file */
-	blob_src = fu_bytes_get_contents(values[0], error);
-	if (blob_src == NULL)
-		return FALSE;
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
@@ -2743,7 +2729,8 @@ fu_util_firmware_convert(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 	firmware_src = g_object_new(gtype_src, NULL);
-	if (!fu_firmware_parse(firmware_src, blob_src, priv->flags, error))
+	file_src = g_file_new_for_path(values[0]);
+	if (!fu_firmware_parse_file(firmware_src, file_src, priv->flags, error))
 		return FALSE;
 	gtype_dst = fu_context_get_firmware_gtype_by_id(ctx, firmware_type_dst);
 	if (gtype_dst == G_TYPE_INVALID) {
@@ -2824,8 +2811,8 @@ fu_util_firmware_patch(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GBytes) blob_dst = NULL;
-	g_autoptr(GBytes) blob_src = NULL;
 	g_autoptr(GBytes) patch = NULL;
+	g_autoptr(GFile) file_src = NULL;
 	guint64 offset = 0;
 
 	/* check args */
@@ -2841,11 +2828,6 @@ fu_util_firmware_patch(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* hardcoded */
 	if (g_strv_length(values) == 4)
 		firmware_type = g_strdup(values[3]);
-
-	/* load file */
-	blob_src = fu_bytes_get_contents(values[0], error);
-	if (blob_src == NULL)
-		return FALSE;
 
 	/* parse offset */
 	if (!fu_strtoull(values[1], &offset, 0x0, G_MAXUINT32, error)) {
@@ -2886,7 +2868,8 @@ fu_util_firmware_patch(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 	firmware = g_object_new(gtype, NULL);
-	if (!fu_firmware_parse(firmware, blob_src, priv->flags, error))
+	file_src = g_file_new_for_path(values[0]);
+	if (!fu_firmware_parse_file(firmware, file_src, priv->flags, error))
 		return FALSE;
 
 	/* add patch */

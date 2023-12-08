@@ -2227,7 +2227,7 @@ fu_firmware_ihex_func(void)
 	g_autofree gchar *filename_ref = NULL;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new();
-	g_autoptr(GBytes) data_file = NULL;
+	g_autoptr(GFile) file = NULL;
 	g_autoptr(GBytes) data_fw = NULL;
 	g_autoptr(GBytes) data_hex = NULL;
 	g_autoptr(GBytes) data_ref = NULL;
@@ -2235,10 +2235,8 @@ fu_firmware_ihex_func(void)
 
 	/* load a Intel hex32 file */
 	filename_hex = g_test_build_filename(G_TEST_DIST, "tests", "firmware.hex", NULL);
-	data_file = fu_bytes_get_contents(filename_hex, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(data_file);
-	ret = fu_firmware_parse(firmware, data_file, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
+	file = g_file_new_for_path(filename_hex);
+	ret = fu_firmware_parse_file(firmware, file, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	data_fw = fu_firmware_get_bytes(firmware, &error);

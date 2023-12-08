@@ -268,13 +268,11 @@ fu_uefi_bootmgr_shim_is_safe(const gchar *source_shim, GError **error)
 	g_autoptr(FuFirmware) previous_sbatlevel = NULL;
 	g_autoptr(FuFirmware) current_sbatlevel = fu_csv_firmware_new();
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GFile) file = NULL;
 	g_autoptr(GPtrArray) shim_entries = NULL;
 
-	blob = fu_bytes_get_contents(source_shim, error);
-	if (blob == NULL)
-		return FALSE;
-	if (!fu_firmware_parse(shim, blob, FWUPD_INSTALL_FLAG_NONE, error)) {
+	file = g_file_new_for_path(source_shim);
+	if (!fu_firmware_parse_file(shim, file, FWUPD_INSTALL_FLAG_NONE, error)) {
 		g_prefix_error(error, "failed to load %s: ", source_shim);
 		return FALSE;
 	}

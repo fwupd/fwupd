@@ -54,6 +54,11 @@ struct _FuFirmwareClass {
 			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
+	gboolean (*parse_stream)(FuFirmware *self,
+				 GInputStream *stream,
+				 gsize offset,
+				 FwupdInstallFlags flags,
+				 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	GByteArray *(*write)(FuFirmware *self, GError **error)G_GNUC_WARN_UNUSED_RESULT;
 	void (*export)(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode *bn);
 	gboolean (*tokenize)(FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GError **error)
@@ -63,6 +68,10 @@ struct _FuFirmwareClass {
 			       GChecksumType csum_kind,
 			       GError **error)G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*check_magic)(FuFirmware *self, GBytes *fw, gsize offset, GError **error);
+	gboolean (*validate_stream)(FuFirmware *self,
+				    GInputStream *stream,
+				    gsize offset,
+				    GError **error);
 	gboolean (*check_compatible)(FuFirmware *self,
 				     FuFirmware *other,
 				     FwupdInstallFlags flags,
@@ -313,6 +322,12 @@ fu_firmware_build_from_xml(FuFirmware *self,
 gboolean
 fu_firmware_parse(FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+gboolean
+fu_firmware_parse_stream(FuFirmware *self,
+			 GInputStream *stream,
+			 gsize offset,
+			 FwupdInstallFlags flags,
+			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_firmware_parse_file(FuFirmware *self, GFile *file, FwupdInstallFlags flags, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);

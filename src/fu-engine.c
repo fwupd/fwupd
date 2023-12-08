@@ -4046,7 +4046,6 @@ static JcatResult *
 fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **error)
 {
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GBytes) blob_sig = NULL;
 	g_autoptr(GInputStream) istream = NULL;
 	g_autoptr(GPtrArray) results = NULL;
 	g_autoptr(JcatItem) jcat_item = NULL;
@@ -4055,10 +4054,9 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 	blob = fu_bytes_get_contents(fwupd_remote_get_filename_cache(remote), error);
 	if (blob == NULL)
 		return NULL;
-	blob_sig = fu_bytes_get_contents(fwupd_remote_get_filename_cache_sig(remote), error);
-	if (blob_sig == NULL)
+	istream = fu_input_stream_from_path(fwupd_remote_get_filename_cache_sig(remote), error);
+	if (istream == NULL)
 		return NULL;
-	istream = g_memory_input_stream_new_from_bytes(blob_sig);
 	if (!jcat_file_import_stream(jcat_file, istream, JCAT_IMPORT_FLAG_NONE, NULL, error))
 		return NULL;
 	jcat_item = jcat_file_get_item_default(jcat_file, error);

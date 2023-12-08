@@ -42,12 +42,10 @@ fu_dbxtool_get_siglist_system(GError **error)
 static FuFirmware *
 fu_dbxtool_get_siglist_local(const gchar *filename, GError **error)
 {
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GFile) file = NULL;
 	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
-	blob = fu_bytes_get_contents(filename, error);
-	if (blob == NULL)
-		return NULL;
-	if (!fu_firmware_parse(siglist, blob, FWUPD_INSTALL_FLAG_NONE, error))
+	file = g_file_new_for_path(filename);
+	if (!fu_firmware_parse_file(siglist, file, FWUPD_INSTALL_FLAG_NONE, error))
 		return NULL;
 	return g_steal_pointer(&siglist);
 }
