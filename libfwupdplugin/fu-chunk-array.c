@@ -8,7 +8,9 @@
 
 #include "config.h"
 
+#include "fu-bytes.h"
 #include "fu-chunk-array.h"
+#include "fu-input-stream.h"
 
 /**
  * FuChunkArray:
@@ -22,9 +24,11 @@
 struct _FuChunkArray {
 	GObject parent_instance;
 	GBytes *blob;
+	GInputStream *stream;
 	guint32 addr_start;
 	guint32 packet_sz;
 	guint total_chunks;
+	gsize total_size;
 };
 
 G_DEFINE_TYPE(FuChunkArray, fu_chunk_array, G_TYPE_OBJECT)
@@ -69,18 +73,31 @@ fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error)
 
 	/* calculate offset and length */
 	offset = (gsize)idx * (gsize)self->packet_sz;
-	if (offset >= g_bytes_get_size(self->blob)) {
+	if (offset >= self->total_size) {
 		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "idx %u invalid", idx);
 		return NULL;
 	}
-	length = MIN(self->packet_sz, g_bytes_get_size(self->blob) - offset);
+	length = MIN(self->packet_sz, self->total_size - offset);
 	if (length == 0) {
 		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "idx %u zero sized", idx);
 		return NULL;
 	}
 
 	/* create new chunk */
-	blob_chk = g_bytes_new_from_bytes(self->blob, offset, length);
+	if (self->blob != NULL) {
+		blob_chk = g_bytes_new_from_bytes(self->blob, offset, length);
+	} else if (self->stream != NULL) {
+		blob_chk = fu_bytes_get_contents_stream_full(self->stream, offset, length, error);
+		if (blob_chk == NULL) {
+			g_prefix_error(error,
+				       "failed to get stream at 0x%x for 0x%x: ",
+				       (guint)offset,
+				       (guint)length);
+			return NULL;
+		}
+	} else {
+		blob_chk = g_bytes_new(NULL, 0);
+	}
 	chk = fu_chunk_bytes_new(blob_chk);
 	fu_chunk_set_idx(chk, idx);
 	fu_chunk_set_address(chk, self->addr_start + offset);
@@ -110,8 +127,47 @@ fu_chunk_array_new_from_bytes(GBytes *blob, guint32 addr_start, guint32 packet_s
 	self->addr_start = addr_start;
 	self->packet_sz = packet_sz;
 	self->blob = g_bytes_ref(blob);
-	self->total_chunks = g_bytes_get_size(self->blob) / self->packet_sz;
-	if (g_bytes_get_size(self->blob) % self->packet_sz != 0)
+	self->total_size = g_bytes_get_size(self->blob);
+	self->total_chunks = self->total_size / self->packet_sz;
+	if (self->total_size % self->packet_sz != 0)
+		self->total_chunks++;
+	return g_steal_pointer(&self);
+}
+
+/**
+ * fu_chunk_array_new_from_stream:
+ * @stream: a #GInputStream
+ * @addr_start: the hardware address offset, or 0x0
+ * @packet_sz: the packet size, or 0x0
+ * @error: (nullable): optional return location for an error
+ *
+ * Chunks a linear stream into packets, ensuring each packet is less that a specific
+ * transfer size.
+ *
+ * Returns: (transfer full): a #FuChunkArray, or #NULL on error
+ *
+ * Since: 1.9.11
+ **/
+FuChunkArray *
+fu_chunk_array_new_from_stream(GInputStream *stream,
+			       guint32 addr_start,
+			       guint32 packet_sz,
+			       GError **error)
+{
+	g_autoptr(FuChunkArray) self = g_object_new(FU_TYPE_CHUNK_ARRAY, NULL);
+
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	if (!fu_input_stream_size(stream, &self->total_size, error))
+		return NULL;
+	if (!g_seekable_seek(G_SEEKABLE(stream), 0x0, G_SEEK_SET, NULL, error))
+		return NULL;
+	self->addr_start = addr_start;
+	self->packet_sz = packet_sz;
+	self->stream = g_object_ref(stream);
+	self->total_chunks = self->total_size / self->packet_sz;
+	if (self->total_size % self->packet_sz != 0)
 		self->total_chunks++;
 	return g_steal_pointer(&self);
 }
@@ -122,6 +178,8 @@ fu_chunk_array_finalize(GObject *object)
 	FuChunkArray *self = FU_CHUNK_ARRAY(object);
 	if (self->blob != NULL)
 		g_bytes_unref(self->blob);
+	if (self->stream != NULL)
+		g_object_unref(self->stream);
 	G_OBJECT_CLASS(fu_chunk_array_parent_class)->finalize(object);
 }
 
