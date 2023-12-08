@@ -879,16 +879,14 @@ fu_uefi_capsule_plugin_parse_acpi_uefi(FuUefiCapsulePlugin *self, GError **error
 {
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *path = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GFile) file = NULL;
 
 	/* if we have a table, parse it and validate it */
 	path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
 	fn = g_build_filename(path, "UEFI", NULL);
-	blob = fu_bytes_get_contents(fn, error);
-	if (blob == NULL)
-		return FALSE;
+	file = g_file_new_for_path(fn);
 	self->acpi_uefi = fu_acpi_uefi_new();
-	return fu_firmware_parse(self->acpi_uefi, blob, FWUPD_INSTALL_FLAG_NONE, error);
+	return fu_firmware_parse_file(self->acpi_uefi, file, FWUPD_INSTALL_FLAG_NONE, error);
 }
 
 static gboolean

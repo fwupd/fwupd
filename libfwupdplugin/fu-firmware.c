@@ -15,6 +15,7 @@
 #include "fu-firmware.h"
 #include "fu-input-stream.h"
 #include "fu-mem.h"
+#include "fu-partial-input-stream.h"
 #include "fu-string.h"
 
 /**
@@ -592,10 +593,10 @@ fu_firmware_get_bytes(FuFirmware *self, GError **error)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
-	if (priv->stream != NULL)
-		return fu_bytes_get_contents_stream_full(priv->stream, 0x0, G_MAXUINT32, error);
 	if (priv->bytes != NULL)
 		return g_bytes_ref(priv->bytes);
+	if (priv->stream != NULL)
+		return fu_bytes_get_contents_stream_full(priv->stream, 0x0, G_MAXUINT32, error);
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no payload set");
 	return NULL;
 }
@@ -943,6 +944,111 @@ fu_firmware_check_magic_for_offset(FuFirmware *self,
 }
 
 /**
+ * fu_firmware_parse_stream:
+ * @self: a #FuFirmware
+ * @stream: input stream
+ * @offset: start offset
+ * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_FORCE
+ * @error: (nullable): optional return location for an error
+ *
+ * Parses a firmware from a stream, typically breaking the firmware into images.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.9.11
+ **/
+gboolean
+fu_firmware_parse_stream(FuFirmware *self,
+			 GInputStream *stream,
+			 gsize offset,
+			 FwupdInstallFlags flags,
+			 GError **error)
+{
+	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	gsize streamsz = 0;
+	g_autoptr(GBytes) fw = NULL;
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* sanity check */
+	if (fu_firmware_has_flag(self, FU_FIRMWARE_FLAG_DONE_PARSE)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "firmware object cannot be reused");
+		return FALSE;
+	}
+
+	/* check size */
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (streamsz == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "invalid firmware as zero sized");
+		return FALSE;
+	}
+	if (streamsz <= offset) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "stream size 0x%x is smaller than offset 0x%x",
+			    (guint)streamsz,
+			    (guint)offset);
+		return FALSE;
+	}
+	if (priv->size_max > 0 && streamsz - offset > priv->size_max) {
+		g_autofree gchar *sz_val = g_format_size(streamsz - offset);
+		g_autofree gchar *sz_max = g_format_size(priv->size_max);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware is too large (%s, limit %s)",
+			    sz_val,
+			    sz_max);
+		return FALSE;
+	}
+	fu_firmware_set_size(self, streamsz - offset);
+
+	/* optional */
+	if (klass->validate_stream != NULL) {
+		if (!klass->validate_stream(self, stream, offset, error))
+			return FALSE;
+	}
+
+	/* save stream */
+	if (offset == 0) {
+		fu_firmware_set_stream(self, stream);
+	} else {
+		g_autoptr(GInputStream) partial_stream =
+		    fu_partial_input_stream_new(stream, offset, streamsz - offset);
+		fu_firmware_set_stream(self, partial_stream);
+	}
+
+	/* optional, fallback to ->tokenize and ->parse() */
+	if (klass->parse_stream != NULL) {
+		fu_firmware_add_flag(self, FU_FIRMWARE_FLAG_DONE_PARSE);
+		return klass->parse_stream(self, stream, offset, flags, error);
+	}
+	fw = fu_bytes_get_contents_stream_full(stream, offset, streamsz - offset, error);
+	if (fw == NULL)
+		return FALSE;
+	if (klass->tokenize != NULL) {
+		if (!klass->tokenize(self, fw, flags, error))
+			return FALSE;
+	}
+	if (klass->parse != NULL)
+		return klass->parse(self, fw, 0x0, flags, error);
+
+	/* success */
+	return TRUE;
+}
+
+/**
  * fu_firmware_parse_full:
  * @self: a #FuFirmware
  * @fw: firmware blob
@@ -1021,6 +1127,10 @@ fu_firmware_parse_full(FuFirmware *self,
 	}
 
 	/* handled by the subclass */
+	if (klass->parse_stream != NULL) {
+		g_autoptr(GInputStream) stream = g_memory_input_stream_new_from_bytes(fw);
+		return klass->parse_stream(self, stream, offset, flags, error);
+	}
 	if (klass->parse != NULL)
 		return klass->parse(self, fw, offset, flags, error);
 
@@ -1338,18 +1448,16 @@ fu_firmware_build_from_xml(FuFirmware *self, const gchar *xml, GError **error)
 gboolean
 fu_firmware_parse_file(FuFirmware *self, GFile *file, FwupdInstallFlags flags, GError **error)
 {
-	gchar *buf = NULL;
-	gsize bufsz = 0;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GFileInputStream) stream = NULL;
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
 	g_return_val_if_fail(G_IS_FILE(file), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if (!g_file_load_contents(file, NULL, &buf, &bufsz, NULL, error))
+	stream = g_file_read(file, NULL, error);
+	if (stream == NULL)
 		return FALSE;
-	fw = g_bytes_new_take(buf, bufsz);
-	return fu_firmware_parse(self, fw, flags, error);
+	return fu_firmware_parse_stream(self, G_INPUT_STREAM(stream), 0, flags, error);
 }
 
 /**

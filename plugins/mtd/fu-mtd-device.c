@@ -41,9 +41,9 @@ fu_mtd_device_metadata_load(FuMtdDevice *self, GError **error)
 	const gchar *fn;
 	g_autoptr(FuFirmware) firmware_child = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GFile) file = NULL;
-	g_autoptr(GFileInputStream) input = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(GInputStream) stream_partial = NULL;
 	g_autoptr(GPtrArray) imgs = NULL;
 
 	/* read contents at the search offset */
@@ -55,22 +55,19 @@ fu_mtd_device_metadata_load(FuMtdDevice *self, GError **error)
 				    "Not supported as no device file");
 		return FALSE;
 	}
-	file = g_file_new_for_path(fn);
-	input = g_file_read(file, NULL, error);
-	if (input == NULL) {
+	stream = fu_input_stream_from_path(fn, error);
+	if (stream == NULL) {
 		g_prefix_error(error, "failed to open device: ");
 		return FALSE;
 	}
-	blob = fu_bytes_get_contents_stream_full(G_INPUT_STREAM(input),
-						 self->metadata_offset,
-						 self->metadata_size,
-						 error);
-	if (blob == NULL) {
-		g_prefix_error(error, "failed to read from stream: ");
-		return FALSE;
-	}
+	stream_partial =
+	    fu_partial_input_stream_new(stream, self->metadata_offset, self->metadata_size);
 	firmware = g_object_new(firmware_gtype, NULL);
-	if (!fu_firmware_parse(firmware, blob, FWUPD_INSTALL_FLAG_NONE, error)) {
+	if (!fu_firmware_parse_stream(firmware,
+				      stream_partial,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      error)) {
 		g_prefix_error(error, "failed to parse image: ");
 		return FALSE;
 	}
