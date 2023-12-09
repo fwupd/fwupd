@@ -28,17 +28,19 @@
  * yyy offset: 0, sz: 4
  */
 
-struct _FuCompositeInputStream {
-	GInputStream parent_instance;
-	GPtrArray *items; /* of FuCompositeInputStreamItem */
-	goffset pos;
-	gsize total_size;
-};
-
 typedef struct {
 	FuPartialInputStream *partial_stream;
 	gsize global_offset;
 } FuCompositeInputStreamItem;
+
+struct _FuCompositeInputStream {
+	GInputStream parent_instance;
+	GPtrArray *items; /* of FuCompositeInputStreamItem */
+	FuCompositeInputStreamItem *last_item; /* no-ref */
+	goffset pos;
+	goffset pos_offset;
+	gsize total_size;
+};
 
 static void
 fu_composite_input_stream_seekable_iface_init(GSeekableIface *iface);
@@ -159,45 +161,19 @@ fu_composite_input_stream_seek(GSeekable *seekable,
 			       GError **error)
 {
 	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(seekable);
-	FuCompositeInputStreamItem *item;
 
 	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* reset */
+	self->pos_offset = 0;
+	self->last_item = NULL;
+
 	if (type == G_SEEK_CUR) {
-		item = fu_composite_input_stream_get_item_for_offset(self,
-								     (gsize)self->pos + offset,
-								     error);
-		if (item == NULL)
-			return FALSE;
-		if (!g_seekable_seek(G_SEEKABLE(item->partial_stream),
-				     offset - item->global_offset,
-				     G_SEEK_SET,
-				     cancellable,
-				     error))
-			return FALSE;
 		self->pos += offset;
 	} else if (type == G_SEEK_END) {
-		if (self->items->len == 0)
-			return TRUE;
-		item = g_ptr_array_index(self->items, self->items->len - 1);
-		if (!g_seekable_seek(G_SEEKABLE(item->partial_stream),
-				     offset,
-				     G_SEEK_END,
-				     cancellable,
-				     error))
-			return FALSE;
-		self->pos = self->total_size - offset;
+		self->pos = self->total_size + offset;
 	} else {
-		item = fu_composite_input_stream_get_item_for_offset(self, (gsize)offset, error);
-		if (item == NULL)
-			return FALSE;
-		if (!g_seekable_seek(G_SEEKABLE(item->partial_stream),
-				     offset - item->global_offset,
-				     G_SEEK_SET,
-				     cancellable,
-				     error))
-			return FALSE;
 		self->pos = offset;
 	}
 	return TRUE;
@@ -256,18 +232,36 @@ fu_composite_input_stream_read(GInputStream *stream,
 {
 	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(stream);
 	FuCompositeInputStreamItem *item;
+	gssize rc;
 
 	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), -1);
 	g_return_val_if_fail(error == NULL || *error == NULL, -1);
 
-	item = fu_composite_input_stream_get_item_for_offset(self, self->pos, error);
+	item =
+	    fu_composite_input_stream_get_item_for_offset(self, self->pos + self->pos_offset, NULL);
 	if (item == NULL)
-		return -1;
-	return g_input_stream_read(G_INPUT_STREAM(item->partial_stream),
-				   buffer,
-				   count,
-				   cancellable,
-				   error);
+		return 0;
+	if (item != self->last_item) {
+		if (!g_seekable_seek(G_SEEKABLE(item->partial_stream),
+				     self->pos + self->pos_offset - item->global_offset,
+				     G_SEEK_SET,
+				     cancellable,
+				     error))
+			return -1;
+		self->last_item = item;
+	}
+	rc = g_input_stream_read(G_INPUT_STREAM(item->partial_stream),
+				 buffer,
+				 count,
+				 cancellable,
+				 error);
+	if (rc < 0)
+		return rc;
+
+	/* we have to keep track of this in case we have to switch the FuCompositeInputStreamItem
+	 * without an explicit seek */
+	self->pos_offset += rc;
+	return rc;
 }
 
 static void

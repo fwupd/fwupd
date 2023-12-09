@@ -4337,12 +4337,100 @@ fu_partial_input_stream_func(void)
 	gboolean ret;
 	gssize rc;
 	guint8 buf[5] = {0x0};
+	goffset pos;
+	g_autofree gchar *fn = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) blob = g_bytes_new_static("12345678", 8);
 	/*                                             \--/   */
 	g_autoptr(GBytes) blob2 = NULL;
+	g_autoptr(GFile) file = NULL;
 	g_autoptr(GInputStream) base_stream = g_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) stream_file = NULL;
+	g_autoptr(GInputStream) stream_complete = fu_partial_input_stream_new(base_stream, 0, 8);
 	g_autoptr(GInputStream) stream = fu_partial_input_stream_new(base_stream, 2, 4);
+
+	/* check the behavior of GFileInputStream */
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "firmware.bin", NULL);
+	g_assert_nonnull(fn);
+	file = g_file_new_for_path(fn);
+	stream_file = G_INPUT_STREAM(g_file_read(file, NULL, &error));
+	g_assert_no_error(error);
+	g_assert_nonnull(stream_file);
+	ret = g_seekable_seek(G_SEEKABLE(stream_file), 0x0, G_SEEK_SET, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream_file)), ==, 0x0);
+	ret = g_seekable_seek(G_SEEKABLE(stream_file), 0x0, G_SEEK_END, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream_file)), ==, 136);
+	rc = g_input_stream_read(stream_file, buf, 2, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 0);
+	pos = g_seekable_tell(G_SEEKABLE(stream_file));
+	g_assert_cmpint(pos, ==, 136);
+	ret = g_seekable_seek(G_SEEKABLE(stream_file), pos, G_SEEK_SET, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	rc = g_input_stream_read(stream_file, buf, 2, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 0);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream_file)), ==, 136);
+	/* we CAN seek past the end... */
+	ret = g_seekable_seek(G_SEEKABLE(stream_file), pos + 10000, G_SEEK_SET, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream_file)), ==, 10136);
+	/* reads all return zero */
+	rc = g_input_stream_read(stream_file, buf, 2, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 0);
+	/* END offset is negative */
+	ret = g_seekable_seek(G_SEEKABLE(stream_file), -0x1, G_SEEK_END, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	rc = g_input_stream_read(stream_file, buf, 1, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 1);
+	g_assert_cmpint(buf[0], ==, 0xF0);
+
+	/* check the behavior of GMemoryInputStream */
+	g_assert_no_error(error);
+	g_assert_nonnull(stream_file);
+	ret = g_seekable_seek(G_SEEKABLE(base_stream), 0x0, G_SEEK_SET, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(base_stream)), ==, 0x0);
+	ret = g_seekable_seek(G_SEEKABLE(base_stream), 0x0, G_SEEK_END, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(base_stream)), ==, 8);
+	rc = g_input_stream_read(base_stream, buf, 2, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 0);
+	pos = g_seekable_tell(G_SEEKABLE(base_stream));
+	g_assert_cmpint(pos, ==, 8);
+	ret = g_seekable_seek(G_SEEKABLE(base_stream), pos, G_SEEK_SET, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	rc = g_input_stream_read(base_stream, buf, 2, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 0);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(base_stream)), ==, 8);
+	/* we CANNOT seek past the end... */
+	ret = g_seekable_seek(G_SEEKABLE(base_stream), pos + 10000, G_SEEK_SET, NULL, &error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT);
+	g_assert_false(ret);
+	g_clear_error(&error);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(base_stream)), ==, 8);
+	/* END offset is negative */
+	ret = g_seekable_seek(G_SEEKABLE(base_stream), -1, G_SEEK_END, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	rc = g_input_stream_read(base_stream, buf, 1, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 1);
+	g_assert_cmpint(buf[0], ==, '8');
 
 	/* seek to non-start */
 	ret = g_seekable_seek(G_SEEKABLE(stream), 0x2, G_SEEK_SET, NULL, &error);
@@ -4386,6 +4474,16 @@ fu_partial_input_stream_func(void)
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
 
+	/* seek to offset to end of partial stream */
+	ret = g_seekable_seek(G_SEEKABLE(stream), -1, G_SEEK_END, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream)), ==, 0x3);
+	rc = g_input_stream_read(stream, buf, sizeof(buf), NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 1);
+	g_assert_cmpint(buf[0], ==, '6');
+
 	/* attempt an overread of the base stream */
 	ret = g_seekable_seek(G_SEEKABLE(stream), 0x2, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
@@ -4393,6 +4491,20 @@ fu_partial_input_stream_func(void)
 	rc = g_input_stream_read(stream, buf, sizeof(buf), NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 2);
+
+	/* attempt to seek way past the base stream */
+	ret = g_seekable_seek(G_SEEKABLE(stream), 0x1000, G_SEEK_SET, NULL, &error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* read right up against the end of the base stream */
+	ret = g_seekable_seek(G_SEEKABLE(stream_complete), 0x8, G_SEEK_SET, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	rc = g_input_stream_read(stream_complete, buf, sizeof(buf), NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 0);
 }
 
 static void
@@ -4406,6 +4518,7 @@ fu_composite_input_stream_func(void)
 	g_autoptr(GBytes) blob1 = g_bytes_new_static("ab", 2);
 	g_autoptr(GBytes) blob2 = g_bytes_new_static("cde", 3);
 	g_autoptr(GBytes) blob3 = g_bytes_new_static("xxxfgyyy", 8);
+	g_autoptr(GBytes) blob4 = NULL;
 	g_autoptr(GInputStream) composite_stream = fu_composite_input_stream_new();
 	g_autoptr(GInputStream) stream3 = g_memory_input_stream_new_from_bytes(blob3);
 	g_autoptr(GInputStream) stream4 = NULL;
@@ -4486,6 +4599,41 @@ fu_composite_input_stream_func(void)
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 1);
 	g_assert_cmpint(buf[0], ==, 'b');
+
+	/* seek to end of composite stream */
+	ret = g_seekable_seek(G_SEEKABLE(composite_stream), 0x0, G_SEEK_END, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(composite_stream)), ==, 0x7);
+	rc = g_input_stream_read(composite_stream, buf, sizeof(buf), NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 0);
+
+	/* seek to the same place directly */
+	ret = g_seekable_seek(G_SEEKABLE(composite_stream), 0x7, G_SEEK_SET, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(composite_stream)), ==, 0x7);
+	rc = g_input_stream_read(composite_stream, buf, sizeof(buf), NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 0);
+
+	/* seek to offset to end of composite stream */
+	ret = g_seekable_seek(G_SEEKABLE(composite_stream), -1, G_SEEK_END, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(composite_stream)), ==, 0x6);
+	rc = g_input_stream_read(composite_stream, buf, sizeof(buf), NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 1);
+	g_assert_cmpint(buf[0], ==, 'g');
+
+	/* dump entire composite stream */
+	blob4 = fu_bytes_get_contents_stream_full(composite_stream, 0x0, G_MAXUINT32, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob4);
+	g_assert_cmpint(g_bytes_get_size(blob4), ==, 7);
+	g_assert_cmpint(memcmp(g_bytes_get_data(blob4, NULL), "abcdefg", 7), ==, 0);
 }
 
 static void
