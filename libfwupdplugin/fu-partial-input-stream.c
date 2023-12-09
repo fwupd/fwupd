@@ -32,7 +32,6 @@ struct _FuPartialInputStream {
 	GInputStream *base_stream;
 	gsize offset;
 	gsize size;
-	gboolean eof;
 };
 
 static void
@@ -70,18 +69,17 @@ fu_partial_input_stream_seek(GSeekable *seekable,
 	g_return_val_if_fail(FU_IS_PARTIAL_INPUT_STREAM(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	self->eof = FALSE;
 	if (type == G_SEEK_CUR) {
 		goffset pos = g_seekable_tell(G_SEEKABLE(self->base_stream));
 		return g_seekable_seek(G_SEEKABLE(self->base_stream),
-				       self->offset + pos,
+				       self->offset + pos + offset,
 				       G_SEEK_SET,
 				       cancellable,
 				       error);
 	}
 	if (type == G_SEEK_END) {
 		return g_seekable_seek(G_SEEKABLE(self->base_stream),
-				       self->offset + self->size - offset,
+				       self->offset + self->size + offset,
 				       G_SEEK_SET,
 				       cancellable,
 				       error);
@@ -187,19 +185,10 @@ fu_partial_input_stream_read(GInputStream *stream,
 			     GError **error)
 {
 	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(stream);
-	gssize rc;
 	g_return_val_if_fail(FU_IS_PARTIAL_INPUT_STREAM(self), -1);
 	g_return_val_if_fail(error == NULL || *error == NULL, -1);
-
-	if (self->eof)
-		return 0;
 	count = MIN(count, self->size - g_seekable_tell(G_SEEKABLE(stream)));
-	rc = g_input_stream_read(self->base_stream, buffer, count, cancellable, error);
-	if (rc < 0)
-		return rc;
-	if (count - rc == 0)
-		self->eof = TRUE;
-	return rc;
+	return g_input_stream_read(self->base_stream, buffer, count, cancellable, error);
 }
 
 static void
