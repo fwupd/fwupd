@@ -595,8 +595,16 @@ fu_firmware_get_bytes(FuFirmware *self, GError **error)
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
 	if (priv->bytes != NULL)
 		return g_bytes_ref(priv->bytes);
-	if (priv->stream != NULL)
-		return fu_bytes_get_contents_stream_full(priv->stream, 0x0, G_MAXUINT32, error);
+	if (priv->stream != NULL) {
+		if (priv->size == 0) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_INVALID_DATA,
+					    "stream size unknown");
+			return NULL;
+		}
+		return fu_bytes_get_contents_stream_full(priv->stream, 0x0, priv->size, error);
+	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no payload set");
 	return NULL;
 }
