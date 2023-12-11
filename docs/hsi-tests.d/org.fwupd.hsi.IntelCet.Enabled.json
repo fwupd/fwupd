@@ -1,8 +1,8 @@
 {
   "id": "org.fwupd.hsi.IntelCet.Enabled",
-  "name": "Intel CET: Available",
+  "name": "CET: Available",
   "description": [
-    "Control enforcement technology is available on new Intel platforms and prevents exploits from hijacking the control-flow transfer instructions for both forward-edge (indirect call/jmp) and back-edge transfer (ret)."
+    "Control enforcement technology prevents exploits from hijacking the control-flow transfer instructions for both forward-edge (indirect call/jmp) and back-edge transfer (ret)."
   ],
   "failure-impact": [
     "A local or physical attacker with an existing unrelated vulnerability can use a reliable and well-known method to run arbitrary code."
@@ -17,8 +17,5 @@
   "references": {
     "https://software.intel.com/sites/default/files/managed/4d/2a/control-flow-enforcement-technology-preview.pdf": "Intel CET Technology Preview"
   },
-  "requires": [
-    "CPUID\\VID_GenuineIntel"
-  ],
   "fwupd-version": "1.5.0"
 }
