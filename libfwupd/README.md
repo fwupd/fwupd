@@ -17,6 +17,7 @@
 * Remove the deprecated method `fwupd_remote_get_approval_required()`
 * Remove the deprecated method `fwupd_remote_get_automatic_reports()`
 * Remove the deprecated method `fwupd_remote_get_automatic_security_reports()`
+* Rename CET and SMAP security attributes `FWUPD_SECURITY_ATTR_ID_INTEL_SMAP` and `FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED` and `FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE`
 
 ## Migration from Version 0.9.x
 
