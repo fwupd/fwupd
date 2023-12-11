@@ -1966,11 +1966,11 @@ fu_util_download_metadata_enable_lvfs(FuUtilPrivate *priv, GError **error)
 		return FALSE;
 
 	/* refresh the newly-enabled remote */
-	return fwupd_client_refresh_remote2(priv->client,
-					    remote,
-					    priv->download_flags,
-					    priv->cancellable,
-					    error);
+	return fwupd_client_refresh_remote(priv->client,
+					   remote,
+					   priv->download_flags,
+					   priv->cancellable,
+					   error);
 }
 
 static gboolean
@@ -2041,11 +2041,11 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 				 "%s %s",
 				 _("Updating"),
 				 fwupd_remote_get_id(remote));
-		if (!fwupd_client_refresh_remote2(priv->client,
-						  remote,
-						  priv->download_flags,
-						  priv->cancellable,
-						  error))
+		if (!fwupd_client_refresh_remote(priv->client,
+						 remote,
+						 priv->download_flags,
+						 priv->cancellable,
+						 error))
 			return FALSE;
 		refresh_cnt++;
 	}
@@ -2800,13 +2800,13 @@ fu_util_update_device_with_release(FuUtilPrivate *priv,
 		if (!fu_util_prompt_warning_bkc(priv, dev, rel, error))
 			return FALSE;
 	}
-	return fwupd_client_install_release2(priv->client,
-					     dev,
-					     rel,
-					     priv->flags,
-					     priv->download_flags,
-					     priv->cancellable,
-					     error);
+	return fwupd_client_install_release(priv->client,
+					    dev,
+					    rel,
+					    priv->flags,
+					    priv->download_flags,
+					    priv->cancellable,
+					    error);
 }
 
 static gboolean
@@ -3052,11 +3052,11 @@ fu_util_remote_enable(FuUtilPrivate *priv, gchar **values, GError **error)
 			return TRUE;
 		}
 	}
-	if (!fwupd_client_refresh_remote2(priv->client,
-					  remote,
-					  priv->download_flags,
-					  priv->cancellable,
-					  error))
+	if (!fwupd_client_refresh_remote(priv->client,
+					 remote,
+					 priv->download_flags,
+					 priv->cancellable,
+					 error))
 		return FALSE;
 
 	/* TRANSLATORS: success message */

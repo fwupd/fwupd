@@ -185,12 +185,6 @@ const gchar *
 fwupd_device_get_plugin(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
 fwupd_device_set_plugin(FwupdDevice *self, const gchar *plugin) G_GNUC_NON_NULL(1);
-G_DEPRECATED_FOR(fwupd_device_get_protocols)
-const gchar *
-fwupd_device_get_protocol(FwupdDevice *self) G_GNUC_NON_NULL(1);
-G_DEPRECATED_FOR(fwupd_device_add_protocol)
-void
-fwupd_device_set_protocol(FwupdDevice *self, const gchar *protocol) G_GNUC_NON_NULL(1);
 void
 fwupd_device_add_protocol(FwupdDevice *self, const gchar *protocol) G_GNUC_NON_NULL(1, 2);
 gboolean
@@ -202,12 +196,6 @@ const gchar *
 fwupd_device_get_vendor(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
 fwupd_device_set_vendor(FwupdDevice *self, const gchar *vendor) G_GNUC_NON_NULL(1);
-G_DEPRECATED_FOR(fwupd_device_get_vendor_ids)
-const gchar *
-fwupd_device_get_vendor_id(FwupdDevice *self) G_GNUC_NON_NULL(1);
-G_DEPRECATED_FOR(fwupd_device_add_vendor_id)
-void
-fwupd_device_set_vendor_id(FwupdDevice *self, const gchar *vendor_id) G_GNUC_NON_NULL(1);
 void
 fwupd_device_add_vendor_id(FwupdDevice *self, const gchar *vendor_id) G_GNUC_NON_NULL(1, 2);
 gboolean

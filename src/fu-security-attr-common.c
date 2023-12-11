@@ -62,17 +62,17 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		 * OTP = one time programmable */
 		return g_strdup(_("Intel BootGuard OTP fuse"));
 	}
-	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED) == 0) {
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_CET_ENABLED) == 0) {
 		/* TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 		 * enabled means supported by the processor */
 		return g_strdup(_("CET Platform"));
 	}
-	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE) == 0) {
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_CET_ACTIVE) == 0) {
 		/* TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 		 * Utilized by OS means the distribution enabled it*/
 		return g_strdup(_("CET OS Support"));
 	}
-	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_SMAP) == 0) {
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SMAP) == 0) {
 		/* TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention */
 		return g_strdup(_("SMAP"));
 	}
@@ -274,12 +274,12 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: BootGuard is a trademark from Intel */
 		return _("Intel BootGuard Fuse");
 	}
-	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED) == 0 ||
-	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE) == 0) {
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_CET_ENABLED) == 0 ||
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_CET_ACTIVE) == 0) {
 		/* TRANSLATORS: Title: CET = Control-flow Enforcement Technology */
 		return _("Control-flow Enforcement Technology");
 	}
-	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_SMAP) == 0) {
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SMAP) == 0) {
 		/* TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention */
 		return _("Supervisor Mode Access Prevention");
 	}
@@ -448,13 +448,13 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		    "Intel BootGuard Error Policy ensures the device does not continue to start if "
 		    "its device software has been tampered with.");
 	}
-	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED) == 0 ||
-	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE) == 0) {
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_CET_ENABLED) == 0 ||
+	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_CET_ACTIVE) == 0) {
 		/* TRANSLATORS: longer description */
 		return _("Control-Flow Enforcement Technology detects and prevents certain "
 			 "methods for running malicious software on the device.");
 	}
-	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_SMAP) == 0) {
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SMAP) == 0) {
 		/* TRANSLATORS: longer description */
 		return _("Supervisor Mode Access Prevention ensures critical parts of "
 			 "device memory are not accessed by less secure programs.");

@@ -153,16 +153,10 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 		return "trusted";
 	if (device_flag == FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED)
 		return "another-write-required";
-	if (device_flag == FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS)
-		return "no-auto-instance-ids";
 	if (device_flag == FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)
 		return "needs-activation";
-	if (device_flag == FWUPD_DEVICE_FLAG_ENSURE_SEMVER)
-		return "ensure-semver";
 	if (device_flag == FWUPD_DEVICE_FLAG_HISTORICAL)
 		return "historical";
-	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_SUPPORTED)
-		return "only-supported";
 	if (device_flag == FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)
 		return "will-disappear";
 	if (device_flag == FWUPD_DEVICE_FLAG_CAN_VERIFY)
@@ -179,18 +173,8 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 		return "version-check-required";
 	if (device_flag == FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)
 		return "install-all-releases";
-	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_NAME)
-		return "md-set-name";
-	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY)
-		return "md-set-name-category";
-	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_VERFMT)
-		return "md-set-verfmt";
-	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_ICON)
-		return "md-set-icon";
 	if (device_flag == FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS)
 		return "add-counterpart-guids";
-	if (device_flag == FWUPD_DEVICE_FLAG_NO_GUID_MATCHING)
-		return "no-guid-matching";
 	if (device_flag == FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)
 		return "updatable-hidden";
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART)
@@ -278,16 +262,10 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_TRUSTED;
 	if (g_strcmp0(device_flag, "another-write-required") == 0)
 		return FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED;
-	if (g_strcmp0(device_flag, "no-auto-instance-ids") == 0)
-		return FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS;
 	if (g_strcmp0(device_flag, "needs-activation") == 0)
 		return FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION;
-	if (g_strcmp0(device_flag, "ensure-semver") == 0)
-		return FWUPD_DEVICE_FLAG_ENSURE_SEMVER;
 	if (g_strcmp0(device_flag, "historical") == 0)
 		return FWUPD_DEVICE_FLAG_HISTORICAL;
-	if (g_strcmp0(device_flag, "only-supported") == 0)
-		return FWUPD_DEVICE_FLAG_ONLY_SUPPORTED;
 	if (g_strcmp0(device_flag, "will-disappear") == 0)
 		return FWUPD_DEVICE_FLAG_WILL_DISAPPEAR;
 	if (g_strcmp0(device_flag, "can-verify") == 0)
@@ -304,18 +282,8 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED;
 	if (g_strcmp0(device_flag, "install-all-releases") == 0)
 		return FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES;
-	if (g_strcmp0(device_flag, "md-set-name") == 0)
-		return FWUPD_DEVICE_FLAG_MD_SET_NAME;
-	if (g_strcmp0(device_flag, "md-set-name-category") == 0)
-		return FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY;
-	if (g_strcmp0(device_flag, "md-set-verfmt") == 0)
-		return FWUPD_DEVICE_FLAG_MD_SET_VERFMT;
-	if (g_strcmp0(device_flag, "md-set-icon") == 0)
-		return FWUPD_DEVICE_FLAG_MD_SET_ICON;
 	if (g_strcmp0(device_flag, "add-counterpart-guids") == 0)
 		return FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS;
-	if (g_strcmp0(device_flag, "no-guid-matching") == 0)
-		return FWUPD_DEVICE_FLAG_NO_GUID_MATCHING;
 	if (g_strcmp0(device_flag, "updatable-hidden") == 0)
 		return FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN;
 	if (g_strcmp0(device_flag, "skips-restart") == 0)
@@ -597,50 +565,6 @@ fwupd_update_state_from_string(const gchar *update_state)
 	if (g_strcmp0(update_state, "needs-reboot") == 0)
 		return FWUPD_UPDATE_STATE_NEEDS_REBOOT;
 	return FWUPD_UPDATE_STATE_UNKNOWN;
-}
-
-/**
- * fwupd_trust_flag_to_string:
- * @trust_flag: the trust flags, e.g. %FWUPD_TRUST_FLAG_PAYLOAD
- *
- * Converts an enumerated trust flag to a string.
- *
- * Returns: identifier string
- *
- * Since: 0.7.0
- **/
-const gchar *
-fwupd_trust_flag_to_string(FwupdTrustFlags trust_flag)
-{
-	if (trust_flag == FWUPD_TRUST_FLAG_NONE)
-		return "none";
-	if (trust_flag == FWUPD_TRUST_FLAG_PAYLOAD)
-		return "payload";
-	if (trust_flag == FWUPD_TRUST_FLAG_METADATA)
-		return "metadata";
-	return NULL;
-}
-
-/**
- * fwupd_trust_flag_from_string:
- * @trust_flag: (nullable): a string, e.g. `payload`
- *
- * Converts a string to an enumerated trust flag.
- *
- * Returns: enumerated value
- *
- * Since: 0.7.0
- **/
-FwupdTrustFlags
-fwupd_trust_flag_from_string(const gchar *trust_flag)
-{
-	if (g_strcmp0(trust_flag, "none") == 0)
-		return FWUPD_TRUST_FLAG_NONE;
-	if (g_strcmp0(trust_flag, "payload") == 0)
-		return FWUPD_TRUST_FLAG_PAYLOAD;
-	if (g_strcmp0(trust_flag, "metadata") == 0)
-		return FWUPD_TRUST_FLAG_METADATA;
-	return FWUPD_TRUST_FLAG_LAST;
 }
 
 /**

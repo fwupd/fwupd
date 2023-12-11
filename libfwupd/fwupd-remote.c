@@ -366,18 +366,16 @@ fwupd_remote_set_agreement(FwupdRemote *self, const gchar *agreement)
 }
 
 /**
- * fwupd_remote_set_checksum:
+ * fwupd_remote_set_checksum_sig:
  * @self: a #FwupdRemote
  * @checksum_sig: (nullable): checksum string
  *
  * Sets the remote signature checksum, typically only useful in the self tests.
  *
- * NOTE: This should have been called fwupd_remote_set_checksum_sig() but alas, ABI.
- *
- * Since: 1.8.2
+ * Since: 2.0.0
  **/
 void
-fwupd_remote_set_checksum(FwupdRemote *self, const gchar *checksum_sig)
+fwupd_remote_set_checksum_sig(FwupdRemote *self, const gchar *checksum_sig)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 
@@ -392,7 +390,7 @@ fwupd_remote_set_checksum(FwupdRemote *self, const gchar *checksum_sig)
 }
 
 static void
-fwupd_remote_set_checksum_metadata(FwupdRemote *self, const gchar *checksum)
+fwupd_remote_set_checksum_sig_metadata(FwupdRemote *self, const gchar *checksum)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 
@@ -845,9 +843,9 @@ fwupd_remote_setup(FwupdRemote *self, GError **error)
 			return FALSE;
 		}
 		g_checksum_update(checksum_sig, (guchar *)buf, (gssize)sz);
-		fwupd_remote_set_checksum(self, g_checksum_get_string(checksum_sig));
+		fwupd_remote_set_checksum_sig(self, g_checksum_get_string(checksum_sig));
 	} else {
-		fwupd_remote_set_checksum(self, NULL);
+		fwupd_remote_set_checksum_sig(self, NULL);
 	}
 
 	/* success */
@@ -1620,7 +1618,7 @@ fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError 
 	if (jcat_blobs->len == 1) {
 		JcatBlob *blob = g_ptr_array_index(jcat_blobs, 0);
 		g_autofree gchar *hash = jcat_blob_get_data_as_string(blob);
-		fwupd_remote_set_checksum_metadata(self, hash);
+		fwupd_remote_set_checksum_sig_metadata(self, hash);
 	}
 
 	/* success */
@@ -1734,23 +1732,6 @@ fwupd_remote_get_firmware_base_uri(FwupdRemote *self)
 }
 
 /**
- * fwupd_remote_get_enabled:
- * @self: a #FwupdRemote
- *
- * Gets if the remote is enabled and should be used.
- *
- * Returns: a #TRUE if the remote is enabled
- *
- * Since: 0.9.3
- **/
-gboolean
-fwupd_remote_get_enabled(FwupdRemote *self)
-{
-	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
-	return fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_ENABLED);
-}
-
-/**
  * fwupd_remote_set_enabled:
  * @self: a #FwupdRemote
  * @enabled: boolean
@@ -1767,40 +1748,6 @@ fwupd_remote_set_enabled(FwupdRemote *self, gboolean enabled)
 		fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_ENABLED);
 	else
 		fwupd_remote_remove_flag(self, FWUPD_REMOTE_FLAG_ENABLED);
-}
-
-/**
- * fwupd_remote_get_automatic_reports:
- * @self: a #FwupdRemote
- *
- * Gets if reports should be automatically uploaded to this remote
- *
- * Returns: a #TRUE if the remote should have reports uploaded automatically
- *
- * Since: 1.3.3
- **/
-gboolean
-fwupd_remote_get_automatic_reports(FwupdRemote *self)
-{
-	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
-	return fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS);
-}
-
-/**
- * fwupd_remote_get_automatic_security_reports:
- * @self: a #FwupdRemote
- *
- * Gets if security reports should be automatically uploaded to this remote
- *
- * Returns: a #TRUE if the remote should have reports uploaded automatically
- *
- * Since: 1.5.0
- **/
-gboolean
-fwupd_remote_get_automatic_security_reports(FwupdRemote *self)
-{
-	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
-	return fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS);
 }
 
 /**
@@ -1824,24 +1771,6 @@ fwupd_remote_needs_refresh(FwupdRemote *self)
 	if (priv->kind != FWUPD_REMOTE_KIND_DOWNLOAD)
 		return FALSE;
 	return fwupd_remote_get_age(self) > priv->refresh_interval;
-}
-
-/**
- * fwupd_remote_get_approval_required:
- * @self: a #FwupdRemote
- *
- * Gets if firmware from the remote should be checked against the list
- * of a approved checksums.
- *
- * Returns: a #TRUE if the remote is restricted
- *
- * Since: 1.2.6
- **/
-gboolean
-fwupd_remote_get_approval_required(FwupdRemote *self)
-{
-	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
-	return fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED);
 }
 
 /**
@@ -1905,7 +1834,7 @@ fwupd_remote_set_from_variant_iter(FwupdRemote *self, GVariantIter *iter)
 		} else if (g_strcmp0(key, "Agreement") == 0) {
 			fwupd_remote_set_agreement(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
-			fwupd_remote_set_checksum(self, g_variant_get_string(value, NULL));
+			fwupd_remote_set_checksum_sig(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, "Enabled") == 0) {
 			if (g_variant_get_boolean(value))
 				fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_ENABLED);

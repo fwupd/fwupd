@@ -110,18 +110,6 @@ const gchar *
 fwupd_remote_get_metadata_uri(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_metadata_uri_sig(FwupdRemote *self) G_GNUC_NON_NULL(1);
-G_DEPRECATED_FOR(fwupd_remote_has_flag)
-gboolean
-fwupd_remote_get_enabled(FwupdRemote *self) G_GNUC_NON_NULL(1);
-G_DEPRECATED_FOR(fwupd_remote_has_flag)
-gboolean
-fwupd_remote_get_approval_required(FwupdRemote *self) G_GNUC_NON_NULL(1);
-G_DEPRECATED_FOR(fwupd_remote_has_flag)
-gboolean
-fwupd_remote_get_automatic_reports(FwupdRemote *self) G_GNUC_NON_NULL(1);
-G_DEPRECATED_FOR(fwupd_remote_has_flag)
-gboolean
-fwupd_remote_get_automatic_security_reports(FwupdRemote *self) G_GNUC_NON_NULL(1);
 guint64
 fwupd_remote_get_refresh_interval(FwupdRemote *self) G_GNUC_NON_NULL(1);
 

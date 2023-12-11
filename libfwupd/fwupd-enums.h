@@ -50,22 +50,6 @@ typedef enum {
 } FwupdStatus;
 
 /**
- * FwupdTrustFlags:
- * @FWUPD_TRUST_FLAG_NONE:			No trust
- * @FWUPD_TRUST_FLAG_PAYLOAD:			The firmware is trusted
- * @FWUPD_TRUST_FLAG_METADATA:			The metadata is trusted
- *
- * The flags to show the level of trust.
- **/
-typedef enum {
-	FWUPD_TRUST_FLAG_NONE = 0,	    /* Since: 0.1.2 */
-	FWUPD_TRUST_FLAG_PAYLOAD = 1 << 0,  /* Since: 0.1.2 */
-	FWUPD_TRUST_FLAG_METADATA = 1 << 1, /* Since: 0.1.2 */
-	/*< private >*/
-	FWUPD_TRUST_FLAG_LAST
-} FwupdTrustFlags;
-
-/**
  * FwupdFeatureFlags:
  * @FWUPD_FEATURE_FLAG_NONE:			No trust
  * @FWUPD_FEATURE_FLAG_CAN_REPORT:		Can upload a report of the update back to the server
@@ -261,15 +245,6 @@ typedef enum {
  */
 #define FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED (1ull << 18)
 /**
- * FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS:
- *
- * Deprecated, no not use
- *
- * Since: 1.2.5
- * Deprecated 1.5.5
- */
-#define FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS (1ull << 19)
-/**
  * FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION:
  *
  * The device update needs to be separately activated.
@@ -280,15 +255,6 @@ typedef enum {
  */
 #define FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION (1ull << 20)
 /**
- * FWUPD_DEVICE_FLAG_ENSURE_SEMVER:
- *
- * Deprecated, no not use
- *
- * Since: 1.2.9
- * Deprecate: 1.5.5
- */
-#define FWUPD_DEVICE_FLAG_ENSURE_SEMVER (1ull << 21)
-/**
  * FWUPD_DEVICE_FLAG_HISTORICAL:
  *
  * The device is used for historical data only.
@@ -296,15 +262,6 @@ typedef enum {
  * Since: 1.3.2
  */
 #define FWUPD_DEVICE_FLAG_HISTORICAL (1ull << 22)
-/**
- * FWUPD_DEVICE_FLAG_ONLY_SUPPORTED:
- *
- * Deprecated, no not use
- *
- * Since: 1.3.3
- * Deprecated 1.5.5
- */
-#define FWUPD_DEVICE_FLAG_ONLY_SUPPORTED (1ull << 23)
 /**
  * FWUPD_DEVICE_FLAG_WILL_DISAPPEAR:
  *
@@ -374,33 +331,6 @@ typedef enum {
  */
 #define FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES (1ull << 31)
 /**
- * FWUPD_DEVICE_FLAG_MD_SET_NAME:
- *
- * Deprecated, no not use
- *
- * Since: 1.4.0
- * Deprecated 1.5.5
- */
-#define FWUPD_DEVICE_FLAG_MD_SET_NAME (1ull << 32)
-/**
- * FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY:
- *
- * Deprecated, no not use
- *
- * Since: 1.4.0
- * Deprecated 1.5.5
- */
-#define FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY (1ull << 33)
-/**
- * FWUPD_DEVICE_FLAG_MD_SET_VERFMT:
- *
- * Deprecated, no not use
- *
- * Since: 1.4.0
- * Deprecated 1.5.5
- */
-#define FWUPD_DEVICE_FLAG_MD_SET_VERFMT (1ull << 34)
-/**
  * FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS:
  *
  * The device will add counterpart GUIDs from an alternate mode like bootloader.
@@ -409,15 +339,6 @@ typedef enum {
  * Since: 1.4.0
  */
 #define FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS (1ull << 35)
-/**
- * FWUPD_DEVICE_FLAG_NO_GUID_MATCHING:
- *
- * Deprecated, no not use
- *
- * Since: 1.4.1
- * Deprecated 1.5.8
- */
-#define FWUPD_DEVICE_FLAG_NO_GUID_MATCHING (1ull << 36)
 /**
  * FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN:
  *
@@ -451,15 +372,6 @@ typedef enum {
  * Since: 1.5.0
  */
 #define FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL (1ull << 40)
-/**
- * FWUPD_DEVICE_FLAG_MD_SET_ICON:
- *
- * Deprecated, no not use
- *
- * Since: 1.5.2
- * Deprecated 1.5.5
- */
-#define FWUPD_DEVICE_FLAG_MD_SET_ICON (1ull << 41)
 /**
  * FWUPD_DEVICE_FLAG_WILDCARD_INSTALL:
  *
@@ -1000,8 +912,6 @@ typedef guint64 FwupdPluginFlags;
  * @FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH:	Allow firmware branch switching
  * @FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM:		Ignore firmware CRCs and checksums
  * @FWUPD_INSTALL_FLAG_IGNORE_VID_PID:		Ignore firmware vendor and project checks
- * @FWUPD_INSTALL_FLAG_IGNORE_POWER:		Ignore requirement of external power source
- *(Deprecated since 1.7.0)
  * @FWUPD_INSTALL_FLAG_NO_SEARCH:		Do not use heuristics when parsing the image
  *
  * Flags to set when performing the firmware update or install.
@@ -1016,8 +926,7 @@ typedef enum {
 	FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH = 1 << 5, /* Since: 1.5.0 */
 	FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM = 1 << 6,	 /* Since: 1.5.0 */
 	FWUPD_INSTALL_FLAG_IGNORE_VID_PID = 1 << 7,	 /* Since: 1.5.0 */
-	FWUPD_INSTALL_FLAG_IGNORE_POWER = 1 << 8,	 /* Since: 1.5.0 */
-	FWUPD_INSTALL_FLAG_NO_SEARCH = 1 << 9,		 /* Since: 1.5.0 */
+	FWUPD_INSTALL_FLAG_NO_SEARCH = 1 << 8,		 /* Since: 2.0.0 */
 	/*< private >*/
 	FWUPD_INSTALL_FLAG_LAST
 } FwupdInstallFlags;
@@ -1156,10 +1065,6 @@ const gchar *
 fwupd_update_state_to_string(FwupdUpdateState update_state);
 FwupdUpdateState
 fwupd_update_state_from_string(const gchar *update_state);
-const gchar *
-fwupd_trust_flag_to_string(FwupdTrustFlags trust_flag);
-FwupdTrustFlags
-fwupd_trust_flag_from_string(const gchar *trust_flag);
 const gchar *
 fwupd_feature_flag_to_string(FwupdFeatureFlags feature_flag);
 FwupdFeatureFlags

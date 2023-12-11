@@ -21,8 +21,6 @@ LIBFWUPD_0.7.0 {
     fwupd_device_flag_to_string;
     fwupd_error_from_string;
     fwupd_error_to_string;
-    fwupd_trust_flag_from_string;
-    fwupd_trust_flag_to_string;
     fwupd_update_state_from_string;
     fwupd_update_state_to_string;
   local: *;
@@ -109,7 +107,6 @@ LIBFWUPD_0.9.3 {
     fwupd_release_get_size;
     fwupd_release_get_summary;
     fwupd_release_get_type;
-    fwupd_release_get_uri;
     fwupd_release_get_vendor;
     fwupd_release_get_version;
     fwupd_release_new;
@@ -122,11 +119,9 @@ LIBFWUPD_0.9.3 {
     fwupd_release_set_remote_id;
     fwupd_release_set_size;
     fwupd_release_set_summary;
-    fwupd_release_set_uri;
     fwupd_release_set_vendor;
     fwupd_release_set_version;
     fwupd_release_to_string;
-    fwupd_remote_get_enabled;
     fwupd_remote_get_id;
     fwupd_remote_get_type;
     fwupd_remote_load_from_filename;
@@ -138,8 +133,6 @@ LIBFWUPD_0.9.4 {
   global:
     fwupd_checksum_get_best;
     fwupd_checksum_get_by_kind;
-    fwupd_device_get_vendor_id;
-    fwupd_device_set_vendor_id;
   local: *;
 } LIBFWUPD_0.9.3;
 
@@ -193,8 +186,6 @@ LIBFWUPD_0.9.8 {
     fwupd_device_get_update_state;
     fwupd_device_set_update_error;
     fwupd_device_set_update_state;
-    fwupd_release_get_trust_flags;
-    fwupd_release_set_trust_flags;
     fwupd_remote_get_filename_source;
     fwupd_remote_get_title;
   local: *;
@@ -337,7 +328,6 @@ LIBFWUPD_1.2.6 {
     fwupd_release_remove_flag;
     fwupd_release_set_flags;
     fwupd_release_to_json;
-    fwupd_remote_get_approval_required;
   local: *;
 } LIBFWUPD_1.2.5;
 
@@ -396,7 +386,6 @@ LIBFWUPD_1.3.3 {
     fwupd_release_get_detach_image;
     fwupd_release_set_detach_caption;
     fwupd_release_set_detach_image;
-    fwupd_remote_get_automatic_reports;
   local: *;
 } LIBFWUPD_1.3.2;
 
@@ -408,9 +397,7 @@ LIBFWUPD_1.3.4 {
 
 LIBFWUPD_1.3.6 {
   global:
-    fwupd_device_get_protocol;
     fwupd_device_get_version_raw;
-    fwupd_device_set_protocol;
     fwupd_device_set_version_raw;
   local: *;
 } LIBFWUPD_1.3.4;
@@ -452,8 +439,6 @@ LIBFWUPD_1.4.5 {
     fwupd_client_download_bytes;
     fwupd_client_ensure_networking;
     fwupd_client_install_bytes;
-    fwupd_client_install_release;
-    fwupd_client_refresh_remote;
     fwupd_client_set_feature_flags;
     fwupd_client_set_user_agent;
     fwupd_client_set_user_agent_for_package;
@@ -527,7 +512,6 @@ LIBFWUPD_1.5.0 {
     fwupd_client_install_bytes_async;
     fwupd_client_install_bytes_finish;
     fwupd_client_install_finish;
-    fwupd_client_install_release_async;
     fwupd_client_install_release_finish;
     fwupd_client_modify_config_async;
     fwupd_client_modify_config_finish;
@@ -535,7 +519,6 @@ LIBFWUPD_1.5.0 {
     fwupd_client_modify_device_finish;
     fwupd_client_modify_remote_async;
     fwupd_client_modify_remote_finish;
-    fwupd_client_refresh_remote_async;
     fwupd_client_refresh_remote_finish;
     fwupd_client_self_sign_async;
     fwupd_client_self_sign_finish;
@@ -575,7 +558,6 @@ LIBFWUPD_1.5.0 {
     fwupd_plugin_to_variant;
     fwupd_release_get_branch;
     fwupd_release_set_branch;
-    fwupd_remote_get_automatic_security_reports;
     fwupd_remote_get_security_report_uri;
     fwupd_security_attr_add_flag;
     fwupd_security_attr_add_metadata;
@@ -642,8 +624,6 @@ LIBFWUPD_1.5.5 {
 
 LIBFWUPD_1.5.6 {
   global:
-    fwupd_client_install_release2;
-    fwupd_client_install_release2_async;
     fwupd_release_add_location;
     fwupd_release_get_locations;
   local: *;
@@ -785,7 +765,6 @@ LIBFWUPD_1.8.2 {
   global:
     fwupd_client_get_host_vendor;
     fwupd_device_to_json_full;
-    fwupd_remote_set_checksum;
     fwupd_remote_set_filename_cache;
     fwupd_security_attr_get_description;
     fwupd_security_attr_get_title;
@@ -964,8 +943,6 @@ LIBFWUPD_1.9.3 {
 LIBFWUPD_1.9.4 {
   global:
     fwupd_bios_setting_write_value;
-    fwupd_client_refresh_remote2;
-    fwupd_client_refresh_remote2_async;
     fwupd_remote_add_flag;
     fwupd_remote_flag_from_string;
     fwupd_remote_flag_to_string;
@@ -1011,3 +988,13 @@ LIBFWUPD_1.9.10 {
     fwupd_device_set_request_flags;
   local: *;
 } LIBFWUPD_1.9.8;
+
+LIBFWUPD_2.0.0 {
+  global:
+    fwupd_client_install_release;
+    fwupd_client_install_release_async;
+    fwupd_client_refresh_remote;
+    fwupd_client_refresh_remote_async;
+    fwupd_remote_set_checksum_sig;
+  local: *;
+} LIBFWUPD_1.9.10;
