@@ -8,6 +8,7 @@
 
 #include <fwupdplugin.h>
 
+#include <fcntl.h>
 #include <glib/gstdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,6 +36,10 @@
 #include "fu-smbios-private.h"
 #include "fu-spawn.h"
 #include "fu-usb-backend.h"
+
+#ifdef HAVE_GIO_UNIX
+#include "fu-unix-seekable-input-stream.h"
+#endif
 
 typedef struct {
 	FuPlugin *plugin;
@@ -5504,6 +5509,53 @@ fu_engine_modify_bios_settings_func(gconstpointer user_data)
 	g_clear_error(&error);
 }
 
+GFileInputStream *
+_g_local_file_input_stream_new(int fd);
+
+static void
+fu_unix_seekable_input_stream_func(void)
+{
+#ifdef HAVE_GIO_UNIX
+	gboolean ret;
+	gint fd;
+	guint8 buf[6] = {0};
+	g_autofree gchar *fn = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "metadata.xml", NULL);
+	g_assert_nonnull(fn);
+	fd = g_open(fn, O_RDONLY, 0);
+	g_assert_cmpint(fd, >=, 0);
+
+	stream = fu_unix_seekable_input_stream_new(fd, TRUE);
+	g_assert_nonnull(stream);
+
+	/* first chuck */
+	ret = g_input_stream_read(stream, buf, sizeof(buf) - 1, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr((const gchar *)buf, ==, "<?xml");
+
+	/* second chuck */
+	ret = g_input_stream_read(stream, buf, sizeof(buf) - 1, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr((const gchar *)buf, ==, " vers");
+
+	/* first chuck, again */
+	ret = g_seekable_seek(G_SEEKABLE(stream), 0, G_SEEK_SET, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = g_input_stream_read(stream, buf, sizeof(buf) - 1, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr((const gchar *)buf, ==, "<?xml");
+#else
+	g_test_skip("No gio-unix-2.0 support, skipping");
+#endif
+}
+
 int
 main(int argc, char **argv)
 {
@@ -5551,6 +5603,7 @@ main(int argc, char **argv)
 	if (g_test_slow()) {
 		g_test_add_data_func("/fwupd/console", self, fu_console_func);
 	}
+	g_test_add_func("/fwupd/unix-seekable-input-stream", fu_unix_seekable_input_stream_func);
 	g_test_add_data_func("/fwupd/backend{usb}", self, fu_backend_usb_func);
 	g_test_add_data_func("/fwupd/backend{usb-invalid}", self, fu_backend_usb_invalid_func);
 	g_test_add_data_func("/fwupd/plugin{module}", self, fu_plugin_module_func);

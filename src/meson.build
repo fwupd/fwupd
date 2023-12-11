@@ -59,6 +59,10 @@ fwupd_engine_src = [
   'fu-security-attr-common.c',
 ] + systemd_src
 
+if giounix.found()
+  fwupd_engine_src += 'fu-unix-seekable-input-stream.c'
+endif
+
 if gudev.found()
   fwupd_engine_src += 'fu-udev-backend.c'
 endif
