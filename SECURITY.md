@@ -5,16 +5,17 @@ If you have any concerns please let us know.
 
 ## Supported Versions
 
-The `main`, and `1.8.x`, branches are fully supported by the upstream authors
+The `main`, and `1.9.x`, branches are fully supported by the upstream authors
 with all unstable code belonging in `wip` branches.
-Additionally, the `1.6.x` and `1.7.x` branches are supported for security fixes.
+Additionally, the `1.7.x` and `1.8.x` branches are supported for security fixes.
 
 | Version | Supported          |
 | ------- | ------------------ |
+| 2.0.x   | :heavy_check_mark: |
 | 1.9.x   | :heavy_check_mark: |
-| 1.8.x   | :heavy_check_mark: |
+| 1.8.x   | :white_check_mark: |
 | 1.7.x   | :white_check_mark: |
-| 1.6.x   | :white_check_mark: |
+| 1.6.x   | :x: EOL 2024-01-01 |
 | 1.5.x   | :x: EOL 2022-01-01 |
 | 1.4.x   | :x: EOL 2021-05-01 |
 | 1.3.x   | :x: EOL 2020-07-01 |
