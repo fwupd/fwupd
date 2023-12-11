@@ -1034,6 +1034,8 @@ fu_firmware_parse_stream(FuFirmware *self,
 		if (!klass->tokenize(self, fw, flags, error))
 			return FALSE;
 	}
+	if (!fu_firmware_check_magic_for_offset(self, fw, &offset, flags, error))
+		return FALSE;
 	if (klass->parse != NULL)
 		return klass->parse(self, fw, 0x0, flags, error);
 
