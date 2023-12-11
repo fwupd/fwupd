@@ -65,12 +65,12 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED) == 0) {
 		/* TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 		 * enabled means supported by the processor */
-		return g_strdup(_("CET Enabled"));
+		return g_strdup(_("CET Platform"));
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE) == 0) {
 		/* TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
-		 * active means being used by the OS */
-		return g_strdup(_("CET Active"));
+		 * Utilized by OS means the distribution enabled it*/
+		return g_strdup(_("CET OS Support"));
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_SMAP) == 0) {
 		/* TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention */
@@ -277,11 +277,11 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED) == 0 ||
 	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE) == 0) {
 		/* TRANSLATORS: Title: CET = Control-flow Enforcement Technology */
-		return _("Intel CET");
+		return _("Control-flow Enforcement Technology");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_SMAP) == 0) {
 		/* TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention */
-		return _("Intel SMAP");
+		return _("Supervisor Mode Access Prevention");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM) == 0) {
 		/* TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME */
@@ -451,12 +451,12 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED) == 0 ||
 	    g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE) == 0) {
 		/* TRANSLATORS: longer description */
-		return _("Intel Control-Flow Enforcement Technology detects and prevents certain "
+		return _("Control-Flow Enforcement Technology detects and prevents certain "
 			 "methods for running malicious software on the device.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_SMAP) == 0) {
 		/* TRANSLATORS: longer description */
-		return _("Intel Supervisor Mode Access Prevention ensures critical parts of "
+		return _("Supervisor Mode Access Prevention ensures critical parts of "
 			 "device memory are not accessed by less secure programs.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM) == 0) {
