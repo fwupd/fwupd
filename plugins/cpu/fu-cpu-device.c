@@ -314,7 +314,7 @@ fu_cpu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 }
 
 static void
-fu_cpu_device_add_security_attrs_intel_cet_enabled(FuCpuDevice *self, FuSecurityAttrs *attrs)
+fu_cpu_device_add_security_attrs_cet_enabled(FuCpuDevice *self, FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
@@ -336,7 +336,7 @@ fu_cpu_device_add_security_attrs_intel_cet_enabled(FuCpuDevice *self, FuSecurity
 }
 
 static void
-fu_cpu_device_add_security_attrs_intel_cet_active(FuCpuDevice *self, FuSecurityAttrs *attrs)
+fu_cpu_device_add_security_attrs_cet_active(FuCpuDevice *self, FuSecurityAttrs *attrs)
 {
 	gint exit_status = 0xff;
 	g_autofree gchar *toolfn = NULL;
@@ -396,7 +396,7 @@ fu_cpu_device_add_security_attrs_intel_tme(FuCpuDevice *self, FuSecurityAttrs *a
 }
 
 static void
-fu_cpu_device_add_security_attrs_intel_smap(FuCpuDevice *self, FuSecurityAttrs *attrs)
+fu_cpu_device_add_security_attrs_smap(FuCpuDevice *self, FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
@@ -421,10 +421,11 @@ fu_cpu_device_add_x86_64_security_attrs(FuDevice *device, FuSecurityAttrs *attrs
 	FuCpuDevice *self = FU_CPU_DEVICE(device);
 
 	/* only Intel */
-	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_INTEL) {
-		fu_cpu_device_add_security_attrs_intel_cet_enabled(self, attrs);
-		fu_cpu_device_add_security_attrs_intel_cet_active(self, attrs);
+	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_INTEL)
 		fu_cpu_device_add_security_attrs_intel_tme(self, attrs);
+	fu_cpu_device_add_security_attrs_cet_enabled(self, attrs);
+	fu_cpu_device_add_security_attrs_cet_active(self, attrs);
+	fu_cpu_device_add_security_attrs_smap(self, attrs);
 }
 
 static void
