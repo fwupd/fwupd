@@ -11,7 +11,8 @@
     "not-supported": "CET not supported"
   },
   "success-results": {
-    "enabled": "CET feature enabled by the platform"
+    "enabled": "CET feature enabled by the platform",
+    "supported": "CET feature support by the platform"
   },
   "hsi-level": 3,
   "references": {
