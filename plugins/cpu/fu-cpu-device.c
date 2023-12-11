@@ -6,6 +6,10 @@
 
 #include "config.h"
 
+#ifdef HAVE_UTSNAME_H
+#include <sys/utsname.h>
+#endif
+
 #include "fu-cpu-device.h"
 
 typedef enum {
@@ -412,7 +416,7 @@ fu_cpu_device_add_security_attrs_intel_smap(FuCpuDevice *self, FuSecurityAttrs *
 }
 
 static void
-fu_cpu_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
+fu_cpu_device_add_x86_64_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 {
 	FuCpuDevice *self = FU_CPU_DEVICE(device);
 
@@ -421,8 +425,23 @@ fu_cpu_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 		fu_cpu_device_add_security_attrs_intel_cet_enabled(self, attrs);
 		fu_cpu_device_add_security_attrs_intel_cet_active(self, attrs);
 		fu_cpu_device_add_security_attrs_intel_tme(self, attrs);
-		fu_cpu_device_add_security_attrs_intel_smap(self, attrs);
+}
+
+static void
+fu_cpu_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
+{
+#ifdef HAVE_UTSNAME_H
+	struct utsname name_tmp;
+
+	memset(&name_tmp, 0, sizeof(struct utsname));
+	if (uname(&name_tmp) < 0) {
+		g_warning("failed to read CPU architecture");
+		return;
 	}
+
+	if (g_strcmp0(name_tmp.machine, "x86_64") == 0)
+		fu_cpu_device_add_x86_64_security_attrs(device, attrs);
+#endif
 }
 
 static void
