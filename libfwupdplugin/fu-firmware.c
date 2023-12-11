@@ -34,6 +34,7 @@ typedef struct {
 	guint64 version_raw;
 	GBytes *bytes;
 	GInputStream *stream;
+	gsize streamsz;
 	guint8 alignment;
 	gchar *id;
 	gchar *filename;
@@ -475,6 +476,8 @@ fu_firmware_get_size(FuFirmware *self)
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), G_MAXSIZE);
 	if (priv->size != 0)
 		return priv->size;
+	if (priv->stream != NULL && priv->streamsz != 0)
+		return priv->streamsz;
 	if (priv->bytes != NULL)
 		return g_bytes_get_size(priv->bytes);
 	return 0;
@@ -596,14 +599,14 @@ fu_firmware_get_bytes(FuFirmware *self, GError **error)
 	if (priv->bytes != NULL)
 		return g_bytes_ref(priv->bytes);
 	if (priv->stream != NULL) {
-		if (priv->size == 0) {
+		if (priv->streamsz == 0) {
 			g_set_error_literal(error,
 					    G_IO_ERROR,
 					    G_IO_ERROR_INVALID_DATA,
 					    "stream size unknown");
 			return NULL;
 		}
-		return fu_bytes_get_contents_stream_full(priv->stream, 0x0, priv->size, error);
+		return fu_bytes_get_contents_stream_full(priv->stream, 0x0, priv->streamsz, error);
 	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no payload set");
 	return NULL;
@@ -676,24 +679,6 @@ fu_firmware_set_alignment(FuFirmware *self, guint8 alignment)
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_FIRMWARE(self));
 	priv->alignment = alignment;
-}
-
-/**
- * fu_firmware_set_stream:
- * @self: a #FuPlugin
- * @stream: input stream
- *
- * Sets the input stream of the image.
- *
- * Since: 1.9.11
- **/
-void
-fu_firmware_set_stream(FuFirmware *self, GInputStream *stream)
-{
-	FuFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_FIRMWARE(self));
-	g_return_if_fail(G_IS_INPUT_STREAM(stream));
-	g_set_object(&priv->stream, stream);
 }
 
 /**
@@ -993,13 +978,6 @@ fu_firmware_parse_stream(FuFirmware *self,
 	/* check size */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	if (streamsz == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "invalid firmware as zero sized");
-		return FALSE;
-	}
 	if (streamsz <= offset) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -1009,8 +987,16 @@ fu_firmware_parse_stream(FuFirmware *self,
 			    (guint)offset);
 		return FALSE;
 	}
-	if (priv->size_max > 0 && streamsz - offset > priv->size_max) {
-		g_autofree gchar *sz_val = g_format_size(streamsz - offset);
+	priv->streamsz = streamsz - offset;
+	if (priv->streamsz == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "invalid firmware as zero sized");
+		return FALSE;
+	}
+	if (priv->size_max > 0 && priv->streamsz > priv->size_max) {
+		g_autofree gchar *sz_val = g_format_size(priv->streamsz);
 		g_autofree gchar *sz_max = g_format_size(priv->size_max);
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -1020,7 +1006,6 @@ fu_firmware_parse_stream(FuFirmware *self,
 			    sz_max);
 		return FALSE;
 	}
-	fu_firmware_set_size(self, streamsz - offset);
 
 	/* optional */
 	if (klass->validate_stream != NULL) {
@@ -1030,11 +1015,11 @@ fu_firmware_parse_stream(FuFirmware *self,
 
 	/* save stream */
 	if (offset == 0) {
-		fu_firmware_set_stream(self, stream);
+		g_set_object(&priv->stream, stream);
 	} else {
 		g_autoptr(GInputStream) partial_stream =
-		    fu_partial_input_stream_new(stream, offset, streamsz - offset);
-		fu_firmware_set_stream(self, partial_stream);
+		    fu_partial_input_stream_new(stream, offset, priv->streamsz);
+		g_set_object(&priv->stream, partial_stream);
 	}
 
 	/* optional, fallback to ->tokenize and ->parse() */
@@ -1042,7 +1027,7 @@ fu_firmware_parse_stream(FuFirmware *self,
 		fu_firmware_add_flag(self, FU_FIRMWARE_FLAG_DONE_PARSE);
 		return klass->parse_stream(self, stream, offset, flags, error);
 	}
-	fw = fu_bytes_get_contents_stream_full(stream, offset, streamsz - offset, error);
+	fw = fu_bytes_get_contents_stream_full(stream, offset, priv->streamsz, error);
 	if (fw == NULL)
 		return FALSE;
 	if (klass->tokenize != NULL) {
@@ -2138,17 +2123,9 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 	fu_xmlb_builder_insert_kx(bn, "size_max", priv->size_max);
 	fu_xmlb_builder_insert_kv(bn, "filename", priv->filename);
 	if (priv->stream != NULL) {
-		gsize streamsz = 0;
-		g_autofree gchar *dataszstr = NULL;
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_input_stream_size(priv->stream, &streamsz, &error_local)) {
-			g_debug("failed to get stream size: %s", error_local->message);
-			streamsz = G_MAXUINT32;
-		}
-		dataszstr = g_strdup_printf("0x%x", (guint)streamsz);
+		g_autofree gchar *dataszstr = g_strdup_printf("0x%x", (guint)priv->streamsz);
 		xb_builder_node_insert_text(bn, "data", "[GInputStream]", "size", dataszstr, NULL);
-	}
-	if (priv->bytes != NULL) {
+	} else if (priv->bytes != NULL) {
 		gsize bufsz = 0;
 		const guint8 *buf = g_bytes_get_data(priv->bytes, &bufsz);
 		g_autofree gchar *datastr = NULL;

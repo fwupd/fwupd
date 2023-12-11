@@ -294,8 +294,6 @@ void
 fu_firmware_set_bytes(FuFirmware *self, GBytes *bytes) G_GNUC_NON_NULL(1);
 GInputStream *
 fu_firmware_get_stream(FuFirmware *self, GError **error) G_GNUC_NON_NULL(1);
-void
-fu_firmware_set_stream(FuFirmware *self, GInputStream *stream) G_GNUC_NON_NULL(1);
 guint8
 fu_firmware_get_alignment(FuFirmware *self) G_GNUC_NON_NULL(1);
 void
