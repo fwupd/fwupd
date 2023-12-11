@@ -628,6 +628,7 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 	    "IntelRST",
 	    "Lenovo_Recovery",
 	    "OS",
+	    "PQSERVICE",
 	    "Recovery",
 	    "RECOVERY",
 	    "Recovery_Partition",
