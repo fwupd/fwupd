@@ -102,7 +102,6 @@ enum {
 	PROP_PERCENTAGE,
 	PROP_DAEMON_VERSION,
 	PROP_TAINTED,
-	PROP_SOUP_SESSION, /* not set, do not use! */
 	PROP_HOST_PRODUCT,
 	PROP_HOST_VENDOR,
 	PROP_HOST_MACHINE_ID,
@@ -2870,12 +2869,6 @@ fwupd_client_install_stream_async(FwupdClient *self,
 	if (install_flags & FWUPD_INSTALL_FLAG_FORCE) {
 		g_variant_builder_add(&builder, "{sv}", "force", g_variant_new_boolean(TRUE));
 	}
-	if (install_flags & FWUPD_INSTALL_FLAG_IGNORE_POWER) {
-		g_variant_builder_add(&builder,
-				      "{sv}",
-				      "ignore-power",
-				      g_variant_new_boolean(TRUE));
-	}
 	if (install_flags & FWUPD_INSTALL_FLAG_NO_HISTORY) {
 		g_variant_builder_add(&builder, "{sv}", "no-history", g_variant_new_boolean(TRUE));
 	}
@@ -3325,7 +3318,7 @@ fwupd_client_filter_locations(GPtrArray *locations,
 #endif
 
 /**
- * fwupd_client_install_release2_async:
+ * fwupd_client_install_release_async:
  * @self: a #FwupdClient
  * @device: (not nullable): a device
  * @release: (not nullable): a release
@@ -3341,17 +3334,17 @@ fwupd_client_filter_locations(GPtrArray *locations,
  * emitted in the global default main context, if not explicitly set with
  * [method@Client.set_main_context].
  *
- * Since: 1.5.6
+ * Since: 2.0.0
  **/
 void
-fwupd_client_install_release2_async(FwupdClient *self,
-				    FwupdDevice *device,
-				    FwupdRelease *release,
-				    FwupdInstallFlags install_flags,
-				    FwupdClientDownloadFlags download_flags,
-				    GCancellable *cancellable,
-				    GAsyncReadyCallback callback,
-				    gpointer callback_data)
+fwupd_client_install_release_async(FwupdClient *self,
+				   FwupdDevice *device,
+				   FwupdRelease *release,
+				   FwupdInstallFlags install_flags,
+				   FwupdClientDownloadFlags download_flags,
+				   GCancellable *cancellable,
+				   GAsyncReadyCallback callback,
+				   gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GTask) task = NULL;
@@ -3391,44 +3384,6 @@ fwupd_client_install_release2_async(FwupdClient *self,
 					    cancellable,
 					    fwupd_client_install_release_remote_cb,
 					    g_steal_pointer(&task));
-}
-
-/**
- * fwupd_client_install_release_async:
- * @self: a #FwupdClient
- * @device: (not nullable): a device
- * @release: (not nullable): a release
- * @install_flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
- * @cancellable: (nullable): optional #GCancellable
- * @callback: (scope async) (closure callback_data): the function to run on completion
- * @callback_data: the data to pass to @callback
- *
- * Installs a new release on a device, downloading the firmware if required.
- *
- * NOTE: This method is thread-safe, but progress signals will be
- * emitted in the global default main context, if not explicitly set with
- * [method@Client.set_main_context].
- *
- * Since: 1.5.0
- * Deprecated: 1.5.6
- **/
-void
-fwupd_client_install_release_async(FwupdClient *self,
-				   FwupdDevice *device,
-				   FwupdRelease *release,
-				   FwupdInstallFlags install_flags,
-				   GCancellable *cancellable,
-				   GAsyncReadyCallback callback,
-				   gpointer callback_data)
-{
-	return fwupd_client_install_release2_async(self,
-						   device,
-						   release,
-						   install_flags,
-						   FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
-						   cancellable,
-						   callback,
-						   callback_data);
 }
 
 /**
@@ -4139,7 +4094,7 @@ fwupd_client_refresh_remote_signature_cb(GObject *source, GAsyncResult *res, gpo
 }
 
 /**
- * fwupd_client_refresh_remote2_async:
+ * fwupd_client_refresh_remote_async:
  * @self: a #FwupdClient
  * @remote: a #FwupdRemote
  * @download_flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P
@@ -4153,15 +4108,15 @@ fwupd_client_refresh_remote_signature_cb(GObject *source, GAsyncResult *res, gpo
  * emitted in the global default main context, if not explicitly set with
  * [method@Client.set_main_context].
  *
- * Since: 1.9.4
+ * Since: 2.0.0
  **/
 void
-fwupd_client_refresh_remote2_async(FwupdClient *self,
-				   FwupdRemote *remote,
-				   FwupdClientDownloadFlags download_flags,
-				   GCancellable *cancellable,
-				   GAsyncReadyCallback callback,
-				   gpointer callback_data)
+fwupd_client_refresh_remote_async(FwupdClient *self,
+				  FwupdRemote *remote,
+				  FwupdClientDownloadFlags download_flags,
+				  GCancellable *cancellable,
+				  GAsyncReadyCallback callback,
+				  gpointer callback_data)
 {
 	FwupdClientRefreshRemoteData *data;
 	g_autofree gchar *uri = NULL;
@@ -4212,40 +4167,6 @@ fwupd_client_refresh_remote2_async(FwupdClient *self,
 					  cancellable,
 					  fwupd_client_refresh_remote_signature_cb,
 					  g_steal_pointer(&task));
-}
-
-/**
- * fwupd_client_refresh_remote_async:
- * @self: a #FwupdClient
- * @remote: a #FwupdRemote
- * @cancellable: (nullable): optional #GCancellable
- * @callback: (scope async) (closure callback_data): the function to run on completion
- * @callback_data: the data to pass to @callback
- *
- * Refreshes a remote by downloading new metadata.
- *
- * NOTE: This method is thread-safe, but progress signals will be
- * emitted in the global default main context, if not explicitly set with
- * [method@Client.set_main_context].
- *
- * Since: 1.5.0
- **/
-void
-fwupd_client_refresh_remote_async(FwupdClient *self,
-				  FwupdRemote *remote,
-				  GCancellable *cancellable,
-				  GAsyncReadyCallback callback,
-				  gpointer callback_data)
-{
-	g_return_if_fail(FWUPD_IS_CLIENT(self));
-	g_return_if_fail(FWUPD_IS_REMOTE(remote));
-	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
-	return fwupd_client_refresh_remote2_async(self,
-						  remote,
-						  FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
-						  cancellable,
-						  callback,
-						  callback_data);
 }
 
 /**
@@ -6151,9 +6072,6 @@ fwupd_client_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_TAINTED:
 		g_value_set_boolean(value, priv->tainted);
 		break;
-	case PROP_SOUP_SESSION:
-		g_value_set_object(value, NULL);
-		break;
 	case PROP_PERCENTAGE:
 		g_value_set_uint(value, priv->percentage);
 		break;
@@ -6457,20 +6375,6 @@ fwupd_client_class_init(FwupdClientClass *klass)
 				    NULL,
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_HOST_BKC, pspec);
-
-	/**
-	 * FwupdClient:soup-session:
-	 *
-	 * The libsoup session, now unused.
-	 *
-	 * Since: 1.4.5
-	 */
-	pspec = g_param_spec_object("soup-session",
-				    NULL,
-				    NULL,
-				    G_TYPE_OBJECT,
-				    G_PARAM_READABLE | G_PARAM_STATIC_NAME);
-	g_object_class_install_property(object_class, PROP_SOUP_SESSION, pspec);
 
 	/**
 	 * FwupdClient:host-vendor:

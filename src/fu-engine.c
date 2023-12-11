@@ -2816,14 +2816,6 @@ fu_engine_device_check_power(FuEngine *self,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
-	if (flags & FWUPD_INSTALL_FLAG_IGNORE_POWER) {
-		g_autofree gchar *configdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
-		g_autofree gchar *configfile = g_build_filename(configdir, "fwupd.conf", NULL);
-		g_warning("Ignoring deprecated flag provided by client "
-			  "'FWUPD_INSTALL_FLAG_IGNORE_POWER'. To ignore power levels, modify %s",
-			  configfile);
-	}
-
 	if (fu_engine_config_get_ignore_power(self->config))
 		return TRUE;
 

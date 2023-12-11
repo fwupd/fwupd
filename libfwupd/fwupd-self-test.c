@@ -68,11 +68,6 @@ fwupd_enums_func(void)
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_update_state_from_string(tmp), ==, i);
 	}
-	for (guint i = 0; i < FWUPD_TRUST_FLAG_LAST; i++) {
-		const gchar *tmp = fwupd_trust_flag_to_string(i);
-		g_assert_cmpstr(tmp, !=, NULL);
-		g_assert_cmpint(fwupd_trust_flag_from_string(tmp), ==, i);
-	}
 	for (guint i = 0; i < FWUPD_REQUEST_KIND_LAST; i++) {
 		const gchar *tmp = fwupd_request_kind_to_string(i);
 		g_assert_cmpstr(tmp, !=, NULL);
@@ -95,13 +90,6 @@ fwupd_enums_func(void)
 	}
 
 	/* bitfield */
-	for (guint64 i = 1; i <= FWUPD_DEVICE_FLAG_EMULATED; i *= 2) {
-		const gchar *tmp = fwupd_device_flag_to_string(i);
-		if (tmp == NULL)
-			g_warning("missing device flag 0x%x", (guint)i);
-		g_assert_cmpstr(tmp, !=, NULL);
-		g_assert_cmpint(fwupd_device_flag_from_string(tmp), ==, i);
-	}
 	for (guint64 i = 1; i <= FWUPD_DEVICE_PROBLEM_IN_USE; i *= 2) {
 		const gchar *tmp = fwupd_device_problem_to_string(i);
 		if (tmp == NULL)
@@ -329,7 +317,7 @@ fwupd_remote_auth_func(void)
 
 	/* to JSON */
 	fwupd_remote_set_filename_source(remote2, NULL);
-	fwupd_remote_set_checksum(
+	fwupd_remote_set_checksum_sig(
 	    remote2,
 	    "dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2");
 	fwupd_remote_set_filename_cache(remote2, "./libfwupd/tests/auth/metadata.xml.gz");

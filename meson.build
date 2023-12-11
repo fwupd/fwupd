@@ -48,7 +48,7 @@ conf.set_quoted('SOURCE_VERSION', source_version)
 # - If the interface is the same as the previous version, but bugs are
 #   fixed, change:
 #      REVISION += 1
-libfwupd_lt_current = '2'
+libfwupd_lt_current = '3'
 libfwupd_lt_revision = '0'
 libfwupd_lt_age = '0'
 libfwupd_lt_version = '@0@.@1@.@2@'.format(libfwupd_lt_current, libfwupd_lt_age, libfwupd_lt_revision)

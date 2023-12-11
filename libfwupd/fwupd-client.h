@@ -52,16 +52,6 @@ typedef enum {
 } FwupdClientDownloadFlags;
 
 /**
- * FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS:
- *
- * For API compatibility:
- *
- * Since: 1.5.6
- * Deprecated: 1.9.4
- **/
-#define FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P
-
-/**
  * FwupdClientUploadFlags:
  * @FWUPD_CLIENT_UPLOAD_FLAG_NONE:		No flags set
  * @FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART:	Always use multipart/form-data
@@ -329,24 +319,15 @@ gboolean
 fwupd_client_install_bytes_finish(FwupdClient *self,
 				  GAsyncResult *res,
 				  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
-G_DEPRECATED_FOR(fwupd_client_install_release2_async)
 void
 fwupd_client_install_release_async(FwupdClient *self,
 				   FwupdDevice *device,
 				   FwupdRelease *release,
 				   FwupdInstallFlags install_flags,
+				   FwupdClientDownloadFlags download_flags,
 				   GCancellable *cancellable,
 				   GAsyncReadyCallback callback,
 				   gpointer callback_data) G_GNUC_NON_NULL(1, 2, 3);
-void
-fwupd_client_install_release2_async(FwupdClient *self,
-				    FwupdDevice *device,
-				    FwupdRelease *release,
-				    FwupdInstallFlags install_flags,
-				    FwupdClientDownloadFlags download_flags,
-				    GCancellable *cancellable,
-				    GAsyncReadyCallback callback,
-				    gpointer callback_data) G_GNUC_NON_NULL(1, 2, 3);
 gboolean
 fwupd_client_install_release_finish(FwupdClient *self,
 				    GAsyncResult *res,
@@ -364,20 +345,13 @@ fwupd_client_update_metadata_bytes_finish(FwupdClient *self,
 					  GAsyncResult *res,
 					  GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);
-G_DEPRECATED_FOR(fwupd_client_refresh_remote2_async)
 void
 fwupd_client_refresh_remote_async(FwupdClient *self,
 				  FwupdRemote *remote,
+				  FwupdClientDownloadFlags download_flags,
 				  GCancellable *cancellable,
 				  GAsyncReadyCallback callback,
 				  gpointer callback_data) G_GNUC_NON_NULL(1, 2);
-void
-fwupd_client_refresh_remote2_async(FwupdClient *self,
-				   FwupdRemote *remote,
-				   FwupdClientDownloadFlags download_flags,
-				   GCancellable *cancellable,
-				   GAsyncReadyCallback callback,
-				   gpointer callback_data) G_GNUC_NON_NULL(1, 2);
 gboolean
 fwupd_client_refresh_remote_finish(FwupdClient *self,
 				   GAsyncResult *res,

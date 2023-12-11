@@ -197,7 +197,7 @@
       ]
     },
     {
-      "AppstreamId": "org.fwupd.hsi.IntelCet.Enabled",
+      "AppstreamId": "org.fwupd.hsi.Cet.Enabled",
       "HsiResult": "not-supported",
       "Plugin": "cpu"
     },
@@ -229,7 +229,7 @@
       ]
     },
     {
-      "AppstreamId": "org.fwupd.hsi.IntelSmap",
+      "AppstreamId": "org.fwupd.hsi.Smap",
       "HsiResult": "enabled",
       "Plugin": "cpu",
       "Flags": [

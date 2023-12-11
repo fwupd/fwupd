@@ -37,7 +37,7 @@ fwupd_remote_set_priority(FwupdRemote *self, gint priority) G_GNUC_NON_NULL(1);
 void
 fwupd_remote_set_agreement(FwupdRemote *self, const gchar *agreement) G_GNUC_NON_NULL(1);
 void
-fwupd_remote_set_checksum(FwupdRemote *self, const gchar *checksum_sig) G_GNUC_NON_NULL(1);
+fwupd_remote_set_checksum_sig(FwupdRemote *self, const gchar *checksum_sig) G_GNUC_NON_NULL(1);
 void
 fwupd_remote_set_filename_cache(FwupdRemote *self, const gchar *filename) G_GNUC_NON_NULL(1);
 void

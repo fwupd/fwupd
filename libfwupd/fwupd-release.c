@@ -69,10 +69,6 @@ enum { PROP_0, PROP_REMOTE_ID, PROP_LAST };
 G_DEFINE_TYPE_WITH_PRIVATE(FwupdRelease, fwupd_release, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_release_get_instance_private(o))
 
-/* the deprecated fwupd_release_get_trust_flags() function should only
- * return the last two bits of the #FwupdReleaseFlags */
-#define FWUPD_RELEASE_TRUST_FLAGS_MASK 0x3
-
 /**
  * fwupd_release_get_remote_id:
  * @self: a #FwupdRelease
@@ -642,46 +638,6 @@ fwupd_release_get_metadata_item(FwupdRelease *self, const gchar *key)
 	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	g_return_val_if_fail(key != NULL, NULL);
 	return g_hash_table_lookup(priv->metadata, key);
-}
-
-/**
- * fwupd_release_get_uri:
- * @self: a #FwupdRelease
- *
- * Gets the default update URI.
- *
- * Returns: the update URI, or %NULL if unset
- *
- * Since: 0.9.3
- * Deprecated: 1.5.6: Use fwupd_release_get_locations() instead.
- **/
-const gchar *
-fwupd_release_get_uri(FwupdRelease *self)
-{
-	FwupdReleasePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
-	if (priv->locations->len == 0)
-		return NULL;
-	return (const gchar *)g_ptr_array_index(priv->locations, 0);
-}
-
-/**
- * fwupd_release_set_uri:
- * @self: a #FwupdRelease
- * @uri: the update URI
- *
- * Sets the update URI, i.e. where you can download the firmware from.
- *
- * Since: 0.9.3
- * Deprecated: 1.5.6: Use fwupd_release_add_location() instead.
- **/
-void
-fwupd_release_set_uri(FwupdRelease *self, const gchar *uri)
-{
-	FwupdReleasePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FWUPD_IS_RELEASE(self));
-	g_ptr_array_set_size(priv->locations, 0);
-	g_ptr_array_add(priv->locations, g_strdup(uri));
 }
 
 /**
@@ -1370,44 +1326,6 @@ fwupd_release_set_name_variant_suffix(FwupdRelease *self, const gchar *name_vari
 
 	g_free(priv->name_variant_suffix);
 	priv->name_variant_suffix = g_strdup(name_variant_suffix);
-}
-
-/**
- * fwupd_release_get_trust_flags:
- * @self: a #FwupdRelease
- *
- * Gets the trust level of the release.
- *
- * Returns: the trust bitfield, e.g. #FWUPD_TRUST_FLAG_PAYLOAD
- *
- * Since: 0.9.8
- **/
-FwupdTrustFlags
-fwupd_release_get_trust_flags(FwupdRelease *self)
-{
-	FwupdReleasePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_RELEASE(self), 0);
-	return priv->flags & FWUPD_RELEASE_TRUST_FLAGS_MASK;
-}
-
-/**
- * fwupd_release_set_trust_flags:
- * @self: a #FwupdRelease
- * @trust_flags: the bitfield, e.g. #FWUPD_TRUST_FLAG_PAYLOAD
- *
- * Sets the trust level of the release.
- *
- * Since: 0.9.8
- **/
-void
-fwupd_release_set_trust_flags(FwupdRelease *self, FwupdTrustFlags trust_flags)
-{
-	FwupdReleasePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FWUPD_IS_RELEASE(self));
-
-	/* only overwrite the last two bits of the flags */
-	priv->flags &= ~FWUPD_RELEASE_TRUST_FLAGS_MASK;
-	priv->flags |= trust_flags;
 }
 
 /**

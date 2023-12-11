@@ -50,7 +50,6 @@ typedef struct {
 	gchar *vendor_id; /* for compat only */
 	gchar *homepage;
 	gchar *plugin;
-	gchar *protocol;
 	gchar *version;
 	gchar *version_lowest;
 	gchar *version_bootloader;
@@ -81,7 +80,6 @@ enum {
 	PROP_VERSION_FORMAT,
 	PROP_FLAGS,
 	PROP_REQUEST_FLAGS,
-	PROP_PROTOCOL,
 	PROP_STATUS,
 	PROP_PERCENTAGE,
 	PROP_PARENT,
@@ -910,51 +908,6 @@ fwupd_device_set_vendor(FwupdDevice *self, const gchar *vendor)
 }
 
 /**
- * fwupd_device_get_vendor_id:
- * @self: a #FwupdDevice
- *
- * Gets the combined device vendor ID.
- *
- * Returns: the device vendor, e.g. 'USB:0x1234|PCI:0x5678', or %NULL if unset
- *
- * Since: 0.9.4
- *
- * Deprecated: 1.5.5: Use fwupd_device_get_vendor_ids() instead.
- **/
-const gchar *
-fwupd_device_get_vendor_id(FwupdDevice *self)
-{
-	FwupdDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_DEVICE(self), NULL);
-	return priv->vendor_id;
-}
-
-/**
- * fwupd_device_set_vendor_id:
- * @self: a #FwupdDevice
- * @vendor_id: (not nullable): the vendor ID, e.g. 'USB:0x1234' or 'USB:0x1234|PCI:0x5678'
- *
- * Sets the device vendor ID.
- *
- * Since: 0.9.4
- *
- * Deprecated: 1.5.5: Use fwupd_device_add_vendor_id() instead.
- **/
-void
-fwupd_device_set_vendor_id(FwupdDevice *self, const gchar *vendor_id)
-{
-	g_auto(GStrv) vendor_ids = NULL;
-
-	g_return_if_fail(FWUPD_IS_DEVICE(self));
-	g_return_if_fail(vendor_id != NULL);
-
-	/* add all */
-	vendor_ids = g_strsplit(vendor_id, "|", -1);
-	for (guint i = 0; vendor_ids[i] != NULL; i++)
-		fwupd_device_add_vendor_id(self, vendor_ids[i]);
-}
-
-/**
  * fwupd_device_get_vendor_ids:
  * @self: a #FwupdDevice
  *
@@ -1476,51 +1429,6 @@ fwupd_device_set_plugin(FwupdDevice *self, const gchar *plugin)
 }
 
 /**
- * fwupd_device_get_protocol:
- * @self: a #FwupdDevice
- *
- * Gets the protocol name that the device uses for updating.
- *
- * Returns: the protocol name, or %NULL if unset
- *
- * Since: 1.3.6
- *
- * Deprecated: 1.5.8: Use fwupd_device_get_protocols() instead.
- **/
-const gchar *
-fwupd_device_get_protocol(FwupdDevice *self)
-{
-	FwupdDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_DEVICE(self), NULL);
-	return priv->protocol;
-}
-
-/**
- * fwupd_device_set_protocol:
- * @self: a #FwupdDevice
- * @protocol: (not nullable): the protocol name, e.g. `com.hughski.colorhug`
- *
- * Sets the protocol name that is used to update the device.
- *
- * Since: 1.3.6
- *
- * Deprecated: 1.5.8: Use fwupd_device_add_protocol() instead.
- **/
-void
-fwupd_device_set_protocol(FwupdDevice *self, const gchar *protocol)
-{
-	g_auto(GStrv) protocols = NULL;
-
-	g_return_if_fail(FWUPD_IS_DEVICE(self));
-	g_return_if_fail(protocol != NULL);
-
-	/* add all */
-	protocols = g_strsplit(protocol, "|", -1);
-	for (guint i = 0; protocols[i] != NULL; i++)
-		fwupd_device_add_protocol(self, protocols[i]);
-}
-
-/**
  * fwupd_device_get_protocols:
  * @self: a #FwupdDevice
  *
@@ -1578,7 +1486,6 @@ void
 fwupd_device_add_protocol(FwupdDevice *self, const gchar *protocol)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
-	g_auto(GStrv) protocols_tmp = NULL;
 
 	g_return_if_fail(FWUPD_IS_DEVICE(self));
 	g_return_if_fail(protocol != NULL);
@@ -1586,15 +1493,6 @@ fwupd_device_add_protocol(FwupdDevice *self, const gchar *protocol)
 	if (fwupd_device_has_protocol(self, protocol))
 		return;
 	g_ptr_array_add(priv->protocols, g_strdup(protocol));
-
-	/* build for compatibility */
-	protocols_tmp = g_new0(gchar *, priv->protocols->len + 1);
-	for (guint i = 0; i < priv->protocols->len; i++) {
-		const gchar *protocol_tmp = g_ptr_array_index(priv->protocols, i);
-		protocols_tmp[i] = g_strdup(protocol_tmp);
-	}
-	g_free(priv->protocol);
-	priv->protocol = g_strjoinv("|", protocols_tmp);
 }
 
 /**
@@ -3106,8 +3004,7 @@ fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFl
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
-	if (priv->protocols->len > 1) { /* --> 0 when bumping API */
+	if (priv->protocols->len > 0) {
 		json_builder_set_member_name(builder, "Protocols");
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->protocols->len; i++) {
@@ -3775,9 +3672,6 @@ fwupd_device_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_REQUEST_FLAGS:
 		g_value_set_uint64(value, priv->request_flags);
 		break;
-	case PROP_PROTOCOL:
-		g_value_set_string(value, priv->protocol);
-		break;
 	case PROP_UPDATE_MESSAGE:
 		g_value_set_string(value, priv->update_message);
 		break;
@@ -3830,9 +3724,6 @@ fwupd_device_set_property(GObject *object, guint prop_id, const GValue *value, G
 		break;
 	case PROP_REQUEST_FLAGS:
 		fwupd_device_set_request_flags(self, g_value_get_uint64(value));
-		break;
-	case PROP_PROTOCOL:
-		fwupd_device_add_protocol(self, g_value_get_string(value));
 		break;
 	case PROP_UPDATE_MESSAGE:
 		fwupd_device_set_update_message(self, g_value_get_string(value));
@@ -3954,21 +3845,6 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				    FWUPD_REQUEST_FLAG_NONE,
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_REQUEST_FLAGS, pspec);
-
-	/**
-	 * FwupdDevice:protocol:
-	 *
-	 * The device protocol.
-	 *
-	 * Since: 1.3.6
-	 * Deprecated: 1.5.8
-	 */
-	pspec = g_param_spec_string("protocol",
-				    NULL,
-				    NULL,
-				    NULL,
-				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
-	g_object_class_install_property(object_class, PROP_PROTOCOL, pspec);
 
 	/**
 	 * FwupdDevice:status:
@@ -4148,7 +4024,6 @@ fwupd_device_finalize(GObject *object)
 	g_free(priv->vendor);
 	g_free(priv->vendor_id);
 	g_free(priv->plugin);
-	g_free(priv->protocol);
 	g_free(priv->update_error);
 	g_free(priv->update_message);
 	g_free(priv->update_image);

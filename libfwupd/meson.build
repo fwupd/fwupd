@@ -8,9 +8,11 @@ fwupd_version_h = configure_file(
   configuration: conf
 )
 
+base_dir = 'fwupd-' + libfwupd_lt_current
+
 install_headers(
   'fwupd.h',
-  subdir: 'fwupd-1',
+  subdir: base_dir,
 )
 
 install_headers([
@@ -30,7 +32,7 @@ install_headers([
     'fwupd-plugin.h',
     fwupd_version_h,
   ],
-  subdir: 'fwupd-1/libfwupd',
+  subdir: join_paths(base_dir, 'libfwupd'),
 )
 
 libfwupd_deps = [
@@ -85,7 +87,7 @@ pkgg = import('pkgconfig')
 pkgg.generate(
   fwupd,
   requires: [ 'gio-2.0' ],
-  subdirs: 'fwupd-1',
+  subdirs: base_dir,
   version: meson.project_version(),
   name: 'fwupd',
   filebase: 'fwupd',
