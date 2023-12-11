@@ -632,6 +632,8 @@ fu_firmware_get_bytes_with_patches(FuFirmware *self, GError **error)
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
 
 	if (priv->bytes == NULL) {
+		if (priv->stream != NULL)
+			return fu_firmware_get_bytes(self, error);
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no payload set");
 		return NULL;
 	}
