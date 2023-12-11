@@ -69,6 +69,9 @@
 #include "fu-usb-device-private.h"
 #include "fu-version.h"
 
+#ifdef HAVE_GIO_UNIX
+#include "fu-unix-seekable-input-stream.h"
+#endif
 #ifdef HAVE_GUDEV
 #include "fu-udev-backend.h"
 #endif
@@ -4308,8 +4311,8 @@ fu_engine_update_metadata(FuEngine *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* ensures the fd's are closed on error */
-	stream_fd = g_unix_input_stream_new(fd, TRUE);
-	stream_sig = g_unix_input_stream_new(fd_sig, TRUE);
+	stream_fd = fu_unix_seekable_input_stream_new(fd, TRUE);
+	stream_sig = fu_unix_seekable_input_stream_new(fd_sig, TRUE);
 
 	/* read the entire file into memory */
 	bytes_raw = fu_bytes_get_contents_stream(stream_fd, FU_ENGINE_MAX_METADATA_SIZE, error);

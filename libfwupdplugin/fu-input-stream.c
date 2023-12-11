@@ -8,10 +8,6 @@
 
 #include "config.h"
 
-#ifdef HAVE_GIO_UNIX
-#include <gio/gunixinputstream.h>
-#endif
-
 #include "fu-input-stream.h"
 #include "fu-mem-private.h"
 
@@ -40,33 +36,6 @@ fu_input_stream_from_path(const gchar *path, GError **error)
 	if (stream == NULL)
 		return NULL;
 	return G_INPUT_STREAM(g_steal_pointer(&stream));
-}
-
-/**
- * fu_input_stream_from_fd:
- * @fd: a file descriptor
- * @error: (nullable): optional return location for an error
- *
- * Opens the file as n input stream.
- *
- * Returns: (transfer full): a #GInputStream, or %NULL on error
- *
- * Since: 1.9.11
- **/
-GInputStream *
-fu_input_stream_from_fd(gint fd, GError **error)
-{
-	g_return_val_if_fail(fd > 0, NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-#ifdef HAVE_GIO_UNIX
-	return g_unix_input_stream_new(fd, TRUE);
-#else
-	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
-			    "not supported as <glib-unix.h> is unavailable");
-	return NULL;
-#endif
 }
 
 /**
