@@ -167,7 +167,7 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 		g_autoptr(FuFirmware) img = NULL;
 
 		img = fu_firmware_new_from_gtypes(fw,
-						  expansion_header_offset,
+						  offset + expansion_header_offset,
 						  FWUPD_INSTALL_FLAG_NONE,
 						  error,
 						  FU_TYPE_IFWI_CPD_FIRMWARE,
