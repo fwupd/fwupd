@@ -334,6 +334,16 @@
         return FALSE;
     }
 {%- endfor %}
+{%- for item in obj.items | selectattr('struct_obj') %}
+    {
+        GByteArray st_tmp = {
+            .data = (guint8*) st->data + {{item.c_define('OFFSET')}},
+            .len = {{item.size}},
+        };
+        if (!{{item.struct_obj.c_method('ValidateInternal')}}(&st_tmp, error))
+            return FALSE;
+    }
+{%- endfor %}
     return TRUE;
 }
 
@@ -347,24 +357,16 @@
 {{export.value}}gboolean
 {{obj.c_method('Validate')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
 {
-{%- if obj.has_constant %}
     GByteArray st = {.data = (guint8 *) buf + offset, .len = bufsz - offset, };
-{%- endif %}
     g_return_val_if_fail(buf != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
     if (!fu_memchk_read(bufsz, offset, {{obj.size}}, error)) {
         g_prefix_error(error, "invalid struct {{obj.name}}: ");
         return FALSE;
     }
-{%- for item in obj.items | selectattr('struct_obj') %}
-    if (!{{item.struct_obj.c_method('Validate')}}(buf, bufsz, offset + {{item.c_define('OFFSET')}}, error))
+    if (!{{obj.c_method('ValidateInternal')}}(&st, error))
         return FALSE;
-{%- endfor %}
-{%- if obj.has_constant %}
-    return {{obj.c_method('ValidateInternal')}}(&st, error);
-{%- else %}
     return TRUE;
-{%- endif %}
 }
 {%- endif %}
 
@@ -376,13 +378,10 @@
 {{export.value}}gboolean
 {{obj.c_method('ValidateStream')}}(GInputStream *stream, gsize offset, GError **error)
 {
-{%- if obj.has_constant %}
     gssize rc;
     g_autoptr(GByteArray) st = g_byte_array_new();
-{%- endif %}
     g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-{%- if obj.has_constant %}
     if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_SET, NULL, error)) {
         g_prefix_error(error, "{{obj.name}} failed seek to 0x%x: ", (guint) offset);
         return FALSE;
@@ -402,8 +401,6 @@
                     (guint) rc);
         return FALSE;
     }
-{%- endif %}
-
 {%- for item in obj.items | selectattr('struct_obj') %}
     if (!{{item.struct_obj.c_method('ValidateStream')}}(stream, offset + {{item.c_define('OFFSET')}}, error))
         return FALSE;

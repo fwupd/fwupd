@@ -71,12 +71,12 @@ enum EfiSectionType {
     MmDepex = 0x1C,
 }
 
-#[derive(New, Validate, ParseBytes)]
+#[derive(New, ParseBytes)]
 struct EfiSection {
     size: u24le,
     type: EfiSectionType,
 }
-#[derive(New, Validate, ParseBytes)]
+#[derive(New, ParseBytes)]
 struct EfiSectionGuidDefined {
     name: Guid,
     offset: u16le,
@@ -95,12 +95,12 @@ struct EfiVolume {
     reserved: u8,
     revision: u8 == 0x02,
 }
-#[derive(New, Validate, ParseBytes)]
+#[derive(New, ParseBytes)]
 struct EfiVolumeBlockMap {
     num_blocks: u32le,
     length: u32le,
 }
-#[derive(New, Validate, Parse)]
+#[derive(New, Parse)]
 struct EfiSignatureList {
     type: Guid,
     list_size: u32le,

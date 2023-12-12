@@ -27,7 +27,7 @@ struct DfuseImage {
     target_size: u32le,
     chunks: u32le,
 }
-#[derive(New, Validate, Parse)]
+#[derive(New, Parse)]
 struct DfuseElement {
     address: u32le,
     size: u32le,
