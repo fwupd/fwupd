@@ -173,6 +173,12 @@ class StructObj:
             return
         self._exports[derive] = Export.PRIVATE
         if derive == "Validate":
+            self.add_private_export("ValidateInternal")
+        elif derive == "ValidateStream":
+            self.add_private_export("ValidateInternal")
+        elif derive == "ValidateBytes":
+            self.add_private_export("Validate")
+        elif derive == "ValidateInternal":
             for item in self.items:
                 if (
                     item.constant
@@ -181,13 +187,7 @@ class StructObj:
                 ):
                     item.add_private_export("Getters")
                 if item.struct_obj:
-                    item.struct_obj.add_private_export("Validate")
-            if self.has_constant:
-                self.add_private_export("ValidateInternal")
-        elif derive == "ValidateStream":
-            self.add_private_export("ValidateInternal")
-        elif derive == "ValidateBytes":
-            self.add_private_export("Validate")
+                    item.struct_obj.add_private_export("ValidateInternal")
         elif derive == "ToString":
             for item in self.items:
                 if item.enum_obj and not item.constant:
