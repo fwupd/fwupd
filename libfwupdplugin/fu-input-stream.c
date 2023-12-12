@@ -20,7 +20,7 @@
  *
  * Returns: (transfer full): a #GInputStream, or %NULL on error
  *
- * Since: 1.9.11
+ * Since: 2.0.0
  **/
 GInputStream *
 fu_input_stream_from_path(const gchar *path, GError **error)
@@ -52,7 +52,7 @@ fu_input_stream_from_path(const gchar *path, GError **error)
  *
  * Returns: %TRUE for success
  *
- * Since: 1.9.11
+ * Since: 2.0.0
  **/
 gboolean
 fu_input_stream_read_safe(GInputStream *stream,
@@ -102,7 +102,7 @@ fu_input_stream_read_safe(GInputStream *stream,
  *
  * Returns: %TRUE for success
  *
- * Since: 1.9.11
+ * Since: 2.0.0
  **/
 gboolean
 fu_input_stream_size(GInputStream *stream, gsize *val, GError **error)
@@ -131,7 +131,7 @@ fu_input_stream_size(GInputStream *stream, gsize *val, GError **error)
  *
  * Returns: the hexadecimal representation of the checksum, or %NULL on error
  *
- * Since: 1.9.11
+ * Since: 2.0.0
  **/
 gchar *
 fu_input_stream_compute_checksum(GInputStream *stream, GChecksumType checksum_type, GError **error)

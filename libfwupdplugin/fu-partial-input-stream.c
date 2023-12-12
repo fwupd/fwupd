@@ -130,7 +130,7 @@ fu_partial_input_stream_seekable_iface_init(GSeekableIface *iface)
  *
  * Returns: (transfer full): a #FuPartialInputStream
  *
- * Since: 1.9.11
+ * Since: 2.0.0
  **/
 GInputStream *
 fu_partial_input_stream_new(GInputStream *stream, gsize offset, gsize size)
@@ -151,7 +151,7 @@ fu_partial_input_stream_new(GInputStream *stream, gsize offset, gsize size)
  *
  * Returns: integer
  *
- * Since: 1.9.11
+ * Since: 2.0.0
  **/
 gsize
 fu_partial_input_stream_get_offset(FuPartialInputStream *self)
@@ -168,7 +168,7 @@ fu_partial_input_stream_get_offset(FuPartialInputStream *self)
  *
  * Returns: integer
  *
- * Since: 1.9.11
+ * Since: 2.0.0
  **/
 gsize
 fu_partial_input_stream_get_size(FuPartialInputStream *self)

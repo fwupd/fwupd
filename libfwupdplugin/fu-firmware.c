@@ -692,7 +692,7 @@ fu_firmware_set_alignment(FuFirmware *self, guint8 alignment)
  *
  * Returns: (transfer full): a #GInputStream, or %NULL if the payload has never been set
  *
- * Since: 1.9.11
+ * Since: 2.0.0
  **/
 GInputStream *
 fu_firmware_get_stream(FuFirmware *self, GError **error)
@@ -950,7 +950,7 @@ fu_firmware_check_magic_for_offset(FuFirmware *self,
  *
  * Returns: %TRUE for success
  *
- * Since: 1.9.11
+ * Since: 2.0.0
  **/
 gboolean
 fu_firmware_parse_stream(FuFirmware *self,

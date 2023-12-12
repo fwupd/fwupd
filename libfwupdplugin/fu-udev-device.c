@@ -1569,7 +1569,7 @@ fu_udev_device_set_flags(FuUdevDevice *self, FuUdevDeviceFlags flags)
  * For example %FU_UDEV_DEVICE_FLAG_OPEN_READ means that fu_device_open()
  * would use `O_RDONLY` rather than `O_RDWR` which is the default.
  *
- * Since: 1.9.11
+ * Since: 2.0.0
  **/
 void
 fu_udev_device_add_flag(FuUdevDevice *self, FuUdevDeviceFlags flag)

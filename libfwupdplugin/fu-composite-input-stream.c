@@ -65,7 +65,7 @@ fu_composite_input_stream_item_free(FuCompositeInputStreamItem *item)
  *
  * Adds a bytes object.
  *
- * Since: 1.9.11
+ * Since: 2.0.0
  **/
 void
 fu_composite_input_stream_add_bytes(FuCompositeInputStream *self, GBytes *bytes)
@@ -88,7 +88,7 @@ fu_composite_input_stream_add_bytes(FuCompositeInputStream *self, GBytes *bytes)
  *
  * Adds a partial stream object.
  *
- * Since: 1.9.11
+ * Since: 2.0.0
  **/
 void
 fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
@@ -215,7 +215,7 @@ fu_composite_input_stream_seekable_iface_init(GSeekableIface *iface)
  *
  * Returns: (transfer full): a #FuCompositeInputStream
  *
- * Since: 1.9.11
+ * Since: 2.0.0
  **/
 GInputStream *
 fu_composite_input_stream_new(void)

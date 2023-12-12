@@ -119,7 +119,7 @@ fu_unix_seekable_input_stream_seekable_iface_init(GSeekableIface *iface)
  *
  * Returns: (transfer full): a #GInputStream
  *
- * Since: 1.9.11
+ * Since: 2.0.0
  **/
 GInputStream *
 fu_unix_seekable_input_stream_new(gint fd, gboolean close_fd)

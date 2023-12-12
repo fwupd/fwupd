@@ -146,7 +146,7 @@ fu_chunk_array_new_from_bytes(GBytes *blob, guint32 addr_start, guint32 packet_s
  *
  * Returns: (transfer full): a #FuChunkArray, or #NULL on error
  *
- * Since: 1.9.11
+ * Since: 2.0.0
  **/
 FuChunkArray *
 fu_chunk_array_new_from_stream(GInputStream *stream,
