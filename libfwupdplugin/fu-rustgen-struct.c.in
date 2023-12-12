@@ -211,109 +211,6 @@
 }
 {%- endif %}
 
-{%- set export = obj.export('ParseInternal') %}
-{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
-{{export.value}}gboolean
-{{obj.c_method('ParseInternal')}}(GByteArray *st, GError **error)
-{
-    g_autofree gchar *str = NULL;
-{%- for item in obj.items | selectattr('struct_obj') %}
-    if (!{{item.struct_obj.c_method('Validate')}}(st->data, st->len, {{item.c_define('OFFSET')}}, error))
-        return FALSE;
-{%- endfor %}
-{%- for item in obj.items | selectattr('constant') %}
-{%- if item.type == Type.STRING %}
-    if (strncmp((const gchar *) (st->data + {{item.offset}}), "{{item.constant}}", {{item.size}}) != 0) {
-{%- elif item.type == Type.GUID or (item.type == Type.U8 and item.multiplier) %}
-    if (memcmp(st->data + {{item.offset}}, "{{item.constant}}", {{item.size}}) != 0) {
-{%- else %}
-    if ({{item.c_getter}}(st) != {{item.constant}}) {
-{%- endif %}
-        g_set_error_literal(error,
-                            G_IO_ERROR,
-                            G_IO_ERROR_INVALID_DATA,
-                            "constant {{obj.name}}.{{item.element_id}} was not valid, expected {{item.constant}}");
-        return FALSE;
-    }
-{%- endfor %}
-    str = {{obj.c_method('ToString')}}(st);
-    g_debug("%s", str);
-    return TRUE;
-}
-{%- endif %}
-
-{%- set export = obj.export('Parse') %}
-{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
-
-/**
- * {{obj.c_method('Parse')}}: (skip):
- **/
-{{export.value}}GByteArray *
-{{obj.c_method('Parse')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
-{
-    g_autoptr(GByteArray) st = g_byte_array_new();
-    g_return_val_if_fail(buf != NULL, NULL);
-    g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-    if (!fu_memchk_read(bufsz, offset, {{obj.size}}, error)) {
-        g_prefix_error(error, "invalid struct {{obj.name}}: ");
-        return NULL;
-    }
-    g_byte_array_append(st, buf + offset, {{obj.size}});
-    if (!{{obj.c_method('ParseInternal')}}(st, error))
-        return NULL;
-    return g_steal_pointer(&st);
-}
-{%- endif %}
-
-{%- set export = obj.export('ParseBytes') %}
-{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
-/**
- * {{obj.c_method('ParseBytes')}}: (skip):
- **/
-{{export.value}}GByteArray *
-{{obj.c_method('ParseBytes')}}(GBytes *blob, gsize offset, GError **error)
-{
-    gsize bufsz = 0;
-    const guint8 *buf = g_bytes_get_data(blob, &bufsz);
-    return {{obj.c_method('Parse')}}(buf, bufsz, offset, error);
-}
-{%- endif %}
-
-{%- set export = obj.export('ParseStream') %}
-{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
-/**
- * {{obj.c_method('ParseStream')}}: (skip):
- **/
-{{export.value}}GByteArray *
-{{obj.c_method('ParseStream')}}(GInputStream *stream, gsize offset, GError **error)
-{
-    gssize rc;
-    g_autoptr(GByteArray) st = g_byte_array_new();
-    if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_SET, NULL, error)) {
-        g_prefix_error(error, "{{obj.name}} failed seek to 0x%x: ", (guint) offset);
-        return NULL;
-    }
-    g_byte_array_set_size(st, {{obj.size}});
-    rc = g_input_stream_read(stream, st->data, st->len, NULL, error);
-    if (rc == -1) {
-        g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) st->len);
-        return NULL;
-    }
-    if (rc != st->len) {
-        g_set_error(error,
-                    G_IO_ERROR,
-                    G_IO_ERROR_PARTIAL_INPUT,
-                    "{{obj.name}} requested 0x%x and got 0x%x",
-                    (guint) st->len,
-                    (guint) rc);
-        return NULL;
-    }
-    if (!{{obj.c_method('ParseInternal')}}(st, error))
-        return NULL;
-    return g_steal_pointer(&st);
-}
-{%- endif %}
-
 {%- set export = obj.export('ValidateInternal') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
 {{export.value}}gboolean
@@ -322,8 +219,10 @@
 {%- for item in obj.items | selectattr('constant') %}
 {%- if item.type == Type.STRING %}
     if (strncmp((const gchar *) (st->data + {{item.offset}}), "{{item.constant}}", {{item.size}}) != 0) {
-{%- elif item.type == Type.GUID or (item.type == Type.U8 and item.multiplier) %}
+{%- elif item.type == Type.GUID %}
     if (memcmp({{item.c_getter}}(st), "{{item.constant}}", {{item.size}}) != 0) {
+{%- elif item.type == Type.U8 and item.multiplier %}
+    if (memcmp(st->data + {{item.offset}}, "{{item.constant}}", {{item.size}}) != 0) {
 {%- else %}
     if ({{item.c_getter}}(st) != {{item.constant}}) {
 {%- endif %}
@@ -401,10 +300,6 @@
                     (guint) rc);
         return FALSE;
     }
-{%- for item in obj.items | selectattr('struct_obj') %}
-    if (!{{item.struct_obj.c_method('ValidateStream')}}(stream, offset + {{item.c_define('OFFSET')}}, error))
-        return FALSE;
-{%- endfor %}
     return {{obj.c_method('ValidateInternal')}}(st, error);
 }
 {%- endif %}
@@ -420,5 +315,91 @@
     gsize bufsz = 0;
     const guint8 *buf = g_bytes_get_data(blob, &bufsz);
     return {{obj.c_method('Validate')}}(buf, bufsz, offset, error);
+}
+{%- endif %}
+
+{%- set export = obj.export('ParseInternal') %}
+{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+{{export.value}}gboolean
+{{obj.c_method('ParseInternal')}}(GByteArray *st, GError **error)
+{
+    g_autofree gchar *str = NULL;
+    if (!{{obj.c_method('ValidateInternal')}}(st, error))
+        return FALSE;
+    str = {{obj.c_method('ToString')}}(st);
+    g_debug("%s", str);
+    return TRUE;
+}
+{%- endif %}
+
+{%- set export = obj.export('Parse') %}
+{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+
+/**
+ * {{obj.c_method('Parse')}}: (skip):
+ **/
+{{export.value}}GByteArray *
+{{obj.c_method('Parse')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
+{
+    g_autoptr(GByteArray) st = g_byte_array_new();
+    g_return_val_if_fail(buf != NULL, NULL);
+    g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+    if (!fu_memchk_read(bufsz, offset, {{obj.size}}, error)) {
+        g_prefix_error(error, "invalid struct {{obj.name}}: ");
+        return NULL;
+    }
+    g_byte_array_append(st, buf + offset, {{obj.size}});
+    if (!{{obj.c_method('ParseInternal')}}(st, error))
+        return NULL;
+    return g_steal_pointer(&st);
+}
+{%- endif %}
+
+{%- set export = obj.export('ParseBytes') %}
+{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+/**
+ * {{obj.c_method('ParseBytes')}}: (skip):
+ **/
+{{export.value}}GByteArray *
+{{obj.c_method('ParseBytes')}}(GBytes *blob, gsize offset, GError **error)
+{
+    gsize bufsz = 0;
+    const guint8 *buf = g_bytes_get_data(blob, &bufsz);
+    return {{obj.c_method('Parse')}}(buf, bufsz, offset, error);
+}
+{%- endif %}
+
+{%- set export = obj.export('ParseStream') %}
+{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+/**
+ * {{obj.c_method('ParseStream')}}: (skip):
+ **/
+{{export.value}}GByteArray *
+{{obj.c_method('ParseStream')}}(GInputStream *stream, gsize offset, GError **error)
+{
+    gssize rc;
+    g_autoptr(GByteArray) st = g_byte_array_new();
+    if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_SET, NULL, error)) {
+        g_prefix_error(error, "{{obj.name}} failed seek to 0x%x: ", (guint) offset);
+        return NULL;
+    }
+    g_byte_array_set_size(st, {{obj.size}});
+    rc = g_input_stream_read(stream, st->data, st->len, NULL, error);
+    if (rc == -1) {
+        g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) st->len);
+        return NULL;
+    }
+    if (rc != st->len) {
+        g_set_error(error,
+                    G_IO_ERROR,
+                    G_IO_ERROR_PARTIAL_INPUT,
+                    "{{obj.name}} requested 0x%x and got 0x%x",
+                    (guint) st->len,
+                    (guint) rc);
+        return NULL;
+    }
+    if (!{{obj.c_method('ParseInternal')}}(st, error))
+        return NULL;
+    return g_steal_pointer(&st);
 }
 {%- endif %}

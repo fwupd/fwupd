@@ -200,6 +200,7 @@ class StructObj:
             self.add_private_export("Parse")
         elif derive == "ParseInternal":
             self.add_private_export("ToString")
+            self.add_private_export("ValidateInternal")
             for item in self.items:
                 if (
                     item.constant
@@ -208,7 +209,7 @@ class StructObj:
                 ):
                     item.add_private_export("Getters")
                 if item.struct_obj:
-                    item.struct_obj.add_private_export("Validate")
+                    item.struct_obj.add_private_export("ValidateInternal")
         elif derive == "New":
             for item in self.items:
                 if item.constant and not (item.type == Type.U8 and item.multiplier):
