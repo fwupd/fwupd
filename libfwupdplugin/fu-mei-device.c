@@ -415,7 +415,7 @@ fu_mei_device_write(FuMeiDevice *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	tv.tv_sec = timeout_ms / 1000;
-	tv.tv_usec = (timeout_ms % 1000) * 1000000;
+	tv.tv_usec = (timeout_ms % 1000) * 1000;
 
 	fu_dump_raw(G_LOG_DOMAIN, "write", buf, bufsz);
 	written = write(fd, buf, bufsz);
