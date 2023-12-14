@@ -20,7 +20,7 @@ G_DEFINE_TYPE(FuAverHidDevice, fu_aver_hid_device, FU_TYPE_HID_DEVICE)
 #define FU_AVER_HID_DEVICE_GET_STATUS_POLL_INTERVAL 1000 /* ms */
 #define FU_AVER_HID_DEVICE_POLL_INTERVAL	    5000 /* ms */
 #define FU_AVER_HID_DEVICE_ISP_RETRY_COUNT	    300
-#define FU_AVER_HID_DEVICE_ISP_UNTAR_WAIT_COUNT		600
+#define FU_AVER_HID_DEVICE_ISP_UNTAR_WAIT_COUNT	    600
 
 static gboolean
 fu_aver_hid_device_transfer(FuAverHidDevice *self, GByteArray *req, GByteArray *res, GError **error)
