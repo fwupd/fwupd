@@ -4321,12 +4321,12 @@ fu_engine_update_metadata(FuEngine *self,
 	stream_sig = fu_unix_seekable_input_stream_new(fd_sig, TRUE);
 
 	/* read the entire file into memory */
-	bytes_raw = fu_bytes_get_contents_stream(stream_fd, FU_ENGINE_MAX_METADATA_SIZE, error);
+	bytes_raw = fu_input_stream_read_bytes(stream_fd, 0, FU_ENGINE_MAX_METADATA_SIZE, error);
 	if (bytes_raw == NULL)
 		return FALSE;
 
 	/* read signature */
-	bytes_sig = fu_bytes_get_contents_stream(stream_sig, FU_ENGINE_MAX_SIGNATURE_SIZE, error);
+	bytes_sig = fu_input_stream_read_bytes(stream_sig, 0, FU_ENGINE_MAX_SIGNATURE_SIZE, error);
 	if (bytes_sig == NULL)
 		return FALSE;
 

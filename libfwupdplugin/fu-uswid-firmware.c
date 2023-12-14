@@ -12,6 +12,7 @@
 #include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-coswid-firmware.h"
+#include "fu-input-stream.h"
 #include "fu-lzma-common.h"
 #include "fu-mem.h"
 #include "fu-string.h"
@@ -125,7 +126,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 		istream1 = g_memory_input_stream_new_from_bytes(payload_tmp);
 		conv = G_CONVERTER(g_zlib_decompressor_new(G_ZLIB_COMPRESSOR_FORMAT_ZLIB));
 		istream2 = g_converter_input_stream_new(istream1, conv);
-		payload = fu_bytes_get_contents_stream(istream2, G_MAXSIZE, error);
+		payload = fu_input_stream_read_bytes(istream2, 0, G_MAXSIZE, error);
 		if (payload == NULL)
 			return FALSE;
 		payloadsz = g_bytes_get_size(payload);
@@ -209,7 +210,7 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 		conv = G_CONVERTER(g_zlib_compressor_new(G_ZLIB_COMPRESSOR_FORMAT_ZLIB, -1));
 		istream1 = g_memory_input_stream_new_from_data(payload->data, payload->len, NULL);
 		istream2 = g_converter_input_stream_new(istream1, conv);
-		payload_blob = fu_bytes_get_contents_stream(istream2, G_MAXSIZE, error);
+		payload_blob = fu_input_stream_read_bytes(istream2, 0, G_MAXSIZE, error);
 		if (payload_blob == NULL)
 			return NULL;
 	} else if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_LZMA) {

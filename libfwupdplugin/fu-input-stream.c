@@ -248,6 +248,97 @@ fu_input_stream_read_u64(GInputStream *stream,
 }
 
 /**
+ * fu_input_stream_read_byte_array:
+ * @stream: a #GInputStream
+ * @offset: offset in bytes into @stream to copy from
+ * @count: maximum number of bytes to read
+ * @error: (nullable): optional return location for an error
+ *
+ * Read a byte array from a stream in a safe way.
+ *
+ * NOTE: The returned buffer may be smaller than @count!
+ *
+ * Returns: (transfer full): buffer
+ *
+ * Since: 2.0.0
+ **/
+GByteArray *
+fu_input_stream_read_byte_array(GInputStream *stream, gsize offset, gsize count, GError **error)
+{
+	guint8 tmp[0x8000] = {0x0};
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* this is invalid */
+	if (count == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "A maximum read size must be specified");
+		return NULL;
+	}
+
+	/* seek back to start */
+	if (g_seekable_can_seek(G_SEEKABLE(stream))) {
+		if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_SET, NULL, error))
+			return NULL;
+	}
+
+	/* read from stream in 32kB chunks */
+	while (TRUE) {
+		gssize sz;
+		sz = g_input_stream_read(stream,
+					 tmp,
+					 MIN(count - buf->len, sizeof(tmp)),
+					 NULL,
+					 &error_local);
+		if (sz == 0)
+			break;
+		if (sz < 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    error_local->message);
+			return NULL;
+		}
+		g_byte_array_append(buf, tmp, sz);
+		if (buf->len >= count)
+			break;
+	}
+	return g_steal_pointer(&buf);
+}
+
+/**
+ * fu_input_stream_read_bytes:
+ * @stream: a #GInputStream
+ * @offset: offset in bytes into @stream to copy from
+ * @count: maximum number of bytes to read
+ * @error: (nullable): optional return location for an error
+ *
+ * Read a #GBytes from a stream in a safe way.
+ *
+ * NOTE: The returned buffer may be smaller than @count!
+ *
+ * Returns: (transfer full): buffer
+ *
+ * Since: 2.0.0
+ **/
+GBytes *
+fu_input_stream_read_bytes(GInputStream *stream, gsize offset, gsize count, GError **error)
+{
+	g_autoptr(GByteArray) buf = NULL;
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	buf = fu_input_stream_read_byte_array(stream, offset, count, error);
+	if (buf == NULL)
+		return NULL;
+	return g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck */
+}
+
+/**
  * fu_input_stream_size:
  * @stream: a #GInputStream
  * @val: (out): size in bytes

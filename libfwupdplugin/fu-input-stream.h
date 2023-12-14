@@ -48,6 +48,12 @@ fu_input_stream_read_u64(GInputStream *stream,
 			 guint64 *value,
 			 FuEndianType endian,
 			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 3);
+GByteArray *
+fu_input_stream_read_byte_array(GInputStream *stream, gsize offset, gsize count, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+GBytes *
+fu_input_stream_read_bytes(GInputStream *stream, gsize offset, gsize count, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gchar *
 fu_input_stream_compute_checksum(GInputStream *stream,
 				 GChecksumType checksum_type,
