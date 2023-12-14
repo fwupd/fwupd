@@ -81,6 +81,18 @@ fu_aver_hid_device_poll(FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_aver_hid_device_check_dual_isp(FuAverHidDevice *device)
+{
+	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
+	const guint16 aver_dual_isp_pid_group[] = { 0x0AB1 };
+	for (guint i = 0; i < sizeof(aver_dual_isp_pid_group) / sizeof(aver_dual_isp_pid_group[0]); ++i) {
+		if (aver_dual_isp_pid_group[i] == fu_usb_device_get_pid(FU_USB_DEVICE(self)))
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static gboolean
 fu_aver_hid_device_ensure_version(FuAverHidDevice *self, GError **error)
 {
 	g_autofree gchar *ver = NULL;
@@ -160,9 +172,15 @@ fu_aver_hid_device_isp_file_dnload(FuAverHidDevice *self,
 			return FALSE;
 
 		/* copy in payload */
-		fu_struct_aver_hid_req_isp_file_dnload_set_custom_isp_cmd(
-		    req,
-		    FU_AVER_HID_CUSTOM_ISP_CMD_FILE_DNLOAD);
+		if (fu_aver_hid_device_check_dual_isp(self) == TRUE) {
+			fu_struct_aver_hid_req_isp_file_dnload_set_custom_isp_cmd(
+				req,
+				FU_AVER_HID_CUSTOM_ISP_CMD_ALL_FILE_DNLOAD);
+		} else {
+			fu_struct_aver_hid_req_isp_file_dnload_set_custom_isp_cmd(
+				req,
+				FU_AVER_HID_CUSTOM_ISP_CMD_FILE_DNLOAD);
+		}
 		if (!fu_memcpy_safe(req->data,
 				    req->len,
 				    FU_STRUCT_AVER_HID_REQ_ISP_FILE_DNLOAD_OFFSET_DATA, /* dst */
@@ -235,9 +253,15 @@ fu_aver_hid_device_isp_file_start(FuAverHidDevice *self,
 	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_file_start_new();
 	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
 
-	fu_struct_aver_hid_req_isp_file_start_set_custom_isp_cmd(
-	    req,
-	    FU_AVER_HID_CUSTOM_ISP_CMD_FILE_START);
+	if (fu_aver_hid_device_check_dual_isp(self) == TRUE) {
+		fu_struct_aver_hid_req_isp_file_start_set_custom_isp_cmd(
+			req,
+			FU_AVER_HID_CUSTOM_ISP_CMD_ALL_FILE_START);
+	} else {
+		fu_struct_aver_hid_req_isp_file_start_set_custom_isp_cmd(
+			req,
+			FU_AVER_HID_CUSTOM_ISP_CMD_FILE_START);
+	}
 	if (!fu_struct_aver_hid_req_isp_file_start_set_file_name(req, name, error))
 		return FALSE;
 	fu_struct_aver_hid_req_isp_file_start_set_file_size(req, sz);
@@ -254,8 +278,15 @@ fu_aver_hid_device_isp_file_end(FuAverHidDevice *self, gsize sz, const gchar *na
 	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_file_end_new();
 	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
 
-	fu_struct_aver_hid_req_isp_file_end_set_custom_isp_cmd(req,
-							       FU_AVER_HID_CUSTOM_ISP_CMD_FILE_END);
+	if (fu_aver_hid_device_check_dual_isp(self) == TRUE) {
+		fu_struct_aver_hid_req_isp_file_end_set_custom_isp_cmd(
+				req,
+				FU_AVER_HID_CUSTOM_ISP_CMD_ALL_FILE_END);
+	} else {
+		fu_struct_aver_hid_req_isp_file_end_set_custom_isp_cmd(
+				req,
+				FU_AVER_HID_CUSTOM_ISP_CMD_FILE_END);
+	}
 	if (!fu_struct_aver_hid_req_isp_file_end_set_file_name(req, name, error))
 		return FALSE;
 	fu_struct_aver_hid_req_isp_file_end_set_end_flag(req, 1);
@@ -268,12 +299,40 @@ fu_aver_hid_device_isp_file_end(FuAverHidDevice *self, gsize sz, const gchar *na
 }
 
 static gboolean
+fu_aver_hid_device_wait_for_untar_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
+	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_file_end_new();
+	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
+
+	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_STATUS);
+	if (!fu_aver_hid_device_transfer(self, req, res, error))
+		return FALSE;
+
+	g_info("isp status: %s", fu_aver_hid_status_to_string(fu_struct_aver_hid_res_isp_status_get_status(res)));
+	if (fu_struct_aver_hid_res_isp_status_get_status(res) != FU_AVER_HID_STATUS_WAITUSR) {
+		g_set_error(error,
+				G_IO_ERROR,
+				G_IO_ERROR_BUSY,
+				"device has status %s",
+				fu_aver_hid_status_to_string(
+				fu_struct_aver_hid_res_isp_status_get_status(res)));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_aver_hid_device_isp_start(FuAverHidDevice *self, GError **error)
 {
 	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_new();
 	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
 
-	fu_struct_aver_hid_req_isp_start_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_START);
+	if (fu_aver_hid_device_check_dual_isp(self) == TRUE) {
+		fu_struct_aver_hid_req_isp_start_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_ALL_START);
+	} else {
+		fu_struct_aver_hid_req_isp_start_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_START);
+	}
 	if (!fu_aver_hid_device_transfer(self, req, res, error))
 		return FALSE;
 	if (!fu_struct_aver_hid_res_isp_status_validate(res->data, res->len, 0x0, error))
@@ -392,6 +451,15 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 
 	/* ISP_FILE_END */
 	if (!fu_aver_hid_device_isp_file_end(self, fw_size, aver_fw_name, error))
+		return FALSE;
+
+	/* poll for the file untar progress */
+	if (!fu_device_retry_full(device,
+				  fu_aver_hid_device_wait_for_untar_cb,
+				  FU_AVER_HID_DEVICE_ISP_RETRY_COUNT,
+				  FU_AVER_HID_DEVICE_GET_STATUS_POLL_INTERVAL,
+				  fu_progress_get_child(progress),
+				  error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
