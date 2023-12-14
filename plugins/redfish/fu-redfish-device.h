@@ -49,6 +49,14 @@ struct _FuRedfishDeviceClass {
  */
 #define FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS (1 << 3)
 
+/**
+ * FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST:
+ *
+ * The BMC device will auto-reboot and so fwupd should not explicitly call
+ * `/redfish/v1/Managers/1/Actions/Manager.Reset`.
+ */
+#define FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST (1 << 4)
+
 FuRedfishBackend *
 fu_redfish_device_get_backend(FuRedfishDevice *self);
 gboolean

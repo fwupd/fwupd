@@ -57,6 +57,13 @@ default 0ms.
 
 Since: 1.8.0
 
+### Flags=no-manager-reset-request
+
+The BMC device will auto-reboot and so fwupd should not explicitly call
+`/redfish/v1/Managers/1/Actions/Manager.Reset`.
+
+Since: 1.9.11
+
 ## Setting Service IP Manually
 
 The service IP may not be automatically discoverable due to the absence of
