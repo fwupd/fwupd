@@ -877,6 +877,9 @@ fu_redfish_device_init(FuRedfishDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_REDFISH_DEVICE_FLAG_MANAGER_RESET,
 					"manager-reset");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST,
+					"no-manager-reset-request");
 }
 
 static void

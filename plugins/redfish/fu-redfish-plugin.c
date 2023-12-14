@@ -564,7 +564,6 @@ fu_redfish_plugin_cleanup(FuPlugin *plugin,
 	guint64 reset_timeout = 0;
 	g_autofree gchar *restart_timeout_str = NULL;
 	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self->backend);
-	g_autoptr(JsonBuilder) builder = json_builder_new();
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* nothing to do */
@@ -580,18 +579,21 @@ fu_redfish_plugin_cleanup(FuPlugin *plugin,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 9, "recoldplug");
 
 	/* ask the BMC to reboot */
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "ResetType");
-	json_builder_add_string_value(builder, "ForceRestart");
-	json_builder_end_object(builder);
-	if (!fu_redfish_request_perform_full(request,
-					     "/redfish/v1/Managers/1/Actions/Manager.Reset",
-					     "POST",
-					     builder,
-					     FU_REDFISH_REQUEST_PERFORM_FLAG_NONE,
-					     error)) {
-		g_prefix_error(error, "failed to reset manager: ");
-		return FALSE;
+	if (!fu_device_has_private_flag(device, FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST)) {
+		g_autoptr(JsonBuilder) builder = json_builder_new();
+		json_builder_begin_object(builder);
+		json_builder_set_member_name(builder, "ResetType");
+		json_builder_add_string_value(builder, "ForceRestart");
+		json_builder_end_object(builder);
+		if (!fu_redfish_request_perform_full(request,
+						     "/redfish/v1/Managers/1/Actions/Manager.Reset",
+						     "POST",
+						     builder,
+						     FU_REDFISH_REQUEST_PERFORM_FLAG_NONE,
+						     error)) {
+			g_prefix_error(error, "failed to reset manager: ");
+			return FALSE;
+		}
 	}
 	fu_progress_step_done(progress);
 
