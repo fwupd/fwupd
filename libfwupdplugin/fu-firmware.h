@@ -370,10 +370,16 @@ fu_firmware_get_image_by_id(FuFirmware *self, const gchar *id, GError **error) G
 GBytes *
 fu_firmware_get_image_by_id_bytes(FuFirmware *self, const gchar *id, GError **error)
     G_GNUC_NON_NULL(1);
+GInputStream *
+fu_firmware_get_image_by_id_stream(FuFirmware *self, const gchar *id, GError **error)
+    G_GNUC_NON_NULL(1);
 FuFirmware *
 fu_firmware_get_image_by_idx(FuFirmware *self, guint64 idx, GError **error) G_GNUC_NON_NULL(1);
 GBytes *
 fu_firmware_get_image_by_idx_bytes(FuFirmware *self, guint64 idx, GError **error)
+    G_GNUC_NON_NULL(1);
+GInputStream *
+fu_firmware_get_image_by_idx_stream(FuFirmware *self, guint64 idx, GError **error)
     G_GNUC_NON_NULL(1);
 FuFirmware *
 fu_firmware_get_image_by_gtype(FuFirmware *self, GType gtype, GError **error) G_GNUC_NON_NULL(1);
