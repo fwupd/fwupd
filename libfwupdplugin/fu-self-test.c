@@ -4637,6 +4637,41 @@ fu_composite_input_stream_func(void)
 }
 
 static void
+fu_input_stream_chunkify_func(void)
+{
+	gboolean ret;
+	guint8 sum8 = 0;
+	guint32 crc32 = 0;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autofree gchar *checksum = NULL;
+	g_autofree gchar *checksum2 = NULL;
+
+	for (guint i = 0; i < 0x80000; i++)
+		fu_byte_array_append_uint8(buf, i);
+	blob = g_bytes_new(buf->data, buf->len);
+	stream = g_memory_input_stream_new_from_bytes(blob);
+
+	ret = fu_input_stream_compute_sum8(stream, &sum8, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(sum8, ==, fu_sum8_bytes(blob));
+
+	checksum = fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA1, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(checksum);
+	checksum2 = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, blob);
+	g_assert_cmpstr(checksum, ==, checksum2);
+
+	ret = fu_input_stream_compute_crc32(stream, &crc32, 0xEDB88320, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(crc32, ==, fu_crc32(buf->data, buf->len));
+}
+
+static void
 fu_input_stream_func(void)
 {
 	gboolean ret;
@@ -4900,6 +4935,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
 
 	g_test_add_func("/fwupd/input-stream", fu_input_stream_func);
+	g_test_add_func("/fwupd/input-stream{chunkify}", fu_input_stream_chunkify_func);
 	g_test_add_func("/fwupd/partial-input-stream", fu_partial_input_stream_func);
 	g_test_add_func("/fwupd/composite-input-stream", fu_composite_input_stream_func);
 	g_test_add_func("/fwupd/struct", fu_plugin_struct_func);

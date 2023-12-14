@@ -8,8 +8,11 @@
 
 #include "config.h"
 
+#include "fu-chunk-array.h"
+#include "fu-crc.h"
 #include "fu-input-stream.h"
 #include "fu-mem-private.h"
+#include "fu-sum.h"
 
 /**
  * fu_input_stream_from_path:
@@ -367,6 +370,17 @@ fu_input_stream_size(GInputStream *stream, gsize *val, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_input_stream_compute_checksum_cb(const guint8 *buf,
+				    gsize bufsz,
+				    gpointer user_data,
+				    GError **error)
+{
+	GChecksum *csum = (GChecksum *)user_data;
+	g_checksum_update(csum, buf, bufsz);
+	return TRUE;
+}
+
 /**
  * fu_input_stream_compute_checksum:
  * @stream: a #GInputStream
@@ -382,25 +396,154 @@ fu_input_stream_size(GInputStream *stream, gsize *val, GError **error)
 gchar *
 fu_input_stream_compute_checksum(GInputStream *stream, GChecksumType checksum_type, GError **error)
 {
-	guint8 buf[0x8000] = {0x0};
 	g_autoptr(GChecksum) csum = g_checksum_new(checksum_type);
 
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	/* read from stream in 32kB chunks */
-	if (!g_seekable_seek(G_SEEKABLE(stream), 0x0, G_SEEK_SET, NULL, error)) {
-		g_prefix_error(error, "seek to start: ");
+	if (!fu_input_stream_chunkify(stream, fu_input_stream_compute_checksum_cb, csum, error))
 		return NULL;
-	}
-	while (TRUE) {
-		gssize sz;
-		sz = g_input_stream_read(stream, buf, sizeof(buf), NULL, error);
-		if (sz == 0)
-			break;
-		if (sz == -1)
-			return NULL;
-		g_checksum_update(csum, buf, sz);
-	}
 	return g_strdup(g_checksum_get_string(csum));
+}
+
+static gboolean
+fu_input_stream_compute_sum8_cb(const guint8 *buf, gsize bufsz, gpointer user_data, GError **error)
+{
+	guint8 *value = (guint8 *)user_data;
+	*value += fu_sum8(buf, bufsz);
+	return TRUE;
+}
+
+/**
+ * fu_input_stream_compute_sum8:
+ * @stream: a #GInputStream
+ * @value: (out): value
+ * @error: (nullable): optional return location for an error
+ *
+ * Returns the arithmetic sum of all bytes in the stream.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_input_stream_compute_sum8(GInputStream *stream, guint8 *value, GError **error)
+{
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return fu_input_stream_chunkify(stream, fu_input_stream_compute_sum8_cb, value, error);
+}
+
+static gboolean
+fu_input_stream_compute_sum16_cb(const guint8 *buf, gsize bufsz, gpointer user_data, GError **error)
+{
+	guint16 *value = (guint16 *)user_data;
+	*value += fu_sum16(buf, bufsz);
+	return TRUE;
+}
+
+/**
+ * fu_input_stream_compute_sum16:
+ * @stream: a #GInputStream
+ * @value: (out): value
+ * @error: (nullable): optional return location for an error
+ *
+ * Returns the arithmetic sum of all bytes in the stream.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_input_stream_compute_sum16(GInputStream *stream, guint16 *value, GError **error)
+{
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return fu_input_stream_chunkify(stream, fu_input_stream_compute_sum16_cb, value, error);
+}
+
+typedef struct {
+	guint32 crc;
+	guint32 polynomial;
+} FuInputStreamComputeCrcHelper;
+
+static gboolean
+fu_input_stream_compute_crc32_cb(const guint8 *buf, gsize bufsz, gpointer user_data, GError **error)
+{
+	FuInputStreamComputeCrcHelper *helper = (FuInputStreamComputeCrcHelper *)user_data;
+	helper->crc = fu_crc32_full(buf, bufsz, ~helper->crc, helper->polynomial);
+	return TRUE;
+}
+
+/**
+ * fu_input_stream_compute_crc32:
+ * @stream: a #GInputStream
+ * @crc: (out): initial and final CRC value, typically 0x0
+ * @polynomial: CRC polynomial, typically 0xEDB88320
+ * @error: (nullable): optional return location for an error
+ *
+ * Returns the cyclic redundancy check value for the given memory buffer.
+ *
+ * NOTE: The initial @crc differs from fu_crc32_full() in that it is inverted (to make it
+ * symmetrical, and chainable), so for most uses you want to use the value of 0x0, not 0xFFFFFFFF.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_input_stream_compute_crc32(GInputStream *stream,
+			      guint32 *crc,
+			      guint32 polynomial,
+			      GError **error)
+{
+	FuInputStreamComputeCrcHelper helper = {.crc = *crc, .polynomial = polynomial};
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(crc != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	if (!fu_input_stream_chunkify(stream, fu_input_stream_compute_crc32_cb, &helper, error))
+		return FALSE;
+	*crc = helper.crc;
+	return TRUE;
+}
+
+/**
+ * fu_input_stream_chunkify:
+ * @stream: a #GInputStream
+ * @func_cb: (scope async): function to call with chunks
+ * @user_data: user data to pass to @func_cb
+ * @error: (nullable): optional return location for an error
+ *
+ * Split the stream into blocks and calls a function on each chunk.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_input_stream_chunkify(GInputStream *stream,
+			 FuInputStreamChunkifyFunc func_cb,
+			 gpointer user_data,
+			 GError **error)
+{
+	g_autoptr(FuChunkArray) chunks = NULL;
+
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(func_cb != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	chunks = fu_chunk_array_new_from_stream(stream, 0x0, 0x8000, error);
+	if (chunks == NULL)
+		return FALSE;
+	for (gsize i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = NULL;
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		if (!func_cb(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk), user_data, error))
+			return FALSE;
+	}
+	return TRUE;
 }
