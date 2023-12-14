@@ -257,7 +257,7 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 }
 
 static gboolean
-fu_wac_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_wac_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	guint8 magic[5] = "WACOM";
 	return fu_memcmp_safe(g_bytes_get_data(fw, NULL),
@@ -389,7 +389,7 @@ static void
 fu_wac_firmware_class_init(FuWacFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_wac_firmware_check_magic;
+	klass_firmware->validate = fu_wac_firmware_validate;
 	klass_firmware->parse = fu_wac_firmware_parse;
 	klass_firmware->write = fu_wac_firmware_write;
 }

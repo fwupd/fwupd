@@ -124,7 +124,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GBytes *fw, GError **e
 }
 
 static gboolean
-fu_ifwi_cpd_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_ifwi_cpd_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	return fu_struct_ifwi_cpd_validate_bytes(fw, offset, error);
 }
@@ -315,7 +315,7 @@ static void
 fu_ifwi_cpd_firmware_class_init(FuIfwiCpdFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_ifwi_cpd_firmware_check_magic;
+	klass_firmware->validate = fu_ifwi_cpd_firmware_validate;
 	klass_firmware->export = fu_ifwi_cpd_firmware_export;
 	klass_firmware->parse = fu_ifwi_cpd_firmware_parse;
 	klass_firmware->write = fu_ifwi_cpd_firmware_write;

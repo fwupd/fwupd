@@ -40,7 +40,7 @@ fu_pxi_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 }
 
 static gboolean
-fu_pxi_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_pxi_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	guint64 magic = 0;
 	FuPxiFirmware *self = FU_PXI_FIRMWARE(firmware);
@@ -281,7 +281,7 @@ fu_pxi_firmware_class_init(FuPxiFirmwareClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_pxi_firmware_finalize;
-	klass_firmware->check_magic = fu_pxi_firmware_check_magic;
+	klass_firmware->validate = fu_pxi_firmware_validate;
 	klass_firmware->parse = fu_pxi_firmware_parse;
 	klass_firmware->build = fu_pxi_firmware_build;
 	klass_firmware->write = fu_pxi_firmware_write;

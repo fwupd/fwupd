@@ -67,7 +67,7 @@ struct _FuFirmwareClass {
 	gchar *(*get_checksum)(FuFirmware *self,
 			       GChecksumType csum_kind,
 			       GError **error)G_GNUC_WARN_UNUSED_RESULT;
-	gboolean (*check_magic)(FuFirmware *self, GBytes *fw, gsize offset, GError **error);
+	gboolean (*validate)(FuFirmware *self, GBytes *fw, gsize offset, GError **error);
 	gboolean (*validate_stream)(FuFirmware *self,
 				    GInputStream *stream,
 				    gsize offset,

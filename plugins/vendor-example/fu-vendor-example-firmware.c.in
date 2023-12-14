@@ -43,7 +43,7 @@ fu_{{vendor}}_{{example}}_firmware_build(FuFirmware *firmware, XbNode *n, GError
 }
 
 static gboolean
-fu_{{vendor}}_{{example}}_check_magic(FuFirmware *firmware,
+fu_{{vendor}}_{{example}}_validate(FuFirmware *firmware,
 					GBytes *fw,
 					gsize offset,
 					GError **error)
@@ -123,7 +123,7 @@ static void
 fu_{{vendor}}_{{example}}_firmware_class_init(Fu{{Vendor}}{{Example}}FirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_{{vendor}}_{{example}}_check_magic;
+	klass_firmware->validate = fu_{{vendor}}_{{example}}_validate;
 	klass_firmware->parse = fu_{{vendor}}_{{example}}_firmware_parse;
 	klass_firmware->write = fu_{{vendor}}_{{example}}_firmware_write;
 	klass_firmware->build = fu_{{vendor}}_{{example}}_firmware_build;

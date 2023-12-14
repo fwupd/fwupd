@@ -62,7 +62,7 @@ fu_amd_gpu_atom_firmware_export(FuFirmware *firmware,
 }
 
 static gboolean
-fu_amd_gpu_atom_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_amd_gpu_atom_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	g_autoptr(GByteArray) atom = NULL;
 
@@ -329,7 +329,7 @@ fu_amd_gpu_atom_firmware_class_init(FuAmdGpuAtomFirmwareClass *klass)
 	object_class->finalize = fu_amd_gpu_atom_firmware_finalize;
 	klass_firmware->parse = fu_amd_gpu_atom_firmware_parse;
 	klass_firmware->export = fu_amd_gpu_atom_firmware_export;
-	klass_firmware->check_magic = fu_amd_gpu_atom_firmware_check_magic;
+	klass_firmware->validate = fu_amd_gpu_atom_firmware_validate;
 }
 
 FuFirmware *

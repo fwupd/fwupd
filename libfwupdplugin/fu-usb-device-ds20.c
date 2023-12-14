@@ -124,7 +124,7 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 }
 
 static gboolean
-fu_usb_device_ds20_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_usb_device_ds20_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	g_autoptr(GByteArray) st = NULL;
 	g_autofree gchar *guid_str = NULL;
@@ -260,7 +260,7 @@ static void
 fu_usb_device_ds20_class_init(FuUsbDeviceDs20Class *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_usb_device_ds20_check_magic;
+	klass_firmware->validate = fu_usb_device_ds20_validate;
 	klass_firmware->parse = fu_usb_device_ds20_parse;
 	klass_firmware->write = fu_usb_device_ds20_write;
 }

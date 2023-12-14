@@ -318,7 +318,7 @@ fu_fdt_firmware_parse_mem_rsvmap(FuFdtFirmware *self, GBytes *fw, gsize offset, 
 }
 
 static gboolean
-fu_fdt_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_fdt_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	return fu_struct_fdt_validate_bytes(fw, offset, error);
 }
@@ -573,7 +573,7 @@ static void
 fu_fdt_firmware_class_init(FuFdtFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_fdt_firmware_check_magic;
+	klass_firmware->validate = fu_fdt_firmware_validate;
 	klass_firmware->export = fu_fdt_firmware_export;
 	klass_firmware->parse = fu_fdt_firmware_parse;
 	klass_firmware->write = fu_fdt_firmware_write;

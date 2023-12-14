@@ -197,10 +197,7 @@ fu_genesys_usbhub_firmware_ensure_version(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_genesys_usbhub_firmware_check_magic(FuFirmware *firmware,
-				       GBytes *fw,
-				       gsize offset,
-				       GError **error)
+fu_genesys_usbhub_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	guint8 magic[4] = GENESYS_USBHUB_FW_SIG_TEXT_HUB;
 	return fu_memcmp_safe(g_bytes_get_data(fw, NULL),
@@ -520,7 +517,7 @@ fu_genesys_usbhub_firmware_class_init(FuGenesysUsbhubFirmwareClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_genesys_usbhub_firmware_finalize;
-	klass_firmware->check_magic = fu_genesys_usbhub_firmware_check_magic;
+	klass_firmware->validate = fu_genesys_usbhub_firmware_validate;
 	klass_firmware->parse = fu_genesys_usbhub_firmware_parse;
 	klass_firmware->export = fu_genesys_usbhub_firmware_export;
 	klass_firmware->build = fu_genesys_usbhub_firmware_build;

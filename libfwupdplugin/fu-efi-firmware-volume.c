@@ -45,7 +45,7 @@ fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 }
 
 static gboolean
-fu_efi_firmware_volume_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_efi_firmware_volume_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	return fu_struct_efi_volume_validate_bytes(fw, offset, error);
 }
@@ -267,7 +267,7 @@ static void
 fu_efi_firmware_volume_class_init(FuEfiFirmwareVolumeClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_efi_firmware_volume_check_magic;
+	klass_firmware->validate = fu_efi_firmware_volume_validate;
 	klass_firmware->parse = fu_efi_firmware_volume_parse;
 	klass_firmware->write = fu_efi_firmware_volume_write;
 	klass_firmware->export = fu_ifd_firmware_export;

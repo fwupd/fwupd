@@ -35,10 +35,7 @@ fu_elantp_haptic_firmware_export(FuFirmware *firmware,
 }
 
 static gboolean
-fu_elantp_haptic_firmware_check_magic(FuFirmware *firmware,
-				      GBytes *fw,
-				      gsize offset,
-				      GError **error)
+fu_elantp_haptic_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	gsize bufsz = g_bytes_get_size(fw);
 	const guint8 *buf = g_bytes_get_data(fw, NULL);
@@ -117,7 +114,7 @@ static void
 fu_elantp_haptic_firmware_class_init(FuElantpHapticFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_elantp_haptic_firmware_check_magic;
+	klass_firmware->validate = fu_elantp_haptic_firmware_validate;
 	klass_firmware->parse = fu_elantp_haptic_firmware_parse;
 	klass_firmware->export = fu_elantp_haptic_firmware_export;
 }

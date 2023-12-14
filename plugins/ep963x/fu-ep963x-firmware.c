@@ -18,7 +18,7 @@ struct _FuEp963xFirmware {
 G_DEFINE_TYPE(FuEp963xFirmware, fu_ep963x_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_ep963x_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_ep963x_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	guint8 magic[5] = "EP963";
 	return fu_memcmp_safe(g_bytes_get_data(fw, NULL),
@@ -64,6 +64,6 @@ static void
 fu_ep963x_firmware_class_init(FuEp963xFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_ep963x_firmware_check_magic;
+	klass_firmware->validate = fu_ep963x_firmware_validate;
 	klass_firmware->parse = fu_ep963x_firmware_parse;
 }

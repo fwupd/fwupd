@@ -90,7 +90,7 @@ fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 }
 
 static gboolean
-fu_ifd_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_ifd_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	return fu_struct_ifd_fdbar_validate_bytes(fw, offset, error);
 }
@@ -439,7 +439,7 @@ fu_ifd_firmware_class_init(FuIfdFirmwareClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_ifd_firmware_finalize;
-	klass_firmware->check_magic = fu_ifd_firmware_check_magic;
+	klass_firmware->validate = fu_ifd_firmware_validate;
 	klass_firmware->export = fu_ifd_firmware_export;
 	klass_firmware->parse = fu_ifd_firmware_parse;
 	klass_firmware->write = fu_ifd_firmware_write;

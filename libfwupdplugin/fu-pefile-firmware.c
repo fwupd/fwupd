@@ -30,7 +30,7 @@
 G_DEFINE_TYPE(FuPefileFirmware, fu_pefile_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_pefile_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_pefile_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	return fu_struct_pe_dos_header_validate_bytes(fw, offset, error);
 }
@@ -182,7 +182,7 @@ static void
 fu_pefile_firmware_class_init(FuPefileFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_pefile_firmware_check_magic;
+	klass_firmware->validate = fu_pefile_firmware_validate;
 	klass_firmware->parse = fu_pefile_firmware_parse;
 }
 

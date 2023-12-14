@@ -891,29 +891,29 @@ fu_firmware_check_compatible(FuFirmware *self,
 }
 
 static gboolean
-fu_firmware_check_magic_for_offset(FuFirmware *self,
-				   GBytes *fw,
-				   gsize *offset,
-				   FwupdInstallFlags flags,
-				   GError **error)
+fu_firmware_validate_for_offset(FuFirmware *self,
+				GBytes *fw,
+				gsize *offset,
+				FwupdInstallFlags flags,
+				GError **error)
 {
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
 
 	/* not implemented */
-	if (klass->check_magic == NULL)
+	if (klass->validate == NULL)
 		return TRUE;
 
 	/* fuzzing */
 	if (!fu_firmware_has_flag(self, FU_FIRMWARE_FLAG_ALWAYS_SEARCH) &&
 	    (flags & FWUPD_INSTALL_FLAG_NO_SEARCH) > 0) {
-		if (!klass->check_magic(self, fw, *offset, error))
+		if (!klass->validate(self, fw, *offset, error))
 			return FALSE;
 		return TRUE;
 	}
 
 	/* limit the size of firmware we search */
 	if (g_bytes_get_size(fw) > FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX) {
-		if (!klass->check_magic(self, fw, *offset, error)) {
+		if (!klass->validate(self, fw, *offset, error)) {
 			g_prefix_error(error,
 				       "failed to search for magic as firmware size was 0x%x and "
 				       "limit was 0x%x: ",
@@ -926,7 +926,7 @@ fu_firmware_check_magic_for_offset(FuFirmware *self,
 
 	/* increment the offset, looking for the magic */
 	for (gsize offset_tmp = *offset; offset_tmp < g_bytes_get_size(fw); offset_tmp++) {
-		if (klass->check_magic(self, fw, offset_tmp, NULL)) {
+		if (klass->validate(self, fw, offset_tmp, NULL)) {
 			fu_firmware_set_offset(self, offset_tmp);
 			*offset = offset_tmp;
 			return TRUE;
@@ -1036,7 +1036,7 @@ fu_firmware_parse_stream(FuFirmware *self,
 		if (!klass->tokenize(self, fw, flags, error))
 			return FALSE;
 	}
-	if (!fu_firmware_check_magic_for_offset(self, fw, &offset, flags, error))
+	if (!fu_firmware_validate_for_offset(self, fw, &offset, flags, error))
 		return FALSE;
 	if (klass->parse != NULL)
 		return klass->parse(self, fw, 0x0, flags, error);
@@ -1109,7 +1109,7 @@ fu_firmware_parse_full(FuFirmware *self,
 		if (!klass->tokenize(self, fw, flags, error))
 			return FALSE;
 	}
-	if (!fu_firmware_check_magic_for_offset(self, fw, &offset, flags, error))
+	if (!fu_firmware_validate_for_offset(self, fw, &offset, flags, error))
 		return FALSE;
 
 	/* always set by default */
