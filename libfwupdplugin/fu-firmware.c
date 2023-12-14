@@ -1928,6 +1928,27 @@ fu_firmware_get_image_by_id_bytes(FuFirmware *self, const gchar *id, GError **er
 }
 
 /**
+ * fu_firmware_get_image_by_id_stream:
+ * @self: a #FuPlugin
+ * @id: (nullable): image ID, e.g. `config`
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the firmware image stream using the image ID.
+ *
+ * Returns: (transfer full): a #GInputStream of a #FuFirmware, or %NULL if the image is not found
+ *
+ * Since: 2.0.0
+ **/
+GInputStream *
+fu_firmware_get_image_by_id_stream(FuFirmware *self, const gchar *id, GError **error)
+{
+	g_autoptr(FuFirmware) img = fu_firmware_get_image_by_id(self, id, error);
+	if (img == NULL)
+		return NULL;
+	return fu_firmware_get_stream(img, error);
+}
+
+/**
  * fu_firmware_get_image_by_idx:
  * @self: a #FuPlugin
  * @idx: image index
@@ -2024,6 +2045,28 @@ fu_firmware_get_image_by_idx_bytes(FuFirmware *self, guint64 idx, GError **error
 		return NULL;
 	return fu_firmware_write(img, error);
 }
+
+/**
+ * fu_firmware_get_image_by_idx_stream:
+ * @self: a #FuPlugin
+ * @idx: image index
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the firmware image stream using the image index.
+ *
+ * Returns: (transfer full): a #GInputStream of a #FuFirmware, or %NULL if the image is not found
+ *
+ * Since: 2.0.0
+ **/
+GInputStream *
+fu_firmware_get_image_by_idx_stream(FuFirmware *self, guint64 idx, GError **error)
+{
+	g_autoptr(FuFirmware) img = fu_firmware_get_image_by_idx(self, idx, error);
+	if (img == NULL)
+		return NULL;
+	return fu_firmware_get_stream(img, error);
+}
+
 /**
  * fu_firmware_get_image_by_gtype_bytes:
  * @self: a #FuPlugin
