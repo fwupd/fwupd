@@ -54,6 +54,30 @@ fu_input_stream_read_byte_array(GInputStream *stream, gsize offset, gsize count,
 GBytes *
 fu_input_stream_read_bytes(GInputStream *stream, gsize offset, gsize count, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
+typedef gboolean (*FuInputStreamChunkifyFunc)(const guint8 *buf,
+					      gsize bufsz,
+					      gpointer user_data,
+					      GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_input_stream_chunkify(GInputStream *stream,
+			 FuInputStreamChunkifyFunc func_cb,
+			 gpointer user_data,
+			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+
+gboolean
+fu_input_stream_compute_sum8(GInputStream *stream,
+			     guint8 *value,
+			     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_input_stream_compute_sum16(GInputStream *stream,
+			      guint16 *value,
+			      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_input_stream_compute_crc32(GInputStream *stream,
+			      guint32 *crc,
+			      guint32 polynomial,
+			      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gchar *
 fu_input_stream_compute_checksum(GInputStream *stream,
 				 GChecksumType checksum_type,
