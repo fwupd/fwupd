@@ -40,7 +40,7 @@ fu_elanfp_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static gboolean
-fu_elanfp_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_elanfp_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	guint32 magic = 0;
 
@@ -229,7 +229,7 @@ static void
 fu_elanfp_firmware_class_init(FuElanfpFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_elanfp_firmware_check_magic;
+	klass_firmware->validate = fu_elanfp_firmware_validate;
 	klass_firmware->parse = fu_elanfp_firmware_parse;
 	klass_firmware->write = fu_elanfp_firmware_write;
 	klass_firmware->export = fu_elanfp_firmware_export;

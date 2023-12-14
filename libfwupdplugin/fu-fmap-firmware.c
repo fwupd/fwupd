@@ -25,7 +25,7 @@
 G_DEFINE_TYPE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_fmap_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_fmap_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	return fu_struct_fmap_validate_bytes(fw, offset, error);
 }
@@ -178,7 +178,7 @@ static void
 fu_fmap_firmware_class_init(FuFmapFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_fmap_firmware_check_magic;
+	klass_firmware->validate = fu_fmap_firmware_validate;
 	klass_firmware->parse = fu_fmap_firmware_parse;
 	klass_firmware->write = fu_fmap_firmware_write;
 }

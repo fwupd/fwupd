@@ -18,10 +18,10 @@ struct _FuGenesysUsbhubDevFirmware {
 G_DEFINE_TYPE(FuGenesysUsbhubDevFirmware, fu_genesys_usbhub_dev_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_genesys_usbhub_dev_firmware_check_magic(FuFirmware *firmware,
-					   GBytes *fw,
-					   gsize offset,
-					   GError **error)
+fu_genesys_usbhub_dev_firmware_validate(FuFirmware *firmware,
+					GBytes *fw,
+					gsize offset,
+					GError **error)
 {
 	guint8 magic[4] = GENESYS_USBHUB_FW_SIG_TEXT_DEV_BRIDGE;
 	return fu_memcmp_safe(g_bytes_get_data(fw, NULL),
@@ -86,6 +86,6 @@ static void
 fu_genesys_usbhub_dev_firmware_class_init(FuGenesysUsbhubDevFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_genesys_usbhub_dev_firmware_check_magic;
+	klass_firmware->validate = fu_genesys_usbhub_dev_firmware_validate;
 	klass_firmware->parse = fu_genesys_usbhub_dev_firmware_parse;
 }

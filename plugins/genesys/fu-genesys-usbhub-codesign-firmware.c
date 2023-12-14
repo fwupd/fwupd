@@ -27,10 +27,10 @@ fu_genesys_usbhub_codesign_firmware_get_codesign(FuGenesysUsbhubCodesignFirmware
 }
 
 static gboolean
-fu_genesys_usbhub_codesign_firmware_check_magic(FuFirmware *firmware,
-						GBytes *fw,
-						gsize offset,
-						GError **error)
+fu_genesys_usbhub_codesign_firmware_validate(FuFirmware *firmware,
+					     GBytes *fw,
+					     gsize offset,
+					     GError **error)
 {
 	gsize code_size = g_bytes_get_size(fw) - offset;
 
@@ -104,7 +104,7 @@ static void
 fu_genesys_usbhub_codesign_firmware_class_init(FuGenesysUsbhubCodesignFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_genesys_usbhub_codesign_firmware_check_magic;
+	klass_firmware->validate = fu_genesys_usbhub_codesign_firmware_validate;
 	klass_firmware->parse = fu_genesys_usbhub_codesign_firmware_parse;
 	klass_firmware->export = fu_genesys_usbhub_codesign_firmware_export;
 }

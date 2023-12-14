@@ -26,7 +26,7 @@ fu_dfu_csr_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, Xb
 }
 
 static gboolean
-fu_dfu_csr_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_dfu_csr_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	return fu_struct_dfu_csr_file_validate_bytes(fw, offset, error);
 }
@@ -67,7 +67,7 @@ static void
 fu_dfu_csr_firmware_class_init(FuDfuCsrFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_dfu_csr_firmware_check_magic;
+	klass_firmware->validate = fu_dfu_csr_firmware_validate;
 	klass_firmware->parse = fu_dfu_csr_firmware_parse;
 	klass_firmware->export = fu_dfu_csr_firmware_export;
 }

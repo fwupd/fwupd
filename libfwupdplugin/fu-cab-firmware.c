@@ -458,7 +458,7 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 }
 
 static gboolean
-fu_cab_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_cab_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	return fu_struct_cab_header_validate_bytes(fw, offset, error);
 }
@@ -837,7 +837,7 @@ static void
 fu_cab_firmware_class_init(FuCabFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_cab_firmware_check_magic;
+	klass_firmware->validate = fu_cab_firmware_validate;
 	klass_firmware->parse = fu_cab_firmware_parse;
 	klass_firmware->write = fu_cab_firmware_write;
 	klass_firmware->build = fu_cab_firmware_build;

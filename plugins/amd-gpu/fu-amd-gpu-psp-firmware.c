@@ -47,7 +47,7 @@ fu_amd_gpu_psp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags
 }
 
 static gboolean
-fu_amd_gpu_psp_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_amd_gpu_psp_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	g_autoptr(GByteArray) efs = NULL;
 
@@ -204,7 +204,7 @@ static void
 fu_amd_gpu_psp_firmware_class_init(FuAmdGpuPspFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_amd_gpu_psp_firmware_check_magic;
+	klass_firmware->validate = fu_amd_gpu_psp_firmware_validate;
 	klass_firmware->parse = fu_amd_gpu_psp_firmware_parse;
 	klass_firmware->export = fu_amd_gpu_psp_firmware_export;
 }

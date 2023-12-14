@@ -19,7 +19,7 @@ G_DEFINE_TYPE(FuTiTps6598xFirmware, fu_ti_tps6598x_firmware, FU_TYPE_FIRMWARE)
 #define FU_TI_TPS6598X_FIRMWARE_PUBKEY_SIZE 0x180 /* bytes */
 
 static gboolean
-fu_ti_tps6598x_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_ti_tps6598x_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	guint32 magic = 0;
 
@@ -149,7 +149,7 @@ static void
 fu_ti_tps6598x_firmware_class_init(FuTiTps6598xFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_ti_tps6598x_firmware_check_magic;
+	klass_firmware->validate = fu_ti_tps6598x_firmware_validate;
 	klass_firmware->parse = fu_ti_tps6598x_firmware_parse;
 	klass_firmware->write = fu_ti_tps6598x_firmware_write;
 }

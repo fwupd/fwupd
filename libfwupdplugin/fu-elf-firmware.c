@@ -26,7 +26,7 @@
 G_DEFINE_TYPE(FuElfFirmware, fu_elf_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_elf_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_elf_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	return fu_struct_elf_file_header64le_validate_bytes(fw, offset, error);
 }
@@ -141,7 +141,7 @@ static void
 fu_elf_firmware_class_init(FuElfFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_elf_firmware_check_magic;
+	klass_firmware->validate = fu_elf_firmware_validate;
 	klass_firmware->parse = fu_elf_firmware_parse;
 }
 

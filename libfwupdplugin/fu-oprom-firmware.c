@@ -107,7 +107,7 @@ fu_oprom_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBu
 }
 
 static gboolean
-fu_oprom_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_oprom_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	return fu_struct_oprom_validate_bytes(fw, offset, error);
 }
@@ -294,7 +294,7 @@ static void
 fu_oprom_firmware_class_init(FuOpromFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_oprom_firmware_check_magic;
+	klass_firmware->validate = fu_oprom_firmware_validate;
 	klass_firmware->export = fu_oprom_firmware_export;
 	klass_firmware->parse = fu_oprom_firmware_parse;
 	klass_firmware->write = fu_oprom_firmware_write;

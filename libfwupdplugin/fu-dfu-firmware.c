@@ -197,7 +197,7 @@ fu_dfu_firmware_set_version(FuDfuFirmware *self, guint16 version)
 }
 
 static gboolean
-fu_dfu_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_dfu_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
 	return fu_struct_dfu_ftr_validate_bytes(fw,
 						g_bytes_get_size(fw) - FU_STRUCT_DFU_FTR_SIZE,
@@ -360,7 +360,7 @@ static void
 fu_dfu_firmware_class_init(FuDfuFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->check_magic = fu_dfu_firmware_check_magic;
+	klass_firmware->validate = fu_dfu_firmware_validate;
 	klass_firmware->export = fu_dfu_firmware_export;
 	klass_firmware->parse = fu_dfu_firmware_parse;
 	klass_firmware->write = fu_dfu_firmware_write;
