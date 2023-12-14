@@ -41,7 +41,7 @@ fu_input_stream_from_path(const gchar *path, GError **error)
 /**
  * fu_input_stream_read_safe:
  * @stream: a #GInputStream
- * @buf: a buffer to read data into
+ * @buf (not nullable): a buffer to read data into
  * @bufsz: size of @buf
  * @offset: offset in bytes into @buf to copy from
  * @seek_set: given offset to seek to
@@ -89,6 +89,161 @@ fu_input_stream_read_safe(GInputStream *stream,
 			    (guint)rc);
 		return FALSE;
 	}
+	return TRUE;
+}
+
+/**
+ * fu_input_stream_read_u8:
+ * @stream: a #GInputStream
+ * @offset: offset in bytes into @stream to copy from
+ * @value: (out) (not nullable): the parsed value
+ * @error: (nullable): optional return location for an error
+ *
+ * Read a value from a stream using a specified endian in a safe way.
+ *
+ * Returns: %TRUE if @value was set, %FALSE otherwise
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_input_stream_read_u8(GInputStream *stream, gsize offset, guint8 *value, GError **error)
+{
+	guint8 buf = 0;
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	if (!fu_input_stream_read_safe(stream, &buf, sizeof(buf), 0x0, offset, sizeof(buf), error))
+		return FALSE;
+	if (value != NULL)
+		*value = buf;
+	return TRUE;
+}
+
+/**
+ * fu_input_stream_read_u16:
+ * @stream: a #GInputStream
+ * @offset: offset in bytes into @stream to copy from
+ * @value: (out) (not nullable): the parsed value
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
+ * @error: (nullable): optional return location for an error
+ *
+ * Read a value from a stream using a specified endian in a safe way.
+ *
+ * Returns: %TRUE if @value was set, %FALSE otherwise
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_input_stream_read_u16(GInputStream *stream,
+			 gsize offset,
+			 guint16 *value,
+			 FuEndianType endian,
+			 GError **error)
+{
+	guint8 buf[2] = {0};
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	if (!fu_input_stream_read_safe(stream, buf, sizeof(buf), 0x0, offset, sizeof(buf), error))
+		return FALSE;
+	if (value != NULL)
+		*value = fu_memread_uint16(buf, endian);
+	return TRUE;
+}
+
+/**
+ * fu_input_stream_read_u24:
+ * @stream: a #GInputStream
+ * @offset: offset in bytes into @stream to copy from
+ * @value: (out) (not nullable): the parsed value
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
+ * @error: (nullable): optional return location for an error
+ *
+ * Read a value from a stream using a specified endian in a safe way.
+ *
+ * Returns: %TRUE if @value was set, %FALSE otherwise
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_input_stream_read_u24(GInputStream *stream,
+			 gsize offset,
+			 guint32 *value,
+			 FuEndianType endian,
+			 GError **error)
+{
+	guint8 buf[3] = {0};
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	if (!fu_input_stream_read_safe(stream, buf, sizeof(buf), 0x0, offset, sizeof(buf), error))
+		return FALSE;
+	if (value != NULL)
+		*value = fu_memread_uint24(buf, endian);
+	return TRUE;
+}
+
+/**
+ * fu_input_stream_read_u32:
+ * @stream: a #GInputStream
+ * @offset: offset in bytes into @stream to copy from
+ * @value: (out) (not nullable): the parsed value
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
+ * @error: (nullable): optional return location for an error
+ *
+ * Read a value from a stream using a specified endian in a safe way.
+ *
+ * Returns: %TRUE if @value was set, %FALSE otherwise
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_input_stream_read_u32(GInputStream *stream,
+			 gsize offset,
+			 guint32 *value,
+			 FuEndianType endian,
+			 GError **error)
+{
+	guint8 buf[4] = {0};
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	if (!fu_input_stream_read_safe(stream, buf, sizeof(buf), 0x0, offset, sizeof(buf), error))
+		return FALSE;
+	if (value != NULL)
+		*value = fu_memread_uint32(buf, endian);
+	return TRUE;
+}
+
+/**
+ * fu_input_stream_read_u64:
+ * @stream: a #GInputStream
+ * @offset: offset in bytes into @stream to copy from
+ * @value: (out) (not nullable): the parsed value
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
+ * @error: (nullable): optional return location for an error
+ *
+ * Read a value from a stream using a specified endian in a safe way.
+ *
+ * Returns: %TRUE if @value was set, %FALSE otherwise
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_input_stream_read_u64(GInputStream *stream,
+			 gsize offset,
+			 guint64 *value,
+			 FuEndianType endian,
+			 GError **error)
+{
+	guint8 buf[8] = {0};
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	if (!fu_input_stream_read_safe(stream, buf, sizeof(buf), 0x0, offset, sizeof(buf), error))
+		return FALSE;
+	if (value != NULL)
+		*value = fu_memread_uint64(buf, endian);
 	return TRUE;
 }
 
