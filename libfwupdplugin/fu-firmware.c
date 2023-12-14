@@ -606,7 +606,7 @@ fu_firmware_get_bytes(FuFirmware *self, GError **error)
 					    "stream size unknown");
 			return NULL;
 		}
-		return fu_bytes_get_contents_stream_full(priv->stream, 0x0, priv->streamsz, error);
+		return fu_input_stream_read_bytes(priv->stream, 0x0, priv->streamsz, error);
 	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no payload set");
 	return NULL;
@@ -1029,7 +1029,7 @@ fu_firmware_parse_stream(FuFirmware *self,
 		fu_firmware_add_flag(self, FU_FIRMWARE_FLAG_DONE_PARSE);
 		return klass->parse_stream(self, stream, offset, flags, error);
 	}
-	fw = fu_bytes_get_contents_stream_full(stream, offset, priv->streamsz, error);
+	fw = fu_input_stream_read_bytes(stream, offset, priv->streamsz, error);
 	if (fw == NULL)
 		return FALSE;
 	if (klass->tokenize != NULL) {
