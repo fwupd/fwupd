@@ -15,6 +15,11 @@
 # To override this behavior add FWUPD_DEVICE_FLAG_SKIPS_RESTART
 #
 
+[MST-162]
+Name = Luxshare Quad USB4 Dock
+SynapticsMstDeviceKind = dock
+Flags = manual-restart-required
+
 [MST-272]
 Name = Dell X6 Platform
 SynapticsMstDeviceKind = system
