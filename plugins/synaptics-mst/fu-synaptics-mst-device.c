@@ -849,6 +849,7 @@ fu_synaptics_mst_device_update_panamera_firmware_cb(FuDevice *device,
 	fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
 
 	/* write */
+	fu_progress_set_id(helper->progress, G_STRLOC);
 	fu_progress_set_steps(helper->progress, fu_chunk_array_length(helper->chunks));
 	for (guint i = 0; i < fu_chunk_array_length(helper->chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
@@ -1031,6 +1032,9 @@ fu_synaptics_mst_device_update_panamera_set_old_invalid_cb(FuDevice *device,
 }
 
 static gboolean
+fu_synaptics_mst_device_panamera_prepare_write(FuSynapticsMstDevice *self, GError **error);
+
+static gboolean
 fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 						 GBytes *fw,
 						 FuProgress *progress,
@@ -1039,6 +1043,28 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	guint32 fw_size = 0;
 	guint8 checksum8 = 0;
 	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "prepare");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 8, "update-esm");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, "update");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "invalidate");
+
+	/* prepare */
+	if (!fu_synaptics_mst_device_panamera_prepare_write(self, error)) {
+		g_prefix_error(error, "Failed to prepare for write: ");
+		return FALSE;
+	}
+	fu_progress_step_done(progress);
+
+	/* update ESM */
+	if (!fu_synaptics_mst_device_update_esm(self, fw, fu_progress_get_child(progress), error)) {
+		g_prefix_error(error, "ESM update failed: ");
+		return FALSE;
+	}
+	fu_progress_step_done(progress);
 
 	/* get used bank */
 	if (!fu_synaptics_mst_device_get_active_bank_panamera(self, error))
@@ -1076,7 +1102,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	helper->checksum = fu_synaptics_mst_calculate_crc16(0,
 							    g_bytes_get_data(helper->fw, NULL),
 							    g_bytes_get_size(helper->fw));
-	helper->progress = g_object_ref(progress);
+	helper->progress = g_object_ref(fu_progress_get_child(progress));
 	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw,
 						       EEPROM_BANK_OFFSET * helper->bank_to_update,
 						       BLOCK_UNIT);
@@ -1087,6 +1113,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 				  helper,
 				  error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* set bank_to_update tag valid */
 	if (!fu_device_retry(FU_DEVICE(self),
@@ -1108,11 +1135,16 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 		return FALSE;
 	}
 	helper->checksum = checksum8;
-	return fu_device_retry(FU_DEVICE(self),
-			       fu_synaptics_mst_device_update_panamera_set_old_invalid_cb,
-			       MAX_RETRY_COUNTS,
-			       helper,
-			       error);
+	if (!fu_device_retry(FU_DEVICE(self),
+			     fu_synaptics_mst_device_update_panamera_set_old_invalid_cb,
+			     MAX_RETRY_COUNTS,
+			     helper,
+			     error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -1186,27 +1218,20 @@ fu_synaptics_mst_device_panamera_prepare_write(FuSynapticsMstDevice *self, GErro
 }
 
 static gboolean
-fu_synaptics_mst_device_update_cayenne_firmware_cb(FuDevice *device,
-						   gpointer user_data,
-						   GError **error)
+fu_synaptics_mst_device_update_cayenne_firmware_chunks(FuSynapticsMstDevice *self,
+						       FuChunkArray *chunks,
+						       FuProgress *progress,
+						       GError **error)
 {
-	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
-	FuSynapticsMstDeviceHelper *helper = (FuSynapticsMstDeviceHelper *)user_data;
-	guint32 flash_checksum;
-	guint8 buf[4] = {0};
-
-	if (!fu_synaptics_mst_device_set_flash_sector_erase(self, 0xffff, 0, error))
-		return FALSE;
-	g_debug("waiting for flash clear to settle");
-	fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
-
-	fu_progress_set_steps(helper->progress, fu_chunk_array_length(helper->chunks));
-	for (guint i = 0; i < fu_chunk_array_length(helper->chunks); i++) {
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		/* prepare chunk */
-		chk = fu_chunk_array_index(helper->chunks, i, error);
+		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
 		if (!fu_synaptics_mst_device_rc_set_command(
@@ -1233,8 +1258,44 @@ fu_synaptics_mst_device_update_cayenne_firmware_cb(FuDevice *device,
 				return FALSE;
 			}
 		}
-		fu_progress_step_done(helper->progress);
+		fu_progress_step_done(progress);
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_synaptics_mst_device_update_cayenne_firmware_cb(FuDevice *device,
+						   gpointer user_data,
+						   GError **error)
+{
+	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
+	FuSynapticsMstDeviceHelper *helper = (FuSynapticsMstDeviceHelper *)user_data;
+	FuProgress *progress = FU_PROGRESS(helper->progress);
+	guint32 flash_checksum;
+	guint8 buf[4] = {0};
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 1, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 1, NULL);
+
+	/* erase */
+	if (!fu_synaptics_mst_device_set_flash_sector_erase(self, 0xffff, 0, error))
+		return FALSE;
+	g_debug("waiting for flash clear to settle");
+	fu_device_sleep(FU_DEVICE(self), FLASH_SETTLE_TIME);
+	fu_progress_step_done(progress);
+
+	/* write */
+	if (!fu_synaptics_mst_device_update_cayenne_firmware_chunks(self,
+								    helper->chunks,
+								    fu_progress_get_child(progress),
+								    error))
+		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* verify CRC */
 	if (!fu_synaptics_mst_device_rc_special_get_command(
@@ -1259,6 +1320,7 @@ fu_synaptics_mst_device_update_cayenne_firmware_cb(FuDevice *device,
 			    helper->checksum);
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* success */
 	return TRUE;
@@ -1272,13 +1334,19 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 {
 	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, NULL);
+
+	/* write */
 	helper->fw = fu_bytes_new_offset(fw, 0x0, CAYENNE_FIRMWARE_SIZE, error);
 	if (helper->fw == NULL)
 		return FALSE;
 	helper->checksum = fu_synaptics_mst_calculate_crc16(0,
 							    g_bytes_get_data(helper->fw, NULL),
 							    g_bytes_get_size(helper->fw));
-	helper->progress = g_object_ref(progress);
+	helper->progress = g_object_ref(fu_progress_get_child(progress));
 	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw, 0x0, BLOCK_UNIT);
 	if (!fu_device_retry(FU_DEVICE(self),
 			     fu_synaptics_mst_device_update_cayenne_firmware_cb,
@@ -1286,7 +1354,9 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 			     helper,
 			     error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
+	/* activate */
 	if (!fu_synaptics_mst_device_rc_set_command(self,
 						    FU_SYNAPTICS_MST_UPDC_CMD_ACTIVATE_FIRMWARE,
 						    0,
@@ -1296,6 +1366,7 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 		g_prefix_error(error, "active firmware failed: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	return TRUE;
 }
@@ -1378,9 +1449,8 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 10, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, NULL);
 
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
@@ -1409,32 +1479,33 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 	switch (self->family) {
 	case FU_SYNAPTICS_MST_FAMILY_TESLA:
 	case FU_SYNAPTICS_MST_FAMILY_LEAF:
-		if (!fu_synaptics_mst_device_update_tesla_leaf_firmware(self,
-									fw,
-									progress,
-									error)) {
-			g_prefix_error(error, "Firmware update failed: ");
+		if (!fu_synaptics_mst_device_update_tesla_leaf_firmware(
+			self,
+			fw,
+			fu_progress_get_child(progress),
+			error)) {
+			g_prefix_error(error, "firmware update failed: ");
 			return FALSE;
 		}
 		break;
 	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
-		if (!fu_synaptics_mst_device_panamera_prepare_write(self, error)) {
-			g_prefix_error(error, "Failed to prepare for write: ");
-			return FALSE;
-		}
-		if (!fu_synaptics_mst_device_update_esm(self, fw, progress, error)) {
-			g_prefix_error(error, "ESM update failed: ");
-			return FALSE;
-		}
-		if (!fu_synaptics_mst_device_update_panamera_firmware(self, fw, progress, error)) {
-			g_prefix_error(error, "Firmware update failed: ");
+		if (!fu_synaptics_mst_device_update_panamera_firmware(
+			self,
+			fw,
+			fu_progress_get_child(progress),
+			error)) {
+			g_prefix_error(error, "firmware update failed: ");
 			return FALSE;
 		}
 		break;
 	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
 	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
-		if (!fu_synaptics_mst_device_update_cayenne_firmware(self, fw, progress, error)) {
-			g_prefix_error(error, "Firmware update failed: ");
+		if (!fu_synaptics_mst_device_update_cayenne_firmware(
+			self,
+			fw,
+			fu_progress_get_child(progress),
+			error)) {
+			g_prefix_error(error, "firmware update failed: ");
 			return FALSE;
 		}
 		break;
@@ -1764,8 +1835,8 @@ fu_synaptics_mst_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 45, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 54, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
 }
 
