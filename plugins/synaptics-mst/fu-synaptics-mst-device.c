@@ -1663,10 +1663,6 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	if (!fu_synaptics_mst_device_ensure_board_id(self, error))
 		return FALSE;
 
-	/* set up the device name and kind via quirks */
-	guid0 = g_strdup_printf("MST-%u", self->board_id);
-	fu_device_add_instance_id(FU_DEVICE(self), guid0);
-
 	parent = fu_device_get_parent(FU_DEVICE(self));
 	if (parent != NULL)
 		name_parent = fu_device_get_name(parent);
@@ -1676,6 +1672,10 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 		name = g_strdup_printf("VMM%04x", self->chip_id);
 	}
 	fu_device_set_name(FU_DEVICE(self), name);
+
+	/* set up the device name and kind via quirks */
+	guid0 = g_strdup_printf("MST-%u", self->board_id);
+	fu_device_add_instance_id(FU_DEVICE(self), guid0);
 
 	/* this is a host system, use system ID */
 	name_family = fu_synaptics_mst_family_to_string(self->family);
