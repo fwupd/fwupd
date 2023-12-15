@@ -165,12 +165,12 @@ fu_aver_hid_device_isp_file_dnload(FuAverHidDevice *self,
 		/* copy in payload */
 		if (fu_device_has_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP)) {
 			fu_struct_aver_hid_req_isp_file_dnload_set_custom_isp_cmd(
-				req,
-				FU_AVER_HID_CUSTOM_ISP_CMD_ALL_FILE_DNLOAD);
+			    req,
+			    FU_AVER_HID_CUSTOM_ISP_CMD_ALL_FILE_DNLOAD);
 		} else {
 			fu_struct_aver_hid_req_isp_file_dnload_set_custom_isp_cmd(
-				req,
-				FU_AVER_HID_CUSTOM_ISP_CMD_FILE_DNLOAD);
+			    req,
+			    FU_AVER_HID_CUSTOM_ISP_CMD_FILE_DNLOAD);
 		}
 		if (!fu_memcpy_safe(req->data,
 				    req->len,
@@ -246,12 +246,12 @@ fu_aver_hid_device_isp_file_start(FuAverHidDevice *self,
 
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP)) {
 		fu_struct_aver_hid_req_isp_file_start_set_custom_isp_cmd(
-			req,
-			FU_AVER_HID_CUSTOM_ISP_CMD_ALL_FILE_START);
+		    req,
+		    FU_AVER_HID_CUSTOM_ISP_CMD_ALL_FILE_START);
 	} else {
 		fu_struct_aver_hid_req_isp_file_start_set_custom_isp_cmd(
-			req,
-			FU_AVER_HID_CUSTOM_ISP_CMD_FILE_START);
+		    req,
+		    FU_AVER_HID_CUSTOM_ISP_CMD_FILE_START);
 	}
 	if (!fu_struct_aver_hid_req_isp_file_start_set_file_name(req, name, error))
 		return FALSE;
@@ -271,12 +271,12 @@ fu_aver_hid_device_isp_file_end(FuAverHidDevice *self, gsize sz, const gchar *na
 
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP)) {
 		fu_struct_aver_hid_req_isp_file_end_set_custom_isp_cmd(
-				req,
-				FU_AVER_HID_CUSTOM_ISP_CMD_ALL_FILE_END);
+		    req,
+		    FU_AVER_HID_CUSTOM_ISP_CMD_ALL_FILE_END);
 	} else {
 		fu_struct_aver_hid_req_isp_file_end_set_custom_isp_cmd(
-				req,
-				FU_AVER_HID_CUSTOM_ISP_CMD_FILE_END);
+		    req,
+		    FU_AVER_HID_CUSTOM_ISP_CMD_FILE_END);
 	}
 	if (!fu_struct_aver_hid_req_isp_file_end_set_file_name(req, name, error))
 		return FALSE;
@@ -300,13 +300,14 @@ fu_aver_hid_device_wait_for_untar_cb(FuDevice *device, gpointer user_data, GErro
 	if (!fu_aver_hid_device_transfer(self, req, res, error))
 		return FALSE;
 
-	g_info("isp status: %s", fu_aver_hid_status_to_string(fu_struct_aver_hid_res_isp_status_get_status(res)));
+	g_info("isp status: %s",
+	       fu_aver_hid_status_to_string(fu_struct_aver_hid_res_isp_status_get_status(res)));
 	if (fu_struct_aver_hid_res_isp_status_get_status(res) != FU_AVER_HID_STATUS_WAITUSR) {
 		g_set_error(error,
-				G_IO_ERROR,
-				G_IO_ERROR_BUSY,
-				"device has status %s",
-				fu_aver_hid_status_to_string(
+			    G_IO_ERROR,
+			    G_IO_ERROR_BUSY,
+			    "device has status %s",
+			    fu_aver_hid_status_to_string(
 				fu_struct_aver_hid_res_isp_status_get_status(res)));
 		return FALSE;
 	}
@@ -320,9 +321,13 @@ fu_aver_hid_device_isp_start(FuAverHidDevice *self, GError **error)
 	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
 
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP)) {
-		fu_struct_aver_hid_req_isp_start_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_ALL_START);
+		fu_struct_aver_hid_req_isp_start_set_custom_isp_cmd(
+		    req,
+		    FU_AVER_HID_CUSTOM_ISP_CMD_ALL_START);
 	} else {
-		fu_struct_aver_hid_req_isp_start_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_START);
+		fu_struct_aver_hid_req_isp_start_set_custom_isp_cmd(
+		    req,
+		    FU_AVER_HID_CUSTOM_ISP_CMD_START);
 	}
 	if (!fu_aver_hid_device_transfer(self, req, res, error))
 		return FALSE;
