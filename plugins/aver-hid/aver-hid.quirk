@@ -5,3 +5,8 @@ Plugin = aver_hid
 # AVer CAM520Pro3
 [USB\VID_2574&PID_0B20]
 Plugin = aver_hid
+
+# AVer VB342Pro
+[USB\VID_2574&PID_0AB1]
+Plugin = aver_hid
+Flags = dual-isp
