@@ -1520,45 +1520,12 @@
       <package variant="aarch64">valgrind-devel</package>
     </distro>
     <distro id="debian">
-      <control>
-        <exclusive>ia64</exclusive>
-        <exclusive>riscv64</exclusive>
-        <exclusive>x32</exclusive>
-        <exclusive>mips</exclusive>
-        <exclusive>sparc64</exclusive>
-        <exclusive>sh4</exclusive>
-        <exclusive>ppc64</exclusive>
-        <exclusive>powerpcspe</exclusive>
-        <exclusive>hppa</exclusive>
-        <exclusive>alpha</exclusive>
-        <exclusive>mips64el</exclusive>
-        <exclusive>armhf</exclusive>
-        <exclusive>armel</exclusive>
-        <exclusive>mipsel</exclusive>
-        <exclusive>m68k</exclusive>
-      </control>
-      <package variant="x86_64" />
-      <package variant="i386" />
+      <package variant="x86_64">valgrind-if-available</package>
+      <package variant="i386">valgrind-if-available</package>
     </distro>
     <distro id="ubuntu">
-      <control>
-        <exclusive>ia64</exclusive>
-        <exclusive>riscv64</exclusive>
-        <exclusive>x32</exclusive>
-        <exclusive>mips</exclusive>
-        <exclusive>sparc64</exclusive>
-        <exclusive>sh4</exclusive>
-        <exclusive>ppc64</exclusive>
-        <exclusive>powerpcspe</exclusive>
-        <exclusive>hppa</exclusive>
-        <exclusive>alpha</exclusive>
-        <exclusive>mips64el</exclusive>
-        <exclusive>armhf</exclusive>
-        <exclusive>armel</exclusive>
-        <exclusive>mipsel</exclusive>
-        <exclusive>m68k</exclusive>
-      </control>
-      <package variant="x86_64" />
+      <package variant="x86_64">valgrind-if-available</package>
+      <package variant="i386">valgrind-if-available</package>
     </distro>
   </dependency>
   <dependency id="wget">
