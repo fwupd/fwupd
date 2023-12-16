@@ -7,4 +7,4 @@ rm_conffile /etc/modules-load.d/fwupd-platform-integrity.conf 1.5.3~
 rm_conffile /etc/fwupd/ata.conf 1.5.5~
 rm_conffile /etc/pki/fwupd/GPG-KEY-Hughski-Limited 1.9.10~
 rm_conffile /etc/fwupd/upower.conf 1.9.10~
-
+rm_conffile /etc/fwupd/remotes.d/dell-esrt.conf 1.9.11~
