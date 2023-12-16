@@ -3,20 +3,6 @@ set -e
 
 #DEBHELPER#
 
-#Perform transition from /etc/fwupd/uefi.conf to /etc/fwupd/uefi_capsule.conf
-if dpkg-maintscript-helper supports mv_conffile 2>/dev/null; then
-	ORIGINAL=/etc/fwupd/uefi.conf
-	NEW=/etc/fwupd/uefi_capsule.conf
-	#If already upgraded this file won't exist
-	#If in the middle of an upgrade:
-	# -> If unmodified then preinst would have renamed to /etc/fwupd/uefi.conf.dpkg-remove
-	# -> If modified, we need to do an in-place upgrade with sed
-	if [ -f $ORIGINAL ]; then
-		sed "s,\[uefi\],\[uefi_capsule\]," -i $ORIGINAL
-	fi
-	dpkg-maintscript-helper mv_conffile $ORIGINAL $NEW 1.5.5~ -- "$@"
-fi
-
 # Clean up from fwupdate->fwupd transition
 # This can be removed after bullseye and focal are released
 EFIDIR=$(awk '/^ID=/ {gsub(/"/,""); split($0,a,"="); print tolower(a[2])}' /etc/os-release)
