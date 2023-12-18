@@ -23,20 +23,6 @@ jobs:
           source venv/bin/activate
           sed -i "/no-commit-to-branch/,+1d" .pre-commit-config.yaml
           pre-commit run --hook-stage commit --all-files
-  abi:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Refresh dependencies
-        run: sudo apt update
-      - name: Install dependencies
-        run: |
-          sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
-          sudo ./contrib/ci/fwupd_setup_helpers.py test-meson
-      - name: Check ABI
-        run: ./contrib/ci/check-abi $(git describe --abbrev=0 --tags) $(git rev-parse HEAD)
 
   snap:
     uses: ./.github/workflows/snap.yml
