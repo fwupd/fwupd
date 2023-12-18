@@ -46,10 +46,6 @@ This plugin uses the following plugin-specific quirks:
 
 Ignore board ID firmware mismatch.
 
-### Flags:scan-cascade
-
-Scan MST controllers for remote cascade devices.
-
 ## Requirements
 
 ### (Kernel) DP Aux Interface
