@@ -1371,6 +1371,7 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 	const gchar *tmp2;
 	guint64 flags = fwupd_device_get_flags(dev);
 	guint64 modified = fwupd_device_get_modified(dev);
+	guint64 request_flags = fwupd_device_get_request_flags(dev);
 	g_autoptr(GHashTable) ids = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 
@@ -1624,7 +1625,7 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 	/* TRANSLATORS: description of the device requests */
 	tmp = _("Device Requests");
 	for (guint i = 0; i < 64; i++) {
-		if ((flags & ((guint64)1 << i)) == 0)
+		if ((request_flags & ((guint64)1 << i)) == 0)
 			continue;
 		tmp2 = fu_util_request_flag_to_string((guint64)1 << i);
 		if (tmp2 == NULL)
