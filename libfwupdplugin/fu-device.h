@@ -635,6 +635,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD (1ull << 42)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER:
+ *
+ * Do not automatically set the device order, e.g. updating the child before the parent.
+ *
+ * Since: 1.9.13
+ */
+#define FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER (1ull << 43)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);
