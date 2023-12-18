@@ -584,6 +584,14 @@ typedef enum {
 	 */
 	FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD = 1ull << 42,
 	/**
+	 * FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER:
+	 *
+	 * Do not automatically set the device order, e.g. updating the child before the parent.
+	 *
+	 * Since: 1.9.13
+	 */
+	FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER = 1ull << 43,
+	/**
 	 * FU_DEVICE_INTERNAL_FLAG_UNKNOWN:
 	 *
 	 * Unknown flag value.
