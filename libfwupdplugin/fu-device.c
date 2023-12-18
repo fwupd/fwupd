@@ -294,6 +294,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "host-cpu";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD)
 		return "host-cpu-child";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER)
+		return "explicit-order";
 	return NULL;
 }
 
@@ -394,6 +396,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_HOST_CPU;
 	if (g_strcmp0(flag, "host-cpu-child") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD;
+	if (g_strcmp0(flag, "explicit-order") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 

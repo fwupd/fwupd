@@ -3610,6 +3610,30 @@ fu_device_list_remove_chain_func(gconstpointer user_data)
 }
 
 static void
+fu_device_list_explicit_order_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FuDevice) device_child = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) device_root = fu_device_new(self->ctx);
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+
+	/* add both */
+	fu_device_set_id(device_root, "device");
+	fu_device_add_instance_id(device_root, "foobar");
+	fu_device_convert_instance_ids(device_root);
+	fu_device_set_id(device_child, "device-child");
+	fu_device_add_instance_id(device_child, "baz");
+	fu_device_convert_instance_ids(device_child);
+	fu_device_add_child(device_root, device_child);
+	fu_device_list_add(device_list, device_root);
+
+	fu_device_add_internal_flag(device_root, FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER);
+	fu_device_list_depsolve_order(device_list, device_root);
+	g_assert_cmpint(fu_device_get_order(device_root), ==, G_MAXINT);
+	g_assert_cmpint(fu_device_get_order(device_child), ==, G_MAXINT);
+}
+
+static void
 fu_device_list_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -6277,6 +6301,9 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/security-attr", self, fu_security_attr_func);
 	g_test_add_data_func("/fwupd/device-list", self, fu_device_list_func);
 	g_test_add_data_func("/fwupd/device-list{delay}", self, fu_device_list_delay_func);
+	g_test_add_data_func("/fwupd/device-list{explicit-order}",
+			     self,
+			     fu_device_list_explicit_order_func);
 	g_test_add_data_func("/fwupd/device-list{no-auto-remove-children}",
 			     self,
 			     fu_device_list_no_auto_remove_children_func);
