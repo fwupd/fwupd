@@ -64,6 +64,13 @@
  */
 #define FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID (1 << 0)
 
+/**
+ * FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED:
+ *
+ * The device must be restarted manually after the update has completed.
+ */
+#define FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED (1 << 1)
+
 struct _FuSynapticsMstDevice {
 	FuDpauxDevice parent_instance;
 	gchar *device_kind;
@@ -118,6 +125,9 @@ fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID,
 					"ignore-board-id");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED,
+					"manual-restart-required");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
 
@@ -1437,6 +1447,25 @@ fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
+fu_synaptics_mst_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+{
+	/* some devices do not use a GPIO to reset the chip */
+	if (fu_device_has_private_flag(device,
+				       FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED)) {
+		g_autoptr(FwupdRequest) request = fwupd_request_new();
+		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+		fwupd_request_set_id(request, FWUPD_REQUEST_ID_REPLUG_POWER);
+		fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+		if (!fu_device_emit_request(device, request, progress, error))
+			return FALSE;
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_synaptics_mst_device_write_firmware(FuDevice *device,
 				       FuFirmware *firmware,
 				       FuProgress *progress,
@@ -1850,6 +1879,7 @@ fu_synaptics_mst_device_class_init(FuSynapticsMstDeviceClass *klass)
 	klass_device->set_quirk_kv = fu_synaptics_mst_device_set_quirk_kv;
 	klass_device->setup = fu_synaptics_mst_device_setup;
 	klass_device->write_firmware = fu_synaptics_mst_device_write_firmware;
+	klass_device->attach = fu_synaptics_mst_device_attach;
 	klass_device->prepare_firmware = fu_synaptics_mst_device_prepare_firmware;
 	klass_device->set_progress = fu_synaptics_mst_device_set_progress;
 }
