@@ -1988,7 +1988,6 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 		}
 		xb_builder_node_insert_text(bn, "data", datastr, "size", dataszstr, NULL);
 	}
-	fu_xmlb_builder_insert_kx(bn, "alignment", priv->alignment);
 
 	/* chunks */
 	if (priv->chunks != NULL && priv->chunks->len > 0) {
