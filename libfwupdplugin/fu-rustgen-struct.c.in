@@ -242,7 +242,7 @@
 {%- for item in obj.items | selectattr('struct_obj') %}
     {
         GByteArray st_tmp = {
-            .data = (guint8*) st->data + {{item.c_define('OFFSET')}},
+            .data = (guint8*) st->data + 0x{{'{:X}'.format(item.offset)}},
             .len = {{item.size}},
         };
         if (!{{item.struct_obj.c_method('ValidateInternal')}}(&st_tmp, error))
