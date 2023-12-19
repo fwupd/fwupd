@@ -420,7 +420,8 @@ if get_option('tests')
       fwupd_incdir,
     ],
     dependencies: [
-      library_deps
+      library_deps,
+      fwupdplugin_rs_dep,
     ],
     link_with: [
       fwupd,
