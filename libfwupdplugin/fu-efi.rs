@@ -51,6 +51,12 @@ struct EfiFile {
     state: u8 == 0xF8,
 }
 
+#[derive(ParseBytes)]
+struct EfiFile2 {
+    _base: EfiFile,
+    extended_size: u64,
+}
+
 #[repr(u8)]
 #[derive(ToString)]
 enum EfiSectionType {
@@ -76,6 +82,13 @@ struct EfiSection {
     size: u24le,
     type: EfiSectionType,
 }
+
+#[derive(ParseBytes)]
+struct EfiSection2 {
+    _base: EfiSection,
+    extended_size: u32,
+}
+
 #[derive(New, ParseBytes)]
 struct EfiSectionGuidDefined {
     name: Guid,
