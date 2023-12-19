@@ -2,6 +2,9 @@
 {%- for item in obj.items | selectattr('enabled') %}
 {%- set export = item.export('Getters') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+/**
+ * {{item.c_getter}}: (skip):
+ **/
 {%- if item.type == Type.STRING %}
 {{export.value}}gchar *
 {{item.c_getter}}(GByteArray *st)
@@ -56,6 +59,9 @@
 {%- for item in obj.items | selectattr('enabled') %}
 {%- set export = item.export('Setters') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+/**
+ * {{item.c_setter}}: (skip):
+ **/
 {%- if item.type == Type.STRING %}
 {{export.value}}gboolean
 {{item.c_setter}}(GByteArray *st, const gchar *value, GError **error)
