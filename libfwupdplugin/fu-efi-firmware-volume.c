@@ -60,12 +60,11 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	FuEfiFirmwareVolume *self = FU_EFI_FIRMWARE_VOLUME(firmware);
 	FuEfiFirmwareVolumePrivate *priv = GET_PRIVATE(self);
 	gsize blockmap_sz = 0;
-	gsize bufsz = 0;
+	gsize bufsz = g_bytes_get_size(fw);
 	guint16 hdr_length = 0;
 	guint32 attrs = 0;
 	guint64 fv_length = 0;
 	guint8 alignment;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *guid_str = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GByteArray) st_hdr = NULL;
@@ -116,7 +115,13 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 
 	/* verify checksum */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		guint16 checksum_verify = fu_sum16w(buf, hdr_length, G_LITTLE_ENDIAN);
+		guint16 checksum_verify;
+		g_autoptr(GBytes) blob_hdr = NULL;
+
+		blob_hdr = fu_bytes_new_offset(fw, offset, hdr_length, error);
+		if (blob_hdr == NULL)
+			return FALSE;
+		checksum_verify = fu_sum16w_bytes(blob_hdr, G_LITTLE_ENDIAN);
 		if (checksum_verify != 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
