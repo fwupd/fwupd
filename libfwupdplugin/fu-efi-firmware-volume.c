@@ -137,7 +137,8 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	fu_firmware_set_size(firmware, fv_length);
 
 	/* parse, which might cascade and do something like FFS2 */
-	if (g_strcmp0(guid_str, FU_EFI_FIRMWARE_VOLUME_GUID_FFS2) == 0) {
+	if (g_strcmp0(guid_str, FU_EFI_FIRMWARE_VOLUME_GUID_FFS2) == 0 ||
+	    g_strcmp0(guid_str, FU_EFI_FIRMWARE_VOLUME_GUID_FFS3) == 0) {
 		g_autoptr(FuFirmware) img = fu_efi_firmware_filesystem_new();
 		fu_firmware_set_alignment(img, fu_firmware_get_alignment(firmware));
 		if (!fu_firmware_parse(img, blob, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error))

@@ -65,7 +65,17 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 	st = fu_struct_efi_section_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
-	size = fu_struct_efi_section_get_size(st);
+
+	/* use extended size */
+	if (fu_struct_efi_section_get_size(st) == 0xFFFFFF) {
+		g_byte_array_unref(st);
+		st = fu_struct_efi_section2_parse_bytes(fw, offset, error);
+		if (st == NULL)
+			return FALSE;
+		size = fu_struct_efi_section2_get_extended_size(st);
+	} else {
+		size = fu_struct_efi_section_get_size(st);
+	}
 	if (size < FU_STRUCT_EFI_SECTION_SIZE) {
 		g_set_error(error,
 			    FWUPD_ERROR,

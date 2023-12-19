@@ -90,7 +90,25 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 	guid_str =
 	    fwupd_guid_to_string(fu_struct_efi_file_get_name(st), FWUPD_GUID_FLAG_MIXED_ENDIAN);
 	fu_firmware_set_id(firmware, guid_str);
-	size = fu_struct_efi_file_get_size(st);
+
+	/* extended size exists so size must be set to zero */
+	if (priv->attrib & FU_EFI_FILE_ATTRIB_LARGE_FILE) {
+		if (fu_struct_efi_file_get_size(st) != 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "invalid FFS size -- expected 0x0 and got 0x%x",
+				    (guint)fu_struct_efi_file_get_size(st));
+			return FALSE;
+		}
+		g_byte_array_unref(st);
+		st = fu_struct_efi_file2_parse_bytes(fw, offset, error);
+		if (st == NULL)
+			return FALSE;
+		size = fu_struct_efi_file2_get_extended_size(st);
+	} else {
+		size = fu_struct_efi_file_get_size(st);
+	}
 	if (size < st->len) {
 		g_set_error(error,
 			    FWUPD_ERROR,
