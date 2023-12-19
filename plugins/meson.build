@@ -60,7 +60,6 @@ plugins = {
   'hailuck': false,
   'intel-gsc': false,
   'intel-me': false,
-  'intel-spi': false,
   'intel-usb4': false,
   'iommu': false,
   'jabra': false,

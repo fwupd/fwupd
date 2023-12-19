@@ -11,6 +11,7 @@
 #endif
 
 #include "fu-mtd-device.h"
+#include "fu-mtd-ifd-device.h"
 
 struct _FuMtdDevice {
 	FuUdevDevice parent_instance;
@@ -29,22 +30,20 @@ fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
 	if (self->erasesize > 0)
 		fu_string_append_kx(str, idt, "EraseSize", self->erasesize);
-	fu_string_append_kx(str, idt, "MetadataOffset", self->metadata_offset);
-	fu_string_append_kx(str, idt, "MetadataSize", self->metadata_size);
+	if (self->metadata_offset > 0)
+		fu_string_append_kx(str, idt, "MetadataOffset", self->metadata_offset);
+	if (self->metadata_size > 0)
+		fu_string_append_kx(str, idt, "MetadataSize", self->metadata_size);
 }
 
-static gboolean
-fu_mtd_device_metadata_load(FuMtdDevice *self, GError **error)
+static FuFirmware *
+fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
-	GPtrArray *instance_ids;
-	GType firmware_gtype = fu_device_get_firmware_gtype(FU_DEVICE(self));
+	FuMtdDevice *self = FU_MTD_DEVICE(device);
 	const gchar *fn;
-	g_autoptr(FuFirmware) firmware_child = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(GFile) file = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GInputStream) stream_partial = NULL;
-	g_autoptr(GPtrArray) imgs = NULL;
 
 	/* read contents at the search offset */
 	fn = fu_udev_device_get_device_file(FU_UDEV_DEVICE(self));
@@ -53,23 +52,57 @@ fu_mtd_device_metadata_load(FuMtdDevice *self, GError **error)
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "Not supported as no device file");
-		return FALSE;
+		return NULL;
 	}
 	stream = fu_input_stream_from_path(fn, error);
 	if (stream == NULL) {
 		g_prefix_error(error, "failed to open device: ");
-		return FALSE;
+		return NULL;
 	}
-	stream_partial =
-	    fu_partial_input_stream_new(stream, self->metadata_offset, self->metadata_size);
-	firmware = g_object_new(firmware_gtype, NULL);
+	if (self->metadata_size > 0) {
+		stream_partial =
+		    fu_partial_input_stream_new(stream, self->metadata_offset, self->metadata_size);
+	} else {
+		stream_partial = g_object_ref(stream);
+	}
+	firmware = g_object_new(fu_device_get_firmware_gtype(FU_DEVICE(self)), NULL);
 	if (!fu_firmware_parse_stream(firmware,
 				      stream_partial,
 				      0x0,
 				      FWUPD_INSTALL_FLAG_NONE,
 				      error)) {
 		g_prefix_error(error, "failed to parse image: ");
+		return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer(&firmware);
+}
+
+static gboolean
+fu_mtd_device_metadata_load(FuMtdDevice *self, GError **error)
+{
+	GPtrArray *instance_ids;
+	g_autoptr(FuFirmware) firmware_child = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GPtrArray) imgs = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+
+	/* read firmware from stream */
+	firmware = fu_mtd_device_read_firmware(FU_DEVICE(self), NULL, error);
+	if (firmware == NULL)
 		return FALSE;
+
+	/* add each IFD image as a sub-device */
+	imgs = fu_firmware_get_images(firmware);
+	if (FU_IS_IFD_FIRMWARE(firmware)) {
+		for (guint i = 0; i < imgs->len; i++) {
+			FuIfdImage *img = g_ptr_array_index(imgs, i);
+			g_autoptr(FuMtdIfdDevice) child =
+			    fu_mtd_ifd_device_new(FU_DEVICE(self), img);
+			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(child));
+		}
+		return TRUE;
 	}
 
 	/* find the firmware child that matches any of the device GUID, then use the first
@@ -82,7 +115,6 @@ fu_mtd_device_metadata_load(FuMtdDevice *self, GError **error)
 		if (firmware_child != NULL)
 			break;
 	}
-	imgs = fu_firmware_get_images(firmware);
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *firmare_tmp = g_ptr_array_index(imgs, i);
 		if (fu_firmware_get_version(firmare_tmp) != NULL ||
@@ -519,6 +551,7 @@ fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 	klass_device->setup = fu_mtd_device_setup;
 	klass_device->to_string = fu_mtd_device_to_string;
 	klass_device->dump_firmware = fu_mtd_device_dump_firmware;
+	klass_device->read_firmware = fu_mtd_device_read_firmware;
 	klass_device->write_firmware = fu_mtd_device_write_firmware;
 	klass_device->set_quirk_kv = fu_mtd_device_set_quirk_kv;
 }
