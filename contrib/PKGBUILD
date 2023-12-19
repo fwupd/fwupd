@@ -28,7 +28,6 @@ build() {
         export CI="--wrap-mode=default"
     fi
     arch-meson -D b_lto=false $CI ../build \
-        -Dplugin_intel_spi=true \
         -Dplugin_powerd=disabled \
         -Dlaunchd=disabled \
         -Ddocs=enabled \
