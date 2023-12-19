@@ -640,7 +640,7 @@ fu_firmware_get_bytes_with_patches(FuFirmware *self, GError **error)
 
 	/* usual case */
 	if (priv->patches == NULL)
-		return g_bytes_ref(priv->bytes);
+		return fu_firmware_get_bytes(self, error);
 
 	/* convert to a mutable buffer, apply each patch, aborting if the offset isn't valid */
 	fu_byte_array_append_bytes(buf, priv->bytes);
