@@ -116,7 +116,7 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 
 	/* verify checksum */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		guint16 checksum_verify = fu_sum16w(buf, hdr_length, G_LITTLE_ENDIAN);
+		guint16 checksum_verify = fu_sum16w(buf + offset, hdr_length, G_LITTLE_ENDIAN);
 		if (checksum_verify != 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
