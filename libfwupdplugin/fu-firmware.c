@@ -701,7 +701,9 @@ fu_firmware_get_stream(FuFirmware *self, GError **error)
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
 	if (priv->stream != NULL)
 		return g_object_ref(priv->stream);
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no stream set");
+	if (priv->bytes != NULL)
+		return g_memory_input_stream_new_from_bytes(priv->bytes);
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no stream or bytes set");
 	return NULL;
 }
 
