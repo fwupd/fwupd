@@ -11,6 +11,7 @@
 
 #include "fu-context-private.h"
 #include "fu-plugin-private.h"
+#include "fu-synaptics-mst-common.h"
 #include "fu-synaptics-mst-firmware.h"
 #include "fu-synaptics-mst-plugin.h"
 
@@ -57,6 +58,8 @@ _test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 				   "drm_dp_aux_dev",
 				   "device-file",
 				   fn,
+				   "dpcd-ieee-oui",
+				   SYNAPTICS_IEEE_OUI,
 				   NULL);
 		g_debug("creating drm_dp_aux_dev object backed by %s", fn);
 		ret = fu_plugin_runner_backend_device_added(plugin,
