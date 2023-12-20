@@ -15,6 +15,8 @@
 
 #define SYNAPTICS_FLASH_MODE_DELAY 3 /* seconds */
 
+#define SYNAPTICS_IEEE_OUI 0x90CC24
+
 FuSynapticsMstFamily
 fu_synaptics_mst_family_from_chip_id(guint16 chip_id);
 guint8
