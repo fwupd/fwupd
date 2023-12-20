@@ -80,10 +80,6 @@ fu_dpaux_device_probe(FuDevice *device, GError **error)
 {
 	FuDpauxDevice *self = FU_DPAUX_DEVICE(device);
 
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_dpaux_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* name */
 	fu_dpaux_device_set_name(self,
 				 fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(self), "name", NULL));
