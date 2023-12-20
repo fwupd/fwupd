@@ -310,26 +310,34 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 	    .fd = self->fd,
 	    .events = G_IO_IN | G_IO_PRI | G_IO_ERR,
 	};
-	g_autoptr(GByteArray) buf2 = g_byte_array_new();
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GByteArray) buf_tmp = g_byte_array_new();
 
 	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), NULL);
 
+	/* a temp buf of 1k or smaller size */
+	g_byte_array_set_size(buf_tmp, count >= 0 ? MIN(count, 1024) : 1024);
+
 	/* blocking IO */
 	if (flags & FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO) {
-		guint8 buf[1024] = {0x0};
-		gssize len = read(self->fd, buf, sizeof(buf));
-		if (len < 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_READ,
-				    "failed to read %i: %s",
-				    self->fd,
-				    strerror(errno));
-			return NULL;
-		}
-		if (len > 0)
-			g_byte_array_append(buf2, buf, len);
-		return g_steal_pointer(&buf2);
+		do {
+			gssize len = read(self->fd, buf_tmp->data, buf_tmp->len);
+			if (len < 0) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_READ,
+					    "failed to read %i: %s",
+					    self->fd,
+					    strerror(errno));
+				return NULL;
+			}
+			if (len == 0)
+				break;
+			if (flags & FU_IO_CHANNEL_FLAG_SINGLE_SHOT)
+				break;
+			g_byte_array_append(buf, buf_tmp->data, len);
+		} while (count < 0 || buf->len < (gsize)count);
+		return g_steal_pointer(&buf);
 	}
 
 	/* nonblocking IO */
@@ -353,8 +361,7 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 
 		/* we have data to read */
 		if (fds.revents & G_IO_IN) {
-			guint8 buf[1024] = {0x0};
-			gssize len = read(self->fd, buf, sizeof(buf));
+			gssize len = read(self->fd, buf_tmp->data, buf_tmp->len);
 			if (len < 0) {
 				if (errno == EINTR)
 					continue;
@@ -371,10 +378,10 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 			if (len == 0)
 				break;
 			if (len > 0)
-				g_byte_array_append(buf2, buf, len);
+				g_byte_array_append(buf, buf_tmp->data, len);
 
 			/* check maximum size */
-			if (count > 0 && buf2->len >= (guint)count)
+			if (count > 0 && buf->len >= (guint)count)
 				break;
 			if (flags & FU_IO_CHANNEL_FLAG_SINGLE_SHOT)
 				break;
@@ -404,7 +411,7 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 	}
 
 	/* no data */
-	if (buf2->len == 0) {
+	if (buf->len == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,
@@ -414,7 +421,7 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 	}
 
 	/* return blob */
-	return g_steal_pointer(&buf2);
+	return g_steal_pointer(&buf);
 }
 
 /**
