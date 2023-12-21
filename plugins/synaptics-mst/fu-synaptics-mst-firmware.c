@@ -156,7 +156,10 @@ fu_synaptics_mst_firmware_class_init(FuSynapticsMstFirmwareClass *klass)
 FuFirmware *
 fu_synaptics_mst_firmware_new(void)
 {
-	return FU_FIRMWARE(g_object_new(FU_TYPE_SYNAPTICS_MST_FIRMWARE, NULL));
+	FuSynapticsMstFirmware *self = g_object_new(FU_TYPE_SYNAPTICS_MST_FIRMWARE, NULL);
+	/* default chip family as Tesla */
+	self->family = FU_SYNAPTICS_MST_FAMILY_TESLA;
+	return FU_FIRMWARE(self);
 }
 
 void
