@@ -1658,7 +1658,7 @@ fu_util_report_export(FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
 		g_autofree gchar *data = NULL;
-		g_autofree gchar *filename = NULL;
+		g_autofree gchar *filename_json = NULL;
 		g_autoptr(GPtrArray) devices_tmp = g_ptr_array_new();
 
 		/* convert single device to JSON */
@@ -1668,11 +1668,32 @@ fu_util_report_export(FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 
 		/* save to local file */
-		filename = g_strdup_printf("%s.json", fwupd_device_get_id(dev));
-		if (!g_file_set_contents(filename, data, -1, error))
+		filename_json = g_strdup_printf("%s.json", fwupd_device_get_id(dev));
+		if (!g_file_set_contents(filename_json, data, -1, error))
 			return FALSE;
 		/* TRANSLATORS: the device ID is printed after this label */
-		g_print("%s %s\n", _("Exported offline report for device:"), filename);
+		g_print("%s %s\n", _("Exported offline report for device:"), filename_json);
+
+		/* self sign data */
+		if (priv->sign) {
+			g_autofree gchar *filename_sig = NULL;
+			g_autofree gchar *sig = NULL;
+
+			sig = fwupd_client_self_sign(priv->client,
+						     data,
+						     FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP,
+						     priv->cancellable,
+						     error);
+			if (sig == NULL)
+				return FALSE;
+			filename_sig = g_strdup_printf("%s.p7c", filename_json);
+			if (!g_file_set_contents(filename_sig, sig, -1, error))
+				return FALSE;
+			/* TRANSLATORS: the device ID is printed after this label */
+			g_print("%s %s\n",
+				_("Exported detached signature for offline report for device:"),
+				filename_sig);
+		}
 	}
 
 	/* success */
