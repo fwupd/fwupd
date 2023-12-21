@@ -1345,6 +1345,8 @@ fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_synaptics_mst_firmware_new();
 
+	/* set chip family to get correct board ID offset */
+	fu_synaptics_mst_firmware_set_family(FU_SYNAPTICS_MST_FIRMWARE(firmware), self->family);
 	/* check firmware and board ID match */
 	if (!fu_firmware_parse(firmware, fw, flags, error))
 		return NULL;

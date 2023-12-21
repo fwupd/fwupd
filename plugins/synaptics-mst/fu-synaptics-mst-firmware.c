@@ -6,16 +6,19 @@
 
 #include "config.h"
 
+#include "fu-synaptics-mst-common.h"
 #include "fu-synaptics-mst-firmware.h"
 
 struct _FuSynapticsMstFirmware {
 	FuFirmwareClass parent_instance;
 	guint16 board_id;
+	FuSynapticsMstFamily family;
 };
 
 G_DEFINE_TYPE(FuSynapticsMstFirmware, fu_synaptics_mst_firmware, FU_TYPE_FIRMWARE)
 
-#define ADDR_CUSTOMER_ID 0x10E
+#define ADDR_CUSTOMER_ID_CAYENNE 0X20E
+#define ADDR_CUSTOMER_ID 0X10E
 
 guint16
 fu_synaptics_mst_firmware_get_board_id(FuSynapticsMstFirmware *self)
@@ -43,10 +46,28 @@ fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
 	FuSynapticsMstFirmware *self = FU_SYNAPTICS_MST_FIRMWARE(firmware);
 	const guint8 *buf;
 	gsize bufsz;
+	guint16 addr;
+	switch (self->family) {
+	case FU_SYNAPTICS_MST_FAMILY_TESLA:
+	case FU_SYNAPTICS_MST_FAMILY_LEAF:
+	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
+		addr = ADDR_CUSTOMER_ID;
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
+	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
+		addr = ADDR_CUSTOMER_ID_CAYENNE;
+		break;
+	default:
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Unsupported chip family");
+		return FALSE;
+	}
 	buf = g_bytes_get_data(fw, &bufsz);
 	if (!fu_memread_uint16_safe(buf,
 				    bufsz,
-				    ADDR_CUSTOMER_ID,
+				    addr,
 				    &self->board_id,
 				    G_BIG_ENDIAN,
 				    error))
@@ -59,14 +80,33 @@ fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
 static GByteArray *
 fu_synaptics_mst_firmware_write(FuFirmware *firmware, GError **error)
 {
+	FuSynapticsMstFirmware *self = FU_SYNAPTICS_MST_FIRMWARE(firmware);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GBytes) blob = NULL;
 
+	guint16 addr;
+	switch (self->family) {
+	case FU_SYNAPTICS_MST_FAMILY_TESLA:
+	case FU_SYNAPTICS_MST_FAMILY_LEAF:
+	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
+		addr = ADDR_CUSTOMER_ID;
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
+	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
+		addr = ADDR_CUSTOMER_ID_CAYENNE;
+		break;
+	default:
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Unsupported chip family");
+		return FALSE;
+	}
 	/* assumed header */
 	fu_byte_array_set_size(buf, ADDR_CUSTOMER_ID + sizeof(guint16), 0x00);
 	if (!fu_memwrite_uint16_safe(buf->data,
 				     buf->len,
-				     ADDR_CUSTOMER_ID,
+				     addr,
 				     fu_firmware_get_idx(firmware),
 				     G_BIG_ENDIAN,
 				     error))
@@ -117,4 +157,10 @@ FuFirmware *
 fu_synaptics_mst_firmware_new(void)
 {
 	return FU_FIRMWARE(g_object_new(FU_TYPE_SYNAPTICS_MST_FIRMWARE, NULL));
+}
+
+void
+fu_synaptics_mst_firmware_set_family(FuSynapticsMstFirmware *self, guint8 family)
+{
+	self->family = (FuSynapticsMstFamily)family;
 }
