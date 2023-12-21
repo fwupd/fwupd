@@ -1594,6 +1594,92 @@ fu_util_report_history_force(FuUtilPrivate *priv, GError **error)
 }
 
 static gboolean
+fu_util_report_export(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) devices_filtered =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* get all devices from the history database, then filter them and export to JSON */
+	devices = fwupd_client_get_history(priv->client, priv->cancellable, error);
+	if (devices == NULL)
+		return FALSE;
+	g_debug("%u devices with history", devices->len);
+
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		gboolean dev_skip_byid = TRUE;
+
+		/* only process particular DEVICE-ID or GUID if specified */
+		for (guint idx = 0; idx < g_strv_length(values); idx++) {
+			const gchar *tmpid = values[idx];
+			const gchar *device_id = fwupd_device_get_id(dev);
+			if (fwupd_device_has_guid(dev, tmpid) || g_strcmp0(device_id, tmpid) == 0) {
+				dev_skip_byid = FALSE;
+				break;
+			}
+		}
+		if (g_strv_length(values) > 0 && dev_skip_byid)
+			continue;
+
+		/* filter, if not forcing */
+		if (!fwupd_device_match_flags(dev,
+					      priv->filter_device_include,
+					      priv->filter_device_exclude))
+			continue;
+		if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+			if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_REPORTED)) {
+				g_debug("%s has already been reported", fwupd_device_get_id(dev));
+				continue;
+			}
+		}
+
+		/* only send success and failure */
+		if (fwupd_device_get_update_state(dev) != FWUPD_UPDATE_STATE_FAILED &&
+		    fwupd_device_get_update_state(dev) != FWUPD_UPDATE_STATE_SUCCESS) {
+			g_debug("ignoring %s with UpdateState %s",
+				fwupd_device_get_id(dev),
+				fwupd_update_state_to_string(fwupd_device_get_update_state(dev)));
+			continue;
+		}
+		g_ptr_array_add(devices_filtered, g_object_ref(dev));
+	}
+
+	/* nothing to report, but try harder with --force */
+	if (devices_filtered->len == 0 && (priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "No reports require uploading");
+		return FALSE;
+	}
+
+	/* write each device report as a new file */
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		g_autofree gchar *data = NULL;
+		g_autofree gchar *filename = NULL;
+		g_autoptr(GPtrArray) devices_tmp = g_ptr_array_new();
+
+		/* convert single device to JSON */
+		g_ptr_array_add(devices_tmp, dev);
+		data = fwupd_build_history_report_json(devices, error);
+		if (data == NULL)
+			return FALSE;
+
+		/* save to local file */
+		filename = g_strdup_printf("%s.json", fwupd_device_get_id(dev));
+		if (!g_file_set_contents(filename, data, -1, error))
+			return FALSE;
+		/* TRANSLATORS: the device ID is printed after this label */
+		g_print("%s %s\n", _("Exported offline report for device:"), filename);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GHashTable) report_map = NULL;
@@ -4961,6 +5047,12 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Share firmware history with the developers"),
 			      fu_util_report_history);
+	fu_util_cmd_array_add(cmd_array,
+			      "report-export",
+			      NULL,
+			      /* TRANSLATORS: command description */
+			      _("Export firmware history for manual upload"),
+			      fu_util_report_export);
 	fu_util_cmd_array_add(cmd_array,
 			      "install",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */

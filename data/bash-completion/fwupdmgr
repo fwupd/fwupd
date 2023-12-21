@@ -36,6 +36,7 @@ _fwupdmgr_cmd_list=(
 	'reinstall'
 	'refresh'
 	'report-history'
+	'report-export'
 	'security'
 	'security-fix'
 	'security-undo'
@@ -180,7 +181,7 @@ _fwupdmgr()
 	esac
 
 	case $arg in
-	activate|clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update|get-updates|switch-branch|update|upgrade)
+	activate|clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update|get-updates|switch-branch|update|upgrade|report-export)
 		#device ID
 		if [[ "$args" = "2" ]]; then
 			_show_device_ids
