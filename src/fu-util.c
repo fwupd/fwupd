@@ -1658,7 +1658,11 @@ fu_util_report_export(FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
 		g_autofree gchar *data = NULL;
-		g_autofree gchar *filename_json = NULL;
+		g_autofree gchar *filename = NULL;
+		g_autoptr(FuFirmware) archive = fu_archive_firmware_new();
+		g_autoptr(FuFirmware) payload_img = NULL;
+		g_autoptr(GBytes) payload_blob = NULL;
+		g_autoptr(GFile) file = NULL;
 		g_autoptr(GPtrArray) devices_tmp = g_ptr_array_new();
 
 		/* convert single device to JSON */
@@ -1666,18 +1670,16 @@ fu_util_report_export(FuUtilPrivate *priv, gchar **values, GError **error)
 		data = fwupd_build_history_report_json(devices, error);
 		if (data == NULL)
 			return FALSE;
-
-		/* save to local file */
-		filename_json = g_strdup_printf("%s.json", fwupd_device_get_id(dev));
-		if (!g_file_set_contents(filename_json, data, -1, error))
-			return FALSE;
-		/* TRANSLATORS: the device ID is printed after this label */
-		g_print("%s %s\n", _("Exported offline report for device:"), filename_json);
+		payload_blob = g_bytes_new(data, strlen(data));
+		payload_img = fu_firmware_new_from_bytes(payload_blob);
+		fu_firmware_set_id(payload_img, "report.json");
+		fu_firmware_add_image(archive, payload_img);
 
 		/* self sign data */
 		if (priv->sign) {
-			g_autofree gchar *filename_sig = NULL;
 			g_autofree gchar *sig = NULL;
+			g_autoptr(FuFirmware) sig_img = NULL;
+			g_autoptr(GBytes) sig_blob = NULL;
 
 			sig = fwupd_client_self_sign(priv->client,
 						     data,
@@ -1686,14 +1688,23 @@ fu_util_report_export(FuUtilPrivate *priv, gchar **values, GError **error)
 						     error);
 			if (sig == NULL)
 				return FALSE;
-			filename_sig = g_strdup_printf("%s.p7c", filename_json);
-			if (!g_file_set_contents(filename_sig, sig, -1, error))
-				return FALSE;
-			/* TRANSLATORS: the device ID is printed after this label */
-			g_print("%s %s\n",
-				_("Exported detached signature for offline report for device:"),
-				filename_sig);
+			sig_blob = g_bytes_new(sig, strlen(sig));
+			sig_img = fu_firmware_new_from_bytes(sig_blob);
+			fu_firmware_set_id(sig_img, "report.json.p7c");
+			fu_firmware_add_image(archive, sig_img);
 		}
+
+		/* save to local file */
+		fu_archive_firmware_set_format(FU_ARCHIVE_FIRMWARE(archive), FU_ARCHIVE_FORMAT_ZIP);
+		fu_archive_firmware_set_compression(FU_ARCHIVE_FIRMWARE(archive),
+						    FU_ARCHIVE_COMPRESSION_GZIP);
+		filename = g_strdup_printf("%s.fwupdreport", fwupd_device_get_id(dev));
+		file = g_file_new_for_path(filename);
+		if (!fu_firmware_write_file(archive, file, error))
+			return FALSE;
+
+		/* TRANSLATORS: key for a offline report filename */
+		fu_console_print_kv(priv->console, _("Saved report"), filename);
 	}
 
 	/* success */
