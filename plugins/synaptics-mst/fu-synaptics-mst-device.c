@@ -1729,12 +1729,10 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	guid3 = g_strdup_printf("MST-%s", name_family);
 	fu_device_add_instance_id_full(FU_DEVICE(self), guid3, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 
-	/* this is not a valid customer ID */
-	if ((self->board_id >> 8) == 0x0) {
-		fu_device_inhibit(device,
-				  "invalid-customer-id",
-				  "cannot update as CustomerID is unset");
-	}
+	/* whitebox customers */
+	if ((self->board_id >> 8) == 0x0)
+		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
+
 	return TRUE;
 }
 
