@@ -100,7 +100,7 @@ fu_synaptics_mst_firmware_write(FuFirmware *firmware, GError **error)
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "Unsupported chip family");
-		return FALSE;
+		return NULL;
 	}
 	/* assumed header */
 	fu_byte_array_set_size(buf, ADDR_CUSTOMER_ID + sizeof(guint16), 0x00);
