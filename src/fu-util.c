@@ -1655,7 +1655,7 @@ fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 		if (remote == NULL)
 			return FALSE;
 		if (fwupd_remote_get_report_uri(remote) == NULL) {
-			g_debug("%s has no RemoteURI", fwupd_remote_get_report_uri(remote));
+			g_debug("%s has no ReportURI", remote_id);
 			continue;
 		}
 
