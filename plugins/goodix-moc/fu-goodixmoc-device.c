@@ -387,6 +387,13 @@ fu_goodixmoc_device_write_firmware(FuDevice *device,
 						  &rsp,
 						  wait_data_reply,
 						  &error_block)) {
+			if (wait_data_reply == TRUE &&
+			    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
+				fu_device_set_remove_delay(device, 0);
+				g_debug("%s", error_block->message);
+				break;
+			}
+
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
