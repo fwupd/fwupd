@@ -22,4 +22,4 @@ Plugin = goodixmoc
 Flags = enforce-requires
 [USB\VID_27C6&PID_609C]
 Plugin = goodixmoc
-Flags = enforce-requires
+Flags = enforce-requires,will-disappear,needs-reboot
