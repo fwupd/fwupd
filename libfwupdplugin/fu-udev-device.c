@@ -959,7 +959,7 @@ fu_udev_device_get_dev(FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
-#ifdef SUPPORTED_BUILD
+#ifndef SUPPORTED_BUILD
 	if (priv->udev_device_cleared) {
 		g_warning("soon the GUdevDevice will not be available post-probe, use "
 			  "FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE in %s plugin to opt-out %s",
