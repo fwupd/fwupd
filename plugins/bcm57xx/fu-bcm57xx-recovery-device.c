@@ -891,10 +891,3 @@ fu_bcm57xx_recovery_device_class_init(FuBcm57xxRecoveryDeviceClass *klass)
 	klass_device->probe = fu_bcm57xx_recovery_device_probe;
 	klass_device->set_progress = fu_bcm57xx_recovery_device_set_progress;
 }
-
-FuBcm57xxRecoveryDevice *
-fu_bcm57xx_recovery_device_new(void)
-{
-	FuUdevDevice *self = g_object_new(FU_TYPE_BCM57XX_RECOVERY_DEVICE, NULL);
-	return FU_BCM57XX_RECOVERY_DEVICE(self);
-}
