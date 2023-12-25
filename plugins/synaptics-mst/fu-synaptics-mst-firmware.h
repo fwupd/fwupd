@@ -19,3 +19,5 @@ FuFirmware *
 fu_synaptics_mst_firmware_new(void);
 guint16
 fu_synaptics_mst_firmware_get_board_id(FuSynapticsMstFirmware *self);
+void
+fu_synaptics_mst_firmware_set_family(FuSynapticsMstFirmware *self, FuSynapticsMstFamily family);

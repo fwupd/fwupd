@@ -3,12 +3,12 @@
 
 #[derive(ToString)]
 enum SynapticsMstFamily {
-    Unknown,
-    Tesla,
-    Leaf,
-    Panamera,
-    Cayenne,
-    Spyder,
+    Unknown = 0xFF,
+    Tesla = 0,
+    Leaf = 1,
+    Panamera = 2,
+    Cayenne = 3,
+    Spyder = 4,
 }
 
 #[derive(ToString)]
@@ -58,4 +58,12 @@ enum SynapticsMstRegRc {
     Len    = 0x4B8,
     Offset = 0x4BC,
     Data   = 0x4C0,
+}
+
+#[derive(ParseBytes)]
+struct SynapticsFirmwareConfig {
+    version: u8,
+    reserved: u8,
+    magic1: u8,
+    magic2: u8,
 }
