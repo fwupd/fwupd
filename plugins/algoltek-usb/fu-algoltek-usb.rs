@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 
-#[derive(New, Getters)]
+#[derive(Getters)]
 struct AlgoltekProductIdentity {
     header_len: u8,
     header:[char; 8],

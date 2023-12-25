@@ -20,5 +20,5 @@
 #define ALGOLTEK_USB_REQUEST_CMD08 0x19
 #define ALGOLTEK_USB_REQUEST_CMD09 0x10
 
-#define Result_PASS  1 // 函式中的case定義，ISP傳輸正常定義為1。
-#define Result_ERROR 2 // 函式中的case定義，ISP傳輸錯誤定義為2。
+#define Result_PASS  1
+#define Result_ERROR 2

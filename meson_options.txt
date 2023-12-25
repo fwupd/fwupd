@@ -142,10 +142,6 @@ option('plugin_acpi_phat',
     'false': 'disabled',
   },
 )
-option('plugin_algoltekusb',
-  type: 'feature',
-  description: 'ALGOLTEKUSB support',
-)
 option('plugin_amdgpu',
   type: 'feature',
   description: 'AMDGPU support',

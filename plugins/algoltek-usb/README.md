@@ -34,7 +34,7 @@ The vendor ID is set from the USB vendor, in this instance set to `USB:0x25A4`.
 This plugin requires read/write access to `/dev/bus/usb`.
 
 ## Version Considerations
-This plugin has been available since fwupd version `SET_VERSION_HERE`.
+This plugin has been available since fwupd version `2.0.0`.
 
 ## Owners
 Anyone can submit a pull request to modify this plugin, but the following people should be
