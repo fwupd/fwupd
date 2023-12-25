@@ -965,7 +965,6 @@ fu_udev_device_get_dev(FuUdevDevice *self)
 		g_warning("GUdevDevice is not available post-probe, use "
 			  "FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE in %s plugin to opt-out: %s",
 			  fu_device_get_plugin(FU_DEVICE(self)),
-			  fu_device_get_id(FU_DEVICE(self)),
 			  str);
 	}
 #endif
