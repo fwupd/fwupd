@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Ling.Chen <ling.chen@algoltek.com.tw>
+ * Copyright (C) 2023 Algoltek, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -72,11 +72,11 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 
 	version = fu_struct_algoltek_product_identity_get_version(headerArray);
 
-	/* len + header = 9 bytes */
+	/* len + Header = 9 bytes */
 	offset += 9;
-	/* len + productName = 17 bytes */
+	/* len + ProductName = 17 bytes */
 	offset += 17;
-	/* len + fwversion = 49 bytes */
+	/* len + FWVersion = 49 bytes */
 	offset += 49;
 
 	blob_ISP = fu_bytes_new_offset(fw, offset, FU_ALGOLTEK_ISP_SIZE, error);

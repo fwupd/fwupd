@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Ling.Chen <ling.chen@algoltek.com.tw>
+ * Copyright (C) 2023 Algoltek, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -53,7 +53,7 @@ fu_algoltek_device_CMD02(FuAlgoltekUsbDevice *self, int address, GError **error)
 					   G_USB_DEVICE_RECIPIENT_INTERFACE,
 					   ALGOLTEK_USB_REQUEST_CMD02,
 					   address, /* value */
-					   0xFFFF,  /* idx */
+					   0xFFFF,  /* index */
 					   buf->data,
 					   buf->len,
 					   NULL,
@@ -87,7 +87,7 @@ fu_algoltek_device_CMD01(FuAlgoltekUsbDevice *self, GError **error)
 					   G_USB_DEVICE_RECIPIENT_INTERFACE,
 					   ALGOLTEK_USB_REQUEST_CMD01,
 					   0xFFFF, /* value */
-					   0xFFFF, /* idx */
+					   0xFFFF, /* index */
 					   buf->data,
 					   buf->len,
 					   &actual_length,
@@ -145,7 +145,7 @@ fu_algoltek_device_CMD03(FuAlgoltekUsbDevice *self, GError **error)
 					   G_USB_DEVICE_RECIPIENT_INTERFACE,
 					   ALGOLTEK_USB_REQUEST_CMD03,
 					   0, /* value */
-					   0, /* idx */
+					   0, /* index */
 					   buf->data,
 					   buf->data[0],
 					   NULL,
@@ -175,7 +175,7 @@ fu_algoltek_device_CMD04(FuAlgoltekUsbDevice *self, guint8 number, GError **erro
 					   G_USB_DEVICE_RECIPIENT_INTERFACE,
 					   ALGOLTEK_USB_REQUEST_CMD04,
 					   0, /* value */
-					   0, /* idx */
+					   0, /* index */
 					   buf->data,
 					   buf->data[0],
 					   NULL,
@@ -207,7 +207,7 @@ fu_algoltek_device_CMD05(FuAlgoltekUsbDevice *self, int address, int inputValue,
 					   G_USB_DEVICE_RECIPIENT_INTERFACE,
 					   ALGOLTEK_USB_REQUEST_CMD05,
 					   0, /* value */
-					   0, /* idx */
+					   0, /* index */
 					   buf->data,
 					   buf->data[0],
 					   NULL,
@@ -261,7 +261,7 @@ fu_algoltek_device_CMD06(FuAlgoltekUsbDevice *self,
 						   G_USB_DEVICE_RECIPIENT_INTERFACE,
 						   ALGOLTEK_USB_REQUEST_CMD06,
 						   0, /* value */
-						   0, /* idx */
+						   0, /* index */
 						   partIspData->data,
 						   partIspData->data[0],
 						   NULL,
@@ -296,7 +296,7 @@ fu_algoltek_device_CMD07(FuAlgoltekUsbDevice *self, int address, GError **error)
 					   G_USB_DEVICE_RECIPIENT_INTERFACE,
 					   ALGOLTEK_USB_REQUEST_CMD07,
 					   0, /* value */
-					   0, /* idx */
+					   0, /* index */
 					   buf->data,
 					   buf->data[0],
 					   NULL,
@@ -326,7 +326,7 @@ fu_algoltek_device_CMD08(FuAlgoltekUsbDevice *self, GError **error)
 					   G_USB_DEVICE_RECIPIENT_INTERFACE,
 					   ALGOLTEK_USB_REQUEST_CMD08,
 					   0, /* value */
-					   0, /* idx */
+					   0, /* index */
 					   buf->data,
 					   buf->len,
 					   NULL,
@@ -422,7 +422,7 @@ fu_algoltek_device_CMD09(FuAlgoltekUsbDevice *self,
 						   G_USB_DEVICE_RECIPIENT_INTERFACE,
 						   ALGOLTEK_USB_REQUEST_CMD09,
 						   value, /* value */
-						   index, /* idx */
+						   index, /* index */
 						   partFirmware->data,
 						   partFirmware->len,
 						   NULL,

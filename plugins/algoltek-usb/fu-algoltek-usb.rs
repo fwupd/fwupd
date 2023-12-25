@@ -1,6 +1,5 @@
-// Copyright (C) 2023 Ling.Chen <ling.chen@algoltek.com.tw>
+// Copyright (C) 2023 Algoltek, Inc.
 // SPDX-License-Identifier: LGPL-2.1+
-
 
 #[derive(Getters)]
 struct AlgoltekProductIdentity {
