@@ -116,6 +116,7 @@ fu_synaptics_mst_device_udev_device_notify_cb(FuUdevDevice *udev_device,
 static void
 fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 {
+	self->family = FU_SYNAPTICS_MST_FAMILY_UNKNOWN;
 	fu_device_add_protocol(FU_DEVICE(self), "com.synaptics.mst");
 	fu_device_set_vendor(FU_DEVICE(self), "Synaptics");
 	fu_device_add_vendor_id(FU_DEVICE(self), "DRM_DP_AUX_DEV:0x06CB");
@@ -1337,6 +1338,9 @@ fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_synaptics_mst_firmware_new();
+
+	/* set chip family to use correct board ID offset */
+	fu_synaptics_mst_firmware_set_family(FU_SYNAPTICS_MST_FIRMWARE(firmware), self->family);
 
 	/* check firmware and board ID match */
 	if (!fu_firmware_parse(firmware, fw, flags, error))
