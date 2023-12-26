@@ -48,16 +48,10 @@ fu_synaptics_mst_firmware_get_family_from_config(GBytes *fw,
 	const guint8 *buf;
 	gsize bufsz;
 	buf = g_bytes_get_data(fw, &bufsz);
-	for (gint i = 0; i < CONFIG_TYPES; i++)
-	{
+	for (gint i = 0; i < CONFIG_TYPES; i++) {
 		guint8 configHeader[4] = {0};
 		guint8 configVer, magicBit1, magicBit2;
-		if (fu_memread_uint8_safe(buf,
-					bufsz,
-					addr[i],
-					&configHeader[0],
-					error))
-		{
+		if (fu_memread_uint8_safe(buf, bufsz, addr[i], &configHeader[0], error)) {
 			configVer = (configHeader[0] & 0xF0) >> 4;
 			magicBit1 = (configHeader[2] & 0x80) >> 7;
 			magicBit2 = (configHeader[3] & 0x80) >> 7;
