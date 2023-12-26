@@ -23,17 +23,6 @@ fu_algoltek_usb_device_to_string(FuDevice *device, guint idt, GString *str)
 	FU_DEVICE_CLASS(fu_algoltek_usb_device_parent_class)->to_string(device, idt, str);
 }
 
-static guint8
-check_sum(GByteArray *byteArray)
-{
-	guint8 result = 0;
-	for (guint32 i = 0; i < byteArray->len; i++) {
-		result += (guint8)(byteArray->data[i] & 0xff);
-	}
-	result = (guint8)(~result + 1);
-	return result;
-}
-
 static GByteArray *
 algoltek_device_rdr(FuAlgoltekUsbDevice *self, int address, GError **error)
 {
@@ -46,7 +35,7 @@ algoltek_device_rdr(FuAlgoltekUsbDevice *self, int address, GError **error)
 	buf->data[1] = ALGOLTEK_RDR;
 	buf->data[2] = ((address >> 8) & 0xFF);
 	buf->data[3] = (address & 0xFF);
-	buf->data[10] = check_sum(buf);
+	buf->data[10] = ~fu_sum8(buf->data, buf->len) + 1;
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -80,7 +69,7 @@ algoltek_device_rdv(FuAlgoltekUsbDevice *self, GError **error)
 	fu_byte_array_set_size(buf, 64, 0x0);
 	buf->data[0] = 3;
 	buf->data[1] = ALGOLTEK_RDV;
-	buf->data[63] = check_sum(buf);
+	buf->data[63] = ~fu_sum8(buf->data, buf->len) + 1;
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -138,7 +127,7 @@ algoltek_device_en(FuAlgoltekUsbDevice *self, GError **error)
 	fu_byte_array_set_size(buf, 11, 0x0);
 	buf->data[0] = 3;
 	buf->data[1] = ALGOLTEK_EN;
-	buf->data[10] = check_sum(buf);
+	buf->data[10] = ~fu_sum8(buf->data, buf->len) + 1;
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -168,7 +157,7 @@ algoltek_device_rst(FuAlgoltekUsbDevice *self, guint8 number, GError **error)
 	buf->data[0] = 4;
 	buf->data[1] = ALGOLTEK_RST;
 	buf->data[2] = number;
-	buf->data[10] = check_sum(buf);
+	buf->data[10] = ~fu_sum8(buf->data, buf->len) + 1;
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -200,7 +189,7 @@ algoltek_device_wrr(FuAlgoltekUsbDevice *self, int address, int inputValue, GErr
 	buf->data[3] = (address & 0xFF);
 	buf->data[4] = ((inputValue >> 8) & 0xFF);
 	buf->data[5] = (inputValue & 0xFF);
-	buf->data[10] = check_sum(buf);
+	buf->data[10] = ~fu_sum8(buf->data, buf->len) + 1;
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -253,7 +242,7 @@ algoltek_device_ISP(FuAlgoltekUsbDevice *self,
 			partISPData->data[4 + i] = ISPData->data[i + startIndex];
 		}
 
-		partISPData->data[partISPData->len - 1] = check_sum(partISPData);
+		partISPData->data[partISPData->len - 1] = ~fu_sum8(partISPData->data, partISPData->len) + 1;
 
 		if (!g_usb_device_control_transfer(usb_device,
 						   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -289,7 +278,7 @@ algoltek_device_bot(FuAlgoltekUsbDevice *self, int address, GError **error)
 	buf->data[1] = ALGOLTEK_BOT;
 	buf->data[2] = ((address >> 8) & 0xFF);
 	buf->data[3] = (address & 0xFF);
-	buf->data[10] = check_sum(buf);
+	buf->data[10] = ~fu_sum8(buf->data, buf->len) + 1;
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
