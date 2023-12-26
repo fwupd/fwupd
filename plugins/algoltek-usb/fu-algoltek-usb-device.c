@@ -17,12 +17,6 @@ struct _FuAlgoltekUsbDevice {
 
 G_DEFINE_TYPE(FuAlgoltekUsbDevice, fu_algoltek_usb_device, FU_TYPE_USB_DEVICE)
 
-static void
-fu_algoltek_usb_device_to_string(FuDevice *device, guint idt, GString *str)
-{
-	FU_DEVICE_CLASS(fu_algoltek_usb_device_parent_class)->to_string(device, idt, str);
-}
-
 static GByteArray *
 algoltek_device_rdr(FuAlgoltekUsbDevice *self, int address, GError **error)
 {
@@ -33,8 +27,7 @@ algoltek_device_rdr(FuAlgoltekUsbDevice *self, int address, GError **error)
 	fu_byte_array_set_size(buf, 11, 0x0);
 	buf->data[0] = 5;
 	buf->data[1] = ALGOLTEK_RDR;
-	buf->data[2] = ((address >> 8) & 0xFF);
-	buf->data[3] = (address & 0xFF);
+	fu_memwrite_uint16(buf->data + 2, address, G_BIG_ENDIAN);
 	buf->data[10] = ~fu_sum8(buf->data, buf->len) + 1;
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
@@ -106,16 +99,18 @@ algoltek_device_rdv(FuAlgoltekUsbDevice *self, GError **error)
 	return g_steal_pointer(&versionData);
 }
 
-static guint
-fu_algoltek_readout_info_int(GByteArray *backData)
+static guint16
+fu_algoltek_readout_value(GByteArray *back_data)
 {
-	int backDataAddress = (backData->data[2] << 8) | backData->data[3];
-	int backDataValue;
-	if (backDataAddress == AG_UPDATE_STATUS_REG)
-		backDataValue = backData->data[0];
+	guint16 back_data_addr;
+	guint16 back_data_value;
+
+	back_data_addr = fu_memread_uint16(back_data->data + 2, G_BIG_ENDIAN);
+	if (back_data_addr == AG_UPDATE_STATUS_REG)
+		back_data_value = back_data->data[0];
 	else
-		backDataValue = (backData->data[4] << 8) | backData->data[5];
-	return backDataValue;
+		back_data_value = fu_memread_uint16(back_data->data + 4, G_BIG_ENDIAN);
+	return back_data_value;
 }
 
 static gboolean
@@ -178,17 +173,15 @@ algoltek_device_rst(FuAlgoltekUsbDevice *self, guint8 number, GError **error)
 }
 
 static gboolean
-algoltek_device_wrr(FuAlgoltekUsbDevice *self, int address, int inputValue, GError **error)
+algoltek_device_wrr(FuAlgoltekUsbDevice *self, int address, int input_value, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	fu_byte_array_set_size(buf, 11, 0x0);
 	buf->data[0] = 7;
 	buf->data[1] = ALGOLTEK_WRR;
-	buf->data[2] = ((address >> 8) & 0xFF);
-	buf->data[3] = (address & 0xFF);
-	buf->data[4] = ((inputValue >> 8) & 0xFF);
-	buf->data[5] = (inputValue & 0xFF);
+	fu_memwrite_uint16(buf->data + 2, address, G_BIG_ENDIAN);
+	fu_memwrite_uint16(buf->data + 4, input_value, G_BIG_ENDIAN);
 	buf->data[10] = ~fu_sum8(buf->data, buf->len) + 1;
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -212,37 +205,36 @@ algoltek_device_wrr(FuAlgoltekUsbDevice *self, int address, int inputValue, GErr
 
 static gboolean
 algoltek_device_ISP(FuAlgoltekUsbDevice *self,
-			 GByteArray *ISPData,
+			 GByteArray *ISP_data,
 			 int address,
 			 GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	g_autoptr(GByteArray) partISPData = g_byte_array_new();
-	guint restTransferDataSize = ISPData->len;
-	guint dataAddress = 0;
-	guint startIndex = 0;
-	guint transferDataSize = 0;
-	guint basicDataSize = 5;
-	guint maxPktSize = 64;
+	g_autoptr(GByteArray) part_ISP_data = g_byte_array_new();
+	guint rest_transfer_data_size = ISP_data->len;
+	guint data_addr = 0;
+	guint start_index = 0;
+	guint transfer_data_size = 0;
+	guint basic_data_size = 5;
+	guint max_packet_size = 64;
 
-	while (restTransferDataSize > 0) {
-		dataAddress = address + startIndex;
-		if (restTransferDataSize > (maxPktSize - basicDataSize)) {
-			transferDataSize = maxPktSize - basicDataSize;
+	while (rest_transfer_data_size > 0) {
+		data_addr = address + start_index;
+		if (rest_transfer_data_size > (max_packet_size - basic_data_size)) {
+			transfer_data_size = max_packet_size - basic_data_size;
 		} else {
-			transferDataSize = restTransferDataSize;
+			transfer_data_size = rest_transfer_data_size;
 		}
-		fu_byte_array_set_size(partISPData, transferDataSize + basicDataSize, 0);
-		partISPData->data[0] = (guint8)(transferDataSize + basicDataSize);
-		partISPData->data[1] = ALGOLTEK_ISP;
-		partISPData->data[2] = (guint8)((dataAddress >> 8) & 0xFF);
-		partISPData->data[3] = (guint8)(dataAddress & 0xFF);
+		fu_byte_array_set_size(part_ISP_data, transfer_data_size + basic_data_size, 0);
+		part_ISP_data->data[0] = (guint8)(transfer_data_size + basic_data_size);
+		part_ISP_data->data[1] = ALGOLTEK_ISP;
+		fu_memwrite_uint16(part_ISP_data->data + 2, data_addr,G_BIG_ENDIAN);
 
-		for (guint i = 0; i < transferDataSize; i++) {
-			partISPData->data[4 + i] = ISPData->data[i + startIndex];
+		for (guint i = 0; i < transfer_data_size; i++) {
+			part_ISP_data->data[4 + i] = ISP_data->data[i + start_index];
 		}
 
-		partISPData->data[partISPData->len - 1] = ~fu_sum8(partISPData->data, partISPData->len) + 1;
+		part_ISP_data->data[part_ISP_data->len - 1] = ~fu_sum8(part_ISP_data->data, part_ISP_data->len) + 1;
 
 		if (!g_usb_device_control_transfer(usb_device,
 						   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -251,8 +243,8 @@ algoltek_device_ISP(FuAlgoltekUsbDevice *self,
 						   ALGOLTEK_ISP,
 						   0, /* value */
 						   0, /* index */
-						   partISPData->data,
-						   partISPData->data[0],
+						   part_ISP_data->data,
+						   part_ISP_data->data[0],
 						   NULL,
 						   ALGOLTEK_DEVICE_USB_TIMEOUT,
 						   NULL,
@@ -261,8 +253,8 @@ algoltek_device_ISP(FuAlgoltekUsbDevice *self,
 			return FALSE;
 		}
 
-		startIndex += transferDataSize;
-		restTransferDataSize -= transferDataSize;
+		start_index += transfer_data_size;
+		rest_transfer_data_size -= transfer_data_size;
 	}
 	return TRUE;
 }
@@ -276,8 +268,7 @@ algoltek_device_bot(FuAlgoltekUsbDevice *self, int address, GError **error)
 	fu_byte_array_set_size(buf, 11, 0x0);
 	buf->data[0] = 5;
 	buf->data[1] = ALGOLTEK_BOT;
-	buf->data[2] = ((address >> 8) & 0xFF);
-	buf->data[3] = (address & 0xFF);
+	fu_memwrite_uint16(buf->data + 2, address, G_BIG_ENDIAN);
 	buf->data[10] = ~fu_sum8(buf->data, buf->len) + 1;
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -306,8 +297,6 @@ algoltek_device_ers(FuAlgoltekUsbDevice *self, GError **error)
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	fu_byte_array_set_size(buf, 2, 0x0);
-	buf->data[0] = 0;
-	buf->data[1] = 0;
 
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -332,22 +321,22 @@ algoltek_device_ers(FuAlgoltekUsbDevice *self, GError **error)
 static gboolean
 fu_algoltek_device_status_check(FuAlgoltekUsbDevice *self, GError **error)
 {
-	g_autoptr(GByteArray) readoutCheck = g_byte_array_new();
+	g_autoptr(GByteArray) update_status_array = g_byte_array_new();
 	guint retryTimes = 0;
-	guint checkResult;
+	guint16 update_status;
 Retry:
-	readoutCheck = algoltek_device_rdr(self, AG_UPDATE_STATUS_REG, error);
-	if (readoutCheck == NULL)
+	update_status_array = algoltek_device_rdr(self, AG_UPDATE_STATUS_REG, error);
+	if (update_status_array == NULL)
 		return FALSE;
-	checkResult = fu_algoltek_readout_info_int(readoutCheck);
-	switch (checkResult) {
+	update_status = fu_algoltek_readout_value(update_status_array);
+	switch (update_status) {
 	case AG_UPDATE_PASS:
 		break;
 	case AG_UPDATE_FAIL:
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
-			    "Check flashwrite status return failed...");
+			    "Update failure.");
 		return FALSE;
 	default:
 		retryTimes++;
@@ -361,49 +350,46 @@ Retry:
 
 static gboolean
 algoltek_device_wrf(FuAlgoltekUsbDevice *self,
-			 GByteArray *firmwareData,
+			 GByteArray *firmware_data,
 			 FuProgress *progress,
 			 GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	g_autoptr(GByteArray) transferParameter = g_byte_array_new();
-	g_autoptr(GByteArray) partFirmware = g_byte_array_new();
-	guint restTransferDataSize = firmwareData->len;
-	guint dataAddress = 0;
-	guint startIndex = 0;
-	guint maxPktSize = 64;
-	guint transferDataSize = 0;
-	guint countCheck = 0;
-	guint value;
-	guint index;
-	gboolean result;
+	g_autoptr(GByteArray) transfer_parameter = g_byte_array_new();
+	g_autoptr(GByteArray) part_firmware = g_byte_array_new();
+	guint rest_transfer_data_size = firmware_data->len;
+	guint data_addr = 0;
+	guint start_index = 0;
+	guint max_packet_size = 64;
+	guint transfer_data_size = 0;
+	guint count_check = 0;
+	guint16 value;
+	guint16 index;
 
-	while (restTransferDataSize > 0) {
-		countCheck++;
-		dataAddress = startIndex;
-		if (restTransferDataSize > maxPktSize)
-			transferDataSize = maxPktSize;
+	while (rest_transfer_data_size > 0) {
+		count_check++;
+		data_addr = start_index;
+		if (rest_transfer_data_size > max_packet_size)
+			transfer_data_size = max_packet_size;
 		else
-			transferDataSize = restTransferDataSize;
+			transfer_data_size = rest_transfer_data_size;
 
-		fu_byte_array_set_size(transferParameter, 4, 0);
+		fu_byte_array_set_size(transfer_parameter, 4, 0);
 
-		if (countCheck == 256 / maxPktSize)
-			transferParameter->data[0] = 1;
+		if (count_check == 256 / max_packet_size)
+			transfer_parameter->data[0] = 1;
 		else
-			transferParameter->data[0] = 0;
+			transfer_parameter->data[0] = 0;
+		
+		fu_memwrite_uint24(transfer_parameter->data + 1, data_addr, G_BIG_ENDIAN);
 
-		transferParameter->data[1] = (guint8)((dataAddress >> 16) & 0xFF);
-		transferParameter->data[2] = (guint8)((dataAddress >> 8) & 0xFF);
-		transferParameter->data[3] = (guint8)(dataAddress & 0xFF);
+		value = fu_memread_uint16(transfer_parameter->data, G_BIG_ENDIAN); 
+		index = fu_memread_uint16(transfer_parameter->data + 2, G_BIG_ENDIAN); 
 
-		value = (transferParameter->data[0] << 8) | (transferParameter->data[1]);
-		index = (transferParameter->data[2] << 8) | (transferParameter->data[3]);
+		fu_byte_array_set_size(part_firmware, transfer_data_size, 0);
 
-		fu_byte_array_set_size(partFirmware, transferDataSize, 0);
-
-		for (guint i = 0; i < transferDataSize; i++)
-			partFirmware->data[i] = firmwareData->data[i + startIndex];
+		for (guint i = 0; i < transfer_data_size; i++)
+			part_firmware->data[i] = firmware_data->data[i + start_index];
 
 		if (!g_usb_device_control_transfer(usb_device,
 						   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -412,8 +398,8 @@ algoltek_device_wrf(FuAlgoltekUsbDevice *self,
 						   ALGOLTEK_WRF,
 						   value, /* value */
 						   index, /* index */
-						   partFirmware->data,
-						   partFirmware->len,
+						   part_firmware->data,
+						   part_firmware->len,
 						   NULL,
 						   ALGOLTEK_DEVICE_USB_TIMEOUT,
 						   NULL,
@@ -422,15 +408,14 @@ algoltek_device_wrf(FuAlgoltekUsbDevice *self,
 			return FALSE;
 		}
 
-		startIndex += transferDataSize;
-		restTransferDataSize -= transferDataSize;
-		if (countCheck == (256 / maxPktSize) || restTransferDataSize == 0) {
-			countCheck = 0;
-			result = fu_algoltek_device_status_check(self, error);
-			if (!result)
+		start_index += transfer_data_size;
+		rest_transfer_data_size -= transfer_data_size;
+		if (count_check == (256 / max_packet_size) || rest_transfer_data_size == 0) {
+			count_check = 0;
+			if (!fu_algoltek_device_status_check(self, error))
 				return FALSE;
 		}
-		fu_progress_set_percentage_full(progress, startIndex, firmwareData->len);
+		fu_progress_set_percentage_full(progress, start_index, firmware_data->len);
 	}
 	return TRUE;
 }
@@ -440,15 +425,15 @@ fu_algoltek_usb_device_setup(FuDevice *device, GError **error)
 {
 	FuAlgoltekUsbDevice *self = FU_ALGOLTEK_USB_DEVICE(device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	g_autoptr(GByteArray) versionData = NULL;
+	g_autoptr(GByteArray) version_data = NULL;
 	g_autofree gchar *version_str = NULL;
 
 	/* UsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_algoltek_usb_device_parent_class)->setup(device, error))
 		return FALSE;
 
-	versionData = algoltek_device_rdv(self, error);
-	version_str = g_strdup_printf("%s", versionData->data);
+	version_data = algoltek_device_rdv(self, error);
+	version_str = g_strdup_printf("%s", version_data->data);
 
 	g_assert(self != NULL);
 	g_assert(usb_device != NULL);
@@ -581,7 +566,6 @@ static void
 fu_algoltek_usb_device_class_init(FuAlgoltekUsbDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_algoltek_usb_device_to_string;
 	klass_device->setup = fu_algoltek_usb_device_setup;
 	klass_device->write_firmware = fu_algoltek_usb_device_write_firmware;
 	klass_device->set_progress = fu_algoltek_usb_device_set_progress;
