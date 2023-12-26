@@ -15,10 +15,17 @@ struct _FuSynapticsMstFirmware {
 	FuSynapticsMstFamily family;
 };
 
+FuSynapticsMstFamily
+fu_synaptics_mst_firmware_get_family_from_config(GBytes *fw,
+				GError **error);
+
 G_DEFINE_TYPE(FuSynapticsMstFirmware, fu_synaptics_mst_firmware, FU_TYPE_FIRMWARE)
 
 #define ADDR_CUSTOMER_ID_CAYENNE 0x20E
 #define ADDR_CUSTOMER_ID 0x10E
+#define CONFIG_TYPES 2
+#define ADDR_CONFIG_CAYENNE 0x200
+#define ADDR_CONFIG 0x100
 
 guint16
 fu_synaptics_mst_firmware_get_board_id(FuSynapticsMstFirmware *self)
@@ -36,6 +43,53 @@ fu_synaptics_mst_firmware_export(FuFirmware *firmware,
 	fu_xmlb_builder_insert_kx(bn, "board_id", self->board_id);
 }
 
+FuSynapticsMstFamily
+fu_synaptics_mst_firmware_get_family_from_config(GBytes *fw,
+				GError **error)
+{
+	FuSynapticsMstFamily family = FU_SYNAPTICS_MST_FAMILY_UNKNOWN;
+	guint16 addr[CONFIG_TYPES] = {ADDR_CONFIG, ADDR_CONFIG_CAYENNE};
+	const guint8 *buf;
+	gsize bufsz;
+	buf = g_bytes_get_data(fw, &bufsz);
+	for (gint i = 0; i < CONFIG_TYPES; i++)
+	{
+		guint8 configHeader[4] = {0};
+		guint8 configVer, magicBit1, magicBit2;
+		if (fu_memread_uint8_safe(buf,
+					bufsz,
+					addr[i],
+					&configHeader[0],
+					error))
+		{
+			configVer = (configHeader[0] & 0xF0) >> 4;
+			magicBit1 = (configHeader[2] & 0x80) >> 7;
+			magicBit2 = (configHeader[3] & 0x80) >> 7;
+			if ( magicBit1 == 1 && magicBit2 == 1 )
+			{
+				switch (configVer) {
+				case 2:
+					family = FU_SYNAPTICS_MST_FAMILY_PANAMERA;
+					break;
+				case 3:
+					family = FU_SYNAPTICS_MST_FAMILY_CAYENNE;
+					break;
+				case 4:
+					family = FU_SYNAPTICS_MST_FAMILY_SPYDER;
+					break;
+				default:
+					family = FU_SYNAPTICS_MST_FAMILY_UNKNOWN;
+					break;
+				}
+
+				if (family != FU_SYNAPTICS_MST_FAMILY_UNKNOWN)
+					break;
+			}
+		}
+	}
+	return family;
+}
+
 static gboolean
 fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
 				GBytes *fw,
@@ -47,6 +101,10 @@ fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
 	const guint8 *buf;
 	gsize bufsz;
 	guint16 addr;
+	/* if device family not specified by caller, try to get from firmware file */
+	if (self->family == FU_SYNAPTICS_MST_FAMILY_UNKNOWN)
+		self->family = fu_synaptics_mst_firmware_get_family_from_config(fw, error);
+
 	switch (self->family) {
 	case FU_SYNAPTICS_MST_FAMILY_TESLA:
 	case FU_SYNAPTICS_MST_FAMILY_LEAF:
@@ -157,8 +215,7 @@ FuFirmware *
 fu_synaptics_mst_firmware_new(void)
 {
 	FuSynapticsMstFirmware *self = g_object_new(FU_TYPE_SYNAPTICS_MST_FIRMWARE, NULL);
-	/* default chip family as Tesla */
-	self->family = FU_SYNAPTICS_MST_FAMILY_TESLA;
+	self->family = FU_SYNAPTICS_MST_FAMILY_UNKNOWN;
 	return FU_FIRMWARE(self);
 }
 
