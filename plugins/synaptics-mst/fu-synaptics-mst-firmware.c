@@ -133,10 +133,6 @@ fu_synaptics_mst_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GBytes) blob = NULL;
 	guint16 addr;
 
-	/* if device family not specified by caller, try to get from firmware file */
-	if (self->family == FU_SYNAPTICS_MST_FAMILY_UNKNOWN)
-		self->family = fu_synaptics_mst_firmware_get_family_from_config(fw, error);
-
 	switch (self->family) {
 	case FU_SYNAPTICS_MST_FAMILY_TESLA:
 	case FU_SYNAPTICS_MST_FAMILY_LEAF:
