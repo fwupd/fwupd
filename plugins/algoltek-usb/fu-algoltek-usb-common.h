@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Ling.Chen <ling.chen@algoltek.com.tw>
+ * Copyright (C) 2023 Algoltek, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -13,14 +13,17 @@
 #define ALGOLTEK_RDR 0x06
 #define ALGOLTEK_WRR 0x07
 #define ALGOLTEK_RDV 0x08
-#define ALGOLTEK_EN 0x09
+#define ALGOLTEK_EN  0x09
 #define ALGOLTEK_WRF 0x10
 #define ALGOLTEK_ISP 0x13
 #define ALGOLTEK_ERS 0x19
 #define ALGOLTEK_BOT 0x1D
 #define ALGOLTEK_RST 0x20
 
-#define AG_BOOT_ISP_ADDR 0x2000
-#define AG_UPDATE_STATUS_REG  0x860C
-#define AG_UPDATE_PASS  1
-#define AG_UPDATE_FAIL 2
+#define AG_ISP_ADDR	 0x2000
+#define AG_ISP_SIZE	 0x1000
+#define AG_FIRMWARE_SIZE 0x20000
+
+#define AG_UPDATE_STATUS 0x860C
+#define AG_UPDATE_PASS	 1
+#define AG_UPDATE_FAIL	 2

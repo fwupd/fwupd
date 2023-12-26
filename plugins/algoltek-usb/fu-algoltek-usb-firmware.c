@@ -8,6 +8,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-algoltek-usb-common.h"
 #include "fu-algoltek-usb-firmware.h"
 #include "fu-algoltek-usb-struct.h"
 
@@ -16,9 +17,6 @@ struct _FuAlgoltekUsbFirmware {
 };
 
 G_DEFINE_TYPE(FuAlgoltekUsbFirmware, fu_algoltek_usb_firmware, FU_TYPE_FIRMWARE)
-
-#define FU_ALGOLTEK_FIRMWARE_SIZE 0x20000
-#define FU_ALGOLTEK_ISP_SIZE	  0x1000
 
 static gboolean
 fu_algoltek_usb_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
@@ -41,14 +39,15 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GBytes) blob_header = NULL;
 	gchar *version;
 
-	blob_header = fu_bytes_new_offset(fw, offset, FU_STRUCT_ALGOLTEK_PRODUCT_IDENTITY_SIZE, error);
+	blob_header =
+	    fu_bytes_new_offset(fw, offset, FU_STRUCT_ALGOLTEK_PRODUCT_IDENTITY_SIZE, error);
 	fu_byte_array_append_bytes(header_array, blob_header);
 
 	version = fu_struct_algoltek_product_identity_get_version(header_array);
 
 	offset += FU_STRUCT_ALGOLTEK_PRODUCT_IDENTITY_SIZE;
 
-	blob_ISP = fu_bytes_new_offset(fw, offset, FU_ALGOLTEK_ISP_SIZE, error);
+	blob_ISP = fu_bytes_new_offset(fw, offset, AG_ISP_SIZE, error);
 	if (blob_ISP == NULL)
 		return FALSE;
 	fu_firmware_set_bytes(img_ISP, blob_ISP);
@@ -56,7 +55,7 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 	fu_firmware_add_image(firmware, img_ISP);
 	offset += g_bytes_get_size(blob_ISP);
 
-	blob_payload = fu_bytes_new_offset(fw, offset, FU_ALGOLTEK_FIRMWARE_SIZE, error);
+	blob_payload = fu_bytes_new_offset(fw, offset, AG_FIRMWARE_SIZE, error);
 	if (blob_payload == NULL)
 		return FALSE;
 
@@ -99,10 +98,4 @@ fu_algoltek_usb_firmware_class_init(FuAlgoltekUsbFirmwareClass *klass)
 	klass_firmware->validate = fu_algoltek_usb_firmware_validate;
 	klass_firmware->parse = fu_algoltek_usb_firmware_parse;
 	klass_firmware->write = fu_algoltek_usb_firmware_write;
-}
-
-FuFirmware *
-fu_algoltek_usb_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_ALGOLTEK_USB_FIRMWARE, NULL));
 }
