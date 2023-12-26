@@ -3300,6 +3300,9 @@ fu_util_esp_list(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuVolume) volume = NULL;
 	g_autoptr(GPtrArray) files = NULL;
 
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_READONLY, priv->progress, error))
+		return FALSE;
+
 	volume = fu_util_prompt_for_volume(priv, error);
 	if (volume == NULL)
 		return FALSE;
