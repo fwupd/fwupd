@@ -13,6 +13,7 @@
 
 #include <fcntl.h>
 #include <glib/gstdio.h>
+#include <libdrm/amdgpu.h>
 #include <libdrm/amdgpu_drm.h>
 
 #include "fu-amd-gpu-atom-firmware.h"
@@ -22,6 +23,8 @@
 struct _FuAmdGpuDevice {
 	FuUdevDevice parent_instance;
 	gchar *vbios_pn;
+	guint32 drm_major;
+	guint32 drm_minor;
 };
 
 #define PSPVBFLASH_MAX_POLL    1500
@@ -30,6 +33,15 @@ struct _FuAmdGpuDevice {
 #define PSPVBFLASH_SUCCESS     0x80000000
 
 G_DEFINE_TYPE(FuAmdGpuDevice, fu_amd_gpu_device, FU_TYPE_UDEV_DEVICE)
+
+static void
+fu_amd_gpu_device_to_string(FuDevice *device, guint idt, GString *str)
+{
+	FuAmdGpuDevice *self = FU_AMDGPU_DEVICE(device);
+
+	fu_string_append_ku(str, idt, "DrmMajor", self->drm_major);
+	fu_string_append_ku(str, idt, "DrmMinor", self->drm_minor);
+}
 
 static gboolean
 fu_amd_gpu_set_device_file(FuDevice *device, const gchar *base, GError **error)
@@ -76,7 +88,6 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 	rom = g_build_filename(base, "rom", NULL);
 	if (!g_file_test(rom, G_FILE_TEST_EXISTS)) {
 		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD);
-		fu_device_set_name(device, "Graphics Processing Unit (GPU)");
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 	} else {
 		fu_device_set_logical_id(device, "rom");
@@ -104,6 +115,24 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static void
+fu_amd_gpu_device_set_marketing_name(FuDevice *device)
+{
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(device));
+	FuAmdGpuDevice *self = FU_AMDGPU_DEVICE(device);
+	amdgpu_device_handle device_handle = {0};
+	gint r;
+
+	r = amdgpu_device_initialize(fu_io_channel_unix_get_fd(io_channel),
+				     &self->drm_major,
+				     &self->drm_minor,
+				     &device_handle);
+	if (r == 0)
+		fu_device_set_name(device, amdgpu_get_marketing_name(device_handle));
+	else
+		g_warning("unable to set marketing name: %s", g_strerror(r));
+}
+
 static gboolean
 fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 {
@@ -118,6 +147,8 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *part = NULL;
 	g_autofree gchar *ver = NULL;
 	g_autofree gchar *model = NULL;
+
+	fu_amd_gpu_device_set_marketing_name(device);
 
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
 				  DRM_IOCTL_AMDGPU_INFO,
@@ -284,4 +315,5 @@ fu_amd_gpu_device_class_init(FuAmdGpuDeviceClass *klass)
 	klass_device->set_progress = fu_amd_gpu_device_set_progress;
 	klass_device->write_firmware = fu_amd_gpu_device_write_firmware;
 	klass_device->prepare_firmware = fu_amd_gpu_device_prepare_firmware;
+	klass_device->to_string = fu_amd_gpu_device_to_string;
 }

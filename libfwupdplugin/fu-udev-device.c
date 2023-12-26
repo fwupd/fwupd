@@ -800,8 +800,8 @@ fu_udev_device_probe_complete(FuDevice *device)
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 
-	/* this is where we would call g_clear_object(&priv->udev_device) in the future, but for
-	 * now just set the flag so we get the warning in non-supported builds */
+	/* free memory */
+	g_clear_object(&priv->udev_device);
 	priv->udev_device_cleared = TRUE;
 }
 
@@ -959,12 +959,13 @@ fu_udev_device_get_dev(FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
-#ifdef SUPPORTED_BUILD
-	if (priv->udev_device_cleared) {
-		g_warning("soon the GUdevDevice will not be available post-probe, use "
-			  "FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE in %s plugin to opt-out %s",
+#ifndef SUPPORTED_BUILD
+	if (priv->udev_device == NULL && priv->udev_device_cleared) {
+		g_autofree gchar *str = fu_device_to_string(FU_DEVICE(self));
+		g_warning("GUdevDevice is not available post-probe, use "
+			  "FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE in %s plugin to opt-out: %s",
 			  fu_device_get_plugin(FU_DEVICE(self)),
-			  fu_device_get_id(FU_DEVICE(self)));
+			  str);
 	}
 #endif
 	return priv->udev_device;

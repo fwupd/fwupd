@@ -17,8 +17,8 @@ struct _FuSynapticsMstFirmware {
 
 G_DEFINE_TYPE(FuSynapticsMstFirmware, fu_synaptics_mst_firmware, FU_TYPE_FIRMWARE)
 
-#define ADDR_CUSTOMER_ID_CAYENNE 0X20E
-#define ADDR_CUSTOMER_ID 0X10E
+#define ADDR_CUSTOMER_ID_CAYENNE 0x20E
+#define ADDR_CUSTOMER_ID 0x10E
 
 guint16
 fu_synaptics_mst_firmware_get_board_id(FuSynapticsMstFirmware *self)

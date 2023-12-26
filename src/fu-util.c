@@ -1594,6 +1594,124 @@ fu_util_report_history_force(FuUtilPrivate *priv, GError **error)
 }
 
 static gboolean
+fu_util_report_export(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) devices_filtered =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* get all devices from the history database, then filter them and export to JSON */
+	devices = fwupd_client_get_history(priv->client, priv->cancellable, error);
+	if (devices == NULL)
+		return FALSE;
+	g_debug("%u devices with history", devices->len);
+
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		gboolean dev_skip_byid = TRUE;
+
+		/* only process particular DEVICE-ID or GUID if specified */
+		for (guint idx = 0; idx < g_strv_length(values); idx++) {
+			const gchar *tmpid = values[idx];
+			const gchar *device_id = fwupd_device_get_id(dev);
+			if (fwupd_device_has_guid(dev, tmpid) || g_strcmp0(device_id, tmpid) == 0) {
+				dev_skip_byid = FALSE;
+				break;
+			}
+		}
+		if (g_strv_length(values) > 0 && dev_skip_byid)
+			continue;
+
+		/* filter, if not forcing */
+		if (!fwupd_device_match_flags(dev,
+					      priv->filter_device_include,
+					      priv->filter_device_exclude))
+			continue;
+		if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+			if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_REPORTED)) {
+				g_debug("%s has already been reported", fwupd_device_get_id(dev));
+				continue;
+			}
+		}
+
+		/* only send success and failure */
+		if (fwupd_device_get_update_state(dev) != FWUPD_UPDATE_STATE_FAILED &&
+		    fwupd_device_get_update_state(dev) != FWUPD_UPDATE_STATE_SUCCESS) {
+			g_debug("ignoring %s with UpdateState %s",
+				fwupd_device_get_id(dev),
+				fwupd_update_state_to_string(fwupd_device_get_update_state(dev)));
+			continue;
+		}
+		g_ptr_array_add(devices_filtered, g_object_ref(dev));
+	}
+
+	/* nothing to report, but try harder with --force */
+	if (devices_filtered->len == 0 && (priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "No reports require uploading");
+		return FALSE;
+	}
+
+	/* write each device report as a new file */
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		g_autofree gchar *data = NULL;
+		g_autofree gchar *filename = NULL;
+		g_autoptr(FuFirmware) archive = fu_archive_firmware_new();
+		g_autoptr(FuFirmware) payload_img = NULL;
+		g_autoptr(GBytes) payload_blob = NULL;
+		g_autoptr(GFile) file = NULL;
+		g_autoptr(GPtrArray) devices_tmp = g_ptr_array_new();
+
+		/* convert single device to JSON */
+		g_ptr_array_add(devices_tmp, dev);
+		data = fwupd_build_history_report_json(devices, error);
+		if (data == NULL)
+			return FALSE;
+		payload_blob = g_bytes_new(data, strlen(data));
+		payload_img = fu_firmware_new_from_bytes(payload_blob);
+		fu_firmware_set_id(payload_img, "report.json");
+		fu_firmware_add_image(archive, payload_img);
+
+		/* self sign data */
+		if (priv->sign) {
+			g_autofree gchar *sig = NULL;
+			g_autoptr(FuFirmware) sig_img = NULL;
+			g_autoptr(GBytes) sig_blob = NULL;
+
+			sig = fwupd_client_self_sign(priv->client,
+						     data,
+						     FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP,
+						     priv->cancellable,
+						     error);
+			if (sig == NULL)
+				return FALSE;
+			sig_blob = g_bytes_new(sig, strlen(sig));
+			sig_img = fu_firmware_new_from_bytes(sig_blob);
+			fu_firmware_set_id(sig_img, "report.json.p7c");
+			fu_firmware_add_image(archive, sig_img);
+		}
+
+		/* save to local file */
+		fu_archive_firmware_set_format(FU_ARCHIVE_FIRMWARE(archive), FU_ARCHIVE_FORMAT_ZIP);
+		fu_archive_firmware_set_compression(FU_ARCHIVE_FIRMWARE(archive),
+						    FU_ARCHIVE_COMPRESSION_GZIP);
+		filename = g_strdup_printf("%s.fwupdreport", fwupd_device_get_id(dev));
+		file = g_file_new_for_path(filename);
+		if (!fu_firmware_write_file(archive, file, error))
+			return FALSE;
+
+		/* TRANSLATORS: key for a offline report filename */
+		fu_console_print_kv(priv->console, _("Saved report"), filename);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GHashTable) report_map = NULL;
@@ -1655,7 +1773,7 @@ fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 		if (remote == NULL)
 			return FALSE;
 		if (fwupd_remote_get_report_uri(remote) == NULL) {
-			g_debug("%s has no RemoteURI", fwupd_remote_get_report_uri(remote));
+			g_debug("%s has no ReportURI", remote_id);
 			continue;
 		}
 
@@ -4961,6 +5079,12 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Share firmware history with the developers"),
 			      fu_util_report_history);
+	fu_util_cmd_array_add(cmd_array,
+			      "report-export",
+			      NULL,
+			      /* TRANSLATORS: command description */
+			      _("Export firmware history for manual upload"),
+			      fu_util_report_export);
 	fu_util_cmd_array_add(cmd_array,
 			      "install",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */

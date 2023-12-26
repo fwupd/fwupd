@@ -33,6 +33,8 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuDpauxDevice, fu_dpaux_device, FU_TYPE_UDEV_DEVICE)
 
+enum { PROP_0, PROP_DPCD_IEEE_OUI, PROP_LAST };
+
 #define GET_PRIVATE(o) (fu_dpaux_device_get_instance_private(o))
 
 #define FU_DPAUX_DEVICE_READ_TIMEOUT 10 /* ms */
@@ -79,10 +81,6 @@ static gboolean
 fu_dpaux_device_probe(FuDevice *device, GError **error)
 {
 	FuDpauxDevice *self = FU_DPAUX_DEVICE(device);
-
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_dpaux_device_parent_class)->probe(device, error))
-		return FALSE;
 
 	/* name */
 	fu_dpaux_device_set_name(self,
@@ -172,7 +170,10 @@ fu_dpaux_device_set_dpcd_ieee_oui(FuDpauxDevice *self, guint32 dpcd_ieee_oui)
 {
 	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DPAUX_DEVICE(self));
+	if (priv->dpcd_ieee_oui == dpcd_ieee_oui)
+		return;
 	priv->dpcd_ieee_oui = dpcd_ieee_oui;
+	g_object_notify(G_OBJECT(self), "dpcd-ieee-oui");
 }
 
 /**
@@ -383,6 +384,35 @@ fu_dpaux_device_incorporate(FuDevice *device, FuDevice *donor)
 }
 
 static void
+fu_dpaux_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	FuDpauxDevice *self = FU_DPAUX_DEVICE(object);
+	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
+	switch (prop_id) {
+	case PROP_DPCD_IEEE_OUI:
+		g_value_set_uint(value, priv->dpcd_ieee_oui);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fu_dpaux_device_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+	FuDpauxDevice *self = FU_DPAUX_DEVICE(object);
+	switch (prop_id) {
+	case PROP_DPCD_IEEE_OUI:
+		fu_dpaux_device_set_dpcd_ieee_oui(self, g_value_get_uint(value));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
 fu_dpaux_device_init(FuDpauxDevice *self)
 {
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
@@ -407,10 +437,30 @@ fu_dpaux_device_class_init(FuDpauxDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	GParamSpec *pspec;
+
 	object_class->finalize = fu_dpaux_device_finalize;
+	object_class->get_property = fu_dpaux_device_get_property;
+	object_class->set_property = fu_dpaux_device_set_property;
 	klass_device->probe = fu_dpaux_device_probe;
 	klass_device->setup = fu_dpaux_device_setup;
 	klass_device->invalidate = fu_dpaux_device_invalidate;
 	klass_device->to_string = fu_dpaux_device_to_string;
 	klass_device->incorporate = fu_dpaux_device_incorporate;
+
+	/**
+	 * FuDpauxDevice:dpcd-ieee-oui:
+	 *
+	 * The DPCD IEEE OUI.
+	 *
+	 * Since: 1.9.11
+	 */
+	pspec = g_param_spec_uint("dpcd-ieee-oui",
+				  NULL,
+				  NULL,
+				  0x0,
+				  G_MAXUINT32,
+				  0x0,
+				  G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_DPCD_IEEE_OUI, pspec);
 }

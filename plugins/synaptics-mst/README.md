@@ -42,13 +42,13 @@ The vendor ID is set from the PCI vendor, for example set to `DRM_DP_AUX_DEV:0x$
 
 This plugin uses the following plugin-specific quirks:
 
+### Flags:manual-restart-required
+
+The device must be restarted manually after the update has completed.
+
 ### Flags:ignore-board-id
 
 Ignore board ID firmware mismatch.
-
-### Flags:scan-cascade
-
-Scan MST controllers for remote cascade devices.
 
 ## Requirements
 

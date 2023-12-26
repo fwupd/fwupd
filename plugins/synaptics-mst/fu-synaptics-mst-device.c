@@ -64,6 +64,13 @@
  */
 #define FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID (1 << 0)
 
+/**
+ * FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED:
+ *
+ * The device must be restarted manually after the update has completed.
+ */
+#define FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED (1 << 1)
+
 struct _FuSynapticsMstDevice {
 	FuDpauxDevice parent_instance;
 	gchar *device_kind;
@@ -118,8 +125,12 @@ fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID,
 					"ignore-board-id");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED,
+					"manual-restart-required");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
+	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 
 	/* this is set from ->incorporate() */
 	g_signal_connect(FU_UDEV_DEVICE(self),
@@ -1368,6 +1379,25 @@ fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
+fu_synaptics_mst_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+{
+	/* some devices do not use a GPIO to reset the chip */
+	if (fu_device_has_private_flag(device,
+				       FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED)) {
+		g_autoptr(FwupdRequest) request = fwupd_request_new();
+		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+		fwupd_request_set_id(request, FWUPD_REQUEST_ID_REPLUG_POWER);
+		fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+		if (!fu_device_emit_request(device, request, progress, error))
+			return FALSE;
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_synaptics_mst_device_write_firmware(FuDevice *device,
 				       FuFirmware *firmware,
 				       FuProgress *progress,
@@ -1569,16 +1599,13 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	/* FuDpauxDevice->setup */
-	if (!FU_DEVICE_CLASS(fu_synaptics_mst_device_parent_class)->setup(device, error))
-		return FALSE;
-
 	/* not a correct device */
-	if (fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)) != 0x90CC24) {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
-				    "not a supported OUI");
+	if (fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)) != SYNAPTICS_IEEE_OUI) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "not a supported OUI, got 0x%x",
+			    fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)));
 		return FALSE;
 	}
 
@@ -1665,10 +1692,6 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	if (!fu_synaptics_mst_device_ensure_board_id(self, error))
 		return FALSE;
 
-	/* set up the device name and kind via quirks */
-	guid0 = g_strdup_printf("MST-%u", self->board_id);
-	fu_device_add_instance_id(FU_DEVICE(self), guid0);
-
 	parent = fu_device_get_parent(FU_DEVICE(self));
 	if (parent != NULL)
 		name_parent = fu_device_get_name(parent);
@@ -1678,6 +1701,16 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 		name = g_strdup_printf("VMM%04x", self->chip_id);
 	}
 	fu_device_set_name(FU_DEVICE(self), name);
+
+	/* set up the device name and kind via quirks */
+	guid0 = g_strdup_printf("MST-%u", self->board_id);
+	fu_device_add_instance_id(FU_DEVICE(self), guid0);
+
+	/* requires user to do something */
+	if (fu_device_has_private_flag(device,
+				       FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED)) {
+		fu_device_set_remove_delay(device, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+	}
 
 	/* this is a host system, use system ID */
 	name_family = fu_synaptics_mst_family_to_string(self->family);
@@ -1734,6 +1767,10 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	guid3 = g_strdup_printf("MST-%s", name_family);
 	fu_device_add_instance_id_full(FU_DEVICE(self), guid3, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 
+	/* whitebox customers */
+	if ((self->board_id >> 8) == 0x0)
+		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
+
 	return TRUE;
 }
 
@@ -1775,6 +1812,7 @@ fu_synaptics_mst_device_class_init(FuSynapticsMstDeviceClass *klass)
 	klass_device->set_quirk_kv = fu_synaptics_mst_device_set_quirk_kv;
 	klass_device->setup = fu_synaptics_mst_device_setup;
 	klass_device->write_firmware = fu_synaptics_mst_device_write_firmware;
+	klass_device->attach = fu_synaptics_mst_device_attach;
 	klass_device->prepare_firmware = fu_synaptics_mst_device_prepare_firmware;
 	klass_device->set_progress = fu_synaptics_mst_device_set_progress;
 }

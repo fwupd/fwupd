@@ -58,6 +58,7 @@ complete -c fwupdmgr -n '__fish_use_subcommand' -x -a modify-remote -d 'Modifies
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a refresh -d 'Refresh metadata from remote server'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a reinstall -d 'Reinstall current firmware on the device'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a report-history -d 'Share firmware history with the developers'
+complete -c fwupdmgr -n '__fish_use_subcommand' -x -a report-export -d 'Export firmware history for manual upload'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a set-bios-setting -d 'Set a BIOS setting'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a security -d 'Gets the host security attributes'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a set-approved-firmware -d 'Sets the list of approved firmware'
