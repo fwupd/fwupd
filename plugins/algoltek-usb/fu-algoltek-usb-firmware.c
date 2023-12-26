@@ -17,39 +17,13 @@ struct _FuAlgoltekUsbFirmware {
 
 G_DEFINE_TYPE(FuAlgoltekUsbFirmware, fu_algoltek_usb_firmware, FU_TYPE_FIRMWARE)
 
-#define FU_ALGOLTEK_HEADER 0x4B45544C4F474C41 // ALGOLTEK
-
 #define FU_ALGOLTEK_FIRMWARE_SIZE 0x20000
 #define FU_ALGOLTEK_ISP_SIZE	  0x1000
 
 static gboolean
 fu_algoltek_usb_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
-	guint64 magic = 0;
-	/* First byte is header length */
-	offset += 1;
-
-	if (!fu_memread_uint64_safe(g_bytes_get_data(fw, NULL),
-				    g_bytes_get_size(fw),
-				    offset,
-				    &magic,
-				    G_LITTLE_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "failed to read magic: ");
-		return FALSE;
-	}
-
-	if (magic != FU_ALGOLTEK_HEADER) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "invalid magic, expected 0x%08lX got 0x%08lX",
-			    (guint64)FU_ALGOLTEK_HEADER,
-			    magic);
-		return FALSE;
-	}
-	/* success */
-	return TRUE;
+	return fu_struct_algoltek_product_identity_validate_bytes(fw, offset, error);
 }
 
 static gboolean
@@ -63,21 +37,16 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
 	g_autoptr(GBytes) blob_ISP = NULL;
 	g_autoptr(GBytes) blob_payload = NULL;
-	g_autoptr(GByteArray) headerArray = g_byte_array_new();
+	g_autoptr(GByteArray) header_array = g_byte_array_new();
 	g_autoptr(GBytes) blob_header = NULL;
 	gchar *version;
 
-	blob_header = fu_bytes_new_offset(fw, offset, 75, error);
-	fu_byte_array_append_bytes(headerArray, blob_header);
+	blob_header = fu_bytes_new_offset(fw, offset, FU_STRUCT_ALGOLTEK_PRODUCT_IDENTITY_SIZE, error);
+	fu_byte_array_append_bytes(header_array, blob_header);
 
-	version = fu_struct_algoltek_product_identity_get_version(headerArray);
+	version = fu_struct_algoltek_product_identity_get_version(header_array);
 
-	/* len + Header = 9 bytes */
-	offset += 9;
-	/* len + ProductName = 17 bytes */
-	offset += 17;
-	/* len + FWVersion = 49 bytes */
-	offset += 49;
+	offset += FU_STRUCT_ALGOLTEK_PRODUCT_IDENTITY_SIZE;
 
 	blob_ISP = fu_bytes_new_offset(fw, offset, FU_ALGOLTEK_ISP_SIZE, error);
 	if (blob_ISP == NULL)
