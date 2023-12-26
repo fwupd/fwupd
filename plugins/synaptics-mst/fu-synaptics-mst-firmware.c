@@ -15,10 +15,6 @@ struct _FuSynapticsMstFirmware {
 	FuSynapticsMstFamily family;
 };
 
-FuSynapticsMstFamily
-fu_synaptics_mst_firmware_get_family_from_config(GBytes *fw,
-				GError **error);
-
 G_DEFINE_TYPE(FuSynapticsMstFirmware, fu_synaptics_mst_firmware, FU_TYPE_FIRMWARE)
 
 #define ADDR_CUSTOMER_ID_CAYENNE 0x20E
@@ -43,7 +39,7 @@ fu_synaptics_mst_firmware_export(FuFirmware *firmware,
 	fu_xmlb_builder_insert_kx(bn, "board_id", self->board_id);
 }
 
-FuSynapticsMstFamily
+static FuSynapticsMstFamily
 fu_synaptics_mst_firmware_get_family_from_config(GBytes *fw,
 				GError **error)
 {
