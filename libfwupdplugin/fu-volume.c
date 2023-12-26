@@ -204,7 +204,7 @@ fu_volume_get_id(FuVolume *self)
 		return g_dbus_proxy_get_object_path(self->proxy_blk);
 	if (self->proxy_part != NULL)
 		return g_dbus_proxy_get_object_path(self->proxy_part);
-	return NULL;
+	return self->mount_path;
 }
 
 /**
