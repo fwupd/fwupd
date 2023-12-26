@@ -5,7 +5,7 @@
       "name": "gdbserver (fwupdtool)",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/dist/libexec/fwupd/fwupdtool",
+      "program": "${workspaceFolder}/dist/bin/fwupdtool",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
