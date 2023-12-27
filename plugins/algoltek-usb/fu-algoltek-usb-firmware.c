@@ -26,10 +26,10 @@ fu_algoltek_usb_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset
 
 static gboolean
 fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
-			                   GBytes *fw,
-			                   gsize offset,
-			                   FwupdInstallFlags flags,
-			                   GError **error)
+			       GBytes *fw,
+			       gsize offset,
+			       FwupdInstallFlags flags,
+			       GError **error)
 {
 	g_autoptr(FuFirmware) img_ISP = fu_firmware_new();
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
