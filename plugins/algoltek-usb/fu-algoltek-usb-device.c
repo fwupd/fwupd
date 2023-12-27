@@ -317,16 +317,18 @@ algoltek_device_ers(FuAlgoltekUsbDevice *self, GError **error)
 }
 
 static gboolean
-fu_algoltek_device_status_check(FuAlgoltekUsbDevice *self, GError **error)
+fu_algoltek_device_status_check(FuDevice *self, gpointer user_data, GError **error)
 {
 	g_autoptr(GByteArray) update_status_array = g_byte_array_new();
-	guint retryTimes = 0;
 	guint16 update_status;
-Retry:
-	update_status_array = algoltek_device_rdr(self, AG_UPDATE_STATUS, error);
+
+	update_status_array =
+	    algoltek_device_rdr(FU_ALGOLTEK_USB_DEVICE(self), AG_UPDATE_STATUS, error);
 	if (update_status_array == NULL)
 		return FALSE;
+
 	update_status = fu_algoltek_readout_value(update_status_array);
+
 	switch (update_status) {
 	case AG_UPDATE_PASS:
 		break;
@@ -337,11 +339,7 @@ Retry:
 			    "Update procedure is failed.");
 		return FALSE;
 	default:
-		retryTimes++;
-		if (retryTimes < 10)
-			goto Retry;
-		else
-			return FALSE;
+		return FALSE;
 	}
 	return TRUE;
 }
@@ -410,7 +408,12 @@ algoltek_device_wrf(FuAlgoltekUsbDevice *self,
 		rest_transfer_data_size -= transfer_data_size;
 		if (count_check == (256 / max_packet_size) || rest_transfer_data_size == 0) {
 			count_check = 0;
-			if (!fu_algoltek_device_status_check(self, error))
+			if (!fu_device_retry_full(FU_DEVICE(self),
+						  fu_algoltek_device_status_check,
+						  10,
+						  0,
+						  NULL,
+						  error))
 				return FALSE;
 		}
 		fu_progress_set_percentage_full(progress, start_index, firmware_data->len);
