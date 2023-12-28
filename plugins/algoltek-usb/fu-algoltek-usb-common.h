@@ -14,7 +14,7 @@
 #define AG_ISP_SIZE	 0x1000
 #define AG_FIRMWARE_SIZE 0x20000
 
-#define AG_UPDATE_STATUS 0x860C
-#define AG_UPDATE_PASS	 1
-#define AG_UPDATE_FAIL	 2
+#define AG_UPDATE_STATUS       0x860C
+#define AG_UPDATE_PASS	       1
+#define AG_UPDATE_FAIL	       2
 #define AG_UPDATE_READOUT_FAIL 0xFF
