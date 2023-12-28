@@ -31,13 +31,13 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
+	gchar *version;
 	g_autoptr(FuFirmware) img_isp = fu_firmware_new();
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
 	g_autoptr(GBytes) blob_isp = NULL;
 	g_autoptr(GBytes) blob_payload = NULL;
 	g_autoptr(GByteArray) header_array = g_byte_array_new();
 	g_autoptr(GBytes) blob_header = NULL;
-	gchar *version;
 
 	blob_header =
 	    fu_bytes_new_offset(fw, offset, FU_STRUCT_ALGOLTEK_PRODUCT_IDENTITY_SIZE, error);
