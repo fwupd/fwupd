@@ -31,9 +31,9 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
-	g_autoptr(FuFirmware) img_ISP = fu_firmware_new();
+	g_autoptr(FuFirmware) img_isp = fu_firmware_new();
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
-	g_autoptr(GBytes) blob_ISP = NULL;
+	g_autoptr(GBytes) blob_isp = NULL;
 	g_autoptr(GBytes) blob_payload = NULL;
 	g_autoptr(GByteArray) header_array = g_byte_array_new();
 	g_autoptr(GBytes) blob_header = NULL;
@@ -47,13 +47,13 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 
 	offset += FU_STRUCT_ALGOLTEK_PRODUCT_IDENTITY_SIZE;
 
-	blob_ISP = fu_bytes_new_offset(fw, offset, AG_ISP_SIZE, error);
-	if (blob_ISP == NULL)
+	blob_isp = fu_bytes_new_offset(fw, offset, AG_ISP_SIZE, error);
+	if (blob_isp == NULL)
 		return FALSE;
-	fu_firmware_set_bytes(img_ISP, blob_ISP);
-	fu_firmware_set_id(img_ISP, "ISP");
-	fu_firmware_add_image(firmware, img_ISP);
-	offset += g_bytes_get_size(blob_ISP);
+	fu_firmware_set_bytes(img_isp, blob_isp);
+	fu_firmware_set_id(img_isp, "ISP");
+	fu_firmware_add_image(firmware, img_isp);
+	offset += g_bytes_get_size(blob_isp);
 
 	blob_payload = fu_bytes_new_offset(fw, offset, AG_FIRMWARE_SIZE, error);
 	if (blob_payload == NULL)
@@ -70,13 +70,13 @@ static GByteArray *
 fu_algoltek_usb_firmware_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GBytes) blob_ISP = NULL;
+	g_autoptr(GBytes) blob_isp = NULL;
 	g_autoptr(GBytes) blob_payload = NULL;
 
-	blob_ISP = fu_firmware_get_image_by_id_bytes(firmware, "ISP", error);
-	if (blob_ISP == NULL)
+	blob_isp = fu_firmware_get_image_by_id_bytes(firmware, "ISP", error);
+	if (blob_isp == NULL)
 		return NULL;
-	fu_byte_array_append_bytes(buf, blob_ISP);
+	fu_byte_array_append_bytes(buf, blob_isp);
 
 	blob_payload = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_PAYLOAD, error);
 	if (blob_payload == NULL)

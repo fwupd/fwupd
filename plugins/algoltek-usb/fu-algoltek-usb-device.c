@@ -9,7 +9,7 @@
 #include "fu-algoltek-usb-common.h"
 #include "fu-algoltek-usb-device.h"
 #include "fu-algoltek-usb-firmware.h"
-// #include "fu-algoltek-usb-struct.h"
+#include "fu-algoltek-usb-struct.h"
 
 struct _FuAlgoltekUsbDevice {
 	FuUsbDevice parent_instance;
@@ -17,34 +17,58 @@ struct _FuAlgoltekUsbDevice {
 
 G_DEFINE_TYPE(FuAlgoltekUsbDevice, fu_algoltek_usb_device, FU_TYPE_USB_DEVICE)
 
-static GByteArray *
-algoltek_device_rdr(FuAlgoltekUsbDevice *self, int address, GError **error)
+static gboolean
+algoltek_device_ctrl_transfer(FuAlgoltekUsbDevice *self,
+			      GUsbDeviceDirection direction,
+			      guint8 algoltek_cmd,
+			      guint16 value,
+			      guint16 index,
+			      GByteArray *transfer_pkt,
+			      guint8 len,
+			      GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	g_autoptr(GByteArray) buf = g_byte_array_new();
 
-	/* first byte is length */
-	fu_byte_array_set_size(buf, 11, 0x0);
-	buf->data[0] = 5;
-	buf->data[1] = ALGOLTEK_RDR;
-	fu_memwrite_uint16(buf->data + 2, address, G_BIG_ENDIAN);
-	buf->data[10] = ~fu_sum8(buf->data, buf->len) + 1;
 	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					   direction,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   ALGOLTEK_RDR,
-					   address, /* value */
-					   0xFFFF,  /* index */
-					   buf->data,
-					   buf->len,
+					   algoltek_cmd,
+					   value,
+					   index,
+					   transfer_pkt->data,
+					   len,
 					   NULL,
 					   ALGOLTEK_DEVICE_USB_TIMEOUT,
 					   NULL,
 					   error)) {
 		g_prefix_error(error, "Device communication failure: ");
-		return NULL;
+		return FALSE;
 	}
+
+	return TRUE;
+}
+
+static GByteArray *
+algoltek_device_rdr(FuAlgoltekUsbDevice *self, int address, GError **error)
+{
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	fu_byte_array_set_size(buf, 11, 0x0);
+	buf->data[0] = 5;
+	buf->data[1] = FU_ALGOLTEK_CMD_RDR;
+	fu_memwrite_uint16(buf->data + 2, address, G_BIG_ENDIAN);
+	buf->data[10] = ~fu_sum8(buf->data, buf->len) + 1;
+
+	if (!algoltek_device_ctrl_transfer(self,
+					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					   FU_ALGOLTEK_CMD_RDR,
+					   address,
+					   0xFFFF,
+					   buf,
+					   buf->len,
+					   error))
+		return NULL;
 
 	/* success */
 	return g_steal_pointer(&buf);
@@ -53,44 +77,25 @@ algoltek_device_rdr(FuAlgoltekUsbDevice *self, int address, GError **error)
 static GByteArray *
 algoltek_device_rdv(FuAlgoltekUsbDevice *self, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GByteArray) versionData = g_byte_array_new();
-	gsize actual_length = 0;
 
-	/* first byte is length */
 	fu_byte_array_set_size(buf, 64, 0x0);
 	buf->data[0] = 3;
-	buf->data[1] = ALGOLTEK_RDV;
+	buf->data[1] = FU_ALGOLTEK_CMD_RDV;
 	buf->data[63] = ~fu_sum8(buf->data, buf->len) + 1;
-	if (!g_usb_device_control_transfer(usb_device,
+
+	if (!algoltek_device_ctrl_transfer(self,
 					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   ALGOLTEK_RDV,
-					   0xFFFF, /* value */
-					   0xFFFF, /* index */
-					   buf->data,
+					   FU_ALGOLTEK_CMD_RDV,
+					   0xFFFF,
+					   0xFFFF,
+					   buf,
 					   buf->len,
-					   &actual_length,
-					   ALGOLTEK_DEVICE_USB_TIMEOUT,
-					   NULL,
-					   error)) {
-		g_prefix_error(error, "Device communication failure: ");
+					   error))
 		return NULL;
-	}
 
-	if (actual_length != buf->len) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "got 0x%x but requested 0x%x",
-			    (guint)actual_length,
-			    (guint)buf->len);
-		return NULL;
-	}
-
-	/* Remove cmd and length */
+	/* Remove len and cmd bytes */
 	for (guint32 i = 2; i < buf->len; i++) {
 		if (buf->data[i] < 128)
 			fu_byte_array_append_uint8(versionData, buf->data[i]);
@@ -116,29 +121,22 @@ fu_algoltek_readout_value(GByteArray *back_data)
 static gboolean
 algoltek_device_en(FuAlgoltekUsbDevice *self, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	fu_byte_array_set_size(buf, 11, 0x0);
 	buf->data[0] = 3;
-	buf->data[1] = ALGOLTEK_EN;
+	buf->data[1] = FU_ALGOLTEK_CMD_EN;
 	buf->data[10] = ~fu_sum8(buf->data, buf->len) + 1;
-	if (!g_usb_device_control_transfer(usb_device,
+
+	if (!algoltek_device_ctrl_transfer(self,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   ALGOLTEK_EN,
-					   0, /* value */
-					   0, /* index */
-					   buf->data,
+					   FU_ALGOLTEK_CMD_EN,
+					   0,
+					   0,
+					   buf,
 					   buf->data[0],
-					   NULL,
-					   ALGOLTEK_DEVICE_USB_TIMEOUT,
-					   NULL,
-					   error)) {
-		g_prefix_error(error, "Device communication failure: ");
+					   error))
 		return FALSE;
-	}
 
 	return TRUE;
 }
@@ -146,144 +144,120 @@ algoltek_device_en(FuAlgoltekUsbDevice *self, GError **error)
 static gboolean
 algoltek_device_rst(FuAlgoltekUsbDevice *self, guint8 number, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	fu_byte_array_set_size(buf, 11, 0x0);
 	buf->data[0] = 4;
-	buf->data[1] = ALGOLTEK_RST;
+	buf->data[1] = FU_ALGOLTEK_CMD_RST;
 	buf->data[2] = number;
 	buf->data[10] = ~fu_sum8(buf->data, buf->len) + 1;
-	if (!g_usb_device_control_transfer(usb_device,
+
+	if (!algoltek_device_ctrl_transfer(self,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   ALGOLTEK_RST,
-					   0, /* value */
-					   0, /* index */
-					   buf->data,
+					   FU_ALGOLTEK_CMD_RST,
+					   0,
+					   0,
+					   buf,
 					   buf->data[0],
-					   NULL,
-					   ALGOLTEK_DEVICE_USB_TIMEOUT,
-					   NULL,
-					   error)) {
-		g_prefix_error(error, "Device communication failure: ");
+					   error))
 		return FALSE;
-	}
+
 	return TRUE;
 }
 
 static gboolean
 algoltek_device_wrr(FuAlgoltekUsbDevice *self, int address, int input_value, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	fu_byte_array_set_size(buf, 11, 0x0);
 	buf->data[0] = 7;
-	buf->data[1] = ALGOLTEK_WRR;
+	buf->data[1] = FU_ALGOLTEK_CMD_WRR;
 	fu_memwrite_uint16(buf->data + 2, address, G_BIG_ENDIAN);
 	fu_memwrite_uint16(buf->data + 4, input_value, G_BIG_ENDIAN);
 	buf->data[10] = ~fu_sum8(buf->data, buf->len) + 1;
-	if (!g_usb_device_control_transfer(usb_device,
+
+	if (!algoltek_device_ctrl_transfer(self,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   ALGOLTEK_WRR,
-					   0, /* value */
-					   0, /* index */
-					   buf->data,
+					   FU_ALGOLTEK_CMD_WRR,
+					   0,
+					   0,
+					   buf,
 					   buf->data[0],
-					   NULL,
-					   ALGOLTEK_DEVICE_USB_TIMEOUT,
-					   NULL,
-					   error)) {
-		g_prefix_error(error, "Device communication failure: ");
+					   error))
 		return FALSE;
-	}
 
 	return TRUE;
 }
 
 static gboolean
-algoltek_device_ISP(FuAlgoltekUsbDevice *self, GByteArray *ISP_data, int address, GError **error)
+algoltek_device_ISP(FuAlgoltekUsbDevice *self,
+		    GBytes *blob_isp,
+		    guint address,
+		    FuProgress *progress,
+		    GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	g_autoptr(GByteArray) part_ISP_data = g_byte_array_new();
-	guint rest_transfer_data_size = ISP_data->len;
-	guint data_addr = 0;
-	guint start_index = 0;
-	guint transfer_data_size = 0;
-	guint basic_data_size = 5;
-	guint max_packet_size = 64;
+	g_autoptr(GPtrArray) chunks_isp = NULL;
+	const guint8 *isp_data = NULL;
+	gsize isp_data_size = 0;
+	guint8 basic_data_size = 5;
+	guint data_addr = address;
 
-	while (rest_transfer_data_size > 0) {
-		data_addr = address + start_index;
-		if (rest_transfer_data_size > (max_packet_size - basic_data_size)) {
-			transfer_data_size = max_packet_size - basic_data_size;
-		} else {
-			transfer_data_size = rest_transfer_data_size;
-		}
-		fu_byte_array_set_size(part_ISP_data, transfer_data_size + basic_data_size, 0);
-		part_ISP_data->data[0] = (guint8)(transfer_data_size + basic_data_size);
-		part_ISP_data->data[1] = ALGOLTEK_ISP;
-		fu_memwrite_uint16(part_ISP_data->data + 2, data_addr, G_BIG_ENDIAN);
+	isp_data = g_bytes_get_data(blob_isp, &isp_data_size);
+	chunks_isp = fu_chunk_array_new(isp_data, isp_data_size, 0x0, 0x0, 64 - basic_data_size);
 
-		for (guint i = 0; i < transfer_data_size; i++) {
-			part_ISP_data->data[4 + i] = ISP_data->data[i + start_index];
-		}
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, chunks_isp->len);
 
-		part_ISP_data->data[part_ISP_data->len - 1] =
-		    ~fu_sum8(part_ISP_data->data, part_ISP_data->len) + 1;
+	for (guint i = 0; i < chunks_isp->len; i++) {
+		FuChunk *chk = g_ptr_array_index(chunks_isp, i);
+		g_autoptr(GByteArray) part_isp_data = g_byte_array_new();
 
-		if (!g_usb_device_control_transfer(usb_device,
+		fu_byte_array_append_uint8(part_isp_data,
+					   basic_data_size + fu_chunk_get_data_sz(chk));
+		fu_byte_array_append_uint8(part_isp_data, FU_ALGOLTEK_CMD_ISP);
+		fu_byte_array_append_uint16(part_isp_data, data_addr, G_BIG_ENDIAN);
+		g_byte_array_append(part_isp_data,
+				    fu_chunk_get_data(chk),
+				    fu_chunk_get_data_sz(chk));
+		fu_byte_array_append_uint8(part_isp_data,
+					   ~fu_sum8(part_isp_data->data, part_isp_data->len) + 1);
+
+		if (!algoltek_device_ctrl_transfer(self,
 						   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						   G_USB_DEVICE_RECIPIENT_INTERFACE,
-						   ALGOLTEK_ISP,
-						   0, /* value */
-						   0, /* index */
-						   part_ISP_data->data,
-						   part_ISP_data->data[0],
-						   NULL,
-						   ALGOLTEK_DEVICE_USB_TIMEOUT,
-						   NULL,
-						   error)) {
-			g_prefix_error(error, "Device communication failure: ");
+						   FU_ALGOLTEK_CMD_ISP,
+						   0,
+						   0,
+						   part_isp_data,
+						   part_isp_data->data[0],
+						   error))
 			return FALSE;
-		}
 
-		start_index += transfer_data_size;
-		rest_transfer_data_size -= transfer_data_size;
+		data_addr += fu_chunk_get_data_sz(chk);
+		fu_progress_step_done(progress);
 	}
+
 	return TRUE;
 }
 
 static gboolean
 algoltek_device_bot(FuAlgoltekUsbDevice *self, int address, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	fu_byte_array_set_size(buf, 11, 0x0);
 	buf->data[0] = 5;
-	buf->data[1] = ALGOLTEK_BOT;
+	buf->data[1] = FU_ALGOLTEK_CMD_BOT;
 	fu_memwrite_uint16(buf->data + 2, address, G_BIG_ENDIAN);
 	buf->data[10] = ~fu_sum8(buf->data, buf->len) + 1;
-	if (!g_usb_device_control_transfer(usb_device,
+
+	if (!algoltek_device_ctrl_transfer(self,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   ALGOLTEK_BOT,
-					   0, /* value */
-					   0, /* index */
-					   buf->data,
+					   FU_ALGOLTEK_CMD_BOT,
+					   0,
+					   0,
+					   buf,
 					   buf->data[0],
-					   NULL,
-					   ALGOLTEK_DEVICE_USB_TIMEOUT,
-					   NULL,
-					   error)) {
-		g_prefix_error(error, "Device communication failure: ");
+					   error))
 		return FALSE;
-	}
 
 	return TRUE;
 }
@@ -291,28 +265,19 @@ algoltek_device_bot(FuAlgoltekUsbDevice *self, int address, GError **error)
 static gboolean
 algoltek_device_ers(FuAlgoltekUsbDevice *self, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	fu_byte_array_set_size(buf, 2, 0x0);
 
-	if (!g_usb_device_control_transfer(usb_device,
+	if (!algoltek_device_ctrl_transfer(self,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   ALGOLTEK_ERS,
-					   0, /* value */
-					   0, /* index */
-					   buf->data,
+					   FU_ALGOLTEK_CMD_ERS,
+					   0,
+					   0,
+					   buf,
 					   buf->len,
-					   NULL,
-					   ALGOLTEK_DEVICE_USB_TIMEOUT,
-					   NULL,
-					   error)) {
-		g_prefix_error(error, "Device communication failure: ");
+					   error))
 		return FALSE;
-	}
-
 	return TRUE;
 }
 
@@ -346,33 +311,34 @@ fu_algoltek_device_status_check(FuDevice *self, gpointer user_data, GError **err
 
 static gboolean
 algoltek_device_wrf(FuAlgoltekUsbDevice *self,
-		    GByteArray *firmware_data,
+		    GBytes *blob_payload,
 		    FuProgress *progress,
 		    GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GByteArray) transfer_parameter = g_byte_array_new();
-	g_autoptr(GByteArray) part_firmware = g_byte_array_new();
-	guint rest_transfer_data_size = firmware_data->len;
+	g_autoptr(GPtrArray) chunks_payload = NULL;
+	const guint8 *fw_data = NULL;
+	gsize fw_data_size = 0;
 	guint data_addr = 0;
-	guint start_index = 0;
-	guint max_packet_size = 64;
-	guint transfer_data_size = 0;
-	guint count_check = 0;
 	guint16 value;
 	guint16 index;
 
-	while (rest_transfer_data_size > 0) {
-		count_check++;
-		data_addr = start_index;
-		if (rest_transfer_data_size > max_packet_size)
-			transfer_data_size = max_packet_size;
-		else
-			transfer_data_size = rest_transfer_data_size;
+	fw_data = g_bytes_get_data(blob_payload, &fw_data_size);
+	chunks_payload = fu_chunk_array_new(fw_data, fw_data_size, 0x0, 0x0, 64);
+
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, chunks_payload->len);
+
+	for (guint i = 0; i < chunks_payload->len; i++) {
+		FuChunk *chk = g_ptr_array_index(chunks_payload, i);
+		g_autoptr(GByteArray) part_firmware = g_byte_array_new();
+
+		g_byte_array_append(part_firmware,
+				    fu_chunk_get_data(chk),
+				    fu_chunk_get_data_sz(chk));
 
 		fu_byte_array_set_size(transfer_parameter, 4, 0);
-
-		if (count_check == 256 / max_packet_size)
+		if ((i + 1) % 4 == 0)
 			transfer_parameter->data[0] = 1;
 		else
 			transfer_parameter->data[0] = 0;
@@ -382,32 +348,19 @@ algoltek_device_wrf(FuAlgoltekUsbDevice *self,
 		value = fu_memread_uint16(transfer_parameter->data, G_BIG_ENDIAN);
 		index = fu_memread_uint16(transfer_parameter->data + 2, G_BIG_ENDIAN);
 
-		fu_byte_array_set_size(part_firmware, transfer_data_size, 0);
-
-		for (guint i = 0; i < transfer_data_size; i++)
-			part_firmware->data[i] = firmware_data->data[i + start_index];
-
-		if (!g_usb_device_control_transfer(usb_device,
+		if (!algoltek_device_ctrl_transfer(self,
 						   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						   G_USB_DEVICE_RECIPIENT_INTERFACE,
-						   ALGOLTEK_WRF,
-						   value, /* value */
-						   index, /* index */
-						   part_firmware->data,
+						   FU_ALGOLTEK_CMD_WRF,
+						   value,
+						   index,
+						   part_firmware,
 						   part_firmware->len,
-						   NULL,
-						   ALGOLTEK_DEVICE_USB_TIMEOUT,
-						   NULL,
-						   error)) {
-			g_prefix_error(error, "Device communication failure: ");
+						   error))
 			return FALSE;
-		}
 
-		start_index += transfer_data_size;
-		rest_transfer_data_size -= transfer_data_size;
-		if (count_check == (256 / max_packet_size) || rest_transfer_data_size == 0) {
-			count_check = 0;
+		data_addr += part_firmware->len;
+
+		if ((i + 1) % 4 == 0 || (i + 1) == chunks_payload->len) {
 			if (!fu_device_retry_full(FU_DEVICE(self),
 						  fu_algoltek_device_status_check,
 						  10,
@@ -416,7 +369,7 @@ algoltek_device_wrf(FuAlgoltekUsbDevice *self,
 						  error))
 				return FALSE;
 		}
-		fu_progress_set_percentage_full(progress, start_index, firmware_data->len);
+		fu_progress_step_done(progress);
 	}
 	return TRUE;
 }
@@ -425,7 +378,6 @@ static gboolean
 fu_algoltek_usb_device_setup(FuDevice *device, GError **error)
 {
 	FuAlgoltekUsbDevice *self = FU_ALGOLTEK_USB_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	g_autoptr(GByteArray) version_data = NULL;
 	g_autofree gchar *version_str = NULL;
 
@@ -450,16 +402,14 @@ fu_algoltek_usb_device_write_firmware(FuDevice *device,
 				      GError **error)
 {
 	FuAlgoltekUsbDevice *self = FU_ALGOLTEK_USB_DEVICE(device);
-	g_autoptr(GBytes) blob_ISP = NULL;
+	g_autoptr(GBytes) blob_isp = NULL;
 	g_autoptr(GBytes) blob_payload = NULL;
-	g_autoptr(GByteArray) fw_ISP = g_byte_array_new();
-	g_autoptr(GByteArray) fw_payload = g_byte_array_new();
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 15, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 18, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 2, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80, NULL);
 
 	if (!algoltek_device_en(self, error)) {
 		g_prefix_error(error, "System activation failure: ");
@@ -510,14 +460,18 @@ fu_algoltek_usb_device_write_firmware(FuDevice *device,
 	fu_device_sleep(FU_DEVICE(self), 500);
 
 	/* get ISP image */
-	blob_ISP = fu_firmware_get_image_by_id_bytes(firmware, "ISP", error);
-	if (blob_ISP == NULL)
+	blob_isp = fu_firmware_get_image_by_id_bytes(firmware, "ISP", error);
+	if (blob_isp == NULL)
 		return FALSE;
-	fu_byte_array_append_bytes(fw_ISP, blob_ISP);
-	if (!algoltek_device_ISP(self, fw_ISP, AG_ISP_ADDR, error)) {
+	if (!algoltek_device_ISP(self,
+				 blob_isp,
+				 AG_ISP_ADDR,
+				 fu_progress_get_child(progress),
+				 error)) {
 		g_prefix_error(error, "ISP failure: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	if (!algoltek_device_bot(self, AG_ISP_ADDR, error)) {
 		g_prefix_error(error, "System boot failure: ");
@@ -530,6 +484,7 @@ fu_algoltek_usb_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "Data clear failure: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	fu_device_sleep(FU_DEVICE(self), 500);
 
@@ -537,8 +492,7 @@ fu_algoltek_usb_device_write_firmware(FuDevice *device,
 	blob_payload = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_PAYLOAD, error);
 	if (blob_payload == NULL)
 		return FALSE;
-	fu_byte_array_append_bytes(fw_payload, blob_payload);
-	if (!algoltek_device_wrf(self, fw_payload, progress, error)) {
+	if (!algoltek_device_wrf(self, blob_payload, fu_progress_get_child(progress), error)) {
 		g_prefix_error(error, "Data write failure: ");
 		return FALSE;
 	}

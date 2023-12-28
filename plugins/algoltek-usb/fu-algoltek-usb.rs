@@ -10,3 +10,15 @@ struct AlgoltekProductIdentity {
     version_len: u8,
     version: [char; 48],
 }
+
+enum AlgoltekCmd {
+    RDR = 0x06,
+    WRR,
+    RDV,
+    EN,
+    WRF = 0x10,
+    ISP = 0x13,
+    ERS = 0x19,
+    BOT = 0x1D,
+    RST = 0x20,
+}
