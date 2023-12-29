@@ -1,17 +1,18 @@
+---
+title: fwupdmgr client command line utility
+---
+
 % fwupdmgr(1) {{PACKAGE_VERSION}} | fwupdmgr man page
 
-NAME
-====
+## NAME
 
 **fwupdmgr** — firmware update manager client utility
 
-SYNOPSIS
-========
+## SYNOPSIS
 
 | **fwupdmgr** [CMD]
 
-DESCRIPTION
-===========
+## DESCRIPTION
 
 fwupdmgr is a command line fwupd client intended to be used interactively.
 The terminal output between versions of fwupd is not guaranteed to be stable, but if you plan on
@@ -32,14 +33,12 @@ On most systems fwupd is configured to download metadata from the Linux Vendor F
 Most users who want to just update all devices to the latest versions can do `fwupdmgr refresh` and then `fwupdmgr update`.
 At this point the system will asking for confirmation, update some devices, and may then reboot to deploy other updates offline.
 
-OPTIONS
-=======
+## OPTIONS
 
 The fwupdmgr command takes various options depending on the action.
 Run **fwupdmgr \-\-help** for the full list.
 
-EXIT STATUS
-===========
+## EXIT STATUS
 
 Commands that successfully execute will return "0", with generic failure as "1".
 
@@ -47,13 +46,11 @@ There are also several other exit codes used:
 A return code of "2" is used for commands that have no actions but were successfully executed,
 and "3" is used when a resource was not found.
 
-BUGS
-====
+## BUGS
 
 See GitHub Issues: <https://github.com/fwupd/fwupd/issues>
 
-SEE ALSO
-========
+## SEE ALSO
 
-fwupdtool(1)
-fwupd.conf(5)
+<fwupdtool(1)>
+<fwupd.conf(5)>

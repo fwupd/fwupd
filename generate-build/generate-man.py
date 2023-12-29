@@ -16,7 +16,7 @@ def _is_md_title(line: str) -> bool:
     if not line:
         return False
     for char in line:
-        if char not in ["#", "-", "="]:
+        if char not in ["#", "##", "-", "="]:
             return False
     return True
 
