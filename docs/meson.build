@@ -47,7 +47,7 @@ if build_standalone and get_option('man')
   )
 endif
 
-if build_docs and introspection.allowed()
+if build_docs
   toml_conf = configuration_data()
   docgen_version = meson.project_version()
   toml_conf.set('version', docgen_version)
