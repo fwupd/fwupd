@@ -41,10 +41,8 @@ algoltek_device_ctrl_transfer(FuAlgoltekUsbDevice *self,
 					   NULL,
 					   ALGOLTEK_DEVICE_USB_TIMEOUT,
 					   NULL,
-					   error)) {
-		g_prefix_error(error, "device communication failure: ");
+					   error))
 		return FALSE;
-	}
 
 	return TRUE;
 }
@@ -102,38 +100,6 @@ algoltek_device_rdv(FuAlgoltekUsbDevice *self, GError **error)
 	return g_steal_pointer(&version_data);
 }
 
-static guint16
-fu_algoltek_readout_value(GByteArray *back_data, GError **error)
-{
-	guint16 back_data_addr;
-	guint16 back_data_value;
-
-	if (!fu_memread_uint16_safe(back_data->data,
-				    back_data->len,
-				    FU_STRUCT_ALGOLTEK_CMD_ADDRESS_PKT_OFFSET_ADDRESS,
-				    &back_data_addr,
-				    G_BIG_ENDIAN,
-				    error)) {
-		g_prefix_error(error, "readout address from data failure: ");
-		return AG_UPDATE_READOUT_FAIL;
-	}
-
-	if (back_data_addr == AG_UPDATE_STATUS)
-		back_data_value = back_data->data[0];
-	else {
-		if (!fu_memread_uint16_safe(back_data->data,
-					    back_data->len,
-					    FU_STRUCT_ALGOLTEK_CMD_ADDRESS_PKT_OFFSET_VALUE,
-					    &back_data_value,
-					    G_BIG_ENDIAN,
-					    error)) {
-			g_prefix_error(error, "readout value from data failure: ");
-			return AG_UPDATE_READOUT_FAIL;
-		}
-	}
-	return back_data_value;
-}
-
 static gboolean
 algoltek_device_en(FuAlgoltekUsbDevice *self, GError **error)
 {
@@ -150,8 +116,10 @@ algoltek_device_en(FuAlgoltekUsbDevice *self, GError **error)
 					   0,
 					   buf,
 					   buf->data[0],
-					   error))
+					   error)) {
+		g_prefix_error(error, "system activation failure: ");
 		return FALSE;
+	}
 
 	return TRUE;
 }
@@ -173,8 +141,10 @@ algoltek_device_rst(FuAlgoltekUsbDevice *self, guint16 address, GError **error)
 					   0,
 					   buf,
 					   buf->data[0],
-					   error))
+					   error)) {
+		g_prefix_error(error, "system reboot failure: ");
 		return FALSE;
+	}
 
 	return TRUE;
 }
@@ -197,14 +167,16 @@ algoltek_device_wrr(FuAlgoltekUsbDevice *self, int address, int value, GError **
 					   0,
 					   buf,
 					   buf->data[0],
-					   error))
+					   error)) {
+		g_prefix_error(error, "data write failure: ");
 		return FALSE;
+	}
 
 	return TRUE;
 }
 
 static gboolean
-algoltek_device_ISP(FuAlgoltekUsbDevice *self,
+algoltek_device_isp(FuAlgoltekUsbDevice *self,
 		    GBytes *blob_isp,
 		    guint address,
 		    FuProgress *progress,
@@ -250,8 +222,10 @@ algoltek_device_ISP(FuAlgoltekUsbDevice *self,
 						   0,
 						   part_isp_data,
 						   part_isp_data->data[0],
-						   error))
+						   error)) {
+			g_prefix_error(error, "isp failure: ");
 			return FALSE;
+		}
 		fu_progress_step_done(progress);
 	}
 
@@ -275,8 +249,10 @@ algoltek_device_bot(FuAlgoltekUsbDevice *self, int address, GError **error)
 					   0,
 					   buf,
 					   buf->data[0],
-					   error))
+					   error)) {
+		g_prefix_error(error, "system boot failure: ");
 		return FALSE;
+	}
 
 	return TRUE;
 }
@@ -297,8 +273,10 @@ algoltek_device_ers(FuAlgoltekUsbDevice *self, GError **error)
 					   0,
 					   buf,
 					   buf->len,
-					   error))
+					   error)) {
+		g_prefix_error(error, "data clear failure: ");
 		return FALSE;
+	}
 	return TRUE;
 }
 
@@ -313,20 +291,17 @@ fu_algoltek_device_status_check(FuDevice *self, gpointer user_data, GError **err
 	if (update_status_array == NULL)
 		return FALSE;
 
-	update_status = fu_algoltek_readout_value(update_status_array, error);
-	if (update_status == AG_UPDATE_READOUT_FAIL)
-		return FALSE;
+	update_status = update_status_array->data[0];
 
 	switch (update_status) {
 	case AG_UPDATE_PASS:
 		break;
 	case AG_UPDATE_FAIL:
+	default:
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "update procedure is failed.");
-		return FALSE;
-	default:
 		return FALSE;
 	}
 	return TRUE;
@@ -379,8 +354,10 @@ algoltek_device_wrf(FuAlgoltekUsbDevice *self,
 						   index,
 						   part_firmware,
 						   part_firmware->len,
-						   error))
+						   error)) {
+			g_prefix_error(error, "data write failure: ");
 			return FALSE;
+		}
 
 		if ((i + 1) % 4 == 0 || (i + 1) == chunks_payload->len) {
 			if (!fu_device_retry_full(FU_DEVICE(self),
@@ -433,22 +410,16 @@ fu_algoltek_usb_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 2, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80, NULL);
 
-	if (!algoltek_device_en(self, error)) {
-		g_prefix_error(error, "system activation failure: ");
+	if (!algoltek_device_en(self, error))
 		return FALSE;
-	}
 
-	if (!algoltek_device_rst(self, 0x200, error)) {
-		g_prefix_error(error, "system reboot failure: ");
+	if (!algoltek_device_rst(self, 0x200, error))
 		return FALSE;
-	}
 
 	fu_device_sleep(FU_DEVICE(self), 900);
 
-	if (!algoltek_device_wrr(self, 0x80AD, 0, error)) {
-		g_prefix_error(error, "data write failure: ");
+	if (!algoltek_device_wrr(self, 0x80AD, 0, error))
 		return FALSE;
-	}
 
 	if (!algoltek_device_wrr(self, 0x80C0, 0, error))
 		return FALSE;
@@ -468,38 +439,30 @@ fu_algoltek_usb_device_write_firmware(FuDevice *device,
 	if (!algoltek_device_wrr(self, 0x80E9, 0, error))
 		return FALSE;
 
-	if (!algoltek_device_rst(self, 0, error)) {
-		g_prefix_error(error, "system reboot failure: ");
+	if (!algoltek_device_rst(self, 0, error))
 		return FALSE;
-	}
 
 	fu_device_sleep(FU_DEVICE(self), 500);
 
 	/* get ISP image */
-	blob_isp = fu_firmware_get_image_by_id_bytes(firmware, "ISP", error);
+	blob_isp = fu_firmware_get_image_by_id_bytes(firmware, "isp", error);
 	if (blob_isp == NULL)
 		return FALSE;
-	if (!algoltek_device_ISP(self,
+	if (!algoltek_device_isp(self,
 				 blob_isp,
 				 AG_ISP_ADDR,
 				 fu_progress_get_child(progress),
-				 error)) {
-		g_prefix_error(error, "isp failure: ");
+				 error))
 		return FALSE;
-	}
 	fu_progress_step_done(progress);
 
-	if (!algoltek_device_bot(self, AG_ISP_ADDR, error)) {
-		g_prefix_error(error, "system boot failure: ");
+	if (!algoltek_device_bot(self, AG_ISP_ADDR, error))
 		return FALSE;
-	}
 
 	fu_device_sleep(FU_DEVICE(self), 1000);
 
-	if (!algoltek_device_ers(self, error)) {
-		g_prefix_error(error, "data clear failure: ");
+	if (!algoltek_device_ers(self, error))
 		return FALSE;
-	}
 	fu_progress_step_done(progress);
 
 	fu_device_sleep(FU_DEVICE(self), 500);
@@ -508,16 +471,14 @@ fu_algoltek_usb_device_write_firmware(FuDevice *device,
 	blob_payload = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_PAYLOAD, error);
 	if (blob_payload == NULL)
 		return FALSE;
-	if (!algoltek_device_wrf(self, blob_payload, fu_progress_get_child(progress), error)) {
-		g_prefix_error(error, "data write failure: ");
+	if (!algoltek_device_wrf(self, blob_payload, fu_progress_get_child(progress), error))
 		return FALSE;
-	}
+
 	fu_progress_step_done(progress);
 
-	if (!algoltek_device_rst(self, 0x100, error)) {
-		g_prefix_error(error, "system reboot failure: ");
+	if (!algoltek_device_rst(self, 0x100, error))
 		return FALSE;
-	}
+
 	/* success! */
 	return TRUE;
 }

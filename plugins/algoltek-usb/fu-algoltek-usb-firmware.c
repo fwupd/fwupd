@@ -51,7 +51,7 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 	if (blob_isp == NULL)
 		return FALSE;
 	fu_firmware_set_bytes(img_isp, blob_isp);
-	fu_firmware_set_id(img_isp, "ISP");
+	fu_firmware_set_id(img_isp, "isp");
 	fu_firmware_add_image(firmware, img_isp);
 	offset += g_bytes_get_size(blob_isp);
 
@@ -73,7 +73,7 @@ fu_algoltek_usb_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GBytes) blob_isp = NULL;
 	g_autoptr(GBytes) blob_payload = NULL;
 
-	blob_isp = fu_firmware_get_image_by_id_bytes(firmware, "ISP", error);
+	blob_isp = fu_firmware_get_image_by_id_bytes(firmware, "isp", error);
 	if (blob_isp == NULL)
 		return NULL;
 	fu_byte_array_append_bytes(buf, blob_isp);
