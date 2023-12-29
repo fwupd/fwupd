@@ -17,7 +17,7 @@ DESCRIPTION
 The terminal output between versions of fwupd is not guaranteed to be stable, but if you plan on
 parsing the results then adding **\-\-json** might be just what you need.
 
-There are also graphical tools to firmware available for GNOME and KDE.
+There are also graphical tools to firmware available for various desktop environments.
 These applications may be more useful to many users compared to using the command line.
 
 * **GNOME Software**: <https://wiki.gnome.org/Apps/Software>
@@ -25,6 +25,10 @@ These applications may be more useful to many users compared to using the comman
 * **GNOME Firmware**: <https://gitlab.gnome.org/World/gnome-firmware>
 
 * **KDE Discover**: <https://userbase.kde.org/Discover>
+
+* **Canonical Firmware Updater**: <https://github.com/canonical/firmware-updater>
+
+* **System76 Firmware Manager**: <https://github.com/pop-os/firmware-manager>
 
 On most systems fwupd is configured to download metadata from the Linux Vendor Firmware Service
 <https://fwupd.org/> and more information about the LVFS is available here: <https://lvfs.readthedocs.io/>
