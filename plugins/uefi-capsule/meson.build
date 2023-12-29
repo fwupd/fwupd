@@ -77,17 +77,31 @@ fwupdate = executable(
 )
 endif
 
-if get_option('compat_cli') and get_option('man')
-  custom_target('fwupdate.1',
-    input: 'fwupdate.md',
-    output: 'fwupdate.1',
-    command: [
-      generate_man, '@INPUT@', '-o', '@OUTPUT@',
-      '--replace', 'PACKAGE_VERSION', fwupd_version,
-    ],
-    install: true,
-    install_dir: join_paths(mandir, 'man1'),
-  )
+if get_option('compat_cli')
+  if get_option('man')
+    custom_target('fwupdate.1',
+      input: 'fwupdate.md',
+      output: 'fwupdate.1',
+      command: [
+        generate_man, '@INPUT@', '-o', '@OUTPUT@',
+        '--replace', 'PACKAGE_VERSION', fwupd_version,
+      ],
+      install: true,
+      install_dir: join_paths(mandir, 'man1'),
+    )
+  endif
+  if build_docs
+    md_targets += custom_target('fwupdate.md',
+      input: 'fwupdate.md',
+      output: 'fwupdate.md',
+      command: [
+        generate_man, '@INPUT@', '-o', '@OUTPUT@',
+        '--replace', 'PACKAGE_VERSION', fwupd_version,
+        '--md',
+      ],
+    )
+    man_md += ['"fwupdate.md"']
+  endif
 endif
 
 # add all the .po files as inputs to watch
