@@ -3245,11 +3245,13 @@ fu_util_prompt_for_volume(FuUtilPrivate *priv, GError **error)
 		return NULL;
 	if (volumes->len == 1) {
 		volume = g_ptr_array_index(volumes, 0);
-		fu_console_print(priv->console,
-				 "%s: %s",
-				 /* TRANSLATORS: Volume has been chosen by the user */
-				 _("Selected volume"),
-				 fu_volume_get_id(volume));
+		if (fu_volume_get_id(volume) != NULL) {
+			fu_console_print(priv->console,
+					 "%s: %s",
+					 /* TRANSLATORS: Volume has been chosen by the user */
+					 _("Selected volume"),
+					 fu_volume_get_id(volume));
+		}
 		return g_object_ref(volume);
 	}
 
