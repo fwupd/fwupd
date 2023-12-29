@@ -51,8 +51,8 @@ content_files = [
   "bios-settings.md",
   "best-known-configuration.md",
   "only-trusted.md",
-  "fwupd.conf.md",
   "supermicro-license.md",
+  @man_md@,
   @plugin_readme_outputs@,
 ]
 content_images = [
