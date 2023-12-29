@@ -19,8 +19,10 @@ reference purposes.
 
 The file consists of a multiple sections with optional parameters. Parameters are of the form:
 
-  [section]
-  key = value
+```text
+[section]
+key = value
+```
 
 The file is line-based, each newline-terminated line represents either a comment, a section name or
 a parameter.
