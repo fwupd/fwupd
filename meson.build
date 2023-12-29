@@ -605,6 +605,8 @@ if polkit.found()
   subdir('policy')
 endif
 if build_standalone
+  man_md = []
+  md_targets = []
   plugin_quirks = []
   subdir('libfwupdplugin')
   subdir('data')

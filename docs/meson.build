@@ -12,39 +12,74 @@ foreach plugin, enabled: plugins
 endforeach
 
 
-if build_standalone and get_option('man')
-  custom_target('fwupd.conf.5',
-    input: 'fwupd.conf.md',
-    output: 'fwupd.conf.5',
-    command: [
-      generate_man, '@INPUT@', '-o', '@OUTPUT@',
-      '--replace', 'PACKAGE_VERSION', fwupd_version,
-      '--replace', 'SYSCONFDIR', sysconfdir,
-      '--replace', 'plugin_uefi_capsule', '@0@'.format(get_option('plugin_uefi_capsule').enabled()),
-      '--replace', 'plugin_msr', '@0@'.format(get_option('plugin_msr').enabled()),
-      '--replace', 'plugin_redfish', '@0@'.format(get_option('plugin_redfish').enabled()),
-      '--defines', join_paths(meson.project_source_root(), 'plugins', 'msr', 'fu-msr-plugin.c'),
-      '--defines', join_paths(meson.project_source_root(), 'plugins', 'redfish', 'fu-redfish-plugin.c'),
-      '--defines', join_paths(meson.project_source_root(), 'plugins', 'thunderbolt', 'fu-thunderbolt-plugin.c'),
-      '--defines', join_paths(meson.project_source_root(), 'plugins', 'uefi-capsule', 'fu-uefi-capsule-plugin.c'),
-      '--defines', join_paths(meson.project_source_root(), 'src', 'fu-engine-config.c'),
-    ],
-    install: true,
-    install_dir: join_paths(mandir, 'man5'),
-  )
-  custom_target('fwupd-remotes.d.5',
-    input: 'fwupd-remotes.d.md',
-    output: 'fwupd-remotes.d.5',
-    command: [
-      generate_man, '@INPUT@', '-o', '@OUTPUT@',
-      '--replace', 'PACKAGE_VERSION', fwupd_version,
-      '--replace', 'SYSCONFDIR', sysconfdir,
-      '--replace', 'LOCALSTATEDIR', localstatedir,
-      '--defines', join_paths(meson.project_source_root(), 'libfwupd', 'fwupd-remote.c'),
-    ],
-    install: true,
-    install_dir: join_paths(mandir, 'man5'),
-  )
+if build_standalone
+  if get_option('man')
+    custom_target('fwupd.conf.5',
+      input: 'fwupd.conf.md',
+      output: 'fwupd.conf.5',
+      command: [
+        generate_man, '@INPUT@', '-o', '@OUTPUT@',
+        '--replace', 'PACKAGE_VERSION', fwupd_version,
+        '--replace', 'SYSCONFDIR', sysconfdir,
+        '--replace', 'plugin_uefi_capsule', '@0@'.format(get_option('plugin_uefi_capsule').enabled()),
+        '--replace', 'plugin_msr', '@0@'.format(get_option('plugin_msr').enabled()),
+        '--replace', 'plugin_redfish', '@0@'.format(get_option('plugin_redfish').enabled()),
+        '--defines', join_paths(meson.project_source_root(), 'plugins', 'msr', 'fu-msr-plugin.c'),
+        '--defines', join_paths(meson.project_source_root(), 'plugins', 'redfish', 'fu-redfish-plugin.c'),
+        '--defines', join_paths(meson.project_source_root(), 'plugins', 'thunderbolt', 'fu-thunderbolt-plugin.c'),
+        '--defines', join_paths(meson.project_source_root(), 'plugins', 'uefi-capsule', 'fu-uefi-capsule-plugin.c'),
+        '--defines', join_paths(meson.project_source_root(), 'src', 'fu-engine-config.c'),
+      ],
+      install: true,
+      install_dir: join_paths(mandir, 'man5'),
+    )
+    custom_target('fwupd-remotes.d.5',
+      input: 'fwupd-remotes.d.md',
+      output: 'fwupd-remotes.d.5',
+      command: [
+        generate_man, '@INPUT@', '-o', '@OUTPUT@',
+        '--replace', 'PACKAGE_VERSION', fwupd_version,
+        '--replace', 'SYSCONFDIR', sysconfdir,
+        '--replace', 'LOCALSTATEDIR', localstatedir,
+        '--defines', join_paths(meson.project_source_root(), 'libfwupd', 'fwupd-remote.c'),
+      ],
+      install: true,
+      install_dir: join_paths(mandir, 'man5'),
+    )
+  endif
+  if build_docs
+    md_targets += custom_target('fwupd.conf.md',
+      input: 'fwupd.conf.md',
+      output: 'fwupd.conf.md',
+      command: [
+        generate_man, '@INPUT@', '-o', '@OUTPUT@',
+        '--replace', 'PACKAGE_VERSION', fwupd_version,
+        '--replace', 'SYSCONFDIR', sysconfdir,
+        '--replace', 'plugin_uefi_capsule', '@0@'.format(get_option('plugin_uefi_capsule').enabled()),
+        '--replace', 'plugin_msr', '@0@'.format(get_option('plugin_msr').enabled()),
+        '--replace', 'plugin_redfish', '@0@'.format(get_option('plugin_redfish').enabled()),
+        '--defines', join_paths(meson.project_source_root(), 'plugins', 'msr', 'fu-msr-plugin.c'),
+        '--defines', join_paths(meson.project_source_root(), 'plugins', 'redfish', 'fu-redfish-plugin.c'),
+        '--defines', join_paths(meson.project_source_root(), 'plugins', 'thunderbolt', 'fu-thunderbolt-plugin.c'),
+        '--defines', join_paths(meson.project_source_root(), 'plugins', 'uefi-capsule', 'fu-uefi-capsule-plugin.c'),
+        '--defines', join_paths(meson.project_source_root(), 'src', 'fu-engine-config.c'),
+        '--md',
+      ],
+    )
+    md_targets += custom_target('fwupd-remotes.d.md',
+      input: 'fwupd-remotes.d.md',
+      output: 'fwupd-remotes.d.md',
+      command: [
+        generate_man, '@INPUT@', '-o', '@OUTPUT@',
+        '--replace', 'PACKAGE_VERSION', fwupd_version,
+        '--replace', 'SYSCONFDIR', sysconfdir,
+        '--replace', 'LOCALSTATEDIR', localstatedir,
+        '--defines', join_paths(meson.project_source_root(), 'libfwupd', 'fwupd-remote.c'),
+        '--md',
+      ],
+    )
+    man_md += ['"fwupd.conf.md"', '"fwupd-remotes.d.md"']
+  endif
 endif
 
 if build_docs and introspection.allowed()
@@ -52,6 +87,7 @@ if build_docs and introspection.allowed()
   docgen_version = meson.project_version()
   toml_conf.set('version', docgen_version)
   toml_conf.set('plugin_readme_outputs', ','.join(plugin_readme_outputs))
+  toml_conf.set('man_md', ','.join(man_md))
 
   fwupd_toml = configure_file(
     input: 'fwupd.toml.in',
@@ -131,19 +167,38 @@ if build_docs and introspection.allowed()
       '--no-namespace-dir',
       '--content-dir=@0@'.format(meson.current_build_dir()),
       '--content-dir=@0@'.format(meson.current_source_dir()),
+      '--content-dir=@0@'.format(meson.current_build_dir() / '../src'),
+      '--content-dir=@0@'.format(meson.current_build_dir() / '../plugins/uefi-dbx'),
+      '--content-dir=@0@'.format(meson.current_build_dir() / '../data/motd'),
+      '--content-dir=@0@'.format(meson.current_build_dir() / '../plugins/uefi-capsule'),
       '@INPUT1@',
     ],
     depends: [
       fwupdplugin_gir[0],
       hsi_md,
       plugin_readme_targets,
+      md_targets,
     ],
     build_by_default: true,
     install: true,
     install_dir: join_paths(datadir, 'doc'),
   )
+  man_cmd = []
+  foreach man: man_md
+    man_cmd += '-m @0@'.format(man)
+  endforeach
+  custom_target('index.html',
+    input: 'index.html',
+    output: 'index.html',
+    command: [
+      generate_index, '@INPUT@', '-o', '@OUTPUT@',
+      man_cmd,
+    ],
+    install: true,
+    install_dir: join_paths(datadir, 'doc', 'fwupd')
+  )
   if hsi
-    install_data(['index.html', 'hsi.html'],
+    install_data(['hsi.html'],
       install_dir : join_paths(datadir, 'doc', 'fwupd')
     )
   endif

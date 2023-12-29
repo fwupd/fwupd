@@ -269,8 +269,8 @@ fwupdtool = executable(
   install_dir: bindir
 )
 
-if get_option('man')
-  if build_daemon
+if build_daemon
+  if get_option('man')
     custom_target('fwupdmgr.1',
       input: 'fwupdmgr.md',
       output: 'fwupdmgr.1',
@@ -282,19 +282,47 @@ if get_option('man')
       install_dir: join_paths(mandir, 'man1'),
     )
   endif
-  if build_daemon and get_option('compat_cli')
-    custom_target('fwupdagent.1',
-      input: 'fwupdagent.md',
-      output: 'fwupdagent.1',
-      command: [
-        generate_man, '@INPUT@', '-o', '@OUTPUT@',
-        '--replace', 'PACKAGE_VERSION', fwupd_version,
-      ],
-      install: true,
-      install_dir: join_paths(mandir, 'man1'),
-    )
+  if build_docs
+      md_targets += custom_target('fwupdmgr.md',
+        input: 'fwupdmgr.md',
+        output: 'fwupdmgr.md',
+        command: [
+          generate_man, '@INPUT@', '-o', '@OUTPUT@',
+          '--replace', 'PACKAGE_VERSION', fwupd_version,
+          '--md',
+        ],
+      )
+      man_md += ['"fwupdmgr.md"']
   endif
-  if build_standalone
+  if get_option('compat_cli')
+    if get_option('man')
+      custom_target('fwupdagent.1',
+        input: 'fwupdagent.md',
+        output: 'fwupdagent.1',
+        command: [
+          generate_man, '@INPUT@', '-o', '@OUTPUT@',
+          '--replace', 'PACKAGE_VERSION', fwupd_version,
+        ],
+        install: true,
+        install_dir: join_paths(mandir, 'man1'),
+      )
+    endif
+    if build_docs
+      md_targets += custom_target('fwupdagent.md',
+        input: 'fwupdagent.md',
+        output: 'fwupdagent.md',
+        command: [
+          generate_man, '@INPUT@', '-o', '@OUTPUT@',
+          '--replace', 'PACKAGE_VERSION', fwupd_version,
+          '--md',
+        ],
+      )
+      man_md += ['"fwupdagent.md"']
+    endif
+  endif
+endif
+if build_standalone
+  if get_option('man')
     custom_target('fwupdtool.1',
       input: 'fwupdtool.md',
       output: 'fwupdtool.1',
@@ -305,6 +333,18 @@ if get_option('man')
       install: true,
       install_dir: join_paths(mandir, 'man1'),
     )
+  endif
+  if build_docs
+    md_targets += custom_target('fwupdtool.md',
+      input: 'fwupdtool.md',
+      output: 'fwupdtool.md',
+      command: [
+        generate_man, '@INPUT@', '-o', '@OUTPUT@',
+        '--replace', 'PACKAGE_VERSION', fwupd_version,
+        '--md',
+      ],
+    )
+    man_md += ['"fwupdtool.md"']
   endif
 endif
 

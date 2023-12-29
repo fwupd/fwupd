@@ -39,6 +39,23 @@ def _replace_bookend(line: str, search: str, replace_l: str, replace_r: str) -> 
     return line
 
 
+def _strip_md(data: str) -> str:
+    content = ""
+    for line in data.split("\n"):
+        # skip the man page header
+        if line.startswith("%"):
+            continue
+        if line.startswith("|"):
+            line = line[2:]
+        # create links to other "man" pages
+        if line.startswith("<") and (line.endswith("(1)>") or line.endswith("(5)>")):
+            line = line.strip("<>")
+            name = line.split("(")[0]
+            line = "[`%s`](./%s.html)" % (line, name)
+        content += "%s\n" % line
+    return content
+
+
 def _convert_md_to_man(data: str) -> str:
 
     sections = data.split("\n\n")
@@ -149,6 +166,7 @@ if __name__ == "__main__":
         "-r", "--replace", action="append", nargs=2, metavar=("symbol", "version")
     )
     parser.add_argument("-d", "--defines", action="append")
+    parser.add_argument("--md", action="store_true")
     args, argv = parser.parse_known_args()
     if len(argv) != 1:
         print(f"usage: {sys.argv[0]} MARKDOWN [-o TROFF]\n")
@@ -176,7 +194,13 @@ if __name__ == "__main__":
         keep_trailing_newline=True,
     )
     template = env.get_template(os.path.basename(argv[0]))
-    out = _convert_md_to_man(template.render(subst))
+    rendered = template.render(subst)
+
+    # Stripped markdown mode is used for HTML docs
+    if args.md:
+        out = _strip_md(rendered)
+    else:
+        out = _convert_md_to_man(rendered)
 
     # success
     if args.output:
