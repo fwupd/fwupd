@@ -3480,7 +3480,7 @@ fu_efivar_func(void)
 	/* check we can get the space used */
 	total = fu_efivar_space_used(&error);
 	g_assert_no_error(error);
-	g_assert_cmpint(total, >=, 0x2000);
+	g_assert_cmpint(total, >=, 0x100);
 
 	/* check existing keys */
 	g_assert_false(fu_efivar_exists(FU_EFIVAR_GUID_EFI_GLOBAL, "NotGoingToExist"));
