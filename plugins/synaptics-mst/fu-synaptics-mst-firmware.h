@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-synaptics-mst-struct.h"
+
 #define FU_TYPE_SYNAPTICS_MST_FIRMWARE (fu_synaptics_mst_firmware_get_type())
 G_DECLARE_FINAL_TYPE(FuSynapticsMstFirmware,
 		     fu_synaptics_mst_firmware,
