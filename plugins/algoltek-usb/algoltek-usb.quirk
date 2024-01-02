@@ -1,0 +1,3 @@
+# AG9421
+[USB\VID_25A4&PID_9421]
+Plugin = algoltek_usb
