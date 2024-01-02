@@ -40,6 +40,24 @@ setup_deps()
     fi
 }
 
+setup_library_dev()
+{
+    if grep -R "/usr/local" "/etc/ld.so.conf.d"; then
+        return
+    fi
+    read -p "Add /usr/local to library search path? (y/N) " question
+    if [ "$question" = "y" ]; then
+        if [ "$OS" = "ubuntu" ] || [ "$OS" = "debian" ]; then
+            path="/usr/local/lib"
+        else
+            path="/usr/local/lib64"
+        fi
+        echo $path | $(which sudo) tee /etc/ld.so.conf.d/local.conf >/dev/null
+        $(which sudo) rm /etc/ld.so.cache
+        $(which sudo) ldconfig
+    fi
+}
+
 setup_run_dev()
 {
     if [ "$SELINUX" -eq "1" ]; then
@@ -168,6 +186,7 @@ if [ -t 2 ]; then
     case $OS in
         debian|ubuntu|arch|fedora)
             setup_deps
+            setup_library_dev
             setup_run_dev
             ;;
         void)
