@@ -5905,9 +5905,11 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progre
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_NOT_SUPPORTED,
-			    "request %s emitted but device does not set "
+			    "request %s emitted but device %s [%s] does not set "
 			    "FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE",
-			    fwupd_request_get_id(request));
+			    fwupd_request_get_id(request),
+			    fu_device_get_id(self),
+			    fu_device_get_plugin(self));
 		return FALSE;
 	}
 	if (!fwupd_request_has_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE) &&
@@ -5915,9 +5917,11 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progre
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_NOT_SUPPORTED,
-			    "request %s is not a GENERIC_MESSAGE and the device does not set "
+			    "request %s is not a GENERIC_MESSAGE and device %s [%s] does not set "
 			    "FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE",
-			    fwupd_request_get_id(request));
+			    fwupd_request_get_id(request),
+			    fu_device_get_id(self),
+			    fu_device_get_plugin(self));
 		return FALSE;
 	}
 #endif
