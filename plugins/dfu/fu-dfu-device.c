@@ -1156,8 +1156,11 @@ fu_dfu_device_probe(FuDevice *device, GError **error)
 
 	/* hardware from Jabra literally reboots if you try to retry a failed
 	 * write -- there's no way to avoid blocking the daemon like this... */
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_ATTACH_EXTRA_RESET))
+	if (fu_device_has_internal_flag(FU_DEVICE(self),
+					FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET)) {
+		g_debug("blocking wait to work around Jabra hardware...");
 		fu_device_sleep(device, 10000);
+	}
 
 	/* success */
 	return TRUE;
@@ -1693,9 +1696,6 @@ fu_dfu_device_init(FuDfuDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_DFU_DEVICE_FLAG_CAN_ACCELERATE,
 					"can-accelerate");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_ATTACH_EXTRA_RESET,
-					"attach-extra-reset");
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_DFU_DEVICE_FLAG_ATTACH_UPLOAD_DOWNLOAD,
 					"attach-upload-download");
