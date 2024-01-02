@@ -3823,6 +3823,22 @@ fu_device_register_private_flag(FuDevice *self, guint64 value, const gchar *valu
 	g_return_if_fail(value != 0);
 	g_return_if_fail(value_str != NULL);
 
+#ifndef SUPPORTED_BUILD
+	/* ensure not already the name of an internal or exported flag */
+	if (fwupd_device_flag_from_string(value_str) != FWUPD_DEVICE_FLAG_UNKNOWN) {
+		g_critical("%s private flag %s already exists as an exported flag",
+			   G_OBJECT_TYPE_NAME(self),
+			   value_str);
+		return;
+	}
+	if (fu_device_internal_flag_from_string(value_str) != FU_DEVICE_INTERNAL_FLAG_UNKNOWN) {
+		g_critical("%s private flag %s already exists as an internal flag",
+			   G_OBJECT_TYPE_NAME(self),
+			   value_str);
+		return;
+	}
+#endif
+
 	/* ensure exists */
 	if (priv->private_flag_items == NULL) {
 		priv->private_flag_items = g_ptr_array_new_with_free_func(
