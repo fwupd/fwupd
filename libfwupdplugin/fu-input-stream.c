@@ -117,8 +117,7 @@ fu_input_stream_read_u8(GInputStream *stream, gsize offset, guint8 *value, GErro
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_input_stream_read_safe(stream, &buf, sizeof(buf), 0x0, offset, sizeof(buf), error))
 		return FALSE;
-	if (value != NULL)
-		*value = buf;
+	*value = buf;
 	return TRUE;
 }
 
@@ -149,8 +148,7 @@ fu_input_stream_read_u16(GInputStream *stream,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_input_stream_read_safe(stream, buf, sizeof(buf), 0x0, offset, sizeof(buf), error))
 		return FALSE;
-	if (value != NULL)
-		*value = fu_memread_uint16(buf, endian);
+	*value = fu_memread_uint16(buf, endian);
 	return TRUE;
 }
 
@@ -181,8 +179,7 @@ fu_input_stream_read_u24(GInputStream *stream,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_input_stream_read_safe(stream, buf, sizeof(buf), 0x0, offset, sizeof(buf), error))
 		return FALSE;
-	if (value != NULL)
-		*value = fu_memread_uint24(buf, endian);
+	*value = fu_memread_uint24(buf, endian);
 	return TRUE;
 }
 
@@ -213,8 +210,7 @@ fu_input_stream_read_u32(GInputStream *stream,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_input_stream_read_safe(stream, buf, sizeof(buf), 0x0, offset, sizeof(buf), error))
 		return FALSE;
-	if (value != NULL)
-		*value = fu_memread_uint32(buf, endian);
+	*value = fu_memread_uint32(buf, endian);
 	return TRUE;
 }
 
@@ -245,8 +241,7 @@ fu_input_stream_read_u64(GInputStream *stream,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_input_stream_read_safe(stream, buf, sizeof(buf), 0x0, offset, sizeof(buf), error))
 		return FALSE;
-	if (value != NULL)
-		*value = fu_memread_uint64(buf, endian);
+	*value = fu_memread_uint64(buf, endian);
 	return TRUE;
 }
 
