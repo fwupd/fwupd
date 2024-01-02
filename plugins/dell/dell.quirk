@@ -1,7 +1,3 @@
-# Realtek NIC in Dell docks
-[USB\VID_0BDA&PID_8153]
-Plugin = dell
-
 # Dell TB16/TB18 cable
 [TBT-00d4b051]
 Plugin = thunderbolt
