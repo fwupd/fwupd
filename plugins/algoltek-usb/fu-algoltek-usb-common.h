@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Algoltek, Inc.
+ * Copyright (C) 2024 Algoltek, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
