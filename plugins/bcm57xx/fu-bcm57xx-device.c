@@ -444,7 +444,6 @@ fu_bcm57xx_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "build-img");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80, "write-chunks");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 19, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, NULL);
 
 	/* build the images into one linear blob of the correct size */
 	blob = fu_firmware_write(firmware, error);
@@ -467,10 +466,23 @@ fu_bcm57xx_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	/* reset APE */
-	if (!fu_device_activate(device, fu_progress_get_child(progress), error))
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_bcm57xx_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+{
+	g_autoptr(FwupdRequest) request = fwupd_request_new();
+
+	/* APE reset cannot be done at runtime */
+	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_POST);
+	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
+	fwupd_request_set_message(request,
+				  "After shutting down, disconnect the computer from all "
+				  "power sources for 30 seconds to complete the update.");
+	if (!fu_device_emit_request(device, request, progress, error))
 		return FALSE;
-	fu_progress_step_done(progress);
 
 	/* success */
 	return TRUE;
@@ -617,6 +629,8 @@ static void
 fu_bcm57xx_device_init(FuBcm57xxDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN);
+	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.broadcom.bcm57xx");
 	fu_device_add_icon(FU_DEVICE(self), "network-wired");
 
@@ -648,6 +662,7 @@ fu_bcm57xx_device_class_init(FuBcm57xxDeviceClass *klass)
 	klass_device->open = fu_bcm57xx_device_open;
 	klass_device->close = fu_bcm57xx_device_close;
 	klass_device->write_firmware = fu_bcm57xx_device_write_firmware;
+	klass_device->attach = fu_bcm57xx_device_attach;
 	klass_device->read_firmware = fu_bcm57xx_device_read_firmware;
 	klass_device->dump_firmware = fu_bcm57xx_device_dump_firmware;
 	klass_device->probe = fu_bcm57xx_device_probe;
