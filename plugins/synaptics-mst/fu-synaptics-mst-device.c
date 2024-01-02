@@ -1594,6 +1594,7 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* not a correct device */
 	if (fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)) != SYNAPTICS_IEEE_OUI) {
@@ -1627,9 +1628,18 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	locker = fu_device_locker_new_full(self,
 					   (FuDeviceLockerFunc)fu_synaptics_mst_device_enable_rc,
 					   (FuDeviceLockerFunc)fu_synaptics_mst_device_disable_rc,
-					   error);
-	if (locker == NULL)
+					   &error_local);
+	if (locker == NULL) {
+		if (g_strcmp0(fu_device_get_name(device), "DPMST") == 0) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_NOT_SUPPORTED,
+					    "downstream endpoint not supported");
+		} else {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+		}
 		return FALSE;
+	}
 
 	/* read firmware version: the third byte is vendor-specific usage */
 	if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(self),
