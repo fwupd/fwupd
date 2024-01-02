@@ -95,7 +95,7 @@ static void
 fu_algoltek_usb_firmware_class_init(FuAlgoltekUsbFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_algoltek_usb_firmware_validate;
+	klass_firmware->check_magic = fu_algoltek_usb_firmware_validate;
 	klass_firmware->parse = fu_algoltek_usb_firmware_parse;
 	klass_firmware->write = fu_algoltek_usb_firmware_write;
 }
