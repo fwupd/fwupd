@@ -3175,3 +3175,12 @@ fu_util_project_versions_to_string(GHashTable *metadata)
 	}
 	return g_string_free(g_steal_pointer(&str), FALSE);
 }
+
+const gchar *
+fu_util_get_prgname(const gchar *argv0)
+{
+	const gchar *prgname = (const gchar *)g_strrstr(argv0, " ");
+	if (prgname != NULL)
+		return prgname + 1;
+	return argv0;
+}
