@@ -19,65 +19,21 @@ struct _FuAlgoltekUsbFirmware {
 G_DEFINE_TYPE(FuAlgoltekUsbFirmware, fu_algoltek_usb_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
-<<<<<<< HEAD
-fu_algoltek_usb_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
-{
-	return fu_struct_algoltek_product_identity_validate_bytes(fw, offset, error);
-=======
 fu_algoltek_usb_firmware_validate(FuFirmware *firmware,
 				  GInputStream *stream,
 				  gsize offset,
 				  GError **error)
 {
 	return fu_struct_algoltek_product_identity_validate_stream(stream, offset, error);
->>>>>>> upstream/main
 }
 
 static gboolean
 fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
-<<<<<<< HEAD
-			       GBytes *fw,
-=======
 			       GInputStream *stream,
->>>>>>> upstream/main
 			       gsize offset,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
-<<<<<<< HEAD
-	gchar *version;
-	g_autoptr(FuFirmware) img_isp = fu_firmware_new();
-	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
-	g_autoptr(GBytes) blob_isp = NULL;
-	g_autoptr(GBytes) blob_payload = NULL;
-	g_autoptr(GByteArray) header_array = g_byte_array_new();
-	g_autoptr(GBytes) blob_header = NULL;
-
-	blob_header =
-	    fu_bytes_new_offset(fw, offset, FU_STRUCT_ALGOLTEK_PRODUCT_IDENTITY_SIZE, error);
-	fu_byte_array_append_bytes(header_array, blob_header);
-
-	version = fu_struct_algoltek_product_identity_get_version(header_array);
-
-	offset += FU_STRUCT_ALGOLTEK_PRODUCT_IDENTITY_SIZE;
-
-	blob_isp = fu_bytes_new_offset(fw, offset, AG_ISP_SIZE, error);
-	if (blob_isp == NULL)
-		return FALSE;
-	fu_firmware_set_bytes(img_isp, blob_isp);
-	fu_firmware_set_id(img_isp, "isp");
-	fu_firmware_add_image(firmware, img_isp);
-	offset += g_bytes_get_size(blob_isp);
-
-	blob_payload = fu_bytes_new_offset(fw, offset, AG_FIRMWARE_SIZE, error);
-	if (blob_payload == NULL)
-		return FALSE;
-
-	fu_firmware_set_version(img_payload, version);
-	fu_firmware_set_bytes(img_payload, blob_payload);
-	fu_firmware_set_id(img_payload, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(firmware, img_payload);
-=======
 	const gchar *version;
 	g_autoptr(FuFirmware) img_isp = fu_firmware_new();
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
@@ -109,7 +65,6 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 	fu_firmware_add_image(firmware, img_payload);
 
 	/* success */
->>>>>>> upstream/main
 	return TRUE;
 }
 
