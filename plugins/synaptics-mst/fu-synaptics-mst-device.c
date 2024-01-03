@@ -110,21 +110,12 @@ fu_synaptics_mst_device_udev_device_notify_cb(FuUdevDevice *udev_device,
 static void
 fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 {
-	self->family = FU_SYNAPTICS_MST_FAMILY_UNKNOWN;
-	fu_device_add_protocol(FU_DEVICE(self), "com.synaptics.mst");
-	fu_device_set_vendor(FU_DEVICE(self), "Synaptics");
-	fu_device_add_vendor_id(FU_DEVICE(self), "DRM_DP_AUX_DEV:0x06CB");
-	fu_device_set_summary(FU_DEVICE(self), "Multi-stream transport device");
-	fu_device_add_icon(FU_DEVICE(self), "video-display");
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID,
 					"ignore-board-id");
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED,
 					"manual-restart-required");
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 
 	/* this is set from ->incorporate() */
@@ -1591,6 +1582,16 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error_local = NULL;
+
+	self->family = FU_SYNAPTICS_MST_FAMILY_UNKNOWN;
+	fu_device_add_protocol(device, "com.synaptics.mst");
+	fu_device_set_vendor(device, "Synaptics");
+	fu_device_add_vendor_id(device, "DRM_DP_AUX_DEV:0x06CB");
+	fu_device_set_summary(device, "Multi-stream transport device");
+	fu_device_add_icon(device, "video-display");
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
 
 	/* not a correct device */
 	if (fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)) != SYNAPTICS_IEEE_OUI) {

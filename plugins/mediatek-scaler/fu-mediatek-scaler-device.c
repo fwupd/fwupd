@@ -472,6 +472,18 @@ fu_mediatek_scaler_device_setup(FuDevice *device, GError **error)
 	if (!fu_mediatek_scaler_device_ensure_firmware_version(self, error))
 		return FALSE;
 
+	/* set flags */
+	fu_device_set_name(device, "Display Controller");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_set_vendor(device, "Mediatek");
+	fu_device_add_protocol(device, "com.mediatek.scaler");
+	fu_device_add_icon(device, "video-display");
+	fu_device_set_firmware_size_max(device, FU_MEDIATEK_SCALER_FW_SIZE_MAX);
+
 	/* success */
 	return TRUE;
 }
@@ -966,16 +978,6 @@ fu_mediatek_scaler_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_mediatek_scaler_device_init(FuMediatekScalerDevice *self)
 {
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_set_vendor(FU_DEVICE(self), "Mediatek");
-	fu_device_add_protocol(FU_DEVICE(self), "com.mediatek.scaler");
-	fu_device_set_name(FU_DEVICE(self), "Display Controller");
-	fu_device_add_icon(FU_DEVICE(self), "video-display");
-	fu_device_set_firmware_size_max(FU_DEVICE(self), FU_MEDIATEK_SCALER_FW_SIZE_MAX);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_MEDIATEK_SCALER_DEVICE_FLAG_PROBE_VCP,
 					"probe-vcp");

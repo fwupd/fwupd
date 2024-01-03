@@ -494,6 +494,18 @@ fu_realtek_mst_device_probe_version(FuDevice *device, GError **error)
 	guint8 *active_version;
 	g_autofree gchar *version_str = NULL;
 
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_protocol(device, "com.realtek.rtd2142");
+	fu_device_set_vendor(device, "Realtek");
+	fu_device_add_vendor_id(device, "PCI:0x10EC");
+	fu_device_set_summary(device, "DisplayPort MST hub");
+	fu_device_add_icon(device, "video-display");
+	fu_device_set_firmware_size(device, FLASH_USER_SIZE);
+
 	/* ensure probed state is cleared in case of error */
 	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	self->active_bank = FLASH_BANK_INVALID;
@@ -935,19 +947,7 @@ static void
 fu_realtek_mst_device_init(FuRealtekMstDevice *self)
 {
 	self->active_bank = FLASH_BANK_INVALID;
-
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS);
-	fu_device_add_protocol(FU_DEVICE(self), "com.realtek.rtd2142");
-	fu_device_set_vendor(FU_DEVICE(self), "Realtek");
-	fu_device_add_vendor_id(FU_DEVICE(self), "PCI:0x10EC");
-	fu_device_set_summary(FU_DEVICE(self), "DisplayPort MST hub");
-	fu_device_add_icon(FU_DEVICE(self), "video-display");
-	fu_device_set_firmware_size(FU_DEVICE(self), FLASH_USER_SIZE);
 }
 
 static void
