@@ -15,20 +15,10 @@ Write release entries:
  * copy into ../data/org.freedesktop.fwupd.metainfo.xml
  * appstream-util appdata-to-news ../data/org.freedesktop.fwupd.metainfo.xml > NEWS
 
-Update translations:
-
-ninja-build fwupd-pot
-cd ..
-tx push --source
-tx pull --all --force --minimum-perc=5
-cd build
-ninja-build fix-translations
-git add ../po/*.po
-
 2. Commit changes to git:
 
 # MAKE SURE THIS IS CORRECT
-export release_ver="1.9.10"
+export release_ver="1.9.11"
 
 git commit -a -m "Release fwupd ${release_ver}" --no-verify
 git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"

@@ -33,6 +33,39 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.11" date="2024-01-03">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Allow exporting 'offline' reports for manual upload</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add some recovery partition names to ignore for ESP selection</li>
+          <li>Check for CET and SMAP on non-Intel x86 processors too</li>
+          <li>Correctly mark the CPU as supported in the HSI tests</li>
+          <li>Do not fail on probing downstream Synaptics MST ports</li>
+          <li>Do not offer to change BIOS settings that are already set</li>
+          <li>Do not prefer msftdata when choosing the default ESP</li>
+          <li>Do not show spurious device request flags</li>
+          <li>Fix a missing build dependency to fwupdplugin-self-test</li>
+          <li>Fix a segfault when using zlib-ng instead of zlib</li>
+          <li>Fix updating Jabra 410, 510, 710 and 810 devices</li>
+          <li>Match more community-supported branches</li>
+          <li>Remove the Intel SPIBAR proxy support as the mtd module works</li>
+          <li>Show a better error when the ESP is missing</li>
+          <li>Show an error if the post-update version does not match exactly</li>
+          <li>Speed up Synaptics MST device enumeration</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Algoltek USB devices</li>
+          <li>Luxshare Quad USB4 Dock</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.10" date="2023-12-04">
       <description>
         <p>
