@@ -17,24 +17,27 @@ G_DEFINE_TYPE(FuEbitdoFirmware, fu_ebitdo_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_ebitdo_firmware_parse(FuFirmware *firmware,
-			 GBytes *fw,
+			 GInputStream *stream,
 			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	guint32 payload_len;
 	guint32 version;
+	gsize streamsz = 0;
 	g_autofree gchar *version_str = NULL;
 	g_autoptr(FuFirmware) img_hdr = fu_firmware_new();
 	g_autoptr(GByteArray) st = NULL;
-	g_autoptr(GBytes) fw_hdr = NULL;
-	g_autoptr(GBytes) fw_payload = NULL;
+	g_autoptr(GInputStream) stream_hdr = NULL;
+	g_autoptr(GInputStream) stream_payload = NULL;
 
 	/* check the file size */
-	st = fu_struct_ebitdo_hdr_parse_bytes(fw, offset, error);
+	st = fu_struct_ebitdo_hdr_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
-	payload_len = (guint32)(g_bytes_get_size(fw) - st->len);
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	payload_len = (guint32)(streamsz - st->len);
 	if (payload_len != fu_struct_ebitdo_hdr_get_destination_len(st)) {
 		g_set_error(error,
 			    G_IO_ERROR,
@@ -52,20 +55,18 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_version_raw(firmware, version);
 
 	/* add header */
-	fw_hdr = fu_bytes_new_offset(fw, 0x0, st->len, error);
-	if (fw_hdr == NULL)
+	stream_hdr = fu_partial_input_stream_new(stream, 0x0, st->len);
+	if (!fu_firmware_parse_stream(img_hdr, stream_hdr, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_hdr, FU_FIRMWARE_ID_HEADER);
-	fu_firmware_set_bytes(img_hdr, fw_hdr);
 	fu_firmware_add_image(firmware, img_hdr);
 
 	/* add payload */
-	fw_payload = fu_bytes_new_offset(fw, st->len, payload_len, error);
-	if (fw_payload == NULL)
+	stream_payload = fu_partial_input_stream_new(stream, st->len, payload_len);
+	if (!fu_firmware_set_stream(firmware, stream_payload, error))
 		return FALSE;
 	fu_firmware_set_id(firmware, FU_FIRMWARE_ID_PAYLOAD);
 	fu_firmware_set_addr(firmware, fu_struct_ebitdo_hdr_get_destination_addr(st));
-	fu_firmware_set_bytes(firmware, fw_payload);
 	return TRUE;
 }
 

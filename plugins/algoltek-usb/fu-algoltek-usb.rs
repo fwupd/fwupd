@@ -13,7 +13,11 @@ enum AlgoltekCmd {
     Rst = 0x20,
 }
 
+<<<<<<< HEAD
 #[derive(Getters,ValidateBytes)]
+=======
+#[derive(ParseStream, ValidateStream)]
+>>>>>>> upstream/main
 struct AlgoltekProductIdentity {
     header_len: u8,
     header: u64le == 0x4B45544C4F474C41, // 'A' 'L' 'G' 'O' 'L' 'T' 'E' 'K'

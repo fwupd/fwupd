@@ -14,6 +14,7 @@
 #include "fu-dump.h"
 #include "fu-fdt-image.h"
 #include "fu-fit-firmware.h"
+#include "fu-input-stream.h"
 #include "fu-mem.h"
 
 /**
@@ -207,7 +208,7 @@ fu_fit_firmware_verify_hash(FuFirmware *firmware,
 
 static gboolean
 fu_fit_firmware_verify_image(FuFirmware *firmware,
-			     GBytes *fw,
+			     GInputStream *stream,
 			     FuFirmware *img,
 			     FwupdInstallFlags flags,
 			     GError **error)
@@ -237,7 +238,7 @@ fu_fit_firmware_verify_image(FuFirmware *firmware,
 					       &data_size,
 					       error))
 			return FALSE;
-		blob = fu_bytes_new_offset(fw, data_offset, data_size, error);
+		blob = fu_input_stream_read_bytes(stream, data_offset, data_size, error);
 		if (blob == NULL)
 			return FALSE;
 	}
@@ -289,7 +290,7 @@ fu_fit_firmware_verify_configuration(FuFirmware *firmware,
 
 static gboolean
 fu_fit_firmware_parse(FuFirmware *firmware,
-		      GBytes *fw,
+		      GInputStream *stream,
 		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
@@ -302,7 +303,7 @@ fu_fit_firmware_parse(FuFirmware *firmware,
 
 	/* FuFdtFirmware->parse */
 	if (!FU_FIRMWARE_CLASS(fu_fit_firmware_parent_class)
-		 ->parse(firmware, fw, offset, flags, error))
+		 ->parse(firmware, stream, offset, flags, error))
 		return FALSE;
 
 	/* sanity check */
@@ -322,7 +323,7 @@ fu_fit_firmware_parse(FuFirmware *firmware,
 	img_images_array = fu_firmware_get_images(img_images);
 	for (guint i = 0; i < img_images_array->len; i++) {
 		FuFirmware *img = g_ptr_array_index(img_images_array, i);
-		if (!fu_fit_firmware_verify_image(firmware, fw, img, flags, error))
+		if (!fu_fit_firmware_verify_image(firmware, stream, img, flags, error))
 			return FALSE;
 	}
 

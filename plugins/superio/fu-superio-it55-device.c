@@ -53,10 +53,6 @@ static void
 fu_superio_it55_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuEcIt55Device *self = FU_SUPERIO_IT55_DEVICE(device);
-
-	/* FuSuperioDevice->to_string */
-	FU_DEVICE_CLASS(fu_superio_it55_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append(str, idt, "PrjName", self->prj_name);
 	fu_string_append_kx(str, idt, "AutoloadAction", self->autoload_action);
 }
@@ -547,7 +543,7 @@ fu_ec_extract_field(GBytes *fw, const gchar *name, GError **error)
 
 static FuFirmware *
 fu_superio_it55_device_prepare_firmware(FuDevice *device,
-					GBytes *fw,
+					GInputStream *stream,
 					FwupdInstallFlags flags,
 					GError **error)
 {
@@ -555,6 +551,13 @@ fu_superio_it55_device_prepare_firmware(FuDevice *device,
 	g_autofree gchar *date = NULL;
 	g_autofree gchar *prj_name = NULL;
 	g_autofree gchar *version = NULL;
+	g_autoptr(FuFirmware) firmware = fu_firmware_new();
+	g_autoptr(GBytes) fw = NULL;
+
+	/* convert to blob */
+	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+	if (fw == NULL)
+		return NULL;
 
 	prj_name = fu_ec_extract_field(fw, "PRJ", error);
 	if (prj_name == NULL)
@@ -579,7 +582,9 @@ fu_superio_it55_device_prepare_firmware(FuDevice *device,
 		return NULL;
 	}
 
-	return fu_firmware_new_from_bytes(fw);
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+		return NULL;
+	return g_steal_pointer(&firmware);
 }
 
 static gboolean

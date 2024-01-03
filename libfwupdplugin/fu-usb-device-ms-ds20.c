@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-input-stream.h"
 #include "fu-usb-device-ds20-struct.h"
 #include "fu-usb-device-ms-ds20.h"
 
@@ -53,17 +54,21 @@ fu_usb_device_os20_type_to_string(guint16 type)
 
 static gboolean
 fu_usb_device_ms_ds20_parse(FuUsbDeviceDs20 *self,
-			    GBytes *blob,
+			    GInputStream *stream,
 			    FuUsbDevice *device,
 			    GError **error)
 {
+	gsize streamsz = 0;
+
 	/* get length and type only */
-	for (gsize offset = 0; offset < g_bytes_get_size(blob);) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	for (gsize offset = 0; offset < streamsz;) {
 		guint16 desc_sz;
 		guint16 desc_type;
 		g_autoptr(GByteArray) st = NULL;
 
-		st = fu_struct_ms_ds20_parse_bytes(blob, offset, error);
+		st = fu_struct_ms_ds20_parse_stream(stream, offset, error);
 		if (st == NULL)
 			return FALSE;
 		desc_sz = fu_struct_ms_ds20_get_size(st);

@@ -16,8 +16,6 @@ GBytes *
 fu_bytes_get_contents(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 GBytes *
-fu_bytes_get_contents_fd(gint fd, gsize count, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-GBytes *
 fu_bytes_align(GBytes *bytes, gsize blksz, gchar padval) G_GNUC_NON_NULL(1);
 const guint8 *
 fu_bytes_get_data_safe(GBytes *bytes, gsize *bufsz, GError **error) G_GNUC_NON_NULL(1);

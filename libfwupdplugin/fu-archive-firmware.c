@@ -55,7 +55,7 @@ fu_archive_firmware_parse_cb(FuArchive *self,
 
 static gboolean
 fu_archive_firmware_parse(FuFirmware *firmware,
-			  GBytes *fw,
+			  GInputStream *stream,
 			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error)
@@ -63,7 +63,7 @@ fu_archive_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuArchive) archive = NULL;
 
 	/* load archive */
-	archive = fu_archive_new(fw, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
+	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
 	if (archive == NULL)
 		return FALSE;
 

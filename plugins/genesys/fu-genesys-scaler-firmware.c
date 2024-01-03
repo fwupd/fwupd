@@ -18,27 +18,27 @@ G_DEFINE_TYPE(FuGenesysScalerFirmware, fu_genesys_scaler_firmware, FU_TYPE_FIRMW
 
 static gboolean
 fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
-				 GBytes *fw,
+				 GInputStream *stream,
 				 gsize offset,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
 	FuGenesysScalerFirmware *self = FU_GENESYS_SCALER_FIRMWARE(firmware);
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	g_autoptr(FuFirmware) firmware_payload = NULL;
+	gsize streamsz = 0;
+	g_autoptr(FuFirmware) firmware_payload = fu_firmware_new();
 	g_autoptr(FuFirmware) firmware_public_key = NULL;
-	g_autoptr(GBytes) blob_payload = NULL;
+	g_autoptr(GInputStream) stream_payload = NULL;
 	g_autoptr(GBytes) blob_public_key = NULL;
 
-	if (!fu_memcpy_safe((guint8 *)&self->public_key,
-			    sizeof(self->public_key),
-			    0, /* dst */
-			    buf,
-			    bufsz,
-			    bufsz - sizeof(self->public_key), /* src */
-			    sizeof(self->public_key),
-			    error))
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (!fu_input_stream_read_safe(stream,
+				       (guint8 *)&self->public_key,
+				       sizeof(self->public_key),
+				       0,				    /* dst */
+				       streamsz - sizeof(self->public_key), /* src */
+				       sizeof(self->public_key),
+				       error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN,
 		    "PublicKey",
@@ -51,8 +51,10 @@ fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* set payload */
-	blob_payload = g_bytes_new(buf, bufsz - sizeof(self->public_key));
-	firmware_payload = fu_firmware_new_from_bytes(blob_payload);
+	stream_payload =
+	    fu_partial_input_stream_new(stream, 0, streamsz - sizeof(self->public_key));
+	if (!fu_firmware_parse_stream(firmware_payload, stream_payload, 0x0, flags, error))
+		return FALSE;
 	fu_firmware_set_id(firmware_payload, FU_FIRMWARE_ID_PAYLOAD);
 	fu_firmware_add_image(firmware, firmware_payload);
 

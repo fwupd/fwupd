@@ -1,29 +1,28 @@
 ---
-title: Remote File Format
+title: fwupd remote file format
 ---
 
 % fwupd-remotes.d(5) {{PACKAGE_VERSION}} | Remote File Format
 
-NAME
-----
+## NAME
 
 **fwupd-remotes.d** — remotes used for the fwupd daemon.
 
-SYNOPSIS
---------
+## SYNOPSIS
 
 The `{{SYSCONFDIR}}/fwupd/remotes.d` and `{{LOCALSTATEDIR}}/fwupd/remotes.d` directories are
 used to read information about remote metadata sources.
 The complete description of the file format and possible parameters are documented here for
 reference purposes.
 
-FILE FORMAT
------------
+## FILE FORMAT
 
 The file consists of a multiple sections with optional parameters. Parameters are of the form:
 
-  [section]
-  key = value
+```text
+[section]
+key = value
+```
 
 The file is line-based, each newline-terminated line represents either a comment, a section name or
 a parameter.
@@ -41,8 +40,7 @@ The values following the equals sign in parameters are all either a string (no q
 unsigned integers, or a boolean, which may be given as **true** or **false**.
 Case is not significant in boolean values, but is preserved in string values.
 
-REMOTE PARAMETERS
------------------
+## REMOTE PARAMETERS
 
 The `[fwupd Remote]` section can contain the following parameters:
 
@@ -124,13 +122,11 @@ The `[fwupd Remote]` section can contain the following parameters:
   The time in seconds after which the front end tools should re-download the metadata signature,
   or `0` to re-download every time.
 
-NOTES
------
+## NOTES
 
 The basename of the path without the extension is used for the remote ID.
 For instance, the `{{SYSCONFDIR}}/fwupd/remotes.d/lvfs.conf` remote file will have ID of `lvfs`.
 
-SEE ALSO
---------
+## SEE ALSO
 
-`fwupd.conf(5)`
+<fwupd.conf(5)>

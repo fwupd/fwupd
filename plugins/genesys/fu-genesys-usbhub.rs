@@ -1,6 +1,18 @@
 // Copyright (C) 2023 Adam.Chen <Adam.Chen@genesyslogic.com.tw>
 // SPDX-License-Identifier: LGPL-2.1+
 
+#[derive(ValidateStream)]
+struct GenesysDevFirmwareHdr {
+    reserved: [u8; 252],
+    magic: [char; 4] == "HOST",
+}
+
+#[derive(ValidateStream)]
+struct GenesysPdFirmwareHdr {
+    reserved: [u8; 252],
+    magic: [char; 4] == "PRDY",
+}
+
 // Tool String Descriptor
 #[repr(u8)]
 #[derive(ToString)]
@@ -15,7 +27,7 @@ enum GenesysTsVersion {
     Dynamic_13Byte,
     BrandProject,
 }
-#[derive(ToString, Parse, ParseBytes, New)]
+#[derive(ToString, Parse, ParseStream, New)]
 struct GenesysTsStatic {
     tool_string_version: GenesysTsVersion,
 
@@ -190,7 +202,7 @@ enum GenesysFwCodesign {
     Ecdsa,
 }
 
-#[derive(ParseBytes, ValidateBytes)]
+#[derive(ParseStream, ValidateStream)]
 struct GenesysFwCodesignInfoRsa {
     tag_n: u32be == 0x4E203D20, // 'N = '
     text_n: [char; 512],
@@ -210,7 +222,7 @@ struct GenesysFwRsaPublicKeyText {
     end_e: u16be == 0x0D0A,
 }
 
-#[derive(Parse, ParseBytes, Validate, ValidateBytes)]
+#[derive(Parse, ParseStream, Validate, ValidateStream)]
 struct GenesysFwCodesignInfoEcdsa {
     hash: [u8; 32],
     key: [u8; 64],

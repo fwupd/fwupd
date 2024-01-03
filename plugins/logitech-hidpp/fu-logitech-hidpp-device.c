@@ -275,10 +275,6 @@ fu_logitech_hidpp_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
-
-	/* FuUdevDevice->to_string */
-	FU_DEVICE_CLASS(fu_logitech_hidpp_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append_ku(str, idt, "HidppVersion", priv->hidpp_version);
 	fu_string_append_ku(str, idt, "HidppPid", priv->hidpp_pid);
 	fu_string_append_kx(str, idt, "DeviceIdx", priv->device_idx);

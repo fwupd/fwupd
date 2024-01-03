@@ -341,7 +341,7 @@ fu_logitech_tap_hdmi_device_write_firmware(FuDevice *device,
 {
 	FuLogitechTapHdmiDevice *self = FU_LOGITECH_TAP_HDMI_DEVICE(device);
 	g_autofree gchar *old_firmware_version = NULL;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* for troubleshooting purpose */
@@ -353,13 +353,15 @@ fu_logitech_tap_hdmi_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
 
 	/* get image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* write */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, kLogiDefaultImageBlockSize);
+	chunks = fu_chunk_array_new_from_stream(stream, 0x0, kLogiDefaultImageBlockSize, error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_logitech_tap_hdmi_device_write_fw(self,
 						  chunks,
 						  fu_progress_get_child(progress),
@@ -494,10 +496,10 @@ static void
 fu_logitech_tap_hdmi_device_init(FuLogitechTapHdmiDevice *self)
 {
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
-	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
-				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
-				     FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK |
-				     FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
 }
 
 static void

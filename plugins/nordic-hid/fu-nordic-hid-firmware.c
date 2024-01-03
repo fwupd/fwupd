@@ -38,38 +38,19 @@ fu_nordic_hid_firmware_get_checksum(FuFirmware *firmware, GChecksumType csum_kin
 	return g_strdup_printf("%x", priv->crc32);
 }
 
-static guint32
-fu_nordic_hid_firmware_crc32(const guint8 *buf, gsize bufsz)
-{
-	guint crc32 = 0x01;
-	/* maybe skipped "^" step in fu_crc32_full()?
-	 * according https://github.com/madler/zlib/blob/master/crc32.c#L225 */
-	crc32 ^= 0xFFFFFFFFUL;
-	return fu_crc32_full(buf, bufsz, crc32, 0xEDB88320);
-}
-
 static gboolean
 fu_nordic_hid_firmware_parse(FuFirmware *firmware,
-			     GBytes *fw,
+			     GInputStream *stream,
 			     gsize offset,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
 	FuNordicHidFirmware *self = FU_NORDIC_HID_FIRMWARE(firmware);
 	FuNordicHidFirmwarePrivate *priv = GET_PRIVATE(self);
-	const guint8 *buf;
-	gsize bufsz = 0;
 
-	buf = g_bytes_get_data(fw, &bufsz);
-	if (buf == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "unable to get the image binary");
+	priv->crc32 = 0x01;
+	if (!fu_input_stream_compute_crc32(stream, &priv->crc32, 0xEDB88320, error))
 		return FALSE;
-	}
-	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
-	priv->crc32 = fu_nordic_hid_firmware_crc32(buf, bufsz);
 
 	/* success */
 	return TRUE;
@@ -78,6 +59,7 @@ fu_nordic_hid_firmware_parse(FuFirmware *firmware,
 static void
 fu_nordic_hid_firmware_init(FuNordicHidFirmware *self)
 {
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 }
 
 static void

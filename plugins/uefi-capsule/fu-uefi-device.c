@@ -615,25 +615,28 @@ fu_uefi_device_get_esp(FuUefiDevice *self)
 
 static FuFirmware *
 fu_uefi_device_prepare_firmware(FuDevice *device,
-				GBytes *fw,
+				GInputStream *stream,
 				FwupdInstallFlags flags,
 				GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 	gsize sz_reqd = priv->require_esp_free_space;
+	g_autoptr(FuFirmware) firmware = fu_firmware_new();
 
 	/* check there is enough space in the ESP */
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+		return NULL;
 	if (sz_reqd == 0) {
 		g_info("required ESP free space is not configured, using 2 x %uMB + 20MB",
-		       (guint)g_bytes_get_size(fw) / (1024 * 1024));
-		sz_reqd = g_bytes_get_size(fw) * 2 + (20u * 1024 * 1024);
+		       (guint)fu_firmware_get_size(firmware) / (1024 * 1024));
+		sz_reqd = fu_firmware_get_size(firmware) * 2 + (20u * 1024 * 1024);
 	}
 	if (!fu_volume_check_free_space(priv->esp, sz_reqd, error))
 		return NULL;
 
 	/* success */
-	return fu_firmware_new_from_bytes(fw);
+	return g_steal_pointer(&firmware);
 }
 
 static void

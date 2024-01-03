@@ -559,7 +559,7 @@ gidocgen_dep = dependency('gi-docgen',
   required: get_option('docs'),
 )
 gidocgen_app = find_program('gi-docgen', required: gidocgen_dep.found())
-build_docs = gidocgen_dep.found() and gidocgen_app.found()
+build_docs = gidocgen_dep.found() and gidocgen_app.found() and introspection.allowed()
 
 if build_docs and gidocgen_dep.version().version_compare('< 2022.2')
   markdown_version = run_command(
@@ -605,6 +605,8 @@ if polkit.found()
   subdir('policy')
 endif
 if build_standalone
+  man_md = []
+  md_targets = []
   plugin_quirks = []
   subdir('libfwupdplugin')
   subdir('data')

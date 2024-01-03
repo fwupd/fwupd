@@ -62,16 +62,19 @@ fu_amd_gpu_atom_firmware_export(FuFirmware *firmware,
 }
 
 static gboolean
-fu_amd_gpu_atom_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_amd_gpu_atom_firmware_validate(FuFirmware *firmware,
+				  GInputStream *stream,
+				  gsize offset,
+				  GError **error)
 {
 	g_autoptr(GByteArray) atom = NULL;
 
-	atom = fu_struct_atom_image_parse_bytes(fw, offset, error);
+	atom = fu_struct_atom_image_parse_stream(stream, offset, error);
 	if (atom == NULL)
 		return FALSE;
-	return fu_struct_atom_rom21_header_validate_bytes(fw,
-							  fu_struct_atom_image_get_rom_loc(atom),
-							  error);
+	return fu_struct_atom_rom21_header_validate_stream(stream,
+							   fu_struct_atom_image_get_rom_loc(atom),
+							   error);
 }
 
 const gchar *
@@ -257,7 +260,7 @@ fu_amd_gpu_atom_parse_config_filename(FuAmdGpuAtomFirmware *self,
 
 static gboolean
 fu_amd_gpu_atom_firmware_parse(FuFirmware *firmware,
-			       GBytes *fw,
+			       GInputStream *stream,
 			       gsize offset,
 			       FwupdInstallFlags flags,
 			       GError **error)
@@ -265,16 +268,17 @@ fu_amd_gpu_atom_firmware_parse(FuFirmware *firmware,
 	FuAmdGpuAtomFirmware *self = FU_AMD_GPU_ATOM_FIRMWARE(firmware);
 	gsize bufsz = 0;
 	guint32 loc;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	const guint8 *buf;
 	g_autoptr(GByteArray) atom_image = NULL;
 	g_autoptr(GByteArray) atom_rom = NULL;
+	g_autoptr(GBytes) fw = NULL;
 
 	if (!FU_FIRMWARE_CLASS(fu_amd_gpu_atom_firmware_parent_class)
-		 ->parse(firmware, fw, offset, flags, error))
+		 ->parse(firmware, stream, offset, flags, error))
 		return FALSE;
 
 	/* atom rom image */
-	atom_image = fu_struct_atom_image_parse_bytes(fw, offset, error);
+	atom_image = fu_struct_atom_image_parse_stream(stream, offset, error);
 	if (atom_image == NULL)
 		return FALSE;
 
@@ -283,10 +287,14 @@ fu_amd_gpu_atom_firmware_parse(FuFirmware *firmware,
 
 	/* atom rom header */
 	loc = fu_struct_atom_image_get_rom_loc(atom_image) + offset;
-	atom_rom = fu_struct_atom_rom21_header_parse_bytes(fw, loc, error);
+	atom_rom = fu_struct_atom_rom21_header_parse_stream(stream, loc, error);
 	if (atom_rom == NULL)
 		return FALSE;
 
+	fw = fu_input_stream_read_bytes(stream, offset, G_MAXSIZE, error);
+	if (fw == NULL)
+		return FALSE;
+	buf = g_bytes_get_data(fw, &bufsz);
 	if (!fu_amd_gpu_atom_parse_config_filename(self, buf, bufsz, atom_rom, error))
 		return FALSE;
 

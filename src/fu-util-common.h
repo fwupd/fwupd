@@ -141,3 +141,5 @@ gchar *
 fu_util_project_versions_to_string(GHashTable *metadata);
 gboolean
 fu_util_project_versions_as_json(FuConsole *console, GHashTable *metadata, GError **error);
+const gchar *
+fu_util_get_prgname(const gchar *argv0);

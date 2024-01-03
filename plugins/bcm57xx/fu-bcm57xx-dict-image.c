@@ -29,21 +29,22 @@ fu_bcm57xx_dict_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, 
 
 static gboolean
 fu_bcm57xx_dict_image_parse(FuFirmware *firmware,
-			    GBytes *fw,
+			    GInputStream *stream,
 			    gsize offset,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {
-	g_autoptr(GBytes) fw_nocrc = NULL;
+	g_autoptr(GInputStream) stream_nocrc = NULL;
+	gsize streamsz = 0;
+
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		if (!fu_bcm57xx_verify_crc(fw, error))
+		if (!fu_bcm57xx_verify_crc(stream, error))
 			return FALSE;
 	}
-	fw_nocrc = fu_bytes_new_offset(fw, 0x0, g_bytes_get_size(fw) - sizeof(guint32), error);
-	if (fw_nocrc == NULL)
-		return FALSE;
-	fu_firmware_set_bytes(firmware, fw_nocrc);
-	return TRUE;
+	stream_nocrc = fu_partial_input_stream_new(stream, 0x0, streamsz - sizeof(guint32));
+	return fu_firmware_set_stream(firmware, stream_nocrc, error);
 }
 
 static GByteArray *

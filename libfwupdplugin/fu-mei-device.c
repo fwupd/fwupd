@@ -58,7 +58,6 @@ fu_mei_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuMeiDevice *self = FU_MEI_DEVICE(device);
 	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
-	FU_DEVICE_CLASS(fu_mei_device_parent_class)->to_string(device, idt, str);
 	fu_string_append(str, idt, "Uuid", priv->uuid);
 	fu_string_append(str, idt, "ParentDeviceFile", priv->parent_device_file);
 	if (priv->max_msg_length > 0x0)
@@ -497,9 +496,10 @@ static void
 fu_mei_device_init(FuMeiDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
-				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
-				     FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 }
 
 static void

@@ -23,6 +23,7 @@ fu_test_synaprom_firmware_func(void)
 	g_autoptr(GBytes) blob2 = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuFirmware) firmware2 = NULL;
 	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new();
 
@@ -62,8 +63,11 @@ fu_test_synaprom_firmware_func(void)
 
 	/* payload needs to exist */
 	fu_synaprom_device_set_version(device, 10, 1, 1234);
-	firmware2 =
-	    fu_synaprom_device_prepare_fw(FU_DEVICE(device), fw, FWUPD_INSTALL_FLAG_NONE, &error);
+	stream = g_memory_input_stream_new_from_bytes(fw);
+	firmware2 = fu_synaprom_device_prepare_firmware(FU_DEVICE(device),
+							stream,
+							FWUPD_INSTALL_FLAG_NONE,
+							&error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware2);
 	blob2 = fu_firmware_get_image_by_id_bytes(firmware2, "mfw-update-payload", &error);

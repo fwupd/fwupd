@@ -28,7 +28,7 @@ struct RmiPartitionTbl {
     partition_addr: u16le,
     partition_prop: u16le,
 }
-#[derive(New, ParseBytes)]
+#[derive(New, ParseStream)]
 struct RmiImg {
     checksum: u32le,
     _reserved1: [u8; 2],
@@ -74,7 +74,7 @@ enum RmiContainerId {
     FixedLocationData = 27,
 }
 
-#[derive(New, ParseBytes)]
+#[derive(New, ParseStream)]
 struct RmiContainerDescriptor {
     content_checksum: u32le,
     container_id: RmiContainerId,

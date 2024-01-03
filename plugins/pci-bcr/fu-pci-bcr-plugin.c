@@ -181,7 +181,7 @@ fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin,
 		return TRUE;
 
 	/* open the config */
-	fu_udev_device_set_flags(FU_UDEV_DEVICE(device), FU_UDEV_DEVICE_FLAG_USE_CONFIG);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(device), FU_UDEV_DEVICE_FLAG_USE_CONFIG);
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
 		return FALSE;
 	locker = fu_device_locker_new(device, error);

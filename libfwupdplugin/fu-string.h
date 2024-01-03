@@ -58,6 +58,13 @@ fu_strsplit_full(const gchar *str,
 		 FuStrsplitFunc callback,
 		 gpointer user_data,
 		 GError **error) G_GNUC_NON_NULL(1, 3);
+gboolean
+fu_strsplit_stream(GInputStream *stream,
+		   gsize offset,
+		   const gchar *delimiter,
+		   FuStrsplitFunc callback,
+		   gpointer user_data,
+		   GError **error) G_GNUC_NON_NULL(1, 3);
 
 /**
  * FuUtfConvertFlags:

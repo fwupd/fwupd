@@ -86,10 +86,6 @@ static void
 fu_vli_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE(device);
-
-	/* parent */
-	FU_DEVICE_CLASS(fu_vli_usbhub_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append_kb(str, idt, "DisablePowersave", self->disable_powersave);
 	fu_string_append_kx(str, idt, "UpdateProtocol", self->update_protocol);
 	if (self->update_protocol >= 0x2) {
@@ -905,7 +901,7 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_vli_usbhub_device_prepare_firmware(FuDevice *device,
-				      GBytes *fw,
+				      GInputStream *stream,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
@@ -914,7 +910,7 @@ fu_vli_usbhub_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_vli_usbhub_firmware_new();
 
 	/* check is compatible with firmware */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	device_kind = fu_vli_usbhub_firmware_get_device_kind(FU_VLI_USBHUB_FIRMWARE(firmware));
 	if (fu_vli_device_get_kind(FU_VLI_DEVICE(self)) != device_kind) {

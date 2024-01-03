@@ -24,6 +24,16 @@
     </div>
   </div>
   <section id="main" style="max-width: 100%" class="content">
+    {% if man %}
+    <header>
+      <h1>Manual pages</h1>
+      <div class="description">
+        <p>Manual pages for interacting with fwupd</p>
+      </div>
+    </header>{% for obj in man %}
+    <ul>
+      <li><a href="libfwupdplugin/{{ obj }}.html">{{ obj }}</a></li>
+    </ul>{% endfor %}{% endif %}
     <header>
       <h1>libfwupd</h1>
       <div class="description">

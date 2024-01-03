@@ -39,10 +39,6 @@ static void
 fu_vbe_simple_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuVbeSimpleDevice *self = FU_VBE_SIMPLE_DEVICE(device);
-
-	/* FuVbeDevice->to_string */
-	FU_DEVICE_CLASS(fu_vbe_simple_device_parent_class)->to_string(device, idt, str);
-
 	if (self->storage != NULL)
 		fu_string_append(str, idt, "Storage", self->storage);
 	if (self->devname != NULL)
@@ -217,7 +213,7 @@ fu_vbe_simple_device_get_cfg_compatible(FuVbeSimpleDevice *self,
 
 static FuFirmware *
 fu_vbe_simple_device_prepare_firmware(FuDevice *device,
-				      GBytes *fw,
+				      GInputStream *stream,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
@@ -229,7 +225,7 @@ fu_vbe_simple_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware_container = fu_firmware_new();
 
 	/* parse all images */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
 	/* look for a compatible configuration */

@@ -449,7 +449,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_elantp_hid_device_prepare_firmware(FuDevice *device,
-				      GBytes *fw,
+				      GInputStream *stream,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
@@ -460,7 +460,7 @@ fu_elantp_hid_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_elantp_firmware_new();
 
 	/* check is compatible with hardware */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	module_id = fu_elantp_firmware_get_module_id(FU_ELANTP_FIRMWARE(firmware));
 	if (self->module_id != module_id) {
@@ -948,9 +948,9 @@ fu_elantp_hid_device_init(FuElantpHidDevice *self)
 	fu_device_set_vendor(FU_DEVICE(self), "ELAN Microelectronics");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
-	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
-				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
-				     FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
 }
 
 static void

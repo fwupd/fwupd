@@ -14,6 +14,3 @@ G_DECLARE_FINAL_TYPE(FuBcm57xxRecoveryDevice,
 		     FU,
 		     BCM57XX_RECOVERY_DEVICE,
 		     FuUdevDevice)
-
-FuBcm57xxRecoveryDevice *
-fu_bcm57xx_recovery_device_new(void);

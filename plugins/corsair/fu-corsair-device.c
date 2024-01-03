@@ -383,10 +383,10 @@ fu_corsair_device_write_firmware(FuDevice *device,
 				 GError **error)
 {
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
-	g_autoptr(GBytes) firmware_bytes = fu_firmware_get_bytes(firmware, error);
+	g_autoptr(GInputStream) stream = fu_firmware_get_stream(firmware, error);
 
-	if (firmware_bytes == NULL) {
-		g_prefix_error(error, "cannot get firmware data: ");
+	if (stream == NULL) {
+		g_prefix_error(error, "cannot get firmware stream: ");
 		return FALSE;
 	}
 
@@ -395,7 +395,7 @@ fu_corsair_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5, NULL);
 
 	if (!fu_device_write_firmware(FU_DEVICE(self->bp),
-				      firmware_bytes,
+				      stream,
 				      fu_progress_get_child(progress),
 				      flags,
 				      error)) {
@@ -422,9 +422,6 @@ static void
 fu_corsair_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
-
-	FU_DEVICE_CLASS(fu_corsair_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append(str,
 			 idt,
 			 "DeviceKind",

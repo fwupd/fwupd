@@ -453,7 +453,7 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_vli_pd_device_prepare_firmware(FuDevice *device,
-				  GBytes *fw,
+				  GInputStream *stream,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
@@ -462,19 +462,19 @@ fu_vli_pd_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_vli_pd_firmware_new();
 
 	/* check size */
-	if (g_bytes_get_size(fw) > fu_device_get_firmware_size_max(device)) {
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+		return NULL;
+	if (fu_firmware_get_size(firmware) > fu_device_get_firmware_size_max(device)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "firmware too large, got 0x%x, expected <= 0x%x",
-			    (guint)g_bytes_get_size(fw),
+			    (guint)fu_firmware_get_size(firmware),
 			    (guint)fu_device_get_firmware_size_max(device));
 		return NULL;
 	}
 
 	/* check is compatible with firmware */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
-		return NULL;
 	device_kind = fu_vli_pd_firmware_get_kind(FU_VLI_PD_FIRMWARE(firmware));
 	if (fu_vli_device_get_kind(FU_VLI_DEVICE(self)) != device_kind) {
 		g_set_error(

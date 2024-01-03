@@ -1,7 +1,7 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(New, ValidateBytes, ParseBytes)]
+#[derive(New, ValidateStream, ParseStream)]
 struct IfwiCpd {
     header_marker: u32le == 0x44504324,
     num_of_entries: u32le,
@@ -12,14 +12,14 @@ struct IfwiCpd {
     partition_name: u32le,
     crc32: u32le,
 }
-#[derive(New, ParseBytes)]
+#[derive(New, ParseStream)]
 struct IfwiCpdEntry {
     name: [char; 12],
     offset: u32le,
     length: u32le,
     _reserved1: [u8; 4],
 }
-#[derive(New, ParseBytes)]
+#[derive(New, ParseStream)]
 struct IfwiCpdManifest {
     header_type: u32le,
     header_length: u32le,		// dwords
@@ -33,12 +33,12 @@ struct IfwiCpdManifest {
     version: u64le,
     svn: u32le,
 }
-#[derive(New, ParseBytes)]
+#[derive(New, ParseStream)]
 struct IfwiCpdManifestExt {
     extension_type: u32le,
     extension_length: u32le,
 }
-#[derive(New, ValidateBytes, ParseBytes)]
+#[derive(New, ValidateStream, ParseStream)]
 struct IfwiFpt {
     header_marker: u32le == 0x54504624,
     num_of_entries: u32le,
@@ -55,7 +55,7 @@ struct IfwiFpt {
     fitc_hotfix: u16le,
     fitc_build: u16le,
 }
-#[derive(New, ParseBytes)]
+#[derive(New, ParseStream)]
 struct IfwiFptEntry {
     partition_name: u32le,
     _reserved1: [u8; 4],

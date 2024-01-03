@@ -260,16 +260,16 @@ fu_android_boot_device_write_firmware(FuDevice *device,
 				      GError **error)
 {
 	FuAndroidBootDevice *self = FU_ANDROID_BOOT_DEVICE(device);
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* get data to write */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
-	fu_dump_bytes(G_LOG_DOMAIN, "write", fw);
-
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 10 * 1024);
+	chunks = fu_chunk_array_new_from_stream(stream, 0x0, 10 * 1024, error);
+	if (chunks == NULL)
+		return FALSE;
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 72, NULL);
@@ -349,9 +349,9 @@ fu_android_boot_device_init(FuAndroidBootDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
-				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
-				     FU_UDEV_DEVICE_FLAG_OPEN_SYNC);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_SYNC);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
 
 	/*

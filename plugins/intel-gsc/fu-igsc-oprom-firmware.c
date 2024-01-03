@@ -91,20 +91,23 @@ fu_igsc_oprom_firmware_match_device(FuIgscOpromFirmware *self,
 static gboolean
 fu_igsc_oprom_firmware_parse_extension(FuIgscOpromFirmware *self, FuFirmware *fw, GError **error)
 {
-	g_autoptr(GBytes) blob = NULL;
+	gsize streamsz = 0;
+	g_autoptr(GInputStream) stream = NULL;
 
 	/* get data */
-	blob = fu_firmware_get_bytes(fw, error);
-	if (blob == NULL)
+	stream = fu_firmware_get_stream(fw, error);
+	if (stream == NULL)
+		return FALSE;
+	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 	if (fu_firmware_get_idx(fw) == MFT_EXT_TYPE_DEVICE_TYPE) {
-		for (gsize offset = 0; offset < g_bytes_get_size(blob);
+		for (gsize offset = 0; offset < streamsz;
 		     offset += FU_STRUCT_IGSC_OPROM_SUBSYSTEM_DEVICE_ID_SIZE) {
 			g_autofree FuIgscFwdataDeviceInfo *info = g_new0(FuIgscFwdataDeviceInfo, 1);
 			g_autoptr(GByteArray) st = NULL;
-			st = fu_struct_igsc_oprom_subsystem_device_id_parse_bytes(blob,
-										  offset,
-										  error);
+			st = fu_struct_igsc_oprom_subsystem_device_id_parse_stream(stream,
+										   offset,
+										   error);
 			if (st == NULL)
 				return FALSE;
 			info->subsys_vendor_id =
@@ -114,13 +117,13 @@ fu_igsc_oprom_firmware_parse_extension(FuIgscOpromFirmware *self, FuFirmware *fw
 			g_ptr_array_add(self->device_infos, g_steal_pointer(&info));
 		}
 	} else if (fu_firmware_get_idx(fw) == MFT_EXT_TYPE_DEVICE_ID_ARRAY) {
-		for (gsize offset = 0; offset < g_bytes_get_size(blob);
+		for (gsize offset = 0; offset < streamsz;
 		     offset += FU_STRUCT_IGSC_OPROM_SUBSYSTEM_DEVICE4_ID_SIZE) {
 			g_autofree FuIgscFwdataDeviceInfo *info = g_new0(FuIgscFwdataDeviceInfo, 1);
 			g_autoptr(GByteArray) st = NULL;
-			st = fu_struct_igsc_oprom_subsystem_device4_id_parse_bytes(blob,
-										   offset,
-										   error);
+			st = fu_struct_igsc_oprom_subsystem_device4_id_parse_stream(stream,
+										    offset,
+										    error);
 			if (st == NULL)
 				return FALSE;
 			info->vendor_id =
@@ -141,7 +144,7 @@ fu_igsc_oprom_firmware_parse_extension(FuIgscOpromFirmware *self, FuFirmware *fw
 
 static gboolean
 fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
-			     GBytes *fw,
+			     GInputStream *stream,
 			     gsize offset,
 			     FwupdInstallFlags flags,
 			     GError **error)
@@ -152,7 +155,7 @@ fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 
 	/* FuOpromFirmware->parse */
 	if (!FU_FIRMWARE_CLASS(fu_igsc_oprom_firmware_parent_class)
-		 ->parse(firmware, fw, offset, flags, error))
+		 ->parse(firmware, stream, offset, flags, error))
 		return FALSE;
 
 	/* check sanity */

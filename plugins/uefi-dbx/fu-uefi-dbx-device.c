@@ -86,13 +86,17 @@ fu_uefi_dbx_device_version_notify_cb(FuDevice *device, GParamSpec *pspec, gpoint
 }
 
 static FuFirmware *
-fu_uefi_dbx_prepare_firmware(FuDevice *device, GBytes *fw, FwupdInstallFlags flags, GError **error)
+fu_uefi_dbx_prepare_firmware(FuDevice *device,
+			     GInputStream *stream,
+			     FwupdInstallFlags flags,
+			     GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);
+	g_autoptr(FuFirmware) firmware = fu_firmware_new();
 	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
 
 	/* parse dbx */
-	if (!fu_firmware_parse(siglist, fw, flags, error))
+	if (!fu_firmware_parse_stream(siglist, stream, 0x0, flags, error))
 		return NULL;
 
 	/* validate this is safe to apply */
@@ -110,7 +114,9 @@ fu_uefi_dbx_prepare_firmware(FuDevice *device, GBytes *fw, FwupdInstallFlags fla
 	}
 
 	/* default blob */
-	return fu_firmware_new_from_bytes(fw);
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+		return NULL;
+	return g_steal_pointer(&firmware);
 }
 
 static gboolean

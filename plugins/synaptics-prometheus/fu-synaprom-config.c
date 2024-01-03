@@ -106,15 +106,16 @@ fu_synaprom_config_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_synaprom_config_prepare_firmware(FuDevice *device,
-				    GBytes *fw,
+				    GInputStream *stream,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
 	FuSynapromConfig *self = FU_SYNAPROM_CONFIG(device);
 	FuDevice *parent = fu_device_get_parent(device);
 	g_autoptr(GByteArray) st_hdr = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream_hdr = NULL;
 	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new();
+	g_autoptr(FuFirmware) img_hdr = NULL;
 
 	if (fu_synaprom_device_get_product_type(FU_SYNAPROM_DEVICE(parent)) ==
 	    FU_SYNAPROM_PRODUCT_TYPE_TRITON) {
@@ -124,14 +125,17 @@ fu_synaprom_config_prepare_firmware(FuDevice *device,
 	}
 
 	/* parse the firmware */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
 	/* check the update header product and version */
-	blob = fu_firmware_get_image_by_id_bytes(firmware, "cfg-update-header", error);
-	if (blob == NULL)
+	img_hdr = fu_firmware_get_image_by_id(firmware, "cfg-update-header", error);
+	if (img_hdr == NULL)
 		return NULL;
-	st_hdr = fu_struct_synaprom_cfg_hdr_parse_bytes(blob, 0x0, error);
+	stream_hdr = fu_firmware_get_stream(img_hdr, error);
+	if (stream_hdr == NULL)
+		return NULL;
+	st_hdr = fu_struct_synaprom_cfg_hdr_parse_stream(stream_hdr, 0x0, error);
 	if (st_hdr == NULL) {
 		g_prefix_error(error, "CFG metadata is invalid: ");
 		return NULL;

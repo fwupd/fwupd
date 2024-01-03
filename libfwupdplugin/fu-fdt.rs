@@ -1,7 +1,7 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(New, ValidateBytes, ParseBytes)]
+#[derive(New, ValidateStream, ParseStream)]
 struct Fdt {
     magic: u32be == 0xD00DFEED,
     totalsize: u32be,
@@ -14,7 +14,7 @@ struct Fdt {
     size_dt_strings: u32be,
     size_dt_struct: u32be,
 }
-#[derive(New, ParseBytes)]
+#[derive(New, ParseStream)]
 struct FdtReserveEntry {
     address: u64be,
     size: u64be,

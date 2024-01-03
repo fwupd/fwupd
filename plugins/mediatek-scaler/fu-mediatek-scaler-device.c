@@ -54,10 +54,6 @@ static void
 fu_mediatek_scaler_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-
-	/* FuUdevDevice->to_string */
-	FU_DEVICE_CLASS(fu_mediatek_scaler_device_parent_class)->to_string(device, idt, str);
-
 	if (self->i2c_dev != NULL) {
 		fu_string_append(str,
 				 idt,
@@ -649,34 +645,40 @@ fu_mediatek_scaler_device_get_staged_data(FuMediatekScalerDevice *self,
 
 static gboolean
 fu_mediatek_scaler_device_check_sent_info(FuMediatekScalerDevice *self,
-					  GBytes *fwdata,
+					  GInputStream *stream,
 					  GError **error)
 {
 	guint16 chksum = 0;
+	guint16 sum16 = 0;
 	guint32 pktcnt = 0;
+	gsize streamsz = 0;
 
 	if (!fu_mediatek_scaler_device_get_staged_data(self, &chksum, &pktcnt, error))
 		return FALSE;
 
 	/* verify the staged packets on chip */
-	if (g_bytes_get_size(fwdata) != pktcnt) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (streamsz != pktcnt) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
 			    "failed data verification, sent size: %" G_GSIZE_FORMAT
 			    ", ack size: %u",
-			    g_bytes_get_size(fwdata),
+			    streamsz,
 			    pktcnt);
 		return FALSE;
 	}
 
 	/* verify the checksum on chip */
-	if (fu_sum16_bytes(fwdata) != chksum) {
+	if (!fu_input_stream_compute_sum16(stream, &sum16, error))
+		return FALSE;
+	if (sum16 != chksum) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
 			    "failed data checksum comparison, expected: %u, got: %u",
-			    fu_sum16_bytes(fwdata),
+			    sum16,
 			    chksum);
 		return FALSE;
 	}
@@ -694,9 +696,14 @@ fu_mediatek_scaler_device_run_isp(FuMediatekScalerDevice *self, guint16 chksum, 
 }
 
 static gboolean
-fu_mediatek_scaler_device_commit_firmware(FuMediatekScalerDevice *self, GBytes *fw, GError **error)
+fu_mediatek_scaler_device_commit_firmware(FuMediatekScalerDevice *self,
+					  GInputStream *stream,
+					  GError **error)
 {
-	if (!(fu_mediatek_scaler_device_run_isp(self, fu_sum16_bytes(fw), error))) {
+	guint16 sum16 = 0;
+	if (!fu_input_stream_compute_sum16(stream, &sum16, error))
+		return FALSE;
+	if (!(fu_mediatek_scaler_device_run_isp(self, sum16, error))) {
 		g_prefix_error(error, "failed to commit firmware: ");
 		return FALSE;
 	}
@@ -797,12 +804,14 @@ fu_mediatek_scaler_device_set_data_fast_forward(FuMediatekScalerDevice *self,
 
 static gboolean
 fu_mediatek_scaler_device_write_firmware_impl(FuMediatekScalerDevice *self,
-					      GBytes *fw,
+					      GInputStream *stream,
 					      FuProgress *progress,
 					      GError **error)
 {
 	g_autoptr(FuChunkArray) chunks =
-	    fu_chunk_array_new_from_bytes(fw, 0x00, DDC_DATA_PAGE_SIZE);
+	    fu_chunk_array_new_from_stream(stream, 0x00, DDC_DATA_PAGE_SIZE, error);
+	if (chunks == NULL)
+		return FALSE;
 	for (gint retry = 1; retry <= DDC_RW_MAX_RETRY_CNT; retry++) {
 		g_autoptr(GError) error_local = NULL;
 		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
@@ -833,7 +842,7 @@ fu_mediatek_scaler_device_write_firmware_impl(FuMediatekScalerDevice *self,
 
 		/* exit the try loop when successes */
 		fu_device_sleep(FU_DEVICE(self), FU_MEDIATEK_SCALER_DDC_MSG_DELAY_MS);
-		if (fu_mediatek_scaler_device_check_sent_info(self, fw, &error_local))
+		if (fu_mediatek_scaler_device_check_sent_info(self, stream, &error_local))
 			return TRUE;
 		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_WRITE)) {
 			g_propagate_error(error, g_steal_pointer(&error_local));
@@ -881,7 +890,7 @@ fu_mediatek_scaler_device_write_firmware(FuDevice *device,
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
 	gsize fw_size = 0;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -891,23 +900,24 @@ fu_mediatek_scaler_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 25, "verify");
 
 	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* prepare the device to accept firmware image */
-	fw_size = g_bytes_get_size(fw);
+	if (!fu_input_stream_size(stream, &fw_size, error))
+		return FALSE;
 	if (!fu_mediatek_scaler_device_prepare_update(device, fw_size, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* write firmware to device */
-	if (!fu_mediatek_scaler_device_write_firmware_impl(self, fw, progress, error))
+	if (!fu_mediatek_scaler_device_write_firmware_impl(self, stream, progress, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* send ISP command to commit the update */
-	if (!fu_mediatek_scaler_device_commit_firmware(self, fw, error))
+	if (!fu_mediatek_scaler_device_commit_firmware(self, stream, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -922,13 +932,13 @@ fu_mediatek_scaler_device_write_firmware(FuDevice *device,
 
 static FuFirmware *
 fu_mediatek_scaler_device_prepare_firmware(FuDevice *device,
-					   GBytes *fw,
+					   GInputStream *stream,
 					   FwupdInstallFlags flags,
 					   GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_mediatek_scaler_firmware_new();
 
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
 	g_info("firmware version old: %s, new: %s",

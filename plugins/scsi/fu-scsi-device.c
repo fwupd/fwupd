@@ -35,7 +35,6 @@ static void
 fu_scsi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
-	FU_DEVICE_CLASS(fu_scsi_device_parent_class)->to_string(device, idt, str);
 	fu_string_append_kx(str, idt, "FfuTimeout", self->ffu_timeout);
 }
 
@@ -142,13 +141,13 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_scsi_device_prepare_firmware(FuDevice *device,
-				GBytes *fw,
+				GInputStream *stream,
 				FwupdInstallFlags flags,
 				GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
 	fu_firmware_set_alignment(firmware, FU_FIRMWARE_ALIGNMENT_4K);
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	return g_steal_pointer(&firmware);
 }
@@ -210,16 +209,18 @@ fu_scsi_device_write_firmware(FuDevice *device,
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
 	guint32 chunksz = 0x1000;
 	guint32 offset = 0;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* prepare chunks */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, chunksz);
+	chunks = fu_chunk_array_new_from_stream(stream, 0x00, chunksz, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
@@ -279,9 +280,9 @@ fu_scsi_device_init(FuScsiDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary(FU_DEVICE(self), "SCSI device");
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
-	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
-				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_SYNC |
-				     FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_SYNC);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
 }
 
 static void

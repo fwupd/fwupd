@@ -10,7 +10,9 @@
 #include "fu-common.h"
 #include "fu-efi-firmware-common.h"
 #include "fu-efi-firmware-section.h"
+#include "fu-input-stream.h"
 #include "fu-lzma-common.h"
+#include "fu-partial-input-stream.h"
 
 /**
  * fu_efi_firmware_parse_sections:
@@ -27,29 +29,29 @@
  **/
 gboolean
 fu_efi_firmware_parse_sections(FuFirmware *firmware,
-			       GBytes *fw,
+			       GInputStream *stream,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
 	gsize offset = 0;
-	gsize bufsz = g_bytes_get_size(fw);
+	gsize streamsz = 0;
 
-	while (offset < bufsz) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	while (offset < streamsz) {
 		g_autoptr(FuFirmware) img = fu_efi_firmware_section_new();
-		g_autoptr(GBytes) blob = NULL;
+		g_autoptr(GInputStream) partial_stream = NULL;
 
-		/* maximum payload */
-		blob = fu_bytes_new_offset(fw, offset, bufsz - offset, error);
-		if (blob == NULL) {
-			g_prefix_error(error, "failed to build maximum payload: ");
-			return FALSE;
-		}
-
-		/* parse section */
-		if (!fu_firmware_parse(img, blob, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error)) {
+		/* parse maximum payload */
+		partial_stream = fu_partial_input_stream_new(stream, offset, streamsz - offset);
+		if (!fu_firmware_parse_stream(img,
+					      partial_stream,
+					      0x0,
+					      flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      error)) {
 			g_prefix_error(error,
 				       "failed to parse section of size 0x%x: ",
-				       (guint)g_bytes_get_size(blob));
+				       (guint)streamsz);
 			return FALSE;
 		}
 

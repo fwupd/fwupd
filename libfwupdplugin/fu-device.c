@@ -14,8 +14,10 @@
 #include "fwupd-common.h"
 #include "fwupd-device-private.h"
 
+#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-device-private.h"
+#include "fu-input-stream.h"
 #include "fu-quirks.h"
 #include "fu-security-attr.h"
 #include "fu-string.h"
@@ -3821,6 +3823,22 @@ fu_device_register_private_flag(FuDevice *self, guint64 value, const gchar *valu
 	g_return_if_fail(value != 0);
 	g_return_if_fail(value_str != NULL);
 
+#ifndef SUPPORTED_BUILD
+	/* ensure not already the name of an internal or exported flag */
+	if (fwupd_device_flag_from_string(value_str) != FWUPD_DEVICE_FLAG_UNKNOWN) {
+		g_critical("%s private flag %s already exists as an exported flag",
+			   G_OBJECT_TYPE_NAME(self),
+			   value_str);
+		return;
+	}
+	if (fu_device_internal_flag_from_string(value_str) != FU_DEVICE_INTERNAL_FLAG_UNKNOWN) {
+		g_critical("%s private flag %s already exists as an internal flag",
+			   G_OBJECT_TYPE_NAME(self),
+			   value_str);
+		return;
+	}
+#endif
+
 	/* ensure exists */
 	if (priv->private_flag_items == NULL) {
 		priv->private_flag_items = g_ptr_array_new_with_free_func(
@@ -4156,91 +4174,75 @@ fu_device_set_battery_threshold(FuDevice *self, guint battery_threshold)
 	fu_device_ensure_battery_inhibit(self);
 }
 
-/**
- * fu_device_add_string:
- * @self: a #FuDevice
- * @idt: indent level
- * @str: a string to append to
- *
- * Add daemon-specific device metadata to an existing string.
- *
- * Since: 1.7.1
- **/
-void
-fu_device_add_string(FuDevice *self, guint idt, GString *str)
+static void
+fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 {
-	GPtrArray *children;
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_autofree gchar *tmp = NULL;
 
-	tmp = fwupd_device_to_string(FWUPD_DEVICE(self));
-	if (tmp != NULL && tmp[0] != '\0')
-		g_string_append(str, tmp);
 	for (guint i = 0; i < priv->instance_id_quirks->len; i++) {
 		const gchar *instance_id = g_ptr_array_index(priv->instance_id_quirks, i);
 		g_autofree gchar *guid = fwupd_guid_hash_string(instance_id);
 		g_autofree gchar *tmp2 = g_strdup_printf("%s ← %s", guid, instance_id);
-		fu_string_append(str, idt + 1, "Guid[quirk]", tmp2);
+		fu_string_append(str, idt, "Guid[quirk]", tmp2);
 	}
 	if (priv->alternate_id != NULL)
-		fu_string_append(str, idt + 1, "AlternateId", priv->alternate_id);
+		fu_string_append(str, idt, "AlternateId", priv->alternate_id);
 	if (priv->equivalent_id != NULL)
-		fu_string_append(str, idt + 1, "EquivalentId", priv->equivalent_id);
+		fu_string_append(str, idt, "EquivalentId", priv->equivalent_id);
 	if (priv->physical_id != NULL)
-		fu_string_append(str, idt + 1, "PhysicalId", priv->physical_id);
+		fu_string_append(str, idt, "PhysicalId", priv->physical_id);
 	if (priv->logical_id != NULL)
-		fu_string_append(str, idt + 1, "LogicalId", priv->logical_id);
+		fu_string_append(str, idt, "LogicalId", priv->logical_id);
 	if (priv->backend_id != NULL)
-		fu_string_append(str, idt + 1, "BackendId", priv->backend_id);
+		fu_string_append(str, idt, "BackendId", priv->backend_id);
 	if (priv->update_request_id != NULL)
-		fu_string_append(str, idt + 1, "UpdateRequestId", priv->update_request_id);
+		fu_string_append(str, idt, "UpdateRequestId", priv->update_request_id);
 	if (priv->proxy != NULL)
-		fu_string_append(str, idt + 1, "ProxyId", fu_device_get_id(priv->proxy));
+		fu_string_append(str, idt, "ProxyId", fu_device_get_id(priv->proxy));
 	if (priv->proxy_guid != NULL)
-		fu_string_append(str, idt + 1, "ProxyGuid", priv->proxy_guid);
+		fu_string_append(str, idt, "ProxyGuid", priv->proxy_guid);
 	if (priv->remove_delay != 0)
-		fu_string_append_ku(str, idt + 1, "RemoveDelay", priv->remove_delay);
+		fu_string_append_ku(str, idt, "RemoveDelay", priv->remove_delay);
 	if (priv->acquiesce_delay != 0)
-		fu_string_append_ku(str, idt + 1, "AcquiesceDelay", priv->acquiesce_delay);
+		fu_string_append_ku(str, idt, "AcquiesceDelay", priv->acquiesce_delay);
 	if (priv->custom_flags != NULL)
-		fu_string_append(str, idt + 1, "CustomFlags", priv->custom_flags);
+		fu_string_append(str, idt, "CustomFlags", priv->custom_flags);
 	if (priv->firmware_gtype != G_TYPE_INVALID) {
-		fu_string_append(str, idt + 1, "FirmwareGType", g_type_name(priv->firmware_gtype));
+		fu_string_append(str, idt, "FirmwareGType", g_type_name(priv->firmware_gtype));
 	}
 	if (priv->size_min > 0) {
 		g_autofree gchar *sz = g_strdup_printf("%" G_GUINT64_FORMAT, priv->size_min);
-		fu_string_append(str, idt + 1, "FirmwareSizeMin", sz);
+		fu_string_append(str, idt, "FirmwareSizeMin", sz);
 	}
 	if (priv->size_max > 0) {
 		g_autofree gchar *sz = g_strdup_printf("%" G_GUINT64_FORMAT, priv->size_max);
-		fu_string_append(str, idt + 1, "FirmwareSizeMax", sz);
+		fu_string_append(str, idt, "FirmwareSizeMax", sz);
 	}
 	if (priv->order != G_MAXINT) {
 		g_autofree gchar *order = g_strdup_printf("%i", priv->order);
-		fu_string_append(str, idt + 1, "Order", order);
+		fu_string_append(str, idt, "Order", order);
 	}
 	if (priv->priority > 0)
-		fu_string_append_ku(str, idt + 1, "Priority", priv->priority);
+		fu_string_append_ku(str, idt, "Priority", priv->priority);
 	if (priv->metadata != NULL) {
 		g_autoptr(GList) keys = g_hash_table_get_keys(priv->metadata);
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *key = l->data;
 			const gchar *value = g_hash_table_lookup(priv->metadata, key);
-			fu_string_append(str, idt + 1, key, value);
+			fu_string_append(str, idt, key, value);
 		}
 	}
 	for (guint i = 0; i < priv->possible_plugins->len; i++) {
 		const gchar *name = g_ptr_array_index(priv->possible_plugins, i);
-		fu_string_append(str, idt + 1, "PossiblePlugin", name);
+		fu_string_append(str, idt, "PossiblePlugin", name);
 	}
 	if (priv->parent_physical_ids != NULL && priv->parent_physical_ids->len > 0) {
 		g_autofree gchar *flags = fu_strjoin(",", priv->parent_physical_ids);
-		fu_string_append(str, idt + 1, "ParentPhysicalIds", flags);
+		fu_string_append(str, idt, "ParentPhysicalIds", flags);
 	}
 	if (priv->parent_backend_ids != NULL && priv->parent_backend_ids->len > 0) {
 		g_autofree gchar *flags = fu_strjoin(",", priv->parent_backend_ids);
-		fu_string_append(str, idt + 1, "ParentBackendIds", flags);
+		fu_string_append(str, idt, "ParentBackendIds", flags);
 	}
 	if (priv->internal_flags != FU_DEVICE_INTERNAL_FLAG_NONE) {
 		g_autoptr(GString) tmp2 = g_string_new("");
@@ -4253,7 +4255,7 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 		}
 		if (tmp2->len > 0)
 			g_string_truncate(tmp2, tmp2->len - 1);
-		fu_string_append(str, idt + 1, "InternalFlags", tmp2->str);
+		fu_string_append(str, idt, "InternalFlags", tmp2->str);
 	}
 	if (priv->private_flags > 0) {
 		g_autoptr(GPtrArray) tmpv = g_ptr_array_new();
@@ -4269,7 +4271,7 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 			g_ptr_array_add(tmpv, item->value_str);
 		}
 		tmps = fu_strjoin(",", tmpv);
-		fu_string_append(str, idt + 1, "PrivateFlags", tmps);
+		fu_string_append(str, idt, "PrivateFlags", tmps);
 	}
 	if (priv->inhibits != NULL) {
 		g_autoptr(GList) values = g_hash_table_get_values(priv->inhibits);
@@ -4277,13 +4279,49 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 			FuDeviceInhibit *inhibit = (FuDeviceInhibit *)l->data;
 			g_autofree gchar *val =
 			    g_strdup_printf("[%s] %s", inhibit->inhibit_id, inhibit->reason);
-			fu_string_append(str, idt + 1, "Inhibit", val);
+			fu_string_append(str, idt, "Inhibit", val);
 		}
 	}
+}
 
-	/* subclassed */
-	if (klass->to_string != NULL)
-		klass->to_string(self, idt + 1, str);
+/**
+ * fu_device_add_string:
+ * @self: a #FuDevice
+ * @idt: indent level
+ * @str: a string to append to
+ *
+ * Add daemon-specific device metadata to an existing string.
+ *
+ * Since: 1.7.1
+ **/
+void
+fu_device_add_string(FuDevice *self, guint idt, GString *str)
+{
+	GPtrArray *children;
+	gpointer klass_to_string_last = NULL;
+	g_autofree gchar *tmp = NULL;
+	g_autoptr(GList) klass_list = NULL;
+
+	/* add baseclass */
+	tmp = fwupd_device_to_string(FWUPD_DEVICE(self));
+	if (tmp != NULL && tmp[0] != '\0')
+		g_string_append(str, tmp);
+
+	/* run every unique ->to_string() in each subclass */
+	for (GType gtype = G_OBJECT_TYPE(self); gtype != G_TYPE_INVALID;
+	     gtype = g_type_parent(gtype)) {
+		FuDeviceClass *klass = g_type_class_peek(gtype);
+		if (!FU_IS_DEVICE_CLASS(klass))
+			break;
+		klass_list = g_list_prepend(klass_list, klass);
+	}
+	for (GList *l = klass_list; l != NULL; l = l->next) {
+		FuDeviceClass *klass = FU_DEVICE_CLASS(l->data);
+		if (klass->to_string != NULL && klass->to_string != klass_to_string_last) {
+			klass->to_string(self, idt + 1, str);
+			klass_to_string_last = klass->to_string;
+		}
+	}
 
 	/* print children also */
 	children = fu_device_get_children(self);
@@ -4396,7 +4434,7 @@ fu_device_get_results(FuDevice *self, GError **error)
 /**
  * fu_device_write_firmware:
  * @self: a #FuDevice
- * @fw: firmware blob
+ * @stream: #GInputStream firmware
  * @progress: a #FuProgress
  * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: (nullable): optional return location for an error
@@ -4409,7 +4447,7 @@ fu_device_get_results(FuDevice *self, GError **error)
  **/
 gboolean
 fu_device_write_firmware(FuDevice *self,
-			 GBytes *fw,
+			 GInputStream *stream,
 			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error)
@@ -4420,6 +4458,7 @@ fu_device_write_firmware(FuDevice *self,
 	g_autofree gchar *str = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -4434,7 +4473,7 @@ fu_device_write_firmware(FuDevice *self,
 
 	/* prepare (e.g. decompress) firmware */
 	fu_progress_set_status(progress, FWUPD_STATUS_DECOMPRESSING);
-	firmware = fu_device_prepare_firmware(self, fw, flags, error);
+	firmware = fu_device_prepare_firmware(self, stream, flags, error);
 	if (firmware == NULL)
 		return FALSE;
 	str = fu_firmware_to_string(firmware);
@@ -4456,6 +4495,7 @@ fu_device_write_firmware(FuDevice *self,
 			fwupd_request_set_id(request, update_request_id);
 			fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 		} else {
+			fu_device_add_request_flag(self, FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
 			fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
 		}
 		fwupd_request_set_message(request, fu_device_get_update_message(self));
@@ -4471,7 +4511,7 @@ fu_device_write_firmware(FuDevice *self,
 /**
  * fu_device_prepare_firmware:
  * @self: a #FuDevice
- * @fw: firmware blob
+ * @stream: a #GInputStream
  * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: (nullable): optional return location for an error
  *
@@ -4488,51 +4528,55 @@ fu_device_write_firmware(FuDevice *self,
  * Since: 1.1.2
  **/
 FuFirmware *
-fu_device_prepare_firmware(FuDevice *self, GBytes *fw, FwupdInstallFlags flags, GError **error)
+fu_device_prepare_firmware(FuDevice *self,
+			   GInputStream *stream,
+			   FwupdInstallFlags flags,
+			   GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(GBytes) fw_def = NULL;
+	gsize fw_size;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-	g_return_val_if_fail(fw != NULL, NULL);
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* optionally subclassed */
 	if (klass->prepare_firmware != NULL) {
-		firmware = klass->prepare_firmware(self, fw, flags, error);
+		firmware = klass->prepare_firmware(self, stream, flags, error);
 		if (firmware == NULL)
 			return NULL;
 	} else if (priv->firmware_gtype != G_TYPE_INVALID) {
 		firmware = g_object_new(priv->firmware_gtype, NULL);
-		if (!fu_firmware_parse(firmware, fw, flags, error))
+		if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 			return NULL;
 	} else {
-		firmware = fu_firmware_new_from_bytes(fw);
+		firmware = fu_firmware_new();
+		if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+			return NULL;
 	}
 
 	/* check size */
-	fw_def = fu_firmware_get_bytes(firmware, NULL);
-	if (fw_def != NULL) {
-		guint64 fw_sz = (guint64)g_bytes_get_size(fw_def);
-		if (priv->size_max > 0 && fw_sz > priv->size_max) {
+	fw_size = fu_firmware_get_size(firmware);
+	if (fw_size != 0) {
+		if (priv->size_max > 0 && fw_size > priv->size_max) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "firmware is 0x%04x bytes larger than the allowed "
 				    "maximum size of 0x%04x bytes",
-				    (guint)(fw_sz - priv->size_max),
+				    (guint)(fw_size - priv->size_max),
 				    (guint)priv->size_max);
 			return NULL;
 		}
-		if (priv->size_min > 0 && fw_sz < priv->size_min) {
+		if (priv->size_min > 0 && fw_size < priv->size_min) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "firmware is %04x bytes smaller than the allowed "
 				    "minimum size of %04x bytes",
-				    (guint)(priv->size_min - fw_sz),
+				    (guint)(priv->size_min - fw_size),
 				    (guint)priv->size_max);
 			return NULL;
 		}
@@ -5905,9 +5949,11 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progre
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_NOT_SUPPORTED,
-			    "request %s emitted but device does not set "
+			    "request %s emitted but device %s [%s] does not set "
 			    "FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE",
-			    fwupd_request_get_id(request));
+			    fwupd_request_get_id(request),
+			    fu_device_get_id(self),
+			    fu_device_get_plugin(self));
 		return FALSE;
 	}
 	if (!fwupd_request_has_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE) &&
@@ -5915,9 +5961,11 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progre
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_NOT_SUPPORTED,
-			    "request %s is not a GENERIC_MESSAGE and the device does not set "
+			    "request %s is not a GENERIC_MESSAGE and device %s [%s] does not set "
 			    "FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE",
-			    fwupd_request_get_id(request));
+			    fwupd_request_get_id(request),
+			    fu_device_get_id(self),
+			    fu_device_get_plugin(self));
 		return FALSE;
 	}
 #endif
@@ -6356,10 +6404,13 @@ static void
 fu_device_class_init(FuDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	GParamSpec *pspec;
 	object_class->finalize = fu_device_finalize;
 	object_class->get_property = fu_device_get_property;
 	object_class->set_property = fu_device_set_property;
+
+	klass_device->to_string = fu_device_to_string_impl;
 
 	/**
 	 * FuDevice::child-added:

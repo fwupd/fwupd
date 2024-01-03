@@ -169,7 +169,7 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 
 static gboolean
 fu_uf2_firmware_parse(FuFirmware *firmware,
-		      GBytes *fw,
+		      GInputStream *stream,
 		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
@@ -180,7 +180,9 @@ fu_uf2_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* read in fixed sized chunks */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 512);
+	chunks = fu_chunk_array_new_from_stream(stream, offset, 512, error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 
@@ -231,16 +233,18 @@ fu_uf2_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuUf2Firmware *self = FU_UF2_FIRMWARE(firmware);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* data first */
-	fw = fu_firmware_get_bytes_with_patches(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return NULL;
 
 	/* write in chunks */
-	chunks = fu_chunk_array_new_from_bytes(fw, fu_firmware_get_addr(firmware), 256);
+	chunks = fu_chunk_array_new_from_stream(stream, fu_firmware_get_addr(firmware), 256, error);
+	if (chunks == NULL)
+		return NULL;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) tmp = NULL;

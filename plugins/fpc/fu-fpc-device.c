@@ -417,7 +417,7 @@ fu_fpc_device_write_firmware(FuDevice *device,
 			     GError **error)
 {
 	FuFpcDevice *self = FU_FPC_DEVICE(device);
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -428,8 +428,8 @@ fu_fpc_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "check");
 
 	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* don't auto-boot firmware */
@@ -444,7 +444,9 @@ fu_fpc_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* build packets */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, self->max_block_size);
+	chunks = fu_chunk_array_new_from_stream(stream, 0x00, self->max_block_size, error);
+	if (chunks == NULL)
+		return FALSE;
 
 	/* write each block */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {

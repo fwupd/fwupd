@@ -94,7 +94,7 @@ fu_jabra_gnp_firmware_parse_info(FuJabraGnpFirmware *self, XbSilo *silo, GError 
 
 static gboolean
 fu_jabra_gnp_firmware_parse(FuFirmware *firmware,
-			    GBytes *fw,
+			    GInputStream *stream,
 			    gsize offset,
 			    FwupdInstallFlags flags,
 			    GError **error)
@@ -113,7 +113,7 @@ fu_jabra_gnp_firmware_parse(FuFirmware *firmware,
 				       FU_ARCHIVE_FORMAT_ZIP);
 	fu_archive_firmware_set_compression(FU_ARCHIVE_FIRMWARE(firmware_archive),
 					    FU_ARCHIVE_COMPRESSION_NONE);
-	if (!fu_firmware_parse_full(firmware_archive, fw, offset, flags, error))
+	if (!fu_firmware_parse_stream(firmware_archive, stream, offset, flags, error))
 		return FALSE;
 
 	/* parse the XML metadata */

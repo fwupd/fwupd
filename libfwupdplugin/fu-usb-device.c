@@ -537,8 +537,10 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 			g_autoptr(FuFirmware) ds20 = NULL;
 			g_autofree gchar *str = NULL;
 			g_autoptr(GError) error_ds20 = NULL;
+			g_autoptr(GInputStream) stream = NULL;
 
-			ds20 = fu_firmware_new_from_gtypes(extra,
+			stream = g_memory_input_stream_new_from_bytes(extra);
+			ds20 = fu_firmware_new_from_gtypes(stream,
 							   0x0,
 							   FWUPD_INSTALL_FLAG_NONE,
 							   &error_ds20,

@@ -8,10 +8,6 @@
 
 #include "config.h"
 
-#ifdef HAVE_GIO_UNIX
-#include <gio/gunixinputstream.h>
-#endif
-
 #include "fwupd-error.h"
 
 #include "fu-bytes.h"
@@ -93,41 +89,6 @@ fu_bytes_get_contents(const gchar *filename, GError **error)
 		filename,
 		(guint)g_mapped_file_get_length(mapped_file));
 	return g_mapped_file_get_bytes(mapped_file);
-}
-
-/**
- * fu_bytes_get_contents_fd:
- * @fd: a file descriptor
- * @count: the maximum number of bytes to read
- * @error: (nullable): optional return location for an error
- *
- * Reads a blob from a specific file descriptor.
- *
- * Note: this will close the fd when done
- *
- * Returns: (transfer full): a #GBytes, or %NULL
- *
- * Since: 1.8.2
- **/
-GBytes *
-fu_bytes_get_contents_fd(gint fd, gsize count, GError **error)
-{
-#ifdef HAVE_GIO_UNIX
-	g_autoptr(GInputStream) stream = NULL;
-
-	g_return_val_if_fail(fd > 0, NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	/* read the entire fd to a data blob */
-	stream = g_unix_input_stream_new(fd, TRUE);
-	return fu_input_stream_read_bytes(stream, 0, count, error);
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Not supported as <glib-unix.h> is unavailable");
-	return NULL;
-#endif
 }
 
 /**

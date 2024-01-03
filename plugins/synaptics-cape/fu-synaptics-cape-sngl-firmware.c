@@ -21,21 +21,21 @@ G_DEFINE_TYPE(FuSynapticsCapeSnglFirmware,
 
 static gboolean
 fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
-				      GBytes *fw,
+				      GInputStream *stream,
 				      gsize offset,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
 	FuSynapticsCapeSnglFirmware *self = FU_SYNAPTICS_CAPE_SNGL_FIRMWARE(firmware);
-	gsize bufsz = 0;
+	gsize streamsz = 0;
 	guint16 num_fw_file;
-	guint32 crc_calc;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GByteArray) st = NULL;
 	g_autofree gchar *version_str = NULL;
 
 	/* sanity check */
-	if ((guint32)bufsz % 4 != 0) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if ((guint32)streamsz % 4 != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -44,25 +44,34 @@ fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* unpack */
-	st = fu_struct_synaptics_cape_sngl_hdr_parse_bytes(fw, offset, error);
+	st = fu_struct_synaptics_cape_sngl_hdr_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
-	if (fu_struct_synaptics_cape_sngl_hdr_get_file_size(st) != bufsz) {
+	if (fu_struct_synaptics_cape_sngl_hdr_get_file_size(st) != streamsz) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "file size is incorrect");
 		return FALSE;
 	}
-	crc_calc = fu_crc32(buf + 8, bufsz - 8);
-	if (crc_calc != fu_struct_synaptics_cape_sngl_hdr_get_file_crc(st)) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "CRC did not match, got 0x%x, expected 0x%x",
-			    fu_struct_synaptics_cape_sngl_hdr_get_file_crc(st),
-			    crc_calc);
-		return FALSE;
+
+	/* check CRC */
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+		guint32 crc_calc = 0;
+		g_autoptr(GInputStream) stream_tmp = NULL;
+
+		stream_tmp = fu_partial_input_stream_new(stream, 8, streamsz - 8);
+		if (!fu_input_stream_compute_crc32(stream_tmp, &crc_calc, 0xEDB88320, error))
+			return FALSE;
+		if (crc_calc != fu_struct_synaptics_cape_sngl_hdr_get_file_crc(st)) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "CRC did not match, got 0x%x, expected 0x%x",
+				    fu_struct_synaptics_cape_sngl_hdr_get_file_crc(st),
+				    crc_calc);
+			return FALSE;
+		}
 	}
 
 	fu_synaptics_cape_firmware_set_vid(FU_SYNAPTICS_CAPE_FIRMWARE(self),

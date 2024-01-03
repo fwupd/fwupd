@@ -10,6 +10,8 @@
 #include "fu-bytes.h"
 #include "fu-efi-firmware-file.h"
 #include "fu-efi-firmware-filesystem.h"
+#include "fu-input-stream.h"
+#include "fu-partial-input-stream.h"
 
 /**
  * FuEfiFirmwareFilesystem:
@@ -26,22 +28,25 @@ G_DEFINE_TYPE(FuEfiFirmwareFilesystem, fu_efi_firmware_filesystem, FU_TYPE_FIRMW
 
 static gboolean
 fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
-				 GBytes *fw,
+				 GInputStream *stream,
 				 gsize offset,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
-	gsize bufsz = 0x0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-
-	while (offset + 0x18 < bufsz) {
+	gsize streamsz = 0;
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	while (offset + 0x18 < streamsz) {
 		g_autoptr(FuFirmware) img = fu_efi_firmware_file_new();
-		g_autoptr(GBytes) fw_tmp = NULL;
+		g_autoptr(GInputStream) stream_tmp = NULL;
 		gboolean is_freespace = TRUE;
 
 		/* ignore free space */
 		for (guint i = 0; i < 0x18; i++) {
-			if (buf[offset + i] != 0xff) {
+			guint8 tmp = 0;
+			if (!fu_input_stream_read_u8(stream, offset + i, &tmp, error))
+				return FALSE;
+			if (tmp != 0xff) {
 				is_freespace = FALSE;
 				break;
 			}
@@ -49,10 +54,12 @@ fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
 		if (is_freespace)
 			break;
 
-		fw_tmp = fu_bytes_new_offset(fw, offset, bufsz - offset, error);
-		if (fw_tmp == NULL)
-			return FALSE;
-		if (!fu_firmware_parse(img, fw_tmp, flags | FWUPD_INSTALL_FLAG_NO_SEARCH, error)) {
+		stream_tmp = fu_partial_input_stream_new(stream, offset, streamsz - offset);
+		if (!fu_firmware_parse_stream(img,
+					      stream_tmp,
+					      0x0,
+					      flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      error)) {
 			g_prefix_error(error, "failed to parse EFI file at 0x%x: ", (guint)offset);
 			return FALSE;
 		}

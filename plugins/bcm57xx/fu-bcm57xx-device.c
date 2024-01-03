@@ -34,57 +34,24 @@
 
 struct _FuBcm57xxDevice {
 	FuUdevDevice parent_instance;
-	FuBcm57xxRecoveryDevice *recovery;
 	gchar *ethtool_iface;
 	int ethtool_fd;
 };
 
 G_DEFINE_TYPE(FuBcm57xxDevice, fu_bcm57xx_device, FU_TYPE_UDEV_DEVICE)
 
+enum { PROP_0, PROP_IFACE, PROP_LAST };
+
 static void
 fu_bcm57xx_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE(device);
-	FU_DEVICE_CLASS(fu_bcm57xx_device_parent_class)->to_string(device, idt, str);
 	fu_string_append(str, idt, "EthtoolIface", self->ethtool_iface);
 }
 
 static gboolean
 fu_bcm57xx_device_probe(FuDevice *device, GError **error)
 {
-	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE(device);
-	g_autofree gchar *fn = NULL;
-	g_autoptr(GPtrArray) ifaces = NULL;
-
-	/* only enumerate number 0 */
-	if (fu_udev_device_get_number(FU_UDEV_DEVICE(device)) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "only device 0 supported on multi-device card");
-		return FALSE;
-	}
-
-	/* we need this even for non-recovery to reset APE */
-	fu_device_set_context(FU_DEVICE(self->recovery), fu_device_get_context(FU_DEVICE(self)));
-	fu_device_incorporate(FU_DEVICE(self->recovery), FU_DEVICE(self));
-	if (!fu_device_probe(FU_DEVICE(self->recovery), error))
-		return FALSE;
-
-	/* only if has an interface */
-	fn = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)), "net", NULL);
-	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
-		g_debug("waiting for net devices to appear");
-		fu_device_sleep(device, 50); /* ms */
-	}
-	ifaces = fu_path_glob(fn, "en*", NULL);
-	if (ifaces == NULL || ifaces->len == 0) {
-		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(self->recovery));
-	} else {
-		self->ethtool_iface = g_path_get_basename(g_ptr_array_index(ifaces, 0));
-	}
-
-	/* success */
 	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error);
 }
 
@@ -300,40 +267,6 @@ fu_bcm57xx_device_nvram_check(FuBcm57xxDevice *self, GError **error)
 #endif
 }
 
-static gboolean
-fu_bcm57xx_device_activate(FuDevice *device, FuProgress *progress, GError **error)
-{
-	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE(device);
-	g_autoptr(FuDeviceLocker) locker1 = NULL;
-	g_autoptr(FuDeviceLocker) locker2 = NULL;
-
-	/* the only way to do this is using the mmap method */
-	locker2 = fu_device_locker_new_full(FU_DEVICE(self->recovery),
-					    (FuDeviceLockerFunc)fu_device_detach,
-					    (FuDeviceLockerFunc)fu_device_attach,
-					    error);
-	if (locker2 == NULL)
-		return FALSE;
-
-	/* open */
-	locker1 = fu_device_locker_new(FU_DEVICE(self->recovery), error);
-	if (locker1 == NULL)
-		return FALSE;
-
-	/* activate, causing APE reset, then close, then attach */
-	if (!fu_device_activate(FU_DEVICE(self->recovery), progress, error))
-		return FALSE;
-
-	/* ensure we attach before we close */
-	if (!fu_device_locker_close(locker2, error))
-		return FALSE;
-
-	/* wait for the device to restart before calling reload() */
-	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
-	fu_device_sleep_full(device, 5000, progress); /* ms */
-	return TRUE;
-}
-
 static GBytes *
 fu_bcm57xx_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
@@ -386,7 +319,7 @@ fu_bcm57xx_device_read_firmware(FuDevice *device, FuProgress *progress, GError *
 
 static FuFirmware *
 fu_bcm57xx_device_prepare_firmware(FuDevice *device,
-				   GBytes *fw,
+				   GInputStream *stream,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
@@ -403,7 +336,7 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 	g_autoptr(GPtrArray) images = NULL;
 
 	/* try to parse NVRAM, stage1 or APE */
-	if (!fu_firmware_parse(firmware_tmp, fw, flags, error)) {
+	if (!fu_firmware_parse_stream(firmware_tmp, stream, 0x0, flags, error)) {
 		g_prefix_error(error, "failed to parse new firmware: ");
 		return NULL;
 	}
@@ -510,7 +443,6 @@ fu_bcm57xx_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "build-img");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80, "write-chunks");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 19, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2, NULL);
 
 	/* build the images into one linear blob of the correct size */
 	blob = fu_firmware_write(firmware, error);
@@ -533,10 +465,23 @@ fu_bcm57xx_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	/* reset APE */
-	if (!fu_device_activate(device, fu_progress_get_child(progress), error))
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_bcm57xx_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+{
+	g_autoptr(FwupdRequest) request = fwupd_request_new();
+
+	/* APE reset cannot be done at runtime */
+	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_POST);
+	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
+	fwupd_request_set_message(request,
+				  "After shutting down, disconnect the computer from all "
+				  "power sources for 30 seconds to complete the update.");
+	if (!fu_device_emit_request(device, request, progress, error))
 		return FALSE;
-	fu_progress_step_done(progress);
 
 	/* success */
 	return TRUE;
@@ -547,16 +492,6 @@ fu_bcm57xx_device_setup(FuDevice *device, GError **error)
 {
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE(device);
 	guint32 fwversion = 0;
-
-	/* device is in recovery mode */
-	if (self->ethtool_iface == NULL) {
-		g_autoptr(FuDeviceLocker) locker = NULL;
-		g_info("device in recovery mode, use alternate device");
-		locker = fu_device_locker_new(FU_DEVICE(self->recovery), error);
-		if (locker == NULL)
-			return FALSE;
-		return fu_device_setup(FU_DEVICE(self->recovery), error);
-	}
 
 	/* check the EEPROM size */
 	if (!fu_bcm57xx_device_nvram_check(self, error))
@@ -658,17 +593,48 @@ fu_bcm57xx_device_set_progress(FuDevice *self, FuProgress *progress)
 }
 
 static void
+fu_bcm57xx_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE(object);
+	switch (prop_id) {
+	case PROP_IFACE:
+		g_value_set_string(value, self->ethtool_iface);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fu_bcm57xx_device_set_property(GObject *object,
+			       guint prop_id,
+			       const GValue *value,
+			       GParamSpec *pspec)
+{
+	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE(object);
+	switch (prop_id) {
+	case PROP_IFACE:
+		g_free(self->ethtool_iface);
+		self->ethtool_iface = g_value_dup_string(value);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
 fu_bcm57xx_device_init(FuBcm57xxDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN);
+	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.broadcom.bcm57xx");
 	fu_device_add_icon(FU_DEVICE(self), "network-wired");
 
 	/* other values are set from a quirk */
 	fu_device_set_firmware_size(FU_DEVICE(self), BCM_FIRMWARE_SIZE);
-
-	/* used for recovery in case of ethtool failure and for APE reset */
-	self->recovery = fu_bcm57xx_recovery_device_new();
 }
 
 static void
@@ -683,18 +649,30 @@ static void
 fu_bcm57xx_device_class_init(FuBcm57xxDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	GParamSpec *pspec;
+
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	object_class->get_property = fu_bcm57xx_device_get_property;
+	object_class->set_property = fu_bcm57xx_device_set_property;
 	object_class->finalize = fu_bcm57xx_device_finalize;
 	klass_device->prepare_firmware = fu_bcm57xx_device_prepare_firmware;
 	klass_device->setup = fu_bcm57xx_device_setup;
 	klass_device->reload = fu_bcm57xx_device_setup;
 	klass_device->open = fu_bcm57xx_device_open;
 	klass_device->close = fu_bcm57xx_device_close;
-	klass_device->activate = fu_bcm57xx_device_activate;
 	klass_device->write_firmware = fu_bcm57xx_device_write_firmware;
+	klass_device->attach = fu_bcm57xx_device_attach;
 	klass_device->read_firmware = fu_bcm57xx_device_read_firmware;
 	klass_device->dump_firmware = fu_bcm57xx_device_dump_firmware;
 	klass_device->probe = fu_bcm57xx_device_probe;
 	klass_device->to_string = fu_bcm57xx_device_to_string;
 	klass_device->set_progress = fu_bcm57xx_device_set_progress;
+
+	pspec =
+	    g_param_spec_string("iface",
+				NULL,
+				NULL,
+				NULL,
+				G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_IFACE, pspec);
 }

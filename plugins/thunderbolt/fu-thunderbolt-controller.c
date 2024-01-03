@@ -67,10 +67,6 @@ static void
 fu_thunderbolt_controller_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuThunderboltController *self = FU_THUNDERBOLT_CONTROLLER(device);
-
-	/* FuThunderboltDevice->to_string */
-	FU_DEVICE_CLASS(fu_thunderbolt_controller_parent_class)->to_string(device, idt, str);
-
 	fu_string_append(str, idt, "DeviceType", fu_thunderbolt_controller_kind_to_string(self));
 	fu_string_append_kb(str, idt, "SafeMode", self->safe_mode);
 	fu_string_append_kb(str, idt, "NativeMode", self->is_native);
@@ -105,8 +101,8 @@ fu_thunderbolt_controller_read_status_block(FuThunderboltController *self, GErro
 {
 	gsize nr_chunks;
 	g_autoptr(GFile) nvmem = NULL;
-	g_autoptr(GBytes) controller_fw = NULL;
 	g_autoptr(GInputStream) istr = NULL;
+	g_autoptr(GInputStream) istr_partial = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 
 	nvmem = fu_thunderbolt_device_find_nvmem(FU_THUNDERBOLT_DEVICE(self), TRUE, error);
@@ -118,10 +114,8 @@ fu_thunderbolt_controller_read_status_block(FuThunderboltController *self, GErro
 	istr = G_INPUT_STREAM(g_file_read(nvmem, NULL, error));
 	if (istr == NULL)
 		return FALSE;
-	controller_fw = g_input_stream_read_bytes(istr, nr_chunks * FU_TBT_CHUNK_SZ, NULL, error);
-	if (controller_fw == NULL)
-		return FALSE;
-	firmware = fu_firmware_new_from_gtypes(controller_fw,
+	istr_partial = fu_partial_input_stream_new(istr, 0, nr_chunks * FU_TBT_CHUNK_SZ);
+	firmware = fu_firmware_new_from_gtypes(istr_partial,
 					       0x0,
 					       FWUPD_INSTALL_FLAG_NO_SEARCH,
 					       error,

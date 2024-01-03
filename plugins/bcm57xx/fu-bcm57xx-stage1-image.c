@@ -17,29 +17,27 @@ G_DEFINE_TYPE(FuBcm57xxStage1Image, fu_bcm57xx_stage1_image, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_bcm57xx_stage1_image_parse(FuFirmware *image,
-			      GBytes *fw,
+			      GInputStream *stream,
 			      gsize offset,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {
-	gsize bufsz = 0x0;
+	gsize streamsz = 0;
 	guint32 fwversion = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	g_autoptr(GBytes) fw_nocrc = NULL;
+	g_autoptr(GInputStream) stream_nocrc = NULL;
 
 	/* verify CRC */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		if (!fu_bcm57xx_verify_crc(fw, error))
+		if (!fu_bcm57xx_verify_crc(stream, error))
 			return FALSE;
 	}
 
 	/* get version number */
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    BCM_NVRAM_STAGE1_VERSION,
-				    &fwversion,
-				    G_BIG_ENDIAN,
-				    error))
+	if (!fu_input_stream_read_u32(stream,
+				      BCM_NVRAM_STAGE1_VERSION,
+				      &fwversion,
+				      G_BIG_ENDIAN,
+				      error))
 		return FALSE;
 	if (fwversion != 0x0) {
 		g_autofree gchar *tmp = NULL;
@@ -50,12 +48,11 @@ fu_bcm57xx_stage1_image_parse(FuFirmware *image,
 		guint32 veraddr = 0x0;
 
 		/* fall back to the optional string, e.g. '5719-v1.43' */
-		if (!fu_memread_uint32_safe(buf,
-					    bufsz,
-					    BCM_NVRAM_STAGE1_VERADDR,
-					    &veraddr,
-					    G_BIG_ENDIAN,
-					    error))
+		if (!fu_input_stream_read_u32(stream,
+					      BCM_NVRAM_STAGE1_VERADDR,
+					      &veraddr,
+					      G_BIG_ENDIAN,
+					      error))
 			return FALSE;
 		if (veraddr != 0x0) {
 			guint32 bufver[4] = {'\0'};
@@ -69,14 +66,13 @@ fu_bcm57xx_stage1_image_parse(FuFirmware *image,
 					    (guint)BCM_PHYS_ADDR_DEFAULT);
 				return FALSE;
 			}
-			if (!fu_memcpy_safe((guint8 *)bufver,
-					    sizeof(bufver),
-					    0x0, /* dst */
-					    buf,
-					    bufsz,
-					    veraddr - BCM_PHYS_ADDR_DEFAULT, /* src */
-					    sizeof(bufver),
-					    error))
+			if (!fu_input_stream_read_safe(stream,
+						       (guint8 *)bufver,
+						       sizeof(bufver),
+						       0x0,				/* dst */
+						       veraddr - BCM_PHYS_ADDR_DEFAULT, /* src */
+						       sizeof(bufver),
+						       error))
 				return FALSE;
 			veritem = fu_bcm57xx_veritem_new((guint8 *)bufver, sizeof(bufver));
 			if (veritem != NULL)
@@ -84,11 +80,10 @@ fu_bcm57xx_stage1_image_parse(FuFirmware *image,
 		}
 	}
 
-	fw_nocrc = fu_bytes_new_offset(fw, 0x0, g_bytes_get_size(fw) - sizeof(guint32), error);
-	if (fw_nocrc == NULL)
+	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	fu_firmware_set_bytes(image, fw_nocrc);
-	return TRUE;
+	stream_nocrc = fu_partial_input_stream_new(stream, 0x0, streamsz - sizeof(guint32));
+	return fu_firmware_set_stream(image, stream_nocrc, error);
 }
 
 static GByteArray *

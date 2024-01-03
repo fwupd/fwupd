@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-synaptics-mst-common.h"
 #include "fu-synaptics-mst-device.h"
 #include "fu-synaptics-mst-firmware.h"
 #include "fu-synaptics-mst-plugin.h"
@@ -58,7 +59,7 @@ fu_synaptics_mst_plugin_backend_device_added(FuPlugin *plugin,
 static gboolean
 fu_synaptics_mst_plugin_write_firmware(FuPlugin *plugin,
 				       FuDevice *device,
-				       GBytes *blob_fw,
+				       GInputStream *stream,
 				       FuProgress *progress,
 				       FwupdInstallFlags flags,
 				       GError **error)
@@ -66,7 +67,7 @@ fu_synaptics_mst_plugin_write_firmware(FuPlugin *plugin,
 	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_device_write_firmware(device, blob_fw, progress, flags, error))
+	if (!fu_device_write_firmware(device, stream, progress, flags, error))
 		return FALSE;
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART))
 		fu_plugin_device_remove(plugin, device);

@@ -38,14 +38,14 @@ fu_security_attr_add_bios_target_value(FwupdSecurityAttr *attr,
 	FuSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	FwupdBiosSetting *bios_setting;
 	GPtrArray *values;
+	const gchar *current;
 
 	bios_setting = fu_context_get_bios_setting(priv->ctx, id);
 	if (bios_setting == NULL)
 		return;
+	current = fwupd_bios_setting_get_current_value(bios_setting);
 	fwupd_security_attr_set_bios_setting_id(attr, fwupd_bios_setting_get_id(bios_setting));
-	fwupd_security_attr_set_bios_setting_current_value(
-	    attr,
-	    fwupd_bios_setting_get_current_value(bios_setting));
+	fwupd_security_attr_set_bios_setting_current_value(attr, current);
 	if (fwupd_bios_setting_get_kind(bios_setting) != FWUPD_BIOS_SETTING_KIND_ENUMERATION)
 		return;
 	if (fwupd_bios_setting_get_read_only(bios_setting))
@@ -57,8 +57,12 @@ fu_security_attr_add_bios_target_value(FwupdSecurityAttr *attr,
 		if (g_strrstr(lower, needle)) {
 			fwupd_security_attr_set_bios_setting_target_value(attr, possible);
 			/* this is built-in to the engine */
-			fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_FIX);
-			fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO);
+			if (g_strcmp0(possible, current) != 0) {
+				fwupd_security_attr_add_flag(attr,
+							     FWUPD_SECURITY_ATTR_FLAG_CAN_FIX);
+				fwupd_security_attr_add_flag(attr,
+							     FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO);
+			}
 			return;
 		}
 	}

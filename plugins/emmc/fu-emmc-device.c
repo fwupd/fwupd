@@ -78,7 +78,6 @@ static void
 fu_emmc_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuEmmcDevice *self = FU_EMMC_DEVICE(device);
-	FU_DEVICE_CLASS(fu_emmc_device_parent_class)->to_string(device, idt, str);
 	fu_string_append_ku(str, idt, "SectorSize", self->sect_size);
 }
 
@@ -329,24 +328,25 @@ fu_emmc_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_emmc_device_prepare_firmware(FuDevice *device,
-				GBytes *fw,
+				GInputStream *stream,
 				FwupdInstallFlags flags,
 				GError **error)
 {
 	FuEmmcDevice *self = FU_EMMC_DEVICE(device);
-	gsize fw_size = g_bytes_get_size(fw);
+	g_autoptr(FuFirmware) firmware = fu_firmware_new();
 
 	/* check alignment */
-	if ((fw_size % self->sect_size) > 0) {
+	if (fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+		return NULL;
+	if ((fu_firmware_get_size(firmware) % self->sect_size) > 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "firmware data size (%" G_GSIZE_FORMAT ") is not aligned",
-			    fw_size);
+			    fu_firmware_get_size(firmware));
 		return NULL;
 	}
-
-	return fu_firmware_new_from_bytes(fw);
+	return g_steal_pointer(&firmware);
 }
 
 static gboolean
@@ -357,7 +357,6 @@ fu_emmc_device_write_firmware(FuDevice *device,
 			      GError **error)
 {
 	FuEmmcDevice *self = FU_EMMC_DEVICE(device);
-	gsize fw_size = 0;
 	guint32 arg;
 	guint32 sect_done = 0;
 	guint32 sector_size;
@@ -365,7 +364,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	guint8 ext_csd[512];
 	guint failure_cnt = 0;
 	g_autofree struct mmc_ioc_multi_cmd *multi_cmd = NULL;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
@@ -378,10 +377,9 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	if (!fu_emmc_read_extcsd(FU_EMMC_DEVICE(device), ext_csd, sizeof(ext_csd), error))
 		return FALSE;
 
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
-	fw_size = g_bytes_get_size(fw);
 
 	sector_size = self->write_block_size ?: self->sect_size;
 
@@ -425,7 +423,9 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* build packets */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, sector_size);
+	chunks = fu_chunk_array_new_from_stream(stream, 0x00, sector_size, error);
+	if (chunks == NULL)
+		return FALSE;
 	while (failure_cnt < 3) {
 		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 			g_autoptr(FuChunk) chk = NULL;
@@ -486,16 +486,18 @@ fu_emmc_device_write_firmware(FuDevice *device,
 
 	/* sanity check */
 	if (check_sect_done) {
+		gsize streamsz = 0;
 		gsize total_done = (gsize)sect_done * (gsize)self->sect_size;
-
-		if (total_done != fw_size) {
+		if (!fu_input_stream_size(stream, &streamsz, error))
+			return FALSE;
+		if (total_done != streamsz) {
 			g_set_error(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_FAILED,
 				    "firmware size and number of sectors written "
 				    "mismatch (%" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT "):",
 				    total_done,
-				    fw_size);
+				    streamsz);
 			return FALSE;
 		}
 	}

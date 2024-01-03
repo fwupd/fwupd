@@ -1,32 +1,31 @@
+---
+title: fwupdate compatibility layer
+---
+
 % fwupdate(1) {{PACKAGE_VERSION}} | fwupdate man page
 
-NAME
-====
+## NAME
 
 **fwupdate** — debugging utility for UEFI firmware updates
 
-SYNOPSIS
-========
+## SYNOPSIS
 
 | **fwupdate** \[CMD]
 
-DESCRIPTION
-===========
+## DESCRIPTION
 
 **fwupdate** is a deprecated tool that allows deploying capsule updates.
 
-OPTIONS
-=======
+## OPTIONS
 
 The fwupdate command takes various options depending on the action.
 Run **fwupdate --help** for the full list.
 
-BUGS
-====
+## BUGS
 
 See GitHub Issues: <https://github.com/fwupd/fwupd/issues>
 
-SEE ALSO
-========
+## SEE ALSO
 
-**fwupdmr(1)**, **fwupdtool(1)**
+<fwupdmr(1)>
+<fwupdtool(1)>

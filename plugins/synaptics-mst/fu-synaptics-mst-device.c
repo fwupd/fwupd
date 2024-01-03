@@ -101,21 +101,16 @@ fu_synaptics_mst_device_udev_device_notify_cb(FuUdevDevice *udev_device,
 					      gpointer user_data)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(user_data);
-	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) != NULL) {
-		fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
-					 FU_UDEV_DEVICE_FLAG_OPEN_READ |
-					     FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
-					     FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
-	} else {
-		fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
-					 FU_UDEV_DEVICE_FLAG_OPEN_READ |
-					     FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
-	}
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) != NULL)
+		fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
 }
 
 static void
 fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 {
+	self->family = FU_SYNAPTICS_MST_FAMILY_UNKNOWN;
 	fu_device_add_protocol(FU_DEVICE(self), "com.synaptics.mst");
 	fu_device_set_vendor(FU_DEVICE(self), "Synaptics");
 	fu_device_add_vendor_id(FU_DEVICE(self), "DRM_DP_AUX_DEV:0x06CB");
@@ -143,10 +138,6 @@ static void
 fu_synaptics_mst_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
-
-	/* FuDpauxDevice->to_string */
-	FU_DEVICE_CLASS(fu_synaptics_mst_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append(str, idt, "DeviceKind", self->device_kind);
 	if (self->family == FU_SYNAPTICS_MST_FAMILY_PANAMERA)
 		fu_string_append_kx(str, idt, "ActiveBank", self->active_bank);
@@ -1349,15 +1340,18 @@ fu_synaptics_mst_device_restart(FuSynapticsMstDevice *self, GError **error)
 
 static FuFirmware *
 fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
-					 GBytes *fw,
+					 GInputStream *stream,
 					 FwupdInstallFlags flags,
 					 GError **error)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_synaptics_mst_firmware_new();
 
+	/* set chip family to use correct board ID offset */
+	fu_synaptics_mst_firmware_set_family(FU_SYNAPTICS_MST_FIRMWARE(firmware), self->family);
+
 	/* check firmware and board ID match */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0 &&
 	    !fu_device_has_private_flag(device, FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID)) {
@@ -1373,7 +1367,7 @@ fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
 			return NULL;
 		}
 	}
-	return fu_firmware_new_from_bytes(fw);
+	return g_steal_pointer(&firmware);
 }
 
 static gboolean
@@ -1596,6 +1590,7 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* not a correct device */
 	if (fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)) != SYNAPTICS_IEEE_OUI) {
@@ -1629,9 +1624,18 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	locker = fu_device_locker_new_full(self,
 					   (FuDeviceLockerFunc)fu_synaptics_mst_device_enable_rc,
 					   (FuDeviceLockerFunc)fu_synaptics_mst_device_disable_rc,
-					   error);
-	if (locker == NULL)
+					   &error_local);
+	if (locker == NULL) {
+		if (g_strcmp0(fu_device_get_name(device), "DPMST") == 0) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_NOT_SUPPORTED,
+					    "downstream endpoint not supported");
+		} else {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+		}
 		return FALSE;
+	}
 
 	/* read firmware version: the third byte is vendor-specific usage */
 	if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(self),

@@ -11,7 +11,7 @@ enum GoodixtpIcType {
     Yellowstone,
 }
 
-#[derive(ParseBytes)]
+#[derive(ParseStream)]
 struct GoodixBrlbHdr {
     firmware_size: u32le,
     checksum: u32le,
@@ -21,7 +21,7 @@ struct GoodixBrlbHdr {
     _unknown: [u8; 12],
 }
 
-#[derive(ParseBytes)]
+#[derive(ParseStream)]
 struct GoodixBrlbImg {
     kind: u8,
     size: u32le,
@@ -29,7 +29,7 @@ struct GoodixBrlbImg {
     _unknown: [u8; 1],
 }
 
-#[derive(ParseBytes)]
+#[derive(ParseStream)]
 struct GoodixGtx8Hdr {
     firmware_size: u32be,
     checksum: u16be,
@@ -39,7 +39,7 @@ struct GoodixGtx8Hdr {
     _unknown: [u8; 4],
 }
 
-#[derive(ParseBytes)]
+#[derive(ParseStream)]
 struct GoodixGtx8Img {
     kind: u8,
     size: u32be,

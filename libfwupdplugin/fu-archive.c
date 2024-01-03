@@ -19,6 +19,8 @@
 #include "fwupd-error.h"
 
 #include "fu-archive.h"
+#include "fu-bytes.h"
+#include "fu-input-stream.h"
 
 /**
  * FuArchive:
@@ -365,6 +367,30 @@ fu_archive_new(GBytes *data, FuArchiveFlags flags, GError **error)
 			return NULL;
 	}
 	return g_steal_pointer(&self);
+}
+
+/**
+ * fu_archive_new_stream:
+ * @stream: a #GInputStream
+ * @flags: archive flags, e.g. %FU_ARCHIVE_FLAG_NONE
+ * @error: (nullable): optional return location for an error
+ *
+ * Parses @stream as an archive and decompresses all files to memory blobs.
+ *
+ * Returns: a #FuArchive, or %NULL if the archive was invalid in any way.
+ *
+ * Since: 2.0.0
+ **/
+FuArchive *
+fu_archive_new_stream(GInputStream *stream, FuArchiveFlags flags, GError **error)
+{
+	g_autoptr(GBytes) fw = NULL;
+	g_return_val_if_fail(G_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+	if (fw == NULL)
+		return NULL;
+	return fu_archive_new(fw, flags, error);
 }
 
 #ifdef HAVE_LIBARCHIVE

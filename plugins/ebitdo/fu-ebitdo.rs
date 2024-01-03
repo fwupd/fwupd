@@ -1,7 +1,7 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(New, ParseBytes)]
+#[derive(New, ParseStream)]
 struct EbitdoHdr {
     version: u32le,
     destination_addr: u32le,

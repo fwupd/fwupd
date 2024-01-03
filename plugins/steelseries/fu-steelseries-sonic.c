@@ -1003,7 +1003,7 @@ fu_steelseries_sonic_parse_firmware(FuFirmware *firmware, FwupdInstallFlags flag
 
 static FuFirmware *
 fu_steelseries_sonic_prepare_firmware(FuDevice *device,
-				      GBytes *fw,
+				      GInputStream *stream,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
@@ -1014,7 +1014,7 @@ fu_steelseries_sonic_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware = NULL;
 
 	firmware = fu_archive_firmware_new();
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
 	/* mouse */

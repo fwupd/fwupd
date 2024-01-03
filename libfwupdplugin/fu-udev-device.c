@@ -455,6 +455,12 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		}
 	}
 
+	if (g_strcmp0(priv->subsystem, "drm_dp_aux_dev") == 0) {
+		tmp = g_udev_device_get_sysfs_attr(priv->udev_device, "name");
+		if (tmp != NULL && fu_device_get_name(device) == NULL)
+			fu_device_set_name(device, tmp);
+	}
+
 	/* set the version if the revision has been set */
 	if (fu_device_get_version(device) == NULL &&
 	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
@@ -965,7 +971,6 @@ fu_udev_device_get_dev(FuUdevDevice *self)
 		g_warning("GUdevDevice is not available post-probe, use "
 			  "FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE in %s plugin to opt-out: %s",
 			  fu_device_get_plugin(FU_DEVICE(self)),
-			  fu_device_get_id(FU_DEVICE(self)),
 			  str);
 	}
 #endif
@@ -1531,34 +1536,20 @@ fu_udev_device_set_io_channel(FuUdevDevice *self, FuIOChannel *io_channel)
 }
 
 /**
- * fu_udev_device_set_flags:
+ * fu_udev_device_remove_flag:
  * @self: a #FuUdevDevice
- * @flags: udev device flags, e.g. %FU_UDEV_DEVICE_FLAG_OPEN_READ
+ * @flag: udev device flag, e.g. %FU_UDEV_DEVICE_FLAG_OPEN_READ
  *
- * Sets the parameters to use when opening the device.
+ * Removes a parameters flag.
  *
- * For example %FU_UDEV_DEVICE_FLAG_OPEN_READ means that fu_device_open()
- * would use `O_RDONLY` rather than `O_RDWR` which is the default.
- *
- * Since: 1.3.6
+ * Since: 2.0.0
  **/
 void
-fu_udev_device_set_flags(FuUdevDevice *self, FuUdevDeviceFlags flags)
+fu_udev_device_remove_flag(FuUdevDevice *self, FuUdevDeviceFlags flag)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
-	priv->flags = flags;
-
-#ifdef HAVE_GUDEV
-	/* overwrite */
-	if (flags & FU_UDEV_DEVICE_FLAG_USE_CONFIG) {
-		g_free(priv->device_file);
-		priv->device_file =
-		    g_build_filename(g_udev_device_get_sysfs_path(priv->udev_device),
-				     "config",
-				     NULL);
-	}
-#endif
+	priv->flags &= ~flag;
 }
 
 /**
@@ -1566,7 +1557,7 @@ fu_udev_device_set_flags(FuUdevDevice *self, FuUdevDeviceFlags flags)
  * @self: a #FuUdevDevice
  * @flag: udev device flag, e.g. %FU_UDEV_DEVICE_FLAG_OPEN_READ
  *
- * Adds a flag to use when opening the device.
+ * Sets the parameters to use when opening the device.
  *
  * For example %FU_UDEV_DEVICE_FLAG_OPEN_READ means that fu_device_open()
  * would use `O_RDONLY` rather than `O_RDWR` which is the default.
@@ -1578,7 +1569,22 @@ fu_udev_device_add_flag(FuUdevDevice *self, FuUdevDeviceFlags flag)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
-	fu_udev_device_set_flags(self, priv->flags | flag);
+
+	/* already set */
+	if (priv->flags & flag)
+		return;
+	priv->flags |= flag;
+
+#ifdef HAVE_GUDEV
+	/* overwrite */
+	if (flag & FU_UDEV_DEVICE_FLAG_USE_CONFIG) {
+		g_free(priv->device_file);
+		priv->device_file =
+		    g_build_filename(g_udev_device_get_sysfs_path(priv->udev_device),
+				     "config",
+				     NULL);
+	}
+#endif
 }
 
 static gboolean
@@ -1587,6 +1593,19 @@ fu_udev_device_open(FuDevice *device, GError **error)
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	gint fd;
+
+	/* old versions of fwupd used to start with OPEN_READ|OPEN_WRITE and then plugins
+	 * could add more flags, or set the flags back to NONE -- detect and fixup */
+	if (priv->device_file != NULL && priv->flags == FU_UDEV_DEVICE_FLAG_NONE) {
+#ifndef SUPPORTED_BUILD
+		g_critical("%s [%s] forgot to call fu_udev_device_add_flag() with OPEN_READ and/or "
+			   "OPEN_WRITE",
+			   fu_device_get_name(device),
+			   fu_device_get_id(device));
+#endif
+		fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+		fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	}
 
 	/* open device */
 	if (priv->device_file != NULL && priv->flags != FU_UDEV_DEVICE_FLAG_NONE) {
@@ -2490,8 +2509,6 @@ fu_udev_device_finalize(GObject *object)
 static void
 fu_udev_device_init(FuUdevDevice *self)
 {
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	priv->flags = FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE;
 	fu_device_set_acquiesce_delay(FU_DEVICE(self), 2500);
 }
 

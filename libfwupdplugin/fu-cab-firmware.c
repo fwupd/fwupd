@@ -16,7 +16,10 @@
 #include "fu-cab-image.h"
 #include "fu-cab-struct.h"
 #include "fu-chunk-array.h"
+#include "fu-composite-input-stream.h"
+#include "fu-input-stream.h"
 #include "fu-mem-private.h"
+#include "fu-partial-input-stream.h"
 #include "fu-string.h"
 
 typedef struct {
@@ -101,13 +104,13 @@ fu_cab_firmware_set_only_basename(FuCabFirmware *self, gboolean only_basename)
 }
 
 typedef struct {
-	GBytes *fw;
+	GInputStream *stream;
 	FwupdInstallFlags install_flags;
 	gsize rsvd_folder;
 	gsize rsvd_block;
 	gsize size_total;
 	FuCabCompression compression;
-	GPtrArray *folder_data; /* of GBytes */
+	GPtrArray *folder_data; /* of FuCompositeInputStream */
 	z_stream zstrm;
 } FuCabFirmwareParseHelper;
 
@@ -115,8 +118,8 @@ static void
 fu_cab_firmware_parse_helper_free(FuCabFirmwareParseHelper *helper)
 {
 	inflateEnd(&helper->zstrm);
-	if (helper->fw != NULL)
-		g_bytes_unref(helper->fw);
+	if (helper->stream != NULL)
+		g_object_unref(helper->stream);
 	if (helper->folder_data != NULL)
 		g_ptr_array_unref(helper->folder_data);
 	g_free(helper);
@@ -146,12 +149,13 @@ fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checks
 }
 
 static gboolean
-fu_cab_firmware_compute_checksum_bytes(GBytes *blob, guint32 *checksum, GError **error)
+fu_cab_firmware_compute_checksum_stream_cb(const guint8 *buf,
+					   gsize bufsz,
+					   gpointer user_data,
+					   GError **error)
 {
-	return fu_cab_firmware_compute_checksum(g_bytes_get_data(blob, NULL),
-						g_bytes_get_size(blob),
-						checksum,
-						error);
+	guint32 *checksum = (guint32 *)user_data;
+	return fu_cab_firmware_compute_checksum(buf, bufsz, checksum, error);
 }
 
 static voidpf
@@ -180,7 +184,7 @@ static gboolean
 fu_cab_firmware_parse_data(FuCabFirmware *self,
 			   FuCabFirmwareParseHelper *helper,
 			   gsize *offset,
-			   GByteArray *folder_data,
+			   GInputStream *folder_data,
 			   GError **error)
 {
 	gsize blob_comp;
@@ -188,10 +192,10 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 	gsize hdr_sz;
 	gsize size_max = fu_firmware_get_size_max(FU_FIRMWARE(self));
 	g_autoptr(GByteArray) st = NULL;
-	g_autoptr(GBytes) data_blob = NULL;
+	g_autoptr(GInputStream) partial_stream = NULL;
 
 	/* parse header */
-	st = fu_struct_cab_data_parse_bytes(helper->fw, *offset, error);
+	st = fu_struct_cab_data_parse_stream(helper->stream, *offset, error);
 	if (st == NULL)
 		return FALSE;
 
@@ -219,20 +223,19 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 	}
 
 	hdr_sz = st->len + helper->rsvd_block;
-	data_blob = fu_bytes_new_offset(helper->fw, *offset + hdr_sz, blob_comp, error);
-	if (data_blob == NULL)
-		return FALSE;
 
 	/* verify checksum */
+	partial_stream = fu_partial_input_stream_new(helper->stream, *offset + hdr_sz, blob_comp);
 	if ((helper->install_flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint32 checksum = fu_struct_cab_data_get_checksum(st);
 		if (checksum != 0) {
 			guint32 checksum_actual = 0;
 			g_autoptr(GByteArray) hdr = g_byte_array_new();
 
-			if (!fu_cab_firmware_compute_checksum_bytes(data_blob,
-								    &checksum_actual,
-								    error))
+			if (!fu_input_stream_chunkify(partial_stream,
+						      fu_cab_firmware_compute_checksum_stream_cb,
+						      &checksum_actual,
+						      error))
 				return FALSE;
 			fu_byte_array_append_uint16(hdr, blob_comp, G_LITTLE_ENDIAN);
 			fu_byte_array_append_uint16(hdr, blob_uncomp, G_LITTLE_ENDIAN);
@@ -260,10 +263,16 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 		int zret;
 		g_autofree gchar *kind = NULL;
 		g_autoptr(GByteArray) buf = g_byte_array_new();
+		g_autoptr(GBytes) bytes_comp = NULL;
+		g_autoptr(GBytes) bytes_uncomp = NULL;
 
 		/* check compressed header */
-		kind = fu_memstrsafe(g_bytes_get_data(data_blob, NULL),
-				     g_bytes_get_size(data_blob),
+		bytes_comp =
+		    fu_input_stream_read_bytes(helper->stream, *offset + hdr_sz, blob_comp, error);
+		if (bytes_comp == NULL)
+			return FALSE;
+		kind = fu_memstrsafe(g_bytes_get_data(bytes_comp, NULL),
+				     g_bytes_get_size(bytes_comp),
 				     0x0,
 				     2,
 				     error);
@@ -277,8 +286,8 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 				    kind);
 			return FALSE;
 		}
-		helper->zstrm.avail_in = g_bytes_get_size(data_blob) - 2;
-		helper->zstrm.next_in = (z_const Bytef *)g_bytes_get_data(data_blob, NULL) + 2;
+		helper->zstrm.avail_in = g_bytes_get_size(bytes_comp) - 2;
+		helper->zstrm.next_in = (z_const Bytef *)g_bytes_get_data(bytes_comp, NULL) + 2;
 		while (1) {
 			helper->zstrm.avail_out = sizeof(tmp);
 			helper->zstrm.next_out = tmp;
@@ -314,9 +323,13 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 				    zError(zret));
 			return FALSE;
 		}
-		g_byte_array_append(folder_data, buf->data, buf->len);
+		bytes_uncomp = g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck */
+		fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(folder_data),
+						    bytes_uncomp);
 	} else {
-		fu_byte_array_append_bytes(folder_data, data_blob);
+		fu_composite_input_stream_add_partial_stream(
+		    FU_COMPOSITE_INPUT_STREAM(folder_data),
+		    FU_PARTIAL_INPUT_STREAM(partial_stream));
 	}
 
 	/* success */
@@ -329,7 +342,7 @@ fu_cab_firmware_parse_folder(FuCabFirmware *self,
 			     FuCabFirmwareParseHelper *helper,
 			     guint idx,
 			     gsize offset,
-			     GByteArray *folder_data,
+			     GInputStream *folder_data,
 			     GError **error)
 {
 	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
@@ -337,7 +350,7 @@ fu_cab_firmware_parse_folder(FuCabFirmware *self,
 	g_autoptr(GByteArray) st = NULL;
 
 	/* parse header */
-	st = fu_struct_cab_folder_parse_bytes(helper->fw, offset, error);
+	st = fu_struct_cab_folder_parse_stream(helper->stream, offset, error);
 	if (st == NULL)
 		return FALSE;
 
@@ -380,23 +393,24 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 			   GError **error)
 {
 	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
-	GBytes *folder_data;
-	gsize bufsz = 0;
+	GInputStream *folder_data;
 	guint16 date;
 	guint16 index;
 	guint16 time;
-	const guint8 *buf = g_bytes_get_data(helper->fw, &bufsz);
 	g_autoptr(FuCabImage) img = fu_cab_image_new();
 	g_autoptr(GByteArray) st = NULL;
 	g_autoptr(GBytes) img_blob = NULL;
 	g_autoptr(GDateTime) created = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GString) filename = g_string_new(NULL);
 	g_autoptr(GTimeZone) tz_utc = g_time_zone_new_utc();
 
 	/* parse header */
-	st = fu_struct_cab_file_parse_bytes(helper->fw, *offset, error);
+	st = fu_struct_cab_file_parse_stream(helper->stream, *offset, error);
 	if (st == NULL)
 		return FALSE;
+	fu_firmware_set_offset(FU_FIRMWARE(img), fu_struct_cab_file_get_uoffset(st));
+	fu_firmware_set_size(FU_FIRMWARE(img), fu_struct_cab_file_get_usize(st));
 
 	/* sanity check */
 	index = fu_struct_cab_file_get_index(st);
@@ -414,7 +428,7 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 	*offset += FU_STRUCT_CAB_FILE_SIZE;
 	for (guint i = 0; i < 255; i++) {
 		guint8 value = 0;
-		if (!fu_memread_uint8_safe(buf, bufsz, *offset + i, &value, error))
+		if (!fu_input_stream_read_u8(helper->stream, *offset + i, &value, error))
 			return FALSE;
 		if (value == 0)
 			break;
@@ -431,14 +445,13 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 	} else {
 		fu_firmware_set_id(FU_FIRMWARE(img), filename->str);
 	}
-	fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(img));
-	img_blob = fu_bytes_new_offset(folder_data,
-				       fu_struct_cab_file_get_uoffset(st),
-				       fu_struct_cab_file_get_usize(st),
-				       error);
-	if (img_blob == NULL)
+	stream = fu_partial_input_stream_new(folder_data,
+					     fu_struct_cab_file_get_uoffset(st),
+					     fu_struct_cab_file_get_usize(st));
+	if (!fu_firmware_parse_stream(FU_FIRMWARE(img), stream, 0x0, helper->install_flags, error))
 		return FALSE;
-	fu_firmware_set_bytes(FU_FIRMWARE(img), img_blob);
+	if (!fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(img), error))
+		return FALSE;
 
 	/* set created date time */
 	date = fu_struct_cab_file_get_date(st);
@@ -458,18 +471,20 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 }
 
 static gboolean
-fu_cab_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_cab_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
 {
-	return fu_struct_cab_header_validate_bytes(fw, offset, error);
+	return fu_struct_cab_header_validate_stream(stream, offset, error);
 }
 
 static FuCabFirmwareParseHelper *
-fu_cab_firmware_parse_helper_new(GBytes *fw, FwupdInstallFlags flags, GError **error)
+fu_cab_firmware_parse_helper_new(GInputStream *stream, FwupdInstallFlags flags, GError **error)
 {
 	int zret;
 	g_autoptr(FuCabFirmwareParseHelper) helper = g_new0(FuCabFirmwareParseHelper, 1);
 
 	/* zlib */
+	helper->zstrm.zalloc = zalloc;
+	helper->zstrm.zfree = zfree;
 	zret = inflateInit2(&helper->zstrm, -MAX_WBITS);
 	if (zret != Z_OK) {
 		g_set_error(error,
@@ -479,39 +494,42 @@ fu_cab_firmware_parse_helper_new(GBytes *fw, FwupdInstallFlags flags, GError **e
 			    zError(zret));
 		return NULL;
 	}
-	helper->zstrm.zalloc = zalloc;
-	helper->zstrm.zfree = zfree;
 
-	helper->fw = g_bytes_ref(fw);
+	helper->stream = g_object_ref(stream);
 	helper->install_flags = flags;
-	helper->folder_data = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
+	helper->folder_data = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	return g_steal_pointer(&helper);
 }
 
 static gboolean
 fu_cab_firmware_parse(FuFirmware *firmware,
-		      GBytes *fw,
+		      GInputStream *stream,
 		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {
 	FuCabFirmware *self = FU_CAB_FIRMWARE(firmware);
 	gsize off_cffile = 0;
+	gsize streamsz = 0;
 	g_autoptr(GByteArray) st = NULL;
 	g_autoptr(FuCabFirmwareParseHelper) helper = NULL;
 
+	/* get size */
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+
 	/* parse header */
-	st = fu_struct_cab_header_parse_bytes(fw, offset, error);
+	st = fu_struct_cab_header_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
 
 	/* sanity checks */
-	if (fu_struct_cab_header_get_size(st) < g_bytes_get_size(fw)) {
+	if (fu_struct_cab_header_get_size(st) < streamsz) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_NOT_SUPPORTED,
-			    "buffer size 0x%x is less than archive size 0x%x",
-			    (guint)g_bytes_get_size(fw),
+			    "buffer size 0x%x is less than stream size 0x%x",
+			    (guint)streamsz,
 			    fu_struct_cab_header_get_size(st));
 		return FALSE;
 	}
@@ -549,7 +567,7 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 	off_cffile = fu_struct_cab_header_get_off_cffile(st);
-	if (off_cffile > g_bytes_get_size(fw)) {
+	if (off_cffile > streamsz) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_NOT_SUPPORTED,
@@ -558,7 +576,7 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* create helper */
-	helper = fu_cab_firmware_parse_helper_new(fw, flags, error);
+	helper = fu_cab_firmware_parse_helper_new(stream, flags, error);
 	if (helper == NULL)
 		return FALSE;
 
@@ -566,7 +584,7 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 	offset += st->len;
 	if (fu_struct_cab_header_get_flags(st) & 0x0004) {
 		g_autoptr(GByteArray) st2 = NULL;
-		st2 = fu_struct_cab_header_parse_bytes(fw, offset, error);
+		st2 = fu_struct_cab_header_reserve_parse_stream(stream, offset, error);
 		if (st2 == NULL)
 			return FALSE;
 		offset += st2->len;
@@ -577,19 +595,19 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 
 	/* parse CFFOLDER */
 	for (guint i = 0; i < fu_struct_cab_header_get_nr_folders(st); i++) {
-		g_autoptr(GByteArray) folder_data = g_byte_array_new();
+		g_autoptr(GInputStream) folder_data = fu_composite_input_stream_new();
 		if (!fu_cab_firmware_parse_folder(self, helper, i, offset, folder_data, error))
 			return FALSE;
-		if (folder_data->len == 0) {
+		if (!fu_input_stream_size(folder_data, &streamsz, error))
+			return FALSE;
+		if (streamsz == 0) {
 			g_set_error_literal(error,
 					    G_IO_ERROR,
 					    G_IO_ERROR_NOT_SUPPORTED,
 					    "no folder data");
 			return FALSE;
 		}
-		g_ptr_array_add(
-		    helper->folder_data,
-		    g_byte_array_free_to_bytes(g_steal_pointer(&folder_data))); /* nocheck */
+		g_ptr_array_add(helper->folder_data, g_steal_pointer(&folder_data));
 		offset += FU_STRUCT_CAB_FOLDER_SIZE + helper->rsvd_folder;
 	}
 

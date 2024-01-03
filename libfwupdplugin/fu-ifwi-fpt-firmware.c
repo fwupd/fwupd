@@ -15,6 +15,7 @@
 #include "fu-bytes.h"
 #include "fu-ifwi-fpt-firmware.h"
 #include "fu-ifwi-struct.h"
+#include "fu-partial-input-stream.h"
 #include "fu-string.h"
 
 /**
@@ -34,14 +35,17 @@ G_DEFINE_TYPE(FuIfwiFptFirmware, fu_ifwi_fpt_firmware, FU_TYPE_FIRMWARE)
 #define FU_IFWI_FPT_MAX_ENTRIES	   56
 
 static gboolean
-fu_ifwi_fpt_firmware_validate(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
+fu_ifwi_fpt_firmware_validate(FuFirmware *firmware,
+			      GInputStream *stream,
+			      gsize offset,
+			      GError **error)
 {
-	return fu_struct_ifwi_fpt_validate_bytes(fw, offset, error);
+	return fu_struct_ifwi_fpt_validate_stream(stream, offset, error);
 }
 
 static gboolean
 fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
-			   GBytes *fw,
+			   GInputStream *stream,
 			   gsize offset,
 			   FwupdInstallFlags flags,
 			   GError **error)
@@ -50,7 +54,7 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GByteArray) st_hdr = NULL;
 
 	/* sanity check */
-	st_hdr = fu_struct_ifwi_fpt_parse_bytes(fw, offset, error);
+	st_hdr = fu_struct_ifwi_fpt_parse_stream(stream, offset, error);
 	if (st_hdr == NULL)
 		return FALSE;
 	num_of_entries = fu_struct_ifwi_fpt_get_num_of_entries(st_hdr);
@@ -84,7 +88,7 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 		g_autoptr(GByteArray) st_ent = NULL;
 
 		/* read IDX */
-		st_ent = fu_struct_ifwi_fpt_entry_parse_bytes(fw, offset, error);
+		st_ent = fu_struct_ifwi_fpt_entry_parse_stream(stream, offset, error);
 		if (st_ent == NULL)
 			return FALSE;
 		partition_name = fu_struct_ifwi_fpt_entry_get_partition_name(st_ent);
@@ -98,12 +102,12 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 		/* get data at offset using zero-copy */
 		data_length = fu_struct_ifwi_fpt_entry_get_length(st_ent);
 		if (data_length != 0x0) {
-			g_autoptr(GBytes) blob = NULL;
 			guint32 data_offset = fu_struct_ifwi_fpt_entry_get_offset(st_ent);
-			blob = fu_bytes_new_offset(fw, data_offset, data_length, error);
-			if (blob == NULL)
+			g_autoptr(GInputStream) partial_stream = NULL;
+			partial_stream =
+			    fu_partial_input_stream_new(stream, data_offset, data_length);
+			if (!fu_firmware_parse_stream(img, partial_stream, 0x0, flags, error))
 				return FALSE;
-			fu_firmware_set_bytes(img, blob);
 			fu_firmware_set_offset(img, data_offset);
 		}
 		if (!fu_firmware_add_image_full(firmware, img, error))

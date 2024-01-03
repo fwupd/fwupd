@@ -13,6 +13,6 @@
 G_DECLARE_FINAL_TYPE(FuAcpiIvrs, fu_acpi_ivrs, FU, ACPI_IVRS, FuAcpiTable)
 
 FuAcpiIvrs *
-fu_acpi_ivrs_new(GBytes *blob, GError **error);
+fu_acpi_ivrs_new(void);
 gboolean
 fu_acpi_ivrs_get_dma_remap(FuAcpiIvrs *self);

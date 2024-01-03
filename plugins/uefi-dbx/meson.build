@@ -72,3 +72,15 @@ if get_option('man')
     install_dir: join_paths(mandir, 'man1'),
   )
 endif
+if build_docs
+  md_targets += custom_target('dbxtool.md',
+    input: 'dbxtool.md',
+    output: 'dbxtool.md',
+    command: [
+      generate_man, '@INPUT@', '-o', '@OUTPUT@',
+      '--replace', 'PACKAGE_VERSION', fwupd_version,
+      '--md',
+    ],
+  )
+  man_md += ['"dbxtool.md"']
+endif

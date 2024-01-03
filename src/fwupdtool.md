@@ -1,17 +1,18 @@
+---
+title: fwupdtool standalone command line utility
+---
+
 % fwupdtool(1) {{PACKAGE_VERSION}} | standalone firmware update utility man page
 
-NAME
-====
+## NAME
 
 **fwupdtool** — standalone firmware update utility
 
-SYNOPSIS
-========
+## SYNOPSIS
 
 | **fwupdtool** [CMD]
 
-DESCRIPTION
-===========
+## DESCRIPTION
 
 This tool allows an administrator to use fwupd plugins directly without using the daemon process,
 which may be faster or easier to use when creating or debugging specific plugins.
@@ -21,15 +22,13 @@ Additionally **fwupdtool** can be used to convert firmware from various differen
 or to modify the images contained inside the container firmware file.
 For example, you can convert DFU or Intel HEX firmware into the vendor-specific format.
 
-OPTIONS
-=======
+## OPTIONS
 
 The fwupdtool command takes various options depending on the action.
 Run **fwupdtool \-\-help** for the full list.
 Note that some runtimes failures can be ignored using **\-\-force**.
 
-EXIT STATUS
-===========
+## EXIT STATUS
 
 Commands that successfully execute will return "0", with generic failure as "1".
 
@@ -37,13 +36,11 @@ There are also several other exit codes used:
 A return code of "2" is used for commands that have no actions but were successfully executed,
 and "3" is used when a resource was not found.
 
-BUGS
-====
+## BUGS
 
 See GitHub Issues: <https://github.com/fwupd/fwupd/issues>
 
-SEE ALSO
-========
+## SEE ALSO
 
-fwupdmgr(1)
-fwupd.conf(5)
+<fwupdmgr(1)>
+<fwupd.conf(5)>

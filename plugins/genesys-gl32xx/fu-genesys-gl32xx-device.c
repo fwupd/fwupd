@@ -601,8 +601,6 @@ static void
 fu_genesys_gl32xx_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuGenesysGl32xxDevice *self = FU_GENESYS_GL32XX_DEVICE(device);
-
-	FU_DEVICE_CLASS(fu_genesys_gl32xx_device_parent_class)->to_string(device, idt, str);
 	fu_string_append(str, idt, "ChipName", self->chip_name);
 	fu_string_append_kx(str, idt, "BlockTransferSize", self->packetsz);
 	fu_string_append_kx(str, idt, "CustomerId", self->customer_id);
@@ -762,13 +760,13 @@ fu_genesys_gl32xx_device_read_firmware(FuDevice *device, FuProgress *progress, G
 
 static FuFirmware *
 fu_genesys_gl32xx_device_prepare_firmware(FuDevice *device,
-					  GBytes *fw,
+					  GInputStream *stream,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_genesys_gl32xx_firmware_new();
 
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
 	/* check size */
@@ -923,10 +921,10 @@ fu_genesys_gl32xx_device_init(FuGenesysGl32xxDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
-				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
-				     FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK |
-				     FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS);

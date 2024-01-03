@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-bios-settings-private.h"
+#include "fu-common-private.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-fdt-firmware.h"
@@ -1436,7 +1437,26 @@ fu_context_get_esp_volumes(FuContext *self, GError **error)
 
 	/* nothing found */
 	if (priv->esp_volumes->len == 0) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "No ESP or BDP found");
+		g_autofree gchar *base = NULL;
+		g_autofree gchar *path = NULL;
+		g_autoptr(GPtrArray) devices = NULL;
+
+		/* udisks2 is working */
+		devices = fu_common_get_block_devices(NULL);
+		if (devices != NULL) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_NOT_FOUND,
+					    "No ESP or BDP found");
+			return NULL;
+		}
+		base = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
+		path = g_build_filename(base, "fwupd.conf", NULL);
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_FOUND,
+			    "No valid 'EspLocation' specified in %s",
+			    path);
 		return NULL;
 	}
 

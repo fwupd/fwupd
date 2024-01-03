@@ -44,7 +44,6 @@ static void
 fu_igsc_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuIgscDevice *self = FU_IGSC_DEVICE(device);
-	FU_DEVICE_CLASS(fu_igsc_device_parent_class)->to_string(device, idt, str);
 	fu_string_append(str, idt, "Project", self->project);
 	fu_string_append_kx(str, idt, "HwSku", self->hw_sku);
 	fu_string_append_kx(str, idt, "SubsystemVendor", self->subsystem_vendor);
@@ -476,7 +475,7 @@ fu_igsc_device_probe(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_igsc_device_prepare_firmware(FuDevice *device,
-				GBytes *fw,
+				GInputStream *stream,
 				FwupdInstallFlags flags,
 				GError **error)
 {
@@ -484,7 +483,7 @@ fu_igsc_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_igsc_code_firmware_new();
 
 	/* check project code */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	if (g_strcmp0(self->project, fu_firmware_get_id(firmware)) != 0) {
 		g_set_error(error,
@@ -542,15 +541,19 @@ static gboolean
 fu_igsc_device_update_start(FuIgscDevice *self,
 			    guint32 payload_type,
 			    GBytes *fw_info,
-			    GBytes *fw,
+			    GInputStream *fw,
 			    GError **error)
 {
+	gsize streamsz = 0;
 	struct gsc_fwu_heci_start_req req = {.header.command_id = GSC_FWU_HECI_COMMAND_ID_START,
 					     .payload_type = payload_type,
-					     .update_img_length = g_bytes_get_size(fw),
 					     .flags = {0}};
 	struct gsc_fwu_heci_start_resp res = {0x0};
 	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	if (!fu_input_stream_size(fw, &streamsz, error))
+		return FALSE;
+	req.update_img_length = streamsz;
 
 	g_byte_array_append(buf, (const guint8 *)&req, sizeof(req));
 	if (fw_info != NULL)
@@ -633,7 +636,7 @@ gboolean
 fu_igsc_device_write_blob(FuIgscDevice *self,
 			  enum gsc_fwu_heci_payload_type payload_type,
 			  GBytes *fw_info,
-			  GBytes *fw,
+			  GInputStream *fw,
 			  FuProgress *progress,
 			  GError **error)
 {
@@ -676,7 +679,9 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 	fu_progress_step_done(progress);
 
 	/* data */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, payloadsz);
+	chunks = fu_chunk_array_new_from_stream(fw, 0x0, payloadsz, error);
+	if (chunks == NULL)
+		return FALSE;
 	if (!fu_igsc_device_write_chunks(self, chunks, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);
@@ -730,21 +735,21 @@ fu_igsc_device_write_firmware(FuDevice *device,
 {
 	FuIgscDevice *self = FU_IGSC_DEVICE(device);
 	g_autoptr(GBytes) fw_info = NULL;
-	g_autoptr(GBytes) fw_payload = NULL;
+	g_autoptr(GInputStream) stream_payload = NULL;
 
 	/* get image, and install on ourself */
 	fw_info =
 	    fu_firmware_get_image_by_idx_bytes(firmware, FU_IFWI_FPT_FIRMWARE_IDX_INFO, error);
 	if (fw_info == NULL)
 		return FALSE;
-	fw_payload =
-	    fu_firmware_get_image_by_idx_bytes(firmware, FU_IFWI_FPT_FIRMWARE_IDX_FWIM, error);
-	if (fw_payload == NULL)
+	stream_payload =
+	    fu_firmware_get_image_by_idx_stream(firmware, FU_IFWI_FPT_FIRMWARE_IDX_FWIM, error);
+	if (stream_payload == NULL)
 		return FALSE;
 	return fu_igsc_device_write_blob(self,
 					 GSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW,
 					 fw_info,
-					 fw_payload,
+					 stream_payload,
 					 progress,
 					 error);
 }

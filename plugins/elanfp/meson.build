@@ -4,6 +4,9 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('elanfp.quirk')
 plugin_builtins += static_library('fu_plugin_elanfp',
+  rustgen.process(
+    'fu-elanfp.rs',         # fuzzing
+  ),
   sources: [
     cfu_rs[1], # header
     'fu-elanfp-plugin.c',

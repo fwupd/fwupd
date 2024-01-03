@@ -40,12 +40,6 @@
 #define FU_DFU_DEVICE_FLAG_CAN_ACCELERATE (1ull << 7)
 
 /**
- * FU_DFU_DEVICE_FLAG_ATTACH_EXTRA_RESET:
- *
- * Device needs resetting twice for attach.
- */
-#define FU_DFU_DEVICE_FLAG_ATTACH_EXTRA_RESET (1ull << (8 + 0))
-/**
  * FU_DFU_DEVICE_FLAG_ATTACH_UPLOAD_DOWNLOAD:
  *
  * An upload or download is required for attach.

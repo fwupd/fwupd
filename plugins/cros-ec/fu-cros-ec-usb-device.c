@@ -893,7 +893,7 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 
 static FuFirmware *
 fu_cros_ec_usb_device_prepare_firmware(FuDevice *device,
-				       GBytes *fw,
+				       GInputStream *stream,
 				       FwupdInstallFlags flags,
 				       GError **error)
 {
@@ -901,7 +901,7 @@ fu_cros_ec_usb_device_prepare_firmware(FuDevice *device,
 	FuCrosEcFirmware *cros_ec_firmware = NULL;
 	g_autoptr(FuFirmware) firmware = fu_cros_ec_firmware_new();
 
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	cros_ec_firmware = FU_CROS_EC_FIRMWARE(firmware);
 

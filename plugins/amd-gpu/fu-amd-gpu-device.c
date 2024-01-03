@@ -92,9 +92,9 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 	} else {
 		fu_device_set_logical_id(device, "rom");
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-		fu_udev_device_set_flags(FU_UDEV_DEVICE(device),
-					 FU_UDEV_DEVICE_FLAG_OPEN_READ |
-					     FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+		fu_udev_device_add_flag(FU_UDEV_DEVICE(device), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+		fu_udev_device_add_flag(FU_UDEV_DEVICE(device),
+					FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 	}
 
 	/* firmware upgrade support */
@@ -172,7 +172,7 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 
 static FuFirmware *
 fu_amd_gpu_device_prepare_firmware(FuDevice *device,
-				   GBytes *fw,
+				   GInputStream *stream,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
@@ -183,7 +183,7 @@ fu_amd_gpu_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) csm = NULL;
 	const gchar *fw_pn;
 
-	if (!fu_firmware_parse(firmware, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
 	/* we will always flash the contents of partition A */

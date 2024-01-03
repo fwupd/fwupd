@@ -43,10 +43,6 @@ static void
 fu_ch347_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCh347Device *self = FU_CH347_DEVICE(device);
-
-	/* FuUsbDevice->to_string */
-	FU_DEVICE_CLASS(fu_ch347_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append_kx(str, idt, "Divisor", self->divisor);
 }
 

@@ -1,13 +1,13 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(Parse)]
+#[derive(Parse, ParseStream)]
 struct VliPdHdr {
     fwver: u32be,
     vid: u16le,
     pid: u16le,
 }
-#[derive(New, Parse, ToString)]
+#[derive(New, Parse, ParseStream, ToString)]
 struct VliUsbhubHdr {
     dev_id: u16be,
     strapping1: u8,

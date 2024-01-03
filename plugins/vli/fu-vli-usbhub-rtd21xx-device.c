@@ -305,14 +305,12 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
 	FuVliUsbhubRtd21xxDevice *self = FU_VLI_USBHUB_RTD21XX_DEVICE(device);
-	const guint8 *fwbuf;
-	gsize fwbufsz = 0;
 	guint32 project_addr;
 	guint8 project_id_count;
 	guint8 read_buf[10] = {0};
 	guint8 write_buf[ISP_PACKET_SIZE] = {0};
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
@@ -328,10 +326,9 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* simple image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
-	fwbuf = g_bytes_get_data(fw, &fwbufsz);
 
 	/* enable ISP high priority */
 	write_buf[0] = ISP_CMD_ENTER_FW_UPDATE;
@@ -386,14 +383,13 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 		return FALSE;
 	project_id_count = read_buf[5];
 	write_buf[0] = ISP_CMD_SYNC_IDENTIFY_CODE;
-	if (!fu_memcpy_safe(write_buf,
-			    sizeof(write_buf),
-			    0x1, /* dst */
-			    fwbuf,
-			    fwbufsz,
-			    project_addr, /* src */
-			    project_id_count,
-			    error)) {
+	if (!fu_input_stream_read_safe(stream,
+				       write_buf,
+				       sizeof(write_buf),
+				       0x1,	     /* dst */
+				       project_addr, /* src */
+				       project_id_count,
+				       error)) {
 		g_prefix_error(error, "failed to write project ID from 0x%04x: ", project_addr);
 		return FALSE;
 	}
@@ -424,7 +420,9 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* send data */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, ISP_DATA_BLOCKSIZE);
+	chunks = fu_chunk_array_new_from_stream(stream, 0x00, ISP_DATA_BLOCKSIZE, error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 

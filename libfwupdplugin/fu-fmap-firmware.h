@@ -17,7 +17,7 @@ G_DECLARE_DERIVABLE_TYPE(FuFmapFirmware, fu_fmap_firmware, FU, FMAP_FIRMWARE, Fu
 struct _FuFmapFirmwareClass {
 	FuFirmwareClass parent_class;
 	gboolean (*parse)(FuFirmware *self,
-			  GBytes *fw,
+			  GInputStream *stream,
 			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error);

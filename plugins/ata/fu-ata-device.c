@@ -111,7 +111,6 @@ static void
 fu_ata_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE(device);
-	FU_DEVICE_CLASS(fu_ata_device_parent_class)->to_string(device, idt, str);
 	fu_string_append_kx(str, idt, "TransferMode", self->transfer_mode);
 	fu_string_append_kx(str, idt, "TransferBlocks", self->transfer_blocks);
 	if (self->oui != 0x0)
@@ -771,14 +770,15 @@ fu_ata_device_write_firmware(FuDevice *device,
 			     GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE(device);
+	gsize streamsz = 0;
 	guint32 chunksz = (guint32)self->transfer_blocks * FU_ATA_BLOCK_SIZE;
 	guint max_size = 0xffff * FU_ATA_BLOCK_SIZE;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* only one block allowed */
@@ -786,7 +786,9 @@ fu_ata_device_write_firmware(FuDevice *device,
 		max_size = 0xffff;
 
 	/* check is valid */
-	if (g_bytes_get_size(fw) > max_size) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (streamsz > max_size) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
@@ -794,7 +796,7 @@ fu_ata_device_write_firmware(FuDevice *device,
 			    max_size);
 		return FALSE;
 	}
-	if (g_bytes_get_size(fw) % FU_ATA_BLOCK_SIZE != 0) {
+	if (streamsz % FU_ATA_BLOCK_SIZE != 0) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
@@ -805,7 +807,9 @@ fu_ata_device_write_firmware(FuDevice *device,
 
 	/* write each block */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, chunksz);
+	chunks = fu_chunk_array_new_from_stream(stream, 0x00, chunksz, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
@@ -891,7 +895,7 @@ fu_ata_device_init(FuAtaDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk");
 	fu_device_add_protocol(FU_DEVICE(self), "org.t13.ata");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
-	fu_udev_device_set_flags(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
 }
 
 static void

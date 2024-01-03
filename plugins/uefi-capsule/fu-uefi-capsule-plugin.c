@@ -482,7 +482,7 @@ fu_uefi_capsule_plugin_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 static gboolean
 fu_uefi_capsule_plugin_write_firmware(FuPlugin *plugin,
 				      FuDevice *device,
-				      GBytes *blob_fw,
+				      GInputStream *stream,
 				      FuProgress *progress,
 				      FwupdInstallFlags flags,
 				      GError **error)
@@ -520,7 +520,7 @@ fu_uefi_capsule_plugin_write_firmware(FuPlugin *plugin,
 	if (!fu_uefi_capsule_plugin_update_splash(plugin, device, &error_splash))
 		g_info("failed to upload UEFI UX capsule text: %s", error_splash->message);
 
-	return fu_device_write_firmware(device, blob_fw, progress, flags, error);
+	return fu_device_write_firmware(device, stream, progress, flags, error);
 }
 
 static void

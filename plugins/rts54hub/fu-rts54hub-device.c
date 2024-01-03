@@ -430,7 +430,7 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 				  GError **error)
 {
 	FuRts54HubDevice *self = FU_RTS54HUB_DEVICE(device);
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
@@ -441,8 +441,8 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, NULL);
 
 	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* enable vendor commands */
@@ -472,7 +472,9 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 	}
 
 	/* write each block */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, FU_RTS54HUB_DEVICE_BLOCK_SIZE);
+	chunks = fu_chunk_array_new_from_stream(stream, 0x00, FU_RTS54HUB_DEVICE_BLOCK_SIZE, error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 
@@ -516,15 +518,14 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 
 static FuFirmware *
 fu_rts54hub_device_prepare_firmware(FuDevice *device,
-				    GBytes *fw,
+				    GInputStream *stream,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
-	gsize bufsz = 0;
 	guint8 tmp = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	g_autoptr(FuFirmware) firmware = fu_firmware_new();
 
-	if (!fu_memread_uint8_safe(buf, bufsz, 0x7ef3, &tmp, error))
+	if (!fu_input_stream_read_u8(stream, 0x7EF3, &tmp, error))
 		return NULL;
 	if ((tmp & 0xf0) != 0x80) {
 		g_set_error_literal(error,
@@ -533,7 +534,9 @@ fu_rts54hub_device_prepare_firmware(FuDevice *device,
 				    "firmware needs to be dual bank");
 		return NULL;
 	}
-	return fu_firmware_new_from_bytes(fw);
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+		return NULL;
+	return g_steal_pointer(&firmware);
 }
 
 static void

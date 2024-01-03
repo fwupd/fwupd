@@ -82,7 +82,7 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 
 static FuFirmware *
 fu_cfu_module_prepare_firmware(FuDevice *device,
-			       GBytes *fw,
+			       GInputStream *stream,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
@@ -96,7 +96,7 @@ fu_cfu_module_prepare_firmware(FuDevice *device,
 	g_autoptr(GBytes) blob_payload = NULL;
 
 	/* parse archive */
-	if (!fu_firmware_parse(firmware_archive, fw, flags, error))
+	if (!fu_firmware_parse_stream(firmware_archive, stream, 0x0, flags, error))
 		return NULL;
 
 	/* offer */
