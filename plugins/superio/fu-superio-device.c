@@ -119,10 +119,6 @@ fu_superio_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE(device);
 	FuSuperioDevicePrivate *priv = GET_PRIVATE(self);
-
-	/* FuUdevDevice->to_string */
-	FU_DEVICE_CLASS(fu_superio_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append(str, idt, "Chipset", priv->chipset);
 	fu_string_append_kx(str, idt, "Id", priv->id);
 	fu_string_append_kx(str, idt, "Port", priv->port);

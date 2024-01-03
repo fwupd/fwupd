@@ -422,9 +422,6 @@ static void
 fu_corsair_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
-
-	FU_DEVICE_CLASS(fu_corsair_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append(str,
 			 idt,
 			 "DeviceKind",

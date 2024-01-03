@@ -54,10 +54,6 @@ static void
 fu_mediatek_scaler_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-
-	/* FuUdevDevice->to_string */
-	FU_DEVICE_CLASS(fu_mediatek_scaler_device_parent_class)->to_string(device, idt, str);
-
 	if (self->i2c_dev != NULL) {
 		fu_string_append(str,
 				 idt,

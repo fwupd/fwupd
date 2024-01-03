@@ -25,7 +25,6 @@ static void
 fu_{{vendor}}_{{example}}_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
-	FU_DEVICE_CLASS(fu_{{vendor}}_{{example}}_device_parent_class)->to_string(device, idt, str);
 	fu_string_append_kx(str, idt, "StartAddr", self->start_addr);
 }
 

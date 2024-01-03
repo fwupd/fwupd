@@ -78,7 +78,6 @@ static void
 fu_emmc_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuEmmcDevice *self = FU_EMMC_DEVICE(device);
-	FU_DEVICE_CLASS(fu_emmc_device_parent_class)->to_string(device, idt, str);
 	fu_string_append_ku(str, idt, "SectorSize", self->sect_size);
 }
 

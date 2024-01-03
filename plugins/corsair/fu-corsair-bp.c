@@ -431,9 +431,6 @@ static void
 fu_corsair_bp_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCorsairBp *self = FU_CORSAIR_BP(device);
-
-	FU_DEVICE_CLASS(fu_corsair_bp_parent_class)->to_string(device, idt, str);
-
 	fu_string_append_kx(str, idt, "InEndpoint", self->epin);
 	fu_string_append_kx(str, idt, "OutEndpoint", self->epout);
 }

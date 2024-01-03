@@ -46,7 +46,6 @@ static void
 fu_bcm57xx_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE(device);
-	FU_DEVICE_CLASS(fu_bcm57xx_device_parent_class)->to_string(device, idt, str);
 	fu_string_append(str, idt, "EthtoolIface", self->ethtool_iface);
 }
 

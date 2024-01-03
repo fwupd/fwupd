@@ -74,10 +74,6 @@ static void
 fu_pxi_ble_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuPxiBleDevice *self = FU_PXI_BLE_DEVICE(device);
-
-	/* FuUdevDevice->to_string */
-	FU_DEVICE_CLASS(fu_pxi_ble_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append(str, idt, "ModelName", self->model_name);
 	fu_pxi_ota_fw_state_to_string(&self->fwstate, idt, str);
 	fu_string_append_kx(str, idt, "RetransmitID", self->retransmit_id);

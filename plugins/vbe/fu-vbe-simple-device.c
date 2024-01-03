@@ -39,10 +39,6 @@ static void
 fu_vbe_simple_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuVbeSimpleDevice *self = FU_VBE_SIMPLE_DEVICE(device);
-
-	/* FuVbeDevice->to_string */
-	FU_DEVICE_CLASS(fu_vbe_simple_device_parent_class)->to_string(device, idt, str);
-
 	if (self->storage != NULL)
 		fu_string_append(str, idt, "Storage", self->storage);
 	if (self->devname != NULL)
