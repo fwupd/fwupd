@@ -128,7 +128,7 @@ if build_daemon
 fwupdmgr = executable(
   'fwupdmgr',
   sources: [
-    'fu-util.c',
+    'fwupdmgr.c',
     client_src,
   ],
   include_directories: [
@@ -249,7 +249,7 @@ fwupdtool = executable(
   plugins_hdr,
   export_dynamic: true,
   sources: [
-    'fu-tool.c',
+    'fwupdtool.c',
   ],
   include_directories: [
     root_incdir,
