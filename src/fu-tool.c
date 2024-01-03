@@ -3979,6 +3979,7 @@ main(int argc, char *argv[])
 	bindtextdomain(GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
 	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 	textdomain(GETTEXT_PACKAGE);
+	g_set_prgname(fu_util_get_prgname(argv[0]));
 
 #ifndef SUPPORTED_BUILD
 	/* make critical warnings fatal */

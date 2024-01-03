@@ -4775,15 +4775,6 @@ fu_util_cancelled_cb(GCancellable *cancellable, gpointer user_data)
 	g_main_loop_quit(priv->loop);
 }
 
-static const gchar *
-fu_util_get_prgname(const gchar *argv0)
-{
-	const gchar *prgname = (const gchar *)g_strrstr(argv0, " ");
-	if (prgname != NULL)
-		return prgname + 1;
-	return argv0;
-}
-
 static void
 fu_util_print_error(FuUtilPrivate *priv, const GError *error)
 {
