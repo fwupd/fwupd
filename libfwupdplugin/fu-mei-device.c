@@ -58,7 +58,6 @@ fu_mei_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuMeiDevice *self = FU_MEI_DEVICE(device);
 	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
-	FU_DEVICE_CLASS(fu_mei_device_parent_class)->to_string(device, idt, str);
 	fu_string_append(str, idt, "Uuid", priv->uuid);
 	fu_string_append(str, idt, "ParentDeviceFile", priv->parent_device_file);
 	if (priv->max_msg_length > 0x0)

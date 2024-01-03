@@ -408,7 +408,6 @@ static void
 fu_uf2_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuUf2Device *self = FU_UF2_DEVICE(device);
-	FU_DEVICE_CLASS(fu_uf2_device_parent_class)->to_string(device, idt, str);
 	if (self->family_id > 0)
 		fu_string_append_kx(str, idt, "FamilyId", self->family_id);
 }

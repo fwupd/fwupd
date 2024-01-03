@@ -86,10 +86,6 @@ static void
 fu_vli_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE(device);
-
-	/* parent */
-	FU_DEVICE_CLASS(fu_vli_usbhub_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append_kb(str, idt, "DisablePowersave", self->disable_powersave);
 	fu_string_append_kx(str, idt, "UpdateProtocol", self->update_protocol);
 	if (self->update_protocol >= 0x2) {

@@ -44,7 +44,6 @@ static void
 fu_igsc_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuIgscDevice *self = FU_IGSC_DEVICE(device);
-	FU_DEVICE_CLASS(fu_igsc_device_parent_class)->to_string(device, idt, str);
 	fu_string_append(str, idt, "Project", self->project);
 	fu_string_append_kx(str, idt, "HwSku", self->hw_sku);
 	fu_string_append_kx(str, idt, "SubsystemVendor", self->subsystem_vendor);

@@ -43,7 +43,6 @@ fu_dpaux_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuDpauxDevice *self = FU_DPAUX_DEVICE(device);
 	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
-	FU_DEVICE_CLASS(fu_dpaux_device_parent_class)->to_string(device, idt, str);
 	if (priv->dpcd_ieee_oui != 0)
 		fu_string_append_kx(str, idt, "DpcdIeeeOui", priv->dpcd_ieee_oui);
 	if (priv->dpcd_hw_rev != 0)

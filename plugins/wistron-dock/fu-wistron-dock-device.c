@@ -42,10 +42,6 @@ static void
 fu_wistron_dock_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuWistronDockDevice *self = FU_WISTRON_DOCK_DEVICE(device);
-
-	/* FuHidDevice->to_string */
-	FU_DEVICE_CLASS(fu_wistron_dock_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append(str,
 			 idt,
 			 "ComponentIdx",

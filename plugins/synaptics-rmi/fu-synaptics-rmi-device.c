@@ -86,10 +86,6 @@ fu_synaptics_rmi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
-
-	/* FuUdevDevice->to_string */
-	FU_DEVICE_CLASS(fu_synaptics_rmi_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append_kx(str, idt, "CurrentPage", priv->current_page);
 	fu_string_append_kx(str, idt, "InIepMode", priv->in_iep_mode);
 	fu_string_append_kx(str, idt, "MaxPage", priv->max_page);

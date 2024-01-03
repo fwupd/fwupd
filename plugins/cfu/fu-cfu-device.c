@@ -47,10 +47,6 @@ static void
 fu_cfu_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCfuDevice *self = FU_CFU_DEVICE(device);
-
-	/* FuUdevDevice->to_string */
-	FU_DEVICE_CLASS(fu_cfu_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append_kx(str, idt, "ProtocolVersion", self->protocol_version);
 	fu_cfu_device_map_to_string(str, idt, &self->version_get_report, "VersionGetReport");
 	fu_cfu_device_map_to_string(str, idt, &self->offer_set_report, "OfferSetReport");

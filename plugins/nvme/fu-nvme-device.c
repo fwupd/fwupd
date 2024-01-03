@@ -47,7 +47,6 @@ static void
 fu_nvme_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE(device);
-	FU_DEVICE_CLASS(fu_nvme_device_parent_class)->to_string(device, idt, str);
 	fu_string_append_ku(str, idt, "PciDepth", self->pci_depth);
 }
 

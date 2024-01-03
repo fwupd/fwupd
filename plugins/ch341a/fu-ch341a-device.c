@@ -82,10 +82,6 @@ static void
 fu_ch341a_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCh341aDevice *self = FU_CH341A_DEVICE(device);
-
-	/* FuUsbDevice->to_string */
-	FU_DEVICE_CLASS(fu_ch341a_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append(str, idt, "Speed", fu_ch341a_device_speed_to_string(self->speed));
 }
 

@@ -29,10 +29,6 @@ fu_wacom_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuWacomDevice *self = FU_WACOM_DEVICE(device);
 	FuWacomDevicePrivate *priv = GET_PRIVATE(self);
-
-	/* FuUdevDevice->to_string */
-	FU_DEVICE_CLASS(fu_wacom_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append_kx(str, idt, "FlashBlockSize", priv->flash_block_size);
 	fu_string_append_kx(str, idt, "FlashBaseAddr", priv->flash_base_addr);
 	fu_string_append_kx(str, idt, "FlashSize", priv->flash_size);

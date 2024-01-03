@@ -601,8 +601,6 @@ static void
 fu_genesys_gl32xx_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuGenesysGl32xxDevice *self = FU_GENESYS_GL32XX_DEVICE(device);
-
-	FU_DEVICE_CLASS(fu_genesys_gl32xx_device_parent_class)->to_string(device, idt, str);
 	fu_string_append(str, idt, "ChipName", self->chip_name);
 	fu_string_append_kx(str, idt, "BlockTransferSize", self->packetsz);
 	fu_string_append_kx(str, idt, "CustomerId", self->customer_id);

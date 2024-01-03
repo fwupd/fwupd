@@ -40,12 +40,6 @@ fu_logitech_hidpp_runtime_get_version_bl_major(FuLogitechHidppRuntime *self)
 	return priv->version_bl_major;
 }
 
-static void
-fu_logitech_hidpp_runtime_to_string(FuDevice *device, guint idt, GString *str)
-{
-	FU_DEVICE_CLASS(fu_logitech_hidpp_runtime_parent_class)->to_string(device, idt, str);
-}
-
 gboolean
 fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidppRuntime *self, GError **error)
 {
@@ -249,7 +243,6 @@ fu_logitech_hidpp_runtime_class_init(FuLogitechHidppRuntimeClass *klass)
 	klass_device->probe = fu_logitech_hidpp_runtime_probe;
 	klass_device->close = fu_logitech_hidpp_runtime_close;
 	klass_device->poll = fu_logitech_hidpp_runtime_poll;
-	klass_device->to_string = fu_logitech_hidpp_runtime_to_string;
 }
 
 static void

@@ -34,10 +34,6 @@ static void
 fu_kinetic_dp_puma_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuKineticDpPumaDevice *self = FU_KINETIC_DP_PUMA_DEVICE(device);
-
-	/* FuKineticDpDevice->to_string */
-	FU_DEVICE_CLASS(fu_kinetic_dp_puma_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append_kx(str, idt, "ReadFlashProgTime", self->read_flash_prog_time);
 	fu_string_append_kx(str, idt, "FlashId", self->flash_id);
 	fu_string_append_kx(str, idt, "FlashSize", self->flash_size);

@@ -155,10 +155,6 @@ fu_thunderbolt_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);
 	FuThunderboltDevicePrivate *priv = GET_PRIVATE(self);
-
-	/* FuUdevDevice->to_string */
-	FU_DEVICE_CLASS(fu_thunderbolt_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append(str, idt, "AuthMethod", priv->auth_method);
 }
 

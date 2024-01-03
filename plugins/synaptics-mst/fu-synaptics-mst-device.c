@@ -138,10 +138,6 @@ static void
 fu_synaptics_mst_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
-
-	/* FuDpauxDevice->to_string */
-	FU_DEVICE_CLASS(fu_synaptics_mst_device_parent_class)->to_string(device, idt, str);
-
 	fu_string_append(str, idt, "DeviceKind", self->device_kind);
 	if (self->family == FU_SYNAPTICS_MST_FAMILY_PANAMERA)
 		fu_string_append_kx(str, idt, "ActiveBank", self->active_bank);
