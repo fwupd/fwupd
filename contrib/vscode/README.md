@@ -15,12 +15,12 @@ Configure Visual Studio code to open the folder representing the root of the fwu
 
 ## Building
 
-Run `./contrib/debugging/build.sh` to build fwupd with all default options and create helper scripts pre-configured for debugger use.
-The application will be placed into `./dist` and helper scripts will be created for `fwupdtool`, `fwupdmgr`, and `fwupd`.
+Run `build-fwupd` within the virtualenv setup by the `contrib/setup` script to build fwupd with all default options and create helper scripts pre-configured for debugger use.
+The application will be placed into `./venv/dist` and helper scripts will be created for `fwupdtool`, `fwupdmgr`, and `fwupd` that are placed in `venv/bin`.
 
 ## Running
 
-To run any of the applications, execute the appropriate helper script in `./dist`.
+To run any of the applications, execute the application within the venv.
 
 ## Debugging
 
@@ -28,7 +28,7 @@ To debug any of the applications, launch the helper script with the environment 
 For example to debug `fwupdtool get-devices` the command to launch would be:
 
 ```shell
-sudo DEBUG=1 ./dist/fwupdtool.sh get-devices
+DEBUG=1 fwupdtool get-devices
 ```
 
 This will configure `gdbserver` to listen on a local port waiting for a debugger to connect.
