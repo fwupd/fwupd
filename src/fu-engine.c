@@ -6469,7 +6469,6 @@ fu_engine_ensure_security_attrs_supported_cpu(FuEngine *self)
 
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
-	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fu_security_attrs_append(self->host_security_attrs, attr);
 }
