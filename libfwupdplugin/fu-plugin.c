@@ -2570,7 +2570,7 @@ g_file_set_contents_full(const gchar *filename,
 	if (length < 0)
 		length = strlen(contents);
 	fd = g_open(filename, O_CREAT, mode);
-	if (fd <= 0) {
+	if (fd < 0) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_FAILED,
