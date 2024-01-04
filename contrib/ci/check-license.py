@@ -32,6 +32,8 @@ def test_files() -> int:
             continue
         if fn.startswith("subprojects"):
             continue
+        if fn.startswith("venv"):
+            continue
         if fn.startswith("dist"):
             continue
         lic = __get_license(fn)

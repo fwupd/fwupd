@@ -51,6 +51,8 @@ def test_files() -> int:
             continue
         if fn.startswith("build"):
             continue
+        if fn.startswith("venv"):
+            continue
         if fn.startswith("dist"):
             continue
         if fn.startswith("contrib/ci"):
