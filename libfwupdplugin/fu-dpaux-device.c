@@ -65,6 +65,12 @@ fu_dpaux_device_invalidate(FuDevice *device)
 static gboolean
 fu_dpaux_device_probe(FuDevice *device, GError **error)
 {
+	const gchar *tmp;
+
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS(fu_dpaux_device_parent_class)->probe(device, error))
+		return FALSE;
+
 	/* get from sysfs if not set from tests */
 	if (fu_device_get_logical_id(device) == NULL &&
 	    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)) != NULL) {
@@ -73,7 +79,16 @@ fu_dpaux_device_probe(FuDevice *device, GError **error)
 		    g_path_get_basename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
 		fu_device_set_logical_id(device, logical_id);
 	}
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci,drm_dp_aux_dev", error);
+
+	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci,drm_dp_aux_dev", error))
+		return FALSE;
+
+	/* only populated on real system, test suite won't have udev_device set */
+	tmp = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "name", NULL);
+	if (tmp != NULL)
+		fu_device_set_name(device, tmp);
+
+	return TRUE;
 }
 
 static gboolean
