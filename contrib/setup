@@ -22,33 +22,11 @@ rename_branch()
     fi
 }
 
-detect_selinux()
-{
-    SELINUX="0"
-    if which getenforce &> /dev/null; then
-        if getenforce | grep -i "enforcing" >/dev/null; then
-            SELINUX="1"
-        fi
-    fi
-}
-
 setup_deps()
 {
     read -p "Install build dependencies? (y/N) " question
     if [ "$question" = "y" ]; then
         $(which sudo) python3 $HELPER install-dependencies $HELPER_ARGS -y
-    fi
-}
-
-setup_run_dev()
-{
-    if [ "$SELINUX" -eq "1" ]; then
-        echo "SELinux is enabled, you won't be able to run the daemon from default prefix /usr/local"
-        return
-    fi
-    read -p "Set up dbus activated daemon and PolicyKit actions from /usr/local? (y/N) " question
-    if [ "$question" = "y" ]; then
-        ./contrib/prepare-system /usr/local install
     fi
 }
 
@@ -65,15 +43,6 @@ setup_run_wrappers()
     # build wrapper
     rm -f ${BIN}/build-fwupd
     ln -s ${BASE}/build-venv.sh ${BIN}/build-fwupd
-}
-
-setup_unsafe_polkit_rules()
-{
-    read -p "Install developer-friendly **unsafe** PolicyKit rules into /etc/polkit-1/rules.d? (y/N) " question
-    if [ "$question" = "y" ]; then
-        sudo mkdir -p /etc/polkit-1/rules.d
-        sudo cp ./policy/org.freedesktop.fwupd-unsafe.rules /etc/polkit-1/rules.d/
-    fi
 }
 
 setup_vscode()
@@ -198,20 +167,16 @@ detect_os()
 #needed for arguments for some commands
 detect_os "$@"
 
-detect_selinux
-
 #if interactive install build deps and prepare environment
 if [ -t 2 ]; then
     case $OS in
         debian|ubuntu|arch|fedora)
             setup_deps
-            setup_run_dev
             ;;
         void)
             setup_deps
             ;;
     esac
-    setup_unsafe_polkit_rules
     rename_branch
 fi
 setup_virtualenv
