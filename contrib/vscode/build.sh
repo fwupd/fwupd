@@ -2,25 +2,20 @@
 # Copyright (C) 2018 Dell, Inc.
 
 SOURCE=$(dirname $0)
-ROOT=$1
-if [ -z "$ROOT" ]; then
-        ROOT=`pwd`
-fi
+ROOT=$(pwd)
+BUILD=${ROOT}/build
+DIST=${ROOT}/dist
 
-# build in tree
-sudo rm -rf build ${ROOT}/dist
-meson build --prefix=${ROOT}/dist -Dsystemd=disabled -Dudevdir=${ROOT}/dist
-ninja -C build install
+#build and install
+rm -rf ${BUILD} ${DIST}
+meson setup ${BUILD} --prefix=${DIST} -Dsystemd=disabled -Dudevdir=${DIST} $@
+ninja -C ${BUILD} install
 
-#create helper scripts
+#create wrapper scripts
 TEMPLATE=${SOURCE}/launcher.sh
-sed "s,#ROOT#,${ROOT},; s,#EXECUTABLE#,libexec/fwupd/fwupd," \
-        ${TEMPLATE} > ${ROOT}/dist/fwupd.sh
-sed "s,#ROOT#,${ROOT},; s,#EXECUTABLE#,bin/fwupdtool," \
-        ${TEMPLATE} > ${ROOT}/dist/fwupdtool.sh
-sed "s,#ROOT#,${ROOT},; s,#EXECUTABLE#,bin/fwupdmgr," \
-        ${TEMPLATE} > ${ROOT}/dist/fwupdmgr.sh
-chmod +x ${ROOT}/dist/*.sh
+for binary in fwupdtool fwupdmgr fwupd; do
+        ln -s ../${TEMPLATE} ${DIST}/$binary
+done
 
 #create debugging targets
 TARGET=${ROOT}/.vscode
