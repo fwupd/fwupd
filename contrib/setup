@@ -70,6 +70,21 @@ setup_run_dev()
     fi
 }
 
+setup_run_wrappers()
+{
+    BASE=../../contrib/
+    BIN=venv/bin/
+    TEMPLATE=${BASE}/launch-venv.sh
+    # launch wrappers
+    for F in fwupdtool fwupdmgr fwupd; do
+        rm -f ${BIN}/${F}
+        ln -s $TEMPLATE ${BIN}/${F}
+    done
+    # build wrapper
+    rm -f ${BIN}/build-fwupd
+    ln -s ${BASE}/build-venv.sh ${BIN}/build-fwupd
+}
+
 setup_unsafe_polkit_rules()
 {
     read -p "Install developer-friendly **unsafe** PolicyKit rules into /etc/polkit-1/rules.d? (y/N) " question
@@ -81,14 +96,18 @@ setup_unsafe_polkit_rules()
 
 setup_vscode()
 {
-    # Add default vscode settings if not existing
-    SETTINGS_FILE=./.vscode/settings.json
-    SETTINGS_TEMPLATE_FILE=./contrib/vscode/settings.json
-    if [ ! -f "$SETTINGS_FILE" ]; then
-        mkdir ./.vscode
-        echo "Copy $SETTINGS_TEMPLATE_FILE to $SETTINGS_FILE."
-        cp "$SETTINGS_TEMPLATE_FILE" "$SETTINGS_FILE"
-    fi
+    # Add default vscode settings and debug launcher
+    SOURCED=./contrib/vscode
+    TARGETD=./.vscode
+    SETTINGS_F=settings.json
+    LAUNCH_F=launch.json
+    for f in $SETTINGS_F $LAUNCH_F; do
+        TEMPLATE=${SOURCED}/${f}
+        TARGETF=${TARGETD}/${f}
+        mkdir -p ${TARGETD}
+        echo "Copy ${TEMPLATE} to ${TARGETF}."
+        cp "${TEMPLATE}" "${TARGETF}"
+    done
 }
 
 setup_git()
@@ -108,12 +127,30 @@ install_pip()
     python3 -m pip install $package
 }
 
+setup_virtualenv()
+{
+    echo "Setting up virtualenv"
+    install_pip virtualenv
+    virtualenv --system-site-packages venv --prompt fwupd
+    source venv/bin/activate
+    cat >> venv/bin/activate << EOF
+echo "To build fwupd within development environment run:"
+echo ""
+echo "# build-fwupd"
+echo ""
+echo "To run any tool under gdbserver add DEBUG=1 to env, for example:"
+echo ""
+echo "# DEBUG=1 fwupdtool get-devices"
+echo ""
+echo "To leave fwupd development environment run:"
+echo ""
+echo "# deactivate"
+EOF
+}
+
 setup_precommit()
 {
     echo "Configuring pre-commit hooks"
-    python3 -m venv venv
-    source venv/bin/activate
-
     install_pip pre-commit
     pre-commit install
 }
@@ -196,6 +233,8 @@ if [ -t 2 ]; then
     setup_unsafe_polkit_rules
     rename_branch
 fi
+setup_virtualenv
+setup_run_wrappers
 check_markdown
 check_jinja2
 setup_vscode
@@ -207,3 +246,9 @@ setup_precommit
 if [ -t 2 ]; then
     setup_prepush
 fi
+
+echo ""
+echo "To enter fwupd development environment run:"
+echo ""
+echo "# source venv/bin/activate"
+echo ""
