@@ -85,7 +85,7 @@ setup_virtualenv()
     virtualenv --system-site-packages venv --prompt fwupd
     source venv/bin/activate
     cat >> venv/bin/activate << EOF
-echo "To build fwupd within development environment run:"
+echo "To build or rebuild fwupd within development environment run:"
 echo ""
 echo "# build-fwupd"
 echo ""
