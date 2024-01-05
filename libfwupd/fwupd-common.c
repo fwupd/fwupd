@@ -382,54 +382,6 @@ fwupd_build_user_agent_system(void)
 }
 
 /**
- * fwupd_build_user_agent:
- * @package_name: (not nullable): client program name, e.g. `gnome-software`
- * @package_version: (not nullable): client program version, e.g. `3.28.1`
- *
- * Builds a user-agent to use for the download.
- *
- * Supplying harmless details to the server means it knows more about each
- * client. This allows the web service to respond in a different way, for
- * instance sending a different metadata file for old versions of fwupd, or
- * returning an error for Solaris machines.
- *
- * Before freaking out about theoretical privacy implications, much more data
- * than this is sent to each and every website you visit.
- *
- * Rather that using this function you should use [method@Client.set_user_agent_for_package]
- * which uses the *runtime* version of the daemon rather than the *build-time*
- * version.
- *
- * Returns: a string, e.g. `foo/0.1 (Linux i386 4.14.5; en; Fedora 27) fwupd/1.0.3`
- *
- * Since: 1.0.3
- **/
-gchar *
-fwupd_build_user_agent(const gchar *package_name, const gchar *package_version)
-{
-	g_autoptr(GString) str = g_string_new(NULL);
-	g_autofree gchar *system = NULL;
-
-	g_return_val_if_fail(package_name != NULL, NULL);
-	g_return_val_if_fail(package_version != NULL, NULL);
-
-	/* application name and version */
-	g_string_append_printf(str, "%s/%s", package_name, package_version);
-
-	/* system information */
-	system = fwupd_build_user_agent_system();
-	if (system != NULL)
-		g_string_append_printf(str, " (%s)", system);
-
-	/* platform, which in our case is just fwupd */
-	if (g_strcmp0(package_name, "fwupd") != 0)
-		g_string_append_printf(str, " fwupd/%s", PACKAGE_VERSION);
-
-	/* success */
-	return g_string_free(g_steal_pointer(&str), FALSE);
-}
-
-/**
  * fwupd_build_machine_id:
  * @salt: (nullable): optional salt
  * @error: (nullable): optional return location for an error

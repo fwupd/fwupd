@@ -207,12 +207,6 @@ LIBFWUPD_1.0.0 {
   local: *;
 } LIBFWUPD_0.9.8;
 
-LIBFWUPD_1.0.3 {
-  global:
-    fwupd_build_user_agent;
-  local: *;
-} LIBFWUPD_1.0.0;
-
 LIBFWUPD_1.0.4 {
   global:
     fwupd_build_history_report_json;
@@ -225,7 +219,7 @@ LIBFWUPD_1.0.4 {
     fwupd_release_get_metadata_item;
     fwupd_remote_get_report_uri;
   local: *;
-} LIBFWUPD_1.0.3;
+} LIBFWUPD_1.0.0;
 
 LIBFWUPD_1.0.7 {
   global:
