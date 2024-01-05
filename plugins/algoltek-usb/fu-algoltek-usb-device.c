@@ -74,6 +74,8 @@ fu_algoltek_usb_device_rdr(FuAlgoltekUsbDevice *self, int address, GError **erro
 static GByteArray *
 fu_algoltek_usb_device_rdv(FuAlgoltekUsbDevice *self, GError **error)
 {
+	guint8 underscore_count = 0;
+	guint16 version_prefix;
 	g_autoptr(GByteArray) st = fu_struct_algoltek_cmd_transfer_pkt_new();
 	g_autoptr(GByteArray) version_data = g_byte_array_new();
 
@@ -91,11 +93,30 @@ fu_algoltek_usb_device_rdv(FuAlgoltekUsbDevice *self, GError **error)
 						  error))
 		return NULL;
 
-	/* Remove len and cmd bytes */
-	for (guint32 i = 2; i < st->len; i++) {
-		if (st->data[i] < 128)
-			fu_byte_array_append_uint8(version_data, st->data[i]);
+	if (!fu_memread_uint16_safe(st->data, st->len, 2, &version_prefix, G_BIG_ENDIAN, error))
+		return NULL;
+
+	if (version_prefix == 0x4147) {
+		/* Remove len, cmd bytes and "AG" prefixes*/
+		for (guint32 i = 4; i < st->len; i++) {
+			if (st->data[i] == 0x5F) {
+				underscore_count++;
+				if (underscore_count == 1)
+					continue;
+			}
+			if (underscore_count > 2)
+				break;
+			else if (underscore_count > 0)
+				fu_byte_array_append_uint8(version_data, st->data[i]);
+		}
+	} else {
+		/* Remove len and cmd bytes */
+		for (guint32 i = 2; i < st->len; i++) {
+			if (st->data[i] < 128)
+				fu_byte_array_append_uint8(version_data, st->data[i]);
+		}
 	}
+
 	/* success */
 	return g_steal_pointer(&version_data);
 }
