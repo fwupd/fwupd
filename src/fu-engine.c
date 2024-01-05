@@ -7648,9 +7648,14 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 	/* the plugin either can't tell us the error, or doesn't know itself */
 	if (fu_device_get_update_state(dev) != FWUPD_UPDATE_STATE_FAILED &&
 	    fu_device_get_update_state(dev) != FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
+		g_autoptr(GString) str = g_string_new("failed to run update on reboot: ");
 		g_info("falling back to generic failure");
 		fu_device_set_update_state(dev_history, FWUPD_UPDATE_STATE_FAILED);
-		fu_device_set_update_error(dev_history, "failed to run update on reboot");
+		g_string_append_printf(str,
+				       "expected %s and got %s",
+				       fwupd_release_get_version(rel_history),
+				       fu_device_get_version(dev));
+		fu_device_set_update_error(dev_history, str->str);
 	} else {
 		fu_device_set_update_state(dev_history, fu_device_get_update_state(dev));
 		fu_device_set_update_error(dev_history, fu_device_get_update_error(dev));
