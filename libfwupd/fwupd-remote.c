@@ -1732,25 +1732,6 @@ fwupd_remote_get_firmware_base_uri(FwupdRemote *self)
 }
 
 /**
- * fwupd_remote_set_enabled:
- * @self: a #FwupdRemote
- * @enabled: boolean
- *
- * Sets if the remote is enabled and should be used.
- *
- * Since: 1.8.13
- **/
-void
-fwupd_remote_set_enabled(FwupdRemote *self, gboolean enabled)
-{
-	g_return_if_fail(FWUPD_IS_REMOTE(self));
-	if (enabled)
-		fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_ENABLED);
-	else
-		fwupd_remote_remove_flag(self, FWUPD_REMOTE_FLAG_ENABLED);
-}
-
-/**
  * fwupd_remote_needs_refresh:
  * @self: a #FwupdRemote
  *
