@@ -20,6 +20,7 @@
 #include "fwupd-remote-private.h"
 
 #include "fu-remote-list.h"
+#include "fu-remote.h"
 
 enum { SIGNAL_CHANGED, SIGNAL_ADDED, SIGNAL_LAST };
 
@@ -242,7 +243,7 @@ fu_remote_list_add_for_file(FuRemoteList *self,
 {
 	FwupdRemote *remote_tmp;
 	g_autofree gchar *remotesdir = NULL;
-	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(FwupdRemote) remote = fu_remote_new();
 
 	/* set directory to store data */
 	remotesdir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_METADATA);

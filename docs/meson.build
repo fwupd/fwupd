@@ -41,7 +41,7 @@ if build_standalone
         '--replace', 'PACKAGE_VERSION', fwupd_version,
         '--replace', 'SYSCONFDIR', sysconfdir,
         '--replace', 'LOCALSTATEDIR', localstatedir,
-        '--defines', join_paths(meson.project_source_root(), 'libfwupd', 'fwupd-remote.c'),
+        '--defines', join_paths(meson.project_source_root(), 'src', 'fu-remote.c'),
       ],
       install: true,
       install_dir: join_paths(mandir, 'man5'),

@@ -124,7 +124,6 @@ LIBFWUPD_0.9.3 {
     fwupd_release_to_string;
     fwupd_remote_get_id;
     fwupd_remote_get_type;
-    fwupd_remote_load_from_filename;
     fwupd_remote_new;
   local: *;
 } LIBFWUPD_0.9.2;
@@ -900,7 +899,6 @@ LIBFWUPD_1.8.11 {
 
 LIBFWUPD_1.8.13 {
   global:
-    fwupd_remote_save_to_filename;
     fwupd_remote_set_metadata_uri;
     fwupd_remote_set_title;
   local: *;
@@ -989,5 +987,14 @@ LIBFWUPD_2.0.0 {
     fwupd_client_refresh_remote;
     fwupd_client_refresh_remote_async;
     fwupd_remote_set_checksum_sig;
+    fwupd_remote_set_firmware_base_uri;
+    fwupd_remote_set_kind;
+    fwupd_remote_set_order_after;
+    fwupd_remote_set_order_before;
+    fwupd_remote_set_password;
+    fwupd_remote_set_refresh_interval;
+    fwupd_remote_set_report_uri;
+    fwupd_remote_set_security_report_uri;
+    fwupd_remote_set_username;
   local: *;
 } LIBFWUPD_1.9.10;

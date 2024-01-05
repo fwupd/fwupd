@@ -55,6 +55,7 @@ fwupd_engine_src = [
   'fu-engine-requirements.c',
   'fu-release-common.c',
   'fu-plugin-list.c',
+  'fu-remote.c',
   'fu-remote-list.c',
   'fu-security-attr-common.c',
 ] + systemd_src
@@ -405,6 +406,7 @@ if get_option('tests')
     multiple_rels_test_firmware,
     noreqs_test_firmware,
     plugins_hdr,
+    metadata_xml_gz_jcat,
     sources: [
       'fu-spawn.c',
       'fu-self-test.c',
