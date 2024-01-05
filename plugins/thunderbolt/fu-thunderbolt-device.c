@@ -428,6 +428,7 @@ fu_thunderbolt_device_init(FuThunderboltDevice *self)
 	priv->auth_method = "nvm_authenticate";
 	fu_device_add_icon(FU_DEVICE(self), "thunderbolt");
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.thunderbolt");
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
