@@ -8,7 +8,7 @@ These instructons below can either be used by the silicon vendor, or the consult
 
 * Working access to the internet
 
-* A user account (we’ll use emily as the example here) with administrator permissions
+* A user account (we’ll use `u` as the example here) with administrator permissions
 
 ## Setup fwupd development environment
 
@@ -58,7 +58,7 @@ The fwupd project is split into three main components:
 
 3. **fwupdtool**: The debugging tool developers use to find problems and to run new code, as root
 
-The `fwupdtool` binary does most of the things that `fwupdmgr` does, but without talking to the system fwupd instance. It is a lot easier to run `fwupdtool` with just one plugin (e.g. `--plugin-whitelist vli`) than running the daemon and all the plugins. You might have to wait 5 seconds and then read thousands of lines of debugging to see the `printf()` you added in a new plugin with the daemon, but with `fwupdtool --plugin-whitelist vli --verbose get-devices` it’ll be in a few lines, and instant.
+The `fwupdtool` binary does most of the things that `fwupdmgr` does, but without talking to the system fwupd instance. It is a lot easier to run `fwupdtool` with just one plugin (e.g. `--plugins vli`) than running the daemon and all the plugins. You might have to wait 5 seconds and then read thousands of lines of debugging to see the `printf()` you added in a new plugin with the daemon, but with `fwupdtool --plugins vli --verbose get-devices` it’ll be in a few lines, and instant.
 
 Within the development environment wrappers have been setup to allow launching `fwupd`, `fwupdtool` or `fwupdmgr` very similar to a host system.
 
@@ -117,7 +117,7 @@ Using fwupdtool raw firmware blob (i.e. not the cabinet archive with metadata) c
 
 ```shell
 fwupdtool --verbose --plugins vli \
- install-blob /home/emily/the-firmware.bin 73ef80b60058b4f18549921520bfd94eaf18710a
+ install-blob /home/u/the-firmware.bin 73ef80b60058b4f18549921520bfd94eaf18710a
 ```
 
 ## Firmware Parsing
