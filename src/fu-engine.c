@@ -60,6 +60,7 @@
 #include "fu-plugin-private.h"
 #include "fu-release.h"
 #include "fu-remote-list.h"
+#include "fu-remote.h"
 #include "fu-security-attr-common.h"
 #include "fu-security-attrs-private.h"
 #include "fu-udev-device-private.h"
