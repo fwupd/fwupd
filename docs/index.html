@@ -24,18 +24,51 @@
     </div>
   </div>
   <section id="main" style="max-width: 100%" class="content">
+    <header>
+      <h1>End user documentation</h1>
+    </header>
     {% if man %}
     <header>
-      <h1>Manual pages</h1>
+      <h2>Manual pages</h2>
       <div class="description">
-        <p>Manual pages for interacting with fwupd</p>
+        <p>Manual pages for interacting with fwupd.</p>
       </div>
     </header>{% for obj in man %}
     <ul>
       <li><a href="libfwupdplugin/{{ obj }}.html">{{ obj }}</a></li>
     </ul>{% endfor %}{% endif %}
     <header>
-      <h1>Building fwupd</h1>
+      <h2>Host Security ID</h2>
+      <div class="description">
+        <p>The fwupd HSI specification.</p>
+      </div>
+    </header>
+    <ul>
+      <li><a href="libfwupdplugin/hsi.html">Public specification</a></li>
+    </ul>
+    <header>
+      <h1>BIOS Settings</h2>
+      <div class="description">
+        <p>The fwupd BIOS settings interface</p>
+      </div>
+    </header>
+    <ul>
+      <li><a href="libfwupdplugin/bios-settings.html">User documentation</a></li>
+    </ul>
+    <header>
+      <h2>Supermicro BMC license issue</h2>
+      <div class="description">
+        <p>Fixing the missing license issue when updating Supermicro boards</p>
+      </div>
+    </header>
+    <ul>
+      <li><a href="libfwupdplugin/supermicro-license.html">Issue</a></li>
+    </ul>
+    <header>
+      <h1>Developer documentation</h1>
+    </header>
+    <header>
+      <h2>Building fwupd</h2>
       <div class="description">
         <p>Building using the fwupd development environment</p>
       </div>
@@ -44,7 +77,7 @@
       <li><a href="libfwupdplugin/building.html">Building and debugging</a></li>
     </ul>
     <header>
-      <h1>libfwupd</h1>
+      <h2>libfwupd</h2>
       <div class="description">
         <p>Functionality exported by libfwupd for client applications.</p>
       </div>
@@ -53,7 +86,7 @@
       <li><a href="libfwupd/index.html">Developer documentation</a></li>
     </ul>
     <header>
-      <h1>libfwupdplugin</h1>
+      <h2>libfwupdplugin</h2>
       <div class="description">
         <p>Functionality available to fwupd plugins.</p>
       </div>
@@ -74,40 +107,13 @@
       <li><a href="libfwupdplugin/env.html">Environment variables</a></li>
     </ul>
     <header>
-      <h1>Host Security ID</h1>
-      <div class="description">
-        <p>The fwupd HSI specification.</p>
-      </div>
-    </header>
-    <ul>
-      <li><a href="libfwupdplugin/hsi.html">Public specification</a></li>
-    </ul>
-    <header>
-      <h1>BIOS Settings</h1>
-      <div class="description">
-        <p>The fwupd BIOS settings interface</p>
-      </div>
-    </header>
-    <ul>
-      <li><a href="libfwupdplugin/bios-settings.html">User documentation</a></li>
-    </ul>
-    <header>
-      <h1>BOS DS20 Specification</h1>
+      <h2>BOS DS20 Specification</h2>
       <div class="description">
         <p>The fwupd Binary Object Store descriptor specification</p>
       </div>
     </header>
     <ul>
       <li><a href="libfwupdplugin/ds20.html">Documentation</a></li>
-    </ul>
-    <header>
-      <h1>Supermicro BMC license issue</h1>
-      <div class="description">
-        <p>Fixing the missing license issue when updating Supermicro boards</p>
-      </div>
-    </header>
-    <ul>
-      <li><a href="libfwupdplugin/supermicro-license.html">Issue</a></li>
     </ul>
   </section>
 </body>
