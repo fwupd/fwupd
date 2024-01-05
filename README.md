@@ -19,9 +19,9 @@ Additional information is available [at the website](https://fwupd.org/).
 
 ## Compiling
 
-The most up-to-date compilation instructions are available in the [Wiki](https://github.com/fwupd/fwupd/wiki/Compilation).
+See [Building and Debugging](docs/building.md) for how to build the fwupd development environment.
 
-**NOTE:** In most cases, end users should never compile fwupd from scratch; it's a
+**NOTE:** In most cases, end users should not compile fwupd from scratch; it's a
 complicated project with dozens of dependencies (and as many configuration options)
 and there's just too many things that can go wrong.
 
