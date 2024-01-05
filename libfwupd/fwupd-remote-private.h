@@ -25,9 +25,6 @@ fwupd_remote_save_to_filename(FwupdRemote *self,
 			      const gchar *filename,
 			      GCancellable *cancellable,
 			      GError **error) G_GNUC_NON_NULL(1, 2);
-G_DEPRECATED_FOR(fwupd_remote_add_flag)
-void
-fwupd_remote_set_enabled(FwupdRemote *self, gboolean enabled) G_GNUC_NON_NULL(1);
 void
 fwupd_remote_set_id(FwupdRemote *self, const gchar *id) G_GNUC_NON_NULL(1);
 void
