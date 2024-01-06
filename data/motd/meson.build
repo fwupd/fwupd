@@ -16,6 +16,7 @@ con2.set('systemd_unit_user', get_option('systemd_unit_user'))
 if libsystemd.found()
   if get_option('systemd_unit_user') == ''
       con2.set('user', 'DynamicUser=yes')
+      warning('Using systemd DynamicUser for fwupd-refresh.service. See https://github.com/systemd/systemd/issues/22737 for possible implications')
   else
       dynamic_options = [
                          'ProtectSystem=strict',
