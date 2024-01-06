@@ -301,6 +301,7 @@ fu_pci_psp_device_add_security_attrs_rpmc(FuDevice *device,
 static void
 fu_pci_psp_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 {
+	FuPciPspDevice *self = FU_PCI_PSP_DEVICE(device);
 	const gchar *sysfs_path = NULL;
 
 	if (device != NULL)
@@ -308,6 +309,8 @@ fu_pci_psp_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	/* ccp not loaded */
 	if (sysfs_path == NULL)
 		return;
+
+	self->supported = FALSE;
 
 	fu_pci_psp_device_add_security_attrs_tsme(device, sysfs_path, attrs);
 	fu_pci_psp_device_add_security_attrs_fused_part(device, sysfs_path, attrs);
