@@ -4030,8 +4030,6 @@ fwupd_client_refresh_remote_signature_cb(GObject *source, GAsyncResult *res, gpo
 	FwupdClientRefreshRemoteData *data = g_task_get_task_data(task);
 	FwupdClient *self = g_task_get_source_object(task);
 	GCancellable *cancellable = g_task_get_cancellable(task);
-	GChecksumType checksum_kind;
-	g_autofree gchar *checksum = NULL;
 	g_autoptr(GPtrArray) urls = g_ptr_array_new_with_free_func(g_free);
 
 	/* save signature */
@@ -4053,16 +4051,19 @@ fwupd_client_refresh_remote_signature_cb(GObject *source, GAsyncResult *res, gpo
 	}
 
 	/* is the signature checksum the same? */
-	checksum_kind = fwupd_checksum_guess_kind(fwupd_remote_get_checksum(data->remote));
-	checksum =
-	    g_compute_checksum_for_data(checksum_kind,
-					(const guchar *)g_bytes_get_data(data->signature, NULL),
-					g_bytes_get_size(data->signature));
-	if (g_strcmp0(checksum, fwupd_remote_get_checksum(data->remote)) == 0) {
-		g_info("metadata signature of %s is unchanged, skipping",
-		       fwupd_remote_get_id(data->remote));
-		g_task_return_boolean(task, TRUE);
-		return;
+	if (fwupd_remote_get_checksum(data->remote) != NULL) {
+		GChecksumType checksum_kind =
+		    fwupd_checksum_guess_kind(fwupd_remote_get_checksum(data->remote));
+		g_autofree gchar *checksum = g_compute_checksum_for_data(
+		    checksum_kind,
+		    (const guchar *)g_bytes_get_data(data->signature, NULL),
+		    g_bytes_get_size(data->signature));
+		if (g_strcmp0(checksum, fwupd_remote_get_checksum(data->remote)) == 0) {
+			g_info("metadata signature of %s is unchanged, skipping",
+			       fwupd_remote_get_id(data->remote));
+			g_task_return_boolean(task, TRUE);
+			return;
+		}
 	}
 
 	/* maybe get metadata from Passim */
