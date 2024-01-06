@@ -92,8 +92,8 @@ fu_linux_swap_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs
 
 	/* none configured */
 	if (!fu_linux_swap_get_enabled(swap)) {
-		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 		return;
 	}
 
