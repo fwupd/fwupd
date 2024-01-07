@@ -274,10 +274,14 @@ fu_cpu_device_probe_extended_features(FuDevice *device, GError **error)
 		self->flags |= FU_CPU_DEVICE_FLAG_SMAP;
 	if ((ecx >> 7) & 0x1)
 		self->flags |= FU_CPU_DEVICE_FLAG_SHSTK;
-	if ((ecx >> 13) & 0x1)
-		self->flags |= FU_CPU_DEVICE_FLAG_TME;
-	if ((edx >> 20) & 0x1)
-		self->flags |= FU_CPU_DEVICE_FLAG_IBT;
+
+	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_INTEL) {
+		if ((ecx >> 13) & 0x1)
+			self->flags |= FU_CPU_DEVICE_FLAG_TME;
+		if ((edx >> 20) & 0x1)
+			self->flags |= FU_CPU_DEVICE_FLAG_IBT;
+	}
+
 	return TRUE;
 }
 
@@ -323,15 +327,25 @@ fu_cpu_device_add_security_attrs_cet_enabled(FuCpuDevice *self, FuSecurityAttrs 
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
 	fu_security_attrs_append(attrs, attr);
 
-	/* check for CET */
-	if (!fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_SHSTK) ||
-	    !fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_IBT)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-		return;
+	switch (fu_cpu_get_vendor()) {
+	case FU_CPU_VENDOR_INTEL:
+		if (fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_SHSTK) &&
+		    fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_IBT)) {
+			fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+			return;
+		}
+		break;
+	case FU_CPU_VENDOR_AMD:
+		if (fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_SHSTK)) {
+			fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+			return;
+		}
+		break;
+	default:
+		break;
 	}
 
-	/* success */
-	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 }
 
 static void
