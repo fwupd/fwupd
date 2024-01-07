@@ -50,17 +50,22 @@ void {{item.c_setter}}(GByteArray *st, {{item.type_glib}} value);
 {%- endif %}
 {%- endfor %}
 
+#ifndef __GI_SCANNER__
 {%- for item in obj.items | selectattr('enabled') %}
 {%- if item.type != Type.B32 %}
 #define {{item.c_define('OFFSET')}} 0x{{'{:X}'.format(item.offset)}}
 {%- endif %}
 {%- endfor %}
+#endif
 
+#ifndef __GI_SCANNER__
 {%- for item in obj.items | selectattr('enabled') | selectattr('multiplier') %}
 #define {{item.c_define('SIZE')}} 0x{{'{:X}'.format(item.size)}}
 {%- endfor %}
 #define {{obj.c_define('SIZE')}} 0x{{'{:X}'.format(obj.size)}}
+#endif
 
+#ifndef __GI_SCANNER__
 {%- for item in obj.items | selectattr('enabled') | selectattr('default') %}
 {%- if item.type == Type.STRING or item.multiplier %}
 #define {{item.c_define('DEFAULT')}} "{{item.default}}"
@@ -68,3 +73,4 @@ void {{item.c_setter}}(GByteArray *st, {{item.type_glib}} value);
 #define {{item.c_define('DEFAULT')}} {{item.default}}
 {%- endif %}
 {%- endfor %}
+#endif
