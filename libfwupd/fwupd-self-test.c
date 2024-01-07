@@ -1272,6 +1272,9 @@ main(int argc, char **argv)
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
 
+	g_assert_cmpint(sizeof(FwupdDeviceFlags), ==, sizeof(guint64));
+	g_assert_cmpint(sizeof(FwupdStatus), ==, sizeof(guint32));
+
 	/* tests go here */
 	g_test_add_func("/fwupd/enums", fwupd_enums_func);
 	g_test_add_func("/fwupd/common{machine-hash}", fwupd_common_machine_hash_func);

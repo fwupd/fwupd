@@ -4410,7 +4410,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 					 releases,
 					 cabinet,
 					 progress,
-					 FWUPD_DEVICE_FLAG_NONE,
+					 FWUPD_INSTALL_FLAG_NONE,
 					 &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
