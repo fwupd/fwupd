@@ -414,7 +414,7 @@ fwupd_device_problem_from_string(const gchar *device_problem)
 const gchar *
 fwupd_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 {
-	if (plugin_flag == FWUPD_DEVICE_FLAG_NONE)
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_NONE)
 		return "none";
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_DISABLED)
 		return "disabled";
@@ -442,7 +442,7 @@ fwupd_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 		return "require-hwid";
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD)
 		return "kernel-too-old";
-	if (plugin_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_UNKNOWN)
 		return "unknown";
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_AUTH_REQUIRED)
 		return "auth-required";
@@ -471,7 +471,7 @@ FwupdPluginFlags
 fwupd_plugin_flag_from_string(const gchar *plugin_flag)
 {
 	if (g_strcmp0(plugin_flag, "none") == 0)
-		return FWUPD_DEVICE_FLAG_NONE;
+		return FWUPD_PLUGIN_FLAG_NONE;
 	if (g_strcmp0(plugin_flag, "disabled") == 0)
 		return FWUPD_PLUGIN_FLAG_DISABLED;
 	if (g_strcmp0(plugin_flag, "user-warning") == 0)
@@ -508,7 +508,7 @@ fwupd_plugin_flag_from_string(const gchar *plugin_flag)
 		return FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY;
 	if (g_strcmp0(plugin_flag, "ready") == 0)
 		return FWUPD_PLUGIN_FLAG_READY;
-	return FWUPD_DEVICE_FLAG_UNKNOWN;
+	return FWUPD_PLUGIN_FLAG_UNKNOWN;
 }
 
 /**
@@ -640,7 +640,7 @@ fwupd_feature_flag_from_string(const gchar *feature_flag)
 		return FWUPD_FEATURE_FLAG_ALLOW_AUTHENTICATION;
 	if (g_strcmp0(feature_flag, "requests-non-generic") == 0)
 		return FWUPD_FEATURE_FLAG_REQUESTS_NON_GENERIC;
-	return FWUPD_FEATURE_FLAG_LAST;
+	return FWUPD_FEATURE_FLAG_UNKNOWN;
 }
 
 /**

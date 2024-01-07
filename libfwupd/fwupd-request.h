@@ -113,65 +113,60 @@ typedef enum {
 #define FWUPD_REQUEST_ID_REPLUG_POWER "org.freedesktop.fwupd.replug-power"
 
 /**
- * FWUPD_REQUEST_FLAG_NONE:
- *
- * No flags are set.
- *
- * Since: 1.8.6
- */
-#define FWUPD_REQUEST_FLAG_NONE (0u)
-
-/**
- * FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE:
- *
- * Use a generic (translated) request message.
- *
- * Since: 1.8.6
- */
-#define FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE (1u << 0)
-
-/**
- * FWUPD_REQUEST_FLAG_ALLOW_GENERIC_IMAGE:
- *
- * Use a generic (translated) request image.
- *
- * Since: 1.8.6
- */
-#define FWUPD_REQUEST_FLAG_ALLOW_GENERIC_IMAGE (1u << 1)
-
-/**
- * FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE:
- *
- * Device requires a non-generic interaction with custom non-translatable text.
- *
- * Since: 1.9.10
- */
-#define FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE (1ull << 2)
-
-/**
- * FWUPD_REQUEST_FLAG_NON_GENERIC_IMAGE:
- *
- * Device requires to show the user a custom image for the action to make sense.
- *
- * Since: 1.9.10
- */
-#define FWUPD_REQUEST_FLAG_NON_GENERIC_IMAGE (1ull << 3)
-
-/**
- * FWUPD_REQUEST_FLAG_UNKNOWN:
- *
- * The request flag is unknown, typically caused by using mismatched client and daemon.
- *
- * Since: 1.8.6
- */
-#define FWUPD_REQUEST_FLAG_UNKNOWN G_MAXUINT64
-
-/**
  * FwupdRequestFlags:
  *
  * Flags used to represent request attributes
  */
-typedef guint64 FwupdRequestFlags;
+typedef enum {
+	/**
+	 * FWUPD_REQUEST_FLAG_NONE:
+	 *
+	 * No flags are set.
+	 *
+	 * Since: 1.8.6
+	 */
+	FWUPD_REQUEST_FLAG_NONE = 0u,
+	/**
+	 * FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE:
+	 *
+	 * Use a generic (translated) request message.
+	 *
+	 * Since: 1.8.6
+	 */
+	FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE = 1u << 0,
+	/**
+	 * FWUPD_REQUEST_FLAG_ALLOW_GENERIC_IMAGE:
+	 *
+	 * Use a generic (translated) request image.
+	 *
+	 * Since: 1.8.6
+	 */
+	FWUPD_REQUEST_FLAG_ALLOW_GENERIC_IMAGE = 1u << 1,
+	/**
+	 * FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE:
+	 *
+	 * Device requires a non-generic interaction with custom non-translatable text.
+	 *
+	 * Since: 1.9.10
+	 */
+	FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE = 1ull << 2,
+	/**
+	 * FWUPD_REQUEST_FLAG_NON_GENERIC_IMAGE:
+	 *
+	 * Device requires to show the user a custom image for the action to make sense.
+	 *
+	 * Since: 1.9.10
+	 */
+	FWUPD_REQUEST_FLAG_NON_GENERIC_IMAGE = 1ull << 3,
+	/**
+	 * FWUPD_REQUEST_FLAG_UNKNOWN:
+	 *
+	 * The request flag is unknown, typically caused by using mismatched client and daemon.
+	 *
+	 * Since: 1.8.6
+	 */
+	FWUPD_REQUEST_FLAG_UNKNOWN = G_MAXUINT64,
+} FwupdRequestFlags;
 
 const gchar *
 fwupd_request_kind_to_string(FwupdRequestKind kind);
