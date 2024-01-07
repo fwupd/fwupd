@@ -35,7 +35,7 @@ typedef struct {
 	GBytes *bytes;
 	GInputStream *stream;
 	gsize streamsz;
-	guint8 alignment;
+	FuFirmwareAlignment alignment;
 	gchar *id;
 	gchar *filename;
 	guint64 idx;
@@ -666,7 +666,7 @@ fu_firmware_get_bytes_with_patches(FuFirmware *self, GError **error)
 /**
  * fu_firmware_set_alignment:
  * @self: a #FuFirmware
- * @alignment: integer, or 0 to disable
+ * @alignment: a #FuFirmwareAlignment
  *
  * Sets the alignment of the firmware.
  *
@@ -676,7 +676,7 @@ fu_firmware_get_bytes_with_patches(FuFirmware *self, GError **error)
  * Since: 1.6.0
  **/
 void
-fu_firmware_set_alignment(FuFirmware *self, guint8 alignment)
+fu_firmware_set_alignment(FuFirmware *self, FuFirmwareAlignment alignment)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_FIRMWARE(self));
@@ -744,15 +744,15 @@ fu_firmware_set_stream(FuFirmware *self, GInputStream *stream, GError **error)
  * This allows a firmware to pad to a power of 2 boundary, where @alignment
  * is the bit position to align to.
  *
- * Returns: integer
+ * Returns: a #FuFirmwareAlignment
  *
  * Since: 1.6.0
  **/
-guint8
+FuFirmwareAlignment
 fu_firmware_get_alignment(FuFirmware *self)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_FIRMWARE(self), G_MAXUINT8);
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_LAST);
 	return priv->alignment;
 }
 
