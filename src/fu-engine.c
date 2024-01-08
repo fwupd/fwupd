@@ -67,7 +67,6 @@
 #include "fu-usb-device-fw-ds20.h"
 #include "fu-usb-device-ms-ds20.h"
 #include "fu-usb-device-private.h"
-#include "fu-version.h"
 
 #ifdef HAVE_GIO_UNIX
 #include "fu-unix-seekable-input-stream.h"
@@ -7983,15 +7982,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 			    G_IO_ERROR_INVAL,
 			    "libfwupd version %s does not match daemon %s",
 			    fwupd_version_string(),
-			    VERSION);
-		return FALSE;
-	}
-	if (g_strcmp0(fu_version_string(), VERSION) != 0) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVAL,
-			    "libfwupdplugin version %s does not match daemon %s",
-			    fu_version_string(),
 			    VERSION);
 		return FALSE;
 	}
