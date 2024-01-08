@@ -440,7 +440,14 @@ fu_volume_get_block_size(FuVolume *self, GError **error)
 	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail(FU_IS_VOLUME(self), 0);
-	g_return_val_if_fail(G_IS_DBUS_PROXY(self->proxy_blk), 0);
+
+	if (self->proxy_blk == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no udisks proxy");
+		return 0;
+	}
 
 	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "Device");
 	if (val == NULL) {
