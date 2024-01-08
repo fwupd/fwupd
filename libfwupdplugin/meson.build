@@ -1,9 +1,3 @@
-fwupdplugin_version_h = configure_file(
-  input: 'fu-version.h.in',
-  output: 'fu-version.h',
-  configuration: conf
-)
-
 fwupdplugin_structs = [
   'fu-acpi-table.rs', # fuzzing
   'fu-archive.rs', # fuzzing
@@ -152,7 +146,6 @@ fwupdplugin_src = [
   'fu-usb-device-fw-ds20.c', # fuzzing
   'fu-usb-device-ms-ds20.c', # fuzzing
   'fu-uswid-firmware.c', # fuzzing
-  'fu-version.c',
   'fu-version-common.c', # fuzzing
   'fu-volume.c', # fuzzing
 ]
@@ -278,7 +271,6 @@ fwupdplugin_headers = [
   'fu-uswid-firmware.h',
   'fu-version-common.h',
   'fu-volume.h',
-  fwupdplugin_version_h,
 ]
 
 introspection_deps = [
