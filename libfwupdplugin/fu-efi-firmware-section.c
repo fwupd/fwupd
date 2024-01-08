@@ -172,6 +172,28 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 		priv->user_interface = fu_utf16_to_utf8_byte_array(buf, G_LITTLE_ENDIAN, error);
 		if (priv->user_interface == NULL)
 			return FALSE;
+	} else if (priv->type == FU_EFI_SECTION_TYPE_VERSION) {
+		g_autoptr(GByteArray) buf = NULL;
+		g_autofree gchar *version = NULL;
+		guint16 version_raw = 0;
+
+		if (!fu_input_stream_read_u16(partial_stream,
+					      0x0,
+					      &version_raw,
+					      G_LITTLE_ENDIAN,
+					      error))
+			return FALSE;
+		fu_firmware_set_version_raw(firmware, version_raw);
+		buf = fu_input_stream_read_byte_array(partial_stream,
+						      sizeof(guint16),
+						      G_MAXSIZE,
+						      error);
+		if (buf == NULL)
+			return FALSE;
+		version = fu_utf16_to_utf8_byte_array(buf, G_LITTLE_ENDIAN, error);
+		if (version == NULL)
+			return FALSE;
+		fu_firmware_set_version(firmware, version);
 	}
 
 	/* success */
