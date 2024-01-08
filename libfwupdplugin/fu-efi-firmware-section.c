@@ -17,6 +17,7 @@
 #include "fu-lzma-common.h"
 #include "fu-mem.h"
 #include "fu-partial-input-stream.h"
+#include "fu-string.h"
 
 /**
  * FuEfiFirmwareSection:
@@ -28,6 +29,7 @@
 
 typedef struct {
 	guint8 type;
+	gchar *user_interface;
 } FuEfiFirmwareSectionPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuEfiFirmwareSection, fu_efi_firmware_section, FU_TYPE_FIRMWARE)
@@ -40,6 +42,8 @@ fu_efi_firmware_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags
 	FuEfiFirmwareSectionPrivate *priv = GET_PRIVATE(self);
 
 	fu_xmlb_builder_insert_kx(bn, "type", priv->type);
+	if (priv->user_interface != NULL)
+		fu_xmlb_builder_insert_kv(bn, "user_interface", priv->user_interface);
 	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
 		fu_xmlb_builder_insert_kv(bn,
 					  "name",
@@ -152,6 +156,22 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to parse sections: ");
 			return FALSE;
 		}
+	} else if (priv->type == FU_EFI_SECTION_TYPE_USER_INTERFACE) {
+		g_autoptr(GByteArray) buf = NULL;
+		if (priv->user_interface != NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "UI already set as %s for section",
+				    priv->user_interface);
+			return FALSE;
+		}
+		buf = fu_input_stream_read_byte_array(partial_stream, 0x0, G_MAXSIZE, error);
+		if (buf == NULL)
+			return FALSE;
+		priv->user_interface = fu_utf16_to_utf8_byte_array(buf, G_LITTLE_ENDIAN, error);
+		if (priv->user_interface == NULL)
+			return FALSE;
 	}
 
 	/* success */
@@ -197,12 +217,25 @@ fu_efi_firmware_section_build(FuFirmware *firmware, XbNode *n, GError **error)
 {
 	FuEfiFirmwareSection *self = FU_EFI_FIRMWARE_SECTION(firmware);
 	FuEfiFirmwareSectionPrivate *priv = GET_PRIVATE(self);
+	const gchar *str;
 	guint64 tmp;
 
 	/* simple properties */
 	tmp = xb_node_query_text_as_uint(n, "type", NULL);
 	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT8)
 		priv->type = tmp;
+	str = xb_node_query_text(n, "user_interface", NULL);
+	if (str != NULL) {
+		if (priv->user_interface != NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "UI already set as %s for section",
+				    priv->user_interface);
+			return FALSE;
+		}
+		priv->user_interface = g_strdup(str);
+	}
 
 	/* success */
 	return TRUE;
@@ -218,9 +251,20 @@ fu_efi_firmware_section_init(FuEfiFirmwareSection *self)
 }
 
 static void
+fu_efi_firmware_section_finalize(GObject *object)
+{
+	FuEfiFirmwareSection *self = FU_EFI_FIRMWARE_SECTION(object);
+	FuEfiFirmwareSectionPrivate *priv = GET_PRIVATE(self);
+	g_free(priv->user_interface);
+	G_OBJECT_CLASS(fu_efi_firmware_section_parent_class)->finalize(object);
+}
+
+static void
 fu_efi_firmware_section_class_init(FuEfiFirmwareSectionClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_efi_firmware_section_finalize;
 	klass_firmware->parse = fu_efi_firmware_section_parse;
 	klass_firmware->write = fu_efi_firmware_section_write;
 	klass_firmware->build = fu_efi_firmware_section_build;
