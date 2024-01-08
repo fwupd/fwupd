@@ -22,6 +22,7 @@
 #include "fu-coswid-firmware.h"
 #include "fu-device-private.h"
 #include "fu-device-progress.h"
+#include "fu-efi-lz77-decompressor.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
 #include "fu-self-test-struct.h"
@@ -4674,6 +4675,58 @@ fu_input_stream_chunkify_func(void)
 }
 
 static void
+fu_efi_lz77_decompressor_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *csum_legacy = NULL;
+	g_autofree gchar *csum_tiano = NULL;
+	g_autofree gchar *filename_legacy = NULL;
+	g_autofree gchar *filename_tiano = NULL;
+	g_autoptr(FuFirmware) lz77_decompressor_legacy = fu_efi_lz77_decompressor_new();
+	g_autoptr(FuFirmware) lz77_decompressor_tiano = fu_efi_lz77_decompressor_new();
+	g_autoptr(GBytes) blob_legacy2 = NULL;
+	g_autoptr(GBytes) blob_legacy = NULL;
+	g_autoptr(GBytes) blob_src = NULL;
+	g_autoptr(GBytes) blob_tiano2 = NULL;
+	g_autoptr(GBytes) blob_tiano = NULL;
+	g_autoptr(GError) error = NULL;
+
+	filename_tiano = g_test_build_filename(G_TEST_DIST, "tests", "efi-lz77-tiano.bin", NULL);
+	blob_tiano = fu_bytes_get_contents(filename_tiano, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_tiano);
+	g_assert_cmpint(g_bytes_get_size(blob_tiano), ==, 144);
+	ret =
+	    fu_firmware_parse(lz77_decompressor_tiano, blob_tiano, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	blob_tiano2 = fu_firmware_get_bytes(lz77_decompressor_tiano, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_tiano2);
+	g_assert_cmpint(g_bytes_get_size(blob_tiano2), ==, 276);
+	csum_tiano = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, blob_tiano2);
+	g_assert_cmpstr(csum_tiano, ==, "40f7fbaff684a6bcf67c81b3079422c2529741e1");
+
+	filename_legacy = g_test_build_filename(G_TEST_DIST, "tests", "efi-lz77-legacy.bin", NULL);
+	blob_legacy = fu_bytes_get_contents(filename_legacy, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_legacy);
+	g_assert_cmpint(g_bytes_get_size(blob_legacy), ==, 144);
+	ret = fu_firmware_parse(lz77_decompressor_legacy,
+				blob_tiano,
+				FWUPD_INSTALL_FLAG_NONE,
+				&error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	blob_legacy2 = fu_firmware_get_bytes(lz77_decompressor_legacy, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_legacy2);
+	g_assert_cmpint(g_bytes_get_size(blob_legacy2), ==, 276);
+	csum_legacy = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, blob_legacy2);
+	g_assert_cmpstr(csum_legacy, ==, "40f7fbaff684a6bcf67c81b3079422c2529741e1");
+}
+
+static void
 fu_input_stream_func(void)
 {
 	gboolean ret;
@@ -4936,6 +4989,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
 
+	g_test_add_func("/fwupd/efi-lz77{decompressor}", fu_efi_lz77_decompressor_func);
 	g_test_add_func("/fwupd/input-stream", fu_input_stream_func);
 	g_test_add_func("/fwupd/input-stream{chunkify}", fu_input_stream_chunkify_func);
 	g_test_add_func("/fwupd/partial-input-stream", fu_partial_input_stream_func);
