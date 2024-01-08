@@ -12,6 +12,7 @@
 #include "fu-efi-firmware-common.h"
 #include "fu-efi-firmware-section.h"
 #include "fu-efi-firmware-volume.h"
+#include "fu-efi-lz77-decompressor.h"
 #include "fu-efi-struct.h"
 #include "fu-input-stream.h"
 #include "fu-lzma-common.h"
@@ -169,6 +170,22 @@ fu_efi_firmware_section_parse_compression_sections(FuEfiFirmwareSection *self,
 		if (!fu_efi_firmware_parse_sections(FU_FIRMWARE(self),
 						    stream,
 						    st->len,
+						    flags,
+						    error)) {
+			g_prefix_error(error, "failed to parse sections: ");
+			return FALSE;
+		}
+	} else {
+		g_autoptr(FuFirmware) lz77_decompressor = fu_efi_lz77_decompressor_new();
+		g_autoptr(GInputStream) lz77_stream = NULL;
+		if (!fu_firmware_parse_stream(lz77_decompressor, stream, st->len, flags, error))
+			return FALSE;
+		lz77_stream = fu_firmware_get_stream(lz77_decompressor, error);
+		if (lz77_stream == NULL)
+			return FALSE;
+		if (!fu_efi_firmware_parse_sections(FU_FIRMWARE(self),
+						    lz77_stream,
+						    0,
 						    flags,
 						    error)) {
 			g_prefix_error(error, "failed to parse sections: ");

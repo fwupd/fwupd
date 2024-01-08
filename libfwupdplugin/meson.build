@@ -85,6 +85,7 @@ fwupdplugin_src = [
   'fu-efi-firmware-filesystem.c', # fuzzing
   'fu-efi-firmware-section.c', # fuzzing
   'fu-efi-firmware-volume.c', # fuzzing
+  'fu-efi-lz77-decompressor.c', # fuzzing
   'fu-efi-hard-drive-device-path.c', # fuzzing
   'fu-efi-load-option.c', # fuzzing
   'fu-efi-signature.c',

@@ -196,7 +196,7 @@ class Builder:
         builder_xmls = glob.glob(globstr)
         if not builder_xmls:
             print(f"failed to find {globstr}")
-            sys.exit(1)
+            return
         for fn_src in builder_xmls:
             fn_dst = fn_src.replace(".builder.xml", ".bin")
             if os.path.exists(fn_dst):
@@ -379,6 +379,7 @@ def _build(bld: Builder) -> None:
 
     # built in formats
     for fzr in [
+        Fuzzer("efi-lz77", pattern="efi-lz77-decompressor"),
         Fuzzer("csv"),
         Fuzzer("cab"),
         Fuzzer("dfuse"),

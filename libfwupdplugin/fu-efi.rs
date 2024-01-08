@@ -69,6 +69,19 @@ struct EfiSectionCompression {
     compression_type: EfiCompressionType,
 }
 
+#[derive(ToString)]
+enum EfiLz77DecompressorVersion {
+    None = 0,
+    Legacy = 1,
+    Tiano = 2,
+}
+
+#[derive(ParseStream)]
+struct EfiLz77DecompressorHeader {
+    src_size: u32,
+    dst_size: u32,
+}
+
 #[repr(u8)]
 #[derive(ToString)]
 enum EfiSectionType {
