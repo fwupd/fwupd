@@ -479,12 +479,12 @@ fu_input_stream_compute_sum16(GInputStream *stream, guint16 *value, GError **err
 typedef struct {
 	guint32 crc;
 	guint32 polynomial;
-} FuInputStreamComputeCrcHelper;
+} FuInputStreamComputeCrc32Helper;
 
 static gboolean
 fu_input_stream_compute_crc32_cb(const guint8 *buf, gsize bufsz, gpointer user_data, GError **error)
 {
-	FuInputStreamComputeCrcHelper *helper = (FuInputStreamComputeCrcHelper *)user_data;
+	FuInputStreamComputeCrc32Helper *helper = (FuInputStreamComputeCrc32Helper *)user_data;
 	helper->crc = fu_crc32_full(buf, bufsz, ~helper->crc, helper->polynomial);
 	return TRUE;
 }
@@ -511,11 +511,56 @@ fu_input_stream_compute_crc32(GInputStream *stream,
 			      guint32 polynomial,
 			      GError **error)
 {
-	FuInputStreamComputeCrcHelper helper = {.crc = *crc, .polynomial = polynomial};
+	FuInputStreamComputeCrc32Helper helper = {.crc = *crc, .polynomial = polynomial};
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(crc != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_input_stream_chunkify(stream, fu_input_stream_compute_crc32_cb, &helper, error))
+		return FALSE;
+	*crc = helper.crc;
+	return TRUE;
+}
+
+typedef struct {
+	guint16 crc;
+	guint16 polynomial;
+} FuInputStreamComputeCrc16Helper;
+
+static gboolean
+fu_input_stream_compute_crc16_cb(const guint8 *buf, gsize bufsz, gpointer user_data, GError **error)
+{
+	FuInputStreamComputeCrc16Helper *helper = (FuInputStreamComputeCrc16Helper *)user_data;
+	helper->crc = fu_crc16_full(buf, bufsz, ~helper->crc, helper->polynomial);
+	return TRUE;
+}
+
+/**
+ * fu_input_stream_compute_crc16:
+ * @stream: a #GInputStream
+ * @crc: (out): initial and final CRC value, typically 0x0
+ * @polynomial: CRC polynomial, typically 0xA001
+ * @error: (nullable): optional return location for an error
+ *
+ * Returns the cyclic redundancy check value for the given memory buffer.
+ *
+ * NOTE: The initial @crc differs from fu_crc16_full() in that it is inverted (to make it
+ * symmetrical, and chainable), so for most uses you want to use the value of 0x0, not 0xFFFF.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_input_stream_compute_crc16(GInputStream *stream,
+			      guint16 *crc,
+			      guint16 polynomial,
+			      GError **error)
+{
+	FuInputStreamComputeCrc16Helper helper = {.crc = *crc, .polynomial = polynomial};
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(crc != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	if (!fu_input_stream_chunkify(stream, fu_input_stream_compute_crc16_cb, &helper, error))
 		return FALSE;
 	*crc = helper.crc;
 	return TRUE;

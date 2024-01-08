@@ -74,6 +74,11 @@ fu_input_stream_compute_sum16(GInputStream *stream,
 			      guint16 *value,
 			      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
+fu_input_stream_compute_crc16(GInputStream *stream,
+			      guint16 *crc,
+			      guint16 polynomial,
+			      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+gboolean
 fu_input_stream_compute_crc32(GInputStream *stream,
 			      guint32 *crc,
 			      guint32 polynomial,
