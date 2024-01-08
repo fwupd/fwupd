@@ -2,6 +2,12 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ValidateStream)]
+struct GenesysFirmwareHdr {
+    reserved: [u8; 252],
+    magic: [char; 4] == "XROM",
+}
+
+#[derive(ValidateStream)]
 struct GenesysDevFirmwareHdr {
     reserved: [u8; 252],
     magic: [char; 4] == "HOST",

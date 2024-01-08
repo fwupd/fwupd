@@ -206,17 +206,7 @@ fu_genesys_usbhub_firmware_validate(FuFirmware *firmware,
 				    gsize offset,
 				    GError **error)
 {
-	guint8 buf[4] = {0};
-	guint8 magic[4] = GENESYS_USBHUB_FW_SIG_TEXT_HUB;
-	if (!fu_input_stream_read_safe(stream,
-				       buf,
-				       sizeof(buf),
-				       0x0,				      /* offset */
-				       offset + GENESYS_USBHUB_FW_SIG_OFFSET, /* seek */
-				       sizeof(buf),
-				       error))
-		return FALSE;
-	return memcmp(buf, magic, sizeof(magic)) == 0;
+	return fu_struct_genesys_firmware_hdr_validate_stream(stream, offset, error);
 }
 
 static gboolean
@@ -355,11 +345,11 @@ fu_genesys_usbhub_firmware_write(FuFirmware *firmware, GError **error)
 	/* signature */
 	if (!fu_memcpy_safe(buf->data,
 			    buf->len,
-			    GENESYS_USBHUB_FW_SIG_OFFSET, /* dst */
-			    (const guint8 *)GENESYS_USBHUB_FW_SIG_TEXT_HUB,
-			    GENESYS_USBHUB_FW_SIG_LEN,
+			    FU_STRUCT_GENESYS_FIRMWARE_HDR_OFFSET_MAGIC, /* dst */
+			    (const guint8 *)FU_STRUCT_GENESYS_FIRMWARE_HDR_DEFAULT_MAGIC,
+			    FU_STRUCT_GENESYS_FIRMWARE_HDR_SIZE_MAGIC,
 			    0x0, /* src */
-			    GENESYS_USBHUB_FW_SIG_LEN,
+			    FU_STRUCT_GENESYS_FIRMWARE_HDR_SIZE_MAGIC,
 			    error))
 		return NULL;
 

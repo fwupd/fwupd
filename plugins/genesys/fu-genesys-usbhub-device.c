@@ -743,7 +743,7 @@ fu_genesys_usbhub_device_check_fw_signature(FuGenesysUsbhubDevice *self,
 					    int bank_num,
 					    GError **error)
 {
-	guint8 sig[GENESYS_USBHUB_FW_SIG_LEN] = {0};
+	guint8 sig[FU_STRUCT_GENESYS_FIRMWARE_HDR_SIZE_MAGIC] = {0};
 	const gchar *sig_txt = NULL;
 
 	g_return_val_if_fail(fw_type < FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT, FALSE);
@@ -752,7 +752,7 @@ fu_genesys_usbhub_device_check_fw_signature(FuGenesysUsbhubDevice *self,
 	/* get firmware signature from device */
 	if (!fu_genesys_usbhub_device_read_flash(self,
 						 self->spec.fw_bank_addr[bank_num][fw_type] +
-						     GENESYS_USBHUB_FW_SIG_OFFSET,
+						     FU_STRUCT_GENESYS_FIRMWARE_HDR_OFFSET_MAGIC,
 						 sig,
 						 sizeof(sig),
 						 NULL,
@@ -766,13 +766,13 @@ fu_genesys_usbhub_device_check_fw_signature(FuGenesysUsbhubDevice *self,
 	/* select firmware signature text and compare */
 	switch (fw_type) {
 	case FU_GENESYS_FW_TYPE_HUB:
-		sig_txt = GENESYS_USBHUB_FW_SIG_TEXT_HUB;
+		sig_txt = FU_STRUCT_GENESYS_FIRMWARE_HDR_DEFAULT_MAGIC;
 		break;
 	case FU_GENESYS_FW_TYPE_DEV_BRIDGE:
-		sig_txt = GENESYS_USBHUB_FW_SIG_TEXT_DEV_BRIDGE;
+		sig_txt = FU_STRUCT_GENESYS_DEV_FIRMWARE_HDR_DEFAULT_MAGIC;
 		break;
 	case FU_GENESYS_FW_TYPE_PD:
-		sig_txt = GENESYS_USBHUB_FW_SIG_TEXT_PD;
+		sig_txt = FU_STRUCT_GENESYS_PD_FIRMWARE_HDR_DEFAULT_MAGIC;
 		break;
 	default:
 		g_set_error_literal(error,
