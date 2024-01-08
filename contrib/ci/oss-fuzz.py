@@ -341,7 +341,14 @@ def _build(bld: Builder) -> None:
     bld.add_build_ldflag("lib/libxmlb.a")
 
     # write required headers
-    bld.write_header("libfwupd/fwupd-version.h", {})
+    bld.write_header(
+        "libfwupd/fwupd-version.h",
+        {
+            "FWUPD_MAJOR_VERSION": 0,
+            "FWUPD_MINOR_VERSION": 0,
+            "FWUPD_MICRO_VERSION": 0,
+        },
+    )
     bld.write_header(
         "config.h",
         {
@@ -352,14 +359,6 @@ def _build(bld: Builder) -> None:
             "HAVE_REALPATH": None,
             "PACKAGE_NAME": "fwupd",
             "PACKAGE_VERSION": "0.0.0",
-        },
-    )
-    bld.write_header(
-        "libfwupdplugin/fu-version.h",
-        {
-            "FU_MAJOR_VERSION": 0,
-            "FU_MINOR_VERSION": 0,
-            "FU_MICRO_VERSION": 0,
         },
     )
 
