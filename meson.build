@@ -696,5 +696,17 @@ if build_daemon
     'GPG support': supported_gpg,
     'PKCS7 support': supported_pkcs7,
   }, section: 'daemon features')
-  summary(plugins, section: 'plugins')
+  en=[]
+  dis=[]
+  foreach plugin: plugins.keys()
+    if plugins[plugin]
+      en += plugin
+    else
+      dis += plugin
+    endif
+  endforeach
+  summary({
+    'enabled': ', '.join(en),
+    'disabled': ', '.join(dis),
+  }, section: 'plugins')
 endif
