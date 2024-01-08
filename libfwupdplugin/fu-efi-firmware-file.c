@@ -143,8 +143,8 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 	/* add simple blob */
 	partial_stream = fu_partial_input_stream_new(stream, st->len, size - st->len);
 
-	/* add fv-image */
-	if (priv->type == FU_EFI_FILE_TYPE_FIRMWARE_VOLUME_IMAGE) {
+	/* add sections */
+	if (priv->type != FU_EFI_FILE_TYPE_FFS_PAD && priv->type != FU_EFI_FILE_TYPE_RAW) {
 		if (!fu_efi_firmware_parse_sections(firmware, partial_stream, flags, error)) {
 			g_prefix_error(error, "failed to add firmware image: ");
 			return FALSE;
