@@ -55,6 +55,130 @@ fu_efi_firmware_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags
 }
 
 static gboolean
+fu_efi_firmware_section_parse_volume_image(FuEfiFirmwareSection *self,
+					   GInputStream *stream,
+					   FwupdInstallFlags flags,
+					   GError **error)
+{
+	g_autoptr(FuFirmware) img = fu_efi_firmware_volume_new();
+	if (!fu_firmware_parse_stream(img,
+				      stream,
+				      0x0,
+				      flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+				      error)) {
+		return FALSE;
+	}
+	fu_firmware_add_image(FU_FIRMWARE(self), img);
+	return TRUE;
+}
+
+static gboolean
+fu_efi_firmware_section_parse_lzma_sections(FuEfiFirmwareSection *self,
+					    GInputStream *stream,
+					    FwupdInstallFlags flags,
+					    GError **error)
+{
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob_uncomp = NULL;
+	g_autoptr(GInputStream) stream_uncomp = NULL;
+
+	/* parse all sections */
+	blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+	if (blob == NULL)
+		return FALSE;
+	blob_uncomp = fu_lzma_decompress_bytes(blob, error);
+	if (blob_uncomp == NULL) {
+		g_prefix_error(error, "failed to decompress: ");
+		return FALSE;
+	}
+	stream_uncomp = g_memory_input_stream_new_from_bytes(blob_uncomp);
+	if (!fu_efi_firmware_parse_sections(FU_FIRMWARE(self), stream_uncomp, 0, flags, error)) {
+		g_prefix_error(error, "failed to parse sections: ");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_efi_firmware_section_parse_user_interface(FuEfiFirmwareSection *self,
+					     GInputStream *stream,
+					     FwupdInstallFlags flags,
+					     GError **error)
+{
+	FuEfiFirmwareSectionPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GByteArray) buf = NULL;
+
+	if (priv->user_interface != NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "UI already set as %s for section",
+			    priv->user_interface);
+		return FALSE;
+	}
+	buf = fu_input_stream_read_byte_array(stream, 0x0, G_MAXSIZE, error);
+	if (buf == NULL)
+		return FALSE;
+	priv->user_interface = fu_utf16_to_utf8_byte_array(buf, G_LITTLE_ENDIAN, error);
+	if (priv->user_interface == NULL)
+		return FALSE;
+	return TRUE;
+}
+
+static gboolean
+fu_efi_firmware_section_parse_version(FuEfiFirmwareSection *self,
+				      GInputStream *stream,
+				      FwupdInstallFlags flags,
+				      GError **error)
+{
+	guint16 version_raw = 0;
+	g_autofree gchar *version = NULL;
+	g_autoptr(GByteArray) buf = NULL;
+
+	if (!fu_input_stream_read_u16(stream, 0x0, &version_raw, G_LITTLE_ENDIAN, error)) {
+		g_prefix_error(error, "failed to read raw version: ");
+		return FALSE;
+	}
+	fu_firmware_set_version_raw(FU_FIRMWARE(self), version_raw);
+	buf = fu_input_stream_read_byte_array(stream, sizeof(guint16), G_MAXSIZE, error);
+	if (buf == NULL) {
+		g_prefix_error(error, "failed to read version buffer: ");
+		return FALSE;
+	}
+	version = fu_utf16_to_utf8_byte_array(buf, G_LITTLE_ENDIAN, error);
+	if (version == NULL) {
+		g_prefix_error(error, "failed to convert to UTF-16: ");
+		return FALSE;
+	}
+	fu_firmware_set_version(FU_FIRMWARE(self), version);
+	return TRUE;
+}
+
+static gboolean
+fu_efi_firmware_section_parse_compression_sections(FuEfiFirmwareSection *self,
+						   GInputStream *stream,
+						   FwupdInstallFlags flags,
+						   GError **error)
+{
+	g_autoptr(GByteArray) st = NULL;
+	st = fu_struct_efi_section_compression_parse_stream(stream, 0x0, error);
+	if (st == NULL)
+		return FALSE;
+	if (fu_struct_efi_section_compression_get_compression_type(st) ==
+	    FU_EFI_COMPRESSION_TYPE_NOT_COMPRESSED) {
+		if (!fu_efi_firmware_parse_sections(FU_FIRMWARE(self),
+						    stream,
+						    st->len,
+						    flags,
+						    error)) {
+			g_prefix_error(error, "failed to parse sections: ");
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_efi_firmware_section_parse(FuFirmware *firmware,
 			      GInputStream *stream,
 			      gsize offset,
@@ -123,77 +247,44 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 
 	/* nested volume */
 	if (priv->type == FU_EFI_SECTION_TYPE_VOLUME_IMAGE) {
-		g_autoptr(FuFirmware) img = fu_efi_firmware_volume_new();
-		if (!fu_firmware_parse_stream(img,
-					      partial_stream,
-					      0x0,
-					      flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
-					      error)) {
+		if (!fu_efi_firmware_section_parse_volume_image(self,
+								partial_stream,
+								flags,
+								error)) {
 			g_prefix_error(error, "failed to parse nested volume: ");
 			return FALSE;
 		}
-		fu_firmware_add_image(firmware, img);
-
-		/* LZMA */
 	} else if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED &&
 		   g_strcmp0(fu_firmware_get_id(firmware), FU_EFI_FIRMWARE_SECTION_LZMA_COMPRESS) ==
 		       0) {
-		g_autoptr(GBytes) blob = NULL;
-		g_autoptr(GBytes) blob_uncomp = NULL;
-		g_autoptr(GInputStream) stream_uncomp = NULL;
-
-		/* parse all sections */
-		blob = fu_input_stream_read_bytes(partial_stream, 0, G_MAXSIZE, error);
-		if (blob == NULL)
-			return FALSE;
-		blob_uncomp = fu_lzma_decompress_bytes(blob, error);
-		if (blob_uncomp == NULL) {
-			g_prefix_error(error, "failed to decompress lzma section: ");
-			return FALSE;
-		}
-		stream_uncomp = g_memory_input_stream_new_from_bytes(blob_uncomp);
-		if (!fu_efi_firmware_parse_sections(firmware, stream_uncomp, flags, error)) {
-			g_prefix_error(error, "failed to parse sections: ");
+		if (!fu_efi_firmware_section_parse_lzma_sections(self,
+								 partial_stream,
+								 flags,
+								 error)) {
+			g_prefix_error(error, "failed to parse lzma section: ");
 			return FALSE;
 		}
 	} else if (priv->type == FU_EFI_SECTION_TYPE_USER_INTERFACE) {
-		g_autoptr(GByteArray) buf = NULL;
-		if (priv->user_interface != NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "UI already set as %s for section",
-				    priv->user_interface);
+		if (!fu_efi_firmware_section_parse_user_interface(self,
+								  partial_stream,
+								  flags,
+								  error)) {
+			g_prefix_error(error, "failed to parse user interface: ");
 			return FALSE;
 		}
-		buf = fu_input_stream_read_byte_array(partial_stream, 0x0, G_MAXSIZE, error);
-		if (buf == NULL)
-			return FALSE;
-		priv->user_interface = fu_utf16_to_utf8_byte_array(buf, G_LITTLE_ENDIAN, error);
-		if (priv->user_interface == NULL)
-			return FALSE;
 	} else if (priv->type == FU_EFI_SECTION_TYPE_VERSION) {
-		g_autoptr(GByteArray) buf = NULL;
-		g_autofree gchar *version = NULL;
-		guint16 version_raw = 0;
-
-		if (!fu_input_stream_read_u16(partial_stream,
-					      0x0,
-					      &version_raw,
-					      G_LITTLE_ENDIAN,
-					      error))
+		if (!fu_efi_firmware_section_parse_version(self, partial_stream, flags, error)) {
+			g_prefix_error(error, "failed to parse version: ");
 			return FALSE;
-		fu_firmware_set_version_raw(firmware, version_raw);
-		buf = fu_input_stream_read_byte_array(partial_stream,
-						      sizeof(guint16),
-						      G_MAXSIZE,
-						      error);
-		if (buf == NULL)
+		}
+	} else if (priv->type == FU_EFI_SECTION_TYPE_COMPRESSION) {
+		if (!fu_efi_firmware_section_parse_compression_sections(self,
+									partial_stream,
+									flags,
+									error)) {
+			g_prefix_error(error, "failed to parse compression: ");
 			return FALSE;
-		version = fu_utf16_to_utf8_byte_array(buf, G_LITTLE_ENDIAN, error);
-		if (version == NULL)
-			return FALSE;
-		fu_firmware_set_version(firmware, version);
+		}
 	}
 
 	/* success */
