@@ -354,11 +354,13 @@ fu_cpu_device_add_security_attrs_cet_active(FuCpuDevice *self, FuSecurityAttrs *
 	gint exit_status = 0xff;
 	g_autofree gchar *toolfn = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FwupdSecurityAttr) cet_plat_attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* check for CET */
-	if (!fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_SHSTK) ||
-	    !fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_IBT))
+	cet_plat_attr =
+	    fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_CET_ENABLED, NULL);
+	if (!fwupd_security_attr_has_flag(cet_plat_attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
 		return;
 
 	/* create attr */
