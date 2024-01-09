@@ -58,11 +58,25 @@ struct EfiFile2 {
 }
 
 #[repr(u8)]
+enum EfiCompressionType {
+    NotCompressed = 0x00,
+    StandardCompression = 0x01,
+}
+
+#[derive(ParseStream)]
+struct EfiSectionCompression {
+    uncompressed_length: u32,
+    compression_type: EfiCompressionType,
+}
+
+#[repr(u8)]
 #[derive(ToString)]
 enum EfiSectionType {
+    // encapsulation section type values
     Compression = 0x01,
     GuidDefined = 0x02,
     Disposable = 0x03,
+    // leaf section type values
     Pe32 = 0x10,
     Pic = 0x11,
     Te = 0x12,
@@ -75,6 +89,9 @@ enum EfiSectionType {
     Raw = 0x19,
     PeiDepex = 0x1B,
     MmDepex = 0x1C,
+    // vendor-specific
+    PhoenixSectionPostcode = 0xF0,  // Phoenix SCT
+    InsydeSectionPostcode = 0x20,   // Insyde H2O
 }
 
 #[derive(New, ParseStream)]

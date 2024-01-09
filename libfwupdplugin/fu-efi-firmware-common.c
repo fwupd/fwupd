@@ -30,10 +30,10 @@
 gboolean
 fu_efi_firmware_parse_sections(FuFirmware *firmware,
 			       GInputStream *stream,
+			       gsize offset,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
-	gsize offset = 0;
 	gsize streamsz = 0;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))

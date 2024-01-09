@@ -145,7 +145,7 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 
 	/* add sections */
 	if (priv->type != FU_EFI_FILE_TYPE_FFS_PAD && priv->type != FU_EFI_FILE_TYPE_RAW) {
-		if (!fu_efi_firmware_parse_sections(firmware, partial_stream, flags, error)) {
+		if (!fu_efi_firmware_parse_sections(firmware, partial_stream, 0, flags, error)) {
 			g_prefix_error(error, "failed to add firmware image: ");
 			return FALSE;
 		}
