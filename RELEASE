@@ -9,6 +9,10 @@ When forking main into a stable 2_1_X, be sure to disable the following CI jobs:
 Also update `SECURITY.md`, removing the oldest branch and add the new branch at the top.
 To make sure it's done right, you can reference commit 433e809318c68c9ab6d4ae50ee9c4312503185d8
 
+Check IFD parsing (if the files are available):
+
+    ../contrib/check-ifd-firmware.py ../../fwupd-test-roms/
+
 Write release entries:
 
  * ../contrib/generate-release.py
