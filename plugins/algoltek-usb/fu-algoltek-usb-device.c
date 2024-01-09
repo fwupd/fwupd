@@ -500,6 +500,8 @@ fu_algoltek_usb_device_write_firmware(FuDevice *device,
 	if (!fu_algoltek_usb_device_rst(self, 0x100, error))
 		return FALSE;
 
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+
 	/* success! */
 	return TRUE;
 }
