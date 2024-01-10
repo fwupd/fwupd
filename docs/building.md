@@ -44,6 +44,12 @@ To build the project a script is included that will configure and build the proj
 build-fwupd
 ```
 
+To run the project test suite a script is included:
+
+```shell
+test-fwupd
+```
+
 If you want to leave the development environment at any time you can run:
 
 ```shell
@@ -168,6 +174,15 @@ fwupdmgr install ~/foo.cab
 
 This will send the firmware archive from the locally built `fwupdmgr` to the locally built daemon using a file descriptor, which will call the new plugin code with the firmware blob in the archive. The daemon terminal will also show lots of useful debugging during this process.
 
+## Using Visual Studio code to build and test
+
+During build time a set of tasks will have been created for use with Visual Studio Code.
+
+The default build task which is triggered by using *ctrl-shift-b* will build the project with default settings.
+The default test task can be triggered from the command palette to run the test suite.
+Open the command palette with *ctrl-shift-p* and type **Run test task** and hit enter. This will launch the daemon in a terminal window.
+<img src="test_task.png" width="286">
+
 ## Using Visual Studio Code to debug
 
 The [debugger](https://code.visualstudio.com/Docs/editor/debugging) that is part of [Visual Studio Code](https://code.visualstudio.com/) is really helpful for debugging issues.
@@ -201,9 +216,10 @@ Press the green start button (or use *F5*) to start debugging. The debugger will
 ### debugging fwupd (daemon)
 
 For debugging the daemon, a helper task is also included to launch the daemon with the `DEBUG` environment variable set within vscode.
-Open the command palette with *ctrl-shift-p* and type **Run test task** and hit enter. This will launch the daemon in a terminal window.
 
-<img src="test_task.png" width="286">
+Open the command palette with *ctrl-shift-p* and type **Run task** and hit enter. Select the `gdbserver-fwupd` task.
+This will launch the daemon in a terminal window.
+<img src="debug_task.png" width="186">
 
 Then use the run and debug button (or *ctrl-shift-d*) to open up the debugger. From the debugger choose `gdbserver (fwupd)`.
 

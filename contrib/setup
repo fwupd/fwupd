@@ -43,6 +43,8 @@ setup_run_wrappers()
     # build wrapper
     rm -f ${BIN}/build-fwupd
     ln -s ${BASE}/build-venv.sh ${BIN}/build-fwupd
+    rm -f ${BIN}/test-fwupd
+    ln -s ${BASE}/test-venv.sh ${BIN}/test-fwupd
 }
 
 setup_vscode()
@@ -89,6 +91,10 @@ setup_virtualenv()
 echo "To build or rebuild fwupd within development environment run:"
 echo ""
 echo "# build-fwupd"
+echo ""
+echo "To run the test suite run:"
+echo ""
+echo "# test-fwupd"
 echo ""
 echo "To run any tool under gdbserver add DEBUG=1 to env, for example:"
 echo ""
