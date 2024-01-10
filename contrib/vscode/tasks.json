@@ -12,13 +12,22 @@
       }
     },
     {
+      "label": "test-fwupd",
+      "type": "shell",
+      "command": "/bin/bash -c 'source venv/bin/activate; test-fwupd'",
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
       "label": "gdbserver-fwupd",
       "type": "shell",
       "command": "/bin/bash -c 'source venv/bin/activate; DEBUG=1 fwupd -v'",
       "problemMatcher": [],
       "group": {
-        "kind": "test",
-        "isDefault": true
+        "kind": "none"
       }
     }
   ]
