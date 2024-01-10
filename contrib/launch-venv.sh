@@ -23,10 +23,9 @@ if [ ! -f ${EXE} ]; then
         echo "# build-fwupd"
         exit 1
 fi
-if [ "${BIN}" != fwupdgmr ]; then
-        SUDO="$(which sudo) \
-              LD_LIBRARY_PATH=${LD_LIBRARY_PATH} \
-              FWUPD_LOCALSTATEDIR=${FWUPD_LOCALSTATEDIR} \
-              FWUPD_SYSCONFDIR=${FWUPD_SYSCONFDIR}"
-fi
+SUDO="$(which sudo) \
+        LD_LIBRARY_PATH=${LD_LIBRARY_PATH} \
+        FWUPD_LOCALSTATEDIR=${FWUPD_LOCALSTATEDIR} \
+        FWUPD_SYSCONFDIR=${FWUPD_SYSCONFDIR} \
+        FWUPD_POLKIT_NOCHECK=1"
 ${SUDO} ${DEBUG} ${EXE} "$@"
