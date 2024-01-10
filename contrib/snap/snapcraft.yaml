@@ -33,7 +33,7 @@ apps:
     plugs: [fwupdmgr, network]
   fwupdtool:
     command: fwupdtool.wrapper
-    plugs: [bluez, udisks2, modem-manager, upower-observe, network, hardware-observe, opengl, raw-usb]
+    plugs: [bluez, udisks2, modem-manager, upower-observe, network, hardware-observe, home, opengl, raw-usb]
     slots: [fwupd]
     completer:
       share/bash-completion/completions/fwupdtool
@@ -51,7 +51,7 @@ apps:
       FWUPD_HOSTDIR: /var/lib/snapd/hostfs
   fwupdmgr:
     command: fwupdmgr.wrapper
-    plugs: [fwupdmgr, network, polkit, shutdown]
+    plugs: [fwupdmgr, home, network, polkit, shutdown]
     completer:
       share/bash-completion/completions/fwupdmgr
 
