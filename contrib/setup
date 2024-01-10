@@ -52,7 +52,8 @@ setup_vscode()
     TARGETD=./.vscode
     SETTINGS_F=settings.json
     LAUNCH_F=launch.json
-    for f in $SETTINGS_F $LAUNCH_F; do
+    TASK_F=tasks.json
+    for f in $SETTINGS_F $LAUNCH_F $TASK_F; do
         TEMPLATE=${SOURCED}/${f}
         TARGETF=${TARGETD}/${f}
         mkdir -p ${TARGETD}
