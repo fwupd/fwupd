@@ -168,9 +168,13 @@ fwupdmgr install ~/foo.cab
 
 This will send the firmware archive from the locally built `fwupdmgr` to the locally built daemon using a file descriptor, which will call the new plugin code with the firmware blob in the archive. The daemon terminal will also show lots of useful debugging during this process.
 
-## Debugging fwupd
+## Using Visual Studio Code to debug
 
-When setup using the virtualenv all 3 binaries have the ability be launched with a debugger attached as a **user** by using `DEBUG=1` in the environment.
+The [debugger](https://code.visualstudio.com/Docs/editor/debugging) that is part of [Visual Studio Code](https://code.visualstudio.com/) is really helpful for debugging issues.
+During build time a set of launch targets will have been created for use with Visual Studio Code.
+All 3 binaries have the ability be launched with a debugger attached as a **user** by using `DEBUG=1` in the environment.
+
+### debugging `fwupdtool` and `fwupdmgr`
 
 For example to debug `fwupdtool` you would launch it like this:
 
@@ -180,9 +184,7 @@ Process /home/u/fwupd/venv/bin/../dist/bin/fwupdtool created; pid = 595311
 Listening on port 9091
 ```
 
-Then the process will wait for a debugger to be attached to `localhost:9091`.
-
-One example is using the [debugger](https://code.visualstudio.com/Docs/editor/debugging) that is part of [Visual Studio Code](https://code.visualstudio.com/).
+This will configure `gdbserver` to listen on a local port waiting for a debugger to connect.
 
 Launch vscode in the same directory as the Git checkout. After it's launched, set a source breakpoint.
 
@@ -195,3 +197,14 @@ Then use the run and debug button (or *ctrl-shift-d*) to open up the debugger. F
 Press the green start button (or use *F5*) to start debugging. The debugger will attach to the process you launched and stop where you left off.
 
 ![debugger attached](debug_attached.png)
+
+### debugging fwupd (daemon)
+
+For debugging the daemon, a helper task is also included to launch the daemon with the `DEBUG` environment variable set within vscode.
+Open the command palette with *ctrl-shift-p* and type **Run test task** and hit enter. This will launch the daemon in a terminal window.
+
+<img src="test_task.png" width="286">
+
+Then use the run and debug button (or *ctrl-shift-d*) to open up the debugger. From the debugger choose `gdbserver (fwupd)`.
+
+<img src="debug_tool_selector.png" width="720">
