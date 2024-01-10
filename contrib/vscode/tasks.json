@@ -4,7 +4,7 @@
     {
       "label": "build-fwupd",
       "type": "shell",
-      "command": "./venv/bin/build-fwupd",
+      "command": "/bin/bash -c 'source venv/bin/activate; build-fwupd'",
       "problemMatcher": [],
       "group": {
         "kind": "build",
