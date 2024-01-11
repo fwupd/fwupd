@@ -28,10 +28,10 @@ def prepare(target):
     data["branch"] = "main"
     for index in range(0, num_modules):
         module = data["modules"][index]
-        if type(module) != dict or not "name" in module:
+        if type(module) != dict or "name" not in module:
             continue
         name = module["name"]
-        if not "fwupd" in name:
+        if "fwupd" not in name:
             continue
         data["modules"][index]["sources"][0].pop("url")
         data["modules"][index]["sources"][0].pop("sha256")
