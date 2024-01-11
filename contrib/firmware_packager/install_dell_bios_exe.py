@@ -56,7 +56,7 @@ def generate_cab(infile, directory, guid, version):
     make_firmware_metainfo(variables, directory)
     create_firmware_cab(variables, directory)
     cab = os.path.join(directory, "firmware.cab")
-    print("Generated CAB file %s" % cab)
+    print(f"Generated CAB file {cab}")
     return cab
 
 
@@ -75,7 +75,7 @@ def find_uefi_device(client, deviceid):
             continue
         # return the first hit for UEFI plugin
         if item.get_plugin() == "uefi" or item.get_plugin() == "uefi_capsule":
-            print("Installing to %s" % item.get_name())
+            print(f"Installing to {item.get_name()}")
             return item.get_guid_default(), item.get_id(), item.get_version()
     print("Couldn't find any UEFI devices")
     sys.exit(1)

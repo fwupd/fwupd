@@ -53,7 +53,7 @@ class FwupdVmCommon:
             c_sha = hashlib.sha256(f.read()).hexdigest()
         if c_sha != sha:
             self.clean_vm_cache()
-            raise ValueError("Computed checksum %s did NOT match %s. " % (c_sha, sha))
+            raise ValueError(f"Computed checksum {c_sha} did NOT match {sha}. ")
 
     def validate_vm_dirs(self):
         """Validates and creates directories"""

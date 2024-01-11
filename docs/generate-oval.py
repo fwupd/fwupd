@@ -33,7 +33,7 @@ if __name__ == "__main__":
             with open(fn, "rb") as f:
                 item = json.loads(f.read())
         except json.decoder.JSONDecodeError as e:
-            print("failed to parse {}: {}".format(fn, str(e)))
+            print(f"failed to parse {fn}: {str(e)}")
             sys.exit(1)
         for tag in ["id", "name", "failure-results"]:
             if tag not in item:
@@ -78,7 +78,7 @@ if __name__ == "__main__":
 
         definition = ET.SubElement(definitions, "definition")
         definition.set("class", "patch")
-        definition.set("id", "oval:{}:def:1".format(item["id"]))
+        definition.set("id", f"oval:{item['id']}:def:1")
         definition.set("version", "1")
 
         metadata = ET.SubElement(definition, "metadata")
@@ -95,7 +95,7 @@ if __name__ == "__main__":
                 reference.set("ref_id", issue)
                 if issue.startswith("CVE-"):
                     reference.set(
-                        "ref_url", "https://nvd.nist.gov/vuln/detail/{}".format(issue)
+                        "ref_url", f"https://nvd.nist.gov/vuln/detail/{issue}"
                     )
                     reference.set("source", "CVE")
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         criteria.set("operator", "OR")
         criterion = ET.SubElement(criteria, "criterion")
         criterion.set("comment", item["name"])
-        criterion.set("test_ref", "oval:{}:tst:1".format(item["id"]))
+        criterion.set("test_ref", f"oval:{item['id']}:tst:1")
 
     tests = ET.SubElement(oval_definitions, "tests")
     for item in items:
@@ -114,19 +114,19 @@ if __name__ == "__main__":
         red_def = ET.SubElement(tests, "red-def:fwupdsecattr_test")
         red_def.set("check", "at least one")
         red_def.set("comment", item["name"])
-        red_def.set("id", "oval:{}:tst:1".format(item["id"]))
+        red_def.set("id", f"oval:{item['id']}:tst:1")
         red_def.set("version", "1")
 
         red_def_object = ET.SubElement(red_def, "red-def:object")
-        red_def_object.set("object_ref", "oval:{}:obj:1".format(item["id"]))
+        red_def_object.set("object_ref", f"oval:{item['id']}:obj:1")
         red_def_state = ET.SubElement(red_def, "red-def:state")
-        red_def_state.set("state_ref", "oval:{}:ste:1".format(item["id"]))
+        red_def_state.set("state_ref", f"oval:{item['id']}:ste:1")
 
     objects = ET.SubElement(oval_definitions, "objects")
     for item in items:
 
         red_def = ET.SubElement(objects, "red-def:fwupdsecattr_object")
-        red_def.set("id", "oval:{}:obj:1".format(item["id"]))
+        red_def.set("id", f"oval:{item['id']}:obj:1")
         red_def.set("version", "1")
 
         red_def_stream_id = ET.SubElement(red_def, "red-def:stream-id")
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     for item in items:
 
         red_def = ET.SubElement(states, "red-def:fwupdsecattr_state")
-        red_def.set("id", "oval:{}:ste:1".format(item["id"]))
+        red_def.set("id", f"oval:{item['id']}:ste:1")
         red_def.set("version", "1")
 
         red_def_security_attr = ET.SubElement(red_def, "red-def:security-attr")

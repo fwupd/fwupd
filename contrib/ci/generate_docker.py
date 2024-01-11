@@ -35,9 +35,9 @@ if len(split) >= 2:
 
 deps = parse_dependencies(OS, SUBOS, False)
 
-f = os.path.join(directory, "Dockerfile-%s.in" % OS)
+f = os.path.join(directory, f"Dockerfile-{OS}.in")
 if not os.path.exists(f):
-    print("Missing input file %s for %s" % (f, OS))
+    print(f"Missing input file {f} for {OS}")
     sys.exit(1)
 
 with open(f, "r") as rfd:
@@ -69,9 +69,9 @@ with open("Dockerfile", "w") as wfd:
                 )
             for i in range(0, len(deps)):
                 if i < len(deps) - 1:
-                    wfd.write("\t%s \\\n" % deps[i])
+                    wfd.write(f"\t{deps[i]} \\\n")
                 else:
-                    wfd.write("\t%s || true\n" % deps[i])
+                    wfd.write(f"\t{deps[i]} || true\n")
         elif line == "%%%ARCH_SPECIFIC_COMMAND%%%\n":
             if OS == "debian" and SUBOS == "s390x":
                 # add sources
@@ -79,19 +79,19 @@ with open("Dockerfile", "w") as wfd:
                     'RUN cat /etc/apt/sources.list | sed "s/deb/deb-src/" >> /etc/apt/sources.list\n'
                 )
                 # add new architecture
-                wfd.write("RUN dpkg --add-architecture %s\n" % SUBOS)
+                wfd.write(f"RUN dpkg --add-architecture {SUBOS}\n")
         elif line == "%%%OS%%%\n":
-            wfd.write("ENV OS %s\n" % TARGET)
+            wfd.write(f"ENV OS {TARGET}\n")
         else:
             wfd.write(line)
     wfd.flush()
 
 if len(sys.argv) == 2 and sys.argv[1] == "build":
     cmd = get_container_cmd()
-    args = [cmd, "build", "-t", "fwupd-%s" % TARGET]
+    args = [cmd, "build", "-t", f"fwupd-{TARGET}"]
     if "http_proxy" in os.environ:
-        args += ["--build-arg=http_proxy=%s" % os.environ["http_proxy"]]
+        args += [f"--build-arg=http_proxy={os.environ['http_proxy']}"]
     if "https_proxy" in os.environ:
-        args += ["--build-arg=https_proxy=%s" % os.environ["https_proxy"]]
+        args += [f"--build-arg=https_proxy={os.environ['https_proxy']}"]
     args += ["-f", "./Dockerfile", "."]
     subprocess.check_call(args)

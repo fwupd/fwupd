@@ -16,30 +16,30 @@ def test_files() -> int:
         with open(fn, "r") as f:
             for line in f.read().split("\n"):
                 if line.startswith(" ") or line.endswith(" "):
-                    print("{} has leading or trailing whitespace: {}".format(fn, line))
+                    print(f"{fn} has leading or trailing whitespace: {line}")
                     rc = 1
                     continue
                 if not line or line.startswith("#"):
                     continue
                 if line.startswith("["):
                     if not line.endswith("]"):
-                        print("{} has invalid section header: {}".format(fn, line))
+                        print(f"{fn} has invalid section header: {line}")
                         rc = 1
                         continue
                     for deprecated in ["DeviceInstanceId", "Guid"]:
                         if line.find(deprecated) != -1:
-                            print("{} has deprecated prefix: {}".format(fn, deprecated))
+                            print(f"{fn} has deprecated prefix: {deprecated}")
                             rc = 1
                             continue
                 else:
                     sections = line.split(" = ")
                     if len(sections) != 2:
-                        print("{} has invalid line: {}".format(fn, line))
+                        print(f"{fn} has invalid line: {line}")
                         rc = 1
                         continue
                     for section in sections:
                         if section.strip() != section:
-                            print("{} has invalid spacing: {}".format(fn, line))
+                            print(f"{fn} has invalid spacing: {line}")
                             rc = 1
                             break
     return rc

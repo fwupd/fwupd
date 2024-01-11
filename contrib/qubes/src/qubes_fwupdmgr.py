@@ -177,7 +177,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             try:
                 self.refresh_metadata(whonix=whonix, remote_name=name, metadata_url=url)
             except Exception as e:
-                print("Failed to refresh remote '{}': {}".format(name, e))
+                print(f"Failed to refresh remote '{name}': {e}")
 
     def _get_dom0_updates(self):
         """Gathers information about available updates."""

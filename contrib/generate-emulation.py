@@ -75,7 +75,7 @@ def _get_host_devices_and_attrs() -> str:
     try:
         devices = client.get_devices()
     except GLib.GError as e:
-        print("ignoring {}".format(e))
+        print(f"ignoring {e}")
     else:
         builder.set_member_name("Devices")
         builder.begin_array()
@@ -89,7 +89,7 @@ def _get_host_devices_and_attrs() -> str:
     try:
         attrs = client.get_host_security_attrs()
     except GLib.GError as e:
-        print("ignoring {}".format(e))
+        print(f"ignoring {e}")
     else:
         builder.set_member_name("SecurityAttributes")
         builder.begin_array()
@@ -103,7 +103,7 @@ def _get_host_devices_and_attrs() -> str:
     try:
         attrs = client.get_bios_settings()
     except GLib.GError as e:
-        print("ignoring {}".format(e))
+        print(f"ignoring {e}")
     else:
         builder.set_member_name("BiosSettings")
         builder.begin_array()
