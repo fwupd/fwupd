@@ -48,7 +48,7 @@ struct EfiFile {
     type: EfiFileType,
     attrs: u8,
     size: u24le,
-    state: u8 == 0xF8,
+    state: u8 = 0xF8,
 }
 
 #[derive(ParseStream)]
