@@ -143,17 +143,6 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 	/* add simple blob */
 	partial_stream = fu_partial_input_stream_new(stream, st->len, size - st->len);
 
-	/* add sections */
-	if (priv->type != FU_EFI_FILE_TYPE_FFS_PAD && priv->type != FU_EFI_FILE_TYPE_RAW) {
-		if (!fu_efi_firmware_parse_sections(firmware, partial_stream, 0, flags, error)) {
-			g_prefix_error(error, "failed to add firmware image: ");
-			return FALSE;
-		}
-	} else {
-		if (!fu_firmware_set_stream(firmware, partial_stream, error))
-			return FALSE;
-	}
-
 	/* verify data checksum */
 	if ((priv->attrib & FU_EFI_FILE_ATTRIB_CHECKSUM) > 0 &&
 	    (flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
@@ -169,6 +158,17 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 				    fu_struct_efi_file_get_data_checksum(st));
 			return FALSE;
 		}
+	}
+
+	/* add sections */
+	if (priv->type != FU_EFI_FILE_TYPE_FFS_PAD && priv->type != FU_EFI_FILE_TYPE_RAW) {
+		if (!fu_efi_firmware_parse_sections(firmware, partial_stream, 0, flags, error)) {
+			g_prefix_error(error, "failed to add firmware image: ");
+			return FALSE;
+		}
+	} else {
+		if (!fu_firmware_set_stream(firmware, partial_stream, error))
+			return FALSE;
 	}
 
 	/* align size for volume */
