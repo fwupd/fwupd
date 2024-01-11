@@ -51,8 +51,8 @@ def _strip_md(data: str) -> str:
         if line.startswith("<") and (line.endswith("(1)>") or line.endswith("(5)>")):
             line = line.strip("<>")
             name = line.split("(")[0]
-            line = "[`%s`](./%s.html)" % (line, name)
-        content += "%s\n" % line
+            line = f"[`{line}`](./{name}.html)"
+        content += f"{line}\n"
     return content
 
 

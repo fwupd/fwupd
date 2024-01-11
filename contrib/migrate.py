@@ -19,7 +19,7 @@ if __name__ == "__main__":
     else:
         exts = ["c", "h", "map"]
         for ext in exts:
-            for fn in glob.glob("**/*.{}".format(ext), recursive=True):
+            for fn in glob.glob(f"**/*.{ext}", recursive=True):
                 if fn.startswith("build"):
                     continue
                 if fn.startswith("subprojects"):
@@ -138,7 +138,7 @@ if __name__ == "__main__":
             buf = buf.replace(old, new)
             modified = True
         if modified:
-            print("MODIFIED: {}".format(fn))
+            print(f"MODIFIED: {fn}")
             with open(fn, "w") as f:
                 f.write(buf)
 

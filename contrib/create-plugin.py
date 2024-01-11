@@ -25,11 +25,9 @@ def _subst_add_string(key: str, value: str) -> None:
 
     # sanity check
     if not value.isascii():
-        raise NotImplementedError("{} can only be ASCII, got {}".format(key, value))
+        raise NotImplementedError(f"{key} can only be ASCII, got {value}")
     if len(value) < 3:
-        raise NotImplementedError(
-            "{} has to be at least length 3, got {}".format(key, value)
-        )
+        raise NotImplementedError(f"{key} has to be at least length 3, got {value}")
 
     subst[key] = value
     subst[key.lower()] = value.lower()
@@ -85,7 +83,7 @@ if __name__ == "__main__":
         autoescape=select_autoescape(),
         keep_trailing_newline=True,
     )
-    for fn in glob.iglob("./plugins/{}/*".format(template_src)):
+    for fn in glob.iglob(f"./plugins/{template_src}/*"):
         template = env.get_template(fn)
         with open(_subst_replace(fn.replace(".in", "")), "wb") as f_dst:
             f_dst.write(template.render(subst).encode())

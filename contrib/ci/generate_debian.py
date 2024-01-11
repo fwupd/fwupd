@@ -19,7 +19,7 @@ def update_debian_control(target):
     control_out = os.path.join(target, "control")
 
     if not os.path.exists(control_in):
-        print("Missing file %s" % control_in)
+        print(f"Missing file {control_in}")
         sys.exit(1)
 
     with open(control_in, "r") as rfd:
@@ -39,7 +39,7 @@ def update_debian_control(target):
             if "Build-Depends:" in line and "%%%DYNAMIC%%%" in line:
                 wfd.write("Build-Depends:\n")
                 for i in range(0, len(deps)):
-                    wfd.write("\t%s,\n" % deps[i])
+                    wfd.write(f"\t{deps[i]},\n")
             elif "fwupd-qubes-vm-whonix" in line and not QUBES:
                 break
             else:
@@ -51,7 +51,7 @@ def update_debian_copyright(directory):
     copyright_out = os.path.join(directory, "copyright")
 
     if not os.path.exists(copyright_in):
-        print("Missing file %s" % copyright_in)
+        print(f"Missing file {copyright_in}")
         sys.exit(1)
 
     # Assume all files are remaining LGPL-2.1+
@@ -76,7 +76,7 @@ def update_debian_copyright(directory):
                         1
                     ].strip()  # split out the copyright header
                     partition = parts.partition(" ")[2]  # remove the year string
-                    copyrights += ["%s" % partition]
+                    copyrights += [f"{partition}"]
     copyrights = "\n\t   ".join(sorted(set(copyrights)))
     with open(copyright_in, "r") as rfd:
         lines = rfd.readlines()
@@ -85,7 +85,7 @@ def update_debian_copyright(directory):
         for line in lines:
             if line.startswith("%%%DYNAMIC%%%"):
                 wfd.write("Files: *\n")
-                wfd.write("Copyright: %s\n" % copyrights)
+                wfd.write(f"Copyright: {copyrights}\n")
                 wfd.write("License: LGPL-2.1+\n")
                 wfd.write("\n")
             else:
