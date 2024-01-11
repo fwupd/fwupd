@@ -36,7 +36,7 @@ fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
 	gsize streamsz = 0;
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	while (offset + 0x18 < streamsz) {
+	while (offset < streamsz) {
 		g_autoptr(FuFirmware) img = fu_efi_firmware_file_new();
 		g_autoptr(GInputStream) stream_tmp = NULL;
 		gboolean is_freespace = TRUE;
@@ -51,9 +51,12 @@ fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
 				break;
 			}
 		}
-		if (is_freespace)
+		if (is_freespace) {
+			g_debug("ignoring free space @0x%x of 0x%x",
+				(guint)offset,
+				(guint)streamsz);
 			break;
-
+		}
 		stream_tmp = fu_partial_input_stream_new(stream, offset, streamsz - offset);
 		if (!fu_firmware_parse_stream(img,
 					      stream_tmp,
