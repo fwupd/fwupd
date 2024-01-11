@@ -125,7 +125,7 @@ def _write_quirks(parts, fn_destination):
         if not mem_part:
             print("no memory layout for", part["desc"])
             continue
-        if not "size" in mem_part:
+        if "size" not in mem_part:
             print("no memory size for", part["desc"])
             continue
         if mem_part["size"].startswith("0x"):

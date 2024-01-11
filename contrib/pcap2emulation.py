@@ -324,7 +324,7 @@ class Pcap2Emulation:
             else:
                 val = get_int(layers[key][self.interface_index])
 
-            if not key in layers:
+            if key not in layers:
                 continue
 
             interface[table[key]] = val
