@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#define G_LOG_DOMAIN "FuEfiFirmwareSection"
+
 #include "config.h"
 
 #include "fu-byte-array.h"
@@ -195,6 +197,62 @@ fu_efi_firmware_section_parse_compression_sections(FuEfiFirmwareSection *self,
 	return TRUE;
 }
 
+static const gchar *
+fu_efi_firmware_section_freeform_subtype_guid_to_string(const gchar *guid)
+{
+	struct {
+		const gchar *guid;
+		const gchar *str;
+	} freeform_guids[] = {
+	    {"00781ca1-5de3-405f-abb8-379c3c076984", "AmiRomLayoutGuid"},
+	    {"20feebde-e739-420e-ae31-77e2876508c0", "IntelRstOprom"},
+	    {"224d6eb4-307f-45ba-9dc3-fe9fc6b38148", "IntelEntRaidController"},
+	    {"2ebe0275-6458-4af9-91ed-d3f4edb100aa", "SignOn"},
+	    {"380b6b4f-1454-41f2-a6d3-61d1333e8cb4", "IntelGop"},
+	    {"50339d20-c90a-4bb2-9aff-d8a11b23bc15", "I219?Oprom"},
+	    {"88a15a4f-977d-4682-b17c-da1f316c1f32", "RomLayout"},
+	    {"9bec7109-6d7a-413a-8e4b-019ced0503e1", "AmiBoardInfoSectionGuid"},
+	    {"ab56dc60-0057-11da-a8db-000102eee626", "?BuildData"},
+	    {"c5a4306e-e247-4ecd-a9d8-5b1985d3dcda", "?Oprom"},
+	    {"c9352cc3-a354-44e5-8776-b2ed8dd781ec", "IntelEntRaidController"},
+	    {"d46346ca-82a1-4cde-9546-77c86f893888", "?Oprom"},
+	    {"e095affe-d4cd-4289-9b48-28f64e3d781d", "IntelRstOprom"},
+	    {"fe612b72-203c-47b1-8560-a66d946eb371", "setupdata"},
+	    {NULL, NULL},
+	};
+	for (guint i = 0; freeform_guids[i].guid != NULL; i++) {
+		if (g_strcmp0(guid, freeform_guids[i].guid) == 0)
+			return freeform_guids[i].str;
+	}
+	return NULL;
+}
+
+static gboolean
+fu_efi_firmware_section_parse_freeform_subtype_guid(FuEfiFirmwareSection *self,
+						    GInputStream *stream,
+						    FwupdInstallFlags flags,
+						    GError **error)
+{
+	const gchar *guid_ui;
+	g_autofree gchar *guid_str = NULL;
+	g_autoptr(GByteArray) st = NULL;
+
+	st = fu_struct_efi_section_freeform_subtype_guid_parse_stream(stream, 0x0, error);
+	if (st == NULL)
+		return FALSE;
+
+	/* no idea */
+	guid_str = fwupd_guid_to_string(fu_struct_efi_section_freeform_subtype_guid_get_guid(st),
+					FWUPD_GUID_FLAG_MIXED_ENDIAN);
+	guid_ui = fu_efi_firmware_section_freeform_subtype_guid_to_string(guid_str);
+	if (guid_ui != NULL) {
+		g_debug("ignoring FREEFORM_SUBTYPE_GUID %s [%s]", guid_str, guid_ui);
+		return TRUE;
+	}
+	g_debug("unknown FREEFORM_SUBTYPE_GUID %s", guid_str);
+	return TRUE;
+}
+
 static gboolean
 fu_efi_firmware_section_parse(FuFirmware *firmware,
 			      GInputStream *stream,
@@ -311,12 +369,18 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to parse compression: ");
 			return FALSE;
 		}
+	} else if (priv->type == FU_EFI_SECTION_TYPE_FREEFORM_SUBTYPE_GUID) {
+		if (!fu_efi_firmware_section_parse_freeform_subtype_guid(self,
+									 partial_stream,
+									 flags,
+									 error)) {
+			g_prefix_error(error, "failed to parse compression: ");
+			return FALSE;
+		}
 	} else if (priv->type == FU_EFI_SECTION_TYPE_PEI_DEPEX ||
 		   priv->type == FU_EFI_SECTION_TYPE_DXE_DEPEX ||
 		   priv->type == FU_EFI_SECTION_TYPE_MM_DEPEX ||
 		   priv->type == FU_EFI_SECTION_TYPE_PE32 || priv->type == FU_EFI_SECTION_TYPE_TE ||
-		   priv->type ==
-		       FU_EFI_SECTION_TYPE_FREEFORM_SUBTYPE_GUID || /* TODO: investigate */
 		   priv->type == FU_EFI_SECTION_TYPE_RAW) {
 		g_debug("ignoring %s [0x%x] EFI section",
 			fu_efi_section_type_to_string(priv->type),

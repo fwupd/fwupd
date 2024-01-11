@@ -119,6 +119,11 @@ struct EfiSection2 {
     extended_size: u32,
 }
 
+#[derive(ParseStream)]
+struct EfiSectionFreeformSubtypeGuid {
+    guid: Guid,
+}
+
 #[derive(New, ParseStream)]
 struct EfiSectionGuidDefined {
     name: Guid,
