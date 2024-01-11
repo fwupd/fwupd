@@ -12,7 +12,6 @@ import tempfile
 import os
 import shutil
 import xml.etree.ElementTree as ET
-from packaging.version import Version
 from qubes_fwupd_common import EXIT_CODES, create_dirs, LooseVersion
 
 FWUPDTOOL = "/bin/fwupdtool"

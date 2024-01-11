@@ -8,8 +8,7 @@
 import argparse
 import sys
 import json
-import os
-from typing import Dict, List, Any
+from typing import List
 
 if __name__ == "__main__":
 

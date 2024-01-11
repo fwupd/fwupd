@@ -9,9 +9,8 @@ import argparse
 import datetime
 import sys
 import json
-import os
 
-from typing import Dict, List, Any
+from typing import List
 
 import xml.etree.ElementTree as ET
 
