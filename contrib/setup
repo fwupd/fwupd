@@ -12,6 +12,7 @@ rename_branch()
     NEW=main
     if git log $OLD >/dev/null 2>&1 &&
        git remote get-url origin 2>&1 | grep fwupd/fwupd.git >/dev/null 2>&1; then
+        echo ""
         read -p "Rename existing $OLD branch to $NEW? (y/N) " question
         if [ "$question" = "y" ]; then
             git branch -m $OLD $NEW
@@ -115,6 +116,7 @@ setup_precommit()
 
 setup_prepush()
 {
+    echo ""
     read -p "Run tests locally before pushing to remote branches? THIS WILL SLOW DOWN EVERY PUSH but reduce the risk of failing CI. (y/N) " question
     if [ "$question" = "y" ]; then
         pre-commit install -t pre-push
@@ -193,10 +195,7 @@ detect_os "$@"
 #if interactive install build deps and prepare environment
 if [ -t 2 ]; then
     case $OS in
-        debian|ubuntu|arch|fedora)
-            setup_deps
-            ;;
-        void)
+        debian|ubuntu|arch|fedora|void)
             setup_deps
             ;;
     esac
