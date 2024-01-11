@@ -171,6 +171,22 @@ detect_os()
     fi
 }
 
+howto()
+{
+    echo ""
+    echo "To enter fwupd development environment run:"
+    echo ""
+    echo "# source venv/bin/activate"
+    echo ""
+}
+
+#already setup
+if [ -f venv/bin/build-fwupd ]; then
+    echo "$0 has already been run"
+    howto
+    exit 0
+fi
+
 #needed for arguments for some commands
 detect_os "$@"
 
@@ -200,8 +216,4 @@ if [ -t 2 ]; then
     setup_prepush
 fi
 
-echo ""
-echo "To enter fwupd development environment run:"
-echo ""
-echo "# source venv/bin/activate"
-echo ""
+howto
