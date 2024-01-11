@@ -37,7 +37,7 @@ def index():
     # check password from the config file
     try:
         if (
-            not request.authorization["username"] in HARDCODED_USERNAMES
+            request.authorization["username"] not in HARDCODED_USERNAMES
             or request.authorization["password"] != HARDCODED_PASSWORD
         ):
             return _failure("unauthorised", status=401)
