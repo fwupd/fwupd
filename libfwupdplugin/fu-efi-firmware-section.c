@@ -281,6 +281,9 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to parse lzma section: ");
 			return FALSE;
 		}
+	} else if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED) {
+		g_warning("no idea how to decompress encapsulation section of type %s",
+			  fu_firmware_get_id(firmware));
 	} else if (priv->type == FU_EFI_SECTION_TYPE_USER_INTERFACE) {
 		if (!fu_efi_firmware_section_parse_user_interface(self,
 								  partial_stream,
