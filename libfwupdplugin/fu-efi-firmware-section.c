@@ -281,6 +281,12 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to parse lzma section: ");
 			return FALSE;
 		}
+	} else if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED &&
+		   g_strcmp0(fu_firmware_get_id(firmware),
+			     "ced4eac6-49f3-4c12-a597-fc8c33447691") == 0) {
+		g_debug("ignoring %s [0x%x] EFI section as self test",
+			fu_efi_section_type_to_string(priv->type),
+			priv->type);
 	} else if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED) {
 		g_warning("no idea how to decompress encapsulation section of type %s",
 			  fu_firmware_get_id(firmware));
@@ -305,6 +311,20 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to parse compression: ");
 			return FALSE;
 		}
+	} else if (priv->type == FU_EFI_SECTION_TYPE_PEI_DEPEX ||
+		   priv->type == FU_EFI_SECTION_TYPE_DXE_DEPEX ||
+		   priv->type == FU_EFI_SECTION_TYPE_MM_DEPEX ||
+		   priv->type == FU_EFI_SECTION_TYPE_PE32 || priv->type == FU_EFI_SECTION_TYPE_TE ||
+		   priv->type ==
+		       FU_EFI_SECTION_TYPE_FREEFORM_SUBTYPE_GUID || /* TODO: investigate */
+		   priv->type == FU_EFI_SECTION_TYPE_RAW) {
+		g_debug("ignoring %s [0x%x] EFI section",
+			fu_efi_section_type_to_string(priv->type),
+			priv->type);
+	} else {
+		g_warning("no idea how to parse %s [0x%x] EFI section",
+			  fu_efi_section_type_to_string(priv->type),
+			  priv->type);
 	}
 
 	/* success */
