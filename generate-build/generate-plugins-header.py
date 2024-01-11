@@ -34,7 +34,7 @@ with open(sys.argv[1], "w") as f:
         )
 
     # GTypes
-    gtypes = ["fu_{}_plugin_get_type".format(name) for _, name in plugin_names]
+    gtypes = [f"fu_{name}_plugin_get_type" for _, name in plugin_names]
     f.write(
         "GType (*fu_plugin_externals[])(void) = { %s };\n"
         % ", ".join(gtypes + ["NULL"])

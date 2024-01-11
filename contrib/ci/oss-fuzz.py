@@ -105,8 +105,8 @@ class Builder:
             subprocess.run(
                 [
                     "cmake",
-                    "-DCMAKE_INSTALL_PREFIX:PATH={}".format(self.builddir),
-                    "-DCMAKE_INSTALL_LIBDIR={}".format("lib"),
+                    f"-DCMAKE_INSTALL_PREFIX:PATH={self.builddir}",
+                    "-DCMAKE_INSTALL_LIBDIR=lib",
                 ]
                 + argv
                 + [".."],
@@ -117,11 +117,11 @@ class Builder:
 
     def add_work_includedir(self, value: str) -> None:
         """add a CFLAG"""
-        self.cflags.append("-I{}/{}".format(self.builddir, value))
+        self.cflags.append(f"-I{self.builddir}/{value}")
 
     def add_src_includedir(self, value: str) -> None:
         """add a CFLAG"""
-        self.cflags.append("-I{}/{}".format(self.srcdir, value))
+        self.cflags.append(f"-I{self.srcdir}/{value}")
 
     def add_build_ldflag(self, value: str) -> None:
         """add a LDFLAG"""
@@ -148,13 +148,13 @@ class Builder:
             fullsrc = os.path.join(self.builddir, src)
         dst = os.path.basename(src).replace(".c", ".o")
         argv.extend(["-c", fullsrc, "-o", os.path.join(self.builddir, dst)])
-        print("building {} into {}".format(src, dst))
+        print(f"building {src} into {dst}")
         try:
             subprocess.run(argv, cwd=self.srcdir, check=True)
         except subprocess.CalledProcessError as e:
             print(e)
             sys.exit(1)
-        return os.path.join(self.builddir, "{}".format(dst))
+        return os.path.join(self.builddir, f"{dst}")
 
     def rustgen(self, src: str) -> str:
 
@@ -188,20 +188,20 @@ class Builder:
                 argv.append(os.path.join(self.builddir, obj))
         argv += ["-o", os.path.join(self.installdir, dst)]
         argv += self.ldflags
-        print("building {} into {}".format(",".join(objs), dst))
+        print(f"building {','.join(objs)} into {dst}")
         subprocess.run(argv, cwd=self.srcdir, check=True)
 
     def mkfuzztargets(self, globstr: str) -> None:
         """make binary fuzzing targets from builder.xml files"""
         builder_xmls = glob.glob(globstr)
         if not builder_xmls:
-            print("failed to find {}".format(globstr))
+            print(f"failed to find {globstr}")
             sys.exit(1)
         for fn_src in builder_xmls:
             fn_dst = fn_src.replace(".builder.xml", ".bin")
             if os.path.exists(fn_dst):
                 continue
-            print("building {} into {}".format(fn_src, fn_dst))
+            print(f"building {fn_src} into {fn_dst}")
             try:
                 argv = [
                     "build/src/fwupdtool",
@@ -211,7 +211,7 @@ class Builder:
                 ]
                 subprocess.run(argv, check=True)
             except subprocess.CalledProcessError as e:
-                print("tried to run: `{}` and got {}".format(" ".join(argv), str(e)))
+                print(f"tried to run: `{' '.join(argv)}` and got {str(e)}")
                 sys.exit(1)
 
     def write_header(
@@ -220,17 +220,17 @@ class Builder:
         """write a header file"""
         dstdir = os.path.join(self.builddir, os.path.dirname(dst))
         os.makedirs(dstdir, exist_ok=True)
-        print("writing {}".format(dst))
+        print(f"writing {dst}")
         with open(os.path.join(dstdir, os.path.basename(dst)), "w") as f:
             for key in defines:
                 value = defines[key]
                 if value is not None:
                     if isinstance(value, int):
-                        f.write("#define {} {}\n".format(key, value))
+                        f.write(f"#define {key} {value}\n")
                     else:
-                        f.write('#define {} "{}"\n'.format(key, value))
+                        f.write(f'#define {key} "{value}"\n')
                 else:
-                    f.write("#define {}\n".format(key))
+                    f.write(f"#define {key}\n")
         self.add_work_includedir(os.path.dirname(dst))
 
     def makezip(self, dst: str, globstr: str) -> None:
@@ -238,7 +238,7 @@ class Builder:
         argv = ["zip", "--junk-paths", os.path.join(self.installdir, dst)] + glob.glob(
             os.path.join(self.srcdir, globstr)
         )
-        print("assembling {}".format(dst))
+        print(f"assembling {dst}")
         subprocess.run(argv, cwd=self.srcdir, check=True)
 
     def grep_meson(self, src: str, token: str = "fuzzing") -> List[str]:
@@ -272,18 +272,16 @@ class Fuzzer:
 
         self.name = name
         self.srcdir = srcdir or name
-        self.globstr = globstr or "{}*.bin".format(name)
-        self.pattern = pattern or "{}-firmware".format(name)
+        self.globstr = globstr or f"{name}*.bin"
+        self.pattern = pattern or f"{name}-firmware"
 
     @property
     def new_gtype(self) -> str:
-        return "g_object_new(FU_TYPE_{}, NULL)".format(
-            self.pattern.replace("-", "_").upper()
-        )
+        return f"g_object_new(FU_TYPE_{self.pattern.replace('-', '_').upper()}, NULL)"
 
     @property
     def header(self) -> str:
-        return "fu-{}.h".format(self.pattern)
+        return f"fu-{self.pattern}.h"
 
 
 def _build(bld: Builder) -> None:
@@ -408,19 +406,19 @@ def _build(bld: Builder) -> None:
                 "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
             },
         )
-        bld.link([bld.compile(src)] + built_objs, "{}_fuzzer".format(fzr.name))
+        bld.link([bld.compile(src)] + built_objs, f"{fzr.name}_fuzzer")
         bld.mkfuzztargets(
             os.path.join(
                 bld.srcdir,
                 "fwupd",
                 "libfwupdplugin",
                 "tests",
-                "{}*.builder.xml".format(fzr.name),
+                f"{fzr.name}*.builder.xml",
             )
         )
         bld.makezip(
-            "{}_fuzzer_seed_corpus.zip".format(fzr.name),
-            "fwupd/libfwupdplugin/tests/{}".format(fzr.globstr),
+            f"{fzr.name}_fuzzer_seed_corpus.zip",
+            f"fwupd/libfwupdplugin/tests/{fzr.globstr}",
         )
 
     # plugins
@@ -445,7 +443,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("wacom-usb", pattern="wac-firmware"),
     ]:
         fuzz_objs = []
-        for obj in bld.grep_meson("fwupd/plugins/{}".format(fzr.srcdir)):
+        for obj in bld.grep_meson(f"fwupd/plugins/{fzr.srcdir}"):
             if obj.endswith(".c"):
                 fuzz_objs.append(bld.compile(obj))
             elif obj.endswith(".rs"):
@@ -458,7 +456,7 @@ def _build(bld: Builder) -> None:
             },
         )
         fuzz_objs.append(bld.compile(src))
-        bld.link(fuzz_objs + built_objs, "{}_fuzzer".format(fzr.name))
+        bld.link(fuzz_objs + built_objs, f"{fzr.name}_fuzzer")
         bld.mkfuzztargets(
             os.path.join(
                 bld.srcdir,
@@ -466,12 +464,12 @@ def _build(bld: Builder) -> None:
                 "plugins",
                 fzr.srcdir,
                 "tests",
-                "{}*.builder.xml".format(fzr.name),
+                f"{fzr.name}*.builder.xml",
             )
         )
         bld.makezip(
-            "{}_fuzzer_seed_corpus.zip".format(fzr.name),
-            "fwupd/plugins/{}/tests/{}".format(fzr.srcdir, fzr.globstr),
+            f"{fzr.name}_fuzzer_seed_corpus.zip",
+            f"fwupd/plugins/{fzr.srcdir}/tests/{fzr.globstr}",
         )
 
 
