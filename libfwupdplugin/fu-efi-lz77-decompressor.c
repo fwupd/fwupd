@@ -615,6 +615,17 @@ fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
 				    "destination size is zero");
 		return FALSE;
 	}
+	if (dst_bufsz > fu_firmware_get_size_max(firmware)) {
+		g_autofree gchar *sz_val = g_format_size(dst_bufsz);
+		g_autofree gchar *sz_max = g_format_size(fu_firmware_get_size_max(firmware));
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "destination size is too large (%s, limit %s)",
+			    sz_val,
+			    sz_max);
+		return FALSE;
+	}
 	fu_byte_array_set_size(dst, dst_bufsz, 0x0);
 
 	/* try both position */
@@ -661,6 +672,7 @@ static void
 fu_efi_lz77_decompressor_init(FuEfiLz77Decompressor *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 64 * 1024 * 1024);
 }
 
 static void
