@@ -130,19 +130,6 @@ fu_util_update_device_changed_cb(FwupdClient *client, FwupdDevice *device, FuUti
 	if (priv->current_operation == FU_UTIL_OPERATION_UNKNOWN)
 		return;
 
-	/* allowed to set whenever the device has changed */
-	if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
-		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
-	if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
-		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
-
-	/* same as last time, so ignore */
-	if (priv->current_device == NULL ||
-	    g_strcmp0(fwupd_device_get_composite_id(priv->current_device),
-		      fwupd_device_get_composite_id(device)) == 0) {
-		g_set_object(&priv->current_device, device);
-		return;
-	}
 
 	/* ignore indirect devices that might have changed */
 	if (fwupd_device_get_status(device) == FWUPD_STATUS_IDLE ||
@@ -152,6 +139,20 @@ fu_util_update_device_changed_cb(FwupdClient *client, FwupdDevice *device, FuUti
 			fwupd_status_to_string(fwupd_device_get_status(device)));
 		return;
 	}
+
+	/* same as last time, so ignore */
+	if (priv->current_device == NULL ||
+	    g_strcmp0(fwupd_device_get_composite_id(priv->current_device),
+		      fwupd_device_get_composite_id(device)) == 0) {
+		g_set_object(&priv->current_device, device);
+		return;
+	}
+
+	/* allowed to set whenever the device has changed */
+	if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
+		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
+	if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
 
 	/* show message in console */
 	if (priv->current_operation == FU_UTIL_OPERATION_UPDATE) {
