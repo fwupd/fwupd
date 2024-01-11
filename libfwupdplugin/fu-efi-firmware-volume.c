@@ -140,6 +140,27 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 		}
 	}
 
+	/* extended header items */
+	if (fu_struct_efi_volume_get_ext_hdr(st_hdr) != 0) {
+		g_autoptr(GByteArray) st_ext_hdr = NULL;
+		goffset offset_ext = offset + fu_struct_efi_volume_get_ext_hdr(st_hdr);
+		st_ext_hdr =
+		    fu_struct_efi_volume_ext_header_parse_stream(stream, offset_ext, error);
+		if (st_ext_hdr == NULL)
+			return FALSE;
+		offset_ext += fu_struct_efi_volume_ext_header_get_size(st_ext_hdr);
+		do {
+			g_autoptr(GByteArray) st_ext_entry = NULL;
+			st_ext_entry =
+			    fu_struct_efi_volume_ext_entry_parse_stream(stream, offset_ext, error);
+			if (st_ext_entry == NULL)
+				return FALSE;
+			if (fu_struct_efi_volume_ext_entry_get_size(st_ext_entry) == 0xFFFF)
+				break;
+			offset_ext += fu_struct_efi_volume_ext_entry_get_size(st_ext_entry);
+		} while ((gsize)offset_ext < fv_length);
+	}
+
 	/* add image */
 	partial_stream =
 	    fu_partial_input_stream_new(stream, offset + hdr_length, fv_length - hdr_length);

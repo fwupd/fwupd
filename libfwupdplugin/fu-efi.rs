@@ -138,6 +138,27 @@ struct EfiVolume {
     reserved: u8,
     revision: u8 == 0x02,
 }
+
+#[derive(ParseStream)]
+struct EfiVolumeExtHeader {
+    fv_name: Guid,
+    size: u32le,
+}
+
+#[repr(u16le)]
+#[derive(ToString)]
+enum EfiVolumeExtEntryType {
+    Oem = 0x01,
+    Guid = 0x02,
+    Size = 0x03,
+}
+
+#[derive(ParseStream)]
+struct EfiVolumeExtEntry {
+    size: u16le,
+    type: EfiVolumeExtEntryType,
+}
+
 #[derive(New, ParseStream)]
 struct EfiVolumeBlockMap {
     num_blocks: u32le,
