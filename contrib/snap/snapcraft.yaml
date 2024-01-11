@@ -43,7 +43,7 @@ apps:
     command: fwupd.wrapper
     daemon: dbus
     slots: [fwupd]
-    plugs: [bluez, udisks2, modem-manager, upower-observe, polkit, network, hardware-observe, opengl, raw-usb]
+    plugs: [bluez, udisks2, modem-manager, upower-observe, polkit, network, hardware-observe, home, opengl, raw-usb]
     daemon-scope: system
     activates-on:
       - fwupd-dbus
