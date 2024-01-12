@@ -131,6 +131,7 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 			return FALSE;
 		remove_delay += fu_ccgx_dmc_devx_device_get_remove_delay(devx);
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(devx));
+		offset += FU_STRUCT_CCGX_DMC_DEVX_STATUS_SIZE;
 	}
 
 	/* ensure the remove delay is set */
