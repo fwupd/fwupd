@@ -145,6 +145,7 @@ struct _FuEngine {
 #ifdef HAVE_PASSIM
 	PassimClient *passim_client;
 #endif
+	FwupdStatus status;
 };
 
 enum { PROP_0, PROP_CONTEXT, PROP_LAST };
@@ -249,6 +250,7 @@ fu_engine_get_context(FuEngine *self)
 static void
 fu_engine_set_status(FuEngine *self, FwupdStatus status)
 {
+	self->status = status;
 	/* emit changed */
 	g_signal_emit(self, signals[SIGNAL_STATUS_CHANGED], 0, status);
 }
@@ -335,6 +337,21 @@ fu_engine_ensure_device_power_inhibit(FuEngine *self, FuDevice *device)
 {
 	if (fu_engine_config_get_ignore_power(self->config))
 		return;
+
+	/* avoid updating status while engine is actively updating devices */
+	switch (self->status) {
+	case FWUPD_STATUS_DECOMPRESSING:
+	case FWUPD_STATUS_DEVICE_RESTART:
+	case FWUPD_STATUS_DEVICE_WRITE:
+	case FWUPD_STATUS_DEVICE_VERIFY:
+	case FWUPD_STATUS_DOWNLOADING:
+	case FWUPD_STATUS_DEVICE_READ:
+	case FWUPD_STATUS_DEVICE_ERASE:
+	case FWUPD_STATUS_DEVICE_BUSY:
+		return;
+	default:
+		break;
+	}
 
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
 	    !fu_power_state_is_ac(fu_context_get_power_state(self->ctx))) {
