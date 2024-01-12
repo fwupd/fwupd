@@ -4069,7 +4069,7 @@ fu_util_security_fix_attr(FuUtilPrivate *priv, FwupdSecurityAttr *attr, GError *
 			    /* TRANSLATORS: the %1 is a kernel command line key=value */
 			    _("This tool can add a kernel argument of '%s', but it will "
 			      "only be active after restarting the computer."),
-			    fwupd_security_attr_get_kernel_current_value(attr));
+			    fwupd_security_attr_get_kernel_target_value(attr));
 		}
 		g_string_append(body, "\n\n");
 		g_string_append(body,
