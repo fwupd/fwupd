@@ -53,7 +53,7 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		if (sig == 0xFFFFFFFF) {
-			offset += 0x10000;
+			offset += 0x1000;
 			continue;
 		}
 		if (sig == FU_IFD_BIOS_FIT_SIGNATURE) {
