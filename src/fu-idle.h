@@ -11,17 +11,27 @@
 #define FU_TYPE_IDLE (fu_idle_get_type())
 G_DECLARE_FINAL_TYPE(FuIdle, fu_idle, FU, IDLE, GObject)
 
+typedef enum {
+	FU_IDLE_STATUS_UNKNOWN,
+	FU_IDLE_STATUS_IDLE,
+	FU_IDLE_STATUS_BUSY,
+	FU_IDLE_STATUS_TIMEOUT,
+	FU_IDLE_STATUS_LAST,
+} FuIdleStatus;
+
 FuIdle *
 fu_idle_new(void);
 guint32
 fu_idle_inhibit(FuIdle *self, const gchar *reason);
+void
+fu_idle_uninhibit(FuIdle *self, guint32 token);
 gboolean
 fu_idle_has_inhibit(FuIdle *self, const gchar *reason);
 void
 fu_idle_set_timeout(FuIdle *self, guint timeout);
 void
 fu_idle_reset(FuIdle *self);
-FwupdStatus
+FuIdleStatus
 fu_idle_get_status(FuIdle *self);
 
 /**
