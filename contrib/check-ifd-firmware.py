@@ -101,7 +101,9 @@ if __name__ == "__main__":
         prog="check-ifd-firmware", description="Check IFD firmware parsing"
     )
     parser.add_argument("paths", nargs="+")
-    parser.add_argument("force_save", action="store_true")
+    parser.add_argument(
+        "--force-save", action="store_true", help="always save the json reports"
+    )
     _args = parser.parse_args()
     for _path in _args.paths:
         if not _scan_dir(_path, force_save=_args.force_save):
