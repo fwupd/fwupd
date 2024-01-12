@@ -29,6 +29,7 @@
 #include "fu-engine-requirements.h"
 #include "fu-engine.h"
 #include "fu-history.h"
+#include "fu-idle.h"
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
 #include "fu-release-common.h"
@@ -125,6 +126,39 @@ fu_test_free(FuTest *self)
 #pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuTest, fu_test_free)
 #pragma clang diagnostic pop
+
+static void
+fu_idle_func(void)
+{
+	guint token;
+	g_autoptr(FuIdle) idle = fu_idle_new();
+
+	fu_idle_reset(idle);
+	g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_IDLE);
+
+	token = fu_idle_inhibit(idle, "update");
+	g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_BUSY);
+	g_assert_true(fu_idle_has_inhibit(idle, "update"));
+	g_assert_false(fu_idle_has_inhibit(idle, "notgoingtoexist"));
+
+	/* wrong token */
+	fu_idle_uninhibit(idle, token + 1);
+	g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_BUSY);
+
+	/* correct token */
+	fu_idle_uninhibit(idle, token);
+	g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_IDLE);
+
+	/* locker section */
+	{
+		g_autoptr(FuIdleLocker) idle_locker1 = fu_idle_locker_new(idle, "update1");
+		g_autoptr(FuIdleLocker) idle_locker2 = fu_idle_locker_new(idle, "update2");
+		g_assert_nonnull(idle_locker1);
+		g_assert_nonnull(idle_locker2);
+		g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_BUSY);
+	}
+	g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_IDLE);
+}
 
 static void
 fu_engine_generate_md_func(gconstpointer user_data)
@@ -5984,6 +6018,7 @@ main(int argc, char **argv)
 	if (g_test_slow()) {
 		g_test_add_data_func("/fwupd/console", self, fu_console_func);
 	}
+	g_test_add_func("/fwupd/idle", fu_idle_func);
 	g_test_add_func("/fwupd/remote{download}", fu_remote_download_func);
 	g_test_add_func("/fwupd/remote{base-uri}", fu_remote_baseuri_func);
 	g_test_add_func("/fwupd/remote{no-path}", fu_remote_nopath_func);
