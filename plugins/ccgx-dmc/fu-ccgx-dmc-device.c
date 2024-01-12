@@ -125,9 +125,13 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 
 	/* add devx children */
 	for (guint i = 0; i < fu_struct_ccgx_dmc_dock_status_get_device_count(st); i++) {
+		g_autoptr(FuDeviceLocker) locker = NULL;
 		g_autoptr(FuCcgxDmcDevxDevice) devx =
 		    fu_ccgx_dmc_devx_device_new(FU_DEVICE(self), buf, bufsz, offset, error);
 		if (devx == NULL)
+			return FALSE;
+		locker = fu_device_locker_new(devx, error);
+		if (locker == NULL)
 			return FALSE;
 		remove_delay += fu_ccgx_dmc_devx_device_get_remove_delay(devx);
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(devx));
