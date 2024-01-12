@@ -109,7 +109,12 @@ def _read_partitions(f: io.BufferedReader) -> bytearray:
         print("reading...", freg)
         try:
             f.seek(freg.offset)
-            blob[freg.offset : freg.offset + freg.size] = f.read(freg.size)
+            blob_part: bytes = f.read(freg.size)
+            blob_size: int = len(blob_part)
+            if blob_size != freg.size:
+                print(f"tried to read 0x{freg.size:x} and instead got 0x{blob_size:x}")
+            if blob_size:
+                blob[freg.offset : freg.offset + blob_size] = blob_part
         except OSError as e:
             print(f"failed to read: {e}")
     return blob
