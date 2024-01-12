@@ -129,6 +129,7 @@ struct _FuEngine {
 	GHashTable *blocked_firmware;  /* (nullable) */
 	GHashTable *emulation_phases;  /* (element-type int utf8) */
 	GHashTable *emulation_backend_ids; /* (element-type str int) */
+	GHashTable *device_changed_allowlist; /* (element-type str int) */
 	gchar *host_machine_id;
 	JcatContext *jcat_context;
 	gboolean loaded;
@@ -254,6 +255,12 @@ fu_engine_set_status(FuEngine *self, FwupdStatus status)
 static void
 fu_engine_generic_notify_cb(FuDevice *device, GParamSpec *pspec, FuEngine *self)
 {
+	if (fu_idle_get_status(self->idle) == FU_IDLE_STATUS_BUSY &&
+	    !g_hash_table_contains(self->device_changed_allowlist, fu_device_get_id(device))) {
+		g_debug("suppressing notification from %s as transaction is in progress",
+			fu_device_get_id(device));
+		return;
+	}
 	fu_engine_emit_device_changed(self, fu_device_get_id(device));
 }
 
@@ -1858,6 +1865,16 @@ fu_engine_install_releases(FuEngine *self,
 	/* do not allow auto-shutdown during this time */
 	locker = fu_idle_locker_new(self->idle, "update");
 	g_assert(locker != NULL);
+
+	/* use an allow-list for device-changed signals -- only allow any of the composite update
+	 * devices to emit signals for the duration of the install */
+	for (guint i = 0; i < releases->len; i++) {
+		FuRelease *release = g_ptr_array_index(releases, i);
+		FuDevice *device = fu_release_get_device(release);
+		g_hash_table_insert(self->device_changed_allowlist,
+				    g_strdup(fu_device_get_id(device)),
+				    GUINT_TO_POINTER(1));
+	}
 
 	/* install these in the right order */
 	g_ptr_array_sort(releases, fu_engine_sort_release_device_order_release_version_cb);
@@ -8544,7 +8561,7 @@ fu_engine_add_runtime_version(FuEngine *self, const gchar *component_id, const g
 }
 
 static void
-fu_engine_context_power_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine *self)
+fu_engine_context_power_changed(FuEngine *self)
 {
 	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
 
@@ -8559,11 +8576,30 @@ fu_engine_context_power_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine *
 }
 
 static void
+fu_engine_context_power_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine *self)
+{
+	if (fu_idle_get_status(self->idle) == FU_IDLE_STATUS_BUSY) {
+		g_debug("suppressing ::power-changed as transaction is in progress");
+		return;
+	}
+	fu_engine_context_power_changed(self);
+}
+
+static void
 fu_engine_idle_status_notify_cb(FuIdle *idle, GParamSpec *pspec, FuEngine *self)
 {
-	FwupdStatus status = fu_idle_get_status(idle);
-	if (status == FWUPD_STATUS_SHUTDOWN)
-		fu_engine_set_status(self, status);
+	FuIdleStatus status = fu_idle_get_status(idle);
+	if (status == FU_IDLE_STATUS_IDLE &&
+	    g_hash_table_size(self->device_changed_allowlist) > 0) {
+		g_debug("clearing device-changed allowlist as transaction done");
+		g_hash_table_remove_all(self->device_changed_allowlist);
+
+		/* we might have suppressed this during the transaction, so ensure all the device
+		 * inhibits are being set up correctly */
+		fu_engine_context_power_changed(self);
+	}
+	if (status == FU_IDLE_STATUS_TIMEOUT)
+		fu_engine_set_status(self, FWUPD_STATUS_SHUTDOWN);
 }
 
 static void
@@ -8729,6 +8765,8 @@ fu_engine_init(FuEngine *self)
 	self->acquiesce_loop = g_main_loop_new(NULL, FALSE);
 	self->emulation_phases = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
 	self->emulation_backend_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	self->device_changed_allowlist =
+	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 #ifdef HAVE_PASSIM
 	self->passim_client = passim_client_new();
 #endif
@@ -8795,6 +8833,7 @@ fu_engine_finalize(GObject *obj)
 	g_ptr_array_unref(self->local_monitors);
 	g_hash_table_unref(self->emulation_phases);
 	g_hash_table_unref(self->emulation_backend_ids);
+	g_hash_table_unref(self->device_changed_allowlist);
 	g_object_unref(self->plugin_list);
 
 	G_OBJECT_CLASS(fu_engine_parent_class)->finalize(obj);
