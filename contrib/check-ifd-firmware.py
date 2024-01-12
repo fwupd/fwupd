@@ -54,8 +54,13 @@ def _scan_dir(path: str, force_save: bool = False) -> bool:
     needs_save: bool = False
 
     results: Dict[str, Dict[str, int]] = {}
-    for fn in glob.glob(f"{path}/*.bin"):
-        results[fn] = _scan_file(fn)
+
+    # support folders or paths
+    if os.path.isdir(path):
+        for fn in glob.glob(f"{path}/*.bin"):
+            results[fn] = _scan_file(fn)
+    else:
+        results[path] = _scan_file(path)
 
     # go through each result
     print(f"    {os.path.basename(sys.argv[0])}:")
