@@ -106,6 +106,8 @@ echo ""
 echo "To leave fwupd development environment run:"
 echo ""
 echo "# deactivate"
+. data/bash-completion/fwupdtool
+. data/bash-completion/fwupdmgr
 EOF
 }
 
