@@ -1,5 +1,4 @@
-if get_option('plugin_uefi_capsule').disable_auto_if(host_machine.system() not in ['linux', 'freebsd']).allowed()
-
+if allow_uefi_capsule
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiCapsule"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
