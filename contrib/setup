@@ -81,7 +81,9 @@ install_pip()
 setup_virtualenv()
 {
     echo "Setting up virtualenv"
-    install_pip virtualenv
+    if ! which virtualenv >/dev/null 2>&1; then
+        install_pip virtualenv
+    fi
     virtualenv --system-site-packages venv --prompt fwupd
     source venv/bin/activate
     cat >> venv/bin/activate << EOF
