@@ -1750,6 +1750,12 @@ fu_engine_composite_prepare(FuEngine *self, GPtrArray *devices, GError **error)
 			return FALSE;
 	}
 
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for composite prepare: ");
+		return FALSE;
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -1791,6 +1797,12 @@ fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error)
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) && !any_emulated) {
 		if (!fu_engine_backends_save_phase(self, error))
 			return FALSE;
+	}
+
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for composite cleanup: ");
+		return FALSE;
 	}
 
 	/* success */
@@ -1910,12 +1922,6 @@ fu_engine_install_releases(FuEngine *self,
 	fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_COMPOSITE_CLEANUP);
 	if (!fu_engine_composite_cleanup(self, devices_new, error)) {
 		g_prefix_error(error, "failed to cleanup composite action: ");
-		return FALSE;
-	}
-
-	/* wait for any device to disconnect and reconnect */
-	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
-		g_prefix_error(error, "failed to wait for device: ");
 		return FALSE;
 	}
 
@@ -2890,6 +2896,14 @@ fu_engine_prepare(FuEngine *self,
 		if (!fu_engine_backends_save_phase(self, error))
 			return FALSE;
 	}
+
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for prepare replug: ");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -2921,18 +2935,20 @@ fu_engine_cleanup(FuEngine *self,
 			return FALSE;
 	}
 
-	/* wait for any device to disconnect and reconnect */
-	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
-		g_prefix_error(error, "failed to wait for cleanup replug: ");
-		return FALSE;
-	}
-
 	/* save to emulated phase */
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		if (!fu_engine_backends_save_phase(self, error))
 			return FALSE;
 	}
+
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for cleanup replug: ");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -2996,6 +3012,12 @@ fu_engine_detach(FuEngine *self,
 			return FALSE;
 	}
 
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for detach replug: ");
+		return FALSE;
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -3036,6 +3058,13 @@ fu_engine_attach(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 			return FALSE;
 	}
 
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for attach replug: ");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -3121,6 +3150,12 @@ fu_engine_reload(FuEngine *self, const gchar *device_id, GError **error)
 			return FALSE;
 	}
 
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for reload replug: ");
+		return FALSE;
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -3185,6 +3220,12 @@ fu_engine_write_firmware(FuEngine *self,
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		if (!fu_engine_backends_save_phase(self, error))
 			return FALSE;
+	}
+
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for write-firmware replug: ");
+		return FALSE;
 	}
 
 	/* success */
