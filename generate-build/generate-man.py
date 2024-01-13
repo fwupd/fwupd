@@ -79,7 +79,7 @@ def _convert_md_to_man(data: str) -> str:
 
         # convert markdown headers to section headers
         if lines[-1].startswith("##"):
-            lines = [lines[-1].strip("#")]
+            lines = [lines[-1].strip("#").strip()]
             sectkind = ".SH"
 
         # join long lines
