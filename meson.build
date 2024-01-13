@@ -599,6 +599,8 @@ rustgen = generator(python3,
   ],
 )
 
+allow_uefi_capsule = get_option('plugin_uefi_capsule').disable_auto_if(host_machine.system() not in ['linux', 'freebsd']).allowed()
+
 subdir('generate-build')
 subdir('libfwupd')
 if polkit.found()
