@@ -12,15 +12,6 @@ from typing import List, Dict
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
-def _is_md_title(line: str) -> bool:
-    if not line:
-        return False
-    for char in line:
-        if char not in ["#", "##", "-", "="]:
-            return False
-    return True
-
-
 def _replace_bookend(line: str, search: str, replace_l: str, replace_r: str) -> str:
 
     try:
@@ -87,8 +78,8 @@ def _convert_md_to_man(data: str) -> str:
         sectalign: int = 4
 
         # convert markdown headers to section headers
-        if _is_md_title(lines[-1]):
-            lines = lines[:-1]
+        if lines[-1].startswith("##"):
+            lines = [lines[-1].strip("#")]
             sectkind = ".SH"
 
         # join long lines
