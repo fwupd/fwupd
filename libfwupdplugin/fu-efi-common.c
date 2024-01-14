@@ -39,6 +39,8 @@ fu_efi_guid_to_name(const gchar *guid)
 		return "Volume:Pfh1";
 	if (g_strcmp0(guid, FU_EFI_FIRMWARE_VOLUME_GUID_PFH2) == 0)
 		return "Volume:Pfh2";
+	if (g_strcmp0(guid, FU_EFI_FIRMWARE_VOLUME_GUID_HP_FS) == 0)
+		return "Volume:HpFs";
 	if (g_strcmp0(guid, FU_EFI_FIRMWARE_FILE_FV_IMAGE) == 0)
 		return "File:FvImage";
 	if (g_strcmp0(guid, FU_EFI_FIRMWARE_FILE_MICROCODE) == 0)

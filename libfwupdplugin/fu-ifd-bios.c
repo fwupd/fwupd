@@ -45,21 +45,6 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 	while (offset < streamsz) {
 		g_autoptr(FuFirmware) firmware_tmp = fu_efi_firmware_volume_new();
 		g_autoptr(GError) error_local = NULL;
-		guint32 sig = 0;
-
-		/* ignore _FIT_ as EOF */
-		if (!fu_input_stream_read_u32(stream, offset, &sig, G_LITTLE_ENDIAN, error)) {
-			g_prefix_error(error, "failed to read start signature: ");
-			return FALSE;
-		}
-		if (sig == 0xFFFFFFFF) {
-			offset += 0x1000;
-			continue;
-		}
-		if (sig == FU_IFD_BIOS_FIT_SIGNATURE) {
-			g_debug("FIT, aborting search for volumes");
-			break;
-		}
 
 		/* FV */
 		if (!fu_firmware_parse_stream(firmware_tmp, stream, offset, flags, &error_local)) {
@@ -67,7 +52,7 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 				(guint)offset,
 				(guint)streamsz,
 				error_local->message);
-			offset += 0x10000;
+			offset += 0x1000;
 			continue;
 		}
 		fu_firmware_set_offset(firmware_tmp, offset);
