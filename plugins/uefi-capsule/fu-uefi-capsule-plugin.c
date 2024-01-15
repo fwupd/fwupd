@@ -668,7 +668,7 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 			name = fu_volume_get_partition_name(esp);
 			if (name != NULL) {
 				g_strdelimit(name, " ", '_');
-				if (g_strv_contains(recovery_partitions, name) == 0) {
+				if (g_strv_contains(recovery_partitions, name)) {
 					g_debug("skipping partition '%s'", name);
 					continue;
 				}
