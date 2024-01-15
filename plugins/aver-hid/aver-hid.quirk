@@ -10,3 +10,8 @@ Plugin = aver_hid
 [USB\VID_2574&PID_0AB1]
 Plugin = aver_hid
 Flags = dual-isp
+
+# AVer CAM340Plus
+[USB\VID_2574&PID_0980]
+Plugin = aver_hid
+Flags = safe-isp
