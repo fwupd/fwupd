@@ -8,6 +8,7 @@ description: |
 grade: stable
 confinement: strict
 base: core22
+license: LGPL-2.1+
 
 architectures:
   - amd64
