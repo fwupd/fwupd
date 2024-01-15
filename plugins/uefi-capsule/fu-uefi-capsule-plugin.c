@@ -620,21 +620,19 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 {
 	g_autoptr(GPtrArray) esp_volumes = NULL;
 	const gchar *recovery_partitions[] = {
-	    "DellRestore",
-	    "DellUtility",
+	    "DELLRESTORE",
+	    "DELLUTILITY",
 	    "DIAGS",
 	    "HP_RECOVERY",
 	    "IBM_SERVICE",
-	    "IntelRST",
-	    "Lenovo_Recovery",
+	    "INTELRST",
+	    "LENOVO_RECOVERY",
 	    "OS",
 	    "PQSERVICE",
-	    "Recovery",
 	    "RECOVERY",
-	    "Recovery_Partition",
+	    "RECOVERY_PARTITION",
 	    "SERVICEV001",
 	    "SERVICEV002",
-	    "System_Reserved",
 	    "SYSTEM_RESERVED",
 	    "WINRE_DRV",
 	    NULL,
@@ -667,9 +665,18 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 			/* ignore a partition that claims to be a recovery partition */
 			name = fu_volume_get_partition_name(esp);
 			if (name != NULL) {
-				g_strdelimit(name, " ", '_');
-				if (g_strv_contains(recovery_partitions, name)) {
-					g_debug("skipping partition '%s'", name);
+				g_autoptr(GString) name_safe = g_string_new(name);
+				g_string_replace(name_safe, " ", "_", 0);
+				g_string_replace(name_safe, "\"", "", 0);
+				g_string_ascii_up(name_safe);
+				if (g_strv_contains(recovery_partitions, name_safe->str)) {
+					if (g_strcmp0(name_safe->str, name) == 0) {
+						g_debug("skipping partition '%s'", name);
+					} else {
+						g_debug("skipping partition '%s' -> '%s'",
+							name,
+							name_safe->str);
+					}
 					continue;
 				}
 			}
