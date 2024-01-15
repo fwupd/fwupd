@@ -8,36 +8,36 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
-#include "fu-efi-firmware-file.h"
-#include "fu-efi-firmware-filesystem.h"
+#include "fu-efi-file.h"
+#include "fu-efi-filesystem.h"
 #include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
 
 /**
- * FuEfiFirmwareFilesystem:
+ * FuEfiFilesystem:
  *
  * A UEFI filesystem.
  *
  * See also: [class@FuFirmware]
  */
 
-G_DEFINE_TYPE(FuEfiFirmwareFilesystem, fu_efi_firmware_filesystem, FU_TYPE_FIRMWARE)
+G_DEFINE_TYPE(FuEfiFilesystem, fu_efi_filesystem, FU_TYPE_FIRMWARE)
 
-#define FU_EFI_FIRMWARE_FILESYSTEM_FILES_MAX 10000
-#define FU_EFI_FIRMWARE_FILESYSTEM_SIZE_MAX  0x10000000 /* 256 MB */
+#define FU_EFI_FILESYSTEM_FILES_MAX 10000
+#define FU_EFI_FILESYSTEM_SIZE_MAX  0x10000000 /* 256 MB */
 
 static gboolean
-fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
-				 GInputStream *stream,
-				 gsize offset,
-				 FwupdInstallFlags flags,
-				 GError **error)
+fu_efi_filesystem_parse(FuFirmware *firmware,
+			GInputStream *stream,
+			gsize offset,
+			FwupdInstallFlags flags,
+			GError **error)
 {
 	gsize streamsz = 0;
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 	while (offset < streamsz) {
-		g_autoptr(FuFirmware) img = fu_efi_firmware_file_new();
+		g_autoptr(FuFirmware) img = fu_efi_file_new();
 		g_autoptr(GInputStream) stream_tmp = NULL;
 		gboolean is_freespace = TRUE;
 
@@ -79,7 +79,7 @@ fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
 }
 
 static GByteArray *
-fu_efi_firmware_filesystem_write(FuFirmware *firmware, GError **error)
+fu_efi_filesystem_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
@@ -106,13 +106,13 @@ fu_efi_firmware_filesystem_write(FuFirmware *firmware, GError **error)
 		fu_byte_array_align_up(buf, fu_firmware_get_alignment(firmware), 0xFF);
 
 		/* sanity check */
-		if (buf->len > FU_EFI_FIRMWARE_FILESYSTEM_SIZE_MAX) {
+		if (buf->len > FU_EFI_FILESYSTEM_SIZE_MAX) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "EFI filesystem too large, 0x%02x > 0x%02x",
 				    (guint)buf->len,
-				    (guint)FU_EFI_FIRMWARE_FILESYSTEM_SIZE_MAX);
+				    (guint)FU_EFI_FILESYSTEM_SIZE_MAX);
 			return NULL;
 		}
 	}
@@ -122,33 +122,33 @@ fu_efi_firmware_filesystem_write(FuFirmware *firmware, GError **error)
 }
 
 static void
-fu_efi_firmware_filesystem_init(FuEfiFirmwareFilesystem *self)
+fu_efi_filesystem_init(FuEfiFilesystem *self)
 {
 	/* if fuzzing, artificially limit the number of files to avoid using large amounts of RSS
-	 * when printing the FuEfiFirmwareFilesystem XML output */
+	 * when printing the FuEfiFilesystem XML output */
 	fu_firmware_set_images_max(
 	    FU_FIRMWARE(self),
-	    g_getenv("FWUPD_FUZZER_RUNNING") == NULL ? FU_EFI_FIRMWARE_FILESYSTEM_FILES_MAX : 50);
+	    g_getenv("FWUPD_FUZZER_RUNNING") == NULL ? FU_EFI_FILESYSTEM_FILES_MAX : 50);
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_8);
 }
 
 static void
-fu_efi_firmware_filesystem_class_init(FuEfiFirmwareFilesystemClass *klass)
+fu_efi_filesystem_class_init(FuEfiFilesystemClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_efi_firmware_filesystem_parse;
-	klass_firmware->write = fu_efi_firmware_filesystem_write;
+	klass_firmware->parse = fu_efi_filesystem_parse;
+	klass_firmware->write = fu_efi_filesystem_write;
 }
 
 /**
- * fu_efi_firmware_filesystem_new:
+ * fu_efi_filesystem_new:
  *
  * Creates a new #FuFirmware
  *
- * Since: 1.6.2
+ * Since: 2.0.0
  **/
 FuFirmware *
-fu_efi_firmware_filesystem_new(void)
+fu_efi_filesystem_new(void)
 {
-	return FU_FIRMWARE(g_object_new(FU_TYPE_EFI_FIRMWARE_FILESYSTEM, NULL));
+	return FU_FIRMWARE(g_object_new(FU_TYPE_EFI_FILESYSTEM, NULL));
 }

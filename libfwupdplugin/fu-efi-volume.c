@@ -4,22 +4,22 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#define G_LOG_DOMAIN "FuEfiFirmwareVolume"
+#define G_LOG_DOMAIN "FuEfiVolume"
 
 #include "config.h"
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-efi-common.h"
-#include "fu-efi-firmware-filesystem.h"
-#include "fu-efi-firmware-volume.h"
+#include "fu-efi-filesystem.h"
 #include "fu-efi-struct.h"
+#include "fu-efi-volume.h"
 #include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-sum.h"
 
 /**
- * FuEfiFirmwareVolume:
+ * FuEfiVolume:
  *
  * A UEFI file volume.
  *
@@ -28,16 +28,16 @@
 
 typedef struct {
 	guint16 attrs;
-} FuEfiFirmwareVolumePrivate;
+} FuEfiVolumePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuEfiFirmwareVolume, fu_efi_firmware_volume, FU_TYPE_FIRMWARE)
-#define GET_PRIVATE(o) (fu_efi_firmware_volume_get_instance_private(o))
+G_DEFINE_TYPE_WITH_PRIVATE(FuEfiVolume, fu_efi_volume, FU_TYPE_FIRMWARE)
+#define GET_PRIVATE(o) (fu_efi_volume_get_instance_private(o))
 
 static void
 fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
-	FuEfiFirmwareVolume *self = FU_EFI_FIRMWARE_VOLUME(firmware);
-	FuEfiFirmwareVolumePrivate *priv = GET_PRIVATE(self);
+	FuEfiVolume *self = FU_EFI_VOLUME(firmware);
+	FuEfiVolumePrivate *priv = GET_PRIVATE(self);
 	fu_xmlb_builder_insert_kx(bn, "attrs", priv->attrs);
 	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
 		fu_xmlb_builder_insert_kv(bn,
@@ -47,23 +47,20 @@ fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 }
 
 static gboolean
-fu_efi_firmware_volume_validate(FuFirmware *firmware,
-				GInputStream *stream,
-				gsize offset,
-				GError **error)
+fu_efi_volume_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
 {
 	return fu_struct_efi_volume_validate_stream(stream, offset, error);
 }
 
 static gboolean
-fu_efi_firmware_volume_parse(FuFirmware *firmware,
-			     GInputStream *stream,
-			     gsize offset,
-			     FwupdInstallFlags flags,
-			     GError **error)
+fu_efi_volume_parse(FuFirmware *firmware,
+		    GInputStream *stream,
+		    gsize offset,
+		    FwupdInstallFlags flags,
+		    GError **error)
 {
-	FuEfiFirmwareVolume *self = FU_EFI_FIRMWARE_VOLUME(firmware);
-	FuEfiFirmwareVolumePrivate *priv = GET_PRIVATE(self);
+	FuEfiVolume *self = FU_EFI_VOLUME(firmware);
+	FuEfiVolumePrivate *priv = GET_PRIVATE(self);
 	gsize blockmap_sz = 0;
 	gsize streamsz = 0;
 	guint16 hdr_length = 0;
@@ -176,9 +173,9 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 	fu_firmware_set_size(firmware, fv_length);
 
 	/* parse, which might cascade and do something like FFS2 */
-	if (g_strcmp0(guid_str, FU_EFI_FIRMWARE_VOLUME_GUID_FFS2) == 0 ||
-	    g_strcmp0(guid_str, FU_EFI_FIRMWARE_VOLUME_GUID_FFS3) == 0) {
-		g_autoptr(FuFirmware) img = fu_efi_firmware_filesystem_new();
+	if (g_strcmp0(guid_str, FU_EFI_VOLUME_GUID_FFS2) == 0 ||
+	    g_strcmp0(guid_str, FU_EFI_VOLUME_GUID_FFS3) == 0) {
+		g_autoptr(FuFirmware) img = fu_efi_filesystem_new();
 		fu_firmware_set_alignment(img, fu_firmware_get_alignment(firmware));
 		if (!fu_firmware_parse_stream(img,
 					      partial_stream,
@@ -187,8 +184,8 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 					      error))
 			return FALSE;
 		fu_firmware_add_image(firmware, img);
-	} else if (g_strcmp0(guid_str, FU_EFI_FIRMWARE_VOLUME_GUID_NVRAM_EVSA) == 0 ||
-		   g_strcmp0(guid_str, FU_EFI_FIRMWARE_VOLUME_GUID_NVRAM_EVSA2) == 0) {
+	} else if (g_strcmp0(guid_str, FU_EFI_VOLUME_GUID_NVRAM_EVSA) == 0 ||
+		   g_strcmp0(guid_str, FU_EFI_VOLUME_GUID_NVRAM_EVSA2) == 0) {
 		g_debug("ignoring %s [%s] EFI FV", guid_str, fu_efi_guid_to_name(guid_str));
 		if (!fu_firmware_set_stream(firmware, partial_stream, error))
 			return FALSE;
@@ -229,10 +226,10 @@ fu_efi_firmware_volume_parse(FuFirmware *firmware,
 }
 
 static GByteArray *
-fu_efi_firmware_volume_write(FuFirmware *firmware, GError **error)
+fu_efi_volume_write(FuFirmware *firmware, GError **error)
 {
-	FuEfiFirmwareVolume *self = FU_EFI_FIRMWARE_VOLUME(firmware);
-	FuEfiFirmwareVolumePrivate *priv = GET_PRIVATE(self);
+	FuEfiVolume *self = FU_EFI_VOLUME(firmware);
+	FuEfiVolumePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GByteArray) buf = fu_struct_efi_volume_new();
 	g_autoptr(GByteArray) st_blk = fu_struct_efi_volume_block_map_new();
 	fwupd_guid_t guid = {0x0};
@@ -310,31 +307,31 @@ fu_efi_firmware_volume_write(FuFirmware *firmware, GError **error)
 }
 
 static void
-fu_efi_firmware_volume_init(FuEfiFirmwareVolume *self)
+fu_efi_volume_init(FuEfiVolume *self)
 {
-	FuEfiFirmwareVolumePrivate *priv = GET_PRIVATE(self);
+	FuEfiVolumePrivate *priv = GET_PRIVATE(self);
 	priv->attrs = 0xfeff;
 }
 
 static void
-fu_efi_firmware_volume_class_init(FuEfiFirmwareVolumeClass *klass)
+fu_efi_volume_class_init(FuEfiVolumeClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_efi_firmware_volume_validate;
-	klass_firmware->parse = fu_efi_firmware_volume_parse;
-	klass_firmware->write = fu_efi_firmware_volume_write;
+	klass_firmware->validate = fu_efi_volume_validate;
+	klass_firmware->parse = fu_efi_volume_parse;
+	klass_firmware->write = fu_efi_volume_write;
 	klass_firmware->export = fu_ifd_firmware_export;
 }
 
 /**
- * fu_efi_firmware_volume_new:
+ * fu_efi_volume_new:
  *
  * Creates a new #FuFirmware
  *
- * Since: 1.6.2
+ * Since: 2.0.0
  **/
 FuFirmware *
-fu_efi_firmware_volume_new(void)
+fu_efi_volume_new(void)
 {
-	return FU_FIRMWARE(g_object_new(FU_TYPE_EFI_FIRMWARE_VOLUME, NULL));
+	return FU_FIRMWARE(g_object_new(FU_TYPE_EFI_VOLUME, NULL));
 }

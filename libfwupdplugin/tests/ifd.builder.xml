@@ -8,30 +8,30 @@
     <id>bios</id>
     <idx>0x1</idx>
     <addr>0x1000</addr>
-    <firmware gtype="FuEfiFirmwareVolume">
+    <firmware gtype="FuEfiVolume">
       <id>8c8ce578-8a3d-4f1c-9935-896185c32dd3</id>
       <alignment>0xB</alignment>
-      <firmware gtype="FuEfiFirmwareFilesystem">
+      <firmware gtype="FuEfiFilesystem">
         <alignment>0x3</alignment>
-        <firmware gtype="FuEfiFirmwareFile">
+        <firmware gtype="FuEfiFile">
           <id>ced4eac6-49f3-4c12-a597-fc8c33447691</id>
           <type>0x0B</type>
-          <firmware gtype="FuEfiFirmwareSection">
+          <firmware gtype="FuEfiSection">
             <type>0x02</type>
             <id>ced4eac6-49f3-4c12-a597-fc8c33447691</id>
             <data>aGVsbG8gd29ybGQ=</data>
           </firmware>
-          <firmware gtype="FuEfiFirmwareSection">
+          <firmware gtype="FuEfiSection">
             <data>aGVsbG8gd29ybGQ=</data>
           </firmware>
         </firmware>
-        <firmware gtype="FuEfiFirmwareFile">
+        <firmware gtype="FuEfiFile">
           <id>ced4eac6-49f3-4c12-a597-fc8c33447691</id>
           <data>aGVsbG8gd29ybGQ=</data>
         </firmware>
       </firmware>
     </firmware>
-    <firmware gtype="FuEfiFirmwareVolume">
+    <firmware gtype="FuEfiVolume">
       <id>fff12b8d-7696-4c8b-a985-2747075b4f50</id>
       <alignment>0xB</alignment>
       <data>aGVsbG8gd29ybGQ=</data>
