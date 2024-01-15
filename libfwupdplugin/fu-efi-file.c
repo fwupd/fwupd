@@ -9,16 +9,15 @@
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-efi-common.h"
-#include "fu-efi-firmware-common.h"
-#include "fu-efi-firmware-file.h"
-#include "fu-efi-firmware-section.h"
+#include "fu-efi-file.h"
+#include "fu-efi-section.h"
 #include "fu-efi-struct.h"
 #include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-sum.h"
 
 /**
- * FuEfiFirmwareFile:
+ * FuEfiFile:
  *
  * A UEFI file.
  *
@@ -28,18 +27,18 @@
 typedef struct {
 	guint8 type;
 	guint8 attrib;
-} FuEfiFirmwareFilePrivate;
+} FuEfiFilePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuEfiFirmwareFile, fu_efi_firmware_file, FU_TYPE_FIRMWARE)
-#define GET_PRIVATE(o) (fu_efi_firmware_file_get_instance_private(o))
+G_DEFINE_TYPE_WITH_PRIVATE(FuEfiFile, fu_efi_file, FU_TYPE_FIRMWARE)
+#define GET_PRIVATE(o) (fu_efi_file_get_instance_private(o))
 
-#define FU_EFI_FIRMWARE_FILE_SIZE_MAX 0x1000000 /* 16 MB */
+#define FU_EFI_FILE_SIZE_MAX 0x1000000 /* 16 MB */
 
 static void
-fu_efi_firmware_file_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_efi_file_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
-	FuEfiFirmwareFile *self = FU_EFI_FIRMWARE_FILE(firmware);
-	FuEfiFirmwareFilePrivate *priv = GET_PRIVATE(self);
+	FuEfiFile *self = FU_EFI_FILE(firmware);
+	FuEfiFilePrivate *priv = GET_PRIVATE(self);
 
 	fu_xmlb_builder_insert_kx(bn, "attrib", priv->attrib);
 	fu_xmlb_builder_insert_kx(bn, "type", priv->type);
@@ -52,7 +51,7 @@ fu_efi_firmware_file_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 }
 
 static guint8
-fu_efi_firmware_file_hdr_checksum8(GBytes *blob)
+fu_efi_file_hdr_checksum8(GBytes *blob)
 {
 	gsize bufsz = 0;
 	guint8 checksum = 0;
@@ -70,14 +69,14 @@ fu_efi_firmware_file_hdr_checksum8(GBytes *blob)
 }
 
 static gboolean
-fu_efi_firmware_file_parse(FuFirmware *firmware,
-			   GInputStream *stream,
-			   gsize offset,
-			   FwupdInstallFlags flags,
-			   GError **error)
+fu_efi_file_parse(FuFirmware *firmware,
+		  GInputStream *stream,
+		  gsize offset,
+		  FwupdInstallFlags flags,
+		  GError **error)
 {
-	FuEfiFirmwareFile *self = FU_EFI_FIRMWARE_FILE(firmware);
-	FuEfiFirmwareFilePrivate *priv = GET_PRIVATE(self);
+	FuEfiFile *self = FU_EFI_FILE(firmware);
+	FuEfiFilePrivate *priv = GET_PRIVATE(self);
 	guint32 size = 0x0;
 	g_autofree gchar *guid_str = NULL;
 	g_autoptr(GByteArray) st = NULL;
@@ -128,7 +127,7 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 		hdr_blob = fu_input_stream_read_bytes(stream, 0x0, st->len, error);
 		if (hdr_blob == NULL)
 			return FALSE;
-		hdr_checksum_verify = fu_efi_firmware_file_hdr_checksum8(hdr_blob);
+		hdr_checksum_verify = fu_efi_file_hdr_checksum8(hdr_blob);
 		if (hdr_checksum_verify != fu_struct_efi_file_get_hdr_checksum(st)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -162,7 +161,7 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 
 	/* add sections */
 	if (priv->type != FU_EFI_FILE_TYPE_FFS_PAD && priv->type != FU_EFI_FILE_TYPE_RAW) {
-		if (!fu_efi_firmware_parse_sections(firmware, partial_stream, 0, flags, error)) {
+		if (!fu_efi_parse_sections(firmware, partial_stream, 0, flags, error)) {
 			g_prefix_error(error, "failed to add firmware image: ");
 			return FALSE;
 		}
@@ -180,7 +179,7 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 }
 
 static GBytes *
-fu_efi_firmware_file_write_sections(FuFirmware *firmware, GError **error)
+fu_efi_file_write_sections(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
@@ -211,13 +210,13 @@ fu_efi_firmware_file_write_sections(FuFirmware *firmware, GError **error)
 		fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_4, 0xFF);
 
 		/* sanity check */
-		if (buf->len > FU_EFI_FIRMWARE_FILE_SIZE_MAX) {
+		if (buf->len > FU_EFI_FILE_SIZE_MAX) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "EFI file too large, 0x%02x > 0x%02x",
 				    (guint)buf->len,
-				    (guint)FU_EFI_FIRMWARE_FILE_SIZE_MAX);
+				    (guint)FU_EFI_FILE_SIZE_MAX);
 			return NULL;
 		}
 	}
@@ -227,17 +226,17 @@ fu_efi_firmware_file_write_sections(FuFirmware *firmware, GError **error)
 }
 
 static GByteArray *
-fu_efi_firmware_file_write(FuFirmware *firmware, GError **error)
+fu_efi_file_write(FuFirmware *firmware, GError **error)
 {
-	FuEfiFirmwareFile *self = FU_EFI_FIRMWARE_FILE(firmware);
-	FuEfiFirmwareFilePrivate *priv = GET_PRIVATE(self);
+	FuEfiFile *self = FU_EFI_FILE(firmware);
+	FuEfiFilePrivate *priv = GET_PRIVATE(self);
 	fwupd_guid_t guid = {0x0};
 	g_autoptr(GByteArray) st = fu_struct_efi_file_new();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) hdr_blob = NULL;
 
 	/* simple blob for now */
-	blob = fu_efi_firmware_file_write_sections(firmware, error);
+	blob = fu_efi_file_write_sections(firmware, error);
 	if (blob == NULL)
 		return NULL;
 	if (!fwupd_guid_from_string(fu_firmware_get_id(firmware),
@@ -254,7 +253,7 @@ fu_efi_firmware_file_write(FuFirmware *firmware, GError **error)
 
 	/* fix up header checksum */
 	hdr_blob = g_bytes_new_static(st->data, st->len);
-	fu_struct_efi_file_set_hdr_checksum(st, fu_efi_firmware_file_hdr_checksum8(hdr_blob));
+	fu_struct_efi_file_set_hdr_checksum(st, fu_efi_file_hdr_checksum8(hdr_blob));
 
 	/* success */
 	fu_byte_array_append_bytes(st, blob);
@@ -262,10 +261,10 @@ fu_efi_firmware_file_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_efi_firmware_file_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_efi_file_build(FuFirmware *firmware, XbNode *n, GError **error)
 {
-	FuEfiFirmwareFile *self = FU_EFI_FIRMWARE_FILE(firmware);
-	FuEfiFirmwareFilePrivate *priv = GET_PRIVATE(self);
+	FuEfiFile *self = FU_EFI_FILE(firmware);
+	FuEfiFilePrivate *priv = GET_PRIVATE(self);
 	guint64 tmp;
 
 	/* simple properties */
@@ -281,33 +280,33 @@ fu_efi_firmware_file_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static void
-fu_efi_firmware_file_init(FuEfiFirmwareFile *self)
+fu_efi_file_init(FuEfiFile *self)
 {
-	FuEfiFirmwareFilePrivate *priv = GET_PRIVATE(self);
+	FuEfiFilePrivate *priv = GET_PRIVATE(self);
 	priv->attrib = FU_EFI_FILE_ATTRIB_NONE;
 	priv->type = FU_EFI_FILE_TYPE_RAW;
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_8);
 }
 
 static void
-fu_efi_firmware_file_class_init(FuEfiFirmwareFileClass *klass)
+fu_efi_file_class_init(FuEfiFileClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_efi_firmware_file_parse;
-	klass_firmware->write = fu_efi_firmware_file_write;
-	klass_firmware->build = fu_efi_firmware_file_build;
-	klass_firmware->export = fu_efi_firmware_file_export;
+	klass_firmware->parse = fu_efi_file_parse;
+	klass_firmware->write = fu_efi_file_write;
+	klass_firmware->build = fu_efi_file_build;
+	klass_firmware->export = fu_efi_file_export;
 }
 
 /**
- * fu_efi_firmware_file_new:
+ * fu_efi_file_new:
  *
  * Creates a new #FuFirmware
  *
- * Since: 1.6.2
+ * Since: 2.0.0
  **/
 FuFirmware *
-fu_efi_firmware_file_new(void)
+fu_efi_file_new(void)
 {
-	return FU_FIRMWARE(g_object_new(FU_TYPE_EFI_FIRMWARE_FILE, NULL));
+	return FU_FIRMWARE(g_object_new(FU_TYPE_EFI_FILE, NULL));
 }

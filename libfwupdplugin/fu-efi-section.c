@@ -4,18 +4,17 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#define G_LOG_DOMAIN "FuEfiFirmwareSection"
+#define G_LOG_DOMAIN "FuEfiSection"
 
 #include "config.h"
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-efi-common.h"
-#include "fu-efi-firmware-common.h"
-#include "fu-efi-firmware-section.h"
-#include "fu-efi-firmware-volume.h"
 #include "fu-efi-lz77-decompressor.h"
+#include "fu-efi-section.h"
 #include "fu-efi-struct.h"
+#include "fu-efi-volume.h"
 #include "fu-input-stream.h"
 #include "fu-lzma-common.h"
 #include "fu-mem.h"
@@ -23,7 +22,7 @@
 #include "fu-string.h"
 
 /**
- * FuEfiFirmwareSection:
+ * FuEfiSection:
  *
  * A UEFI firmware section.
  *
@@ -33,16 +32,16 @@
 typedef struct {
 	guint8 type;
 	gchar *user_interface;
-} FuEfiFirmwareSectionPrivate;
+} FuEfiSectionPrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuEfiFirmwareSection, fu_efi_firmware_section, FU_TYPE_FIRMWARE)
-#define GET_PRIVATE(o) (fu_efi_firmware_section_get_instance_private(o))
+G_DEFINE_TYPE_WITH_PRIVATE(FuEfiSection, fu_efi_section, FU_TYPE_FIRMWARE)
+#define GET_PRIVATE(o) (fu_efi_section_get_instance_private(o))
 
 static void
-fu_efi_firmware_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_efi_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
-	FuEfiFirmwareSection *self = FU_EFI_FIRMWARE_SECTION(firmware);
-	FuEfiFirmwareSectionPrivate *priv = GET_PRIVATE(self);
+	FuEfiSection *self = FU_EFI_SECTION(firmware);
+	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
 
 	fu_xmlb_builder_insert_kx(bn, "type", priv->type);
 	if (priv->user_interface != NULL)
@@ -58,12 +57,12 @@ fu_efi_firmware_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags
 }
 
 static gboolean
-fu_efi_firmware_section_parse_volume_image(FuEfiFirmwareSection *self,
-					   GInputStream *stream,
-					   FwupdInstallFlags flags,
-					   GError **error)
+fu_efi_section_parse_volume_image(FuEfiSection *self,
+				  GInputStream *stream,
+				  FwupdInstallFlags flags,
+				  GError **error)
 {
-	g_autoptr(FuFirmware) img = fu_efi_firmware_volume_new();
+	g_autoptr(FuFirmware) img = fu_efi_volume_new();
 	if (!fu_firmware_parse_stream(img,
 				      stream,
 				      0x0,
@@ -76,10 +75,10 @@ fu_efi_firmware_section_parse_volume_image(FuEfiFirmwareSection *self,
 }
 
 static gboolean
-fu_efi_firmware_section_parse_lzma_sections(FuEfiFirmwareSection *self,
-					    GInputStream *stream,
-					    FwupdInstallFlags flags,
-					    GError **error)
+fu_efi_section_parse_lzma_sections(FuEfiSection *self,
+				   GInputStream *stream,
+				   FwupdInstallFlags flags,
+				   GError **error)
 {
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) blob_uncomp = NULL;
@@ -95,7 +94,7 @@ fu_efi_firmware_section_parse_lzma_sections(FuEfiFirmwareSection *self,
 		return FALSE;
 	}
 	stream_uncomp = g_memory_input_stream_new_from_bytes(blob_uncomp);
-	if (!fu_efi_firmware_parse_sections(FU_FIRMWARE(self), stream_uncomp, 0, flags, error)) {
+	if (!fu_efi_parse_sections(FU_FIRMWARE(self), stream_uncomp, 0, flags, error)) {
 		g_prefix_error(error, "failed to parse sections: ");
 		return FALSE;
 	}
@@ -103,12 +102,12 @@ fu_efi_firmware_section_parse_lzma_sections(FuEfiFirmwareSection *self,
 }
 
 static gboolean
-fu_efi_firmware_section_parse_user_interface(FuEfiFirmwareSection *self,
-					     GInputStream *stream,
-					     FwupdInstallFlags flags,
-					     GError **error)
+fu_efi_section_parse_user_interface(FuEfiSection *self,
+				    GInputStream *stream,
+				    FwupdInstallFlags flags,
+				    GError **error)
 {
-	FuEfiFirmwareSectionPrivate *priv = GET_PRIVATE(self);
+	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GByteArray) buf = NULL;
 
 	if (priv->user_interface != NULL) {
@@ -129,10 +128,10 @@ fu_efi_firmware_section_parse_user_interface(FuEfiFirmwareSection *self,
 }
 
 static gboolean
-fu_efi_firmware_section_parse_version(FuEfiFirmwareSection *self,
-				      GInputStream *stream,
-				      FwupdInstallFlags flags,
-				      GError **error)
+fu_efi_section_parse_version(FuEfiSection *self,
+			     GInputStream *stream,
+			     FwupdInstallFlags flags,
+			     GError **error)
 {
 	guint16 version_raw = 0;
 	g_autofree gchar *version = NULL;
@@ -158,10 +157,10 @@ fu_efi_firmware_section_parse_version(FuEfiFirmwareSection *self,
 }
 
 static gboolean
-fu_efi_firmware_section_parse_compression_sections(FuEfiFirmwareSection *self,
-						   GInputStream *stream,
-						   FwupdInstallFlags flags,
-						   GError **error)
+fu_efi_section_parse_compression_sections(FuEfiSection *self,
+					  GInputStream *stream,
+					  FwupdInstallFlags flags,
+					  GError **error)
 {
 	g_autoptr(GByteArray) st = NULL;
 	st = fu_struct_efi_section_compression_parse_stream(stream, 0x0, error);
@@ -169,11 +168,7 @@ fu_efi_firmware_section_parse_compression_sections(FuEfiFirmwareSection *self,
 		return FALSE;
 	if (fu_struct_efi_section_compression_get_compression_type(st) ==
 	    FU_EFI_COMPRESSION_TYPE_NOT_COMPRESSED) {
-		if (!fu_efi_firmware_parse_sections(FU_FIRMWARE(self),
-						    stream,
-						    st->len,
-						    flags,
-						    error)) {
+		if (!fu_efi_parse_sections(FU_FIRMWARE(self), stream, st->len, flags, error)) {
 			g_prefix_error(error, "failed to parse sections: ");
 			return FALSE;
 		}
@@ -185,11 +180,7 @@ fu_efi_firmware_section_parse_compression_sections(FuEfiFirmwareSection *self,
 		lz77_stream = fu_firmware_get_stream(lz77_decompressor, error);
 		if (lz77_stream == NULL)
 			return FALSE;
-		if (!fu_efi_firmware_parse_sections(FU_FIRMWARE(self),
-						    lz77_stream,
-						    0,
-						    flags,
-						    error)) {
+		if (!fu_efi_parse_sections(FU_FIRMWARE(self), lz77_stream, 0, flags, error)) {
 			g_prefix_error(error, "failed to parse sections: ");
 			return FALSE;
 		}
@@ -198,7 +189,7 @@ fu_efi_firmware_section_parse_compression_sections(FuEfiFirmwareSection *self,
 }
 
 static const gchar *
-fu_efi_firmware_section_freeform_subtype_guid_to_string(const gchar *guid)
+fu_efi_section_freeform_subtype_guid_to_string(const gchar *guid)
 {
 	struct {
 		const gchar *guid;
@@ -228,10 +219,10 @@ fu_efi_firmware_section_freeform_subtype_guid_to_string(const gchar *guid)
 }
 
 static gboolean
-fu_efi_firmware_section_parse_freeform_subtype_guid(FuEfiFirmwareSection *self,
-						    GInputStream *stream,
-						    FwupdInstallFlags flags,
-						    GError **error)
+fu_efi_section_parse_freeform_subtype_guid(FuEfiSection *self,
+					   GInputStream *stream,
+					   FwupdInstallFlags flags,
+					   GError **error)
 {
 	const gchar *guid_ui;
 	g_autofree gchar *guid_str = NULL;
@@ -244,7 +235,7 @@ fu_efi_firmware_section_parse_freeform_subtype_guid(FuEfiFirmwareSection *self,
 	/* no idea */
 	guid_str = fwupd_guid_to_string(fu_struct_efi_section_freeform_subtype_guid_get_guid(st),
 					FWUPD_GUID_FLAG_MIXED_ENDIAN);
-	guid_ui = fu_efi_firmware_section_freeform_subtype_guid_to_string(guid_str);
+	guid_ui = fu_efi_section_freeform_subtype_guid_to_string(guid_str);
 	if (guid_ui != NULL) {
 		g_debug("ignoring FREEFORM_SUBTYPE_GUID %s [%s]", guid_str, guid_ui);
 		return TRUE;
@@ -254,14 +245,14 @@ fu_efi_firmware_section_parse_freeform_subtype_guid(FuEfiFirmwareSection *self,
 }
 
 static gboolean
-fu_efi_firmware_section_parse(FuFirmware *firmware,
-			      GInputStream *stream,
-			      gsize offset,
-			      FwupdInstallFlags flags,
-			      GError **error)
+fu_efi_section_parse(FuFirmware *firmware,
+		     GInputStream *stream,
+		     gsize offset,
+		     FwupdInstallFlags flags,
+		     GError **error)
 {
-	FuEfiFirmwareSection *self = FU_EFI_FIRMWARE_SECTION(firmware);
-	FuEfiFirmwareSectionPrivate *priv = GET_PRIVATE(self);
+	FuEfiSection *self = FU_EFI_SECTION(firmware);
+	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
 	guint32 size;
 	g_autoptr(GByteArray) st = NULL;
 	g_autoptr(GInputStream) partial_stream = NULL;
@@ -322,20 +313,14 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 
 	/* nested volume */
 	if (priv->type == FU_EFI_SECTION_TYPE_VOLUME_IMAGE) {
-		if (!fu_efi_firmware_section_parse_volume_image(self,
-								partial_stream,
-								flags,
-								error)) {
+		if (!fu_efi_section_parse_volume_image(self, partial_stream, flags, error)) {
 			g_prefix_error(error, "failed to parse nested volume: ");
 			return FALSE;
 		}
 	} else if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED &&
-		   g_strcmp0(fu_firmware_get_id(firmware), FU_EFI_FIRMWARE_SECTION_LZMA_COMPRESS) ==
+		   g_strcmp0(fu_firmware_get_id(firmware), FU_EFI_SECTION_GUID_LZMA_COMPRESS) ==
 		       0) {
-		if (!fu_efi_firmware_section_parse_lzma_sections(self,
-								 partial_stream,
-								 flags,
-								 error)) {
+		if (!fu_efi_section_parse_lzma_sections(self, partial_stream, flags, error)) {
 			g_prefix_error(error, "failed to parse lzma section: ");
 			return FALSE;
 		}
@@ -349,31 +334,28 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 		g_warning("no idea how to decompress encapsulation section of type %s",
 			  fu_firmware_get_id(firmware));
 	} else if (priv->type == FU_EFI_SECTION_TYPE_USER_INTERFACE) {
-		if (!fu_efi_firmware_section_parse_user_interface(self,
-								  partial_stream,
-								  flags,
-								  error)) {
+		if (!fu_efi_section_parse_user_interface(self, partial_stream, flags, error)) {
 			g_prefix_error(error, "failed to parse user interface: ");
 			return FALSE;
 		}
 	} else if (priv->type == FU_EFI_SECTION_TYPE_VERSION) {
-		if (!fu_efi_firmware_section_parse_version(self, partial_stream, flags, error)) {
+		if (!fu_efi_section_parse_version(self, partial_stream, flags, error)) {
 			g_prefix_error(error, "failed to parse version: ");
 			return FALSE;
 		}
 	} else if (priv->type == FU_EFI_SECTION_TYPE_COMPRESSION) {
-		if (!fu_efi_firmware_section_parse_compression_sections(self,
-									partial_stream,
-									flags,
-									error)) {
+		if (!fu_efi_section_parse_compression_sections(self,
+							       partial_stream,
+							       flags,
+							       error)) {
 			g_prefix_error(error, "failed to parse compression: ");
 			return FALSE;
 		}
 	} else if (priv->type == FU_EFI_SECTION_TYPE_FREEFORM_SUBTYPE_GUID) {
-		if (!fu_efi_firmware_section_parse_freeform_subtype_guid(self,
-									 partial_stream,
-									 flags,
-									 error)) {
+		if (!fu_efi_section_parse_freeform_subtype_guid(self,
+								partial_stream,
+								flags,
+								error)) {
 			g_prefix_error(error, "failed to parse compression: ");
 			return FALSE;
 		}
@@ -396,10 +378,10 @@ fu_efi_firmware_section_parse(FuFirmware *firmware,
 }
 
 static GByteArray *
-fu_efi_firmware_section_write(FuFirmware *firmware, GError **error)
+fu_efi_section_write(FuFirmware *firmware, GError **error)
 {
-	FuEfiFirmwareSection *self = FU_EFI_FIRMWARE_SECTION(firmware);
-	FuEfiFirmwareSectionPrivate *priv = GET_PRIVATE(self);
+	FuEfiSection *self = FU_EFI_SECTION(firmware);
+	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GByteArray) buf = fu_struct_efi_section_new();
 	g_autoptr(GBytes) blob = NULL;
 
@@ -430,10 +412,10 @@ fu_efi_firmware_section_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_efi_firmware_section_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_efi_section_build(FuFirmware *firmware, XbNode *n, GError **error)
 {
-	FuEfiFirmwareSection *self = FU_EFI_FIRMWARE_SECTION(firmware);
-	FuEfiFirmwareSectionPrivate *priv = GET_PRIVATE(self);
+	FuEfiSection *self = FU_EFI_SECTION(firmware);
+	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
 	const gchar *str;
 	guint64 tmp;
 
@@ -459,44 +441,44 @@ fu_efi_firmware_section_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static void
-fu_efi_firmware_section_init(FuEfiFirmwareSection *self)
+fu_efi_section_init(FuEfiSection *self)
 {
-	FuEfiFirmwareSectionPrivate *priv = GET_PRIVATE(self);
+	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
 	priv->type = FU_EFI_SECTION_TYPE_RAW;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	//	fu_firmware_set_alignment (FU_FIRMWARE (self), FU_FIRMWARE_ALIGNMENT_8);
 }
 
 static void
-fu_efi_firmware_section_finalize(GObject *object)
+fu_efi_section_finalize(GObject *object)
 {
-	FuEfiFirmwareSection *self = FU_EFI_FIRMWARE_SECTION(object);
-	FuEfiFirmwareSectionPrivate *priv = GET_PRIVATE(self);
+	FuEfiSection *self = FU_EFI_SECTION(object);
+	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
 	g_free(priv->user_interface);
-	G_OBJECT_CLASS(fu_efi_firmware_section_parent_class)->finalize(object);
+	G_OBJECT_CLASS(fu_efi_section_parent_class)->finalize(object);
 }
 
 static void
-fu_efi_firmware_section_class_init(FuEfiFirmwareSectionClass *klass)
+fu_efi_section_class_init(FuEfiSectionClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->finalize = fu_efi_firmware_section_finalize;
-	klass_firmware->parse = fu_efi_firmware_section_parse;
-	klass_firmware->write = fu_efi_firmware_section_write;
-	klass_firmware->build = fu_efi_firmware_section_build;
-	klass_firmware->export = fu_efi_firmware_section_export;
+	object_class->finalize = fu_efi_section_finalize;
+	klass_firmware->parse = fu_efi_section_parse;
+	klass_firmware->write = fu_efi_section_write;
+	klass_firmware->build = fu_efi_section_build;
+	klass_firmware->export = fu_efi_section_export;
 }
 
 /**
- * fu_efi_firmware_section_new:
+ * fu_efi_section_new:
  *
  * Creates a new #FuFirmware
  *
- * Since: 1.6.2
+ * Since: 2.0.0
  **/
 FuFirmware *
-fu_efi_firmware_section_new(void)
+fu_efi_section_new(void)
 {
-	return FU_FIRMWARE(g_object_new(FU_TYPE_EFI_FIRMWARE_SECTION, NULL));
+	return FU_FIRMWARE(g_object_new(FU_TYPE_EFI_SECTION, NULL));
 }

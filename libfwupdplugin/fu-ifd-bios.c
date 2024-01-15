@@ -10,7 +10,7 @@
 
 #include "fu-bytes.h"
 #include "fu-common.h"
-#include "fu-efi-firmware-volume.h"
+#include "fu-efi-volume.h"
 #include "fu-ifd-bios.h"
 #include "fu-input-stream.h"
 #include "fu-mem.h"
@@ -43,7 +43,7 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 
 	/* read each volume in order */
 	while (offset < streamsz) {
-		g_autoptr(FuFirmware) firmware_tmp = fu_efi_firmware_volume_new();
+		g_autoptr(FuFirmware) firmware_tmp = fu_efi_volume_new();
 		g_autoptr(GError) error_local = NULL;
 
 		/* FV */

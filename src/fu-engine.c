@@ -8161,20 +8161,14 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_context_add_firmware_gtype(self->ctx, "smbios", FU_TYPE_SMBIOS);
 	fu_context_add_firmware_gtype(self->ctx, "acpi-table", FU_TYPE_ACPI_TABLE);
 	fu_context_add_firmware_gtype(self->ctx, "edid", FU_TYPE_EDID);
-	fu_context_add_firmware_gtype(self->ctx, "efi-firmware-file", FU_TYPE_EFI_FIRMWARE_FILE);
+	fu_context_add_firmware_gtype(self->ctx, "efi-file", FU_TYPE_EFI_FILE);
 	fu_context_add_firmware_gtype(self->ctx, "efi-load-option", FU_TYPE_EFI_LOAD_OPTION);
 	fu_context_add_firmware_gtype(self->ctx,
 				      "efi-device-path-list",
 				      FU_TYPE_EFI_DEVICE_PATH_LIST);
-	fu_context_add_firmware_gtype(self->ctx,
-				      "efi-firmware-filesystem",
-				      FU_TYPE_EFI_FIRMWARE_FILESYSTEM);
-	fu_context_add_firmware_gtype(self->ctx,
-				      "efi-firmware-section",
-				      FU_TYPE_EFI_FIRMWARE_SECTION);
-	fu_context_add_firmware_gtype(self->ctx,
-				      "efi-firmware-volume",
-				      FU_TYPE_EFI_FIRMWARE_VOLUME);
+	fu_context_add_firmware_gtype(self->ctx, "efi-filesystem", FU_TYPE_EFI_FILESYSTEM);
+	fu_context_add_firmware_gtype(self->ctx, "efi-section", FU_TYPE_EFI_SECTION);
+	fu_context_add_firmware_gtype(self->ctx, "efi-volume", FU_TYPE_EFI_VOLUME);
 	fu_context_add_firmware_gtype(self->ctx, "ifd-bios", FU_TYPE_IFD_BIOS);
 	fu_context_add_firmware_gtype(self->ctx, "ifd-firmware", FU_TYPE_IFD_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "cfu-offer", FU_TYPE_CFU_OFFER);

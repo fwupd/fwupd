@@ -395,8 +395,8 @@ def _build(bld: Builder) -> None:
         Fuzzer("ifwi-fpt"),
         Fuzzer("oprom"),
         Fuzzer("uswid"),
-        Fuzzer("efi-firmware-filesystem", pattern="efi-firmware-filesystem"),
-        Fuzzer("efi-firmware-volume", pattern="efi-firmware-volume"),
+        Fuzzer("efi-filesystem", pattern="efi-filesystem"),
+        Fuzzer("efi-volume", pattern="efi-volume"),
         Fuzzer("efi-load-option", pattern="efi-load-option"),
         Fuzzer("ifd"),
     ]:
