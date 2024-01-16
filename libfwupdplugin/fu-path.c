@@ -322,7 +322,15 @@ fu_path_from_kind(FuPathKind path_kind)
 		if (basedir != NULL)
 			return g_build_filename(basedir, FWUPD_SYSCONFDIR, NULL);
 		return g_strdup(FWUPD_SYSCONFDIR);
-
+	/* /usr/libexec/ */
+	case FU_PATH_KIND_LIBEXECDIR:
+		tmp = g_getenv("FWUPD_LIBEXECDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		tmp = g_getenv("SNAP");
+		if (tmp != NULL)
+			return g_build_filename(tmp, FWUPD_LIBEXECDIR, NULL);
+		return g_strdup(FWUPD_LIBEXECDIR);
 	/* /usr/lib/<triplet>/fwupd-#VERSION# */
 	case FU_PATH_KIND_LIBDIR_PKG:
 		tmp = g_getenv("FWUPD_LIBDIR_PKG");
@@ -347,6 +355,15 @@ fu_path_from_kind(FuPathKind path_kind)
 		if (basedir != NULL)
 			return g_build_filename(basedir, FWUPD_DATADIR, PACKAGE_NAME, NULL);
 		return g_build_filename(FWUPD_DATADIR, PACKAGE_NAME, NULL);
+	/* /usr/libexec/fwupd */
+	case FU_PATH_KIND_LIBEXECDIR_PKG:
+		tmp = g_getenv("FWUPD_LIBEXECDIR_PKG");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		tmp = g_getenv("SNAP");
+		if (tmp != NULL)
+			return g_build_filename(tmp, FWUPD_LIBEXECDIR, PACKAGE_NAME, NULL);
+		return g_build_filename(FWUPD_LIBEXECDIR, PACKAGE_NAME, NULL);
 	/* /usr/share/fwupd/quirks.d */
 	case FU_PATH_KIND_DATADIR_QUIRKS:
 		tmp = g_getenv("FWUPD_DATADIR_QUIRKS");
