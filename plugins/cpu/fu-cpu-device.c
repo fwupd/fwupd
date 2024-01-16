@@ -353,6 +353,7 @@ fu_cpu_device_add_security_attrs_cet_active(FuCpuDevice *self, FuSecurityAttrs *
 {
 	gint exit_status = 0xff;
 	g_autofree gchar *toolfn = NULL;
+	g_autofree gchar *dir = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(FwupdSecurityAttr) cet_plat_attr = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -370,7 +371,8 @@ fu_cpu_device_add_security_attrs_cet_active(FuCpuDevice *self, FuSecurityAttrs *
 	fu_security_attrs_append(attrs, attr);
 
 	/* check that userspace has been compiled for CET support */
-	toolfn = g_build_filename(FWUPD_LIBEXECDIR, "fwupd", "fwupd-detect-cet", NULL);
+	dir = fu_path_from_kind(FU_PATH_KIND_LIBEXECDIR_PKG);
+	toolfn = g_build_filename(dir, "fwupd-detect-cet", NULL);
 	if (!g_spawn_command_line_sync(toolfn, NULL, NULL, &exit_status, &error_local)) {
 		g_warning("failed to test CET: %s", error_local->message);
 		return;
