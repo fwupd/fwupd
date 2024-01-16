@@ -36,22 +36,22 @@ enum AverHidCustomIspCmd {
 }
 
 #[derive(ToString)]
-enum AverHidCustomSafeispCmd {
-    SafeispGetVersion = 0x14,
-    SafeispSupport = 0x29,
-    SafeispEraseTemp,
-    SafeispUploadPrepare,
-    SafeispUploadCompareChecksum,
-    SafeispUploadToCx3,
-    SafeispUploadToM12mo,
-    SafeispUploadToM051,
-    SafeispUploadToTmpm342,
-    SafeispUploadToTmpm342Boot,
-    SafeispUpdateStart,
+enum AverSafeispCustomCmd {
+    GetVersion = 0x14,
+    Support = 0x29,
+    EraseTemp,
+    UploadPrepare,
+    UploadCompareChecksum,
+    UploadToCx3,
+    UploadToM12mo,
+    UploadToM051,
+    UploadToTmpm342,
+    UploadToTmpm342Boot,
+    UpdateStart,
 }
 
 #[derive(ToString)]
-enum AverHidSafeispAckStatus {
+enum AverSafeispAckStatus {
     Idle = 0x00,
     Success,
     Checksum,
@@ -65,7 +65,7 @@ enum AverHidSafeispAckStatus {
     VerifyFail,
     CompareSame,
     CompareDiff,
-    SafeispSupport,
+    Support,
 }
 
 #[derive(ToString, Getters, New)]
@@ -160,7 +160,7 @@ struct AverHidResDeviceVersion {
 }
 
 #[derive(Setters, Getters, New)]
-struct AverHidReqSafeisp {
+struct AverSafeispReq {
     report_id_custom_command: u8 == 0x08,
     custom_cmd: u8,
     custom_res: u16,
@@ -170,7 +170,7 @@ struct AverHidReqSafeisp {
 };
 
 #[derive(New, Getters, Validate)]
-struct AverHidResSafeisp {
+struct AverSafeispRes {
     report_id_custom_command: u8 == 0x09,
     custom_cmd: u8,
     custom_res: u16,
@@ -180,7 +180,7 @@ struct AverHidResSafeisp {
 };
 
 #[derive(Getters, New, Validate)]
-struct AverHidResSafeispDeviceVersion {
+struct AverSafeispResDeviceVersion {
     report_id_custom_command: u8 == 0x09,
     custom_cmd: u8 == 0x14,
     ver: [u8; 11],
