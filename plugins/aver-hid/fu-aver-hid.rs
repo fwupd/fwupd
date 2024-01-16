@@ -50,7 +50,6 @@ enum AverSafeispCustomCmd {
     UpdateStart,
 }
 
-#[derive(ToString)]
 enum AverSafeispAckStatus {
     Idle = 0x00,
     Success,
@@ -179,7 +178,7 @@ struct AverSafeispRes {
     data: [u8; 4] = 0x00,
 };
 
-#[derive(Getters, New, Validate)]
+#[derive(Getters, Validate)]
 struct AverSafeispResDeviceVersion {
     report_id_custom_command: u8 == 0x09,
     custom_cmd: u8 == 0x14,
