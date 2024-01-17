@@ -186,9 +186,16 @@ fu_aver_safeisp_device_upload(FuAverSafeispDevice *self,
 		g_autoptr(GByteArray) res = fu_struct_aver_safeisp_res_new();
 
 		/* prepare chunk */
-		chk = fu_chunk_array_index(chunks, i, error);
-		if (chk == NULL)
+		chk = fu_chunk_array_index(chunks, i);
+		if (chk == NULL) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_ARGUMENT,
+				    "invalid chunk %u for argument %u",
+				    i,
+				    partition);
 			return FALSE;
+		}
 
 		/* copy in payload */
 		if (partition == ISP_CX3) {
