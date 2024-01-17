@@ -327,8 +327,7 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
-			    "cx3 file size is invalid %lu",
-			    cx3_fw_size);
+			    "cx3 file size is invalid");
 
 		return FALSE;
 	}
@@ -341,8 +340,7 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
-			    "m12 file size is invalid %lu",
-			    m12_fw_size);
+			    "m12 file size is invalid");
 		return FALSE;
 	}
 	/* calculate M12 firmware checksum */
