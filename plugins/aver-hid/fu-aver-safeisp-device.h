@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2024 Pierce Wang <pierce.wang@aver.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
