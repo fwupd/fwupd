@@ -1,12 +1,20 @@
 # AVer Fone540
 [USB\VID_2574&PID_09F0]
 Plugin = aver_hid
+GType = FuAverHidDevice
 
 # AVer CAM520Pro3
 [USB\VID_2574&PID_0B20]
 Plugin = aver_hid
+GType = FuAverHidDevice
 
 # AVer VB342Pro
 [USB\VID_2574&PID_0AB1]
 Plugin = aver_hid
 Flags = dual-isp
+GType = FuAverHidDevice
+
+# AVer CAM340Plus
+[USB\VID_2574&PID_0980]
+Plugin = aver_hid
+GType = FuAverSafeispDevice

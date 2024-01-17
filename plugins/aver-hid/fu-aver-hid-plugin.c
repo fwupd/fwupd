@@ -9,6 +9,7 @@
 #include "fu-aver-hid-device.h"
 #include "fu-aver-hid-firmware.h"
 #include "fu-aver-hid-plugin.h"
+#include "fu-aver-safeisp-device.h"
 
 struct _FuAverHidPlugin {
 	FuPlugin parent_instance;
@@ -26,6 +27,7 @@ fu_aver_hid_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_AVER_HID_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_AVER_SAFEISP_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_AVER_HID_FIRMWARE);
 }
 

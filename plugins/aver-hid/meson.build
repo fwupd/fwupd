@@ -7,6 +7,7 @@ plugin_builtins += static_library('fu_plugin_aver_hid',
   rustgen.process('fu-aver-hid.rs'),
   sources: [
     'fu-aver-hid-device.c',
+    'fu-aver-safeisp-device.c',
     'fu-aver-hid-firmware.c',
     'fu-aver-hid-plugin.c',
   ],
