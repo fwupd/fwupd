@@ -4,7 +4,7 @@ DIST="$(dirname $0)/../dist"
 BIN="$(basename $0)"
 export FWUPD_LOCALSTATEDIR=${DIST}
 export FWUPD_SYSCONFDIR=${DIST}/etc
-export LD_LIBRARY_PATH=${DIST}/lib/${gcc}:${DIST}/lib64
+export LD_LIBRARY_PATH=${DIST}/lib/${gcc}:${DIST}/lib64:${DIST}/lib
 if [ -n "${DEBUG}" ]; then
         if ! which gdbserver 1>/dev/null 2>&1; then
                 echo "install gdbserver to enable debugging"
