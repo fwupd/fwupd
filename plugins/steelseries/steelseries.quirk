@@ -40,7 +40,7 @@ Plugin = steelseries
 GType = FuSteelseriesFizzTunnel
 Name = Aerox 3 Wireless Mouse via USB Receiver
 Icon = input-mouse
-FirmwareSize = 0x27000
+FirmwareSize = 0x23000
 
 [USB\VID_1038&PID_183A]
 Plugin = steelseries
@@ -48,14 +48,14 @@ GType = FuSteelseriesFizz
 Name = Aerox 3 Wireless Mouse
 Icon = input-mouse
 CounterpartGuid = USB\VID_1038&PID_1839,HIDRAW\VEN_0111&DEV_183A
-FirmwareSize = 0x27000
+FirmwareSize = 0x23000
 
 [USB\VID_1038&PID_183B]
 Plugin = steelseries
 GType = FuSteelseriesFizz
 Name = Aerox 3 Wireless Mouse bootloader
 Icon = input-mouse
-FirmwareSize = 0x27000
+FirmwareSize = 0x23000
 Flags = is-bootloader,~usable-during-update
 
 # Stratus Duo RX
