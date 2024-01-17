@@ -9,6 +9,7 @@
 import sys
 import os
 import struct
+import subprocess
 import io
 from typing import List, Optional
 import argparse
@@ -164,6 +165,18 @@ def _read_device_to_file(devname: str, filename: Optional[str]) -> None:
     print(f"writing {filename}...")
     with open(filename, "wb") as f_out:
         f_out.write(blob)
+
+    # this is really helpful for debugging
+    print(f"getting additional data from {devname}...")
+    try:
+        p = subprocess.run(["mtdinfo", devname], check=True, capture_output=True)
+    except subprocess.CalledProcessError as e:
+        print(f"{' '.join(args)}: {e}")
+    else:
+        for line in p.stdout.decode().split("\n"):
+            if not line:
+                continue
+            print(line)
     print("done!")
 
 
