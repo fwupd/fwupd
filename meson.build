@@ -686,7 +686,6 @@ summary({
 if build_daemon
   summary({
     'bluez': bluez.allowed(),
-    'compat_cli': get_option('compat_cli'),
     'gusb': gusb,
     'gudev': gudev,
     'hsi': hsi,

@@ -29,7 +29,6 @@ meson setup \
     -Ddocs=disabled \
     -Dman=true \
     -Dtests=true \
-    -Dcompat_cli=true \
     -Db_sanitize=undefined \
     -Dgusb:tests=false \
     -Dplugin_flashrom=enabled \

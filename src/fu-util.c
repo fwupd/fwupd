@@ -5037,13 +5037,6 @@ main(int argc, char *argv[])
 	/* ensure D-Bus errors are registered */
 	(void)fwupd_error_quark();
 
-	/* this is an old command which is possibly a symlink */
-	if (g_strcmp0(g_get_prgname(), "fwupdagent") == 0) {
-		g_printerr("INFO: The fwupdagent command is deprecated, "
-			   "use `fwupdmgr --json` instead\n");
-		priv->as_json = TRUE;
-	}
-
 	/* create helper object */
 	priv->main_ctx = g_main_context_new();
 	priv->loop = g_main_loop_new(priv->main_ctx, FALSE);

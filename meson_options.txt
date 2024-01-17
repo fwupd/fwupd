@@ -500,11 +500,6 @@ option('offline',
     'false': 'disabled',
   },
 )
-option('compat_cli',
-  type: 'boolean',
-  value: false,
-  description: 'enable legacy commands: fwupdagent,dfu-tool,fwupdate',
-)
 option('hsi',
   type: 'feature',
   description: ' Host Security Information',

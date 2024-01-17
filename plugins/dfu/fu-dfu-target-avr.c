@@ -24,8 +24,8 @@
  * program the user firmware avoiding the bootloader and for checking the total
  * chunk size.
  *
- * The chip ID can be found from a datasheet or using `dfu-tool list` when the
- * hardware is connected and in bootloader mode.
+ * The chip ID can be found from a datasheet or using `sudo fwupdtool --plugins dfu get-devices`
+ * when the hardware is connected and in bootloader mode.
  *
  * Since: 1.0.1
  */

@@ -53,56 +53,6 @@ plugin_builtin_uefi_capsule = static_library('fu_plugin_uefi_capsule',
 )
 plugin_builtins += plugin_builtin_uefi_capsule
 
-if get_option('compat_cli')
-fwupdate = executable(
-  'fwupdate',
-  rustgen.process('fu-uefi.rs'),
-  sources: [
-    'fu-uefi-tool.c',
-  ],
-  include_directories: plugin_incdirs,
-  dependencies: [
-    plugin_deps,
-    platform_deps,
-  ],
-  link_with: [
-    plugin_libs,
-    plugin_builtin_uefi_capsule,
-  ],
-  install: true,
-  install_dir: bindir,
-  install_rpath: libdir_pkg,
-  c_args: cargs,
-)
-endif
-
-if get_option('compat_cli')
-  if get_option('man')
-    custom_target('fwupdate.1',
-      input: 'fwupdate.md',
-      output: 'fwupdate.1',
-      command: [
-        generate_man, '@INPUT@', '-o', '@OUTPUT@',
-        '--replace', 'PACKAGE_VERSION', fwupd_version,
-      ],
-      install: true,
-      install_dir: join_paths(mandir, 'man1'),
-    )
-  endif
-  if build_docs
-    md_targets += custom_target('fwupdate.md',
-      input: 'fwupdate.md',
-      output: 'fwupdate.md',
-      command: [
-        generate_man, '@INPUT@', '-o', '@OUTPUT@',
-        '--replace', 'PACKAGE_VERSION', fwupd_version,
-        '--md',
-      ],
-    )
-    man_md += ['"fwupdate.md"']
-  endif
-endif
-
 # add all the .po files as inputs to watch
 ux_linguas = run_command(
   ['cat', files(join_paths(meson.project_source_root(), 'po', 'LINGUAS'))],

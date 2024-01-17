@@ -7,7 +7,6 @@ meson setup build-openbmc \
     -Ddocs=disabled \
     -Dpolkit=disabled \
     -Dbash_completion=false \
-    -Dcompat_cli=false \
     -Dfish_completion=false \
     -Dfirmware-packager=false \
     -Dhsi=disabled \
