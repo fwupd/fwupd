@@ -24,7 +24,6 @@ meson build \
  -Dconsolekit=disabled \
  -Dsystemd=disabled \
  -Doffline=disabled \
- -Dcompat_cli=true \
  -Dplugin_vendor_example=true \
  -Delogind=enabled
 ninja -C build test -v

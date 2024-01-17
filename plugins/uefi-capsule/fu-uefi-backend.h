@@ -25,6 +25,4 @@ GType
 fu_uefi_backend_get_device_gtype(FuUefiBackend *self);
 
 FuUefiDevice *
-fu_uefi_backend_device_new_from_guid(FuUefiBackend *self, const gchar *guid);
-FuUefiDevice *
 fu_uefi_backend_device_new_from_dev(FuUefiBackend *self, FuDevice *dev);

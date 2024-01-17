@@ -23,27 +23,12 @@ struct _FuDfuDeviceClass {
 
 FuDfuDevice *
 fu_dfu_device_new(FuContext *ctx, GUsbDevice *usb_device);
-FuDfuTarget *
-fu_dfu_device_get_target_by_alt_setting(FuDfuDevice *self, guint8 alt_setting, GError **error);
-FuDfuTarget *
-fu_dfu_device_get_target_by_alt_name(FuDfuDevice *self, const gchar *alt_name, GError **error);
 const gchar *
 fu_dfu_device_get_chip_id(FuDfuDevice *self);
-guint16
-fu_dfu_device_get_runtime_vid(FuDfuDevice *self);
-guint16
-fu_dfu_device_get_runtime_pid(FuDfuDevice *self);
 gboolean
 fu_dfu_device_reset(FuDfuDevice *self, FuProgress *progress, GError **error);
-FuFirmware *
-fu_dfu_device_upload(FuDfuDevice *self,
-		     FuProgress *progress,
-		     FuDfuTargetTransferFlags flags,
-		     GError **error);
 gboolean
 fu_dfu_device_refresh(FuDfuDevice *self, guint timeout_ms, GError **error);
-gboolean
-fu_dfu_device_refresh_and_clear(FuDfuDevice *self, GError **error);
 gboolean
 fu_dfu_device_abort(FuDfuDevice *self, GError **error);
 
@@ -60,8 +45,6 @@ fu_dfu_device_get_version(FuDfuDevice *self);
 guint
 fu_dfu_device_get_timeout(FuDfuDevice *self);
 
-void
-fu_dfu_device_set_transfer_size(FuDfuDevice *self, guint16 transfer_size);
 void
 fu_dfu_device_error_fixup(FuDfuDevice *self, GError **error);
 guint
