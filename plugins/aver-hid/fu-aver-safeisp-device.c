@@ -174,7 +174,7 @@ static gboolean
 fu_aver_safeisp_device_upload(FuAverSafeispDevice *self,
 			      FuChunkArray *chunks,
 			      FuProgress *progress,
-			      guint ISP_SOC,
+			      FuAverSafeIspPartition partition,
 			      GError **error)
 {
 	/* progress */
@@ -191,11 +191,11 @@ fu_aver_safeisp_device_upload(FuAverSafeispDevice *self,
 			return FALSE;
 
 		/* copy in payload */
-		if (ISP_SOC == ISP_CX3) {
+		if (partition == ISP_CX3) {
 			fu_struct_aver_safeisp_req_set_custom_cmd(
 			    req,
 			    FU_AVER_SAFEISP_CUSTOM_CMD_UPLOAD_TO_CX3);
-		} else if (ISP_SOC == ISP_M12) {
+		} else if (partition == ISP_M12) {
 			fu_struct_aver_safeisp_req_set_custom_cmd(
 			    req,
 			    FU_AVER_SAFEISP_CUSTOM_CMD_UPLOAD_TO_M12MO);
@@ -204,7 +204,7 @@ fu_aver_safeisp_device_upload(FuAverSafeispDevice *self,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_ARGUMENT,
 				    "invalid argument %u",
-				    ISP_SOC);
+				    partition);
 			return FALSE;
 		}
 
