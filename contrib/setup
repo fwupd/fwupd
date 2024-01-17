@@ -6,6 +6,10 @@ cd "$(dirname "$0")/.."
 HELPER=./contrib/ci/fwupd_setup_helpers.py
 HELPER_ARGS="-y"
 
+if [ "$(id -u)" != "0" ]; then
+       SUDO=$(which sudo)
+fi
+
 rename_branch()
 {
     OLD=master
@@ -27,7 +31,7 @@ setup_deps()
 {
     read -p "Install build dependencies? (y/N) " question
     if [ "$question" = "y" ]; then
-        $(which sudo) python3 $HELPER install-dependencies $HELPER_ARGS -y
+        $SUDO python3 $HELPER install-dependencies $HELPER_ARGS -y
     fi
 }
 
@@ -76,7 +80,7 @@ install_pip()
     package=$1
     args=$2
     if ! python3 -m pip install $package $args; then
-        $(which sudo) python3 $HELPER install-pip $HELPER_ARGS -y
+        $SUDO python3 $HELPER install-pip $HELPER_ARGS -y
     fi
     #try once more
     python3 -m pip install $package
@@ -192,6 +196,12 @@ if [ -f venv/bin/build-fwupd ]; then
     echo "$0 has already been run"
     howto
     exit 0
+fi
+
+PYTHON_VERSION=$(python3 --version 2>/dev/null)
+if [ -z "$PYTHON_VERSION" ]; then
+    echo "Install python3 to run this script" >&2
+    exit 1
 fi
 
 #needed for arguments for some commands
