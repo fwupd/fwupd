@@ -87,7 +87,7 @@ fwupd
 ```
 
 ```shell
-fwupdgmr get-devices
+fwupdmgr get-devices
 ```
 
 ## Using fwupdtool
