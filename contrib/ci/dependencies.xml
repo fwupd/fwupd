@@ -1137,6 +1137,9 @@
     <distro id="centos">
       <package variant="x86_64" />
     </distro>
+    <distro id="arch">
+      <package variant="x86_64">python-pip</package>
+    </distro>
   </dependency>
   <dependency id="python3">
     <distro id="centos">
@@ -1640,6 +1643,9 @@
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
+    </distro>
+    <distro id="arch">
+      <package variant="x86_64">python-virtualenv</package>
     </distro>
   </dependency>
   <dependency id="libasan">
