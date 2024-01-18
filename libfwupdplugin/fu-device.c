@@ -4064,6 +4064,11 @@ fu_device_set_update_state(FuDevice *self, FwupdUpdateState update_state)
 	    update_state == FWUPD_UPDATE_STATE_PENDING ||
 	    update_state == FWUPD_UPDATE_STATE_NEEDS_REBOOT)
 		fu_device_set_update_error(self, NULL);
+	if (update_state == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
+		fu_device_add_problem(self, FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
+	} else {
+		fu_device_remove_problem(self, FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
+	}
 	fwupd_device_set_update_state(FWUPD_DEVICE(self), update_state);
 }
 
