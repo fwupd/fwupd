@@ -136,18 +136,3 @@ fu_systemd_unit_stop(const gchar *unit, GError **error)
 				     error);
 	return val != NULL;
 }
-
-gboolean
-fu_systemd_unit_check_exists(const gchar *unit, GError **error)
-{
-	g_autoptr(GDBusProxy) proxy_manager = NULL;
-	g_autofree gchar *path = NULL;
-
-	g_return_val_if_fail(unit != NULL, FALSE);
-
-	proxy_manager = fu_systemd_get_manager(error);
-	if (proxy_manager == NULL)
-		return FALSE;
-	path = fu_systemd_unit_get_path(proxy_manager, unit, error);
-	return path != NULL;
-}

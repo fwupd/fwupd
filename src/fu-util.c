@@ -5551,16 +5551,6 @@ main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-#ifdef HAVE_SYSTEMD
-	/* make sure the correct daemon is in use */
-	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
-	    !fwupd_client_get_daemon_interactive(priv->client) &&
-	    !fu_util_using_correct_daemon(&error)) {
-		fu_util_print_error(priv, error);
-		return EXIT_FAILURE;
-	}
-#endif
-
 	/* make sure polkit actions were installed */
 	if (!fu_util_check_polkit_actions(&error)) {
 		fu_util_print_error(priv, error);

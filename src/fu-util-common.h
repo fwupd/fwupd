@@ -88,11 +88,6 @@ fu_util_branch_for_display(const gchar *branch);
 const gchar *
 fu_util_request_get_message(FwupdRequest *req);
 
-const gchar *
-fu_util_get_systemd_unit(void);
-gboolean
-fu_util_using_correct_daemon(GError **error);
-
 gboolean
 fu_util_parse_filter_device_flags(const gchar *filter,
 				  FwupdDeviceFlags *include,
