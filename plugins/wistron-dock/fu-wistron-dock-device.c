@@ -647,7 +647,7 @@ fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 		g_warning("unknown status_code 0x%02x", self->status_code);
 
 	/* composite version */
-	fu_device_set_version_u32(FU_DEVICE(self),
+	fu_device_set_version_raw(FU_DEVICE(self),
 				  fu_struct_wistron_dock_wdit_get_composite_version(st));
 
 	/* for debugging only */
@@ -801,6 +801,12 @@ fu_wistron_dock_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 75, "reload");
 }
 
+static gchar *
+fu_wistron_dock_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_wistron_dock_device_init(FuWistronDockDevice *self)
 {
@@ -838,4 +844,5 @@ fu_wistron_dock_device_class_init(FuWistronDockDeviceClass *klass)
 	klass_device->setup = fu_wistron_dock_device_setup;
 	klass_device->cleanup = fu_wistron_dock_device_cleanup;
 	klass_device->set_progress = fu_wistron_dock_device_set_progress;
+	klass_device->convert_version = fu_wistron_dock_device_convert_version;
 }

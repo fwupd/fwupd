@@ -283,7 +283,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	if (fwver == 0xFFFF || fwver == ETP_CMD_I2C_FW_VERSION)
 		fwver = 0;
-	fu_device_set_version_u16(device, fwver);
+	fu_device_set_version_raw(device, fwver);
 
 	/* get IAP firmware version */
 	if (!fu_elantp_i2c_device_read_cmd(self,
@@ -803,6 +803,12 @@ fu_elantp_i2c_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
+static gchar *
+fu_elantp_i2c_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint16(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_elantp_i2c_device_init(FuElantpI2cDevice *self)
 {
@@ -845,4 +851,5 @@ fu_elantp_i2c_device_class_init(FuElantpI2cDeviceClass *klass)
 	klass_device->probe = fu_elantp_i2c_device_probe;
 	klass_device->open = fu_elantp_i2c_device_open;
 	klass_device->set_progress = fu_elantp_i2c_device_set_progress;
+	klass_device->convert_version = fu_elantp_i2c_device_convert_version;
 }

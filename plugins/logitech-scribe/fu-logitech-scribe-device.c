@@ -601,7 +601,7 @@ fu_logitech_scribe_device_set_version(FuDevice *device, GError **error)
 	/*  little-endian data. MinorVersion byte 0, MajorVersion byte 1, BuildVersion byte 3 & 2 */
 	fwversion =
 	    (query_data[1] << 24) + (query_data[0] << 16) + (query_data[3] << 8) + query_data[2];
-	fu_device_set_version_u32(device, fwversion);
+	fu_device_set_version_raw(device, fwversion);
 
 	/* success */
 	return TRUE;
@@ -621,6 +621,12 @@ fu_logitech_scribe_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
+}
+
+static gchar *
+fu_logitech_scribe_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
 }
 
 static void
@@ -650,4 +656,5 @@ fu_logitech_scribe_device_class_init(FuLogitechScribeDeviceClass *klass)
 	klass_device->probe = fu_logitech_scribe_device_probe;
 	klass_device->setup = fu_logitech_scribe_device_setup;
 	klass_device->set_progress = fu_logitech_scribe_device_set_progress;
+	klass_device->convert_version = fu_logitech_scribe_device_convert_version;
 }

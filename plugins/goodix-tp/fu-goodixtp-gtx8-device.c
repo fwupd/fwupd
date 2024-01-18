@@ -195,7 +195,7 @@ fu_goodixtp_gtx8_device_ensure_version(FuGoodixtpGtx8Device *self, GError **erro
 	fu_goodixtp_hid_device_set_config_ver(FU_GOODIXTP_HID_DEVICE(self), cfg_ver);
 	vice_ver = fw_info[19];
 	inter_ver = fw_info[20];
-	fu_device_set_version_u32(FU_DEVICE(self), (vice_ver << 16) | (inter_ver << 8) | cfg_ver);
+	fu_device_set_version_raw(FU_DEVICE(self), (vice_ver << 16) | (inter_ver << 8) | cfg_ver);
 	return TRUE;
 }
 

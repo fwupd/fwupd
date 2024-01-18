@@ -253,7 +253,7 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 	}
 
 	/* set display version */
-	fu_device_set_version_u32(FU_DEVICE(self), version);
+	fu_device_set_version_raw(FU_DEVICE(self), version);
 	return TRUE;
 }
 
@@ -535,6 +535,12 @@ fu_fpc_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
+static gchar *
+fu_fpc_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_fpc_device_init(FuFpcDevice *self)
 {
@@ -570,4 +576,5 @@ fu_fpc_device_class_init(FuFpcDeviceClass *klass)
 	klass_device->attach = fu_fpc_device_attach;
 	klass_device->detach = fu_fpc_device_detach;
 	klass_device->set_progress = fu_fpc_device_set_progress;
+	klass_device->convert_version = fu_fpc_device_convert_version;
 }

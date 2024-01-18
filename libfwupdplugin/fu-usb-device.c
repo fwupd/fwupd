@@ -686,7 +686,7 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	if (release != 0x0 &&
 	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_BCD);
-		fu_device_set_version_u16(device, release);
+		fu_device_set_version_raw(device, release);
 	}
 
 	/* add GUIDs in order of priority */
@@ -996,6 +996,12 @@ fu_usb_device_incorporate(FuDevice *self, FuDevice *donor)
 	fu_usb_device_set_dev(FU_USB_DEVICE(self), fu_usb_device_get_dev(FU_USB_DEVICE(donor)));
 }
 
+static gchar *
+fu_usb_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint16(version_raw, fu_device_get_version_format(device));
+}
+
 static gboolean
 fu_udev_device_bind_driver(FuDevice *device,
 			   const gchar *subsystem,
@@ -1152,6 +1158,7 @@ fu_usb_device_class_init(FuUsbDeviceClass *klass)
 	device_class->incorporate = fu_usb_device_incorporate;
 	device_class->bind_driver = fu_udev_device_bind_driver;
 	device_class->unbind_driver = fu_udev_device_unbind_driver;
+	device_class->convert_version = fu_usb_device_convert_version;
 
 	/**
 	 * FuUsbDevice:usb-device:

@@ -507,7 +507,7 @@ fu_bcm57xx_device_setup(FuDevice *device, GError **error)
 	if (fwversion != 0x0) {
 		/* this is only set on the OSS firmware */
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
-		fu_device_set_version_u32(device, GUINT32_FROM_BE(fwversion));
+		fu_device_set_version_raw(device, GUINT32_FROM_BE(fwversion));
 		fu_device_set_branch(device, BCM_FW_BRANCH_OSS_FIRMWARE);
 	} else {
 		guint8 bufver[16] = {0x0};
@@ -592,6 +592,12 @@ fu_bcm57xx_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
+static gchar *
+fu_bcm57xx_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_bcm57xx_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -667,6 +673,7 @@ fu_bcm57xx_device_class_init(FuBcm57xxDeviceClass *klass)
 	klass_device->probe = fu_bcm57xx_device_probe;
 	klass_device->to_string = fu_bcm57xx_device_to_string;
 	klass_device->set_progress = fu_bcm57xx_device_set_progress;
+	klass_device->convert_version = fu_bcm57xx_device_convert_version;
 
 	pspec =
 	    g_param_spec_string("iface",

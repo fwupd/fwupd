@@ -673,14 +673,6 @@ fu_device_set_version_bootloader(FuDevice *self, const gchar *version) G_GNUC_NO
 void
 fu_device_set_version_raw(FuDevice *self, guint64 version_raw) G_GNUC_NON_NULL(1);
 void
-fu_device_set_version_u16(FuDevice *self, guint16 version_raw) G_GNUC_NON_NULL(1);
-void
-fu_device_set_version_u24(FuDevice *self, guint32 version_raw) G_GNUC_NON_NULL(1);
-void
-fu_device_set_version_u32(FuDevice *self, guint32 version_raw) G_GNUC_NON_NULL(1);
-void
-fu_device_set_version_u64(FuDevice *self, guint64 version_raw) G_GNUC_NON_NULL(1);
-void
 fu_device_inhibit(FuDevice *self, const gchar *inhibit_id, const gchar *reason)
     G_GNUC_NON_NULL(1, 2);
 void
