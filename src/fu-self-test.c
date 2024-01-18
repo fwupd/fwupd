@@ -2461,6 +2461,7 @@ fu_engine_history_func(gconstpointer user_data)
 			    "  Plugin:               test\n"
 			    "  Flags:                historical|updatable-hidden|unsigned-payload\n"
 			    "  Version:              1.2.2\n"
+			    "  VersionFormat:        triplet\n"
 			    "  Created:              2018-01-07\n"
 			    "  Modified:             2017-12-27\n"
 			    "  UpdateState:          success\n"
@@ -2493,6 +2494,43 @@ fu_engine_history_func(gconstpointer user_data)
 	device4 = fu_engine_get_results(engine, FWUPD_DEVICE_ID_ANY, &error);
 	g_assert_null(device4);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
+}
+
+static void
+fu_engine_history_verfmt_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_DPAUX_DEVICE, "context", self->ctx, NULL);
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* set up dummy plugin */
+	fu_engine_add_plugin(engine, self->plugin);
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* absorb version format from the database */
+	fu_device_set_version_raw(device, 65563);
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_NUMBER);
+	fu_device_set_id(device, "test_device");
+	fu_device_add_vendor_id(device, "USB:FFFF");
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_set_plugin(device, "test");
+	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_checksum(device, "0123456789abcdef0123456789abcdef01234567");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_set_created(device, 1515338000);
+	fu_engine_add_device(engine, device);
+	g_assert_cmpint(fu_device_get_version_format(device), ==, FWUPD_VERSION_FORMAT_TRIPLET);
+	g_assert_cmpstr(fu_device_get_version(device), ==, "0.1.27");
 }
 
 static void
@@ -3067,6 +3105,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 			    "  Plugin:               test\n"
 			    "  Flags:                updatable|historical|unsigned-payload\n"
 			    "  Version:              1.2.2\n"
+			    "  VersionFormat:        triplet\n"
 			    "  Created:              2018-01-07\n"
 			    "  Modified:             2017-12-27\n"
 			    "  UpdateState:          failed\n"
@@ -5607,6 +5646,7 @@ main(int argc, char **argv)
 			     fu_engine_multiple_rels_func);
 	g_test_add_data_func("/fwupd/engine{install-request}", self, fu_engine_install_request);
 	g_test_add_data_func("/fwupd/engine{history-success}", self, fu_engine_history_func);
+	g_test_add_data_func("/fwupd/engine{history-verfmt}", self, fu_engine_history_verfmt_func);
 	g_test_add_data_func("/fwupd/engine{history-modify}", self, fu_engine_history_modify_func);
 	g_test_add_data_func("/fwupd/engine{history-error}", self, fu_engine_history_error_func);
 	if (g_test_slow()) {

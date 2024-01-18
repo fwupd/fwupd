@@ -502,7 +502,7 @@ fu_uefi_device_probe(FuDevice *device, GError **error)
 	fu_device_add_guid(device, priv->fw_class);
 
 	/* set versions */
-	fu_device_set_version_u32(device, priv->fw_version);
+	fu_device_set_version_raw(device, priv->fw_version);
 	if (priv->fw_version_lowest != 0) {
 		g_autofree gchar *version_lowest =
 		    fu_version_from_uint32(priv->fw_version_lowest,
@@ -736,6 +736,12 @@ fu_uefi_device_finalize(GObject *object)
 	G_OBJECT_CLASS(fu_uefi_device_parent_class)->finalize(object);
 }
 
+static gchar *
+fu_uefi_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 {
@@ -754,6 +760,7 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 	klass_device->report_metadata_post = fu_uefi_device_report_metadata_post;
 	klass_device->get_results = fu_uefi_device_get_results;
 	klass_device->set_progress = fu_uefi_device_set_progress;
+	klass_device->convert_version = fu_uefi_device_convert_version;
 
 	/**
 	 * FuUefiDevice:fw-class:
