@@ -392,7 +392,7 @@ fu_focalfp_hid_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to read version2: ");
 		return FALSE;
 	}
-	fu_device_set_version_u16(device, fu_memread_uint16(buf, G_BIG_ENDIAN));
+	fu_device_set_version_raw(device, fu_memread_uint16(buf, G_BIG_ENDIAN));
 
 	/* success */
 	return TRUE;
@@ -641,6 +641,12 @@ fu_focalfp_hid_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
+static gchar *
+fu_focalfp_hid_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint16(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_focalfp_hid_device_init(FuFocalfpHidDevice *self)
 {
@@ -669,4 +675,5 @@ fu_focalfp_hid_device_class_init(FuFocalfpHidDeviceClass *klass)
 	klass_device->write_firmware = fu_focalfp_hid_device_write_firmware;
 	klass_device->probe = fu_focalfp_hid_device_probe;
 	klass_device->set_progress = fu_focalfp_hid_device_set_progress;
+	klass_device->convert_version = fu_focalfp_hid_device_convert_version;
 }

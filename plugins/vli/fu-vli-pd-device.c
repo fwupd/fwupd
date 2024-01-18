@@ -356,7 +356,7 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 	}
 	if (!fu_memread_uint32_safe(verbuf, sizeof(verbuf), 0x0, &version_raw, G_BIG_ENDIAN, error))
 		return FALSE;
-	fu_device_set_version_u32(FU_DEVICE(self), version_raw);
+	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
 
 	/* get device kind if not already in ROM mode */
 	if (fu_vli_device_get_kind(FU_VLI_DEVICE(self)) == FU_VLI_DEVICE_KIND_UNKNOWN) {
@@ -897,6 +897,12 @@ fu_vli_pd_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 28, "reload");
 }
 
+static gchar *
+fu_vli_pd_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_vli_pd_device_init(FuVliPdDevice *self)
 {
@@ -934,6 +940,7 @@ fu_vli_pd_device_class_init(FuVliPdDeviceClass *klass)
 	klass_device->detach = fu_vli_pd_device_detach;
 	klass_device->setup = fu_vli_pd_device_setup;
 	klass_device->set_progress = fu_vli_pd_device_set_progress;
+	klass_device->convert_version = fu_vli_pd_device_convert_version;
 	klass_vli_device->spi_chip_erase = fu_vli_pd_device_spi_chip_erase;
 	klass_vli_device->spi_sector_erase = fu_vli_pd_device_spi_sector_erase;
 	klass_vli_device->spi_read_data = fu_vli_pd_device_spi_read_data;

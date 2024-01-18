@@ -218,7 +218,7 @@ fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 	if (rev != 0x0 &&
 	    fu_device_get_version_format(FU_DEVICE(self)) == FWUPD_VERSION_FORMAT_UNKNOWN) {
 		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
-		fu_device_set_version_u16(FU_DEVICE(self), rev);
+		fu_device_set_version_raw(FU_DEVICE(self), rev);
 	}
 }
 
@@ -625,6 +625,12 @@ fu_bluez_device_incorporate(FuDevice *self, FuDevice *donor)
 		priv->proxy = g_object_ref(privdonor->proxy);
 }
 
+static gchar *
+fu_bluez_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint16(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_bluez_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -697,6 +703,7 @@ fu_bluez_device_class_init(FuBluezDeviceClass *klass)
 	device_class->setup = fu_bluez_device_setup;
 	device_class->to_string = fu_bluez_device_to_string;
 	device_class->incorporate = fu_bluez_device_incorporate;
+	device_class->convert_version = fu_bluez_device_convert_version;
 
 	/**
 	 * FuBluezDevice::changed:

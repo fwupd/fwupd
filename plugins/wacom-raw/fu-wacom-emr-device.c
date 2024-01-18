@@ -42,7 +42,7 @@ fu_wacom_emr_device_setup(FuDevice *device, GError **error)
 					    error))
 			return FALSE;
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-		fu_device_set_version_u32(device, fw_ver);
+		fu_device_set_version_raw(device, fw_ver);
 	}
 
 	/* success */
@@ -267,6 +267,12 @@ fu_wacom_emr_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
+static gchar *
+fu_wacom_emr_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_wacom_emr_device_init(FuWacomEmrDevice *self)
 {
@@ -281,5 +287,6 @@ fu_wacom_emr_device_class_init(FuWacomEmrDeviceClass *klass)
 	FuWacomDeviceClass *klass_wac_device = FU_WACOM_DEVICE_CLASS(klass);
 	klass_device->setup = fu_wacom_emr_device_setup;
 	klass_device->attach = fu_wacom_emr_device_attach;
+	klass_device->convert_version = fu_wacom_emr_device_convert_version;
 	klass_wac_device->write_firmware = fu_wacom_emr_device_write_firmware;
 }

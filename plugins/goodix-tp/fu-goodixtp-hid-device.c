@@ -167,6 +167,12 @@ fu_goodixtp_hid_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
+static gchar *
+fu_goodixtp_hid_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_goodixtp_hid_device_init(FuGoodixtpHidDevice *self)
 {
@@ -205,4 +211,5 @@ fu_goodixtp_hid_device_class_init(FuGoodixtpHidDeviceClass *klass)
 	klass_device->to_string = fu_goodixtp_hid_device_to_string;
 	klass_device->probe = fu_goodixtp_hid_device_probe;
 	klass_device->set_progress = fu_goodixtp_hid_device_set_progress;
+	klass_device->convert_version = fu_goodixtp_hid_device_convert_version;
 }

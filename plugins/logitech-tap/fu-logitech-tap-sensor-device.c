@@ -245,7 +245,7 @@ fu_logitech_tap_sensor_device_set_version(FuLogitechTapSensorDevice *self, GErro
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
-	fu_device_set_version_u32(FU_DEVICE(self), version);
+	fu_device_set_version_raw(FU_DEVICE(self), version);
 
 	/* success */
 	return TRUE;
@@ -339,6 +339,12 @@ fu_logitech_tap_sensor_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
+static gchar *
+fu_logitech_tap_sensor_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_logitech_tap_sensor_device_init(FuLogitechTapSensorDevice *self)
 {
@@ -356,4 +362,5 @@ fu_logitech_tap_sensor_device_class_init(FuLogitechTapSensorDeviceClass *klass)
 	klass_device->probe = fu_logitech_tap_sensor_device_probe;
 	klass_device->setup = fu_logitech_tap_sensor_device_setup;
 	klass_device->set_progress = fu_logitech_tap_sensor_device_set_progress;
+	klass_device->convert_version = fu_logitech_tap_sensor_device_convert_version;
 }
