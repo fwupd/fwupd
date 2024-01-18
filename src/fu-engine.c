@@ -6161,6 +6161,18 @@ fu_engine_device_inherit_history(FuEngine *self, FuDevice *device)
 	if (device_history == NULL)
 		return;
 
+	/* in an offline environment we may have used the .cab file to find the version-format
+	 * to use for the device -- so when we reboot use the database as the archive data is no
+	 * longer available */
+	if (fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN &&
+	    fu_device_get_version_format(device_history) != FWUPD_VERSION_FORMAT_UNKNOWN) {
+		g_debug(
+		    "absorbing version format %s into %s from history database",
+		    fwupd_version_format_to_string(fu_device_get_version_format(device_history)),
+		    fu_device_get_id(device));
+		fu_device_set_version_format(device, fu_device_get_version_format(device_history));
+	}
+
 	/* the device is still running the old firmware version and so if it
 	 * required activation before, it still requires it now -- note:
 	 * we can't just check for version_new=version to allow for re-installs */
