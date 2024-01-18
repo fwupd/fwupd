@@ -1007,6 +1007,8 @@ fwupd_client_disconnect(FwupdClient *self, GError **error)
 static void
 fwupd_client_quit_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
+	FwupdClient *self = FWUPD_CLIENT(g_task_get_source_object(G_TASK(user_data)));
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) val = NULL;
@@ -1019,6 +1021,7 @@ fwupd_client_quit_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 	}
 
 	/* success */
+	g_clear_object(&priv->proxy);
 	g_task_return_boolean(task, TRUE);
 }
 
