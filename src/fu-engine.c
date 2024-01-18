@@ -7030,9 +7030,15 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	for (guint i = 0; i < vals->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(vals, i);
 		if (fwupd_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+#ifdef SUPPORTED_BUILD
+			g_debug("HSI attribute %s (from %s) had unknown result",
+				fwupd_security_attr_get_appstream_id(attr),
+				fwupd_security_attr_get_plugin(attr));
+#else
 			g_warning("HSI attribute %s (from %s) had unknown result",
 				  fwupd_security_attr_get_appstream_id(attr),
 				  fwupd_security_attr_get_plugin(attr));
+#endif
 		}
 	}
 
