@@ -2862,6 +2862,8 @@ fu_device_set_id(FuDevice *self, const gchar *id)
 void
 fu_device_set_version_format(FuDevice *self, FwupdVersionFormat fmt)
 {
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+
 	/* same */
 	if (fu_device_get_version_format(self) == fmt)
 		return;
@@ -2872,6 +2874,14 @@ fu_device_set_version_format(FuDevice *self, FwupdVersionFormat fmt)
 			fwupd_version_format_to_string(fmt));
 	}
 	fwupd_device_set_version_format(FWUPD_DEVICE(self), fmt);
+
+	/* convert this, now we know */
+	if (klass->convert_version != NULL && fu_device_get_version(self) != NULL &&
+	    fu_device_get_version_raw(self) != 0) {
+		g_autofree gchar *version =
+		    klass->convert_version(self, fu_device_get_version_raw(self));
+		fu_device_set_version(self, version);
+	}
 }
 
 /**
