@@ -3672,10 +3672,12 @@ fu_util_modify_config(FuUtilPrivate *priv, gchar **values, GError **error)
 					   _("Restart the daemon to make the change effective?")))
 			return TRUE;
 	}
-#ifdef HAVE_SYSTEMD
-	if (!fu_systemd_unit_stop(fu_util_get_systemd_unit(), error))
+
+	if (!fu_util_quit(priv, NULL, error))
 		return FALSE;
-#endif
+	if (!fwupd_client_connect(priv->client, priv->cancellable, error))
+		return FALSE;
+
 	/* TRANSLATORS: success message -- a per-system setting value */
 	fu_console_print_literal(priv->console, _("Successfully modified configuration value"));
 	return TRUE;
