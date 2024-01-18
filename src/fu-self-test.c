@@ -2496,7 +2496,7 @@ fu_engine_history_func(gconstpointer user_data)
 			    "  Name:                 Test Device\n"
 			    "  Guid:                 12345678-1234-1234-1234-123456789012\n"
 			    "  Plugin:               test\n"
-			    "  Flags:                historical|updatable-hidden|unsigned-payload\n"
+			    "  Flags:                updatable|historical|unsigned-payload\n"
 			    "  Version:              1.2.2\n"
 			    "  Created:              2018-01-07\n"
 			    "  Modified:             2017-12-27\n"
