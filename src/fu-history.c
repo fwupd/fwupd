@@ -21,7 +21,7 @@
 #include "fu-history.h"
 #include "fu-security-attr-common.h"
 
-#define FU_HISTORY_CURRENT_SCHEMA_VERSION 9
+#define FU_HISTORY_CURRENT_SCHEMA_VERSION 10
 
 static void
 fu_history_finalize(GObject *object);
@@ -140,6 +140,11 @@ fu_history_device_from_stmt(sqlite3_stmt *stmt)
 	tmp = (const gchar *)sqlite3_column_text(stmt, 17);
 	if (tmp != NULL)
 		fwupd_release_set_appstream_id(release, tmp);
+
+	/* version_format */
+	fu_device_set_version_format(device, sqlite3_column_int(stmt, 18));
+
+	/* success */
 	return device;
 }
 
@@ -194,7 +199,8 @@ fu_history_create_database(FuHistory *self, GError **error)
 			  "checksum_device TEXT DEFAULT NULL,"
 			  "protocol TEXT DEFAULT NULL,"
 			  "release_id TEXT DEFAULT NULL,"
-			  "appstream_id TEXT DEFAULT NULL);"
+			  "appstream_id TEXT DEFAULT NULL,"
+			  "version_format INTEGER DEFAULT 0);"
 			  "CREATE TABLE IF NOT EXISTS approved_firmware ("
 			  "checksum TEXT);"
 			  "CREATE TABLE IF NOT EXISTS blocked_firmware ("
@@ -241,7 +247,7 @@ fu_history_migrate_database_v1(FuHistory *self, GError **error)
 			  "device_id, update_state, update_error, filename, "
 			  "display_name, plugin, device_created, device_modified, "
 			  "checksum, flags, metadata, guid_default, version_old, "
-			  "version_new, NULL, NULL, NULL, NULL FROM history_old;"
+			  "version_new, NULL, NULL, NULL, NULL, NULL FROM history_old;"
 			  "DROP TABLE history_old;",
 			  NULL,
 			  NULL,
@@ -378,6 +384,20 @@ fu_history_migrate_database_v8(FuHistory *self, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_history_migrate_database_v9(FuHistory *self, GError **error)
+{
+	gint rc;
+	rc = sqlite3_exec(self->db,
+			  "ALTER TABLE history ADD COLUMN version_format INTEGER DEFAULT 0;",
+			  NULL,
+			  NULL,
+			  NULL);
+	if (rc != SQLITE_OK)
+		g_debug("ignoring database error: %s", sqlite3_errmsg(self->db));
+	return TRUE;
+}
+
 /* returns 0 if database is not initialized */
 static guint
 fu_history_get_schema_version(FuHistory *self)
@@ -445,6 +465,11 @@ fu_history_create_or_migrate(FuHistory *self, guint schema_ver, GError **error)
 	/* fall through */
 	case 8:
 		if (!fu_history_migrate_database_v8(self, error))
+			return FALSE;
+		break;
+	/* fall through */
+	case 9:
+		if (!fu_history_migrate_database_v9(self, error))
 			return FALSE;
 		break;
 	default:
@@ -813,9 +838,10 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FwupdRelease *release, 
 				"checksum_device,"
 				"protocol,"
 				"release_id,"
-				"appstream_id) "
+				"appstream_id,"
+				"version_format) "
 				"VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,"
-				"?11,?12,?13,?14,?15,?16,?17,?18)",
+				"?11,?12,?13,?14,?15,?16,?17,?18,?19)",
 				-1,
 				&stmt,
 				NULL);
@@ -845,6 +871,7 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FwupdRelease *release, 
 	sqlite3_bind_text(stmt, 16, fwupd_release_get_protocol(release), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 17, fwupd_release_get_id(release), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 18, fwupd_release_get_appstream_id(release), -1, SQLITE_STATIC);
+	sqlite3_bind_int(stmt, 19, fu_device_get_version_format(device));
 	return fu_history_stmt_exec(self, stmt, NULL, error);
 #else
 	return TRUE;
@@ -995,7 +1022,8 @@ fu_history_get_device_by_id(FuHistory *self, const gchar *device_id, GError **er
 				"checksum_device, "
 				"protocol, "
 				"release_id, "
-				"appstream_id FROM history WHERE "
+				"appstream_id, "
+				"version_format FROM history WHERE "
 				"device_id = ?1 ORDER BY device_created DESC "
 				"LIMIT 1",
 				-1,
@@ -1073,7 +1101,8 @@ fu_history_get_devices(FuHistory *self, GError **error)
 				"checksum_device, "
 				"protocol, "
 				"release_id, "
-				"appstream_id FROM history "
+				"appstream_id, "
+				"version_format FROM history "
 				"ORDER BY device_modified ASC;",
 				-1,
 				&stmt,
