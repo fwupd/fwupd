@@ -128,7 +128,7 @@ fu_dpaux_device_setup(FuDevice *device, GError **error)
 	priv->dpcd_ieee_oui = fu_struct_dpaux_dpcd_get_ieee_oui(st);
 	priv->dpcd_hw_rev = fu_struct_dpaux_dpcd_get_hw_rev(st);
 	priv->dpcd_dev_id = fu_struct_dpaux_dpcd_get_dev_id(st);
-	fu_device_set_version_u24(device, fu_struct_dpaux_dpcd_get_fw_ver(st));
+	fu_device_set_version_raw(device, fu_struct_dpaux_dpcd_get_fw_ver(st));
 	return TRUE;
 }
 
@@ -377,6 +377,12 @@ fu_dpaux_device_incorporate(FuDevice *device, FuDevice *donor)
 					fu_dpaux_device_get_dpcd_dev_id(FU_DPAUX_DEVICE(donor)));
 }
 
+static gchar *
+fu_dpaux_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint24(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_dpaux_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -440,6 +446,7 @@ fu_dpaux_device_class_init(FuDpauxDeviceClass *klass)
 	klass_device->invalidate = fu_dpaux_device_invalidate;
 	klass_device->to_string = fu_dpaux_device_to_string;
 	klass_device->incorporate = fu_dpaux_device_incorporate;
+	klass_device->convert_version = fu_dpaux_device_convert_version;
 
 	/**
 	 * FuDpauxDevice:dpcd-ieee-oui:
