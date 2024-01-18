@@ -48,6 +48,8 @@
 
 #ifdef HAVE_SYSTEMD
 #include "fu-systemd.h"
+#define SYSTEMD_FWUPD_UNIT	"fwupd.service"
+#define SYSTEMD_SNAP_FWUPD_UNIT "snap.fwupd.fwupd.service"
 #endif
 
 /* custom return codes */
@@ -207,6 +209,16 @@ fu_util_lock(FuUtilPrivate *priv, GError **error)
 #endif
 	return TRUE;
 }
+
+#ifdef HAVE_SYSTEMD
+static const gchar *
+fu_util_get_systemd_unit(void)
+{
+	if (g_getenv("SNAP") != NULL)
+		return SYSTEMD_SNAP_FWUPD_UNIT;
+	return SYSTEMD_FWUPD_UNIT;
+}
+#endif
 
 static gboolean
 fu_util_start_engine(FuUtilPrivate *priv,
