@@ -9,8 +9,6 @@
 #include <glib.h>
 
 gboolean
-fu_systemd_unit_check_exists(const gchar *unit, GError **error);
-gboolean
 fu_systemd_unit_stop(const gchar *unit, GError **error);
 gchar *
 fu_systemd_get_default_target(GError **error);
