@@ -22,6 +22,7 @@
 #include "fu-coswid-firmware.h"
 #include "fu-device-private.h"
 #include "fu-device-progress.h"
+#include "fu-efi-lz77-decompressor.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
 #include "fu-self-test-struct.h"
@@ -3968,20 +3969,18 @@ fu_firmware_builder_round_trip_func(void)
 	     "efi-load-option.builder.xml",
 	     "7ef696d22902ae97ef5f73ad9c85a28095ad56f1"},
 	    {FU_TYPE_EDID, "edid.builder.xml", "64cef10b75ccce684a483d576dd4a4ce6bef8165"},
-	    {FU_TYPE_EFI_FIRMWARE_SECTION,
-	     "efi-firmware-section.builder.xml",
+	    {FU_TYPE_EFI_SECTION,
+	     "efi-section.builder.xml",
 	     "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
-	    {FU_TYPE_EFI_FIRMWARE_SECTION,
-	     "efi-firmware-section.builder.xml",
+	    {FU_TYPE_EFI_SECTION,
+	     "efi-section.builder.xml",
 	     "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
-	    {FU_TYPE_EFI_FIRMWARE_FILE,
-	     "efi-firmware-file.builder.xml",
-	     "90374d97cf6bc70059d24c816c188c10bd250ed7"},
-	    {FU_TYPE_EFI_FIRMWARE_FILESYSTEM,
-	     "efi-firmware-filesystem.builder.xml",
+	    {FU_TYPE_EFI_FILE, "efi-file.builder.xml", "90374d97cf6bc70059d24c816c188c10bd250ed7"},
+	    {FU_TYPE_EFI_FILESYSTEM,
+	     "efi-filesystem.builder.xml",
 	     "d6fbadc1c303a3b4eede9db7fb0ddb353efffc86"},
-	    {FU_TYPE_EFI_FIRMWARE_VOLUME,
-	     "efi-firmware-volume.builder.xml",
+	    {FU_TYPE_EFI_VOLUME,
+	     "efi-volume.builder.xml",
 	     "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
 	    {FU_TYPE_IFD_FIRMWARE, "ifd.builder.xml", "06ae066ea53cefe43fed2f1ca4fc7d8cccdbcf1e"},
 	    {FU_TYPE_CFU_OFFER,
@@ -4674,6 +4673,58 @@ fu_input_stream_chunkify_func(void)
 }
 
 static void
+fu_efi_lz77_decompressor_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *csum_legacy = NULL;
+	g_autofree gchar *csum_tiano = NULL;
+	g_autofree gchar *filename_legacy = NULL;
+	g_autofree gchar *filename_tiano = NULL;
+	g_autoptr(FuFirmware) lz77_decompressor_legacy = fu_efi_lz77_decompressor_new();
+	g_autoptr(FuFirmware) lz77_decompressor_tiano = fu_efi_lz77_decompressor_new();
+	g_autoptr(GBytes) blob_legacy2 = NULL;
+	g_autoptr(GBytes) blob_legacy = NULL;
+	g_autoptr(GBytes) blob_src = NULL;
+	g_autoptr(GBytes) blob_tiano2 = NULL;
+	g_autoptr(GBytes) blob_tiano = NULL;
+	g_autoptr(GError) error = NULL;
+
+	filename_tiano = g_test_build_filename(G_TEST_DIST, "tests", "efi-lz77-tiano.bin", NULL);
+	blob_tiano = fu_bytes_get_contents(filename_tiano, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_tiano);
+	g_assert_cmpint(g_bytes_get_size(blob_tiano), ==, 144);
+	ret =
+	    fu_firmware_parse(lz77_decompressor_tiano, blob_tiano, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	blob_tiano2 = fu_firmware_get_bytes(lz77_decompressor_tiano, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_tiano2);
+	g_assert_cmpint(g_bytes_get_size(blob_tiano2), ==, 276);
+	csum_tiano = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, blob_tiano2);
+	g_assert_cmpstr(csum_tiano, ==, "40f7fbaff684a6bcf67c81b3079422c2529741e1");
+
+	filename_legacy = g_test_build_filename(G_TEST_DIST, "tests", "efi-lz77-legacy.bin", NULL);
+	blob_legacy = fu_bytes_get_contents(filename_legacy, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_legacy);
+	g_assert_cmpint(g_bytes_get_size(blob_legacy), ==, 144);
+	ret = fu_firmware_parse(lz77_decompressor_legacy,
+				blob_tiano,
+				FWUPD_INSTALL_FLAG_NONE,
+				&error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	blob_legacy2 = fu_firmware_get_bytes(lz77_decompressor_legacy, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_legacy2);
+	g_assert_cmpint(g_bytes_get_size(blob_legacy2), ==, 276);
+	csum_legacy = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, blob_legacy2);
+	g_assert_cmpstr(csum_legacy, ==, "40f7fbaff684a6bcf67c81b3079422c2529741e1");
+}
+
+static void
 fu_input_stream_func(void)
 {
 	gboolean ret;
@@ -4936,6 +4987,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
 
+	g_test_add_func("/fwupd/efi-lz77{decompressor}", fu_efi_lz77_decompressor_func);
 	g_test_add_func("/fwupd/input-stream", fu_input_stream_func);
 	g_test_add_func("/fwupd/input-stream{chunkify}", fu_input_stream_chunkify_func);
 	g_test_add_func("/fwupd/partial-input-stream", fu_partial_input_stream_func);

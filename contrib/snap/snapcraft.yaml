@@ -8,6 +8,7 @@ description: |
 grade: stable
 confinement: strict
 base: core22
+license: LGPL-2.1+
 
 architectures:
   - amd64
@@ -33,7 +34,7 @@ apps:
     plugs: [fwupdmgr, network]
   fwupdtool:
     command: fwupdtool.wrapper
-    plugs: [bluez, udisks2, modem-manager, upower-observe, network, hardware-observe, opengl, raw-usb]
+    plugs: [bluez, udisks2, modem-manager, upower-observe, network, hardware-observe, home, opengl, raw-usb]
     slots: [fwupd]
     completer:
       share/bash-completion/completions/fwupdtool
@@ -43,7 +44,7 @@ apps:
     command: fwupd.wrapper
     daemon: dbus
     slots: [fwupd]
-    plugs: [bluez, udisks2, modem-manager, upower-observe, polkit, network, hardware-observe, opengl, raw-usb]
+    plugs: [bluez, udisks2, modem-manager, upower-observe, polkit, network, hardware-observe, home, opengl, raw-usb]
     daemon-scope: system
     activates-on:
       - fwupd-dbus
@@ -51,7 +52,7 @@ apps:
       FWUPD_HOSTDIR: /var/lib/snapd/hostfs
   fwupdmgr:
     command: fwupdmgr.wrapper
-    plugs: [fwupdmgr, network, polkit, shutdown]
+    plugs: [fwupdmgr, home, network, polkit, shutdown]
     completer:
       share/bash-completion/completions/fwupdmgr
 
@@ -112,8 +113,7 @@ parts:
       # fixes up commands like fwupdtool -> fwupd.fwupdtool
       sed -i "s,\(complete -F _fwupd[a-z]*\) \(fwupd.*\),\1 fwupd.\2,;          \
               s,\(command.*\)\(fwupdtool\),\1fwupd.\2,;                         \
-              s,\(command.*\)\(fwupdmgr\),\1fwupd.\2,;                          \
-              s,\(command.*\)\(fwupdagent\),\1fwupd.\2,"                        \
+              s,\(command.*\)\(fwupdmgr\),\1fwupd.\2,"                          \
               ${CRAFT_PART_INSTALL}/share/bash-completion/completions/*
       # fixes up dbus service for classic snap
       sed -i 's!SystemdService=\(.*\)!SystemdService=snap.fwupd.fwupd.service!' \

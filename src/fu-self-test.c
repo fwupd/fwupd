@@ -29,9 +29,11 @@
 #include "fu-engine-requirements.h"
 #include "fu-engine.h"
 #include "fu-history.h"
+#include "fu-idle.h"
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
 #include "fu-release-common.h"
+#include "fu-remote.h"
 #include "fu-security-attr-common.h"
 #include "fu-smbios-private.h"
 #include "fu-spawn.h"
@@ -124,6 +126,39 @@ fu_test_free(FuTest *self)
 #pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuTest, fu_test_free)
 #pragma clang diagnostic pop
+
+static void
+fu_idle_func(void)
+{
+	guint token;
+	g_autoptr(FuIdle) idle = fu_idle_new();
+
+	fu_idle_reset(idle);
+	g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_IDLE);
+
+	token = fu_idle_inhibit(idle, "update");
+	g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_BUSY);
+	g_assert_true(fu_idle_has_inhibit(idle, "update"));
+	g_assert_false(fu_idle_has_inhibit(idle, "notgoingtoexist"));
+
+	/* wrong token */
+	fu_idle_uninhibit(idle, token + 1);
+	g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_BUSY);
+
+	/* correct token */
+	fu_idle_uninhibit(idle, token);
+	g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_IDLE);
+
+	/* locker section */
+	{
+		g_autoptr(FuIdleLocker) idle_locker1 = fu_idle_locker_new(idle, "update1");
+		g_autoptr(FuIdleLocker) idle_locker2 = fu_idle_locker_new(idle, "update2");
+		g_assert_nonnull(idle_locker1);
+		g_assert_nonnull(idle_locker2);
+		g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_BUSY);
+	}
+	g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_IDLE);
+}
 
 static void
 fu_engine_generate_md_func(gconstpointer user_data)
@@ -2461,8 +2496,9 @@ fu_engine_history_func(gconstpointer user_data)
 			    "  Name:                 Test Device\n"
 			    "  Guid:                 12345678-1234-1234-1234-123456789012\n"
 			    "  Plugin:               test\n"
-			    "  Flags:                historical|updatable-hidden|unsigned-payload\n"
+			    "  Flags:                updatable|historical|unsigned-payload\n"
 			    "  Version:              1.2.2\n"
+			    "  VersionFormat:        triplet\n"
 			    "  Created:              2018-01-07\n"
 			    "  Modified:             2017-12-27\n"
 			    "  UpdateState:          success\n"
@@ -2495,6 +2531,42 @@ fu_engine_history_func(gconstpointer user_data)
 	device4 = fu_engine_get_results(engine, FWUPD_DEVICE_ID_ANY, &error);
 	g_assert_null(device4);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
+}
+
+static void
+fu_engine_history_verfmt_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_DPAUX_DEVICE, "context", self->ctx, NULL);
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* set up dummy plugin */
+	fu_engine_add_plugin(engine, self->plugin);
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* absorb version format from the database */
+	fu_device_set_version_raw(device, 65563);
+	fu_device_set_id(device, "test_device");
+	fu_device_add_vendor_id(device, "USB:FFFF");
+	fu_device_add_protocol(device, "com.acme");
+	fu_device_set_plugin(device, "test");
+	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_checksum(device, "0123456789abcdef0123456789abcdef01234567");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_set_created(device, 1515338000);
+	fu_engine_add_device(engine, device);
+	g_assert_cmpint(fu_device_get_version_format(device), ==, FWUPD_VERSION_FORMAT_TRIPLET);
+	g_assert_cmpstr(fu_device_get_version(device), ==, "0.1.27");
 }
 
 static void
@@ -3061,6 +3133,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 			    "  Plugin:               test\n"
 			    "  Flags:                updatable|historical|unsigned-payload\n"
 			    "  Version:              1.2.2\n"
+			    "  VersionFormat:        triplet\n"
 			    "  Created:              2018-01-07\n"
 			    "  Modified:             2017-12-27\n"
 			    "  UpdateState:          failed\n"
@@ -4409,7 +4482,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 					 releases,
 					 cabinet,
 					 progress,
-					 FWUPD_DEVICE_FLAG_NONE,
+					 FWUPD_INSTALL_FLAG_NONE,
 					 &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -5591,6 +5664,351 @@ fu_unix_seekable_input_stream_func(void)
 #endif
 }
 
+static void
+fu_remote_download_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *directory = NULL;
+	g_autofree gchar *expected_metadata = NULL;
+	g_autofree gchar *expected_signature = NULL;
+	g_autoptr(FwupdRemote) remote = NULL;
+	g_autoptr(GError) error = NULL;
+
+	remote = fwupd_remote_new();
+	directory = g_build_filename(FWUPD_LOCALSTATEDIR, "lib", "fwupd", "remotes2.d", NULL);
+	expected_metadata = g_build_filename(FWUPD_LOCALSTATEDIR,
+					     "lib",
+					     "fwupd",
+					     "remotes2.d",
+					     "lvfs-testing",
+					     "metadata.xml.gz",
+					     NULL);
+	expected_signature = g_strdup_printf("%s.jcat", expected_metadata);
+	fwupd_remote_set_remotes_dir(remote, directory);
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "remotes2.d", "lvfs-testing.conf", NULL);
+	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fwupd_remote_setup(remote, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
+	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_JCAT);
+	g_assert_cmpint(fwupd_remote_get_priority(remote), ==, 0);
+	g_assert_false(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
+	g_assert_nonnull(fwupd_remote_get_metadata_uri(remote));
+	g_assert_nonnull(fwupd_remote_get_metadata_uri_sig(remote));
+	g_assert_cmpstr(fwupd_remote_get_title(remote),
+			==,
+			"Linux Vendor Firmware Service (testing)");
+	g_assert_cmpstr(fwupd_remote_get_report_uri(remote),
+			==,
+			"https://fwupd.org/lvfs/firmware/report");
+	g_assert_cmpstr(fwupd_remote_get_filename_cache(remote), ==, expected_metadata);
+	g_assert_cmpstr(fwupd_remote_get_filename_cache_sig(remote), ==, expected_signature);
+}
+
+/* verify we used the FirmwareBaseURI just for firmware */
+static void
+fu_remote_baseuri_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *firmware_uri = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FwupdRemote) remote = NULL;
+	g_autofree gchar *directory = NULL;
+	g_autoptr(GError) error = NULL;
+
+	remote = fwupd_remote_new();
+	directory = g_build_filename(FWUPD_LOCALSTATEDIR, "lib", "fwupd", "remotes2.d", NULL);
+	fwupd_remote_set_remotes_dir(remote, directory);
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "firmware-base-uri.conf", NULL);
+	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
+	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_JCAT);
+	g_assert_cmpint(fwupd_remote_get_priority(remote), ==, 0);
+	g_assert_true(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
+	g_assert_cmpstr(fwupd_remote_get_firmware_base_uri(remote), ==, "https://my.fancy.cdn/");
+	g_assert_cmpstr(fwupd_remote_get_agreement(remote), ==, NULL);
+	g_assert_cmpstr(fwupd_remote_get_checksum(remote), ==, NULL);
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+			==,
+			"https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz");
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri_sig(remote),
+			==,
+			"https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz.jcat");
+	firmware_uri =
+	    fwupd_remote_build_firmware_uri(remote, "http://bbc.co.uk/firmware.cab", &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(firmware_uri, ==, "https://my.fancy.cdn/firmware.cab");
+}
+
+static gchar *
+fwupd_remote_to_json_string(FwupdRemote *remote, GError **error)
+{
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(JsonNode) json_root = NULL;
+	json_builder_begin_object(builder);
+	fwupd_remote_to_json(remote, builder);
+	json_builder_end_object(builder);
+	json_root = json_builder_get_root(builder);
+	json_generator = json_generator_new();
+	json_generator_set_pretty(json_generator, TRUE);
+	json_generator_set_root(json_generator, json_root);
+	data = json_generator_to_data(json_generator, NULL);
+	if (data == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed to convert remote to json.");
+		return NULL;
+	}
+	return g_steal_pointer(&data);
+}
+
+static void
+fu_remote_auth_func(void)
+{
+	gboolean ret;
+	gchar **order;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *remotes_dir = NULL;
+	g_autofree gchar *json = NULL;
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(FwupdRemote) remote2 = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) data = NULL;
+
+	remotes_dir = g_test_build_filename(G_TEST_BUILT, "tests", NULL);
+	fwupd_remote_set_remotes_dir(remote, remotes_dir);
+
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "auth.conf", NULL);
+	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fwupd_remote_get_username(remote), ==, "user");
+	g_assert_cmpstr(fwupd_remote_get_password(remote), ==, "pass");
+	g_assert_cmpstr(fwupd_remote_get_security_report_uri(remote),
+			==,
+			"https://fwupd.org/lvfs/hsireports/upload");
+	g_assert_false(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED));
+	g_assert_false(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS));
+	g_assert_true(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS));
+
+	g_assert_true(
+	    g_str_has_suffix(fwupd_remote_get_filename_source(remote), "tests/auth.conf"));
+	g_assert_true(g_str_has_suffix(fwupd_remote_get_remotes_dir(remote), "/src/tests"));
+	g_assert_cmpint(fwupd_remote_get_age(remote), >, 1000000);
+
+	ret = fwupd_remote_setup(remote, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	order = fwupd_remote_get_order_before(remote);
+	g_assert_nonnull(order);
+	g_assert_cmpint(g_strv_length(order), ==, 1);
+	g_assert_cmpstr(order[0], ==, "before");
+	order = fwupd_remote_get_order_after(remote);
+	g_assert_nonnull(order);
+	g_assert_cmpint(g_strv_length(order), ==, 1);
+	g_assert_cmpstr(order[0], ==, "after");
+
+	/* to/from GVariant */
+	fwupd_remote_set_priority(remote, 999);
+	data = fwupd_remote_to_variant(remote);
+	remote2 = fwupd_remote_from_variant(data);
+	g_assert_cmpstr(fwupd_remote_get_username(remote2), ==, "user");
+	g_assert_cmpint(fwupd_remote_get_priority(remote2), ==, 999);
+
+	/* jcat-tool is not a hard dep, and the tests create an empty file if unfound */
+	ret = fwupd_remote_load_signature(remote,
+					  fwupd_remote_get_filename_cache_sig(remote),
+					  &error);
+	if (!ret) {
+		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_PARTIAL_INPUT)) {
+			g_test_skip("no jcat-tool, so skipping test");
+			return;
+		}
+	}
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* to JSON */
+	fwupd_remote_set_filename_source(remote2, NULL);
+	fwupd_remote_set_checksum_sig(
+	    remote2,
+	    "dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2");
+	fwupd_remote_set_filename_cache(remote2, "./libfwupd/tests/auth/metadata.xml.gz");
+	json = fwupd_remote_to_json_string(remote2, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json);
+	ret = fu_test_compare_lines(
+	    json,
+	    "{\n"
+	    "  \"Id\" : \"auth\",\n"
+	    "  \"Kind\" : \"download\",\n"
+	    "  \"KeyringKind\" : \"jcat\",\n"
+	    "  \"FirmwareBaseUri\" : \"https://my.fancy.cdn/\",\n"
+	    "  \"ReportUri\" : \"https://fwupd.org/lvfs/firmware/report\",\n"
+	    "  \"SecurityReportUri\" : \"https://fwupd.org/lvfs/hsireports/upload\",\n"
+	    "  \"MetadataUri\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz\",\n"
+	    "  \"MetadataUriSig\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz.jcat\",\n"
+	    "  \"Username\" : \"user\",\n"
+	    "  \"Password\" : \"pass\",\n"
+	    "  \"ChecksumSig\" : "
+	    "\"dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2\",\n"
+	    "  \"FilenameCache\" : \"./libfwupd/tests/auth/metadata.xml.gz\",\n"
+	    "  \"FilenameCacheSig\" : \"./libfwupd/tests/auth/metadata.xml.gz.jcat\",\n"
+	    "  \"Flags\" : 9,\n"
+	    "  \"Enabled\" : \"true\",\n"
+	    "  \"ApprovalRequired\" : \"false\",\n"
+	    "  \"AutomaticReports\" : \"false\",\n"
+	    "  \"AutomaticSecurityReports\" : \"true\",\n"
+	    "  \"Priority\" : 999,\n"
+	    "  \"Mtime\" : 0,\n"
+	    "  \"RefreshInterval\" : 86400\n"
+	    "}",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_remote_duplicate_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn2 = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(GError) error = NULL;
+
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "stable.conf", NULL);
+	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fn2 = g_test_build_filename(G_TEST_DIST, "tests", "disabled.conf", NULL);
+	ret = fwupd_remote_load_from_filename(remote, fn2, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fwupd_remote_setup(remote, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fwupd_remote_setup(remote, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_false(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
+	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_NONE);
+	g_assert_cmpstr(fwupd_remote_get_username(remote), ==, NULL);
+	g_assert_cmpstr(fwupd_remote_get_password(remote), ==, "");
+	g_assert_cmpstr(fwupd_remote_get_filename_cache(remote),
+			==,
+			"/tmp/fwupd-self-test/stable.xml");
+}
+
+/* verify we used the metadata path for firmware */
+static void
+fu_remote_nopath_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *firmware_uri = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FwupdRemote) remote = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *directory = NULL;
+
+	remote = fwupd_remote_new();
+	directory = g_build_filename(FWUPD_LOCALSTATEDIR, "lib", "fwupd", "remotes2.d", NULL);
+	fwupd_remote_set_remotes_dir(remote, directory);
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "firmware-nopath.conf", NULL);
+	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
+	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_JCAT);
+	g_assert_cmpint(fwupd_remote_get_priority(remote), ==, 0);
+	g_assert_true(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
+	g_assert_cmpstr(fwupd_remote_get_checksum(remote), ==, NULL);
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+			==,
+			"https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz");
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri_sig(remote),
+			==,
+			"https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz.jcat");
+	firmware_uri = fwupd_remote_build_firmware_uri(remote, "firmware.cab", &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(firmware_uri,
+			==,
+			"https://s3.amazonaws.com/lvfsbucket/downloads/firmware.cab");
+}
+
+static void
+fu_remote_local_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *json = NULL;
+	g_autoptr(FwupdRemote) remote = NULL;
+	g_autoptr(FwupdRemote) remote2 = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) data = NULL;
+
+	remote = fwupd_remote_new();
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "dell-esrt.conf", NULL);
+	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_LOCAL);
+	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_NONE);
+	g_assert_true(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
+	g_assert_null(fwupd_remote_get_metadata_uri(remote));
+	g_assert_null(fwupd_remote_get_metadata_uri_sig(remote));
+	g_assert_null(fwupd_remote_get_report_uri(remote));
+	g_assert_cmpstr(fwupd_remote_get_title(remote),
+			==,
+			"Enable UEFI capsule updates on Dell systems");
+	g_assert_cmpstr(fwupd_remote_get_filename_cache(remote),
+			==,
+			"@datadir@/fwupd/remotes.d/dell-esrt/metadata.xml");
+	g_assert_cmpstr(fwupd_remote_get_filename_cache_sig(remote), ==, NULL);
+	g_assert_cmpstr(fwupd_remote_get_checksum(remote), ==, NULL);
+
+	/* to/from GVariant */
+	data = fwupd_remote_to_variant(remote);
+	remote2 = fwupd_remote_from_variant(data);
+	g_assert_null(fwupd_remote_get_metadata_uri(remote));
+
+	/* to JSON */
+	fwupd_remote_set_filename_source(remote2, NULL);
+	json = fwupd_remote_to_json_string(remote2, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json);
+	ret = fu_test_compare_lines(
+	    json,
+	    "{\n"
+	    "  \"Id\" : \"dell-esrt\",\n"
+	    "  \"Kind\" : \"local\",\n"
+	    "  \"KeyringKind\" : \"none\",\n"
+	    "  \"Title\" : \"Enable UEFI capsule updates on Dell systems\",\n"
+	    "  \"FilenameCache\" : \"@datadir@/fwupd/remotes.d/dell-esrt/metadata.xml\",\n"
+	    "  \"Flags\" : 1,\n"
+	    "  \"Enabled\" : \"true\",\n"
+	    "  \"ApprovalRequired\" : \"false\",\n"
+	    "  \"AutomaticReports\" : \"false\",\n"
+	    "  \"AutomaticSecurityReports\" : \"false\",\n"
+	    "  \"Priority\" : 0,\n"
+	    "  \"Mtime\" : 0,\n"
+	    "  \"RefreshInterval\" : 0\n"
+	    "}",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -5638,6 +6056,13 @@ main(int argc, char **argv)
 	if (g_test_slow()) {
 		g_test_add_data_func("/fwupd/console", self, fu_console_func);
 	}
+	g_test_add_func("/fwupd/idle", fu_idle_func);
+	g_test_add_func("/fwupd/remote{download}", fu_remote_download_func);
+	g_test_add_func("/fwupd/remote{base-uri}", fu_remote_baseuri_func);
+	g_test_add_func("/fwupd/remote{no-path}", fu_remote_nopath_func);
+	g_test_add_func("/fwupd/remote{local}", fu_remote_local_func);
+	g_test_add_func("/fwupd/remote{duplicate}", fu_remote_duplicate_func);
+	g_test_add_func("/fwupd/remote{auth}", fu_remote_auth_func);
 	g_test_add_func("/fwupd/unix-seekable-input-stream", fu_unix_seekable_input_stream_func);
 	g_test_add_data_func("/fwupd/backend{usb}", self, fu_backend_usb_func);
 	g_test_add_data_func("/fwupd/backend{usb-invalid}", self, fu_backend_usb_invalid_func);
@@ -5682,6 +6107,7 @@ main(int argc, char **argv)
 			     fu_engine_multiple_rels_func);
 	g_test_add_data_func("/fwupd/engine{install-request}", self, fu_engine_install_request);
 	g_test_add_data_func("/fwupd/engine{history-success}", self, fu_engine_history_func);
+	g_test_add_data_func("/fwupd/engine{history-verfmt}", self, fu_engine_history_verfmt_func);
 	g_test_add_data_func("/fwupd/engine{history-modify}", self, fu_engine_history_modify_func);
 	g_test_add_data_func("/fwupd/engine{history-error}", self, fu_engine_history_error_func);
 	if (g_test_slow()) {

@@ -3,7 +3,7 @@
 
 import sys
 import argparse
-from urllib import request, parse
+from urllib import request
 import base64
 import ssl
 

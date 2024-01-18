@@ -2862,6 +2862,8 @@ fu_device_set_id(FuDevice *self, const gchar *id)
 void
 fu_device_set_version_format(FuDevice *self, FwupdVersionFormat fmt)
 {
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+
 	/* same */
 	if (fu_device_get_version_format(self) == fmt)
 		return;
@@ -2872,6 +2874,14 @@ fu_device_set_version_format(FuDevice *self, FwupdVersionFormat fmt)
 			fwupd_version_format_to_string(fmt));
 	}
 	fwupd_device_set_version_format(FWUPD_DEVICE(self), fmt);
+
+	/* convert this, now we know */
+	if (klass->convert_version != NULL && fu_device_get_version(self) != NULL &&
+	    fu_device_get_version_raw(self) != 0) {
+		g_autofree gchar *version =
+		    klass->convert_version(self, fu_device_get_version_raw(self));
+		fu_device_set_version(self, version);
+	}
 }
 
 /**
@@ -3026,94 +3036,6 @@ fu_device_set_version_raw(FuDevice *self, guint64 version_raw)
 		g_autofree gchar *version = klass->convert_version(self, version_raw);
 		if (version != NULL)
 			fu_device_set_version(self, version);
-	}
-}
-
-/**
- * fu_device_set_version_u16:
- * @self: a #FuDevice
- * @version_raw: an integer
- *
- * Sets the device version from a integer value and the device version format.
- *
- * Since: 1.9.8
- **/
-void
-fu_device_set_version_u16(FuDevice *self, guint16 version_raw)
-{
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
-	g_return_if_fail(FU_IS_DEVICE(self));
-	fu_device_set_version_raw(self, version_raw);
-	if (klass->convert_version == NULL) {
-		g_autofree gchar *version =
-		    fu_version_from_uint16(version_raw, fu_device_get_version_format(self));
-		fwupd_device_set_version(FWUPD_DEVICE(self), version);
-	}
-}
-
-/**
- * fu_device_set_version_u24:
- * @self: a #FuDevice
- * @version_raw: an integer
- *
- * Sets the device version from a integer value and the device version format.
- *
- * Since: 1.9.8
- **/
-void
-fu_device_set_version_u24(FuDevice *self, guint32 version_raw)
-{
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
-	g_return_if_fail(FU_IS_DEVICE(self));
-	fu_device_set_version_raw(self, version_raw);
-	if (klass->convert_version == NULL) {
-		g_autofree gchar *version =
-		    fu_version_from_uint24(version_raw, fu_device_get_version_format(self));
-		fwupd_device_set_version(FWUPD_DEVICE(self), version);
-	}
-}
-
-/**
- * fu_device_set_version_u32:
- * @self: a #FuDevice
- * @version_raw: an integer
- *
- * Sets the device version from a integer value and the device version format.
- *
- * Since: 1.9.8
- **/
-void
-fu_device_set_version_u32(FuDevice *self, guint32 version_raw)
-{
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
-	g_return_if_fail(FU_IS_DEVICE(self));
-	fu_device_set_version_raw(self, version_raw);
-	if (klass->convert_version == NULL) {
-		g_autofree gchar *version =
-		    fu_version_from_uint32(version_raw, fu_device_get_version_format(self));
-		fwupd_device_set_version(FWUPD_DEVICE(self), version);
-	}
-}
-
-/**
- * fu_device_set_version_u64:
- * @self: a #FuDevice
- * @version_raw: an integer
- *
- * Sets the device version from a integer value and the device version format.
- *
- * Since: 1.9.8
- **/
-void
-fu_device_set_version_u64(FuDevice *self, guint64 version_raw)
-{
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
-	g_return_if_fail(FU_IS_DEVICE(self));
-	fu_device_set_version_raw(self, version_raw);
-	if (klass->convert_version == NULL) {
-		g_autofree gchar *version =
-		    fu_version_from_uint64(version_raw, fu_device_get_version_format(self));
-		fwupd_device_set_version(FWUPD_DEVICE(self), version);
 	}
 }
 
@@ -4064,6 +3986,11 @@ fu_device_set_update_state(FuDevice *self, FwupdUpdateState update_state)
 	    update_state == FWUPD_UPDATE_STATE_PENDING ||
 	    update_state == FWUPD_UPDATE_STATE_NEEDS_REBOOT)
 		fu_device_set_update_error(self, NULL);
+	if (update_state == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
+		fu_device_add_problem(self, FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
+	} else {
+		fu_device_remove_problem(self, FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
+	}
 	fwupd_device_set_update_state(FWUPD_DEVICE(self), update_state);
 }
 

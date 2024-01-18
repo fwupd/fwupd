@@ -49,6 +49,8 @@
  * @FU_PATH_KIND_HOSTFS_BOOT:		The host boot directory, (IE /boot)
  * @FU_PATH_KIND_DEVFS: 		The host dev directory, (IE /dev)
  * @FU_PATH_KIND_LOCALTIME:		The timezone symlink (IE /etc/localtime)
+ * @FU_PATH_KIND_LIBEXECDIR:		The directory to launch executables
+ * @FU_PATH_KIND_LIBEXECDIR_PKG		The directory launch executables packaged with daemon
  *
  * Path types to use when dynamically determining a path at runtime
  **/
@@ -83,6 +85,8 @@ typedef enum {
 	FU_PATH_KIND_HOSTFS_BOOT,
 	FU_PATH_KIND_DEVFS,
 	FU_PATH_KIND_LOCALTIME,
+	FU_PATH_KIND_LIBEXECDIR,
+	FU_PATH_KIND_LIBEXECDIR_PKG,
 	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;

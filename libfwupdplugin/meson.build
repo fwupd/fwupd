@@ -1,9 +1,3 @@
-fwupdplugin_version_h = configure_file(
-  input: 'fu-version.h.in',
-  output: 'fu-version.h',
-  configuration: conf
-)
-
 fwupdplugin_structs = [
   'fu-acpi-table.rs', # fuzzing
   'fu-archive.rs', # fuzzing
@@ -86,11 +80,11 @@ fwupdplugin_src = [
   'fu-efi-device-path.c', # fuzzing
   'fu-efi-device-path-list.c', # fuzzing
   'fu-efi-file-path-device-path.c', # fuzzing
-  'fu-efi-firmware-common.c', # fuzzing
-  'fu-efi-firmware-file.c', # fuzzing
-  'fu-efi-firmware-filesystem.c', # fuzzing
-  'fu-efi-firmware-section.c', # fuzzing
-  'fu-efi-firmware-volume.c', # fuzzing
+  'fu-efi-file.c', # fuzzing
+  'fu-efi-filesystem.c', # fuzzing
+  'fu-efi-section.c', # fuzzing
+  'fu-efi-volume.c', # fuzzing
+  'fu-efi-lz77-decompressor.c', # fuzzing
   'fu-efi-hard-drive-device-path.c', # fuzzing
   'fu-efi-load-option.c', # fuzzing
   'fu-efi-signature.c',
@@ -152,7 +146,6 @@ fwupdplugin_src = [
   'fu-usb-device-fw-ds20.c', # fuzzing
   'fu-usb-device-ms-ds20.c', # fuzzing
   'fu-uswid-firmware.c', # fuzzing
-  'fu-version.c',
   'fu-version-common.c', # fuzzing
   'fu-volume.c', # fuzzing
 ]
@@ -214,10 +207,10 @@ fwupdplugin_headers = [
   'fu-dump.h',
   'fu-edid.h',
   'fu-efi-common.h',
-  'fu-efi-firmware-file.h',
-  'fu-efi-firmware-filesystem.h',
-  'fu-efi-firmware-section.h',
-  'fu-efi-firmware-volume.h',
+  'fu-efi-file.h',
+  'fu-efi-filesystem.h',
+  'fu-efi-section.h',
+  'fu-efi-volume.h',
   'fu-efi-load-option.h',
   'fu-efi-signature.h',
   'fu-efi-signature-list.h',
@@ -278,7 +271,6 @@ fwupdplugin_headers = [
   'fu-uswid-firmware.h',
   'fu-version-common.h',
   'fu-volume.h',
-  fwupdplugin_version_h,
 ]
 
 introspection_deps = [

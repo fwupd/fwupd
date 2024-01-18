@@ -125,12 +125,17 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 
 	/* add devx children */
 	for (guint i = 0; i < fu_struct_ccgx_dmc_dock_status_get_device_count(st); i++) {
+		g_autoptr(FuDeviceLocker) locker = NULL;
 		g_autoptr(FuCcgxDmcDevxDevice) devx =
 		    fu_ccgx_dmc_devx_device_new(FU_DEVICE(self), buf, bufsz, offset, error);
 		if (devx == NULL)
 			return FALSE;
+		locker = fu_device_locker_new(devx, error);
+		if (locker == NULL)
+			return FALSE;
 		remove_delay += fu_ccgx_dmc_devx_device_get_remove_delay(devx);
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(devx));
+		offset += FU_STRUCT_CCGX_DMC_DEVX_STATUS_SIZE;
 	}
 
 	/* ensure the remove delay is set */
@@ -141,7 +146,7 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 
 	/* success */
 	self->device_status = fu_struct_ccgx_dmc_dock_status_get_device_status(st);
-	fu_device_set_version_u32(FU_DEVICE(self),
+	fu_device_set_version_raw(FU_DEVICE(self),
 				  fu_struct_ccgx_dmc_dock_status_get_composite_version(st));
 	return TRUE;
 }
@@ -719,7 +724,7 @@ fu_ccgx_dmc_device_ensure_factory_version(FuCcgxDmcDevice *self)
 		if (device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_DMC && fwver_img1 == fwver_img2 &&
 		    fwver_img1 != 0) {
 			g_info("overriding version as device is in factory mode");
-			fu_device_set_version_u32(FU_DEVICE(self), 0x1);
+			fu_device_set_version_raw(FU_DEVICE(self), 0x1);
 			return;
 		}
 	}
@@ -788,6 +793,12 @@ fu_ccgx_dmc_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 25, "reload");
 }
 
+static gchar *
+fu_ccgx_dmc_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_ccgx_dmc_device_init(FuCcgxDmcDevice *self)
 {
@@ -819,4 +830,5 @@ fu_ccgx_dmc_device_class_init(FuCcgxDmcDeviceClass *klass)
 	klass_device->setup = fu_ccgx_dmc_device_setup;
 	klass_device->set_quirk_kv = fu_ccgx_dmc_device_set_quirk_kv;
 	klass_device->set_progress = fu_ccgx_dmc_device_set_progress;
+	klass_device->convert_version = fu_ccgx_dmc_device_convert_version;
 }

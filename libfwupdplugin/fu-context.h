@@ -37,47 +37,52 @@ typedef void (*FuContextLookupIter)(FuContext *self,
 				    gpointer user_data);
 
 /**
- * FU_CONTEXT_FLAG_NONE:
- *
- * No flags set.
- *
- * Since: 1.8.5
- **/
-#define FU_CONTEXT_FLAG_NONE (0u)
-
-/**
- * FU_CONTEXT_FLAG_SAVE_EVENTS:
- *
- * Save events so that they can be replayed to emulate devices.
- *
- * Since: 1.8.5
- **/
-#define FU_CONTEXT_FLAG_SAVE_EVENTS (1u << 0)
-
-/**
- * FU_CONTEXT_FLAG_SYSTEM_INHIBIT:
- *
- * All devices are not updatable due to a system-wide inhibit.
- *
- * Since: 1.8.10
- **/
-#define FU_CONTEXT_FLAG_SYSTEM_INHIBIT (1u << 1)
-
-/**
- * FU_CONTEXT_FLAG_LOADED_HWINFO:
- *
- * Hardware information has been loaded with a call to fu_context_load_hwinfo().
- *
- * Since: 1.9.10
- **/
-#define FU_CONTEXT_FLAG_LOADED_HWINFO (1u << 2)
-
-/**
  * FuContextFlags:
  *
  * The context flags.
  **/
-typedef guint64 FuContextFlags;
+typedef enum {
+	/**
+	 * FU_CONTEXT_FLAG_NONE:
+	 *
+	 * No flags set.
+	 *
+	 * Since: 1.8.5
+	 **/
+	FU_CONTEXT_FLAG_NONE = 0,
+	/**
+	 * FU_CONTEXT_FLAG_SAVE_EVENTS:
+	 *
+	 * Save events so that they can be replayed to emulate devices.
+	 *
+	 * Since: 1.8.5
+	 **/
+	FU_CONTEXT_FLAG_SAVE_EVENTS = 1u << 0,
+	/**
+	 * FU_CONTEXT_FLAG_SYSTEM_INHIBIT:
+	 *
+	 * All devices are not updatable due to a system-wide inhibit.
+	 *
+	 * Since: 1.8.10
+	 **/
+	FU_CONTEXT_FLAG_SYSTEM_INHIBIT = 1u << 1,
+	/**
+	 * FU_CONTEXT_FLAG_LOADED_HWINFO:
+	 *
+	 * Hardware information has been loaded with a call to fu_context_load_hwinfo().
+	 *
+	 * Since: 1.9.10
+	 **/
+	FU_CONTEXT_FLAG_LOADED_HWINFO = 1u << 2,
+	/**
+	 * FU_CONTEXT_FLAG_LOADED_UNKNOWN:
+	 *
+	 * Unknown flag value.
+	 *
+	 * Since: 2.0.0
+	 **/
+	FU_CONTEXT_FLAG_LOADED_UNKNOWN = G_MAXUINT64,
+} FuContextFlags;
 
 void
 fu_context_add_flag(FuContext *context, FuContextFlags flag) G_GNUC_NON_NULL(1);

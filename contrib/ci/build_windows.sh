@@ -47,7 +47,6 @@ meson setup .. \
     -Dbash_completion=false \
     -Dfirmware-packager=false \
     -Dmetainfo=false \
-    -Dcompat_cli=false \
     -Dlibxmlb:introspection=false \
     -Dlibxmlb:gtkdoc=false \
     -Dlibjcat:man=false \

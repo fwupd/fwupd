@@ -23,7 +23,7 @@ def usage(return_code):
         out = sys.stdout
     else:
         out = sys.stderr
-    out.write("usage: %s <NAME> <INPUT> <OUTPUT>\n" % sys.argv[0])
+    out.write(f"usage: {sys.argv[0]} <NAME> <INPUT> <OUTPUT>\n")
     sys.exit(return_code)
 
 
@@ -114,7 +114,7 @@ class LdVersionScript:
             verout += "\n%s_%s {\n" % (self.library_name, version)
             verout += "  global:\n"
             for symbol in symbols:
-                verout += "    %s;\n" % symbol
+                verout += f"    {symbol};\n"
             verout += "  local: *;\n"
             if oldversion:
                 verout += "} %s_%s;\n" % (self.library_name, oldversion)

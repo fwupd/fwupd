@@ -55,6 +55,8 @@ void
 fu_ifd_image_set_access(FuIfdImage *self, FuIfdRegion region, FuIfdAccess access)
 {
 	FuIfdImagePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_IFD_IMAGE(self));
+	g_return_if_fail(region < FU_IFD_REGION_MAX);
 	priv->access[region] = access;
 }
 
@@ -73,6 +75,8 @@ FuIfdAccess
 fu_ifd_image_get_access(FuIfdImage *self, FuIfdRegion region)
 {
 	FuIfdImagePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_IFD_IMAGE(self), FU_IFD_ACCESS_NONE);
+	g_return_val_if_fail(region < FU_IFD_REGION_MAX, FU_IFD_ACCESS_NONE);
 	return priv->access[region];
 }
 

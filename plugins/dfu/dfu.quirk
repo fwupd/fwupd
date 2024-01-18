@@ -463,6 +463,10 @@ Flags = detach-for-attach,ignore-upload,ignore-polltimeout
 Plugin = dfu
 Flags = detach-for-attach,ignore-upload
 
+[USB\VID_1BCF&PID_0B22]
+Plugin = dfu
+Flags = detach-for-attach,ignore-upload
+
 # Sonix USB cameras
 [USB\VID_0C45&PID_636D]
 Plugin = dfu

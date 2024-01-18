@@ -125,7 +125,7 @@ def _write_quirks(parts, fn_destination):
         if not mem_part:
             print("no memory layout for", part["desc"])
             continue
-        if not "size" in mem_part:
+        if "size" not in mem_part:
             print("no memory size for", part["desc"])
             continue
         if mem_part["size"].startswith("0x"):
@@ -151,7 +151,7 @@ def _write_quirks(parts, fn_destination):
     for chip_id in results:
         result = results[chip_id]
         outp.append(
-            "# " + result["desc"] + "	[USER]		USER=0x%x" % result["size"] + "\n"
+            "# " + result["desc"] + f"\t[USER]\t\tUSER=0x{result['size']:x}" + "\n"
         )
         outp.append(chip_id + "=" + result["mem_layout"] + "\n\n")
 
@@ -162,7 +162,7 @@ def _write_quirks(parts, fn_destination):
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print("USAGE: %s avrdude.conf tmp.quirk" % sys.argv[0])
+        print(f"USAGE: {sys.argv[0]} avrdude.conf tmp.quirk")
         sys.exit(1)
 
     all_parts = _parse_parts(sys.argv[1])

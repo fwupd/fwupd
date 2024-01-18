@@ -43,6 +43,7 @@ base_url = "https://github.com/fwupd/fwupd/blob/@version@/"
 [extra]
 content_files = [
   "env.md",
+  "building.md",
   "tutorial.md",
   "hsi.md",
   "device-emulation.md",
@@ -58,6 +59,11 @@ content_files = [
 content_images = [
   "architecture-plan.svg",
   "../data/org.freedesktop.fwupd.svg",
+  "debug_attached.png",
+  "debug_breakpoint.png",
+  "debug_tool_selector.png",
+  "debug_task.png",
+  "test_task.png",
 ]
 urlmap_file = "urlmap_fwupdplugin.js"
 

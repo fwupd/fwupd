@@ -10,7 +10,7 @@
 
 #include "fu-bytes.h"
 #include "fu-common.h"
-#include "fu-efi-firmware-volume.h"
+#include "fu-efi-volume.h"
 #include "fu-ifd-bios.h"
 #include "fu-input-stream.h"
 #include "fu-mem.h"
@@ -26,7 +26,6 @@
 G_DEFINE_TYPE(FuIfdBios, fu_ifd_bios, FU_TYPE_IFD_IMAGE)
 
 #define FU_IFD_BIOS_FIT_SIGNATURE 0x5449465F
-#define FU_IFD_BIOS_FIT_SIZE	  0x150000
 
 static gboolean
 fu_ifd_bios_parse(FuFirmware *firmware,
@@ -42,39 +41,19 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 
-	/* jump 16MiB as required */
-	if (streamsz > 0x100000)
-		offset += 0x100000;
-
 	/* read each volume in order */
 	while (offset < streamsz) {
-		g_autoptr(FuFirmware) firmware_tmp = NULL;
-		guint32 sig = 0;
-
-		/* ignore _FIT_ as EOF */
-		if (!fu_input_stream_read_u32(stream, offset, &sig, G_LITTLE_ENDIAN, error)) {
-			g_prefix_error(error, "failed to read start signature: ");
-			return FALSE;
-		}
-		if (sig == FU_IFD_BIOS_FIT_SIGNATURE)
-			break;
-		if (sig == 0xffffffff)
-			break;
+		g_autoptr(FuFirmware) firmware_tmp = fu_efi_volume_new();
+		g_autoptr(GError) error_local = NULL;
 
 		/* FV */
-		firmware_tmp = fu_firmware_new_from_gtypes(stream,
-							   offset,
-							   flags,
-							   error,
-							   FU_TYPE_EFI_FIRMWARE_VOLUME,
-							   FU_TYPE_FIRMWARE,
-							   G_TYPE_INVALID);
-		if (firmware_tmp == NULL) {
-			g_prefix_error(error,
-				       "failed to read @0x%x of 0x%x: ",
-				       (guint)offset,
-				       (guint)streamsz);
-			return FALSE;
+		if (!fu_firmware_parse_stream(firmware_tmp, stream, offset, flags, &error_local)) {
+			g_debug("failed to read volume @0x%x of 0x%x: %s",
+				(guint)offset,
+				(guint)streamsz,
+				error_local->message);
+			offset += 0x1000;
+			continue;
 		}
 		fu_firmware_set_offset(firmware_tmp, offset);
 		if (!fu_firmware_add_image_full(firmware, firmware_tmp, error))

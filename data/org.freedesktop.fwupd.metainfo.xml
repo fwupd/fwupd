@@ -23,9 +23,10 @@
   <url type="bugtracker">https://github.com/fwupd/fwupd/issues</url>
   <url type="homepage">https://fwupd.org/</url>
   <url type="translate">https://www.transifex.com/freedesktop/fwupd/</url>
+  <url type="vcs-browser">https://github.com/fwupd/fwupd</url>
   <update_contact>richard_at_hughsie.com</update_contact>
   <translation type="gettext">fwupd</translation>
-  <content_rating type="oars-1.0">
+  <content_rating type="oars-1.1">
     <content_attribute id="social-info">moderate</content_attribute>
   </content_rating>
   <provides>

@@ -1,5 +1,4 @@
-if get_option('plugin_uefi_capsule').disable_auto_if(host_machine.system() != 'linux').allowed()
-
+if allow_uefi_capsule
 cargs = ['-DG_LOG_DOMAIN="FuPluginDell"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

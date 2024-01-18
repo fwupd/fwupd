@@ -19,9 +19,9 @@ Additional information is available [at the website](https://fwupd.org/).
 
 ## Compiling
 
-The most up-to-date compilation instructions are available in the [Wiki](https://github.com/fwupd/fwupd/wiki/Compilation).
+See [Building and Debugging](docs/building.md) for how to build the fwupd development environment.
 
-**NOTE:** In most cases, end users should never compile fwupd from scratch; it's a
+**NOTE:** In most cases, end users should not compile fwupd from scratch; it's a
 complicated project with dozens of dependencies (and as many configuration options)
 and there's just too many things that can go wrong.
 
@@ -121,19 +121,4 @@ Additionally, the list of approved firmware can be supplemented using
 
 ## Other frontends
 
-1. [GNOME Software](https://wiki.gnome.org/Apps/Software) is the graphical
- frontend available. When compiled with firmware support, it will check for
- updates periodically and automatically download firmware in the background.
- After the firmware has been downloaded, a popup will be displayed in GNOME
- Software to perform the update.
-
-2. [KDE Discover](https://userbase.kde.org/Discover) is the software center,
- generally bundled with KDE Plasma. With the release of
- [KDE Plasma 5.14](https://www.kde.org/announcements/plasma-5.14.0.php),
- a new fwupd backend has been implemented in KDE Discover for firmware updates.
- These firmware updates are shown with other system updates.
-
-3. [Wyse Management Suite](https://www.dell.com/en-us/work/shop/wyse-endpoints-and-software/wyse-management-suite/spd/wyse-wms)
- A software suite available on Dell IoT gateways and Wyse thin clients with built-in fwupd support.
- The remote administration interface can be used to download and deploy firmware
- updates.
+fwupdmgr is a command line client, but various additional graphical frontends are enumerated in the [fwupdmgr man page](https://fwupd.github.io/libfwupdplugin/fwupdmgr.html#description).

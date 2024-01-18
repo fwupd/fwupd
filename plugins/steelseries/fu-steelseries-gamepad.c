@@ -69,7 +69,7 @@ fu_steelseries_gamepad_setup(FuDevice *device, GError **error)
 
 	if (!fu_memread_uint16_safe(data, sizeof(data), 0x01, &fw_ver, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	fu_device_set_version_u16(FU_DEVICE(device), fw_ver);
+	fu_device_set_version_raw(FU_DEVICE(device), fw_ver);
 
 	if (!fu_memread_uint16_safe(data, sizeof(data), 0x03, &fw_ver, G_LITTLE_ENDIAN, error))
 		return FALSE;
@@ -289,6 +289,12 @@ fu_steelseries_gamepad_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "reload");
 }
 
+static gchar *
+fu_steelseries_gamepad_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint16(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_steelseries_gamepad_class_init(FuSteelseriesGamepadClass *klass)
 {
@@ -299,6 +305,7 @@ fu_steelseries_gamepad_class_init(FuSteelseriesGamepadClass *klass)
 	klass_device->detach = fu_steelseries_gamepad_detach;
 	klass_device->write_firmware = fu_steelseries_gamepad_write_firmware;
 	klass_device->set_progress = fu_steelseries_gamepad_set_progress;
+	klass_device->convert_version = fu_steelseries_gamepad_convert_version;
 }
 
 static void

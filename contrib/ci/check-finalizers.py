@@ -37,9 +37,7 @@ class ReturnValidator:
                 # finalize is done
                 if infunc and line.startswith("}"):
                     if not has_parent_finalize:
-                        self.warnings.append(
-                            "{} did not have parent ->finalize()".format(fn)
-                        )
+                        self.warnings.append(f"{fn} did not have parent ->finalize()")
                     break
 
 

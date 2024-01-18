@@ -101,7 +101,7 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 	fu_device_set_name(device, name);
 
 	/* use header to populate device info */
-	fu_device_set_version_u32(device, fwver);
+	fu_device_set_version_raw(device, fwver);
 
 	/* add standard GUIDs in order of priority */
 	fu_device_add_instance_u16(device, "VID", fu_struct_vli_pd_hdr_get_vid(st));
@@ -276,6 +276,12 @@ fu_vli_usbhub_pd_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
+static gchar *
+fu_vli_usbhub_pd_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_vli_usbhub_pd_device_init(FuVliUsbhubPdDevice *self)
 {
@@ -301,6 +307,7 @@ fu_vli_usbhub_pd_device_class_init(FuVliUsbhubPdDeviceClass *klass)
 	klass_device->dump_firmware = fu_vli_usbhub_pd_device_dump_firmware;
 	klass_device->write_firmware = fu_vli_usbhub_pd_device_write_firmware;
 	klass_device->prepare_firmware = fu_vli_usbhub_pd_device_prepare_firmware;
+	klass_device->convert_version = fu_vli_usbhub_pd_device_convert_version;
 	klass_device->set_progress = fu_vli_usbhub_pd_device_set_progress;
 }
 

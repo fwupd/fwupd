@@ -51,6 +51,8 @@ def test_files() -> int:
             continue
         if fn.startswith("build"):
             continue
+        if fn.startswith("venv"):
+            continue
         if fn.startswith("dist"):
             continue
         if fn.startswith("contrib/ci"):
@@ -71,16 +73,14 @@ def test_files() -> int:
             for include in includes:
                 # check for using private header use in plugins
                 if include.endswith("private.h"):
-                    print("{} uses private header {}".format(fn, include))
+                    print(f"{fn} uses private header {include}")
                     rc = 1
                     continue
 
                 # check for referring to anything but top level header
                 if include in lib_headers or include in lib_headers_nopath:
                     print(
-                        "{} contains {}, should only use top level includes".format(
-                            fn, include
-                        )
+                        f"{fn} contains {include}, should only use top level includes"
                     )
                     rc = 1
 
@@ -95,9 +95,7 @@ def test_files() -> int:
 
             # we do not need both toplevel headers
             if set(toplevel_headers_nopath).issubset(set(includes)):
-                print(
-                    "{} contains both {}".format(fn, ", ".join(toplevel_headers_nopath))
-                )
+                print(f"{fn} contains both {', '.join(toplevel_headers_nopath)}")
 
             # toplevel not listed
             if toplevel_fn not in includes:
@@ -106,16 +104,12 @@ def test_files() -> int:
             # includes toplevel and *also* something listed in the toplevel
             for include in includes:
                 if include in toplevel_includes or include in toplevel_includes_nopath:
-                    print(
-                        "{} contains {} but also includes {}".format(
-                            fn, toplevel_fn, include
-                        )
-                    )
+                    print(f"{fn} contains {toplevel_fn} but also includes {include}")
                     rc = 1
 
         # check for missing config.h
         if fn.endswith(".c") and "config.h" not in includes:
-            print("{} does not include config.h".format(fn))
+            print(f"{fn} does not include config.h")
             rc = 1
 
         # check for one header implying the other
@@ -137,9 +131,7 @@ def test_files() -> int:
         for key, values in implied_headers.items():
             for value in values:
                 if key in includes and value in includes:
-                    print(
-                        "{} contains {} which is implied by {}".format(fn, value, key)
-                    )
+                    print(f"{fn} contains {value} which is implied by {key}")
                     rc = 1
 
     return rc

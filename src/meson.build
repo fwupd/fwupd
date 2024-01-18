@@ -55,6 +55,7 @@ fwupd_engine_src = [
   'fu-engine-requirements.c',
   'fu-release-common.c',
   'fu-plugin-list.c',
+  'fu-remote.c',
   'fu-remote-list.c',
   'fu-security-attr-common.c',
 ] + systemd_src
@@ -149,14 +150,6 @@ fwupdmgr = executable(
   install_rpath: libdir_pkg,
   install_dir: bindir
 )
-
-# for compatibility
-if get_option('compat_cli')
-  install_symlink('fwupdagent',
-    install_dir: join_paths(get_option('prefix'), get_option('bindir')),
-    pointing_to: 'fwupdmgr',
-  )
-endif
 endif
 
 if offline.allowed()
@@ -297,32 +290,6 @@ if build_daemon
       )
       man_md += ['"fwupdmgr.md"']
   endif
-  if get_option('compat_cli')
-    if get_option('man')
-      custom_target('fwupdagent.1',
-        input: 'fwupdagent.md',
-        output: 'fwupdagent.1',
-        command: [
-          generate_man, '@INPUT@', '-o', '@OUTPUT@',
-          '--replace', 'PACKAGE_VERSION', fwupd_version,
-        ],
-        install: true,
-        install_dir: join_paths(mandir, 'man1'),
-      )
-    endif
-    if build_docs
-      md_targets += custom_target('fwupdagent.md',
-        input: 'fwupdagent.md',
-        output: 'fwupdagent.md',
-        command: [
-          generate_man, '@INPUT@', '-o', '@OUTPUT@',
-          '--replace', 'PACKAGE_VERSION', fwupd_version,
-          '--md',
-        ],
-      )
-      man_md += ['"fwupdagent.md"']
-    endif
-  endif
 endif
 if build_standalone
   if get_option('man')
@@ -405,6 +372,7 @@ if get_option('tests')
     multiple_rels_test_firmware,
     noreqs_test_firmware,
     plugins_hdr,
+    metadata_xml_gz_jcat,
     sources: [
       'fu-spawn.c',
       'fu-self-test.c',

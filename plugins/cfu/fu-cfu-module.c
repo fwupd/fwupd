@@ -69,7 +69,7 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 	}
 
 	/* version */
-	fu_device_set_version_u32(device,
+	fu_device_set_version_raw(device,
 				  fu_struct_cfu_get_version_rsp_component_get_fw_version(st));
 
 	/* logical ID */
@@ -165,6 +165,12 @@ fu_cfu_module_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
+static gchar *
+fu_cfu_module_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_cfu_module_init(FuCfuModule *self)
 {
@@ -185,6 +191,7 @@ fu_cfu_module_class_init(FuCfuModuleClass *klass)
 	klass_device->prepare_firmware = fu_cfu_module_prepare_firmware;
 	klass_device->write_firmware = fu_cfu_module_write_firmware;
 	klass_device->set_progress = fu_cfu_module_set_progress;
+	klass_device->convert_version = fu_cfu_module_convert_version;
 }
 
 FuCfuModule *

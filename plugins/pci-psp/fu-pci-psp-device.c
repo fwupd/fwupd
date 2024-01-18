@@ -87,6 +87,24 @@ fu_pci_psp_device_set_valid_data(FuDevice *device, FuSecurityAttrs *attrs)
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
+static FwupdSecurityAttr *
+fu_pci_psp_device_get_security_attr(FuDevice *device,
+				    FuSecurityAttrs *attrs,
+				    const gchar *appstream_id)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	attr = fu_security_attrs_get_by_appstream_id(attrs, appstream_id, NULL);
+	if (attr == NULL) {
+		attr = fu_device_security_attr_new(device, appstream_id);
+		fu_security_attrs_append(attrs, attr);
+	} else if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA)) {
+		g_debug("found missing data on old attribute, repopulating");
+		fwupd_security_attr_remove_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+	}
+	return g_steal_pointer(&attr);
+}
+
 static void
 fu_pci_psp_device_add_security_attrs_tsme(FuDevice *device,
 					  const gchar *path,
@@ -96,9 +114,14 @@ fu_pci_psp_device_add_security_attrs_tsme(FuDevice *device,
 	g_autoptr(GError) error_local = NULL;
 	gboolean val;
 
-	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
+	attr = fu_pci_psp_device_get_security_attr(device,
+						   attrs,
+						   FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
+	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		g_debug("ignoring already populated attribute");
+		return;
+	}
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
-	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "tsme_status", &val, &error_local)) {
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
@@ -130,9 +153,14 @@ fu_pci_psp_device_add_security_attrs_fused_part(FuDevice *device,
 	g_autoptr(GError) error_local = NULL;
 	gboolean val;
 
-	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED);
+	attr = fu_pci_psp_device_get_security_attr(device,
+						   attrs,
+						   FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED);
+	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		g_debug("ignoring already populated attribute");
+		return;
+	}
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
-	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "fused_part", &val, &error_local)) {
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
@@ -162,9 +190,14 @@ fu_pci_psp_device_add_security_attrs_debug_locked_part(FuDevice *device,
 	g_autoptr(GError) error_local = NULL;
 	gboolean val;
 
-	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED);
+	attr = fu_pci_psp_device_get_security_attr(device,
+						   attrs,
+						   FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED);
+	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		g_debug("ignoring already populated attribute");
+		return;
+	}
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
-	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "debug_lock_on", &val, &error_local)) {
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
@@ -194,9 +227,14 @@ fu_pci_psp_device_add_security_attrs_rollback_protection(FuDevice *device,
 	g_autoptr(GError) error_local = NULL;
 	gboolean val;
 
-	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION);
+	attr = fu_pci_psp_device_get_security_attr(device,
+						   attrs,
+						   FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION);
+	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		g_debug("ignoring already populated attribute");
+		return;
+	}
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
-	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "anti_rollback_status", &val, &error_local)) {
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
@@ -227,9 +265,14 @@ fu_pci_psp_device_add_security_attrs_rom_armor(FuDevice *device,
 	gboolean val;
 
 	/* create attr */
-	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION);
+	attr = fu_pci_psp_device_get_security_attr(device,
+						   attrs,
+						   FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION);
+	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		g_debug("ignoring already populated attribute");
+		return;
+	}
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
-	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "rom_armor_enforced", &val, &error_local)) {
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
@@ -261,9 +304,15 @@ fu_pci_psp_device_add_security_attrs_rpmc(FuDevice *device,
 
 	/* create attr */
 	attr =
-	    fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION);
+	    fu_pci_psp_device_get_security_attr(device,
+						attrs,
+						FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION);
+	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		g_debug("ignoring already populated attribute");
+		return;
+	}
+
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
-	fu_security_attrs_append(attrs, attr);
 
 	if (!fu_pci_psp_device_get_attr(attr, path, "rpmc_spirom_available", &val, &error_local)) {
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
@@ -301,6 +350,7 @@ fu_pci_psp_device_add_security_attrs_rpmc(FuDevice *device,
 static void
 fu_pci_psp_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 {
+	FuPciPspDevice *self = FU_PCI_PSP_DEVICE(device);
 	const gchar *sysfs_path = NULL;
 
 	if (device != NULL)
@@ -308,6 +358,8 @@ fu_pci_psp_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	/* ccp not loaded */
 	if (sysfs_path == NULL)
 		return;
+
+	self->supported = FALSE;
 
 	fu_pci_psp_device_add_security_attrs_tsme(device, sysfs_path, attrs);
 	fu_pci_psp_device_add_security_attrs_fused_part(device, sysfs_path, attrs);

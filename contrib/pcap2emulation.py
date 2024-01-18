@@ -67,7 +67,7 @@ class Pcap2Emulation:
         for i in range(len(device_ids)):
             device_id = device_ids[i].split(":")
             if len(device_id) > 2:
-                sys.stderr.write("Malformed device ID: {}\n\n".format(device_ids[i]))
+                sys.stderr.write(f"Malformed device ID: {device_ids[i]}\n\n")
                 exit(1)
             if len(device_id) == 2 and len(device_id[1]) == 0:
                 del device_id[1]
@@ -83,7 +83,7 @@ class Pcap2Emulation:
         if not self.phases:
             return
 
-        print("Found {} phases:".format(len(self.phases)))
+        print(f"Found {len(self.phases)} phases:")
         phase = 0
 
         if path.endswith(".zip"):
@@ -91,7 +91,7 @@ class Pcap2Emulation:
         else:
             emulation_file = path + ".zip"
         with ZipFile(emulation_file, "w", compression=ZIP_DEFLATED) as write_file:
-            print("- phase {} as setup.json".format(phase))
+            print(f"- phase {phase} as setup.json")
             json_string = json.dumps(
                 self.phases[phase], indent=2, separators=(",", " : ")
             )
@@ -99,14 +99,14 @@ class Pcap2Emulation:
             phase += 1
 
             if len(self.phases) > 2:
-                print("- phase {} as install.json".format(phase))
+                print(f"- phase {phase} as install.json")
                 json_string = json.dumps(
                     self.phases[phase], indent=2, separators=(",", " : ")
                 )
                 write_file.writestr("install.json", json_string)
                 phase += 1
 
-            print("- phase {} as reload.json".format(phase))
+            print(f"- phase {phase} as reload.json")
             json_string = json.dumps(
                 self.phases[phase], indent=2, separators=(",", " : ")
             )
@@ -116,7 +116,7 @@ class Pcap2Emulation:
         print("Emulation file saved to " + emulation_file)
 
         while phase < len(self.phases):
-            phase_path = "{}-{}.json".format(path, phase)
+            phase_path = f"{path}-{phase}.json"
             with open(phase_path, "w") as dump_file:
                 json.dump(
                     self.phases[phase],
@@ -124,7 +124,7 @@ class Pcap2Emulation:
                     indent=2,
                     separators=(",", " : "),
                 )
-                print("- unused phase {} saved to {}".format(phase, phase_path))
+                print(f"- unused phase {phase} saved to {phase_path}")
             phase += 1
 
     def _run_tshark(self, file: str, tshark_filter: str) -> Any:
@@ -177,14 +177,14 @@ class Pcap2Emulation:
             )
             if layers["usb"]["usb_usb_endpoint_address_direction"] == "1":
                 if hasattr(self, "previous_data") and self.previous_data:
-                    s += ",Data={}".format(self.previous_data)
+                    s += f",Data={self.previous_data}"
                     self.previous_data = None
                 else:
                     s += ",Data="
             else:
                 self.previous_data = captured_data
-                s += ",Data={}".format(captured_data)
-            s += ",Length=0x{:x}".format(int(layers["usb"]["usb_usb_data_len"]))
+                s += f",Data={captured_data}"
+            s += f",Length=0x{int(layers['usb']['usb_usb_data_len']):x}"
             return {"Id": s, "Data": captured_data}
         return {}
 
@@ -254,9 +254,7 @@ class Pcap2Emulation:
                     layers["data"]["data_data_data"].replace(":", "")
                 )
             else:
-                print(
-                    "Unknown USB CCID Bulk message type: 0x{:02X}".format(message_type)
-                )
+                print(f"Unknown USB CCID Bulk message type: 0x{message_type:02X}")
 
             captured_data = str(base64.b64encode(ccid), "utf-8")
         elif "usb_usb_capdata" in layers:
@@ -282,11 +280,11 @@ class Pcap2Emulation:
                     base64.b64encode(bytes.fromhex("00" * length)),
                     "utf-8",
                 )
-                s += ",Data={}".format(data)
+                s += f",Data={data}"
             else:
                 length = int(layers["usb"]["usb_usb_data_len"])
-                s += ",Data={}".format(captured_data)
-            s += ",Length=0x{:x}".format(length)
+                s += f",Data={captured_data}"
+            s += f",Length=0x{length:x}"
             return {"Id": s, "Data": captured_data}
         elif layers["usb"]["usb_usb_endpoint_address_direction"] == "1":
             if "usb_usb_urb_len" in layers["usb"]:
@@ -324,7 +322,7 @@ class Pcap2Emulation:
             else:
                 val = get_int(layers[key][self.interface_index])
 
-            if not key in layers:
+            if key not in layers:
                 continue
 
             interface[table[key]] = val
@@ -402,10 +400,10 @@ class Pcap2Emulation:
 
         # Filter the device related packets and the C_PORT_CONNECTION clear
         # feature packets to allow detection of the re-plug/re-enumerate events
-        tshark_filter = "usb.bus_id == {}".format(bus_id)
+        tshark_filter = f"usb.bus_id == {bus_id}"
         tshark_filter += " and (usbhub.setup.PortFeatureSelector == 16"
         for addr in addrs:
-            tshark_filter += " or usb.device_address == {}".format(addr)
+            tshark_filter += f" or usb.device_address == {addr}"
         tshark_filter += ")"
 
         p = self._run_tshark(file, tshark_filter)
@@ -560,10 +558,8 @@ class Pcap2Emulation:
                                             desc_index
                                         )
                                     }
-                                    event_bytes["Id"] += ",Langid=0x{:04x}".format(
-                                        language_id
-                                    )
-                                    event_bytes["Id"] += ",Length=0x{:x}".format(length)
+                                    event_bytes["Id"] += f",Langid=0x{language_id:04x}"
+                                    event_bytes["Id"] += f",Length=0x{length:x}"
 
                                 elif "usb_usb_bString" in layers:
                                     if int(layers["usb_usb_bLength"]) != len(
@@ -673,20 +669,16 @@ class Pcap2Emulation:
                     ):
                         # Found vendor CONTROL URB request
                         direction = not (layers["usb_usb_bmRequestType_direction"])
-                        s = "ControlTransfer:Direction=0x{:02x}".format(direction)
+                        s = f"ControlTransfer:Direction=0x{direction:02x}"
                         s += ",RequestType=0x{:02x}".format(
                             int(layers["usb_usb_bmRequestType_type"], 16)
                         )
                         s += ",Recipient=0x{:02x}".format(
                             int(layers["usb_usb_bmRequestType_recipient"], 16)
                         )
-                        s += ",Request=0x{:02x}".format(
-                            int(layers["usb_usb_setup_bRequest"])
-                        )
-                        s += ",Value=0x{:04x}".format(
-                            int(layers["usb_usb_setup_wValue"], 16)
-                        )
-                        s += ",Idx=0x{:04x}".format(int(layers["usb_usb_setup_wIndex"]))
+                        s += f",Request=0x{int(layers['usb_usb_setup_bRequest']):02x}"
+                        s += f",Value=0x{int(layers['usb_usb_setup_wValue'], 16):04x}"
+                        s += f",Idx=0x{int(layers['usb_usb_setup_wIndex']):04x}"
                         if "usb_usb_data_fragment" in layers:
                             data = layers["usb_usb_data_fragment"].replace(":", "")
                         else:
@@ -694,9 +686,7 @@ class Pcap2Emulation:
                         s += ",Data={}".format(
                             str(base64.b64encode(bytes.fromhex(data)), "utf-8")
                         )
-                        s += ",Length=0x{:x}".format(
-                            int(layers["usb_usb_setup_wLength"])
-                        )
+                        s += f",Length=0x{int(layers['usb_usb_setup_wLength']):x}"
                         event = {"Id": s}
 
                         if direction:

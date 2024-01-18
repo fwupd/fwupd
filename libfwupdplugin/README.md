@@ -120,10 +120,10 @@ Remember: Plugins should be upstream!
 * `fu_smbios_get_data()`: Now returns a array of `GByte`s
 * `fu_udev_device_get_fd()`: Use `fu_udev_device_get_io_channel()` instead
 * `fu_device_emit_request()`: Add `FuProgress` and `GError`
-* `fu_device_set_version_from_uint16()`: Use `fu_device_set_version_u16()` instead
-* `fu_device_set_version_from_uint24()`: Use `fu_device_set_version_u24()` instead
-* `fu_device_set_version_from_uint32()`: Use `fu_device_set_version_u32()` instead
-* `fu_device_set_version_from_uint64()`: Use `fu_device_set_version_u64()` instead
+* `fu_device_set_version_from_uint16()`: Use `fu_version_from_uint16()` from `FuDeviceClass->convert_version` instead
+* `fu_device_set_version_from_uint24()`: Use `fu_version_from_uint24()` from `FuDeviceClass->convert_version` instead
+* `fu_device_set_version_from_uint32()`: Use `fu_version_from_uint32()` from `FuDeviceClass->convert_version` instead
+* `fu_device_set_version_from_uint64()`: Use `fu_version_from_uint64()` from `FuDeviceClass->convert_version` instead
 
 ## 2.0.0
 

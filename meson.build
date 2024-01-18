@@ -1,7 +1,7 @@
 project('fwupd', 'c',
   version: '2.0.0',
   license: 'LGPL-2.1-or-later',
-  meson_version: '>=0.61.0',
+  meson_version: '>=0.62.0',
   default_options: ['warning_level=2', 'c_std=c11'],
 )
 
@@ -599,6 +599,8 @@ rustgen = generator(python3,
   ],
 )
 
+allow_uefi_capsule = get_option('plugin_uefi_capsule').disable_auto_if(host_machine.system() not in ['linux', 'freebsd']).allowed()
+
 subdir('generate-build')
 subdir('libfwupd')
 if polkit.found()
@@ -684,7 +686,6 @@ summary({
 if build_daemon
   summary({
     'bluez': bluez.allowed(),
-    'compat_cli': get_option('compat_cli'),
     'gusb': gusb,
     'gudev': gudev,
     'hsi': hsi,
@@ -696,5 +697,17 @@ if build_daemon
     'GPG support': supported_gpg,
     'PKCS7 support': supported_pkcs7,
   }, section: 'daemon features')
-  summary(plugins, section: 'plugins')
+  en=[]
+  dis=[]
+  foreach plugin: plugins.keys()
+    if plugins[plugin]
+      en += plugin
+    else
+      dis += plugin
+    endif
+  endforeach
+  summary({
+    'enabled': ', '.join(en),
+    'disabled': ', '.join(dis),
+  }, section: 'plugins')
 endif

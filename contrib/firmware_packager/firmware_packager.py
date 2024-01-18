@@ -65,7 +65,7 @@ def make_firmware_metainfo(firmware_info, dst):
 
 
 def extract_exe(exe, dst):
-    command = ["7z", "x", "-o{}".format(dst), exe]
+    command = ["7z", "x", f"-o{dst}", exe]
     subprocess.check_call(command, stdout=subprocess.DEVNULL)
 
 
@@ -98,7 +98,7 @@ def create_firmware_cab(exe, folder):
 
 def main(args):
     with tempfile.TemporaryDirectory() as d:
-        print("Using temp directory {}".format(d))
+        print(f"Using temp directory {d}")
 
         if args.exe:
             print("Extracting firmware exe")

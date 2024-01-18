@@ -1,0 +1,34 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-fwupd",
+      "type": "shell",
+      "command": "/bin/bash -c 'source venv/bin/activate; build-fwupd'",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "test-fwupd",
+      "type": "shell",
+      "command": "/bin/bash -c 'source venv/bin/activate; test-fwupd'",
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "gdbserver-fwupd",
+      "type": "shell",
+      "command": "/bin/bash -c 'source venv/bin/activate; DEBUG=1 fwupd -v'",
+      "problemMatcher": [],
+      "group": {
+        "kind": "none"
+      }
+    }
+  ]
+}

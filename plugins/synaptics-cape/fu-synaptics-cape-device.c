@@ -519,7 +519,7 @@ fu_synaptics_cape_device_setup_version(FuSynapticsCapeDevice *self, GError **err
 	version_raw =
 	    (GUINT32_FROM_LE(cmd.data[0]) << 24) | ((GUINT32_FROM_LE(cmd.data[1]) & 0xFF) << 16) |
 	    ((GUINT32_FROM_LE(cmd.data[2]) & 0xFF) << 8) | (GUINT32_FROM_LE(cmd.data[3]) & 0xFF);
-	fu_device_set_version_u32(FU_DEVICE(self), version_raw);
+	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* success */
@@ -793,6 +793,12 @@ fu_synaptics_cape_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "reload");
 }
 
+static gchar *
+fu_synaptics_cape_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_synaptics_cape_device_init(FuSynapticsCapeDevice *self)
 {
@@ -818,4 +824,5 @@ fu_synaptics_cape_device_class_init(FuSynapticsCapeDeviceClass *klass)
 	klass_device->write_firmware = fu_synaptics_cape_device_write_firmware;
 	klass_device->prepare_firmware = fu_synaptics_cape_device_prepare_firmware;
 	klass_device->set_progress = fu_synaptics_cape_device_set_progress;
+	klass_device->convert_version = fu_synaptics_cape_device_convert_version;
 }

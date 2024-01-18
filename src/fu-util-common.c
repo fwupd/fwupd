@@ -868,7 +868,7 @@ fu_util_parse_filter_release_flags(const gchar *filter,
 				   FwupdReleaseFlags *exclude,
 				   GError **error)
 {
-	FwupdDeviceFlags tmp;
+	FwupdReleaseFlags tmp;
 	g_auto(GStrv) strv = g_strsplit(filter, ",", -1);
 
 	g_return_val_if_fail(include != NULL, FALSE);

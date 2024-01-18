@@ -9,7 +9,6 @@
 #
 
 import base64
-import glob
 import hashlib
 import itertools
 import os
@@ -17,7 +16,7 @@ import shutil
 import struct
 import subprocess
 import tempfile
-from qubes_fwupd_common import EXIT_CODES, create_dirs
+from qubes_fwupd_common import create_dirs
 
 FWUPD_DOM0_DIR = "/var/cache/fwupd/qubes"
 FWUPD_DOM0_UPDATES_DIR = os.path.join(FWUPD_DOM0_DIR, "updates")

@@ -57,17 +57,6 @@ fu_vli_pd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 }
 
 static gboolean
-fu_vli_pd_firmware_compute_crc16_cb(const guint8 *buf,
-				    gsize bufsz,
-				    gpointer user_data,
-				    GError **error)
-{
-	guint16 *value = (guint16 *)user_data;
-	*value = fu_crc16_full(buf, bufsz, *value, 0xA001);
-	return TRUE;
-}
-
-static gboolean
 fu_vli_pd_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
 			 gsize offset,
@@ -140,7 +129,7 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 
 	/* check CRC */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		guint16 crc_actual = 0xFFFF;
+		guint16 crc_actual = 0x0;
 		guint16 crc_file = 0x0;
 		g_autoptr(GInputStream) stream_tmp = NULL;
 
@@ -152,11 +141,8 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to read file CRC: ");
 			return FALSE;
 		}
-		stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz);
-		if (!fu_input_stream_chunkify(stream_tmp,
-					      fu_vli_pd_firmware_compute_crc16_cb,
-					      &crc_actual,
-					      error))
+		stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - 2);
+		if (!fu_input_stream_compute_crc16(stream_tmp, &crc_actual, 0xA001, error))
 			return FALSE;
 		if (crc_actual != crc_file) {
 			g_set_error(error,

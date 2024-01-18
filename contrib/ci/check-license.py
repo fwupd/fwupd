@@ -32,15 +32,17 @@ def test_files() -> int:
             continue
         if fn.startswith("subprojects"):
             continue
+        if fn.startswith("venv"):
+            continue
         if fn.startswith("dist"):
             continue
         lic = __get_license(fn)
         if not lic:
-            print("{} does not specify a license".format(fn))
+            print(f"{fn} does not specify a license")
             rc = 1
             continue
-        if not "GPL" in lic:
-            print("{} does not contain LGPL or GPL ({})".format(fn, lic))
+        if "GPL" not in lic:
+            print(f"{fn} does not contain LGPL or GPL ({lic})")
             rc = 1
             continue
     return rc

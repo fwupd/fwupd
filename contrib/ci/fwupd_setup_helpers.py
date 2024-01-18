@@ -26,7 +26,7 @@ def detect_profile():
         import distro
 
         target = distro.id()
-        if not target in get_possible_profiles():
+        if target not in get_possible_profiles():
             target = distro.like()
     except ModuleNotFoundError:
         target = ""
@@ -125,8 +125,8 @@ def parse_dependencies(OS, variant, add_control):
                     inclusive = " ".join(inclusive).strip()
                     exclusive = " !".join(exclusive).strip()
                     if exclusive:
-                        exclusive = "!%s" % exclusive
-                    control = " [%s%s]" % (inclusive, exclusive)
+                        exclusive = f"!{exclusive}"
+                    control = f" [{inclusive}{exclusive}]"
             for package in distro.findall("package"):
                 if variant:
                     if "variant" not in package.attrib:
@@ -179,7 +179,7 @@ def _get_installer_cmd(os, yes):
         installer = ["xbps-install", "-Syu"]
     else:
         print("unable to detect OS profile, use --os= to specify")
-        print("\tsupported profiles: %s" % get_possible_profiles())
+        print(f"\tsupported profiles: {get_possible_profiles()}")
         sys.exit(1)
     if yes:
         installer += ["-y"]

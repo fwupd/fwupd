@@ -6,12 +6,17 @@ cd "$(dirname "$0")/.."
 HELPER=./contrib/ci/fwupd_setup_helpers.py
 HELPER_ARGS="-y"
 
+if [ "$(id -u)" != "0" ]; then
+       SUDO=$(which sudo)
+fi
+
 rename_branch()
 {
     OLD=master
     NEW=main
     if git log $OLD >/dev/null 2>&1 &&
        git remote get-url origin 2>&1 | grep fwupd/fwupd.git >/dev/null 2>&1; then
+        echo ""
         read -p "Rename existing $OLD branch to $NEW? (y/N) " question
         if [ "$question" = "y" ]; then
             git branch -m $OLD $NEW
@@ -22,73 +27,46 @@ rename_branch()
     fi
 }
 
-detect_selinux()
-{
-    SELINUX="0"
-    if which getenforce &> /dev/null; then
-        if getenforce | grep -i "enforcing" >/dev/null; then
-            SELINUX="1"
-        fi
-    fi
-}
-
 setup_deps()
 {
     read -p "Install build dependencies? (y/N) " question
     if [ "$question" = "y" ]; then
-        $(which sudo) python3 $HELPER install-dependencies $HELPER_ARGS -y
+        $SUDO python3 $HELPER install-dependencies $HELPER_ARGS -y
     fi
 }
 
-setup_library_dev()
+setup_run_wrappers()
 {
-    if grep -R "/usr/local" "/etc/ld.so.conf.d"; then
-        return
-    fi
-    read -p "Add /usr/local to library search path? (y/N) " question
-    if [ "$question" = "y" ]; then
-        if [ "$OS" = "ubuntu" ] || [ "$OS" = "debian" ]; then
-            path="/usr/local/lib"
-        else
-            path="/usr/local/lib64"
-        fi
-        echo $path | $(which sudo) tee /etc/ld.so.conf.d/local.conf >/dev/null
-        $(which sudo) rm /etc/ld.so.cache
-        $(which sudo) ldconfig
-    fi
-}
-
-setup_run_dev()
-{
-    if [ "$SELINUX" -eq "1" ]; then
-        echo "SELinux is enabled, you won't be able to run the daemon from default prefix /usr/local"
-        return
-    fi
-    read -p "Set up dbus activated daemon and PolicyKit actions from /usr/local? (y/N) " question
-    if [ "$question" = "y" ]; then
-        ./contrib/prepare-system /usr/local install
-    fi
-}
-
-setup_unsafe_polkit_rules()
-{
-    read -p "Install developer-friendly **unsafe** PolicyKit rules into /etc/polkit-1/rules.d? (y/N) " question
-    if [ "$question" = "y" ]; then
-        sudo mkdir -p /etc/polkit-1/rules.d
-        sudo cp ./policy/org.freedesktop.fwupd-unsafe.rules /etc/polkit-1/rules.d/
-    fi
+    BASE=../../contrib/
+    BIN=venv/bin/
+    TEMPLATE=${BASE}/launch-venv.sh
+    # launch wrappers
+    for F in fwupdtool fwupdmgr fwupd; do
+        rm -f ${BIN}/${F}
+        ln -s $TEMPLATE ${BIN}/${F}
+    done
+    # build wrapper
+    rm -f ${BIN}/build-fwupd
+    ln -s ${BASE}/build-venv.sh ${BIN}/build-fwupd
+    rm -f ${BIN}/test-fwupd
+    ln -s ${BASE}/test-venv.sh ${BIN}/test-fwupd
 }
 
 setup_vscode()
 {
-    # Add default vscode settings if not existing
-    SETTINGS_FILE=./.vscode/settings.json
-    SETTINGS_TEMPLATE_FILE=./contrib/vscode/settings.json
-    if [ ! -f "$SETTINGS_FILE" ]; then
-        mkdir ./.vscode
-        echo "Copy $SETTINGS_TEMPLATE_FILE to $SETTINGS_FILE."
-        cp "$SETTINGS_TEMPLATE_FILE" "$SETTINGS_FILE"
-    fi
+    # Add default vscode settings and debug launcher
+    SOURCED=./contrib/vscode
+    TARGETD=./.vscode
+    SETTINGS_F=settings.json
+    LAUNCH_F=launch.json
+    TASK_F=tasks.json
+    for f in $SETTINGS_F $LAUNCH_F $TASK_F; do
+        TEMPLATE=${SOURCED}/${f}
+        TARGETF=${TARGETD}/${f}
+        mkdir -p ${TARGETD}
+        echo "Copy ${TEMPLATE} to ${TARGETF}."
+        cp "${TEMPLATE}" "${TARGETF}"
+    done
 }
 
 setup_git()
@@ -102,24 +80,52 @@ install_pip()
     package=$1
     args=$2
     if ! python3 -m pip install $package $args; then
-        $(which sudo) python3 $HELPER install-pip $HELPER_ARGS -y
+        $SUDO python3 $HELPER install-pip $HELPER_ARGS -y
     fi
     #try once more
     python3 -m pip install $package
 }
 
+setup_virtualenv()
+{
+    echo "Setting up virtualenv"
+    if ! which virtualenv >/dev/null 2>&1; then
+        install_pip virtualenv
+    fi
+    virtualenv --system-site-packages venv --prompt fwupd
+    source venv/bin/activate
+    cat >> venv/bin/activate << EOF
+echo "To build or rebuild fwupd within development environment run:"
+echo ""
+echo "# build-fwupd"
+echo ""
+echo "To run the test suite run:"
+echo ""
+echo "# test-fwupd"
+echo ""
+echo "To run any tool under gdbserver add DEBUG=1 to env, for example:"
+echo ""
+echo "# DEBUG=1 fwupdtool get-devices"
+echo ""
+echo "To leave fwupd development environment run:"
+echo ""
+echo "# deactivate"
+. data/bash-completion/fwupdtool
+. data/bash-completion/fwupdmgr
+export MANPATH=./venv/dist/share/man:
+EOF
+}
+
 setup_precommit()
 {
     echo "Configuring pre-commit hooks"
-    python3 -m venv venv
-    source venv/bin/activate
-
     install_pip pre-commit
     pre-commit install
 }
 
 setup_prepush()
 {
+    echo ""
     read -p "Run tests locally before pushing to remote branches? THIS WILL SLOW DOWN EVERY PUSH but reduce the risk of failing CI. (y/N) " question
     if [ "$question" = "y" ]; then
         pre-commit install -t pre-push
@@ -176,26 +182,42 @@ detect_os()
     fi
 }
 
+howto()
+{
+    echo ""
+    echo "To enter fwupd development environment run:"
+    echo ""
+    echo "# source venv/bin/activate"
+    echo ""
+}
+
+#already setup
+if [ -f venv/bin/build-fwupd ]; then
+    echo "$0 has already been run"
+    howto
+    exit 0
+fi
+
+PYTHON_VERSION=$(python3 --version 2>/dev/null)
+if [ -z "$PYTHON_VERSION" ]; then
+    echo "Install python3 to run this script" >&2
+    exit 1
+fi
+
 #needed for arguments for some commands
 detect_os "$@"
-
-detect_selinux
 
 #if interactive install build deps and prepare environment
 if [ -t 2 ]; then
     case $OS in
-        debian|ubuntu|arch|fedora)
-            setup_deps
-            setup_library_dev
-            setup_run_dev
-            ;;
-        void)
+        debian|ubuntu|arch|fedora|void)
             setup_deps
             ;;
     esac
-    setup_unsafe_polkit_rules
     rename_branch
 fi
+setup_virtualenv
+setup_run_wrappers
 check_markdown
 check_jinja2
 setup_vscode
@@ -207,3 +229,5 @@ setup_precommit
 if [ -t 2 ]; then
     setup_prepush
 fi
+
+howto

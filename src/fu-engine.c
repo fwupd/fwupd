@@ -60,13 +60,13 @@
 #include "fu-plugin-private.h"
 #include "fu-release.h"
 #include "fu-remote-list.h"
+#include "fu-remote.h"
 #include "fu-security-attr-common.h"
 #include "fu-security-attrs-private.h"
 #include "fu-udev-device-private.h"
 #include "fu-usb-device-fw-ds20.h"
 #include "fu-usb-device-ms-ds20.h"
 #include "fu-usb-device-private.h"
-#include "fu-version.h"
 
 #ifdef HAVE_GIO_UNIX
 #include "fu-unix-seekable-input-stream.h"
@@ -131,6 +131,7 @@ struct _FuEngine {
 	GHashTable *blocked_firmware;  /* (nullable) */
 	GHashTable *emulation_phases;  /* (element-type int utf8) */
 	GHashTable *emulation_backend_ids; /* (element-type str int) */
+	GHashTable *device_changed_allowlist; /* (element-type str int) */
 	gchar *host_machine_id;
 	JcatContext *jcat_context;
 	gboolean loaded;
@@ -256,6 +257,12 @@ fu_engine_set_status(FuEngine *self, FwupdStatus status)
 static void
 fu_engine_generic_notify_cb(FuDevice *device, GParamSpec *pspec, FuEngine *self)
 {
+	if (fu_idle_get_status(self->idle) == FU_IDLE_STATUS_BUSY &&
+	    !g_hash_table_contains(self->device_changed_allowlist, fu_device_get_id(device))) {
+		g_debug("suppressing notification from %s as transaction is in progress",
+			fu_device_get_id(device));
+		return;
+	}
 	fu_engine_emit_device_changed(self, fu_device_get_id(device));
 }
 
@@ -1758,6 +1765,12 @@ fu_engine_composite_prepare(FuEngine *self, GPtrArray *devices, GError **error)
 			return FALSE;
 	}
 
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for composite prepare: ");
+		return FALSE;
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -1799,6 +1812,12 @@ fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error)
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) && !any_emulated) {
 		if (!fu_engine_backends_save_phase(self, error))
 			return FALSE;
+	}
+
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for composite cleanup: ");
+		return FALSE;
 	}
 
 	/* success */
@@ -1846,6 +1865,16 @@ fu_engine_install_releases(FuEngine *self,
 	/* do not allow auto-shutdown during this time */
 	locker = fu_idle_locker_new(self->idle, "update");
 	g_assert(locker != NULL);
+
+	/* use an allow-list for device-changed signals -- only allow any of the composite update
+	 * devices to emit signals for the duration of the install */
+	for (guint i = 0; i < releases->len; i++) {
+		FuRelease *release = g_ptr_array_index(releases, i);
+		FuDevice *device = fu_release_get_device(release);
+		g_hash_table_insert(self->device_changed_allowlist,
+				    g_strdup(fu_device_get_id(device)),
+				    GUINT_TO_POINTER(1));
+	}
 
 	/* install these in the right order */
 	g_ptr_array_sort(releases, fu_engine_sort_release_device_order_release_version_cb);
@@ -1926,12 +1955,6 @@ fu_engine_install_releases(FuEngine *self,
 	fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_COMPOSITE_CLEANUP);
 	if (!fu_engine_composite_cleanup(self, devices_new, error)) {
 		g_prefix_error(error, "failed to cleanup composite action: ");
-		return FALSE;
-	}
-
-	/* wait for any device to disconnect and reconnect */
-	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
-		g_prefix_error(error, "failed to wait for device: ");
 		return FALSE;
 	}
 
@@ -2929,6 +2952,14 @@ fu_engine_prepare(FuEngine *self,
 		if (!fu_engine_backends_save_phase(self, error))
 			return FALSE;
 	}
+
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for prepare replug: ");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -2960,18 +2991,20 @@ fu_engine_cleanup(FuEngine *self,
 			return FALSE;
 	}
 
-	/* wait for any device to disconnect and reconnect */
-	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
-		g_prefix_error(error, "failed to wait for cleanup replug: ");
-		return FALSE;
-	}
-
 	/* save to emulated phase */
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		if (!fu_engine_backends_save_phase(self, error))
 			return FALSE;
 	}
+
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for cleanup replug: ");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -3035,6 +3068,12 @@ fu_engine_detach(FuEngine *self,
 			return FALSE;
 	}
 
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for detach replug: ");
+		return FALSE;
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -3075,6 +3114,13 @@ fu_engine_attach(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 			return FALSE;
 	}
 
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for attach replug: ");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -3160,6 +3206,12 @@ fu_engine_reload(FuEngine *self, const gchar *device_id, GError **error)
 			return FALSE;
 	}
 
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for reload replug: ");
+		return FALSE;
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -3224,6 +3276,12 @@ fu_engine_write_firmware(FuEngine *self,
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		if (!fu_engine_backends_save_phase(self, error))
 			return FALSE;
+	}
+
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
+		g_prefix_error(error, "failed to wait for write-firmware replug: ");
+		return FALSE;
 	}
 
 	/* success */
@@ -6103,6 +6161,18 @@ fu_engine_device_inherit_history(FuEngine *self, FuDevice *device)
 	if (device_history == NULL)
 		return;
 
+	/* in an offline environment we may have used the .cab file to find the version-format
+	 * to use for the device -- so when we reboot use the database as the archive data is no
+	 * longer available */
+	if (fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN &&
+	    fu_device_get_version_format(device_history) != FWUPD_VERSION_FORMAT_UNKNOWN) {
+		g_debug(
+		    "absorbing version format %s into %s from history database",
+		    fwupd_version_format_to_string(fu_device_get_version_format(device_history)),
+		    fu_device_get_id(device));
+		fu_device_set_version_format(device, fu_device_get_version_format(device_history));
+	}
+
 	/* the device is still running the old firmware version and so if it
 	 * required activation before, it still requires it now -- note:
 	 * we can't just check for version_new=version to allow for re-installs */
@@ -6972,9 +7042,15 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	for (guint i = 0; i < vals->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(vals, i);
 		if (fwupd_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+#ifdef SUPPORTED_BUILD
+			g_debug("HSI attribute %s (from %s) had unknown result",
+				fwupd_security_attr_get_appstream_id(attr),
+				fwupd_security_attr_get_plugin(attr));
+#else
 			g_warning("HSI attribute %s (from %s) had unknown result",
 				  fwupd_security_attr_get_appstream_id(attr),
 				  fwupd_security_attr_get_plugin(attr));
+#endif
 		}
 	}
 
@@ -7647,9 +7723,14 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 	/* the plugin either can't tell us the error, or doesn't know itself */
 	if (fu_device_get_update_state(dev) != FWUPD_UPDATE_STATE_FAILED &&
 	    fu_device_get_update_state(dev) != FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
+		g_autoptr(GString) str = g_string_new("failed to run update on reboot: ");
 		g_info("falling back to generic failure");
 		fu_device_set_update_state(dev_history, FWUPD_UPDATE_STATE_FAILED);
-		fu_device_set_update_error(dev_history, "failed to run update on reboot");
+		g_string_append_printf(str,
+				       "expected %s and got %s",
+				       fwupd_release_get_version(rel_history),
+				       fu_device_get_version(dev));
+		fu_device_set_update_error(dev_history, str->str);
 	} else {
 		fu_device_set_update_state(dev_history, fu_device_get_update_state(dev));
 		fu_device_set_update_error(dev_history, fu_device_get_update_error(dev));
@@ -7980,15 +8061,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 			    VERSION);
 		return FALSE;
 	}
-	if (g_strcmp0(fu_version_string(), VERSION) != 0) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVAL,
-			    "libfwupdplugin version %s does not match daemon %s",
-			    fu_version_string(),
-			    VERSION);
-		return FALSE;
-	}
 
 	/* cache machine ID so we can use it from a sandboxed app */
 #ifdef _WIN32
@@ -8148,20 +8220,14 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_context_add_firmware_gtype(self->ctx, "smbios", FU_TYPE_SMBIOS);
 	fu_context_add_firmware_gtype(self->ctx, "acpi-table", FU_TYPE_ACPI_TABLE);
 	fu_context_add_firmware_gtype(self->ctx, "edid", FU_TYPE_EDID);
-	fu_context_add_firmware_gtype(self->ctx, "efi-firmware-file", FU_TYPE_EFI_FIRMWARE_FILE);
+	fu_context_add_firmware_gtype(self->ctx, "efi-file", FU_TYPE_EFI_FILE);
 	fu_context_add_firmware_gtype(self->ctx, "efi-load-option", FU_TYPE_EFI_LOAD_OPTION);
 	fu_context_add_firmware_gtype(self->ctx,
 				      "efi-device-path-list",
 				      FU_TYPE_EFI_DEVICE_PATH_LIST);
-	fu_context_add_firmware_gtype(self->ctx,
-				      "efi-firmware-filesystem",
-				      FU_TYPE_EFI_FIRMWARE_FILESYSTEM);
-	fu_context_add_firmware_gtype(self->ctx,
-				      "efi-firmware-section",
-				      FU_TYPE_EFI_FIRMWARE_SECTION);
-	fu_context_add_firmware_gtype(self->ctx,
-				      "efi-firmware-volume",
-				      FU_TYPE_EFI_FIRMWARE_VOLUME);
+	fu_context_add_firmware_gtype(self->ctx, "efi-filesystem", FU_TYPE_EFI_FILESYSTEM);
+	fu_context_add_firmware_gtype(self->ctx, "efi-section", FU_TYPE_EFI_SECTION);
+	fu_context_add_firmware_gtype(self->ctx, "efi-volume", FU_TYPE_EFI_VOLUME);
 	fu_context_add_firmware_gtype(self->ctx, "ifd-bios", FU_TYPE_IFD_BIOS);
 	fu_context_add_firmware_gtype(self->ctx, "ifd-firmware", FU_TYPE_IFD_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "cfu-offer", FU_TYPE_CFU_OFFER);
@@ -8482,7 +8548,7 @@ fu_engine_add_runtime_version(FuEngine *self, const gchar *component_id, const g
 }
 
 static void
-fu_engine_context_power_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine *self)
+fu_engine_context_power_changed(FuEngine *self)
 {
 	g_autoptr(GPtrArray) devices = fu_device_list_get_all(self->device_list);
 
@@ -8497,11 +8563,30 @@ fu_engine_context_power_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine *
 }
 
 static void
+fu_engine_context_power_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine *self)
+{
+	if (fu_idle_get_status(self->idle) == FU_IDLE_STATUS_BUSY) {
+		g_debug("suppressing ::power-changed as transaction is in progress");
+		return;
+	}
+	fu_engine_context_power_changed(self);
+}
+
+static void
 fu_engine_idle_status_notify_cb(FuIdle *idle, GParamSpec *pspec, FuEngine *self)
 {
-	FwupdStatus status = fu_idle_get_status(idle);
-	if (status == FWUPD_STATUS_SHUTDOWN)
-		fu_engine_set_status(self, status);
+	FuIdleStatus status = fu_idle_get_status(idle);
+	if (status == FU_IDLE_STATUS_IDLE &&
+	    g_hash_table_size(self->device_changed_allowlist) > 0) {
+		g_debug("clearing device-changed allowlist as transaction done");
+		g_hash_table_remove_all(self->device_changed_allowlist);
+
+		/* we might have suppressed this during the transaction, so ensure all the device
+		 * inhibits are being set up correctly */
+		fu_engine_context_power_changed(self);
+	}
+	if (status == FU_IDLE_STATUS_TIMEOUT)
+		fu_engine_set_status(self, FWUPD_STATUS_SHUTDOWN);
 }
 
 static void
@@ -8660,6 +8745,8 @@ fu_engine_init(FuEngine *self)
 	self->acquiesce_loop = g_main_loop_new(NULL, FALSE);
 	self->emulation_phases = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
 	self->emulation_backend_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	self->device_changed_allowlist =
+	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 #ifdef HAVE_PASSIM
 	self->passim_client = passim_client_new();
 #endif
@@ -8726,6 +8813,7 @@ fu_engine_finalize(GObject *obj)
 	g_ptr_array_unref(self->local_monitors);
 	g_hash_table_unref(self->emulation_phases);
 	g_hash_table_unref(self->emulation_backend_ids);
+	g_hash_table_unref(self->device_changed_allowlist);
 	g_object_unref(self->plugin_list);
 
 	G_OBJECT_CLASS(fu_engine_parent_class)->finalize(obj);

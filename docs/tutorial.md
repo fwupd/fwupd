@@ -167,6 +167,29 @@ to depend on a specific bootloader version, for instance allowing signed
 firmware to only be installable on hardware with a bootloader new enough to
 deploy it.
 
+### Setting the device version
+
+Although the version can be set easily as a string using `fu_device_set_version()`
+directly, it is more flexible to tell fwupd what the *version format* should be,
+and to allow the daemon to convert it to a string internally.
+
+This also means that if we get the version format from a quirk file, or from metadata,
+or even if it changes at runtime -- the correct string version is used at all times.
+
+    static gchar *
+    fu_foo_device_convert_version(FuDevice *device, guint64 version_raw)
+    {
+        return fu_version_from_uint24(version_raw, FWUPD_VERSION_FORMAT_TRIPLET);
+    }
+
+    static void
+    fu_foo_device_class_init(FuFooDeviceClass *klass)
+    {
+        …
+        device_class->convert_version = fu_foo_device_convert_version;
+        …
+    }
+
 ## Mechanism Plugins
 
 Although it would be a wonderful world if we could update all hardware using a

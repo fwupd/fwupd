@@ -173,21 +173,6 @@ fu_dfu_device_set_download_timeout(FuDfuDevice *self, guint dnload_timeout)
 	priv->dnload_timeout = dnload_timeout;
 }
 
-/**
- * fu_dfu_device_set_transfer_size:
- * @self: a #FuDfuDevice
- * @transfer_size: maximum packet size
- *
- * Sets the transfer size in bytes.
- **/
-void
-fu_dfu_device_set_transfer_size(FuDfuDevice *self, guint16 transfer_size)
-{
-	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_DFU_DEVICE(self));
-	priv->transfer_size = transfer_size;
-}
-
 typedef struct __attribute__((packed)) {
 	guint8 bLength;
 	guint8 bDescriptorType;
@@ -498,17 +483,7 @@ fu_dfu_device_new(FuContext *ctx, GUsbDevice *usb_device)
 	return self;
 }
 
-/**
- * fu_dfu_device_get_target_by_alt_setting:
- * @self: a #FuDfuDevice
- * @alt_setting: the setting used to find
- * @error: (nullable): optional return location for an error
- *
- * Gets a target with a specific alternative setting.
- *
- * Returns: (transfer full): a #FuDfuTarget, or %NULL
- **/
-FuDfuTarget *
+static FuDfuTarget *
 fu_dfu_device_get_target_by_alt_setting(FuDfuDevice *self, guint8 alt_setting, GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
@@ -530,72 +505,6 @@ fu_dfu_device_get_target_by_alt_setting(FuDfuDevice *self, guint8 alt_setting, G
 		    "No target with alt-setting %i",
 		    alt_setting);
 	return NULL;
-}
-
-/**
- * fu_dfu_device_get_target_by_alt_name:
- * @self: a #FuDfuDevice
- * @alt_name: the name used to find
- * @error: (nullable): optional return location for an error
- *
- * Gets a target with a specific alternative name.
- *
- * Returns: (transfer full): a #FuDfuTarget, or %NULL
- **/
-FuDfuTarget *
-fu_dfu_device_get_target_by_alt_name(FuDfuDevice *self, const gchar *alt_name, GError **error)
-{
-	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-
-	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	/* find by ID */
-	for (guint i = 0; i < priv->targets->len; i++) {
-		FuDfuTarget *target = g_ptr_array_index(priv->targets, i);
-		if (g_strcmp0(fu_device_get_logical_id(FU_DEVICE(target)), alt_name) == 0)
-			return g_object_ref(target);
-	}
-
-	/* failed */
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_FOUND,
-		    "No target with alt-name %s",
-		    alt_name);
-	return NULL;
-}
-
-/**
- * fu_dfu_device_get_runtime_vid:
- * @self: a #FuDfuDevice
- *
- * Gets the runtime vendor ID.
- *
- * Returns: vendor ID, or 0xffff for unknown
- **/
-guint16
-fu_dfu_device_get_runtime_vid(FuDfuDevice *self)
-{
-	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), 0xffff);
-	return priv->runtime_vid;
-}
-
-/**
- * fu_dfu_device_get_runtime_pid:
- * @self: a #FuDfuDevice
- *
- * Gets the runtime product ID.
- *
- * Returns: product ID, or 0xffff for unknown
- **/
-guint16
-fu_dfu_device_get_runtime_pid(FuDfuDevice *self)
-{
-	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), 0xffff);
-	return priv->runtime_pid;
 }
 
 const gchar *
@@ -674,18 +583,7 @@ fu_dfu_device_ensure_interface(FuDfuDevice *self, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_dfu_device_refresh_and_clear:
- * @self: a #FuDfuDevice
- * @error: (nullable): optional return location for an error
- *
- * Refreshes the cached properties on the DFU device. If there are any transfers
- * in progress they are cancelled, and if there are any pending errors they are
- * cancelled.
- *
- * Returns: %TRUE for success
- **/
-gboolean
+static gboolean
 fu_dfu_device_refresh_and_clear(FuDfuDevice *self, GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
@@ -1251,17 +1149,7 @@ fu_dfu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_dfu_device_upload:
- * @self: a #FuDfuDevice
- * @flags: DFU target flags, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
- * @error: (nullable): optional return location for an error
- *
- * Uploads firmware from the target to the host.
- *
- * Returns: (transfer full): the uploaded firmware, or %NULL for error
- **/
-FuFirmware *
+static FuFirmware *
 fu_dfu_device_upload(FuDfuDevice *self,
 		     FuProgress *progress,
 		     FuDfuTargetTransferFlags flags,

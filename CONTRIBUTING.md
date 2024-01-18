@@ -2,7 +2,8 @@
 
 ## Getting started
 
-To set up your local environment, from the top level of the checkout run
+To set up your local fwupd development environment, from the top level of
+the checkout run:
 
 ```shell
 ./contrib/setup
@@ -13,6 +14,29 @@ code is submitted.
 
 On some Linux distributions this will install all build dependencies needed
 to compile fwupd as well.
+
+A [virtualenv](https://virtualenv.pypa.io/en/latest/user_guide.html) will be created in `venv/` in the checkout that is used for
+building and running fwupd without affecting the local system installation.
+
+To enter this virtualenv run:
+
+```shell
+source venv/bin/activate
+```
+
+To build fwupd in the venv run:
+
+```shell
+build-fwupd
+```
+
+Wrappers are configured while in the venv to run `fwupdtool`, `fwupd`, and
+`fwupdmgr` using the virtualenv directory structure.  To leave the virtualenv
+run:
+
+```shell
+deactivate
+```
 
 ## Coding Style
 

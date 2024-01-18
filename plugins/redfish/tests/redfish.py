@@ -37,7 +37,7 @@ def index():
     # check password from the config file
     try:
         if (
-            not request.authorization["username"] in HARDCODED_USERNAMES
+            request.authorization["username"] not in HARDCODED_USERNAMES
             or request.authorization["password"] != HARDCODED_PASSWORD
         ):
             return _failure("unauthorised", status=401)
@@ -199,7 +199,6 @@ def firmware_inventory_bios():
         "LowestSupportedVersion": "P79 v1.10",
         "Name": "Contoso BIOS Firmware",
         "RelatedItem": [{"@odata.id": "/redfish/v1/Systems/437XR1138R2"}],
-        "ReleaseDate": "2017-12-06T12:00:00",
         "SoftwareId": "FEE82A67-6CE2-4625-9F44-237AD2402C28",
         "Updateable": True,
         "Version": "P79 v1.45",

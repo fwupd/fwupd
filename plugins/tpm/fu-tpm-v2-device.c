@@ -349,7 +349,7 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	if (!fu_tpm_v2_device_get_uint32(self, TPM2_PT_FIRMWARE_VERSION_2, &version2, error))
 		return FALSE;
 	version_raw = ((guint64)version1) << 32 | ((guint64)version2);
-	fu_device_set_version_u64(device, version_raw);
+	fu_device_set_version_raw(device, version_raw);
 
 	/* get capabilities */
 	if (!fu_tpm_v2_device_ensure_commands(self, error))
@@ -554,6 +554,12 @@ fu_tpm_v2_device_close(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_tpm_v2_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint64(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_tpm_v2_device_init(FuTpmV2Device *self)
 {
@@ -576,6 +582,7 @@ fu_tpm_v2_device_class_init(FuTpmV2DeviceClass *klass)
 	klass_device->close = fu_tpm_v2_device_close;
 	klass_device->write_firmware = fu_tpm_v2_device_write_firmware;
 	klass_device->dump_firmware = fu_tpm_v2_device_dump_firmware;
+	klass_device->convert_version = fu_tpm_v2_device_convert_version;
 }
 
 FuTpmDevice *

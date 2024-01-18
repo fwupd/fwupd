@@ -28,14 +28,6 @@ G_BEGIN_DECLS
  * The dbus interface
  **/
 #define FWUPD_DBUS_INTERFACE "org.freedesktop.fwupd"
-/**
- * FWUPD_DBUS_P2P_SOCKET_ADDRESS:
- *
- * The D-Bus socket address when using point-to-point connections.
- *
- * NOTE: This is no longer used as the value is set at compile time.
- **/
-#define FWUPD_DBUS_P2P_SOCKET_ADDRESS "tcp:host=localhost,port=1341"
 
 /**
  * FWUPD_DEVICE_ID_ANY:
@@ -78,10 +70,6 @@ fwupd_checksum_type_to_string_display(GChecksumType checksum_type);
 gchar *
 fwupd_checksum_format_for_display(const gchar *checksum) G_GNUC_NON_NULL(1);
 
-G_DEPRECATED_FOR(fwupd_client_set_user_agent_for_package)
-gchar *
-fwupd_build_user_agent(const gchar *package_name, const gchar *package_version)
-    G_GNUC_NON_NULL(1, 2);
 gchar *
 fwupd_build_machine_id(const gchar *salt, GError **error);
 GHashTable *

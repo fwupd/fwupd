@@ -65,19 +65,6 @@ fu_uefi_backend_device_new_from_dev(FuUefiBackend *self, FuDevice *dev)
 	return device;
 }
 
-FuUefiDevice *
-fu_uefi_backend_device_new_from_guid(FuUefiBackend *self, const gchar *guid)
-{
-	FuUefiDevice *device;
-	FuUefiBackendPrivate *priv = GET_PRIVATE(self);
-
-	g_return_val_if_fail(guid != NULL, NULL);
-
-	device = g_object_new(priv->device_gtype, "fw-class", guid, NULL);
-	fu_device_set_version_format(FU_DEVICE(device), FWUPD_VERSION_FORMAT_NUMBER);
-	return device;
-}
-
 static void
 fu_uefi_backend_init(FuUefiBackend *self)
 {

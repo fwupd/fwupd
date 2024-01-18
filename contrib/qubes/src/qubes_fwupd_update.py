@@ -9,7 +9,6 @@
 
 import os
 import re
-import shlex
 import subprocess
 from qubes_fwupd_common import create_dirs
 

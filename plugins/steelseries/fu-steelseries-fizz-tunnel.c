@@ -166,7 +166,7 @@ fu_steelseries_fizz_tunnel_probe(FuDevice *device, GError **error)
 	if (release != 0x0 &&
 	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_BCD);
-		fu_device_set_version_u16(device, release);
+		fu_device_set_version_raw(device, release);
 	}
 
 	/* add GUIDs in order of priority */
@@ -369,6 +369,12 @@ fu_steelseries_fizz_tunnel_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
+static gchar *
+fu_steelseries_fizz_tunnel_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint16(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_steelseries_fizz_tunnel_class_init(FuSteelseriesFizzTunnelClass *klass)
 {
@@ -381,6 +387,7 @@ fu_steelseries_fizz_tunnel_class_init(FuSteelseriesFizzTunnelClass *klass)
 	klass_device->write_firmware = fu_steelseries_fizz_tunnel_write_firmware;
 	klass_device->read_firmware = fu_steelseries_fizz_tunnel_read_firmware;
 	klass_device->set_progress = fu_steelseries_fizz_tunnel_set_progress;
+	klass_device->convert_version = fu_steelseries_fizz_tunnel_convert_version;
 }
 
 static void

@@ -26,7 +26,7 @@ def populate_translations(path):
             if not val:
                 continue
             output.write("#TRANSLATORS: Description of BIOS setting\n")
-            output.write("%s\n\n" % val)
+            output.write(f"{val}\n\n")
     output.close()
 
 

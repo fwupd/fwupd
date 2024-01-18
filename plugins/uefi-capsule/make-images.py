@@ -98,7 +98,7 @@ def main(args) -> int:
             if lang == "en":
                 label_translated: str = args.label
             else:
-                potfile = PotFile(os.path.join(args.podir, "{}.po".format(lang)))
+                potfile = PotFile(os.path.join(args.podir, f"{lang}.po"))
                 try:
                     label_translated = potfile.msgs[args.label]
                 except KeyError:
@@ -125,7 +125,7 @@ def main(args) -> int:
             ):
 
                 # generate PangoLanguage
-                font_desc = "Sans %.2fpx" % (height / 32,)
+                font_desc = f"Sans {height / 32:.2f}px"
                 fd = Pango.FontDescription(font_desc)
                 font_option = cairo.FontOptions()
                 font_option.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
@@ -202,7 +202,7 @@ def main(args) -> int:
                 # convert to BMP and add to archive
                 with io.BytesIO() as io_bmp:
                     io_bmp.write(_cairo_surface_write_to_bmp(img))
-                    filename = "fwupd-{}-{}-{}.bmp".format(lang, width, height)
+                    filename = f"fwupd-{lang}-{width}-{height}.bmp"
                     tarinfo = tarfile.TarInfo(filename)
                     tarinfo.size = io_bmp.tell()
                     io_bmp.seek(0)

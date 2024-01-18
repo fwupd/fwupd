@@ -48,7 +48,7 @@ struct EfiFile {
     type: EfiFileType,
     attrs: u8,
     size: u24le,
-    state: u8 == 0xF8,
+    state: u8 = 0xF8,
 }
 
 #[derive(ParseStream)]
@@ -58,11 +58,38 @@ struct EfiFile2 {
 }
 
 #[repr(u8)]
+enum EfiCompressionType {
+    NotCompressed = 0x00,
+    StandardCompression = 0x01,
+}
+
+#[derive(ParseStream)]
+struct EfiSectionCompression {
+    uncompressed_length: u32,
+    compression_type: EfiCompressionType,
+}
+
+#[derive(ToString)]
+enum EfiLz77DecompressorVersion {
+    None = 0,
+    Legacy = 1,
+    Tiano = 2,
+}
+
+#[derive(ParseStream)]
+struct EfiLz77DecompressorHeader {
+    src_size: u32,
+    dst_size: u32,
+}
+
+#[repr(u8)]
 #[derive(ToString)]
 enum EfiSectionType {
+    // encapsulation section type values
     Compression = 0x01,
     GuidDefined = 0x02,
     Disposable = 0x03,
+    // leaf section type values
     Pe32 = 0x10,
     Pic = 0x11,
     Te = 0x12,
@@ -75,6 +102,9 @@ enum EfiSectionType {
     Raw = 0x19,
     PeiDepex = 0x1B,
     MmDepex = 0x1C,
+    // vendor-specific
+    PhoenixSectionPostcode = 0xF0,  // Phoenix SCT
+    InsydeSectionPostcode = 0x20,   // Insyde H2O
 }
 
 #[derive(New, ParseStream)]
@@ -87,6 +117,11 @@ struct EfiSection {
 struct EfiSection2 {
     _base: EfiSection,
     extended_size: u32,
+}
+
+#[derive(ParseStream)]
+struct EfiSectionFreeformSubtypeGuid {
+    guid: Guid,
 }
 
 #[derive(New, ParseStream)]
@@ -108,6 +143,27 @@ struct EfiVolume {
     reserved: u8,
     revision: u8 == 0x02,
 }
+
+#[derive(ParseStream)]
+struct EfiVolumeExtHeader {
+    fv_name: Guid,
+    size: u32le,
+}
+
+#[repr(u16le)]
+#[derive(ToString)]
+enum EfiVolumeExtEntryType {
+    Oem = 0x01,
+    Guid = 0x02,
+    Size = 0x03,
+}
+
+#[derive(ParseStream)]
+struct EfiVolumeExtEntry {
+    size: u16le,
+    type: EfiVolumeExtEntryType,
+}
+
 #[derive(New, ParseStream)]
 struct EfiVolumeBlockMap {
     num_blocks: u32le,

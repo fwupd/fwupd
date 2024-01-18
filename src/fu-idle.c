@@ -19,10 +19,24 @@ struct _FuIdle {
 	GRWLock items_mutex;
 	guint idle_id;
 	guint timeout;
-	FwupdStatus status;
+	FuIdleStatus status;
 };
 
 enum { PROP_0, PROP_STATUS, PROP_LAST };
+
+static const gchar *
+fu_idle_status_to_string(FuIdleStatus status)
+{
+	if (status == FU_IDLE_STATUS_UNKNOWN)
+		return "unknown";
+	if (status == FU_IDLE_STATUS_IDLE)
+		return "idle";
+	if (status == FU_IDLE_STATUS_BUSY)
+		return "busy";
+	if (status == FU_IDLE_STATUS_TIMEOUT)
+		return "timeout";
+	return NULL;
+}
 
 static void
 fu_idle_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
@@ -55,20 +69,20 @@ typedef struct {
 
 G_DEFINE_TYPE(FuIdle, fu_idle, G_TYPE_OBJECT)
 
-FwupdStatus
+FuIdleStatus
 fu_idle_get_status(FuIdle *self)
 {
-	g_return_val_if_fail(FU_IS_IDLE(self), FWUPD_STATUS_UNKNOWN);
+	g_return_val_if_fail(FU_IS_IDLE(self), FU_IDLE_STATUS_UNKNOWN);
 	return self->status;
 }
 
 static void
-fu_idle_set_status(FuIdle *self, FwupdStatus status)
+fu_idle_set_status(FuIdle *self, FuIdleStatus status)
 {
 	if (self->status == status)
 		return;
 	self->status = status;
-	g_debug("status now %s", fwupd_status_to_string(status));
+	g_debug("status now %s", fu_idle_status_to_string(status));
 	g_object_notify(G_OBJECT(self), "status");
 }
 
@@ -76,7 +90,7 @@ static gboolean
 fu_idle_check_cb(gpointer user_data)
 {
 	FuIdle *self = FU_IDLE(user_data);
-	fu_idle_set_status(self, FWUPD_STATUS_SHUTDOWN);
+	fu_idle_set_status(self, FU_IDLE_STATUS_TIMEOUT);
 	return G_SOURCE_CONTINUE;
 }
 
@@ -104,11 +118,15 @@ fu_idle_reset(FuIdle *self)
 {
 	g_return_if_fail(FU_IS_IDLE(self));
 	fu_idle_stop(self);
-	if (self->items->len == 0)
+	if (self->items->len == 0) {
 		fu_idle_start(self);
+		fu_idle_set_status(self, FU_IDLE_STATUS_IDLE);
+	} else {
+		fu_idle_set_status(self, FU_IDLE_STATUS_BUSY);
+	}
 }
 
-static void
+void
 fu_idle_uninhibit(FuIdle *self, guint32 token)
 {
 	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new(&self->items_mutex);
@@ -217,9 +235,9 @@ fu_idle_class_init(FuIdleClass *klass)
 	pspec = g_param_spec_uint("status",
 				  NULL,
 				  NULL,
-				  FWUPD_STATUS_UNKNOWN,
-				  FWUPD_STATUS_LAST,
-				  FWUPD_STATUS_UNKNOWN,
+				  FU_IDLE_STATUS_UNKNOWN,
+				  FU_IDLE_STATUS_LAST,
+				  FU_IDLE_STATUS_UNKNOWN,
 				  G_PARAM_READABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_STATUS, pspec);
 }
@@ -227,7 +245,7 @@ fu_idle_class_init(FuIdleClass *klass)
 static void
 fu_idle_init(FuIdle *self)
 {
-	self->status = FWUPD_STATUS_IDLE;
+	self->status = FU_IDLE_STATUS_IDLE;
 	self->items = g_ptr_array_new_with_free_func((GDestroyNotify)fu_idle_item_free);
 	g_rw_lock_init(&self->items_mutex);
 }

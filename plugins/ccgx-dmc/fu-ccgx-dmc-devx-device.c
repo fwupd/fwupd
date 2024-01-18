@@ -190,7 +190,7 @@ fu_ccgx_dmc_devx_device_set_quirk_kv(FuDevice *device,
 				(guint)fu_device_get_version_raw(proxy),
 				(guint)tmp,
 				fu_device_get_id(device));
-			fu_device_set_version_u32(proxy, tmp);
+			fu_device_set_version_raw(proxy, tmp);
 		}
 		return TRUE;
 	}
@@ -307,6 +307,12 @@ fu_ccgx_dmc_devx_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_ccgx_dmc_devx_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_ccgx_dmc_devx_device_init(FuCcgxDmcDevxDevice *self)
 {
@@ -330,6 +336,7 @@ fu_ccgx_dmc_devx_device_class_init(FuCcgxDmcDevxDeviceClass *klass)
 	klass_device->probe = fu_ccgx_dmc_devx_device_probe;
 	klass_device->to_string = fu_ccgx_dmc_devx_device_to_string;
 	klass_device->set_quirk_kv = fu_ccgx_dmc_devx_device_set_quirk_kv;
+	klass_device->convert_version = fu_ccgx_dmc_devx_device_convert_version;
 }
 
 FuCcgxDmcDevxDevice *

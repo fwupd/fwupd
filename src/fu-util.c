@@ -3672,10 +3672,12 @@ fu_util_modify_config(FuUtilPrivate *priv, gchar **values, GError **error)
 					   _("Restart the daemon to make the change effective?")))
 			return TRUE;
 	}
-#ifdef HAVE_SYSTEMD
-	if (!fu_systemd_unit_stop(fu_util_get_systemd_unit(), error))
+
+	if (!fu_util_quit(priv, NULL, error))
 		return FALSE;
-#endif
+	if (!fwupd_client_connect(priv->client, priv->cancellable, error))
+		return FALSE;
+
 	/* TRANSLATORS: success message -- a per-system setting value */
 	fu_console_print_literal(priv->console, _("Successfully modified configuration value"));
 	return TRUE;
@@ -4069,7 +4071,7 @@ fu_util_security_fix_attr(FuUtilPrivate *priv, FwupdSecurityAttr *attr, GError *
 			    /* TRANSLATORS: the %1 is a kernel command line key=value */
 			    _("This tool can add a kernel argument of '%s', but it will "
 			      "only be active after restarting the computer."),
-			    fwupd_security_attr_get_kernel_current_value(attr));
+			    fwupd_security_attr_get_kernel_target_value(attr));
 		}
 		g_string_append(body, "\n\n");
 		g_string_append(body,
@@ -5036,13 +5038,6 @@ main(int argc, char *argv[])
 
 	/* ensure D-Bus errors are registered */
 	(void)fwupd_error_quark();
-
-	/* this is an old command which is possibly a symlink */
-	if (g_strcmp0(g_get_prgname(), "fwupdagent") == 0) {
-		g_printerr("INFO: The fwupdagent command is deprecated, "
-			   "use `fwupdmgr --json` instead\n");
-		priv->as_json = TRUE;
-	}
 
 	/* create helper object */
 	priv->main_ctx = g_main_context_new();
