@@ -15,6 +15,7 @@ a packed binary file format.
 This plugin supports the following protocol ID:
 
 * `com.aver.hid`
+* `com.aver.safeisp`
 
 ## GUID Generation
 
@@ -55,4 +56,4 @@ This plugin has been available since fwupd version `1.9.2`.
 Anyone can submit a pull request to modify this plugin, but the following people should be
 consulted before making major or functional changes:
 
-* Pierce Wang: @PierceWangAVer
+* Pierce Wang: @AVer-V001598
