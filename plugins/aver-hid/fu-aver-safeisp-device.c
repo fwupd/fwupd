@@ -59,25 +59,6 @@ fu_aver_safeisp_device_transfer(FuAverSafeispDevice *self,
 }
 
 static gboolean
-fu_aver_safeisp_device_poll(FuDevice *device, GError **error)
-{
-	FuAverSafeispDevice *self = FU_AVER_SAFEISP_DEVICE(device);
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GByteArray) req = fu_struct_aver_safeisp_req_new();
-	g_autoptr(GByteArray) res = fu_struct_aver_safeisp_res_new();
-
-	locker = fu_device_locker_new(device, error);
-	if (locker == NULL)
-		return FALSE;
-
-	fu_struct_aver_safeisp_req_set_custom_cmd(req, FU_AVER_SAFEISP_CUSTOM_CMD_GET_VERSION);
-	if (!fu_aver_safeisp_device_transfer(self, req, res, error))
-		return FALSE;
-
-	return TRUE;
-}
-
-static gboolean
 fu_aver_safeisp_device_ensure_version(FuAverSafeispDevice *self, GError **error)
 {
 	g_autofree gchar *ver = NULL;
@@ -103,11 +84,6 @@ fu_aver_safeisp_device_setup(FuDevice *device, GError **error)
 	/* HidDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_aver_safeisp_device_parent_class)->setup(device, error))
 		return FALSE;
-
-	/* using isp status requests as polling device requests */
-	if (!fu_aver_safeisp_device_poll(device, error))
-		return FALSE;
-
 	/* get the version from the hardware while open */
 	if (!fu_aver_safeisp_device_ensure_version(self, error))
 		return FALSE;
@@ -432,7 +408,6 @@ fu_aver_safeisp_device_init(FuAverSafeispDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING);
-	fu_device_set_poll_interval(FU_DEVICE(self), FU_AVER_SAFEISP_DEVICE_POLL_INTERVAL);
 	fu_device_set_remove_delay(FU_DEVICE(self), 150000);
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_RETRY_FAILURE);
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
@@ -442,7 +417,6 @@ static void
 fu_aver_safeisp_device_class_init(FuAverSafeispDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->poll = fu_aver_safeisp_device_poll;
 	klass_device->setup = fu_aver_safeisp_device_setup;
 	klass_device->write_firmware = fu_aver_safeisp_device_write_firmware;
 	klass_device->set_progress = fu_aver_safeisp_device_set_progress;
