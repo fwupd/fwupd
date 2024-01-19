@@ -60,13 +60,14 @@ fu_efi_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuild
 static gboolean
 fu_efi_section_parse_volume_image(FuEfiSection *self,
 				  GInputStream *stream,
+				  gsize offset,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
 	g_autoptr(FuFirmware) img = fu_efi_volume_new();
 	if (!fu_firmware_parse_stream(img,
 				      stream,
-				      0x0,
+				      offset,
 				      flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
 				      error)) {
 		return FALSE;
@@ -330,7 +331,7 @@ fu_efi_section_parse(FuFirmware *firmware,
 
 	/* nested volume */
 	if (priv->type == FU_EFI_SECTION_TYPE_VOLUME_IMAGE) {
-		if (!fu_efi_section_parse_volume_image(self, partial_stream, flags, error)) {
+		if (!fu_efi_section_parse_volume_image(self, partial_stream, 0x0, flags, error)) {
 			g_prefix_error(error, "failed to parse nested volume: ");
 			return FALSE;
 		}
@@ -338,6 +339,27 @@ fu_efi_section_parse(FuFirmware *firmware,
 		   g_strcmp0(fu_firmware_get_id(firmware), FU_EFI_SECTION_GUID_LZMA_COMPRESS) ==
 		       0) {
 		if (!fu_efi_section_parse_lzma_sections(self, partial_stream, flags, error)) {
+			g_prefix_error(error, "failed to parse lzma section: ");
+			return FALSE;
+		}
+	} else if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED &&
+		   g_strcmp0(fu_firmware_get_id(firmware), FU_EFI_SECTION_GUID_TIANO_COMPRESS) ==
+		       0) {
+		g_autoptr(FuFirmware) lz77_decompressor = fu_efi_lz77_decompressor_new();
+		g_autoptr(GInputStream) lz77_stream = NULL;
+		if (!fu_firmware_parse_stream(lz77_decompressor, partial_stream, 0x0, flags, error))
+			return FALSE;
+		lz77_stream = fu_firmware_get_stream(lz77_decompressor, error);
+		if (lz77_stream == NULL)
+			return FALSE;
+		if (!fu_efi_section_parse_volume_image(self, lz77_stream, 0x10, flags, error)) {
+			g_prefix_error(error, "failed to parse tiano-compressed volume: ");
+			return FALSE;
+		}
+		if (!fu_efi_section_parse_compression_sections(self,
+							       partial_stream,
+							       flags,
+							       error)) {
 			g_prefix_error(error, "failed to parse lzma section: ");
 			return FALSE;
 		}

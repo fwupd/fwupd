@@ -597,8 +597,8 @@ fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
 	g_autoptr(GError) error_all = NULL;
 	g_autoptr(GByteArray) dst = g_byte_array_new();
 	FuEfiLz77DecompressorVersion decompressor_versions[] = {
-	    FU_EFI_LZ77_DECOMPRESSOR_VERSION_LEGACY,
 	    FU_EFI_LZ77_DECOMPRESSOR_VERSION_TIANO,
+	    FU_EFI_LZ77_DECOMPRESSOR_VERSION_LEGACY,
 	};
 
 	/* parse header */
