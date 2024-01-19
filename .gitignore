@@ -35,3 +35,4 @@ plugins/uefi-dbx/tests/
 .buildconfig
 .ossfuzz
 *.rej
+/snap
