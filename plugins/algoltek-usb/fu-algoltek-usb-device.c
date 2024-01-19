@@ -97,20 +97,20 @@ fu_algoltek_usb_device_rdv(FuAlgoltekUsbDevice *self, GError **error)
 		return NULL;
 
 	if (version_prefix == 0x4147) {
-		/* Remove len, cmd bytes and "AG" prefixes*/
+		/* remove len, cmd bytes and "AG" prefixes */
 		for (guint32 i = 4; i < st->len; i++) {
-			if (st->data[i] == 0x5F) {
+			if (st->data[i] == '_') {
 				underscore_count++;
 				if (underscore_count == 1)
 					continue;
 			}
 			if (underscore_count > 2)
 				break;
-			else if (underscore_count > 0)
+			if (underscore_count > 0)
 				fu_byte_array_append_uint8(version_data, st->data[i]);
 		}
 	} else {
-		/* Remove len and cmd bytes */
+		/* remove len and cmd bytes */
 		for (guint32 i = 2; i < st->len; i++) {
 			if (st->data[i] < 128)
 				fu_byte_array_append_uint8(version_data, st->data[i]);
