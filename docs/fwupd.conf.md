@@ -55,7 +55,7 @@ The `[fwupd]` section can contain the following parameters:
 
   Maximum archive size that can be loaded in Mb, with 25% of the total system memory as the default.
 
-**IdleTimeout=**
+**IdleTimeout={{FU_DAEMON_CONFIG_DEFAULT_IDLE_TIMEOUT}}**
 
   Idle time in seconds to shut down the daemon, where a value of **0** specifies "never".
 
