@@ -38,4 +38,31 @@ if [ $needs_update = true ]; then
   echo "SNAP_DESKTOP_LAST_REVISION=$SNAP_REVISION" > $SNAP_USER_DATA/.last_revision
 fi
 
+# Setup directory structures if command was run as root
+if [ "$(id -u)" = "0" ]; then
+  CONF_DIR="${SNAP_COMMON}/var/etc/fwupd"
+  REMOTE_DIR="${SNAP_COMMON}/var/lib/fwupd/remotes.d"
+  SHARE_DIR="${SNAP_COMMON}/share/fwupd/remotes.d/vendor/firmware"
+  mkdir -p ${CONF_DIR} ${REMOTE_DIR} ${SHARE_DIR}
+
+  # copy a writable fwupd.conf for users to use
+  if [ ! -f "${CONF_DIR}/fwupd.conf" ]; then
+    cp "$SNAP/etc/fwupd/fwupd.conf" "${CONF_DIR}/fwupd.conf"
+  fi
+
+  # Migrate remotes from "old" snap guidance and from immutable directory
+  for BASE in "${SNAP}/etc/fwupd/remotes.d" "${SNAP_USER_DATA}/etc/fwupd/remotes.d/"; do
+    for P in ${BASE}/*.conf; do
+      REMOTE=$(basename $P)
+      # vendor.conf doesn't make sense in snap
+      if [ "${REMOTE}" = "vendor.conf" ]; then
+          continue
+      fi
+      if [ ! -f "${REMOTE_DIR}/${REMOTE}" ]; then
+          cp ${P} "${REMOTE_DIR}"
+      fi
+    done
+  done
+fi
+
 exec "$@"
