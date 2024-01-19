@@ -44,6 +44,7 @@ G_DEFINE_TYPE(FuEngineConfig, fu_engine_config, FU_TYPE_CONFIG)
 #define FU_DAEMON_CONFIG_DEFAULT_RELEASE_DEDUPE	       TRUE
 #define FU_DAEMON_CONFIG_DEFAULT_RELEASE_PRIORITY      "local"
 #define FU_DAEMON_CONFIG_DEFAULT_P2P_POLICY	       "metadata"
+#define FU_DAEMON_CONFIG_DEFAULT_IDLE_TIMEOUT	       7200
 
 static FwupdReport *
 fu_engine_config_report_from_spec(FuEngineConfig *self, const gchar *report_spec, GError **error)
@@ -236,7 +237,10 @@ fu_engine_config_changed_cb(FuEngineConfig *config, gpointer user_data)
 guint
 fu_engine_config_get_idle_timeout(FuEngineConfig *self)
 {
-	return fu_config_get_value_u64(FU_CONFIG(self), "fwupd", "IdleTimeout", 7200);
+	return fu_config_get_value_u64(FU_CONFIG(self),
+				       "fwupd",
+				       "IdleTimeout",
+				       FU_DAEMON_CONFIG_DEFAULT_IDLE_TIMEOUT);
 }
 
 GPtrArray *
