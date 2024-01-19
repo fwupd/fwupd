@@ -257,7 +257,7 @@ fu_path_from_kind(FuPathKind path_kind)
 					FWUPD_LOCALSTATEDIR,
 					NULL);
 #else
-		tmp = g_getenv("SNAP_USER_DATA");
+		tmp = g_getenv("SNAP_COMMON");
 		if (tmp != NULL)
 			return g_build_filename(tmp, FWUPD_LOCALSTATEDIR, NULL);
 		return g_build_filename(FWUPD_LOCALSTATEDIR, NULL);
@@ -315,7 +315,7 @@ fu_path_from_kind(FuPathKind path_kind)
 		tmp = g_getenv("FWUPD_SYSCONFDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		tmp = g_getenv("SNAP_USER_DATA");
+		tmp = g_getenv("SNAP");
 		if (tmp != NULL)
 			return g_build_filename(tmp, FWUPD_SYSCONFDIR, NULL);
 		basedir = fu_path_get_win32_basedir();

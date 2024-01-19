@@ -121,7 +121,7 @@ parts:
               ${CRAFT_PART_INSTALL}/share/dbus-1/system-services/org.freedesktop.fwupd.service
       cp -R /usr/libexec/fwupd/efi ${CRAFT_PART_INSTALL}/libexec/fwupd
       cp /usr/lib/shim/shimx64.efi.signed ${CRAFT_PART_INSTALL}/libexec/fwupd/efi/
-      sed -i 's,^MetadataURI=.*$,MetadataURI=file:///var/snap/fwupd/common,' "${CRAFT_PART_INSTALL}/etc/fwupd/remotes.d/vendor-directory.conf"
+      sed -i 's,^MetadataURI=.*$,MetadataURI=file:///var/snap/fwupd/common/share/fwupd/remotes.d/vendor/firmware,' "${CRAFT_PART_INSTALL}/etc/fwupd/remotes.d/vendor-directory.conf"
     override-pull: |
       craftctl default
       craftctl set version=$(git describe HEAD --always)
