@@ -8726,6 +8726,13 @@ fu_engine_constructed(GObject *obj)
 							    XMLB_MICRO_VERSION);
 		fu_context_add_compile_version(self->ctx, "com.hughsie.libxmlb", version);
 	}
+
+	/* add optional snap version */
+	if (g_getenv("SNAP_REVISION") != NULL) {
+		fu_context_add_compile_version(self->ctx,
+					       "io.snapcraft.fwupd",
+					       g_getenv("SNAP_REVISION"));
+	}
 }
 
 static void
