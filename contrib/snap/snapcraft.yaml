@@ -211,6 +211,13 @@ parts:
       # this will cause gpgme to error finding it
       # but that also avoids trying to use nonexistent
       # /usr/bin/gpg2
+      - -etc/dconf/db
+      - -etc/grub.d
+      - -etc/fwupd/remotes.d/vendor.conf
+      - -etc/systemd/system
+      - -share/fwupd/*.py
+      - -share/fish
+      - -root
       - -usr/bin
       - -usr/sbin
       - -usr/libexec
@@ -235,6 +242,7 @@ parts:
       - -usr/share/upstart
       - -usr/share/X11
       - -include
+      - -lib/systemd
       - -lib/udev
       - -lib/*/pkgconfig
       - -usr/share/lintian
