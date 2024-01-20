@@ -52,6 +52,9 @@ if [ "$(id -u)" = "0" ]; then
 
   # Migrate remotes from "old" snap guidance and from immutable directory
   for BASE in "${SNAP}/etc/fwupd/remotes.d" "${SNAP_USER_DATA}/etc/fwupd/remotes.d/"; do
+    if [ ! -d "${BASE}" ]; then
+      continue
+    fi
     for P in ${BASE}/*.conf; do
       REMOTE=$(basename $P)
       # vendor.conf doesn't make sense in snap
