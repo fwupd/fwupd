@@ -34,6 +34,38 @@ jobs:
         name: snap
         path: ${{ steps.snapcraft.outputs.snap }}
 
+  test-snap:
+    needs: build-snap
+    runs-on: ubuntu-latest
+    steps:
+    - id: checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - id: install-deps
+      run: |
+        sudo apt update
+        sudo apt install -y snapd gcab
+    - uses: actions/download-artifact@v4
+      id: download
+      with:
+        name: snap
+    - id: install-snap
+      run: |
+        sudo snap install --dangerous ${{ needs.build-snap.outputs.snap_name }}
+        sudo snap connect fwupd:polkit :polkit
+        sudo mkdir -p /var/snap/fwupd/common/var/etc/fwupd
+        sudo sed "s,^DisabledPlugins=.*,DisabledPlugins=," /snap/fwupd/current/etc/fwupd/fwupd.conf | sudo tee /var/snap/fwupd/common/var/etc/fwupd/fwupd.conf
+    - id: build-cab
+      run: |
+        gcab --create  --nopath fakedevice123.cab data/installed-tests/fakedevice123.*
+        sudo mkdir -p /var/snap/fwupd/common/share/fwupd/remotes.d/vendor/firmware
+        sudo cp fakedevice123.cab /var/snap/fwupd/common/share/fwupd/remotes.d/vendor/firmware
+    - id: update-fake-device
+      run: |
+        sudo fwupd.fwupdmgr update
+        fwupd.fwupdmgr get-updates || [ "$?" = "2" ]
+
   deploy-store:
     needs: build-snap
     runs-on: ubuntu-latest
