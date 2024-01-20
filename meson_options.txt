@@ -510,6 +510,7 @@ option('hsi',
 )
 option('thinklmi_compat',
   type: 'boolean',
+  value: false,
   description: 'Include workaround for thinklmi kernel bugs',
 )
 option('python',
