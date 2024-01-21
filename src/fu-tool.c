@@ -1921,6 +1921,30 @@ fu_util_get_report_metadata(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_modify_config(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	/* check args */
+	if (g_strv_length(values) != 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments: KEY VALUE expected");
+		return FALSE;
+	}
+
+	/* start engine */
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_NONE, priv->progress, error))
+		return FALSE;
+
+	if (!fu_engine_modify_config(priv->engine, values[0], values[1], error))
+		return FALSE;
+
+	/* TRANSLATORS: success message -- a per-system setting value */
+	fu_console_print_literal(priv->console, _("Successfully modified configuration value"));
+	return TRUE;
+}
+
+static gboolean
 fu_util_check_activation_needed(FuUtilPrivate *priv, GError **error)
 {
 	gboolean has_pending = FALSE;
@@ -4353,6 +4377,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Run the post-reboot cleanup action"),
 			      fu_util_reboot_cleanup);
+	fu_util_cmd_array_add(cmd_array,
+			      "modify-config",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("KEY,VALUE"),
+			      /* TRANSLATORS: sets something in the daemon configuration file */
+			      _("Modifies a daemon configuration value"),
+			      fu_util_modify_config);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();

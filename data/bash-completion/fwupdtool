@@ -31,6 +31,7 @@ _fwupdtool_cmd_list=(
 	'upgrade'
 	'install'
 	'install-blob'
+	'modify-config'
 	'monitor'
 	'reinstall'
 	'security'
@@ -74,6 +75,35 @@ _fwupdtool_opts=(
 	'--ignore-vid-pid'
 	'--save-backends'
 )
+
+modify_config_opts=(
+	'ArchiveSizeMax'
+	'AllowEmulation'
+	'ApprovedFirmware'
+	'BlockedFirmware'
+	'DisabledDevices'
+	'DisabledPlugins'
+	'EspLocation'
+	'EnumerateAllDevices'
+	'HostBkc'
+	'IdleTimeout'
+	'IgnorePower'
+	'OnlyTrusted'
+	'P2pPolicy'
+	'ReleaseDedupe'
+	'ReleasePriority'
+	'ShowDevicePrivate'
+	'TrustedReports'
+	'TrustedUids'
+	'UpdateMotd'
+	'UriSchemes'
+	'VerboseDomains'
+)
+
+_show_modify_config()
+{
+	COMPREPLY+=( $(compgen -W '${modify_config_opts[@]}' -- "$cur") )
+}
 
 _show_filters()
 {
@@ -171,6 +201,44 @@ _fwupdtool()
 		#firmware_type out
 		elif [[ "$args" = "5" ]]; then
 			_show_firmware_types
+		fi
+		;;
+	modify-config)
+		if [[ "$args" = "2" ]]; then
+			_show_modify_config
+			return 0
+		elif [[ "$args" = "3" ]]; then
+			case $prev in
+			AllowEmulation|EnumerateAllDevices|OnlyTrusted|IgnorePower|UpdateMotd|ShowDevicePrivate|ReleaseDedupe)
+				COMPREPLY=( $(compgen -W "True False" -- "$cur") )
+				;;
+			ReleasePriority)
+				COMPREPLY=( $(compgen -W "local remote" -- "$cur") )
+				;;
+			UriSchemes)
+				COMPREPLY=( $(compgen -W "file https http ipfs file;https;http;ipfs file;https;http https;http" -- "$cur") )
+				;;
+			P2pPolicy)
+				COMPREPLY=( $(compgen -W "none metadata firmware metadata,firmware" -- "$cur") )
+				;;
+			IdleTimeout|ArchiveSizeMax|HostBkc|TrustedUids)
+				;;
+			ApprovedFirmware|BlockedFirmware)
+				;;
+			DisabledDevices)
+				_show_device_ids
+				;;
+			DisabledPlugins)
+				_show_plugins
+				;;
+			EspLocation)
+				;;
+			TrustedReports)
+				;;
+			VerboseDomains)
+				;;
+			esac
+			return 0;
 		fi
 		;;
 	*)
