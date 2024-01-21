@@ -55,7 +55,7 @@ configure_file(
   input: 'vendor.conf',
   output: 'vendor.conf',
   configuration: con2,
-  install: true,
+  install: get_option('vendor_metadata'),
   install_dir: join_paths(sysconfdir, 'fwupd', 'remotes.d'),
 )
 configure_file(

@@ -484,6 +484,11 @@ option('udevdir',
   value: '',
   description: 'Directory for udev rules',
 )
+option('vendor_metadata',
+  type: 'boolean',
+  value: false,
+  description: 'install OS vendor provided metadata',
+)
 option('efi_os_dir',
   type: 'string',
   description: 'the hardcoded name of OS directory in ESP, e.g. fedora',
