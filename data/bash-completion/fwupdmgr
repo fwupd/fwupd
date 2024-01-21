@@ -19,6 +19,7 @@ _fwupdmgr_cmd_list=(
 	'get-details'
 	'get-devices'
 	'get-history'
+	'get-plugins'
 	'get-releases'
 	'get-remotes'
 	'get-results'
@@ -89,6 +90,23 @@ bios_set_opts=(
 	'--verbose'
 )
 
+modify_config_opts=(
+	'ArchiveSizeMax'
+	'AllowEmulation'
+	'ApprovedFirmware'
+	'BlockedFirmware'
+	'DisabledDevices'
+	'DisabledPlugins'
+	'EnumerateAllDevices'
+	'HostBkc'
+	'IdleTimeout'
+	'IgnorePower'
+	'OnlyTrusted'
+	'UpdateMotd'
+	'UriSchemes'
+	'VerboseDomains'
+)
+
 _show_file_in_dir()
 {
 	local files
@@ -148,6 +166,16 @@ _show_device_ids()
 	COMPREPLY+=( $(compgen -W "${description}" -- "$cur") )
 }
 
+_show_plugins()
+{
+	if ! command -v jq &> /dev/null; then
+		return 0
+	fi
+	local plugins
+	plugins="$(command fwupdmgr get-plugins --json 2>/dev/null | jq '.Plugins | .[] | .Name')"
+	COMPREPLY+=( $(compgen -W "${plugins}" -- "$cur") )
+}
+
 _show_release_versions()
 {
 	if ! command -v jq &> /dev/null; then
@@ -156,6 +184,11 @@ _show_release_versions()
 	local description
 	description="$(command fwupdmgr get-releases "$1" --json 2>/dev/null | jq '.Releases[].Version')"
 	COMPREPLY+=( $(compgen -W "${description}" -- "$cur") )
+}
+
+_show_modify_config()
+{
+	COMPREPLY+=( $(compgen -W '${modify_config_opts[@]}' -- "$cur") )
 }
 
 _show_remotes()
@@ -211,6 +244,9 @@ _fwupdmgr()
 		_show_bios_set_modifiers
 		return 0
 		;;
+	get-plugins)
+		return 0
+		;;
 	get-details)
 		#find files
 		if [[ "$args" = "2" ]]; then
@@ -263,6 +299,34 @@ _fwupdmgr()
 		#find remotes
 		if [[ "$args" = "2" ]]; then
 			_show_remotes
+		fi
+		;;
+	modify-config)
+		if [[ "$args" = "2" ]]; then
+			_show_modify_config
+			return 0
+		elif [[ "$args" = "3" ]]; then
+			case $prev in
+			AllowEmulation|EnumerateAllDevices|OnlyTrusted|IgnorePower|UpdateMotd)
+				COMPREPLY=( $(compgen -W "True False" -- "$cur") )
+				;;
+			UriSchemes)
+				COMPREPLY=( $(compgen -W "file https http ipfs" -- "$cur") )
+				;;
+			IdleTimeout|ArchiveSizeMax|HostBkc)
+				;;
+			ApprovedFirmware|BlockedFirmware)
+				;;
+			DisabledDevices)
+				_show_device_ids
+				;;
+			DisabledPlugins)
+				_show_plugins
+				;;
+			VerboseDomains)
+				;;
+			esac
+			return 0;
 		fi
 		;;
 	refresh)
