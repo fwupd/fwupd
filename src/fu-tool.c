@@ -3722,14 +3722,15 @@ fu_util_build_cabinet(FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_cabinet_add_file(cab_file, basename, blob);
 	}
 
-	/* sanity check JCat and XML MetaInfo files */
-	if (!fu_firmware_parse(FU_FIRMWARE(cab_file), NULL, FWUPD_INSTALL_FLAG_NONE, error))
-		return FALSE;
-
 	/* export */
 	cab_blob = fu_firmware_write(FU_FIRMWARE(cab_file), error);
 	if (cab_blob == NULL)
 		return FALSE;
+
+	/* sanity check JCat and XML MetaInfo files */
+	if (!fu_firmware_parse(FU_FIRMWARE(cab_file), cab_blob, FWUPD_INSTALL_FLAG_NONE, error))
+		return FALSE;
+
 	return fu_bytes_set_contents(values[0], cab_blob, error);
 }
 
