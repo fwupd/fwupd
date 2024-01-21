@@ -6,10 +6,17 @@ set -e
 if [ "$1" = remove -o "$1" = purge ]; then
 	if [ -f /etc/fwupd/fwupd.conf ]; then
 		if [ "$CI" = "true" ]; then
-			sed "s,^DisabledPlugins=,DisabledPlugins=test," -i /etc/fwupd/fwupd.conf
-			sed "s,^AllowEmulation=true,AllowEmulation=false," -i /etc/fwupd/fwupd.conf
+			fwupdtool modify-config DisabledPlugins "test;test_ble"
+			fwupdtool modify-config AllowEmulation false
 		else
 			echo "To disable test suite, modify /etc/fwupd/fwupd.conf"
+		fi
+	fi
+	if [ -f /etc/fwupd/remotes.d/fwupd-tests.conf ]; then
+		if [ "$CI" = "true" ]; then
+			sed "s,^Enabled=true,Enabled=false," -i /etc/fwupd/remotes.d/fwupd-tests.conf
+		else
+			echo "To enable test suite, enable fwupd-tests remote"
 		fi
 	fi
 fi
