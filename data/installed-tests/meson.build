@@ -69,7 +69,7 @@ configure_file(
   output: 'fwupd.sh',
   configuration: con2,
   install: true,
-  install_dir: installed_test_bindir,
+  install_dir: installed_test_datadir,
 )
 
 custom_target('installed-cab123',
