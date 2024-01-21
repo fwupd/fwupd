@@ -448,38 +448,6 @@ fu_util_perhaps_show_unreported(FuUtilPrivate *priv, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_util_modify_remote_warning(FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
-{
-	const gchar *warning_markup = NULL;
-	g_autofree gchar *warning_plain = NULL;
-
-	/* get formatted text */
-	warning_markup = fwupd_remote_get_agreement(remote);
-	if (warning_markup == NULL)
-		return TRUE;
-	warning_plain = fu_util_convert_description(warning_markup, error);
-	if (warning_plain == NULL)
-		return FALSE;
-
-	/* TRANSLATORS: a remote here is like a 'repo' or software source */
-	fu_console_box(priv->console, _("Enable new remote?"), warning_plain, 80);
-	if (!priv->assume_yes) {
-		if (!fu_console_input_bool(priv->console,
-					   TRUE,
-					   "%s",
-					   /* TRANSLATORS: should the remote still be enabled */
-					   _("Agree and enable the remote?"))) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOTHING_TO_DO,
-					    "Declined agreement");
-			return FALSE;
-		}
-	}
-	return TRUE;
-}
-
 static void
 fu_util_build_device_tree_node(FuUtilPrivate *priv, GNode *root, FwupdDevice *dev)
 {
@@ -2080,7 +2048,7 @@ fu_util_download_metadata_enable_lvfs(FuUtilPrivate *priv, GError **error)
 					priv->cancellable,
 					error))
 		return FALSE;
-	if (!fu_util_modify_remote_warning(priv, remote, error))
+	if (!fu_util_modify_remote_warning(priv->console, remote, priv->assume_yes, error))
 		return FALSE;
 
 	/* refresh the newly-enabled remote */
@@ -3141,7 +3109,7 @@ fu_util_remote_enable(FuUtilPrivate *priv, gchar **values, GError **error)
 	remote = fwupd_client_get_remote_by_id(priv->client, values[0], priv->cancellable, error);
 	if (remote == NULL)
 		return FALSE;
-	if (!fu_util_modify_remote_warning(priv, remote, error))
+	if (!fu_util_modify_remote_warning(priv->console, remote, priv->assume_yes, error))
 		return FALSE;
 	if (!fwupd_client_modify_remote(priv->client,
 					fwupd_remote_get_id(remote),
