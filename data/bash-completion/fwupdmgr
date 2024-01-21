@@ -97,11 +97,18 @@ modify_config_opts=(
 	'BlockedFirmware'
 	'DisabledDevices'
 	'DisabledPlugins'
+	'EspLocation'
 	'EnumerateAllDevices'
 	'HostBkc'
 	'IdleTimeout'
 	'IgnorePower'
 	'OnlyTrusted'
+	'P2pPolicy'
+	'ReleaseDedupe'
+	'ReleasePriority'
+	'ShowDevicePrivate'
+	'TrustedReports'
+	'TrustedUids'
 	'UpdateMotd'
 	'UriSchemes'
 	'VerboseDomains'
@@ -307,13 +314,19 @@ _fwupdmgr()
 			return 0
 		elif [[ "$args" = "3" ]]; then
 			case $prev in
-			AllowEmulation|EnumerateAllDevices|OnlyTrusted|IgnorePower|UpdateMotd)
+			AllowEmulation|EnumerateAllDevices|OnlyTrusted|IgnorePower|UpdateMotd|ShowDevicePrivate|ReleaseDedupe)
 				COMPREPLY=( $(compgen -W "True False" -- "$cur") )
 				;;
-			UriSchemes)
-				COMPREPLY=( $(compgen -W "file https http ipfs" -- "$cur") )
+			ReleasePriority)
+				COMPREPLY=( $(compgen -W "local remote" -- "$cur") )
 				;;
-			IdleTimeout|ArchiveSizeMax|HostBkc)
+			UriSchemes)
+				COMPREPLY=( $(compgen -W "file https http ipfs file;https;http;ipfs file;https;http https;http" -- "$cur") )
+				;;
+			P2pPolicy)
+				COMPREPLY=( $(compgen -W "none metadata firmware metadata,firmware" -- "$cur") )
+				;;
+			IdleTimeout|ArchiveSizeMax|HostBkc|TrustedUids)
 				;;
 			ApprovedFirmware|BlockedFirmware)
 				;;
@@ -322,6 +335,10 @@ _fwupdmgr()
 				;;
 			DisabledPlugins)
 				_show_plugins
+				;;
+			EspLocation)
+				;;
+			TrustedReports)
 				;;
 			VerboseDomains)
 				;;
