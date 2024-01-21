@@ -212,7 +212,6 @@ parts:
       # /usr/bin/gpg2
       - -etc/dconf/db
       - -etc/grub.d
-      - -etc/fwupd/remotes.d/vendor.conf
       - -etc/systemd/system
       - -share/fwupd/*.py
       - -share/fish

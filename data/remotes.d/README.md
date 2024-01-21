@@ -4,6 +4,7 @@
 
 These are the steps to add vendor firmware that is installed as part of an embedded image such as an OSTree or ChromeOS image:
 
+* Compile with `-Dvendor_metadata=true` to install `/etc/fwupd/remotes.d/vendor.conf`
 * Change `/etc/fwupd/remotes.d/vendor.conf` to have `Enabled=true`
 * Change `/etc/fwupd/remotes.d/vendor.conf` to have the correct `Title`
 * Deploy the firmware to `/usr/share/fwupd/remotes.d/vendor/firmware`
