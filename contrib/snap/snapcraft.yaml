@@ -80,7 +80,6 @@ parts:
     meson-parameters: [--prefix=/,
                        -Defi_binary=false,
                        -Ddocs=disabled,
-                       -Dtests=false,
                        -Dbuild=all,
                        -Dintrospection=disabled,
                        -Dman=false,
@@ -216,6 +215,7 @@ parts:
       - -etc/dconf/db
       - -etc/grub.d
       - -etc/systemd/system
+      - -libexec/installed-tests
       - -share/fwupd/*.py
       - -share/fish
       - -root
@@ -248,7 +248,6 @@ parts:
       - -lib/*/pkgconfig
       - -usr/share/lintian
       - -usr/share/pkgconfig
-      - -usr/share/installed-tests
       - -usr/share/polkit-1
       - -usr/share/vala
       - -usr/share/doc
