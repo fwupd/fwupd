@@ -3,6 +3,11 @@
 A test suite that can be used to interact with a fake device is installed when
 configured with `-Dbuild=all` and `-Dtests=true`.
 
+The test files have been signed by the production LVFS instance, and are available here:
+
+* <https://fwupd.org/downloads/07ee357a95dd3bd400a2bd8ba329491e5791dbcf4590215ddd75566c6ed1f958-fakedevice123.cab>
+* <https://fwupd.org/downloads/a92d4f433e925ea8e4a10d25dfa58e64ba1e68d07ee963605a2ccbaa2e3185aa-fakedevice124.cab>
+
 By default this test suite is disabled.
 
 ## Enabling

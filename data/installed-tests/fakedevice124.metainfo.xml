@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright 2017 Richard Hughes <richard@hughsie.com> -->
 <component type="firmware">
   <id>org.fwupd.fakedevice.firmware</id>
   <name>FakeDevice</name>
   <summary>Firmware for the ACME Corp Integrated Webcam</summary>
   <description>
-    <p>
-      Updating the firmware on your webcam device improves performance and
-      adds new features.
-    </p>
+    <p>Updating the firmware on your webcam device improves performance and adds new features.</p>
   </description>
   <provides>
     <firmware type="flashed">b585990a-003e-5270-89d5-3705a17f9a43</firmware>
@@ -16,13 +12,30 @@
   <url type="homepage">http://www.acme.com/</url>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-2.0+</project_license>
-  <developer_name>ACME Corp</developer_name>
+  <developer_name>LVFS</developer_name>
+  <categories>
+    <category>X-Device</category>
+  </categories>
+  <custom>
+    <value key="LVFS::DeviceIntegrity">unsigned</value>
+    <value key="LVFS::VersionFormat">triplet</value>
+    <value key="LVFS::UpdateProtocol">com.acme.test</value>
+  </custom>
   <releases>
-    <release version="1.2.4" date="2017-06-15" urgency="medium">
-      <checksum filename="fakedevice124.bin" target="content"/>
+    <release version="1.2.4" date="2024-01-21" urgency="medium">
+      <checksum type="sha1" filename="fakedevice124.bin" target="content">c2ef77a5ab4ecde5f1c75f1e3fe983c0b901cbdc</checksum>
+      <checksum type="sha256" filename="fakedevice124.bin" target="content">77f3e17bad9d510786133804fc1e050488f628257ce00c7e23938f7b31c4cac2</checksum>
       <description>
         <p>Fixes another bug with the flux capacitor to prevent time going backwards.</p>
       </description>
+      <url type="source">https://github.com/fwupd/fwupd/tree/main/data/installed-tests</url>
+      <artifacts>
+        <artifact type="source">
+          <filename>fakedevice124.bin</filename>
+          <checksum type="sha1">c2ef77a5ab4ecde5f1c75f1e3fe983c0b901cbdc</checksum>
+          <checksum type="sha256">77f3e17bad9d510786133804fc1e050488f628257ce00c7e23938f7b31c4cac2</checksum>
+        </artifact>
+      </artifacts>
     </release>
   </releases>
 </component>
