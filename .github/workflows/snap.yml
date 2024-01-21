@@ -50,8 +50,7 @@ jobs:
       run: |
         sudo snap install --dangerous ${{ needs.build-snap.outputs.snap_name }}
         sudo snap connect fwupd:polkit :polkit
-        sudo mkdir -p /var/snap/fwupd/common/var/etc/fwupd
-        sudo sed "s,^DisabledPlugins=.*,DisabledPlugins=," /snap/fwupd/current/etc/fwupd/fwupd.conf | sudo tee /var/snap/fwupd/common/var/etc/fwupd/fwupd.conf
+        sudo fwupd.fwupdtool modify-config DisabledPlugins ""
     - id: build-cab
       run: |
         fwupd.fwupdtool build-cabinet fakedevice123.cab data/installed-tests/fakedevice123.*
