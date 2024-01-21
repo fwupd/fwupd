@@ -11,4 +11,4 @@ fdtput firmware.fit -t s /configurations/conf-1 version "1.2.4"
 # Make the data external, now that we have finished fiddling with the FDT
 mkimage -E -F firmware.fit
 
-gcab --create --zip --nopath Vbe-Board-1.2.4.cab firmware.fit com.Vbe.Board.metainfo.xml
+fwupdtool build-cabinet Vbe-Board-1.2.4.cab firmware.fit com.Vbe.Board.metainfo.xml

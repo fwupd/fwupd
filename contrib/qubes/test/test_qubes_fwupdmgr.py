@@ -286,7 +286,8 @@ class TestQubesFwupdmgr(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             arch_name = tmpdir + "/firmware.cab"
             subprocess.check_call(
-                ["gcab", "-c", arch_name, "firmware.metainfo.xml"], cwd="test/logs"
+                ["fwupdtool", "build-cabinet", arch_name, "firmware.metainfo.xml"],
+                cwd="test/logs",
             )
             self.q._verify_dmi(arch_name, "P1.1")
 
@@ -300,7 +301,7 @@ class TestQubesFwupdmgr(unittest.TestCase):
             with tempfile.TemporaryDirectory() as tmpdir:
                 arch_name = tmpdir + "/firmware.cab"
                 subprocess.check_call(
-                    ["gcab", "-c", arch_name, "firmware.metainfo.xml"],
+                    ["fwupdtool", "build-cabinet", arch_name, "firmware.metainfo.xml"],
                     cwd="test/logs/metainfo_name",
                 )
                 self.q._verify_dmi(arch_name, "P1.1")
@@ -316,7 +317,7 @@ class TestQubesFwupdmgr(unittest.TestCase):
             with tempfile.TemporaryDirectory() as tmpdir:
                 arch_name = tmpdir + "/firmware.cab"
                 subprocess.check_call(
-                    ["gcab", "-c", arch_name, "firmware.metainfo.xml"],
+                    ["fwupdtool", "build-cabinet", arch_name, "firmware.metainfo.xml"],
                     cwd="test/logs/metainfo_version",
                 )
                 self.q._verify_dmi(arch_name, "P0.1")

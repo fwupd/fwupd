@@ -202,8 +202,7 @@ or server machines.
 %if 0%{?qubes_packages}
 %package qubes-dom0
 Summary: fwupd wrapper for Qubes OS - dom0 scripts
-Requires:   gcab
-Requires:   fwupd >= 1.5.7
+Requires:   fwupd >= 2.0.0
 Requires:   libjcat >= 0.1.6
 Requires:   python3-packaging
 Requires:   sequoia-sqv
@@ -213,8 +212,7 @@ fwupd wrapper for Qubes OS
 
 %package qubes-vm
 Summary: fwupd wrapper for Qubes OS - VM scripts
-Requires:   gcab
-Requires:   fwupd >= 1.5.7
+Requires:   fwupd >= 2.0.0
 Requires:   libjcat >= 0.1.6
 Requires:   python3-packaging
 

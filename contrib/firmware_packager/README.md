@@ -8,7 +8,6 @@ To run this script you will need
 
 1. Python3.5, a standard install should include all packages you need
 2. 7z (for extracting .exe files)
-3. gcab (for creating the cab file)
 
 ## Usage
 
