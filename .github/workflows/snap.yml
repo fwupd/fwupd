@@ -63,7 +63,7 @@ jobs:
         fwupd.fwupdmgr get-updates || [ "$?" = "2" ]
 
   deploy-store:
-    needs: build-snap
+    needs: [build-snap, test-snap]
     runs-on: ubuntu-latest
     if: ${{ inputs.deploy }}
     steps:
