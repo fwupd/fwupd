@@ -74,7 +74,7 @@ qvm-copy fwupd-qubes-vm-<ver>-0.1alpha.fc32.x86_64.rpm
 * Install package dependencies
 
 ```shell
-# dnf install gcab fwupd
+# dnf install fwupd
 ```
 
 * Run terminal in the template VM and go to
@@ -96,7 +96,7 @@ qvm-copy fwupd-qubes-vm-whonix-<ver>_amd64.deb
 * Install dependencies
 
 ```shell
-# apt install gcab fwupd
+# apt install fwupd
 ```
 
 * Run terminal in the whonix-gw-15 and go to `~/QubesIncoming/qubes-builder`.
@@ -120,7 +120,7 @@ qvm-copy fwupd-qubes-vm-whonix-<ver>_amd64.deb
 * Install package dependencies:
 
  ```shell
- # qubes-dom0-update gcab fwupd python36
+ # qubes-dom0-update fwupd python36
  ```
 
 * Make sure that sys-firewall and sys-whonix are running.

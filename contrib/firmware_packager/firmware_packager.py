@@ -87,8 +87,8 @@ def create_firmware_cab(exe, folder):
             command = ["makecab.exe", "/f", directive]
         else:
             command = [
-                "gcab",
-                "--create",
+                "fwupdtool",
+                "build-cabinet",
                 "firmware.cab",
                 "firmware.bin",
                 "firmware.metainfo.xml",
