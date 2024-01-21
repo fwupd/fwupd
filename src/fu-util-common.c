@@ -35,6 +35,8 @@ static gchar *
 fu_util_remote_to_string(FwupdRemote *remote, guint idt);
 static gchar *
 fu_util_release_to_string(FwupdRelease *rel, guint idt);
+static gchar *
+fu_util_convert_description(const gchar *xml, GError **error);
 
 const gchar *
 fu_util_get_systemd_unit(void)
@@ -993,7 +995,7 @@ fu_util_convert_description_tail_cb(XbNode *n, gpointer user_data)
 	return FALSE;
 }
 
-gchar *
+static gchar *
 fu_util_convert_description(const gchar *xml, GError **error)
 {
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -3004,6 +3006,41 @@ fu_util_show_unsupported_warning(FuConsole *console)
 			      /* TRANSLATORS: unsupported build of the package */
 			      _("This package has not been validated, it may not work properly."));
 #endif
+}
+
+gboolean
+fu_util_modify_remote_warning(FuConsole *console,
+			      FwupdRemote *remote,
+			      gboolean assume_yes,
+			      GError **error)
+{
+	const gchar *warning_markup = NULL;
+	g_autofree gchar *warning_plain = NULL;
+
+	/* get formatted text */
+	warning_markup = fwupd_remote_get_agreement(remote);
+	if (warning_markup == NULL)
+		return TRUE;
+	warning_plain = fu_util_convert_description(warning_markup, error);
+	if (warning_plain == NULL)
+		return FALSE;
+
+	/* TRANSLATORS: a remote here is like a 'repo' or software source */
+	fu_console_box(console, _("Enable new remote?"), warning_plain, 80);
+	if (!assume_yes) {
+		if (!fu_console_input_bool(console,
+					   TRUE,
+					   "%s",
+					   /* TRANSLATORS: should the remote still be enabled */
+					   _("Agree and enable the remote?"))) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOTHING_TO_DO,
+					    "Declined agreement");
+			return FALSE;
+		}
+	}
+	return TRUE;
 }
 
 #ifdef HAVE_LIBCURL

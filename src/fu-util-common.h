@@ -50,6 +50,13 @@ fu_util_prompt_warning(FuConsole *console,
 		       GError **error);
 gboolean
 fu_util_prompt_warning_fde(FuConsole *console, FwupdDevice *dev, GError **error);
+
+gboolean
+fu_util_modify_remote_warning(FuConsole *console,
+			      FwupdRemote *remote,
+			      gboolean assume_yes,
+			      GError **error);
+
 gboolean
 fu_util_prompt_complete(FuConsole *console,
 			FwupdDeviceFlags flags,
@@ -96,9 +103,6 @@ fu_util_parse_filter_release_flags(const gchar *filter,
 				   FwupdReleaseFlags *include,
 				   FwupdReleaseFlags *exclude,
 				   GError **error);
-gchar *
-fu_util_convert_description(const gchar *xml, GError **error);
-
 gchar *
 fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt);
 gchar *
