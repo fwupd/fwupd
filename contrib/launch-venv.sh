@@ -27,5 +27,6 @@ SUDO="$(which sudo) \
         LD_LIBRARY_PATH=${LD_LIBRARY_PATH} \
         FWUPD_LOCALSTATEDIR=${FWUPD_LOCALSTATEDIR} \
         FWUPD_SYSCONFDIR=${FWUPD_SYSCONFDIR} \
+        G_DEBUG=fatal_warnings \
         FWUPD_POLKIT_NOCHECK=1"
 ${SUDO} ${DEBUG} ${EXE} "$@"

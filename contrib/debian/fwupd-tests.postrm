@@ -3,7 +3,8 @@ set -e
 
 #DEBHELPER#
 
-if [ "$1" = remove -o "$1" = purge ]; then
+# don't run on purge; the commands might be missing
+if [ "$1" = remove ]; then
 	if [ -f /etc/fwupd/fwupd.conf ]; then
 		if [ "$CI" = "true" ]; then
 			fwupdtool modify-config DisabledPlugins "test;test_ble"
@@ -14,7 +15,7 @@ if [ "$1" = remove -o "$1" = purge ]; then
 	fi
 	if [ -f /etc/fwupd/remotes.d/fwupd-tests.conf ]; then
 		if [ "$CI" = "true" ]; then
-			sed "s,^Enabled=true,Enabled=false," -i /etc/fwupd/remotes.d/fwupd-tests.conf
+			fwupdtool disable-remote fwupd-tests
 		else
 			echo "To enable test suite, enable fwupd-tests remote"
 		fi

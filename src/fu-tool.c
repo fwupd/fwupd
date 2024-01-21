@@ -1954,6 +1954,102 @@ fu_util_modify_config(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_remote_modify(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	FwupdRemote *remote = NULL;
+
+	if (g_strv_length(values) < 3) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_REMOTES, priv->progress, error))
+		return FALSE;
+
+	remote = fu_engine_get_remote_by_id(priv->engine, values[0], error);
+	if (remote == NULL)
+		return FALSE;
+
+	if (!fu_engine_modify_remote(priv->engine,
+				     fwupd_remote_get_id(remote),
+				     values[1],
+				     values[2],
+				     error))
+		return FALSE;
+
+	fu_console_print_literal(priv->console, _("Successfully modified remote"));
+	return TRUE;
+}
+
+static gboolean
+fu_util_remote_disable(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	FwupdRemote *remote = NULL;
+
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_REMOTES, priv->progress, error))
+		return FALSE;
+
+	remote = fu_engine_get_remote_by_id(priv->engine, values[0], error);
+	if (remote == NULL)
+		return FALSE;
+
+	if (!fu_engine_modify_remote(priv->engine,
+				     fwupd_remote_get_id(remote),
+				     "Enabled",
+				     "false",
+				     error))
+		return FALSE;
+
+	fu_console_print_literal(priv->console, _("Successfully disabled remote"));
+	return TRUE;
+}
+
+static gboolean
+fu_util_remote_enable(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	FwupdRemote *remote = NULL;
+
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_REMOTES, priv->progress, error))
+		return FALSE;
+
+	remote = fu_engine_get_remote_by_id(priv->engine, values[0], error);
+	if (remote == NULL)
+		return FALSE;
+
+	if (!fu_util_modify_remote_warning(priv->console, remote, FALSE, error))
+		return FALSE;
+
+	if (!fu_engine_modify_remote(priv->engine,
+				     fwupd_remote_get_id(remote),
+				     "Enabled",
+				     "true",
+				     error))
+		return FALSE;
+
+	fu_console_print_literal(priv->console, _("Successfully enabled remote"));
+	return TRUE;
+}
+
+static gboolean
 fu_util_check_activation_needed(FuUtilPrivate *priv, GError **error)
 {
 	gboolean has_pending = FALSE;
@@ -4407,6 +4503,27 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: sets something in the daemon configuration file */
 			      _("Modifies a daemon configuration value"),
 			      fu_util_modify_config);
+	fu_util_cmd_array_add(cmd_array,
+			      "modify-remote",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("REMOTE-ID KEY VALUE"),
+			      /* TRANSLATORS: command description */
+			      _("Modifies a given remote"),
+			      fu_util_remote_modify);
+	fu_util_cmd_array_add(cmd_array,
+			      "enable-remote",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("REMOTE-ID"),
+			      /* TRANSLATORS: command description */
+			      _("Enables a given remote"),
+			      fu_util_remote_enable);
+	fu_util_cmd_array_add(cmd_array,
+			      "disable-remote",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("REMOTE-ID"),
+			      /* TRANSLATORS: command description */
+			      _("Disables a given remote"),
+			      fu_util_remote_disable);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();

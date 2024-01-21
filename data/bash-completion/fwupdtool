@@ -2,7 +2,9 @@ _fwupdtool_cmd_list=(
 	'activate'
 	'build-cabinet'
 	'clear-history'
+	'disable-remote'
 	'efivar-list'
+	'enable-remote'
 	'esp-list'
 	'esp-mount'
 	'esp-unmount'
@@ -32,6 +34,7 @@ _fwupdtool_cmd_list=(
 	'install'
 	'install-blob'
 	'modify-config'
+	'modify-remote'
 	'monitor'
 	'reinstall'
 	'security'
@@ -103,6 +106,13 @@ modify_config_opts=(
 _show_modify_config()
 {
 	COMPREPLY+=( $(compgen -W '${modify_config_opts[@]}' -- "$cur") )
+}
+
+_show_remotes()
+{
+	local remotes
+	remotes="$(command fwupdtool get-remotes | command awk '/Remote ID/ { print $4 }')"
+	COMPREPLY+=( $(compgen -W "${remotes}" -- "$cur") )
 }
 
 _show_filters()
@@ -201,6 +211,29 @@ _fwupdtool()
 		#firmware_type out
 		elif [[ "$args" = "5" ]]; then
 			_show_firmware_types
+		fi
+		;;
+	modify-remote)
+		#find remotes
+		if [[ "$args" = "2" ]]; then
+			_show_remotes
+		#add key
+		elif [[ "$args" = "3" ]]; then
+			local keys
+			keys="$(command fwupdtool get-remotes | command awk -v pattern="Remote ID:.*${prev}$" '$0~pattern{show=1; next}/Remote/{show=0}{gsub(/:.*/,"")}show')"
+			COMPREPLY+=( $(compgen -W "${keys}" -- "$cur") )
+		fi
+		;;
+	enable-remote)
+		#find remotes
+		if [[ "$args" = "2" ]]; then
+			_show_remotes
+		fi
+		;;
+	disable-remote)
+		#find remotes
+		if [[ "$args" = "2" ]]; then
+			_show_remotes
 		fi
 		;;
 	modify-config)
