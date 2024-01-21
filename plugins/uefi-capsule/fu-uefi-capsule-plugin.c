@@ -868,6 +868,7 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 			fu_device_add_vendor_id(FU_DEVICE(dev), vendor_id);
 		}
 	}
+	fu_device_add_request_flag(FU_DEVICE(dev), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 
 	/* success */
 	return TRUE;
