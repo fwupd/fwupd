@@ -29,9 +29,6 @@ plugs:
     action-prefix: org.freedesktop.fwupd
 
 apps:
-  dbxtool:
-    command: dbxtool.wrapper
-    plugs: [fwupdmgr, network]
   fwupdtool:
     command: fwupdtool.wrapper
     plugs: [bluez, udisks2, modem-manager, upower-observe, network, hardware-observe, home, opengl, raw-usb]
@@ -294,7 +291,6 @@ parts:
     plugin: dump
     source: contrib/snap
     stage:
-    - dbxtool.wrapper
     - fwupd-command
     - fwupdtool.wrapper
     - fwupd.wrapper
