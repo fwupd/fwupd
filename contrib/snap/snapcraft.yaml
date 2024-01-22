@@ -269,10 +269,6 @@ parts:
     after: [build-introspection]
     build-environment:
       - PYTHONPATH: "${CRAFT_STAGE}/usr/lib/python3/dist-packages"
-  activate-shutdown:
-    plugin: make
-    source: contrib/snap/activate-shutdown
-    after: [fwupd]
   update-mime:
     plugin: make
     source: contrib/snap/update-mime
