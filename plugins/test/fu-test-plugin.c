@@ -361,7 +361,7 @@ fu_test_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **
 static void
 fu_test_plugin_init(FuTestPlugin *self)
 {
-	g_debug("init");
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_TEST_ONLY);
 	self->delay_request_ms = 10;
 }
 

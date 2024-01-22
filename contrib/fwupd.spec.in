@@ -428,8 +428,7 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %{_datadir}/fwupd/device-tests/*.json
 %endif
 %{_libexecdir}/installed-tests/fwupd/*
-%dir %{_sysconfdir}/fwupd/remotes.d
-%config(noreplace)%{_sysconfdir}/fwupd/remotes.d/fwupd-tests.conf
+%{_datadir}/fwupd/remotes.d/fwupd-tests.conf
 %endif
 
 %if 0%{?qubes_packages}

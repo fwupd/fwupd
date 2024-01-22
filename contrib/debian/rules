@@ -72,9 +72,7 @@ override_dh_install:
 	dh_missing -a --fail-missing
 
 	#this is placed in fwupd-tests
-	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-*/libfu_plugin_test.so
-	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-*/libfu_plugin_test_ble.so
-	rm -f debian/fwupd/etc/fwupd/remotes.d/fwupd-tests.conf
+	rm -f debian/fwupd/usr/share/fwupd/remotes.d/fwupd-tests.conf
 
 	# avoid shipping an empty directory
 	[ ! -d debian/fwupd/lib/systemd ] || find debian/fwupd/lib/systemd -type d -empty -delete

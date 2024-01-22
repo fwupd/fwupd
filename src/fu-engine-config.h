@@ -44,6 +44,8 @@ fu_engine_config_get_only_trusted(FuEngineConfig *self);
 gboolean
 fu_engine_config_get_show_device_private(FuEngineConfig *self);
 gboolean
+fu_engine_config_get_test_devices(FuEngineConfig *self);
+gboolean
 fu_engine_config_get_allow_emulation(FuEngineConfig *self);
 gboolean
 fu_engine_config_get_release_dedupe(FuEngineConfig *self);

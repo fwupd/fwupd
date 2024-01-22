@@ -202,6 +202,11 @@ The `[fwupd]` section can contain the following parameters:
 
   At some point in the future fwupd will change the default to `metadata,firmware`.
 
+**TestDevices={{FU_DAEMON_CONFIG_DEFAULT_TEST_DEVICES}}**
+
+  Create virtual test devices and remote for validating daemon flows.
+  This is only intended for CI testing and development purposes.
+
 {% if plugin_uefi_capsule %}
 
 ## UEFI_CAPSULE PARAMETERS

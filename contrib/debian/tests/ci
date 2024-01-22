@@ -2,8 +2,7 @@
 set -e
 # try loading the mtdram module to run our mtd tests
 modprobe mtdram 2>&1 || true
-fwupdtool modify-config DisabledPlugins ""
-fwupdtool modify-config AllowEmulation true
+fwupdtool enable-test-devices
 fwupdtool modify-config VerboseDomains "*"
 sed "s,ConditionVirtualization=.*,," 		\
 	/lib/systemd/system/fwupd.service >	\

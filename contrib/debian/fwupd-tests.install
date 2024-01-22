@@ -5,4 +5,4 @@
 usr/share/installed-tests/*
 usr/libexec/installed-tests/fwupd/*-self-test
 debian/lintian/fwupd-tests usr/share/lintian/overrides
-etc/fwupd/remotes.d/fwupd-tests.conf
+usr/share/fwupd/remotes.d/fwupd-tests.conf
