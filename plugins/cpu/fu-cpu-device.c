@@ -364,6 +364,8 @@ fu_cpu_device_add_security_attrs_cet_active(FuCpuDevice *self, FuSecurityAttrs *
 	    fu_security_attrs_get_by_appstream_id(attrs,
 						  FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED,
 						  NULL);
+	if (cet_plat_attr == NULL)
+		return;
 	if (!fwupd_security_attr_has_flag(cet_plat_attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
 		return;
 
