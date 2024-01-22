@@ -535,6 +535,8 @@ motd_dir = 'motd.d'
 conf.set_quoted('MOTD_FILE', motd_file)
 conf.set_quoted('MOTD_DIR', motd_dir)
 
+conf.set_quoted('FU_DEFAULT_P2P_POLICY', get_option('p2p_policy'))
+
 configure_file(
   output: 'config.h',
   configuration: conf
