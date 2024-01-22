@@ -18,6 +18,7 @@
 
 #include "fu-bios-settings-private.h"
 #include "fu-common-private.h"
+#include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-coswid-firmware.h"
 #include "fu-device-private.h"
@@ -753,9 +754,49 @@ _plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 }
 
 static void
+fu_config_func(void)
+{
+	const gchar *fn_mut = "/tmp/fwupd-self-test/var/etc/fwupd/fwupd.conf";
+	gboolean ret;
+	g_autofree gchar *composite_data = NULL;
+	g_autoptr(FuConfig) config = fu_config_new();
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_path_mkdir_parent(fn_mut, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = g_file_set_contents(fn_mut,
+				  "# group comment\n"
+				  "[fwupd]\n"
+				  "# key comment\n"
+				  "Key=false\n",
+				  -1,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_config_load(config, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_config_set_value(config, "fwupd", "Key", "false", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = g_file_get_contents(fn_mut, &composite_data, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(g_strstr_len(composite_data, -1, "Key=false") != NULL);
+	g_assert_true(g_strstr_len(composite_data, -1, "Key=true") == NULL);
+	g_assert_true(g_strstr_len(composite_data, -1, "# group comment") != NULL);
+	g_assert_true(g_strstr_len(composite_data, -1, "# key comment") != NULL);
+}
+
+static void
 fu_plugin_config_func(void)
 {
 	GStatBuf statbuf = {0};
+	const gchar *fn_mut = "/tmp/fwupd-self-test/var/etc/fwupd/fwupd.conf";
 	gboolean ret;
 	gint rc;
 	g_autofree gchar *conf_dir = NULL;
@@ -802,7 +843,7 @@ fu_plugin_config_func(void)
 	g_assert_true(g_file_test(fn, G_FILE_TEST_EXISTS));
 
 	/* check it is only readable by the user/group */
-	rc = g_stat(fn, &statbuf);
+	rc = g_stat(fn_mut, &statbuf);
 	g_assert_cmpint(rc, ==, 0);
 	g_assert_cmpint(statbuf.st_mode & 0777, ==, 0640);
 
@@ -5010,6 +5051,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/bios-attrs{load}", fu_bios_settings_load_func);
 	g_test_add_func("/fwupd/security-attrs{hsi}", fu_security_attrs_hsi_func);
 	g_test_add_func("/fwupd/security-attrs{compare}", fu_security_attrs_compare_func);
+	g_test_add_func("/fwupd/config", fu_config_func);
 	g_test_add_func("/fwupd/plugin{config}", fu_plugin_config_func);
 	g_test_add_func("/fwupd/plugin{devices}", fu_plugin_devices_func);
 	g_test_add_func("/fwupd/plugin{device-inhibit-children}",
