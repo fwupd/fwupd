@@ -186,7 +186,7 @@ The `[fwupd]` section can contain the following parameters:
 
 * `DistroId=$ID,DistroVersion=$VERSION_ID`
 
-**P2pPolicy={{FU_DAEMON_CONFIG_DEFAULT_P2P_POLICY}}**
+**P2pPolicy={{FU_DEFAULT_P2P_POLICY}}**
 
   This tells the daemon what peer-to-peer policy to use. For instance, using Passim, an optional
   local caching service. Using peer-to-peer data might reduce the amount of bandwidth used on your

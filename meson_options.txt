@@ -122,6 +122,17 @@ option('passim',
   type: 'feature',
   description: 'Passim support',
 )
+option('p2p_policy',
+  type: 'combo',
+  choices: [
+    'none',
+    'metadata',
+    'firmware',
+    'metadata,firmware',
+  ],
+  value: 'metadata',
+  description: 'Default P2P sharing policy',
+)
 option('lzma',
   type: 'feature',
   description: 'LZMA support',
