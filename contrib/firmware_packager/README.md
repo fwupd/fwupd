@@ -35,7 +35,7 @@ bin file inside the archive, I would pass `--exe dell-thunderbolt-firmware.exe -
 
 `--firmware-homepage` Website for the firmware provider (e.g. <http://www.dell.com>)
 
-`-contact-info` Email address of the firmware developer (e.g. someone@something.net)
+`-contact-info` Email address of the firmware developer (e.g. <someone@something.net>)
 
 `--developer-name` Name of the firmware developer (e.g. Dell) **REQUIRED**
 
