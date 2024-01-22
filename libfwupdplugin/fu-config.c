@@ -109,10 +109,61 @@ fu_config_emit_loaded(FuConfig *self)
 }
 
 static gboolean
+fu_config_load_bytes_replace(FuConfig *self, GBytes *blob, GError **error)
+{
+	FuConfigPrivate *priv = GET_PRIVATE(self);
+	g_auto(GStrv) groups = NULL;
+	g_autoptr(GKeyFile) kf = g_key_file_new();
+
+	if (!g_key_file_load_from_data(kf,
+				       (const gchar *)g_bytes_get_data(blob, NULL),
+				       g_bytes_get_size(blob),
+				       G_KEY_FILE_KEEP_COMMENTS,
+				       error))
+		return FALSE;
+	groups = g_key_file_get_groups(kf, NULL);
+	for (guint i = 0; groups[i] != NULL; i++) {
+		g_auto(GStrv) keys = NULL;
+		g_autofree gchar *comment_group = NULL;
+		keys = g_key_file_get_keys(kf, groups[i], NULL, error);
+		if (keys == NULL)
+			return FALSE;
+		for (guint j = 0; keys[j] != NULL; j++) {
+			g_autofree gchar *value = NULL;
+			g_autofree gchar *comment_key = NULL;
+			value = g_key_file_get_string(kf, groups[i], keys[j], error);
+			if (value == NULL)
+				return FALSE;
+			g_key_file_set_string(priv->keyfile, groups[i], keys[j], value);
+			comment_key = g_key_file_get_comment(kf, groups[i], keys[j], NULL);
+			if (comment_key != NULL) {
+				if (!g_key_file_set_comment(priv->keyfile,
+							    groups[i],
+							    keys[j],
+							    comment_key,
+							    error))
+					return FALSE;
+			}
+		}
+		comment_group = g_key_file_get_comment(kf, groups[i], NULL, NULL);
+		if (comment_group != NULL) {
+			if (!g_key_file_set_comment(priv->keyfile,
+						    groups[i],
+						    NULL,
+						    comment_group,
+						    error))
+				return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_config_reload(FuConfig *self, GError **error)
 {
 	FuConfigPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GPtrArray) legacy_cfg_files = g_ptr_array_new_with_free_func(g_free);
 	const gchar *fn_merge[] = {"daemon.conf",
 				   "msr.conf",
@@ -159,9 +210,11 @@ fu_config_reload(FuConfig *self, GError **error)
 	}
 #endif
 
-	/* we have to load each file into a buffer as g_key_file_load_from_file() clears the
-	 * GKeyFile state before loading each file, and we want to allow the mutable version to be
+	/* we have to copy each group/key from a temporary GKeyFile as g_key_file_load_from_file()
+	 * clears all keys before loading each file, and we want to allow the mutable version to be
 	 * incomplete and just *override* a specific option */
+	if (!g_key_file_load_from_data(priv->keyfile, "", -1, G_KEY_FILE_NONE, error))
+		return FALSE;
 	for (guint i = 0; i < priv->items->len; i++) {
 		FuConfigItem *item = g_ptr_array_index(priv->items, i);
 		g_autofree gchar *dirname = g_path_get_dirname(item->filename);
@@ -180,7 +233,8 @@ fu_config_reload(FuConfig *self, GError **error)
 			g_propagate_error(error, g_steal_pointer(&error_load));
 			return FALSE;
 		}
-		fu_byte_array_append_bytes(buf, blob_item);
+		if (!fu_config_load_bytes_replace(self, blob_item, error))
+			return FALSE;
 
 		/* are any of the legacy files found in this location? */
 		for (guint j = 0; fn_merge[j] != NULL; j++) {
@@ -190,20 +244,11 @@ fu_config_reload(FuConfig *self, GError **error)
 				    fu_bytes_get_contents(fncompat, error);
 				if (blob_compat == NULL)
 					return FALSE;
-				fu_byte_array_append_bytes(buf, blob_compat);
+				if (!fu_config_load_bytes_replace(self, blob_compat, error))
+					return FALSE;
 				g_ptr_array_add(legacy_cfg_files, g_steal_pointer(&fncompat));
 			}
 		}
-	}
-
-	/* load if either file found */
-	if (buf->len > 0) {
-		if (!g_key_file_load_from_data(priv->keyfile,
-					       (const gchar *)buf->data,
-					       buf->len,
-					       G_KEY_FILE_NONE,
-					       error))
-			return FALSE;
 	}
 
 	/* migration needed */
@@ -492,17 +537,22 @@ fu_config_add_location(FuConfig *self, const gchar *dirname, GError **error)
 
 	/* is writable */
 	if (g_file_query_exists(item->file, NULL)) {
-		g_autoptr(GFileInfo) info = g_file_query_info(item->file,
-							      G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE,
-							      G_FILE_QUERY_INFO_NONE,
-							      NULL,
-							      error);
+		g_autoptr(GFileInfo) info = NULL;
+
+		g_debug("loading config %s", item->filename);
+		info = g_file_query_info(item->file,
+					 G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE,
+					 G_FILE_QUERY_INFO_NONE,
+					 NULL,
+					 error);
 		if (info == NULL)
 			return FALSE;
 		item->is_writable =
 		    g_file_info_get_attribute_boolean(info, G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE);
 		if (!item->is_writable)
 			g_debug("config %s is immutable", item->filename);
+	} else {
+		g_debug("not loading config %s", item->filename);
 	}
 
 	/* success */
