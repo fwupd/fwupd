@@ -13,7 +13,6 @@ from jinja2 import Environment, FileSystemLoader
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--output")
     parser.add_argument("-m", "--man", action="append", nargs=1)

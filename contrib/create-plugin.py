@@ -17,12 +17,10 @@ subst = {}
 
 
 def _fix_case(value: str) -> str:
-
     return value[0].upper() + value[1:].lower()
 
 
 def _subst_add_string(key: str, value: str) -> None:
-
     # sanity check
     if not value.isascii():
         raise NotImplementedError(f"{key} can only be ASCII, got {value}")
@@ -35,14 +33,12 @@ def _subst_add_string(key: str, value: str) -> None:
 
 
 def _subst_replace(data: str) -> str:
-
     for key, value in subst.items():
         data = data.replace(key, value)
     return data
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--vendor",

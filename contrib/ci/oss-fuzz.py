@@ -18,7 +18,6 @@ DEFAULT_BUILDDIR = ".ossfuzz"
 
 class Builder:
     def __init__(self) -> None:
-
         self.cc = self._ensure_environ("CC", "gcc")
         self.cxx = self._ensure_environ("CXX", "g++")
         self.builddir = self._ensure_environ("WORK", os.path.realpath(DEFAULT_BUILDDIR))
@@ -157,7 +156,6 @@ class Builder:
         return os.path.join(self.builddir, f"{dst}")
 
     def rustgen(self, src: str) -> str:
-
         fn_root = os.path.basename(src).replace(".rs", "")
         fulldst_c = os.path.join(self.builddir, f"{fn_root}-struct.c")
         fulldst_h = os.path.join(self.builddir, f"{fn_root}-struct.h")
@@ -269,7 +267,6 @@ class Builder:
 
 class Fuzzer:
     def __init__(self, name, srcdir=None, globstr=None, pattern=None) -> None:
-
         self.name = name
         self.srcdir = srcdir or name
         self.globstr = globstr or f"{name}*.bin"
@@ -285,7 +282,6 @@ class Fuzzer:
 
 
 def _build(bld: Builder) -> None:
-
     # CBOR
     src = bld.checkout_source(
         "libcbor", url="https://github.com/PJK/libcbor.git", commit="v0.9.0"
@@ -476,7 +472,6 @@ def _build(bld: Builder) -> None:
 
 
 if __name__ == "__main__":
-
     # install missing deps here rather than patching the Dockerfile in oss-fuzz
     try:
         subprocess.check_call(

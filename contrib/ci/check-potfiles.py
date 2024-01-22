@@ -13,7 +13,6 @@ from typing import List
 
 
 def test_files():
-
     # compare with POTFILES.in
     with open("po/POTFILES.in", "rb") as f:
         potfiles_fns: List[str] = f.read().decode().split("\n")
@@ -42,6 +41,5 @@ def test_files():
 
 
 if __name__ == "__main__":
-
     # all done!
     sys.exit(test_files())

@@ -19,7 +19,6 @@ def __get_license(fn: str) -> str:
 
 
 def test_files() -> int:
-
     rc: int = 0
     build_dirs = [os.path.dirname(cf) for cf in glob.glob("**/config.h")]
 
@@ -49,6 +48,5 @@ def test_files() -> int:
 
 
 if __name__ == "__main__":
-
     # all done!
     sys.exit(test_files())

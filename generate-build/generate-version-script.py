@@ -53,7 +53,6 @@ class LdVersionScript:
         return version
 
     def _add_cls(self, cls):
-
         # add all class functions
         for node in cls.findall(XMLNS + "function"):
             self._add_node(node)
@@ -100,7 +99,6 @@ class LdVersionScript:
                 self._add_cls(cls)
 
     def render(self):
-
         # get a sorted list of all the versions
         versions = []
         for version in self.releases:
@@ -125,7 +123,6 @@ class LdVersionScript:
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-r", "--override", action="append", nargs=2, metavar=("symbol", "version")
