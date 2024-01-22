@@ -12,7 +12,6 @@ import subprocess
 
 
 def test_files() -> int:
-
     fns = sys.argv[1:]
     if not fns:
         fns.append("./plugins")
@@ -74,6 +73,5 @@ def test_files() -> int:
 
 
 if __name__ == "__main__":
-
     # all done!
     sys.exit(test_files())

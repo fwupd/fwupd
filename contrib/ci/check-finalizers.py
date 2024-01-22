@@ -16,12 +16,10 @@ class ReturnValidator:
         self.warnings: List[str] = []
 
     def parse(self, fn: str) -> None:
-
         with open(fn, "rb") as f:
             infunc = False
             has_parent_finalize = False
             for line in f.read().decode().split("\n"):
-
                 # found the function, but ignore the prototype
                 if line.find("_finalize(") != -1:
                     if line.endswith(";"):
@@ -42,7 +40,6 @@ class ReturnValidator:
 
 
 def test_files():
-
     # test all C source files
     validator = ReturnValidator()
     for fn in glob.glob("**/*.c", recursive=True):
@@ -56,6 +53,5 @@ def test_files():
 
 
 if __name__ == "__main__":
-
     # all done!
     sys.exit(test_files())

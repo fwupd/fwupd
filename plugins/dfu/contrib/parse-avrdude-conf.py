@@ -8,6 +8,7 @@
 import sys
 from difflib import SequenceMatcher
 
+
 # finds a part using the ID
 def _find_part_by_id(parts, part_id):
     for part in parts:
@@ -43,7 +44,6 @@ def _parse_parts(fn_source):
     parts = []
 
     for line in open(fn_source).readlines():
-
         # try to clean up crazy syntax
         line = line.replace("\n", "")
         if line.endswith(";"):
@@ -113,7 +113,6 @@ def _write_quirks(parts, fn_destination):
     results = {}
 
     for part in parts:
-
         # ignore meta parts with deprecated names
         if "desc" not in part:
             continue

@@ -62,7 +62,6 @@ class PotFile:
 
 
 def _cairo_surface_write_to_bmp(img: cairo.ImageSurface) -> bytes:
-
     data = bytes(img.get_data())
     return (
         b"BM"
@@ -89,10 +88,8 @@ def _cairo_surface_write_to_bmp(img: cairo.ImageSurface) -> bytes:
 
 
 def main(args) -> int:
-
     # open output archive
     with tarfile.open(args.out, "w:xz", preset=8) as tar:
-
         for lang in languages(args.podir):
             # these are the 1.6:1 of some common(ish) screen widths
             if lang == "en":
@@ -123,7 +120,6 @@ def main(args) -> int:
                 (5688, 3200),
                 (7680, 4320),
             ):
-
                 # generate PangoLanguage
                 font_desc = f"Sans {height / 32:.2f}px"
                 fd = Pango.FontDescription(font_desc)

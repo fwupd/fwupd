@@ -11,7 +11,6 @@ import glob
 
 
 if __name__ == "__main__":
-
     fns = []
 
     if len(sys.argv) > 1:

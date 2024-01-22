@@ -65,7 +65,6 @@ def _minimize_json(json_str: str) -> str:
 
 
 def _get_host_devices_and_attrs() -> str:
-
     # connect to the running daemon
     client = Fwupd.Client()
     builder = Json.Builder()
@@ -125,7 +124,6 @@ if len(sys.argv) < 2:
     sys.stdout.write(_minimize_json(sys.stdin.read()))
 else:
     for fn in sys.argv[1:]:
-
         try:
             with open(fn, "rb") as f_in:
                 json_in = f_in.read().decode()

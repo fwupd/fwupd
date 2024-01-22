@@ -15,7 +15,6 @@ from typing import List
 import xml.etree.ElementTree as ET
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", type=str, help="fwupd version")
     parser.add_argument("-s", "--schema-version", type=str, help="schema version")
@@ -74,7 +73,6 @@ if __name__ == "__main__":
 
     definitions = ET.SubElement(oval_definitions, "definitions")
     for item in items:
-
         definition = ET.SubElement(definitions, "definition")
         definition.set("class", "patch")
         definition.set("id", f"oval:{item['id']}:def:1")
@@ -109,7 +107,6 @@ if __name__ == "__main__":
 
     tests = ET.SubElement(oval_definitions, "tests")
     for item in items:
-
         red_def = ET.SubElement(tests, "red-def:fwupdsecattr_test")
         red_def.set("check", "at least one")
         red_def.set("comment", item["name"])
@@ -123,7 +120,6 @@ if __name__ == "__main__":
 
     objects = ET.SubElement(oval_definitions, "objects")
     for item in items:
-
         red_def = ET.SubElement(objects, "red-def:fwupdsecattr_object")
         red_def.set("id", f"oval:{item['id']}:obj:1")
         red_def.set("version", "1")
@@ -134,7 +130,6 @@ if __name__ == "__main__":
 
     states = ET.SubElement(oval_definitions, "states")
     for item in items:
-
         red_def = ET.SubElement(states, "red-def:fwupdsecattr_state")
         red_def.set("id", f"oval:{item['id']}:ste:1")
         red_def.set("version", "1")

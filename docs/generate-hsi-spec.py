@@ -11,7 +11,6 @@ import json
 from typing import List
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "filename_src", action="store", type=str, help="markdown source"

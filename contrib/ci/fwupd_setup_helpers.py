@@ -199,7 +199,6 @@ def install_packages(os, variant, yes, debugging, packages):
 
 
 if __name__ == "__main__":
-
     command = None
     # compat mode for old training documentation
     if "generate_dependencies.py" in sys.argv[0]:

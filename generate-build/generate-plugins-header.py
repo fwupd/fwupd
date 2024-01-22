@@ -12,7 +12,6 @@ if len(sys.argv) < 3:
     sys.exit(1)
 
 with open(sys.argv[1], "w") as f:
-
     # empty argument is no plugins
     plugin_names = []
     if sys.argv[3]:

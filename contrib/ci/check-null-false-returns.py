@@ -12,7 +12,6 @@ from typing import List
 
 
 def _tokenize(line: str) -> List[str]:
-
     # remove whitespace
     line = line.strip()
     line = line.replace("\t", "")
@@ -65,7 +64,6 @@ class ReturnValidator:
         return self._value
 
     def _test_rvif(self) -> None:
-
         # parse "g_return_val_if_fail (SOMETHING (foo), NULL);"
         self._value = self._tokens[-1]
 
@@ -82,7 +80,6 @@ class ReturnValidator:
             )
 
     def _test_return(self) -> None:
-
         # parse "return 0x0;"
         self._value = self._tokens[-1]
 
@@ -95,7 +92,6 @@ class ReturnValidator:
             )
 
     def parse(self, fn: str) -> None:
-
         self._fn = fn
         with open(fn) as f:
             self._rvif = None
@@ -221,7 +217,6 @@ class ReturnValidator:
 
 
 def test_files():
-
     # test all C source files
     validator = ReturnValidator()
     for fn in glob.glob("**/*.c", recursive=True):
@@ -235,6 +230,5 @@ def test_files():
 
 
 if __name__ == "__main__":
-
     # all done!
     sys.exit(test_files())

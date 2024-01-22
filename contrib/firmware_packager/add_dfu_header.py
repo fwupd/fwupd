@@ -11,7 +11,6 @@ import argparse
 
 
 def main(bin_fn, dfu_fn, pad, vid, pid, rev):
-
     # read binary file
     with open(bin_fn, "rb") as f:
         blob = f.read()
@@ -40,7 +39,6 @@ def main(bin_fn, dfu_fn, pad, vid, pid, rev):
 
 
 if __name__ == "__main__":
-
     # parse args
     parser = argparse.ArgumentParser(description="Add DFU footer on firmware")
     parser.add_argument("--bin", help="Path to the .bin file", required=True)

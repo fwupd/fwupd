@@ -29,7 +29,6 @@ def _failure(msg: str, status=400):
 
 @app.route("/redfish/v1/")
 def index():
-
     # reset counter
     app._percentage545 = 0
     app._percentage546 = 0
@@ -56,7 +55,6 @@ def index():
 
 @app.route("/redfish/v1/UpdateService")
 def update_service():
-
     res = {
         "@odata.id": "/redfish/v1/UpdateService",
         "@odata.type": "#UpdateService.v1_8_0.UpdateService",
@@ -96,7 +94,6 @@ def update_service():
 
 @app.route("/redfish/v1/UpdateService/FirmwareInventory")
 def firmware_inventory():
-
     res = {
         "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory",
         "@odata.type": "#SoftwareInventoryCollection.SoftwareInventoryCollection",
@@ -112,7 +109,6 @@ def firmware_inventory():
 
 @app.route("/redfish/v1/UpdateService/FirmwareInventory/BMC")
 def firmware_inventory_bmc():
-
     res = {
         "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/BMC",
         "@odata.type": "#SoftwareInventory.v1_2_3.SoftwareInventory",
@@ -139,14 +135,12 @@ def firmware_inventory_bmc():
 
 @app.route("/redfish/v1/Managers/BMC")
 def redfish_managers_bmc():
-
     res = {}
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
 
 @app.route("/redfish/v1/Chassis/1/PCIeDevices/slot_3/PCIeFunctions/slot_2.00")
 def firmware_chassis_pcie_function_slot2():
-
     res = {
         "VendorId": "0x14e4",
         "FunctionId": 1,
@@ -162,7 +156,6 @@ def firmware_chassis_pcie_function_slot2():
 
 @app.route("/redfish/v1/Chassis/1/PCIeDevices/slot_3/PCIeFunctions")
 def firmware_chassis_pcie_functions():
-
     res = {
         "Members": [
             {
@@ -175,7 +168,6 @@ def firmware_chassis_pcie_functions():
 
 @app.route("/redfish/v1/Systems/437XR1138R2")
 def firmware_systems_slot7():
-
     res = {
         "SerialNumber": "12345",
         "@odata.id": "/redfish/v1/Chassis/1/PCIeDevices/slot_3",
@@ -190,7 +182,6 @@ def firmware_systems_slot7():
 
 @app.route("/redfish/v1/UpdateService/FirmwareInventory/BIOS")
 def firmware_inventory_bios():
-
     res = {
         "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/BIOS",
         "@odata.type": "#SoftwareInventory.v1_2_3.SoftwareInventory",
@@ -228,7 +219,6 @@ def task_manager():
 
 @app.route("/redfish/v1/TaskService/Tasks/545")
 def task_status_545():
-
     res = {
         "@odata.id": "/redfish/v1/TaskService/Tasks/545",
         "@odata.type": "#Task.v1_4_3.Task",
@@ -281,7 +271,6 @@ def task_status_545():
 
 @app.route("/redfish/v1/TaskService/Tasks/546")
 def task_status_546():
-
     res = {
         "@odata.type": "#Task.v1_4_3.Task",
         "@odata.id": "/redfish/v1/TaskService/Tasks/546",
@@ -317,7 +306,6 @@ def task_status_546():
 
 @app.route("/FWUpdate-unlicensed", methods=["GET"])
 def fwupdate_unlicensed():
-
     res = {
         "error": {
             "code": "Base.v1_4_0.GeneralError",
@@ -362,7 +350,6 @@ def fwupdate_unlicensed():
 
 @app.route("/FWUpdate-smc", methods=["POST"])
 def fwupdate_smc():
-
     data = json.loads(request.form["UpdateParameters"])
     if data["@Redfish.OperationApplyTime"] != "OnStartUpdateRequest":
         return _failure("apply invalid")
@@ -423,7 +410,6 @@ def fwupdate_smc():
 
 @app.route("/FWUpdate", methods=["POST"])
 def fwupdate():
-
     data = json.loads(request.form["UpdateParameters"])
     if data["@Redfish.OperationApplyTime"] != "Immediate":
         return _failure("apply invalid")

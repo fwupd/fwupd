@@ -29,7 +29,6 @@ def __get_includes(fn: str) -> List[str]:
 
 
 def test_files() -> int:
-
     rc: int = 0
 
     lib_headers1 = glob.glob("libfwupd/*.h")
@@ -45,7 +44,6 @@ def test_files() -> int:
 
     # test all C and H files
     for fn in glob.glob("**/*.[c|h]", recursive=True):
-
         # we do not care
         if fn.startswith("subprojects"):
             continue
@@ -86,7 +84,6 @@ def test_files() -> int:
 
         # check for double top level headers
         for toplevel_header in toplevel_headers:
-
             toplevel_fn = os.path.basename(toplevel_header)
             toplevel_includes = __get_includes(toplevel_header)
             toplevel_includes_nopath = [
@@ -138,6 +135,5 @@ def test_files() -> int:
 
 
 if __name__ == "__main__":
-
     # all done!
     sys.exit(test_files())

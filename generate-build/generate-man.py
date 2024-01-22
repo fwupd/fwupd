@@ -13,7 +13,6 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
 def _replace_bookend(line: str, search: str, replace_l: str, replace_r: str) -> str:
-
     try:
         while line.find(search) != -1:
             it = iter(line.split(search, maxsplit=2))
@@ -48,7 +47,6 @@ def _strip_md(data: str) -> str:
 
 
 def _convert_md_to_man(data: str) -> str:
-
     sections = data.split("\n\n")
     troff_lines: List[str] = []
 
@@ -150,7 +148,6 @@ def _add_defines(defines: Dict[str, str], fn: str) -> None:
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--output")
     parser.add_argument(

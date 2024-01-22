@@ -9,7 +9,6 @@ import sys
 
 
 def test_files() -> int:
-
     rc: int = 0
 
     for fn in glob.glob("**/*.quirk", recursive=True):
@@ -46,6 +45,5 @@ def test_files() -> int:
 
 
 if __name__ == "__main__":
-
     # all done!
     sys.exit(test_files())

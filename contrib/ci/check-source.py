@@ -10,7 +10,6 @@ import sys
 
 
 def test_files() -> int:
-
     # test all C and H files
     rc: int = 0
     for fn in glob.glob("**/*.[c|h]", recursive=True):
@@ -39,6 +38,5 @@ def test_files() -> int:
 
 
 if __name__ == "__main__":
-
     # all done!
     sys.exit(test_files())

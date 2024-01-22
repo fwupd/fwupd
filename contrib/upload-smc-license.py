@@ -8,7 +8,6 @@ import base64
 import ssl
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-u",

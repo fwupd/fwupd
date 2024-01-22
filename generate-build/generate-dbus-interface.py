@@ -11,7 +11,6 @@ import xml.etree.ElementTree as ET
 
 
 def _remove_docs(parent):
-
     namespaces = {"doc": "http://www.freedesktop.org/dbus/1.0/doc.dtd"}
     for node in parent.findall("doc:doc", namespaces):
         parent.remove(node)
@@ -19,7 +18,6 @@ def _remove_docs(parent):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("src", action="store", type=str, help="metainfo source")
     parser.add_argument("dst", action="store", type=str, help="metainfo destination")
