@@ -1674,6 +1674,10 @@ fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 		/* TRANSLATORS: The kernel does not support this plugin */
 		return _("Running kernel is too old");
 	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_TEST_ONLY) {
+		/* TRANSLATORS: The plugin is only for testing */
+		return _("Plugin is only for testing");
+	}
 
 	/* fall back for unknown types */
 	return fwupd_plugin_flag_to_string(plugin_flag);
@@ -1697,6 +1701,7 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 					       FU_CONSOLE_COLOR_GREEN);
 	case FWUPD_PLUGIN_FLAG_DISABLED:
 	case FWUPD_PLUGIN_FLAG_NO_HARDWARE:
+	case FWUPD_PLUGIN_FLAG_TEST_ONLY:
 		return fu_console_color_format(fu_util_plugin_flag_to_string(plugin_flag),
 					       FU_CONSOLE_COLOR_BLACK);
 	case FWUPD_PLUGIN_FLAG_LEGACY_BIOS:

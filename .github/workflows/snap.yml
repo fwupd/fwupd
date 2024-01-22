@@ -50,16 +50,13 @@ jobs:
       run: |
         sudo snap install --dangerous ${{ needs.build-snap.outputs.snap_name }}
         sudo snap connect fwupd:polkit :polkit
-        sudo fwupd.fwupdtool modify-config DisabledPlugins ""
-    - id: build-cab
-      run: |
-        fwupd.fwupdtool build-cabinet fakedevice123.cab data/installed-tests/fakedevice123.*
-        sudo mkdir -p /var/snap/fwupd/common/share/fwupd/remotes.d/vendor/firmware
-        sudo cp fakedevice123.cab /var/snap/fwupd/common/share/fwupd/remotes.d/vendor/firmware
-    - id: update-fake-device
-      run: |
-        sudo fwupd.fwupdmgr update
-        fwupd.fwupdmgr get-updates || [ "$?" = "2" ]
+        sudo fwupd.fwupdtool enable-test-devices
+    - name: Run fwupdmgr tests
+      run: sudo /snap/fwupd/current/share/installed-tests/fwupd/fwupdmgr.sh
+    - name: Run fwupd tests
+      run: sudo /snap/fwupd/current/share/installed-tests/fwupd/fwupd.sh
+    - name: Run fwupdtool tests
+      run: sudo /snap/fwupd/current/share/installed-tests/fwupd/fwupdtool.sh
 
   deploy-store:
     needs: [build-snap, test-snap]

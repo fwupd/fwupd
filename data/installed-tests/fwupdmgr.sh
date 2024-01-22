@@ -16,11 +16,6 @@ fwupdmgr get-remotes
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
-echo "Enabling fwupd-tests remote..."
-fwupdmgr enable-remote fwupd-tests
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
-
-# ---
 echo "Update the device hash database..."
 fwupdmgr verify-update $device
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
