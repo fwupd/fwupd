@@ -181,7 +181,7 @@ During build time a set of tasks will have been created for use with Visual Stud
 The default build task which is triggered by using *ctrl-shift-b* will build the project with default settings.
 The default test task can be triggered from the command palette to run the test suite.
 Open the command palette with *ctrl-shift-p* and type **Run test task** and hit enter. This will launch the daemon in a terminal window.
-<img src="test_task.png" width="286">
+<img src="test_task.png" width="286" alt="test task screenshot">
 
 ## Using Visual Studio Code to debug
 
@@ -203,11 +203,11 @@ This will configure `gdbserver` to listen on a local port waiting for a debugger
 
 Launch vscode in the same directory as the Git checkout. After it's launched, set a source breakpoint.
 
-<img src="debug_breakpoint.png" width="720">
+<img src="debug_breakpoint.png" width="720" alt="debug breakpoint screenshot">
 
 Then use the run and debug button (or *ctrl-shift-d*) to open up the debugger. From the debugger choose the tool to use.
 
-<img src="debug_tool_selector.png" width="720">
+<img src="debug_tool_selector.png" width="720" alt="debug tool selector screenshot">
 
 Press the green start button (or use *F5*) to start debugging. The debugger will attach to the process you launched and stop where you left off.
 
@@ -219,8 +219,8 @@ For debugging the daemon, a helper task is also included to launch the daemon wi
 
 Open the command palette with *ctrl-shift-p* and type **Run task** and hit enter. Select the `gdbserver-fwupd` task.
 This will launch the daemon in a terminal window.
-<img src="debug_task.png" width="186">
+<img src="debug_task.png" width="186" alt="debug task screenshot">
 
 Then use the run and debug button (or *ctrl-shift-d*) to open up the debugger. From the debugger choose `gdbserver (fwupd)`.
 
-<img src="debug_tool_selector.png" width="720">
+<img src="debug_tool_selector.png" width="720" alt="debug tool selector screenshot">
