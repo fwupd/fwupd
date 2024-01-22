@@ -169,8 +169,6 @@ parts:
       - systemd
       - uuid-dev
     stage-packages:
-      - libunbound8
-      - libevent-2.1-7
       - libnghttp2-14
       - libpsl5
       - librtmp1
@@ -180,13 +178,11 @@ parts:
       - libassuan0
       - libffi8
       - libjcat1
-      - liblcms2-2
       - liblzma5
       - libgusb2
       - libusb-1.0-0
       - libgudev-1.0-0
       - libgpgme11
-      - libpcre32-3
       - libprotobuf-c1
       - libpolkit-gobject-1-0
       - libtss2-esys-3.0.2-0
@@ -255,11 +251,15 @@ parts:
       - -usr/share/info
       - -usr/share/gir-1.0
       - -usr/share/upstart
+      - -usr/lib/*/libicu*
       - -usr/lib/*/pkgconfig
-      - -usr/lib/x86_64-linux-gnu/gio/modules/libdconfsettings.so
+      - -usr/lib/*/libnpth*
+      - -usr/lib/*/libgthread*
+      - -usr/lib/*/libksba*
+      - -usr/lib/*/gio/modules/libdconfsettings.so
       - -usr/lib/systemd/user/dconf.service
       - -usr/share/dbus-1/services/ca.desrt.dconf.service
-      - -usr/lib/x86_64-linux-gnu/libdconf.so.1.0.0
+      - -usr/lib/*/libdconf.so.1.0.0
     after: [build-introspection]
     build-environment:
       - PYTHONPATH: "${CRAFT_STAGE}/usr/lib/python3/dist-packages"
