@@ -101,7 +101,7 @@ to one of "Manager Network" Interfaces. For example:
 In this example, the service IP is "192.168.0.133".
 
 Since the conventional HTTP port is 80 and HTTPS port is 443, we can set
-RedfishUri to either "http://192.168.0.133:80" or "https://192.168.0.133:443"
+RedfishUri to either "<http://192.168.0.133:80>" or "<https://192.168.0.133:443>"
 and verify the uri with
 
 ```shell
