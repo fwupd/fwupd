@@ -39,7 +39,6 @@ class Export(Enum):
 
 # convert a CamelCase name into snake_case
 def _camel_to_snake(name: str) -> str:
-
     # specified as all caps
     if name.upper() == name:
         return name.lower()
@@ -110,7 +109,6 @@ class EnumItem:
         return f"FU_{name_snake.upper()}_{_camel_to_snake(self.name).replace('-', '_').upper()}"
 
     def parse_default(self, val: str) -> None:
-
         val = {
             "u64::MAX": "G_MAXUINT64",
             "u32::MAX": "G_MAXUINT32",
@@ -216,7 +214,6 @@ class StructObj:
                     item.add_private_export("Setters")
 
     def add_public_export(self, derive: str) -> None:
-
         # Getters and Setters are special as we do not want public exports of const
         if derive in ["Getters", "Setters"]:
             for item in self.items:
@@ -346,7 +343,6 @@ class StructItem:
         return ""
 
     def _parse_default(self, val: str) -> str:
-
         if self.enum_obj:
             enum_item = self.enum_obj.item(val)
             if not enum_item:
@@ -379,7 +375,6 @@ class StructItem:
         raise ValueError(f"do not know how to parse value for type: {self.type}")
 
     def parse_default(self, val: str) -> None:
-
         if (
             self.type == Type.U8
             and self.multiplier
@@ -391,14 +386,12 @@ class StructItem:
         self.default = self._parse_default(val)
 
     def parse_constant(self, val: str) -> None:
-
         self.default = self._parse_default(val)
         self.constant = self.default
 
     def parse_type(
         self, val: str, enum_objs: Dict[str, EnumObj], struct_objs: Dict[str, StructObj]
     ) -> None:
-
         # is array
         if val.startswith("[") and val.endswith("]"):
             typestr, multiplier = val[1:-1].split(";", maxsplit=1)
@@ -461,7 +454,6 @@ class Generator:
         )
 
     def _process_enums(self, enum_obj: EnumObj) -> Tuple[str, str]:
-
         # render
         subst = {
             "Type": Type,
@@ -473,7 +465,6 @@ class Generator:
         return template_c.render(subst), template_h.render(subst)
 
     def _process_structs(self, struct_obj: StructObj) -> Tuple[str, str]:
-
         # render
         subst = {
             "Type": Type,
@@ -493,7 +484,6 @@ class Generator:
         enum_cur: Optional[EnumObj] = None
 
         for line in contents.split("\n"):
-
             # replace all tabs with spaces
             line = line.replace("\t", "  ")
 
@@ -570,7 +560,6 @@ class Generator:
 
             # split structure into sections
             if struct_cur:
-
                 # parse "signature: u32be == 0x12345678"
                 parts = line.replace(" ", "").split(":", maxsplit=2)
                 if len(parts) == 1:
@@ -616,7 +605,6 @@ class Generator:
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("src", action="store", type=str, help="source")
     parser.add_argument("dst_c", action="store", type=str, help="destination .c")
