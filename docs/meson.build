@@ -29,6 +29,7 @@ if build_standalone
         '--defines', join_paths(meson.project_source_root(), 'plugins', 'thunderbolt', 'fu-thunderbolt-plugin.c'),
         '--defines', join_paths(meson.project_source_root(), 'plugins', 'uefi-capsule', 'fu-uefi-capsule-plugin.c'),
         '--defines', join_paths(meson.project_source_root(), 'src', 'fu-engine-config.c'),
+        '--defines', join_paths(meson.project_build_root(), 'config.h'),
       ],
       install: true,
       install_dir: join_paths(mandir, 'man5'),
