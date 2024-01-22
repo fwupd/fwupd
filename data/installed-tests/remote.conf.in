@@ -2,8 +2,9 @@
 # This is a local fwupd remote that is used only for installed tests
 # either from continuous integration or for fake devices from fwupd
 # frontends
+# It will only be loaded when the daemon configuration has `TestDevices=true`
 
-Enabled=false
+Enabled=true
 Title=fwupd test suite
 Keyring=none
 MetadataURI=file://@installedtestsdir@/fwupd-tests.xml

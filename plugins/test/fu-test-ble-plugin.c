@@ -18,6 +18,7 @@ G_DEFINE_TYPE(FuTestBlePlugin, fu_test_ble_plugin, FU_TYPE_PLUGIN)
 static void
 fu_test_ble_plugin_init(FuTestBlePlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_TEST_ONLY);
 }
 
 static void

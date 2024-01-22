@@ -981,6 +981,14 @@ typedef enum {
  *
  * Since: 1.5.0
  */
+#define FWUPD_PLUGIN_FLAG_TEST_ONLY (1ull << 18)
+/**
+ * FWUPD_PLUGIN_FLAG_TEST_ONLY:
+ *
+ * The plugin is used for virtual devices that exercising daemon flows.
+ *
+ * Since: 1.9.13
+ */
 #define FWUPD_PLUGIN_FLAG_UNKNOWN G_MAXUINT64
 /**
  * FwupdPluginFlags:
