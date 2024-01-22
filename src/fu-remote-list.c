@@ -35,6 +35,7 @@ struct _FuRemoteList {
 	GObject parent_instance;
 	GPtrArray *array;	  /* (element-type FwupdRemote) */
 	GPtrArray *monitors;	  /* (element-type GFileMonitor) */
+	gboolean testing_remote;
 	XbSilo *silo;
 };
 
@@ -345,6 +346,8 @@ fu_remote_list_add_for_path(FuRemoteList *self, const gchar *path, GError **erro
 		return FALSE;
 	for (guint i = 0; i < paths->len; i++) {
 		const gchar *filename = g_ptr_array_index(paths, i);
+		if (g_str_has_suffix(filename, "fwupd-tests.conf") && !self->testing_remote)
+			continue;
 		if (!fu_remote_list_add_for_file(self, os_release, filename, error))
 			return FALSE;
 	}
@@ -506,18 +509,22 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 	guint depsolve_check;
 	g_autofree gchar *remotesdir = NULL;
 	g_autofree gchar *remotesdir_mut = NULL;
+	g_autofree gchar *remotesdir_immut = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* clear */
 	g_ptr_array_set_size(self->array, 0);
 	g_ptr_array_set_size(self->monitors, 0);
 
-	/* search mutable, and then fall back to /etc */
+	/* search mutable, and then fall back to /etc and immutable */
 	remotesdir_mut = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	if (!fu_remote_list_add_for_path(self, remotesdir_mut, error))
 		return FALSE;
 	remotesdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
 	if (!fu_remote_list_add_for_path(self, remotesdir, error))
+		return FALSE;
+	remotesdir_immut = fu_path_from_kind(FU_PATH_KIND_DATADIR_PKG);
+	if (!fu_remote_list_add_for_path(self, remotesdir_immut, error))
 		return FALSE;
 
 	/* depsolve */
@@ -603,6 +610,10 @@ fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **er
 
 	g_return_val_if_fail(FU_IS_REMOTE_LIST(self), FALSE);
 	g_return_val_if_fail(self->silo == NULL, FALSE);
+
+	/* enable testing only remotes */
+	if (flags & FU_REMOTE_LIST_LOAD_FLAG_TEST_REMOTE)
+		self->testing_remote = TRUE;
 
 	/* load AppStream about the remote_list */
 	if (!fu_remote_list_load_metainfos(builder, error))

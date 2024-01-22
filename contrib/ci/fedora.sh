@@ -73,8 +73,7 @@ mkdir -p dist
 cp $HOME/rpmbuild/RPMS/*/*.rpm dist
 
 if [ "$CI" = "true" ]; then
-	fwupdtool modify-config DisabledPlugins ""
-	fwupdtool modify-config AllowEmulation true
+	fwupdtool enable-test-devices
 
 	# set up enough PolicyKit and D-Bus to run the daemon
 	mkdir -p /run/dbus

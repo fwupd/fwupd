@@ -769,6 +769,7 @@ fu_engine_modify_config(FuEngine *self, const gchar *key, const gchar *value, GE
 			       "ReleaseDedupe",
 			       "ReleasePriority",
 			       "ShowDevicePrivate",
+			       "TestDevices",
 			       "TrustedReports",
 			       "TrustedUids",
 			       "UpdateMotd",
@@ -6444,6 +6445,16 @@ fu_engine_is_uid_trusted(FuEngine *self, guint64 calling_uid)
 }
 
 static gboolean
+fu_engine_is_test_plugin_disabled(FuEngine *self, FuPlugin *plugin)
+{
+	if (!fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_TEST_ONLY))
+		return FALSE;
+	if (fu_engine_config_get_test_devices(self->config))
+		return FALSE;
+	return TRUE;
+}
+
+static gboolean
 fu_engine_is_plugin_name_disabled(FuEngine *self, const gchar *name)
 {
 	GPtrArray *disabled = fu_engine_config_get_disabled_plugins(self->config);
@@ -7240,6 +7251,7 @@ fu_engine_plugins_init(FuEngine *self, FuProgress *progress, GError **error)
 
 		/* is disabled */
 		if (fu_engine_is_plugin_name_disabled(self, name) ||
+		    fu_engine_is_test_plugin_disabled(self, plugin) ||
 		    !fu_engine_is_plugin_name_enabled(self, name)) {
 			g_ptr_array_add(plugins_disabled, g_strdup(name));
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED);
@@ -8106,6 +8118,8 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	/* read remotes */
 	if (flags & FU_ENGINE_LOAD_FLAG_REMOTES) {
 		FuRemoteListLoadFlags remote_list_flags = FU_REMOTE_LIST_LOAD_FLAG_NONE;
+		if (fu_engine_config_get_test_devices(self->config))
+			remote_list_flags |= FU_REMOTE_LIST_LOAD_FLAG_TEST_REMOTE;
 		if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
 			remote_list_flags |= FU_REMOTE_LIST_LOAD_FLAG_READONLY_FS;
 		if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE)

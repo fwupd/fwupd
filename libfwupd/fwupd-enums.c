@@ -454,6 +454,8 @@ fwupd_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 		return "measure-system-integrity";
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_READY)
 		return "ready";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_TEST_ONLY)
+		return "test-only";
 	return NULL;
 }
 
@@ -508,6 +510,8 @@ fwupd_plugin_flag_from_string(const gchar *plugin_flag)
 		return FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY;
 	if (g_strcmp0(plugin_flag, "ready") == 0)
 		return FWUPD_PLUGIN_FLAG_READY;
+	if (g_strcmp0(plugin_flag, "test-only") == 0)
+		return FWUPD_PLUGIN_FLAG_TEST_ONLY;
 	return FWUPD_PLUGIN_FLAG_UNKNOWN;
 }
 

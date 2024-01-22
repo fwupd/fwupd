@@ -119,7 +119,7 @@ parts:
               ${CRAFT_PART_INSTALL}/share/installed-tests/fwupd/fwupdtool.sh
       sed -i "s,\(/libexec\),/snap/fwupd/current/\1," \
               ${CRAFT_PART_INSTALL}/share/installed-tests/fwupd/fwupd.sh
-      sed -i 's,^MetadataURI=.*$,MetadataURI=file:///snap/fwupd/current/share/installed-tests/fwupd/fwupd-tests.xml,' "${CRAFT_PART_INSTALL}/etc/fwupd/remotes.d/fwupd-tests.conf"
+      sed -i 's,^MetadataURI=.*$,MetadataURI=file:///snap/fwupd/current/share/installed-tests/fwupd/fwupd-tests.xml,' "${CRAFT_PART_INSTALL}/share/fwupd/remotes.d/fwupd-tests.conf"
       # fixes up dbus service for classic snap
       sed -i 's!SystemdService=\(.*\)!SystemdService=snap.fwupd.fwupd.service!' \
               ${CRAFT_PART_INSTALL}/share/dbus-1/system-services/org.freedesktop.fwupd.service

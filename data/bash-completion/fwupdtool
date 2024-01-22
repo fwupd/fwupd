@@ -3,8 +3,10 @@ _fwupdtool_cmd_list=(
 	'build-cabinet'
 	'clear-history'
 	'disable-remote'
+	'disable-test-devices'
 	'efivar-list'
 	'enable-remote'
+	'enable-test-devices'
 	'esp-list'
 	'esp-mount'
 	'esp-unmount'
@@ -96,6 +98,7 @@ modify_config_opts=(
 	'ReleaseDedupe'
 	'ReleasePriority'
 	'ShowDevicePrivate'
+	'TestDevices'
 	'TrustedReports'
 	'TrustedUids'
 	'UpdateMotd'
@@ -242,7 +245,7 @@ _fwupdtool()
 			return 0
 		elif [[ "$args" = "3" ]]; then
 			case $prev in
-			AllowEmulation|EnumerateAllDevices|OnlyTrusted|IgnorePower|UpdateMotd|ShowDevicePrivate|ReleaseDedupe)
+			AllowEmulation|EnumerateAllDevices|OnlyTrusted|IgnorePower|UpdateMotd|ShowDevicePrivate|ReleaseDedupe|TestDevices)
 				COMPREPLY=( $(compgen -W "True False" -- "$cur") )
 				;;
 			ReleasePriority)

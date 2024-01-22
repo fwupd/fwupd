@@ -46,7 +46,7 @@ jobs:
       run: |
         sudo snap install --dangerous ${{ needs.build-snap.outputs.snap_name }}
         sudo snap connect fwupd:polkit :polkit
-        sudo fwupd.fwupdtool modify-config DisabledPlugins ""
+        sudo fwupd.fwupdtool enable-test-devices
     - name: Run fwupdmgr tests
       run: sudo /snap/fwupd/current/share/installed-tests/fwupd/fwupdmgr.sh
     - name: Run fwupd tests

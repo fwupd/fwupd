@@ -5,19 +5,9 @@ set -e
 
 #only enable on installation not upgrade
 if [ "$1" = configure ] && [ -z "$2" ]; then
-	if [ -f /etc/fwupd/fwupd.conf ]; then
-		if [ "$CI" = "true" ]; then
-			fwupdtool modify-config DisabledPlugins ""
-			fwupdtool modify-config AllowEmulation true
-		else
-			echo "To enable test suite, modify /etc/fwupd/fwupd.conf"
-		fi
-	fi
-	if [ -f /etc/fwupd/remotes.d/fwupd-tests.conf ]; then
-		if [ "$CI" = "true" ]; then
-			fwupdtool enable-remote fwupd-tests
-		else
-			echo "To enable test suite, enable fwupd-tests remote"
-		fi
+	if [ "$CI" = "true" ]; then
+		fwupdtool enable-test-devices
+	else
+		echo "To enable test suite, run `fwupdtool enable-test-devices`"
 	fi
 fi

@@ -30,7 +30,7 @@ struct _FuEngineConfig {
 G_DEFINE_TYPE(FuEngineConfig, fu_engine_config, FU_TYPE_CONFIG)
 
 /* defaults changed here will also be reflected in the fwupd.conf man page */
-#define FU_DAEMON_CONFIG_DEFAULT_DISABLED_PLUGINS      "test;test_ble"
+#define FU_DAEMON_CONFIG_DEFAULT_DISABLED_PLUGINS      ""
 #define FU_DAEMON_CONFIG_DEFAULT_URI_SCHEMES	       "file;https;http;ipfs"
 #define FU_DAEMON_CONFIG_DEFAULT_UPDATE_MOTD	       TRUE
 #define FU_DAEMON_CONFIG_DEFAULT_IGNORE_POWER	       FALSE
@@ -44,6 +44,7 @@ G_DEFINE_TYPE(FuEngineConfig, fu_engine_config, FU_TYPE_CONFIG)
 #define FU_DAEMON_CONFIG_DEFAULT_RELEASE_DEDUPE	       TRUE
 #define FU_DAEMON_CONFIG_DEFAULT_RELEASE_PRIORITY      "local"
 #define FU_DAEMON_CONFIG_DEFAULT_IDLE_TIMEOUT	       7200
+#define FU_DAEMON_CONFIG_DEFAULT_TEST_DEVICES	       FALSE
 
 static FwupdReport *
 fu_engine_config_report_from_spec(FuEngineConfig *self, const gchar *report_spec, GError **error)
@@ -336,6 +337,15 @@ fu_engine_config_get_show_device_private(FuEngineConfig *self)
 					"fwupd",
 					"ShowDevicePrivate",
 					FU_DAEMON_CONFIG_DEFAULT_SHOW_DEVICE_PRIVATE);
+}
+
+gboolean
+fu_engine_config_get_test_devices(FuEngineConfig *self)
+{
+	return fu_config_get_value_bool(FU_CONFIG(self),
+					"fwupd",
+					"TestDevices",
+					FU_DAEMON_CONFIG_DEFAULT_TEST_DEVICES);
 }
 
 gboolean

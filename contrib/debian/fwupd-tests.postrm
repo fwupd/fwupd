@@ -5,19 +5,9 @@ set -e
 
 # don't run on purge; the commands might be missing
 if [ "$1" = remove ]; then
-	if [ -f /etc/fwupd/fwupd.conf ]; then
-		if [ "$CI" = "true" ]; then
-			fwupdtool modify-config DisabledPlugins "test;test_ble"
-			fwupdtool modify-config AllowEmulation false
-		else
-			echo "To disable test suite, modify /etc/fwupd/fwupd.conf"
-		fi
-	fi
-	if [ -f /etc/fwupd/remotes.d/fwupd-tests.conf ]; then
-		if [ "$CI" = "true" ]; then
-			fwupdtool disable-remote fwupd-tests
-		else
-			echo "To enable test suite, enable fwupd-tests remote"
-		fi
+	if [ "$CI" = "true" ]; then
+		fwupdtool disable-test-devices
+	else
+		echo "To disable test suite, run `fwupdtool disable-test-devices`"
 	fi
 fi
