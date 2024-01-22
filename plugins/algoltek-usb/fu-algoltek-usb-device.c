@@ -74,6 +74,7 @@ fu_algoltek_usb_device_rdr(FuAlgoltekUsbDevice *self, int address, GError **erro
 static GByteArray *
 fu_algoltek_usb_device_rdv(FuAlgoltekUsbDevice *self, GError **error)
 {
+	guint16 version_prefix;
 	g_autoptr(GByteArray) st = fu_struct_algoltek_cmd_transfer_pkt_new();
 	g_autoptr(GByteArray) version_data = g_byte_array_new();
 
@@ -91,11 +92,32 @@ fu_algoltek_usb_device_rdv(FuAlgoltekUsbDevice *self, GError **error)
 						  error))
 		return NULL;
 
-	/* Remove len and cmd bytes */
-	for (guint32 i = 2; i < st->len; i++) {
-		if (st->data[i] < 128)
-			fu_byte_array_append_uint8(version_data, st->data[i]);
+	if (!fu_memread_uint16_safe(st->data, st->len, 2, &version_prefix, G_BIG_ENDIAN, error))
+		return NULL;
+
+	if (version_prefix == 0x4147) {
+		guint8 underscore_count = 0;
+
+		/* remove len, cmd bytes and "AG" prefixes */
+		for (guint32 i = 4; i < st->len; i++) {
+			if (st->data[i] == '_') {
+				underscore_count++;
+				if (underscore_count == 1)
+					continue;
+			}
+			if (underscore_count > 2)
+				break;
+			if (underscore_count > 0)
+				fu_byte_array_append_uint8(version_data, st->data[i]);
+		}
+	} else {
+		/* remove len and cmd bytes */
+		for (guint32 i = 2; i < st->len; i++) {
+			if (st->data[i] < 128)
+				fu_byte_array_append_uint8(version_data, st->data[i]);
+		}
 	}
+
 	/* success */
 	return g_steal_pointer(&version_data);
 }
@@ -475,6 +497,9 @@ fu_algoltek_usb_device_write_firmware(FuDevice *device,
 	if (!fu_algoltek_usb_device_rst(self, 0x100, error))
 		return FALSE;
 
+	/* the device automatically reboots */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+
 	/* success! */
 	return TRUE;
 }
@@ -498,6 +523,7 @@ fu_algoltek_usb_device_init(FuAlgoltekUsbDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ALGOLTEK_USB_FIRMWARE);
+	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }
 
 static void
