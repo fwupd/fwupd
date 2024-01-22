@@ -74,7 +74,6 @@ fu_algoltek_usb_device_rdr(FuAlgoltekUsbDevice *self, int address, GError **erro
 static GByteArray *
 fu_algoltek_usb_device_rdv(FuAlgoltekUsbDevice *self, GError **error)
 {
-	guint8 underscore_count = 0;
 	guint16 version_prefix;
 	g_autoptr(GByteArray) st = fu_struct_algoltek_cmd_transfer_pkt_new();
 	g_autoptr(GByteArray) version_data = g_byte_array_new();
@@ -97,6 +96,8 @@ fu_algoltek_usb_device_rdv(FuAlgoltekUsbDevice *self, GError **error)
 		return NULL;
 
 	if (version_prefix == 0x4147) {
+		guint8 underscore_count = 0;
+
 		/* remove len, cmd bytes and "AG" prefixes */
 		for (guint32 i = 4; i < st->len; i++) {
 			if (st->data[i] == '_') {
