@@ -34,6 +34,41 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.12" date="2024-01-23">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add remote modification support to fwupdtool</li>
+          <li>Add support for more modify-config options</li>
+          <li>Generate HTML pages for all man pages</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Assume the legacy LVFS::UpdateRequestId tag is non-generic</li>
+          <li>Avoid crashing the daemon if not using udisks</li>
+          <li>Correctly mark the CPU as supported</li>
+          <li>Correctly match invalid EFI partitions</li>
+          <li>Do not change the device status until the action has completed</li>
+          <li>Do not require systemd for fwupdtool modify-config</li>
+          <li>Enable access to the home interface for snap</li>
+          <li>Fix an assertion when enabling lvfs-testing for the first time</li>
+          <li>Fix a possible crash in fwupdtool build-cabinet</li>
+          <li>Handle systems with more than one ccp device</li>
+          <li>Only check AMD CPUs for SHSTK, not IBT</li>
+          <li>Only write the mutable fwupd.conf with the current values</li>
+          <li>Re-evaluate supported every time pci-psp attributes are refreshed</li>
+          <li>Show "CET OS support" on AMD systems too</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>AVer CAM340plus</li>
+          <li>AVer VB342 Pro</li>
+          <li>More Algoltek devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.11" date="2024-01-03">
       <description>
         <p>
