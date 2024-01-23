@@ -108,6 +108,15 @@ fu_efi_parse_sections(FuFirmware *firmware,
 			return FALSE;
 		}
 
+		/* invalid */
+		if (fu_firmware_get_size(img) == 0) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_INVALID_DATA,
+					    "section had zero size");
+			return FALSE;
+		}
+
 		fu_firmware_set_offset(img, offset);
 		if (!fu_firmware_add_image_full(firmware, img, error))
 			return FALSE;
