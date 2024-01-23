@@ -756,15 +756,47 @@ _plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 static void
 fu_config_func(void)
 {
-	const gchar *fn_mut = "/tmp/fwupd-self-test/var/etc/fwupd/fwupd.conf";
+	GStatBuf statbuf = {0};
 	gboolean ret;
 	g_autofree gchar *composite_data = NULL;
 	g_autoptr(FuConfig) config = fu_config_new();
 	g_autoptr(GError) error = NULL;
+	g_autofree gchar *fn_imu = NULL;
+	g_autofree gchar *fn_mut = NULL;
 
+#ifdef _WIN32
+	/* the Windows file permission model is different than a simple octal value */
+	g_test_skip("chmod not supported on Windows");
+	return;
+#endif
+
+	/* immutable file */
+	(void)g_setenv("FWUPD_SYSCONFDIR", "/tmp/fwupd-self-test/etc/fwupd", TRUE);
+	fn_imu = g_build_filename(g_getenv("FWUPD_SYSCONFDIR"), "fwupd.conf", NULL);
+	ret = fu_path_mkdir_parent(fn_imu, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_remove(fn_imu);
+	ret = g_file_set_contents(fn_imu,
+				  "[fwupd]\n"
+				  "Key=true\n",
+				  -1,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	g_chmod(fn_imu, 0640);
+	ret = g_stat(fn_imu, &statbuf);
+	g_assert_cmpint(ret, ==, 0);
+	g_assert_cmpint(statbuf.st_mode & 0777, ==, 0640);
+
+	/* mutable file */
+	(void)g_setenv("LOCALCONF_DIRECTORY", "/tmp/fwupd-self-test/var/etc/fwupd", TRUE);
+	fn_mut = g_build_filename(g_getenv("LOCALCONF_DIRECTORY"), "fwupd.conf", NULL);
 	ret = fu_path_mkdir_parent(fn_mut, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	g_remove(fn_mut);
 	ret = g_file_set_contents(fn_mut,
 				  "# group comment\n"
 				  "[fwupd]\n"
