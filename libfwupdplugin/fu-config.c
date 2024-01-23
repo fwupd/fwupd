@@ -549,6 +549,10 @@ fu_config_add_location(FuConfig *self, const gchar *dirname, GError **error)
 			return FALSE;
 		item->is_writable =
 		    g_file_info_get_attribute_boolean(info, G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE);
+		if (item->is_writable) {
+			if (g_str_has_suffix(dirname, "tests/fwupd"))
+				item->is_writable = FALSE;
+		}
 		if (!item->is_writable)
 			g_debug("config %s is immutable", item->filename);
 	} else {
