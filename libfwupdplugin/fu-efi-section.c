@@ -445,6 +445,8 @@ fu_efi_section_init(FuEfiSection *self)
 {
 	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
 	priv->type = FU_EFI_SECTION_TYPE_RAW;
+	fu_firmware_set_images_max(FU_FIRMWARE(self),
+				   g_getenv("FWUPD_FUZZER_RUNNING") != NULL ? 10 : 2000);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	//	fu_firmware_set_alignment (FU_FIRMWARE (self), FU_FIRMWARE_ALIGNMENT_8);
 }
