@@ -35,6 +35,26 @@ jobs:
         run: |
           ./contrib/build-openbmc.sh --prefix=/home/runner/.root
 
+  library:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refresh dependencies
+        run: sudo apt update
+      - name: Install dependencies
+        run: |
+          sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
+          sudo ./contrib/ci/fwupd_setup_helpers.py test-meson
+      - name: Build
+        run: |
+          meson setup build \
+                      -Dbuild=library \
+                      -Ddocs=disabled \
+                      -Dman=false \
+                      -Dauto_features=disabled \
+                      -Dtests=false
+          ninja -C build
+
   macos:
     runs-on: macos-12
     steps:
