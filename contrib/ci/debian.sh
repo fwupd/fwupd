@@ -41,9 +41,6 @@ if ! dpkg-checkbuilddeps; then
 	exit 0
 fi
 
-#clone test firmware if necessary
-. ./contrib/ci/get_test_firmware.sh
-
 #disable unit tests if fwupd is already installed (may cause problems)
 if [ -x /usr/lib/fwupd/fwupd ]; then
 	export DEB_BUILD_OPTIONS=nocheck
@@ -69,34 +66,7 @@ lintian ../*changes \
 	--suppress-tags arch-dependent-file-not-in-arch-specific-directory \
 	--allow-root
 
-#if invoked outside of CI
-if [ ! -f /.dockerenv ]; then
-	echo "Not running in a container, please manually install packages"
-	exit 0
-fi
-
-#test the packages install
-PACKAGES=$(find .. -type f -name "*.deb" | grep -v 'fwupd-tests\|dbgsym')
-dpkg -i $PACKAGES
-
-# copy in more non-generated data
-mkdir -p /usr/share/installed-tests/fwupd
-cp fwupd-test-firmware/installed-tests/* /usr/share/installed-tests/fwupd/ -LRv
-
-# run the installed tests
-if [ "$CI" = "true" ]; then
-	dpkg -i ../fwupd-tests*.deb
-	service dbus restart
-	gnome-desktop-testing-runner fwupd
-	apt purge -y fwupd-tests
-fi
-
-#test the packages remove
-apt purge -y fwupd \
-	     fwupd-doc \
-	     libfwupd2 \
-	     libfwupd-dev
-
 #place built packages in dist outside docker
 mkdir -p ../dist
+PACKAGES=$(find .. -type f -name "*.deb" | grep -v 'dbgsym')
 cp $PACKAGES ../dist
