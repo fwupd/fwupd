@@ -30,7 +30,7 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [fedora, debian-i386, debian-x86_64]
+        os: [fedora, debian-i386, arch, debian-x86_64]
     runs-on: ubuntu-latest
     needs: build
     steps:
