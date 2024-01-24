@@ -8,33 +8,16 @@ set -x
 # disable the safe directory feature
 git config --global safe.directory "*"
 
-#generate a tarball
-mkdir -p build && pushd build
-rm -rf *
-
 if [ "$QUBES" = "true" ]; then
     QUBES_MACRO=(--define "qubes_packages 1")
 fi
 
-# smoke test something small with no auto-deps
-meson setup .. \
-    -Dbuild=library \
-    -Dauto_features=disabled \
-    -Dtests=false
-ninja-build
-rm -rf *
-
 # do the full-fat build
+mkdir -p build && pushd build
+rm -rf *
 meson setup \
-    -Ddocs=disabled \
-    -Dman=true \
-    -Dtests=true \
     -Db_sanitize=undefined \
-    -Dgusb:tests=false \
-    -Dplugin_flashrom=enabled \
-    -Dplugin_modem_manager=disabled \
-    -Dplugin_uefi_capsule=enabled \
-    -Dplugin_synaptics_mst=enabled $@
+    $@
 ninja-build
 ../contrib/ci/check-unused.py
 ninja-build dist
