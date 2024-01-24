@@ -20,6 +20,35 @@ jobs:
         run: |
           echo $GITHUB_WORKSPACE
           docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
+      - name: Save any applicable artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}
+          path: ${{ github.workspace }}/dist/*
+          if-no-files-found: ignore
+
+  test:
+    strategy:
+      matrix:
+        os: [fedora, debian-i386, debian-x86_64]
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        id: download
+        with:
+          name: ${{ matrix.os }}
+      - name: Docker login
+        run: docker login docker.pkg.github.com -u $GITHUB_ACTOR -p $GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Test in container
+        env:
+          CI_NETWORK: true
+          CI: true
+        run: |
+          docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest contrib/ci/${{matrix.os}}-test.sh
 
   openbmc:
     runs-on: ubuntu-22.04

@@ -43,34 +43,5 @@ fi
 #build RPM packages
 rpmbuild -ba "${QUBES_MACRO[@]}" build/fwupd.spec
 
-#if invoked outside of CI
-if [ ! -f /.dockerenv ]; then
-        echo "Not running in a container, please manually install packages"
-        exit 0
-fi
-
-#install RPM packages
-dnf install -y $HOME/rpmbuild/RPMS/*/*.rpm
-
 mkdir -p dist
 cp $HOME/rpmbuild/RPMS/*/*.rpm dist
-
-if [ "$CI" = "true" ]; then
-	fwupdtool enable-test-devices
-
-	# set up enough PolicyKit and D-Bus to run the daemon
-	mkdir -p /run/dbus
-	mkdir -p /var
-	ln -s /var/run /run
-	dbus-daemon --system --fork
-	/usr/lib/polkit-1/polkitd &
-	sleep 5
-
-	# run the daemon startup to check it can start
-	/usr/libexec/fwupd/fwupd --immediate-exit --verbose
-
-	# run the installed tests whilst the daemon debugging
-	/usr/libexec/fwupd/fwupd --verbose &
-	sleep 10
-	gnome-desktop-testing-runner fwupd
-fi
