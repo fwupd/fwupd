@@ -28,6 +28,13 @@ fu_bcm57xx_verify_crc(GInputStream *stream, GError **error)
 	/* expected */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (streamsz < sizeof(guint32)) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "image is too small for CRC");
+		return FALSE;
+	}
 	if (!fu_input_stream_read_u32(stream,
 				      streamsz - sizeof(guint32),
 				      &crc_file,
