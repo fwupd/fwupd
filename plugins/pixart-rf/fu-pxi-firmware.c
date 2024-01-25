@@ -105,6 +105,13 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 	if (fu_pxi_firmware_is_hpac(self)) {
+		if (streamsz < PIXART_RF_FW_HEADER_HPAC_VERSION_POS_FROM_END) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_INVALID_DATA,
+					    "image is too small");
+			return FALSE;
+		}
 		if (!fu_input_stream_read_safe(stream,
 					       fw_header,
 					       sizeof(fw_header),
@@ -116,6 +123,13 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 	} else {
+		if (streamsz < sizeof(fw_header)) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_INVALID_DATA,
+					    "image is too small");
+			return FALSE;
+		}
 		if (!fu_input_stream_read_safe(stream,
 					       fw_header,
 					       sizeof(fw_header),
