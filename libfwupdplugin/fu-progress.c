@@ -549,6 +549,8 @@ fu_progress_get_step_percentage(FuProgress *self, guint idx)
 			current += child->step_weighting;
 		total += child->step_weighting;
 	}
+	if (total == 0)
+		return -1;
 	return ((gdouble)current * 100.f) / (gdouble)total;
 }
 
