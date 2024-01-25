@@ -24,7 +24,7 @@
 struct _FuChunk {
 	GObject parent_instance;
 	guint idx;
-	guint32 page;
+	guint page;
 	guint32 address;
 	const guint8 *data;
 	guint32 data_sz;
@@ -77,7 +77,7 @@ fu_chunk_get_idx(FuChunk *self)
  * Since: 1.5.6
  **/
 void
-fu_chunk_set_page(FuChunk *self, guint32 page)
+fu_chunk_set_page(FuChunk *self, guint page)
 {
 	g_return_if_fail(FU_IS_CHUNK(self));
 	self->page = page;
@@ -93,7 +93,7 @@ fu_chunk_set_page(FuChunk *self, guint32 page)
  *
  * Since: 1.5.6
  **/
-guint32
+guint
 fu_chunk_get_page(FuChunk *self)
 {
 	g_return_val_if_fail(FU_IS_CHUNK(self), G_MAXUINT32);
@@ -258,7 +258,7 @@ fu_chunk_get_bytes(FuChunk *self)
  * Since: 1.1.2
  **/
 FuChunk *
-fu_chunk_new(guint idx, guint32 page, guint32 address, const guint8 *data, guint32 data_sz)
+fu_chunk_new(guint idx, guint page, guint32 address, const guint8 *data, guint32 data_sz)
 {
 	FuChunk *self = g_object_new(FU_TYPE_CHUNK, NULL);
 	self->idx = idx;
@@ -417,7 +417,7 @@ fu_chunk_array_new(const guint8 *data,
 		   guint32 packet_sz)
 {
 	GPtrArray *chunks = NULL;
-	guint32 page_old = G_MAXUINT32;
+	guint page_old = G_MAXUINT;
 	guint idx;
 	guint32 last_flush = 0;
 
@@ -428,7 +428,7 @@ fu_chunk_array_new(const guint8 *data,
 		guint32 page = 0;
 		if (page_sz > 0)
 			page = (addr_start + idx) / page_sz;
-		if (page_old == G_MAXUINT32) {
+		if (page_old == G_MAXUINT) {
 			page_old = page;
 		} else if (page != page_old) {
 			const guint8 *data_offset = data != NULL ? data + last_flush : 0x0;
@@ -463,7 +463,7 @@ fu_chunk_array_new(const guint8 *data,
 	if (last_flush != idx) {
 		const guint8 *data_offset = data != NULL ? data + last_flush : 0x0;
 		guint32 address_offset = addr_start + last_flush;
-		guint32 page = 0;
+		guint page = 0;
 		if (page_sz > 0) {
 			address_offset %= page_sz;
 			page = (addr_start + (idx - 1)) / page_sz;
