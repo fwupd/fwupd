@@ -176,9 +176,11 @@ fu_byte_array_append_bytes(GByteArray *array, GBytes *bytes)
  * Since: 1.8.2
  **/
 void
-fu_byte_array_set_size(GByteArray *array, guint length, guint8 data)
+fu_byte_array_set_size(GByteArray *array, gsize length, guint8 data)
 {
 	guint oldlength = array->len;
+	g_return_if_fail(array != NULL);
+	g_return_if_fail(length < G_MAXUINT);
 	g_byte_array_set_size(array, length);
 	if (length > oldlength)
 		memset(array->data + oldlength, data, length - oldlength);
