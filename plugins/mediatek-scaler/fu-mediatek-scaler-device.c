@@ -161,6 +161,7 @@ fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self, GByteArray *st_
 	guint8 buf[0x40] = {0x00}; /* default 64 bytes */
 	gsize report_data_sz = 0;
 	guint8 checksum = 0;
+	guint8 checksum_hw = 0;
 	g_autoptr(GByteArray) st_res = g_byte_array_new();
 
 	/* write for read */
@@ -215,14 +216,15 @@ fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self, GByteArray *st_
 	checksum ^= FU_DDC_I2C_ADDR_CHECKSUM;
 	for (gsize i = 0; i < report_data_sz + 2; i++)
 		checksum ^= buf[i];
-
-	if (buf[report_data_sz + 2] != checksum) {
+	if (!fu_memread_uint8_safe(buf, sizeof(buf), report_data_sz + 2, &checksum_hw, error))
+		return NULL;
+	if (checksum_hw != checksum) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "invalid read buffer, checksum expected 0x%02x, got 0x%02x.",
 			    checksum,
-			    buf[report_data_sz + 2]);
+			    checksum_hw);
 		return NULL;
 	}
 
