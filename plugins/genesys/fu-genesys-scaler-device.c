@@ -934,7 +934,7 @@ fu_genesys_scaler_device_read_flash(FuGenesysScalerDevice *self,
 						   error)) {
 			g_prefix_error(error,
 				       "error reading flash at 0x%06x: ",
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -1242,7 +1242,7 @@ fu_genesys_scaler_device_erase_flash(FuGenesysScalerDevice *self,
 									 error)) {
 			g_prefix_error(error,
 				       "error erasing flash at address 0x%06x: ",
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -1334,7 +1334,7 @@ fu_genesys_scaler_device_flash_control_page_program(FuGenesysScalerDevice *self,
 			g_prefix_error(
 			    error,
 			    "error sending flash control page program at address 0x%06x: ",
-			    fu_chunk_get_address(chk));
+			    (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 		fu_progress_step_done(progress);

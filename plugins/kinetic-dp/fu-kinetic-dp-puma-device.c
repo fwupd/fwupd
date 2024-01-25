@@ -156,7 +156,7 @@ fu_kinetic_dp_puma_device_send_chunk(FuKineticDpPumaDevice *self,
 					   fu_chunk_get_data_sz(chk),
 					   FU_KINETIC_DP_DEVICE_TIMEOUT,
 					   error)) {
-			g_prefix_error(error, "failed at 0x%x: ", fu_chunk_get_address(chk));
+			g_prefix_error(error, "failed at 0x%x: ", (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 	}
@@ -194,7 +194,7 @@ fu_kinetic_dp_puma_device_send_payload(FuKineticDpPumaDevice *self,
 		if (!fu_kinetic_dp_puma_device_send_chunk(self, io_channel, chk_blob, error)) {
 			g_prefix_error(error,
 				       "failed to AUX write at 0x%x: ",
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 

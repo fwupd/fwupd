@@ -528,9 +528,9 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 		if (chk == NULL)
 			return FALSE;
 		g_debug("writing %u bytes to 0x%04x of 0x%04x",
-			fu_chunk_get_data_sz(chk),
-			fu_chunk_get_address(chk),
-			fu_chunk_get_data_sz(chk));
+			(guint)fu_chunk_get_data_sz(chk),
+			(guint)fu_chunk_get_address(chk),
+			(guint)fu_chunk_get_data_sz(chk));
 		if (!fu_ebitdo_device_send(self,
 					   FU_EBITDO_PKT_TYPE_USER_CMD,
 					   FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
@@ -540,13 +540,13 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 					   error)) {
 			g_prefix_error(error,
 				       "failed to write firmware @0x%04x: ",
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 		if (!fu_ebitdo_device_receive(self, NULL, 0, error)) {
 			g_prefix_error(error,
 				       "failed to get ACK for write firmware @0x%04x: ",
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),

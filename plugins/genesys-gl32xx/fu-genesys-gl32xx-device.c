@@ -84,9 +84,9 @@ fu_genesys_gl32xx_device_cmd_none(FuGenesysGl32xxDevice *self,
 static gboolean
 fu_genesys_gl32xx_device_cmd_in(FuGenesysGl32xxDevice *self,
 				const guint8 *cdb,
-				guint8 cdbsz,
+				gsize cdbsz,
 				guint8 *buf,
-				guint32 bufsz,
+				gsize bufsz,
 				GError **error)
 {
 #ifdef HAVE_SCSI_SG_H
@@ -142,9 +142,9 @@ fu_genesys_gl32xx_device_cmd_in(FuGenesysGl32xxDevice *self,
 static gboolean
 fu_genesys_gl32xx_device_cmd_out(FuGenesysGl32xxDevice *self,
 				 const guint8 *cdb,
-				 guint8 cdbsz,
+				 gsize cdbsz,
 				 const guint8 *buf,
-				 guint32 bufsz,
+				 gsize bufsz,
 				 GError **error)
 {
 #ifdef HAVE_SCSI_SG_H
@@ -287,9 +287,9 @@ fu_genesys_gl32xx_device_cmd_wait_wip(FuGenesysGl32xxDevice *self, GError **erro
 
 static gboolean
 fu_genesys_gl32xx_device_cmd_read_flash(FuGenesysGl32xxDevice *self,
-					guint32 addr,
+					gsize addr,
 					guint8 *data,
-					guint32 datasz,
+					gsize datasz,
 					GError **error)
 {
 	guint8 cmd[] = {0xE4, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -790,8 +790,8 @@ fu_genesys_gl32xx_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_genesys_gl32xx_device_write_block(FuGenesysGl32xxDevice *self, FuChunk *chunk, GError **error)
 {
-	guint32 addr = fu_chunk_get_address(chunk);
-	guint16 datasz = fu_chunk_get_data_sz(chunk);
+	gsize addr = fu_chunk_get_address(chunk);
+	gsize datasz = fu_chunk_get_data_sz(chunk);
 	const guint8 *data = fu_chunk_get_data(chunk);
 	guint8 cmd[] = {0xE5, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
 

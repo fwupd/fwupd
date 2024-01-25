@@ -427,7 +427,7 @@ fu_vbe_simple_device_upload(FuDevice *device, FuProgress *progress, GError **err
 				    FWUPD_ERROR_READ,
 				    "incomplete read of %s @0x%x",
 				    self->devname,
-				    fu_chunk_get_address(chk));
+				    (guint)fu_chunk_get_address(chk));
 			return NULL;
 		}
 		g_byte_array_append(buf, tmpbuf, fu_chunk_get_data_sz(chk));

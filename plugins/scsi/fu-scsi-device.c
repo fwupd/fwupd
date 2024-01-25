@@ -155,9 +155,9 @@ fu_scsi_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 				const guint8 *cdb,
-				guint8 cdbsz,
+				gsize cdbsz,
 				const guint8 *buf,
-				guint32 bufsz,
+				gsize bufsz,
 				gint dir,
 				GError **error)
 {

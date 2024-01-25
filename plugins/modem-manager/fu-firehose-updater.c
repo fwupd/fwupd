@@ -554,7 +554,7 @@ fu_firehose_updater_send_program_file(FuFirehoseUpdater *self,
 		/* log only in blocks of 250 plus first/last */
 		if (i == 0 || i == (fu_chunk_array_length(chunks) - 1) || (i + 1) % 250 == 0)
 			g_debug("sending %u bytes in block %u/%u of file '%s'",
-				fu_chunk_get_data_sz(chk),
+				(guint)fu_chunk_get_data_sz(chk),
 				i + 1,
 				fu_chunk_array_length(chunks),
 				program_filename);
@@ -565,7 +565,7 @@ fu_firehose_updater_send_program_file(FuFirehoseUpdater *self,
 				       FU_IO_CHANNEL_FLAG_FLUSH_INPUT,
 				       error)) {
 			g_prefix_error(error,
-				       "Failed to write block %u/%u of file '%s': ",
+				       "failed to write block %u/%u of file '%s': ",
 				       i + 1,
 				       fu_chunk_array_length(chunks),
 				       program_filename);

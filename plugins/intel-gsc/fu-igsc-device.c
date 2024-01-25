@@ -520,7 +520,7 @@ fu_igsc_device_update_end(FuIgscDevice *self, GError **error)
 }
 
 static gboolean
-fu_igsc_device_update_data(FuIgscDevice *self, const guint8 *data, guint32 length, GError **error)
+fu_igsc_device_update_data(FuIgscDevice *self, const guint8 *data, gsize length, GError **error)
 {
 	struct gsc_fwu_heci_data_req req = {.header.command_id = GSC_FWU_HECI_COMMAND_ID_DATA,
 					    .data_length = length};
@@ -600,7 +600,7 @@ fu_igsc_device_write_chunks(FuIgscDevice *self,
 			g_prefix_error(error,
 				       "failed on chunk %u (@0x%x): ",
 				       i,
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 		fu_progress_step_done(progress);

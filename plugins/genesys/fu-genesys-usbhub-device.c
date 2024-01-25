@@ -265,7 +265,7 @@ fu_genesys_usbhub_device_read_flash(FuGenesysUsbhubDevice *self,
 			error)) {
 			g_prefix_error(error,
 				       "error reading flash at 0x%04x: ",
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 		if (progress != NULL)
@@ -329,7 +329,7 @@ fu_genesys_usbhub_device_compare_flash_blank(FuGenesysUsbhubDevice *self,
 			error)) {
 			g_prefix_error(error,
 				       "error reading flash at 0x%04x: ",
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 		if (!fu_memcmp_safe(read_buf->data,
@@ -342,7 +342,7 @@ fu_genesys_usbhub_device_compare_flash_blank(FuGenesysUsbhubDevice *self,
 				    error)) {
 			g_prefix_error(error,
 				       "compare flash blank at 0x%04x: ",
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -389,7 +389,7 @@ fu_genesys_usbhub_device_compare_flash_data(FuGenesysUsbhubDevice *self,
 			error)) {
 			g_prefix_error(error,
 				       "error reading flash at 0x%04x: ",
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 		if (!fu_memcmp_safe(read_buf->data,
@@ -402,7 +402,7 @@ fu_genesys_usbhub_device_compare_flash_data(FuGenesysUsbhubDevice *self,
 				    error)) {
 			g_prefix_error(error,
 				       "compare flash data failed at 0x%04x: ",
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -2291,7 +2291,7 @@ fu_genesys_usbhub_device_write_flash(FuGenesysUsbhubDevice *self,
 			g_prefix_error(error,
 				       "error writing flash at 0x%02x%04x: ",
 				       fu_chunk_get_page(chk),
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 

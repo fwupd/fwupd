@@ -313,7 +313,7 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 							  error)) {
 			g_prefix_error(error,
 				       "failed to write @0x%04x: ",
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 

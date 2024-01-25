@@ -230,7 +230,7 @@ fu_synaptics_rmi_v7_device_write_blocks(FuSynapticsRmiDevice *self,
 			g_prefix_error(error,
 				       "failed to write block @0x%x:%x: ",
 				       address,
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 	}

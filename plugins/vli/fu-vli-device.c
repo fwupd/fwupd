@@ -227,7 +227,7 @@ fu_vli_device_spi_read(FuVliDevice *self,
 						  error)) {
 			g_prefix_error(error,
 				       "SPI data read failed @0x%x: ",
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return NULL;
 		}
 		fu_progress_step_done(progress);
@@ -388,13 +388,13 @@ fu_vli_device_spi_erase(FuVliDevice *self,
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		g_debug("erasing @0x%x", fu_chunk_get_address(chk));
+		g_debug("erasing @0x%x", (guint)fu_chunk_get_address(chk));
 		if (!fu_vli_device_spi_erase_sector(FU_VLI_DEVICE(self),
 						    fu_chunk_get_address(chk),
 						    error)) {
 			g_prefix_error(error,
 				       "failed to erase FW sector @0x%x: ",
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 		fu_progress_step_done(progress);

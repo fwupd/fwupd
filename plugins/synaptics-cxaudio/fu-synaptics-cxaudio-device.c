@@ -209,7 +209,7 @@ fu_synaptics_cxaudio_device_operation(FuSynapticsCxaudioDevice *self,
 				g_prefix_error(error,
 					       "failed to verify on packet %u @0x%x: ",
 					       fu_chunk_get_idx(chk),
-					       fu_chunk_get_address(chk));
+					       (guint)fu_chunk_get_address(chk));
 				return FALSE;
 			}
 		}

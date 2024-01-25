@@ -239,7 +239,7 @@ fu_steelseries_sonic_read_from_flash(FuDevice *device,
 				     SteelseriesSonicChip chip,
 				     guint32 address,
 				     guint8 *buf,
-				     guint32 bufsz,
+				     gsize bufsz,
 				     FuProgress *progress,
 				     GError **error)
 {
@@ -756,7 +756,7 @@ fu_steelseries_sonic_read_chip(FuDevice *device,
 			       FuProgress *progress,
 			       GError **error)
 {
-	guint32 bufsz;
+	gsize bufsz;
 	g_autoptr(GBytes) blob = NULL;
 	g_autofree guint8 *buf = NULL;
 
