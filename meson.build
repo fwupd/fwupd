@@ -66,6 +66,7 @@ warning_flags = [
   '-Wduplicated-branches',
   '-Wduplicated-cond',
   '-Wempty-body',
+  '-Wfloat-equal',
   '-Wformat=2',
   '-Wformat-nonliteral',
   '-Wformat-security',
