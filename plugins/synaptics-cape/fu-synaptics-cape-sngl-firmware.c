@@ -42,6 +42,13 @@ fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
 				    "data not aligned to 32 bits");
 		return FALSE;
 	}
+	if (streamsz < 8) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "image is too small");
+		return FALSE;
+	}
 
 	/* unpack */
 	st = fu_struct_synaptics_cape_sngl_hdr_parse_stream(stream, offset, error);
