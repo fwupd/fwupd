@@ -45,7 +45,7 @@ fu_steelseries_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - sizeof(checksum_tmp));
-	if (!fu_input_stream_compute_crc32(stream, &checksum_tmp, 0xEDB88320, error))
+	if (!fu_input_stream_compute_crc32(stream_tmp, &checksum_tmp, 0xEDB88320, error))
 		return FALSE;
 	if (checksum_tmp != checksum) {
 		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
