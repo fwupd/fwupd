@@ -56,7 +56,7 @@ main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 	if (verbose)
-		g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
+		(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
 
 	if (do_create && argc > 1) {
 		g_autoptr(GFile) file = g_file_new_for_path(argv[1]);
