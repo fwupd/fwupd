@@ -773,6 +773,7 @@ fu_config_func(void)
 	/* immutable file */
 	(void)g_setenv("FWUPD_SYSCONFDIR", "/tmp/fwupd-self-test/etc/fwupd", TRUE);
 	fn_imu = g_build_filename(g_getenv("FWUPD_SYSCONFDIR"), "fwupd.conf", NULL);
+	g_assert_nonnull(fn_imu);
 	ret = fu_path_mkdir_parent(fn_imu, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -793,6 +794,7 @@ fu_config_func(void)
 	/* mutable file */
 	(void)g_setenv("LOCALCONF_DIRECTORY", "/tmp/fwupd-self-test/var/etc/fwupd", TRUE);
 	fn_mut = g_build_filename(g_getenv("LOCALCONF_DIRECTORY"), "fwupd.conf", NULL);
+	g_assert_nonnull(fn_mut);
 	ret = fu_path_mkdir_parent(fn_mut, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
