@@ -19,8 +19,8 @@ fu_chunk_set_idx(FuChunk *self, guint idx) G_GNUC_NON_NULL(1);
 guint
 fu_chunk_get_idx(FuChunk *self) G_GNUC_NON_NULL(1);
 void
-fu_chunk_set_page(FuChunk *self, guint32 page) G_GNUC_NON_NULL(1);
-guint32
+fu_chunk_set_page(FuChunk *self, guint page) G_GNUC_NON_NULL(1);
+guint
 fu_chunk_get_page(FuChunk *self) G_GNUC_NON_NULL(1);
 void
 fu_chunk_set_address(FuChunk *self, guint32 address) G_GNUC_NON_NULL(1);
@@ -38,7 +38,7 @@ GBytes *
 fu_chunk_get_bytes(FuChunk *self) G_GNUC_NON_NULL(1);
 
 FuChunk *
-fu_chunk_new(guint idx, guint32 page, guint32 address, const guint8 *data, guint32 data_sz);
+fu_chunk_new(guint idx, guint page, guint32 address, const guint8 *data, guint32 data_sz);
 gchar *
 fu_chunk_to_string(FuChunk *self) G_GNUC_NON_NULL(1);
 
