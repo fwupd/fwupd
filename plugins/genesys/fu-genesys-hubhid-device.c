@@ -106,7 +106,7 @@ fu_genesys_hubhid_device_command_read(FuGenesysHubhidDevice *self,
 					      error)) {
 			g_prefix_error(error,
 				       "error getting report at 0x%04x: ",
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 		if (!fu_memcpy_safe(fu_chunk_get_data_out(chk),
@@ -119,7 +119,7 @@ fu_genesys_hubhid_device_command_read(FuGenesysHubhidDevice *self,
 				    error)) {
 			g_prefix_error(error,
 				       "error getting report data at 0x%04x: ",
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 		if (progress != NULL)
@@ -221,7 +221,7 @@ fu_genesys_hubhid_device_command_write(FuGenesysHubhidDevice *self,
 					    error)) {
 				g_prefix_error(error,
 					       "error setting report data at 0x%04x: ",
-					       fu_chunk_get_address(chk));
+					       (guint)fu_chunk_get_address(chk));
 				return FALSE;
 			}
 			if (!fu_hid_device_set_report(hid_device,
@@ -234,7 +234,7 @@ fu_genesys_hubhid_device_command_write(FuGenesysHubhidDevice *self,
 						      error)) {
 				g_prefix_error(error,
 					       "error setting report at 0x%04x: ",
-					       fu_chunk_get_address(chk));
+					       (guint)fu_chunk_get_address(chk));
 				return FALSE;
 			}
 			if (progress != NULL)

@@ -380,7 +380,7 @@ static gboolean
 fu_jabra_gnp_device_write_chunk(FuJabraGnpDevice *self,
 				guint32 chunk_number,
 				const guint8 *buf,
-				guint32 bufsz,
+				gsize bufsz,
 				GError **error)
 {
 	guint8 write_length = 0x00 + bufsz + 10;

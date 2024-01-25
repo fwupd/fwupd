@@ -73,7 +73,7 @@ fu_logitech_rallysystem_tablehub_device_probe(FuDevice *device, GError **error)
 static gboolean
 fu_logitech_rallysystem_tablehub_device_send(FuLogitechRallysystemTablehubDevice *self,
 					     guint8 *buf,
-					     guint32 bufsz,
+					     gsize bufsz,
 					     GError **error)
 {
 	gsize actual_length = 0;
@@ -102,7 +102,7 @@ fu_logitech_rallysystem_tablehub_device_send(FuLogitechRallysystemTablehubDevice
 static gboolean
 fu_logitech_rallysystem_tablehub_device_recv(FuLogitechRallysystemTablehubDevice *self,
 					     guint8 *buf,
-					     guint32 bufsz,
+					     gsize bufsz,
 					     guint timeout,
 					     GError **error)
 {

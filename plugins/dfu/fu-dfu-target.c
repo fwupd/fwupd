@@ -1214,7 +1214,7 @@ fu_dfu_target_download(FuDfuTarget *self,
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		g_debug("downloading chunk at 0x%04x", fu_chunk_get_address(chk));
+		g_debug("downloading chunk at 0x%04x", (guint)fu_chunk_get_address(chk));
 
 		/* auto-detect missing firmware address -- this assumes
 		 * that the first target is the main program memory and that

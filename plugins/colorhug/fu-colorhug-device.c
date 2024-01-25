@@ -400,7 +400,7 @@ fu_colorhug_device_setup(FuDevice *device, GError **error)
 }
 
 static guint8
-ch_colorhug_device_calculate_checksum(const guint8 *data, guint32 len)
+ch_colorhug_device_calculate_checksum(const guint8 *data, gsize len)
 {
 	guint8 checksum = 0xff;
 	for (guint32 i = 0; i < len; i++)
@@ -511,7 +511,7 @@ fu_colorhug_device_verify_blocks(FuColorhugDevice *self,
 				    "address 0x%0x, length 0x%0x",
 				    i,
 				    (guint)fu_chunk_get_address(chk),
-				    fu_chunk_get_data_sz(chk));
+				    (guint)fu_chunk_get_data_sz(chk));
 			return FALSE;
 		}
 

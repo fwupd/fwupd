@@ -18,9 +18,9 @@ G_DEFINE_TYPE(FuGoodixtpBrlbDevice, fu_goodixtp_brlb_device, FU_TYPE_GOODIXTP_HI
 
 static gboolean
 fu_goodixtp_brlb_device_read_pkg(FuGoodixtpBrlbDevice *self,
-				 guint32 addr,
+				 gsize addr,
 				 guint8 *buf,
-				 guint32 bufsz,
+				 gsize bufsz,
 				 GError **error)
 {
 	guint8 hidbuf[PACKAGE_LEN] = {0};
@@ -56,9 +56,9 @@ fu_goodixtp_brlb_device_read_pkg(FuGoodixtpBrlbDevice *self,
 
 static gboolean
 fu_goodixtp_brlb_device_hid_read(FuGoodixtpBrlbDevice *self,
-				 guint32 addr,
+				 gsize addr,
 				 guint8 *buf,
-				 guint32 bufsz,
+				 gsize bufsz,
 				 GError **error)
 {
 	g_autoptr(GPtrArray) chunks =
@@ -77,9 +77,9 @@ fu_goodixtp_brlb_device_hid_read(FuGoodixtpBrlbDevice *self,
 
 static gboolean
 fu_goodixtp_brlb_device_hid_write(FuGoodixtpBrlbDevice *self,
-				  guint32 addr,
+				  gsize addr,
 				  guint8 *buf,
-				  guint32 bufsz,
+				  gsize bufsz,
 				  GError **error)
 {
 	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(buf, bufsz, addr, 0, PACKAGE_LEN - 12);
@@ -112,7 +112,7 @@ fu_goodixtp_brlb_device_hid_write(FuGoodixtpBrlbDevice *self,
 						       error)) {
 			g_prefix_error(error,
 				       "failed write data to addr=0x%x, len=%d: ",
-				       fu_chunk_get_address(chk),
+				       (guint)fu_chunk_get_address(chk),
 				       (gint)fu_chunk_get_data_sz(chk));
 			return FALSE;
 		}
@@ -359,7 +359,7 @@ fu_goodixtp_brlb_device_update_process(FuGoodixtpBrlbDevice *self, FuChunk *chk,
 				  error)) {
 		g_prefix_error(error,
 			       "load sub firmware failed, addr:0x%04x: ",
-			       fu_chunk_get_address(chk));
+			       (guint)fu_chunk_get_address(chk));
 		return FALSE;
 	}
 	return TRUE;

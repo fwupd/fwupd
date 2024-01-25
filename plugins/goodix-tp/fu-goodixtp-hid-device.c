@@ -76,7 +76,7 @@ fu_goodixtp_hid_device_to_string(FuDevice *device, guint idt, GString *str)
 gboolean
 fu_goodixtp_hid_device_get_report(FuGoodixtpHidDevice *self,
 				  guint8 *buf,
-				  guint32 bufsz,
+				  gsize bufsz,
 				  GError **error)
 {
 #ifdef HAVE_HIDRAW_H
@@ -116,12 +116,12 @@ fu_goodixtp_hid_device_get_report(FuGoodixtpHidDevice *self,
 gboolean
 fu_goodixtp_hid_device_set_report(FuGoodixtpHidDevice *self,
 				  guint8 *buf,
-				  guint32 len,
+				  gsize bufsz,
 				  GError **error)
 {
 #ifdef HAVE_HIDRAW_H
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCSFEATURE(len),
+				  HIDIOCSFEATURE(bufsz),
 				  buf,
 				  NULL,
 				  GOODIX_DEVICE_IOCTL_TIMEOUT,

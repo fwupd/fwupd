@@ -253,8 +253,8 @@ fu_dfu_target_stm_download_element1(FuDfuTarget *target,
 				    GError **error)
 {
 	g_autoptr(GHashTable) sectors_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
-	guint32 address = 0;
-	guint32 transfer_size = 0;
+	gsize address = 0;
+	gsize transfer_size = 0;
 
 	/* start offset */
 	if (fu_chunk_array_length(chunks) > 0) {
@@ -363,8 +363,8 @@ fu_dfu_target_stm_download_element3(FuDfuTarget *target,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "no valid sector for %x",
-				    fu_chunk_get_address(chk_tmp));
+				    "no valid sector for 0x%x",
+				    (guint)fu_chunk_get_address(chk_tmp));
 			return FALSE;
 		}
 
@@ -383,7 +383,7 @@ fu_dfu_target_stm_download_element3(FuDfuTarget *target,
 		/* we have to write one final zero-sized chunk for EOF */
 		bytes_tmp = fu_chunk_get_bytes(chk_tmp);
 		g_debug("writing sector at 0x%04x (0x%" G_GSIZE_FORMAT ")",
-			fu_chunk_get_address(chk_tmp),
+			(guint)fu_chunk_get_address(chk_tmp),
 			g_bytes_get_size(bytes_tmp));
 
 		/* ST uses wBlockNum=0 for DfuSe commands and wBlockNum=1 is reserved */

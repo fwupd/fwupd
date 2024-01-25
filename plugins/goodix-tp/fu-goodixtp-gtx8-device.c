@@ -24,9 +24,9 @@ G_DEFINE_TYPE(FuGoodixtpGtx8Device, fu_goodixtp_gtx8_device, FU_TYPE_GOODIXTP_HI
 
 static gboolean
 fu_goodixtp_gtx8_device_read_pkg(FuGoodixtpGtx8Device *self,
-				 guint32 addr,
+				 gsize addr,
 				 guint8 *buf,
-				 guint32 bufsz,
+				 gsize bufsz,
 				 GError **error)
 {
 	guint8 hidbuf[PACKAGE_LEN] = {0};
@@ -64,9 +64,9 @@ fu_goodixtp_gtx8_device_read_pkg(FuGoodixtpGtx8Device *self,
 
 static gboolean
 fu_goodixtp_gtx8_device_hid_read(FuGoodixtpGtx8Device *self,
-				 guint32 addr,
+				 gsize addr,
 				 guint8 *buf,
-				 guint32 bufsz,
+				 gsize bufsz,
 				 GError **error)
 {
 	g_autoptr(GPtrArray) chunks =
@@ -85,9 +85,9 @@ fu_goodixtp_gtx8_device_hid_read(FuGoodixtpGtx8Device *self,
 
 static gboolean
 fu_goodixtp_gtx8_device_hid_write(FuGoodixtpGtx8Device *self,
-				  guint32 addr,
+				  gsize addr,
 				  guint8 *buf,
-				  guint32 bufsz,
+				  gsize bufsz,
 				  GError **error)
 {
 	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(buf, bufsz, addr, 0, PACKAGE_LEN - 10);
@@ -121,7 +121,7 @@ fu_goodixtp_gtx8_device_hid_write(FuGoodixtpGtx8Device *self,
 						       error)) {
 			g_prefix_error(error,
 				       "failed write data to addr=0x%x, len=%d: ",
-				       fu_chunk_get_address(chk),
+				       (guint)fu_chunk_get_address(chk),
 				       (gint)fu_chunk_get_data_sz(chk));
 			return FALSE;
 		}
@@ -132,7 +132,7 @@ fu_goodixtp_gtx8_device_hid_write(FuGoodixtpGtx8Device *self,
 static gboolean
 fu_goodixtp_gtx8_device_send_cmd(FuGoodixtpGtx8Device *self,
 				 guint8 *buf,
-				 guint32 bufsz,
+				 gsize bufsz,
 				 GError **error)
 {
 	guint8 hidbuf[PACKAGE_LEN] = {0};
@@ -371,9 +371,9 @@ fu_goodixtp_gtx8_device_load_sub_firmware_cb(FuDevice *device, gpointer user_dat
 					       sizeof(buf_align4k),
 					       error)) {
 		g_prefix_error(error,
-			       "Failed to load fw bufsz=0x%x, addr=0x%x",
+			       "failed to load fw bufsz=0x%x, addr=0x%x: ",
 			       (guint)sizeof(buf_align4k),
-			       fu_chunk_get_address(chk));
+			       (guint)fu_chunk_get_address(chk));
 		return FALSE;
 	}
 
@@ -420,7 +420,7 @@ fu_goodixtp_gtx8_device_update_process(FuGoodixtpGtx8Device *self, FuChunk *chk,
 				  error)) {
 		g_prefix_error(error,
 			       "load sub firmware failed, addr=0x%04x: ",
-			       fu_chunk_get_address(chk));
+			       (guint)fu_chunk_get_address(chk));
 		return FALSE;
 	}
 	return TRUE;

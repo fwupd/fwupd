@@ -24,12 +24,12 @@ struct _FuGoodixtpHidDeviceClass {
 gboolean
 fu_goodixtp_hid_device_get_report(FuGoodixtpHidDevice *self,
 				  guint8 *buf,
-				  guint32 bufsz,
+				  gsize bufsz,
 				  GError **error);
 gboolean
 fu_goodixtp_hid_device_set_report(FuGoodixtpHidDevice *self,
 				  guint8 *buf,
-				  guint32 len,
+				  gsize bufsz,
 				  GError **error);
 void
 fu_goodixtp_hid_device_set_patch_pid(FuGoodixtpHidDevice *self, const gchar *patch_pid);

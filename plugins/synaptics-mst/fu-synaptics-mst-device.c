@@ -279,8 +279,8 @@ fu_synaptics_mst_device_rc_set_command(FuSynapticsMstDevice *self,
 		guint8 buf2[4] = {0};
 
 		g_debug("writing chunk of 0x%x bytes at offset 0x%x",
-			fu_chunk_get_data_sz(chk),
-			fu_chunk_get_address(chk));
+			(guint)fu_chunk_get_data_sz(chk),
+			(guint)fu_chunk_get_address(chk));
 
 		/* write data */
 		if (!fu_dpaux_device_write(FU_DPAUX_DEVICE(self),
@@ -354,8 +354,8 @@ fu_synaptics_mst_device_rc_get_command(FuSynapticsMstDevice *self,
 		guint8 buf2[4] = {0};
 
 		g_debug("reading chunk of 0x%x bytes at offset 0x%x",
-			fu_chunk_get_data_sz(chk),
-			fu_chunk_get_address(chk));
+			(guint)fu_chunk_get_data_sz(chk),
+			(guint)fu_chunk_get_address(chk));
 
 		/* write offset */
 		fu_memwrite_uint32(buf2, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
@@ -745,8 +745,8 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware_cb(FuDevice *device,
 			fu_chunk_get_data(chk),
 			fu_chunk_get_data_sz(chk),
 			&error_local)) {
-			g_warning("Failed to write flash offset 0x%04x: %s, retrying",
-				  fu_chunk_get_address(chk),
+			g_warning("failed to write flash offset 0x%04x: %s, retrying",
+				  (guint)fu_chunk_get_address(chk),
 				  error_local->message);
 			/* repeat once */
 			if (!fu_synaptics_mst_device_rc_set_command(
@@ -758,7 +758,7 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware_cb(FuDevice *device,
 				error)) {
 				g_prefix_error(error,
 					       "can't write flash offset 0x%04x: ",
-					       fu_chunk_get_address(chk));
+					       (guint)fu_chunk_get_address(chk));
 				return FALSE;
 			}
 		}
@@ -1218,8 +1218,8 @@ fu_synaptics_mst_device_update_cayenne_firmware_cb(FuDevice *device,
 			fu_chunk_get_data(chk),
 			fu_chunk_get_data_sz(chk),
 			&error_local)) {
-			g_warning("Failed to write flash offset 0x%04x: %s, retrying",
-				  fu_chunk_get_address(chk),
+			g_warning("failed to write flash offset 0x%04x: %s, retrying",
+				  (guint)fu_chunk_get_address(chk),
 				  error_local->message);
 			/* repeat once */
 			if (!fu_synaptics_mst_device_rc_set_command(
@@ -1231,7 +1231,7 @@ fu_synaptics_mst_device_update_cayenne_firmware_cb(FuDevice *device,
 				error)) {
 				g_prefix_error(error,
 					       "can't write flash offset 0x%04x: ",
-					       fu_chunk_get_address(chk));
+					       (guint)fu_chunk_get_address(chk));
 				return FALSE;
 			}
 		}

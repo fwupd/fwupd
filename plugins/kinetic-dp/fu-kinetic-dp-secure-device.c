@@ -320,18 +320,15 @@ fu_kinetic_dp_secure_device_enter_code_loading_mode(FuKineticDpSecureDevice *sel
  * Returns: CRC value
  **/
 static guint16
-fu_kinetic_dp_secure_device_crc16(const guint8 *buf, guint16 bufsize)
+fu_kinetic_dp_secure_device_crc16(const guint8 *buf, gsize bufsize)
 {
 	guint16 crc = 0x1021;
-	guint16 i, crc_tmp;
-	guint8 data, flag, j;
+	for (gsize i = 0; i < bufsize; i++) {
+		guint16 crc_tmp = crc;
+		guint8 data = buf[i];
 
-	for (i = 0; i < bufsize; i++) {
-		crc_tmp = crc;
-		data = buf[i];
-
-		for (j = 8; j; j--) {
-			flag = data ^ (crc_tmp >> 8);
+		for (guint8 j = 8; j; j--) {
+			guint8 flag = data ^ (crc_tmp >> 8);
 			crc_tmp <<= 1;
 			if (flag & 0x80)
 				crc_tmp ^= 0x1021;
@@ -366,7 +363,7 @@ fu_kinetic_dp_secure_device_send_chunk(FuKineticDpSecureDevice *self,
 					   fu_chunk_get_data_sz(chk),
 					   FU_KINETIC_DP_DEVICE_TIMEOUT,
 					   error)) {
-			g_prefix_error(error, "failed at 0x%x: ", fu_chunk_get_address(chk));
+			g_prefix_error(error, "failed at 0x%x: ", (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -409,7 +406,7 @@ fu_kinetic_dp_secure_device_send_payload(FuKineticDpSecureDevice *self,
 							    error)) {
 			g_prefix_error(error,
 				       "failed to AUX write at 0x%x: ",
-				       fu_chunk_get_address(chk));
+				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
 
