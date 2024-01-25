@@ -32,6 +32,13 @@ fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (streamsz < sizeof(self->public_key)) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "image is too small");
+		return FALSE;
+	}
 	if (!fu_input_stream_read_safe(stream,
 				       (guint8 *)&self->public_key,
 				       sizeof(self->public_key),
