@@ -6003,7 +6003,8 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progre
 		return FALSE;
 	}
 	g_signal_emit(self, signals[SIGNAL_REQUEST], 0, request);
-	priv->request_cnts[fwupd_request_get_kind(request)]++;
+	if (fwupd_request_get_kind(request) < FWUPD_REQUEST_KIND_LAST)
+		priv->request_cnts[fwupd_request_get_kind(request)]++;
 	return TRUE;
 }
 
