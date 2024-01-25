@@ -23,7 +23,7 @@
 
 struct _FuChunk {
 	GObject parent_instance;
-	guint32 idx;
+	guint idx;
 	guint32 page;
 	guint32 address;
 	const guint8 *data;
@@ -44,7 +44,7 @@ G_DEFINE_TYPE(FuChunk, fu_chunk, G_TYPE_OBJECT)
  * Since: 1.5.6
  **/
 void
-fu_chunk_set_idx(FuChunk *self, guint32 idx)
+fu_chunk_set_idx(FuChunk *self, guint idx)
 {
 	g_return_if_fail(FU_IS_CHUNK(self));
 	self->idx = idx;
@@ -60,7 +60,7 @@ fu_chunk_set_idx(FuChunk *self, guint32 idx)
  *
  * Since: 1.5.6
  **/
-guint32
+guint
 fu_chunk_get_idx(FuChunk *self)
 {
 	g_return_val_if_fail(FU_IS_CHUNK(self), G_MAXUINT32);
@@ -258,7 +258,7 @@ fu_chunk_get_bytes(FuChunk *self)
  * Since: 1.1.2
  **/
 FuChunk *
-fu_chunk_new(guint32 idx, guint32 page, guint32 address, const guint8 *data, guint32 data_sz)
+fu_chunk_new(guint idx, guint32 page, guint32 address, const guint8 *data, guint32 data_sz)
 {
 	FuChunk *self = g_object_new(FU_TYPE_CHUNK, NULL);
 	self->idx = idx;
@@ -418,7 +418,7 @@ fu_chunk_array_new(const guint8 *data,
 {
 	GPtrArray *chunks = NULL;
 	guint32 page_old = G_MAXUINT32;
-	guint32 idx;
+	guint idx;
 	guint32 last_flush = 0;
 
 	chunks = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
