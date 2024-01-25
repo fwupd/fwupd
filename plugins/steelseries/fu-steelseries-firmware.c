@@ -30,6 +30,13 @@ fu_steelseries_firmware_parse(FuFirmware *firmware,
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (streamsz < sizeof(checksum)) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "image is too small");
+		return FALSE;
+	}
 	if (!fu_input_stream_read_u32(stream,
 				      streamsz - sizeof(checksum),
 				      &checksum,
