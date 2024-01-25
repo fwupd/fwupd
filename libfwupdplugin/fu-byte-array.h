@@ -15,7 +15,7 @@ fu_byte_array_to_string(GByteArray *array) G_GNUC_NON_NULL(1);
 GByteArray *
 fu_byte_array_from_string(const gchar *str, GError **error) G_GNUC_NON_NULL(1);
 void
-fu_byte_array_set_size(GByteArray *array, guint length, guint8 data) G_GNUC_NON_NULL(1);
+fu_byte_array_set_size(GByteArray *array, gsize length, guint8 data) G_GNUC_NON_NULL(1);
 void
 fu_byte_array_align_up(GByteArray *array, guint8 alignment, guint8 data) G_GNUC_NON_NULL(1);
 void
