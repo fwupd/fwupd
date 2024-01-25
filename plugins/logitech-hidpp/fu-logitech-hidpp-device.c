@@ -133,7 +133,6 @@ static gboolean
 fu_logitech_hidpp_device_ping(FuLogitechHidppDevice *self, GError **error)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
-	gdouble version;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 	GPtrArray *children = NULL;
@@ -177,8 +176,8 @@ fu_logitech_hidpp_device_ping(FuLogitechHidppDevice *self, GError **error)
 
 	/* format version in BCD format */
 	if (priv->hidpp_version != FU_HIDPP_VERSION_BLE) {
-		version = (gdouble)msg->data[0] + ((gdouble)msg->data[1]) / 100.f;
-		priv->hidpp_version = (guint)version;
+		/* minor version is in msg->data[1] */;
+		priv->hidpp_version = msg->data[0];
 	}
 
 	/* success */
@@ -554,7 +553,7 @@ fu_logitech_hidpp_device_fetch_battery_level(FuLogitechHidppDevice *self, GError
 	}
 
 	/* try HID++1.0 battery mileage */
-	if (priv->hidpp_version == 1.f) {
+	if (priv->hidpp_version == 1) {
 		g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
 		msg->device_id = priv->device_idx;
