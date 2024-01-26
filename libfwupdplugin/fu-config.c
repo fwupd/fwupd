@@ -143,7 +143,7 @@ fu_config_load_bytes_replace(FuConfig *self, GBytes *blob, GError **error)
 			}
 			g_key_file_set_string(priv->keyfile, groups[i], keys[j], value);
 			comment_key = g_key_file_get_comment(kf, groups[i], keys[j], NULL);
-			if (comment_key != NULL) {
+			if (comment_key != NULL && comment_key[0] != '\0') {
 				if (!g_key_file_set_comment(priv->keyfile,
 							    groups[i],
 							    keys[j],
@@ -159,7 +159,7 @@ fu_config_load_bytes_replace(FuConfig *self, GBytes *blob, GError **error)
 			}
 		}
 		comment_group = g_key_file_get_comment(kf, groups[i], NULL, NULL);
-		if (comment_group != NULL) {
+		if (comment_group != NULL && comment_group[0] != '\0') {
 			if (!g_key_file_set_comment(priv->keyfile,
 						    groups[i],
 						    NULL,
