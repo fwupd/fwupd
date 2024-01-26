@@ -12,70 +12,227 @@ G_BEGIN_DECLS
 
 /**
  * FwupdStatus:
- * @FWUPD_STATUS_UNKNOWN:			Unknown state
- * @FWUPD_STATUS_IDLE:				Idle
- * @FWUPD_STATUS_LOADING:			Loading a resource
- * @FWUPD_STATUS_DECOMPRESSING:			Decompressing firmware
- * @FWUPD_STATUS_DEVICE_RESTART:		Restarting the device
- * @FWUPD_STATUS_DEVICE_WRITE:			Writing to a device
- * @FWUPD_STATUS_DEVICE_VERIFY:			Verifying (reading) a device
- * @FWUPD_STATUS_SCHEDULING:			Scheduling an offline update
- * @FWUPD_STATUS_DOWNLOADING:			A file is downloading
- * @FWUPD_STATUS_DEVICE_READ:			Reading from a device
- * @FWUPD_STATUS_DEVICE_ERASE:			Erasing a device
- * @FWUPD_STATUS_WAITING_FOR_AUTH:		Waiting for authentication
- * @FWUPD_STATUS_DEVICE_BUSY:			The device is busy
- * @FWUPD_STATUS_SHUTDOWN:			The daemon is shutting down
  *
  * The flags to show daemon status.
  **/
 typedef enum {
-	FWUPD_STATUS_UNKNOWN,	       /* Since: 0.1.1 */
-	FWUPD_STATUS_IDLE,	       /* Since: 0.1.1 */
-	FWUPD_STATUS_LOADING,	       /* Since: 0.1.1 */
-	FWUPD_STATUS_DECOMPRESSING,    /* Since: 0.1.1 */
-	FWUPD_STATUS_DEVICE_RESTART,   /* Since: 0.1.1 */
-	FWUPD_STATUS_DEVICE_WRITE,     /* Since: 0.1.1 */
-	FWUPD_STATUS_DEVICE_VERIFY,    /* Since: 0.1.1 */
-	FWUPD_STATUS_SCHEDULING,       /* Since: 0.1.1 */
-	FWUPD_STATUS_DOWNLOADING,      /* Since: 0.9.4 */
-	FWUPD_STATUS_DEVICE_READ,      /* Since: 1.0.0 */
-	FWUPD_STATUS_DEVICE_ERASE,     /* Since: 1.0.0 */
-	FWUPD_STATUS_WAITING_FOR_AUTH, /* Since: 1.0.0 */
-	FWUPD_STATUS_DEVICE_BUSY,      /* Since: 1.0.1 */
-	FWUPD_STATUS_SHUTDOWN,	       /* Since: 1.2.1 */
-	FWUPD_STATUS_WAITING_FOR_USER, /* Since: 1.9.8 */
+	/**
+	 * FWUPD_STATUS_UNKNOWN:
+	 *
+	 * Unknown state.
+	 *
+	 * Since: 0.1.1
+	 */
+	FWUPD_STATUS_UNKNOWN,
+	/**
+	 * FWUPD_STATUS_IDLE:
+	 *
+	 * Idle.
+	 *
+	 * Since: 0.1.1
+	 */
+	FWUPD_STATUS_IDLE,
+	/**
+	 * FWUPD_STATUS_LOADING:
+	 *
+	 * Loading a resource.
+	 *
+	 * Since: 0.1.1
+	 */
+	FWUPD_STATUS_LOADING,
+	/**
+	 * FWUPD_STATUS_DECOMPRESSING:
+	 *
+	 * Decompressing firmware.
+	 *
+	 * Since: 0.1.1
+	 */
+	FWUPD_STATUS_DECOMPRESSING,
+	/**
+	 * FWUPD_STATUS_DEVICE_RESTART:
+	 *
+	 * Restarting the device.
+	 *
+	 * Since: 0.1.1
+	 */
+	FWUPD_STATUS_DEVICE_RESTART,
+	/**
+	 * FWUPD_STATUS_DEVICE_WRITE:
+	 *
+	 * Writing to a device.
+	 *
+	 * Since: 0.1.1
+	 */
+	FWUPD_STATUS_DEVICE_WRITE,
+	/**
+	 * FWUPD_STATUS_DEVICE_VERIFY:
+	 *
+	 * Verifying (reading) a device.
+	 *
+	 * Since: 0.1.1
+	 */
+	FWUPD_STATUS_DEVICE_VERIFY,
+	/**
+	 * FWUPD_STATUS_SCHEDULING:
+	 *
+	 * Scheduling an offline update.
+	 *
+	 * Since: 0.1.1
+	 */
+	FWUPD_STATUS_SCHEDULING,
+	/**
+	 * FWUPD_STATUS_DOWNLOADING:
+	 *
+	 * A file is downloading.
+	 *
+	 * Since: 0.9.4
+	 */
+	FWUPD_STATUS_DOWNLOADING,
+	/**
+	 * FWUPD_STATUS_DEVICE_READ:
+	 *
+	 * Reading from a device.
+	 *
+	 * Since: 1.0.0
+	 */
+	FWUPD_STATUS_DEVICE_READ,
+	/**
+	 * FWUPD_STATUS_DEVICE_ERASE:
+	 *
+	 * Erasing a device.
+	 *
+	 * Since: 1.0.0
+	 */
+	FWUPD_STATUS_DEVICE_ERASE,
+	/**
+	 * FWUPD_STATUS_WAITING_FOR_AUTH:
+	 *
+	 * Waiting for authentication.
+	 *
+	 * Since: 1.0.0
+	 */
+	FWUPD_STATUS_WAITING_FOR_AUTH,
+	/**
+	 * FWUPD_STATUS_DEVICE_BUSY:
+	 *
+	 * The device is busy.
+	 *
+	 * Since: 1.0.1
+	 */
+	FWUPD_STATUS_DEVICE_BUSY,
+	/**
+	 * FWUPD_STATUS_SHUTDOWN:
+	 *
+	 * The daemon is shutting down.
+	 *
+	 * Since: 1.2.1
+	 */
+	FWUPD_STATUS_SHUTDOWN,
+	/**
+	 * FWUPD_STATUS_WAITING_FOR_USER:
+	 *
+	 * Waiting for an interactive user action.
+	 *
+	 * Since: 1.9.8
+	 */
+	FWUPD_STATUS_WAITING_FOR_USER,
 	/*< private >*/
 	FWUPD_STATUS_LAST
 } FwupdStatus;
 
 /**
  * FwupdFeatureFlags:
- * @FWUPD_FEATURE_FLAG_NONE:			No trust
- * @FWUPD_FEATURE_FLAG_CAN_REPORT:		Can upload a report of the update back to the server
- * @FWUPD_FEATURE_FLAG_DETACH_ACTION:		Can perform detach action, typically showing text
- * @FWUPD_FEATURE_FLAG_UPDATE_ACTION:		Can perform update action, typically showing text
- * @FWUPD_FEATURE_FLAG_SWITCH_BRANCH:		Can switch the firmware branch
- * @FWUPD_FEATURE_FLAG_REQUESTS:		Can show interactive requests
- * @FWUPD_FEATURE_FLAG_FDE_WARNING:		Can warn about full disk encryption
- * @FWUPD_FEATURE_FLAG_COMMUNITY_TEXT:		Can show information about community supported
- * @FWUPD_FEATURE_FLAG_SHOW_PROBLEMS:		Can show problems when getting the update list
- * @FWUPD_FEATURE_FLAG_ALLOW_AUTHENTICATION:	Can authenticate with PolicyKit for requests
- * @FWUPD_FEATURE_FLAG_REQUESTS_NON_GENERIC:	Can handle showing non-generic request message text
  *
  * The flags to the feature capabilities of the front-end client.
  **/
 typedef enum {
-	FWUPD_FEATURE_FLAG_NONE = 0,			  /* Since: 1.4.5 */
-	FWUPD_FEATURE_FLAG_CAN_REPORT = 1 << 0,		  /* Since: 1.4.5 */
-	FWUPD_FEATURE_FLAG_DETACH_ACTION = 1 << 1,	  /* Since: 1.4.5 */
-	FWUPD_FEATURE_FLAG_UPDATE_ACTION = 1 << 2,	  /* Since: 1.4.5 */
-	FWUPD_FEATURE_FLAG_SWITCH_BRANCH = 1 << 3,	  /* Since: 1.5.0 */
-	FWUPD_FEATURE_FLAG_REQUESTS = 1 << 4,		  /* Since: 1.6.2 */
-	FWUPD_FEATURE_FLAG_FDE_WARNING = 1 << 5,	  /* Since: 1.7.1 */
-	FWUPD_FEATURE_FLAG_COMMUNITY_TEXT = 1 << 6,	  /* Since: 1.7.5 */
-	FWUPD_FEATURE_FLAG_SHOW_PROBLEMS = 1 << 7,	  /* Since: 1.8.1 */
-	FWUPD_FEATURE_FLAG_ALLOW_AUTHENTICATION = 1 << 8, /* Since: 1.8.4 */
+	/**
+	 * FWUPD_FEATURE_FLAG_NONE:
+	 *
+	 * No trust.
+	 *
+	 * Since: 1.4.5
+	 */
+	FWUPD_FEATURE_FLAG_NONE = 0,
+	/**
+	 * FWUPD_FEATURE_FLAG_CAN_REPORT:
+	 *
+	 * Can upload a report of the update back to the server.
+	 *
+	 * Since: 1.4.5
+	 */
+	FWUPD_FEATURE_FLAG_CAN_REPORT = 1 << 0,
+	/**
+	 * FWUPD_FEATURE_FLAG_DETACH_ACTION:
+	 *
+	 * Can perform detach action, typically showing text.
+	 *
+	 * Since: 1.4.5
+	 */
+	FWUPD_FEATURE_FLAG_DETACH_ACTION = 1 << 1,
+	/**
+	 * FWUPD_FEATURE_FLAG_UPDATE_ACTION:
+	 *
+	 * Can perform update action, typically showing text.
+	 *
+	 * Since: 1.4.5
+	 */
+	FWUPD_FEATURE_FLAG_UPDATE_ACTION = 1 << 2,
+	/**
+	 * FWUPD_FEATURE_FLAG_SWITCH_BRANCH:
+	 *
+	 * Can switch the firmware branch.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_FEATURE_FLAG_SWITCH_BRANCH = 1 << 3,
+	/**
+	 * FWUPD_FEATURE_FLAG_REQUESTS:
+	 *
+	 * Can show interactive requests.
+	 *
+	 * Since: 1.6.2
+	 */
+	FWUPD_FEATURE_FLAG_REQUESTS = 1 << 4,
+	/**
+	 * FWUPD_FEATURE_FLAG_FDE_WARNING:
+	 *
+	 * Can warn about full disk encryption.
+	 *
+	 * Since: 1.7.1
+	 */
+	FWUPD_FEATURE_FLAG_FDE_WARNING = 1 << 5,
+	/**
+	 * FWUPD_FEATURE_FLAG_COMMUNITY_TEXT:
+	 *
+	 * Can show information about community supported.
+	 *
+	 * Since: 1.7.5
+	 */
+	FWUPD_FEATURE_FLAG_COMMUNITY_TEXT = 1 << 6,
+	/**
+	 * FWUPD_FEATURE_FLAG_SHOW_PROBLEMS:
+	 *
+	 * Can show problems when getting the update list.
+	 *
+	 * Since: 1.8.1
+	 */
+	FWUPD_FEATURE_FLAG_SHOW_PROBLEMS = 1 << 7,
+	/**
+	 * FWUPD_FEATURE_FLAG_ALLOW_AUTHENTICATION:
+	 *
+	 * Can authenticate with PolicyKit for requests.
+	 *
+	 * Since: 1.8.4
+	 */
+	FWUPD_FEATURE_FLAG_ALLOW_AUTHENTICATION = 1 << 8,
+	/**
+	 * FWUPD_FEATURE_FLAG_REQUESTS_NON_GENERIC:
+	 *
+	 * Can handle showing non-generic request message text.
+	 *
+	 * Since: 1.9.8
+	 */
 	FWUPD_FEATURE_FLAG_REQUESTS_NON_GENERIC = 1 << 9, /* Since: 1.9.8 */
 	/*< private >*/
 	FWUPD_FEATURE_FLAG_UNKNOWN = G_MAXUINT64,
@@ -927,108 +1084,238 @@ typedef enum {
 
 /**
  * FwupdInstallFlags:
- * @FWUPD_INSTALL_FLAG_NONE:			No flags set
- * @FWUPD_INSTALL_FLAG_OFFLINE:			Schedule this for next boot
- * @FWUPD_INSTALL_FLAG_ALLOW_REINSTALL:		Allow reinstalling the same version
- * @FWUPD_INSTALL_FLAG_ALLOW_OLDER:		Allow downgrading firmware
- * @FWUPD_INSTALL_FLAG_FORCE:			Force the update even if not a good idea
- * @FWUPD_INSTALL_FLAG_NO_HISTORY:		Do not write to the history database
- * @FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH:	Allow firmware branch switching
- * @FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM:		Ignore firmware CRCs and checksums
- * @FWUPD_INSTALL_FLAG_IGNORE_VID_PID:		Ignore firmware vendor and project checks
- * @FWUPD_INSTALL_FLAG_NO_SEARCH:		Do not use heuristics when parsing the image
  *
  * Flags to set when performing the firmware update or install.
  **/
 typedef enum {
-	FWUPD_INSTALL_FLAG_NONE = 0,			 /* Since: 0.7.0 */
-	FWUPD_INSTALL_FLAG_OFFLINE = 1 << 0,		 /* Since: 0.7.0 */
-	FWUPD_INSTALL_FLAG_ALLOW_REINSTALL = 1 << 1,	 /* Since: 0.7.0 */
-	FWUPD_INSTALL_FLAG_ALLOW_OLDER = 1 << 2,	 /* Since: 0.7.0 */
-	FWUPD_INSTALL_FLAG_FORCE = 1 << 3,		 /* Since: 0.7.1 */
-	FWUPD_INSTALL_FLAG_NO_HISTORY = 1 << 4,		 /* Since: 1.0.8 */
-	FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH = 1 << 5, /* Since: 1.5.0 */
-	FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM = 1 << 6,	 /* Since: 1.5.0 */
-	FWUPD_INSTALL_FLAG_IGNORE_VID_PID = 1 << 7,	 /* Since: 1.5.0 */
-	FWUPD_INSTALL_FLAG_NO_SEARCH = 1 << 8,		 /* Since: 2.0.0 */
+	/**
+	 * FWUPD_INSTALL_FLAG_NONE:
+	 *
+	 * No flags set.
+	 *
+	 * Since: 0.7.0
+	 */
+	FWUPD_INSTALL_FLAG_NONE = 0,
+	/**
+	 * FWUPD_INSTALL_FLAG_OFFLINE:
+	 *
+	 * Schedule this for next boot.
+	 *
+	 * Since: 0.7.0
+	 */
+	FWUPD_INSTALL_FLAG_OFFLINE = 1 << 0,
+	/**
+	 * FWUPD_INSTALL_FLAG_ALLOW_REINSTALL:
+	 *
+	 * Allow reinstalling the same version.
+	 *
+	 * Since: 0.7.0
+	 */
+	FWUPD_INSTALL_FLAG_ALLOW_REINSTALL = 1 << 1,
+	/**
+	 * FWUPD_INSTALL_FLAG_ALLOW_OLDER:
+	 *
+	 * Allow downgrading firmware.
+	 *
+	 * Since: 0.7.0
+	 */
+	FWUPD_INSTALL_FLAG_ALLOW_OLDER = 1 << 2,
+	/**
+	 * FWUPD_INSTALL_FLAG_FORCE:
+	 *
+	 * Force the update even if not a good idea.
+	 *
+	 * Since: 0.7.1
+	 */
+	FWUPD_INSTALL_FLAG_FORCE = 1 << 3,
+	/**
+	 * FWUPD_INSTALL_FLAG_NO_HISTORY:
+	 *
+	 * Do not write to the history database.
+	 *
+	 * Since: 1.0.8
+	 */
+	FWUPD_INSTALL_FLAG_NO_HISTORY = 1 << 4,
+	/**
+	 * FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH:
+	 *
+	 * Allow firmware branch switching.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH = 1 << 5,
+	/**
+	 * FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM:
+	 *
+	 * Ignore firmware CRCs and checksums.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM = 1 << 6,
+	/**
+	 * FWUPD_INSTALL_FLAG_IGNORE_VID_PID:
+	 *
+	 * Ignore firmware vendor and project checks.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_INSTALL_FLAG_IGNORE_VID_PID = 1 << 7,
+	/**
+	 * FWUPD_INSTALL_FLAG_NO_SEARCH:
+	 *
+	 * Do not use heuristics when parsing the image.
+	 *
+	 * Since: 2.0.0
+	 */
+	FWUPD_INSTALL_FLAG_NO_SEARCH = 1 << 8,
 	/*< private >*/
 	FWUPD_INSTALL_FLAG_UNKNOWN = G_MAXUINT64,
 } FwupdInstallFlags;
 
 /**
  * FwupdSelfSignFlags:
- * @FWUPD_SELF_SIGN_FLAG_NONE:			No flags set
- * @FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP:		Add the timestamp to the detached signature
- * @FWUPD_SELF_SIGN_FLAG_ADD_CERT:		Add the certificate to the detached signature
  *
  * Flags to set when performing the firmware update or install.
  **/
 typedef enum {
-	FWUPD_SELF_SIGN_FLAG_NONE = 0,		     /* Since: 1.2.6 */
-	FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP = 1 << 0, /* Since: 1.2.6 */
-	FWUPD_SELF_SIGN_FLAG_ADD_CERT = 1 << 1,	     /* Since: 1.2.6 */
+	/**
+	 * FWUPD_SELF_SIGN_FLAG_NONE:
+	 *
+	 * No flags set.
+	 *
+	 * Since: 1.2.6
+	 */
+	FWUPD_SELF_SIGN_FLAG_NONE = 0,
+	/**
+	 * FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP:
+	 *
+	 * Add the timestamp to the detached signature.
+	 *
+	 * Since: 1.2.6
+	 */
+	FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP = 1 << 0,
+	/**
+	 * FWUPD_SELF_SIGN_FLAG_ADD_CERT:
+	 *
+	 * Add the certificate to the detached signature.
+	 *
+	 * Since: 1.2.6
+	 */
+	FWUPD_SELF_SIGN_FLAG_ADD_CERT = 1 << 1,
 	/*< private >*/
 	FWUPD_SELF_SIGN_FLAG_UNKNOWN = G_MAXUINT64,
 } FwupdSelfSignFlags;
 
 /**
  * FwupdUpdateState:
- * @FWUPD_UPDATE_STATE_UNKNOWN:			Unknown
- * @FWUPD_UPDATE_STATE_PENDING:			Update is pending
- * @FWUPD_UPDATE_STATE_SUCCESS:			Update was successful
- * @FWUPD_UPDATE_STATE_FAILED:			Update failed
- * @FWUPD_UPDATE_STATE_NEEDS_REBOOT:		Waiting for a reboot to apply
- * @FWUPD_UPDATE_STATE_FAILED_TRANSIENT:	Update failed due to transient issue, e.g. AC power
- *required
  *
  * The update state.
  **/
 typedef enum {
-	FWUPD_UPDATE_STATE_UNKNOWN,	     /* Since: 0.7.0 */
-	FWUPD_UPDATE_STATE_PENDING,	     /* Since: 0.7.0 */
-	FWUPD_UPDATE_STATE_SUCCESS,	     /* Since: 0.7.0 */
-	FWUPD_UPDATE_STATE_FAILED,	     /* Since: 0.7.0 */
-	FWUPD_UPDATE_STATE_NEEDS_REBOOT,     /* Since: 1.0.4 */
-	FWUPD_UPDATE_STATE_FAILED_TRANSIENT, /* Since: 1.2.7 */
+	/**
+	 * FWUPD_UPDATE_STATE_UNKNOWN:
+	 *
+	 * Unknown.
+	 *
+	 * Since: 0.7.0
+	 */
+	FWUPD_UPDATE_STATE_UNKNOWN,
+	/**
+	 * FWUPD_UPDATE_STATE_PENDING:
+	 *
+	 * Update is pending.
+	 *
+	 * Since: 0.7.0
+	 */
+	FWUPD_UPDATE_STATE_PENDING,
+	/**
+	 * FWUPD_UPDATE_STATE_SUCCESS:
+	 *
+	 * Update was successful.
+	 *
+	 * Since: 0.7.0
+	 */
+	FWUPD_UPDATE_STATE_SUCCESS,
+	/**
+	 * FWUPD_UPDATE_STATE_FAILED:
+	 *
+	 * Update failed.
+	 *
+	 * Since: 0.7.0
+	 */
+	FWUPD_UPDATE_STATE_FAILED,
+	/**
+	 * FWUPD_UPDATE_STATE_NEEDS_REBOOT:
+	 *
+	 * Waiting for a reboot to apply.
+	 *
+	 * Since: 1.0.4
+	 */
+	FWUPD_UPDATE_STATE_NEEDS_REBOOT,
+	/**
+	 * FWUPD_UPDATE_STATE_FAILED_TRANSIENT:
+	 *
+	 * Update failed due to transient issue, e.g. AC power required.
+	 *
+	 * Since: 1.2.7
+	 */
+	FWUPD_UPDATE_STATE_FAILED_TRANSIENT,
 	/*< private >*/
 	FWUPD_UPDATE_STATE_LAST
 } FwupdUpdateState;
 
 /**
  * FwupdKeyringKind:
- * @FWUPD_KEYRING_KIND_UNKNOWN:			Unknown
- * @FWUPD_KEYRING_KIND_NONE:			No verification
- * @FWUPD_KEYRING_KIND_GPG:			Verification using GPG
- * @FWUPD_KEYRING_KIND_PKCS7:			Verification using PKCS7
- * @FWUPD_KEYRING_KIND_JCAT:			Verification using Jcat
  *
  * Type of keyring used on a remote.
  **/
 typedef enum {
-	FWUPD_KEYRING_KIND_UNKNOWN, /* Since: 0.9.7 */
-	FWUPD_KEYRING_KIND_NONE,    /* Since: 0.9.7 */
-	FWUPD_KEYRING_KIND_GPG,	    /* Since: 0.9.7 */
-	FWUPD_KEYRING_KIND_PKCS7,   /* Since: 0.9.7 */
-	FWUPD_KEYRING_KIND_JCAT,    /* Since: 1.4.0 */
+	/**
+	 * FWUPD_KEYRING_KIND_UNKNOWN:
+	 *
+	 * Unknown.
+	 *
+	 * Since: 0.9.7
+	 */
+	FWUPD_KEYRING_KIND_UNKNOWN,
+	/**
+	 * FWUPD_KEYRING_KIND_NONE:
+	 *
+	 * No verification.
+	 *
+	 * Since: 0.9.7
+	 */
+	FWUPD_KEYRING_KIND_NONE,
+	/**
+	 * FWUPD_KEYRING_KIND_GPG:
+	 *
+	 * Verification using GPG.
+	 *
+	 * Since: 0.9.7
+	 */
+	FWUPD_KEYRING_KIND_GPG,
+	/**
+	 * FWUPD_KEYRING_KIND_PKCS7:
+	 *
+	 * Verification using PKCS7.
+	 *
+	 * Since: 0.9.7
+	 */
+	FWUPD_KEYRING_KIND_PKCS7,
+	/**
+	 * FWUPD_KEYRING_KIND_JCAT:
+	 *
+	 * Verification using Jcat.
+	 *
+	 * Since: 1.4.0
+	 */
+	FWUPD_KEYRING_KIND_JCAT,
 	/*< private >*/
 	FWUPD_KEYRING_KIND_LAST
 } FwupdKeyringKind;
 
 /**
  * FwupdVersionFormat:
- * @FWUPD_VERSION_FORMAT_UNKNOWN:		Unknown version format
- * @FWUPD_VERSION_FORMAT_PLAIN:			An unidentified format text string
- * @FWUPD_VERSION_FORMAT_NUMBER:		A single integer version number
- * @FWUPD_VERSION_FORMAT_PAIR:			Two AABB.CCDD version numbers
- * @FWUPD_VERSION_FORMAT_TRIPLET:		Microsoft-style AA.BB.CCDD version numbers
- * @FWUPD_VERSION_FORMAT_QUAD:			UEFI-style AA.BB.CC.DD version numbers
- * @FWUPD_VERSION_FORMAT_BCD:			Binary coded decimal notation
- * @FWUPD_VERSION_FORMAT_INTEL_ME:		Intel ME-style bitshifted notation
- * @FWUPD_VERSION_FORMAT_INTEL_ME2:		Intel ME-style A.B.CC.DDDD notation notation
- * @FWUPD_VERSION_FORMAT_SURFACE_LEGACY:	Legacy Microsoft Surface 10b.12b.10b
- * @FWUPD_VERSION_FORMAT_SURFACE:		Microsoft Surface 8b.16b.8b
- * @FWUPD_VERSION_FORMAT_DELL_BIOS:		Dell BIOS BB.CC.DD style
- * @FWUPD_VERSION_FORMAT_HEX:			Hexadecimal 0xAABCCDD style
  *
  * The flags used when parsing version numbers.
  *
@@ -1036,19 +1323,110 @@ typedef enum {
  * be used to signify an unparsable text string.
  **/
 typedef enum {
-	FWUPD_VERSION_FORMAT_UNKNOWN,	     /* Since: 1.2.9 */
-	FWUPD_VERSION_FORMAT_PLAIN,	     /* Since: 1.2.9 */
-	FWUPD_VERSION_FORMAT_NUMBER,	     /* Since: 1.2.9 */
-	FWUPD_VERSION_FORMAT_PAIR,	     /* Since: 1.2.9 */
-	FWUPD_VERSION_FORMAT_TRIPLET,	     /* Since: 1.2.9 */
-	FWUPD_VERSION_FORMAT_QUAD,	     /* Since: 1.2.9 */
-	FWUPD_VERSION_FORMAT_BCD,	     /* Since: 1.2.9 */
-	FWUPD_VERSION_FORMAT_INTEL_ME,	     /* Since: 1.2.9 */
-	FWUPD_VERSION_FORMAT_INTEL_ME2,	     /* Since: 1.2.9 */
-	FWUPD_VERSION_FORMAT_SURFACE_LEGACY, /* Since: 1.3.4 */
-	FWUPD_VERSION_FORMAT_SURFACE,	     /* Since: 1.3.4 */
-	FWUPD_VERSION_FORMAT_DELL_BIOS,	     /* Since: 1.3.6 */
-	FWUPD_VERSION_FORMAT_HEX,	     /* Since: 1.4.0 */
+	/**
+	 * FWUPD_VERSION_FORMAT_UNKNOWN:
+	 *
+	 * Unknown version format.
+	 *
+	 * Since: 1.2.9
+	 */
+	FWUPD_VERSION_FORMAT_UNKNOWN,
+	/**
+	 * FWUPD_VERSION_FORMAT_PLAIN:
+	 *
+	 * An unidentified format text string.
+	 *
+	 * Since: 1.2.9
+	 */
+	FWUPD_VERSION_FORMAT_PLAIN,
+	/**
+	 * FWUPD_VERSION_FORMAT_NUMBER:
+	 *
+	 * A single integer version number.
+	 *
+	 * Since: 1.2.9
+	 */
+	FWUPD_VERSION_FORMAT_NUMBER,
+	/**
+	 * FWUPD_VERSION_FORMAT_PAIR:
+	 *
+	 * Two AABB.CCDD version numbers.
+	 *
+	 * Since: 1.2.9
+	 */
+	FWUPD_VERSION_FORMAT_PAIR,
+	/**
+	 * FWUPD_VERSION_FORMAT_TRIPLET:
+	 *
+	 * Microsoft-style AA.BB.CCDD version numbers.
+	 *
+	 * Since: 1.2.9
+	 */
+	FWUPD_VERSION_FORMAT_TRIPLET,
+	/**
+	 * FWUPD_VERSION_FORMAT_QUAD:
+	 *
+	 * UEFI-style AA.BB.CC.DD version numbers.
+	 *
+	 * Since: 1.2.9
+	 */
+	FWUPD_VERSION_FORMAT_QUAD,
+	/**
+	 * FWUPD_VERSION_FORMAT_BCD:
+	 *
+	 * Binary coded decimal notation.
+	 *
+	 * Since: 1.2.9
+	 */
+	FWUPD_VERSION_FORMAT_BCD,
+	/**
+	 * FWUPD_VERSION_FORMAT_INTEL_ME:
+	 *
+	 * Intel ME-style bitshifted notation.
+	 *
+	 * Since: 1.2.9
+	 */
+	FWUPD_VERSION_FORMAT_INTEL_ME,
+	/**
+	 * FWUPD_VERSION_FORMAT_INTEL_ME2:
+	 *
+	 * Intel ME-style A.B.CC.DDDD notation notation.
+	 *
+	 * Since: 1.2.9
+	 */
+	FWUPD_VERSION_FORMAT_INTEL_ME2,
+	/**
+	 * FWUPD_VERSION_FORMAT_SURFACE_LEGACY:
+	 *
+	 * Legacy Microsoft Surface 10b.12b.10b.
+	 *
+	 * Since: 1.3.4
+	 */
+	FWUPD_VERSION_FORMAT_SURFACE_LEGACY,
+	/**
+	 * FWUPD_VERSION_FORMAT_SURFACE:
+	 *
+	 * Microsoft Surface 8b.16b.8b.
+	 *
+	 * Since: 1.3.4
+	 */
+	FWUPD_VERSION_FORMAT_SURFACE,
+	/**
+	 * FWUPD_VERSION_FORMAT_DELL_BIOS:
+	 *
+	 * Dell BIOS BB.CC.DD style.
+	 *
+	 * Since: 1.3.6
+	 */
+	FWUPD_VERSION_FORMAT_DELL_BIOS,
+	/**
+	 * FWUPD_VERSION_FORMAT_HEX:
+	 *
+	 * Hexadecimal 0xAABCCDD style.
+	 *
+	 * Since: 1.4.0
+	 */
+	FWUPD_VERSION_FORMAT_HEX,
 	/*< private >*/
 	FWUPD_VERSION_FORMAT_LAST
 } FwupdVersionFormat;
