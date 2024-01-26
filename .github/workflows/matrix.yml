@@ -4,6 +4,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    needs: library
     strategy:
       matrix:
         os: [fedora, debian-x86_64, arch, debian-i386]
@@ -13,13 +14,19 @@ jobs:
         run: docker login docker.pkg.github.com -u $GITHUB_ACTOR -p $GITHUB_TOKEN
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Download tarball
+        if: matrix.os == 'fedora'
+        uses: actions/download-artifact@v4
+        id: download
+        with:
+          name: tarball
       - name: Build in container
         env:
           CI_NETWORK: true
           CI: true
+          VERSION: ${{ needs.library.outputs.version }}
         run: |
-          echo $GITHUB_WORKSPACE
-          docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
+          docker run --privileged -e CI_NETWORK=$CI_NETWORK -e CI=$CI -e VERSION=$VERSION -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
       - name: Save any applicable artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -66,6 +73,8 @@ jobs:
 
   library:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - name: Refresh dependencies
@@ -82,7 +91,16 @@ jobs:
                       -Dman=false \
                       -Dauto_features=disabled \
                       -Dtests=false
-          ninja -C build
+          ninja -C build dist
+      - name: Save version
+        id: version
+        run: |
+          echo "version=$(meson introspect build --projectinfo | jq -r .version)" >> $GITHUB_OUTPUT
+      - name: Save tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: tarball
+          path: ${{ github.workspace }}/build/meson-dist/*xz
 
   macos:
     runs-on: macos-12

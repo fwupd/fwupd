@@ -13,28 +13,19 @@ if [ "$QUBES" = "true" ]; then
 fi
 
 # do the full-fat build
-mkdir -p build && pushd build
-rm -rf *
-meson setup \
-    -Db_sanitize=undefined \
-    $@
-ninja-build
-../contrib/ci/check-unused.py
-ninja-build dist
-popd
-VERSION=`meson introspect build --projectinfo | jq -r .version`
 RPMVERSION=${VERSION//-/.}
 mkdir -p $HOME/rpmbuild/SOURCES/
-mv build/meson-dist/fwupd-$VERSION.tar.xz $HOME/rpmbuild/SOURCES/
+mv fwupd-$VERSION.tar.xz $HOME/rpmbuild/SOURCES/
 
 #generate a spec file
+mkdir -p build
 sed "s,#VERSION#,$RPMVERSION,;
      s,#BUILD#,1,;
      s,#LONGDATE#,`date '+%a %b %d %Y'`,;
      s,#ALPHATAG#,alpha,;
      s,enable_dummy 0,enable_dummy 1,;
      s,Source0.*,Source0:\tfwupd-$VERSION.tar.xz," \
-	build/contrib/fwupd.spec.in > build/fwupd.spec
+	contrib/fwupd.spec.in > build/fwupd.spec
 
 if [ -n "$CI" ]; then
 	sed -i "s,enable_ci 0,enable_ci 1,;" build/fwupd.spec

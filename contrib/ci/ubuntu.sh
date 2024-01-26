@@ -36,5 +36,8 @@ sudo -u nobody meson ${root}/build -Dman=false -Ddocs=enabled -Dgusb:tests=false
 #build with clang
 sudo -u nobody ninja -C ${root}/build test -v
 
+# check for unused symbols
+./contrib/ci/check-unused.py
+
 #make docs available outside of docker
 ninja -C ${root}/build install -v
