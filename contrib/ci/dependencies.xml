@@ -627,6 +627,9 @@
       <package variant="aarch64" />
       <package variant="mingw64" />
     </distro>
+    <distro id="debian">
+      <package variant="x86_64" />
+    </distro>
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
