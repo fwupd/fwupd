@@ -126,14 +126,21 @@ fu_config_load_bytes_replace(FuConfig *self, GBytes *blob, GError **error)
 		g_auto(GStrv) keys = NULL;
 		g_autofree gchar *comment_group = NULL;
 		keys = g_key_file_get_keys(kf, groups[i], NULL, error);
-		if (keys == NULL)
+		if (keys == NULL) {
+			g_prefix_error(error, "failed to get keys for [%s]: ", groups[i]);
 			return FALSE;
+		}
 		for (guint j = 0; keys[j] != NULL; j++) {
 			g_autofree gchar *value = NULL;
 			g_autofree gchar *comment_key = NULL;
 			value = g_key_file_get_string(kf, groups[i], keys[j], error);
-			if (value == NULL)
+			if (value == NULL) {
+				g_prefix_error(error,
+					       "failed to get string for %s=%s: ",
+					       groups[i],
+					       keys[j]);
 				return FALSE;
+			}
 			g_key_file_set_string(priv->keyfile, groups[i], keys[j], value);
 			comment_key = g_key_file_get_comment(kf, groups[i], keys[j], NULL);
 			if (comment_key != NULL) {
@@ -141,8 +148,14 @@ fu_config_load_bytes_replace(FuConfig *self, GBytes *blob, GError **error)
 							    groups[i],
 							    keys[j],
 							    comment_key,
-							    error))
+							    error)) {
+					g_prefix_error(error,
+						       "failed to set comment '%s' for %s=%s: ",
+						       comment_key,
+						       groups[i],
+						       keys[j]);
 					return FALSE;
+				}
 			}
 		}
 		comment_group = g_key_file_get_comment(kf, groups[i], NULL, NULL);
@@ -151,8 +164,13 @@ fu_config_load_bytes_replace(FuConfig *self, GBytes *blob, GError **error)
 						    groups[i],
 						    NULL,
 						    comment_group,
-						    error))
+						    error)) {
+				g_prefix_error(error,
+					       "failed to set comment '%s' for [%s]: ",
+					       comment_group,
+					       groups[i]);
 				return FALSE;
+			}
 		}
 	}
 
@@ -189,8 +207,10 @@ fu_config_reload(FuConfig *self, GError **error)
 					 G_FILE_QUERY_INFO_NONE,
 					 NULL,
 					 error);
-		if (info == NULL)
+		if (info == NULL) {
+			g_prefix_error(error, "failed to query info about %s", item->filename);
 			return FALSE;
+		}
 		st_mode = g_file_info_get_attribute_uint32(info, G_FILE_ATTRIBUTE_UNIX_MODE) & 0777;
 		if (st_mode != FU_CONFIG_FILE_MODE_SECURE) {
 			g_info("fixing %s from mode 0%o to 0%o",
@@ -204,8 +224,12 @@ fu_config_reload(FuConfig *self, GError **error)
 							     info,
 							     G_FILE_QUERY_INFO_NONE,
 							     NULL,
-							     error))
+							     error)) {
+				g_prefix_error(error,
+					       "failed to set mode attribute of %s: ",
+					       item->filename);
 				return FALSE;
+			}
 		}
 	}
 #endif
@@ -231,10 +255,13 @@ fu_config_reload(FuConfig *self, GError **error)
 				continue;
 			}
 			g_propagate_error(error, g_steal_pointer(&error_load));
+			g_prefix_error(error, "failed to read %s: ", item->filename);
 			return FALSE;
 		}
-		if (!fu_config_load_bytes_replace(self, blob_item, error))
+		if (!fu_config_load_bytes_replace(self, blob_item, error)) {
+			g_prefix_error(error, "failed to load %s: ", item->filename);
 			return FALSE;
+		}
 
 		/* are any of the legacy files found in this location? */
 		for (guint j = 0; fn_merge[j] != NULL; j++) {
@@ -242,10 +269,14 @@ fu_config_reload(FuConfig *self, GError **error)
 			if (g_file_test(fncompat, G_FILE_TEST_EXISTS)) {
 				g_autoptr(GBytes) blob_compat =
 				    fu_bytes_get_contents(fncompat, error);
-				if (blob_compat == NULL)
+				if (blob_compat == NULL) {
+					g_prefix_error(error, "failed to read %s: ", fncompat);
 					return FALSE;
-				if (!fu_config_load_bytes_replace(self, blob_compat, error))
+				}
+				if (!fu_config_load_bytes_replace(self, blob_compat, error)) {
+					g_prefix_error(error, "failed to load %s: ", fncompat);
 					return FALSE;
+				}
 				g_ptr_array_add(legacy_cfg_files, g_steal_pointer(&fncompat));
 			}
 		}
@@ -306,8 +337,10 @@ fu_config_reload(FuConfig *self, GError **error)
 			-1,
 			G_FILE_SET_CONTENTS_CONSISTENT,
 			FU_CONFIG_FILE_MODE_SECURE, /* only readable by root */
-			error))
+			error)) {
+			g_prefix_error(error, "failed to save %s: ", fn_default);
 			return FALSE;
+		}
 
 		/* give the legacy files a .old extension */
 		for (guint i = 0; i < legacy_cfg_files->len; i++) {
