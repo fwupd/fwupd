@@ -19,9 +19,9 @@ jobs:
     - id: channel
       run: |
         if git describe --exact-match; then
-          echo "::set-output name=channel::candidate"
+          echo "channel=candidate" >> $GITHUB_OUTPUT
         else
-          echo "::set-output name=channel::edge"
+          echo "channel=edge" >> $GITHUB_OUTPUT
         fi
     - id: prep
       run: |
