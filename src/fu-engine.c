@@ -6172,8 +6172,7 @@ fu_engine_device_inherit_history(FuEngine *self, FuDevice *device)
 	/* in an offline environment we may have used the .cab file to find the version-format
 	 * to use for the device -- so when we reboot use the database as the archive data is no
 	 * longer available */
-	if (fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN &&
-	    fu_device_get_version_format(device_history) != FWUPD_VERSION_FORMAT_UNKNOWN) {
+	if (fu_device_get_version_format(device_history) != FWUPD_VERSION_FORMAT_UNKNOWN) {
 		g_debug(
 		    "absorbing version format %s into %s from history database",
 		    fwupd_version_format_to_string(fu_device_get_version_format(device_history)),
