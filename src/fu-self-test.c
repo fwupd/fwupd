@@ -2555,6 +2555,7 @@ fu_engine_history_verfmt_func(gconstpointer user_data)
 
 	/* absorb version format from the database */
 	fu_device_set_version_raw(device, 65563);
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_NUMBER);
 	fu_device_set_id(device, "test_device");
 	fu_device_add_vendor_id(device, "USB:FFFF");
 	fu_device_add_protocol(device, "com.acme");
