@@ -779,8 +779,6 @@ fu_pxi_wireless_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_pxi_wireless_device_init(FuPxiWirelessDevice *self)
 {
-	FuPxiReceiverDevice *parent;
-	parent = fu_pxi_wireless_device_get_parent(FU_DEVICE(self), NULL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
@@ -788,7 +786,6 @@ fu_pxi_wireless_device_init(FuPxiWirelessDevice *self)
 	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x093A");
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_PXI_FIRMWARE);
-	fu_device_register_private_flag(FU_DEVICE(parent), FU_PXI_DEVICE_FLAG_IS_HPAC, "is-hpac");
 }
 
 static void
