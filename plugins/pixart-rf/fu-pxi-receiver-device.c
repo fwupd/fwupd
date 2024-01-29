@@ -787,7 +787,8 @@ fu_pxi_receiver_device_add_peripherals(FuPxiReceiverDevice *device, guint idx, G
 						 NULL))
 			return FALSE;
 	} else {
-		g_autoptr(FuPxiWirelessDevice) child = fu_pxi_wireless_device_new(&model);
+		FuContext *ctx = fu_device_get_context(FU_DEVICE(device));
+		g_autoptr(FuPxiWirelessDevice) child = fu_pxi_wireless_device_new(ctx, &model);
 		g_autofree gchar *logical_id = g_strdup_printf("IDX:0x%02x", idx);
 		fu_device_add_instance_u16(FU_DEVICE(child), "VEN", device->vendor);
 		fu_device_add_instance_u16(FU_DEVICE(child), "DEV", device->product);
