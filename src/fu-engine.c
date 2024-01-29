@@ -7149,6 +7149,7 @@ fu_engine_load_plugins_builtins(FuEngine *self, FuProgress *progress)
 	for (guint i = 0; fu_plugin_externals[i] != NULL; i++) {
 		GType plugin_gtype = fu_plugin_externals[i]();
 		g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(plugin_gtype, self->ctx);
+		fu_progress_set_name(fu_progress_get_child(progress), fu_plugin_get_name(plugin));
 		fu_engine_add_plugin(self, plugin);
 		fu_progress_step_done(progress);
 	}
