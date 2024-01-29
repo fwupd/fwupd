@@ -799,10 +799,10 @@ fu_pxi_wireless_device_class_init(FuPxiWirelessDeviceClass *klass)
 }
 
 FuPxiWirelessDevice *
-fu_pxi_wireless_device_new(struct ota_fw_dev_model *model)
+fu_pxi_wireless_device_new(FuContext *ctx, struct ota_fw_dev_model *model)
 {
 	FuPxiWirelessDevice *self = NULL;
-	self = g_object_new(FU_TYPE_PXI_WIRELESS_DEVICE, NULL);
+	self = g_object_new(FU_TYPE_PXI_WIRELESS_DEVICE, "context", ctx, NULL);
 
 	self->model.status = model->status;
 	for (guint idx = 0; idx < FU_PXI_DEVICE_MODEL_NAME_LEN; idx++)
