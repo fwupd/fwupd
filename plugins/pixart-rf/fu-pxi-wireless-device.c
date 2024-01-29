@@ -58,7 +58,6 @@ fu_pxi_wireless_device_prepare_firmware(FuDevice *device,
 {
 	FuPxiReceiverDevice *parent;
 	g_autoptr(FuFirmware) firmware = fu_pxi_firmware_new();
-	g_autoptr(FuFirmware) firmware_new = NULL;
 
 	parent = fu_pxi_wireless_device_get_parent(device, error);
 	if (parent == NULL)
@@ -70,13 +69,12 @@ fu_pxi_wireless_device_prepare_firmware(FuDevice *device,
 	if (fu_device_has_private_flag(FU_DEVICE(parent), FU_PXI_DEVICE_FLAG_IS_HPAC) &&
 	    fu_pxi_firmware_is_hpac(FU_PXI_FIRMWARE(firmware))) {
 		guint32 hpac_fw_size = 0;
-		g_autoptr(GInputStream) stream_fw = NULL;
+		g_autoptr(GInputStream) stream_new = NULL;
 
 		if (!fu_input_stream_read_u32(stream, 9, &hpac_fw_size, G_LITTLE_ENDIAN, error))
 			return NULL;
-		stream_fw = fu_partial_input_stream_new(stream, 9, hpac_fw_size + 264);
-		firmware_new = fu_pxi_firmware_new();
-		if (!fu_firmware_parse_stream(firmware, stream_fw, 0x0, flags, error))
+		stream_new = fu_partial_input_stream_new(stream, 9, hpac_fw_size + 264);
+		if (!fu_firmware_set_stream(firmware, stream_new, error))
 			return NULL;
 	} else if (fu_device_has_private_flag(FU_DEVICE(parent), FU_PXI_DEVICE_FLAG_IS_HPAC) !=
 		   fu_pxi_firmware_is_hpac(FU_PXI_FIRMWARE(firmware))) {
@@ -85,11 +83,9 @@ fu_pxi_wireless_device_prepare_firmware(FuDevice *device,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "The firmware is incompatible with the device");
 		return NULL;
-	} else {
-		firmware_new = g_object_ref(firmware);
 	}
 
-	return g_steal_pointer(&firmware_new);
+	return g_steal_pointer(&firmware);
 }
 
 static gboolean

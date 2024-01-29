@@ -89,7 +89,6 @@ fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 {
 	FuPxiBleDevice *self = FU_PXI_BLE_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_pxi_firmware_new();
-	g_autoptr(FuFirmware) firmware_new = NULL;
 
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
@@ -97,13 +96,12 @@ fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 	if (fu_device_has_private_flag(device, FU_PXI_DEVICE_FLAG_IS_HPAC) &&
 	    fu_pxi_firmware_is_hpac(FU_PXI_FIRMWARE(firmware))) {
 		guint32 hpac_fw_size = 0;
-		g_autoptr(GInputStream) stream_fw = NULL;
+		g_autoptr(GInputStream) stream_new = NULL;
 
 		if (!fu_input_stream_read_u32(stream, 9, &hpac_fw_size, G_LITTLE_ENDIAN, error))
 			return NULL;
-		stream_fw = fu_partial_input_stream_new(stream, 9, hpac_fw_size + 264);
-		firmware_new = fu_pxi_firmware_new();
-		if (!fu_firmware_parse_stream(firmware, stream_fw, 0x0, flags, error))
+		stream_new = fu_partial_input_stream_new(stream, 9, hpac_fw_size + 264);
+		if (!fu_firmware_set_stream(firmware, stream_new, error))
 			return NULL;
 
 	} else if (!fu_device_has_private_flag(device, FU_PXI_DEVICE_FLAG_IS_HPAC) &&
@@ -131,7 +129,6 @@ fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 				return NULL;
 			}
 		}
-		firmware_new = g_object_ref(firmware);
 	} else {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -140,7 +137,7 @@ fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 		return NULL;
 	}
 
-	return g_steal_pointer(&firmware_new);
+	return g_steal_pointer(&firmware);
 }
 
 #ifdef HAVE_HIDRAW_H
