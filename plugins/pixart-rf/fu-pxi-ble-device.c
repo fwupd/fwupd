@@ -1005,6 +1005,8 @@ fu_pxi_ble_device_init(FuPxiBleDevice *self)
 	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x093A");
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
 	fu_device_retry_set_delay(FU_DEVICE(self), 50);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
 	self->retransmit_id = PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
 	self->feature_report_id = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
 	self->input_report_id = PXI_HID_DEV_OTA_INPUT_REPORT_ID;

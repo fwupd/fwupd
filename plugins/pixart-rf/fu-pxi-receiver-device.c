@@ -920,6 +920,8 @@ fu_pxi_receiver_device_init(FuPxiReceiverDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_PXI_FIRMWARE);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC, "is-hpac");
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
 }
 
 static void
