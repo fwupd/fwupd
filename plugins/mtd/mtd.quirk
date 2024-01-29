@@ -15,4 +15,4 @@ Flags = no-probe
 # Intel SPI Controller
 [MTD\NAME_BIOS]
 Name = Internal SPI Controller
-FirmwareGType = FuIfdFirmware
+#FirmwareGType = FuIfdFirmware
