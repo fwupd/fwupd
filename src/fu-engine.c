@@ -3801,7 +3801,7 @@ fu_engine_ensure_device_supported(FuEngine *self, FuDevice *device)
 static void
 fu_engine_md_refresh_devices(FuEngine *self)
 {
-	g_autoptr(GPtrArray) devices = fu_device_list_get_all(self->device_list);
+	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
 		g_autoptr(XbNode) component = fu_engine_get_component_by_guids(self, device);
@@ -4755,7 +4755,7 @@ fu_engine_get_devices_by_guid(FuEngine *self, const gchar *guid, GError **error)
 	g_autoptr(GPtrArray) devices_tmp = NULL;
 
 	/* find the devices by GUID */
-	devices_tmp = fu_device_list_get_all(self->device_list);
+	devices_tmp = fu_device_list_get_active(self->device_list);
 	devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	for (guint i = 0; i < devices_tmp->len; i++) {
 		FuDevice *dev_tmp = g_ptr_array_index(devices_tmp, i);
@@ -4783,7 +4783,7 @@ fu_engine_get_devices_by_guid(FuEngine *self, const gchar *guid, GError **error)
  * @composite_id: a device ID
  * @error: (nullable): optional return location for an error
  *
- * Gets all devices that match a specific composite ID.
+ * Gets all active devices that match a specific composite ID.
  *
  * Returns: (transfer full) (element-type FuDevice): devices
  **/
@@ -4794,7 +4794,7 @@ fu_engine_get_devices_by_composite_id(FuEngine *self, const gchar *composite_id,
 	g_autoptr(GPtrArray) devices_tmp = NULL;
 
 	/* find the devices by composite ID */
-	devices_tmp = fu_device_list_get_all(self->device_list);
+	devices_tmp = fu_device_list_get_active(self->device_list);
 	devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	for (guint i = 0; i < devices_tmp->len; i++) {
 		FuDevice *dev_tmp = g_ptr_array_index(devices_tmp, i);
@@ -6988,7 +6988,7 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 {
 #ifdef HAVE_HSI
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
-	g_autoptr(GPtrArray) devices = fu_device_list_get_all(self->device_list);
+	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
 	g_autoptr(GPtrArray) vals = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -7370,7 +7370,7 @@ fu_engine_backend_device_removed_cb(FuBackend *backend, FuDevice *device, FuEngi
 	g_debug("%s removed %s", fu_backend_get_name(backend), fu_device_get_backend_id(device));
 
 	/* go through each device and remove any that match */
-	devices = fu_device_list_get_all(self->device_list);
+	devices = fu_device_list_get_active(self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
 		if (g_strcmp0(fu_device_get_backend_id(device_tmp),
@@ -7525,7 +7525,7 @@ fu_engine_backend_device_changed_cb(FuBackend *backend, FuDevice *device, FuEngi
 	g_debug("%s changed %s", fu_backend_get_name(backend), fu_device_get_physical_id(device));
 
 	/* emit changed on any that match */
-	devices = fu_device_list_get_all(self->device_list);
+	devices = fu_device_list_get_active(self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
 		if (!FU_IS_UDEV_DEVICE(device_tmp) || !FU_IS_UDEV_DEVICE(device))
@@ -8546,7 +8546,7 @@ fu_engine_add_runtime_version(FuEngine *self, const gchar *component_id, const g
 static void
 fu_engine_context_power_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine *self)
 {
-	g_autoptr(GPtrArray) devices = fu_device_list_get_all(self->device_list);
+	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
 
 	/* apply policy on any existing devices */
 	for (guint i = 0; i < devices->len; i++) {
