@@ -1893,9 +1893,11 @@ fu_engine_install_releases(FuEngine *self,
 		FuRelease *release = g_ptr_array_index(releases, i);
 		FuDevice *device = fu_release_get_device(release);
 		const gchar *logical_id = fu_device_get_logical_id(device);
-		g_info("composite update %u: %s (%s: %i)",
+		g_info("composite update %u: %s %s->%s (%s: %i)",
 		       i + 1,
 		       fu_device_get_id(device),
+		       fu_device_get_version(device),
+		       fu_release_get_version(release),
 		       logical_id != NULL ? logical_id : "n/a",
 		       fu_device_get_order(device));
 		g_ptr_array_add(devices, g_object_ref(device));

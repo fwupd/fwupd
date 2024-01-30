@@ -980,6 +980,10 @@ fu_daemon_install_with_helper(FuMainAuthHelper *helper_ref, GError **error)
 		XbNode *component = g_ptr_array_index(components, i);
 		for (guint j = 0; j < devices_possible->len; j++) {
 			FuDevice *device = g_ptr_array_index(devices_possible, j);
+			g_debug("testing device %u [%s] with component %u",
+				j,
+				fu_device_get_id(device),
+				i);
 			if (!fu_daemon_install_with_helper_device(helper, component, device, error))
 				return FALSE;
 		}
