@@ -20,10 +20,6 @@ G_DEFINE_TYPE(FuThunderboltPlugin, fu_thunderbolt_plugin, FU_TYPE_PLUGIN)
 /* 5 seconds sleep until retimer is available after nvm update */
 #define FU_THUNDERBOLT_RETIMER_CLEANUP_DELAY 5000000
 
-/* defaults changed here will also be reflected in the fwupd.conf man page */
-#define FU_THUNDERBOLT_CONFIG_DEFAULT_MINIMUM_KERNEL_VERSION "4.13.0"
-#define FU_THUNDERBOLT_CONFIG_DEFAULT_DELAYED_ACTIVATION     FALSE
-
 static gboolean
 fu_thunderbolt_plugin_safe_kernel(FuPlugin *plugin, GError **error)
 {

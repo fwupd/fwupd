@@ -248,6 +248,7 @@ fwupdplugin_headers = [
   'fu-partial-input-stream.h',
   'fu-path.h',
   'fu-pefile-firmware.h',
+  'fu-plugin-config-defaults.h',
   'fu-plugin.h',
   'fu-plugin-private.h',
   'fu-progress.h',

@@ -8,6 +8,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include "fwupd-remote-private.h"
 
 #include "fu-remote.h"
@@ -17,8 +19,6 @@ struct _FuRemote {
 };
 
 G_DEFINE_TYPE(FuRemote, fu_remote, FWUPD_TYPE_REMOTE)
-
-#define FWUPD_REMOTE_CONFIG_DEFAULT_REFRESH_INTERVAL 86400 /* 24h */
 
 /**
  * fwupd_remote_load_from_filename:

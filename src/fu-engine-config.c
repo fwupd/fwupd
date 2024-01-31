@@ -29,23 +29,6 @@ struct _FuEngineConfig {
 
 G_DEFINE_TYPE(FuEngineConfig, fu_engine_config, FU_TYPE_CONFIG)
 
-/* defaults changed here will also be reflected in the fwupd.conf man page */
-#define FU_DAEMON_CONFIG_DEFAULT_DISABLED_PLUGINS      ""
-#define FU_DAEMON_CONFIG_DEFAULT_URI_SCHEMES	       "file;https;http;ipfs"
-#define FU_DAEMON_CONFIG_DEFAULT_UPDATE_MOTD	       TRUE
-#define FU_DAEMON_CONFIG_DEFAULT_IGNORE_POWER	       FALSE
-#define FU_DAEMON_CONFIG_DEFAULT_ONLY_TRUSTED	       TRUE
-#define FU_DAEMON_CONFIG_DEFAULT_SHOW_DEVICE_PRIVATE   TRUE
-#define FU_DAEMON_CONFIG_DEFAULT_ALLOW_EMULATION       FALSE
-#define FU_DAEMON_CONFIG_DEFAULT_ENUMERATE_ALL_DEVICES TRUE
-#define FU_DAEMON_CONFIG_DEFAULT_TRUSTED_UIDS	       NULL
-#define FU_DAEMON_CONFIG_DEFAULT_HOST_BKC	       NULL
-#define FU_DAEMON_CONFIG_DEFAULT_TRUSTED_REPORTS       "VendorId=$OEM"
-#define FU_DAEMON_CONFIG_DEFAULT_RELEASE_DEDUPE	       TRUE
-#define FU_DAEMON_CONFIG_DEFAULT_RELEASE_PRIORITY      "local"
-#define FU_DAEMON_CONFIG_DEFAULT_IDLE_TIMEOUT	       7200
-#define FU_DAEMON_CONFIG_DEFAULT_TEST_DEVICES	       FALSE
-
 static FwupdReport *
 fu_engine_config_report_from_spec(FuEngineConfig *self, const gchar *report_spec, GError **error)
 {

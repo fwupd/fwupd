@@ -8,16 +8,13 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include <fcntl.h>
-#include <gio/gio.h>
 #include <glib/gstdio.h>
 #include <unistd.h>
 
-#include "fu-byte-array.h"
-#include "fu-bytes.h"
 #include "fu-config-private.h"
-#include "fu-path.h"
-#include "fu-string.h"
 
 enum { SIGNAL_CHANGED, SIGNAL_LOADED, SIGNAL_LAST };
 
@@ -115,31 +112,34 @@ fu_config_migrate_default_keys(GKeyFile *kf)
 		const gchar *group;
 		const gchar *key;
 		const gchar *value;
-	} key_values[] = {{"fwupd", "ApprovedFirmware", ""},
-			  {"fwupd", "ArchiveSizeMax", "0"},
-			  {"fwupd", "BlockedFirmware", ""},
-			  {"fwupd", "DisabledDevices", ""},
-			  {"fwupd", "EnumerateAllDevices", "false"},
-			  {"fwupd", "EspLocation", ""},
-			  {"fwupd", "HostBkc", ""},
-			  {"fwupd", "IdleTimeout", "7200"},
-			  {"fwupd", "IgnorePower", ""},
-			  {"fwupd", "ShowDevicePrivate", "true"},
-			  {"fwupd", "TrustedUids", ""},
-			  {"fwupd", "UpdateMotd", "true"},
-			  {"fwupd", "UriSchemes", ""},
-			  {"fwupd", "VerboseDomains", ""},
-			  {"fwupd", "OnlyTrusted", "true"},
-			  {"fwupd", "IgnorePower", "false"},
-			  {"fwupd", "DisabledPlugins", "test;test_ble;invalid"},
-			  {"fwupd", "DisabledPlugins", "test;test_ble"},
-			  {"fwupd", "AllowEmulation", "false"},
-			  {"redfish", "IpmiDisableCreateUser", "False"},
-			  {"redfish", "ManagerResetTimeout", "1800"},
-			  {"msr", "MinimumSmeKernelVersion", "5.18.0"},
-			  {"thunderbolt", "MinimumKernelVersion", "4.13.0"},
-			  {"thunderbolt", "DelayedActivation", "false"},
-			  {NULL, NULL, NULL}};
+	} key_values[] = {
+	    {"fwupd", "ApprovedFirmware", ""},
+	    {"fwupd", "ArchiveSizeMax", "0"},
+	    {"fwupd", "BlockedFirmware", ""},
+	    {"fwupd", "DisabledDevices", ""},
+	    {"fwupd", "EnumerateAllDevices", "false"},
+	    {"fwupd", "EspLocation", ""},
+	    {"fwupd", "HostBkc", ""},
+	    {"fwupd", "IdleTimeout", G_STRINGIFY(FU_DAEMON_CONFIG_DEFAULT_IDLE_TIMEOUT)},
+	    {"fwupd", "IgnorePower", ""},
+	    {"fwupd", "ShowDevicePrivate", "true"},
+	    {"fwupd", "TrustedUids", ""},
+	    {"fwupd", "UpdateMotd", "true"},
+	    {"fwupd", "UriSchemes", ""},
+	    {"fwupd", "VerboseDomains", ""},
+	    {"fwupd", "OnlyTrusted", "true"},
+	    {"fwupd", "IgnorePower", "false"},
+	    {"fwupd", "DisabledPlugins", "test;test_ble;invalid"},
+	    {"fwupd", "DisabledPlugins", "test;test_ble"},
+	    {"fwupd", "AllowEmulation", "false"},
+	    {"redfish", "IpmiDisableCreateUser", "False"},
+	    {"redfish", "ManagerResetTimeout", FU_REDFISH_CONFIG_DEFAULT_MANAGER_RESET_TIMEOUT},
+	    {"msr", "MinimumSmeKernelVersion", FU_MSR_CONFIG_DEFAULT_MINIMUM_SME_KERNEL_VERSION},
+	    {"thunderbolt",
+	     "MinimumKernelVersion",
+	     FU_THUNDERBOLT_CONFIG_DEFAULT_MINIMUM_KERNEL_VERSION},
+	    {"thunderbolt", "DelayedActivation", "false"},
+	    {NULL, NULL, NULL}};
 	for (guint i = 0; key_values[i].group != NULL; i++) {
 		g_autofree gchar *value =
 		    g_key_file_get_value(kf, key_values[i].group, key_values[i].key, NULL);

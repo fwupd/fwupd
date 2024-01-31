@@ -100,9 +100,6 @@ G_DEFINE_TYPE(FuMsrPlugin, fu_msr_plugin, FU_TYPE_PLUGIN)
 #define PCI_MSR_AMD64_SYSCFG	     0xC0010010
 #define PCI_MSR_AMD64_SEV	     0xC0010131
 
-/* defaults changed here will also be reflected in the fwupd.conf man page */
-#define FU_MSR_CONFIG_DEFAULT_MINIMUM_SME_KERNEL_VERSION "5.18.0"
-
 static void
 fu_msr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {

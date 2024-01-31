@@ -33,12 +33,6 @@ struct _FuUefiCapsulePlugin {
 G_DEFINE_TYPE(FuUefiCapsulePlugin, fu_uefi_capsule_plugin, FU_TYPE_PLUGIN)
 
 /* defaults changed here will also be reflected in the fwupd.conf man page */
-#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_ENABLE_GRUB_CHAIN_LOAD	      FALSE
-#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_DISABLE_SHIM_FOR_SECURE_BOOT   FALSE
-#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_REQUIRE_ESP_FREE_SPACE	      "0" /* in MB */
-#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_DISABLE_CAPSULE_UPDATE_ON_DISK FALSE
-#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_ENABLE_EFI_DEBUGGING	      FALSE
-#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_REBOOT_CLEANUP		      TRUE
 
 static void
 fu_uefi_capsule_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)

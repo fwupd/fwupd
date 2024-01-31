@@ -20,11 +20,6 @@
 
 #define FU_REDFISH_PLUGIN_CLEANUP_RETRIES_DELAY 10 /* seconds */
 
-/* defaults changed here will also be reflected in the fwupd.conf man page */
-#define FU_REDFISH_CONFIG_DEFAULT_CA_CHECK		   FALSE
-#define FU_REDFISH_CONFIG_DEFAULT_IPMI_DISABLE_CREATE_USER FALSE
-#define FU_REDFISH_CONFIG_DEFAULT_MANAGER_RESET_TIMEOUT	   "1800" /* seconds */
-
 struct _FuRedfishPlugin {
 	FuPlugin parent_instance;
 	FuRedfishBackend *backend;

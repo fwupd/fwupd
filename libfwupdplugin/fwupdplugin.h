@@ -84,6 +84,7 @@
 #include <libfwupdplugin/fu-partial-input-stream.h>
 #include <libfwupdplugin/fu-path.h>
 #include <libfwupdplugin/fu-pefile-firmware.h>
+#include <libfwupdplugin/fu-plugin-config-defaults.h>
 #include <libfwupdplugin/fu-plugin-vfuncs.h>
 #include <libfwupdplugin/fu-plugin.h>
 #include <libfwupdplugin/fu-progress.h>
