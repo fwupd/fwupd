@@ -311,6 +311,7 @@ fu_config_reload(FuConfig *self, GError **error)
 				  {"fwupd", "IgnorePower", "false"},
 				  {"fwupd", "DisabledPlugins", "test;test_ble;invalid"},
 				  {"fwupd", "DisabledPlugins", "test;test_ble"},
+				  {"fwupd", "AllowEmulation", "false"},
 				  {"redfish", "IpmiDisableCreateUser", "False"},
 				  {"redfish", "ManagerResetTimeout", "1800"},
 				  {"msr", "MinimumSmeKernelVersion", "5.18.0"},
