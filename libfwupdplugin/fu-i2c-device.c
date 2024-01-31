@@ -251,6 +251,7 @@ fu_i2c_device_incorporate(FuDevice *device, FuDevice *donor)
 static void
 fu_i2c_device_init(FuI2cDevice *self)
 {
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
 }
 
 static void
