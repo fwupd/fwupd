@@ -590,7 +590,12 @@ fu_parade_lspcon_device_reload(FuDevice *device, GError **error)
 			    self->aux_device_name);
 		return FALSE;
 	}
-	aux_device = fu_udev_device_new(fu_device_get_context(device), aux_devices->data);
+	aux_device = g_object_new(FU_TYPE_DPAUX_DEVICE,
+				  "context",
+				  fu_device_get_context(device),
+				  "udev-device",
+				  aux_devices->data,
+				  NULL);
 	g_debug("using aux dev %s", fu_udev_device_get_sysfs_path(aux_device));
 
 	/* the following open() requires the device have IDs set */
@@ -598,16 +603,12 @@ fu_parade_lspcon_device_reload(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* open device to read version from DPCD */
-	if ((aux_device_locker = fu_device_locker_new(aux_device, error)) == NULL)
+	aux_device_locker = fu_device_locker_new(aux_device, error);
+	if (aux_device_locker == NULL)
 		return FALSE;
 
 	/* DPCD address 00500-00502: device OUI */
-	if (!fu_udev_device_pread(aux_device, 0x500, (guint8 *)&oui, 3, error))
-		return FALSE;
-	oui = GUINT32_FROM_BE(oui) >> 8;
-	oui_string = g_strdup_printf("OUI:%06X", oui);
-	fu_device_add_vendor_id(device, oui_string);
-
+	oui = fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(aux_device));
 	if (oui != 0x001CF8) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -616,6 +617,8 @@ fu_parade_lspcon_device_reload(FuDevice *device, GError **error)
 			    oui);
 		return FALSE;
 	}
+	oui_string = g_strdup_printf("OUI:%06X", oui);
+	fu_device_add_vendor_id(device, oui_string);
 
 	/* DPCD address 0x50A, 0x50B: branch device firmware
 	 * major and minor revision */
