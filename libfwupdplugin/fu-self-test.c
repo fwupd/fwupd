@@ -754,6 +754,168 @@ _plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 }
 
 static void
+fu_config_migrate_1_9_func(void)
+{
+	const gchar *sysconfdir = "/tmp/fwupd-self-test/conf-migration-1.9/var/etc";
+	gboolean ret;
+	g_auto(GStrv) lines = NULL;
+	g_autoptr(FuConfig) config = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *fn_mut = NULL;
+	g_autofree gchar *composite_data = NULL;
+	g_autofree gchar *source = NULL;
+	g_autofree gchar *source_data = NULL;
+
+	/* source directory and data */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "conf-migration-1.9", NULL);
+	if (!g_file_test(testdatadir, G_FILE_TEST_EXISTS)) {
+		g_test_skip("missing fwupd 1.9.x migration test data");
+		return;
+	}
+
+	/* working directory */
+	(void)g_setenv("FWUPD_SYSCONFDIR", sysconfdir, TRUE);
+	(void)g_unsetenv("LOCALCONF_DIRECTORY");
+	fn_mut = g_build_filename(sysconfdir, "fwupd", "fwupd.conf", NULL);
+	g_assert_nonnull(fn_mut);
+	ret = fu_path_mkdir_parent(fn_mut, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_remove(fn_mut);
+	ret = g_file_set_contents(fn_mut, "", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* copy to working directory */
+	source = g_build_filename(testdatadir, "fwupd", "fwupd.conf", NULL);
+	ret = g_file_test(source, G_FILE_TEST_EXISTS);
+	g_assert_true(ret);
+	ret = g_file_get_contents(source, &source_data, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_remove(fn_mut);
+	ret = g_file_set_contents(fn_mut, source_data, -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	config = fu_config_new();
+	g_assert_nonnull(config);
+	ret = fu_config_load(config, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_config_set_value(config, "fwupd", "AllowEmulation", "true", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* ensure that all keys except AllowEmulation migrated */
+	ret = g_file_get_contents(fn_mut, &composite_data, NULL, &error);
+	lines = g_strsplit(composite_data, "\n", -1);
+	for (guint i = 0; lines[i] != NULL; i++) {
+		if (g_str_has_prefix(lines[i], "#"))
+			continue;
+		if (g_str_has_prefix(lines[i], "[") && g_str_has_suffix(lines[i], "]"))
+			continue;
+		if (g_str_has_prefix(lines[i], "AllowEmulation"))
+			continue;
+		if (strlen(lines[i]) == 0)
+			continue;
+		g_debug("Unmatched line _%s_", lines[i]);
+		g_assert_true(FALSE);
+	}
+}
+
+static void
+fu_config_migrate_1_7_func(void)
+{
+	const gchar *sysconfdir = "/tmp/fwupd-self-test/conf-migration-1.7/var/etc";
+	gboolean ret;
+	const gchar *fn_merge[] = {"daemon.conf",
+				   "msr.conf",
+				   "redfish.conf",
+				   "thunderbolt.conf",
+				   "uefi_capsule.conf",
+				   NULL};
+	g_auto(GStrv) lines = NULL;
+	g_autoptr(FuConfig) config = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *fn_mut = NULL;
+	g_autofree gchar *composite_data = NULL;
+
+	/* source directory and data */
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "conf-migration-1.7", NULL);
+	if (!g_file_test(testdatadir, G_FILE_TEST_EXISTS)) {
+		g_test_skip("missing fwupd 1.7.x migration test data");
+		return;
+	}
+
+	/* working directory */
+	(void)g_setenv("FWUPD_SYSCONFDIR", sysconfdir, TRUE);
+	(void)g_unsetenv("LOCALCONF_DIRECTORY");
+	fn_mut = g_build_filename(sysconfdir, "fwupd", "fwupd.conf", NULL);
+	g_assert_nonnull(fn_mut);
+	ret = fu_path_mkdir_parent(fn_mut, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_remove(fn_mut);
+	ret = g_file_set_contents(fn_mut, "", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* copy all files to working directory */
+	for (guint i = 0; fn_merge[i] != NULL; i++) {
+		g_autofree gchar *source =
+		    g_build_filename(testdatadir, "fwupd", fn_merge[i], NULL);
+		g_autofree gchar *target = g_build_filename(sysconfdir, "fwupd", fn_merge[i], NULL);
+		g_autofree gchar *data = NULL;
+
+		g_debug("Copying %s to %s", source, target);
+		ret = g_file_test(source, G_FILE_TEST_EXISTS);
+		g_assert_true(ret);
+		ret = g_file_get_contents(source, &data, NULL, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+		g_remove(target);
+		ret = g_file_set_contents(target, data, -1, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+	}
+
+	config = fu_config_new();
+	g_assert_nonnull(config);
+	ret = fu_config_load(config, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* make sure all migrated files were renamed */
+	for (guint i = 0; fn_merge[i] != NULL; i++) {
+		g_autofree gchar *old = g_build_filename(sysconfdir, "fwupd", fn_merge[i], NULL);
+		g_autofree gchar *new = g_strdup_printf("%s.old", old);
+
+		ret = g_file_test(old, G_FILE_TEST_EXISTS);
+		g_assert_false(ret);
+		ret = g_file_test(new, G_FILE_TEST_EXISTS);
+		g_assert_true(ret);
+	}
+
+	/* ensure all default keys migrated */
+	ret = g_file_get_contents(fn_mut, &composite_data, NULL, &error);
+	lines = g_strsplit(composite_data, "\n", -1);
+	for (guint i = 0; lines[i] != NULL; i++) {
+		if (g_str_has_prefix(lines[i], "#"))
+			continue;
+		if (g_str_has_prefix(lines[i], "[") && g_str_has_suffix(lines[i], "]"))
+			continue;
+		if (strlen(lines[i]) == 0)
+			continue;
+		g_debug("Unmatched line _%s_", lines[i]);
+		g_assert_true(FALSE);
+	}
+}
+
+static void
 fu_config_func(void)
 {
 	GStatBuf statbuf = {0};
@@ -5099,6 +5261,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/security-attrs{hsi}", fu_security_attrs_hsi_func);
 	g_test_add_func("/fwupd/security-attrs{compare}", fu_security_attrs_compare_func);
 	g_test_add_func("/fwupd/config", fu_config_func);
+	g_test_add_func("/fwupd/config_migrate_1_7", fu_config_migrate_1_7_func);
+	g_test_add_func("/fwupd/config_migrate_1_9", fu_config_migrate_1_9_func);
 	g_test_add_func("/fwupd/plugin{config}", fu_plugin_config_func);
 	g_test_add_func("/fwupd/plugin{devices}", fu_plugin_devices_func);
 	g_test_add_func("/fwupd/plugin{device-inhibit-children}",
