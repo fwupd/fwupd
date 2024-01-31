@@ -307,8 +307,13 @@ fu_config_reload(FuConfig *self, GError **error)
 				  {"fwupd", "UpdateMotd", "true"},
 				  {"fwupd", "UriSchemes", ""},
 				  {"fwupd", "VerboseDomains", ""},
+				  {"fwupd", "OnlyTrusted", "true"},
+				  {"fwupd", "IgnorePower", "false"},
 				  {"redfish", "IpmiDisableCreateUser", "False"},
 				  {"redfish", "ManagerResetTimeout", "1800"},
+				  {"msr", "MinimumSmeKernelVersion", "5.18.0"},
+				  {"thunderbolt", "MinimumKernelVersion", "4.13.0"},
+				  {"thunderbolt", "DelayedActivation", "false"},
 				  {NULL, NULL, NULL}};
 		for (guint i = 0; key_values[i].group != NULL; i++) {
 			g_autofree gchar *value = g_key_file_get_value(priv->keyfile,
