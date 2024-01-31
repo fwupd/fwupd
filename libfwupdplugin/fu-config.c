@@ -108,6 +108,51 @@ fu_config_emit_loaded(FuConfig *self)
 	g_signal_emit(self, signals[SIGNAL_LOADED], 0);
 }
 
+static void
+fu_config_migrate_default_keys(GKeyFile *kf)
+{
+	struct {
+		const gchar *group;
+		const gchar *key;
+		const gchar *value;
+	} key_values[] = {{"fwupd", "ApprovedFirmware", ""},
+			  {"fwupd", "ArchiveSizeMax", "0"},
+			  {"fwupd", "BlockedFirmware", ""},
+			  {"fwupd", "DisabledDevices", ""},
+			  {"fwupd", "EnumerateAllDevices", "false"},
+			  {"fwupd", "EspLocation", ""},
+			  {"fwupd", "HostBkc", ""},
+			  {"fwupd", "IdleTimeout", "7200"},
+			  {"fwupd", "IgnorePower", ""},
+			  {"fwupd", "ShowDevicePrivate", "true"},
+			  {"fwupd", "TrustedUids", ""},
+			  {"fwupd", "UpdateMotd", "true"},
+			  {"fwupd", "UriSchemes", ""},
+			  {"fwupd", "VerboseDomains", ""},
+			  {"fwupd", "OnlyTrusted", "true"},
+			  {"fwupd", "IgnorePower", "false"},
+			  {"fwupd", "DisabledPlugins", "test;test_ble;invalid"},
+			  {"fwupd", "DisabledPlugins", "test;test_ble"},
+			  {"fwupd", "AllowEmulation", "false"},
+			  {"redfish", "IpmiDisableCreateUser", "False"},
+			  {"redfish", "ManagerResetTimeout", "1800"},
+			  {"msr", "MinimumSmeKernelVersion", "5.18.0"},
+			  {"thunderbolt", "MinimumKernelVersion", "4.13.0"},
+			  {"thunderbolt", "DelayedActivation", "false"},
+			  {NULL, NULL, NULL}};
+	for (guint i = 0; key_values[i].group != NULL; i++) {
+		g_autofree gchar *value =
+		    g_key_file_get_value(kf, key_values[i].group, key_values[i].key, NULL);
+		if (g_strcmp0(value, key_values[i].value) == 0) {
+			g_debug("not migrating default value of [%s] %s=%s",
+				key_values[i].group,
+				key_values[i].key,
+				key_values[i].value);
+			g_key_file_remove_key(kf, key_values[i].group, key_values[i].key, NULL);
+		}
+	}
+}
+
 static gboolean
 fu_config_load_bytes_replace(FuConfig *self, GBytes *blob, GError **error)
 {
@@ -121,6 +166,8 @@ fu_config_load_bytes_replace(FuConfig *self, GBytes *blob, GError **error)
 				       G_KEY_FILE_KEEP_COMMENTS,
 				       error))
 		return FALSE;
+	fu_config_migrate_default_keys(kf);
+
 	groups = g_key_file_get_groups(kf, NULL);
 	for (guint i = 0; groups[i] != NULL; i++) {
 		g_auto(GStrv) keys = NULL;
@@ -158,6 +205,8 @@ fu_config_load_bytes_replace(FuConfig *self, GBytes *blob, GError **error)
 				}
 			}
 		}
+		if (!g_key_file_has_group(priv->keyfile, groups[i]))
+			continue;
 		comment_group = g_key_file_get_comment(kf, groups[i], NULL, NULL);
 		if (comment_group != NULL && comment_group[0] != '\0') {
 			if (!g_key_file_set_comment(priv->keyfile,
@@ -288,52 +337,7 @@ fu_config_reload(FuConfig *self, GError **error)
 		const gchar *fn_default = item->filename;
 		g_autofree gchar *data = NULL;
 
-		/* do not write empty keys migrated from daemon.conf */
-		struct {
-			const gchar *group;
-			const gchar *key;
-			const gchar *value;
-		} key_values[] = {{"fwupd", "ApprovedFirmware", ""},
-				  {"fwupd", "ArchiveSizeMax", "0"},
-				  {"fwupd", "BlockedFirmware", ""},
-				  {"fwupd", "DisabledDevices", ""},
-				  {"fwupd", "EnumerateAllDevices", "false"},
-				  {"fwupd", "EspLocation", ""},
-				  {"fwupd", "HostBkc", ""},
-				  {"fwupd", "IdleTimeout", "7200"},
-				  {"fwupd", "IgnorePower", ""},
-				  {"fwupd", "ShowDevicePrivate", "true"},
-				  {"fwupd", "TrustedUids", ""},
-				  {"fwupd", "UpdateMotd", "true"},
-				  {"fwupd", "UriSchemes", ""},
-				  {"fwupd", "VerboseDomains", ""},
-				  {"fwupd", "OnlyTrusted", "true"},
-				  {"fwupd", "IgnorePower", "false"},
-				  {"fwupd", "DisabledPlugins", "test;test_ble;invalid"},
-				  {"fwupd", "DisabledPlugins", "test;test_ble"},
-				  {"fwupd", "AllowEmulation", "false"},
-				  {"redfish", "IpmiDisableCreateUser", "False"},
-				  {"redfish", "ManagerResetTimeout", "1800"},
-				  {"msr", "MinimumSmeKernelVersion", "5.18.0"},
-				  {"thunderbolt", "MinimumKernelVersion", "4.13.0"},
-				  {"thunderbolt", "DelayedActivation", "false"},
-				  {NULL, NULL, NULL}};
-		for (guint i = 0; key_values[i].group != NULL; i++) {
-			g_autofree gchar *value = g_key_file_get_value(priv->keyfile,
-								       key_values[i].group,
-								       key_values[i].key,
-								       NULL);
-			if (g_strcmp0(value, key_values[i].value) == 0) {
-				g_debug("not migrating default value of [%s] %s=%s",
-					key_values[i].group,
-					key_values[i].key,
-					key_values[i].value);
-				g_key_file_remove_key(priv->keyfile,
-						      key_values[i].group,
-						      key_values[i].key,
-						      NULL);
-			}
-		}
+		fu_config_migrate_default_keys(priv->keyfile);
 
 		/* make sure we can save the new file first */
 		data = g_key_file_to_data(priv->keyfile, NULL, error);
