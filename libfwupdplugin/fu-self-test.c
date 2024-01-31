@@ -824,13 +824,13 @@ fu_config_func(void)
 	g_assert_true(g_strstr_len(composite_data, -1, "Key=true") == NULL);
 	g_assert_true(g_strstr_len(composite_data, -1, "# group comment") != NULL);
 	g_assert_true(g_strstr_len(composite_data, -1, "# key comment") != NULL);
+	g_remove(fn_mut);
 }
 
 static void
 fu_plugin_config_func(void)
 {
 	GStatBuf statbuf = {0};
-	const gchar *fn_mut = "/tmp/fwupd-self-test/var/etc/fwupd/fwupd.conf";
 	gboolean ret;
 	gint rc;
 	g_autofree gchar *conf_dir = NULL;
@@ -838,6 +838,7 @@ fu_plugin_config_func(void)
 	g_autofree gchar *testdatadir = NULL;
 	g_autofree gchar *value = NULL;
 	g_autofree gchar *value_missing = NULL;
+	g_autofree gchar *fn_mut = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -862,6 +863,18 @@ fu_plugin_config_func(void)
 	g_assert_true(ret);
 	g_remove(fn);
 	ret = g_file_set_contents(fn, "", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* mutable file we'll be writing */
+	(void)g_setenv("LOCALCONF_DIRECTORY", "/tmp/fwupd-self-test/var/etc/fwupd", TRUE);
+	fn_mut = g_build_filename(g_getenv("LOCALCONF_DIRECTORY"), "fwupd.conf", NULL);
+	g_assert_nonnull(fn_mut);
+	ret = fu_path_mkdir_parent(fn_mut, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_remove(fn_mut);
+	ret = g_file_set_contents(fn_mut, "", -1, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
