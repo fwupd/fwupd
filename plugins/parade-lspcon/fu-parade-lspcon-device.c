@@ -131,13 +131,7 @@ fu_parade_lspcon_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_str(device,
 				   "FAMILY",
 				   fu_context_get_hwid_value(context, FU_HWIDS_KEY_FAMILY));
-	if (!fu_device_build_instance_id_full(device,
-					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
-					      error,
-					      "I2C",
-					      "NAME",
-					      "FAMILY",
-					      NULL))
+	if (!fu_device_build_instance_id(device, error, "I2C", "NAME", "FAMILY", NULL))
 		return FALSE;
 
 	/* should know which aux device over which we read DPCD version */
