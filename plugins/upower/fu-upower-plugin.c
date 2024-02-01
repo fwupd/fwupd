@@ -158,11 +158,11 @@ fu_upower_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 			    g_dbus_proxy_get_name(self->proxy));
 		return FALSE;
 	}
-	g_signal_connect(G_DBUS_PROXY(self->proxy),
+	g_signal_connect(self->proxy,
 			 "g-properties-changed",
 			 G_CALLBACK(fu_upower_plugin_proxy_changed_cb),
 			 plugin);
-	g_signal_connect(G_DBUS_PROXY(self->proxy_manager),
+	g_signal_connect(self->proxy_manager,
 			 "g-properties-changed",
 			 G_CALLBACK(fu_upower_plugin_proxy_changed_cb),
 			 plugin);
