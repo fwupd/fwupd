@@ -501,12 +501,13 @@ fu_plugin_add_rule(FuPlugin *self, FuPluginRule rule, const gchar *name) G_GNUC_
 void
 fu_plugin_add_report_metadata(FuPlugin *self, const gchar *key, const gchar *value)
     G_GNUC_NON_NULL(1, 2, 3);
+void
+fu_plugin_set_config_default(FuPlugin *self, const gchar *key, const gchar *value)
+    G_GNUC_NON_NULL(1, 2);
 gchar *
-fu_plugin_get_config_value(FuPlugin *self, const gchar *key, const gchar *value_default)
-    G_GNUC_NON_NULL(1, 2);
+fu_plugin_get_config_value(FuPlugin *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_plugin_get_config_value_boolean(FuPlugin *self, const gchar *key, gboolean value_default)
-    G_GNUC_NON_NULL(1, 2);
+fu_plugin_get_config_value_boolean(FuPlugin *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value, GError **error)
     G_GNUC_NON_NULL(1, 2);

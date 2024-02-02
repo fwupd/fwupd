@@ -22,7 +22,7 @@ fu_hwids_config_setup(FuContext *ctx, FuHwids *self, GError **error)
 	/* all keys are optional */
 	for (guint i = 0; i < keys->len; i++) {
 		const gchar *key = g_ptr_array_index(keys, i);
-		g_autofree gchar *value = fu_config_get_value(config, "fwupd", key, NULL);
+		g_autofree gchar *value = fu_config_get_value(config, "fwupd", key);
 		if (value != NULL)
 			fu_hwids_add_value(self, key, value);
 	}

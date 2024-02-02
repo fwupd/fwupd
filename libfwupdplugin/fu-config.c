@@ -35,6 +35,7 @@ typedef struct {
 
 typedef struct {
 	GKeyFile *keyfile;
+	GHashTable *default_values;
 	GPtrArray *items; /* (element-type FuConfigItem) */
 } FuConfigPrivate;
 
@@ -109,6 +110,12 @@ fu_config_emit_loaded(FuConfig *self)
 	g_signal_emit(self, signals[SIGNAL_LOADED], 0);
 }
 
+static gchar *
+fu_config_build_section_key(const gchar *section, const gchar *key)
+{
+	return g_strdup_printf("%s::%s", section, key);
+}
+
 static gboolean
 fu_config_load_bytes_replace(FuConfig *self, GBytes *blob, GError **error)
 {
@@ -132,8 +139,11 @@ fu_config_load_bytes_replace(FuConfig *self, GBytes *blob, GError **error)
 			return FALSE;
 		}
 		for (guint j = 0; keys[j] != NULL; j++) {
-			g_autofree gchar *value = NULL;
+			const gchar *default_value;
 			g_autofree gchar *comment_key = NULL;
+			g_autofree gchar *section_key = NULL;
+			g_autofree gchar *value = NULL;
+
 			value = g_key_file_get_string(kf, groups[i], keys[j], error);
 			if (value == NULL) {
 				g_prefix_error(error,
@@ -142,6 +152,19 @@ fu_config_load_bytes_replace(FuConfig *self, GBytes *blob, GError **error)
 					       keys[j]);
 				return FALSE;
 			}
+
+			/* is the same as the default */
+			section_key = fu_config_build_section_key(groups[i], keys[j]);
+			default_value = g_hash_table_lookup(priv->default_values, section_key);
+			if (g_strcmp0(value, default_value) == 0) {
+				g_debug("default config, ignoring [%s] %s=%s",
+					groups[i],
+					keys[j],
+					value);
+				continue;
+			}
+
+			g_debug("setting config [%s] %s=%s", groups[i], keys[j], value);
 			g_key_file_set_string(priv->keyfile, groups[i], keys[j], value);
 			comment_key = g_key_file_get_comment(kf, groups[i], keys[j], NULL);
 			if (comment_key != NULL && comment_key[0] != '\0') {
@@ -177,6 +200,82 @@ fu_config_load_bytes_replace(FuConfig *self, GBytes *blob, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+static void
+fu_config_migrate_keyfile(FuConfig *self)
+{
+	FuConfigPrivate *priv = GET_PRIVATE(self);
+	struct {
+		const gchar *group;
+		const gchar *key;
+		const gchar *value;
+	} key_values[] = {{"fwupd", "ApprovedFirmware", NULL},
+			  {"fwupd", "ArchiveSizeMax", "0"},
+			  {"fwupd", "BlockedFirmware", NULL},
+			  {"fwupd", "DisabledDevices", NULL},
+			  {"fwupd", "EnumerateAllDevices", NULL},
+			  {"fwupd", "EspLocation", NULL},
+			  {"fwupd", "HostBkc", NULL},
+			  {"fwupd", "IdleTimeout", NULL},
+			  {"fwupd", "IgnorePower", NULL},
+			  {"fwupd", "ShowDevicePrivate", NULL},
+			  {"fwupd", "TrustedUids", NULL},
+			  {"fwupd", "UpdateMotd", NULL},
+			  {"fwupd", "UriSchemes", NULL},
+			  {"fwupd", "VerboseDomains", NULL},
+			  {"fwupd", "OnlyTrusted", NULL},
+			  {"fwupd", "IgnorePower", NULL},
+			  {"fwupd", "DisabledPlugins", "test;test_ble;invalid"},
+			  {"fwupd", "DisabledPlugins", "test;test_ble"},
+			  {"fwupd", "AllowEmulation", NULL},
+			  {"redfish", "IpmiDisableCreateUser", NULL},
+			  {"redfish", "ManagerResetTimeout", NULL},
+			  {"msr", "MinimumSmeKernelVersion", NULL},
+			  {"thunderbolt", "MinimumKernelVersion", NULL},
+			  {"thunderbolt", "DelayedActivation", NULL},
+			  {NULL, NULL, NULL}};
+	for (guint i = 0; key_values[i].group != NULL; i++) {
+		const gchar *default_value;
+		g_autofree gchar *value = NULL;
+		g_auto(GStrv) keys = NULL;
+
+		value = g_key_file_get_value(priv->keyfile,
+					     key_values[i].group,
+					     key_values[i].key,
+					     NULL);
+		if (value == NULL)
+			continue;
+		if (key_values[i].value == NULL) {
+			g_autofree gchar *section_key =
+			    fu_config_build_section_key(key_values[i].group, key_values[i].key);
+			default_value = g_hash_table_lookup(priv->default_values, section_key);
+		} else {
+			default_value = key_values[i].value;
+		}
+		if ((default_value != NULL && g_ascii_strcasecmp(value, default_value) == 0) ||
+		    (key_values[i].value == NULL && g_strcmp0(value, "") == 0)) {
+			g_debug("not migrating default value of [%s] %s=%s",
+				key_values[i].group,
+				key_values[i].key,
+				default_value);
+			g_key_file_remove_comment(priv->keyfile,
+						  key_values[i].group,
+						  key_values[i].key,
+						  NULL);
+			g_key_file_remove_key(priv->keyfile,
+					      key_values[i].group,
+					      key_values[i].key,
+					      NULL);
+		}
+
+		/* remove the group if there are no keys left */
+		keys = g_key_file_get_keys(priv->keyfile, key_values[i].group, NULL, NULL);
+		if (g_strv_length(keys) == 0) {
+			g_key_file_remove_comment(priv->keyfile, key_values[i].group, NULL, NULL);
+			g_key_file_remove_group(priv->keyfile, key_values[i].group, NULL);
+		}
+	}
 }
 
 static gboolean
@@ -245,6 +344,7 @@ fu_config_reload(FuConfig *self, GError **error)
 		g_autofree gchar *dirname = g_path_get_dirname(item->filename);
 		g_autoptr(GError) error_load = NULL;
 		g_autoptr(GBytes) blob_item = NULL;
+
 		g_debug("trying to load config values from %s", item->filename);
 		blob_item = fu_bytes_get_contents(item->filename, &error_load);
 		if (blob_item == NULL) {
@@ -263,8 +363,13 @@ fu_config_reload(FuConfig *self, GError **error)
 			g_prefix_error(error, "failed to load %s: ", item->filename);
 			return FALSE;
 		}
+	}
 
-		/* are any of the legacy files found in this location? */
+	/* are any of the legacy files found in this location? */
+	for (guint i = 0; i < priv->items->len; i++) {
+		FuConfigItem *item = g_ptr_array_index(priv->items, i);
+		g_autofree gchar *dirname = g_path_get_dirname(item->filename);
+
 		for (guint j = 0; fn_merge[j] != NULL; j++) {
 			g_autofree gchar *fncompat = g_build_filename(dirname, fn_merge[j], NULL);
 			if (g_file_test(fncompat, G_FILE_TEST_EXISTS)) {
@@ -290,68 +395,7 @@ fu_config_reload(FuConfig *self, GError **error)
 		g_autofree gchar *data = NULL;
 
 		/* do not write empty keys migrated from daemon.conf */
-		struct {
-			const gchar *group;
-			const gchar *key;
-			const gchar *value;
-		} key_values[] = {{"fwupd", "ApprovedFirmware", ""},
-				  {"fwupd", "ArchiveSizeMax", "0"},
-				  {"fwupd", "BlockedFirmware", ""},
-				  {"fwupd", "DisabledDevices", ""},
-				  {"fwupd", "EnumerateAllDevices", "false"},
-				  {"fwupd", "EspLocation", ""},
-				  {"fwupd", "HostBkc", ""},
-				  {"fwupd", "IdleTimeout", "7200"},
-				  {"fwupd", "IgnorePower", ""},
-				  {"fwupd", "ShowDevicePrivate", "true"},
-				  {"fwupd", "TrustedUids", ""},
-				  {"fwupd", "UpdateMotd", "true"},
-				  {"fwupd", "UriSchemes", ""},
-				  {"fwupd", "VerboseDomains", ""},
-				  {"fwupd", "OnlyTrusted", "true"},
-				  {"fwupd", "IgnorePower", "false"},
-				  {"fwupd", "DisabledPlugins", "test;test_ble;invalid"},
-				  {"fwupd", "DisabledPlugins", "test;test_ble"},
-				  {"fwupd", "AllowEmulation", "false"},
-				  {"redfish", "IpmiDisableCreateUser", "False"},
-				  {"redfish", "ManagerResetTimeout", "1800"},
-				  {"msr", "MinimumSmeKernelVersion", "5.18.0"},
-				  {"thunderbolt", "MinimumKernelVersion", "4.13.0"},
-				  {"thunderbolt", "DelayedActivation", "false"},
-				  {NULL, NULL, NULL}};
-		for (guint i = 0; key_values[i].group != NULL; i++) {
-			g_autofree gchar *value = NULL;
-			g_auto(GStrv) keys = NULL;
-
-			value = g_key_file_get_value(priv->keyfile,
-						     key_values[i].group,
-						     key_values[i].key,
-						     NULL);
-			if (g_strcmp0(value, key_values[i].value) == 0) {
-				g_debug("not migrating default value of [%s] %s=%s",
-					key_values[i].group,
-					key_values[i].key,
-					key_values[i].value);
-				g_key_file_remove_comment(priv->keyfile,
-							  key_values[i].group,
-							  key_values[i].key,
-							  NULL);
-				g_key_file_remove_key(priv->keyfile,
-						      key_values[i].group,
-						      key_values[i].key,
-						      NULL);
-			}
-
-			/* remove the group if there are no keys left */
-			keys = g_key_file_get_keys(priv->keyfile, key_values[i].group, NULL, NULL);
-			if (g_strv_length(keys) == 0) {
-				g_key_file_remove_comment(priv->keyfile,
-							  key_values[i].group,
-							  NULL,
-							  NULL);
-				g_key_file_remove_group(priv->keyfile, key_values[i].group, NULL);
-			}
-		}
+		fu_config_migrate_keyfile(self);
 
 		/* make sure we can save the new file first */
 		data = g_key_file_to_data(priv->keyfile, NULL, error);
@@ -406,6 +450,29 @@ fu_config_monitor_changed_cb(GFileMonitor *monitor,
 }
 
 /**
+ * fu_config_set_default:
+ * @self: a #FuConfig
+ * @section: a settings section
+ * @key: a settings key
+ * @value: (nullable): a settings value
+ *
+ * Sets a default config value.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_config_set_default(FuConfig *self, const gchar *section, const gchar *key, const gchar *value)
+{
+	FuConfigPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONFIG(self));
+	g_return_if_fail(section != NULL);
+	g_return_if_fail(key != NULL);
+	g_hash_table_insert(priv->default_values,
+			    fu_config_build_section_key(section, key),
+			    g_strdup(value));
+}
+
+/**
  * fu_config_set_value:
  * @self: a #FuConfig
  * @section: a settings section
@@ -440,6 +507,9 @@ fu_config_set_value(FuConfig *self,
 		return FALSE;
 	}
 
+	/* do not write default keys */
+	fu_config_migrate_keyfile(self);
+
 	/* only write the file to a mutable location */
 	g_key_file_set_string(priv->keyfile, section, key, value);
 	data = g_key_file_to_data(priv->keyfile, NULL, error);
@@ -471,7 +541,6 @@ fu_config_set_value(FuConfig *self,
  * @self: a #FuConfig
  * @section: a settings section
  * @key: a settings key
- * @value_default: (nullable): a settings value default
  *
  * Return the value of a key, falling back to the default value if missing.
  *
@@ -482,10 +551,7 @@ fu_config_set_value(FuConfig *self,
  * Since: 1.9.1
  **/
 gchar *
-fu_config_get_value(FuConfig *self,
-		    const gchar *section,
-		    const gchar *key,
-		    const gchar *value_default)
+fu_config_get_value(FuConfig *self, const gchar *section, const gchar *key)
 {
 	FuConfigPrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *value = NULL;
@@ -495,8 +561,11 @@ fu_config_get_value(FuConfig *self,
 	g_return_val_if_fail(key != NULL, NULL);
 
 	value = g_key_file_get_string(priv->keyfile, section, key, NULL);
-	if (value == NULL)
-		return g_strdup(value_default);
+	if (value == NULL) {
+		g_autofree gchar *section_key = fu_config_build_section_key(section, key);
+		const gchar *value_tmp = g_hash_table_lookup(priv->default_values, section_key);
+		return g_strdup(value_tmp);
+	}
 	return g_steal_pointer(&value);
 }
 
@@ -505,7 +574,6 @@ fu_config_get_value(FuConfig *self,
  * @self: a #FuConfig
  * @section: a settings section
  * @key: a settings key
- * @value_default: (nullable): a settings value default
  *
  * Return the value of a key, falling back to the default value if missing.
  *
@@ -516,16 +584,13 @@ fu_config_get_value(FuConfig *self,
  * Since: 1.9.1
  **/
 gchar **
-fu_config_get_value_strv(FuConfig *self,
-			 const gchar *section,
-			 const gchar *key,
-			 const gchar *value_default)
+fu_config_get_value_strv(FuConfig *self, const gchar *section, const gchar *key)
 {
 	g_autofree gchar *value = NULL;
 	g_return_val_if_fail(FU_IS_CONFIG(self), NULL);
 	g_return_val_if_fail(section != NULL, NULL);
 	g_return_val_if_fail(key != NULL, NULL);
-	value = fu_config_get_value(self, section, key, value_default);
+	value = fu_config_get_value(self, section, key);
 	if (value == NULL)
 		return NULL;
 	return g_strsplit(value, ";", -1);
@@ -536,7 +601,6 @@ fu_config_get_value_strv(FuConfig *self,
  * @self: a #FuConfig
  * @section: a settings section
  * @key: a settings key
- * @value_default: a settings value default
  *
  * Return the value of a key, falling back to the default value if missing or empty.
  *
@@ -545,15 +609,20 @@ fu_config_get_value_strv(FuConfig *self,
  * Since: 1.9.1
  **/
 gboolean
-fu_config_get_value_bool(FuConfig *self,
-			 const gchar *section,
-			 const gchar *key,
-			 gboolean value_default)
+fu_config_get_value_bool(FuConfig *self, const gchar *section, const gchar *key)
 {
-	g_autofree gchar *tmp = fu_config_get_value(self, section, key, NULL);
-	if (tmp == NULL || tmp[0] == '\0')
-		return value_default;
-	return g_ascii_strcasecmp(tmp, "true") == 0;
+	FuConfigPrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *value = fu_config_get_value(self, section, key);
+	if (value == NULL || value[0] == '\0') {
+		g_autofree gchar *section_key = fu_config_build_section_key(section, key);
+		const gchar *value_tmp = g_hash_table_lookup(priv->default_values, section_key);
+		if (value_tmp == NULL) {
+			g_critical("no default for [%s] %s", section, key);
+			return FALSE;
+		}
+		return g_ascii_strcasecmp(value_tmp, "true") == 0;
+	}
+	return g_ascii_strcasecmp(value, "true") == 0;
 }
 
 /**
@@ -561,7 +630,6 @@ fu_config_get_value_bool(FuConfig *self,
  * @self: a #FuConfig
  * @section: a settings section
  * @key: a settings key
- * @value_default: a settings value default
  *
  * Return the value of a key, falling back to the default value if missing or empty.
  *
@@ -570,20 +638,27 @@ fu_config_get_value_bool(FuConfig *self,
  * Since: 1.9.1
  **/
 guint64
-fu_config_get_value_u64(FuConfig *self,
-			const gchar *section,
-			const gchar *key,
-			guint64 value_default)
+fu_config_get_value_u64(FuConfig *self, const gchar *section, const gchar *key)
 {
+	FuConfigPrivate *priv = GET_PRIVATE(self);
 	guint64 value = 0;
-	g_autofree gchar *tmp = fu_config_get_value(self, section, key, NULL);
+	const gchar *value_tmp;
+	g_autofree gchar *tmp = fu_config_get_value(self, section, key);
 	g_autoptr(GError) error_local = NULL;
 
-	if (tmp == NULL || tmp[0] == '\0')
-		return value_default;
-	if (!fu_strtoull(tmp, &value, 0, G_MAXUINT64, &error_local)) {
-		g_warning("failed to parse [%s] %s = %s as integer", section, key, tmp);
-		return value_default;
+	if (tmp == NULL || tmp[0] == '\0') {
+		g_autofree gchar *section_key = fu_config_build_section_key(section, key);
+		value_tmp = g_hash_table_lookup(priv->default_values, section_key);
+		if (value_tmp == NULL) {
+			g_critical("no default for [%s] %s", section, key);
+			return G_MAXUINT64;
+		}
+	} else {
+		value_tmp = tmp;
+	}
+	if (!fu_strtoull(value_tmp, &value, 0, G_MAXUINT64, &error_local)) {
+		g_warning("failed to parse [%s] %s = %s as integer", section, key, value_tmp);
+		return G_MAXUINT64;
 	}
 	return value;
 }
@@ -676,6 +751,7 @@ fu_config_init(FuConfig *self)
 	FuConfigPrivate *priv = GET_PRIVATE(self);
 	priv->keyfile = g_key_file_new();
 	priv->items = g_ptr_array_new_with_free_func((GDestroyNotify)fu_config_item_free);
+	priv->default_values = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
 
 static void
@@ -685,6 +761,7 @@ fu_config_finalize(GObject *obj)
 	FuConfigPrivate *priv = GET_PRIVATE(self);
 	g_key_file_unref(priv->keyfile);
 	g_ptr_array_unref(priv->items);
+	g_hash_table_unref(priv->default_values);
 	G_OBJECT_CLASS(fu_config_parent_class)->finalize(obj);
 }
 

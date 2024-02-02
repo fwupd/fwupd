@@ -8178,8 +8178,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	/* migrate per-plugin settings into fwupd.conf */
 	plugin_uefi = fu_plugin_list_find_by_name(self->plugin_list, "uefi_capsule", NULL);
 	if (plugin_uefi != NULL) {
-		const gchar *tmp =
-		    fu_plugin_get_config_value(plugin_uefi, "OverrideESPMountPoint", NULL);
+		const gchar *tmp = fu_plugin_get_config_value(plugin_uefi, "OverrideESPMountPoint");
 		if (tmp != NULL &&
 		    g_strcmp0(tmp, fu_engine_config_get_esp_location(self->config)) != 0) {
 			g_info("migrating OverrideESPMountPoint=%s to EspLocation", tmp);
