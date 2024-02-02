@@ -30,6 +30,7 @@ typedef struct {
 	GFile *file;
 	GFileMonitor *monitor; /* nullable */
 	gboolean is_writable;
+	gboolean is_mutable;
 } FuConfigItem;
 
 typedef struct {
@@ -429,8 +430,10 @@ fu_config_set_value(FuConfig *self,
 		return FALSE;
 	for (guint i = 0; i < priv->items->len; i++) {
 		FuConfigItem *item = g_ptr_array_index(priv->items, i);
-		if (!item->is_writable)
+		if (!item->is_mutable)
 			continue;
+		if (!fu_path_mkdir_parent(item->filename, error))
+			return FALSE;
 		if (!g_file_set_contents_full(item->filename,
 					      data,
 					      -1,
@@ -569,10 +572,12 @@ fu_config_get_value_u64(FuConfig *self,
 }
 
 static gboolean
-fu_config_add_location(FuConfig *self, const gchar *dirname, GError **error)
+fu_config_add_location(FuConfig *self, const gchar *dirname, gboolean is_mutable, GError **error)
 {
 	FuConfigPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuConfigItem) item = g_new0(FuConfigItem, 1);
+
+	item->is_mutable = is_mutable;
 	item->filename = g_build_filename(dirname, "fwupd.conf", NULL);
 	item->file = g_file_new_for_path(item->filename);
 
@@ -623,9 +628,9 @@ fu_config_load(FuConfig *self, GError **error)
 	g_return_val_if_fail(priv->items->len == 0, FALSE);
 
 	/* load the main daemon config file */
-	if (!fu_config_add_location(self, configdir, error))
+	if (!fu_config_add_location(self, configdir, FALSE, error))
 		return FALSE;
-	if (!fu_config_add_location(self, configdir_mut, error))
+	if (!fu_config_add_location(self, configdir_mut, TRUE, error))
 		return FALSE;
 	if (!fu_config_reload(self, error))
 		return FALSE;
