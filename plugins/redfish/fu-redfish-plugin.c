@@ -20,11 +20,6 @@
 
 #define FU_REDFISH_PLUGIN_CLEANUP_RETRIES_DELAY 10 /* seconds */
 
-/* defaults changed here will also be reflected in the fwupd.conf man page */
-#define FU_REDFISH_CONFIG_DEFAULT_CA_CHECK		   FALSE
-#define FU_REDFISH_CONFIG_DEFAULT_IPMI_DISABLE_CREATE_USER FALSE
-#define FU_REDFISH_CONFIG_DEFAULT_MANAGER_RESET_TIMEOUT	   "1800" /* seconds */
-
 struct _FuRedfishPlugin {
 	FuPlugin parent_instance;
 	FuRedfishBackend *backend;
@@ -71,7 +66,7 @@ fu_redfish_plugin_change_expired(FuPlugin *plugin, GError **error)
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 
 	/* select correct, falling back to default for old fwupd versions */
-	uri = fu_plugin_get_config_value(plugin, "UserUri", NULL);
+	uri = fu_plugin_get_config_value(plugin, "UserUri");
 	if (uri == NULL) {
 		uri = g_strdup("/redfish/v1/AccountService/Accounts/2");
 		if (!fu_plugin_set_config_value(plugin, "UserUri", uri, error))
@@ -436,7 +431,7 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	}
 
 	/* override with the conf file */
-	redfish_uri = fu_plugin_get_config_value(plugin, "Uri", NULL);
+	redfish_uri = fu_plugin_get_config_value(plugin, "Uri");
 	if (redfish_uri != NULL) {
 		const gchar *ip_str = NULL;
 		g_auto(GStrv) split = NULL;
@@ -471,23 +466,20 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 		}
 		fu_redfish_backend_set_port(self->backend, port);
 	}
-	username = fu_plugin_get_config_value(plugin, "Username", NULL);
+	username = fu_plugin_get_config_value(plugin, "Username");
 	if (username != NULL)
 		fu_redfish_backend_set_username(self->backend, username);
-	password = fu_plugin_get_config_value(plugin, "Password", NULL);
+	password = fu_plugin_get_config_value(plugin, "Password");
 	if (password != NULL)
 		fu_redfish_backend_set_password(self->backend, password);
-	fu_redfish_backend_set_cacheck(
-	    self->backend,
-	    fu_plugin_get_config_value_boolean(plugin,
-					       "CACheck",
-					       FU_REDFISH_CONFIG_DEFAULT_CA_CHECK));
+	fu_redfish_backend_set_cacheck(self->backend,
+				       fu_plugin_get_config_value_boolean(plugin, "CACheck"));
 	if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "wildcard-targets"))
 		fu_redfish_backend_set_wildcard_targets(self->backend, TRUE);
 
 #ifdef HAVE_LINUX_IPMI_H
 	/* test if the existing credentials work */
-	user_uri = fu_plugin_get_config_value(plugin, "UserUri", NULL);
+	user_uri = fu_plugin_get_config_value(plugin, "UserUri");
 	if (username != NULL && password != NULL && user_uri != NULL) {
 		g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self->backend);
 		g_autoptr(GError) error_local = NULL;
@@ -517,10 +509,7 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 					    "and no vendor quirk for 'ipmi-create-user'");
 			return FALSE;
 		}
-		if (!fu_plugin_get_config_value_boolean(
-			plugin,
-			"IpmiDisableCreateUser",
-			FU_REDFISH_CONFIG_DEFAULT_IPMI_DISABLE_CREATE_USER)) {
+		if (!fu_plugin_get_config_value_boolean(plugin, "IpmiDisableCreateUser")) {
 			g_info("attempting to [re-]create user using IPMI");
 			if (!fu_redfish_plugin_ipmi_create_user(plugin, error))
 				return FALSE;
@@ -612,10 +601,7 @@ fu_redfish_plugin_cleanup(FuPlugin *plugin,
 	fu_progress_step_done(progress);
 
 	/* read the config file to work out how long to wait */
-	restart_timeout_str =
-	    fu_plugin_get_config_value(plugin,
-				       "ManagerResetTimeout",
-				       FU_REDFISH_CONFIG_DEFAULT_MANAGER_RESET_TIMEOUT);
+	restart_timeout_str = fu_plugin_get_config_value(plugin, "ManagerResetTimeout");
 	if (!fu_strtoull(restart_timeout_str, &reset_timeout, 1, 86400, error))
 		return FALSE;
 
@@ -669,6 +655,15 @@ fu_redfish_plugin_constructed(GObject *obj)
 	self->backend = fu_redfish_backend_new(ctx);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_REDFISH_SMBIOS);
 	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_SECURE_CONFIG);
+
+	/* defaults changed here will also be reflected in the fwupd.conf man page */
+	fu_plugin_set_config_default(plugin, "CACheck", "false");
+	fu_plugin_set_config_default(plugin, "IpmiDisableCreateUser", "false");
+	fu_plugin_set_config_default(plugin, "ManagerResetTimeout", "1800"); /* seconds */
+	fu_plugin_set_config_default(plugin, "Password", NULL);
+	fu_plugin_set_config_default(plugin, "Uri", NULL);
+	fu_plugin_set_config_default(plugin, "Username", NULL);
+	fu_plugin_set_config_default(plugin, "UserUri", NULL);
 }
 
 static void

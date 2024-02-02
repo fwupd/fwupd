@@ -32,14 +32,6 @@ struct _FuUefiCapsulePlugin {
 
 G_DEFINE_TYPE(FuUefiCapsulePlugin, fu_uefi_capsule_plugin, FU_TYPE_PLUGIN)
 
-/* defaults changed here will also be reflected in the fwupd.conf man page */
-#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_ENABLE_GRUB_CHAIN_LOAD	      FALSE
-#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_DISABLE_SHIM_FOR_SECURE_BOOT   FALSE
-#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_REQUIRE_ESP_FREE_SPACE	      "0" /* in MB */
-#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_DISABLE_CAPSULE_UPDATE_ON_DISK FALSE
-#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_ENABLE_EFI_DEBUGGING	      FALSE
-#define FU_UEFI_CAPSULE_CONFIG_DEFAULT_REBOOT_CLEANUP		      TRUE
-
 static void
 fu_uefi_capsule_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
@@ -531,25 +523,17 @@ fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 	g_autoptr(GError) error_local = NULL;
 
 	/* parse free space needed for ESP */
-	require_esp_free_space =
-	    fu_plugin_get_config_value(plugin,
-				       "RequireESPFreeSpace",
-				       FU_UEFI_CAPSULE_CONFIG_DEFAULT_REQUIRE_ESP_FREE_SPACE);
+	require_esp_free_space = fu_plugin_get_config_value(plugin, "RequireESPFreeSpace");
 	if (!fu_strtoull(require_esp_free_space, &sz_reqd, 0, G_MAXUINT64, &error_local))
 		g_warning("invalid ESP free space specified: %s", error_local->message);
 	fu_uefi_device_set_require_esp_free_space(FU_UEFI_DEVICE(device), sz_reqd);
 
 	/* shim used for SB or not? */
-	if (!fu_plugin_get_config_value_boolean(
-		plugin,
-		"DisableShimForSecureBoot",
-		FU_UEFI_CAPSULE_CONFIG_DEFAULT_DISABLE_SHIM_FOR_SECURE_BOOT))
+	if (!fu_plugin_get_config_value_boolean(plugin, "DisableShimForSecureBoot"))
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB);
 
 	/* enable the fwupd.efi debug log? */
-	if (fu_plugin_get_config_value_boolean(plugin,
-					       "EnableEfiDebugging",
-					       FU_UEFI_CAPSULE_CONFIG_DEFAULT_ENABLE_EFI_DEBUGGING))
+	if (fu_plugin_get_config_value_boolean(plugin, "EnableEfiDebugging"))
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING);
 }
 
@@ -924,10 +908,7 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 		return TRUE;
 
 	/* use GRUB to load updates */
-	if (fu_plugin_get_config_value_boolean(
-		plugin,
-		"EnableGrubChainLoad",
-		FU_UEFI_CAPSULE_CONFIG_DEFAULT_ENABLE_GRUB_CHAIN_LOAD)) {
+	if (fu_plugin_get_config_value_boolean(plugin, "EnableGrubChainLoad")) {
 		fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(self->backend),
 						 FU_TYPE_UEFI_GRUB_DEVICE);
 	}
@@ -953,7 +934,7 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 	fu_plugin_add_report_metadata(plugin, "EfivarNvramUsed", nvram_total_str);
 
 	/* override the default ESP path */
-	esp_path = fu_plugin_get_config_value(plugin, "OverrideESPMountPoint", NULL);
+	esp_path = fu_plugin_get_config_value(plugin, "OverrideESPMountPoint");
 	if (esp_path != NULL) {
 		self->esp = fu_volume_new_esp_for_path(esp_path, error);
 		if (self->esp == NULL) {
@@ -1132,10 +1113,7 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	fu_progress_step_done(progress);
 
 	/* firmware may lie */
-	if (!fu_plugin_get_config_value_boolean(
-		plugin,
-		"DisableCapsuleUpdateOnDisk",
-		FU_UEFI_CAPSULE_CONFIG_DEFAULT_DISABLE_CAPSULE_UPDATE_ON_DISK)) {
+	if (!fu_plugin_get_config_value_boolean(plugin, "DisableCapsuleUpdateOnDisk")) {
 		g_autoptr(GError) error_cod = NULL;
 		if (!fu_uefi_capsule_plugin_check_cod_support(self, &error_cod)) {
 			g_debug("not using CapsuleOnDisk support: %s", error_cod->message);
@@ -1299,9 +1277,7 @@ fu_uefi_capsule_plugin_reboot_cleanup(FuPlugin *plugin, FuDevice *device, GError
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 
 	/* provide an escape hatch for debugging */
-	if (!fu_plugin_get_config_value_boolean(plugin,
-						"RebootCleanup",
-						FU_UEFI_CAPSULE_CONFIG_DEFAULT_REBOOT_CLEANUP))
+	if (!fu_plugin_get_config_value_boolean(plugin, "RebootCleanup"))
 		return TRUE;
 
 	/* delete capsules */
@@ -1344,6 +1320,15 @@ fu_uefi_capsule_plugin_constructed(GObject *obj)
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "uefi"); /* old name */
 	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_ACPI_UEFI);
 	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_UEFI_UPDATE_INFO);
+
+	/* defaults changed here will also be reflected in the fwupd.conf man page */
+	fu_plugin_set_config_default(plugin, "DisableCapsuleUpdateOnDisk", "false");
+	fu_plugin_set_config_default(plugin, "DisableShimForSecureBoot", "false");
+	fu_plugin_set_config_default(plugin, "EnableEfiDebugging", "false");
+	fu_plugin_set_config_default(plugin, "EnableGrubChainLoad", "false");
+	fu_plugin_set_config_default(plugin, "OverrideESPMountPoint", NULL);
+	fu_plugin_set_config_default(plugin, "RebootCleanup", "true");
+	fu_plugin_set_config_default(plugin, "RequireESPFreeSpace", "0"); /* in MB */
 
 	/* add a requirement on the fwupd-efi version -- which can change  */
 	if (!fu_uefi_capsule_plugin_fwupd_efi_probe(self, &error_local))
