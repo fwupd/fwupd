@@ -824,13 +824,13 @@ fu_config_func(void)
 	g_assert_true(g_strstr_len(composite_data, -1, "Key=true") == NULL);
 	g_assert_true(g_strstr_len(composite_data, -1, "# group comment") != NULL);
 	g_assert_true(g_strstr_len(composite_data, -1, "# key comment") != NULL);
+	g_remove(fn_mut);
 }
 
 static void
 fu_plugin_config_func(void)
 {
 	GStatBuf statbuf = {0};
-	const gchar *fn_mut = "/tmp/fwupd-self-test/var/etc/fwupd/fwupd.conf";
 	gboolean ret;
 	gint rc;
 	g_autofree gchar *conf_dir = NULL;
@@ -838,6 +838,7 @@ fu_plugin_config_func(void)
 	g_autofree gchar *testdatadir = NULL;
 	g_autofree gchar *value = NULL;
 	g_autofree gchar *value_missing = NULL;
+	g_autofree gchar *fn_mut = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -865,6 +866,18 @@ fu_plugin_config_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
+	/* mutable file we'll be writing */
+	(void)g_setenv("LOCALCONF_DIRECTORY", "/tmp/fwupd-self-test/var/etc/fwupd", TRUE);
+	fn_mut = g_build_filename(g_getenv("LOCALCONF_DIRECTORY"), "fwupd.conf", NULL);
+	g_assert_nonnull(fn_mut);
+	ret = fu_path_mkdir_parent(fn_mut, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_remove(fn_mut);
+	ret = g_file_set_contents(fn_mut, "", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
 	/* load context */
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_NONE, &error);
 	g_assert_no_error(error);
@@ -882,11 +895,12 @@ fu_plugin_config_func(void)
 	g_assert_cmpint(statbuf.st_mode & 0777, ==, 0640);
 
 	/* read back the value */
-	value_missing = fu_plugin_get_config_value(plugin, "NotGoingToExist", "Foo");
+	fu_plugin_set_config_default(plugin, "NotGoingToExist", "Foo");
+	value_missing = fu_plugin_get_config_value(plugin, "NotGoingToExist");
 	g_assert_cmpstr(value_missing, ==, "Foo");
-	value = fu_plugin_get_config_value(plugin, "Key", "Foo");
+	value = fu_plugin_get_config_value(plugin, "Key");
 	g_assert_cmpstr(value, ==, "True");
-	g_assert_true(fu_plugin_get_config_value_boolean(plugin, "Key", FALSE));
+	g_assert_true(fu_plugin_get_config_value_boolean(plugin, "Key"));
 }
 
 static void

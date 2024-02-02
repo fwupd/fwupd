@@ -15,6 +15,9 @@ struct _FuConfigClass {
 	GObjectClass parent_class;
 };
 
+void
+fu_config_set_default(FuConfig *self, const gchar *section, const gchar *key, const gchar *value)
+    G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_config_set_value(FuConfig *self,
 		    const gchar *section,
@@ -22,22 +25,13 @@ fu_config_set_value(FuConfig *self,
 		    const gchar *value,
 		    GError **error) G_GNUC_NON_NULL(1, 2);
 gchar *
-fu_config_get_value(FuConfig *self,
-		    const gchar *section,
-		    const gchar *key,
-		    const gchar *value_default) G_GNUC_NON_NULL(1, 2);
+fu_config_get_value(FuConfig *self, const gchar *section, const gchar *key) G_GNUC_NON_NULL(1, 2);
 gchar **
-fu_config_get_value_strv(FuConfig *self,
-			 const gchar *section,
-			 const gchar *key,
-			 const gchar *value_default) G_GNUC_NON_NULL(1, 2);
+fu_config_get_value_strv(FuConfig *self, const gchar *section, const gchar *key)
+    G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_config_get_value_bool(FuConfig *self,
-			 const gchar *section,
-			 const gchar *key,
-			 gboolean value_default) G_GNUC_NON_NULL(1, 2);
+fu_config_get_value_bool(FuConfig *self, const gchar *section, const gchar *key)
+    G_GNUC_NON_NULL(1, 2);
 guint64
-fu_config_get_value_u64(FuConfig *self,
-			const gchar *section,
-			const gchar *key,
-			guint64 value_default) G_GNUC_NON_NULL(1, 2);
+fu_config_get_value_u64(FuConfig *self, const gchar *section, const gchar *key)
+    G_GNUC_NON_NULL(1, 2);

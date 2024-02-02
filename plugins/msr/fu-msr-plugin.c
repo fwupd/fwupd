@@ -100,9 +100,6 @@ G_DEFINE_TYPE(FuMsrPlugin, fu_msr_plugin, FU_TYPE_PLUGIN)
 #define PCI_MSR_AMD64_SYSCFG	     0xC0010010
 #define PCI_MSR_AMD64_SEV	     0xC0010131
 
-/* defaults changed here will also be reflected in the fwupd.conf man page */
-#define FU_MSR_CONFIG_DEFAULT_MINIMUM_SME_KERNEL_VERSION "5.18.0"
-
 static void
 fu_msr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
@@ -547,10 +544,7 @@ fu_plugin_add_security_attr_dci_locked(FuPlugin *plugin, FuSecurityAttrs *attrs)
 static gboolean
 fu_msr_plugin_safe_kernel_for_sme(FuPlugin *plugin, GError **error)
 {
-	g_autofree gchar *min =
-	    fu_plugin_get_config_value(plugin,
-				       "MinimumSmeKernelVersion",
-				       FU_MSR_CONFIG_DEFAULT_MINIMUM_SME_KERNEL_VERSION);
+	g_autofree gchar *min = fu_plugin_get_config_value(plugin, "MinimumSmeKernelVersion");
 	return fu_kernel_check_version(min, error);
 }
 
@@ -646,6 +640,9 @@ fu_msr_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_device_udev_subsystem(plugin, "msr");
+
+	/* defaults changed here will also be reflected in the fwupd.conf man page */
+	fu_plugin_set_config_default(plugin, "MinimumSmeKernelVersion", "5.18.0");
 }
 
 static void
