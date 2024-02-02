@@ -9,6 +9,8 @@
 
 #include "fu-powerd-plugin.h"
 
+#define POWERD_SUSPEND_ANNOUNCED_PATH  "/run/power_manager/power/suspend_announced"
+
 struct _FuPowerdPlugin {
 	FuPlugin parent_instance;
 	GDBusProxy *proxy; /* nullable */
@@ -67,6 +69,45 @@ fu_powerd_plugin_delete_suspend_file(GError **error)
 	}
 	return TRUE;
 }
+
+static gboolean
+fu_powerd_plugin_block_suspend(GError **error)
+{
+again:
+	// Create lockfile so powerd doesn't suspend.
+	if (!fu_powerd_plugin_create_suspend_file(error)) {
+		return FALSE;
+	}
+	// Check for suspend_announced; is a suspend imminent?
+	if (g_file_test(POWERD_SUSPEND_ANNOUNCED_PATH, G_FILE_TEST_EXISTS)) {
+		g_info("waiting due to presence of " POWERD_SUSPEND_ANNOUNCED_PATH "\n");
+		// suspend_announced exists.
+		// Remove our lock, wait until the suspend is done, and try again.
+		if (!fu_powerd_plugin_delete_suspend_file(error)) {
+			return FALSE;
+		}
+		while (g_file_test(POWERD_SUSPEND_ANNOUNCED_PATH, G_FILE_TEST_EXISTS)) {
+			// powerd will remove the suspend_annouced file when suspend is finished
+			g_usleep(100000); // 0.1 seconds
+		}
+		goto again;
+	}
+	// suspend_announced does not exist.
+	g_info("suspend blocked\n");
+	return TRUE;
+}
+
+static gboolean
+fu_powerd_plugin_unblock_suspend(GError **error)
+{
+	// Remove our lockfile so powerd can suspend.
+	gboolean result = fu_powerd_plugin_delete_suspend_file(error);
+	if (result) {
+		g_info("suspend unblocked\n");
+	}
+	return result;
+}
+
 
 static void
 fu_powerd_plugin_rescan(FuPlugin *plugin, GVariant *parameters)
@@ -189,7 +230,7 @@ fu_powerd_plugin_prepare(FuPlugin *plugin,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
-	return fu_powerd_plugin_create_suspend_file(error);
+	return fu_powerd_plugin_block_suspend(error);
 }
 
 static gboolean
@@ -199,7 +240,7 @@ fu_powerd_plugin_cleanup(FuPlugin *plugin,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
-	return fu_powerd_plugin_delete_suspend_file(error);
+	return fu_powerd_plugin_unblock_suspend(error);
 }
 
 static void
