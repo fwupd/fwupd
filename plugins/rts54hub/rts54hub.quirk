@@ -42,3 +42,18 @@ Rts54TargetAddr = 0x20
 Rts54I2cSpeed = 0x2
 Rts54RegisterAddrLen = 0x04
 
+#GoodWay Acer Dock gen1
+[USB\VID_065F&PID_0702]
+Plugin = rts54hub
+Flags = updatable
+GType = FuRts54HubDevice
+FirmwareSizeMin = 0x10000
+FirmwareSizeMax = 0x20000
+
+#GoodWay Acer Dock gen2
+[USB\VID_065F&PID_0701]
+Plugin = rts54hub
+Flags = updatable
+GType = FuRts54HubDevice
+FirmwareSizeMin = 0x10000
+FirmwareSizeMax = 0x20000
