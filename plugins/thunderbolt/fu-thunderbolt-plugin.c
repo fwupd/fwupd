@@ -20,17 +20,10 @@ G_DEFINE_TYPE(FuThunderboltPlugin, fu_thunderbolt_plugin, FU_TYPE_PLUGIN)
 /* 5 seconds sleep until retimer is available after nvm update */
 #define FU_THUNDERBOLT_RETIMER_CLEANUP_DELAY 5000000
 
-/* defaults changed here will also be reflected in the fwupd.conf man page */
-#define FU_THUNDERBOLT_CONFIG_DEFAULT_MINIMUM_KERNEL_VERSION "4.13.0"
-#define FU_THUNDERBOLT_CONFIG_DEFAULT_DELAYED_ACTIVATION     FALSE
-
 static gboolean
 fu_thunderbolt_plugin_safe_kernel(FuPlugin *plugin, GError **error)
 {
-	g_autofree gchar *min =
-	    fu_plugin_get_config_value(plugin,
-				       "MinimumKernelVersion",
-				       FU_THUNDERBOLT_CONFIG_DEFAULT_MINIMUM_KERNEL_VERSION);
+	g_autofree gchar *min = fu_plugin_get_config_value(plugin, "MinimumKernelVersion");
 	return fu_kernel_check_version(min, error);
 }
 
@@ -53,9 +46,7 @@ fu_thunderbolt_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 		return;
 
 	/* Operating system will handle finishing updates later */
-	if (fu_plugin_get_config_value_boolean(plugin,
-					       "DelayedActivation",
-					       FU_THUNDERBOLT_CONFIG_DEFAULT_DELAYED_ACTIVATION) &&
+	if (fu_plugin_get_config_value_boolean(plugin, "DelayedActivation") &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
 		g_info("turning on delayed activation for %s", fu_device_get_name(device));
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
@@ -111,6 +102,10 @@ fu_thunderbolt_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "thunderbolt");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_THUNDERBOLT_CONTROLLER);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_THUNDERBOLT_RETIMER);
+
+	/* defaults changed here will also be reflected in the fwupd.conf man page */
+	fu_plugin_set_config_default(plugin, "DelayedActivation", "false");
+	fu_plugin_set_config_default(plugin, "MinimumKernelVersion", "4.13.0");
 }
 
 static void

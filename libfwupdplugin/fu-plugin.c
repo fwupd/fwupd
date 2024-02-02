@@ -2509,14 +2509,13 @@ fu_plugin_get_report_metadata(FuPlugin *self)
  * fu_plugin_get_config_value:
  * @self: a #FuPlugin
  * @key: a settings key
- * @value_default: the default value of the key if not found
  *
  * Return the value of a key, falling back to the default value.
  *
  * Since: 1.0.6
  **/
 gchar *
-fu_plugin_get_config_value(FuPlugin *self, const gchar *key, const gchar *value_default)
+fu_plugin_get_config_value(FuPlugin *self, const gchar *key)
 {
 	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
 	FuConfig *config = fu_context_get_config(priv->ctx);
@@ -2524,7 +2523,29 @@ fu_plugin_get_config_value(FuPlugin *self, const gchar *key, const gchar *value_
 		g_critical("cannot get config value with no loaded context!");
 		return NULL;
 	}
-	return fu_config_get_value(config, fu_plugin_get_name(self), key, value_default);
+	return fu_config_get_value(config, fu_plugin_get_name(self), key);
+}
+
+/**
+ * fu_plugin_set_config_default:
+ * @self: a #FuPlugin
+ * @key: a settings key
+ * @value: the default value of the key if not found
+ *
+ * Sets the config default value.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_plugin_set_config_default(FuPlugin *self, const gchar *key, const gchar *value)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
+	FuConfig *config = fu_context_get_config(priv->ctx);
+	if (config == NULL) {
+		g_critical("cannot set config default with no loaded context!");
+		return;
+	}
+	fu_config_set_default(config, fu_plugin_get_name(self), key, value);
 }
 
 /**
@@ -2627,7 +2648,6 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
  * fu_plugin_get_config_value_boolean:
  * @self: a #FuPlugin
  * @key: a settings key
- * @value_default: the default value of the key if not found
  *
  * Return the boolean value of a key if it's been configured
  *
@@ -2636,15 +2656,15 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
  * Since: 1.4.0
  **/
 gboolean
-fu_plugin_get_config_value_boolean(FuPlugin *self, const gchar *key, gboolean value_default)
+fu_plugin_get_config_value_boolean(FuPlugin *self, const gchar *key)
 {
 	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
 	FuConfig *config = fu_context_get_config(priv->ctx);
 	if (config == NULL) {
 		g_critical("cannot get config value with no loaded context!");
-		return value_default;
+		return FALSE;
 	}
-	return fu_config_get_value_bool(config, fu_plugin_get_name(self), key, value_default);
+	return fu_config_get_value_bool(config, fu_plugin_get_name(self), key);
 }
 
 /**
