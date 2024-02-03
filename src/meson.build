@@ -58,6 +58,8 @@ fwupd_engine_src = [
   'fu-remote.c',
   'fu-remote-list.c',
   'fu-security-attr-common.c',
+  'fu-client.c',
+  'fu-client-list.c',
 ] + systemd_src
 
 if giounix.found()
