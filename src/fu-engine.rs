@@ -35,3 +35,10 @@ enum EngineRequestFlag {
     NoRequirements = 1 << 0,
     AnyRelease = 1 << 1,
 }
+
+#[derive(ToBitString)]
+enum IdleInhibit {
+    None = 0,
+    Timeout = 1 << 0,
+    Signals = 1 << 1,
+}

@@ -134,30 +134,35 @@ fu_idle_func(void)
 	g_autoptr(FuIdle) idle = fu_idle_new();
 
 	fu_idle_reset(idle);
-	g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_IDLE);
+	g_assert_false(fu_idle_has_inhibit(idle, FU_IDLE_INHIBIT_TIMEOUT));
+	g_assert_false(fu_idle_has_inhibit(idle, FU_IDLE_INHIBIT_SIGNALS));
 
-	token = fu_idle_inhibit(idle, "update");
-	g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_BUSY);
-	g_assert_true(fu_idle_has_inhibit(idle, "update"));
-	g_assert_false(fu_idle_has_inhibit(idle, "notgoingtoexist"));
+	token = fu_idle_inhibit(idle, FU_IDLE_INHIBIT_TIMEOUT | FU_IDLE_INHIBIT_SIGNALS, NULL);
+	g_assert_true(fu_idle_has_inhibit(idle, FU_IDLE_INHIBIT_TIMEOUT));
+	g_assert_true(fu_idle_has_inhibit(idle, FU_IDLE_INHIBIT_SIGNALS));
 
 	/* wrong token */
 	fu_idle_uninhibit(idle, token + 1);
-	g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_BUSY);
+	g_assert_true(fu_idle_has_inhibit(idle, FU_IDLE_INHIBIT_SIGNALS));
 
 	/* correct token */
 	fu_idle_uninhibit(idle, token);
-	g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_IDLE);
+	g_assert_false(fu_idle_has_inhibit(idle, FU_IDLE_INHIBIT_TIMEOUT));
+	g_assert_false(fu_idle_has_inhibit(idle, FU_IDLE_INHIBIT_SIGNALS));
 
 	/* locker section */
 	{
-		g_autoptr(FuIdleLocker) idle_locker1 = fu_idle_locker_new(idle, "update1");
-		g_autoptr(FuIdleLocker) idle_locker2 = fu_idle_locker_new(idle, "update2");
+		g_autoptr(FuIdleLocker) idle_locker1 =
+		    fu_idle_locker_new(idle, FU_IDLE_INHIBIT_TIMEOUT, NULL);
+		g_autoptr(FuIdleLocker) idle_locker2 =
+		    fu_idle_locker_new(idle, FU_IDLE_INHIBIT_SIGNALS, NULL);
 		g_assert_nonnull(idle_locker1);
 		g_assert_nonnull(idle_locker2);
-		g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_BUSY);
+		g_assert_true(fu_idle_has_inhibit(idle, FU_IDLE_INHIBIT_TIMEOUT));
+		g_assert_true(fu_idle_has_inhibit(idle, FU_IDLE_INHIBIT_SIGNALS));
 	}
-	g_assert_cmpint(fu_idle_get_status(idle), ==, FU_IDLE_STATUS_IDLE);
+	g_assert_false(fu_idle_has_inhibit(idle, FU_IDLE_INHIBIT_TIMEOUT));
+	g_assert_false(fu_idle_has_inhibit(idle, FU_IDLE_INHIBIT_SIGNALS));
 }
 
 static void
