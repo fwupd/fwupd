@@ -169,7 +169,7 @@ fu_engine_update_motd_timeout_cb(gpointer user_data)
 	g_autoptr(GError) error_local = NULL;
 
 	/* busy */
-	if (fu_idle_has_inhibit(self->idle, "update"))
+	if (fu_idle_has_inhibit(self->idle, FU_IDLE_INHIBIT_SIGNALS))
 		return G_SOURCE_CONTINUE;
 
 	/* update now */
@@ -255,7 +255,7 @@ fu_engine_set_status(FuEngine *self, FwupdStatus status)
 static void
 fu_engine_generic_notify_cb(FuDevice *device, GParamSpec *pspec, FuEngine *self)
 {
-	if (fu_idle_get_status(self->idle) == FU_IDLE_STATUS_BUSY &&
+	if (fu_idle_has_inhibit(self->idle, FU_IDLE_INHIBIT_SIGNALS) &&
 	    !g_hash_table_contains(self->device_changed_allowlist, fu_device_get_id(device))) {
 		g_debug("suppressing notification from %s as transaction is in progress",
 			fu_device_get_id(device));
@@ -1863,7 +1863,9 @@ fu_engine_install_releases(FuEngine *self,
 	g_autoptr(GPtrArray) devices_new = NULL;
 
 	/* do not allow auto-shutdown during this time */
-	locker = fu_idle_locker_new(self->idle, "update");
+	locker = fu_idle_locker_new(self->idle,
+				    FU_IDLE_INHIBIT_TIMEOUT | FU_IDLE_INHIBIT_SIGNALS,
+				    "update");
 	g_assert(locker != NULL);
 
 	/* use an allow-list for device-changed signals -- only allow any of the composite update
@@ -6346,7 +6348,7 @@ fu_engine_plugin_rules_changed_cb(FuPlugin *plugin, gpointer user_data)
 		return;
 	for (guint j = 0; j < rules->len; j++) {
 		const gchar *tmp = g_ptr_array_index(rules, j);
-		fu_idle_inhibit(self->idle, tmp);
+		fu_idle_inhibit(self->idle, FU_IDLE_INHIBIT_TIMEOUT, tmp);
 	}
 }
 
@@ -8578,7 +8580,7 @@ fu_engine_context_power_changed(FuEngine *self)
 static void
 fu_engine_context_power_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine *self)
 {
-	if (fu_idle_get_status(self->idle) == FU_IDLE_STATUS_BUSY) {
+	if (fu_idle_has_inhibit(self->idle, FU_IDLE_INHIBIT_SIGNALS)) {
 		g_debug("suppressing ::power-changed as transaction is in progress");
 		return;
 	}
@@ -8586,10 +8588,15 @@ fu_engine_context_power_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine *
 }
 
 static void
-fu_engine_idle_status_notify_cb(FuIdle *idle, GParamSpec *pspec, FuEngine *self)
+fu_engine_idle_timeout_cb(FuIdle *idle, FuEngine *self)
 {
-	FuIdleStatus status = fu_idle_get_status(idle);
-	if (status == FU_IDLE_STATUS_IDLE &&
+	fu_engine_set_status(self, FWUPD_STATUS_SHUTDOWN);
+}
+
+static void
+fu_engine_idle_inhibit_changed_cb(FuIdle *idle, GParamSpec *pspec, FuEngine *self)
+{
+	if (!fu_idle_has_inhibit(idle, FU_IDLE_INHIBIT_SIGNALS) &&
 	    g_hash_table_size(self->device_changed_allowlist) > 0) {
 		g_debug("clearing device-changed allowlist as transaction done");
 		g_hash_table_remove_all(self->device_changed_allowlist);
@@ -8598,8 +8605,6 @@ fu_engine_idle_status_notify_cb(FuIdle *idle, GParamSpec *pspec, FuEngine *self)
 		 * inhibits are being set up correctly */
 		fu_engine_context_power_changed(self);
 	}
-	if (status == FU_IDLE_STATUS_TIMEOUT)
-		fu_engine_set_status(self, FWUPD_STATUS_SHUTDOWN);
 }
 
 static void
@@ -8659,8 +8664,12 @@ fu_engine_constructed(GObject *obj)
 			 self);
 
 	g_signal_connect(FU_IDLE(self->idle),
-			 "notify::status",
-			 G_CALLBACK(fu_engine_idle_status_notify_cb),
+			 "inhibit-changed",
+			 G_CALLBACK(fu_engine_idle_inhibit_changed_cb),
+			 self);
+	g_signal_connect(FU_IDLE(self->idle),
+			 "timeout",
+			 G_CALLBACK(fu_engine_idle_timeout_cb),
 			 self);
 
 	/* backends */
