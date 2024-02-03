@@ -25,6 +25,7 @@
 #include "fwupd-security-attr-private.h"
 
 #include "fu-bios-settings-private.h"
+#include "fu-client-list.h"
 #include "fu-context-private.h"
 #include "fu-daemon.h"
 #include "fu-device-private.h"
@@ -48,7 +49,8 @@ struct _FuDaemon {
 	GDBusNodeInfo *introspection_daemon;
 	GDBusProxy *proxy_uid;
 	GMainLoop *loop;
-	GHashTable *sender_items; /* sender:FuDaemonSenderItem */
+	FuClientList *client_list;
+	guint32 clients_inhibit_id;
 	FuPolkitAuthority *authority;
 	FwupdStatus status; /* last emitted */
 	guint percentage;   /* last emitted */
@@ -80,11 +82,6 @@ fu_daemon_stop(FuDaemon *self)
 	}
 	g_main_loop_quit(self->loop);
 }
-
-typedef struct {
-	FwupdFeatureFlags feature_flags;
-	GHashTable *hints; /* str:str */
-} FuDaemonSenderItem;
 
 static FuDaemonMachineKind
 fu_daemon_machine_kind_from_string(const gchar *kind)
@@ -240,9 +237,9 @@ fu_daemon_engine_status_changed_cb(FuEngine *engine, FwupdStatus status, FuDaemo
 static FuEngineRequest *
 fu_daemon_create_request(FuDaemon *self, const gchar *sender, GError **error)
 {
-	FuDaemonSenderItem *sender_item;
 	FwupdDeviceFlags device_flags = FWUPD_DEVICE_FLAG_NONE;
 	guint calling_uid = 0;
+	g_autoptr(FuClient) client = NULL;
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(GVariant) value = NULL;
 
@@ -253,12 +250,12 @@ fu_daemon_create_request(FuDaemon *self, const gchar *sender, GError **error)
 	}
 
 	/* did the client set the list of supported features or any hints */
-	sender_item = g_hash_table_lookup(self->sender_items, sender);
-	if (sender_item != NULL) {
-		const gchar *locale = g_hash_table_lookup(sender_item->hints, "locale");
+	client = fu_client_list_get_by_sender(self->client_list, sender);
+	if (client != NULL) {
+		const gchar *locale = fu_client_lookup_hint(client, "locale");
 		if (locale != NULL)
 			fu_engine_request_set_locale(request, locale);
-		fu_engine_request_set_feature_flags(request, sender_item->feature_flags);
+		fu_engine_request_set_feature_flags(request, fu_client_get_feature_flags(client));
 	}
 
 	/* are we root and therefore trusted? */
@@ -364,8 +361,8 @@ typedef struct {
 	GDBusMethodInvocation *invocation;
 	FuEngineRequest *request;
 	FuProgress *progress;
-	guint watcher_id;
-	gchar *sender;
+	FuClient *client;
+	glong client_sender_changed_id;
 	GPtrArray *releases;
 	GPtrArray *action_ids;
 	GPtrArray *checksums;
@@ -388,8 +385,6 @@ fu_daemon_auth_helper_free(FuMainAuthHelper *helper)
 	/* always return to IDLE even in event of an auth error */
 	fu_daemon_set_status(helper->self, FWUPD_STATUS_IDLE);
 
-	if (helper->watcher_id > 0)
-		g_bus_unwatch_name(helper->watcher_id);
 	if (helper->cabinet != NULL)
 		g_object_unref(helper->cabinet);
 	if (helper->stream != NULL)
@@ -406,7 +401,10 @@ fu_daemon_auth_helper_free(FuMainAuthHelper *helper)
 		g_ptr_array_unref(helper->checksums);
 	if (helper->errors != NULL)
 		g_ptr_array_unref(helper->errors);
-	g_free(helper->sender);
+	if (helper->client != NULL)
+		g_object_unref(helper->client);
+	if (helper->client_sender_changed_id > 0)
+		g_signal_handler_disconnect(helper->client, helper->client_sender_changed_id);
 	g_free(helper->device_id);
 	g_free(helper->remote_id);
 	g_free(helper->key);
@@ -764,7 +762,7 @@ fu_daemon_authorize_install_queue(FuMainAuthHelper *helper_ref)
 		FuPolkitAuthorityCheckFlags auth_flags =
 		    FU_POLKIT_AUTHORITY_CHECK_FLAG_ALLOW_USER_INTERACTION;
 		g_autofree gchar *action_id = g_strdup(g_ptr_array_index(helper->action_ids, 0));
-		g_autofree gchar *sender = g_strdup(helper->sender);
+		g_autofree gchar *sender = g_strdup(fu_client_get_sender(helper->client));
 		g_ptr_array_remove_index(helper->action_ids, 0);
 		if (fu_engine_request_has_device_flag(helper->request, FWUPD_DEVICE_FLAG_TRUSTED))
 			auth_flags |= FU_POLKIT_AUTHORITY_CHECK_FLAG_USER_IS_TRUSTED;
@@ -1006,23 +1004,6 @@ fu_daemon_install_with_helper(FuMainAuthHelper *helper_ref, GError **error)
 }
 #endif /* HAVE_GIO_UNIX */
 
-static FuDaemonSenderItem *
-fu_daemon_ensure_sender_item(FuDaemon *self, const gchar *sender)
-{
-	FuDaemonSenderItem *sender_item = NULL;
-
-	/* operating in point-to-point mode */
-	if (sender == NULL)
-		sender = "";
-	sender_item = g_hash_table_lookup(self->sender_items, sender);
-	if (sender_item == NULL) {
-		sender_item = g_new0(FuDaemonSenderItem, 1);
-		sender_item->hints = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-		g_hash_table_insert(self->sender_items, g_strdup(sender), sender_item);
-	}
-	return sender_item;
-}
-
 static gboolean
 fu_daemon_device_id_valid(const gchar *device_id, GError **error)
 {
@@ -1107,13 +1088,14 @@ fu_daemon_inhibit_name_vanished_cb(GDBusConnection *connection,
 
 #ifdef HAVE_GIO_UNIX
 static void
-fu_daemon_sender_name_vanished_cb(GDBusConnection *connection,
-				  const gchar *name,
-				  gpointer user_data)
+fu_daemon_client_flags_notify_cb(FuClient *client, GParamSpec *pspec, FuMainAuthHelper *helper)
 {
-	FuMainAuthHelper *helper = (FuMainAuthHelper *)user_data;
-	g_info("%s vanished before completion of install on %s", name, helper->device_id);
-	fu_progress_add_flag(helper->progress, FU_PROGRESS_FLAG_NO_SENDER);
+	if (!fu_client_has_flag(client, FU_CLIENT_FLAG_ACTIVE)) {
+		g_info("%s vanished before completion of install on %s",
+		       fu_client_get_sender(client),
+		       helper->device_id);
+		fu_progress_add_flag(helper->progress, FU_PROGRESS_FLAG_NO_SENDER);
+	}
 }
 #endif
 
@@ -1741,32 +1723,30 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		return;
 	}
 	if (g_strcmp0(method_name, "SetFeatureFlags") == 0) {
-		FuDaemonSenderItem *sender_item;
 		guint64 feature_flags_u64 = 0;
+		g_autoptr(FuClient) client = NULL;
 
 		g_variant_get(parameters, "(t)", &feature_flags_u64);
 		g_debug("Called %s(%" G_GUINT64_FORMAT ")", method_name, feature_flags_u64);
 
 		/* old flags for the same sender will be automatically destroyed */
-		sender_item = fu_daemon_ensure_sender_item(self, sender);
-		sender_item->feature_flags = feature_flags_u64;
+		client = fu_client_list_register(self->client_list, sender);
+		fu_client_set_feature_flags(client, feature_flags_u64);
 		g_dbus_method_invocation_return_value(invocation, NULL);
 		return;
 	}
 	if (g_strcmp0(method_name, "SetHints") == 0) {
-		FuDaemonSenderItem *sender_item;
 		const gchar *prop_key;
 		const gchar *prop_value;
+		g_autoptr(FuClient) client = NULL;
 		g_autoptr(GVariantIter) iter = NULL;
 
 		g_variant_get(parameters, "(a{ss})", &iter);
 		g_debug("Called %s()", method_name);
-		sender_item = fu_daemon_ensure_sender_item(self, sender);
+		client = fu_client_list_register(self->client_list, sender);
 		while (g_variant_iter_next(iter, "{&s&s}", &prop_key, &prop_value)) {
 			g_debug("got hint %s=%s", prop_key, prop_value);
-			g_hash_table_insert(sender_item->hints,
-					    g_strdup(prop_key),
-					    g_strdup(prop_value));
+			fu_client_insert_hint(client, prop_key, prop_value);
 		}
 		g_dbus_method_invocation_return_value(invocation, NULL);
 		return;
@@ -1893,15 +1873,12 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		helper->stream = fu_unix_seekable_input_stream_new(fd, TRUE);
 
 		/* install all the things in the store */
-		helper->sender = g_strdup(sender);
-		helper->watcher_id =
-		    g_bus_watch_name_on_connection(self->connection,
-						   sender,
-						   G_BUS_NAME_WATCHER_FLAGS_NONE,
-						   NULL,
-						   fu_daemon_sender_name_vanished_cb,
-						   helper,
-						   NULL);
+		helper->client = fu_client_list_register(self->client_list, sender);
+		helper->client_sender_changed_id =
+		    g_signal_connect(FU_CLIENT(helper->client),
+				     "notify::flags",
+				     G_CALLBACK(fu_daemon_client_flags_notify_cb),
+				     helper);
 		if (!fu_daemon_install_with_helper(g_steal_pointer(&helper), &error)) {
 			g_dbus_method_invocation_return_gerror(invocation, error);
 			return;
@@ -2187,12 +2164,51 @@ fu_daemon_register_object(FuDaemon *self)
 }
 
 static void
+fu_daemon_client_list_ensure_inhibit(FuDaemon *self)
+{
+	g_autoptr(GPtrArray) clients = fu_client_list_get_all(self->client_list);
+	g_debug("connected clients: %u", clients->len);
+	if (clients->len > 0 && self->clients_inhibit_id == 0) {
+		self->clients_inhibit_id = fu_engine_idle_inhibit(self->engine,
+								  FU_IDLE_INHIBIT_TIMEOUT,
+								  "connected-clients");
+	} else if (clients->len == 0 && self->clients_inhibit_id != 0) {
+		fu_engine_idle_uninhibit(self->engine, self->clients_inhibit_id);
+		self->clients_inhibit_id = 0;
+	}
+}
+
+static void
+fu_daemon_client_list_added_cb(FuClientList *client_list, FuClient *client, gpointer user_data)
+{
+	FuDaemon *self = FU_DAEMON(user_data);
+	fu_daemon_client_list_ensure_inhibit(self);
+}
+
+static void
+fu_daemon_client_list_removed_cb(FuClientList *client_list, FuClient *client, gpointer user_data)
+{
+	FuDaemon *self = FU_DAEMON(user_data);
+	fu_daemon_client_list_ensure_inhibit(self);
+}
+
+static void
 fu_daemon_dbus_bus_acquired_cb(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
 	FuDaemon *self = FU_DAEMON(user_data);
 	g_autoptr(GError) error = NULL;
 
 	self->connection = g_object_ref(connection);
+	self->client_list = fu_client_list_new(self->connection);
+	g_signal_connect(self->client_list,
+			 "added",
+			 G_CALLBACK(fu_daemon_client_list_added_cb),
+			 self);
+	g_signal_connect(self->client_list,
+			 "removed",
+			 G_CALLBACK(fu_daemon_client_list_removed_cb),
+			 self);
+
 	fu_daemon_register_object(self);
 
 	/* connect to D-Bus directly */
@@ -2405,20 +2421,9 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 }
 
 static void
-fu_daemon_sender_item_free(FuDaemonSenderItem *sender_item)
-{
-	g_hash_table_unref(sender_item->hints);
-	g_free(sender_item);
-}
-
-static void
 fu_daemon_init(FuDaemon *self)
 {
 	self->status = FWUPD_STATUS_IDLE;
-	self->sender_items = g_hash_table_new_full(g_str_hash,
-						   g_str_equal,
-						   g_free,
-						   (GDestroyNotify)fu_daemon_sender_item_free);
 	self->loop = g_main_loop_new(NULL, FALSE);
 	self->system_inhibits =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_daemon_system_inhibit_free);
@@ -2430,7 +2435,8 @@ fu_daemon_finalize(GObject *obj)
 	FuDaemon *self = FU_DAEMON(obj);
 
 	g_ptr_array_unref(self->system_inhibits);
-	g_hash_table_unref(self->sender_items);
+	if (self->client_list != NULL)
+		g_object_unref(self->client_list);
 	if (self->process_quit_id != 0)
 		g_source_remove(self->process_quit_id);
 	if (self->loop != NULL)
