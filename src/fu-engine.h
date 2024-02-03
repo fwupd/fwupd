@@ -51,6 +51,10 @@ void
 fu_engine_add_plugin_filter(FuEngine *self, const gchar *plugin_glob);
 void
 fu_engine_idle_reset(FuEngine *self);
+guint32
+fu_engine_idle_inhibit(FuEngine *self, FuIdleInhibit inhibit, const gchar *reason);
+void
+fu_engine_idle_uninhibit(FuEngine *self, guint32 token);
 gboolean
 fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GError **error);
 const gchar *

@@ -42,3 +42,8 @@ enum IdleInhibit {
     Timeout = 1 << 0,
     Signals = 1 << 1,
 }
+
+enum ClientFlag {
+    None = 0,
+    Active = 1 << 0,
+}

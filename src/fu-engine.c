@@ -1495,6 +1495,18 @@ fu_engine_idle_reset(FuEngine *self)
 	fu_idle_reset(self->idle);
 }
 
+guint32
+fu_engine_idle_inhibit(FuEngine *self, FuIdleInhibit inhibit, const gchar *reason)
+{
+	return fu_idle_inhibit(self->idle, inhibit, reason);
+}
+
+void
+fu_engine_idle_uninhibit(FuEngine *self, guint32 token)
+{
+	fu_idle_uninhibit(self->idle, token);
+}
+
 static gchar *
 fu_engine_get_boot_time(void)
 {
