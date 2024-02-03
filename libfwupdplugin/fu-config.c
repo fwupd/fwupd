@@ -329,6 +329,10 @@ fu_config_reload(FuConfig *self, GError **error)
 					key_values[i].group,
 					key_values[i].key,
 					key_values[i].value);
+				g_key_file_remove_comment(priv->keyfile,
+							  key_values[i].group,
+							  key_values[i].key,
+							  NULL);
 				g_key_file_remove_key(priv->keyfile,
 						      key_values[i].group,
 						      key_values[i].key,
