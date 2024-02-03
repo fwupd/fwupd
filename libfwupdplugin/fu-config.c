@@ -320,10 +320,13 @@ fu_config_reload(FuConfig *self, GError **error)
 				  {"thunderbolt", "DelayedActivation", "false"},
 				  {NULL, NULL, NULL}};
 		for (guint i = 0; key_values[i].group != NULL; i++) {
-			g_autofree gchar *value = g_key_file_get_value(priv->keyfile,
-								       key_values[i].group,
-								       key_values[i].key,
-								       NULL);
+			g_autofree gchar *value = NULL;
+			g_auto(GStrv) keys = NULL;
+
+			value = g_key_file_get_value(priv->keyfile,
+						     key_values[i].group,
+						     key_values[i].key,
+						     NULL);
 			if (g_strcmp0(value, key_values[i].value) == 0) {
 				g_debug("not migrating default value of [%s] %s=%s",
 					key_values[i].group,
@@ -337,6 +340,16 @@ fu_config_reload(FuConfig *self, GError **error)
 						      key_values[i].group,
 						      key_values[i].key,
 						      NULL);
+			}
+
+			/* remove the group if there are no keys left */
+			keys = g_key_file_get_keys(priv->keyfile, key_values[i].group, NULL, NULL);
+			if (g_strv_length(keys) == 0) {
+				g_key_file_remove_comment(priv->keyfile,
+							  key_values[i].group,
+							  NULL,
+							  NULL);
+				g_key_file_remove_group(priv->keyfile, key_values[i].group, NULL);
 			}
 		}
 
