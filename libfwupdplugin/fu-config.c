@@ -217,6 +217,7 @@ fu_config_migrate_keyfile(FuConfig *self)
 			  {"fwupd", "EnumerateAllDevices", NULL},
 			  {"fwupd", "EspLocation", NULL},
 			  {"fwupd", "HostBkc", NULL},
+			  {"fwupd", "IdleTimeout", "7200"},
 			  {"fwupd", "IdleTimeout", NULL},
 			  {"fwupd", "IgnorePower", NULL},
 			  {"fwupd", "ShowDevicePrivate", NULL},
