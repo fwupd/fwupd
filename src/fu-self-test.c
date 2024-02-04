@@ -107,7 +107,6 @@ fu_test_copy_file(const gchar *source, const gchar *target)
 	ret = g_file_get_contents(source, &data, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_remove(target);
 	ret = g_file_set_contents(target, data, -1, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
