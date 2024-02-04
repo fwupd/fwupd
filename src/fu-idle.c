@@ -16,7 +16,6 @@ fu_idle_finalize(GObject *obj);
 struct _FuIdle {
 	GObject parent_instance;
 	GPtrArray *items; /* of FuIdleItem */
-	GRWLock items_mutex;
 	guint idle_id;
 	guint timeout;
 	FuIdleInhibit inhibit_old;
@@ -91,11 +90,8 @@ fu_idle_reset(FuIdle *self)
 void
 fu_idle_uninhibit(FuIdle *self, guint32 token)
 {
-	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new(&self->items_mutex);
-
 	g_return_if_fail(FU_IS_IDLE(self));
 	g_return_if_fail(token != 0);
-	g_return_if_fail(locker != NULL);
 
 	for (guint i = 0; i < self->items->len; i++) {
 		FuIdleItem *item = g_ptr_array_index(self->items, i);
@@ -106,8 +102,6 @@ fu_idle_uninhibit(FuIdle *self, guint32 token)
 			break;
 		}
 	}
-
-	g_clear_pointer(&locker, g_rw_lock_writer_locker_free);
 	fu_idle_emit_inhibit_changed(self);
 }
 
@@ -116,11 +110,9 @@ fu_idle_inhibit(FuIdle *self, FuIdleInhibit inhibit, const gchar *reason)
 {
 	FuIdleItem *item;
 	g_autofree gchar *inhibit_str = fu_idle_inhibit_to_string(inhibit);
-	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new(&self->items_mutex);
 
 	g_return_val_if_fail(FU_IS_IDLE(self), 0);
 	g_return_val_if_fail(inhibit != FU_IDLE_INHIBIT_NONE, 0);
-	g_return_val_if_fail(locker != NULL, 0);
 
 	g_debug("inhibiting: %s by %s", inhibit_str, reason);
 	item = g_new0(FuIdleItem, 1);
@@ -129,7 +121,6 @@ fu_idle_inhibit(FuIdle *self, FuIdleInhibit inhibit, const gchar *reason)
 	item->token = g_random_int_range(1, G_MAXINT);
 	g_ptr_array_add(self->items, item);
 
-	g_clear_pointer(&locker, g_rw_lock_writer_locker_free);
 	fu_idle_emit_inhibit_changed(self);
 	return item->token;
 }
@@ -137,11 +128,8 @@ fu_idle_inhibit(FuIdle *self, FuIdleInhibit inhibit, const gchar *reason)
 gboolean
 fu_idle_has_inhibit(FuIdle *self, FuIdleInhibit inhibit)
 {
-	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_reader_locker_new(&self->items_mutex);
-
 	g_return_val_if_fail(FU_IS_IDLE(self), FALSE);
 	g_return_val_if_fail(inhibit != FU_IDLE_INHIBIT_NONE, FALSE);
-	g_return_val_if_fail(locker != NULL, FALSE);
 
 	for (guint i = 0; i < self->items->len; i++) {
 		FuIdleItem *item = g_ptr_array_index(self->items, i);
@@ -218,7 +206,6 @@ static void
 fu_idle_init(FuIdle *self)
 {
 	self->items = g_ptr_array_new_with_free_func((GDestroyNotify)fu_idle_item_free);
-	g_rw_lock_init(&self->items_mutex);
 }
 
 static void
@@ -227,7 +214,6 @@ fu_idle_finalize(GObject *obj)
 	FuIdle *self = FU_IDLE(obj);
 
 	fu_idle_stop(self);
-	g_rw_lock_clear(&self->items_mutex);
 	g_ptr_array_unref(self->items);
 
 	G_OBJECT_CLASS(fu_idle_parent_class)->finalize(obj);
