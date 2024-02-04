@@ -401,10 +401,10 @@ fu_daemon_auth_helper_free(FuMainAuthHelper *helper)
 		g_ptr_array_unref(helper->checksums);
 	if (helper->errors != NULL)
 		g_ptr_array_unref(helper->errors);
-	if (helper->client != NULL)
-		g_object_unref(helper->client);
 	if (helper->client_sender_changed_id > 0)
 		g_signal_handler_disconnect(helper->client, helper->client_sender_changed_id);
+	if (helper->client != NULL)
+		g_object_unref(helper->client);
 	g_free(helper->device_id);
 	g_free(helper->remote_id);
 	g_free(helper->key);
