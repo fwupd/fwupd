@@ -61,6 +61,11 @@ The `[fwupd]` section can contain the following parameters:
 
   **NOTE:** some plugins might inhibit the auto-shutdown, for instance thunderbolt.
 
+**IdleInhibitStartupThreshold={{IdleInhibitStartupThreshold}}**
+
+  If the daemon takes more than this time to startup (in milliseconds) then inhibit the idle
+  shutdown timer. A value of **0** specifies "never".
+
 **VerboseDomains={{VerboseDomains}}**
 
   Comma separated list of domains to log in verbose mode.

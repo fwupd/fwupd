@@ -2300,8 +2300,10 @@ gboolean
 fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 {
 	const gchar *machine_kind = g_getenv("FWUPD_MACHINE_KIND");
+	guint timer_max_ms;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GTimer) timer = g_timer_new();
 
 	g_return_val_if_fail(FU_IS_DAEMON(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -2411,6 +2413,19 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 						NULL);
 	}
 	fu_progress_step_done(progress);
+
+	/* how did we do */
+	timer_max_ms = fu_config_get_value_u64(FU_CONFIG(fu_engine_get_config(self->engine)),
+					       "fwupd",
+					       "IdleInhibitStartupThreshold");
+	if (timer_max_ms > 0) {
+		guint timer_ms = g_timer_elapsed(timer, NULL) * 1000.f;
+		if (timer_ms > timer_max_ms) {
+			g_autofree gchar *reason =
+			    g_strdup_printf("daemon-startup-%ums-max-%ums", timer_ms, timer_max_ms);
+			fu_engine_idle_inhibit(self->engine, FU_IDLE_INHIBIT_TIMEOUT, reason);
+		}
+	}
 
 	/* a good place to do the traceback */
 	if (fu_progress_get_profile(progress)) {
