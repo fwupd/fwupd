@@ -770,13 +770,13 @@ fu_ti_tps6598x_device_finalize(GObject *object)
 static void
 fu_ti_tps6598x_device_class_init(FuTiTps6598xDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_ti_tps6598x_device_finalize;
-	klass_device->to_string = fu_ti_tps6598x_device_to_string;
-	klass_device->write_firmware = fu_ti_tps6598x_device_write_firmware;
-	klass_device->attach = fu_ti_tps6598x_device_attach;
-	klass_device->setup = fu_ti_tps6598x_device_setup;
-	klass_device->report_metadata_pre = fu_ti_tps6598x_device_report_metadata_pre;
-	klass_device->set_progress = fu_ti_tps6598x_device_set_progress;
+	device_class->to_string = fu_ti_tps6598x_device_to_string;
+	device_class->write_firmware = fu_ti_tps6598x_device_write_firmware;
+	device_class->attach = fu_ti_tps6598x_device_attach;
+	device_class->setup = fu_ti_tps6598x_device_setup;
+	device_class->report_metadata_pre = fu_ti_tps6598x_device_report_metadata_pre;
+	device_class->set_progress = fu_ti_tps6598x_device_set_progress;
 }

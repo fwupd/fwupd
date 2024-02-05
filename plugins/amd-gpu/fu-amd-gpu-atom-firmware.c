@@ -333,11 +333,11 @@ static void
 fu_amd_gpu_atom_firmware_class_init(FuAmdGpuAtomFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_amd_gpu_atom_firmware_finalize;
-	klass_firmware->parse = fu_amd_gpu_atom_firmware_parse;
-	klass_firmware->export = fu_amd_gpu_atom_firmware_export;
-	klass_firmware->validate = fu_amd_gpu_atom_firmware_validate;
+	firmware_class->parse = fu_amd_gpu_atom_firmware_parse;
+	firmware_class->export = fu_amd_gpu_atom_firmware_export;
+	firmware_class->validate = fu_amd_gpu_atom_firmware_validate;
 }
 
 FuFirmware *

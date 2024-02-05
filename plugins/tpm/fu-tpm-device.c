@@ -113,8 +113,8 @@ static void
 fu_tpm_device_class_init(FuTpmDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
 	object_class->finalize = fu_tpm_device_finalize;
-	klass_device->to_string = fu_tpm_device_to_string;
+	device_class->to_string = fu_tpm_device_to_string;
 }

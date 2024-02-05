@@ -515,10 +515,10 @@ fu_aver_hid_device_init(FuAverHidDevice *self)
 static void
 fu_aver_hid_device_class_init(FuAverHidDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->poll = fu_aver_hid_device_poll;
-	klass_device->setup = fu_aver_hid_device_setup;
-	klass_device->prepare_firmware = fu_aver_hid_device_prepare_firmware;
-	klass_device->write_firmware = fu_aver_hid_device_write_firmware;
-	klass_device->set_progress = fu_aver_hid_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->poll = fu_aver_hid_device_poll;
+	device_class->setup = fu_aver_hid_device_setup;
+	device_class->prepare_firmware = fu_aver_hid_device_prepare_firmware;
+	device_class->write_firmware = fu_aver_hid_device_write_firmware;
+	device_class->set_progress = fu_aver_hid_device_set_progress;
 }

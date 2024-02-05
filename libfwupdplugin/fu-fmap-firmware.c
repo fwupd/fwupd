@@ -39,7 +39,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		       FwupdInstallFlags flags,
 		       GError **error)
 {
-	FuFmapFirmwareClass *klass_firmware = FU_FMAP_FIRMWARE_GET_CLASS(firmware);
+	FuFmapFirmwareClass *firmware_class = FU_FMAP_FIRMWARE_GET_CLASS(firmware);
 	gsize streamsz = 0;
 	guint32 nareas;
 	g_autoptr(GByteArray) st_hdr = NULL;
@@ -108,8 +108,8 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* subclassed */
-	if (klass_firmware->parse != NULL) {
-		if (!klass_firmware->parse(firmware, stream, offset, flags, error))
+	if (firmware_class->parse != NULL) {
+		if (!firmware_class->parse(firmware, stream, offset, flags, error))
 			return FALSE;
 	}
 
@@ -183,10 +183,10 @@ fu_fmap_firmware_init(FuFmapFirmware *self)
 static void
 fu_fmap_firmware_class_init(FuFmapFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_fmap_firmware_validate;
-	klass_firmware->parse = fu_fmap_firmware_parse;
-	klass_firmware->write = fu_fmap_firmware_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_fmap_firmware_validate;
+	firmware_class->parse = fu_fmap_firmware_parse;
+	firmware_class->write = fu_fmap_firmware_write;
 }
 
 /**

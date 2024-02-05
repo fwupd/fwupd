@@ -282,11 +282,11 @@ fu_archive_firmware_init(FuArchiveFirmware *self)
 static void
 fu_archive_firmware_class_init(FuArchiveFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_archive_firmware_parse;
-	klass_firmware->write = fu_archive_firmware_write;
-	klass_firmware->build = fu_archive_firmware_build;
-	klass_firmware->export = fu_archive_firmware_export;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_archive_firmware_parse;
+	firmware_class->write = fu_archive_firmware_write;
+	firmware_class->build = fu_archive_firmware_build;
+	firmware_class->export = fu_archive_firmware_export;
 }
 
 /**

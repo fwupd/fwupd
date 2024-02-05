@@ -108,13 +108,13 @@ fu_logitech_hidpp_radio_init(FuLogitechHidppRadio *self)
 static void
 fu_logitech_hidpp_radio_class_init(FuLogitechHidppRadioClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
-	klass_device->detach = fu_logitech_hidpp_radio_detach;
-	klass_device->attach = fu_logitech_hidpp_radio_attach;
-	klass_device->write_firmware = fu_logitech_hidpp_radio_write_firmware;
-	klass_device->to_string = fu_logitech_hidpp_radio_to_string;
-	klass_device->set_progress = fu_logitech_hidpp_radio_set_progress;
+	device_class->detach = fu_logitech_hidpp_radio_detach;
+	device_class->attach = fu_logitech_hidpp_radio_attach;
+	device_class->write_firmware = fu_logitech_hidpp_radio_write_firmware;
+	device_class->to_string = fu_logitech_hidpp_radio_to_string;
+	device_class->set_progress = fu_logitech_hidpp_radio_set_progress;
 }
 
 FuLogitechHidppRadio *

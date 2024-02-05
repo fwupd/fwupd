@@ -436,13 +436,13 @@ fu_ch341a_cfi_device_init(FuCh341aCfiDevice *self)
 static void
 fu_ch341a_cfi_device_class_init(FuCh341aCfiDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	FuCfiDeviceClass *klass_cfi = FU_CFI_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	FuCfiDeviceClass *cfi_class = FU_CFI_DEVICE_CLASS(klass);
 
-	klass_cfi->chip_select = fu_ch341a_cfi_device_chip_select;
+	cfi_class->chip_select = fu_ch341a_cfi_device_chip_select;
 
-	klass_device->setup = fu_ch341a_cfi_device_setup;
-	klass_device->write_firmware = fu_ch341a_cfi_device_write_firmware;
-	klass_device->dump_firmware = fu_ch341a_cfi_device_dump_firmware;
-	klass_device->set_progress = fu_ch341a_cfi_device_set_progress;
+	device_class->setup = fu_ch341a_cfi_device_setup;
+	device_class->write_firmware = fu_ch341a_cfi_device_write_firmware;
+	device_class->dump_firmware = fu_ch341a_cfi_device_dump_firmware;
+	device_class->set_progress = fu_ch341a_cfi_device_set_progress;
 }

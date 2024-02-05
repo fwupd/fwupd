@@ -195,10 +195,10 @@ fu_steelseries_fizz_hid_setup(FuDevice *device, GError **error)
 static void
 fu_steelseries_fizz_hid_class_init(FuSteelseriesFizzHidClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
-	klass_device->setup = fu_steelseries_fizz_hid_setup;
-	klass_device->detach = fu_steelseries_fizz_hid_detach;
+	device_class->setup = fu_steelseries_fizz_hid_setup;
+	device_class->detach = fu_steelseries_fizz_hid_detach;
 }
 
 static void

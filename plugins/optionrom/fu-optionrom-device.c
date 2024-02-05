@@ -78,8 +78,8 @@ static void
 fu_optionrom_device_class_init(FuOptionromDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_optionrom_device_finalize;
-	klass_device->dump_firmware = fu_optionrom_device_dump_firmware;
-	klass_device->probe = fu_optionrom_device_probe;
+	device_class->dump_firmware = fu_optionrom_device_dump_firmware;
+	device_class->probe = fu_optionrom_device_probe;
 }

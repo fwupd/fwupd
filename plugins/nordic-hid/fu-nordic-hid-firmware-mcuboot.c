@@ -142,7 +142,7 @@ fu_nordic_hid_firmware_mcuboot_init(FuNordicHidFirmwareMcuboot *self)
 static void
 fu_nordic_hid_firmware_mcuboot_class_init(FuNordicHidFirmwareMcubootClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_nordic_hid_firmware_mcuboot_parse;
-	klass_firmware->write = fu_nordic_hid_firmware_mcuboot_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_nordic_hid_firmware_mcuboot_parse;
+	firmware_class->write = fu_nordic_hid_firmware_mcuboot_write;
 }

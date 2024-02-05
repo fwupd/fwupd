@@ -219,9 +219,9 @@ fu_drm_device_finalize(GObject *object)
 static void
 fu_drm_device_class_init(FuDrmDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_drm_device_finalize;
-	klass_device->probe = fu_drm_device_probe;
-	klass_device->to_string = fu_drm_device_to_string;
+	device_class->probe = fu_drm_device_probe;
+	device_class->to_string = fu_drm_device_to_string;
 }

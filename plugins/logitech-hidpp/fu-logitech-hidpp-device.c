@@ -1332,22 +1332,22 @@ fu_logitech_hidpp_device_cleanup(FuDevice *device,
 static void
 fu_logitech_hidpp_device_class_init(FuLogitechHidppDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
 	object_class->finalize = fu_logitech_hidpp_device_finalize;
-	klass_device->setup = fu_logitech_hidpp_device_setup;
-	klass_device->open = fu_logitech_hidpp_device_open;
-	klass_device->close = fu_logitech_hidpp_device_close;
-	klass_device->write_firmware = fu_logitech_hidpp_device_write_firmware;
-	klass_device->attach = fu_logitech_hidpp_device_attach_cached;
-	klass_device->detach = fu_logitech_hidpp_device_detach;
-	klass_device->poll = fu_logitech_hidpp_device_poll;
-	klass_device->to_string = fu_logitech_hidpp_device_to_string;
-	klass_device->probe = fu_logitech_hidpp_device_probe;
-	klass_device->set_quirk_kv = fu_logitech_hidpp_device_set_quirk_kv;
-	klass_device->cleanup = fu_logitech_hidpp_device_cleanup;
-	klass_device->set_progress = fu_logitech_hidpp_device_set_progress;
+	device_class->setup = fu_logitech_hidpp_device_setup;
+	device_class->open = fu_logitech_hidpp_device_open;
+	device_class->close = fu_logitech_hidpp_device_close;
+	device_class->write_firmware = fu_logitech_hidpp_device_write_firmware;
+	device_class->attach = fu_logitech_hidpp_device_attach_cached;
+	device_class->detach = fu_logitech_hidpp_device_detach;
+	device_class->poll = fu_logitech_hidpp_device_poll;
+	device_class->to_string = fu_logitech_hidpp_device_to_string;
+	device_class->probe = fu_logitech_hidpp_device_probe;
+	device_class->set_quirk_kv = fu_logitech_hidpp_device_set_quirk_kv;
+	device_class->cleanup = fu_logitech_hidpp_device_cleanup;
+	device_class->set_progress = fu_logitech_hidpp_device_set_progress;
 }
 
 static void

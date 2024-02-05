@@ -382,10 +382,10 @@ fu_ep963x_device_init(FuEp963xDevice *self)
 static void
 fu_ep963x_device_class_init(FuEp963xDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->write_firmware = fu_ep963x_device_write_firmware;
-	klass_device->attach = fu_ep963x_device_attach;
-	klass_device->detach = fu_ep963x_device_detach;
-	klass_device->setup = fu_ep963x_device_setup;
-	klass_device->set_progress = fu_ep963x_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->write_firmware = fu_ep963x_device_write_firmware;
+	device_class->attach = fu_ep963x_device_attach;
+	device_class->detach = fu_ep963x_device_detach;
+	device_class->setup = fu_ep963x_device_setup;
+	device_class->set_progress = fu_ep963x_device_set_progress;
 }

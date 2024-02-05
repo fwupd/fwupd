@@ -398,10 +398,10 @@ fu_rts54hub_rtd21xx_foreground_init(FuRts54hubRtd21xxForeground *self)
 static void
 fu_rts54hub_rtd21xx_foreground_class_init(FuRts54hubRtd21xxForegroundClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_rts54hub_rtd21xx_foreground_setup;
-	klass_device->reload = fu_rts54hub_rtd21xx_foreground_reload;
-	klass_device->attach = fu_rts54hub_rtd21xx_foreground_attach;
-	klass_device->detach = fu_rts54hub_rtd21xx_foreground_detach;
-	klass_device->write_firmware = fu_rts54hub_rtd21xx_foreground_write_firmware;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->setup = fu_rts54hub_rtd21xx_foreground_setup;
+	device_class->reload = fu_rts54hub_rtd21xx_foreground_reload;
+	device_class->attach = fu_rts54hub_rtd21xx_foreground_attach;
+	device_class->detach = fu_rts54hub_rtd21xx_foreground_detach;
+	device_class->write_firmware = fu_rts54hub_rtd21xx_foreground_write_firmware;
 }

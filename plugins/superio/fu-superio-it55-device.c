@@ -644,14 +644,14 @@ fu_superio_it55_device_finalize(GObject *obj)
 static void
 fu_superio_it55_device_class_init(FuEcIt55DeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	G_OBJECT_CLASS(klass)->finalize = fu_superio_it55_device_finalize;
-	klass_device->to_string = fu_superio_it55_device_to_string;
-	klass_device->attach = fu_superio_it55_device_attach;
-	klass_device->detach = fu_superio_it55_device_detach;
-	klass_device->dump_firmware = fu_superio_it55_device_dump_firmware;
-	klass_device->write_firmware = fu_superio_it55_device_write_firmware;
-	klass_device->setup = fu_superio_it55_device_setup;
-	klass_device->prepare_firmware = fu_superio_it55_device_prepare_firmware;
-	klass_device->set_quirk_kv = fu_superio_it55_device_set_quirk_kv;
+	device_class->to_string = fu_superio_it55_device_to_string;
+	device_class->attach = fu_superio_it55_device_attach;
+	device_class->detach = fu_superio_it55_device_detach;
+	device_class->dump_firmware = fu_superio_it55_device_dump_firmware;
+	device_class->write_firmware = fu_superio_it55_device_write_firmware;
+	device_class->setup = fu_superio_it55_device_setup;
+	device_class->prepare_firmware = fu_superio_it55_device_prepare_firmware;
+	device_class->set_quirk_kv = fu_superio_it55_device_set_quirk_kv;
 }

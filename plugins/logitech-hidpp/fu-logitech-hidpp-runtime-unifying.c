@@ -167,11 +167,11 @@ fu_logitech_hidpp_runtime_unifying_set_progress(FuDevice *self, FuProgress *prog
 static void
 fu_logitech_hidpp_runtime_unifying_class_init(FuLogitechHidppRuntimeUnifyingClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
-	klass_device->detach = fu_logitech_hidpp_runtime_unifying_detach;
-	klass_device->setup = fu_logitech_hidpp_runtime_unifying_setup;
-	klass_device->set_progress = fu_logitech_hidpp_runtime_unifying_set_progress;
+	device_class->detach = fu_logitech_hidpp_runtime_unifying_detach;
+	device_class->setup = fu_logitech_hidpp_runtime_unifying_setup;
+	device_class->set_progress = fu_logitech_hidpp_runtime_unifying_set_progress;
 }
 
 static void

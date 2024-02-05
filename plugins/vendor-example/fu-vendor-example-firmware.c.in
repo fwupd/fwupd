@@ -111,12 +111,12 @@ fu_{{vendor}}_{{example}}_firmware_init(Fu{{Vendor}}{{Example}}Firmware *self)
 static void
 fu_{{vendor}}_{{example}}_firmware_class_init(Fu{{Vendor}}{{Example}}FirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_{{vendor}}_{{example}}_validate;
-	klass_firmware->parse = fu_{{vendor}}_{{example}}_firmware_parse;
-	klass_firmware->write = fu_{{vendor}}_{{example}}_firmware_write;
-	klass_firmware->build = fu_{{vendor}}_{{example}}_firmware_build;
-	klass_firmware->export = fu_{{vendor}}_{{example}}_firmware_export;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_{{vendor}}_{{example}}_validate;
+	firmware_class->parse = fu_{{vendor}}_{{example}}_firmware_parse;
+	firmware_class->write = fu_{{vendor}}_{{example}}_firmware_write;
+	firmware_class->build = fu_{{vendor}}_{{example}}_firmware_build;
+	firmware_class->export = fu_{{vendor}}_{{example}}_firmware_export;
 }
 
 FuFirmware *

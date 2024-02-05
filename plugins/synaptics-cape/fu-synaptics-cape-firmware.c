@@ -88,7 +88,7 @@ fu_synaptics_cape_firmware_init(FuSynapticsCapeFirmware *self)
 static void
 fu_synaptics_cape_firmware_class_init(FuSynapticsCapeFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->export = fu_synaptics_cape_firmware_export;
-	klass_firmware->build = fu_synaptics_cape_firmware_build;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->export = fu_synaptics_cape_firmware_export;
+	firmware_class->build = fu_synaptics_cape_firmware_build;
 }

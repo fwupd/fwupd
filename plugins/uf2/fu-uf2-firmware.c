@@ -271,9 +271,9 @@ fu_uf2_firmware_init(FuUf2Firmware *self)
 static void
 fu_uf2_firmware_class_init(FuUf2FirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_uf2_firmware_parse;
-	klass_firmware->write = fu_uf2_firmware_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_uf2_firmware_parse;
+	firmware_class->write = fu_uf2_firmware_write;
 }
 
 FuFirmware *

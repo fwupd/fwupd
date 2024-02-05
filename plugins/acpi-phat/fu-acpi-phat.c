@@ -320,13 +320,13 @@ static void
 fu_acpi_phat_class_init(FuAcpiPhatClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_acpi_phat_finalize;
-	klass_firmware->validate = fu_acpi_phat_validate;
-	klass_firmware->parse = fu_acpi_phat_parse;
-	klass_firmware->write = fu_acpi_phat_write;
-	klass_firmware->export = fu_acpi_phat_export;
-	klass_firmware->build = fu_acpi_phat_build;
+	firmware_class->validate = fu_acpi_phat_validate;
+	firmware_class->parse = fu_acpi_phat_parse;
+	firmware_class->write = fu_acpi_phat_write;
+	firmware_class->export = fu_acpi_phat_export;
+	firmware_class->build = fu_acpi_phat_build;
 }
 
 FuFirmware *

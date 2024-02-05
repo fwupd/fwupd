@@ -1061,14 +1061,14 @@ fu_steelseries_sonic_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_steelseries_sonic_class_init(FuSteelseriesSonicClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
-	klass_device->attach = fu_steelseries_sonic_attach;
-	klass_device->prepare = fu_steelseries_sonic_prepare;
-	klass_device->read_firmware = fu_steelseries_sonic_read_firmware;
-	klass_device->write_firmware = fu_steelseries_sonic_write_firmware;
-	klass_device->prepare_firmware = fu_steelseries_sonic_prepare_firmware;
-	klass_device->set_progress = fu_steelseries_sonic_set_progress;
+	device_class->attach = fu_steelseries_sonic_attach;
+	device_class->prepare = fu_steelseries_sonic_prepare;
+	device_class->read_firmware = fu_steelseries_sonic_read_firmware;
+	device_class->write_firmware = fu_steelseries_sonic_write_firmware;
+	device_class->prepare_firmware = fu_steelseries_sonic_prepare_firmware;
+	device_class->set_progress = fu_steelseries_sonic_set_progress;
 }
 
 static void

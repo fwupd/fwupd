@@ -437,17 +437,17 @@ fu_uf2_device_finalize(GObject *obj)
 static void
 fu_uf2_device_class_init(FuUf2DeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	GObjectClass *klass_object = G_OBJECT_CLASS(klass);
-	klass_object->finalize = fu_uf2_device_finalize;
-	klass_device->to_string = fu_uf2_device_to_string;
-	klass_device->probe = fu_uf2_device_probe;
-	klass_device->setup = fu_uf2_device_setup;
-	klass_device->open = fu_uf2_device_open;
-	klass_device->close = fu_uf2_device_close;
-	klass_device->prepare_firmware = fu_uf2_device_prepare_firmware;
-	klass_device->set_progress = fu_uf2_device_set_progress;
-	klass_device->read_firmware = fu_uf2_device_read_firmware;
-	klass_device->write_firmware = fu_block_device_write_firmware;
-	klass_device->dump_firmware = fu_block_device_dump_firmware;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_uf2_device_finalize;
+	device_class->to_string = fu_uf2_device_to_string;
+	device_class->probe = fu_uf2_device_probe;
+	device_class->setup = fu_uf2_device_setup;
+	device_class->open = fu_uf2_device_open;
+	device_class->close = fu_uf2_device_close;
+	device_class->prepare_firmware = fu_uf2_device_prepare_firmware;
+	device_class->set_progress = fu_uf2_device_set_progress;
+	device_class->read_firmware = fu_uf2_device_read_firmware;
+	device_class->write_firmware = fu_block_device_write_firmware;
+	device_class->dump_firmware = fu_block_device_dump_firmware;
 }

@@ -369,12 +369,12 @@ fu_dfu_firmware_init(FuDfuFirmware *self)
 static void
 fu_dfu_firmware_class_init(FuDfuFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_dfu_firmware_validate;
-	klass_firmware->export = fu_dfu_firmware_export;
-	klass_firmware->parse = fu_dfu_firmware_parse;
-	klass_firmware->write = fu_dfu_firmware_write;
-	klass_firmware->build = fu_dfu_firmware_build;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_dfu_firmware_validate;
+	firmware_class->export = fu_dfu_firmware_export;
+	firmware_class->parse = fu_dfu_firmware_parse;
+	firmware_class->write = fu_dfu_firmware_write;
+	firmware_class->build = fu_dfu_firmware_build;
 }
 
 /**

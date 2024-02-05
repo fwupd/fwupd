@@ -283,7 +283,7 @@ fu_ch341a_device_init(FuCh341aDevice *self)
 static void
 fu_ch341a_device_class_init(FuCh341aDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_ch341a_device_setup;
-	klass_device->to_string = fu_ch341a_device_to_string;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->setup = fu_ch341a_device_setup;
+	device_class->to_string = fu_ch341a_device_to_string;
 }

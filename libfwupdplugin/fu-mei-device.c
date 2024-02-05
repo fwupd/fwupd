@@ -515,10 +515,10 @@ fu_mei_device_finalize(GObject *object)
 static void
 fu_mei_device_class_init(FuMeiDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_mei_device_finalize;
-	klass_device->probe = fu_mei_device_probe;
-	klass_device->to_string = fu_mei_device_to_string;
-	klass_device->incorporate = fu_mei_device_incorporate;
+	device_class->probe = fu_mei_device_probe;
+	device_class->to_string = fu_mei_device_to_string;
+	device_class->incorporate = fu_mei_device_incorporate;
 }

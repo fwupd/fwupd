@@ -298,14 +298,14 @@ fu_steelseries_gamepad_convert_version(FuDevice *device, guint64 version_raw)
 static void
 fu_steelseries_gamepad_class_init(FuSteelseriesGamepadClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
-	klass_device->setup = fu_steelseries_gamepad_setup;
-	klass_device->attach = fu_steelseries_gamepad_attach;
-	klass_device->detach = fu_steelseries_gamepad_detach;
-	klass_device->write_firmware = fu_steelseries_gamepad_write_firmware;
-	klass_device->set_progress = fu_steelseries_gamepad_set_progress;
-	klass_device->convert_version = fu_steelseries_gamepad_convert_version;
+	device_class->setup = fu_steelseries_gamepad_setup;
+	device_class->attach = fu_steelseries_gamepad_attach;
+	device_class->detach = fu_steelseries_gamepad_detach;
+	device_class->write_firmware = fu_steelseries_gamepad_write_firmware;
+	device_class->set_progress = fu_steelseries_gamepad_set_progress;
+	device_class->convert_version = fu_steelseries_gamepad_convert_version;
 }
 
 static void

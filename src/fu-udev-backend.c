@@ -342,9 +342,9 @@ static void
 fu_udev_backend_class_init(FuUdevBackendClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuBackendClass *klass_backend = FU_BACKEND_CLASS(klass);
+	FuBackendClass *backend_class = FU_BACKEND_CLASS(klass);
 	object_class->finalize = fu_udev_backend_finalize;
-	klass_backend->coldplug = fu_udev_backend_coldplug;
+	backend_class->coldplug = fu_udev_backend_coldplug;
 }
 
 FuBackend *

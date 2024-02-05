@@ -119,6 +119,6 @@ fu_analogix_firmware_init(FuAnalogixFirmware *self)
 static void
 fu_analogix_firmware_class_init(FuAnalogixFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_analogix_firmware_parse;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_analogix_firmware_parse;
 }

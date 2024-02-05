@@ -854,12 +854,12 @@ fu_cab_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 static void
 fu_cab_firmware_class_init(FuCabFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_cab_firmware_validate;
-	klass_firmware->parse = fu_cab_firmware_parse;
-	klass_firmware->write = fu_cab_firmware_write;
-	klass_firmware->build = fu_cab_firmware_build;
-	klass_firmware->export = fu_cab_firmware_export;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_cab_firmware_validate;
+	firmware_class->parse = fu_cab_firmware_parse;
+	firmware_class->write = fu_cab_firmware_write;
+	firmware_class->build = fu_cab_firmware_build;
+	firmware_class->export = fu_cab_firmware_export;
 }
 
 static void

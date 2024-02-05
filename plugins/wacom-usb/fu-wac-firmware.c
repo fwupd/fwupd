@@ -374,10 +374,10 @@ fu_wac_firmware_init(FuWacFirmware *self)
 static void
 fu_wac_firmware_class_init(FuWacFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_wac_firmware_validate;
-	klass_firmware->parse = fu_wac_firmware_parse;
-	klass_firmware->write = fu_wac_firmware_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_wac_firmware_validate;
+	firmware_class->parse = fu_wac_firmware_parse;
+	firmware_class->write = fu_wac_firmware_write;
 }
 
 FuFirmware *

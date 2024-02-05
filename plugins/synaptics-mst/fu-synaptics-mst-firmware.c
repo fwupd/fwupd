@@ -184,11 +184,11 @@ fu_synaptics_mst_firmware_init(FuSynapticsMstFirmware *self)
 static void
 fu_synaptics_mst_firmware_class_init(FuSynapticsMstFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_synaptics_mst_firmware_parse;
-	klass_firmware->export = fu_synaptics_mst_firmware_export;
-	klass_firmware->write = fu_synaptics_mst_firmware_write;
-	klass_firmware->build = fu_synaptics_rmi_firmware_build;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_synaptics_mst_firmware_parse;
+	firmware_class->export = fu_synaptics_mst_firmware_export;
+	firmware_class->write = fu_synaptics_mst_firmware_write;
+	firmware_class->build = fu_synaptics_rmi_firmware_build;
 }
 
 FuFirmware *

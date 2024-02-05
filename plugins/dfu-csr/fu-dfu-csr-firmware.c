@@ -68,10 +68,10 @@ fu_dfu_csr_firmware_init(FuDfuCsrFirmware *self)
 static void
 fu_dfu_csr_firmware_class_init(FuDfuCsrFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_dfu_csr_firmware_validate;
-	klass_firmware->parse = fu_dfu_csr_firmware_parse;
-	klass_firmware->export = fu_dfu_csr_firmware_export;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_dfu_csr_firmware_validate;
+	firmware_class->parse = fu_dfu_csr_firmware_parse;
+	firmware_class->export = fu_dfu_csr_firmware_export;
 }
 
 FuFirmware *

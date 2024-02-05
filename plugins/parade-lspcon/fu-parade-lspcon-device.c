@@ -840,18 +840,18 @@ fu_parade_lspcon_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_parade_lspcon_device_class_init(FuParadeLspconDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	GObjectClass *klass_object = G_OBJECT_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	klass_object->finalize = fu_parade_lspcon_device_finalize;
-	klass_device->set_quirk_kv = fu_parade_lspcon_device_set_quirk_kv;
-	klass_device->probe = fu_parade_lspcon_device_probe;
-	klass_device->setup = fu_parade_lspcon_device_reload;
-	klass_device->open = fu_parade_lspcon_device_open;
-	klass_device->reload = fu_parade_lspcon_device_reload;
-	klass_device->detach = fu_parade_lspcon_device_detach;
-	klass_device->write_firmware = fu_parade_lspcon_device_write_firmware;
-	klass_device->attach = fu_parade_lspcon_device_attach;
-	klass_device->dump_firmware = fu_parade_lspcon_device_dump_firmware;
-	klass_device->set_progress = fu_parade_lspcon_device_set_progress;
+	object_class->finalize = fu_parade_lspcon_device_finalize;
+	device_class->set_quirk_kv = fu_parade_lspcon_device_set_quirk_kv;
+	device_class->probe = fu_parade_lspcon_device_probe;
+	device_class->setup = fu_parade_lspcon_device_reload;
+	device_class->open = fu_parade_lspcon_device_open;
+	device_class->reload = fu_parade_lspcon_device_reload;
+	device_class->detach = fu_parade_lspcon_device_detach;
+	device_class->write_firmware = fu_parade_lspcon_device_write_firmware;
+	device_class->attach = fu_parade_lspcon_device_attach;
+	device_class->dump_firmware = fu_parade_lspcon_device_dump_firmware;
+	device_class->set_progress = fu_parade_lspcon_device_set_progress;
 }

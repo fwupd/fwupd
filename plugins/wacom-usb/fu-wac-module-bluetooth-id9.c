@@ -286,9 +286,9 @@ fu_wac_module_bluetooth_id9_init(FuWacModuleBluetoothId9 *self)
 static void
 fu_wac_module_bluetooth_id9_class_init(FuWacModuleBluetoothId9Class *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->write_firmware = fu_wac_module_bluetooth_id9_write_firmware;
-	klass_device->prepare_firmware = fu_wac_module_bluetooth_id9_prepare_firmware;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->write_firmware = fu_wac_module_bluetooth_id9_write_firmware;
+	device_class->prepare_firmware = fu_wac_module_bluetooth_id9_prepare_firmware;
 }
 
 FuWacModule *

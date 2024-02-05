@@ -148,7 +148,7 @@ fu_thunderbolt_retimer_init(FuThunderboltRetimer *self)
 static void
 fu_thunderbolt_retimer_class_init(FuThunderboltRetimerClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_thunderbolt_retimer_setup;
-	klass_device->probe = fu_thunderbolt_retimer_probe;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->setup = fu_thunderbolt_retimer_setup;
+	device_class->probe = fu_thunderbolt_retimer_probe;
 }

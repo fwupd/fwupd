@@ -266,8 +266,8 @@ fu_usb_device_ds20_init(FuUsbDeviceDs20 *self)
 static void
 fu_usb_device_ds20_class_init(FuUsbDeviceDs20Class *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_usb_device_ds20_validate;
-	klass_firmware->parse = fu_usb_device_ds20_parse;
-	klass_firmware->write = fu_usb_device_ds20_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_usb_device_ds20_validate;
+	firmware_class->parse = fu_usb_device_ds20_parse;
+	firmware_class->write = fu_usb_device_ds20_write;
 }

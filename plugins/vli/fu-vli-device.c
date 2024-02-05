@@ -736,7 +736,7 @@ fu_vli_device_finalize(GObject *obj)
 static void
 fu_vli_device_class_init(FuVliDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	GParamSpec *pspec;
 
@@ -760,8 +760,8 @@ fu_vli_device_class_init(FuVliDeviceClass *klass)
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_KIND, pspec);
 
-	klass_device->to_string = fu_vli_device_to_string;
-	klass_device->set_quirk_kv = fu_vli_device_set_quirk_kv;
-	klass_device->setup = fu_vli_device_setup;
-	klass_device->report_metadata_pre = fu_vli_device_report_metadata_pre;
+	device_class->to_string = fu_vli_device_to_string;
+	device_class->set_quirk_kv = fu_vli_device_set_quirk_kv;
+	device_class->setup = fu_vli_device_setup;
+	device_class->report_metadata_pre = fu_vli_device_report_metadata_pre;
 }

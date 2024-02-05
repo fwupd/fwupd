@@ -383,8 +383,8 @@ fu_wac_module_touch_id7_init(FuWacModuleTouchId7 *self)
 static void
 fu_wac_module_touch_id7_class_init(FuWacModuleTouchId7Class *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->write_firmware = fu_wac_module_touch_id7_write_firmware;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->write_firmware = fu_wac_module_touch_id7_write_firmware;
 }
 
 FuWacModule *

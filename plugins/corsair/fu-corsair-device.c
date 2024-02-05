@@ -517,19 +517,19 @@ fu_corsair_device_finalize(GObject *object)
 static void
 fu_corsair_device_class_init(FuCorsairDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	klass_device->poll = fu_corsair_device_poll;
-	klass_device->probe = fu_corsair_device_probe;
-	klass_device->set_quirk_kv = fu_corsair_set_quirk_kv;
-	klass_device->setup = fu_corsair_device_setup;
-	klass_device->reload = fu_corsair_device_reload;
-	klass_device->attach = fu_corsair_device_attach;
-	klass_device->detach = fu_corsair_device_detach;
-	klass_device->write_firmware = fu_corsair_device_write_firmware;
-	klass_device->to_string = fu_corsair_device_to_string;
-	klass_device->set_progress = fu_corsair_device_set_progress;
+	device_class->poll = fu_corsair_device_poll;
+	device_class->probe = fu_corsair_device_probe;
+	device_class->set_quirk_kv = fu_corsair_set_quirk_kv;
+	device_class->setup = fu_corsair_device_setup;
+	device_class->reload = fu_corsair_device_reload;
+	device_class->attach = fu_corsair_device_attach;
+	device_class->detach = fu_corsair_device_detach;
+	device_class->write_firmware = fu_corsair_device_write_firmware;
+	device_class->to_string = fu_corsair_device_to_string;
+	device_class->set_progress = fu_corsair_device_set_progress;
 
 	object_class->finalize = fu_corsair_device_finalize;
 }

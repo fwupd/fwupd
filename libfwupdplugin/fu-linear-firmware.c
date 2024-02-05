@@ -183,16 +183,16 @@ fu_linear_firmware_init(FuLinearFirmware *self)
 static void
 fu_linear_firmware_class_init(FuLinearFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	GParamSpec *pspec;
 
 	object_class->get_property = fu_linear_firmware_get_property;
 	object_class->set_property = fu_linear_firmware_set_property;
-	klass_firmware->parse = fu_linear_firmware_parse;
-	klass_firmware->write = fu_linear_firmware_write;
-	klass_firmware->export = fu_linear_firmware_export;
-	klass_firmware->build = fu_linear_firmware_build;
+	firmware_class->parse = fu_linear_firmware_parse;
+	firmware_class->write = fu_linear_firmware_write;
+	firmware_class->export = fu_linear_firmware_export;
+	firmware_class->build = fu_linear_firmware_build;
 
 	/**
 	 * FuLinearFirmware:image-gtype:

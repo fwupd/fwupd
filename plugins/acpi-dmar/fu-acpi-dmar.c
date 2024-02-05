@@ -64,8 +64,8 @@ fu_acpi_dmar_get_opt_in(FuAcpiDmar *self)
 static void
 fu_acpi_dmar_class_init(FuAcpiDmarClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_acpi_dmar_parse;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_acpi_dmar_parse;
 }
 
 static void

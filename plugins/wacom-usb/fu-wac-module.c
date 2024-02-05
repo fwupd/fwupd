@@ -298,7 +298,7 @@ fu_wac_module_class_init(FuWacModuleClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	GParamSpec *pspec;
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
 	/* properties */
 	object_class->get_property = fu_wac_module_get_property;
@@ -319,7 +319,7 @@ fu_wac_module_class_init(FuWacModuleClass *klass)
 	g_object_class_install_property(object_class, PROP_FW_TYPE, pspec);
 
 	object_class->constructed = fu_wac_module_constructed;
-	klass_device->to_string = fu_wac_module_to_string;
-	klass_device->cleanup = fu_wac_module_cleanup;
-	klass_device->set_progress = fu_wac_module_set_progress;
+	device_class->to_string = fu_wac_module_to_string;
+	device_class->cleanup = fu_wac_module_cleanup;
+	device_class->set_progress = fu_wac_module_set_progress;
 }

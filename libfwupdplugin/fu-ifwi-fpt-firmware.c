@@ -179,10 +179,10 @@ fu_ifwi_fpt_firmware_init(FuIfwiFptFirmware *self)
 static void
 fu_ifwi_fpt_firmware_class_init(FuIfwiFptFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_ifwi_fpt_firmware_validate;
-	klass_firmware->parse = fu_ifwi_fpt_firmware_parse;
-	klass_firmware->write = fu_ifwi_fpt_firmware_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_ifwi_fpt_firmware_validate;
+	firmware_class->parse = fu_ifwi_fpt_firmware_parse;
+	firmware_class->write = fu_ifwi_fpt_firmware_write;
 }
 
 /**

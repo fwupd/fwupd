@@ -433,19 +433,19 @@ fu_dpaux_device_finalize(GObject *object)
 static void
 fu_dpaux_device_class_init(FuDpauxDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	GParamSpec *pspec;
 
 	object_class->finalize = fu_dpaux_device_finalize;
 	object_class->get_property = fu_dpaux_device_get_property;
 	object_class->set_property = fu_dpaux_device_set_property;
-	klass_device->probe = fu_dpaux_device_probe;
-	klass_device->setup = fu_dpaux_device_setup;
-	klass_device->invalidate = fu_dpaux_device_invalidate;
-	klass_device->to_string = fu_dpaux_device_to_string;
-	klass_device->incorporate = fu_dpaux_device_incorporate;
-	klass_device->convert_version = fu_dpaux_device_convert_version;
+	device_class->probe = fu_dpaux_device_probe;
+	device_class->setup = fu_dpaux_device_setup;
+	device_class->invalidate = fu_dpaux_device_invalidate;
+	device_class->to_string = fu_dpaux_device_to_string;
+	device_class->incorporate = fu_dpaux_device_incorporate;
+	device_class->convert_version = fu_dpaux_device_convert_version;
 
 	/**
 	 * FuDpauxDevice:dpcd-ieee-oui:

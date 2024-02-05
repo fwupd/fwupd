@@ -729,10 +729,10 @@ fu_ipmi_device_init(FuIpmiDevice *self)
 static void
 fu_ipmi_device_class_init(FuIpmiDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->probe = fu_ipmi_device_probe;
-	klass_device->setup = fu_ipmi_device_setup;
-	klass_device->to_string = fu_ipmi_device_to_string;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->probe = fu_ipmi_device_probe;
+	device_class->setup = fu_ipmi_device_setup;
+	device_class->to_string = fu_ipmi_device_to_string;
 }
 
 FuIpmiDevice *

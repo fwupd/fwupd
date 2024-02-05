@@ -267,12 +267,12 @@ static void
 fu_efi_load_option_class_init(FuEfiLoadOptionClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_efi_load_option_finalize;
-	klass_firmware->parse = fu_efi_load_option_parse;
-	klass_firmware->write = fu_efi_load_option_write;
-	klass_firmware->build = fu_efi_load_option_build;
-	klass_firmware->export = fu_efi_load_option_export;
+	firmware_class->parse = fu_efi_load_option_parse;
+	firmware_class->write = fu_efi_load_option_write;
+	firmware_class->build = fu_efi_load_option_build;
+	firmware_class->export = fu_efi_load_option_export;
 }
 
 static void

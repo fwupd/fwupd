@@ -293,9 +293,9 @@ fu_wacom_aes_device_init(FuWacomAesDevice *self)
 static void
 fu_wacom_aes_device_class_init(FuWacomAesDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	FuWacomDeviceClass *klass_wac_device = FU_WACOM_DEVICE_CLASS(klass);
-	klass_device->setup = fu_wacom_aes_device_setup;
-	klass_device->attach = fu_wacom_aes_device_attach;
-	klass_wac_device->write_firmware = fu_wacom_aes_device_write_firmware;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	FuWacomDeviceClass *wac_device_class = FU_WACOM_DEVICE_CLASS(klass);
+	device_class->setup = fu_wacom_aes_device_setup;
+	device_class->attach = fu_wacom_aes_device_attach;
+	wac_device_class->write_firmware = fu_wacom_aes_device_write_firmware;
 }

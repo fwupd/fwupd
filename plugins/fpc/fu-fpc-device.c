@@ -568,13 +568,13 @@ fu_fpc_device_init(FuFpcDevice *self)
 static void
 fu_fpc_device_class_init(FuFpcDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_fpc_device_to_string;
-	klass_device->write_firmware = fu_fpc_device_write_firmware;
-	klass_device->setup = fu_fpc_device_setup;
-	klass_device->reload = fu_fpc_device_setup;
-	klass_device->attach = fu_fpc_device_attach;
-	klass_device->detach = fu_fpc_device_detach;
-	klass_device->set_progress = fu_fpc_device_set_progress;
-	klass_device->convert_version = fu_fpc_device_convert_version;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_fpc_device_to_string;
+	device_class->write_firmware = fu_fpc_device_write_firmware;
+	device_class->setup = fu_fpc_device_setup;
+	device_class->reload = fu_fpc_device_setup;
+	device_class->attach = fu_fpc_device_attach;
+	device_class->detach = fu_fpc_device_detach;
+	device_class->set_progress = fu_fpc_device_set_progress;
+	device_class->convert_version = fu_fpc_device_convert_version;
 }

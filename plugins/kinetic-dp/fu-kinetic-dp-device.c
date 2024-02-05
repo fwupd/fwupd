@@ -230,9 +230,9 @@ fu_kinetic_dp_device_setup(FuDevice *device, GError **error)
 static void
 fu_kinetic_dp_device_class_init(FuKineticDpDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_kinetic_dp_device_setup;
-	klass_device->to_string = fu_kinetic_dp_device_to_string;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->setup = fu_kinetic_dp_device_setup;
+	device_class->to_string = fu_kinetic_dp_device_to_string;
 }
 
 static void

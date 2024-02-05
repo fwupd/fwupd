@@ -89,8 +89,8 @@ fu_usb_device_ms_ds20_parse(FuUsbDeviceDs20 *self,
 static void
 fu_usb_device_ms_ds20_class_init(FuUsbDeviceMsDs20Class *klass)
 {
-	FuUsbDeviceDs20Class *usb_device_ds20_klass = FU_USB_DEVICE_DS20_CLASS(klass);
-	usb_device_ds20_klass->parse = fu_usb_device_ms_ds20_parse;
+	FuUsbDeviceDs20Class *usb_device_ds20_class = FU_USB_DEVICE_DS20_CLASS(klass);
+	usb_device_ds20_class->parse = fu_usb_device_ms_ds20_parse;
 }
 
 static void

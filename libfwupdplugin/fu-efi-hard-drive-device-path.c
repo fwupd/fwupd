@@ -165,11 +165,11 @@ fu_efi_hard_drive_device_path_init(FuEfiHardDriveDevicePath *self)
 static void
 fu_efi_hard_drive_device_path_class_init(FuEfiHardDriveDevicePathClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->export = fu_efi_hard_drive_device_path_export;
-	klass_firmware->parse = fu_efi_hard_drive_device_path_parse;
-	klass_firmware->write = fu_efi_hard_drive_device_path_write;
-	klass_firmware->build = fu_efi_hard_drive_device_path_build;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->export = fu_efi_hard_drive_device_path_export;
+	firmware_class->parse = fu_efi_hard_drive_device_path_parse;
+	firmware_class->write = fu_efi_hard_drive_device_path_write;
+	firmware_class->build = fu_efi_hard_drive_device_path_build;
 }
 
 /**

@@ -69,9 +69,9 @@ fu_fresco_pd_firmware_init(FuFrescoPdFirmware *self)
 static void
 fu_fresco_pd_firmware_class_init(FuFrescoPdFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_fresco_pd_firmware_parse;
-	klass_firmware->export = fu_fresco_pd_firmware_export;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_fresco_pd_firmware_parse;
+	firmware_class->export = fu_fresco_pd_firmware_export;
 }
 
 FuFirmware *

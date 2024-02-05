@@ -270,8 +270,8 @@ fu_system76_launch_device_init(FuSystem76LaunchDevice *self)
 static void
 fu_system76_launch_device_class_init(FuSystem76LaunchDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_system76_launch_device_setup;
-	klass_device->detach = fu_system76_launch_device_detach;
-	klass_device->set_progress = fu_system76_launch_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->setup = fu_system76_launch_device_setup;
+	device_class->detach = fu_system76_launch_device_detach;
+	device_class->set_progress = fu_system76_launch_device_set_progress;
 }

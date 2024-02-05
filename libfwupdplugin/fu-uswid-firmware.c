@@ -298,12 +298,12 @@ fu_uswid_firmware_init(FuUswidFirmware *self)
 static void
 fu_uswid_firmware_class_init(FuUswidFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_uswid_firmware_validate;
-	klass_firmware->parse = fu_uswid_firmware_parse;
-	klass_firmware->write = fu_uswid_firmware_write;
-	klass_firmware->build = fu_uswid_firmware_build;
-	klass_firmware->export = fu_uswid_firmware_export;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_uswid_firmware_validate;
+	firmware_class->parse = fu_uswid_firmware_parse;
+	firmware_class->write = fu_uswid_firmware_write;
+	firmware_class->build = fu_uswid_firmware_build;
+	firmware_class->export = fu_uswid_firmware_export;
 }
 
 /**

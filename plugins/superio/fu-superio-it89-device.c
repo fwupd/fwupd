@@ -738,11 +738,11 @@ fu_superio_it89_device_init(FuSuperioIt89Device *self)
 static void
 fu_superio_it89_device_class_init(FuSuperioIt89DeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->attach = fu_superio_it89_device_attach;
-	klass_device->detach = fu_superio_it89_device_detach;
-	klass_device->read_firmware = fu_superio_it89_device_read_firmware;
-	klass_device->dump_firmware = fu_superio_it89_device_dump_firmware;
-	klass_device->write_firmware = fu_superio_it89_device_write_firmware;
-	klass_device->setup = fu_superio_it89_device_setup;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->attach = fu_superio_it89_device_attach;
+	device_class->detach = fu_superio_it89_device_detach;
+	device_class->read_firmware = fu_superio_it89_device_read_firmware;
+	device_class->dump_firmware = fu_superio_it89_device_dump_firmware;
+	device_class->write_firmware = fu_superio_it89_device_write_firmware;
+	device_class->setup = fu_superio_it89_device_setup;
 }

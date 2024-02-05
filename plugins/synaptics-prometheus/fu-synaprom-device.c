@@ -526,14 +526,14 @@ fu_synaprom_device_init(FuSynapromDevice *self)
 static void
 fu_synaprom_device_class_init(FuSynapromDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->write_firmware = fu_synaprom_device_write_firmware;
-	klass_device->prepare_firmware = fu_synaprom_device_prepare_firmware;
-	klass_device->setup = fu_synaprom_device_setup;
-	klass_device->reload = fu_synaprom_device_setup;
-	klass_device->attach = fu_synaprom_device_attach;
-	klass_device->detach = fu_synaprom_device_detach;
-	klass_device->set_progress = fu_synaprom_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->write_firmware = fu_synaprom_device_write_firmware;
+	device_class->prepare_firmware = fu_synaprom_device_prepare_firmware;
+	device_class->setup = fu_synaprom_device_setup;
+	device_class->reload = fu_synaprom_device_setup;
+	device_class->attach = fu_synaprom_device_attach;
+	device_class->detach = fu_synaprom_device_detach;
+	device_class->set_progress = fu_synaprom_device_set_progress;
 }
 
 FuSynapromDevice *

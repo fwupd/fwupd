@@ -342,18 +342,18 @@ static void
 fu_{{vendor}}_{{example}}_device_class_init(Fu{{Vendor}}{{Example}}DeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_{{vendor}}_{{example}}_device_finalize;
-	klass_device->to_string = fu_{{vendor}}_{{example}}_device_to_string;
-	klass_device->probe = fu_{{vendor}}_{{example}}_device_probe;
-	klass_device->setup = fu_{{vendor}}_{{example}}_device_setup;
-	klass_device->reload = fu_{{vendor}}_{{example}}_device_reload;
-	klass_device->prepare = fu_{{vendor}}_{{example}}_device_prepare;
-	klass_device->cleanup = fu_{{vendor}}_{{example}}_device_cleanup;
-	klass_device->attach = fu_{{vendor}}_{{example}}_device_attach;
-	klass_device->detach = fu_{{vendor}}_{{example}}_device_detach;
-	klass_device->prepare_firmware = fu_{{vendor}}_{{example}}_device_prepare_firmware;
-	klass_device->write_firmware = fu_{{vendor}}_{{example}}_device_write_firmware;
-	klass_device->set_quirk_kv = fu_{{vendor}}_{{example}}_device_set_quirk_kv;
-	klass_device->set_progress = fu_{{vendor}}_{{example}}_device_set_progress;
+	device_class->to_string = fu_{{vendor}}_{{example}}_device_to_string;
+	device_class->probe = fu_{{vendor}}_{{example}}_device_probe;
+	device_class->setup = fu_{{vendor}}_{{example}}_device_setup;
+	device_class->reload = fu_{{vendor}}_{{example}}_device_reload;
+	device_class->prepare = fu_{{vendor}}_{{example}}_device_prepare;
+	device_class->cleanup = fu_{{vendor}}_{{example}}_device_cleanup;
+	device_class->attach = fu_{{vendor}}_{{example}}_device_attach;
+	device_class->detach = fu_{{vendor}}_{{example}}_device_detach;
+	device_class->prepare_firmware = fu_{{vendor}}_{{example}}_device_prepare_firmware;
+	device_class->write_firmware = fu_{{vendor}}_{{example}}_device_write_firmware;
+	device_class->set_quirk_kv = fu_{{vendor}}_{{example}}_device_set_quirk_kv;
+	device_class->set_progress = fu_{{vendor}}_{{example}}_device_set_progress;
 }

@@ -283,10 +283,10 @@ fu_wacom_emr_device_init(FuWacomEmrDevice *self)
 static void
 fu_wacom_emr_device_class_init(FuWacomEmrDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	FuWacomDeviceClass *klass_wac_device = FU_WACOM_DEVICE_CLASS(klass);
-	klass_device->setup = fu_wacom_emr_device_setup;
-	klass_device->attach = fu_wacom_emr_device_attach;
-	klass_device->convert_version = fu_wacom_emr_device_convert_version;
-	klass_wac_device->write_firmware = fu_wacom_emr_device_write_firmware;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	FuWacomDeviceClass *wac_device_class = FU_WACOM_DEVICE_CLASS(klass);
+	device_class->setup = fu_wacom_emr_device_setup;
+	device_class->attach = fu_wacom_emr_device_attach;
+	device_class->convert_version = fu_wacom_emr_device_convert_version;
+	wac_device_class->write_firmware = fu_wacom_emr_device_write_firmware;
 }

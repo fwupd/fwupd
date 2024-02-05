@@ -205,12 +205,12 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 static void
 fu_uefi_dbx_device_class_init(FuUefiDbxDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->probe = fu_uefi_dbx_device_probe;
-	klass_device->write_firmware = fu_uefi_dbx_device_write_firmware;
-	klass_device->prepare_firmware = fu_uefi_dbx_prepare_firmware;
-	klass_device->set_progress = fu_uefi_dbx_device_set_progress;
-	klass_device->report_metadata_pre = fu_uefi_dbx_device_report_metadata_pre;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->probe = fu_uefi_dbx_device_probe;
+	device_class->write_firmware = fu_uefi_dbx_device_write_firmware;
+	device_class->prepare_firmware = fu_uefi_dbx_prepare_firmware;
+	device_class->set_progress = fu_uefi_dbx_device_set_progress;
+	device_class->report_metadata_pre = fu_uefi_dbx_device_report_metadata_pre;
 }
 
 FuUefiDbxDevice *

@@ -91,6 +91,6 @@ fu_hailuck_kbd_firmware_init(FuHailuckKbdFirmware *self)
 static void
 fu_hailuck_kbd_firmware_class_init(FuHailuckKbdFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_hailuck_kbd_firmware_parse;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_hailuck_kbd_firmware_parse;
 }

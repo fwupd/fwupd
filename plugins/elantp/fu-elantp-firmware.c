@@ -271,12 +271,12 @@ fu_elantp_firmware_init(FuElantpFirmware *self)
 static void
 fu_elantp_firmware_class_init(FuElantpFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_elantp_firmware_validate;
-	klass_firmware->parse = fu_elantp_firmware_parse;
-	klass_firmware->build = fu_elantp_firmware_build;
-	klass_firmware->write = fu_elantp_firmware_write;
-	klass_firmware->export = fu_elantp_firmware_export;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_elantp_firmware_validate;
+	firmware_class->parse = fu_elantp_firmware_parse;
+	firmware_class->build = fu_elantp_firmware_build;
+	firmware_class->write = fu_elantp_firmware_write;
+	firmware_class->export = fu_elantp_firmware_export;
 }
 
 FuFirmware *

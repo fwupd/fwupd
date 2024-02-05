@@ -112,9 +112,9 @@ fu_intel_thunderbolt_firmware_init(FuIntelThunderboltFirmware *self)
 static void
 fu_intel_thunderbolt_firmware_class_init(FuIntelThunderboltFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_intel_thunderbolt_firmware_parse;
-	klass_firmware->write = fu_intel_thunderbolt_firmware_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_intel_thunderbolt_firmware_parse;
+	firmware_class->write = fu_intel_thunderbolt_firmware_write;
 }
 
 /**

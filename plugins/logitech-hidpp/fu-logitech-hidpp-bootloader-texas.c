@@ -257,9 +257,9 @@ fu_logitech_hidpp_bootloader_texas_setup(FuDevice *device, GError **error)
 static void
 fu_logitech_hidpp_bootloader_texas_class_init(FuLogitechHidppBootloaderTexasClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->write_firmware = fu_logitech_hidpp_bootloader_texas_write_firmware;
-	klass_device->setup = fu_logitech_hidpp_bootloader_texas_setup;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->write_firmware = fu_logitech_hidpp_bootloader_texas_write_firmware;
+	device_class->setup = fu_logitech_hidpp_bootloader_texas_setup;
 }
 
 static void

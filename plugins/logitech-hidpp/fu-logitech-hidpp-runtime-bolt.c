@@ -477,12 +477,12 @@ fu_logitech_hidpp_runtime_bolt_setup(FuDevice *device, GError **error)
 static void
 fu_logitech_hidpp_runtime_bolt_class_init(FuLogitechHidppRuntimeBoltClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
-	klass_device->detach = fu_logitech_hidpp_runtime_bolt_detach;
-	klass_device->setup = fu_logitech_hidpp_runtime_bolt_setup;
-	klass_device->poll = fu_logitech_hidpp_runtime_bolt_poll;
-	klass_device->to_string = fu_logitech_hidpp_runtime_bolt_to_string;
+	device_class->detach = fu_logitech_hidpp_runtime_bolt_detach;
+	device_class->setup = fu_logitech_hidpp_runtime_bolt_setup;
+	device_class->poll = fu_logitech_hidpp_runtime_bolt_poll;
+	device_class->to_string = fu_logitech_hidpp_runtime_bolt_to_string;
 }
 
 static void

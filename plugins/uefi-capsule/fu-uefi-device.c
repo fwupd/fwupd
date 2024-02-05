@@ -750,20 +750,20 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	GParamSpec *pspec;
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
 	object_class->set_property = fu_uefi_device_set_property;
 	object_class->finalize = fu_uefi_device_finalize;
-	klass_device->to_string = fu_uefi_device_to_string;
-	klass_device->probe = fu_uefi_device_probe;
-	klass_device->prepare_firmware = fu_uefi_device_prepare_firmware;
-	klass_device->prepare = fu_uefi_device_prepare;
-	klass_device->cleanup = fu_uefi_device_cleanup;
-	klass_device->report_metadata_pre = fu_uefi_device_report_metadata_pre;
-	klass_device->report_metadata_post = fu_uefi_device_report_metadata_post;
-	klass_device->get_results = fu_uefi_device_get_results;
-	klass_device->set_progress = fu_uefi_device_set_progress;
-	klass_device->convert_version = fu_uefi_device_convert_version;
+	device_class->to_string = fu_uefi_device_to_string;
+	device_class->probe = fu_uefi_device_probe;
+	device_class->prepare_firmware = fu_uefi_device_prepare_firmware;
+	device_class->prepare = fu_uefi_device_prepare;
+	device_class->cleanup = fu_uefi_device_cleanup;
+	device_class->report_metadata_pre = fu_uefi_device_report_metadata_pre;
+	device_class->report_metadata_post = fu_uefi_device_report_metadata_post;
+	device_class->get_results = fu_uefi_device_get_results;
+	device_class->set_progress = fu_uefi_device_set_progress;
+	device_class->convert_version = fu_uefi_device_convert_version;
 
 	/**
 	 * FuUefiDevice:fw-class:

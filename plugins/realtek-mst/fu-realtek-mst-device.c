@@ -957,20 +957,20 @@ fu_realtek_mst_device_finalize(GObject *object)
 static void
 fu_realtek_mst_device_class_init(FuRealtekMstDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	GObjectClass *klass_object = G_OBJECT_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	klass_object->finalize = fu_realtek_mst_device_finalize;
-	klass_device->probe = fu_realtek_mst_device_probe;
-	klass_device->set_quirk_kv = fu_realtek_mst_device_set_quirk_kv;
-	klass_device->setup = fu_realtek_mst_device_probe_version;
-	klass_device->detach = fu_realtek_mst_device_detach;
-	klass_device->attach = fu_realtek_mst_device_attach;
-	klass_device->write_firmware = fu_realtek_mst_device_write_firmware;
-	klass_device->reload = fu_realtek_mst_device_probe_version;
+	object_class->finalize = fu_realtek_mst_device_finalize;
+	device_class->probe = fu_realtek_mst_device_probe;
+	device_class->set_quirk_kv = fu_realtek_mst_device_set_quirk_kv;
+	device_class->setup = fu_realtek_mst_device_probe_version;
+	device_class->detach = fu_realtek_mst_device_detach;
+	device_class->attach = fu_realtek_mst_device_attach;
+	device_class->write_firmware = fu_realtek_mst_device_write_firmware;
+	device_class->reload = fu_realtek_mst_device_probe_version;
 	/* read active image */
-	klass_device->read_firmware = fu_realtek_mst_device_read_firmware;
+	device_class->read_firmware = fu_realtek_mst_device_read_firmware;
 	/* dump whole flash */
-	klass_device->dump_firmware = fu_realtek_mst_device_dump_firmware;
-	klass_device->set_progress = fu_realtek_mst_device_set_progress;
+	device_class->dump_firmware = fu_realtek_mst_device_dump_firmware;
+	device_class->set_progress = fu_realtek_mst_device_set_progress;
 }

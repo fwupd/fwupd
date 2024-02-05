@@ -191,13 +191,13 @@ fu_ti_tps6598x_pd_device_init(FuTiTps6598xPdDevice *self)
 static void
 fu_ti_tps6598x_pd_device_class_init(FuTiTps6598xPdDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->write_firmware = fu_ti_tps6598x_pd_device_write_firmware;
-	klass_device->attach = fu_ti_tps6598x_pd_device_attach;
-	klass_device->setup = fu_ti_tps6598x_pd_device_setup;
-	klass_device->probe = fu_ti_tps6598x_pd_device_probe;
-	klass_device->report_metadata_pre = fu_ti_tps6598x_pd_device_report_metadata_pre;
-	klass_device->set_progress = fu_ti_tps6598x_pd_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->write_firmware = fu_ti_tps6598x_pd_device_write_firmware;
+	device_class->attach = fu_ti_tps6598x_pd_device_attach;
+	device_class->setup = fu_ti_tps6598x_pd_device_setup;
+	device_class->probe = fu_ti_tps6598x_pd_device_probe;
+	device_class->report_metadata_pre = fu_ti_tps6598x_pd_device_report_metadata_pre;
+	device_class->set_progress = fu_ti_tps6598x_pd_device_set_progress;
 }
 
 FuDevice *

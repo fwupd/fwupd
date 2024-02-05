@@ -160,9 +160,9 @@ static void
 fu_jabra_device_class_init(FuJabraDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_jabra_device_finalize;
-	klass_device->to_string = fu_jabra_device_to_string;
-	klass_device->prepare = fu_jabra_device_prepare;
-	klass_device->set_quirk_kv = fu_jabra_device_set_quirk_kv;
+	device_class->to_string = fu_jabra_device_to_string;
+	device_class->prepare = fu_jabra_device_prepare;
+	device_class->set_quirk_kv = fu_jabra_device_set_quirk_kv;
 }

@@ -139,7 +139,7 @@ fu_cfu_module_write_firmware(FuDevice *device,
 			     GError **error)
 {
 	FuDevice *proxy;
-	FuDeviceClass *klass_proxy;
+	FuDeviceClass *device_class;
 
 	/* process by the parent */
 	proxy = fu_device_get_proxy(device);
@@ -150,8 +150,8 @@ fu_cfu_module_write_firmware(FuDevice *device,
 			    "no proxy device assigned");
 		return FALSE;
 	}
-	klass_proxy = FU_DEVICE_GET_CLASS(proxy);
-	return klass_proxy->write_firmware(proxy, firmware, progress, flags, error);
+	device_class = FU_DEVICE_GET_CLASS(proxy);
+	return device_class->write_firmware(proxy, firmware, progress, flags, error);
 }
 
 static void
@@ -186,12 +186,12 @@ fu_cfu_module_init(FuCfuModule *self)
 static void
 fu_cfu_module_class_init(FuCfuModuleClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_cfu_module_to_string;
-	klass_device->prepare_firmware = fu_cfu_module_prepare_firmware;
-	klass_device->write_firmware = fu_cfu_module_write_firmware;
-	klass_device->set_progress = fu_cfu_module_set_progress;
-	klass_device->convert_version = fu_cfu_module_convert_version;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_cfu_module_to_string;
+	device_class->prepare_firmware = fu_cfu_module_prepare_firmware;
+	device_class->write_firmware = fu_cfu_module_write_firmware;
+	device_class->set_progress = fu_cfu_module_set_progress;
+	device_class->convert_version = fu_cfu_module_convert_version;
 }
 
 FuCfuModule *

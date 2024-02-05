@@ -323,12 +323,12 @@ fu_ifwi_cpd_firmware_init(FuIfwiCpdFirmware *self)
 static void
 fu_ifwi_cpd_firmware_class_init(FuIfwiCpdFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_ifwi_cpd_firmware_validate;
-	klass_firmware->export = fu_ifwi_cpd_firmware_export;
-	klass_firmware->parse = fu_ifwi_cpd_firmware_parse;
-	klass_firmware->write = fu_ifwi_cpd_firmware_write;
-	klass_firmware->build = fu_ifwi_cpd_firmware_build;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_ifwi_cpd_firmware_validate;
+	firmware_class->export = fu_ifwi_cpd_firmware_export;
+	firmware_class->parse = fu_ifwi_cpd_firmware_parse;
+	firmware_class->write = fu_ifwi_cpd_firmware_write;
+	firmware_class->build = fu_ifwi_cpd_firmware_build;
 }
 
 /**

@@ -216,9 +216,9 @@ static void
 fu_gpio_device_class_init(FuGpioDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_gpio_device_finalize;
-	klass_device->to_string = fu_gpio_device_to_string;
-	klass_device->setup = fu_gpio_device_setup;
-	klass_device->probe = fu_gpio_device_probe;
+	device_class->to_string = fu_gpio_device_to_string;
+	device_class->setup = fu_gpio_device_setup;
+	device_class->probe = fu_gpio_device_probe;
 }

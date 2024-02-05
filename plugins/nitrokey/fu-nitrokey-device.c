@@ -158,6 +158,6 @@ fu_nitrokey_device_init(FuNitrokeyDevice *self)
 static void
 fu_nitrokey_device_class_init(FuNitrokeyDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_nitrokey_device_setup;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->setup = fu_nitrokey_device_setup;
 }

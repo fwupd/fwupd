@@ -678,13 +678,13 @@ fu_ebitdo_device_init(FuEbitdoDevice *self)
 static void
 fu_ebitdo_device_class_init(FuEbitdoDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->write_firmware = fu_ebitdo_device_write_firmware;
-	klass_device->setup = fu_ebitdo_device_setup;
-	klass_device->detach = fu_ebitdo_device_detach;
-	klass_device->attach = fu_ebitdo_device_attach;
-	klass_device->open = fu_ebitdo_device_open;
-	klass_device->probe = fu_ebitdo_device_probe;
-	klass_device->set_progress = fu_ebitdo_set_progress;
-	klass_device->convert_version = fu_ebitdo_device_convert_version;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->write_firmware = fu_ebitdo_device_write_firmware;
+	device_class->setup = fu_ebitdo_device_setup;
+	device_class->detach = fu_ebitdo_device_detach;
+	device_class->attach = fu_ebitdo_device_attach;
+	device_class->open = fu_ebitdo_device_open;
+	device_class->probe = fu_ebitdo_device_probe;
+	device_class->set_progress = fu_ebitdo_set_progress;
+	device_class->convert_version = fu_ebitdo_device_convert_version;
 }

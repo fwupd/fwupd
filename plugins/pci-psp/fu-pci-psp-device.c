@@ -385,7 +385,7 @@ fu_pci_psp_device_init(FuPciPspDevice *self)
 static void
 fu_pci_psp_device_class_init(FuPciPspDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->probe = fu_pci_psp_device_probe;
-	klass_device->add_security_attrs = fu_pci_psp_device_add_security_attrs;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->probe = fu_pci_psp_device_probe;
+	device_class->add_security_attrs = fu_pci_psp_device_add_security_attrs;
 }

@@ -76,7 +76,7 @@ fu_genesys_usbhub_dev_firmware_init(FuGenesysUsbhubDevFirmware *self)
 static void
 fu_genesys_usbhub_dev_firmware_class_init(FuGenesysUsbhubDevFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_genesys_usbhub_dev_firmware_validate;
-	klass_firmware->parse = fu_genesys_usbhub_dev_firmware_parse;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_genesys_usbhub_dev_firmware_validate;
+	firmware_class->parse = fu_genesys_usbhub_dev_firmware_parse;
 }

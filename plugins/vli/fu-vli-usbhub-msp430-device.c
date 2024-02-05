@@ -333,12 +333,12 @@ fu_vli_usbhub_msp430_device_init(FuVliUsbhubMsp430Device *self)
 static void
 fu_vli_usbhub_msp430_device_class_init(FuVliUsbhubMsp430DeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->probe = fu_vli_usbhub_msp430_device_probe;
-	klass_device->setup = fu_vli_usbhub_msp430_device_setup;
-	klass_device->detach = fu_vli_usbhub_msp430_device_detach;
-	klass_device->write_firmware = fu_vli_usbhub_msp430_device_write_firmware;
-	klass_device->set_progress = fu_vli_usbhub_msp430_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->probe = fu_vli_usbhub_msp430_device_probe;
+	device_class->setup = fu_vli_usbhub_msp430_device_setup;
+	device_class->detach = fu_vli_usbhub_msp430_device_detach;
+	device_class->write_firmware = fu_vli_usbhub_msp430_device_write_firmware;
+	device_class->set_progress = fu_vli_usbhub_msp430_device_set_progress;
 }
 
 FuDevice *

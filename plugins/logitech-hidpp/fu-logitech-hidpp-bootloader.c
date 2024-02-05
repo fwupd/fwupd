@@ -435,8 +435,8 @@ fu_logitech_hidpp_bootloader_init(FuLogitechHidppBootloader *self)
 static void
 fu_logitech_hidpp_bootloader_class_init(FuLogitechHidppBootloaderClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_logitech_hidpp_bootloader_to_string;
-	klass_device->attach = fu_logitech_hidpp_bootloader_attach;
-	klass_device->setup = fu_logitech_hidpp_bootloader_setup;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_logitech_hidpp_bootloader_to_string;
+	device_class->attach = fu_logitech_hidpp_bootloader_attach;
+	device_class->setup = fu_logitech_hidpp_bootloader_setup;
 }

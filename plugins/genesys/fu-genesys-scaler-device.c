@@ -1959,18 +1959,18 @@ static void
 fu_genesys_scaler_device_class_init(FuGenesysScalerDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_genesys_scaler_device_finalize;
-	klass_device->probe = fu_genesys_scaler_device_probe;
-	klass_device->setup = fu_genesys_scaler_device_setup;
-	klass_device->dump_firmware = fu_genesys_scaler_device_dump_firmware;
-	klass_device->prepare_firmware = fu_genesys_scaler_device_prepare_firmware;
-	klass_device->write_firmware = fu_genesys_scaler_device_write_firmware;
-	klass_device->set_progress = fu_genesys_scaler_device_set_progress;
-	klass_device->detach = fu_genesys_scaler_device_detach;
-	klass_device->attach = fu_genesys_scaler_device_attach;
-	klass_device->to_string = fu_genesys_scaler_device_to_string;
-	klass_device->set_quirk_kv = fu_genesys_scaler_device_set_quirk_kv;
+	device_class->probe = fu_genesys_scaler_device_probe;
+	device_class->setup = fu_genesys_scaler_device_setup;
+	device_class->dump_firmware = fu_genesys_scaler_device_dump_firmware;
+	device_class->prepare_firmware = fu_genesys_scaler_device_prepare_firmware;
+	device_class->write_firmware = fu_genesys_scaler_device_write_firmware;
+	device_class->set_progress = fu_genesys_scaler_device_set_progress;
+	device_class->detach = fu_genesys_scaler_device_detach;
+	device_class->attach = fu_genesys_scaler_device_attach;
+	device_class->to_string = fu_genesys_scaler_device_to_string;
+	device_class->set_quirk_kv = fu_genesys_scaler_device_set_quirk_kv;
 }
 
 FuGenesysScalerDevice *

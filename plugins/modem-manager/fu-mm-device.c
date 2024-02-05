@@ -1989,19 +1989,19 @@ static void
 fu_mm_device_class_init(FuMmDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_mm_device_finalize;
-	klass_device->setup = fu_mm_device_setup;
-	klass_device->reload = fu_mm_device_setup;
-	klass_device->to_string = fu_mm_device_to_string;
-	klass_device->set_quirk_kv = fu_mm_device_set_quirk_kv;
-	klass_device->probe = fu_mm_device_probe;
-	klass_device->detach = fu_mm_device_detach;
-	klass_device->write_firmware = fu_mm_device_write_firmware;
-	klass_device->attach = fu_mm_device_attach;
-	klass_device->cleanup = fu_mm_device_cleanup;
-	klass_device->set_progress = fu_mm_device_set_progress;
-	klass_device->incorporate = fu_mm_device_incorporate;
+	device_class->setup = fu_mm_device_setup;
+	device_class->reload = fu_mm_device_setup;
+	device_class->to_string = fu_mm_device_to_string;
+	device_class->set_quirk_kv = fu_mm_device_set_quirk_kv;
+	device_class->probe = fu_mm_device_probe;
+	device_class->detach = fu_mm_device_detach;
+	device_class->write_firmware = fu_mm_device_write_firmware;
+	device_class->attach = fu_mm_device_attach;
+	device_class->cleanup = fu_mm_device_cleanup;
+	device_class->set_progress = fu_mm_device_set_progress;
+	device_class->incorporate = fu_mm_device_incorporate;
 
 	/**
 	 * FuMmDevice::attach-finished:

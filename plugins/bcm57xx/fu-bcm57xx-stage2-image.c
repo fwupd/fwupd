@@ -76,9 +76,9 @@ fu_bcm57xx_stage2_image_init(FuBcm57xxStage2Image *self)
 static void
 fu_bcm57xx_stage2_image_class_init(FuBcm57xxStage2ImageClass *klass)
 {
-	FuFirmwareClass *klass_image = FU_FIRMWARE_CLASS(klass);
-	klass_image->parse = fu_bcm57xx_stage2_image_parse;
-	klass_image->write = fu_bcm57xx_stage2_image_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_bcm57xx_stage2_image_parse;
+	firmware_class->write = fu_bcm57xx_stage2_image_write;
 }
 
 FuFirmware *

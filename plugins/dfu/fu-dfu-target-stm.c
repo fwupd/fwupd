@@ -468,11 +468,11 @@ fu_dfu_target_stm_init(FuDfuTargetStm *self)
 static void
 fu_dfu_target_stm_class_init(FuDfuTargetStmClass *klass)
 {
-	FuDfuTargetClass *klass_target = FU_DFU_TARGET_CLASS(klass);
-	klass_target->attach = fu_dfu_target_stm_attach;
-	klass_target->mass_erase = fu_dfu_target_stm_mass_erase;
-	klass_target->upload_element = fu_dfu_target_stm_upload_element;
-	klass_target->download_element = fu_dfu_target_stm_download_element;
+	FuDfuTargetClass *target_class = FU_DFU_TARGET_CLASS(klass);
+	target_class->attach = fu_dfu_target_stm_attach;
+	target_class->mass_erase = fu_dfu_target_stm_mass_erase;
+	target_class->upload_element = fu_dfu_target_stm_upload_element;
+	target_class->download_element = fu_dfu_target_stm_download_element;
 }
 
 FuDfuTarget *

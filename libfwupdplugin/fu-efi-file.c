@@ -291,11 +291,11 @@ fu_efi_file_init(FuEfiFile *self)
 static void
 fu_efi_file_class_init(FuEfiFileClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_efi_file_parse;
-	klass_firmware->write = fu_efi_file_write;
-	klass_firmware->build = fu_efi_file_build;
-	klass_firmware->export = fu_efi_file_export;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_efi_file_parse;
+	firmware_class->write = fu_efi_file_write;
+	firmware_class->build = fu_efi_file_build;
+	firmware_class->export = fu_efi_file_export;
 }
 
 /**

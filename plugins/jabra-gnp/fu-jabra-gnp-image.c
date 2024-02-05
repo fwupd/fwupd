@@ -130,8 +130,8 @@ fu_jabra_gnp_image_init(FuJabraGnpImage *self)
 static void
 fu_jabra_gnp_image_class_init(FuJabraGnpImageClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->export = fu_jabra_gnp_image_export;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->export = fu_jabra_gnp_image_export;
 }
 
 FuJabraGnpImage *

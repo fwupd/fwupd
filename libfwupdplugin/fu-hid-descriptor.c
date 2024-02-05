@@ -300,9 +300,9 @@ fu_hid_descriptor_init(FuHidDescriptor *self)
 static void
 fu_hid_descriptor_class_init(FuHidDescriptorClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_hid_descriptor_parse;
-	klass_firmware->write = fu_hid_descriptor_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_hid_descriptor_parse;
+	firmware_class->write = fu_hid_descriptor_write;
 }
 
 /**

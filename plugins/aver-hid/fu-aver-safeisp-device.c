@@ -416,8 +416,8 @@ fu_aver_safeisp_device_init(FuAverSafeispDevice *self)
 static void
 fu_aver_safeisp_device_class_init(FuAverSafeispDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_aver_safeisp_device_setup;
-	klass_device->write_firmware = fu_aver_safeisp_device_write_firmware;
-	klass_device->set_progress = fu_aver_safeisp_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->setup = fu_aver_safeisp_device_setup;
+	device_class->write_firmware = fu_aver_safeisp_device_write_firmware;
+	device_class->set_progress = fu_aver_safeisp_device_set_progress;
 }

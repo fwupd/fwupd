@@ -251,15 +251,15 @@ fu_synaprom_config_detach(FuDevice *device, FuProgress *progress, GError **error
 static void
 fu_synaprom_config_class_init(FuSynapromConfigClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->constructed = fu_synaprom_config_constructed;
-	klass_device->write_firmware = fu_synaprom_config_write_firmware;
-	klass_device->prepare_firmware = fu_synaprom_config_prepare_firmware;
-	klass_device->setup = fu_synaprom_config_setup;
-	klass_device->reload = fu_synaprom_config_setup;
-	klass_device->attach = fu_synaprom_config_attach;
-	klass_device->detach = fu_synaprom_config_detach;
+	device_class->write_firmware = fu_synaprom_config_write_firmware;
+	device_class->prepare_firmware = fu_synaprom_config_prepare_firmware;
+	device_class->setup = fu_synaprom_config_setup;
+	device_class->reload = fu_synaprom_config_setup;
+	device_class->attach = fu_synaprom_config_attach;
+	device_class->detach = fu_synaprom_config_detach;
 }
 
 FuSynapromConfig *

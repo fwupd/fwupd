@@ -392,10 +392,10 @@ fu_logitech_rallysystem_tablehub_device_init(FuLogitechRallysystemTablehubDevice
 static void
 fu_logitech_rallysystem_tablehub_device_class_init(FuLogitechRallysystemTablehubDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_logitech_rallysystem_tablehub_device_to_string;
-	klass_device->write_firmware = fu_logitech_rallysystem_tablehub_device_write_firmware;
-	klass_device->probe = fu_logitech_rallysystem_tablehub_device_probe;
-	klass_device->setup = fu_logitech_rallysystem_tablehub_device_setup;
-	klass_device->set_progress = fu_logitech_rallysystem_tablehub_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_logitech_rallysystem_tablehub_device_to_string;
+	device_class->write_firmware = fu_logitech_rallysystem_tablehub_device_write_firmware;
+	device_class->probe = fu_logitech_rallysystem_tablehub_device_probe;
+	device_class->setup = fu_logitech_rallysystem_tablehub_device_setup;
+	device_class->set_progress = fu_logitech_rallysystem_tablehub_device_set_progress;
 }

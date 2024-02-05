@@ -86,8 +86,8 @@ fu_genesys_gl32xx_firmware_init(FuGenesysGl32xxFirmware *self)
 static void
 fu_genesys_gl32xx_firmware_class_init(FuGenesysGl32xxFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_genesys_gl32xx_firmware_parse;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_genesys_gl32xx_firmware_parse;
 }
 
 FuFirmware *

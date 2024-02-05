@@ -472,12 +472,12 @@ fu_cpu_device_convert_version(FuDevice *device, guint64 version_raw)
 static void
 fu_cpu_device_class_init(FuCpuDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_cpu_device_to_string;
-	klass_device->probe = fu_cpu_device_probe;
-	klass_device->set_quirk_kv = fu_cpu_device_set_quirk_kv;
-	klass_device->add_security_attrs = fu_cpu_device_add_security_attrs;
-	klass_device->convert_version = fu_cpu_device_convert_version;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_cpu_device_to_string;
+	device_class->probe = fu_cpu_device_probe;
+	device_class->set_quirk_kv = fu_cpu_device_set_quirk_kv;
+	device_class->add_security_attrs = fu_cpu_device_add_security_attrs;
+	device_class->convert_version = fu_cpu_device_convert_version;
 }
 
 FuCpuDevice *

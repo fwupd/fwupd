@@ -922,12 +922,12 @@ fu_dfu_target_avr_init(FuDfuTargetAvr *self)
 static void
 fu_dfu_target_avr_class_init(FuDfuTargetAvrClass *klass)
 {
-	FuDfuTargetClass *klass_target = FU_DFU_TARGET_CLASS(klass);
-	klass_target->setup = fu_dfu_target_avr_setup;
-	klass_target->attach = fu_dfu_target_avr_attach;
-	klass_target->mass_erase = fu_dfu_target_avr_mass_erase;
-	klass_target->upload_element = fu_dfu_target_avr_upload_element;
-	klass_target->download_element = fu_dfu_target_avr_download_element;
+	FuDfuTargetClass *target_class = FU_DFU_TARGET_CLASS(klass);
+	target_class->setup = fu_dfu_target_avr_setup;
+	target_class->attach = fu_dfu_target_avr_attach;
+	target_class->mass_erase = fu_dfu_target_avr_mass_erase;
+	target_class->upload_element = fu_dfu_target_avr_upload_element;
+	target_class->download_element = fu_dfu_target_avr_download_element;
 }
 
 FuDfuTarget *

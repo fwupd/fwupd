@@ -283,14 +283,14 @@ static void
 fu_dell_dock_tbt_class_init(FuDellDockTbtClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_dell_dock_tbt_finalize;
-	klass_device->probe = fu_dell_dock_tbt_probe;
-	klass_device->setup = fu_dell_dock_tbt_setup;
-	klass_device->open = fu_dell_dock_tbt_open;
-	klass_device->close = fu_dell_dock_tbt_close;
-	klass_device->write_firmware = fu_dell_dock_tbt_write_fw;
-	klass_device->set_quirk_kv = fu_dell_dock_tbt_set_quirk_kv;
+	device_class->probe = fu_dell_dock_tbt_probe;
+	device_class->setup = fu_dell_dock_tbt_setup;
+	device_class->open = fu_dell_dock_tbt_open;
+	device_class->close = fu_dell_dock_tbt_close;
+	device_class->write_firmware = fu_dell_dock_tbt_write_fw;
+	device_class->set_quirk_kv = fu_dell_dock_tbt_set_quirk_kv;
 }
 
 FuDellDockTbt *

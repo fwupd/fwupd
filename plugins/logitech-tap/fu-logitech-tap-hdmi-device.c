@@ -505,9 +505,9 @@ fu_logitech_tap_hdmi_device_init(FuLogitechTapHdmiDevice *self)
 static void
 fu_logitech_tap_hdmi_device_class_init(FuLogitechTapHdmiDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->probe = fu_logitech_tap_hdmi_device_probe;
-	klass_device->setup = fu_logitech_tap_hdmi_device_setup;
-	klass_device->set_progress = fu_logitech_tap_hdmi_device_set_progress;
-	klass_device->write_firmware = fu_logitech_tap_hdmi_device_write_firmware;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->probe = fu_logitech_tap_hdmi_device_probe;
+	device_class->setup = fu_logitech_tap_hdmi_device_setup;
+	device_class->set_progress = fu_logitech_tap_hdmi_device_set_progress;
+	device_class->write_firmware = fu_logitech_tap_hdmi_device_write_firmware;
 }

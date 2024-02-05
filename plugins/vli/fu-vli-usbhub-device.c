@@ -1475,22 +1475,22 @@ static void
 fu_vli_usbhub_device_class_init(FuVliUsbhubDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	FuVliDeviceClass *klass_vli_device = FU_VLI_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	FuVliDeviceClass *vli_device_class = FU_VLI_DEVICE_CLASS(klass);
 	object_class->finalize = fu_vli_usbhub_device_finalize;
-	klass_device->probe = fu_vli_usbhub_device_probe;
-	klass_device->dump_firmware = fu_vli_usbhub_device_dump_firmware;
-	klass_device->write_firmware = fu_vli_usbhub_device_write_firmware;
-	klass_device->prepare_firmware = fu_vli_usbhub_device_prepare_firmware;
-	klass_device->attach = fu_vli_usbhub_device_attach;
-	klass_device->to_string = fu_vli_usbhub_device_to_string;
-	klass_device->ready = fu_vli_usbhub_device_ready;
-	klass_device->set_progress = fu_vli_usbhub_device_set_progress;
-	klass_vli_device->spi_chip_erase = fu_vli_usbhub_device_spi_chip_erase;
-	klass_vli_device->spi_sector_erase = fu_vli_usbhub_device_spi_sector_erase;
-	klass_vli_device->spi_read_data = fu_vli_usbhub_device_spi_read_data;
-	klass_vli_device->spi_read_status = fu_vli_usbhub_device_spi_read_status;
-	klass_vli_device->spi_write_data = fu_vli_usbhub_device_spi_write_data;
-	klass_vli_device->spi_write_enable = fu_vli_usbhub_device_spi_write_enable;
-	klass_vli_device->spi_write_status = fu_vli_usbhub_device_spi_write_status;
+	device_class->probe = fu_vli_usbhub_device_probe;
+	device_class->dump_firmware = fu_vli_usbhub_device_dump_firmware;
+	device_class->write_firmware = fu_vli_usbhub_device_write_firmware;
+	device_class->prepare_firmware = fu_vli_usbhub_device_prepare_firmware;
+	device_class->attach = fu_vli_usbhub_device_attach;
+	device_class->to_string = fu_vli_usbhub_device_to_string;
+	device_class->ready = fu_vli_usbhub_device_ready;
+	device_class->set_progress = fu_vli_usbhub_device_set_progress;
+	vli_device_class->spi_chip_erase = fu_vli_usbhub_device_spi_chip_erase;
+	vli_device_class->spi_sector_erase = fu_vli_usbhub_device_spi_sector_erase;
+	vli_device_class->spi_read_data = fu_vli_usbhub_device_spi_read_data;
+	vli_device_class->spi_read_status = fu_vli_usbhub_device_spi_read_status;
+	vli_device_class->spi_write_data = fu_vli_usbhub_device_spi_write_data;
+	vli_device_class->spi_write_enable = fu_vli_usbhub_device_spi_write_enable;
+	vli_device_class->spi_write_status = fu_vli_usbhub_device_spi_write_status;
 }

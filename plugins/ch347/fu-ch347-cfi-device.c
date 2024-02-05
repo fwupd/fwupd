@@ -43,7 +43,7 @@ fu_ch347_cfi_device_init(FuCh347CfiDevice *self)
 static void
 fu_ch347_cfi_device_class_init(FuCh347CfiDeviceClass *klass)
 {
-	FuCfiDeviceClass *klass_cfi = FU_CFI_DEVICE_CLASS(klass);
-	klass_cfi->chip_select = fu_ch347_cfi_device_chip_select;
-	klass_cfi->send_command = fu_ch347_cfi_device_send_command;
+	FuCfiDeviceClass *cfi_class = FU_CFI_DEVICE_CLASS(klass);
+	cfi_class->chip_select = fu_ch347_cfi_device_chip_select;
+	cfi_class->send_command = fu_ch347_cfi_device_send_command;
 }

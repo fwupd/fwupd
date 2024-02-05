@@ -92,8 +92,8 @@ fu_tpm_v1_device_init(FuTpmV1Device *self)
 static void
 fu_tpm_v1_device_class_init(FuTpmV1DeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->probe = fu_tpm_v1_device_probe;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->probe = fu_tpm_v1_device_probe;
 }
 
 FuTpmDevice *

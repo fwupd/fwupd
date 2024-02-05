@@ -893,12 +893,12 @@ fu_intel_thunderbolt_nvm_init(FuIntelThunderboltNvm *self)
 static void
 fu_intel_thunderbolt_nvm_class_init(FuIntelThunderboltNvmClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->export = fu_intel_thunderbolt_nvm_export;
-	klass_firmware->parse = fu_intel_thunderbolt_nvm_parse;
-	klass_firmware->write = fu_intel_thunderbolt_nvm_write;
-	klass_firmware->build = fu_intel_thunderbolt_nvm_build;
-	klass_firmware->check_compatible = fu_intel_thunderbolt_nvm_check_compatible;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->export = fu_intel_thunderbolt_nvm_export;
+	firmware_class->parse = fu_intel_thunderbolt_nvm_parse;
+	firmware_class->write = fu_intel_thunderbolt_nvm_write;
+	firmware_class->build = fu_intel_thunderbolt_nvm_build;
+	firmware_class->check_compatible = fu_intel_thunderbolt_nvm_check_compatible;
 }
 
 /**

@@ -75,10 +75,10 @@ fu_qsi_dock_child_device_init(FuQsiDockChildDevice *self)
 static void
 fu_qsi_dock_child_device_class_init(FuQsiDockChildDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_qsi_dock_child_device_to_string;
-	klass_device->prepare_firmware = fu_qsi_dock_mcu_device_prepare_firmware;
-	klass_device->write_firmware = fu_qsi_dock_mcu_device_write_firmware;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_qsi_dock_child_device_to_string;
+	device_class->prepare_firmware = fu_qsi_dock_mcu_device_prepare_firmware;
+	device_class->write_firmware = fu_qsi_dock_mcu_device_write_firmware;
 }
 
 FuDevice *

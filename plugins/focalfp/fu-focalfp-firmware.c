@@ -98,7 +98,7 @@ fu_focalfp_firmware_init(FuFocalfpFirmware *self)
 static void
 fu_focalfp_firmware_class_init(FuFocalfpFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_focalfp_firmware_parse;
-	klass_firmware->export = fu_focalfp_firmware_export;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_focalfp_firmware_parse;
+	firmware_class->export = fu_focalfp_firmware_export;
 }

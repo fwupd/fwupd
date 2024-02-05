@@ -316,11 +316,11 @@ fu_efi_volume_init(FuEfiVolume *self)
 static void
 fu_efi_volume_class_init(FuEfiVolumeClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_efi_volume_validate;
-	klass_firmware->parse = fu_efi_volume_parse;
-	klass_firmware->write = fu_efi_volume_write;
-	klass_firmware->export = fu_ifd_firmware_export;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_efi_volume_validate;
+	firmware_class->parse = fu_efi_volume_parse;
+	firmware_class->write = fu_efi_volume_write;
+	firmware_class->export = fu_ifd_firmware_export;
 }
 
 /**

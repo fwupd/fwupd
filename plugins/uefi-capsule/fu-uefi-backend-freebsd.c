@@ -183,9 +183,9 @@ fu_uefi_backend_freebsd_init(FuUefiBackendFreebsd *self)
 static void
 fu_uefi_backend_freebsd_class_init(FuUefiBackendFreebsdClass *klass)
 {
-	FuBackendClass *klass_backend = FU_BACKEND_CLASS(klass);
-	klass_backend->setup = fu_uefi_backend_freebsd_setup;
-	klass_backend->coldplug = fu_uefi_backend_freebsd_coldplug;
+	FuBackendClass *backend_class = FU_BACKEND_CLASS(klass);
+	backend_class->setup = fu_uefi_backend_freebsd_setup;
+	backend_class->coldplug = fu_uefi_backend_freebsd_coldplug;
 }
 
 FuBackend *

@@ -1021,12 +1021,12 @@ fu_kinetic_dp_secure_device_init(FuKineticDpSecureDevice *self)
 static void
 fu_kinetic_dp_secure_device_class_init(FuKineticDpSecureDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_kinetic_dp_secure_device_to_string;
-	klass_device->prepare = fu_kinetic_dp_secure_device_prepare;
-	klass_device->cleanup = fu_kinetic_dp_secure_device_cleanup;
-	klass_device->setup = fu_kinetic_dp_secure_device_setup;
-	klass_device->write_firmware = fu_kinetic_dp_secure_device_write_firmware;
-	klass_device->set_progress = fu_kinetic_dp_secure_device_set_progress;
-	klass_device->convert_version = fu_kinetic_dp_secure_device_convert_version;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_kinetic_dp_secure_device_to_string;
+	device_class->prepare = fu_kinetic_dp_secure_device_prepare;
+	device_class->cleanup = fu_kinetic_dp_secure_device_cleanup;
+	device_class->setup = fu_kinetic_dp_secure_device_setup;
+	device_class->write_firmware = fu_kinetic_dp_secure_device_write_firmware;
+	device_class->set_progress = fu_kinetic_dp_secure_device_set_progress;
+	device_class->convert_version = fu_kinetic_dp_secure_device_convert_version;
 }

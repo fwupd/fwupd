@@ -545,13 +545,13 @@ fu_mtd_device_init(FuMtdDevice *self)
 static void
 fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->open = fu_mtd_device_open;
-	klass_device->probe = fu_mtd_device_probe;
-	klass_device->setup = fu_mtd_device_setup;
-	klass_device->to_string = fu_mtd_device_to_string;
-	klass_device->dump_firmware = fu_mtd_device_dump_firmware;
-	klass_device->read_firmware = fu_mtd_device_read_firmware;
-	klass_device->write_firmware = fu_mtd_device_write_firmware;
-	klass_device->set_quirk_kv = fu_mtd_device_set_quirk_kv;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->open = fu_mtd_device_open;
+	device_class->probe = fu_mtd_device_probe;
+	device_class->setup = fu_mtd_device_setup;
+	device_class->to_string = fu_mtd_device_to_string;
+	device_class->dump_firmware = fu_mtd_device_dump_firmware;
+	device_class->read_firmware = fu_mtd_device_read_firmware;
+	device_class->write_firmware = fu_mtd_device_write_firmware;
+	device_class->set_quirk_kv = fu_mtd_device_set_quirk_kv;
 }

@@ -282,7 +282,7 @@ fu_kinetic_dp_puma_firmware_init(FuKineticDpPumaFirmware *self)
 static void
 fu_kinetic_dp_puma_firmware_class_init(FuKineticDpPumaFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_kinetic_dp_puma_firmware_parse;
-	klass_firmware->export = fu_kinetic_dp_puma_firmware_export;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_kinetic_dp_puma_firmware_parse;
+	firmware_class->export = fu_kinetic_dp_puma_firmware_export;
 }

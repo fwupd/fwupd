@@ -75,6 +75,6 @@ fu_uefi_backend_init(FuUefiBackend *self)
 static void
 fu_uefi_backend_class_init(FuUefiBackendClass *klass)
 {
-	FuBackendClass *klass_backend = FU_BACKEND_CLASS(klass);
-	klass_backend->to_string = fu_uefi_backend_to_string;
+	FuBackendClass *backend_class = FU_BACKEND_CLASS(klass);
+	backend_class->to_string = fu_uefi_backend_to_string;
 }

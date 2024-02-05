@@ -188,11 +188,11 @@ fu_hid_report_item_init(FuHidReportItem *self)
 static void
 fu_hid_report_item_class_init(FuHidReportItemClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->export = fu_hid_report_item_export;
-	klass_firmware->parse = fu_hid_report_item_parse;
-	klass_firmware->write = fu_hid_report_item_write;
-	klass_firmware->build = fu_hid_report_item_build;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->export = fu_hid_report_item_export;
+	firmware_class->parse = fu_hid_report_item_parse;
+	firmware_class->write = fu_hid_report_item_write;
+	firmware_class->build = fu_hid_report_item_build;
 }
 
 /**
