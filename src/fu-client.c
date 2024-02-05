@@ -60,7 +60,7 @@ fu_client_insert_hint(FuClient *self, const gchar *key, const gchar *value)
 	g_hash_table_insert(self->hints, g_strdup(key), g_strdup(value));
 }
 
-void
+static void
 fu_client_add_flag(FuClient *self, FuClientFlag flag)
 {
 	g_return_if_fail(FU_IS_CLIENT(self));
@@ -116,7 +116,7 @@ fu_client_set_property(GObject *object, guint prop_id, const GValue *value, GPar
 		self->sender = g_value_dup_string(value);
 		break;
 	case PROP_FLAGS:
-		self->flags = g_value_get_uint64(value);
+		fu_client_add_flag(self, (FuClientFlag)g_value_get_uint64(value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);

@@ -26,8 +26,6 @@ fu_client_set_feature_flags(FuClient *self, FwupdFeatureFlags feature_flags);
 FwupdFeatureFlags
 fu_client_get_feature_flags(FuClient *self);
 void
-fu_client_add_flag(FuClient *self, FuClientFlag flag);
-void
 fu_client_remove_flag(FuClient *self, FuClientFlag flag);
 gboolean
 fu_client_has_flag(FuClient *self, FuClientFlag flag);

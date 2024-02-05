@@ -43,7 +43,6 @@ enum IdleInhibit {
     Signals = 1 << 1,
 }
 
-#[derive(ToBitString)]
 enum ClientFlag {
     None = 0,
     Active = 1 << 0,
