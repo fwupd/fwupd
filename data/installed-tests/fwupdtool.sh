@@ -9,10 +9,14 @@ INPUT="@installedtestsdir@/fakedevice124.bin \
 
 # ---
 echo "Building ${CAB}..."
-fwupdtool build-cabinet ${CAB} ${INPUT}
+fwupdtool build-cabinet ${CAB} ${INPUT} --force
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Installing ${CAB} cabinet..."
 fwupdtool install ${CAB}
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+# ---
+echo "Cleaning ${CAB} generated cabinet ..."
+rm -f ${CAB}
