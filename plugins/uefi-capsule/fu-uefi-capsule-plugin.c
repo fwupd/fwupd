@@ -711,7 +711,8 @@ fu_uefi_capsule_plugin_validate_esp(FuUefiCapsulePlugin *self)
 
 	/* found *something* but it wasn't quite an ESP... */
 	kind = fu_volume_get_partition_kind(self->esp);
-	if (g_strcmp0(fu_volume_kind_convert_to_gpt(kind), FU_VOLUME_KIND_ESP) != 0) {
+	if (kind != NULL &&
+	    g_strcmp0(fu_volume_kind_convert_to_gpt(kind), FU_VOLUME_KIND_ESP) != 0) {
 		fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_ESP_NOT_VALID);
 		fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_USER_WARNING);
 	}
