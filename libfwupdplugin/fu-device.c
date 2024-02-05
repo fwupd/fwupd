@@ -940,14 +940,14 @@ fu_device_poll_locker_new(FuDevice *self, GError **error)
 gboolean
 fu_device_poll(FuDevice *self, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* subclassed */
-	if (klass->poll != NULL) {
-		if (!klass->poll(self, error))
+	if (device_class->poll != NULL) {
+		if (!device_class->poll(self, error))
 			return FALSE;
 	}
 	return TRUE;
@@ -1905,7 +1905,7 @@ gboolean
 fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	guint64 tmp;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
@@ -2109,8 +2109,8 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 	}
 
 	/* optional device-specific method */
-	if (klass->set_quirk_kv != NULL)
-		return klass->set_quirk_kv(self, key, value, error);
+	if (device_class->set_quirk_kv != NULL)
+		return device_class->set_quirk_kv(self, key, value, error);
 
 	/* failed */
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
@@ -2862,7 +2862,7 @@ fu_device_set_id(FuDevice *self, const gchar *id)
 void
 fu_device_set_version_format(FuDevice *self, FwupdVersionFormat fmt)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 
 	/* same */
 	if (fu_device_get_version_format(self) == fmt)
@@ -2876,10 +2876,10 @@ fu_device_set_version_format(FuDevice *self, FwupdVersionFormat fmt)
 	fwupd_device_set_version_format(FWUPD_DEVICE(self), fmt);
 
 	/* convert this, now we know */
-	if (klass->convert_version != NULL && fu_device_get_version(self) != NULL &&
+	if (device_class->convert_version != NULL && fu_device_get_version(self) != NULL &&
 	    fu_device_get_version_raw(self) != 0) {
 		g_autofree gchar *version =
-		    klass->convert_version(self, fu_device_get_version_raw(self));
+		    device_class->convert_version(self, fu_device_get_version_raw(self));
 		fu_device_set_version(self, version);
 	}
 }
@@ -3028,12 +3028,12 @@ fu_device_set_version_bootloader(FuDevice *self, const gchar *version)
 void
 fu_device_set_version_raw(FuDevice *self, guint64 version_raw)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 
 	fwupd_device_set_version_raw(FWUPD_DEVICE(self), version_raw);
-	if (klass->convert_version != NULL) {
-		g_autofree gchar *version = klass->convert_version(self, version_raw);
+	if (device_class->convert_version != NULL) {
+		g_autofree gchar *version = device_class->convert_version(self, version_raw);
 		if (version != NULL)
 			fu_device_set_version(self, version);
 	}
@@ -4225,9 +4225,9 @@ void
 fu_device_add_string(FuDevice *self, guint idt, GString *str)
 {
 	GPtrArray *children;
-	gpointer klass_to_string_last = NULL;
+	gpointer device_class_to_string_last = NULL;
 	g_autofree gchar *tmp = NULL;
-	g_autoptr(GList) klass_list = NULL;
+	g_autoptr(GList) device_class_list = NULL;
 
 	/* add baseclass */
 	tmp = fwupd_device_to_string(FWUPD_DEVICE(self));
@@ -4237,16 +4237,17 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 	/* run every unique ->to_string() in each subclass */
 	for (GType gtype = G_OBJECT_TYPE(self); gtype != G_TYPE_INVALID;
 	     gtype = g_type_parent(gtype)) {
-		FuDeviceClass *klass = g_type_class_peek(gtype);
-		if (!FU_IS_DEVICE_CLASS(klass))
+		FuDeviceClass *device_class = g_type_class_peek(gtype);
+		if (!FU_IS_DEVICE_CLASS(device_class))
 			break;
-		klass_list = g_list_prepend(klass_list, klass);
+		device_class_list = g_list_prepend(device_class_list, device_class);
 	}
-	for (GList *l = klass_list; l != NULL; l = l->next) {
-		FuDeviceClass *klass = FU_DEVICE_CLASS(l->data);
-		if (klass->to_string != NULL && klass->to_string != klass_to_string_last) {
-			klass->to_string(self, idt + 1, str);
-			klass_to_string_last = klass->to_string;
+	for (GList *l = device_class_list; l != NULL; l = l->next) {
+		FuDeviceClass *device_class = FU_DEVICE_CLASS(l->data);
+		if (device_class->to_string != NULL &&
+		    device_class->to_string != device_class_to_string_last) {
+			device_class->to_string(self, idt + 1, str);
+			device_class_to_string_last = device_class->to_string;
 		}
 	}
 
@@ -4340,13 +4341,13 @@ fu_device_get_context(FuDevice *self)
 gboolean
 fu_device_get_results(FuDevice *self, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* no plugin-specific method */
-	if (klass->get_results == NULL) {
+	if (device_class->get_results == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -4355,7 +4356,7 @@ fu_device_get_results(FuDevice *self, GError **error)
 	}
 
 	/* call vfunc */
-	return klass->get_results(self, error);
+	return device_class->get_results(self, error);
 }
 
 /**
@@ -4379,7 +4380,7 @@ fu_device_write_firmware(FuDevice *self,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autofree gchar *str = NULL;
@@ -4390,7 +4391,7 @@ fu_device_write_firmware(FuDevice *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* no plugin-specific method */
-	if (klass->write_firmware == NULL) {
+	if (device_class->write_firmware == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -4408,7 +4409,7 @@ fu_device_write_firmware(FuDevice *self,
 
 	/* call vfunc */
 	g_set_object(&priv->progress, progress);
-	if (!klass->write_firmware(self, firmware, progress, flags, error))
+	if (!device_class->write_firmware(self, firmware, progress, flags, error))
 		return FALSE;
 
 	/* the device set an UpdateMessage (possibly from a quirk, or XML file)
@@ -4460,7 +4461,7 @@ fu_device_prepare_firmware(FuDevice *self,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuFirmware) firmware = NULL;
 	gsize fw_size;
@@ -4470,8 +4471,8 @@ fu_device_prepare_firmware(FuDevice *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* optionally subclassed */
-	if (klass->prepare_firmware != NULL) {
-		firmware = klass->prepare_firmware(self, stream, flags, error);
+	if (device_class->prepare_firmware != NULL) {
+		firmware = device_class->prepare_firmware(self, stream, flags, error);
 		if (firmware == NULL)
 			return NULL;
 	} else if (priv->firmware_gtype != G_TYPE_INVALID) {
@@ -4533,7 +4534,7 @@ fu_device_prepare_firmware(FuDevice *self,
 FuFirmware *
 fu_device_read_firmware(FuDevice *self, FuProgress *progress, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GBytes) fw = NULL;
 
@@ -4552,8 +4553,8 @@ fu_device_read_firmware(FuDevice *self, FuProgress *progress, GError **error)
 
 	/* call vfunc */
 	g_set_object(&priv->progress, progress);
-	if (klass->read_firmware != NULL)
-		return klass->read_firmware(self, progress, error);
+	if (device_class->read_firmware != NULL)
+		return device_class->read_firmware(self, progress, error);
 
 	/* use the default FuFirmware when only ->dump_firmware is provided */
 	fw = fu_device_dump_firmware(self, progress, error);
@@ -4580,7 +4581,7 @@ fu_device_read_firmware(FuDevice *self, FuProgress *progress, GError **error)
 GBytes *
 fu_device_dump_firmware(FuDevice *self, FuProgress *progress, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
@@ -4588,7 +4589,7 @@ fu_device_dump_firmware(FuDevice *self, FuProgress *progress, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* use the default FuFirmware when only ->dump_firmware is provided */
-	if (klass->dump_firmware == NULL) {
+	if (device_class->dump_firmware == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -4598,7 +4599,7 @@ fu_device_dump_firmware(FuDevice *self, FuProgress *progress, GError **error)
 
 	/* proxy */
 	g_set_object(&priv->progress, progress);
-	return klass->dump_firmware(self, progress, error);
+	return device_class->dump_firmware(self, progress, error);
 }
 
 /**
@@ -4634,7 +4635,7 @@ fu_device_detach(FuDevice *self, GError **error)
 gboolean
 fu_device_detach_full(FuDevice *self, FuProgress *progress, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
@@ -4642,12 +4643,12 @@ fu_device_detach_full(FuDevice *self, FuProgress *progress, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* no plugin-specific method */
-	if (klass->detach == NULL)
+	if (device_class->detach == NULL)
 		return TRUE;
 
 	/* call vfunc */
 	g_set_object(&priv->progress, progress);
-	return klass->detach(self, progress, error);
+	return device_class->detach(self, progress, error);
 }
 
 /**
@@ -4683,7 +4684,7 @@ fu_device_attach(FuDevice *self, GError **error)
 gboolean
 fu_device_attach_full(FuDevice *self, FuProgress *progress, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
@@ -4691,12 +4692,12 @@ fu_device_attach_full(FuDevice *self, FuProgress *progress, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* no plugin-specific method */
-	if (klass->attach == NULL)
+	if (device_class->attach == NULL)
 		return TRUE;
 
 	/* call vfunc */
 	g_set_object(&priv->progress, progress);
-	return klass->attach(self, progress, error);
+	return device_class->attach(self, progress, error);
 }
 
 /**
@@ -4713,17 +4714,17 @@ fu_device_attach_full(FuDevice *self, FuProgress *progress, GError **error)
 gboolean
 fu_device_reload(FuDevice *self, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* no plugin-specific method */
-	if (klass->reload == NULL)
+	if (device_class->reload == NULL)
 		return TRUE;
 
 	/* call vfunc */
-	return klass->reload(self, error);
+	return device_class->reload(self, error);
 }
 
 /**
@@ -4743,7 +4744,7 @@ fu_device_reload(FuDevice *self, GError **error)
 gboolean
 fu_device_prepare(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
@@ -4751,12 +4752,12 @@ fu_device_prepare(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* no plugin-specific method */
-	if (klass->prepare == NULL)
+	if (device_class->prepare == NULL)
 		return TRUE;
 
 	/* call vfunc */
 	g_set_object(&priv->progress, progress);
-	return klass->prepare(self, progress, flags, error);
+	return device_class->prepare(self, progress, flags, error);
 }
 
 /**
@@ -4776,7 +4777,7 @@ fu_device_prepare(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags,
 gboolean
 fu_device_cleanup(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
@@ -4784,25 +4785,25 @@ fu_device_cleanup(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* no plugin-specific method */
-	if (klass->cleanup == NULL)
+	if (device_class->cleanup == NULL)
 		return TRUE;
 
 	/* call vfunc */
 	g_set_object(&priv->progress, progress);
-	return klass->cleanup(self, progress, flags, error);
+	return device_class->cleanup(self, progress, flags, error);
 }
 
 static gboolean
 fu_device_open_cb(FuDevice *self, gpointer user_data, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
-	return klass->open(self, error);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
+	return device_class->open(self, error);
 }
 
 static gboolean
 fu_device_open_internal(FuDevice *self, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* already open */
@@ -4819,7 +4820,7 @@ fu_device_open_internal(FuDevice *self, GError **error)
 		return FALSE;
 
 	/* subclassed */
-	if (klass->open != NULL) {
+	if (device_class->open != NULL) {
 		if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN)) {
 			if (!fu_device_retry_full(self,
 						  fu_device_open_cb,
@@ -4829,7 +4830,7 @@ fu_device_open_internal(FuDevice *self, GError **error)
 						  error))
 				return FALSE;
 		} else {
-			if (!klass->open(self, error))
+			if (!device_class->open(self, error))
 				return FALSE;
 		}
 	}
@@ -4895,7 +4896,7 @@ fu_device_open(FuDevice *self, GError **error)
 static gboolean
 fu_device_close_internal(FuDevice *self, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* not yet open */
@@ -4910,8 +4911,8 @@ fu_device_close_internal(FuDevice *self, GError **error)
 		return TRUE;
 
 	/* subclassed */
-	if (klass->close != NULL) {
-		if (!klass->close(self, error))
+	if (device_class->close != NULL) {
+		if (!device_class->close(self, error))
 			return FALSE;
 	}
 
@@ -4981,7 +4982,7 @@ gboolean
 fu_device_probe(FuDevice *self, GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -4997,8 +4998,8 @@ fu_device_probe(FuDevice *self, GError **error)
 	}
 
 	/* subclassed */
-	if (klass->probe != NULL) {
-		if (!klass->probe(self, error))
+	if (device_class->probe != NULL) {
+		if (!device_class->probe(self, error))
 			return FALSE;
 	}
 
@@ -5025,14 +5026,14 @@ fu_device_probe(FuDevice *self, GError **error)
 void
 fu_device_probe_complete(FuDevice *self)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 
 	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE))
 		return;
-	if (klass->probe_complete != NULL)
-		klass->probe_complete(self);
+	if (device_class->probe_complete != NULL)
+		device_class->probe_complete(self);
 }
 
 /**
@@ -5049,7 +5050,7 @@ fu_device_probe_complete(FuDevice *self)
 gboolean
 fu_device_rescan(FuDevice *self, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -5059,8 +5060,8 @@ fu_device_rescan(FuDevice *self, GError **error)
 	g_ptr_array_set_size(fu_device_get_guids(self), 0);
 
 	/* subclassed */
-	if (klass->rescan != NULL) {
-		if (!klass->rescan(self, error)) {
+	if (device_class->rescan != NULL) {
+		if (!device_class->rescan(self, error)) {
 			fu_device_convert_instance_ids(self);
 			return FALSE;
 		}
@@ -5082,15 +5083,15 @@ fu_device_rescan(FuDevice *self, GError **error)
 void
 fu_device_set_progress(FuDevice *self, FuProgress *progress)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(FU_IS_PROGRESS(progress));
 
 	/* subclassed */
-	if (klass->set_progress == NULL)
+	if (device_class->set_progress == NULL)
 		return;
-	klass->set_progress(self, progress);
+	device_class->set_progress(self, progress);
 }
 
 /**
@@ -5140,7 +5141,7 @@ gboolean
 fu_device_setup(FuDevice *self, GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	GPtrArray *children;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
@@ -5155,8 +5156,8 @@ fu_device_setup(FuDevice *self, GError **error)
 		return TRUE;
 
 	/* subclassed */
-	if (klass->setup != NULL) {
-		if (!klass->setup(self, error))
+	if (device_class->setup != NULL) {
+		if (!device_class->setup(self, error))
 			return FALSE;
 	}
 
@@ -5178,8 +5179,8 @@ fu_device_setup(FuDevice *self, GError **error)
 	fu_device_convert_instance_ids(self);
 
 	/* subclassed */
-	if (klass->ready != NULL) {
-		if (!klass->ready(self, error))
+	if (device_class->ready != NULL) {
+		if (!device_class->ready(self, error))
 			return FALSE;
 	}
 
@@ -5203,7 +5204,7 @@ fu_device_setup(FuDevice *self, GError **error)
 gboolean
 fu_device_activate(FuDevice *self, FuProgress *progress, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
@@ -5211,9 +5212,9 @@ fu_device_activate(FuDevice *self, FuProgress *progress, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* subclassed */
-	if (klass->activate != NULL) {
+	if (device_class->activate != NULL) {
 		g_set_object(&priv->progress, progress);
-		if (!klass->activate(self, progress, error))
+		if (!device_class->activate(self, progress, error))
 			return FALSE;
 	}
 
@@ -5237,12 +5238,12 @@ void
 fu_device_probe_invalidate(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	priv->done_probe = FALSE;
 	priv->done_setup = FALSE;
-	if (klass->invalidate != NULL)
-		klass->invalidate(self);
+	if (device_class->invalidate != NULL)
+		device_class->invalidate(self);
 }
 
 /**
@@ -5258,18 +5259,18 @@ fu_device_probe_invalidate(FuDevice *self)
 GHashTable *
 fu_device_report_metadata_pre(FuDevice *self)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	g_autoptr(GHashTable) metadata = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 
 	/* not implemented */
-	if (klass->report_metadata_pre == NULL)
+	if (device_class->report_metadata_pre == NULL)
 		return NULL;
 
 	/* metadata for all devices */
 	metadata = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	klass->report_metadata_pre(self, metadata);
+	device_class->report_metadata_pre(self, metadata);
 	return g_steal_pointer(&metadata);
 }
 
@@ -5286,18 +5287,18 @@ fu_device_report_metadata_pre(FuDevice *self)
 GHashTable *
 fu_device_report_metadata_post(FuDevice *self)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	g_autoptr(GHashTable) metadata = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 
 	/* not implemented */
-	if (klass->report_metadata_post == NULL)
+	if (device_class->report_metadata_post == NULL)
 		return NULL;
 
 	/* metadata for all devices */
 	metadata = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	klass->report_metadata_post(self, metadata);
+	device_class->report_metadata_post(self, metadata);
 	return g_steal_pointer(&metadata);
 }
 
@@ -5313,13 +5314,13 @@ fu_device_report_metadata_post(FuDevice *self)
 void
 fu_device_add_security_attrs(FuDevice *self, FuSecurityAttrs *attrs)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 
 	/* optional */
-	if (klass->add_security_attrs != NULL)
-		return klass->add_security_attrs(self, attrs);
+	if (device_class->add_security_attrs != NULL)
+		return device_class->add_security_attrs(self, attrs);
 }
 
 /**
@@ -5339,7 +5340,7 @@ fu_device_add_security_attrs(FuDevice *self, FuSecurityAttrs *attrs)
 gboolean
 fu_device_bind_driver(FuDevice *self, const gchar *subsystem, const gchar *driver, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(subsystem != NULL, FALSE);
@@ -5347,7 +5348,7 @@ fu_device_bind_driver(FuDevice *self, const gchar *subsystem, const gchar *drive
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not implemented */
-	if (klass->bind_driver == NULL) {
+	if (device_class->bind_driver == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -5356,7 +5357,7 @@ fu_device_bind_driver(FuDevice *self, const gchar *subsystem, const gchar *drive
 	}
 
 	/* subclass */
-	return klass->bind_driver(self, subsystem, driver, error);
+	return device_class->bind_driver(self, subsystem, driver, error);
 }
 
 /**
@@ -5377,13 +5378,13 @@ fu_device_bind_driver(FuDevice *self, const gchar *subsystem, const gchar *drive
 gboolean
 fu_device_unbind_driver(FuDevice *self, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not implemented */
-	if (klass->unbind_driver == NULL) {
+	if (device_class->unbind_driver == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -5392,7 +5393,7 @@ fu_device_unbind_driver(FuDevice *self, GError **error)
 	}
 
 	/* subclass */
-	return klass->unbind_driver(self, error);
+	return device_class->unbind_driver(self, error);
 }
 
 /**
@@ -5427,7 +5428,7 @@ fu_device_get_instance_str(FuDevice *self, const gchar *key)
 void
 fu_device_incorporate(FuDevice *self, FuDevice *donor)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	FuDevicePrivate *priv_donor = GET_PRIVATE(donor);
 	GPtrArray *instance_ids = fu_device_get_instance_ids(donor);
@@ -5517,8 +5518,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 		priv->device_id_valid = TRUE;
 
 	/* optional subclass */
-	if (klass->incorporate != NULL)
-		klass->incorporate(self, donor);
+	if (device_class->incorporate != NULL)
+		device_class->incorporate(self, donor);
 
 	/* call the set_quirk_kv() vfunc for the superclassed object */
 	for (guint i = 0; i < instance_ids->len; i++) {
@@ -5542,14 +5543,14 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 void
 fu_device_replace(FuDevice *self, FuDevice *donor)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(FU_IS_DEVICE(donor));
 
 	/* optional subclass */
-	if (klass->replace != NULL)
-		klass->replace(self, donor);
+	if (device_class->replace != NULL)
+		device_class->replace(self, donor);
 }
 
 /**
@@ -6332,13 +6333,13 @@ static void
 fu_device_class_init(FuDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GParamSpec *pspec;
 	object_class->finalize = fu_device_finalize;
 	object_class->get_property = fu_device_get_property;
 	object_class->set_property = fu_device_set_property;
 
-	klass_device->to_string = fu_device_to_string_impl;
+	device_class->to_string = fu_device_to_string_impl;
 
 	/**
 	 * FuDevice::child-added:

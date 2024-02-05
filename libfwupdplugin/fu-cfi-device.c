@@ -982,19 +982,19 @@ static void
 fu_cfi_device_class_init(FuCfiDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GParamSpec *pspec;
 
 	object_class->finalize = fu_cfi_device_finalize;
 	object_class->get_property = fu_cfi_device_get_property;
 	object_class->set_property = fu_cfi_device_set_property;
 	object_class->constructed = fu_cfi_device_constructed;
-	klass_device->setup = fu_cfi_device_setup;
-	klass_device->to_string = fu_cfi_device_to_string;
-	klass_device->set_quirk_kv = fu_cfi_device_set_quirk_kv;
-	klass_device->write_firmware = fu_cfi_device_write_firmware;
-	klass_device->dump_firmware = fu_cfi_device_dump_firmware;
-	klass_device->set_progress = fu_cfi_device_set_progress;
+	device_class->setup = fu_cfi_device_setup;
+	device_class->to_string = fu_cfi_device_to_string;
+	device_class->set_quirk_kv = fu_cfi_device_set_quirk_kv;
+	device_class->write_firmware = fu_cfi_device_write_firmware;
+	device_class->dump_firmware = fu_cfi_device_dump_firmware;
+	device_class->set_progress = fu_cfi_device_set_progress;
 
 	/**
 	 * FuCfiDevice:flash-id:

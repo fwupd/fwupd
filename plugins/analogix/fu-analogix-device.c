@@ -488,11 +488,11 @@ fu_analogix_device_init(FuAnalogixDevice *self)
 static void
 fu_analogix_device_class_init(FuAnalogixDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_analogix_device_to_string;
-	klass_device->write_firmware = fu_analogix_device_write_firmware;
-	klass_device->attach = fu_analogix_device_attach;
-	klass_device->setup = fu_analogix_device_setup;
-	klass_device->probe = fu_analogix_device_probe;
-	klass_device->set_progress = fu_analogix_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_analogix_device_to_string;
+	device_class->write_firmware = fu_analogix_device_write_firmware;
+	device_class->attach = fu_analogix_device_attach;
+	device_class->setup = fu_analogix_device_setup;
+	device_class->probe = fu_analogix_device_probe;
+	device_class->set_progress = fu_analogix_device_set_progress;
 }

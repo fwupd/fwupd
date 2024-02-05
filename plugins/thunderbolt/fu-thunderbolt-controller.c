@@ -359,10 +359,10 @@ static void
 fu_thunderbolt_controller_class_init(FuThunderboltControllerClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_thunderbolt_controller_finalize;
-	klass_device->setup = fu_thunderbolt_controller_setup;
-	klass_device->probe = fu_thunderbolt_controller_probe;
-	klass_device->to_string = fu_thunderbolt_controller_to_string;
-	klass_device->write_firmware = fu_thunderbolt_controller_write_firmware;
+	device_class->setup = fu_thunderbolt_controller_setup;
+	device_class->probe = fu_thunderbolt_controller_probe;
+	device_class->to_string = fu_thunderbolt_controller_to_string;
+	device_class->write_firmware = fu_thunderbolt_controller_write_firmware;
 }

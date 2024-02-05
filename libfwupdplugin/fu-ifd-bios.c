@@ -87,8 +87,8 @@ fu_ifd_bios_init(FuIfdBios *self)
 static void
 fu_ifd_bios_class_init(FuIfdBiosClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_ifd_bios_parse;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_ifd_bios_parse;
 }
 
 /**

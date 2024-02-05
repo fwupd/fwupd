@@ -684,15 +684,15 @@ fu_hid_device_new(GUsbDevice *usb_device)
 static void
 fu_hid_device_class_init(FuHidDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	GParamSpec *pspec;
 
 	object_class->get_property = fu_hid_device_get_property;
 	object_class->set_property = fu_hid_device_set_property;
-	klass_device->open = fu_hid_device_open;
-	klass_device->close = fu_hid_device_close;
-	klass_device->to_string = fu_hid_device_to_string;
+	device_class->open = fu_hid_device_open;
+	device_class->close = fu_hid_device_close;
+	device_class->to_string = fu_hid_device_to_string;
 
 	/**
 	 * FuHidDevice:interface:

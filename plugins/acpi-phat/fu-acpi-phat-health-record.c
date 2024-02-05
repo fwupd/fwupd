@@ -195,12 +195,12 @@ static void
 fu_acpi_phat_health_record_class_init(FuAcpiPhatHealthRecordClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_acpi_phat_health_record_finalize;
-	klass_firmware->parse = fu_acpi_phat_health_record_parse;
-	klass_firmware->write = fu_acpi_phat_health_record_write;
-	klass_firmware->export = fu_acpi_phat_health_record_export;
-	klass_firmware->build = fu_acpi_phat_health_record_build;
+	firmware_class->parse = fu_acpi_phat_health_record_parse;
+	firmware_class->write = fu_acpi_phat_health_record_write;
+	firmware_class->export = fu_acpi_phat_health_record_export;
+	firmware_class->build = fu_acpi_phat_health_record_build;
 }
 
 FuFirmware *

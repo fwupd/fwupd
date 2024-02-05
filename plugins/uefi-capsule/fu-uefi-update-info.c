@@ -131,10 +131,10 @@ fu_uefi_update_info_finalize(GObject *object)
 static void
 fu_uefi_update_info_class_init(FuUefiUpdateInfoClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	klass_firmware->parse = fu_uefi_update_info_parse;
-	klass_firmware->export = fu_uefi_update_info_export;
+	firmware_class->parse = fu_uefi_update_info_parse;
+	firmware_class->export = fu_uefi_update_info_export;
 	object_class->finalize = fu_uefi_update_info_finalize;
 }
 

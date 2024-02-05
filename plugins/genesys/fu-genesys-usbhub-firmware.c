@@ -514,13 +514,13 @@ static void
 fu_genesys_usbhub_firmware_class_init(FuGenesysUsbhubFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_genesys_usbhub_firmware_finalize;
-	klass_firmware->validate = fu_genesys_usbhub_firmware_validate;
-	klass_firmware->parse = fu_genesys_usbhub_firmware_parse;
-	klass_firmware->export = fu_genesys_usbhub_firmware_export;
-	klass_firmware->build = fu_genesys_usbhub_firmware_build;
-	klass_firmware->write = fu_genesys_usbhub_firmware_write;
+	firmware_class->validate = fu_genesys_usbhub_firmware_validate;
+	firmware_class->parse = fu_genesys_usbhub_firmware_parse;
+	firmware_class->export = fu_genesys_usbhub_firmware_export;
+	firmware_class->build = fu_genesys_usbhub_firmware_build;
+	firmware_class->write = fu_genesys_usbhub_firmware_write;
 }
 
 FuFirmware *

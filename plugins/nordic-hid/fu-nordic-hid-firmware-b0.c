@@ -128,7 +128,7 @@ fu_nordic_hid_firmware_b0_init(FuNordicHidFirmwareB0 *self)
 static void
 fu_nordic_hid_firmware_b0_class_init(FuNordicHidFirmwareB0Class *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_nordic_hid_firmware_b0_parse;
-	klass_firmware->write = fu_nordic_hid_firmware_b0_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_nordic_hid_firmware_b0_parse;
+	firmware_class->write = fu_nordic_hid_firmware_b0_write;
 }

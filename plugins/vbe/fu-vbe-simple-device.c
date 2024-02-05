@@ -478,15 +478,15 @@ static void
 fu_vbe_simple_device_class_init(FuVbeSimpleDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->constructed = fu_vbe_simple_device_constructed;
 	object_class->finalize = fu_vbe_simple_device_finalize;
-	klass_device->to_string = fu_vbe_simple_device_to_string;
-	klass_device->probe = fu_vbe_simple_device_probe;
-	klass_device->open = fu_vbe_simple_device_open;
-	klass_device->close = fu_vbe_simple_device_close;
-	klass_device->set_progress = fu_vbe_simple_device_set_progress;
-	klass_device->prepare_firmware = fu_vbe_simple_device_prepare_firmware;
-	klass_device->write_firmware = fu_vbe_simple_device_write_firmware;
-	klass_device->dump_firmware = fu_vbe_simple_device_upload;
+	device_class->to_string = fu_vbe_simple_device_to_string;
+	device_class->probe = fu_vbe_simple_device_probe;
+	device_class->open = fu_vbe_simple_device_open;
+	device_class->close = fu_vbe_simple_device_close;
+	device_class->set_progress = fu_vbe_simple_device_set_progress;
+	device_class->prepare_firmware = fu_vbe_simple_device_prepare_firmware;
+	device_class->write_firmware = fu_vbe_simple_device_write_firmware;
+	device_class->dump_firmware = fu_vbe_simple_device_upload;
 }

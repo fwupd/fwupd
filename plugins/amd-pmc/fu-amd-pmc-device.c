@@ -70,6 +70,6 @@ fu_amd_pmc_device_init(FuAmdPmcDevice *self)
 static void
 fu_amd_pmc_device_class_init(FuAmdPmcDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->probe = fu_amd_pmc_device_probe;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->probe = fu_amd_pmc_device_probe;
 }

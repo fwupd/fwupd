@@ -667,13 +667,13 @@ fu_focalfp_hid_device_init(FuFocalfpHidDevice *self)
 static void
 fu_focalfp_hid_device_class_init(FuFocalfpHidDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->attach = fu_focalfp_hid_device_attach;
-	klass_device->detach = fu_focalfp_hid_device_detach;
-	klass_device->setup = fu_focalfp_hid_device_setup;
-	klass_device->reload = fu_focalfp_hid_device_reload;
-	klass_device->write_firmware = fu_focalfp_hid_device_write_firmware;
-	klass_device->probe = fu_focalfp_hid_device_probe;
-	klass_device->set_progress = fu_focalfp_hid_device_set_progress;
-	klass_device->convert_version = fu_focalfp_hid_device_convert_version;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->attach = fu_focalfp_hid_device_attach;
+	device_class->detach = fu_focalfp_hid_device_detach;
+	device_class->setup = fu_focalfp_hid_device_setup;
+	device_class->reload = fu_focalfp_hid_device_reload;
+	device_class->write_firmware = fu_focalfp_hid_device_write_firmware;
+	device_class->probe = fu_focalfp_hid_device_probe;
+	device_class->set_progress = fu_focalfp_hid_device_set_progress;
+	device_class->convert_version = fu_focalfp_hid_device_convert_version;
 }

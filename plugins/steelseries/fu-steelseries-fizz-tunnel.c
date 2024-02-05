@@ -378,16 +378,16 @@ fu_steelseries_fizz_tunnel_convert_version(FuDevice *device, guint64 version_raw
 static void
 fu_steelseries_fizz_tunnel_class_init(FuSteelseriesFizzTunnelClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
-	klass_device->attach = fu_steelseries_fizz_tunnel_attach;
-	klass_device->probe = fu_steelseries_fizz_tunnel_probe;
-	klass_device->setup = fu_steelseries_fizz_tunnel_setup;
-	klass_device->poll = fu_steelseries_fizz_tunnel_poll;
-	klass_device->write_firmware = fu_steelseries_fizz_tunnel_write_firmware;
-	klass_device->read_firmware = fu_steelseries_fizz_tunnel_read_firmware;
-	klass_device->set_progress = fu_steelseries_fizz_tunnel_set_progress;
-	klass_device->convert_version = fu_steelseries_fizz_tunnel_convert_version;
+	device_class->attach = fu_steelseries_fizz_tunnel_attach;
+	device_class->probe = fu_steelseries_fizz_tunnel_probe;
+	device_class->setup = fu_steelseries_fizz_tunnel_setup;
+	device_class->poll = fu_steelseries_fizz_tunnel_poll;
+	device_class->write_firmware = fu_steelseries_fizz_tunnel_write_firmware;
+	device_class->read_firmware = fu_steelseries_fizz_tunnel_read_firmware;
+	device_class->set_progress = fu_steelseries_fizz_tunnel_set_progress;
+	device_class->convert_version = fu_steelseries_fizz_tunnel_convert_version;
 }
 
 static void

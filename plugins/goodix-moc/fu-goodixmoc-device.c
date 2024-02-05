@@ -460,9 +460,9 @@ fu_goodixmoc_device_init(FuGoodixMocDevice *self)
 static void
 fu_goodixmoc_device_class_init(FuGoodixMocDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->write_firmware = fu_goodixmoc_device_write_firmware;
-	klass_device->setup = fu_goodixmoc_device_setup;
-	klass_device->attach = fu_goodixmoc_device_attach;
-	klass_device->set_progress = fu_goodixmoc_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->write_firmware = fu_goodixmoc_device_write_firmware;
+	device_class->setup = fu_goodixmoc_device_setup;
+	device_class->attach = fu_goodixmoc_device_attach;
+	device_class->set_progress = fu_goodixmoc_device_set_progress;
 }

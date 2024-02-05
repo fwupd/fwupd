@@ -267,13 +267,13 @@ static void
 fu_usb_backend_class_init(FuUsbBackendClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuBackendClass *klass_backend = FU_BACKEND_CLASS(klass);
+	FuBackendClass *backend_class = FU_BACKEND_CLASS(klass);
 	object_class->finalize = fu_usb_backend_finalize;
-	klass_backend->setup = fu_usb_backend_setup;
-	klass_backend->coldplug = fu_usb_backend_coldplug;
-	klass_backend->load = fu_usb_backend_load;
-	klass_backend->save = fu_usb_backend_save;
-	klass_backend->registered = fu_usb_backend_registered;
+	backend_class->setup = fu_usb_backend_setup;
+	backend_class->coldplug = fu_usb_backend_coldplug;
+	backend_class->load = fu_usb_backend_load;
+	backend_class->save = fu_usb_backend_save;
+	backend_class->registered = fu_usb_backend_registered;
 }
 
 FuBackend *

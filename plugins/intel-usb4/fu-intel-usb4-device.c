@@ -603,11 +603,11 @@ fu_intel_usb4_device_init(FuIntelUsb4Device *self)
 static void
 fu_intel_usb4_device_class_init(FuIntelUsb4DeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_intel_usb4_device_to_string;
-	klass_device->setup = fu_intel_usb4_device_setup;
-	klass_device->prepare_firmware = fu_intel_usb4_device_prepare_firmware;
-	klass_device->write_firmware = fu_intel_usb4_device_write_firmware;
-	klass_device->activate = fu_intel_usb4_device_activate;
-	klass_device->set_progress = fu_thunderbolt_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_intel_usb4_device_to_string;
+	device_class->setup = fu_intel_usb4_device_setup;
+	device_class->prepare_firmware = fu_intel_usb4_device_prepare_firmware;
+	device_class->write_firmware = fu_intel_usb4_device_write_firmware;
+	device_class->activate = fu_intel_usb4_device_activate;
+	device_class->set_progress = fu_thunderbolt_device_set_progress;
 }

@@ -194,10 +194,10 @@ static void
 fu_acpi_table_class_init(FuAcpiTableClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_acpi_table_finalize;
-	klass_firmware->parse = fu_acpi_table_parse;
-	klass_firmware->export = fu_acpi_table_export;
+	firmware_class->parse = fu_acpi_table_parse;
+	firmware_class->export = fu_acpi_table_export;
 }
 
 /**

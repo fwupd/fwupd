@@ -86,6 +86,6 @@ fu_intel_me_mkhi_device_init(FuIntelMeMkhiDevice *self)
 static void
 fu_intel_me_mkhi_device_class_init(FuIntelMeMkhiDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_intel_me_mkhi_device_setup;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->setup = fu_intel_me_mkhi_device_setup;
 }

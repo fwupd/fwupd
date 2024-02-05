@@ -205,11 +205,11 @@ static void
 fu_goodixtp_hid_device_class_init(FuGoodixtpHidDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
 	object_class->finalize = fu_goodixtp_hid_device_finalize;
-	klass_device->to_string = fu_goodixtp_hid_device_to_string;
-	klass_device->probe = fu_goodixtp_hid_device_probe;
-	klass_device->set_progress = fu_goodixtp_hid_device_set_progress;
-	klass_device->convert_version = fu_goodixtp_hid_device_convert_version;
+	device_class->to_string = fu_goodixtp_hid_device_to_string;
+	device_class->probe = fu_goodixtp_hid_device_probe;
+	device_class->set_progress = fu_goodixtp_hid_device_set_progress;
+	device_class->convert_version = fu_goodixtp_hid_device_convert_version;
 }

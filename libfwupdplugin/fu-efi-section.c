@@ -463,13 +463,13 @@ fu_efi_section_finalize(GObject *object)
 static void
 fu_efi_section_class_init(FuEfiSectionClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_efi_section_finalize;
-	klass_firmware->parse = fu_efi_section_parse;
-	klass_firmware->write = fu_efi_section_write;
-	klass_firmware->build = fu_efi_section_build;
-	klass_firmware->export = fu_efi_section_export;
+	firmware_class->parse = fu_efi_section_parse;
+	firmware_class->write = fu_efi_section_write;
+	firmware_class->build = fu_efi_section_build;
+	firmware_class->export = fu_efi_section_export;
 }
 
 /**

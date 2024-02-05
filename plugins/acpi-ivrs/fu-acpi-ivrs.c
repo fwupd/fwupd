@@ -66,8 +66,8 @@ fu_acpi_ivrs_get_dma_remap(FuAcpiIvrs *self)
 static void
 fu_acpi_ivrs_class_init(FuAcpiIvrsClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_acpi_ivrs_parse;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_acpi_ivrs_parse;
 }
 
 static void

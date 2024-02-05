@@ -141,9 +141,9 @@ fu_elf_firmware_init(FuElfFirmware *self)
 static void
 fu_elf_firmware_class_init(FuElfFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_elf_firmware_validate;
-	klass_firmware->parse = fu_elf_firmware_parse;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_elf_firmware_validate;
+	firmware_class->parse = fu_elf_firmware_parse;
 }
 
 /**

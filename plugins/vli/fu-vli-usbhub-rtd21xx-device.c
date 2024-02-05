@@ -543,14 +543,14 @@ fu_vli_usbhub_rtd21xx_device_init(FuVliUsbhubRtd21xxDevice *self)
 static void
 fu_vli_usbhub_rtd21xx_device_class_init(FuVliUsbhubRtd21xxDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->probe = fu_vli_usbhub_rtd21xx_device_probe;
-	klass_device->setup = fu_vli_usbhub_rtd21xx_device_setup;
-	klass_device->reload = fu_vli_usbhub_rtd21xx_device_reload;
-	klass_device->attach = fu_vli_usbhub_rtd21xx_device_attach;
-	klass_device->detach = fu_vli_usbhub_rtd21xx_device_detach;
-	klass_device->write_firmware = fu_vli_usbhub_rtd21xx_device_write_firmware;
-	klass_device->set_progress = fu_vli_usbhub_rtd21xx_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->probe = fu_vli_usbhub_rtd21xx_device_probe;
+	device_class->setup = fu_vli_usbhub_rtd21xx_device_setup;
+	device_class->reload = fu_vli_usbhub_rtd21xx_device_reload;
+	device_class->attach = fu_vli_usbhub_rtd21xx_device_attach;
+	device_class->detach = fu_vli_usbhub_rtd21xx_device_detach;
+	device_class->write_firmware = fu_vli_usbhub_rtd21xx_device_write_firmware;
+	device_class->set_progress = fu_vli_usbhub_rtd21xx_device_set_progress;
 }
 
 FuDevice *

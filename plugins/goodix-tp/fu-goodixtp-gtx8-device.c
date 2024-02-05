@@ -566,10 +566,10 @@ fu_goodixtp_gtx8_device_init(FuGoodixtpGtx8Device *self)
 static void
 fu_goodixtp_gtx8_device_class_init(FuGoodixtpGtx8DeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
-	klass_device->setup = fu_goodixtp_gtx8_device_setup;
-	klass_device->reload = fu_goodixtp_gtx8_device_setup;
-	klass_device->prepare_firmware = fu_goodixtp_gtx8_device_prepare_firmware;
-	klass_device->write_firmware = fu_goodixtp_gtx8_device_write_firmware;
+	device_class->setup = fu_goodixtp_gtx8_device_setup;
+	device_class->reload = fu_goodixtp_gtx8_device_setup;
+	device_class->prepare_firmware = fu_goodixtp_gtx8_device_prepare_firmware;
+	device_class->write_firmware = fu_goodixtp_gtx8_device_write_firmware;
 }

@@ -610,12 +610,12 @@ fu_colorhug_device_init(FuColorhugDevice *self)
 static void
 fu_colorhug_device_class_init(FuColorhugDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->write_firmware = fu_colorhug_device_write_firmware;
-	klass_device->attach = fu_colorhug_device_attach;
-	klass_device->detach = fu_colorhug_device_detach;
-	klass_device->reload = fu_colorhug_device_reload;
-	klass_device->setup = fu_colorhug_device_setup;
-	klass_device->probe = fu_colorhug_device_probe;
-	klass_device->set_progress = fu_colorhug_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->write_firmware = fu_colorhug_device_write_firmware;
+	device_class->attach = fu_colorhug_device_attach;
+	device_class->detach = fu_colorhug_device_detach;
+	device_class->reload = fu_colorhug_device_reload;
+	device_class->setup = fu_colorhug_device_setup;
+	device_class->probe = fu_colorhug_device_probe;
+	device_class->set_progress = fu_colorhug_device_set_progress;
 }

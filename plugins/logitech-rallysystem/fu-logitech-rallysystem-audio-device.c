@@ -212,9 +212,9 @@ fu_logitech_rallysystem_audio_device_init(FuLogitechRallysystemAudioDevice *self
 static void
 fu_logitech_rallysystem_audio_device_class_init(FuLogitechRallysystemAudioDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->probe = fu_logitech_rallysystem_audio_device_probe;
-	klass_device->setup = fu_logitech_rallysystem_audio_device_setup;
-	klass_device->set_progress = fu_logitech_rallysystem_audio_device_set_progress;
-	klass_device->convert_version = fu_logitech_rallysystem_audio_device_convert_version;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->probe = fu_logitech_rallysystem_audio_device_probe;
+	device_class->setup = fu_logitech_rallysystem_audio_device_setup;
+	device_class->set_progress = fu_logitech_rallysystem_audio_device_set_progress;
+	device_class->convert_version = fu_logitech_rallysystem_audio_device_convert_version;
 }

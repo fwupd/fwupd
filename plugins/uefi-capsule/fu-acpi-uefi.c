@@ -136,10 +136,10 @@ static void
 fu_acpi_uefi_class_init(FuAcpiUefiClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_acpi_uefi_finalize;
-	klass_firmware->parse = fu_acpi_uefi_parse;
-	klass_firmware->export = fu_acpi_uefi_export;
+	firmware_class->parse = fu_acpi_uefi_parse;
+	firmware_class->export = fu_acpi_uefi_export;
 }
 
 FuFirmware *

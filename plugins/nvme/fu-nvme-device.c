@@ -488,14 +488,14 @@ static void
 fu_nvme_device_class_init(FuNvmeDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_nvme_device_finalize;
-	klass_device->to_string = fu_nvme_device_to_string;
-	klass_device->set_quirk_kv = fu_nvme_device_set_quirk_kv;
-	klass_device->setup = fu_nvme_device_setup;
-	klass_device->write_firmware = fu_nvme_device_write_firmware;
-	klass_device->probe = fu_nvme_device_probe;
-	klass_device->set_progress = fu_nvme_device_set_progress;
+	device_class->to_string = fu_nvme_device_to_string;
+	device_class->set_quirk_kv = fu_nvme_device_set_quirk_kv;
+	device_class->setup = fu_nvme_device_setup;
+	device_class->write_firmware = fu_nvme_device_write_firmware;
+	device_class->probe = fu_nvme_device_probe;
+	device_class->set_progress = fu_nvme_device_set_progress;
 }
 
 FuNvmeDevice *

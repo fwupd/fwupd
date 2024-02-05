@@ -332,7 +332,7 @@ fu_flashrom_device_class_init(FuFlashromDeviceClass *klass)
 {
 	GParamSpec *pspec;
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
 	object_class->get_property = fu_flashrom_device_get_property;
 	object_class->set_property = fu_flashrom_device_set_property;
@@ -364,14 +364,14 @@ fu_flashrom_device_class_init(FuFlashromDeviceClass *klass)
 	g_object_class_install_property(object_class, PROP_FLASHCTX, pspec);
 
 	object_class->finalize = fu_flashrom_device_finalize;
-	klass_device->set_quirk_kv = fu_flashrom_device_set_quirk_kv;
-	klass_device->probe = fu_flashrom_device_probe;
-	klass_device->open = fu_flashrom_device_open;
-	klass_device->close = fu_flashrom_device_close;
-	klass_device->set_progress = fu_flashrom_device_set_progress;
-	klass_device->prepare = fu_flashrom_device_prepare;
-	klass_device->dump_firmware = fu_flashrom_device_dump_firmware;
-	klass_device->write_firmware = fu_flashrom_device_write_firmware;
+	device_class->set_quirk_kv = fu_flashrom_device_set_quirk_kv;
+	device_class->probe = fu_flashrom_device_probe;
+	device_class->open = fu_flashrom_device_open;
+	device_class->close = fu_flashrom_device_close;
+	device_class->set_progress = fu_flashrom_device_set_progress;
+	device_class->prepare = fu_flashrom_device_prepare;
+	device_class->dump_firmware = fu_flashrom_device_dump_firmware;
+	device_class->write_firmware = fu_flashrom_device_write_firmware;
 }
 
 FuDevice *

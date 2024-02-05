@@ -173,7 +173,7 @@ fu_steelseries_device_init(FuSteelseriesDevice *self)
 static void
 fu_steelseries_device_class_init(FuSteelseriesDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_steelseries_device_to_string;
-	klass_device->probe = fu_steelseries_device_probe;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_steelseries_device_to_string;
+	device_class->probe = fu_steelseries_device_probe;
 }

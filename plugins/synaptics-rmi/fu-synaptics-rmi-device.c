@@ -125,8 +125,8 @@ fu_synaptics_rmi_device_get_function(FuSynapticsRmiDevice *self,
 GByteArray *
 fu_synaptics_rmi_device_read(FuSynapticsRmiDevice *self, guint16 addr, gsize req_sz, GError **error)
 {
-	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
-	return klass_rmi->read(self, addr, req_sz, error);
+	FuSynapticsRmiDeviceClass *rmi_class = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
+	return rmi_class->read(self, addr, req_sz, error);
 }
 
 GByteArray *
@@ -135,15 +135,15 @@ fu_synaptics_rmi_device_read_packet_register(FuSynapticsRmiDevice *self,
 					     gsize req_sz,
 					     GError **error)
 {
-	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
-	if (klass_rmi->read_packet_register == NULL) {
+	FuSynapticsRmiDeviceClass *rmi_class = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
+	if (rmi_class->read_packet_register == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "packet register reads not supported");
 		return NULL;
 	}
-	return klass_rmi->read_packet_register(self, addr, req_sz, error);
+	return rmi_class->read_packet_register(self, addr, req_sz, error);
 }
 
 gboolean
@@ -153,18 +153,18 @@ fu_synaptics_rmi_device_write(FuSynapticsRmiDevice *self,
 			      FuSynapticsRmiDeviceFlags flags,
 			      GError **error)
 {
-	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
-	return klass_rmi->write(self, addr, req, flags, error);
+	FuSynapticsRmiDeviceClass *rmi_class = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
+	return rmi_class->write(self, addr, req, flags, error);
 }
 
 gboolean
 fu_synaptics_rmi_device_set_page(FuSynapticsRmiDevice *self, guint8 page, GError **error)
 {
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
-	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
+	FuSynapticsRmiDeviceClass *rmi_class = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
 	if (priv->current_page == page)
 		return TRUE;
-	if (!klass_rmi->set_page(self, page, error))
+	if (!rmi_class->set_page(self, page, error))
 		return FALSE;
 	priv->current_page = page;
 	return TRUE;
@@ -180,10 +180,10 @@ fu_synaptics_rmi_device_set_iepmode(FuSynapticsRmiDevice *self, gboolean iepmode
 gboolean
 fu_synaptics_rmi_device_write_bus_select(FuSynapticsRmiDevice *self, guint8 bus, GError **error)
 {
-	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
-	if (klass_rmi->write_bus_select == NULL)
+	FuSynapticsRmiDeviceClass *rmi_class = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
+	if (rmi_class->write_bus_select == NULL)
 		return TRUE;
-	return klass_rmi->write_bus_select(self, bus, error);
+	return rmi_class->write_bus_select(self, bus, error);
 }
 
 gboolean
@@ -316,8 +316,8 @@ fu_synaptics_rmi_device_set_product_id(FuSynapticsRmiDevice *self, const gchar *
 static gboolean
 fu_synaptics_rmi_device_query_status(FuSynapticsRmiDevice *self, GError **error)
 {
-	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
-	return klass_rmi->query_status(self, error);
+	FuSynapticsRmiDeviceClass *rmi_class = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
+	return rmi_class->query_status(self, error);
 }
 
 static gboolean
@@ -325,10 +325,10 @@ fu_synaptics_rmi_device_query_build_id(FuSynapticsRmiDevice *self,
 				       guint32 *build_id,
 				       GError **error)
 {
-	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
-	if (klass_rmi->query_build_id == NULL)
+	FuSynapticsRmiDeviceClass *rmi_class = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
+	if (rmi_class->query_build_id == NULL)
 		return TRUE;
-	return klass_rmi->query_build_id(self, build_id, error);
+	return rmi_class->query_build_id(self, build_id, error);
 }
 
 static gboolean
@@ -336,10 +336,10 @@ fu_synaptics_rmi_device_query_product_sub_id(FuSynapticsRmiDevice *self,
 					     guint8 *product_sub_id,
 					     GError **error)
 {
-	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
-	if (klass_rmi->query_product_sub_id == NULL)
+	FuSynapticsRmiDeviceClass *rmi_class = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
+	if (rmi_class->query_product_sub_id == NULL)
 		return TRUE;
-	return klass_rmi->query_product_sub_id(self, product_sub_id, error);
+	return rmi_class->query_product_sub_id(self, product_sub_id, error);
 }
 
 static gboolean
@@ -640,8 +640,8 @@ fu_synaptics_rmi_device_wait_for_attr(FuSynapticsRmiDevice *self,
 				      guint timeout_ms,
 				      GError **error)
 {
-	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
-	return klass_rmi->wait_for_attr(self, source_mask, timeout_ms, error);
+	FuSynapticsRmiDeviceClass *rmi_class = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
+	return rmi_class->wait_for_attr(self, source_mask, timeout_ms, error);
 }
 
 gboolean
@@ -649,15 +649,15 @@ fu_synaptics_rmi_device_enter_iep_mode(FuSynapticsRmiDevice *self,
 				       FuSynapticsRmiDeviceFlags flags,
 				       GError **error)
 {
-	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
+	FuSynapticsRmiDeviceClass *rmi_class = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* already set */
 	if ((flags & FU_SYNAPTICS_RMI_DEVICE_FLAG_FORCE) == 0 && priv->in_iep_mode)
 		return TRUE;
-	if (klass_rmi->enter_iep_mode != NULL) {
+	if (rmi_class->enter_iep_mode != NULL) {
 		g_debug("enabling RMI iep_mode");
-		if (!klass_rmi->enter_iep_mode(self, error)) {
+		if (!rmi_class->enter_iep_mode(self, error)) {
 			g_prefix_error(error, "failed to enable RMI iep_mode: ");
 			return FALSE;
 		}
@@ -749,10 +749,10 @@ fu_synaptics_rmi_device_wait_for_idle(FuSynapticsRmiDevice *self,
 gboolean
 fu_synaptics_rmi_device_disable_sleep(FuSynapticsRmiDevice *self, GError **error)
 {
-	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
-	if (klass_rmi->disable_sleep == NULL)
+	FuSynapticsRmiDeviceClass *rmi_class = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
+	if (rmi_class->disable_sleep == NULL)
 		return TRUE;
-	return klass_rmi->disable_sleep(self, error);
+	return rmi_class->disable_sleep(self, error);
 }
 
 gboolean
@@ -857,10 +857,10 @@ static void
 fu_synaptics_rmi_device_class_init(FuSynapticsRmiDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_synaptics_rmi_device_finalize;
-	klass_device->to_string = fu_synaptics_rmi_device_to_string;
-	klass_device->prepare_firmware = fu_synaptics_rmi_device_prepare_firmware;
-	klass_device->setup = fu_synaptics_rmi_device_setup;
-	klass_device->write_firmware = fu_synaptics_rmi_device_write_firmware;
+	device_class->to_string = fu_synaptics_rmi_device_to_string;
+	device_class->prepare_firmware = fu_synaptics_rmi_device_prepare_firmware;
+	device_class->setup = fu_synaptics_rmi_device_setup;
+	device_class->write_firmware = fu_synaptics_rmi_device_write_firmware;
 }

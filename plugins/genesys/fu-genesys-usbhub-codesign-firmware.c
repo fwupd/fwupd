@@ -111,8 +111,8 @@ fu_genesys_usbhub_codesign_firmware_init(FuGenesysUsbhubCodesignFirmware *self)
 static void
 fu_genesys_usbhub_codesign_firmware_class_init(FuGenesysUsbhubCodesignFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_genesys_usbhub_codesign_firmware_validate;
-	klass_firmware->parse = fu_genesys_usbhub_codesign_firmware_parse;
-	klass_firmware->export = fu_genesys_usbhub_codesign_firmware_export;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_genesys_usbhub_codesign_firmware_validate;
+	firmware_class->parse = fu_genesys_usbhub_codesign_firmware_parse;
+	firmware_class->export = fu_genesys_usbhub_codesign_firmware_export;
 }

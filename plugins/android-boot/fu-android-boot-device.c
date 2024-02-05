@@ -366,13 +366,13 @@ fu_android_boot_device_init(FuAndroidBootDevice *self)
 static void
 fu_android_boot_device_class_init(FuAndroidBootDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	GObjectClass *klass_object = G_OBJECT_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	klass_object->finalize = fu_android_boot_device_finalize;
-	klass_device->probe = fu_android_boot_device_probe;
-	klass_device->open = fu_android_boot_device_open;
-	klass_device->write_firmware = fu_android_boot_device_write_firmware;
-	klass_device->to_string = fu_android_boot_device_to_string;
-	klass_device->set_quirk_kv = fu_android_boot_device_set_quirk_kv;
+	object_class->finalize = fu_android_boot_device_finalize;
+	device_class->probe = fu_android_boot_device_probe;
+	device_class->open = fu_android_boot_device_open;
+	device_class->write_firmware = fu_android_boot_device_write_firmware;
+	device_class->to_string = fu_android_boot_device_to_string;
+	device_class->set_quirk_kv = fu_android_boot_device_set_quirk_kv;
 }

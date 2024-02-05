@@ -102,8 +102,8 @@ fu_ccgx_hid_device_init(FuCcgxHidDevice *self)
 static void
 fu_ccgx_hid_device_class_init(FuCcgxHidDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->detach = fu_ccgx_hid_device_detach;
-	klass_device->setup = fu_ccgx_hid_device_setup;
-	klass_device->set_progress = fu_ccgx_hid_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->detach = fu_ccgx_hid_device_detach;
+	device_class->setup = fu_ccgx_hid_device_setup;
+	device_class->set_progress = fu_ccgx_hid_device_set_progress;
 }

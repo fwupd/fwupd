@@ -677,12 +677,12 @@ static void
 fu_synaptics_rmi_firmware_class_init(FuSynapticsRmiFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_synaptics_rmi_firmware_finalize;
-	klass_firmware->parse = fu_synaptics_rmi_firmware_parse;
-	klass_firmware->export = fu_synaptics_rmi_firmware_export;
-	klass_firmware->build = fu_synaptics_rmi_firmware_build;
-	klass_firmware->write = fu_synaptics_rmi_firmware_write;
+	firmware_class->parse = fu_synaptics_rmi_firmware_parse;
+	firmware_class->export = fu_synaptics_rmi_firmware_export;
+	firmware_class->build = fu_synaptics_rmi_firmware_build;
+	firmware_class->write = fu_synaptics_rmi_firmware_write;
 }
 
 FuFirmware *

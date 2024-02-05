@@ -266,8 +266,8 @@ fu_rts54hid_module_init(FuRts54HidModule *self)
 static void
 fu_rts54hid_module_class_init(FuRts54HidModuleClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->write_firmware = fu_rts54hid_module_write_firmware;
-	klass_device->to_string = fu_rts54hid_module_to_string;
-	klass_device->set_quirk_kv = fu_rts54hid_module_set_quirk_kv;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->write_firmware = fu_rts54hid_module_write_firmware;
+	device_class->to_string = fu_rts54hid_module_to_string;
+	device_class->set_quirk_kv = fu_rts54hid_module_set_quirk_kv;
 }

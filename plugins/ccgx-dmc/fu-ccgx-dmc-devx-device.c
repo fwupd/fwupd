@@ -330,13 +330,13 @@ fu_ccgx_dmc_devx_device_finalize(GObject *object)
 static void
 fu_ccgx_dmc_devx_device_class_init(FuCcgxDmcDevxDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_ccgx_dmc_devx_device_finalize;
-	klass_device->probe = fu_ccgx_dmc_devx_device_probe;
-	klass_device->to_string = fu_ccgx_dmc_devx_device_to_string;
-	klass_device->set_quirk_kv = fu_ccgx_dmc_devx_device_set_quirk_kv;
-	klass_device->convert_version = fu_ccgx_dmc_devx_device_convert_version;
+	device_class->probe = fu_ccgx_dmc_devx_device_probe;
+	device_class->to_string = fu_ccgx_dmc_devx_device_to_string;
+	device_class->set_quirk_kv = fu_ccgx_dmc_devx_device_set_quirk_kv;
+	device_class->convert_version = fu_ccgx_dmc_devx_device_convert_version;
 }
 
 FuCcgxDmcDevxDevice *

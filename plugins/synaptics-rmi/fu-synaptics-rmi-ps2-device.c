@@ -979,21 +979,21 @@ fu_synaptics_rmi_ps2_device_wait_for_attr(FuSynapticsRmiDevice *rmi_device,
 static void
 fu_synaptics_rmi_ps2_device_class_init(FuSynapticsRmiPs2DeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_CLASS(klass);
-	klass_device->attach = fu_synaptics_rmi_ps2_device_attach;
-	klass_device->detach = fu_synaptics_rmi_ps2_device_detach;
-	klass_device->setup = fu_synaptics_rmi_ps2_device_setup;
-	klass_device->probe = fu_synaptics_rmi_ps2_device_probe;
-	klass_device->open = fu_synaptics_rmi_ps2_device_open;
-	klass_rmi->read = fu_synaptics_rmi_ps2_device_read;
-	klass_rmi->write = fu_synaptics_rmi_ps2_device_write;
-	klass_rmi->set_page = fu_synaptics_rmi_ps2_device_set_page;
-	klass_rmi->query_status = fu_synaptics_rmi_ps2_device_query_status;
-	klass_rmi->query_build_id = fu_synaptics_rmi_ps2_device_query_build_id;
-	klass_rmi->query_product_sub_id = fu_synaptics_rmi_ps2_device_query_product_sub_id;
-	klass_rmi->wait_for_attr = fu_synaptics_rmi_ps2_device_wait_for_attr;
-	klass_rmi->enter_iep_mode = fu_synaptics_rmi_ps2_device_enter_iep_mode;
-	klass_rmi->write_bus_select = fu_synaptics_rmi_ps2_device_write_bus_select;
-	klass_rmi->read_packet_register = fu_synaptics_rmi_ps2_device_read_packet_register;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	FuSynapticsRmiDeviceClass *rmi_class = FU_SYNAPTICS_RMI_DEVICE_CLASS(klass);
+	device_class->attach = fu_synaptics_rmi_ps2_device_attach;
+	device_class->detach = fu_synaptics_rmi_ps2_device_detach;
+	device_class->setup = fu_synaptics_rmi_ps2_device_setup;
+	device_class->probe = fu_synaptics_rmi_ps2_device_probe;
+	device_class->open = fu_synaptics_rmi_ps2_device_open;
+	rmi_class->read = fu_synaptics_rmi_ps2_device_read;
+	rmi_class->write = fu_synaptics_rmi_ps2_device_write;
+	rmi_class->set_page = fu_synaptics_rmi_ps2_device_set_page;
+	rmi_class->query_status = fu_synaptics_rmi_ps2_device_query_status;
+	rmi_class->query_build_id = fu_synaptics_rmi_ps2_device_query_build_id;
+	rmi_class->query_product_sub_id = fu_synaptics_rmi_ps2_device_query_product_sub_id;
+	rmi_class->wait_for_attr = fu_synaptics_rmi_ps2_device_wait_for_attr;
+	rmi_class->enter_iep_mode = fu_synaptics_rmi_ps2_device_enter_iep_mode;
+	rmi_class->write_bus_select = fu_synaptics_rmi_ps2_device_write_bus_select;
+	rmi_class->read_packet_register = fu_synaptics_rmi_ps2_device_read_packet_register;
 }

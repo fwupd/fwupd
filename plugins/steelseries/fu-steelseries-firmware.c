@@ -85,9 +85,9 @@ fu_steelseries_firmware_init(FuSteelseriesFirmware *self)
 static void
 fu_steelseries_firmware_class_init(FuSteelseriesFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_steelseries_firmware_parse;
-	klass_firmware->export = fu_steelseries_firmware_export;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_steelseries_firmware_parse;
+	firmware_class->export = fu_steelseries_firmware_export;
 }
 
 FuFirmware *

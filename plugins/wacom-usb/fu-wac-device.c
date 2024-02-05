@@ -907,12 +907,12 @@ static void
 fu_wac_device_class_init(FuWacDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_wac_device_finalize;
-	klass_device->write_firmware = fu_wac_device_write_firmware;
-	klass_device->to_string = fu_wac_device_to_string;
-	klass_device->setup = fu_wac_device_setup;
-	klass_device->close = fu_wac_device_close;
-	klass_device->set_progress = fu_wac_device_set_progress;
-	klass_device->convert_version = fu_wac_device_convert_version;
+	device_class->write_firmware = fu_wac_device_write_firmware;
+	device_class->to_string = fu_wac_device_to_string;
+	device_class->setup = fu_wac_device_setup;
+	device_class->close = fu_wac_device_close;
+	device_class->set_progress = fu_wac_device_set_progress;
+	device_class->convert_version = fu_wac_device_convert_version;
 }

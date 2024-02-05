@@ -986,16 +986,16 @@ fu_mediatek_scaler_device_init(FuMediatekScalerDevice *self)
 static void
 fu_mediatek_scaler_device_class_init(FuMediatekScalerDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_mediatek_scaler_device_to_string;
-	klass_device->convert_version = fu_mediatek_scaler_device_convert_version;
-	klass_device->probe = fu_mediatek_scaler_device_probe;
-	klass_device->setup = fu_mediatek_scaler_device_setup;
-	klass_device->open = fu_mediatek_scaler_device_open;
-	klass_device->close = fu_mediatek_scaler_device_close;
-	klass_device->prepare_firmware = fu_mediatek_scaler_device_prepare_firmware;
-	klass_device->write_firmware = fu_mediatek_scaler_device_write_firmware;
-	klass_device->attach = fu_mediatek_scaler_device_attach;
-	klass_device->reload = fu_mediatek_scaler_device_setup;
-	klass_device->set_progress = fu_mediatek_scaler_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_mediatek_scaler_device_to_string;
+	device_class->convert_version = fu_mediatek_scaler_device_convert_version;
+	device_class->probe = fu_mediatek_scaler_device_probe;
+	device_class->setup = fu_mediatek_scaler_device_setup;
+	device_class->open = fu_mediatek_scaler_device_open;
+	device_class->close = fu_mediatek_scaler_device_close;
+	device_class->prepare_firmware = fu_mediatek_scaler_device_prepare_firmware;
+	device_class->write_firmware = fu_mediatek_scaler_device_write_firmware;
+	device_class->attach = fu_mediatek_scaler_device_attach;
+	device_class->reload = fu_mediatek_scaler_device_setup;
+	device_class->set_progress = fu_mediatek_scaler_device_set_progress;
 }

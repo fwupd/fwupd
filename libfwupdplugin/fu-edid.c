@@ -413,12 +413,12 @@ static void
 fu_edid_class_init(FuEdidClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_edid_finalize;
-	klass_firmware->parse = fu_edid_parse;
-	klass_firmware->write = fu_edid_write;
-	klass_firmware->build = fu_edid_build;
-	klass_firmware->export = fu_edid_export;
+	firmware_class->parse = fu_edid_parse;
+	firmware_class->write = fu_edid_write;
+	firmware_class->build = fu_edid_build;
+	firmware_class->export = fu_edid_export;
 }
 
 static void

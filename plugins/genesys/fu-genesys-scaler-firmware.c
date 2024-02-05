@@ -156,11 +156,11 @@ fu_genesys_scaler_firmware_init(FuGenesysScalerFirmware *self)
 static void
 fu_genesys_scaler_firmware_class_init(FuGenesysScalerFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_genesys_scaler_firmware_parse;
-	klass_firmware->export = fu_genesys_scaler_firmware_export;
-	klass_firmware->build = fu_genesys_scaler_firmware_build;
-	klass_firmware->write = fu_genesys_scaler_firmware_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_genesys_scaler_firmware_parse;
+	firmware_class->export = fu_genesys_scaler_firmware_export;
+	firmware_class->build = fu_genesys_scaler_firmware_build;
+	firmware_class->write = fu_genesys_scaler_firmware_write;
 }
 
 FuFirmware *

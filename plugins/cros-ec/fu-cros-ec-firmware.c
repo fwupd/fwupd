@@ -192,8 +192,8 @@ static void
 fu_cros_ec_firmware_class_init(FuCrosEcFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFmapFirmwareClass *klass_firmware = FU_FMAP_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_cros_ec_firmware_parse;
+	FuFmapFirmwareClass *firmware_class = FU_FMAP_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_cros_ec_firmware_parse;
 	object_class->finalize = fu_cros_ec_firmware_finalize;
 }
 

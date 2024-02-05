@@ -214,7 +214,7 @@ fu_rts54hub_rtd21xx_device_init(FuRts54hubRtd21xxDevice *self)
 static void
 fu_rts54hub_rtd21xx_device_class_init(FuRts54hubRtd21xxDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_rts54hub_rtd21xx_device_to_string;
-	klass_device->set_quirk_kv = fu_rts54hub_rtd21xx_device_set_quirk_kv;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_rts54hub_rtd21xx_device_to_string;
+	device_class->set_quirk_kv = fu_rts54hub_rtd21xx_device_set_quirk_kv;
 }

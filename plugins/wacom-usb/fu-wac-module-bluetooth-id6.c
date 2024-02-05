@@ -180,8 +180,8 @@ fu_wac_module_bluetooth_id6_init(FuWacModuleBluetoothId6 *self)
 static void
 fu_wac_module_bluetooth_id6_class_init(FuWacModuleBluetoothId6Class *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->write_firmware = fu_wac_module_bluetooth_id6_write_firmware;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->write_firmware = fu_wac_module_bluetooth_id6_write_firmware;
 }
 
 FuWacModule *

@@ -235,10 +235,10 @@ fu_hailuck_tp_device_init(FuHailuckTpDevice *self)
 static void
 fu_hailuck_tp_device_class_init(FuHailuckTpDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->write_firmware = fu_hailuck_tp_device_write_firmware;
-	klass_device->probe = fu_hailuck_tp_device_probe;
-	klass_device->set_progress = fu_hailuck_tp_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->write_firmware = fu_hailuck_tp_device_write_firmware;
+	device_class->probe = fu_hailuck_tp_device_probe;
+	device_class->set_progress = fu_hailuck_tp_device_set_progress;
 }
 
 FuHailuckTpDevice *

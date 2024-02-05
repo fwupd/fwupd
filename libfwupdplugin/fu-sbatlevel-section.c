@@ -115,9 +115,9 @@ fu_sbatlevel_section_init(FuSbatlevelSection *self)
 static void
 fu_sbatlevel_section_class_init(FuSbatlevelSectionClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 
-	klass_firmware->parse = fu_sbatlevel_section_parse;
+	firmware_class->parse = fu_sbatlevel_section_parse;
 }
 
 FuFirmware *

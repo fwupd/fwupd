@@ -883,18 +883,18 @@ fu_bcm57xx_recovery_device_probe(FuDevice *device, GError **error)
 static void
 fu_bcm57xx_recovery_device_class_init(FuBcm57xxRecoveryDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->activate = fu_bcm57xx_recovery_device_activate;
-	klass_device->prepare_firmware = fu_bcm57xx_recovery_device_prepare_firmware;
-	klass_device->setup = fu_bcm57xx_recovery_device_setup;
-	klass_device->reload = fu_bcm57xx_recovery_device_setup;
-	klass_device->open = fu_bcm57xx_recovery_device_open;
-	klass_device->close = fu_bcm57xx_recovery_device_close;
-	klass_device->write_firmware = fu_bcm57xx_recovery_device_write_firmware;
-	klass_device->dump_firmware = fu_bcm57xx_recovery_device_dump_firmware;
-	klass_device->attach = fu_bcm57xx_recovery_device_attach;
-	klass_device->detach = fu_bcm57xx_recovery_device_detach;
-	klass_device->probe = fu_bcm57xx_recovery_device_probe;
-	klass_device->set_progress = fu_bcm57xx_recovery_device_set_progress;
-	klass_device->convert_version = fu_bcm57xx_recovery_device_convert_version;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->activate = fu_bcm57xx_recovery_device_activate;
+	device_class->prepare_firmware = fu_bcm57xx_recovery_device_prepare_firmware;
+	device_class->setup = fu_bcm57xx_recovery_device_setup;
+	device_class->reload = fu_bcm57xx_recovery_device_setup;
+	device_class->open = fu_bcm57xx_recovery_device_open;
+	device_class->close = fu_bcm57xx_recovery_device_close;
+	device_class->write_firmware = fu_bcm57xx_recovery_device_write_firmware;
+	device_class->dump_firmware = fu_bcm57xx_recovery_device_dump_firmware;
+	device_class->attach = fu_bcm57xx_recovery_device_attach;
+	device_class->detach = fu_bcm57xx_recovery_device_detach;
+	device_class->probe = fu_bcm57xx_recovery_device_probe;
+	device_class->set_progress = fu_bcm57xx_recovery_device_set_progress;
+	device_class->convert_version = fu_bcm57xx_recovery_device_convert_version;
 }

@@ -115,9 +115,9 @@ fu_synaptics_cape_hid_firmware_init(FuSynapticsCapeHidFirmware *self)
 static void
 fu_synaptics_cape_hid_firmware_class_init(FuSynapticsCapeHidFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_synaptics_cape_hid_firmware_parse;
-	klass_firmware->write = fu_synaptics_cape_hid_firmware_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_synaptics_cape_hid_firmware_parse;
+	firmware_class->write = fu_synaptics_cape_hid_firmware_write;
 }
 
 FuFirmware *

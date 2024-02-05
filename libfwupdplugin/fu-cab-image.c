@@ -154,11 +154,11 @@ fu_cab_image_finalize(GObject *object)
 static void
 fu_cab_image_class_init(FuCabImageClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_cab_image_finalize;
-	klass_firmware->build = fu_cab_image_build;
-	klass_firmware->export = fu_cab_image_export;
+	firmware_class->build = fu_cab_image_build;
+	firmware_class->export = fu_cab_image_export;
 }
 
 static void

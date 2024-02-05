@@ -824,13 +824,13 @@ fu_usi_dock_mcu_device_init(FuUsiDockMcuDevice *self)
 static void
 fu_usi_dock_mcu_device_class_init(FuUsiDockMcuDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
-	klass_device->write_firmware = fu_usi_dock_mcu_device_write_firmware;
-	klass_device->attach = fu_usi_dock_mcu_device_attach;
-	klass_device->setup = fu_usi_dock_mcu_device_setup;
-	klass_device->set_progress = fu_usi_dock_mcu_device_set_progress;
-	klass_device->cleanup = fu_usi_dock_mcu_device_cleanup;
-	klass_device->reload = fu_usi_dock_mcu_device_reload;
-	klass_device->replace = fu_usi_dock_mcu_device_replace;
+	device_class->write_firmware = fu_usi_dock_mcu_device_write_firmware;
+	device_class->attach = fu_usi_dock_mcu_device_attach;
+	device_class->setup = fu_usi_dock_mcu_device_setup;
+	device_class->set_progress = fu_usi_dock_mcu_device_set_progress;
+	device_class->cleanup = fu_usi_dock_mcu_device_cleanup;
+	device_class->reload = fu_usi_dock_mcu_device_reload;
+	device_class->replace = fu_usi_dock_mcu_device_replace;
 }

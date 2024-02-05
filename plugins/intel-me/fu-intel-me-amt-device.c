@@ -368,7 +368,7 @@ fu_intel_me_amt_device_init(FuIntelMeAmtDevice *self)
 static void
 fu_intel_me_amt_device_class_init(FuIntelMeAmtDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->open = fu_intel_me_amt_device_open;
-	klass_device->setup = fu_intel_me_amt_device_setup;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->open = fu_intel_me_amt_device_open;
+	device_class->setup = fu_intel_me_amt_device_setup;
 }

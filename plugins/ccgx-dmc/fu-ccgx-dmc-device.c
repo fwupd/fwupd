@@ -822,13 +822,13 @@ fu_ccgx_dmc_device_init(FuCcgxDmcDevice *self)
 static void
 fu_ccgx_dmc_device_class_init(FuCcgxDmcDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_ccgx_dmc_device_to_string;
-	klass_device->write_firmware = fu_ccgx_dmc_write_firmware;
-	klass_device->prepare_firmware = fu_ccgx_dmc_device_prepare_firmware;
-	klass_device->attach = fu_ccgx_dmc_device_attach;
-	klass_device->setup = fu_ccgx_dmc_device_setup;
-	klass_device->set_quirk_kv = fu_ccgx_dmc_device_set_quirk_kv;
-	klass_device->set_progress = fu_ccgx_dmc_device_set_progress;
-	klass_device->convert_version = fu_ccgx_dmc_device_convert_version;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_ccgx_dmc_device_to_string;
+	device_class->write_firmware = fu_ccgx_dmc_write_firmware;
+	device_class->prepare_firmware = fu_ccgx_dmc_device_prepare_firmware;
+	device_class->attach = fu_ccgx_dmc_device_attach;
+	device_class->setup = fu_ccgx_dmc_device_setup;
+	device_class->set_quirk_kv = fu_ccgx_dmc_device_set_quirk_kv;
+	device_class->set_progress = fu_ccgx_dmc_device_set_progress;
+	device_class->convert_version = fu_ccgx_dmc_device_convert_version;
 }

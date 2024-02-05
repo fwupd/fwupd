@@ -95,6 +95,6 @@ fu_steelseries_mouse_init(FuSteelseriesMouse *self)
 static void
 fu_steelseries_mouse_class_init(FuSteelseriesMouseClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_steelseries_mouse_setup;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->setup = fu_steelseries_mouse_setup;
 }

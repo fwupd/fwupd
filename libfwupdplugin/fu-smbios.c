@@ -612,10 +612,10 @@ static void
 fu_smbios_class_init(FuSmbiosClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_smbios_finalize;
-	klass_firmware->parse = fu_smbios_parse;
-	klass_firmware->export = fu_smbios_export;
+	firmware_class->parse = fu_smbios_parse;
+	firmware_class->export = fu_smbios_export;
 }
 
 static void

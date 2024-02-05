@@ -138,8 +138,8 @@ fu_uefi_nvram_device_init(FuUefiNvramDevice *self)
 static void
 fu_uefi_nvram_device_class_init(FuUefiNvramDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->get_results = fu_uefi_nvram_device_get_results;
-	klass_device->write_firmware = fu_uefi_nvram_device_write_firmware;
-	klass_device->report_metadata_pre = fu_uefi_nvram_device_report_metadata_pre;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->get_results = fu_uefi_nvram_device_get_results;
+	device_class->write_firmware = fu_uefi_nvram_device_write_firmware;
+	device_class->report_metadata_pre = fu_uefi_nvram_device_report_metadata_pre;
 }

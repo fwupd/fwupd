@@ -708,12 +708,12 @@ fu_fastboot_device_init(FuFastbootDevice *self)
 static void
 fu_fastboot_device_class_init(FuFastbootDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->probe = fu_fastboot_device_probe;
-	klass_device->setup = fu_fastboot_device_setup;
-	klass_device->write_firmware = fu_fastboot_device_write_firmware;
-	klass_device->attach = fu_fastboot_device_attach;
-	klass_device->to_string = fu_fastboot_device_to_string;
-	klass_device->set_quirk_kv = fu_fastboot_device_set_quirk_kv;
-	klass_device->set_progress = fu_fastboot_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->probe = fu_fastboot_device_probe;
+	device_class->setup = fu_fastboot_device_setup;
+	device_class->write_firmware = fu_fastboot_device_write_firmware;
+	device_class->attach = fu_fastboot_device_attach;
+	device_class->to_string = fu_fastboot_device_to_string;
+	device_class->set_quirk_kv = fu_fastboot_device_set_quirk_kv;
+	device_class->set_progress = fu_fastboot_device_set_progress;
 }

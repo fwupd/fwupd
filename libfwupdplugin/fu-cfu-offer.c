@@ -549,11 +549,11 @@ fu_cfu_offer_init(FuCfuOffer *self)
 static void
 fu_cfu_offer_class_init(FuCfuOfferClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->export = fu_cfu_offer_export;
-	klass_firmware->parse = fu_cfu_offer_parse;
-	klass_firmware->write = fu_cfu_offer_write;
-	klass_firmware->build = fu_cfu_offer_build;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->export = fu_cfu_offer_export;
+	firmware_class->parse = fu_cfu_offer_parse;
+	firmware_class->write = fu_cfu_offer_write;
+	firmware_class->build = fu_cfu_offer_build;
 }
 
 /**

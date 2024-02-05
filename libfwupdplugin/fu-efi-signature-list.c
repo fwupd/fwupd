@@ -272,10 +272,10 @@ fu_efi_signature_list_new(void)
 static void
 fu_efi_signature_list_class_init(FuEfiSignatureListClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_efi_signature_list_validate;
-	klass_firmware->parse = fu_efi_signature_list_parse;
-	klass_firmware->write = fu_efi_signature_list_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_efi_signature_list_validate;
+	firmware_class->parse = fu_efi_signature_list_parse;
+	firmware_class->write = fu_efi_signature_list_write;
 }
 
 static void

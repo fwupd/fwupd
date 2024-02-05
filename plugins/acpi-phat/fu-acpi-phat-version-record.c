@@ -87,9 +87,9 @@ fu_acpi_phat_version_record_init(FuAcpiPhatVersionRecord *self)
 static void
 fu_acpi_phat_version_record_class_init(FuAcpiPhatVersionRecordClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_acpi_phat_version_record_parse;
-	klass_firmware->write = fu_acpi_phat_version_record_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_acpi_phat_version_record_parse;
+	firmware_class->write = fu_acpi_phat_version_record_write;
 }
 
 FuFirmware *

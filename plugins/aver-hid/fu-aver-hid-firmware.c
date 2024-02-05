@@ -54,8 +54,8 @@ fu_aver_hid_firmware_init(FuAverHidFirmware *self)
 static void
 fu_aver_hid_firmware_class_init(FuAverHidFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_aver_hid_firmware_parse;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_aver_hid_firmware_parse;
 }
 
 FuFirmware *

@@ -439,13 +439,13 @@ static void
 fu_ifd_firmware_class_init(FuIfdFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_ifd_firmware_finalize;
-	klass_firmware->validate = fu_ifd_firmware_validate;
-	klass_firmware->export = fu_ifd_firmware_export;
-	klass_firmware->parse = fu_ifd_firmware_parse;
-	klass_firmware->write = fu_ifd_firmware_write;
-	klass_firmware->build = fu_ifd_firmware_build;
+	firmware_class->validate = fu_ifd_firmware_validate;
+	firmware_class->export = fu_ifd_firmware_export;
+	firmware_class->parse = fu_ifd_firmware_parse;
+	firmware_class->write = fu_ifd_firmware_write;
+	firmware_class->build = fu_ifd_firmware_build;
 }
 
 /**

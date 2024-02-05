@@ -455,8 +455,8 @@ fu_elanfp_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_elanfp_device_class_init(FuElanfpDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_elanfp_device_setup;
-	klass_device->write_firmware = fu_elanfp_device_write_firmware;
-	klass_device->set_progress = fu_elanfp_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->setup = fu_elanfp_device_setup;
+	device_class->write_firmware = fu_elanfp_device_write_firmware;
+	device_class->set_progress = fu_elanfp_device_set_progress;
 }

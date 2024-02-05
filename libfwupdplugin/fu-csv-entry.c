@@ -248,13 +248,13 @@ fu_csv_entry_finalize(GObject *object)
 static void
 fu_csv_entry_class_init(FuCsvEntryClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_csv_entry_finalize;
-	klass_firmware->parse = fu_csv_entry_parse;
-	klass_firmware->write = fu_csv_entry_write;
-	klass_firmware->build = fu_archive_firmware_build;
-	klass_firmware->export = fu_ifd_firmware_export;
+	firmware_class->parse = fu_csv_entry_parse;
+	firmware_class->write = fu_csv_entry_write;
+	firmware_class->build = fu_archive_firmware_build;
+	firmware_class->export = fu_ifd_firmware_export;
 }
 
 /**

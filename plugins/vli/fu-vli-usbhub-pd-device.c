@@ -298,17 +298,17 @@ fu_vli_usbhub_pd_device_init(FuVliUsbhubPdDevice *self)
 static void
 fu_vli_usbhub_pd_device_class_init(FuVliUsbhubPdDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_vli_usbhub_pd_device_to_string;
-	klass_device->probe = fu_vli_usbhub_pd_device_probe;
-	klass_device->setup = fu_vli_usbhub_pd_device_setup;
-	klass_device->reload = fu_vli_usbhub_pd_device_reload;
-	klass_device->attach = fu_vli_usbhub_pd_device_attach;
-	klass_device->dump_firmware = fu_vli_usbhub_pd_device_dump_firmware;
-	klass_device->write_firmware = fu_vli_usbhub_pd_device_write_firmware;
-	klass_device->prepare_firmware = fu_vli_usbhub_pd_device_prepare_firmware;
-	klass_device->convert_version = fu_vli_usbhub_pd_device_convert_version;
-	klass_device->set_progress = fu_vli_usbhub_pd_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_vli_usbhub_pd_device_to_string;
+	device_class->probe = fu_vli_usbhub_pd_device_probe;
+	device_class->setup = fu_vli_usbhub_pd_device_setup;
+	device_class->reload = fu_vli_usbhub_pd_device_reload;
+	device_class->attach = fu_vli_usbhub_pd_device_attach;
+	device_class->dump_firmware = fu_vli_usbhub_pd_device_dump_firmware;
+	device_class->write_firmware = fu_vli_usbhub_pd_device_write_firmware;
+	device_class->prepare_firmware = fu_vli_usbhub_pd_device_prepare_firmware;
+	device_class->convert_version = fu_vli_usbhub_pd_device_convert_version;
+	device_class->set_progress = fu_vli_usbhub_pd_device_set_progress;
 }
 
 FuDevice *

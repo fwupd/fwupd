@@ -1010,16 +1010,16 @@ static void
 fu_dell_dock_ec_class_init(FuDellDockEcClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_dell_dock_ec_finalize;
-	klass_device->activate = fu_dell_dock_ec_activate;
-	klass_device->to_string = fu_dell_dock_ec_to_string;
-	klass_device->setup = fu_dell_dock_ec_setup;
-	klass_device->open = fu_dell_dock_ec_open;
-	klass_device->close = fu_dell_dock_ec_close;
-	klass_device->write_firmware = fu_dell_dock_ec_write_fw;
-	klass_device->set_quirk_kv = fu_dell_dock_ec_set_quirk_kv;
-	klass_device->set_progress = fu_dell_dock_ec_set_progress;
+	device_class->activate = fu_dell_dock_ec_activate;
+	device_class->to_string = fu_dell_dock_ec_to_string;
+	device_class->setup = fu_dell_dock_ec_setup;
+	device_class->open = fu_dell_dock_ec_open;
+	device_class->close = fu_dell_dock_ec_close;
+	device_class->write_firmware = fu_dell_dock_ec_write_fw;
+	device_class->set_quirk_kv = fu_dell_dock_ec_set_quirk_kv;
+	device_class->set_progress = fu_dell_dock_ec_set_progress;
 }
 
 FuDellDockEc *

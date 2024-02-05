@@ -327,9 +327,9 @@ fu_vli_usbhub_firmware_init(FuVliUsbhubFirmware *self)
 static void
 fu_vli_usbhub_firmware_class_init(FuVliUsbhubFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_vli_usbhub_firmware_parse;
-	klass_firmware->export = fu_vli_usbhub_firmware_export;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_vli_usbhub_firmware_parse;
+	firmware_class->export = fu_vli_usbhub_firmware_export;
 }
 
 FuFirmware *

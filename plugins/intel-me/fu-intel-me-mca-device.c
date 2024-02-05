@@ -127,7 +127,7 @@ fu_intel_me_mca_device_init(FuIntelMeMcaDevice *self)
 static void
 fu_intel_me_mca_device_class_init(FuIntelMeMcaDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_intel_me_mca_device_setup;
-	klass_device->add_security_attrs = fu_intel_me_mca_device_add_security_attrs;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->setup = fu_intel_me_mca_device_setup;
+	device_class->add_security_attrs = fu_intel_me_mca_device_add_security_attrs;
 }

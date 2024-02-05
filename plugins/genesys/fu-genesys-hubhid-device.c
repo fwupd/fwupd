@@ -393,7 +393,7 @@ fu_genesys_hubhid_device_init(FuGenesysHubhidDevice *self)
 static void
 fu_genesys_hubhid_device_class_init(FuGenesysHubhidDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->probe = fu_genesys_hubhid_device_probe;
-	klass_device->setup = fu_genesys_hubhid_device_setup;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->probe = fu_genesys_hubhid_device_probe;
+	device_class->setup = fu_genesys_hubhid_device_setup;
 }

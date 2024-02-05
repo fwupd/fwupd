@@ -304,9 +304,9 @@ fu_hailuck_bl_device_init(FuHailuckBlDevice *self)
 static void
 fu_hailuck_bl_device_class_init(FuHailuckBlDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->dump_firmware = fu_hailuck_bl_device_dump_firmware;
-	klass_device->write_firmware = fu_hailuck_bl_device_write_firmware;
-	klass_device->attach = fu_hailuck_bl_device_attach;
-	klass_device->probe = fu_hailuck_bl_device_probe;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->dump_firmware = fu_hailuck_bl_device_dump_firmware;
+	device_class->write_firmware = fu_hailuck_bl_device_write_firmware;
+	device_class->attach = fu_hailuck_bl_device_attach;
+	device_class->probe = fu_hailuck_bl_device_probe;
 }

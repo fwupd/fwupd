@@ -503,11 +503,11 @@ static void
 fu_redfish_backend_class_init(FuRedfishBackendClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuBackendClass *klass_backend = FU_BACKEND_CLASS(klass);
-	klass_backend->coldplug = fu_redfish_backend_coldplug;
-	klass_backend->setup = fu_redfish_backend_setup;
-	klass_backend->invalidate = fu_redfish_backend_invalidate;
-	klass_backend->to_string = fu_redfish_backend_to_string;
+	FuBackendClass *backend_class = FU_BACKEND_CLASS(klass);
+	backend_class->coldplug = fu_redfish_backend_coldplug;
+	backend_class->setup = fu_redfish_backend_setup;
+	backend_class->invalidate = fu_redfish_backend_invalidate;
+	backend_class->to_string = fu_redfish_backend_to_string;
 	object_class->finalize = fu_redfish_backend_finalize;
 }
 

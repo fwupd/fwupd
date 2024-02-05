@@ -1682,16 +1682,16 @@ fu_nordic_hid_cfg_channel_finalize(GObject *object)
 static void
 fu_nordic_hid_cfg_channel_class_init(FuNordicHidCfgChannelClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	klass_device->probe = fu_nordic_hid_cfg_channel_probe;
-	klass_device->set_progress = fu_nordic_hid_cfg_channel_set_progress;
-	klass_device->set_quirk_kv = fu_nordic_hid_cfg_channel_set_quirk_kv;
-	klass_device->setup = fu_nordic_hid_cfg_channel_setup;
-	klass_device->poll = fu_nordic_hid_cfg_channel_poll_peers;
-	klass_device->to_string = fu_nordic_hid_cfg_channel_to_string;
-	klass_device->write_firmware = fu_nordic_hid_cfg_channel_write_firmware;
+	device_class->probe = fu_nordic_hid_cfg_channel_probe;
+	device_class->set_progress = fu_nordic_hid_cfg_channel_set_progress;
+	device_class->set_quirk_kv = fu_nordic_hid_cfg_channel_set_quirk_kv;
+	device_class->setup = fu_nordic_hid_cfg_channel_setup;
+	device_class->poll = fu_nordic_hid_cfg_channel_poll_peers;
+	device_class->to_string = fu_nordic_hid_cfg_channel_to_string;
+	device_class->write_firmware = fu_nordic_hid_cfg_channel_write_firmware;
 	object_class->finalize = fu_nordic_hid_cfg_channel_finalize;
 }
 

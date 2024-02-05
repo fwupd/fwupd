@@ -257,16 +257,16 @@ fu_i2c_device_init(FuI2cDevice *self)
 static void
 fu_i2c_device_class_init(FuI2cDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	GParamSpec *pspec;
 
 	object_class->get_property = fu_i2c_device_get_property;
 	object_class->set_property = fu_i2c_device_set_property;
-	klass_device->open = fu_i2c_device_open;
-	klass_device->probe = fu_i2c_device_probe;
-	klass_device->to_string = fu_i2c_device_to_string;
-	klass_device->incorporate = fu_i2c_device_incorporate;
+	device_class->open = fu_i2c_device_open;
+	device_class->probe = fu_i2c_device_probe;
+	device_class->to_string = fu_i2c_device_to_string;
+	device_class->incorporate = fu_i2c_device_incorporate;
 
 	/**
 	 * FuI2cDevice:bus-number:

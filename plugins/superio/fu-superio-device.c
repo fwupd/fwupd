@@ -509,7 +509,7 @@ fu_superio_device_class_init(FuSuperioDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	GParamSpec *pspec;
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
 	/* properties */
 	object_class->get_property = fu_superio_device_get_property;
@@ -529,10 +529,10 @@ fu_superio_device_class_init(FuSuperioDeviceClass *klass)
 	g_object_class_install_property(object_class, PROP_CHIPSET, pspec);
 
 	object_class->finalize = fu_superio_device_finalize;
-	klass_device->to_string = fu_superio_device_to_string;
-	klass_device->set_quirk_kv = fu_superio_device_set_quirk_kv;
-	klass_device->probe = fu_superio_device_probe;
-	klass_device->setup = fu_superio_device_setup;
-	klass_device->prepare_firmware = fu_superio_device_prepare_firmware;
-	klass_device->set_progress = fu_superio_device_set_progress;
+	device_class->to_string = fu_superio_device_to_string;
+	device_class->set_quirk_kv = fu_superio_device_set_quirk_kv;
+	device_class->probe = fu_superio_device_probe;
+	device_class->setup = fu_superio_device_setup;
+	device_class->prepare_firmware = fu_superio_device_prepare_firmware;
+	device_class->set_progress = fu_superio_device_set_progress;
 }

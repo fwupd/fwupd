@@ -121,8 +121,8 @@ fu_thelio_io_device_init(FuThelioIoDevice *self)
 static void
 fu_thelio_io_device_class_init(FuThelioIoDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->probe = fu_thelio_io_device_probe;
-	klass_device->detach = fu_thelio_io_device_detach;
-	klass_device->set_progress = fu_thelio_io_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->probe = fu_thelio_io_device_probe;
+	device_class->detach = fu_thelio_io_device_detach;
+	device_class->set_progress = fu_thelio_io_device_set_progress;
 }

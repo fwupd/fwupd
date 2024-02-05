@@ -642,11 +642,11 @@ fu_fdt_image_finalize(GObject *object)
 static void
 fu_fdt_image_class_init(FuFdtImageClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_fdt_image_finalize;
-	klass_firmware->export = fu_fdt_image_export;
-	klass_firmware->build = fu_fdt_image_build;
+	firmware_class->export = fu_fdt_image_export;
+	firmware_class->build = fu_fdt_image_build;
 }
 
 /**

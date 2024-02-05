@@ -228,9 +228,9 @@ fu_uefi_backend_linux_init(FuUefiBackendLinux *self)
 static void
 fu_uefi_backend_linux_class_init(FuUefiBackendLinuxClass *klass)
 {
-	FuBackendClass *klass_backend = FU_BACKEND_CLASS(klass);
-	klass_backend->coldplug = fu_uefi_backend_linux_coldplug;
-	klass_backend->setup = fu_uefi_backend_linux_setup;
+	FuBackendClass *backend_class = FU_BACKEND_CLASS(klass);
+	backend_class->coldplug = fu_uefi_backend_linux_coldplug;
+	backend_class->setup = fu_uefi_backend_linux_setup;
 }
 
 FuBackend *

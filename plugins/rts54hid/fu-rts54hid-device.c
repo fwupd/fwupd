@@ -425,10 +425,10 @@ fu_rts54hid_device_init(FuRts54HidDevice *self)
 static void
 fu_rts54hid_device_class_init(FuRts54HidDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->write_firmware = fu_rts54hid_device_write_firmware;
-	klass_device->to_string = fu_rts54hid_device_to_string;
-	klass_device->setup = fu_rts54hid_device_setup;
-	klass_device->close = fu_rts54hid_device_close;
-	klass_device->set_progress = fu_rts54hid_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->write_firmware = fu_rts54hid_device_write_firmware;
+	device_class->to_string = fu_rts54hid_device_to_string;
+	device_class->setup = fu_rts54hid_device_setup;
+	device_class->close = fu_rts54hid_device_close;
+	device_class->set_progress = fu_rts54hid_device_set_progress;
 }

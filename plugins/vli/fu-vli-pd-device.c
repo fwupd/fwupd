@@ -931,21 +931,21 @@ fu_vli_pd_device_init(FuVliPdDevice *self)
 static void
 fu_vli_pd_device_class_init(FuVliPdDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	FuVliDeviceClass *klass_vli_device = FU_VLI_DEVICE_CLASS(klass);
-	klass_device->dump_firmware = fu_vli_pd_device_dump_firmware;
-	klass_device->write_firmware = fu_vli_pd_device_write_firmware;
-	klass_device->prepare_firmware = fu_vli_pd_device_prepare_firmware;
-	klass_device->attach = fu_vli_pd_device_attach;
-	klass_device->detach = fu_vli_pd_device_detach;
-	klass_device->setup = fu_vli_pd_device_setup;
-	klass_device->set_progress = fu_vli_pd_device_set_progress;
-	klass_device->convert_version = fu_vli_pd_device_convert_version;
-	klass_vli_device->spi_chip_erase = fu_vli_pd_device_spi_chip_erase;
-	klass_vli_device->spi_sector_erase = fu_vli_pd_device_spi_sector_erase;
-	klass_vli_device->spi_read_data = fu_vli_pd_device_spi_read_data;
-	klass_vli_device->spi_read_status = fu_vli_pd_device_spi_read_status;
-	klass_vli_device->spi_write_data = fu_vli_pd_device_spi_write_data;
-	klass_vli_device->spi_write_enable = fu_vli_pd_device_spi_write_enable;
-	klass_vli_device->spi_write_status = fu_vli_pd_device_spi_write_status;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	FuVliDeviceClass *vli_device_class = FU_VLI_DEVICE_CLASS(klass);
+	device_class->dump_firmware = fu_vli_pd_device_dump_firmware;
+	device_class->write_firmware = fu_vli_pd_device_write_firmware;
+	device_class->prepare_firmware = fu_vli_pd_device_prepare_firmware;
+	device_class->attach = fu_vli_pd_device_attach;
+	device_class->detach = fu_vli_pd_device_detach;
+	device_class->setup = fu_vli_pd_device_setup;
+	device_class->set_progress = fu_vli_pd_device_set_progress;
+	device_class->convert_version = fu_vli_pd_device_convert_version;
+	vli_device_class->spi_chip_erase = fu_vli_pd_device_spi_chip_erase;
+	vli_device_class->spi_sector_erase = fu_vli_pd_device_spi_sector_erase;
+	vli_device_class->spi_read_data = fu_vli_pd_device_spi_read_data;
+	vli_device_class->spi_read_status = fu_vli_pd_device_spi_read_status;
+	vli_device_class->spi_write_data = fu_vli_pd_device_spi_write_data;
+	vli_device_class->spi_write_enable = fu_vli_pd_device_spi_write_enable;
+	vli_device_class->spi_write_status = fu_vli_pd_device_spi_write_status;
 }

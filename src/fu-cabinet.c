@@ -1006,9 +1006,9 @@ static void
 fu_cabinet_class_init(FuCabinetClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_cabinet_finalize;
-	klass_firmware->parse = fu_cabinet_parse;
+	firmware_class->parse = fu_cabinet_parse;
 }
 
 /**

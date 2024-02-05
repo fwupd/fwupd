@@ -351,8 +351,8 @@ fu_fit_firmware_init(FuFitFirmware *self)
 static void
 fu_fit_firmware_class_init(FuFitFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_fit_firmware_parse;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_fit_firmware_parse;
 }
 
 /**

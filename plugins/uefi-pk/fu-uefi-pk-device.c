@@ -233,10 +233,10 @@ fu_uefi_pk_device_init(FuUefiPkDevice *self)
 static void
 fu_uefi_pk_device_class_init(FuUefiPkDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_uefi_pk_device_to_string;
-	klass_device->add_security_attrs = fu_uefi_pk_device_add_security_attrs;
-	klass_device->probe = fu_uefi_pk_device_probe;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_uefi_pk_device_to_string;
+	device_class->add_security_attrs = fu_uefi_pk_device_add_security_attrs;
+	device_class->probe = fu_uefi_pk_device_probe;
 }
 
 FuUefiPkDevice *

@@ -678,8 +678,8 @@ fu_efi_lz77_decompressor_init(FuEfiLz77Decompressor *self)
 static void
 fu_efi_lz77_decompressor_class_init(FuEfiLz77DecompressorClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_efi_lz77_decompressor_parse;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_efi_lz77_decompressor_parse;
 }
 
 /**

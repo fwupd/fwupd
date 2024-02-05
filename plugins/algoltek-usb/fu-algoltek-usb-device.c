@@ -533,8 +533,8 @@ fu_algoltek_usb_device_init(FuAlgoltekUsbDevice *self)
 static void
 fu_algoltek_usb_device_class_init(FuAlgoltekUsbDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_algoltek_usb_device_setup;
-	klass_device->write_firmware = fu_algoltek_usb_device_write_firmware;
-	klass_device->set_progress = fu_algoltek_usb_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->setup = fu_algoltek_usb_device_setup;
+	device_class->write_firmware = fu_algoltek_usb_device_write_firmware;
+	device_class->set_progress = fu_algoltek_usb_device_set_progress;
 }

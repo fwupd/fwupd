@@ -560,11 +560,11 @@ fu_kinetic_dp_puma_device_init(FuKineticDpPumaDevice *self)
 static void
 fu_kinetic_dp_puma_device_class_init(FuKineticDpPumaDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_kinetic_dp_puma_device_to_string;
-	klass_device->setup = fu_kinetic_dp_puma_device_setup;
-	klass_device->prepare = fu_kinetic_dp_puma_device_prepare;
-	klass_device->cleanup = fu_kinetic_dp_puma_device_cleanup;
-	klass_device->write_firmware = fu_kinetic_dp_puma_device_write_firmware;
-	klass_device->set_progress = fu_kinetic_dp_puma_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_kinetic_dp_puma_device_to_string;
+	device_class->setup = fu_kinetic_dp_puma_device_setup;
+	device_class->prepare = fu_kinetic_dp_puma_device_prepare;
+	device_class->cleanup = fu_kinetic_dp_puma_device_cleanup;
+	device_class->write_firmware = fu_kinetic_dp_puma_device_write_firmware;
+	device_class->set_progress = fu_kinetic_dp_puma_device_set_progress;
 }

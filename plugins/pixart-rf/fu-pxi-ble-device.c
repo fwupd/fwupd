@@ -1022,12 +1022,12 @@ static void
 fu_pxi_ble_device_class_init(FuPxiBleDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_pxi_ble_device_finalize;
-	klass_device->probe = fu_pxi_ble_device_probe;
-	klass_device->setup = fu_pxi_ble_device_setup;
-	klass_device->to_string = fu_pxi_ble_device_to_string;
-	klass_device->write_firmware = fu_pxi_ble_device_write_firmware;
-	klass_device->prepare_firmware = fu_pxi_ble_device_prepare_firmware;
-	klass_device->set_progress = fu_pxi_ble_device_set_progress;
+	device_class->probe = fu_pxi_ble_device_probe;
+	device_class->setup = fu_pxi_ble_device_setup;
+	device_class->to_string = fu_pxi_ble_device_to_string;
+	device_class->write_firmware = fu_pxi_ble_device_write_firmware;
+	device_class->prepare_firmware = fu_pxi_ble_device_prepare_firmware;
+	device_class->set_progress = fu_pxi_ble_device_set_progress;
 }

@@ -547,19 +547,19 @@ fu_synaptics_rmi_hid_device_init(FuSynapticsRmiHidDevice *self)
 static void
 fu_synaptics_rmi_hid_device_class_init(FuSynapticsRmiHidDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_CLASS(klass);
-	klass_device->attach = fu_synaptics_rmi_hid_device_attach;
-	klass_device->detach = fu_synaptics_rmi_hid_device_detach;
-	klass_device->probe = fu_synaptics_rmi_hid_device_probe;
-	klass_device->open = fu_synaptics_rmi_hid_device_open;
-	klass_device->close = fu_synaptics_rmi_hid_device_close;
-	klass_device->set_progress = fu_synaptics_rmi_hid_device_set_progress;
-	klass_rmi->write = fu_synaptics_rmi_hid_device_write;
-	klass_rmi->read = fu_synaptics_rmi_hid_device_read;
-	klass_rmi->wait_for_attr = fu_synaptics_rmi_hid_device_wait_for_attr;
-	klass_rmi->set_page = fu_synaptics_rmi_hid_device_set_page;
-	klass_rmi->query_status = fu_synaptics_rmi_hid_device_query_status;
-	klass_rmi->read_packet_register = fu_synaptics_rmi_hid_device_read_packet_register;
-	klass_rmi->disable_sleep = fu_synaptics_rmi_hid_device_disable_sleep;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	FuSynapticsRmiDeviceClass *rmi_class = FU_SYNAPTICS_RMI_DEVICE_CLASS(klass);
+	device_class->attach = fu_synaptics_rmi_hid_device_attach;
+	device_class->detach = fu_synaptics_rmi_hid_device_detach;
+	device_class->probe = fu_synaptics_rmi_hid_device_probe;
+	device_class->open = fu_synaptics_rmi_hid_device_open;
+	device_class->close = fu_synaptics_rmi_hid_device_close;
+	device_class->set_progress = fu_synaptics_rmi_hid_device_set_progress;
+	rmi_class->write = fu_synaptics_rmi_hid_device_write;
+	rmi_class->read = fu_synaptics_rmi_hid_device_read;
+	rmi_class->wait_for_attr = fu_synaptics_rmi_hid_device_wait_for_attr;
+	rmi_class->set_page = fu_synaptics_rmi_hid_device_set_page;
+	rmi_class->query_status = fu_synaptics_rmi_hid_device_query_status;
+	rmi_class->read_packet_register = fu_synaptics_rmi_hid_device_read_packet_register;
+	rmi_class->disable_sleep = fu_synaptics_rmi_hid_device_disable_sleep;
 }

@@ -1267,7 +1267,7 @@ static void
 fu_dfu_target_class_init(FuDfuTargetClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_dfu_target_to_string;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_dfu_target_to_string;
 	object_class->finalize = fu_dfu_target_finalize;
 }

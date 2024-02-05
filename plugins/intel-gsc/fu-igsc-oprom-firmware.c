@@ -233,9 +233,9 @@ fu_igsc_oprom_firmware_finalize(GObject *object)
 static void
 fu_igsc_oprom_firmware_class_init(FuIgscOpromFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_igsc_oprom_firmware_finalize;
-	klass_firmware->parse = fu_igsc_oprom_firmware_parse;
-	klass_firmware->export = fu_igsc_oprom_firmware_export;
+	firmware_class->parse = fu_igsc_oprom_firmware_parse;
+	firmware_class->export = fu_igsc_oprom_firmware_export;
 }

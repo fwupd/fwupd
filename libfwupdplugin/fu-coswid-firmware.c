@@ -1170,13 +1170,13 @@ static void
 fu_coswid_firmware_class_init(FuCoswidFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_coswid_firmware_finalize;
-	klass_firmware->parse = fu_coswid_firmware_parse;
-	klass_firmware->write = fu_coswid_firmware_write;
-	klass_firmware->build = fu_coswid_firmware_build;
-	klass_firmware->export = fu_coswid_firmware_export;
-	klass_firmware->get_checksum = fu_coswid_firmware_get_checksum;
+	firmware_class->parse = fu_coswid_firmware_parse;
+	firmware_class->write = fu_coswid_firmware_write;
+	firmware_class->build = fu_coswid_firmware_build;
+	firmware_class->export = fu_coswid_firmware_export;
+	firmware_class->get_checksum = fu_coswid_firmware_get_checksum;
 }
 
 /**

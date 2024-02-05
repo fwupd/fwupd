@@ -133,9 +133,9 @@ fu_efi_file_path_device_path_init(FuEfiFilePathDevicePath *self)
 static void
 fu_efi_file_path_device_path_class_init(FuEfiFilePathDevicePathClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->export = fu_efi_file_path_device_path_export;
-	klass_firmware->build = fu_efi_file_path_device_path_build;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->export = fu_efi_file_path_device_path_export;
+	firmware_class->build = fu_efi_file_path_device_path_build;
 }
 
 /**

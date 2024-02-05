@@ -916,13 +916,13 @@ fu_steelseries_fizz_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_steelseries_fizz_class_init(FuSteelseriesFizzClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
-	klass_device->attach = fu_steelseries_fizz_attach;
-	klass_device->setup = fu_steelseries_fizz_setup;
-	klass_device->write_firmware = fu_steelseries_fizz_write_firmware;
-	klass_device->read_firmware = fu_steelseries_fizz_read_firmware;
-	klass_device->set_progress = fu_steelseries_fizz_set_progress;
+	device_class->attach = fu_steelseries_fizz_attach;
+	device_class->setup = fu_steelseries_fizz_setup;
+	device_class->write_firmware = fu_steelseries_fizz_write_firmware;
+	device_class->read_firmware = fu_steelseries_fizz_read_firmware;
+	device_class->set_progress = fu_steelseries_fizz_set_progress;
 }
 
 static void

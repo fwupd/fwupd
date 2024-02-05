@@ -135,9 +135,9 @@ fu_efi_filesystem_init(FuEfiFilesystem *self)
 static void
 fu_efi_filesystem_class_init(FuEfiFilesystemClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_efi_filesystem_parse;
-	klass_firmware->write = fu_efi_filesystem_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_efi_filesystem_parse;
+	firmware_class->write = fu_efi_filesystem_write;
 }
 
 /**

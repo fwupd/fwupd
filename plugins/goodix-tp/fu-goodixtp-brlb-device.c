@@ -516,9 +516,9 @@ fu_goodixtp_brlb_device_init(FuGoodixtpBrlbDevice *self)
 static void
 fu_goodixtp_brlb_device_class_init(FuGoodixtpBrlbDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_goodixtp_brlb_device_setup;
-	klass_device->reload = fu_goodixtp_brlb_device_setup;
-	klass_device->prepare_firmware = fu_goodixtp_brlb_device_prepare_firmware;
-	klass_device->write_firmware = fu_goodixtp_brlb_device_write_firmware;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->setup = fu_goodixtp_brlb_device_setup;
+	device_class->reload = fu_goodixtp_brlb_device_setup;
+	device_class->prepare_firmware = fu_goodixtp_brlb_device_prepare_firmware;
+	device_class->write_firmware = fu_goodixtp_brlb_device_write_firmware;
 }

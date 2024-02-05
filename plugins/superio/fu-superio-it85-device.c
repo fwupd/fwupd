@@ -75,6 +75,6 @@ fu_superio_it85_device_init(FuSuperioIt85Device *self)
 static void
 fu_superio_it85_device_class_init(FuSuperioIt85DeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_superio_it85_device_setup;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->setup = fu_superio_it85_device_setup;
 }

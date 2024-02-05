@@ -131,9 +131,9 @@ fu_ifd_image_init(FuIfdImage *self)
 static void
 fu_ifd_image_class_init(FuIfdImageClass *klass)
 {
-	FuFirmwareClass *klass_image = FU_FIRMWARE_CLASS(klass);
-	klass_image->export = fu_ifd_image_export;
-	klass_image->write = fu_ifd_image_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->export = fu_ifd_image_export;
+	firmware_class->write = fu_ifd_image_write;
 }
 
 /**

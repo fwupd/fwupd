@@ -1240,14 +1240,14 @@ fu_dell_dock_mst_init(FuDellDockMst *self)
 static void
 fu_dell_dock_mst_class_init(FuDellDockMstClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->probe = fu_dell_dock_mst_probe;
-	klass_device->open = fu_dell_dock_mst_open;
-	klass_device->close = fu_dell_dock_mst_close;
-	klass_device->setup = fu_dell_dock_mst_setup;
-	klass_device->write_firmware = fu_dell_dock_mst_write_fw;
-	klass_device->set_quirk_kv = fu_dell_dock_mst_set_quirk_kv;
-	klass_device->set_progress = fu_dell_dock_mst_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->probe = fu_dell_dock_mst_probe;
+	device_class->open = fu_dell_dock_mst_open;
+	device_class->close = fu_dell_dock_mst_close;
+	device_class->setup = fu_dell_dock_mst_setup;
+	device_class->write_firmware = fu_dell_dock_mst_write_fw;
+	device_class->set_quirk_kv = fu_dell_dock_mst_set_quirk_kv;
+	device_class->set_progress = fu_dell_dock_mst_set_progress;
 }
 
 FuDellDockMst *

@@ -204,10 +204,10 @@ fu_elanfp_firmware_init(FuElanfpFirmware *self)
 static void
 fu_elanfp_firmware_class_init(FuElanfpFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->validate = fu_elanfp_firmware_validate;
-	klass_firmware->parse = fu_elanfp_firmware_parse;
-	klass_firmware->write = fu_elanfp_firmware_write;
-	klass_firmware->export = fu_elanfp_firmware_export;
-	klass_firmware->build = fu_elanfp_firmware_build;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->validate = fu_elanfp_firmware_validate;
+	firmware_class->parse = fu_elanfp_firmware_parse;
+	firmware_class->write = fu_elanfp_firmware_write;
+	firmware_class->export = fu_elanfp_firmware_export;
+	firmware_class->build = fu_elanfp_firmware_build;
 }

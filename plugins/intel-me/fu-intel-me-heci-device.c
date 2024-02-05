@@ -198,6 +198,6 @@ fu_intel_me_heci_device_init(FuIntelMeHeciDevice *self)
 static void
 fu_intel_me_heci_device_class_init(FuIntelMeHeciDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->open = fu_intel_me_heci_device_open;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->open = fu_intel_me_heci_device_open;
 }

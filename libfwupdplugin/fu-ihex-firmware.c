@@ -579,11 +579,11 @@ static void
 fu_ihex_firmware_class_init(FuIhexFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_ihex_firmware_finalize;
-	klass_firmware->parse = fu_ihex_firmware_parse;
-	klass_firmware->tokenize = fu_ihex_firmware_tokenize;
-	klass_firmware->write = fu_ihex_firmware_write;
+	firmware_class->parse = fu_ihex_firmware_parse;
+	firmware_class->tokenize = fu_ihex_firmware_tokenize;
+	firmware_class->write = fu_ihex_firmware_write;
 }
 
 /**

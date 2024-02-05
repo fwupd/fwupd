@@ -102,9 +102,9 @@ fu_cfu_payload_init(FuCfuPayload *self)
 static void
 fu_cfu_payload_class_init(FuCfuPayloadClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_cfu_payload_parse;
-	klass_firmware->write = fu_cfu_payload_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_cfu_payload_parse;
+	firmware_class->write = fu_cfu_payload_write;
 }
 
 /**

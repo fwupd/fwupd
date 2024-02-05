@@ -95,7 +95,7 @@ fu_ebitdo_firmware_init(FuEbitdoFirmware *self)
 static void
 fu_ebitdo_firmware_class_init(FuEbitdoFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_ebitdo_firmware_parse;
-	klass_firmware->write = fu_ebitdo_firmware_write;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_ebitdo_firmware_parse;
+	firmware_class->write = fu_ebitdo_firmware_write;
 }

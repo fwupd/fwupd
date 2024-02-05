@@ -84,9 +84,9 @@ fu_mtd_ifd_device_init(FuMtdIfdDevice *self)
 static void
 fu_mtd_ifd_device_class_init(FuMtdIfdDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->probe = fu_mtd_ifd_device_probe;
-	klass_device->add_security_attrs = fu_mtd_ifd_device_add_security_attrs;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->probe = fu_mtd_ifd_device_probe;
+	device_class->add_security_attrs = fu_mtd_ifd_device_add_security_attrs;
 }
 
 FuMtdIfdDevice *

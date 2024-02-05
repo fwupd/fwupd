@@ -183,6 +183,6 @@ fu_nordic_hid_archive_init(FuNordicHidArchive *self)
 static void
 fu_nordic_hid_archive_class_init(FuNordicHidArchiveClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_nordic_hid_archive_parse;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_nordic_hid_archive_parse;
 }

@@ -200,11 +200,11 @@ fu_synaprom_firmware_init(FuSynapromFirmware *self)
 static void
 fu_synaprom_firmware_class_init(FuSynapromFirmwareClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-	klass_firmware->parse = fu_synaprom_firmware_parse;
-	klass_firmware->write = fu_synaprom_firmware_write;
-	klass_firmware->export = fu_synaprom_firmware_export;
-	klass_firmware->build = fu_synaprom_firmware_build;
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_synaprom_firmware_parse;
+	firmware_class->write = fu_synaprom_firmware_write;
+	firmware_class->export = fu_synaprom_firmware_export;
+	firmware_class->build = fu_synaprom_firmware_build;
 }
 
 FuFirmware *

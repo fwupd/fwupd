@@ -581,10 +581,10 @@ fu_qsi_dock_mcu_device_init(FuQsiDockMcuDevice *self)
 static void
 fu_qsi_dock_mcu_device_class_init(FuQsiDockMcuDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
-	klass_device->setup = fu_qsi_dock_mcu_device_setup;
-	klass_device->attach = fu_qsi_dock_mcu_device_attach;
-	klass_device->set_progress = fu_qsi_dock_mcu_device_set_progress;
-	klass_device->write_firmware = fu_qsi_dock_mcu_device_write_firmware;
+	device_class->setup = fu_qsi_dock_mcu_device_setup;
+	device_class->attach = fu_qsi_dock_mcu_device_attach;
+	device_class->set_progress = fu_qsi_dock_mcu_device_set_progress;
+	device_class->write_firmware = fu_qsi_dock_mcu_device_write_firmware;
 }

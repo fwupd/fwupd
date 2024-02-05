@@ -438,13 +438,13 @@ fu_corsair_bp_to_string(FuDevice *device, guint idt, GString *str)
 static void
 fu_corsair_bp_class_init(FuCorsairBpClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
-	klass_device->incorporate = fu_corsair_bp_incorporate;
-	klass_device->write_firmware = fu_corsair_bp_write_firmware;
-	klass_device->attach = fu_corsair_bp_attach;
-	klass_device->detach = fu_corsair_bp_detach;
-	klass_device->to_string = fu_corsair_bp_to_string;
+	device_class->incorporate = fu_corsair_bp_incorporate;
+	device_class->write_firmware = fu_corsair_bp_write_firmware;
+	device_class->attach = fu_corsair_bp_attach;
+	device_class->detach = fu_corsair_bp_detach;
+	device_class->to_string = fu_corsair_bp_to_string;
 }
 
 FuCorsairBp *

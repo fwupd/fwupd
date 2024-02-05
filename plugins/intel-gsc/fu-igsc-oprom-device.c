@@ -258,14 +258,14 @@ fu_igsc_oprom_device_init(FuIgscOpromDevice *self)
 static void
 fu_igsc_oprom_device_class_init(FuIgscOpromDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_igsc_oprom_device_to_string;
-	klass_device->probe = fu_igsc_oprom_device_probe;
-	klass_device->setup = fu_igsc_oprom_device_setup;
-	klass_device->prepare_firmware = fu_igsc_oprom_device_prepare_firmware;
-	klass_device->write_firmware = fu_igsc_oprom_device_write_firmware;
-	klass_device->prepare = fu_igsc_aux_device_prepare;
-	klass_device->cleanup = fu_igsc_aux_device_cleanup;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_igsc_oprom_device_to_string;
+	device_class->probe = fu_igsc_oprom_device_probe;
+	device_class->setup = fu_igsc_oprom_device_setup;
+	device_class->prepare_firmware = fu_igsc_oprom_device_prepare_firmware;
+	device_class->write_firmware = fu_igsc_oprom_device_write_firmware;
+	device_class->prepare = fu_igsc_aux_device_prepare;
+	device_class->cleanup = fu_igsc_aux_device_cleanup;
 }
 
 FuIgscOpromDevice *

@@ -900,15 +900,15 @@ fu_redfish_device_class_init(FuRedfishDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	GParamSpec *pspec;
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
 	object_class->get_property = fu_redfish_device_get_property;
 	object_class->set_property = fu_redfish_device_set_property;
 	object_class->finalize = fu_redfish_device_finalize;
 
-	klass_device->to_string = fu_redfish_device_to_string;
-	klass_device->probe = fu_redfish_device_probe;
-	klass_device->set_quirk_kv = fu_redfish_device_set_quirk_kv;
+	device_class->to_string = fu_redfish_device_to_string;
+	device_class->probe = fu_redfish_device_probe;
+	device_class->set_quirk_kv = fu_redfish_device_set_quirk_kv;
 
 	/**
 	 * FuRedfishDevice:backend:
