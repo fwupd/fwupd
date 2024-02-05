@@ -835,7 +835,6 @@ fu_plugin_config_func(void)
 	gint rc;
 	g_autofree gchar *conf_dir = NULL;
 	g_autofree gchar *fn = NULL;
-	g_autofree gchar *testdatadir = NULL;
 	g_autofree gchar *value = NULL;
 	g_autofree gchar *value_missing = NULL;
 	g_autofree gchar *fn_mut = NULL;
@@ -850,12 +849,9 @@ fu_plugin_config_func(void)
 	return;
 #endif
 
-	/* this is a build file */
-	testdatadir = g_test_build_filename(G_TEST_BUILT, "tests", NULL);
-	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
-	conf_dir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
-
 	/* remove existing file */
+	(void)g_setenv("FWUPD_SYSCONFDIR", "/tmp/fwupd-self-test/etc/fwupd", TRUE);
+	conf_dir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
 	fu_plugin_set_name(plugin, "test");
 	fn = g_build_filename(conf_dir, "fwupd.conf", NULL);
 	ret = fu_path_mkdir_parent(fn, &error);
