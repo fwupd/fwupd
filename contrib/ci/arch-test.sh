@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-pacman -U --noconfirm *.pkg.*
+pacman -U --noconfirm dist/*.pkg.*
 
 #run the CI tests for Qt5
 pacman -S --noconfirm qt5-base

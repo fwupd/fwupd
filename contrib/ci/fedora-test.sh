@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/sh -e
 #install RPM packages
-dnf install -y $HOME/rpmbuild/RPMS/*/*.rpm
+dnf install -y dist/*.rpm
 
 fwupdtool enable-test-devices
 

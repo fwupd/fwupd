@@ -63,5 +63,5 @@ lintian ../*changes \
 
 #place built packages in dist outside docker
 mkdir -p ../dist
-PACKAGES=$(find .. -type f -name "*.deb" | grep -v 'dbgsym')
+PACKAGES=$(find .. -type f -name "*deb")
 cp $PACKAGES ../dist

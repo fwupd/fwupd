@@ -13,7 +13,7 @@ endif
 CONFARGS =
 
 ifneq ($(CI),)
-	CONFARGS += --werror
+	CONFARGS += --werror -Db_coverage=true
 endif
 
 ifneq ($(DEB_HOST_ARCH_CPU),ia64)
