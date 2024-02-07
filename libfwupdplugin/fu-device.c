@@ -5722,7 +5722,9 @@ fu_device_ensure_from_component_flags(FuDevice *self, XbNode *component)
 	const gchar *tmp =
 	    xb_node_query_text(component, "custom/value[@key='LVFS::DeviceFlags']", NULL);
 	if (tmp != NULL) {
-		fu_device_set_custom_flag(self, tmp);
+		g_auto(GStrv) hints = g_strsplit(tmp, ",", -1);
+		for (guint i = 0; hints[i] != NULL; i++)
+			fu_device_set_custom_flag(self, hints[i]);
 		fu_device_remove_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
 	}
 }
