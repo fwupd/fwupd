@@ -139,6 +139,12 @@ fwupd_enums_func(void)
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_keyring_kind_from_string(tmp), ==, i);
 	}
+	for (guint64 i = 1; i < FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE; i *= 2) {
+		const gchar *tmp = fwupd_remote_flag_to_string(i);
+		if (tmp == NULL)
+			break;
+		g_assert_cmpint(fwupd_remote_flag_from_string(tmp), ==, i);
+	}
 }
 
 static gchar *
