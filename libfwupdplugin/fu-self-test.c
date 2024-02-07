@@ -3583,6 +3583,7 @@ fu_bios_settings_load_func(void)
 	GPtrArray *values;
 	FwupdBiosSetting *setting;
 	FwupdBiosSettingKind kind;
+	g_autofree gchar *base_dir = NULL;
 	g_autofree gchar *test_dir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
@@ -3601,8 +3602,15 @@ fu_bios_settings_load_func(void)
 	return;
 #endif
 
+	/* ensure the data directory is actually present for the test */
+	base_dir = g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", NULL);
+	if (!g_file_test(base_dir, G_FILE_TEST_EXISTS)) {
+		g_test_skip("Missing test data");
+		return;
+	}
+
 	/* load BIOS settings from a Lenovo P620 (with thinklmi driver problems) */
-	test_dir = g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", "lenovo-p620", NULL);
+	test_dir = g_build_filename(base_dir, "lenovo-p620", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
 	ret = fu_context_reload_bios_settings(ctx, &error);
@@ -3676,8 +3684,7 @@ fu_bios_settings_load_func(void)
 	g_free(test_dir);
 
 	/* load BIOS settings from a Lenovo P620 running 6.3 */
-	test_dir =
-	    g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", "lenovo-p620-6.3", NULL);
+	test_dir = g_build_filename(base_dir, "lenovo-p620-6.3", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
 	ret = fu_context_reload_bios_settings(ctx, &error);
@@ -3745,8 +3752,7 @@ fu_bios_settings_load_func(void)
 	g_free(test_dir);
 
 	/* load BIOS settings from a Lenovo P14s Gen1 */
-	test_dir =
-	    g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", "lenovo-p14s-gen1", NULL);
+	test_dir = g_build_filename(base_dir, "lenovo-p14s-gen1", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 	ret = fu_context_reload_bios_settings(ctx, &error);
 #ifdef FU_THINKLMI_COMPAT
@@ -3790,8 +3796,7 @@ fu_bios_settings_load_func(void)
 	g_free(test_dir);
 
 	/* load BIOS settings from a Dell XPS 9310 */
-	test_dir =
-	    g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", "dell-xps13-9310", NULL);
+	test_dir = g_build_filename(base_dir, "dell-xps13-9310", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 	ret = fu_context_reload_bios_settings(ctx, &error);
 	g_assert_no_error(error);
