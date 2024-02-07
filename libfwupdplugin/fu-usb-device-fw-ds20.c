@@ -61,7 +61,7 @@ fu_usb_device_fw_ds20_parse(FuUsbDeviceDs20 *self,
 	}
 
 	/* no NUL is unexpected, but fine */
-	if (bufsz == 0)
+	if (bufsz_safe == 0)
 		bufsz_safe = bufsz;
 
 	if (!g_utf8_validate((const gchar *)buf, (gssize)bufsz_safe, NULL)) {
