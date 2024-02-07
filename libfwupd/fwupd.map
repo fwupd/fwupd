@@ -64,7 +64,6 @@ LIBFWUPD_0.9.3 {
     fwupd_device_add_guid;
     fwupd_device_get_checksums;
     fwupd_device_get_created;
-    fwupd_device_get_description;
     fwupd_device_get_flags;
     fwupd_device_get_flashes_left;
     fwupd_device_get_guid_default;
@@ -83,7 +82,6 @@ LIBFWUPD_0.9.3 {
     fwupd_device_new;
     fwupd_device_remove_flag;
     fwupd_device_set_created;
-    fwupd_device_set_description;
     fwupd_device_set_flags;
     fwupd_device_set_flashes_left;
     fwupd_device_set_id;

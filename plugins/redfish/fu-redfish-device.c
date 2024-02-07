@@ -495,7 +495,7 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 	if (json_object_has_member(member, "Description")) {
 		const gchar *tmp = json_object_get_string_member(member, "Description");
 		if (tmp != NULL && tmp[0] != '\0')
-			fu_device_set_description(dev, tmp);
+			fu_device_set_summary(dev, tmp);
 	}
 
 	/* reasons why the device might not be updatable */
