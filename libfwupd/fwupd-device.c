@@ -45,7 +45,6 @@ typedef struct {
 	gchar *serial;
 	gchar *summary;
 	gchar *branch;
-	gchar *description;
 	gchar *vendor;
 	gchar *vendor_id; /* for compat only */
 	gchar *homepage;
@@ -985,47 +984,6 @@ fwupd_device_add_vendor_id(FwupdDevice *self, const gchar *vendor_id)
 }
 
 /**
- * fwupd_device_get_description:
- * @self: a #FwupdDevice
- *
- * Gets the device description in AppStream markup format.
- *
- * Returns: the device description, or %NULL if unset
- *
- * Since: 0.9.3
- **/
-const gchar *
-fwupd_device_get_description(FwupdDevice *self)
-{
-	FwupdDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_DEVICE(self), NULL);
-	return priv->description;
-}
-
-/**
- * fwupd_device_set_description:
- * @self: a #FwupdDevice
- * @description: (nullable): the description in AppStream markup format
- *
- * Sets the device description.
- *
- * Since: 0.9.3
- **/
-void
-fwupd_device_set_description(FwupdDevice *self, const gchar *description)
-{
-	FwupdDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FWUPD_IS_DEVICE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->description, description) == 0)
-		return;
-
-	g_free(priv->description);
-	priv->description = g_strdup(description);
-}
-
-/**
  * fwupd_device_get_version:
  * @self: a #FwupdDevice
  *
@@ -1905,8 +1863,6 @@ fwupd_device_incorporate(FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_install_duration(self, priv_donor->install_duration);
 	if (priv->update_state == FWUPD_UPDATE_STATE_UNKNOWN)
 		fwupd_device_set_update_state(self, priv_donor->update_state);
-	if (priv->description == NULL)
-		fwupd_device_set_description(self, priv_donor->description);
 	if (priv->id == NULL)
 		fwupd_device_set_id(self, priv_donor->id);
 	if (priv->parent_id == NULL)
@@ -2091,12 +2047,6 @@ fwupd_device_to_variant_full(FwupdDevice *self, FwupdDeviceFlags flags)
 				      g_variant_new_uint64(priv->version_build_date));
 	}
 
-	if (priv->description != NULL) {
-		g_variant_builder_add(&builder,
-				      "{sv}",
-				      FWUPD_RESULT_KEY_DESCRIPTION,
-				      g_variant_new_string(priv->description));
-	}
 	if (priv->summary != NULL) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
@@ -2395,10 +2345,6 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_BRANCH) == 0) {
 		fwupd_device_set_branch(self, g_variant_get_string(value, NULL));
-		return;
-	}
-	if (g_strcmp0(key, FWUPD_RESULT_KEY_DESCRIPTION) == 0) {
-		fwupd_device_set_description(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
@@ -3001,7 +2947,6 @@ fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFl
 	if (flags & FWUPD_DEVICE_FLAG_TRUSTED)
 		fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_SERIAL, priv->serial);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	if (priv->protocols->len > 0) {
@@ -3235,13 +3180,6 @@ fwupd_device_from_json(FwupdDevice *self, JsonNode *json_node, GError **error)
 		const gchar *tmp =
 		    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_SUMMARY, NULL);
 		fwupd_device_set_summary(self, tmp);
-	}
-	if (json_object_has_member(obj, FWUPD_RESULT_KEY_DESCRIPTION)) {
-		const gchar *tmp =
-		    json_object_get_string_member_with_default(obj,
-							       FWUPD_RESULT_KEY_DESCRIPTION,
-							       NULL);
-		fwupd_device_set_description(self, tmp);
 	}
 	if (json_object_has_member(obj, FWUPD_RESULT_KEY_BRANCH)) {
 		const gchar *tmp =
@@ -3568,7 +3506,6 @@ fwupd_device_to_string(FwupdDevice *self)
 
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_SERIAL, priv->serial);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BRANCH, priv->branch);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	for (guint i = 0; i < priv->protocols->len; i++) {
@@ -4013,7 +3950,6 @@ fwupd_device_finalize(GObject *object)
 		g_object_weak_unref(G_OBJECT(child), fwupd_device_child_finalized_cb, self);
 	}
 
-	g_free(priv->description);
 	g_free(priv->id);
 	g_free(priv->parent_id);
 	g_free(priv->composite_id);

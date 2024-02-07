@@ -462,25 +462,6 @@ fu_engine_device_changed_cb(FuDeviceList *device_list, FuDevice *device, FuEngin
 	fu_engine_acquiesce_reset(self);
 }
 
-static gchar *
-fu_engine_request_get_localized_xpath(FuEngineRequest *request, const gchar *element)
-{
-	GString *xpath = g_string_new(element);
-	const gchar *locale = NULL;
-
-	/* optional; not set in tests */
-	if (request != NULL)
-		locale = fu_engine_request_get_locale(request);
-
-	/* prefer the users locale if set */
-	if (locale != NULL) {
-		g_autofree gchar *xpath_locale = NULL;
-		xpath_locale = g_strdup_printf("%s[@xml:lang='%s']|", element, locale);
-		g_string_prepend(xpath, xpath_locale);
-	}
-	return g_string_free(xpath, FALSE);
-}
-
 /* add any client-side BKC tags */
 static gboolean
 fu_engine_add_local_release_metadata(FuEngine *self, FuRelease *release, GError **error)
@@ -4497,14 +4478,12 @@ fu_engine_get_result_from_component(FuEngine *self,
 				    XbNode *component,
 				    GError **error)
 {
-	g_autofree gchar *description_xpath = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GError) error_reqs = NULL;
 	g_autoptr(GPtrArray) provides = NULL;
 	g_autoptr(GPtrArray) tags = NULL;
-	g_autoptr(XbNode) description = NULL;
 	g_autoptr(XbNode) rel = NULL;
 	g_autoptr(XbQuery) query = NULL;
 
@@ -4586,16 +4565,6 @@ fu_engine_get_result_from_component(FuEngine *self,
 		if (!fu_device_has_inhibit(dev, "not-found"))
 			fu_device_inhibit(dev, "failed-reqs", error_reqs->message);
 		/* continue */
-	}
-
-	/* create a result with all the metadata in */
-	description_xpath = fu_engine_request_get_localized_xpath(request, "description");
-	description = xb_node_query_first(component, description_xpath, NULL);
-	if (description != NULL) {
-		g_autofree gchar *xml = NULL;
-		xml = xb_node_export(description, XB_NODE_EXPORT_FLAG_ONLY_CHILDREN, NULL);
-		if (xml != NULL)
-			fu_device_set_description(dev, xml);
 	}
 
 	/* success */

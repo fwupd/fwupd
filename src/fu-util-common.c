@@ -1348,17 +1348,6 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 		fu_string_append(str, idt + 1, _("Summary"), tmp);
 	}
 
-	/* description */
-	tmp = fwupd_device_get_description(dev);
-	if (tmp != NULL) {
-		g_autofree gchar *desc = NULL;
-		desc = fu_util_convert_description(tmp, NULL);
-		if (desc == NULL)
-			desc = g_strdup(tmp);
-		/* TRANSLATORS: multiline description of device */
-		fu_string_append(str, idt + 1, _("Description"), desc);
-	}
-
 	/* versions */
 	tmp = fwupd_device_get_version(dev);
 	if (tmp != NULL) {

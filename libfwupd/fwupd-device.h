@@ -75,10 +75,6 @@ fwupd_device_get_branch(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
 fwupd_device_set_branch(FwupdDevice *self, const gchar *branch) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_device_get_description(FwupdDevice *self) G_GNUC_NON_NULL(1);
-void
-fwupd_device_set_description(FwupdDevice *self, const gchar *description) G_GNUC_NON_NULL(1);
-const gchar *
 fwupd_device_get_version(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
 fwupd_device_set_version(FwupdDevice *self, const gchar *version) G_GNUC_NON_NULL(1);
