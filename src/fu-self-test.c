@@ -2179,9 +2179,14 @@ fu_engine_md_verfmt_func(gconstpointer user_data)
 	    "  <component type=\"firmware\">"
 	    "    <id>test</id>"
 	    "    <name>Test Device</name>"
+	    "    <icon>computer</icon>"
+	    "    <developer_name>ACME</developer_name>"
 	    "    <provides>"
 	    "      <firmware type=\"flashed\">aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee</firmware>"
 	    "    </provides>"
+	    "    <categories>"
+	    "      <category>X-GraphicsTablet</category>"
+	    "    </categories>"
 	    "    <releases>"
 	    "      <release version=\"1.2.3\" date=\"2017-09-15\">"
 	    "        <size type=\"installed\">123</size>"
@@ -2195,6 +2200,8 @@ fu_engine_md_verfmt_func(gconstpointer user_data)
 	    "    </releases>"
 	    "    <custom>"
 	    "      <value key=\"LVFS::VersionFormat\">triplet</value>"
+	    "      <value key=\"LVFS::DeviceIntegrity\">signed</value>"
+	    "      <value key=\"LVFS::DeviceFlags\">host-cpu,needs-shutdown</value>"
 	    "    </custom>"
 	    "  </component>"
 	    "</components>",
@@ -2220,19 +2227,28 @@ fu_engine_md_verfmt_func(gconstpointer user_data)
 	/* add a device with no defined version format */
 	fu_device_set_version(device, "16908291");
 	fu_device_set_version_raw(device, 0x01020003);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
 	fu_device_set_id(device, "test_device");
 	fu_device_add_vendor_id(device, "USB:FFFF");
 	fu_device_add_protocol(device, "com.acme");
-	fu_device_set_name(device, "Test Device");
 	fu_device_add_guid(device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_engine_add_device(engine, device);
 
 	/* ensure the version format was set from the metadata */
 	g_assert_cmpint(fu_device_get_version_format(device), ==, FWUPD_VERSION_FORMAT_TRIPLET);
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.3");
+	g_assert_cmpstr(fu_device_get_name(device), ==, "Graphics Tablet");
+	g_assert_cmpstr(fu_device_get_vendor(device), ==, "ACME");
+	g_assert_true(fu_device_has_icon(device, "computer"));
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD));
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN));
+	g_assert_true(fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_CPU));
 
 	/* ensure the device was added */
 	devices = fu_engine_get_devices(engine, &error);
