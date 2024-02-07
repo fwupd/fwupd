@@ -399,10 +399,9 @@ if get_option('tests')
       fwupdplugin
     ],
   )
-  subdir('tests')
-endif
 
-if get_option('tests')
+  subdir('tests')
+
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
@@ -428,27 +427,11 @@ if get_option('tests')
     c_args: [
       '-DSRCDIR="' + meson.current_source_dir() + '"',
     ],
+    install: true,
+    install_rpath: libdir_pkg,
+    install_dir: installed_test_bindir,
   )
   test('fwupdplugin-self-test', e, is_parallel: false, timeout: 180, env: env)
-
-  install_data([
-      'tests/chassis_type',
-      'tests/sys_vendor',
-    ],
-    install_dir: installed_test_datadir,
-  )
-  install_data([
-      'tests/dmi/tables/DMI',
-      'tests/dmi/tables/smbios_entry_point',
-    ],
-    install_dir: join_paths(installed_test_datadir, 'tests/dmi/tables'),
-  )
-  install_data([
-      'tests/dmi/tables64/DMI',
-      'tests/dmi/tables64/smbios_entry_point',
-    ],
-    install_dir: join_paths(installed_test_datadir, 'tests/dmi/tables64'),
-  )
 endif
 
 fwupdplugin_incdir = include_directories('.')

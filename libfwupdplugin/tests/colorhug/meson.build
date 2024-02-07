@@ -8,4 +8,6 @@ colorhug_test_firmware = custom_target('colorhug-test-firmware',
   command: [
     gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
   ],
+  install: true,
+  install_dir: join_paths(installed_test_datadir, 'tests/colorhug'),
 )
