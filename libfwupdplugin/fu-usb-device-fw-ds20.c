@@ -73,6 +73,10 @@ fu_usb_device_fw_ds20_parse(FuUsbDeviceDs20 *self,
 		g_auto(GStrv) kv = NULL;
 		if (lines[i][0] == '\0')
 			continue;
+		if (g_str_has_prefix(lines[i], "[") && g_str_has_suffix(lines[i], "]")) {
+			g_debug("ignoring DS-20 group header: %s", lines[i]);
+			continue;
+		}
 		kv = g_strsplit(lines[i], "=", 2);
 		if (g_strv_length(kv) < 2) {
 			g_set_error(error,
