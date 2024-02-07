@@ -554,6 +554,7 @@ fwupd_device_func(void)
 	fwupd_device_set_id(dev, "USB:foo");
 	fwupd_device_set_modified(dev, 60 * 60 * 24);
 	fwupd_device_set_name(dev, "ColorHug2");
+	fwupd_device_set_branch(dev, "community");
 	fwupd_device_add_guid(dev, "2082b5e0-7a64-478a-b1b2-e3404fab6dad");
 	fwupd_device_add_guid(dev, "00000000-0000-0000-0000-000000000000");
 	fwupd_device_add_instance_id(dev, "USB\\VID_1234&PID_0001");
@@ -598,6 +599,7 @@ fwupd_device_func(void)
 				    "← USB\\VID_1234&PID_0001 ⚠\n"
 				    "  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
 				    "  Guid:                 00000000-0000-0000-0000-000000000000\n"
+				    "  Branch:               community\n"
 				    "  Flags:                updatable|require-ac\n"
 				    "  Checksum:             SHA1(beefdead)\n"
 				    "  VendorId:             USB:0x1234\n"
@@ -644,6 +646,7 @@ fwupd_device_func(void)
 				    "    \"2082b5e0-7a64-478a-b1b2-e3404fab6dad\",\n"
 				    "    \"00000000-0000-0000-0000-000000000000\"\n"
 				    "  ],\n"
+				    "  \"Branch\" : \"community\",\n"
 				    "  \"Flags\" : [\n"
 				    "    \"updatable\",\n"
 				    "    \"require-ac\"\n"
