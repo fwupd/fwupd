@@ -456,9 +456,6 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	guint idx;
-#if G_USB_CHECK_VERSION(0, 4, 0)
-	g_autoptr(GPtrArray) bos_descriptors = NULL;
-#endif
 
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -525,42 +522,6 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 		if (!fu_usb_device_query_hub(self, error))
 			return FALSE;
 	}
-
-#if G_USB_CHECK_VERSION(0, 4, 2)
-	/* get the platform capability BOS descriptors */
-	bos_descriptors = g_usb_device_get_bos_descriptors(priv->usb_device, NULL);
-	for (guint i = 0; bos_descriptors != NULL && i < bos_descriptors->len; i++) {
-		GUsbBosDescriptor *bos = g_ptr_array_index(bos_descriptors, i);
-		GBytes *extra = g_usb_bos_descriptor_get_extra(bos);
-		if (g_usb_bos_descriptor_get_capability(bos) == 0x5 &&
-		    g_bytes_get_size(extra) > 0) {
-			g_autoptr(FuFirmware) ds20 = NULL;
-			g_autofree gchar *str = NULL;
-			g_autoptr(GError) error_ds20 = NULL;
-
-			ds20 = fu_firmware_new_from_gtypes(extra,
-							   0x0,
-							   FWUPD_INSTALL_FLAG_NONE,
-							   &error_ds20,
-							   FU_TYPE_USB_DEVICE_FW_DS20,
-							   FU_TYPE_USB_DEVICE_MS_DS20,
-							   G_TYPE_INVALID);
-			if (ds20 == NULL) {
-				g_warning("failed to parse platform capability BOS descriptor: %s",
-					  error_ds20->message);
-				continue;
-			}
-			if (!fu_usb_device_ds20_apply_to_device(FU_USB_DEVICE_DS20(ds20),
-								self,
-								&error_ds20)) {
-				g_warning("failed to get DS20 data: %s", error_ds20->message);
-				continue;
-			}
-			str = fu_firmware_to_string(ds20);
-			g_debug("DS20: %s", str);
-		}
-	}
-#endif
 #endif
 
 	/* success */
@@ -663,6 +624,69 @@ fu_usb_device_close(FuDevice *device, GError **error)
 	g_clear_object(&priv->usb_device_locker);
 	return TRUE;
 }
+
+#if G_USB_CHECK_VERSION(0, 4, 0)
+static gboolean
+fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, GUsbBosDescriptor *bos, GError **error)
+{
+	GBytes *extra = g_usb_bos_descriptor_get_extra(bos);
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuFirmware) ds20 = NULL;
+
+	/* sanity check */
+	if (g_bytes_get_size(extra) == 0) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "zero sized data");
+		return FALSE;
+	}
+
+	/* parse either type */
+	ds20 = fu_firmware_new_from_gtypes(extra,
+					   0x0,
+					   FWUPD_INSTALL_FLAG_NONE,
+					   error,
+					   FU_TYPE_USB_DEVICE_FW_DS20,
+					   FU_TYPE_USB_DEVICE_MS_DS20,
+					   G_TYPE_INVALID);
+	if (ds20 == NULL) {
+		g_prefix_error(error, "failed to parse: ");
+		return FALSE;
+	}
+	str = fu_firmware_to_string(ds20);
+	g_debug("DS20: %s", str);
+
+	/* set the quirks onto the device */
+	if (!fu_usb_device_ds20_apply_to_device(FU_USB_DEVICE_DS20(ds20), self, error)) {
+		g_prefix_error(error, "failed to apply DS20 data: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_usb_device_probe_bos_descriptors(FuUsbDevice *self, GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GPtrArray) bos_descriptors = NULL;
+
+	bos_descriptors = g_usb_device_get_bos_descriptors(priv->usb_device, NULL);
+	if (bos_descriptors == NULL)
+		return TRUE;
+	for (guint i = 0; i < bos_descriptors->len; i++) {
+		GUsbBosDescriptor *bos = g_ptr_array_index(bos_descriptors, i);
+		g_autoptr(GError) error_local = NULL;
+
+		if (g_usb_bos_descriptor_get_capability(bos) != 0x5)
+			continue;
+		if (!fu_usb_device_probe_bos_descriptor(self, bos, &error_local)) {
+			g_warning("failed to parse platform BOS descriptor: %s",
+				  error_local->message);
+		}
+	}
+	return TRUE;
+}
+#endif
 
 static gboolean
 fu_usb_device_probe(FuDevice *device, GError **error)
@@ -768,6 +792,12 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 			break;
 		fu_device_add_parent_physical_id(device, platform_id);
 	}
+
+#if G_USB_CHECK_VERSION(0, 4, 0)
+	/* parse the platform capability BOS descriptors for quirks */
+	if (!fu_usb_device_probe_bos_descriptors(self, error))
+		return FALSE;
+#endif
 #endif
 
 	/* success */

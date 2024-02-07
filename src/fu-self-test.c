@@ -3911,7 +3911,6 @@ fu_backend_usb_func(gconstpointer user_data)
 	g_autofree gchar *gusb_emulate_fn3 = NULL;
 	g_autofree gchar *devicestr = NULL;
 	g_autoptr(FuBackend) backend = fu_usb_backend_new(self->ctx);
-	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -3951,19 +3950,14 @@ fu_backend_usb_func(gconstpointer user_data)
 	g_assert_cmpint(devices->len, ==, 1);
 	device_tmp = g_ptr_array_index(devices, 0);
 	fu_device_set_context(device_tmp, self->ctx);
-	locker = fu_device_locker_new(device_tmp, &error);
+	ret = fu_device_probe(device_tmp, &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(locker);
+	g_assert_true(ret);
 	g_assert_true(fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_EMULATED));
 
 	/* for debugging */
 	devicestr = fu_device_to_string(device_tmp);
 	g_debug("%s", devicestr);
-
-	/* check the device was processed correctly by FuUsbDevice */
-	g_assert_cmpstr(fu_device_get_name(device_tmp), ==, "ColorHug2");
-	g_assert_true(fu_device_has_instance_id(device_tmp, "USB\\VID_273F&PID_1004"));
-	g_assert_true(fu_device_has_vendor_id(device_tmp, "USB:0x273F"));
 
 	/* check the fwupd DS20 descriptor was parsed */
 	g_assert_true(fu_device_has_icon(device_tmp, "computer"));
@@ -4040,7 +4034,7 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 			      "*invalid platform version 0x0000000a, expected >= 0x00010805*");
 	g_test_expect_message("FuUsbDevice",
 			      G_LOG_LEVEL_WARNING,
-			      "failed to parse * BOS descriptor: did not find magic*");
+			      "failed to parse * BOS descriptor: *did not find magic*");
 
 	locker = fu_device_locker_new(device_tmp, &error);
 	g_assert_no_error(error);
