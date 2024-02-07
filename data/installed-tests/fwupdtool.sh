@@ -19,6 +19,11 @@ fwupdtool build-cabinet ${CAB} ${INPUT} --force
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
+echo "Examining ${CAB}..."
+fwupdtool get-details ${CAB}
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+# ---
 echo "Installing ${CAB} cabinet..."
 fwupdtool install ${CAB}
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
@@ -31,3 +36,18 @@ rm -f ${CAB}
 echo "Verifying update..."
 fwupdtool verify-update ${DEVICE}
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+# ---
+echo "Getting history (should be one)..."
+fwupdtool get-history
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+# ---
+echo "Clearing history..."
+fwupdtool clear-history ${DEVICE}
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+# ---
+echo "Getting history (should be none)..."
+fwupdtool get-history
+rc=$?; if [ $rc != 2 ]; then exit $rc; fi
