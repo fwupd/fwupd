@@ -25,6 +25,10 @@
   <url type="translate">https://www.transifex.com/freedesktop/fwupd/</url>
   <url type="vcs-browser">https://github.com/fwupd/fwupd</url>
   <update_contact>richard_at_hughsie.com</update_contact>
+  <developer_name>The fwupd authors</developer_name>
+  <developer id="fwupd.org">
+    <name translatable="no">The fwupd authors</name>
+  </developer>
   <translation type="gettext">fwupd</translation>
   <content_rating type="oars-1.1">
     <content_attribute id="social-info">moderate</content_attribute>
