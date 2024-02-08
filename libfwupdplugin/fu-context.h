@@ -9,6 +9,7 @@
 #include <gio/gio.h>
 
 #include "fu-bios-settings.h"
+#include "fu-common-struct.h"
 #include "fu-common.h"
 #include "fu-firmware.h"
 #include "fu-smbios.h"
