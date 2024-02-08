@@ -8,10 +8,12 @@
 
 #include "config.h"
 
+#include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-csv-firmware.h"
 #include "fu-input-stream.h"
 #include "fu-mem.h"
+#include "fu-partial-input-stream.h"
 #include "fu-sbatlevel-section-struct.h"
 #include "fu-sbatlevel-section.h"
 
@@ -26,22 +28,21 @@ fu_sbatlevel_section_add_entry(FuFirmware *firmware,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
-	gsize bufsz = 0;
-	const guint8 *buf;
-	gsize size = 0;
+	gsize streamsz = 0;
 	g_autoptr(FuFirmware) entry_fw = NULL;
-	g_autoptr(GBytes) entry_blob = NULL;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) partial_stream = NULL;
 
-	fw = fu_input_stream_read_bytes(stream, offset, G_MAXSIZE, error);
-	if (fw == NULL)
+	/* stop at the null terminator */
+	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	buf = g_bytes_get_data(fw, &bufsz);
-
-	/* look for the null terminator */
-	for (size = 0; ((offset + size) < bufsz); ++size) {
-		if (buf[offset + size] == 0)
+	for (guint i = offset; i < streamsz; i++) {
+		guint8 value = 0;
+		if (!fu_input_stream_read_u8(stream, i, &value, error))
+			return FALSE;
+		if (value == 0x0) {
+			streamsz = i - 1;
 			break;
+		}
 	}
 
 	entry_fw = fu_csv_firmware_new();
@@ -53,16 +54,15 @@ fu_sbatlevel_section_add_entry(FuFirmware *firmware,
 	fu_firmware_set_idx(entry_fw, entry_idx);
 	fu_firmware_set_id(entry_fw, entry_name);
 	fu_firmware_set_offset(entry_fw, offset);
-	entry_blob = fu_bytes_new_offset(fw, offset, size, error);
-	if (entry_blob == NULL)
-		return FALSE;
-	if (!fu_firmware_add_image_full(firmware, entry_fw, error))
-		return FALSE;
-	if (!fu_firmware_parse(entry_fw, entry_blob, flags, error)) {
+	partial_stream = fu_partial_input_stream_new(stream, offset, streamsz - offset);
+	if (!fu_firmware_parse_stream(entry_fw, partial_stream, 0, flags, error)) {
 		g_prefix_error(error, "failed to parse %s: ", entry_name);
 		return FALSE;
 	}
+	if (!fu_firmware_add_image_full(firmware, entry_fw, error))
+		return FALSE;
 
+	/* success */
 	return TRUE;
 }
 
@@ -73,38 +73,69 @@ fu_sbatlevel_section_parse(FuFirmware *firmware,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
-	gsize header_offset = offset + FU_STRUCT_SBAT_LEVEL_SECTION_HEADER_OFFSET_PREVIOUS;
-	guint32 previous_addr;
-	guint32 latest_addr;
 	g_autoptr(GByteArray) st = NULL;
 
 	st = fu_struct_sbat_level_section_header_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
-
-	previous_addr = fu_struct_sbat_level_section_header_get_previous(st);
-
-	if (!fu_sbatlevel_section_add_entry(firmware,
-					    stream,
-					    header_offset + previous_addr,
-					    "previous",
-					    0,
-					    flags,
-					    error))
+	if (!fu_sbatlevel_section_add_entry(
+		firmware,
+		stream,
+		offset + sizeof(guint32) + fu_struct_sbat_level_section_header_get_previous(st),
+		"previous",
+		0,
+		flags,
+		error))
 		return FALSE;
-
-	latest_addr = fu_struct_sbat_level_section_header_get_latest(st);
-
 	if (!fu_sbatlevel_section_add_entry(firmware,
 					    stream,
-					    header_offset + latest_addr,
+					    offset + sizeof(guint32) +
+						fu_struct_sbat_level_section_header_get_latest(st),
 					    "latest",
 					    1,
 					    flags,
 					    error))
 		return FALSE;
-
 	return TRUE;
+}
+
+static GByteArray *
+fu_sbatlevel_section_write(FuFirmware *firmware, GError **error)
+{
+	g_autoptr(FuFirmware) img_ltst = NULL;
+	g_autoptr(FuFirmware) img_prev = NULL;
+	g_autoptr(GByteArray) buf = fu_struct_sbat_level_section_header_new();
+	g_autoptr(GByteArray) buf_ltst = NULL;
+	g_autoptr(GByteArray) buf_prev = NULL;
+	g_autoptr(GBytes) blob_ltst = NULL;
+	g_autoptr(GBytes) blob_prev = NULL;
+
+	/* previous */
+	fu_struct_sbat_level_section_header_set_previous(buf, sizeof(guint32) * 2);
+	img_prev = fu_firmware_get_image_by_id(firmware, "previous", error);
+	if (img_prev == NULL)
+		return NULL;
+	blob_prev = fu_firmware_write(img_prev, error);
+	if (blob_prev == NULL)
+		return NULL;
+	fu_byte_array_append_bytes(buf, blob_prev);
+	fu_byte_array_append_uint8(buf, 0x0);
+
+	/* latest */
+	fu_struct_sbat_level_section_header_set_latest(buf,
+						       (sizeof(guint32) * 2) +
+							   g_bytes_get_size(blob_prev) + 1);
+	img_ltst = fu_firmware_get_image_by_id(firmware, "latest", error);
+	if (img_ltst == NULL)
+		return NULL;
+	blob_ltst = fu_firmware_write(img_ltst, error);
+	if (blob_ltst == NULL)
+		return NULL;
+	fu_byte_array_append_bytes(buf, blob_ltst);
+	fu_byte_array_append_uint8(buf, 0x0);
+
+	/* success */
+	return g_steal_pointer(&buf);
 }
 
 static void
@@ -119,6 +150,7 @@ fu_sbatlevel_section_class_init(FuSbatlevelSectionClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 
 	firmware_class->parse = fu_sbatlevel_section_parse;
+	firmware_class->write = fu_sbatlevel_section_write;
 }
 
 FuFirmware *
