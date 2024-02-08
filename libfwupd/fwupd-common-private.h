@@ -26,17 +26,6 @@ gchar *
 fwupd_build_user_agent_system(void);
 
 void
-fwupd_input_stream_read_bytes_async(GInputStream *stream,
-				    GCancellable *cancellable,
-				    GAsyncReadyCallback callback,
-				    gpointer callback_data) G_GNUC_NON_NULL(1);
-GBytes *
-fwupd_input_stream_read_bytes_finish(GInputStream *stream,
-				     GAsyncResult *res,
-				     GError **error) G_GNUC_WARN_UNUSED_RESULT
-    G_GNUC_NON_NULL(1, 2);
-
-void
 fwupd_common_json_add_string(JsonBuilder *builder, const gchar *key, const gchar *value)
     G_GNUC_NON_NULL(1, 2);
 void
