@@ -78,6 +78,8 @@ install_data([
     'oprom.bin',
     'oprom.builder.xml',
     'srec-addr32.bin',
+    'sbatlevel.bin',
+    'sbatlevel.builder.xml',
     'srec.bin',
     'srec.builder.xml',
     'sys_vendor',

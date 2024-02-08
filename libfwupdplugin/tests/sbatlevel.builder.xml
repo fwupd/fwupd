@@ -1,0 +1,22 @@
+<firmware gtype="FuSbatlevelSection">
+  <firmware gtype="FuCsvFirmware">
+    <id>previous</id>
+    <write_column_ids>false</write_column_ids>
+    <firmware gtype="FuCsvEntry">
+      <values>
+        <component_name>grub</component_name>
+        <component_generation>1</component_generation>
+      </values>
+    </firmware>
+  </firmware>
+  <firmware gtype="FuCsvFirmware">
+    <id>latest</id>
+    <write_column_ids>false</write_column_ids>
+    <firmware gtype="FuCsvEntry">
+      <values>
+        <component_name>sbat</component_name>
+        <component_generation>1</component_generation>
+      </values>
+    </firmware>
+  </firmware>
+</firmware>
