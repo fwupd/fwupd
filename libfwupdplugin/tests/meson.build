@@ -72,6 +72,8 @@ install_data([
     'ihex.builder.xml',
     'intel-thunderbolt.bin',
     'intel-thunderbolt.builder.xml',
+    'linear.bin',
+    'linear.builder.xml',
     'metadata.xml',
     'oprom.bin',
     'oprom.builder.xml',
