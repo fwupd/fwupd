@@ -251,36 +251,6 @@ fu_common_align_up(gsize value, guint8 alignment)
 }
 
 /**
- * fu_power_state_to_string:
- * @power_state: a power state, e.g. %FU_POWER_STATE_AC_FULLY_CHARGED
- *
- * Converts an enumerated type to a string.
- *
- * Returns: a string, or %NULL for invalid
- *
- * Since: 1.8.11
- **/
-const gchar *
-fu_power_state_to_string(FuPowerState power_state)
-{
-	if (power_state == FU_POWER_STATE_UNKNOWN)
-		return "unknown";
-	if (power_state == FU_POWER_STATE_BATTERY)
-		return "battery";
-	if (power_state == FU_POWER_STATE_BATTERY_DISCHARGING)
-		return "battery-discharging";
-	if (power_state == FU_POWER_STATE_BATTERY_EMPTY)
-		return "battery-empty";
-	if (power_state == FU_POWER_STATE_AC)
-		return "ac";
-	if (power_state == FU_POWER_STATE_AC_CHARGING)
-		return "ac-charging";
-	if (power_state == FU_POWER_STATE_AC_FULLY_CHARGED)
-		return "ac-fully-charged";
-	return NULL;
-}
-
-/**
  * fu_power_state_is_ac:
  * @power_state: a power state, e.g. %FU_POWER_STATE_AC_FULLY_CHARGED
  *
@@ -298,50 +268,6 @@ fu_power_state_is_ac(FuPowerState power_state)
 	    power_state == FU_POWER_STATE_AC_FULLY_CHARGED)
 		return TRUE;
 	return FALSE;
-}
-
-/**
- * fu_lid_state_to_string:
- * @lid_state: a lid state, e.g. %FU_LID_STATE_CLOSED
- *
- * Converts an enumerated type to a string.
- *
- * Returns: a string, or %NULL for invalid
- *
- * Since: 1.7.4
- **/
-const gchar *
-fu_lid_state_to_string(FuLidState lid_state)
-{
-	if (lid_state == FU_LID_STATE_UNKNOWN)
-		return "unknown";
-	if (lid_state == FU_LID_STATE_OPEN)
-		return "open";
-	if (lid_state == FU_LID_STATE_CLOSED)
-		return "closed";
-	return NULL;
-}
-
-/**
- * fu_display_state_to_string:
- * @display_state: a lid state, e.g. %FU_DISPLAY_STATE_CONNECTED
- *
- * Converts an enumerated type to a string.
- *
- * Returns: a string, or %NULL for invalid
- *
- * Since: 1.9.6
- **/
-const gchar *
-fu_display_state_to_string(FuDisplayState display_state)
-{
-	if (display_state == FU_DISPLAY_STATE_UNKNOWN)
-		return "unknown";
-	if (display_state == FU_DISPLAY_STATE_CONNECTED)
-		return "connected";
-	if (display_state == FU_DISPLAY_STATE_DISCONNECTED)
-		return "disconnected";
-	return NULL;
 }
 
 /**
