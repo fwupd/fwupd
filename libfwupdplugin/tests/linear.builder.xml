@@ -1,0 +1,9 @@
+<firmware gtype="FuLinearFirmware">
+  <image_gtype>FuDfuFirmware</image_gtype>
+  <firmware gtype="FuDfuFirmware">
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+  <firmware gtype="FuDfuFirmware">
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+</firmware>
