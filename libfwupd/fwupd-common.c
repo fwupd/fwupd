@@ -397,46 +397,55 @@ fwupd_build_user_agent_system(void)
 gchar *
 fwupd_build_machine_id(const gchar *salt, GError **error)
 {
-	const gchar *fn = NULL;
+	const gchar *machine_id;
+	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
-	g_auto(GStrv) fns = g_new0(gchar *, 6);
 	g_autoptr(GChecksum) csum = NULL;
-	gsize sz = 0;
 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	/* one of these has to exist */
-	fns[0] = g_build_filename(FWUPD_SYSCONFDIR, "machine-id", NULL);
-	fns[1] = g_build_filename(FWUPD_LOCALSTATEDIR, "lib", "dbus", "machine-id", NULL);
-	fns[2] = g_strdup("/etc/machine-id");
-	fns[3] = g_strdup("/var/lib/dbus/machine-id");
-	fns[4] = g_strdup("/var/db/dbus/machine-id");
-	for (guint i = 0; fns[i] != NULL; i++) {
-		if (g_file_test(fns[i], G_FILE_TEST_EXISTS)) {
-			fn = fns[i];
-			break;
+	/* in test mode */
+	machine_id = g_getenv("FWUPD_MACHINE_ID");
+	if (machine_id != NULL) {
+		buf = g_strdup(machine_id);
+		bufsz = strlen(buf);
+	} else {
+		const gchar *fn = NULL;
+		g_auto(GStrv) fns = g_new0(gchar *, 6);
+
+		/* one of these has to exist */
+		fns[0] = g_build_filename(FWUPD_SYSCONFDIR, "machine-id", NULL);
+		fns[1] = g_build_filename(FWUPD_LOCALSTATEDIR, "lib", "dbus", "machine-id", NULL);
+		fns[2] = g_strdup("/etc/machine-id");
+		fns[3] = g_strdup("/var/lib/dbus/machine-id");
+		fns[4] = g_strdup("/var/db/dbus/machine-id");
+		for (guint i = 0; fns[i] != NULL; i++) {
+			if (g_file_test(fns[i], G_FILE_TEST_EXISTS)) {
+				fn = fns[i];
+				break;
+			}
 		}
-	}
-	if (fn == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_READ,
-				    "The machine-id is not present");
-		return NULL;
-	}
-	if (!g_file_get_contents(fn, &buf, &sz, error))
-		return NULL;
-	if (sz == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_READ,
-				    "The machine-id is present but unset");
-		return NULL;
+		if (fn == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_READ,
+					    "The machine-id is not present");
+			return NULL;
+		}
+		if (!g_file_get_contents(fn, &buf, &bufsz, error))
+			return NULL;
+		if (bufsz == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_READ,
+					    "The machine-id is present but unset");
+			return NULL;
+		}
 	}
 	csum = g_checksum_new(G_CHECKSUM_SHA256);
 	if (salt != NULL)
 		g_checksum_update(csum, (const guchar *)salt, (gssize)strlen(salt));
-	g_checksum_update(csum, (const guchar *)buf, (gssize)sz);
+	g_checksum_update(csum, (const guchar *)buf, (gssize)bufsz);
 	return g_strdup(g_checksum_get_string(csum));
 }
 
@@ -447,7 +456,13 @@ fwupd_build_history_report_json_metadata_device(JsonBuilder *builder, FwupdDevic
 	GHashTable *metadata = fwupd_release_get_metadata(rel);
 	g_autoptr(GList) keys = NULL;
 
+	/* nothing to do */
+	if (g_hash_table_size(metadata) == 0)
+		return;
+
 	/* add each metadata value */
+	json_builder_set_member_name(builder, "Metadata");
+	json_builder_begin_object(builder);
 	keys = g_hash_table_get_keys(metadata);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
@@ -455,6 +470,7 @@ fwupd_build_history_report_json_metadata_device(JsonBuilder *builder, FwupdDevic
 		json_builder_set_member_name(builder, key);
 		json_builder_add_string_value(builder, value);
 	}
+	json_builder_end_object(builder);
 }
 
 static void
@@ -542,10 +558,7 @@ fwupd_build_history_report_json_device(JsonBuilder *builder, FwupdDevice *dev)
 	json_builder_add_int_value(builder, fwupd_device_get_modified(dev));
 
 	/* add saved metadata to the report */
-	json_builder_set_member_name(builder, "Metadata");
-	json_builder_begin_object(builder);
 	fwupd_build_history_report_json_metadata_device(builder, dev);
-	json_builder_end_object(builder);
 }
 
 static gboolean
@@ -564,6 +577,10 @@ fwupd_build_history_report_json_metadata(JsonBuilder *builder, GError **error)
 	hash = fwupd_get_os_release(error);
 	if (hash == NULL)
 		return FALSE;
+	if (!g_hash_table_contains(hash, "ID"))
+		return TRUE;
+	json_builder_set_member_name(builder, "Metadata");
+	json_builder_begin_object(builder);
 	for (guint i = 0; distro_kv[i].key != NULL; i++) {
 		const gchar *tmp = g_hash_table_lookup(hash, distro_kv[i].key);
 		if (tmp != NULL) {
@@ -571,6 +588,7 @@ fwupd_build_history_report_json_metadata(JsonBuilder *builder, GError **error)
 			json_builder_add_string_value(builder, tmp);
 		}
 	}
+	json_builder_end_object(builder);
 	return TRUE;
 }
 
@@ -613,11 +631,8 @@ fwupd_build_history_report_json(GPtrArray *devices, GError **error)
 	json_builder_add_string_value(builder, machine_id);
 
 	/* this is system metadata not stored in the database */
-	json_builder_set_member_name(builder, "Metadata");
-	json_builder_begin_object(builder);
 	if (!fwupd_build_history_report_json_metadata(builder, error))
 		return NULL;
-	json_builder_end_object(builder);
 
 	/* add each device */
 	json_builder_set_member_name(builder, "Reports");

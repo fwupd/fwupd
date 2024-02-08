@@ -45,6 +45,7 @@ Other variables, include:
 * `FWUPD_TEST_PLUGIN_XML` used by the test plugin to load XML state out-of-band before startup
 * `FWUPD_UEFI_CAPSULE_RECREATE_COD_DATA` if set, write the files in the example COD tree in srcdir
 * `FWUPD_UEFI_TEST` used by the UEFI plugins to disable specific sanity checks during self tests
+* `FWUPD_MACHINE_ID` used by the tests to set a predictable hash normally loaded from `/etc/machine-id`
 
 ## File system overrides
 
