@@ -34,6 +34,36 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.13" date="2024-02-08">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a timer inhibit if the daemon took a long time to startup</li>
+          <li>Add a concept of 'Test Mode' rather than enabling specific plugins</li>
+          <li>Do not idle-quit the daemon if there is a connected D-Bus client</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow plugins to opt-out of the child-device first depsolve</li>
+          <li>Allow setting multiple flags in LVFS::DeviceFlags</li>
+          <li>Do not migrate config comments for removed keys</li>
+          <li>Do not request the Advantech BMC to reboot</li>
+          <li>Do not warn the user about ESP when using MBR</li>
+          <li>Fix a critical warning when adding a PixArt wireless device</li>
+          <li>Fix migration of legacy config files</li>
+          <li>Only save config values to the mutable config file</li>
+          <li>Parse DS-20 descriptors earlier in device setup</li>
+          <li>Store the version format in the history database to fix offline reports</li>
+          <li>Use the correct GUID for matching realtek-mst and parade-lspcon</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>GoodWay Acer Dock</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.12" date="2024-01-23">
       <description>
         <p>
