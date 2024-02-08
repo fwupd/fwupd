@@ -530,6 +530,68 @@ fwupd_device_filter_func(void)
 }
 
 static void
+fwupd_common_history_report_func(void)
+{
+	g_autofree gchar *json = NULL;
+	g_autoptr(FwupdDevice) dev = fwupd_device_new();
+	g_autoptr(FwupdRelease) rel = fwupd_release_new();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devs = g_ptr_array_new();
+
+	fwupd_device_add_checksum(dev, "beefdead");
+	fwupd_device_add_guid(dev, "2082b5e0-7a64-478a-b1b2-e3404fab6dad");
+	fwupd_device_add_protocol(dev, "org.hughski.colorhug");
+	fwupd_device_set_plugin(dev, "colorhug");
+	fwupd_device_set_update_error(dev, "device dead");
+	fwupd_device_set_version(dev, "1.2.3");
+	fwupd_release_add_checksum(rel, "beefdead");
+	fwupd_release_set_id(rel, "123");
+	fwupd_release_set_update_message(rel, "oops");
+	fwupd_release_set_version(rel, "1.2.4");
+	fwupd_device_add_release(dev, rel);
+
+	g_ptr_array_add(devs, dev);
+	json = fwupd_build_history_report_json(devs, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json);
+	g_assert_cmpstr(json,
+			==,
+			"{\n"
+			"  \"ReportVersion\" : 2,\n"
+			"  \"MachineId\" : "
+			"\"36b2e7b8bb9a1344db8d6736dd10bcc169a95fc66decbac99c22718a54f434e3\",\n"
+#ifndef _WIN32
+			"  \"Metadata\" : {\n"
+			"    \"DistroId\" : \"generic\",\n"
+			"    \"DistroVersion\" : \"39\",\n"
+			"    \"DistroVariant\" : \"workstation\"\n"
+			"  },\n"
+#endif
+			"  \"Reports\" : [\n"
+			"    {\n"
+			"      \"Checksum\" : \"beefdead\",\n"
+			"      \"ChecksumDevice\" : [\n"
+			"        \"beefdead\"\n"
+			"      ],\n"
+			"      \"ReleaseId\" : \"123\",\n"
+			"      \"UpdateState\" : 0,\n"
+			"      \"UpdateError\" : \"device dead\",\n"
+			"      \"UpdateMessage\" : \"oops\",\n"
+			"      \"Guid\" : [\n"
+			"        \"2082b5e0-7a64-478a-b1b2-e3404fab6dad\"\n"
+			"      ],\n"
+			"      \"Plugin\" : \"colorhug\",\n"
+			"      \"VersionOld\" : \"1.2.3\",\n"
+			"      \"VersionNew\" : \"1.2.4\",\n"
+			"      \"Flags\" : 0,\n"
+			"      \"Created\" : 0,\n"
+			"      \"Modified\" : 0\n"
+			"    }\n"
+			"  ]\n"
+			"}");
+}
+
+static void
 fwupd_device_func(void)
 {
 	gboolean ret;
@@ -1273,6 +1335,8 @@ fwupd_bios_settings_func(void)
 int
 main(int argc, char **argv)
 {
+	g_autofree gchar *testdatadir = NULL;
+
 	setlocale(LC_ALL, "");
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
@@ -1280,6 +1344,10 @@ main(int argc, char **argv)
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
+	(void)g_setenv("FWUPD_MACHINE_ID", "test", TRUE);
+
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
 
 	g_assert_cmpint(sizeof(FwupdDeviceFlags), ==, sizeof(guint64));
 	g_assert_cmpint(sizeof(FwupdStatus), ==, sizeof(guint32));
@@ -1289,6 +1357,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{machine-hash}", fwupd_common_machine_hash_func);
 	g_test_add_func("/fwupd/common{device-id}", fwupd_common_device_id_func);
 	g_test_add_func("/fwupd/common{guid}", fwupd_common_guid_func);
+	g_test_add_func("/fwupd/common{history-report}", fwupd_common_history_report_func);
 	g_test_add_func("/fwupd/release", fwupd_release_func);
 	g_test_add_func("/fwupd/report", fwupd_report_func);
 	g_test_add_func("/fwupd/plugin", fwupd_plugin_func);
