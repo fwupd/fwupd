@@ -457,8 +457,11 @@ fwupd_request_func(void)
 
 	/* create dummy */
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
-	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+	fwupd_request_set_id(request, FWUPD_REQUEST_ID_DO_NOT_POWER_OFF);
 	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	g_assert_cmpstr(fwupd_request_get_message(request),
+			==,
+			"Do not turn off your computer or remove the AC adaptor.");
 	fwupd_request_set_message(request, "foo");
 	fwupd_request_set_image(request, "bar");
 	fwupd_request_set_device_id(request, "950da62d4c753a26e64f7f7d687104ce38e32ca5");
@@ -481,7 +484,7 @@ fwupd_request_func(void)
 	request2 = fwupd_request_from_variant(data);
 	g_assert_cmpint(fwupd_request_get_kind(request2), ==, FWUPD_REQUEST_KIND_IMMEDIATE);
 	g_assert_cmpint(fwupd_request_get_created(request2), >, 0);
-	g_assert_cmpstr(fwupd_request_get_id(request2), ==, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+	g_assert_cmpstr(fwupd_request_get_id(request2), ==, FWUPD_REQUEST_ID_DO_NOT_POWER_OFF);
 	g_assert_cmpstr(fwupd_request_get_message(request2), ==, "foo");
 	g_assert_cmpstr(fwupd_request_get_image(request2), ==, "bar");
 	g_assert_cmpstr(fwupd_request_get_device_id(request2),
