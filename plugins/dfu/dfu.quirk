@@ -437,6 +437,16 @@ Plugin = dfu
 Flags = manifest-poll,allow-zero-polltimeout,unsigned-payload
 RemoveDelay = 9000
 
+# Poly Studio V52
+[USB\VID_095D&PID_92C6]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload,index-force-detach
+RemoveDelay = 180000
+[USB\VID_095D&PID_92C7]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload
+RemoveDelay = 180000
+
 # AVer ATLAS CAM
 [USB\VID_34AD&PID_0006]
 Plugin = dfu
