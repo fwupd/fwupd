@@ -90,7 +90,7 @@ to LVFS.  This is an optional feature, but encouraged as it provides valuable
 feedback to LVFS administrators and OEM developers regarding firmware update
 process efficacy.
 
-The privacy policy regarding this data can be viewed on the [fwupd website](https://fwupd.org/privacy).
+The privacy policy regarding this data can be viewed on the [lvfs readthedocs site](https://lvfs.readthedocs.io/en/latest/privacy.html).
 
 To report the status of an update, run:
 
