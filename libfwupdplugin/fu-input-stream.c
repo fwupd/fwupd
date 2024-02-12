@@ -361,6 +361,8 @@ fu_input_stream_read_bytes(GInputStream *stream, gsize offset, gsize count, GErr
  *
  * Reads the total possible of the stream.
  *
+ * If @stream is not seekable, %G_MAXSIZE is used as the size.
+ *
  * Returns: %TRUE for success
  *
  * Since: 2.0.0
@@ -370,6 +372,13 @@ fu_input_stream_size(GInputStream *stream, gsize *val, GError **error)
 {
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* streaming from unseekable stream */
+	if (!G_IS_SEEKABLE(stream) || !g_seekable_can_seek(G_SEEKABLE(stream))) {
+		if (val != NULL)
+			*val = G_MAXSIZE;
+		return TRUE;
+	}
 
 	if (!g_seekable_seek(G_SEEKABLE(stream), 0, G_SEEK_END, NULL, error)) {
 		g_prefix_error(error, "seek to end: ");
