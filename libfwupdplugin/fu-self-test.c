@@ -24,6 +24,7 @@
 #include "fu-device-private.h"
 #include "fu-device-progress.h"
 #include "fu-efi-lz77-decompressor.h"
+#include "fu-lzma-common.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
 #include "fu-self-test-struct.h"
@@ -4767,6 +4768,43 @@ fu_input_stream_chunkify_func(void)
 }
 
 static void
+fu_lzma_func(void)
+{
+	gboolean ret;
+	g_autoptr(GByteArray) buf_in = g_byte_array_new();
+	g_autoptr(GBytes) blob_in = NULL;
+	g_autoptr(GBytes) blob_orig = NULL;
+	g_autoptr(GBytes) blob_out = NULL;
+	g_autoptr(GError) error = NULL;
+
+#ifndef HAVE_LZMA
+	g_test_skip("not compiled with lzma support");
+	return;
+#endif
+
+	/* create a repeating pattern */
+	for (guint i = 0; i < 10000; i++) {
+		guint8 tmp = i % 8;
+		g_byte_array_append(buf_in, &tmp, sizeof(tmp));
+	}
+	blob_in = g_bytes_new(buf_in->data, buf_in->len);
+
+	/* compress */
+	blob_out = fu_lzma_compress_bytes(blob_in, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_out);
+	g_assert_cmpint(g_bytes_get_size(blob_out), <, 500);
+
+	/* decompress */
+	blob_orig = fu_lzma_decompress_bytes(blob_out, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob_orig);
+	ret = fu_bytes_compare(blob_in, blob_orig, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
 fu_efi_lz77_decompressor_func(void)
 {
 	gboolean ret;
@@ -5090,6 +5128,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/struct{wrapped}", fu_plugin_struct_wrapped_func);
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/string{password-mask}", fu_strpassmask_func);
+	g_test_add_func("/fwupd/lzma", fu_lzma_func);
 	g_test_add_func("/fwupd/common{strnsplit}", fu_strsplit_func);
 	g_test_add_func("/fwupd/common{olson-timezone-id}", fu_common_olson_timezone_id_func);
 	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);
