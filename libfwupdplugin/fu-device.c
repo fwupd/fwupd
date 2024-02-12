@@ -43,14 +43,12 @@ fu_device_inhibit_full(FuDevice *self,
 		       const gchar *reason);
 
 typedef struct {
-	gchar *alternate_id;
 	gchar *equivalent_id;
 	gchar *physical_id;
 	gchar *logical_id;
 	gchar *backend_id;
 	gchar *update_request_id;
 	gchar *proxy_guid;
-	FuDevice *alternate;
 	FuDevice *proxy; /* noref */
 	FuContext *ctx;
 	GHashTable *inhibits; /* (nullable) */
@@ -1121,92 +1119,6 @@ fu_device_set_equivalent_id(FuDevice *self, const gchar *equivalent_id)
 
 	g_free(priv->equivalent_id);
 	priv->equivalent_id = g_strdup(equivalent_id);
-}
-
-/**
- * fu_device_get_alternate_id:
- * @self: a #FuDevice
- *
- * Gets any alternate device ID. An alternate device may be linked to the primary
- * device in some way.
- *
- * Returns: (transfer none): a device or %NULL
- *
- * Since: 1.1.0
- **/
-const gchar *
-fu_device_get_alternate_id(FuDevice *self)
-{
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-	return priv->alternate_id;
-}
-
-/**
- * fu_device_set_alternate_id:
- * @self: a #FuDevice
- * @alternate_id: (nullable): Another #FuDevice ID
- *
- * Sets any alternate device ID. An alternate device may be linked to the primary
- * device in some way.
- *
- * Since: 1.1.0
- **/
-void
-fu_device_set_alternate_id(FuDevice *self, const gchar *alternate_id)
-{
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_DEVICE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->alternate_id, alternate_id) == 0)
-		return;
-
-	g_free(priv->alternate_id);
-	priv->alternate_id = g_strdup(alternate_id);
-}
-
-/**
- * fu_device_get_alternate:
- * @self: a #FuDevice
- *
- * Gets any alternate device. An alternate device may be linked to the primary
- * device in some way.
- *
- * The alternate object will be matched from the ID set in fu_device_set_alternate_id()
- * and will be assigned by the daemon. This means if the ID is not found as an
- * added device, then this function will return %NULL.
- *
- * Returns: (transfer none): a device or %NULL
- *
- * Since: 0.7.2
- **/
-FuDevice *
-fu_device_get_alternate(FuDevice *self)
-{
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-	return priv->alternate;
-}
-
-/**
- * fu_device_set_alternate:
- * @self: a #FuDevice
- * @alternate: Another #FuDevice
- *
- * Sets any alternate device. An alternate device may be linked to the primary
- * device in some way.
- *
- * This function is only usable by the daemon, not directly from plugins.
- *
- * Since: 0.7.2
- **/
-void
-fu_device_set_alternate(FuDevice *self, FuDevice *alternate)
-{
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_DEVICE(self));
-	g_set_object(&priv->alternate, alternate);
 }
 
 /**
@@ -4116,8 +4028,6 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 		g_autofree gchar *tmp2 = g_strdup_printf("%s ← %s", guid, instance_id);
 		fu_string_append(str, idt, "Guid[quirk]", tmp2);
 	}
-	if (priv->alternate_id != NULL)
-		fu_string_append(str, idt, "AlternateId", priv->alternate_id);
 	if (priv->equivalent_id != NULL)
 		fu_string_append(str, idt, "EquivalentId", priv->equivalent_id);
 	if (priv->physical_id != NULL)
@@ -5447,8 +5357,6 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 
 	/* copy from donor FuDevice if has not already been set */
 	fu_device_add_internal_flag(self, fu_device_get_internal_flags(donor));
-	if (priv->alternate_id == NULL && fu_device_get_alternate_id(donor) != NULL)
-		fu_device_set_alternate_id(self, fu_device_get_alternate_id(donor));
 	if (priv->equivalent_id == NULL && fu_device_get_equivalent_id(donor) != NULL)
 		fu_device_set_equivalent_id(self, fu_device_get_equivalent_id(donor));
 	if (priv->physical_id == NULL && priv_donor->physical_id != NULL)
@@ -6547,8 +6455,6 @@ fu_device_finalize(GObject *object)
 
 	if (priv->progress != NULL)
 		g_object_unref(priv->progress);
-	if (priv->alternate != NULL)
-		g_object_unref(priv->alternate);
 	if (priv->proxy != NULL)
 		g_object_remove_weak_pointer(G_OBJECT(priv->proxy), (gpointer *)&priv->proxy);
 	if (priv->ctx != NULL)
@@ -6569,7 +6475,6 @@ fu_device_finalize(GObject *object)
 	g_ptr_array_unref(priv->possible_plugins);
 	g_ptr_array_unref(priv->instance_id_quirks);
 	g_ptr_array_unref(priv->retry_recs);
-	g_free(priv->alternate_id);
 	g_free(priv->equivalent_id);
 	g_free(priv->physical_id);
 	g_free(priv->logical_id);
