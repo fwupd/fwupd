@@ -50,8 +50,6 @@ void
 fu_device_ensure_from_component(FuDevice *self, XbNode *component) G_GNUC_NON_NULL(1, 2);
 void
 fu_device_convert_instance_ids(FuDevice *self) G_GNUC_NON_NULL(1);
-gchar *
-fu_device_get_guids_as_str(FuDevice *self) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_device_get_possible_plugins(FuDevice *self) G_GNUC_NON_NULL(1);
 void
