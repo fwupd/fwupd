@@ -1405,24 +1405,47 @@ fu_device_poll_cb(FuDevice *device, GError **error)
 static void
 fu_device_poll_func(void)
 {
+	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) error = NULL;
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(device);
 	guint cnt;
 
-	/* set up a 10ms poll */
 	klass->poll = fu_device_poll_cb;
 	fu_device_set_metadata_integer(device, "cnt", 0);
-	fu_device_set_poll_interval(device, 10);
-	fu_test_loop_run_with_timeout(100);
+
+	/* manual poll */
+	ret = fu_device_poll(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	cnt = fu_device_get_metadata_integer(device, "cnt");
+	g_assert_cmpint(cnt, ==, 1);
+
+	/* set up a 10ms poll */
+	fu_device_set_poll_interval(device, 5);
+	fu_test_loop_run_with_timeout(50);
 	fu_test_loop_quit();
 	cnt = fu_device_get_metadata_integer(device, "cnt");
-	g_assert_cmpint(cnt, >=, 8);
+	g_assert_cmpint(cnt, >=, 9);
+	fu_test_loop_quit();
 
-	/* disable the poll */
+	/* auto pause */
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING);
+	locker = fu_device_poll_locker_new(device, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(locker);
+	fu_test_loop_run_with_timeout(25);
+	g_clear_object(&locker);
+	g_assert_cmpint(fu_device_get_metadata_integer(device, "cnt"), ==, cnt);
+	fu_test_loop_quit();
+
+	/* disable the poll manually */
 	fu_device_set_poll_interval(device, 0);
-	fu_test_loop_run_with_timeout(100);
+	fu_test_loop_run_with_timeout(25);
 	fu_test_loop_quit();
 	g_assert_cmpint(fu_device_get_metadata_integer(device, "cnt"), ==, cnt);
+	fu_test_loop_quit();
 }
 
 static void
@@ -5183,8 +5206,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{parent}", fu_device_parent_func);
 	g_test_add_func("/fwupd/device{children}", fu_device_children_func);
 	g_test_add_func("/fwupd/device{incorporate}", fu_device_incorporate_func);
-	if (g_test_slow())
-		g_test_add_func("/fwupd/device{poll}", fu_device_poll_func);
+	g_test_add_func("/fwupd/device{poll}", fu_device_poll_func);
 	g_test_add_func("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func("/fwupd/device{name}", fu_device_name_func);
