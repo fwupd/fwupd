@@ -21,6 +21,7 @@
 
 typedef struct {
 	GPtrArray *column_ids;
+	gboolean write_column_ids;
 } FuCsvFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuCsvFirmware, fu_csv_firmware, FU_TYPE_FIRMWARE)
@@ -98,6 +99,41 @@ fu_csv_firmware_get_idx_for_column_id(FuCsvFirmware *self, const gchar *column_i
 	return G_MAXUINT;
 }
 
+/**
+ * fu_csv_firmware_set_write_column_ids:
+ * @self: a #FuFirmware
+ * @write_column_ids: boolean
+ *
+ * Sets if we should write the column ID headers on export.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_csv_firmware_set_write_column_ids(FuCsvFirmware *self, gboolean write_column_ids)
+{
+	FuCsvFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CSV_FIRMWARE(self));
+	priv->write_column_ids = write_column_ids;
+}
+
+/**
+ * fu_csv_firmware_get_write_column_ids:
+ * @self: a #FuFirmware
+ *
+ * Gets if we should write the column ID headers on export.
+ *
+ * Returns: boolean.
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_csv_firmware_get_write_column_ids(FuCsvFirmware *self)
+{
+	FuCsvFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CSV_FIRMWARE(self), FALSE);
+	return priv->write_column_ids;
+}
+
 static gboolean
 fu_csv_firmware_parse_token_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
 {
@@ -152,17 +188,19 @@ fu_csv_firmware_write(FuFirmware *firmware, GError **error)
 	FuCsvFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
-	g_autoptr(GString) str = g_string_new("#");
 
 	/* title section */
-	for (guint i = 0; i < priv->column_ids->len; i++) {
-		const gchar *column_id = g_ptr_array_index(priv->column_ids, i);
-		if (str->len > 1)
-			g_string_append(str, ",");
-		g_string_append(str, column_id);
+	if (priv->write_column_ids) {
+		g_autoptr(GString) str = g_string_new("#");
+		for (guint i = 0; i < priv->column_ids->len; i++) {
+			const gchar *column_id = g_ptr_array_index(priv->column_ids, i);
+			if (str->len > 1)
+				g_string_append(str, ",");
+			g_string_append(str, column_id);
+		}
+		g_string_append(str, "\n");
+		g_byte_array_append(buf, (const guint8 *)str->str, str->len);
 	}
-	g_string_append(str, "\n");
-	g_byte_array_append(buf, (const guint8 *)str->str, str->len);
 
 	/* each entry */
 	for (guint i = 0; i < imgs->len; i++) {
@@ -178,10 +216,37 @@ fu_csv_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static void
+fu_csv_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+{
+	FuCsvFirmware *self = FU_CSV_FIRMWARE(firmware);
+	FuCsvFirmwarePrivate *priv = GET_PRIVATE(self);
+	fu_xmlb_builder_insert_kb(bn, "write_column_ids", priv->write_column_ids);
+}
+
+static gboolean
+fu_csv_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+{
+	FuCsvFirmware *self = FU_CSV_FIRMWARE(firmware);
+	FuCsvFirmwarePrivate *priv = GET_PRIVATE(self);
+	const gchar *tmp;
+
+	/* optional properties */
+	tmp = xb_node_query_text(n, "write_column_ids", NULL);
+	if (tmp != NULL) {
+		if (!fu_strtobool(tmp, &priv->write_column_ids, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static void
 fu_csv_firmware_init(FuCsvFirmware *self)
 {
 	FuCsvFirmwarePrivate *priv = GET_PRIVATE(self);
 	priv->column_ids = g_ptr_array_new_with_free_func(g_free);
+	priv->write_column_ids = TRUE;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 10000);
 	g_type_ensure(FU_TYPE_CSV_ENTRY);
@@ -204,6 +269,8 @@ fu_csv_firmware_class_init(FuCsvFirmwareClass *klass)
 	object_class->finalize = fu_csv_firmware_finalize;
 	firmware_class->parse = fu_csv_firmware_parse;
 	firmware_class->write = fu_csv_firmware_write;
+	firmware_class->export = fu_csv_firmware_export;
+	firmware_class->build = fu_csv_firmware_build;
 }
 
 /**
