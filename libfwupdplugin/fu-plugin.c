@@ -1647,8 +1647,9 @@ fu_plugin_backend_device_added(FuPlugin *self,
 			return FALSE;
 		fu_device_convert_instance_ids(dev);
 		if (!fu_plugin_check_supported_device(self, dev)) {
-			g_autofree gchar *guids = fu_device_get_guids_as_str(dev);
-			g_info("%s has no updates, so ignoring device", guids);
+			GPtrArray *guids = fu_device_get_guids(self);
+			g_autofree gchar *guids_str = fu_strjoin(",", guids);
+			g_info("%s has no updates, so ignoring device", guids_str);
 			fu_progress_finished(progress);
 			return TRUE;
 		}
