@@ -297,7 +297,7 @@ fu_input_stream_read_byte_array(GInputStream *stream, gsize offset, gsize count,
 	}
 
 	/* seek back to start */
-	if (g_seekable_can_seek(G_SEEKABLE(stream))) {
+	if (G_IS_SEEKABLE(stream) && g_seekable_can_seek(G_SEEKABLE(stream))) {
 		if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_SET, NULL, error))
 			return NULL;
 	}
