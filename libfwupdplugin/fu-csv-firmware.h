@@ -21,3 +21,7 @@ void
 fu_csv_firmware_add_column_id(FuCsvFirmware *self, const gchar *column_id) G_GNUC_NON_NULL(1, 2);
 const gchar *
 fu_csv_firmware_get_column_id(FuCsvFirmware *self, guint idx) G_GNUC_NON_NULL(1);
+void
+fu_csv_firmware_set_write_column_ids(FuCsvFirmware *self, gboolean write_column_ids);
+gboolean
+fu_csv_firmware_get_write_column_ids(FuCsvFirmware *self);

@@ -48,6 +48,7 @@ fu_sbatlevel_section_add_entry(FuFirmware *firmware,
 	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(entry_fw), "$id");
 	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(entry_fw), "component_generation");
 	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(entry_fw), "date_stamp");
+	fu_csv_firmware_set_write_column_ids(FU_CSV_FIRMWARE(entry_fw), FALSE);
 
 	fu_firmware_set_idx(entry_fw, entry_idx);
 	fu_firmware_set_id(entry_fw, entry_name);
