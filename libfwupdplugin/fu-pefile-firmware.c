@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-coswid-firmware.h"
 #include "fu-csv-firmware.h"
@@ -196,6 +197,116 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
+typedef struct {
+	GBytes *blob;
+	gchar *id;
+	gsize offset;
+	gsize blobsz_aligned;
+} FuPefileSection;
+
+static void
+fu_pefile_section_free(FuPefileSection *section)
+{
+	if (section->blob != NULL)
+		g_bytes_unref(section->blob);
+	g_free(section->id);
+	g_free(section);
+}
+
+static GByteArray *
+fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
+{
+	gsize offset = 0;
+	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
+	g_autoptr(GByteArray) st = fu_struct_pe_dos_header_new();
+	g_autoptr(GByteArray) st_hdr = fu_struct_pe_coff_file_header_new();
+	g_autoptr(GByteArray) st_opt = fu_struct_pe_coff_optional_header64_new();
+	g_autoptr(GByteArray) strtab = g_byte_array_new();
+	g_autoptr(GPtrArray) sections =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_pefile_section_free);
+
+	/* calculate the offset for each of the sections */
+	offset += st->len + st_hdr->len + st_opt->len;
+	offset += FU_STRUCT_PE_COFF_SECTION_SIZE * imgs->len;
+	for (guint i = 0; i < imgs->len; i++) {
+		g_autofree FuPefileSection *section = g_new0(FuPefileSection, 1);
+		FuFirmware *img = g_ptr_array_index(imgs, i);
+		g_autoptr(GBytes) blob = NULL;
+
+		section->offset = offset;
+		section->blob = fu_firmware_write(img, error);
+		if (section->blob == NULL)
+			return NULL;
+		section->id = g_strdup(fu_firmware_get_id(img));
+		section->blobsz_aligned = fu_common_align_up(g_bytes_get_size(section->blob), 4);
+		offset += section->blobsz_aligned;
+		g_ptr_array_add(sections, g_steal_pointer(&section));
+	}
+
+	/* COFF file header */
+	fu_struct_pe_coff_file_header_set_size_of_optional_header(st_hdr, st_opt->len);
+	fu_struct_pe_coff_file_header_set_number_of_sections(st_hdr, sections->len);
+	fu_struct_pe_coff_file_header_set_pointer_to_symbol_table(st_hdr, offset);
+	g_byte_array_append(st, st_hdr->data, st_hdr->len);
+	g_byte_array_append(st, st_opt->data, st_opt->len);
+
+	/* add sections */
+	for (guint i = 0; i < sections->len; i++) {
+		FuPefileSection *section = g_ptr_array_index(sections, i);
+		g_autoptr(GByteArray) st_sect = fu_struct_pe_coff_section_new();
+
+		fu_struct_pe_coff_section_set_size_of_raw_data(st_sect, section->blobsz_aligned);
+		fu_struct_pe_coff_section_set_virtual_address(st_sect, 0x0);
+		fu_struct_pe_coff_section_set_virtual_size(st_sect,
+							   g_bytes_get_size(section->blob));
+		fu_struct_pe_coff_section_set_pointer_to_raw_data(st_sect, section->offset);
+
+		/* set the name directly, or add to the string table */
+		if (section->id == NULL) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "image %u has no ID",
+				    i);
+			return NULL;
+		}
+		if (strlen(section->id) > 16) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "image ID %s is too long",
+				    section->id);
+			return NULL;
+		}
+		if (strlen(section->id) <= 8) {
+			if (!fu_struct_pe_coff_section_set_name(st_sect, section->id, error))
+				return NULL;
+		} else {
+			gchar id_tmp[16] = {0};
+			g_autofree gchar *name_tmp = g_strdup_printf("/%u", strtab->len);
+			if (!fu_struct_pe_coff_section_set_name(st_sect, name_tmp, error))
+				return NULL;
+			memcpy(id_tmp, section->id, strlen(section->id));
+			g_byte_array_append(strtab, (const guint8 *)id_tmp, sizeof(id_tmp));
+		}
+		g_byte_array_append(st, st_sect->data, st_sect->len);
+	}
+
+	/* add the section data itself */
+	for (guint i = 0; i < sections->len; i++) {
+		FuPefileSection *section = g_ptr_array_index(sections, i);
+		g_autoptr(GBytes) blob_aligned =
+		    fu_bytes_pad(section->blob, section->blobsz_aligned);
+		fu_byte_array_append_bytes(st, blob_aligned);
+	}
+
+	/* string table comes last */
+	g_byte_array_append(st, strtab->data, strtab->len);
+
+	/* success */
+	return g_steal_pointer(&st);
+}
+
 static void
 fu_pefile_firmware_init(FuPefileFirmware *self)
 {
@@ -208,6 +319,7 @@ fu_pefile_firmware_class_init(FuPefileFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->validate = fu_pefile_firmware_validate;
 	firmware_class->parse = fu_pefile_firmware_parse;
+	firmware_class->write = fu_pefile_firmware_write;
 }
 
 /**
