@@ -4123,6 +4123,7 @@ fu_firmware_builder_round_trip_func(void)
 	    {FU_TYPE_USWID_FIRMWARE,
 	     "uswid.builder.xml",
 	     "b473fbdbe00f860c4da43f9499569394bac81f14"},
+	    {FU_TYPE_USWID_FIRMWARE, "uswid-compressed.builder.xml", NULL}, /* not byte-identical */
 #endif
 	    {G_TYPE_INVALID, NULL, NULL}};
 	g_type_ensure(FU_TYPE_COSWID_FIRMWARE);

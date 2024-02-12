@@ -85,6 +85,8 @@ install_data([
     'sys_vendor',
     'uswid.bin',
     'uswid.builder.xml',
+    'uswid-compressed.bin',
+    'uswid-compressed.builder.xml',
   ],
   install_dir: join_paths(installed_test_datadir, 'tests')
 )
