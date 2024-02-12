@@ -607,10 +607,6 @@ fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_add_string(FuDevice *self, guint idt, GString *str) G_GNUC_NON_NULL(1, 3);
 const gchar *
-fu_device_get_alternate_id(FuDevice *self) G_GNUC_NON_NULL(1);
-void
-fu_device_set_alternate_id(FuDevice *self, const gchar *alternate_id) G_GNUC_NON_NULL(1, 2);
-const gchar *
 fu_device_get_equivalent_id(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_set_equivalent_id(FuDevice *self, const gchar *equivalent_id) G_GNUC_NON_NULL(1, 2);
@@ -627,8 +623,6 @@ void
 fu_device_add_instance_id_full(FuDevice *self,
 			       const gchar *instance_id,
 			       FuDeviceInstanceFlags flags) G_GNUC_NON_NULL(1, 2);
-FuDevice *
-fu_device_get_alternate(FuDevice *self) G_GNUC_NON_NULL(1);
 FuDevice *
 fu_device_get_root(FuDevice *self) G_GNUC_NON_NULL(1);
 FuDevice *

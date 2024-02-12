@@ -6325,16 +6325,6 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	/* set the proxy device if specified by GUID */
 	fu_engine_set_proxy_device(self, device);
 
-	/* set any alternate objects on the device from the ID */
-	if (fu_device_get_alternate_id(device) != NULL) {
-		g_autoptr(FuDevice) device_alt = NULL;
-		device_alt = fu_device_list_get_by_id(self->device_list,
-						      fu_device_get_alternate_id(device),
-						      NULL);
-		if (device_alt != NULL)
-			fu_device_set_alternate(device, device_alt);
-	}
-
 	/* sometimes inherit flags from recent history */
 	fu_engine_device_inherit_history(self, device);
 
