@@ -77,6 +77,8 @@ install_data([
     'metadata.xml',
     'oprom.bin',
     'oprom.builder.xml',
+    'pefile.bin',
+    'pefile.builder.xml',
     'srec-addr32.bin',
     'sbatlevel.bin',
     'sbatlevel.builder.xml',

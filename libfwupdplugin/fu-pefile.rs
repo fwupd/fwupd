@@ -1,27 +1,28 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(ParseStream, ValidateStream)]
+#[derive(ParseStream, ValidateStream, New)]
 struct PeDosHeader {
     magic: u16le == 0x5A4D,
-    _cblp: u16le = 0x90,
-    _cp: u16le = 0x3,
-    _crlc: u16le,
-    _cparhdr: u16le = 0x4,
-    _minalloc: u16le,
-    _maxalloc: u16le = 0xFFFF,
+    cblp: u16le = 0x90,
+    cp: u16le = 0x3,
+    crlc: u16le,
+    cparhdr: u16le = 0x4,
+    minalloc: u16le,
+    maxalloc: u16le = 0xFFFF,
     _ss: u16le,
-    _sp: u16le = 0xB8,
+    sp: u16le = 0xB8,
     _csum: u16le,
     _ip: u16le,
     _cs: u16le,
-    _lfarlc: u16le = 0x40,
+    lfarlc: u16le = 0x40,
     _ovno: u16le,
     _res: [u8; 8],
     _oemid: u16le,
     _oeminfo: u16le,
     _res2: [u8; 20],
     lfanew: u32le = 0x80,
+    _res3: [u8; 64],
 }
 
 #[repr(u16le)]
@@ -81,7 +82,7 @@ enum FuCoffSubsystem {
     WindowsBootApplication = 16,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, New)]
 struct PeCoffFileHeader {
     signature: u32le == 0x4550, // "PE\0\0"
     machine: PeCoffMachine = Amd64,
@@ -93,11 +94,11 @@ struct PeCoffFileHeader {
     characteristics: u16le = 0x2022,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, New)]
 struct PeCoffOptionalHeader64 {
     magic: PeCoffMagic = Pe32Plus,
-    _major_linker_version: u8 = 0x0e,
-    _minor_linker_version: u8 = 0x0e,
+    major_linker_version: u8 = 0x0e,
+    minor_linker_version: u8 = 0x0e,
     size_of_code: u32le,
     size_of_initialized_data: u32le,
     size_of_uninitialized_data: u32le,
@@ -135,7 +136,7 @@ struct PeCoffSymbol {
     number_of_aux_symbols: u8,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, New)]
 struct PeCoffSection {
     name: [char; 8],
     virtual_size: u32le,
