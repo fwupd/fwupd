@@ -74,6 +74,14 @@
         return TRUE;
     }
     len = strlen(value);
+    if (len > {{item.size}}) {
+        g_set_error(error,
+                    G_IO_ERROR,
+                    G_IO_ERROR_INVALID_DATA,
+                    "string '%s' (0x%x bytes) does not fit in {{obj.name}}.{{item.element_id}} (0x%x bytes)",
+                    value, (guint) len, (guint) {{item.size}});
+        return FALSE;
+    }
     return fu_memcpy_safe(st->data, st->len, {{item.offset}}, (const guint8 *)value, len, 0x0, len, error);
 }
 {%- elif item.struct_obj %}
