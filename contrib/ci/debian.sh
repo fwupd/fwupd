@@ -54,6 +54,7 @@ lintian ../*changes \
 	-IE \
 	--pedantic \
 	--no-tag-display-limit \
+	--suppress-tags missing-build-dependency-for-dh-addon \
 	--suppress-tags library-not-linked-against-libc \
 	--suppress-tags bad-distribution-in-changes-file \
 	--suppress-tags debian-watch-file-in-native-package \
