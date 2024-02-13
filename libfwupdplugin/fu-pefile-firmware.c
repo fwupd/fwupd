@@ -56,8 +56,10 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	g_autoptr(GInputStream) img_stream = NULL;
 
 	st = fu_struct_pe_coff_section_parse_stream(stream, hdr_offset, error);
-	if (st == NULL)
+	if (st == NULL) {
+		g_prefix_error(error, "failed to read section: ");
 		return FALSE;
+	}
 	sect_id_tmp = fu_struct_pe_coff_section_get_name(st);
 	if (sect_id_tmp == NULL) {
 		g_set_error_literal(error,
@@ -71,8 +73,10 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 		guint8 buf[16] = {0};
 		g_autofree gchar *str = NULL;
 
-		if (!fu_strtoull(sect_id_tmp + 1, &str_idx, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(sect_id_tmp + 1, &str_idx, 0, G_MAXUINT32, error)) {
+			g_prefix_error(error, "failed to parse section ID '%s': ", sect_id_tmp + 1);
 			return FALSE;
+		}
 		if (!fu_input_stream_read_safe(stream,
 					       buf,
 					       sizeof(buf),
@@ -118,7 +122,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 						 sect_offset,
 						 fu_struct_pe_coff_section_get_virtual_size(st));
 	if (!fu_firmware_parse_stream(img, img_stream, 0x0, flags, error)) {
-		g_prefix_error(error, "failed to parse %s: ", sect_id);
+		g_prefix_error(error, "failed to parse raw data %s: ", sect_id);
 		return FALSE;
 	}
 	return fu_firmware_add_image_full(firmware, img, error);
@@ -138,20 +142,26 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 
 	/* parse the DOS header to get the COFF header */
 	st_doshdr = fu_struct_pe_dos_header_parse_stream(stream, offset, error);
-	if (st_doshdr == NULL)
+	if (st_doshdr == NULL) {
+		g_prefix_error(error, "failed to read DOS header: ");
 		return FALSE;
+	}
 	offset += fu_struct_pe_dos_header_get_lfanew(st_doshdr);
 	st_coff = fu_struct_pe_coff_file_header_parse_stream(stream, offset, error);
-	if (st_coff == NULL)
+	if (st_coff == NULL) {
+		g_prefix_error(error, "failed to read COFF header: ");
 		return FALSE;
+	}
 	offset += st_coff->len;
 
 	/* verify optional extra header */
 	if (fu_struct_pe_coff_file_header_get_size_of_optional_header(st_coff) > 0) {
 		g_autoptr(GByteArray) st_opt =
 		    fu_struct_pe_coff_optional_header64_parse_stream(stream, offset, error);
-		if (st_opt == NULL)
+		if (st_opt == NULL) {
+			g_prefix_error(error, "failed to read optional header: ");
 			return FALSE;
+		}
 		offset += fu_struct_pe_coff_file_header_get_size_of_optional_header(st_coff);
 	}
 
@@ -175,8 +185,10 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 						      offset,
 						      strtab_offset,
 						      flags,
-						      error))
+						      error)) {
+			g_prefix_error(error, "failed to read section 0x%x: ", idx);
 			return FALSE;
+		}
 		offset += FU_STRUCT_PE_COFF_SECTION_SIZE;
 	}
 
