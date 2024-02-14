@@ -245,6 +245,10 @@ fu_flashrom_plugin_find_guid(FuPlugin *plugin, GError **error)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	GPtrArray *hwids = fu_context_get_hwid_guids(ctx);
 
+	/* any coreboot */
+	if (g_strcmp0(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR), "coreboot") == 0)
+		return g_strdup(FWUPD_DEVICE_ID_ANY);
+
 	for (guint i = 0; i < hwids->len; i++) {
 		const gchar *guid = g_ptr_array_index(hwids, i);
 		const gchar *plugin_name =
@@ -336,7 +340,6 @@ fu_flashrom_plugin_constructed(GObject *obj)
 	(void)fu_plugin_alloc_data(plugin, sizeof(FuFlashromPlugin));
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "coreboot"); /* obsoleted */
-	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_REQUIRE_HWID);
 	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY);
 }
 

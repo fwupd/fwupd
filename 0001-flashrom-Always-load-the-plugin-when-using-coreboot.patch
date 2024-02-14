@@ -1,0 +1,36 @@
+From 36c374e9a846b1a06b80084f3de4a4036730dc7b Mon Sep 17 00:00:00 2001
+From: Richard Hughes <richard@hughsie.com>
+Date: Wed, 14 Feb 2024 22:00:51 +0000
+Subject: [PATCH] flashrom: Always load the plugin when using coreboot
+
+Based on a patch by Sean Rhodes <sean@starlabs.systems>, many thanks.
+---
+ plugins/flashrom/fu-flashrom-plugin.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/plugins/flashrom/fu-flashrom-plugin.c b/plugins/flashrom/fu-flashrom-plugin.c
+index 1875149d8..0b11af931 100644
+--- a/plugins/flashrom/fu-flashrom-plugin.c
++++ b/plugins/flashrom/fu-flashrom-plugin.c
+@@ -245,6 +245,10 @@ fu_flashrom_plugin_find_guid(FuPlugin *plugin, GError **error)
+ 	FuContext *ctx = fu_plugin_get_context(plugin);
+ 	GPtrArray *hwids = fu_context_get_hwid_guids(ctx);
+ 
++	/* any coreboot */
++	if (g_strcmp0(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR), "coreboot") == 0)
++		return g_strdup(FWUPD_DEVICE_ID_ANY);
++
+ 	for (guint i = 0; i < hwids->len; i++) {
+ 		const gchar *guid = g_ptr_array_index(hwids, i);
+ 		const gchar *plugin_name =
+@@ -336,7 +340,6 @@ fu_flashrom_plugin_constructed(GObject *obj)
+ 	(void)fu_plugin_alloc_data(plugin, sizeof(FuFlashromPlugin));
+ 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
+ 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "coreboot"); /* obsoleted */
+-	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_REQUIRE_HWID);
+ 	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY);
+ }
+ 
+-- 
+2.40.1
+
