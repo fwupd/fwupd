@@ -253,6 +253,7 @@ fu_efi_section_parse(FuFirmware *firmware,
 {
 	FuEfiSection *self = FU_EFI_SECTION(firmware);
 	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
+	gsize streamsz = 0;
 	guint32 size;
 	g_autoptr(GByteArray) st = NULL;
 	g_autoptr(GInputStream) partial_stream = NULL;
@@ -278,6 +279,19 @@ fu_efi_section_parse(FuFirmware *firmware,
 			    FWUPD_ERROR_INTERNAL,
 			    "invalid section size, got 0x%x",
 			    (guint)size);
+		return FALSE;
+	}
+
+	/* sanity check */
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (size > streamsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "invalid section size, got 0x%x from stream of size 0x%x",
+			    (guint)size,
+			    (guint)streamsz);
 		return FALSE;
 	}
 
