@@ -304,6 +304,8 @@ void
 fu_firmware_set_images_max(FuFirmware *self, guint images_max) G_GNUC_NON_NULL(1);
 guint
 fu_firmware_get_images_max(FuFirmware *self) G_GNUC_NON_NULL(1);
+guint
+fu_firmware_get_depth(FuFirmware *self) G_GNUC_NON_NULL(1);
 guint64
 fu_firmware_get_idx(FuFirmware *self) G_GNUC_NON_NULL(1);
 void

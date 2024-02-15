@@ -3288,6 +3288,11 @@ fu_firmware_func(void)
 	fu_firmware_set_id(img2, "secondary");
 	fu_firmware_add_image(firmware, img2);
 
+	/* check depth */
+	g_assert_cmpint(fu_firmware_get_depth(firmware), ==, 0);
+	g_assert_cmpint(fu_firmware_get_depth(img1), ==, 1);
+	g_assert_cmpint(fu_firmware_get_depth(img2), ==, 1);
+
 	img_id = fu_firmware_get_image_by_id(firmware, "NotGoingToExist", &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_null(img_id);

@@ -44,6 +44,7 @@ typedef struct {
 	gsize size;
 	gsize size_max;
 	guint images_max;
+	guint depth;
 	GPtrArray *chunks;  /* nullable, element-type FuChunk */
 	GPtrArray *patches; /* nullable, element-type FuFirmwarePatch */
 } FuFirmwarePrivate;
@@ -52,6 +53,8 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuFirmware, fu_firmware, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_firmware_get_instance_private(o))
 
 enum { PROP_0, PROP_PARENT, PROP_LAST };
+
+#define FU_FIRMWARE_IMAGE_DEPTH_MAX 50
 
 /**
  * fu_firmware_flag_to_string:
@@ -1606,6 +1609,32 @@ fu_firmware_write_file(FuFirmware *self, GFile *file, GError **error)
 				       error);
 }
 
+static void
+fu_firmware_set_depth(FuFirmware *self, guint depth)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_FIRMWARE(self));
+	priv->depth = depth;
+}
+
+/**
+ * fu_firmware_get_depth:
+ * @self: a #FuPlugin
+ *
+ * Gets the depth of this child image relative to the root.
+ *
+ * Returns: integer, or 0 for the root.
+ *
+ * Since: 1.9.14
+ **/
+guint
+fu_firmware_get_depth(FuFirmware *self)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), G_MAXUINT);
+	return priv->depth;
+}
+
 /**
  * fu_firmware_add_image_full:
  * @self: a #FuPlugin
@@ -1630,6 +1659,16 @@ fu_firmware_add_image_full(FuFirmware *self, FuFirmware *img, GError **error)
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
 	g_return_val_if_fail(FU_IS_FIRMWARE(img), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* check depth */
+	if (priv->depth > FU_FIRMWARE_IMAGE_DEPTH_MAX) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "images are nested too deep, limit is %u",
+			    (guint)FU_FIRMWARE_IMAGE_DEPTH_MAX);
+		return FALSE;
+	}
 
 	/* dedupe */
 	for (guint i = 0; i < priv->images->len; i++) {
@@ -1662,6 +1701,7 @@ fu_firmware_add_image_full(FuFirmware *self, FuFirmware *img, GError **error)
 
 	/* set the other way around */
 	fu_firmware_set_parent(img, self);
+	fu_firmware_set_depth(img, priv->depth + 1);
 
 	/* success */
 	return TRUE;
