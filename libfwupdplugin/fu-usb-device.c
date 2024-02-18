@@ -668,20 +668,31 @@ static gboolean
 fu_usb_device_probe_bos_descriptors(FuUsbDevice *self, GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuDeviceLocker) gusb_locker = NULL;
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) bos_descriptors = NULL;
 
-	bos_descriptors = g_usb_device_get_bos_descriptors(priv->usb_device, NULL);
-	if (bos_descriptors == NULL)
-		return TRUE;
+	gusb_locker = fu_device_locker_new(priv->usb_device, error);
+	if (gusb_locker == NULL)
+		return FALSE;
+	bos_descriptors = g_usb_device_get_bos_descriptors(priv->usb_device, &error_local);
+	if (bos_descriptors == NULL) {
+		if (g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_IO)) {
+			g_debug("ignoring missing BOS descriptor: %s", error_local->message);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
 	for (guint i = 0; i < bos_descriptors->len; i++) {
 		GUsbBosDescriptor *bos = g_ptr_array_index(bos_descriptors, i);
-		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GError) error_loop = NULL;
 
 		if (g_usb_bos_descriptor_get_capability(bos) != 0x5)
 			continue;
-		if (!fu_usb_device_probe_bos_descriptor(self, bos, &error_local)) {
+		if (!fu_usb_device_probe_bos_descriptor(self, bos, &error_loop)) {
 			g_warning("failed to parse platform BOS descriptor: %s",
-				  error_local->message);
+				  error_loop->message);
 		}
 	}
 	return TRUE;
@@ -698,6 +709,9 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *platform_id = NULL;
 	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(GPtrArray) intfs = NULL;
+#if G_USB_CHECK_VERSION(0, 4, 0)
+	g_autoptr(GError) error_bos = NULL;
+#endif
 
 	/* set vendor ID */
 	vendor_id = g_strdup_printf("USB:0x%04X", g_usb_device_get_vid(priv->usb_device));
@@ -795,8 +809,8 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 
 #if G_USB_CHECK_VERSION(0, 4, 0)
 	/* parse the platform capability BOS descriptors for quirks */
-	if (!fu_usb_device_probe_bos_descriptors(self, error))
-		return FALSE;
+	if (!fu_usb_device_probe_bos_descriptors(self, &error_bos))
+		g_warning("failed to load BOS descriptor from USB device: %s", error_bos->message);
 #endif
 #endif
 
