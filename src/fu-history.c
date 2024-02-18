@@ -21,7 +21,20 @@
 #include "fu-history.h"
 #include "fu-security-attr-common.h"
 
-#define FU_HISTORY_CURRENT_SCHEMA_VERSION 10
+/*
+ * v1	legacy schema
+ * v2	initial schema
+ * v3	add checksum_device to history
+ * v4	add protocol to history
+ * v5	create table approved_firmware
+ * v6	create table blocked_firmware
+ * v7	create table hsi_history
+ * v8	add release_id to history
+ * v9	add appstream_id to history
+ * v10	add version_format to history
+ * v11	no changes, bumped due to bungled migration to v10
+ */
+#define FU_HISTORY_CURRENT_SCHEMA_VERSION 11
 
 static void
 fu_history_finalize(GObject *object);
@@ -466,11 +479,12 @@ fu_history_create_or_migrate(FuHistory *self, guint schema_ver, GError **error)
 	case 8:
 		if (!fu_history_migrate_database_v8(self, error))
 			return FALSE;
-		break;
 	/* fall through */
 	case 9:
+	case 10:
 		if (!fu_history_migrate_database_v9(self, error))
 			return FALSE;
+		/* no longer fall through */
 		break;
 	default:
 		/* this is probably okay, but return an error if we ever delete

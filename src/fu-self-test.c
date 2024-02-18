@@ -3810,7 +3810,7 @@ fu_plugin_list_depsolve_func(gconstpointer user_data)
 }
 
 static void
-fu_history_migrate_func(gconstpointer user_data)
+fu_history_migrate_v1_func(gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
@@ -3827,6 +3827,43 @@ fu_history_migrate_func(gconstpointer user_data)
 
 	/* load old version */
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "history_v1.db", NULL);
+	file_src = g_file_new_for_path(filename);
+	file_dst = g_file_new_for_path("/tmp/fwupd-self-test/var/lib/fwupd/pending.db");
+	ret = g_file_copy(file_src, file_dst, G_FILE_COPY_OVERWRITE, NULL, NULL, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* create, migrating as required */
+	history = fu_history_new();
+	g_assert_nonnull(history);
+
+	/* get device */
+	device = fu_history_get_device_by_id(history,
+					     "2ba16d10df45823dd4494ff10a0bfccfef512c9d",
+					     &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	g_assert_cmpstr(fu_device_get_id(device), ==, "2ba16d10df45823dd4494ff10a0bfccfef512c9d");
+}
+
+static void
+fu_history_migrate_v2_func(gconstpointer user_data)
+{
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file_dst = NULL;
+	g_autoptr(GFile) file_src = NULL;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuHistory) history = NULL;
+	g_autofree gchar *filename = NULL;
+
+#ifndef HAVE_SQLITE
+	g_test_skip("no sqlite support");
+	return;
+#endif
+
+	/* load old version */
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "history_v2.db", NULL);
 	file_src = g_file_new_for_path(filename);
 	file_dst = g_file_new_for_path("/tmp/fwupd-self-test/var/lib/fwupd/pending.db");
 	ret = g_file_copy(file_src, file_dst, G_FILE_COPY_OVERWRITE, NULL, NULL, NULL, &error);
@@ -6017,7 +6054,8 @@ main(int argc, char **argv)
 			     fu_engine_requirements_sibling_device_func);
 	g_test_add_data_func("/fwupd/plugin{composite}", self, fu_plugin_composite_func);
 	g_test_add_data_func("/fwupd/history", self, fu_history_func);
-	g_test_add_data_func("/fwupd/history{migrate}", self, fu_history_migrate_func);
+	g_test_add_data_func("/fwupd/history{migrate-v1}", self, fu_history_migrate_v1_func);
+	g_test_add_data_func("/fwupd/history{migrate-v2}", self, fu_history_migrate_v2_func);
 	g_test_add_data_func("/fwupd/plugin-list", self, fu_plugin_list_func);
 	g_test_add_data_func("/fwupd/plugin-list{depsolve}", self, fu_plugin_list_depsolve_func);
 	if (g_test_slow()) {
