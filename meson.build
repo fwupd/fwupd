@@ -440,6 +440,8 @@ if build_standalone
     EFI_MACHINE_TYPE_NAME = 'aa64'
   elif host_cpu == 'loongarch64'
     EFI_MACHINE_TYPE_NAME = 'loongarch64'
+  elif host_cpu == 'riscv64'
+    EFI_MACHINE_TYPE_NAME = 'riscv64'
   else
     EFI_MACHINE_TYPE_NAME = ''
   endif
