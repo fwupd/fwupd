@@ -45,6 +45,7 @@ meson qt5-thread-test ../contrib/ci/qt5-thread-test
 ninja -C qt5-thread-test test
 
 # move the package to working dir
+mkdir -p ../dist
 mv *.pkg.* ../dist
 
 # no testing here because gnome-desktop-testing isn’t available in Arch
