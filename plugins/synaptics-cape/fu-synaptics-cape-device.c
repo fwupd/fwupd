@@ -10,6 +10,7 @@
 
 #include "fu-synaptics-cape-device.h"
 #include "fu-synaptics-cape-hid-firmware.h"
+#include "fu-synaptics-cape-struct.h"
 
 /* defines timings */
 #define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_WRITE_TIMEOUT	20   /* ms */
@@ -523,7 +524,8 @@ fu_synaptics_cape_device_setup_active_partition(FuSynapticsCapeDevice *self, GEr
 
 	self->active_partition = GUINT32_FROM_LE(cmd.data[0]);
 
-	if (self->active_partition != 1 && self->active_partition != 2) {
+	if (self->active_partition != FU_SYNAPTICS_CAPE_FIRMWARE_PARTITION_1 &&
+	    self->active_partition != FU_SYNAPTICS_CAPE_FIRMWARE_PARTITION_2) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
