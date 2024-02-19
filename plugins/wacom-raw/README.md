@@ -45,6 +45,12 @@ Maximum size of the firmware zone.
 
 Since: 1.2.4
 
+### Flags:requires-wait-for-replug
+
+The device needs to replug into a bootloader mode.
+
+Since: 1.9.15
+
 ## Update Behavior
 
 The device usually presents in runtime mode, but on detach re-enumerates with a
