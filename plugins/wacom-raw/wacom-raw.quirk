@@ -2,37 +2,44 @@
 # need to have an extra GUID of WacomAES or WacomEMR added so that the flash
 # constants are set correctly.
 
-#Lenovo X1 Yoga Gen7 5308
+# This device has USB I/F
+[HIDRAW\VEN_056A&DEV_5315]
+Plugin = wacom_raw
+Guid[quirk] = WacomAES
+Flags = requires-wait-for-replug
+CounterpartGuid = HIDRAW\VEN_056A&DEV_0094
+
+# Lenovo X1 Yoga Gen7 5308
 [HIDRAW\VEN_056A&DEV_5308]
 Plugin = wacom_raw
 Guid[quirk] = WacomAES
 
-#Lenovo X1 Yoga Gen7 5309
+# Lenovo X1 Yoga Gen7 5309
 [HIDRAW\VEN_056A&DEV_5309]
 Plugin = wacom_raw
 Guid[quirk] = WacomAES
 
-#Lenovo X1 Yoga Gen7 530A
+# Lenovo X1 Yoga Gen7 530A
 [HIDRAW\VEN_056A&DEV_530A]
 Plugin = wacom_raw
 Guid[quirk] = WacomAES
 
-#Lenovo X1 Yoga Gen7 530B
+# Lenovo X1 Yoga Gen7 530B
 [HIDRAW\VEN_056A&DEV_530B]
 Plugin = wacom_raw
 Guid[quirk] = WacomAES
 
-#Lenovo X1 Yoga Gen7 530E
+# Lenovo X1 Yoga Gen7 530E
 [HIDRAW\VEN_056A&DEV_530E]
 Plugin = wacom_raw
 Guid[quirk] = WacomAES
 
-#Lenovo X1 Yoga Gen7 52B5
+# Lenovo X1 Yoga Gen7 52B5
 [HIDRAW\VEN_056A&DEV_52B5]
 Plugin = wacom_raw
 Guid[quirk] = WacomAES
 
-#Lenovo X1 Yoga Gen7 52C4
+# Lenovo X1 Yoga Gen7 52C4
 [HIDRAW\VEN_056A&DEV_52C4]
 Plugin = wacom_raw
 Guid[quirk] = WacomAES
