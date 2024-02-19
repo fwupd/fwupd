@@ -891,7 +891,6 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 	JsonArray *json_array;
 	const gchar *url;
 	const gchar *emulation_url = NULL;
-	const gchar *baseuri = g_getenv("FWUPD_DEVICE_TESTS_BASE_URI");
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *url_safe = NULL;
 	g_autoptr(GBytes) fw = NULL;
@@ -900,7 +899,6 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 	/* send this data to the daemon */
 	if (helper->use_emulation) {
 		g_autofree gchar *emulation_filename = NULL;
-		g_autofree gchar *emulation_safe = NULL;
 		g_autoptr(GBytes) emulation_data = NULL;
 
 		/* just ignore anything without emulation data */
@@ -908,15 +906,9 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 			return TRUE;
 
 		emulation_url = json_object_get_string_member(json_obj, "emulation-url");
-		if (baseuri != NULL) {
-			g_autofree gchar *basename = g_path_get_basename(emulation_url);
-			emulation_safe = g_build_filename(baseuri, basename, NULL);
-		} else {
-			emulation_safe = g_strdup(emulation_url);
-		}
-		emulation_filename = fu_util_download_if_required(priv, emulation_safe, error);
+		emulation_filename = fu_util_download_if_required(priv, emulation_url, error);
 		if (emulation_filename == NULL) {
-			g_prefix_error(error, "failed to download %s: ", emulation_safe);
+			g_prefix_error(error, "failed to download %s: ", emulation_url);
 			return FALSE;
 		}
 		emulation_data = fu_bytes_get_contents(emulation_filename, error);
@@ -937,21 +929,15 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 
 	/* build URL */
 	url = json_object_get_string_member(json_obj, "url");
-	if (baseuri != NULL) {
-		g_autofree gchar *basename = g_path_get_basename(url);
-		url_safe = g_build_filename(baseuri, basename, NULL);
-	} else {
-		url_safe = g_strdup(url);
-	}
-	filename = fu_util_download_if_required(priv, url_safe, error);
+	filename = fu_util_download_if_required(priv, url, error);
 	if (filename == NULL) {
-		g_prefix_error(error, "failed to download %s: ", url_safe);
+		g_prefix_error(error, "failed to download %s: ", url);
 		return FALSE;
 	}
 
 	/* log */
 	json_builder_set_member_name(helper->builder, "url");
-	json_builder_add_string_value(helper->builder, url_safe);
+	json_builder_add_string_value(helper->builder, url);
 
 	/* install file */
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
