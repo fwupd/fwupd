@@ -14,8 +14,6 @@ run_device_tests()
 {
 	if [ -n "$CI_NETWORK" ] && [ -d @devicetestdir@ ]; then
 		fwupdmgr modify-config AllowEmulation true -y
-		# grab device tests from the CDN to avoid incrementing the download counter
-		export FWUPD_DEVICE_TESTS_BASE_URI=http://cdn.fwupd.org/downloads
 		for f in `grep --files-with-matches -r emulation-url @devicetestdir@`; do
 		        echo "Emulating for $f"
 		        fwupdmgr device-emulate --no-unreported-check --no-remote-check --no-metadata-check "$f"

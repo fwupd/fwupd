@@ -11,7 +11,6 @@ with a non-standard filesystem layout.
 * `DISABLE_SSL_STRICT` disables strict SSL certificate checking, which may make
   downloading files work when using some antisocial corporate firewalls.
 * `FWUPD_CURL_VERBOSE` shows more information when downloading files
-* `FWUPD_DEVICE_TESTS_BASE_URI` sets the base URI when downloading firmware for the device-tests
 * `FWUPD_SUPPORTED` overrides the `-Dsupported_build` meson option at runtime
 * `FWUPD_VERBOSE` is set when running `--verbose`
 * `FWUPD_XMLB_VERBOSE` can be set to show Xmlb silo regeneration and quirk matches
