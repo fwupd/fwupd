@@ -79,18 +79,6 @@ fu_daemon_stop(FuDaemon *self)
 	g_main_loop_quit(self->loop);
 }
 
-static FuDaemonMachineKind
-fu_daemon_machine_kind_from_string(const gchar *kind)
-{
-	if (g_strcmp0(kind, "physical") == 0)
-		return FU_DAEMON_MACHINE_KIND_PHYSICAL;
-	if (g_strcmp0(kind, "virtual") == 0)
-		return FU_DAEMON_MACHINE_KIND_VIRTUAL;
-	if (g_strcmp0(kind, "container") == 0)
-		return FU_DAEMON_MACHINE_KIND_CONTAINER;
-	return FU_DAEMON_MACHINE_KIND_UNKNOWN;
-}
-
 static void
 fu_daemon_engine_changed_cb(FuEngine *engine, FuDaemon *self)
 {
