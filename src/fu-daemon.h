@@ -6,17 +6,10 @@
 
 #pragma once
 
-#include <glib-object.h>
+#include "fu-daemon-struct.h"
 
 #define FU_TYPE_DAEMON (fu_daemon_get_type())
 G_DECLARE_FINAL_TYPE(FuDaemon, fu_daemon, FU, DAEMON, GObject)
-
-typedef enum {
-	FU_DAEMON_MACHINE_KIND_UNKNOWN,
-	FU_DAEMON_MACHINE_KIND_PHYSICAL,
-	FU_DAEMON_MACHINE_KIND_VIRTUAL,
-	FU_DAEMON_MACHINE_KIND_CONTAINER,
-} FuDaemonMachineKind;
 
 FuDaemon *
 fu_daemon_new(void);
