@@ -64,7 +64,6 @@ fu_client_list_register(FuClientList *self, const gchar *sender)
 	FuClientListItem *item;
 
 	g_return_val_if_fail(FU_IS_CLIENT_LIST(self), NULL);
-	g_return_val_if_fail(sender != NULL, NULL);
 
 	/* already exists */
 	client = fu_client_list_get_by_sender(self, sender);
@@ -75,7 +74,7 @@ fu_client_list_register(FuClientList *self, const gchar *sender)
 	item = g_new0(FuClientListItem, 1);
 	item->self = self;
 	item->client = fu_client_new(sender);
-	if (self->connection != NULL) {
+	if (self->connection != NULL && sender != NULL) {
 		item->watcher_id =
 		    g_bus_watch_name_on_connection(self->connection,
 						   sender,
