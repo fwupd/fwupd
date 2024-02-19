@@ -2,6 +2,13 @@
 # need to have an extra GUID of WacomAES or WacomEMR added so that the flash
 # constants are set correctly.
 
+# Test purpose
+[HIDRAW\VEN_056A&DEV_5F0F]
+Plugin = wacom_raw
+Guid[quirk] = WacomAES
+Flags = requires-wait-for-replug
+CounterpartGuid = HIDRAW\VEN_056A&DEV_0094
+
 #Lenovo X1 Yoga Gen7 5308
 [HIDRAW\VEN_056A&DEV_5308]
 Plugin = wacom_raw

@@ -106,8 +106,14 @@ fu_wacom_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 		g_prefix_error(error, "failed to switch to bootloader mode: ");
 		return FALSE;
 	}
-	fu_device_sleep(device, 300); /* ms */
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+
+	/* does the device have to replug to bootloader mode */
+	if (fu_device_has_private_flag(device, FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG)) {
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	} else {
+		fu_device_sleep(device, 300); /* ms */
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	}
 	return TRUE;
 }
 
@@ -304,6 +310,19 @@ fu_wacom_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *va
 }
 
 static void
+fu_wacom_device_replace(FuDevice *device, FuDevice *donor)
+{
+	g_return_if_fail(FU_IS_WACOM_DEVICE(device));
+	g_return_if_fail(FU_IS_WACOM_DEVICE(donor));
+
+	/* copy private instance data */
+	if (fu_device_has_private_flag(donor, FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG)) {
+		fu_device_add_private_flag(device,
+					   FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG);
+	}
+}
+
+static void
 fu_wacom_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
@@ -327,6 +346,10 @@ fu_wacom_device_init(FuWacomDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_IHEX_FIRMWARE);
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG,
+					"requires-wait-for-replug");
 }
 
 static void
@@ -339,4 +362,5 @@ fu_wacom_device_class_init(FuWacomDeviceClass *klass)
 	device_class->set_quirk_kv = fu_wacom_device_set_quirk_kv;
 	device_class->probe = fu_wacom_device_probe;
 	device_class->set_progress = fu_wacom_device_set_progress;
+	device_class->replace = fu_wacom_device_replace;
 }
