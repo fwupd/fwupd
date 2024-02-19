@@ -27,6 +27,8 @@ typedef enum {
 	FU_WACOM_DEVICE_CMD_FLAG_NO_ERROR_CHECK = 1 << 1,
 } FuWacomDeviceCmdFlags;
 
+#define FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG (1 << 0)
+
 gboolean
 fu_wacom_device_set_feature(FuWacomDevice *self, const guint8 *data, guint datasz, GError **error);
 gboolean
