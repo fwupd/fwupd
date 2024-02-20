@@ -4022,9 +4022,10 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 		fu_string_append_ku(str, idt, "AcquiesceDelay", priv->acquiesce_delay);
 	if (priv->custom_flags != NULL)
 		fu_string_append(str, idt, "CustomFlags", priv->custom_flags);
-	if (priv->firmware_gtype != G_TYPE_INVALID) {
+	if (priv->specialized_gtype != G_TYPE_INVALID)
+		fu_string_append(str, idt, "GType", g_type_name(priv->specialized_gtype));
+	if (priv->firmware_gtype != G_TYPE_INVALID)
 		fu_string_append(str, idt, "FirmwareGType", g_type_name(priv->firmware_gtype));
-	}
 	if (priv->size_min > 0) {
 		g_autofree gchar *sz = g_strdup_printf("%" G_GUINT64_FORMAT, priv->size_min);
 		fu_string_append(str, idt, "FirmwareSizeMin", sz);
