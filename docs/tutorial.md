@@ -886,7 +886,7 @@ Although these files *look like* Rust files they're *not actually compiled by
 rustc*, so small differences may be noticeable.
 
     #[derive(New, Validate, Parse)]
-    struct ExampleHdr {
+    struct FuExampleHdr {
         magic: Guid,
         hdrver: u8,
         hdrsz: u16le = $struct_size,
@@ -896,7 +896,7 @@ rustc*, so small differences may be noticeable.
 
     #[derive(ToString, FromString)]
     #[repr(u8)] // optional, and only required if using the enum as a struct item type
-    enum ExampleFamily {
+    enum FuExampleFamily {
         Unknown,
         Sps,
         Txe = 0x5,
@@ -904,7 +904,7 @@ rustc*, so small differences may be noticeable.
         Csme,
     }
     struct ExamplePacket {
-        family: ExampleFamily = Csme,
+        family: FuExampleFamily = Csme,
         data: [u8; 254],
     }
 

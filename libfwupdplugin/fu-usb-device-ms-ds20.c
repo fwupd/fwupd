@@ -66,7 +66,7 @@ fu_usb_device_ms_ds20_parse(FuUsbDeviceDs20 *self,
 	for (gsize offset = 0; offset < streamsz;) {
 		guint16 desc_sz;
 		guint16 desc_type;
-		g_autoptr(GByteArray) st = NULL;
+		g_autoptr(FuStructMsDs20) st = NULL;
 
 		st = fu_struct_ms_ds20_parse_stream(stream, offset, error);
 		if (st == NULL)

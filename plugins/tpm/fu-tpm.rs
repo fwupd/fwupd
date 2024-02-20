@@ -3,7 +3,7 @@
 
 #[derive(ToString)]
 #[repr(u32le)]
-enum TpmEventlogItemKind {
+enum FuTpmEventlogItemKind {
     EV_PREBOOT_CERT = 0x00000000,
     EV_POST_CODE = 0x00000001,
     EV_NO_ACTION = 0x00000003,
@@ -35,14 +35,14 @@ enum TpmEventlogItemKind {
 }
 
 #[derive(Parse)]
-struct TpmEventLog2 {
+struct FuStructTpmEventLog2 {
     pcr: u32le,
-    type: TpmEventlogItemKind,
+    type: FuTpmEventlogItemKind,
     digest_count: u32le,
 }
 
 #[derive(ParseBytes)]
-struct TpmEfiStartupLocalityEvent {
+struct FuStructTpmEfiStartupLocalityEvent {
     signature: [char; 16] == "StartupLocality",
     locality: u8,    // from which TPM2_Startup() was issued -- which is the initial value of PCR0
 }

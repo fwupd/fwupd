@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString)]
-enum UsiDockSpiState {
+enum FuUsiDockSpiState {
     None,
     SwitchSuccess,
     SwitchFail,
@@ -17,7 +17,7 @@ enum UsiDockSpiState {
     FlashNotFound,
 }
 
-enum UsiDockFirmwareIdx {
+enum FuUsiDockFirmwareIdx {
     None  = 0x00,
     DmcPd = 0x01,
     Dp    = 0x02,
@@ -30,7 +30,7 @@ enum UsiDockFirmwareIdx {
 }
 
 #[repr(u8)]
-enum UsiDockTag2 {
+enum FuUsiDockTag2 {
     IspBoot     = 0,    // before Common CMD for bootload, with TAG0, TAG1, CMD
     Isp         = 0x5A, // before Common, with TAG0, TAG1, CMD
     CmdMcu      = 0x6A, // USB->MCU(Common-cmd mode), with TAG0, TAG1, CMD
@@ -42,7 +42,7 @@ enum UsiDockTag2 {
 }
 
 #[repr(u8)]
-enum UsiDockMcuCmd {
+enum FuUsiDockMcuCmd {
     McuNone = 0x0,
     McuStatus = 0x1,
     McuJump2boot = 0x2,
@@ -58,7 +58,7 @@ enum UsiDockMcuCmd {
     All = 0xFF,
 }
 
-enum UsiDockSpiCmd {
+enum FuUsiDockSpiCmd {
     Initial = 0x01,
     EraseFlash = 0x02,
     Program = 0x03,
@@ -71,35 +71,35 @@ enum UsiDockSpiCmd {
 }
 
 #[derive(New)]
-struct UsiDockHidReq {
+struct FuStructUsiDockHidReq {
     id: u8 == 2,
     length: u8,
     buf: [u8; 61],
-    tag3: UsiDockTag2,
+    tag3: FuUsiDockTag2,
 }
 
 #[derive(New)]
-struct UsiDockMcuCmdReq {
+struct FuStructUsiDockMcuCmdReq {
     id: u8 == 2,
     length: u8,
     tag1: u8 == 0xFE,
     tag2: u8 == 0xFF,
     buf: [u8; 59],
-    tag3: UsiDockTag2,
+    tag3: FuUsiDockTag2,
 }
 
 #[derive(Parse)]
-struct UsiDockMcuCmdRes {
+struct FuStructUsiDockMcuCmdRes {
     id: u8 == 2,
-    cmd1: UsiDockMcuCmd,
+    cmd1: FuUsiDockMcuCmd,
     tag1: u8 == 0xFE,
     tag2: u8 == 0xFF,
-    cmd2: UsiDockMcuCmd,
+    cmd2: FuUsiDockMcuCmd,
     buf: [u8; 58],
-    tag3: UsiDockTag2,
+    tag3: FuUsiDockTag2,
 }
 
-struct UsiDockIspVersion {
+struct FuStructUsiDockIspVersion {
     dmc: [u8; 5],
     pd: [u8; 5],
     dp5x: [u8; 5],

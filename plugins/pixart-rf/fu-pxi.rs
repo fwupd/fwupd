@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString)]
-enum PxiOtaSpecCheckResult {
+enum FuPxiOtaSpecCheckResult {
     Ok = 1,
     FwOutOfBounds = 2,
     ProcessIllegal = 3,
@@ -12,7 +12,7 @@ enum PxiOtaSpecCheckResult {
 }
 
 #[derive(ToString)]
-enum PxiWirelessModuleOtaRspCode {
+enum FuPxiWirelessModuleOtaRspCode {
     Ok,
     Finish,
     Fail,

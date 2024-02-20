@@ -1,7 +1,7 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-enum DfuRequest {
+enum FuDfuRequest {
     Detach,
     Dnload,
     Upload,
@@ -12,7 +12,7 @@ enum DfuRequest {
 }
 
 #[derive(ToString)]
-enum DfuStatus {
+enum FuDfuStatus {
     Ok,
     ErrTarget,
     ErrFile,
@@ -32,7 +32,7 @@ enum DfuStatus {
 }
 
 #[derive(ToString)]
-enum DfuState {
+enum FuDfuState {
     AppIdle,
     AppDetach,
     DfuIdle,
@@ -47,7 +47,7 @@ enum DfuState {
 }
 
 #[derive(ToBitString)]
-enum DfuSectorCap {
+enum FuDfuSectorCap {
     None = 0, // No operations possible
     Readable = 1 << 0,
     Writeable = 1 << 1,
