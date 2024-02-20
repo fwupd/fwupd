@@ -4212,6 +4212,8 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 	if (priv->firmware_gtype != G_TYPE_INVALID) {
 		fu_string_append(str, idt + 1, "FirmwareGType", g_type_name(priv->firmware_gtype));
 	}
+	if (priv->specialized_gtype != G_TYPE_INVALID)
+		fu_string_append(str, idt + 1, "GType", g_type_name(priv->specialized_gtype));
 	if (priv->size_min > 0) {
 		g_autofree gchar *sz = g_strdup_printf("%" G_GUINT64_FORMAT, priv->size_min);
 		fu_string_append(str, idt + 1, "FirmwareSizeMin", sz);
