@@ -68,7 +68,7 @@ fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize bufsz, GError
 	for (gsize i = 0; i < bufsz; i++) {
 		FuSmbiosItem *item;
 		guint8 length;
-		g_autoptr(GByteArray) st_str = NULL;
+		g_autoptr(FuStructSmbiosStructure) st_str = NULL;
 
 		/* sanity check */
 		st_str = fu_struct_smbios_structure_parse(buf, bufsz, i, error);

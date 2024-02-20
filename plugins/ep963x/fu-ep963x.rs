@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ValidateStream)]
-struct Ep963xFirmwareHdr {
+struct FuStructEp963xFirmwareHdr {
     reserved: [u8; 16],
     magic: [char; 5] == "EP963",
 }
 
 // byte = 0x07
 #[derive(ToString)]
-enum Ep963xSmbusError {
+enum FuEp963xSmbusError {
     None = 0x00,
     Address = 0x01,
     NoAck = 0x02,

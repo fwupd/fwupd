@@ -241,7 +241,7 @@ fu_usb_device_ds20_parse(FuFirmware *firmware,
 static GByteArray *
 fu_usb_device_ds20_write(FuFirmware *firmware, GError **error)
 {
-	g_autoptr(GByteArray) st = fu_struct_ds20_new();
+	g_autoptr(FuStructDs20) st = fu_struct_ds20_new();
 	fwupd_guid_t guid = {0x0};
 
 	/* pack */

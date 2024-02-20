@@ -69,7 +69,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	guint16 hdrsz;
 	guint32 payloadsz;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructUswid) st = NULL;
 	g_autoptr(GBytes) payload = NULL;
 
 	/* unpack */
@@ -182,7 +182,7 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuUswidFirmware *self = FU_USWID_FIRMWARE(firmware);
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) buf = fu_struct_uswid_new();
+	g_autoptr(FuStructUswid) buf = fu_struct_uswid_new();
 	g_autoptr(GByteArray) payload = g_byte_array_new();
 	g_autoptr(GBytes) payload_blob = NULL;
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);

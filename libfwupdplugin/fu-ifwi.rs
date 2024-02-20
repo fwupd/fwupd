@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(New, ValidateStream, ParseStream)]
-struct IfwiCpd {
+struct FuStructIfwiCpd {
     header_marker: u32le == 0x44504324,
     num_of_entries: u32le,
     header_version: u8,
@@ -12,15 +12,17 @@ struct IfwiCpd {
     partition_name: u32le,
     crc32: u32le,
 }
+
 #[derive(New, ParseStream)]
-struct IfwiCpdEntry {
+struct FuStructIfwiCpdEntry {
     name: [char; 12],
     offset: u32le,
     length: u32le,
     _reserved1: [u8; 4],
 }
+
 #[derive(New, ParseStream)]
-struct IfwiCpdManifest {
+struct FuStructIfwiCpdManifest {
     header_type: u32le,
     header_length: u32le,		// dwords
     header_version: u32le,
@@ -33,13 +35,15 @@ struct IfwiCpdManifest {
     version: u64le,
     svn: u32le,
 }
+
 #[derive(New, ParseStream)]
-struct IfwiCpdManifestExt {
+struct FuStructIfwiCpdManifestExt {
     extension_type: u32le,
     extension_length: u32le,
 }
+
 #[derive(New, ValidateStream, ParseStream)]
-struct IfwiFpt {
+struct FuStructIfwiFpt {
     header_marker: u32le == 0x54504624,
     num_of_entries: u32le,
     header_version: u8 = 0x20,
@@ -55,8 +59,9 @@ struct IfwiFpt {
     fitc_hotfix: u16le,
     fitc_build: u16le,
 }
+
 #[derive(New, ParseStream)]
-struct IfwiFptEntry {
+struct FuStructIfwiFptEntry {
     partition_name: u32le,
     _reserved1: [u8; 4],
     offset: u32le,

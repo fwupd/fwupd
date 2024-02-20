@@ -125,7 +125,7 @@ fu_acpi_table_parse(FuFirmware *firmware,
 	gsize streamsz = 0;
 	guint32 length;
 	g_autofree gchar *id = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructAcpiTable) st = NULL;
 
 	/* parse */
 	st = fu_struct_acpi_table_parse_stream(stream, offset, error);

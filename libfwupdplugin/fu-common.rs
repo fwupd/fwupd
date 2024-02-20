@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-enum CpuVendor {
+enum FuCpuVendor {
     Unknown,
     Intel,
     Amd,
@@ -9,7 +9,7 @@ enum CpuVendor {
 }
 
 #[derive(ToString)]
-enum PowerState {
+enum FuPowerState {
     Unknown,
     Ac,                     // On AC power
     AcCharging,             // Charging on AC
@@ -21,7 +21,7 @@ enum PowerState {
 }
 
 #[derive(ToString)]
-enum LidState {
+enum FuLidState {
     Unknown,
     Open,
     Closed,
@@ -29,7 +29,7 @@ enum LidState {
 }
 
 #[derive(ToString)]
-enum DisplayState {
+enum FuDisplayState {
     Unknown,
     Connected,
     Disconnected,

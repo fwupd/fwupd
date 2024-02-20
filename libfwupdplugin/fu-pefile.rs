@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ParseStream, ValidateStream, New)]
-struct PeDosHeader {
+struct FuStructPeDosHeader {
     magic: u16le == 0x5A4D,
     cblp: u16le = 0x90,
     cp: u16le = 0x3,
@@ -26,7 +26,7 @@ struct PeDosHeader {
 }
 
 #[repr(u16le)]
-enum PeCoffMachine {
+enum FuPeCoffMachine {
     Unknown,
     Alpha = 0x184,
     Alpha64 = 0x284,
@@ -59,7 +59,7 @@ enum PeCoffMachine {
 }
 
 #[repr(u16le)]
-enum PeCoffMagic {
+enum FuPeCoffMagic {
     Pe32 = 0x10b,
     Pe32Plus = 0x20b,
 }
@@ -83,9 +83,9 @@ enum FuCoffSubsystem {
 }
 
 #[derive(ParseStream, New)]
-struct PeCoffFileHeader {
+struct FuStructPeCoffFileHeader {
     signature: u32le == 0x4550, // "PE\0\0"
-    machine: PeCoffMachine = Amd64,
+    machine: FuPeCoffMachine = Amd64,
     number_of_sections: u16le,
     _time_date_stamp: u32le,
     pointer_to_symbol_table: u32le,
@@ -95,8 +95,8 @@ struct PeCoffFileHeader {
 }
 
 #[derive(ParseStream, New)]
-struct PeCoffOptionalHeader64 {
-    magic: PeCoffMagic = Pe32Plus,
+struct FuStructPeCoffOptionalHeader64 {
+    magic: FuPeCoffMagic = Pe32Plus,
     major_linker_version: u8 = 0x0e,
     minor_linker_version: u8 = 0x0e,
     size_of_code: u32le,
@@ -127,7 +127,7 @@ struct PeCoffOptionalHeader64 {
     number_of_rva_and_sizes: u32le,
 }
 
-struct PeCoffSymbol {
+struct FuStructPeCoffSymbol {
     name: [char; 8],
     value: u32le,
     section_number: u16le,
@@ -137,7 +137,7 @@ struct PeCoffSymbol {
 }
 
 #[derive(ParseStream, New)]
-struct PeCoffSection {
+struct FuStructPeCoffSection {
     name: [char; 8],
     virtual_size: u32le,
     virtual_address: u32le,

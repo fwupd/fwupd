@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString)]
-enum MeiFamily {
+enum FuMeiFamily {
     Unknown,
     Sps,
     Txe,
@@ -12,7 +12,7 @@ enum MeiFamily {
 
 # HFS1[3:0] Current Working State Values
 #[derive(ToString)]
-enum MeHfsCws {
+enum FuMeHfsCws {
     Reset,
     Initializing,
     Recovery,
@@ -26,7 +26,7 @@ enum MeHfsCws {
 
 # HFS1[8:6] Current Operation State Values
 #[derive(ToString)]
-enum MeHfsState {
+enum FuMeHfsState {
     Preboot,
     M0WithUma = 1,
     M3WithoutUma = 4,
@@ -37,7 +37,7 @@ enum MeHfsState {
 
 # HFS[19:16] Current Operation Mode Values
 #[derive(ToString)]
-enum MeHfsMode {
+enum FuMeHfsMode {
     Normal,
     Debug = 2,
     Disable,
@@ -49,7 +49,7 @@ enum MeHfsMode {
 
 # HFS[15:12] Error Code Values
 #[derive(ToString)]
-enum MeHfsError {
+enum FuMeHfsError {
     NoError,
     UncategorizedFailure,
     Disabled,
@@ -57,7 +57,7 @@ enum MeHfsError {
     DebugFailure,
 }
 
-enum MeHfsEnforcementPolicy {
+enum FuMeHfsEnforcementPolicy {
     Nothing,
     ShutdownTo,
     ShutdownNow,

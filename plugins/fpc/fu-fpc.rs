@@ -2,15 +2,15 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[repr(u8)]
-enum FpcDfuState {
+enum FuFpcDfuState {
     Dnbusy = 0x04,
 }
 
 #[derive(New, Getters)]
-struct FpcDfu {
+struct FuStructFpcDfu {
     status: u8,
     max_payload_size: u8,
     _reserved: [u8; 2],
-    state: FpcDfuState,
+    state: FuFpcDfuState,
     _reserved2: u8,
 }

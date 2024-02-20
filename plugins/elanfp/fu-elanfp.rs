@@ -2,6 +2,6 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ValidateStream)]
-struct ElanfpFirmwareHdr {
+struct FuStructElanfpFirmwareHdr {
     magic: u32le == 0x46325354,
 }

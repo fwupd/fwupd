@@ -2,19 +2,19 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ValidateStream)]
-struct GenesysFirmwareHdr {
+struct FuStructGenesysFirmwareHdr {
     reserved: [u8; 252],
     magic: [char; 4] == "XROM",
 }
 
 #[derive(ValidateStream)]
-struct GenesysDevFirmwareHdr {
+struct FuStructGenesysDevFirmwareHdr {
     reserved: [u8; 252],
     magic: [char; 4] == "HOST",
 }
 
 #[derive(ValidateStream)]
-struct GenesysPdFirmwareHdr {
+struct FuStructGenesysPdFirmwareHdr {
     reserved: [u8; 252],
     magic: [char; 4] == "PRDY",
 }
@@ -22,7 +22,7 @@ struct GenesysPdFirmwareHdr {
 // Tool String Descriptor
 #[repr(u8)]
 #[derive(ToString)]
-enum GenesysTsVersion {
+enum FuGenesysTsVersion {
     Dynamic_9Byte = 0x30,
     Bonding,
     BondingQc,
@@ -33,9 +33,10 @@ enum GenesysTsVersion {
     Dynamic_13Byte,
     BrandProject,
 }
+
 #[derive(ToString, Parse, ParseStream, New)]
-struct GenesysTsStatic {
-    tool_string_version: GenesysTsVersion,
+struct FuStructGenesysTsStatic {
+    tool_string_version: FuGenesysTsVersion,
 
     mask_project_code: [char; 4],
     mask_project_hardware: char,      // 0=a, 1=b...
@@ -51,7 +52,7 @@ struct GenesysTsStatic {
 }
 
 #[derive(ToString, Parse)]
-struct GenesysTsDynamicGl3523 {
+struct FuStructGenesysTsDynamicGl3523 {
     running_mode: char, // 'M' for mask code, the others for bank code
 
     ss_port_number: char, // super-speed port number
@@ -89,7 +90,7 @@ struct GenesysTsDynamicGl3523 {
 }
 
 #[derive(ToString, Parse)]
-struct GenesysTsDynamicGl3590 {
+struct FuStructGenesysTsDynamicGl3590 {
     running_mode: char,
 
     ss_port_number: char,
@@ -110,13 +111,14 @@ struct GenesysTsDynamicGl3590 {
 
 #[derive(ToString)]
 #[repr(u8)]
-enum GenesysFwStatus {
+enum FuGenesysFwStatus {
     Mask = 0x30,
     Bank1,
     Bank2,
 }
+
 #[derive(ToString, Parse)]
-struct GenesysTsDynamicGl359030 {
+struct FuStructGenesysTsDynamicGl359030 {
     running_mode: char,
 
     ss_port_number: char,
@@ -132,13 +134,13 @@ struct GenesysTsDynamicGl359030 {
 
     bonding: u8,
 
-    hub_fw_status: GenesysFwStatus,
-    dev_fw_status: GenesysFwStatus,
+    hub_fw_status: FuGenesysFwStatus,
+    dev_fw_status: FuGenesysFwStatus,
     dev_fw_version: u16le,
 }
 
 #[derive(ToString, Parse)]
-struct GenesysTsDynamicGl3525 {
+struct FuStructGenesysTsDynamicGl3525 {
     running_mode: char,
 
     ss_port_number: char,
@@ -154,15 +156,15 @@ struct GenesysTsDynamicGl3525 {
 
     bonding: u8,
 
-    hub_fw_status: GenesysFwStatus,
-    pd_fw_status: GenesysFwStatus,
+    hub_fw_status: FuGenesysFwStatus,
+    pd_fw_status: FuGenesysFwStatus,
     pd_fw_version: u16le,
-    dev_fw_status: GenesysFwStatus,
+    dev_fw_status: FuGenesysFwStatus,
     dev_fw_version: u16le,
 }
 
 #[derive(ToString, Parse)]
-struct GenesysTsFirmwareInfo {
+struct FuStructGenesysTsFirmwareInfo {
     tool_version: [u8; 6],      // ISP tool defined by itself
     address_mode: u8,           // 3 or 4: support 3 or 4-bytes address, others are no meaning.
     build_fw_time: [char; 12],  // YYYYMMDDhhmm
@@ -171,7 +173,7 @@ struct GenesysTsFirmwareInfo {
 
 #[derive(ToString)]
 #[repr(u8)]
-enum GenesysVsCodesignCheck {
+enum FuGenesysVsCodesignCheck {
     Unsupported = 0x30,
     Scaler,
     Fw,
@@ -179,37 +181,39 @@ enum GenesysVsCodesignCheck {
     Reserved,
     Hw,
 }
+
 #[repr(u8)]
-enum GenesysVsHidIsp {
+enum FuGenesysVsHidIsp {
     Unsupported = 0x30,
     Support,
     CodesignNReset, // Support Codesign ISP Bank2 FW without reset.
 }
+
 #[derive(ToString, New, Parse)]
-struct GenesysTsVendorSupport {
+struct FuStructGenesysTsVendorSupport {
     version: [char; 2],
     reserved1: [char; 8],
-    codesign_check: GenesysVsCodesignCheck, // offset: 0x0a
+    codesign_check: FuGenesysVsCodesignCheck, // offset: 0x0a
     reserved2: [char; 4],
-    hid_isp: GenesysVsHidIsp, // offset: 0x0f
+    hid_isp: FuGenesysVsHidIsp, // offset: 0x0f
     reserved3: [char; 15],
 }
 
 #[derive(ToString, Parse)]
-struct GenesysTsBrandProject {
+struct FuStructGenesysTsBrandProject {
     project: [char; 15],
 }
 
 // Firmware info
 #[derive(ToString)]
-enum GenesysFwCodesign {
+enum FuGenesysFwCodesign {
     None,
     Rsa,
     Ecdsa,
 }
 
 #[derive(ParseStream, ValidateStream)]
-struct GenesysFwCodesignInfoRsa {
+struct FuStructGenesysFwCodesignInfoRsa {
     tag_n: u32be == 0x4E203D20, // 'N = '
     text_n: [char; 512],
     end_n: u16be == 0x0D0A,
@@ -218,8 +222,9 @@ struct GenesysFwCodesignInfoRsa {
     end_e: u16be == 0x0D0A,
     signature: [u8; 256],
 }
+
 #[derive(Parse, Validate)]
-struct GenesysFwRsaPublicKeyText {
+struct FuStructGenesysFwRsaPublicKeyText {
     tag_n: u32be == 0x4E203D20, // 'N = '
     text_n: [char; 512],
     end_n: u16be == 0x0D0A,
@@ -229,18 +234,19 @@ struct GenesysFwRsaPublicKeyText {
 }
 
 #[derive(Parse, ParseStream, Validate, ValidateStream)]
-struct GenesysFwCodesignInfoEcdsa {
+struct FuStructGenesysFwCodesignInfoEcdsa {
     hash: [u8; 32],
     key: [u8; 64],
     signature: [u8; 64],
 }
+
 #[derive(Parse, Validate)]
-struct GenesysFwEcdsaPublicKey {
+struct FuStructGenesysFwEcdsaPublicKey {
     key: [u8; 64],
 }
 
 #[derive(ToString)]
-enum GenesysFwType {
+enum FuGenesysFwType {
     Hub, // inside hub start
     DevBridge,
     Pd,

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(New, ValidateStream, ParseStream)]
-struct Oprom {
+struct FuStructOprom {
     signature: u16le == 0xAA55,
     image_size: u16le,		// of 512 bytes
     init_func_entry_point: u32le,
@@ -14,8 +14,9 @@ struct Oprom {
     pci_header_offset: u16le = $struct_size,
     expansion_header_offset: u16le,
 }
+
 #[derive(New, ParseStream)]
-struct OpromPci {
+struct FuStructOpromPci {
     signature: u32le == 0x52494350,
     vendor_id: u16le,
     device_id: u16le,

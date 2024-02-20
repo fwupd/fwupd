@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(New, Parse)]
-struct SmbiosEp32 {
+struct FuStructSmbiosEp32 {
     anchor_str: [char; 4],
     entry_point_csum: u8,
     entry_point_len: u8,
@@ -18,8 +18,9 @@ struct SmbiosEp32 {
     number_smbios_structs: u16le,
     smbios_bcd_rev: u8,
 }
+
 #[derive(New, Parse)]
-struct SmbiosEp64 {
+struct FuStructSmbiosEp64 {
     anchor_str: [char; 5],
     entry_point_csum: u8,
     entry_point_len: u8,
@@ -31,8 +32,9 @@ struct SmbiosEp64 {
     structure_table_len: u32le,
     structure_table_addr: u64le,
 }
+
 #[derive(New, Parse)]
-struct SmbiosStructure {
+struct FuStructSmbiosStructure {
     type: u8,
     length: u8,
     handle: u16le,

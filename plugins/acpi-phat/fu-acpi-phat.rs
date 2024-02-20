@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ValidateStream)]
-struct AcpiPhatHdr {
+struct FuStructAcpiPhatHdr {
     magic: [char; 4] == "PHAT",
 }
 
 #[derive(New, ParseStream)]
-struct AcpiPhatHealthRecord {
+struct FuStructAcpiPhatHealthRecord {
     signature: u16le = 0x1,
     rcdlen: u16le,
     version: u8,
@@ -16,14 +16,16 @@ struct AcpiPhatHealthRecord {
     device_signature: Guid,
     device_specific_data: u32le,
 }
+
 #[derive(New, ParseStream)]
-struct AcpiPhatVersionElement {
+struct FuStructAcpiPhatVersionElement {
     component_id: Guid,
     version_value: u64le,
     producer_id: [char; 4],
 }
+
 #[derive(New, ParseStream)]
-struct AcpiPhatVersionRecord {
+struct FuStructAcpiPhatVersionRecord {
     signature: u16le = 0x0,
     rcdlen: u16le,
     version: u8,

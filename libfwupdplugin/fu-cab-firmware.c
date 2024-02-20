@@ -191,7 +191,7 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 	gsize blob_uncomp;
 	gsize hdr_sz;
 	gsize size_max = fu_firmware_get_size_max(FU_FIRMWARE(self));
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructCabData) st = NULL;
 	g_autoptr(GInputStream) partial_stream = NULL;
 
 	/* parse header */

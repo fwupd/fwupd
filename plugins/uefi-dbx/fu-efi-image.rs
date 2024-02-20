@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(Getters)]
-struct EfiImageDataDirEntry {
+struct FuStructEfiImageDataDirEntry {
     addr: u32le,
     size: u32le,
 }
