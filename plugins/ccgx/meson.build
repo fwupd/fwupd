@@ -9,6 +9,7 @@ plugin_quirks += files([
 plugin_builtin_ccgx = static_library('fu_plugin_ccgx',
   rustgen.process(
     'fu-ccgx.rs',           # fuzzing
+    'fu-ccgx-pure-hid.rs',  # fuzzing
   ),
   sources: [
     'fu-ccgx-plugin.c',
