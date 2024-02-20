@@ -59,7 +59,7 @@ fu_aver_hid_device_transfer(FuAverHidDevice *self, GByteArray *req, GByteArray *
 }
 
 static gboolean
-fu_aver_hid_device_poll(FuDevice *device, GError **error)
+fu_aver_hid_device_ensure_status(FuDevice *device, GError **error)
 {
 	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
 	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_new();
@@ -119,8 +119,8 @@ fu_aver_hid_device_setup(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_aver_hid_device_parent_class)->setup(device, error))
 		return FALSE;
 
-	/* using isp status requests as polling device requests */
-	if (!fu_aver_hid_device_poll(device, error))
+	/* ensure that the device status is updateable */
+	if (!fu_aver_hid_device_ensure_status(device, error))
 		return FALSE;
 
 	/* get the version from the hardware while open */
@@ -516,7 +516,6 @@ static void
 fu_aver_hid_device_class_init(FuAverHidDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->poll = fu_aver_hid_device_poll;
 	device_class->setup = fu_aver_hid_device_setup;
 	device_class->prepare_firmware = fu_aver_hid_device_prepare_firmware;
 	device_class->write_firmware = fu_aver_hid_device_write_firmware;
