@@ -14,21 +14,21 @@ gboolean {{obj.c_method('Validate')}}(const guint8 *buf, gsize bufsz, gsize offs
 gboolean {{obj.c_method('ValidateBytes')}}(GBytes *blob, gsize offset, GError **error);
 {%- endif %}
 {%- if obj.export('ToString') == Export.PUBLIC %}
-gchar *{{obj.c_method('ToString')}}(GByteArray *st);
+gchar *{{obj.c_method('ToString')}}(const GByteArray *st);
 {%- endif %}
 
 {%- for item in obj.items | selectattr('enabled') %}
 {%- if item.export('Getters') == Export.PUBLIC %}
 {%- if item.type == Type.STRING %}
-gchar *{{item.c_getter}}(GByteArray *st);
+gchar *{{item.c_getter}}(const GByteArray *st);
 {%- elif item.struct_obj %}
-GByteArray *{{item.c_getter}}(GByteArray *st);
+GByteArray *{{item.c_getter}}(const GByteArray *st);
 {%- elif item.type == Type.U8 and item.multiplier %}
-const guint8 *{{item.c_getter}}(GByteArray *st, gsize *bufsz);
+const guint8 *{{item.c_getter}}(const GByteArray *st, gsize *bufsz);
 {%- elif item.type == Type.GUID %}
-const fwupd_guid_t *{{item.c_getter}}(GByteArray *st);
+const fwupd_guid_t *{{item.c_getter}}(const GByteArray *st);
 {%- elif not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64] %}
-{{item.type_glib}} {{item.c_getter}}(GByteArray *st);
+{{item.type_glib}} {{item.c_getter}}(const GByteArray *st);
 {%- endif %}
 {%- endif %}
 {%- endfor %}
