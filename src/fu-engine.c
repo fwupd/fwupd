@@ -2079,7 +2079,7 @@ fu_realpath(const gchar *filename, GError **error)
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
 			    "cannot resolve path: %s",
-			    strerror(errno));
+			    g_strerror(errno));
 		return NULL;
 	}
 	if (!g_file_test(full_tmp, G_FILE_TEST_EXISTS)) {
@@ -2121,7 +2121,7 @@ fu_engine_offline_setup(GError **error)
 			    "Failed to create symlink %s to %s: %s",
 			    trigger,
 			    symlink_target,
-			    strerror(errno));
+			    g_strerror(errno));
 		return FALSE;
 	}
 	return TRUE;

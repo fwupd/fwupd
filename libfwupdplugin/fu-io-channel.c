@@ -187,7 +187,7 @@ fu_io_channel_write_raw(FuIOChannel *self,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_FOUND,
 					    "failed to write: %s",
-					    strerror(errno));
+					    g_strerror(errno));
 				return FALSE;
 			}
 			g_set_error(error,
@@ -236,7 +236,7 @@ fu_io_channel_write_raw(FuIOChannel *self,
 						    FWUPD_ERROR,
 						    FWUPD_ERROR_NOT_FOUND,
 						    "failed to write: %s",
-						    strerror(errno));
+						    g_strerror(errno));
 					return FALSE;
 				}
 				g_set_error(error,
@@ -245,7 +245,7 @@ fu_io_channel_write_raw(FuIOChannel *self,
 					    "failed to write %" G_GSIZE_FORMAT " bytes to %i: %s",
 					    datasz,
 					    self->fd,
-					    strerror(errno));
+					    g_strerror(errno));
 				return FALSE;
 			}
 			if (flags & FU_IO_CHANNEL_FLAG_SINGLE_SHOT)
@@ -328,7 +328,7 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 					    FWUPD_ERROR_READ,
 					    "failed to read %i: %s",
 					    self->fd,
-					    strerror(errno));
+					    g_strerror(errno));
 				return NULL;
 			}
 			if (len == 0)
@@ -372,7 +372,7 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 					    FWUPD_ERROR_READ,
 					    "failed to read %i: %s",
 					    self->fd,
-					    strerror(errno));
+					    g_strerror(errno));
 				return NULL;
 			}
 			if (len == 0)
