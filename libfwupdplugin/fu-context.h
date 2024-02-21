@@ -164,3 +164,7 @@ FuFirmware *
 fu_context_get_fdt(FuContext *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 FuSmbiosChassisKind
 fu_context_get_chassis_kind(FuContext *self) G_GNUC_NON_NULL(1);
+void
+fu_context_set_esp_location(FuContext *self, const gchar *location);
+const gchar *
+fu_context_get_esp_location(FuContext *self);

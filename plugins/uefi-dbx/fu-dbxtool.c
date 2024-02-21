@@ -193,16 +193,8 @@ main(int argc, char *argv[])
 	}
 
 	/* override the default ESP path */
-	if (esp_path != NULL) {
-		g_autoptr(FuVolume) volume = NULL;
-		volume = fu_volume_new_esp_for_path(esp_path, &error);
-		if (volume == NULL) {
-			/* TRANSLATORS: ESP is EFI System Partition */
-			g_print("%s: %s\n", _("ESP specified was not valid"), error->message);
-			return EXIT_FAILURE;
-		}
-		fu_context_add_esp_volume(ctx, volume);
-	}
+	if (esp_path != NULL)
+		fu_context_set_esp_location(ctx, esp_path);
 
 	/* list contents, either of the existing system, or an update */
 	if (action_list || action_version) {
