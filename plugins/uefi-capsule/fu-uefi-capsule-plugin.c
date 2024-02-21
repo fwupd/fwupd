@@ -891,7 +891,6 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	guint64 nvram_total;
-	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *nvram_total_str = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GError) error_acpi_uefi = NULL;
@@ -933,20 +932,6 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 		return FALSE;
 	nvram_total_str = g_strdup_printf("%" G_GUINT64_FORMAT, nvram_total);
 	fu_plugin_add_report_metadata(plugin, "EfivarNvramUsed", nvram_total_str);
-
-	/* override the default ESP path */
-	esp_path = fu_plugin_get_config_value(plugin, "OverrideESPMountPoint");
-	if (esp_path != NULL) {
-		self->esp = fu_volume_new_esp_for_path(esp_path, error);
-		if (self->esp == NULL) {
-			g_prefix_error(error,
-				       "invalid OverrideESPMountPoint=%s "
-				       "specified in config: ",
-				       esp_path);
-			return FALSE;
-		}
-		fu_uefi_capsule_plugin_validate_esp(self);
-	}
 
 	/* we use this both for quirking the CoD implementation sanity and the CoD filename */
 	if (!fu_uefi_capsule_plugin_parse_acpi_uefi(self, &error_acpi_uefi))
