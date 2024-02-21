@@ -512,6 +512,54 @@ fu_context_flags_func(void)
 }
 
 static void
+fu_context_state_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+
+	g_assert_cmpint(fu_context_get_power_state(ctx), ==, FU_POWER_STATE_UNKNOWN);
+	g_assert_cmpint(fu_context_get_lid_state(ctx), ==, FU_LID_STATE_UNKNOWN);
+	g_assert_cmpint(fu_context_get_display_state(ctx), ==, FU_DISPLAY_STATE_UNKNOWN);
+	g_assert_cmpint(fu_context_get_battery_level(ctx), ==, FWUPD_BATTERY_LEVEL_INVALID);
+
+	fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY_DISCHARGING);
+	fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY_DISCHARGING);
+	fu_context_set_lid_state(ctx, FU_LID_STATE_CLOSED);
+	fu_context_set_lid_state(ctx, FU_LID_STATE_CLOSED);
+	fu_context_set_display_state(ctx, FU_DISPLAY_STATE_CONNECTED);
+	fu_context_set_display_state(ctx, FU_DISPLAY_STATE_CONNECTED);
+	fu_context_set_battery_level(ctx, 50);
+	fu_context_set_battery_level(ctx, 50);
+
+	g_assert_cmpint(fu_context_get_power_state(ctx), ==, FU_POWER_STATE_BATTERY_DISCHARGING);
+	g_assert_cmpint(fu_context_get_lid_state(ctx), ==, FU_LID_STATE_CLOSED);
+	g_assert_cmpint(fu_context_get_display_state(ctx), ==, FU_DISPLAY_STATE_CONNECTED);
+	g_assert_cmpint(fu_context_get_battery_level(ctx), ==, 50);
+}
+
+static void
+fu_context_firmware_gtypes_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(GArray) gtypes = NULL;
+	g_autoptr(GPtrArray) gtype_ids = NULL;
+
+	fu_context_add_firmware_gtype(ctx, "base", FU_TYPE_FIRMWARE);
+
+	gtype_ids = fu_context_get_firmware_gtype_ids(ctx);
+	g_assert_nonnull(gtype_ids);
+	g_assert_cmpint(gtype_ids->len, ==, 1);
+	g_assert_cmpstr(g_ptr_array_index(gtype_ids, 0), ==, "base");
+
+	gtypes = fu_context_get_firmware_gtypes(ctx);
+	g_assert_nonnull(gtypes);
+	g_assert_cmpint(gtypes->len, ==, 1);
+	g_assert_cmpint(g_array_index(gtypes, GType, 0), ==, FU_TYPE_FIRMWARE);
+
+	g_assert_cmpint(fu_context_get_firmware_gtype_by_id(ctx, "base"), ==, FU_TYPE_FIRMWARE);
+	g_assert_cmpint(fu_context_get_firmware_gtype_by_id(ctx, "n/a"), ==, G_TYPE_INVALID);
+}
+
+static void
 fu_context_hwids_dmi_func(void)
 {
 	g_autofree gchar *dump = NULL;
@@ -5209,6 +5257,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func("/fwupd/context{flags}", fu_context_flags_func);
 	g_test_add_func("/fwupd/context{hwids-dmi}", fu_context_hwids_dmi_func);
+	g_test_add_func("/fwupd/context{firmware-gtypes}", fu_context_firmware_gtypes_func);
+	g_test_add_func("/fwupd/context{state}", fu_context_state_func);
 	g_test_add_func("/fwupd/string{utf16}", fu_string_utf16_func);
 	g_test_add_func("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func("/fwupd/smbios3", fu_smbios3_func);
