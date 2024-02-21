@@ -68,7 +68,7 @@ fu_efivar_set_immutable_fd(int fd, gboolean value, gboolean *value_old, GError *
 				    G_IO_ERROR,
 				    G_IO_ERROR_FAILED,
 				    "failed to get flags: %s",
-				    strerror(errno));
+				    g_strerror(errno));
 			return FALSE;
 		}
 	} else {
@@ -97,7 +97,7 @@ fu_efivar_set_immutable_fd(int fd, gboolean value, gboolean *value_old, GError *
 			    G_IO_ERROR,
 			    G_IO_ERROR_FAILED,
 			    "failed to set flags: %s",
-			    strerror(errno));
+			    g_strerror(errno));
 		return FALSE;
 	}
 	return TRUE;
@@ -116,7 +116,7 @@ fu_efivar_set_immutable(const gchar *fn, gboolean value, gboolean *value_old, GE
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_FILENAME,
 			    "failed to open: %s",
-			    strerror(errno));
+			    g_strerror(errno));
 		return FALSE;
 	}
 	istr = g_unix_input_stream_new(fd, TRUE);
@@ -419,7 +419,7 @@ fu_efivar_set_data_impl(const gchar *guid,
 			    G_IO_ERROR_INVALID_DATA,
 			    "failed to open %s: %s",
 			    fn,
-			    strerror(errno));
+			    g_strerror(errno));
 		return FALSE;
 	}
 	ostr = g_unix_output_stream_new(fd, TRUE);
