@@ -398,7 +398,7 @@ fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **err
 		g_set_error_literal(error,
 				    G_IO_ERROR,
 				    g_io_error_from_errno(errno),
-				    strerror(errno));
+				    g_strerror(errno));
 		return 0;
 	}
 	rc = ioctl(fd, BLKSSZGET, &sector_size);
@@ -406,7 +406,7 @@ fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **err
 		g_set_error_literal(error,
 				    G_IO_ERROR,
 				    g_io_error_from_errno(errno),
-				    strerror(errno));
+				    g_strerror(errno));
 	} else if (sector_size == 0) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,

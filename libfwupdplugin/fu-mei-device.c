@@ -373,7 +373,7 @@ fu_mei_device_read(FuMeiDevice *self,
 			    FWUPD_ERROR_READ,
 			    "read failed %u: %s",
 			    (guint)rc,
-			    strerror(errno));
+			    g_strerror(errno));
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "read", buf, rc);
@@ -426,7 +426,7 @@ fu_mei_device_write(FuMeiDevice *self,
 			    FWUPD_ERROR_WRITE,
 			    "write failed with status %" G_GSSIZE_FORMAT " %s",
 			    written,
-			    strerror(errno));
+			    g_strerror(errno));
 		return FALSE;
 	}
 	if ((gsize)written != bufsz) {
