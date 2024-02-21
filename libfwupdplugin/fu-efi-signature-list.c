@@ -240,20 +240,42 @@ fu_efi_signature_list_parse(FuFirmware *firmware,
 static GByteArray *
 fu_efi_signature_list_write(FuFirmware *firmware, GError **error)
 {
-	g_autoptr(GByteArray) buf = fu_struct_efi_signature_list_new();
+	fwupd_guid_t guid = {0};
+	g_autoptr(FuStructEfiSignatureList) st = fu_struct_efi_signature_list_new();
+	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 
 	/* entry */
-	fu_struct_efi_signature_list_set_list_size(buf, buf->len + 16 + 32);
-	fu_struct_efi_signature_list_set_header_size(buf, 0);
-	fu_struct_efi_signature_list_set_size(buf, 16 + 32);
+	if (!fwupd_guid_from_string("c1c41626-504c-4092-aca9-41f936934328",
+				    &guid,
+				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
+				    error))
+		return NULL;
+	fu_struct_efi_signature_list_set_type(st, &guid);
+	fu_struct_efi_signature_list_set_header_size(st, 0);
+	fu_struct_efi_signature_list_set_list_size(st,
+						   FU_STRUCT_EFI_SIGNATURE_LIST_SIZE +
+						       (images->len * (16 + 32)));
+	fu_struct_efi_signature_list_set_size(st, 32); /* SHA256 */
 
 	/* SignatureOwner + SignatureData */
-	for (guint i = 0; i < 16; i++)
-		fu_byte_array_append_uint8(buf, '1');
-	for (guint i = 0; i < 16; i++)
-		fu_byte_array_append_uint8(buf, '2');
+	for (guint i = 0; i < images->len; i++) {
+		FuFirmware *img = g_ptr_array_index(images, i);
+		g_autoptr(GBytes) img_blob = NULL;
+		img_blob = fu_firmware_write(img, error);
+		if (img_blob == NULL)
+			return NULL;
+		if (g_bytes_get_size(img_blob) != 16 + 32) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_INVALID_DATA,
+					    "expected SHA256 hash as signature data");
+			return NULL;
+		}
+		fu_byte_array_append_bytes(st, img_blob);
+	}
 
-	return g_steal_pointer(&buf);
+	/* success */
+	return g_steal_pointer(&st);
 }
 
 /**
@@ -283,4 +305,5 @@ fu_efi_signature_list_init(FuEfiSignatureList *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALWAYS_SEARCH);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 2000);
+	g_type_ensure(FU_TYPE_EFI_SIGNATURE);
 }

@@ -1,7 +1,7 @@
 // Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(ToString)]
+#[derive(ToString, FromString)]
 enum FuEfiSignatureKind {
     Unknown,
     Sha256,

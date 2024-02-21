@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-efi-signature-private.h"
 
 /**
@@ -23,6 +25,14 @@ struct _FuEfiSignature {
 };
 
 G_DEFINE_TYPE(FuEfiSignature, fu_efi_signature, FU_TYPE_FIRMWARE)
+
+static void
+fu_efi_signature_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+{
+	FuEfiSignature *self = FU_EFI_SIGNATURE(firmware);
+	fu_xmlb_builder_insert_kv(bn, "kind", fu_efi_signature_kind_to_string(self->kind));
+	fu_xmlb_builder_insert_kv(bn, "owner", self->owner);
+}
 
 /**
  * fu_efi_signature_new: (skip):
@@ -78,6 +88,67 @@ fu_efi_signature_get_owner(FuEfiSignature *self)
 	return self->owner;
 }
 
+static GByteArray *
+fu_efi_signature_write(FuFirmware *firmware, GError **error)
+{
+	FuEfiSignature *self = FU_EFI_SIGNATURE(firmware);
+	fwupd_guid_t owner = {0};
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GBytes) data = NULL;
+
+	/* optional owner */
+	if (self->owner != NULL) {
+		if (!fwupd_guid_from_string(self->owner,
+					    &owner,
+					    FWUPD_GUID_FLAG_MIXED_ENDIAN,
+					    error))
+			return NULL;
+	}
+	g_byte_array_append(buf, owner, sizeof(owner));
+
+	/* data */
+	data = fu_firmware_get_bytes_with_patches(firmware, error);
+	if (data == NULL)
+		return NULL;
+	fu_byte_array_append_bytes(buf, data);
+
+	/* success */
+	return g_steal_pointer(&buf);
+}
+
+static gboolean
+fu_efi_signature_build(FuFirmware *firmware, XbNode *n, GError **error)
+{
+	FuEfiSignature *self = FU_EFI_SIGNATURE(firmware);
+	const gchar *tmp;
+
+	/* optional properties */
+	tmp = xb_node_query_text(n, "kind", NULL);
+	if (tmp != NULL) {
+		self->kind = fu_efi_signature_kind_from_string(tmp);
+		if (self->kind == FU_EFI_SIGNATURE_KIND_UNKNOWN) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "invalid kind: %s",
+				    tmp);
+			return FALSE;
+		}
+	}
+	tmp = xb_node_query_text(n, "owner", NULL);
+	if (tmp != NULL) {
+		if (!fwupd_guid_from_string(tmp, NULL, FWUPD_GUID_FLAG_MIXED_ENDIAN, error)) {
+			g_prefix_error(error, "failed to parse owner %s, expected GUID: ", tmp);
+			return FALSE;
+		}
+		g_free(self->owner);
+		self->owner = g_strdup(tmp);
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gchar *
 fu_efi_signature_get_checksum(FuFirmware *firmware, GChecksumType csum_kind, GError **error)
 {
@@ -116,6 +187,9 @@ fu_efi_signature_class_init(FuEfiSignatureClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_efi_signature_finalize;
+	firmware_class->export = fu_efi_signature_export;
+	firmware_class->write = fu_efi_signature_write;
+	firmware_class->build = fu_efi_signature_build;
 	firmware_class->get_checksum = fu_efi_signature_get_checksum;
 }
 
