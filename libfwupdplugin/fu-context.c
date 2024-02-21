@@ -1532,6 +1532,7 @@ fu_context_finalize(GObject *object)
 
 	if (priv->fdt != NULL)
 		g_object_unref(priv->fdt);
+	g_free(priv->preferred_esp_path);
 	g_hash_table_unref(priv->runtime_versions);
 	g_hash_table_unref(priv->compile_versions);
 	g_object_unref(priv->hwids);
