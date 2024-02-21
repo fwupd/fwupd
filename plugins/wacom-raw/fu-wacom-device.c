@@ -94,6 +94,7 @@ static gboolean
 fu_wacom_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuWacomDevice *self = FU_WACOM_DEVICE(device);
+	g_autoptr(GError) error_local = NULL;
 	guint8 buf[FU_WACOM_RAW_FW_REPORT_SZ] = {
 	    FU_WACOM_RAW_FW_REPORT_ID,
 	    FU_WACOM_RAW_FW_CMD_DETACH,
@@ -102,9 +103,15 @@ fu_wacom_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 		g_debug("already in bootloader mode, skipping");
 		return TRUE;
 	}
-	if (!fu_wacom_device_set_feature(self, buf, sizeof(buf), error)) {
-		g_prefix_error(error, "failed to switch to bootloader mode: ");
-		return FALSE;
+	if (!fu_wacom_device_set_feature(self, buf, sizeof(buf), &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
+			g_debug("ignoring: %s", error_local->message);
+		} else {
+			g_propagate_prefixed_error(error,
+						   g_steal_pointer(&error_local),
+						   "failed to switch to bootloader mode: ");
+			return FALSE;
+		}
 	}
 
 	/* does the device have to replug to bootloader mode */
