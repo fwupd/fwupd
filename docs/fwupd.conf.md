@@ -135,8 +135,8 @@ The `[fwupd]` section can contain the following parameters:
 
 **EspLocation=**
 
-  Override the location used for the EFI system partition (ESP) path.
-  This is typically used if UDisks is not available, or was not able to automatically identify the location for any reason.
+  Set the preferred location used for the EFI system partition (ESP) path.
+  This is typically used if UDisks was not able to automatically identify the location for any reason.
 
 **Manufacturer=**
 
