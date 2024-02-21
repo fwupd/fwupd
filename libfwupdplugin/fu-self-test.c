@@ -1511,6 +1511,67 @@ fu_device_func(void)
 }
 
 static void
+fu_device_vfuncs_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GInputStream) istream = g_memory_input_stream_new();
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* nop: error */
+	ret = fu_device_get_results(device, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	ret = fu_device_write_firmware(device, istream, progress, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	firmware = fu_device_read_firmware(device, progress, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_null(firmware);
+	g_clear_error(&error);
+
+	blob = fu_device_dump_firmware(device, progress, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_null(firmware);
+	g_clear_error(&error);
+
+	ret = fu_device_unbind_driver(device, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+	g_clear_error(&error);
+	ret = fu_device_bind_driver(device, "subsystem", "driver", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* nop: ignore */
+	ret = fu_device_detach(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_device_attach(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_device_activate(device, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* no-probe */
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NO_PROBE);
+	ret = fu_device_probe(device, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+	g_clear_error(&error);
+}
+
+static void
 fu_device_instance_ids_func(void)
 {
 	gboolean ret;
@@ -1811,7 +1872,8 @@ fu_device_incorporate_func(void)
 	fu_device_set_metadata(donor, "test", "me");
 	fu_device_set_metadata(donor, "test2", "me");
 	fu_device_add_instance_str(donor, "VID", "0A5C");
-	fu_device_add_instance_str(donor, "PID", "6412");
+	fu_device_add_instance_u16(donor, "PID", 0x6412);
+	fu_device_add_instance_u32(donor, "BOARD_ID", 0x12345678);
 
 	/* match a quirk entry, and then clear to ensure encorporate uses the quirk instance ID */
 	ret = fu_device_build_instance_id_full(donor,
@@ -5293,6 +5355,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func("/fwupd/device", fu_device_func);
+	g_test_add_func("/fwupd/device{vfuncs}", fu_device_vfuncs_func);
 	g_test_add_func("/fwupd/device{instance-ids}", fu_device_instance_ids_func);
 	g_test_add_func("/fwupd/device{composite-id}", fu_device_composite_id_func);
 	g_test_add_func("/fwupd/device{flags}", fu_device_flags_func);
