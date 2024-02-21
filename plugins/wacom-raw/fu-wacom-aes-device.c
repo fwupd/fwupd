@@ -233,7 +233,7 @@ fu_wacom_aes_device_write_block(FuWacomAesDevice *self,
 				 &req,
 				 &rsp,
 				 1, /* ms */
-				 FU_WACOM_DEVICE_CMD_FLAG_NONE,
+				 FU_WACOM_DEVICE_CMD_FLAG_POLL_ON_WAITING,
 				 error)) {
 		g_prefix_error(error, "failed to write block %u: ", idx);
 		return FALSE;
