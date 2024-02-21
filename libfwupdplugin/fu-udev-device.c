@@ -1726,7 +1726,7 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 		}
 		g_set_error(error,
 			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
+			    g_io_error_from_errno(errno),
 			    "ioctl error: %s [%i]",
 			    g_strerror(errno),
 			    errno);
