@@ -621,6 +621,7 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 	    "WINRE_DRV",
 	    NULL,
 	}; /* from https://github.com/storaged-project/udisks/blob/master/data/80-udisks2.rules */
+	const gchar *user_esp_location = fu_context_get_esp_location(fu_plugin_get_context(plugin));
 
 	/* show which volumes we're choosing from */
 	esp_volumes = fu_context_get_esp_volumes(fu_plugin_get_context(plugin), error);
@@ -644,6 +645,17 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 			if (locker == NULL) {
 				g_warning("failed to mount ESP: %s", error_local->message);
 				continue;
+			}
+
+			/* if user specified, make sure that it matches */
+			if (user_esp_location != NULL) {
+				g_autofree gchar *mount = fu_volume_get_mount_point(esp);
+				if (g_strcmp0(mount, user_esp_location) != 0) {
+					g_debug("skipping %s as it's not the user "
+						"specified ESP",
+						mount);
+					continue;
+				}
 			}
 
 			/* ignore a partition that claims to be a recovery partition */
@@ -681,6 +693,15 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 			}
 			g_hash_table_insert(esp_scores, (gpointer)esp, GUINT_TO_POINTER(score));
 		}
+
+		if (g_hash_table_size(esp_scores) == 0) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "no EFI system partition found");
+			return NULL;
+		}
+
 		g_ptr_array_sort_with_data(esp_volumes,
 					   fu_uefi_capsule_plugin_sort_volume_score_cb,
 					   esp_scores);
@@ -690,6 +711,30 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 			g_string_append_printf(str, "\n - 0x%x:\t%s", score, fu_volume_get_id(esp));
 		}
 		g_debug("%s", str->str);
+	}
+
+	if (esp_volumes->len == 1) {
+		FuVolume *esp = g_ptr_array_index(esp_volumes, 0);
+		g_autoptr(FuDeviceLocker) locker = NULL;
+
+		/* ensure it can be mounted */
+		locker = fu_volume_locker(esp, error);
+		if (locker == NULL)
+			return NULL;
+
+		/* if user specified, does it match mountpoints ? */
+		if (user_esp_location != NULL) {
+			g_autofree gchar *mount = fu_volume_get_mount_point(esp);
+
+			if (g_strcmp0(mount, user_esp_location) != 0) {
+				g_set_error(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_NOT_SUPPORTED,
+					    "user specified ESP %s not found",
+					    user_esp_location);
+				return NULL;
+			}
+		}
 	}
 
 	/* "success" */

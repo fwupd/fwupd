@@ -4086,16 +4086,8 @@ fu_engine_config_changed_cb(FuEngineConfig *config, FuEngine *self)
 	fu_idle_set_timeout(self->idle, fu_engine_config_get_idle_timeout(config));
 
 	/* allow changing the hardcoded ESP location */
-	if (fu_engine_config_get_esp_location(config) != NULL) {
-		g_autoptr(GError) error = NULL;
-		g_autoptr(FuVolume) vol = NULL;
-		vol = fu_volume_new_esp_for_path(fu_engine_config_get_esp_location(config), &error);
-		if (vol == NULL) {
-			g_warning("not adding changed EspLocation: %s", error->message);
-		} else {
-			fu_context_add_esp_volume(self->ctx, vol);
-		}
-	}
+	if (fu_engine_config_get_esp_location(config) != NULL)
+		fu_context_set_esp_location(self->ctx, fu_engine_config_get_esp_location(config));
 
 	/* amend P2P policy */
 	for (guint i = 0; i < remotes->len; i++) {
@@ -8115,12 +8107,8 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 
 	/* set the hardcoded ESP */
 	if (fu_engine_config_get_esp_location(self->config) != NULL) {
-		g_autoptr(FuVolume) vol = NULL;
-		vol = fu_volume_new_esp_for_path(fu_engine_config_get_esp_location(self->config),
-						 error);
-		if (vol == NULL)
-			return FALSE;
-		fu_context_add_esp_volume(self->ctx, vol);
+		fu_context_set_esp_location(self->ctx,
+					    fu_engine_config_get_esp_location(self->config));
 	}
 
 	/* read remotes */
