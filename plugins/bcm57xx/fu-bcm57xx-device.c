@@ -618,7 +618,7 @@ fu_bcm57xx_device_open(FuDevice *device, GError **error)
 			    G_IO_ERROR_NOT_SUPPORTED,
 			    "failed to open socket: %s",
 #ifdef HAVE_ERRNO_H
-			    strerror(errno));
+			    g_strerror(errno));
 #else
 			    "unspecified error");
 #endif

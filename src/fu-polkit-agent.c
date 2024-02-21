@@ -192,7 +192,7 @@ fu_polkit_agent_open(GError **error)
 			    G_IO_ERROR,
 			    G_IO_ERROR_FAILED,
 			    "failed to create pipe: %s",
-			    strerror(errno));
+			    g_strerror(errno));
 		return FALSE;
 	}
 
@@ -210,7 +210,7 @@ fu_polkit_agent_open(GError **error)
 			    G_IO_ERROR,
 			    G_IO_ERROR_FAILED,
 			    "failed to fork TTY ask password agent: %s",
-			    strerror(-r));
+			    g_strerror(-r));
 		close_nointr_nofail(pipe_fd[1]);
 		close_nointr_nofail(pipe_fd[0]);
 		return FALSE;
