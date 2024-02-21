@@ -45,6 +45,7 @@ typedef struct {
 	guint battery_threshold;
 	FuBiosSettings *host_bios_settings;
 	FuFirmware *fdt; /* optional */
+	gchar *esp_location;
 } FuContextPrivate;
 
 enum { SIGNAL_SECURITY_CHANGED, SIGNAL_LAST };
@@ -1368,6 +1369,39 @@ fu_context_add_esp_volume(FuContext *self, FuVolume *volume)
 }
 
 /**
+ * fu_context_set_esp_location:
+ * @self: A #FuContext object.
+ * @location: The path to the preferred ESP.
+ *
+ * Sets the user's desired ESP (EFI System Partition) location for the given #FuContext.
+ */
+void
+fu_context_set_esp_location(FuContext *self, const gchar *location)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	g_return_if_fail(location != NULL);
+	g_free(priv->esp_location);
+	priv->esp_location = g_strdup(location);
+}
+
+/**
+ * fu_context_get_esp_location:
+ * @self: The FuContext object.
+ *
+ * Retrieves the user's desired ESP (EFI System Partition) location for the given #FuContext
+ *
+ * Return: The preferred ESP location as a string.
+ */
+const gchar *
+fu_context_get_esp_location(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	return priv->esp_location;
+}
+
+/**
  * fu_context_get_esp_volumes:
  * @self: a #FuContext
  * @error: (nullable): optional return location for an error
@@ -1532,6 +1566,7 @@ fu_context_finalize(GObject *object)
 
 	if (priv->fdt != NULL)
 		g_object_unref(priv->fdt);
+	g_free(priv->esp_location);
 	g_hash_table_unref(priv->runtime_versions);
 	g_hash_table_unref(priv->compile_versions);
 	g_object_unref(priv->hwids);
