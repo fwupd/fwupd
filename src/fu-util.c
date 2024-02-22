@@ -3637,6 +3637,37 @@ fu_util_modify_config(FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_reset_config(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	/* check args */
+	if (g_strv_length(values) != 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments: SECTION expected");
+		return FALSE;
+	}
+	if (!fwupd_client_reset_config(priv->client, values[0], priv->cancellable, error))
+		return FALSE;
+	if (!priv->assume_yes) {
+		if (!fu_console_input_bool(priv->console,
+					   FALSE,
+					   "%s",
+					   /* TRANSLATORS: changes only take effect on restart */
+					   _("Restart the daemon to make the change effective?")))
+			return TRUE;
+	}
+	if (!fu_util_quit(priv, NULL, error))
+		return FALSE;
+	if (!fwupd_client_connect(priv->client, priv->cancellable, error))
+		return FALSE;
+
+	/* TRANSLATORS: success message -- a per-system setting value */
+	fu_console_print_literal(priv->console, _("Successfully reset configuration values"));
+	return TRUE;
+}
+
 static FwupdRemote *
 fu_util_get_remote_with_security_report_uri(FuUtilPrivate *priv, GError **error)
 {
@@ -5171,6 +5202,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: sets something in the daemon configuration file */
 			      _("Modifies a daemon configuration value"),
 			      fu_util_modify_config);
+	fu_util_cmd_array_add(cmd_array,
+			      "reset-config",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("KEY,VALUE"),
+			      /* TRANSLATORS: sets something in the daemon configuration file */
+			      _("Resets a daemon configuration section"),
+			      fu_util_reset_config);
 	fu_util_cmd_array_add(cmd_array,
 			      "reinstall",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */

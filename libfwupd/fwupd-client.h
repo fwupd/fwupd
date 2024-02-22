@@ -202,6 +202,16 @@ fwupd_client_modify_config_finish(FwupdClient *self,
 				  GAsyncResult *res,
 				  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 void
+fwupd_client_reset_config_async(FwupdClient *self,
+				const gchar *section,
+				GCancellable *cancellable,
+				GAsyncReadyCallback callback,
+				gpointer callback_data) G_GNUC_NON_NULL(1, 2);
+gboolean
+fwupd_client_reset_config_finish(FwupdClient *self,
+				 GAsyncResult *res,
+				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+void
 fwupd_client_activate_async(FwupdClient *self,
 			    const gchar *device_id,
 			    GCancellable *cancellable,

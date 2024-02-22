@@ -1957,6 +1957,30 @@ fu_util_modify_config(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_reset_config(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	/* check args */
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments: SECTION");
+		return FALSE;
+	}
+
+	/* start engine */
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_NONE, priv->progress, error))
+		return FALSE;
+
+	if (!fu_engine_reset_config(priv->engine, values[0], error))
+		return FALSE;
+
+	/* TRANSLATORS: success message -- a per-system setting value */
+	fu_console_print_literal(priv->console, _("Successfully reset configuration section"));
+	return TRUE;
+}
+
+static gboolean
 fu_util_remote_modify(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FwupdRemote *remote = NULL;
@@ -4523,6 +4547,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: sets something in the daemon configuration file */
 			      _("Modifies a daemon configuration value"),
 			      fu_util_modify_config);
+	fu_util_cmd_array_add(cmd_array,
+			      "reset-config",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("KEY,VALUE"),
+			      /* TRANSLATORS: sets something in the daemon configuration file */
+			      _("Resets a daemon configuration section"),
+			      fu_util_reset_config);
 	fu_util_cmd_array_add(cmd_array,
 			      "modify-remote",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */

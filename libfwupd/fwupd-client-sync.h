@@ -87,6 +87,11 @@ fwupd_client_modify_config(FwupdClient *self,
 			   GCancellable *cancellable,
 			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
+fwupd_client_reset_config(FwupdClient *self,
+			  const gchar *section,
+			  GCancellable *cancellable,
+			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+gboolean
 fwupd_client_activate(FwupdClient *self,
 		      GCancellable *cancellable,
 		      const gchar *device_id,

@@ -51,3 +51,8 @@ rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 echo "Getting history (should be none)..."
 fwupdtool get-history
 rc=$?; if [ $rc != 2 ]; then exit $rc; fi
+
+# ---
+echo "Resetting config..."
+fwupdtool reset-config test
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi

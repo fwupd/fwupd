@@ -106,9 +106,23 @@ modify_config_opts=(
 	'VerboseDomains'
 )
 
+reset_config_opts=(
+	'fwupd'
+	'msr'
+	'redfish'
+	'test'
+	'thunderbolt'
+	'uefi_capsule'
+)
+
 _show_modify_config()
 {
 	COMPREPLY+=( $(compgen -W '${modify_config_opts[@]}' -- "$cur") )
+}
+
+_show_reset_config()
+{
+	COMPREPLY+=( $(compgen -W '${reset_config_opts[@]}' -- "$cur") )
 }
 
 _show_remotes()
@@ -275,6 +289,13 @@ _fwupdtool()
 				;;
 			esac
 			return 0;
+		fi
+		;;
+	reset-config)
+		#find files
+		if [[ "$args" = "2" ]]; then
+			_show_reset_config
+			return 0
 		fi
 		;;
 	*)

@@ -113,6 +113,26 @@ modify_config_opts=(
 	'UpdateMotd'
 	'UriSchemes'
 	'VerboseDomains'
+	'test:AnotherWriteRequired'
+	'test:CompositeChild'
+	'test:DecompressDelay'
+	'test:NeedsActivation'
+	'test:NeedsReboot'
+	'test:RegistrationSupported"
+	'test:RequestDelay"
+	'test:RequestSupported'
+	'test:VerifyDelay'
+	'test:WriteDelay'
+	'test:WriteSupported'
+)
+
+reset_config_opts=(
+	'fwupd'
+	'msr'
+	'redfish'
+	'test'
+	'thunderbolt'
+	'uefi_capsule'
 )
 
 _show_file_in_dir()
@@ -197,6 +217,11 @@ _show_release_versions()
 _show_modify_config()
 {
 	COMPREPLY+=( $(compgen -W '${modify_config_opts[@]}' -- "$cur") )
+}
+
+_show_reset_config()
+{
+	COMPREPLY+=( $(compgen -W '${reset_config_opts[@]}' -- "$cur") )
 }
 
 _show_remotes()
@@ -345,6 +370,13 @@ _fwupdmgr()
 				;;
 			esac
 			return 0;
+		fi
+		;;
+	reset-config)
+		#find files
+		if [[ "$args" = "2" ]]; then
+			_show_reset_config
+			return 0
 		fi
 		;;
 	refresh)
