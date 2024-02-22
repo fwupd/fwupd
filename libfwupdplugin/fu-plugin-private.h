@@ -32,8 +32,6 @@ void
 fu_plugin_add_string(FuPlugin *self, guint idt, GString *str) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_plugin_get_rules(FuPlugin *self, FuPluginRule rule) G_GNUC_NON_NULL(1);
-gboolean
-fu_plugin_has_rule(FuPlugin *self, FuPluginRule rule, const gchar *name) G_GNUC_NON_NULL(1);
 GHashTable *
 fu_plugin_get_report_metadata(FuPlugin *self) G_GNUC_NON_NULL(1);
 gboolean
