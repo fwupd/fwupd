@@ -683,7 +683,7 @@ fu_release_check_requirements(FuRelease *self,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "Specified firmware is older than the minimum "
 			    "required version '%s < %s'",
-			    version,
+			    fu_release_get_version(self),
 			    version_lowest);
 		return FALSE;
 	}
