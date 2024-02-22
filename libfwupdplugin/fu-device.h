@@ -275,7 +275,7 @@ typedef enum {
 	/**
 	 * FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT:
 	 *
-	 * Set the device version format from the metadata if available.
+	 * Set the device version format from the metadata or history database if available.
 	 *
 	 * Since: 1.5.5
 	 */
