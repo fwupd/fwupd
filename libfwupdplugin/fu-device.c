@@ -2051,6 +2051,24 @@ fu_device_get_specialized_gtype(FuDevice *self)
 }
 
 /**
+ * fu_device_set_specialized_gtype:
+ * @self: a #FuDevice
+ * @gtype: a #GType
+ *
+ * Sets the specialized type of the device
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_set_specialized_gtype(FuDevice *self, GType gtype)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(gtype != G_TYPE_INVALID);
+	priv->specialized_gtype = gtype;
+}
+
+/**
  * fu_device_get_firmware_gtype:
  * @self: a #FuDevice
  *
@@ -2064,6 +2082,7 @@ GType
 fu_device_get_firmware_gtype(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), G_TYPE_INVALID);
 	return priv->firmware_gtype;
 }
 

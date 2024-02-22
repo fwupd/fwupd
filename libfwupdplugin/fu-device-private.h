@@ -67,3 +67,5 @@ fu_device_set_internal_flags(FuDevice *self, FuDeviceInternalFlags flags) G_GNUC
 gboolean
 fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GError **error)
     G_GNUC_NON_NULL(1, 2, 3);
+void
+fu_device_set_specialized_gtype(FuDevice *self, GType gtype) G_GNUC_NON_NULL(1);
