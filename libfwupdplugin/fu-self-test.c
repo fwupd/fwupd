@@ -1245,6 +1245,28 @@ fu_plugin_quirks_append_func(void)
 }
 
 static void
+fu_plugin_func(void)
+{
+	GHashTable *metadata;
+	GPtrArray *rules;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
+
+	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "dave1");
+	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "dave2");
+	rules = fu_plugin_get_rules(plugin, FU_PLUGIN_RULE_CONFLICTS);
+	g_assert_nonnull(rules);
+	g_assert_cmpint(rules->len, ==, 2);
+	rules = fu_plugin_get_rules(plugin, FU_PLUGIN_RULE_RUN_AFTER);
+	g_assert_null(rules);
+
+	fu_plugin_add_report_metadata(plugin, "key", "value");
+	metadata = fu_plugin_get_report_metadata(plugin);
+	g_assert_nonnull(metadata);
+	g_assert_cmpint(g_hash_table_size(metadata), ==, 1);
+}
+
+static void
 fu_plugin_quirks_device_func(void)
 {
 	FuDevice *device_tmp;
@@ -5286,6 +5308,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/security-attrs{hsi}", fu_security_attrs_hsi_func);
 	g_test_add_func("/fwupd/security-attrs{compare}", fu_security_attrs_compare_func);
 	g_test_add_func("/fwupd/config", fu_config_func);
+	g_test_add_func("/fwupd/plugin", fu_plugin_func);
 	g_test_add_func("/fwupd/plugin{config}", fu_plugin_config_func);
 	g_test_add_func("/fwupd/plugin{devices}", fu_plugin_devices_func);
 	g_test_add_func("/fwupd/plugin{device-inhibit-children}",
