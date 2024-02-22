@@ -16,7 +16,7 @@
 #include <unistd.h>
 
 #include "fu-bytes.h"
-#include "fu-config.h"
+#include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-kernel.h"
@@ -1171,6 +1171,7 @@ fu_plugin_runner_coldplug(FuPlugin *self, FuProgress *progress, GError **error)
 					    FWUPD_ERROR_INTERNAL,
 					    "unspecified error");
 		}
+		g_warning("%s", error_local->message);
 		/* coldplug failed, but we might have already added devices to the daemon... */
 		if (priv->devices != NULL) {
 			for (guint i = 0; i < priv->devices->len; i++) {
@@ -2618,6 +2619,34 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
 		return FALSE;
 	}
 	return fu_config_set_value(config, fu_plugin_get_name(self), key, value, error);
+}
+
+/**
+ * fu_plugin_reset_config_values:
+ * @self: a #FuPlugin
+ * @error: (nullable): optional return location for an error
+ *
+ * Reset all the plugin keys back to the default values.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.9.15
+ **/
+gboolean
+fu_plugin_reset_config_values(FuPlugin *self, GError **error)
+{
+	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
+	FuConfig *config = fu_context_get_config(priv->ctx);
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	if (config == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_FAILED,
+				    "cannot reset config values with no loaded context");
+		return FALSE;
+	}
+	return fu_config_reset_defaults(config, fu_plugin_get_name(self), error);
 }
 
 /**

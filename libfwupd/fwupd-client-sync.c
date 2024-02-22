@@ -881,6 +881,60 @@ fwupd_client_modify_config(FwupdClient *self,
 }
 
 static void
+fwupd_client_reset_config_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
+	helper->ret = fwupd_client_reset_config_finish(FWUPD_CLIENT(source), res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+/**
+ * fwupd_client_reset_config
+ * @self: a #FwupdClient
+ * @section: config section, e.g. `redfish`
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Resets a daemon config section.
+ * The daemon will only respond to this request with proper permissions.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.9.15
+ **/
+gboolean
+fwupd_client_reset_config(FwupdClient *self,
+			  const gchar *section,
+			  GCancellable *cancellable,
+			  GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(section != NULL, FALSE);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* connect */
+	if (!fwupd_client_connect(self, cancellable, error))
+		return FALSE;
+
+	/* call async version and run loop until complete */
+	helper = fwupd_client_helper_new(self);
+	fwupd_client_reset_config_async(self,
+					section,
+					cancellable,
+					fwupd_client_reset_config_cb,
+					helper);
+	g_main_loop_run(helper->loop);
+	if (!helper->ret) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static void
 fwupd_client_activate_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;

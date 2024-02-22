@@ -360,6 +360,7 @@ typedef struct {
 	FuDaemon *self;
 	gchar *device_id;
 	gchar *remote_id;
+	gchar *section;
 	gchar *key;
 	gchar *value;
 	FuCabinet *cabinet;
@@ -395,6 +396,7 @@ fu_daemon_auth_helper_free(FuMainAuthHelper *helper)
 		g_object_unref(helper->client);
 	g_free(helper->device_id);
 	g_free(helper->remote_id);
+	g_free(helper->section);
 	g_free(helper->key);
 	g_free(helper->value);
 	g_object_unref(helper->invocation);
@@ -597,6 +599,26 @@ fu_daemon_modify_config_cb(GObject *source, GAsyncResult *res, gpointer user_dat
 	}
 
 	if (!fu_engine_modify_config(helper->self->engine, helper->key, helper->value, &error)) {
+		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value(helper->invocation, NULL);
+}
+
+static void
+fu_daemon_reset_config_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+
+	/* get result */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+	if (!fu_engine_reset_config(helper->self->engine, helper->section, &error)) {
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
@@ -1618,6 +1640,28 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 					  auth_flags,
 					  NULL,
 					  fu_daemon_modify_config_cb,
+					  g_steal_pointer(&helper));
+		return;
+	}
+	if (g_strcmp0(method_name, "ResetConfig") == 0) {
+		g_autofree gchar *section = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
+
+		g_variant_get(parameters, "(s)", &section);
+		g_debug("Called %s(%s)", method_name, section);
+
+		/* authenticate */
+		helper = g_new0(FuMainAuthHelper, 1);
+		helper->self = self;
+		helper->section = g_steal_pointer(&section);
+		helper->request = g_steal_pointer(&request);
+		helper->invocation = g_object_ref(invocation);
+		fu_polkit_authority_check(self->authority,
+					  sender,
+					  "org.freedesktop.fwupd.reset-config",
+					  auth_flags,
+					  NULL,
+					  fu_daemon_reset_config_cb,
 					  g_steal_pointer(&helper));
 		return;
 	}

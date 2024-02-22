@@ -751,6 +751,26 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='ResetConfig'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Reset persistent configuration for daemon
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='section' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              The config section, e.g. 'fwupd'.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='UpdateMetadata'>
       <doc:doc>
         <doc:description>
