@@ -1,13 +1,3 @@
-# Framework HDMI Expansion Card
-[USB\VID_32AC&PID_0002]
-Plugin = ccgx
-GType = FuCcgxPureHidDevice
-
-# Framework DisplayPort Expansion Card
-[USB\VID_32AC&PID_0003]
-Plugin = ccgx
-GType = FuCcgxPureHidDevice
-
 # Lenovo ThinkPad USB-C Dock Gen2
 [USB\VID_17EF&PID_A38F]
 Plugin = ccgx
@@ -60,3 +50,13 @@ Summary = CCGx Power Delivery Device (Symmetric FW1)
 
 [USB\VID_04B4&PID_5218&SID_1F00&APP_6432&MODE_FW2]
 Summary = CCGx Power Delivery Device (Symmetric FW2)
+
+# Framework HDMI Expansion Card
+[USB\VID_32AC&PID_0002]
+Plugin = ccgx
+GType = FuCcgxPureHidDevice
+
+# Framework DisplayPort Expansion Card
+[USB\VID_32AC&PID_0003]
+Plugin = ccgx
+GType = FuCcgxPureHidDevice
