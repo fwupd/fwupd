@@ -52,6 +52,38 @@ typedef enum {
 	FU_PLUGIN_VERIFY_FLAG_LAST
 } FuPluginVerifyFlags;
 
+/**
+ * FuPluginInternalFlags:
+ *
+ * The plugin internal flags, not exported over D-Bus.
+ **/
+typedef enum {
+	/**
+	 * FU_PLUGIN_INTERNAL_FLAG_NONE:
+	 *
+	 * No flags set.
+	 *
+	 * Since: 1.9.14
+	 */
+	FU_PLUGIN_INTERNAL_FLAG_NONE = 0,
+	/**
+	 * FU_PLUGIN_INTERNAL_FLAG_DEFAULT_DEVICE_GTYPE:
+	 *
+	 * Use the first-added plugin GType when there are multiple to choose from.
+	 *
+	 * Since: 1.9.14
+	 */
+	FU_PLUGIN_INTERNAL_FLAG_DEFAULT_DEVICE_GTYPE = 1ull << 0,
+	/**
+	 * FU_PLUGIN_INTERNAL_FLAG_UNKNOWN:
+	 *
+	 * Unknown flag value.
+	 *
+	 * Since: 1.9.14
+	 */
+	FU_PLUGIN_INTERNAL_FLAG_UNKNOWN = G_MAXUINT64,
+} FuPluginInternalFlags;
+
 struct _FuPluginClass {
 	FwupdPluginClass parent_class;
 	/* signals */
@@ -513,3 +545,9 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
     G_GNUC_NON_NULL(1, 2);
 FwupdSecurityAttr *
 fu_plugin_security_attr_new(FuPlugin *self, const gchar *appstream_id) G_GNUC_NON_NULL(1, 2);
+void
+fu_plugin_add_internal_flag(FuPlugin *self, FuPluginInternalFlags flag) G_GNUC_NON_NULL(1);
+void
+fu_plugin_remove_internal_flag(FuPlugin *self, FuPluginInternalFlags flag) G_GNUC_NON_NULL(1);
+gboolean
+fu_plugin_has_internal_flag(FuPlugin *self, FuPluginInternalFlags flag) G_GNUC_NON_NULL(1);

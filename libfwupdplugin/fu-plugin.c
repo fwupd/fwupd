@@ -50,11 +50,12 @@ typedef struct {
 	GHashTable *cache;	     /* (nullable): platform_id:GObject */
 	GHashTable *report_metadata; /* (nullable): key:value */
 	GFileMonitor *config_monitor;
+	FuPluginInternalFlags internal_flags;
 	FuPluginData *data;
 	FuPluginVfuncs vfuncs;
 } FuPluginPrivate;
 
-enum { PROP_0, PROP_CONTEXT, PROP_LAST };
+enum { PROP_0, PROP_CONTEXT, PROP_INTERNAL_FLAGS, PROP_LAST };
 
 enum {
 	SIGNAL_DEVICE_ADDED,
@@ -243,6 +244,69 @@ fu_plugin_get_data(FuPlugin *self)
 }
 
 /**
+ * fu_plugin_add_internal_flag:
+ * @self: a #FuPlugin
+ * @flag: an internal plugin flag, e.g. %FU_PLUGIN_INTERNAL_FLAG_DEFAULT_DEVICE_GTYPE
+ *
+ * Adds a private flag that stays internal to the engine and is not leaked to the client.
+ *
+ * Since: 1.9.14
+ **/
+void
+fu_plugin_add_internal_flag(FuPlugin *self, FuPluginInternalFlags flag)
+{
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_PLUGIN(self));
+	g_return_if_fail(flag != FU_PLUGIN_INTERNAL_FLAG_NONE);
+	priv->internal_flags |= flag;
+	g_object_notify(G_OBJECT(self), "internal-flags");
+}
+
+/**
+ * fu_plugin_remove_internal_flag:
+ * @self: a #FuPlugin
+ * @flag: an internal plugin flag, e.g. %FU_PLUGIN_INTERNAL_FLAG_DEFAULT_DEVICE_GTYPE
+ *
+ * Removes a private flag that stays internal to the engine and is not leaked to the client.
+ *
+ * Since: 1.9.14
+ **/
+void
+fu_plugin_remove_internal_flag(FuPlugin *self, FuPluginInternalFlags flag)
+{
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_PLUGIN(self));
+	g_return_if_fail(flag != FU_PLUGIN_INTERNAL_FLAG_NONE);
+	priv->internal_flags &= ~flag;
+	g_object_notify(G_OBJECT(self), "internal-flags");
+}
+
+/**
+ * fu_plugin_has_internal_flag:
+ * @self: a #FuPlugin
+ * @flag: an internal plugin flag, e.g. %FU_PLUGIN_INTERNAL_FLAG_DEFAULT_DEVICE_GTYPE
+ *
+ * Tests for a private flag that stays internal to the engine and is not leaked to the client.
+ *
+ * Since: 1.9.14
+ **/
+gboolean
+fu_plugin_has_internal_flag(FuPlugin *self, FuPluginInternalFlags flag)
+{
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	return (priv->internal_flags & flag) > 0;
+}
+
+static void
+fu_plugin_set_internal_flags(FuPlugin *self, FuPluginInternalFlags flags)
+{
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+	priv->internal_flags = flags;
+	g_object_notify(G_OBJECT(self), "internal-flags");
+}
+
+/**
  * fu_plugin_alloc_data: (skip):
  * @self: a #FuPlugin
  * @data_sz: the size to allocate
@@ -376,6 +440,31 @@ fu_plugin_flags_to_string(FwupdPluginFlags flags)
 	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
+static const gchar *
+fu_plugin_internal_flag_to_string(FuPluginInternalFlags flag)
+{
+	if (flag == FU_PLUGIN_INTERNAL_FLAG_DEFAULT_DEVICE_GTYPE)
+		return "default-plugin-gtype";
+	return NULL;
+}
+
+static gchar *
+fu_plugin_internal_flags_to_string(FuPluginInternalFlags flags)
+{
+	g_autoptr(GString) str = g_string_new(NULL);
+	for (guint i = 0; i < 64; i++) {
+		FuPluginInternalFlags flag = (guint64)1 << i;
+		if ((flags & flag) == 0)
+			continue;
+		if (str->len > 0)
+			g_string_append_c(str, ',');
+		g_string_append(str, fu_plugin_internal_flag_to_string(flag));
+	}
+	if (str->len == 0)
+		return NULL;
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
 /**
  * fu_plugin_add_string:
  * @self: a #FuPlugin
@@ -393,6 +482,7 @@ fu_plugin_add_string(FuPlugin *self, guint idt, GString *str)
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
 	const gchar *name = fwupd_plugin_get_name(FWUPD_PLUGIN(self));
 	g_autofree gchar *flags = NULL;
+	g_autofree gchar *internal_flags = NULL;
 
 	g_return_if_fail(FU_IS_PLUGIN(self));
 	g_return_if_fail(str != NULL);
@@ -404,6 +494,9 @@ fu_plugin_add_string(FuPlugin *self, guint idt, GString *str)
 	flags = fu_plugin_flags_to_string(fwupd_plugin_get_flags(FWUPD_PLUGIN(self)));
 	if (flags != NULL)
 		fu_string_append(str, idt + 1, "Flags", flags);
+	internal_flags = fu_plugin_internal_flags_to_string(priv->internal_flags);
+	if (internal_flags != NULL)
+		fu_string_append(str, idt + 1, "InternalFlags", internal_flags);
 	if (priv->order != 0)
 		fu_string_append_ku(str, idt + 1, "Order", priv->order);
 	if (priv->priority != 0)
@@ -1615,7 +1708,9 @@ fu_plugin_backend_device_added(FuPlugin *self,
 
 	/* fall back to plugin default */
 	if (device_gtype == G_TYPE_INVALID) {
-		if (priv->device_gtypes->len > 1) {
+		if (priv->device_gtypes->len > 1 &&
+		    !fu_plugin_has_internal_flag(self,
+						 FU_PLUGIN_INTERNAL_FLAG_DEFAULT_DEVICE_GTYPE)) {
 			g_autoptr(GString) str = g_string_new(NULL);
 			for (guint i = 0; i < priv->device_gtypes->len; i++) {
 				device_gtype = g_array_index(priv->device_gtypes, GType, i);
@@ -2722,6 +2817,9 @@ fu_plugin_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec
 	case PROP_CONTEXT:
 		g_value_set_object(value, priv->ctx);
 		break;
+	case PROP_INTERNAL_FLAGS:
+		g_value_set_uint64(value, priv->internal_flags);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -2735,6 +2833,9 @@ fu_plugin_set_property(GObject *object, guint prop_id, const GValue *value, GPar
 	switch (prop_id) {
 	case PROP_CONTEXT:
 		fu_plugin_set_context(self, g_value_get_object(value));
+		break;
+	case PROP_INTERNAL_FLAGS:
+		fu_plugin_set_internal_flags(self, g_value_get_uint64(value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -2857,6 +2958,22 @@ fu_plugin_class_init(FuPluginClass *klass)
 				    FU_TYPE_CONTEXT,
 				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_CONTEXT, pspec);
+
+	/**
+	 * FuPlugin:internal-flags:
+	 *
+	 * The plugin internal flags.
+	 *
+	 * Since: 1.9.14
+	 */
+	pspec = g_param_spec_uint64("internal-flags",
+				    NULL,
+				    NULL,
+				    0,
+				    G_MAXUINT64,
+				    0,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_INTERNAL_FLAGS, pspec);
 }
 
 static void

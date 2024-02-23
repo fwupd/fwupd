@@ -2,19 +2,16 @@
 # Intuos Pro medium (2nd-gen USB) [PTH-660]
 [USB\VID_056A&PID_0357]
 Plugin = wacom_usb
-GType = FuWacDevice
 Flags = use-runtime-version
 
 # Intuos Pro large (2nd-gen USB) [PTH-860]
 [USB\VID_056A&PID_0358]
 Plugin = wacom_usb
-GType = FuWacDevice
 Flags = use-runtime-version
 
 # Intuos S 3rd-gen (USB) [CTL-4100]
 [USB\VID_056A&PID_0374]
 Plugin = wacom_usb
-GType = FuWacDevice
 Flags = use-runtime-version,no-serial-number
 
 # Intuos S 3rd-gen (USB) [CTL-4100 - Android Mode]
@@ -25,7 +22,6 @@ GType = FuWacAndroidDevice
 # Intuos M 3rd-gen (USB) [CTL-6100]
 [USB\VID_056A&PID_0375]
 Plugin = wacom_usb
-GType = FuWacDevice
 Flags = use-runtime-version,no-serial-number
 
 # Intuos M 3rd-gen (USB) [CTL-6100 - Android Mode]
@@ -36,7 +32,6 @@ GType = FuWacAndroidDevice
 # Intuos BT S 3rd-gen (USB) [CTL-4100WL]
 [USB\VID_056A&PID_0376]
 Plugin = wacom_usb
-GType = FuWacDevice
 Flags = use-runtime-version,no-serial-number
 
 # Intuos BT S 3rd-gen (USB) [CTL-4100WL - Android Mode]
@@ -47,7 +42,6 @@ GType = FuWacAndroidDevice
 # Intuos BT M 3rd-gen (USB) [CTL-6100WL]
 [USB\VID_056A&PID_0378]
 Plugin = wacom_usb
-GType = FuWacDevice
 Flags = use-runtime-version,no-serial-number
 
 # Intuos BT M 3rd-gen (USB) [CTL-6100WL - Android Mode]
@@ -57,13 +51,11 @@ GType = FuWacAndroidDevice
 
 # Intuos Pro Small (2nd-gen USB) [PTH-460]
 [USB\VID_056A&PID_0392]
-GType = FuWacDevice
 Plugin = wacom_usb
 
 # Intuos BT S 3rd-gen, Rev 2 (USB) [CTL-4100WL]
 [USB\VID_056A&PID_03C5]
 Plugin = wacom_usb
-GType = FuWacDevice
 Flags = use-runtime-version,no-serial-number
 
 # Intuos BT S 3rd-gen, Rev 2 (USB) [CTL-4100WL - Android Mode]
@@ -74,7 +66,6 @@ GType = FuWacAndroidDevice
 # Intuos BT M 3rd-gen, Rev 2 (USB) [CTL-6100WL]
 [USB\VID_056A&PID_03C7]
 Plugin = wacom_usb
-GType = FuWacDevice
 Flags = use-runtime-version,no-serial-number
 
 # Intuos BT M 3rd-gen, Rev 2 (USB) [CTL-6100WL - Android Mode]
@@ -84,62 +75,50 @@ GType = FuWacAndroidDevice
 
 # Intuos Pro Small (2nd-gen USB v2) [PTH-460]
 [USB\VID_056A&PID_03DC]
-GType = FuWacDevice
 Plugin = wacom_usb
 
 # Cintiq Pro 27 (USB) [DTH271]
 [USB\VID_056A&PID_03C0]
 Plugin = wacom_usb
-GType = FuWacDevice
 
 # Wacom One 13 (USB) [DTH-134]
 [USB\VID_056A&PID_03CB]
 Plugin = wacom_usb
-GType = FuWacDevice
 
 # Wacom One 12 (USB) [DTC-121]
 [USB\VID_056A&PID_03CE]
 Plugin = wacom_usb
-GType = FuWacDevice
 
 # DTH134 (USB) [DTH-134]
 [USB\VID_056A&PID_03EC]
 Plugin = wacom_usb
-GType = FuWacDevice
 
 # DTC121 (USB) [DTC-121]
 [USB\VID_056A&PID_03ED]
 Plugin = wacom_usb
-GType = FuWacDevice
 
 # Wacom One Pen tablet small (USB) [CTC4110WL]
 [USB\VID_0531&PID_0100]
 Plugin = wacom_usb
-GType = FuWacDevice
 Flags = no-serial-number
 
 # Wacom One Pen tablet small (USB) [CTC4110WL - Android Mode]
 [USB\VID_0531&PID_0104]
 Plugin = wacom_usb
-GType = FuWacDevice
 
 # Wacom One Pen tablet medium (USB) [CTC6110WL]
 [USB\VID_0531&PID_0102]
 Plugin = wacom_usb
-GType = FuWacDevice
 Flags = no-serial-number
 
 # Wacom One Pen tablet medium (USB) [CTC6110WL - Android Mode]
 [USB\VID_0531&PID_0105]
 Plugin = wacom_usb
-GType = FuWacDevice
 
 # Cintiq Pro 17 (USB) [DTH172]
 [USB\VID_056A&PID_03C4]
 Plugin = wacom_usb
-GType = FuWacDevice
 
 # Cintiq Pro 22 (USB) [DTH227]
 [USB\VID_056A&PID_03D0]
 Plugin = wacom_usb
-GType = FuWacDevice
