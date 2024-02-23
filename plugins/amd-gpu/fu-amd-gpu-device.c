@@ -128,9 +128,11 @@ fu_amd_gpu_device_set_marketing_name(FuDevice *device)
 				     &self->drm_major,
 				     &self->drm_minor,
 				     &device_handle);
-	if (r == 0)
-		fu_device_set_name(device, amdgpu_get_marketing_name(device_handle));
-	else
+	if (r == 0) {
+		const gchar *marketing_name = amdgpu_get_marketing_name(device_handle);
+		if (marketing_name != NULL)
+			fu_device_set_name(device, marketing_name);
+	} else
 		g_warning("unable to set marketing name: %s", g_strerror(r));
 }
 
