@@ -1,13 +1,13 @@
 #[derive(ToString)]
 #[repr(u8)]
-enum CcgxPureHidFwMode {
+enum FuCcgxPureHidFwMode {
     Boot,
     Fw1,
     Fw2,
 }
 
 #[repr(u8)]
-enum CcgxPureHidReportId {
+enum FuCcgxPureHidReportId {
     Info = 0xE0,
     Command = 0xE1,
     Write = 0xE2,
@@ -16,7 +16,7 @@ enum CcgxPureHidReportId {
 }
 
 #[repr(u8)]
-enum CcgxPureHidCommand {
+enum FuCcgxPureHidCommand {
     Jump = 0x01,
     Flash = 0x02,
     SetBoot = 0x04,
@@ -24,11 +24,11 @@ enum CcgxPureHidCommand {
 }
 
 #[derive(Parse)]
-struct CcgxPureHidFwInfo {
-    report_id: CcgxPureHidReportId == Info,
+struct FuStructCcgxPureHidFwInfo {
+    report_id: FuCcgxPureHidReportId == Info,
     _reserved_1: u8,
     signature: u16le == 0x5943,
-    operating_mode: CcgxPureHidFwMode,
+    operating_mode: FuCcgxPureHidFwMode,
     bootloader_info: u8,
     bootmode_reason: u8,
     _reserved_2: u8,
@@ -46,8 +46,8 @@ struct CcgxPureHidFwInfo {
 }
 
 #[derive(New)]
-struct CcgxPureHidCommand {
-    report_id: CcgxPureHidReportId == Command,
+struct FuStructCcgxPureHidCommand {
+    report_id: FuCcgxPureHidReportId == Command,
     cmd: u8,
     opt: u8,
     pad1: u8 = 0x00,
@@ -55,8 +55,8 @@ struct CcgxPureHidCommand {
 }
 
 #[derive(New)]
-struct CcgxPureHidWriteHdr {
-    report_id: CcgxPureHidReportId == Write,
+struct FuStructCcgxPureHidWriteHdr {
+    report_id: FuCcgxPureHidReportId == Write,
     pd_resp: u8,
     addr: u16le,
     data: [u8; 128],
