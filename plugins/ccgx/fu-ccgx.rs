@@ -22,6 +22,7 @@ enum FuCcgxImageType {
     DualAsymmetric,         // A=bootloader (fixed) B=runtime
     DualAsymmetricVariable, // A=bootloader (variable) B=runtime
 }
+
 #[derive(ToString)]
 enum FuCcgxFwMode {
     Boot,
@@ -29,6 +30,7 @@ enum FuCcgxFwMode {
     Fw2,
     Last,
 }
+
 #[derive(ToString)]
 enum FuCcgxPdResp {
     // responses
