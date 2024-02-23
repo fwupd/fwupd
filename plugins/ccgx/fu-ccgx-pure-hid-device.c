@@ -97,7 +97,6 @@ fu_ccgx_pure_hid_magic_unlock(FuCcgxPureHidDevice *self, GError **error)
 static gboolean
 fu_ccgx_pure_hid_ensure_fw_info(FuCcgxPureHidDevice *self, GError **error)
 {
-	FuDevice *device = FU_DEVICE(self);
 	guint8 buf[0x40] = {FU_CCGX_PURE_HID_REPORT_ID_INFO, 0};
 	guint version = 0;
 	g_autofree gchar *bl_ver = NULL;
@@ -118,7 +117,7 @@ fu_ccgx_pure_hid_ensure_fw_info(FuCcgxPureHidDevice *self, GError **error)
 	self->silicon_id = fu_struct_ccgx_pure_hid_fw_info_get_silicon_id(st_info);
 	self->operating_mode = fu_struct_ccgx_pure_hid_fw_info_get_operating_mode(st_info);
 
-	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	/* set current version */
 	switch (self->operating_mode) {
 	case FU_CCGX_PURE_HID_FW_MODE_FW1:
@@ -130,7 +129,7 @@ fu_ccgx_pure_hid_ensure_fw_info(FuCcgxPureHidDevice *self, GError **error)
 	case FU_CCGX_PURE_HID_FW_MODE_BOOT:
 		/* force an upgrade to any version */
 		version = 0x0;
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		break;
 	default:
 		g_set_error_literal(error,
@@ -139,19 +138,15 @@ fu_ccgx_pure_hid_ensure_fw_info(FuCcgxPureHidDevice *self, GError **error)
 				    "unsupported mode");
 		return FALSE;
 	}
-	fu_device_set_version_raw(device, version);
+	fu_device_set_version_raw(FU_DEVICE(self), version);
 
 	/* set bootloader version */
 	fu_device_set_version_bootloader_raw(
-	    device,
+	    FU_DEVICE(self),
 	    fu_struct_ccgx_pure_hid_fw_info_get_bl_version(st_info));
 	bl_ver = fu_version_from_uint32(fu_struct_ccgx_pure_hid_fw_info_get_bl_version(st_info),
 					fu_device_get_version_format(self));
 	fu_device_set_version_bootloader(FU_DEVICE(self), bl_ver);
-
-	/* FIXME: d4s: do we need that for querying??? */
-	if (!fu_ccgx_pure_hid_enter_flashing_mode(self, error))
-		return FALSE;
 
 	/* TODO: d4s: from wireshark for ReadVersion.exe:
 	 * > e1 04 01 00 cc cc cc cc
@@ -189,7 +184,6 @@ fu_ccgx_pure_hid_device_setup(FuDevice *device, GError **error)
 					      "SID",
 					      NULL))
 		return FALSE;
-	g_debug("got silicon ID: 0x%04x", self->silicon_id);
 
 	/* ensure the remove delay is set, even if no quirk matched */
 	if (fu_device_get_remove_delay(FU_DEVICE(self)) == 0)
@@ -213,7 +207,6 @@ fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 	gsize fw_size = 0;
 	guint16 vid;
 	guint16 pid;
-	const guint8 *bytes;
 	g_autoptr(FuFirmware) firmware = fu_ccgx_firmware_new();
 
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
@@ -254,20 +247,20 @@ fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "expected block length %lu, got %lu: array id=0x%02x, "
-				    "row=0x%04x (:%02x%04x%04lx)",
-				    self->flash_row_size,
-				    record_size,
+				    "expected block length %u, got %u: array id=0x%02x, "
+				    "row=0x%04x (:%02x%04x%04x)",
+				    (guint)self->flash_row_size,
+				    (guint)record_size,
 				    record->array_id,
 				    record->row_number,
 				    record->array_id,
 				    record->row_number,
-				    record_size);
+				    (guint)record_size);
 			return NULL;
 		}
 		fw_size += record_size;
 	}
-	g_debug("firmware size: %lu", fw_size);
+	g_debug("firmware size: %u", (guint)fw_size);
 
 	/* Check the target VID and PID */
 	/* FIXME: address is guessed: 0036 and 0206 for fw1 and fw2 */
@@ -279,11 +272,20 @@ fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 		return NULL;
 	}
 	vidpid_rcd = g_ptr_array_index(records, VIDPID_BLOCK_ID);
-	bytes = g_bytes_get_data(vidpid_rcd->data, NULL);
-	vid = fu_memread_uint16(bytes, G_LITTLE_ENDIAN);
-	pid = fu_memread_uint16(bytes + 2, G_LITTLE_ENDIAN);
-
-	g_debug("image is for %04X:%04X", vid, pid);
+	if (!fu_memread_uint16_safe(g_bytes_get_data(vidpid_rcd->data, NULL),
+				    g_bytes_get_size(vidpid_rcd->data),
+				    0,
+				    &vid,
+				    G_LITTLE_ENDIAN,
+				    error))
+		return NULL;
+	if (!fu_memread_uint16_safe(g_bytes_get_data(vidpid_rcd->data, NULL),
+				    g_bytes_get_size(vidpid_rcd->data),
+				    2,
+				    &pid,
+				    G_LITTLE_ENDIAN,
+				    error))
+		return NULL;
 
 	if (vid != fu_usb_device_get_vid(FU_USB_DEVICE(device)) ||
 	    pid != fu_usb_device_get_pid(FU_USB_DEVICE(device))) {
@@ -347,20 +349,18 @@ fu_ccgx_pure_hid_device_write_firmware(FuDevice *device,
 	guint8 fw_mode = 1;
 	GPtrArray *records = fu_ccgx_firmware_get_records(FU_CCGX_FIRMWARE(firmware));
 
-	g_debug("operating mode: 0x%02x", self->operating_mode);
+	if (!fu_ccgx_pure_hid_enter_flashing_mode(self, error))
+		return FALSE;
 
-	if (self->operating_mode != FU_CCGX_PURE_HID_FW_MODE_FW2) {
+	if (self->operating_mode != FU_CCGX_PURE_HID_FW_MODE_FW2)
 		fw_mode = 2;
-	}
+
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, records->len);
 
 	for (guint i = 0; i < records->len; i++) {
 		FuCcgxFirmwareRecord *record = g_ptr_array_index(records, i);
-		g_debug("writing row 0x%x 0x%04lx",
-			record->row_number,
-			g_bytes_get_size(record->data));
 		if (!fu_ccgx_pure_hid_write_row(self,
 						record->row_number,
 						g_bytes_get_data(record->data, NULL),
@@ -370,13 +370,11 @@ fu_ccgx_pure_hid_device_write_firmware(FuDevice *device,
 		fu_progress_step_done(progress);
 	}
 
-	g_debug("bootswitch");
 	if (!fu_ccgx_pure_hid_command(self, FU_CCGX_PURE_HID_COMMAND_SET_BOOT, fw_mode, error)) {
 		g_prefix_error(error, "bootswitch command error: ");
 		return FALSE;
 	}
 
-	g_debug("reset");
 	if (!fu_ccgx_pure_hid_command(self,
 				      FU_CCGX_PURE_HID_COMMAND_JUMP,
 				      FU_CCGX_PD_RESP_DEVICE_RESET_CMD_SIG,
@@ -385,7 +383,6 @@ fu_ccgx_pure_hid_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	g_debug("wait for replug");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	return TRUE;
