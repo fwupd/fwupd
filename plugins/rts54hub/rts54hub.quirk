@@ -57,3 +57,19 @@ Flags = updatable
 GType = FuRts54HubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
+
+#GoodWay Acer Dock DUD9108D1 gen2
+[USB\VID_065F&PID_0801]
+Plugin = rts54hub
+Flags = updatable
+GType = FuRts54HubDevice
+FirmwareSizeMin = 0x10000
+FirmwareSizeMax = 0x20000
+
+#GoodWay Acer Dock DUD9108D1 gen1
+[USB\VID_065F&PID_0802]
+Plugin = rts54hub
+Flags = updatable
+GType = FuRts54HubDevice
+FirmwareSizeMin = 0x10000
+FirmwareSizeMax = 0x20000
