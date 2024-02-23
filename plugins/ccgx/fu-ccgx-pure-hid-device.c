@@ -16,6 +16,7 @@
 #include "fu-ccgx-pure-hid-struct.h"
 
 #define DEFAULT_ROW_SIZE 0x80
+#define VIDPID_BLOCK_ID	 6
 
 struct _FuCcgxPureHidDevice {
 	FuHidDevice parent_instance;
@@ -207,9 +208,13 @@ fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 	FuCcgxPureHidDevice *self = FU_CCGX_PURE_HID_DEVICE(device);
 	FuCcgxFwMode fw_mode;
 	GPtrArray *records = NULL;
+	FuCcgxFirmwareRecord *vidpid_rcd = NULL;
 	guint16 fw_silicon_id;
-	g_autoptr(FuFirmware) firmware = fu_ccgx_firmware_new();
 	gsize fw_size = 0;
+	guint16 vid;
+	guint16 pid;
+	const guint8 *bytes;
+	g_autoptr(FuFirmware) firmware = fu_ccgx_firmware_new();
 
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
@@ -241,6 +246,7 @@ fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 	/* validate all records has proper size */
 	records = fu_ccgx_firmware_get_records(FU_CCGX_FIRMWARE(firmware));
 	g_debug("records found: %u", records->len);
+
 	for (guint i = 0; i < records->len; i++) {
 		FuCcgxFirmwareRecord *record = g_ptr_array_index(records, i);
 		gsize record_size = g_bytes_get_size(record->data);
@@ -262,6 +268,35 @@ fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 		fw_size += record_size;
 	}
 	g_debug("firmware size: %lu", fw_size);
+
+	/* Check the target VID and PID */
+	/* FIXME: address is guessed: 0036 and 0206 for fw1 and fw2 */
+	if (records->len <= VIDPID_BLOCK_ID) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "unable to read VID and PID from the image");
+		return NULL;
+	}
+	vidpid_rcd = g_ptr_array_index(records, VIDPID_BLOCK_ID);
+	bytes = g_bytes_get_data(vidpid_rcd->data, NULL);
+	vid = fu_memread_uint16(bytes, G_LITTLE_ENDIAN);
+	pid = fu_memread_uint16(bytes + 2, G_LITTLE_ENDIAN);
+
+	g_debug("image is for %04X:%04X", vid, pid);
+
+	if (vid != fu_usb_device_get_vid(FU_USB_DEVICE(device)) ||
+	    pid != fu_usb_device_get_pid(FU_USB_DEVICE(device))) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "image VID:PID mismatch, expected %04X:%04X, got %04X:%04X",
+			    fu_usb_device_get_vid(FU_USB_DEVICE(self)),
+			    fu_usb_device_get_pid(FU_USB_DEVICE(self)),
+			    vid,
+			    pid);
+		return NULL;
+	}
 
 	return g_steal_pointer(&firmware);
 }
