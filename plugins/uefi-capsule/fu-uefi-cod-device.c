@@ -141,7 +141,7 @@ fu_uefi_cod_device_get_indexed_filename(FuUefiDevice *self, GError **error)
 	for (guint i = 0; i < 0xFFFF; i++) {
 		g_autofree gchar *basename = g_strdup_printf("CapsuleUpdateFile%04X.bin", i);
 		g_autofree gchar *cod_path =
-		    g_build_filename(esp_path, "EFI", "UpdateCapsule", basename, NULL);
+		    g_build_filename(esp_path, "EFIUpdateCapsule", basename, NULL);
 		if (!g_file_test(cod_path, G_FILE_TEST_EXISTS))
 			return g_steal_pointer(&cod_path);
 	}
@@ -164,7 +164,7 @@ fu_uefi_cod_device_get_filename(FuUefiDevice *self, GError **error)
 
 	/* fallback */
 	basename = g_strdup_printf("fwupd-%s.cap", fu_uefi_device_get_guid(self));
-	return g_build_filename(esp_path, "EFI", "UpdateCapsule", basename, NULL);
+	return g_build_filename(esp_path, "EFIUpdateCapsule", basename, NULL);
 }
 
 static gboolean
