@@ -191,6 +191,10 @@ The `[fwupd]` section can contain the following parameters:
 
 * `DistroId=$ID,DistroVersion=$VERSION_ID`
 
+* `Flags=is-upgrade,from-oem`
+
+  Any flags listed here must all be matched by the report.
+
 **P2pPolicy={{P2pPolicy}}**
 
   This tells the daemon what peer-to-peer policy to use. For instance, using Passim, an optional

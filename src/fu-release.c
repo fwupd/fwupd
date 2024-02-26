@@ -302,8 +302,14 @@ fu_release_load_test_result(FuRelease *self, XbNode *n, GError **error)
 	if (tmp != NULL)
 		fwupd_report_set_device_name(report, tmp);
 	tmp = xb_node_query_text(n, "previous_version", NULL);
-	if (tmp != NULL)
+	if (tmp != NULL) {
 		fwupd_report_set_version_old(report, tmp);
+		if (fu_version_compare(fu_release_get_version(self),
+				       tmp,
+				       FWUPD_VERSION_FORMAT_UNKNOWN) > 0) {
+			fwupd_report_add_flag(report, FWUPD_REPORT_FLAG_IS_UPGRADE);
+		}
+	}
 	vendor_name = xb_node_query_first(n, "vendor_name", NULL);
 	if (vendor_name != NULL) {
 		guint64 vendor_id = xb_node_get_attr_as_uint(vendor_name, "id");

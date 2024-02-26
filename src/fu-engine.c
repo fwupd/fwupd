@@ -543,6 +543,9 @@ fu_engine_compare_report_trusted(FwupdReport *report_trusted, FwupdReport *repor
 	if (fwupd_report_has_flag(report_trusted, FWUPD_REPORT_FLAG_FROM_OEM) &&
 	    !fwupd_report_has_flag(report, FWUPD_REPORT_FLAG_FROM_OEM))
 		return FALSE;
+	if (fwupd_report_has_flag(report_trusted, FWUPD_REPORT_FLAG_IS_UPGRADE) &&
+	    !fwupd_report_has_flag(report, FWUPD_REPORT_FLAG_IS_UPGRADE))
+		return FALSE;
 	if (fwupd_report_get_vendor_id(report_trusted) != 0) {
 		if (fwupd_report_get_vendor_id(report_trusted) !=
 		    fwupd_report_get_vendor_id(report))

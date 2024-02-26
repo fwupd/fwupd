@@ -17,7 +17,8 @@
                 <vendor_name id="9999">Google</vendor_name>
                 <device>ChromeBook</device>
                 <os version="102">chromeos</os>
-                <previous_version>1.2.2</previous_version>
+                <!-- same as release, so a reinstall -->
+                <previous_version>1.2.3</previous_version>
                 <custom>
                   <value key="RuntimeVersion(org.freedesktop.fwupd)">1.9.1</value>
                   <value key="FromOEM" />
