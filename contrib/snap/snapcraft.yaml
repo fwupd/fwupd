@@ -168,9 +168,11 @@ parts:
       - python3-cairo
       - python3-gi
       - python3-jinja2
+      - python3-dbusmock
       - protobuf-c-compiler
       - shim-signed
       - systemd
+      - umockdev
       - uuid-dev
     stage-packages:
       - libnghttp2-14

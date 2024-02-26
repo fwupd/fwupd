@@ -22,6 +22,19 @@ run_device_tests()
 	fi
 }
 
+run_umockdev_test()
+{
+	INSPECTOR=@installedtestsdatadir@/unittest_inspector.py
+	ARG=@installedtestsdatadir@/$1
+	if [ -f ${INSPECTOR} ] && [ -f ${ARG} ]; then
+		TESTS=`${INSPECTOR} ${ARG}`
+		for test in ${TESTS}; do
+			${ARG} ${test} --verbose
+			rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+		done
+	fi
+}
+
 run_test acpi-dmar-self-test
 run_test acpi-facp-self-test
 run_test acpi-phat-self-test
@@ -40,6 +53,9 @@ run_test dfu-self-test
 run_test mtd-self-test
 run_test vli-self-test
 run_device_tests
+run_umockdev_test fwupd_test.py
+run_umockdev_test amd_pmc_test.py
+run_umockdev_test pci_psp_test.py
 
 # success!
 exit 0

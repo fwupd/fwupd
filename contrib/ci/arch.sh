@@ -36,7 +36,7 @@ tpm2_pcrextend 0:sha1=f1d2d2f924e986ac86fdf7b36c94bcdf32beec15
 export TPM_SERVER_RUNNING=1
 
 # build the package
-sudo -E -u nobody PKGEXT='.pkg.tar' makepkg -e --noconfirm
+sudo -E -u nobody PKGEXT='.pkg.tar' makepkg -e --noconfirm --nocheck
 
 # move the package to artifact dir
 mkdir -p ../dist

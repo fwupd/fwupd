@@ -128,6 +128,29 @@ if get_option('plugin_vendor_example')
   plugins += {'vendor-example': false}
 endif
 
+umockdev_tests = []
 foreach plugin, enabled: plugins
   subdir(plugin)
 endforeach
+
+if umockdev_integration_tests.allowed()
+  envs = environment()
+  envs.set('DAEMON_BUILDDIR', join_paths(meson.project_build_root(), 'src'))
+  envs.set('LIBFWUPD_BUILD_DIR', join_paths(meson.project_build_root(), 'libfwupd'))
+  envs.set('PYTHONPATH', join_paths(meson.project_source_root(), 'src'))
+  envs.set('FWUPD_DATADIR_QUIRKS', join_paths(meson.project_build_root()))
+  envs.set('STATE_DIRECTORY', join_paths(meson.project_build_root(), 'state'))
+  envs.set('CACHE_DIRECTORY', join_paths(meson.project_build_root(), 'cache'))
+
+  foreach suite: umockdev_tests
+    r = run_command(unittest_inspector, suite,
+                    check: true, env: envs)
+    unit_tests = r.stdout().strip().split('\n')
+    foreach ut: unit_tests
+        test(ut, python3, args: [suite, ut], is_parallel: false, env: envs)
+    endforeach
+    install_data(suite,
+      install_dir: installed_test_datadir,
+    )
+  endforeach
+endif
