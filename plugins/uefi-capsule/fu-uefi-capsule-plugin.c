@@ -1277,6 +1277,31 @@ fu_uefi_capsule_plugin_reboot_cleanup(FuPlugin *plugin, FuDevice *device, GError
 	return TRUE;
 }
 
+static gboolean
+fu_uefi_capsule_plugin_modify_config(FuPlugin *plugin,
+				     const gchar *key,
+				     const gchar *value,
+				     GError **error)
+{
+	const gchar *keys[] = {"DisableCapsuleUpdateOnDisk",
+			       "DisableShimForSecureBoot",
+			       "EnableEfiDebugging",
+			       "EnableGrubChainLoad",
+			       "OverrideESPMountPoint",
+			       "RebootCleanup",
+			       "RequireESPFreeSpace",
+			       NULL};
+	if (!g_strv_contains(keys, key)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "config key %s not supported",
+			    key);
+		return FALSE;
+	}
+	return fu_plugin_set_config_value(plugin, key, value, error);
+}
+
 static void
 fu_uefi_capsule_plugin_init(FuUefiCapsulePlugin *self)
 {
@@ -1354,4 +1379,5 @@ fu_uefi_capsule_plugin_class_init(FuUefiCapsulePluginClass *klass)
 	plugin_class->coldplug = fu_uefi_capsule_plugin_coldplug;
 	plugin_class->write_firmware = fu_uefi_capsule_plugin_write_firmware;
 	plugin_class->reboot_cleanup = fu_uefi_capsule_plugin_reboot_cleanup;
+	plugin_class->modify_config = fu_uefi_capsule_plugin_modify_config;
 }

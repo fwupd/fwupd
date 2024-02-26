@@ -869,6 +869,7 @@ fu_util_emulation_load_with_fallback(FuUtilPrivate *priv, GBytes *emulation_data
 			}
 		}
 		if (!fwupd_client_modify_config(priv->client,
+						"fwupd",
 						"AllowEmulation",
 						"true",
 						priv->cancellable,
@@ -3605,19 +3606,29 @@ static gboolean
 fu_util_modify_config(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	/* check args */
-	if (g_strv_length(values) != 2) {
+	if (g_strv_length(values) == 3) {
+		if (!fwupd_client_modify_config(priv->client,
+						values[0],
+						values[1],
+						values[2],
+						priv->cancellable,
+						error))
+			return FALSE;
+	} else if (g_strv_length(values) == 2) {
+		if (!fwupd_client_modify_config(priv->client,
+						"fwupd",
+						values[0],
+						values[1],
+						priv->cancellable,
+						error))
+			return FALSE;
+	} else {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_ARGS,
-				    "Invalid arguments: KEY VALUE expected");
+				    "Invalid arguments: [SECTION] KEY VALUE expected");
 		return FALSE;
 	}
-	if (!fwupd_client_modify_config(priv->client,
-					values[0],
-					values[1],
-					priv->cancellable,
-					error))
-		return FALSE;
 	if (!priv->assume_yes) {
 		if (!fu_console_input_bool(priv->console,
 					   FALSE,
@@ -5198,7 +5209,7 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_add(cmd_array,
 			      "modify-config",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("KEY,VALUE"),
+			      _("[SECTION] KEY VALUE"),
 			      /* TRANSLATORS: sets something in the daemon configuration file */
 			      _("Modifies a daemon configuration value"),
 			      fu_util_modify_config);

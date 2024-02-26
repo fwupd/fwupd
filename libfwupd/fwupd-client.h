@@ -192,6 +192,7 @@ fwupd_client_unlock_finish(FwupdClient *self,
 			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 void
 fwupd_client_modify_config_async(FwupdClient *self,
+				 const gchar *section,
 				 const gchar *key,
 				 const gchar *value,
 				 GCancellable *cancellable,

@@ -1935,21 +1935,24 @@ fu_util_get_report_metadata(FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_modify_config(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	/* check args */
-	if (g_strv_length(values) != 2) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    "Invalid arguments: KEY VALUE expected");
-		return FALSE;
-	}
-
 	/* start engine */
 	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_NONE, priv->progress, error))
 		return FALSE;
 
-	if (!fu_engine_modify_config(priv->engine, values[0], values[1], error))
+	/* check args */
+	if (g_strv_length(values) == 3) {
+		if (!fu_engine_modify_config(priv->engine, values[0], values[1], values[2], error))
+			return FALSE;
+	} else if (g_strv_length(values) == 2) {
+		if (!fu_engine_modify_config(priv->engine, "fwupd", values[0], values[1], error))
+			return FALSE;
+	} else {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments: [SECTION] KEY VALUE expected");
 		return FALSE;
+	}
 
 	/* TRANSLATORS: success message -- a per-system setting value */
 	fu_console_print_literal(priv->console, _("Successfully modified configuration value"));
@@ -2082,7 +2085,11 @@ fu_util_toggle_test_devices(FuUtilPrivate *priv, gboolean enable, GError **error
 	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_NONE, priv->progress, error))
 		return FALSE;
 
-	if (!fu_engine_modify_config(priv->engine, "TestDevices", enable ? "true" : "false", error))
+	if (!fu_engine_modify_config(priv->engine,
+				     "fwupd",
+				     "TestDevices",
+				     enable ? "true" : "false",
+				     error))
 		return FALSE;
 
 	if (enable) {
@@ -4543,7 +4550,7 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_add(cmd_array,
 			      "modify-config",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("KEY,VALUE"),
+			      _("[SECTION] KEY VALUE"),
 			      /* TRANSLATORS: sets something in the daemon configuration file */
 			      _("Modifies a daemon configuration value"),
 			      fu_util_modify_config);

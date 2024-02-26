@@ -88,6 +88,32 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_test_plugin_modify_config(FuPlugin *plugin, const gchar *key, const gchar *value, GError **error)
+{
+	const gchar *keys[] = {"AnotherWriteRequired",
+			       "CompositeChild",
+			       "DecompressDelay",
+			       "NeedsActivation",
+			       "NeedsReboot",
+			       "RegistrationSupported",
+			       "RequestDelay",
+			       "RequestSupported",
+			       "VerifyDelay",
+			       "WriteDelay",
+			       "WriteSupported",
+			       NULL};
+	if (!g_strv_contains(keys, key)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "config key %s not supported",
+			    key);
+		return FALSE;
+	}
+	return fu_plugin_set_config_value(plugin, key, value, error);
+}
+
 static void
 fu_test_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 {
@@ -374,4 +400,5 @@ fu_test_plugin_class_init(FuTestPluginClass *klass)
 	plugin_class->verify = fu_test_plugin_verify;
 	plugin_class->coldplug = fu_test_plugin_coldplug;
 	plugin_class->device_registered = fu_test_plugin_device_registered;
+	plugin_class->modify_config = fu_test_plugin_modify_config;
 }

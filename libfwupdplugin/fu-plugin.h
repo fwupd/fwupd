@@ -424,6 +424,21 @@ struct _FuPluginClass {
 	 * Since: 1.9.7
 	 **/
 	gboolean (*reboot_cleanup)(FuPlugin *self, FuDevice *device, GError **error);
+	/**
+	 * modify_config:
+	 * @self: a #FuPlugin
+	 * @key: a config key
+	 * @value: a config value
+	 * @error: (nullable): optional return location for an error
+	 *
+	 * Sets a plugin config option, which may be allow-listed or value-checked.
+	 *
+	 * Since: 2.0.0
+	 **/
+	gboolean (*modify_config)(FuPlugin *self,
+				  const gchar *key,
+				  const gchar *value,
+				  GError **error);
 };
 
 /**

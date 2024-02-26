@@ -6,6 +6,7 @@
 
 ## Migration from Version 1.x.x
 
+* Add section to `fwupd_client_modify_config()`
 * Migrate from `fwupd_client_install_release2()` to `fwupd_client_install_release()`
 * Migrate from `fwupd_client_install_release2_async()` to `fwupd_client_install_release_async()`
 * Migrate from `fwupd_client_refresh_remote2()` to `fwupd_client_refresh_remote()`

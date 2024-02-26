@@ -637,6 +637,31 @@ fu_redfish_plugin_cleanup(FuPlugin *plugin,
 	return TRUE;
 }
 
+static gboolean
+fu_redfish_plugin_modify_config(FuPlugin *plugin,
+				const gchar *key,
+				const gchar *value,
+				GError **error)
+{
+	const gchar *keys[] = {"CACheck",
+			       "IpmiDisableCreateUser",
+			       "ManagerResetTimeout",
+			       "Password",
+			       "Uri",
+			       "Username",
+			       "UserUri",
+			       NULL};
+	if (!g_strv_contains(keys, key)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "config key %s not supported",
+			    key);
+		return FALSE;
+	}
+	return fu_plugin_set_config_value(plugin, key, value, error);
+}
+
 static void
 fu_redfish_plugin_init(FuRedfishPlugin *self)
 {
@@ -687,4 +712,5 @@ fu_redfish_plugin_class_init(FuRedfishPluginClass *klass)
 	plugin_class->startup = fu_redfish_plugin_startup;
 	plugin_class->coldplug = fu_redfish_plugin_coldplug;
 	plugin_class->cleanup = fu_redfish_plugin_cleanup;
+	plugin_class->modify_config = fu_redfish_plugin_modify_config;
 }

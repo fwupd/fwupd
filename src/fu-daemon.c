@@ -598,7 +598,11 @@ fu_daemon_modify_config_cb(GObject *source, GAsyncResult *res, gpointer user_dat
 		return;
 	}
 
-	if (!fu_engine_modify_config(helper->self->engine, helper->key, helper->value, &error)) {
+	if (!fu_engine_modify_config(helper->self->engine,
+				     helper->section,
+				     helper->key,
+				     helper->value,
+				     &error)) {
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
@@ -1621,15 +1625,17 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 	}
 	if (g_strcmp0(method_name, "ModifyConfig") == 0) {
 		g_autofree gchar *key = NULL;
+		g_autofree gchar *section = NULL;
 		g_autofree gchar *value = NULL;
 		g_autoptr(FuMainAuthHelper) helper = NULL;
 
-		g_variant_get(parameters, "(ss)", &key, &value);
-		g_debug("Called %s(%s=%s)", method_name, key, value);
+		g_variant_get(parameters, "(sss)", &section, &key, &value);
+		g_debug("Called %s([%s] %s=%s)", method_name, section, key, value);
 
 		/* authenticate */
 		helper = g_new0(FuMainAuthHelper, 1);
 		helper->self = self;
+		helper->section = g_steal_pointer(&section);
 		helper->key = g_steal_pointer(&key);
 		helper->value = g_steal_pointer(&value);
 		helper->request = g_steal_pointer(&request);

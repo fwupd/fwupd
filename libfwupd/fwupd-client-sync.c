@@ -833,6 +833,7 @@ fwupd_client_modify_config_cb(GObject *source, GAsyncResult *res, gpointer user_
 /**
  * fwupd_client_modify_config
  * @self: a #FwupdClient
+ * @section: config section, e.g. `redfish`
  * @key: config key, e.g. `DisabledPlugins`
  * @value: config value, e.g. `*`
  * @cancellable: (nullable): optional #GCancellable
@@ -843,10 +844,11 @@ fwupd_client_modify_config_cb(GObject *source, GAsyncResult *res, gpointer user_
  *
  * Returns: %TRUE for success
  *
- * Since: 1.2.8
+ * Since: 2.0.0
  **/
 gboolean
 fwupd_client_modify_config(FwupdClient *self,
+			   const gchar *section,
 			   const gchar *key,
 			   const gchar *value,
 			   GCancellable *cancellable,
@@ -855,6 +857,7 @@ fwupd_client_modify_config(FwupdClient *self,
 	g_autoptr(FwupdClientHelper) helper = NULL;
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(section != NULL, FALSE);
 	g_return_val_if_fail(key != NULL, FALSE);
 	g_return_val_if_fail(value != NULL, FALSE);
 	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
@@ -867,6 +870,7 @@ fwupd_client_modify_config(FwupdClient *self,
 	/* call async version and run loop until complete */
 	helper = fwupd_client_helper_new(self);
 	fwupd_client_modify_config_async(self,
+					 section,
 					 key,
 					 value,
 					 cancellable,
