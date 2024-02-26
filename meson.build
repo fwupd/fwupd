@@ -449,8 +449,6 @@ if build_standalone
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
 endif
 
-umockdev = dependency('umockdev-1.0', required: false)
-
 if build_standalone
   libflashrom = dependency('flashrom', 
                             fallback: ['flashrom', 'flashrom_dep'], 
@@ -604,6 +602,21 @@ rustgen = generator(python3,
   ],
 )
 
+dbusmock = run_command(
+  [python3, '-c', 'import dbusmock; print(dbusmock.__version__)'],
+  check: false,
+)
+
+umockdev_integration_tests = get_option('umockdev_tests')                     \
+                              .disable_auto_if(not get_option('tests'))       \
+                              .disable_auto_if(not introspection.allowed())   \
+                              .disable_auto_if(dbusmock.returncode() != 0)
+umockdev = dependency('umockdev-1.0', required: get_option('umockdev_tests'))
+
+if dbusmock.returncode() != 0 and get_option('umockdev_tests').allowed()
+  warning('python dbusmock not found, umockdev tests will be disabled')
+endif
+
 allow_uefi_capsule = get_option('plugin_uefi_capsule').disable_auto_if(host_machine.system() not in ['linux', 'freebsd']).allowed()
 
 subdir('generate-build')
@@ -686,6 +699,7 @@ summary({
   'supported_build': supported_build,
   'static_analysis': static_analysis,
   'tests': get_option('tests'),
+  'umockdev_tests': umockdev_integration_tests.allowed(),
 }, section: 'project features')
 
 if build_daemon

@@ -7194,8 +7194,11 @@ fu_engine_load_plugins_builtins(FuEngine *self, FuProgress *progress)
 	}
 }
 
-static void
-fu_engine_load_plugins(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress)
+static gboolean
+fu_engine_load_plugins(FuEngine *self,
+		       FuEngineLoadFlags flags,
+		       FuProgress *progress,
+		       GError **error)
 {
 	g_autofree gchar *plugin_path = NULL;
 	g_autoptr(GPtrArray) filenames = NULL;
@@ -7224,6 +7227,9 @@ fu_engine_load_plugins(FuEngine *self, FuEngineLoadFlags flags, FuProgress *prog
 	if (flags & FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS)
 		fu_engine_load_plugins_builtins(self, fu_progress_get_child(progress));
 	fu_progress_step_done(progress);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -8155,7 +8161,10 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_progress_step_done(progress);
 
 	/* load plugins early, as we have to call ->load() *before* building quirk silo */
-	fu_engine_load_plugins(self, flags, fu_progress_get_child(progress));
+	if (!fu_engine_load_plugins(self, flags, fu_progress_get_child(progress), error)) {
+		g_prefix_error(error, "failed to load plugins: ");
+		return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* migrate per-plugin settings into fwupd.conf */

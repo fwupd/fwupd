@@ -466,6 +466,10 @@ option('tests',
   value: true,
   description: 'enable tests',
 )
+option('umockdev_tests',
+  type: 'feature',
+  description: 'umockdev tests',
+)
 option('curl',
   type: 'feature',
   description: 'libcurl support',

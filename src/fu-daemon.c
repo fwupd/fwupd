@@ -1407,7 +1407,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 							      "HSI support not enabled");
 #else
 		if (self->machine_kind != FU_DAEMON_MACHINE_KIND_PHYSICAL &&
-		    !g_getenv("UMOCKDEV_DIR")) {
+		    g_getenv("UMOCKDEV_DIR") == NULL) {
 			g_dbus_method_invocation_return_error_literal(
 			    invocation,
 			    FWUPD_ERROR,

@@ -424,6 +424,7 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %{_datadir}/installed-tests/fwupd/fakedevice124.bin
 %{_datadir}/installed-tests/fwupd/fakedevice124.metainfo.xml
 %{_datadir}/installed-tests/fwupd/*.sh
+%{_datadir}/installed-tests/fwupd/*.py
 %if 0%{?have_uefi}
 %{_datadir}/installed-tests/fwupd/efi
 %endif
