@@ -830,6 +830,8 @@ fwupd_report_flag_to_string(FwupdReportFlags report_flag)
 		return "none";
 	if (report_flag == FWUPD_REPORT_FLAG_FROM_OEM)
 		return "from-oem";
+	if (report_flag == FWUPD_REPORT_FLAG_IS_UPGRADE)
+		return "is-upgrade";
 	return NULL;
 }
 
@@ -850,6 +852,8 @@ fwupd_report_flag_from_string(const gchar *report_flag)
 		return FWUPD_REPORT_FLAG_NONE;
 	if (g_strcmp0(report_flag, "from-oem") == 0)
 		return FWUPD_REPORT_FLAG_FROM_OEM;
+	if (g_strcmp0(report_flag, "is-upgrade") == 0)
+		return FWUPD_REPORT_FLAG_IS_UPGRADE;
 	return FWUPD_REPORT_FLAG_UNKNOWN;
 }
 

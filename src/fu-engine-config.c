@@ -29,6 +29,25 @@ struct _FuEngineConfig {
 
 G_DEFINE_TYPE(FuEngineConfig, fu_engine_config, FU_TYPE_CONFIG)
 
+static gboolean
+fu_engine_config_report_from_flags(FwupdReport *report, const gchar *flags_str, GError **error)
+{
+	g_auto(GStrv) flags_strv = g_strsplit(flags_str, ",", -1);
+	for (guint i = 0; flags_strv[i] != NULL; i++) {
+		FwupdReportFlags flag = fwupd_report_flag_from_string(flags_strv[i]);
+		if (flag == FWUPD_REPORT_FLAG_UNKNOWN) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "report flag '%s' unknown",
+				    flags_strv[i]);
+			return FALSE;
+		}
+		fwupd_report_add_flag(report, flag);
+	}
+	return TRUE;
+}
+
 static FwupdReport *
 fu_engine_config_report_from_spec(FuEngineConfig *self, const gchar *report_spec, GError **error)
 {
@@ -69,6 +88,9 @@ fu_engine_config_report_from_spec(FuEngineConfig *self, const gchar *report_spec
 			fwupd_report_set_distro_version(report, value);
 		} else if (g_strcmp0(kv[0], "RemoteId") == 0) {
 			fwupd_report_set_remote_id(report, value);
+		} else if (g_strcmp0(kv[0], "Flags") == 0) {
+			if (!fu_engine_config_report_from_flags(report, value, error))
+				return NULL;
 		} else {
 			g_set_error(error,
 				    G_IO_ERROR,

@@ -44,6 +44,15 @@ struct _FwupdReportClass {
 #define FWUPD_REPORT_FLAG_FROM_OEM (1ull << 0)
 
 /**
+ * FWUPD_REPORT_FLAG_IS_UPGRADE:
+ *
+ * The new firmware was newer than the old firmware.
+ *
+ * Since: 1.9.14
+ */
+#define FWUPD_REPORT_FLAG_IS_UPGRADE (1ull << 1)
+
+/**
  * FWUPD_REPORT_FLAG_UNKNOWN:
  *
  * The report flag is unknown.
