@@ -730,6 +730,15 @@
           </doc:para>
         </doc:description>
       </doc:doc>
+      <arg type='s' name='section' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              The config section, e.g. 'fwupd'.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
       <arg type='s' name='key' direction='in'>
         <doc:doc>
           <doc:summary>

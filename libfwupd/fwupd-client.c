@@ -2264,6 +2264,7 @@ fwupd_client_modify_config_cb(GObject *source, GAsyncResult *res, gpointer user_
 /**
  * fwupd_client_modify_config_async:
  * @self: a #FwupdClient
+ * @section: config section, e.g. `redfish`
  * @key: config key, e.g. `DisabledPlugins`
  * @value: config value, e.g. `*`
  * @cancellable: (nullable): optional #GCancellable
@@ -2273,10 +2274,11 @@ fwupd_client_modify_config_cb(GObject *source, GAsyncResult *res, gpointer user_
  * Modifies a daemon config option.
  * The daemon will only respond to this request with proper permissions.
  *
- * Since: 1.5.0
+ * Since: 2.0.0
  **/
 void
 fwupd_client_modify_config_async(FwupdClient *self,
+				 const gchar *section,
 				 const gchar *key,
 				 const gchar *value,
 				 GCancellable *cancellable,
@@ -2287,6 +2289,7 @@ fwupd_client_modify_config_async(FwupdClient *self,
 	g_autoptr(GTask) task = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(section != NULL);
 	g_return_if_fail(key != NULL);
 	g_return_if_fail(value != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
@@ -2296,7 +2299,7 @@ fwupd_client_modify_config_async(FwupdClient *self,
 	task = g_task_new(self, cancellable, callback, callback_data);
 	g_dbus_proxy_call(priv->proxy,
 			  "ModifyConfig",
-			  g_variant_new("(ss)", key, value),
+			  g_variant_new("(sss)", section, key, value),
 			  G_DBUS_CALL_FLAGS_NONE,
 			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
@@ -2314,7 +2317,7 @@ fwupd_client_modify_config_async(FwupdClient *self,
  *
  * Returns: %TRUE for success
  *
- * Since: 1.5.0
+ * Since: 2.0.0
  **/
 gboolean
 fwupd_client_modify_config_finish(FwupdClient *self, GAsyncResult *res, GError **error)

@@ -1267,6 +1267,22 @@ fu_plugin_func(void)
 }
 
 static void
+fu_plugin_vfuncs_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* nop: error */
+	ret = fu_plugin_runner_modify_config(plugin, "foo", "bar", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+	g_clear_error(&error);
+}
+
+static void
 fu_plugin_device_gtype_func(void)
 {
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -5353,6 +5369,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/security-attrs{compare}", fu_security_attrs_compare_func);
 	g_test_add_func("/fwupd/config", fu_config_func);
 	g_test_add_func("/fwupd/plugin", fu_plugin_func);
+	g_test_add_func("/fwupd/plugin{vfuncs}", fu_plugin_vfuncs_func);
 	g_test_add_func("/fwupd/plugin{device-gtype}", fu_plugin_device_gtype_func);
 	g_test_add_func("/fwupd/plugin{backend-device}", fu_plugin_backend_device_func);
 	g_test_add_func("/fwupd/plugin{config}", fu_plugin_config_func);

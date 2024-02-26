@@ -147,6 +147,9 @@ fu_plugin_runner_reboot_cleanup(FuPlugin *self,
 				GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 void
 fu_plugin_runner_add_security_attrs(FuPlugin *self, FuSecurityAttrs *attrs) G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_plugin_runner_modify_config(FuPlugin *self, const gchar *key, const gchar *value, GError **error)
+    G_GNUC_NON_NULL(1, 2, 3);
 gint
 fu_plugin_name_compare(FuPlugin *plugin1, FuPlugin *plugin2) G_GNUC_NON_NULL(1, 2);
 gint

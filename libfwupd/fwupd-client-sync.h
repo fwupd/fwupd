@@ -82,6 +82,7 @@ fwupd_client_uninhibit(FwupdClient *self,
 		       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fwupd_client_modify_config(FwupdClient *self,
+			   const gchar *section,
 			   const gchar *key,
 			   const gchar *value,
 			   GCancellable *cancellable,

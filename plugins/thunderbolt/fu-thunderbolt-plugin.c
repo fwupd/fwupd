@@ -90,6 +90,24 @@ fu_thunderbolt_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GE
 	return TRUE;
 }
 
+static gboolean
+fu_thunderbolt_plugin_modify_config(FuPlugin *plugin,
+				    const gchar *key,
+				    const gchar *value,
+				    GError **error)
+{
+	const gchar *keys[] = {"DelayedActivation", "MinimumKernelVersion", NULL};
+	if (!g_strv_contains(keys, key)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "config key %s not supported",
+			    key);
+		return FALSE;
+	}
+	return fu_plugin_set_config_value(plugin, key, value, error);
+}
+
 static void
 fu_thunderbolt_plugin_init(FuThunderboltPlugin *self)
 {
@@ -118,4 +136,5 @@ fu_thunderbolt_plugin_class_init(FuThunderboltPluginClass *klass)
 	plugin_class->device_created = fu_thunderbolt_plugin_device_created;
 	plugin_class->composite_prepare = fu_thunderbolt_plugin_composite_prepare;
 	plugin_class->composite_cleanup = fu_thunderbolt_plugin_composite_cleanup;
+	plugin_class->modify_config = fu_thunderbolt_plugin_modify_config;
 }

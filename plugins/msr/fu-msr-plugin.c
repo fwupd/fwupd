@@ -630,6 +630,21 @@ fu_msr_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_plugin_add_security_attr_intel_gds(plugin, attrs);
 }
 
+static gboolean
+fu_msr_plugin_modify_config(FuPlugin *plugin, const gchar *key, const gchar *value, GError **error)
+{
+	const gchar *keys[] = {"MinimumSmeKernelVersion", NULL};
+	if (!g_strv_contains(keys, key)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "config key %s not supported",
+			    key);
+		return FALSE;
+	}
+	return fu_plugin_set_config_value(plugin, key, value, error);
+}
+
 static void
 fu_msr_plugin_init(FuMsrPlugin *self)
 {
@@ -655,4 +670,5 @@ fu_msr_plugin_class_init(FuMsrPluginClass *klass)
 	plugin_class->backend_device_added = fu_msr_plugin_backend_device_added;
 	plugin_class->add_security_attrs = fu_msr_plugin_add_security_attrs;
 	plugin_class->device_registered = fu_msr_plugin_device_registered;
+	plugin_class->modify_config = fu_msr_plugin_modify_config;
 }

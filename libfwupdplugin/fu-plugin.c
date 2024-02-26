@@ -2403,6 +2403,38 @@ fu_plugin_runner_undo_host_security_attr(FuPlugin *self, FwupdSecurityAttr *attr
 }
 
 /**
+ * fu_plugin_runner_modify_config:
+ * @self: a #FuPlugin
+ * @key: a config key
+ * @value: a config value
+ * @error: (nullable): optional return location for an error
+ *
+ * Sets a plugin config option, which may be allow-listed or value-checked.
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_plugin_runner_modify_config(FuPlugin *self, const gchar *key, const gchar *value, GError **error)
+{
+	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
+
+	/* optional */
+	if (vfuncs->modify_config == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "cannot modify %s=%s config",
+			    key,
+			    value);
+		return FALSE;
+	}
+	g_debug("modify_config(%s)", fu_plugin_get_name(self));
+	return vfuncs->modify_config(self, key, value, error);
+}
+
+/**
  * fu_plugin_get_order:
  * @self: a #FuPlugin
  *

@@ -90,7 +90,7 @@ def set_conf_only_trusted(client, setval):
         pass
     else:
         return False
-    modify_config(client, prop, str(setval).lower())
+    modify_config(client, "fwupd", prop, str(setval).lower())
     return get_daemon_property(prop) == setval
 
 
