@@ -5205,7 +5205,7 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_add(cmd_array,
 			      "reset-config",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("KEY,VALUE"),
+			      _("SECTION"),
 			      /* TRANSLATORS: sets something in the daemon configuration file */
 			      _("Resets a daemon configuration section"),
 			      fu_util_reset_config);
