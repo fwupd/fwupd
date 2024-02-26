@@ -84,7 +84,7 @@ static void
 fu_wac_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_WAC_DEVICE);
+	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_WAC_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_WAC_ANDROID_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, "wacom", FU_TYPE_WAC_FIRMWARE);
 }

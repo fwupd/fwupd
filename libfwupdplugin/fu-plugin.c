@@ -47,6 +47,7 @@ typedef struct {
 	GHashTable *compile_versions;
 	FuContext *ctx;
 	GArray *device_gtypes;	     /* (nullable): of #GType */
+	GType device_gtype_default;
 	GHashTable *cache;	     /* (nullable): platform_id:GObject */
 	GHashTable *report_metadata; /* (nullable): key:value */
 	GFileMonitor *config_monitor;
@@ -408,6 +409,12 @@ fu_plugin_add_string(FuPlugin *self, guint idt, GString *str)
 		fu_string_append_ku(str, idt + 1, "Order", priv->order);
 	if (priv->priority != 0)
 		fu_string_append_ku(str, idt + 1, "Priority", priv->priority);
+	if (priv->device_gtype_default != G_TYPE_INVALID) {
+		fu_string_append(str,
+				 idt,
+				 "DeviceGTypeDefault",
+				 g_type_name(priv->device_gtype_default));
+	}
 
 	/* optional */
 	if (vfuncs->to_string != NULL)
@@ -1437,6 +1444,8 @@ fu_plugin_runner_add_security_attrs(FuPlugin *self, FuSecurityAttrs *attrs)
  *
  * Plugins can use this method only in fu_plugin_init()
  *
+ * See also: fu_plugin_set_device_gtype_default()
+ *
  * Since: 1.6.0
  **/
 void
@@ -1444,13 +1453,73 @@ fu_plugin_add_device_gtype(FuPlugin *self, GType device_gtype)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 
+	g_return_if_fail(FU_IS_PLUGIN(self));
+
 	/* create as required */
 	if (priv->device_gtypes == NULL)
 		priv->device_gtypes = g_array_new(FALSE, FALSE, sizeof(GType));
 
+	/* check for duplicates */
+	for (guint i = 0; i < priv->device_gtypes->len; i++) {
+		GType device_gtype_tmp = g_array_index(priv->device_gtypes, GType, i);
+		if (device_gtype == device_gtype_tmp)
+			return;
+	}
+
 	/* ensure (to allow quirks to use it) then add */
 	g_type_ensure(device_gtype);
 	g_array_append_val(priv->device_gtypes, device_gtype);
+}
+
+/**
+ * fu_plugin_get_device_gtype_default:
+ * @self: a #FuPlugin
+ *
+ * Gets the default device #GType.
+ *
+ * If there is only one possible #GType added from fu_plugin_add_device_gtype() it will also be
+ * returned here.
+ *
+ * Returns: a #GType, or %G_TYPE_INVALID on error
+ *
+ * Since: 1.9.14
+ **/
+GType
+fu_plugin_get_device_gtype_default(FuPlugin *self)
+{
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), G_TYPE_INVALID);
+
+	if (priv->device_gtype_default != G_TYPE_INVALID)
+		return priv->device_gtype_default;
+	if (priv->device_gtypes->len == 1)
+		return g_array_index(priv->device_gtypes, GType, 0);
+	return G_TYPE_INVALID;
+}
+
+/**
+ * fu_plugin_set_device_gtype_default:
+ * @self: a #FuPlugin
+ * @device_gtype: a #GType, e.g. `FU_TYPE_DEVICE`
+ *
+ * Sets the default device #GType.
+ *
+ * This will also add the device #GType using fu_plugin_add_device_gtype().
+ *
+ * Plugins can use this method only in fu_plugin_init()
+ *
+ * Since: 1.9.14
+ **/
+void
+fu_plugin_set_device_gtype_default(FuPlugin *self, GType device_gtype)
+{
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_PLUGIN(self));
+
+	fu_plugin_add_device_gtype(self, device_gtype);
+	priv->device_gtype_default = device_gtype;
 }
 
 static gchar *
@@ -1614,6 +1683,8 @@ fu_plugin_backend_device_added(FuPlugin *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 48, "add");
 
 	/* fall back to plugin default */
+	if (device_gtype == G_TYPE_INVALID)
+		device_gtype = fu_plugin_get_device_gtype_default(self);
 	if (device_gtype == G_TYPE_INVALID) {
 		if (priv->device_gtypes->len > 1) {
 			g_autoptr(GString) str = g_string_new(NULL);
@@ -1630,7 +1701,11 @@ fu_plugin_backend_device_added(FuPlugin *self,
 				    str->str);
 			return FALSE;
 		}
-		device_gtype = g_array_index(priv->device_gtypes, GType, 0);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "no possible device GTypes");
+		return FALSE;
 	}
 
 	/* create new device and incorporate existing properties */
@@ -2887,6 +2962,8 @@ fu_plugin_class_init(FuPluginClass *klass)
 static void
 fu_plugin_init(FuPlugin *self)
 {
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+	priv->device_gtype_default = G_TYPE_INVALID;
 }
 
 static void

@@ -1193,6 +1193,26 @@ fu_plugin_quirks_append_func(void)
 }
 
 static void
+fu_plugin_device_gtype_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
+
+	/* add the same gtype multiple times */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_DEVICE);
+	g_assert_cmpint(fu_plugin_get_device_gtype_default(plugin), ==, FU_TYPE_DEVICE);
+
+	/* now there's no explicit default */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_USB_DEVICE);
+	g_assert_cmpint(fu_plugin_get_device_gtype_default(plugin), ==, G_TYPE_INVALID);
+
+	/* make it explicit */
+	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_USB_DEVICE);
+	g_assert_cmpint(fu_plugin_get_device_gtype_default(plugin), ==, FU_TYPE_USB_DEVICE);
+}
+
+static void
 fu_plugin_quirks_device_func(void)
 {
 	FuDevice *device_tmp;
@@ -4618,6 +4638,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/security-attrs{hsi}", fu_security_attrs_hsi_func);
 	g_test_add_func("/fwupd/security-attrs{compare}", fu_security_attrs_compare_func);
 	g_test_add_func("/fwupd/config", fu_config_func);
+	g_test_add_func("/fwupd/plugin{device-gtype}", fu_plugin_device_gtype_func);
 	g_test_add_func("/fwupd/plugin{config}", fu_plugin_config_func);
 	g_test_add_func("/fwupd/plugin{devices}", fu_plugin_devices_func);
 	g_test_add_func("/fwupd/plugin{device-inhibit-children}",
