@@ -38,6 +38,30 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.14" date="2024-02-26">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Allow plugins to opt-into a default device GType</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Correctly detect ARM32 and RISC-V UEFI binaries</li>
+          <li>Correctly migrate the database schema from very old fwupd versions</li>
+          <li>Fix critical warnings when using FWUPD_DBUS_SOCKET= on macOS</li>
+          <li>Fix DS-20 descriptors by opening the GUsbDevice earlier</li>
+          <li>Fix updating the fingerprint reader on the Framework 13 and 16 laptop</li>
+          <li>Fix warning when probing devices using the metadata allowlist</li>
+          <li>Only recover the version format for specific devices</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Poly Studio V52</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.13" date="2024-02-08">
       <description>
         <p>
