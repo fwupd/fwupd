@@ -482,6 +482,10 @@ void
 fu_plugin_device_register(FuPlugin *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
 void
 fu_plugin_add_device_gtype(FuPlugin *self, GType device_gtype) G_GNUC_NON_NULL(1);
+GType
+fu_plugin_get_device_gtype_default(FuPlugin *self) G_GNUC_NON_NULL(1);
+void
+fu_plugin_set_device_gtype_default(FuPlugin *self, GType device_gtype) G_GNUC_NON_NULL(1);
 void
 fu_plugin_add_firmware_gtype(FuPlugin *self, const gchar *id, GType gtype) G_GNUC_NON_NULL(1);
 void
