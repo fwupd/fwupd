@@ -105,6 +105,8 @@ fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt);
 const gchar *
 fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag);
 gchar *
+fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDeviceProblem problem);
+gchar *
 fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags flags);
 gchar *
 fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags flags);

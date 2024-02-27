@@ -1487,8 +1487,9 @@ static gboolean
 fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
-	gboolean no_updates_header = FALSE;
-	gboolean latest_header = FALSE;
+	g_autoptr(GPtrArray) devices_latest = g_ptr_array_new();
+	g_autoptr(GPtrArray) devices_pending = g_ptr_array_new();
+	g_autoptr(GPtrArray) devices_unsupported = g_ptr_array_new();
 
 	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
 		g_set_error_literal(error,
@@ -1555,19 +1556,13 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		if (!fu_util_is_interesting_device(dev))
 			continue;
+
 		/* only show stuff that has metadata available */
-		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
+		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+		    !fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN))
 			continue;
 		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
-			if (!no_updates_header) {
-				fu_console_print_literal(
-				    priv->console,
-				    /* TRANSLATORS: message letting the user know no
-				     * device upgrade available due to missing on LVFS */
-				    _("Devices with no available firmware updates: "));
-				no_updates_header = TRUE;
-			}
-			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
+			g_ptr_array_add(devices_unsupported, dev);
 			continue;
 		}
 		if (!fwupd_device_match_flags(dev,
@@ -1577,17 +1572,15 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 
 		rels = fu_engine_get_upgrades(priv->engine, priv->request, device_id, &error_local);
 		if (rels == NULL) {
-			if (!latest_header) {
-				fu_console_print_literal(
-				    priv->console,
-				    /* TRANSLATORS: message letting the user know no device upgrade
-				     * available */
-				    _("Devices with the latest available firmware version:"));
-				latest_header = TRUE;
-			}
-			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
+			g_ptr_array_add(devices_latest, dev);
 			/* discard the actual reason from user, but leave for debugging */
 			g_debug("%s", error_local->message);
+			continue;
+		}
+
+		/* something is wrong */
+		if (fwupd_device_get_problems(dev) != FWUPD_DEVICE_PROBLEM_NONE) {
+			g_ptr_array_add(devices_pending, dev);
 			continue;
 		}
 
@@ -1608,6 +1601,49 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		}
 		fu_util_display_current_message(priv);
+	}
+
+	/* show warnings */
+	if (devices_latest->len > 0) {
+		fu_console_print_literal(priv->console,
+					 /* TRANSLATORS: message letting the user know no device
+					  * upgrade available */
+					 _("Devices with the latest available firmware version:"));
+		for (guint i = 0; i < devices_latest->len; i++) {
+			FwupdDevice *dev = g_ptr_array_index(devices_latest, i);
+			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
+		}
+	}
+	if (devices_unsupported->len > 0) {
+		fu_console_print_literal(priv->console,
+					 /* TRANSLATORS: message letting the user know no
+					  * device upgrade available due to missing on LVFS */
+					 _("Devices with no available firmware updates: "));
+		for (guint i = 0; i < devices_unsupported->len; i++) {
+			FwupdDevice *dev = g_ptr_array_index(devices_unsupported, i);
+			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
+		}
+	}
+	if (devices_pending->len > 0) {
+		fu_console_print_literal(
+		    priv->console,
+		    /* TRANSLATORS: message letting the user there is an update
+		     * waiting, but there is a reason it cannot be deployed */
+		    _("Devices with firmware updates that need user action: "));
+		for (guint i = 0; i < devices_pending->len; i++) {
+			FwupdDevice *dev = g_ptr_array_index(devices_pending, i);
+			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
+			for (guint j = 0; j < 64; j++) {
+				FwupdDeviceProblem problem = (guint64)1 << j;
+				g_autofree gchar *desc = NULL;
+				if (!fwupd_device_has_problem(dev, problem))
+					continue;
+				desc = fu_util_device_problem_to_string(priv->client, dev, problem);
+				if (desc == NULL)
+					continue;
+				fu_console_print(priv->console, "   ‣ %s", desc);
+			}
+		}
 	}
 
 	/* we don't want to ask anything */
