@@ -1231,7 +1231,7 @@ fu_util_update_state_to_string(FwupdUpdateState update_state)
 	return NULL;
 }
 
-static gchar *
+gchar *
 fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDeviceProblem problem)
 {
 	if (problem == FWUPD_DEVICE_PROBLEM_NONE)
