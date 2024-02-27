@@ -36,6 +36,7 @@ struct _FuHwids {
 	GHashTable *hash_values_display; /* BiosVersion->"1.2.3" */
 	GHashTable *hash_guid;		 /* a-c-b-d->1 */
 	GPtrArray *array_guids;		 /* a-c-b-d */
+	GHashTable *chids;		 /* "HardwareID-5"->"Manufacturer&ProductName" */
 };
 
 G_DEFINE_TYPE(FuHwids, fu_hwids, G_TYPE_OBJECT)
@@ -158,9 +159,9 @@ fu_hwids_get_guid_for_str(const gchar *str, GError **error)
 /**
  * fu_hwids_get_replace_keys:
  * @self: a #FuHwids
- * @key: a HardwareID key, e.g. `HardwareID-3`
+ * @key: a CHID key, e.g. `HardwareID-03`
  *
- * Gets the replacement key for a well known value.
+ * Gets the defined values for a well known value.
  *
  * Returns: the replacement value, e.g. `Manufacturer&ProductName`, or %NULL for error.
  *
@@ -169,68 +170,69 @@ fu_hwids_get_guid_for_str(const gchar *str, GError **error)
 const gchar *
 fu_hwids_get_replace_keys(FuHwids *self, const gchar *key)
 {
-	struct {
-		const gchar *search;
-		const gchar *replace;
-	} msdefined[] = {
-	    {"HardwareID-0",
-	     FU_HWIDS_KEY_MANUFACTURER
-	     "&" FU_HWIDS_KEY_FAMILY "&" FU_HWIDS_KEY_PRODUCT_NAME "&" FU_HWIDS_KEY_PRODUCT_SKU
-	     "&" FU_HWIDS_KEY_BIOS_VENDOR "&" FU_HWIDS_KEY_BIOS_VERSION
-	     "&" FU_HWIDS_KEY_BIOS_MAJOR_RELEASE "&" FU_HWIDS_KEY_BIOS_MINOR_RELEASE},
-	    {"HardwareID-1",
-	     FU_HWIDS_KEY_MANUFACTURER "&" FU_HWIDS_KEY_FAMILY "&" FU_HWIDS_KEY_PRODUCT_NAME
-				       "&" FU_HWIDS_KEY_BIOS_VENDOR "&" FU_HWIDS_KEY_BIOS_VERSION
-				       "&" FU_HWIDS_KEY_BIOS_MAJOR_RELEASE
-				       "&" FU_HWIDS_KEY_BIOS_MINOR_RELEASE},
-	    {"HardwareID-2",
-	     FU_HWIDS_KEY_MANUFACTURER "&" FU_HWIDS_KEY_PRODUCT_NAME "&" FU_HWIDS_KEY_BIOS_VENDOR
-				       "&" FU_HWIDS_KEY_BIOS_VERSION
-				       "&" FU_HWIDS_KEY_BIOS_MAJOR_RELEASE
-				       "&" FU_HWIDS_KEY_BIOS_MINOR_RELEASE},
-	    {"HardwareID-3",
-	     FU_HWIDS_KEY_MANUFACTURER
-	     "&" FU_HWIDS_KEY_FAMILY "&" FU_HWIDS_KEY_PRODUCT_NAME "&" FU_HWIDS_KEY_PRODUCT_SKU
-	     "&" FU_HWIDS_KEY_BASEBOARD_MANUFACTURER "&" FU_HWIDS_KEY_BASEBOARD_PRODUCT},
-	    {"HardwareID-4",
-	     FU_HWIDS_KEY_MANUFACTURER "&" FU_HWIDS_KEY_FAMILY "&" FU_HWIDS_KEY_PRODUCT_NAME
-				       "&" FU_HWIDS_KEY_PRODUCT_SKU},
-	    {"HardwareID-5",
-	     FU_HWIDS_KEY_MANUFACTURER "&" FU_HWIDS_KEY_FAMILY "&" FU_HWIDS_KEY_PRODUCT_NAME},
-	    {"HardwareID-6",
-	     FU_HWIDS_KEY_MANUFACTURER "&" FU_HWIDS_KEY_PRODUCT_SKU
-				       "&" FU_HWIDS_KEY_BASEBOARD_MANUFACTURER
-				       "&" FU_HWIDS_KEY_BASEBOARD_PRODUCT},
-	    {"HardwareID-7", FU_HWIDS_KEY_MANUFACTURER "&" FU_HWIDS_KEY_PRODUCT_SKU},
-	    {"HardwareID-8",
-	     FU_HWIDS_KEY_MANUFACTURER "&" FU_HWIDS_KEY_PRODUCT_NAME
-				       "&" FU_HWIDS_KEY_BASEBOARD_MANUFACTURER
-				       "&" FU_HWIDS_KEY_BASEBOARD_PRODUCT},
-	    {"HardwareID-9", FU_HWIDS_KEY_MANUFACTURER "&" FU_HWIDS_KEY_PRODUCT_NAME},
-	    {"HardwareID-10",
-	     FU_HWIDS_KEY_MANUFACTURER "&" FU_HWIDS_KEY_FAMILY
-				       "&" FU_HWIDS_KEY_BASEBOARD_MANUFACTURER
-				       "&" FU_HWIDS_KEY_BASEBOARD_PRODUCT},
-	    {"HardwareID-11", FU_HWIDS_KEY_MANUFACTURER "&" FU_HWIDS_KEY_FAMILY},
-	    {"HardwareID-12", FU_HWIDS_KEY_MANUFACTURER "&" FU_HWIDS_KEY_ENCLOSURE_KIND},
-	    {"HardwareID-13",
-	     FU_HWIDS_KEY_MANUFACTURER "&" FU_HWIDS_KEY_BASEBOARD_MANUFACTURER
-				       "&" FU_HWIDS_KEY_BASEBOARD_PRODUCT},
-	    {"HardwareID-14", FU_HWIDS_KEY_MANUFACTURER},
-	    {NULL, NULL}};
+	const gchar *value;
 
 	g_return_val_if_fail(FU_IS_HWIDS(self), NULL);
 	g_return_val_if_fail(key != NULL, NULL);
 
-	/* defined for Windows 10 */
-	for (guint i = 0; msdefined[i].search != NULL; i++) {
-		if (g_strcmp0(msdefined[i].search, key) == 0) {
-			key = msdefined[i].replace;
-			break;
-		}
-	}
-
+	value = g_hash_table_lookup(self->chids, key);
+	if (value != NULL)
+		return value;
 	return key;
+}
+
+/**
+ * fu_hwids_add_chid:
+ * @self: a #FuHwids
+ * @key: an textual ID, e.g. `HardwareID-05`
+ * @value: a composite hardware key, e.g. `Manufacturer&ProductName`
+ *
+ * Defines a "Computer Hardware ID" in terms of a set of SMBIOS values.
+ *
+ * Since: 1.9.16
+ **/
+void
+fu_hwids_add_chid(FuHwids *self, const gchar *key, const gchar *value)
+{
+	g_return_if_fail(FU_IS_HWIDS(self));
+	g_return_if_fail(key != NULL);
+	g_return_if_fail(value != NULL);
+	g_hash_table_insert(self->chids, g_strdup(key), g_strdup(value));
+}
+
+static gint
+fu_hwids_sort_keys_cb(gconstpointer a, gconstpointer b)
+{
+	const gchar *key1 = *((gchar **)a);
+	const gchar *key2 = *((gchar **)b);
+	return g_strcmp0(key1, key2);
+}
+
+/**
+ * fu_hwids_get_chid_keys:
+ * @self: a #FuHwids
+ *
+ * Returns all the CHID keys added by fu_hwids_add_chid().
+ *
+ * Returns: (transfer container) (element-type utf8): IDs
+ *
+ * Since: 1.9.16
+ **/
+GPtrArray *
+fu_hwids_get_chid_keys(FuHwids *self)
+{
+	GHashTableIter iter;
+	gpointer key;
+	g_autoptr(GPtrArray) keys = g_ptr_array_new_with_free_func(g_free);
+
+	g_return_val_if_fail(FU_IS_HWIDS(self), NULL);
+
+	g_hash_table_iter_init(&iter, self->chids);
+	while (g_hash_table_iter_next(&iter, &key, NULL))
+		g_ptr_array_add(keys, g_strdup(key));
+	g_ptr_array_sort(keys, fu_hwids_sort_keys_cb);
+
+	return g_steal_pointer(&keys);
 }
 
 /**
@@ -372,17 +374,18 @@ fu_hwids_add_guid(FuHwids *self, const gchar *guid)
 gboolean
 fu_hwids_setup(FuHwids *self, GError **error)
 {
+	g_autoptr(GPtrArray) chids = fu_hwids_get_chid_keys(self);
+
 	g_return_val_if_fail(FU_IS_HWIDS(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* add GUIDs */
-	for (guint i = 0; i < 15; i++) {
+	for (guint i = 0; i < chids->len; i++) {
+		const gchar *key = g_ptr_array_index(chids, i);
 		g_autofree gchar *guid = NULL;
-		g_autofree gchar *key = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		/* get the GUID and add to hash */
-		key = g_strdup_printf("HardwareID-%u", i);
 		guid = fu_hwids_get_guid(self, key, &error_local);
 		if (guid == NULL) {
 			g_debug("%s is not available, %s", key, error_local->message);
@@ -404,6 +407,7 @@ fu_hwids_finalize(GObject *object)
 	g_hash_table_unref(self->hash_values);
 	g_hash_table_unref(self->hash_values_display);
 	g_hash_table_unref(self->hash_guid);
+	g_hash_table_unref(self->chids);
 	g_ptr_array_unref(self->array_guids);
 
 	G_OBJECT_CLASS(fu_hwids_parent_class)->finalize(object);
@@ -422,7 +426,49 @@ fu_hwids_init(FuHwids *self)
 	self->hash_values = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	self->hash_values_display = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	self->hash_guid = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	self->chids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	self->array_guids = g_ptr_array_new_with_free_func(g_free);
+
+	/* Windows 10 CHIDs */
+	fu_hwids_add_chid(self,
+			  "HardwareID-00",
+			  "Manufacturer&Family&ProductName&ProductSku&BiosVendor&BiosVersion&"
+			  "BiosMajorRelease&BiosMinorRelease");
+	fu_hwids_add_chid(self,
+			  "HardwareID-01",
+			  "Manufacturer&Family&ProductName&BiosVendor&BiosVersion&"
+			  "BiosMajorRelease&BiosMinorRelease");
+	fu_hwids_add_chid(self,
+			  "HardwareID-02",
+			  "Manufacturer&ProductName&BiosVendor&BiosVersion&"
+			  "BiosMajorRelease&BiosMinorRelease");
+	fu_hwids_add_chid(self,
+			  "HardwareID-03",
+			  "Manufacturer&Family&ProductName&ProductSku&"
+			  "BaseboardManufacturer&BaseboardProduct");
+	fu_hwids_add_chid(self, "HardwareID-04", "Manufacturer&Family&ProductName&ProductSku");
+	fu_hwids_add_chid(self, "HardwareID-05", "Manufacturer&Family&ProductName");
+	fu_hwids_add_chid(self,
+			  "HardwareID-06",
+			  "Manufacturer&ProductSku&BaseboardManufacturer&BaseboardProduct");
+	fu_hwids_add_chid(self, "HardwareID-07", "Manufacturer&ProductSku");
+	fu_hwids_add_chid(self,
+			  "HardwareID-08",
+			  "Manufacturer&ProductName&BaseboardManufacturer&BaseboardProduct");
+	fu_hwids_add_chid(self, "HardwareID-09", "Manufacturer&ProductName");
+	fu_hwids_add_chid(self,
+			  "HardwareID-10",
+			  "Manufacturer&Family&BaseboardManufacturer&BaseboardProduct");
+	fu_hwids_add_chid(self, "HardwareID-11", "Manufacturer&Family");
+	fu_hwids_add_chid(self, "HardwareID-12", "Manufacturer&EnclosureKind");
+	fu_hwids_add_chid(self,
+			  "HardwareID-13",
+			  "Manufacturer&BaseboardManufacturer&BaseboardProduct");
+	fu_hwids_add_chid(self, "HardwareID-14", "Manufacturer");
+
+	/* used by the flashrom plugin */
+	fu_hwids_add_chid(self, "fwupd-05", "Manufacturer&Family&ProductName&BiosVendor");
+	fu_hwids_add_chid(self, "fwupd-14", "Manufacturer&BiosVendor");
 }
 
 /**
