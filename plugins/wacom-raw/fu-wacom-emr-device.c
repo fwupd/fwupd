@@ -58,17 +58,20 @@ fu_wacom_emr_device_calc_checksum(guint8 init1, const guint8 *buf, gsize bufsz)
 static gboolean
 fu_wacom_emr_device_w9013_erase_data(FuWacomEmrDevice *self, GError **error)
 {
-	FuWacomRawResponse rsp = {0x00};
-	FuWacomRawRequest req = {.cmd = FU_WACOM_RAW_BL_CMD_ERASE_DATAMEM,
-				 .echo = FU_WACOM_RAW_ECHO_DEFAULT,
-				 0x00};
-	guint8 *buf = (guint8 *)&req.addr;
+	g_autoptr(FuStructWacomRawRequest) st_req = fu_struct_wacom_raw_request_new();
+	guint8 *buf = st_req->data + FU_STRUCT_WACOM_RAW_REQUEST_OFFSET_ADDR;
+
+	fu_struct_wacom_raw_request_set_report_id(st_req, FU_WACOM_RAW_BL_REPORT_ID_SET);
+	fu_struct_wacom_raw_request_set_cmd(st_req, FU_WACOM_RAW_BL_CMD_ERASE_DATAMEM);
+	fu_struct_wacom_raw_request_set_echo(st_req,
+					     fu_wacom_device_get_echo_next(FU_WACOM_DEVICE(self)));
 	buf[0] = 0x00; /* erased block */
-	buf[1] =
-	    fu_wacom_emr_device_calc_checksum(0x05 + 0x00 + 0x07 + 0x00, (const guint8 *)&req, 4);
+	buf[1] = fu_wacom_emr_device_calc_checksum(0x05 + 0x00 + 0x07 + 0x00,
+						   (const guint8 *)&st_req,
+						   4);
 	if (!fu_wacom_device_cmd(FU_WACOM_DEVICE(self),
-				 &req,
-				 &rsp,
+				 st_req,
+				 NULL,
 				 1, /* ms */
 				 FU_WACOM_DEVICE_CMD_FLAG_POLL_ON_WAITING,
 				 error)) {
@@ -85,15 +88,19 @@ fu_wacom_emr_device_w9013_erase_code(FuWacomEmrDevice *self,
 				     guint8 block_nr,
 				     GError **error)
 {
-	FuWacomRawResponse rsp = {0x00};
-	FuWacomRawRequest req = {.cmd = FU_WACOM_RAW_BL_CMD_ERASE_FLASH, .echo = idx, 0x00};
-	guint8 *buf = (guint8 *)&req.addr;
+	g_autoptr(FuStructWacomRawRequest) st_req = fu_struct_wacom_raw_request_new();
+	guint8 *buf = st_req->data + FU_STRUCT_WACOM_RAW_REQUEST_OFFSET_ADDR;
+
+	fu_struct_wacom_raw_request_set_report_id(st_req, FU_WACOM_RAW_BL_REPORT_ID_SET);
+	fu_struct_wacom_raw_request_set_cmd(st_req, FU_WACOM_RAW_BL_CMD_ERASE_FLASH);
+	fu_struct_wacom_raw_request_set_echo(st_req, idx);
 	buf[0] = block_nr;
-	buf[1] =
-	    fu_wacom_emr_device_calc_checksum(0x05 + 0x00 + 0x07 + 0x00, (const guint8 *)&req, 4);
+	buf[1] = fu_wacom_emr_device_calc_checksum(0x05 + 0x00 + 0x07 + 0x00,
+						   (const guint8 *)&st_req,
+						   4);
 	if (!fu_wacom_device_cmd(FU_WACOM_DEVICE(self),
-				 &req,
-				 &rsp,
+				 st_req,
+				 NULL,
 				 1, /* ms */
 				 FU_WACOM_DEVICE_CMD_FLAG_POLL_ON_WAITING,
 				 error)) {
@@ -107,23 +114,18 @@ fu_wacom_emr_device_w9013_erase_code(FuWacomEmrDevice *self,
 static gboolean
 fu_wacom_emr_device_w9021_erase_all(FuWacomEmrDevice *self, GError **error)
 {
-	FuWacomRawRequest req = {
-	    .cmd = FU_WACOM_RAW_BL_CMD_ALL_ERASE,
-	    .echo = 0x01,
-	    .addr = 0x00,
-	};
-	FuWacomRawResponse rsp = {0x00};
+	g_autoptr(FuStructWacomRawRequest) st_req = fu_struct_wacom_raw_request_new();
+
+	fu_struct_wacom_raw_request_set_report_id(st_req, FU_WACOM_RAW_BL_REPORT_ID_SET);
+	fu_struct_wacom_raw_request_set_cmd(st_req, FU_WACOM_RAW_BL_CMD_ALL_ERASE);
+	fu_struct_wacom_raw_request_set_echo(st_req, 0x01);
 	if (!fu_wacom_device_cmd(FU_WACOM_DEVICE(self),
-				 &req,
-				 &rsp,
+				 st_req,
+				 NULL,
 				 2000, /* this takes a long time */
 				 FU_WACOM_DEVICE_CMD_FLAG_POLL_ON_WAITING,
 				 error)) {
 		g_prefix_error(error, "failed to send eraseall command: ");
-		return FALSE;
-	}
-	if (!fu_wacom_common_rc_set_error(&rsp, error)) {
-		g_prefix_error(error, "failed to erase: ");
 		return FALSE;
 	}
 	g_usleep(50);
@@ -134,16 +136,18 @@ static gboolean
 fu_wacom_emr_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuWacomDevice *self = FU_WACOM_DEVICE(device);
-	FuWacomRawRequest req = {.report_id = FU_WACOM_RAW_BL_REPORT_ID_SET,
-				 .cmd = FU_WACOM_RAW_BL_CMD_ATTACH,
-				 .echo = FU_WACOM_RAW_ECHO_DEFAULT,
-				 0x00};
+	g_autoptr(FuStructWacomRawRequest) st_req = fu_struct_wacom_raw_request_new();
 
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_debug("already in runtime mode, skipping");
 		return TRUE;
 	}
-	if (!fu_wacom_device_set_feature(self, (const guint8 *)&req, sizeof(req), error)) {
+
+	fu_struct_wacom_raw_request_set_report_id(st_req, FU_WACOM_RAW_BL_REPORT_ID_SET);
+	fu_struct_wacom_raw_request_set_cmd(st_req, FU_WACOM_RAW_BL_CMD_ATTACH);
+	fu_struct_wacom_raw_request_set_echo(st_req,
+					     fu_wacom_device_get_echo_next(FU_WACOM_DEVICE(self)));
+	if (!fu_wacom_device_set_feature(self, st_req->data, st_req->len, error)) {
 		g_prefix_error(error, "failed to switch to runtime mode: ");
 		return FALSE;
 	}
@@ -168,17 +172,11 @@ fu_wacom_emr_device_write_block(FuWacomEmrDevice *self,
 				GError **error)
 {
 	gsize blocksz = fu_wacom_device_get_block_sz(FU_WACOM_DEVICE(self));
-	FuWacomRawRequest req = {
-	    .cmd = FU_WACOM_RAW_BL_CMD_WRITE_FLASH,
-	    .echo = (guint8)idx + 1,
-	    .addr = GUINT32_TO_LE(address),
-	    .size8 = datasz / 8,
-	    .data = {0x00},
-	};
-	FuWacomRawResponse rsp = {0x00};
+	g_autoptr(FuStructWacomRawRequest) st_req = fu_struct_wacom_raw_request_new();
+	guint8 *data_unused = st_req->data + FU_STRUCT_WACOM_RAW_REQUEST_OFFSET_DATA_UNUSED;
 
 	/* check size */
-	if (datasz > sizeof(req.data)) {
+	if (datasz > FU_STRUCT_WACOM_RAW_REQUEST_SIZE_DATA) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -197,15 +195,21 @@ fu_wacom_emr_device_write_block(FuWacomEmrDevice *self,
 	}
 
 	/* data */
-	memcpy(&req.data, data, datasz); /* nocheck:blocked */
+	fu_struct_wacom_raw_request_set_report_id(st_req, FU_WACOM_RAW_BL_REPORT_ID_SET);
+	fu_struct_wacom_raw_request_set_cmd(st_req, FU_WACOM_RAW_BL_CMD_WRITE_FLASH);
+	fu_struct_wacom_raw_request_set_echo(st_req, (guint8)idx + 1);
+	fu_struct_wacom_raw_request_set_addr(st_req, address);
+	fu_struct_wacom_raw_request_set_size8(st_req, datasz / 8);
+	if (!fu_struct_wacom_raw_request_set_data(st_req, data, datasz, error))
+		return FALSE;
 
 	/* cmd and data checksums */
-	req.data_unused[0] =
-	    fu_wacom_emr_device_calc_checksum(0x05 + 0x00 + 0x4c + 0x00, (const guint8 *)&req, 8);
-	req.data_unused[1] = fu_wacom_emr_device_calc_checksum(0x00, data, datasz);
+	data_unused[0] =
+	    fu_wacom_emr_device_calc_checksum(0x05 + 0x00 + 0x4c + 0x00, st_req->data, 8);
+	data_unused[1] = fu_wacom_emr_device_calc_checksum(0x00, data, datasz);
 	if (!fu_wacom_device_cmd(FU_WACOM_DEVICE(self),
-				 &req,
-				 &rsp,
+				 st_req,
+				 NULL,
 				 1,
 				 FU_WACOM_DEVICE_CMD_FLAG_NONE,
 				 error)) {
