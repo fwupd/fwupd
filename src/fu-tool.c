@@ -2230,6 +2230,7 @@ fu_util_hwids(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuContext *ctx = fu_engine_get_context(priv->engine);
 	FuHwids *hwids = fu_context_get_hwids(ctx);
+	g_autoptr(GPtrArray) chid_keys = fu_hwids_get_chid_keys(hwids);
 	g_autoptr(GPtrArray) hwid_keys = fu_hwids_get_keys(hwids);
 
 	/* a keyfile with overrides */
@@ -2267,16 +2268,48 @@ fu_util_hwids(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* show GUIDs */
 	fu_console_print_literal(priv->console, "Hardware IDs");
 	fu_console_print_literal(priv->console, "------------");
-	for (guint i = 0; i < 15; i++) {
+	for (guint i = 0; i < chid_keys->len; i++) {
+		const gchar *key = g_ptr_array_index(chid_keys, i);
 		const gchar *keys = NULL;
 		g_autofree gchar *guid = NULL;
-		g_autofree gchar *key = NULL;
 		g_autofree gchar *keys_str = NULL;
 		g_auto(GStrv) keysv = NULL;
 		g_autoptr(GError) error_local = NULL;
 
+		/* filter */
+		if (!g_str_has_prefix(key, "HardwareID"))
+			continue;
+
 		/* get the GUID */
-		key = g_strdup_printf("HardwareID-%u", i);
+		keys = fu_hwids_get_replace_keys(hwids, key);
+		guid = fu_hwids_get_guid(hwids, key, &error_local);
+		if (guid == NULL) {
+			fu_console_print_literal(priv->console, error_local->message);
+			continue;
+		}
+
+		/* show what makes up the GUID */
+		keysv = g_strsplit(keys, "&", -1);
+		keys_str = g_strjoinv(" + ", keysv);
+		fu_console_print(priv->console, "{%s}   <- %s", guid, keys_str);
+	}
+
+	/* show extra GUIDs */
+	fu_console_print_literal(priv->console, "Extra Hardware IDs");
+	fu_console_print_literal(priv->console, "------------------");
+	for (guint i = 0; i < chid_keys->len; i++) {
+		const gchar *key = g_ptr_array_index(chid_keys, i);
+		const gchar *keys = NULL;
+		g_autofree gchar *guid = NULL;
+		g_autofree gchar *keys_str = NULL;
+		g_auto(GStrv) keysv = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* filter */
+		if (g_str_has_prefix(key, "HardwareID"))
+			continue;
+
+		/* get the GUID */
 		keys = fu_hwids_get_replace_keys(hwids, key);
 		guid = fu_hwids_get_guid(hwids, key, &error_local);
 		if (guid == NULL) {

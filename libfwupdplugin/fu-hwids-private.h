@@ -11,6 +11,8 @@
 
 FuHwids *
 fu_hwids_new(void);
+void
+fu_hwids_add_chid(FuHwids *self, const gchar *key, const gchar *value);
 gboolean
 fu_hwids_setup(FuHwids *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
