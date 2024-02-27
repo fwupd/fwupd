@@ -133,20 +133,18 @@ static void
 fu_flashrom_plugin_device_set_hwids(FuPlugin *plugin, FuDevice *device)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	static const gchar *hwids[] = {
-	    "HardwareID-3",
-	    "HardwareID-4",
-	    "HardwareID-5",
-	    "HardwareID-6",
+	static const gchar *chids[] = {
+	    "HardwareID-03",
+	    "HardwareID-04",
+	    "HardwareID-05",
+	    "HardwareID-06",
 	    "HardwareID-10",
-	    /* a more useful one for coreboot branch detection */
-	    FU_HWIDS_KEY_MANUFACTURER "&" FU_HWIDS_KEY_FAMILY "&" FU_HWIDS_KEY_PRODUCT_NAME
-				      "&" FU_HWIDS_KEY_PRODUCT_SKU "&" FU_HWIDS_KEY_BIOS_VENDOR,
+	    "fwupd-05", /* for coreboot branch detection */
 	};
 	/* don't include FU_HWIDS_KEY_BIOS_VERSION */
-	for (guint i = 0; i < G_N_ELEMENTS(hwids); i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(chids); i++) {
 		g_autofree gchar *str = NULL;
-		str = fu_context_get_hwid_replace_value(ctx, hwids[i], NULL);
+		str = fu_context_get_hwid_replace_value(ctx, chids[i], NULL);
 		if (str != NULL)
 			fu_device_add_instance_id(device, str);
 	}

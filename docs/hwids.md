@@ -19,21 +19,26 @@ Microsoft calls these values "CHIDs" and they are generated on Windows from the 
 binary which can be found [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/devtest/computerhardwareids).
 The list of CHIDs used in Microsoft Windows is:
 
-    HardwareID-0  ← Manufacturer + Family + Product Name + SKU Number + BIOS Vendor + BIOS Version + BIOS Major Release + BIOS Minor Release
-    HardwareID-1  ← Manufacturer + Family + Product Name + BIOS Vendor + BIOS Version + BIOS Major Release + BIOS Minor Release
-    HardwareID-2  ← Manufacturer + Product Name + BIOS Vendor + BIOS Version + BIOS Major Release + BIOS Minor Release
-    HardwareID-3  ← Manufacturer + Family + ProductName + SKU Number + Baseboard_Manufacturer + Baseboard_Product
-    HardwareID-4  ← Manufacturer + Family + ProductName + SKU Number
-    HardwareID-5  ← Manufacturer + Family + ProductName
-    HardwareID-6  ← Manufacturer + SKU Number + Baseboard_Manufacturer + Baseboard_Product
-    HardwareID-7  ← Manufacturer + SKU Number
-    HardwareID-8  ← Manufacturer + ProductName + Baseboard_Manufacturer + Baseboard_Product
-    HardwareID-9  ← Manufacturer + ProductName
+    HardwareID-00 ← Manufacturer + Family + Product Name + SKU Number + BIOS Vendor + BIOS Version + BIOS Major Release + BIOS Minor Release
+    HardwareID-01 ← Manufacturer + Family + Product Name + BIOS Vendor + BIOS Version + BIOS Major Release + BIOS Minor Release
+    HardwareID-02 ← Manufacturer + Product Name + BIOS Vendor + BIOS Version + BIOS Major Release + BIOS Minor Release
+    HardwareID-03 ← Manufacturer + Family + ProductName + SKU Number + Baseboard_Manufacturer + Baseboard_Product
+    HardwareID-04 ← Manufacturer + Family + ProductName + SKU Number
+    HardwareID-05 ← Manufacturer + Family + ProductName
+    HardwareID-06 ← Manufacturer + SKU Number + Baseboard_Manufacturer + Baseboard_Product
+    HardwareID-07 ← Manufacturer + SKU Number
+    HardwareID-08 ← Manufacturer + ProductName + Baseboard_Manufacturer + Baseboard_Product
+    HardwareID-09 ← Manufacturer + ProductName
     HardwareID-10 ← Manufacturer + Family + Baseboard_Manufacturer + Baseboard_Product
     HardwareID-11 ← Manufacturer + Family
     HardwareID-12 ← Manufacturer + Enclosure Type
     HardwareID-13 ← Manufacturer + Baseboard_Manufacturer + Baseboard_Product
     HardwareID-14 ← Manufacturer
+
+Additionally, we also support some fwupd-specific IDs:
+
+    fwupd-05 ← Manufacturer&Family&ProductName&BiosVendor
+    fwupd-14 ← Manufacturer&BiosVendor
 
 On Windows, CHIDs are generated from the ASCII representation of SMBIOS strings, and on Linux the same
 mechanism is used. Additionally, on Linux, the Device Tree, DMI and `kenv` data sources
