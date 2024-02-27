@@ -62,6 +62,7 @@ install_data([
     'synaptics-prometheus.json',
     'synaptics-vmm9430evb.json',
     'ugreen-cm260.json',
+    'wacom-g14t.json',
     'wacom-intuos-bt-m.json',
     'wacom-intuos-bt-s.json',
     'wistron-dock-40b7.json',
