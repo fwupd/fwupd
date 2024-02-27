@@ -83,7 +83,11 @@ BuildRequires: gnutls-utils
 BuildRequires: meson
 BuildRequires: json-glib-devel >= %{json_glib_version}
 BuildRequires: vala
+%if 0%{?rhel} >= 10 || 0%{?fedora} >= 41
+BuildRequires: bash-completion-devel
+%else
 BuildRequires: bash-completion
+%endif
 BuildRequires: git-core
 %if 0%{?have_flashrom}
 BuildRequires: flashrom-devel >= 1.2-2
