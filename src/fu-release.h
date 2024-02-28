@@ -68,3 +68,5 @@ gint
 fu_release_compare(FuRelease *release1, FuRelease *release2);
 void
 fu_release_set_priority(FuRelease *self, guint64 priority);
+guint64
+fu_release_get_priority(FuRelease *self);
