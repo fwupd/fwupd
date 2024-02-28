@@ -155,7 +155,7 @@ void
 fu_device_list_depsolve_order(FuDeviceList *self, FuDevice *device)
 {
 	g_autoptr(FuDevice) root = fu_device_get_root(device);
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER))
+	if (fu_device_has_internal_flag(root, FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER))
 		return;
 	fu_device_list_depsolve_order_full(self, root, 0);
 }
