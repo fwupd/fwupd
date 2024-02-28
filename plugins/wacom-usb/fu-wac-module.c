@@ -217,6 +217,12 @@ fu_wac_module_cleanup(FuDevice *device,
 	return fu_device_cleanup(parent, progress, flags, error);
 }
 
+static gchar *
+fu_wac_module_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint16(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_wac_module_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -322,4 +328,5 @@ fu_wac_module_class_init(FuWacModuleClass *klass)
 	klass_device->to_string = fu_wac_module_to_string;
 	klass_device->cleanup = fu_wac_module_cleanup;
 	klass_device->set_progress = fu_wac_module_set_progress;
+	klass_device->convert_version = fu_wac_module_convert_version;
 }
