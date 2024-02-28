@@ -740,6 +740,13 @@ fu_release_set_priority(FuRelease *self, guint64 priority)
 	self->priority = priority;
 }
 
+guint64
+fu_release_get_priority(FuRelease *self)
+{
+	g_return_val_if_fail(FU_IS_RELEASE(self), 0);
+	return self->priority;
+}
+
 static void
 fu_release_ensure_device_by_checksum(FuRelease *self, XbNode *component, XbNode *rel)
 {
