@@ -58,11 +58,7 @@ fu_logind_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 }
 
 static gboolean
-fu_logind_plugin_prepare(FuPlugin *plugin,
-			 FuDevice *device,
-			 FuProgress *progress,
-			 FwupdInstallFlags flags,
-			 GError **error)
+fu_logind_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
 	FuLogindPlugin *self = FU_LOGIND_PLUGIN(plugin);
 	g_autoptr(GError) error_local = NULL;
@@ -108,11 +104,7 @@ fu_logind_plugin_prepare(FuPlugin *plugin,
 }
 
 static gboolean
-fu_logind_plugin_cleanup(FuPlugin *plugin,
-			 FuDevice *device,
-			 FuProgress *progress,
-			 FwupdInstallFlags flags,
-			 GError **error)
+fu_logind_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
 	FuLogindPlugin *self = FU_LOGIND_PLUGIN(plugin);
 	if (self->logind_fd < 0)
@@ -150,6 +142,6 @@ fu_logind_plugin_class_init(FuLogindPluginClass *klass)
 	object_class->finalize = fu_logind_finalize;
 	plugin_class->to_string = fu_logind_plugin_to_string;
 	plugin_class->startup = fu_logind_plugin_startup;
-	plugin_class->cleanup = fu_logind_plugin_cleanup;
-	plugin_class->prepare = fu_logind_plugin_prepare;
+	plugin_class->composite_cleanup = fu_logind_plugin_composite_cleanup;
+	plugin_class->composite_prepare = fu_logind_plugin_composite_prepare;
 }
