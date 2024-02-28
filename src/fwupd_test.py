@@ -54,23 +54,10 @@ class FwupdTest(dbusmock.DBusTestCase):
             | GLib.LogLevelFlags.LEVEL_CRITICAL
         )
         # set up a fake system D-BUS
-        cls.test_bus = Gio.TestDBus.new(Gio.TestDBusFlags.NONE)
-        cls.test_bus.up()
-        try:
-            del os.environ["DBUS_SESSION_BUS_ADDRESS"]
-        except KeyError:
-            pass
-        os.environ["DBUS_SYSTEM_BUS_ADDRESS"] = cls.test_bus.get_bus_address()
-
+        cls.start_system_bus()
         cls.dbus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
-        cls.dbus_con = cls.get_dbus(True)
 
         override_gi_search_path()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.test_bus.down()
-        dbusmock.DBusTestCase.tearDownClass()
 
     def setUp(self):
         self.testbed = UMockdev.Testbed.new()
