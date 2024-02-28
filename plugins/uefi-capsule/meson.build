@@ -142,6 +142,7 @@ install_data([
   ],
   install_dir: join_paths(installed_test_datadir, 'efi/efivars'),
 )
+umockdev_tests += files('uefi_capsule_test.py')
 endif
 
 summary({

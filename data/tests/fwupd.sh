@@ -57,6 +57,7 @@ run_device_tests
 run_umockdev_test fwupd_test.py
 run_umockdev_test amd_pmc_test.py
 run_umockdev_test pci_psp_test.py
+run_umockdev_test uefi_capsule_test.py
 
 # success!
 exit 0
