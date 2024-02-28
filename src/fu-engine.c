@@ -1917,13 +1917,14 @@ fu_engine_install_releases(FuEngine *self,
 		FuRelease *release = g_ptr_array_index(releases, i);
 		FuDevice *device = fu_release_get_device(release);
 		const gchar *logical_id = fu_device_get_logical_id(device);
-		g_info("composite update %u: %s %s->%s (%s: %i)",
+		g_info("composite update %u: %s %s->%s (%s, order:%i: priority:%u)",
 		       i + 1,
 		       fu_device_get_id(device),
 		       fu_device_get_version(device),
 		       fu_release_get_version(release),
 		       logical_id != NULL ? logical_id : "n/a",
-		       fu_device_get_order(device));
+		       fu_device_get_order(device),
+		       (guint)fu_release_get_priority(release));
 		g_ptr_array_add(devices, g_object_ref(device));
 	}
 	fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_COMPOSITE_PREPARE);
