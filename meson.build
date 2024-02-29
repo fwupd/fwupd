@@ -456,7 +456,7 @@ if build_standalone
 endif
 
 if libsystemd.found()
-  systemd = dependency('systemd', version: '>= 211', required: get_option('systemd'))
+  systemd = dependency('systemd', version: '>= 249', required: get_option('systemd'))
   conf.set('HAVE_SYSTEMD' , '1')
   conf.set('HAVE_LOGIND' , '1')
   systemd_root_prefix = get_option('systemd_root_prefix')
@@ -467,13 +467,9 @@ if libsystemd.found()
     systemd_sysusers_dir = systemd.get_variable(pkgconfig: 'sysusersdir')
   else
     systemdunitdir = systemd.get_variable(pkgconfig: 'systemdsystemunitdir', pkgconfig_define: ['rootprefix', systemd_root_prefix])
-    systemd_root_prefix_varname = 'root_prefix'
-    if systemd.version().version_compare('< 246')
-      systemd_root_prefix_varname = 'rootprefix'
-    endif
-    systemd_shutdown_dir = systemd.get_variable(pkgconfig: 'systemdshutdowndir', pkgconfig_define: [systemd_root_prefix_varname, systemd_root_prefix])
-    systemd_modules_load_dir = systemd.get_variable(pkgconfig: 'modulesloaddir', pkgconfig_define: [systemd_root_prefix_varname, systemd_root_prefix])
-    systemd_sysusers_dir = systemd.get_variable(pkgconfig: 'sysusersdir', pkgconfig_define: [systemd_root_prefix_varname, systemd_root_prefix])
+    systemd_shutdown_dir = systemd.get_variable(pkgconfig: 'systemdshutdowndir', pkgconfig_define: ['root_prefix', systemd_root_prefix])
+    systemd_modules_load_dir = systemd.get_variable(pkgconfig: 'modulesloaddir', pkgconfig_define: ['root_prefix', systemd_root_prefix])
+    systemd_sysusers_dir = systemd.get_variable(pkgconfig: 'sysusersdir', pkgconfig_define: ['root_prefix', systemd_root_prefix])
   endif
 endif
 

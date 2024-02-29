@@ -15,5 +15,8 @@ ExecStart=@libexecdir@/fwupd/fwupd
 PrivateTmp=yes
 ProtectHome=yes
 ProtectSystem=full
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+RestrictRealtime=yes
 SystemCallFilter=~@mount
 @dynamic_options@
