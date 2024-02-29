@@ -35,13 +35,11 @@ Other variables, include:
 
 * `FWUPD_DELL_FAKE_SMBIOS` if set, use fake SMBIOS information for tests
 * `FWUPD_FORCE_TPM2` ignores a TPM 1.2 device detected in the TPM self tests
-* `FWUPD_PLUGIN_TEST` used by the test plugin to pass data out-of-band to the loader
 * `FWUPD_REDFISH_SELF_TEST` if set, do destructive tests on the actual device BMC
 * `FWUPD_REDFISH_SMBIOS_DATA` use this filename to emulate a specific SMBIOS blob
 * `FWUPD_SOLOKEY_EMULATE` emulates a fake device for testing
 * `FWUPD_SUPERIO_DISABLE_MIRROR` disables the e-flash fixup to get byte-accurate hardware dumps
 * `FWUPD_SUPERIO_RECOVER` allow recovery of a corrupted SuperIO by hardcoding the device size
-* `FWUPD_TEST_PLUGIN_XML` used by the test plugin to load XML state out-of-band before startup
 * `FWUPD_UEFI_CAPSULE_RECREATE_COD_DATA` if set, write the files in the example COD tree in srcdir
 * `FWUPD_UEFI_TEST` used by the UEFI plugins to disable specific sanity checks during self tests
 

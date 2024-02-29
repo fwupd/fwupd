@@ -39,6 +39,8 @@ fu_plugin_get_report_metadata(FuPlugin *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_plugin_open(FuPlugin *self, const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_plugin_reset_config_values(FuPlugin *self, GError **error) G_GNUC_NON_NULL(1);
 void
 fu_plugin_runner_init(FuPlugin *self) G_GNUC_NON_NULL(1);
 gboolean

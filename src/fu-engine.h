@@ -206,6 +206,8 @@ gchar *
 fu_engine_self_sign(FuEngine *self, const gchar *value, JcatSignFlags flags, GError **error);
 gboolean
 fu_engine_modify_config(FuEngine *self, const gchar *key, const gchar *value, GError **error);
+gboolean
+fu_engine_reset_config(FuEngine *self, const gchar *section, GError **error);
 FuContext *
 fu_engine_get_context(FuEngine *self);
 GPtrArray *
