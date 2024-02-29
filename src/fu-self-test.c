@@ -2488,6 +2488,12 @@ fu_engine_history_func(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
+	ret = fu_plugin_reset_config_values(self->plugin, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_set_config_value(self->plugin, "AnotherWriteRequired", "true", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	fu_engine_add_plugin(engine, self->plugin);
 
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
@@ -2532,7 +2538,6 @@ fu_engine_history_func(gconstpointer user_data)
 	g_assert_nonnull(component);
 
 	/* set the counter */
-	(void)g_setenv("FWUPD_PLUGIN_TEST", "another-write-required", TRUE);
 	fu_device_set_metadata_integer(device, "nr-update", 0);
 
 	/* install it */
@@ -2679,6 +2684,9 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
+	ret = fu_plugin_reset_config_values(self->plugin, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	fu_engine_add_plugin(engine, self->plugin);
 
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
@@ -2761,6 +2769,11 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	/* check we did 1.2.2 -> 1.2.3 -> 1.2.4 */
 	g_assert_cmpint(fu_device_get_metadata_integer(device, "nr-update"), ==, 2);
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.4");
+
+	/* reset the config back to defaults */
+	ret = fu_engine_reset_config(engine, "test", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
@@ -2796,7 +2809,12 @@ fu_engine_history_inherit(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	(void)g_setenv("FWUPD_PLUGIN_TEST", "fail", TRUE);
+	ret = fu_plugin_reset_config_values(self->plugin, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_set_config_value(self->plugin, "NeedsActivation", "true", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	fu_engine_add_plugin(engine, self->plugin);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
 	g_assert_no_error(error);
@@ -2839,7 +2857,6 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_assert_nonnull(component);
 
 	/* install it */
-	(void)g_setenv("FWUPD_PLUGIN_TEST", "requires-activation", TRUE);
 	fu_release_set_device(release, device);
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
@@ -2935,7 +2952,12 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	(void)g_setenv("FWUPD_PLUGIN_TEST", "fail", TRUE);
+	ret = fu_plugin_reset_config_values(self->plugin, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_set_config_value(self->plugin, "NeedsReboot", "true", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	fu_engine_add_plugin(engine, self->plugin);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NONE, progress, &error);
 	g_assert_no_error(error);
@@ -2978,7 +3000,6 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_assert_nonnull(component);
 
 	/* install it */
-	(void)g_setenv("FWUPD_PLUGIN_TEST", "requires-reboot", TRUE);
 	fu_release_set_device(release, device);
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
@@ -3045,6 +3066,12 @@ fu_engine_install_request(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
+	ret = fu_plugin_reset_config_values(self->plugin, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_set_config_value(self->plugin, "RequestSupported", "true", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	fu_engine_add_plugin(engine, self->plugin);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NONE, progress, &error);
 	g_assert_no_error(error);
@@ -3088,7 +3115,6 @@ fu_engine_install_request(gconstpointer user_data)
 	g_assert_nonnull(component);
 
 	/* install it */
-	(void)g_setenv("FWUPD_PLUGIN_TEST", "request", TRUE);
 	fu_release_set_device(release, device);
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
@@ -3142,7 +3168,9 @@ fu_engine_history_error_func(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	(void)g_setenv("FWUPD_PLUGIN_TEST", "fail", TRUE);
+	ret = fu_plugin_set_config_value(self->plugin, "WriteSupported", "false", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	fu_engine_add_plugin(engine, self->plugin);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
 	g_assert_no_error(error);
@@ -4142,7 +4170,9 @@ fu_plugin_module_func(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* create a fake device */
-	(void)g_setenv("FWUPD_PLUGIN_TEST", "registration", TRUE);
+	ret = fu_plugin_set_config_value(self->plugin, "RegistrationSupported", "true", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	ret = fu_plugin_runner_startup(self->plugin, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -4536,7 +4566,12 @@ fu_plugin_composite_func(gconstpointer user_data)
 	g_assert_cmpint(components->len, ==, 3);
 
 	/* set up dummy plugin */
-	(void)g_setenv("FWUPD_PLUGIN_TEST", "composite", TRUE);
+	ret = fu_plugin_reset_config_values(self->plugin, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_set_config_value(self->plugin, "CompositeChild", "true", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	fu_engine_add_plugin(engine, self->plugin);
 
 	ret = fu_plugin_runner_startup(self->plugin, progress, &error);

@@ -473,46 +473,12 @@ fu_config_set_default(FuConfig *self, const gchar *section, const gchar *key, co
 			    g_strdup(value));
 }
 
-/**
- * fu_config_set_value:
- * @self: a #FuConfig
- * @section: a settings section
- * @key: a settings key
- * @value: (nullable): a settings value
- * @error: (nullable): optional return location for an error
- *
- * Sets a plugin config value, saving the new data back to the default config file.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.9.1
- **/
-gboolean
-fu_config_set_value(FuConfig *self,
-		    const gchar *section,
-		    const gchar *key,
-		    const gchar *value,
-		    GError **error)
+static gboolean
+fu_config_save(FuConfig *self, GError **error)
 {
 	FuConfigPrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *data = NULL;
 
-	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
-	g_return_val_if_fail(section != NULL, FALSE);
-	g_return_val_if_fail(key != NULL, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* sanity check */
-	if (priv->items->len == 0) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, "no config to load");
-		return FALSE;
-	}
-
-	/* do not write default keys */
-	fu_config_migrate_keyfile(self);
-
-	/* only write the file to a mutable location */
-	g_key_file_set_string(priv->keyfile, section, key, value);
 	data = g_key_file_to_data(priv->keyfile, NULL, error);
 	if (data == NULL)
 		return FALSE;
@@ -535,6 +501,71 @@ fu_config_set_value(FuConfig *self,
 	/* failed */
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED, "no writable config");
 	return FALSE;
+}
+
+/**
+ * fu_config_set_value:
+ * @self: a #FuConfig
+ * @section: a settings section
+ * @key: a settings key
+ * @value: (nullable): a settings value
+ * @error: (nullable): optional return location for an error
+ *
+ * Sets a plugin config value, saving the new data back to the default config file.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.9.1
+ **/
+gboolean
+fu_config_set_value(FuConfig *self,
+		    const gchar *section,
+		    const gchar *key,
+		    const gchar *value,
+		    GError **error)
+{
+	FuConfigPrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
+	g_return_val_if_fail(section != NULL, FALSE);
+	g_return_val_if_fail(key != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* sanity check */
+	if (priv->items->len == 0) {
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, "no config to load");
+		return FALSE;
+	}
+
+	/* do not write default keys */
+	fu_config_migrate_keyfile(self);
+
+	/* only write the file to a mutable location */
+	g_key_file_set_string(priv->keyfile, section, key, value);
+	return fu_config_save(self, error);
+}
+
+/**
+ * fu_config_reset_defaults:
+ * @self: a #FuConfig
+ * @section: a settings section
+ *
+ * Reset all the keys back to the default values.
+ *
+ * Since: 1.9.15
+ **/
+gboolean
+fu_config_reset_defaults(FuConfig *self, const gchar *section, GError **error)
+{
+	FuConfigPrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
+	g_return_val_if_fail(section != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* remove all keys, and save */
+	g_key_file_remove_group(priv->keyfile, section, NULL);
+	return fu_config_save(self, error);
 }
 
 /**

@@ -746,8 +746,16 @@ fu_engine_unlock(FuEngine *self, const gchar *device_id, GError **error)
 }
 
 gboolean
+fu_engine_reset_config(FuEngine *self, const gchar *section, GError **error)
+{
+	/* reset, effective next reboot */
+	return fu_config_reset_defaults(FU_CONFIG(self->config), section, error);
+}
+
+gboolean
 fu_engine_modify_config(FuEngine *self, const gchar *key, const gchar *value, GError **error)
 {
+	g_auto(GStrv) section_key = NULL;
 	const gchar *keys[] = {"ArchiveSizeMax",
 			       "AllowEmulation",
 			       "ApprovedFirmware",
@@ -770,6 +778,17 @@ fu_engine_modify_config(FuEngine *self, const gchar *key, const gchar *value, GE
 			       "UpdateMotd",
 			       "UriSchemes",
 			       "VerboseDomains",
+			       "test:AnotherWriteRequired",
+			       "test:CompositeChild",
+			       "test:DecompressDelay",
+			       "test:NeedsActivation",
+			       "test:NeedsReboot",
+			       "test:RegistrationSupported",
+			       "test:RequestDelay",
+			       "test:RequestSupported",
+			       "test:VerifyDelay",
+			       "test:WriteDelay",
+			       "test:WriteSupported",
 			       NULL};
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
@@ -781,6 +800,16 @@ fu_engine_modify_config(FuEngine *self, const gchar *key, const gchar *value, GE
 	if (!g_strv_contains(keys, key)) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "key %s not supported", key);
 		return FALSE;
+	}
+
+	/* plugin specified */
+	section_key = g_strsplit(key, ":", 2);
+	if (g_strv_length(section_key) == 2) {
+		return fu_config_set_value(FU_CONFIG(self->config),
+					   section_key[0],
+					   section_key[1],
+					   value,
+					   error);
 	}
 
 	/* modify, effective next reboot */
