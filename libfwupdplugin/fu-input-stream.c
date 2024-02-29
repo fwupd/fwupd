@@ -85,8 +85,8 @@ fu_input_stream_read_safe(GInputStream *stream,
 	}
 	if ((gsize)rc != count) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_PARTIAL_INPUT,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_READ,
 			    "requested 0x%x and got 0x%x",
 			    (guint)count,
 			    (guint)rc);
@@ -286,8 +286,8 @@ fu_input_stream_read_byte_array(GInputStream *stream, gsize offset, gsize count,
 			return NULL;
 		if (offset > streamsz) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_ARGUMENT,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "offset 0x%x is out of range of stream size 0x%x",
 				    (guint)offset,
 				    (guint)streamsz);

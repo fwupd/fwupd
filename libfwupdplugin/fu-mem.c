@@ -287,8 +287,8 @@ fu_memcmp_safe(const guint8 *buf1,
 	for (guint i = 0x0; i < n; i++) {
 		if (buf1[buf1_offset + i] != buf2[buf2_offset + i]) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "got 0x%02x, expected 0x%02x @ 0x%04x",
 				    buf1[buf1_offset + i],
 				    buf2[buf2_offset + i],
@@ -541,8 +541,8 @@ fu_memdup_safe(const guint8 *src, gsize n, GError **error)
 	/* sanity check */
 	if (n > 0x40000000) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot allocate %uGB of memory",
 			    (guint)(n / 0x40000000));
 		return NULL;
@@ -970,8 +970,8 @@ fu_memstrsafe(const guint8 *buf, gsize bufsz, gsize offset, gsize maxsz, GError 
 	str = fu_strsafe((const gchar *)buf + offset, maxsz);
 	if (str == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid ASCII string");
 		return NULL;
 	}

@@ -54,8 +54,8 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	if (fu_struct_fmap_get_size(st_hdr) != streamsz) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "file size incorrect, expected 0x%04x got 0x%04x",
 			    fu_struct_fmap_get_size(st_hdr),
 			    (guint)streamsz);
@@ -64,8 +64,8 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 	nareas = fu_struct_fmap_get_nareas(st_hdr);
 	if (nareas < 1) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "number of areas invalid");
 		return FALSE;
 	}

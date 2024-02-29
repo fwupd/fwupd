@@ -39,8 +39,8 @@ fu_uefi_bootmgr_get_suffix(GError **error)
 	firmware_bits = fu_uefi_read_file_as_uint64(sysfsefidir, "fw_platform_size");
 	if (firmware_bits == 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "%s/fw_platform_size cannot be found",
 			    sysfsefidir);
 		return NULL;
@@ -53,8 +53,8 @@ fu_uefi_bootmgr_get_suffix(GError **error)
 
 	/* this should exist */
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_NOT_FOUND,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
 		    "%s/fw_platform_size has unknown value %" G_GUINT64_FORMAT,
 		    sysfsefidir,
 		    firmware_bits);
@@ -110,8 +110,8 @@ fu_uefi_get_built_app_path(const gchar *binary, GError **error)
 	if (fu_efivar_secure_boot_enabled(NULL)) {
 		if (!source_path_signed_exists) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_FOUND,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "%s cannot be found",
 				    source_path_signed);
 			return NULL;
@@ -125,8 +125,8 @@ fu_uefi_get_built_app_path(const gchar *binary, GError **error)
 		return g_steal_pointer(&source_path_signed);
 
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_NOT_FOUND,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
 		    "%s and %s cannot be found",
 		    source_path,
 		    source_path_signed);
@@ -145,8 +145,8 @@ fu_uefi_get_framebuffer_size(guint32 *width, guint32 *height, GError **error)
 	fbdir = g_build_filename(sysfsdriverdir, "efi-framebuffer", "efi-framebuffer.0", NULL);
 	if (!g_file_test(fbdir, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "EFI framebuffer not found");
 		return FALSE;
 	}
@@ -154,8 +154,8 @@ fu_uefi_get_framebuffer_size(guint32 *width, guint32 *height, GError **error)
 	width_tmp = fu_uefi_read_file_as_uint64(fbdir, "width");
 	if (width_tmp == 0 || height_tmp == 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "EFI framebuffer has invalid size "
 			    "%" G_GUINT32_FORMAT "x%" G_GUINT32_FORMAT,
 			    width_tmp,
@@ -183,8 +183,8 @@ fu_uefi_get_bitmap_size(const guint8 *buf,
 	/* check header */
 	if (bufsz < 26 || memcmp(buf, "BM", 2) != 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid BMP header signature");
 		return FALSE;
 	}
@@ -194,8 +194,8 @@ fu_uefi_get_bitmap_size(const guint8 *buf,
 		return FALSE;
 	if (ui32 < 26) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "BMP header invalid @ %" G_GUINT32_FORMAT "x",
 			    ui32);
 		return FALSE;
@@ -206,8 +206,8 @@ fu_uefi_get_bitmap_size(const guint8 *buf,
 		return FALSE;
 	if (ui32 < 26 - 14) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "BITMAPINFOHEADER invalid @ %" G_GUINT32_FORMAT "x",
 			    ui32);
 		return FALSE;

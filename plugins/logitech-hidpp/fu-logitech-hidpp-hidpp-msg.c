@@ -82,74 +82,77 @@ fu_logitech_hidpp_msg_is_error(FuLogitechHidppHidppMsg *msg, GError **error)
 		switch (msg->data[1]) {
 		case HIDPP_ERR_INVALID_SUBID:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "invalid SubID");
 			break;
 		case HIDPP_ERR_INVALID_ADDRESS:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "invalid address");
 			break;
 		case HIDPP_ERR_INVALID_VALUE:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "invalid value");
 			break;
 		case HIDPP_ERR_CONNECT_FAIL:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_FAILED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
 					    "connection request failed");
 			break;
 		case HIDPP_ERR_TOO_MANY_DEVICES:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NO_SPACE,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "too many devices connected");
 			break;
 		case HIDPP_ERR_ALREADY_EXISTS:
-			g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_EXISTS, "already exists");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "already exists");
 			break;
 		case HIDPP_ERR_BUSY:
-			g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BUSY, "busy");
+			g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "busy");
 			break;
 		case HIDPP_ERR_UNKNOWN_DEVICE:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_FOUND,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
 					    "unknown device");
 			break;
 		case HIDPP_ERR_RESOURCE_ERROR:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_HOST_UNREACHABLE,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
 					    "resource error");
 			break;
 		case HIDPP_ERR_REQUEST_UNAVAILABLE:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_EXISTS,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "request not valid in current context");
 			break;
 		case HIDPP_ERR_INVALID_PARAM_VALUE:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "request parameter has unsupported value");
 			break;
 		case HIDPP_ERR_WRONG_PIN_CODE:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_CONNECTION_REFUSED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_AUTH_FAILED,
 					    "the pin code was wrong");
 			break;
 		default:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_FAILED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
 					    "generic failure");
 		}
 		return FALSE;
@@ -158,48 +161,48 @@ fu_logitech_hidpp_msg_is_error(FuLogitechHidppHidppMsg *msg, GError **error)
 		switch (msg->data[1]) {
 		case HIDPP_ERROR_CODE_INVALID_ARGUMENT:
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_ARGUMENT,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "Invalid argument 0x%02x",
 				    msg->data[2]);
 			break;
 		case HIDPP_ERROR_CODE_OUT_OF_RANGE:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "out of range");
 			break;
 		case HIDPP_ERROR_CODE_HW_ERROR:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_BROKEN_PIPE,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "hardware error");
 			break;
 		case HIDPP_ERROR_CODE_INVALID_FEATURE_INDEX:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_ARGUMENT,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "invalid feature index");
 			break;
 		case HIDPP_ERROR_CODE_INVALID_FUNCTION_ID:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_ARGUMENT,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "invalid function ID");
 			break;
 		case HIDPP_ERROR_CODE_BUSY:
-			g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BUSY, "busy");
+			g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "busy");
 			break;
 		case HIDPP_ERROR_CODE_UNSUPPORTED:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "unsupported");
 			break;
 		default:
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_FAILED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
 					    "generic failure");
 			break;
 		}

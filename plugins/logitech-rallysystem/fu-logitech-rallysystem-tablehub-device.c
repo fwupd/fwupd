@@ -61,8 +61,8 @@ fu_logitech_rallysystem_tablehub_device_probe(FuDevice *device, GError **error)
 	}
 	if (bulk_iface == G_MAXUINT8) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no bulk interface found");
 		return FALSE;
 	}
@@ -90,8 +90,8 @@ fu_logitech_rallysystem_tablehub_device_send(FuLogitechRallysystemTablehubDevice
 	}
 	if (bufsz != actual_length) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "failed to send full packet using bulk transfer");
 		return FALSE;
 	}
@@ -120,8 +120,8 @@ fu_logitech_rallysystem_tablehub_device_recv(FuLogitechRallysystemTablehubDevice
 	}
 	if (bufsz != actual_length) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "failed to receive full packet using bulk transfer");
 		return FALSE;
 	}
@@ -187,8 +187,8 @@ fu_logitech_rallysystem_tablehub_device_progress_cb(FuDevice *device,
 		return FALSE;
 	if (fu_struct_usb_progress_response_get_completed(st_res) != 100) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_ARGUMENT,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
 			    "percentage only %u%%",
 			    fu_struct_usb_progress_response_get_completed(st_res));
 		return FALSE;

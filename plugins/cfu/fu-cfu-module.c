@@ -145,8 +145,8 @@ fu_cfu_module_write_firmware(FuDevice *device,
 	proxy = fu_device_get_proxy(device);
 	if (proxy == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "no proxy device assigned");
 		return FALSE;
 	}

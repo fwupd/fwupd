@@ -60,9 +60,9 @@ fu_genesys_gl32xx_device_cmd_none(FuGenesysGl32xxDevice *self,
 		return FALSE;
 	if (io_hdr.status) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Command fail with status %x, senseKey 0x%02x, asc 0x%02x, ascq 0x%02x",
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "command fail with status %x, senseKey 0x%02x, asc 0x%02x, ascq 0x%02x",
 			    io_hdr.status,
 			    sense_buffer[2],
 			    sense_buffer[12],
@@ -115,9 +115,9 @@ fu_genesys_gl32xx_device_cmd_in(FuGenesysGl32xxDevice *self,
 		return FALSE;
 	if (io_hdr.status) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Command fail with status %x, senseKey 0x%02x, asc 0x%02x, ascq 0x%02x",
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "command fail with status %x, senseKey 0x%02x, asc 0x%02x, ascq 0x%02x",
 			    io_hdr.status,
 			    sense_buffer[2],
 			    sense_buffer[12],
@@ -173,9 +173,9 @@ fu_genesys_gl32xx_device_cmd_out(FuGenesysGl32xxDevice *self,
 		return FALSE;
 	if (io_hdr.status) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Command fail with status %x, senseKey 0x%02x, asc 0x%02x, ascq 0x%02x",
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "command fail with status %x, senseKey 0x%02x, asc 0x%02x, ascq 0x%02x",
 			    io_hdr.status,
 			    sense_buffer[2],
 			    sense_buffer[12],
@@ -321,8 +321,8 @@ fu_genesys_gl32xx_device_ensure_version(FuGenesysGl32xxDevice *self, GError **er
 	}
 	if (buf->len < 0x24) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to read version");
 		return FALSE;
 	}
@@ -547,8 +547,8 @@ fu_genesys_gl32xx_device_get_usb_mode(FuGenesysGl32xxDevice *self, GError **erro
 		break;
 	default:
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "unknown USB mode 0x%02x read from device",
 			    mode);
 		return FALSE;

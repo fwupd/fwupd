@@ -2602,8 +2602,8 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 			gtype_tmp = fu_context_get_firmware_gtype_by_id(ctx, gtype_id);
 			if (gtype_tmp == G_TYPE_INVALID) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_FOUND,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
 					    "GType %s not supported",
 					    gtype_id);
 				return FALSE;
@@ -2634,8 +2634,8 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 	gtype = fu_context_get_firmware_gtype_by_id(ctx, firmware_type);
 	if (gtype == G_TYPE_INVALID) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "GType %s not supported",
 			    firmware_type);
 		return FALSE;
@@ -2704,8 +2704,8 @@ fu_util_firmware_export(FuUtilPrivate *priv, gchar **values, GError **error)
 	gtype = fu_context_get_firmware_gtype_by_id(ctx, firmware_type);
 	if (gtype == G_TYPE_INVALID) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "GType %s not supported",
 			    firmware_type);
 		return FALSE;
@@ -2762,8 +2762,8 @@ fu_util_firmware_extract(FuUtilPrivate *priv, gchar **values, GError **error)
 	gtype = fu_context_get_firmware_gtype_by_id(ctx, firmware_type);
 	if (gtype == G_TYPE_INVALID) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "GType %s not supported",
 			    firmware_type);
 		return FALSE;
@@ -2862,8 +2862,8 @@ fu_util_firmware_build(FuUtilPrivate *priv, gchar **values, GError **error)
 		gtype = g_type_from_name(tmp);
 		if (gtype == G_TYPE_INVALID) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_FOUND,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "GType %s not registered",
 				    tmp);
 			return FALSE;
@@ -2875,8 +2875,8 @@ fu_util_firmware_build(FuUtilPrivate *priv, gchar **values, GError **error)
 		    fu_context_get_firmware_gtype_by_id(fu_engine_get_context(priv->engine), tmp);
 		if (gtype == G_TYPE_INVALID) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_FOUND,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "GType %s not supported",
 				    tmp);
 			return FALSE;
@@ -2957,8 +2957,8 @@ fu_util_firmware_convert(FuUtilPrivate *priv, gchar **values, GError **error)
 	gtype_src = fu_context_get_firmware_gtype_by_id(ctx, firmware_type_src);
 	if (gtype_src == G_TYPE_INVALID) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "GType %s not supported",
 			    firmware_type_src);
 		return FALSE;
@@ -2970,8 +2970,8 @@ fu_util_firmware_convert(FuUtilPrivate *priv, gchar **values, GError **error)
 	gtype_dst = fu_context_get_firmware_gtype_by_id(ctx, firmware_type_dst);
 	if (gtype_dst == G_TYPE_INVALID) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "GType %s not supported",
 			    firmware_type_dst);
 		return FALSE;
@@ -3096,8 +3096,8 @@ fu_util_firmware_patch(FuUtilPrivate *priv, gchar **values, GError **error)
 	gtype = fu_context_get_firmware_gtype_by_id(ctx, firmware_type);
 	if (gtype == G_TYPE_INVALID) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "GType %s not supported",
 			    firmware_type);
 		return FALSE;
@@ -3532,8 +3532,8 @@ fu_util_esp_list(FuUtilPrivate *priv, gchar **values, GError **error)
 	mount_point = fu_volume_get_mount_point(volume);
 	if (mount_point == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no mountpoint for ESP");
 		return FALSE;
 	}
@@ -3990,7 +3990,7 @@ static gboolean
 fu_util_setup_interactive(FuUtilPrivate *priv, GError **error)
 {
 	if (priv->as_json) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "using --json");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "using --json");
 		return FALSE;
 	}
 	return fu_console_setup(priv->console, error);

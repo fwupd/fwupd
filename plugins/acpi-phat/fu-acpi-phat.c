@@ -47,8 +47,8 @@ fu_acpi_phat_record_parse(FuFirmware *firmware,
 		return FALSE;
 	if (record_length < 5) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "PHAT record length invalid, got 0x%x",
 			    record_length);
 		return FALSE;
@@ -116,8 +116,8 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 		return FALSE;
 	if (streamsz < length) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "PHAT table invalid size, got 0x%x, expected 0x%x",
 			    (guint)streamsz,
 			    length);
@@ -131,8 +131,8 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 			return FALSE;
 		if (revision != FU_ACPI_PHAT_REVISION) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "PHAT table revision invalid, got 0x%x, expected 0x%x",
 				    revision,
 				    (guint)FU_ACPI_PHAT_REVISION);
@@ -148,8 +148,8 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 			return FALSE;
 		if (checksum != 0x00) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "PHAT table checksum invalid, got 0x%x",
 				    checksum);
 			return FALSE;

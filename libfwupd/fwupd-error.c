@@ -61,6 +61,12 @@ fwupd_error_to_string(FwupdError error)
 		return FWUPD_DBUS_INTERFACE ".NeedsUserAction";
 	if (error == FWUPD_ERROR_AUTH_EXPIRED)
 		return FWUPD_DBUS_INTERFACE ".AuthExpired";
+	if (error == FWUPD_ERROR_INVALID_DATA)
+		return FWUPD_DBUS_INTERFACE ".InvalidData";
+	if (error == FWUPD_ERROR_TIMED_OUT)
+		return FWUPD_DBUS_INTERFACE ".TimedOut";
+	if (error == FWUPD_ERROR_BUSY)
+		return FWUPD_DBUS_INTERFACE ".Busy";
 	return NULL;
 }
 
@@ -93,6 +99,8 @@ fwupd_error_from_string(const gchar *error)
 		return FWUPD_ERROR_WRITE;
 	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".InvalidFile") == 0)
 		return FWUPD_ERROR_INVALID_FILE;
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".InvalidData") == 0)
+		return FWUPD_ERROR_INVALID_DATA;
 	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".NotFound") == 0)
 		return FWUPD_ERROR_NOT_FOUND;
 	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".NothingToDo") == 0)
@@ -113,6 +121,10 @@ fwupd_error_from_string(const gchar *error)
 		return FWUPD_ERROR_NEEDS_USER_ACTION;
 	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".AuthExpired") == 0)
 		return FWUPD_ERROR_AUTH_EXPIRED;
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".TimedOut") == 0)
+		return FWUPD_ERROR_TIMED_OUT;
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".Busy") == 0)
+		return FWUPD_ERROR_BUSY;
 	return FWUPD_ERROR_LAST;
 }
 
@@ -136,4 +148,59 @@ fwupd_error_quark(void)
 		}
 	}
 	return quark;
+}
+
+/**
+ * fwupd_error_convert:
+ * @perror: (nullable): A #GError, perhaps with domain #GIOError
+ *
+ * Convert the error to a #FwupdError, if required.
+ *
+ * Since: 2.0.0
+ **/
+void
+fwupd_error_convert(GError **perror)
+{
+	GError *error = (perror != NULL) ? *perror : NULL;
+	struct {
+		GQuark domain;
+		gint code;
+		FwupdError fwupd_code;
+	} map[] = {
+	    {G_IO_ERROR, G_IO_ERROR_CANCELLED, FWUPD_ERROR_INTERNAL},
+	    {G_IO_ERROR, G_IO_ERROR_FAILED, FWUPD_ERROR_INTERNAL},
+	    {G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT, FWUPD_ERROR_INVALID_DATA},
+	    {G_IO_ERROR, G_IO_ERROR_INVALID_DATA, FWUPD_ERROR_INVALID_DATA},
+	    {G_IO_ERROR, G_IO_ERROR_NOT_CONNECTED, FWUPD_ERROR_NOT_FOUND},
+	    {G_IO_ERROR, G_IO_ERROR_NOT_FOUND, FWUPD_ERROR_NOT_FOUND},
+	    {G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, FWUPD_ERROR_INTERNAL},
+	    {G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, FWUPD_ERROR_NOT_SUPPORTED},
+	    {G_IO_ERROR, G_IO_ERROR_PARTIAL_INPUT, FWUPD_ERROR_READ},
+	    {G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED, FWUPD_ERROR_PERMISSION_DENIED},
+	    {G_IO_ERROR, G_IO_ERROR_TIMED_OUT, FWUPD_ERROR_TIMED_OUT},
+	};
+
+	/* sanity check */
+	if (error == NULL)
+		return;
+	if (error->domain == FWUPD_ERROR)
+		return;
+
+	/* correct some company names */
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
+		if (g_error_matches(error, map[i].domain, map[i].code)) {
+			error->domain = FWUPD_ERROR;
+			error->code = map[i].fwupd_code;
+			return;
+		}
+	}
+
+	/* fallback */
+#ifndef SUPPORTED_BUILD
+	g_critical("GError %s:%i sending over D-Bus was not converted to FwupdError",
+		   g_quark_to_string(error->domain),
+		   error->code);
+#endif
+	error->domain = FWUPD_ERROR;
+	error->code = FWUPD_ERROR_INTERNAL;
 }

@@ -157,8 +157,8 @@ fu_csv_entry_parse_token_cb(GString *token, guint token_idx, gpointer user_data,
 	/* sanity check */
 	if (token_idx > FU_CSV_ENTRY_COLUMNS_MAX) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "too many columns, limit is %u",
 			    FU_CSV_ENTRY_COLUMNS_MAX);
 		return FALSE;

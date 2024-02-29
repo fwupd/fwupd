@@ -636,7 +636,10 @@ fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, GUsbBosDescriptor *bos, GE
 
 	/* sanity check */
 	if (g_bytes_get_size(extra) == 0) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "zero sized data");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "zero sized data");
 		return FALSE;
 	}
 

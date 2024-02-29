@@ -239,8 +239,8 @@ fu_bytes_new_offset(GBytes *bytes, gsize offset, gsize length, GError **error)
 	/* sanity check */
 	if (offset + length < length || offset + length > g_bytes_get_size(bytes)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "cannot create bytes @0x%02x for 0x%02x "
 			    "as buffer only 0x%04x bytes in size",
 			    (guint)offset,
@@ -274,7 +274,7 @@ fu_bytes_get_data_safe(GBytes *bytes, gsize *bufsz, GError **error)
 {
 	const guint8 *buf = g_bytes_get_data(bytes, bufsz);
 	if (buf == NULL) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "invalid data");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "invalid data");
 		return NULL;
 	}
 	return buf;

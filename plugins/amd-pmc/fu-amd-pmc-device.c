@@ -29,7 +29,7 @@ fu_amd_pmc_device_probe(FuDevice *device, GError **error)
 	version =
 	    fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "smu_fw_version", &error_local);
 	if (version == NULL) {
-		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,

@@ -71,8 +71,8 @@ fu_igsc_oprom_firmware_match_device(FuIgscOpromFirmware *self,
 
 	/* not us */
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_NOT_FOUND,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
 		    "could not find 0x%04x:0x%04x 0x%04x:0x%04x in the image",
 		    vendor_id,
 		    device_id,
@@ -162,8 +162,8 @@ fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 	if (fu_oprom_firmware_get_subsystem(FU_OPROM_FIRMWARE(firmware)) !=
 	    FU_OPROM_FIRMWARE_SUBSYSTEM_EFI_BOOT_SRV_DRV) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid subsystem, got 0x%x, expected 0x%x",
 			    fu_oprom_firmware_get_subsystem(FU_OPROM_FIRMWARE(firmware)),
 			    (guint)FU_OPROM_FIRMWARE_SUBSYSTEM_EFI_BOOT_SRV_DRV);
@@ -172,8 +172,8 @@ fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 	if (fu_oprom_firmware_get_machine_type(FU_OPROM_FIRMWARE(firmware)) !=
 	    FU_OPROM_FIRMWARE_MACHINE_TYPE_X64) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid machine type, got 0x%x, expected 0x%x",
 			    fu_oprom_firmware_get_machine_type(FU_OPROM_FIRMWARE(firmware)),
 			    (guint)FU_OPROM_FIRMWARE_MACHINE_TYPE_X64);
@@ -182,8 +182,8 @@ fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 	if (fu_oprom_firmware_get_compression_type(FU_OPROM_FIRMWARE(firmware)) !=
 	    FU_OPROM_FIRMWARE_COMPRESSION_TYPE_NONE) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid compression type, got 0x%x, expected 0x%x (uncompressed)",
 			    fu_oprom_firmware_get_compression_type(FU_OPROM_FIRMWARE(firmware)),
 			    (guint)FU_OPROM_FIRMWARE_COMPRESSION_TYPE_NONE);
@@ -196,8 +196,8 @@ fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	if (!FU_IS_IFWI_CPD_FIRMWARE(fw_cpd)) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "CPD was not FuIfwiCpdFirmware");
 		return FALSE;
 	}

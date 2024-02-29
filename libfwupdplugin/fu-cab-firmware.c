@@ -204,8 +204,8 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 	blob_uncomp = fu_struct_cab_data_get_uncomp(st);
 	if (helper->compression == FU_CAB_COMPRESSION_NONE && blob_comp != blob_uncomp) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "mismatched compressed data");
 		return FALSE;
 	}
@@ -214,8 +214,8 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 		g_autofree gchar *sz_val = g_format_size(helper->size_total);
 		g_autofree gchar *sz_max = g_format_size(size_max);
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "uncompressed data too large (%s, limit %s)",
 			    sz_val,
 			    sz_max);
@@ -246,8 +246,8 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 				return FALSE;
 			if (checksum_actual != checksum) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "invalid checksum at 0x%x, expected 0x%x, got 0x%x",
 					    (guint)*offset,
 					    checksum,
@@ -280,8 +280,8 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 			return FALSE;
 		if (g_strcmp0(kind, "CK") != 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "compressed header invalid: %s",
 				    kind);
 			return FALSE;
@@ -297,8 +297,8 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 			g_byte_array_append(buf, tmp, sizeof(tmp) - helper->zstrm.avail_out);
 			if (zret != Z_OK) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "inflate error @0x%x: %s",
 					    (guint)*offset,
 					    zError(zret));
@@ -308,8 +308,8 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 		zret = inflateReset(&helper->zstrm);
 		if (zret != Z_OK) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to reset inflate: %s",
 				    zError(zret));
 			return FALSE;
@@ -317,8 +317,8 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 		zret = inflateSetDictionary(&helper->zstrm, buf->data, buf->len);
 		if (zret != Z_OK) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to set inflate dictionary: %s",
 				    zError(zret));
 			return FALSE;
@@ -357,8 +357,8 @@ fu_cab_firmware_parse_folder(FuCabFirmware *self,
 	/* sanity check */
 	if (fu_struct_cab_folder_get_ndatab(st) == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no CFDATA blocks");
 		return FALSE;
 	}
@@ -368,8 +368,8 @@ fu_cab_firmware_parse_folder(FuCabFirmware *self,
 	if (helper->compression != FU_CAB_COMPRESSION_NONE &&
 	    helper->compression != FU_CAB_COMPRESSION_MSZIP) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "compression %s not supported",
 			    fu_cab_compression_to_string(helper->compression));
 		return FALSE;
@@ -416,8 +416,8 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 	index = fu_struct_cab_file_get_index(st);
 	if (index >= helper->folder_data->len) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to get folder data for 0x%x",
 			    index);
 		return FALSE;
@@ -488,8 +488,8 @@ fu_cab_firmware_parse_helper_new(GInputStream *stream, FwupdInstallFlags flags, 
 	zret = inflateInit2(&helper->zstrm, -MAX_WBITS);
 	if (zret != Z_OK) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to initialize inflate: %s",
 			    zError(zret));
 		return NULL;
@@ -526,8 +526,8 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 	/* sanity checks */
 	if (fu_struct_cab_header_get_size(st) < streamsz) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "buffer size 0x%x is less than stream size 0x%x",
 			    (guint)streamsz,
 			    fu_struct_cab_header_get_size(st));
@@ -535,23 +535,23 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 	}
 	if (fu_struct_cab_header_get_idx_cabinet(st) != 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "chained archive not supported");
 		return FALSE;
 	}
 	if (fu_struct_cab_header_get_nr_folders(st) == 0 ||
 	    fu_struct_cab_header_get_nr_files(st) == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "archive is empty");
 		return FALSE;
 	}
 	if (fu_struct_cab_header_get_nr_folders(st) > FU_CAB_FIRMWARE_MAX_FOLDERS) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "too many CFFOLDERS, parsed %u and limit was %u",
 			    fu_struct_cab_header_get_nr_folders(st),
 			    (guint)FU_CAB_FIRMWARE_MAX_FOLDERS);
@@ -559,8 +559,8 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 	}
 	if (fu_struct_cab_header_get_nr_files(st) > FU_CAB_FIRMWARE_MAX_FILES) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "too many CFFILES, parsed %u and limit was %u",
 			    fu_struct_cab_header_get_nr_files(st),
 			    (guint)FU_CAB_FIRMWARE_MAX_FILES);
@@ -569,8 +569,8 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 	off_cffile = fu_struct_cab_header_get_off_cffile(st);
 	if (off_cffile > streamsz) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "archive is corrupt");
 		return FALSE;
 	}
@@ -602,8 +602,8 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		if (streamsz == 0) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "no folder data");
 			return FALSE;
 		}
@@ -646,8 +646,8 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 
 		if (filename_win32 == NULL) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "no image filename");
 			return NULL;
 		}
@@ -660,8 +660,8 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	/* chunkify and compress with a fixed size */
 	if (cfdata_linear->len == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no data to compress");
 		return NULL;
 	}
@@ -697,8 +697,8 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 					    Z_DEFAULT_STRATEGY);
 			if (zret != Z_OK) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "failed to initialize deflate: %s",
 					    zError(zret));
 				return NULL;
@@ -706,8 +706,8 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 			zret = deflate(zstrm_deflater, Z_FINISH);
 			if (zret != Z_OK && zret != Z_STREAM_END) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "zlib deflate failed: %s",
 					    zError(zret));
 				return NULL;

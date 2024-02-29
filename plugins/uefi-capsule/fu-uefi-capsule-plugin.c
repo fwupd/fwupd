@@ -557,8 +557,8 @@ fu_uefi_capsule_plugin_is_esp_linux(FuVolume *esp, GError **error)
 	/* look for any likely basenames */
 	if (mount_point == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no mountpoint for ESP");
 		return FALSE;
 	}
@@ -578,8 +578,8 @@ fu_uefi_capsule_plugin_is_esp_linux(FuVolume *esp, GError **error)
 	/* failed */
 	basenames_str = g_strjoinv("|", (gchar **)basenames);
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_NOT_FOUND,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
 		    "did not find %s in %s",
 		    basenames_str,
 		    mount_point);
@@ -696,8 +696,8 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 
 		if (g_hash_table_size(esp_scores) == 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no EFI system partition found");
 			return NULL;
 		}
@@ -728,8 +728,8 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 
 			if (g_strcmp0(mount, user_esp_location) != 0) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "user specified ESP %s not found",
 					    user_esp_location);
 				return NULL;
@@ -1053,8 +1053,8 @@ fu_uefi_capsule_plugin_check_cod_support(FuUefiCapsulePlugin *self, GError **err
 		return FALSE;
 	if ((value & EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED) == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "Capsule-on-Disk is not supported");
 		return FALSE;
 	}
@@ -1179,8 +1179,8 @@ fu_uefi_capsule_plugin_cleanup_esp(FuUefiCapsulePlugin *self, GError **error)
 		return FALSE;
 	if (esp_path == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no mountpoint for ESP");
 		return FALSE;
 	}
@@ -1293,8 +1293,8 @@ fu_uefi_capsule_plugin_modify_config(FuPlugin *plugin,
 			       NULL};
 	if (!g_strv_contains(keys, key)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "config key %s not supported",
 			    key);
 		return FALSE;

@@ -47,8 +47,8 @@ fu_kinetic_dp_plugin_create_device(FuDpauxDevice *dpaux_device, GError **error)
 	/* sanity check */
 	if (dev_id == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "device has no DPCD device id");
 		return NULL;
 	}
@@ -72,8 +72,8 @@ fu_kinetic_dp_plugin_create_device(FuDpauxDevice *dpaux_device, GError **error)
 		    FU_KINETIC_DP_DEVICE(g_object_new(FU_TYPE_KINETIC_DP_PUMA_DEVICE, NULL));
 	} else {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "%s is not a supported Kinetic device",
 			    dev_id);
 		return NULL;
@@ -105,7 +105,7 @@ fu_kinetic_dp_plugin_backend_device_added(FuPlugin *plugin,
 		return FALSE;
 	locker = fu_device_locker_new(dev, &error_local);
 	if (locker == NULL) {
-		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_debug("no device found: %s", error_local->message);
 			return TRUE;
 		}

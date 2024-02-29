@@ -519,8 +519,8 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	}
 	if (priv->family == FU_INTEL_THUNDERBOLT_NVM_FAMILY_UNKNOWN) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "unknown NVM family");
 		return FALSE;
 	}
@@ -854,8 +854,8 @@ fu_intel_thunderbolt_nvm_build(FuFirmware *firmware, XbNode *n, GError **error)
 		priv->family = fu_intel_thunderbolt_nvm_family_from_string(tmp);
 		if (priv->family == FU_INTEL_THUNDERBOLT_NVM_FAMILY_UNKNOWN) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "unknown family: %s",
 				    tmp);
 			return FALSE;

@@ -95,8 +95,8 @@ fu_uefi_pk_device_parse_signature(FuUefiPkDevice *self, FuEfiSignature *sig, GEr
 	rc = gnutls_x509_crt_init(&crt);
 	if (rc < 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "crt_init: %s [%i]",
 			    gnutls_strerror(rc),
 			    rc);
@@ -112,8 +112,8 @@ fu_uefi_pk_device_parse_signature(FuUefiPkDevice *self, FuEfiSignature *sig, GEr
 	rc = gnutls_x509_crt_import(crt, &d, GNUTLS_X509_FMT_DER);
 	if (rc < 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "crt_import: %s [%i]",
 			    gnutls_strerror(rc),
 			    rc);
@@ -143,8 +143,8 @@ fu_uefi_pk_device_parse_signature(FuUefiPkDevice *self, FuEfiSignature *sig, GEr
 	rc = gnutls_x509_crt_get_key_id(crt, 0, key_id, &key_idsz);
 	if (rc < 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "failed to get key ID: %s [%i]",
 			    gnutls_strerror(rc),
 			    rc);
@@ -153,8 +153,8 @@ fu_uefi_pk_device_parse_signature(FuUefiPkDevice *self, FuEfiSignature *sig, GEr
 	key_idstr = g_compute_checksum_for_data(G_CHECKSUM_SHA1, key_id, key_idsz);
 	if (key_idstr == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "failed to calculate key ID for 0x%x bytes",
 			    (guint)key_idsz);
 		return FALSE;

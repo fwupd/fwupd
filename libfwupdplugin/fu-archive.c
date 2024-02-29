@@ -100,7 +100,8 @@ fu_archive_lookup_by_fn(FuArchive *self, const gchar *fn, GError **error)
 
 	bytes = g_hash_table_lookup(self->entries, fn);
 	if (bytes == NULL) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "no blob for %s", fn);
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no blob for %s", fn);
+		return NULL;
 	}
 	return bytes;
 }
@@ -252,8 +253,8 @@ fu_archive_load(FuArchive *self, GBytes *blob, FuArchiveFlags flags, GError **er
 	arch = archive_read_new();
 	if (arch == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "libarchive startup failed");
 		return FALSE;
 	}
@@ -264,8 +265,8 @@ fu_archive_load(FuArchive *self, GBytes *blob, FuArchiveFlags flags, GError **er
 				     (size_t)g_bytes_get_size(blob));
 	if (r != 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot open: %s",
 			    archive_error_string(arch));
 		return FALSE;
@@ -284,8 +285,8 @@ fu_archive_load(FuArchive *self, GBytes *blob, FuArchiveFlags flags, GError **er
 			break;
 		if (r != ARCHIVE_OK) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "cannot read header: %s",
 				    archive_error_string(arch));
 			return FALSE;
@@ -298,8 +299,8 @@ fu_archive_load(FuArchive *self, GBytes *blob, FuArchiveFlags flags, GError **er
 		bufsz = archive_entry_size(entry);
 		if (bufsz > 1024 * 1024 * 1024) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_FAILED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "cannot read huge files");
 			return FALSE;
 		}
@@ -307,16 +308,16 @@ fu_archive_load(FuArchive *self, GBytes *blob, FuArchiveFlags flags, GError **er
 		rc = archive_read_data(arch, buf, (gsize)bufsz);
 		if (rc < 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
 				    "cannot read data: %s",
 				    archive_error_string(arch));
 			return FALSE;
 		}
 		if (rc != bufsz) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
 				    "read %" G_GSSIZE_FORMAT " of %" G_GINT64_FORMAT,
 				    rc,
 				    bufsz);
@@ -437,8 +438,8 @@ fu_archive_write(FuArchive *self,
 #ifndef HAVE_LIBARCHIVE_WRITE_ADD_COMPRESSION_ZSTD
 	if (compression == FU_ARCHIVE_COMPRESSION_ZSTD) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "archive_write_add_filter_zstd() not supported");
 		return NULL;
 	}
@@ -448,8 +449,8 @@ fu_archive_write(FuArchive *self,
 	arch = archive_write_new();
 	if (arch == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "libarchive startup failed");
 		return NULL;
 	}
@@ -463,8 +464,8 @@ fu_archive_write(FuArchive *self,
 	r = archive_write_open(arch, blob, NULL, fu_archive_write_cb, NULL);
 	if (r != 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot open: %s",
 			    archive_error_string(arch));
 		return NULL;
@@ -486,8 +487,8 @@ fu_archive_write(FuArchive *self,
 		r = archive_write_header(arch, entry);
 		if (r != 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "cannot write header: %s",
 				    archive_error_string(arch));
 			return NULL;
@@ -497,8 +498,8 @@ fu_archive_write(FuArchive *self,
 					g_bytes_get_size(bytes));
 		if (rc < 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
 				    "cannot write data: %s",
 				    archive_error_string(arch));
 			return NULL;
@@ -508,8 +509,8 @@ fu_archive_write(FuArchive *self,
 	r = archive_write_close(arch);
 	if (r != 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot close: %s",
 			    archive_error_string(arch));
 		return NULL;

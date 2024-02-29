@@ -44,8 +44,8 @@ fu_logitech_rallysystem_audio_device_set_feature(FuLogitechRallysystemAudioDevic
 #else
 	/* failed */
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "<linux/hidraw.h> not available");
 	return FALSE;
 #endif
@@ -72,8 +72,8 @@ fu_logitech_rallysystem_audio_device_get_feature(FuLogitechRallysystemAudioDevic
 #else
 	/* failed */
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "<linux/hidraw.h> not available");
 	return FALSE;
 #endif

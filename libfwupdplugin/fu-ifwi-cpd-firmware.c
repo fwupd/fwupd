@@ -70,8 +70,8 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GInputStream *stream, 
 	size = fu_struct_ifwi_cpd_manifest_get_size(st_mhd);
 	if (size * 4 != streamsz) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid manifest invalid length, got 0x%x, expected 0x%x",
 			    size * 4,
 			    (guint)streamsz);
@@ -102,8 +102,8 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GInputStream *stream, 
 			break;
 		if (extension_length < st_mex->len) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid manifest extension header length 0x%x",
 				    (guint)extension_length);
 			return FALSE;
@@ -162,8 +162,8 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 	num_of_entries = fu_struct_ifwi_cpd_get_num_of_entries(st_hdr);
 	if (num_of_entries > FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "too many entries 0x%x, expected <= 0x%x",
 			    num_of_entries,
 			    (guint)FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX);
@@ -260,8 +260,8 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 		/* sanity check */
 		if (fu_firmware_get_id(img) == NULL) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "image 0x%x must have an ID",
 				    (guint)fu_firmware_get_idx(img));
 			return NULL;

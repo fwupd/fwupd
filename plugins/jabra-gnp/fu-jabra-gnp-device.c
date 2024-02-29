@@ -577,8 +577,8 @@ fu_jabra_gnp_device_prepare_firmware(FuDevice *device,
 		return NULL;
 	if (fu_jabra_gnp_firmware_get_dfu_pid(FU_JABRA_GNP_FIRMWARE(firmware)) != self->dfu_pid) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "wrong DFU PID, got 0x%x, expected 0x%x",
 			    fu_jabra_gnp_firmware_get_dfu_pid(FU_JABRA_GNP_FIRMWARE(firmware)),
 			    self->dfu_pid);

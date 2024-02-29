@@ -180,8 +180,8 @@ fu_usb_backend_load(FuBackend *backend,
 	return g_usb_context_load_with_tag(self->usb_ctx, json_object, tag, error);
 #else
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "GUsb version too old to load backends");
 	return FALSE;
 #endif
@@ -220,8 +220,8 @@ fu_usb_backend_save(FuBackend *backend,
 	return TRUE;
 #else
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "GUsb version too old to save backends");
 	return FALSE;
 #endif

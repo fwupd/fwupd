@@ -187,8 +187,8 @@ fu_elanfp_device_do_xfer(FuElanfpDevice *self,
 		}
 		if (actual != outlen) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_PARTIAL_INPUT,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
 				    "only sent %" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT " bytes",
 				    actual,
 				    outlen);
@@ -211,8 +211,8 @@ fu_elanfp_device_do_xfer(FuElanfpDevice *self,
 		}
 		if (actual != inlen && !allow_less) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_PARTIAL_INPUT,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
 				    "only received %" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT " bytes",
 				    actual,
 				    outlen);
@@ -328,8 +328,8 @@ fu_elanfp_device_write_payload(FuElanfpDevice *self,
 		}
 		if (recvbuf[5] != FU_CFU_CONTENT_STATUS_SUCCESS) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "failed to send chunk %u: %s",
 				    i + 1,
 				    fu_cfu_content_status_to_string(recvbuf[5]));
@@ -398,8 +398,8 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 	}
 	if (items[i].tag == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "no CFU offer was accepted");
 		return FALSE;
 	}

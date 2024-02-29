@@ -96,7 +96,10 @@ fu_logitech_scribe_device_send(FuLogitechScribeDevice *self,
 	if (interface_id == BULK_INTERFACE_UPD) {
 		ep = self->update_ep[EP_OUT];
 	} else {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "interface is invalid");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "interface is invalid");
 		return FALSE;
 	}
 	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(usb_device)),
@@ -128,7 +131,10 @@ fu_logitech_scribe_device_recv(FuLogitechScribeDevice *self,
 	if (interface_id == BULK_INTERFACE_UPD) {
 		ep = self->update_ep[EP_IN];
 	} else {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "interface is invalid");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "interface is invalid");
 		return FALSE;
 	}
 	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(usb_device)),
@@ -193,7 +199,11 @@ fu_logitech_scribe_device_send_upd_cmd(FuLogitechScribeDevice *self,
 				    error))
 		return FALSE;
 	if (cmd_tmp != CMD_ACK) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "not CMD_ACK, got %x", cmd);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "not CMD_ACK, got %x",
+			    cmd);
 		return FALSE;
 	}
 	if (!fu_memread_uint32_safe(buf_ack->data,
@@ -205,8 +215,8 @@ fu_logitech_scribe_device_send_upd_cmd(FuLogitechScribeDevice *self,
 		return FALSE;
 	if (cmd_tmp != cmd) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid upd message received, expected %x, got %x",
 			    cmd,
 			    cmd_tmp);
@@ -437,8 +447,8 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	usb_device = fu_usb_device_new(fu_device_get_context(device), g_usb_device);
 	if (usb_device == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "failed to create usb device instance");
 		return FALSE;
 	}
@@ -460,8 +470,8 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	endpoints = g_usb_interface_get_endpoints(intf);
 	if (endpoints == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to get usb device endpoints");
 		return FALSE;
 	}

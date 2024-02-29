@@ -348,8 +348,8 @@ mst_poll_register(FuRealtekMstDevice *self,
 		return TRUE;
 
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_TIMED_OUT,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_TIMED_OUT,
 		    "register %x still reads %x after %us, wanted %x (mask %x)",
 		    address,
 		    value,

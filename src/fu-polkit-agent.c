@@ -189,8 +189,8 @@ fu_polkit_agent_open(GError **error)
 		return TRUE;
 	if (pipe(pipe_fd) < 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to create pipe: %s",
 			    g_strerror(errno));
 		return FALSE;
@@ -207,8 +207,8 @@ fu_polkit_agent_open(GError **error)
 		       NULL);
 	if (r < 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
 			    "failed to fork TTY ask password agent: %s",
 			    g_strerror(-r));
 		close_nointr_nofail(pipe_fd[1]);

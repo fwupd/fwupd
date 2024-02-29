@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#include <fwupd.h>
+
 #include "fu-redfish-common.h"
 
 gchar *
@@ -93,26 +95,29 @@ fu_redfish_common_parse_version_lenovo(const gchar *version,
 
 	/* sanity check */
 	if (g_strv_length(versplit) != 2) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not two sections");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "not two sections");
 		return FALSE;
 	}
 	if (strlen(versplit[0]) != 3) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid length first section");
 		return FALSE;
 	}
 
 	/* milestone */
 	if (!g_ascii_isdigit(versplit[0][0]) || !g_ascii_isdigit(versplit[0][1])) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "milestone number invalid");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "milestone number invalid");
 		return FALSE;
 	}
 
 	/* build is only one letter from A -> Z */
 	if (!g_ascii_isalpha(versplit[0][2])) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "build letter invalid");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "build letter invalid");
 		return FALSE;
 	}
 

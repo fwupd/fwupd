@@ -619,9 +619,9 @@ fu_vli_usbhub_device_guess_kind(FuVliUsbhubDevice *self, GError **error)
 				break;
 			default:
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
-					    "Packet Type match failed: ");
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "packet Type match failed: ");
 				return FALSE;
 			}
 		} else {
@@ -669,8 +669,8 @@ fu_vli_usbhub_device_guess_kind(FuVliUsbhubDevice *self, GError **error)
 			fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL812B3);
 	} else {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "hardware is not supported");
 		return FALSE;
 	}
@@ -859,8 +859,8 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 		break;
 	default:
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "hardware is not supported, dev_id=0x%x",
 			    (guint)fu_struct_vli_usbhub_hdr_get_dev_id(self->st_hd1));
 		return FALSE;
@@ -1152,8 +1152,8 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 	hd1_fw_sz = fu_struct_vli_usbhub_hdr_get_usb3_fw_sz(self->st_hd1);
 	if (hd1_fw_sz > 0xF000) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "FW1 size abnormal 0x%x",
 			    (guint)hd1_fw_sz);
 		return FALSE;

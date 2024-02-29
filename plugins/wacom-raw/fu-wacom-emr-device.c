@@ -180,16 +180,16 @@ fu_wacom_emr_device_write_block(FuWacomEmrDevice *self,
 	/* check size */
 	if (datasz > sizeof(req.data)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "data size 0x%x too large for packet",
 			    (guint)datasz);
 		return FALSE;
 	}
 	if (datasz != blocksz) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "block size 0x%x != 0x%x untested",
 			    (guint)datasz,
 			    (guint)blocksz);

@@ -667,8 +667,8 @@ fu_dell_dock_ec_activate(FuDevice *device, FuProgress *progress, GError **error)
 
 	if (status != FW_UPDATE_IN_PROGRESS) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "No firmware update pending for %s",
 			    fu_device_get_name(device));
 		return FALSE;
@@ -753,8 +753,8 @@ fu_dell_dock_ec_commit_package(FuDevice *device, GBytes *blob_fw, GError **error
 
 	if (length != sizeof(FuDellDockDockPackageFWVersion)) {
 		g_set_error(error,
-			    G_IO_ERR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "Invalid package size %" G_GSIZE_FORMAT,
 			    length);
 		return FALSE;
@@ -908,7 +908,10 @@ fu_dell_dock_ec_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *va
 	}
 
 	/* failed */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
 	return FALSE;
 }
 

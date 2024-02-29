@@ -134,7 +134,10 @@ fu_logitech_bulkcontroller_device_send(FuLogitechBulkcontrollerDevice *self,
 	} else if (interface_id == BULK_INTERFACE_UPD) {
 		ep = self->update_ep[EP_OUT];
 	} else {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "interface is invalid");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "interface is invalid");
 		return FALSE;
 	}
 	fu_dump_full(G_LOG_DOMAIN, "request", buf, bufsz, 20, FU_DUMP_FLAGS_SHOW_ASCII);
@@ -170,7 +173,10 @@ fu_logitech_bulkcontroller_device_recv(FuLogitechBulkcontrollerDevice *self,
 	} else if (interface_id == BULK_INTERFACE_UPD) {
 		ep = self->update_ep[EP_IN];
 	} else {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "interface is invalid");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "interface is invalid");
 		return FALSE;
 	}
 	g_debug("read response");
@@ -298,8 +304,8 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 			    fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st));
 	if (response->data == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
 				    "failed to receive packet");
 		return NULL;
 	}
@@ -319,8 +325,8 @@ fu_logitech_bulkcontroller_device_sync_wait_cmd(FuLogitechBulkcontrollerDevice *
 		return NULL;
 	if (response->cmd != cmd) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "command invalid, expected %s and got %s",
 			    fu_logitech_bulkcontroller_cmd_to_string(cmd),
 			    fu_logitech_bulkcontroller_cmd_to_string(response->cmd));
@@ -330,8 +336,8 @@ fu_logitech_bulkcontroller_device_sync_wait_cmd(FuLogitechBulkcontrollerDevice *
 	/* verify the sequence ID */
 	if (response->sequence_id != sequence_id) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "sequence ID invalid, expected 0x%04x and got 0x%04x",
 			    sequence_id,
 			    response->sequence_id);
@@ -407,8 +413,8 @@ fu_logitech_bulkcontroller_device_sync_check_ack_cmd(GByteArray *buf,
 		(guint)ack_cmd);
 	if (ack_cmd != cmd) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "command invalid, expected %s and got %s",
 			    fu_logitech_bulkcontroller_cmd_to_string(cmd),
 			    fu_logitech_bulkcontroller_cmd_to_string(ack_cmd));
@@ -466,8 +472,8 @@ fu_logitech_bulkcontroller_device_sync_check_ack(FuLogitechBulkcontrollerRespons
 	/* verify the sequence ID */
 	if (response->sequence_id != sequence_id) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "sequence ID invalid, expected 0x%04x and got 0x%04x",
 			    sequence_id,
 			    response->sequence_id);
@@ -529,8 +535,8 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 		if (response_tmp->cmd == FU_LOGITECH_BULKCONTROLLER_CMD_ACK) {
 			if (res_ack != NULL) {
 				g_set_error_literal(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_FAILED,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
 						    "already received ack");
 				return NULL;
 			}
@@ -546,8 +552,8 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 		} else if (response_tmp->cmd == FU_LOGITECH_BULKCONTROLLER_CMD_BUFFER_READ) {
 			if (res_read != NULL) {
 				g_set_error_literal(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_FAILED,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
 						    "already received read-buffer");
 				return NULL;
 			}
@@ -626,8 +632,8 @@ fu_logitech_bulkcontroller_device_upd_send_cmd(FuLogitechBulkcontrollerDevice *s
 	if (fu_struct_logitech_bulkcontroller_update_res_get_cmd(&buf_ack) !=
 	    FU_LOGITECH_BULKCONTROLLER_CMD_ACK) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "not CMD_ACK, got %s",
 			    fu_logitech_bulkcontroller_cmd_to_string(
 				fu_struct_logitech_bulkcontroller_update_res_get_cmd(&buf_ack)));
@@ -636,8 +642,8 @@ fu_logitech_bulkcontroller_device_upd_send_cmd(FuLogitechBulkcontrollerDevice *s
 	if (fu_struct_logitech_bulkcontroller_update_res_get_cmd_req(&buf_ack) != cmd) {
 		g_set_error(
 		    error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_FAILED,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_DATA,
 		    "invalid upd message received, expected %s, got %s",
 		    fu_logitech_bulkcontroller_cmd_to_string(cmd),
 		    fu_logitech_bulkcontroller_cmd_to_string(
@@ -711,8 +717,8 @@ fu_logitech_bulkcontroller_device_json_parser(FuLogitechBulkcontrollerDevice *se
 	json_root = json_parser_get_root(json_parser);
 	if (json_root == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "did not get JSON root");
 		return FALSE;
 	}
@@ -720,24 +726,24 @@ fu_logitech_bulkcontroller_device_json_parser(FuLogitechBulkcontrollerDevice *se
 	json_payload = json_object_get_object_member(json_object, "payload");
 	if (json_payload == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "did not get JSON payload");
 		return FALSE;
 	}
 	json_devices = json_object_get_array_member(json_payload, "devices");
 	if (json_devices == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "did not get JSON devices");
 		return FALSE;
 	}
 	json_device = json_array_get_object_element(json_devices, 0);
 	if (json_device == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "did not get JSON device");
 		return FALSE;
 	}
@@ -784,8 +790,8 @@ fu_logitech_bulkcontroller_device_parse_info(FuLogitechBulkcontrollerDevice *sel
 		bufstr);
 	if (proto_id != kProtoId_GetDeviceInfoResponse && proto_id != kProtoId_KongEvent) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "incorrect response for device info request");
 		return FALSE;
 	}
@@ -1064,8 +1070,8 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 		return FALSE;
 	if (self->update_status == FU_LOGITECH_BULKCONTROLLER_UPDATE_STATE_ERROR) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "firmware upgrade failed");
 		return FALSE;
 	}
@@ -1107,8 +1113,8 @@ fu_logitech_fu_logitech_bulkcontroller_device_set_time_cb(FuDevice *device,
 		bufstr);
 	if (proto_id != kProtoId_Ack) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "incorrect response");
 		return FALSE;
 	}
@@ -1151,8 +1157,8 @@ fu_logitech_bulkcontroller_device_transition_to_device_mode_cb(FuDevice *device,
 	g_debug("received transition mode response: id: %u, length %u", proto_id, res->len);
 	if (proto_id != kProtoId_TransitionToDeviceModeResponse) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "incorrect response");
 		return FALSE;
 	}
@@ -1198,7 +1204,7 @@ fu_logitech_bulkcontroller_device_clear_queue_cb(FuDevice *device,
 	}
 
 	/* failed */
-	g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "got valid data, so keep going");
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "got valid data, so keep going");
 	return FALSE;
 }
 

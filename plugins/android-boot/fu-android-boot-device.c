@@ -141,7 +141,7 @@ fu_android_boot_device_open(FuDevice *device, GError **error)
 
 	/* FuUdevDevice->open */
 	if (!FU_DEVICE_CLASS(fu_android_boot_device_parent_class)->open(device, &error_local)) {
-		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_PERMISSION_DENIED)) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
@@ -325,7 +325,10 @@ fu_android_boot_device_set_quirk_kv(FuDevice *device,
 	}
 
 	/* failed */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
 	return FALSE;
 }
 

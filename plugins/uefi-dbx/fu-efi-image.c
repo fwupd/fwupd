@@ -119,8 +119,8 @@ fu_efi_image_new(GBytes *data, GError **error)
 		return NULL;
 	if (dos_sig != 0x5a4d) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "Invalid DOS header magic %04x",
 			    dos_sig);
 		return NULL;
@@ -143,8 +143,8 @@ fu_efi_image_new(GBytes *data, GError **error)
 		return NULL;
 	if (nt_sig != 0x4550) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "Invalid PE header signature %08x",
 			    nt_sig);
 		return NULL;
@@ -169,8 +169,8 @@ fu_efi_image_new(GBytes *data, GError **error)
 			return NULL;
 		if (machine != 0x020b) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "Invalid a.out machine type %04x",
 				    machine);
 			return NULL;
@@ -201,8 +201,8 @@ fu_efi_image_new(GBytes *data, GError **error)
 			return NULL;
 		if (machine != 0x010b) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "Invalid a.out machine type %04x",
 				    machine);
 			return NULL;
@@ -220,8 +220,8 @@ fu_efi_image_new(GBytes *data, GError **error)
 
 	} else {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "Invalid PE header machine %04x",
 			    machine);
 		return NULL;
@@ -313,8 +313,8 @@ fu_efi_image_new(GBytes *data, GError **error)
 
 		if (file_offset + r->size > bufsz) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "file-aligned section %s extends beyond end of file",
 				    r->name);
 			return NULL;
@@ -333,8 +333,8 @@ fu_efi_image_new(GBytes *data, GError **error)
 					bufsz - cert_table_size);
 	} else if (image_bytes + cert_table_size > bufsz) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "checksum_offset areas outside image size");
 		return NULL;
 	}

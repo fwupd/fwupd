@@ -84,8 +84,8 @@ fu_mei_parse_fwvers(FuPlugin *plugin, const gchar *fwvers, GError **error)
 	lines = g_strsplit(fwvers, "\n", -1);
 	if (g_strv_length(lines) < 1) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "expected data, got %s",
 			    fwvers);
 		return FALSE;
@@ -95,8 +95,8 @@ fu_mei_parse_fwvers(FuPlugin *plugin, const gchar *fwvers, GError **error)
 	sections = g_strsplit(lines[0], ":", -1);
 	if (g_strv_length(sections) != 2) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "expected platform:major.minor.micro.build, got %s",
 			    lines[0]);
 		return FALSE;
@@ -111,8 +111,8 @@ fu_mei_parse_fwvers(FuPlugin *plugin, const gchar *fwvers, GError **error)
 	split = g_strsplit(sections[1], ".", -1);
 	if (g_strv_length(split) != 4) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "expected major.minor.micro.build, got %s",
 			    sections[1]);
 		return FALSE;

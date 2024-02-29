@@ -539,8 +539,8 @@ fu_path_glob(const gchar *directory, const gchar *pattern, GError **error)
 	}
 	if (files->len == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_FOUND,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "no files matched pattern");
 		return NULL;
 	}

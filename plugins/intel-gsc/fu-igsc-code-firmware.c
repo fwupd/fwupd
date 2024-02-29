@@ -71,8 +71,8 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	if (streamsz > FU_IGSC_FIRMWARE_MAX_SIZE) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "image size too big: 0x%x",
 			    (guint)streamsz);
 		return FALSE;

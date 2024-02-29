@@ -68,7 +68,7 @@ fu_cabinet_get_silo(FuCabinet *self, GError **error)
 	g_return_val_if_fail(FU_IS_CABINET(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	if (self->silo == NULL) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, "no silo");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no silo");
 		return NULL;
 	}
 	return g_object_ref(self->silo);

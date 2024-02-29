@@ -310,8 +310,8 @@ fu_cfi_device_setup(FuDevice *device, GError **error)
 		flash_idsz = strlen(priv->flash_id);
 	if (flash_idsz == 0 || flash_idsz % 2 != 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "not a valid flash-id");
 		return FALSE;
 	}
@@ -356,13 +356,16 @@ fu_cfi_device_get_cmd(FuCfiDevice *self, FuCfiDeviceCmd cmd, guint8 *value, GErr
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	if (cmd >= FU_CFI_DEVICE_CMD_LAST) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "CFI cmd invalid");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "CFI cmd invalid");
 		return FALSE;
 	}
 	if (priv->cmds[cmd] == 0x0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "No defined CFI cmd for %s",
 			    fu_cfi_device_cmd_to_string(cmd));
 		return FALSE;

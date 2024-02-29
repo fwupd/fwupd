@@ -89,7 +89,7 @@ fu_logitech_hidpp_runtime_poll(FuDevice *device, GError **error)
 	/* is there any pending data to read */
 	msg->hidpp_version = 1;
 	if (!fu_logitech_hidpp_receive(priv->io_channel, msg, timeout, &error_local)) {
-		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_TIMED_OUT)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 			return TRUE;
 		}
 		g_warning("failed to get pending read: %s", error_local->message);
@@ -199,8 +199,8 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 			    g_udev_device_get_property(udev_parent_usb_interface, "INTERFACE");
 			if (interface_str == NULL) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_FOUND,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
 					    "INTERFACE property not found in parent device");
 				return FALSE;
 			}

@@ -141,8 +141,8 @@ fu_steelseries_fizz_command_error_to_error(guint8 cmd, guint8 err, GError **erro
 
 	/* fallback */
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_FAILED,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INTERNAL,
 		    "command 0x%02x returned error 0x%02x",
 		    cmd,
 		    err);

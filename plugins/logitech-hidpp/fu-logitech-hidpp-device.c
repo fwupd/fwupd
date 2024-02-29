@@ -147,11 +147,11 @@ fu_logitech_hidpp_device_ping(FuLogitechHidppDevice *self, GError **error)
 	msg->data[2] = 0xaa; /* user-selected value */
 	msg->hidpp_version = priv->hidpp_version;
 	if (!fu_logitech_hidpp_transfer(priv->io_channel, msg, &error_local)) {
-		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			priv->hidpp_version = 1;
 			return TRUE;
 		}
-		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_HOST_UNREACHABLE)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNREACHABLE);
 			return TRUE;
 		}
@@ -217,7 +217,7 @@ fu_logitech_hidpp_device_poll(FuDevice *device, GError **error)
 	msg->device_id = priv->device_idx;
 	msg->hidpp_version = priv->hidpp_version;
 	if (!fu_logitech_hidpp_receive(priv->io_channel, msg, timeout, &error_local)) {
-		if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_TIMED_OUT)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 			g_warning("failed to get pending read: %s", error_local->message);
 			return TRUE;
 		}
@@ -314,8 +314,8 @@ fu_logitech_hidpp_device_create_radio_child(FuLogitechHidppDevice *self,
 	/* sanity check */
 	if (priv->model_id == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "model ID not set");
 		return FALSE;
 	}
@@ -624,8 +624,8 @@ fu_logitech_hidpp_feature_search(FuDevice *device, guint16 feature, GError **err
 	/* zero index */
 	if (msg->data[0] == 0x00) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "feature %s [0x%04x] not found",
 			    fu_logitech_hidpp_feature_to_string(feature),
 			    feature);
@@ -751,8 +751,8 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_logitech_hidpp_feature_search(device, map_features[i], &error_local)) {
 			g_debug("%s", error_local->message);
-			if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_TIMED_OUT) ||
-			    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_HOST_UNREACHABLE)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT) ||
+			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 				/* timed out, so not trying any more */
 				break;
 			}
@@ -953,7 +953,7 @@ fu_logitech_hidpp_device_detach(FuDevice *device, FuProgress *progress, GError *
 	}
 
 	/* we don't know how */
-	g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "no method to detach");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no method to detach");
 	return FALSE;
 }
 
@@ -963,8 +963,8 @@ fu_logitech_hidpp_device_check_status(guint8 status, GError **error)
 	switch (status & 0x7f) {
 	case 0x00:
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid status value 0x%02x",
 			    status);
 		break;
@@ -977,86 +977,110 @@ fu_logitech_hidpp_device_check_status(guint8 status, GError **error)
 		break;
 	case 0x03:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_PENDING,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_BUSY,
 				    "wait for event (command in progress)");
 		break;
 	case 0x04:
 	case 0x10: /* unknown */
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "generic error");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "generic error");
 		break;
 	case 0x11:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "bad voltage (power too low?)");
 		break;
 	case 0x12:
 	case 0x14: /* bad magic string */
 	case 0x21: /* bad firmware */
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "unsupported firmware");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unsupported firmware");
 		break;
 	case 0x13:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "unsupported encryption mode");
 		break;
 	case 0x15:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "erase failure");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_WRITE, "erase failure");
 		break;
 	case 0x16:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "DFU not started");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "DFU not started");
 		break;
 	case 0x17:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "bad sequence number");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "bad sequence number");
 		break;
 	case 0x18:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "unsupported command");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unsupported command");
 		break;
 	case 0x19:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "command in progress");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "command in progress");
 		break;
 	case 0x1a:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "address out of range");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "address out of range");
 		break;
 	case 0x1b:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "unaligned address");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "unaligned address");
 		break;
 	case 0x1c:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "bad size");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "bad size");
 		break;
 	case 0x1d:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "missing program data");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "missing program data");
 		break;
 	case 0x1e:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "missing check data");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "missing check data");
 		break;
 	case 0x1f:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
 				    "program failed to write");
 		break;
 	case 0x20:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
 				    "program failed to verify");
 		break;
 	case 0x22:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "firmware check failure");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "firmware check failure");
 		break;
 	case 0x23:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_BUSY,
 				    "blocked command (restart required)");
 		break;
 	default:
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "unhandled status value 0x%02x",
 			    status);
 		break;
@@ -1113,8 +1137,8 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidppDevice *self,
 		return TRUE;
 
 	/* fatal error */
-	if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_PENDING)) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, error_local->message);
+	if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_BUSY)) {
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
 	}
 
@@ -1138,8 +1162,8 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidppDevice *self,
 
 	/* nothing in the queue */
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_TIMED_OUT,
 			    "failed to get event after timeout");
 	return FALSE;
 }
@@ -1162,7 +1186,10 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 	/* if we're in bootloader mode, we should be able to get this feature */
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_DFU);
 	if (idx == 0x00) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "no DFU feature available");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no DFU feature available");
 		return FALSE;
 	}
 
@@ -1227,7 +1254,10 @@ fu_logitech_hidpp_device_attach(FuLogitechHidppDevice *self,
 	/* if we're in bootloader mode, we should be able to get this feature */
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_DFU);
 	if (idx == 0x00) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "no DFU feature available");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no DFU feature available");
 		return FALSE;
 	}
 
@@ -1292,7 +1322,10 @@ fu_logitech_hidpp_device_set_quirk_kv(FuDevice *device,
 		fu_logitech_hidpp_device_set_model_id(self, value);
 		return TRUE;
 	}
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
 	return FALSE;
 }
 

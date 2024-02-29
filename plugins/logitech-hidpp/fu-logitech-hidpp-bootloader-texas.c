@@ -47,7 +47,10 @@ fu_logitech_hidpp_bootloader_texas_compute_and_test_crc(FuLogitechHidppBootloade
 		return FALSE;
 	}
 	if (req->cmd == FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM_WRONG_CRC) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "CRC is incorrect");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "CRC is incorrect");
 		return FALSE;
 	}
 	return TRUE;
@@ -70,24 +73,24 @@ fu_logitech_hidpp_bootloader_texas_flash_ram_buffer(FuLogitechHidppBootloader *s
 	}
 	if (req->cmd == FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM_INVALID_ADDR) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to flash ram buffer @%04x: invalid flash page",
 			    addr);
 		return FALSE;
 	}
 	if (req->cmd == FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM_PAGE0_INVALID) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to flash ram buffer @%04x: invalid App JMP vector",
 			    addr);
 		return FALSE;
 	}
 	if (req->cmd == FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM_INVALID_ORDER) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to flash ram buffer @%04x: page flashed before page 0",
 			    addr);
 		return FALSE;
@@ -166,8 +169,8 @@ fu_logitech_hidpp_bootloader_texas_write_firmware(FuDevice *device,
 		/* check size */
 		if (payload->len != 16) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "payload size invalid @%04x: got 0x%02x",
 				    payload->addr,
 				    payload->len);
@@ -199,16 +202,16 @@ fu_logitech_hidpp_bootloader_texas_write_firmware(FuDevice *device,
 		}
 		if (req->cmd == FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_RAM_BUFFER_INVALID_ADDR) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "failed to write ram buffer @%04x: invalid location",
 				    req->addr);
 			return FALSE;
 		}
 		if (req->cmd == FU_LOGITECH_HIDPP_BOOTLOADER_CMD_WRITE_RAM_BUFFER_OVERFLOW) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "failed to write ram buffer @%04x: invalid size 0x%02x",
 				    req->addr,
 				    req->len);

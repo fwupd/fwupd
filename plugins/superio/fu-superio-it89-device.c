@@ -460,8 +460,8 @@ fu_superio_it89_device_detach(FuDevice *device, FuProgress *progress, GError **e
 		return FALSE;
 	if (tmp != 0x33) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to clear HOSTWA, got 0x%02x, expected 0x33",
 			    tmp);
 		return FALSE;

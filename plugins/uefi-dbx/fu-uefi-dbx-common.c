@@ -188,7 +188,7 @@ fu_uefi_dbx_signature_list_validate(FuContext *ctx,
 		g_autoptr(GError) error_local = NULL;
 		locker = fu_volume_locker(esp, &error_local);
 		if (locker == NULL) {
-			if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				g_propagate_error(error, g_steal_pointer(&error_local));
 				return FALSE;
 			}

@@ -79,8 +79,8 @@ fu_hid_report_item_parse(FuFirmware *firmware,
 			return FALSE;
 		if (offset + 1 >= streamsz) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_FAILED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "not enough data to read long tag");
 			return FALSE;
 		}

@@ -91,8 +91,8 @@ fu_kinetic_dp_secure_firmware_parse_chip_id(GInputStream *stream,
 
 	/* failed */
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "no valid Chip ID is found in the firmware");
 	return FALSE;
 }
@@ -153,8 +153,8 @@ fu_kinetic_dp_secure_device_parse_app_fw(FuKineticDpSecureFirmware *self,
 		return FALSE;
 	if (streamsz != STD_FW_PAYLOAD_SIZE) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "firmware payload size (0x%x) is not valid",
 			    (guint)streamsz);
 		return FALSE;

@@ -91,8 +91,8 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 		sect_id = fu_strsafe((const gchar *)buf, sizeof(buf));
 		if (sect_id == NULL) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "no section name");
 			return FALSE;
 		}
@@ -266,8 +266,8 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 		/* set the name directly, or add to the string table */
 		if (section->id == NULL) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "image %u has no ID",
 				    i);
 			return NULL;
@@ -288,8 +288,8 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 					    strlen(section->id));
 			if (strtab_buf->len > FU_PEFILE_SECTION_ID_STRTAB_SIZE) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "image ID %s is too long",
 					    section->id);
 				return NULL;

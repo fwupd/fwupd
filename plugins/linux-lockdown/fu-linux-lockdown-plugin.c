@@ -107,8 +107,8 @@ fu_linux_lockdown_plugin_ensure_security_attr_flags(FwupdSecurityAttr *attr, GEr
 		return FALSE;
 	if (!g_hash_table_contains(config, "CONFIG_LOCK_DOWN_KERNEL_FORCE_NONE")) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "config does not have CONFIG_LOCK_DOWN_KERNEL_FORCE_NONE");
 		return FALSE;
 	}
@@ -118,8 +118,8 @@ fu_linux_lockdown_plugin_ensure_security_attr_flags(FwupdSecurityAttr *attr, GEr
 	    fu_efivar_secure_boot_enabled(NULL)) {
 		g_set_error_literal(
 		    error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_INVALID_ARGUMENT,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "kernel lockdown cannot be changed when secure boot is enabled");
 		return FALSE;
 	}

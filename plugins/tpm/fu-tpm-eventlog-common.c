@@ -92,8 +92,8 @@ fu_tpm_eventlog_calc_checksums(GPtrArray *items, guint8 pcr, GError **error)
 	/* sanity check */
 	if (items->len == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "no event log data");
 		return NULL;
 	}
@@ -159,8 +159,8 @@ fu_tpm_eventlog_calc_checksums(GPtrArray *items, guint8 pcr, GError **error)
 	}
 	if (cnt_sha1 == 0 && cnt_sha256 == 0 && cnt_sha384 == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "no SHA1, SHA256, or SHA384 data");
 		return NULL;
 	}

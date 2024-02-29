@@ -289,7 +289,7 @@ fu_engine_integrity_new(GError **error)
 
 	/* nothing of use */
 	if (g_hash_table_size(self) == 0) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "no measurements");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no measurements");
 		return NULL;
 	}
 

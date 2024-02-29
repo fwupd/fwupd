@@ -51,9 +51,8 @@ fu_intel_me_mkhi_device_setup(FuDevice *device, GError **error)
 		if (!fu_intel_me_mkhi_device_add_checksum_for_filename(self,
 								       fns[i],
 								       &error_local)) {
-			if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 				continue;
-			}
 			g_warning("failed to get public key using %s: %s",
 				  fns[i],
 				  error_local->message);

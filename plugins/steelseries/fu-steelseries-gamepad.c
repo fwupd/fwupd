@@ -221,8 +221,8 @@ fu_steelseries_gamepad_write_checksum(FuDevice *device, guint32 checksum, GError
 	/* validate checksum */
 	if (data[0] != 0xA5 || data[1] != 0xAA || data[2] != 0x55 || data[3] != 0x01) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "Controller is unable to validate checksum");
 		return FALSE;
 	}

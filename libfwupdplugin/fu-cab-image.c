@@ -117,8 +117,8 @@ fu_cab_image_build(FuFirmware *firmware, XbNode *n, GError **error)
 		g_autoptr(GDateTime) created = g_date_time_new_from_iso8601(tmp, NULL);
 		if (created == NULL) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "not iso8601: %s",
 				    tmp);
 			return FALSE;

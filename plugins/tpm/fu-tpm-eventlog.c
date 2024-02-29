@@ -56,8 +56,8 @@ fu_tmp_eventlog_process(const gchar *fn, gint pcr, GError **error)
 	}
 	if (pcr > max_pcr) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid PCR specified: %d",
 			    pcr);
 		return FALSE;

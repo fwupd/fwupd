@@ -181,7 +181,7 @@ fu_fdt_image_get_attr(FuFdtImage *self, const gchar *key, GError **error)
 
 	blob = g_hash_table_lookup(priv->hash_attrs, key);
 	if (blob == NULL) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "no data for %s", key);
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no data for %s", key);
 		return NULL;
 	}
 
@@ -216,8 +216,8 @@ fu_fdt_image_get_attr_u32(FuFdtImage *self, const gchar *key, guint32 *val, GErr
 		return FALSE;
 	if (g_bytes_get_size(blob) != sizeof(guint32)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid data size for %s, got 0x%x, expected 0x%x",
 			    key,
 			    (guint)g_bytes_get_size(blob),
@@ -256,8 +256,8 @@ fu_fdt_image_get_attr_u64(FuFdtImage *self, const gchar *key, guint64 *val, GErr
 		return FALSE;
 	if (g_bytes_get_size(blob) != sizeof(guint64)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid data size for %s, got 0x%x, expected 0x%x",
 			    key,
 			    (guint)g_bytes_get_size(blob),
@@ -298,8 +298,8 @@ fu_fdt_image_get_attr_strlist(FuFdtImage *self, const gchar *key, gchar ***val, 
 		return FALSE;
 	if (g_bytes_get_size(blob) == 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid data size for %s, got 0x%x",
 			    key,
 			    (guint)g_bytes_get_size(blob));
@@ -311,8 +311,8 @@ fu_fdt_image_get_attr_strlist(FuFdtImage *self, const gchar *key, gchar ***val, 
 	for (gsize i = 0; i < bufsz; i++) {
 		if (buf[i] != 0x0 && !g_ascii_isprint((gchar)buf[i])) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "nonprintable character 0x%02x at offset 0x%x in %s",
 				    buf[i],
 				    (guint)i,
@@ -356,8 +356,8 @@ fu_fdt_image_get_attr_str(FuFdtImage *self, const gchar *key, gchar **val, GErro
 		return FALSE;
 	if (g_bytes_get_size(blob) == 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid data size for %s, got 0x%x",
 			    key,
 			    (guint)g_bytes_get_size(blob));
@@ -369,8 +369,8 @@ fu_fdt_image_get_attr_str(FuFdtImage *self, const gchar *key, gchar **val, GErro
 	for (gsize i = 0; i < bufsz; i++) {
 		if (buf[i] != 0x0 && !g_ascii_isprint((gchar)buf[i])) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "nonprintable character 0x%02x at offset 0x%x in %s",
 				    buf[i],
 				    (guint)i,
@@ -526,14 +526,14 @@ fu_fdt_image_build_metadata_node(FuFdtImage *self, XbNode *n, GError **error)
 
 	key = xb_node_get_attr(n, "key");
 	if (key == NULL) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "key invalid");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "key invalid");
 		return FALSE;
 	}
 	format = xb_node_get_attr(n, "format");
 	if (format == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "format unspecified for %s, expected uint64|uint32|str|strlist|data",
 			    key);
 		return FALSE;
@@ -593,8 +593,8 @@ fu_fdt_image_build_metadata_node(FuFdtImage *self, XbNode *n, GError **error)
 
 	/* failed */
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_INVALID_DATA,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_DATA,
 		    "format for %s invalid, expected uint64|uint32|str|strlist|data",
 		    key);
 	return FALSE;

@@ -87,8 +87,8 @@ fu_kinetic_dp_device_dpcd_read_oui(FuKineticDpDevice *self,
 {
 	if (bufsz < DPCD_SIZE_IEEE_OUI) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "aux dpcd read buffer size [0x%x] is too small to read IEEE OUI",
 			    (guint)bufsz);
 		return FALSE;
@@ -188,7 +188,10 @@ fu_kinetic_dp_device_setup(FuDevice *device, GError **error)
 
 	/* sanity check */
 	if (fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)) == 0x0) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no IEEE OUI set");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no IEEE OUI set");
 		return FALSE;
 	}
 

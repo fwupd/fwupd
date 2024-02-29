@@ -692,8 +692,8 @@ fu_ccgx_hpi_device_wait_for_event(FuCcgxHpiDevice *self,
 
 	/* timed out */
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_TIMED_OUT,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_TIMED_OUT,
 		    "failed to wait for event in %ums",
 		    timeout_ms);
 	return FALSE;
@@ -733,7 +733,7 @@ fu_ccgx_hpi_device_clear_all_events(FuCcgxHpiDevice *self, guint32 io_timeout, G
 						       event_array,
 						       io_timeout,
 						       &error_local)) {
-			if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_TIMED_OUT)) {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 				g_propagate_prefixed_error(error,
 							   g_steal_pointer(&error_local),
 							   "failed to clear events: ");
@@ -1499,7 +1499,7 @@ fu_ccgx_hpi_device_setup(FuDevice *device, GError **error)
 					  &hpi_event,
 					  HPI_CMD_SETUP_EVENT_WAIT_TIME_MS,
 					  &error_local)) {
-		if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_TIMED_OUT)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
@@ -1544,12 +1544,12 @@ fu_ccgx_hpi_device_set_quirk_kv(FuDevice *device,
 		if (self->fw_image_type != FU_CCGX_IMAGE_TYPE_UNKNOWN)
 			return TRUE;
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid CcgxImageKind");
 		return FALSE;
 	}
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no supported");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no supported");
 	return FALSE;
 }
 

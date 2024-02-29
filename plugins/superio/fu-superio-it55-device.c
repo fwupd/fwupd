@@ -611,8 +611,8 @@ fu_superio_it55_device_set_quirk_kv(FuDevice *device,
 			self->autoload_action = AUTOLOAD_SET_OFF;
 		} else {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "invalid value");
 			return FALSE;
 		}

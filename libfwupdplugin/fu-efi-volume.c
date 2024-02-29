@@ -97,8 +97,8 @@ fu_efi_volume_parse(FuFirmware *firmware,
 	alignment = (attrs & 0x00ff0000) >> 16;
 	if (alignment > FU_FIRMWARE_ALIGNMENT_2G) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "0x%x invalid, maximum is 0x%x",
 			    (guint)alignment,
 			    (guint)FU_FIRMWARE_ALIGNMENT_2G);
@@ -154,8 +154,8 @@ fu_efi_volume_parse(FuFirmware *firmware,
 				return FALSE;
 			if (fu_struct_efi_volume_ext_entry_get_size(st_ext_entry) == 0x0) {
 				g_set_error_literal(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_INVALID_DATA,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
 						    "EFI_VOLUME_EXT_ENTRY invalid size");
 				return FALSE;
 			}

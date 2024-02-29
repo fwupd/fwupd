@@ -126,9 +126,9 @@ fu_sahara_loader_find_interface(FuSaharaLoader *self, FuUsbDevice *usb_device, G
 	if (g_usb_device_get_vid(g_usb_device) != 0x05c6 ||
 	    g_usb_device_get_pid(g_usb_device) != 0x9008) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Wrong device and/or vendor id: 0x%04x 0x%04x",
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "wrong device and/or vendor id: 0x%04x 0x%04x",
 			    g_usb_device_get_vid(g_usb_device),
 			    g_usb_device_get_pid(g_usb_device));
 		return FALSE;
@@ -234,7 +234,7 @@ fu_sahara_loader_qdl_read(FuSaharaLoader *self, GError **error)
 
 	return g_steal_pointer(&buf);
 #else
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
 	return NULL;
 #endif
 }
@@ -267,8 +267,8 @@ fu_sahara_loader_qdl_write(FuSaharaLoader *self, const guint8 *data, gsize sz, G
 		}
 		if (actual_len != fu_chunk_get_data_sz(chk)) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "only wrote %" G_GSIZE_FORMAT "bytes",
 				    actual_len);
 			return FALSE;
@@ -291,7 +291,7 @@ fu_sahara_loader_qdl_write(FuSaharaLoader *self, const guint8 *data, gsize sz, G
 
 	return TRUE;
 #else
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
 	return FALSE;
 #endif
 }
@@ -415,9 +415,9 @@ fu_sahara_loader_send_reset_packet(FuSaharaLoader *self, GError **error)
 	if (rx_packet == NULL ||
 	    sahara_packet_get_command_id(rx_packet) != SAHARA_RESET_RESPONSE_ID) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Failed to receive RESET_RESPONSE packet");
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to receive RESET_RESPONSE packet");
 		return FALSE;
 	}
 
@@ -446,9 +446,9 @@ fu_sahara_loader_wait_hello_rsp(FuSaharaLoader *self, GError **error)
 
 	if (sahara_packet_get_command_id(rx_packet) != SAHARA_HELLO_ID) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Received a different packet while waiting for the HELLO packet");
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "received a different packet while waiting for the HELLO packet");
 		fu_sahara_loader_send_reset_packet(self, NULL);
 		return FALSE;
 	}
@@ -481,9 +481,9 @@ fu_sahara_loader_run(FuSaharaLoader *self, GBytes *prog, GError **error)
 			break;
 		if (rx_packet->len != sahara_packet_get_length(rx_packet)) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
-				    "Received packet length is not matching");
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "received packet length is not matching");
 			break;
 		}
 		fu_dump_raw(G_LOG_DOMAIN, "rx_packet", rx_packet->data, rx_packet->len);

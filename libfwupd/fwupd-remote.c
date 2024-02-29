@@ -1561,8 +1561,10 @@ fwupd_remote_load_signature(FwupdRemote *self, const gchar *filename, GError **e
 
 	/* load JCat file */
 	gfile = g_file_new_for_path(filename);
-	if (!jcat_file_import_file(jcat_file, gfile, JCAT_IMPORT_FLAG_NONE, NULL, error))
+	if (!jcat_file_import_file(jcat_file, gfile, JCAT_IMPORT_FLAG_NONE, NULL, error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	return fwupd_remote_load_signature_jcat(self, jcat_file, error);
 }
 

@@ -65,8 +65,8 @@ fu_efivar_set_immutable_fd(int fd, gboolean value, gboolean *value_old, GError *
 			is_immutable = FALSE;
 		} else {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to get flags: %s",
 				    g_strerror(errno));
 			return FALSE;
@@ -94,8 +94,8 @@ fu_efivar_set_immutable_fd(int fd, gboolean value, gboolean *value_old, GError *
 	rc = ioctl(fd, FS_IOC_SETFLAGS, &flags);
 	if (rc < 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to set flags: %s",
 			    g_strerror(errno));
 		return FALSE;
@@ -113,8 +113,8 @@ fu_efivar_set_immutable(const gchar *fn, gboolean value, gboolean *value_old, GE
 	fd = open(fn, O_RDONLY);
 	if (fd < 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_FILENAME,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "failed to open: %s",
 			    g_strerror(errno));
 		return FALSE;
@@ -122,8 +122,8 @@ fu_efivar_set_immutable(const gchar *fn, gboolean value, gboolean *value_old, GE
 	istr = g_unix_input_stream_new(fd, TRUE);
 	if (istr == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to create stream");
 		return FALSE;
 	}
@@ -225,14 +225,17 @@ fu_efivar_get_data_impl(const gchar *guid,
 	fn = fu_efivar_get_filename(guid, name);
 	file = g_file_new_for_path(fn);
 	istr = G_INPUT_STREAM(g_file_read(file, NULL, error));
-	if (istr == NULL)
+	if (istr == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	info = g_file_input_stream_query_info(G_FILE_INPUT_STREAM(istr),
 					      G_FILE_ATTRIBUTE_STANDARD_SIZE,
 					      NULL,
 					      error);
 	if (info == NULL) {
 		g_prefix_error(error, "failed to get stream info: ");
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 
@@ -240,8 +243,8 @@ fu_efivar_get_data_impl(const gchar *guid,
 	sz = g_file_info_get_attribute_uint64(info, G_FILE_ATTRIBUTE_STANDARD_SIZE);
 	if (sz < 4) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "efivars file too small: %" G_GUINT64_FORMAT,
 			    sz);
 		return FALSE;
@@ -251,6 +254,7 @@ fu_efivar_get_data_impl(const gchar *guid,
 	attr_sz = g_input_stream_read(istr, &attr_tmp, sizeof(attr_tmp), NULL, error);
 	if (attr_sz == -1) {
 		g_prefix_error(error, "failed to read attr: ");
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	if (attr != NULL)
@@ -259,7 +263,10 @@ fu_efivar_get_data_impl(const gchar *guid,
 	/* read out the data */
 	data_sz_tmp = sz - sizeof(attr_tmp);
 	if (data_sz_tmp == 0) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "no data to read");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no data to read");
 		return FALSE;
 	}
 	if (data_sz != NULL)
@@ -298,7 +305,11 @@ fu_efivar_get_names_impl(const gchar *guid, GError **error)
 
 	/* nothing found */
 	if (names->len == 0) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "no names for GUID %s", guid);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "no names for GUID %s",
+			    guid);
 		return NULL;
 	}
 
@@ -316,8 +327,10 @@ fu_efivar_get_monitor_impl(const gchar *guid, const gchar *name, GError **error)
 	fn = fu_efivar_get_filename(guid, name);
 	file = g_file_new_for_path(fn);
 	monitor = g_file_monitor_file(file, G_FILE_MONITOR_NONE, NULL, error);
-	if (monitor == NULL)
+	if (monitor == NULL) {
+		fwupd_error_convert(error);
 		return NULL;
+	}
 	g_file_monitor_set_rate_limit(monitor, 5000);
 	return g_steal_pointer(&monitor);
 }
@@ -363,8 +376,10 @@ fu_efivar_space_used_impl(GError **error)
 					 G_FILE_QUERY_INFO_NONE,
 					 NULL,
 					 error);
-		if (info == NULL)
+		if (info == NULL) {
+			fwupd_error_convert(error);
 			return G_MAXUINT64;
+		}
 		sz = g_file_info_get_attribute_uint64(info,
 						      G_FILE_ATTRIBUTE_STANDARD_ALLOCATED_SIZE);
 		if (sz == 0)
@@ -396,10 +411,13 @@ fu_efivar_set_data_impl(const gchar *guid,
 	if (!g_file_query_exists(file, NULL)) {
 		g_autoptr(GFileOutputStream) ostr_tmp = NULL;
 		ostr_tmp = g_file_create(file, G_FILE_CREATE_NONE, NULL, error);
-		if (ostr_tmp == NULL)
+		if (ostr_tmp == NULL) {
+			fwupd_error_convert(error);
 			return FALSE;
+		}
 		if (!g_output_stream_close(G_OUTPUT_STREAM(ostr_tmp), NULL, error)) {
 			g_prefix_error(error, "failed to touch efivarfs: ");
+			fwupd_error_convert(error);
 			return FALSE;
 		}
 	}
@@ -415,8 +433,8 @@ fu_efivar_set_data_impl(const gchar *guid,
 	fd = open(fn, open_wflags);
 	if (fd < 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "failed to open %s: %s",
 			    fn,
 			    g_strerror(errno));
@@ -427,12 +445,14 @@ fu_efivar_set_data_impl(const gchar *guid,
 	memcpy(buf + sizeof(attr), data, sz);
 	if (g_output_stream_write(ostr, buf, sizeof(attr) + sz, NULL, error) < 0) {
 		g_prefix_error(error, "failed to write data to efivarfs: ");
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 
 	/* set as immutable again */
 	if (was_immutable && !fu_efivar_set_immutable(fn, TRUE, NULL, error)) {
 		g_prefix_error(error, "failed to set %s as immutable: ", fn);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 

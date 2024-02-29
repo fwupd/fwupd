@@ -32,6 +32,9 @@ G_BEGIN_DECLS
  * @FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW:		The system battery level is too low
  * @FWUPD_ERROR_NEEDS_USER_ACTION:		User needs to do an action to complete the update
  * @FWUPD_ERROR_AUTH_EXPIRED:			Failed to get auth as credentials have expired
+ * @FWUPD_ERROR_INVALID_DATA:			Invalid data
+ * @FWUPD_ERROR_TIMED_OUT:			The request timed out
+ * @FWUPD_ERROR_BUSY:				The device is busy
  *
  * The error code.
  **/
@@ -54,6 +57,9 @@ typedef enum {
 	FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW, /* Since: 1.2.10 */
 	FWUPD_ERROR_NEEDS_USER_ACTION,	   /* Since: 1.3.3 */
 	FWUPD_ERROR_AUTH_EXPIRED,	   /* Since: 1.7.5 */
+	FWUPD_ERROR_INVALID_DATA,	   /* Since: 2.0.0 */
+	FWUPD_ERROR_TIMED_OUT,		   /* Since: 2.0.0 */
+	FWUPD_ERROR_BUSY,		   /* Since: 2.0.0 */
 	/*< private >*/
 	FWUPD_ERROR_LAST
 } FwupdError;
@@ -64,5 +70,7 @@ const gchar *
 fwupd_error_to_string(FwupdError error);
 FwupdError
 fwupd_error_from_string(const gchar *error);
+void
+fwupd_error_convert(GError **perror);
 
 G_END_DECLS

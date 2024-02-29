@@ -37,8 +37,8 @@ fu_acpi_ivrs_parse(FuFirmware *firmware,
 	/* check signature and read flags */
 	if (g_strcmp0(fu_firmware_get_id(FU_FIRMWARE(self)), "IVRS") != 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "Not a IVRS table, got %s",
 			    fu_firmware_get_id(FU_FIRMWARE(self)));
 		return FALSE;

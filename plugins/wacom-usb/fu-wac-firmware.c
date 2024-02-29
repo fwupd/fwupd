@@ -43,8 +43,8 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 	/* sanity check */
 	if (token_idx > FU_WAC_FIRMWARE_TOKENS_MAX) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "file has too many lines");
 		return FALSE;
 	}

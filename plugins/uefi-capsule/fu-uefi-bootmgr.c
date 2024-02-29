@@ -121,8 +121,8 @@ fu_uefi_bootmgr_verify_fwupd(GError **error)
 
 	/* did not find */
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "no 'Linux Firmware Updater' entry found");
 	return FALSE;
 }
@@ -218,8 +218,8 @@ fu_uefi_setup_bootnext_with_loadopt(FuEfiLoadOption *loadopt,
 		}
 		if (boot_next == G_MAXUINT16) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no free boot variables (tried %x)",
 				    boot_next);
 			return FALSE;

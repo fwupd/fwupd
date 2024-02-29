@@ -65,8 +65,8 @@ fu_analogix_device_send(FuAnalogixDevice *self,
 	}
 	if (actual_len != bufsz) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "send data length is incorrect");
 		return FALSE;
 	}
@@ -108,8 +108,8 @@ fu_analogix_device_receive(FuAnalogixDevice *self,
 	}
 	if (actual_len != bufsz) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "receive data length is incorrect");
 		return FALSE;
 	}

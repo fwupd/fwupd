@@ -599,7 +599,7 @@ _fu_strtoull_simple(const gchar *str, guint64 *value, GError **error)
 	}
 	*value = g_ascii_strtoull(str, &endptr, base);
 	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "cannot parse %s", str);
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "cannot parse %s", str);
 		return FALSE;
 	}
 	return TRUE;
@@ -914,7 +914,10 @@ fwupd_bios_setting_from_json(FwupdBiosSetting *self, JsonNode *json_node, GError
 
 	/* sanity check */
 	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not JSON object");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "not JSON object");
 		return FALSE;
 	}
 	obj = json_node_get_object(json_node);

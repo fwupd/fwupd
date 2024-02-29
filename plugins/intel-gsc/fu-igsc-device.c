@@ -83,14 +83,14 @@ fu_igsc_device_heci_validate_response_header(FuIgscDevice *self,
 {
 	if (resp_header->header.command_id != command_id) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid command ID (%d): ",
 			    resp_header->header.command_id);
 		return FALSE;
 	}
 	if (!resp_header->header.is_response) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not a response");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "not a response");
 		return FALSE;
 	}
 	if (resp_header->status != GSC_FWU_STATUS_SUCCESS) {
@@ -118,8 +118,8 @@ fu_igsc_device_heci_validate_response_header(FuIgscDevice *self,
 			break;
 		}
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "HECI message failed: %s [0x%x]: ",
 			    msg,
 			    resp_header->status);
@@ -127,8 +127,8 @@ fu_igsc_device_heci_validate_response_header(FuIgscDevice *self,
 	}
 	if (resp_header->reserved != 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "HECI message response is leaking data");
 		return FALSE;
 	}
@@ -161,8 +161,8 @@ fu_igsc_device_command(FuIgscDevice *self,
 		return FALSE;
 	if (resp_readsz != resp_bufsz) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "read 0x%x bytes but expected 0x%x",
 			    (guint)resp_readsz,
 			    (guint)resp_bufsz);
@@ -200,16 +200,16 @@ fu_igsc_device_get_version_raw(FuIgscDevice *self,
 		return FALSE;
 	if (res->partition != partition) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid HECI message response payload: 0x%x: ",
 			    res->partition);
 		return FALSE;
 	}
 	if (bufsz > 0 && res->version_length != bufsz) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid HECI message response version_length: 0x%x, expected 0x%x: ",
 			    res->version_length,
 			    (guint)bufsz);
@@ -325,8 +325,8 @@ fu_igsc_device_get_config(FuIgscDevice *self, GError **error)
 		return FALSE;
 	if (res.format_version != GSC_FWU_GET_CONFIG_FORMAT_VERSION) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid config version 0x%x, expected 0x%x",
 			    res.format_version,
 			    (guint)GSC_FWU_GET_CONFIG_FORMAT_VERSION);
@@ -342,8 +342,8 @@ fu_igsc_device_get_config(FuIgscDevice *self, GError **error)
 		self->hw_sku = GSC_IFWI_TAG_SOC2_SKU_BIT;
 	} else {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid hw sku 0x%x, expected 0..2",
 			    res.hw_sku);
 		return FALSE;
@@ -622,7 +622,7 @@ fu_igsc_device_wait_for_reset(FuIgscDevice *self, GError **error)
 			return TRUE;
 		fu_device_sleep(FU_DEVICE(self), 100);
 	}
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_TIMED_OUT, "device did not reset");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "device did not reset");
 	return FALSE;
 }
 

@@ -77,8 +77,8 @@ fu_igsc_aux_firmware_match_device(FuIgscAuxFirmware *self,
 
 	/* not us */
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_NOT_FOUND,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
 		    "could not find 0x%04x:0x%04x 0x%04x:0x%04x in the image",
 		    vendor_id,
 		    device_id,
@@ -176,8 +176,8 @@ fu_igsc_aux_firmware_parse_extension(FuIgscAuxFirmware *self, FuFirmware *fw, GE
 	} else if (fu_firmware_get_idx(fw) == MFT_EXT_TYPE_FWDATA_UPDATE) {
 		if (bufsz != sizeof(struct mft_fwdata_update_ext)) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "signed data update manifest ext was 0x%x bytes",
 				    (guint)bufsz);
 			return FALSE;
@@ -232,8 +232,8 @@ fu_igsc_aux_firmware_parse(FuFirmware *firmware,
 	}
 	if (!self->has_manifest_ext || self->device_infos->len == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "missing extensions");
 		return FALSE;
 	}

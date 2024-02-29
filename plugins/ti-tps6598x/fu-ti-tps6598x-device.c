@@ -70,8 +70,8 @@ fu_ti_tps6598x_device_usbep_read_raw(FuTiTps6598xDevice *self,
 	fu_dump_raw(G_LOG_DOMAIN, title, buf->data, buf->len);
 	if (actual_length != buf->len) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "got 0x%x but requested 0x%x",
 			    (guint)actual_length,
 			    (guint)buf->len);
@@ -99,8 +99,8 @@ fu_ti_tps6598x_device_usbep_read(FuTiTps6598xDevice *self,
 	/* check then remove size */
 	if (buf->data[0] < length) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "response 0x%x but requested 0x%x",
 			    (guint)buf->data[0],
 			    (guint)length);
@@ -151,8 +151,8 @@ fu_ti_tps6598x_device_usbep_write(FuTiTps6598xDevice *self,
 		}
 		if (actual_length != fu_chunk_get_data_sz(chk)) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "wrote 0x%x but expected 0x%x",
 				    (guint)actual_length,
 				    (guint)fu_chunk_get_data_sz(chk));
@@ -203,8 +203,8 @@ fu_ti_tps6598x_device_write_4cc(FuTiTps6598xDevice *self,
 	/* sanity check */
 	if (strlen(cmd) != 4) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_ARGUMENT,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "expected 4-char cmd");
 		return FALSE;
 	}
@@ -237,8 +237,8 @@ fu_ti_tps6598x_device_wait_for_command_cb(FuDevice *device, gpointer user_data, 
 	/* check the value of the cmd register */
 	if (buf->data[0] != 0 || buf->data[1] != 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_ARGUMENT,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid status register, got 0x%02x:0x%02x",
 			    buf->data[1],
 			    buf->data[2]);
@@ -303,8 +303,8 @@ fu_ti_tps6598x_device_sfwi(FuTiTps6598xDevice *self, GError **error)
 	res = buf->data[0] & 0b1111;
 	if (res != FU_TI_TPS6598X_SFWI_SUCCESS) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_ARGUMENT,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "SFWi failed, got %s [0x%02x]",
 			    fu_ti_tps6598x_sfwi_to_string(res),
 			    res);
@@ -335,8 +335,8 @@ fu_ti_tps6598x_device_sfwd(FuTiTps6598xDevice *self, GByteArray *data, GError **
 	res = buf->data[0] & 0b1111;
 	if (res != FU_TI_TPS6598X_SFWD_SUCCESS) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_ARGUMENT,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "SFWd failed, got %s [0x%02x]",
 			    fu_ti_tps6598x_sfwd_to_string(res),
 			    res);
@@ -365,8 +365,8 @@ fu_ti_tps6598x_device_sfws(FuTiTps6598xDevice *self, GByteArray *data, GError **
 	res = buf->data[0] & 0b1111;
 	if (res != FU_TI_TPS6598X_SFWS_SUCCESS) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_ARGUMENT,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "SFWs failed, got %s [0x%02x]",
 			    fu_ti_tps6598x_sfws_to_string(res),
 			    res);
@@ -407,8 +407,8 @@ fu_ti_tps6598x_device_read_target_register(FuTiTps6598xDevice *self,
 	/* check then remove response code */
 	if (buf->data[0] != 0x00) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "response code 0x%02x",
 			    (guint)buf->data[0]);
 		return NULL;
@@ -459,8 +459,8 @@ fu_ti_tps6598x_device_ensure_mode(FuTiTps6598xDevice *self, GError **error)
 
 	/* unhandled */
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_INVALID_ARGUMENT,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "device in unknown mode: %s",
 		    str);
 	return FALSE;

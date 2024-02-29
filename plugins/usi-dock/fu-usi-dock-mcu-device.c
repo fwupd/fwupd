@@ -135,11 +135,11 @@ fu_usi_dock_mcu_device_get_status(FuUsiDockMcuDevice *self, GError **error)
 		return FALSE;
 	}
 	if (response == 0x1) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BUSY, "device is busy");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "device is busy");
 		return FALSE;
 	}
 	if (response == 0xFF) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_TIMED_OUT, "device timed out");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "device timed out");
 		return FALSE;
 	}
 
@@ -486,8 +486,8 @@ fu_usi_dock_mcu_device_wait_for_spi_ready_cb(FuDevice *device, gpointer user_dat
 		return FALSE;
 	if (val != FU_USI_DOCK_SPI_STATE_READY) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_BUSY,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_BUSY,
 			    "SPI state is %s [0x%02x]",
 			    fu_usi_dock_spi_state_to_string(val),
 			    val);
@@ -517,8 +517,8 @@ fu_usi_dock_mcu_device_wait_for_spi_initial_ready_cb(FuDevice *device,
 		return FALSE;
 	if (val != FU_USI_DOCK_SPI_STATE_READY) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_BUSY,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_BUSY,
 			    "SPI state is %s [0x%02x]",
 			    fu_usi_dock_spi_state_to_string(val),
 			    val);
@@ -644,8 +644,8 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 
 	if (checksum != 0x0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid checksum result for CMD_FWBUFER_CHECKSUM, got 0x%02x",
 			    checksum);
 		return FALSE;

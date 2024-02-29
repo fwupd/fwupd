@@ -49,7 +49,7 @@ fu_ebitdo_device_send(FuEbitdoDevice *self,
 
 	/* check size */
 	if (in_len > 64 - 8) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "input buffer too large");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "input buffer too large");
 		return FALSE;
 	}
 
@@ -89,8 +89,8 @@ fu_ebitdo_device_send(FuEbitdoDevice *self,
 					     NULL, /* cancellable */
 					     &error_local)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "failed to send to device on ep 0x%02x: %s",
 			    (guint)FU_EBITDO_USB_BOOTLOADER_EP_OUT,
 			    error_local->message);
@@ -123,8 +123,8 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 					     NULL, /* cancellable */
 					     &error_local)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "failed to retrieve from device on ep 0x%02x: %s",
 			    (guint)ep_in,
 			    error_local->message);
@@ -144,8 +144,8 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 		if (out != NULL) {
 			if (fu_struct_ebitdo_pkt_get_payload_len(st_hdr) < out_len) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "payload too small, expected %" G_GSIZE_FORMAT
 					    " got %u",
 					    out_len,
@@ -170,8 +170,8 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 		if (out != NULL) {
 			if (out_len != 4) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "outbuf size wrong, expected 4 got %" G_GSIZE_FORMAT,
 					    out_len);
 				return FALSE;
@@ -195,8 +195,8 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 		if (out != NULL) {
 			if (fu_struct_ebitdo_pkt_get_cmd_len(st_hdr) != out_len) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "outbuf size wrong, expected %" G_GSIZE_FORMAT
 					    " got %i",
 					    out_len,
@@ -223,8 +223,8 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 		if (fu_struct_ebitdo_pkt_get_cmd(st_hdr) != FU_EBITDO_PKT_CMD_ACK) {
 			g_set_error(
 			    error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "write failed, got %s",
 			    fu_ebitdo_pkt_cmd_to_string(fu_struct_ebitdo_pkt_get_cmd(st_hdr)));
 			return FALSE;
@@ -233,10 +233,7 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 	}
 
 	/* unhandled */
-	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "unexpected device response");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unexpected device response");
 	return FALSE;
 }
 
@@ -260,8 +257,8 @@ fu_ebitdo_device_validate(FuEbitdoDevice *self, GError **error)
 	ven = fu_device_get_vendor(FU_DEVICE(self));
 	if (ven == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "could not check vendor descriptor: ");
 		return FALSE;
 	}
@@ -270,8 +267,8 @@ fu_ebitdo_device_validate(FuEbitdoDevice *self, GError **error)
 			return TRUE;
 	}
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_INVALID_DATA,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_DATA,
 		    "vendor '%s' did not match allowlist, "
 		    "probably not a 8BitDo device…",
 		    ven);

@@ -75,8 +75,8 @@ fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
 		payload->len = fu_logitech_hidpp_buffer_read_uint8(tmp + 0x01);
 		if (payload->len > 28) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "firmware data invalid: too large %u bytes",
 				    payload->len);
 			return NULL;
@@ -104,8 +104,8 @@ fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
 				return NULL;
 			if (offset != 0x0000) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "extended linear addresses with offset different from "
 					    "0 are not supported");
 				return NULL;
@@ -122,8 +122,8 @@ fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
 			break;
 		default:
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "intel hex file record type %02x not supported",
 				    rec_type);
 			return NULL;
@@ -137,8 +137,8 @@ fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
 			const gchar *ptr = tmp + 0x09 + (j * 2);
 			if (ptr[0] == '\0') {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "firmware data invalid: expected %u bytes",
 					    payload->len);
 				return NULL;
@@ -176,8 +176,8 @@ fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
 	}
 	if (reqs->len == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "firmware data invalid: no payloads found");
 		return NULL;
 	}
@@ -283,8 +283,8 @@ fu_logitech_hidpp_bootloader_setup(FuDevice *device, GError **error)
 	}
 	if (req->len != 0x06) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to get meminfo: invalid size %02x",
 			    req->len);
 		return FALSE;
@@ -391,8 +391,8 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
 	/* parse response */
 	if ((buf_response[0x00] & 0xf0) != req->cmd) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid command response of %02x, expected %02x",
 			    buf_response[0x00],
 			    req->cmd);
@@ -403,8 +403,8 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
 	req->len = buf_response[0x03];
 	if (req->len > 28) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid data size of %02x",
 			    req->len);
 		return FALSE;

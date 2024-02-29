@@ -117,8 +117,8 @@ proto_manager_decode_message(const guint8 *data,
 	    logi__device__proto__usb_msg__unpack(NULL, len, (const unsigned char *)data);
 	if (usb_msg == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "unable to unpack data");
 		return NULL;
 	}
@@ -130,8 +130,8 @@ proto_manager_decode_message(const guint8 *data,
 	case LOGI__DEVICE__PROTO__USB_MSG__MESSAGE_RESPONSE:
 		if (!usb_msg->response) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "no USB response");
 			return NULL;
 		}
@@ -153,8 +153,8 @@ proto_manager_decode_message(const guint8 *data,
 				if (!usb_msg->response->transition_to_devicemode_response
 					 ->success) {
 					g_set_error(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_FAILED,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_NOT_SUPPORTED,
 						    "transition mode request failed. error: %u",
 						    (guint)usb_msg->response
 							->transition_to_devicemode_response->error);
@@ -169,8 +169,8 @@ proto_manager_decode_message(const guint8 *data,
 	case LOGI__DEVICE__PROTO__USB_MSG__MESSAGE_EVENT:
 		if (!usb_msg->response) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "no USB event");
 			return NULL;
 		}

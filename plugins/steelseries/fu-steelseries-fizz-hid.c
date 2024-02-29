@@ -58,7 +58,7 @@ fu_steelseries_fizz_hid_command_cb(FuDevice *device, gpointer user_data, GError 
 		/* since fu_udev_device_pread() treats unexpected data size as error
 		 * we have to check the output additionally since the size of
 		 * unexpected data size from mouse input data is only 16b */
-		if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_FAILED) ||
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL) ||
 		    report_id != 0x01) {
 			g_propagate_prefixed_error(error,
 						   g_steal_pointer(&error_local),
@@ -71,8 +71,8 @@ fu_steelseries_fizz_hid_command_cb(FuDevice *device, gpointer user_data, GError 
 
 	if (report_id != STEELSERIES_HID_GET_REPORT) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "data with unexpected Report ID (%u)",
 			    report_id);
 		return FALSE;

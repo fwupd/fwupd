@@ -110,9 +110,9 @@ validate_program_action(XbNode *program, FuArchive *archive, GError **error)
 	filename_attr = xb_node_get_attr(program, "filename");
 	if (filename_attr == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Missing 'filename' attribute in 'program' action");
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "missing 'filename' attribute in 'program' action");
 		return FALSE;
 	}
 
@@ -127,9 +127,9 @@ validate_program_action(XbNode *program, FuArchive *archive, GError **error)
 	num_partition_sectors = xb_node_get_attr_as_uint(program, "num_partition_sectors");
 	if (num_partition_sectors == G_MAXUINT64) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Missing 'num_partition_sectors' attribute in 'program' action for "
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "missing 'num_partition_sectors' attribute in 'program' action for "
 			    "filename '%s'",
 			    filename_attr);
 		return FALSE;
@@ -137,9 +137,9 @@ validate_program_action(XbNode *program, FuArchive *archive, GError **error)
 	sector_size_in_bytes = xb_node_get_attr_as_uint(program, "SECTOR_SIZE_IN_BYTES");
 	if (sector_size_in_bytes == G_MAXUINT64) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Missing 'SECTOR_SIZE_IN_BYTES' attribute in 'program' action for "
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "missing 'SECTOR_SIZE_IN_BYTES' attribute in 'program' action for "
 			    "filename '%s'",
 			    filename_attr);
 		return FALSE;
@@ -152,9 +152,9 @@ validate_program_action(XbNode *program, FuArchive *archive, GError **error)
 	if (computed_num_partition_sectors != num_partition_sectors) {
 		g_set_error(
 		    error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_FAILED,
-		    "Invalid 'num_partition_sectors' in 'program' action for filename '%s': "
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_DATA,
+		    "invalid 'num_partition_sectors' in 'program' action for filename '%s': "
 		    "expected %" G_GUINT64_FORMAT " instead of %" G_GUINT64_FORMAT " bytes",
 		    filename_attr,
 		    computed_num_partition_sectors,
@@ -189,7 +189,7 @@ fu_firehose_validate_rawprogram(GBytes *rawprogram,
 	data_node = xb_silo_get_root(silo);
 	action_nodes = xb_node_get_children(data_node);
 	if (action_nodes == NULL || action_nodes->len == 0) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "No actions given");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no actions given");
 		return FALSE;
 	}
 
@@ -230,10 +230,10 @@ fu_firehose_updater_open(FuFirehoseUpdater *self, GError **error)
 		return self->io_channel != NULL;
 	}
 
-	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_NOT_FOUND,
-		    "No device to write firehose commands to");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "no device to write firehose commands to");
 	return FALSE;
 }
 
@@ -281,7 +281,10 @@ fu_firehose_updater_process_response(GBytes *rsp_bytes,
 
 	data_node = xb_silo_get_root(silo);
 	if (data_node == NULL) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "Missing root data node");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "missing root data node");
 		return FALSE;
 	}
 
@@ -377,9 +380,9 @@ fu_firehose_updater_send_and_receive(FuFirehoseUpdater *self,
 	}
 
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_TIMED_OUT,
-		    "Didn't get any response in the last %d messages",
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_TIMED_OUT,
+		    "didn't get any response in the last %d messages",
 		    MAX_RECV_MESSAGES);
 	return FALSE;
 }
@@ -408,9 +411,9 @@ fu_firehose_updater_initialize(FuFirehoseUpdater *self, GError **error)
 
 	if (n_msg == 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Couldn't read initial firehose messages from device");
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "couldn't read initial firehose messages from device");
 		return FALSE;
 	}
 
@@ -478,7 +481,10 @@ fu_firehose_updater_configure(FuFirehoseUpdater *self, GError **error)
 		return max_payload_size;
 	}
 
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "Configure operation failed");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "configure operation failed");
 	return 0;
 }
 
@@ -503,7 +509,10 @@ fu_firehose_updater_reset(FuFirehoseUpdater *self, GError **error)
 	}
 
 	if (!fu_firehose_updater_check_operation_result(rsp_node, NULL)) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "Reset operation failed");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "reset operation failed");
 		return FALSE;
 	}
 
@@ -599,9 +608,9 @@ fu_firehose_updater_actions_validate(GPtrArray *action_nodes,
 		program_file = xb_node_get_data(node, name);
 		if (program_file == NULL) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
-				    "Failed to validate program file: failed to get %s",
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "failed to validate program file: failed to get %s",
 				    name);
 			return FALSE;
 		}
@@ -609,9 +618,9 @@ fu_firehose_updater_actions_validate(GPtrArray *action_nodes,
 		program_filename = xb_node_get_attr(node, name);
 		if (program_filename == NULL) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
-				    "Failed to validate program file: failed to get %s",
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "failed to validate program file: failed to get %s",
 				    name);
 			return FALSE;
 		}
@@ -619,9 +628,9 @@ fu_firehose_updater_actions_validate(GPtrArray *action_nodes,
 		program_sector_size_in_bytes = xb_node_get_attr_as_uint(node, name);
 		if (program_sector_size_in_bytes > max_payload_size) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
-				    "Failed to validate program file '%s' command: "
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to validate program file '%s' command: "
 				    "requested sector size bigger (%" G_GUINT64_FORMAT " bytes) "
 				    "than maximum payload size agreed with device (%u bytes)",
 				    program_filename,
@@ -684,9 +693,9 @@ fu_firehose_updater_run_action_program(FuFirehoseUpdater *self,
 
 	if (rawmode == FALSE) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Failed to download program file '%s': rawmode not enabled",
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "failed to download program file '%s': rawmode not enabled",
 			    program_filename);
 		return FALSE;
 	}
@@ -694,7 +703,10 @@ fu_firehose_updater_run_action_program(FuFirehoseUpdater *self,
 	while ((payload_size + (guint)program_sector_size) <= max_payload_size)
 		payload_size += (guint)program_sector_size;
 	if (payload_size == 0) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "payload size invalid");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "payload size invalid");
 		return FALSE;
 	}
 
@@ -707,32 +719,32 @@ fu_firehose_updater_run_action_program(FuFirehoseUpdater *self,
 						   payload_size,
 						   program_sector_size,
 						   error)) {
-		g_prefix_error(error, "Failed to send program file '%s': ", program_filename);
+		g_prefix_error(error, "failed to send program file '%s': ", program_filename);
 		return FALSE;
 	}
 
 	g_debug("waiting for program file download confirmation...");
 	if (!fu_firehose_updater_send_and_receive(self, NULL, &rsp_silo, &rsp_node, error)) {
 		g_prefix_error(error,
-			       "Download confirmation not received for file '%s': ",
+			       "download confirmation not received for file '%s': ",
 			       program_filename);
 		return FALSE;
 	}
 
 	if (!fu_firehose_updater_check_operation_result(rsp_node, &rawmode)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Download confirmation failed for file '%s'",
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "download confirmation failed for file '%s'",
 			    program_filename);
 		return FALSE;
 	}
 
 	if (rawmode != FALSE) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Download confirmation failed for file '%s': rawmode still enabled",
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "download confirmation failed for file '%s': rawmode still enabled",
 			    program_filename);
 		return FALSE;
 	}
@@ -770,12 +782,16 @@ fu_firehose_updater_run_action(FuFirehoseUpdater *self,
 						  &rsp_silo,
 						  &rsp_node,
 						  error)) {
-		g_prefix_error(error, "Failed to run command '%s': ", action);
+		g_prefix_error(error, "failed to run command '%s': ", action);
 		return FALSE;
 	}
 
 	if (!fu_firehose_updater_check_operation_result(rsp_node, &rawmode)) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "Command '%s' failed", action);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "command '%s' failed",
+			    action);
 		return FALSE;
 	}
 

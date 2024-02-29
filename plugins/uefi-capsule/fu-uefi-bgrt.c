@@ -36,16 +36,16 @@ fu_uefi_bgrt_setup(FuUefiBgrt *self, GError **error)
 	bgrtdir = g_build_filename(sysfsfwdir, "acpi", "bgrt", NULL);
 	if (!g_file_test(bgrtdir, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "BGRT is not supported");
 		return FALSE;
 	}
 	type = fu_uefi_read_file_as_uint64(bgrtdir, "type");
 	if (type != 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "BGRT type was %" G_GUINT64_FORMAT,
 			    type);
 		return FALSE;
@@ -53,8 +53,8 @@ fu_uefi_bgrt_setup(FuUefiBgrt *self, GError **error)
 	version = fu_uefi_read_file_as_uint64(bgrtdir, "version");
 	if (version != 1) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "BGRT version was %" G_GUINT64_FORMAT,
 			    version);
 		return FALSE;

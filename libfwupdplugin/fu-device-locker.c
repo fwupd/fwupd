@@ -149,8 +149,8 @@ fu_device_locker_new(gpointer device, GError **error)
 						 error);
 	}
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "device object type not supported");
 	return NULL;
 }

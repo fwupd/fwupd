@@ -48,16 +48,16 @@ fu_console_setup(FuConsole *self, GError **error)
 	hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (hOut == INVALID_HANDLE_VALUE) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to get stdout [%u]",
 			    (guint)GetLastError());
 		return FALSE;
 	}
 	if (!GetConsoleMode(hOut, &dwMode)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to get mode [%u]",
 			    (guint)GetLastError());
 		return FALSE;
@@ -65,31 +65,31 @@ fu_console_setup(FuConsole *self, GError **error)
 	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 	if (!SetConsoleMode(hOut, dwMode)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to set mode [%u]",
 			    (guint)GetLastError());
 		return FALSE;
 	}
 	if (!SetConsoleOutputCP(CP_UTF8)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to set output UTF-8 [%u]",
 			    (guint)GetLastError());
 		return FALSE;
 	}
 	if (!SetConsoleCP(CP_UTF8)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to set UTF-8 [%u]",
 			    (guint)GetLastError());
 		return FALSE;
 	}
 #else
 	if (isatty(fileno(stdout)) == 0) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "not a TTY");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not a TTY");
 		return FALSE;
 	}
 #endif

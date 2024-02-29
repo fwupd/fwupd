@@ -89,8 +89,8 @@ fu_acpi_uefi_parse(FuFirmware *firmware,
 	/* check signature and read flags */
 	if (g_strcmp0(fu_firmware_get_id(FU_FIRMWARE(self)), "UEFI") != 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "Not a UEFI table, got %s",
 			    fu_firmware_get_id(FU_FIRMWARE(self)));
 		return FALSE;
@@ -155,8 +155,8 @@ fu_acpi_uefi_cod_functional(FuAcpiUefi *self, GError **error)
 	if (!self->is_insyde || self->insyde_cod_status > 0)
 		return TRUE;
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "Capsule-on-Disk may have a firmware bug");
 	return FALSE;
 }

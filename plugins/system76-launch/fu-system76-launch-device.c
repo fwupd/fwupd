@@ -57,8 +57,8 @@ fu_system76_launch_device_response_cb(FuDevice *device, gpointer user_data, GErr
 	}
 	if (actual_len < helper->len) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "response truncated: received %" G_GSIZE_FORMAT " bytes",
 			    actual_len);
 		return FALSE;
@@ -90,8 +90,8 @@ fu_system76_launch_device_command(FuDevice *device, guint8 *data, gsize len, GEr
 	}
 	if (actual_len < len) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "command truncated: sent %" G_GSIZE_FORMAT " bytes",
 			    actual_len);
 		return FALSE;

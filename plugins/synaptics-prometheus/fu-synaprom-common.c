@@ -52,46 +52,43 @@ fu_synaprom_error_from_status(guint16 status, GError **error)
 		return TRUE;
 	switch (status) {
 	case FU_SYNAPROM_RESULT_GEN_OPERATION_CANCELED:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_CANCELLED, "cancelled");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "cancelled");
 		break;
 	case FU_SYNAPROM_RESULT_GEN_BAD_PARAM:
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_ARGUMENT,
-				    "bad parameter");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "bad parameter");
 		break;
 	case FU_SYNAPROM_RESULT_GEN_NULL_POINTER:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "NULL pointer");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "NULL pointer");
 		break;
 	case FU_SYNAPROM_RESULT_GEN_UNEXPECTED_FORMAT:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "unexpected format");
 		break;
 	case FU_SYNAPROM_RESULT_GEN_TIMEOUT:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_TIMED_OUT, "timed out");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "timed out");
 		break;
 	case FU_SYNAPROM_RESULT_GEN_OBJECT_DOESNT_EXIST:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_FOUND,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "object does not exist");
 		break;
 	case FU_SYNAPROM_RESULT_GEN_ERROR:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "generic error");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "generic error");
 		break;
 	case FU_SYNAPROM_RESULT_SENSOR_MALFUNCTIONED:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_INITIALIZED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "sensor malfunctioned");
 		break;
 	case FU_SYNAPROM_RESULT_SYS_OUT_OF_MEMORY:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_AGAIN, "out of heap memory");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "out of heap memory");
 		break;
 	default:
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "error status: 0x%x", status);
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "error status: 0x%x", status);
 	}
 	return FALSE;
 }

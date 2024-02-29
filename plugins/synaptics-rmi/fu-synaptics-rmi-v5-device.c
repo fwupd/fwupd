@@ -194,8 +194,8 @@ fu_synaptics_rmi_v5_device_secure_check(FuDevice *device,
 			if (retries++ > 2) {
 				g_set_error(
 				    error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "RSA public key length not matched %u: after %u retries: ",
 				    pubkey_buf->len,
 				    retries);

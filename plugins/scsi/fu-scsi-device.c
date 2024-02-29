@@ -185,9 +185,9 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 
 	if (io_hdr.status) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Command fail with status %x, senseKey %s, asc 0x%02x, ascq 0x%02x",
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "command fail with status %x, senseKey %s, asc 0x%02x, ascq 0x%02x",
 			    io_hdr.status,
 			    fu_scsi_sense_key_to_string(sense_buffer[2]),
 			    sense_buffer[12],

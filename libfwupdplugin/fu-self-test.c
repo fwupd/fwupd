@@ -84,7 +84,7 @@ fu_archive_invalid_func(void)
 	g_assert_nonnull(data);
 
 	archive = fu_archive_new(data, FU_ARCHIVE_FLAG_NONE, &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_null(archive);
 }
 
@@ -130,7 +130,7 @@ fu_archive_cab_func(void)
 	g_assert_cmpstr(checksum2, ==, "7c0ae84b191822bcadbdcbe2f74a011695d783c7");
 
 	data_tmp = fu_archive_lookup_by_fn(archive, "NOTGOINGTOEXIST.xml", &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_null(data_tmp);
 }
 
@@ -191,7 +191,7 @@ fu_common_byte_array_func(void)
 	g_assert_cmpint(memcmp(array2->data, "hello\0\0\0\0\0", array2->len), ==, 0);
 
 	array3 = fu_byte_array_from_string("ZZZ", &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_null(array3);
 }
 
@@ -389,7 +389,7 @@ fu_string_utf16_func(void)
 	/* failure */
 	g_byte_array_set_size(buf, buf->len - 1);
 	str2 = fu_utf16_to_utf8_byte_array(buf, G_LITTLE_ENDIAN, &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_cmpstr(str2, ==, NULL);
 }
 
@@ -1426,7 +1426,7 @@ static gboolean
 _fail_open_cb(FuDevice *device, GError **error)
 {
 	fu_device_set_metadata_boolean(device, "Test::Open", TRUE);
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "fail");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "fail");
 	return FALSE;
 }
 
@@ -1434,7 +1434,7 @@ static gboolean
 _fail_close_cb(FuDevice *device, GError **error)
 {
 	fu_device_set_metadata_boolean(device, "Test::Close", TRUE);
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BUSY, "busy");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "busy");
 	return FALSE;
 }
 
@@ -1448,7 +1448,7 @@ fu_device_locker_fail_func(void)
 					   (FuDeviceLockerFunc)_fail_open_cb,
 					   (FuDeviceLockerFunc)_fail_close_cb,
 					   &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_FAILED);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
 	g_assert_null(locker);
 	g_assert_true(fu_device_get_metadata_boolean(device, "Test::Open"));
 	g_assert_true(fu_device_get_metadata_boolean(device, "Test::Close"));
@@ -1517,7 +1517,7 @@ fu_common_bytes_get_data_func(void)
 
 	/* use the safe function */
 	buf = fu_bytes_get_data_safe(bytes2, NULL, &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_null(buf);
 }
 
@@ -2081,7 +2081,7 @@ fu_chunk_array_func(void)
 	g_assert_cmpint(strncmp((const gchar *)fu_chunk_get_data(chk3), "d", 1), ==, 0);
 
 	chk4 = fu_chunk_array_index(chunks, 3, &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_null(chk4);
 	chk4 = fu_chunk_array_index(chunks, 1024, NULL);
 	g_assert_null(chk4);
@@ -2728,7 +2728,7 @@ fu_firmware_fdt_func(void)
 
 	/* wrong type */
 	ret = fu_fdt_image_get_attr_u64(img2, "key", &val64, &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_false(ret);
 }
 
@@ -3126,7 +3126,7 @@ fu_firmware_archive_func(void)
 	g_assert_nonnull(img_asc);
 	img_both =
 	    fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware), "*.bin*", &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_null(img_both);
 }
 
@@ -3450,7 +3450,7 @@ fu_hid_descriptor_func(void)
 						"report-id",
 						0xF1,
 						NULL);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_null(report3);
 }
 
@@ -3553,7 +3553,7 @@ fu_firmware_common_func(void)
 	g_assert_cmpint(value, ==, 0x00);
 
 	ret = fu_firmware_strparse_uint8_safe("ff00XX", 6, 4, &value, &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_false(ret);
 }
 
@@ -3605,7 +3605,7 @@ fu_firmware_dedupe_func(void)
 	g_assert_cmpstr(fu_firmware_get_id(img_idx), ==, "secondary");
 
 	ret = fu_firmware_add_image_full(firmware, img3, &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_false(ret);
 }
 
@@ -3692,7 +3692,7 @@ fu_efivar_func(void)
 				 NULL,
 				 NULL,
 				 &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_false(ret);
 }
 
@@ -5151,7 +5151,7 @@ fu_input_stream_func(void)
 					bufsz, /* count */
 					&error);
 	fu_dump_raw(G_LOG_DOMAIN, "dst", buf2, bufsz);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_PARTIAL_INPUT);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
 	g_assert_false(ret);
 }
 
@@ -5211,11 +5211,11 @@ fu_plugin_struct_func(void)
 	/* parse failing signature */
 	st->data[0] = 0xFF;
 	st3 = fu_struct_self_test_parse(st->data, st->len, 0x0, &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_null(st3);
 	g_clear_error(&error);
 	ret = fu_struct_self_test_validate(st->data, st->len, 0x0, &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_false(ret);
 }
 
@@ -5283,11 +5283,11 @@ fu_plugin_struct_wrapped_func(void)
 	/* parse failing signature */
 	st->data[FU_STRUCT_SELF_TEST_WRAPPED_OFFSET_BASE] = 0xFF;
 	st3 = fu_struct_self_test_wrapped_parse(st->data, st->len, 0x0, &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_null(st3);
 	g_clear_error(&error);
 	ret = fu_struct_self_test_wrapped_validate(st->data, st->len, 0x0, &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_false(ret);
 }
 

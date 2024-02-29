@@ -81,8 +81,8 @@ fu_fastboot_device_write(FuDevice *device, const guint8 *buf, gsize buflen, GErr
 	}
 	if (actual_len != buflen) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "only wrote %" G_GSIZE_FORMAT "bytes",
 			    actual_len);
 		return FALSE;
@@ -96,8 +96,8 @@ fu_fastboot_device_writestr(FuDevice *device, const gchar *str, GError **error)
 	gsize buflen = strlen(str);
 	if (buflen > FASTBOOT_CMD_BUFSZ - 4) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "fastboot limits writes to %i bytes",
 			    FASTBOOT_CMD_BUFSZ - 4);
 		return FALSE;
@@ -158,8 +158,8 @@ fu_fastboot_device_read(FuDevice *device,
 		fu_dump_raw(G_LOG_DOMAIN, "read", buf, actual_len);
 		if (actual_len < 4) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "only read %" G_GSIZE_FORMAT "bytes",
 				    actual_len);
 			return FALSE;
@@ -187,8 +187,8 @@ fu_fastboot_device_read(FuDevice *device,
 		/* failure */
 		if (memcmp(buf, "FAIL", 4) == 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
 				    "failed to read response: %s",
 				    tmp);
 			return FALSE;
@@ -196,14 +196,14 @@ fu_fastboot_device_read(FuDevice *device,
 
 		/* unknown failure */
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "failed to read response");
 		return FALSE;
 	}
 
 	/* we timed out a *lot* */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "no response to read");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "no response to read");
 	return FALSE;
 }
 
@@ -390,8 +390,8 @@ fu_fastboot_device_write_motorola_part(FuDevice *device,
 	/* oem */
 	if (g_strcmp0(op, "oem") == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "OEM commands are not supported");
 		return FALSE;
 	}
@@ -405,8 +405,8 @@ fu_fastboot_device_write_motorola_part(FuDevice *device,
 		if (var == NULL) {
 			tmp = xb_node_export(part, XB_NODE_EXPORT_FLAG_NONE, NULL);
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "required var for part: %s",
 				    tmp);
 			return FALSE;
@@ -417,8 +417,8 @@ fu_fastboot_device_write_motorola_part(FuDevice *device,
 			return FALSE;
 		if (tmp == NULL || tmp[0] == '\0') {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "failed to getvar %s",
 				    var);
 			return FALSE;
@@ -436,8 +436,8 @@ fu_fastboot_device_write_motorola_part(FuDevice *device,
 			g_autofree gchar *tmp = NULL;
 			tmp = xb_node_export(part, XB_NODE_EXPORT_FLAG_NONE, NULL);
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "required partition for part: %s",
 				    tmp);
 			return FALSE;
@@ -469,8 +469,8 @@ fu_fastboot_device_write_motorola_part(FuDevice *device,
 			g_autofree gchar *tmp = NULL;
 			tmp = xb_node_export(part, XB_NODE_EXPORT_FLAG_NONE, NULL);
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "required partition and filename: %s",
 				    tmp);
 			return FALSE;
@@ -495,8 +495,8 @@ fu_fastboot_device_write_motorola_part(FuDevice *device,
 			csum_actual = g_compute_checksum_for_bytes(csum_kinds[i].kind, data);
 			if (g_strcmp0(csum, csum_actual) != 0) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "%s invalid, expected %s, got %s",
 					    filename,
 					    csum,
@@ -523,7 +523,7 @@ fu_fastboot_device_write_motorola_part(FuDevice *device,
 	}
 
 	/* unknown */
-	g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "unknown operation %s", op);
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "unknown operation %s", op);
 	return FALSE;
 }
 
@@ -633,7 +633,10 @@ fu_fastboot_device_write_firmware(FuDevice *device,
 		return fu_fastboot_device_write_motorola(device, firmware, progress, error);
 
 	/* not supported */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "manifest not supported");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "manifest not supported");
 	return FALSE;
 }
 
@@ -661,7 +664,10 @@ fu_fastboot_device_set_quirk_kv(FuDevice *device,
 	}
 
 	/* failed */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
 	return FALSE;
 }
 

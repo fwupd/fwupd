@@ -38,7 +38,11 @@ fu_efivar_delete_impl(const gchar *guid, const gchar *name, GError **error)
 	if (efi_del_variable(guidt, name) == 0)
 		return TRUE;
 
-	g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "failed to delete efivar %s", name);
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_DATA,
+		    "failed to delete efivar %s",
+		    name);
 	return FALSE;
 }
 
@@ -121,7 +125,11 @@ fu_efivar_get_names_impl(const gchar *guid, GError **error)
 
 	/* nothing found */
 	if (names->len == 0) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "no names for GUID %s", guid);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no names for GUID %s",
+				    guid);
 		return NULL;
 	}
 
@@ -150,8 +158,8 @@ fu_efivar_space_used_impl(GError **error)
 		size_t size = 0;
 		if (efi_get_variable_size(*guidt, name, &size) < 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to get efivar size");
 			return G_MAXUINT64;
 		}
@@ -175,8 +183,8 @@ fu_efivar_set_data_impl(const gchar *guid,
 
 	if (efi_set_variable(guidt, name, (guint8 *)data, sz, attr) != 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to write data to efivar %s",
 			    name);
 		return FALSE;

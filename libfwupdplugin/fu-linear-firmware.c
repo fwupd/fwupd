@@ -70,8 +70,8 @@ fu_linear_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 		priv->image_gtype = g_type_from_name(tmp);
 		if (priv->image_gtype == G_TYPE_INVALID) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_FOUND,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "GType %s not registered",
 				    tmp);
 			return FALSE;

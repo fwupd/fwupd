@@ -77,8 +77,8 @@ fu_corsair_bp_command(FuCorsairBp *self,
 	}
 	if (actual_len != self->cmd_write_size) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "wrong size written: %" G_GSIZE_FORMAT,
 			    actual_len);
 		return FALSE;
@@ -103,8 +103,8 @@ fu_corsair_bp_command(FuCorsairBp *self,
 	}
 	if (actual_len != self->cmd_read_size) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "wrong size read: %" G_GSIZE_FORMAT,
 			    actual_len);
 		return FALSE;
@@ -114,8 +114,8 @@ fu_corsair_bp_command(FuCorsairBp *self,
 
 	if (data[CORSAIR_OFFSET_CMD_STATUS] != 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
 			    "device replied with error: 0x%02x",
 			    data[CORSAIR_OFFSET_CMD_STATUS]);
 		return FALSE;

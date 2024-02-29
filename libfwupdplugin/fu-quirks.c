@@ -115,16 +115,16 @@ fu_quirks_validate_flags(const gchar *value, GError **error)
 			continue;
 		if (!g_ascii_isalnum(tmp)) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "%c is not alphanumeric",
 				    tmp);
 			return FALSE;
 		}
 		if (g_ascii_isalpha(tmp) && !g_ascii_islower(tmp)) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "%c is not lowercase",
 				    tmp);
 			return FALSE;
@@ -175,8 +175,8 @@ fu_quirks_convert_keyfile_to_xml_cb(GString *token,
 	/* neither a key=value or [group] */
 	if (token->len < 3) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid line: %s",
 			    token->str);
 		return FALSE;
@@ -200,8 +200,8 @@ fu_quirks_convert_keyfile_to_xml_cb(GString *token,
 	/* no current group */
 	if (helper->bn == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid line when group unset: %s",
 			    token->str);
 		return FALSE;
@@ -211,8 +211,8 @@ fu_quirks_convert_keyfile_to_xml_cb(GString *token,
 	kv = g_strsplit(token->str, "=", 2);
 	if (kv[1] == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid line: not key=value: %s",
 			    token->str);
 		return FALSE;

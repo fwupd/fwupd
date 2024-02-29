@@ -72,8 +72,8 @@ fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		if (crc_calc != fu_struct_synaptics_cape_sngl_hdr_get_file_crc(st)) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "CRC did not match, got 0x%x, expected 0x%x",
 				    fu_struct_synaptics_cape_sngl_hdr_get_file_crc(st),
 				    crc_calc);
@@ -93,8 +93,8 @@ fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
 	num_fw_file = fu_struct_synaptics_cape_sngl_hdr_get_fw_file_num(st);
 	if (num_fw_file == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "no image files found");
 		return FALSE;
 	}

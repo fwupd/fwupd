@@ -131,8 +131,8 @@ fu_efi_load_option_parse(FuFirmware *firmware,
 		guint16 tmp = 0;
 		if (buf_utf16->len > FU_EFI_LOAD_OPTION_DESCRIPTION_SIZE_MAX) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "description was too long, limit is 0x%x chars",
 				    FU_EFI_LOAD_OPTION_DESCRIPTION_SIZE_MAX / 2);
 			return FALSE;
@@ -183,8 +183,8 @@ fu_efi_load_option_write(FuFirmware *firmware, GError **error)
 	/* label */
 	if (fu_firmware_get_id(firmware) == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "firmware ID required");
 		return NULL;
 	}

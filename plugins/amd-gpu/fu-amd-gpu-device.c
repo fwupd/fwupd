@@ -230,8 +230,8 @@ fu_amd_gpu_device_wait_for_completion_cb(FuDevice *device, gpointer user_data, G
 		return FALSE;
 	if (status != PSPVBFLASH_SUCCESS) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
 			    "status was %" G_GUINT64_FORMAT,
 			    status);
 		return FALSE;

@@ -559,8 +559,8 @@ fu_version_verify_format(const gchar *version, FwupdVersionFormat fmt, GError **
 	fmt_guess = fu_version_guess_format(version);
 	if (fmt_guess != fmt_base) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "%s is not a valid %s (guessed %s)",
 			    version,
 			    fwupd_version_format_to_string(fmt),

@@ -63,7 +63,7 @@ g_file_set_contents_full(const gchar *filename,
 	if (fd < 0) {
 		g_set_error(error,
 			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    G_IO_ERROR_FAILED, /* nocheck */
 			    "could not open %s file",
 			    filename);
 		return FALSE;
@@ -72,7 +72,7 @@ g_file_set_contents_full(const gchar *filename,
 	if (wrote != length) {
 		g_set_error(error,
 			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    G_IO_ERROR_FAILED, /* nocheck */
 			    "did not write %s file",
 			    filename);
 		g_close(fd, NULL);
@@ -420,8 +420,8 @@ fu_config_reload(FuConfig *self, GError **error)
 			g_info("renaming legacy config file %s to %s", fn_old, fn_new);
 			if (g_rename(fn_old, fn_new) != 0) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_FAILED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
 					    "failed to change rename %s to %s",
 					    fn_old,
 					    fn_new);
@@ -499,7 +499,7 @@ fu_config_save(FuConfig *self, GError **error)
 	}
 
 	/* failed */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED, "no writable config");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no writable config");
 	return FALSE;
 }
 
@@ -533,7 +533,7 @@ fu_config_set_value(FuConfig *self,
 
 	/* sanity check */
 	if (priv->items->len == 0) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, "no config to load");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no config to load");
 		return FALSE;
 	}
 

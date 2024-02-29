@@ -43,13 +43,16 @@ fu_jabra_gnp_image_parse(FuJabraGnpImage *self,
 	/* only match on US English */
 	language = xb_node_query_text(n, "language", NULL);
 	if (language == NULL) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "language missing");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "language missing");
 		return FALSE;
 	}
 	if (g_strcmp0(language, "English") != 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "language was not 'English', got '%s'",
 			    language);
 		return FALSE;
@@ -58,7 +61,7 @@ fu_jabra_gnp_image_parse(FuJabraGnpImage *self,
 	/* get the CRC */
 	crc_str = xb_node_query_text(n, "crc", NULL);
 	if (crc_str == NULL) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "crc missing");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "crc missing");
 		return FALSE;
 	}
 	if (!fu_strtoull(crc_str, &crc_expected, 0x0, 0xFFFFFFFF, error)) {
@@ -70,8 +73,8 @@ fu_jabra_gnp_image_parse(FuJabraGnpImage *self,
 	part_str = xb_node_query_text(n, "partition", NULL);
 	if (part_str == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "partition missing");
 		return FALSE;
 	}
@@ -84,7 +87,7 @@ fu_jabra_gnp_image_parse(FuJabraGnpImage *self,
 	/* get the file pointed to by 'name' */
 	name = xb_node_get_attr(n, "name");
 	if (name == NULL) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "name missing");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "name missing");
 		return FALSE;
 	}
 	fu_firmware_set_id(FU_FIRMWARE(self), name);
@@ -101,8 +104,8 @@ fu_jabra_gnp_image_parse(FuJabraGnpImage *self,
 	self->crc32 = fu_jabra_gnp_calculate_crc(blob);
 	if (self->crc32 != (guint32)crc_expected) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "checksum invalid, got 0x%x, expected 0x%x",
 			    (guint)self->crc32,
 			    (guint)crc_expected);

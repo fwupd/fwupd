@@ -126,8 +126,8 @@ fu_ch347_device_read(FuCh347Device *self, guint8 cmd, guint8 *buf, gsize bufsz, 
 	cmd_rsp = cmdbuf->data[0];
 	if (cmd_rsp != cmd) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid cmd, got 0x%02x, expected 0x%02x",
 			    cmd_rsp,
 			    cmd);
@@ -136,8 +136,8 @@ fu_ch347_device_read(FuCh347Device *self, guint8 cmd, guint8 *buf, gsize bufsz, 
 	size_rsp = fu_memread_uint16(cmdbuf->data + 0x1, G_LITTLE_ENDIAN);
 	if (size_rsp != bufsz) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "size invalid, got 0x%04x, expected 0x04%x",
 			    size_rsp,
 			    (guint)bufsz);

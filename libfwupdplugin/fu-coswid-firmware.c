@@ -148,7 +148,10 @@ fu_coswid_firmware_parse_one_or_many(FuCoswidFirmware *self,
 	}
 
 	/* not sure what to do */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "neither an array or map");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "neither an array or map");
 	return FALSE;
 }
 
@@ -223,8 +226,8 @@ fu_coswid_firmware_parse_hash(FuCoswidFirmware *self,
 	/* sanity check */
 	if (hash_item_alg_id == NULL || hash_item_value == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid hash item");
 		return FALSE;
 	}
@@ -290,8 +293,8 @@ fu_coswid_firmware_parse_file(FuCoswidFirmware *self,
 				}
 			} else {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "hashes neither an array or array of array");
 				return FALSE;
 			}
@@ -424,8 +427,8 @@ fu_coswid_firmware_parse_entity(FuCoswidFirmware *self,
 				FuCoswidEntityRole role = cbor_get_uint8(value);
 				if (entity_role_cnt >= G_N_ELEMENTS(entity->roles)) {
 					g_set_error_literal(error,
-							    G_IO_ERROR,
-							    G_IO_ERROR_INVALID_DATA,
+							    FWUPD_ERROR,
+							    FWUPD_ERROR_INVALID_DATA,
 							    "too many roles");
 					return FALSE;
 				}
@@ -483,8 +486,8 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 	/* sanity check */
 	if (!cbor_isa_map(item)) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "root item is not a map");
 		return FALSE;
 	}
@@ -551,8 +554,8 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 	if (fu_firmware_get_id(firmware) == NULL && fu_firmware_get_version(firmware) == NULL &&
 	    priv->product == NULL && priv->entities->len == 0 && priv->links->len == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "not enough SBoM data");
 		return FALSE;
 	}
@@ -561,8 +564,8 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 #else
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "not compiled with CBOR support");
 	return FALSE;
 #endif
@@ -591,8 +594,8 @@ fu_coswid_firmware_get_checksum(FuFirmware *firmware, GChecksumType csum_kind, G
 	}
 	if (alg_id == FU_COSWID_HASH_ALG_UNKNOWN) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot convert %s",
 			    fwupd_checksum_type_to_string_display(csum_kind));
 		return NULL;
@@ -608,8 +611,8 @@ fu_coswid_firmware_get_checksum(FuFirmware *firmware, GChecksumType csum_kind, G
 		}
 	}
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_NOT_SUPPORTED,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "no hash kind %s",
 		    fwupd_checksum_type_to_string_display(csum_kind));
 	return NULL;
@@ -852,16 +855,16 @@ fu_coswid_firmware_write(FuFirmware *firmware, GError **error)
 	buflen = cbor_serialize_alloc(root, &buf, &bufsz);
 	if (buflen > bufsz) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "CBOR allocation failure");
 		return NULL;
 	}
 	return g_byte_array_new_take(g_steal_pointer(&buf), buflen);
 #else
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "not compiled with CBOR support");
 	return NULL;
 #endif
@@ -896,16 +899,16 @@ fu_coswid_firmware_build_entity(FuCoswidFirmware *self, XbNode *n, GError **erro
 			role = fu_coswid_entity_role_from_string(tmp);
 			if (role == FU_COSWID_ENTITY_ROLE_UNKNOWN) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "failed to parse entity role %s",
 					    tmp);
 				return FALSE;
 			}
 			if (entity_role_cnt >= G_N_ELEMENTS(entity->roles)) {
 				g_set_error_literal(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_INVALID_DATA,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
 						    "too many roles");
 				return FALSE;
 			}
@@ -937,8 +940,8 @@ fu_coswid_firmware_build_link(FuCoswidFirmware *self, XbNode *n, GError **error)
 		link->rel = fu_coswid_link_rel_from_string(tmp);
 		if (link->rel == FU_COSWID_LINK_REL_UNKNOWN) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "failed to parse link rel %s",
 				    tmp);
 			return FALSE;
@@ -973,8 +976,8 @@ fu_coswid_firmware_build_hash(FuCoswidFirmware *self,
 		hash->alg_id = fu_coswid_hash_alg_from_string(tmp);
 		if (hash->alg_id == FU_COSWID_HASH_ALG_UNKNOWN) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "failed to parse alg_id %s",
 				    tmp);
 			return FALSE;
@@ -1044,8 +1047,8 @@ fu_coswid_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 		priv->version_scheme = fu_coswid_version_scheme_from_string(tmp);
 		if (priv->version_scheme == FU_COSWID_VERSION_SCHEME_UNKNOWN) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "failed to parse version_scheme %s",
 				    tmp);
 			return FALSE;

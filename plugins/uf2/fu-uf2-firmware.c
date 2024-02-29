@@ -48,24 +48,24 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 	flags = fu_struct_uf2_get_flags(st);
 	if (flags & FU_UF2_FIRMWARE_BLOCK_FLAG_IS_CONTAINER) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "container U2F firmware not supported");
 		return FALSE;
 	}
 	datasz = fu_struct_uf2_get_payload_size(st);
 	if (datasz > 476) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "data size impossible got 0x%08x",
 			    datasz);
 		return FALSE;
 	}
 	if (fu_struct_uf2_get_block_no(st) != fu_chunk_get_idx(chk)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "block count invalid, expected 0x%04x and got 0x%04x",
 			    fu_chunk_get_idx(chk),
 			    fu_struct_uf2_get_block_no(st));
@@ -73,16 +73,16 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 	}
 	if (fu_struct_uf2_get_num_blocks(st) == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "block count invalid, expected > 0");
 		return FALSE;
 	}
 	if (flags & FU_UF2_FIRMWARE_BLOCK_FLAG_HAS_FAMILY) {
 		if (fu_struct_uf2_get_family_id(st) == 0) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "family_id required but not supplied");
 			return FALSE;
 		}
@@ -99,8 +99,8 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 	if (flags & FU_UF2_FIRMWARE_BLOCK_FLAG_HAS_MD5) {
 		if (datasz < 24) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "not enough space for MD5 checksum");
 			return FALSE;
 		}
@@ -116,8 +116,8 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 				return FALSE;
 			if (sz < 4) {
 				g_set_error_literal(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_INVALID_DATA,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
 						    "invalid extension tag size");
 				return FALSE;
 			}

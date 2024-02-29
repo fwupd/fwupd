@@ -86,7 +86,7 @@ fu_fpc_device_dfu_cmd(FuFpcDevice *self,
 	gsize actual_len = 0;
 
 	if (data == NULL && length > 0) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "Invalid input data");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "Invalid input data");
 		return FALSE;
 	}
 
@@ -108,8 +108,8 @@ fu_fpc_device_dfu_cmd(FuFpcDevice *self,
 		return FALSE;
 	if (actual_len != length) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "only sent 0x%04x of 0x%04x",
 			    (guint)actual_len,
 			    (guint)length);
@@ -130,7 +130,7 @@ fu_fpc_device_fw_cmd(FuFpcDevice *self,
 	gsize actual_len = 0;
 
 	if (data == NULL && length > 0) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "Invalid input data");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "Invalid input data");
 		return FALSE;
 	}
 
@@ -151,8 +151,8 @@ fu_fpc_device_fw_cmd(FuFpcDevice *self,
 		return FALSE;
 	if (actual_len != length) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "only sent 0x%04x of 0x%04x",
 			    (guint)actual_len,
 			    (guint)length);

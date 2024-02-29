@@ -90,8 +90,8 @@ fu_efi_device_path_parse(FuFirmware *firmware,
 		return FALSE;
 	if (fu_struct_efi_device_path_get_length(st) < FU_STRUCT_EFI_DEVICE_PATH_SIZE) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "EFI DEVICE_PATH length invalid: 0x%x",
 			    fu_struct_efi_device_path_get_length(st));
 		return FALSE;

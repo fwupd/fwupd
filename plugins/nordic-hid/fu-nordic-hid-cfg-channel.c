@@ -145,8 +145,8 @@ fu_nordic_hid_cfg_channel_get_udev_device(FuNordicHidCfgChannel *self, GError **
 	/* parent */
 	if (self->parent_udev == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "no parent for peer 0x%02x",
 			    self->peer_id);
 		return NULL;
@@ -177,8 +177,8 @@ fu_nordic_hid_cfg_channel_send(FuNordicHidCfgChannel *self,
 	return TRUE;
 #else
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "<linux/hidraw.h> not available");
 	return FALSE;
 #endif
@@ -334,8 +334,8 @@ fu_nordic_hid_cfg_channel_cmd_send_by_id(FuNordicHidCfgChannel *self,
 	if (data != NULL) {
 		if (data_len > REPORT_DATA_MAX_LEN) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "requested to send %d bytes, while maximum is %d",
 				    data_len,
 				    REPORT_DATA_MAX_LEN);
@@ -680,8 +680,8 @@ fu_nordic_hid_cfg_channel_update_peers(FuNordicHidCfgChannel *self,
 
 	if (peer_id != INVALID_PEER_ID) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_BROKEN_PIPE,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "too many peers detected");
 		return FALSE;
 	}
@@ -1110,8 +1110,8 @@ fu_nordic_hid_cfg_channel_dfu_reboot(FuNordicHidCfgChannel *self, GError **error
 		return FALSE;
 	if (res->data_len != 1 || res->data[0] != 0x01) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "reboot data was invalid");
 		return FALSE;
 	}
@@ -1149,8 +1149,8 @@ fu_nordic_hid_cfg_channel_dfu_sync_cb(FuDevice *device, gpointer user_data, GErr
 		}
 		if (recv_msg->data_len != 0x0F) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "incorrect length of reply");
 			return FALSE;
 		}
@@ -1248,8 +1248,8 @@ fu_nordic_hid_cfg_channel_dfu_start(FuNordicHidCfgChannel *self,
 	/* sanity check */
 	if (img_length > G_MAXUINT32) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "payload was too large");
 		return FALSE;
 	}
@@ -1642,8 +1642,8 @@ fu_nordic_hid_cfg_channel_set_quirk_kv(FuDevice *device,
 	if (g_strcmp0(key, "NordicHidBootloader") == 0) {
 		if (g_strcmp0(value, "B0") != 0) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "can be only 'B0' in quirk");
 			return FALSE;
 		}
@@ -1654,8 +1654,8 @@ fu_nordic_hid_cfg_channel_set_quirk_kv(FuDevice *device,
 	if (g_strcmp0(key, "NordicHidGeneration") == 0) {
 		if (g_strcmp0(value, "default") != 0) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "can be only 'default' in quirk");
 			return FALSE;
 		}
@@ -1664,7 +1664,10 @@ fu_nordic_hid_cfg_channel_set_quirk_kv(FuDevice *device,
 	}
 
 	/* failed */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
 	return FALSE;
 }
 
