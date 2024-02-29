@@ -1427,7 +1427,7 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 231)</version>
+        <version>(>= 249)</version>
       </control>
       <package variant="x86_64">systemd-dev</package>
       <package variant="s390x">systemd-dev</package>
@@ -1435,7 +1435,7 @@
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 231)</version>
+        <version>(>= 249)</version>
       </control>
       <package variant="x86_64">systemd-dev</package>
     </distro>

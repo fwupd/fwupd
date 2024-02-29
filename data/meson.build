@@ -80,17 +80,7 @@ if build_daemon
     endif
 
     dynamic_options = []
-    if systemd.version().version_compare('>= 232')
-      dynamic_options += 'ProtectControlGroups=yes'
-      dynamic_options += 'ProtectKernelModules=yes'
-    endif
-    if systemd.version().version_compare('>= 231')
-      dynamic_options += 'RestrictRealtime=yes'
-#     dynamic_options += 'MemoryDenyWriteExecute=yes'
-      dynamic_options += ['ReadWritePaths=' + ' '.join(rw_directories)]
-    else
-      dynamic_options += ['ReadWriteDirectories=' + ' '.join(rw_directories)]
-    endif
+    dynamic_options += ['ReadWritePaths=' + ' '.join(rw_directories)]
     #pull configuration/cache/state from /etc and /var only if prefix is /usr
     if get_option('prefix') == '/usr'
       dynamic_options += 'ConfigurationDirectory=fwupd'
