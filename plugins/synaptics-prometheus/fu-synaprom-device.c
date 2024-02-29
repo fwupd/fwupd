@@ -102,8 +102,8 @@ fu_synaprom_device_cmd_send(FuSynapromDevice *device,
 	}
 	if (actual_len < request->len) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "only sent 0x%04x of 0x%04x",
 			    (guint)actual_len,
 			    request->len);
@@ -226,8 +226,8 @@ fu_synaprom_device_setup(FuDevice *device, GError **error)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	} else {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "device %u is not supported by this plugin",
 			    product);
 		return FALSE;
@@ -281,8 +281,8 @@ fu_synaprom_device_prepare_firmware(FuDevice *device,
 				  (guint)FU_SYNAPROM_PRODUCT_TRITON);
 		} else {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "MFW metadata not compatible, "
 				    "got 0x%02x expected 0x%02x or 0x%02x",
 				    product_id,
@@ -434,8 +434,8 @@ fu_synaprom_device_attach(FuDevice *device, FuProgress *progress, GError **error
 		return FALSE;
 	if (actual_len != sizeof(data)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "only sent 0x%04x of 0x%04x",
 			    (guint)actual_len,
 			    (guint)sizeof(data));
@@ -480,8 +480,8 @@ fu_synaprom_device_detach(FuDevice *device, FuProgress *progress, GError **error
 		return FALSE;
 	if (actual_len != sizeof(data)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "only sent 0x%04x of 0x%04x",
 			    (guint)actual_len,
 			    (guint)sizeof(data));

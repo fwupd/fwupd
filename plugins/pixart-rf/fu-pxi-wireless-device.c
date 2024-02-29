@@ -101,8 +101,8 @@ fu_pxi_wireless_device_set_feature(FuDevice *self, const guint8 *buf, guint bufs
 				    error);
 #else
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "<linux/hidraw.h> not available");
 	return FALSE;
 #endif
@@ -124,8 +124,8 @@ fu_pxi_wireless_device_get_feature(FuDevice *self, guint8 *buf, guint bufsz, GEr
 	return TRUE;
 #else
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "<linux/hidraw.h> not available");
 	return FALSE;
 #endif

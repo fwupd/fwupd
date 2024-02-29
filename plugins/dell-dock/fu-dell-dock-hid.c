@@ -446,9 +446,9 @@ fu_dell_dock_hid_tbt_authenticate(FuDevice *self,
 	}
 	if (result != 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Thunderbolt authentication failed: %s",
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_AUTH_FAILED,
+			    "thunderbolt authentication failed: %s",
 			    fu_dell_dock_hid_tbt_map_error(result));
 		return FALSE;
 	}

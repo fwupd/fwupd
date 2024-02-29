@@ -243,7 +243,7 @@ fu_synaptics_rmi_hid_device_wait_for_attr(FuSynapticsRmiDevice *rmi_device,
 						    FU_IO_CHANNEL_FLAG_NONE,
 						    &error_local);
 		if (res == NULL) {
-			if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_TIMED_OUT))
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT))
 				break;
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;

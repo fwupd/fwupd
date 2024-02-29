@@ -262,8 +262,8 @@ fu_parade_lspcon_poll_register(FuParadeLspconDevice *self,
 	} while (g_timer_elapsed(timer, NULL) <= 10.0);
 
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_TIMED_OUT,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_TIMED_OUT,
 		    "register %x did not read %x (mask %x) within 10 seconds: read %x",
 		    register_address,
 		    expected,
@@ -397,8 +397,8 @@ fu_parade_lspcon_flash_wait_ready(FuParadeLspconDevice *self, GError **error)
 	} while (g_timer_elapsed(timer, NULL) <= 10.0);
 
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_TIMED_OUT,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_TIMED_OUT,
 			    "flash did not become ready within 10 seconds");
 	return FALSE;
 }

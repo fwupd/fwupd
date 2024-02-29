@@ -91,7 +91,10 @@ fu_dell_supported(FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 	if (value != 0xDE) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "invalid DE data");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid DE data");
 		return FALSE;
 	}
 
@@ -112,8 +115,8 @@ fu_dell_supported(FuPlugin *plugin, GError **error)
 	}
 	if (!(da_values.supported_cmds & (1 << DACI_FLASH_INTERFACE_CLASS))) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "unable to access flash interface. supported commands: 0x%x",
 			    da_values.supported_cmds);
 		return FALSE;
@@ -126,7 +129,7 @@ fu_dell_supported(FuPlugin *plugin, GError **error)
 	}
 
 	/* failed */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "chassis invalid");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "chassis invalid");
 	return FALSE;
 }
 

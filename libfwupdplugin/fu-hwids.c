@@ -300,8 +300,8 @@ fu_hwids_get_replace_values(FuHwids *self, const gchar *keys, GError **error)
 		const gchar *tmp = g_hash_table_lookup(self->hash_values, split[j]);
 		if (tmp == NULL) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "not available as '%s' unknown",
 				    split[j]);
 			return NULL;

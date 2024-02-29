@@ -127,8 +127,8 @@ fu_security_attrs_get_by_appstream_id(FuSecurityAttrs *self,
 	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(self), NULL);
 	if (self->attrs->len == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_FOUND,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "no attributes are loaded");
 		return NULL;
 	}
@@ -137,7 +137,7 @@ fu_security_attrs_get_by_appstream_id(FuSecurityAttrs *self,
 		if (g_strcmp0(fwupd_security_attr_get_appstream_id(attr), appstream_id) == 0)
 			return g_object_ref(attr);
 	}
-	g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "no attr with ID %s", appstream_id);
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no attr with ID %s", appstream_id);
 	return NULL;
 }
 
@@ -576,7 +576,10 @@ fu_security_attrs_from_json(FuSecurityAttrs *self, JsonNode *json_node, GError *
 
 	/* sanity check */
 	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not JSON object");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "not JSON object");
 		return FALSE;
 	}
 	obj = json_node_get_object(json_node);
@@ -584,8 +587,8 @@ fu_security_attrs_from_json(FuSecurityAttrs *self, JsonNode *json_node, GError *
 	/* this has to exist */
 	if (!json_object_has_member(obj, "SecurityAttributes")) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "no SecurityAttributes property in object");
 		return FALSE;
 	}

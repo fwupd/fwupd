@@ -103,8 +103,8 @@ fu_dpaux_device_setup(FuDevice *device, GError **error)
 	    g_str_has_prefix(fu_device_get_name(device), "AMDGPU DM") &&
 	    fu_context_has_hwid_guid(ctx, "32d49d99-414b-55d5-813b-12aaf0335b58")) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "reading %s DPCD is broken on this hardware, "
 			    "you need to update the system BIOS",
 			    fu_device_get_name(device));
@@ -272,10 +272,7 @@ fu_dpaux_device_write(FuDpauxDevice *self,
 
 	/* sanity check */
 	if (io_channel == NULL) {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_INITIALIZED,
-				    "device is not open");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "device is not open");
 		return FALSE;
 	}
 
@@ -283,8 +280,8 @@ fu_dpaux_device_write(FuDpauxDevice *self,
 	fu_dump_raw(G_LOG_DOMAIN, title, buf, bufsz);
 	if (lseek(fu_io_channel_unix_get_fd(io_channel), offset, SEEK_SET) != offset) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "failed to lseek to 0x%x",
 			    (guint)offset);
 		return FALSE;
@@ -327,17 +324,14 @@ fu_dpaux_device_read(FuDpauxDevice *self,
 
 	/* sanity check */
 	if (io_channel == NULL) {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_INITIALIZED,
-				    "device is not open");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "device is not open");
 		return FALSE;
 	}
 	/* seek, then read */
 	if (lseek(fu_io_channel_unix_get_fd(io_channel), offset, SEEK_SET) != offset) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "failed to lseek to 0x%x",
 			    (guint)offset);
 		return FALSE;

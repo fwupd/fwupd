@@ -71,8 +71,8 @@ fu_aver_hid_device_ensure_status(FuAverHidDevice *self, GError **error)
 		return FALSE;
 	if (fu_struct_aver_hid_res_isp_status_get_status(res) == FU_AVER_HID_STATUS_BUSY) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_BUSY,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_BUSY,
 			    "device has status %s",
 			    fu_aver_hid_status_to_string(
 				fu_struct_aver_hid_res_isp_status_get_status(res)));
@@ -193,8 +193,8 @@ fu_aver_hid_device_isp_file_dnload(FuAverHidDevice *self,
 		if (fu_struct_aver_hid_res_isp_status_get_status(res) ==
 		    FU_AVER_HID_STATUS_FILEERR) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_BUSY,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_BUSY,
 				    "device has status %s",
 				    fu_aver_hid_status_to_string(
 					fu_struct_aver_hid_res_isp_status_get_status(res)));
@@ -223,8 +223,8 @@ fu_aver_hid_device_wait_for_ready_cb(FuDevice *device, gpointer user_data, GErro
 		return FALSE;
 	if (fu_struct_aver_hid_res_isp_status_get_status(res) != FU_AVER_HID_STATUS_READY) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_BUSY,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_BUSY,
 			    "device has status %s",
 			    fu_aver_hid_status_to_string(
 				fu_struct_aver_hid_res_isp_status_get_status(res)));
@@ -302,8 +302,8 @@ fu_aver_hid_device_wait_for_untar_cb(FuDevice *device, gpointer user_data, GErro
 	       fu_aver_hid_status_to_string(fu_struct_aver_hid_res_isp_status_get_status(res)));
 	if (fu_struct_aver_hid_res_isp_status_get_status(res) != FU_AVER_HID_STATUS_WAITUSR) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_BUSY,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_BUSY,
 			    "device has status %s",
 			    fu_aver_hid_status_to_string(
 				fu_struct_aver_hid_res_isp_status_get_status(res)));
@@ -358,8 +358,8 @@ fu_aver_hid_device_wait_for_reboot_cb(FuDevice *device, gpointer user_data, GErr
 		if (percentage < 100)
 			fu_progress_set_percentage(progress, percentage);
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_BUSY,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_BUSY,
 			    "device has status %s",
 			    fu_aver_hid_status_to_string(
 				fu_struct_aver_hid_res_isp_status_get_status(res)));
@@ -367,8 +367,8 @@ fu_aver_hid_device_wait_for_reboot_cb(FuDevice *device, gpointer user_data, GErr
 	}
 	if (fu_struct_aver_hid_res_isp_status_get_status(res) != FU_AVER_HID_STATUS_REBOOT) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_BUSY,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_BUSY,
 			    "device has status %s",
 			    fu_aver_hid_status_to_string(
 				fu_struct_aver_hid_res_isp_status_get_status(res)));

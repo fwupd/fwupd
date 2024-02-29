@@ -12,14 +12,14 @@
 static gboolean
 fu_thunderbolt_device_check_usb4_port_path(FuUdevDevice *device,
 					   const gchar *attribute,
-					   GError **err)
+					   GError **error)
 {
 	g_autofree const gchar *path =
 	    g_build_filename(fu_udev_device_get_sysfs_path(device), attribute, NULL);
 	g_autofree gchar *fn = g_strdup_printf("%s", path);
 	g_autoptr(GFile) file = g_file_new_for_path(fn);
 	if (!g_file_query_exists(file, NULL)) {
-		g_set_error(err, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "failed to find %s", fn);
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "failed to find %s", fn);
 		return FALSE;
 	}
 	return TRUE;

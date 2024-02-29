@@ -150,7 +150,7 @@ fu_synaptics_mst_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_synaptics_mst_device_rc_to_error(FuSynapticsMstUpdcRc rc, GError **error)
 {
-	gint code = G_IO_ERROR_FAILED;
+	gint code = FWUPD_ERROR_INTERNAL;
 
 	/* yay */
 	if (rc == FU_SYNAPTICS_MST_UPDC_RC_SUCCESS)
@@ -159,21 +159,21 @@ fu_synaptics_mst_device_rc_to_error(FuSynapticsMstUpdcRc rc, GError **error)
 	/* map */
 	switch (rc) {
 	case FU_SYNAPTICS_MST_UPDC_RC_INVALID:
-		code = G_IO_ERROR_INVALID_DATA;
+		code = FWUPD_ERROR_INVALID_DATA;
 		break;
 	case FU_SYNAPTICS_MST_UPDC_RC_UNSUPPORTED:
-		code = G_IO_ERROR_NOT_SUPPORTED;
+		code = FWUPD_ERROR_NOT_SUPPORTED;
 		break;
 	case FU_SYNAPTICS_MST_UPDC_RC_FAILED:
-		code = G_IO_ERROR_FAILED;
+		code = FWUPD_ERROR_INTERNAL;
 		break;
 	case FU_SYNAPTICS_MST_UPDC_RC_DISABLED:
-		code = G_IO_ERROR_NOT_FOUND;
+		code = FWUPD_ERROR_NOT_FOUND;
 		break;
 	case FU_SYNAPTICS_MST_UPDC_RC_CONFIGURE_SIGN_FAILED:
 	case FU_SYNAPTICS_MST_UPDC_RC_FIRMWARE_SIGN_FAILED:
 	case FU_SYNAPTICS_MST_UPDC_RC_ROLLBACK_FAILED:
-		code = G_IO_ERROR_INVALID_ARGUMENT;
+		code = FWUPD_ERROR_INVALID_DATA;
 		break;
 	default:
 		break;
@@ -206,7 +206,10 @@ fu_synaptics_mst_device_rc_send_command_and_wait_cb(FuDevice *device,
 		return FALSE;
 	}
 	if (buf[0] & 0x80) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BUSY, "command in active state");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_BUSY,
+				    "command in active state");
 		return FALSE;
 	}
 
@@ -424,7 +427,7 @@ fu_synaptics_mst_device_disable_rc(FuSynapticsMstDevice *self, GError **error)
 						    0,
 						    &error_local)) {
 		/* ignore disabled */
-		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
 			return TRUE;
 		g_propagate_prefixed_error(error,
 					   g_steal_pointer(&error_local),
@@ -667,8 +670,8 @@ fu_synaptics_mst_device_update_esm_cb(FuDevice *device, gpointer user_data, GErr
 	/* ESM update done */
 	if (helper->checksum != flash_checksum) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "checksum 0x%x mismatched 0x%x",
 			    flash_checksum,
 			    helper->checksum);
@@ -774,8 +777,8 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware_cb(FuDevice *device,
 		return FALSE;
 	if (helper->checksum != flash_checksum) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "checksum 0x%x mismatched 0x%x",
 			    flash_checksum,
 			    helper->checksum);
@@ -903,8 +906,8 @@ fu_synaptics_mst_device_update_panamera_firmware_cb(FuDevice *device,
 	}
 	if (helper->checksum != flash_checksum) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "checksum 0x%x mismatched 0x%x",
 			    flash_checksum,
 			    helper->checksum);
@@ -965,8 +968,8 @@ fu_synaptics_mst_device_update_panamera_set_new_valid_cb(FuDevice *device,
 	}
 	if (memcmp(buf, buf_verify, sizeof(buf)) != 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "set tag valid fail");
 		return FALSE;
 	}
@@ -1020,8 +1023,8 @@ fu_synaptics_mst_device_update_panamera_set_old_invalid_cb(FuDevice *device,
 	}
 	if (checksum_tmp != checksum_nul) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "set tag invalid fail, got 0x%x and expected 0x%x",
 			    checksum_tmp,
 			    checksum_nul);
@@ -1060,8 +1063,8 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	fw_size += 0x410;
 	if (fw_size > PANAMERA_FIRMWARE_SIZE) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid firmware size 0x%x",
 			    fw_size);
 		return FALSE;
@@ -1254,8 +1257,8 @@ fu_synaptics_mst_device_update_cayenne_firmware_cb(FuDevice *device,
 	flash_checksum = fu_memread_uint32(buf, G_LITTLE_ENDIAN);
 	if (helper->checksum != flash_checksum) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "checksum 0x%x mismatched 0x%x",
 			    flash_checksum,
 			    helper->checksum);
@@ -1359,8 +1362,8 @@ fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
 		    fu_synaptics_mst_firmware_get_board_id(FU_SYNAPTICS_MST_FIRMWARE(firmware));
 		if (board_id != self->board_id) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "board ID mismatch, got 0x%04x, expected 0x%04x",
 				    board_id,
 				    self->board_id);
@@ -1503,8 +1506,8 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 					   fu_device_get_logical_id(FU_DEVICE(self)));
 		if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_FOUND,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "no device exists %s",
 				    filename);
 			return FALSE;
@@ -1512,16 +1515,16 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 		fd = open(filename, O_RDONLY);
 		if (fd == -1) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_PERMISSION_DENIED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_PERMISSION_DENIED,
 				    "cannot open device %s",
 				    filename);
 			return FALSE;
 		}
 		if (read(fd, buf, 2) != 2) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "error reading EEPROM file %s",
 				    filename);
 			close(fd);
@@ -1595,8 +1598,8 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	/* not a correct device */
 	if (fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)) != SYNAPTICS_IEEE_OUI) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "not a supported OUI, got 0x%x",
 			    fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)));
 		return FALSE;
@@ -1614,8 +1617,8 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	}
 	if ((rc_cap & 0x04) == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no support for remote control");
 		return FALSE;
 	}
@@ -1628,8 +1631,8 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	if (locker == NULL) {
 		if (g_strcmp0(fu_device_get_name(device), "DPMST") == 0) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "downstream endpoint not supported");
 		} else {
 			g_propagate_error(error, g_steal_pointer(&error_local));
@@ -1663,7 +1666,10 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	}
 	self->chip_id = fu_memread_uint16(buf_cid, G_BIG_ENDIAN);
 	if (self->chip_id == 0) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "invalid chip ID");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid chip ID");
 		return FALSE;
 	}
 	self->family = fu_synaptics_mst_family_from_chip_id(self->chip_id);

@@ -340,8 +340,8 @@ fu_ata_device_parse_id(FuAtaDevice *self, const guint8 *buf, gsize sz, GError **
 	/* check size */
 	if (sz != FU_ATA_IDENTIFY_SIZE) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "ID incorrect size, got 0x%02x",
 			    (guint)sz);
 		return FALSE;
@@ -354,8 +354,8 @@ fu_ata_device_parse_id(FuAtaDevice *self, const guint8 *buf, gsize sz, GError **
 	/* verify drive correctly supports DOWNLOAD_MICROCODE */
 	if (!(id[83] & 1 && id[86] & 1)) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "DOWNLOAD_MICROCODE not supported by device");
 		return FALSE;
 	}
@@ -577,24 +577,24 @@ fu_ata_device_command(FuAtaDevice *self,
 	/* error check */
 	if (io_hdr.status && io_hdr.status != SG_CHECK_CONDITION) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "bad status: 0x%x",
 			    io_hdr.status);
 		return FALSE;
 	}
 	if (io_hdr.host_status) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "bad host status: 0x%x",
 			    io_hdr.host_status);
 		return FALSE;
 	}
 	if (io_hdr.driver_status && (io_hdr.driver_status != SG_DRIVER_SENSE)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "bad driver status: 0x%x",
 			    io_hdr.driver_status);
 		return FALSE;
@@ -622,8 +622,8 @@ fu_ata_device_command(FuAtaDevice *self,
 	/* io error */
 	if (tf->status & (ATA_STAT_ERR | ATA_STAT_DRQ)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
 			    "I/O error, ata_op=0x%02x ata_status=0x%02x ata_error=0x%02x",
 			    tf->command,
 			    tf->status,
@@ -749,14 +749,17 @@ fu_ata_device_fw_download(FuAtaDevice *self,
 
 	/* the offset was set up incorrectly */
 	if (tf.nsect == 0x4) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "alignment error");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "alignment error");
 		return FALSE;
 	}
 
 	/* other error */
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_INVALID_DATA,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_DATA,
 		    "unknown return code 0x%02x",
 		    tf.nsect);
 	return FALSE;
@@ -790,16 +793,16 @@ fu_ata_device_write_firmware(FuDevice *device,
 		return FALSE;
 	if (streamsz > max_size) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "firmware is too large, maximum size is %u",
 			    max_size);
 		return FALSE;
 	}
 	if (streamsz % FU_ATA_BLOCK_SIZE != 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "firmware is not multiple of block size %i",
 			    FU_ATA_BLOCK_SIZE);
 		return FALSE;
@@ -849,8 +852,8 @@ fu_ata_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		    tmp != ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS &&
 		    tmp != ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNK) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "AtaTransferMode only supports "
 					    "values 0x3, 0x7 or 0xe");
 			return FALSE;
@@ -864,7 +867,10 @@ fu_ata_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		self->transfer_blocks = (guint16)tmp;
 		return TRUE;
 	}
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
 	return FALSE;
 }
 

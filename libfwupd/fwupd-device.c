@@ -3128,7 +3128,10 @@ fwupd_device_from_json(FwupdDevice *self, JsonNode *json_node, GError **error)
 
 	/* sanity check */
 	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not JSON object");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "not JSON object");
 		return FALSE;
 	}
 	obj = json_node_get_object(json_node);
@@ -3136,8 +3139,8 @@ fwupd_device_from_json(FwupdDevice *self, JsonNode *json_node, GError **error)
 	/* this has to exist */
 	if (!json_object_has_member(obj, FWUPD_RESULT_KEY_DEVICE_ID)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "no %s property in object",
 			    FWUPD_RESULT_KEY_DEVICE_ID);
 		return FALSE;

@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include <gio/gio.h>
+#include <fwupd.h>
 
 #include "fu-mm-utils.h"
 
@@ -55,8 +55,8 @@ fu_mm_utils_get_udev_port_info(GUdevDevice *device,
 	device_bus = find_device_bus_subsystem(device);
 	if (device_bus == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "failed to lookup device info: bus not found");
 		return FALSE;
 	}
@@ -102,8 +102,8 @@ fu_mm_utils_get_udev_port_info(GUdevDevice *device,
 	} else {
 		/* other subsystems, we don't support firmware upgrade for those */
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "device bus unsupported: %s",
 			    device_bus);
 		return FALSE;
@@ -111,8 +111,8 @@ fu_mm_utils_get_udev_port_info(GUdevDevice *device,
 
 	if (device_sysfs_path == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "failed to lookup device info: physical device not found");
 		return FALSE;
 	}
@@ -140,8 +140,8 @@ fu_mm_utils_get_port_info(const gchar *path,
 	dev = g_udev_client_query_by_device_file(client, path);
 	if (dev == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "failed to lookup device by path");
 		return FALSE;
 	}
@@ -179,8 +179,8 @@ fu_mm_utils_find_device_file(const gchar *device_sysfs_path,
 
 	if (device_file == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "failed to find %s port in device %s",
 			    subsystem,
 			    device_sysfs_path);

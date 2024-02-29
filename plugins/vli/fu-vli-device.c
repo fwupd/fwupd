@@ -150,7 +150,7 @@ fu_vli_device_spi_wait_finish(FuVliDevice *self, GError **error)
 		}
 		fu_device_sleep(FU_DEVICE(self), 500); /* ms */
 	}
-	g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "failed to wait for SPI");
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "failed to wait for SPI");
 	return FALSE;
 }
 
@@ -191,8 +191,8 @@ fu_vli_device_spi_erase_sector(FuVliDevice *self, guint32 addr, GError **error)
 		for (guint i = 0; i < sizeof(buf); i++) {
 			if (buf[i] != 0xff) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_FAILED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_READ,
 					    "failed to check blank @0x%x",
 					    addr + offset + i);
 				return FALSE;
@@ -248,8 +248,8 @@ fu_vli_device_spi_write_block(FuVliDevice *self,
 	/* sanity check */
 	if (bufsz > FU_VLI_DEVICE_TXSIZE) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot write 0x%x in one block",
 			    (guint)bufsz);
 		return FALSE;
@@ -360,8 +360,8 @@ fu_vli_device_spi_erase_all(FuVliDevice *self, FuProgress *progress, GError **er
 		for (guint i = 0; i < sizeof(buf); i++) {
 			if (buf[i] != 0xff) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_FAILED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_READ,
 					    "failed to verify erase @0x%x: ",
 					    addr);
 				return FALSE;
@@ -653,8 +653,8 @@ fu_vli_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		device_kind = fu_vli_device_kind_from_string(value);
 		if (device_kind == FU_VLI_DEVICE_KIND_UNKNOWN) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "VliDeviceKind %s is not supported",
 				    value);
 			return FALSE;

@@ -1339,8 +1339,8 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 	if (udev_device == NULL) {
 		g_autofree gchar *str = fu_udev_device_get_parent_subsystems(self);
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "failed to find device with subsystems %s, only got %s",
 			    subsystems,
 			    str);
@@ -1351,8 +1351,8 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 		tmp = g_udev_device_get_property(udev_device, "PCI_SLOT_NAME");
 		if (tmp == NULL) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_FOUND,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
 					    "failed to find PCI_SLOT_NAME");
 			return FALSE;
 		}
@@ -1365,8 +1365,8 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 		tmp = g_udev_device_get_property(udev_device, "DEVPATH");
 		if (tmp == NULL) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_FOUND,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
 					    "failed to find DEVPATH");
 			return FALSE;
 		}
@@ -1375,8 +1375,8 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 		tmp = g_udev_device_get_property(udev_device, "HID_PHYS");
 		if (tmp == NULL) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_FOUND,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
 					    "failed to find HID_PHYS");
 			return FALSE;
 		}
@@ -1386,16 +1386,16 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 		tmp = g_udev_device_get_property(udev_device, "DEVNAME");
 		if (tmp == NULL) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_FOUND,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
 					    "failed to find DEVNAME");
 			return FALSE;
 		}
 		physical_id = g_strdup_printf("DEVNAME=%s", tmp);
 	} else {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot handle subsystem %s",
 			    subsystem);
 		return FALSE;
@@ -1453,8 +1453,8 @@ fu_udev_device_set_logical_id(FuUdevDevice *self, const gchar *subsystem, GError
 	}
 	if (udev_device == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "failed to find device with subsystem %s",
 			    subsystem);
 		return FALSE;
@@ -1465,16 +1465,16 @@ fu_udev_device_set_logical_id(FuUdevDevice *self, const gchar *subsystem, GError
 		tmp = g_udev_device_get_property(udev_device, "HID_UNIQ");
 		if (tmp == NULL) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_FOUND,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
 					    "failed to find HID_UNIQ");
 			return FALSE;
 		}
 		logical_id = g_strdup_printf("HID_UNIQ=%s", tmp);
 	} else {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot handle subsystem %s",
 			    subsystem);
 		return FALSE;
@@ -1628,11 +1628,12 @@ fu_udev_device_open(FuDevice *device, GError **error)
 #ifdef HAVE_ERRNO_H
 				    g_io_error_from_errno(errno),
 #else
-				    G_IO_ERROR_FAILED,
+				    G_IO_ERROR_FAILED, /* nocheck */
 #endif
 				    "failed to open %s: %s",
 				    priv->device_file,
 				    g_strerror(errno));
+			fwupd_error_convert(error);
 			return FALSE;
 		}
 		io_channel = fu_io_channel_unix_new(fd);
@@ -1821,11 +1822,12 @@ fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz,
 #ifdef HAVE_ERRNO_H
 			    g_io_error_from_errno(errno),
 #else
-			    G_IO_ERROR_FAILED,
+			    G_IO_ERROR_FAILED, /* nocheck */
 #endif
 			    "failed to read from port 0x%04x: %s",
 			    (guint)port,
 			    g_strerror(errno));
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	return TRUE;
@@ -1876,11 +1878,12 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
 #ifdef HAVE_ERRNO_H
 			    g_io_error_from_errno(errno),
 #else
-			    G_IO_ERROR_FAILED,
+			    G_IO_ERROR_FAILED, /* nocheck */
 #endif
 			    "failed to seek to 0x%04x: %s",
 			    (guint)offset,
 			    g_strerror(errno));
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	return TRUE;
@@ -1938,11 +1941,12 @@ fu_udev_device_pwrite(FuUdevDevice *self,
 #ifdef HAVE_ERRNO_H
 			    g_io_error_from_errno(errno),
 #else
-			    G_IO_ERROR_FAILED,
+			    G_IO_ERROR_FAILED, /* nocheck */
 #endif
 			    "failed to write to port %04x: %s",
 			    (guint)port,
 			    g_strerror(errno));
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	return TRUE;
@@ -2006,14 +2010,17 @@ fu_udev_device_get_sysfs_attr(FuUdevDevice *self, const gchar *attr, GError **er
 
 	/* nothing to do */
 	if (priv->udev_device == NULL) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "not yet initialized");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "not yet initialized");
 		return NULL;
 	}
 	result = g_udev_device_get_sysfs_attr(priv->udev_device, attr);
 	if (result == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "attribute %s returned no data",
 			    attr);
 		return NULL;
@@ -2022,8 +2029,8 @@ fu_udev_device_get_sysfs_attr(FuUdevDevice *self, const gchar *attr, GError **er
 	return result;
 #else
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "getting attributes is not supported as no GUdev support");
 	return NULL;
 #endif
@@ -2112,6 +2119,7 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 				    path,
 				    g_strerror(errno));
 			(void)close(fd);
+			fwupd_error_convert(error);
 			return FALSE;
 		}
 	} while (n < 1);
@@ -2124,6 +2132,7 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 			    "could not close %s: %s",
 			    path,
 			    g_strerror(errno));
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 

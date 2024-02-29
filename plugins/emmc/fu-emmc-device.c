@@ -492,8 +492,8 @@ fu_emmc_device_write_firmware(FuDevice *device,
 			return FALSE;
 		if (total_done != streamsz) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "firmware size and number of sectors written "
 				    "mismatch (%" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT "):",
 				    total_done,
@@ -545,8 +545,8 @@ fu_emmc_device_write_firmware(FuDevice *device,
 			return FALSE;
 		if (ext_csd[EXT_CSD_FFU_STATUS] != 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "FFU install failed: %d",
 				    ext_csd[EXT_CSD_FFU_STATUS]);
 			return FALSE;
@@ -569,7 +569,10 @@ fu_emmc_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *val
 		return TRUE;
 	}
 
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
 	return FALSE;
 }
 

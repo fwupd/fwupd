@@ -39,8 +39,8 @@ fu_gpio_plugin_parse_level(const gchar *str, gboolean *ret, GError **error)
 		return TRUE;
 	}
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_INVALID_DATA,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_DATA,
 		    "cannot parse level, got %s and expected high|low",
 		    str);
 	return FALSE;
@@ -58,8 +58,8 @@ fu_gpio_plugin_process_quirk(FuPlugin *plugin, const gchar *str, GError **error)
 	/* sanity check */
 	if (g_strv_length(split) != 3) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid format, CHIP_NAME,PIN_NAME,LEVEL, got '%s'",
 			    str);
 		return FALSE;

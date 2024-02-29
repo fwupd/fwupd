@@ -38,8 +38,8 @@ fu_intel_me_heci_device_read_file_response(GByteArray *buf_res, guint32 datasz_r
 		return NULL;
 	if (datasz_res > datasz_req || datasz_res == 0x0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid response data size, requested 0x%x and got 0x%x",
 			    datasz_req,
 			    datasz_res);

@@ -40,8 +40,8 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 	payload_len = (guint32)(streamsz - st->len);
 	if (payload_len != fu_struct_ebitdo_hdr_get_destination_len(st)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "file size incorrect, expected 0x%04x got 0x%04x",
 			    (guint)fu_struct_ebitdo_hdr_get_destination_len(st),
 			    (guint)payload_len);

@@ -42,24 +42,24 @@ fu_tpm_v2_device_get_uint32(FuTpmV2Device *self, guint32 query, guint32 *val, GE
 				&capability);
 	if (rc != TSS2_RC_SUCCESS) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "capability request failed for query %x",
 			    query);
 		return FALSE;
 	}
 	if (capability->data.tpmProperties.count == 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "no properties returned for query %x",
 			    query);
 		return FALSE;
 	}
 	if (capability->data.tpmProperties.tpmProperty[0].property != query) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "wrong query returned (got %x expected %x)",
 			    capability->data.tpmProperties.tpmProperty[0].property,
 			    query);
@@ -163,8 +163,8 @@ fu_tpm_v2_device_setup_pcrs(FuTpmV2Device *self, GError **error)
 				&capability_data);
 	if (rc != TSS2_RC_SUCCESS) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to get hash algorithms supported by TPM");
 		return FALSE;
 	}
@@ -189,8 +189,8 @@ fu_tpm_v2_device_setup_pcrs(FuTpmV2Device *self, GError **error)
 			   &pcr_values);
 	if (rc != TSS2_RC_SUCCESS) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to read PCR values from TPM");
 		return FALSE;
 	}
@@ -236,8 +236,8 @@ fu_tpm_v2_device_ensure_commands(FuTpmV2Device *self, GError **error)
 				&capability);
 	if (rc != TSS2_RC_SUCCESS) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "capability request failed for TPM2_CAP_COMMANDS");
 		return FALSE;
 	}
@@ -293,8 +293,8 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	rc = Esys_Startup(self->esys_context, TPM2_SU_CLEAR);
 	if (rc != TSS2_RC_SUCCESS) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to initialize TPM");
 		return FALSE;
 	}

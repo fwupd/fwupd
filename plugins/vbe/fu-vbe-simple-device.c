@@ -207,7 +207,11 @@ fu_vbe_simple_device_get_cfg_compatible(FuVbeSimpleDevice *self,
 
 	/* failure */
 	str = g_strjoinv(", ", device_compatible);
-	g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "no images found that match %s", str);
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "no images found that match %s",
+		    str);
 	return NULL;
 }
 

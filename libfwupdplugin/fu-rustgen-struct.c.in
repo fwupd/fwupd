@@ -76,8 +76,8 @@
     len = strlen(value);
     if (len > {{item.size}}) {
         g_set_error(error,
-                    G_IO_ERROR,
-                    G_IO_ERROR_INVALID_DATA,
+                    FWUPD_ERROR,
+                    FWUPD_ERROR_INVALID_DATA,
                     "string '%s' (0x%x bytes) does not fit in {{obj.name}}.{{item.element_id}} (0x%x bytes)",
                     value, (guint) len, (guint) {{item.size}});
         return FALSE;
@@ -241,8 +241,8 @@
     if ({{item.c_getter}}(st) != {{item.constant}}) {
 {%- endif %}
         g_set_error_literal(error,
-                            G_IO_ERROR,
-                            G_IO_ERROR_INVALID_DATA,
+                            FWUPD_ERROR,
+                            FWUPD_ERROR_INVALID_DATA,
                             "constant {{obj.name}}.{{item.element_id}} was not valid");
         return FALSE;
     }
@@ -307,8 +307,8 @@
     }
     if ((gsize) rc != st->len) {
         g_set_error(error,
-                    G_IO_ERROR,
-                    G_IO_ERROR_PARTIAL_INPUT,
+                    FWUPD_ERROR,
+                    FWUPD_ERROR_INVALID_DATA,
                     "{{obj.name}} requested 0x%x and got 0x%x",
                     (guint) st->len,
                     (guint) rc);
@@ -405,8 +405,8 @@
     }
     if ((gsize) rc != st->len) {
         g_set_error(error,
-                    G_IO_ERROR,
-                    G_IO_ERROR_PARTIAL_INPUT,
+                    FWUPD_ERROR,
+                    FWUPD_ERROR_INVALID_DATA,
                     "{{obj.name}} requested 0x%x and got 0x%x",
                     (guint) st->len,
                     (guint) rc);

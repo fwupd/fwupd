@@ -122,8 +122,8 @@ fu_hid_device_parse_descriptors(FuHidDevice *self, GError **error)
 	return g_steal_pointer(&descriptors);
 #else
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "only supported in libgusb >= 0.4.7");
 	return NULL;
 #endif
@@ -404,8 +404,8 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 		fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
 		if (priv->ep_addr_out == 0x0) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "no EpAddrOut set");
 			return FALSE;
 		}
@@ -450,8 +450,8 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 	}
 	if ((helper->flags & FU_HID_DEVICE_FLAG_ALLOW_TRUNC) == 0 && actual_len != helper->bufsz) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "wrote %" G_GSIZE_FORMAT ", requested %" G_GSIZE_FORMAT " bytes",
 			    actual_len,
 			    helper->bufsz);
@@ -535,8 +535,8 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 		g_autofree gchar *title = NULL;
 		if (priv->ep_addr_in == 0x0) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "no EpAddrIn set");
 			return FALSE;
 		}
@@ -584,8 +584,8 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 	}
 	if ((helper->flags & FU_HID_DEVICE_FLAG_ALLOW_TRUNC) == 0 && actual_len != helper->bufsz) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "read %" G_GSIZE_FORMAT ", requested %" G_GSIZE_FORMAT " bytes",
 			    actual_len,
 			    helper->bufsz);

@@ -356,8 +356,8 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 			device_sysfs_path = g_steal_pointer(&qmi_device_sysfs_path);
 		} else if (g_strcmp0(device_sysfs_path, qmi_device_sysfs_path) != 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "mismatched device sysfs path: %s != %s",
 				    device_sysfs_path,
 				    qmi_device_sysfs_path);
@@ -367,8 +367,8 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 			device_bus = g_steal_pointer(&qmi_device_bus);
 		} else if (g_strcmp0(device_bus, qmi_device_bus) != 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "mismatched device bus: %s != %s",
 				    device_bus,
 				    qmi_device_bus);
@@ -387,8 +387,8 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 			device_sysfs_path = g_steal_pointer(&mbim_device_sysfs_path);
 		} else if (g_strcmp0(device_sysfs_path, mbim_device_sysfs_path) != 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "mismatched device sysfs path: %s != %s",
 				    device_sysfs_path,
 				    mbim_device_sysfs_path);
@@ -398,8 +398,8 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 			device_bus = g_steal_pointer(&mbim_device_bus);
 		} else if (g_strcmp0(device_bus, mbim_device_bus) != 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "mismatched device bus: %s != %s",
 				    device_bus,
 				    mbim_device_bus);
@@ -419,8 +419,8 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 			device_sysfs_path = g_steal_pointer(&qcdm_device_sysfs_path);
 		} else if (g_strcmp0(device_sysfs_path, qcdm_device_sysfs_path) != 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "mismatched device sysfs path: %s != %s",
 				    device_sysfs_path,
 				    qcdm_device_sysfs_path);
@@ -430,8 +430,8 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 			device_bus = g_steal_pointer(&qcdm_device_bus);
 		} else if (g_strcmp0(device_bus, qcdm_device_bus) != 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "mismatched device bus: %s != %s",
 				    device_bus,
 				    qcdm_device_bus);
@@ -1683,7 +1683,10 @@ fu_mm_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value
 	}
 
 	/* failed */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
 	return FALSE;
 }
 

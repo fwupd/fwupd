@@ -51,8 +51,8 @@ fu_efi_signature_list_parse_item(FuEfiSignatureList *self,
 	/* allocate data buf */
 	if (size <= sizeof(fwupd_guid_t)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "SignatureSize invalid: 0x%x",
 			    (guint)size);
 		return FALSE;
@@ -113,8 +113,8 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 	list_size = fu_struct_efi_signature_list_get_list_size(st);
 	if (list_size < 0x1c || list_size > 1024 * 1024) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "SignatureListSize invalid: 0x%x",
 			    list_size);
 		return FALSE;
@@ -122,8 +122,8 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 	header_size = fu_struct_efi_signature_list_get_header_size(st);
 	if (header_size > 1024 * 1024) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "SignatureHeaderSize invalid: 0x%x",
 			    header_size);
 		return FALSE;
@@ -131,8 +131,8 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 	size = fu_struct_efi_signature_list_get_size(st);
 	if (size < sizeof(fwupd_guid_t) || size > 1024 * 1024) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "SignatureSize invalid: 0x%x",
 			    size);
 		return FALSE;
@@ -266,8 +266,8 @@ fu_efi_signature_list_write(FuFirmware *firmware, GError **error)
 			return NULL;
 		if (g_bytes_get_size(img_blob) != 16 + 32) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "expected SHA256 hash as signature data");
 			return NULL;
 		}

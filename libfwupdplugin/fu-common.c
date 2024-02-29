@@ -54,7 +54,7 @@ fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, G
 		*edx = edx_tmp;
 	return TRUE;
 #else
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no <cpuid.h> support");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no <cpuid.h> support");
 	return FALSE;
 #endif
 }
@@ -186,8 +186,8 @@ fu_common_check_full_disk_encryption(GError **error)
 			continue;
 		if (g_strcmp0(g_variant_get_string(id_type, NULL), "BitLocker") == 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_WOULD_BLOCK,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_AUTH_EXPIRED,
 				    "%s device %s is encrypted",
 				    g_variant_get_string(id_type, NULL),
 				    g_variant_get_bytestring(device));

@@ -139,8 +139,8 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	pci_header_offset = fu_struct_oprom_get_pci_header_offset(st_hdr);
 	if (pci_header_offset == 0x0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "no PCI data structure offset provided");
 		return FALSE;
 	}
@@ -155,7 +155,7 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	/* get length */
 	image_length = fu_struct_oprom_pci_get_image_length(st_pci);
 	if (image_length == 0x0) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "invalid image length");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "invalid image length");
 		return FALSE;
 	}
 	fu_firmware_set_size(firmware, image_length * FU_OPROM_FIRMWARE_ALIGN_LEN);

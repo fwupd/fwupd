@@ -59,8 +59,8 @@ fu_synaprom_config_setup(FuDevice *device, GError **error)
 	if (reply->len < FU_STRUCT_SYNAPROM_REPLY_IOTA_FIND_HDR_SIZE +
 			     FU_STRUCT_SYNAPROM_IOTA_CONFIG_VERSION_SIZE) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "CFG return data invalid size: 0x%04x",
 			    reply->len);
 		return FALSE;
@@ -71,8 +71,8 @@ fu_synaprom_config_setup(FuDevice *device, GError **error)
 	if (fu_struct_synaprom_reply_iota_find_hdr_get_itype(st_hdr) !=
 	    FU_SYNAPROM_IOTA_ITYPE_CONFIG_VERSION) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "CFG iota had invalid itype: 0x%04x",
 			    fu_struct_synaprom_reply_iota_find_hdr_get_itype(st_hdr));
 		return FALSE;
@@ -148,8 +148,8 @@ fu_synaprom_config_prepare_firmware(FuDevice *device,
 				  (guint)FU_SYNAPROM_PRODUCT_PROMETHEUS);
 		} else {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "CFG metadata not compatible, "
 				    "got 0x%02x expected 0x%02x",
 				    fu_struct_synaprom_cfg_hdr_get_product(st_hdr),
@@ -168,8 +168,8 @@ fu_synaprom_config_prepare_firmware(FuDevice *device,
 				  self->configid2);
 		} else {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "CFG version not compatible, "
 				    "got %u:%u expected %u:%u",
 				    fu_struct_synaprom_cfg_hdr_get_id1(st_hdr),

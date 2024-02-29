@@ -33,7 +33,10 @@ fu_superio_device_io_read(FuSuperioDevice *self, guint8 addr, guint8 *data, GErr
 	FuSuperioDevicePrivate *priv = GET_PRIVATE(self);
 
 	if (priv->port == 0) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "port isn't set");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "port isn't set");
 		return FALSE;
 	}
 
@@ -63,7 +66,10 @@ fu_superio_device_io_write(FuSuperioDevice *self, guint8 addr, guint8 data, GErr
 	FuSuperioDevicePrivate *priv = GET_PRIVATE(self);
 
 	if (priv->port == 0) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "port isn't set");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "port isn't set");
 		return FALSE;
 	}
 
@@ -135,8 +141,8 @@ fu_superio_device_check_id(FuSuperioDevice *self, GError **error)
 	/* no quirk entry */
 	if (priv->id == 0x0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "invalid SuperioId");
 		return FALSE;
 	}
@@ -150,8 +156,8 @@ fu_superio_device_check_id(FuSuperioDevice *self, GError **error)
 		return FALSE;
 	if (priv->id != id_tmp) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "SuperIO chip not supported, got %04x, expected %04x",
 			    (guint)id_tmp,
 			    (guint)priv->id);
@@ -182,8 +188,8 @@ fu_superio_device_wait_for(FuSuperioDevice *self, guint8 mask, gboolean set, GEr
 			return TRUE;
 	} while (TRUE);
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_TIMED_OUT,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_TIMED_OUT,
 		    "timed out whilst waiting for 0x%02x:%i",
 		    mask,
 		    set);
@@ -237,8 +243,8 @@ fu_superio_device_ec_flush(FuSuperioDevice *self, GError **error)
 			return FALSE;
 		if (g_timer_elapsed(timer, NULL) * 1000.f > priv->timeout_ms) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_TIMED_OUT,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_TIMED_OUT,
 					    "timed out whilst waiting for flush");
 			return FALSE;
 		}
@@ -464,7 +470,10 @@ fu_superio_device_set_quirk_kv(FuDevice *device,
 	}
 
 	/* failed */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
 	return FALSE;
 }
 

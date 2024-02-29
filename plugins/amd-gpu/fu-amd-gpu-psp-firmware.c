@@ -123,8 +123,8 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 			break;
 		default:
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "Unknown ISH FWID: %x",
 				    fu_struct_psp_dir_table_get_fw_id(l1_entry));
 			return FALSE;
@@ -165,9 +165,9 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 			break;
 		default:
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
-				    "Unknown Partition FWID: %x",
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "unknown Partition FWID: %x",
 				    fu_struct_image_slot_header_get_fw_id(ish));
 			return FALSE;
 		}

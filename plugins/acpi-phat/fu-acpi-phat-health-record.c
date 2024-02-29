@@ -55,8 +55,8 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 		return FALSE;
 	if (rcdlen != streamsz) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "record length not valid: %" G_GUINT16_FORMAT,
 			    rcdlen);
 		return FALSE;
@@ -80,8 +80,8 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 		}
 		if (ubufsz == 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "device path not valid: %" G_GSIZE_FORMAT,
 				    ubufsz);
 			return FALSE;
@@ -163,8 +163,8 @@ fu_acpi_phat_health_record_build(FuFirmware *firmware, XbNode *n, GError **error
 	tmp64 = xb_node_query_text_as_uint(n, "am_healthy", NULL);
 	if (tmp64 > G_MAXUINT8) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "am_healthy value invalid, got 0x%x",
 			    (guint)tmp64);
 		return FALSE;

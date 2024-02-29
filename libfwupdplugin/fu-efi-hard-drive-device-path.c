@@ -226,16 +226,16 @@ fu_efi_hard_drive_device_path_new_from_volume(FuVolume *volume, GError **error)
 	partition_kind = fu_volume_get_partition_kind(volume);
 	if (partition_kind == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "partition kind required");
 		return NULL;
 	}
 	partition_uuid = fu_volume_get_partition_uuid(volume);
 	if (partition_uuid == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "partition UUID required");
 		return NULL;
 	}
@@ -271,8 +271,8 @@ fu_efi_hard_drive_device_path_new_from_volume(FuVolume *volume, GError **error)
 		self->signature_type = FU_EFI_HARD_DRIVE_DEVICE_PATH_SIGNATURE_TYPE_ADDR1B8;
 	} else {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "partition kind %s not supported",
 			    partition_kind);
 		return NULL;

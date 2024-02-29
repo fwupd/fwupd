@@ -588,8 +588,8 @@ fu_bios_settings_get_pending_reboot(FuBiosSettings *self, gboolean *result, GErr
 	}
 	if (attr == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_FOUND,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "failed to find pending reboot attribute");
 		return FALSE;
 	}
@@ -653,7 +653,10 @@ fu_bios_settings_from_json(FuBiosSettings *self, JsonNode *json_node, GError **e
 
 	/* sanity check */
 	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not JSON object");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "not JSON object");
 		return FALSE;
 	}
 	obj = json_node_get_object(json_node);
@@ -661,8 +664,8 @@ fu_bios_settings_from_json(FuBiosSettings *self, JsonNode *json_node, GError **e
 	/* this has to exist */
 	if (!json_object_has_member(obj, "BiosSettings")) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "no BiosSettings property in object");
 		return FALSE;
 	}

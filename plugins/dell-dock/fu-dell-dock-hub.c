@@ -172,7 +172,10 @@ fu_dell_dock_hub_set_quirk_kv(FuDevice *device,
 	}
 
 	/* failed */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
 	return FALSE;
 }
 

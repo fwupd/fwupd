@@ -164,7 +164,10 @@ fu_genesys_usbhub_firmware_calculate_size(GInputStream *stream,
 		return FALSE;
 	}
 	if (kbs == 0) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "invalid codesize");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid codesize");
 		return FALSE;
 	}
 	if (size != NULL)
@@ -445,8 +448,8 @@ fu_genesys_usbhub_firmware_build(FuFirmware *firmware, XbNode *n, GError **error
 	tmp = xb_node_query_text(n, "tool_string_version", NULL);
 	if (tmp == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid tool_string_version");
 		return FALSE;
 	} else {
@@ -459,8 +462,8 @@ fu_genesys_usbhub_firmware_build(FuFirmware *firmware, XbNode *n, GError **error
 		gsize len = strlen(tmp);
 		if (len != 4) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid mask_project_code %s, got 0x%x length",
 				    tmp,
 				    (guint)len);
@@ -478,8 +481,8 @@ fu_genesys_usbhub_firmware_build(FuFirmware *firmware, XbNode *n, GError **error
 		gsize len = strlen(tmp);
 		if (len != 6) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid mask_project_ic_type %s, got 0x%x length",
 				    tmp,
 				    (guint)len);

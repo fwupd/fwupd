@@ -128,8 +128,8 @@ fu_efi_signature_build(FuFirmware *firmware, XbNode *n, GError **error)
 		self->kind = fu_efi_signature_kind_from_string(tmp);
 		if (self->kind == FU_EFI_SIGNATURE_KIND_UNKNOWN) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid kind: %s",
 				    tmp);
 			return FALSE;

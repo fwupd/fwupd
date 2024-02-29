@@ -32,8 +32,8 @@ fu_bcm57xx_stage2_image_parse(FuFirmware *image,
 		return FALSE;
 	if (streamsz < sizeof(guint32)) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "stage2 image is too small");
 		return FALSE;
 	}

@@ -107,8 +107,8 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 	if (fu_pxi_firmware_is_hpac(self)) {
 		if (streamsz < PIXART_RF_FW_HEADER_HPAC_VERSION_POS_FROM_END) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "image is too small");
 			return FALSE;
 		}
@@ -125,8 +125,8 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 	} else {
 		if (streamsz < sizeof(fw_header)) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "image is too small");
 			return FALSE;
 		}
@@ -249,8 +249,8 @@ fu_pxi_firmware_write(FuFirmware *firmware, GError **error)
 	if (!g_ascii_isdigit(fw_header[0]) || !g_ascii_isdigit(fw_header[2]) ||
 	    !g_ascii_isdigit(fw_header[4])) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot write invalid version number 0x%x",
 			    (guint)version_raw);
 		return NULL;

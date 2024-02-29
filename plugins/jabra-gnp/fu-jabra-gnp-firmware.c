@@ -34,7 +34,10 @@ fu_jabra_gnp_firmware_parse_version(FuJabraGnpFirmware *self, GError **error)
 
 	split = g_strsplit(fu_firmware_get_version(FU_FIRMWARE(self)), ".", -1);
 	if (g_strv_length(split) != 3) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "version invalid");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "version invalid");
 		return FALSE;
 	}
 	if (!fu_strtoull(split[0], &val, 0x0, 0xFF, error))
@@ -68,8 +71,8 @@ fu_jabra_gnp_firmware_parse_info(FuJabraGnpFirmware *self, XbSilo *silo, GError 
 	version = xb_node_get_attr(build_vector, "version");
 	if (version == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "buildVector version missing");
 		return FALSE;
 	}
@@ -141,7 +144,7 @@ fu_jabra_gnp_firmware_parse(FuFirmware *firmware,
 		g_autoptr(FuJabraGnpImage) img = fu_jabra_gnp_image_new();
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_jabra_gnp_image_parse(img, n, firmware_archive, &error_local)) {
-			if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_DATA)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA)) {
 				g_debug("ignoring image 0x%x: %s", i, error_local->message);
 				continue;
 			}

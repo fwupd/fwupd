@@ -37,8 +37,8 @@ fu_cros_ec_firmware_pick_sections(FuCrosEcFirmware *self, guint32 writeable_offs
 
 	if (!found) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "no writeable section found with offset: 0x%x",
 			    writeable_offset);
 		return FALSE;
@@ -61,8 +61,8 @@ fu_cros_ec_firmware_get_needed_sections(FuCrosEcFirmware *self, GError **error)
 	}
 	if (needed_sections->len == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "no needed sections");
 		return NULL;
 	}
@@ -100,8 +100,8 @@ fu_cros_ec_firmware_parse(FuFirmware *firmware,
 			fmap_fwid_name = "RW_FWID";
 		} else {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "incorrect section name");
 			return FALSE;
 		}

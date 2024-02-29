@@ -145,7 +145,7 @@ fu_logitech_hidpp_runtime_unifying_setup(FuDevice *device, GError **error)
 		fu_device_sleep(device, 200); /* ms */
 		if (fu_logitech_hidpp_runtime_unifying_setup_internal(device, &error_local))
 			return TRUE;
-		if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_DATA)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA)) {
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}

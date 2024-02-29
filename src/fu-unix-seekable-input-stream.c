@@ -93,9 +93,10 @@ fu_unix_seekable_input_stream_truncate(GSeekable *seekable,
 				       GCancellable *cancellable,
 				       GError **error)
 {
+	/* using GIOError here as this will eventually go into GLib */
 	g_set_error_literal(error,
 			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    G_IO_ERROR_NOT_SUPPORTED, /* nocheck */
 			    "cannot truncate FuUnixSeekableInputStream");
 	return FALSE;
 }

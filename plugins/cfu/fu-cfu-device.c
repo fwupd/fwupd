@@ -102,8 +102,8 @@ fu_cfu_device_send_offer_info(FuCfuDevice *self, FuCfuOfferInfoCode info_code, G
 	if (fu_struct_cfu_offer_rsp_get_token(st_res) !=
 	    FU_STRUCT_CFU_OFFER_INFO_REQ_DEFAULT_TOKEN) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "token invalid: got 0x%x and expected 0x%x",
 			    fu_struct_cfu_offer_rsp_get_token(st_res),
 			    (guint)FU_STRUCT_CFU_OFFER_INFO_REQ_DEFAULT_TOKEN);
@@ -112,8 +112,8 @@ fu_cfu_device_send_offer_info(FuCfuDevice *self, FuCfuOfferInfoCode info_code, G
 	if (fu_struct_cfu_offer_rsp_get_status(st_res) != FU_CFU_OFFER_STATUS_ACCEPT) {
 		g_set_error(
 		    error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_NOT_SUPPORTED,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "offer info %s not supported: %s",
 		    fu_cfu_offer_info_code_to_string(info_code),
 		    fu_cfu_offer_status_to_string(fu_struct_cfu_offer_rsp_get_status(st_res)));
@@ -177,8 +177,8 @@ fu_cfu_device_send_offer(FuCfuDevice *self,
 	if (fu_struct_cfu_offer_rsp_get_token(st) !=
 	    fu_cfu_offer_get_token(FU_CFU_OFFER(firmware))) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "offer token invalid: got %02x but expected %02x",
 			    fu_struct_cfu_offer_rsp_get_token(st),
 			    fu_cfu_offer_get_token(FU_CFU_OFFER(firmware)));
@@ -186,8 +186,8 @@ fu_cfu_device_send_offer(FuCfuDevice *self,
 	}
 	if (fu_struct_cfu_offer_rsp_get_status(st) != FU_CFU_OFFER_STATUS_ACCEPT) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "offer not supported: %s: %s",
 			    fu_cfu_offer_status_to_string(fu_struct_cfu_offer_rsp_get_status(st)),
 			    fu_cfu_rr_code_to_string(fu_struct_cfu_offer_rsp_get_rr_code(st)));
@@ -268,8 +268,8 @@ fu_cfu_device_send_payload(FuCfuDevice *self,
 		if (fu_struct_cfu_content_rsp_get_seq_number(st_rsp) !=
 		    fu_struct_cfu_content_req_get_seq_number(st_req)) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "sequence number invalid 0x%x: expected 0x%x",
 				    fu_struct_cfu_content_rsp_get_seq_number(st_rsp),
 				    fu_struct_cfu_content_req_get_seq_number(st_req));
@@ -277,8 +277,8 @@ fu_cfu_device_send_payload(FuCfuDevice *self,
 		}
 		if (fu_struct_cfu_content_rsp_get_status(st_rsp) != FU_CFU_CONTENT_STATUS_SUCCESS) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "failed to send chunk %u: %s",
 				    i + 1,
 				    fu_cfu_content_status_to_string(
@@ -447,8 +447,8 @@ fu_cfu_device_setup(FuDevice *device, GError **error)
 	}
 	if (self->content_get_report.ct == 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "no CFU descriptor found: %s",
 			    descriptors_error->str);
 		return FALSE;
@@ -548,7 +548,10 @@ fu_cfu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	}
 
 	/* failed */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
 	return FALSE;
 }
 

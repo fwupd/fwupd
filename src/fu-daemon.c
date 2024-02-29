@@ -405,6 +405,13 @@ fu_daemon_auth_helper_free(FuMainAuthHelper *helper)
 	g_free(helper);
 }
 
+static void
+fu_daemon_method_invocation_return_gerror(GDBusMethodInvocation *invocation, GError *error)
+{
+	fwupd_error_convert(&error);
+	g_dbus_method_invocation_return_gerror(invocation, error);
+}
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuMainAuthHelper, fu_daemon_auth_helper_free)
@@ -418,13 +425,13 @@ fu_daemon_authorize_unlock_cb(GObject *source, GAsyncResult *res, gpointer user_
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
 	/* authenticated */
 	if (!fu_engine_unlock(helper->self->engine, helper->device_id, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
@@ -443,7 +450,7 @@ fu_daemon_authorize_get_bios_settings_cb(GObject *source, GAsyncResult *res, gpo
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
@@ -462,7 +469,7 @@ fu_daemon_authorize_set_bios_settings_cb(GObject *source, GAsyncResult *res, gpo
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
@@ -471,7 +478,7 @@ fu_daemon_authorize_set_bios_settings_cb(GObject *source, GAsyncResult *res, gpo
 					    helper->bios_settings,
 					    FALSE,
 					    &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 	/* success */
@@ -486,7 +493,7 @@ fu_daemon_authorize_set_approved_firmware_cb(GObject *source, GAsyncResult *res,
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
@@ -506,13 +513,13 @@ fu_daemon_authorize_set_blocked_firmware_cb(GObject *source, GAsyncResult *res, 
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
 	/* success */
 	if (!fu_engine_set_blocked_firmware(helper->self->engine, helper->checksums, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
@@ -528,13 +535,13 @@ fu_daemon_authorize_fix_host_security_attr_cb(GObject *source,
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
 	/* success */
 	if (!fu_engine_fix_host_security_attr(helper->self->engine, helper->key, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
@@ -550,13 +557,13 @@ fu_daemon_authorize_undo_host_security_attr_cb(GObject *source,
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
 	/* success */
 	if (!fu_engine_undo_host_security_attr(helper->self->engine, helper->key, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
@@ -571,14 +578,14 @@ fu_daemon_authorize_self_sign_cb(GObject *source, GAsyncResult *res, gpointer us
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
 	/* authenticated */
 	sig = fu_engine_self_sign(helper->self->engine, helper->value, helper->flags, &error);
 	if (sig == NULL) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
@@ -594,7 +601,7 @@ fu_daemon_modify_config_cb(GObject *source, GAsyncResult *res, gpointer user_dat
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
@@ -603,7 +610,7 @@ fu_daemon_modify_config_cb(GObject *source, GAsyncResult *res, gpointer user_dat
 				     helper->key,
 				     helper->value,
 				     &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
@@ -619,11 +626,11 @@ fu_daemon_reset_config_cb(GObject *source, GAsyncResult *res, gpointer user_data
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 	if (!fu_engine_reset_config(helper->self->engine, helper->section, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
@@ -658,7 +665,7 @@ fu_daemon_authorize_activate_cb(GObject *source, GAsyncResult *res, gpointer use
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
@@ -675,7 +682,7 @@ fu_daemon_authorize_activate_cb(GObject *source, GAsyncResult *res, gpointer use
 
 	/* authenticated */
 	if (!fu_engine_activate(helper->self->engine, helper->device_id, progress, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
@@ -692,7 +699,7 @@ fu_daemon_authorize_verify_update_cb(GObject *source, GAsyncResult *res, gpointe
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
@@ -709,7 +716,7 @@ fu_daemon_authorize_verify_update_cb(GObject *source, GAsyncResult *res, gpointe
 
 	/* authenticated */
 	if (!fu_engine_verify_update(helper->self->engine, helper->device_id, progress, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
@@ -725,7 +732,7 @@ fu_daemon_authorize_modify_remote_cb(GObject *source, GAsyncResult *res, gpointe
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
@@ -735,7 +742,7 @@ fu_daemon_authorize_modify_remote_cb(GObject *source, GAsyncResult *res, gpointe
 				     helper->key,
 				     helper->value,
 				     &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
@@ -755,7 +762,7 @@ fu_daemon_authorize_install_cb(GObject *source, GAsyncResult *res, gpointer user
 
 	/* get result */
 	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
@@ -814,7 +821,7 @@ fu_daemon_authorize_install_queue(FuMainAuthHelper *helper_ref)
 	if (self->pending_stop)
 		g_main_loop_quit(self->loop);
 	if (!ret) {
-		g_dbus_method_invocation_return_gerror(helper->invocation, error);
+		fu_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
@@ -1133,7 +1140,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 	/* build request */
 	request = fu_daemon_create_request(self, sender, &error);
 	if (request == NULL) {
-		g_dbus_method_invocation_return_gerror(invocation, error);
+		fu_daemon_method_invocation_return_gerror(invocation, error);
 		return;
 	}
 	if (fu_engine_request_has_device_flag(request, FWUPD_DEVICE_FLAG_TRUSTED))
@@ -1147,12 +1154,12 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_debug("Called %s()", method_name);
 		devices = fu_engine_get_devices(self->engine, &error);
 		if (devices == NULL) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		val = fu_daemon_device_array_to_variant(self, request, devices, &error);
 		if (val == NULL) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		g_dbus_method_invocation_return_value(invocation, val);
@@ -1170,12 +1177,12 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_variant_get(parameters, "(&s)", &device_id);
 		g_debug("Called %s(%s)", method_name, device_id);
 		if (!fu_daemon_device_id_valid(device_id, &error)) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		releases = fu_engine_get_releases(self->engine, request, device_id, &error);
 		if (releases == NULL) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		val = fu_daemon_release_array_to_variant(releases);
@@ -1215,7 +1222,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 
 		metadata = fu_engine_get_report_metadata(self->engine, &error);
 		if (metadata == NULL) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		g_variant_builder_init(&builder, G_VARIANT_TYPE("a{ss}"));
@@ -1337,12 +1344,12 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_variant_get(parameters, "(&s)", &device_id);
 		g_debug("Called %s(%s)", method_name, device_id);
 		if (!fu_daemon_device_id_valid(device_id, &error)) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		releases = fu_engine_get_downgrades(self->engine, request, device_id, &error);
 		if (releases == NULL) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		val = fu_daemon_release_array_to_variant(releases);
@@ -1355,12 +1362,12 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_variant_get(parameters, "(&s)", &device_id);
 		g_debug("Called %s(%s)", method_name, device_id);
 		if (!fu_daemon_device_id_valid(device_id, &error)) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		releases = fu_engine_get_upgrades(self->engine, request, device_id, &error);
 		if (releases == NULL) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		val = fu_daemon_release_array_to_variant(releases);
@@ -1372,7 +1379,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_debug("Called %s()", method_name);
 		remotes = fu_engine_get_remotes(self->engine, &error);
 		if (remotes == NULL) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		val = fu_daemon_remote_array_to_variant(remotes);
@@ -1384,12 +1391,12 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_debug("Called %s()", method_name);
 		devices = fu_engine_get_history(self->engine, &error);
 		if (devices == NULL) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		val = fu_daemon_device_array_to_variant(self, request, devices, &error);
 		if (val == NULL) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		g_dbus_method_invocation_return_value(invocation, val);
@@ -1436,7 +1443,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 #else
 		attrs = fu_engine_get_host_security_events(self->engine, limit, &error);
 		if (attrs == NULL) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		val = fu_security_attrs_to_variant(attrs);
@@ -1449,7 +1456,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_variant_get(parameters, "(&s)", &device_id);
 		g_debug("Called %s(%s)", method_name, device_id);
 		if (!fu_engine_clear_results(self->engine, device_id, &error)) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		g_dbus_method_invocation_return_value(invocation, NULL);
@@ -1503,7 +1510,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_variant_get(parameters, "(&s&s&s)", &device_id, &key, &value);
 		g_debug("Called %s(%s,%s=%s)", method_name, device_id, key, value);
 		if (!fu_engine_modify_device(self->engine, device_id, key, value, &error)) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		g_dbus_method_invocation_return_value(invocation, NULL);
@@ -1515,12 +1522,12 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_variant_get(parameters, "(&s)", &device_id);
 		g_debug("Called %s(%s)", method_name, device_id);
 		if (!fu_daemon_device_id_valid(device_id, &error)) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		result = fu_engine_get_results(self->engine, device_id, &error);
 		if (result == NULL) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		val = fwupd_device_to_variant(result);
@@ -1543,30 +1550,30 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		fd_list = g_dbus_message_get_unix_fd_list(message);
 		if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 2) {
 			g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		fd_data = g_unix_fd_list_get(fd_list, 0, &error);
 		if (fd_data < 0) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		fd_sig = g_unix_fd_list_get(fd_list, 1, &error);
 		if (fd_sig < 0) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 
 		/* store new metadata (will close the fds when done) */
 		if (!fu_engine_update_metadata(self->engine, remote_id, fd_data, fd_sig, &error)) {
 			g_prefix_error(&error, "Failed to update metadata for %s: ", remote_id);
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		g_dbus_method_invocation_return_value(invocation, NULL);
 #else
 		g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
-		g_dbus_method_invocation_return_gerror(invocation, error);
+		fu_daemon_method_invocation_return_gerror(invocation, error);
 #endif /* HAVE_GIO_UNIX */
 		return;
 	}
@@ -1577,7 +1584,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_variant_get(parameters, "(&s)", &device_id);
 		g_debug("Called %s(%s)", method_name, device_id);
 		if (!fu_daemon_device_id_valid(device_id, &error)) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 
@@ -1604,7 +1611,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 
 		g_debug("Called %s(%s)", method_name, device_id);
 		if (!fu_daemon_device_id_valid(device_id, &error)) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 
@@ -1710,7 +1717,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_variant_get(parameters, "(&s)", &device_id);
 		g_debug("Called %s(%s)", method_name, device_id);
 		if (!fu_daemon_device_id_valid(device_id, &error)) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 
@@ -1739,7 +1746,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_variant_get(parameters, "(&s)", &device_id);
 		g_debug("Called %s(%s)", method_name, device_id);
 		if (!fu_daemon_device_id_valid(device_id, &error)) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 
@@ -1755,7 +1762,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 				 self);
 
 		if (!fu_engine_verify(self->engine, device_id, progress, &error)) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		g_dbus_method_invocation_return_value(invocation, NULL);
@@ -1860,7 +1867,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_variant_get(parameters, "(&sha{sv})", &device_id, &fd_handle, &iter);
 		g_debug("Called %s(%s,%i)", method_name, device_id, fd_handle);
 		if (!fu_daemon_device_id_valid(device_id, &error)) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 
@@ -1901,12 +1908,12 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		fd_list = g_dbus_message_get_unix_fd_list(message);
 		if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 1) {
 			g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		fd = g_unix_fd_list_get(fd_list, 0, &error);
 		if (fd < 0) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		helper->stream = fu_unix_seekable_input_stream_new(fd, TRUE);
@@ -1919,12 +1926,12 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 				     G_CALLBACK(fu_daemon_client_flags_notify_cb),
 				     helper);
 		if (!fu_daemon_install_with_helper(g_steal_pointer(&helper), &error)) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 #else
 		g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
-		g_dbus_method_invocation_return_gerror(invocation, error);
+		fu_daemon_method_invocation_return_gerror(invocation, error);
 #endif /* HAVE_GIO_UNIX */
 
 		/* async return */
@@ -1948,31 +1955,31 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		fd_list = g_dbus_message_get_unix_fd_list(message);
 		if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 1) {
 			g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		fd = g_unix_fd_list_get(fd_list, 0, &error);
 		if (fd < 0) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 
 		/* get details about the file (will close the fd when done) */
 		stream = fu_unix_seekable_input_stream_new(fd, TRUE);
 		if (stream == NULL) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		results = fu_engine_get_details(self->engine, request, stream, &error);
 		if (results == NULL) {
-			g_dbus_method_invocation_return_gerror(invocation, error);
+			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		val = fu_daemon_result_array_to_variant(results);
 		g_dbus_method_invocation_return_value(invocation, val);
 #else
 		g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
-		g_dbus_method_invocation_return_gerror(invocation, error);
+		fu_daemon_method_invocation_return_gerror(invocation, error);
 #endif /* HAVE_GIO_UNIX */
 		return;
 	}
@@ -2087,12 +2094,11 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 					  g_steal_pointer(&helper));
 		return;
 	}
-	g_set_error(&error,
-		    G_DBUS_ERROR,
-		    G_DBUS_ERROR_UNKNOWN_METHOD,
-		    "no such method %s",
-		    method_name);
-	g_dbus_method_invocation_return_gerror(invocation, error);
+	g_dbus_method_invocation_return_error(invocation,
+					      G_DBUS_ERROR,
+					      G_DBUS_ERROR_UNKNOWN_METHOD,
+					      "no such method %s",
+					      method_name);
 }
 
 static GVariant *
@@ -2365,9 +2371,9 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 		self->machine_kind = fu_daemon_machine_kind_from_string(machine_kind);
 		if (self->machine_kind == FU_DAEMON_MACHINE_KIND_UNKNOWN) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_ARGUMENT,
-				    "Invalid machine kind specified: %s",
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid machine kind specified: %s",
 				    machine_kind);
 			return FALSE;
 		}

@@ -55,8 +55,8 @@ fu_wacom_aes_add_recovery_hwid(FuDevice *device, GError **error)
 	}
 	if (rsp.size8 != cmd.size8) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "firmware does not support this feature");
 		return FALSE;
 	}
@@ -64,8 +64,8 @@ fu_wacom_aes_add_recovery_hwid(FuDevice *device, GError **error)
 	pid = (rsp.data[7] << 8) + (rsp.data[6]);
 	if ((pid == 0xFFFF) || (pid == 0x0000)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "invalid recovery product ID %04x",
 			    pid);
 		return FALSE;
@@ -102,9 +102,9 @@ fu_wacom_aes_query_operation_mode(FuWacomAesDevice *self, GError **error)
 
 	/* unsupported */
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_FAILED,
-		    "Failed to query operation mode, got 0x%x",
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "failed to query operation mode, got 0x%x",
 		    buf[1]);
 	return FALSE;
 }
@@ -218,8 +218,8 @@ fu_wacom_aes_device_write_block(FuWacomAesDevice *self,
 	/* check size */
 	if (datasz != blocksz) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "block size 0x%x != 0x%x untested",
 			    (guint)datasz,
 			    (guint)blocksz);

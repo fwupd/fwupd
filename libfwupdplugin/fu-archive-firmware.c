@@ -171,8 +171,8 @@ fu_archive_firmware_get_image_fnmatch(FuArchiveFirmware *self, const gchar *patt
 			continue;
 		if (img_match != NULL) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_ARGUMENT,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "multiple images matched %s",
 				    pattern);
 			return NULL;
@@ -181,8 +181,8 @@ fu_archive_firmware_get_image_fnmatch(FuArchiveFirmware *self, const gchar *patt
 	}
 	if (img_match == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "no image matched %s",
 			    pattern);
 		return NULL;

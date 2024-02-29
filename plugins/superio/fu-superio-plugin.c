@@ -39,8 +39,8 @@ fu_superio_plugin_coldplug_chipset(FuPlugin *plugin, const gchar *guid, GError *
 	custom_gtype = g_type_from_name(chipset);
 	if (custom_gtype == G_TYPE_INVALID) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "SuperIO GType %s unsupported",
 			    chipset);
 		return FALSE;

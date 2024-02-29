@@ -122,7 +122,10 @@ fu_amd_gpu_atom_parse_vbios_date(FuAmdGpuAtomFirmware *self, GByteArray *atom_im
 	g_autoptr(GByteArray) st = fu_struct_atom_image_get_vbios_date(atom_image);
 
 	if (st == NULL) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "ATOMBIOS date is invalid");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "ATOMBIOS date is invalid");
 		return FALSE;
 	}
 
@@ -153,16 +156,16 @@ fu_amd_gpu_atom_parse_vbios_pn(FuAmdGpuAtomFirmware *self,
 	num_str = fu_struct_atom_image_get_num_strings(atom_image);
 	if (num_str == 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "ATOMBIOS number of strings is 0");
 		return FALSE;
 	}
 	idx = fu_struct_atom_image_get_str_loc(atom_image);
 	if (idx == 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "ATOMBIOS string location is invalid");
 		return FALSE;
 	}
@@ -171,8 +174,8 @@ fu_amd_gpu_atom_parse_vbios_pn(FuAmdGpuAtomFirmware *self,
 	atombios_size = fu_firmware_get_size(FU_FIRMWARE(self));
 	if ((gsize)(idx + (num_str * (STRLEN_NORMAL - 1))) > atombios_size) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "bufsz is too small for all strings");
 		return FALSE;
 	}
@@ -204,8 +207,8 @@ fu_amd_gpu_atom_parse_vbios_pn(FuAmdGpuAtomFirmware *self,
 			break;
 		default:
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "unknown string index: %d",
 				    i);
 			return FALSE;
@@ -218,8 +221,8 @@ fu_amd_gpu_atom_parse_vbios_pn(FuAmdGpuAtomFirmware *self,
 	/* make sure there is enough space for name string */
 	if ((gsize)(idx + STRLEN_LONG - 1) > atombios_size) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "bufsz is too small for name string");
 		return FALSE;
 	}

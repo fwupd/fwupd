@@ -36,8 +36,8 @@ fu_uefi_grub_device_mkconfig(FuDevice *device,
 		argv_mkconfig[2] = "/boot/grub2/grub.cfg";
 	if (!g_file_test(argv_mkconfig[2], G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "could not find grub.conf");
 		return FALSE;
 	}
@@ -48,8 +48,8 @@ fu_uefi_grub_device_mkconfig(FuDevice *device,
 		grub_mkconfig = fu_path_find_program("grub2-mkconfig", NULL);
 	if (grub_mkconfig == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "could not find grub-mkconfig");
 		return FALSE;
 	}
@@ -60,8 +60,8 @@ fu_uefi_grub_device_mkconfig(FuDevice *device,
 		grub_reboot = fu_path_find_program("grub2-reboot", NULL);
 	if (grub_reboot == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "could not find grub-reboot");
 		return FALSE;
 	}

@@ -270,8 +270,8 @@ fu_uswid_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 		priv->compression = fu_uswid_payload_compression_from_string(str);
 		if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_NONE) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid compression type %s",
 				    str);
 			return FALSE;

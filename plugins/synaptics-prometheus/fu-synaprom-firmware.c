@@ -61,8 +61,8 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	if (streamsz < self->signature_size + FU_STRUCT_SYNAPROM_HDR_SIZE) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "blob is too small to be firmware");
 		return FALSE;
 	}
@@ -84,8 +84,8 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 		tag = fu_struct_synaprom_hdr_get_tag(st_hdr);
 		if (tag >= FU_SYNAPROM_FIRMWARE_TAG_MAX) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "tag 0x%04x is too large",
 				    tag);
 			return FALSE;
@@ -95,8 +95,8 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 		img_old = fu_firmware_get_image_by_idx(firmware, tag, NULL);
 		if (img_old != NULL) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "tag 0x%04x already present in image",
 				    tag);
 			return FALSE;
@@ -104,8 +104,8 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 		hdrsz = fu_struct_synaprom_hdr_get_bufsz(st_hdr);
 		if (hdrsz == 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "empty header for tag 0x%04x",
 				    tag);
 			return FALSE;

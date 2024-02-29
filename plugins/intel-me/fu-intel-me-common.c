@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#include <fwupd.h>
+
 #include "fu-intel-me-common.h"
 
 static gboolean
@@ -19,13 +21,17 @@ fu_intel_me_mkhi_result_to_error(FuMkhiResult result, GError **error)
 	case MKHI_STATUS_NOT_AVAILABLE:
 	case MKHI_STATUS_NOT_SET:
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "not supported [0x%x]",
 			    result);
 		break;
 	default:
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "generic failure [0x%x]", result);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "generic failure [0x%x]",
+			    result);
 		break;
 	}
 	return FALSE;
@@ -38,8 +44,8 @@ fu_intel_me_mkhi_verify_header(const FuMkhiHeader *hdr_req,
 {
 	if (hdr_req->group_id != hdr_res->group_id) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid response group ID, requested 0x%x and got 0x%x",
 			    hdr_req->group_id,
 			    hdr_res->group_id);
@@ -47,8 +53,8 @@ fu_intel_me_mkhi_verify_header(const FuMkhiHeader *hdr_req,
 	}
 	if (hdr_req->command != hdr_res->command) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid response command, requested 0x%x and got 0x%x",
 			    (guint)hdr_req->command,
 			    (guint)hdr_res->command);
@@ -56,8 +62,8 @@ fu_intel_me_mkhi_verify_header(const FuMkhiHeader *hdr_req,
 	}
 	if (!hdr_res->is_resp) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid response group ID, not a response!");
 		return FALSE;
 	}
@@ -81,15 +87,15 @@ fu_intel_me_convert_checksum(GByteArray *buf, GError **error)
 	}
 	if (!seen_non00_data) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_INITIALIZED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "buffer was all 0x00");
 		return NULL;
 	}
 	if (!seen_nonff_data) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_INITIALIZED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "buffer was all 0xFF");
 		return NULL;
 	}

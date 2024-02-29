@@ -251,8 +251,8 @@ fu_kernel_parse_config_line_cb(GString *token, guint token_idx, gpointer user_da
 	kv = g_strsplit(token->str, "=", 2);
 	if (g_strv_length(kv) != 2) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid format for '%s'",
 			    token->str);
 		return FALSE;
@@ -505,8 +505,8 @@ fu_kernel_check_cmdline_mutable(GError **error)
 		}
 		if (!g_file_info_get_attribute_boolean(info, G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE)) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "%s is not writable",
 				    config_files[i]);
 			return FALSE;

@@ -59,8 +59,8 @@ fu_kinetic_dp_puma_device_wait_dpcd_cmd_status_cb(FuDevice *device,
 	}
 	if (status != status_want) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "flash mode was %s, wanted %s",
 			    fu_kinetic_dp_puma_mode_to_string(status),
 			    fu_kinetic_dp_puma_mode_to_string(status_want));
@@ -91,8 +91,8 @@ fu_kinetic_dp_puma_device_wait_dpcd_sink_mode_cb(FuDevice *device,
 	}
 	if (status != status_want) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "flash mode was %s, wanted %s",
 			    fu_kinetic_dp_puma_mode_to_string(status),
 			    fu_kinetic_dp_puma_mode_to_string(status_want));
@@ -281,14 +281,14 @@ fu_kinetic_dp_puma_device_send_isp_drv(FuKineticDpPumaDevice *self,
 	if (self->flash_size == 0) {
 		if (self->flash_id > 0) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "SPI flash not supported");
 			return FALSE;
 		}
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "SPI flash not connected");
 		return FALSE;
 	}
@@ -352,14 +352,14 @@ fu_kinetic_dp_puma_device_enable_fw_update_mode(FuKineticDpPumaDevice *self,
 		if (self->flash_size == 0) {
 			if (self->flash_id > 0) {
 				g_set_error_literal(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_NOT_SUPPORTED,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_NOT_SUPPORTED,
 						    "SPI flash not supported");
 				return FALSE;
 			}
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "SPI flash not connected");
 			return FALSE;
 		}

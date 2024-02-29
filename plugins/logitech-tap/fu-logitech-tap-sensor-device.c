@@ -73,8 +73,8 @@ fu_logitech_tap_sensor_device_set_feature(FuLogitechTapSensorDevice *self,
 #else
 	/* failed */
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "<linux/hidraw.h> not available");
 	return FALSE;
 #endif
@@ -113,8 +113,8 @@ fu_logitech_tap_sensor_device_get_feature(FuLogitechTapSensorDevice *self,
 #else
 	/* failed */
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "<linux/hidraw.h> not available");
 	return FALSE;
 #endif

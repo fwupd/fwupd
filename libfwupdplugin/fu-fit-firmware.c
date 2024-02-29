@@ -103,8 +103,8 @@ fu_fit_firmware_verify_crc32(FuFirmware *firmware,
 	value_calc = fu_crc32(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob));
 	if (value_calc != value) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "%s CRC did not match, got 0x%x, expected 0x%x",
 			    fu_firmware_get_id(img),
 			    value,
@@ -137,8 +137,8 @@ fu_fit_firmware_verify_checksum(FuFirmware *firmware,
 		return FALSE;
 	if (g_bytes_get_size(value) != digest_len) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "%s invalid hash value size, got 0x%x, expected 0x%x",
 			    fu_firmware_get_id(img),
 			    (guint)g_bytes_get_size(value),
@@ -251,8 +251,8 @@ fu_fit_firmware_verify_image(FuFirmware *firmware,
 			FuFirmware *img_hash = g_ptr_array_index(img_hashes, i);
 			if (fu_firmware_get_id(img_hash) == NULL) {
 				g_set_error_literal(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_INVALID_DATA,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
 						    "no ID for image hash");
 				return FALSE;
 			}

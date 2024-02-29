@@ -269,8 +269,8 @@ fu_qmi_pdc_updater_load_config_timeout(gpointer user_data)
 	ctx->indication_id = 0;
 
 	g_set_error_literal(&ctx->error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_TIMED_OUT,
 			    "couldn't load mcfg: timed out");
 	g_main_loop_quit(ctx->mainloop);
 
@@ -310,8 +310,8 @@ fu_qmi_pdc_updater_load_config_indication(QmiClientPdc *client,
 		}
 
 		g_set_error(&ctx->error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
 			    "couldn't load mcfg: %s",
 			    qmi_protocol_error_get_string((QmiProtocolError)error_code));
 		g_main_loop_quit(ctx->mainloop);
@@ -321,8 +321,8 @@ fu_qmi_pdc_updater_load_config_indication(QmiClientPdc *client,
 	if (qmi_indication_pdc_load_config_output_get_frame_reset(output, &frame_reset, NULL) &&
 	    frame_reset) {
 		g_set_error(&ctx->error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
 			    "couldn't load mcfg: sent data discarded");
 		g_main_loop_quit(ctx->mainloop);
 		return;
@@ -518,8 +518,8 @@ fu_qmi_pdc_updater_activate_config_indication(QmiClientPdc *client,
 
 	if (error_code != 0) {
 		g_set_error(&ctx->error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
 			    "couldn't activate config: %s",
 			    qmi_protocol_error_get_string((QmiProtocolError)error_code));
 		g_main_loop_quit(ctx->mainloop);
@@ -607,8 +607,8 @@ fu_qmi_pdc_updater_set_selected_config_timeout(gpointer user_data)
 	ctx->indication_id = 0;
 
 	g_set_error_literal(&ctx->error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_TIMED_OUT,
 			    "couldn't set selected config: timed out");
 	g_main_loop_quit(ctx->mainloop);
 
@@ -636,8 +636,8 @@ fu_qmi_pdc_updater_set_selected_config_indication(QmiClientPdc *client,
 
 	if (error_code != 0) {
 		g_set_error(&ctx->error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
 			    "couldn't set selected config: %s",
 			    qmi_protocol_error_get_string((QmiProtocolError)error_code));
 		g_main_loop_quit(ctx->mainloop);

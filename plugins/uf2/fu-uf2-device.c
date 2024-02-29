@@ -34,8 +34,8 @@ fu_uf2_device_prepare_firmware(FuDevice *device,
 	if (self->family_id > 0 && fu_firmware_get_idx(firmware) > 0 &&
 	    self->family_id != fu_firmware_get_idx(firmware)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "family ID was different, expected 0x%08x and got 0x%08x",
 			    (guint)self->family_id,
 			    (guint)fu_firmware_get_idx(firmware));
@@ -95,8 +95,8 @@ fu_block_device_get_full_path(FuUf2Device *self, const gchar *filename, GError *
 	/* sanity check */
 	if (devfile == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "invalid path: no devfile");
 		return NULL;
 	}

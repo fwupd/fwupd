@@ -94,10 +94,11 @@ fu_i2c_device_open(FuDevice *device, GError **error)
 #ifdef HAVE_ERRNO_H
 			    g_io_error_from_errno(errno),
 #else
-			    G_IO_ERROR_FAILED,
+			    G_IO_ERROR_FAILED, /* nocheck */
 #endif
 			    "failed to open %s read-write",
 			    bus_path);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	io_channel = fu_io_channel_unix_new(bus_fd);

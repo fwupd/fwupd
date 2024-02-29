@@ -144,8 +144,8 @@ fu_cros_ec_usb_device_probe(FuDevice *device, GError **error)
 
 	if (self->chunk_len == 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "wMaxPacketSize isn't valid: %" G_GUINT16_FORMAT,
 			    self->chunk_len);
 		return FALSE;
@@ -189,8 +189,8 @@ fu_cros_ec_usb_device_do_xfer(FuCrosEcUsbDevice *self,
 		}
 		if (actual != outlen) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_PARTIAL_INPUT,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
 				    "only sent %" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT " bytes",
 				    actual,
 				    outlen);
@@ -213,8 +213,8 @@ fu_cros_ec_usb_device_do_xfer(FuCrosEcUsbDevice *self,
 		}
 		if (actual != inlen && !allow_less) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_PARTIAL_INPUT,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
 				    "only received %" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT " bytes",
 				    actual,
 				    inlen);
@@ -249,8 +249,8 @@ fu_cros_ec_usb_device_flush(FuDevice *device, gpointer user_data, GError **error
 				       NULL)) {
 		g_debug("flushing %" G_GSIZE_FORMAT " bytes", actual);
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
 			    "flushing %" G_GSIZE_FORMAT " bytes",
 			    actual);
 		return FALSE;
@@ -345,8 +345,8 @@ fu_cros_ec_usb_device_start_request(FuDevice *device, gpointer user_data, GError
 	/* we got something, so check for errors in response */
 	if (rxed_size < 8) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_PARTIAL_INPUT,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_READ,
 			    "unexpected response size %" G_GSIZE_FORMAT,
 			    rxed_size);
 		return FALSE;
@@ -385,8 +385,8 @@ fu_cros_ec_usb_device_setup(FuDevice *device, GError **error)
 
 	if (self->protocol_version < 5 || self->protocol_version > 6) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "unsupported protocol version %d",
 			    self->protocol_version);
 		return FALSE;
@@ -396,8 +396,8 @@ fu_cros_ec_usb_device_setup(FuDevice *device, GError **error)
 	error_code = GUINT32_FROM_BE(start_resp.rpdu.return_value);
 	if (error_code != 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
 			    "target reporting error %u",
 			    error_code);
 		return FALSE;
@@ -556,13 +556,13 @@ fu_cros_ec_usb_device_transfer_block(FuDevice *device, gpointer user_data, GErro
 	}
 	if (transfer_size == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
 				    "zero bytes received for block reply");
 		return FALSE;
 	}
 	if (reply != 0) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "error: status 0x%#x", reply);
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "error: status 0x%#x", reply);
 		return FALSE;
 	}
 
@@ -594,8 +594,8 @@ fu_cros_ec_usb_device_transfer_section(FuDevice *device,
 	data_ptr = (const guint8 *)g_bytes_get_data(img_bytes, &data_len);
 	if (data_ptr == NULL || data_len != section->size) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "image and section sizes do not match: image = %" G_GSIZE_FORMAT
 			    " bytes vs section size = %" G_GSIZE_FORMAT " bytes",
 			    data_len,

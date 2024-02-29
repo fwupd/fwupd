@@ -604,8 +604,8 @@ fu_firmware_get_bytes(FuFirmware *self, GError **error)
 	if (priv->stream != NULL) {
 		if (priv->streamsz == 0) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "stream size unknown");
 			return NULL;
 		}
@@ -1235,8 +1235,8 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 	if (tmpval != G_MAXUINT64) {
 		if (tmpval > FU_FIRMWARE_ALIGNMENT_2G) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_FOUND,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "0x%x invalid, maximum is 0x%x",
 				    (guint)tmpval,
 				    (guint)FU_FIRMWARE_ALIGNMENT_2G);
@@ -1301,8 +1301,8 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 				GType gtype = g_type_from_name(tmp);
 				if (gtype == G_TYPE_INVALID) {
 					g_set_error(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_NOT_FOUND,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_NOT_FOUND,
 						    "GType %s not registered",
 						    tmp);
 					return FALSE;
@@ -1663,8 +1663,8 @@ fu_firmware_add_image_full(FuFirmware *self, FuFirmware *img, GError **error)
 	/* check depth */
 	if (priv->depth > FU_FIRMWARE_IMAGE_DEPTH_MAX) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "images are nested too deep, limit is %u",
 			    (guint)FU_FIRMWARE_IMAGE_DEPTH_MAX);
 		return FALSE;
@@ -1690,8 +1690,8 @@ fu_firmware_add_image_full(FuFirmware *self, FuFirmware *img, GError **error)
 	/* sanity check */
 	if (priv->images_max > 0 && priv->images->len >= priv->images_max) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "too many images, limit is %u",
 			    priv->images_max);
 		return FALSE;
@@ -2427,8 +2427,8 @@ fu_firmware_new_from_gtypes(GInputStream *stream,
 	/* invalid */
 	if (gtypes->len == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_ARGUMENT,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
 				    "no GTypes specified");
 		return NULL;
 	}

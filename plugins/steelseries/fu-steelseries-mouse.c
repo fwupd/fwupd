@@ -52,8 +52,8 @@ fu_steelseries_mouse_setup(FuDevice *device, GError **error)
 	}
 	if (actual_len != 32) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "only wrote %" G_GSIZE_FORMAT "bytes",
 			    actual_len);
 		return FALSE;
@@ -72,8 +72,8 @@ fu_steelseries_mouse_setup(FuDevice *device, GError **error)
 	}
 	if (actual_len != 32) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "only read %" G_GSIZE_FORMAT "bytes",
 			    actual_len);
 		return FALSE;

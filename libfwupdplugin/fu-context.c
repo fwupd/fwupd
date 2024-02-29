@@ -239,7 +239,7 @@ fu_context_get_smbios_data(FuContext *self, guint8 structure_type, GError **erro
 	/* must be valid and non-zero length */
 	if (!fu_context_has_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO)) {
 		g_critical("cannot use SMBIOS before calling ->load_hwinfo()");
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, "no data");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no data");
 		return NULL;
 	}
 	return fu_smbios_get_data(priv->smbios, structure_type, error);
@@ -478,7 +478,7 @@ fu_context_get_hwid_replace_value(FuContext *self, const gchar *keys, GError **e
 
 	if (!fu_context_has_flag(self, FU_CONTEXT_FLAG_LOADED_HWINFO)) {
 		g_critical("cannot use HWIDs before calling ->load_hwinfo()");
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, "no data");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no data");
 		return NULL;
 	}
 	return fu_hwids_get_replace_values(priv->hwids, keys, error);
@@ -675,8 +675,8 @@ fu_context_get_plugin_names_for_udev_subsystem(FuContext *self,
 	plugin_names = g_hash_table_lookup(priv->udev_subsystems, subsystem);
 	if (plugin_names == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "no plugins registered for %s",
 			    subsystem);
 		return NULL;
@@ -1479,16 +1479,16 @@ fu_context_get_esp_volumes(FuContext *self, GError **error)
 		devices = fu_common_get_block_devices(NULL);
 		if (devices != NULL) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_FOUND,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
 					    "No ESP or BDP found");
 			return NULL;
 		}
 		base = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
 		path = g_build_filename(base, "fwupd.conf", NULL);
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "No valid 'EspLocation' specified in %s",
 			    path);
 		return NULL;

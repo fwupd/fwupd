@@ -132,14 +132,14 @@ fu_kinetic_dp_secure_device_send_kt_prop_cmd_cb(FuDevice *device,
 			status &= DPCD_KT_COMMAND_MASK;
 			if (status == (guint8)FU_KINETIC_DP_DPCD_STS_CRC_FAILURE) {
 				g_set_error_literal(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_FAILED_HANDLED,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
 						    "chunk data CRC failed: ");
 				return FALSE;
 			}
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "Invalid value in DPCD_KT_CMD_STATUS_REG: 0x%x",
 				    status);
 			return FALSE;
@@ -150,8 +150,8 @@ fu_kinetic_dp_secure_device_send_kt_prop_cmd_cb(FuDevice *device,
 
 	/* failed */
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_FAILED,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_DATA,
 		    "waiting for prop cmd, got %s",
 		    fu_kinetic_dp_dpcd_to_string(status));
 	return FALSE;
@@ -205,8 +205,8 @@ fu_kinetic_dp_secure_device_read_dpcd_reply_data_reg(FuKineticDpSecureDevice *se
 
 	if (bufsz < read_data_len) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_ARGUMENT,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "buffer size [%u] is not enough to read DPCD_ISP_REPLY_DATA_REG [%u]",
 			    (guint)bufsz,
 			    read_data_len);
@@ -239,8 +239,8 @@ fu_kinetic_dp_secure_device_write_dpcd_reply_data_reg(FuKineticDpSecureDevice *s
 
 	if (len > DPCD_SIZE_ISP_REPLY_DATA_REG) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "length bigger than DPCD_SIZE_ISP_REPLY_DATA_REG [%u]",
 			    (guint)len);
 		return FALSE;
@@ -466,22 +466,22 @@ fu_kinetic_dp_secure_device_wait_dpcd_cmd_cleared_cb(FuDevice *device,
 		 * it means that target responded with failure */
 		if (status == FU_KINETIC_DP_DPCD_STS_INVALID_IMAGE) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_FAILED_HANDLED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "invalid ISP driver");
 			return FALSE;
 		}
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "failed to execute ISP driver");
 		return FALSE;
 	}
 
 	/* failed */
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "waiting for sink to clear status");
 	return FALSE;
 }
@@ -530,8 +530,8 @@ fu_kinetic_dp_secure_device_execute_isp_drv(FuKineticDpSecureDevice *self, GErro
 	if (status != FU_KINETIC_DP_DPCD_STS_SECURE_ENABLED &&
 	    status != FU_KINETIC_DP_DPCD_STS_SECURE_DISABLED) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_TIMED_OUT,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_TIMED_OUT,
 				    "waiting for ISP driver ready failed!");
 		return FALSE;
 	}
@@ -558,14 +558,14 @@ fu_kinetic_dp_secure_device_execute_isp_drv(FuKineticDpSecureDevice *self, GErro
 	if (self->flash_size == 0) {
 		if (self->flash_id > 0) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "SPI flash not supported");
 			return FALSE;
 		}
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "SPI flash not connected");
 		return FALSE;
 	}
@@ -807,16 +807,16 @@ fu_kinetic_dp_secure_device_install_fw_images_cb(FuDevice *device,
 		if ((status & FU_KINETIC_DP_DPCD_CMD_INSTALL_IMAGES) > 0)
 			return TRUE;
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED_HANDLED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to install images");
 		return FALSE;
 	}
 
 	/* failed */
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_FAILED,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_DATA,
 		    "waiting for status, got %s",
 		    fu_kinetic_dp_dpcd_to_string(status));
 	return FALSE;
@@ -880,7 +880,7 @@ fu_kinetic_dp_secure_device_get_flash_bank_idx(FuKineticDpSecureDevice *self, GE
 	g_debug("secure aux got active flash bank 0x%x (0=BankA, 1=BankB, 2=TotalBanks)", res);
 	self->flash_bank = (FuKineticDpBank)res;
 	if (self->flash_bank == FU_KINETIC_DP_BANK_NONE) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "bank not NONE");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "bank not NONE");
 		return FALSE;
 	}
 
@@ -1015,7 +1015,7 @@ fu_kinetic_dp_secure_device_init(FuKineticDpSecureDevice *self)
 	self->isp_secure_auth_mode = TRUE;
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_KINETIC_DP_SECURE_FIRMWARE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_retry_add_recovery(FU_DEVICE(self), G_IO_ERROR, G_IO_ERROR_FAILED_HANDLED, NULL);
+	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, NULL);
 }
 
 static void

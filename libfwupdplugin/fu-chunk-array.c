@@ -74,12 +74,12 @@ fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error)
 	/* calculate offset and length */
 	offset = (gsize)idx * (gsize)self->packet_sz;
 	if (offset >= self->total_size) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "idx %u invalid", idx);
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "idx %u invalid", idx);
 		return NULL;
 	}
 	length = MIN(self->packet_sz, self->total_size - offset);
 	if (length == 0) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "idx %u zero sized", idx);
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "idx %u zero sized", idx);
 		return NULL;
 	}
 

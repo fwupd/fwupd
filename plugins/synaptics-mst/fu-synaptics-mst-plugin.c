@@ -44,7 +44,7 @@ fu_synaptics_mst_plugin_backend_device_added(FuPlugin *plugin,
 	/* open */
 	locker = fu_device_locker_new(dev, &error_local);
 	if (locker == NULL) {
-		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED) ||
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {
 			g_debug("no device found: %s", error_local->message);
 			return TRUE;

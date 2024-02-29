@@ -103,7 +103,7 @@ fu_test_redfish_ipmi_func(void)
 
 	/* create device */
 	locker = fu_device_locker_new(device, &error);
-	if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED)) {
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_PERMISSION_DENIED)) {
 		g_test_skip("permission denied for access to IPMI hardware");
 		return;
 	}

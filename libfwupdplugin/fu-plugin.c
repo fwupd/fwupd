@@ -316,8 +316,8 @@ fu_plugin_open(FuPlugin *self, const gchar *filename, GError **error)
 	priv->module = g_module_open(filename, 0);
 	if (priv->module == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to open plugin %s: %s",
 			    filename,
 			    g_module_error());
@@ -330,8 +330,8 @@ fu_plugin_open(FuPlugin *self, const gchar *filename, GError **error)
 	g_module_symbol(priv->module, "fu_plugin_init_vfuncs", (gpointer *)&init_vfuncs);
 	if (init_vfuncs == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
 			    "failed to init_vfuncs() on plugin %s",
 			    filename);
 		fu_plugin_add_flag(self, FWUPD_PLUGIN_FLAG_FAILED_OPEN);
@@ -2364,8 +2364,8 @@ fu_plugin_runner_fix_host_security_attr(FuPlugin *self, FwupdSecurityAttr *attr,
 
 	if (vfuncs->fix_host_security_attr == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "fix is not supported");
 		return FALSE;
 	}
@@ -2394,8 +2394,8 @@ fu_plugin_runner_undo_host_security_attr(FuPlugin *self, FwupdSecurityAttr *attr
 
 	if (vfuncs->undo_host_security_attr == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "undo is not supported");
 		return FALSE;
 	}
@@ -2678,7 +2678,7 @@ g_file_set_contents_full(const gchar *filename,
 	if (fd < 0) {
 		g_set_error(error,
 			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    G_IO_ERROR_FAILED, /* nocheck */
 			    "could not open %s file",
 			    filename);
 		return FALSE;
@@ -2687,7 +2687,7 @@ g_file_set_contents_full(const gchar *filename,
 	if (wrote != length) {
 		g_set_error(error,
 			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    G_IO_ERROR_FAILED, /* nocheck */
 			    "did not write %s file",
 			    filename);
 		g_close(fd, NULL);
@@ -2720,8 +2720,8 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (config == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "cannot get config value with no loaded context");
 		return FALSE;
 	}
@@ -2748,8 +2748,8 @@ fu_plugin_reset_config_values(FuPlugin *self, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (config == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "cannot reset config values with no loaded context");
 		return FALSE;
 	}

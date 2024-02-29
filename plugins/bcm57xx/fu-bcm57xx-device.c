@@ -80,8 +80,8 @@ fu_bcm57xx_device_nvram_write(FuBcm57xxDevice *self,
 	/* sanity check */
 	if (address + bufsz > fu_device_get_firmware_size_max(FU_DEVICE(self))) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "tried to read outside of EEPROM size [0x%x]",
 			    (guint)fu_device_get_firmware_size_max(FU_DEVICE(self)));
 		return FALSE;
@@ -107,7 +107,11 @@ fu_bcm57xx_device_nvram_write(FuBcm57xxDevice *self,
 	return FALSE;
 #endif
 	if (rc < 0) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "cannot write eeprom [%i]", rc);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "cannot write eeprom [%i]",
+			    rc);
 		return FALSE;
 	}
 
@@ -147,8 +151,8 @@ fu_bcm57xx_device_nvram_read(FuBcm57xxDevice *self,
 	/* sanity check */
 	if (address + bufsz > fu_device_get_firmware_size_max(FU_DEVICE(self))) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "tried to read outside of EEPROM size [0x%x]",
 			    (guint)fu_device_get_firmware_size_max(FU_DEVICE(self)));
 		return FALSE;
@@ -172,7 +176,11 @@ fu_bcm57xx_device_nvram_read(FuBcm57xxDevice *self,
 	return FALSE;
 #endif
 	if (rc < 0) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "cannot read eeprom [%i]", rc);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "cannot read eeprom [%i]",
+			    rc);
 		return FALSE;
 	}
 
@@ -230,8 +238,8 @@ fu_bcm57xx_device_nvram_check(FuBcm57xxDevice *self, GError **error)
 #endif
 	if (rc < 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot get driver information [%i]",
 			    rc);
 		return FALSE;
@@ -248,8 +256,8 @@ fu_bcm57xx_device_nvram_check(FuBcm57xxDevice *self, GError **error)
 		fu_device_set_firmware_size(FU_DEVICE(self), drvinfo.eedump_len);
 	} else if (drvinfo.eedump_len != fu_device_get_firmware_size_max(FU_DEVICE(self))) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "EEPROM size invalid, got 0x%x, expected 0x%x",
 			    drvinfo.eedump_len,
 			    (guint)fu_device_get_firmware_size_max(FU_DEVICE(self)));
@@ -554,8 +562,8 @@ fu_bcm57xx_device_open(FuDevice *device, GError **error)
 	self->ethtool_fd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (self->ethtool_fd < 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to open socket: %s",
 #ifdef HAVE_ERRNO_H
 			    g_strerror(errno));
@@ -567,8 +575,8 @@ fu_bcm57xx_device_open(FuDevice *device, GError **error)
 	return TRUE;
 #else
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "socket() not supported as sys/socket.h not available");
 	return FALSE;
 #endif

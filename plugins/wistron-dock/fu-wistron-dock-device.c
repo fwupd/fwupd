@@ -92,8 +92,8 @@ fu_wistron_dock_device_control_cb(FuDevice *device, gpointer user_data, GError *
 			return FALSE;
 		if (helper->buf[7] != FU_WISTRON_DOCK_CMD_ICP_DONE) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "not icp-done, got 0x%02x",
 				    helper->cmd[7]);
 			return FALSE;
@@ -174,8 +174,8 @@ fu_wistron_dock_device_data_write_cb(FuDevice *device, gpointer user_data, GErro
 		return FALSE;
 	if (helper->cmd[7] != FU_WISTRON_DOCK_CMD_ICP_DONE) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "not icp-done, got 0x%02x",
 			    helper->cmd[7]);
 		return FALSE;
@@ -363,8 +363,8 @@ fu_wistron_dock_device_prepare_firmware(FuDevice *device,
 	/* sanity check sizes */
 	if (fu_firmware_get_size(fw_wsig) < FU_WISTRON_DOCK_WDFL_SIG_SIZE) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "WDFL signature size invalid, got 0x%x, expected >= 0x%x",
 			    (guint)fu_firmware_get_size(fw_wsig),
 			    (guint)FU_WISTRON_DOCK_WDFL_SIG_SIZE);
@@ -372,8 +372,8 @@ fu_wistron_dock_device_prepare_firmware(FuDevice *device,
 	}
 	if (fu_firmware_get_size(fw_wdfl) != FU_WISTRON_DOCK_WDFL_DATA_SIZE) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "WDFL size invalid, got 0x%x, expected 0x%x",
 			    (guint)fu_firmware_get_size(fw_wdfl),
 			    (guint)FU_WISTRON_DOCK_WDFL_DATA_SIZE);
@@ -599,8 +599,8 @@ fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 		return FALSE;
 	if (fu_struct_wistron_dock_wdit_get_tag_id(st) != FU_WISTRON_DOCK_WDIT_TAG_ID) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "WDIT tag invalid, expected 0x%x, got 0x%x",
 			    (guint)FU_WISTRON_DOCK_WDIT_TAG_ID,
 			    fu_struct_wistron_dock_wdit_get_tag_id(st));
@@ -611,8 +611,8 @@ fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 	if (fu_struct_wistron_dock_wdit_get_vid(st) != fu_usb_device_get_vid(FU_USB_DEVICE(self)) ||
 	    fu_struct_wistron_dock_wdit_get_pid(st) != fu_usb_device_get_pid(FU_USB_DEVICE(self))) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "USB VID:PID invalid, expected %04X:%04X, got %04X:%04X",
 			    (guint)fu_usb_device_get_vid(FU_USB_DEVICE(self)),
 			    (guint)fu_usb_device_get_pid(FU_USB_DEVICE(self)),

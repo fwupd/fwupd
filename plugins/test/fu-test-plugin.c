@@ -105,8 +105,8 @@ fu_test_plugin_modify_config(FuPlugin *plugin, const gchar *key, const gchar *va
 			       NULL};
 	if (!g_strv_contains(keys, key)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "config key %s not supported",
 			    key);
 		return FALSE;

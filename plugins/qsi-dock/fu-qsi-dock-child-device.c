@@ -38,7 +38,7 @@ fu_qsi_dock_mcu_device_prepare_firmware(FuDevice *device,
 {
 	FuDevice *parent = fu_device_get_parent(device);
 	if (parent == NULL) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no parent");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no parent");
 		return NULL;
 	}
 	return fu_device_prepare_firmware(parent, stream, flags, error);
@@ -55,7 +55,7 @@ fu_qsi_dock_mcu_device_write_firmware(FuDevice *device,
 	FuQsiDockChildDevice *self = FU_QSI_DOCK_CHILD_DEVICE(device);
 	FuDevice *parent = fu_device_get_parent(device);
 	if (parent == NULL) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no parent");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no parent");
 		return FALSE;
 	}
 	return fu_qsi_dock_mcu_device_write_firmware_with_idx(FU_QSI_DOCK_MCU_DEVICE(parent),

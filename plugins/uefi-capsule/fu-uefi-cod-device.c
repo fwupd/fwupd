@@ -98,8 +98,8 @@ fu_uefi_cod_device_get_variable_idx(const gchar *name, guint *value, GError **er
 		return FALSE;
 	if (!g_str_has_prefix(str, "Capsule")) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "wrong contents, got %s",
 			    str);
 		return FALSE;
@@ -123,8 +123,7 @@ fu_uefi_cod_device_get_results(FuDevice *device, GError **error)
 		g_autoptr(GError) error_local = NULL;
 		if (fu_uefi_cod_device_get_results_for_idx(device, i, &error_local))
 			return TRUE;
-		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) &&
-		    !g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}

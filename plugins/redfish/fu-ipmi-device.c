@@ -155,7 +155,10 @@ fu_ipmi_device_lock(GObject *device, GError **error)
 	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	struct flock lock = {.l_type = F_WRLCK, .l_whence = SEEK_SET};
 	if (fcntl(fu_io_channel_unix_get_fd(io_channel), F_SETLKW, &lock) == -1) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "error locking IPMI device: %m");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "error locking IPMI device: %m");
 		return FALSE;
 	}
 	return TRUE;
@@ -169,8 +172,8 @@ fu_ipmi_device_unlock(GObject *device, GError **error)
 	struct flock lock = {.l_type = F_UNLCK};
 	if (fcntl(fu_io_channel_unix_get_fd(io_channel), F_SETLKW, &lock) == -1) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
 			    "error unlocking IPMI device: %m");
 		return FALSE;
 	}
@@ -250,8 +253,8 @@ fu_ipmi_device_errcode_to_error(guint8 errcode, GError **error)
 	/* data not found, seemingly Lenovo specific */
 	if (errcode == IPMI_INVALID_DATA_FIELD_ERR || errcode == IPMI_NOT_FOUND_ERR) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "CC error: %s [0x%02X]",
 			    fu_ipmi_device_errcode_to_string(errcode),
 			    errcode);
@@ -260,8 +263,8 @@ fu_ipmi_device_errcode_to_error(guint8 errcode, GError **error)
 
 	/* fallback */
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_FAILED,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INTERNAL,
 		    "CC error: %s [0x%02X]",
 		    fu_ipmi_device_errcode_to_string(errcode),
 		    errcode);
@@ -317,13 +320,13 @@ fu_ipmi_device_transaction_cb(FuDevice *device, gpointer user_data, GError **err
 			    1,
 			    helper->timeout_ms - (g_timer_elapsed(timer, NULL) * 1000.f));
 		if (rc < 0) {
-			g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "poll() error %m");
+			g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "poll() error %m");
 			return FALSE;
 		}
 		if (rc == 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_TIMED_OUT,
 				    "timeout waiting for response "
 				    "(netfn %d, cmd %d)",
 				    helper->netfn,
@@ -333,8 +336,8 @@ fu_ipmi_device_transaction_cb(FuDevice *device, gpointer user_data, GError **err
 
 		if (!(pollfds[0].revents & POLLIN)) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_FAILED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
 					    "unexpected status");
 			return FALSE;
 		}
@@ -356,8 +359,8 @@ fu_ipmi_device_transaction_cb(FuDevice *device, gpointer user_data, GError **err
 				seq);
 			if (g_timer_elapsed(timer, NULL) * 1000.f >= helper->timeout_ms) {
 				g_set_error_literal(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_FAILED,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_TIMED_OUT,
 						    "timed out");
 				return FALSE;
 			}
@@ -410,7 +413,7 @@ fu_ipmi_device_transaction(FuIpmiDevice *self,
 	    .resp_len = resp_len,
 	    .timeout_ms = timeout_ms,
 	};
-	fu_device_retry_add_recovery(FU_DEVICE(self), G_IO_ERROR, G_IO_ERROR_NOT_FOUND, NULL);
+	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, NULL);
 	return fu_device_retry_full(FU_DEVICE(self),
 				    fu_ipmi_device_transaction_cb,
 				    FU_IPMI_TRANSACTION_RETRY_COUNT,
@@ -434,7 +437,7 @@ fu_ipmi_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* cannot continue */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no BMC device found");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no BMC device found");
 	return FALSE;
 }
 
@@ -481,8 +484,8 @@ fu_ipmi_device_setup(FuDevice *device, GError **error)
 		self->version_ipmi = bcd;
 	} else {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to parse DEVICE_ID_CMD response (sz: %" G_GSIZE_FORMAT ")",
 			    resp_len);
 		return FALSE;
@@ -518,8 +521,8 @@ fu_ipmi_device_get_user_password(FuIpmiDevice *self, guint8 user_id, GError **er
 	}
 	if (resp_len != sizeof(resp)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to retrieve username from IPMI, got 0x%x bytes",
 			    (guint)resp_len);
 		return NULL;

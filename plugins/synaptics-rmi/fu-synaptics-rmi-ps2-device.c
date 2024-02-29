@@ -113,7 +113,7 @@ fu_synaptics_rmi_ps2_device_read_ack(FuSynapticsRmiPs2Device *self, guint8 *pbuf
 					    10,
 					    FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
 					    &error_local)) {
-			if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_TIMED_OUT)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 				g_warning("read timed out: %u", i);
 				fu_device_sleep(FU_DEVICE(self), 1); /* ms */
 				continue;
@@ -123,7 +123,7 @@ fu_synaptics_rmi_ps2_device_read_ack(FuSynapticsRmiPs2Device *self, guint8 *pbuf
 		}
 		return TRUE;
 	}
-	g_set_error(error, G_IO_ERROR, G_IO_ERROR_TIMED_OUT, "read timed out");
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "read timed out");
 	return FALSE;
 }
 
@@ -284,7 +284,7 @@ fu_synaptics_rmi_ps2_device_status_request_sequence(FuSynapticsRmiPs2Device *sel
 		break;
 	}
 	if (success == FALSE) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "failed");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed");
 		return FALSE;
 	}
 
@@ -687,8 +687,8 @@ fu_synaptics_rmi_ps2_device_read(FuSynapticsRmiDevice *rmi_device,
 			g_debug("buf->len(%u) != req_sz(%u)", buf->len, (guint)req_sz);
 			if (retries++ > 2) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_FAILED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "buffer length did not match: %u vs %u",
 					    buf->len,
 					    (guint)req_sz);
@@ -825,8 +825,8 @@ fu_synaptics_rmi_ps2_device_open(FuDevice *device, GError **error)
 		}
 		if (buf[0] != 0xAA || buf[1] != 0x00) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "failed to read 0xAA00, got 0x%02X%02X: ",
 				    buf[0],
 				    buf[1]);

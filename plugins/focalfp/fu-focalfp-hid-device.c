@@ -136,8 +136,8 @@ fu_focalfp_buffer_check_cmd_crc(const guint8 *buf, gsize bufsz, guint8 cmd, GErr
 	/* check was correct response */
 	if (buf[4] != cmd) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "got cmd 0x%02x, expected 0x%02x",
 			    buf[4],
 			    cmd);
@@ -150,8 +150,8 @@ fu_focalfp_buffer_check_cmd_crc(const guint8 *buf, gsize bufsz, guint8 cmd, GErr
 	csum_actual = fu_focaltp_buffer_generate_checksum(buf + 1, buf[3] - 1);
 	if (csum != csum_actual) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "got checksum 0x%02x, expected 0x%02x",
 			    csum,
 			    csum_actual);
@@ -339,8 +339,8 @@ fu_focalfp_hid_device_send_data(FuFocalfpHidDevice *self,
 	/* sanity check */
 	if (bufsz > REPORT_SIZE - 8) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "data length 0x%x invalid",
 			    bufsz);
 		return FALSE;
@@ -473,8 +473,8 @@ fu_focalfp_hid_device_write_firmware(FuDevice *device,
 		return FALSE;
 	if (us_ic_id != UPGRADE_ID) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "got us_ic_id 0x%02x, expected 0x%02x",
 			    us_ic_id,
 			    (guint)UPGRADE_ID);
@@ -510,8 +510,8 @@ fu_focalfp_hid_device_write_firmware(FuDevice *device,
 	if (checksum != fu_focalfp_firmware_get_checksum(FU_FOCALFP_FIRMWARE(firmware))) {
 		fu_device_sleep(device, 500);
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "device checksum invalid, got 0x%02x, expected 0x%02x",
 			    checksum,
 			    fu_focalfp_firmware_get_checksum(FU_FOCALFP_FIRMWARE(firmware)));
@@ -538,8 +538,8 @@ fu_focalfp_hid_device_reload(FuDevice *device, GError **error)
 	g_debug("id1=%x, id2=%x", idbuf[1], idbuf[0]);
 	if (idbuf[1] != 0x58 && idbuf[0] != 0x22) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "firmware id invalid, got 0x%02x:0x%02x, expected 0x%02x:0x%02x",
 			    idbuf[1],
 			    idbuf[0],
@@ -569,8 +569,8 @@ fu_focalfp_hid_device_detach_cb(FuDevice *device, gpointer user_data, GError **e
 	/* 1: upgrade mode; 2: fw mode */
 	if (uc_mode != 1) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "got uc_mode 0x%02x, expected 0x%02x",
 			    uc_mode,
 			    (guint)1);

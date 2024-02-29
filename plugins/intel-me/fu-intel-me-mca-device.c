@@ -65,8 +65,8 @@ fu_intel_me_mca_device_setup(FuDevice *device, GError **error)
 								file_ids[i],
 								0x0,
 								&error_local)) {
-			if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED) ||
-			    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
+			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA)) {
 				continue;
 			}
 			g_warning("failed to get public key using file-id 0x%x: %s",

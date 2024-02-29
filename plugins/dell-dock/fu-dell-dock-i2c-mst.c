@@ -332,13 +332,19 @@ fu_dell_dock_trigger_rc_command(FuDevice *device, GError **error)
 		return fu_dell_dock_mst_enable_remote_control(device, error);
 	/* error scenarios */
 	case 3:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "Unknown error");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "Unknown error");
 		return FALSE;
 	case 2:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "Unsupported command");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Unsupported command");
 		return FALSE;
 	case 1:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "Invalid argument");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "Invalid argument");
 		return FALSE;
 	/* success scenario */
 	case 0:
@@ -346,9 +352,9 @@ fu_dell_dock_trigger_rc_command(FuDevice *device, GError **error)
 
 	default:
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Command timed out or unknown failure: %x",
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_TIMED_OUT,
+			    "command timed out or unknown failure: 0x%x",
 			    tmp);
 		return FALSE;
 	}
@@ -541,9 +547,9 @@ fu_dell_dock_mst_checksum_bank(FuDevice *device,
 	/* bank is specified outside of payload */
 	if (attribs->start + attribs->length > length) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Payload %u is bigger than bank %u",
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "payload %u is bigger than bank %u",
 			    attribs->start + attribs->length,
 			    bank);
 		return FALSE;
@@ -848,8 +854,8 @@ fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError *
 		}
 		if (retries_cnt > retries) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "set tag invalid fail (new 0x%x; old 0x%x)",
 				    new_tag[3],
 				    crc_tag[3]);
@@ -903,7 +909,7 @@ fu_dell_dock_mst_write_bank(FuDevice *device,
 	}
 
 	/* failed after all our retries */
-	g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "Failed to write to bank %u", bank);
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed to write to bank %u", bank);
 	return FALSE;
 }
 
@@ -1010,7 +1016,7 @@ fu_dell_dock_mst_write_cayenne(FuDevice *device,
 	}
 	/* failed after all our retries */
 	if (!checksum) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "Failed to write to bank");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed to write to bank");
 		return FALSE;
 	}
 	/* activate the FW */
@@ -1128,7 +1134,10 @@ fu_dell_dock_mst_set_quirk_kv(FuDevice *device,
 	}
 
 	/* failed */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
 	return FALSE;
 }
 

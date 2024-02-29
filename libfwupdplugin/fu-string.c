@@ -38,8 +38,8 @@ fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError *
 	/* sanity check */
 	if (str == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "cannot parse NULL");
 		return FALSE;
 	}
@@ -53,15 +53,15 @@ fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError *
 	/* convert */
 	value_tmp = g_ascii_strtoull(str, &endptr, base);
 	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "cannot parse %s", str);
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "cannot parse %s", str);
 		return FALSE;
 	}
 
 	/* overflow check */
 	if (value_tmp == G_MAXUINT64) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "cannot parse %s as caused overflow",
 			    str);
 		return FALSE;
@@ -70,8 +70,8 @@ fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError *
 	/* range check */
 	if (value_tmp < min) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "value %" G_GUINT64_FORMAT " was below minimum %" G_GUINT64_FORMAT,
 			    value_tmp,
 			    min);
@@ -79,8 +79,8 @@ fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError *
 	}
 	if (value_tmp > max) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "value %" G_GUINT64_FORMAT " was above maximum %" G_GUINT64_FORMAT,
 			    value_tmp,
 			    max);
@@ -118,8 +118,8 @@ fu_strtoll(const gchar *str, gint64 *value, gint64 min, gint64 max, GError **err
 	/* sanity check */
 	if (str == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "cannot parse NULL");
 		return FALSE;
 	}
@@ -133,15 +133,15 @@ fu_strtoll(const gchar *str, gint64 *value, gint64 min, gint64 max, GError **err
 	/* convert */
 	value_tmp = g_ascii_strtoll(str, &endptr, base);
 	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "cannot parse %s", str);
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "cannot parse %s", str);
 		return FALSE;
 	}
 
 	/* overflow check */
 	if (value_tmp == G_MAXINT64) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "cannot parse %s as caused overflow",
 			    str);
 		return FALSE;
@@ -150,8 +150,8 @@ fu_strtoll(const gchar *str, gint64 *value, gint64 min, gint64 max, GError **err
 	/* range check */
 	if (value_tmp < min) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "value %" G_GINT64_FORMAT " was below minimum %" G_GINT64_FORMAT,
 			    value_tmp,
 			    min);
@@ -159,8 +159,8 @@ fu_strtoll(const gchar *str, gint64 *value, gint64 min, gint64 max, GError **err
 	}
 	if (value_tmp > max) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "value %" G_GINT64_FORMAT " was above maximum %" G_GINT64_FORMAT,
 			    value_tmp,
 			    max);
@@ -191,8 +191,8 @@ fu_strtobool(const gchar *str, gboolean *value, GError **error)
 	/* sanity check */
 	if (str == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "cannot parse NULL");
 		return FALSE;
 	}
@@ -211,8 +211,8 @@ fu_strtobool(const gchar *str, gboolean *value, GError **error)
 
 	/* invalid */
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_INVALID_DATA,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_DATA,
 		    "cannot parse %s as boolean, expected true|false",
 		    str);
 	return FALSE;
@@ -708,8 +708,8 @@ fu_utf16_to_utf8_byte_array(GByteArray *array, FuEndianType endian, GError **err
 
 	if (array->len % 2 != 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid UTF-16 buffer length");
 		return NULL;
 	}

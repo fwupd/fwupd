@@ -61,8 +61,8 @@ fu_hailuck_tp_device_cmd_cb(FuDevice *device, gpointer user_data, GError **error
 		success_tmp = req->type - 0x10;
 	if (buf[0] != FU_HAILUCK_REPORT_ID_SHORT || buf[1] != success_tmp) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "report mismatch for type=0x%02x[%s]: "
 			    "expected=0x%02x, received=0x%02x",
 			    req->type,
@@ -140,8 +140,8 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 		fu_byte_array_append_uint16(buf, 0xCCCC, G_LITTLE_ENDIAN);
 		if (buf->len != block_size + 16) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "packet mismatch: len=0x%04x, expected=0x%04x",
 				    buf->len,
 				    block_size + 16);

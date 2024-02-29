@@ -6057,7 +6057,7 @@ fu_remote_auth_func(void)
 					  fwupd_remote_get_filename_cache_sig(remote),
 					  &error);
 	if (!ret) {
-		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_PARTIAL_INPUT)) {
+		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_READ)) {
 			g_test_skip("no jcat-tool, so skipping test");
 			return;
 		}

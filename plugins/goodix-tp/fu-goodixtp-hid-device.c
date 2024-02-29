@@ -94,8 +94,8 @@ fu_goodixtp_hid_device_get_report(FuGoodixtpHidDevice *self,
 	}
 	if (rcv_buf[0] != REPORT_ID) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "rcv_buf[0]:%02x != 0x0E",
 			    rcv_buf[0]);
 		return FALSE;
@@ -106,8 +106,8 @@ fu_goodixtp_hid_device_get_report(FuGoodixtpHidDevice *self,
 	return TRUE;
 #else
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "<linux/hidraw.h> not available");
 	return FALSE;
 #endif
@@ -132,8 +132,8 @@ fu_goodixtp_hid_device_set_report(FuGoodixtpHidDevice *self,
 	return TRUE;
 #else
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "<linux/hidraw.h> not available");
 	return FALSE;
 #endif

@@ -85,7 +85,10 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 		if (vid == helper->vid && pid == helper->pid)
 			helper->device = fu_redfish_network_device_new(object_path);
 #else
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no UDev support");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no UDev support");
 		return FALSE;
 #endif
 	}

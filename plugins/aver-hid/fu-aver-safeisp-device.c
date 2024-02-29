@@ -177,8 +177,8 @@ fu_aver_safeisp_device_upload(FuAverSafeispDevice *self,
 			    FU_AVER_SAFEISP_CUSTOM_CMD_UPLOAD_TO_M12MO);
 		} else {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_ARGUMENT,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid argument %u",
 				    partition);
 			return FALSE;
@@ -301,8 +301,8 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 	cx3_fw_buf = g_bytes_get_data(cx3_fw, &cx3_fw_size);
 	if (cx3_fw_size > 256 * 1024) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "cx3 file size is invalid: 0x%x",
 			    (guint)cx3_fw_size);
 
@@ -315,8 +315,8 @@ fu_aver_safeisp_device_write_firmware(FuDevice *device,
 	m12_fw_buf = g_bytes_get_data(m12_fw, &m12_fw_size);
 	if (m12_fw_size > 3 * 1024 * 1024) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "m12 file size is invalid: 0x%x",
 			    (guint)m12_fw_size);
 		return FALSE;

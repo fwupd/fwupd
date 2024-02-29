@@ -100,8 +100,8 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 	}
 	if (total_length != actual_length) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "expected 0x%x bytes from vendor code 0x%02x, but got 0x%x",
 			    (guint)total_length,
 			    vendor_code,
@@ -209,16 +209,16 @@ fu_usb_device_ds20_parse(FuFirmware *firmware,
 		/* not valid */
 		if (dsinfo->platform_ver == 0x0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "invalid platform version 0x%08x",
 				    dsinfo->platform_ver);
 			return FALSE;
 		}
 		if (dsinfo->platform_ver < priv->version_lowest) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "invalid platform version 0x%08x, expected >= 0x%08x",
 				    dsinfo->platform_ver,
 				    priv->version_lowest);
@@ -234,7 +234,10 @@ fu_usb_device_ds20_parse(FuFirmware *firmware,
 	}
 
 	/* failed */
-	g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no supported platform version");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no supported platform version");
 	return FALSE;
 }
 

@@ -37,8 +37,8 @@ fu_engine_config_report_from_flags(FwupdReport *report, const gchar *flags_str, 
 		FwupdReportFlags flag = fwupd_report_flag_from_string(flags_strv[i]);
 		if (flag == FWUPD_REPORT_FLAG_UNKNOWN) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "report flag '%s' unknown",
 				    flags_strv[i]);
 			return FALSE;
@@ -59,8 +59,8 @@ fu_engine_config_report_from_spec(FuEngineConfig *self, const gchar *report_spec
 		g_auto(GStrv) kv = g_strsplit(parts[i], "=", 2);
 		if (g_strv_length(kv) != 2) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "failed to parse report specifier key=value %s",
 				    parts[i]);
 			return NULL;
@@ -93,8 +93,8 @@ fu_engine_config_report_from_spec(FuEngineConfig *self, const gchar *report_spec
 				return NULL;
 		} else {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "failed to parse report specifier key %s",
 				    kv[0]);
 			return NULL;

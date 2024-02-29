@@ -60,8 +60,8 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 	num_of_entries = fu_struct_ifwi_fpt_get_num_of_entries(st_hdr);
 	if (num_of_entries > FU_IFWI_FPT_MAX_ENTRIES) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid FPT number of entries %u",
 			    num_of_entries);
 		return FALSE;
@@ -69,8 +69,8 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 	if (fu_struct_ifwi_fpt_get_header_version(st_hdr) <
 	    FU_STRUCT_IFWI_FPT_DEFAULT_HEADER_VERSION) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid FPT header version: 0x%x",
 			    fu_struct_ifwi_fpt_get_header_version(st_hdr));
 		return FALSE;

@@ -76,8 +76,8 @@ fu_wacom_device_check_mpu(FuWacomDevice *self, GError **error)
 
 	/* unsupported */
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_FAILED,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "MPU is not W9013 or W9021: 0x%x",
 		    rsp.resp);
 	return FALSE;
@@ -142,8 +142,8 @@ fu_wacom_device_check_mode(FuWacomDevice *self, GError **error)
 	}
 	if (rsp.resp != 0x06) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "check mode failed, mode=0x%02x",
 			    rsp.resp);
 		return FALSE;
@@ -192,8 +192,8 @@ fu_wacom_device_write_firmware(FuDevice *device,
 	/* check start address and size */
 	if (fu_firmware_get_addr(firmware) != priv->flash_base_addr) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "base addr invalid: 0x%05x",
 			    (guint)fu_firmware_get_addr(firmware));
 		return FALSE;
@@ -203,8 +203,8 @@ fu_wacom_device_write_firmware(FuDevice *device,
 		return FALSE;
 	if (g_bytes_get_size(fw) > priv->flash_size) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "size is invalid: 0x%05x",
 			    (guint)g_bytes_get_size(fw));
 		return FALSE;
@@ -312,7 +312,10 @@ fu_wacom_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *va
 		priv->flash_size = tmp;
 		return TRUE;
 	}
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
 	return FALSE;
 }
 

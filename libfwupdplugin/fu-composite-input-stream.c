@@ -146,8 +146,8 @@ fu_composite_input_stream_get_item_for_offset(FuCompositeInputStream *self,
 			return item;
 	}
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_INVALID_DATA,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_DATA,
 		    "offset is 0x%x out of range",
 		    (guint)offset);
 	return NULL;
@@ -192,8 +192,8 @@ fu_composite_input_stream_truncate(GSeekable *seekable,
 				   GError **error)
 {
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot truncate FuCompositeInputStream");
 	return FALSE;
 }

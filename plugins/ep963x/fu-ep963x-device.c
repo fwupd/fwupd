@@ -220,7 +220,7 @@ fu_ep963x_device_wait_cb(FuDevice *device, gpointer user_data, GError **error)
 		return FALSE;
 	}
 	if (bufhw[2] != FU_EP963_USB_STATE_READY) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BUSY, "hardware is not ready");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "hardware is not ready");
 		return FALSE;
 	}
 	return TRUE;

@@ -186,8 +186,8 @@ fu_logitech_tap_hdmi_device_ait_initiate_update(FuLogitechTapHdmiDevice *self, G
 		return FALSE;
 	if (data_len > XU_INPUT_DATA_LEN) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "initiate query packet was too large at 0x%x bytes: ",
 			    data_len);
 		return FALSE;
@@ -203,8 +203,8 @@ fu_logitech_tap_hdmi_device_ait_initiate_update(FuLogitechTapHdmiDevice *self, G
 		return FALSE;
 	if (mmp_get_data[0] != kLogiDefaultAitSuccessValue) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "failed to initialize AIT update, invalid result data: 0x%x",
 			    mmp_get_data[0]);
 		return FALSE;
@@ -260,8 +260,8 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self, G
 			break;
 		} else if (mmp_get_data[0] == kLogiDefaultAitFailureValue) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "failed to finalize image burning, invalid result data: 0x%x",
 				    mmp_get_data[0]);
 			return FALSE;
@@ -269,8 +269,8 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self, G
 		if (duration_ms > kLogiDefaultAitFinalizeMaxPollingDurationMs) {
 			/* if device never returns 0x82 or 0x00, bail out */
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "failed to finalize image burning, duration_ms: %u",
 				    duration_ms);
 			return FALSE;
@@ -400,8 +400,8 @@ fu_logitech_tap_hdmi_device_set_version(FuLogitechTapHdmiDevice *self, GError **
 		return FALSE;
 	if (bufsz > XU_INPUT_DATA_LEN) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "version query packet was too large at 0x%x bytes: ",
 			    bufsz);
 		return FALSE;

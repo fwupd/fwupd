@@ -156,13 +156,16 @@ fu_efi_lz77_decompressor_make_huffman_table(FuEfiLz77DecompressHelper *helper,
 
 	/* the maximum mapping table width supported by this internal working function is 16 */
 	if (mapping_table_bits >= (sizeof(count) / sizeof(guint16))) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "bad table");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "bad table");
 		return FALSE;
 	}
 
 	for (index = 0; index < number_of_symbols; index++) {
 		if (code_length_array[index] > 16) {
-			g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "bad table");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "bad table");
 			return FALSE;
 		}
 		count[code_length_array[index]]++;
@@ -176,7 +179,7 @@ fu_efi_lz77_decompressor_make_huffman_table(FuEfiLz77DecompressHelper *helper,
 
 	if (start[17] != 0) {
 		/*(1U << 16)*/
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "bad table");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "bad table");
 		return FALSE;
 	}
 
@@ -217,8 +220,8 @@ fu_efi_lz77_decompressor_make_huffman_table(FuEfiLz77DecompressHelper *helper,
 			for (index = start[len]; index < next_code; index++) {
 				if (index >= max_table_length) {
 					g_set_error_literal(error,
-							    G_IO_ERROR,
-							    G_IO_ERROR_FAILED,
+							    FWUPD_ERROR,
+							    FWUPD_ERROR_INVALID_DATA,
 							    "bad table");
 					return FALSE;
 				}
@@ -305,7 +308,7 @@ fu_efi_lz77_decompressor_read_pt_len(FuEfiLz77DecompressHelper *helper,
 
 	/* fail if number or number_of_symbols is greater than size of pt_len */
 	if ((number > sizeof(helper->pt_len)) || (number_of_symbols > sizeof(helper->pt_len))) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "bad table");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "bad table");
 		return FALSE;
 	}
 	if (number == 0) {
@@ -516,8 +519,8 @@ fu_efi_lz77_decompressor_internal(FuEfiLz77DecompressHelper *helper,
 		break;
 	default:
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "unknown version 0x%x",
 			    version);
 		return FALSE;
@@ -553,15 +556,15 @@ fu_efi_lz77_decompressor_internal(FuEfiLz77DecompressHelper *helper,
 			while ((gint16)(bytes_remaining) >= 0) {
 				if (dst_offset >= helper->dst->len) {
 					g_set_error_literal(error,
-							    G_IO_ERROR,
-							    G_IO_ERROR_FAILED,
+							    FWUPD_ERROR,
+							    FWUPD_ERROR_INVALID_DATA,
 							    "bad pointer offset");
 					return FALSE;
 				}
 				if (data_offset >= helper->dst->len) {
 					g_set_error_literal(error,
-							    G_IO_ERROR,
-							    G_IO_ERROR_FAILED,
+							    FWUPD_ERROR,
+							    FWUPD_ERROR_INVALID_DATA,
 							    "bad table");
 					return FALSE;
 				}
@@ -602,16 +605,16 @@ fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
 	src_bufsz = fu_struct_efi_lz77_decompressor_header_get_src_size(st);
 	if (streamsz - offset < src_bufsz + st->len) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "source buffer is truncated");
 		return FALSE;
 	}
 	dst_bufsz = fu_struct_efi_lz77_decompressor_header_get_dst_size(st);
 	if (dst_bufsz == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "destination size is zero");
 		return FALSE;
 	}
@@ -619,8 +622,8 @@ fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
 		g_autofree gchar *sz_val = g_format_size(dst_bufsz);
 		g_autofree gchar *sz_max = g_format_size(fu_firmware_get_size_max(firmware));
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "destination size is too large (%s, limit %s)",
 			    sz_val,
 			    sz_max);

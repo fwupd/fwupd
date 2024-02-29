@@ -768,8 +768,8 @@ fu_device_retry_full(FuDevice *self,
 		/* sanity check */
 		if (error_local == NULL) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "exec failed but no error set!");
 			return FALSE;
 		}
@@ -1761,8 +1761,8 @@ fu_device_add_child_by_kv(FuDevice *self, const gchar *str, GError **error)
 		GType devtype = g_type_from_name(split[0]);
 		if (devtype == 0) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_FOUND,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
 					    "no GType registered");
 			return FALSE;
 		}
@@ -1771,8 +1771,8 @@ fu_device_add_child_by_kv(FuDevice *self, const gchar *str, GError **error)
 
 	/* more than one '|' */
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "unable to add parse child section");
 	return FALSE;
 }
@@ -1788,8 +1788,8 @@ fu_device_set_quirk_inhibit_section(FuDevice *self, const gchar *value, GError *
 	sections = g_strsplit(value, ":", -1);
 	if (g_strv_length(sections) != 2) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "quirk key not supported, expected k1:v1[,k2:v2][,k3:]");
 		return FALSE;
 	}
@@ -1989,8 +1989,8 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		priv->specialized_gtype = g_type_from_name(value);
 		if (priv->specialized_gtype == G_TYPE_INVALID) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "unknown GType name %s",
 				    value);
 			return FALSE;
@@ -2007,8 +2007,8 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		priv->firmware_gtype = g_type_from_name(value);
 		if (priv->firmware_gtype == G_TYPE_INVALID) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "unknown GType name %s",
 				    value);
 			return FALSE;
@@ -2029,7 +2029,10 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		return device_class->set_quirk_kv(self, key, value, error);
 
 	/* failed */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
 	return FALSE;
 }
 
@@ -2108,9 +2111,8 @@ fu_device_quirks_iter_cb(FuContext *ctx, const gchar *key, const gchar *value, g
 	FuDevice *self = FU_DEVICE(user_data);
 	g_autoptr(GError) error = NULL;
 	if (!fu_device_set_quirk_kv(self, key, value, &error)) {
-		if (!g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+		if (!g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 			g_warning("failed to set quirk key %s=%s: %s", key, value, error->message);
-		}
 	}
 }
 
@@ -3269,7 +3271,11 @@ fu_device_ensure_id(FuDevice *self, GError **error)
 	/* nothing we can do! */
 	if (priv->physical_id == NULL) {
 		g_autofree gchar *tmp = fu_device_to_string(self);
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "cannot ensure ID: %s", tmp);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "cannot ensure ID: %s",
+			    tmp);
 		return FALSE;
 	}
 
@@ -5783,8 +5789,8 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progre
 	if (fwupd_request_has_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE) &&
 	    !fu_device_has_request_flag(self, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "request %s emitted but device %s [%s] does not set "
 			    "FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE",
 			    fwupd_request_get_id(request),
@@ -5795,8 +5801,8 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progre
 	if (!fwupd_request_has_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE) &&
 	    !fu_device_has_request_flag(self, FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "request %s is not a GENERIC_MESSAGE and device %s [%s] does not set "
 			    "FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE",
 			    fwupd_request_get_id(request),
@@ -5809,22 +5815,22 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progre
 	/* sanity check */
 	if (fwupd_request_get_kind(request) == FWUPD_REQUEST_KIND_UNKNOWN) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "a request must have an assigned kind");
 		return FALSE;
 	}
 	if (fwupd_request_get_id(request) == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "a request must have an assigned ID");
 		return FALSE;
 	}
 	if (fwupd_request_get_kind(request) >= FWUPD_REQUEST_KIND_LAST) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "invalid request kind");
 		return FALSE;
 	}
@@ -5832,8 +5838,8 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progre
 	/* already cancelled */
 	if (progress != NULL && fu_progress_has_flag(progress, FU_PROGRESS_FLAG_NO_SENDER)) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_CANCELLED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no sender, and so cannot process request");
 		return FALSE;
 	}
@@ -5862,7 +5868,7 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progre
 		g_debug("using fallback progress");
 		fu_progress_set_status(priv->progress, FWUPD_STATUS_WAITING_FOR_USER);
 	} else {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no progress");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no progress");
 		return FALSE;
 	}
 	g_signal_emit(self, signals[SIGNAL_REQUEST], 0, request);
@@ -6117,8 +6123,8 @@ fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsyst
 			value = fu_device_get_instance_str(priv->proxy, key);
 		if (value == NULL) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "no value for %s",
 				    key);
 			ret = FALSE;
@@ -6177,8 +6183,8 @@ fu_device_build_instance_id_full(FuDevice *self,
 		value = g_hash_table_lookup(priv->instance_hash, key);
 		if (value == NULL) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "no value for %s",
 				    key);
 			ret = FALSE;

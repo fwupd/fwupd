@@ -144,8 +144,8 @@ fu_acpi_table_parse(FuFirmware *firmware,
 		return FALSE;
 	if (length > streamsz || length < st->len) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "table length not valid: got 0x%x but expected 0x%x",
 			    (guint)streamsz,
 			    (guint)length);

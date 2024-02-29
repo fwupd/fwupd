@@ -62,8 +62,8 @@ nitrokey_execute_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 	memcpy(&res, buf, sizeof(buf));
 	if (GUINT32_FROM_LE(res.last_command_crc) != crc_tmp) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "got response CRC %x, expected %x",
 			    GUINT32_FROM_LE(res.last_command_crc),
 			    crc_tmp);
@@ -74,8 +74,8 @@ nitrokey_execute_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 	crc_tmp = fu_nitrokey_perform_crc32(buf, sizeof(res) - 4);
 	if (GUINT32_FROM_LE(res.crc) != crc_tmp) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "got packet CRC %x, expected %x",
 			    GUINT32_FROM_LE(res.crc),
 			    crc_tmp);

@@ -188,40 +188,49 @@ fu_synaptics_cape_device_rc_set_error(const FuCapCmd *rsp, GError **error)
 
 	switch (rsp->data_len) {
 	case FU_SYNAPTICS_CAPE_MODULE_RC_GENERIC_FAILURE:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BUSY, "generic failure");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "generic failure");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_ALREADY_EXISTS:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BUSY, "already exists");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "already exists");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_NULL_APP_POINTER:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BUSY, "null app pointer");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "null app pointer");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_NULL_MODULE_POINTER:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BUSY, "null module pointer");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "null module pointer");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_NULL_POINTER:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BUSY, "null pointer");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "null pointer");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_BAD_APP_ID:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "bad app id");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "bad app id");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_MODULE_TYPE_HAS_NO_API:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BUSY, "has no api");
+		g_set_error_literal(error, G_IO_ERROR, FWUPD_ERROR_INTERNAL, "has no api");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_BAD_MAGIC_NUMBER:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "bad magic number");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "bad magic number");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_CMD_MODE_UNSUPPORTED:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "mode unsupported");
 		break;
 	case FU_SYNAPTICS_CAPE_ERROR_EAGAIN:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_TIMED_OUT, "query timeout");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "query timeout");
 		break;
 	case FU_SYNAPTICS_CAPE_ERROR_SFU_FAIL:
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "command failed");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "command failed");
 		break;
 	case FU_SYNAPTICS_CAPE_ERROR_SFU_WRITE_FAIL:
 		g_set_error_literal(error,
@@ -237,8 +246,8 @@ fu_synaptics_cape_device_rc_set_error(const FuCapCmd *rsp, GError **error)
 		break;
 	case FU_SYNAPTICS_CAPE_ERROR_SFU_CRC_ERROR:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "firmware data has been corrupted");
 		break;
 	case FU_SYNAPTICS_CAPE_ERROR_SFU_USB_ID_NOT_MATCH:
@@ -255,32 +264,32 @@ fu_synaptics_cape_device_rc_set_error(const FuCapCmd *rsp, GError **error)
 		break;
 	case FU_SYNAPTICS_CAPE_ERROR_SFU_HEADER_CORRUPTION:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "firmware header data has been corrupted");
 		break;
 	case FU_SYNAPTICS_CAPE_ERROR_SFU_IMAGE_CORRUPTION:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "firmware payload data has been corrupted");
 		break;
 	case FU_SYNAPTICS_CAPE_ERROR_SFU_ALREADY_ACTIVE:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "failed to active new firmward");
 		break;
 	case FU_SYNAPTICS_CAPE_ERROR_SFU_NOT_READY:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_BUSY,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_BUSY,
 				    "firmware update is not ready");
 		break;
 	case FU_SYNAPTICS_CAPE_ERROR_SFU_SIGN_TRANSFER_CORRUPTION:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "signature data has been corrupted");
 		break;
 	case FU_SYNAPTICS_CAPE_ERROR_SFU_DIGITAL_SIGNATURE_VERFIICATION_FAILED:
@@ -291,12 +300,16 @@ fu_synaptics_cape_device_rc_set_error(const FuCapCmd *rsp, GError **error)
 		break;
 	case FU_SYNAPTICS_CAPE_ERROR_SFU_TASK_NOT_RUNING:
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "firmware update task is not running");
 		break;
 	default:
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "unknown error %d", rsp->data_len);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "unknown error %d",
+			    rsp->data_len);
 	}
 
 	/* success */

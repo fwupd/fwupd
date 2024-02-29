@@ -280,8 +280,8 @@ fu_bcm57xx_recovery_device_nvram_acquire_lock(FuBcm57xxRecoveryDevice *self, GEr
 
 	/* timed out */
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_TIMED_OUT,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_TIMED_OUT,
 			    "timed out trying to acquire lock #1");
 	return FALSE;
 }
@@ -318,7 +318,7 @@ fu_bcm57xx_recovery_device_nvram_wait_done(FuBcm57xxRecoveryDevice *self, GError
 	} while (TRUE);
 
 	/* timed out */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_TIMED_OUT, "timed out");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "timed out");
 	return FALSE;
 }
 
@@ -742,8 +742,8 @@ fu_bcm57xx_recovery_device_open(FuDevice *device, GError **error)
 	/* this can't work */
 	if (RUNNING_ON_VALGRIND) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "cannot mmap'ing BARs when using valgrind");
 		return FALSE;
 	}
@@ -763,16 +763,16 @@ fu_bcm57xx_recovery_device_open(FuDevice *device, GError **error)
 		memfd = open(fn, O_RDWR | O_SYNC);
 		if (memfd < 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_FOUND,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "error opening %s",
 				    fn);
 			return FALSE;
 		}
 		if (fstat(memfd, &st) < 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "could not stat %s",
 				    fn);
 			close(memfd);
@@ -787,8 +787,8 @@ fu_bcm57xx_recovery_device_open(FuDevice *device, GError **error)
 		close(memfd);
 		if (self->bar[i].buf == MAP_FAILED) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "could not mmap %s: %s",
 				    fn,
 				    g_strerror(errno));
@@ -800,8 +800,8 @@ fu_bcm57xx_recovery_device_open(FuDevice *device, GError **error)
 	return TRUE;
 #else
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "mmap() not supported as sys/mman.h not available");
 	return FALSE;
 #endif
@@ -827,8 +827,8 @@ fu_bcm57xx_recovery_device_close(FuDevice *device, GError **error)
 	return TRUE;
 #else
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "munmap() not supported as sys/mman.h not available");
 	return FALSE;
 #endif

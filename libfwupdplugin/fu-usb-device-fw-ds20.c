@@ -46,8 +46,8 @@ fu_usb_device_fw_ds20_parse(FuUsbDeviceDs20 *self,
 	buf = g_bytes_get_data(blob, &bufsz);
 	if (g_strstr_len((const gchar *)buf, bufsz, "\r") != NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "Windows line endings are not supported");
 		return FALSE;
 	}
@@ -66,8 +66,8 @@ fu_usb_device_fw_ds20_parse(FuUsbDeviceDs20 *self,
 
 	if (!g_utf8_validate((const gchar *)buf, (gssize)bufsz_safe, NULL)) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "DS20 descriptor is not valid UTF-8");
 		return FALSE;
 	}
@@ -91,8 +91,8 @@ fu_usb_device_fw_ds20_parse(FuUsbDeviceDs20 *self,
 		kv = g_strsplit(lines[i], "=", 2);
 		if (g_strv_length(kv) < 2) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "expected key=value for '%s'",
 				    lines[i]);
 			return FALSE;

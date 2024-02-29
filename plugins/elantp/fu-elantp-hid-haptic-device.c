@@ -186,11 +186,11 @@ fu_elantp_hid_haptic_device_ensure_eeprom_iap_ctrl(FuDevice *parent,
 	self->iap_ctrl = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	if ((self->iap_ctrl & 0x800) != 0x800) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_PARTIAL_INPUT, "bit11 fail");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "bit11 fail");
 		return FALSE;
 	}
 	if ((self->iap_ctrl & 0x1000) == 0x1000) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "bit12 fail, resend");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "bit12 fail, resend");
 		return FALSE;
 	}
 
@@ -215,8 +215,8 @@ fu_elantp_hid_haptic_device_get_haptic_driver_ic(FuDevice *parent,
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (value == 0xFFFF || value == ETP_CMD_I2C_FORCE_TYPE_ENABLE) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to read haptic enable cmd");
 		return FALSE;
 	}
@@ -224,8 +224,8 @@ fu_elantp_hid_haptic_device_get_haptic_driver_ic(FuDevice *parent,
 	if ((buf[0] & ETP_FW_FORCE_TYPE_ENABLE_BIT) == 0 ||
 	    (buf[0] & ETP_FW_EEPROM_ENABLE_BIT) == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "eeprom enable bit unset");
 		return FALSE;
 	}
@@ -362,8 +362,8 @@ fu_elantp_hid_haptic_device_write_checksum_cb(FuDevice *parent, gpointer user_da
 
 	if ((value & 0xFFFF) != ETP_CMD_I2C_EEPROM_WRITE_INFORMATION) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
 			    "failed to set haptic info (0x%04x): ",
 			    value);
 		return FALSE;
@@ -405,8 +405,8 @@ fu_elantp_hid_haptic_device_write_checksum_cb(FuDevice *parent, gpointer user_da
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if ((value & 0xFFFF) != helper->checksum) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "eeprom checksum failed 0x%04x != 0x%04x : ",
 			    value,
 			    helper->checksum);
@@ -442,7 +442,11 @@ fu_elantp_hid_haptic_device_wait_calc_checksum_cb(FuDevice *parent,
 	}
 	ctrl = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if ((ctrl & 0x20) == 0x20) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "ctrl failed 0x%04x", ctrl);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "ctrl failed 0x%04x",
+			    ctrl);
 		return FALSE;
 	}
 
@@ -634,8 +638,8 @@ fu_elantp_hid_haptic_device_prepare_firmware(FuDevice *device,
 	driver_ic = fu_elantp_haptic_firmware_get_driver_ic(FU_ELANTP_HAPTIC_FIRMWARE(firmware));
 	if (driver_ic != self->driver_ic) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "driver IC 0x%x != 0x%x",
 			    (guint)driver_ic,
 			    (guint)self->driver_ic);
@@ -899,16 +903,16 @@ fu_elantp_hid_haptic_device_detach(FuDevice *device, FuProgress *progress, GErro
 	/* haptic EEPROM IAP process runs in the TP main code */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "in touchpad bootloader mode");
 		return FALSE;
 	}
 
 	if (self->driver_ic != 0x2 || self->iap_ver != 0x1) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "no support for EEPROM IAP 0x%x 0x%x: ",
 			    (guint)self->driver_ic,
 			    (guint)self->iap_ver);
@@ -1092,7 +1096,10 @@ fu_elantp_hid_haptic_device_set_quirk_kv(FuDevice *device,
 		self->iap_password = (guint16)tmp;
 		return TRUE;
 	}
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
 	return FALSE;
 }
 

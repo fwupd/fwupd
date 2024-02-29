@@ -752,24 +752,24 @@ fwupd_guid_from_string(const gchar *guidstr,
 	/* split into sections */
 	if (strlen(guidstr) != 36) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "GUID is not valid format");
 		return FALSE;
 	}
 	split = g_strsplit(guidstr, "-", 5);
 	if (g_strv_length(split) != 5) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "GUID is not valid format, no dashes");
 		return FALSE;
 	}
 	if (strlen(split[0]) != 8 && strlen(split[1]) != 4 && strlen(split[2]) != 4 &&
 	    strlen(split[3]) != 4 && strlen(split[4]) != 12) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "GUID is not valid format, not GUID");
 		return FALSE;
 	}

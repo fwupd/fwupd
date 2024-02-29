@@ -54,8 +54,8 @@ fu_cfu_payload_parse(FuFirmware *firmware,
 		chunk_size = fu_struct_cfu_payload_get_size(st);
 		if (chunk_size == 0) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "payload size was invalid");
 			return FALSE;
 		}

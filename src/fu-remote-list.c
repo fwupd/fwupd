@@ -214,8 +214,8 @@ fu_remote_list_cleanup_remote(FwupdRemote *remote, GError **error)
 			g_info("deleting obsolete %s", fn);
 			if (g_unlink(fn) == -1) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_FAILED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
 					    "failed to delete obsolete %s",
 					    fn);
 				return FALSE;

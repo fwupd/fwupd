@@ -34,11 +34,12 @@ fu_bios_setting_write_value(FwupdBiosSetting *self, const gchar *value, GError *
 #ifdef HAVE_ERRNO_H
 			    g_io_error_from_errno(errno),
 #else
-			    G_IO_ERROR_FAILED,
+			    G_IO_ERROR_FAILED, /* nocheck */
 #endif
 			    "could not open %s: %s",
 			    fn,
 			    g_strerror(errno));
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	io = fu_io_channel_unix_new(fd);

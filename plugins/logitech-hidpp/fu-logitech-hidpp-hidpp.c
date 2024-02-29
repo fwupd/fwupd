@@ -121,8 +121,8 @@ fu_logitech_hidpp_receive(FuIOChannel *io_channel,
 	fu_dump_raw(G_LOG_DOMAIN, "device->host", (guint8 *)msg, read_size);
 	if (read_size < fu_logitech_hidpp_msg_get_payload_length(msg)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "message length too small, "
 			    "got %" G_GSIZE_FORMAT " expected %" G_GSIZE_FORMAT,
 			    read_size,
@@ -219,8 +219,8 @@ fu_logitech_hidpp_transfer(FuIOChannel *io_channel, FuLogitechHidppHidppMsg *msg
 		/* hardware not responding */
 		if (ignore_cnt++ > 10) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "too many messages to ignore");
 			return FALSE;
 		}

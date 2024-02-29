@@ -57,8 +57,8 @@ fu_steelseries_device_cmd(FuSteelseriesDevice *self,
 	}
 	if (actual_len != datasz) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "only wrote %" G_GSIZE_FORMAT "bytes",
 			    actual_len);
 		return FALSE;
@@ -85,8 +85,8 @@ fu_steelseries_device_cmd(FuSteelseriesDevice *self,
 	}
 	if (actual_len != priv->ep_in_size) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "only read %" G_GSIZE_FORMAT "bytes",
 			    actual_len);
 		return FALSE;

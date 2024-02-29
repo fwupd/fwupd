@@ -74,8 +74,8 @@ fu_bluez_device_get_uuid_helper(FuBluezDevice *self, const gchar *uuid, GError *
 	uuid_helper = g_hash_table_lookup(priv->uuids, uuid);
 	if (uuid_helper == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "UUID %s not supported",
 			    uuid);
 		return NULL;
@@ -124,8 +124,8 @@ fu_bluez_device_ensure_uuid_helper_proxy(FuBluezDeviceUuidHelper *uuid_helper, G
 						  uuid_helper);
 	if (uuid_helper->signal_id <= 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot connect to signal of UUID %s",
 			    uuid_helper->uuid);
 		return FALSE;
@@ -363,8 +363,8 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 	val_address = g_dbus_proxy_get_cached_property(priv->proxy, "Address");
 	if (val_address == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "No required BLE address");
 		return FALSE;
 	}

@@ -41,8 +41,8 @@ fu_redfish_network_device_get_state(FuRedfishNetworkDevice *self,
 	retval = g_dbus_proxy_get_cached_property(proxy, "State");
 	if (retval == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_CONNECTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "could not find State");
 		return FALSE;
 	}
@@ -100,8 +100,8 @@ fu_redfish_network_device_connect(FuRedfishNetworkDevice *self, GError **error)
 
 	/* timed out */
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_TIMED_OUT,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_TIMED_OUT,
 			    "could not activate connection");
 	return FALSE;
 }
@@ -132,8 +132,8 @@ fu_redfish_network_device_get_address(FuRedfishNetworkDevice *self, GError **err
 	ip4_config = g_dbus_proxy_get_cached_property(proxy, "Ip4Config");
 	if (ip4_config == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_CONNECTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "could not find IPv4 config");
 		return NULL;
 	}
@@ -156,8 +156,8 @@ fu_redfish_network_device_get_address(FuRedfishNetworkDevice *self, GError **err
 	}
 	if (address == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_CONNECTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
 				    "could not find IP address for device");
 		return NULL;
 	}

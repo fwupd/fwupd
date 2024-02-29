@@ -56,8 +56,8 @@ fu_string_new_safe(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
 		g_string_append_c(str, (gchar)buf[i]);
 	}
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "buffer not NULL terminated");
 	return NULL;
 }
@@ -178,8 +178,8 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 		if (token == FDT_END) {
 			if (firmware_current != FU_FIRMWARE(self)) {
 				g_set_error_literal(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_INVALID_DATA,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
 						    "got END with unclosed node");
 				return FALSE;
 			}
@@ -195,8 +195,8 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 			/* sanity check */
 			if (depth++ > FDT_DEPTH_MAX) {
 				g_set_error(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_INVALID_DATA,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
 					    "node depth exceeded maximum: 0x%x",
 					    (guint)FDT_DEPTH_MAX);
 				return FALSE;
@@ -220,8 +220,8 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 		if (token == FDT_END_NODE) {
 			if (firmware_current == FU_FIRMWARE(self)) {
 				g_set_error_literal(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_INVALID_DATA,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
 						    "got END NODE with no node to end");
 				return FALSE;
 			}
@@ -242,8 +242,8 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 			/* sanity check */
 			if (firmware_current == FU_FIRMWARE(self)) {
 				g_set_error_literal(error,
-						    G_IO_ERROR,
-						    G_IO_ERROR_INVALID_DATA,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
 						    "got PROP with unopen node");
 				return FALSE;
 			}
@@ -272,8 +272,8 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 
 		/* unknown token */
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid token 0x%x @0%x",
 			    token,
 			    (guint)offset);
@@ -283,8 +283,8 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 	/* did not see FDT_END */
 	if (!has_end) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "did not see FDT_END");
 		return FALSE;
 	}
@@ -351,8 +351,8 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	totalsize = fu_struct_fdt_get_totalsize(st_hdr);
 	if (totalsize > streamsz) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "truncated image, got 0x%x, expected >= 0x%x",
 			    (guint)streamsz,
 			    (guint)totalsize);
@@ -369,8 +369,8 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	}
 	if (fu_struct_fdt_get_last_comp_version(st_hdr) < FDT_LAST_COMP_VERSION) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid header version, got 0x%x, expected >= 0x%x",
 			    (guint)fu_struct_fdt_get_last_comp_version(st_hdr),
 			    (guint)FDT_LAST_COMP_VERSION);
@@ -400,8 +400,8 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		if (dt_struct->len != fu_struct_fdt_get_size_dt_struct(st_hdr)) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid firmware -- dt_struct invalid");
 			return FALSE;
 		}
@@ -453,8 +453,8 @@ fu_fdt_firmware_write_image(FuFdtFirmware *self,
 	/* sanity check */
 	if (depth > 0 && id == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "child FuFdtImage requires ID");
 		return FALSE;
 	}
@@ -527,7 +527,7 @@ fu_fdt_firmware_write(FuFirmware *firmware, GError **error)
 
 	/* only one root node supported */
 	if (images->len != 1) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "no root node");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "no root node");
 		return NULL;
 	}
 	if (!fu_fdt_firmware_write_image(self,

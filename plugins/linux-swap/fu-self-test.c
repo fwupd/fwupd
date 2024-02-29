@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#include <fwupd.h>
+
 #include "fu-linux-swap.h"
 
 static void
@@ -32,7 +34,8 @@ fu_linux_swap_plain_func(void)
 			      "/dev/nvme0n1p4                          partition\t5962748\t0\t-2\n",
 			      0,
 			      &error);
-	if (g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_NAME_HAS_NO_OWNER) ||
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
+	    g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_NAME_HAS_NO_OWNER) ||
 	    g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_SERVICE_UNKNOWN) ||
 	    g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_SPAWN_EXEC_FAILED) ||
 	    g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CONNECTION_REFUSED) ||
@@ -57,7 +60,8 @@ fu_linux_swap_encrypted_func(void)
 			      "/dev/dm-1                               partition\t5962748\t0\t-2\n",
 			      0,
 			      &error);
-	if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
+	    g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
 	    g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_SERVICE_UNKNOWN) ||
 	    g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_SPAWN_EXEC_FAILED) ||
 	    g_error_matches(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {

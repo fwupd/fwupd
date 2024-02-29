@@ -399,6 +399,7 @@ fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **err
 				    G_IO_ERROR,
 				    g_io_error_from_errno(errno),
 				    g_strerror(errno));
+		fwupd_error_convert(error);
 		return 0;
 	}
 	rc = ioctl(fd, BLKSSZGET, &sector_size);
@@ -409,8 +410,8 @@ fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **err
 				    g_strerror(errno));
 	} else if (sector_size == 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to get non-zero logical sector size");
 	}
 	g_close(fd, NULL);
@@ -624,8 +625,8 @@ fu_volume_mount(FuVolume *self, GError **error)
 		if (g_error_matches(error_local, G_DBUS_ERROR, G_DBUS_ERROR_UNKNOWN_INTERFACE) ||
 		    g_error_matches(error_local, G_DBUS_ERROR, G_DBUS_ERROR_UNKNOWN_METHOD)) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    error_local->message);
 			return FALSE;
 		}
@@ -888,7 +889,11 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 		g_ptr_array_add(volumes, g_steal_pointer(&vol));
 	}
 	if (volumes->len == 0) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "no volumes of type %s", kind);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "no volumes of type %s",
+			    kind);
 		return NULL;
 	}
 	return g_steal_pointer(&volumes);
@@ -959,7 +964,7 @@ fu_volume_new_by_device(const gchar *device, GError **error)
 	}
 
 	/* failed */
-	g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "no volumes for device %s", device);
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no volumes for device %s", device);
 	return NULL;
 }
 
@@ -997,6 +1002,6 @@ fu_volume_new_by_devnum(guint32 devnum, GError **error)
 	}
 
 	/* failed */
-	g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "no volumes for devnum %u", devnum);
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no volumes for devnum %u", devnum);
 	return NULL;
 }

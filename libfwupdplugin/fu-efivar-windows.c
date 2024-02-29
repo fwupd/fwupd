@@ -66,7 +66,7 @@ fu_efivar_delete_with_glob_impl(const gchar *guid, const gchar *name_glob, GErro
 
 	names = fu_efivar_get_names_impl(guid, &error_local);
 	if (names == NULL) {
-		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
 			return TRUE;
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
@@ -114,8 +114,8 @@ fu_efivar_get_data_impl(const gchar *guid,
 	/* unimplemented function KERNEL32.dll.GetFirmwareEnvironmentVariableExA on wine */
 	if (fu_efivar_is_running_under_wine()) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "GetFirmwareEnvironmentVariableExA is not implemented");
 		return FALSE;
 	}
@@ -143,8 +143,8 @@ fu_efivar_get_data_impl(const gchar *guid,
 
 	/* failed */
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_FAILED,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "failed to get get variable [%u]",
 		    (guint)GetLastError());
 	return FALSE;
@@ -229,7 +229,11 @@ fu_efivar_get_names_impl(const gchar *guid, GError **error)
 
 	/* nothing found */
 	if (names->len == 0) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "no names for GUID %s", guid);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "no names for GUID %s",
+			    guid);
 		return NULL;
 	}
 
@@ -270,15 +274,15 @@ fu_efivar_set_data_impl(const gchar *guid,
 	/* unimplemented function KERNEL32.dll.SetFirmwareEnvironmentVariableExA on wine */
 	if (fu_efivar_is_running_under_wine()) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "SetFirmwareEnvironmentVariableExA is not implemented");
 		return FALSE;
 	}
 	if (!SetFirmwareEnvironmentVariableExA(name, guid_win32, (PVOID)data, sz, attr)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to get set variable [%u]",
 			    (guint)GetLastError());
 		return FALSE;

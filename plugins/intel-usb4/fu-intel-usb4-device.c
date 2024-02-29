@@ -108,8 +108,8 @@ fu_intel_usb4_device_get_mmio(FuDevice *device,
 		/* error status bit */
 		if (fu_struct_intel_usb4_mbox_get_status(st_regex) & MBOX_ERROR) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "GET_MMIO opcode [0x%x] nonzero error bit in status [0x%x]",
 				    fu_struct_intel_usb4_mbox_get_opcode(st_regex),
 				    fu_struct_intel_usb4_mbox_get_status(st_regex));
@@ -119,8 +119,8 @@ fu_intel_usb4_device_get_mmio(FuDevice *device,
 		/* operation valid (OV) bit should be 0'b */
 		if (fu_struct_intel_usb4_mbox_get_status(st_regex) & MBOX_OPVALID) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_FAILED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "GET_MMIO opcode [0x%x] nonzero OV bit in status [0x%x]",
 				    fu_struct_intel_usb4_mbox_get_opcode(st_regex),
 				    fu_struct_intel_usb4_mbox_get_status(st_regex));
@@ -171,8 +171,8 @@ fu_intel_usb4_device_mbox_data_read(FuDevice *device, guint8 *data, guint8 lengt
 
 	if (length > 64 || length % 4) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid firmware data read length %u",
 			    length);
 		return FALSE;
@@ -203,8 +203,8 @@ fu_intel_usb4_device_mbox_data_write(FuDevice *device,
 
 	if (length > 64 || length % 4) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
 			    "invalid firmware data write length %u",
 			    length);
 		return FALSE;
@@ -238,8 +238,8 @@ fu_intel_usb4_device_operation(FuDevice *device,
 	case FU_INTEL_USB4_OPCODE_DROM_READ:
 		if (metadata == NULL) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
 				    "hub opcode 0x%x requires metadata",
 				    opcode);
 			return FALSE;
@@ -255,8 +255,8 @@ fu_intel_usb4_device_operation(FuDevice *device,
 		break;
 	default:
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "invalid hub opcode: 0x%x",
 			    opcode);
 		return FALSE;

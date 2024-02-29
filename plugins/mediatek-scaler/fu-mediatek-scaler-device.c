@@ -177,8 +177,8 @@ fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self, GByteArray *st_
 	/* verify read buffer: [0] == source address */
 	if (buf[0] != FU_DDC_I2C_ADDR_DISPLAY_DEVICE) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid read buffer: addr(src) expected 0x%02x, got 0x%02x.",
 			    (guint)FU_DDC_I2C_ADDR_DISPLAY_DEVICE,
 			    buf[0]);
@@ -188,8 +188,8 @@ fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self, GByteArray *st_
 	/* verify read buffer: [1] as the length of data */
 	if (buf[1] <= DDC_DATA_LEN_DFT) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid read buffer: size 0x%02x must greater than 0x%02x.",
 			    buf[1],
 			    (guint)DDC_DATA_LEN_DFT);
@@ -200,8 +200,8 @@ fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self, GByteArray *st_
 	report_data_sz = buf[1] - DDC_DATA_LEN_DFT;
 	if (report_data_sz + 3 > sizeof(buf)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid read buffer: size 0x%02x exceeded 0x%02x",
 			    (guint)report_data_sz,
 			    (guint)sizeof(buf));
@@ -216,8 +216,8 @@ fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self, GByteArray *st_
 		return NULL;
 	if (checksum_hw != checksum) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid read buffer, checksum expected 0x%02x, got 0x%02x.",
 			    checksum,
 			    checksum_hw);
@@ -430,8 +430,8 @@ fu_mediatek_scaler_device_verify_controller_type(FuMediatekScalerDevice *self, G
 	/* restrict to specific controller type */
 	if (controller_type != FU_MEDIATEK_SCALER_SUPPORTED_CONTROLLER_TYPE) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "0x%x is not supported",
 			    controller_type);
 		return FALSE;
@@ -508,8 +508,8 @@ fu_mediatek_scaler_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_device_has_private_flag(device, FU_MEDIATEK_SCALER_DEVICE_FLAG_PROBE_VCP)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "%04X:%04X: is not supported",
 			    fu_udev_device_get_subsystem_vendor(udev_parent),
 			    fu_udev_device_get_subsystem_model(udev_parent));
@@ -721,7 +721,7 @@ fu_mediatek_scaler_device_set_isp_reboot(FuMediatekScalerDevice *self, GError **
 	/* device will reboot after this, so the write will timed out fail */
 	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_REBOOT);
 	if (!fu_mediatek_scaler_device_ddc_write(self, st_req, &error_local)) {
-		if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_TIMED_OUT)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 			g_propagate_prefixed_error(error,
 						   g_steal_pointer(&error_local),
 						   "failed to set isp reboot: ");

@@ -1272,7 +1272,7 @@ fu_engine_verify_from_local_metadata(FuEngine *self, FuDevice *device, GError **
 	fn = g_strdup_printf("%s/verify/%s.xml", localstatedir, fu_device_get_id(device));
 	file = g_file_new_for_path(fn);
 	if (!g_file_query_exists(file, NULL)) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "failed to find %s", fn);
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "failed to find %s", fn);
 		return NULL;
 	}
 
@@ -1342,7 +1342,7 @@ fu_engine_verify_from_system_metadata(FuEngine *self, FuDevice *device, GError *
 	}
 
 	/* not found */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "failed to find release");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "failed to find release");
 	return NULL;
 }
 
@@ -1407,7 +1407,7 @@ fu_engine_verify(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 		g_autoptr(GError) error_system = NULL;
 		release = fu_engine_verify_from_system_metadata(self, device, &error_system);
 		if (release == NULL) {
-			if (!g_error_matches(error_system, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
+			if (!g_error_matches(error_system, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) &&
 			    !g_error_matches(error_system,
 					     G_IO_ERROR,
 					     G_IO_ERROR_INVALID_ARGUMENT)) {
@@ -1941,8 +1941,8 @@ fu_engine_install_releases(FuEngine *self,
 		GInputStream *stream = fu_release_get_stream(release);
 		if (stream == NULL) {
 			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "no stream for release");
 			return FALSE;
 		}
@@ -2103,16 +2103,16 @@ fu_realpath(const gchar *filename, GError **error)
 	if (_fullpath(full_tmp, filename, sizeof(full_tmp)) == NULL) {
 #endif
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "cannot resolve path: %s",
 			    g_strerror(errno));
 		return NULL;
 	}
 	if (!g_file_test(full_tmp, G_FILE_TEST_EXISTS)) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "cannot find path: %s",
 			    full_tmp);
 		return NULL;
@@ -3774,8 +3774,8 @@ fu_engine_create_metadata(FuEngine *self, XbBuilder *builder, FwupdRemote *remot
 	path = fwupd_remote_get_filename_cache(remote);
 	if (path == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "no filename cache for %s",
 			    fwupd_remote_get_id(remote));
 		return FALSE;
@@ -6752,8 +6752,8 @@ fu_engine_get_previous_bios_security_attr(FuEngine *self,
 
 	/* failed */
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot find previous BIOS value");
 	return NULL;
 }
@@ -6785,8 +6785,8 @@ fu_engine_fix_host_security_attr(FuEngine *self, const gchar *appstream_id, GErr
 		return FALSE;
 	if (!fwupd_security_attr_has_flag(hsi_attr, FWUPD_SECURITY_ATTR_FLAG_CAN_FIX)) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "cannot auto-fix attribute");
 		return FALSE;
 	}
@@ -6798,7 +6798,7 @@ fu_engine_fix_host_security_attr(FuEngine *self, const gchar *appstream_id, GErr
 
 	/* first try the per-plugin vfunc */
 	if (!fu_plugin_runner_fix_host_security_attr(plugin, hsi_attr, &error_local)) {
-		if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
@@ -6811,8 +6811,8 @@ fu_engine_fix_host_security_attr(FuEngine *self, const gchar *appstream_id, GErr
 	/* fall back to setting the BIOS attribute */
 	if (fwupd_security_attr_get_bios_setting_id(hsi_attr) == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no BIOS setting ID set");
 		return FALSE;
 	}
@@ -6820,8 +6820,8 @@ fu_engine_fix_host_security_attr(FuEngine *self, const gchar *appstream_id, GErr
 						fwupd_security_attr_get_bios_setting_id(hsi_attr));
 	if (bios_attr == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot get BIOS setting %s",
 			    fwupd_security_attr_get_bios_setting_id(hsi_attr));
 		return FALSE;
@@ -6860,8 +6860,8 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
 		return FALSE;
 	if (!fwupd_security_attr_has_flag(hsi_attr, FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO)) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "cannot auto-undo attribute");
 		return FALSE;
 	}
@@ -6873,7 +6873,7 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
 
 	/* first try the per-plugin vfunc */
 	if (!fu_plugin_runner_undo_host_security_attr(plugin, hsi_attr, &error_local)) {
-		if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
@@ -6882,8 +6882,8 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
 	/* fall back to setting the BIOS attribute */
 	if (fwupd_security_attr_get_bios_setting_id(hsi_attr) == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no BIOS setting ID");
 		return FALSE;
 	}
@@ -6891,16 +6891,16 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
 						fwupd_security_attr_get_bios_setting_id(hsi_attr));
 	if (bios_attr == NULL) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot get BIOS setting %s",
 			    fwupd_security_attr_get_bios_setting_id(hsi_attr));
 		return FALSE;
 	}
 	if (fwupd_security_attr_get_bios_setting_current_value(hsi_attr) == NULL) {
 		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no BIOS setting current value");
 		return FALSE;
 	}
@@ -6924,7 +6924,10 @@ fu_engine_security_attrs_from_json(FuEngine *self, JsonNode *json_node, GError *
 
 	/* sanity check */
 	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not JSON object");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "not JSON object");
 		return FALSE;
 	}
 
@@ -6947,7 +6950,10 @@ fu_engine_devices_from_json(FuEngine *self, JsonNode *json_node, GError **error)
 
 	/* sanity check */
 	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not JSON object");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "not JSON object");
 		return FALSE;
 	}
 
@@ -7451,8 +7457,8 @@ fu_engine_backend_device_added_run_plugin(FuEngine *self,
 		/* sanity check */
 		if (*error == NULL) {
 			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_ARGUMENT,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
 				    "%s failed but no error set",
 				    fu_device_get_backend_id(device));
 			return FALSE;
@@ -7481,8 +7487,7 @@ fu_engine_backend_device_added_run_plugins(FuEngine *self, FuDevice *device, FuP
 							       plugin_name,
 							       fu_progress_get_child(progress),
 							       &error_local)) {
-			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
-			    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				g_debug("%s ignoring: %s", plugin_name, error_local->message);
 			} else {
 				g_warning("failed to add device %s: %s",
@@ -7789,23 +7794,24 @@ static void
 fu_engine_ensure_client_certificate(FuEngine *self)
 {
 	g_autoptr(GBytes) blob = g_bytes_new_static(NULL, 0);
-	g_autoptr(GError) error = NULL;
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(JcatBlob) jcat_sig = NULL;
 	g_autoptr(JcatEngine) jcat_engine = NULL;
 
 	/* create keyring and sign dummy data to ensure certificate exists */
-	jcat_engine = jcat_context_get_engine(self->jcat_context, JCAT_BLOB_KIND_PKCS7, &error);
+	jcat_engine =
+	    jcat_context_get_engine(self->jcat_context, JCAT_BLOB_KIND_PKCS7, &error_local);
 	if (jcat_engine == NULL) {
-		g_message("failed to create keyring: %s", error->message);
+		g_message("failed to create keyring: %s", error_local->message);
 		return;
 	}
-	jcat_sig = jcat_engine_self_sign(jcat_engine, blob, JCAT_SIGN_FLAG_NONE, &error);
+	jcat_sig = jcat_engine_self_sign(jcat_engine, blob, JCAT_SIGN_FLAG_NONE, &error_local);
 	if (jcat_sig == NULL) {
-		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
-			g_info("client certificate now exists: %s", error->message);
+		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+			g_info("client certificate now exists: %s", error_local->message);
 			return;
 		}
-		g_message("failed to sign using keyring: %s", error->message);
+		g_message("failed to sign using keyring: %s", error_local->message);
 		return;
 	}
 	g_info("client certificate exists and working");
@@ -7908,9 +7914,9 @@ fu_common_win32_registry_get_string(HKEY hkey,
 	rc = RegGetValue(hkey, subkey, value, RRF_RT_REG_SZ, NULL, (PVOID)&buf, &bufsz);
 	if (rc != ERROR_SUCCESS) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVAL,
-			    "Failed to get registry string %s [0x%lX]",
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "failed to get registry string %s [0x%lX]",
 			    subkey,
 			    (unsigned long)rc);
 		return NULL;
@@ -8073,8 +8079,8 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	/* sanity check libraries are in sync with daemon */
 	if (g_strcmp0(fwupd_version_string(), VERSION) != 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVAL,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
 			    "libfwupd version %s does not match daemon %s",
 			    fwupd_version_string(),
 			    VERSION);

@@ -18,10 +18,10 @@
 GPtrArray *
 fu_common_get_block_devices(GError **error)
 {
-	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_NOT_SUPPORTED,
-		    "getting block devices is not supported on Windows");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "getting block devices is not supported on Windows");
 	return NULL;
 }
 
@@ -191,8 +191,8 @@ fu_common_convert_tzinfo_to_olson_id(const gchar *tzinfo, GError **error)
 			return g_strdup(map[i].olson_id);
 	}
 	g_set_error(error,
-		    G_IO_ERROR,
-		    G_IO_ERROR_NOT_SUPPORTED,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "cannot map tzinfo '%s' to Olson ID",
 		    tzinfo);
 	return NULL;
@@ -209,8 +209,8 @@ fu_common_get_olson_timezone_id_impl(GError **error)
 	rc = GetTimeZoneInformation(&tzinfo);
 	if (rc == TIME_ZONE_ID_INVALID) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot get timezone information [%u]",
 			    (guint)GetLastError());
 		return NULL;

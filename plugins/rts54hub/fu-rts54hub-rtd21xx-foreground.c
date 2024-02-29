@@ -290,8 +290,8 @@ fu_rts54hub_rtd21xx_foreground_write_firmware(FuDevice *device,
 	}
 	if (read_buf[0] != ISP_STATUS_IDLE_SUCCESS) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "failed project ID with error 0x%02x: ",
 			    read_buf[0]);
 		return FALSE;
