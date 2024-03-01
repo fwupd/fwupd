@@ -32,6 +32,8 @@
 
 G_DEFINE_TYPE(FuPefileFirmware, fu_pefile_firmware, FU_TYPE_FIRMWARE)
 
+#define FU_PEFILE_SECTION_ID_STRTAB_SIZE 16
+
 static gboolean
 fu_pefile_firmware_validate(FuFirmware *firmware,
 			    GInputStream *stream,
@@ -71,7 +73,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	}
 	if (sect_id_tmp[0] == '/') {
 		guint64 str_idx = 0x0;
-		guint8 buf[16] = {0};
+		guint8 buf[FU_PEFILE_SECTION_ID_STRTAB_SIZE] = {0};
 		g_autofree gchar *str = NULL;
 
 		if (!fu_strtoull(sect_id_tmp + 1, &str_idx, 0, G_MAXUINT32, error)) {
@@ -270,24 +272,30 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 				    i);
 			return NULL;
 		}
-		if (strlen(section->id) > 16) {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "image ID %s is too long",
-				    section->id);
-			return NULL;
-		}
 		if (strlen(section->id) <= 8) {
 			if (!fu_struct_pe_coff_section_set_name(st_sect, section->id, error))
 				return NULL;
 		} else {
-			gchar id_tmp[16] = {0};
 			g_autofree gchar *name_tmp = g_strdup_printf("/%u", strtab->len);
+			g_autoptr(GByteArray) strtab_buf = g_byte_array_new();
+
 			if (!fu_struct_pe_coff_section_set_name(st_sect, name_tmp, error))
 				return NULL;
-			memcpy(id_tmp, section->id, strlen(section->id));
-			g_byte_array_append(strtab, (const guint8 *)id_tmp, sizeof(id_tmp));
+
+			/* create a byte buffer of exactly the correct chunk size */
+			g_byte_array_append(strtab_buf,
+					    (const guint8 *)section->id,
+					    strlen(section->id));
+			if (strtab_buf->len > FU_PEFILE_SECTION_ID_STRTAB_SIZE) {
+				g_set_error(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_INVALID_DATA,
+					    "image ID %s is too long",
+					    section->id);
+				return NULL;
+			}
+			fu_byte_array_set_size(strtab_buf, FU_PEFILE_SECTION_ID_STRTAB_SIZE, 0x0);
+			g_byte_array_append(strtab, strtab_buf->data, strtab_buf->len);
 		}
 		g_byte_array_append(st, st_sect->data, st_sect->len);
 	}
