@@ -74,6 +74,7 @@ warning_flags = [
   '-Wignored-qualifiers',
   '-Wimplicit-function-declaration',
   '-Wimplicit-int',
+  '-Wincompatible-pointer-types',
   '-Winit-self',
   '-Wint-conversion',
   '-Wlogical-op',
