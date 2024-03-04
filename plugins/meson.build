@@ -129,6 +129,7 @@ if get_option('plugin_vendor_example')
 endif
 
 umockdev_tests = []
+umockdev_ioctls = []
 foreach plugin, enabled: plugins
   subdir(plugin)
 endforeach
@@ -150,6 +151,11 @@ if umockdev_integration_tests.allowed()
         test(ut, python3, args: [suite, ut], is_parallel: false, env: envs)
     endforeach
     install_data(suite,
+      install_dir: installed_test_datadir,
+    )
+  endforeach
+  foreach ioctl: umockdev_ioctls
+    install_data(ioctl,
       install_dir: installed_test_datadir,
     )
   endforeach
