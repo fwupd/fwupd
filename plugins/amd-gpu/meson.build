@@ -19,4 +19,6 @@ plugin_builtins += static_library('fu_plugin_amd_gpu',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+umockdev_tests += files('amd_gpu_test.py')
+umockdev_ioctls += files('amd_gpu_ioctl.py')
 endif
