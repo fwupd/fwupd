@@ -107,3 +107,26 @@ configure_file(
   install: true,
   install_dir: join_paths(datadir, 'fwupd', 'remotes.d'),
 )
+if umockdev_integration_tests.allowed()
+  fwupd_mockdev_tests = files('fwupd_test.py')
+  r = run_command(unittest_inspector, fwupd_mockdev_tests, check: true)
+  unit_tests = r.stdout().strip().split('\n')
+  foreach ut: unit_tests
+      test(ut, python3, args: [fwupd_mockdev_tests, ut], is_parallel: false,
+          env: {
+            'DAEMON_BUILDDIR': join_paths(meson.project_build_root(), 'src'),
+            'LIBFWUPD_BUILD_DIR': join_paths(meson.project_build_root(), 'libfwupd'),
+            'STATE_DIRECTORY': join_paths(meson.project_build_root(), 'state'),
+            'CACHE_DIRECTORY': join_paths(meson.project_build_root(), 'cache'),
+          },
+          )
+  endforeach
+  configure_file(
+    input: fwupd_mockdev_tests,
+    output: 'fwupd_test.py',
+    configuration: {
+      'LIBEXECDIR': daemon_dir,
+    },
+    install_dir: installed_test_datadir
+  )
+endif

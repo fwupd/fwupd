@@ -20,7 +20,7 @@ endif
 
 if get_option('tests')
   if build_daemon
-    subdir('installed-tests')
+    subdir('tests')
   endif
 endif
 
