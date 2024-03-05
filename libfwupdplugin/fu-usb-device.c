@@ -672,6 +672,16 @@ fu_usb_device_probe_bos_descriptors(FuUsbDevice *self, GError **error)
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) bos_descriptors = NULL;
 
+	/* not supported, so there is no point opening */
+	if (g_usb_device_get_spec(priv->usb_device) <= 0x0200) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "not available as bcdUSB 0x%04x <= 0x0200",
+			    g_usb_device_get_spec(priv->usb_device));
+		return FALSE;
+	}
+
 	gusb_locker = fu_device_locker_new(priv->usb_device, error);
 	if (gusb_locker == NULL)
 		return FALSE;
@@ -809,8 +819,14 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 
 #if G_USB_CHECK_VERSION(0, 4, 0)
 	/* parse the platform capability BOS descriptors for quirks */
-	if (!fu_usb_device_probe_bos_descriptors(self, &error_bos))
-		g_warning("failed to load BOS descriptor from USB device: %s", error_bos->message);
+	if (!fu_usb_device_probe_bos_descriptors(self, &error_bos)) {
+		if (g_error_matches(error_bos, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug("ignoring: %s", error_bos->message);
+		} else {
+			g_warning("failed to load BOS descriptor from USB device: %s",
+				  error_bos->message);
+		}
+	}
 #endif
 #endif
 
