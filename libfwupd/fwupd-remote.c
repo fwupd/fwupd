@@ -163,7 +163,6 @@ fwupd_remote_to_json(FwupdRemote *self, JsonBuilder *builder)
 					     "KeyringKind",
 					     fwupd_keyring_kind_to_string(priv->keyring_kind));
 	}
-	fwupd_common_json_add_string(builder, "FirmwareBaseUri", priv->firmware_base_uri);
 	fwupd_common_json_add_string(builder, "ReportUri", priv->report_uri);
 	fwupd_common_json_add_string(builder, "SecurityReportUri", priv->security_report_uri);
 	fwupd_common_json_add_string(builder, "MetadataUri", priv->metadata_uri);
@@ -525,10 +524,7 @@ fwupd_remote_get_suffix_for_keyring_kind(FwupdKeyringKind keyring_kind)
 }
 
 static gchar *
-fwupd_remote_build_uri(FwupdRemote *self,
-		       const gchar *base_uri,
-		       const gchar *url_noauth,
-		       GError **error)
+fwupd_remote_build_uri(FwupdRemote *self, const gchar *url_noauth, GError **error)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 #ifdef HAVE_LIBCURL
@@ -544,27 +540,8 @@ fwupd_remote_build_uri(FwupdRemote *self,
 		url = g_strdup(url_noauth);
 	}
 
-	/* create URI, substituting if required */
-	if (base_uri != NULL) {
-		g_autofree gchar *basename = NULL;
-		g_autofree gchar *path_new = NULL;
-		g_autoptr(curlptr) path = NULL;
-		g_autoptr(CURLU) uri_tmp = curl_url();
-		if (curl_url_set(uri_tmp, CURLUPART_URL, url, 0) != CURLUE_OK) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "Failed to parse url '%s'",
-				    url);
-			return NULL;
-		}
-		(void)curl_url_get(uri_tmp, CURLUPART_PATH, &path, 0);
-		basename = g_path_get_basename(path);
-		path_new = g_build_filename(priv->firmware_base_uri, basename, NULL);
-		(void)curl_url_set(uri, CURLUPART_URL, path_new, 0);
-
-		/* use the base URI of the metadata to build the full path */
-	} else if (g_strstr_len(url, -1, "/") == NULL) {
+	/* use the base URI of the metadata to build the full path */
+	if (g_strstr_len(url, -1, "/") == NULL) {
 		g_autofree gchar *basename = NULL;
 		g_autofree gchar *path_new = NULL;
 		g_autoptr(curlptr) path = NULL;
@@ -605,10 +582,6 @@ fwupd_remote_build_uri(FwupdRemote *self,
 	(void)curl_url_get(uri, CURLUPART_URL, &tmp_uri, 0);
 	return g_strdup(tmp_uri);
 #else
-	if (priv->firmware_base_uri != NULL) {
-		g_autofree gchar *basename = g_path_get_basename(url_noauth);
-		return g_build_filename(priv->firmware_base_uri, basename, NULL);
-	}
 	if (g_strstr_len(url_noauth, -1, "/") == NULL) {
 		g_autofree gchar *basename = g_path_get_dirname(priv->metadata_uri);
 		return g_build_filename(basename, url_noauth, NULL);
@@ -643,30 +616,6 @@ fwupd_remote_set_metadata_uri(FwupdRemote *self, const gchar *metadata_uri)
 	suffix = fwupd_remote_get_suffix_for_keyring_kind(priv->keyring_kind);
 	if (suffix != NULL)
 		priv->metadata_uri_sig = g_strconcat(metadata_uri, suffix, NULL);
-}
-
-/**
- * fwupd_remote_set_firmware_base_uri:
- * @self: a #FwupdRemote
- * @firmware_base_uri: (nullable): base URI for firmware
- *
- * Sets the firmware base URI.
- *
- * NOTE: This has to be set after MetadataURI.
- *
- * Since: 2.0.0
- **/
-void
-fwupd_remote_set_firmware_base_uri(FwupdRemote *self, const gchar *firmware_base_uri)
-{
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-
-	/* not changed */
-	if (g_strcmp0(priv->firmware_base_uri, firmware_base_uri) == 0)
-		return;
-
-	g_free(priv->firmware_base_uri);
-	priv->firmware_base_uri = g_strdup(firmware_base_uri);
 }
 
 /**
@@ -1324,11 +1273,10 @@ fwupd_remote_get_checksum_metadata(FwupdRemote *self)
 gchar *
 fwupd_remote_build_firmware_uri(FwupdRemote *self, const gchar *url, GError **error)
 {
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
 	g_return_val_if_fail(url != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-	return fwupd_remote_build_uri(self, priv->firmware_base_uri, url, error);
+	return fwupd_remote_build_uri(self, url, error);
 }
 
 /**
@@ -1348,7 +1296,7 @@ fwupd_remote_build_report_uri(FwupdRemote *self, GError **error)
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-	return fwupd_remote_build_uri(self, NULL, priv->report_uri, error);
+	return fwupd_remote_build_uri(self, priv->report_uri, error);
 }
 
 /**
@@ -1368,7 +1316,7 @@ fwupd_remote_build_metadata_sig_uri(FwupdRemote *self, GError **error)
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-	return fwupd_remote_build_uri(self, NULL, priv->metadata_uri_sig, error);
+	return fwupd_remote_build_uri(self, priv->metadata_uri_sig, error);
 }
 
 /**
@@ -1388,7 +1336,7 @@ fwupd_remote_build_metadata_uri(FwupdRemote *self, GError **error)
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-	return fwupd_remote_build_uri(self, NULL, priv->metadata_uri, error);
+	return fwupd_remote_build_uri(self, priv->metadata_uri, error);
 }
 
 /**
@@ -1587,24 +1535,6 @@ fwupd_remote_get_metadata_uri_sig(FwupdRemote *self)
 }
 
 /**
- * fwupd_remote_get_firmware_base_uri:
- * @self: a #FwupdRemote
- *
- * Gets the base URI for firmware.
- *
- * Returns: (transfer none): a URI, or %NULL for unset.
- *
- * Since: 0.9.7
- **/
-const gchar *
-fwupd_remote_get_firmware_base_uri(FwupdRemote *self)
-{
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
-	return priv->firmware_base_uri;
-}
-
-/**
  * fwupd_remote_needs_refresh:
  * @self: a #FwupdRemote
  *
@@ -1701,8 +1631,6 @@ fwupd_remote_set_from_variant_iter(FwupdRemote *self, GVariantIter *iter)
 			priv->mtime = g_variant_get_uint64(value);
 		} else if (g_strcmp0(key, "RefreshInterval") == 0) {
 			priv->refresh_interval = g_variant_get_uint64(value);
-		} else if (g_strcmp0(key, "FirmwareBaseUri") == 0) {
-			fwupd_remote_set_firmware_base_uri(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, "AutomaticReports") == 0) {
 			/* we can probably stop doing proxying flags when we next branch */
 			if (g_variant_get_boolean(value))
@@ -1791,12 +1719,6 @@ fwupd_remote_to_variant(FwupdRemote *self)
 				      "{sv}",
 				      "SecurityReportUri",
 				      g_variant_new_string(priv->security_report_uri));
-	}
-	if (priv->firmware_base_uri != NULL) {
-		g_variant_builder_add(&builder,
-				      "{sv}",
-				      "FirmwareBaseUri",
-				      g_variant_new_string(priv->firmware_base_uri));
 	}
 	if (priv->priority != 0) {
 		g_variant_builder_add(&builder,
