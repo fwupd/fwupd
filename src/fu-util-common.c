@@ -2173,11 +2173,6 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 		/* TRANSLATORS: remote URI */
 		fu_string_append(str, idt + 1, _("Metadata Signature"), tmp);
 	}
-	tmp = fwupd_remote_get_firmware_base_uri(remote);
-	if (tmp != NULL) {
-		/* TRANSLATORS: remote URI */
-		fu_string_append(str, idt + 1, _("Firmware Base URI"), tmp);
-	}
 	tmp = fwupd_remote_get_report_uri(remote);
 	if (tmp != NULL) {
 		/* TRANSLATORS: URI to send success/failure reports */
