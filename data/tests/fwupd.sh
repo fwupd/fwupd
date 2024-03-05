@@ -19,6 +19,7 @@ run_device_tests()
 		        fwupdmgr device-emulate --no-unreported-check --no-remote-check --no-metadata-check "$f"
 		        rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 		done
+		fwupdmgr quit
 	fi
 }
 
