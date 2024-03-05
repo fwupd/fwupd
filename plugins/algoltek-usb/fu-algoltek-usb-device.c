@@ -313,18 +313,23 @@ fu_algoltek_usb_device_bot(FuAlgoltekUsbDevice *self, int address, GError **erro
 }
 
 static gboolean
-fu_algoltek_usb_device_ers(FuAlgoltekUsbDevice *self, GError **error)
+fu_algoltek_usb_device_ers(FuAlgoltekUsbDevice *self,
+			   guint erase_type,
+			   guint8 sector,
+			   GError **error)
 {
+	guint16 value;
 	g_autoptr(GByteArray) st = fu_struct_algoltek_cmd_address_pkt_new();
 
 	fu_struct_algoltek_cmd_address_pkt_set_len(st, 3);
 	fu_struct_algoltek_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_CMD_ERS);
 	fu_struct_algoltek_cmd_address_pkt_set_checksum(st, ~fu_sum8(st->data, st->len) + 1);
 
+	value = (erase_type << 8) | sector;
 	if (!fu_algoltek_usb_device_ctrl_transfer(self,
 						  G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 						  FU_ALGOLTEK_CMD_ERS,
-						  0,
+						  value,
 						  0,
 						  st,
 						  st->len,
@@ -516,8 +521,15 @@ fu_algoltek_usb_device_write_firmware(FuDevice *device,
 
 	fu_device_sleep(FU_DEVICE(self), 1000);
 
-	if (!fu_algoltek_usb_device_ers(self, error))
+	if (!fu_algoltek_usb_device_ers(self, 0x20, AG_IDENTIFICATION_128K_ADDR, error))
 		return FALSE;
+	if (!fu_algoltek_usb_device_ers(self, 0x20, AG_IDENTIFICATION_256K_ADDR, error))
+		return FALSE;
+	/* 1 sector = 4 kb, 256kb = 64 sector */
+	for (int i = 0; i < 64; i++) {
+		if (!fu_algoltek_usb_device_ers(self, 0x20, i, error))
+			return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	fu_device_sleep(FU_DEVICE(self), 500);
@@ -557,6 +569,7 @@ fu_algoltek_usb_device_init(FuAlgoltekUsbDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.algoltek.usb");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ALGOLTEK_USB_FIRMWARE);
