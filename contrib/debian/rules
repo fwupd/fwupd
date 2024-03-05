@@ -78,6 +78,9 @@ override_dh_install:
 	[ ! -d debian/fwupd/lib/systemd ] || find debian/fwupd/lib/systemd -type d -empty -delete
 	[ ! -d debian/fwupd/usr/lib/systemd ] || find debian/fwupd/usr/lib/systemd -type d -empty -delete
 
+	# the below step is automatic with debhelper >= 14
+	dh_installsysusers
+
 override_dh_strip_nondeterminism:
 	dh_strip_nondeterminism -Xfirmware-example.xml.gz
 
