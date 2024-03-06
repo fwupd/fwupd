@@ -30,7 +30,7 @@ fu_bios_setting_write_value(FwupdBiosSetting *self, const gchar *value, GError *
 	fd = open(fn, O_WRONLY);
 	if (fd < 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
+			    G_IO_ERROR, /* nocheck */
 #ifdef HAVE_ERRNO_H
 			    g_io_error_from_errno(errno),
 #else

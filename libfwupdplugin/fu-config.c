@@ -62,7 +62,7 @@ g_file_set_contents_full(const gchar *filename,
 	fd = g_open(filename, O_CREAT, mode);
 	if (fd < 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
+			    G_IO_ERROR,	       /* nocheck */
 			    G_IO_ERROR_FAILED, /* nocheck */
 			    "could not open %s file",
 			    filename);
@@ -71,7 +71,7 @@ g_file_set_contents_full(const gchar *filename,
 	wrote = write(fd, contents, length);
 	if (wrote != length) {
 		g_set_error(error,
-			    G_IO_ERROR,
+			    G_IO_ERROR,	       /* nocheck */
 			    G_IO_ERROR_FAILED, /* nocheck */
 			    "did not write %s file",
 			    filename);
