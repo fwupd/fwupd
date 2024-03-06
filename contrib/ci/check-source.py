@@ -32,18 +32,22 @@ def test_files() -> int:
                 }.items():
                     if line.find(token) != -1:
                         print(
-                            f"{fn} contains blocked token {token}: {msg} -- use a nocheck comment to ignore"
+                            f"{fn} contains blocked token {token}: {msg} -- "
+                            "use a nocheck comment to ignore"
                         )
                         rc = 1
 
                 # do not use G_IO_ERROR internally
                 if line.find("g_set_error") != -1:
                     linecnt_g_set_error = linecnt
-                if linecnt - linecnt_g_set_error < 5 and line.find("G_IO_ERROR_") != -1:
-                    print(
-                        f"{fn} uses g_set_error() without using FWUPD_ERROR: -- use a nocheck comment to ignore"
-                    )
-                    rc = 1
+                if linecnt - linecnt_g_set_error < 5:
+                    for error_domain in ["G_IO_ERROR", "G_FILE_ERROR"]:
+                        if line.find(error_domain) != -1:
+                            print(
+                                f"{fn} uses g_set_error() without using FWUPD_ERROR: -- "
+                                "use a nocheck comment to ignore"
+                            )
+                            rc = 1
 
     return rc
 

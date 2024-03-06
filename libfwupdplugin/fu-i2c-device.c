@@ -90,7 +90,7 @@ fu_i2c_device_open(FuDevice *device, GError **error)
 	bus_path = g_strdup_printf("/dev/i2c-%u", priv->bus_number);
 	if ((bus_fd = g_open(bus_path, O_RDWR, 0)) == -1) {
 		g_set_error(error,
-			    G_IO_ERROR,
+			    G_IO_ERROR, /* nocheck */
 #ifdef HAVE_ERRNO_H
 			    g_io_error_from_errno(errno),
 #else
