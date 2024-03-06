@@ -212,7 +212,7 @@ fu_synaptics_cape_device_rc_set_error(const FuCapCmd *rsp, GError **error)
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "bad app id");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_MODULE_TYPE_HAS_NO_API:
-		g_set_error_literal(error, G_IO_ERROR, FWUPD_ERROR_INTERNAL, "has no api");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "has no api");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_BAD_MAGIC_NUMBER:
 		g_set_error_literal(error,
