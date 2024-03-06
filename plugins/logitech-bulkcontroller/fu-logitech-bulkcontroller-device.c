@@ -914,7 +914,7 @@ fu_logitech_bulkcontroller_device_verify_cb(FuDevice *device, gpointer user_data
 		fu_progress_set_percentage(progress, self->update_progress);
 
 	/* keep waiting */
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR, "waiting for verify to finish");
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BUSY, "waiting for verify to finish");
 	return FALSE;
 }
 
