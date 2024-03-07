@@ -1198,7 +1198,6 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 				     FuProgress *progress,
 				     GError **error)
 {
-	GBytes *data;
 	XbNode *part = NULL;
 	const gchar *filename = NULL;
 	const gchar *csum;
@@ -1208,6 +1207,8 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GArray) digest = NULL;
+	g_autoptr(GBytes) data_xml = NULL;
+	g_autoptr(GBytes) data_part = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
 	g_autoptr(XbSilo) silo = NULL;
@@ -1225,10 +1226,10 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 		return FALSE;
 
 	/* load the manifest of operations */
-	data = fu_archive_lookup_by_fn(archive, "flashfile.xml", error);
-	if (data == NULL)
+	data_xml = fu_archive_lookup_by_fn(archive, "flashfile.xml", error);
+	if (data_xml == NULL)
 		return FALSE;
-	if (!xb_builder_source_load_bytes(source, data, XB_BUILDER_SOURCE_FLAG_NONE, error))
+	if (!xb_builder_source_load_bytes(source, data_xml, XB_BUILDER_SOURCE_FLAG_NONE, error))
 		return FALSE;
 	xb_builder_import_source(builder, source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
@@ -1240,10 +1241,10 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 		return FALSE;
 	filename = xb_node_get_attr(part, "filename");
 	csum = xb_node_get_attr(part, "MD5");
-	data = fu_archive_lookup_by_fn(archive, filename, error);
-	if (data == NULL)
+	data_part = fu_archive_lookup_by_fn(archive, filename, error);
+	if (data_part == NULL)
 		return FALSE;
-	csum_actual = g_compute_checksum_for_bytes(G_CHECKSUM_MD5, data);
+	csum_actual = g_compute_checksum_for_bytes(G_CHECKSUM_MD5, data_part);
 	if (g_strcmp0(csum, csum_actual) != 0) {
 		g_debug("[%s] MD5 not matched", filename);
 		g_set_error(error,
@@ -1262,7 +1263,7 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	digest = fu_mbim_qdu_updater_write(self->mbim_qdu_updater,
 					   filename,
-					   data,
+					   data_part,
 					   device,
 					   progress,
 					   error);
@@ -1512,11 +1513,11 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
 	MMModem *modem = mm_object_peek_modem(self->omodem);
-	GBytes *firehose_rawprogram;
-	GBytes *firehose_prog;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(XbSilo) firehose_rawprogram_silo = NULL;
+	g_autoptr(GBytes) firehose_prog = NULL;
+	g_autoptr(GBytes) firehose_rawprogram = NULL;
 	g_autoptr(GPtrArray) firehose_rawprogram_actions = NULL;
 
 	/* progress */

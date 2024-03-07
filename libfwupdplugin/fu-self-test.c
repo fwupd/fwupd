@@ -94,8 +94,10 @@ fu_archive_cab_func(void)
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(GBytes) data = NULL;
+	g_autoptr(GBytes) data_tmp1 = NULL;
+	g_autoptr(GBytes) data_tmp2 = NULL;
+	g_autoptr(GBytes) data_tmp3 = NULL;
 	g_autoptr(GError) error = NULL;
-	GBytes *data_tmp;
 
 #ifndef HAVE_LIBARCHIVE
 	g_test_skip("no libarchive support");
@@ -115,21 +117,21 @@ fu_archive_cab_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(archive);
 
-	data_tmp = fu_archive_lookup_by_fn(archive, "firmware.metainfo.xml", &error);
+	data_tmp1 = fu_archive_lookup_by_fn(archive, "firmware.metainfo.xml", &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(data_tmp);
-	checksum1 = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data_tmp);
+	g_assert_nonnull(data_tmp1);
+	checksum1 = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data_tmp1);
 	g_assert_cmpstr(checksum1, ==, "8611114f51f7151f190de86a5c9259d79ff34216");
 
-	data_tmp = fu_archive_lookup_by_fn(archive, "firmware.bin", &error);
+	data_tmp2 = fu_archive_lookup_by_fn(archive, "firmware.bin", &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(data_tmp);
-	checksum2 = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data_tmp);
+	g_assert_nonnull(data_tmp2);
+	checksum2 = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data_tmp2);
 	g_assert_cmpstr(checksum2, ==, "7c0ae84b191822bcadbdcbe2f74a011695d783c7");
 
-	data_tmp = fu_archive_lookup_by_fn(archive, "NOTGOINGTOEXIST.xml", &error);
+	data_tmp3 = fu_archive_lookup_by_fn(archive, "NOTGOINGTOEXIST.xml", &error);
 	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND);
-	g_assert_null(data_tmp);
+	g_assert_null(data_tmp3);
 }
 
 static void
