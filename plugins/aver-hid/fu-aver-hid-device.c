@@ -386,11 +386,11 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 {
 	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
 	const gchar *aver_fw_name = NULL;
+	FuChunkArray *chunks = NULL;
 	gsize fw_size;
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(GBytes) aver_fw = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
