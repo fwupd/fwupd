@@ -83,7 +83,7 @@ fu_archive_add_entry(FuArchive *self, const gchar *fn, GBytes *blob)
  *
  * Finds the blob referenced by filename
  *
- * Returns: (transfer none): a #GBytes, or %NULL if the filename was not found
+ * Returns: (transfer container): a #GBytes, or %NULL if the filename was not found
  *
  * Since: 1.2.2
  **/
@@ -99,8 +99,9 @@ fu_archive_lookup_by_fn(FuArchive *self, const gchar *fn, GError **error)
 	bytes = g_hash_table_lookup(self->entries, fn);
 	if (bytes == NULL) {
 		g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "no blob for %s", fn);
+		return NULL;
 	}
-	return bytes;
+	return g_bytes_ref(bytes);
 }
 
 /**

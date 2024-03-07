@@ -32,8 +32,8 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 	JsonArray *json_files;
 	guint manifest_ver;
 	guint files_cnt = 0;
-	GBytes *manifest = NULL;
 	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(GBytes) manifest = NULL;
 	g_autoptr(JsonParser) parser = json_parser_new();
 
 	/* load archive */
@@ -102,10 +102,10 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 		const gchar *bootloader_name = NULL;
 		guint image_addr = 0;
 		JsonObject *obj = json_array_get_object_element(json_files, i);
-		GBytes *blob = NULL;
 		g_autoptr(FuFirmware) image = NULL;
 		g_autofree gchar *image_id = NULL;
 		g_auto(GStrv) board_split = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		if (!json_object_has_member(obj, "file")) {
 			g_set_error_literal(error,

@@ -101,11 +101,11 @@ static gboolean
 validate_program_action(XbNode *program, FuArchive *archive, GError **error)
 {
 	const gchar *filename_attr;
-	GBytes *file;
 	gsize file_size;
 	guint64 computed_num_partition_sectors;
 	guint64 num_partition_sectors;
 	guint64 sector_size_in_bytes;
+	g_autoptr(GBytes) file = NULL;
 
 	filename_attr = xb_node_get_attr(program, "filename");
 	if (filename_attr == NULL) {
