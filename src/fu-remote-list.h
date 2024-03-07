@@ -17,6 +17,7 @@ G_DECLARE_FINAL_TYPE(FuRemoteList, fu_remote_list, FU, REMOTE_LIST, GObject)
  * @FU_REMOTE_LIST_LOAD_FLAG_READONLY_FS:	Ignore readonly filesystem errors
  * @FU_REMOTE_LIST_LOAD_FLAG_NO_CACHE:		Do not save persistent xmlb silos
  * @FU_REMOTE_LIST_LOAD_FLAG_TEST_REMOTE:		Enable test mode remotes
+ * @FU_REMOTE_LIST_LOAD_FLAG_FIX_METADATA_URI:	Auto-fix to use the newest supported metadata
  *
  * The flags to use when loading a remote_listuration file.
  **/
@@ -25,6 +26,7 @@ typedef enum {
 	FU_REMOTE_LIST_LOAD_FLAG_READONLY_FS = 1 << 0,
 	FU_REMOTE_LIST_LOAD_FLAG_NO_CACHE = 1 << 1,
 	FU_REMOTE_LIST_LOAD_FLAG_TEST_REMOTE = 1 << 2,
+	FU_REMOTE_LIST_LOAD_FLAG_FIX_METADATA_URI = 1 << 3,
 	/*< private >*/
 	FU_REMOTE_LIST_LOAD_FLAG_LAST
 } FuRemoteListLoadFlags;
