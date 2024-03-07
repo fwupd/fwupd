@@ -1178,7 +1178,6 @@ fu_plugin_runner_coldplug(FuPlugin *self, FuProgress *progress, GError **error)
 					    FWUPD_ERROR_INTERNAL,
 					    "unspecified error");
 		}
-		g_warning("%s", error_local->message);
 		/* coldplug failed, but we might have already added devices to the daemon... */
 		if (priv->devices != NULL) {
 			for (guint i = 0; i < priv->devices->len; i++) {
