@@ -76,8 +76,10 @@ fu_bytes_get_contents(const gchar *filename, GError **error)
 	if (mapped_file == NULL || g_mapped_file_get_length(mapped_file) == 0) {
 		gchar *data = NULL;
 		gsize len = 0;
-		if (!g_file_get_contents(filename, &data, &len, error))
+		if (!g_file_get_contents(filename, &data, &len, error)) {
+			fwupd_error_convert(error);
 			return NULL;
+		}
 		g_debug("failed to read as mapped file, "
 			"so reading %s of size 0x%x: %s",
 			filename,
