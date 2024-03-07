@@ -8135,7 +8135,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 
 	/* read remotes */
 	if (flags & FU_ENGINE_LOAD_FLAG_REMOTES) {
-		FuRemoteListLoadFlags remote_list_flags = FU_REMOTE_LIST_LOAD_FLAG_NONE;
+		FuRemoteListLoadFlags remote_list_flags = FU_REMOTE_LIST_LOAD_FLAG_FIX_METADATA_URI;
 		if (fu_engine_config_get_test_devices(self->config))
 			remote_list_flags |= FU_REMOTE_LIST_LOAD_FLAG_TEST_REMOTE;
 		if (flags & FU_ENGINE_LOAD_FLAG_READONLY)

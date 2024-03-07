@@ -35,6 +35,7 @@
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
 #include "fu-release-common.h"
+#include "fu-remote-list.h"
 #include "fu-security-attr-common.h"
 #include "fu-smbios-private.h"
 #include "fu-spawn.h"
@@ -2075,7 +2076,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	remotes = fu_engine_get_remotes(engine, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(remotes);
-	g_assert_cmpint(remotes->len, ==, 4);
+	g_assert_cmpint(remotes->len, ==, 6);
 
 	/* ensure there are no devices already */
 	devices_pre = fu_engine_get_devices(engine, &error);
@@ -5817,6 +5818,33 @@ fu_engine_modify_bios_settings_func(gconstpointer user_data)
 }
 
 static void
+fu_remote_list_repair_func(void)
+{
+	FwupdRemote *remote;
+	gboolean ret;
+	g_autoptr(FuRemoteList) remote_list = fu_remote_list_new();
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_remote_list_load(remote_list, FU_REMOTE_LIST_LOAD_FLAG_FIX_METADATA_URI, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* check .gz converted to .xz */
+	remote = fu_remote_list_get_by_id(remote_list, "legacy-lvfs");
+	g_assert_nonnull(remote);
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+			==,
+			"http://localhost/stable.xml.xz");
+
+	/* check non-LVFS remote NOT .gz converted to .xz */
+	remote = fu_remote_list_get_by_id(remote_list, "legacy");
+	g_assert_nonnull(remote);
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+			==,
+			"http://localhost/stable.xml.gz");
+}
+
+static void
 fu_config_migrate_1_9_func(void)
 {
 	const gchar *fake_localconf_fn = "/tmp/fwupd-self-test/var/etc/fwupd/fwupd.conf";
@@ -6004,6 +6032,7 @@ main(int argc, char **argv)
 	}
 	g_test_add_func("/fwupd/idle", fu_idle_func);
 	g_test_add_func("/fwupd/client-list", fu_client_list_func);
+	g_test_add_func("/fwupd/remote-list{repair}", fu_remote_list_repair_func);
 	g_test_add_data_func("/fwupd/backend{usb}", self, fu_backend_usb_func);
 	g_test_add_data_func("/fwupd/backend{usb-invalid}", self, fu_backend_usb_invalid_func);
 	g_test_add_data_func("/fwupd/plugin{module}", self, fu_plugin_module_func);

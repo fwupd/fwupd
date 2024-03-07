@@ -35,6 +35,7 @@ struct _FuRemoteList {
 	GPtrArray *array;	  /* (element-type FwupdRemote) */
 	GPtrArray *monitors;	  /* (element-type GFileMonitor) */
 	gboolean testing_remote;
+	gboolean fix_metadata_uri;
 	XbSilo *silo;
 };
 
@@ -236,6 +237,18 @@ fu_remote_list_add_remote(FuRemoteList *self, FwupdRemote *remote)
 }
 
 static gboolean
+fu_remote_list_is_remote_origin_lvfs(FwupdRemote *remote)
+{
+	if (fwupd_remote_get_id(remote) != NULL &&
+	    g_strstr_len(fwupd_remote_get_id(remote), -1, "lvfs") != NULL)
+		return TRUE;
+	if (fwupd_remote_get_metadata_uri(remote) != NULL &&
+	    g_strstr_len(fwupd_remote_get_metadata_uri(remote), -1, "fwupd.org") != NULL)
+		return TRUE;
+	return FALSE;
+}
+
+static gboolean
 fu_remote_list_add_for_file(FuRemoteList *self,
 			    GHashTable *os_release,
 			    const gchar *filename,
@@ -263,6 +276,20 @@ fu_remote_list_add_for_file(FuRemoteList *self,
 			fwupd_remote_get_id(remote),
 			fwupd_remote_get_filename_source(remote_tmp));
 		return TRUE;
+	}
+
+	/* auto-fix before setup */
+	if (self->fix_metadata_uri && fu_remote_list_is_remote_origin_lvfs(remote)) {
+		const gchar *metadata_url = fwupd_remote_get_metadata_uri(remote);
+		if (metadata_url != NULL && g_str_has_suffix(metadata_url, ".gz")) {
+			g_autoptr(GString) str = g_string_new(metadata_url);
+			g_string_replace(str, ".gz", ".xz", 0);
+			g_info("auto-fixing remote %s MetadataURI from %s to %s",
+			       fwupd_remote_get_id(remote),
+			       metadata_url,
+			       str->str);
+			fwupd_remote_set_metadata_uri(remote, str->str);
+		}
 	}
 
 	/* load remote */
@@ -613,6 +640,10 @@ fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **er
 	/* enable testing only remotes */
 	if (flags & FU_REMOTE_LIST_LOAD_FLAG_TEST_REMOTE)
 		self->testing_remote = TRUE;
+
+	/* autofix on reload too */
+	if (flags & FU_REMOTE_LIST_LOAD_FLAG_FIX_METADATA_URI)
+		self->fix_metadata_uri = TRUE;
 
 	/* load AppStream about the remote_list */
 	if (!fu_remote_list_load_metainfos(builder, error))
