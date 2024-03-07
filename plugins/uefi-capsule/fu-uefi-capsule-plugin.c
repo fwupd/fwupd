@@ -273,8 +273,8 @@ fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error
 
 	/* find the closest locale match, falling back to `en` and `C` */
 	for (guint i = 0; langs[i] != NULL; i++) {
-		GBytes *blob_tmp;
 		g_autofree gchar *fn = NULL;
+		g_autoptr(GBytes) blob_tmp = NULL;
 		if (g_str_has_suffix(langs[i], ".UTF-8"))
 			continue;
 		fn = g_strdup_printf("fwupd-%s-%u-%u.bmp", langs[i], width, height);

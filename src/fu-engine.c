@@ -2684,9 +2684,10 @@ fu_engine_emulation_load(FuEngine *self, GBytes *data, GError **error)
 		g_autofree gchar *fn =
 		    g_strdup_printf("%s.json", fu_engine_install_phase_to_string(phase));
 		g_autofree gchar *json_safe = NULL;
-		GBytes *blob = fu_archive_lookup_by_fn(archive, fn, NULL);
+		g_autoptr(GBytes) blob = NULL;
 
 		/* not found */
+		blob = fu_archive_lookup_by_fn(archive, fn, NULL);
 		if (blob == NULL)
 			continue;
 		json_safe = g_strndup(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob));
