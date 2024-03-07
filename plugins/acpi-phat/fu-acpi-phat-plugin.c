@@ -26,12 +26,22 @@ fu_acpi_phat_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **er
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuFirmware) phat = fu_acpi_phat_new();
 	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
 	fn = g_build_filename(path, "PHAT", NULL);
-	blob = fu_bytes_get_contents(fn, error);
-	if (blob == NULL)
+	blob = fu_bytes_get_contents(fn, &error_local);
+	if (blob == NULL) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    error_local->message);
+			return FALSE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
+	}
 	if (!fu_firmware_parse(phat, blob, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 		return FALSE;
 	str = fu_acpi_phat_to_report_string(FU_ACPI_PHAT(phat));
