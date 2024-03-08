@@ -558,6 +558,12 @@ fwupd_build_history_report_json_device(JsonBuilder *builder, FwupdDevice *dev)
 		json_builder_add_string_value(builder, fwupd_release_get_update_message(rel));
 	}
 
+	/* find out if the predicted duration was accurate */
+	if (fwupd_device_get_install_duration(dev) != 0) {
+		json_builder_set_member_name(builder, "InstallDuration");
+		json_builder_add_int_value(builder, fwupd_device_get_install_duration(dev));
+	}
+
 	/* map back to the dev type on the LVFS */
 	guids = fwupd_device_get_guids(dev);
 	if (guids->len > 0) {
