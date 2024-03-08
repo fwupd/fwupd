@@ -415,6 +415,9 @@
     </distro>
   </dependency>
   <dependency id="libflashrom-dev">
+    <distro id="arch">
+      <package variant="x86_64">flashrom</package>
+    </distro>
     <distro id="fedora">
       <package variant="x86_64">flashrom-devel</package>
       <package variant="aarch64">flashrom-devel</package>
@@ -713,6 +716,9 @@
     </distro>
   </dependency>
   <dependency id="libjcat-dev">
+    <distro id="arch">
+      <package variant="x86_64">libjcat</package>
+    </distro>
     <distro id="fedora">
       <package variant="x86_64">libjcat-devel</package>
       <package variant="aarch64">libjcat-devel</package>
