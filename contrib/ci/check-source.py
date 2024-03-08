@@ -21,6 +21,8 @@ def test_files() -> int:
             continue
         if fn.startswith("contrib/ci"):
             continue
+        if fn.startswith("venv"):
+            continue
         with open(fn, "rb") as f:
             linecnt_g_set_error: int = 0
             for linecnt, line in enumerate(f.read().decode().split("\n")):
