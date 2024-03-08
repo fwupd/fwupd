@@ -3,7 +3,7 @@
 
 #[derive(ToString)]
 #[repr(u8)]
-// Upgrade ptotocol OpCode
+// Upgrade protocol OpCode
 enum FuQcOpcode {
     StartReq = 0x01,
     StartCfm = 0x02,

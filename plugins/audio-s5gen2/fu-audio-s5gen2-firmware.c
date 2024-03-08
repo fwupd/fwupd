@@ -13,7 +13,7 @@
 
 struct _FuQcS5gen2Firmware {
 	FuFirmware parent_instance;
-	guint32 file_id; /* generated ID unique for the firmware */
+	guint32 file_id;
 	guint8 protocol_ver;
 	gchar *device_variant;
 };
@@ -26,6 +26,7 @@ fu_qc_s5gen2_firmware_get_protocol_version(FuQcS5gen2Firmware *self)
 	return self->protocol_ver;
 }
 
+/* generated ID unique for the firmware */
 guint32
 fu_qc_s5gen2_firmware_get_id(FuQcS5gen2Firmware *self)
 {
@@ -58,31 +59,23 @@ fu_qc_s5gen2_firmware_parse(FuFirmware *firmware,
 			    GError **error)
 {
 	FuQcS5gen2Firmware *self = FU_QC_S5GEN2_FIRMWARE(firmware);
-	gsize streamsz = 0;
 	const guint8 *device_variant;
 	gsize config_offset = 26;
 	guint16 config_ver;
+	g_autofree gchar *ver_str = NULL;
+	g_autoptr(GByteArray) hdr = NULL;
 
 	/* FIXME: deal with encrypted? */
-	g_autoptr(GByteArray) hdr = NULL;
-	g_autofree gchar *ver_str = NULL;
-
-	if (!fu_input_stream_size(stream, &streamsz, error))
-		return FALSE;
-
 	hdr = fu_struct_qc_fw_update_hdr_parse_stream(stream, offset, error);
-
 	if (hdr == NULL)
 		return FALSE;
 
 	/* protocol version */
 	self->protocol_ver = fu_struct_qc_fw_update_hdr_get_protocol(hdr) - '0';
-
 	device_variant = fu_struct_qc_fw_update_hdr_get_dev_variant(hdr, NULL);
-	self->device_variant = g_strndup((gchar *)device_variant, 8);
+	self->device_variant = fu_strsafe((const gchar *)device_variant, 8);
 
 	config_offset += fu_struct_qc_fw_update_hdr_get_upgrades(hdr) * 4;
-
 	if (!fu_input_stream_read_u16(stream, config_offset, &config_ver, G_BIG_ENDIAN, error))
 		return FALSE;
 
@@ -90,15 +83,14 @@ fu_qc_s5gen2_firmware_parse(FuFirmware *firmware,
 				  fu_struct_qc_fw_update_hdr_get_major(hdr),
 				  fu_struct_qc_fw_update_hdr_get_minor(hdr),
 				  config_ver);
-
 	fu_firmware_set_version(firmware, ver_str);
 
 	if (!fu_firmware_set_stream(firmware, stream, error))
 		return FALSE;
-
 	if (!fu_input_stream_compute_crc32(stream, &self->file_id, 0xEDB88320, error))
 		return FALSE;
 
+	/* success */
 	return TRUE;
 }
 

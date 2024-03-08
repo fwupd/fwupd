@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023,2024 Denis Pynkin <denis.pynkin@collabora.com>
+ * Copyright (C) 2023 Denis Pynkin <denis.pynkin@collabora.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -8,9 +8,7 @@
 
 #include "fu-audio-s5gen2-device.h"
 #include "fu-audio-s5gen2-firmware.h"
-#include "fu-audio-s5gen2-fw-struct.h"
-#include "fu-audio-s5gen2-hid-device.h"
-#include "fu-audio-s5gen2-hid-struct.h"
+#include "fu-audio-s5gen2-impl.h"
 #include "fu-audio-s5gen2-struct.h"
 
 #define FU_QC_S5GEN2_DEVICE_DATA_REQ_SLEEP 1000 /* ms */
@@ -19,112 +17,61 @@
 /* 100ms delay requested by device as a rule */
 #define FU_QC_S5GEN2_DEVICE_VALIDATION_RETRIES (60000 / 100)
 
-typedef struct {
+struct _FuQcS5gen2Device {
+	FuDevice parent_instance;
 	guint32 file_id;
 	guint8 file_version;
 	guint16 battery_raw;
-} FuQcS5gen2DevicePrivate;
+};
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuQcS5gen2Device, fu_qc_s5gen2_device, FU_TYPE_DEVICE)
-#define GET_PRIVATE(o) (fu_qc_s5gen2_device_get_instance_private(o))
+G_DEFINE_TYPE(FuQcS5gen2Device, fu_qc_s5gen2_device, FU_TYPE_DEVICE)
 
-guint32
-fu_qc_s5gen2_device_get_file_id(FuQcS5gen2Device *self)
+static void
+fu_qc_s5gen2_device_to_string(FuDevice *device, guint idt, GString *str)
 {
-	FuQcS5gen2DevicePrivate *priv = GET_PRIVATE(self);
-
-	return priv->file_id;
-}
-
-void
-fu_qc_s5gen2_device_set_file_id(FuQcS5gen2Device *self, guint32 id)
-{
-	FuQcS5gen2DevicePrivate *priv = GET_PRIVATE(self);
-	priv->file_id = id;
-}
-
-guint8
-fu_qc_s5gen2_device_get_file_version(FuQcS5gen2Device *self)
-{
-	FuQcS5gen2DevicePrivate *priv = GET_PRIVATE(self);
-
-	return priv->file_version;
-}
-
-void
-fu_qc_s5gen2_device_set_file_version(FuQcS5gen2Device *self, guint8 version)
-{
-	FuQcS5gen2DevicePrivate *priv = GET_PRIVATE(self);
-	priv->file_version = version;
-}
-
-guint16
-fu_qc_s5gen2_device_get_battery_raw(FuQcS5gen2Device *self)
-{
-	FuQcS5gen2DevicePrivate *priv = GET_PRIVATE(self);
-
-	return priv->battery_raw;
+	FuQcS5gen2Device *self = FU_QC_S5GEN2_DEVICE(device);
+	fu_string_append_kx(str, idt, "FileId", self->file_id);
+	fu_string_append_kx(str, idt, "FileVersion", self->file_version);
+	fu_string_append_kx(str, idt, "BatteryRaw", self->battery_raw);
 }
 
 static gboolean
 fu_qc_s5gen2_device_msg_out(FuQcS5gen2Device *self, guint8 *data, gsize data_len, GError **error)
 {
-	FuQcS5gen2DeviceClass *klass = FU_QC_S5GEN2_DEVICE_GET_CLASS(self);
 	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-
-	if (klass->msg_out == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "not implemented (%s)",
-			    __FUNCTION__);
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
 		return FALSE;
 	}
-
-	return klass->msg_out(proxy, data, data_len, error);
+	return fu_qc_s5gen2_impl_msg_out(FU_QC_S5GEN2_IMPL(proxy), data, data_len, error);
 }
 
 static gboolean
 fu_qc_s5gen2_device_msg_in(FuQcS5gen2Device *self, guint8 *data_in, gsize data_len, GError **error)
 {
-	FuQcS5gen2DeviceClass *klass = FU_QC_S5GEN2_DEVICE_GET_CLASS(self);
 	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-
-	if (klass->msg_in == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "not implemented (%s)",
-			    __FUNCTION__);
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
 		return FALSE;
 	}
-
-	return klass->msg_in(proxy, data_in, data_len, error);
+	return fu_qc_s5gen2_impl_msg_in(FU_QC_S5GEN2_IMPL(proxy), data_in, data_len, error);
 }
 
 static gboolean
 fu_qc_s5gen2_device_msg_cmd(FuQcS5gen2Device *self, guint8 *data, gsize data_len, GError **error)
 {
-	FuQcS5gen2DeviceClass *klass = FU_QC_S5GEN2_DEVICE_GET_CLASS(self);
 	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-
-	if (klass->msg_cmd == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "not implemented (%s)",
-			    __FUNCTION__);
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
 		return FALSE;
 	}
-
-	return klass->msg_cmd(proxy, data, data_len, error);
+	return fu_qc_s5gen2_impl_msg_cmd(FU_QC_S5GEN2_IMPL(proxy), data, data_len, error);
 }
 
 static gboolean
 fu_qc_s5gen2_device_cmd_req_disconnect(FuQcS5gen2Device *self, GError **error)
 {
 	g_autoptr(GByteArray) req = fu_struct_qc_disconnect_req_new();
-
 	return fu_qc_s5gen2_device_msg_cmd(self, req->data, req->len, error);
 }
 
@@ -138,10 +85,8 @@ fu_qc_s5gen2_device_cmd_req_connect(FuQcS5gen2Device *self, GError **error)
 
 	if (!fu_qc_s5gen2_device_msg_cmd(self, req->data, req->len, error))
 		return FALSE;
-
 	if (!fu_qc_s5gen2_device_msg_in(self, data_in, sizeof(data_in), error))
 		return FALSE;
-
 	st = fu_struct_qc_update_status_parse(data_in, sizeof(data_in), 0, error);
 	if (st == NULL)
 		return FALSE;
@@ -193,13 +138,12 @@ fu_qc_s5gen2_device_cmd_abort(FuQcS5gen2Device *self, GError **error)
 static gboolean
 fu_qc_s5gen2_device_cmd_sync(FuQcS5gen2Device *self, GError **error)
 {
-	FuQcS5gen2DevicePrivate *priv = GET_PRIVATE(self);
 	guint8 data[FU_STRUCT_QC_SYNC_SIZE] = {0};
 	FuQcResumePoint rp;
 	g_autoptr(GByteArray) req = fu_struct_qc_sync_req_new();
 	g_autoptr(GByteArray) reply = NULL;
 
-	fu_struct_qc_sync_req_set_file_id(req, priv->file_id);
+	fu_struct_qc_sync_req_set_file_id(req, self->file_id);
 	if (!fu_qc_s5gen2_device_msg_out(self, req->data, req->len, error))
 		return FALSE;
 	if (!fu_qc_s5gen2_device_msg_in(self, data, sizeof(data), error))
@@ -219,13 +163,13 @@ fu_qc_s5gen2_device_cmd_sync(FuQcS5gen2Device *self, GError **error)
 	if (reply == NULL)
 		return FALSE;
 
-	if (priv->file_version != fu_struct_qc_sync_get_protocol_version(reply)) {
+	if (self->file_version != fu_struct_qc_sync_get_protocol_version(reply)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "unsupported firmware protocol version on device %u, expected %u",
 			    fu_struct_qc_sync_get_protocol_version(reply),
-			    priv->file_version);
+			    self->file_version);
 		return FALSE;
 	}
 
@@ -243,13 +187,13 @@ fu_qc_s5gen2_device_cmd_sync(FuQcS5gen2Device *self, GError **error)
 		return FALSE;
 	}
 
-	if (priv->file_id != fu_struct_qc_sync_get_file_id(reply)) {
+	if (self->file_id != fu_struct_qc_sync_get_file_id(reply)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "unexpected file ID from the device (%u), expected (%u)",
 			    fu_struct_qc_sync_get_file_id(reply),
-			    priv->file_id);
+			    self->file_id);
 		return FALSE;
 	}
 
@@ -259,8 +203,6 @@ fu_qc_s5gen2_device_cmd_sync(FuQcS5gen2Device *self, GError **error)
 static gboolean
 fu_qc_s5gen2_device_cmd_start(FuQcS5gen2Device *self, GError **error)
 {
-	FuQcS5gen2DevicePrivate *priv = GET_PRIVATE(self);
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
 	guint8 data[FU_STRUCT_QC_START_SIZE] = {0};
 	FuQcStartStatus status;
 	g_autoptr(GByteArray) req = fu_struct_qc_start_req_new();
@@ -286,11 +228,11 @@ fu_qc_s5gen2_device_cmd_start(FuQcS5gen2Device *self, GError **error)
 	}
 
 	/* check battery */
-	priv->battery_raw = fu_struct_qc_start_get_battery_level(reply);
+	self->battery_raw = fu_struct_qc_start_get_battery_level(reply);
 
 	/* FIXME: calculate and set real percentage here.
 	 * For now just pass the threshold. */
-	fu_device_set_battery_level(FU_DEVICE(proxy), 100);
+	fu_device_set_battery_level(FU_DEVICE(self), 100);
 
 	return TRUE;
 }
@@ -414,27 +356,23 @@ fu_qc_s5gen2_device_cmd_commit(FuQcS5gen2Device *self, GError **error)
 static gboolean
 fu_qc_s5gen2_device_ensure_version(FuQcS5gen2Device *self, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-
 	guint8 ver_raw[FU_STRUCT_QC_VERSION_SIZE] = {0};
-	g_autoptr(GByteArray) version_req = fu_struct_qc_version_req_new();
-	g_autoptr(GByteArray) version = NULL;
 	g_autofree gchar *ver_str = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GByteArray) version = NULL;
+	g_autoptr(GByteArray) version_req = fu_struct_qc_version_req_new();
 
-	g_autoptr(FuDeviceLocker) locker =
+	locker =
 	    fu_device_locker_new_full(FU_DEVICE(self),
 				      (FuDeviceLockerFunc)fu_qc_s5gen2_device_cmd_req_connect,
 				      (FuDeviceLockerFunc)fu_qc_s5gen2_device_cmd_req_disconnect,
 				      error);
 	if (locker == NULL)
 		return FALSE;
-
 	if (!fu_qc_s5gen2_device_msg_out(self, version_req->data, version_req->len, error))
 		return FALSE;
-
-	if (!fu_qc_s5gen2_device_msg_in(self, ver_raw, sizeof(ver_raw), error)) {
+	if (!fu_qc_s5gen2_device_msg_in(self, ver_raw, sizeof(ver_raw), error))
 		return FALSE;
-	}
 	version = fu_struct_qc_version_parse(ver_raw, sizeof(ver_raw), 0, error);
 	if (version == NULL)
 		return FALSE;
@@ -443,8 +381,7 @@ fu_qc_s5gen2_device_ensure_version(FuQcS5gen2Device *self, GError **error)
 				  fu_struct_qc_version_get_major(version),
 				  fu_struct_qc_version_get_minor(version),
 				  fu_struct_qc_version_get_config(version));
-
-	fu_device_set_version(proxy, ver_str);
+	fu_device_set_version(FU_DEVICE(self), ver_str);
 	return TRUE;
 }
 
@@ -452,26 +389,35 @@ static gboolean
 fu_qc_s5gen2_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuQcS5gen2Device *self = FU_QC_S5GEN2_DEVICE(device);
-	g_autoptr(FuDeviceLocker) locker =
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	locker =
 	    fu_device_locker_new_full(device,
 				      (FuDeviceLockerFunc)fu_qc_s5gen2_device_cmd_req_connect,
 				      (FuDeviceLockerFunc)fu_qc_s5gen2_device_cmd_req_disconnect,
 				      error);
-	if (locker == NULL)
+	if (locker == NULL) {
+		g_prefix_error(error, "failed to connect: ");
 		return FALSE;
-
-	if (!fu_qc_s5gen2_device_cmd_sync(self, error))
+	}
+	if (!fu_qc_s5gen2_device_cmd_sync(self, error)) {
+		g_prefix_error(error, "failed to cmd-sync: ");
 		return FALSE;
-
-	if (!fu_qc_s5gen2_device_cmd_start(self, error))
+	}
+	if (!fu_qc_s5gen2_device_cmd_start(self, error)) {
+		g_prefix_error(error, "failed to cmd-start: ");
 		return FALSE;
-
-	if (!fu_qc_s5gen2_device_cmd_proceed_to_commit(self, error))
+	}
+	if (!fu_qc_s5gen2_device_cmd_proceed_to_commit(self, error)) {
+		g_prefix_error(error, "failed to cmd-proceed-to-commit: ");
 		return FALSE;
-
-	if (!fu_qc_s5gen2_device_cmd_commit(self, error))
+	}
+	if (!fu_qc_s5gen2_device_cmd_commit(self, error)) {
+		g_prefix_error(error, "failed to cmd-commit: ");
 		return FALSE;
+	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -479,7 +425,6 @@ static gboolean
 fu_qc_s5gen2_device_reload(FuDevice *device, GError **error)
 {
 	FuQcS5gen2Device *self = FU_QC_S5GEN2_DEVICE(device);
-
 	return fu_qc_s5gen2_device_ensure_version(self, error);
 }
 
@@ -487,7 +432,6 @@ static gboolean
 fu_qc_s5gen2_device_setup(FuDevice *device, GError **error)
 {
 	FuQcS5gen2Device *self = FU_QC_S5GEN2_DEVICE(device);
-
 	return fu_qc_s5gen2_device_ensure_version(self, error);
 }
 
@@ -498,14 +442,17 @@ fu_qc_s5gen2_device_prepare(FuDevice *device,
 			    GError **error)
 {
 	FuQcS5gen2Device *self = FU_QC_S5GEN2_DEVICE(device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	g_autoptr(FuDeviceLocker) locker =
+	locker =
 	    fu_device_locker_new_full(device,
 				      (FuDeviceLockerFunc)fu_qc_s5gen2_device_cmd_req_connect,
 				      (FuDeviceLockerFunc)fu_qc_s5gen2_device_cmd_req_disconnect,
 				      error);
-	if (locker == NULL)
+	if (locker == NULL) {
+		g_prefix_error(error, "failed to connect: ");
 		return FALSE;
+	}
 
 	/* FIXME: do abort of any stalled upgrade for USB only
 	 * rework that part to continue update for wireless/USB */
@@ -626,15 +573,14 @@ fu_qc_s5gen2_device_prepare_firmware(FuDevice *device,
 				     GError **error)
 {
 	FuQcS5gen2Device *self = FU_QC_S5GEN2_DEVICE(device);
-	FuQcS5gen2DevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuFirmware) firmware = fu_qc_s5gen2_firmware_new();
 
 	if (!fu_firmware_parse_stream(firmware, stream, 0, flags, error))
 		return NULL;
 
-	priv->file_version =
+	self->file_version =
 	    fu_qc_s5gen2_firmware_get_protocol_version(FU_QC_S5GEN2_FIRMWARE(firmware));
-	priv->file_id = fu_qc_s5gen2_firmware_get_id(FU_QC_S5GEN2_FIRMWARE(firmware));
+	self->file_id = fu_qc_s5gen2_firmware_get_id(FU_QC_S5GEN2_FIRMWARE(firmware));
 
 	return g_steal_pointer(&firmware);
 }
@@ -651,13 +597,10 @@ fu_qc_s5gen2_device_write_firmware(FuDevice *device,
 
 	if (!fu_qc_s5gen2_device_cmd_req_connect(self, error))
 		return FALSE;
-
 	if (!fu_qc_s5gen2_device_cmd_sync(self, error))
 		return FALSE;
-
 	if (!fu_qc_s5gen2_device_cmd_start(self, error))
 		return FALSE;
-
 	if (!fu_qc_s5gen2_device_cmd_start_data(self, error))
 		return FALSE;
 
@@ -688,37 +631,54 @@ fu_qc_s5gen2_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* complete & reboot the device */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return fu_qc_s5gen2_device_cmd_transfer_complete(self, error);
+}
+
+static void
+fu_qc_s5gen2_hid_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
+}
+
+static void
+fu_qc_s5gen2_hid_device_replace(FuDevice *device, FuDevice *donor)
+{
+	FuQcS5gen2Device *self = FU_QC_S5GEN2_DEVICE(device);
+	FuQcS5gen2Device *self_donor = FU_QC_S5GEN2_DEVICE(donor);
+	self->file_id = self_donor->file_id;
+	self->file_version = self_donor->file_version;
+	self->battery_raw = self_donor->battery_raw;
 }
 
 static void
 fu_qc_s5gen2_device_init(FuQcS5gen2Device *self)
 {
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_add_protocol(FU_DEVICE(self), "com.qualcomm.s5gen2");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 }
 
 static void
 fu_qc_s5gen2_device_class_init(FuQcS5gen2DeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->setup = fu_qc_s5gen2_device_setup;
-	klass_device->reload = fu_qc_s5gen2_device_reload;
-	klass_device->prepare = fu_qc_s5gen2_device_prepare;
-	klass_device->attach = fu_qc_s5gen2_device_attach;
-	klass_device->prepare_firmware = fu_qc_s5gen2_device_prepare_firmware;
-	klass_device->write_firmware = fu_qc_s5gen2_device_write_firmware;
-}
-
-FuDevice *
-fu_qc_s5gen2_device_new(FuDevice *proxy)
-{
-	FuQcS5gen2Device *self = g_object_new(FU_TYPE_QC_S5GEN2_DEVICE,
-					      "context",
-					      fu_device_get_context(proxy),
-					      "proxy",
-					      proxy,
-					      NULL);
-
-	return FU_DEVICE(self);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_qc_s5gen2_device_to_string;
+	device_class->setup = fu_qc_s5gen2_device_setup;
+	device_class->reload = fu_qc_s5gen2_device_reload;
+	device_class->prepare = fu_qc_s5gen2_device_prepare;
+	device_class->attach = fu_qc_s5gen2_device_attach;
+	device_class->prepare_firmware = fu_qc_s5gen2_device_prepare_firmware;
+	device_class->write_firmware = fu_qc_s5gen2_device_write_firmware;
+	device_class->set_progress = fu_qc_s5gen2_hid_device_set_progress;
+	device_class->replace = fu_qc_s5gen2_hid_device_replace;
 }
