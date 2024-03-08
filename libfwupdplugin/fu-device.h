@@ -644,6 +644,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER (1ull << 43)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY:
+ *
+ * Reference-count the proxy -- which is useful when using `ProxyGType`.
+ *
+ * Since: 1.9.15
+ */
+#define FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY (1ull << 44)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);
@@ -810,6 +819,8 @@ FuContext *
 fu_device_get_context(FuDevice *self) G_GNUC_NON_NULL(1);
 GType
 fu_device_get_specialized_gtype(FuDevice *self) G_GNUC_NON_NULL(1);
+GType
+fu_device_get_proxy_gtype(FuDevice *self) G_GNUC_NON_NULL(1);
 GType
 fu_device_get_firmware_gtype(FuDevice *self) G_GNUC_NON_NULL(1);
 void
