@@ -387,6 +387,10 @@ fu_usb_device_open(FuDevice *device, GError **error)
 	if (priv->usb_device_locker != NULL)
 		return TRUE;
 
+	/* self tests */
+	if (priv->usb_device == NULL)
+		return TRUE;
+
 	/* open */
 	if (priv->open_retry_count > 0) {
 		locker = fu_device_locker_new_full(self,
@@ -459,6 +463,10 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* self tests */
+	if (priv->usb_device == NULL)
+		return TRUE;
 
 	/* get vendor */
 	if (fu_device_get_vendor(device) == NULL) {
@@ -535,6 +543,10 @@ fu_usb_device_ready(FuDevice *device, GError **error)
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) intfs = NULL;
+
+	/* self tests */
+	if (priv->usb_device == NULL)
+		return TRUE;
 
 	/* get the interface GUIDs */
 	intfs = g_usb_device_get_interfaces(priv->usb_device, error);
@@ -727,6 +739,10 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 #if G_USB_CHECK_VERSION(0, 4, 0)
 	g_autoptr(GError) error_bos = NULL;
 #endif
+
+	/* self tests */
+	if (priv->usb_device == NULL)
+		return TRUE;
 
 	/* set vendor ID */
 	vendor_id = g_strdup_printf("USB:0x%04X", g_usb_device_get_vid(priv->usb_device));
