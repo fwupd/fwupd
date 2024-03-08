@@ -360,9 +360,6 @@ fu_dpaux_device_incorporate(FuDevice *device, FuDevice *donor)
 	g_return_if_fail(FU_IS_DPAUX_DEVICE(self));
 	g_return_if_fail(FU_IS_DPAUX_DEVICE(donor));
 
-	/* FuUdevDevice->incorporate */
-	FU_DEVICE_CLASS(fu_dpaux_device_parent_class)->incorporate(device, donor);
-
 	/* copy private instance data */
 	priv->dpcd_ieee_oui = priv_donor->dpcd_ieee_oui;
 	priv->dpcd_hw_rev = priv_donor->dpcd_hw_rev;
