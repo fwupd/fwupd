@@ -172,6 +172,10 @@ fu_hid_device_open(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_hid_device_parent_class)->open(device, error))
 		return FALSE;
 
+	/* self tests */
+	if (usb_device == NULL)
+		return TRUE;
+
 	/* auto-detect */
 	if (priv->interface_autodetect) {
 		g_autoptr(GPtrArray) ifaces = NULL;
@@ -221,9 +225,11 @@ fu_hid_device_close(FuDevice *device, GError **error)
 	GUsbDeviceClaimInterfaceFlags flags = 0;
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	g_autoptr(GError) error_local = NULL;
-#endif
 
-#ifdef HAVE_GUSB
+	/* self tests */
+	if (usb_device == NULL)
+		return TRUE;
+
 	/* release */
 	if ((priv->flags & FU_HID_DEVICE_FLAG_NO_KERNEL_REBIND) == 0)
 		flags |= G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER;
