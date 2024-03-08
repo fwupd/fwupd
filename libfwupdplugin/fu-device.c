@@ -294,6 +294,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "host-cpu-child";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER)
 		return "explicit-order";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY)
+		return "refcounted-proxy";
 	return NULL;
 }
 
@@ -396,6 +398,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD;
 	if (g_strcmp0(flag, "explicit-order") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER;
+	if (g_strcmp0(flag, "refcounted-proxy") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -1268,6 +1272,9 @@ fu_device_proxy_flags_notify_cb(FuDevice *proxy, GParamSpec *pspec, gpointer use
  * behalf of another device, for instance attach()ing it after a successful
  * update.
  *
+ * If the %FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY flag is present on the device then a *strong*
+ * reference is used, otherwise the proxy will be cleared if @proxy is destroyed.
+ *
  * Since: 1.4.1
  **/
 void
@@ -1295,11 +1302,17 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 		fu_device_incorporate_from_proxy_flags(self, proxy);
 	}
 
-	if (priv->proxy != NULL)
-		g_object_remove_weak_pointer(G_OBJECT(priv->proxy), (gpointer *)&priv->proxy);
-	if (proxy != NULL)
-		g_object_add_weak_pointer(G_OBJECT(proxy), (gpointer *)&priv->proxy);
-	priv->proxy = proxy;
+	/* sometimes strong, sometimes weak */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY)) {
+		g_set_object(&priv->proxy, proxy);
+	} else {
+		if (priv->proxy != NULL)
+			g_object_remove_weak_pointer(G_OBJECT(priv->proxy),
+						     (gpointer *)&priv->proxy);
+		if (proxy != NULL)
+			g_object_add_weak_pointer(G_OBJECT(proxy), (gpointer *)&priv->proxy);
+		priv->proxy = proxy;
+	}
 	g_object_notify(G_OBJECT(self), "proxy");
 }
 
@@ -1311,8 +1324,8 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
  * behalf of another device, for instance attach()ing it after a successful
  * update.
  *
- * The proxy object is not refcounted and if destroyed this function will then
- * return %NULL.
+ * Unless %FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY is set, the proxy object is not refcounted and
+ * if destroyed this function will then return %NULL.
  *
  * Returns: (transfer none): a device or %NULL
  *
@@ -6469,8 +6482,14 @@ fu_device_finalize(GObject *object)
 
 	if (priv->progress != NULL)
 		g_object_unref(priv->progress);
-	if (priv->proxy != NULL)
-		g_object_remove_weak_pointer(G_OBJECT(priv->proxy), (gpointer *)&priv->proxy);
+	if (priv->proxy != NULL) {
+		if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY)) {
+			g_object_unref(priv->proxy);
+		} else {
+			g_object_remove_weak_pointer(G_OBJECT(priv->proxy),
+						     (gpointer *)&priv->proxy);
+		}
+	}
 	if (priv->ctx != NULL)
 		g_object_unref(priv->ctx);
 	if (priv->poll_id != 0)

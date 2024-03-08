@@ -592,6 +592,14 @@ typedef enum {
 	 */
 	FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER = 1ull << 42,
 	/**
+	 * FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY:
+	 *
+	 * Reference-count the proxy -- which is useful when using `ProxyGType`.
+	 *
+	 * Since: 1.9.15
+	 */
+	FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY = 1ull << 43,
+	/**
 	 * FU_DEVICE_INTERNAL_FLAG_UNKNOWN:
 	 *
 	 * Unknown flag value.
