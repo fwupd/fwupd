@@ -1731,7 +1731,7 @@ fu_plugin_backend_device_added(FuPlugin *self,
 	}
 
 	/* open */
-	proxy = fu_device_get_proxy(device);
+	proxy = fu_device_get_proxy(dev);
 	if (proxy != NULL) {
 		g_autoptr(FuDeviceLocker) locker_proxy = NULL;
 		locker_proxy = fu_device_locker_new(proxy, error);
