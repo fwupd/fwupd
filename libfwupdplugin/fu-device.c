@@ -1363,6 +1363,10 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 
+	/* unchanged */
+	if (proxy == priv->proxy)
+		return;
+
 	/* copy from proxy */
 	if (proxy != NULL) {
 		if (fu_device_get_context(self) == NULL && fu_device_get_context(proxy) != NULL)
