@@ -1672,6 +1672,7 @@ fu_plugin_backend_device_added(FuPlugin *self,
 	FuDevice *proxy;
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 	GType device_gtype = fu_device_get_specialized_gtype(FU_DEVICE(device));
+	GType proxy_gtype = fu_device_get_proxy_gtype(FU_DEVICE(device));
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -1711,6 +1712,17 @@ fu_plugin_backend_device_added(FuPlugin *self,
 	/* create new device and incorporate existing properties */
 	dev = g_object_new(device_gtype, "context", priv->ctx, NULL);
 	fu_device_incorporate(dev, FU_DEVICE(device));
+
+	/* any proxy device to create too? */
+	if (proxy_gtype != G_TYPE_INVALID) {
+		g_autoptr(FuDevice) proxy_tmp =
+		    g_object_new(proxy_gtype, "context", priv->ctx, NULL);
+		fu_device_incorporate(proxy_tmp, device);
+		fu_device_add_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY);
+		fu_device_set_proxy(dev, proxy_tmp);
+	}
+
+	/* notify plugins */
 	if (!fu_plugin_runner_device_created(self, dev, error))
 		return FALSE;
 	fu_progress_step_done(progress);
