@@ -70,6 +70,7 @@ typedef struct {
 	guint64 size_max;
 	gint open_refcount; /* atomic */
 	GType specialized_gtype;
+	GType proxy_gtype;
 	GType firmware_gtype;
 	GPtrArray *possible_plugins;
 	GPtrArray *instance_id_quirks; /* of utf-8 */
@@ -2024,6 +2025,24 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		}
 		return TRUE;
 	}
+	if (g_strcmp0(key, FU_QUIRKS_PROXY_GTYPE) == 0) {
+		if (priv->proxy_gtype != G_TYPE_INVALID) {
+			g_debug("already set GType to %s, ignoring %s",
+				g_type_name(priv->proxy_gtype),
+				value);
+			return TRUE;
+		}
+		priv->proxy_gtype = g_type_from_name(value);
+		if (priv->proxy_gtype == G_TYPE_INVALID) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unknown GType name %s",
+				    value);
+			return FALSE;
+		}
+		return TRUE;
+	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_GTYPE) == 0) {
 		if (priv->firmware_gtype != G_TYPE_INVALID) {
 			g_debug("already set firmware GType to %s, ignoring %s",
@@ -2096,6 +2115,41 @@ fu_device_set_specialized_gtype(FuDevice *self, GType gtype)
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(gtype != G_TYPE_INVALID);
 	priv->specialized_gtype = gtype;
+}
+
+/**
+ * fu_device_get_proxy_gtype:
+ * @self: a #FuDevice
+ *
+ * Gets the specialized type of the device
+ *
+ * Returns:#GType
+ *
+ * Since: 1.9.15
+ **/
+GType
+fu_device_get_proxy_gtype(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	return priv->proxy_gtype;
+}
+
+/**
+ * fu_device_set_proxy_gtype:
+ * @self: a #FuDevice
+ * @gtype: a #GType
+ *
+ * Sets the specialized type of the device
+ *
+ * Since: 1.9.15
+ **/
+void
+fu_device_set_proxy_gtype(FuDevice *self, GType gtype)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(gtype != G_TYPE_INVALID);
+	priv->proxy_gtype = gtype;
 }
 
 /**
@@ -4076,6 +4130,8 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 		fu_string_append(str, idt, "CustomFlags", priv->custom_flags);
 	if (priv->specialized_gtype != G_TYPE_INVALID)
 		fu_string_append(str, idt, "GType", g_type_name(priv->specialized_gtype));
+	if (priv->proxy_gtype != G_TYPE_INVALID)
+		fu_string_append(str, idt, "ProxyGType", g_type_name(priv->proxy_gtype));
 	if (priv->firmware_gtype != G_TYPE_INVALID)
 		fu_string_append(str, idt, "FirmwareGType", g_type_name(priv->firmware_gtype));
 	if (priv->size_min > 0) {

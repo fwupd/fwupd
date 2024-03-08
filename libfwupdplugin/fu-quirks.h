@@ -247,6 +247,14 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  **/
 #define FU_QUIRKS_GTYPE "GType"
 /**
+ * FU_QUIRKS_PROXY_GTYPE:
+ *
+ * The quirk key for the custom proxy GType, e.g. `FuCcgxHidDevice`.
+ *
+ * Since: 1.9.15
+ **/
+#define FU_QUIRKS_PROXY_GTYPE "ProxyGType"
+/**
  * FU_QUIRKS_FIRMWARE_GTYPE:
  *
  * The quirk key for the custom firmware GType, e.g. `FuUswidFirmware`.

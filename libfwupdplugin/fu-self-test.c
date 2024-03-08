@@ -1326,6 +1326,52 @@ fu_plugin_backend_device_func(void)
 }
 
 static void
+_plugin_backend_proxy_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
+{
+	FuDevice **dev = (FuDevice **)user_data;
+	*dev = g_object_ref(device);
+}
+
+static void
+fu_plugin_backend_proxy_device_func(void)
+{
+	gboolean ret;
+	FuDevice *proxy;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuDevice) device_new = NULL;
+	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRFUNC);
+	g_autoptr(GError) error = NULL;
+
+	fu_device_set_id(device, "testdev");
+	ret = fu_plugin_runner_backend_device_changed(plugin, device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* watch for the new superclassed device */
+	g_signal_connect(plugin,
+			 "device-added",
+			 G_CALLBACK(_plugin_backend_proxy_device_added_cb),
+			 &device_new);
+
+	fu_device_set_specialized_gtype(device, FU_TYPE_DEVICE);
+	fu_device_set_proxy_gtype(device, FU_TYPE_HID_DEVICE);
+	ret = fu_plugin_runner_backend_device_added(plugin, device, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* check device was constructed */
+	g_assert_nonnull(device_new);
+	g_assert_true(FU_IS_DEVICE(device_new));
+
+	/* check proxy was constructed */
+	proxy = fu_device_get_proxy(device_new);
+	g_assert_nonnull(proxy);
+	g_assert_true(FU_IS_USB_DEVICE(proxy));
+}
+
+static void
 fu_plugin_quirks_device_func(void)
 {
 	FuDevice *device_tmp;
@@ -5392,6 +5438,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/plugin{vfuncs}", fu_plugin_vfuncs_func);
 	g_test_add_func("/fwupd/plugin{device-gtype}", fu_plugin_device_gtype_func);
 	g_test_add_func("/fwupd/plugin{backend-device}", fu_plugin_backend_device_func);
+	g_test_add_func("/fwupd/plugin{backend-proxy-device}", fu_plugin_backend_proxy_device_func);
 	g_test_add_func("/fwupd/plugin{config}", fu_plugin_config_func);
 	g_test_add_func("/fwupd/plugin{devices}", fu_plugin_devices_func);
 	g_test_add_func("/fwupd/plugin{device-inhibit-children}",
