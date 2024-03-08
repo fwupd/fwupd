@@ -762,6 +762,8 @@ fu_device_get_context(FuDevice *self) G_GNUC_NON_NULL(1);
 GType
 fu_device_get_specialized_gtype(FuDevice *self) G_GNUC_NON_NULL(1);
 GType
+fu_device_get_proxy_gtype(FuDevice *self) G_GNUC_NON_NULL(1);
+GType
 fu_device_get_firmware_gtype(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_set_firmware_gtype(FuDevice *self, GType firmware_gtype) G_GNUC_NON_NULL(1);

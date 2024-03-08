@@ -69,3 +69,5 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
     G_GNUC_NON_NULL(1, 2, 3);
 void
 fu_device_set_specialized_gtype(FuDevice *self, GType gtype) G_GNUC_NON_NULL(1);
+void
+fu_device_set_proxy_gtype(FuDevice *self, GType gtype) G_GNUC_NON_NULL(1);
