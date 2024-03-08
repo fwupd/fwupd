@@ -1935,6 +1935,24 @@ fu_device_parent_func(void)
 }
 
 static void
+fu_device_incorporate_descendant_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuUsbDevice) usb_device = fu_usb_device_new(ctx, NULL);
+
+	fu_device_set_name(device, "FuDevice");
+	fu_device_set_summary(FU_DEVICE(usb_device), "FuUsbDevice");
+
+	fu_device_incorporate(FU_DEVICE(usb_device), device);
+	g_assert_cmpstr(fu_device_get_name(FU_DEVICE(usb_device)), ==, "FuDevice");
+
+	/* this won't explode as device_class->incorporate is checking types */
+	fu_device_incorporate(device, FU_DEVICE(usb_device));
+	g_assert_cmpstr(fu_device_get_summary(device), ==, "FuUsbDevice");
+}
+
+static void
 fu_device_incorporate_func(void)
 {
 	gboolean ret;
@@ -5453,6 +5471,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{parent}", fu_device_parent_func);
 	g_test_add_func("/fwupd/device{children}", fu_device_children_func);
 	g_test_add_func("/fwupd/device{incorporate}", fu_device_incorporate_func);
+	g_test_add_func("/fwupd/device{incorporate-descendant}",
+			fu_device_incorporate_descendant_func);
 	g_test_add_func("/fwupd/device{poll}", fu_device_poll_func);
 	g_test_add_func("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func("/fwupd/device-locker{fail}", fu_device_locker_fail_func);

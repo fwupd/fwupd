@@ -5357,6 +5357,50 @@ fu_device_get_instance_str(FuDevice *self, const gchar *key)
 	return g_hash_table_lookup(priv->instance_hash, key);
 }
 
+/* check whether @gtype_child is a descendant of @gtype_parent */
+static gboolean
+_g_type_is_a_recursive(GType gtype_child, GType gtype_parent)
+{
+	for (GType gtype = gtype_parent; gtype != G_TYPE_INVALID; gtype = g_type_parent(gtype)) {
+		if (gtype == gtype_child)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static void
+fu_device_incorporate_subclasses(FuDevice *self, FuDevice *donor)
+{
+	gpointer device_class_incorporate_last = NULL;
+	g_autoptr(GList) device_class_list = NULL;
+
+	/* run every unique ->incorporate() in each subclass */
+	for (GType gtype = G_OBJECT_TYPE(self); gtype != G_TYPE_INVALID;
+	     gtype = g_type_parent(gtype)) {
+		FuDeviceClass *device_class = g_type_class_peek(gtype);
+		if (gtype == FU_TYPE_DEVICE)
+			break;
+		if (!_g_type_is_a_recursive(gtype, G_OBJECT_TYPE(donor))) {
+			g_debug("not calling ->incorporate(%s, %s)",
+				g_type_name(gtype),
+				G_OBJECT_TYPE_NAME(donor));
+		} else {
+			g_debug("calling ->incorporate(%s, %s)",
+				g_type_name(gtype),
+				G_OBJECT_TYPE_NAME(donor));
+			device_class_list = g_list_prepend(device_class_list, device_class);
+		}
+	}
+	for (GList *l = device_class_list; l != NULL; l = l->next) {
+		FuDeviceClass *device_class = FU_DEVICE_CLASS(l->data);
+		if (device_class->incorporate != NULL &&
+		    device_class->incorporate != device_class_incorporate_last) {
+			device_class->incorporate(self, donor);
+			device_class_incorporate_last = device_class->incorporate;
+		}
+	}
+}
+
 /**
  * fu_device_incorporate:
  * @self: a #FuDevice
@@ -5369,7 +5413,6 @@ fu_device_get_instance_str(FuDevice *self, const gchar *key)
 void
 fu_device_incorporate(FuDevice *self, FuDevice *donor)
 {
-	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	FuDevicePrivate *priv_donor = GET_PRIVATE(donor);
 	GPtrArray *instance_ids = fu_device_get_instance_ids(donor);
@@ -5457,8 +5500,7 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 		priv->device_id_valid = TRUE;
 
 	/* optional subclass */
-	if (device_class->incorporate != NULL)
-		device_class->incorporate(self, donor);
+	fu_device_incorporate_subclasses(self, donor);
 
 	/* call the set_quirk_kv() vfunc for the superclassed object */
 	for (guint i = 0; i < instance_ids->len; i++) {

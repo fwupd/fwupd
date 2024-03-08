@@ -223,9 +223,6 @@ fu_corsair_bp_incorporate(FuDevice *self, FuDevice *donor)
 	g_return_if_fail(FU_IS_CORSAIR_BP(self));
 	g_return_if_fail(FU_IS_CORSAIR_BP(donor));
 
-	/* FuUsbDevice */
-	FU_DEVICE_CLASS(fu_corsair_bp_parent_class)->incorporate(self, donor);
-
 	bp_self->epin = bp_donor->epin;
 	bp_self->epout = bp_donor->epout;
 	bp_self->cmd_write_size = bp_donor->cmd_write_size;

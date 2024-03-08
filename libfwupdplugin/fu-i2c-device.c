@@ -242,9 +242,6 @@ fu_i2c_device_incorporate(FuDevice *device, FuDevice *donor)
 	g_return_if_fail(FU_IS_I2C_DEVICE(self));
 	g_return_if_fail(FU_IS_I2C_DEVICE(donor));
 
-	/* FuUdevDevice->incorporate */
-	FU_DEVICE_CLASS(fu_i2c_device_parent_class)->incorporate(device, donor);
-
 	/* copy private instance data */
 	priv->bus_number = priv_donor->bus_number;
 }
