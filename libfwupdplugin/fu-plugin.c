@@ -1749,6 +1749,7 @@ fu_plugin_backend_device_added(FuPlugin *self,
 		locker_proxy = fu_device_locker_new(proxy, error);
 		if (locker_proxy == NULL)
 			return FALSE;
+		fu_device_incorporate(dev, proxy);
 	}
 	locker = fu_device_locker_new(dev, error);
 	if (locker == NULL)
