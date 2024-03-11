@@ -1861,6 +1861,7 @@ fu_device_private_flags_func(void)
 	fu_device_set_custom_flags(device, "baz");
 	g_assert_cmpint(fu_device_get_private_flags(device), ==, TEST_FLAG_FOO);
 
+	fu_device_set_created(device, 0);
 	tmp = fu_device_to_string(device);
 	g_assert_cmpstr(tmp,
 			==,
@@ -2043,6 +2044,7 @@ fu_device_incorporate_func(void)
 	fu_device_set_equivalent_id(device, "DO_NOT_OVERWRITE");
 	fu_device_set_metadata(device, "test2", "DO_NOT_OVERWRITE");
 	fu_device_set_modified(device, 789);
+	fu_device_set_created(device, 0);
 
 	/* incorporate properties from donor to device */
 	fu_device_incorporate(device, donor);
