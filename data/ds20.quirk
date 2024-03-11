@@ -1,0 +1,3 @@
+# Nostromo n52 gamepad
+[USB\VID_050D&PID_0815]
+Flags = no-probe
