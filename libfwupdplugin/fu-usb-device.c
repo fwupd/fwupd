@@ -672,6 +672,12 @@ fu_usb_device_probe_bos_descriptors(FuUsbDevice *self, GError **error)
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) bos_descriptors = NULL;
 
+	/* already matched a quirk entry */
+	if (fu_device_has_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE)) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not probing");
+		return FALSE;
+	}
+
 	/* not supported, so there is no point opening */
 	if (g_usb_device_get_spec(priv->usb_device) <= 0x0200) {
 		g_set_error(error,

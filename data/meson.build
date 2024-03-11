@@ -30,6 +30,7 @@ if build_standalone
     install_mode: 'rw-r-----',
   )
   plugin_quirks += files([
+    'ds20.quirk',
     'power.quirk',
     'cfi.quirk',
   ])
