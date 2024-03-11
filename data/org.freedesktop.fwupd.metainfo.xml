@@ -38,6 +38,25 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.15" date="2024-03-11">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Allow loading in parameters for the test device from fwupd.conf</li>
+          <li>Ensure LVFS remotes are changed from .gz to .xz</li>
+          <li>Store the install duration in the history database</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Drop OverrideESPMountPoint references in uefi-capsule</li>
+          <li>Fix a potential double-free when writing AVer firmware</li>
+          <li>Only request the BOS descriptor when bcdUSB > 0x0200</li>
+          <li>Use the root device order when sorting device children</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.14" date="2024-02-26">
       <description>
         <p>
