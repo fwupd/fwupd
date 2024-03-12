@@ -28,6 +28,7 @@ struct _FuRelease {
 	FuEngineConfig *config;
 	GBytes *blob_fw;
 	gchar *update_request_id;
+	gchar *device_version_old;
 	GPtrArray *soft_reqs; /* nullable, element-type XbNode */
 	GPtrArray *hard_reqs; /* nullable, element-type XbNode */
 	guint64 priority;
@@ -59,6 +60,8 @@ fu_release_to_string(FuRelease *self)
 	}
 	if (self->device != NULL)
 		fu_string_append(str, idt, "Device", fu_device_get_id(self->device));
+	if (self->device_version_old != NULL)
+		fu_string_append(str, idt, "DeviceVersionOld", self->device_version_old);
 	if (self->remote != NULL)
 		fu_string_append(str, idt, "Remote", fwupd_remote_get_id(self->remote));
 	fu_string_append_kb(str, idt, "HasConfig", self->config != NULL);
@@ -105,6 +108,34 @@ fu_release_get_request(FuRelease *self)
 }
 
 /**
+ * fu_release_get_device_version_old:
+ * @self: a #FuRelease
+ *
+ * Gets the original [before update] device version.
+ *
+ * Returns: a string value, or %NULL if never set.
+ **/
+const gchar *
+fu_release_get_device_version_old(FuRelease *self)
+{
+	g_return_val_if_fail(FU_IS_RELEASE(self), NULL);
+	return self->device_version_old;
+}
+
+static void
+fu_release_set_device_version_old(FuRelease *self, const gchar *device_version_old)
+{
+	g_return_if_fail(FU_IS_RELEASE(self));
+
+	/* not changed */
+	if (g_strcmp0(self->device_version_old, device_version_old) == 0)
+		return;
+
+	g_free(self->device_version_old);
+	self->device_version_old = g_strdup(device_version_old);
+}
+
+/**
  * fu_release_set_device:
  * @self: a #FuRelease
  * @device: (nullable): a #FuDevice
@@ -116,6 +147,7 @@ fu_release_set_device(FuRelease *self, FuDevice *device)
 {
 	g_return_if_fail(FU_IS_RELEASE(self));
 	g_set_object(&self->device, device);
+	fu_release_set_device_version_old(self, fu_device_get_version(device));
 }
 
 /**
@@ -1278,6 +1310,7 @@ fu_release_finalize(GObject *obj)
 	FuRelease *self = FU_RELEASE(obj);
 
 	g_free(self->update_request_id);
+	g_free(self->device_version_old);
 	if (self->request != NULL)
 		g_object_unref(self->request);
 	if (self->device != NULL)
