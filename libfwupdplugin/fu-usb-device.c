@@ -706,8 +706,10 @@ fu_usb_device_probe_bos_descriptors(FuUsbDevice *self, GError **error)
 	}
 
 	gusb_locker = fu_device_locker_new(priv->usb_device, error);
-	if (gusb_locker == NULL)
+	if (gusb_locker == NULL) {
+		fu_error_convert(error);
 		return FALSE;
+	}
 	bos_descriptors = g_usb_device_get_bos_descriptors(priv->usb_device, &error_local);
 	if (bos_descriptors == NULL) {
 		if (g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_IO)) {
@@ -715,6 +717,7 @@ fu_usb_device_probe_bos_descriptors(FuUsbDevice *self, GError **error)
 			return TRUE;
 		}
 		g_propagate_error(error, g_steal_pointer(&error_local));
+		fu_error_convert(error);
 		return FALSE;
 	}
 	for (guint i = 0; i < bos_descriptors->len; i++) {

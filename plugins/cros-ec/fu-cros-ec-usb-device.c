@@ -185,6 +185,7 @@ fu_cros_ec_usb_device_do_xfer(FuCrosEcUsbDevice *self,
 						BULK_SEND_TIMEOUT_MS,
 						NULL,
 						error)) {
+			fu_error_convert(error);
 			return FALSE;
 		}
 		if (actual != outlen) {
@@ -209,6 +210,7 @@ fu_cros_ec_usb_device_do_xfer(FuCrosEcUsbDevice *self,
 						BULK_RECV_TIMEOUT_MS,
 						NULL,
 						error)) {
+			fu_error_convert(error);
 			return FALSE;
 		}
 		if (actual != inlen && !allow_less) {
@@ -850,9 +852,7 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 							    section,
 							    fu_progress_get_child(progress),
 							    &error_local)) {
-			if (g_error_matches(error_local,
-					    G_USB_DEVICE_ERROR,
-					    G_USB_DEVICE_ERROR_NOT_SUPPORTED)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				g_debug("failed to transfer section, trying another write, "
 					"ignoring error: %s",
 					error_local->message);

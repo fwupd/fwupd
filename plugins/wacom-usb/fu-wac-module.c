@@ -48,6 +48,7 @@ fu_wac_module_refresh(FuWacModule *self, GError **error)
 					      FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
 					      error)) {
 		g_prefix_error(error, "failed to refresh status: ");
+		fu_error_convert(error);
 		return FALSE;
 	}
 
@@ -84,7 +85,7 @@ fu_wac_module_refresh_cb(FuDevice *device, gpointer user_data, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_wac_module_refresh(self, &error_local)) {
-		if (g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_NO_DEVICE))
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
 			return TRUE;
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;

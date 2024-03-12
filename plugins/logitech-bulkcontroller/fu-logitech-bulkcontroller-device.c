@@ -150,6 +150,7 @@ fu_logitech_bulkcontroller_device_send(FuLogitechBulkcontrollerDevice *self,
 					NULL,
 					error)) {
 		g_prefix_error(error, "failed to send using bulk transfer: ");
+		fu_error_convert(error);
 		return FALSE;
 	}
 	return TRUE;
@@ -189,6 +190,7 @@ fu_logitech_bulkcontroller_device_recv(FuLogitechBulkcontrollerDevice *self,
 					NULL,
 					error)) {
 		g_prefix_error(error, "failed to receive using bulk transfer: ");
+		fu_error_convert(error);
 		return FALSE;
 	}
 	fu_dump_full(G_LOG_DOMAIN, "response", buf, actual_length, 20, FU_DUMP_FLAGS_SHOW_ASCII);
@@ -1193,9 +1195,7 @@ fu_logitech_bulkcontroller_device_clear_queue_cb(FuDevice *device,
 						    BULK_INTERFACE_SYNC,
 						    250, /* ms */
 						    &error_local)) {
-		if (g_error_matches(error_local,
-				    G_USB_DEVICE_ERROR,
-				    G_USB_DEVICE_ERROR_TIMED_OUT)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 			g_debug("timed out successfully");
 			return TRUE;
 		}
@@ -1338,13 +1338,10 @@ fu_logitech_bulkcontroller_device_init(FuLogitechBulkcontrollerDevice *self)
 					"post-install");
 
 	/* these are unrecoverable */
+	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, NULL);
 	fu_device_retry_add_recovery(FU_DEVICE(self),
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_NO_DEVICE,
-				     NULL);
-	fu_device_retry_add_recovery(FU_DEVICE(self),
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_PERMISSION_DENIED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_PERMISSION_DENIED,
 				     NULL);
 }
 

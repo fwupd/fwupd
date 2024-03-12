@@ -408,7 +408,7 @@ fu_daemon_auth_helper_free(FuMainAuthHelper *helper)
 static void
 fu_daemon_method_invocation_return_gerror(GDBusMethodInvocation *invocation, GError *error)
 {
-	fwupd_error_convert(&error);
+	fu_error_convert(&error);
 	g_dbus_method_invocation_return_gerror(invocation, error);
 }
 

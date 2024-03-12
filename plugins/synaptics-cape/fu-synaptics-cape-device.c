@@ -375,12 +375,8 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 			/* ignoring io error for software reset command */
 			if ((req->cmd_id == FU_SYNAPTICS_CMD_MCU_SOFT_RESET) &&
 			    (req->module_id == FU_SYNAPTICS_CAPE_CMD_APP_ID_CTRL) &&
-			    (g_error_matches(error_local,
-					     G_USB_DEVICE_ERROR,
-					     G_USB_DEVICE_ERROR_NO_DEVICE) ||
-			     g_error_matches(error_local,
-					     G_USB_DEVICE_ERROR,
-					     G_USB_DEVICE_ERROR_FAILED))) {
+			    (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
+			     g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL))) {
 				g_debug("ignoring: %s", error_local->message);
 				return TRUE;
 			}
@@ -397,11 +393,11 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 				if ((req->cmd_id == FU_SYNAPTICS_CMD_MCU_SOFT_RESET) &&
 				    (req->module_id == FU_SYNAPTICS_CAPE_CMD_APP_ID_CTRL) &&
 				    (g_error_matches(error_local,
-						     G_USB_DEVICE_ERROR,
-						     G_USB_DEVICE_ERROR_NO_DEVICE) ||
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_NOT_FOUND) ||
 				     g_error_matches(error_local,
-						     G_USB_DEVICE_ERROR,
-						     G_USB_DEVICE_ERROR_FAILED))) {
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INTERNAL))) {
 					g_debug("ignoring: %s", error_local->message);
 					return TRUE;
 				}
