@@ -1876,6 +1876,32 @@ fu_engine_sort_release_device_order_release_version_cb(gconstpointer a, gconstpo
 	return fu_release_compare(na, nb);
 }
 
+static gboolean
+fu_engine_install_release_version_check(FuEngine *self,
+					FuRelease *release,
+					FuDevice *device,
+					GError **error)
+{
+	FwupdVersionFormat fmt = fu_device_get_version_format(device);
+	const gchar *version_rel = fu_release_get_version(release);
+	const gchar *version_old = fu_release_get_device_version_old(release);
+	if (version_rel != NULL && fu_version_compare(version_old, version_rel, fmt) != 0 &&
+	    fu_version_compare(version_old, fu_device_get_version(device), fmt) == 0 &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "device version not updated on success, %s != %s",
+			    version_rel,
+			    fu_device_get_version(device));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 /**
  * fu_engine_install_releases:
  * @self: a #FuEngine
@@ -1997,6 +2023,24 @@ fu_engine_install_releases(FuEngine *self,
 	if (!fu_engine_composite_cleanup(self, devices_new, error)) {
 		g_prefix_error(error, "failed to cleanup composite action: ");
 		return FALSE;
+	}
+
+	/* for online updates, verify the version changed if not a re-install */
+	for (guint i = 0; i < releases->len; i++) {
+		FuRelease *release = g_ptr_array_index(releases, i);
+		FuDevice *device = fu_release_get_device(release);
+		g_autoptr(FuDevice) device_new = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		device_new = fu_device_list_get_by_id(self->device_list,
+						      fu_device_get_id(device),
+						      &error_local);
+		if (device_new == NULL) {
+			g_info("failed to find new device: %s", error_local->message);
+			continue;
+		}
+		if (!fu_engine_install_release_version_check(self, release, device_new, error))
+			return FALSE;
 	}
 
 	/* allow capturing setup again */
@@ -2355,11 +2399,8 @@ fu_engine_install_release(FuEngine *self,
 	FuEngineRequest *request = fu_release_get_request(release);
 	FuPlugin *plugin;
 	FwupdFeatureFlags feature_flags = FWUPD_FEATURE_FLAG_NONE;
-	FwupdVersionFormat fmt;
 	GBytes *blob_fw;
 	const gchar *tmp;
-	const gchar *version_rel;
-	const gchar *version_old;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) device_tmp = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -2491,23 +2532,6 @@ fu_engine_install_release(FuEngine *self,
 	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN)) {
 		fu_device_set_update_state(device_orig, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
 		return TRUE;
-	}
-
-	/* for online updates, verify the version changed if not a re-install */
-	fmt = fu_device_get_version_format(device);
-	version_rel = fu_release_get_version(release);
-	version_old = fu_release_get_device_version_old(release);
-	if (version_rel != NULL && fu_version_compare(version_old, version_rel, fmt) != 0 &&
-	    fu_version_compare(version_old, fu_device_get_version(device), fmt) == 0 &&
-	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
-		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED);
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "device version not updated on success, %s != %s",
-			    version_rel,
-			    fu_device_get_version(device));
-		return FALSE;
 	}
 
 	/* mark success unless needs a reboot */
