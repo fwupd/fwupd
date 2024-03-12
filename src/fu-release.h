@@ -46,6 +46,8 @@ GPtrArray *
 fu_release_get_hard_reqs(FuRelease *self);
 const gchar *
 fu_release_get_update_request_id(FuRelease *self);
+const gchar *
+fu_release_get_device_version_old(FuRelease *self);
 
 void
 fu_release_set_request(FuRelease *self, FuEngineRequest *request);

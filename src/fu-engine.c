@@ -2359,7 +2359,7 @@ fu_engine_install_release(FuEngine *self,
 	GBytes *blob_fw;
 	const gchar *tmp;
 	const gchar *version_rel;
-	g_autofree gchar *version_orig = NULL;
+	const gchar *version_old;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) device_tmp = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -2457,7 +2457,6 @@ fu_engine_install_release(FuEngine *self,
 	}
 
 	/* install firmware blob */
-	version_orig = g_strdup(fu_device_get_version(device));
 	if (!fu_engine_install_blob(self,
 				    device,
 				    blob_fw,
@@ -2497,8 +2496,9 @@ fu_engine_install_release(FuEngine *self,
 	/* for online updates, verify the version changed if not a re-install */
 	fmt = fu_device_get_version_format(device);
 	version_rel = fu_release_get_version(release);
-	if (version_rel != NULL && fu_version_compare(version_orig, version_rel, fmt) != 0 &&
-	    fu_version_compare(version_orig, fu_device_get_version(device), fmt) == 0 &&
+	version_old = fu_release_get_device_version_old(release);
+	if (version_rel != NULL && fu_version_compare(version_old, version_rel, fmt) != 0 &&
+	    fu_version_compare(version_old, fu_device_get_version(device), fmt) == 0 &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED);
 		g_set_error(error,
