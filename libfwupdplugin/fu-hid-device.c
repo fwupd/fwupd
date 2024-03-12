@@ -423,6 +423,7 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 						     helper->timeout,
 						     NULL, /* cancellable */
 						     error)) {
+			fu_error_convert(error);
 			return FALSE;
 		}
 	} else {
@@ -451,6 +452,7 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 						   NULL,
 						   error)) {
 			g_prefix_error(error, "failed to SetReport: ");
+			fu_error_convert(error);
 			return FALSE;
 		}
 	}
@@ -554,6 +556,7 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 						     helper->timeout,
 						     NULL, /* cancellable */
 						     error)) {
+			fu_error_convert(error);
 			return FALSE;
 		}
 		title = g_strdup_printf("HID::GetReport [EP=0x%02x]", priv->ep_addr_in);
@@ -584,6 +587,7 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 						   NULL,
 						   error)) {
 			g_prefix_error(error, "failed to GetReport: ");
+			fu_error_convert(error);
 			return FALSE;
 		}
 		fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, actual_len);

@@ -818,9 +818,8 @@ fu_synaptics_cxaudio_device_attach(FuDevice *device, FuProgress *progress, GErro
 						   sizeof(tmp),
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 						   &error_local)) {
-		if (g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_FAILED)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
 			return TRUE;
-		}
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
 	}

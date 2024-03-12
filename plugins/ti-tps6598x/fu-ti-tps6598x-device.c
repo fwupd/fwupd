@@ -65,6 +65,7 @@ fu_ti_tps6598x_device_usbep_read_raw(FuTiTps6598xDevice *self,
 					   NULL,
 					   error)) {
 		g_prefix_error(error, "failed to contact device: ");
+		fu_error_convert(error);
 		return NULL;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, title, buf->data, buf->len);
@@ -147,6 +148,7 @@ fu_ti_tps6598x_device_usbep_write(FuTiTps6598xDevice *self,
 						   NULL,
 						   error)) {
 			g_prefix_error(error, "failed to contact device: ");
+			fu_error_convert(error);
 			return FALSE;
 		}
 		if (actual_length != fu_chunk_get_data_sz(chk)) {
@@ -634,9 +636,7 @@ fu_ti_tps6598x_device_attach(FuDevice *device, FuProgress *progress, GError **er
 
 	/* hopefully this fails because the hardware rebooted */
 	if (!fu_ti_tps6598x_device_maybe_reboot(self, &error_local)) {
-		if (!g_error_matches(error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_NO_DEVICE)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}

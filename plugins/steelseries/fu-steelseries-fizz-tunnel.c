@@ -42,9 +42,7 @@ fu_steelseries_fizz_tunnel_ping(FuDevice *device, gboolean *reached, GError **er
 						   &error_local)) {
 		*reached = FALSE;
 
-		if (!g_error_matches(error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_TIMED_OUT)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 			/* failure */
 			*error = g_steal_pointer(&error_local);
 			return FALSE;

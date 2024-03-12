@@ -54,6 +54,7 @@ fu_fresco_pd_device_transfer_read(FuFrescoPdDevice *self,
 					   NULL,
 					   error)) {
 		g_prefix_error(error, "failed to read from offset 0x%x: ", offset);
+		fu_error_convert(error);
 		return FALSE;
 	}
 	if (bufsz != actual_length) {
@@ -99,6 +100,7 @@ fu_fresco_pd_device_transfer_write(FuFrescoPdDevice *self,
 					   NULL,
 					   error)) {
 		g_prefix_error(error, "failed to write offset 0x%x: ", offset);
+		fu_error_convert(error);
 		return FALSE;
 	}
 	if (bufsz != actual_length) {
@@ -222,7 +224,7 @@ fu_fresco_pd_device_panther_reset_device(FuFrescoPdDevice *self, GError **error)
 
 	/* ignore when the device reset before completing the transaction */
 	if (!fu_fresco_pd_device_or_byte(self, 0xA003, 1 << 3, &error_local)) {
-		if (g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_FAILED)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
 			g_debug("ignoring %s", error_local->message);
 			return TRUE;
 		}

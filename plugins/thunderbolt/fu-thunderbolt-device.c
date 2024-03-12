@@ -88,7 +88,7 @@ fu_thunderbolt_device_check_authorized(FuThunderboltDevice *self, GError **error
 			    g_io_error_from_errno(errno),
 			    "failed to read 'authorized: %s",
 			    g_strerror(errno));
-		fwupd_error_convert(error);
+		fu_error_convert(error);
 		return FALSE;
 	}
 	if (status == 1 || status == 2)
@@ -212,7 +212,7 @@ fu_thunderbolt_device_attach(FuDevice *device, FuProgress *progress, GError **er
 			    g_io_error_from_errno(errno),
 			    "failed to read 'nvm_authenticate: %s",
 			    g_strerror(errno));
-		fwupd_error_convert(error);
+		fu_error_convert(error);
 		return FALSE;
 	}
 
