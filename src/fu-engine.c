@@ -2002,7 +2002,8 @@ fu_engine_install_releases(FuEngine *self,
 	/* allow capturing setup again */
 	fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_SETUP);
 
-	/* success */
+	/* make the UI update */
+	fu_engine_emit_changed(self);
 	return TRUE;
 }
 
@@ -2543,10 +2544,7 @@ fu_engine_install_release(FuEngine *self,
 		}
 	}
 #endif
-
-	/* make the UI update */
-	fu_engine_emit_changed(self);
-
+	/* success */
 	return TRUE;
 }
 
