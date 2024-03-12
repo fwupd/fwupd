@@ -1999,6 +1999,9 @@ fu_engine_install_releases(FuEngine *self,
 		return FALSE;
 	}
 
+	/* allow capturing setup again */
+	fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_SETUP);
+
 	/* success */
 	return TRUE;
 }
@@ -2516,9 +2519,6 @@ fu_engine_install_release(FuEngine *self,
 		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 		fu_engine_wait_for_acquiesce(self, fu_device_get_acquiesce_delay(device_orig));
 	}
-
-	/* allow capturing setup again */
-	fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_SETUP);
 
 #ifdef HAVE_PASSIM
 	/* send to passimd, if enabled and running */
