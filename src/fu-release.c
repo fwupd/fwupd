@@ -411,15 +411,18 @@ fu_release_load_artifact(FuRelease *self, XbNode *artifact, GError **error)
 	if (locations != NULL) {
 		for (guint i = 0; i < locations->len; i++) {
 			XbNode *n = g_ptr_array_index(locations, i);
-			g_autofree gchar *scheme = NULL;
 
 			/* check the scheme is allowed */
-			scheme = fu_release_uri_get_scheme(xb_node_get_text(n));
-			if (scheme != NULL) {
-				guint prio =
-				    fu_engine_config_get_uri_scheme_prio(self->config, scheme);
-				if (prio == G_MAXUINT)
-					continue;
+			if (self->config != NULL) {
+				g_autofree gchar *scheme =
+				    fu_release_uri_get_scheme(xb_node_get_text(n));
+				if (scheme != NULL) {
+					guint prio =
+					    fu_engine_config_get_uri_scheme_prio(self->config,
+										 scheme);
+					if (prio == G_MAXUINT)
+						continue;
+				}
 			}
 
 			/* build the complete URI */
