@@ -633,6 +633,8 @@ fwupd_release_func(void)
 				    "  AppstreamId:          appstream-id\n"
 				    "  ReleaseId:            id\n"
 				    "  RemoteId:             remote-id\n"
+				    "  Name:                 name\n"
+				    "  NameVariantSuffix:    name_variant_suffix\n"
 				    "  Summary:              summary\n"
 				    "  Description:          description\n"
 				    "  Branch:               branch\n"
