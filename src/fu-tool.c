@@ -3138,6 +3138,7 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdRelease *rel;
 		const gchar *remote;
 		GNode *child;
+		g_autoptr(GError) error_local = NULL;
 
 		if (!fwupd_device_match_flags(dev,
 					      priv->filter_device_include,
@@ -3156,13 +3157,20 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		}
 
-		/* try to lookup releases from client */
+		/* try to lookup releases from client, falling back to the history release */
 		rels = fu_engine_get_releases(priv->engine,
 					      priv->request,
 					      fwupd_device_get_id(dev),
-					      error);
-		if (rels == NULL)
-			return FALSE;
+					      &error_local);
+		if (rels == NULL) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+				rels = g_ptr_array_new();
+				g_ptr_array_add(rels, fwupd_device_get_release_default(dev));
+			} else {
+				g_propagate_error(error, g_steal_pointer(&error_local));
+				return FALSE;
+			}
+		}
 
 		/* map to a release in client */
 		for (guint j = 0; j < rels->len; j++) {
