@@ -854,7 +854,6 @@ fu_release_load(FuRelease *self,
 	g_return_val_if_fail(XB_IS_NODE(component), FALSE);
 	g_return_val_if_fail(rel_optional == NULL || XB_IS_NODE(rel_optional), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-	g_return_val_if_fail(fwupd_release_get_appstream_id(FWUPD_RELEASE(self)) == NULL, FALSE);
 
 	/* set from the component */
 	tmp = xb_node_query_text(component, "id", NULL);

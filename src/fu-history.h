@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-release.h"
+
 #define FU_TYPE_PENDING (fu_history_get_type())
 G_DECLARE_FINAL_TYPE(FuHistory, fu_history, FU, HISTORY, GObject)
 
@@ -15,13 +17,13 @@ FuHistory *
 fu_history_new(void);
 
 gboolean
-fu_history_add_device(FuHistory *self, FuDevice *device, FwupdRelease *release, GError **error);
+fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GError **error);
 gboolean
 fu_history_modify_device(FuHistory *self, FuDevice *device, GError **error);
 gboolean
 fu_history_modify_device_release(FuHistory *self,
 				 FuDevice *device,
-				 FwupdRelease *release,
+				 FuRelease *release,
 				 GError **error);
 gboolean
 fu_history_remove_device(FuHistory *self, FuDevice *device, GError **error);

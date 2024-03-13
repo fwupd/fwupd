@@ -244,7 +244,7 @@ fu_engine_get_remote_id_for_stream(FuEngine *self, GInputStream *stream);
 gboolean
 fu_engine_schedule_update(FuEngine *self,
 			  FuDevice *device,
-			  FwupdRelease *release,
+			  FuRelease *release,
 			  GBytes *blob_cab,
 			  FwupdInstallFlags flags,
 			  GError **error);

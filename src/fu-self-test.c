@@ -2446,7 +2446,7 @@ fu_engine_history_modify_func(gconstpointer user_data)
 	/* add a new entry */
 	fu_device_set_id(device, "foobarbaz");
 	fu_history_remove_device(history, device, NULL);
-	ret = fu_history_add_device(history, device, FWUPD_RELEASE(release), &error);
+	ret = fu_history_add_device(history, device, release, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -4185,7 +4185,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(FwupdRelease) release = fwupd_release_new();
+	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GMappedFile) mapped_file = NULL;
@@ -4240,7 +4240,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_nonnull(mapped_file);
 	blob_cab = g_mapped_file_get_bytes(mapped_file);
-	fwupd_release_set_version(release, "1.2.3");
+	fu_release_set_version(release, "1.2.3");
 	ret = fu_engine_schedule_update(engine,
 					device,
 					release,
@@ -4329,7 +4329,7 @@ fu_history_func(gconstpointer user_data)
 	GPtrArray *checksums;
 	gboolean ret;
 	FuDevice *device;
-	FwupdRelease *release;
+	FuRelease *release;
 	g_autoptr(FuDevice) device_found = NULL;
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(GPtrArray) approved_firmware = NULL;
@@ -4364,11 +4364,11 @@ fu_history_func(gconstpointer user_data)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_set_created(device, 123);
 	fu_device_set_modified(device, 456);
-	release = fwupd_release_new();
-	fwupd_release_set_filename(release, "/var/lib/dave.cap"),
-	    fwupd_release_add_checksum(release, "abcdef");
-	fwupd_release_set_version(release, "3.0.2");
-	fwupd_release_add_metadata_item(release, "FwupdVersion", VERSION);
+	release = fu_release_new();
+	fu_release_set_filename(release, "/var/lib/dave.cap"),
+	    fu_release_add_checksum(release, "abcdef");
+	fu_release_set_version(release, "3.0.2");
+	fu_release_add_metadata_item(release, "FwupdVersion", VERSION);
 	ret = fu_history_add_device(history, device, release, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -4398,12 +4398,12 @@ fu_history_func(gconstpointer user_data)
 			FWUPD_DEVICE_FLAG_INTERNAL | FWUPD_DEVICE_FLAG_HISTORICAL);
 	g_assert_cmpint(fu_device_get_created(device), ==, 123);
 	g_assert_cmpint(fu_device_get_modified(device), ==, 456);
-	release = fu_device_get_release_default(device);
+	release = FU_RELEASE(fu_device_get_release_default(device));
 	g_assert_nonnull(release);
-	g_assert_cmpstr(fwupd_release_get_version(release), ==, "3.0.2");
-	g_assert_cmpstr(fwupd_release_get_filename(release), ==, "/var/lib/dave.cap");
-	g_assert_cmpstr(fwupd_release_get_metadata_item(release, "FwupdVersion"), ==, VERSION);
-	checksums = fwupd_release_get_checksums(release);
+	g_assert_cmpstr(fu_release_get_version(release), ==, "3.0.2");
+	g_assert_cmpstr(fu_release_get_filename(release), ==, "/var/lib/dave.cap");
+	g_assert_cmpstr(fu_release_get_metadata_item(release, "FwupdVersion"), ==, VERSION);
+	checksums = fu_release_get_checksums(release);
 	g_assert_nonnull(checksums);
 	g_assert_cmpint(checksums->len, ==, 1);
 	g_assert_cmpstr(fwupd_checksum_get_by_kind(checksums, G_CHECKSUM_SHA1), ==, "abcdef");

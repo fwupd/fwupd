@@ -2107,12 +2107,12 @@ fu_engine_install_releases(FuEngine *self,
 }
 
 static void
-fu_engine_update_release_integrity(FuEngine *self, FwupdRelease *release, const gchar *key)
+fu_engine_update_release_integrity(FuEngine *self, FuRelease *release, const gchar *key)
 {
 	g_autoptr(GHashTable) integrity = fu_engine_integrity_new(NULL);
 	if (integrity != NULL) {
 		g_autofree gchar *str = fu_engine_integrity_to_string(integrity);
-		fwupd_release_add_metadata_item(FWUPD_RELEASE(release), key, str);
+		fu_release_add_metadata_item(release, key, str);
 	}
 }
 
@@ -2172,9 +2172,7 @@ fu_engine_add_release_plugin_metadata(FuEngine *self,
 
 	/* measure the "old" system state */
 	if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY)) {
-		fu_engine_update_release_integrity(self,
-						   FWUPD_RELEASE(release),
-						   "SystemIntegrityOld");
+		fu_engine_update_release_integrity(self, release, "SystemIntegrityOld");
 	}
 
 	return TRUE;
@@ -2312,7 +2310,7 @@ fu_engine_offline_invalidate(GError **error)
 gboolean
 fu_engine_schedule_update(FuEngine *self,
 			  FuDevice *device,
-			  FwupdRelease *release,
+			  FuRelease *release,
 			  GBytes *blob_cab,
 			  FwupdInstallFlags flags,
 			  GError **error)
@@ -2372,7 +2370,7 @@ fu_engine_schedule_update(FuEngine *self,
 	g_info("schedule %s to be installed to %s on next boot",
 	       filename,
 	       fu_device_get_id(device));
-	fwupd_release_set_filename(release, filename);
+	fu_release_set_filename(release, filename);
 
 	/* add to database */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
@@ -2525,12 +2523,7 @@ fu_engine_install_release(FuEngine *self,
 		blob_cab = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
 		if (blob_cab == NULL)
 			return FALSE;
-		return fu_engine_schedule_update(self,
-						 device,
-						 FWUPD_RELEASE(release),
-						 blob_cab,
-						 flags,
-						 error);
+		return fu_engine_schedule_update(self, device, release, blob_cab, flags, error);
 	}
 
 	/* set this for the callback */
@@ -2558,7 +2551,7 @@ fu_engine_install_release(FuEngine *self,
 			return FALSE;
 		if (!fu_engine_add_release_plugin_metadata(self, release, plugin, error))
 			return FALSE;
-		if (!fu_history_add_device(self->history, device, FWUPD_RELEASE(release), error))
+		if (!fu_history_add_device(self->history, device, release, error))
 			return FALSE;
 	}
 
@@ -4711,12 +4704,12 @@ fu_engine_get_details(FuEngine *self,
 	for (guint i = 0; i < components->len; i++) {
 		XbNode *component = g_ptr_array_index(components, i);
 		FuDevice *dev;
-		g_autoptr(FwupdRelease) rel = fwupd_release_new();
+		g_autoptr(FuRelease) rel = fu_release_new();
 
 		dev = fu_engine_get_result_from_component(self, request, cabinet, component, error);
 		if (dev == NULL)
 			return NULL;
-		fu_device_add_release(dev, rel);
+		fu_device_add_release(dev, FWUPD_RELEASE(rel));
 
 		if (component_by_csum != NULL) {
 			const gchar *remote_id =
@@ -4724,14 +4717,14 @@ fu_engine_get_details(FuEngine *self,
 					       "../custom/value[@key='fwupd::RemoteId']",
 					       NULL);
 			if (remote_id != NULL)
-				fwupd_release_set_remote_id(rel, remote_id);
+				fu_release_set_remote_id(rel, remote_id);
 			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED);
 		}
 
 		/* add the checksum of the container blob */
 		for (guint j = 0; j < checksums->len; j++) {
 			const gchar *csum = g_ptr_array_index(checksums, j);
-			fwupd_release_add_checksum(rel, csum);
+			fu_release_add_checksum(rel, csum);
 		}
 
 		/* if this matched a device on the system, ensure all the
@@ -4941,15 +4934,16 @@ fu_engine_fixup_history_device(FuEngine *self, FuDevice *device)
 		const gchar *csum = g_ptr_array_index(csums, j);
 		g_autoptr(XbNode) component = fu_engine_get_component_for_checksum(self, csum);
 		if (component != NULL) {
-			const gchar *appstream_id = xb_node_query_text(component, "id", NULL);
-			const gchar *remote_id =
-			    xb_node_query_text(component,
-					       "../custom/value[@key='fwupd::RemoteId']",
-					       NULL);
-			if (remote_id != NULL)
-				fwupd_release_set_remote_id(rel, remote_id);
-			if (appstream_id != NULL)
-				fwupd_release_set_appstream_id(rel, appstream_id);
+			g_autoptr(GError) error_local = NULL;
+			if (!fu_release_load(FU_RELEASE(rel),
+					     NULL,
+					     component,
+					     NULL,
+					     FWUPD_INSTALL_FLAG_NONE,
+					     &error_local)) {
+				g_warning("failed to load release: %s", error_local->message);
+				continue;
+			}
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED);
 			break;
 		}
@@ -7695,7 +7689,7 @@ static gboolean
 fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **error)
 {
 	FuPlugin *plugin;
-	FwupdRelease *rel_history;
+	FuRelease *rel_history;
 	g_autofree gchar *btime = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GHashTable) metadata_device = NULL;
@@ -7707,7 +7701,7 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 
 	/* does the installed version match what we tried to install
 	 * before fwupd was restarted */
-	rel_history = fu_device_get_release_default(dev_history);
+	rel_history = FU_RELEASE(fu_device_get_release_default(dev_history));
 	if (rel_history == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -7719,7 +7713,7 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 	/* is this the same boot time as when we scheduled the update,
 	 * i.e. has fwupd been restarted before we rebooted */
 	btime = fu_engine_get_boot_time();
-	if (g_strcmp0(fwupd_release_get_metadata_item(rel_history, "BootTime"), btime) == 0) {
+	if (g_strcmp0(fu_release_get_metadata_item(rel_history, "BootTime"), btime) == 0) {
 		g_info("service restarted, but no reboot has taken place");
 
 		/* if it needed reboot then, it also needs it now... */
@@ -7733,7 +7727,7 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 	/* save any additional report metadata */
 	metadata_device = fu_device_report_metadata_post(dev);
 	if (metadata_device != NULL && g_hash_table_size(metadata_device) > 0) {
-		fwupd_release_add_metadata(rel_history, metadata_device);
+		fu_release_add_metadata(rel_history, metadata_device);
 		if (!fu_history_modify_device_release(self->history,
 						      dev_history,
 						      rel_history,
@@ -7758,12 +7752,12 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 
 	/* the system is running with the new firmware version */
 	if (fu_version_compare(fu_device_get_version(dev),
-			       fwupd_release_get_version(rel_history),
+			       fu_release_get_version(rel_history),
 			       fu_device_get_version_format(dev)) == 0) {
 		GPtrArray *checksums;
 		g_info("installed version %s matching history %s",
 		       fu_device_get_version(dev),
-		       fwupd_release_get_version(rel_history));
+		       fu_release_get_version(rel_history));
 
 		/* copy over runtime checksums if set from probe() */
 		checksums = fu_device_get_checksums(dev);
@@ -7793,7 +7787,7 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 		fu_device_set_update_state(dev_history, FWUPD_UPDATE_STATE_FAILED);
 		g_string_append_printf(str,
 				       "expected %s and got %s",
-				       fwupd_release_get_version(rel_history),
+				       fu_release_get_version(rel_history),
 				       fu_device_get_version(dev));
 		fu_device_set_update_error(dev_history, str->str);
 	} else {
