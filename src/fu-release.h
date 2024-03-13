@@ -33,6 +33,19 @@ fu_release_new(void);
 #define fu_release_set_branch(r, v)   fwupd_release_set_branch(FWUPD_RELEASE(r), v)
 #define fu_release_set_description(r, v) fwupd_release_set_description(FWUPD_RELEASE(r), v)
 #define fu_release_set_flags(r, v)    fwupd_release_set_flags(FWUPD_RELEASE(r), v)
+#define fu_release_set_filename(r, v)	 fwupd_release_set_filename(FWUPD_RELEASE(r), v)
+#define fu_release_add_metadata_item(r, k, v)                                                      \
+	fwupd_release_add_metadata_item(FWUPD_RELEASE(r), k, v)
+#define fu_release_set_version(r, v)	   fwupd_release_set_version(FWUPD_RELEASE(r), v)
+#define fu_release_set_protocol(r, v)	   fwupd_release_set_protocol(FWUPD_RELEASE(r), v)
+#define fu_release_set_appstream_id(r, v)  fwupd_release_set_appstream_id(FWUPD_RELEASE(r), v)
+#define fu_release_add_checksum(r, v)	   fwupd_release_add_checksum(FWUPD_RELEASE(r), v)
+#define fu_release_set_id(r, v)		   fwupd_release_set_id(FWUPD_RELEASE(r), v)
+#define fu_release_set_remote_id(r, v)	   fwupd_release_set_remote_id(FWUPD_RELEASE(r), v)
+#define fu_release_get_metadata_item(r, v) fwupd_release_get_metadata_item(FWUPD_RELEASE(r), v)
+#define fu_release_get_protocol(r)	   fwupd_release_get_protocol(FWUPD_RELEASE(r))
+#define fu_release_get_metadata(r)	   fwupd_release_get_metadata(FWUPD_RELEASE(r))
+#define fu_release_get_id(r)		   fwupd_release_get_id(FWUPD_RELEASE(r))
 
 gchar *
 fu_release_to_string(FuRelease *self);

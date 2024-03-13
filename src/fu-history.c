@@ -19,6 +19,7 @@
 
 #include "fu-device-private.h"
 #include "fu-history.h"
+#include "fu-release.h"
 #include "fu-security-attr-common.h"
 
 /*
@@ -61,11 +62,11 @@ fu_history_device_from_stmt(sqlite3_stmt *stmt)
 {
 	const gchar *tmp;
 	FuDevice *device;
-	g_autoptr(FwupdRelease) release = fwupd_release_new();
+	g_autoptr(FuRelease) release = fu_release_new();
 
 	/* create new result */
 	device = fu_device_new(NULL);
-	fu_device_add_release(device, release);
+	fu_device_add_release(device, FWUPD_RELEASE(release));
 
 	/* device_id */
 	tmp = (const gchar *)sqlite3_column_text(stmt, 0);
@@ -75,7 +76,7 @@ fu_history_device_from_stmt(sqlite3_stmt *stmt)
 	/* checksum */
 	tmp = (const gchar *)sqlite3_column_text(stmt, 1);
 	if (tmp != NULL)
-		fwupd_release_add_checksum(release, tmp);
+		fu_release_add_checksum(release, tmp);
 
 	/* plugin */
 	tmp = (const gchar *)sqlite3_column_text(stmt, 2);
@@ -96,7 +97,7 @@ fu_history_device_from_stmt(sqlite3_stmt *stmt)
 	/* filename */
 	tmp = (const gchar *)sqlite3_column_text(stmt, 6);
 	if (tmp != NULL)
-		fwupd_release_set_filename(release, tmp);
+		fu_release_set_filename(release, tmp);
 
 	/* flags */
 	fu_device_set_flags(device, sqlite3_column_int64(stmt, 7) | FWUPD_DEVICE_FLAG_HISTORICAL);
@@ -109,7 +110,7 @@ fu_history_device_from_stmt(sqlite3_stmt *stmt)
 			g_auto(GStrv) kv = g_strsplit(split[i], "=", 2);
 			if (g_strv_length(kv) != 2)
 				continue;
-			fwupd_release_add_metadata_item(release, kv[0], kv[1]);
+			fu_release_add_metadata_item(release, kv[0], kv[1]);
 		}
 	}
 
@@ -128,7 +129,7 @@ fu_history_device_from_stmt(sqlite3_stmt *stmt)
 	/* version_new */
 	tmp = (const gchar *)sqlite3_column_text(stmt, 12);
 	if (tmp != NULL)
-		fwupd_release_set_version(release, tmp);
+		fu_release_set_version(release, tmp);
 
 	/* version_old */
 	tmp = (const gchar *)sqlite3_column_text(stmt, 13);
@@ -143,17 +144,17 @@ fu_history_device_from_stmt(sqlite3_stmt *stmt)
 	/* protocol */
 	tmp = (const gchar *)sqlite3_column_text(stmt, 15);
 	if (tmp != NULL)
-		fwupd_release_set_protocol(release, tmp);
+		fu_release_set_protocol(release, tmp);
 
 	/* release_id */
 	tmp = (const gchar *)sqlite3_column_text(stmt, 16);
 	if (tmp != NULL)
-		fwupd_release_set_id(release, tmp);
+		fu_release_set_id(release, tmp);
 
 	/* appstream_id */
 	tmp = (const gchar *)sqlite3_column_text(stmt, 17);
 	if (tmp != NULL)
-		fwupd_release_set_appstream_id(release, tmp);
+		fu_release_set_appstream_id(release, tmp);
 
 	/* version_format */
 	fu_device_set_version_format(device, sqlite3_column_int(stmt, 18));
@@ -734,7 +735,7 @@ fu_history_modify_device(FuHistory *self, FuDevice *device, GError **error)
  * fu_history_modify_device_release:
  * @self: a #FuHistory
  * @device: a #FuDevice
- * @release: a #FwupdRelease
+ * @release: a #FuRelease
  * @error: (nullable): optional return location for an error
  *
  * Modify a device in the history database, also changing metadata from the new release.
@@ -746,7 +747,7 @@ fu_history_modify_device(FuHistory *self, FuDevice *device, GError **error)
 gboolean
 fu_history_modify_device_release(FuHistory *self,
 				 FuDevice *device,
-				 FwupdRelease *release,
+				 FuRelease *release,
 				 GError **error)
 {
 #ifdef HAVE_SQLITE
@@ -763,7 +764,7 @@ fu_history_modify_device_release(FuHistory *self,
 		return FALSE;
 
 	/* metadata is stored as a simple string */
-	metadata = _convert_hash_to_string(fwupd_release_get_metadata(release));
+	metadata = _convert_hash_to_string(fu_release_get_metadata(release));
 
 	/* overwrite entry if it exists */
 	locker = g_rw_lock_writer_locker_new(&self->db_mutex);
@@ -824,7 +825,7 @@ fu_history_modify_device_release(FuHistory *self,
  * Since: 1.0.4
  **/
 gboolean
-fu_history_add_device(FuHistory *self, FuDevice *device, FwupdRelease *release, GError **error)
+fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GError **error)
 {
 #ifdef HAVE_SQLITE
 	const gchar *checksum_device;
@@ -836,7 +837,7 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FwupdRelease *release, 
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
 	g_return_val_if_fail(FU_IS_DEVICE(device), FALSE);
-	g_return_val_if_fail(FWUPD_IS_RELEASE(release), FALSE);
+	g_return_val_if_fail(FU_IS_RELEASE(release), FALSE);
 
 	/* lazy load */
 	if (!fu_history_load(self, error))
@@ -847,14 +848,14 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FwupdRelease *release, 
 		return FALSE;
 	g_debug("add device %s [%s]", fu_device_get_name(device), fu_device_get_id(device));
 	if (release != NULL) {
-		GPtrArray *checksums = fwupd_release_get_checksums(release);
+		GPtrArray *checksums = fu_release_get_checksums(release);
 		checksum = fwupd_checksum_get_by_kind(checksums, G_CHECKSUM_SHA1);
 	}
 	checksum_device =
 	    fwupd_checksum_get_by_kind(fu_device_get_checksums(device), G_CHECKSUM_SHA1);
 
 	/* metadata is stored as a simple string */
-	metadata = _convert_hash_to_string(fwupd_release_get_metadata(release));
+	metadata = _convert_hash_to_string(fu_release_get_metadata(release));
 
 	/* add */
 	locker = g_rw_lock_writer_locker_new(&self->db_mutex);
@@ -897,7 +898,7 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FwupdRelease *release, 
 	sqlite3_bind_int(stmt, 2, fu_device_get_update_state(device));
 	sqlite3_bind_text(stmt, 3, fu_device_get_update_error(device), -1, SQLITE_STATIC);
 	sqlite3_bind_int64(stmt, 4, fu_history_get_device_flags_filtered(device));
-	sqlite3_bind_text(stmt, 5, fwupd_release_get_filename(release), -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 5, fu_release_get_filename(release), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 6, checksum, -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 7, fu_device_get_name(device), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 8, fu_device_get_plugin(device), -1, SQLITE_STATIC);
@@ -906,11 +907,11 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FwupdRelease *release, 
 	sqlite3_bind_int64(stmt, 11, fu_device_get_created(device));
 	sqlite3_bind_int64(stmt, 12, fu_device_get_modified(device));
 	sqlite3_bind_text(stmt, 13, fu_device_get_version(device), -1, SQLITE_STATIC);
-	sqlite3_bind_text(stmt, 14, fwupd_release_get_version(release), -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 14, fu_release_get_version(release), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 15, checksum_device, -1, SQLITE_STATIC);
-	sqlite3_bind_text(stmt, 16, fwupd_release_get_protocol(release), -1, SQLITE_STATIC);
-	sqlite3_bind_text(stmt, 17, fwupd_release_get_id(release), -1, SQLITE_STATIC);
-	sqlite3_bind_text(stmt, 18, fwupd_release_get_appstream_id(release), -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 16, fu_release_get_protocol(release), -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 17, fu_release_get_id(release), -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 18, fu_release_get_appstream_id(release), -1, SQLITE_STATIC);
 	sqlite3_bind_int(stmt, 19, fu_device_get_version_format(device));
 	sqlite3_bind_int(stmt, 20, fu_device_get_install_duration(device));
 	return fu_history_stmt_exec(self, stmt, NULL, error);
