@@ -28,7 +28,9 @@ fu_uefi_backend_linux_read(const gchar *path, const gchar *filename)
 }
 
 static FuUefiDevice *
-fu_uefi_backend_linux_device_new(FuUefiBackendLinux *self, const gchar *path)
+fu_uefi_backend_linux_device_new(FuUefiBackendLinux *self,
+				 const gchar *physical_id,
+				 const gchar *path)
 {
 	g_autoptr(FuUefiDevice) dev = NULL;
 	g_autofree gchar *fw_class = NULL;
@@ -73,7 +75,9 @@ fu_uefi_backend_linux_device_new(FuUefiBackendLinux *self, const gchar *path)
 		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE);
 
 	/* set ID */
-	fu_device_set_physical_id(FU_DEVICE(dev), path);
+	fu_device_set_backend_id(FU_DEVICE(dev), path);
+	fu_device_set_physical_id(FU_DEVICE(dev), physical_id);
+	fu_device_set_logical_id(FU_DEVICE(dev), fw_class);
 	return g_steal_pointer(&dev);
 }
 
@@ -139,7 +143,8 @@ fu_uefi_backend_linux_coldplug(FuBackend *backend, FuProgress *progress, GError 
 	/* add each device */
 	while ((fn = g_dir_read_name(dir)) != NULL) {
 		g_autofree gchar *path = g_build_filename(esrt_entries, fn, NULL);
-		g_autoptr(FuUefiDevice) dev = fu_uefi_backend_linux_device_new(self, path);
+		g_autoptr(FuUefiDevice) dev =
+		    fu_uefi_backend_linux_device_new(self, esrt_path, path);
 		fu_backend_device_added(backend, FU_DEVICE(dev));
 	}
 

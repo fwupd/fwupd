@@ -33,13 +33,14 @@ G_DEFINE_TYPE(FuUefiBackendFreebsd, fu_uefi_backend_freebsd, FU_TYPE_UEFI_BACKEN
 
 static FuUefiDevice *
 fu_uefi_backend_device_new(FuUefiBackend *self,
+			   const gchar *physical_id,
 			   struct efi_esrt_entry_v1 *entry,
 			   guint64 idx,
 			   GError **error)
 {
 	g_autoptr(FuUefiDevice) dev = NULL;
+	g_autofree gchar *backend_id = NULL;
 	g_autofree gchar *fw_class = NULL;
-	g_autofree gchar *phys_id = NULL;
 	uint32_t status;
 
 	uuid_to_string(&entry->fw_class, &fw_class, &status);
@@ -74,8 +75,10 @@ fu_uefi_backend_device_new(FuUefiBackend *self,
 			   NULL);
 
 	/* set ID */
-	phys_id = g_strdup_printf("ESRT/%u", (guint)idx);
-	fu_device_set_physical_id(FU_DEVICE(dev), phys_id);
+	backend_id = g_strdup_printf("ESRT/%u", (guint)idx);
+	fu_device_set_backend_id(FU_DEVICE(dev), backend_id);
+	fu_device_set_physical_id(FU_DEVICE(dev), physical_id);
+	fu_device_set_logical_id(FU_DEVICE(dev), fw_class);
 	return g_steal_pointer(&dev);
 }
 
@@ -105,17 +108,19 @@ fu_uefi_backend_freebsd_coldplug(FuBackend *backend, GError **error)
 {
 #ifdef HAVE_FREEBSD_ESRT
 	FuUefiBackend *self = FU_UEFI_BACKEND(backend);
+	const gchar *esrt_dev = "/dev/efi";
 	struct efi_get_table_ioc table = {.uuid = EFI_TABLE_ESRT};
 	gint efi_fd;
 	struct efi_esrt_entry_v1 *entries;
 	g_autofree struct efi_esrt_table *esrt = NULL;
 
-	efi_fd = g_open("/dev/efi", O_RDONLY, 0);
+	efi_fd = g_open(esrt_dev, O_RDONLY, 0);
 	if (efi_fd < 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "Cannot open /dev/efi");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "cannot open %s",
+			    esrt_dev);
 		return FALSE;
 	}
 
@@ -152,7 +157,7 @@ fu_uefi_backend_freebsd_coldplug(FuBackend *backend, GError **error)
 	entries = (struct efi_esrt_entry_v1 *)esrt->entries;
 	for (guint i = 0; i < esrt->fw_resource_count; i++) {
 		g_autoptr(FuUefiDevice) dev = NULL;
-		dev = fu_uefi_backend_device_new(self, &entries[i], i, error);
+		dev = fu_uefi_backend_device_new(self, esrt_dev, &entries[i], i, error);
 		if (dev == NULL)
 			return FALSE;
 
