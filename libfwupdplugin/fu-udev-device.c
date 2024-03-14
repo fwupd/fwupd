@@ -2358,9 +2358,7 @@ fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error)
 	usb_device = g_usb_context_find_by_bus_address(usb_ctx, bus, address, error);
 	if (usb_device == NULL)
 		return NULL;
-#if G_USB_CHECK_VERSION(0, 4, 1)
 	g_usb_device_add_tag(usb_device, "is-transient");
-#endif
 	return g_steal_pointer(&usb_device);
 #else
 	g_set_error_literal(error,
