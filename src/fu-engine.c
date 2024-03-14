@@ -1872,7 +1872,9 @@ fu_engine_publish_release(FuEngine *self, FuRelease *release, GError **error)
 	/* send to passimd, if enabled and running */
 	if (passim_client_get_version(self->passim_client) != NULL &&
 	    fu_engine_config_get_p2p_policy(self->config) & FU_P2P_POLICY_FIRMWARE) {
+		gsize streamsz = 0;
 		g_autofree gchar *basename = g_path_get_basename(fu_release_get_filename(release));
+		g_autofree gchar *checksum = NULL;
 		g_autoptr(GError) error_passim = NULL;
 		g_autoptr(PassimItem) passim_item = passim_item_new();
 		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
@@ -1880,28 +1882,14 @@ fu_engine_publish_release(FuEngine *self, FuRelease *release, GError **error)
 		passim_item_set_max_age(passim_item, 30 * 24 * 60 * 60);
 		passim_item_set_share_limit(passim_item, 50);
 		passim_item_set_basename(passim_item, basename);
-#if PASSIM_CHECK_VERSION(0, 1, 5)
-		{
-			gsize streamsz = 0;
-			g_autofree gchar *checksum =
-			    fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA256, error);
-			if (checksum == NULL)
-				return FALSE;
-			if (!fu_input_stream_size(stream, &streamsz, error))
-				return FALSE;
-			passim_item_set_size(passim_item, streamsz);
-			passim_item_set_stream(passim_item, stream);
-			passim_item_set_hash(passim_item, checksum);
-		}
-#else
-		{
-			g_autoptr(GBytes) blob_cab = NULL;
-			blob_cab = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
-			if (blob_cab == NULL)
-				return FALSE;
-			passim_item_set_bytes(passim_item, blob_cab);
-		}
-#endif
+		checksum = fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA256, error);
+		if (checksum == NULL)
+			return FALSE;
+		if (!fu_input_stream_size(stream, &streamsz, error))
+			return FALSE;
+		passim_item_set_size(passim_item, streamsz);
+		passim_item_set_stream(passim_item, stream);
+		passim_item_set_hash(passim_item, checksum);
 		if (!passim_client_publish(self->passim_client, passim_item, &error_passim)) {
 			if (!g_error_matches(error_passim, G_IO_ERROR, G_IO_ERROR_EXISTS)) {
 				g_warning("failed to publish firmware to Passim: %s",
