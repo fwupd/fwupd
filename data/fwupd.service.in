@@ -32,5 +32,6 @@ RestrictNamespaces=yes
 RestrictRealtime=yes
 RestrictSUIDSGID=yes
 SystemCallArchitectures=native
-SystemCallFilter=~@clock @cpu-emulation @mount
+SystemCallErrorNumber=EPERM
+SystemCallFilter=~@clock @cpu-emulation @debug @module @mount
 @dynamic_options@
