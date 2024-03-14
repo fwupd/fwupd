@@ -7,6 +7,10 @@ Plugin = flashrom
 Plugin = flashrom
 VersionFormat = quad
 
+# Star Labs generic (HwId - coreboot)
+[b8cf5af6-8a46-5deb-ac01-a35b1ea5fb48]
+Plugin = flashrom
+
 # StarLite Mk II (HwId - AMI)
 [013b60e5-1023-5bee-8ae5-14cae21377b7]
 Plugin = flashrom

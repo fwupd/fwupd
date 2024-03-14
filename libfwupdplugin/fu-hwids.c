@@ -467,6 +467,9 @@ fu_hwids_init(FuHwids *self)
 	fu_hwids_add_chid(self, "HardwareID-14", "Manufacturer");
 
 	/* used by the flashrom plugin */
+	fu_hwids_add_chid(self,
+			  "fwupd-04",
+			  "Manufacturer&Family&ProductName&ProductSku&BiosVendor");
 	fu_hwids_add_chid(self, "fwupd-05", "Manufacturer&Family&ProductName&BiosVendor");
 	fu_hwids_add_chid(self, "fwupd-14", "Manufacturer&BiosVendor");
 }
