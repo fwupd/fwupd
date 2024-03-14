@@ -637,7 +637,7 @@ fu_usb_device_close(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-#if G_USB_CHECK_VERSION(0, 4, 0)
+#ifdef HAVE_GUSB
 static gboolean
 fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, GUsbBosDescriptor *bos, GError **error)
 {
@@ -744,10 +744,8 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	guint16 release;
 	g_autofree gchar *platform_id = NULL;
 	g_autofree gchar *vendor_id = NULL;
-	g_autoptr(GPtrArray) intfs = NULL;
-#if G_USB_CHECK_VERSION(0, 4, 0)
 	g_autoptr(GError) error_bos = NULL;
-#endif
+	g_autoptr(GPtrArray) intfs = NULL;
 
 	/* self tests */
 	if (priv->usb_device == NULL)
@@ -847,7 +845,6 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 		fu_device_add_parent_physical_id(device, platform_id);
 	}
 
-#if G_USB_CHECK_VERSION(0, 4, 0)
 	/* parse the platform capability BOS descriptors for quirks */
 	if (!fu_usb_device_probe_bos_descriptors(self, &error_bos)) {
 		if (g_error_matches(error_bos, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
@@ -857,7 +854,6 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 				  error_bos->message);
 		}
 	}
-#endif
 #endif
 
 	/* success */

@@ -27,7 +27,6 @@ G_DEFINE_TYPE(FuUsbBackend, fu_usb_backend, FU_TYPE_BACKEND)
 static void
 fu_usb_backend_device_notify_flags_cb(FuDevice *device, GParamSpec *pspec, FuBackend *backend)
 {
-#if G_USB_CHECK_VERSION(0, 3, 10)
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
 
 	/* if waiting for a disconnect, set win32 to poll insanely fast -- and set it
@@ -41,9 +40,6 @@ fu_usb_backend_device_notify_flags_cb(FuDevice *device, GParamSpec *pspec, FuBac
 		g_usb_context_set_hotplug_poll_interval(self->usb_ctx,
 							FU_USB_BACKEND_POLL_INTERVAL_DEFAULT);
 	}
-#else
-	g_warning("GUsb >= 0.3.10 may be needed to notice device enumeration");
-#endif
 }
 #endif
 
