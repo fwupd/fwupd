@@ -2669,46 +2669,6 @@ fu_plugin_security_attr_new(FuPlugin *self, const gchar *appstream_id)
 	return g_steal_pointer(&attr);
 }
 
-#if !GLIB_CHECK_VERSION(2, 66, 0)
-
-#define G_FILE_SET_CONTENTS_CONSISTENT 0
-typedef guint GFileSetContentsFlags;
-static gboolean
-g_file_set_contents_full(const gchar *filename,
-			 const gchar *contents,
-			 gssize length,
-			 GFileSetContentsFlags flags,
-			 int mode,
-			 GError **error)
-{
-	gint fd;
-	gssize wrote;
-
-	if (length < 0)
-		length = strlen(contents);
-	fd = g_open(filename, O_CREAT, mode);
-	if (fd < 0) {
-		g_set_error(error,
-			    G_IO_ERROR,	       /* nocheck */
-			    G_IO_ERROR_FAILED, /* nocheck */
-			    "could not open %s file",
-			    filename);
-		return FALSE;
-	}
-	wrote = write(fd, contents, length);
-	if (wrote != length) {
-		g_set_error(error,
-			    G_IO_ERROR,	       /* nocheck */
-			    G_IO_ERROR_FAILED, /* nocheck */
-			    "did not write %s file",
-			    filename);
-		g_close(fd, NULL);
-		return FALSE;
-	}
-	return g_close(fd, error);
-}
-#endif
-
 /**
  * fu_plugin_set_config_value:
  * @self: a #FuPlugin
