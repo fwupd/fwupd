@@ -48,6 +48,7 @@ fu_wac_module_refresh(FuWacModule *self, GError **error)
 					      FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
 					      error)) {
 		g_prefix_error(error, "failed to refresh status: ");
+		fu_error_convert(error);
 		return FALSE;
 	}
 
@@ -84,7 +85,7 @@ fu_wac_module_refresh_cb(FuDevice *device, gpointer user_data, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_wac_module_refresh(self, &error_local)) {
-		if (g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_NO_DEVICE))
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
 			return TRUE;
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
@@ -217,6 +218,12 @@ fu_wac_module_cleanup(FuDevice *device,
 	return fu_device_cleanup(parent, progress, flags, error);
 }
 
+static gchar *
+fu_wac_module_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint16(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_wac_module_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -322,4 +329,5 @@ fu_wac_module_class_init(FuWacModuleClass *klass)
 	device_class->to_string = fu_wac_module_to_string;
 	device_class->cleanup = fu_wac_module_cleanup;
 	device_class->set_progress = fu_wac_module_set_progress;
+	device_class->convert_version = fu_wac_module_convert_version;
 }

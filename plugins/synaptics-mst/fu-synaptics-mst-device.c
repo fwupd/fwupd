@@ -178,7 +178,12 @@ fu_synaptics_mst_device_rc_to_error(FuSynapticsMstUpdcRc rc, GError **error)
 	default:
 		break;
 	}
-	g_set_error(error, G_IO_ERROR, code, "%s [%u]", fu_synaptics_mst_updc_rc_to_string(rc), rc);
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    code,
+		    "%s [%u]",
+		    fu_synaptics_mst_updc_rc_to_string(rc),
+		    rc);
 	return FALSE;
 }
 

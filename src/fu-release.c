@@ -28,6 +28,7 @@ struct _FuRelease {
 	FuEngineConfig *config;
 	GInputStream *stream;
 	gchar *update_request_id;
+	gchar *device_version_old;
 	GPtrArray *soft_reqs; /* nullable, element-type XbNode */
 	GPtrArray *hard_reqs; /* nullable, element-type XbNode */
 	guint64 priority;
@@ -59,6 +60,8 @@ fu_release_to_string(FuRelease *self)
 	}
 	if (self->device != NULL)
 		fu_string_append(str, idt, "Device", fu_device_get_id(self->device));
+	if (self->device_version_old != NULL)
+		fu_string_append(str, idt, "DeviceVersionOld", self->device_version_old);
 	if (self->remote != NULL)
 		fu_string_append(str, idt, "Remote", fwupd_remote_get_id(self->remote));
 	fu_string_append_kb(str, idt, "HasConfig", self->config != NULL);
@@ -104,6 +107,34 @@ fu_release_get_request(FuRelease *self)
 }
 
 /**
+ * fu_release_get_device_version_old:
+ * @self: a #FuRelease
+ *
+ * Gets the original [before update] device version.
+ *
+ * Returns: a string value, or %NULL if never set.
+ **/
+const gchar *
+fu_release_get_device_version_old(FuRelease *self)
+{
+	g_return_val_if_fail(FU_IS_RELEASE(self), NULL);
+	return self->device_version_old;
+}
+
+static void
+fu_release_set_device_version_old(FuRelease *self, const gchar *device_version_old)
+{
+	g_return_if_fail(FU_IS_RELEASE(self));
+
+	/* not changed */
+	if (g_strcmp0(self->device_version_old, device_version_old) == 0)
+		return;
+
+	g_free(self->device_version_old);
+	self->device_version_old = g_strdup(device_version_old);
+}
+
+/**
  * fu_release_set_device:
  * @self: a #FuRelease
  * @device: (nullable): a #FuDevice
@@ -115,6 +146,7 @@ fu_release_set_device(FuRelease *self, FuDevice *device)
 {
 	g_return_if_fail(FU_IS_RELEASE(self));
 	g_set_object(&self->device, device);
+	fu_release_set_device_version_old(self, fu_device_get_version(device));
 }
 
 /**
@@ -379,15 +411,18 @@ fu_release_load_artifact(FuRelease *self, XbNode *artifact, GError **error)
 	if (locations != NULL) {
 		for (guint i = 0; i < locations->len; i++) {
 			XbNode *n = g_ptr_array_index(locations, i);
-			g_autofree gchar *scheme = NULL;
 
 			/* check the scheme is allowed */
-			scheme = fu_release_uri_get_scheme(xb_node_get_text(n));
-			if (scheme != NULL) {
-				guint prio =
-				    fu_engine_config_get_uri_scheme_prio(self->config, scheme);
-				if (prio == G_MAXUINT)
-					continue;
+			if (self->config != NULL) {
+				g_autofree gchar *scheme =
+				    fu_release_uri_get_scheme(xb_node_get_text(n));
+				if (scheme != NULL) {
+					guint prio =
+					    fu_engine_config_get_uri_scheme_prio(self->config,
+										 scheme);
+					if (prio == G_MAXUINT)
+						continue;
+				}
 			}
 
 			/* build the complete URI */
@@ -739,6 +774,13 @@ fu_release_set_priority(FuRelease *self, guint64 priority)
 	self->priority = priority;
 }
 
+guint64
+fu_release_get_priority(FuRelease *self)
+{
+	g_return_val_if_fail(FU_IS_RELEASE(self), 0);
+	return self->priority;
+}
+
 static void
 fu_release_ensure_device_by_checksum(FuRelease *self, XbNode *component, XbNode *rel)
 {
@@ -812,7 +854,6 @@ fu_release_load(FuRelease *self,
 	g_return_val_if_fail(XB_IS_NODE(component), FALSE);
 	g_return_val_if_fail(rel_optional == NULL || XB_IS_NODE(rel_optional), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-	g_return_val_if_fail(fwupd_release_get_appstream_id(FWUPD_RELEASE(self)) == NULL, FALSE);
 
 	/* set from the component */
 	tmp = xb_node_query_text(component, "id", NULL);
@@ -1283,6 +1324,7 @@ fu_release_finalize(GObject *obj)
 	FuRelease *self = FU_RELEASE(obj);
 
 	g_free(self->update_request_id);
+	g_free(self->device_version_old);
 	if (self->request != NULL)
 		g_object_unref(self->request);
 	if (self->device != NULL)

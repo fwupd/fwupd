@@ -85,7 +85,7 @@ fu_archive_add_entry(FuArchive *self, const gchar *fn, GBytes *blob)
  *
  * Finds the blob referenced by filename
  *
- * Returns: (transfer none): a #GBytes, or %NULL if the filename was not found
+ * Returns: (transfer full): a #GBytes, or %NULL if the filename was not found
  *
  * Since: 1.2.2
  **/
@@ -103,7 +103,7 @@ fu_archive_lookup_by_fn(FuArchive *self, const gchar *fn, GError **error)
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no blob for %s", fn);
 		return NULL;
 	}
-	return bytes;
+	return g_bytes_ref(bytes);
 }
 
 /**

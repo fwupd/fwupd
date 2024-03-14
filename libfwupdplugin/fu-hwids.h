@@ -123,6 +123,8 @@ const gchar *
 fu_hwids_get_value(FuHwids *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 void
 fu_hwids_add_value(FuHwids *self, const gchar *key, const gchar *value) G_GNUC_NON_NULL(1, 2);
+GPtrArray *
+fu_hwids_get_chid_keys(FuHwids *self);
 const gchar *
 fu_hwids_get_replace_keys(FuHwids *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 gchar *

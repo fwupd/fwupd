@@ -68,6 +68,8 @@ gsize
 fu_common_align_up(gsize value, guint8 alignment);
 gboolean
 fu_power_state_is_ac(FuPowerState power_state);
+void
+fu_error_convert(GError **perror);
 
 void
 fu_xmlb_builder_insert_kv(XbBuilderNode *bn, const gchar *key, const gchar *value)

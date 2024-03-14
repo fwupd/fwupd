@@ -11,6 +11,9 @@
 #ifdef HAVE_CPUID_H
 #include <cpuid.h>
 #endif
+#ifdef HAVE_GUSB
+#include <gusb.h>
+#endif
 
 #include "fu-common-private.h"
 #include "fu-firmware.h"
@@ -268,6 +271,70 @@ fu_power_state_is_ac(FuPowerState power_state)
 	    power_state == FU_POWER_STATE_AC_FULLY_CHARGED)
 		return TRUE;
 	return FALSE;
+}
+
+/**
+ * fu_error_convert:
+ * @perror: (nullable): A #GError, perhaps with domain #GIOError
+ *
+ * Convert the error to a #FwupdError, if required.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_error_convert(GError **perror)
+{
+	GError *error = (perror != NULL) ? *perror : NULL;
+	struct {
+		GQuark domain;
+		gint code;
+		FwupdError fwupd_code;
+	} map[] = {
+#ifdef HAVE_GUSB
+		{G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_ALREADY_OPEN, FWUPD_ERROR_NOTHING_TO_DO},
+		{G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_CANCELLED, FWUPD_ERROR_NOTHING_TO_DO},
+		{G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_FAILED, FWUPD_ERROR_INTERNAL},
+		{G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_INTERNAL, FWUPD_ERROR_INTERNAL},
+		{G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_IO, FWUPD_ERROR},
+		{G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_NO_DEVICE, FWUPD_ERROR_NOT_FOUND},
+		{G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_NOT_OPEN, FWUPD_ERROR_INTERNAL},
+		{G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_NOT_SUPPORTED, FWUPD_ERROR_NOT_SUPPORTED},
+		{G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_TIMED_OUT, FWUPD_ERROR_TIMED_OUT},
+		{G_USB_DEVICE_ERROR,
+		 G_USB_DEVICE_ERROR_PERMISSION_DENIED,
+		 FWUPD_ERROR_PERMISSION_DENIED},
+#if G_USB_CHECK_VERSION(0, 4, 8)
+		{G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_BUSY, FWUPD_ERROR_BUSY},
+#endif
+#endif
+	};
+
+	/* sanity check */
+	if (error == NULL)
+		return;
+
+	/* convert GIOError and GFileError */
+	fwupd_error_convert(perror);
+	if (error->domain == FWUPD_ERROR)
+		return;
+
+	/* find match */
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
+		if (g_error_matches(error, map[i].domain, map[i].code)) {
+			error->domain = FWUPD_ERROR;
+			error->code = map[i].fwupd_code;
+			return;
+		}
+	}
+
+	/* fallback */
+#ifndef SUPPORTED_BUILD
+	g_critical("GError %s:%i sending over D-Bus was not converted to FwupdError",
+		   g_quark_to_string(error->domain),
+		   error->code);
+#endif
+	error->domain = FWUPD_ERROR;
+	error->code = FWUPD_ERROR_INTERNAL;
 }
 
 /**

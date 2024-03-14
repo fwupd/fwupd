@@ -273,8 +273,8 @@ fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error
 
 	/* find the closest locale match, falling back to `en` and `C` */
 	for (guint i = 0; langs[i] != NULL; i++) {
-		GBytes *blob_tmp;
 		g_autofree gchar *fn = NULL;
+		g_autoptr(GBytes) blob_tmp = NULL;
 		if (g_str_has_suffix(langs[i], ".UTF-8"))
 			continue;
 		fn = g_strdup_printf("fwupd-%s-%u-%u.bmp", langs[i], width, height);
@@ -835,6 +835,7 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuUefiDeviceKind device_kind;
+	g_autoptr(GError) error_udisks2 = NULL;
 
 	/* probe to get add GUIDs (and hence any quirk fixups) */
 	if (!fu_device_probe(FU_DEVICE(dev), error))
@@ -899,6 +900,16 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 		}
 	}
 	fu_device_add_request_flag(FU_DEVICE(dev), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+
+	/* find and set ESP */
+	if (self->esp == NULL) {
+		self->esp = fu_uefi_capsule_plugin_get_default_esp(plugin, &error_udisks2);
+		if (self->esp == NULL)
+			g_warning("cannot find default ESP: %s", error_udisks2->message);
+		fu_uefi_capsule_plugin_validate_esp(self);
+	}
+	if (self->esp != NULL)
+		fu_uefi_device_set_esp(dev, self->esp);
 
 	/* success */
 	return TRUE;
@@ -1071,27 +1082,17 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	const gchar *str;
 	gboolean has_fde = FALSE;
-	g_autoptr(GError) error_udisks2 = NULL;
 	g_autoptr(GError) error_fde = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 63, "find-esp");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "check-cod");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 8, "check-bitlocker");
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "coldplug");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 64, "coldplug");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 26, "add-devices");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "setup-bgrt");
-
-	if (self->esp == NULL) {
-		self->esp = fu_uefi_capsule_plugin_get_default_esp(plugin, &error_udisks2);
-		if (self->esp == NULL)
-			g_warning("cannot find default ESP: %s", error_udisks2->message);
-		fu_uefi_capsule_plugin_validate_esp(self);
-	}
-	fu_progress_step_done(progress);
 
 	/* firmware may lie */
 	if (!fu_plugin_get_config_value_boolean(plugin, "DisableCapsuleUpdateOnDisk")) {
@@ -1121,8 +1122,6 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 		FuUefiDevice *dev = g_ptr_array_index(devices, i);
 		g_autoptr(GError) error_device = NULL;
 
-		if (self->esp != NULL)
-			fu_uefi_device_set_esp(dev, self->esp);
 		if (!fu_uefi_capsule_plugin_coldplug_device(plugin, dev, &error_device)) {
 			if (g_error_matches(error_device, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				g_warning("skipping device that failed coldplug: %s",

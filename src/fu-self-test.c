@@ -21,8 +21,8 @@
 #include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
 #include "fu-cabinet.h"
-#include "fu-config-private.h"
 #include "fu-client-list.h"
+#include "fu-config-private.h"
 #include "fu-console.h"
 #include "fu-context-private.h"
 #include "fu-device-list.h"
@@ -35,6 +35,7 @@
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
 #include "fu-release-common.h"
+#include "fu-remote-list.h"
 #include "fu-remote.h"
 #include "fu-security-attr-common.h"
 #include "fu-smbios-private.h"
@@ -2079,7 +2080,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	remotes = fu_engine_get_remotes(engine, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(remotes);
-	g_assert_cmpint(remotes->len, ==, 4);
+	g_assert_cmpint(remotes->len, ==, 6);
 
 	/* ensure there are no devices already */
 	devices_pre = fu_engine_get_devices(engine, &error);
@@ -2445,7 +2446,7 @@ fu_engine_history_modify_func(gconstpointer user_data)
 	/* add a new entry */
 	fu_device_set_id(device, "foobarbaz");
 	fu_history_remove_device(history, device, NULL);
-	ret = fu_history_add_device(history, device, FWUPD_RELEASE(release), &error);
+	ret = fu_history_add_device(history, device, release, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -3679,6 +3680,34 @@ fu_device_list_explicit_order_func(gconstpointer user_data)
 }
 
 static void
+fu_device_list_explicit_order_post_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FuDevice) device_child = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) device_root = fu_device_new(self->ctx);
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+
+	/* add both */
+	fu_device_set_id(device_root, "device");
+	fu_device_add_instance_id(device_root, "foobar");
+	fu_device_convert_instance_ids(device_root);
+	fu_device_set_id(device_child, "device-child");
+	fu_device_add_instance_id(device_child, "baz");
+	fu_device_convert_instance_ids(device_child);
+	fu_device_add_child(device_root, device_child);
+	fu_device_list_add(device_list, device_root);
+	fu_device_list_add(device_list, device_child);
+
+	fu_device_list_depsolve_order(device_list, device_root);
+	g_assert_cmpint(fu_device_get_order(device_root), ==, 0);
+	g_assert_cmpint(fu_device_get_order(device_child), ==, -1);
+
+	fu_device_add_internal_flag(device_root, FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER);
+	g_assert_cmpint(fu_device_get_order(device_root), ==, G_MAXINT);
+	g_assert_cmpint(fu_device_get_order(device_child), ==, G_MAXINT);
+}
+
+static void
 fu_device_list_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -4156,7 +4185,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(FwupdRelease) release = fwupd_release_new();
+	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GMappedFile) mapped_file = NULL;
@@ -4211,7 +4240,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_nonnull(mapped_file);
 	blob_cab = g_mapped_file_get_bytes(mapped_file);
-	fwupd_release_set_version(release, "1.2.3");
+	fu_release_set_version(release, "1.2.3");
 	ret = fu_engine_schedule_update(engine,
 					device,
 					release,
@@ -4300,7 +4329,7 @@ fu_history_func(gconstpointer user_data)
 	GPtrArray *checksums;
 	gboolean ret;
 	FuDevice *device;
-	FwupdRelease *release;
+	FuRelease *release;
 	g_autoptr(FuDevice) device_found = NULL;
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(GPtrArray) approved_firmware = NULL;
@@ -4335,11 +4364,11 @@ fu_history_func(gconstpointer user_data)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_set_created(device, 123);
 	fu_device_set_modified(device, 456);
-	release = fwupd_release_new();
-	fwupd_release_set_filename(release, "/var/lib/dave.cap"),
-	    fwupd_release_add_checksum(release, "abcdef");
-	fwupd_release_set_version(release, "3.0.2");
-	fwupd_release_add_metadata_item(release, "FwupdVersion", VERSION);
+	release = fu_release_new();
+	fu_release_set_filename(release, "/var/lib/dave.cap"),
+	    fu_release_add_checksum(release, "abcdef");
+	fu_release_set_version(release, "3.0.2");
+	fu_release_add_metadata_item(release, "FwupdVersion", VERSION);
 	ret = fu_history_add_device(history, device, release, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -4369,12 +4398,12 @@ fu_history_func(gconstpointer user_data)
 			FWUPD_DEVICE_FLAG_INTERNAL | FWUPD_DEVICE_FLAG_HISTORICAL);
 	g_assert_cmpint(fu_device_get_created(device), ==, 123);
 	g_assert_cmpint(fu_device_get_modified(device), ==, 456);
-	release = fu_device_get_release_default(device);
+	release = FU_RELEASE(fu_device_get_release_default(device));
 	g_assert_nonnull(release);
-	g_assert_cmpstr(fwupd_release_get_version(release), ==, "3.0.2");
-	g_assert_cmpstr(fwupd_release_get_filename(release), ==, "/var/lib/dave.cap");
-	g_assert_cmpstr(fwupd_release_get_metadata_item(release, "FwupdVersion"), ==, VERSION);
-	checksums = fwupd_release_get_checksums(release);
+	g_assert_cmpstr(fu_release_get_version(release), ==, "3.0.2");
+	g_assert_cmpstr(fu_release_get_filename(release), ==, "/var/lib/dave.cap");
+	g_assert_cmpstr(fu_release_get_metadata_item(release, "FwupdVersion"), ==, VERSION);
+	checksums = fu_release_get_checksums(release);
 	g_assert_nonnull(checksums);
 	g_assert_cmpint(checksums->len, ==, 1);
 	g_assert_cmpstr(fwupd_checksum_get_by_kind(checksums, G_CHECKSUM_SHA1), ==, "abcdef");
@@ -5936,43 +5965,6 @@ fu_remote_download_func(void)
 	g_assert_cmpstr(fwupd_remote_get_filename_cache_sig(remote), ==, expected_signature);
 }
 
-/* verify we used the FirmwareBaseURI just for firmware */
-static void
-fu_remote_baseuri_func(void)
-{
-	gboolean ret;
-	g_autofree gchar *firmware_uri = NULL;
-	g_autofree gchar *fn = NULL;
-	g_autoptr(FwupdRemote) remote = NULL;
-	g_autofree gchar *directory = NULL;
-	g_autoptr(GError) error = NULL;
-
-	remote = fwupd_remote_new();
-	directory = g_build_filename(FWUPD_LOCALSTATEDIR, "lib", "fwupd", "remotes2.d", NULL);
-	fwupd_remote_set_remotes_dir(remote, directory);
-	fn = g_test_build_filename(G_TEST_DIST, "tests", "firmware-base-uri.conf", NULL);
-	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
-	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_JCAT);
-	g_assert_cmpint(fwupd_remote_get_priority(remote), ==, 0);
-	g_assert_true(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
-	g_assert_cmpstr(fwupd_remote_get_firmware_base_uri(remote), ==, "https://my.fancy.cdn/");
-	g_assert_cmpstr(fwupd_remote_get_agreement(remote), ==, NULL);
-	g_assert_cmpstr(fwupd_remote_get_checksum(remote), ==, NULL);
-	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
-			==,
-			"https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz");
-	g_assert_cmpstr(fwupd_remote_get_metadata_uri_sig(remote),
-			==,
-			"https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz.jcat");
-	firmware_uri =
-	    fwupd_remote_build_firmware_uri(remote, "http://bbc.co.uk/firmware.cab", &error);
-	g_assert_no_error(error);
-	g_assert_cmpstr(firmware_uri, ==, "https://my.fancy.cdn/firmware.cab");
-}
-
 static gchar *
 fwupd_remote_to_json_string(FwupdRemote *remote, GError **error)
 {
@@ -6080,7 +6072,6 @@ fu_remote_auth_func(void)
 	    "  \"Id\" : \"auth\",\n"
 	    "  \"Kind\" : \"download\",\n"
 	    "  \"KeyringKind\" : \"jcat\",\n"
-	    "  \"FirmwareBaseUri\" : \"https://my.fancy.cdn/\",\n"
 	    "  \"ReportUri\" : \"https://fwupd.org/lvfs/firmware/report\",\n"
 	    "  \"SecurityReportUri\" : \"https://fwupd.org/lvfs/hsireports/upload\",\n"
 	    "  \"MetadataUri\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz\",\n"
@@ -6234,6 +6225,33 @@ fu_remote_local_func(void)
 	    &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+}
+
+static void
+fu_remote_list_repair_func(void)
+{
+	FwupdRemote *remote;
+	gboolean ret;
+	g_autoptr(FuRemoteList) remote_list = fu_remote_list_new();
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_remote_list_load(remote_list, FU_REMOTE_LIST_LOAD_FLAG_FIX_METADATA_URI, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* check .gz converted to .xz */
+	remote = fu_remote_list_get_by_id(remote_list, "legacy-lvfs");
+	g_assert_nonnull(remote);
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+			==,
+			"http://localhost/stable.xml.xz");
+
+	/* check non-LVFS remote NOT .gz converted to .xz */
+	remote = fu_remote_list_get_by_id(remote_list, "legacy");
+	g_assert_nonnull(remote);
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+			==,
+			"http://localhost/stable.xml.gz");
 }
 
 static void
@@ -6425,11 +6443,11 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/idle", fu_idle_func);
 	g_test_add_func("/fwupd/client-list", fu_client_list_func);
 	g_test_add_func("/fwupd/remote{download}", fu_remote_download_func);
-	g_test_add_func("/fwupd/remote{base-uri}", fu_remote_baseuri_func);
 	g_test_add_func("/fwupd/remote{no-path}", fu_remote_nopath_func);
 	g_test_add_func("/fwupd/remote{local}", fu_remote_local_func);
 	g_test_add_func("/fwupd/remote{duplicate}", fu_remote_duplicate_func);
 	g_test_add_func("/fwupd/remote{auth}", fu_remote_auth_func);
+	g_test_add_func("/fwupd/remote-list{repair}", fu_remote_list_repair_func);
 	g_test_add_func("/fwupd/unix-seekable-input-stream", fu_unix_seekable_input_stream_func);
 	g_test_add_data_func("/fwupd/backend{usb}", self, fu_backend_usb_func);
 	g_test_add_data_func("/fwupd/backend{usb-invalid}", self, fu_backend_usb_invalid_func);
@@ -6442,6 +6460,9 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/device-list{explicit-order}",
 			     self,
 			     fu_device_list_explicit_order_func);
+	g_test_add_data_func("/fwupd/device-list{explicit-order-post}",
+			     self,
+			     fu_device_list_explicit_order_post_func);
 	g_test_add_data_func("/fwupd/device-list{no-auto-remove-children}",
 			     self,
 			     fu_device_list_no_auto_remove_children_func);

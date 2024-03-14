@@ -2301,6 +2301,7 @@ fu_util_hwids(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuContext *ctx = fu_engine_get_context(priv->engine);
 	FuHwids *hwids = fu_context_get_hwids(ctx);
+	g_autoptr(GPtrArray) chid_keys = fu_hwids_get_chid_keys(hwids);
 	g_autoptr(GPtrArray) hwid_keys = fu_hwids_get_keys(hwids);
 
 	/* a keyfile with overrides */
@@ -2338,16 +2339,48 @@ fu_util_hwids(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* show GUIDs */
 	fu_console_print_literal(priv->console, "Hardware IDs");
 	fu_console_print_literal(priv->console, "------------");
-	for (guint i = 0; i < 15; i++) {
+	for (guint i = 0; i < chid_keys->len; i++) {
+		const gchar *key = g_ptr_array_index(chid_keys, i);
 		const gchar *keys = NULL;
 		g_autofree gchar *guid = NULL;
-		g_autofree gchar *key = NULL;
 		g_autofree gchar *keys_str = NULL;
 		g_auto(GStrv) keysv = NULL;
 		g_autoptr(GError) error_local = NULL;
 
+		/* filter */
+		if (!g_str_has_prefix(key, "HardwareID"))
+			continue;
+
 		/* get the GUID */
-		key = g_strdup_printf("HardwareID-%u", i);
+		keys = fu_hwids_get_replace_keys(hwids, key);
+		guid = fu_hwids_get_guid(hwids, key, &error_local);
+		if (guid == NULL) {
+			fu_console_print_literal(priv->console, error_local->message);
+			continue;
+		}
+
+		/* show what makes up the GUID */
+		keysv = g_strsplit(keys, "&", -1);
+		keys_str = g_strjoinv(" + ", keysv);
+		fu_console_print(priv->console, "{%s}   <- %s", guid, keys_str);
+	}
+
+	/* show extra GUIDs */
+	fu_console_print_literal(priv->console, "Extra Hardware IDs");
+	fu_console_print_literal(priv->console, "------------------");
+	for (guint i = 0; i < chid_keys->len; i++) {
+		const gchar *key = g_ptr_array_index(chid_keys, i);
+		const gchar *keys = NULL;
+		g_autofree gchar *guid = NULL;
+		g_autofree gchar *keys_str = NULL;
+		g_auto(GStrv) keysv = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* filter */
+		if (g_str_has_prefix(key, "HardwareID"))
+			continue;
+
+		/* get the GUID */
 		keys = fu_hwids_get_replace_keys(hwids, key);
 		guid = fu_hwids_get_guid(hwids, key, &error_local);
 		if (guid == NULL) {
@@ -3193,6 +3226,7 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdRelease *rel;
 		const gchar *remote;
 		GNode *child;
+		g_autoptr(GError) error_local = NULL;
 
 		if (!fwupd_device_match_flags(dev,
 					      priv->filter_device_include,
@@ -3211,13 +3245,20 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		}
 
-		/* try to lookup releases from client */
+		/* try to lookup releases from client, falling back to the history release */
 		rels = fu_engine_get_releases(priv->engine,
 					      priv->request,
 					      fwupd_device_get_id(dev),
-					      error);
-		if (rels == NULL)
-			return FALSE;
+					      &error_local);
+		if (rels == NULL) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+				rels = g_ptr_array_new();
+				g_ptr_array_add(rels, fwupd_device_get_release_default(dev));
+			} else {
+				g_propagate_error(error, g_steal_pointer(&error_local));
+				return FALSE;
+			}
+		}
 
 		/* map to a release in client */
 		for (guint j = 0; j < rels->len; j++) {

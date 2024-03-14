@@ -84,10 +84,11 @@ fu_thunderbolt_device_check_authorized(FuThunderboltDevice *self, GError **error
 	status = g_ascii_strtoull(attribute, NULL, 16);
 	if (status == G_MAXUINT64 && errno == ERANGE) {
 		g_set_error(error,
-			    G_IO_ERROR,
+			    G_IO_ERROR, /* nocheck */
 			    g_io_error_from_errno(errno),
 			    "failed to read 'authorized: %s",
 			    g_strerror(errno));
+		fu_error_convert(error);
 		return FALSE;
 	}
 	if (status == 1 || status == 2)
@@ -207,10 +208,11 @@ fu_thunderbolt_device_attach(FuDevice *device, FuProgress *progress, GError **er
 	status = g_ascii_strtoull(attribute, NULL, 16);
 	if (status == G_MAXUINT64 && errno == ERANGE) {
 		g_set_error(error,
-			    G_IO_ERROR,
+			    G_IO_ERROR, /* nocheck */
 			    g_io_error_from_errno(errno),
 			    "failed to read 'nvm_authenticate: %s",
 			    g_strerror(errno));
+		fu_error_convert(error);
 		return FALSE;
 	}
 

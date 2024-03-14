@@ -58,25 +58,10 @@ To enable this:
 
 ## Mirroring a Repository
 
-The LVFS currently outputs XML with absolute URI locations, e.g.
-`<location>http://foo/bar.cab</location>` rather than `<location>bar.cab</location>`
+The upstream LVFS instance will output a relative URL for firmware files, e.g.
+`<location>bar.cab</location>` instead of an absolute URI location, e.g.
+`<location>http://foo/bar.cab</location>`.
 
-This makes mirroring the upstream LVFS (or other private instance) somewhat tricky.
-To work around this issue client remotes can specify `FirmwareBaseURI` to
-replace the URI of the firmware before it is downloaded.
-
-For mirroring the LVFS content to a new CDN, you could use:
-
-    [fwupd Remote]
-    Enabled=true
-    Type=download
-    Keyring=gpg
-    MetadataURI=https://my.new.cdn/mirror/firmware.xml.gz
-    FirmwareBaseURI=https://my.new.cdn/mirror
-
-New instances of the LVFS can actually output a relative URL for firmware files,
-e.g. `<location>bar.cab</location>` and when downloading the `MetadataURI` name
-and path prefix is used in this case.
-This is not enabled for the "upstream" LVFS instance as versions of fwupd older
-than 1.0.3 are unable to automatically use the `MetadataURI` value for firmware
-downloads.
+When setting up a mirror of the LVFS onto another CDN you just need to change
+the `MetadataURI` to your local mirror and firmware downloads will use the
+relative URI.

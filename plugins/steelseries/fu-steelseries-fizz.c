@@ -87,8 +87,8 @@ fu_steelseries_fizz_command_error_to_error(guint8 cmd, guint8 err, GError **erro
 
 	if (err == STEELSERIES_FIZZ_COMMAND_ERROR_FILE_NOT_FOUND) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_FILE_ERROR_NOENT,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
 			    "command 0x%02x returned error 0x%02x",
 			    cmd,
 			    err);
@@ -98,8 +98,8 @@ fu_steelseries_fizz_command_error_to_error(guint8 cmd, guint8 err, GError **erro
 	/* targeted offset is past the file end */
 	if (err == STEELSERIES_FIZZ_COMMAND_ERROR_FILE_TOO_SHORT) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_FILE_ERROR_NOSPC,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "command 0x%02x returned error 0x%02x",
 			    cmd,
 			    err);
@@ -109,8 +109,8 @@ fu_steelseries_fizz_command_error_to_error(guint8 cmd, guint8 err, GError **erro
 	/* when internal flash returns error */
 	if (err == STEELSERIES_FIZZ_COMMAND_ERROR_FLASH_FAILED) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_FILE_ERROR_IO,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
 			    "command 0x%02x returned error 0x%02x",
 			    cmd,
 			    err);
@@ -120,8 +120,8 @@ fu_steelseries_fizz_command_error_to_error(guint8 cmd, guint8 err, GError **erro
 	/* USB API doesn't have permission to access this file */
 	if (err == STEELSERIES_FIZZ_COMMAND_ERROR_PERMISSION_DENIED) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_FILE_ERROR_ACCES,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_PERMISSION_DENIED,
 			    "command 0x%02x returned error 0x%02x",
 			    cmd,
 			    err);
@@ -131,8 +131,8 @@ fu_steelseries_fizz_command_error_to_error(guint8 cmd, guint8 err, GError **erro
 	/* USB API doesn't have permission to access this file */
 	if (err == STEELSERIES_FIZZ_COMMAND_ERROR_OPERATION_NO_SUPPORTED) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    G_FILE_ERROR_PERM,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "command 0x%02x returned error 0x%02x",
 			    cmd,
 			    err);
@@ -155,7 +155,6 @@ fu_steelseries_fizz_command_and_check_error(FuDevice *device,
 					    gsize datasz,
 					    GError **error)
 {
-	gint gerr = G_FILE_ERROR_FAILED;
 	const guint8 command = data[0];
 	guint8 err;
 	guint8 cmd;
@@ -168,8 +167,8 @@ fu_steelseries_fizz_command_and_check_error(FuDevice *device,
 
 	if (cmd != command) {
 		g_set_error(error,
-			    G_IO_ERROR,
-			    gerr,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
 			    "command invalid, got 0x%02x, expected 0x%02x",
 			    cmd,
 			    command);

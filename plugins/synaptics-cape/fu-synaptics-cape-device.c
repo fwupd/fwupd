@@ -212,7 +212,7 @@ fu_synaptics_cape_device_rc_set_error(const FuCapCmd *rsp, GError **error)
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "bad app id");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_MODULE_TYPE_HAS_NO_API:
-		g_set_error_literal(error, G_IO_ERROR, FWUPD_ERROR_INTERNAL, "has no api");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "has no api");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_BAD_MAGIC_NUMBER:
 		g_set_error_literal(error,
@@ -375,12 +375,8 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 			/* ignoring io error for software reset command */
 			if ((req->cmd_id == FU_SYNAPTICS_CMD_MCU_SOFT_RESET) &&
 			    (req->module_id == FU_SYNAPTICS_CAPE_CMD_APP_ID_CTRL) &&
-			    (g_error_matches(error_local,
-					     G_USB_DEVICE_ERROR,
-					     G_USB_DEVICE_ERROR_NO_DEVICE) ||
-			     g_error_matches(error_local,
-					     G_USB_DEVICE_ERROR,
-					     G_USB_DEVICE_ERROR_FAILED))) {
+			    (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
+			     g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL))) {
 				g_debug("ignoring: %s", error_local->message);
 				return TRUE;
 			}
@@ -397,11 +393,11 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 				if ((req->cmd_id == FU_SYNAPTICS_CMD_MCU_SOFT_RESET) &&
 				    (req->module_id == FU_SYNAPTICS_CAPE_CMD_APP_ID_CTRL) &&
 				    (g_error_matches(error_local,
-						     G_USB_DEVICE_ERROR,
-						     G_USB_DEVICE_ERROR_NO_DEVICE) ||
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_NOT_FOUND) ||
 				     g_error_matches(error_local,
-						     G_USB_DEVICE_ERROR,
-						     G_USB_DEVICE_ERROR_FAILED))) {
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INTERNAL))) {
 					g_debug("ignoring: %s", error_local->message);
 					return TRUE;
 				}

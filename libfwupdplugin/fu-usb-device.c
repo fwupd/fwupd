@@ -387,6 +387,10 @@ fu_usb_device_open(FuDevice *device, GError **error)
 	if (priv->usb_device_locker != NULL)
 		return TRUE;
 
+	/* self tests */
+	if (priv->usb_device == NULL)
+		return TRUE;
+
 	/* open */
 	if (priv->open_retry_count > 0) {
 		locker = fu_device_locker_new_full(self,
@@ -459,6 +463,10 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* self tests */
+	if (priv->usb_device == NULL)
+		return TRUE;
 
 	/* get vendor */
 	if (fu_device_get_vendor(device) == NULL) {
@@ -535,6 +543,10 @@ fu_usb_device_ready(FuDevice *device, GError **error)
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) intfs = NULL;
+
+	/* self tests */
+	if (priv->usb_device == NULL)
+		return TRUE;
 
 	/* get the interface GUIDs */
 	intfs = g_usb_device_get_interfaces(priv->usb_device, error);
@@ -677,9 +689,27 @@ fu_usb_device_probe_bos_descriptors(FuUsbDevice *self, GError **error)
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) bos_descriptors = NULL;
 
-	gusb_locker = fu_device_locker_new(priv->usb_device, error);
-	if (gusb_locker == NULL)
+	/* already matched a quirk entry */
+	if (fu_device_has_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE)) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not probing");
 		return FALSE;
+	}
+
+	/* not supported, so there is no point opening */
+	if (g_usb_device_get_spec(priv->usb_device) <= 0x0200) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "not available as bcdUSB 0x%04x <= 0x0200",
+			    g_usb_device_get_spec(priv->usb_device));
+		return FALSE;
+	}
+
+	gusb_locker = fu_device_locker_new(priv->usb_device, error);
+	if (gusb_locker == NULL) {
+		fu_error_convert(error);
+		return FALSE;
+	}
 	bos_descriptors = g_usb_device_get_bos_descriptors(priv->usb_device, &error_local);
 	if (bos_descriptors == NULL) {
 		if (g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_IO)) {
@@ -687,6 +717,7 @@ fu_usb_device_probe_bos_descriptors(FuUsbDevice *self, GError **error)
 			return TRUE;
 		}
 		g_propagate_error(error, g_steal_pointer(&error_local));
+		fu_error_convert(error);
 		return FALSE;
 	}
 	for (guint i = 0; i < bos_descriptors->len; i++) {
@@ -717,6 +748,10 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 #if G_USB_CHECK_VERSION(0, 4, 0)
 	g_autoptr(GError) error_bos = NULL;
 #endif
+
+	/* self tests */
+	if (priv->usb_device == NULL)
+		return TRUE;
 
 	/* set vendor ID */
 	vendor_id = g_strdup_printf("USB:0x%04X", g_usb_device_get_vid(priv->usb_device));
@@ -814,8 +849,14 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 
 #if G_USB_CHECK_VERSION(0, 4, 0)
 	/* parse the platform capability BOS descriptors for quirks */
-	if (!fu_usb_device_probe_bos_descriptors(self, &error_bos))
-		g_warning("failed to load BOS descriptor from USB device: %s", error_bos->message);
+	if (!fu_usb_device_probe_bos_descriptors(self, &error_bos)) {
+		if (g_error_matches(error_bos, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug("ignoring: %s", error_bos->message);
+		} else {
+			g_warning("failed to load BOS descriptor from USB device: %s",
+				  error_bos->message);
+		}
+	}
 #endif
 #endif
 

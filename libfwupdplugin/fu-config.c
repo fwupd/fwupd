@@ -62,7 +62,7 @@ g_file_set_contents_full(const gchar *filename,
 	fd = g_open(filename, O_CREAT, mode);
 	if (fd < 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
+			    G_IO_ERROR,	       /* nocheck */
 			    G_IO_ERROR_FAILED, /* nocheck */
 			    "could not open %s file",
 			    filename);
@@ -71,7 +71,7 @@ g_file_set_contents_full(const gchar *filename,
 	wrote = write(fd, contents, length);
 	if (wrote != length) {
 		g_set_error(error,
-			    G_IO_ERROR,
+			    G_IO_ERROR,	       /* nocheck */
 			    G_IO_ERROR_FAILED, /* nocheck */
 			    "did not write %s file",
 			    filename);
@@ -349,10 +349,14 @@ fu_config_reload(FuConfig *self, GError **error)
 		g_debug("trying to load config values from %s", item->filename);
 		blob_item = fu_bytes_get_contents(item->filename, &error_load);
 		if (blob_item == NULL) {
-			if (g_error_matches(error_load, G_FILE_ERROR, G_FILE_ERROR_ACCES)) {
+			if (g_error_matches(error_load,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_PERMISSION_DENIED)) {
 				g_debug("ignoring config file %s: ", error_load->message);
 				continue;
-			} else if (g_error_matches(error_load, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
+			} else if (g_error_matches(error_load,
+						   FWUPD_ERROR,
+						   FWUPD_ERROR_INVALID_FILE)) {
 				g_debug("%s", error_load->message);
 				continue;
 			}

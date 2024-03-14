@@ -154,35 +154,6 @@ fwupdmgr = executable(
 )
 endif
 
-if offline.allowed()
-fwupdoffline = executable(
-  'fwupdoffline',
-  sources: [
-    'fu-history.c',
-    'fu-offline.c',
-    'fu-spawn.c',
-    systemd_src
-  ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  dependencies: [
-    libfwupd_deps,
-    client_dep,
-  ],
-  link_with: [
-    fwupd,
-    fwupdplugin,
-    fwupdutil,
-  ],
-  install: true,
-  install_rpath: libdir_pkg,
-  install_dir: join_paths(libexecdir, 'fwupd')
-)
-endif
-
 resources_src = gnome.compile_resources(
   'fwupd-resources',
   'fwupd.gresource.xml',
@@ -237,6 +208,35 @@ fwupdengine = library(
     fwupdplugin,
   ],
 )
+
+if offline.allowed()
+fwupdoffline = executable(
+  'fwupdoffline',
+  fwupdengine_rs,
+  sources: [
+    'fu-offline.c',
+    'fu-spawn.c',
+    systemd_src
+  ],
+  include_directories: [
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
+  ],
+  dependencies: [
+    libfwupd_deps,
+    client_dep,
+  ],
+  link_with: [
+    fwupd,
+    fwupdutil,
+    fwupdengine,
+  ],
+  install: true,
+  install_rpath: libdir_pkg,
+  install_dir: join_paths(libexecdir, 'fwupd')
+)
+endif
 
 fwupdtool = executable(
   'fwupdtool',

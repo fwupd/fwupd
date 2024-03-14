@@ -480,9 +480,6 @@ fu_mei_device_incorporate(FuDevice *device, FuDevice *donor)
 	g_return_if_fail(FU_IS_MEI_DEVICE(self));
 	g_return_if_fail(FU_IS_MEI_DEVICE(donor));
 
-	/* FuUdevDevice->incorporate */
-	FU_DEVICE_CLASS(fu_mei_device_parent_class)->incorporate(device, donor);
-
 	/* copy private instance data */
 	priv->max_msg_length = priv_donor->max_msg_length;
 	priv->protocol_version = priv_donor->protocol_version;

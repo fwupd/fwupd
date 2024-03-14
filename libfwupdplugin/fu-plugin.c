@@ -1178,7 +1178,6 @@ fu_plugin_runner_coldplug(FuPlugin *self, FuProgress *progress, GError **error)
 					    FWUPD_ERROR_INTERNAL,
 					    "unspecified error");
 		}
-		g_warning("%s", error_local->message);
 		/* coldplug failed, but we might have already added devices to the daemon... */
 		if (priv->devices != NULL) {
 			for (guint i = 0; i < priv->devices->len; i++) {
@@ -1673,6 +1672,7 @@ fu_plugin_backend_device_added(FuPlugin *self,
 	FuDevice *proxy;
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 	GType device_gtype = fu_device_get_specialized_gtype(FU_DEVICE(device));
+	GType proxy_gtype = fu_device_get_proxy_gtype(FU_DEVICE(device));
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -1712,6 +1712,17 @@ fu_plugin_backend_device_added(FuPlugin *self,
 	/* create new device and incorporate existing properties */
 	dev = g_object_new(device_gtype, "context", priv->ctx, NULL);
 	fu_device_incorporate(dev, FU_DEVICE(device));
+
+	/* any proxy device to create too? */
+	if (proxy_gtype != G_TYPE_INVALID) {
+		g_autoptr(FuDevice) proxy_tmp =
+		    g_object_new(proxy_gtype, "context", priv->ctx, NULL);
+		fu_device_incorporate(proxy_tmp, device);
+		fu_device_add_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY);
+		fu_device_set_proxy(dev, proxy_tmp);
+	}
+
+	/* notify plugins */
 	if (!fu_plugin_runner_device_created(self, dev, error))
 		return FALSE;
 	fu_progress_step_done(progress);
@@ -1732,12 +1743,13 @@ fu_plugin_backend_device_added(FuPlugin *self,
 	}
 
 	/* open */
-	proxy = fu_device_get_proxy(device);
+	proxy = fu_device_get_proxy(dev);
 	if (proxy != NULL) {
 		g_autoptr(FuDeviceLocker) locker_proxy = NULL;
 		locker_proxy = fu_device_locker_new(proxy, error);
 		if (locker_proxy == NULL)
 			return FALSE;
+		fu_device_incorporate(dev, proxy);
 	}
 	locker = fu_device_locker_new(dev, error);
 	if (locker == NULL)
@@ -2677,7 +2689,7 @@ g_file_set_contents_full(const gchar *filename,
 	fd = g_open(filename, O_CREAT, mode);
 	if (fd < 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
+			    G_IO_ERROR,	       /* nocheck */
 			    G_IO_ERROR_FAILED, /* nocheck */
 			    "could not open %s file",
 			    filename);
@@ -2686,7 +2698,7 @@ g_file_set_contents_full(const gchar *filename,
 	wrote = write(fd, contents, length);
 	if (wrote != length) {
 		g_set_error(error,
-			    G_IO_ERROR,
+			    G_IO_ERROR,	       /* nocheck */
 			    G_IO_ERROR_FAILED, /* nocheck */
 			    "did not write %s file",
 			    filename);

@@ -1624,7 +1624,7 @@ fu_udev_device_open(FuDevice *device, GError **error)
 		fd = g_open(priv->device_file, flags, 0);
 		if (fd < 0) {
 			g_set_error(error,
-				    G_IO_ERROR,
+				    G_IO_ERROR, /* nocheck */
 #ifdef HAVE_ERRNO_H
 				    g_io_error_from_errno(errno),
 #else
@@ -1818,7 +1818,7 @@ fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz,
 #ifdef HAVE_PWRITE
 	if (pread(fu_io_channel_unix_get_fd(priv->io_channel), buf, bufsz, port) != (gssize)bufsz) {
 		g_set_error(error,
-			    G_IO_ERROR,
+			    G_IO_ERROR, /* nocheck */
 #ifdef HAVE_ERRNO_H
 			    g_io_error_from_errno(errno),
 #else
@@ -1874,7 +1874,7 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
 #ifdef HAVE_PWRITE
 	if (lseek(fu_io_channel_unix_get_fd(priv->io_channel), offset, SEEK_SET) < 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
+			    G_IO_ERROR, /* nocheck */
 #ifdef HAVE_ERRNO_H
 			    g_io_error_from_errno(errno),
 #else
@@ -1937,7 +1937,7 @@ fu_udev_device_pwrite(FuUdevDevice *self,
 	if (pwrite(fu_io_channel_unix_get_fd(priv->io_channel), buf, bufsz, port) !=
 	    (gssize)bufsz) {
 		g_set_error(error,
-			    G_IO_ERROR,
+			    G_IO_ERROR, /* nocheck */
 #ifdef HAVE_ERRNO_H
 			    g_io_error_from_errno(errno),
 #else
@@ -2101,11 +2101,12 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 	fd = open(path, O_WRONLY | O_CLOEXEC);
 	if (fd < 0) {
 		g_set_error(error,
-			    G_IO_ERROR,
+			    G_IO_ERROR, /* nocheck */
 			    g_io_error_from_errno(errno),
 			    "could not open %s: %s",
 			    path,
 			    g_strerror(errno));
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 
@@ -2113,7 +2114,7 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 		n = write(fd, val, strlen(val));
 		if (n < 1 && errno != EINTR) {
 			g_set_error(error,
-				    G_IO_ERROR,
+				    G_IO_ERROR, /* nocheck */
 				    g_io_error_from_errno(errno),
 				    "could not write to %s: %s",
 				    path,
@@ -2127,7 +2128,7 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 	r = close(fd);
 	if (r < 0 && errno != EINTR) {
 		g_set_error(error,
-			    G_IO_ERROR,
+			    G_IO_ERROR, /* nocheck */
 			    g_io_error_from_errno(errno),
 			    "could not close %s: %s",
 			    path,

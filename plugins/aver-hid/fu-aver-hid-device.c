@@ -90,9 +90,7 @@ fu_aver_hid_device_ensure_version(FuAverHidDevice *self, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_aver_hid_device_transfer(self, req, res, &error_local)) {
-		if (g_error_matches(error_local,
-				    G_USB_DEVICE_ERROR,
-				    G_USB_DEVICE_ERROR_TIMED_OUT)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 			g_debug("ignoring %s", error_local->message);
 			fu_device_set_version(FU_DEVICE(self), "0.0.0000.00");
 			return TRUE;

@@ -96,8 +96,10 @@ fu_archive_cab_func(void)
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(GBytes) data = NULL;
+	g_autoptr(GBytes) data_tmp1 = NULL;
+	g_autoptr(GBytes) data_tmp2 = NULL;
+	g_autoptr(GBytes) data_tmp3 = NULL;
 	g_autoptr(GError) error = NULL;
-	GBytes *data_tmp;
 
 #ifndef HAVE_LIBARCHIVE
 	g_test_skip("no libarchive support");
@@ -117,21 +119,21 @@ fu_archive_cab_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(archive);
 
-	data_tmp = fu_archive_lookup_by_fn(archive, "firmware.metainfo.xml", &error);
+	data_tmp1 = fu_archive_lookup_by_fn(archive, "firmware.metainfo.xml", &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(data_tmp);
-	checksum1 = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data_tmp);
+	g_assert_nonnull(data_tmp1);
+	checksum1 = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data_tmp1);
 	g_assert_cmpstr(checksum1, ==, "8611114f51f7151f190de86a5c9259d79ff34216");
 
-	data_tmp = fu_archive_lookup_by_fn(archive, "firmware.bin", &error);
+	data_tmp2 = fu_archive_lookup_by_fn(archive, "firmware.bin", &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(data_tmp);
-	checksum2 = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data_tmp);
+	g_assert_nonnull(data_tmp2);
+	checksum2 = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data_tmp2);
 	g_assert_cmpstr(checksum2, ==, "7c0ae84b191822bcadbdcbe2f74a011695d783c7");
 
-	data_tmp = fu_archive_lookup_by_fn(archive, "NOTGOINGTOEXIST.xml", &error);
+	data_tmp3 = fu_archive_lookup_by_fn(archive, "NOTGOINGTOEXIST.xml", &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert_null(data_tmp);
+	g_assert_null(data_tmp3);
 }
 
 static void
@@ -735,16 +737,16 @@ fu_hwids_func(void)
 		     {"HardwareID-12", "e093d715-70f7-51f4-b6c8-b4a7e31def85"},
 		     {"HardwareID-11", "db73af4c-4612-50f7-b8a7-787cf4871847"},
 		     {"HardwareID-10", "f4275c1f-6130-5191-845c-3426247eb6a1"},
-		     {"HardwareID-9", "0cf8618d-9eff-537c-9f35-46861406eb9c"},
-		     {"HardwareID-8", "059eb22d-6dc7-59af-abd3-94bbe017f67c"},
-		     {"HardwareID-7", "da1da9b6-62f5-5f22-8aaa-14db7eeda2a4"},
-		     {"HardwareID-6", "178cd22d-ad9f-562d-ae0a-34009822cdbe"},
-		     {"HardwareID-5", "8dc9b7c5-f5d5-5850-9ab3-bd6f0549d814"},
-		     {"HardwareID-4", "660ccba8-1b78-5a33-80e6-9fb8354ee873"},
-		     {"HardwareID-3", "3faec92a-3ae3-5744-be88-495e90a7d541"},
-		     {"HardwareID-2", "f5ff077f-3eeb-5bae-be1c-e98ffe8ce5f8"},
-		     {"HardwareID-1", "b7cceb67-774c-537e-bf8b-22c6107e9a74"},
-		     {"HardwareID-0", "147efce9-f201-5fc8-ab0c-c859751c3440"},
+		     {"HardwareID-09", "0cf8618d-9eff-537c-9f35-46861406eb9c"},
+		     {"HardwareID-08", "059eb22d-6dc7-59af-abd3-94bbe017f67c"},
+		     {"HardwareID-07", "da1da9b6-62f5-5f22-8aaa-14db7eeda2a4"},
+		     {"HardwareID-06", "178cd22d-ad9f-562d-ae0a-34009822cdbe"},
+		     {"HardwareID-05", "8dc9b7c5-f5d5-5850-9ab3-bd6f0549d814"},
+		     {"HardwareID-04", "660ccba8-1b78-5a33-80e6-9fb8354ee873"},
+		     {"HardwareID-03", "3faec92a-3ae3-5744-be88-495e90a7d541"},
+		     {"HardwareID-02", "f5ff077f-3eeb-5bae-be1c-e98ffe8ce5f8"},
+		     {"HardwareID-01", "b7cceb67-774c-537e-bf8b-22c6107e9a74"},
+		     {"HardwareID-00", "147efce9-f201-5fc8-ab0c-c859751c3440"},
 		     {NULL, NULL}};
 
 #ifdef _WIN32
@@ -1324,6 +1326,52 @@ fu_plugin_backend_device_func(void)
 }
 
 static void
+_plugin_backend_proxy_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
+{
+	FuDevice **dev = (FuDevice **)user_data;
+	*dev = g_object_ref(device);
+}
+
+static void
+fu_plugin_backend_proxy_device_func(void)
+{
+	gboolean ret;
+	FuDevice *proxy;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuDevice) device_new = NULL;
+	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRFUNC);
+	g_autoptr(GError) error = NULL;
+
+	fu_device_set_id(device, "testdev");
+	ret = fu_plugin_runner_backend_device_changed(plugin, device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* watch for the new superclassed device */
+	g_signal_connect(plugin,
+			 "device-added",
+			 G_CALLBACK(_plugin_backend_proxy_device_added_cb),
+			 &device_new);
+
+	fu_device_set_specialized_gtype(device, FU_TYPE_DEVICE);
+	fu_device_set_proxy_gtype(device, FU_TYPE_HID_DEVICE);
+	ret = fu_plugin_runner_backend_device_added(plugin, device, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* check device was constructed */
+	g_assert_nonnull(device_new);
+	g_assert_true(FU_IS_DEVICE(device_new));
+
+	/* check proxy was constructed */
+	proxy = fu_device_get_proxy(device_new);
+	g_assert_nonnull(proxy);
+	g_assert_true(FU_IS_USB_DEVICE(proxy));
+}
+
+static void
 fu_plugin_quirks_device_func(void)
 {
 	FuDevice *device_tmp;
@@ -1813,6 +1861,7 @@ fu_device_private_flags_func(void)
 	fu_device_set_custom_flags(device, "baz");
 	g_assert_cmpint(fu_device_get_private_flags(device), ==, TEST_FLAG_FOO);
 
+	fu_device_set_created(device, 0);
 	tmp = fu_device_to_string(device);
 	g_assert_cmpstr(tmp,
 			==,
@@ -1933,6 +1982,24 @@ fu_device_parent_func(void)
 }
 
 static void
+fu_device_incorporate_descendant_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuUsbDevice) usb_device = fu_usb_device_new(ctx, NULL);
+
+	fu_device_set_name(device, "FuDevice");
+	fu_device_set_summary(FU_DEVICE(usb_device), "FuUsbDevice");
+
+	fu_device_incorporate(FU_DEVICE(usb_device), device);
+	g_assert_cmpstr(fu_device_get_name(FU_DEVICE(usb_device)), ==, "FuDevice");
+
+	/* this won't explode as device_class->incorporate is checking types */
+	fu_device_incorporate(device, FU_DEVICE(usb_device));
+	g_assert_cmpstr(fu_device_get_summary(device), ==, "FuUsbDevice");
+}
+
+static void
 fu_device_incorporate_func(void)
 {
 	gboolean ret;
@@ -1977,6 +2044,7 @@ fu_device_incorporate_func(void)
 	fu_device_set_equivalent_id(device, "DO_NOT_OVERWRITE");
 	fu_device_set_metadata(device, "test2", "DO_NOT_OVERWRITE");
 	fu_device_set_modified(device, 789);
+	fu_device_set_created(device, 0);
 
 	/* incorporate properties from donor to device */
 	fu_device_incorporate(device, donor);
@@ -5372,6 +5440,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/plugin{vfuncs}", fu_plugin_vfuncs_func);
 	g_test_add_func("/fwupd/plugin{device-gtype}", fu_plugin_device_gtype_func);
 	g_test_add_func("/fwupd/plugin{backend-device}", fu_plugin_backend_device_func);
+	g_test_add_func("/fwupd/plugin{backend-proxy-device}", fu_plugin_backend_proxy_device_func);
 	g_test_add_func("/fwupd/plugin{config}", fu_plugin_config_func);
 	g_test_add_func("/fwupd/plugin{devices}", fu_plugin_devices_func);
 	g_test_add_func("/fwupd/plugin{device-inhibit-children}",
@@ -5451,6 +5520,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{parent}", fu_device_parent_func);
 	g_test_add_func("/fwupd/device{children}", fu_device_children_func);
 	g_test_add_func("/fwupd/device{incorporate}", fu_device_incorporate_func);
+	g_test_add_func("/fwupd/device{incorporate-descendant}",
+			fu_device_incorporate_descendant_func);
 	g_test_add_func("/fwupd/device{poll}", fu_device_poll_func);
 	g_test_add_func("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func("/fwupd/device-locker{fail}", fu_device_locker_fail_func);

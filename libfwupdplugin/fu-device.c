@@ -70,6 +70,7 @@ typedef struct {
 	guint64 size_max;
 	gint open_refcount; /* atomic */
 	GType specialized_gtype;
+	GType proxy_gtype;
 	GType firmware_gtype;
 	GPtrArray *possible_plugins;
 	GPtrArray *instance_id_quirks; /* of utf-8 */
@@ -294,6 +295,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "host-cpu-child";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER)
 		return "explicit-order";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY)
+		return "refcounted-proxy";
 	return NULL;
 }
 
@@ -396,6 +399,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD;
 	if (g_strcmp0(flag, "explicit-order") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER;
+	if (g_strcmp0(flag, "refcounted-proxy") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -417,6 +422,16 @@ fu_device_add_internal_flag(FuDevice *self, FuDeviceInternalFlags flag)
 	/* do not let devices be updated until re-connected */
 	if (flag & FU_DEVICE_INTERNAL_FLAG_UNCONNECTED)
 		fu_device_inhibit(self, "unconnected", "Device has been removed");
+
+	/* reset this back to the default */
+	if (flag & FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER) {
+		GPtrArray *children = fu_device_get_children(self);
+		for (guint i = 0; i < children->len; i++) {
+			FuDevice *child_tmp = g_ptr_array_index(children, i);
+			fu_device_set_order(child_tmp, G_MAXINT);
+		}
+		fu_device_set_order(self, G_MAXINT);
+	}
 
 	priv->internal_flags |= flag;
 	g_object_notify(G_OBJECT(self), "internal-flags");
@@ -1258,6 +1273,9 @@ fu_device_proxy_flags_notify_cb(FuDevice *proxy, GParamSpec *pspec, gpointer use
  * behalf of another device, for instance attach()ing it after a successful
  * update.
  *
+ * If the %FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY flag is present on the device then a *strong*
+ * reference is used, otherwise the proxy will be cleared if @proxy is destroyed.
+ *
  * Since: 1.4.1
  **/
 void
@@ -1266,6 +1284,10 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_if_fail(FU_IS_DEVICE(self));
+
+	/* unchanged */
+	if (proxy == priv->proxy)
+		return;
 
 	/* copy from proxy */
 	if (proxy != NULL) {
@@ -1281,11 +1303,17 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 		fu_device_incorporate_from_proxy_flags(self, proxy);
 	}
 
-	if (priv->proxy != NULL)
-		g_object_remove_weak_pointer(G_OBJECT(priv->proxy), (gpointer *)&priv->proxy);
-	if (proxy != NULL)
-		g_object_add_weak_pointer(G_OBJECT(proxy), (gpointer *)&priv->proxy);
-	priv->proxy = proxy;
+	/* sometimes strong, sometimes weak */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY)) {
+		g_set_object(&priv->proxy, proxy);
+	} else {
+		if (priv->proxy != NULL)
+			g_object_remove_weak_pointer(G_OBJECT(priv->proxy),
+						     (gpointer *)&priv->proxy);
+		if (proxy != NULL)
+			g_object_add_weak_pointer(G_OBJECT(proxy), (gpointer *)&priv->proxy);
+		priv->proxy = proxy;
+	}
 	g_object_notify(G_OBJECT(self), "proxy");
 }
 
@@ -1297,8 +1325,8 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
  * behalf of another device, for instance attach()ing it after a successful
  * update.
  *
- * The proxy object is not refcounted and if destroyed this function will then
- * return %NULL.
+ * Unless %FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY is set, the proxy object is not refcounted and
+ * if destroyed this function will then return %NULL.
  *
  * Returns: (transfer none): a device or %NULL
  *
@@ -1997,6 +2025,24 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		}
 		return TRUE;
 	}
+	if (g_strcmp0(key, FU_QUIRKS_PROXY_GTYPE) == 0) {
+		if (priv->proxy_gtype != G_TYPE_INVALID) {
+			g_debug("already set GType to %s, ignoring %s",
+				g_type_name(priv->proxy_gtype),
+				value);
+			return TRUE;
+		}
+		priv->proxy_gtype = g_type_from_name(value);
+		if (priv->proxy_gtype == G_TYPE_INVALID) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unknown GType name %s",
+				    value);
+			return FALSE;
+		}
+		return TRUE;
+	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_GTYPE) == 0) {
 		if (priv->firmware_gtype != G_TYPE_INVALID) {
 			g_debug("already set firmware GType to %s, ignoring %s",
@@ -2069,6 +2115,41 @@ fu_device_set_specialized_gtype(FuDevice *self, GType gtype)
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(gtype != G_TYPE_INVALID);
 	priv->specialized_gtype = gtype;
+}
+
+/**
+ * fu_device_get_proxy_gtype:
+ * @self: a #FuDevice
+ *
+ * Gets the specialized type of the device
+ *
+ * Returns:#GType
+ *
+ * Since: 1.9.15
+ **/
+GType
+fu_device_get_proxy_gtype(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	return priv->proxy_gtype;
+}
+
+/**
+ * fu_device_set_proxy_gtype:
+ * @self: a #FuDevice
+ * @gtype: a #GType
+ *
+ * Sets the specialized type of the device
+ *
+ * Since: 1.9.15
+ **/
+void
+fu_device_set_proxy_gtype(FuDevice *self, GType gtype)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(gtype != G_TYPE_INVALID);
+	priv->proxy_gtype = gtype;
 }
 
 /**
@@ -4049,6 +4130,8 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 		fu_string_append(str, idt, "CustomFlags", priv->custom_flags);
 	if (priv->specialized_gtype != G_TYPE_INVALID)
 		fu_string_append(str, idt, "GType", g_type_name(priv->specialized_gtype));
+	if (priv->proxy_gtype != G_TYPE_INVALID)
+		fu_string_append(str, idt, "ProxyGType", g_type_name(priv->proxy_gtype));
 	if (priv->firmware_gtype != G_TYPE_INVALID)
 		fu_string_append(str, idt, "FirmwareGType", g_type_name(priv->firmware_gtype));
 	if (priv->size_min > 0) {
@@ -5330,6 +5413,50 @@ fu_device_get_instance_str(FuDevice *self, const gchar *key)
 	return g_hash_table_lookup(priv->instance_hash, key);
 }
 
+/* check whether @gtype_child is a descendant of @gtype_parent */
+static gboolean
+_g_type_is_a_recursive(GType gtype_child, GType gtype_parent)
+{
+	for (GType gtype = gtype_parent; gtype != G_TYPE_INVALID; gtype = g_type_parent(gtype)) {
+		if (gtype == gtype_child)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static void
+fu_device_incorporate_subclasses(FuDevice *self, FuDevice *donor)
+{
+	gpointer device_class_incorporate_last = NULL;
+	g_autoptr(GList) device_class_list = NULL;
+
+	/* run every unique ->incorporate() in each subclass */
+	for (GType gtype = G_OBJECT_TYPE(self); gtype != G_TYPE_INVALID;
+	     gtype = g_type_parent(gtype)) {
+		FuDeviceClass *device_class = g_type_class_peek(gtype);
+		if (gtype == FU_TYPE_DEVICE)
+			break;
+		if (!_g_type_is_a_recursive(gtype, G_OBJECT_TYPE(donor))) {
+			g_debug("not calling ->incorporate(%s, %s)",
+				g_type_name(gtype),
+				G_OBJECT_TYPE_NAME(donor));
+		} else {
+			g_debug("calling ->incorporate(%s, %s)",
+				g_type_name(gtype),
+				G_OBJECT_TYPE_NAME(donor));
+			device_class_list = g_list_prepend(device_class_list, device_class);
+		}
+	}
+	for (GList *l = device_class_list; l != NULL; l = l->next) {
+		FuDeviceClass *device_class = FU_DEVICE_CLASS(l->data);
+		if (device_class->incorporate != NULL &&
+		    device_class->incorporate != device_class_incorporate_last) {
+			device_class->incorporate(self, donor);
+			device_class_incorporate_last = device_class->incorporate;
+		}
+	}
+}
+
 /**
  * fu_device_incorporate:
  * @self: a #FuDevice
@@ -5342,7 +5469,6 @@ fu_device_get_instance_str(FuDevice *self, const gchar *key)
 void
 fu_device_incorporate(FuDevice *self, FuDevice *donor)
 {
-	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	FuDevicePrivate *priv_donor = GET_PRIVATE(donor);
 	GPtrArray *instance_ids = fu_device_get_instance_ids(donor);
@@ -5430,8 +5556,7 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 		priv->device_id_valid = TRUE;
 
 	/* optional subclass */
-	if (device_class->incorporate != NULL)
-		device_class->incorporate(self, donor);
+	fu_device_incorporate_subclasses(self, donor);
 
 	/* call the set_quirk_kv() vfunc for the superclassed object */
 	for (guint i = 0; i < instance_ids->len; i++) {
@@ -6445,6 +6570,7 @@ fu_device_init(FuDevice *self)
 							 "notify::flags",
 							 G_CALLBACK(fu_device_flags_notify_cb),
 							 NULL);
+	fu_device_set_created(self, (guint64)g_get_real_time() / G_USEC_PER_SEC);
 }
 
 static void
@@ -6455,8 +6581,14 @@ fu_device_finalize(GObject *object)
 
 	if (priv->progress != NULL)
 		g_object_unref(priv->progress);
-	if (priv->proxy != NULL)
-		g_object_remove_weak_pointer(G_OBJECT(priv->proxy), (gpointer *)&priv->proxy);
+	if (priv->proxy != NULL) {
+		if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY)) {
+			g_object_unref(priv->proxy);
+		} else {
+			g_object_remove_weak_pointer(G_OBJECT(priv->proxy),
+						     (gpointer *)&priv->proxy);
+		}
+	}
 	if (priv->ctx != NULL)
 		g_object_unref(priv->ctx);
 	if (priv->poll_id != 0)

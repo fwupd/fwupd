@@ -53,6 +53,7 @@ fu_steelseries_device_cmd(FuSteelseriesDevice *self,
 					    error);
 	if (!ret) {
 		g_prefix_error(error, "failed to do control transfer: ");
+		fu_error_convert(error);
 		return FALSE;
 	}
 	if (actual_len != datasz) {
@@ -81,6 +82,7 @@ fu_steelseries_device_cmd(FuSteelseriesDevice *self,
 					      error);
 	if (!ret) {
 		g_prefix_error(error, "failed to do EP transfer: ");
+		fu_error_convert(error);
 		return FALSE;
 	}
 	if (actual_len != priv->ep_in_size) {
