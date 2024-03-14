@@ -11,52 +11,8 @@ VersionFormat = quad
 [b8cf5af6-8a46-5deb-ac01-a35b1ea5fb48]
 Plugin = flashrom
 
-# StarLite Mk II (HwId - AMI)
-[013b60e5-1023-5bee-8ae5-14cae21377b7]
-Plugin = flashrom
-
-# StarLite Mk II (HwId - coreboot)
-[0130a1a1-f888-5977-820a-6214bf1d6ab2]
-Plugin = flashrom
-
-# StarLite Mk III (HwId)
-[d5521faa-c50b-5d64-971d-8fd400030c51]
-Plugin = flashrom
-
-# StarLite Mk IV (HwId)
-[0fc25c8c-ffa8-54ad-a216-d13cfe75bee4]
-Plugin = flashrom
-
-# StarLabTop Mk III (HwId - AMI)
-[013b60e5-1023-5bee-8ae5-14cae21377b7]
-Plugin = flashrom
-
-# StarLabTop Mk III (HwId - coreboot)
-[8f8ca82b-30e1-5907-bc9d-4257a49898d4]
-Plugin = flashrom
-
-# StarLabTop Mk IV (HwId)
-[baf1d04e-fd16-5e6a-93cc-1c23d171f879]
-Plugin = flashrom
-
-# StarBookMk V (HwId)
-[85aba599-addd-5985-a2e8-eddb41c61ba3]
-Plugin = flashrom
-
-# StarBook Mk VI - Intel (HwId)
-[5c917039-d938-5c9a-b22a-9c392b1534f3]
-Plugin = flashrom
-
-# StarBook Mk VI - AMD (HwId)
-[b39593ad-7522-52a5-a4ab-1b2ca2153956]
-Plugin = flashrom
-
-# StarBook Mk VIr2 - Intel (HwId)
-[12122d1c-c383-5583-9cb7-3ba8d220913d]
-Plugin = flashrom
-
-# Byte Mk I - AMD (HwId)
-[79a64046-5643-59c4-91d0-e68b33db5829]
+# Star Labs generic (HwID - AMI)
+[29230df7-d1e5-5c38-859b-229e966b22e9]
 Plugin = flashrom
 
 # StarLabTop Mk III (coreboot GUID)
