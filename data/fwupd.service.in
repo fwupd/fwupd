@@ -18,6 +18,7 @@ MemoryDenyWriteExecute=yes
 NoNewPrivileges=no
 PrivateDevices=no
 PrivateTmp=true
+ProcSubset=pid
 ProtectClock=yes
 ProtectControlGroups=yes
 ProtectHome=yes
@@ -31,5 +32,5 @@ RestrictNamespaces=yes
 RestrictRealtime=yes
 RestrictSUIDSGID=yes
 SystemCallArchitectures=native
-SystemCallFilter=~@mount
+SystemCallFilter=~@clock @cpu-emulation @mount
 @dynamic_options@
