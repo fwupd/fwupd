@@ -7818,6 +7818,11 @@ fu_engine_update_history_database(FuEngine *self, GError **error)
 
 		/* try to save the new update-state, but ignoring any error */
 		if (!fu_engine_update_history_device(self, dev, &error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+				g_debug("failed to update history database: %s",
+					error_local->message);
+				continue;
+			}
 			g_warning("failed to update history database: %s", error_local->message);
 		}
 	}
