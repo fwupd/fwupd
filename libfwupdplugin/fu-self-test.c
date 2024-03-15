@@ -2181,6 +2181,7 @@ fu_common_version_func(void)
 				   {0x9999, "99.99", FWUPD_VERSION_FORMAT_BCD},
 				   {0x0, "0", FWUPD_VERSION_FORMAT_NUMBER},
 				   {0x1234, "4660", FWUPD_VERSION_FORMAT_NUMBER},
+				   {0x1234, "1.2.52", FWUPD_VERSION_FORMAT_TRIPLET},
 				   {0, NULL}};
 	struct {
 		const gchar *old;
