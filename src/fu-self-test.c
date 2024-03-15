@@ -4531,7 +4531,6 @@ fu_plugin_composite_func(gconstpointer user_data)
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
-	g_autoptr(XbSilo) silo = NULL;
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);

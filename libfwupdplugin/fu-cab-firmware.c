@@ -399,7 +399,6 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 	guint16 time;
 	g_autoptr(FuCabImage) img = fu_cab_image_new();
 	g_autoptr(GByteArray) st = NULL;
-	g_autoptr(GBytes) img_blob = NULL;
 	g_autoptr(GDateTime) created = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GString) filename = g_string_new(NULL);

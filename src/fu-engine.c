@@ -749,7 +749,6 @@ fu_engine_modify_config(FuEngine *self,
 			GError **error)
 {
 	FuPlugin *plugin;
-	g_auto(GStrv) section_key = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(section != NULL, FALSE);
@@ -4647,7 +4646,6 @@ fu_engine_get_details(FuEngine *self,
 		      GError **error)
 {
 	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) details = NULL;
 	g_autoptr(GPtrArray) checksums = g_ptr_array_new_with_free_func(g_free);
