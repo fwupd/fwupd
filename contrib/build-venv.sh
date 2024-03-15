@@ -6,7 +6,7 @@ DIST=${VENV}/dist
 
 #build and install
 if [ ! -d ${BUILD} ]; then
-        meson setup ${BUILD} --prefix=${DIST} -Dsystemd=disabled -Dudevdir=${DIST} $@
+        meson setup ${BUILD} --prefix=${DIST} -Dsystemd=disabled -Dlaunchd=disabled -Dudevdir=${DIST} $@
 fi
 ninja -C ${BUILD} install
 
