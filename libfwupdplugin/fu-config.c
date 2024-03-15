@@ -302,7 +302,6 @@ fu_config_reload(FuConfig *self, GError **error)
 		return FALSE;
 	for (guint i = 0; i < priv->items->len; i++) {
 		FuConfigItem *item = g_ptr_array_index(priv->items, i);
-		g_autofree gchar *dirname = g_path_get_dirname(item->filename);
 		g_autoptr(GError) error_load = NULL;
 		g_autoptr(GBytes) blob_item = NULL;
 

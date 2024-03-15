@@ -1274,7 +1274,6 @@ fu_plugin_vfuncs_func(void)
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
-	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* nop: error */
@@ -3871,12 +3870,14 @@ fu_bios_settings_load_func(void)
 	g_autofree gchar *test_dir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuBiosSettings) p620_settings = NULL;
-	g_autoptr(FuBiosSettings) p620_6_3_settings = NULL;
+#ifdef FU_THINKLMI_COMPAT
 	g_autoptr(FuBiosSettings) p14s_settings = NULL;
-	g_autoptr(FuBiosSettings) xp29310_settings = NULL;
+	g_autoptr(FuBiosSettings) p620_settings = NULL;
 	g_autoptr(GPtrArray) p14s_items = NULL;
 	g_autoptr(GPtrArray) p620_items = NULL;
+#endif
+	g_autoptr(FuBiosSettings) p620_6_3_settings = NULL;
+	g_autoptr(FuBiosSettings) xp29310_settings = NULL;
 	g_autoptr(GPtrArray) p620_6_3_items = NULL;
 	g_autoptr(GPtrArray) xps9310_items = NULL;
 
@@ -5108,7 +5109,6 @@ fu_efi_lz77_decompressor_func(void)
 	g_autoptr(FuFirmware) lz77_decompressor_tiano = fu_efi_lz77_decompressor_new();
 	g_autoptr(GBytes) blob_legacy2 = NULL;
 	g_autoptr(GBytes) blob_legacy = NULL;
-	g_autoptr(GBytes) blob_src = NULL;
 	g_autoptr(GBytes) blob_tiano2 = NULL;
 	g_autoptr(GBytes) blob_tiano = NULL;
 	g_autoptr(GError) error = NULL;

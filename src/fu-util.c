@@ -893,7 +893,6 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 	const gchar *url;
 	const gchar *emulation_url = NULL;
 	g_autofree gchar *filename = NULL;
-	g_autofree gchar *url_safe = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error_local = NULL;
 
