@@ -27,7 +27,6 @@ G_DEFINE_TYPE(FuUsbBackend, fu_usb_backend, FU_TYPE_BACKEND)
 static void
 fu_usb_backend_device_notify_flags_cb(FuDevice *device, GParamSpec *pspec, FuBackend *backend)
 {
-#if G_USB_CHECK_VERSION(0, 3, 10)
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
 
 	/* if waiting for a disconnect, set win32 to poll insanely fast -- and set it
@@ -41,9 +40,6 @@ fu_usb_backend_device_notify_flags_cb(FuDevice *device, GParamSpec *pspec, FuBac
 		g_usb_context_set_hotplug_poll_interval(self->usb_ctx,
 							FU_USB_BACKEND_POLL_INTERVAL_DEFAULT);
 	}
-#else
-	g_warning("GUsb >= 0.3.10 may be needed to notice device enumeration");
-#endif
 }
 #endif
 
@@ -73,7 +69,6 @@ fu_usb_backend_context_finalized_cb(gpointer data, GObject *where_the_object_was
 static void
 fu_usb_backend_context_flags_check(FuUsbBackend *self)
 {
-#if G_USB_CHECK_VERSION(0, 4, 5)
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	GUsbContextFlags usb_flags = G_USB_CONTEXT_FLAGS_DEBUG;
 	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS)) {
@@ -81,7 +76,6 @@ fu_usb_backend_context_flags_check(FuUsbBackend *self)
 		usb_flags |= G_USB_CONTEXT_FLAGS_SAVE_EVENTS;
 	}
 	g_usb_context_set_flags(self->usb_ctx, usb_flags);
-#endif
 }
 
 static void
@@ -175,16 +169,8 @@ fu_usb_backend_load(FuBackend *backend,
 		    FuBackendLoadFlags flags,
 		    GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 4, 5)
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
 	return g_usb_context_load_with_tag(self->usb_ctx, json_object, tag, error);
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "GUsb version too old to load backends");
-	return FALSE;
-#endif
 }
 
 static gboolean
@@ -194,7 +180,6 @@ fu_usb_backend_save(FuBackend *backend,
 		    FuBackendSaveFlags flags,
 		    GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 4, 5)
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
 	guint usb_events_cnt = 0;
 	g_autoptr(GPtrArray) devices = g_usb_context_get_devices(self->usb_ctx);
@@ -218,13 +203,6 @@ fu_usb_backend_save(FuBackend *backend,
 		g_usb_device_clear_events(usb_device);
 	}
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "GUsb version too old to save backends");
-	return FALSE;
-#endif
 }
 
 static void

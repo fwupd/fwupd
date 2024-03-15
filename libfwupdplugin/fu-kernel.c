@@ -157,60 +157,19 @@ fu_kernel_get_firmware_search_path(GError **error)
 gboolean
 fu_kernel_set_firmware_search_path(const gchar *path, GError **error)
 {
-#if GLIB_CHECK_VERSION(2, 66, 0)
 	g_autofree gchar *sys_fw_search_path_prm = NULL;
 
 	g_return_val_if_fail(path != NULL, FALSE);
 	g_return_val_if_fail(strlen(path) < PATH_MAX, FALSE);
 
-	sys_fw_search_path_prm = fu_path_from_kind(FU_PATH_KIND_FIRMWARE_SEARCH);
-
 	g_debug("writing firmware search path (%" G_GSIZE_FORMAT "): %s", strlen(path), path);
-
+	sys_fw_search_path_prm = fu_path_from_kind(FU_PATH_KIND_FIRMWARE_SEARCH);
 	return g_file_set_contents_full(sys_fw_search_path_prm,
 					path,
 					strlen(path),
 					G_FILE_SET_CONTENTS_NONE,
 					0644,
 					error);
-#else
-	FILE *fd;
-	gsize res;
-	g_autofree gchar *sys_fw_search_path_prm = NULL;
-
-	g_return_val_if_fail(path != NULL, FALSE);
-	g_return_val_if_fail(strlen(path) < PATH_MAX, FALSE);
-
-	sys_fw_search_path_prm = fu_path_from_kind(FU_PATH_KIND_FIRMWARE_SEARCH);
-	/* g_file_set_contents will try to create backup files in sysfs, so use fopen here */
-	fd = fopen(sys_fw_search_path_prm, "w");
-	if (fd == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_PERMISSION_DENIED,
-			    "Failed to open %s: %s",
-			    sys_fw_search_path_prm,
-			    g_strerror(errno));
-		return FALSE;
-	}
-
-	g_debug("writing firmware search path (%" G_GSIZE_FORMAT "): %s", strlen(path), path);
-
-	res = fwrite(path, sizeof(gchar), strlen(path), fd);
-
-	fclose(fd);
-
-	if (res != strlen(path)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "Failed to write firmware search path: %s",
-			    g_strerror(errno));
-		return FALSE;
-	}
-
-	return TRUE;
-#endif
 }
 
 /**

@@ -99,7 +99,7 @@ fu_hid_device_set_property(GObject *object, guint prop_id, const GValue *value, 
 GPtrArray *
 fu_hid_device_parse_descriptors(FuHidDevice *self, GError **error)
 {
-#if G_USB_CHECK_VERSION(0, 4, 7)
+#ifdef HAVE_GUSB
 	g_autoptr(GPtrArray) fws = NULL;
 	g_autoptr(GPtrArray) descriptors =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
@@ -124,7 +124,7 @@ fu_hid_device_parse_descriptors(FuHidDevice *self, GError **error)
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "only supported in libgusb >= 0.4.7");
+			    "not supported as <gusb.h> is unavailable");
 	return NULL;
 #endif
 }

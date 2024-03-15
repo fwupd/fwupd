@@ -1872,7 +1872,9 @@ fu_engine_publish_release(FuEngine *self, FuRelease *release, GError **error)
 	/* send to passimd, if enabled and running */
 	if (passim_client_get_version(self->passim_client) != NULL &&
 	    fu_engine_config_get_p2p_policy(self->config) & FU_P2P_POLICY_FIRMWARE) {
+		gsize streamsz = 0;
 		g_autofree gchar *basename = g_path_get_basename(fu_release_get_filename(release));
+		g_autofree gchar *checksum = NULL;
 		g_autoptr(GError) error_passim = NULL;
 		g_autoptr(PassimItem) passim_item = passim_item_new();
 		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
@@ -1880,28 +1882,14 @@ fu_engine_publish_release(FuEngine *self, FuRelease *release, GError **error)
 		passim_item_set_max_age(passim_item, 30 * 24 * 60 * 60);
 		passim_item_set_share_limit(passim_item, 50);
 		passim_item_set_basename(passim_item, basename);
-#if PASSIM_CHECK_VERSION(0, 1, 5)
-		{
-			gsize streamsz = 0;
-			g_autofree gchar *checksum =
-			    fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA256, error);
-			if (checksum == NULL)
-				return FALSE;
-			if (!fu_input_stream_size(stream, &streamsz, error))
-				return FALSE;
-			passim_item_set_size(passim_item, streamsz);
-			passim_item_set_stream(passim_item, stream);
-			passim_item_set_hash(passim_item, checksum);
-		}
-#else
-		{
-			g_autoptr(GBytes) blob_cab = NULL;
-			blob_cab = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
-			if (blob_cab == NULL)
-				return FALSE;
-			passim_item_set_bytes(passim_item, blob_cab);
-		}
-#endif
+		checksum = fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA256, error);
+		if (checksum == NULL)
+			return FALSE;
+		if (!fu_input_stream_size(stream, &streamsz, error))
+			return FALSE;
+		passim_item_set_size(passim_item, streamsz);
+		passim_item_set_stream(passim_item, stream);
+		passim_item_set_hash(passim_item, checksum);
 		if (!passim_client_publish(self->passim_client, passim_item, &error_passim)) {
 			if (!g_error_matches(error_passim, G_IO_ERROR, G_IO_ERROR_EXISTS)) {
 				g_warning("failed to publish firmware to Passim: %s",
@@ -1927,6 +1915,7 @@ fu_engine_install_release_version_check(FuEngine *self,
 	const gchar *version_old = fu_release_get_device_version_old(release);
 	if (version_rel != NULL && fu_version_compare(version_old, version_rel, fmt) != 0 &&
 	    fu_version_compare(version_old, fu_device_get_version(device), fmt) == 0 &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED);
 		g_set_error(error,
@@ -3786,12 +3775,8 @@ fu_engine_create_metadata_builder_source(FuEngine *self, const gchar *fn, GError
 					     NULL);
 	if (!xb_builder_source_load_file(source,
 					 file,
-#if LIBJCAT_CHECK_VERSION(0, 2, 0)
 					 XB_BUILDER_SOURCE_FLAG_WATCH_FILE |
 					     XB_BUILDER_SOURCE_FLAG_WATCH_DIRECTORY,
-#else
-					 XB_BUILDER_SOURCE_FLAG_WATCH_FILE,
-#endif
 					 NULL,
 					 error))
 		return NULL;
@@ -8729,12 +8714,10 @@ fu_engine_constructed(GObject *obj)
 
 	/* setup Jcat context */
 	self->jcat_context = jcat_context_new();
-#if LIBJCAT_CHECK_VERSION(0, 1, 13)
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA256);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA512);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_PKCS7);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_GPG);
-#endif
 	keyring_path = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	jcat_context_set_keyring_path(self->jcat_context, keyring_path);
 	sysconfdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR);
@@ -8748,9 +8731,7 @@ fu_engine_constructed(GObject *obj)
 #ifdef HAVE_GUSB
 	fu_engine_add_runtime_version(self, "org.freedesktop.gusb", g_usb_version_string());
 #endif
-#if LIBJCAT_CHECK_VERSION(0, 1, 11)
 	fu_engine_add_runtime_version(self, "com.hughsie.libjcat", jcat_version_string());
-#endif
 
 	/* optional kernel version */
 #ifdef HAVE_UTSNAME_H

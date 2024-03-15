@@ -4030,10 +4030,6 @@ fu_backend_usb_func(gconstpointer user_data)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) possible_plugins = NULL;
 
-#if !G_USB_CHECK_VERSION(0, 4, 5)
-	g_test_skip("GUsb version too old");
-	return;
-#endif
 	/* check there were events */
 	g_signal_connect(backend,
 			 "device-added",
@@ -4113,11 +4109,6 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(JsonParser) parser = json_parser_new();
-
-#if !G_USB_CHECK_VERSION(0, 4, 5)
-	g_test_skip("GUsb version too old");
-	return;
-#endif
 
 	/* load the JSON into the backend */
 	gusb_emulate_fn =

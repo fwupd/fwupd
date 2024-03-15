@@ -548,12 +548,8 @@ fu_memdup_safe(const guint8 *src, gsize n, GError **error)
 		return NULL;
 	}
 
-#if GLIB_CHECK_VERSION(2, 67, 3)
 	/* linear block of memory */
 	return g_memdup2(src, n);
-#else
-	return g_memdup(src, (guint)n);
-#endif
 }
 
 /**

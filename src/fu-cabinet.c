@@ -200,10 +200,8 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 		}
 	}
 
-	/* find out if the payload is signed, falling back to detached */
-	item = jcat_file_get_item_by_id(self->jcat_file, basename, NULL);
-#if LIBJCAT_CHECK_VERSION(0, 2, 0)
 	/* the jcat file signed the *checksum of the payload*, not the payload itself */
+	item = jcat_file_get_item_by_id(self->jcat_file, basename, NULL);
 	if (item != NULL && jcat_item_has_target(item)) {
 		gchar *checksum_sha256 = NULL;
 		gchar *checksum_sha512 = NULL;
@@ -244,9 +242,6 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 			release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
 		}
 	} else if (item != NULL) {
-#else
-	if (item != NULL) {
-#endif
 		g_autoptr(GBytes) blob = NULL;
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) results = NULL;
@@ -979,12 +974,10 @@ fu_cabinet_init(FuCabinet *self)
 	self->builder = xb_builder_new();
 	self->jcat_file = jcat_file_new();
 	self->jcat_context = jcat_context_new();
-#if LIBJCAT_CHECK_VERSION(0, 1, 13)
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA256);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA512);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_PKCS7);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_GPG);
-#endif
 }
 
 static void
