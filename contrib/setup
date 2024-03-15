@@ -6,10 +6,6 @@ cd "$(dirname "$0")/.."
 HELPER=./contrib/ci/fwupd_setup_helpers.py
 HELPER_ARGS="-y"
 
-if [ "$(id -u)" != "0" ]; then
-       SUDO=$(which sudo)
-fi
-
 rename_branch()
 {
     OLD=master
@@ -31,7 +27,7 @@ setup_deps()
 {
     read -p "Install build dependencies? (y/N) " question
     if [ "$question" = "y" ]; then
-        $SUDO python3 $HELPER install-dependencies $HELPER_ARGS -y
+        python3 $HELPER install-dependencies $HELPER_ARGS -y
     fi
 }
 
@@ -80,7 +76,7 @@ install_pip()
     package=$1
     args=$2
     if ! python3 -m pip install $package $args; then
-        $SUDO python3 $HELPER install-pip $HELPER_ARGS -y
+        python3 $HELPER install-pip $HELPER_ARGS -y
     fi
     #try once more
     python3 -m pip install $package
@@ -210,7 +206,7 @@ detect_os "$@"
 #if interactive install build deps and prepare environment
 if [ -t 2 ]; then
     case $OS in
-        debian|ubuntu|arch|fedora|void)
+        debian|ubuntu|arch|fedora|void|darwin)
             setup_deps
             ;;
     esac
