@@ -3605,12 +3605,14 @@ fu_bios_settings_load_func(void)
 	g_autofree gchar *test_dir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuBiosSettings) p620_settings = NULL;
-	g_autoptr(FuBiosSettings) p620_6_3_settings = NULL;
+#ifdef FU_THINKLMI_COMPAT
 	g_autoptr(FuBiosSettings) p14s_settings = NULL;
-	g_autoptr(FuBiosSettings) xp29310_settings = NULL;
+	g_autoptr(FuBiosSettings) p620_settings = NULL;
 	g_autoptr(GPtrArray) p14s_items = NULL;
 	g_autoptr(GPtrArray) p620_items = NULL;
+#endif
+	g_autoptr(FuBiosSettings) p620_6_3_settings = NULL;
+	g_autoptr(FuBiosSettings) xp29310_settings = NULL;
 	g_autoptr(GPtrArray) p620_6_3_items = NULL;
 	g_autoptr(GPtrArray) xps9310_items = NULL;
 
