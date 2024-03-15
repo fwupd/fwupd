@@ -626,6 +626,11 @@ fu_common_olson_timezone_id_func(void)
 	g_autofree gchar *timezone_id = NULL;
 	g_autoptr(GError) error = NULL;
 
+#ifdef HOST_MACHINE_SYSTEM_DARWIN
+	g_test_skip("not supported on Darwin");
+	return;
+#endif
+
 	timezone_id = fu_common_get_olson_timezone_id(&error);
 	g_assert_no_error(error);
 #ifdef _WIN32
