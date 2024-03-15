@@ -63,6 +63,12 @@ fu_backend_device_added(FuBackend *self, FuDevice *device)
 	if (fu_device_get_backend_id(device) == NULL)
 		fu_device_set_backend_id(device, priv->name);
 
+	/* sanity check */
+	if (g_hash_table_contains(priv->devices, fu_device_get_backend_id(device))) {
+		g_warning("replacing existing device with backend_id %s",
+			  fu_device_get_backend_id(device));
+	}
+
 	/* add */
 	g_hash_table_insert(priv->devices,
 			    g_strdup(fu_device_get_backend_id(device)),
