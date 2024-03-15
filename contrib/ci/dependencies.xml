@@ -189,6 +189,9 @@
     <distro id="void">
       <package variant="x86_64">json-glib-devel</package>
     </distro>
+    <distro id="darwin">
+      <package variant="x86_64">json-glib</package>
+    </distro>
     <distro id="debian">
       <control>
         <version>(>= 1.1.1)</version>
@@ -560,6 +563,9 @@
     <distro id="void">
       <package variant="x86_64" />
     </distro>
+    <distro id="darwin">
+      <package variant="x86_64" />
+    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
@@ -593,6 +599,9 @@
     </distro>
     <distro id="void">
       <package variant="x86_64">gnutls-devel</package>
+    </distro>
+    <distro id="darwin">
+      <package variant="x86_64">gnutls</package>
     </distro>
     <distro id="debian">
       <control />
@@ -743,6 +752,9 @@
     <distro id="void">
       <package variant="x86_64">libarchive-devel</package>
     </distro>
+    <distro id="darwin">
+      <package variant="x86_64">libarchive</package>
+    </distro>
   </dependency>
   <dependency id="libcbor-dev">
     <distro id="arch">
@@ -815,6 +827,9 @@
     <distro id="void">
       <package variant="x86_64">libgusb-devel</package>
     </distro>
+    <distro id="darwin">
+      <package variant="x86_64">libgusb</package>
+    </distro>
     <distro id="debian">
       <control>
         <version>(>= 0.3.5)</version>
@@ -856,6 +871,9 @@
     </distro>
     <distro id="void">
       <package variant="x86_64">libcurl-devel</package>
+    </distro>
+    <distro id="darwin">
+      <package variant="x86_64">curl</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1163,6 +1181,9 @@
     <distro id="fedora">
       <package variant="x86_64" />
     </distro>
+    <distro id="darwin">
+      <package variant="x86_64">virtualenv</package>
+    </distro>
   </dependency>
   <dependency id="python3-dbusmock">
     <distro id="debian">
@@ -1250,6 +1271,9 @@
       <package variant="aarch64" />
     </distro>
     <distro id="arch">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="darwin">
       <package variant="x86_64" />
     </distro>
     <distro id="centos">
@@ -1411,6 +1435,9 @@
     <distro id="void">
       <package variant="x86_64">sqlite-devel</package>
     </distro>
+    <distro id="darwin">
+      <package variant="x86_64">sqlite</package>
+    </distro>
   </dependency>
   <dependency id="logind">
     <distro id="void">
@@ -1537,6 +1564,9 @@
     <distro id="void">
       <package variant="x86_64">vala</package>
     </distro>
+    <distro id="darwin">
+      <package variant="x86_64">vala</package>
+    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
@@ -1645,6 +1675,9 @@
     </distro>
     <distro id="void">
       <package variant="x86_64">protobuf-c-devel</package>
+    </distro>
+    <distro id="darwin">
+      <package variant="x86_64">protobuf-c</package>
     </distro>
   </dependency>
   <dependency id="protobuf-c-compiler">
