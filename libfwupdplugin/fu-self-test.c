@@ -2145,17 +2145,17 @@ fu_common_version_func(void)
 	    {0x6001988, "6.25.136", FWUPD_VERSION_FORMAT_SURFACE},
 	    {0x00ff0001, "255.0.1", FWUPD_VERSION_FORMAT_DELL_BIOS},
 	    {0xc8, "0x000000c8", FWUPD_VERSION_FORMAT_HEX},
-	    {0, NULL}};
+	};
 	struct {
 		guint32 val;
 		const gchar *ver;
 		FwupdVersionFormat flags;
-	} version_from_uint24[] = {{0x0, NULL, FWUPD_VERSION_FORMAT_QUAD},
-				   {0x0, "0.0.0", FWUPD_VERSION_FORMAT_TRIPLET},
-				   {0xff, "0.0.255", FWUPD_VERSION_FORMAT_TRIPLET},
-				   {0x0, "0", FWUPD_VERSION_FORMAT_NUMBER},
-				   {0xc8, "0x0000c8", FWUPD_VERSION_FORMAT_HEX},
-				   {0, NULL}};
+	} version_from_uint24[] = {
+	    {0x0, "0.0.0", FWUPD_VERSION_FORMAT_TRIPLET},
+	    {0xff, "0.0.255", FWUPD_VERSION_FORMAT_TRIPLET},
+	    {0x0, "0", FWUPD_VERSION_FORMAT_NUMBER},
+	    {0xc8, "0x0000c8", FWUPD_VERSION_FORMAT_HEX},
+	};
 	struct {
 		guint64 val;
 		const gchar *ver;
@@ -2168,55 +2168,57 @@ fu_common_version_func(void)
 	    {0xffffffffffffffff, "4294967295.4294967295", FWUPD_VERSION_FORMAT_PAIR},
 	    {0x0, "0", FWUPD_VERSION_FORMAT_NUMBER},
 	    {0x11000000c8, "0x00000011000000c8", FWUPD_VERSION_FORMAT_HEX},
-	    {0, NULL}};
+	};
 	struct {
 		guint16 val;
 		const gchar *ver;
 		FwupdVersionFormat flags;
-	} version_from_uint16[] = {{0x0, "0.0", FWUPD_VERSION_FORMAT_PAIR},
-				   {0xff, "0.255", FWUPD_VERSION_FORMAT_PAIR},
-				   {0xff01, "255.1", FWUPD_VERSION_FORMAT_PAIR},
-				   {0x0, "0.0", FWUPD_VERSION_FORMAT_BCD},
-				   {0x0110, "1.10", FWUPD_VERSION_FORMAT_BCD},
-				   {0x9999, "99.99", FWUPD_VERSION_FORMAT_BCD},
-				   {0x0, "0", FWUPD_VERSION_FORMAT_NUMBER},
-				   {0x1234, "4660", FWUPD_VERSION_FORMAT_NUMBER},
-				   {0x1234, "1.2.52", FWUPD_VERSION_FORMAT_TRIPLET},
-				   {0, NULL}};
+	} version_from_uint16[] = {
+	    {0x0, "0.0", FWUPD_VERSION_FORMAT_PAIR},
+	    {0xff, "0.255", FWUPD_VERSION_FORMAT_PAIR},
+	    {0xff01, "255.1", FWUPD_VERSION_FORMAT_PAIR},
+	    {0x0, "0.0", FWUPD_VERSION_FORMAT_BCD},
+	    {0x0110, "1.10", FWUPD_VERSION_FORMAT_BCD},
+	    {0x9999, "99.99", FWUPD_VERSION_FORMAT_BCD},
+	    {0x0, "0", FWUPD_VERSION_FORMAT_NUMBER},
+	    {0x1234, "4660", FWUPD_VERSION_FORMAT_NUMBER},
+	    {0x1234, "1.2.52", FWUPD_VERSION_FORMAT_TRIPLET},
+	};
 	struct {
 		const gchar *old;
 		const gchar *new;
-	} version_parse[] = {{"0", "0"},
-			     {"0x1a", "0.0.26"},
-			     {"257", "0.0.257"},
-			     {"1.2.3", "1.2.3"},
-			     {"0xff0001", "0.255.1"},
-			     {"16711681", "0.255.1"},
-			     {"20150915", "20150915"},
-			     {"dave", "dave"},
-			     {"0x1x", "0x1x"},
-			     {NULL, NULL}};
+	} version_parse[] = {
+	    {"0", "0"},
+	    {"0x1a", "0.0.26"},
+	    {"257", "0.0.257"},
+	    {"1.2.3", "1.2.3"},
+	    {"0xff0001", "0.255.1"},
+	    {"16711681", "0.255.1"},
+	    {"20150915", "20150915"},
+	    {"dave", "dave"},
+	    {"0x1x", "0x1x"},
+	};
 
 	/* check version conversion */
-	for (i = 0; version_from_uint64[i].ver != NULL; i++) {
+	for (i = 0; i < G_N_ELEMENTS(version_from_uint64); i++) {
 		g_autofree gchar *ver = NULL;
 		ver = fu_version_from_uint64(version_from_uint64[i].val,
 					     version_from_uint64[i].flags);
 		g_assert_cmpstr(ver, ==, version_from_uint64[i].ver);
 	}
-	for (i = 0; version_from_uint32[i].ver != NULL; i++) {
+	for (i = 0; i < G_N_ELEMENTS(version_from_uint32); i++) {
 		g_autofree gchar *ver = NULL;
 		ver = fu_version_from_uint32(version_from_uint32[i].val,
 					     version_from_uint32[i].flags);
 		g_assert_cmpstr(ver, ==, version_from_uint32[i].ver);
 	}
-	for (i = 0; version_from_uint24[i].ver != NULL; i++) {
+	for (i = 0; i < G_N_ELEMENTS(version_from_uint24); i++) {
 		g_autofree gchar *ver = NULL;
 		ver = fu_version_from_uint24(version_from_uint24[i].val,
 					     version_from_uint24[i].flags);
 		g_assert_cmpstr(ver, ==, version_from_uint24[i].ver);
 	}
-	for (i = 0; version_from_uint16[i].ver != NULL; i++) {
+	for (i = 0; i < G_N_ELEMENTS(version_from_uint16); i++) {
 		g_autofree gchar *ver = NULL;
 		ver = fu_version_from_uint16(version_from_uint16[i].val,
 					     version_from_uint16[i].flags);
@@ -2224,7 +2226,7 @@ fu_common_version_func(void)
 	}
 
 	/* check version parsing */
-	for (i = 0; version_parse[i].old != NULL; i++) {
+	for (i = 0; i < G_N_ELEMENTS(version_parse); i++) {
 		g_autofree gchar *ver = NULL;
 		ver = fu_version_parse_from_format(version_parse[i].old,
 						   FWUPD_VERSION_FORMAT_TRIPLET);
