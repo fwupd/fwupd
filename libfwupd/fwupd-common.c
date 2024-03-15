@@ -419,17 +419,22 @@ fwupd_build_machine_id(const gchar *salt, GError **error)
 		bufsz = strlen(buf);
 	} else {
 		const gchar *fn = NULL;
-		g_auto(GStrv) fns = g_new0(gchar *, 6);
+		g_autoptr(GPtrArray) fns = g_ptr_array_new_with_free_func(g_free);
 
 		/* one of these has to exist */
-		fns[0] = g_build_filename(FWUPD_SYSCONFDIR, "machine-id", NULL);
-		fns[1] = g_build_filename(FWUPD_LOCALSTATEDIR, "lib", "dbus", "machine-id", NULL);
-		fns[2] = g_strdup("/etc/machine-id");
-		fns[3] = g_strdup("/var/lib/dbus/machine-id");
-		fns[4] = g_strdup("/var/db/dbus/machine-id");
-		for (guint i = 0; fns[i] != NULL; i++) {
-			if (g_file_test(fns[i], G_FILE_TEST_EXISTS)) {
-				fn = fns[i];
+		g_ptr_array_add(fns, g_build_filename(FWUPD_SYSCONFDIR, "machine-id", NULL));
+		g_ptr_array_add(
+		    fns,
+		    g_build_filename(FWUPD_LOCALSTATEDIR, "lib", "dbus", "machine-id", NULL));
+		g_ptr_array_add(fns, g_strdup("/etc/machine-id"));
+		g_ptr_array_add(fns, g_strdup("/var/lib/dbus/machine-id"));
+		g_ptr_array_add(fns, g_strdup("/var/db/dbus/machine-id"));
+		/* this is the hardcoded path for homebrew, e.g. `sudo dbus-uuidgen --ensure` */
+		g_ptr_array_add(fns, g_strdup("/usr/local/var/lib/dbus/machine-id"));
+		for (guint i = 0; i < fns->len; i++) {
+			const gchar *fn_tmp = g_ptr_array_index(fns, i);
+			if (g_file_test(fn_tmp, G_FILE_TEST_EXISTS)) {
+				fn = fn_tmp;
 				break;
 			}
 		}
