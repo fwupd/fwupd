@@ -4203,19 +4203,25 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 	istream = fu_input_stream_from_path(fwupd_remote_get_filename_cache_sig(remote), error);
 	if (istream == NULL)
 		return NULL;
-	if (!jcat_file_import_stream(jcat_file, istream, JCAT_IMPORT_FLAG_NONE, NULL, error))
+	if (!jcat_file_import_stream(jcat_file, istream, JCAT_IMPORT_FLAG_NONE, NULL, error)) {
+		fu_error_convert(error);
 		return NULL;
+	}
 	jcat_item = jcat_file_get_item_default(jcat_file, error);
-	if (jcat_item == NULL)
+	if (jcat_item == NULL) {
+		fu_error_convert(error);
 		return NULL;
+	}
 	results = jcat_context_verify_item(self->jcat_context,
 					   blob,
 					   jcat_item,
 					   JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
 					       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
 					   error);
-	if (results == NULL)
+	if (results == NULL) {
+		fu_error_convert(error);
 		return NULL;
+	}
 
 	/* return the newest signature */
 	return fu_engine_get_newest_signature_jcat_result(results, error);
@@ -4356,7 +4362,7 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 		 * metadata for this remote to mitigate a rollback attack */
 		jcat_result_old = fu_engine_get_system_jcat_result(self, remote, &error_local);
 		if (jcat_result_old == NULL) {
-			if (g_error_matches(error_local, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
 				g_info("no existing valid keyrings: %s", error_local->message);
 			} else {
 				g_warning("could not get existing keyring result: %s",

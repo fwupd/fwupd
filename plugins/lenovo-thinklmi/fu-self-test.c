@@ -74,7 +74,7 @@ fu_test_self_init(FuTest *self, GError **error)
 	self->ctx = fu_plugin_get_context(self->plugin_lenovo_thinklmi);
 	return TRUE;
 #else
-	g_assert_error(*error, G_FILE_ERROR, G_FILE_ERROR_NOENT);
+	g_assert_error(*error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
 	return FALSE;
 #endif

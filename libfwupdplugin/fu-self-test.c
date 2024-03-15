@@ -3967,7 +3967,7 @@ fu_bios_settings_load_func(void)
 	}
 
 #else
-	g_assert_error(error, G_FILE_ERROR, G_FILE_ERROR_NOENT);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
 	g_clear_error(&error);
 #endif
@@ -4079,7 +4079,7 @@ fu_bios_settings_load_func(void)
 	ret = fwupd_bios_setting_get_read_only(setting);
 	g_assert_true(ret);
 #else
-	g_assert_error(error, G_FILE_ERROR, G_FILE_ERROR_NOENT);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
 	g_clear_error(&error);
 #endif
