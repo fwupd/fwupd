@@ -186,7 +186,7 @@ def _get_installer_cmd(profile: str, yes: bool):
         print(f"\tsupported profiles: {get_possible_profiles()}")
         sys.exit(1)
     if os.geteuid() != 0:
-        installer.prepend("sudo")
+        installer.insert(0, "sudo")
     if yes:
         installer += ["-y"]
     return installer
