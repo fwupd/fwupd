@@ -512,14 +512,6 @@ option('fish_completion',
   value: true,
   description: 'enable fish completion',
 )
-option('offline',
-  type: 'feature',
-  description: 'Allow installing firmware using a pre-boot systemd target',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
 option('hsi',
   type: 'feature',
   description: ' Host Security Information',

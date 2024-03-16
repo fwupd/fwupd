@@ -4163,7 +4163,6 @@ fu_plugin_module_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	GError *error = NULL;
 	FuDevice *device_tmp;
-	FwupdRelease *release_tmp;
 	gboolean ret;
 	guint cnt = 0;
 	g_autofree gchar *localstatedir = NULL;
@@ -4172,9 +4171,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_autofree gchar *history_db = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
-	g_autoptr(FuDevice) device3 = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
-	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GBytes) blob_cab = NULL;
@@ -4216,11 +4213,6 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_name(device), ==, "Integrated Webcam™");
 	g_signal_handlers_disconnect_by_data(self->plugin, &device);
 
-#ifndef HAVE_FWUPDOFFLINE
-	g_test_skip("No offline update support on Windows");
-	return;
-#endif
-	/* schedule an offline update */
 	g_signal_connect(FU_PROGRESS(progress),
 			 "status-changed",
 			 G_CALLBACK(_plugin_status_changed_cb),
@@ -4229,35 +4221,6 @@ fu_plugin_module_func(gconstpointer user_data)
 	mapped_file = g_mapped_file_new(mapped_file_fn, FALSE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(mapped_file);
-	blob_cab = g_mapped_file_get_bytes(mapped_file);
-	fu_release_set_version(release, "1.2.3");
-	ret = fu_engine_schedule_update(engine,
-					device,
-					release,
-					blob_cab,
-					FWUPD_INSTALL_FLAG_NONE,
-					&error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* set on the current device */
-	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
-
-	/* lets check the history */
-	history = fu_history_new();
-	device2 = fu_history_get_device_by_id(history, fu_device_get_id(device), &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(device2);
-	g_assert_cmpint(fu_device_get_update_state(device2), ==, FWUPD_UPDATE_STATE_PENDING);
-	g_assert_cmpstr(fu_device_get_update_error(device2), ==, NULL);
-	g_assert_true(fu_device_has_flag(device2, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
-	release_tmp = fu_device_get_release_default(device2);
-	g_assert_nonnull(release_tmp);
-	g_assert_cmpstr(fwupd_release_get_filename(release_tmp), !=, NULL);
-	g_assert_cmpstr(fwupd_release_get_version(release_tmp), ==, "1.2.3");
-
-	/* save this; we'll need to delete it later */
-	pending_cap = g_strdup(fwupd_release_get_filename(release_tmp));
 
 	/* lets do this online */
 	fu_engine_add_device(engine, device);
@@ -4269,7 +4232,7 @@ fu_plugin_module_func(gconstpointer user_data)
 				     device,
 				     stream,
 				     progress,
-				     FWUPD_INSTALL_FLAG_NO_SEARCH,
+				     FWUPD_INSTALL_FLAG_NO_SEARCH | FWUPD_INSTALL_FLAG_NO_HISTORY,
 				     FWUPD_FEATURE_FLAG_NONE,
 				     &error);
 	g_assert_no_error(error);
@@ -4279,13 +4242,6 @@ fu_plugin_module_func(gconstpointer user_data)
 	/* check the new version */
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.3");
 	g_assert_cmpstr(fu_device_get_version_bootloader(device), ==, "0.1.2");
-
-	/* lets check the history */
-	device3 = fu_history_get_device_by_id(history, fu_device_get_id(device), &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(device3);
-	g_assert_cmpint(fu_device_get_update_state(device3), ==, FWUPD_UPDATE_STATE_SUCCESS);
-	g_assert_cmpstr(fu_device_get_update_error(device3), ==, NULL);
 
 	/* get the status */
 	device_tmp = fu_device_new(NULL);

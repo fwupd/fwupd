@@ -3550,7 +3550,7 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* TRANSLATORS: success message -- where activation is making the new
-	 * firmware take effect, usually after updating offline */
+	 * firmware take effect, usually after updating across a reboot cycle */
 	fu_console_print_literal(priv->console, _("Successfully activated all devices"));
 	return TRUE;
 }
@@ -4828,7 +4828,6 @@ main(int argc, char *argv[])
 	gboolean is_interactive = FALSE;
 	gboolean no_history = FALSE;
 	gboolean no_authenticate = FALSE;
-	gboolean offline = FALSE;
 	gboolean ret;
 	gboolean verbose = FALSE;
 	gboolean version = FALSE;
@@ -4856,14 +4855,6 @@ main(int argc, char *argv[])
 	     &version,
 	     /* TRANSLATORS: command line option */
 	     N_("Show client and daemon versions"),
-	     NULL},
-	    {"offline",
-	     '\0',
-	     0,
-	     G_OPTION_ARG_NONE,
-	     &offline,
-	     /* TRANSLATORS: command line option */
-	     N_("Schedule installation for next reboot when possible"),
 	     NULL},
 	    {"allow-reinstall",
 	     '\0',
@@ -5522,8 +5513,6 @@ main(int argc, char *argv[])
 	}
 
 	/* set flags */
-	if (offline)
-		priv->flags |= FWUPD_INSTALL_FLAG_OFFLINE;
 	if (allow_reinstall)
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	if (allow_older)

@@ -1882,9 +1882,6 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		/* get flags */
 		while (g_variant_iter_next(iter, "{&sv}", &prop_key, &prop_value)) {
 			g_debug("got option %s", prop_key);
-			if (g_strcmp0(prop_key, "offline") == 0 &&
-			    g_variant_get_boolean(prop_value) == TRUE)
-				helper->flags |= FWUPD_INSTALL_FLAG_OFFLINE;
 			if (g_strcmp0(prop_key, "allow-older") == 0 &&
 			    g_variant_get_boolean(prop_value) == TRUE)
 				helper->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;

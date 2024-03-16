@@ -209,35 +209,6 @@ fwupdengine = library(
   ],
 )
 
-if offline.allowed()
-fwupdoffline = executable(
-  'fwupdoffline',
-  fwupdengine_rs,
-  sources: [
-    'fu-offline.c',
-    'fu-spawn.c',
-    systemd_src
-  ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  dependencies: [
-    libfwupd_deps,
-    client_dep,
-  ],
-  link_with: [
-    fwupd,
-    fwupdutil,
-    fwupdengine,
-  ],
-  install: true,
-  install_rpath: libdir_pkg,
-  install_dir: join_paths(libexecdir, 'fwupd')
-)
-endif
-
 fwupdtool = executable(
   'fwupdtool',
   fwupdengine_rs,
@@ -360,9 +331,6 @@ executable(
   link_with: [
     fwupdengine,
     plugin_libs,
-  ],
-  c_args: [
-    '-DFU_OFFLINE_DESTDIR=""',
   ],
   install: true,
   install_rpath: libdir_pkg,

@@ -56,7 +56,6 @@ _fwupdmgr_cmd_list=(
 
 _fwupdmgr_opts=(
 	'--verbose'
-	'--offline'
 	'--allow-reinstall'
 	'--allow-older'
 	'--allow-branch-switch'

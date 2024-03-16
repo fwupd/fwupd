@@ -330,7 +330,6 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %ifarch i686 x86_64
 %{_libexecdir}/fwupd/fwupd-detect-cet
 %endif
-%{_libexecdir}/fwupd/fwupdoffline
 %{_bindir}/dbxtool
 %{_bindir}/fwupdmgr
 %{_bindir}/fwupdtool
@@ -367,11 +366,9 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %{_datadir}/fwupd/simple_client.py
 %{_datadir}/fwupd/add_capsule_header.py
 %{_datadir}/fwupd/install_dell_bios_exe.py
-%{_unitdir}/fwupd-offline-update.service
 %{_unitdir}/fwupd.service
 %{_unitdir}/fwupd-refresh.service
 %{_unitdir}/fwupd-refresh.timer
-%{_unitdir}/system-update.target.wants/
 %dir %{_localstatedir}/lib/fwupd
 %dir %{_localstatedir}/cache/fwupd
 %dir %{_datadir}/fwupd/quirks.d

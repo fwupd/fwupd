@@ -1019,10 +1019,6 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		/* TRANSLATORS: Device is updatable in this or any other mode */
 		return _("Updatable");
 	}
-	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_OFFLINE) {
-		/* TRANSLATORS: Update can only be done from offline mode */
-		return _("Update requires a reboot");
-	}
 	if (device_flag == FWUPD_DEVICE_FLAG_REQUIRE_AC) {
 		/* TRANSLATORS: Must be plugged into an outlet */
 		return _("System requires external power source");

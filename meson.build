@@ -311,11 +311,6 @@ endif
 
 libsystemd = dependency('libsystemd',
                         required: get_option('systemd').disable_auto_if(host_machine.system() != 'linux'))
-offline = get_option('offline').require(libsystemd.found(),
-    error_message: '-Doffline=enabled requires systemd')
-if offline.allowed()
-  conf.set('HAVE_FWUPDOFFLINE', '1')
-endif
 
 if cc.has_header('sys/utsname.h')
   conf.set('HAVE_UTSNAME_H', '1')
@@ -659,12 +654,6 @@ if build_standalone
   )
 endif
 
-if build_daemon and libsystemd.found() and offline.allowed()
-  install_symlink('fwupd-offline-update.service',
-    install_dir: join_paths(systemdunitdir, 'system-update.target.wants'),
-    pointing_to: join_paths('..', 'fwupd-offline-update.service')
-  )
-endif
 
 if libsystemd.found()
   summary({
@@ -706,7 +695,6 @@ if build_daemon
     'gudev': gudev,
     'hsi': hsi,
     'libarchive': libarchive.found(),
-    'offline': offline.allowed(),
     'passim': passim,
     'sqlite': sqlite,
     'thinklmi_compat': get_option('thinklmi_compat'),

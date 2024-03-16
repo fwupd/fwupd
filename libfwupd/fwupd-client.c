@@ -2933,9 +2933,6 @@ fwupd_client_install_stream_async(FwupdClient *self,
 				      "filename",
 				      g_variant_new_string(filename_hint));
 	}
-	if (install_flags & FWUPD_INSTALL_FLAG_OFFLINE) {
-		g_variant_builder_add(&builder, "{sv}", "offline", g_variant_new_boolean(TRUE));
-	}
 	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
 		g_variant_builder_add(&builder, "{sv}", "allow-older", g_variant_new_boolean(TRUE));
 	}
@@ -3227,9 +3224,6 @@ fwupd_client_install_release_download_cb(GObject *source, GAsyncResult *res, gpo
 		return;
 	}
 
-	/* if the device specifies ONLY_OFFLINE automatically set this flag */
-	if (fwupd_device_has_flag(data->device, FWUPD_DEVICE_FLAG_ONLY_OFFLINE))
-		data->install_flags |= FWUPD_INSTALL_FLAG_OFFLINE;
 	fwupd_client_install_bytes_async(FWUPD_CLIENT(source),
 					 fwupd_device_get_id(data->device),
 					 blob,

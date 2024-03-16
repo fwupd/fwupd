@@ -96,17 +96,6 @@ if build_daemon
     con2.set('dynamic_options', '\n'.join(dynamic_options))
     con2.set('motd_dir', motd_dir)
 
-    # replace @bindir@
-    if offline.allowed()
-      configure_file(
-        input: 'fwupd-offline-update.service.in',
-        output: 'fwupd-offline-update.service',
-        configuration: con2,
-        install: true,
-        install_dir: systemdunitdir,
-      )
-    endif
-
     # replace @dynamic_options@
     configure_file(
       input: 'fwupd.service.in',

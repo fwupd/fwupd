@@ -242,13 +242,6 @@ fu_engine_get_component_by_guids(FuEngine *self, FuDevice *device);
 gchar *
 fu_engine_get_remote_id_for_stream(FuEngine *self, GInputStream *stream);
 gboolean
-fu_engine_schedule_update(FuEngine *self,
-			  FuDevice *device,
-			  FuRelease *release,
-			  GBytes *blob_cab,
-			  FwupdInstallFlags flags,
-			  GError **error);
-gboolean
 fu_engine_modify_bios_settings(FuEngine *self,
 			       GHashTable *settings,
 			       gboolean force_ro,
