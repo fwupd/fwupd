@@ -4225,8 +4225,7 @@ fu_plugin_module_func(gconstpointer user_data)
 			 "status-changed",
 			 G_CALLBACK(_plugin_status_changed_cb),
 			 &cnt);
-	mapped_file_fn =
-	    g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin", NULL);
+	mapped_file_fn = g_test_build_filename(G_TEST_DIST, "tests", "fakedevice123.bin", NULL);
 	mapped_file = g_mapped_file_new(mapped_file_fn, FALSE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(mapped_file);
