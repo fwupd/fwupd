@@ -126,7 +126,7 @@ if get_option('plugin_uefi_capsule_splash')
     join_paths(meson.project_source_root(), 'po', 'LINGUAS'),
   ], check: false)
   if splash_deps.returncode() != 0
-    error(splash_deps.stdout().strip())
+    error(splash_deps.stderr().strip())
   endif
   custom_target('ux-capsule-tar',
     input: [
