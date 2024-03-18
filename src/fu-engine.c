@@ -162,6 +162,12 @@ static guint signals[SIGNAL_LAST] = {0};
 
 G_DEFINE_TYPE(FuEngine, fu_engine, G_TYPE_OBJECT)
 
+gboolean
+fu_engine_get_loaded(FuEngine *self)
+{
+	return self->loaded;
+}
+
 static gboolean
 fu_engine_update_motd_timeout_cb(gpointer user_data)
 {
