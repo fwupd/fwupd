@@ -226,6 +226,10 @@ fu_util_start_engine(FuUtilPrivate *priv,
 		     FuProgress *progress,
 		     GError **error)
 {
+	/* already done */
+	if (fu_engine_get_loaded(priv->engine))
+		return TRUE;
+
 	if (!fu_util_lock(priv, error)) {
 		/* TRANSLATORS: another fwupdtool instance is already running */
 		g_prefix_error(error, "%s: ", _("Failed to lock"));
