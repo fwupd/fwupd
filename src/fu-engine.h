@@ -47,6 +47,8 @@ typedef enum {
 
 FuEngine *
 fu_engine_new(FuContext *ctx);
+gboolean
+fu_engine_get_loaded(FuEngine *self);
 void
 fu_engine_add_plugin_filter(FuEngine *self, const gchar *plugin_glob);
 void
