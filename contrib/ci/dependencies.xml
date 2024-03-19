@@ -190,7 +190,7 @@
       <package variant="x86_64">json-glib-devel</package>
     </distro>
     <distro id="darwin">
-      <package variant="x86_64">json-glib</package>
+      <package>json-glib</package>
     </distro>
     <distro id="debian">
       <control>
@@ -601,7 +601,7 @@
       <package variant="x86_64">gnutls-devel</package>
     </distro>
     <distro id="darwin">
-      <package variant="x86_64">gnutls</package>
+      <package>gnutls</package>
     </distro>
     <distro id="debian">
       <control />
@@ -753,7 +753,7 @@
       <package variant="x86_64">libarchive-devel</package>
     </distro>
     <distro id="darwin">
-      <package variant="x86_64">libarchive</package>
+      <package>libarchive</package>
     </distro>
   </dependency>
   <dependency id="libcbor-dev">
@@ -828,7 +828,7 @@
       <package variant="x86_64">libgusb-devel</package>
     </distro>
     <distro id="darwin">
-      <package variant="x86_64">libgusb</package>
+      <package>libgusb</package>
     </distro>
     <distro id="debian">
       <control>
@@ -873,7 +873,7 @@
       <package variant="x86_64">libcurl-devel</package>
     </distro>
     <distro id="darwin">
-      <package variant="x86_64">curl</package>
+      <package>curl</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1182,7 +1182,7 @@
       <package variant="x86_64" />
     </distro>
     <distro id="darwin">
-      <package variant="x86_64">virtualenv</package>
+      <package>virtualenv</package>
     </distro>
   </dependency>
   <dependency id="python3-dbusmock">
@@ -1436,7 +1436,7 @@
       <package variant="x86_64">sqlite-devel</package>
     </distro>
     <distro id="darwin">
-      <package variant="x86_64">sqlite</package>
+      <package>sqlite</package>
     </distro>
   </dependency>
   <dependency id="logind">
@@ -1565,7 +1565,7 @@
       <package variant="x86_64">vala</package>
     </distro>
     <distro id="darwin">
-      <package variant="x86_64">vala</package>
+      <package>vala</package>
     </distro>
     <distro id="debian">
       <control />
@@ -1677,7 +1677,7 @@
       <package variant="x86_64">protobuf-c-devel</package>
     </distro>
     <distro id="darwin">
-      <package variant="x86_64">protobuf-c</package>
+      <package>protobuf-c</package>
     </distro>
   </dependency>
   <dependency id="protobuf-c-compiler">

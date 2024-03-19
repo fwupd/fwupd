@@ -130,9 +130,7 @@ def parse_dependencies(OS, variant, add_control):
                         exclusive = f"!{exclusive}"
                     control = f" [{inclusive}{exclusive}]"
             for package in distro.findall("package"):
-                if variant:
-                    if "variant" not in package.attrib:
-                        continue
+                if variant and "variant" in package.attrib:
                     if package.attrib["variant"] != variant:
                         continue
                 if package.text:
