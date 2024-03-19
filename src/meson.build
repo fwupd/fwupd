@@ -361,9 +361,6 @@ executable(
     fwupdengine,
     plugin_libs,
   ],
-  c_args: [
-    '-DFU_OFFLINE_DESTDIR=""',
-  ],
   install: true,
   install_rpath: libdir_pkg,
   install_dir: daemon_dir
