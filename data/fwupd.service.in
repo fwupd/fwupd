@@ -33,5 +33,4 @@ RestrictRealtime=yes
 RestrictSUIDSGID=yes
 SystemCallArchitectures=native
 SystemCallErrorNumber=EPERM
-SystemCallFilter=~@clock @cpu-emulation @debug @module @mount
 @dynamic_options@
