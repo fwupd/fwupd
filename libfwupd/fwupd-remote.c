@@ -612,13 +612,20 @@ fwupd_remote_set_metadata_uri(FwupdRemote *self, const gchar *metadata_uri)
 
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
 
+	/* not changed */
+	if (g_strcmp0(priv->metadata_uri, metadata_uri) == 0)
+		return;
+
 	/* save this so we can export the object as a GVariant */
+	g_free(priv->metadata_uri);
 	priv->metadata_uri = g_strdup(metadata_uri);
 
 	/* generate the signature URI too */
 	suffix = fwupd_remote_get_suffix_for_keyring_kind(priv->keyring_kind);
-	if (suffix != NULL)
+	if (suffix != NULL) {
+		g_free(priv->metadata_uri_sig);
 		priv->metadata_uri_sig = g_strconcat(metadata_uri, suffix, NULL);
+	}
 }
 
 /* note, this has to be set after MetadataURI */
