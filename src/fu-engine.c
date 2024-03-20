@@ -1314,8 +1314,10 @@ fu_engine_verify_from_system_metadata(FuEngine *self, FuDevice *device, GError *
 				  "../../releases/release",
 				  XB_QUERY_FLAG_OPTIMIZE | XB_QUERY_FLAG_USE_INDEXES,
 				  error);
-	if (query == NULL)
+	if (query == NULL) {
+		fu_error_convert(error);
 		return NULL;
+	}
 
 	/* use prepared query for each GUID */
 	for (guint i = 0; i < guids->len; i++) {
@@ -1412,9 +1414,7 @@ fu_engine_verify(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 		release = fu_engine_verify_from_system_metadata(self, device, &error_system);
 		if (release == NULL) {
 			if (!g_error_matches(error_system, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) &&
-			    !g_error_matches(error_system,
-					     G_IO_ERROR,
-					     G_IO_ERROR_INVALID_ARGUMENT)) {
+			    !g_error_matches(error_system, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA)) {
 				g_propagate_error(error, g_steal_pointer(&error_system));
 				return FALSE;
 			}
