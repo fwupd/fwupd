@@ -600,6 +600,14 @@ typedef enum {
 	 */
 	FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY = 1ull << 43,
 	/**
+	 * FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FOR_OPEN:
+	 *
+	 * Use proxy to open and close the device.
+	 *
+	 * Since: 1.9.16
+	 */
+	FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FOR_OPEN = 1ull << 44,
+	/**
 	 * FU_DEVICE_INTERNAL_FLAG_UNKNOWN:
 	 *
 	 * Unknown flag value.

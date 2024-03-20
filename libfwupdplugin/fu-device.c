@@ -243,6 +243,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "no-auto-remove-children";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN)
 		return "use-parent-for-open";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FOR_OPEN)
+		return "use-proxy-for-open";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY)
 		return "use-parent-for-battery";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK)
@@ -347,6 +349,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN;
 	if (g_strcmp0(flag, "use-parent-for-open") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN;
+	if (g_strcmp0(flag, "use-proxy-for-open") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FOR_OPEN;
 	if (g_strcmp0(flag, "use-parent-for-battery") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY;
 	if (g_strcmp0(flag, "use-proxy-fallback") == 0)
@@ -4887,6 +4891,17 @@ fu_device_open(FuDevice *self, GError **error)
 		}
 		return fu_device_open_internal(parent, error);
 	}
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FOR_OPEN)) {
+		FuDevice *proxy = fu_device_get_proxy(self);
+		if (proxy == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "no proxy device");
+			return FALSE;
+		}
+		return fu_device_open_internal(proxy, error);
+	}
 	return fu_device_open_internal(self, error);
 }
 
@@ -4958,6 +4973,17 @@ fu_device_close(FuDevice *self, GError **error)
 			return FALSE;
 		}
 		return fu_device_close_internal(parent, error);
+	}
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FOR_OPEN)) {
+		FuDevice *proxy = fu_device_get_proxy(self);
+		if (proxy == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "no proxy device");
+			return FALSE;
+		}
+		return fu_device_close_internal(proxy, error);
 	}
 	return fu_device_close_internal(self, error);
 }
