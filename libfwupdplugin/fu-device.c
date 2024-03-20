@@ -2031,7 +2031,7 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 	}
 	if (g_strcmp0(key, FU_QUIRKS_PROXY_GTYPE) == 0) {
 		if (priv->proxy_gtype != G_TYPE_INVALID) {
-			g_debug("already set GType to %s, ignoring %s",
+			g_debug("already set proxy GType to %s, ignoring %s",
 				g_type_name(priv->proxy_gtype),
 				value);
 			return TRUE;
@@ -4900,7 +4900,8 @@ fu_device_open(FuDevice *self, GError **error)
 					    "no proxy device");
 			return FALSE;
 		}
-		return fu_device_open_internal(proxy, error);
+		if (!fu_device_open_internal(proxy, error))
+			return FALSE;
 	}
 	return fu_device_open_internal(self, error);
 }
@@ -4983,7 +4984,8 @@ fu_device_close(FuDevice *self, GError **error)
 					    "no proxy device");
 			return FALSE;
 		}
-		return fu_device_close_internal(proxy, error);
+		if (!fu_device_close_internal(proxy, error))
+			return FALSE;
 	}
 	return fu_device_close_internal(self, error);
 }
