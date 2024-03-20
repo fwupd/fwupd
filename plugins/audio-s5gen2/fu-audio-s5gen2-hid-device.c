@@ -7,6 +7,7 @@
 
 #include "config.h"
 
+#include "fu-audio-s5gen2-device.h"
 #include "fu-audio-s5gen2-hid-device.h"
 #include "fu-audio-s5gen2-hid-struct.h"
 #include "fu-audio-s5gen2-impl.h"
@@ -15,9 +16,8 @@
 #define HID_EP_IN  0x82
 #define HID_EP_OUT 0x01
 
-/* FIXME: values :-| */
-#define FU_QC_S5GEN2_HID_DEVICE_TIMEOUT	     0	   /* ms */
-#define FU_QC_S5GEN2_HID_DEVICE_REMOVE_DELAY 60000 /* ms */
+/* FIXME: value :-| */
+#define FU_QC_S5GEN2_HID_DEVICE_TIMEOUT 0 /* ms */
 
 struct _FuQcS5gen2HidDevice {
 	FuHidDevice parent_instance;
@@ -149,7 +149,7 @@ static void
 fu_qc_s5gen2_hid_device_init(FuQcS5gen2HidDevice *self)
 {
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_RETRY_FAILURE);
-	fu_device_set_remove_delay(FU_DEVICE(self), FU_QC_S5GEN2_HID_DEVICE_REMOVE_DELAY);
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_QC_S5GEN2_DEVICE_REMOVE_DELAY);
 	fu_device_set_battery_threshold(FU_DEVICE(self), 0);
 }
 
