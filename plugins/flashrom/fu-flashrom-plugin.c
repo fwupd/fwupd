@@ -275,7 +275,11 @@ fu_flashrom_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **erro
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	self->guid = g_strdup(guid);
+	/* if changed */
+	if (g_strcmp0(self->guid, guid) != 0) {
+		g_free(self->guid);
+		self->guid = g_strdup(guid);
+	}
 
 	if (flashrom_init(SELFCHECK_TRUE)) {
 		g_set_error_literal(error,
