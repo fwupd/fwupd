@@ -214,7 +214,7 @@ fu_util_lock(FuUtilPrivate *priv, GError **error)
 static const gchar *
 fu_util_get_systemd_unit(void)
 {
-	if (g_getenv("SNAP") != NULL)
+	if (g_getenv("SNAP_NAME") == "fwupd")
 		return SYSTEMD_SNAP_FWUPD_UNIT;
 	return SYSTEMD_FWUPD_UNIT;
 }
