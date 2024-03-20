@@ -653,6 +653,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY (1ull << 44)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FOR_OPEN:
+ *
+ * Use proxy to open and close the device.
+ *
+ * Since: 1.9.16
+ */
+#define FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FOR_OPEN (1ull << 45)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);
