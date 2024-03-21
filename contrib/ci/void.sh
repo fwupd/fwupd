@@ -23,7 +23,6 @@ meson build \
  -Dgusb:tests=false \
  -Dconsolekit=disabled \
  -Dsystemd=disabled \
- -Doffline=disabled \
  -Dplugin_vendor_example=true \
  -Delogind=enabled
 ninja -C build test -v

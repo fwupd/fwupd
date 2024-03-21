@@ -4217,7 +4217,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_signal_handlers_disconnect_by_data(self->plugin, &device);
 
 #ifndef HAVE_FWUPDOFFLINE
-	g_test_skip("No offline update support on Windows");
+	g_test_skip("No offline update support");
 	return;
 #endif
 	/* schedule an offline update */

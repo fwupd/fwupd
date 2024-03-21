@@ -5,6 +5,9 @@ if bashcomp.found()
 
   con = configuration_data()
   con.set('localstatedir', localstatedir)
+  if offline
+    con.set_quoted('offline', '--offline')
+  endif
 
   configure_file(
     input: 'fwupdtool',
@@ -15,7 +18,11 @@ if bashcomp.found()
   )
 
   if build_daemon
-    install_data(['fwupdmgr'],
+    configure_file(
+      input: 'fwupdmgr',
+      output: 'fwupdmgr',
+      configuration: con,
+      install: true,
       install_dir: completions_dir,
     )
   endif # build_daemon
