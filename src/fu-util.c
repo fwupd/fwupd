@@ -4857,6 +4857,7 @@ main(int argc, char *argv[])
 	     /* TRANSLATORS: command line option */
 	     N_("Show client and daemon versions"),
 	     NULL},
+#ifdef HAVE_FWUPDOFFLINE
 	    {"offline",
 	     '\0',
 	     0,
@@ -4865,6 +4866,7 @@ main(int argc, char *argv[])
 	     /* TRANSLATORS: command line option */
 	     N_("Schedule installation for next reboot when possible"),
 	     NULL},
+#endif
 	    {"allow-reinstall",
 	     '\0',
 	     0,

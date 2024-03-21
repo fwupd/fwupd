@@ -35,7 +35,7 @@ On most systems fwupd is configured to download metadata from the Linux Vendor F
 <https://fwupd.org/> and more information about the LVFS is available here: <https://lvfs.readthedocs.io/>
 
 Most users who want to just update all devices to the latest versions can do `fwupdmgr refresh` and then `fwupdmgr update`.
-At this point the system will asking for confirmation, update some devices, and may then reboot to deploy other updates offline.
+At this point the system will asking for confirmation, update some devices, and may then reboot to deploy updates that require a restart.
 
 ## OPTIONS
 

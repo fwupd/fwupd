@@ -105,7 +105,7 @@ if build_daemon
     con2.set('motd_dir', motd_dir)
 
     # replace @bindir@
-    if offline.allowed()
+    if offline
       configure_file(
         input: 'fwupd-offline-update.service.in',
         output: 'fwupd-offline-update.service',

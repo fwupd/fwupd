@@ -56,7 +56,6 @@ _fwupdmgr_cmd_list=(
 
 _fwupdmgr_opts=(
 	'--verbose'
-	'--offline'
 	'--allow-reinstall'
 	'--allow-older'
 	'--allow-branch-switch'
@@ -76,6 +75,7 @@ _fwupdmgr_opts=(
 	'--disable-ssl-strict'
 	'--p2p'
 	'--json'
+	@offline@
 )
 
 bios_get_opts=(

@@ -209,7 +209,7 @@ fwupdengine = library(
   ],
 )
 
-if offline.allowed()
+if offline
 fwupdoffline = executable(
   'fwupdoffline',
   fwupdengine_rs,
