@@ -1903,6 +1903,13 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 			g_variant_unref(prop_value);
 		}
 
+#ifndef HAVE_FWUPDOFFLINE
+		if (helper->flags & FWUPD_INSTALL_FLAG_OFFLINE) {
+			g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no offline support");
+			fu_daemon_method_invocation_return_gerror(invocation, error);
+			return;
+		}
+#endif
 		/* get the fd */
 		message = g_dbus_method_invocation_get_message(invocation);
 		fd_list = g_dbus_message_get_unix_fd_list(message);

@@ -4728,9 +4728,12 @@ fu_engine_get_details(FuEngine *self,
 			g_autoptr(FuRelease) release = fu_release_new();
 			g_autoptr(GError) error_req = NULL;
 			FwupdInstallFlags install_flags =
-			    FWUPD_INSTALL_FLAG_OFFLINE | FWUPD_INSTALL_FLAG_IGNORE_VID_PID |
+			    FWUPD_INSTALL_FLAG_IGNORE_VID_PID |
 			    FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
 			    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+#ifdef HAVE_FWUPDOFFLINE
+			install_flags |= FWUPD_INSTALL_FLAG_OFFLINE;
+#endif
 
 			fu_release_set_device(release, dev);
 			fu_release_set_request(release, request);
@@ -5117,9 +5120,13 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) releases_tmp = NULL;
 	FwupdInstallFlags install_flags =
-	    FWUPD_INSTALL_FLAG_OFFLINE | FWUPD_INSTALL_FLAG_IGNORE_VID_PID |
+	    FWUPD_INSTALL_FLAG_IGNORE_VID_PID |
 	    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
 	    FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+
+#ifdef HAVE_FWUPDOFFLINE
+	install_flags |= FWUPD_INSTALL_FLAG_OFFLINE;
+#endif
 
 	/* get all releases */
 	releases_tmp = xb_node_query(component, "releases/release", 0, &error_local);
