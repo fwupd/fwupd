@@ -12,7 +12,7 @@
 
 struct _FuClientList {
 	GObject parent_instance;
-	GPtrArray *array; /* (element-type FuClientListItem) */
+	GPtrArray *array;	     /* (element-type FuClientListItem) */
 	GDBusConnection *connection; /* nullable */
 };
 

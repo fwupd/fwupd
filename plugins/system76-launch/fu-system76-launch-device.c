@@ -9,10 +9,10 @@
 
 #include "fu-system76-launch-device.h"
 
-#define SYSTEM76_LAUNCH_CMD_VERSION 3
-#define SYSTEM76_LAUNCH_CMD_RESET   6
+#define SYSTEM76_LAUNCH_CMD_VERSION	 3
+#define SYSTEM76_LAUNCH_CMD_RESET	 6
 #define SYSTEM76_LAUNCH_CMD_SECURITY_SET 21
-#define SYSTEM76_LAUNCH_TIMEOUT	    1000
+#define SYSTEM76_LAUNCH_TIMEOUT		 1000
 
 enum SecurityState {
 	/* Default value, flashing is prevented, cannot be set with CMD_SECURITY_SET */

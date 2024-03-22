@@ -36,7 +36,7 @@ struct _FuSynapticsRmiFirmware {
 
 G_DEFINE_TYPE(FuSynapticsRmiFirmware, fu_synaptics_rmi_firmware, FU_TYPE_FIRMWARE)
 
-#define RMI_IMG_FW_OFFSET		  0x100
+#define RMI_IMG_FW_OFFSET 0x100
 
 #define RMI_IMG_V10_CNTR_ADDR_OFFSET 0x0c
 #define RMI_IMG_MAX_CONTAINERS	     1024
