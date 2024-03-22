@@ -33,8 +33,8 @@ fu_remote_list_finalize(GObject *obj);
 
 struct _FuRemoteList {
 	GObject parent_instance;
-	GPtrArray *array;	  /* (element-type FwupdRemote) */
-	GPtrArray *monitors;	  /* (element-type GFileMonitor) */
+	GPtrArray *array;    /* (element-type FwupdRemote) */
+	GPtrArray *monitors; /* (element-type GFileMonitor) */
 	gboolean testing_remote;
 	gboolean fix_metadata_uri;
 	XbSilo *silo;

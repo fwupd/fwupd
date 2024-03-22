@@ -407,7 +407,7 @@ fu_engine_config_init(FuEngineConfig *self)
 	fu_engine_set_config_default(self, "EnumerateAllDevices", "false");
 	fu_engine_set_config_default(self, "EspLocation", NULL);
 	fu_engine_set_config_default(self, "HostBkc", NULL);
-	fu_engine_set_config_default(self, "IdleTimeout", "300");	     /* s */
+	fu_engine_set_config_default(self, "IdleTimeout", "300");		  /* s */
 	fu_engine_set_config_default(self, "IdleInhibitStartupThreshold", "500"); /* ms */
 	fu_engine_set_config_default(self, "IgnorePower", "false");
 	fu_engine_set_config_default(self, "OnlyTrusted", "true");

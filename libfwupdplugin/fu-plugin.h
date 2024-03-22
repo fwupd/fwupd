@@ -22,7 +22,7 @@
 #include "fu-security-attrs.h"
 #include "fu-usb-device.h"
 #include "fu-version-common.h"
-//#include "fu-hid-device.h"
+// #include "fu-hid-device.h"
 #ifdef HAVE_GUDEV
 #include "fu-udev-device.h"
 #endif

@@ -20,7 +20,8 @@ fu_cpu_helper_cet_testfn_call_fptr(void (*func)(void))
 	func();
 }
 
-void __attribute__((noinline, noclone)) fu_cpu_helper_cet_testfn1(void)
+void __attribute__((noinline, noclone))
+fu_cpu_helper_cet_testfn1(void)
 {
 	fu_cpu_helper_cet_testfn_call_fptr(fu_cpu_helper_cet_testfn_fptr);
 }

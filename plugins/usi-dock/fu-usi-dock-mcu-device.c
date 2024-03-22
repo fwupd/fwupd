@@ -28,8 +28,8 @@ G_DEFINE_TYPE(FuUsiDockMcuDevice, fu_usi_dock_mcu_device, FU_TYPE_HID_DEVICE)
 
 #define W25Q16DV_PAGE_SIZE 256
 
-#define FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP (1 << 0)
-#define FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE (1 << 1)
+#define FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP	   (1 << 0)
+#define FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE	   (1 << 1)
 #define FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG (1 << 2)
 
 static gboolean

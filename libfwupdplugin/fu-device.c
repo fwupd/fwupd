@@ -74,7 +74,7 @@ typedef struct {
 	GType firmware_gtype;
 	GPtrArray *possible_plugins;
 	GPtrArray *instance_id_quirks; /* of utf-8 */
-	GPtrArray *retry_recs; /* of FuDeviceRetryRecovery */
+	GPtrArray *retry_recs;	       /* of FuDeviceRetryRecovery */
 	guint retry_delay;
 	FuDeviceInternalFlags internal_flags;
 	guint64 private_flags;

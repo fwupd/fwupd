@@ -127,10 +127,10 @@ struct _FuEngine {
 	FuPluginList *plugin_list;
 	GPtrArray *plugin_filter;
 	FuContext *ctx;
-	GHashTable *approved_firmware; /* (nullable) */
-	GHashTable *blocked_firmware;  /* (nullable) */
-	GHashTable *emulation_phases;  /* (element-type int utf8) */
-	GHashTable *emulation_backend_ids; /* (element-type str int) */
+	GHashTable *approved_firmware;	      /* (nullable) */
+	GHashTable *blocked_firmware;	      /* (nullable) */
+	GHashTable *emulation_phases;	      /* (element-type int utf8) */
+	GHashTable *emulation_backend_ids;    /* (element-type str int) */
 	GHashTable *device_changed_allowlist; /* (element-type str int) */
 	gchar *host_machine_id;
 	JcatContext *jcat_context;
@@ -1722,7 +1722,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 		}
 	}
 
-		/* kernel version is often important for debugging failures */
+	/* kernel version is often important for debugging failures */
 #ifdef HAVE_UTSNAME_H
 	memset(&name_tmp, 0, sizeof(struct utsname));
 	if (uname(&name_tmp) >= 0) {
@@ -3311,7 +3311,12 @@ fu_engine_write_firmware(FuEngine *self,
 	    fu_plugin_list_find_by_name(self->plugin_list, fu_device_get_plugin(device), error);
 	if (plugin == NULL)
 		return FALSE;
-	if (!fu_plugin_runner_write_firmware(plugin, device, stream_fw, progress, flags, &error_write)) {
+	if (!fu_plugin_runner_write_firmware(plugin,
+					     device,
+					     stream_fw,
+					     progress,
+					     flags,
+					     &error_write)) {
 		g_autoptr(GError) error_attach = NULL;
 		g_autoptr(GError) error_cleanup = NULL;
 
@@ -3319,8 +3324,7 @@ fu_engine_write_firmware(FuEngine *self,
 		    g_error_matches(error_write, FWUPD_ERROR, FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW) ||
 		    g_error_matches(error_write, FWUPD_ERROR, FWUPD_ERROR_NEEDS_USER_ACTION) ||
 		    g_error_matches(error_write, FWUPD_ERROR, FWUPD_ERROR_BROKEN_SYSTEM)) {
-			fu_device_set_update_state(device,
-						   FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+			fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
 		} else {
 			fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED);
 		}
@@ -4737,8 +4741,7 @@ fu_engine_get_details(FuEngine *self,
 			g_autoptr(FuRelease) release = fu_release_new();
 			g_autoptr(GError) error_req = NULL;
 			FwupdInstallFlags install_flags =
-			    FWUPD_INSTALL_FLAG_IGNORE_VID_PID |
-			    FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
+			    FWUPD_INSTALL_FLAG_IGNORE_VID_PID | FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
 			    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 #ifdef HAVE_FWUPDOFFLINE
 			install_flags |= FWUPD_INSTALL_FLAG_OFFLINE;
@@ -5129,9 +5132,8 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) releases_tmp = NULL;
 	FwupdInstallFlags install_flags =
-	    FWUPD_INSTALL_FLAG_IGNORE_VID_PID |
-	    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
-	    FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+	    FWUPD_INSTALL_FLAG_IGNORE_VID_PID | FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH |
+	    FWUPD_INSTALL_FLAG_ALLOW_REINSTALL | FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 
 #ifdef HAVE_FWUPDOFFLINE
 	install_flags |= FWUPD_INSTALL_FLAG_OFFLINE;

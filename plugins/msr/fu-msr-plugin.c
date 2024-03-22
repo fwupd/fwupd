@@ -92,13 +92,13 @@ struct _FuMsrPlugin {
 
 G_DEFINE_TYPE(FuMsrPlugin, fu_msr_plugin, FU_TYPE_PLUGIN)
 
-#define PCI_MSR_IA32_DEBUG_INTERFACE 0xc80
-#define PCI_MSR_IA32_TME_ACTIVATION  0x982
-#define PCI_MSR_IA32_BIOS_SIGN_ID    0x8b
+#define PCI_MSR_IA32_DEBUG_INTERFACE   0xc80
+#define PCI_MSR_IA32_TME_ACTIVATION    0x982
+#define PCI_MSR_IA32_BIOS_SIGN_ID      0x8b
 #define PCI_MSR_IA32_ARCH_CAPABILITIES 0x10a
 #define PCI_MSR_IA32_MCU_OPT_CTRL      0x123
-#define PCI_MSR_AMD64_SYSCFG	     0xC0010010
-#define PCI_MSR_AMD64_SEV	     0xC0010131
+#define PCI_MSR_AMD64_SYSCFG	       0xC0010010
+#define PCI_MSR_AMD64_SEV	       0xC0010131
 
 static void
 fu_msr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
