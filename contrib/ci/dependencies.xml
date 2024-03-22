@@ -866,17 +866,6 @@
       <package variant="x86_64">passim</package>
     </distro>
   </dependency>
-  <dependency id="libtool-bin">
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency id="libstemmer-0">
     <distro id="centos">
       <package variant="x86_64" />
