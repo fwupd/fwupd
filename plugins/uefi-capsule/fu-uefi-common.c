@@ -10,7 +10,7 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 
-const gchar *
+static const gchar *
 fu_uefi_bootmgr_get_suffix(GError **error)
 {
 	guint64 firmware_bits;
