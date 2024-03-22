@@ -2557,15 +2557,12 @@ fu_engine_install_release(FuEngine *self,
 				    flags,
 				    feature_flags,
 				    &error_local)) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_AC_POWER_REQUIRED) ||
-		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW) ||
-		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NEEDS_USER_ACTION) ||
-		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_BROKEN_SYSTEM)) {
-			fu_device_set_update_state(device_orig,
-						   FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
-		} else {
+		FwupdUpdateState state = fu_device_get_update_state(device);
+		if (state != FWUPD_UPDATE_STATE_FAILED &&
+		    state != FWUPD_UPDATE_STATE_FAILED_TRANSIENT)
 			fu_device_set_update_state(device_orig, FWUPD_UPDATE_STATE_FAILED);
-		}
+		else
+			fu_device_set_update_state(device_orig, state);
 		fu_device_set_update_error(device_orig, error_local->message);
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
@@ -3290,6 +3287,7 @@ fu_engine_write_firmware(FuEngine *self,
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) poll_locker = NULL;
+	g_autoptr(GError) error_write = NULL;
 
 	/* cancel the pending action */
 	if (!fu_engine_offline_invalidate(error))
@@ -3313,9 +3311,19 @@ fu_engine_write_firmware(FuEngine *self,
 	    fu_plugin_list_find_by_name(self->plugin_list, fu_device_get_plugin(device), error);
 	if (plugin == NULL)
 		return FALSE;
-	if (!fu_plugin_runner_write_firmware(plugin, device, stream_fw, progress, flags, error)) {
+	if (!fu_plugin_runner_write_firmware(plugin, device, stream_fw, progress, flags, &error_write)) {
 		g_autoptr(GError) error_attach = NULL;
 		g_autoptr(GError) error_cleanup = NULL;
+
+		if (g_error_matches(error_write, FWUPD_ERROR, FWUPD_ERROR_AC_POWER_REQUIRED) ||
+		    g_error_matches(error_write, FWUPD_ERROR, FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW) ||
+		    g_error_matches(error_write, FWUPD_ERROR, FWUPD_ERROR_NEEDS_USER_ACTION) ||
+		    g_error_matches(error_write, FWUPD_ERROR, FWUPD_ERROR_BROKEN_SYSTEM)) {
+			fu_device_set_update_state(device,
+						   FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+		} else {
+			fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED);
+		}
 
 		/* attach back into runtime then cleanup */
 		fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_ATTACH);
@@ -3330,6 +3338,7 @@ fu_engine_write_firmware(FuEngine *self,
 			g_warning("failed to update-cleanup after failed update: %s",
 				  error_cleanup->message);
 		}
+		g_propagate_error(error, g_steal_pointer(&error_write));
 		return FALSE;
 	}
 
