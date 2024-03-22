@@ -28,14 +28,12 @@ enum FuQcOpcode {
     ErrorRes = 0x1F,
 }
 
-#[derive(ToString)]
 #[repr(u8)]
 enum FuQcAction {
     Proceed = 0,
     NotProceed = 1,
 }
 
-#[derive(ToString)]
 #[repr(u8)]
 enum FuQcReq {
     Connect = 0x02,
@@ -140,7 +138,6 @@ struct FuStructQcStartDataReq {
     data: [u8; 250],
 }
 
-#[derive(ToString)]
 #[repr(u8)]
 enum FuQcMoreData {
     More = 0,
@@ -192,7 +189,6 @@ struct FuStructQcCommitReq {
     data_len: u16be = 0x00,
 }
 
-#[derive(ToString)]
 #[repr(u8)]
 enum FuQcCommitAction {
     Upgrade = 0,

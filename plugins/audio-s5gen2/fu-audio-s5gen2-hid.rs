@@ -1,7 +1,6 @@
 // Copyright (C) 2023 Denis Pynkin <denis.pynkin@collabora.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-#[derive(ToString)]
 #[repr(u8)]
 enum FuQcReportId {
     Command = 3,
