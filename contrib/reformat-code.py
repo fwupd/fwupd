@@ -73,14 +73,7 @@ if __name__ == "__main__":
     if ret.returncode:
         print(f"Failed to run {cmd}\n{ret.stderr.strip()}")
         sys.exit(1)
-    cmd = [formatter, "-regex", "^.*\\.(c|h|proto)$", "-p1"]
-    if args.debug:
-        print(cmd)
-    ret = subprocess.run(cmd, input=ret.stdout, capture_output=True, text=True)
-    if ret.returncode:
-        print(f"Failed to run {cmd}\n{ret.stderr.strip()}")
-        sys.exit(1)
-    cmd = ["patch", "-p0"]
+    cmd = [formatter, "-i", "-regex", "^.*\\.(c|h|proto)$", "-p1"]
     if args.debug:
         print(cmd)
     ret = subprocess.run(cmd, input=ret.stdout, capture_output=True, text=True)
