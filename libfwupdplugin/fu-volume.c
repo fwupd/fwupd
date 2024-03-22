@@ -800,6 +800,23 @@ fu_volume_kind_convert_to_gpt(const gchar *kind)
 	return kind;
 }
 
+static gboolean
+fu_volume_check_block_device_symlinks(const gchar *const *symlinks, GError **error)
+{
+	for (guint i = 0; symlinks[i] != NULL; i++) {
+		if (g_str_has_prefix(symlinks[i], "/dev/zvol")) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "detected zfs zvol");
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
 /**
  * fu_volume_new_by_kind:
  * @kind: a volume kind, typically a GUID
@@ -833,8 +850,19 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 		g_autoptr(FuVolume) vol = NULL;
 		g_autoptr(GDBusProxy) proxy_part = NULL;
 		g_autoptr(GDBusProxy) proxy_fs = NULL;
-		g_autoptr(GError) error_proxy_fs = NULL;
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GVariant) symlinks = NULL;
 
+		/* ignore anything in a zfs zvol */
+		symlinks = g_dbus_proxy_get_cached_property(proxy_blk, "Symlinks");
+		if (symlinks != NULL) {
+			g_autofree const gchar **symlinks_strv =
+			    g_variant_get_bytestring_array(symlinks, NULL);
+			if (!fu_volume_check_block_device_symlinks(symlinks_strv, &error_local)) {
+				g_debug("ignoring due to symlink: %s", error_local->message);
+				continue;
+			}
+		}
 		proxy_part = g_dbus_proxy_new_sync(g_dbus_proxy_get_connection(proxy_blk),
 						   G_DBUS_PROXY_FLAGS_NONE,
 						   NULL,
@@ -856,11 +884,11 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 						 g_dbus_proxy_get_object_path(proxy_blk),
 						 UDISKS_DBUS_INTERFACE_FILESYSTEM,
 						 NULL,
-						 &error_proxy_fs);
+						 &error_local);
 		if (proxy_fs == NULL) {
 			g_debug("failed to get filesystem for %s: %s",
 				g_dbus_proxy_get_object_path(proxy_blk),
-				error_proxy_fs->message);
+				error_local->message);
 			continue;
 		}
 		vol = g_object_new(FU_TYPE_VOLUME,
