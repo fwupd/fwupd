@@ -1167,7 +1167,7 @@ static gboolean
 fu_uefi_capsule_plugin_cleanup_esp(FuUefiCapsulePlugin *self, GError **error)
 {
 	g_autofree gchar *esp_os_base = fu_uefi_get_esp_path_for_os();
-	g_autofree gchar *esp_path = fu_volume_get_mount_point(self->esp);
+	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *pattern = NULL;
 	g_autoptr(FuDeviceLocker) esp_locker = NULL;
 	g_autoptr(GPtrArray) files = NULL;
@@ -1176,6 +1176,7 @@ fu_uefi_capsule_plugin_cleanup_esp(FuUefiCapsulePlugin *self, GError **error)
 	esp_locker = fu_volume_locker(self->esp, error);
 	if (esp_locker == NULL)
 		return FALSE;
+	esp_path = fu_volume_get_mount_point(self->esp);
 	if (esp_path == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
