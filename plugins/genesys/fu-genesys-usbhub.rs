@@ -15,7 +15,7 @@ enum GenesysTsVersion {
     Dynamic_13Byte,
     BrandProject,
 }
-#[derive(ToString, Parse, ParseBytes, New)]
+#[derive(Parse, ParseBytes, New)]
 struct GenesysTsStatic {
     tool_string_version: GenesysTsVersion,
 
@@ -32,7 +32,7 @@ struct GenesysTsStatic {
     firmware_version: [char; 4], // MMmm=MM.mm (ASCII string)
 }
 
-#[derive(ToString, Parse)]
+#[derive(Parse)]
 struct GenesysTsDynamicGl3523 {
     running_mode: char, // 'M' for mask code, the others for bank code
 
@@ -70,7 +70,7 @@ struct GenesysTsDynamicGl3523 {
     bonding: char,
 }
 
-#[derive(ToString, Parse)]
+#[derive(Parse)]
 struct GenesysTsDynamicGl3590 {
     running_mode: char,
 
@@ -97,7 +97,7 @@ enum GenesysFwStatus {
     Bank1,
     Bank2,
 }
-#[derive(ToString, Parse)]
+#[derive(Parse)]
 struct GenesysTsDynamicGl359030 {
     running_mode: char,
 
@@ -119,7 +119,7 @@ struct GenesysTsDynamicGl359030 {
     dev_fw_version: u16le,
 }
 
-#[derive(ToString, Parse)]
+#[derive(Parse)]
 struct GenesysTsDynamicGl3525 {
     running_mode: char,
 
@@ -143,7 +143,7 @@ struct GenesysTsDynamicGl3525 {
     dev_fw_version: u16le,
 }
 
-#[derive(ToString, Parse)]
+#[derive(Parse)]
 struct GenesysTsFirmwareInfo {
     tool_version: [u8; 6],      // ISP tool defined by itself
     address_mode: u8,           // 3 or 4: support 3 or 4-bytes address, others are no meaning.
@@ -167,7 +167,7 @@ enum GenesysVsHidIsp {
     Support,
     CodesignNReset, // Support Codesign ISP Bank2 FW without reset.
 }
-#[derive(ToString, New, Parse)]
+#[derive(New, Parse)]
 struct GenesysTsVendorSupport {
     version: [char; 2],
     reserved1: [char; 8],
@@ -177,7 +177,7 @@ struct GenesysTsVendorSupport {
     reserved3: [char; 15],
 }
 
-#[derive(ToString, Parse)]
+#[derive(Parse)]
 struct GenesysTsBrandProject {
     project: [char; 15],
 }

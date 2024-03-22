@@ -45,7 +45,7 @@ enum SynapticsVmm9RcSts {
     RollbackFailed,
 }
 
-#[derive(New, Getters, ToString)]
+#[derive(New, Getters)]
 struct HidPayload {
     cap: u8,
     state: u8,

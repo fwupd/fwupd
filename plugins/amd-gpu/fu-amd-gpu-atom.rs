@@ -1,7 +1,7 @@
 // Copyright (C) 2023 Advanced Micro Devices Inc.
 // SPDX-License-Identifier: LGPL-2.1+ OR MIT
 
-#[derive(Getters, ToString)]
+#[derive(Getters)]
 struct VbiosDate {
     month: [char; 2],
     _separator: u8,
@@ -39,7 +39,7 @@ struct AtomImage {
     str_loc: u32le,
 }
 
-#[derive(Getters, ToString)]
+#[derive(Getters)]
 struct AtomHeaderCommon {
     size: u16le,
     format_rev: u8,
