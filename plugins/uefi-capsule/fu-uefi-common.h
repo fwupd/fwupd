@@ -44,5 +44,3 @@ fu_uefi_esp_target_copy(const gchar *source_fn,
 			FuVolume *esp,
 			const gchar *target_no_mountpoint,
 			GError **error);
-const gchar *
-fu_uefi_bootmgr_get_suffix(GError **error);
