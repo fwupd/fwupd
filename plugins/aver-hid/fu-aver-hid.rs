@@ -67,7 +67,7 @@ enum FuAverSafeispAckStatus {
     Support,
 }
 
-#[derive(ToString, Getters, New)]
+#[derive(Getters, New)]
 struct FuStructAverHidReqIsp {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
