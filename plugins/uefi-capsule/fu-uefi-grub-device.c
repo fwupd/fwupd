@@ -198,6 +198,8 @@ fu_uefi_grub_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 static void
 fu_uefi_grub_device_init(FuUefiGrubDevice *self)
 {
+	fu_device_set_summary(FU_DEVICE(self),
+			      "UEFI System Resource Table device (updated via grub)");
 }
 
 static void

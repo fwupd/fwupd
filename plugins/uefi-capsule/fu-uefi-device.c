@@ -685,7 +685,6 @@ fu_uefi_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_uefi_device_init(FuUefiDevice *self)
 {
-	fu_device_set_summary(FU_DEVICE(self), "UEFI ESRT device");
 	fu_device_add_protocol(FU_DEVICE(self), "org.uefi.capsule");
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
