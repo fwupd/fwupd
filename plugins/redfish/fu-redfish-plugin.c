@@ -559,6 +559,10 @@ fu_redfish_plugin_cleanup(FuPlugin *plugin,
 	if (!fu_device_has_private_flag(device, FU_REDFISH_DEVICE_FLAG_MANAGER_RESET))
 		return TRUE;
 
+	/* update failed; don't reboot BMC */
+	if (fu_device_get_update_state(device) == FWUPD_UPDATE_STATE_FAILED)
+		return TRUE;
+
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "manager-reboot");
