@@ -257,6 +257,7 @@ fu_uefi_cod_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 static void
 fu_uefi_cod_device_init(FuUefiCodDevice *self)
 {
+	fu_device_set_summary(FU_DEVICE(self), "UEFI ESRT device (CoD)");
 }
 
 static void
