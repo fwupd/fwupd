@@ -32,6 +32,7 @@ Package: fwupd
 Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
+         libfwupd2 (= ${binary:Version}),
          shared-mime-info,
          systemd-sysusers
 Recommends: python3,
