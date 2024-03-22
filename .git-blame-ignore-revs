@@ -1,1 +1,8 @@
-72819f91c19e076ca383e6e9fd7c7a510c62792e
+# trivial: reformat the whole tree to match new format
+55de39c077ca8d793178054b5d3ba7cbdf8a82a2
+
+# dell-dock: Fix a trivial clang-format issue
+61fe427d41347de3f98d9c5bed200d6fbfaac0b0
+
+# trivial: reformat codebase with clang-format
+87dcdf5412c4c9da65e4530255b1636fc0d167dd
