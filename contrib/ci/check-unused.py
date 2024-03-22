@@ -7,6 +7,7 @@
 
 import glob
 import fnmatch
+import os
 import sys
 import subprocess
 
@@ -14,8 +15,9 @@ import subprocess
 def test_files() -> int:
     fns = sys.argv[1:]
     if not fns:
-        fns.append("./plugins")
-        fns.append("./src")
+        build = os.environ["BUILD"] if "BUILD" in os.environ else ""
+        fns.append(os.path.join(".", build, "plugins"))
+        fns.append(os.path.join(".", build, "src"))
 
     data = []
 
