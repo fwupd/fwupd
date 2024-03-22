@@ -540,7 +540,7 @@ fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 static gboolean
 fu_uefi_capsule_plugin_is_esp_linux(FuVolume *esp, GError **error)
 {
-	const gchar *prefixes[] = {"grub", "shim", "systemd-boot", NULL};
+	const gchar *prefixes[] = {"grub", "shim", "systemd-boot", "zfsbootmenu", NULL};
 	g_autofree gchar *prefixes_str = NULL;
 	g_autofree gchar *mount_point = fu_volume_get_mount_point(esp);
 	g_autoptr(GPtrArray) files = NULL;
