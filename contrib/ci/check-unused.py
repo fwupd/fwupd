@@ -49,8 +49,6 @@ def test_files() -> int:
             continue
         if fnmatch.fnmatch(symb, "fu_struct_*_get_*"):
             continue
-        if fnmatch.fnmatch(symb, "fu_struct_*_to_string"):
-            continue
         if symb.find("__proto__") != -1:
             continue
         if symb in ["main", "fu_plugin_init_vfuncs"]:
