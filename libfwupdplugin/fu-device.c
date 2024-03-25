@@ -6598,7 +6598,6 @@ fu_device_init(FuDevice *self)
 							 "notify::flags",
 							 G_CALLBACK(fu_device_flags_notify_cb),
 							 NULL);
-	fu_device_set_created(self, (guint64)g_get_real_time() / G_USEC_PER_SEC);
 }
 
 static void
