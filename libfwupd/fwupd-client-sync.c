@@ -1095,6 +1095,60 @@ fwupd_client_get_results(FwupdClient *self,
 }
 
 static void
+fwupd_client_get_device_debuglog_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
+	helper->str =
+	    fwupd_client_get_device_debuglog_finish(FWUPD_CLIENT(source), res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+/**
+ * fwupd_client_get_device_debuglog:
+ * @self: a #FwupdClient
+ * @device_id: (not nullable): the device ID
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the debug log for a specific device.
+ *
+ * Returns: (transfer full): a device, or %NULL for failure
+ *
+ * Since: 1.9.16
+ **/
+gchar *
+fwupd_client_get_device_debuglog(FwupdClient *self,
+				 const gchar *device_id,
+				 GCancellable *cancellable,
+				 GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(device_id != NULL, NULL);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect(self, cancellable, error))
+		return NULL;
+
+	/* call async version and run loop until complete */
+	helper = fwupd_client_helper_new(self);
+	fwupd_client_get_device_debuglog_async(self,
+					       device_id,
+					       cancellable,
+					       fwupd_client_get_device_debuglog_cb,
+					       helper);
+	g_main_loop_run(helper->loop);
+	if (helper->str == NULL) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return NULL;
+	}
+	return g_steal_pointer(&helper->str);
+}
+
+static void
 fwupd_client_modify_bios_setting_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;

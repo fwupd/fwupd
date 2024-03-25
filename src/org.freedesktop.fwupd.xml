@@ -552,6 +552,31 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='GetDebuglog'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets the debug log for a specific device.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>A device ID</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='s' name='results' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>Device debug output, usually containing multiple lines</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='GetRemotes'>
       <doc:doc>
         <doc:description>

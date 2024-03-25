@@ -243,6 +243,17 @@ fwupd_client_get_results_finish(FwupdClient *self,
 				GAsyncResult *res,
 				GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 void
+fwupd_client_get_device_debuglog_async(FwupdClient *self,
+				       const gchar *device_id,
+				       GCancellable *cancellable,
+				       GAsyncReadyCallback callback,
+				       gpointer callback_data) G_GNUC_NON_NULL(1, 2);
+gchar *
+fwupd_client_get_device_debuglog_finish(FwupdClient *self,
+					GAsyncResult *res,
+					GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
+void
 fwupd_client_modify_bios_setting_async(FwupdClient *self,
 				       GHashTable *settings,
 				       GCancellable *cancellable,

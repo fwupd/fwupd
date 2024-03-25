@@ -107,6 +107,11 @@ fwupd_client_get_results(FwupdClient *self,
 			 const gchar *device_id,
 			 GCancellable *cancellable,
 			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+gchar *
+fwupd_client_get_device_debuglog(FwupdClient *self,
+				 const gchar *device_id,
+				 GCancellable *cancellable,
+				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fwupd_client_modify_bios_setting(FwupdClient *self,
 				 GHashTable *settings,

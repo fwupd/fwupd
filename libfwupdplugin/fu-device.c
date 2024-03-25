@@ -4361,6 +4361,38 @@ fu_device_get_results(FuDevice *self, GError **error)
 }
 
 /**
+ * fu_device_get_debuglog:
+ * @self: a #FuDevice
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the debugging log from a device.
+ *
+ * Returns: (transfer full): a string on success
+ *
+ * Since: 1.9.16
+ **/
+gchar *
+fu_device_get_debuglog(FuDevice *self, GError **error)
+{
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* no plugin-specific method */
+	if (device_class->get_debuglog == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "getting results not supported by device");
+		return NULL;
+	}
+
+	/* call vfunc */
+	return device_class->get_debuglog(self, error);
+}
+
+/**
  * fu_device_write_firmware:
  * @self: a #FuDevice
  * @stream: #GInputStream firmware

@@ -87,6 +87,7 @@ struct _FuDeviceClass {
 	void (*set_progress)(FuDevice *self, FuProgress *progress);
 	void (*invalidate)(FuDevice *self);
 	gchar *(*convert_version)(FuDevice *self, guint64 version_raw);
+	gchar *(*get_debuglog)(FuDevice *self, GError **error)G_GNUC_WARN_UNUSED_RESULT;
 #endif
 };
 
@@ -783,6 +784,8 @@ gboolean
 fu_device_has_internal_flag(FuDevice *self, FuDeviceInternalFlags flag) G_GNUC_NON_NULL(1);
 gboolean
 fu_device_get_results(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
+gchar *
+fu_device_get_debuglog(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_device_write_firmware(FuDevice *self,
 			 GInputStream *stream,

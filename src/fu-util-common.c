@@ -1585,6 +1585,27 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 				 issue);
 	}
 
+	{
+		g_autofree gchar *debuglog = NULL;
+		g_autoptr(GError) error_local = NULL;
+		debuglog = fwupd_client_get_device_debuglog(client,
+							    fwupd_device_get_id(dev),
+							    NULL,
+							    &error_local);
+		if (debuglog != NULL) {
+			/* TRANSLATORS: for programmers */
+			fu_string_append(str, idt + 1, "Debug Log", debuglog);
+		} else {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
+			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_debug("ignoring: %s", error_local->message);
+			} else {
+				/* TRANSLATORS: for programmers */
+				fu_string_append(str, idt + 1, "Debug Log", error_local->message);
+			}
+		}
+	}
+
 	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 

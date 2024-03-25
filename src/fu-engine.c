@@ -5914,6 +5914,32 @@ fu_engine_get_results(FuEngine *self, const gchar *device_id, GError **error)
 	return g_object_ref(FWUPD_DEVICE(device));
 }
 
+/**
+ * fu_engine_get_device_debuglog:
+ * @self: a #FuEngine
+ * @device_id: a device ID
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the debug log for a specific device.
+ *
+ * Returns: (transfer full): a string, or %NULL
+ **/
+gchar *
+fu_engine_get_device_debuglog(FuEngine *self, const gchar *device_id, GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+	g_return_val_if_fail(device_id != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* find the device */
+	device = fu_device_list_get_by_id(self->device_list, device_id, error);
+	if (device == NULL)
+		return NULL;
+	return fu_device_get_debuglog(device, error);
+}
+
 static void
 fu_engine_plugins_startup(FuEngine *self, FuProgress *progress)
 {

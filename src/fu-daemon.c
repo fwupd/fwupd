@@ -1534,6 +1534,25 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		g_dbus_method_invocation_return_value(invocation, g_variant_new_tuple(&val, 1));
 		return;
 	}
+	if (g_strcmp0(method_name, "GetDebuglog") == 0) {
+		const gchar *device_id = NULL;
+		g_autofree gchar *result = NULL;
+
+		g_variant_get(parameters, "(&s)", &device_id);
+		g_debug("Called %s(%s)", method_name, device_id);
+		if (!fu_daemon_device_id_valid(device_id, &error)) {
+			fu_daemon_method_invocation_return_gerror(invocation, error);
+			return;
+		}
+		result = fu_engine_get_device_debuglog(self->engine, device_id, &error);
+		if (result == NULL) {
+			fu_daemon_method_invocation_return_gerror(invocation, error);
+			return;
+		}
+		val = g_variant_new_string(result);
+		g_dbus_method_invocation_return_value(invocation, g_variant_new_tuple(&val, 1));
+		return;
+	}
 	if (g_strcmp0(method_name, "UpdateMetadata") == 0) {
 #ifdef HAVE_GIO_UNIX
 		GDBusMessage *message;

@@ -111,6 +111,8 @@ fu_engine_get_upgrades(FuEngine *self,
 		       GError **error);
 FwupdDevice *
 fu_engine_get_results(FuEngine *self, const gchar *device_id, GError **error);
+gchar *
+fu_engine_get_device_debuglog(FuEngine *self, const gchar *device_id, GError **error);
 FuSecurityAttrs *
 fu_engine_get_host_security_attrs(FuEngine *self);
 FuSecurityAttrs *

@@ -2881,6 +2881,89 @@ fwupd_client_get_results_finish(FwupdClient *self, GAsyncResult *res, GError **e
 	return g_task_propagate_pointer(G_TASK(res), error);
 }
 
+static void
+fwupd_client_get_device_debuglog_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK(user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error(error);
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_pointer(task,
+			      fwupd_device_from_variant(val),
+			      (GDestroyNotify)g_ptr_array_unref);
+}
+
+/**
+ * fwupd_client_get_device_debuglog_async:
+ * @self: a #FwupdClient
+ * @device_id: (not nullable): the device ID
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: (scope async) (closure callback_data): the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Gets the debug log for a specific device.
+ *
+ * You must have called [method@Client.connect_async] on @self before using
+ * this method.
+ *
+ * Since: 1.9.16
+ **/
+void
+fwupd_client_get_device_debuglog_async(FwupdClient *self,
+				       const gchar *device_id,
+				       GCancellable *cancellable,
+				       GAsyncReadyCallback callback,
+				       gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(device_id != NULL);
+	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
+	g_return_if_fail(priv->proxy != NULL);
+
+	/* call into daemon */
+	task = g_task_new(self, cancellable, callback, callback_data);
+	g_dbus_proxy_call(priv->proxy,
+			  "GetDebuglog",
+			  g_variant_new("(s)", device_id),
+			  G_DBUS_CALL_FLAGS_NONE,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
+			  cancellable,
+			  fwupd_client_get_device_debuglog_cb,
+			  g_steal_pointer(&task));
+}
+
+/**
+ * fwupd_client_get_device_debuglog_finish:
+ * @self: a #FwupdClient
+ * @res: (not nullable): the asynchronous result
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the result of [method@FwupdClient.get_device_debuglog_async].
+ *
+ * Returns: (transfer full): a device, or %NULL for failure
+ *
+ * Since: 1.9.16
+ **/
+gchar *
+fwupd_client_get_device_debuglog_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(g_task_is_valid(res, self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer(G_TASK(res), error);
+}
+
 #ifdef HAVE_GIO_UNIX
 
 static void
