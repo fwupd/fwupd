@@ -1819,12 +1819,9 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* show each device */
 	for (guint i = 0; i < devices->len; i++) {
-		g_autoptr(GPtrArray) rels = NULL;
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
 		FwupdRelease *rel;
-		const gchar *remote;
 		GNode *child;
-		g_autoptr(GError) error_local = NULL;
 
 		if (!fwupd_device_match_flags(dev,
 					      priv->filter_device_include,
@@ -1835,49 +1832,7 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 		rel = fwupd_device_get_release_default(dev);
 		if (rel == NULL)
 			continue;
-		remote = fwupd_release_get_remote_id(rel);
-
-		/* doesn't actually map to remote */
-		if (remote == NULL) {
-			g_node_append_data(child, rel);
-			continue;
-		}
-
-		/* try to lookup releases from client */
-		rels = fwupd_client_get_releases(priv->client,
-						 fwupd_device_get_id(dev),
-						 priv->cancellable,
-						 &error_local);
-		if (rels == NULL) {
-			g_debug("failed to get releases for %s: %s",
-				fwupd_device_get_id(dev),
-				error_local->message);
-			g_node_append_data(child, rel);
-			continue;
-		}
-
-		/* map to a release in client */
-		for (guint j = 0; j < rels->len; j++) {
-			FwupdRelease *rel2 = g_ptr_array_index(rels, j);
-			if (!fwupd_release_match_flags(rel2,
-						       priv->filter_release_include,
-						       priv->filter_release_exclude))
-				continue;
-			if (g_strcmp0(remote, fwupd_release_get_remote_id(rel2)) != 0)
-				continue;
-			if (g_strcmp0(fwupd_release_get_version(rel),
-				      fwupd_release_get_version(rel2)) != 0)
-				continue;
-			g_node_append_data(child, g_object_ref(rel2));
-			rel = NULL;
-			break;
-		}
-
-		/* didn't match anything */
-		if (rels->len == 0 || rel != NULL) {
-			g_node_append_data(child, rel);
-			continue;
-		}
+		g_node_append_data(child, rel);
 	}
 
 	fu_util_print_tree(priv->console, priv->client, root);
