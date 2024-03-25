@@ -534,32 +534,28 @@ fu_uefi_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static void
-fu_uefi_device_capture_efi_debugging(FuDevice *device)
+static gboolean
+fu_uefi_device_capture_efi_debugging(FuUefiDevice *self, GError **error)
 {
 	g_autofree gchar *str = NULL;
 	g_autoptr(GBytes) buf = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	/* get the EFI variable contents */
-	buf = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_FWUPDATE,
-				       "FWUPDATE_DEBUG_LOG",
-				       NULL,
-				       &error_local);
+	buf = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_DEBUG_LOG", NULL, error);
 	if (buf == NULL) {
-		fu_device_set_update_error(device, error_local->message);
-		return;
+		fu_error_convert(error);
+		return FALSE;
 	}
 
 	/* convert from UCS-2 to UTF-8 */
-	str = fu_utf16_to_utf8_bytes(buf, G_LITTLE_ENDIAN, &error_local);
+	str = fu_utf16_to_utf8_bytes(buf, G_LITTLE_ENDIAN, error);
 	if (str == NULL) {
-		fu_device_set_update_error(device, error_local->message);
-		return;
+		fu_error_convert(error);
+		return FALSE;
 	}
 
 	/* success */
-	fu_device_set_update_error(device, str);
+	return fu_device_append_log(FU_DEVICE(self), str, error);
 }
 
 gboolean
@@ -598,8 +594,10 @@ fu_uefi_device_get_results(FuDevice *device, GError **error)
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* capture EFI binary debug output */
-	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING))
-		fu_uefi_device_capture_efi_debugging(device);
+	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING)) {
+		if (!fu_uefi_device_capture_efi_debugging(self, error))
+			return FALSE;
+	}
 
 	/* just set the update error */
 	fu_uefi_device_set_status(self, priv->last_attempt_status);

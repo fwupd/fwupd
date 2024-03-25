@@ -1204,6 +1204,38 @@ fu_plugin_quirks_append_cb(FuQuirks *quirks,
 }
 
 static void
+fu_plugin_device_log_func(void)
+{
+	gboolean ret;
+	const gchar *fn =
+	    "/tmp/fwupd-self-test/var/log/fwupd/test-87ea5dfc8b8e384d848979496e706390b497e547";
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(GError) error = NULL;
+
+	/* make sure does not exist */
+	g_unlink(fn);
+	fu_device_set_id(device, "id");
+	fu_device_set_plugin(device, "test");
+
+	/* log two things */
+	ret = fu_device_append_log(device, "hello world", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_device_append_log(device, "bye cruel world", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* make sure has both entries */
+	ret = g_file_get_contents(fn, &str, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_nonnull(g_strstr_len(str, -1, "hello world"));
+	g_assert_nonnull(g_strstr_len(str, -1, "bye cruel world"));
+}
+
+static void
 fu_plugin_device_progress_func(void)
 {
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -5415,6 +5447,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
+	(void)g_setenv("FWUPD_LOGDIR", "/tmp/fwupd-self-test/var/log", TRUE);
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
 
 	g_test_add_func("/fwupd/efi-lz77{decompressor}", fu_efi_lz77_decompressor_func);
@@ -5540,5 +5573,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{retry-hardware}", fu_device_retry_hardware_func);
 	g_test_add_func("/fwupd/device{cfi-device}", fu_device_cfi_device_func);
 	g_test_add_func("/fwupd/device{progress}", fu_plugin_device_progress_func);
+	g_test_add_func("/fwupd/device{log}", fu_plugin_device_log_func);
 	return g_test_run();
 }

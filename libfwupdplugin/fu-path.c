@@ -491,6 +491,19 @@ fu_path_from_kind(FuPathKind path_kind)
 			return g_steal_pointer(&basedir);
 		return g_build_filename(sysconfdir, "localtime", NULL);
 	}
+	/* /var/log */
+	case FU_PATH_KIND_LOGDIR:
+		tmp = g_getenv("FWUPD_LOGDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		tmp = g_getenv("SNAP_COMMON");
+		if (tmp != NULL)
+			return g_build_filename(tmp, FWUPD_LOCALSTATEDIR, "log", NULL);
+		return g_build_filename(FWUPD_LOCALSTATEDIR, "log", NULL);
+	/* /var/log/fwupd */
+	case FU_PATH_KIND_LOGDIR_PKG:
+		basedir = fu_path_from_kind(FU_PATH_KIND_LOGDIR);
+		return g_build_filename(basedir, PACKAGE_NAME, NULL);
 	/* this shouldn't happen */
 	default:
 		g_warning("cannot build path for unknown kind %u", path_kind);

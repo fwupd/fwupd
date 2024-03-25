@@ -18,6 +18,7 @@
 #include "fu-common.h"
 #include "fu-device-private.h"
 #include "fu-input-stream.h"
+#include "fu-path.h"
 #include "fu-quirks.h"
 #include "fu-security-attr.h"
 #include "fu-string.h"
@@ -901,6 +902,70 @@ fu_device_sleep_full(FuDevice *self, guint delay_ms, FuProgress *progress)
 	g_return_if_fail(FU_IS_PROGRESS(progress));
 	if (delay_ms > 0 && !fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED))
 		fu_progress_sleep(progress, delay_ms);
+}
+
+/**
+ * fu_device_append_log:
+ * @self: a #FuDevice
+ * @data: (not nullable): debug data
+ * @error: (nullable): optional return location for an error
+ *
+ * Adds (or creates, then adds) information into the per-device log file.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.9.16
+ **/
+gboolean
+fu_device_append_log(FuDevice *self, const gchar *data, GError **error)
+{
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *logdir = NULL;
+	g_autofree gchar *path = NULL;
+	g_autoptr(GDateTime) dt = g_date_time_new_now_utc();
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFileOutputStream) stream = NULL;
+	g_autoptr(GString) datastr = g_string_new(NULL);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(data != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* open file in logdir */
+	logdir = fu_path_from_kind(FU_PATH_KIND_LOGDIR_PKG);
+	fn = g_strdup_printf("%s-%s", fu_device_get_plugin(self), fu_device_get_id(self));
+	path = g_build_filename(logdir, fn, NULL);
+	if (!fu_path_mkdir_parent(path, error))
+		return FALSE;
+	g_debug("logging to %s", path);
+	file = g_file_new_for_path(path);
+	stream = g_file_append_to(file, G_FILE_CREATE_NONE, NULL, error);
+	if (stream == NULL) {
+		fu_error_convert(error);
+		return FALSE;
+	}
+
+	/* add start and end */
+	g_string_append_printf(datastr,
+			       "--- START LOG %02i:%02i:%02i\n",
+			       g_date_time_get_hour(dt),
+			       g_date_time_get_minute(dt),
+			       g_date_time_get_second(dt));
+	g_string_append_printf(datastr, "%s\n", data);
+	g_string_append(datastr, "--- END LOG\n\n");
+
+	/* write to disk */
+	if (!g_output_stream_write(G_OUTPUT_STREAM(stream),
+				   datastr->str,
+				   datastr->len,
+				   NULL,
+				   error)) {
+		fu_error_convert(error);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean

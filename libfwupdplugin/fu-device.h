@@ -880,6 +880,8 @@ GHashTable *
 fu_device_report_metadata_pre(FuDevice *self) G_GNUC_NON_NULL(1);
 GHashTable *
 fu_device_report_metadata_post(FuDevice *self) G_GNUC_NON_NULL(1);
+gboolean
+fu_device_append_log(FuDevice *self, const gchar *data, GError **error);
 void
 fu_device_add_security_attrs(FuDevice *self, FuSecurityAttrs *attrs) G_GNUC_NON_NULL(1, 2);
 void
