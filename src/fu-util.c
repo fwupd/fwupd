@@ -2956,6 +2956,8 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 			rel = g_object_ref(rel_tmp);
 			break;
 		}
+		if (rel == NULL)
+			continue;
 
 		/* something is wrong */
 		if (fwupd_device_get_problems(dev) != FWUPD_DEVICE_PROBLEM_NONE) {
