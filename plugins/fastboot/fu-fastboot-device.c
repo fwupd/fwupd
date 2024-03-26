@@ -211,9 +211,14 @@ static gboolean
 fu_fastboot_device_getvar(FuDevice *device, const gchar *key, gchar **str, GError **error)
 {
 	g_autofree gchar *tmp = g_strdup_printf("getvar:%s", key);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	if (!fu_fastboot_device_writestr(device, tmp, error))
 		return FALSE;
-	if (!fu_fastboot_device_read(device, str, NULL, FU_FASTBOOT_DEVICE_READ_FLAG_NONE, error)) {
+	if (!fu_fastboot_device_read(device,
+				     str,
+				     progress,
+				     FU_FASTBOOT_DEVICE_READ_FLAG_NONE,
+				     error)) {
 		g_prefix_error(error, "failed to getvar %s: ", key);
 		return FALSE;
 	}
