@@ -1671,7 +1671,7 @@ fu_device_vfuncs_func(void)
 
 	blob = fu_device_dump_firmware(device, progress, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
-	g_assert_null(firmware);
+	g_assert_null(blob);
 	g_clear_error(&error);
 
 	ret = fu_device_unbind_driver(device, &error);
