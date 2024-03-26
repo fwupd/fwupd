@@ -4523,7 +4523,6 @@ fu_plugin_composite_func(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) releases =
@@ -4666,7 +4665,6 @@ fu_plugin_composite_func(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_logical_id(dev_tmp), ==, NULL);
 
 	/* install the cab */
-	stream = g_memory_input_stream_new_from_bytes(blob);
 	ret = fu_engine_install_releases(engine,
 					 request,
 					 releases,
