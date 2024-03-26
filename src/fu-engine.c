@@ -1154,6 +1154,7 @@ fu_engine_verify_update(FuEngine *self,
 	if (device == NULL)
 		return FALSE;
 	device_progress = fu_device_progress_new(device, progress);
+	g_assert(device_progress != NULL);
 
 	/* get the plugin */
 	plugin =
