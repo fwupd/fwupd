@@ -477,7 +477,7 @@ fu_cabinet_build_silo_metainfo(FuCabinet *self, FuFirmware *img, GError **error)
 	item = jcat_file_get_item_by_id(self->jcat_file, fn, NULL);
 	if (item == NULL) {
 		g_info("failed to verify %s: no JcatItem", fn);
-	} else {
+	} else if (self->jcat_context != NULL) {
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) results = NULL;
 		g_autoptr(GBytes) blob = NULL;
