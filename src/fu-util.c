@@ -2970,6 +2970,9 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 			rel = g_object_ref(rel_tmp);
 			break;
 		}
+		if (rel == NULL)
+			continue;
+
 		if (!fu_util_update_device_with_release(priv, dev, rel, &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
 				g_debug("ignoring %s: %s",
