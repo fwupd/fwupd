@@ -40,8 +40,8 @@ def test_files() -> int:
             print(f"{fn} does not specify a license")
             rc = 1
             continue
-        if "GPL" not in lic:
-            print(f"{fn} does not contain LGPL or GPL ({lic})")
+        if "LGPL" not in lic:
+            print(f"{fn} does not contain LGPL ({lic})")
             rc = 1
             continue
     return rc
