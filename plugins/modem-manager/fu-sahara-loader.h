@@ -2,7 +2,7 @@
  * Copyright (C) 2021 Quectel Wireless Solutions Co., Ltd.
  *                    Ivan Mikhanchuk <ivan.mikhanchuk@quectel.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once

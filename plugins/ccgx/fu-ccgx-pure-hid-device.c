@@ -2,7 +2,7 @@
  * Copyright (C) 2023 Framework Computer Inc
  * Copyright (C) 2024 Denis Pynkin <denis.pynkin@collabora.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"

@@ -4,7 +4,7 @@
  * Copyright (C) 2020 Mario Limonciello <mario.limonciello@dell.com>
  * Copyright (C) 2017 Intel Corporation.
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once

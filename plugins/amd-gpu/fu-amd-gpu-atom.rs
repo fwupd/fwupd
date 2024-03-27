@@ -1,5 +1,5 @@
 // Copyright (C) 2023 Advanced Micro Devices Inc.
-// SPDX-License-Identifier: LGPL-2.1+ OR MIT
+// SPDX-License-Identifier: LGPL-2.1-or-later OR MIT
 
 #[derive(Getters)]
 struct FuStructVbiosDate {

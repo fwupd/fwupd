@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 # Copyright (C) 2013-2018  Vincent Pelletier <plr.vincent@gmail.com>
 """
 Pythonified linux asm-generic/ioctl.h .

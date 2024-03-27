@@ -2,7 +2,7 @@
  * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2022 Gaël PORTAY <gael.portay@collabora.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuArchive"

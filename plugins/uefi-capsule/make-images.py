@@ -4,7 +4,7 @@
 # Copyright (C) 2017 Peter Jones <pjones@redhat.com>
 # Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 #
 # pylint: disable=wrong-import-position,too-many-locals,unused-argument,too-many-statements
 # pylint: disable=invalid-name,too-many-instance-attributes,missing-module-docstring
