@@ -3031,8 +3031,10 @@ fu_engine_prepare(FuEngine *self,
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		if (!fu_engine_backends_save_phase(self, error))
 			return FALSE;
-		if (!fu_engine_backends_clear_phase(self, error))
-			return FALSE;
+		if (fu_device_get_composite_id(device) == NULL) {
+			if (!fu_engine_backends_clear_phase(self, error))
+				return FALSE;
+		}
 	}
 
 	/* wait for any device to disconnect and reconnect */
@@ -3078,8 +3080,10 @@ fu_engine_cleanup(FuEngine *self,
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		if (!fu_engine_backends_save_phase(self, error))
 			return FALSE;
-		if (!fu_engine_backends_clear_phase(self, error))
-			return FALSE;
+		if (fu_device_get_composite_id(device) == NULL) {
+			if (!fu_engine_backends_clear_phase(self, error))
+				return FALSE;
+		}
 	}
 
 	/* wait for any device to disconnect and reconnect */
@@ -3150,8 +3154,10 @@ fu_engine_detach(FuEngine *self,
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		if (!fu_engine_backends_save_phase(self, error))
 			return FALSE;
-		if (!fu_engine_backends_clear_phase(self, error))
-			return FALSE;
+		if (fu_device_get_composite_id(device) == NULL) {
+			if (!fu_engine_backends_clear_phase(self, error))
+				return FALSE;
+		}
 	}
 
 	/* wait for any device to disconnect and reconnect */
@@ -3198,8 +3204,10 @@ fu_engine_attach(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		if (!fu_engine_backends_save_phase(self, error))
 			return FALSE;
-		if (!fu_engine_backends_clear_phase(self, error))
-			return FALSE;
+		if (fu_device_get_composite_id(device) == NULL) {
+			if (!fu_engine_backends_clear_phase(self, error))
+				return FALSE;
+		}
 	}
 
 	/* wait for any device to disconnect and reconnect */
@@ -3292,8 +3300,10 @@ fu_engine_reload(FuEngine *self, const gchar *device_id, GError **error)
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		if (!fu_engine_backends_save_phase(self, error))
 			return FALSE;
-		if (!fu_engine_backends_clear_phase(self, error))
-			return FALSE;
+		if (fu_device_get_composite_id(device) == NULL) {
+			if (!fu_engine_backends_clear_phase(self, error))
+				return FALSE;
+		}
 	}
 
 	/* wait for any device to disconnect and reconnect */
@@ -3381,8 +3391,6 @@ fu_engine_write_firmware(FuEngine *self,
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		if (!fu_engine_backends_save_phase(self, error))
-			return FALSE;
-		if (!fu_engine_backends_clear_phase(self, error))
 			return FALSE;
 	}
 
