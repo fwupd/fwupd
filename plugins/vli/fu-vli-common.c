@@ -82,6 +82,8 @@ fu_vli_common_device_kind_get_size(FuVliDeviceKind device_kind)
 		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL822Q8)
 		return 0x10000;
+	if (device_kind == FU_VLI_DEVICE_KIND_VL822C0)
+		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_PS186)
 		return 0x40000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL650)
