@@ -2190,6 +2190,7 @@ fu_engine_is_running_offline(FuEngine *self)
 #endif
 }
 
+#ifdef HAVE_FWUPDOFFLINE
 #ifdef HAVE_GIO_UNIX
 static gchar *
 fu_realpath(const gchar *filename, GError **error)
@@ -2262,6 +2263,7 @@ fu_engine_offline_setup(GError **error)
 	return FALSE;
 #endif
 }
+#endif
 
 static gboolean
 fu_engine_offline_invalidate(GError **error)
@@ -2310,23 +2312,14 @@ fu_engine_schedule_update(FuEngine *self,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {
+#ifdef HAVE_FWUPDOFFLINE
 	gchar tmpname[] = {"XXXXXX.cab"};
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
-	g_autoptr(FuHistory) history = NULL;
+	g_autoptr(FuHistory) history = fu_history_new();
 	g_autoptr(GFile) file = NULL;
 
-#ifndef HAVE_FWUPDOFFLINE
-	/* sanity check */
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "Not supported as compiled without offline support");
-	return FALSE;
-#endif
-
 	/* id already exists */
-	history = fu_history_new();
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_autoptr(FuDevice) res_tmp = NULL;
 		res_tmp = fu_history_get_device_by_id(history, fu_device_get_id(device), NULL);
@@ -2375,6 +2368,13 @@ fu_engine_schedule_update(FuEngine *self,
 
 	/* next boot we run offline */
 	return fu_engine_offline_setup(error);
+#else
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "Not supported as compiled without offline support");
+	return FALSE;
+#endif
 }
 
 static gboolean
