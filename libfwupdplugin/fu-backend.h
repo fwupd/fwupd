@@ -44,6 +44,7 @@ struct _FuBackendClass {
 			 const gchar *tag,
 			 FuBackendSaveFlags flags,
 			 GError **error);
+	gboolean (*clear)(FuBackend *self, GError **error);
 };
 
 const gchar *

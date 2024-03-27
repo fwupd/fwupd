@@ -20,3 +20,6 @@ fu_backend_save(FuBackend *self,
 		const gchar *tag,
 		FuBackendSaveFlags flags,
 		GError **error) G_GNUC_NON_NULL(1, 2);
+
+gboolean
+fu_backend_clear(FuBackend *self, GError **error) G_GNUC_NON_NULL(1, 2);

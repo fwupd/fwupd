@@ -265,6 +265,34 @@ fu_backend_load(FuBackend *self,
 }
 
 /**
+ * fu_backend_clear:
+ * @self: a #FuBackend
+ * @error: (nullable): optional return location for an error
+ *
+ * Clears saved events from the backend. Intended to be called at the end
+ * of a phase.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_backend_clear(FuBackend *self, GError **error)
+{
+	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
+
+	g_return_val_if_fail(FU_IS_BACKEND(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* optional */
+	if (klass->clear != NULL) {
+		if (!klass->clear(self, error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+/**
  * fu_backend_save:
  * @self: a #FuBackend
  * @json_builder: a #JsonBuilder
