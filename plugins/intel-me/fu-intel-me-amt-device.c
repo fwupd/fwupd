@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2012 Intel Corporation.
- * Copyright (C) 2017 Google, Inc.
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2012 Intel Corporation.
+ * Copyright 2017 Google, Inc.
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Synaptics Incorporated <simon.ho@synaptics.com>
+ * Copyright 2021 Synaptics Incorporated <simon.ho@synaptics.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

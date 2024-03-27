@@ -1,4 +1,4 @@
-// Copyright (C) {{Year}} {{Author}} <{{Email}}>
+// Copyright {{Year}} {{Author}} <{{Email}}>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(New, ValidateBytes, Parse)]

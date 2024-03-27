@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2021 Denis Pynkin <denis.pynkin@collabora.com>
- * Copyright (C) 2022 Gaël PORTAY <gael.portay@collabora.com>
+ * Copyright 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright 2021 Denis Pynkin <denis.pynkin@collabora.com>
+ * Copyright 2022 Gaël PORTAY <gael.portay@collabora.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

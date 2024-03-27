@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Cypress Semiconductor Corporation.
+ * Copyright 2020 Cypress Semiconductor Corporation.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

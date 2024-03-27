@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Advanced Micro Devices Inc.
+ * Copyright 2023 Advanced Micro Devices Inc.
  * All rights reserved.
  *
  * This file is provided under a dual MIT/LGPLv2 license.  When using or

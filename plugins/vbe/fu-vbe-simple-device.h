@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Google LLC
+ * Copyright 2022 Google LLC
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

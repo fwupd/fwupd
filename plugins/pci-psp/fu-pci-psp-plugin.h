@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2022 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2022 Advanced Micro Devices Inc.
+ * Copyright 2022 Richard Hughes <richard@hughsie.com>
+ * Copyright 2022 Advanced Micro Devices Inc.
  * All rights reserved.
  *
  * This file is provided under a dual MIT/LGPLv2 license.  When using or

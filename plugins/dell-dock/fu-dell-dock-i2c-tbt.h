@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2019 Intel Corporation.
- * Copyright (C) 2019 Dell Inc.
+ * Copyright 2019 Intel Corporation.
+ * Copyright 2019 Dell Inc.
  * All rights reserved.
  *
  * This software and associated documentation (if any) is furnished

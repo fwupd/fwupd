@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Aaron Skomra <aaron.skomra@wacom.com>
+ * Copyright 2022 Aaron Skomra <aaron.skomra@wacom.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

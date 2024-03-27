@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Jimmy Yu <Jimmy_yu@pixart.com>
+ * Copyright 2020 Jimmy Yu <Jimmy_yu@pixart.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

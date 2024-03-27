@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2022 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2021 Intel Corporation.
- * Copyright (C) 2021 Dell Inc.
+ * Copyright 2022 Richard Hughes <richard@hughsie.com>
+ * Copyright 2021 Intel Corporation.
+ * Copyright 2021 Dell Inc.
  * All rights reserved.
  *
  * This software and associated documentation (if any) is furnished

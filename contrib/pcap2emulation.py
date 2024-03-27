@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # pylint: disable=invalid-name,missing-docstring
 #
-# Copyright (C) 2023 Collabora Ltd
+# Copyright 2023 Collabora Ltd
 # Author: Frédéric Danis <frederic.danis@collabora.com>
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later

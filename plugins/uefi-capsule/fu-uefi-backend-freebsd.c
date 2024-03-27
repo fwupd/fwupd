@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2021 3mdeb Embedded Systems Consulting
+ * Copyright 2021 Richard Hughes <richard@hughsie.com>
+ * Copyright 2021 3mdeb Embedded Systems Consulting
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

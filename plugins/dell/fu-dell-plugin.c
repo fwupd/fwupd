@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2016 Mario Limonciello <mario.limonciello@dell.com>
+ * Copyright 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright 2016 Mario Limonciello <mario.limonciello@dell.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

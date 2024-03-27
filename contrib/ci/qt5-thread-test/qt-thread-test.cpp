@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Aleix Pol <aleixpol@kde.org>
+ * Copyright 2020 Aleix Pol <aleixpol@kde.org>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

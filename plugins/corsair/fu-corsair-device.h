@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Andrii Dushko <andrii.dushko@developex.net>
+ * Copyright 2021 Andrii Dushko <andrii.dushko@developex.net>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

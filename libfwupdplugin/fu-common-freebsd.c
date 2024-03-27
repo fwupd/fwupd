@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Sergii Dmytruk <sergii.dmytruk@3mdeb.com>
+ * Copyright 2021 Sergii Dmytruk <sergii.dmytruk@3mdeb.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

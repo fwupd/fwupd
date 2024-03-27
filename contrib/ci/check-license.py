@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 #
-# Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
-# Copyright (C) 2021 Mario Limonciello <superm1@gmail.com>
+# Copyright 2021 Richard Hughes <richard@hughsie.com>
+# Copyright 2021 Mario Limonciello <superm1@gmail.com>
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
@@ -64,6 +64,11 @@ def test_files() -> int:
             print(f"{fn} does not contain LGPL-2.1-or-later ({lic})")
             rc = 1
             continue
+        for cprt in cprts:
+            for word in ["(C)", "(c)", "©", "  "]:
+                if cprt.find(word) != -1:
+                    print(f"{fn} should not contain {word} in the string {cprt}")
+                    rc = 1
     return rc
 
 

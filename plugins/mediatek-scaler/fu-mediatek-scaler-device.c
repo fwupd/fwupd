@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2023 Dell Technologies
- * Copyright (C) 2023 Mediatek Inc.
+ * Copyright 2023 Dell Technologies
+ * Copyright 2023 Mediatek Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Algoltek, Inc.
+// Copyright 2024 Algoltek, Inc.
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 enum FuAlgoltekCmd {

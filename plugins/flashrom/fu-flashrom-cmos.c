@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Sean Rhodes <sean@starlabs.systems>
+ * Copyright 2021 Sean Rhodes <sean@starlabs.systems>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

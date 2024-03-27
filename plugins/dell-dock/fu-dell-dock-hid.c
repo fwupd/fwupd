@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2018 Realtek Semiconductor Corporation
- * Copyright (C) 2018 Dell Inc.
+ * Copyright 2018 Realtek Semiconductor Corporation
+ * Copyright 2018 Dell Inc.
  * All rights reserved.
  *
  * This software and associated documentation (if any) is furnished

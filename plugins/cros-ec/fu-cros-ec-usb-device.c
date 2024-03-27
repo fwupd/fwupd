@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Benson Leung <bleung@chromium.org>
+ * Copyright 2020 Benson Leung <bleung@chromium.org>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
