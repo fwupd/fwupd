@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2019 Mario Limonciello <mario.limonciello@dell.com>
  *
- * SPDX-License-Identifier: GPL-2+
+ * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
