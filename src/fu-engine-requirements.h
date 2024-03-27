@@ -15,4 +15,4 @@ gboolean
 fu_engine_requirements_check(FuEngine *engine,
 			     FuRelease *release,
 			     FwupdInstallFlags flags,
-			     GError **error);
+			     GError **error) G_GNUC_NON_NULL(1, 2);

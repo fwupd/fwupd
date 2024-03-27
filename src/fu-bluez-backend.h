@@ -12,4 +12,4 @@
 G_DECLARE_FINAL_TYPE(FuBluezBackend, fu_bluez_backend, FU, BLUEZ_BACKEND, FuBackend)
 
 FuBackend *
-fu_bluez_backend_new(FuContext *ctx);
+fu_bluez_backend_new(FuContext *ctx) G_GNUC_NON_NULL(1);

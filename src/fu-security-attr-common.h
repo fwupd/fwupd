@@ -13,8 +13,8 @@
 #include "fu-security-attrs-private.h"
 
 gchar *
-fu_security_attr_get_name(FwupdSecurityAttr *attr);
+fu_security_attr_get_name(FwupdSecurityAttr *attr) G_GNUC_NON_NULL(1);
 const gchar *
-fu_security_attr_get_title(FwupdSecurityAttr *attr);
+fu_security_attr_get_title(FwupdSecurityAttr *attr) G_GNUC_NON_NULL(1);
 const gchar *
-fu_security_attr_get_description(FwupdSecurityAttr *attr);
+fu_security_attr_get_description(FwupdSecurityAttr *attr) G_GNUC_NON_NULL(1);

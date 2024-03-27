@@ -808,6 +808,11 @@ fu_cabinet_sign(FuCabinet *self,
 	g_autoptr(JcatEngine) jcat_engine = NULL;
 	g_autoptr(JcatFile) jcat_file = jcat_file_new();
 
+	g_return_val_if_fail(FU_IS_CABINET(self), FALSE);
+	g_return_val_if_fail(cert != NULL, FALSE);
+	g_return_val_if_fail(privkey != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	/* load existing .jcat file if it exists */
 	img = fu_firmware_get_image_by_id(FU_FIRMWARE(self), "firmware.jcat", NULL);
 	if (img != NULL) {

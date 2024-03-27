@@ -9,9 +9,9 @@
 #include "fu-engine.h"
 
 gboolean
-fu_engine_update_motd(FuEngine *self, GError **error);
+fu_engine_update_motd(FuEngine *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
-fu_engine_update_devices_file(FuEngine *self, GError **error);
+fu_engine_update_devices_file(FuEngine *self, GError **error) G_GNUC_NON_NULL(1);
 
 GHashTable *
 fu_engine_integrity_new(GError **error);

@@ -14,10 +14,11 @@ G_DECLARE_FINAL_TYPE(FuPluginList, fu_plugin_list, FU, PLUGIN_LIST, GObject)
 FuPluginList *
 fu_plugin_list_new(void);
 void
-fu_plugin_list_add(FuPluginList *self, FuPlugin *plugin);
+fu_plugin_list_add(FuPluginList *self, FuPlugin *plugin) G_GNUC_NON_NULL(1, 2);
 GPtrArray *
-fu_plugin_list_get_all(FuPluginList *self);
+fu_plugin_list_get_all(FuPluginList *self) G_GNUC_NON_NULL(1);
 FuPlugin *
-fu_plugin_list_find_by_name(FuPluginList *self, const gchar *name, GError **error);
+fu_plugin_list_find_by_name(FuPluginList *self, const gchar *name, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_plugin_list_depsolve(FuPluginList *self, GError **error);
+fu_plugin_list_depsolve(FuPluginList *self, GError **error) G_GNUC_NON_NULL(1);

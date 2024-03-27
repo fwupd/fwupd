@@ -5416,6 +5416,7 @@ fu_engine_get_releases(FuEngine *self,
 	g_autoptr(GPtrArray) releases_deduped = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+	g_return_val_if_fail(FU_IS_ENGINE_REQUEST(request), NULL);
 	g_return_val_if_fail(device_id != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
@@ -8104,6 +8105,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* avoid re-loading a second time if fu-tool or fu-util request to */

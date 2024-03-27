@@ -34,18 +34,19 @@ typedef enum {
 FuRemoteList *
 fu_remote_list_new(void);
 gboolean
-fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **error);
+fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **error)
+    G_GNUC_NON_NULL(1);
 gboolean
 fu_remote_list_set_key_value(FuRemoteList *self,
 			     const gchar *remote_id,
 			     const gchar *key,
 			     const gchar *value,
-			     GError **error);
+			     GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
 GPtrArray *
-fu_remote_list_get_all(FuRemoteList *self);
+fu_remote_list_get_all(FuRemoteList *self) G_GNUC_NON_NULL(1);
 FwupdRemote *
-fu_remote_list_get_by_id(FuRemoteList *self, const gchar *remote_id);
+fu_remote_list_get_by_id(FuRemoteList *self, const gchar *remote_id) G_GNUC_NON_NULL(1, 2);
 
 /* for the self tests */
 void
-fu_remote_list_add_remote(FuRemoteList *self, FwupdRemote *remote);
+fu_remote_list_add_remote(FuRemoteList *self, FwupdRemote *remote) G_GNUC_NON_NULL(1, 2);

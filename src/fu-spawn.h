@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <gio/gio.h>
+#include <fwupd.h>
 
 /**
  * FuSpawnOutputHandler:
@@ -23,4 +23,4 @@ fu_spawn_sync(const gchar *const *argv,
 	      gpointer user_data,
 	      guint timeout_ms,
 	      GCancellable *cancellable,
-	      GError **error) G_GNUC_WARN_UNUSED_RESULT;
+	      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
