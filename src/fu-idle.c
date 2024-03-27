@@ -167,8 +167,7 @@ fu_idle_locker_new(FuIdle *self, FuIdleInhibit inhibit, const gchar *reason)
 void
 fu_idle_locker_free(FuIdleLocker *locker)
 {
-	if (locker == NULL)
-		return;
+	g_return_if_fail(locker != NULL);
 	fu_idle_uninhibit(locker->idle, locker->token);
 	g_object_unref(locker->idle);
 	g_free(locker);

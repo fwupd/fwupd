@@ -870,10 +870,7 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GEr
 	if (!fu_history_remove_device(self, device, error))
 		return FALSE;
 	g_debug("add device %s [%s]", fu_device_get_name(device), fu_device_get_id(device));
-	if (release != NULL) {
-		GPtrArray *checksums = fu_release_get_checksums(release);
-		checksum = fwupd_checksum_get_by_kind(checksums, G_CHECKSUM_SHA1);
-	}
+	checksum = fwupd_checksum_get_by_kind(fu_release_get_checksums(release), G_CHECKSUM_SHA1);
 	checksum_device =
 	    fwupd_checksum_get_by_kind(fu_device_get_checksums(device), G_CHECKSUM_SHA1);
 
