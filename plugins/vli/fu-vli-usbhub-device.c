@@ -644,6 +644,16 @@ fu_vli_usbhub_device_guess_kind(FuVliUsbhubDevice *self, GError **error)
 		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL817S);
 	} else if (chipid2 == 0x35 && chipid1 == 0x95) {
 		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL822T);
+	} else if (chipid2 == 0x35 && chipid1 == 0x99) {
+		if (chipver == 0xC0 || chipver == 0xC1)
+			fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL822C0);
+		else {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "not supported 99 type");
+			return FALSE;
+		}
 	} else if (chipid2 == 0x35 && chipid1 == 0x66) {
 		if (chipver <= 0xC0)
 			fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL830);

@@ -468,6 +468,7 @@ fu_vli_device_set_kind(FuVliDevice *self, FuVliDeviceKind device_kind)
 	case FU_VLI_DEVICE_KIND_VL822Q5:
 	case FU_VLI_DEVICE_KIND_VL822Q7:
 	case FU_VLI_DEVICE_KIND_VL822Q8:
+	case FU_VLI_DEVICE_KIND_VL822C0:
 	case FU_VLI_DEVICE_KIND_VL830:
 	case FU_VLI_DEVICE_KIND_VL832:
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
