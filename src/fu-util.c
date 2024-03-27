@@ -4783,7 +4783,9 @@ main(int argc, char *argv[])
 	gboolean is_interactive = FALSE;
 	gboolean no_history = FALSE;
 	gboolean no_authenticate = FALSE;
+#ifdef HAVE_FWUPDOFFLINE
 	gboolean offline = FALSE;
+#endif
 	gboolean ret;
 	gboolean verbose = FALSE;
 	gboolean version = FALSE;
@@ -5479,8 +5481,10 @@ main(int argc, char *argv[])
 	}
 
 	/* set flags */
+#ifdef HAVE_FWUPDOFFLINE
 	if (offline)
 		priv->flags |= FWUPD_INSTALL_FLAG_OFFLINE;
+#endif
 	if (allow_reinstall)
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	if (allow_older)

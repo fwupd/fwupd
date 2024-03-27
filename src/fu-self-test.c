@@ -3936,6 +3936,7 @@ fu_history_migrate_v2_func(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_id(device), ==, "2ba16d10df45823dd4494ff10a0bfccfef512c9d");
 }
 
+#ifdef HAVE_FWUPDOFFLINE
 static void
 _plugin_status_changed_cb(FuDevice *device, FwupdStatus status, gpointer user_data)
 {
@@ -3944,6 +3945,7 @@ _plugin_status_changed_cb(FuDevice *device, FwupdStatus status, gpointer user_da
 	(*cnt)++;
 	fu_test_loop_quit();
 }
+#endif
 
 static void
 _plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
@@ -4162,25 +4164,27 @@ fu_plugin_module_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
 	GError *error = NULL;
+	gboolean ret;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+#ifdef HAVE_FWUPDOFFLINE
 	FuDevice *device_tmp;
 	FwupdRelease *release_tmp;
-	gboolean ret;
 	guint cnt = 0;
 	g_autofree gchar *localstatedir = NULL;
 	g_autofree gchar *mapped_file_fn = NULL;
 	g_autofree gchar *pending_cap = NULL;
 	g_autofree gchar *history_db = NULL;
-	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuDevice) device3 = NULL;
-	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuHistory) history = NULL;
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GMappedFile) mapped_file = NULL;
-	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+#endif
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
@@ -4216,10 +4220,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_name(device), ==, "Integrated Webcam™");
 	g_signal_handlers_disconnect_by_data(self->plugin, &device);
 
-#ifndef HAVE_FWUPDOFFLINE
-	g_test_skip("No offline update support");
-	return;
-#endif
+#ifdef HAVE_FWUPDOFFLINE
 	/* schedule an offline update */
 	g_signal_connect(FU_PROGRESS(progress),
 			 "status-changed",
@@ -4309,6 +4310,9 @@ fu_plugin_module_func(gconstpointer user_data)
 	history_db = g_build_filename(localstatedir, "pending.db", NULL);
 	(void)g_unlink(history_db);
 	(void)g_unlink(pending_cap);
+#else
+	g_test_skip("No offline update support");
+#endif
 }
 
 static void
