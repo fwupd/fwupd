@@ -13,13 +13,13 @@
 #include "fu-console.h"
 
 gchar *
-fu_util_bios_setting_to_string(FwupdBiosSetting *setting, guint idt);
+fu_util_bios_setting_to_string(FwupdBiosSetting *setting, guint idt) G_GNUC_NON_NULL(1);
 gboolean
-fu_util_bios_setting_matches_args(FwupdBiosSetting *setting, gchar **values);
+fu_util_bios_setting_matches_args(FwupdBiosSetting *setting, gchar **values) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_util_get_bios_setting_as_json(FuConsole *console,
 				 gchar **values,
 				 GPtrArray *settings,
-				 GError **error);
+				 GError **error) G_GNUC_NON_NULL(1, 2, 3);
 GHashTable *
-fu_util_bios_settings_parse_argv(gchar **input, GError **error);
+fu_util_bios_settings_parse_argv(gchar **input, GError **error) G_GNUC_NON_NULL(1);

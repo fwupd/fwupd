@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <glib.h>
+#include <fwupd.h>
 
 gboolean
-fu_systemd_unit_stop(const gchar *unit, GError **error);
+fu_systemd_unit_stop(const gchar *unit, GError **error) G_GNUC_NON_NULL(1);
 gchar *
 fu_systemd_get_default_target(GError **error);

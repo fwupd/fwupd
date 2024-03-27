@@ -19,7 +19,8 @@
 #define FWUPD_ERROR_INVALID_ARGS (FWUPD_ERROR_LAST + 1)
 
 typedef struct FuUtilPrivate FuUtilPrivate;
-typedef gboolean (*FuUtilCmdFunc)(FuUtilPrivate *util, gchar **values, GError **error);
+typedef gboolean (*FuUtilCmdFunc)(FuUtilPrivate *util, gchar **values, GError **error)
+    G_GNUC_NON_NULL(1);
 typedef struct {
 	gchar *name;
 	gchar *arguments;
@@ -36,34 +37,32 @@ typedef enum {
 } FuSecurityAttrToStringFlags;
 
 void
-fu_util_print_tree(FuConsole *console, FwupdClient *client, GNode *n);
+fu_util_print_tree(FuConsole *console, FwupdClient *client, GNode *n) G_GNUC_NON_NULL(1, 2, 3);
 gboolean
-fu_util_is_interesting_device(FwupdDevice *dev);
+fu_util_is_interesting_device(FwupdDevice *dev) G_GNUC_NON_NULL(1);
 gchar *
-fu_util_get_user_cache_path(const gchar *fn);
+fu_util_get_user_cache_path(const gchar *fn) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_util_prompt_warning(FuConsole *console,
 		       FwupdDevice *device,
 		       FwupdRelease *release,
 		       const gchar *machine,
-		       GError **error);
+		       GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
 gboolean
-fu_util_prompt_warning_fde(FuConsole *console, FwupdDevice *dev, GError **error);
+fu_util_prompt_warning_fde(FuConsole *console, FwupdDevice *dev, GError **error) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_util_modify_remote_warning(FuConsole *console,
 			      FwupdRemote *remote,
 			      gboolean assume_yes,
-			      GError **error);
+			      GError **error) G_GNUC_NON_NULL(1, 2);
 
 gboolean
-fu_util_prompt_complete(FuConsole *console,
-			FwupdDeviceFlags flags,
-			gboolean prompt,
-			GError **error);
+fu_util_prompt_complete(FuConsole *console, FwupdDeviceFlags flags, gboolean prompt, GError **error)
+    G_GNUC_NON_NULL(1);
 gboolean
-fu_util_update_reboot(GError **error);
+fu_util_update_reboot(GError **error) G_GNUC_NON_NULL(1);
 
 GPtrArray *
 fu_util_cmd_array_new(void);
@@ -72,73 +71,78 @@ fu_util_cmd_array_add(GPtrArray *array,
 		      const gchar *name,
 		      const gchar *arguments,
 		      const gchar *description,
-		      FuUtilCmdFunc callback);
+		      FuUtilCmdFunc callback) G_GNUC_NON_NULL(1, 2, 4);
 gchar *
-fu_util_cmd_array_to_string(GPtrArray *array);
+fu_util_cmd_array_to_string(GPtrArray *array) G_GNUC_NON_NULL(1);
 void
-fu_util_cmd_array_sort(GPtrArray *array);
+fu_util_cmd_array_sort(GPtrArray *array) G_GNUC_NON_NULL(1);
 gboolean
 fu_util_cmd_array_run(GPtrArray *array,
 		      FuUtilPrivate *priv,
 		      const gchar *command,
 		      gchar **values,
-		      GError **error);
+		      GError **error) G_GNUC_NON_NULL(1, 2, 3);
 const gchar *
 fu_util_branch_for_display(const gchar *branch);
 const gchar *
-fu_util_request_get_message(FwupdRequest *req);
+fu_util_request_get_message(FwupdRequest *req) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_util_parse_filter_device_flags(const gchar *filter,
 				  FwupdDeviceFlags *include,
 				  FwupdDeviceFlags *exclude,
-				  GError **error);
+				  GError **error) G_GNUC_NON_NULL(1, 2, 3);
 gboolean
 fu_util_parse_filter_release_flags(const gchar *filter,
 				   FwupdReleaseFlags *include,
 				   FwupdReleaseFlags *exclude,
-				   GError **error);
+				   GError **error) G_GNUC_NON_NULL(1, 2, 3);
 gchar *
-fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt);
+fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt) G_GNUC_NON_NULL(1, 2);
 gchar *
-fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt);
+fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt) G_GNUC_NON_NULL(1);
 const gchar *
 fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag);
 gchar *
-fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDeviceProblem problem);
+fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDeviceProblem problem)
+    G_GNUC_NON_NULL(1, 2);
 gchar *
-fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags flags);
+fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags flags)
+    G_GNUC_NON_NULL(1);
 gchar *
-fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags flags);
+fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags flags)
+    G_GNUC_NON_NULL(1);
 gchar *
-fu_util_security_issues_to_string(GPtrArray *devices);
+fu_util_security_issues_to_string(GPtrArray *devices) G_GNUC_NON_NULL(1);
 gboolean
 fu_util_send_report(FwupdClient *client,
 		    const gchar *report_uri,
 		    const gchar *data,
 		    const gchar *sig,
 		    gchar **uri,
-		    GError **error);
+		    GError **error) G_GNUC_NON_NULL(1, 2, 3);
 gint
-fu_util_sort_devices_by_flags_cb(gconstpointer a, gconstpointer b);
+fu_util_sort_devices_by_flags_cb(gconstpointer a, gconstpointer b) G_GNUC_NON_NULL(1, 2);
 
 gboolean
 fu_util_switch_branch_warning(FuConsole *console,
 			      FwupdDevice *dev,
 			      FwupdRelease *rel,
 			      gboolean assume_yes,
-			      GError **error);
+			      GError **error) G_GNUC_NON_NULL(1, 2, 3);
 void
-fu_util_show_unsupported_warning(FuConsole *console);
+fu_util_show_unsupported_warning(FuConsole *console) G_GNUC_NON_NULL(1);
 gboolean
-fu_util_is_url(const gchar *perhaps_url);
+fu_util_is_url(const gchar *perhaps_url) G_GNUC_NON_NULL(1);
 gboolean
-fu_util_print_builder(FuConsole *console, JsonBuilder *builder, GError **error);
+fu_util_print_builder(FuConsole *console, JsonBuilder *builder, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 void
-fu_util_print_error_as_json(FuConsole *console, const GError *error);
+fu_util_print_error_as_json(FuConsole *console, const GError *error) G_GNUC_NON_NULL(1);
 gchar *
-fu_util_project_versions_to_string(GHashTable *metadata);
+fu_util_project_versions_to_string(GHashTable *metadata) G_GNUC_NON_NULL(1);
 gboolean
-fu_util_project_versions_as_json(FuConsole *console, GHashTable *metadata, GError **error);
+fu_util_project_versions_as_json(FuConsole *console, GHashTable *metadata, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 const gchar *
-fu_util_get_prgname(const gchar *argv0);
+fu_util_get_prgname(const gchar *argv0) G_GNUC_NON_NULL(1);

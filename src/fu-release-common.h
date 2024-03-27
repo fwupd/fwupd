@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <gio/gio.h>
+#include <fwupd.h>
 
 gchar *
-fu_release_uri_get_scheme(const gchar *uri);
+fu_release_uri_get_scheme(const gchar *uri) G_GNUC_NON_NULL(1);
