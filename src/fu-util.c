@@ -3483,8 +3483,6 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* activate anything with _NEEDS_ACTIVATION */
-	/* order by device priority */
-	g_ptr_array_sort(devices, fu_util_device_order_sort_cb);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *device = g_ptr_array_index(devices, i);
 		if (!fwupd_device_match_flags(device,
