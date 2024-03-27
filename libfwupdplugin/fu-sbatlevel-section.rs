@@ -1,5 +1,5 @@
 // Copyright (C) 2023 Canonical Ltd
-// SPDX-License-Identifier: LGPL-2.1+
+// SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(ParseStream, New)]
 struct FuStructSbatLevelSectionHeader {

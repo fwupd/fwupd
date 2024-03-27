@@ -2,7 +2,7 @@
  * Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2021 Victor Cheng <victor_cheng@usiglobal.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"

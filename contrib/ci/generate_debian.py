@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2017 Dell, Inc.
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 #
 import os
 import sys
@@ -54,7 +54,7 @@ def update_debian_copyright(directory):
         print(f"Missing file {copyright_in}")
         sys.exit(1)
 
-    # Assume all files are remaining LGPL-2.1+
+    # Assume all files are remaining LGPL-2.1-or-later
     copyrights = []
     for root, dirs, files in os.walk("."):
         for file in files:
@@ -86,7 +86,7 @@ def update_debian_copyright(directory):
             if line.startswith("%%%DYNAMIC%%%"):
                 wfd.write("Files: *\n")
                 wfd.write(f"Copyright: {copyrights}\n")
-                wfd.write("License: LGPL-2.1+\n")
+                wfd.write("License: LGPL-2.1-or-later\n")
                 wfd.write("\n")
             else:
                 wfd.write(line)

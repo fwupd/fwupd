@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2019 Mario Limonciello <mario.limonciello@dell.com>
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 import dbus
 import os.path

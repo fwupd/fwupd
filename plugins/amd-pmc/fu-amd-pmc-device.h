@@ -6,7 +6,7 @@
  * redistributing this file, you may do so under either license.
  * AMD Chooses the MIT license part of Dual MIT/LGPLv2 license agreement.
  *
- * SPDX-License-Identifier: LGPL-2.1+ OR MIT
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR MIT
  */
 
 #pragma once

@@ -3,7 +3,7 @@
  * Copyright (C) 2022 Google LLC
  * Written by Simon Glass <sjg@chromium.org>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"

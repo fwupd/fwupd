@@ -3,7 +3,7 @@
  * Copyright (C) 2018 Realtek Semiconductor Corporation
  * Copyright (C) 2018 Dell Inc.
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once

@@ -2,7 +2,7 @@
  * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2019 Aleksander Morgado <aleksander@aleksander.es>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #ifndef __FU_MM_DEVICE_H

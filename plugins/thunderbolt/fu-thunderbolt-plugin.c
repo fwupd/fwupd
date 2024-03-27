@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2017 Christian J. Kellner <christian@kellner.me>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"

@@ -10,9 +10,9 @@ License: CC0-1.0
 Files: debian/*
 Copyright: 2015 Daniel Jared Dominguez <Jared_Dominguez@Dell.com>
            2015 Mario Limonciello <mario.limonciello@dell.com>
-License: LGPL-2.1+
+License: LGPL-2.1-or-later
 
-License: LGPL-2.1+
+License: LGPL-2.1-or-later
  This package is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as published by
  the Free Software Foundation; either version 2.1 of the License, or

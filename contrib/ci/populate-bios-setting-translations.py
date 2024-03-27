@@ -8,7 +8,7 @@
 #
 # Copyright (C) 2022  Mario Limonciello <superm1@gmail.com>
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 import os
 import sys

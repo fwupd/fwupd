@@ -3,7 +3,7 @@
 # Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
 # Copyright (C) 2021 Mario Limonciello <superm1@gmail.com>
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 import glob
 import os
@@ -40,8 +40,8 @@ def test_files() -> int:
             print(f"{fn} does not specify a license")
             rc = 1
             continue
-        if "LGPL" not in lic:
-            print(f"{fn} does not contain LGPL ({lic})")
+        if "LGPL-2.1-or-later" not in lic:
+            print(f"{fn} does not contain LGPL-2.1-or-later ({lic})")
             rc = 1
             continue
     return rc

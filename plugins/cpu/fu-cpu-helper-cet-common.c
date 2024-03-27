@@ -2,7 +2,7 @@
  * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2020 H.J. Lu <hjl.tools@gmail.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
