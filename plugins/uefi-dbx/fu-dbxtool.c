@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2015 Peter Jones <pjones@redhat.com>
- * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
+ * Copyright 2015 Peter Jones <pjones@redhat.com>
+ * Copyright 2020 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

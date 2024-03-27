@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Richard Hughes <richard@hughsie.com>
+// Copyright 2024 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 enum FuCpuVendor {

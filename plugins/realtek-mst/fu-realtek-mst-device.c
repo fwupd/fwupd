@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Peter Marheine <pmarheine@chromium.org>
+ * Copyright 2021 Peter Marheine <pmarheine@chromium.org>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

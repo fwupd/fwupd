@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Jarvis Jiang <jarvis.w.jiang@gmail.com>
+ * Copyright 2021 Jarvis Jiang <jarvis.w.jiang@gmail.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

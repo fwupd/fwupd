@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Framework Computer Inc
+ * Copyright 2023 Framework Computer Inc
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Haowei Lo <haowei.lo@fingerprints.com>
+ * Copyright 2022 Haowei Lo <haowei.lo@fingerprints.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

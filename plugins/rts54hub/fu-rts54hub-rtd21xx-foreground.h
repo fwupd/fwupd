@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 Ricky Wu <ricky_wu@realtek.com> <spring1527@gmail.com>
- * Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
+ * Copyright 2021 Ricky Wu <ricky_wu@realtek.com> <spring1527@gmail.com>
+ * Copyright 2021 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

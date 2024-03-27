@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2020 Mario Limonciello <mario.limonciello@dell.com>
- * Copyright (C) 2022 Richard Hughes <richard@hughsie.com>
+ * Copyright 2020 Mario Limonciello <mario.limonciello@dell.com>
+ * Copyright 2022 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# Copyright (C) 2017 Dell, Inc.
+# Copyright 2017 Dell, Inc.
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
@@ -71,8 +71,8 @@ def update_debian_copyright(directory):
             except FileNotFoundError:
                 continue
             for line in lines:
-                if "Copyright (C) " in line:
-                    parts = line.split("Copyright (C)")[
+                if "Copyright " in line:
+                    parts = line.split("Copyright")[
                         1
                     ].strip()  # split out the copyright header
                     partition = parts.partition(" ")[2]  # remove the year string

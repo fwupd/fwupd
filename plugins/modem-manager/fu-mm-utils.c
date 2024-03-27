@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright 2019 Aleksander Morgado <aleksander@aleksander.es>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Dylan Van Assche <me@dylanvanassche.be>
+ * Copyright 2022 Dylan Van Assche <me@dylanvanassche.be>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

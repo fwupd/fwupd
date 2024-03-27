@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Intel
+ * Copyright 2022 Intel
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later OR Apache-2.0
  */

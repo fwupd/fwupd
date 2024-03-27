@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2022 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2022 Wistron <Felix_F_Chen@wistron.com>
+ * Copyright 2022 Richard Hughes <richard@hughsie.com>
+ * Copyright 2022 Wistron <Felix_F_Chen@wistron.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

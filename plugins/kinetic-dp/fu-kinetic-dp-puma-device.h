@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Hai Su <hsu@kinet-ic.com>
+ * Copyright 2022 Hai Su <hsu@kinet-ic.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
