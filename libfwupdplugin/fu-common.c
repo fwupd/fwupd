@@ -311,11 +311,6 @@ fu_error_convert(GError **perror)
 	if (error == NULL)
 		return;
 
-	/* convert GIOError and GFileError */
-	fwupd_error_convert(perror);
-	if (error->domain == FWUPD_ERROR)
-		return;
-
 	/* find match */
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		if (g_error_matches(error, map[i].domain, map[i].code)) {
@@ -324,6 +319,11 @@ fu_error_convert(GError **perror)
 			return;
 		}
 	}
+
+	/* convert GIOError and GFileError */
+	fwupd_error_convert(perror);
+	if (error->domain == FWUPD_ERROR)
+		return;
 
 	/* fallback */
 #ifndef SUPPORTED_BUILD
