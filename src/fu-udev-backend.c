@@ -22,11 +22,19 @@ struct _FuUdevBackend {
 	GHashTable *changed_idle_ids; /* sysfs:FuUdevBackendHelper */
 	GPtrArray *dpaux_devices;     /* of FuDpauxDevice */
 	guint dpaux_devices_rescan_id;
+	gboolean done_coldplug;
 };
 
 G_DEFINE_TYPE(FuUdevBackend, fu_udev_backend, FU_TYPE_BACKEND)
 
 #define FU_UDEV_BACKEND_DPAUX_RESCAN_DELAY 5 /* s */
+
+static void
+fu_udev_backend_to_string(FuBackend *backend, guint idt, GString *str)
+{
+	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
+	fu_string_append_kb(str, idt, "DoneColdplug", self->done_coldplug);
+}
 
 static void
 fu_udev_backend_rescan_dpaux_device(FuUdevBackend *self, FuDevice *dpaux_device)
@@ -128,8 +136,6 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 
 	/* DP AUX devices are *weird* and can only read the DPCD when a DRM device is attached */
 	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "drm_dp_aux_dev") == 0) {
-		g_autoptr(FuDeviceLocker) locker = NULL;
-		g_autoptr(GError) error_local = NULL;
 
 		/* add and rescan, regardless of if we can open it */
 		g_ptr_array_add(self->dpaux_devices, g_object_ref(device));
@@ -137,14 +143,19 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 
 		/* open -- this might seem redundant, but it means the device is added at daemon
 		 * coldplug rather than a few seconds later */
-		locker = fu_device_locker_new(device, &error_local);
-		if (locker == NULL) {
-			g_debug("failed to open device %s: %s",
-				fu_device_get_backend_id(FU_DEVICE(device)),
-				error_local->message);
-			return;
+		if (!self->done_coldplug) {
+			g_autoptr(FuDeviceLocker) locker = NULL;
+			g_autoptr(GError) error_local = NULL;
+
+			locker = fu_device_locker_new(device, &error_local);
+			if (locker == NULL) {
+				g_debug("failed to open device %s: %s",
+					fu_device_get_backend_id(FU_DEVICE(device)),
+					error_local->message);
+				return;
+			}
+			fu_backend_device_added(FU_BACKEND(self), FU_DEVICE(device));
 		}
-		fu_backend_device_added(FU_BACKEND(self), FU_DEVICE(device));
 		return;
 	}
 
@@ -307,6 +318,8 @@ fu_udev_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **erro
 		fu_progress_step_done(progress);
 	}
 
+	/* success */
+	self->done_coldplug = TRUE;
 	return TRUE;
 }
 
@@ -341,6 +354,7 @@ fu_udev_backend_class_init(FuUdevBackendClass *klass)
 	FuBackendClass *klass_backend = FU_BACKEND_CLASS(klass);
 	object_class->finalize = fu_udev_backend_finalize;
 	klass_backend->coldplug = fu_udev_backend_coldplug;
+	klass_backend->to_string = fu_udev_backend_to_string;
 }
 
 FuBackend *
