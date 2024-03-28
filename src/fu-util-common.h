@@ -81,7 +81,7 @@ fu_util_cmd_array_run(GPtrArray *array,
 		      FuUtilPrivate *priv,
 		      const gchar *command,
 		      gchar **values,
-		      GError **error) G_GNUC_NON_NULL(1, 2, 3);
+		      GError **error) G_GNUC_NON_NULL(1, 2);
 const gchar *
 fu_util_branch_for_display(const gchar *branch);
 const gchar *
