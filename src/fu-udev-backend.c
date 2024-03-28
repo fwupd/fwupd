@@ -81,7 +81,7 @@ fu_udev_backend_rescan_dpaux_devices(FuUdevBackend *self)
 }
 
 static void
-fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
+fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device, gboolean in_coldplug)
 {
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	GType gtype = FU_TYPE_UDEV_DEVICE;
@@ -128,8 +128,6 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 
 	/* DP AUX devices are *weird* and can only read the DPCD when a DRM device is attached */
 	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "drm_dp_aux_dev") == 0) {
-		g_autoptr(FuDeviceLocker) locker = NULL;
-		g_autoptr(GError) error_local = NULL;
 
 		/* add and rescan, regardless of if we can open it */
 		g_ptr_array_add(self->dpaux_devices, g_object_ref(device));
@@ -137,14 +135,19 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 
 		/* open -- this might seem redundant, but it means the device is added at daemon
 		 * coldplug rather than a few seconds later */
-		locker = fu_device_locker_new(device, &error_local);
-		if (locker == NULL) {
-			g_debug("failed to open device %s: %s",
-				fu_device_get_backend_id(FU_DEVICE(device)),
-				error_local->message);
-			return;
+		if (in_coldplug) {
+			g_autoptr(FuDeviceLocker) locker = NULL;
+			g_autoptr(GError) error_local = NULL;
+
+			locker = fu_device_locker_new(device, &error_local);
+			if (locker == NULL) {
+				g_debug("failed to open device %s: %s",
+					fu_device_get_backend_id(FU_DEVICE(device)),
+					error_local->message);
+				return;
+			}
+			fu_backend_device_added(FU_BACKEND(self), FU_DEVICE(device));
 		}
-		fu_backend_device_added(FU_BACKEND(self), FU_DEVICE(device));
 		return;
 	}
 
@@ -240,7 +243,7 @@ fu_udev_backend_uevent_cb(GUdevClient *gudev_client,
 			  FuUdevBackend *self)
 {
 	if (g_strcmp0(action, "add") == 0) {
-		fu_udev_backend_device_add(self, udev_device);
+		fu_udev_backend_device_add(self, udev_device, FALSE);
 		return;
 	}
 	if (g_strcmp0(action, "remove") == 0) {
@@ -270,7 +273,7 @@ fu_udev_backend_coldplug_subsystem(FuUdevBackend *self,
 		GUdevDevice *udev_device = l->data;
 		fu_progress_set_name(fu_progress_get_child(progress),
 				     g_udev_device_get_sysfs_path(udev_device));
-		fu_udev_backend_device_add(self, udev_device);
+		fu_udev_backend_device_add(self, udev_device, TRUE);
 		fu_progress_step_done(progress);
 	}
 }
