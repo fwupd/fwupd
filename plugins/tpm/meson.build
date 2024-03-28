@@ -7,6 +7,7 @@ if hsi and \
 cargs = ['-DG_LOG_DOMAIN="FuPluginTpm"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
+plugin_quirks += files('tpm.quirk')
 plugin_builtin_tpm = static_library('fu_plugin_tpm',
   rustgen.process('fu-tpm.rs'),
   sources: [
