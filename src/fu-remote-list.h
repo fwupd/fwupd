@@ -45,6 +45,8 @@ GPtrArray *
 fu_remote_list_get_all(FuRemoteList *self);
 FwupdRemote *
 fu_remote_list_get_by_id(FuRemoteList *self, const gchar *remote_id);
+void
+fu_remote_list_set_lvfs_metadata_format(FuRemoteList *self, const gchar *lvfs_metadata_format);
 
 /* for the self tests */
 void
