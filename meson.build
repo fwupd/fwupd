@@ -222,6 +222,18 @@ if hsi
 endif
 libxmlb = dependency('xmlb', version: '>= 0.3.6', fallback: ['libxmlb', 'libxmlb_dep'])
 gusb = dependency('gusb', version: '>= 0.3.8', fallback: ['gusb', 'gusb_dep'], required: get_option('gusb'))
+if libxmlb.version().version_compare('>= 0.3.16')
+  if libxmlb.get_variable('zstd') == 'true'
+    lvfs_metadata_format = 'zstd'
+  elif libxmlb.get_variable('lzma') == 'true'
+    lvfs_metadata_format = 'xz'
+  else
+    lvfs_metadata_format = 'gz'
+  endif
+else
+  lvfs_metadata_format = 'xz'
+endif
+conf.set_quoted('FU_LVFS_METADATA_FORMAT', lvfs_metadata_format)
 if gusb.found()
   conf.set('HAVE_GUSB', '1')
 endif
@@ -692,6 +704,7 @@ if build_daemon
     'gusb': gusb,
     'gudev': gudev,
     'hsi': hsi,
+    'lvfs_metadata_format': lvfs_metadata_format,
     'libarchive': libarchive.found(),
     'offline': offline.allowed(),
     'passim': passim,

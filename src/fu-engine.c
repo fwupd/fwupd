@@ -8187,6 +8187,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 			remote_list_flags |= FU_REMOTE_LIST_LOAD_FLAG_READONLY_FS;
 		if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE)
 			remote_list_flags |= FU_REMOTE_LIST_LOAD_FLAG_NO_CACHE;
+		fu_remote_list_set_lvfs_metadata_format(self->remote_list, FU_LVFS_METADATA_FORMAT);
 		if (!fu_remote_list_load(self->remote_list, remote_list_flags, error)) {
 			g_prefix_error(error, "Failed to load remotes: ");
 			return FALSE;
