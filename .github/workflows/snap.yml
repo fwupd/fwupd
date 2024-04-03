@@ -6,6 +6,9 @@ on:
         required: true
         type: boolean
 
+permissions:
+  contents: read
+
 jobs:
   build-snap:
     runs-on: ubuntu-latest
