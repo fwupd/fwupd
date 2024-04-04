@@ -169,6 +169,9 @@ fu_synaptics_rmi_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	tmp = xb_node_query_text_as_uint(n, "board_id", NULL);
 	if (tmp != G_MAXUINT64)
 		self->board_id = tmp;
+	tmp = xb_node_query_text_as_uint(n, "family", NULL);
+	if (tmp != G_MAXUINT64)
+		self->family = tmp;
 
 	/* success */
 	return TRUE;
