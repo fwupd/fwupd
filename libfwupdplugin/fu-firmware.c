@@ -2182,7 +2182,21 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 	fu_xmlb_builder_insert_kv(bn, "filename", priv->filename);
 	if (priv->stream != NULL) {
 		g_autofree gchar *dataszstr = g_strdup_printf("0x%x", (guint)priv->streamsz);
-		xb_builder_node_insert_text(bn, "data", "[GInputStream]", "size", dataszstr, NULL);
+		g_autofree gchar *datastr = NULL;
+		if (priv->streamsz > 0x100) {
+			datastr = g_strdup("[GInputStream]");
+		} else {
+			g_autoptr(GByteArray) buf = fu_input_stream_read_byte_array(priv->stream,
+										    0x0,
+										    priv->streamsz,
+										    NULL);
+			if (buf != NULL) {
+				datastr = g_base64_encode(buf->data, buf->len);
+			} else {
+				datastr = g_strdup("[??GInputStream??]");
+			}
+		}
+		xb_builder_node_insert_text(bn, "data", datastr, "size", dataszstr, NULL);
 	} else if (priv->bytes != NULL) {
 		gsize bufsz = 0;
 		const guint8 *buf = g_bytes_get_data(priv->bytes, &bufsz);
