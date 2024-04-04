@@ -225,7 +225,7 @@ endif
 libxmlb = dependency('xmlb', version: '>= 0.3.6', fallback: ['libxmlb', 'libxmlb_dep'])
 if libxmlb.version().version_compare('>= 0.3.16')
   if libxmlb.get_variable('zstd') == 'true'
-    lvfs_metadata_format = 'zstd'
+    lvfs_metadata_format = 'zst'
   elif libxmlb.get_variable('lzma') == 'true'
     lvfs_metadata_format = 'xz'
   else
