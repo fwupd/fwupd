@@ -101,7 +101,7 @@ fu_synaptics_cape_hid_firmware_write(FuFirmware *firmware, GError **error)
 	if (payload == NULL)
 		return NULL;
 	fu_byte_array_append_bytes(buf, payload);
-	fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_32, 0xFF);
+	fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_4, 0xFF);
 
 	return g_steal_pointer(&buf);
 }
