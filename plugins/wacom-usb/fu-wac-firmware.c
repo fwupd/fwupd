@@ -369,6 +369,7 @@ static void
 fu_wac_firmware_init(FuWacFirmware *self)
 {
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
+	g_type_ensure(FU_TYPE_SREC_FIRMWARE);
 }
 
 static void
