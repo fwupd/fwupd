@@ -1073,7 +1073,7 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_true(ret);
 
 	/* a wrong/bad firmware update image */
-	bad_path = g_test_build_filename(G_TEST_DIST, "tests", "colorhug.bin", NULL);
+	bad_path = g_test_build_filename(G_TEST_DIST, "tests", "colorhug.txt", NULL);
 	bad_file = g_mapped_file_new(bad_path, FALSE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(bad_file);
@@ -1084,7 +1084,7 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	/* parse; should fail, bad image */
 	ret = fu_firmware_parse(firmware_bad, bad_data, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_false(ret);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
 	g_debug("expected image validation error [ctl]: %s", error->message);
 	g_clear_error(&error);
 

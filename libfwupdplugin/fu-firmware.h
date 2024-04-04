@@ -346,6 +346,10 @@ fu_firmware_build_from_xml(FuFirmware *self,
 			   const gchar *xml,
 			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
+fu_firmware_build_from_filename(FuFirmware *self,
+				const gchar *filename,
+				GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+gboolean
 fu_firmware_parse(FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
