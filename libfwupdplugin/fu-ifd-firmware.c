@@ -10,6 +10,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-efi-volume.h"
 #include "fu-ifd-bios.h"
 #include "fu-ifd-common.h"
 #include "fu-ifd-firmware.h"
@@ -424,6 +425,9 @@ fu_ifd_firmware_init(FuIfdFirmware *self)
 	priv->flash_master[3] = 0x00800900;
 	priv->flash_ich_strap_base_addr = 0x100;
 	priv->flash_mch_strap_base_addr = 0x300;
+	g_type_ensure(FU_TYPE_IFD_BIOS);
+	g_type_ensure(FU_TYPE_IFD_IMAGE);
+	g_type_ensure(FU_TYPE_EFI_VOLUME);
 }
 
 static void
