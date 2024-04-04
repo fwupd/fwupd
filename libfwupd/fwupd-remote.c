@@ -831,7 +831,10 @@ fwupd_remote_setup(FwupdRemote *self, GError **error)
 					    "metadata URI not set");
 			return FALSE;
 		}
-		if (g_str_has_suffix(priv->metadata_uri, ".xml.xz")) {
+		if (g_str_has_suffix(priv->metadata_uri, ".xml.zst")) {
+			filename_cache =
+			    g_build_filename(priv->remotes_dir, priv->id, "metadata.xml.zst", NULL);
+		} else if (g_str_has_suffix(priv->metadata_uri, ".xml.xz")) {
 			filename_cache =
 			    g_build_filename(priv->remotes_dir, priv->id, "metadata.xml.xz", NULL);
 		} else {
