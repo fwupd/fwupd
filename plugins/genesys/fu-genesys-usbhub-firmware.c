@@ -370,21 +370,21 @@ fu_genesys_usbhub_firmware_write(FuFirmware *firmware, GError **error)
 			return NULL;
 	}
 
+	/* version */
+	if (!fu_memwrite_uint16_safe(buf->data,
+				     buf->len,
+				     GENESYS_USBHUB_VERSION_OFFSET,
+				     0x1234, // TODO: parse from firmware version string
+				     G_BIG_ENDIAN,
+				     error))
+		return NULL;
+
 	/* checksum */
 	checksum = fu_sum16(buf->data, code_size - sizeof(checksum));
 	if (!fu_memwrite_uint16_safe(buf->data,
 				     buf->len,
 				     code_size - sizeof(guint16),
 				     checksum,
-				     G_BIG_ENDIAN,
-				     error))
-		return NULL;
-
-	/* version */
-	if (!fu_memwrite_uint16_safe(buf->data,
-				     buf->len,
-				     GENESYS_USBHUB_VERSION_OFFSET,
-				     0x1234, // TODO: parse from firmware version string
 				     G_BIG_ENDIAN,
 				     error))
 		return NULL;
