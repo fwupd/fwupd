@@ -498,7 +498,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_REDFISH_VERBOSE", "1", TRUE);
 
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	smbios_data_fn = g_build_filename(testdatadir, "redfish-smbios.bin", NULL);
+	smbios_data_fn = g_build_filename(testdatadir, "redfish-smbios.builder.xml", NULL);
 	(void)g_setenv("FWUPD_REDFISH_SMBIOS_DATA", smbios_data_fn, TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
