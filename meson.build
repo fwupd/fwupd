@@ -224,7 +224,7 @@ libxmlb = dependency('xmlb', version: '>= 0.3.6', fallback: ['libxmlb', 'libxmlb
 gusb = dependency('gusb', version: '>= 0.3.8', fallback: ['gusb', 'gusb_dep'], required: get_option('gusb'))
 if libxmlb.version().version_compare('>= 0.3.16')
   if libxmlb.get_variable('zstd') == 'true'
-    lvfs_metadata_format = 'zstd'
+    lvfs_metadata_format = 'zst'
   elif libxmlb.get_variable('lzma') == 'true'
     lvfs_metadata_format = 'xz'
   else

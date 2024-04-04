@@ -314,7 +314,7 @@ fu_remote_list_add_for_file(FuRemoteList *self,
 			    g_strdup_printf(".%s", self->lvfs_metadata_format);
 			g_string_replace(str, ".gz", metadata_ext, 0);
 			g_string_replace(str, ".xz", metadata_ext, 0);
-			g_string_replace(str, ".zstd", metadata_ext, 0);
+			g_string_replace(str, ".zst", metadata_ext, 0);
 			g_info("auto-fixing remote %s MetadataURI from %s to %s",
 			       fwupd_remote_get_id(remote),
 			       metadata_url,

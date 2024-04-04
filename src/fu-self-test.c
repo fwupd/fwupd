@@ -5852,24 +5852,24 @@ fu_remote_list_repair_func(void)
 	g_autoptr(FuRemoteList) remote_list = fu_remote_list_new();
 	g_autoptr(GError) error = NULL;
 
-	fu_remote_list_set_lvfs_metadata_format(remote_list, "zstd");
+	fu_remote_list_set_lvfs_metadata_format(remote_list, "zst");
 	ret = fu_remote_list_load(remote_list, FU_REMOTE_LIST_LOAD_FLAG_FIX_METADATA_URI, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* check .gz converted to .zstd */
+	/* check .gz converted to .zst */
 	remote = fu_remote_list_get_by_id(remote_list, "legacy-lvfs");
 	g_assert_nonnull(remote);
 	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
 			==,
-			"http://localhost/stable.xml.zstd");
+			"http://localhost/stable.xml.zst");
 
-	/* check .xz converted to .zstd */
+	/* check .xz converted to .zst */
 	remote = fu_remote_list_get_by_id(remote_list, "legacy-lvfs-xz");
 	g_assert_nonnull(remote);
 	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
 			==,
-			"http://localhost/stable.xml.zstd");
+			"http://localhost/stable.xml.zst");
 
 	/* check non-LVFS remote NOT .gz converted to .xz */
 	remote = fu_remote_list_get_by_id(remote_list, "legacy");
