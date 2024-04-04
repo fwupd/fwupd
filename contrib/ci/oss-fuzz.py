@@ -353,6 +353,7 @@ def _build(bld: Builder) -> None:
             "FWUPD_LIBDIR_PKG": "/tmp",
             "FWUPD_SYSCONFDIR": "/tmp",
             "FWUPD_LIBEXECDIR": "/tmp",
+            "HAVE_CBOR": None,
             "HAVE_REALPATH": None,
             "PACKAGE_NAME": "fwupd",
             "PACKAGE_VERSION": "0.0.0",
