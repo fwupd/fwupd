@@ -5254,7 +5254,8 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 		}
 		update_request_id = fu_release_get_update_request_id(release);
 		if (fu_device_get_update_request_id(device) == NULL && update_request_id != NULL) {
-			fu_device_add_request_flag(device, FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
+			fu_device_add_request_flag(device,
+						   FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 			fu_device_set_update_request_id(device, update_request_id);
 		}
 
