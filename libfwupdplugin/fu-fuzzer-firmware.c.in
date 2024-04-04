@@ -33,3 +33,13 @@ LLVMFuzzerTestOneInput(const guint8 *data, gsize size)
 	}
 	return 0;
 }
+
+GBytes *
+BuildOneOutput(const gchar *filename, GError **error)
+{
+	g_autoptr(FuFirmware) firmware = FU_FIRMWARE(@FIRMWARENEW@);
+
+	if (!fu_firmware_build_from_filename(firmware, filename, error))
+		return NULL;
+	return fu_firmware_write(firmware, error);
+}

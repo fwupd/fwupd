@@ -39,7 +39,7 @@ plugin_builtin_redfish = static_library('fu_plugin_redfish',
 plugin_builtins += plugin_builtin_redfish
 
 if get_option('tests')
-  install_data(['tests/redfish-smbios.bin'],
+  install_data(['tests/redfish-smbios.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'))
   install_data(['tests/redfish.conf'],
     install_dir: join_paths(installed_test_datadir, 'tests'),

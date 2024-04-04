@@ -1,0 +1,7 @@
+<firmware gtype="FuDfuFirmware">
+  <data>WFhYWFhYWFhYWFhY</data> <!-- XXXXXXXXXXXX -->
+  <vendor>0x1234</vendor>
+  <product>0x4321</product>
+  <release>0xDEAD</release>
+  <dfu_version>0x100</dfu_version>
+</firmware>

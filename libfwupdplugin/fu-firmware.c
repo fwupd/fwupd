@@ -1404,6 +1404,32 @@ fu_firmware_build_from_xml(FuFirmware *self, const gchar *xml, GError **error)
 }
 
 /**
+ * fu_firmware_build_from_filename:
+ * @self: a #FuFirmware
+ * @filename: filename of XML builder
+ * @error: (nullable): optional return location for an error
+ *
+ * Builds a firmware from an XML manifest.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_firmware_build_from_filename(FuFirmware *self, const gchar *filename, GError **error)
+{
+	g_autofree gchar *xml = NULL;
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
+	g_return_val_if_fail(filename != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!g_file_get_contents(filename, &xml, NULL, error))
+		return FALSE;
+	return fu_firmware_build_from_xml(self, xml, error);
+}
+
+/**
  * fu_firmware_parse_file:
  * @self: a #FuFirmware
  * @file: a file
