@@ -4311,7 +4311,7 @@ fu_firmware_builder_round_trip_func(void)
 	     "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
 	    {FU_TYPE_INTEL_THUNDERBOLT_NVM,
 	     "intel-thunderbolt.builder.xml",
-	     "e858000646fecb5223b41df57647c005b495749b"},
+	     "b3a73baf05078dfdd833b407a0a6afb239ec2f23"},
 #ifdef HAVE_CBOR
 	    {FU_TYPE_USWID_FIRMWARE,
 	     "uswid.builder.xml",

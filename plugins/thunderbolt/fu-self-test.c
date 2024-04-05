@@ -321,18 +321,25 @@ mock_tree_node_have_fu_device(const MockTree *node, gpointer data)
 static void
 write_controller_fw(const gchar *nvm)
 {
+	gboolean ret;
 	g_autoptr(GFile) nvm_device = NULL;
 	g_autoptr(GFile) nvmem = NULL;
 	g_autofree gchar *fw_path = NULL;
-	g_autoptr(GFile) fw_file = NULL;
+	g_autoptr(GBytes) fw_blob = NULL;
 	g_autoptr(GInputStream) is = NULL;
 	g_autoptr(GOutputStream) os = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(FuFirmware) firmware_ctl = fu_intel_thunderbolt_nvm_new();
 	gssize n;
 
-	fw_path = g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw-controller.bin", NULL);
-	fw_file = g_file_new_for_path(fw_path);
-	g_assert_nonnull(fw_file);
+	fw_path =
+	    g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw-controller.builder.xml", NULL);
+	ret = fu_firmware_build_from_filename(firmware_ctl, fw_path, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fw_blob = fu_firmware_write(firmware_ctl, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(fw_blob);
 
 	nvm_device = g_file_new_for_path(nvm);
 	g_assert_nonnull(nvm_device);
@@ -344,9 +351,7 @@ write_controller_fw(const gchar *nvm)
 	g_assert_no_error(error);
 	g_assert_nonnull(os);
 
-	is = (GInputStream *)g_file_read(fw_file, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(is);
+	is = g_memory_input_stream_new_from_bytes(fw_blob);
 
 	n = g_output_stream_splice(os, is, G_OUTPUT_STREAM_SPLICE_NONE, NULL, &error);
 	g_assert_no_error(error);
@@ -849,7 +854,6 @@ typedef struct ThunderboltTest {
 	MockTree *tree;
 
 	/* if TestParam::firmware_file is nonnull */
-	GMappedFile *fw_file;
 	GBytes *fw_data;
 	GInputStream *fw_stream;
 
@@ -948,13 +952,16 @@ test_set_up(ThunderboltTest *tt, gconstpointer params)
 
 	if (flags & TEST_PREPARE_FIRMWARE) {
 		g_autofree gchar *fw_path = NULL;
+		g_autoptr(GBytes) fw_blob = NULL;
+		g_autoptr(FuFirmware) firmware = fu_intel_thunderbolt_firmware_new();
 
-		fw_path = g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw.bin", NULL);
-		tt->fw_file = g_mapped_file_new(fw_path, FALSE, &error);
+		fw_path =
+		    g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw.builder.xml", NULL);
+		ret = fu_firmware_build_from_filename(firmware, fw_path, &error);
 		g_assert_no_error(error);
-		g_assert_nonnull(tt->fw_file);
-
-		tt->fw_data = g_mapped_file_get_bytes(tt->fw_file);
+		g_assert_true(ret);
+		tt->fw_data = fu_firmware_write(firmware, &error);
+		g_assert_no_error(error);
 		g_assert_nonnull(tt->fw_data);
 		tt->fw_stream = g_memory_input_stream_new_from_bytes(tt->fw_data);
 		g_assert_nonnull(tt->fw_stream);
@@ -976,9 +983,6 @@ test_tear_down(ThunderboltTest *tt, gconstpointer user_data)
 		g_bytes_unref(tt->fw_data);
 	if (tt->fw_stream)
 		g_object_unref(tt->fw_stream);
-
-	if (tt->fw_file)
-		g_mapped_file_unref(tt->fw_file);
 }
 
 static gboolean
@@ -1033,11 +1037,7 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	g_autofree gchar *ctl_path = NULL;
 	g_autofree gchar *fwi_path = NULL;
 	g_autofree gchar *bad_path = NULL;
-	g_autoptr(GMappedFile) fwi_file = NULL;
-	g_autoptr(GMappedFile) ctl_file = NULL;
 	g_autoptr(GMappedFile) bad_file = NULL;
-	g_autoptr(GBytes) fwi_data = NULL;
-	g_autoptr(GBytes) ctl_data = NULL;
 	g_autoptr(GBytes) bad_data = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuFirmware) firmware_fwi = fu_intel_thunderbolt_firmware_new();
@@ -1045,30 +1045,15 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	g_autoptr(FuFirmware) firmware_bad = fu_intel_thunderbolt_nvm_new();
 
 	/* image as if read from the controller (i.e. no headers) */
-	ctl_path = g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw-controller.bin", NULL);
-	ctl_file = g_mapped_file_new(ctl_path, FALSE, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(ctl_file);
-
-	ctl_data = g_mapped_file_get_bytes(ctl_file);
-	g_assert_nonnull(ctl_data);
-
-	/* parse controller image */
-	ret = fu_firmware_parse(firmware_ctl, ctl_data, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
+	ctl_path =
+	    g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw-controller.builder.xml", NULL);
+	ret = fu_firmware_build_from_filename(firmware_ctl, ctl_path, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* valid firmware update image */
-	fwi_path = g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw.bin", NULL);
-	fwi_file = g_mapped_file_new(fwi_path, FALSE, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(fwi_file);
-
-	fwi_data = g_mapped_file_get_bytes(fwi_file);
-	g_assert_nonnull(fwi_data);
-
-	/* parse */
-	ret = fu_firmware_parse(firmware_fwi, fwi_data, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
+	fwi_path = g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw.builder.xml", NULL);
+	ret = fu_firmware_build_from_filename(firmware_fwi, fwi_path, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
