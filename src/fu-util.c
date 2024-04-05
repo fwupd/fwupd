@@ -1705,6 +1705,20 @@ fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 				continue;
 			}
 		}
+
+		/* needs an extra action */
+		if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+			g_autofree gchar *cmd = g_strdup_printf("%s activate", g_get_prgname());
+			fu_console_print(
+			    priv->console,
+			    /* TRANSLATORS: %1 is a device name, e.g. "ThinkPad Universal
+			     * ThunderBolt 4 Dock" and %2 is "fwupdmgr activate" */
+			    _("%s is pending activation; use %s to complete the update."),
+			    fwupd_device_get_name(dev),
+			    cmd);
+			continue;
+		}
+
 		/* only send success and failure */
 		if (fwupd_device_get_update_state(dev) != FWUPD_UPDATE_STATE_FAILED &&
 		    fwupd_device_get_update_state(dev) != FWUPD_UPDATE_STATE_SUCCESS) {
