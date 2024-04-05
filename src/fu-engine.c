@@ -120,8 +120,8 @@ struct _FuEngine {
 	FuIdle *idle;
 	XbSilo *silo;
 	XbQuery *query_component_by_guid;
-	XbQuery *query_container_checksum1;
-	XbQuery *query_container_checksum2;
+	XbQuery *query_container_checksum1; /* container checksum -> release */
+	XbQuery *query_container_checksum2; /* artifact checksum -> release */
 	XbQuery *query_tag_by_guid_version;
 	guint coldplug_id;
 	FuPluginList *plugin_list;
@@ -642,30 +642,30 @@ fu_engine_load_release(FuEngine *self,
 	return TRUE;
 }
 
-/* finds the remote-id for the first firmware in the silo that matches this
- * container checksum */
+/* finds the release for the first firmware in the silo that matches this
+ * container or artifact checksum */
 static XbNode *
-fu_engine_get_component_for_checksum(FuEngine *self, const gchar *csum)
+fu_engine_get_release_for_checksum(FuEngine *self, const gchar *csum)
 {
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, csum, NULL);
 	if (self->query_container_checksum1 != NULL) {
-		g_autoptr(XbNode) component =
+		g_autoptr(XbNode) rel =
 		    xb_silo_query_first_with_context(self->silo,
 						     self->query_container_checksum1,
 						     &context,
 						     NULL);
-		if (component != NULL)
-			return g_steal_pointer(&component);
+		if (rel != NULL)
+			return g_steal_pointer(&rel);
 	}
 	if (self->query_container_checksum2 != NULL) {
-		g_autoptr(XbNode) component =
+		g_autoptr(XbNode) rel =
 		    xb_silo_query_first_with_context(self->silo,
 						     self->query_container_checksum2,
 						     &context,
 						     NULL);
-		if (component != NULL)
-			return g_steal_pointer(&component);
+		if (rel != NULL)
+			return g_steal_pointer(&rel);
 	}
 
 	/* failed */
@@ -683,14 +683,14 @@ fu_engine_get_remote_id_for_stream(FuEngine *self, GInputStream *stream)
 
 	for (guint i = 0; checksum_types[i] != 0; i++) {
 		g_autofree gchar *csum = NULL;
-		g_autoptr(XbNode) component = NULL;
+		g_autoptr(XbNode) rel = NULL;
 		csum = fu_input_stream_compute_checksum(stream, checksum_types[i], NULL);
 		if (csum != NULL)
-			component = fu_engine_get_component_for_checksum(self, csum);
-		if (component != NULL) {
+			rel = fu_engine_get_release_for_checksum(self, csum);
+		if (rel != NULL) {
 			const gchar *remote_id =
-			    xb_node_query_text(component,
-					       "../custom/value[@key='fwupd::RemoteId']",
+			    xb_node_query_text(rel,
+					       "../../../custom/value[@key='fwupd::RemoteId']",
 					       NULL);
 			if (remote_id != NULL)
 				return g_strdup(remote_id);
@@ -3698,7 +3698,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 	self->query_container_checksum1 =
 	    xb_query_new_full(self->silo,
 			      "components/component[@type='firmware']/releases/release/"
-			      "checksum[@target='container'][text()=?]/../../..",
+			      "checksum[@target='container'][text()=?]/..",
 			      XB_QUERY_FLAG_OPTIMIZE,
 			      &error_container_checksum1);
 	if (self->query_container_checksum1 == NULL)
@@ -3706,7 +3706,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 	self->query_container_checksum2 =
 	    xb_query_new_full(self->silo,
 			      "components/component[@type='firmware']/releases/release/"
-			      "artifacts/artifact[@type='binary']/checksum[text()=?]/../../"
+			      "artifacts/artifact[@type='binary']/checksum[text()=?]/"
 			      "../../..",
 			      XB_QUERY_FLAG_OPTIMIZE,
 			      &error_container_checksum2);
@@ -4676,7 +4676,7 @@ fu_engine_get_details(FuEngine *self,
 	g_autoptr(GPtrArray) details = NULL;
 	g_autoptr(GPtrArray) checksums = g_ptr_array_new_with_free_func(g_free);
 	g_autoptr(FuCabinet) cabinet = NULL;
-	g_autoptr(XbNode) component_by_csum = NULL;
+	g_autoptr(XbNode) rel_by_csum = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
@@ -4703,8 +4703,8 @@ fu_engine_get_details(FuEngine *self,
 	/* does this exist in any enabled remote */
 	for (guint i = 0; i < checksums->len; i++) {
 		const gchar *csum = g_ptr_array_index(checksums, i);
-		component_by_csum = fu_engine_get_component_for_checksum(self, csum);
-		if (component_by_csum != NULL)
+		rel_by_csum = fu_engine_get_release_for_checksum(self, csum);
+		if (rel_by_csum != NULL)
 			break;
 	}
 
@@ -4720,10 +4720,10 @@ fu_engine_get_details(FuEngine *self,
 			return NULL;
 		fu_device_add_release(dev, FWUPD_RELEASE(rel));
 
-		if (component_by_csum != NULL) {
+		if (rel_by_csum != NULL) {
 			const gchar *remote_id =
-			    xb_node_query_text(component_by_csum,
-					       "../custom/value[@key='fwupd::RemoteId']",
+			    xb_node_query_text(rel_by_csum,
+					       "../../../custom/value[@key='fwupd::RemoteId']",
 					       NULL);
 			if (remote_id != NULL)
 				fu_release_set_remote_id(rel, remote_id);
@@ -4929,27 +4929,34 @@ fu_engine_get_history_set_hsi_attrs(FuEngine *self, FuDevice *device)
 static void
 fu_engine_fixup_history_device(FuEngine *self, FuDevice *device)
 {
-	FwupdRelease *rel;
+	FwupdRelease *release;
 	GPtrArray *csums;
 
 	/* get the checksums */
-	rel = fu_device_get_release_default(device);
-	if (rel == NULL) {
+	release = fu_device_get_release_default(device);
+	if (release == NULL) {
 		g_warning("no checksums from release history");
 		return;
 	}
 
 	/* find the checksum that matches */
-	csums = fwupd_release_get_checksums(rel);
+	csums = fwupd_release_get_checksums(release);
 	for (guint j = 0; j < csums->len; j++) {
 		const gchar *csum = g_ptr_array_index(csums, j);
-		g_autoptr(XbNode) component = fu_engine_get_component_for_checksum(self, csum);
-		if (component != NULL) {
+		g_autoptr(XbNode) rel = fu_engine_get_release_for_checksum(self, csum);
+		if (rel != NULL) {
 			g_autoptr(GError) error_local = NULL;
-			if (!fu_release_load(FU_RELEASE(rel),
+			g_autoptr(XbNode) component = NULL;
+
+			component = xb_node_query_first(rel, "../..", &error_local);
+			if (component == NULL) {
+				g_warning("failed to load component: %s", error_local->message);
+				continue;
+			}
+			if (!fu_release_load(FU_RELEASE(release),
 					     NULL,
 					     component,
-					     NULL,
+					     rel,
 					     FWUPD_INSTALL_FLAG_NONE,
 					     &error_local)) {
 				g_warning("failed to load release: %s", error_local->message);
