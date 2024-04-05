@@ -20,9 +20,6 @@
 #ifdef HAVE_SYSTEMD
 #include <systemd/sd-daemon.h>
 #endif
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 
 #include "fu-daemon.h"
 #include "fu-debug.h"
@@ -207,11 +204,6 @@ main(int argc, char *argv[])
 		g_idle_add(fu_main_timed_exit_cb, daemon);
 	else if (timed_exit)
 		g_timeout_add_seconds(5, fu_main_timed_exit_cb, daemon);
-
-#ifdef HAVE_MALLOC_TRIM
-	/* drop heap except one page */
-	malloc_trim(4096);
-#endif
 
 	/* wait */
 	g_message("Daemon ready for requests (locale %s)", g_getenv("LANG"));
