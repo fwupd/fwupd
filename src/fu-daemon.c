@@ -39,6 +39,9 @@
 #ifdef HAVE_GIO_UNIX
 #include "fu-unix-seekable-input-stream.h"
 #endif
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 
 static void
 fu_daemon_finalize(GObject *obj);
@@ -57,6 +60,7 @@ struct _FuDaemon {
 	guint owner_id;
 	guint process_quit_id;
 	FuEngine *engine;
+	guint housekeeping_id;
 	gboolean update_in_progress;
 	gboolean pending_stop;
 	FuDaemonMachineKind machine_kind;
@@ -65,10 +69,40 @@ struct _FuDaemon {
 
 G_DEFINE_TYPE(FuDaemon, fu_daemon, G_TYPE_OBJECT)
 
+#define FU_DAEMON_HOUSEKEEPING_DELAY 10 /* seconds */
+
+static gboolean
+fu_daemon_schedule_housekeeping_cb(gpointer user_data)
+{
+	FuDaemon *self = FU_DAEMON(user_data);
+
+#ifdef HAVE_MALLOC_TRIM
+	/* drop heap except one page */
+	malloc_trim(0);
+#endif
+
+	/* success */
+	self->housekeeping_id = 0;
+	return G_SOURCE_REMOVE;
+}
+
+static void
+fu_daemon_schedule_housekeeping(FuDaemon *self)
+{
+	if (self->update_in_progress)
+		return;
+	if (self->housekeeping_id != 0)
+		g_source_remove(self->housekeeping_id);
+	self->housekeeping_id = g_timeout_add_seconds(FU_DAEMON_HOUSEKEEPING_DELAY,
+						      fu_daemon_schedule_housekeeping_cb,
+						      self);
+}
+
 void
 fu_daemon_start(FuDaemon *self)
 {
 	g_return_if_fail(FU_IS_DAEMON(self));
+	fu_daemon_schedule_housekeeping(self);
 	g_main_loop_run(self->loop);
 }
 
@@ -96,6 +130,7 @@ fu_daemon_engine_changed_cb(FuEngine *engine, FuDaemon *self)
 				      "Changed",
 				      NULL,
 				      NULL);
+	fu_daemon_schedule_housekeeping(self);
 }
 
 static void
@@ -114,6 +149,7 @@ fu_daemon_engine_device_added_cb(FuEngine *engine, FuDevice *device, FuDaemon *s
 				      "DeviceAdded",
 				      g_variant_new_tuple(&val, 1),
 				      NULL);
+	fu_daemon_schedule_housekeeping(self);
 }
 
 static void
@@ -132,6 +168,7 @@ fu_daemon_engine_device_removed_cb(FuEngine *engine, FuDevice *device, FuDaemon 
 				      "DeviceRemoved",
 				      g_variant_new_tuple(&val, 1),
 				      NULL);
+	fu_daemon_schedule_housekeeping(self);
 }
 
 static void
@@ -150,6 +187,7 @@ fu_daemon_engine_device_changed_cb(FuEngine *engine, FuDevice *device, FuDaemon 
 				      "DeviceChanged",
 				      g_variant_new_tuple(&val, 1),
 				      NULL);
+	fu_daemon_schedule_housekeeping(self);
 }
 
 static void
@@ -2517,6 +2555,8 @@ fu_daemon_finalize(GObject *obj)
 		g_object_unref(self->client_list);
 	if (self->process_quit_id != 0)
 		g_source_remove(self->process_quit_id);
+	if (self->housekeeping_id != 0)
+		g_source_remove(self->housekeeping_id);
 	if (self->loop != NULL)
 		g_main_loop_unref(self->loop);
 	if (self->owner_id > 0)
