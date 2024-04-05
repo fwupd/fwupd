@@ -38,6 +38,38 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.16" date="2024-04-05">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Prefer zstd over xz for metadata</li>
+          <li>Relicense a few remaining plugin files to LGPL-2.1+</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Correctly record UEFI success if adding ESRT nodes</li>
+          <li>Defer the DP Aux MST scanning on hotplug to workaround a kernel bug</li>
+          <li>Do not do the post-update version check if the device needs-reboot</li>
+          <li>Fix a fastboot warning when loading device</li>
+          <li>Fix a possible warning in fwupdmgr when excluding releases</li>
+          <li>Fix a qsi-dock warning when writing chunks</li>
+          <li>Ignore attribute-changed to work around a regression in macOS</li>
+          <li>Ignore ZFS zvols when finding the default ESP</li>
+          <li>Mark Pluton TPMs as part of the main CPU</li>
+          <li>Put the fwupd-efi verbose debugging in the journal</li>
+          <li>Recognize zfsbootmenu in ESP detection heuristic</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Acer T34 and U33 docks</li>
+          <li>Qualcomm Series 5 Gen 1 and Gen 2 and Series 3 Gen 1 and Gen 2 devices</li>
+          <li>Several Puya SPI chips</li>
+          <li>VIA VL822 C0</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.15" date="2024-03-11">
       <description>
         <p>
