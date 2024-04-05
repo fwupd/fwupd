@@ -38,6 +38,7 @@ struct _FuRemoteList {
 	gboolean testing_remote;
 	gboolean fix_metadata_uri;
 	XbSilo *silo;
+	gchar *lvfs_metadata_format;
 };
 
 G_DEFINE_TYPE(FuRemoteList, fu_remote_list, G_TYPE_OBJECT)
@@ -54,6 +55,17 @@ fu_remote_list_emit_added(FuRemoteList *self, FwupdRemote *remote)
 {
 	g_debug("::remote_list changed");
 	g_signal_emit(self, signals[SIGNAL_ADDED], 0, remote);
+}
+
+void
+fu_remote_list_set_lvfs_metadata_format(FuRemoteList *self, const gchar *lvfs_metadata_format)
+{
+	g_return_if_fail(FU_IS_REMOTE_LIST(self));
+	g_return_if_fail(lvfs_metadata_format != NULL);
+	if (g_strcmp0(lvfs_metadata_format, self->lvfs_metadata_format) == 0)
+		return;
+	g_free(self->lvfs_metadata_format);
+	self->lvfs_metadata_format = g_strdup(lvfs_metadata_format);
 }
 
 static void
@@ -189,8 +201,19 @@ _fwupd_remote_build_component_id(FwupdRemote *remote)
 	return g_strdup_printf("org.freedesktop.fwupd.remotes.%s", fwupd_remote_get_id(remote));
 }
 
+static gchar *
+fu_remote_list_get_last_ext(const gchar *filename)
+{
+	gchar *tmp;
+	g_return_val_if_fail(filename != NULL, NULL);
+	tmp = g_strrstr(filename, ".");
+	if (tmp == NULL)
+		return NULL;
+	return g_strdup(tmp + 1);
+}
+
 static gboolean
-fu_remote_list_cleanup_remote(FwupdRemote *remote, GError **error)
+fu_remote_list_cleanup_lvfs_remote(FuRemoteList *self, FwupdRemote *remote, GError **error)
 {
 	const gchar *fn_cache = fwupd_remote_get_filename_cache(remote);
 	g_autofree gchar *dirname = NULL;
@@ -199,7 +222,7 @@ fu_remote_list_cleanup_remote(FwupdRemote *remote, GError **error)
 	/* sanity check */
 	if (fn_cache == NULL)
 		return TRUE;
-	if (!g_str_has_suffix(fn_cache, ".xz"))
+	if (self->lvfs_metadata_format == NULL)
 		return TRUE;
 
 	/* get all files */
@@ -211,7 +234,10 @@ fu_remote_list_cleanup_remote(FwupdRemote *remote, GError **error)
 	/* delete any obsolete ones */
 	for (guint i = 0; i < files->len; i++) {
 		const gchar *fn = g_ptr_array_index(files, i);
-		if (g_strstr_len(fn, -1, ".gz") != NULL) {
+		g_autofree gchar *ext = fu_remote_list_get_last_ext(fn);
+		if (g_strcmp0(ext, "jcat") == 0)
+			continue;
+		if (g_strcmp0(ext, self->lvfs_metadata_format) != 0) {
 			g_info("deleting obsolete %s", fn);
 			if (g_unlink(fn) == -1) {
 				g_set_error(error,
@@ -282,9 +308,14 @@ fu_remote_list_add_for_file(FuRemoteList *self,
 	/* auto-fix before setup */
 	if (self->fix_metadata_uri && fu_remote_list_is_remote_origin_lvfs(remote)) {
 		const gchar *metadata_url = fwupd_remote_get_metadata_uri(remote);
-		if (metadata_url != NULL && g_str_has_suffix(metadata_url, ".gz")) {
+		g_autofree gchar *ext = fu_remote_list_get_last_ext(metadata_url);
+		if (g_strcmp0(ext, self->lvfs_metadata_format) != 0) {
 			g_autoptr(GString) str = g_string_new(metadata_url);
-			g_string_replace(str, ".gz", ".xz", 0);
+			g_autofree gchar *metadata_ext =
+			    g_strdup_printf(".%s", self->lvfs_metadata_format);
+			g_string_replace(str, ".gz", metadata_ext, 0);
+			g_string_replace(str, ".xz", metadata_ext, 0);
+			g_string_replace(str, ".zst", metadata_ext, 0);
 			g_info("auto-fixing remote %s MetadataURI from %s to %s",
 			       fwupd_remote_get_id(remote),
 			       metadata_url,
@@ -299,10 +330,11 @@ fu_remote_list_add_for_file(FuRemoteList *self,
 		return FALSE;
 	}
 
-	/* delete the obsolete .gz files if the remote is now set up to use .xz */
+	/* delete the obsolete files if the remote is now set up to use a new metadata format */
 	if (fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED) &&
-	    fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD) {
-		if (!fu_remote_list_cleanup_remote(remote, error))
+	    fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD &&
+	    fu_remote_list_is_remote_origin_lvfs(remote)) {
+		if (!fu_remote_list_cleanup_lvfs_remote(self, remote, error))
 			return FALSE;
 	}
 
@@ -758,6 +790,7 @@ fu_remote_list_finalize(GObject *obj)
 		g_object_unref(self->silo);
 	g_ptr_array_unref(self->array);
 	g_ptr_array_unref(self->monitors);
+	g_free(self->lvfs_metadata_format);
 	G_OBJECT_CLASS(fu_remote_list_parent_class)->finalize(obj);
 }
 

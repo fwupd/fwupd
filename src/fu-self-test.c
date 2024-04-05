@@ -2080,7 +2080,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	remotes = fu_engine_get_remotes(engine, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(remotes);
-	g_assert_cmpint(remotes->len, ==, 6);
+	g_assert_cmpint(remotes->len, ==, 7);
 
 	/* ensure there are no devices already */
 	devices_pre = fu_engine_get_devices(engine, &error);
@@ -6226,16 +6226,24 @@ fu_remote_list_repair_func(void)
 	g_autoptr(FuRemoteList) remote_list = fu_remote_list_new();
 	g_autoptr(GError) error = NULL;
 
+	fu_remote_list_set_lvfs_metadata_format(remote_list, "zst");
 	ret = fu_remote_list_load(remote_list, FU_REMOTE_LIST_LOAD_FLAG_FIX_METADATA_URI, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* check .gz converted to .xz */
+	/* check .gz converted to .zst */
 	remote = fu_remote_list_get_by_id(remote_list, "legacy-lvfs");
 	g_assert_nonnull(remote);
 	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
 			==,
-			"http://localhost/stable.xml.xz");
+			"http://localhost/stable.xml.zst");
+
+	/* check .xz converted to .zst */
+	remote = fu_remote_list_get_by_id(remote_list, "legacy-lvfs-xz");
+	g_assert_nonnull(remote);
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+			==,
+			"http://localhost/stable.xml.zst");
 
 	/* check non-LVFS remote NOT .gz converted to .xz */
 	remote = fu_remote_list_get_by_id(remote_list, "legacy");

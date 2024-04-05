@@ -311,6 +311,7 @@ fu_efi_volume_init(FuEfiVolume *self)
 {
 	FuEfiVolumePrivate *priv = GET_PRIVATE(self);
 	priv->attrs = 0xfeff;
+	g_type_ensure(FU_TYPE_EFI_FILESYSTEM);
 }
 
 static void

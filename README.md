@@ -6,6 +6,7 @@
 [![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/fwupd.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:fwupd)
 [![CircleCI](https://circleci.com/gh/fwupd/fwupd/tree/main.svg?style=svg)](https://circleci.com/gh/fwupd/fwupd/tree/main)
 [![Coverage Status](https://coveralls.io/repos/github/fwupd/fwupd/badge.svg)](https://coveralls.io/github/fwupd/fwupd)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/fwupd/fwupd/badge)](https://securityscorecards.dev/viewer/?uri=github.com/fwupd/fwupd)
 
 This project aims to make updating firmware on Linux automatic, safe, and reliable.
 
