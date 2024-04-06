@@ -7,6 +7,7 @@
 [![CircleCI](https://circleci.com/gh/fwupd/fwupd/tree/main.svg?style=svg)](https://circleci.com/gh/fwupd/fwupd/tree/main)
 [![Coverage Status](https://coveralls.io/repos/github/fwupd/fwupd/badge.svg)](https://coveralls.io/github/fwupd/fwupd)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/fwupd/fwupd/badge)](https://securityscorecards.dev/viewer/?uri=github.com/fwupd/fwupd)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8751/badge)](https://www.bestpractices.dev/projects/8751)
 
 This project aims to make updating firmware on Linux automatic, safe, and reliable.
 
