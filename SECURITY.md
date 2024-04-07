@@ -1,7 +1,7 @@
 # Security Policy
 
 Due to the nature of what we are doing, fwupd takes security very seriously.
-If you have any concerns please [https://github.com/fwupd/fwupd/security](let us know).
+If you have any concerns please [let us know](https://github.com/fwupd/fwupd/security).
 
 ## Supported Versions
 
@@ -32,7 +32,7 @@ is unwilling to update to a supported version.
 ## Reporting a Vulnerability
 
 If you find a vulnerability in fwupd you should let us know using a
-[https://github.com/fwupd/fwupd/security](private vulnerability disclosure) on GitHub,
+[private vulnerability disclosure](https://github.com/fwupd/fwupd/security) on GitHub,
 with a description of the issue, the steps you took to create the issue, affected
 versions, and, if known, mitigations for the issue.
 
