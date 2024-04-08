@@ -909,11 +909,11 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 			continue;
 		type_str = fu_volume_kind_convert_to_gpt(part_type);
 		id_type = fu_volume_get_id_type(vol);
-		g_debug("device %s, type: %s, internal: %d, fs: %s",
-			g_dbus_proxy_get_object_path(proxy_blk),
-			type_str,
-			fu_volume_is_internal(vol),
-			id_type);
+		g_info("device %s, type: %s, internal: %d, fs: %s",
+		       g_dbus_proxy_get_object_path(proxy_blk),
+		       type_str,
+		       fu_volume_is_internal(vol),
+		       id_type);
 		if (g_strcmp0(type_str, kind) != 0)
 			continue;
 		if (g_strcmp0(id_type, "linux_raid_member") == 0) {
