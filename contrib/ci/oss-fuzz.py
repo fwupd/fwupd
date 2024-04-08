@@ -190,10 +190,10 @@ class Builder:
         subprocess.run(argv, cwd=self.srcdir, check=True)
         return os.path.join(self.installdir, dst)
 
-    def mkfuzztargets(self, exe: str, globstr: str) -> list[str]:
+    def mkfuzztargets(self, exe: str, globstr: str) -> List[str]:
         """make binary fuzzing targets from builder.xml files"""
         builder_xmls = glob.glob(globstr)
-        corpus: list[str] = []
+        corpus: List[str] = []
         if not builder_xmls:
             print(f"failed to find {globstr}")
         for fn_src in builder_xmls:
@@ -228,7 +228,7 @@ class Builder:
                     f.write(f"#define {key}\n")
         self.add_work_includedir(os.path.dirname(dst))
 
-    def makezip(self, dst: str, corpus: list[str]) -> None:
+    def makezip(self, dst: str, corpus: List[str]) -> None:
         """create a zip file archive from a glob"""
         if not corpus:
             return
