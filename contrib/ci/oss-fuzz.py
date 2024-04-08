@@ -63,7 +63,13 @@ class Builder:
             os.environ[key] = value
         return os.environ[key]
 
-    def checkout_source(self, name: str, url: str, commit: Optional[str] = None) -> str:
+    def checkout_source(
+        self,
+        name: str,
+        url: str,
+        commit: Optional[str] = None,
+        patches: Optional[List[str]] = None,
+    ) -> str:
         """checkout source tree, optionally to a specific commit"""
         srcdir_name = os.path.join(self.srcdir, name)
         if os.path.exists(srcdir_name):
@@ -71,6 +77,12 @@ class Builder:
         subprocess.run(["git", "clone", url], cwd=self.srcdir, check=True)
         if commit:
             subprocess.run(["git", "checkout", commit], cwd=srcdir_name, check=True)
+        if patches:
+            for fn in patches:
+                with open(fn, "rb") as f:
+                    subprocess.run(
+                        ["patch", "-p1"], cwd=srcdir_name, check=True, input=f.read()
+                    )
         return srcdir_name
 
     def build_meson_project(self, srcdir: str, argv) -> None:
@@ -281,7 +293,10 @@ class Fuzzer:
 def _build(bld: Builder) -> None:
     # CBOR
     src = bld.checkout_source(
-        "libcbor", url="https://github.com/PJK/libcbor.git", commit="v0.9.0"
+        "libcbor",
+        url="https://github.com/PJK/libcbor.git",
+        commit="v0.9.0",
+        patches=["contrib/ci/oss-fuzz-libcbor-lto.patch"],
     )
     bld.build_cmake_project(src)
     bld.add_build_ldflag("lib/libcbor.a")
