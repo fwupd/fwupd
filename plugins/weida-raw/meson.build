@@ -8,7 +8,6 @@ plugin_builtins += static_library('fu_plugin_weida_raw',
   sources: [
     'fu-weida-raw-common.c',
     'fu-weida-raw-device.c',
-    'fu-weida-raw-firmware.c',
     'fu-weida-raw-plugin.c',
   ],
   include_directories: plugin_incdirs,
