@@ -20,6 +20,12 @@ Name = Luxshare Quad USB4 Dock
 SynapticsMstDeviceKind = dock
 Flags = manual-restart-required
 
+[MST-163]
+Name = Luxshare 7-in-1 Travel Dock Video Hub
+SynapticsMstDeviceKind = dock
+Flags = install-parent-first
+ParentGuid = USB\VID_208E&PID_0822
+
 [MST-272]
 Name = Dell X6 Platform
 SynapticsMstDeviceKind = system
