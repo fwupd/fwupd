@@ -863,6 +863,7 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 				continue;
 			}
 		}
+
 		proxy_part = g_dbus_proxy_new_sync(g_dbus_proxy_get_connection(proxy_blk),
 						   G_DBUS_PROXY_FLAGS_NONE,
 						   NULL,
@@ -913,6 +914,11 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 			id_type);
 		if (g_strcmp0(type_str, kind) != 0)
 			continue;
+		if (g_strcmp0(id_type, "linux_raid_member") == 0) {
+			g_debug("ignoring linux_raid_member device %s",
+				g_dbus_proxy_get_object_path(proxy_blk));
+			continue;
+		}
 		g_ptr_array_add(volumes, g_steal_pointer(&vol));
 	}
 	if (volumes->len == 0) {
