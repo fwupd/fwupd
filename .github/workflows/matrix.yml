@@ -13,7 +13,7 @@ jobs:
       matrix:
         os: [fedora, debian-x86_64, arch, debian-i386]
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
       - name: Docker login
         run: docker login docker.pkg.github.com -u $GITHUB_ACTOR -p $GITHUB_TOKEN
         env:
@@ -63,7 +63,7 @@ jobs:
   openbmc:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
       - name: Refresh dependencies
         run: sudo apt update
       - name: Install dependencies
@@ -79,7 +79,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
       - name: Refresh dependencies
         run: sudo apt update
       - name: Install dependencies
@@ -112,7 +112,7 @@ jobs:
       run: |
         brew install meson libgusb gobject-introspection sqlite libarchive json-glib curl gnutls protobuf-c vala gi-docgen
         python3 -m pip install --user jinja2
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
     - name: configure
       run: ./contrib/ci/build_macos.sh
     - name: build
