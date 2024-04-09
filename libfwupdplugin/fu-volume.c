@@ -385,6 +385,31 @@ fu_volume_get_partition_name(FuVolume *self)
 	return g_variant_dup_string(val, NULL);
 }
 
+/**
+ * fu_volume_is_mdraid:
+ * @self: a @FuVolume
+ *
+ * Determines if a volume is part of an MDRAID array.
+ *
+ * Returns: %TRUE if the volume is part of an MDRAID array
+ *
+ * Since: 1.9.17
+ **/
+gboolean
+fu_volume_is_mdraid(FuVolume *self)
+{
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail(FU_IS_VOLUME(self), FALSE);
+
+	if (self->proxy_blk == NULL)
+		return FALSE;
+	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "MDRaid");
+	if (val == NULL)
+		return FALSE;
+	return g_strcmp0(g_variant_get_string(val, NULL), "/") != 0;
+}
+
 static guint32
 fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **error)
 {
@@ -904,10 +929,16 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 				   proxy_part,
 				   NULL);
 
+		if (fu_volume_is_mdraid(vol))
+			part_type = g_strdup(kind);
+
+		if (part_type == NULL)
+			part_type = fu_volume_get_partition_kind(vol);
+
 		/* convert reported type to GPT type */
-		part_type = fu_volume_get_partition_kind(vol);
 		if (part_type == NULL)
 			continue;
+
 		type_str = fu_volume_kind_convert_to_gpt(part_type);
 		id_type = fu_volume_get_id_type(vol);
 		g_info("device %s, type: %s, internal: %d, fs: %s",
