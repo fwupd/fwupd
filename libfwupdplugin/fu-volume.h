@@ -83,3 +83,5 @@ fu_volume_new_esp_for_path(const gchar *esp_path, GError **error) G_GNUC_WARN_UN
     G_GNUC_NON_NULL(1);
 const gchar *
 fu_volume_kind_convert_to_gpt(const gchar *kind) G_GNUC_NON_NULL(1);
+gboolean
+fu_volume_is_mdraid(FuVolume *self) G_GNUC_NON_NULL(1);
