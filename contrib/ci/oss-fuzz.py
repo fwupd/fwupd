@@ -214,7 +214,8 @@ class Builder:
             )
             print(f"building {fn_src} into {fn_dst}")
             try:
-                subprocess.run([exe, fn_src, fn_dst], check=True)
+                argv = [exe, fn_src, fn_dst]
+                subprocess.run(argv, check=True)
             except subprocess.CalledProcessError as e:
                 print(f"tried to run: `{' '.join(argv)}` and got {str(e)}")
                 sys.exit(1)
