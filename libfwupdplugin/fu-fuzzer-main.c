@@ -16,10 +16,6 @@ BuildOneOutput(const gchar *filename, GError **error);
 int
 main(int argc, char **argv)
 {
-	g_assert_nonnull(LLVMFuzzerTestOneInput);
-	if (LLVMFuzzerInitialize != NULL)
-		LLVMFuzzerInitialize(&argc, &argv);
-
 	/* do not use g_option_context_parse() here for speed */
 	if (argc == 3 && g_str_has_suffix(argv[1], ".builder.xml") &&
 	    g_str_has_suffix(argv[2], ".bin")) {
@@ -39,6 +35,10 @@ main(int argc, char **argv)
 		}
 		return EXIT_SUCCESS;
 	}
+
+	g_assert_nonnull(LLVMFuzzerTestOneInput);
+	if (LLVMFuzzerInitialize != NULL)
+		LLVMFuzzerInitialize(&argc, &argv);
 
 	for (int i = 1; i < argc; i++) {
 		gsize bufsz = 0;
