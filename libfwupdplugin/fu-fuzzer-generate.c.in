@@ -18,7 +18,7 @@ main(int argc, char **argv)
 	/* do not use g_option_context_parse() here for speed */
 	if (argc != 3 || !g_str_has_suffix(argv[1], ".builder.xml") ||
 	    !g_str_has_suffix(argv[2], ".bin")) {
-		g_printerr("Invalid arguments, expected %s XML BIN\n");
+		g_printerr("Invalid arguments, expected %s XML BIN\n", argv[0]);
 		return EXIT_FAILURE;
 	}
 	if (!fu_firmware_build_from_filename(firmware, argv[1], &error)) {
