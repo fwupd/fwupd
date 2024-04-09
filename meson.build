@@ -223,7 +223,7 @@ if hsi
   conf.set('HAVE_HSI', '1')
 endif
 libxmlb = dependency('xmlb', version: '>= 0.3.6', fallback: ['libxmlb', 'libxmlb_dep'])
-if libxmlb.version().version_compare('>= 0.3.17')
+if libxmlb.version().version_compare('>= 0.3.18')
   if libxmlb.get_variable('zstd') == 'true'
     lvfs_metadata_format = 'zst'
   elif libxmlb.get_variable('lzma') == 'true'
