@@ -222,17 +222,13 @@ hsi = get_option('hsi').disable_auto_if(host_machine.system() != 'linux').disabl
 if hsi
   conf.set('HAVE_HSI', '1')
 endif
-libxmlb = dependency('xmlb', version: '>= 0.3.6', fallback: ['libxmlb', 'libxmlb_dep'])
-if libxmlb.version().version_compare('>= 0.3.18')
-  if libxmlb.get_variable('zstd') == 'true'
-    lvfs_metadata_format = 'zst'
-  elif libxmlb.get_variable('lzma') == 'true'
-    lvfs_metadata_format = 'xz'
-  else
-    lvfs_metadata_format = 'gz'
-  endif
-else
+libxmlb = dependency('xmlb', version: '>= 0.3.18', fallback: ['libxmlb', 'libxmlb_dep'])
+if libxmlb.get_variable('zstd') == 'true'
+  lvfs_metadata_format = 'zst'
+elif libxmlb.get_variable('lzma') == 'true'
   lvfs_metadata_format = 'xz'
+else
+  lvfs_metadata_format = 'gz'
 endif
 conf.set_quoted('FU_LVFS_METADATA_FORMAT', lvfs_metadata_format)
 gusb = dependency('gusb', version: '>= 0.4.8', fallback: ['gusb', 'gusb_dep'], required: get_option('gusb'))
