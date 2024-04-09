@@ -375,6 +375,7 @@ def _build(bld: Builder) -> None:
 
     # libfwupd + libfwupdplugin
     built_objs: List[str] = []
+    fuzzing_objs: List[str] = []
     bld.add_src_includedir("fwupd")
     for path in ["fwupd/libfwupd", "fwupd/libfwupdplugin"]:
         bld.add_src_includedir(path)
@@ -386,9 +387,9 @@ def _build(bld: Builder) -> None:
 
     # dummy binary entrypoint
     if "LIB_FUZZING_ENGINE" in os.environ:
-        built_objs.append(os.environ["LIB_FUZZING_ENGINE"])
+        fuzzing_objs.append(os.environ["LIB_FUZZING_ENGINE"])
     else:
-        built_objs.append(bld.compile("fwupd/libfwupdplugin/fu-fuzzer-main.c"))
+        fuzzing_objs.append(bld.compile("fwupd/libfwupdplugin/fu-fuzzer-main.c"))
 
     # built in formats
     for fzr in [
@@ -420,9 +421,22 @@ def _build(bld: Builder) -> None:
                 "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
             },
         )
-        exe = bld.link([bld.compile(src)] + built_objs, f"{fzr.name}_fuzzer")
+        exe = bld.link(
+            [bld.compile(src)] + fuzzing_objs + built_objs, f"{fzr.name}_fuzzer"
+        )
+
+        src_generator = bld.substitute(
+            "fwupd/libfwupdplugin/fu-fuzzer-generate.c.in",
+            {
+                "@FIRMWARENEW@": fzr.new_gtype,
+                "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
+            },
+        )
+        exe_generator = bld.link(
+            [bld.compile(src_generator)] + built_objs, f"{fzr.name}_generator"
+        )
         corpus = bld.mkfuzztargets(
-            exe,
+            exe_generator,
             os.path.join(
                 bld.srcdir,
                 "fwupd",
@@ -470,10 +484,25 @@ def _build(bld: Builder) -> None:
                 "@INCLUDE@": os.path.join("plugins", fzr.srcdir, fzr.header),
             },
         )
-        fuzz_objs.append(bld.compile(src))
-        exe = bld.link(fuzz_objs + built_objs, f"{fzr.name}_fuzzer")
+        exe = bld.link(
+            fuzz_objs + built_objs + fuzzing_objs + [bld.compile(src)],
+            f"{fzr.name}_fuzzer",
+        )
+
+        # generate the corpus
+        src_generator = bld.substitute(
+            "fwupd/libfwupdplugin/fu-fuzzer-generate.c.in",
+            {
+                "@FIRMWARENEW@": fzr.new_gtype,
+                "@INCLUDE@": os.path.join("plugins", fzr.srcdir, fzr.header),
+            },
+        )
+        exe_generator = bld.link(
+            fuzz_objs + built_objs + [bld.compile(src_generator)],
+            f"{fzr.name}_generator",
+        )
         corpus = bld.mkfuzztargets(
-            exe,
+            exe_generator,
             os.path.join(
                 bld.srcdir,
                 "fwupd",
