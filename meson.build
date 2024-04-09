@@ -222,7 +222,7 @@ if hsi
 endif
 libxmlb = dependency('xmlb', version: '>= 0.3.6', fallback: ['libxmlb', 'libxmlb_dep'])
 gusb = dependency('gusb', version: '>= 0.3.8', fallback: ['gusb', 'gusb_dep'], required: get_option('gusb'))
-if libxmlb.version().version_compare('>= 0.3.17')
+if libxmlb.version().version_compare('>= 0.3.18')
   if libxmlb.get_variable('zstd') == 'true'
     lvfs_metadata_format = 'zst'
   elif libxmlb.get_variable('lzma') == 'true'
