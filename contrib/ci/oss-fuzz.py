@@ -299,7 +299,7 @@ def _build(bld: Builder) -> None:
         commit="v0.9.0",
         patches=["contrib/ci/oss-fuzz-libcbor-lto.patch"],
     )
-    bld.build_cmake_project(src)
+    bld.build_cmake_project(src, argv=["-DCBOR_CUSTOM_ALLOC=ON"])
     bld.add_build_ldflag("lib/libcbor.a")
 
     # GLib
@@ -367,6 +367,7 @@ def _build(bld: Builder) -> None:
             "FWUPD_SYSCONFDIR": "/tmp",
             "FWUPD_LIBEXECDIR": "/tmp",
             "HAVE_CBOR": None,
+            "HAVE_CBOR_SET_ALLOCS": None,
             "HAVE_REALPATH": None,
             "PACKAGE_NAME": "fwupd",
             "PACKAGE_VERSION": "0.0.0",
