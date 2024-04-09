@@ -79,7 +79,7 @@ class Builder:
             subprocess.run(["git", "checkout", commit], cwd=srcdir_name, check=True)
         if patches:
             for fn in patches:
-                with open(fn, "rb") as f:
+                with open(os.path.join(self.srcdir, "fwupd", fn), "rb") as f:
                     subprocess.run(
                         ["patch", "-p1"], cwd=srcdir_name, check=True, input=f.read()
                     )
