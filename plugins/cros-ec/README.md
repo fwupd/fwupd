@@ -29,6 +29,11 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 
 * `USB\VID_18D1&PID_501A`
 
+It also adds one more instance ID that includes the board name, parsed from
+the device version string, e.g.
+
+* `USB\VID_18D1&PID_501A&BOARDNAME_gingerbread`
+
 ## Update Behavior
 
 The device usually presents in runtime mode, but on detach re-enumerates with

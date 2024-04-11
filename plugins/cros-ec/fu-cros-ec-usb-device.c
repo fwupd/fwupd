@@ -460,7 +460,17 @@ fu_cros_ec_usb_device_setup(FuDevice *device, GError **error)
 		fu_device_set_version(FU_DEVICE(device), self->active_version.triplet);
 		fu_device_set_version_bootloader(FU_DEVICE(device), self->version.triplet);
 	}
-	fu_device_add_instance_id(FU_DEVICE(device), self->version.boardname);
+
+	/* one extra instance ID */
+	fu_device_add_instance_str(FU_DEVICE(device), "BOARDNAME", self->version.boardname);
+	if (!fu_device_build_instance_id(FU_DEVICE(device),
+					 error,
+					 "USB",
+					 "VID",
+					 "PID",
+					 "BOARDNAME",
+					 NULL))
+		return FALSE;
 
 	/* success */
 	return TRUE;
