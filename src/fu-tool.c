@@ -2120,38 +2120,69 @@ fu_util_remote_enable(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_toggle_test_devices(FuUtilPrivate *priv, gboolean enable, GError **error)
+fu_util_set_test_devices_enabled(FuUtilPrivate *priv, gboolean enable, GError **error)
 {
-	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_NONE, priv->progress, error))
-		return FALSE;
-
-	if (!fu_engine_modify_config(priv->engine,
-				     "fwupd",
-				     "TestDevices",
-				     enable ? "true" : "false",
-				     error))
-		return FALSE;
-
-	if (enable) {
-		/* TRANSLATORS: comment explaining result of command */
-		fu_console_print_literal(priv->console, _("Successfully enabled test devices"));
-	} else {
-		/* TRANSLATORS: comment explaining result of command */
-		fu_console_print_literal(priv->console, _("Successfully disabled test devices"));
-	}
-	return TRUE;
+	return fu_engine_modify_config(priv->engine,
+				       "fwupd",
+				       "TestDevices",
+				       enable ? "true" : "false",
+				       error);
 }
 
 static gboolean
 fu_util_disable_test_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	return fu_util_toggle_test_devices(priv, FALSE, error);
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_NONE, priv->progress, error))
+		return FALSE;
+
+	if (!fu_util_set_test_devices_enabled(priv, FALSE, error))
+		return FALSE;
+
+	/* TRANSLATORS: comment explaining result of command */
+	fu_console_print_literal(priv->console, _("Successfully disabled test devices"));
+
+	return TRUE;
 }
 
 static gboolean
 fu_util_enable_test_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	return fu_util_toggle_test_devices(priv, TRUE, error);
+	gboolean found = FALSE;
+	g_autoptr(GPtrArray) remotes = NULL;
+
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_REMOTES, priv->progress, error))
+		return FALSE;
+
+	if (!fu_util_set_test_devices_enabled(priv, TRUE, error))
+		return FALSE;
+
+	/* verify remote is present */
+	remotes = fu_engine_get_remotes(priv->engine, error);
+	if (remotes == NULL)
+		return FALSE;
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index(remotes, i);
+		if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED))
+			continue;
+		if (g_strcmp0(fwupd_remote_get_id(remote), "fwupd-tests") == 0) {
+			found = TRUE;
+			break;
+		}
+	}
+	if (!found) {
+		if (!fu_util_set_test_devices_enabled(priv, FALSE, error))
+			return FALSE;
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to enable fwupd-tests remote");
+		return FALSE;
+	}
+
+	/* TRANSLATORS: comment explaining result of command */
+	fu_console_print_literal(priv->console, _("Successfully enabled test devices"));
+
+	return TRUE;
 }
 
 static gboolean
