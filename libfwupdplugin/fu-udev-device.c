@@ -816,6 +816,10 @@ fu_udev_device_unbind_driver(FuDevice *device, GError **error)
 	g_autoptr(GOutputStream) stream = NULL;
 
 	/* is already unbound */
+	if (priv->udev_device == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "not initialized");
+		return FALSE;
+	}
 	fn = g_build_filename(g_udev_device_get_sysfs_path(priv->udev_device),
 			      "driver",
 			      "unbind",
@@ -1978,6 +1982,8 @@ fu_udev_device_get_parent_name(FuUdevDevice *self)
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
 
+	if (priv->udev_device == NULL)
+		return NULL;
 	parent = g_udev_device_get_parent(priv->udev_device);
 	return parent == NULL ? NULL : g_strdup(g_udev_device_get_name(parent));
 #else
@@ -2010,10 +2016,7 @@ fu_udev_device_get_sysfs_attr(FuUdevDevice *self, const gchar *attr, GError **er
 
 	/* nothing to do */
 	if (priv->udev_device == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "not yet initialized");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "not initialized");
 		return NULL;
 	}
 	result = g_udev_device_get_sysfs_attr(priv->udev_device, attr);
@@ -2163,6 +2166,8 @@ fu_udev_device_get_devtype(FuUdevDevice *self)
 #ifdef HAVE_GUDEV
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 
+	if (priv->udev_device == NULL)
+		return NULL;
 	return g_udev_device_get_devtype(priv->udev_device);
 #else
 	return NULL;
@@ -2189,12 +2194,15 @@ fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self, const gchar *subs
 #ifdef HAVE_GUDEV
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *udev_parent_path;
-	g_autoptr(GUdevDevice) udev_parent = g_udev_device_get_parent(priv->udev_device);
+	g_autoptr(GUdevDevice) udev_parent = NULL;
 	g_autoptr(GUdevClient) udev_client = g_udev_client_new(NULL);
 	g_autolist(GUdevDevice) enumerated =
 	    g_udev_client_query_by_subsystem(udev_client, subsystem);
 
 	/* we have no parent, and so no siblings are possible */
+	if (priv->udev_device == NULL)
+		return NULL;
+	udev_parent = g_udev_device_get_parent(priv->udev_device);
 	if (udev_parent == NULL)
 		return g_steal_pointer(&out);
 	udev_parent_path = g_udev_device_get_sysfs_path(udev_parent);
@@ -2241,6 +2249,8 @@ fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self, const gchar *subsys
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GUdevDevice) device_tmp = NULL;
 
+	if (priv->udev_device == NULL)
+		return NULL;
 	if (subsystem == NULL) {
 		device_tmp = g_udev_device_get_parent(priv->udev_device);
 	} else {
@@ -2324,14 +2334,21 @@ fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 bus = 0;
 	guint8 address = 0;
-	g_autoptr(GUdevDevice) udev_device = g_object_ref(priv->udev_device);
+	g_autoptr(GUdevDevice) udev_device = NULL;
 	g_autoptr(GUsbContext) usb_ctx = NULL;
 	g_autoptr(GUsbDevice) usb_device = NULL;
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
+	/* sanity check */
+	if (priv->udev_device == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "not initialized");
+		return NULL;
+	}
+
 	/* look at the current device and all the parent devices until we can find the USB data */
+	udev_device = g_object_ref(priv->udev_device);
 	while (udev_device != NULL) {
 		g_autoptr(GUdevDevice) udev_device_parent = NULL;
 		bus = g_udev_device_get_sysfs_attr_as_int(udev_device, "busnum");
