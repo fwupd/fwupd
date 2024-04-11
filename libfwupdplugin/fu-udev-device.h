@@ -205,7 +205,7 @@ GPtrArray *
 fu_udev_device_get_children_with_subsystem(FuUdevDevice *self, const gchar *subsystem)
     G_GNUC_NON_NULL(1, 2);
 FuUdevDevice *
-fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self, const gchar *subsystem)
+fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self, const gchar *subsystem, GError **error)
     G_GNUC_NON_NULL(1);
 
 GUsbDevice *
