@@ -28,6 +28,7 @@ fu_optionrom_device_probe(FuDevice *device, GError **error)
 				    "Unable to read firmware from device");
 		return FALSE;
 	}
+	fu_udev_device_set_device_file(FU_UDEV_DEVICE(device), fn);
 
 	/* FuUdevDevice->probe -- needed by FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT */
 	if (!FU_DEVICE_CLASS(fu_optionrom_device_parent_class)->probe(device, error))
