@@ -193,7 +193,7 @@ fu_realtek_mst_device_use_aux_dev(FuRealtekMstDevice *self, GError **error)
 			continue;
 		}
 
-		i2c_devices = fu_udev_device_get_siblings_with_subsystem(device, "i2c");
+		i2c_devices = fu_udev_device_get_siblings_with_subsystem(device, "i2c", NULL);
 		bus_device = locate_i2c_bus(i2c_devices);
 	}
 
