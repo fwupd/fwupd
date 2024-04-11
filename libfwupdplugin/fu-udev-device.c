@@ -2389,7 +2389,8 @@ fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error)
 static GBytes *
 fu_udev_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuUdevDevice *udev_device = FU_UDEV_DEVICE(device);
+	FuUdevDevice *self = FU_UDEV_DEVICE(device);
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	guint number_reads = 0;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *rom_fn = NULL;
@@ -2399,8 +2400,7 @@ fu_udev_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 	g_autoptr(GInputStream) stream = NULL;
 
 	/* open the file */
-	rom_fn = g_build_filename(fu_udev_device_get_sysfs_path(udev_device), "rom", NULL);
-	if (rom_fn == NULL) {
+	if (priv->device_file == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
@@ -2409,7 +2409,7 @@ fu_udev_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 	}
 
 	/* open file */
-	file = g_file_new_for_path(rom_fn);
+	file = g_file_new_for_path(priv->device_file);
 	stream = G_INPUT_STREAM(g_file_read(file, NULL, &error_local));
 	if (stream == NULL) {
 		g_set_error_literal(error,
