@@ -116,7 +116,9 @@ static gboolean
 fu_mediatek_scaler_device_use_aux_dev(FuMediatekScalerDevice *self, GError **error)
 {
 	g_autoptr(GPtrArray) i2c_devices =
-	    fu_udev_device_get_siblings_with_subsystem(FU_UDEV_DEVICE(self), "i2c");
+	    fu_udev_device_get_siblings_with_subsystem(FU_UDEV_DEVICE(self), "i2c", error);
+	if (i2c_devices == NULL)
+		return FALSE;
 	return fu_mediatek_scaler_device_set_i2c_dev(self, i2c_devices, error);
 }
 

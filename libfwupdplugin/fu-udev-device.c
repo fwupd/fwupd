@@ -2178,16 +2178,19 @@ fu_udev_device_get_devtype(FuUdevDevice *self)
  * fu_udev_device_get_siblings_with_subsystem
  * @self: a #FuUdevDevice
  * @subsystem: the name of a udev subsystem
+ * @error: (nullable): optional return location for an error
  *
  * Get a list of devices that are siblings of self and have the
  * provided subsystem.
  *
- * Returns: (element-type FuUdevDevice) (transfer full): devices
+ * Returns: (element-type FuUdevDevice) (transfer full): devices, or %NULL on error
  *
- * Since: 1.6.0
+ * Since: 2.0.0
  */
 GPtrArray *
-fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self, const gchar *subsystem)
+fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self,
+					   const gchar *subsystem,
+					   GError **error)
 {
 	g_autoptr(GPtrArray) out = g_ptr_array_new_with_free_func(g_object_unref);
 
@@ -2200,8 +2203,10 @@ fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self, const gchar *subs
 	    g_udev_client_query_by_subsystem(udev_client, subsystem);
 
 	/* we have no parent, and so no siblings are possible */
-	if (priv->udev_device == NULL)
+	if (priv->udev_device == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "not initialized");
 		return NULL;
+	}
 	udev_parent = g_udev_device_get_parent(priv->udev_device);
 	if (udev_parent == NULL)
 		return g_steal_pointer(&out);
