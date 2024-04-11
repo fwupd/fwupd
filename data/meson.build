@@ -95,8 +95,8 @@ if build_daemon
     endif
 
     # flashrom requires raw-io
-    system_call_filter = ['~@clock', '@cpu-emulation', '@debug', '@memlock', '@module', '@mount', '@obsolete', '@pkey', '@reboot', '@resources', '@swap']
-    if not allow_flashrom
+    system_call_filter = ['@system-service']
+    if allow_flashrom
       system_call_filter += ['@raw-io']
     endif
     dynamic_options += ['SystemCallFilter=' + ' '.join(system_call_filter)]
