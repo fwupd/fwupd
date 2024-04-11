@@ -2235,32 +2235,46 @@ fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self, const gchar *subs
  * fu_udev_device_get_parent_with_subsystem
  * @self: a #FuUdevDevice
  * @subsystem: (nullable): the name of a udev subsystem
+ * @error: (nullable): optional return location for an error
  *
  * Get the device that is a parent of self and has the provided subsystem.
  *
  * Returns: (transfer full): device, or %NULL
  *
- * Since: 1.7.6
+ * Since: 2.0.0
  */
 FuUdevDevice *
-fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self, const gchar *subsystem)
+fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self, const gchar *subsystem, GError **error)
 {
 #ifdef HAVE_GUDEV
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GUdevDevice) device_tmp = NULL;
 
-	if (priv->udev_device == NULL)
+	/* sanity check */
+	if (priv->udev_device == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "not initialized");
 		return NULL;
+	}
 	if (subsystem == NULL) {
 		device_tmp = g_udev_device_get_parent(priv->udev_device);
 	} else {
 		device_tmp =
 		    g_udev_device_get_parent_with_subsystem(priv->udev_device, subsystem, NULL);
 	}
-	if (device_tmp == NULL)
+	if (device_tmp == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no parent with subsystem %s",
+			    subsystem);
 		return NULL;
+	}
 	return fu_udev_device_new(fu_device_get_context(FU_DEVICE(self)), device_tmp);
 #else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "not supported as <gudev.h> is unavailable");
 	return NULL;
 #endif
 }
