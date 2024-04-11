@@ -32,4 +32,5 @@ RestrictRealtime=yes
 RestrictSUIDSGID=yes
 SystemCallArchitectures=native
 SystemCallErrorNumber=EPERM
+SystemCallFilter=~@resources
 @dynamic_options@
