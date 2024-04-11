@@ -8779,6 +8779,11 @@ fu_engine_constructed(GObject *obj)
 #if LIBJCAT_CHECK_VERSION(0, 1, 11)
 	fu_engine_add_runtime_version(self, "com.hughsie.libjcat", jcat_version_string());
 #endif
+#if LIBXMLB_CHECK_VERSION(0, 3, 19)
+	fu_engine_add_runtime_version(self, "com.hughsie.libxmlb", xb_version_string());
+#else
+	fu_engine_add_runtime_version(self, "com.hughsie.libxmlb", "0.3.x");
+#endif
 
 	/* optional kernel version */
 #ifdef HAVE_UTSNAME_H
