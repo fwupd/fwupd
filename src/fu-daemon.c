@@ -36,6 +36,10 @@
 #include "fu-release.h"
 #include "fu-security-attrs-private.h"
 
+#ifdef HAVE_MMAN_H
+#include <sys/mman.h>
+#endif
+
 static void
 fu_daemon_finalize(GObject *obj);
 
@@ -2292,6 +2296,28 @@ fu_daemon_set_machine_kind(FuDaemon *self, FuDaemonMachineKind machine_kind)
 	self->machine_kind = machine_kind;
 }
 
+static gboolean
+fu_daemon_check_syscall_filtering(GError **error)
+{
+#ifdef HAVE_MMAN_H
+	if (g_getenv("FWUPD_SYSCALL_FILTER") != NULL) {
+		const gsize bufsz = 10;
+		g_autofree guint8 *buf = g_malloc0(bufsz);
+		if (mlock(buf, bufsz) == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_BROKEN_SYSTEM,
+					    "syscall filtering is configured but not working");
+			munlock(buf, bufsz);
+			return FALSE;
+		}
+		g_debug("syscall filtering is working");
+	}
+#endif
+	/* success */
+	return TRUE;
+}
+
 gboolean
 fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 {
@@ -2311,6 +2337,10 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-introspection");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "load-authority");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "own-name");
+
+	/* check that the process manager is preventing access to dangerous system calls */
+	if (!fu_daemon_check_syscall_filtering(error))
+		return FALSE;
 
 	/* allow overriding for development */
 	if (machine_kind != NULL) {

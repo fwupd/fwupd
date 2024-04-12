@@ -103,6 +103,14 @@ if build_daemon
     else
       dynamic_options += 'RestrictAddressFamilies=AF_NETLINK AF_UNIX'
     endif
+
+    # flashrom requires raw-io
+    system_call_filter = ['~@clock', '@cpu-emulation', '@debug', '@memlock', '@module', '@mount', '@obsolete', '@pkey', '@reboot', '@resources', '@swap']
+    if not allow_flashrom
+      system_call_filter += ['@raw-io']
+    endif
+    dynamic_options += ['SystemCallFilter=' + ' '.join(system_call_filter)]
+
     con2.set('dynamic_options', '\n'.join(dynamic_options))
     con2.set('motd_dir', motd_dir)
 
