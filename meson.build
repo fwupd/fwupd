@@ -303,6 +303,9 @@ endif
 cbor = dependency('libcbor', version: '>= 0.7.0', required: get_option('cbor'))
 if cbor.found()
   conf.set('HAVE_CBOR', '1')
+  if cc.has_header_symbol('cbor.h', 'cbor_set_allocs')
+    conf.set('HAVE_CBOR_SET_ALLOCS', '1')
+  endif
 endif
 
 platform_deps = []
