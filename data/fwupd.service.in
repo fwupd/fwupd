@@ -6,6 +6,7 @@ Before=display-manager.service
 ConditionVirtualization=!container
 
 [Service]
+Environment="FWUPD_SYSCALL_FILTER=systemd"
 Type=dbus
 TimeoutSec=180
 RuntimeDirectory=@motd_dir@
