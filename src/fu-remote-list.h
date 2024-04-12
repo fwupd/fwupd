@@ -34,6 +34,9 @@ typedef enum {
 FuRemoteList *
 fu_remote_list_new(void);
 gboolean
+fu_remote_list_set_testing_remote_enabled(FuRemoteList *self, gboolean enable, GError **error)
+    G_GNUC_NON_NULL(1);
+gboolean
 fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **error)
     G_GNUC_NON_NULL(1);
 gboolean

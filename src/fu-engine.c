@@ -797,8 +797,19 @@ fu_engine_modify_config(FuEngine *self,
 			return FALSE;
 		}
 
-		/* modify, effective next reboot */
-		return fu_config_set_value(FU_CONFIG(self->config), section, key, value, error);
+		/* many options need a reboot after this */
+		if (!fu_config_set_value(FU_CONFIG(self->config), section, key, value, error))
+			return FALSE;
+
+		/* reload remotes */
+		if (g_strcmp0(key, "TestDevices") == 0 &&
+		    !fu_remote_list_set_testing_remote_enabled(
+			self->remote_list,
+			fu_engine_config_get_test_devices(self->config),
+			error))
+			return FALSE;
+
+		return TRUE;
 	}
 
 	/* handled per-plugin */
