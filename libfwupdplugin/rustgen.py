@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 # pylint: disable=invalid-name,missing-docstring
 #
-# Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
+# Copyright 2023 Richard Hughes <richard@hughsie.com>
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 import os
 import sys
@@ -188,6 +188,8 @@ class StructObj:
                     item.struct_obj.add_private_export("ValidateInternal")
         elif derive == "ToString":
             for item in self.items:
+                if item.struct_obj:
+                    item.struct_obj.add_private_export("ToString")
                 if item.enum_obj and not item.constant:
                     item.enum_obj.add_private_export("ToString")
         elif derive == "Parse":

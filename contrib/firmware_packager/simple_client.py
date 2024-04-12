@@ -1,5 +1,9 @@
 #!/usr/bin/python3
-# SPDX-License-Identifier: LGPL-2.1+
+#
+# Copyright 2019 Mario Limonciello <mario.limonciello@dell.com>
+#
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
 """A simple fwupd frontend"""
 import sys
 import os

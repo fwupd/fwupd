@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2017 VIA Corporation
- * Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 VIA Corporation
+ * Copyright 2019 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -81,6 +81,8 @@ fu_vli_common_device_kind_get_size(FuVliDeviceKind device_kind)
 	if (device_kind == FU_VLI_DEVICE_KIND_VL822Q7)
 		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL822Q8)
+		return 0x10000;
+	if (device_kind == FU_VLI_DEVICE_KIND_VL822C0)
 		return 0x10000;
 	if (device_kind == FU_VLI_DEVICE_KIND_PS186)
 		return 0x40000;

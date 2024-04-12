@@ -85,6 +85,22 @@ Vendor = Sanyo
 [CFI\FLASHID_7F]
 Vendor = AMIC
 
+# Puya Semiconductor
+[CFI\FLASHID_85]
+Vendor = Puya
+[CFI\FLASHID_854012]
+Name = P25Q21H
+FirmwareSizeMax = 0x40000
+[CFI\FLASHID_854011]
+Name = P25Q11H
+FirmwareSizeMax = 0x20000
+[CFI\FLASHID_854010]
+Name = P25Q06H
+FirmwareSizeMax = 0x10000
+[CFI\FLASHID_852014]
+Name = PY25Q80HB
+FirmwareSizeMax = 0x100000
+
 [CFI\FLASHID_89]
 Vendor = Intel
 

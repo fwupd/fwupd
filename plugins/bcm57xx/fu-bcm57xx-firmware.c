@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2018 Evan Lojewski
- * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
+ * Copyright 2018 Evan Lojewski
+ * Copyright 2020 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -643,6 +643,9 @@ fu_bcm57xx_firmware_init(FuBcm57xxFirmware *self)
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
+	g_type_ensure(FU_TYPE_BCM57XX_STAGE1_IMAGE);
+	g_type_ensure(FU_TYPE_BCM57XX_STAGE2_IMAGE);
+	g_type_ensure(FU_TYPE_BCM57XX_DICT_IMAGE);
 }
 
 static void

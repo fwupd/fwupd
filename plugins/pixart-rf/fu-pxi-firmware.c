@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2020 Jimmy Yu <Jimmy_yu@pixart.com>
+ * Copyright 2020 Jimmy Yu <Jimmy_yu@pixart.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -12,7 +12,7 @@
 #define PIXART_RF_FW_HEADER_SIZE       32 /* bytes */
 #define PIXART_RF_FW_HEADER_TAG_OFFSET 24
 /* The hpac header is start from 821st byte from the end */
-#define PIXART_RF_FW_HEADER_HPAC_POS_FROM_END 821
+#define PIXART_RF_FW_HEADER_HPAC_POS_FROM_END	      821
 #define PIXART_RF_FW_HEADER_HPAC_VERSION_POS_FROM_END 823
 
 #define PIXART_RF_FW_HEADER_MAGIC 0x55AA55AA55AA55AA

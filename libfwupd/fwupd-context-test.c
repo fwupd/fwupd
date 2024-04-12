@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2020 Philip Withnall <pwithnall@endlessos.org>
- * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
+ * Copyright 2020 Philip Withnall <pwithnall@endlessos.org>
+ * Copyright 2020 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include <fwupd.h>

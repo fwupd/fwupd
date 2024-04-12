@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2024 Pierce Wang <pierce.wang@aver.com>
+ * Copyright 2024 Pierce Wang <pierce.wang@aver.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once

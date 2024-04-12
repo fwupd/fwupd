@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright 2015 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -2080,7 +2080,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	remotes = fu_engine_get_remotes(engine, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(remotes);
-	g_assert_cmpint(remotes->len, ==, 6);
+	g_assert_cmpint(remotes->len, ==, 7);
 
 	/* ensure there are no devices already */
 	devices_pre = fu_engine_get_devices(engine, &error);
@@ -2593,7 +2593,7 @@ fu_engine_history_func(gconstpointer user_data)
 			    "  AppstreamId:          com.hughski.test.firmware\n"
 			    "  Version:              1.2.3\n"
 			    "  Checksum:             SHA1(%s)\n"
-			    "  Flags:                none\n"
+			    "  Flags:                trusted-payload|trusted-metadata\n"
 			    "  AcquiesceDelay:       50\n",
 			    checksum);
 	ret = fu_test_compare_lines(device_str, device_str_expected, &error);
@@ -3254,7 +3254,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 			    "  AppstreamId:          com.hughski.test.firmware\n"
 			    "  Version:              1.2.3\n"
 			    "  Checksum:             SHA1(%s)\n"
-			    "  Flags:                none\n"
+			    "  Flags:                trusted-payload|trusted-metadata\n"
 			    "  AcquiesceDelay:       50\n",
 			    checksum);
 	ret = fu_test_compare_lines(device_str, device_str_expected, &error);
@@ -3936,6 +3936,7 @@ fu_history_migrate_v2_func(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_id(device), ==, "2ba16d10df45823dd4494ff10a0bfccfef512c9d");
 }
 
+#ifdef HAVE_FWUPDOFFLINE
 static void
 _plugin_status_changed_cb(FuDevice *device, FwupdStatus status, gpointer user_data)
 {
@@ -3944,6 +3945,7 @@ _plugin_status_changed_cb(FuDevice *device, FwupdStatus status, gpointer user_da
 	(*cnt)++;
 	fu_test_loop_quit();
 }
+#endif
 
 static void
 _plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
@@ -4162,25 +4164,27 @@ fu_plugin_module_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
 	GError *error = NULL;
+	gboolean ret;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+#ifdef HAVE_FWUPDOFFLINE
 	FuDevice *device_tmp;
 	FwupdRelease *release_tmp;
-	gboolean ret;
 	guint cnt = 0;
 	g_autofree gchar *localstatedir = NULL;
 	g_autofree gchar *mapped_file_fn = NULL;
 	g_autofree gchar *pending_cap = NULL;
 	g_autofree gchar *history_db = NULL;
-	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuDevice) device3 = NULL;
-	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuHistory) history = NULL;
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GMappedFile) mapped_file = NULL;
-	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+#endif
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
@@ -4216,10 +4220,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_name(device), ==, "Integrated Webcam™");
 	g_signal_handlers_disconnect_by_data(self->plugin, &device);
 
-#ifndef HAVE_FWUPDOFFLINE
-	g_test_skip("No offline update support on Windows");
-	return;
-#endif
+#ifdef HAVE_FWUPDOFFLINE
 	/* schedule an offline update */
 	g_signal_connect(FU_PROGRESS(progress),
 			 "status-changed",
@@ -4309,6 +4310,9 @@ fu_plugin_module_func(gconstpointer user_data)
 	history_db = g_build_filename(localstatedir, "pending.db", NULL);
 	(void)g_unlink(history_db);
 	(void)g_unlink(pending_cap);
+#else
+	g_test_skip("No offline update support");
+#endif
 }
 
 static void
@@ -4523,7 +4527,6 @@ fu_plugin_composite_func(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) releases =
@@ -4666,7 +4669,6 @@ fu_plugin_composite_func(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_logical_id(dev_tmp), ==, NULL);
 
 	/* install the cab */
-	stream = g_memory_input_stream_new_from_bytes(blob);
 	ret = fu_engine_install_releases(engine,
 					 request,
 					 releases,
@@ -6224,16 +6226,24 @@ fu_remote_list_repair_func(void)
 	g_autoptr(FuRemoteList) remote_list = fu_remote_list_new();
 	g_autoptr(GError) error = NULL;
 
+	fu_remote_list_set_lvfs_metadata_format(remote_list, "zst");
 	ret = fu_remote_list_load(remote_list, FU_REMOTE_LIST_LOAD_FLAG_FIX_METADATA_URI, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* check .gz converted to .xz */
+	/* check .gz converted to .zst */
 	remote = fu_remote_list_get_by_id(remote_list, "legacy-lvfs");
 	g_assert_nonnull(remote);
 	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
 			==,
-			"http://localhost/stable.xml.xz");
+			"http://localhost/stable.xml.zst");
+
+	/* check .xz converted to .zst */
+	remote = fu_remote_list_get_by_id(remote_list, "legacy-lvfs-xz");
+	g_assert_nonnull(remote);
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+			==,
+			"http://localhost/stable.xml.zst");
 
 	/* check non-LVFS remote NOT .gz converted to .xz */
 	remote = fu_remote_list_get_by_id(remote_list, "legacy");

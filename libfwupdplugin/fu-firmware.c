@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
+ * Copyright 2019 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuFirmware"
@@ -1404,6 +1404,32 @@ fu_firmware_build_from_xml(FuFirmware *self, const gchar *xml, GError **error)
 }
 
 /**
+ * fu_firmware_build_from_filename:
+ * @self: a #FuFirmware
+ * @filename: filename of XML builder
+ * @error: (nullable): optional return location for an error
+ *
+ * Builds a firmware from an XML manifest.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_firmware_build_from_filename(FuFirmware *self, const gchar *filename, GError **error)
+{
+	g_autofree gchar *xml = NULL;
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
+	g_return_val_if_fail(filename != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!g_file_get_contents(filename, &xml, NULL, error))
+		return FALSE;
+	return fu_firmware_build_from_xml(self, xml, error);
+}
+
+/**
  * fu_firmware_parse_file:
  * @self: a #FuFirmware
  * @file: a file
@@ -2182,7 +2208,21 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 	fu_xmlb_builder_insert_kv(bn, "filename", priv->filename);
 	if (priv->stream != NULL) {
 		g_autofree gchar *dataszstr = g_strdup_printf("0x%x", (guint)priv->streamsz);
-		xb_builder_node_insert_text(bn, "data", "[GInputStream]", "size", dataszstr, NULL);
+		g_autofree gchar *datastr = NULL;
+		if (priv->streamsz > 0x100) {
+			datastr = g_strdup("[GInputStream]");
+		} else {
+			g_autoptr(GByteArray) buf = fu_input_stream_read_byte_array(priv->stream,
+										    0x0,
+										    priv->streamsz,
+										    NULL);
+			if (buf != NULL) {
+				datastr = g_base64_encode(buf->data, buf->len);
+			} else {
+				datastr = g_strdup("[??GInputStream??]");
+			}
+		}
+		xb_builder_node_insert_text(bn, "data", datastr, "size", dataszstr, NULL);
 	} else if (priv->bytes != NULL) {
 		gsize bufsz = 0;
 		const guint8 *buf = g_bytes_get_data(priv->bytes, &bufsz);

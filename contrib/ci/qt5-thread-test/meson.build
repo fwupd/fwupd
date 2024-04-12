@@ -1,5 +1,5 @@
 project('qt5-thread-test', 'cpp',
-  license: 'LGPL-2.1+',
+  license: 'LGPL-2.1-or-later',
 )
 add_project_arguments('-fPIC', language: 'cpp')
 qt5core = dependency('Qt5Core')

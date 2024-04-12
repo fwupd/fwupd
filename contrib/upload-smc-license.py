@@ -1,5 +1,8 @@
 #!/usr/bin/python3
-# SPDX-License-Identifier: LGPL-2.1+
+#
+# Copyright 2022 Kai Michaelis <kai.michaelis@immu.ne>
+#
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 import sys
 import argparse

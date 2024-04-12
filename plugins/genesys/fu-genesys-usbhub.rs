@@ -1,5 +1,5 @@
-// Copyright (C) 2023 Adam.Chen <Adam.Chen@genesyslogic.com.tw>
-// SPDX-License-Identifier: LGPL-2.1+
+// Copyright 2023 Adam.Chen <Adam.Chen@genesyslogic.com.tw>
+// SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(ValidateStream)]
 struct FuStructGenesysFirmwareHdr {
@@ -34,7 +34,7 @@ enum FuGenesysTsVersion {
     BrandProject,
 }
 
-#[derive(ToString, Parse, ParseStream, New)]
+#[derive(Parse, ParseStream, New)]
 struct FuStructGenesysTsStatic {
     tool_string_version: FuGenesysTsVersion,
 
@@ -51,7 +51,7 @@ struct FuStructGenesysTsStatic {
     firmware_version: [char; 4], // MMmm=MM.mm (ASCII string)
 }
 
-#[derive(ToString, Parse)]
+#[derive(Parse)]
 struct FuStructGenesysTsDynamicGl3523 {
     running_mode: char, // 'M' for mask code, the others for bank code
 
@@ -89,7 +89,7 @@ struct FuStructGenesysTsDynamicGl3523 {
     bonding: char,
 }
 
-#[derive(ToString, Parse)]
+#[derive(Parse)]
 struct FuStructGenesysTsDynamicGl3590 {
     running_mode: char,
 
@@ -117,7 +117,7 @@ enum FuGenesysFwStatus {
     Bank2,
 }
 
-#[derive(ToString, Parse)]
+#[derive(Parse)]
 struct FuStructGenesysTsDynamicGl359030 {
     running_mode: char,
 
@@ -139,7 +139,7 @@ struct FuStructGenesysTsDynamicGl359030 {
     dev_fw_version: u16le,
 }
 
-#[derive(ToString, Parse)]
+#[derive(Parse)]
 struct FuStructGenesysTsDynamicGl3525 {
     running_mode: char,
 
@@ -163,7 +163,7 @@ struct FuStructGenesysTsDynamicGl3525 {
     dev_fw_version: u16le,
 }
 
-#[derive(ToString, Parse)]
+#[derive(Parse)]
 struct FuStructGenesysTsFirmwareInfo {
     tool_version: [u8; 6],      // ISP tool defined by itself
     address_mode: u8,           // 3 or 4: support 3 or 4-bytes address, others are no meaning.
@@ -189,7 +189,7 @@ enum FuGenesysVsHidIsp {
     CodesignNReset, // Support Codesign ISP Bank2 FW without reset.
 }
 
-#[derive(ToString, New, Parse)]
+#[derive(New, Parse)]
 struct FuStructGenesysTsVendorSupport {
     version: [char; 2],
     reserved1: [char; 8],
@@ -199,7 +199,7 @@ struct FuStructGenesysTsVendorSupport {
     reserved3: [char; 15],
 }
 
-#[derive(ToString, Parse)]
+#[derive(Parse)]
 struct FuStructGenesysTsBrandProject {
     project: [char; 15],
 }

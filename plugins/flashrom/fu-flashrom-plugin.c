@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2019 9elements Agency GmbH <patrick.rudolph@9elements.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2019 9elements Agency GmbH <patrick.rudolph@9elements.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -283,7 +283,11 @@ fu_flashrom_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **erro
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	self->guid = g_strdup(guid);
+	/* if changed */
+	if (g_strcmp0(self->guid, guid) != 0) {
+		g_free(self->guid);
+		self->guid = g_strdup(guid);
+	}
 
 	if (flashrom_init(SELFCHECK_TRUE)) {
 		g_set_error_literal(error,

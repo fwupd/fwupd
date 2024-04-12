@@ -30,14 +30,15 @@ LDFLAGS=$(dpkg-buildflags --get LDFLAGS | sed "s/-Wl,-Bsymbolic-functions\s//")
 export LDFLAGS
 
 root=$(pwd)
-rm -rf ${root}/build
+export BUILD=${root}/build
+rm -rf ${BUILD}
 chown -R nobody ${root}
-sudo -u nobody meson ${root}/build -Dman=false -Ddocs=enabled -Dgusb:tests=false --prefix=${root}/dist
+sudo -u nobody meson ${BUILD} -Doffline=true -Dman=false -Ddocs=enabled -Dgusb:tests=false --prefix=${root}/dist
 #build with clang
-sudo -u nobody ninja -C ${root}/build test -v
+sudo -u nobody ninja -C ${BUILD} test -v
 
 # check for unused symbols
 ./contrib/ci/check-unused.py
 
 #make docs available outside of docker
-ninja -C ${root}/build install -v
+ninja -C ${BUILD} install -v

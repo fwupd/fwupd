@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
+ * Copyright 2018 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -257,6 +257,8 @@ fu_uefi_cod_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 static void
 fu_uefi_cod_device_init(FuUefiCodDevice *self)
 {
+	fu_device_set_summary(FU_DEVICE(self),
+			      "UEFI System Resource Table device (Updated via caspule-on-disk)");
 }
 
 static void

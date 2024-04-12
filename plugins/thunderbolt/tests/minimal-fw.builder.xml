@@ -1,0 +1,12 @@
+<firmware gtype="FuIntelThunderboltFirmware">
+  <offset>0x8</offset>
+  <vendor_id>0x8086</vendor_id>
+  <device_id>0x15d3</device_id>
+  <model_id>0x1234</model_id>
+  <family>alpine-ridge-c</family>
+  <is_host>true</is_host>
+  <is_native>false</is_native>
+  <generation>0x3</generation>
+  <ports>0x2</ports>
+  <has_pd>true</has_pd>
+</firmware>

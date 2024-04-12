@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2021 Mario Limonciello <mario.limonciello@amd.com>
- * Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
+ * Copyright 2021 Mario Limonciello <mario.limonciello@amd.com>
+ * Copyright 2021 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -198,6 +198,8 @@ fu_uefi_grub_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 static void
 fu_uefi_grub_device_init(FuUefiGrubDevice *self)
 {
+	fu_device_set_summary(FU_DEVICE(self),
+			      "UEFI System Resource Table device (updated via grub)");
 }
 
 static void

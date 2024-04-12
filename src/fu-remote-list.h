@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once
@@ -34,18 +34,21 @@ typedef enum {
 FuRemoteList *
 fu_remote_list_new(void);
 gboolean
-fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **error);
+fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **error)
+    G_GNUC_NON_NULL(1);
 gboolean
 fu_remote_list_set_key_value(FuRemoteList *self,
 			     const gchar *remote_id,
 			     const gchar *key,
 			     const gchar *value,
-			     GError **error);
+			     GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
 GPtrArray *
-fu_remote_list_get_all(FuRemoteList *self);
+fu_remote_list_get_all(FuRemoteList *self) G_GNUC_NON_NULL(1);
 FwupdRemote *
-fu_remote_list_get_by_id(FuRemoteList *self, const gchar *remote_id);
+fu_remote_list_get_by_id(FuRemoteList *self, const gchar *remote_id) G_GNUC_NON_NULL(1, 2);
+void
+fu_remote_list_set_lvfs_metadata_format(FuRemoteList *self, const gchar *lvfs_metadata_format);
 
 /* for the self tests */
 void
-fu_remote_list_add_remote(FuRemoteList *self, FwupdRemote *remote);
+fu_remote_list_add_remote(FuRemoteList *self, FwupdRemote *remote) G_GNUC_NON_NULL(1, 2);

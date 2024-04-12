@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
+ * Copyright 2021 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuIfdFirmware"
@@ -10,6 +10,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-efi-volume.h"
 #include "fu-ifd-bios.h"
 #include "fu-ifd-common.h"
 #include "fu-ifd-firmware.h"
@@ -48,7 +49,7 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuIfdFirmware, fu_ifd_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_ifd_firmware_get_instance_private(o))
 
-#define FU_IFD_SIZE	 0x1000
+#define FU_IFD_SIZE 0x1000
 
 #define FU_IFD_FDBAR_FLASH_UPPER_MAP1 0x0EFC
 #define FU_IFD_FDBAR_OEM_SECTION      0x0F00
@@ -424,6 +425,9 @@ fu_ifd_firmware_init(FuIfdFirmware *self)
 	priv->flash_master[3] = 0x00800900;
 	priv->flash_ich_strap_base_addr = 0x100;
 	priv->flash_mch_strap_base_addr = 0x300;
+	g_type_ensure(FU_TYPE_IFD_BIOS);
+	g_type_ensure(FU_TYPE_IFD_IMAGE);
+	g_type_ensure(FU_TYPE_EFI_VOLUME);
 }
 
 static void

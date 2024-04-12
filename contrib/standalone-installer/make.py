@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# Copyright (C) 2017 Dell, Inc.
+# Copyright 2017 Dell, Inc.
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 #
 from base64 import b64encode
 import io

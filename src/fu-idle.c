@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
+ * Copyright 2018 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuIdle"
@@ -167,8 +167,7 @@ fu_idle_locker_new(FuIdle *self, FuIdleInhibit inhibit, const gchar *reason)
 void
 fu_idle_locker_free(FuIdleLocker *locker)
 {
-	if (locker == NULL)
-		return;
+	g_return_if_fail(locker != NULL);
 	fu_idle_uninhibit(locker->idle, locker->token);
 	g_object_unref(locker->idle);
 	g_free(locker);

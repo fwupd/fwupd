@@ -1,5 +1,5 @@
-// Copyright (C) {{Year}} {{Author}} <{{Email}}>
-// SPDX-License-Identifier: LGPL-2.1+
+// Copyright {{Year}} {{Author}} <{{Email}}>
+// SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(New, ValidateBytes, Parse)]
 struct FuStruct{{Vendor}}{{Example}} {

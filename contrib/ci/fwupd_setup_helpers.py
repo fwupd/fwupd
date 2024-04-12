@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 #
-# Copyright (C) 2017 Dell, Inc.
-# Copyright (C) 2020 Intel, Inc.
-# Copyright (C) 2021 Mario Limonciello
+# Copyright 2017 Dell, Inc.
+# Copyright 2020 Intel, Inc.
+# Copyright 2021 Mario Limonciello
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 #
 import os
 import sys

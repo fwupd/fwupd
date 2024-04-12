@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuEngineConfig"
@@ -407,7 +407,7 @@ fu_engine_config_init(FuEngineConfig *self)
 	fu_engine_set_config_default(self, "EnumerateAllDevices", "false");
 	fu_engine_set_config_default(self, "EspLocation", NULL);
 	fu_engine_set_config_default(self, "HostBkc", NULL);
-	fu_engine_set_config_default(self, "IdleTimeout", "300");	     /* s */
+	fu_engine_set_config_default(self, "IdleTimeout", "300");		  /* s */
 	fu_engine_set_config_default(self, "IdleInhibitStartupThreshold", "500"); /* ms */
 	fu_engine_set_config_default(self, "IgnorePower", "false");
 	fu_engine_set_config_default(self, "OnlyTrusted", "true");

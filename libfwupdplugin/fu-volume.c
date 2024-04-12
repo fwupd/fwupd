@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2019 Mario Limonciello <mario.limonciello@dell.com>
+ * Copyright 2018 Richard Hughes <richard@hughsie.com>
+ * Copyright 2019 Mario Limonciello <mario.limonciello@dell.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuVolume"
@@ -383,6 +383,31 @@ fu_volume_get_partition_name(FuVolume *self)
 	if (val == NULL)
 		return NULL;
 	return g_variant_dup_string(val, NULL);
+}
+
+/**
+ * fu_volume_is_mdraid:
+ * @self: a @FuVolume
+ *
+ * Determines if a volume is part of an MDRAID array.
+ *
+ * Returns: %TRUE if the volume is part of an MDRAID array
+ *
+ * Since: 1.9.17
+ **/
+gboolean
+fu_volume_is_mdraid(FuVolume *self)
+{
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail(FU_IS_VOLUME(self), FALSE);
+
+	if (self->proxy_blk == NULL)
+		return FALSE;
+	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "MDRaid");
+	if (val == NULL)
+		return FALSE;
+	return g_strcmp0(g_variant_get_string(val, NULL), "/") != 0;
 }
 
 static guint32
@@ -802,6 +827,23 @@ fu_volume_kind_convert_to_gpt(const gchar *kind)
 	return kind;
 }
 
+static gboolean
+fu_volume_check_block_device_symlinks(const gchar *const *symlinks, GError **error)
+{
+	for (guint i = 0; symlinks[i] != NULL; i++) {
+		if (g_str_has_prefix(symlinks[i], "/dev/zvol")) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "detected zfs zvol");
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
 /**
  * fu_volume_new_by_kind:
  * @kind: a volume kind, typically a GUID
@@ -826,6 +868,7 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 	devices = fu_common_get_block_devices(error);
 	if (devices == NULL)
 		return NULL;
+	g_info("Looking for volumes of type %s", kind);
 	volumes = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	for (guint i = 0; i < devices->len; i++) {
 		GDBusProxy *proxy_blk = g_ptr_array_index(devices, i);
@@ -835,7 +878,19 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 		g_autoptr(FuVolume) vol = NULL;
 		g_autoptr(GDBusProxy) proxy_part = NULL;
 		g_autoptr(GDBusProxy) proxy_fs = NULL;
-		g_autoptr(GError) error_proxy_fs = NULL;
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GVariant) symlinks = NULL;
+
+		/* ignore anything in a zfs zvol */
+		symlinks = g_dbus_proxy_get_cached_property(proxy_blk, "Symlinks");
+		if (symlinks != NULL) {
+			g_autofree const gchar **symlinks_strv =
+			    g_variant_get_bytestring_array(symlinks, NULL);
+			if (!fu_volume_check_block_device_symlinks(symlinks_strv, &error_local)) {
+				g_debug("ignoring due to symlink: %s", error_local->message);
+				continue;
+			}
+		}
 
 		proxy_part = g_dbus_proxy_new_sync(g_dbus_proxy_get_connection(proxy_blk),
 						   G_DBUS_PROXY_FLAGS_NONE,
@@ -858,11 +913,11 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 						 g_dbus_proxy_get_object_path(proxy_blk),
 						 UDISKS_DBUS_INTERFACE_FILESYSTEM,
 						 NULL,
-						 &error_proxy_fs);
+						 &error_local);
 		if (proxy_fs == NULL) {
 			g_debug("failed to get filesystem for %s: %s",
 				g_dbus_proxy_get_object_path(proxy_blk),
-				error_proxy_fs->message);
+				error_local->message);
 			continue;
 		}
 		vol = g_object_new(FU_TYPE_VOLUME,
@@ -874,19 +929,30 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 				   proxy_part,
 				   NULL);
 
+		if (fu_volume_is_mdraid(vol))
+			part_type = g_strdup(kind);
+
+		if (part_type == NULL)
+			part_type = fu_volume_get_partition_kind(vol);
+
 		/* convert reported type to GPT type */
-		part_type = fu_volume_get_partition_kind(vol);
 		if (part_type == NULL)
 			continue;
+
 		type_str = fu_volume_kind_convert_to_gpt(part_type);
 		id_type = fu_volume_get_id_type(vol);
-		g_debug("device %s, type: %s, internal: %d, fs: %s",
-			g_dbus_proxy_get_object_path(proxy_blk),
-			type_str,
-			fu_volume_is_internal(vol),
-			id_type);
+		g_info("device %s, type: %s, internal: %d, fs: %s",
+		       g_dbus_proxy_get_object_path(proxy_blk),
+		       type_str,
+		       fu_volume_is_internal(vol),
+		       id_type);
 		if (g_strcmp0(type_str, kind) != 0)
 			continue;
+		if (g_strcmp0(id_type, "linux_raid_member") == 0) {
+			g_debug("ignoring linux_raid_member device %s",
+				g_dbus_proxy_get_object_path(proxy_blk));
+			continue;
+		}
 		g_ptr_array_add(volumes, g_steal_pointer(&vol));
 	}
 	if (volumes->len == 0) {

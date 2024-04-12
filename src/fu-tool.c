@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright 2015 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuMain"
@@ -214,7 +214,7 @@ fu_util_lock(FuUtilPrivate *priv, GError **error)
 static const gchar *
 fu_util_get_systemd_unit(void)
 {
-	if (g_getenv("SNAP") != NULL)
+	if (g_strcmp0(g_getenv("SNAP_NAME"), "fwupd") == 0)
 		return SYSTEMD_SNAP_FWUPD_UNIT;
 	return SYSTEMD_FWUPD_UNIT;
 }
@@ -2229,8 +2229,6 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* activate anything with _NEEDS_ACTIVATION */
-	/* order by device priority */
-	g_ptr_array_sort(devices, fu_util_device_order_sort_cb);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
 		if (!fwupd_device_match_flags(FWUPD_DEVICE(device),

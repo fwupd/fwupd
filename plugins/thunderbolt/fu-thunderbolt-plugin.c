@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Christian J. Kellner <christian@kellner.me>
+ * Copyright 2017 Christian J. Kellner <christian@kellner.me>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -18,7 +18,7 @@ struct _FuThunderboltPlugin {
 G_DEFINE_TYPE(FuThunderboltPlugin, fu_thunderbolt_plugin, FU_TYPE_PLUGIN)
 
 /* 5 seconds sleep until retimer is available after nvm update */
-#define FU_THUNDERBOLT_RETIMER_CLEANUP_DELAY 5000000
+#define FU_THUNDERBOLT_RETIMER_CLEANUP_DELAY 5000 /* ms */
 
 static gboolean
 fu_thunderbolt_plugin_safe_kernel(FuPlugin *plugin, GError **error)
@@ -83,7 +83,7 @@ fu_thunderbolt_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GE
 		if ((g_strcmp0(fu_device_get_plugin(dev), "thunderbolt") == 0) &&
 		    fu_device_has_private_flag(dev, FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION) &&
 		    fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)) {
-			g_usleep(FU_THUNDERBOLT_RETIMER_CLEANUP_DELAY);
+			fu_device_sleep(dev, FU_THUNDERBOLT_RETIMER_CLEANUP_DELAY);
 			return fu_thunderbolt_retimer_set_parent_port_online(dev, error);
 		}
 	}

@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2021 Dell Inc.
- * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2020 Mario Limonciello <mario.limonciello@dell.com>
- * Copyright (C) 2017 Intel Corporation.
+ * Copyright 2021 Dell Inc.
+ * Copyright 2020 Richard Hughes <richard@hughsie.com>
+ * Copyright 2020 Mario Limonciello <mario.limonciello@dell.com>
+ * Copyright 2017 Intel Corporation.
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once

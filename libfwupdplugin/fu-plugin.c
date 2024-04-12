@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright 2016 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuPlugin"
@@ -46,7 +46,7 @@ typedef struct {
 	GHashTable *runtime_versions;
 	GHashTable *compile_versions;
 	FuContext *ctx;
-	GArray *device_gtypes;	     /* (nullable): of #GType */
+	GArray *device_gtypes; /* (nullable): of #GType */
 	GType device_gtype_default;
 	GHashTable *cache;	     /* (nullable): platform_id:GObject */
 	GHashTable *report_metadata; /* (nullable): key:value */

@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuMain"
@@ -2805,24 +2805,6 @@ fu_util_sort_devices_by_flags_cb(gconstpointer a, gconstpointer b)
 		return 1;
 
 	return 0;
-}
-
-static gint
-fu_util_device_order_compare(FuDevice *device1, FuDevice *device2)
-{
-	if (fu_device_get_order(device1) < fu_device_get_order(device2))
-		return -1;
-	if (fu_device_get_order(device1) > fu_device_get_order(device2))
-		return 1;
-	return 0;
-}
-
-gint
-fu_util_device_order_sort_cb(gconstpointer a, gconstpointer b)
-{
-	FuDevice *device_a = *((FuDevice **)a);
-	FuDevice *device_b = *((FuDevice **)b);
-	return fu_util_device_order_compare(device_a, device_b);
 }
 
 gboolean

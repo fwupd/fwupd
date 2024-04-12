@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuUsbDevice"
@@ -119,6 +119,11 @@ fu_usb_device_init(FuUsbDevice *device)
 				     G_USB_DEVICE_ERROR_PERMISSION_DENIED,
 				     NULL);
 #endif
+	fu_device_retry_add_recovery(FU_DEVICE(device), FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, NULL);
+	fu_device_retry_add_recovery(FU_DEVICE(device),
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_PERMISSION_DENIED,
+				     NULL);
 }
 
 static void

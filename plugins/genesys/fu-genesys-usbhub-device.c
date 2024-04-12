@@ -1,9 +1,9 @@
 /*
- * Copyright (C) 2023 Adam.Chen <Adam.Chen@genesyslogic.com.tw>
- * Copyright (C) 2022 Gaël PORTAY <gael.portay@collabora.com>
- * Copyright (C) 2021 Ricardo Cañuelo <ricardo.canuelo@collabora.com>
+ * Copyright 2023 Adam.Chen <Adam.Chen@genesyslogic.com.tw>
+ * Copyright 2022 Gaël PORTAY <gael.portay@collabora.com>
+ * Copyright 2021 Ricardo Cañuelo <ricardo.canuelo@collabora.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -1878,10 +1878,10 @@ fu_genesys_usbhub_device_prepare(FuDevice *device,
 		return TRUE;
 
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_SCHEDULING, 5, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 5, "detach");
 	for (guint i = 0; i < fw_types->len; i++) {
-		fu_progress_add_step(progress, FWUPD_STATUS_SCHEDULING, 100, NULL);
-		fu_progress_add_step(progress, FWUPD_STATUS_SCHEDULING, 100, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 100, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 100, NULL);
 	}
 
 	/* enter isp mode */

@@ -1,5 +1,8 @@
 #!/usr/bin/python3
-# SPDX-License-Identifier: LGPL-2.1+
+#
+# Copyright 2017 Richard Hughes <richard@hughsie.com>
+#
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 """ This parses avrdude.conf and generates quirks for fwupd """
 

@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
+ * Copyright 2021 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -130,6 +130,7 @@ fu_efi_filesystem_init(FuEfiFilesystem *self)
 	    FU_FIRMWARE(self),
 	    g_getenv("FWUPD_FUZZER_RUNNING") == NULL ? FU_EFI_FILESYSTEM_FILES_MAX : 50);
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_8);
+	g_type_ensure(FU_TYPE_EFI_FILE);
 }
 
 static void

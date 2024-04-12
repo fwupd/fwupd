@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuCabinet"
@@ -505,7 +505,7 @@ fu_cabinet_build_silo_metainfo(FuCabinet *self, FuFirmware *img, GError **error)
 	item = jcat_file_get_item_by_id(self->jcat_file, fn, NULL);
 	if (item == NULL) {
 		g_info("failed to verify %s: no JcatItem", fn);
-	} else {
+	} else if (self->jcat_context != NULL) {
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) results = NULL;
 		g_autoptr(GBytes) blob = NULL;
@@ -807,6 +807,11 @@ fu_cabinet_sign(FuCabinet *self,
 	g_autoptr(JcatContext) jcat_context = jcat_context_new();
 	g_autoptr(JcatEngine) jcat_engine = NULL;
 	g_autoptr(JcatFile) jcat_file = jcat_file_new();
+
+	g_return_val_if_fail(FU_IS_CABINET(self), FALSE);
+	g_return_val_if_fail(cert != NULL, FALSE);
+	g_return_val_if_fail(privkey != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* load existing .jcat file if it exists */
 	img = fu_firmware_get_image_by_id(FU_FIRMWARE(self), "firmware.jcat", NULL);

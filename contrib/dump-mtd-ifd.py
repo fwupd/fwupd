@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# Copyright (C) 2024 Richard Hughes <richard@hughsie.com>
+# Copyright 2024 Richard Hughes <richard@hughsie.com>
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 #
 # pylint: disable=invalid-name,missing-docstring,too-few-public-methods,too-many-locals
 

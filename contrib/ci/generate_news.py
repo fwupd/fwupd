@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# Copyright (C) 2020 Dell Inc.
+# Copyright 2020 Dell Inc.
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 #
 import os
 import argparse

@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2021 Xiaotian Cui <xtcui@analogixsemi.com>
+ * Copyright 2021 Xiaotian Cui <xtcui@analogixsemi.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"

@@ -18,7 +18,6 @@ MemoryDenyWriteExecute=yes
 NoNewPrivileges=no
 PrivateDevices=no
 PrivateTmp=true
-ProcSubset=pid
 ProtectClock=yes
 ProtectControlGroups=yes
 ProtectHome=yes

@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2021 Dell Inc.
- * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2020 Mario Limonciello <mario.limonciello@dell.com>
- * Copyright (C) 2017 Intel Corporation.
+ * Copyright 2021 Dell Inc.
+ * Copyright 2020 Richard Hughes <richard@hughsie.com>
+ * Copyright 2020 Mario Limonciello <mario.limonciello@dell.com>
+ * Copyright 2017 Intel Corporation.
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuFirmware"
@@ -45,21 +45,6 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuIntelThunderboltNvm, fu_intel_thunderbolt_nvm, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_intel_thunderbolt_nvm_get_instance_private(o))
-
-#define FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_AVAILABLE_SECTIONS 0x0002
-#define FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_UCODE		   0x0003
-#define FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_DEVICE_ID	   0x0005
-#define FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_VERSION		   0x0009
-#define FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_FLAGS_HOST	   0x0010
-#define FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_FLASH_SIZE	   0x0045
-#define FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_ARC_PARAMS	   0x0075
-#define FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_FLAGS_IS_NATIVE	   0x007B
-#define FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_DROM		   0x010E
-
-#define FU_INTEL_THUNDERBOLT_NVM_DROM_OFFSET_VENDOR_ID 0x0010
-#define FU_INTEL_THUNDERBOLT_NVM_DROM_OFFSET_MODEL_ID  0x0012
-
-#define FU_INTEL_THUNDERBOLT_NVM_ARC_PARAMS_OFFSET_PD_POINTER 0x010C
 
 /**
  * fu_intel_thunderbolt_nvm_get_vendor_id:
@@ -365,7 +350,6 @@ fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self, GError **err
 		 * offset to find the start of the next section. Otherwise, we
 		 * already have the next section offset...
 		 */
-		const guint8 DRAM_FLAG = 1 << 6;
 		guint16 ucode_offset;
 		guint8 available_sections = 0;
 
@@ -388,7 +372,7 @@ fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self, GError **err
 			return FALSE;
 		}
 		offset = ucode_offset;
-		if ((available_sections & DRAM_FLAG) == 0) {
+		if ((available_sections & FU_INTEL_THUNDERBOLT_NVM_SECTION_FLAG_DRAM) == 0) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_FILE,
@@ -396,7 +380,7 @@ fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self, GError **err
 			return FALSE;
 		}
 
-		for (guint8 i = 1; i < DRAM_FLAG; i <<= 1) {
+		for (guint8 i = 1; i < FU_INTEL_THUNDERBOLT_NVM_SECTION_FLAG_DRAM; i <<= 1) {
 			if (available_sections & i) {
 				if (!fu_intel_thunderbolt_nvm_read_ucode_section_len(self,
 										     offset,
@@ -650,105 +634,38 @@ fu_intel_thunderbolt_nvm_write(FuFirmware *firmware, GError **error)
 {
 	FuIntelThunderboltNvm *self = FU_INTEL_THUNDERBOLT_NVM(firmware);
 	FuIntelThunderboltNvmPrivate *priv = GET_PRIVATE(self);
-	guint32 digital_size = 0x120;
-	guint32 drom_offset = 0 + digital_size;
-	guint32 drom_size = 0x20;
-	guint32 arc_param_offset = drom_offset + drom_size;
-	guint32 arc_param_size = 0x120;
-	g_autoptr(GByteArray) buf = g_byte_array_new();
-
-	/* minimal size */
-	fu_byte_array_set_size(buf, arc_param_offset + arc_param_size, 0x0);
+	g_autoptr(GByteArray) st = fu_intel_thunderbolt_nvm_digital_new();
+	g_autoptr(GByteArray) st_drom = fu_intel_thunderbolt_nvm_drom_new();
+	g_autoptr(GByteArray) st_arc = fu_intel_thunderbolt_nvm_arc_params_new();
+	g_autoptr(GByteArray) st_dram = fu_intel_thunderbolt_nvm_dram_new();
 
 	/* digital section */
-	if (!fu_memwrite_uint8_safe(buf->data,
-				    buf->len,
-				    FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_AVAILABLE_SECTIONS,
-				    0x0,
-				    error))
-		return NULL;
-	if (!fu_memwrite_uint16_safe(buf->data,
-				     buf->len,
-				     FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_UCODE,
-				     0x0,
-				     G_LITTLE_ENDIAN,
-				     error))
-		return NULL;
-	if (!fu_memwrite_uint8_safe(buf->data,
-				    buf->len,
-				    FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_FLAGS_IS_NATIVE,
-				    priv->is_native ? 0x20 : 0x0,
-				    error))
-		return NULL;
-	if (!fu_memwrite_uint8_safe(buf->data,
-				    buf->len,
-				    FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_FLAGS_HOST,
-				    priv->is_host ? 0x2 : 0x0,
-				    error))
-		return NULL;
-	if (!fu_memwrite_uint32_safe(buf->data,
-				     buf->len,
-				     FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_DEVICE_ID,
-				     priv->device_id,
-				     G_LITTLE_ENDIAN,
-				     error))
-		return NULL;
-	if (!fu_memwrite_uint16_safe(buf->data,
-				     buf->len,
-				     FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_VERSION,
-				     fu_firmware_get_version_raw(firmware),
-				     G_LITTLE_ENDIAN,
-				     error))
-		return NULL;
-	if (!fu_memwrite_uint8_safe(buf->data,
-				    buf->len,
-				    FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_FLASH_SIZE,
-				    priv->flash_size,
-				    error))
-		return NULL;
+	fu_intel_thunderbolt_nvm_digital_set_available_sections(
+	    st,
+	    FU_INTEL_THUNDERBOLT_NVM_SECTION_FLAG_DRAM);
+	fu_intel_thunderbolt_nvm_digital_set_device_id(st, priv->device_id);
+	fu_intel_thunderbolt_nvm_digital_set_version(st, fu_firmware_get_version_raw(firmware));
+	fu_intel_thunderbolt_nvm_digital_set_flags_host(st, priv->is_host ? 0x2 : 0x0);
+	fu_intel_thunderbolt_nvm_digital_set_flash_size(st, priv->flash_size);
+	fu_intel_thunderbolt_nvm_digital_set_flags_is_native(st, priv->is_native ? 0x20 : 0x0);
 
 	/* drom section */
-	if (!fu_memwrite_uint32_safe(buf->data,
-				     buf->len,
-				     FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_DROM,
-				     drom_offset,
-				     G_LITTLE_ENDIAN,
-				     error))
-		return NULL;
-	if (!fu_memwrite_uint16_safe(buf->data,
-				     buf->len,
-				     drom_offset + FU_INTEL_THUNDERBOLT_NVM_DROM_OFFSET_VENDOR_ID,
-				     priv->vendor_id,
-				     G_LITTLE_ENDIAN,
-				     error))
-		return NULL;
-	if (!fu_memwrite_uint16_safe(buf->data,
-				     buf->len,
-				     drom_offset + FU_INTEL_THUNDERBOLT_NVM_DROM_OFFSET_MODEL_ID,
-				     priv->model_id,
-				     G_LITTLE_ENDIAN,
-				     error))
-		return NULL;
+	fu_intel_thunderbolt_nvm_digital_set_drom(st, st->len);
+	fu_intel_thunderbolt_nvm_drom_set_vendor_id(st_drom, priv->vendor_id);
+	fu_intel_thunderbolt_nvm_drom_set_model_id(st_drom, priv->model_id);
+	g_byte_array_append(st, st_drom->data, st_drom->len);
 
 	/* ARC param section */
-	if (!fu_memwrite_uint32_safe(buf->data,
-				     buf->len,
-				     FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_ARC_PARAMS,
-				     arc_param_offset,
-				     G_LITTLE_ENDIAN,
-				     error))
-		return NULL;
-	if (!fu_memwrite_uint32_safe(buf->data,
-				     buf->len,
-				     arc_param_offset +
-					 FU_INTEL_THUNDERBOLT_NVM_ARC_PARAMS_OFFSET_PD_POINTER,
-				     priv->has_pd ? 0x1 : 0x0,
-				     G_LITTLE_ENDIAN,
-				     error))
-		return NULL;
+	fu_intel_thunderbolt_nvm_digital_set_arc_params(st, st->len);
+	fu_intel_thunderbolt_nvm_arc_params_set_pd_pointer(st_arc, priv->has_pd ? 0x1 : 0x0);
+	g_byte_array_append(st, st_arc->data, st_arc->len);
+
+	/* dram section */
+	fu_intel_thunderbolt_nvm_digital_set_ucode(st, st->len);
+	g_byte_array_append(st, st_dram->data, st_dram->len);
 
 	/* success */
-	return g_steal_pointer(&buf);
+	return g_steal_pointer(&st);
 }
 
 static gboolean

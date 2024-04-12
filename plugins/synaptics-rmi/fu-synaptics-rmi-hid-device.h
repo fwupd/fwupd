@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
- * Copyright (c) 2012 Synaptics Incorporated.
+ * Copyright 2019 Richard Hughes <richard@hughsie.com>
+ * Copyright 2012 Synaptics Incorporated.
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once

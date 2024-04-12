@@ -1,6 +1,6 @@
-// Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
-// Copyright (C) 2021 Michael Cheng <michael.cheng@emc.com.tw>
-// SPDX-License-Identifier: LGPL-2.1+
+// Copyright 2023 Richard Hughes <richard@hughsie.com>
+// Copyright 2021 Michael Cheng <michael.cheng@emc.com.tw>
+// SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(New, Parse)]
 struct FuStructCfuGetVersionRsp {

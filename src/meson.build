@@ -209,7 +209,7 @@ fwupdengine = library(
   ],
 )
 
-if offline.allowed()
+if offline
 fwupdoffline = executable(
   'fwupdoffline',
   fwupdengine_rs,
@@ -360,9 +360,6 @@ executable(
   link_with: [
     fwupdengine,
     plugin_libs,
-  ],
-  c_args: [
-    '-DFU_OFFLINE_DESTDIR=""',
   ],
   install: true,
   install_rpath: libdir_pkg,

@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2022 Richard Hughes <richard@hughsie.com>
+ * Copyright 2022 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once
@@ -14,10 +14,10 @@ G_DECLARE_FINAL_TYPE(FuDaemon, fu_daemon, FU, DAEMON, GObject)
 FuDaemon *
 fu_daemon_new(void);
 gboolean
-fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error);
+fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error) G_GNUC_NON_NULL(1);
 void
-fu_daemon_start(FuDaemon *self);
+fu_daemon_start(FuDaemon *self) G_GNUC_NON_NULL(1);
 void
-fu_daemon_stop(FuDaemon *self);
+fu_daemon_stop(FuDaemon *self) G_GNUC_NON_NULL(1);
 void
-fu_daemon_set_machine_kind(FuDaemon *self, FuDaemonMachineKind machine_kind);
+fu_daemon_set_machine_kind(FuDaemon *self, FuDaemonMachineKind machine_kind) G_GNUC_NON_NULL(1);

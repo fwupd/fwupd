@@ -6,7 +6,7 @@
 
   <!--
     Policy definitions for fwupd actions.
-    Copyright (c) 2015 Richard Hughes <richard@hughsie.com>
+    Copyright 2015 Richard Hughes <richard@hughsie.com>
   -->
 
   <vendor>System firmware update</vendor>

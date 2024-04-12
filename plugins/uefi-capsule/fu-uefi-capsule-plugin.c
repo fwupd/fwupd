@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2015 Peter Jones <pjones@redhat.com>
+ * Copyright 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright 2015 Peter Jones <pjones@redhat.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -540,19 +540,10 @@ fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 static gboolean
 fu_uefi_capsule_plugin_is_esp_linux(FuVolume *esp, GError **error)
 {
-	const gchar *basenames_root[] = {"grub", "shim", "systemd-boot", NULL};
-	const gchar *efi_suffix;
-	g_autofree gchar *basenames_str = NULL;
+	const gchar *prefixes[] = {"grub", "shim", "systemd-boot", "zfsbootmenu", NULL};
+	g_autofree gchar *prefixes_str = NULL;
 	g_autofree gchar *mount_point = fu_volume_get_mount_point(esp);
-	g_auto(GStrv) basenames = g_new0(gchar *, G_N_ELEMENTS(basenames_root));
 	g_autoptr(GPtrArray) files = NULL;
-
-	/* build a list of possible files, e.g. grubx64.efi, shimaa64.efi, etc. */
-	efi_suffix = fu_uefi_bootmgr_get_suffix(error);
-	if (efi_suffix == NULL)
-		return FALSE;
-	for (guint i = 0; basenames_root[i] != NULL; i++)
-		basenames[i] = g_strdup_printf("%s%s.efi", basenames_root[i], efi_suffix);
 
 	/* look for any likely basenames */
 	if (mount_point == NULL) {
@@ -569,19 +560,24 @@ fu_uefi_capsule_plugin_is_esp_linux(FuVolume *esp, GError **error)
 		const gchar *fn = g_ptr_array_index(files, i);
 		g_autofree gchar *basename = g_path_get_basename(fn);
 		g_autofree gchar *basename_lower = g_utf8_strdown(basename, -1);
-		if (g_strv_contains((const gchar *const *)basenames, basename_lower)) {
+
+		for (guint j = 0; prefixes[j] != NULL; j++) {
+			if (!g_str_has_prefix(basename_lower, prefixes[j]))
+				continue;
+			if (!g_str_has_suffix(basename_lower, ".efi"))
+				continue;
 			g_info("found %s which indicates a Linux ESP, using %s", fn, mount_point);
 			return TRUE;
 		}
 	}
 
 	/* failed */
-	basenames_str = g_strjoinv("|", (gchar **)basenames);
+	prefixes_str = g_strjoinv("|", (gchar **)prefixes);
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_FOUND,
-		    "did not find %s in %s",
-		    basenames_str,
+		    "did not any files with prefix %s in %s",
+		    prefixes_str,
 		    mount_point);
 	return FALSE;
 }
@@ -1167,7 +1163,7 @@ static gboolean
 fu_uefi_capsule_plugin_cleanup_esp(FuUefiCapsulePlugin *self, GError **error)
 {
 	g_autofree gchar *esp_os_base = fu_uefi_get_esp_path_for_os();
-	g_autofree gchar *esp_path = fu_volume_get_mount_point(self->esp);
+	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *pattern = NULL;
 	g_autoptr(FuDeviceLocker) esp_locker = NULL;
 	g_autoptr(GPtrArray) files = NULL;
@@ -1176,6 +1172,7 @@ fu_uefi_capsule_plugin_cleanup_esp(FuUefiCapsulePlugin *self, GError **error)
 	esp_locker = fu_volume_locker(self->esp, error);
 	if (esp_locker == NULL)
 		return FALSE;
+	esp_path = fu_volume_get_mount_point(self->esp);
 	if (esp_path == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

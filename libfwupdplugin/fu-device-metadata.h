@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Mario Limonciello <mario.limonciello@dell.com>
+ * Copyright 2017 Mario Limonciello <mario.limonciello@dell.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once

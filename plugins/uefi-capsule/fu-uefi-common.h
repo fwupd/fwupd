@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2015 Peter Jones <pjones@redhat.com>
+ * Copyright 2018 Richard Hughes <richard@hughsie.com>
+ * Copyright 2015 Peter Jones <pjones@redhat.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once
@@ -44,5 +44,3 @@ fu_uefi_esp_target_copy(const gchar *source_fn,
 			FuVolume *esp,
 			const gchar *target_no_mountpoint,
 			GError **error);
-const gchar *
-fu_uefi_bootmgr_get_suffix(GError **error);

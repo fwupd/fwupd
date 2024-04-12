@@ -95,7 +95,7 @@ if build_daemon
     endif
 
     # flashrom requires raw-io
-    system_call_filter = ['~@clock', '@cpu-emulation', '@debug', '@module', '@mount', '@obsolete']
+    system_call_filter = ['~@clock', '@cpu-emulation', '@debug', '@memlock', '@module', '@mount', '@obsolete', '@pkey', '@reboot', '@resources', '@swap']
     if not allow_flashrom
       system_call_filter += ['@raw-io']
     endif
@@ -105,7 +105,7 @@ if build_daemon
     con2.set('motd_dir', motd_dir)
 
     # replace @bindir@
-    if offline.allowed()
+    if offline
       configure_file(
         input: 'fwupd-offline-update.service.in',
         output: 'fwupd-offline-update.service',

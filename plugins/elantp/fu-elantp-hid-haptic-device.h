@@ -1,7 +1,7 @@
 /*
- *  Copyright (C) 2022 Jingle Wu <jingle.wu@emc.com.tw>
+ * Copyright 2022 Jingle Wu <jingle.wu@emc.com.tw>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once

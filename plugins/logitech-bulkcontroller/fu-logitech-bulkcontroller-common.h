@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 1999-2021 Logitech, Inc.
+ * Copyright 1999-2021 Logitech, Inc.
  * All Rights Reserved
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once

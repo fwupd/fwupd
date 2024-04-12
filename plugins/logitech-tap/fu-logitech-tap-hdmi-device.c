@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 1999-2023 Logitech, Inc.
+ * Copyright 1999-2023 Logitech, Inc.
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -256,7 +256,7 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self, G
 			return FALSE;
 		if (mmp_get_data[0] == kLogiDefaultAitSuccessValue) {
 			if (pass == 0)
-				g_usleep(8 * G_USEC_PER_SEC);
+				fu_device_sleep(FU_DEVICE(self), 8 * 1000);
 			break;
 		} else if (mmp_get_data[0] == kLogiDefaultAitFailureValue) {
 			g_set_error(error,

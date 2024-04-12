@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright 2016 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -184,7 +184,9 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {
-	const gchar *tmp;
+	g_autofree gchar *decompress_delay_str = NULL;
+	g_autofree gchar *write_delay_str = NULL;
+	g_autofree gchar *verify_delay_str = NULL;
 	guint64 delay_decompress_ms = 0;
 	guint64 delay_write_ms = 0;
 	guint64 delay_verify_ms = 0;
@@ -199,9 +201,9 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 	}
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DECOMPRESSING);
-	tmp = fu_plugin_get_config_value(plugin, "DecompressDelay");
-	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &delay_decompress_ms, 0, 10000, error)) {
+	decompress_delay_str = fu_plugin_get_config_value(plugin, "DecompressDelay");
+	if (decompress_delay_str != NULL) {
+		if (!fu_strtoull(decompress_delay_str, &delay_decompress_ms, 0, 10000, error)) {
 			g_prefix_error(error, "failed to parse DecompressDelay: ");
 			return FALSE;
 		}
@@ -213,7 +215,9 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 
 	/* send an interactive request, and wait some time */
 	if (fu_plugin_get_config_value_boolean(plugin, "RequestSupported")) {
+		g_autofree gchar *request_delay_str = NULL;
 		g_autoptr(FwupdRequest) request = fwupd_request_new();
+
 		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 		fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
 		fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
@@ -222,20 +226,20 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 					  "touch and please re-insert it.");
 		if (!fu_device_emit_request(device, request, progress, error))
 			return FALSE;
-		tmp = fu_plugin_get_config_value(plugin, "RequestDelay");
-		if (tmp != NULL) {
-			if (!fu_strtoull(tmp, &delay_request_ms, 0, 10000, error)) {
+		request_delay_str = fu_plugin_get_config_value(plugin, "RequestDelay");
+		if (request_delay_str != NULL) {
+			if (!fu_strtoull(request_delay_str, &delay_request_ms, 0, 10000, error)) {
 				g_prefix_error(error, "failed to parse RequestDelay: ");
 				return FALSE;
 			}
 		}
-		g_usleep(delay_request_ms * 1000);
+		fu_device_sleep(device, delay_request_ms);
 	}
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	tmp = fu_plugin_get_config_value(plugin, "WriteDelay");
-	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &delay_write_ms, 0, 10000, error)) {
+	write_delay_str = fu_plugin_get_config_value(plugin, "WriteDelay");
+	if (write_delay_str != NULL) {
+		if (!fu_strtoull(write_delay_str, &delay_write_ms, 0, 10000, error)) {
 			g_prefix_error(error, "failed to parse WriteDelay: ");
 			return FALSE;
 		}
@@ -245,9 +249,9 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 		fu_progress_set_percentage_full(progress, i, delay_write_ms);
 	}
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_VERIFY);
-	tmp = fu_plugin_get_config_value(plugin, "VerifyDelay");
-	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &delay_verify_ms, 0, 10000, error)) {
+	verify_delay_str = fu_plugin_get_config_value(plugin, "VerifyDelay");
+	if (verify_delay_str != NULL) {
+		if (!fu_strtoull(verify_delay_str, &delay_verify_ms, 0, 10000, error)) {
 			g_prefix_error(error, "failed to parse VerifyDelay: ");
 			return FALSE;
 		}

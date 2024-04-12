@@ -1,5 +1,5 @@
-// Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
-// SPDX-License-Identifier: LGPL-2.1+
+// Copyright 2023 Richard Hughes <richard@hughsie.com>
+// SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(Parse, ParseStream)]
 struct FuStructVliPdHdr {
@@ -69,6 +69,7 @@ enum FuVliDeviceKind {
     Vl822q7 = 0xa822, // guessed
     Vl822q8 = 0xb822, // guessed
     Vl822t = 0xc822, // guessed
+    Vl822c0 = 0xd822,
     Vl830 = 0x0830,
     Vl832 = 0x0832,
     Msp430 = 0xf430,  // guessed

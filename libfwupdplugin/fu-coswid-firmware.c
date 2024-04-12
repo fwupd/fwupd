@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2022 Richard Hughes <richard@hughsie.com>
+ * Copyright 2022 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuFirmware"
@@ -39,6 +39,8 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuCoswidFirmware, fu_coswid_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_coswid_firmware_get_instance_private(o))
+
+#define FU_COSWID_FIRMWARE_MAX_ALLOCATION 0x32000
 
 typedef struct {
 	gchar *name;
@@ -114,10 +116,22 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCoswidFirmwarePayload, fu_coswid_firmware_payloa
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(cbor_item_t, cbor_intermediate_decref)
 
 static gchar *
-fu_coswid_firmware_strndup(cbor_item_t *item)
+fu_coswid_firmware_strndup(cbor_item_t *item, GError **error)
 {
-	if (!cbor_string_is_definite(item))
+	if (!cbor_isa_string(item)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "item is not a string");
 		return NULL;
+	}
+	if (cbor_string_handle(item) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "item has no string set");
+		return NULL;
+	}
 	return g_strndup((const gchar *)cbor_string_handle(item), cbor_string_length(item));
 }
 
@@ -167,9 +181,20 @@ fu_coswid_firmware_parse_meta(FuCoswidFirmware *self,
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
 		FuCoswidTag tag_id = cbor_get_uint8(pairs[i].key);
 		if (tag_id == FU_COSWID_TAG_SUMMARY) {
-			priv->summary = fu_coswid_firmware_strndup(pairs[i].value);
+			g_free(priv->summary);
+			priv->summary = fu_coswid_firmware_strndup(pairs[i].value, error);
+			if (priv->summary == NULL) {
+				g_prefix_error(error, "failed to parse summary: ");
+				return FALSE;
+			}
 		} else if (tag_id == FU_COSWID_TAG_COLLOQUIAL_VERSION) {
-			priv->colloquial_version = fu_coswid_firmware_strndup(pairs[i].value);
+			g_free(priv->colloquial_version);
+			priv->colloquial_version =
+			    fu_coswid_firmware_strndup(pairs[i].value, error);
+			if (priv->colloquial_version == NULL) {
+				g_prefix_error(error, "failed to parse colloquial-version: ");
+				return FALSE;
+			}
 		} else {
 			g_debug("unhandled tag %s from %s",
 				fu_coswid_tag_to_string(tag_id),
@@ -194,7 +219,12 @@ fu_coswid_firmware_parse_link(FuCoswidFirmware *self,
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
 		FuCoswidTag tag_id = cbor_get_uint8(pairs[i].key);
 		if (tag_id == FU_COSWID_TAG_HREF) {
-			link->href = fu_coswid_firmware_strndup(pairs[i].value);
+			g_free(link->href);
+			link->href = fu_coswid_firmware_strndup(pairs[i].value, error);
+			if (link->href == NULL) {
+				g_prefix_error(error, "failed to parse link href: ");
+				return FALSE;
+			}
 		} else if (tag_id == FU_COSWID_TAG_REL) {
 			if (cbor_isa_negint(pairs[i].value))
 				link->rel = (-1) - cbor_get_uint8(pairs[i].value);
@@ -269,7 +299,12 @@ fu_coswid_firmware_parse_file(FuCoswidFirmware *self,
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
 		FuCoswidTag tag_id = cbor_get_uint8(pairs[i].key);
 		if (tag_id == FU_COSWID_TAG_FS_NAME) {
-			payload->name = fu_coswid_firmware_strndup(pairs[i].value);
+			g_free(payload->name);
+			payload->name = fu_coswid_firmware_strndup(pairs[i].value, error);
+			if (payload->name == NULL) {
+				g_prefix_error(error, "failed to parse payload name: ");
+				return FALSE;
+			}
 		} else if (tag_id == FU_COSWID_TAG_SIZE) {
 			payload->size = cbor_get_int(pairs[i].value);
 		} else if (tag_id == FU_COSWID_TAG_HASH) {
@@ -414,9 +449,19 @@ fu_coswid_firmware_parse_entity(FuCoswidFirmware *self,
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
 		FuCoswidTag tag_id = cbor_get_uint8(pairs[i].key);
 		if (tag_id == FU_COSWID_TAG_ENTITY_NAME) {
-			entity->name = fu_coswid_firmware_strndup(pairs[i].value);
+			g_free(entity->name);
+			entity->name = fu_coswid_firmware_strndup(pairs[i].value, error);
+			if (entity->name == NULL) {
+				g_prefix_error(error, "failed to parse entity name: ");
+				return FALSE;
+			}
 		} else if (tag_id == FU_COSWID_TAG_REG_ID) {
-			entity->regid = fu_coswid_firmware_strndup(pairs[i].value);
+			g_free(entity->regid);
+			entity->regid = fu_coswid_firmware_strndup(pairs[i].value, error);
+			if (entity->regid == NULL) {
+				g_prefix_error(error, "failed to parse entity regid: ");
+				return FALSE;
+			}
 		} else if (tag_id == FU_COSWID_TAG_ROLE) {
 			if (cbor_isa_uint(pairs[i].value)) {
 				FuCoswidEntityRole role = cbor_get_uint8(pairs[i].value);
@@ -444,6 +489,34 @@ fu_coswid_firmware_parse_entity(FuCoswidFirmware *self,
 	/* success */
 	g_ptr_array_add(priv->entities, g_steal_pointer(&entity));
 	return TRUE;
+}
+#endif
+
+#ifdef HAVE_CBOR_SET_ALLOCS
+static void *
+fu_coswid_firmware_malloc(size_t size)
+{
+	if (size > FU_COSWID_FIRMWARE_MAX_ALLOCATION) {
+		g_debug("failing CBOR allocation of 0x%x bytes", (guint)size);
+		return NULL;
+	}
+	return g_malloc0(size);
+}
+
+static void *
+fu_coswid_firmware_realloc(void *ptr, size_t size)
+{
+	if (size > FU_COSWID_FIRMWARE_MAX_ALLOCATION) {
+		g_debug("failing CBOR reallocation of 0x%x bytes", (guint)size);
+		return NULL;
+	}
+	return g_realloc(ptr, size);
+}
+
+static void
+fu_coswid_firmware_free(void *ptr)
+{
+	g_free(ptr);
 }
 #endif
 
@@ -501,7 +574,11 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 		if (tag_id == FU_COSWID_TAG_TAG_ID) {
 			g_autofree gchar *str = NULL;
 			if (cbor_isa_string(pairs[i].value)) {
-				str = fu_coswid_firmware_strndup(pairs[i].value);
+				str = fu_coswid_firmware_strndup(pairs[i].value, error);
+				if (str == NULL) {
+					g_prefix_error(error, "failed to parse tag-id: ");
+					return FALSE;
+				}
 			} else if (cbor_isa_bytestring(pairs[i].value) &&
 				   cbor_bytestring_length(pairs[i].value) == 16) {
 				str = fwupd_guid_to_string(
@@ -511,9 +588,18 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 			if (str != NULL)
 				fu_firmware_set_id(firmware, str);
 		} else if (tag_id == FU_COSWID_TAG_SOFTWARE_NAME) {
-			priv->product = fu_coswid_firmware_strndup(pairs[i].value);
+			g_free(priv->product);
+			priv->product = fu_coswid_firmware_strndup(pairs[i].value, error);
+			if (priv->product == NULL) {
+				g_prefix_error(error, "failed to parse product: ");
+				return FALSE;
+			}
 		} else if (tag_id == FU_COSWID_TAG_SOFTWARE_VERSION) {
-			g_autofree gchar *str = fu_coswid_firmware_strndup(pairs[i].value);
+			g_autofree gchar *str = fu_coswid_firmware_strndup(pairs[i].value, error);
+			if (str == NULL) {
+				g_prefix_error(error, "failed to parse software-version: ");
+				return FALSE;
+			}
 			fu_firmware_set_version(firmware, str);
 		} else if (tag_id == FU_COSWID_TAG_VERSION_SCHEME) {
 			priv->version_scheme = cbor_get_uint16(pairs[i].value);
@@ -1180,6 +1266,13 @@ fu_coswid_firmware_class_init(FuCoswidFirmwareClass *klass)
 	firmware_class->build = fu_coswid_firmware_build;
 	firmware_class->export = fu_coswid_firmware_export;
 	firmware_class->get_checksum = fu_coswid_firmware_get_checksum;
+
+#ifdef HAVE_CBOR_SET_ALLOCS
+	/* limit for protection, yes; this is global and there is no context */
+	cbor_set_allocs(fu_coswid_firmware_malloc,
+			fu_coswid_firmware_realloc,
+			fu_coswid_firmware_free);
+#endif
 }
 
 /**

@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -357,15 +357,15 @@ fu_redfish_smbios_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_uint8(buf, 0x6D + hostname_sz);	   /* length */
 	fu_byte_array_append_uint16(buf, 0x1234, G_LITTLE_ENDIAN); /* handle */
 	fu_byte_array_append_uint8(buf, FU_REDFISH_SMBIOS_INTERFACE_TYPE_NETWORK);
-	fu_byte_array_append_uint8(buf, 0x09);				     /* iface datalen */
+	fu_byte_array_append_uint8(buf, 0x09);					/* iface datalen */
 	fu_byte_array_append_uint8(buf, FU_REDFISH_INTERFACE_TYPE_USB_NETWORK); /* iface */
-	fu_byte_array_append_uint16(buf, self->vid, G_LITTLE_ENDIAN);	     /* iface:VID */
-	fu_byte_array_append_uint16(buf, self->pid, G_LITTLE_ENDIAN);	     /* iface:PID */
-	fu_byte_array_append_uint8(buf, 0x02);				     /* iface:serialsz */
-	fu_byte_array_append_uint8(buf, 0x03);				     /* iType */
-	fu_byte_array_append_uint8(buf, 'S');				     /* iface:serial */
-	fu_byte_array_append_uint8(buf, 'n');				     /* iface:serial */
-	fu_byte_array_append_uint8(buf, 0x1);				     /* nr protocol rcds */
+	fu_byte_array_append_uint16(buf, self->vid, G_LITTLE_ENDIAN);		/* iface:VID */
+	fu_byte_array_append_uint16(buf, self->pid, G_LITTLE_ENDIAN);		/* iface:PID */
+	fu_byte_array_append_uint8(buf, 0x02);					/* iface:serialsz */
+	fu_byte_array_append_uint8(buf, 0x03);					/* iType */
+	fu_byte_array_append_uint8(buf, 'S');					/* iface:serial */
+	fu_byte_array_append_uint8(buf, 'n');					/* iface:serial */
+	fu_byte_array_append_uint8(buf, 0x1); /* nr protocol rcds */
 
 	/* protocol record */
 	fu_byte_array_append_uint8(buf, REDFISH_PROTOCOL_REDFISH_OVER_IP);

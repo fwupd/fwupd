@@ -15,7 +15,6 @@ end
 complete -c fwupdmgr -s h -l help -d 'Show help options'
 complete -c fwupdmgr -s v -l verbose -d 'Show extra debugging information'
 complete -c fwupdmgr -l version -d 'Show client and daemon versions'
-complete -c fwupdmgr -l offline -d 'Schedule installation for next reboot when possible'
 complete -c fwupdmgr -l allow-reinstall -d 'Allow reinstalling existing firmware versions'
 complete -c fwupdmgr -l allow-older -d 'Allow downgrading firmware versions'
 complete -c fwupdmgr -l allow-branch-switch -d 'Allow switching firmware branch'

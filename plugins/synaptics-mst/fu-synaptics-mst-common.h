@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2016 Mario Limonciello <mario.limonciello@dell.com>
- * Copyright (C) 2017 Peichen Huang <peichenhuang@tw.synaptics.com>
- * Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2021 Apollo Ling <apollo.ling@synaptics.com>
+ * Copyright 2016 Mario Limonciello <mario.limonciello@dell.com>
+ * Copyright 2017 Peichen Huang <peichenhuang@tw.synaptics.com>
+ * Copyright 2019 Richard Hughes <richard@hughsie.com>
+ * Copyright 2021 Apollo Ling <apollo.ling@synaptics.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once

@@ -1,5 +1,5 @@
-// Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
-// SPDX-License-Identifier: LGPL-2.1+
+// Copyright 2023 Richard Hughes <richard@hughsie.com>
+// SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(ToString)]
 enum FuAverHidStatus {
@@ -67,7 +67,7 @@ enum FuAverSafeispAckStatus {
     Support,
 }
 
-#[derive(ToString, Getters, New)]
+#[derive(Getters, New)]
 struct FuStructAverHidReqIsp {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,

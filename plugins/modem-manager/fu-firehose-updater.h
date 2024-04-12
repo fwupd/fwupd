@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2020 Aleksander Morgado <aleksander@aleksander.es>
- * Copyright (C) 2021 Ivan Mikhanchuk <ivan.mikhanchuk@quectel.com>
+ * Copyright 2020 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright 2021 Ivan Mikhanchuk <ivan.mikhanchuk@quectel.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once

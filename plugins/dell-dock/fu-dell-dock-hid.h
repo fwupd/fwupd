@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2018 Realtek Semiconductor Corporation
- * Copyright (C) 2018 Dell Inc.
+ * Copyright 2018 Realtek Semiconductor Corporation
+ * Copyright 2018 Dell Inc.
  * All rights reserved.
  *
  * This software and associated documentation (if any) is furnished
@@ -11,7 +11,7 @@
  * redistributing this file, you may do so under either license.
  * Dell Chooses the MIT license part of Dual MIT/LGPLv2 license agreement.
  *
- * SPDX-License-Identifier: LGPL-2.1+ OR MIT
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR MIT
  */
 
 #pragma once
