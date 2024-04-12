@@ -233,7 +233,7 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 				return FALSE;
 			}
 		}
-		g_usleep(delay_request_ms * 1000);
+		fu_device_sleep(device, delay_request_ms);
 	}
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
