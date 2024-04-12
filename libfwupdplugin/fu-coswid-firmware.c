@@ -38,6 +38,8 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuCoswidFirmware, fu_coswid_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_coswid_firmware_get_instance_private(o))
 
+#define FU_COSWID_FIRMWARE_MAX_ALLOCATION 0x32000
+
 typedef struct {
 	gchar *name;
 	gchar *regid;
@@ -439,6 +441,34 @@ fu_coswid_firmware_parse_entity(FuCoswidFirmware *self,
 	/* success */
 	g_ptr_array_add(priv->entities, g_steal_pointer(&entity));
 	return TRUE;
+}
+#endif
+
+#ifdef HAVE_CBOR_SET_ALLOCS
+static void *
+fu_coswid_firmware_malloc(size_t size)
+{
+	if (size > FU_COSWID_FIRMWARE_MAX_ALLOCATION) {
+		g_debug("failing CBOR allocation of 0x%x bytes", (guint)size);
+		return NULL;
+	}
+	return g_malloc0(size);
+}
+
+static void *
+fu_coswid_firmware_realloc(void *ptr, size_t size)
+{
+	if (size > FU_COSWID_FIRMWARE_MAX_ALLOCATION) {
+		g_debug("failing CBOR reallocation of 0x%x bytes", (guint)size);
+		return NULL;
+	}
+	return g_realloc(ptr, size);
+}
+
+static void
+fu_coswid_firmware_free(void *ptr)
+{
+	g_free(ptr);
 }
 #endif
 
@@ -1171,6 +1201,13 @@ fu_coswid_firmware_class_init(FuCoswidFirmwareClass *klass)
 	klass_firmware->build = fu_coswid_firmware_build;
 	klass_firmware->export = fu_coswid_firmware_export;
 	klass_firmware->get_checksum = fu_coswid_firmware_get_checksum;
+
+#ifdef HAVE_CBOR_SET_ALLOCS
+	/* limit for protection, yes; this is global and there is no context */
+	cbor_set_allocs(fu_coswid_firmware_malloc,
+			fu_coswid_firmware_realloc,
+			fu_coswid_firmware_free);
+#endif
 }
 
 /**
