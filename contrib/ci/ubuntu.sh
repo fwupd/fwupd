@@ -40,5 +40,13 @@ sudo -u nobody ninja -C ${BUILD} test -v
 # check for unused symbols
 ./contrib/ci/check-unused.py
 
+# check the daemon aborts
+set +e
+FWUPD_SYSCALL_FILTER=systemd ${BUILD}/src/fwupd --immediate-exit
+if [ $? -ne 1 ] ; then
+    echo "failed to detect missing syscall filtering"
+    exit 1
+fi
+
 #make docs available outside of docker
 ninja -C ${BUILD} install -v
