@@ -8,8 +8,8 @@
 
 #include <string.h>
 
-#include "fu-colorhug-common.h"
 #include "fu-colorhug-device.h"
+#include "fu-colorhug-struct.h"
 
 /**
  * FU_COLORHUG_DEVICE_FLAG_HALFSIZE:
@@ -157,8 +157,8 @@ fu_colorhug_device_msg(FuColorhugDevice *self,
 	}
 
 	/* check error code */
-	if (buf[0] != CH_ERROR_NONE) {
-		const gchar *msg = ch_strerror(buf[0]);
+	if (buf[0] != FU_COLORHUG_ERROR_NONE) {
+		const gchar *msg = fu_colorhug_error_to_string(buf[0]);
 		if (msg == NULL)
 			msg = "unknown error";
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, msg);
