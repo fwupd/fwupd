@@ -68,6 +68,7 @@ fwupdplugin_src = [
   'fu-common-guid.c',
   'fu-config.c', # fuzzing
   'fu-context.c', # fuzzing
+  'fu-coswid-common.c', # fuzzing
   'fu-coswid-firmware.c', # fuzzing
   'fu-crc.c', # fuzzing
   'fu-csv-entry.c', # fuzzing
@@ -194,6 +195,7 @@ fwupdplugin_headers = [
   'fu-config-private.h',
   'fu-context.h',
   'fu-context-private.h',
+  'fu-coswid-common.h',
   'fu-coswid-firmware.h',
   'fu-crc.h',
   'fu-csv-entry.h',
