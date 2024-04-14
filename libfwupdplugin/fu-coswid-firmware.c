@@ -118,6 +118,9 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(cbor_item_t, cbor_intermediate_decref)
 static gchar *
 fu_coswid_firmware_strndup(cbor_item_t *item, GError **error)
 {
+	g_return_val_if_fail(item != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	if (!cbor_isa_string(item)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -133,6 +136,24 @@ fu_coswid_firmware_strndup(cbor_item_t *item, GError **error)
 		return NULL;
 	}
 	return g_strndup((const gchar *)cbor_string_handle(item), cbor_string_length(item));
+}
+
+static gboolean
+fu_coswid_firmware_read_tag(cbor_item_t *item, FuCoswidTag *tag_id, GError **error)
+{
+	g_return_val_if_fail(item != NULL, FALSE);
+	g_return_val_if_fail(tag_id != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!cbor_isa_uint(item)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "tag item is not a uint");
+		return FALSE;
+	}
+	*tag_id = cbor_get_uint8(item);
+	return TRUE;
 }
 
 typedef gboolean (*FuCoswidFirmwareItemFunc)(FuCoswidFirmware *self,
@@ -179,7 +200,9 @@ fu_coswid_firmware_parse_meta(FuCoswidFirmware *self,
 	struct cbor_pair *pairs = cbor_map_handle(item);
 
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
-		FuCoswidTag tag_id = cbor_get_uint8(pairs[i].key);
+		FuCoswidTag tag_id = 0;
+		if (!fu_coswid_firmware_read_tag(pairs[i].key, &tag_id, error))
+			return FALSE;
 		if (tag_id == FU_COSWID_TAG_SUMMARY) {
 			g_free(priv->summary);
 			priv->summary = fu_coswid_firmware_strndup(pairs[i].value, error);
@@ -217,7 +240,9 @@ fu_coswid_firmware_parse_link(FuCoswidFirmware *self,
 	g_autoptr(FuCoswidFirmwareLink) link = g_new0(FuCoswidFirmwareLink, 1);
 
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
-		FuCoswidTag tag_id = cbor_get_uint8(pairs[i].key);
+		FuCoswidTag tag_id = 0;
+		if (!fu_coswid_firmware_read_tag(pairs[i].key, &tag_id, error))
+			return FALSE;
 		if (tag_id == FU_COSWID_TAG_HREF) {
 			g_free(link->href);
 			link->href = fu_coswid_firmware_strndup(pairs[i].value, error);
@@ -226,10 +251,17 @@ fu_coswid_firmware_parse_link(FuCoswidFirmware *self,
 				return FALSE;
 			}
 		} else if (tag_id == FU_COSWID_TAG_REL) {
-			if (cbor_isa_negint(pairs[i].value))
+			if (cbor_isa_negint(pairs[i].value)) {
 				link->rel = (-1) - cbor_get_uint8(pairs[i].value);
-			else
+			} else if (cbor_isa_uint(item)) {
 				link->rel = cbor_get_uint8(pairs[i].value);
+			} else {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "failed to parse link rel: item is not a uint");
+				return FALSE;
+			}
 		} else {
 			g_debug("unhandled tag %s from %s",
 				fu_coswid_tag_to_string(tag_id),
@@ -259,6 +291,13 @@ fu_coswid_firmware_parse_hash(FuCoswidFirmware *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "invalid hash item");
+		return FALSE;
+	}
+	if (!cbor_isa_uint(hash_item_alg_id)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "hash alg-id item is not a uint");
 		return FALSE;
 	}
 
@@ -297,7 +336,9 @@ fu_coswid_firmware_parse_file(FuCoswidFirmware *self,
 	g_autoptr(FuCoswidFirmwarePayload) payload = fu_coswid_firmware_payload_new();
 
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
-		FuCoswidTag tag_id = cbor_get_uint8(pairs[i].key);
+		FuCoswidTag tag_id = 0;
+		if (!fu_coswid_firmware_read_tag(pairs[i].key, &tag_id, error))
+			return FALSE;
 		if (tag_id == FU_COSWID_TAG_FS_NAME) {
 			g_free(payload->name);
 			payload->name = fu_coswid_firmware_strndup(pairs[i].value, error);
@@ -353,7 +394,9 @@ fu_coswid_firmware_parse_path_elements(FuCoswidFirmware *self,
 {
 	struct cbor_pair *pairs = cbor_map_handle(item);
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
-		FuCoswidTag tag_id = cbor_get_uint8(pairs[i].key);
+		FuCoswidTag tag_id = 0;
+		if (!fu_coswid_firmware_read_tag(pairs[i].key, &tag_id, error))
+			return FALSE;
 		if (tag_id == FU_COSWID_TAG_FILE) {
 			if (!fu_coswid_firmware_parse_one_or_many(self,
 								  pairs[i].value,
@@ -380,7 +423,9 @@ fu_coswid_firmware_parse_directory(FuCoswidFirmware *self,
 {
 	struct cbor_pair *pairs = cbor_map_handle(item);
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
-		FuCoswidTag tag_id = cbor_get_uint8(pairs[i].key);
+		FuCoswidTag tag_id = 0;
+		if (!fu_coswid_firmware_read_tag(pairs[i].key, &tag_id, error))
+			return FALSE;
 		if (tag_id == FU_COSWID_TAG_PATH_ELEMENTS) {
 			if (!fu_coswid_firmware_parse_one_or_many(
 				self,
@@ -408,7 +453,9 @@ fu_coswid_firmware_parse_payload(FuCoswidFirmware *self,
 {
 	struct cbor_pair *pairs = cbor_map_handle(item);
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
-		FuCoswidTag tag_id = cbor_get_uint8(pairs[i].key);
+		FuCoswidTag tag_id = 0;
+		if (!fu_coswid_firmware_read_tag(pairs[i].key, &tag_id, error))
+			return FALSE;
 		if (tag_id == FU_COSWID_TAG_FILE) {
 			if (!fu_coswid_firmware_parse_one_or_many(self,
 								  pairs[i].value,
@@ -447,7 +494,9 @@ fu_coswid_firmware_parse_entity(FuCoswidFirmware *self,
 	g_autoptr(FuCoswidFirmwareEntity) entity = g_new0(FuCoswidFirmwareEntity, 1);
 
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
-		FuCoswidTag tag_id = cbor_get_uint8(pairs[i].key);
+		FuCoswidTag tag_id = 0;
+		if (!fu_coswid_firmware_read_tag(pairs[i].key, &tag_id, error))
+			return FALSE;
 		if (tag_id == FU_COSWID_TAG_ENTITY_NAME) {
 			g_free(entity->name);
 			entity->name = fu_coswid_firmware_strndup(pairs[i].value, error);
@@ -469,7 +518,13 @@ fu_coswid_firmware_parse_entity(FuCoswidFirmware *self,
 			}
 			for (guint j = 0; j < cbor_array_size(pairs[i].value); j++) {
 				g_autoptr(cbor_item_t) value = cbor_array_get(pairs[i].value, j);
-				FuCoswidEntityRole role = cbor_get_uint8(value);
+				if (!cbor_isa_uint(value)) {
+					g_set_error_literal(error,
+							    FWUPD_ERROR,
+							    FWUPD_ERROR_INVALID_DATA,
+							    "entity role is not a uint");
+					return FALSE;
+				}
 				if (entity_role_cnt >= G_N_ELEMENTS(entity->roles)) {
 					g_set_error_literal(error,
 							    FWUPD_ERROR,
@@ -477,7 +532,7 @@ fu_coswid_firmware_parse_entity(FuCoswidFirmware *self,
 							    "too many roles");
 					return FALSE;
 				}
-				entity->roles[entity_role_cnt++] = role;
+				entity->roles[entity_role_cnt++] = cbor_get_uint8(value);
 			}
 		} else {
 			g_debug("unhandled tag %s from %s",
@@ -568,7 +623,9 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 	/* parse out anything interesting */
 	pairs = cbor_map_handle(item);
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
-		FuCoswidTag tag_id = cbor_get_uint8(pairs[i].key);
+		FuCoswidTag tag_id = 0;
+		if (!fu_coswid_firmware_read_tag(pairs[i].key, &tag_id, error))
+			return FALSE;
 
 		/* identity can be specified as a string or in binary */
 		if (tag_id == FU_COSWID_TAG_TAG_ID) {
