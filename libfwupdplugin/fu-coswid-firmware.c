@@ -256,10 +256,11 @@ fu_coswid_firmware_parse_link(FuCoswidFirmware *self,
 			} else if (cbor_isa_uint(item)) {
 				link->rel = cbor_get_uint8(pairs[i].value);
 			} else {
-				g_set_error_literal(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_INVALID_DATA,
-						    "failed to parse link rel: item is not a uint");
+				g_set_error_literal(
+				    error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to parse link rel: item is not a integer");
 				return FALSE;
 			}
 		} else {
@@ -282,10 +283,19 @@ fu_coswid_firmware_parse_hash(FuCoswidFirmware *self,
 {
 	FuCoswidFirmwarePayload *payload = (FuCoswidFirmwarePayload *)user_data;
 	g_autoptr(FuCoswidFirmwareHash) hash = g_new0(FuCoswidFirmwareHash, 1);
-	g_autoptr(cbor_item_t) hash_item_alg_id = cbor_array_get(item, 0);
-	g_autoptr(cbor_item_t) hash_item_value = cbor_array_get(item, 1);
+	g_autoptr(cbor_item_t) hash_item_alg_id = NULL;
+	g_autoptr(cbor_item_t) hash_item_value = NULL;
 
 	/* sanity check */
+	if (!cbor_isa_array(item)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "hash item is not an array");
+		return FALSE;
+	}
+	hash_item_alg_id = cbor_array_get(item, 0);
+	hash_item_value = cbor_array_get(item, 1);
 	if (hash_item_alg_id == NULL || hash_item_value == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -515,24 +525,32 @@ fu_coswid_firmware_parse_entity(FuCoswidFirmware *self,
 			if (cbor_isa_uint(pairs[i].value)) {
 				FuCoswidEntityRole role = cbor_get_uint8(pairs[i].value);
 				entity->roles[entity_role_cnt++] = role;
-			}
-			for (guint j = 0; j < cbor_array_size(pairs[i].value); j++) {
-				g_autoptr(cbor_item_t) value = cbor_array_get(pairs[i].value, j);
-				if (!cbor_isa_uint(value)) {
-					g_set_error_literal(error,
-							    FWUPD_ERROR,
-							    FWUPD_ERROR_INVALID_DATA,
-							    "entity role is not a uint");
-					return FALSE;
+			} else if (cbor_isa_array(pairs[i].value)) {
+				for (guint j = 0; j < cbor_array_size(pairs[i].value); j++) {
+					g_autoptr(cbor_item_t) value =
+					    cbor_array_get(pairs[i].value, j);
+					if (!cbor_isa_uint(value)) {
+						g_set_error_literal(error,
+								    FWUPD_ERROR,
+								    FWUPD_ERROR_INVALID_DATA,
+								    "entity role is not a uint");
+						return FALSE;
+					}
+					if (entity_role_cnt >= G_N_ELEMENTS(entity->roles)) {
+						g_set_error_literal(error,
+								    FWUPD_ERROR,
+								    FWUPD_ERROR_INVALID_DATA,
+								    "too many roles");
+						return FALSE;
+					}
+					entity->roles[entity_role_cnt++] = cbor_get_uint8(value);
 				}
-				if (entity_role_cnt >= G_N_ELEMENTS(entity->roles)) {
-					g_set_error_literal(error,
-							    FWUPD_ERROR,
-							    FWUPD_ERROR_INVALID_DATA,
-							    "too many roles");
-					return FALSE;
-				}
-				entity->roles[entity_role_cnt++] = cbor_get_uint8(value);
+			} else {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "entity role item is not an uint or array");
+				return FALSE;
 			}
 		} else {
 			g_debug("unhandled tag %s from %s",
