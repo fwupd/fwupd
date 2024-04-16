@@ -296,10 +296,9 @@ def _build(bld: Builder) -> None:
     src = bld.checkout_source(
         "libcbor",
         url="https://github.com/PJK/libcbor.git",
-        commit="v0.9.0",
-        patches=["contrib/ci/oss-fuzz-libcbor-lto.patch"],
+        commit="b223daaaa34dcb83f9c25576f05e4f1646f44bf9",
     )
-    bld.build_cmake_project(src, argv=["-DCBOR_CUSTOM_ALLOC=ON"])
+    bld.build_cmake_project(src, argv=["-DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF"])
     bld.add_build_ldflag("lib/libcbor.a")
 
     # GLib
