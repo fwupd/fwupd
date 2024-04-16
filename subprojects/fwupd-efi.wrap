@@ -1,4 +1,4 @@
 [wrap-git]
 directory = fwupd-efi
 url = https://github.com/fwupd/fwupd-efi
-revision = 5ae565488cf71f05b90fe7e8832ce089bd92b3ac
+revision = 1.6
