@@ -25,9 +25,9 @@ These devices use the standard  DeviceInstanceId values, e.g.
 
 ## Update Behavior
 
-The device is updated in runtime mode and rebooted with a new version. The new
-firmware is saved after commit command, otherwise the device is rebooted with
-a previous version.
+The device is updated in runtime mode and rebooted with a new version.
+The commit command should be used after the update process is done, otherwise
+the device will reboot with the previous firmware version.
 
 The upgrade protocol and update behivior are specified in documentation from Qualcomm,
 referenced by 80-CH281-1 and 80-CU043-1.

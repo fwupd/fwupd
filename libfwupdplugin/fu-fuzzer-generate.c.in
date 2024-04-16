@@ -1,0 +1,41 @@
+/*
+ * Copyright 2024 Richard Hughes <richard@hughsie.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
+
+#include <glib.h>
+
+#include "@INCLUDE@"
+
+int
+main(int argc, char **argv)
+{
+	g_autoptr(FuFirmware) firmware = FU_FIRMWARE(@FIRMWARENEW@);
+	g_autoptr(GBytes) blob_dst = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* do not use g_option_context_parse() here for speed */
+	if (argc != 3 || !g_str_has_suffix(argv[1], ".builder.xml") ||
+	    !g_str_has_suffix(argv[2], ".bin")) {
+		g_printerr("Invalid arguments, expected %s XML BIN\n", argv[0]);
+		return EXIT_FAILURE;
+	}
+	if (!fu_firmware_build_from_filename(firmware, argv[1], &error)) {
+		g_printerr("Failed to build: %s\n", error->message);
+		return EXIT_FAILURE;
+	}
+	blob_dst = fu_firmware_write(firmware, &error);
+	if (blob_dst == NULL) {
+		g_printerr("Failed to write: %s\n", error->message);
+		return EXIT_FAILURE;
+	}
+	if (!g_file_set_contents(argv[2],
+				 g_bytes_get_data(blob_dst, NULL),
+				 g_bytes_get_size(blob_dst),
+				 &error)) {
+		g_printerr("Failed to save: %s\n", error->message);
+		return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
+}

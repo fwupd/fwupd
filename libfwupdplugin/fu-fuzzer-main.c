@@ -10,8 +10,6 @@ __attribute__((weak)) extern int
 LLVMFuzzerTestOneInput(const unsigned char *data, size_t size);
 __attribute__((weak)) extern int
 LLVMFuzzerInitialize(int *argc, char ***argv);
-__attribute__((weak)) extern GBytes *
-BuildOneOutput(const gchar *filename, GError **error);
 
 int
 main(int argc, char **argv)
@@ -19,26 +17,6 @@ main(int argc, char **argv)
 	g_assert_nonnull(LLVMFuzzerTestOneInput);
 	if (LLVMFuzzerInitialize != NULL)
 		LLVMFuzzerInitialize(&argc, &argv);
-
-	/* do not use g_option_context_parse() here for speed */
-	if (argc == 3 && g_str_has_suffix(argv[1], ".builder.xml") &&
-	    g_str_has_suffix(argv[2], ".bin")) {
-		g_autoptr(GBytes) blob_dst = NULL;
-		g_autoptr(GError) error = NULL;
-		blob_dst = BuildOneOutput(argv[1], &error);
-		if (blob_dst == NULL) {
-			g_printerr("Failed to build output: %s\n", error->message);
-			return EXIT_FAILURE;
-		}
-		if (!g_file_set_contents(argv[2],
-					 g_bytes_get_data(blob_dst, NULL),
-					 g_bytes_get_size(blob_dst),
-					 &error)) {
-			g_printerr("Failed to save: %s\n", error->message);
-			return EXIT_FAILURE;
-		}
-		return EXIT_SUCCESS;
-	}
 
 	for (int i = 1; i < argc; i++) {
 		gsize bufsz = 0;

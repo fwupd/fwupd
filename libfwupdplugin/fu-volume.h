@@ -80,3 +80,5 @@ FuVolume *
 fu_volume_new_by_devnum(guint32 devnum, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 const gchar *
 fu_volume_kind_convert_to_gpt(const gchar *kind) G_GNUC_NON_NULL(1);
+gboolean
+fu_volume_is_mdraid(FuVolume *self) G_GNUC_NON_NULL(1);

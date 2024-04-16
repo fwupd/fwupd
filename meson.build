@@ -223,7 +223,7 @@ if hsi
   conf.set('HAVE_HSI', '1')
 endif
 libxmlb = dependency('xmlb', version: '>= 0.3.6', fallback: ['libxmlb', 'libxmlb_dep'])
-if libxmlb.version().version_compare('>= 0.3.17')
+if libxmlb.version().version_compare('>= 0.3.18')
   if libxmlb.get_variable('zstd') == 'true'
     lvfs_metadata_format = 'zst'
   elif libxmlb.get_variable('lzma') == 'true'
@@ -305,6 +305,9 @@ endif
 cbor = dependency('libcbor', version: '>= 0.7.0', required: get_option('cbor'))
 if cbor.found()
   conf.set('HAVE_CBOR', '1')
+  if cc.has_header_symbol('cbor.h', 'cbor_set_allocs')
+    conf.set('HAVE_CBOR_SET_ALLOCS', '1')
+  endif
 endif
 
 platform_deps = []

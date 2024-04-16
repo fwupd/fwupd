@@ -10,4 +10,4 @@ Plugin = fpc
 Flags = moh-device,rts,lenfy,enforce-requires
 [USB\VID_10A5&PID_D805]
 Plugin = fpc
-Flags = moc-device,lenfy,enforce-requires
+Flags = enforce-requires

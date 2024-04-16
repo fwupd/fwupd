@@ -4,8 +4,8 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('colorhug.quirk')
 plugin_builtins += static_library('fu_plugin_colorhug',
+  rustgen.process('fu-colorhug.rs'),
   sources: [
-    'fu-colorhug-common.c',
     'fu-colorhug-device.c',
     'fu-colorhug-plugin.c',
   ],

@@ -1697,6 +1697,17 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 	if (tmp != NULL)
 		g_hash_table_insert(hash, g_strdup("HostBkc"), g_strdup(tmp));
 
+#ifdef HAVE_PASSIM
+#if PASSIM_CHECK_VERSION(0, 1, 6)
+	/* this is useful to know if passim support is actually helping bandwidth use */
+	g_hash_table_insert(
+	    hash,
+	    g_strdup("PassimDownloadSaving"),
+	    g_strdup_printf("%" G_GUINT64_FORMAT,
+			    passim_client_get_download_saving(self->passim_client)));
+#endif
+#endif
+
 	/* DMI data */
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_LOADED_HWINFO)) {
 		struct {
@@ -5260,7 +5271,8 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 		}
 		update_request_id = fu_release_get_update_request_id(release);
 		if (fu_device_get_update_request_id(device) == NULL && update_request_id != NULL) {
-			fu_device_add_request_flag(device, FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
+			fu_device_add_request_flag(device,
+						   FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 			fu_device_set_update_request_id(device, update_request_id);
 		}
 
@@ -8776,6 +8788,11 @@ fu_engine_constructed(GObject *obj)
 	fu_engine_add_runtime_version(self, "org.freedesktop.gusb", g_usb_version_string());
 #endif
 	fu_engine_add_runtime_version(self, "com.hughsie.libjcat", jcat_version_string());
+#if LIBXMLB_CHECK_VERSION(0, 3, 19)
+	fu_engine_add_runtime_version(self, "com.hughsie.libxmlb", xb_version_string());
+#else
+	fu_engine_add_runtime_version(self, "com.hughsie.libxmlb", "0.3.x");
+#endif
 
 	/* optional kernel version */
 #ifdef HAVE_UTSNAME_H

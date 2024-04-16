@@ -876,9 +876,16 @@ fu_device_retry(FuDevice *self,
 void
 fu_device_sleep(FuDevice *self, guint delay_ms)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(delay_ms < 100000);
-	if (delay_ms > 0 && !fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED))
+
+	if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED))
+		return;
+	if (priv->proxy != NULL && fu_device_has_flag(priv->proxy, FWUPD_DEVICE_FLAG_EMULATED))
+		return;
+	if (delay_ms > 0)
 		g_usleep(delay_ms * 1000);
 }
 
@@ -896,10 +903,17 @@ fu_device_sleep(FuDevice *self, guint delay_ms)
 void
 fu_device_sleep_full(FuDevice *self, guint delay_ms, FuProgress *progress)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(delay_ms < 1000000);
 	g_return_if_fail(FU_IS_PROGRESS(progress));
-	if (delay_ms > 0 && !fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED))
+
+	if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED))
+		return;
+	if (priv->proxy != NULL && fu_device_has_flag(priv->proxy, FWUPD_DEVICE_FLAG_EMULATED))
+		return;
+	if (delay_ms > 0)
 		fu_progress_sleep(progress, delay_ms);
 }
 
