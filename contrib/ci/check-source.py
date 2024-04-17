@@ -27,6 +27,9 @@ def test_files() -> int:
                 if line.find("nocheck") != -1:
                     continue
                 for token, msg in {
+                    "cbor_get_uint8(": "Use cbor_get_int() instead",
+                    "cbor_get_uint16(": "Use cbor_get_int() instead",
+                    "cbor_get_uint32(": "Use cbor_get_int() instead",
                     "g_error(": "Use GError instead",
                     "g_byte_array_free_to_bytes(": "Use g_bytes_new() instead",
                 }.items():
