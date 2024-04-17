@@ -260,7 +260,6 @@ fwupd wrapper for Qubes OS
     -Dplugin_uefi_capsule=enabled \
     -Dplugin_uefi_pk=enabled \
     -Dplugin_tpm=enabled \
-    -Defi_binary=false \
 %else
     -Dplugin_uefi_capsule=disabled \
     -Dplugin_uefi_pk=disabled \

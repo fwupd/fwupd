@@ -31,7 +31,6 @@ build() {
         -Dplugin_powerd=disabled \
         -Dlaunchd=disabled \
         -Ddocs=enabled \
-        -Defi_binary=false \
         -Dsupported_build=enabled
 
     ninja -v -C ../build
