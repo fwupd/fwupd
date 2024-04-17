@@ -1,5 +1,6 @@
 /*
  * Copyright 2021 Ricardo Cañuelo <ricardo.canuelo@collabora.com>
+ * Copyright 2024 Denis Pynkin <denis.pynkin@collabora.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -8,15 +9,20 @@
 
 #include "config.h"
 
+#include <gio/gunixfdlist.h>
 #include <string.h>
 
 #include "fu-bluez-device.h"
-#include "fu-common.h"
-#include "fu-device-private.h"
 #include "fu-firmware-common.h"
 #include "fu-string.h"
 
 #define DEFAULT_PROXY_TIMEOUT 5000
+
+/* Device Information service attributes to check */
+#define DI_MODEL_NUMBER_UUID	  "00002a24-0000-1000-8000-00805f9b34fb"
+#define DI_SERIAL_NUMBER_UUID	  "00002a25-0000-1000-8000-00805f9b34fb"
+#define DI_FIRMWARE_REVISION_UUID "00002a26-0000-1000-8000-00805f9b34fb"
+#define DI_MANUFACTURER_NAME_UUID "00002a29-0000-1000-8000-00805f9b34fb"
 
 /**
  * FuBluezDevice:
@@ -301,24 +307,190 @@ fu_bluez_device_get_ble_string_property(const gchar *obj_path,
 	return g_variant_dup_string(val, NULL);
 }
 
+static gchar *
+fu_bluez_device_get_interface_uuid(FuBluezDevice *self,
+				   GDBusObject *obj,
+				   const gchar *obj_path,
+				   const gchar *iface_name,
+				   GError **error)
+{
+	g_autofree gchar *obj_uuid = NULL;
+	g_autoptr(GDBusInterface) iface = NULL;
+
+	iface = g_dbus_object_get_interface(obj, iface_name);
+	if (iface == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no %s interface",
+			    iface_name);
+		return NULL;
+	}
+	obj_uuid = fu_bluez_device_get_ble_string_property(obj_path, iface_name, "UUID", error);
+	if (obj_uuid == NULL) {
+		g_prefix_error(error, "failed to get %s property: ", iface_name);
+		return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer(&obj_uuid);
+}
+
+/*
+ * Populates the {uuid_helper : object_path} entry of a device for its
+ * characteristic.
+ */
+static gboolean
+fu_bluez_device_add_characteristic_uuid(FuBluezDevice *self,
+					GDBusObject *obj,
+					const gchar *obj_path,
+					const gchar *iface_name,
+					GError **error)
+{
+	g_autofree gchar *obj_uuid = NULL;
+
+	obj_uuid = fu_bluez_device_get_interface_uuid(self, obj, obj_path, iface_name, error);
+	if (obj_uuid == NULL)
+		return FALSE;
+	fu_bluez_device_add_uuid_path(self, obj_uuid, obj_path);
+	return TRUE;
+}
+
+static gboolean
+fu_bluez_device_add_instance_by_service_uuid(FuBluezDevice *self,
+					     GDBusObject *obj,
+					     const gchar *obj_path,
+					     const gchar *iface_name,
+					     GError **error)
+{
+	g_autofree gchar *obj_uuid = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* register device by service UUID */
+	obj_uuid = fu_bluez_device_get_interface_uuid(self, obj, obj_path, iface_name, error);
+	if (obj_uuid == NULL)
+		return FALSE;
+	fu_device_add_instance_str(FU_DEVICE(self), "GATT", obj_uuid);
+	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "BLUETOOTH",
+					      "GATT",
+					      NULL)) {
+		g_prefix_error(error, "failed to register %s service: ", obj_uuid);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_bluez_device_read_battery_interface(FuBluezDevice *self,
+				       GDBusObject *obj,
+				       const gchar *obj_path,
+				       const gchar *iface_name,
+				       GError **error)
+{
+	guint8 percentage = FWUPD_BATTERY_LEVEL_INVALID;
+	g_autoptr(GDBusInterface) iface = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GVariant) obj_percentage = NULL;
+
+	iface = g_dbus_object_get_interface(obj, iface_name);
+	if (iface == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no %s interface",
+			    iface_name);
+		return FALSE;
+	}
+
+	/* sometimes battery service announced but has no value, no error in that case */
+	obj_percentage =
+	    fu_bluez_device_get_ble_property(obj_path, iface_name, "Percentage", &error_local);
+	if (obj_percentage == NULL) {
+		g_debug("failed to get battery percentage from org.bluez.Battery1: %s",
+			error_local->message);
+		/* return TRUE since that situation should not affect to further interaction */
+		return TRUE;
+	}
+
+	percentage = g_variant_get_byte(obj_percentage);
+	fu_device_set_battery_level(FU_DEVICE(self), percentage);
+
+	/* success */
+	return TRUE;
+}
+
+/* see https://www.bluetooth.com/specifications/dis-1-2/ spec */
+static gboolean
+fu_bluez_device_parse_device_information_service(FuBluezDevice *self, GError **error)
+{
+	g_autofree gchar *model_number = NULL;
+	g_autofree gchar *serial_number = NULL;
+	g_autofree gchar *fw_revision = NULL;
+	g_autofree gchar *manufacturer = NULL;
+
+	model_number = fu_bluez_device_read_string(self, DI_MODEL_NUMBER_UUID, NULL);
+	if (model_number != NULL) {
+		fu_device_add_instance_str(FU_DEVICE(self), "MODEL", model_number);
+		if (!fu_device_build_instance_id_full(FU_DEVICE(self),
+						      FU_DEVICE_INSTANCE_FLAG_GENERIC |
+							  FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						      error,
+						      "BLUETOOTH",
+						      "MODEL",
+						      NULL)) {
+			g_prefix_error(error, "failed to register model %s: ", model_number);
+			return FALSE;
+		}
+		manufacturer = fu_bluez_device_read_string(self, DI_MANUFACTURER_NAME_UUID, NULL);
+		if (manufacturer != NULL) {
+			fu_device_add_instance_str(FU_DEVICE(self), "MANUFACTURER", manufacturer);
+			if (!fu_device_build_instance_id_full(FU_DEVICE(self),
+							      FU_DEVICE_INSTANCE_FLAG_GENERIC |
+								  FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+							      error,
+							      "BLUETOOTH",
+							      "MANUFACTURER",
+							      "MODEL",
+							      NULL)) {
+				g_prefix_error(error,
+					       "failed to register manufacturer %s: ",
+					       manufacturer);
+				return FALSE;
+			}
+		}
+	}
+
+	serial_number = fu_bluez_device_read_string(self, DI_SERIAL_NUMBER_UUID, NULL);
+	if (serial_number != NULL)
+		fu_device_set_serial(FU_DEVICE(self), serial_number);
+
+	fw_revision = fu_bluez_device_read_string(self, DI_FIRMWARE_REVISION_UUID, NULL);
+	if (fw_revision != NULL)
+		fu_device_set_version(FU_DEVICE(self), fw_revision);
+
+	/* success */
+	return TRUE;
+}
+
 /*
  * Populates the {uuid_helper : object_path} entries of a device for all its
  * characteristics.
- *
- * TODO: Extend to services and descriptors too?
  */
-static void
-fu_bluez_device_add_device_uuids(FuBluezDevice *self)
+static gboolean
+fu_bluez_device_ensure_gatt_interfaces(FuBluezDevice *self, GError **error)
 {
 	FuBluezDevicePrivate *priv = GET_PRIVATE(self);
+	guint valid = 0;
 	g_autolist(GDBusObject) obj_list = NULL;
 
 	obj_list = g_dbus_object_manager_get_objects(priv->object_manager);
 	for (GList *l = obj_list; l != NULL; l = l->next) {
 		GDBusObject *obj = G_DBUS_OBJECT(l->data);
-		g_autoptr(GDBusInterface) iface = NULL;
-		g_autoptr(GError) error_local = NULL;
-		g_autofree gchar *obj_uuid = NULL;
 		const gchar *obj_path = g_dbus_object_get_object_path(obj);
 
 		/* not us */
@@ -326,34 +498,54 @@ fu_bluez_device_add_device_uuids(FuBluezDevice *self)
 				      g_dbus_proxy_get_object_path(priv->proxy)))
 			continue;
 
-		/*
-		 * TODO: Currently restricted to getting UUIDs for
-		 * characteristics only, as the only use case we're
-		 * going to need for now is reading/writing
-		 * characteristics.
-		 */
-		iface = g_dbus_object_get_interface(obj, "org.bluez.GattCharacteristic1");
-		if (iface == NULL)
-			continue;
-		obj_uuid = fu_bluez_device_get_ble_string_property(obj_path,
-								   "org.bluez.GattCharacteristic1",
-								   "UUID",
-								   &error_local);
-		if (obj_uuid == NULL) {
-			g_debug("failed to get property: %s", error_local->message);
-			continue;
+		/* add characteristics UUID for reading and writing */
+		if (g_dbus_object_get_interface(obj, "org.bluez.GattCharacteristic1")) {
+			if (!fu_bluez_device_add_characteristic_uuid(
+				self,
+				obj,
+				obj_path,
+				"org.bluez.GattCharacteristic1",
+				error)) {
+				g_prefix_error(error, "failed to add characteristic uuid: ");
+				return FALSE;
+			}
+			valid += 1;
 		}
-		fu_bluez_device_add_uuid_path(self, obj_uuid, obj_path);
+		if (g_dbus_object_get_interface(obj, "org.bluez.GattService1")) {
+			if (!fu_bluez_device_add_instance_by_service_uuid(self,
+									  obj,
+									  obj_path,
+									  "org.bluez.GattService1",
+									  error)) {
+				g_prefix_error(error, "failed to add service uuid: ");
+				return FALSE;
+			}
+			valid += 1;
+		}
+
+		/* battery level is optional */
+		if (g_dbus_object_get_interface(obj, "org.bluez.Battery1")) {
+			if (!fu_bluez_device_read_battery_interface(self,
+								    obj,
+								    obj_path,
+								    "org.bluez.Battery1",
+								    error)) {
+				g_prefix_error(error, "failed to add battery: ");
+				return FALSE;
+			}
+		}
 	}
-}
 
-static gboolean
-fu_bluez_device_setup(FuDevice *device, GError **error)
-{
-	FuBluezDevice *self = FU_BLUEZ_DEVICE(device);
+	/* found nothing */
+	if (valid == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no supported GATT characteristic or service");
+		return FALSE;
+	}
 
-	fu_bluez_device_add_device_uuids(self);
-
+	/* success */
 	return TRUE;
 }
 
@@ -402,8 +594,12 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 	if (val_modalias != NULL)
 		fu_bluez_device_set_modalias(self, g_variant_get_string(val_modalias, NULL));
 
-	/* success */
-	return TRUE;
+	/* success, if we added one service or characteristic */
+	if (!fu_bluez_device_ensure_gatt_interfaces(self, error))
+		return FALSE;
+
+	/* try to parse Device Information service if available */
+	return fu_bluez_device_parse_device_information_service(self, error);
 }
 
 /**
@@ -636,6 +832,104 @@ fu_bluez_device_notify_stop(FuBluezDevice *self, const gchar *uuid, GError **err
 	return TRUE;
 }
 
+static FuIOChannel *
+fu_bluez_device_method_acquire(FuBluezDevice *self,
+			       const gchar *method,
+			       const gchar *uuid,
+			       gint32 *mtu,
+			       GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	FuBluezDeviceUuidHelper *uuid_helper;
+	GVariant *opt_variant = NULL;
+	gint fd_id;
+	g_autoptr(GVariantBuilder) opt_builder = NULL;
+	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GUnixFDList) out_fd_list = NULL;
+
+	uuid_helper = fu_bluez_device_get_uuid_helper(self, uuid, error);
+	if (uuid_helper == NULL)
+		return NULL;
+	if (!fu_bluez_device_ensure_uuid_helper_proxy(uuid_helper, error))
+		return NULL;
+
+	opt_builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
+	opt_variant = g_variant_new("a{sv}", opt_builder);
+
+	val = g_dbus_proxy_call_with_unix_fd_list_sync(uuid_helper->proxy,
+						       method,
+						       g_variant_new("(@a{sv})", opt_variant),
+						       G_DBUS_CALL_FLAGS_NONE,
+						       -1,
+						       NULL, // fd list
+						       &out_fd_list,
+						       NULL,
+						       error);
+	if (val == NULL) {
+		g_prefix_error(error, "failed to call %s: ", method);
+		return NULL;
+	}
+
+	g_variant_get_child(val, 0, "h", &fd_id);
+	if (mtu != NULL)
+		g_variant_get_child(val, 1, "q", mtu);
+
+	return fu_io_channel_unix_new(g_unix_fd_list_get(out_fd_list, fd_id, NULL));
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "not supported as <gio-unix.h> not available");
+	return NULL;
+#endif
+}
+
+/**
+ * fu_bluez_device_notify_acquire:
+ * @self: a #FuBluezDevice
+ * @uuid: the UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
+ * @mtu: (out) (optional): MTU of the channel on success
+ * @error: (nullable): optional return location for an error
+ *
+ * Acquire notifications for property changes in a UUID (AcquireNotify
+ * method). Closing IO channel releases the notify.
+ *
+ * Returns: (transfer full): a #FuIOChannel or %NULL on error
+ *
+ * Since: 2.0.0
+ **/
+FuIOChannel *
+fu_bluez_device_notify_acquire(FuBluezDevice *self, const gchar *uuid, gint32 *mtu, GError **error)
+{
+	g_return_val_if_fail(FU_IS_BLUEZ_DEVICE(self), NULL);
+	g_return_val_if_fail(uuid != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return fu_bluez_device_method_acquire(self, "AcquireNotify", uuid, mtu, error);
+}
+
+/**
+ * fu_bluez_device_write_acquire:
+ * @self: a #FuBluezDevice
+ * @uuid: the UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
+ * @mtu: (out) (optional): MTU of the channel
+ * @error: (nullable): optional return location for an error
+ *
+ * Acquire notifications for property changes in a UUID (AcquireNotify
+ * method). Closing IO channel releases the notify.
+ *
+ * Returns: (transfer full): a #FuIOChannel or %NULL on error
+ *
+ * Since: 2.0.0
+ **/
+FuIOChannel *
+fu_bluez_device_write_acquire(FuBluezDevice *self, const gchar *uuid, gint32 *mtu, GError **error)
+{
+	g_return_val_if_fail(FU_IS_BLUEZ_DEVICE(self), NULL);
+	g_return_val_if_fail(uuid != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return fu_bluez_device_method_acquire(self, "AcquireWrite", uuid, mtu, error);
+}
+
 static void
 fu_bluez_device_incorporate(FuDevice *self, FuDevice *donor)
 {
@@ -737,7 +1031,6 @@ fu_bluez_device_class_init(FuBluezDeviceClass *klass)
 	object_class->set_property = fu_bluez_device_set_property;
 	object_class->finalize = fu_bluez_device_finalize;
 	device_class->probe = fu_bluez_device_probe;
-	device_class->setup = fu_bluez_device_setup;
 	device_class->to_string = fu_bluez_device_to_string;
 	device_class->incorporate = fu_bluez_device_incorporate;
 	device_class->convert_version = fu_bluez_device_convert_version;
