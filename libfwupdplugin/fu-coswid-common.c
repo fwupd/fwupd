@@ -64,6 +64,8 @@ fu_coswid_read_string(cbor_item_t *item, GError **error)
 gboolean
 fu_coswid_read_tag(cbor_item_t *item, FuCoswidTag *value, GError **error)
 {
+	guint64 tmp;
+
 	g_return_val_if_fail(item != NULL, FALSE);
 	g_return_val_if_fail(value != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -75,7 +77,16 @@ fu_coswid_read_tag(cbor_item_t *item, FuCoswidTag *value, GError **error)
 				    "tag item is not a uint");
 		return FALSE;
 	}
-	*value = cbor_get_uint8(item);
+	tmp = cbor_get_int(item);
+	if (tmp > G_MAXUINT8) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "0x%x is too large for tag",
+			    (guint)tmp);
+		return FALSE;
+	}
+	*value = (FuCoswidTag)tmp;
 	return TRUE;
 }
 
@@ -105,7 +116,7 @@ fu_coswid_read_version_scheme(cbor_item_t *item, FuCoswidVersionScheme *value, G
 				    "version-scheme item is not a uint");
 		return FALSE;
 	}
-	*value = cbor_get_uint16(item);
+	*value = (FuCoswidVersionScheme)cbor_get_int(item);
 	return TRUE;
 }
 
@@ -124,6 +135,8 @@ fu_coswid_read_version_scheme(cbor_item_t *item, FuCoswidVersionScheme *value, G
 gboolean
 fu_coswid_read_u8(cbor_item_t *item, guint8 *value, GError **error)
 {
+	guint64 tmp;
+
 	g_return_val_if_fail(item != NULL, FALSE);
 	g_return_val_if_fail(value != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -135,7 +148,57 @@ fu_coswid_read_u8(cbor_item_t *item, guint8 *value, GError **error)
 				    "value item is not a uint");
 		return FALSE;
 	}
-	*value = cbor_get_uint8(item);
+	tmp = cbor_get_int(item);
+	if (tmp > G_MAXUINT8) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "0x%x is too large for u8",
+			    (guint)tmp);
+		return FALSE;
+	}
+	*value = (guint8)tmp;
+	return TRUE;
+}
+
+/**
+ * fu_coswid_read_s8:
+ * @item: a #cbor_item_t
+ * @value: read value
+ * @error: (nullable): optional return location for an error
+ *
+ * Reads a #gint8 value.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.9.17
+ **/
+gboolean
+fu_coswid_read_s8(cbor_item_t *item, gint8 *value, GError **error)
+{
+	guint64 tmp;
+
+	g_return_val_if_fail(item != NULL, FALSE);
+	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!cbor_is_int(item)) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "value item is not a int");
+		return FALSE;
+	}
+	tmp = cbor_get_int(item);
+	if (tmp > 127) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "0x%x is too large for s8",
+			    (guint)tmp);
+		return FALSE;
+	}
+	*value = cbor_isa_negint(item) ? (gint8)((-1) - tmp) : (gint8)tmp;
 	return TRUE;
 }
 
@@ -165,7 +228,7 @@ fu_coswid_read_u64(cbor_item_t *item, guint64 *value, GError **error)
 				    "value item is not a uint");
 		return FALSE;
 	}
-	*value = cbor_get_uint64(item);
+	*value = cbor_get_int(item);
 	return TRUE;
 }
 

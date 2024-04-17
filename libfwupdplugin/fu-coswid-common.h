@@ -24,6 +24,8 @@ fu_coswid_read_version_scheme(cbor_item_t *item, FuCoswidVersionScheme *value, G
 gboolean
 fu_coswid_read_u8(cbor_item_t *item, guint8 *value, GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
+fu_coswid_read_s8(cbor_item_t *item, gint8 *value, GError **error) G_GNUC_NON_NULL(1, 2);
+gboolean
 fu_coswid_read_u64(cbor_item_t *item, guint64 *value, GError **error) G_GNUC_NON_NULL(1, 2);
 
 void
