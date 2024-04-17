@@ -173,18 +173,12 @@ fu_coswid_firmware_parse_link(cbor_item_t *item, gpointer user_data, GError **er
 				return FALSE;
 			}
 		} else if (tag_id == FU_COSWID_TAG_REL) {
-			if (cbor_isa_negint(pairs[i].value)) {
-				link->rel = (-1) - cbor_get_uint8(pairs[i].value);
-			} else if (cbor_isa_uint(item)) {
-				link->rel = cbor_get_uint8(pairs[i].value);
-			} else {
-				g_set_error_literal(
-				    error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "failed to parse link rel: item is not a integer");
+			gint8 tmp = 0;
+			if (!fu_coswid_read_s8(pairs[i].value, &tmp, error)) {
+				g_prefix_error(error, "failed to parse link rel: ");
 				return FALSE;
 			}
+			link->rel = tmp;
 		} else {
 			g_debug("unhandled tag %s from %s",
 				fu_coswid_tag_to_string(tag_id),
@@ -202,6 +196,7 @@ static gboolean
 fu_coswid_firmware_parse_hash(cbor_item_t *item, gpointer user_data, GError **error)
 {
 	FuCoswidFirmwarePayload *payload = (FuCoswidFirmwarePayload *)user_data;
+	guint8 alg_id8 = 0;
 	g_autoptr(FuCoswidFirmwareHash) hash = g_new0(FuCoswidFirmwareHash, 1);
 	g_autoptr(cbor_item_t) hash_item_alg_id = NULL;
 	g_autoptr(cbor_item_t) hash_item_value = NULL;
@@ -223,16 +218,13 @@ fu_coswid_firmware_parse_hash(cbor_item_t *item, gpointer user_data, GError **er
 				    "invalid hash item");
 		return FALSE;
 	}
-	if (!cbor_isa_uint(hash_item_alg_id)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "hash alg-id item is not a uint");
+	if (!fu_coswid_read_u8(hash_item_alg_id, &alg_id8, error)) {
+		g_prefix_error(error, "failed to parse hash alg-id: ");
 		return FALSE;
 	}
 
 	/* success */
-	hash->alg_id = cbor_get_uint8(hash_item_alg_id);
+	hash->alg_id = alg_id8;
 	hash->value = g_byte_array_new();
 	g_byte_array_append(hash->value,
 			    cbor_bytestring_handle(hash_item_value),
@@ -429,10 +421,15 @@ fu_coswid_firmware_parse_entity(cbor_item_t *item, gpointer user_data, GError **
 			}
 		} else if (tag_id == FU_COSWID_TAG_ROLE) {
 			if (cbor_isa_uint(pairs[i].value)) {
-				FuCoswidEntityRole role = cbor_get_uint8(pairs[i].value);
-				entity->roles[entity_role_cnt++] = role;
+				guint8 role8 = 0;
+				if (!fu_coswid_read_u8(pairs[i].value, &role8, error)) {
+					g_prefix_error(error, "failed to parse entity role: ");
+					return FALSE;
+				}
+				entity->roles[entity_role_cnt++] = role8;
 			} else if (cbor_isa_array(pairs[i].value)) {
 				for (guint j = 0; j < cbor_array_size(pairs[i].value); j++) {
+					guint8 role8 = 0;
 					g_autoptr(cbor_item_t) value =
 					    cbor_array_get(pairs[i].value, j);
 					if (!cbor_isa_uint(value)) {
@@ -449,7 +446,12 @@ fu_coswid_firmware_parse_entity(cbor_item_t *item, gpointer user_data, GError **
 								    "too many roles");
 						return FALSE;
 					}
-					entity->roles[entity_role_cnt++] = cbor_get_uint8(value);
+					if (!fu_coswid_read_u8(value, &role8, error)) {
+						g_prefix_error(error,
+							       "failed to parse entity role: ");
+						return FALSE;
+					}
+					entity->roles[entity_role_cnt++] = role8;
 				}
 			} else {
 				g_set_error_literal(error,
