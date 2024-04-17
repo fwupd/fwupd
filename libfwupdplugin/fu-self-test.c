@@ -204,6 +204,8 @@ fu_common_crc_func(void)
 	g_assert_cmpint(fu_crc8(buf, sizeof(buf)), ==, 0x7A);
 	g_assert_cmpint(fu_crc16(buf, sizeof(buf)), ==, 0x4DF1);
 	g_assert_cmpint(fu_crc32(buf, sizeof(buf)), ==, 0x40EFAB9E);
+	g_assert_cmpint(fu_misr16(0, buf, sizeof(buf)), ==, 0x813);
+	g_assert_cmpint(fu_misr16(0xFFFF, buf, sizeof(buf)), ==, 0xF7FD);
 }
 
 static void
