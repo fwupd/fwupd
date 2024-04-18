@@ -481,7 +481,8 @@ fu_coswid_firmware_malloc(size_t size)
 		g_debug("failing CBOR allocation of 0x%x bytes", (guint)size);
 		return NULL;
 	}
-	return g_malloc0(size);
+	/* libcbor expects a valid pointer for a zero sized allocation */
+	return g_malloc0(MAX(size, 1));
 }
 
 static void *
@@ -491,7 +492,8 @@ fu_coswid_firmware_realloc(void *ptr, size_t size)
 		g_debug("failing CBOR reallocation of 0x%x bytes", (guint)size);
 		return NULL;
 	}
-	return g_realloc(ptr, size);
+	/* libcbor expects a valid pointer for a zero sized allocation */
+	return g_realloc(ptr, MAX(size, 1));
 }
 
 static void
