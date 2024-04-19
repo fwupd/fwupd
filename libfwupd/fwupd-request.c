@@ -28,6 +28,8 @@ typedef struct {
 	gchar *image;
 } FwupdRequestPrivate;
 
+enum { SIGNAL_INVALIDATE, SIGNAL_LAST };
+
 enum {
 	PROP_0,
 	PROP_ID,
@@ -38,6 +40,8 @@ enum {
 	PROP_DEVICE_ID,
 	PROP_LAST
 };
+
+static guint signals[SIGNAL_LAST] = {0};
 
 G_DEFINE_TYPE_WITH_PRIVATE(FwupdRequest, fwupd_request, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_request_get_instance_private(o))
@@ -134,6 +138,23 @@ fwupd_request_flag_from_string(const gchar *flag)
 	if (g_strcmp0(flag, "non-generic-image") == 0)
 		return FWUPD_REQUEST_FLAG_NON_GENERIC_IMAGE;
 	return FWUPD_REQUEST_FLAG_NONE;
+}
+
+/**
+ * fwupd_request_emit_invalidate:
+ * @self: a #FwupdRequest
+ *
+ * Emits an `invalidate` signal to signify that the request is no longer valid, and any visible
+ * UI components should be hidden.
+ *
+ * Since: 1.9.17
+ **/
+void
+fwupd_request_emit_invalidate(FwupdRequest *self)
+{
+	g_return_if_fail(FWUPD_IS_REQUEST(self));
+	g_debug("emitting FwupdRequest::invalidate()");
+	g_signal_emit(self, signals[SIGNAL_INVALIDATE], 0);
 }
 
 /**
@@ -710,6 +731,25 @@ fwupd_request_class_init(FwupdRequestClass *klass)
 	object_class->finalize = fwupd_request_finalize;
 	object_class->get_property = fwupd_request_get_property;
 	object_class->set_property = fwupd_request_set_property;
+
+	/**
+	 * FwupdRequest::invalidate:
+	 * @self: the #FwupdRequest instance that emitted the signal
+	 *
+	 * The ::invalidate signal is emitted when the request is no longer valid, and any visible
+	 * UI components should be hidden.
+	 *
+	 * Since: 1.9.17
+	 **/
+	signals[SIGNAL_INVALIDATE] = g_signal_new("invalidate",
+						  G_TYPE_FROM_CLASS(object_class),
+						  G_SIGNAL_RUN_LAST,
+						  G_STRUCT_OFFSET(FwupdRequestClass, invalidate),
+						  NULL,
+						  NULL,
+						  g_cclosure_marshal_VOID__VOID,
+						  G_TYPE_NONE,
+						  0);
 
 	/**
 	 * FwupdRequest:id:

@@ -15,8 +15,8 @@ G_DECLARE_DERIVABLE_TYPE(FwupdRequest, fwupd_request, FWUPD, REQUEST, GObject)
 
 struct _FwupdRequestClass {
 	GObjectClass parent_class;
+	void (*invalidate)(FwupdRequest *client);
 	/*< private >*/
-	void (*_fwupd_reserved1)(void);
 	void (*_fwupd_reserved2)(void);
 	void (*_fwupd_reserved3)(void);
 	void (*_fwupd_reserved4)(void);
