@@ -19,7 +19,7 @@ G_DECLARE_FINAL_TYPE(FuThunderboltRetimer,
 		     FuThunderboltDevice)
 
 gboolean
-fu_thunderbolt_retimer_set_parent_port_offline(FuDevice *device, GError **error);
+fu_thunderbolt_retimer_set_parent_port_offline(FuDevice *device, const gchar *port, GError **error);
 
 gboolean
-fu_thunderbolt_retimer_set_parent_port_online(FuDevice *device, GError **error);
+fu_thunderbolt_retimer_set_parent_port_online(FuDevice *device, const gchar *port, GError **error);

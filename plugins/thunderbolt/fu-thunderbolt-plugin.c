@@ -13,12 +13,20 @@
 
 struct _FuThunderboltPlugin {
 	FuPlugin parent_instance;
+	gchar *port;
 };
 
 G_DEFINE_TYPE(FuThunderboltPlugin, fu_thunderbolt_plugin, FU_TYPE_PLUGIN)
 
 /* 5 seconds sleep until retimer is available after nvm update */
 #define FU_THUNDERBOLT_RETIMER_CLEANUP_DELAY 5000 /* ms */
+
+static void
+fu_thunderbolt_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
+{
+	FuThunderboltPlugin *self = FU_THUNDERBOLT_PLUGIN(plugin);
+	fu_string_append(str, idt, "Port", self->port);
+}
 
 static gboolean
 fu_thunderbolt_plugin_safe_kernel(FuPlugin *plugin, GError **error)
@@ -31,11 +39,19 @@ static gboolean
 fu_thunderbolt_plugin_device_created(FuPlugin *plugin, FuDevice *dev, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuThunderboltPlugin *self = FU_THUNDERBOLT_PLUGIN(plugin);
+
 	fu_plugin_add_rule(plugin,
 			   FU_PLUGIN_RULE_INHIBITS_IDLE,
 			   "thunderbolt requires device wakeup");
 	if (fu_context_has_hwid_flag(ctx, "retimer-offline-mode"))
 		fu_device_add_private_flag(dev, FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION);
+
+	/* by default usb4_port1 is used, but this needs to be configurable with a DMI match */
+	if (FU_IS_THUNDERBOLT_CONTROLLER(dev) && self->port != NULL)
+		fu_thunderbolt_controller_set_port(FU_THUNDERBOLT_CONTROLLER(dev), self->port);
+
+	/* success */
 	return TRUE;
 }
 
@@ -62,14 +78,38 @@ fu_thunderbolt_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **e
 }
 
 static gboolean
+fu_thunderbolt_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
+{
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuThunderboltPlugin *self = FU_THUNDERBOLT_PLUGIN(plugin);
+	GPtrArray *guids = fu_context_get_hwid_guids(ctx);
+
+	/* find the custom port from the DMI match */
+	for (guint i = 0; i < guids->len; i++) {
+		const gchar *guid = g_ptr_array_index(guids, i);
+		const gchar *port = fu_context_lookup_quirk_by_id(ctx, guid, "ThunderboltPort");
+		if (port != NULL) {
+			self->port = g_strdup(port);
+			break;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_thunderbolt_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
+	FuThunderboltPlugin *self = FU_THUNDERBOLT_PLUGIN(plugin);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index(devices, i);
 		if ((g_strcmp0(fu_device_get_plugin(dev), "thunderbolt") == 0) &&
 		    fu_device_has_private_flag(dev, FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION) &&
 		    fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)) {
-			return fu_thunderbolt_retimer_set_parent_port_offline(dev, error);
+			return fu_thunderbolt_retimer_set_parent_port_offline(dev,
+									      self->port,
+									      error);
 		}
 	}
 	return TRUE;
@@ -78,13 +118,16 @@ fu_thunderbolt_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GE
 static gboolean
 fu_thunderbolt_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
+	FuThunderboltPlugin *self = FU_THUNDERBOLT_PLUGIN(plugin);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index(devices, i);
 		if ((g_strcmp0(fu_device_get_plugin(dev), "thunderbolt") == 0) &&
 		    fu_device_has_private_flag(dev, FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION) &&
 		    fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)) {
 			fu_device_sleep(dev, FU_THUNDERBOLT_RETIMER_CLEANUP_DELAY);
-			return fu_thunderbolt_retimer_set_parent_port_online(dev, error);
+			return fu_thunderbolt_retimer_set_parent_port_online(dev,
+									     self->port,
+									     error);
 		}
 	}
 	return TRUE;
@@ -127,11 +170,24 @@ fu_thunderbolt_plugin_constructed(GObject *obj)
 }
 
 static void
+fu_thunderbolt_finalize(GObject *obj)
+{
+	FuThunderboltPlugin *self = FU_THUNDERBOLT_PLUGIN(obj);
+	g_free(self->port);
+	G_OBJECT_CLASS(fu_thunderbolt_plugin_parent_class)->finalize(obj);
+}
+
+static void
 fu_thunderbolt_plugin_class_init(FuThunderboltPluginClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
+
+	object_class->finalize = fu_thunderbolt_finalize;
+	plugin_class->to_string = fu_thunderbolt_plugin_to_string;
 	plugin_class->constructed = fu_thunderbolt_plugin_constructed;
 	plugin_class->startup = fu_thunderbolt_plugin_startup;
+	plugin_class->coldplug = fu_thunderbolt_plugin_coldplug;
 	plugin_class->device_registered = fu_thunderbolt_plugin_device_registered;
 	plugin_class->device_created = fu_thunderbolt_plugin_device_created;
 	plugin_class->composite_prepare = fu_thunderbolt_plugin_composite_prepare;

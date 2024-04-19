@@ -23,6 +23,7 @@ struct _FuThunderboltController {
 	gboolean is_native;
 	guint16 gen;
 	guint host_online_timer_id;
+	gchar *port;
 };
 
 G_DEFINE_TYPE(FuThunderboltController, fu_thunderbolt_controller, FU_TYPE_THUNDERBOLT_DEVICE)
@@ -71,6 +72,7 @@ fu_thunderbolt_controller_to_string(FuDevice *device, guint idt, GString *str)
 	fu_string_append_kb(str, idt, "SafeMode", self->safe_mode);
 	fu_string_append_kb(str, idt, "NativeMode", self->is_native);
 	fu_string_append_ku(str, idt, "Generation", self->gen);
+	fu_string_append(str, idt, "Port", self->port);
 }
 
 static gboolean
@@ -153,7 +155,7 @@ fu_thunderbolt_controller_set_port_online_cb(gpointer user_data)
 	FuThunderboltController *self = FU_THUNDERBOLT_CONTROLLER(user_data);
 	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_thunderbolt_udev_set_port_online(FU_UDEV_DEVICE(self), &error_local))
+	if (!fu_thunderbolt_udev_set_port_online(FU_UDEV_DEVICE(self), self->port, &error_local))
 		g_warning("failed to set online after initial delay: %s", error_local->message);
 
 	/* no longer valid */
@@ -164,7 +166,7 @@ fu_thunderbolt_controller_set_port_online_cb(gpointer user_data)
 static gboolean
 fu_thunderbolt_controller_setup_usb4(FuThunderboltController *self, GError **error)
 {
-	if (!fu_thunderbolt_udev_set_port_offline(FU_UDEV_DEVICE(self), error))
+	if (!fu_thunderbolt_udev_set_port_offline(FU_UDEV_DEVICE(self), self->port, error))
 		return FALSE;
 	self->host_online_timer_id =
 	    g_timeout_add_seconds(5, fu_thunderbolt_controller_set_port_online_cb, self);
@@ -335,9 +337,19 @@ fu_thunderbolt_controller_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
+void
+fu_thunderbolt_controller_set_port(FuThunderboltController *self, const gchar *port)
+{
+	if (g_strcmp0(self->port, port) == 0)
+		return;
+	g_free(self->port);
+	self->port = g_strdup(port);
+}
+
 static void
 fu_thunderbolt_controller_init(FuThunderboltController *self)
 {
+	self->port = g_strdup("usb4_port1");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION,
@@ -351,6 +363,7 @@ fu_thunderbolt_controller_finalize(GObject *object)
 
 	if (self->host_online_timer_id != 0)
 		g_source_remove(self->host_online_timer_id);
+	g_free(self->port);
 
 	G_OBJECT_CLASS(fu_thunderbolt_controller_parent_class)->finalize(object);
 }

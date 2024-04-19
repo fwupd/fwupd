@@ -16,3 +16,6 @@ G_DECLARE_FINAL_TYPE(FuThunderboltController,
 		     FU,
 		     THUNDERBOLT_CONTROLLER,
 		     FuThunderboltDevice)
+
+void
+fu_thunderbolt_controller_set_port(FuThunderboltController *self, const gchar *port);

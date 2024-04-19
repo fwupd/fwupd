@@ -112,6 +112,13 @@ Use offline mode interface to update retimers.
 
 Since: 1.9.1
 
+## ThunderboltPort=
+
+The port to offline and rescan to make the controller appear.
+Defaults to `usb4_port1`
+
+Since 1.9.17
+
 ## External Interface Access
 
 This plugin requires read/write access to `/sys/bus/thunderbolt`.

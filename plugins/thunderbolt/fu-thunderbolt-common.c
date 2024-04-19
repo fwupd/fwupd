@@ -26,11 +26,11 @@ fu_thunderbolt_device_check_usb4_port_path(FuUdevDevice *device,
 }
 
 gboolean
-fu_thunderbolt_udev_set_port_offline(FuUdevDevice *device, GError **error)
+fu_thunderbolt_udev_set_port_offline(FuUdevDevice *device, const gchar *port, GError **error)
 {
-	const gchar *offline = "usb4_port1/offline";
-	const gchar *rescan = "usb4_port1/rescan";
 	g_autoptr(GError) error_local = NULL;
+	g_autofree gchar *offline = g_build_filename(port, "offline", NULL);
+	g_autofree gchar *rescan = g_build_filename(port, "rescan", NULL);
 
 	if (!fu_thunderbolt_device_check_usb4_port_path(device, offline, &error_local)) {
 		g_debug("failed to check usb4 offline path: %s", error_local->message);
@@ -52,10 +52,10 @@ fu_thunderbolt_udev_set_port_offline(FuUdevDevice *device, GError **error)
 }
 
 gboolean
-fu_thunderbolt_udev_set_port_online(FuUdevDevice *device, GError **error)
+fu_thunderbolt_udev_set_port_online(FuUdevDevice *device, const gchar *port, GError **error)
 {
 	FuUdevDevice *udev = FU_UDEV_DEVICE(device);
-	const gchar *offline = "usb4_port1/offline";
+	g_autofree gchar *offline = g_build_filename(port, "offline", NULL);
 	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_thunderbolt_device_check_usb4_port_path(device, offline, &error_local)) {

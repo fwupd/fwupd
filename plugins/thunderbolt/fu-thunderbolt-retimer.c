@@ -54,21 +54,21 @@ fu_thunderbolt_retimer_get_udev_grandparent(FuDevice *device, GError **error)
 }
 
 gboolean
-fu_thunderbolt_retimer_set_parent_port_offline(FuDevice *device, GError **error)
+fu_thunderbolt_retimer_set_parent_port_offline(FuDevice *device, const gchar *port, GError **error)
 {
 	g_autoptr(FuUdevDevice) parent = fu_thunderbolt_retimer_get_udev_grandparent(device, error);
 	if (parent == NULL)
 		return FALSE;
-	return fu_thunderbolt_udev_set_port_offline(parent, error);
+	return fu_thunderbolt_udev_set_port_offline(parent, port, error);
 }
 
 gboolean
-fu_thunderbolt_retimer_set_parent_port_online(FuDevice *device, GError **error)
+fu_thunderbolt_retimer_set_parent_port_online(FuDevice *device, const gchar *port, GError **error)
 {
 	g_autoptr(FuUdevDevice) parent = fu_thunderbolt_retimer_get_udev_grandparent(device, error);
 	if (parent == NULL)
 		return FALSE;
-	return fu_thunderbolt_udev_set_port_online(parent, error);
+	return fu_thunderbolt_udev_set_port_online(parent, port, error);
 }
 
 static gboolean
