@@ -14,8 +14,6 @@
 struct _FuVliPdFirmware {
 	FuFirmwareClass parent_instance;
 	FuVliDeviceKind device_kind;
-	guint16 vid;
-	guint16 pid;
 };
 
 G_DEFINE_TYPE(FuVliPdFirmware, fu_vli_pd_firmware, FU_TYPE_FIRMWARE)
@@ -27,24 +25,6 @@ fu_vli_pd_firmware_get_kind(FuVliPdFirmware *self)
 	return self->device_kind;
 }
 
-static gboolean
-fu_vli_pd_firmware_validate_header(FuVliPdFirmware *self)
-{
-	if (self->vid == 0x2109)
-		return TRUE;
-	if (self->vid == 0x17EF)
-		return TRUE;
-	if (self->vid == 0x2D01)
-		return TRUE;
-	if (self->vid == 0x06C4)
-		return TRUE;
-	if (self->vid == 0x0BF8)
-		return TRUE;
-	if (self->vid == 0x208E)
-		return TRUE;
-	return FALSE;
-}
-
 static void
 fu_vli_pd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
@@ -52,8 +32,6 @@ fu_vli_pd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 	fu_xmlb_builder_insert_kv(bn,
 				  "device_kind",
 				  fu_vli_device_kind_to_string(self->device_kind));
-	fu_xmlb_builder_insert_kx(bn, "vid", self->vid);
-	fu_xmlb_builder_insert_kx(bn, "pid", self->pid);
 }
 
 static gboolean
@@ -74,30 +52,6 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 	st = fu_struct_vli_pd_hdr_parse(buf, bufsz, VLI_USBHUB_PD_FLASHMAP_ADDR, error);
 	if (st == NULL) {
 		g_prefix_error(error, "failed to read header: ");
-		return FALSE;
-	}
-	self->vid = fu_struct_vli_pd_hdr_get_vid(st);
-
-	/* fall back to legacy location */
-	if (!fu_vli_pd_firmware_validate_header(self)) {
-		g_byte_array_unref(st);
-		st = fu_struct_vli_pd_hdr_parse(buf,
-						bufsz,
-						VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY,
-						error);
-		if (st == NULL) {
-			g_prefix_error(error, "failed to read header: ");
-			return FALSE;
-		}
-	}
-	self->vid = fu_struct_vli_pd_hdr_get_vid(st);
-
-	/* urgh, not found */
-	if (!fu_vli_pd_firmware_validate_header(self)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "header invalid, VID not supported");
 		return FALSE;
 	}
 

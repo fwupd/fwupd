@@ -9,3 +9,23 @@ Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
 ParentGuid = USB\VID_065F&PID_F817
+
+# Goodway ASUS DC201
+[USB\VID_0B05&PID_1BA2]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3,has-shared-spi-pd
+CounterpartGuid = USB\VID_0B05&PID_1BA8
+[USB\VID_0B05&PID_1BA8]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+ParentGuid = USB\VID_0B05&PID_1BA2
+
+# VL105 PD Controller
+[USB\VID_0B05&PID_1BA9]
+Plugin = vli
+GType = FuVliPdDevice
+Flags = skips-rom
+VliDeviceKind = vl105
+
