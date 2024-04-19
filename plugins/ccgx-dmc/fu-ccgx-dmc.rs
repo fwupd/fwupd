@@ -123,6 +123,7 @@ enum CcgxDmcFwctAnalysisStatus {
     InvalidCompositeVersion,
     AuthenticationFailed,
     InvalidAlgorithm,
+    InvalidFence,
 }
 
 #[derive(ToString)]
