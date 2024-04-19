@@ -37,6 +37,7 @@ enum WacModuleFwType {
     BluetoothId6  = 0x06,
     TouchId7      = 0x07,
     BluetoothId9  = 0x09,
+    SubCpu        = 0x0A,
     Main          = 0x3F,
 }
 #[derive(ToString)]
