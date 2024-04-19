@@ -75,6 +75,7 @@ typedef struct {
 	gchar *package_version;
 	gchar *user_agent;
 	GHashTable *hints; /* str:str */
+	GHashTable *immediate_requests; /* str:FwupdRequest */
 } FwupdClientPrivate;
 
 #ifdef HAVE_LIBCURL
@@ -187,6 +188,8 @@ fwupd_client_context_idle_cb(gpointer user_data)
 		/* property */
 		if (helper->property_name != NULL)
 			fwupd_client_context_object_notify(self, helper->property_name);
+		if (g_strcmp0(helper->property_name, "FwupdRequest") == 0)
+			fwupd_request_emit_invalidate(FWUPD_REQUEST(helper->payload));
 
 		/* payload signal */
 		if (helper->signal_id != 0 && helper->payload != NULL)
@@ -235,6 +238,27 @@ fwupd_client_object_notify(FwupdClient *self, const gchar *property_name)
 	helper = g_new0(FwupdClientContextHelper, 1);
 	helper->self = g_object_ref(self);
 	helper->property_name = g_strdup(property_name);
+	fwupd_client_context_helper(self, helper);
+}
+
+/* run callback in the correct thread */
+static void
+fwupd_client_request_invalidate(FwupdClient *self, FwupdRequest *request)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	FwupdClientContextHelper *helper = NULL;
+
+	/* shortcut */
+	if (g_main_context_is_owner(priv->main_ctx)) {
+		fwupd_request_emit_invalidate(request);
+		return;
+	}
+
+	/* run in the correct GMainContext and thread */
+	helper = g_new0(FwupdClientContextHelper, 1);
+	helper->self = g_object_ref(self);
+	helper->property_name = g_strdup("FwupdRequest");
+	helper->payload = G_OBJECT(g_object_ref(request));
 	fwupd_client_context_helper(self, helper);
 }
 
@@ -526,6 +550,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 		       GVariant *parameters,
 		       FwupdClient *self)
 {
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FwupdDevice) dev = NULL;
 	if (g_strcmp0(signal_name, "Changed") == 0) {
 		g_debug("Emitting ::changed()");
@@ -548,12 +573,31 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 		dev = fwupd_device_from_variant(parameters);
 		g_debug("Emitting ::device-changed(%s)", fwupd_device_get_id(dev));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_CHANGED, G_OBJECT(dev));
+
+		/* invalidate request */
+		if (fwupd_device_get_status(dev) != FWUPD_STATUS_WAITING_FOR_USER) {
+			FwupdRequest *req =
+			    g_hash_table_lookup(priv->immediate_requests, fwupd_device_get_id(dev));
+			if (req != NULL) {
+				fwupd_client_request_invalidate(self, req);
+				g_hash_table_remove(priv->immediate_requests,
+						    fwupd_device_get_id(dev));
+			}
+		}
 		return;
 	}
 	if (g_strcmp0(signal_name, "DeviceRequest") == 0) {
 		g_autoptr(FwupdRequest) req = fwupd_request_from_variant(parameters);
 		g_debug("Emitting ::device-request(%s)", fwupd_request_get_id(req));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REQUEST, G_OBJECT(req));
+
+		/* we may need to invalidate this later */
+		if (fwupd_request_get_kind(req) == FWUPD_REQUEST_KIND_IMMEDIATE &&
+		    fwupd_request_get_device_id(req) != NULL) {
+			g_hash_table_insert(priv->immediate_requests,
+					    g_strdup(fwupd_request_get_device_id(req)),
+					    g_object_ref(req));
+		}
 		return;
 	}
 	g_debug("Unknown signal name '%s' from %s", signal_name, sender_name);
@@ -6577,6 +6621,8 @@ fwupd_client_init(FwupdClient *self)
 	priv->hints = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	priv->battery_level = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->battery_threshold = FWUPD_BATTERY_LEVEL_INVALID;
+	priv->immediate_requests =
+	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_object_unref);
 
 	/* we get this one for free */
 	fwupd_client_add_hint(self, "locale", g_getenv("LANG"));
@@ -6599,6 +6645,7 @@ fwupd_client_finalize(GObject *object)
 	g_free(priv->host_machine_id);
 	g_free(priv->host_security_id);
 	g_hash_table_unref(priv->hints);
+	g_hash_table_unref(priv->immediate_requests);
 	g_mutex_clear(&priv->idle_mutex);
 	if (priv->idle_id != 0)
 		g_source_remove(priv->idle_id);
