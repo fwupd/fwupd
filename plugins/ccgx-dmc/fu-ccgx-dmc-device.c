@@ -620,7 +620,7 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	if (rqt_data[0] == FU_CCGX_DMC_DEVICE_STATUS_UPDATE_PHASE1_COMPLETE) {
+	if (rqt_data[0] == FU_CCGX_DMC_DEVICE_STATUS_UPDATE_PHASE1_COMPLETE_FULL_PHASE2_NOT_DONE) {
 		self->update_model = FU_CCGX_DMC_UPDATE_MODEL_DOWNLOAD_TRIGGER;
 	} else if (rqt_data[0] == FU_CCGX_DMC_DEVICE_STATUS_FW_DOWNLOADED_UPDATE_PEND) {
 		self->update_model = FU_CCGX_DMC_UPDATE_MODEL_PENDING_RESET;
