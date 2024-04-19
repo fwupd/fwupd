@@ -599,6 +599,13 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 			return FALSE;
 	}
 	if (rqt_opcode != FU_CCGX_DMC_INT_OPCODE_FW_UPGRADE_STATUS) {
+		if (rqt_opcode == FU_CCGX_DMC_FWCT_ANALYSIS_STATUS_INVALID_FENCE) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "cannot downgrade to this firmware version");
+			return FALSE;
+		}
 		if (rqt_opcode == FU_CCGX_DMC_INT_OPCODE_FWCT_ANALYSIS_STATUS) {
 			g_set_error(error,
 				    FWUPD_ERROR,
