@@ -13,6 +13,16 @@ RuntimeDirectory=@motd_dir@
 RuntimeDirectoryPreserve=yes
 BusName=org.freedesktop.fwupd
 ExecStart=@libexecdir@/fwupd/fwupd
+
+# Already implicitly dropped, dropping explicitly
+CapabilityBoundingSet=~CAP_SYS_MODULE
+CapabilityBoundingSet=~CAP_SYS_TIME
+CapabilityBoundingSet=~CAP_SYSLOG
+
+CapabilityBoundingSet=~CAP_AUDIT_CONTROL CAP_AUDIT_READ CAP_AUDIT_WRITE
+CapabilityBoundingSet=~CAP_BLOCK_SUSPEND
+CapabilityBoundingSet=~CAP_CHECKPOINT_RESTORE
+
 KeyringMode=private
 LockPersonality=yes
 MemoryDenyWriteExecute=yes
