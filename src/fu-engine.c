@@ -3070,6 +3070,7 @@ fu_engine_detach(FuEngine *self,
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) poll_locker = NULL;
+	g_autoptr(FuDeviceProgress) device_progress = NULL;
 
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device(self, device_id, error);
@@ -3077,6 +3078,8 @@ fu_engine_detach(FuEngine *self,
 		g_prefix_error(error, "failed to get device before update detach: ");
 		return FALSE;
 	}
+	device_progress = fu_device_progress_new(device, progress);
+	g_assert(device_progress != NULL);
 
 	/* pause the polling */
 	poll_locker = fu_device_poll_locker_new(device, error);
@@ -3136,6 +3139,7 @@ fu_engine_attach(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) poll_locker = NULL;
+	g_autoptr(FuDeviceProgress) device_progress = NULL;
 
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device(self, device_id, error);
@@ -3143,6 +3147,9 @@ fu_engine_attach(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 		g_prefix_error(error, "failed to get device before update attach: ");
 		return FALSE;
 	}
+	device_progress = fu_device_progress_new(device, progress);
+	g_assert(device_progress != NULL);
+
 	str = fu_device_to_string(device);
 	g_info("attach -> %s", str);
 	plugin =
@@ -3279,6 +3286,7 @@ fu_engine_write_firmware(FuEngine *self,
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) poll_locker = NULL;
+	g_autoptr(FuDeviceProgress) device_progress = NULL;
 	g_autoptr(GError) error_write = NULL;
 
 	/* cancel the pending action */
@@ -3291,6 +3299,8 @@ fu_engine_write_firmware(FuEngine *self,
 		g_prefix_error(error, "failed to get device before update: ");
 		return FALSE;
 	}
+	device_progress = fu_device_progress_new(device, progress);
+	g_assert(device_progress != NULL);
 
 	/* pause the polling */
 	poll_locker = fu_device_poll_locker_new(device, error);
