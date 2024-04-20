@@ -209,6 +209,13 @@ fu_coswid_firmware_parse_hash(cbor_item_t *item, gpointer user_data, GError **er
 				    "hash item is not an array");
 		return FALSE;
 	}
+	if (cbor_array_size(item) != 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "hash array has invalid size");
+		return FALSE;
+	}
 	hash_item_alg_id = cbor_array_get(item, 0);
 	hash_item_value = cbor_array_get(item, 1);
 	if (hash_item_alg_id == NULL || hash_item_value == NULL) {
