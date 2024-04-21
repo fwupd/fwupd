@@ -366,7 +366,7 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 	g_autoptr(GVariant) val_address = NULL;
 	g_autoptr(GVariant) val_icon = NULL;
 	g_autoptr(GVariant) val_modalias = NULL;
-	g_autoptr(GVariant) val_name = NULL;
+	g_autoptr(GVariant) val_alias = NULL;
 
 	val_address = g_dbus_proxy_get_cached_property(priv->proxy, "Address");
 	if (val_address == NULL) {
@@ -380,9 +380,21 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 	val_adapter = g_dbus_proxy_get_cached_property(priv->proxy, "Adapter");
 	if (val_adapter != NULL)
 		fu_device_set_physical_id(device, g_variant_get_string(val_adapter, NULL));
-	val_name = g_dbus_proxy_get_cached_property(priv->proxy, "Name");
-	if (val_name != NULL)
-		fu_device_set_name(device, g_variant_get_string(val_name, NULL));
+	val_alias = g_dbus_proxy_get_cached_property(priv->proxy, "Alias");
+	if (val_alias != NULL) {
+		fu_device_set_name(device, g_variant_get_string(val_alias, NULL));
+		/* register the device by its alias, since modalias could be absent */
+		fu_device_add_instance_str(FU_DEVICE(self),
+					   "ALIAS",
+					   g_variant_get_string(val_alias, NULL));
+		fu_device_build_instance_id_full(FU_DEVICE(self),
+						 FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						 NULL,
+						 "BLUETOOTH",
+						 "ALIAS",
+						 NULL);
+	}
 	val_icon = g_dbus_proxy_get_cached_property(priv->proxy, "Icon");
 	if (val_icon != NULL)
 		fu_device_add_icon(device, g_variant_get_string(val_icon, NULL));
