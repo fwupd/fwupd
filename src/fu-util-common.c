@@ -1758,18 +1758,32 @@ fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt)
 }
 
 static const gchar *
-fu_util_license_to_string(const gchar *license)
+fu_util_license_to_string(const gchar *spdx_license)
 {
-	if (license == NULL) {
+	g_autofree const gchar **new = NULL;
+	g_auto(GStrv) old = NULL;
+
+	/* sanity check */
+	if (spdx_license == NULL) {
 		/* TRANSLATORS: we don't know the license of the update */
-		return _("Unknown");
+		return g_strdup(_("Unknown"));
 	}
-	if (g_strcmp0(license, "LicenseRef-proprietary") == 0 ||
-	    g_strcmp0(license, "proprietary") == 0) {
-		/* TRANSLATORS: a non-free software license */
-		return _("Proprietary");
+
+	/* replace any LicenseRef-proprietary with it's translated form */
+	old = g_strsplit(spdx_license, " AND ", -1);
+	new = g_new0(const gchar *, g_strv_length(old) + 1);
+	for (guint i = 0; old[i] != NULL; i++) {
+		const gchar *license = old[i];
+		if (g_strcmp0(license, "LicenseRef-proprietary") == 0 ||
+		    g_strcmp0(license, "proprietary") == 0) {
+			/* TRANSLATORS: a non-free software license */
+			license = _("Proprietary");
+		}
+		new[i] = license;
 	}
-	return license;
+
+	/* this is no longer SPDX */
+	return g_strjoinv(", ", (gchar **)new);
 }
 
 static const gchar *
