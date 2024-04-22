@@ -16,6 +16,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(cbor_item_t, cbor_intermediate_decref)
 
 gchar *
 fu_coswid_read_string(cbor_item_t *item, GError **error) G_GNUC_NON_NULL(1);
+GByteArray *
+fu_coswid_read_byte_array(cbor_item_t *item, GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_coswid_read_tag(cbor_item_t *item, FuCoswidTag *value, GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean

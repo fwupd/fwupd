@@ -207,6 +207,13 @@ fu_coswid_firmware_parse_hash(cbor_item_t *item, gpointer user_data, GError **er
 				    "hash item is not an array");
 		return FALSE;
 	}
+	if (cbor_array_size(item) != 2) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "hash array has invalid size");
+		return FALSE;
+	}
 	hash_item_alg_id = cbor_array_get(item, 0);
 	hash_item_value = cbor_array_get(item, 1);
 	if (hash_item_alg_id == NULL || hash_item_value == NULL) {
@@ -223,10 +230,11 @@ fu_coswid_firmware_parse_hash(cbor_item_t *item, gpointer user_data, GError **er
 
 	/* success */
 	hash->alg_id = alg_id8;
-	hash->value = g_byte_array_new();
-	g_byte_array_append(hash->value,
-			    cbor_bytestring_handle(hash_item_value),
-			    cbor_bytestring_length(hash_item_value));
+	hash->value = fu_coswid_read_byte_array(hash_item_value, error);
+	if (hash->value == NULL) {
+		g_prefix_error(error, "failed to parse hash value: ");
+		return FALSE;
+	}
 	g_ptr_array_add(payload->hashes, g_steal_pointer(&hash));
 	return TRUE;
 }
@@ -479,7 +487,8 @@ fu_coswid_firmware_malloc(size_t size)
 		g_debug("failing CBOR allocation of 0x%x bytes", (guint)size);
 		return NULL;
 	}
-	return g_malloc0(size);
+	/* libcbor expects a valid pointer for a zero sized allocation */
+	return g_malloc0(MAX(size, 1));
 }
 
 static void *
@@ -489,7 +498,8 @@ fu_coswid_firmware_realloc(void *ptr, size_t size)
 		g_debug("failing CBOR reallocation of 0x%x bytes", (guint)size);
 		return NULL;
 	}
-	return g_realloc(ptr, size);
+	/* libcbor expects a valid pointer for a zero sized allocation */
+	return g_realloc(ptr, MAX(size, 1));
 }
 
 static void
@@ -549,21 +559,12 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 
 		/* identity can be specified as a string or in binary */
 		if (tag_id == FU_COSWID_TAG_TAG_ID) {
-			g_autofree gchar *str = NULL;
-			if (cbor_isa_string(pairs[i].value)) {
-				str = fu_coswid_read_string(pairs[i].value, error);
-				if (str == NULL) {
-					g_prefix_error(error, "failed to parse tag-id: ");
-					return FALSE;
-				}
-			} else if (cbor_isa_bytestring(pairs[i].value) &&
-				   cbor_bytestring_length(pairs[i].value) == 16) {
-				str = fwupd_guid_to_string(
-				    (const fwupd_guid_t *)cbor_bytestring_handle(pairs[i].value),
-				    FWUPD_GUID_FLAG_NONE);
+			g_autofree gchar *str = fu_coswid_read_string(pairs[i].value, error);
+			if (str == NULL) {
+				g_prefix_error(error, "failed to parse tag-id: ");
+				return FALSE;
 			}
-			if (str != NULL)
-				fu_firmware_set_id(firmware, str);
+			fu_firmware_set_id(firmware, str);
 		} else if (tag_id == FU_COSWID_TAG_SOFTWARE_NAME) {
 			g_free(priv->product);
 			priv->product = fu_coswid_read_string(pairs[i].value, error);
