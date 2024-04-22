@@ -181,7 +181,7 @@ guint16
 fu_misr16(guint16 init, const guint8 *buf, gsize bufsz)
 {
 	g_return_val_if_fail(buf != NULL, G_MAXUINT16);
-	g_return_val_if_fail(bufsz % 2 != 0, G_MAXUINT16);
+	g_return_val_if_fail(bufsz % 2 == 0, G_MAXUINT16);
 
 	for (gsize i = 0; i < bufsz; i += 2)
 		init = fu_misr16_step(init, fu_memread_uint16(buf + i, G_LITTLE_ENDIAN));
