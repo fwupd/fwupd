@@ -232,10 +232,11 @@ fu_coswid_firmware_parse_hash(cbor_item_t *item, gpointer user_data, GError **er
 
 	/* success */
 	hash->alg_id = alg_id8;
-	hash->value = g_byte_array_new();
-	g_byte_array_append(hash->value,
-			    cbor_bytestring_handle(hash_item_value),
-			    cbor_bytestring_length(hash_item_value));
+	hash->value = fu_coswid_read_byte_array(hash_item_value, error);
+	if (hash->value == NULL) {
+		g_prefix_error(error, "failed to parse hash value: ");
+		return FALSE;
+	}
 	g_ptr_array_add(payload->hashes, g_steal_pointer(&hash));
 	return TRUE;
 }
