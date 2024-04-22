@@ -564,21 +564,12 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 
 		/* identity can be specified as a string or in binary */
 		if (tag_id == FU_COSWID_TAG_TAG_ID) {
-			g_autofree gchar *str = NULL;
-			if (cbor_isa_string(pairs[i].value)) {
-				str = fu_coswid_read_string(pairs[i].value, error);
-				if (str == NULL) {
-					g_prefix_error(error, "failed to parse tag-id: ");
-					return FALSE;
-				}
-			} else if (cbor_isa_bytestring(pairs[i].value) &&
-				   cbor_bytestring_length(pairs[i].value) == 16) {
-				str = fwupd_guid_to_string(
-				    (const fwupd_guid_t *)cbor_bytestring_handle(pairs[i].value),
-				    FWUPD_GUID_FLAG_NONE);
+			g_autofree gchar *str = fu_coswid_read_string(pairs[i].value, error);
+			if (str == NULL) {
+				g_prefix_error(error, "failed to parse tag-id: ");
+				return FALSE;
 			}
-			if (str != NULL)
-				fu_firmware_set_id(firmware, str);
+			fu_firmware_set_id(firmware, str);
 		} else if (tag_id == FU_COSWID_TAG_SOFTWARE_NAME) {
 			g_free(priv->product);
 			priv->product = fu_coswid_read_string(pairs[i].value, error);

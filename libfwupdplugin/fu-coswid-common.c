@@ -20,7 +20,7 @@
  * @value: read value
  * @error: (nullable): optional return location for an error
  *
- * Reads a string value.
+ * Reads a string value. If a bytestring is provided it is converted to a GUID.
  *
  * Returns: %TRUE for success
  *
@@ -32,21 +32,25 @@ fu_coswid_read_string(cbor_item_t *item, GError **error)
 	g_return_val_if_fail(item != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	if (!cbor_isa_string(item)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "item is not a string");
-		return NULL;
+	if (cbor_isa_string(item)) {
+		if (cbor_string_handle(item) == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "item has no string set");
+			return NULL;
+		}
+		return g_strndup((const gchar *)cbor_string_handle(item), cbor_string_length(item));
 	}
-	if (cbor_string_handle(item) == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "item has no string set");
-		return NULL;
+	if (cbor_isa_bytestring(item) && cbor_bytestring_length(item) == 16) {
+		return fwupd_guid_to_string((const fwupd_guid_t *)cbor_bytestring_handle(item),
+					    FWUPD_GUID_FLAG_NONE);
 	}
-	return g_strndup((const gchar *)cbor_string_handle(item), cbor_string_length(item));
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "item is not a string or GUID bytestring");
+	return NULL;
 }
 
 /**
