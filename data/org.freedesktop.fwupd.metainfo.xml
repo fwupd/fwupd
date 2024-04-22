@@ -38,6 +38,27 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.17" date="2024-04-22">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Capture device status changes when in bootloader mode</li>
+          <li>Change the systemd SystemCallFilter to an allowlist</li>
+          <li>Detect when a CCGX dock forbids downgrade</li>
+          <li>Do not add an overly-generic instance ID to CrosEC devices</li>
+          <li>Do not read OptionROM verification data on Apple hardware</li>
+          <li>Emit a signal when a user-request is no longer valid</li>
+          <li>Fix a potential crash when parsing invalid CBOR data</li>
+          <li>Properly show SPDX project licenses with AND as a delimiter</li>
+          <li>Verify that syscalls are being filtered correctly at startup</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Asus DC201</li>
+          <li>Realtek Gen1 RTS541x</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.16" date="2024-04-05">
       <description>
         <p>
