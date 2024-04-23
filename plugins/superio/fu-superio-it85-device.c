@@ -27,7 +27,9 @@ fu_superio_it85_device_get_str(FuSuperioDevice *self, guint8 idx, GError **error
 			return NULL;
 		if (c == '$')
 			break;
-		g_string_append_c(str, c);
+		if (!g_ascii_isprint((gchar)c))
+			continue;
+		g_string_append_c(str, (gchar)c);
 	}
 	return g_string_free(g_steal_pointer(&str), FALSE);
 }
