@@ -38,6 +38,15 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.18" date="2024-04-23">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fix a small memory leak in fwupdmgr</li>
+          <li>Use simple allow-listing for the syscall filter</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.17" date="2024-04-22">
       <description>
         <p>This release fixes the following bugs:</p>
