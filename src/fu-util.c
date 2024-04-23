@@ -4202,8 +4202,16 @@ fu_util_setup_signal_handlers(FuUtilPrivate *priv)
 static void
 fu_util_private_free(FuUtilPrivate *priv)
 {
-	if (priv->client != NULL)
+	if (priv->client != NULL) {
+		/* when destroying GDBusProxy in a custom GMainContext, the context must be
+		 * iterated enough after finalization of the proxies that any pending D-Bus traffic
+		 * can be freed */
+		fwupd_client_disconnect(priv->client, NULL);
+		while (g_main_context_iteration(priv->main_ctx, FALSE)) {
+			/* nothing needs to be done here */
+		};
 		g_object_unref(priv->client);
+	}
 	if (priv->current_device != NULL)
 		g_object_unref(priv->current_device);
 	g_ptr_array_unref(priv->post_requests);
