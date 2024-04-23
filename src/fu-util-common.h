@@ -35,8 +35,14 @@ typedef enum {
 	FU_SECURITY_ATTR_TO_STRING_FLAG_LAST
 } FuSecurityAttrToStringFlags;
 
+/* node with refcounted data */
+typedef GNode FuUtilNode;
 void
-fu_util_print_tree(FuConsole *console, FwupdClient *client, GNode *n);
+fu_util_print_node(FuConsole *console, FwupdClient *client, FuUtilNode *n);
+void
+fu_util_free_node(FuUtilNode *n) G_GNUC_NON_NULL(1);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilNode, fu_util_free_node)
+
 gboolean
 fu_util_is_interesting_device(FwupdDevice *dev);
 gchar *
