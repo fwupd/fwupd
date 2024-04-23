@@ -117,6 +117,7 @@ if build_daemon
       syscall_filter += ['@raw-io']
     endif
     if supported_build
+      dynamic_options += ['Environment="FWUPD_SYSCALL_FILTER=systemd"']
       dynamic_options += ['SystemCallErrorNumber=EPERM']
     else
       # to debug what additional syscalls are required, we set SystemCallErrorNumber=SIGSYS

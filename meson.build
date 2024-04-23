@@ -622,6 +622,7 @@ dbusmock = run_command(
 umockdev_integration_tests = get_option('umockdev_tests')                     \
                               .disable_auto_if(not get_option('tests'))       \
                               .disable_auto_if(not introspection.allowed())   \
+                              .disable_auto_if(not run_sanitize_unsafe_tests) \
                               .disable_auto_if(dbusmock.returncode() != 0)
 umockdev = dependency('umockdev-1.0', required: get_option('umockdev_tests'))
 
