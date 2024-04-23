@@ -45,7 +45,7 @@ typedef struct {
 } FuUtilPrintTreeHelper;
 
 static gboolean
-fu_util_traverse_tree(GNode *n, gpointer data)
+fu_util_traverse_tree(FuUtilNode *n, gpointer data)
 {
 	FuUtilPrintTreeHelper *helper = (FuUtilPrintTreeHelper *)data;
 	guint idx = g_node_depth(n) - 1;
@@ -122,8 +122,23 @@ fu_util_traverse_tree(GNode *n, gpointer data)
 	return FALSE;
 }
 
+static gboolean
+fu_util_free_tree_cb(FuUtilNode *n, gpointer data)
+{
+	if (n->data != NULL)
+		g_object_unref(n->data);
+	return FALSE;
+}
+
 void
-fu_util_print_tree(FuConsole *console, FwupdClient *client, GNode *n)
+fu_util_free_node(FuUtilNode *n)
+{
+	g_node_traverse(n, G_POST_ORDER, G_TRAVERSE_ALL, -1, fu_util_free_tree_cb, NULL);
+	g_node_destroy(n);
+}
+
+void
+fu_util_print_node(FuConsole *console, FwupdClient *client, FuUtilNode *n)
 {
 	FuUtilPrintTreeHelper helper = {.client = client, .console = console};
 	g_node_traverse(n, G_PRE_ORDER, G_TRAVERSE_ALL, -1, fu_util_traverse_tree, &helper);
@@ -1746,7 +1761,7 @@ fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt)
 	return g_string_free(str, FALSE);
 }
 
-static const gchar *
+static gchar *
 fu_util_license_to_string(const gchar *spdx_license)
 {
 	g_autofree const gchar **new = NULL;
@@ -1945,11 +1960,12 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 		    _("Variant"),
 		    fwupd_release_get_name_variant_suffix(rel));
 	}
-	fu_string_append(str,
-			 idt + 1,
-			 /* TRANSLATORS: e.g. GPLv2+, Proprietary etc */
-			 _("License"),
-			 fu_util_license_to_string(fwupd_release_get_license(rel)));
+	if (fwupd_release_get_license(rel) != NULL) {
+		g_autofree gchar *license =
+		    fu_util_license_to_string(fwupd_release_get_license(rel));
+		/* TRANSLATORS: e.g. GPLv2+, Proprietary etc */
+		fu_string_append(str, idt + 1, _("License"), license);
+	}
 	if (fwupd_release_get_size(rel) != 0) {
 		g_autofree gchar *tmp = NULL;
 		tmp = g_format_size(fwupd_release_get_size(rel));
