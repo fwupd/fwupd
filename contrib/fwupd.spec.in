@@ -235,6 +235,7 @@ fwupd wrapper for Qubes OS
 %meson \
 %if 0%{?enable_ci}
     --werror \
+    -Db_sanitize=address,undefined \
 %endif
     -Ddocs=enabled \
 %if 0%{?enable_tests}
