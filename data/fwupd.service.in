@@ -32,5 +32,4 @@ RestrictNamespaces=yes
 RestrictRealtime=yes
 RestrictSUIDSGID=yes
 SystemCallArchitectures=native
-SystemCallErrorNumber=EPERM
 @dynamic_options@
