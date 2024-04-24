@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
+ * Copyright 2018 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -123,12 +123,12 @@ static gboolean
 validate_firmware_update_method(MMModemFirmwareUpdateMethod methods, GError **error)
 {
 	static const MMModemFirmwareUpdateMethod supported_combinations[] = {
-		MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
-		MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC | MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
-		MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU,
-		MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE,
+	    MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
+	    MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC | MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
+	    MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU,
+	    MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE,
 #if MM_CHECK_VERSION(1, 19, 1)
-		MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE | MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA,
+	    MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE | MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA,
 #endif
 	};
 	g_autofree gchar *methods_str = NULL;

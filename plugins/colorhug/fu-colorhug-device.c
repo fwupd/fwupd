@@ -1,15 +1,15 @@
 /*
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright 2016 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
 
 #include <string.h>
 
-#include "fu-colorhug-common.h"
 #include "fu-colorhug-device.h"
+#include "fu-colorhug-struct.h"
 
 /**
  * FU_COLORHUG_DEVICE_FLAG_HALFSIZE:
@@ -157,8 +157,8 @@ fu_colorhug_device_msg(FuColorhugDevice *self,
 	}
 
 	/* check error code */
-	if (buf[0] != CH_ERROR_NONE) {
-		const gchar *msg = ch_strerror(buf[0]);
+	if (buf[0] != FU_COLORHUG_ERROR_NONE) {
+		const gchar *msg = fu_colorhug_error_to_string(buf[0]);
 		if (msg == NULL)
 			msg = "unknown error";
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, msg);
@@ -388,8 +388,8 @@ fu_colorhug_device_setup(FuDevice *device, GError **error)
 		version = fu_colorhug_device_get_version(self, &error_local);
 		if (version != NULL) {
 			g_debug("obtained fwver using API '%s'", version);
-			fu_device_set_version(device, version);
 			fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+			fu_device_set_version(device, version);
 		} else {
 			g_warning("failed to get firmware version: %s", error_local->message);
 		}

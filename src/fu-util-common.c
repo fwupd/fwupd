@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuMain"
@@ -45,7 +45,7 @@ typedef struct {
 } FuUtilPrintTreeHelper;
 
 static gboolean
-fu_util_traverse_tree(GNode *n, gpointer data)
+fu_util_traverse_tree(FuUtilNode *n, gpointer data)
 {
 	FuUtilPrintTreeHelper *helper = (FuUtilPrintTreeHelper *)data;
 	guint idx = g_node_depth(n) - 1;
@@ -122,8 +122,23 @@ fu_util_traverse_tree(GNode *n, gpointer data)
 	return FALSE;
 }
 
+static gboolean
+fu_util_free_tree_cb(FuUtilNode *n, gpointer data)
+{
+	if (n->data != NULL)
+		g_object_unref(n->data);
+	return FALSE;
+}
+
 void
-fu_util_print_tree(FuConsole *console, FwupdClient *client, GNode *n)
+fu_util_free_node(FuUtilNode *n)
+{
+	g_node_traverse(n, G_POST_ORDER, G_TRAVERSE_ALL, -1, fu_util_free_tree_cb, NULL);
+	g_node_destroy(n);
+}
+
+void
+fu_util_print_node(FuConsole *console, FwupdClient *client, FuUtilNode *n)
 {
 	FuUtilPrintTreeHelper helper = {.client = client, .console = console};
 	g_node_traverse(n, G_PRE_ORDER, G_TRAVERSE_ALL, -1, fu_util_traverse_tree, &helper);
@@ -1746,19 +1761,33 @@ fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt)
 	return g_string_free(str, FALSE);
 }
 
-static const gchar *
-fu_util_license_to_string(const gchar *license)
+static gchar *
+fu_util_license_to_string(const gchar *spdx_license)
 {
-	if (license == NULL) {
+	g_autofree const gchar **new = NULL;
+	g_auto(GStrv) old = NULL;
+
+	/* sanity check */
+	if (spdx_license == NULL) {
 		/* TRANSLATORS: we don't know the license of the update */
-		return _("Unknown");
+		return g_strdup(_("Unknown"));
 	}
-	if (g_strcmp0(license, "LicenseRef-proprietary") == 0 ||
-	    g_strcmp0(license, "proprietary") == 0) {
-		/* TRANSLATORS: a non-free software license */
-		return _("Proprietary");
+
+	/* replace any LicenseRef-proprietary with it's translated form */
+	old = g_strsplit(spdx_license, " AND ", -1);
+	new = g_new0(const gchar *, g_strv_length(old) + 1);
+	for (guint i = 0; old[i] != NULL; i++) {
+		const gchar *license = old[i];
+		if (g_strcmp0(license, "LicenseRef-proprietary") == 0 ||
+		    g_strcmp0(license, "proprietary") == 0) {
+			/* TRANSLATORS: a non-free software license */
+			license = _("Proprietary");
+		}
+		new[i] = license;
 	}
-	return license;
+
+	/* this is no longer SPDX */
+	return g_strjoinv(", ", (gchar **)new);
 }
 
 static const gchar *
@@ -1931,11 +1960,12 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 		    _("Variant"),
 		    fwupd_release_get_name_variant_suffix(rel));
 	}
-	fu_string_append(str,
-			 idt + 1,
-			 /* TRANSLATORS: e.g. GPLv2+, Proprietary etc */
-			 _("License"),
-			 fu_util_license_to_string(fwupd_release_get_license(rel)));
+	if (fwupd_release_get_license(rel) != NULL) {
+		g_autofree gchar *license =
+		    fu_util_license_to_string(fwupd_release_get_license(rel));
+		/* TRANSLATORS: e.g. GPLv2+, Proprietary etc */
+		fu_string_append(str, idt + 1, _("License"), license);
+	}
 	if (fwupd_release_get_size(rel) != 0) {
 		g_autofree gchar *tmp = NULL;
 		tmp = g_format_size(fwupd_release_get_size(rel));
@@ -2805,24 +2835,6 @@ fu_util_sort_devices_by_flags_cb(gconstpointer a, gconstpointer b)
 		return 1;
 
 	return 0;
-}
-
-static gint
-fu_util_device_order_compare(FuDevice *device1, FuDevice *device2)
-{
-	if (fu_device_get_order(device1) < fu_device_get_order(device2))
-		return -1;
-	if (fu_device_get_order(device1) > fu_device_get_order(device2))
-		return 1;
-	return 0;
-}
-
-gint
-fu_util_device_order_sort_cb(gconstpointer a, gconstpointer b)
-{
-	FuDevice *device_a = *((FuDevice **)a);
-	FuDevice *device_b = *((FuDevice **)b);
-	return fu_util_device_order_compare(device_a, device_b);
 }
 
 gboolean

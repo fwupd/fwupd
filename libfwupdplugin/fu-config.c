@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuConfig"
@@ -41,46 +41,6 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuConfig, fu_config, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_config_get_instance_private(o))
-
-#if !GLIB_CHECK_VERSION(2, 66, 0)
-
-#define G_FILE_SET_CONTENTS_CONSISTENT 0
-typedef guint GFileSetContentsFlags;
-static gboolean
-g_file_set_contents_full(const gchar *filename,
-			 const gchar *contents,
-			 gssize length,
-			 GFileSetContentsFlags flags,
-			 int mode,
-			 GError **error)
-{
-	gint fd;
-	gssize wrote;
-
-	if (length < 0)
-		length = strlen(contents);
-	fd = g_open(filename, O_CREAT, mode);
-	if (fd < 0) {
-		g_set_error(error,
-			    G_IO_ERROR,	       /* nocheck */
-			    G_IO_ERROR_FAILED, /* nocheck */
-			    "could not open %s file",
-			    filename);
-		return FALSE;
-	}
-	wrote = write(fd, contents, length);
-	if (wrote != length) {
-		g_set_error(error,
-			    G_IO_ERROR,	       /* nocheck */
-			    G_IO_ERROR_FAILED, /* nocheck */
-			    "did not write %s file",
-			    filename);
-		g_close(fd, NULL);
-		return FALSE;
-	}
-	return g_close(fd, error);
-}
-#endif
 
 static void
 fu_config_item_free(FuConfigItem *item)
@@ -342,7 +302,6 @@ fu_config_reload(FuConfig *self, GError **error)
 		return FALSE;
 	for (guint i = 0; i < priv->items->len; i++) {
 		FuConfigItem *item = g_ptr_array_index(priv->items, i);
-		g_autofree gchar *dirname = g_path_get_dirname(item->filename);
 		g_autoptr(GError) error_load = NULL;
 		g_autoptr(GBytes) blob_item = NULL;
 
@@ -448,6 +407,14 @@ fu_config_monitor_changed_cb(GFileMonitor *monitor,
 	FuConfig *self = FU_CONFIG(user_data);
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *fn = g_file_get_path(file);
+
+	/* nothing we need to care about */
+	if (event_type == G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED) {
+		g_debug("%s attributes changed, ignoring", fn);
+		return;
+	}
+
+	/* reload everything */
 	g_info("%s changed, reloading all configs", fn);
 	if (!fu_config_reload(self, &error))
 		g_warning("failed to rescan daemon config: %s", error->message);

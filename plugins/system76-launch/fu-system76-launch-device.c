@@ -1,18 +1,18 @@
 /*
- * Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2021 Jeremy Soller <jeremy@system76.com>
+ * Copyright 2019 Richard Hughes <richard@hughsie.com>
+ * Copyright 2021 Jeremy Soller <jeremy@system76.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
 
 #include "fu-system76-launch-device.h"
 
-#define SYSTEM76_LAUNCH_CMD_VERSION 3
-#define SYSTEM76_LAUNCH_CMD_RESET   6
+#define SYSTEM76_LAUNCH_CMD_VERSION	 3
+#define SYSTEM76_LAUNCH_CMD_RESET	 6
 #define SYSTEM76_LAUNCH_CMD_SECURITY_SET 21
-#define SYSTEM76_LAUNCH_TIMEOUT	    1000
+#define SYSTEM76_LAUNCH_TIMEOUT		 1000
 
 enum SecurityState {
 	/* Default value, flashing is prevented, cannot be set with CMD_SECURITY_SET */

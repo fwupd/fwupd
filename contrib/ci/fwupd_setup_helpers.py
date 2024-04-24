@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 #
-# Copyright (C) 2017 Dell, Inc.
-# Copyright (C) 2020 Intel, Inc.
-# Copyright (C) 2021 Mario Limonciello
+# Copyright 2017 Dell, Inc.
+# Copyright 2020 Intel, Inc.
+# Copyright 2021 Mario Limonciello
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 #
 import os
 import sys
@@ -18,10 +18,12 @@ MINIMUM_MARKDOWN = (3, 2, 0)
 
 
 def get_possible_profiles():
-    return ["fedora", "centos", "debian", "ubuntu", "arch", "void"]
+    return ["fedora", "centos", "debian", "ubuntu", "arch", "void", "darwin"]
 
 
 def detect_profile():
+    if os.path.exists("/Library/Apple"):
+        return "darwin"
     try:
         import distro
 
@@ -128,9 +130,7 @@ def parse_dependencies(OS, variant, add_control):
                         exclusive = f"!{exclusive}"
                     control = f" [{inclusive}{exclusive}]"
             for package in distro.findall("package"):
-                if variant:
-                    if "variant" not in package.attrib:
-                        continue
+                if variant and "variant" in package.attrib:
                     if package.attrib["variant"] != variant:
                         continue
                 if package.text:
@@ -143,9 +143,9 @@ def parse_dependencies(OS, variant, add_control):
     return deps
 
 
-def _validate_deps(os, deps):
+def _validate_deps(profile: str, deps):
     validated = deps
-    if os == "debian" or os == "ubuntu":
+    if profile == "debian" or profile == "ubuntu":
         try:
             from apt import cache
 
@@ -163,35 +163,39 @@ def _validate_deps(os, deps):
     return validated
 
 
-def get_build_dependencies(os, variant):
-    parsed = parse_dependencies(os, variant, False)
-    return _validate_deps(os, parsed)
+def get_build_dependencies(profile: str, variant: str):
+    parsed = parse_dependencies(profile, variant, False)
+    return _validate_deps(profile, parsed)
 
 
-def _get_installer_cmd(os, yes):
-    if os == "debian" or os == "ubuntu":
+def _get_installer_cmd(profile: str, yes: bool):
+    if profile == "darwin":
+        return ["brew", "install"]
+    if profile == "debian" or profile == "ubuntu":
         installer = ["apt", "install"]
-    elif os == "fedora":
+    elif profile == "fedora":
         installer = ["dnf", "install"]
-    elif os == "arch":
+    elif profile == "arch":
         installer = ["pacman", "-Syu", "--noconfirm", "--needed"]
-    elif os == "void":
+    elif profile == "void":
         installer = ["xbps-install", "-Syu"]
     else:
         print("unable to detect OS profile, use --os= to specify")
         print(f"\tsupported profiles: {get_possible_profiles()}")
         sys.exit(1)
+    if os.geteuid() != 0:
+        installer.insert(0, "sudo")
     if yes:
         installer += ["-y"]
     return installer
 
 
-def install_packages(os, variant, yes, debugging, packages):
+def install_packages(profile: str, variant: str, yes: bool, debugging: bool, packages):
     import subprocess
 
     if packages == "build-dependencies":
-        packages = get_build_dependencies(os, variant)
-    installer = _get_installer_cmd(os, yes)
+        packages = get_build_dependencies(profile, variant)
+    installer = _get_installer_cmd(profile, yes)
     installer += packages
     if debugging:
         print(installer)
@@ -260,4 +264,9 @@ if __name__ == "__main__":
             args.os, args.variant, args.yes, args.debug, "build-dependencies"
         )
     elif command == "install-pip":
-        install_packages(args.os, args.variant, args.yes, args.debug, ["python3-pip"])
+        if args.os == "darwin":
+            install_packages(args.os, args.variant, args.yes, args.debug, ["python"])
+        else:
+            install_packages(
+                args.os, args.variant, args.yes, args.debug, ["python3-pip"]
+            )

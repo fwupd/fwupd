@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2021 Michael Cheng <michael.cheng@emc.com.tw>
+ * Copyright 2021 Michael Cheng <michael.cheng@emc.com.tw>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once

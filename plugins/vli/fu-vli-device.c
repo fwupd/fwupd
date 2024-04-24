@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2017 VIA Corporation
- * Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 VIA Corporation
+ * Copyright 2019 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -468,6 +468,7 @@ fu_vli_device_set_kind(FuVliDevice *self, FuVliDeviceKind device_kind)
 	case FU_VLI_DEVICE_KIND_VL822Q5:
 	case FU_VLI_DEVICE_KIND_VL822Q7:
 	case FU_VLI_DEVICE_KIND_VL822Q8:
+	case FU_VLI_DEVICE_KIND_VL822C0:
 	case FU_VLI_DEVICE_KIND_VL830:
 	case FU_VLI_DEVICE_KIND_VL832:
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);

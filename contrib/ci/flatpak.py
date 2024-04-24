@@ -1,4 +1,9 @@
 #!/usr/bin/python3
+#
+# Copyright 2018 Mario Limonciello <mario.limonciello@dell.com>
+#
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
 import subprocess
 import os
 import json

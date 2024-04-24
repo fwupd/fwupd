@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2021 Mario Limonciello <mario.limonciello@amd.com>
+ * Copyright 2021 Mario Limonciello <mario.limonciello@amd.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -74,7 +74,7 @@ fu_test_self_init(FuTest *self, GError **error)
 	self->ctx = fu_plugin_get_context(self->plugin_lenovo_thinklmi);
 	return TRUE;
 #else
-	g_assert_error(*error, G_FILE_ERROR, G_FILE_ERROR_NOENT);
+	g_assert_error(*error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
 	return FALSE;
 #endif

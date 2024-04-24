@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2022 Intel, Inc
- * Copyright (C) 2022 Richard Hughes <richard@hughsie.com>
+ * Copyright 2022 Intel, Inc
+ * Copyright 2022 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+ OR Apache-2.0
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR Apache-2.0
  */
 
 #include "config.h"
@@ -760,11 +760,9 @@ fu_igsc_device_set_pci_power_policy(FuIgscDevice *self, const gchar *val, GError
 	g_autoptr(FuUdevDevice) parent = NULL;
 
 	/* get PCI parent */
-	parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self), "pci");
-	if (parent == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no PCI parent");
+	parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self), "pci", error);
+	if (parent == NULL)
 		return FALSE;
-	}
 	return fu_udev_device_write_sysfs(parent, "power/control", val, error);
 }
 

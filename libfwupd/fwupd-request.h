@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
+ * Copyright 2021 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once
@@ -15,8 +15,8 @@ G_DECLARE_DERIVABLE_TYPE(FwupdRequest, fwupd_request, FWUPD, REQUEST, GObject)
 
 struct _FwupdRequestClass {
 	GObjectClass parent_class;
+	void (*invalidate)(FwupdRequest *client);
 	/*< private >*/
-	void (*_fwupd_reserved1)(void);
 	void (*_fwupd_reserved2)(void);
 	void (*_fwupd_reserved3)(void);
 	void (*_fwupd_reserved4)(void);

@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2023 Mario Limonciello <mario.limonciello@amd.com>
+ * Copyright 2023 Mario Limonciello <mario.limonciello@amd.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once

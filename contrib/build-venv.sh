@@ -3,10 +3,14 @@
 VENV=$(dirname $0)/..
 BUILD=${VENV}/build
 DIST=${VENV}/dist
+EXTRA_ARGS="-Dsystemd=disabled -Dlaunchd=disabled"
 
 #build and install
+if [ -d /opt/homebrew/opt/libarchive/lib/pkgconfig ]; then
+        EXTRA_ARGS="${EXTRA_ARGS} -Dpkg_config_path=/opt/homebrew/opt/libarchive/lib/pkgconfig"
+fi
 if [ ! -d ${BUILD} ]; then
-        meson setup ${BUILD} --prefix=${DIST} -Dsystemd=disabled -Dudevdir=${DIST} $@
+        meson setup ${BUILD} --prefix=${DIST} -Dudevdir=${DIST} ${EXTRA_ARGS} $@
 fi
 ninja -C ${BUILD} install
 

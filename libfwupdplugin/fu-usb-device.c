@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuUsbDevice"
@@ -91,7 +91,7 @@ fu_usb_device_finalize(GObject *object)
 	G_OBJECT_CLASS(fu_usb_device_parent_class)->finalize(object);
 }
 
-#if G_USB_CHECK_VERSION(0, 4, 5)
+#ifdef HAVE_GUSB
 static void
 fu_usb_device_flags_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
 {
@@ -119,12 +119,17 @@ fu_usb_device_init(FuUsbDevice *device)
 				     G_USB_DEVICE_ERROR_PERMISSION_DENIED,
 				     NULL);
 #endif
+	fu_device_retry_add_recovery(FU_DEVICE(device), FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, NULL);
+	fu_device_retry_add_recovery(FU_DEVICE(device),
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_PERMISSION_DENIED,
+				     NULL);
 }
 
 static void
 fu_usb_device_constructed(GObject *obj)
 {
-#if G_USB_CHECK_VERSION(0, 4, 5)
+#ifdef HAVE_GUSB
 	FuUsbDevice *self = FU_USB_DEVICE(obj);
 	/* copy this to the GUsbDevice */
 	g_signal_connect(FU_DEVICE(self),
@@ -637,7 +642,7 @@ fu_usb_device_close(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-#if G_USB_CHECK_VERSION(0, 4, 0)
+#ifdef HAVE_GUSB
 static gboolean
 fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, GUsbBosDescriptor *bos, GError **error)
 {
@@ -744,10 +749,8 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	guint16 release;
 	g_autofree gchar *platform_id = NULL;
 	g_autofree gchar *vendor_id = NULL;
-	g_autoptr(GPtrArray) intfs = NULL;
-#if G_USB_CHECK_VERSION(0, 4, 0)
 	g_autoptr(GError) error_bos = NULL;
-#endif
+	g_autoptr(GPtrArray) intfs = NULL;
 
 	/* self tests */
 	if (priv->usb_device == NULL)
@@ -847,7 +850,6 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 		fu_device_add_parent_physical_id(device, platform_id);
 	}
 
-#if G_USB_CHECK_VERSION(0, 4, 0)
 	/* parse the platform capability BOS descriptors for quirks */
 	if (!fu_usb_device_probe_bos_descriptors(self, &error_bos)) {
 		if (g_error_matches(error_bos, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
@@ -857,7 +859,6 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 				  error_bos->message);
 		}
 	}
-#endif
 #endif
 
 	/* success */
@@ -988,11 +989,9 @@ fu_usb_device_set_dev(FuUsbDevice *device, GUsbDevice *usb_device)
 	}
 
 #ifdef HAVE_GUSB
-#if G_USB_CHECK_VERSION(0, 4, 5)
 	/* propagate emulated flag */
 	if (usb_device != NULL && g_usb_device_is_emulated(usb_device))
 		fu_device_add_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_EMULATED);
-#endif
 
 	/* set device ID automatically */
 	fu_device_set_physical_id(FU_DEVICE(device), g_usb_device_get_platform_id(usb_device));
@@ -1137,7 +1136,7 @@ fu_udev_device_unbind_driver(FuDevice *device, GError **error)
 FuUsbDevice *
 fu_usb_device_new(FuContext *ctx, GUsbDevice *usb_device)
 {
-#if G_USB_CHECK_VERSION(0, 4, 3)
+#ifdef HAVE_GUSB
 	if (usb_device != NULL && g_usb_device_has_tag(usb_device, "is-transient")) {
 		g_critical("cannot use a device built using fu_udev_device_find_usb_device() as "
 			   "the GUsbContext is different");

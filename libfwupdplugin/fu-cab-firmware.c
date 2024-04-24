@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
+ * Copyright 2023 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuCabFirmware"
@@ -399,7 +399,6 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 	guint16 time;
 	g_autoptr(FuCabImage) img = fu_cab_image_new();
 	g_autoptr(GByteArray) st = NULL;
-	g_autoptr(GBytes) img_blob = NULL;
 	g_autoptr(GDateTime) created = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GString) filename = g_string_new(NULL);

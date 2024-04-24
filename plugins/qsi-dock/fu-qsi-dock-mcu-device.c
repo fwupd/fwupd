@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2022 Kevin Chen <hsinfu.chen@qsitw.com>
+ * Copyright 2021 Richard Hughes <richard@hughsie.com>
+ * Copyright 2022 Kevin Chen <hsinfu.chen@qsitw.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -279,9 +279,10 @@ fu_qsi_dock_mcu_device_write_chunk(FuQsiDockMcuDevice *self,
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		guint8 checksum_buf[FU_QSI_DOCK_TX_ISP_LENGTH_MCU] = {0x0};
-		guint8 buf[64] = {FU_QSI_DOCK_REPORT_ID,
-				  FU_QSI_DOCK_CMD1_MASS_SPI,
-				  fu_chunk_get_data_sz(chk)};
+		guint8 buf[64] = {
+		    FU_QSI_DOCK_REPORT_ID,
+		    FU_QSI_DOCK_CMD1_MASS_SPI,
+		};
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);

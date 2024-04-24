@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuCommon"
@@ -548,12 +548,8 @@ fu_memdup_safe(const guint8 *src, gsize n, GError **error)
 		return NULL;
 	}
 
-#if GLIB_CHECK_VERSION(2, 67, 3)
 	/* linear block of memory */
 	return g_memdup2(src, n);
-#else
-	return g_memdup(src, (guint)n);
-#endif
 }
 
 /**

@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2021 Norbert Kamiński <norbert.kaminski@3mdeb.com>
- * Copyright (C) 2021 Michał Kopeć <michal.kopec@3mdeb.com>
- * Copyright (C) 2021 Sergii Dmytruk <sergii.dmytruk@3mdeb.com>
+ * Copyright 2021 Richard Hughes <richard@hughsie.com>
+ * Copyright 2021 Norbert Kamiński <norbert.kaminski@3mdeb.com>
+ * Copyright 2021 Michał Kopeć <michal.kopec@3mdeb.com>
+ * Copyright 2021 Sergii Dmytruk <sergii.dmytruk@3mdeb.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"

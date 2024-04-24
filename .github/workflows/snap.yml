@@ -6,6 +6,9 @@ on:
         required: true
         type: boolean
 
+permissions:
+  contents: read
+
 jobs:
   build-snap:
     runs-on: ubuntu-latest
@@ -13,7 +16,7 @@ jobs:
       snap_name: ${{ steps.snapcraft.outputs.snap }}
       channel: ${{ steps.channel.outputs.channel }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.1.3
       with:
         fetch-depth: 0
     - id: channel
@@ -27,9 +30,9 @@ jobs:
       run: |
         mkdir -p snap
         ln -s ../contrib/snap/snapcraft.yaml snap/snapcraft.yaml
-    - uses: snapcore/action-build@v1
+    - uses: snapcore/action-build@2096990827aa966f773676c8a53793c723b6b40f # v1.2.0
       id: snapcraft
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
       with:
         name: snap
         path: ${{ steps.snapcraft.outputs.snap }}
@@ -38,7 +41,7 @@ jobs:
     needs: build-snap
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@9c19ed7fe5d278cd354c7dfd5d3b88589c7e2395 # v4.1.6
       id: download
       with:
         name: snap
@@ -59,11 +62,11 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ inputs.deploy }}
     steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@9c19ed7fe5d278cd354c7dfd5d3b88589c7e2395 # v4.1.6
       id: download
       with:
         name: snap
-    - uses: snapcore/action-publish@v1
+    - uses: snapcore/action-publish@214b86e5ca036ead1668c79afb81e550e6c54d40 # v1.2.0
       env:
         SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
       with:

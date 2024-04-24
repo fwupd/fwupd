@@ -23,9 +23,9 @@ is taken automatically from the GType.
 
     /* fu-foo-plugin.h
      *
-     * Copyright (C) 2022 Richard Hughes <richard@hughsie.com>
+     * Copyright 2022 Richard Hughes <richard@hughsie.com>
      *
-     * SPDX-License-Identifier: LGPL-2.1+
+     * SPDX-License-Identifier: LGPL-2.1-or-later
      */
 
     #pragma once
@@ -36,9 +36,9 @@ is taken automatically from the GType.
 
     /* fu-foo-plugin.c
      *
-     * Copyright (C) Richard Hughes <richard@hughsie.com>
+     * Copyright Richard Hughes <richard@hughsie.com>
      *
-     * SPDX-License-Identifier: LGPL-2.1+
+     * SPDX-License-Identifier: LGPL-2.1-or-later
      */
 
     #include "config.h"

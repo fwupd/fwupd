@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2022 Shihwei Huang <shihwei.huang@focaltech-electronics.com>
+ * Copyright 2022 Shihwei Huang <shihwei.huang@focaltech-electronics.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once

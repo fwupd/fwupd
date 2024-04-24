@@ -223,7 +223,19 @@ if hsi
   conf.set('HAVE_HSI', '1')
 endif
 libxmlb = dependency('xmlb', version: '>= 0.3.6', fallback: ['libxmlb', 'libxmlb_dep'])
-gusb = dependency('gusb', version: '>= 0.3.8', fallback: ['gusb', 'gusb_dep'], required: get_option('gusb'))
+if libxmlb.version().version_compare('>= 0.3.18')
+  if libxmlb.get_variable('zstd') == 'true'
+    lvfs_metadata_format = 'zst'
+  elif libxmlb.get_variable('lzma') == 'true'
+    lvfs_metadata_format = 'xz'
+  else
+    lvfs_metadata_format = 'gz'
+  endif
+else
+  lvfs_metadata_format = 'xz'
+endif
+conf.set_quoted('FU_LVFS_METADATA_FORMAT', lvfs_metadata_format)
+gusb = dependency('gusb', version: '>= 0.4.8', fallback: ['gusb', 'gusb_dep'], required: get_option('gusb'))
 if gusb.found()
   conf.set('HAVE_GUSB', '1')
 endif
@@ -293,6 +305,9 @@ endif
 cbor = dependency('libcbor', version: '>= 0.7.0', required: get_option('cbor'))
 if cbor.found()
   conf.set('HAVE_CBOR', '1')
+  if cc.has_header_symbol('cbor.h', 'cbor_set_allocs')
+    conf.set('HAVE_CBOR_SET_ALLOCS', '1')
+  endif
 endif
 
 platform_deps = []
@@ -311,9 +326,8 @@ endif
 
 libsystemd = dependency('libsystemd',
                         required: get_option('systemd').disable_auto_if(host_machine.system() != 'linux'))
-offline = get_option('offline').require(libsystemd.found(),
-    error_message: '-Doffline=enabled requires systemd')
-if offline.allowed()
+offline = get_option('offline')
+if offline
   conf.set('HAVE_FWUPDOFFLINE', '1')
 endif
 
@@ -450,10 +464,11 @@ if build_standalone
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
 endif
 
+allow_flashrom = get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux').allowed()
 if build_standalone
   libflashrom = dependency('flashrom', 
                             fallback: ['flashrom', 'flashrom_dep'], 
-                            required: get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux'))
+                            required: allow_flashrom)
 endif
 
 if libsystemd.found()
@@ -659,7 +674,7 @@ if build_standalone
   )
 endif
 
-if build_daemon and libsystemd.found() and offline.allowed()
+if build_daemon and libsystemd.found() and offline
   install_symlink('fwupd-offline-update.service',
     install_dir: join_paths(systemdunitdir, 'system-update.target.wants'),
     pointing_to: join_paths('..', 'fwupd-offline-update.service')
@@ -705,8 +720,9 @@ if build_daemon
     'gusb': gusb,
     'gudev': gudev,
     'hsi': hsi,
+    'lvfs_metadata_format': lvfs_metadata_format,
     'libarchive': libarchive.found(),
-    'offline': offline.allowed(),
+    'offline': offline,
     'passim': passim,
     'sqlite': sqlite,
     'thinklmi_compat': get_option('thinklmi_compat'),

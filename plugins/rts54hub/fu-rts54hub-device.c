@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
+ * Copyright 2018 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -25,7 +25,7 @@ G_DEFINE_TYPE(FuRts54HubDevice, fu_rts54hub_device, FU_TYPE_USB_DEVICE)
 #define FU_RTS54HUB_DEVICE_TIMEOUT_ERASE 5000  /* ms */
 #define FU_RTS54HUB_DEVICE_TIMEOUT_AUTH	 10000 /* ms */
 #define FU_RTS54HUB_DEVICE_BLOCK_SIZE	 4096
-#define FU_RTS54HUB_DEVICE_STATUS_LEN	 25
+#define FU_RTS54HUB_DEVICE_STATUS_LEN	 24
 
 #define FU_RTS54HUB_I2C_CONFIG_REQUEST 0xF6
 #define FU_RTS54HUB_I2C_WRITE_REQUEST  0xC6

@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2022 Richard Hughes <richard@hughsie.com>
+ * Copyright 2022 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once
@@ -20,7 +20,7 @@ typedef enum {
 FuPolkitAuthority *
 fu_polkit_authority_new(void);
 gboolean
-fu_polkit_authority_load(FuPolkitAuthority *self, GError **error);
+fu_polkit_authority_load(FuPolkitAuthority *self, GError **error) G_GNUC_NON_NULL(1);
 
 void
 fu_polkit_authority_check(FuPolkitAuthority *self,
@@ -29,6 +29,7 @@ fu_polkit_authority_check(FuPolkitAuthority *self,
 			  FuPolkitAuthorityCheckFlags flags,
 			  GCancellable *cancellable,
 			  GAsyncReadyCallback callback,
-			  gpointer user_data);
+			  gpointer user_data) G_GNUC_NON_NULL(1, 3);
 gboolean
-fu_polkit_authority_check_finish(FuPolkitAuthority *self, GAsyncResult *res, GError **error);
+fu_polkit_authority_check_finish(FuPolkitAuthority *self, GAsyncResult *res, GError **error)
+    G_GNUC_NON_NULL(1, 2);

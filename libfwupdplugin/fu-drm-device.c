@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
+ * Copyright 2023 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuDrmDevice"
@@ -157,7 +157,7 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* set the parent */
-	parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self), "pci");
+	parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self), "pci", NULL);
 	if (parent != NULL)
 		fu_device_add_parent_backend_id(device, fu_udev_device_get_sysfs_path(parent));
 

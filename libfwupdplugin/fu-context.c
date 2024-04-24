@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
+ * Copyright 2021 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuContext"
@@ -37,7 +37,7 @@ typedef struct {
 	GHashTable *udev_subsystems; /* utf8:GPtrArray */
 	GPtrArray *esp_volumes;
 	GHashTable *firmware_gtypes; /* utf8:GType */
-	GHashTable *hwid_flags; /* str: */
+	GHashTable *hwid_flags;	     /* str: */
 	FuPowerState power_state;
 	FuLidState lid_state;
 	FuDisplayState display_state;

@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
+ * Copyright 2023 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuFirmware"
@@ -74,7 +74,6 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	if (sect_id_tmp[0] == '/') {
 		guint64 str_idx = 0x0;
 		guint8 buf[FU_PEFILE_SECTION_ID_STRTAB_SIZE] = {0};
-		g_autofree gchar *str = NULL;
 
 		if (!fu_strtoull(sect_id_tmp + 1, &str_idx, 0, G_MAXUINT32, error)) {
 			g_prefix_error(error, "failed to parse section ID '%s': ", sect_id_tmp + 1);
@@ -233,7 +232,6 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 	for (guint i = 0; i < imgs->len; i++) {
 		g_autofree FuPefileSection *section = g_new0(FuPefileSection, 1);
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		g_autoptr(GBytes) blob = NULL;
 
 		section->offset = offset;
 		section->blob = fu_firmware_write(img, error);

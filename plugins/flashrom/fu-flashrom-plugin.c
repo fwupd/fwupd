@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2019 9elements Agency GmbH <patrick.rudolph@9elements.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2019 9elements Agency GmbH <patrick.rudolph@9elements.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -139,7 +139,8 @@ fu_flashrom_plugin_device_set_hwids(FuPlugin *plugin, FuDevice *device)
 	    "HardwareID-05",
 	    "HardwareID-06",
 	    "HardwareID-10",
-	    "fwupd-05", /* for coreboot branch detection */
+	    "fwupd-04", /* for coreboot */
+	    "fwupd-05", /* for coreboot */
 	};
 	/* don't include FU_HWIDS_KEY_BIOS_VERSION */
 	for (guint i = 0; i < G_N_ELEMENTS(chids); i++) {
@@ -199,6 +200,11 @@ fu_flashrom_plugin_add_device(FuPlugin *plugin,
 	if (!fu_device_setup(device, error))
 		return NULL;
 
+	/* BCR is almost-never used on coreboot because SMI is evil */
+	if (g_strcmp0(dmi_vendor, "coreboot") == 0 &&
+	    fu_device_get_metadata(device, "PciBcrAddr") == NULL)
+		fu_device_set_metadata_integer(device, "PciBcrAddr", 0x0);
+
 	/* success */
 	fu_plugin_device_add(plugin, device);
 	return g_steal_pointer(&device);
@@ -243,6 +249,10 @@ fu_flashrom_plugin_find_guid(FuPlugin *plugin, GError **error)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	GPtrArray *hwids = fu_context_get_hwid_guids(ctx);
 
+	/* any coreboot */
+	if (g_strcmp0(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR), "coreboot") == 0)
+		return g_strdup(FWUPD_DEVICE_ID_ANY);
+
 	for (guint i = 0; i < hwids->len; i++) {
 		const gchar *guid = g_ptr_array_index(hwids, i);
 		const gchar *plugin_name =
@@ -273,7 +283,11 @@ fu_flashrom_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **erro
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	self->guid = g_strdup(guid);
+	/* if changed */
+	if (g_strcmp0(self->guid, guid) != 0) {
+		g_free(self->guid);
+		self->guid = g_strdup(guid);
+	}
 
 	if (flashrom_init(SELFCHECK_TRUE)) {
 		g_set_error_literal(error,

@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuSmbios"
@@ -268,8 +268,10 @@ fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
 
 	/* get the smbios entry point */
 	ep_fn = g_build_filename(path, "smbios_entry_point", NULL);
-	if (!g_file_get_contents(ep_fn, &ep_raw, &sz, error))
+	if (!g_file_get_contents(ep_fn, &ep_raw, &sz, error)) {
+		fu_error_convert(error);
 		return FALSE;
+	}
 
 	/* check we got enough data to read the signature */
 	if (sz < 5) {
@@ -302,8 +304,10 @@ fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
 
 	/* get the DMI data */
 	dmi_fn = g_build_filename(path, "DMI", NULL);
-	if (!g_file_get_contents(dmi_fn, &dmi_raw, &sz, error))
+	if (!g_file_get_contents(dmi_fn, &dmi_raw, &sz, error)) {
+		fu_error_convert(error);
 		return FALSE;
+	}
 	if (sz > self->structure_table_len) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -414,7 +418,7 @@ fu_smbios_setup(FuSmbios *self, GError **error)
 		return FALSE;
 	}
 	if (!fu_smbios_setup_from_path(self, path, &error_local)) {
-		if (!g_error_matches(error_local, G_FILE_ERROR, G_FILE_ERROR_ACCES)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}

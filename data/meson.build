@@ -93,11 +93,29 @@ if build_daemon
     else
       dynamic_options += 'RestrictAddressFamilies=AF_NETLINK AF_UNIX'
     endif
+
+    # allow-list, see `systemd-analyze syscall-filter` for what each group adds
+    syscall_filter = [
+      '@basic-io',
+      '@file-system',
+      '@io-event',
+      '@ipc',
+      '@network-io',
+      '@process',
+      '@sync',
+      'ioctl',
+      'uname',
+    ]
+    if allow_flashrom
+      syscall_filter += ['@raw-io']
+    endif
+    dynamic_options += ['SystemCallFilter=' + ' '.join(syscall_filter)]
+
     con2.set('dynamic_options', '\n'.join(dynamic_options))
     con2.set('motd_dir', motd_dir)
 
     # replace @bindir@
-    if offline.allowed()
+    if offline
       configure_file(
         input: 'fwupd-offline-update.service.in',
         output: 'fwupd-offline-update.service',
@@ -142,7 +160,7 @@ if build_daemon
     )
   endif
 
-  if launchctl.found()
+  if get_option('launchd').allowed() and launchctl.found()
     con2 = configuration_data()
     con2.set('libexecdir', libexecdir)
     con2.set('dbus_socket_address', get_option('dbus_socket_address'))

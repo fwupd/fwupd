@@ -1,5 +1,5 @@
-// Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
-// SPDX-License-Identifier: LGPL-2.1+
+// Copyright 2023 Richard Hughes <richard@hughsie.com>
+// SPDX-License-Identifier: LGPL-2.1-or-later
 
 enum FuCcgxDmcImgType {
     Invalid = 0,
@@ -42,17 +42,17 @@ enum FuCcgxDmcDeviceStatus {
     // no outstanding request or event
     Idle = 0,
     // status code indicating dock FW update in progress
-    UpdateInProgress,
+    UpdatePhase1InProgress,
     // status code indicating dock FW update is partially complete
-    UpdatePartial,
+    UpdatePhase1Partial,
     // status code indicating dock FW update SUCCESS - all m_images of all
     // devices are valid
     UpdateCompleteFull,
     // status code indicating dock FW update SUCCESS - not all m_images of all
     // devices are valid
-    UpdateCompletePartial,
+    UpdatePhase1CompletePartial,
     // fw download status
-    UpdatePhase1Complete,
+    UpdatePhase1CompleteFullPhase2NotDone,
     FwDownloadedUpdatePend,
     FwDownloadedPartialUpdatePend,
     Phase2UpdateInProgress = 0x81,
@@ -123,6 +123,7 @@ enum FuCcgxDmcFwctAnalysisStatus {
     InvalidCompositeVersion,
     AuthenticationFailed,
     InvalidAlgorithm,
+    InvalidFence,
 }
 
 #[derive(ToString)]

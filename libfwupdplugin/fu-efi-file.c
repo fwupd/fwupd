@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
+ * Copyright 2020 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -286,6 +286,7 @@ fu_efi_file_init(FuEfiFile *self)
 	priv->attrib = FU_EFI_FILE_ATTRIB_NONE;
 	priv->type = FU_EFI_FILE_TYPE_RAW;
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_8);
+	g_type_ensure(FU_TYPE_EFI_SECTION);
 }
 
 static void

@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2017 VIA Corporation
- * Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 VIA Corporation
+ * Copyright 2019 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -244,6 +244,8 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 				return FALSE;
 			}
 			/* VL820 */
+		} else if (tmp == 0xC0 || tmp == 0xC1) {
+			self->device_kind = FU_VLI_DEVICE_KIND_VL822C0;
 		} else {
 			if (!fu_input_stream_read_u8(stream, 0xf000, &tmp, error)) {
 				g_prefix_error(error, "failed to get Q7/Q8 difference: ");

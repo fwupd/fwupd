@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2015 Peter Jones <pjones@redhat.com>
+ * Copyright 2018 Richard Hughes <richard@hughsie.com>
+ * Copyright 2015 Peter Jones <pjones@redhat.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -284,12 +284,12 @@ fu_uefi_device_clear_status(FuUefiDevice *self, GError **error)
 	fu_struct_efi_update_info_set_status(st_inf, FU_UEFI_UPDATE_INFO_STATUS_UNKNOWN);
 	memcpy(data, st_inf->data, st_inf->len);
 	if (!fu_efivar_set_data(FU_EFIVAR_GUID_FWUPDATE,
-				  varname,
-				  data,
-				  datasz,
-				  FU_EFIVAR_ATTR_NON_VOLATILE | FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
-				      FU_EFIVAR_ATTR_RUNTIME_ACCESS,
-				  error)) {
+				varname,
+				data,
+				datasz,
+				FU_EFIVAR_ATTR_NON_VOLATILE | FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
+				    FU_EFIVAR_ATTR_RUNTIME_ACCESS,
+				error)) {
 		g_prefix_error(error, "could not set EfiUpdateInfo: ");
 		return FALSE;
 	}
@@ -408,12 +408,12 @@ fu_uefi_device_write_update_info(FuUefiDevice *self,
 	fu_struct_efi_update_info_set_guid(st_inf, &guid);
 	fu_byte_array_append_bytes(st_inf, dp_blob);
 	if (!fu_efivar_set_data(FU_EFIVAR_GUID_FWUPDATE,
-				  varname,
-				  st_inf->data,
-				  st_inf->len,
-				  FU_EFIVAR_ATTR_NON_VOLATILE | FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
-				      FU_EFIVAR_ATTR_RUNTIME_ACCESS,
-				  error)) {
+				varname,
+				st_inf->data,
+				st_inf->len,
+				FU_EFIVAR_ATTR_NON_VOLATILE | FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
+				    FU_EFIVAR_ATTR_RUNTIME_ACCESS,
+				error)) {
 		g_prefix_error(error, "could not set DP_BUF with %s: ", capsule_path);
 		return FALSE;
 	}
@@ -547,19 +547,19 @@ fu_uefi_device_capture_efi_debugging(FuDevice *device)
 				       NULL,
 				       &error_local);
 	if (buf == NULL) {
-		fu_device_set_update_error(device, error_local->message);
+		g_warning("failed to capture EFI debugging: %s", error_local->message);
 		return;
 	}
 
 	/* convert from UCS-2 to UTF-8 */
 	str = fu_utf16_to_utf8_bytes(buf, G_LITTLE_ENDIAN, &error_local);
 	if (str == NULL) {
-		fu_device_set_update_error(device, error_local->message);
+		g_warning("failed to capture EFI debugging: %s", error_local->message);
 		return;
 	}
 
-	/* success */
-	fu_device_set_update_error(device, str);
+	/* success, dump into journal */
+	g_info("EFI debugging: %s", str);
 }
 
 gboolean
@@ -688,7 +688,6 @@ fu_uefi_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_uefi_device_init(FuUefiDevice *self)
 {
-	fu_device_set_summary(FU_DEVICE(self), "UEFI ESRT device");
 	fu_device_add_protocol(FU_DEVICE(self), "org.uefi.capsule");
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);

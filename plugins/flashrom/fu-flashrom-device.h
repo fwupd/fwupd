@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2021 Daniel Campello <campello@chromium.org>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2021 Daniel Campello <campello@chromium.org>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once

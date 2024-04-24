@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
+ * Copyright 2018 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -49,11 +49,11 @@ fu_uefi_bootmgr_add_to_boot_order(guint16 boot_entry, GError **error)
 	new_boot_order[i] = boot_entry;
 	boot_order_size += sizeof(guint16);
 	if (!fu_efivar_set_data(FU_EFIVAR_GUID_EFI_GLOBAL,
-				  "BootOrder",
-				  (guint8 *)new_boot_order,
-				  boot_order_size,
-				  attr,
-				  error)) {
+				"BootOrder",
+				(guint8 *)new_boot_order,
+				boot_order_size,
+				attr,
+				error)) {
 		g_prefix_error(error, "could not set BootOrder(%u): ", boot_entry);
 		return FALSE;
 	}

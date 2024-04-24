@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
+ * Copyright 2016 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once
@@ -254,7 +254,7 @@ fwupd_client_upload_bytes(FwupdClient *self,
 			  const gchar *signature,
 			  FwupdClientUploadFlags flags,
 			  GCancellable *cancellable,
-			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3, 4);
+			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 gboolean
 fwupd_client_emulation_load(FwupdClient *self,
 			    GBytes *data,

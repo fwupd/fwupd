@@ -1,9 +1,9 @@
 /*
- * Copyright (C) 2012 Andrew Duggan
- * Copyright (C) 2012 Synaptics Inc.
- * Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
+ * Copyright 2012 Andrew Duggan
+ * Copyright 2012 Synaptics Inc.
+ * Copyright 2019 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"

@@ -1,5 +1,4 @@
-if get_option('plugin_flashrom').enabled() or \
-   (get_option('plugin_flashrom').auto() and libflashrom.found())
+if allow_flashrom
 cargs = ['-DG_LOG_DOMAIN="FuPluginFlashrom"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

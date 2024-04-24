@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2022 Gaël PORTAY <gael.portay@collabora.com>
+ * Copyright 2022 Gaël PORTAY <gael.portay@collabora.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -10,7 +10,7 @@
 
 #define STEELSERIES_BUFFER_REPORT_SIZE 64 + 1
 
-#define STEELSERIES_HID_GET_REPORT 0x04U
+#define STEELSERIES_HID_GET_REPORT  0x04U
 #define STEELSERIES_HID_MAX_RETRIES 100
 
 #define STEELSERIES_HID_VERSION_COMMAND		 0x90U

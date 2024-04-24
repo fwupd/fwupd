@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
+ * Copyright 2020 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include <glib.h>
@@ -17,6 +17,7 @@ main(int argc, char **argv)
 	g_assert_nonnull(LLVMFuzzerTestOneInput);
 	if (LLVMFuzzerInitialize != NULL)
 		LLVMFuzzerInitialize(&argc, &argv);
+
 	for (int i = 1; i < argc; i++) {
 		gsize bufsz = 0;
 		g_autofree gchar *buf = NULL;
@@ -29,4 +30,5 @@ main(int argc, char **argv)
 		LLVMFuzzerTestOneInput((const guint8 *)buf, bufsz);
 		g_printerr("Done\n");
 	}
+	return EXIT_SUCCESS;
 }

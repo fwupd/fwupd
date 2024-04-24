@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once
@@ -199,13 +199,14 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 const gchar *
 fu_udev_device_get_devtype(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 GPtrArray *
-fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self, const gchar *subsystem)
-    G_GNUC_NON_NULL(1, 2);
+fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self,
+					   const gchar *subsystem,
+					   GError **error) G_GNUC_NON_NULL(1, 2);
 GPtrArray *
 fu_udev_device_get_children_with_subsystem(FuUdevDevice *self, const gchar *subsystem)
     G_GNUC_NON_NULL(1, 2);
 FuUdevDevice *
-fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self, const gchar *subsystem)
+fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self, const gchar *subsystem, GError **error)
     G_GNUC_NON_NULL(1);
 
 GUsbDevice *

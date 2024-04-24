@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuCommon"
@@ -15,7 +15,7 @@
 
 #include "fu-version-common.h"
 
-#define FU_COMMON_VERSION_DECODE_BCD(val) ((((val) >> 4) & 0x0f) * 10 + ((val)&0x0f))
+#define FU_COMMON_VERSION_DECODE_BCD(val) ((((val) >> 4) & 0x0f) * 10 + ((val) & 0x0f))
 
 static gchar *
 fu_common_version_ensure_semver(const gchar *version);
@@ -219,6 +219,12 @@ fu_version_from_uint16(guint16 val, FwupdVersionFormat kind)
 	}
 	if (kind == FWUPD_VERSION_FORMAT_PAIR) {
 		return g_strdup_printf("%u.%u", (guint)(val >> 8) & 0xff, (guint)val & 0xff);
+	}
+	if (kind == FWUPD_VERSION_FORMAT_TRIPLET) {
+		return g_strdup_printf("%u.%u.%u",
+				       (guint)(val >> 12) & 0xF,
+				       (guint)(val >> 8) & 0xF,
+				       (guint)val & 0xFF);
 	}
 	if (kind == FWUPD_VERSION_FORMAT_NUMBER || kind == FWUPD_VERSION_FORMAT_PLAIN) {
 		return g_strdup_printf("%" G_GUINT16_FORMAT, val);

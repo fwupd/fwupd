@@ -42,32 +42,32 @@ Rts54TargetAddr = 0x20
 Rts54I2cSpeed = 0x2
 Rts54RegisterAddrLen = 0x04
 
-#GoodWay Acer Dock gen1
-[USB\VID_065F&PID_0702]
+#Acer T34 Dock gen1
+[USB\VID_0502&PID_0702]
 Plugin = rts54hub
 Flags = updatable
 GType = FuRts54HubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
 
-#GoodWay Acer Dock gen2
-[USB\VID_065F&PID_0701]
+#Acer T34 Dock gen2
+[USB\VID_0502&PID_0701]
 Plugin = rts54hub
 Flags = updatable
 GType = FuRts54HubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
 
-#GoodWay Acer Dock DUD9108D1 gen2
-[USB\VID_065F&PID_0801]
+#Acer U33 Dock gen2
+[USB\VID_0502&PID_0801]
 Plugin = rts54hub
 Flags = updatable
 GType = FuRts54HubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
 
-#GoodWay Acer Dock DUD9108D1 gen1
-[USB\VID_065F&PID_0802]
+#Acer U33 Dock gen1
+[USB\VID_0502&PID_0802]
 Plugin = rts54hub
 Flags = updatable
 GType = FuRts54HubDevice

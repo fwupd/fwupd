@@ -1,17 +1,17 @@
 /*
- * Copyright (C) 2020 Mario Limonciello <mario.limonciello@dell.com>
- * Copyright (C) 2022 Richard Hughes <richard@hughsie.com>
+ * Copyright 2020 Mario Limonciello <mario.limonciello@dell.com>
+ * Copyright 2022 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 #pragma once
 
 #include "fu-engine.h"
 
 gboolean
-fu_engine_update_motd(FuEngine *self, GError **error);
+fu_engine_update_motd(FuEngine *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
-fu_engine_update_devices_file(FuEngine *self, GError **error);
+fu_engine_update_devices_file(FuEngine *self, GError **error) G_GNUC_NON_NULL(1);
 
 GHashTable *
 fu_engine_integrity_new(GError **error);

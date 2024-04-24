@@ -6,9 +6,9 @@
 # will lead to ./libfwupdplugin/tests/bios-attrs/dell-xps13-9310/strings.txt
 # which can be added to po/POTFILES.in
 #
-# Copyright (C) 2022  Mario Limonciello <superm1@gmail.com>
+# Copyright 2022 Mario Limonciello <superm1@gmail.com>
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 import os
 import sys

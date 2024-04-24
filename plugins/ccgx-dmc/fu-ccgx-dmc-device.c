@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2020 Cypress Semiconductor Corporation.
- * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
+ * Copyright 2020 Cypress Semiconductor Corporation.
+ * Copyright 2020 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -599,6 +599,13 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 			return FALSE;
 	}
 	if (rqt_opcode != FU_CCGX_DMC_INT_OPCODE_FW_UPGRADE_STATUS) {
+		if (rqt_opcode == FU_CCGX_DMC_FWCT_ANALYSIS_STATUS_INVALID_FENCE) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "cannot downgrade to this firmware version");
+			return FALSE;
+		}
 		if (rqt_opcode == FU_CCGX_DMC_INT_OPCODE_FWCT_ANALYSIS_STATUS) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -618,7 +625,7 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	if (rqt_data[0] == FU_CCGX_DMC_DEVICE_STATUS_UPDATE_PHASE1_COMPLETE) {
+	if (rqt_data[0] == FU_CCGX_DMC_DEVICE_STATUS_UPDATE_PHASE1_COMPLETE_FULL_PHASE2_NOT_DONE) {
 		self->update_model = FU_CCGX_DMC_UPDATE_MODEL_DOWNLOAD_TRIGGER;
 	} else if (rqt_data[0] == FU_CCGX_DMC_DEVICE_STATUS_FW_DOWNLOADED_UPDATE_PEND) {
 		self->update_model = FU_CCGX_DMC_UPDATE_MODEL_PENDING_RESET;

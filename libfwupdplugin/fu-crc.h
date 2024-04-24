@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright 2017 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once
@@ -20,3 +20,6 @@ guint32
 fu_crc32(const guint8 *buf, gsize bufsz);
 guint32
 fu_crc32_full(const guint8 *buf, gsize bufsz, guint32 crc, guint32 polynomial);
+
+guint16
+fu_misr16(guint16 init, const guint8 *buf, gsize bufsz);

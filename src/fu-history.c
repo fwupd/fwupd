@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright 2015 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuHistory"
@@ -35,8 +35,9 @@
  * v10	add version_format to history
  * v11	no changes, bumped due to bungled migration to v10
  * v12	add install_duration to history
+ * v13	add release_flags to history
  */
-#define FU_HISTORY_CURRENT_SCHEMA_VERSION 12
+#define FU_HISTORY_CURRENT_SCHEMA_VERSION 13
 
 static void
 fu_history_finalize(GObject *object);
@@ -162,6 +163,9 @@ fu_history_device_from_stmt(sqlite3_stmt *stmt)
 	/* install_duration */
 	fu_device_set_install_duration(device, sqlite3_column_int(stmt, 19));
 
+	/* release flags */
+	fu_release_set_flags(release, sqlite3_column_int(stmt, 20));
+
 	/* success */
 	return device;
 }
@@ -219,7 +223,8 @@ fu_history_create_database(FuHistory *self, GError **error)
 			  "release_id TEXT DEFAULT NULL,"
 			  "appstream_id TEXT DEFAULT NULL,"
 			  "version_format INTEGER DEFAULT 0,"
-			  "install_duration INTEGER DEFAULT 0);"
+			  "install_duration INTEGER DEFAULT 0,"
+			  "release_flags INTEGER DEFAULT 0);"
 			  "CREATE TABLE IF NOT EXISTS approved_firmware ("
 			  "checksum TEXT);"
 			  "CREATE TABLE IF NOT EXISTS blocked_firmware ("
@@ -266,7 +271,7 @@ fu_history_migrate_database_v1(FuHistory *self, GError **error)
 			  "device_id, update_state, update_error, filename, "
 			  "display_name, plugin, device_created, device_modified, "
 			  "checksum, flags, metadata, guid_default, version_old, "
-			  "version_new, NULL, NULL, NULL, NULL, NULL, 0 FROM history_old;"
+			  "version_new, NULL, NULL, NULL, NULL, NULL, 0, 0 FROM history_old;"
 			  "DROP TABLE history_old;",
 			  NULL,
 			  NULL,
@@ -431,6 +436,20 @@ fu_history_migrate_database_v10(FuHistory *self, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_history_migrate_database_v11(FuHistory *self, GError **error)
+{
+	gint rc;
+	rc = sqlite3_exec(self->db,
+			  "ALTER TABLE history ADD COLUMN release_flags INTEGER DEFAULT 0;",
+			  NULL,
+			  NULL,
+			  NULL);
+	if (rc != SQLITE_OK)
+		g_debug("ignoring database error: %s", sqlite3_errmsg(self->db));
+	return TRUE;
+}
+
 /* returns 0 if database is not initialized */
 static guint
 fu_history_get_schema_version(FuHistory *self)
@@ -507,6 +526,10 @@ fu_history_create_or_migrate(FuHistory *self, guint schema_ver, GError **error)
 	/* fall through */
 	case 11:
 		if (!fu_history_migrate_database_v10(self, error))
+			return FALSE;
+	/* fall through */
+	case 12:
+		if (!fu_history_migrate_database_v11(self, error))
 			return FALSE;
 		/* no longer fall through */
 		break;
@@ -847,10 +870,7 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GEr
 	if (!fu_history_remove_device(self, device, error))
 		return FALSE;
 	g_debug("add device %s [%s]", fu_device_get_name(device), fu_device_get_id(device));
-	if (release != NULL) {
-		GPtrArray *checksums = fu_release_get_checksums(release);
-		checksum = fwupd_checksum_get_by_kind(checksums, G_CHECKSUM_SHA1);
-	}
+	checksum = fwupd_checksum_get_by_kind(fu_release_get_checksums(release), G_CHECKSUM_SHA1);
 	checksum_device =
 	    fwupd_checksum_get_by_kind(fu_device_get_checksums(device), G_CHECKSUM_SHA1);
 
@@ -880,9 +900,10 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GEr
 				"release_id,"
 				"appstream_id,"
 				"version_format,"
-				"install_duration) "
+				"install_duration,"
+				"release_flags) "
 				"VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,"
-				"?11,?12,?13,?14,?15,?16,?17,?18,?19,?20)",
+				"?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21)",
 				-1,
 				&stmt,
 				NULL);
@@ -914,6 +935,7 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GEr
 	sqlite3_bind_text(stmt, 18, fu_release_get_appstream_id(release), -1, SQLITE_STATIC);
 	sqlite3_bind_int(stmt, 19, fu_device_get_version_format(device));
 	sqlite3_bind_int(stmt, 20, fu_device_get_install_duration(device));
+	sqlite3_bind_int(stmt, 21, fu_release_get_flags(release));
 	return fu_history_stmt_exec(self, stmt, NULL, error);
 #else
 	return TRUE;
@@ -1066,7 +1088,8 @@ fu_history_get_device_by_id(FuHistory *self, const gchar *device_id, GError **er
 				"release_id, "
 				"appstream_id, "
 				"version_format, "
-				"install_duration FROM history WHERE "
+				"install_duration, "
+				"release_flags FROM history WHERE "
 				"device_id = ?1 ORDER BY device_created DESC "
 				"LIMIT 1",
 				-1,
@@ -1146,7 +1169,8 @@ fu_history_get_devices(FuHistory *self, GError **error)
 				"release_id, "
 				"appstream_id, "
 				"version_format, "
-				"install_duration FROM history "
+				"install_duration, "
+				"release_flags FROM history "
 				"ORDER BY device_modified ASC;",
 				-1,
 				&stmt,

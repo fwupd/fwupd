@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 #
-# Copyright © 2020, Canonical Ltd
+# Copyright 2020 Canonical Ltd
 #
 # Authors:
 #       Marco Trevisan <marco.trevisan@canonical.com>

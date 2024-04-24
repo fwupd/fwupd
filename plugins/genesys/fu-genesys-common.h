@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2023 Adam.Chen <Adam.Chen@genesyslogic.com.tw>
- * Copyright (C) 2021 Gaël PORTAY <gael.portay@collabora.com>
+ * Copyright 2023 Adam.Chen <Adam.Chen@genesyslogic.com.tw>
+ * Copyright 2021 Gaël PORTAY <gael.portay@collabora.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once

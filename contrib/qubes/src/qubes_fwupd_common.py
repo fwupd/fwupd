@@ -1,3 +1,9 @@
+#!/usr/bin/python3
+#
+# Copyright 2023 Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
+#
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
 import grp
 import re
 import os

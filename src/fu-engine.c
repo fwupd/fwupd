@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright 2015 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuEngine"
@@ -120,17 +120,17 @@ struct _FuEngine {
 	FuIdle *idle;
 	XbSilo *silo;
 	XbQuery *query_component_by_guid;
-	XbQuery *query_container_checksum1;
-	XbQuery *query_container_checksum2;
+	XbQuery *query_container_checksum1; /* container checksum -> release */
+	XbQuery *query_container_checksum2; /* artifact checksum -> release */
 	XbQuery *query_tag_by_guid_version;
 	guint coldplug_id;
 	FuPluginList *plugin_list;
 	GPtrArray *plugin_filter;
 	FuContext *ctx;
-	GHashTable *approved_firmware; /* (nullable) */
-	GHashTable *blocked_firmware;  /* (nullable) */
-	GHashTable *emulation_phases;  /* (element-type int utf8) */
-	GHashTable *emulation_backend_ids; /* (element-type str int) */
+	GHashTable *approved_firmware;	      /* (nullable) */
+	GHashTable *blocked_firmware;	      /* (nullable) */
+	GHashTable *emulation_phases;	      /* (element-type int utf8) */
+	GHashTable *emulation_backend_ids;    /* (element-type str int) */
 	GHashTable *device_changed_allowlist; /* (element-type str int) */
 	gchar *host_machine_id;
 	JcatContext *jcat_context;
@@ -163,6 +163,12 @@ enum {
 static guint signals[SIGNAL_LAST] = {0};
 
 G_DEFINE_TYPE(FuEngine, fu_engine, G_TYPE_OBJECT)
+
+gboolean
+fu_engine_get_loaded(FuEngine *self)
+{
+	return self->loaded;
+}
 
 static gboolean
 fu_engine_update_motd_timeout_cb(gpointer user_data)
@@ -636,30 +642,30 @@ fu_engine_load_release(FuEngine *self,
 	return TRUE;
 }
 
-/* finds the remote-id for the first firmware in the silo that matches this
- * container checksum */
+/* finds the release for the first firmware in the silo that matches this
+ * container or artifact checksum */
 static XbNode *
-fu_engine_get_component_for_checksum(FuEngine *self, const gchar *csum)
+fu_engine_get_release_for_checksum(FuEngine *self, const gchar *csum)
 {
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, csum, NULL);
 	if (self->query_container_checksum1 != NULL) {
-		g_autoptr(XbNode) component =
+		g_autoptr(XbNode) rel =
 		    xb_silo_query_first_with_context(self->silo,
 						     self->query_container_checksum1,
 						     &context,
 						     NULL);
-		if (component != NULL)
-			return g_steal_pointer(&component);
+		if (rel != NULL)
+			return g_steal_pointer(&rel);
 	}
 	if (self->query_container_checksum2 != NULL) {
-		g_autoptr(XbNode) component =
+		g_autoptr(XbNode) rel =
 		    xb_silo_query_first_with_context(self->silo,
 						     self->query_container_checksum2,
 						     &context,
 						     NULL);
-		if (component != NULL)
-			return g_steal_pointer(&component);
+		if (rel != NULL)
+			return g_steal_pointer(&rel);
 	}
 
 	/* failed */
@@ -677,14 +683,14 @@ fu_engine_get_remote_id_for_stream(FuEngine *self, GInputStream *stream)
 
 	for (guint i = 0; checksum_types[i] != 0; i++) {
 		g_autofree gchar *csum = NULL;
-		g_autoptr(XbNode) component = NULL;
+		g_autoptr(XbNode) rel = NULL;
 		csum = fu_input_stream_compute_checksum(stream, checksum_types[i], NULL);
 		if (csum != NULL)
-			component = fu_engine_get_component_for_checksum(self, csum);
-		if (component != NULL) {
+			rel = fu_engine_get_release_for_checksum(self, csum);
+		if (rel != NULL) {
 			const gchar *remote_id =
-			    xb_node_query_text(component,
-					       "../custom/value[@key='fwupd::RemoteId']",
+			    xb_node_query_text(rel,
+					       "../../../custom/value[@key='fwupd::RemoteId']",
 					       NULL);
 			if (remote_id != NULL)
 				return g_strdup(remote_id);
@@ -749,7 +755,6 @@ fu_engine_modify_config(FuEngine *self,
 			GError **error)
 {
 	FuPlugin *plugin;
-	g_auto(GStrv) section_key = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(section != NULL, FALSE);
@@ -792,8 +797,19 @@ fu_engine_modify_config(FuEngine *self,
 			return FALSE;
 		}
 
-		/* modify, effective next reboot */
-		return fu_config_set_value(FU_CONFIG(self->config), section, key, value, error);
+		/* many options need a reboot after this */
+		if (!fu_config_set_value(FU_CONFIG(self->config), section, key, value, error))
+			return FALSE;
+
+		/* reload remotes */
+		if (g_strcmp0(key, "TestDevices") == 0 &&
+		    !fu_remote_list_set_testing_remote_enabled(
+			self->remote_list,
+			fu_engine_config_get_test_devices(self->config),
+			error))
+			return FALSE;
+
+		return TRUE;
 	}
 
 	/* handled per-plugin */
@@ -1140,6 +1156,7 @@ fu_engine_verify_update(FuEngine *self,
 	if (device == NULL)
 		return FALSE;
 	device_progress = fu_device_progress_new(device, progress);
+	g_assert(device_progress != NULL);
 
 	/* get the plugin */
 	plugin =
@@ -1309,8 +1326,10 @@ fu_engine_verify_from_system_metadata(FuEngine *self, FuDevice *device, GError *
 				  "../../releases/release",
 				  XB_QUERY_FLAG_OPTIMIZE | XB_QUERY_FLAG_USE_INDEXES,
 				  error);
-	if (query == NULL)
+	if (query == NULL) {
+		fu_error_convert(error);
 		return NULL;
+	}
 
 	/* use prepared query for each GUID */
 	for (guint i = 0; i < guids->len; i++) {
@@ -1407,9 +1426,7 @@ fu_engine_verify(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 		release = fu_engine_verify_from_system_metadata(self, device, &error_system);
 		if (release == NULL) {
 			if (!g_error_matches(error_system, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) &&
-			    !g_error_matches(error_system,
-					     G_IO_ERROR,
-					     G_IO_ERROR_INVALID_ARGUMENT)) {
+			    !g_error_matches(error_system, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA)) {
 				g_propagate_error(error, g_steal_pointer(&error_system));
 				return FALSE;
 			}
@@ -1691,6 +1708,17 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 	if (tmp != NULL)
 		g_hash_table_insert(hash, g_strdup("HostBkc"), g_strdup(tmp));
 
+#ifdef HAVE_PASSIM
+#if PASSIM_CHECK_VERSION(0, 1, 6)
+	/* this is useful to know if passim support is actually helping bandwidth use */
+	g_hash_table_insert(
+	    hash,
+	    g_strdup("PassimDownloadSaving"),
+	    g_strdup_printf("%" G_GUINT64_FORMAT,
+			    passim_client_get_download_saving(self->passim_client)));
+#endif
+#endif
+
 	/* DMI data */
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_LOADED_HWINFO)) {
 		struct {
@@ -1717,7 +1745,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 		}
 	}
 
-		/* kernel version is often important for debugging failures */
+	/* kernel version is often important for debugging failures */
 #ifdef HAVE_UTSNAME_H
 	memset(&name_tmp, 0, sizeof(struct utsname));
 	if (uname(&name_tmp) >= 0) {
@@ -1872,7 +1900,9 @@ fu_engine_publish_release(FuEngine *self, FuRelease *release, GError **error)
 	/* send to passimd, if enabled and running */
 	if (passim_client_get_version(self->passim_client) != NULL &&
 	    fu_engine_config_get_p2p_policy(self->config) & FU_P2P_POLICY_FIRMWARE) {
+		gsize streamsz = 0;
 		g_autofree gchar *basename = g_path_get_basename(fu_release_get_filename(release));
+		g_autofree gchar *checksum = NULL;
 		g_autoptr(GError) error_passim = NULL;
 		g_autoptr(PassimItem) passim_item = passim_item_new();
 		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
@@ -1880,28 +1910,14 @@ fu_engine_publish_release(FuEngine *self, FuRelease *release, GError **error)
 		passim_item_set_max_age(passim_item, 30 * 24 * 60 * 60);
 		passim_item_set_share_limit(passim_item, 50);
 		passim_item_set_basename(passim_item, basename);
-#if PASSIM_CHECK_VERSION(0, 1, 5)
-		{
-			gsize streamsz = 0;
-			g_autofree gchar *checksum =
-			    fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA256, error);
-			if (checksum == NULL)
-				return FALSE;
-			if (!fu_input_stream_size(stream, &streamsz, error))
-				return FALSE;
-			passim_item_set_size(passim_item, streamsz);
-			passim_item_set_stream(passim_item, stream);
-			passim_item_set_hash(passim_item, checksum);
-		}
-#else
-		{
-			g_autoptr(GBytes) blob_cab = NULL;
-			blob_cab = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
-			if (blob_cab == NULL)
-				return FALSE;
-			passim_item_set_bytes(passim_item, blob_cab);
-		}
-#endif
+		checksum = fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA256, error);
+		if (checksum == NULL)
+			return FALSE;
+		if (!fu_input_stream_size(stream, &streamsz, error))
+			return FALSE;
+		passim_item_set_size(passim_item, streamsz);
+		passim_item_set_stream(passim_item, stream);
+		passim_item_set_hash(passim_item, checksum);
 		if (!passim_client_publish(self->passim_client, passim_item, &error_passim)) {
 			if (!g_error_matches(error_passim, G_IO_ERROR, G_IO_ERROR_EXISTS)) {
 				g_warning("failed to publish firmware to Passim: %s",
@@ -1927,6 +1943,7 @@ fu_engine_install_release_version_check(FuEngine *self,
 	const gchar *version_old = fu_release_get_device_version_old(release);
 	if (version_rel != NULL && fu_version_compare(version_old, version_rel, fmt) != 0 &&
 	    fu_version_compare(version_old, fu_device_get_version(device), fmt) == 0 &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED);
 		g_set_error(error,
@@ -2195,6 +2212,7 @@ fu_engine_is_running_offline(FuEngine *self)
 #endif
 }
 
+#ifdef HAVE_FWUPDOFFLINE
 #ifdef HAVE_GIO_UNIX
 static gchar *
 fu_realpath(const gchar *filename, GError **error)
@@ -2267,6 +2285,7 @@ fu_engine_offline_setup(GError **error)
 	return FALSE;
 #endif
 }
+#endif
 
 static gboolean
 fu_engine_offline_invalidate(GError **error)
@@ -2315,23 +2334,14 @@ fu_engine_schedule_update(FuEngine *self,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {
+#ifdef HAVE_FWUPDOFFLINE
 	gchar tmpname[] = {"XXXXXX.cab"};
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
-	g_autoptr(FuHistory) history = NULL;
+	g_autoptr(FuHistory) history = fu_history_new();
 	g_autoptr(GFile) file = NULL;
 
-#ifndef HAVE_FWUPDOFFLINE
-	/* sanity check */
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "Not supported as compiled without offline support");
-	return FALSE;
-#endif
-
 	/* id already exists */
-	history = fu_history_new();
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_autoptr(FuDevice) res_tmp = NULL;
 		res_tmp = fu_history_get_device_by_id(history, fu_device_get_id(device), NULL);
@@ -2380,6 +2390,13 @@ fu_engine_schedule_update(FuEngine *self,
 
 	/* next boot we run offline */
 	return fu_engine_offline_setup(error);
+#else
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "Not supported as compiled without offline support");
+	return FALSE;
+#endif
 }
 
 static gboolean
@@ -2563,15 +2580,12 @@ fu_engine_install_release(FuEngine *self,
 				    flags,
 				    feature_flags,
 				    &error_local)) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_AC_POWER_REQUIRED) ||
-		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW) ||
-		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NEEDS_USER_ACTION) ||
-		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_BROKEN_SYSTEM)) {
-			fu_device_set_update_state(device_orig,
-						   FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
-		} else {
+		FwupdUpdateState state = fu_device_get_update_state(device);
+		if (state != FWUPD_UPDATE_STATE_FAILED &&
+		    state != FWUPD_UPDATE_STATE_FAILED_TRANSIENT)
 			fu_device_set_update_state(device_orig, FWUPD_UPDATE_STATE_FAILED);
-		}
+		else
+			fu_device_set_update_state(device_orig, state);
 		fu_device_set_update_error(device_orig, error_local->message);
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
@@ -3087,6 +3101,7 @@ fu_engine_detach(FuEngine *self,
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) poll_locker = NULL;
+	g_autoptr(FuDeviceProgress) device_progress = NULL;
 
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device(self, device_id, error);
@@ -3094,6 +3109,8 @@ fu_engine_detach(FuEngine *self,
 		g_prefix_error(error, "failed to get device before update detach: ");
 		return FALSE;
 	}
+	device_progress = fu_device_progress_new(device, progress);
+	g_assert(device_progress != NULL);
 
 	/* pause the polling */
 	poll_locker = fu_device_poll_locker_new(device, error);
@@ -3153,6 +3170,7 @@ fu_engine_attach(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) poll_locker = NULL;
+	g_autoptr(FuDeviceProgress) device_progress = NULL;
 
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device(self, device_id, error);
@@ -3160,6 +3178,9 @@ fu_engine_attach(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 		g_prefix_error(error, "failed to get device before update attach: ");
 		return FALSE;
 	}
+	device_progress = fu_device_progress_new(device, progress);
+	g_assert(device_progress != NULL);
+
 	str = fu_device_to_string(device);
 	g_info("attach -> %s", str);
 	plugin =
@@ -3296,6 +3317,8 @@ fu_engine_write_firmware(FuEngine *self,
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) poll_locker = NULL;
+	g_autoptr(FuDeviceProgress) device_progress = NULL;
+	g_autoptr(GError) error_write = NULL;
 
 	/* cancel the pending action */
 	if (!fu_engine_offline_invalidate(error))
@@ -3307,6 +3330,8 @@ fu_engine_write_firmware(FuEngine *self,
 		g_prefix_error(error, "failed to get device before update: ");
 		return FALSE;
 	}
+	device_progress = fu_device_progress_new(device, progress);
+	g_assert(device_progress != NULL);
 
 	/* pause the polling */
 	poll_locker = fu_device_poll_locker_new(device, error);
@@ -3319,9 +3344,23 @@ fu_engine_write_firmware(FuEngine *self,
 	    fu_plugin_list_find_by_name(self->plugin_list, fu_device_get_plugin(device), error);
 	if (plugin == NULL)
 		return FALSE;
-	if (!fu_plugin_runner_write_firmware(plugin, device, stream_fw, progress, flags, error)) {
+	if (!fu_plugin_runner_write_firmware(plugin,
+					     device,
+					     stream_fw,
+					     progress,
+					     flags,
+					     &error_write)) {
 		g_autoptr(GError) error_attach = NULL;
 		g_autoptr(GError) error_cleanup = NULL;
+
+		if (g_error_matches(error_write, FWUPD_ERROR, FWUPD_ERROR_AC_POWER_REQUIRED) ||
+		    g_error_matches(error_write, FWUPD_ERROR, FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW) ||
+		    g_error_matches(error_write, FWUPD_ERROR, FWUPD_ERROR_NEEDS_USER_ACTION) ||
+		    g_error_matches(error_write, FWUPD_ERROR, FWUPD_ERROR_BROKEN_SYSTEM)) {
+			fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+		} else {
+			fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED);
+		}
 
 		/* attach back into runtime then cleanup */
 		fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_ATTACH);
@@ -3336,6 +3375,7 @@ fu_engine_write_firmware(FuEngine *self,
 			g_warning("failed to update-cleanup after failed update: %s",
 				  error_cleanup->message);
 		}
+		g_propagate_error(error, g_steal_pointer(&error_write));
 		return FALSE;
 	}
 
@@ -3690,7 +3730,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 	self->query_container_checksum1 =
 	    xb_query_new_full(self->silo,
 			      "components/component[@type='firmware']/releases/release/"
-			      "checksum[@target='container'][text()=?]/../../..",
+			      "checksum[@target='container'][text()=?]/..",
 			      XB_QUERY_FLAG_OPTIMIZE,
 			      &error_container_checksum1);
 	if (self->query_container_checksum1 == NULL)
@@ -3698,7 +3738,7 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 	self->query_container_checksum2 =
 	    xb_query_new_full(self->silo,
 			      "components/component[@type='firmware']/releases/release/"
-			      "artifacts/artifact[@type='binary']/checksum[text()=?]/../../"
+			      "artifacts/artifact[@type='binary']/checksum[text()=?]/"
 			      "../../..",
 			      XB_QUERY_FLAG_OPTIMIZE,
 			      &error_container_checksum2);
@@ -3786,12 +3826,8 @@ fu_engine_create_metadata_builder_source(FuEngine *self, const gchar *fn, GError
 					     NULL);
 	if (!xb_builder_source_load_file(source,
 					 file,
-#if LIBJCAT_CHECK_VERSION(0, 2, 0)
 					 XB_BUILDER_SOURCE_FLAG_WATCH_FILE |
 					     XB_BUILDER_SOURCE_FLAG_WATCH_DIRECTORY,
-#else
-					 XB_BUILDER_SOURCE_FLAG_WATCH_FILE,
-#endif
 					 NULL,
 					 error))
 		return NULL;
@@ -4219,19 +4255,25 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 	istream = fu_input_stream_from_path(fwupd_remote_get_filename_cache_sig(remote), error);
 	if (istream == NULL)
 		return NULL;
-	if (!jcat_file_import_stream(jcat_file, istream, JCAT_IMPORT_FLAG_NONE, NULL, error))
+	if (!jcat_file_import_stream(jcat_file, istream, JCAT_IMPORT_FLAG_NONE, NULL, error)) {
+		fu_error_convert(error);
 		return NULL;
+	}
 	jcat_item = jcat_file_get_item_default(jcat_file, error);
-	if (jcat_item == NULL)
+	if (jcat_item == NULL) {
+		fu_error_convert(error);
 		return NULL;
+	}
 	results = jcat_context_verify_item(self->jcat_context,
 					   blob,
 					   jcat_item,
 					   JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
 					       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
 					   error);
-	if (results == NULL)
+	if (results == NULL) {
+		fu_error_convert(error);
 		return NULL;
+	}
 
 	/* return the newest signature */
 	return fu_engine_get_newest_signature_jcat_result(results, error);
@@ -4372,7 +4414,7 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 		 * metadata for this remote to mitigate a rollback attack */
 		jcat_result_old = fu_engine_get_system_jcat_result(self, remote, &error_local);
 		if (jcat_result_old == NULL) {
-			if (g_error_matches(error_local, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
 				g_info("no existing valid keyrings: %s", error_local->message);
 			} else {
 				g_warning("could not get existing keyring result: %s",
@@ -4662,12 +4704,11 @@ fu_engine_get_details(FuEngine *self,
 		      GError **error)
 {
 	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) details = NULL;
 	g_autoptr(GPtrArray) checksums = g_ptr_array_new_with_free_func(g_free);
 	g_autoptr(FuCabinet) cabinet = NULL;
-	g_autoptr(XbNode) component_by_csum = NULL;
+	g_autoptr(XbNode) rel_by_csum = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
@@ -4694,8 +4735,8 @@ fu_engine_get_details(FuEngine *self,
 	/* does this exist in any enabled remote */
 	for (guint i = 0; i < checksums->len; i++) {
 		const gchar *csum = g_ptr_array_index(checksums, i);
-		component_by_csum = fu_engine_get_component_for_checksum(self, csum);
-		if (component_by_csum != NULL)
+		rel_by_csum = fu_engine_get_release_for_checksum(self, csum);
+		if (rel_by_csum != NULL)
 			break;
 	}
 
@@ -4711,10 +4752,10 @@ fu_engine_get_details(FuEngine *self,
 			return NULL;
 		fu_device_add_release(dev, FWUPD_RELEASE(rel));
 
-		if (component_by_csum != NULL) {
+		if (rel_by_csum != NULL) {
 			const gchar *remote_id =
-			    xb_node_query_text(component_by_csum,
-					       "../custom/value[@key='fwupd::RemoteId']",
+			    xb_node_query_text(rel_by_csum,
+					       "../../../custom/value[@key='fwupd::RemoteId']",
 					       NULL);
 			if (remote_id != NULL)
 				fu_release_set_remote_id(rel, remote_id);
@@ -4733,9 +4774,11 @@ fu_engine_get_details(FuEngine *self,
 			g_autoptr(FuRelease) release = fu_release_new();
 			g_autoptr(GError) error_req = NULL;
 			FwupdInstallFlags install_flags =
-			    FWUPD_INSTALL_FLAG_OFFLINE | FWUPD_INSTALL_FLAG_IGNORE_VID_PID |
-			    FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
+			    FWUPD_INSTALL_FLAG_IGNORE_VID_PID | FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
 			    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+#ifdef HAVE_FWUPDOFFLINE
+			install_flags |= FWUPD_INSTALL_FLAG_OFFLINE;
+#endif
 
 			fu_release_set_device(release, dev);
 			fu_release_set_request(release, request);
@@ -4918,27 +4961,34 @@ fu_engine_get_history_set_hsi_attrs(FuEngine *self, FuDevice *device)
 static void
 fu_engine_fixup_history_device(FuEngine *self, FuDevice *device)
 {
-	FwupdRelease *rel;
+	FwupdRelease *release;
 	GPtrArray *csums;
 
 	/* get the checksums */
-	rel = fu_device_get_release_default(device);
-	if (rel == NULL) {
+	release = fu_device_get_release_default(device);
+	if (release == NULL) {
 		g_warning("no checksums from release history");
 		return;
 	}
 
 	/* find the checksum that matches */
-	csums = fwupd_release_get_checksums(rel);
+	csums = fwupd_release_get_checksums(release);
 	for (guint j = 0; j < csums->len; j++) {
 		const gchar *csum = g_ptr_array_index(csums, j);
-		g_autoptr(XbNode) component = fu_engine_get_component_for_checksum(self, csum);
-		if (component != NULL) {
+		g_autoptr(XbNode) rel = fu_engine_get_release_for_checksum(self, csum);
+		if (rel != NULL) {
 			g_autoptr(GError) error_local = NULL;
-			if (!fu_release_load(FU_RELEASE(rel),
+			g_autoptr(XbNode) component = NULL;
+
+			component = xb_node_query_first(rel, "../..", &error_local);
+			if (component == NULL) {
+				g_warning("failed to load component: %s", error_local->message);
+				continue;
+			}
+			if (!fu_release_load(FU_RELEASE(release),
 					     NULL,
 					     component,
-					     NULL,
+					     rel,
 					     FWUPD_INSTALL_FLAG_NONE,
 					     &error_local)) {
 				g_warning("failed to load release: %s", error_local->message);
@@ -5122,9 +5172,12 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) releases_tmp = NULL;
 	FwupdInstallFlags install_flags =
-	    FWUPD_INSTALL_FLAG_OFFLINE | FWUPD_INSTALL_FLAG_IGNORE_VID_PID |
-	    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
-	    FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+	    FWUPD_INSTALL_FLAG_IGNORE_VID_PID | FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH |
+	    FWUPD_INSTALL_FLAG_ALLOW_REINSTALL | FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+
+#ifdef HAVE_FWUPDOFFLINE
+	install_flags |= FWUPD_INSTALL_FLAG_OFFLINE;
+#endif
 
 	/* get all releases */
 	releases_tmp = xb_node_query(component, "releases/release", 0, &error_local);
@@ -5239,7 +5292,8 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 		}
 		update_request_id = fu_release_get_update_request_id(release);
 		if (fu_device_get_update_request_id(device) == NULL && update_request_id != NULL) {
-			fu_device_add_request_flag(device, FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
+			fu_device_add_request_flag(device,
+						   FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 			fu_device_set_update_request_id(device, update_request_id);
 		}
 
@@ -5402,6 +5456,7 @@ fu_engine_get_releases(FuEngine *self,
 	g_autoptr(GPtrArray) releases_deduped = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+	g_return_val_if_fail(FU_IS_ENGINE_REQUEST(request), NULL);
 	g_return_val_if_fail(device_id != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
@@ -6613,7 +6668,7 @@ fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 		}
 	}
 	if (self->plugin_filter->len > 0 || disabled_plugins) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_TAINTED);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS);
 		return;
 	}
@@ -7819,6 +7874,11 @@ fu_engine_update_history_database(FuEngine *self, GError **error)
 
 		/* try to save the new update-state, but ignoring any error */
 		if (!fu_engine_update_history_device(self, dev, &error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+				g_debug("failed to update history database: %s",
+					error_local->message);
+				continue;
+			}
 			g_warning("failed to update history database: %s", error_local->message);
 		}
 	}
@@ -8085,6 +8145,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* avoid re-loading a second time if fu-tool or fu-util request to */
@@ -8161,6 +8222,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 			remote_list_flags |= FU_REMOTE_LIST_LOAD_FLAG_READONLY_FS;
 		if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE)
 			remote_list_flags |= FU_REMOTE_LIST_LOAD_FLAG_NO_CACHE;
+		fu_remote_list_set_lvfs_metadata_format(self->remote_list, FU_LVFS_METADATA_FORMAT);
 		if (!fu_remote_list_load(self->remote_list, remote_list_flags, error)) {
 			g_prefix_error(error, "Failed to load remotes: ");
 			return FALSE;
@@ -8729,12 +8791,10 @@ fu_engine_constructed(GObject *obj)
 
 	/* setup Jcat context */
 	self->jcat_context = jcat_context_new();
-#if LIBJCAT_CHECK_VERSION(0, 1, 13)
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA256);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA512);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_PKCS7);
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_GPG);
-#endif
 	keyring_path = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	jcat_context_set_keyring_path(self->jcat_context, keyring_path);
 	sysconfdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR);
@@ -8748,8 +8808,11 @@ fu_engine_constructed(GObject *obj)
 #ifdef HAVE_GUSB
 	fu_engine_add_runtime_version(self, "org.freedesktop.gusb", g_usb_version_string());
 #endif
-#if LIBJCAT_CHECK_VERSION(0, 1, 11)
 	fu_engine_add_runtime_version(self, "com.hughsie.libjcat", jcat_version_string());
+#if LIBXMLB_CHECK_VERSION(0, 3, 19)
+	fu_engine_add_runtime_version(self, "com.hughsie.libxmlb", xb_version_string());
+#else
+	fu_engine_add_runtime_version(self, "com.hughsie.libxmlb", "0.3.x");
 #endif
 
 	/* optional kernel version */

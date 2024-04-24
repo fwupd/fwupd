@@ -8,3 +8,6 @@ Flags = moh-device,rts,enforce-requires
 [USB\VID_10A5&PID_9800]
 Plugin = fpc
 Flags = moh-device,rts,lenfy,enforce-requires
+[USB\VID_10A5&PID_D805]
+Plugin = fpc
+Flags = enforce-requires

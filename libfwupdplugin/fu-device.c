@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright 2015 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuDevice"
@@ -74,7 +74,7 @@ typedef struct {
 	GType firmware_gtype;
 	GPtrArray *possible_plugins;
 	GPtrArray *instance_id_quirks; /* of utf-8 */
-	GPtrArray *retry_recs; /* of FuDeviceRetryRecovery */
+	GPtrArray *retry_recs;	       /* of FuDeviceRetryRecovery */
 	guint retry_delay;
 	FuDeviceInternalFlags internal_flags;
 	guint64 private_flags;
@@ -243,6 +243,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "no-auto-remove-children";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN)
 		return "use-parent-for-open";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FOR_OPEN)
+		return "use-proxy-for-open";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY)
 		return "use-parent-for-battery";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK)
@@ -347,6 +349,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN;
 	if (g_strcmp0(flag, "use-parent-for-open") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN;
+	if (g_strcmp0(flag, "use-proxy-for-open") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FOR_OPEN;
 	if (g_strcmp0(flag, "use-parent-for-battery") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY;
 	if (g_strcmp0(flag, "use-proxy-fallback") == 0)
@@ -872,9 +876,16 @@ fu_device_retry(FuDevice *self,
 void
 fu_device_sleep(FuDevice *self, guint delay_ms)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(delay_ms < 100000);
-	if (delay_ms > 0 && !fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED))
+
+	if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED))
+		return;
+	if (priv->proxy != NULL && fu_device_has_flag(priv->proxy, FWUPD_DEVICE_FLAG_EMULATED))
+		return;
+	if (delay_ms > 0)
 		g_usleep(delay_ms * 1000);
 }
 
@@ -892,10 +903,17 @@ fu_device_sleep(FuDevice *self, guint delay_ms)
 void
 fu_device_sleep_full(FuDevice *self, guint delay_ms, FuProgress *progress)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(delay_ms < 1000000);
 	g_return_if_fail(FU_IS_PROGRESS(progress));
-	if (delay_ms > 0 && !fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED))
+
+	if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED))
+		return;
+	if (priv->proxy != NULL && fu_device_has_flag(priv->proxy, FWUPD_DEVICE_FLAG_EMULATED))
+		return;
+	if (delay_ms > 0)
 		fu_progress_sleep(progress, delay_ms);
 }
 
@@ -2027,7 +2045,7 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 	}
 	if (g_strcmp0(key, FU_QUIRKS_PROXY_GTYPE) == 0) {
 		if (priv->proxy_gtype != G_TYPE_INVALID) {
-			g_debug("already set GType to %s, ignoring %s",
+			g_debug("already set proxy GType to %s, ignoring %s",
 				g_type_name(priv->proxy_gtype),
 				value);
 			return TRUE;
@@ -4887,6 +4905,18 @@ fu_device_open(FuDevice *self, GError **error)
 		}
 		return fu_device_open_internal(parent, error);
 	}
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FOR_OPEN)) {
+		FuDevice *proxy = fu_device_get_proxy(self);
+		if (proxy == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "no proxy device");
+			return FALSE;
+		}
+		if (!fu_device_open_internal(proxy, error))
+			return FALSE;
+	}
 	return fu_device_open_internal(self, error);
 }
 
@@ -4958,6 +4988,18 @@ fu_device_close(FuDevice *self, GError **error)
 			return FALSE;
 		}
 		return fu_device_close_internal(parent, error);
+	}
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FOR_OPEN)) {
+		FuDevice *proxy = fu_device_get_proxy(self);
+		if (proxy == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "no proxy device");
+			return FALSE;
+		}
+		if (!fu_device_close_internal(proxy, error))
+			return FALSE;
 	}
 	return fu_device_close_internal(self, error);
 }
@@ -6570,7 +6612,6 @@ fu_device_init(FuDevice *self)
 							 "notify::flags",
 							 G_CALLBACK(fu_device_flags_notify_cb),
 							 NULL);
-	fu_device_set_created(self, (guint64)g_get_real_time() / G_USEC_PER_SEC);
 }
 
 static void

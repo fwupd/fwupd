@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2015 Peter Jones <pjones@redhat.com>
+ * Copyright 2018 Richard Hughes <richard@hughsie.com>
+ * Copyright 2015 Peter Jones <pjones@redhat.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -10,7 +10,7 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 
-const gchar *
+static const gchar *
 fu_uefi_bootmgr_get_suffix(GError **error)
 {
 	guint64 firmware_bits;
@@ -19,21 +19,20 @@ fu_uefi_bootmgr_get_suffix(GError **error)
 		const gchar *arch;
 	} suffixes[] = {
 #if defined(__x86_64__)
-		{64, "x64"},
+	    {64, "x64"},
 #elif defined(__aarch64__)
-		{64, "aa64"},
+	    {64, "aa64"},
 #elif defined(__loongarch_lp64)
-		{64, "loongarch64"},
+	    {64, "loongarch64"},
 #elif (defined(__riscv) && __riscv_xlen == 64)
-		{64, "riscv64"},
+	    {64, "riscv64"},
 #endif
 #if defined(__i386__) || defined(__i686__)
-		{32, "ia32"},
+	    {32, "ia32"},
 #elif defined(__arm__)
-		{32, "arm"},
+	    {32, "arm"},
 #endif
-		{0, NULL}
-	};
+	    {0, NULL}};
 	g_autofree gchar *sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
 	g_autofree gchar *sysfsefidir = g_build_filename(sysfsfwdir, "efi", NULL);
 	firmware_bits = fu_uefi_read_file_as_uint64(sysfsefidir, "fw_platform_size");

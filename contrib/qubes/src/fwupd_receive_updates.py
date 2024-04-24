@@ -2,10 +2,10 @@
 #
 # The Qubes OS Project, http://www.qubes-os.org
 #
-# Copyright (C) 2010  Rafal Wojtczuk  <rafal@invisiblethingslab.com>
-#               2020  Norbert Kamiński  <norbert.kaminski@3mdeb.com>
+# Copyright 2010 Rafal Wojtczuk <rafal@invisiblethingslab.com>
+# Copyright 2020 Norbert Kamiński <norbert.kaminski@3mdeb.com>
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 #
 
 import base64

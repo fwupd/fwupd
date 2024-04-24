@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
+ * Copyright 2015 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #pragma once
@@ -22,7 +22,7 @@
 #include "fu-security-attrs.h"
 #include "fu-usb-device.h"
 #include "fu-version-common.h"
-//#include "fu-hid-device.h"
+// #include "fu-hid-device.h"
 #ifdef HAVE_GUDEV
 #include "fu-udev-device.h"
 #endif

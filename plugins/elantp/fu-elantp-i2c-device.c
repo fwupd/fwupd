@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
+ * Copyright 2020 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -112,14 +112,9 @@ fu_elantp_i2c_device_probe(FuDevice *device, GError **error)
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "i2c") == 0) {
 		g_autoptr(GPtrArray) i2c_buses = NULL;
 		FuUdevDevice *i2c_device =
-		    fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "i2c");
-		if (i2c_device == NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "did not find the i2c parent for device");
+		    fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "i2c", error);
+		if (i2c_device == NULL)
 			return FALSE;
-		}
 
 		i2c_buses = fu_udev_device_get_children_with_subsystem(i2c_device, "i2c-dev");
 		if (i2c_buses->len == 1) {

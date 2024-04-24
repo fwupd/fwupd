@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2021 Victor Cheng <victor_cheng@usiglobal.com>
+ * Copyright 2021 Richard Hughes <richard@hughsie.com>
+ * Copyright 2021 Victor Cheng <victor_cheng@usiglobal.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -28,8 +28,8 @@ G_DEFINE_TYPE(FuUsiDockMcuDevice, fu_usi_dock_mcu_device, FU_TYPE_HID_DEVICE)
 
 #define W25Q16DV_PAGE_SIZE 256
 
-#define FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP (1 << 0)
-#define FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE (1 << 1)
+#define FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP	   (1 << 0)
+#define FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE	   (1 << 1)
 #define FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG (1 << 2)
 
 static gboolean

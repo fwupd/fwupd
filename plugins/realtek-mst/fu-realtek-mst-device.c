@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2021 Peter Marheine <pmarheine@chromium.org>
+ * Copyright 2021 Peter Marheine <pmarheine@chromium.org>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -193,7 +193,7 @@ fu_realtek_mst_device_use_aux_dev(FuRealtekMstDevice *self, GError **error)
 			continue;
 		}
 
-		i2c_devices = fu_udev_device_get_siblings_with_subsystem(device, "i2c");
+		i2c_devices = fu_udev_device_get_siblings_with_subsystem(device, "i2c", NULL);
 		bus_device = locate_i2c_bus(i2c_devices);
 	}
 

@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2024 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2018 LongSoft
- * Copyright (C) 2008 Apple Inc
- * Copyright (C) 2006 Intel Corporation
+ * Copyright 2024 Richard Hughes <richard@hughsie.com>
+ * Copyright 2018 LongSoft
+ * Copyright 2008 Apple Inc
+ * Copyright 2006 Intel Corporation
  *
- * SPDX-License-Identifier: BSD-2-Clause or LGPL-2.1+
+ * SPDX-License-Identifier: BSD-2-Clause or LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuFirmware"

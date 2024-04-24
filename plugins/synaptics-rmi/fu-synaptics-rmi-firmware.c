@@ -1,9 +1,9 @@
 /*
- * Copyright (C) 2012 Andrew Duggan
- * Copyright (C) 2012 Synaptics Inc.
- * Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
+ * Copyright 2012 Andrew Duggan
+ * Copyright 2012 Synaptics Inc.
+ * Copyright 2019 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -36,7 +36,7 @@ struct _FuSynapticsRmiFirmware {
 
 G_DEFINE_TYPE(FuSynapticsRmiFirmware, fu_synaptics_rmi_firmware, FU_TYPE_FIRMWARE)
 
-#define RMI_IMG_FW_OFFSET		  0x100
+#define RMI_IMG_FW_OFFSET 0x100
 
 #define RMI_IMG_V10_CNTR_ADDR_OFFSET 0x0c
 #define RMI_IMG_MAX_CONTAINERS	     1024

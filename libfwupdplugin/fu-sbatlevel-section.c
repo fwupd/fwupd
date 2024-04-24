@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2023 Canonical Ltd.
+ * Copyright 2023 Canonical Ltd.
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuFirmware"
@@ -105,8 +105,6 @@ fu_sbatlevel_section_write(FuFirmware *firmware, GError **error)
 	g_autoptr(FuFirmware) img_ltst = NULL;
 	g_autoptr(FuFirmware) img_prev = NULL;
 	g_autoptr(GByteArray) buf = fu_struct_sbat_level_section_header_new();
-	g_autoptr(GByteArray) buf_ltst = NULL;
-	g_autoptr(GByteArray) buf_prev = NULL;
 	g_autoptr(GBytes) blob_ltst = NULL;
 	g_autoptr(GBytes) blob_prev = NULL;
 

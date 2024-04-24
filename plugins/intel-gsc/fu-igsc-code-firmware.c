@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2022 Intel
- * Copyright (C) 2022 Richard Hughes <richard@hughsie.com>
+ * Copyright 2022 Intel
+ * Copyright 2022 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -17,8 +17,8 @@ struct _FuIgscCodeFirmware {
 
 G_DEFINE_TYPE(FuIgscCodeFirmware, fu_igsc_code_firmware, FU_TYPE_IFWI_FPT_FIRMWARE)
 
-#define GSC_FWU_IUP_NUM				   2
-#define FU_IGSC_FIRMWARE_MAX_SIZE		   (8 * 1024 * 1024) /* 8M */
+#define GSC_FWU_IUP_NUM		  2
+#define FU_IGSC_FIRMWARE_MAX_SIZE (8 * 1024 * 1024) /* 8M */
 
 static void
 fu_igsc_code_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)

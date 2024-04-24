@@ -25,6 +25,7 @@ with a non-standard filesystem layout.
 
 * `FWUPD_MACHINE_KIND` can be used to override the detected machine type, e.g. `physical`, `virtual`, or `container`
 * `FWUPD_HOST_EMULATE` can be used to load test data from `/usr/share/fwupd/host-emulate.d`, e.g. `thinkpad-p1-no-iommu.json.gz`
+* `FWUPD_SYSCALL_FILTER` can be set to the name of the service manager if syscalls are being filtered, e.g. `systemd`.
 
 ## Self Tests
 
@@ -39,8 +40,6 @@ Other variables, include:
 * `FWUPD_REDFISH_SELF_TEST` if set, do destructive tests on the actual device BMC
 * `FWUPD_REDFISH_SMBIOS_DATA` use this filename to emulate a specific SMBIOS blob
 * `FWUPD_SOLOKEY_EMULATE` emulates a fake device for testing
-* `FWUPD_SUPERIO_DISABLE_MIRROR` disables the e-flash fixup to get byte-accurate hardware dumps
-* `FWUPD_SUPERIO_RECOVER` allow recovery of a corrupted SuperIO by hardcoding the device size
 * `FWUPD_UEFI_CAPSULE_RECREATE_COD_DATA` if set, write the files in the example COD tree in srcdir
 * `FWUPD_UEFI_TEST` used by the UEFI plugins to disable specific sanity checks during self tests
 * `FWUPD_MACHINE_ID` used by the tests to set a predictable hash normally loaded from `/etc/machine-id`

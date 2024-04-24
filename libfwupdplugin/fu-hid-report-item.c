@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
+ * Copyright 2023 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuHidDevice"
@@ -87,7 +87,6 @@ fu_hid_report_item_parse(FuFirmware *firmware,
 		if (!fu_input_stream_read_u8(stream, offset + 1, &data_size, error))
 			return FALSE;
 	} else {
-		g_autoptr(GBytes) img = NULL;
 		g_autoptr(GInputStream) partial_stream = NULL;
 		if (data_size == 1) {
 			guint8 value = 0;

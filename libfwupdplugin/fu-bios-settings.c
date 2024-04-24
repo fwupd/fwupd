@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2022 Mario Limonciello <mario.limonciello@amd.com>
+ * Copyright 2022 Mario Limonciello <mario.limonciello@amd.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define G_LOG_DOMAIN "FuBiosSettings"
@@ -57,6 +57,7 @@ fu_bios_setting_get_key(FwupdBiosSetting *attr, const gchar *key, gchar **value_
 	tmp = g_build_filename(fwupd_bios_setting_get_path(attr), key, NULL);
 	if (!g_file_get_contents(tmp, value_out, NULL, error)) {
 		g_prefix_error(error, "failed to load %s: ", key);
+		fu_error_convert(error);
 		return FALSE;
 	}
 	g_strchomp(*value_out);
@@ -461,9 +462,10 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 
 	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW_ATTRIB);
 	class_dir = g_dir_open(sysfsfwdir, 0, error);
-	if (class_dir == NULL)
+	if (class_dir == NULL) {
+		fu_error_convert(error);
 		return FALSE;
-
+	}
 	do {
 		g_autofree gchar *path = NULL;
 		g_autoptr(GDir) driver_dir = NULL;
@@ -476,8 +478,10 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 			continue;
 		}
 		driver_dir = g_dir_open(path, 0, error);
-		if (driver_dir == NULL)
+		if (driver_dir == NULL) {
+			fu_error_convert(error);
 			return FALSE;
+		}
 		do {
 			const gchar *name = g_dir_read_name(driver_dir);
 			g_autofree gchar *full_path = NULL;

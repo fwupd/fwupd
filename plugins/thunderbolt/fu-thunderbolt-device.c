@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2017 Christian J. Kellner <christian@kellner.me>
- * Copyright (C) 2020 Mario Limonciello <mario.limonciello@dell.com>
+ * Copyright 2017 Christian J. Kellner <christian@kellner.me>
+ * Copyright 2020 Mario Limonciello <mario.limonciello@dell.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -397,7 +397,7 @@ fu_thunderbolt_device_probe(FuDevice *device, GError **error)
 	g_autoptr(FuUdevDevice) udev_parent = NULL;
 
 	/* if the PCI ID is Intel then it's signed, no idea otherwise */
-	udev_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "pci");
+	udev_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "pci", NULL);
 	if (udev_parent != NULL) {
 		if (!fu_device_probe(FU_DEVICE(udev_parent), error))
 			return FALSE;

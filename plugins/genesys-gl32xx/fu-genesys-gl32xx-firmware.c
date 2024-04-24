@@ -1,9 +1,9 @@
 /*
- * Copyright (C) 2023 Denis Pynkin <denis.pynkin@collabora.com>
- * Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2023 Ben Chuang <benchuanggli@gmail.com>
+ * Copyright 2023 Denis Pynkin <denis.pynkin@collabora.com>
+ * Copyright 2023 Richard Hughes <richard@hughsie.com>
+ * Copyright 2023 Ben Chuang <benchuanggli@gmail.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"

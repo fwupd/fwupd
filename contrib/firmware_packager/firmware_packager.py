@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# Copyright (C) 2017 Max Ehrlich maxehr@gmail.com
+# Copyright 2017 Max Ehrlich maxehr@gmail.com
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 #
 
 import argparse

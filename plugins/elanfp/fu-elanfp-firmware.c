@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2021 Michael Cheng <michael.cheng@emc.com.tw>
+ * Copyright 2021 Michael Cheng <michael.cheng@emc.com.tw>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -199,6 +199,8 @@ static void
 fu_elanfp_firmware_init(FuElanfpFirmware *self)
 {
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 256);
+	g_type_ensure(FU_TYPE_CFU_OFFER);
+	g_type_ensure(FU_TYPE_CFU_PAYLOAD);
 }
 
 static void

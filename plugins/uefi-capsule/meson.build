@@ -64,16 +64,19 @@ foreach ux_lingua: ux_linguas
 endforeach
 
 if get_option('efi_binary')
-  efi_binary = dependency('fwupd-efi', fallback: ['fwupd-efi', 'fwupd_efi_dep'])
+  efi_binary = dependency('fwupd-efi', version: '>= 1.6', fallback: ['fwupd-efi', 'fwupd_efi_dep'])
 endif
 
 if get_option('plugin_uefi_capsule_splash')
   # add the archive of pregenerated images
-  run_command([
+  splash_deps = run_command([
     python3,
     join_paths(meson.project_source_root(), 'po', 'test-deps'),
     join_paths(meson.project_source_root(), 'po', 'LINGUAS'),
-  ], check: true)
+  ], check: false)
+  if splash_deps.returncode() != 0
+    error(splash_deps.stderr().strip())
+  endif
   custom_target('ux-capsule-tar',
     input: [
       join_paths(meson.project_source_root(), 'po', 'LINGUAS'),

@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
+ * Copyright 2021 Richard Hughes <richard@hughsie.com>
  *
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
@@ -542,6 +542,7 @@ fu_redfish_device_get_backend(FuRedfishDevice *self)
 typedef struct {
 	FwupdError error_code;
 	gchar *location;
+	gboolean completed;
 	GHashTable *messages_seen;
 	FuProgress *progress;
 } FuRedfishDevicePollCtx;
@@ -635,10 +636,8 @@ fu_redfish_device_poll_set_message_id(FuRedfishDevice *self,
 }
 
 static gboolean
-fu_redfish_device_poll_task_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_redfish_device_poll_task_once(FuRedfishDevice *self, FuRedfishDevicePollCtx *ctx, GError **error)
 {
-	FuRedfishDevicePollCtx *ctx = (FuRedfishDevicePollCtx *)user_data;
-	FuRedfishDevice *self = FU_REDFISH_DEVICE(device);
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
 	JsonObject *json_obj;
 	const gchar *message = "Unknown failure";
@@ -701,8 +700,10 @@ fu_redfish_device_poll_task_cb(FuDevice *device, gpointer user_data, GError **er
 	}
 	state_tmp = json_object_get_string_member(json_obj, "TaskState");
 	g_debug("TaskState now %s", state_tmp);
-	if (g_strcmp0(state_tmp, "Completed") == 0)
+	if (g_strcmp0(state_tmp, "Completed") == 0) {
+		ctx->completed = TRUE;
 		return TRUE;
+	}
 	if (g_strcmp0(state_tmp, "Cancelled") == 0) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "Task was cancelled");
 		return FALSE;
@@ -714,8 +715,7 @@ fu_redfish_device_poll_task_cb(FuDevice *device, gpointer user_data, GError **er
 	}
 
 	/* try again */
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "TaskState is %s", state_tmp);
-	return FALSE;
+	return TRUE;
 }
 
 static FuRedfishDevicePollCtx *
@@ -749,16 +749,27 @@ fu_redfish_device_poll_task(FuRedfishDevice *self,
 			    FuProgress *progress,
 			    GError **error)
 {
+	const guint timeout = 2400;
+	g_autoptr(GTimer) timer = g_timer_new();
 	g_autoptr(FuRedfishDevicePollCtx) ctx = fu_redfish_device_poll_ctx_new(progress, location);
 
 	/* sleep and then reprobe hardware */
-	fu_device_sleep(FU_DEVICE(self), 1000); /* ms */
-	return fu_device_retry_full(FU_DEVICE(self),
-				    fu_redfish_device_poll_task_cb,
-				    60 * 60, /* a long time */
-				    1000,
-				    ctx,
-				    error);
+	do {
+		fu_device_sleep(FU_DEVICE(self), 1000); /* ms */
+		if (!fu_redfish_device_poll_task_once(self, ctx, error))
+			return FALSE;
+		if (ctx->completed)
+			return TRUE;
+	} while (g_timer_elapsed(timer, NULL) < timeout);
+
+	/* success */
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_FILE,
+		    "failed to poll %s for success after %u seconds",
+		    location,
+		    timeout);
+	return FALSE;
 }
 
 guint
