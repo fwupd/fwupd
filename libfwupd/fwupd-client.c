@@ -58,6 +58,7 @@ typedef struct {
 	guint percentage;
 	guint32 battery_level;
 	guint32 battery_threshold;
+	guint download_retries;
 	GMutex idle_mutex; /* for @idle_id and @idle_sources */
 	guint idle_id;
 	GPtrArray *idle_sources; /* element-type FwupdClientContextHelper */
@@ -388,6 +389,23 @@ fwupd_client_set_daemon_version(FwupdClient *self, const gchar *daemon_version)
 	fwupd_client_rebuild_user_agent(self);
 }
 
+/**
+ * fwupd_client_download_set_retries:
+ * @self: a #FwupdClient
+ * @retries: number of tries, defaulting to 0
+ *
+ * Sets the number of retries should be attempted on transient download errors.
+ *
+ * Since: 1.9.19
+ **/
+void
+fwupd_client_download_set_retries(FwupdClient *self, guint retries)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	priv->download_retries = retries;
+}
+
 static void
 fwupd_client_set_host_bkc(FwupdClient *self, const gchar *host_bkc)
 {
@@ -708,20 +726,25 @@ fwupd_client_progress_callback_cb(void *clientp,
 	return 0;
 }
 
-static void
-fwupd_client_curl_helper_set_proxy(FwupdClient *self, FwupdCurlHelper *helper, const gchar *url)
+static gboolean
+fwupd_client_curl_helper_set_proxy(FwupdClient *self,
+				   FwupdCurlHelper *helper,
+				   const gchar *url,
+				   GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_auto(GStrv) proxies = NULL;
-	g_autoptr(GError) error_local = NULL;
 
-	proxies = g_proxy_resolver_lookup(priv->proxy_resolver, url, NULL, &error_local);
+	proxies = g_proxy_resolver_lookup(priv->proxy_resolver, url, NULL, error);
 	if (proxies == NULL) {
-		g_warning("failed to lookup proxy for %s: %s", url, error_local->message);
-		return;
+		g_prefix_error(error, "failed to lookup proxy for %s: ", url);
+		return FALSE;
 	}
 	if (g_strcmp0(proxies[0], "direct://") != 0)
 		(void)curl_easy_setopt(helper->curl, CURLOPT_PROXY, proxies[0]);
+
+	/* success */
+	return TRUE;
 }
 
 static FwupdCurlHelper *
@@ -5358,6 +5381,24 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 				    "Failed to download due to server limit");
 		return NULL;
 	}
+	if (status_code == 502 || status_code == 503 || status_code == 504) {
+		g_autofree gchar *str = g_strndup((const gchar *)buf->data, MIN(buf->len, 4000));
+		if (g_str_is_ascii(str)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_TIMED_OUT,
+				    "Transient failure to download, server response was %u: %s",
+				    (guint)status_code,
+				    str);
+			return NULL;
+		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_TIMED_OUT,
+			    "Transient failure to download, server response was %u",
+			    (guint)status_code);
+		return NULL;
+	}
 	if (status_code >= 400) {
 		g_autofree gchar *str = g_strndup((const gchar *)buf->data, MIN(buf->len, 4000));
 		if (g_str_is_ascii(str)) {
@@ -5380,6 +5421,36 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 	return g_bytes_new(buf->data, buf->len);
 }
 
+static gboolean
+fwupd_client_download_error_is_fatal(const GError *error)
+{
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT))
+		return FALSE;
+	return TRUE;
+}
+
+static GBytes *
+fwupd_client_download_http_retry(FwupdClient *self, CURL *curl, const gchar *url, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	guint delay_ms = 2500;
+	for (guint i = 0;; i++, delay_ms *= 2) {
+		g_autoptr(GBytes) blob = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		blob = fwupd_client_download_http(self, curl, url, &error_local);
+		if (blob != NULL)
+			return g_steal_pointer(&blob);
+		if (i >= priv->download_retries ||
+		    fwupd_client_download_error_is_fatal(error_local)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			break;
+		}
+		g_debug("ignoring and trying again: %s", error_local->message);
+		g_usleep(delay_ms * 1000);
+	}
+	return NULL;
+}
 static void
 fwupd_client_download_bytes_thread_cb(GTask *task,
 				      gpointer source_object,
@@ -5394,9 +5465,12 @@ fwupd_client_download_bytes_thread_cb(GTask *task,
 		const gchar *url = g_ptr_array_index(helper->urls, i);
 		g_autoptr(GError) error = NULL;
 		g_info("downloading %s", url);
-		fwupd_client_curl_helper_set_proxy(self, helper, url);
+		if (!fwupd_client_curl_helper_set_proxy(self, helper, url, &error)) {
+			g_task_return_error(task, g_steal_pointer(&error));
+			return;
+		}
 		if (fwupd_client_is_url_http(url)) {
-			blob = fwupd_client_download_http(self, helper->curl, url, &error);
+			blob = fwupd_client_download_http_retry(self, helper->curl, url, &error);
 			if (blob != NULL)
 				break;
 		} else if (fwupd_client_is_url_ipfs(url)) {
