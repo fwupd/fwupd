@@ -105,6 +105,7 @@ if build_daemon
       '@sync',
       'ioctl',
       'uname',
+      'splice'
     ]
     if allow_flashrom
       syscall_filter += ['@raw-io']
