@@ -605,6 +605,8 @@ fwupd_client_download_bytes_finish(FwupdClient *self,
 				   GAsyncResult *res,
 				   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 void
+fwupd_client_download_set_retries(FwupdClient *self, guint retries) G_GNUC_NON_NULL(1);
+void
 fwupd_client_upload_bytes_async(FwupdClient *self,
 				const gchar *url,
 				const gchar *payload,

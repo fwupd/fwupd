@@ -57,7 +57,7 @@ fi
 
 # ---
 echo "Downgrading to older release (requires network access)"
-fwupdmgr downgrade $device -y
+fwupdmgr --download-retries=5 downgrade $device -y
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
@@ -67,7 +67,7 @@ rc=$?; if [ $rc != 2 ]; then error $rc; fi
 
 # ---
 echo "Updating all devices to latest release (requires network access)"
-fwupdmgr --no-unreported-check --no-metadata-check --no-reboot-check update -y
+fwupdmgr --download-retries=5 --no-unreported-check --no-metadata-check --no-reboot-check update -y
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
@@ -77,7 +77,7 @@ rc=$?; if [ $rc != 2 ]; then error $rc; fi
 
 # ---
 echo "Refreshing from the LVFS (requires network access)..."
-fwupdmgr refresh
+fwupdmgr --download-retries=5 refresh
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # success!
