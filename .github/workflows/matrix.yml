@@ -26,7 +26,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Refresh dependencies
-        run: sudo apt update
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt update
       - name: Install dependencies
         run: |
           sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
