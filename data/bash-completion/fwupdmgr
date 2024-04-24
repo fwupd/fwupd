@@ -75,6 +75,7 @@ _fwupdmgr_opts=(
 	'--disable-ssl-strict'
 	'--p2p'
 	'--json'
+	'--download-retries'
 	@offline@
 )
 

@@ -4811,6 +4811,7 @@ main(int argc, char *argv[])
 	gboolean ret;
 	gboolean verbose = FALSE;
 	gboolean version = FALSE;
+	guint download_retries = 0;
 	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
 	g_autoptr(GDateTime) dt_now = g_date_time_new_now_utc();
 	g_autoptr(GError) error = NULL;
@@ -4835,6 +4836,14 @@ main(int argc, char *argv[])
 	     &version,
 	     /* TRANSLATORS: command line option */
 	     N_("Show client and daemon versions"),
+	     NULL},
+	    {"download-retries",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_INT,
+	     &download_retries,
+	     /* TRANSLATORS: command line option */
+	     N_("Set the download retries for transient errors"),
 	     NULL},
 #ifdef HAVE_FWUPDOFFLINE
 	    {"offline",
@@ -5537,6 +5546,7 @@ main(int argc, char *argv[])
 	/* connect to the daemon */
 	priv->client = fwupd_client_new();
 	fwupd_client_set_main_context(priv->client, priv->main_ctx);
+	fwupd_client_download_set_retries(priv->client, download_retries);
 	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "notify::percentage",
 			 G_CALLBACK(fu_util_client_notify_cb),
