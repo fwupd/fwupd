@@ -16,6 +16,11 @@ if [ "$(id -u)" -eq 0 ]; then
     pip install meson --force-reinstall
 fi
 
+# get a libxmlb with the workaround for the GLib regression
+if [ "$(id -u)" -eq 0 ]; then
+    dnf upgrade --enablerepo=updates-testing --refresh --advisory=FEDORA-2024-584ab295c8 -y
+fi
+
 #prep
 export LC_ALL=C.UTF-8
 root=$(pwd)
@@ -47,8 +52,6 @@ meson setup .. \
     -Dbash_completion=false \
     -Dfirmware-packager=false \
     -Dmetainfo=false \
-    -Dlibxmlb:introspection=false \
-    -Dlibxmlb:gtkdoc=false \
     -Dlibjcat:man=false \
     -Dlibjcat:gpg=false \
     -Dlibjcat:tests=false \
@@ -112,6 +115,7 @@ find $MINGW32BINDIR \
 	-o -name libusb-1.0.dll \
 	-o -name libwinpthread-1.dll \
 	-o -name libxml2-2.dll \
+	-o -name libxmlb-2.dll \
 	-o -name libzstd.dll \
 	-o -name zlib1.dll \
 	| wixl-heat \
