@@ -65,7 +65,9 @@ jobs:
     steps:
       - uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.1.3
       - name: Refresh dependencies
-        run: sudo apt update
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt update
       - name: Install dependencies
         run: |
           sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
@@ -81,7 +83,9 @@ jobs:
     steps:
       - uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.1.3
       - name: Refresh dependencies
-        run: sudo apt update
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt update
       - name: Install dependencies
         run: |
           sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
