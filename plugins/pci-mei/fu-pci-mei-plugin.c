@@ -57,6 +57,8 @@ fu_mei_detect_family(FuPlugin *plugin)
 	FuPciMeiPlugin *self = FU_PCI_MEI_PLUGIN(plugin);
 	guint8 ver = self->vers.major;
 
+	if (ver == 0)
+		return FU_MEI_FAMILY_UNKNOWN;
 	if (ver == 1 || ver == 2) {
 		if (self->hfsts1.fields.operation_mode == 0xf)
 			return FU_MEI_FAMILY_SPS;
@@ -66,9 +68,7 @@ fu_mei_detect_family(FuPlugin *plugin)
 		return FU_MEI_FAMILY_TXE;
 	if (ver == 6 || ver == 7 || ver == 8 || ver == 9 || ver == 10)
 		return FU_MEI_FAMILY_ME;
-	if (ver == 11 || ver == 12 || ver == 13 || ver == 14 || ver == 15 || ver == 16)
-		return FU_MEI_FAMILY_CSME;
-	return FU_MEI_FAMILY_UNKNOWN;
+	return FU_MEI_FAMILY_CSME;
 }
 
 static gboolean
