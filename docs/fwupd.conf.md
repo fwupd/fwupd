@@ -203,7 +203,7 @@ The `[fwupd]` section can contain the following parameters:
 
   There are three possible values:
 
-* `none`: Do not publish any files
+* `nothing`: Do not publish any files
 
 * `metadata`: Only publish shared metadata that is common to each machine.
 
