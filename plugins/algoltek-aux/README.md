@@ -1,10 +1,10 @@
 ---
-title: Plugin: Algoltek Aux
+title: Plugin: Algoltek AUX
 ---
 
 ## Introduction
 
-The Aux is a bla bla bla.
+This plugin supports the firmware upgrade of DisplayPort over AUX to HDMI converter provided by Algoltek, Inc. These DisplayPort over AUX to HDMI converters can be updated through multiple interfaces, but this plugin is only designed for the AUX interface.
 
 ## Firmware Format
 
@@ -13,43 +13,29 @@ a packed binary file format.
 
 This plugin supports the following protocol ID:
 
-* `com.algoltek.aux`
+* `tw.com.algoltek.aux`
 
 ## GUID Generation
 
-These devices use the standard TODO DeviceInstanceId values, e.g.
+These devices use the standard AUX DeviceInstanceId values, e.g.
 
-* `TODO\VID_XXX`
+* `MST-ALGOLTEK`
 
 ## Update Behavior
 
-The device is updated by bla bla bla.
-
-## Vendor ID Security
-
-The vendor ID is set from the TODO vendor, in this instance set to `TODO:0x273F`
-
-## Quirk Use
-
-This plugin uses the following plugin-specific quirks:
-
-### AlgoltekAuxStartAddr
-
-The bla bla bla.
-
-Since: 1.8.TODO
+The firmware is deployed when the device is in normal runtime mode, and the device will reset when the new firmware has been programmed.
 
 ## External Interface Access
 
-This plugin requires read/write access to `TODO`.
+This plugin requires read/write access to `/dev/drm_dp_aux*`.
 
 ## Version Considerations
 
-This plugin has been available since fwupd version `SET_VERSION_HERE`.
+This plugin has been available since fwupd version `...`.
 
 ## Owners
 
 Anyone can submit a pull request to modify this plugin, but the following people should be
 consulted before making major or functional changes:
 
-* Algoltek: @github-username
+Mason Lyu: @MasonLyu
