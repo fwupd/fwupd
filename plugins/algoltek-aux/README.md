@@ -4,7 +4,7 @@ title: Plugin: Algoltek AUX
 
 ## Introduction
 
-This plugin supports the firmware upgrade of DisplayPort over AUX to HDMI converter provided by Algoltek, Inc. These DisplayPort over AUX to HDMI converters can be updated through multiple interfaces, but this plugin is only designed for the AUX interface.
+This plugin supports the firmware upgrade of DisplayPort over USB-C to HDMI converter provided by Algoltek, Inc. These DisplayPort over USB-C to HDMI converters can be updated through multiple interfaces, but this plugin is only designed for the  DisplayPort AUX interface.
 
 ## Firmware Format
 
