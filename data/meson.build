@@ -116,6 +116,13 @@ if build_daemon
     if allow_flashrom
       syscall_filter += ['@raw-io']
     endif
+    if supported_build
+      dynamic_options += ['SystemCallErrorNumber=EPERM']
+    else
+      # to debug what additional syscalls are required, we set SystemCallErrorNumber=SIGSYS
+      # and then can do `coredumpctl debug` and get the syscall number with `(gdb) p $rax`
+      dynamic_options += ['SystemCallErrorNumber=SIGSYS']
+    endif
     dynamic_options += ['SystemCallFilter=' + ' '.join(syscall_filter)]
 
     con2.set('dynamic_options', '\n'.join(dynamic_options))
