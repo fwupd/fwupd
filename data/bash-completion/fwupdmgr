@@ -76,6 +76,7 @@ _fwupdmgr_opts=(
 	'--disable-ssl-strict'
 	'--p2p'
 	'--json'
+	'--download-retries'
 )
 
 bios_get_opts=(

@@ -16,7 +16,12 @@ run_device_tests()
 		fwupdmgr modify-config AllowEmulation true -y
 		for f in `grep --files-with-matches -r emulation-url @devicetestdir@`; do
 		        echo "Emulating for $f"
-		        fwupdmgr device-emulate --no-unreported-check --no-remote-check --no-metadata-check "$f"
+		        fwupdmgr device-emulate \
+				--download-retries=5 \
+				--no-unreported-check \
+				--no-remote-check \
+				--no-metadata-check \
+				"$f"
 		        rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 		done
 		fwupdmgr quit
