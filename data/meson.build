@@ -103,8 +103,15 @@ if build_daemon
       '@network-io',
       '@process',
       '@sync',
+      '@signal',  # for g_local_file_monitor_new
+      '@timer',   # for usbi_create_timer
+      '@chown',   # for sqlite3Step
       'ioctl',
       'uname',
+      'sysinfo',  # for sysconf
+      'madvise',  # for mtrim
+      'mremap',   # for g_realloc
+      'splice', 'vmsplice', 'copy_file_range', # for g_file_copy
     ]
     if allow_flashrom
       syscall_filter += ['@raw-io']
