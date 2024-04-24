@@ -73,3 +73,21 @@ Flags = updatable
 GType = FuRts54HubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
+
+#Acer U32 Dock level 1
+[USB\VID_0502&PID_0804]
+Plugin = rts54hub
+Name = Acer Universal Dock U32 Lv1
+Flags = updatable
+GType = FuRts54HubDevice
+FirmwareSizeMin = 0x10000
+FirmwareSizeMax = 0x20000
+
+#Acer U32 Dock level 2
+[USB\VID_0502&PID_0806]
+Plugin = rts54hub
+Name = Acer Universal Dock U32 Lv2
+Flags = updatable
+GType = FuRts54HubDevice
+FirmwareSizeMin = 0x10000
+FirmwareSizeMax = 0x20000
