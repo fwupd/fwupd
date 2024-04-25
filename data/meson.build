@@ -103,24 +103,6 @@ if build_daemon
     else
       dynamic_options += 'RestrictAddressFamilies=AF_NETLINK AF_UNIX'
     endif
-
-    # allow-list, see `systemd-analyze syscall-filter` for what each group adds
-    syscall_filter = [
-      '@basic-io',
-      '@file-system',
-      '@io-event',
-      '@ipc',
-      '@network-io',
-      '@process',
-      '@sync',
-      'ioctl',
-      'uname',
-    ]
-    if allow_flashrom
-      syscall_filter += ['@raw-io']
-    endif
-    dynamic_options += ['SystemCallFilter=' + ' '.join(syscall_filter)]
-
     con2.set('dynamic_options', '\n'.join(dynamic_options))
     con2.set('motd_dir', motd_dir)
 
