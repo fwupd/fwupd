@@ -465,11 +465,10 @@ endif
 
 umockdev = dependency('umockdev-1.0', required: false)
 
-allow_flashrom = get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux').allowed()
 if build_standalone
   libflashrom = dependency('flashrom', 
                             fallback: ['flashrom', 'flashrom_dep'], 
-                            required: allow_flashrom)
+                            required: get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux'))
 endif
 
 if libsystemd.found()
