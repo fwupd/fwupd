@@ -245,11 +245,11 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 		fu_device_set_update_error(device, "Device is in safe mode");
 	} else {
 		g_autofree gchar *device_id = NULL;
-		g_autofree gchar *domain_id = NULL;
 		if (fu_thunderbolt_controller_can_update(self)) {
 			const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
-			g_autofree gchar *vendor_id = NULL;
 			g_autofree gchar *domain = g_path_get_basename(devpath);
+			g_autofree gchar *domain_id = NULL;
+			g_autofree gchar *vendor_id = NULL;
 			/* USB4 controllers don't have a concept of legacy vs native
 			 * so don't try to read a native attribute from their NVM */
 			if (self->controller_kind == FU_THUNDERBOLT_CONTROLLER_KIND_HOST &&
@@ -265,6 +265,7 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 						    (guint)did,
 						    self->is_native ? "-native" : "",
 						    domain);
+			fu_device_add_instance_id(device, domain_id);
 			vendor_id = g_strdup_printf("TBT:0x%04X", (guint)vid);
 			fu_device_add_vendor_id(device, vendor_id);
 			device_id = g_strdup_printf("TBT-%04x%04x%s",
@@ -278,17 +279,8 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 			if (!fu_thunderbolt_device_check_authorized(FU_THUNDERBOLT_DEVICE(self),
 								    error))
 				return FALSE;
-
-		} else {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "updates are distributed as part of the platform");
-			return FALSE;
+			fu_device_add_instance_id(device, device_id);
 		}
-		fu_device_add_instance_id(device, device_id);
-		if (domain_id != NULL)
-			fu_device_add_instance_id(device, domain_id);
 	}
 
 	/* determine if we can update on unplug */
