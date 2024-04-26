@@ -8,7 +8,9 @@ if [ "$CI" != "true" ]; then
 fi
 
 # install deps
-./contrib/ci/fwupd_setup_helpers.py --yes -o fedora -v mingw64 install-dependencies
+if [ "$(id -u)" -eq 0 ]; then
+    ./contrib/ci/fwupd_setup_helpers.py --yes -o fedora -v mingw64 install-dependencies
+fi
 
 # update to latest version of meson
 if [ "$(id -u)" -eq 0 ]; then
