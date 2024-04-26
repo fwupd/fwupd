@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Algoltek <Algoltek, Inc.>
+// Copyright 2024 Algoltek <Algoltek, Inc.>
 // SPDX-License-Identifier: LGPL-2.1+
 
 enum AlgoltekAuxCmd {
@@ -12,8 +12,6 @@ enum AlgoltekAuxCmd {
     Bot = 0x1D,
     Rst = 0x20,
     Vid = 0x22,
-    CrcInitPolinom = 0x1021,
-    CrcPolinom = 0x1021,
 }
 
 #[derive(ParseStream, ValidateStream)]
@@ -26,18 +24,18 @@ struct AlgoltekAuxProductIdentity {
     version: [char; 48],
 }
 
-#[derive(New)] //6
+#[derive(New)]
 struct AlgoltekAuxRdvCmdAddressPkt {
-    i2cAddress: u8,
+    i2c_address: u8,
     sublen: u8,
     address: u16be,
     len: u8,
     cmd: u8,
 }
 
-#[derive(New)] //8
+#[derive(New)]
 struct AlgoltekAuxBotErsCmdAddressPkt {
-    i2cAddress: u8,
+    i2c_address: u8,
     sublen: u8,
     reserved: [u8; 2],
     len: u8,
@@ -45,9 +43,9 @@ struct AlgoltekAuxBotErsCmdAddressPkt {
     address: u16be,
 }
 
-#[derive(New)] //10
+#[derive(New)]
 struct AlgoltekAuxEnRstWrrCmdAddressPkt {
-    i2cAddress: u8,
+    i2c_address: u8,
     sublen: u8,
     reserved: [u8; 2],
     len: u8,
@@ -56,9 +54,9 @@ struct AlgoltekAuxEnRstWrrCmdAddressPkt {
     value: u16be,
 }
 
-#[derive(New)] //14-1
+#[derive(New)]
 struct AlgoltekAuxIspFlashWriteCmdAddressPkt {
-    i2cAddress: u8,
+    i2c_address: u8,
     sublen: u8,
     serialno: u16be,
     len: u8,
@@ -66,9 +64,9 @@ struct AlgoltekAuxIspFlashWriteCmdAddressPkt {
     data: [u8; 8],
 }
 
-#[derive(New)] //14-2 crc
+#[derive(New)]
 struct AlgoltekAuxCrcCmdAddressPkt {
-    i2cAddress: u8,
+    i2c_address: u8,
     sublen: u8,
     serialno: u16be,
     len: u8,
@@ -76,6 +74,3 @@ struct AlgoltekAuxCrcCmdAddressPkt {
     wcrc: u16be,
     reserved: [u8; 6],
 }
-
-
-

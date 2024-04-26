@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Algoltek <Algoltek, Inc.>
+ * Copyright 2024 Algoltek <Algoltek, Inc.>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -14,4 +14,3 @@ G_DECLARE_FINAL_TYPE(FuAlgoltekAuxFirmware,
 		     FU,
 		     ALGOLTEK_AUX_FIRMWARE,
 		     FuFirmware)
-

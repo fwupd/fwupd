@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Algoltek <Algoltek, Inc.>
+ * Copyright 2024 Algoltek <Algoltek, Inc.>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -17,7 +17,6 @@ struct _FuAlgoltekAuxFirmware {
 };
 
 G_DEFINE_TYPE(FuAlgoltekAuxFirmware, fu_algoltek_aux_firmware, FU_TYPE_FIRMWARE)
-
 
 static gboolean
 fu_algoltek_aux_firmware_validate(FuFirmware *firmware,
@@ -47,7 +46,7 @@ fu_algoltek_aux_firmware_parse(FuFirmware *firmware,
 	if (st == NULL)
 		return FALSE;
 	version = fu_struct_algoltek_aux_product_identity_get_version(st);
-	offset += FU_STRUCT_ALGOLTEK_AUX_PRODUCT_IDENTITY_SIZE;
+	offset += ALGOLTEK_AUX_PRODUCT_IDENTITY_SIZE;
 
 	/* ISP */
 	stream_isp = fu_partial_input_stream_new(stream, offset, AG_ISP_AUX_SIZE);

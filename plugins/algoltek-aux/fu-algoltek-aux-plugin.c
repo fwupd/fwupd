@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Algoltek <Algoltek, Inc.>
+ * Copyright 2024 Algoltek <Algoltek, Inc.>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -37,12 +37,12 @@ fu_algoltek_aux_plugin_backend_device_added(FuPlugin *plugin,
 		/* interesting device? */
 		if (!FU_IS_DPAUX_DEVICE(device))
 			return TRUE;
-	
+
 		/* instantiate a new device */
 		dev = fu_algoltek_aux_device_new(FU_DPAUX_DEVICE(device));
 		if (dev == NULL)
 			return FALSE;
-	
+
 		/* open */
 		locker = fu_device_locker_new(dev, &error_local);
 		if (locker == NULL) {
@@ -55,7 +55,6 @@ fu_algoltek_aux_plugin_backend_device_added(FuPlugin *plugin,
 			return FALSE;
 		}
 		fu_plugin_device_add(FU_PLUGIN(self), FU_DEVICE(dev));
-	
 	}
 	return TRUE;
 }
@@ -69,11 +68,8 @@ static void
 fu_algoltek_aux_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
-	//FuContext *ctx = fu_plugin_get_context(plugin);
-	//fu_context_add_quirk_key(ctx, "AlgoltekAuxStartAddr");
-	fu_plugin_add_udev_subsystem(plugin, "drm"); /* used for uevent only */
-	fu_plugin_add_device_udev_subsystem(plugin, "drm_dp_aux_dev"); //I care about dpaux devices
-	//fu_plugin_add_device_gtype(plugin, FU_TYPE_ALGOLTEK_AUX_DEVICE);
+	fu_plugin_add_udev_subsystem(plugin, "drm");		       /* used for uevent only */
+	fu_plugin_add_device_udev_subsystem(plugin, "drm_dp_aux_dev"); // I care about dpaux devices
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_ALGOLTEK_AUX_FIRMWARE);
 }
 

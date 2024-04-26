@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Algoltek <Algoltek, Inc.>
+ * Copyright 2024 Algoltek <Algoltek, Inc.>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -16,3 +16,6 @@
 #define AG_UPDATE_AUX_STATUS 0x860C
 #define AG_UPDATE_AUX_PASS	 1
 #define AG_UPDATE_AUX_FAIL	 2
+
+#define AG_AUX_CRC_INIT_POLINOM 0x1021
+#define AG_AUX_CRC_POLINOM	0x1021

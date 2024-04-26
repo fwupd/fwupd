@@ -6,7 +6,6 @@ plugin_quirks += files('algoltek-aux.quirk')
 plugin_builtins += static_library('fu_plugin_algoltek_aux',
   rustgen.process('fu-algoltek-aux.rs'),
   sources: [
-    'fu-algoltek-aux-common.c',
     'fu-algoltek-aux-device.c',
     'fu-algoltek-aux-firmware.c',
     'fu-algoltek-aux-plugin.c',

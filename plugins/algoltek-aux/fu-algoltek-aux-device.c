@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Algoltek <Algoltek, Inc.>
+ * Copyright 2024 Algoltek <Algoltek, Inc.>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -13,7 +13,6 @@
 
 struct _FuAlgoltekAuxDevice {
 	FuDpauxDevice parent_instance;
-	guint8 testoui;
 };
 
 G_DEFINE_TYPE(FuAlgoltekAuxDevice, fu_algoltek_aux_device, FU_TYPE_DPAUX_DEVICE)
@@ -38,7 +37,7 @@ fu_algoltek_dpaux_device_write(FuAlgoltekAuxDevice *self, GByteArray *buf, guint
 				  ALGOLTEK_DEVICE_AUX_TIMEOUT,
 				  error))
 		return FALSE;
-	
+
 	return TRUE;
 }
 
@@ -53,10 +52,9 @@ fu_algoltek_dpaux_device_read(FuAlgoltekAuxDevice *self, GByteArray *buf, GError
 				  ALGOLTEK_DEVICE_AUX_TIMEOUT,
 				  error))
 		return FALSE;
-	
+
 	return TRUE;
 }
-
 
 static guint16
 gen_crc16(guint16 BData, guint16 crc)
@@ -66,36 +64,32 @@ gen_crc16(guint16 BData, guint16 crc)
 	for (guint16 i= 0 ; i < 8; i++ ) {
 		BFlag = BData ^ (crc >> 8);
 		crc <<= 1;
-		
+
 		if (BFlag & 0x80) {
-			crc ^= FU_ALGOLTEK_AUX_CMD_CRC_POLINOM;
-			
+			crc ^= AG_AUX_CRC_POLINOM;
 		}
 		BData <<= 1;
-		
 	}
-	
+
 	return crc;
 }
 
 static GByteArray *
 fu_algoltek_aux_device_rdv(FuAlgoltekAuxDevice *self, GError **error)
-{	
+{
+	g_autoptr(GByteArray) st = algoltek_aux_rdv_cmd_address_pkt_new();
 	g_autoptr(GByteArray) replay = g_byte_array_new();
 	g_autoptr(GByteArray) version_data = g_byte_array_new();
-	guint copyCount = 0;
-
 	fu_byte_array_set_size(replay, 16, 0x0);
 	fu_byte_array_set_size(version_data, 64, 0x0);
-
-	g_autoptr(GByteArray) st = fu_struct_algoltek_aux_rdv_cmd_address_pkt_new();
+	guint copy_count = 0;
 	gsize length = st->len - 3;
 
-	fu_struct_algoltek_aux_rdv_cmd_address_pkt_set_i2c_address(st, 0x51);
-	fu_struct_algoltek_aux_rdv_cmd_address_pkt_set_sublen(st, length);
-	fu_struct_algoltek_aux_rdv_cmd_address_pkt_set_address(st, 0);
-	fu_struct_algoltek_aux_rdv_cmd_address_pkt_set_len(st, length);
-	fu_struct_algoltek_aux_rdv_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_RDV);
+	algoltek_aux_rdv_cmd_address_pkt_set_i2c_address(st, 0x51);
+	algoltek_aux_rdv_cmd_address_pkt_set_sublen(st, length);
+	algoltek_aux_rdv_cmd_address_pkt_set_address(st, 0);
+	algoltek_aux_rdv_cmd_address_pkt_set_len(st, length);
+	algoltek_aux_rdv_cmd_address_pkt_set_cmd(st, ALGOLTEK_AUX_CMD_RDV);
 
 	for (guint i = 0; i < 4; i++) {
 	if(!fu_algoltek_dpaux_device_write(FU_DPAUX_DEVICE(self), st, 20, error)){
@@ -109,55 +103,53 @@ fu_algoltek_aux_device_rdv(FuAlgoltekAuxDevice *self, GError **error)
 	}
 
 	if (i == 0) {
-		memcpy(version_data->data + copyCount, replay->data + 2, 14);
-		copyCount += 14;	
+		memcpy(version_data->data + copy_count, replay->data + 2, 14);
+		copy_count += 14;
 	} else {
-		memcpy(version_data->data + copyCount, replay->data + 0, 16);
-		copyCount += 16;
+		memcpy(version_data->data + copy_count, replay->data + 0, 16);
+		copy_count += 16;
 	}
-	g_print(replay->data);
 	}
-	
+
 	/* success */
 	return g_steal_pointer(&version_data);
 }
 
-
 static gboolean
 fu_algoltek_aux_device_en(FuAlgoltekAuxDevice *self, GError **error)
-{	
-	g_autoptr(GByteArray) st = fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_new();
+{
+	g_autoptr(GByteArray) st = algoltek_aux_en_rst_wrr_cmd_address_pkt_new();
 	gsize length = st->len - 3;
-	
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_i2c_address(st, 0x51);
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_sublen(st, length);
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_len(st, length);
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_EN);
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_address(st, 0);
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_value(st, 0);
-	
+
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_i2c_address(st, 0x51);
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_sublen(st, length);
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_len(st, length);
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_cmd(st, ALGOLTEK_AUX_CMD_EN);
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_address(st, 0);
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_value(st, 0);
+
 	if(!fu_algoltek_dpaux_device_write(FU_DPAUX_DEVICE(self), st, 20, error))
-		return FALSE;	
-		
+		return FALSE;
+
 	/* success */
 	return TRUE;
 }
 
 static gboolean
 fu_algoltek_aux_device_rst(FuAlgoltekAuxDevice *self, GError **error)
-{	
-	g_autoptr(GByteArray) st = fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_new();
+{
+	g_autoptr(GByteArray) st = algoltek_aux_en_rst_wrr_cmd_address_pkt_new();
 	gsize length = st->len - 3;
-	
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_i2c_address(st, 0x51);
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_sublen(st, length);
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_len(st, length);
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_RST);
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_address(st, 0x300);
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_value(st, 0);
+
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_i2c_address(st, 0x51);
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_sublen(st, length);
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_len(st, length);
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_cmd(st, ALGOLTEK_AUX_CMD_RST);
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_address(st, 0x300);
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_value(st, 0);
 
 	if(!fu_algoltek_dpaux_device_write(FU_DPAUX_DEVICE(self), st, 20, error))
-		return FALSE;	
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -165,113 +157,116 @@ fu_algoltek_aux_device_rst(FuAlgoltekAuxDevice *self, GError **error)
 
 static gboolean
 fu_algoltek_aux_device_dummy(FuAlgoltekAuxDevice *self, GError **error)
-{	
-	g_autoptr(GByteArray) st = fu_struct_algoltek_aux_rdv_cmd_address_pkt_new();
+{
+	g_autoptr(GByteArray) st = algoltek_aux_rdv_cmd_address_pkt_new();
 
-	fu_struct_algoltek_aux_rdv_cmd_address_pkt_set_i2c_address(st, 0x51);
-	fu_struct_algoltek_aux_rdv_cmd_address_pkt_set_sublen(st, 0);
-	fu_struct_algoltek_aux_rdv_cmd_address_pkt_set_address(st, 0);
-	fu_struct_algoltek_aux_rdv_cmd_address_pkt_set_len(st, 0);
-	fu_struct_algoltek_aux_rdv_cmd_address_pkt_set_cmd(st, 0);
+	algoltek_aux_rdv_cmd_address_pkt_set_i2c_address(st, 0x51);
+	algoltek_aux_rdv_cmd_address_pkt_set_sublen(st, 0);
+	algoltek_aux_rdv_cmd_address_pkt_set_address(st, 0);
+	algoltek_aux_rdv_cmd_address_pkt_set_len(st, 0);
+	algoltek_aux_rdv_cmd_address_pkt_set_cmd(st, 0);
 
 	if(!fu_algoltek_dpaux_device_write(FU_DPAUX_DEVICE(self), st, 20, error))
-		return FALSE;	
-		
+		return FALSE;
 
 	/* success */
 	return TRUE;
 }
+
 static gboolean
 fu_algoltek_aux_device_wrr(FuAlgoltekAuxDevice *self, int address, int inputValue, GError **error)
-{	
-	g_autoptr(GByteArray) st = fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_new();
+{
+	g_autoptr(GByteArray) st = algoltek_aux_en_rst_wrr_cmd_address_pkt_new();
 	gsize length = st->len - 3;
 
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_i2c_address(st, 0x51);
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_sublen(st, length);
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_len(st, length);
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_WRR);
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_address(st, address);
-	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_value(st, inputValue);
-	g_print("\nWRITE");
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_i2c_address(st, 0x51);
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_sublen(st, length);
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_len(st, length);
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_cmd(st, ALGOLTEK_AUX_CMD_WRR);
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_address(st, address);
+	algoltek_aux_en_rst_wrr_cmd_address_pkt_set_value(st, inputValue);
 
 	if(!fu_algoltek_dpaux_device_write(FU_DPAUX_DEVICE(self), st, 20, error))
-		return FALSE;	
-		
-	
+		return FALSE;
+
 	/* success */
 	return TRUE;
 }
 
-
 static GByteArray *
-fu_algoltek_aux_device_ispcrc(FuAlgoltekAuxDevice *self, int serialNo, guint16* WCRC, GError **error)
-{	
-	g_autoptr(GByteArray) st = fu_struct_algoltek_aux_crc_cmd_address_pkt_new();
+fu_algoltek_aux_device_ispcrc(FuAlgoltekAuxDevice *self,
+			      int serialno,
+			      guint16 *wcrc,
+			      GError **error)
+{
+	g_autoptr(GByteArray) st = algoltek_aux_crc_cmd_address_pkt_new();
 	gsize length = st->len - 3;
 
-	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_i2c_address(st, 0x51);
-	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_sublen(st, st->len | 0x80);
-	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_serialno(st, serialNo);
-	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_len(st, st->len);
-	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_ISP);
-	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_wcrc(st, *WCRC);
+	algoltek_aux_crc_cmd_address_pkt_set_i2c_address(st, 0x51);
+	algoltek_aux_crc_cmd_address_pkt_set_sublen(st, st->len | 0x80);
+	algoltek_aux_crc_cmd_address_pkt_set_serialno(st, serialno);
+	algoltek_aux_crc_cmd_address_pkt_set_len(st, st->len);
+	algoltek_aux_crc_cmd_address_pkt_set_cmd(st, ALGOLTEK_AUX_CMD_ISP);
+	algoltek_aux_crc_cmd_address_pkt_set_wcrc(st, *wcrc);
 
 	if(!fu_algoltek_dpaux_device_write(FU_DPAUX_DEVICE(self), st, 20, error))
-		return FALSE;	
+		return FALSE;
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_algoltek_aux_device_isp(FuAlgoltekAuxDevice *self, GInputStream *stream, guint16* WCRC, FuProgress *progress, GError **error)
-{	
-	g_autoptr(GByteArray) st = fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_new();
-	gsize length = st->len - 3;
-	guint16 serialNo = 0;
-	
+fu_algoltek_aux_device_isp(FuAlgoltekAuxDevice *self,
+			   GInputStream *stream,
+			   guint16 *wcrc,
+			   FuProgress *progress,
+			   GError **error)
+{
+	g_autoptr(GByteArray) st = algoltek_aux_isp_flash_write_cmd_address_pkt_new();
 	g_autoptr(FuChunkArray) chunks = NULL;
+	gsize length = st->len - 3;
+	guint16 serialno = 0;
+
 	chunks = fu_chunk_array_new_from_stream(stream, 0, 8, error);
-	if (chunks == NULL)			
+	if (chunks == NULL)
 		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		
 		g_autoptr(FuChunk) chk = NULL;
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		
-		fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_set_i2c_address(st, 0x51);
-		fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_set_sublen(st, length);
-		fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_set_serialno(st, serialNo);
-		fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_set_len(st, length);
-		fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_ISP);
-		if (!fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_set_data(st,
-									fu_chunk_get_data(chk),
-									fu_chunk_get_data_sz(chk),
-									error)) {
-				g_prefix_error(error, "assign isp data failure: ");
-				return FALSE;
-			}
-		
-		for (guint16 crc_i = 0 ; crc_i < 8; crc_i++ ) {
-			*WCRC = gen_crc16(fu_chunk_get_data(chk)[crc_i], *WCRC);
+
+		algoltek_aux_isp_flash_write_cmd_address_pkt_set_i2c_address(st, 0x51);
+		algoltek_aux_isp_flash_write_cmd_address_pkt_set_sublen(st, length);
+		algoltek_aux_isp_flash_write_cmd_address_pkt_set_serialno(st, serialno);
+		algoltek_aux_isp_flash_write_cmd_address_pkt_set_len(st, length);
+		algoltek_aux_isp_flash_write_cmd_address_pkt_set_cmd(st, ALGOLTEK_AUX_CMD_ISP);
+		if (!algoltek_aux_isp_flash_write_cmd_address_pkt_set_data(
+			st,
+			fu_chunk_get_data(chk),
+			fu_chunk_get_data_sz(chk),
+			error)) {
+			g_prefix_error(error, "assign isp data failure: ");
+			return FALSE;
 		}
-		
+
+		for (guint16 crc_i = 0 ; crc_i < 8; crc_i++ ) {
+			*wcrc = gen_crc16(fu_chunk_get_data(chk)[crc_i], *wcrc);
+		}
+
 		if(!fu_algoltek_dpaux_device_write(FU_DPAUX_DEVICE(self), st, 20, error))
 			return FALSE;
-		
-		serialNo += 1;
-		
+
+		serialno += 1;
+
 		if ((i + 1) % 32 == 0) {
-			if (!fu_algoltek_aux_device_ispcrc(self, serialNo, WCRC, error))
+			if (!fu_algoltek_aux_device_ispcrc(self, serialno, wcrc, error))
 				return FALSE;
-			*WCRC = FU_ALGOLTEK_AUX_CMD_CRC_INIT_POLINOM;
-			serialNo += 1;
-			
+			*wcrc = AG_AUX_CRC_INIT_POLINOM;
+			serialno += 1;
 		}
 		fu_progress_step_done(progress);
 	}
@@ -282,18 +277,18 @@ fu_algoltek_aux_device_isp(FuAlgoltekAuxDevice *self, GInputStream *stream, guin
 
 static gboolean
 fu_algoltek_aux_device_bot(FuAlgoltekAuxDevice *self, int address, GError **error)
-{	
-	g_autoptr(GByteArray) st = fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_new();
+{
+	g_autoptr(GByteArray) st = algoltek_aux_bot_ers_cmd_address_pkt_new();
 	gsize length = st->len - 3;
 
-	fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_set_i2c_address(st, 0x51);
-	fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_set_sublen(st, length + 1);
-	fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_set_len(st, length);
-	fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_BOT);
-	fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_set_address(st, address);
+	algoltek_aux_bot_ers_cmd_address_pkt_set_i2c_address(st, 0x51);
+	algoltek_aux_bot_ers_cmd_address_pkt_set_sublen(st, length + 1);
+	algoltek_aux_bot_ers_cmd_address_pkt_set_len(st, length);
+	algoltek_aux_bot_ers_cmd_address_pkt_set_cmd(st, ALGOLTEK_AUX_CMD_BOT);
+	algoltek_aux_bot_ers_cmd_address_pkt_set_address(st, address);
 
 	if(!fu_algoltek_dpaux_device_write(FU_DPAUX_DEVICE(self), st, 20, error))
-		return FALSE;	
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -301,39 +296,41 @@ fu_algoltek_aux_device_bot(FuAlgoltekAuxDevice *self, int address, GError **erro
 
 static gboolean
 fu_algoltek_aux_device_ers(FuAlgoltekAuxDevice *self, GError **error)
-{	
-	g_autoptr(GByteArray) st = fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_new();
+{
+	g_autoptr(GByteArray) st = algoltek_aux_bot_ers_cmd_address_pkt_new();
 	gsize length = st->len - 3;
 
-	fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_set_i2c_address(st, 0x51);
-	fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_set_sublen(st, length + 1);
-	fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_set_len(st, length);
-	fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_ERS);
-	fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_set_address(st, 0x6000);
+	algoltek_aux_bot_ers_cmd_address_pkt_set_i2c_address(st, 0x51);
+	algoltek_aux_bot_ers_cmd_address_pkt_set_sublen(st, length + 1);
+	algoltek_aux_bot_ers_cmd_address_pkt_set_len(st, length);
+	algoltek_aux_bot_ers_cmd_address_pkt_set_cmd(st, ALGOLTEK_AUX_CMD_ERS);
+	algoltek_aux_bot_ers_cmd_address_pkt_set_address(st, 0x6000);
 
 	if(!fu_algoltek_dpaux_device_write(FU_DPAUX_DEVICE(self), st, 20, error))
-		return FALSE;	
+		return FALSE;
 
 	/* success */
 	return TRUE;
 }
 
-
 static GByteArray *
-fu_algoltek_aux_device_wrfcrc(FuAlgoltekAuxDevice *self, int serialNo, guint16* WCRC, GError **error)
+fu_algoltek_aux_device_wrfcrc(FuAlgoltekAuxDevice *self,
+			      int serialno,
+			      guint16 *wcrc,
+			      GError **error)
 {
-	g_autoptr(GByteArray) st = fu_struct_algoltek_aux_crc_cmd_address_pkt_new();
+	g_autoptr(GByteArray) st = algoltek_aux_crc_cmd_address_pkt_new();
 	gsize length = st->len - 3;
-    
-	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_i2c_address(st, 0x51);
-	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_sublen(st, length | 0x80);
-	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_serialno(st, serialNo);
-	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_len(st, 0x04);
-	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_ISP);
-	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_wcrc(st, *WCRC);
-	
+
+	algoltek_aux_crc_cmd_address_pkt_set_i2c_address(st, 0x51);
+	algoltek_aux_crc_cmd_address_pkt_set_sublen(st, length | 0x80);
+	algoltek_aux_crc_cmd_address_pkt_set_serialno(st, serialno);
+	algoltek_aux_crc_cmd_address_pkt_set_len(st, 0x04);
+	algoltek_aux_crc_cmd_address_pkt_set_cmd(st, ALGOLTEK_AUX_CMD_ISP);
+	algoltek_aux_crc_cmd_address_pkt_set_wcrc(st, *wcrc);
+
 	if(!fu_algoltek_dpaux_device_write(FU_DPAUX_DEVICE(self), st, 10, error))
-		return FALSE;	
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -341,15 +338,19 @@ fu_algoltek_aux_device_wrfcrc(FuAlgoltekAuxDevice *self, int serialNo, guint16* 
 }
 
 static gboolean
-fu_algoltek_aux_device_wrf(FuAlgoltekAuxDevice *self, GInputStream *stream, guint16* WCRC, FuProgress *progress, GError **error)
-{	
-	g_autoptr(GByteArray) st = fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_new();
+fu_algoltek_aux_device_wrf(FuAlgoltekAuxDevice *self,
+			   GInputStream *stream,
+			   guint16 *wcrc,
+			   FuProgress *progress,
+			   GError **error)
+{
+	g_autoptr(GByteArray) st = algoltek_aux_isp_flash_write_cmd_address_pkt_new();
+	g_autoptr(FuChunkArray) chunks = NULL;
 	gsize length = st->len - 3;
-    guint16 serialNo = 1;
-    guint8 startLength = 0;
+	guint8 start_length = 0;
+	guint16 serialno = 1;
 	guint firmwareBufferCount = 0;
 
-	g_autoptr(FuChunkArray) chunks = NULL;
 	chunks = fu_chunk_array_new_from_stream(stream, 0, 8, error);
 	if (chunks == NULL)
 		return FALSE;
@@ -358,64 +359,61 @@ fu_algoltek_aux_device_wrf(FuAlgoltekAuxDevice *self, GInputStream *stream, guin
 
 	g_autoptr(GByteArray) firmwareBytesArray = NULL;
 	firmwareBytesArray = fu_input_stream_read_byte_array(stream, 0, AG_FIRMWARE_AUX_SIZE, error);
-	if (firmwareBytesArray == NULL) {
+	if (firmwareBytesArray == NULL)
 		return FALSE;
-	} 
 
 	for (guint i = 0; i < fu_chunk_array_length(chunks) ; i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		
-		fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_set_i2c_address(st, 0x51);
-		fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_set_sublen(st, length | startLength);
-		fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_set_serialno(st, serialNo);
-		fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_set_len(st, length - 1);
-		fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_WRF);
+
+		algoltek_aux_isp_flash_write_cmd_address_pkt_set_i2c_address(st, 0x51);
+		algoltek_aux_isp_flash_write_cmd_address_pkt_set_sublen(st, length | start_length);
+		algoltek_aux_isp_flash_write_cmd_address_pkt_set_serialno(st, serialno);
+		algoltek_aux_isp_flash_write_cmd_address_pkt_set_len(st, length - 1);
+		algoltek_aux_isp_flash_write_cmd_address_pkt_set_cmd(st, ALGOLTEK_AUX_CMD_WRF);
 
 		for (guint16 i= 0 ; i < 8; i++ ) {
 			st->data[i + 6] = firmwareBytesArray->data[i + firmwareBufferCount];
-			*WCRC = gen_crc16(st->data[i + 6], *WCRC);
+			*wcrc = gen_crc16(st->data[i + 6], *wcrc);
 		}
-		
+
 		if(!fu_algoltek_dpaux_device_write(FU_DPAUX_DEVICE(self), st, 10, error))
 			return FALSE;
 		fu_algoltek_aux_device_dummy(self, error);
 		firmwareBufferCount += 8;
-        serialNo += 1;
+		serialno += 1;
 
-        if ((i + 1) % 32 == 31) {
-            startLength = 0x40;
-        } else {
-            startLength = 0x00;
-        }
+		if ((i + 1) % 32 == 31) {
+			start_length = 0x40;
+		} else {
+			start_length = 0x00;
+		}
 
-        if ((i + 1) % 32 == 0) {
-			g_print("\nRamWrite: %d",  serialNo);
-			//g_print("\nWRFCRC %x", *WCRC);
-            if (!fu_algoltek_aux_device_wrfcrc(self, serialNo, WCRC, error))
-				return FALSE;
-			fu_algoltek_aux_device_dummy(self, error);
-			*WCRC = FU_ALGOLTEK_AUX_CMD_CRC_INIT_POLINOM;
-            serialNo += 1;
-        }
+	if ((i + 1) % 32 == 0) {
+		g_print("\nRamWrite: %d", serialno);
+		// g_print("\nWRFCRC %x", *wcrc);
+		if (!fu_algoltek_aux_device_wrfcrc(self, serialno, wcrc, error))
+			return FALSE;
+		fu_algoltek_aux_device_dummy(self, error);
+		*wcrc = AG_AUX_CRC_INIT_POLINOM;
+		serialno += 1;
+	}
 		fu_progress_step_done(progress);
 	}
 	/* success */
 	return TRUE;
 }
 
-
 static gboolean
 fu_algoltek_aux_device_write_firmware(FuDevice *device, FuFirmware *firmware, FuProgress *progress, FwupdInstallFlags flags, GError **error)
-{	
-	FuAlgoltekAuxDevice *self = FU_ALGOLTEK_AUX_DEVICE(device);
-	guint32 firmwareBufferCount = 0;
-	guint16 WCRC = 0x1021;
-
+{
 	g_autoptr(GInputStream) stream_isp = NULL;
 	g_autoptr(GInputStream) stream_payload = NULL;
+	FuAlgoltekAuxDevice *self = FU_ALGOLTEK_AUX_DEVICE(device);
+	guint16 wcrc = 0x1021;
+	guint32 firmwareBufferCount = 0;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -425,7 +423,7 @@ fu_algoltek_aux_device_write_firmware(FuDevice *device, FuFirmware *firmware, Fu
 
 	if (!fu_algoltek_aux_device_en(self, error))
 		return FALSE;
-	
+
 	if (!fu_algoltek_aux_device_rst(self, error))
 		return FALSE;
 
@@ -458,9 +456,13 @@ fu_algoltek_aux_device_write_firmware(FuDevice *device, FuFirmware *firmware, Fu
 	stream_isp = fu_firmware_get_image_by_id_stream(firmware, "isp", error);
 	if (stream_isp == NULL)
 		return FALSE;
-	
-    if (!fu_algoltek_aux_device_isp(self, stream_isp, &WCRC, fu_progress_get_child(progress), error))
-				return FALSE;
+
+	if (!fu_algoltek_aux_device_isp(self,
+					stream_isp,
+					&wcrc,
+					fu_progress_get_child(progress),
+					error))
+		return FALSE;
 
 	fu_device_sleep(FU_DEVICE(self), 2000);
 #if 1
@@ -481,11 +483,14 @@ fu_algoltek_aux_device_write_firmware(FuDevice *device, FuFirmware *firmware, Fu
 
 
 #if 1
-    if (!fu_algoltek_aux_device_wrf(self, stream_payload, &WCRC, fu_progress_get_child(progress), error))
-	    return FALSE;
+	if (!fu_algoltek_aux_device_wrf(self,
+					stream_payload,
+					&wcrc,
+					fu_progress_get_child(progress),
+					error))
+		return FALSE;
 
 #endif
-	
 #endif
 	/* success */
 	return TRUE;
@@ -494,11 +499,11 @@ fu_algoltek_aux_device_write_firmware(FuDevice *device, FuFirmware *firmware, Fu
 static gboolean
 fu_algoltek_aux_device_setup(FuDevice *device, FuFirmware *firmware, GError **error)
 {
-	FuAlgoltekAuxDevice *self = FU_ALGOLTEK_AUX_DEVICE(device);
-	g_autofree gchar *version_str = NULL;
 	g_autoptr(GByteArray) version_data = NULL;
 	g_autoptr(GByteArray) guid_data = g_byte_array_new();
 	fu_byte_array_set_size(guid_data, 4, 0x0);
+	FuAlgoltekAuxDevice *self = FU_ALGOLTEK_AUX_DEVICE(device);
+	g_autofree gchar *version_str = NULL;
 
 	/* AuxDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_algoltek_aux_device_parent_class)->setup(device, error))
@@ -506,7 +511,6 @@ fu_algoltek_aux_device_setup(FuDevice *device, FuFirmware *firmware, GError **er
 
 	version_data = fu_algoltek_aux_device_rdv(self, error);
 
-	g_print("\nSETUP\n");
 	if (version_data == NULL) {
 		return NULL;
 	}
@@ -515,16 +519,18 @@ fu_algoltek_aux_device_setup(FuDevice *device, FuFirmware *firmware, GError **er
 
 	fu_device_set_version(FU_DEVICE(self), version_str);
 	g_autofree gchar *product = NULL;
-	
-	product = g_strdup_printf("MST-ALGOLTEK");
-	
-	
+
+	product = g_strdup_printf("MST-%c%c%c%c",
+				  version_data->data[2],
+				  version_data->data[3],
+				  version_data->data[4],
+				  version_data->data[5]);
+
 	fu_device_add_instance_id(FU_DEVICE(self), product);
-	
+
 	/* success */
 	return TRUE;
 }
-
 
 static void
 fu_algoltek_aux_device_set_progress(FuDevice *self, FuProgress *progress)
@@ -541,14 +547,13 @@ fu_algoltek_aux_device_init(FuAlgoltekAuxDevice *self)
 {
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.algoltek.aux");
-	fu_device_add_vendor_id(FU_DEVICE(self), "DRM_DP_AUX_DEV:0x25A4");
+	fu_device_add_vendor_id(FU_DEVICE(self), "drm_dp_aux_dev:0x25a4");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE); //Selected device to upgrade
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ALGOLTEK_AUX_FIRMWARE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }
-
 
 static void
 fu_algoltek_aux_device_class_init(FuAlgoltekAuxDeviceClass *klass)
