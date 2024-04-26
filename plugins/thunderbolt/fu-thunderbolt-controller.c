@@ -171,6 +171,8 @@ fu_thunderbolt_controller_setup_usb4(FuThunderboltController *self, GError **err
 {
 	if (!fu_thunderbolt_udev_set_port_offline(FU_UDEV_DEVICE(self), error))
 		return FALSE;
+	if (self->host_online_timer_id > 0)
+		g_source_remove(self->host_online_timer_id);
 	self->host_online_timer_id =
 	    g_timeout_add_seconds(5, fu_thunderbolt_controller_set_port_online_cb, self);
 	return TRUE;
