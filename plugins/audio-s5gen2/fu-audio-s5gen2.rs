@@ -1,7 +1,6 @@
 // Copyright 2023 Denis Pynkin <denis.pynkin@collabora.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(ToString)]
 #[repr(u8)]
 // Upgrade protocol OpCode
 enum FuQcOpcode {
@@ -28,11 +27,6 @@ enum FuQcOpcode {
     ErrorRes = 0x1F,
 }
 
-#[repr(u8)]
-enum FuQcAction {
-    Proceed = 0,
-    NotProceed = 1,
-}
 
 #[repr(u8)]
 enum FuQcReq {
@@ -42,10 +36,12 @@ enum FuQcReq {
 #[derive(New)]
 struct FuStructQcConnectReq {
     req: FuQcReq == Connect,
+    data_len: u16be,
 }
 #[derive(New)]
 struct FuStructQcDisconnectReq {
     req: FuQcReq == Disconnect,
+    data_len: u16be,
 }
 
 #[derive(ToString)]
@@ -95,6 +91,7 @@ enum FuQcResumePoint {
     PreValidate,
     PreReboot,
     PostReboot,
+    Commit,
     PostCommit,
 }
 #[derive(New)]
@@ -135,7 +132,6 @@ struct FuStructQcStart {
 struct FuStructQcStartDataReq {
     opcode: FuQcOpcode == StartDataReq,
     data_len: u16be = 0x00,
-    data: [u8; 250],
 }
 
 #[repr(u8)]
@@ -155,7 +151,6 @@ struct FuStructQcData {
     opcode: FuQcOpcode == Data,
     data_len: u16be,
     last_packet: FuQcMoreData,
-    data: [u8; 249],
 }
 
 #[derive(New)]
@@ -164,24 +159,40 @@ struct FuStructQcValidationReq {
     data_len: u16be = 0x00,
 }
 #[derive(Parse)]
-struct FuStructQcValidation {
-    opcode: FuQcOpcode, // Could be TransferCompleteInd or IsValidationDoneCfm
+struct FuStructQcIsValidationDone {
+    opcode: FuQcOpcode == IsValidationDoneCfm,
     data_len: u16be,
     delay: u16be,
 }
+#[derive(Parse)]
+struct FuStructQcTransferCompleteInd {
+    opcode: FuQcOpcode == TransferCompleteInd,
+    data_len: u16be,
+}
 
+#[repr(u8)]
+enum FuQcTransferAction {
+    Interactive = 0,
+    Abort = 1,
+    Silent = 2,
+}
 #[derive(New)]
 struct FuStructQcTransferComplete {
     opcode: FuQcOpcode == TransferCompleteRes,
     data_len: u16be = 0x01,
-    action: FuQcAction,
+    action: FuQcTransferAction,
 }
 
+#[repr(u8)]
+enum FuQcCommitAction {
+    Proceed = 0,
+    NotProceed = 1,
+}
 #[derive(New)]
 struct FuStructQcProceedToCommit {
     opcode: FuQcOpcode == ProceedToCommit,
     data_len: u16be = 0x01,
-    action: FuQcAction,
+    action: FuQcCommitAction,
 }
 #[derive(Parse)]
 struct FuStructQcCommitReq {
@@ -190,7 +201,7 @@ struct FuStructQcCommitReq {
 }
 
 #[repr(u8)]
-enum FuQcCommitAction {
+enum FuQcCommitCfmAction {
     Upgrade = 0,
     Rollback = 1,
 }
@@ -198,10 +209,23 @@ enum FuQcCommitAction {
 struct FuStructQcCommitCfm {
     opcode: FuQcOpcode == CommitCfm,
     data_len: u16be = 0x01,
-    action: FuQcCommitAction,
+    action: FuQcCommitCfmAction,
 }
 #[derive(Parse)]
 struct FuStructQcComplete {
     opcode: FuQcOpcode == CompleteInd,
     data_len: u16be = 0x00,
+}
+
+#[derive(Parse)]
+struct FuStructQcErrorInd {
+    opcode: FuQcOpcode == ErrorInd,
+    data_len: u16be = 0x02,
+    error_code: u16be,
+}
+#[derive(New)]
+struct FuStructQcErrorRes {
+    opcode: FuQcOpcode == ErrorRes,
+    data_len: u16be = 0x02,
+    error_code: u16be,
 }

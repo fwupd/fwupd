@@ -92,6 +92,10 @@ class Checker:
             "fu_audio_s5gen2_firmware": "fu_qc_s5gen2_firmware",
             "fu_audio_s5gen2": "fu_qc_s5gen2",  # FIXME: rename after merging #7638
             "fu_audio_s5gen2_hid": "fu_qc_s5gen2_hid",
+            "fu_audio_s5gen2_ble": "fu_qc_s5gen2_ble",
+            "fu_audio_s5gen2_hid_device": "fu_qc_s5gen2_hid_device",
+            "fu_audio_s5gen2_ble_device": "fu_qc_s5gen2_ble_device",
+            "fu_crc": "fu_misr",  # FIXME: split out to fu-misr.[c|h]
             "fu_darwin_efivars": "fu_efivars",
             "fu_dbus_daemon": "fu_daemon",
             "fu_dbxtool": "fu_util",

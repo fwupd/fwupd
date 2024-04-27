@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-audio-s5gen2-ble-device.h"
 #include "fu-audio-s5gen2-device.h"
 #include "fu-audio-s5gen2-firmware.h"
 #include "fu-audio-s5gen2-hid-device.h"
@@ -26,6 +27,9 @@ static void
 fu_audio_s5gen2_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	fu_context_add_quirk_key(ctx, "AudioS5gen2Gaia3VendorId");
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_QC_S5GEN2_BLE_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_QC_S5GEN2_HID_DEVICE);
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_QC_S5GEN2_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_QC_S5GEN2_FIRMWARE);

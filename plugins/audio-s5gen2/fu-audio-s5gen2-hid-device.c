@@ -11,13 +11,15 @@
 #include "fu-audio-s5gen2-hid-device.h"
 #include "fu-audio-s5gen2-hid-struct.h"
 #include "fu-audio-s5gen2-impl.h"
+#include "fu-audio-s5gen2-struct.h"
 
 #define HID_IFACE  0x01
 #define HID_EP_IN  0x82
 #define HID_EP_OUT 0x01
 
-/* FIXME: value :-| */
 #define FU_QC_S5GEN2_HID_DEVICE_TIMEOUT 0 /* ms */
+
+#define FU_QC_S5GEN2_HID_DEVICE_MAX_TRANSFER_SIZE 255
 
 struct _FuQcS5gen2HidDevice {
 	FuHidDevice parent_instance;
@@ -52,7 +54,11 @@ fu_qc_s5gen2_hid_device_msg_out(FuQcS5gen2Impl *impl, guint8 *data, gsize data_l
 }
 
 static gboolean
-fu_qc_s5gen2_hid_device_msg_in(FuQcS5gen2Impl *impl, guint8 *data, gsize data_len, GError **error)
+fu_qc_s5gen2_hid_device_msg_in(FuQcS5gen2Impl *impl,
+			       guint8 *data,
+			       gsize data_len,
+			       gsize *read_len,
+			       GError **error)
 {
 	FuQcS5gen2HidDevice *self = FU_QC_S5GEN2_HID_DEVICE(impl);
 	guint8 buf[FU_STRUCT_QC_HID_RESPONSE_SIZE] = {0x0};
@@ -81,6 +87,8 @@ fu_qc_s5gen2_hid_device_msg_in(FuQcS5gen2Impl *impl, guint8 *data, gsize data_le
 			    error))
 		return FALSE;
 
+	*read_len = fu_struct_qc_hid_response_get_payload_len(msg);
+
 	return TRUE;
 }
 
@@ -101,6 +109,64 @@ fu_qc_s5gen2_hid_device_msg_cmd(FuQcS5gen2Impl *impl, guint8 *data, gsize data_l
 					0,
 					FU_HID_DEVICE_FLAG_IS_FEATURE,
 					error);
+}
+
+static gboolean
+fu_qc_s5gen2_hid_device_cmd_req_disconnect(FuQcS5gen2Impl *impl, GError **error)
+{
+	g_autoptr(GByteArray) req = fu_struct_qc_disconnect_req_new();
+	return fu_qc_s5gen2_hid_device_msg_cmd(impl, req->data, req->len, error);
+}
+
+static gboolean
+fu_qc_s5gen2_hid_device_cmd_req_connect(FuQcS5gen2Impl *impl, GError **error)
+{
+	guint8 data_in[FU_STRUCT_QC_UPDATE_STATUS_SIZE] = {0x0};
+	gsize read_len;
+	FuQcStatus update_status;
+	g_autoptr(GByteArray) req = fu_struct_qc_connect_req_new();
+	g_autoptr(GByteArray) st = NULL;
+
+	if (!fu_qc_s5gen2_hid_device_msg_cmd(impl, req->data, req->len, error))
+		return FALSE;
+	if (!fu_qc_s5gen2_hid_device_msg_in(impl, data_in, sizeof(data_in), &read_len, error))
+		return FALSE;
+	st = fu_struct_qc_update_status_parse(data_in, read_len, 0, error);
+	if (st == NULL)
+		return FALSE;
+
+	update_status = fu_struct_qc_update_status_get_status(st);
+	switch (update_status) {
+	case FU_QC_STATUS_SUCCESS:
+		break;
+	case FU_QC_STATUS_ALREADY_CONNECTED_WARNING:
+		g_debug("device is already connected");
+		break;
+	default:
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "invalid update status (%s)",
+			    fu_qc_status_to_string(update_status));
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_qc_s5gen2_hid_device_data_size(FuQcS5gen2Impl *impl, gsize *data_sz, GError **error)
+{
+	if (FU_QC_S5GEN2_HID_DEVICE_MAX_TRANSFER_SIZE <= FU_STRUCT_QC_DATA_SIZE + 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "MTU is not sufficient");
+		return FALSE;
+	}
+
+	*data_sz = FU_QC_S5GEN2_HID_DEVICE_MAX_TRANSFER_SIZE - FU_STRUCT_QC_DATA_SIZE - 2;
+	return TRUE;
 }
 
 static gboolean
@@ -157,7 +223,9 @@ fu_qc_s5gen2_hid_device_impl_iface_init(FuQcS5gen2ImplInterface *iface)
 {
 	iface->msg_in = fu_qc_s5gen2_hid_device_msg_in;
 	iface->msg_out = fu_qc_s5gen2_hid_device_msg_out;
-	iface->msg_cmd = fu_qc_s5gen2_hid_device_msg_cmd;
+	iface->req_connect = fu_qc_s5gen2_hid_device_cmd_req_connect;
+	iface->req_disconnect = fu_qc_s5gen2_hid_device_cmd_req_disconnect;
+	iface->data_size = fu_qc_s5gen2_hid_device_data_size;
 }
 
 static void
