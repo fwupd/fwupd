@@ -1,5 +1,18 @@
-# 5171 devboard
+# 5171 devboard connected via USB
 [USB\VID_0A12&PID_4007]
 Plugin = audio_s5gen2
 Flags = enforce-requires
 ProxyGType = FuQcS5gen2HidDevice
+
+# 5171 devboard connected via BT
+[BLUETOOTH\NAME_QCC5171]
+Plugin = audio_s5gen2
+Flags = enforce-requires
+ProxyGType = FuQcS5gen2BleDevice
+AudioS5gen2Gaia3VendorId = 0x001D
+
+# by GAIA primary service with default vendor ID
+[BLUETOOTH\GATT_00001100-d102-11e1-9b23-00025b00a5a5]
+Plugin = audio_s5gen2
+ProxyGType = FuQcS5gen2BleDevice
+AudioS5gen2Gaia3VendorId = 0x001D
