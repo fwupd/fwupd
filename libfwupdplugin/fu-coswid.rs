@@ -100,6 +100,7 @@ enum CoswidEntityRole {
     Distributor,
     Licensor,
     Maintainer,
+    Last,
 }
 
 #[derive(ToString, FromString)]
