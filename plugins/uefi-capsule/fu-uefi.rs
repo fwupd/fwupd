@@ -51,17 +51,15 @@ enum UefiDeviceKind {
     UefiDriver,
     Fmp,
     DellTpmFirmware,
-    Last,
 }
 #[derive(ToString)]
 enum UefiDeviceStatus {
-    Success = 0x00,
-    ErrorUnsuccessful = 0x01,
-    ErrorInsufficientResources = 0x02,
-    ErrorIncorrectVersion = 0x03,
-    ErrorInvalidFormat = 0x04,
-    ErrorAuthError = 0x05,
-    ErrorPwrEvtAc = 0x06,
-    ErrorPwrEvtBatt = 0x07,
-    Last,
+    Success,
+    ErrorUnsuccessful,
+    ErrorInsufficientResources,
+    ErrorIncorrectVersion,
+    ErrorInvalidFormat,
+    ErrorAuthError,
+    ErrorPwrEvtAc,
+    ErrorPwrEvtBatt,
 }

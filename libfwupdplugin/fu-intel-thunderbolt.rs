@@ -7,7 +7,6 @@ enum IntelThunderboltNvmSection {
     Drom,
     ArcParams,
     DramUcode,
-    Last,
 }
 
 #[derive(ToString, FromString)]

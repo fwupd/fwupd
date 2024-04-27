@@ -26,7 +26,6 @@ enum EngineInstallPhase {
     Reload,
     CompositePrepare,
     CompositeCleanup,
-    Last,
 }
 
 #[derive(ToBitString)]

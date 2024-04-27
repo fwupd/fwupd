@@ -22,7 +22,7 @@ enum CcgxDmcImgStatus {
 #[repr(u8)]
 enum CcgxDmcImgMode {
     // indicates that the device has a single image
-    SingleImg = 0,
+    SingleImg,
     // the device supports symmetric boot. In symmetric mode the bootloader
     // boots the image with higher version, when they are valid
     DualImgSym,
@@ -31,7 +31,6 @@ enum CcgxDmcImgMode {
     // image. Secondary acts as recovery
     DualImgAsym,
     SingleImgWithRamImg,
-    Last,
 }
 
 // dock status

@@ -27,7 +27,6 @@ enum CcgxFwMode {
     Boot,
     Fw1,
     Fw2,
-    Last,
 }
 #[derive(ToString)]
 enum CcgxPdResp {
