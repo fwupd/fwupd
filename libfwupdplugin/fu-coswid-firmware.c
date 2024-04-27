@@ -46,7 +46,7 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuCoswidFirmware, fu_coswid_firmware, FU_TYPE_FIRMWAR
 typedef struct {
 	gchar *name;
 	gchar *regid;
-	FuCoswidEntityRole roles[6];
+	guint8 roles; /* bitfield of FuCoswidEntityRole */
 } FuCoswidFirmwareEntity;
 
 typedef struct {
@@ -406,7 +406,6 @@ fu_coswid_firmware_parse_entity(cbor_item_t *item, gpointer user_data, GError **
 	FuCoswidFirmware *self = FU_COSWID_FIRMWARE(user_data);
 	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	struct cbor_pair *pairs = cbor_map_handle(item);
-	guint entity_role_cnt = 0;
 	g_autoptr(FuCoswidFirmwareEntity) entity = g_new0(FuCoswidFirmwareEntity, 1);
 
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
@@ -434,32 +433,34 @@ fu_coswid_firmware_parse_entity(cbor_item_t *item, gpointer user_data, GError **
 					g_prefix_error(error, "failed to parse entity role: ");
 					return FALSE;
 				}
-				entity->roles[entity_role_cnt++] = role8;
+				if (role8 >= FU_COSWID_ENTITY_ROLE_LAST) {
+					g_set_error(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "invalid entity role 0x%x",
+						    role8);
+					return FALSE;
+				}
+				entity->roles |= 1u << role8;
 			} else if (cbor_isa_array(pairs[i].value)) {
 				for (guint j = 0; j < cbor_array_size(pairs[i].value); j++) {
 					guint8 role8 = 0;
 					g_autoptr(cbor_item_t) value =
 					    cbor_array_get(pairs[i].value, j);
-					if (!cbor_isa_uint(value)) {
-						g_set_error_literal(error,
-								    FWUPD_ERROR,
-								    FWUPD_ERROR_INVALID_DATA,
-								    "entity role is not a uint");
-						return FALSE;
-					}
-					if (entity_role_cnt >= G_N_ELEMENTS(entity->roles)) {
-						g_set_error_literal(error,
-								    FWUPD_ERROR,
-								    FWUPD_ERROR_INVALID_DATA,
-								    "too many roles");
-						return FALSE;
-					}
 					if (!fu_coswid_read_u8(value, &role8, error)) {
 						g_prefix_error(error,
 							       "failed to parse entity role: ");
 						return FALSE;
 					}
-					entity->roles[entity_role_cnt++] = role8;
+					if (role8 >= FU_COSWID_ENTITY_ROLE_LAST) {
+						g_set_error(error,
+							    FWUPD_ERROR,
+							    FWUPD_ERROR_INVALID_DATA,
+							    "invalid entity role 0x%x",
+							    role8);
+						return FALSE;
+					}
+					entity->roles |= 1u << role8;
 				}
 			} else {
 				g_set_error_literal(error,
@@ -796,11 +797,12 @@ fu_coswid_firmware_write(FuFirmware *firmware, GError **error)
 							   FU_COSWID_TAG_REG_ID,
 							   entity->regid);
 			}
-			for (guint j = 0; entity->roles[j] != FU_COSWID_ENTITY_ROLE_UNKNOWN; j++) {
-				g_autoptr(cbor_item_t) item_role =
-				    cbor_build_uint8(entity->roles[j]);
-				if (!cbor_array_push(item_roles, item_role))
-					g_critical("failed to push to indefinite array");
+			for (guint j = 0; j < FU_COSWID_ENTITY_ROLE_LAST; j++) {
+				if (entity->roles & (1u << j)) {
+					g_autoptr(cbor_item_t) item_role = cbor_build_uint8(j);
+					if (!cbor_array_push(item_roles, item_role))
+						g_critical("failed to push to indefinite array");
+				}
 			}
 			fu_coswid_write_tag_item(item_entity, FU_COSWID_TAG_ROLE, item_roles);
 			if (!cbor_array_push(item_entities, item_entity))
@@ -861,7 +863,6 @@ fu_coswid_firmware_build_entity(FuCoswidFirmware *self, XbNode *n, GError **erro
 {
 	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
-	guint entity_role_cnt = 0;
 	FuCoswidEntityRole role;
 	g_autoptr(GPtrArray) roles = NULL;
 	g_autoptr(FuCoswidFirmwareEntity) entity = g_new0(FuCoswidFirmwareEntity, 1);
@@ -883,7 +884,8 @@ fu_coswid_firmware_build_entity(FuCoswidFirmware *self, XbNode *n, GError **erro
 			XbNode *c = g_ptr_array_index(roles, i);
 			tmp = xb_node_get_text(c);
 			role = fu_coswid_entity_role_from_string(tmp);
-			if (role == FU_COSWID_ENTITY_ROLE_UNKNOWN) {
+			if (role == FU_COSWID_ENTITY_ROLE_UNKNOWN ||
+			    role >= FU_COSWID_ENTITY_ROLE_LAST) {
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_DATA,
@@ -891,14 +893,7 @@ fu_coswid_firmware_build_entity(FuCoswidFirmware *self, XbNode *n, GError **erro
 					    tmp);
 				return FALSE;
 			}
-			if (entity_role_cnt >= G_N_ELEMENTS(entity->roles)) {
-				g_set_error_literal(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_INVALID_DATA,
-						    "too many roles");
-				return FALSE;
-			}
-			entity->roles[entity_role_cnt++] = role;
+			entity->roles |= 1u << role;
 		}
 	}
 
@@ -1118,11 +1113,12 @@ fu_coswid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "entity", NULL);
 		fu_xmlb_builder_insert_kv(bc, "name", entity->name);
 		fu_xmlb_builder_insert_kv(bc, "regid", entity->regid);
-		for (guint j = 0; entity->roles[j] != FU_COSWID_ENTITY_ROLE_UNKNOWN; j++) {
-			fu_xmlb_builder_insert_kv(
-			    bc,
-			    "role",
-			    fu_coswid_entity_role_to_string(entity->roles[j]));
+		for (guint j = 0; j < FU_COSWID_ENTITY_ROLE_LAST; j++) {
+			if (entity->roles & (1u << j)) {
+				fu_xmlb_builder_insert_kv(bc,
+							  "role",
+							  fu_coswid_entity_role_to_string(j));
+			}
 		}
 	}
 }
