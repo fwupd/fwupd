@@ -100,7 +100,6 @@ enum FuCoswidEntityRole {
     Distributor,
     Licensor,
     Maintainer,
-    Last,
 }
 
 #[derive(ToString, FromString)]

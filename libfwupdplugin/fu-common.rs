@@ -5,7 +5,6 @@ enum FuCpuVendor {
     Unknown,
     Intel,
     Amd,
-    Last,
 }
 
 #[derive(ToString)]
@@ -17,7 +16,6 @@ enum FuPowerState {
     Battery,                // On system battery
     BatteryDischarging,     // System battery discharging
     BatteryEmpty,           // System battery empty
-    Last,
 }
 
 #[derive(ToString)]
@@ -25,7 +23,6 @@ enum FuLidState {
     Unknown,
     Open,
     Closed,
-    Last,
 }
 
 #[derive(ToString)]
@@ -33,5 +30,4 @@ enum FuDisplayState {
     Unknown,
     Connected,
     Disconnected,
-    Last,
 }
