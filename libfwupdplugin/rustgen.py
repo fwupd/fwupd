@@ -78,6 +78,19 @@ class EnumObj:
             return self.name
         return f"Fu{self.name}"
 
+    @property
+    def c_define_last(self) -> str:
+        if self.name.startswith("Fu"):
+            return f"{_camel_to_snake(self.name).upper()}_LAST"
+        return f"FU_{_camel_to_snake(self.name).upper()}_LAST"
+
+    @property
+    def items_any_defaults(self) -> bool:
+        for item in self.items:
+            if item.default:
+                return True
+        return False
+
     def item(self, name: str) -> Optional["EnumItem"]:
         for item in self.items:
             if item.name == name:
