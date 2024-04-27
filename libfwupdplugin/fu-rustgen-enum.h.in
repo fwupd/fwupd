@@ -8,6 +8,10 @@ typedef enum {
 {%- endfor %}
 } {{obj.c_type}};
 
+{%- if not obj.items_any_defaults %}
+#define {{obj.c_define_last}} {{obj.items|length}}
+{%- endif %}
+
 {%- if obj.export('ToString') == Export.PUBLIC %}
 const gchar *{{obj.c_method('ToString')}}({{obj.c_type}} val);
 {%- endif %}

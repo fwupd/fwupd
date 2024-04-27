@@ -26,7 +26,6 @@ enum FuEngineInstallPhase {
     Reload,
     CompositePrepare,
     CompositeCleanup,
-    Last,
 }
 
 #[derive(ToBitString)]
