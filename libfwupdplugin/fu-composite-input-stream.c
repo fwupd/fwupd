@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-composite-input-stream.h"
+#include "fu-partial-input-stream-private.h"
 
 /**
  * FuCompositeInputStream:
