@@ -52,6 +52,7 @@ jobs:
         with:
           flag-name: run-${{ join(matrix.*, '-') }}
           parallel: true
+          debug: true
 
   finish:
     needs: build
