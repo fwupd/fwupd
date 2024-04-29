@@ -323,6 +323,17 @@ fu_input_stream_read_byte_array(GInputStream *stream, gsize offset, gsize count,
 		if (buf->len >= count)
 			break;
 	}
+
+	/* no data was read */
+	if (buf->len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no data could be read");
+		return NULL;
+	}
+
+	/* success */
 	return g_steal_pointer(&buf);
 }
 
