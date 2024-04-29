@@ -43,13 +43,6 @@ jobs:
           CI: true
         run: |
           docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest contrib/ci/${{matrix.os}}-test.sh
-      - name: Coveralls
-        if: matrix.os == 'debian-x86_64' || matrix.os == 'debian-i386'
-        uses: coverallsapp/github-action@3dfc5567390f6fa9267c0ee9c251e4c8c3f18949 # v2.2.3
-        with:
-          flag-name: run-${{ join(matrix.*, '-') }}
-          parallel: true
-          debug: true
       - name: Upload Coverage optional
         if: matrix.os == 'debian-x86_64' || matrix.os == 'debian-i386'
         env:
