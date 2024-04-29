@@ -20,6 +20,7 @@ if [ "$CI" = "true" ]; then
 		-o coverage.xml
 	sed "s,build/,,g" coverage.xml -i
 fi
+cp coverage.xml dist/
 
 # cleanup
 apt purge -y fwupd fwupd-doc libfwupd3 libfwupd-dev
