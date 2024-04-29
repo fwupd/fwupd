@@ -18,7 +18,3 @@ G_DECLARE_FINAL_TYPE(FuPartialInputStream,
 
 GInputStream *
 fu_partial_input_stream_new(GInputStream *stream, gsize offset, gsize size) G_GNUC_NON_NULL(1);
-gsize
-fu_partial_input_stream_get_offset(FuPartialInputStream *self) G_GNUC_NON_NULL(1);
-gsize
-fu_partial_input_stream_get_size(FuPartialInputStream *self) G_GNUC_NON_NULL(1);

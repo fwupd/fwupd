@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#include "fu-partial-input-stream.h"
+#include "fu-partial-input-stream-private.h"
 
 /**
  * FuPartialInputStream:
