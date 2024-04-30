@@ -259,7 +259,7 @@ static void
 fu_uefi_cod_device_init(FuUefiCodDevice *self)
 {
 	fu_device_set_summary(FU_DEVICE(self),
-			      "UEFI System Resource Table device (Updated via caspule-on-disk)");
+			      "UEFI System Resource Table device (Updated via capsule-on-disk)");
 }
 
 static void
