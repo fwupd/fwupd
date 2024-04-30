@@ -110,7 +110,9 @@ fu_hid_report_item_parse(FuFirmware *firmware,
 						      error))
 				return FALSE;
 		}
-		partial_stream = fu_partial_input_stream_new(stream, offset + 1, data_size);
+		partial_stream = fu_partial_input_stream_new(stream, offset + 1, data_size, error);
+		if (partial_stream == NULL)
+			return FALSE;
 		if (!fu_firmware_set_stream(firmware, partial_stream, error))
 			return FALSE;
 	}

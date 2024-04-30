@@ -36,7 +36,10 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 		g_autoptr(GInputStream) stream_tmp = NULL;
 		stream_tmp = fu_partial_input_stream_new(stream,
 							 offset + st->len,
-							 FU_STRUCT_ACPI_PHAT_VERSION_ELEMENT_SIZE);
+							 FU_STRUCT_ACPI_PHAT_VERSION_ELEMENT_SIZE,
+							 error);
+		if (stream_tmp == NULL)
+			return FALSE;
 		fu_firmware_set_offset(firmware_tmp, offset + st->len);
 		if (!fu_firmware_parse_stream(firmware_tmp,
 					      stream_tmp,

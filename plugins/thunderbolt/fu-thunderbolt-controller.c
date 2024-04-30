@@ -114,7 +114,9 @@ fu_thunderbolt_controller_read_status_block(FuThunderboltController *self, GErro
 	istr = G_INPUT_STREAM(g_file_read(nvmem, NULL, error));
 	if (istr == NULL)
 		return FALSE;
-	istr_partial = fu_partial_input_stream_new(istr, 0, nr_chunks * FU_TBT_CHUNK_SZ);
+	istr_partial = fu_partial_input_stream_new(istr, 0, nr_chunks * FU_TBT_CHUNK_SZ, error);
+	if (istr_partial == NULL)
+		return FALSE;
 	firmware = fu_firmware_new_from_gtypes(istr_partial,
 					       0x0,
 					       FWUPD_INSTALL_FLAG_NO_SEARCH,

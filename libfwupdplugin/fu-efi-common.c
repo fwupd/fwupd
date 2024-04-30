@@ -96,7 +96,10 @@ fu_efi_parse_sections(FuFirmware *firmware,
 		g_autoptr(GInputStream) partial_stream = NULL;
 
 		/* parse maximum payload */
-		partial_stream = fu_partial_input_stream_new(stream, offset, streamsz - offset);
+		partial_stream =
+		    fu_partial_input_stream_new(stream, offset, streamsz - offset, error);
+		if (partial_stream == NULL)
+			return FALSE;
 		if (!fu_firmware_parse_stream(img,
 					      partial_stream,
 					      0x0,

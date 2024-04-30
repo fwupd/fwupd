@@ -59,7 +59,9 @@ fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
 
 	/* set payload */
 	stream_payload =
-	    fu_partial_input_stream_new(stream, 0, streamsz - sizeof(self->public_key));
+	    fu_partial_input_stream_new(stream, 0, streamsz - sizeof(self->public_key), error);
+	if (stream_payload == NULL)
+		return FALSE;
 	if (!fu_firmware_parse_stream(firmware_payload, stream_payload, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(firmware_payload, FU_FIRMWARE_ID_PAYLOAD);

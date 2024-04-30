@@ -49,7 +49,9 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 	offset += FU_STRUCT_ALGOLTEK_PRODUCT_IDENTITY_SIZE;
 
 	/* ISP */
-	stream_isp = fu_partial_input_stream_new(stream, offset, AG_ISP_SIZE);
+	stream_isp = fu_partial_input_stream_new(stream, offset, AG_ISP_SIZE, error);
+	if (stream_isp == NULL)
+		return FALSE;
 	if (!fu_firmware_parse_stream(img_isp, stream_isp, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_isp, "isp");
@@ -57,7 +59,9 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 	offset += AG_ISP_SIZE;
 
 	/* payload */
-	stream_payload = fu_partial_input_stream_new(stream, offset, AG_FIRMWARE_SIZE);
+	stream_payload = fu_partial_input_stream_new(stream, offset, AG_FIRMWARE_SIZE, error);
+	if (stream_payload == NULL)
+		return FALSE;
 	if (!fu_firmware_parse_stream(img_payload, stream_payload, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_version(img_payload, version);

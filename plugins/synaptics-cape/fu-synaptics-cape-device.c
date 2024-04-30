@@ -631,7 +631,9 @@ fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
 	if (self->active_partition == 1)
 		offset = bufsz / 2;
 
-	stream_fw = fu_partial_input_stream_new(stream, offset, bufsz / 2);
+	stream_fw = fu_partial_input_stream_new(stream, offset, bufsz / 2, error);
+	if (stream_fw == NULL)
+		return NULL;
 	if (!fu_firmware_parse_stream(firmware, stream_fw, 0x0, flags, error))
 		return NULL;
 

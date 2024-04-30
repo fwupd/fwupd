@@ -86,8 +86,12 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		if (area_size == 0)
 			continue;
 		area_offset = fu_struct_fmap_area_get_offset(st_area);
-		img_stream =
-		    fu_partial_input_stream_new(stream, (gsize)area_offset, (gsize)area_size);
+		img_stream = fu_partial_input_stream_new(stream,
+							 (gsize)area_offset,
+							 (gsize)area_size,
+							 error);
+		if (img_stream == NULL)
+			return FALSE;
 		if (!fu_firmware_parse_stream(img, img_stream, 0x0, flags, error))
 			return FALSE;
 		area_name = fu_struct_fmap_area_get_name(st_area);

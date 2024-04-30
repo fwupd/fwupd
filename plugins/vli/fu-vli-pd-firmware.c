@@ -96,7 +96,9 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to read file CRC: ");
 			return FALSE;
 		}
-		stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - 2);
+		stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - 2, error);
+		if (stream_tmp == NULL)
+			return FALSE;
 		if (!fu_input_stream_compute_crc16(stream_tmp, &crc_actual, 0xA001, error))
 			return FALSE;
 		if (crc_actual != crc_file) {

@@ -100,7 +100,9 @@ fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 
 		if (!fu_input_stream_read_u32(stream, 9, &hpac_fw_size, G_LITTLE_ENDIAN, error))
 			return NULL;
-		stream_new = fu_partial_input_stream_new(stream, 9, hpac_fw_size + 264);
+		stream_new = fu_partial_input_stream_new(stream, 9, hpac_fw_size + 264, error);
+		if (stream_new == NULL)
+			return NULL;
 		if (!fu_firmware_set_stream(firmware, stream_new, error))
 			return NULL;
 

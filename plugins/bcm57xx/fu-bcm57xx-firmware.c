@@ -146,7 +146,9 @@ fu_bcm57xx_firmware_parse_stage1(FuBcm57xxFirmware *self,
 	}
 
 	/* verify CRC */
-	stream_tmp = fu_partial_input_stream_new(stream, stage1_off, stage1_sz);
+	stream_tmp = fu_partial_input_stream_new(stream, stage1_off, stage1_sz, error);
+	if (stream_tmp == NULL)
+		return NULL;
 	if (!fu_firmware_parse_stream(img,
 				      stream_tmp,
 				      0x0,
@@ -199,7 +201,9 @@ fu_bcm57xx_firmware_parse_stage2(FuBcm57xxFirmware *self,
 	}
 
 	/* verify CRC */
-	stream_tmp = fu_partial_input_stream_new(stream, stage2_off + 0x8, stage2_sz);
+	stream_tmp = fu_partial_input_stream_new(stream, stage2_off + 0x8, stage2_sz, error);
+	if (stream_tmp == NULL)
+		return NULL;
 	if (!fu_firmware_parse_stream(img,
 				      stream_tmp,
 				      0x0,
@@ -282,7 +286,9 @@ fu_bcm57xx_firmware_parse_dict(FuBcm57xxFirmware *self,
 			    (guint)dict_off);
 		return FALSE;
 	}
-	stream_tmp = fu_partial_input_stream_new(stream, dict_off, dict_sz);
+	stream_tmp = fu_partial_input_stream_new(stream, dict_off, dict_sz, error);
+	if (stream_tmp == NULL)
+		return FALSE;
 	if (!fu_firmware_parse_stream(img,
 				      stream_tmp,
 				      0x0,
@@ -386,14 +392,19 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 
 	/* NVRAM header */
 	stream_header =
-	    fu_partial_input_stream_new(stream, BCM_NVRAM_HEADER_BASE, BCM_NVRAM_HEADER_SZ);
+	    fu_partial_input_stream_new(stream, BCM_NVRAM_HEADER_BASE, BCM_NVRAM_HEADER_SZ, error);
+	if (stream_header == NULL)
+		return FALSE;
 	if (!fu_bcm57xx_firmware_parse_header(self, stream_header, error)) {
 		g_prefix_error(error, "failed to parse header: ");
 		return FALSE;
 	}
 
 	/* info */
-	stream_info = fu_partial_input_stream_new(stream, BCM_NVRAM_INFO_BASE, BCM_NVRAM_INFO_SZ);
+	stream_info =
+	    fu_partial_input_stream_new(stream, BCM_NVRAM_INFO_BASE, BCM_NVRAM_INFO_SZ, error);
+	if (stream_info == NULL)
+		return FALSE;
 	img_info = fu_bcm57xx_firmware_parse_info(self, stream_info, error);
 	if (img_info == NULL) {
 		g_prefix_error(error, "failed to parse info: ");
@@ -403,7 +414,10 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 	fu_firmware_add_image(firmware, img_info);
 
 	/* VPD */
-	stream_vpd = fu_partial_input_stream_new(stream, BCM_NVRAM_VPD_BASE, BCM_NVRAM_VPD_SZ);
+	stream_vpd =
+	    fu_partial_input_stream_new(stream, BCM_NVRAM_VPD_BASE, BCM_NVRAM_VPD_SZ, error);
+	if (stream_vpd == NULL)
+		return FALSE;
 	if (!fu_firmware_parse_stream(img_vpd, stream_vpd, 0x0, flags, error)) {
 		g_prefix_error(error, "failed to parse VPD: ");
 		return FALSE;
@@ -414,7 +428,9 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 
 	/* info2 */
 	stream_info2 =
-	    fu_partial_input_stream_new(stream, BCM_NVRAM_INFO2_BASE, BCM_NVRAM_INFO2_SZ);
+	    fu_partial_input_stream_new(stream, BCM_NVRAM_INFO2_BASE, BCM_NVRAM_INFO2_SZ, error);
+	if (stream_info2 == NULL)
+		return FALSE;
 	if (!fu_firmware_parse_stream(img_info2, stream_info2, 0x0, flags, error)) {
 		g_prefix_error(error, "failed to parse info2: ");
 		return FALSE;

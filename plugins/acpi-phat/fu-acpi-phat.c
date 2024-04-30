@@ -66,7 +66,9 @@ fu_acpi_phat_record_parse(FuFirmware *firmware,
 	/* supported record type */
 	if (firmware_rcd != NULL) {
 		g_autoptr(GInputStream) partial_stream = NULL;
-		partial_stream = fu_partial_input_stream_new(stream, *offset, record_length);
+		partial_stream = fu_partial_input_stream_new(stream, *offset, record_length, error);
+		if (partial_stream == NULL)
+			return FALSE;
 		fu_firmware_set_size(firmware_rcd, record_length);
 		fu_firmware_set_offset(firmware_rcd, *offset);
 		fu_firmware_set_version_raw(firmware_rcd, revision);
@@ -143,7 +145,10 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 	/* verify checksum */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 checksum = 0;
-		g_autoptr(GInputStream) stream_tmp = fu_partial_input_stream_new(stream, 0, length);
+		g_autoptr(GInputStream) stream_tmp =
+		    fu_partial_input_stream_new(stream, 0, length, error);
+		if (stream_tmp == NULL)
+			return FALSE;
 		if (!fu_input_stream_compute_sum8(stream_tmp, &checksum, error))
 			return FALSE;
 		if (checksum != 0x00) {

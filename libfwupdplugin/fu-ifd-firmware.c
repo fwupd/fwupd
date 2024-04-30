@@ -192,7 +192,9 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 
 		/* create image */
 		g_debug("freg %s 0x%04x -> 0x%04x", freg_str, freg_base, freg_limt);
-		partial_stream = fu_partial_input_stream_new(stream, freg_base, freg_size);
+		partial_stream = fu_partial_input_stream_new(stream, freg_base, freg_size, error);
+		if (partial_stream == NULL)
+			return FALSE;
 		if (i == FU_IFD_REGION_BIOS) {
 			img = fu_ifd_bios_new();
 		} else {
