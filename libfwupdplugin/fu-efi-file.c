@@ -140,7 +140,9 @@ fu_efi_file_parse(FuFirmware *firmware,
 	}
 
 	/* add simple blob */
-	partial_stream = fu_partial_input_stream_new(stream, st->len, size - st->len);
+	partial_stream = fu_partial_input_stream_new(stream, st->len, size - st->len, error);
+	if (partial_stream == NULL)
+		return FALSE;
 
 	/* verify data checksum */
 	if ((priv->attrib & FU_EFI_FILE_ATTRIB_CHECKSUM) > 0 &&

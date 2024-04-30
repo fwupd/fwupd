@@ -45,7 +45,9 @@ fu_genesys_usbhub_dev_firmware_parse(FuFirmware *firmware,
 		g_prefix_error(error, "not valid for dev: ");
 		return FALSE;
 	}
-	stream_trunc = fu_partial_input_stream_new(stream, offset, code_size);
+	stream_trunc = fu_partial_input_stream_new(stream, offset, code_size, error);
+	if (stream_trunc == NULL)
+		return FALSE;
 	if (!fu_firmware_set_stream(firmware, stream_trunc, error))
 		return FALSE;
 

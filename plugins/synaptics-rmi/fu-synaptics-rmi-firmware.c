@@ -51,7 +51,9 @@ fu_synaptics_rmi_firmware_add_image(FuFirmware *firmware,
 {
 	g_autoptr(FuFirmware) img = fu_firmware_new();
 	g_autoptr(GInputStream) partial_stream = NULL;
-	partial_stream = fu_partial_input_stream_new(stream, offset, bufsz);
+	partial_stream = fu_partial_input_stream_new(stream, offset, bufsz, error);
+	if (partial_stream == NULL)
+		return FALSE;
 	if (!fu_firmware_parse_stream(img, partial_stream, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
 	fu_firmware_set_id(img, id);
@@ -74,7 +76,9 @@ fu_synaptics_rmi_firmware_add_image_v10(FuFirmware *firmware,
 		g_autoptr(FuFirmware) img = fu_firmware_new();
 		g_autofree gchar *sig_id = NULL;
 
-		partial_stream = fu_partial_input_stream_new(stream, offset + bufsz, sig_sz);
+		partial_stream = fu_partial_input_stream_new(stream, offset + bufsz, sig_sz, error);
+		if (partial_stream == NULL)
+			return FALSE;
 		if (!fu_firmware_parse_stream(img,
 					      partial_stream,
 					      0x0,

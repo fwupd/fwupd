@@ -60,8 +60,12 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 		return NULL;
 	}
 	if (self->metadata_size > 0) {
-		stream_partial =
-		    fu_partial_input_stream_new(stream, self->metadata_offset, self->metadata_size);
+		stream_partial = fu_partial_input_stream_new(stream,
+							     self->metadata_offset,
+							     self->metadata_size,
+							     error);
+		if (stream_partial == NULL)
+			return NULL;
 	} else {
 		stream_partial = g_object_ref(stream);
 	}

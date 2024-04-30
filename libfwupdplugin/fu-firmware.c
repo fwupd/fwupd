@@ -1066,7 +1066,9 @@ fu_firmware_parse_stream(FuFirmware *self,
 		g_set_object(&priv->stream, stream);
 	} else {
 		g_autoptr(GInputStream) partial_stream =
-		    fu_partial_input_stream_new(stream, offset, priv->streamsz);
+		    fu_partial_input_stream_new(stream, offset, priv->streamsz - offset, error);
+		if (partial_stream == NULL)
+			return FALSE;
 		g_set_object(&priv->stream, partial_stream);
 	}
 

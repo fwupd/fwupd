@@ -78,7 +78,7 @@ fu_composite_input_stream_add_bytes(FuCompositeInputStream *self, GBytes *bytes)
 	g_return_if_fail(bytes != NULL);
 
 	stream = g_memory_input_stream_new_from_bytes(bytes);
-	partial_stream = fu_partial_input_stream_new(stream, 0x0, g_bytes_get_size(bytes));
+	partial_stream = fu_partial_input_stream_new(stream, 0x0, g_bytes_get_size(bytes), NULL);
 	fu_composite_input_stream_add_partial_stream(self, FU_PARTIAL_INPUT_STREAM(partial_stream));
 }
 

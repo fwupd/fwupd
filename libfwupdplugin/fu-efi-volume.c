@@ -167,7 +167,9 @@ fu_efi_volume_parse(FuFirmware *firmware,
 
 	/* add image */
 	partial_stream =
-	    fu_partial_input_stream_new(stream, offset + hdr_length, fv_length - hdr_length);
+	    fu_partial_input_stream_new(stream, offset + hdr_length, fv_length - hdr_length, error);
+	if (partial_stream == NULL)
+		return FALSE;
 	fu_firmware_set_offset(firmware, offset);
 	fu_firmware_set_id(firmware, guid_str);
 	fu_firmware_set_size(firmware, fv_length);

@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-input-stream.h"
 #include "fu-partial-input-stream-private.h"
 
 /**
@@ -125,21 +126,45 @@ fu_partial_input_stream_seekable_iface_init(GSeekableIface *iface)
  * @stream: a base #GInputStream
  * @offset: offset into @stream
  * @size: size of @stream in bytes
+ * @error: (nullable): optional return location for an error
  *
  * Creates a partial input stream where content is read from the donor stream.
  *
- * Returns: (transfer full): a #FuPartialInputStream
+ * Returns: (transfer full): a #FuPartialInputStream, or %NULL on error
  *
  * Since: 2.0.0
  **/
 GInputStream *
-fu_partial_input_stream_new(GInputStream *stream, gsize offset, gsize size)
+fu_partial_input_stream_new(GInputStream *stream, gsize offset, gsize size, GError **error)
 {
+	gsize base_sz = 0;
 	g_autoptr(FuPartialInputStream) self = g_object_new(FU_TYPE_PARTIAL_INPUT_STREAM, NULL);
+
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	self->base_stream = g_object_ref(stream);
 	self->offset = offset;
 	self->size = size;
+
+	/* sanity check */
+	if (!fu_input_stream_size(stream, &base_sz, error)) {
+		g_prefix_error(error, "failed to get size: ");
+		return NULL;
+	}
+	if (offset + size > base_sz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "base stream was 0x%x bytes in size, and tried to create partial "
+			    "stream @0x%x of 0x%x bytes",
+			    (guint)base_sz,
+			    (guint)offset,
+			    (guint)size);
+		return NULL;
+	}
+
+	/* success */
 	return G_INPUT_STREAM(g_steal_pointer(&self));
 }
 

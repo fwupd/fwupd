@@ -111,7 +111,9 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		offset += st_hdr->len;
-		partial_stream = fu_partial_input_stream_new(stream, offset, hdrsz);
+		partial_stream = fu_partial_input_stream_new(stream, offset, hdrsz, error);
+		if (partial_stream == NULL)
+			return FALSE;
 		if (!fu_firmware_parse_stream(img, partial_stream, 0x0, flags, error))
 			return FALSE;
 		g_debug("adding 0x%04x (%s) with size 0x%04x",

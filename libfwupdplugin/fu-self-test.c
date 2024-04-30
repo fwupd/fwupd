@@ -4660,9 +4660,10 @@ fu_partial_input_stream_func(void)
 	g_autoptr(GBytes) blob2 = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GInputStream) base_stream = g_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) stream_complete = NULL;
+	g_autoptr(GInputStream) stream_error = NULL;
 	g_autoptr(GInputStream) stream_file = NULL;
-	g_autoptr(GInputStream) stream_complete = fu_partial_input_stream_new(base_stream, 0, 8);
-	g_autoptr(GInputStream) stream = fu_partial_input_stream_new(base_stream, 2, 4);
+	g_autoptr(GInputStream) stream = NULL;
 
 	/* check the behavior of GFileInputStream */
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.xml", NULL);
@@ -4748,6 +4749,9 @@ fu_partial_input_stream_func(void)
 	g_assert_cmpint(buf[0], ==, '8');
 
 	/* seek to non-start */
+	stream = fu_partial_input_stream_new(base_stream, 2, 4, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream);
 	ret = g_seekable_seek(G_SEEKABLE(stream), 0x2, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -4814,12 +4818,20 @@ fu_partial_input_stream_func(void)
 	g_clear_error(&error);
 
 	/* read right up against the end of the base stream */
+	stream_complete = fu_partial_input_stream_new(base_stream, 0, 8, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream_complete);
 	ret = g_seekable_seek(G_SEEKABLE(stream_complete), 0x8, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	rc = g_input_stream_read(stream_complete, buf, sizeof(buf), NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
+
+	/* try to create an out-of-range partial stream */
+	stream_error = fu_partial_input_stream_new(base_stream, 0, 9, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(stream_error);
 }
 
 static void
@@ -4859,7 +4871,9 @@ fu_composite_input_stream_func(void)
 	g_assert_cmpint(streamsz, ==, 5);
 
 	/* add partial stream */
-	stream4 = fu_partial_input_stream_new(stream3, 0x3, 2);
+	stream4 = fu_partial_input_stream_new(stream3, 0x3, 2, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream4);
 	fu_composite_input_stream_add_partial_stream(FU_COMPOSITE_INPUT_STREAM(composite_stream),
 						     FU_PARTIAL_INPUT_STREAM(stream4));
 	ret = fu_input_stream_size(composite_stream, &streamsz, &error);
