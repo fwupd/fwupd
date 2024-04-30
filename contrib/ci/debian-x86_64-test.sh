@@ -11,15 +11,14 @@ service dbus restart
 gnome-desktop-testing-runner fwupd
 
 # generate coverage report
-if [ "$CI" = "true" ]; then
-	gcovr -x \
-		--filter build/libfwupd \
-		--filter build/libfwupdplugin \
-		--filter build/plugins \
-		--filter build/src \
-		-o coverage.xml
-	sed "s,build/,,g" coverage.xml -i
-fi
+gcovr -x \
+	--filter build/libfwupd \
+	--filter build/libfwupdplugin \
+	--filter build/plugins \
+	--filter build/src \
+	-o coverage.xml
+sed "s,build/,,g" coverage.xml -i
+cp coverage.xml dist/
 
 # cleanup
 apt purge -y fwupd fwupd-doc libfwupd3 libfwupd-dev
