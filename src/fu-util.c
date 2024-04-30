@@ -23,7 +23,6 @@
 
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
-#include "fwupd-plugin-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 
@@ -532,9 +531,7 @@ fu_util_get_releases_as_json(FuUtilPrivate *priv, GPtrArray *rels, GError **erro
 					       priv->filter_release_include,
 					       priv->filter_release_exclude))
 			continue;
-		json_builder_begin_object(builder);
-		fwupd_release_to_json(rel, builder);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(rel), builder, FWUPD_CODEC_FLAG_NONE);
 	}
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
@@ -572,9 +569,7 @@ fu_util_get_devices_as_json(FuUtilPrivate *priv, GPtrArray *devs, GError **error
 		}
 
 		/* add to builder */
-		json_builder_begin_object(builder);
-		fwupd_device_to_json_full(dev, builder, FWUPD_DEVICE_FLAG_TRUSTED);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
 	}
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
@@ -634,9 +629,7 @@ fu_util_get_plugins_as_json(FuUtilPrivate *priv, GPtrArray *plugins, GError **er
 	json_builder_begin_array(builder);
 	for (guint i = 0; i < plugins->len; i++) {
 		FwupdPlugin *plugin = g_ptr_array_index(plugins, i);
-		json_builder_begin_object(builder);
-		fwupd_plugin_to_json(plugin, builder);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(plugin), builder, FWUPD_CODEC_FLAG_NONE);
 	}
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
@@ -1399,9 +1392,7 @@ fu_util_get_details_as_json(FuUtilPrivate *priv, GPtrArray *devs, GError **error
 	json_builder_begin_array(builder);
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devs, i);
-		json_builder_begin_object(builder);
-		fwupd_device_to_json_full(dev, builder, FWUPD_DEVICE_FLAG_TRUSTED);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
 	}
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
@@ -1808,9 +1799,7 @@ fu_util_get_history_as_json(FuUtilPrivate *priv, GPtrArray *devs, GError **error
 	json_builder_begin_array(builder);
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devs, i);
-		json_builder_begin_object(builder);
-		fwupd_device_to_json_full(dev, builder, FWUPD_DEVICE_FLAG_TRUSTED);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
 	}
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
@@ -2171,9 +2160,7 @@ static gboolean
 fu_util_get_results_as_json(FuUtilPrivate *priv, FwupdDevice *res, GError **error)
 {
 	g_autoptr(JsonBuilder) builder = json_builder_new();
-	json_builder_begin_object(builder);
-	fwupd_device_to_json_full(res, builder, FWUPD_DEVICE_FLAG_TRUSTED);
-	json_builder_end_object(builder);
+	fwupd_codec_to_json(FWUPD_CODEC(res), builder, FWUPD_CODEC_FLAG_TRUSTED);
 	return fu_util_print_builder(priv->console, builder, error);
 }
 
@@ -2237,7 +2224,7 @@ fu_util_get_releases(FuUtilPrivate *priv, gchar **values, GError **error)
 						       priv->filter_release_include,
 						       priv->filter_release_exclude))
 				continue;
-			tmp = fwupd_release_to_string(rel);
+			tmp = fwupd_codec_to_string(FWUPD_CODEC(rel));
 			fu_console_print_literal(priv->console, tmp);
 		}
 	} else {
@@ -2424,9 +2411,7 @@ fu_util_get_updates_as_json(FuUtilPrivate *priv, GPtrArray *devices, GError **er
 		}
 
 		/* add to builder */
-		json_builder_begin_object(builder);
-		fwupd_device_to_json_full(dev, builder, FWUPD_DEVICE_FLAG_TRUSTED);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
 	}
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
@@ -2574,9 +2559,7 @@ fu_util_get_remotes_as_json(FuUtilPrivate *priv, GPtrArray *remotes, GError **er
 	json_builder_begin_array(builder);
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index(remotes, i);
-		json_builder_begin_object(builder);
-		fwupd_remote_to_json(remote, builder);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(remote), builder, FWUPD_CODEC_FLAG_TRUSTED);
 	}
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
@@ -3787,9 +3770,7 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 	json_builder_begin_array(builder);
 	for (guint i = 0; i < attrs->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
-		json_builder_begin_object(builder);
-		fwupd_security_attr_to_json(attr, builder);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(attr), builder, FWUPD_CODEC_FLAG_TRUSTED);
 	}
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
@@ -3889,9 +3870,7 @@ fu_util_security_as_json(FuUtilPrivate *priv,
 	json_builder_begin_array(builder);
 	for (guint i = 0; i < attrs->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
-		json_builder_begin_object(builder);
-		fwupd_security_attr_to_json(attr, builder);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(attr), builder, FWUPD_CODEC_FLAG_TRUSTED);
 	}
 	json_builder_end_array(builder);
 
@@ -3901,9 +3880,7 @@ fu_util_security_as_json(FuUtilPrivate *priv,
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < attrs->len; i++) {
 			FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
-			json_builder_begin_object(builder);
-			fwupd_security_attr_to_json(attr, builder);
-			json_builder_end_object(builder);
+			fwupd_codec_to_json(FWUPD_CODEC(attr), builder, FWUPD_CODEC_FLAG_TRUSTED);
 		}
 		json_builder_end_array(builder);
 	}
@@ -3922,9 +3899,7 @@ fu_util_security_as_json(FuUtilPrivate *priv,
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < devices_issues->len; i++) {
 			FwupdDevice *device = g_ptr_array_index(devices_issues, i);
-			json_builder_begin_object(builder);
-			fwupd_device_to_json_full(device, builder, FWUPD_DEVICE_FLAG_TRUSTED);
-			json_builder_end_object(builder);
+			fwupd_codec_to_json(FWUPD_CODEC(device), builder, FWUPD_CODEC_FLAG_TRUSTED);
 		}
 		json_builder_end_array(builder);
 	}

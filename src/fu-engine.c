@@ -31,7 +31,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fwupd-bios-setting-private.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
@@ -591,7 +590,8 @@ fu_engine_add_trusted_report(FuEngine *self, FuRelease *release)
 		for (guint j = 0; j < trusted_reports->len; j++) {
 			FwupdReport *trusted_report = g_ptr_array_index(trusted_reports, j);
 			if (fu_engine_compare_report_trusted(trusted_report, report)) {
-				g_autofree gchar *str = fwupd_report_to_string(trusted_report);
+				g_autofree gchar *str =
+				    fwupd_codec_to_string(FWUPD_CODEC(trusted_report));
 				g_debug("add trusted-report to %s:%s as trusted: %s",
 					fu_release_get_appstream_id(release),
 					fu_release_get_version(release),
@@ -5225,13 +5225,13 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 		/* invalid */
 		locations = fwupd_release_get_locations(FWUPD_RELEASE(release));
 		if (locations->len == 0) {
-			g_autofree gchar *str = fwupd_release_to_string(FWUPD_RELEASE(release));
+			g_autofree gchar *str = fwupd_codec_to_string(FWUPD_CODEC(release));
 			g_debug("no locations for %s", str);
 			continue;
 		}
 		checksums = fu_release_get_checksums(release);
 		if (checksums->len == 0) {
-			g_autofree gchar *str = fwupd_release_to_string(FWUPD_RELEASE(release));
+			g_autofree gchar *str = fwupd_codec_to_string(FWUPD_CODEC(release));
 			g_debug("no locations for %s", str);
 			continue;
 		}
@@ -6731,7 +6731,9 @@ fu_engine_record_security_attrs(FuEngine *self, GError **error)
 	g_autofree gchar *json = NULL;
 
 	/* convert attrs to json string */
-	json = fu_security_attrs_to_json_string(self->host_security_attrs, error);
+	json = fwupd_codec_to_json_string(FWUPD_CODEC(self->host_security_attrs),
+					  FWUPD_CODEC_FLAG_NONE,
+					  error);
 	if (json == NULL) {
 		g_prefix_error(error, "cannot convert current attrs to string: ");
 		return FALSE;
@@ -7025,7 +7027,7 @@ fu_engine_security_attrs_from_json(FuEngine *self, JsonNode *json_node, GError *
 	obj = json_node_get_object(json_node);
 	if (!json_object_has_member(obj, "SecurityAttributes"))
 		return TRUE;
-	if (!fu_security_attrs_from_json(self->host_security_attrs, json_node, error))
+	if (!fwupd_codec_from_json(FWUPD_CODEC(self->host_security_attrs), json_node, error))
 		return FALSE;
 
 	/* success */
@@ -7057,7 +7059,7 @@ fu_engine_devices_from_json(FuEngine *self, JsonNode *json_node, GError **error)
 	for (guint i = 0; i < json_array_get_length(array); i++) {
 		JsonNode *node_tmp = json_array_get_element(array, i);
 		g_autoptr(FuDevice) device = fu_device_new(self->ctx);
-		if (!fwupd_device_from_json(FWUPD_DEVICE(device), node_tmp, error))
+		if (!fwupd_codec_from_json(FWUPD_CODEC(device), node_tmp, error))
 			return FALSE;
 		fu_device_set_plugin(device, "dummy");
 		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_IS_EMULATED);
@@ -7104,7 +7106,7 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 		return FALSE;
 	if (!fu_engine_security_attrs_from_json(self, json_parser_get_root(parser), error))
 		return FALSE;
-	if (!fu_bios_settings_from_json(bios_settings, json_parser_get_root(parser), error))
+	if (!fwupd_codec_from_json(FWUPD_CODEC(bios_settings), json_parser_get_root(parser), error))
 		return FALSE;
 
 #ifdef HAVE_HSI
@@ -7444,12 +7446,15 @@ fu_engine_apply_default_bios_settings_policy(FuEngine *self, GError **error)
 	if (dir == NULL)
 		return FALSE;
 	while ((tmp = g_dir_read_name(dir)) != NULL) {
+		g_autofree gchar *data = NULL;
 		g_autofree gchar *fn = NULL;
 		if (!g_str_has_suffix(tmp, ".json"))
 			continue;
 		fn = g_build_filename(dirname, tmp, NULL);
 		g_info("loading default BIOS settings policy from %s", fn);
-		if (!fu_bios_settings_from_json_file(new_bios_settings, fn, error))
+		if (!g_file_get_contents(fn, &data, NULL, error))
+			return FALSE;
+		if (!fwupd_codec_from_json_string(FWUPD_CODEC(new_bios_settings), data, error))
 			return FALSE;
 	}
 	hashtable = fu_bios_settings_to_hash_kv(new_bios_settings);

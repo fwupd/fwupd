@@ -80,7 +80,13 @@ enum { SIGNAL_PERCENTAGE_CHANGED, SIGNAL_STATUS_CHANGED, SIGNAL_LAST };
 
 static guint signals[SIGNAL_LAST] = {0};
 
-G_DEFINE_TYPE(FuProgress, fu_progress, G_TYPE_OBJECT)
+static void
+fwupd_progress_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_WITH_CODE(FuProgress,
+			fu_progress,
+			G_TYPE_OBJECT,
+			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fwupd_progress_codec_iface_init))
 
 #define FU_PROGRESS_STEPS_MAX 1000
 
@@ -968,50 +974,38 @@ fu_progress_traceback(FuProgress *self)
 }
 
 static void
-fu_progress_to_string_cb(FuProgress *self, guint idt, GString *str)
+fu_progress_add_string(FwupdCodec *converter, guint idt, GString *str)
 {
+	FuProgress *self = FU_PROGRESS(converter);
+
 	/* not interesting */
 	if (self->id == NULL && self->name == NULL)
 		return;
 
 	if (self->id != NULL)
-		fu_string_append(str, idt, "Id", self->id);
+		fwupd_codec_string_append(str, idt, "Id", self->id);
 	if (self->name != NULL)
-		fu_string_append(str, idt, "Name", self->name);
+		fwupd_codec_string_append(str, idt, "Name", self->name);
 	if (self->percentage != G_MAXUINT)
-		fu_string_append_ku(str, idt, "Percentage", self->percentage);
+		fwupd_codec_string_append_int(str, idt, "Percentage", self->percentage);
 	if (self->status != FWUPD_STATUS_UNKNOWN)
-		fu_string_append(str, idt, "Status", fwupd_status_to_string(self->status));
+		fwupd_codec_string_append(str, idt, "Status", fwupd_status_to_string(self->status));
 	if (self->duration > 0.0001)
-		fu_string_append_ku(str, idt, "DurationMs", self->duration * 1000.f);
+		fwupd_codec_string_append_int(str, idt, "DurationMs", self->duration * 1000.f);
 	if (self->step_weighting > 0)
-		fu_string_append_ku(str, idt, "StepWeighting", self->step_weighting);
+		fwupd_codec_string_append_int(str, idt, "StepWeighting", self->step_weighting);
 	if (self->step_now > 0)
-		fu_string_append_ku(str, idt, "StepNow", self->step_now);
+		fwupd_codec_string_append_int(str, idt, "StepNow", self->step_now);
 	for (guint i = 0; i < self->children->len; i++) {
 		FuProgress *child = g_ptr_array_index(self->children, i);
-		fu_progress_to_string_cb(child, idt + 1, str);
+		fwupd_codec_add_string(FWUPD_CODEC(child), idt + 1, str);
 	}
 }
 
-/**
- * fu_progress_to_string:
- * @self: A #FuProgress
- *
- * Prints the progress for debugging.
- *
- * Return value: (transfer full): string
- *
- * Since: 1.8.7
- **/
-gchar *
-fu_progress_to_string(FuProgress *self)
+static void
+fwupd_progress_codec_iface_init(FwupdCodecInterface *iface)
 {
-	g_autoptr(GString) str = g_string_new(NULL);
-	fu_progress_to_string_cb(self, 0, str);
-	if (str->len == 0)
-		return NULL;
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	iface->add_string = fu_progress_add_string;
 }
 
 static void

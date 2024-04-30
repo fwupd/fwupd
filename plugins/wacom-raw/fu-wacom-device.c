@@ -29,9 +29,9 @@ fu_wacom_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuWacomDevice *self = FU_WACOM_DEVICE(device);
 	FuWacomDevicePrivate *priv = GET_PRIVATE(self);
-	fu_string_append_kx(str, idt, "FlashBlockSize", priv->flash_block_size);
-	fu_string_append_kx(str, idt, "FlashBaseAddr", priv->flash_base_addr);
-	fu_string_append_kx(str, idt, "FlashSize", priv->flash_size);
+	fwupd_codec_string_append_hex(str, idt, "FlashBlockSize", priv->flash_block_size);
+	fwupd_codec_string_append_hex(str, idt, "FlashBaseAddr", priv->flash_base_addr);
+	fwupd_codec_string_append_hex(str, idt, "FlashSize", priv->flash_size);
 }
 
 gsize

@@ -19,14 +19,15 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "fwupd-bios-setting-private.h"
+#include "fwupd-bios-setting.h"
 #include "fwupd-client-private.h"
 #include "fwupd-client-sync.h"
+#include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
-#include "fwupd-plugin-private.h"
+#include "fwupd-plugin.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-request-private.h"
@@ -570,25 +571,38 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FwupdDevice) dev = NULL;
+	g_autoptr(GError) error = NULL;
 	if (g_strcmp0(signal_name, "Changed") == 0) {
 		g_debug("Emitting ::changed()");
 		g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
 		return;
 	}
 	if (g_strcmp0(signal_name, "DeviceAdded") == 0) {
-		dev = fwupd_device_from_variant(parameters);
+		dev = fwupd_device_new();
+		if (!fwupd_codec_from_variant(FWUPD_CODEC(dev), parameters, &error)) {
+			g_warning("failed to build FwupdDevice[DeviceAdded]: %s", error->message);
+			return;
+		}
 		g_debug("Emitting ::device-added(%s)", fwupd_device_get_id(dev));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_ADDED, G_OBJECT(dev));
 		return;
 	}
 	if (g_strcmp0(signal_name, "DeviceRemoved") == 0) {
-		dev = fwupd_device_from_variant(parameters);
+		dev = fwupd_device_new();
+		if (!fwupd_codec_from_variant(FWUPD_CODEC(dev), parameters, &error)) {
+			g_warning("failed to build FwupdDevice[DeviceRemoved]: %s", error->message);
+			return;
+		}
 		g_debug("Emitting ::device-removed(%s)", fwupd_device_get_id(dev));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REMOVED, G_OBJECT(dev));
 		return;
 	}
 	if (g_strcmp0(signal_name, "DeviceChanged") == 0) {
-		dev = fwupd_device_from_variant(parameters);
+		dev = fwupd_device_new();
+		if (!fwupd_codec_from_variant(FWUPD_CODEC(dev), parameters, &error)) {
+			g_warning("failed to build FwupdDevice[DeviceChanged]: %s", error->message);
+			return;
+		}
 		g_debug("Emitting ::device-changed(%s)", fwupd_device_get_id(dev));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_CHANGED, G_OBJECT(dev));
 
@@ -605,7 +619,11 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 		return;
 	}
 	if (g_strcmp0(signal_name, "DeviceRequest") == 0) {
-		g_autoptr(FwupdRequest) req = fwupd_request_from_variant(parameters);
+		g_autoptr(FwupdRequest) req = fwupd_request_new();
+		if (!fwupd_codec_from_variant(FWUPD_CODEC(req), parameters, &error)) {
+			g_warning("failed to convert DeviceRequest: %s", error->message);
+			return;
+		}
 		g_debug("Emitting ::device-request(%s)", fwupd_request_get_id(req));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REQUEST, G_OBJECT(req));
 
@@ -1188,6 +1206,7 @@ fwupd_client_get_host_security_attrs_cb(GObject *source, GAsyncResult *res, gpoi
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -1196,11 +1215,14 @@ fwupd_client_get_host_security_attrs_cb(GObject *source, GAsyncResult *res, gpoi
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_SECURITY_ATTR, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_security_attr_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -1358,6 +1380,7 @@ fwupd_client_get_bios_settings_cb(GObject *source, GAsyncResult *res, gpointer u
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -1366,11 +1389,14 @@ fwupd_client_get_bios_settings_cb(GObject *source, GAsyncResult *res, gpointer u
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_BIOS_SETTING, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_bios_setting_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -1438,6 +1464,7 @@ fwupd_client_get_host_security_events_cb(GObject *source, GAsyncResult *res, gpo
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -1446,11 +1473,14 @@ fwupd_client_get_host_security_events_cb(GObject *source, GAsyncResult *res, gpo
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_SECURITY_ATTR, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_security_attr_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -1621,6 +1651,7 @@ fwupd_client_get_devices_cb(GObject *source, GAsyncResult *res, gpointer user_da
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -1629,11 +1660,14 @@ fwupd_client_get_devices_cb(GObject *source, GAsyncResult *res, gpointer user_da
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_DEVICE, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_device_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -1701,6 +1735,7 @@ fwupd_client_get_plugins_cb(GObject *source, GAsyncResult *res, gpointer user_da
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -1709,11 +1744,14 @@ fwupd_client_get_plugins_cb(GObject *source, GAsyncResult *res, gpointer user_da
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_PLUGIN, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_plugin_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -1781,6 +1819,7 @@ fwupd_client_get_history_cb(GObject *source, GAsyncResult *res, gpointer user_da
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -1789,11 +1828,14 @@ fwupd_client_get_history_cb(GObject *source, GAsyncResult *res, gpointer user_da
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_DEVICE, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_device_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -2069,6 +2111,7 @@ fwupd_client_get_releases_cb(GObject *source, GAsyncResult *res, gpointer user_d
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -2077,11 +2120,14 @@ fwupd_client_get_releases_cb(GObject *source, GAsyncResult *res, gpointer user_d
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_RELEASE, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_release_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -2152,6 +2198,7 @@ fwupd_client_get_downgrades_cb(GObject *source, GAsyncResult *res, gpointer user
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -2160,11 +2207,14 @@ fwupd_client_get_downgrades_cb(GObject *source, GAsyncResult *res, gpointer user
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_RELEASE, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_release_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -2235,6 +2285,7 @@ fwupd_client_get_upgrades_cb(GObject *source, GAsyncResult *res, gpointer user_d
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -2243,11 +2294,14 @@ fwupd_client_get_upgrades_cb(GObject *source, GAsyncResult *res, gpointer user_d
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_RELEASE, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_release_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -2871,6 +2925,7 @@ fwupd_client_clear_results_finish(FwupdClient *self, GAsyncResult *res, GError *
 static void
 fwupd_client_get_results_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
+	g_autoptr(FwupdDevice) device = fwupd_device_new();
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) val = NULL;
@@ -2881,11 +2936,13 @@ fwupd_client_get_results_cb(GObject *source, GAsyncResult *res, gpointer user_da
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	if (!fwupd_codec_from_variant(FWUPD_CODEC(device), val, &error)) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_device_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&device), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -3569,6 +3626,7 @@ fwupd_client_get_details_stream_cb(GObject *source, GAsyncResult *res, gpointer 
 {
 	g_autoptr(GDBusMessage) msg = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GTask) task = G_TASK(user_data);
 
 	msg = g_dbus_connection_send_message_with_reply_finish(G_DBUS_CONNECTION(source),
@@ -3584,11 +3642,15 @@ fwupd_client_get_details_stream_cb(GObject *source, GAsyncResult *res, gpointer 
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array =
+	    fwupd_codec_array_from_variant(g_dbus_message_get_body(msg), FWUPD_TYPE_DEVICE, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_device_array_from_variant(g_dbus_message_get_body(msg)),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 void
@@ -4351,6 +4413,7 @@ fwupd_client_get_remotes_cb(GObject *source, GAsyncResult *res, gpointer user_da
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -4359,11 +4422,14 @@ fwupd_client_get_remotes_cb(GObject *source, GAsyncResult *res, gpointer user_da
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_REMOTE, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_remote_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**

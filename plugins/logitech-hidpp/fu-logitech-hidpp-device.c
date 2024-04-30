@@ -266,7 +266,7 @@ fu_logitech_hidpp_map_to_string(FuLogitechHidppHidppMap *map, guint idt, GString
 	g_autofree gchar *tmp = g_strdup_printf("%s [0x%04x]",
 						fu_logitech_hidpp_feature_to_string(map->feature),
 						map->feature);
-	fu_string_append(str, idt, title, tmp);
+	fwupd_codec_string_append(str, idt, title, tmp);
 }
 
 static void
@@ -274,10 +274,10 @@ fu_logitech_hidpp_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
-	fu_string_append_ku(str, idt, "HidppVersion", priv->hidpp_version);
-	fu_string_append_ku(str, idt, "HidppPid", priv->hidpp_pid);
-	fu_string_append_kx(str, idt, "DeviceIdx", priv->device_idx);
-	fu_string_append(str, idt, "ModelId", priv->model_id);
+	fwupd_codec_string_append_int(str, idt, "HidppVersion", priv->hidpp_version);
+	fwupd_codec_string_append_int(str, idt, "HidppPid", priv->hidpp_pid);
+	fwupd_codec_string_append_hex(str, idt, "DeviceIdx", priv->device_idx);
+	fwupd_codec_string_append(str, idt, "ModelId", priv->model_id);
 	for (guint i = 0; i < priv->feature_index->len; i++) {
 		FuLogitechHidppHidppMap *map = g_ptr_array_index(priv->feature_index, i);
 		fu_logitech_hidpp_map_to_string(map, idt, str);

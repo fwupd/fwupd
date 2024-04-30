@@ -25,9 +25,9 @@ static void
 fu_igsc_aux_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuIgscAuxDevice *self = FU_IGSC_AUX_DEVICE(device);
-	fu_string_append_kx(str, idt, "OemManufDataVersion", self->oem_version);
-	fu_string_append_kx(str, idt, "MajorVersion", self->major_version);
-	fu_string_append_kx(str, idt, "MajorVcn", self->major_vcn);
+	fwupd_codec_string_append_hex(str, idt, "OemManufDataVersion", self->oem_version);
+	fwupd_codec_string_append_hex(str, idt, "MajorVersion", self->major_version);
+	fwupd_codec_string_append_hex(str, idt, "MajorVcn", self->major_vcn);
 }
 
 static gboolean

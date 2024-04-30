@@ -8,30 +8,45 @@
 
 #include "config.h"
 
+#include <fwupd.h>
+
 #include "fu-engine-request.h"
 
 struct _FuEngineRequest {
 	GObject parent_instance;
 	FuEngineRequestFlag flags;
 	FwupdFeatureFlags feature_flags;
-	FwupdDeviceFlags device_flags;
+	FwupdCodecFlags converter_flags;
 	gchar *locale;
 };
 
-G_DEFINE_TYPE(FuEngineRequest, fu_engine_request, G_TYPE_OBJECT)
+static void
+fwupd_engine_request_codec_iface_init(FwupdCodecInterface *iface);
 
-void
-fu_engine_request_add_string(FuEngineRequest *self, guint idt, GString *str)
+G_DEFINE_TYPE_WITH_CODE(FuEngineRequest,
+			fu_engine_request,
+			G_TYPE_OBJECT,
+			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
+					      fwupd_engine_request_codec_iface_init))
+
+static void
+fu_engine_request_add_string(FwupdCodec *converter, guint idt, GString *str)
 {
-	g_return_if_fail(FU_IS_ENGINE_REQUEST(self));
+	FuEngineRequest *self = FU_ENGINE_REQUEST(converter);
 	if (self->flags != FU_ENGINE_REQUEST_FLAG_NONE) {
 		g_autofree gchar *flags = fu_engine_request_flag_to_string(self->flags);
-		fu_string_append(str, idt, "Flags", flags);
+		fwupd_codec_string_append(str, idt, "Flags", flags);
 	}
-	fu_string_append_kx(str, idt, "FeatureFlags", self->feature_flags);
-	fu_string_append_kx(str, idt, "DeviceFlags", self->device_flags);
+	fwupd_codec_string_append_hex(str, idt, "FeatureFlags", self->feature_flags);
+	fwupd_codec_string_append_hex(str, idt, "ConverterFlags", self->converter_flags);
 	if (self->locale != NULL)
-		fu_string_append(str, idt, "Locale", self->locale);
+		fwupd_codec_string_append(str, idt, "Locale", self->locale);
+}
+
+static void
+fwupd_engine_request_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_string = fu_engine_request_add_string;
 }
 
 FwupdFeatureFlags
@@ -93,32 +108,32 @@ fu_engine_request_has_feature_flag(FuEngineRequest *self, FwupdFeatureFlags feat
 	return (self->feature_flags & feature_flag) > 0;
 }
 
-FwupdDeviceFlags
-fu_engine_request_get_device_flags(FuEngineRequest *self)
+FwupdCodecFlags
+fu_engine_request_get_converter_flags(FuEngineRequest *self)
 {
 	g_return_val_if_fail(FU_IS_ENGINE_REQUEST(self), FALSE);
-	return self->device_flags;
+	return self->converter_flags;
 }
 
 void
-fu_engine_request_set_device_flags(FuEngineRequest *self, FwupdDeviceFlags device_flags)
+fu_engine_request_set_converter_flags(FuEngineRequest *self, FwupdCodecFlags converter_flags)
 {
 	g_return_if_fail(FU_IS_ENGINE_REQUEST(self));
-	self->device_flags = device_flags;
+	self->converter_flags = converter_flags;
 }
 
 gboolean
-fu_engine_request_has_device_flag(FuEngineRequest *self, FwupdDeviceFlags device_flag)
+fu_engine_request_has_converter_flag(FuEngineRequest *self, FwupdCodecFlags device_flag)
 {
 	g_return_val_if_fail(FU_IS_ENGINE_REQUEST(self), FALSE);
-	return (self->device_flags & device_flag) > 0;
+	return (self->converter_flags & device_flag) > 0;
 }
 
 static void
 fu_engine_request_init(FuEngineRequest *self)
 {
 	self->flags = FU_ENGINE_REQUEST_FLAG_NONE;
-	self->device_flags = FWUPD_DEVICE_FLAG_NONE;
+	self->converter_flags = FWUPD_CODEC_FLAG_NONE;
 	self->feature_flags = FWUPD_FEATURE_FLAG_NONE;
 }
 

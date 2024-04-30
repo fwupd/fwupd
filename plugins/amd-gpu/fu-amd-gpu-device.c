@@ -39,8 +39,8 @@ fu_amd_gpu_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuAmdGpuDevice *self = FU_AMDGPU_DEVICE(device);
 
-	fu_string_append_ku(str, idt, "DrmMajor", self->drm_major);
-	fu_string_append_ku(str, idt, "DrmMinor", self->drm_minor);
+	fwupd_codec_string_append_int(str, idt, "DrmMajor", self->drm_major);
+	fwupd_codec_string_append_int(str, idt, "DrmMinor", self->drm_minor);
 }
 
 static gboolean

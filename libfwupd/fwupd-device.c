@@ -9,6 +9,7 @@
 #include <gio/gio.h>
 #include <string.h>
 
+#include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
@@ -92,7 +93,16 @@ enum {
 	PROP_LAST
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE(FwupdDevice, fwupd_device, G_TYPE_OBJECT)
+static void
+fwupd_device_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FwupdDevice,
+		       fwupd_device,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_ADD_PRIVATE(FwupdDevice)
+			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fwupd_device_codec_iface_init));
+
 #define GET_PRIVATE(o) (fwupd_device_get_instance_private(o))
 
 #define FWUPD_BATTERY_THRESHOLD_DEFAULT 10 /* % */
@@ -1931,21 +1941,10 @@ fwupd_device_incorporate(FwupdDevice *self, FwupdDevice *donor)
 	}
 }
 
-/**
- * fwupd_device_to_variant_full:
- * @self: a #FwupdDevice
- * @flags: device flags
- *
- * Serialize the device data.
- * Optionally provides additional data based upon flags
- *
- * Returns: the serialized data, or %NULL for error
- *
- * Since: 1.1.2
- **/
-GVariant *
-fwupd_device_to_variant_full(FwupdDevice *self, FwupdDeviceFlags flags)
+static GVariant *
+fwupd_device_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 {
+	FwupdDevice *self = FWUPD_DEVICE(converter);
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 	GVariantBuilder builder;
 
@@ -2202,7 +2201,7 @@ fwupd_device_to_variant_full(FwupdDevice *self, FwupdDeviceFlags flags)
 				      FWUPD_RESULT_KEY_VERSION_FORMAT,
 				      g_variant_new_uint32(priv->version_format));
 	}
-	if (flags & FWUPD_DEVICE_FLAG_TRUSTED) {
+	if (flags & FWUPD_CODEC_FLAG_TRUSTED) {
 		if (priv->serial != NULL) {
 			g_variant_builder_add(&builder,
 					      "{sv}",
@@ -2224,7 +2223,8 @@ fwupd_device_to_variant_full(FwupdDevice *self, FwupdDeviceFlags flags)
 		children = g_new0(GVariant *, priv->releases->len);
 		for (guint i = 0; i < priv->releases->len; i++) {
 			FwupdRelease *release = g_ptr_array_index(priv->releases, i);
-			children[i] = fwupd_release_to_variant(release);
+			children[i] =
+			    fwupd_codec_to_variant(FWUPD_CODEC(release), FWUPD_CODEC_FLAG_NONE);
 		}
 		g_variant_builder_add(
 		    &builder,
@@ -2235,22 +2235,6 @@ fwupd_device_to_variant_full(FwupdDevice *self, FwupdDeviceFlags flags)
 	return g_variant_new("a{sv}", &builder);
 }
 
-/**
- * fwupd_device_to_variant:
- * @self: a #FwupdDevice
- *
- * Serialize the device data omitting sensitive fields
- *
- * Returns: the serialized data, or %NULL for error
- *
- * Since: 1.0.0
- **/
-GVariant *
-fwupd_device_to_variant(FwupdDevice *self)
-{
-	return fwupd_device_to_variant_full(self, FWUPD_DEVICE_FLAG_NONE);
-}
-
 static void
 fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value)
 {
@@ -2259,8 +2243,8 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 		GVariant *child;
 		g_variant_iter_init(&iter, value);
 		while ((child = g_variant_iter_next_value(&iter))) {
-			g_autoptr(FwupdRelease) release = fwupd_release_from_variant(child);
-			if (release != NULL)
+			g_autoptr(FwupdRelease) release = fwupd_release_new();
+			if (fwupd_codec_from_variant(FWUPD_CODEC(release), child, NULL))
 				fwupd_device_add_release(self, release);
 			g_variant_unref(child);
 		}
@@ -2444,7 +2428,7 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 }
 
 static void
-fwupd_pad_kv_dfl(GString *str, const gchar *key, guint64 device_flags)
+fwupd_device_string_append_flags(GString *str, guint idt, const gchar *key, guint64 device_flags)
 {
 	g_autoptr(GString) tmp = g_string_new("");
 	for (guint i = 0; i < 64; i++) {
@@ -2457,11 +2441,14 @@ fwupd_pad_kv_dfl(GString *str, const gchar *key, guint64 device_flags)
 	} else {
 		g_string_truncate(tmp, tmp->len - 1);
 	}
-	fwupd_pad_kv_str(str, key, tmp->str);
+	fwupd_codec_string_append(str, idt, key, tmp->str);
 }
 
 static void
-fwupd_pad_kv_drfl(GString *str, const gchar *key, guint64 request_flags)
+fwupd_device_string_append_request_flags(GString *str,
+					 guint idt,
+					 const gchar *key,
+					 guint64 request_flags)
 {
 	g_autoptr(GString) tmp = g_string_new("");
 	for (guint i = 0; i < 64; i++) {
@@ -2474,11 +2461,14 @@ fwupd_pad_kv_drfl(GString *str, const gchar *key, guint64 request_flags)
 	} else {
 		g_string_truncate(tmp, tmp->len - 1);
 	}
-	fwupd_pad_kv_str(str, key, tmp->str);
+	fwupd_codec_string_append(str, idt, key, tmp->str);
 }
 
 static void
-fwupd_device_pad_kv_problems(GString *str, const gchar *key, guint64 device_problems)
+fwupd_device_string_append_problems(GString *str,
+				    guint idt,
+				    const gchar *key,
+				    guint64 device_problems)
 {
 	g_autoptr(GString) tmp = g_string_new("");
 	for (guint i = 0; i < 64; i++) {
@@ -2491,7 +2481,7 @@ fwupd_device_pad_kv_problems(GString *str, const gchar *key, guint64 device_prob
 	} else {
 		g_string_truncate(tmp, tmp->len - 1);
 	}
-	fwupd_pad_kv_str(str, key, tmp->str);
+	fwupd_codec_string_append(str, idt, key, tmp->str);
 }
 
 /**
@@ -2896,37 +2886,27 @@ fwupd_device_set_percentage(FwupdDevice *self, guint percentage)
 }
 
 static void
-fwupd_pad_kv_ups(GString *str, const gchar *key, FwupdUpdateState value)
+fwupd_device_string_append_update_state(GString *str,
+					guint idt,
+					const gchar *key,
+					FwupdUpdateState value)
 {
 	if (value == FWUPD_UPDATE_STATE_UNKNOWN)
 		return;
-	fwupd_pad_kv_str(str, key, fwupd_update_state_to_string(value));
+	fwupd_codec_string_append(str, idt, key, fwupd_update_state_to_string(value));
 }
 
-/**
- * fwupd_device_to_json_full:
- * @self: a #FwupdDevice
- * @builder: (not nullable): a JSON builder
- * @flags: device flags
- *
- * Adds a fwupd device to a JSON builder
- * Optionally provides additional data based upon flags
- *
- * Since: 1.8.2
- **/
-void
-fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFlags flags)
+static void
+fwupd_device_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
 {
+	FwupdDevice *self = FWUPD_DEVICE(converter);
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 
-	g_return_if_fail(FWUPD_IS_DEVICE(self));
-	g_return_if_fail(builder != NULL);
-
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_NAME, priv->name);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PARENT_DEVICE_ID, priv->parent_id);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_COMPOSITE_ID, priv->composite_id);
-	if (flags & FWUPD_DEVICE_FLAG_TRUSTED && priv->instance_ids->len > 0) {
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_PARENT_DEVICE_ID, priv->parent_id);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_COMPOSITE_ID, priv->composite_id);
+	if (flags & FWUPD_CODEC_FLAG_TRUSTED && priv->instance_ids->len > 0) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_INSTANCE_IDS);
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->instance_ids->len; i++) {
@@ -2944,11 +2924,11 @@ fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFl
 		}
 		json_builder_end_array(builder);
 	}
-	if (flags & FWUPD_DEVICE_FLAG_TRUSTED)
-		fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_SERIAL, priv->serial);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
+	if (flags & FWUPD_CODEC_FLAG_TRUSTED)
+		fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_SERIAL, priv->serial);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	if (priv->protocols->len > 0) {
 		json_builder_set_member_name(builder, "Protocols");
 		json_builder_begin_array(builder);
@@ -3012,8 +2992,8 @@ fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFl
 		}
 		json_builder_end_array(builder);
 	}
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_VENDOR_ID, priv->vendor_id);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_VENDOR_ID, priv->vendor_id);
 	if (priv->vendor_ids->len > 1) { /* --> 0 when bumping API */
 		json_builder_set_member_name(builder, "VendorIds");
 		json_builder_begin_array(builder);
@@ -3023,44 +3003,47 @@ fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFl
 		}
 		json_builder_end_array(builder);
 	}
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_VERSION, priv->version);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_VERSION_LOWEST,
-				     priv->version_lowest);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_VERSION_BOOTLOADER,
-				     priv->version_bootloader);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_VERSION_FORMAT,
-				     fwupd_version_format_to_string(priv->version_format));
-	if (priv->flashes_left > 0)
-		fwupd_common_json_add_int(builder,
-					  FWUPD_RESULT_KEY_FLASHES_LEFT,
-					  priv->flashes_left);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_VERSION, priv->version);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_VERSION_LOWEST, priv->version_lowest);
+	fwupd_codec_json_append(builder,
+				FWUPD_RESULT_KEY_VERSION_BOOTLOADER,
+				priv->version_bootloader);
+	fwupd_codec_json_append(builder,
+				FWUPD_RESULT_KEY_VERSION_FORMAT,
+				fwupd_version_format_to_string(priv->version_format));
+	if (priv->flashes_left > 0) {
+		fwupd_codec_json_append_int(builder,
+					    FWUPD_RESULT_KEY_FLASHES_LEFT,
+					    priv->flashes_left);
+	}
 	if (priv->battery_level != FWUPD_BATTERY_LEVEL_INVALID) {
-		fwupd_common_json_add_int(builder,
-					  FWUPD_RESULT_KEY_BATTERY_LEVEL,
-					  priv->battery_level);
+		fwupd_codec_json_append_int(builder,
+					    FWUPD_RESULT_KEY_BATTERY_LEVEL,
+					    priv->battery_level);
 	}
 	if (priv->battery_threshold != FWUPD_BATTERY_LEVEL_INVALID) {
-		fwupd_common_json_add_int(builder,
-					  FWUPD_RESULT_KEY_BATTERY_THRESHOLD,
-					  priv->battery_threshold);
+		fwupd_codec_json_append_int(builder,
+					    FWUPD_RESULT_KEY_BATTERY_THRESHOLD,
+					    priv->battery_threshold);
 	}
-	if (priv->version_raw > 0)
-		fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_VERSION_RAW, priv->version_raw);
+	if (priv->version_raw > 0) {
+		fwupd_codec_json_append_int(builder,
+					    FWUPD_RESULT_KEY_VERSION_RAW,
+					    priv->version_raw);
+	}
 	if (priv->version_lowest_raw > 0)
-		fwupd_common_json_add_int(builder,
-					  FWUPD_RESULT_KEY_VERSION_LOWEST_RAW,
-					  priv->version_lowest_raw);
+		fwupd_codec_json_append_int(builder,
+					    FWUPD_RESULT_KEY_VERSION_LOWEST_RAW,
+					    priv->version_lowest_raw);
 	if (priv->version_bootloader_raw > 0)
-		fwupd_common_json_add_int(builder,
-					  FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW,
-					  priv->version_bootloader_raw);
-	if (priv->version_build_date > 0)
-		fwupd_common_json_add_int(builder,
-					  FWUPD_RESULT_KEY_VERSION_BUILD_DATE,
-					  priv->version_build_date);
+		fwupd_codec_json_append_int(builder,
+					    FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW,
+					    priv->version_bootloader_raw);
+	if (priv->version_build_date > 0) {
+		fwupd_codec_json_append_int(builder,
+					    FWUPD_RESULT_KEY_VERSION_BUILD_DATE,
+					    priv->version_build_date);
+	}
 	if (priv->icons->len > 0) {
 		json_builder_set_member_name(builder, "Icons");
 		json_builder_begin_array(builder);
@@ -3071,55 +3054,41 @@ fwupd_device_to_json_full(FwupdDevice *self, JsonBuilder *builder, FwupdDeviceFl
 		json_builder_end_array(builder);
 	}
 	if (priv->install_duration > 0) {
-		fwupd_common_json_add_int(builder,
-					  FWUPD_RESULT_KEY_INSTALL_DURATION,
-					  priv->install_duration);
+		fwupd_codec_json_append_int(builder,
+					    FWUPD_RESULT_KEY_INSTALL_DURATION,
+					    priv->install_duration);
 	}
 	if (priv->created > 0)
-		fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_CREATED, priv->created);
+		fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_CREATED, priv->created);
 	if (priv->modified > 0)
-		fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_MODIFIED, priv->modified);
-	if (priv->update_state > 0)
-		fwupd_common_json_add_int(builder,
-					  FWUPD_RESULT_KEY_UPDATE_STATE,
-					  priv->update_state);
+		fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_MODIFIED, priv->modified);
+	if (priv->update_state > 0) {
+		fwupd_codec_json_append_int(builder,
+					    FWUPD_RESULT_KEY_UPDATE_STATE,
+					    priv->update_state);
+	}
 	if (priv->status > 0)
-		fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_STATUS, priv->status);
+		fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_STATUS, priv->status);
 	if (priv->percentage > 0)
-		fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_PERCENTAGE, priv->percentage);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_UPDATE_MESSAGE,
-				     priv->update_message);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
+		fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_PERCENTAGE, priv->percentage);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 	if (priv->releases->len > 0) {
 		json_builder_set_member_name(builder, "Releases");
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->releases->len; i++) {
 			FwupdRelease *release = g_ptr_array_index(priv->releases, i);
-			json_builder_begin_object(builder);
-			fwupd_release_to_json(release, builder);
-			json_builder_end_object(builder);
+			fwupd_codec_to_json(FWUPD_CODEC(release), builder, flags);
 		}
 		json_builder_end_array(builder);
 	}
 }
 
-/**
- * fwupd_device_from_json:
- * @self: a #FwupdDevice
- * @json_node: (not nullable): a JSON node
- * @error: (nullable): optional return location for an error
- *
- * Loads a fwupd security attribute from a JSON node.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.8.3
- **/
-gboolean
-fwupd_device_from_json(FwupdDevice *self, JsonNode *json_node, GError **error)
+static gboolean
+fwupd_device_from_json(FwupdCodec *converter, JsonNode *json_node, GError **error)
 {
+	FwupdDevice *self = FWUPD_DEVICE(converter);
 	JsonObject *obj;
 
 	g_return_val_if_fail(FWUPD_IS_DEVICE(self), FALSE);
@@ -3396,21 +3365,6 @@ fwupd_device_from_json(FwupdDevice *self, JsonNode *json_node, GError **error)
 	return TRUE;
 }
 
-/**
- * fwupd_device_to_json:
- * @self: a #FwupdDevice
- * @builder: (not nullable): a JSON builder
- *
- * Adds a fwupd device to a JSON builder
- *
- * Since: 1.2.6
- **/
-void
-fwupd_device_to_json(FwupdDevice *self, JsonBuilder *builder)
-{
-	return fwupd_device_to_json_full(self, builder, FWUPD_DEVICE_FLAG_NONE);
-}
-
 static gchar *
 fwupd_device_verstr_raw(guint64 value_raw)
 {
@@ -3446,39 +3400,35 @@ fwupd_device_guid_helper_array_find(GPtrArray *array, const gchar *guid)
 	return NULL;
 }
 
-/**
- * fwupd_device_to_string:
- * @self: a #FwupdDevice
- *
- * Builds a text representation of the object.
- *
- * Returns: text, or %NULL for invalid
- *
- * Since: 0.9.3
- **/
-gchar *
-fwupd_device_to_string(FwupdDevice *self)
+static void
+fwupd_device_add_string(FwupdCodec *converter, guint idt, GString *str)
 {
+	FwupdDevice *self = FWUPD_DEVICE(converter);
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GString) str = g_string_new(NULL);
 	g_autoptr(GPtrArray) guid_helpers = NULL;
 
-	g_return_val_if_fail(FWUPD_IS_DEVICE(self), NULL);
-
-	g_string_append_printf(str, "%s:\n", G_OBJECT_TYPE_NAME(self));
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
-	if (g_strcmp0(priv->composite_id, priv->parent_id) != 0)
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_PARENT_DEVICE_ID, priv->parent_id);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_COMPOSITE_ID, priv->composite_id);
-	if (priv->name != NULL)
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_NAME, priv->name);
-	if (priv->status != FWUPD_STATUS_UNKNOWN) {
-		fwupd_pad_kv_str(str,
-				 FWUPD_RESULT_KEY_STATUS,
-				 fwupd_status_to_string(priv->status));
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
+	if (g_strcmp0(priv->composite_id, priv->parent_id) != 0) {
+		fwupd_codec_string_append(str,
+					  idt,
+					  FWUPD_RESULT_KEY_PARENT_DEVICE_ID,
+					  priv->parent_id);
 	}
-	if (priv->percentage != 0)
-		fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_PERCENTAGE, priv->percentage);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_COMPOSITE_ID, priv->composite_id);
+	if (priv->name != NULL)
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_NAME, priv->name);
+	if (priv->status != FWUPD_STATUS_UNKNOWN) {
+		fwupd_codec_string_append(str,
+					  idt,
+					  FWUPD_RESULT_KEY_STATUS,
+					  fwupd_status_to_string(priv->status));
+	}
+	if (priv->percentage != 0) {
+		fwupd_codec_string_append_int(str,
+					      idt,
+					      FWUPD_RESULT_KEY_PERCENTAGE,
+					      priv->percentage);
+	}
 
 	/* show instance IDs optionally mapped to GUIDs, and also "standalone" GUIDs */
 	guid_helpers = g_ptr_array_new_with_free_func((GDestroyNotify)fwupd_device_guid_helper_new);
@@ -3504,66 +3454,89 @@ fwupd_device_to_string(FwupdDevice *self)
 			g_string_append_printf(tmp, " ← %s", helper->instance_id);
 		if (!fwupd_device_has_guid(self, helper->guid))
 			g_string_append(tmp, " ⚠");
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_GUID, tmp->str);
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_GUID, tmp->str);
 	}
 
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_SERIAL, priv->serial);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BRANCH, priv->branch);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_SERIAL, priv->serial);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_BRANCH, priv->branch);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	for (guint i = 0; i < priv->protocols->len; i++) {
 		const gchar *tmp = g_ptr_array_index(priv->protocols, i);
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_PROTOCOL, tmp);
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_PROTOCOL, tmp);
 	}
 	for (guint i = 0; i < priv->issues->len; i++) {
 		const gchar *tmp = g_ptr_array_index(priv->issues, i);
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_ISSUES, tmp);
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_ISSUES, tmp);
 	}
-	fwupd_pad_kv_dfl(str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
+	fwupd_device_string_append_flags(str, idt, FWUPD_RESULT_KEY_FLAGS, priv->flags);
 	if (priv->problems != FWUPD_DEVICE_PROBLEM_NONE) {
-		fwupd_device_pad_kv_problems(str, FWUPD_RESULT_KEY_PROBLEMS, priv->problems);
+		fwupd_device_string_append_problems(str,
+						    idt,
+						    FWUPD_RESULT_KEY_PROBLEMS,
+						    priv->problems);
 	}
-	if (priv->request_flags > 0)
-		fwupd_pad_kv_drfl(str, FWUPD_RESULT_KEY_REQUEST_FLAGS, priv->request_flags);
+	if (priv->request_flags > 0) {
+		fwupd_device_string_append_request_flags(str,
+							 idt,
+							 FWUPD_RESULT_KEY_REQUEST_FLAGS,
+							 priv->request_flags);
+	}
 	for (guint i = 0; i < priv->checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index(priv->checksums, i);
 		g_autofree gchar *checksum_display = fwupd_checksum_format_for_display(checksum);
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_CHECKSUM, checksum_display);
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_CHECKSUM, checksum_display);
 	}
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
 	for (guint i = 0; i < priv->vendor_ids->len; i++) {
 		const gchar *tmp = g_ptr_array_index(priv->vendor_ids, i);
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VENDOR_ID, tmp);
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VENDOR_ID, tmp);
 	}
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VERSION, priv->version);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VERSION_LOWEST, priv->version_lowest);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VERSION_BOOTLOADER, priv->version_bootloader);
-	fwupd_pad_kv_str(str,
-			 FWUPD_RESULT_KEY_VERSION_FORMAT,
-			 fwupd_version_format_to_string(priv->version_format));
-	if (priv->flashes_left < 2)
-		fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_FLASHES_LEFT, priv->flashes_left);
-
-	if (priv->battery_level != FWUPD_BATTERY_LEVEL_INVALID)
-		fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_BATTERY_LEVEL, priv->battery_level);
-	if (priv->battery_threshold != FWUPD_BATTERY_LEVEL_INVALID)
-		fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_BATTERY_THRESHOLD, priv->battery_threshold);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VERSION, priv->version);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VERSION_LOWEST, priv->version_lowest);
+	fwupd_codec_string_append(str,
+				  idt,
+				  FWUPD_RESULT_KEY_VERSION_BOOTLOADER,
+				  priv->version_bootloader);
+	fwupd_codec_string_append(str,
+				  idt,
+				  FWUPD_RESULT_KEY_VERSION_FORMAT,
+				  fwupd_version_format_to_string(priv->version_format));
+	if (priv->flashes_left < 2) {
+		fwupd_codec_string_append_int(str,
+					      idt,
+					      FWUPD_RESULT_KEY_FLASHES_LEFT,
+					      priv->flashes_left);
+	}
+	if (priv->battery_level != FWUPD_BATTERY_LEVEL_INVALID) {
+		fwupd_codec_string_append_int(str,
+					      idt,
+					      FWUPD_RESULT_KEY_BATTERY_LEVEL,
+					      priv->battery_level);
+	}
+	if (priv->battery_threshold != FWUPD_BATTERY_LEVEL_INVALID) {
+		fwupd_codec_string_append_int(str,
+					      idt,
+					      FWUPD_RESULT_KEY_BATTERY_THRESHOLD,
+					      priv->battery_threshold);
+	}
 	if (priv->version_raw > 0) {
 		g_autofree gchar *tmp = fwupd_device_verstr_raw(priv->version_raw);
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VERSION_RAW, tmp);
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VERSION_RAW, tmp);
 	}
 	if (priv->version_lowest_raw > 0) {
 		g_autofree gchar *tmp = fwupd_device_verstr_raw(priv->version_lowest_raw);
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VERSION_LOWEST_RAW, tmp);
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VERSION_LOWEST_RAW, tmp);
 	}
 	if (priv->version_build_date > 0) {
-		fwupd_pad_kv_unx(str,
-				 FWUPD_RESULT_KEY_VERSION_BUILD_DATE,
-				 priv->version_build_date);
+		fwupd_codec_string_append_time(str,
+					       idt,
+					       FWUPD_RESULT_KEY_VERSION_BUILD_DATE,
+					       priv->version_build_date);
 	}
 	if (priv->version_bootloader_raw > 0) {
 		g_autofree gchar *tmp = fwupd_device_verstr_raw(priv->version_bootloader_raw);
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW, tmp);
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW, tmp);
 	}
 	if (priv->icons->len > 0) {
 		g_autoptr(GString) tmp = g_string_new(NULL);
@@ -3573,22 +3546,25 @@ fwupd_device_to_string(FwupdDevice *self)
 		}
 		if (tmp->len > 1)
 			g_string_truncate(tmp, tmp->len - 1);
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_ICON, tmp->str);
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_ICON, tmp->str);
 	}
-	fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
-	fwupd_pad_kv_unx(str, FWUPD_RESULT_KEY_CREATED, priv->created);
-	fwupd_pad_kv_unx(str, FWUPD_RESULT_KEY_MODIFIED, priv->modified);
-	fwupd_pad_kv_ups(str, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
+	fwupd_codec_string_append_int(str,
+				      idt,
+				      FWUPD_RESULT_KEY_INSTALL_DURATION,
+				      priv->install_duration);
+	fwupd_codec_string_append_time(str, idt, FWUPD_RESULT_KEY_CREATED, priv->created);
+	fwupd_codec_string_append_time(str, idt, FWUPD_RESULT_KEY_MODIFIED, priv->modified);
+	fwupd_device_string_append_update_state(str,
+						idt,
+						FWUPD_RESULT_KEY_UPDATE_STATE,
+						priv->update_state);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 	for (guint i = 0; i < priv->releases->len; i++) {
 		FwupdRelease *release = g_ptr_array_index(priv->releases, i);
-		g_autofree gchar *tmp = fwupd_release_to_string(release);
-		g_string_append_printf(str, "  \n  [%s]\n%s", FWUPD_RESULT_KEY_RELEASE, tmp);
+		fwupd_codec_add_string(FWUPD_CODEC(release), idt, str);
 	}
-
-	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 static void
@@ -3983,8 +3959,9 @@ fwupd_device_finalize(GObject *object)
 }
 
 static void
-fwupd_device_set_from_variant_iter(FwupdDevice *self, GVariantIter *iter)
+fwupd_device_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
 {
+	FwupdDevice *self = FWUPD_DEVICE(converter);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {
@@ -3993,39 +3970,14 @@ fwupd_device_set_from_variant_iter(FwupdDevice *self, GVariantIter *iter)
 	}
 }
 
-/**
- * fwupd_device_from_variant:
- * @value: (not nullable): the serialized data
- *
- * Creates a new device using serialized data.
- *
- * Returns: (transfer full): a new #FwupdDevice, or %NULL if @value was invalid
- *
- * Since: 1.0.0
- **/
-FwupdDevice *
-fwupd_device_from_variant(GVariant *value)
+static void
+fwupd_device_codec_iface_init(FwupdCodecInterface *iface)
 {
-	FwupdDevice *dev = NULL;
-	const gchar *type_string;
-	g_autoptr(GVariantIter) iter = NULL;
-
-	g_return_val_if_fail(value != NULL, NULL);
-
-	/* format from GetDetails */
-	type_string = g_variant_get_type_string(value);
-	if (g_strcmp0(type_string, "(a{sv})") == 0) {
-		dev = fwupd_device_new();
-		g_variant_get(value, "(a{sv})", &iter);
-		fwupd_device_set_from_variant_iter(dev, iter);
-	} else if (g_strcmp0(type_string, "a{sv}") == 0) {
-		dev = fwupd_device_new();
-		g_variant_get(value, "a{sv}", &iter);
-		fwupd_device_set_from_variant_iter(dev, iter);
-	} else {
-		g_warning("type %s not known", type_string);
-	}
-	return dev;
+	iface->add_string = fwupd_device_add_string;
+	iface->to_json = fwupd_device_to_json;
+	iface->from_json = fwupd_device_from_json;
+	iface->to_variant = fwupd_device_to_variant;
+	iface->from_variant_iter = fwupd_device_from_variant_iter;
 }
 
 /**
@@ -4065,43 +4017,6 @@ fwupd_device_array_ensure_parents(GPtrArray *devices)
 				fwupd_device_set_parent(dev, dev_tmp);
 		}
 	}
-}
-
-/**
- * fwupd_device_array_from_variant:
- * @value: (not nullable): the serialized data
- *
- * Creates an array of new devices using serialized data.
- *
- * Returns: (transfer container) (element-type FwupdDevice): devices, or %NULL if @value was invalid
- *
- * Since: 1.2.10
- **/
-GPtrArray *
-fwupd_device_array_from_variant(GVariant *value)
-{
-	GPtrArray *array = NULL;
-	gsize sz;
-	g_autoptr(GVariant) untuple = NULL;
-
-	g_return_val_if_fail(value != NULL, NULL);
-
-	array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	untuple = g_variant_get_child_value(value, 0);
-	sz = g_variant_n_children(untuple);
-	for (guint i = 0; i < sz; i++) {
-		FwupdDevice *dev;
-		g_autoptr(GVariant) data = NULL;
-		data = g_variant_get_child_value(untuple, i);
-		dev = fwupd_device_from_variant(data);
-		if (dev == NULL)
-			continue;
-		g_ptr_array_add(array, dev);
-	}
-
-	/* set the parent on each child */
-	fwupd_device_array_ensure_parents(array);
-	return array;
 }
 
 /**

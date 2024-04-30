@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-request-private.h"
@@ -43,7 +44,16 @@ enum {
 
 static guint signals[SIGNAL_LAST] = {0};
 
-G_DEFINE_TYPE_WITH_PRIVATE(FwupdRequest, fwupd_request, G_TYPE_OBJECT)
+static void
+fwupd_request_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FwupdRequest,
+		       fwupd_request,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_ADD_PRIVATE(FwupdRequest)
+			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fwupd_request_codec_iface_init));
+
 #define GET_PRIVATE(o) (fwupd_request_get_instance_private(o))
 
 /**
@@ -274,23 +284,12 @@ fwupd_request_set_created(FwupdRequest *self, guint64 created)
 	priv->created = created;
 }
 
-/**
- * fwupd_request_to_variant:
- * @self: a #FwupdRequest
- *
- * Serialize the request data.
- *
- * Returns: the serialized data, or %NULL for error
- *
- * Since: 1.6.2
- **/
-GVariant *
-fwupd_request_to_variant(FwupdRequest *self)
+static GVariant *
+fwupd_request_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 {
+	FwupdRequest *self = FWUPD_REQUEST(converter);
 	FwupdRequestPrivate *priv = GET_PRIVATE(self);
 	GVariantBuilder builder;
-
-	g_return_val_if_fail(FWUPD_IS_REQUEST(self), NULL);
 
 	/* create an array with all the metadata in */
 	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
@@ -610,36 +609,26 @@ fwupd_request_has_flag(FwupdRequest *self, FwupdRequestFlags flag)
 	return (priv->flags & flag) > 0;
 }
 
-/**
- * fwupd_request_to_string:
- * @self: a #FwupdRequest
- *
- * Builds a text representation of the object.
- *
- * Returns: text, or %NULL for invalid
- *
- * Since: 1.6.2
- **/
-gchar *
-fwupd_request_to_string(FwupdRequest *self)
+static void
+fwupd_request_add_string(FwupdCodec *converter, guint idt, GString *str)
 {
+	FwupdRequest *self = FWUPD_REQUEST(converter);
 	FwupdRequestPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GString) str = g_string_new(NULL);
-
-	g_return_val_if_fail(FWUPD_IS_REQUEST(self), NULL);
-
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->id);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->id);
 	if (priv->kind != FWUPD_REQUEST_KIND_UNKNOWN) {
-		fwupd_pad_kv_str(str,
-				 FWUPD_RESULT_KEY_REQUEST_KIND,
-				 fwupd_request_kind_to_string(priv->kind));
+		fwupd_codec_string_append(str,
+					  idt,
+					  FWUPD_RESULT_KEY_REQUEST_KIND,
+					  fwupd_request_kind_to_string(priv->kind));
 	}
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_FLAGS, fwupd_request_flag_to_string(priv->flags));
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DEVICE_ID, priv->device_id);
-	fwupd_pad_kv_unx(str, FWUPD_RESULT_KEY_CREATED, priv->created);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->message);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->image);
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	fwupd_codec_string_append(str,
+				  idt,
+				  FWUPD_RESULT_KEY_FLAGS,
+				  fwupd_request_flag_to_string(priv->flags));
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DEVICE_ID, priv->device_id);
+	fwupd_codec_string_append_time(str, idt, FWUPD_RESULT_KEY_CREATED, priv->created);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->message);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->image);
 }
 
 static void
@@ -835,8 +824,9 @@ fwupd_request_class_init(FwupdRequestClass *klass)
 }
 
 static void
-fwupd_request_set_from_variant_iter(FwupdRequest *self, GVariantIter *iter)
+fwupd_request_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
 {
+	FwupdRequest *self = FWUPD_REQUEST(converter);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {
@@ -845,39 +835,12 @@ fwupd_request_set_from_variant_iter(FwupdRequest *self, GVariantIter *iter)
 	}
 }
 
-/**
- * fwupd_request_from_variant:
- * @value: (not nullable): the serialized data
- *
- * Creates a new request using serialized data.
- *
- * Returns: (transfer full): a new #FwupdRequest, or %NULL if @value was invalid
- *
- * Since: 1.6.2
- **/
-FwupdRequest *
-fwupd_request_from_variant(GVariant *value)
+static void
+fwupd_request_codec_iface_init(FwupdCodecInterface *iface)
 {
-	FwupdRequest *self = NULL;
-	const gchar *type_string;
-	g_autoptr(GVariantIter) iter = NULL;
-
-	g_return_val_if_fail(value != NULL, NULL);
-
-	/* format from GetDetails */
-	type_string = g_variant_get_type_string(value);
-	if (g_strcmp0(type_string, "(a{sv})") == 0) {
-		self = fwupd_request_new();
-		g_variant_get(value, "(a{sv})", &iter);
-		fwupd_request_set_from_variant_iter(self, iter);
-	} else if (g_strcmp0(type_string, "a{sv}") == 0) {
-		self = fwupd_request_new();
-		g_variant_get(value, "a{sv}", &iter);
-		fwupd_request_set_from_variant_iter(self, iter);
-	} else {
-		g_warning("type %s not known", type_string);
-	}
-	return self;
+	iface->add_string = fwupd_request_add_string;
+	iface->to_variant = fwupd_request_to_variant;
+	iface->from_variant_iter = fwupd_request_from_variant_iter;
 }
 
 /**

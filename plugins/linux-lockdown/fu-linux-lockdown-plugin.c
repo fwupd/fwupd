@@ -178,7 +178,10 @@ static void
 fu_linux_lockdown_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuLinuxLockdownPlugin *self = FU_LINUX_LOCKDOWN_PLUGIN(plugin);
-	fu_string_append(str, idt, "Lockdown", fu_linux_lockdown_to_string(self->lockdown));
+	fwupd_codec_string_append(str,
+				  idt,
+				  "Lockdown",
+				  fu_linux_lockdown_to_string(self->lockdown));
 }
 
 static void

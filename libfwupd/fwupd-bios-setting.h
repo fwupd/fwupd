@@ -54,8 +54,6 @@ typedef enum {
 
 FwupdBiosSetting *
 fwupd_bios_setting_new(const gchar *name, const gchar *path);
-gchar *
-fwupd_bios_setting_to_string(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
 
 gboolean
 fwupd_bios_setting_get_read_only(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
@@ -106,11 +104,6 @@ fwupd_bios_setting_add_possible_value(FwupdBiosSetting *self, const gchar *possi
     G_GNUC_NON_NULL(1, 2);
 GPtrArray *
 fwupd_bios_setting_get_possible_values(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);
-
-FwupdBiosSetting *
-fwupd_bios_setting_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
-GPtrArray *
-fwupd_bios_setting_array_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
 
 const gchar *
 fwupd_bios_setting_get_current_value(FwupdBiosSetting *self) G_GNUC_NON_NULL(1);

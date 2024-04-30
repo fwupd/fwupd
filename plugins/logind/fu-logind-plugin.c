@@ -23,7 +23,7 @@ static void
 fu_logind_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuLogindPlugin *self = FU_LOGIND_PLUGIN(plugin);
-	fu_string_append_kx(str, idt, "LogindFd", self->logind_fd);
+	fwupd_codec_string_append_hex(str, idt, "LogindFd", self->logind_fd);
 }
 
 static gboolean

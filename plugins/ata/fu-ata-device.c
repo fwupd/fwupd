@@ -111,12 +111,12 @@ static void
 fu_ata_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE(device);
-	fu_string_append_kx(str, idt, "TransferMode", self->transfer_mode);
-	fu_string_append_kx(str, idt, "TransferBlocks", self->transfer_blocks);
+	fwupd_codec_string_append_hex(str, idt, "TransferMode", self->transfer_mode);
+	fwupd_codec_string_append_hex(str, idt, "TransferBlocks", self->transfer_blocks);
 	if (self->oui != 0x0)
-		fu_string_append_kx(str, idt, "OUI", self->oui);
-	fu_string_append_ku(str, idt, "PciDepth", self->pci_depth);
-	fu_string_append_ku(str, idt, "UsbDepth", self->usb_depth);
+		fwupd_codec_string_append_hex(str, idt, "OUI", self->oui);
+	fwupd_codec_string_append_int(str, idt, "PciDepth", self->pci_depth);
+	fwupd_codec_string_append_int(str, idt, "UsbDepth", self->usb_depth);
 }
 
 /* https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-ide-devices */

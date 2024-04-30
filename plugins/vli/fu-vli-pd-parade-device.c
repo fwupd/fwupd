@@ -27,9 +27,12 @@ static void
 fu_vli_pd_parade_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
-	fu_string_append(str, idt, "DeviceKind", fu_vli_device_kind_to_string(self->device_kind));
-	fu_string_append_kx(str, idt, "Page2", self->page2);
-	fu_string_append_kx(str, idt, "Page7", self->page7);
+	fwupd_codec_string_append(str,
+				  idt,
+				  "DeviceKind",
+				  fu_vli_device_kind_to_string(self->device_kind));
+	fwupd_codec_string_append_hex(str, idt, "Page2", self->page2);
+	fwupd_codec_string_append_hex(str, idt, "Page7", self->page7);
 }
 
 static gboolean

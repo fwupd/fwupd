@@ -13,8 +13,6 @@
 
 G_BEGIN_DECLS
 
-GVariant *
-fwupd_remote_to_variant(FwupdRemote *self) G_GNUC_NON_NULL(1);
 void
 fwupd_remote_set_kind(FwupdRemote *self, FwupdRemoteKind kind) G_GNUC_NON_NULL(1);
 void
@@ -66,7 +64,5 @@ gchar *
 fwupd_remote_build_metadata_sig_uri(FwupdRemote *self, GError **error) G_GNUC_NON_NULL(1);
 gchar *
 fwupd_remote_build_metadata_uri(FwupdRemote *self, GError **error) G_GNUC_NON_NULL(1);
-void
-fwupd_remote_to_json(FwupdRemote *self, JsonBuilder *builder) G_GNUC_NON_NULL(1, 2);
 
 G_END_DECLS

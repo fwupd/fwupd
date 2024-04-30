@@ -46,7 +46,7 @@ static void
 fu_bcm57xx_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE(device);
-	fu_string_append(str, idt, "EthtoolIface", self->ethtool_iface);
+	fwupd_codec_string_append(str, idt, "EthtoolIface", self->ethtool_iface);
 }
 
 static gboolean

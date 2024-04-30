@@ -15,10 +15,8 @@
 #include <glib/gstdio.h>
 #include <jcat.h>
 
-#include "fwupd-bios-setting-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
-#include "fwupd-plugin-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-request-private.h"
@@ -144,7 +142,7 @@ fu_daemon_engine_device_added_cb(FuEngine *engine, FuDevice *device, FuDaemon *s
 	/* not yet connected */
 	if (self->connection == NULL)
 		return;
-	val = fwupd_device_to_variant(FWUPD_DEVICE(device));
+	val = fwupd_codec_to_variant(FWUPD_CODEC(device), FWUPD_CODEC_FLAG_NONE);
 	g_dbus_connection_emit_signal(self->connection,
 				      NULL,
 				      FWUPD_DBUS_PATH,
@@ -163,7 +161,7 @@ fu_daemon_engine_device_removed_cb(FuEngine *engine, FuDevice *device, FuDaemon 
 	/* not yet connected */
 	if (self->connection == NULL)
 		return;
-	val = fwupd_device_to_variant(FWUPD_DEVICE(device));
+	val = fwupd_codec_to_variant(FWUPD_CODEC(device), FWUPD_CODEC_FLAG_NONE);
 	g_dbus_connection_emit_signal(self->connection,
 				      NULL,
 				      FWUPD_DBUS_PATH,
@@ -182,7 +180,7 @@ fu_daemon_engine_device_changed_cb(FuEngine *engine, FuDevice *device, FuDaemon 
 	/* not yet connected */
 	if (self->connection == NULL)
 		return;
-	val = fwupd_device_to_variant(FWUPD_DEVICE(device));
+	val = fwupd_codec_to_variant(FWUPD_CODEC(device), FWUPD_CODEC_FLAG_NONE);
 	g_dbus_connection_emit_signal(self->connection,
 				      NULL,
 				      FWUPD_DBUS_PATH,
@@ -201,7 +199,7 @@ fu_daemon_engine_device_request_cb(FuEngine *engine, FwupdRequest *request, FuDa
 	/* not yet connected */
 	if (self->connection == NULL)
 		return;
-	val = fwupd_request_to_variant(FWUPD_REQUEST(request));
+	val = fwupd_codec_to_variant(FWUPD_CODEC(request), FWUPD_CODEC_FLAG_NONE);
 	g_dbus_connection_emit_signal(self->connection,
 				      NULL,
 				      FWUPD_DBUS_PATH,
@@ -266,7 +264,7 @@ fu_daemon_engine_status_changed_cb(FuEngine *engine, FwupdStatus status, FuDaemo
 static FuEngineRequest *
 fu_daemon_create_request(FuDaemon *self, const gchar *sender, GError **error)
 {
-	FwupdDeviceFlags device_flags = FWUPD_DEVICE_FLAG_NONE;
+	FwupdCodecFlags converter_flags = FWUPD_CODEC_FLAG_NONE;
 	guint calling_uid = 0;
 	g_autoptr(FuClient) client = NULL;
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
@@ -274,7 +272,7 @@ fu_daemon_create_request(FuDaemon *self, const gchar *sender, GError **error)
 
 	/* if using FWUPD_DBUS_SOCKET... */
 	if (sender == NULL) {
-		fu_engine_request_set_device_flags(request, FWUPD_DEVICE_FLAG_TRUSTED);
+		fu_engine_request_set_converter_flags(request, FWUPD_CODEC_FLAG_TRUSTED);
 		return g_steal_pointer(&request);
 	}
 
@@ -301,8 +299,8 @@ fu_daemon_create_request(FuDaemon *self, const gchar *sender, GError **error)
 	}
 	g_variant_get(value, "(u)", &calling_uid);
 	if (fu_engine_is_uid_trusted(self->engine, calling_uid))
-		device_flags |= FWUPD_DEVICE_FLAG_TRUSTED;
-	fu_engine_request_set_device_flags(request, device_flags);
+		converter_flags |= FWUPD_CODEC_FLAG_TRUSTED;
+	fu_engine_request_set_converter_flags(request, converter_flags);
 
 	/* success */
 	return g_steal_pointer(&request);
@@ -314,77 +312,11 @@ fu_daemon_device_array_to_variant(FuDaemon *self,
 				  GPtrArray *devices,
 				  GError **error)
 {
-	GVariantBuilder builder;
-	FwupdDeviceFlags flags = fu_engine_request_get_device_flags(request);
-
-	g_return_val_if_fail(devices->len > 0, NULL);
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
-
-	/* override when required */
+	FwupdCodecFlags flags = fu_engine_request_get_converter_flags(request);
 	if (fu_engine_config_get_show_device_private(fu_engine_get_config(self->engine)))
-		flags |= FWUPD_DEVICE_FLAG_TRUSTED;
-	for (guint i = 0; i < devices->len; i++) {
-		FuDevice *device = g_ptr_array_index(devices, i);
-		GVariant *tmp = fwupd_device_to_variant_full(FWUPD_DEVICE(device), flags);
-		g_variant_builder_add_value(&builder, tmp);
-	}
-	return g_variant_new("(aa{sv})", &builder);
+		flags |= FWUPD_CODEC_FLAG_TRUSTED;
+	return fwupd_codec_array_to_variant(devices, flags);
 }
-
-static GVariant *
-fu_daemon_plugin_array_to_variant(GPtrArray *plugins)
-{
-	GVariantBuilder builder;
-	g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
-	for (guint i = 0; i < plugins->len; i++) {
-		FuDevice *plugin = g_ptr_array_index(plugins, i);
-		GVariant *tmp = fwupd_plugin_to_variant(FWUPD_PLUGIN(plugin));
-		g_variant_builder_add_value(&builder, tmp);
-	}
-	return g_variant_new("(aa{sv})", &builder);
-}
-
-static GVariant *
-fu_daemon_release_array_to_variant(GPtrArray *results)
-{
-	GVariantBuilder builder;
-	g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
-	for (guint i = 0; i < results->len; i++) {
-		FwupdRelease *rel = g_ptr_array_index(results, i);
-		GVariant *tmp = fwupd_release_to_variant(rel);
-		g_variant_builder_add_value(&builder, tmp);
-	}
-	return g_variant_new("(aa{sv})", &builder);
-}
-
-static GVariant *
-fu_daemon_remote_array_to_variant(GPtrArray *remotes)
-{
-	GVariantBuilder builder;
-	g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
-	for (guint i = 0; i < remotes->len; i++) {
-		FwupdRemote *remote = g_ptr_array_index(remotes, i);
-		GVariant *tmp = fwupd_remote_to_variant(remote);
-		g_variant_builder_add_value(&builder, tmp);
-	}
-	return g_variant_new("(aa{sv})", &builder);
-}
-
-#ifdef HAVE_GIO_UNIX
-static GVariant *
-fu_daemon_result_array_to_variant(GPtrArray *results)
-{
-	GVariantBuilder builder;
-	g_return_val_if_fail(results->len > 0, NULL);
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
-	for (guint i = 0; i < results->len; i++) {
-		FwupdDevice *result = g_ptr_array_index(results, i);
-		GVariant *tmp = fwupd_device_to_variant(result);
-		g_variant_builder_add_value(&builder, tmp);
-	}
-	return g_variant_new("(aa{sv})", &builder);
-}
-#endif /* HAVE_GIO_UNIX */
 
 typedef struct {
 	GDBusMethodInvocation *invocation;
@@ -498,7 +430,7 @@ fu_daemon_authorize_get_bios_settings_cb(GObject *source, GAsyncResult *res, gpo
 	/* authenticated */
 	ctx = fu_engine_get_context(helper->self->engine);
 	attrs = fu_context_get_bios_settings(ctx);
-	val = fu_bios_settings_to_variant(attrs, TRUE);
+	val = fwupd_codec_to_variant(FWUPD_CODEC(attrs), FWUPD_CODEC_FLAG_TRUSTED);
 	g_dbus_method_invocation_return_value(helper->invocation, val);
 }
 
@@ -826,7 +758,7 @@ fu_daemon_authorize_install_queue(FuMainAuthHelper *helper_ref)
 		g_autofree gchar *action_id = g_strdup(g_ptr_array_index(helper->action_ids, 0));
 		g_autofree gchar *sender = g_strdup(fu_client_get_sender(helper->client));
 		g_ptr_array_remove_index(helper->action_ids, 0);
-		if (fu_engine_request_has_device_flag(helper->request, FWUPD_DEVICE_FLAG_TRUSTED))
+		if (fu_engine_request_has_converter_flag(helper->request, FWUPD_CODEC_FLAG_TRUSTED))
 			auth_flags |= FU_POLKIT_AUTHORITY_CHECK_FLAG_USER_IS_TRUSTED;
 		fu_polkit_authority_check(self->authority,
 					  sender,
@@ -1184,7 +1116,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		fu_daemon_method_invocation_return_gerror(invocation, error);
 		return;
 	}
-	if (fu_engine_request_has_device_flag(request, FWUPD_DEVICE_FLAG_TRUSTED))
+	if (fu_engine_request_has_converter_flag(request, FWUPD_CODEC_FLAG_TRUSTED))
 		auth_flags |= FU_POLKIT_AUTHORITY_CHECK_FLAG_USER_IS_TRUSTED;
 
 	/* activity */
@@ -1208,7 +1140,8 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 	}
 	if (g_strcmp0(method_name, "GetPlugins") == 0) {
 		g_debug("Called %s()", method_name);
-		val = fu_daemon_plugin_array_to_variant(fu_engine_get_plugins(self->engine));
+		val = fwupd_codec_array_to_variant(fu_engine_get_plugins(self->engine),
+						   FWUPD_CODEC_FLAG_NONE);
 		g_dbus_method_invocation_return_value(invocation, val);
 		return;
 	}
@@ -1226,7 +1159,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
-		val = fu_daemon_release_array_to_variant(releases);
+		val = fwupd_codec_array_to_variant(releases, FWUPD_CODEC_FLAG_NONE);
 		g_dbus_method_invocation_return_value(invocation, val);
 		return;
 	}
@@ -1330,7 +1263,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		return;
 	}
 	if (g_strcmp0(method_name, "Quit") == 0) {
-		if (!fu_engine_request_has_device_flag(request, FWUPD_DEVICE_FLAG_TRUSTED)) {
+		if (!fu_engine_request_has_converter_flag(request, FWUPD_CODEC_FLAG_TRUSTED)) {
 			g_dbus_method_invocation_return_error_literal(invocation,
 								      FWUPD_ERROR,
 								      FWUPD_ERROR_PERMISSION_DENIED,
@@ -1393,7 +1326,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
-		val = fu_daemon_release_array_to_variant(releases);
+		val = fwupd_codec_array_to_variant(releases, FWUPD_CODEC_FLAG_NONE);
 		g_dbus_method_invocation_return_value(invocation, val);
 		return;
 	}
@@ -1411,7 +1344,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
-		val = fu_daemon_release_array_to_variant(releases);
+		val = fwupd_codec_array_to_variant(releases, FWUPD_CODEC_FLAG_NONE);
 		g_dbus_method_invocation_return_value(invocation, val);
 		return;
 	}
@@ -1423,7 +1356,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
-		val = fu_daemon_remote_array_to_variant(remotes);
+		val = fwupd_codec_array_to_variant(remotes, FWUPD_CODEC_FLAG_NONE);
 		g_dbus_method_invocation_return_value(invocation, val);
 		return;
 	}
@@ -1571,7 +1504,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
-		val = fwupd_device_to_variant(result);
+		val = fwupd_codec_to_variant(FWUPD_CODEC(result), FWUPD_CODEC_FLAG_TRUSTED);
 		g_dbus_method_invocation_return_value(invocation, g_variant_new_tuple(&val, 1));
 		return;
 	}
@@ -2026,7 +1959,7 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 			fu_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
-		val = fu_daemon_result_array_to_variant(results);
+		val = fwupd_codec_array_to_variant(results, FWUPD_CODEC_FLAG_TRUSTED);
 		g_dbus_method_invocation_return_value(invocation, val);
 #else
 		g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
@@ -2045,10 +1978,9 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 			 * subset of the settings */
 			g_autoptr(FuBiosSettings) attrs =
 			    fu_context_get_bios_settings(fu_engine_get_context(self->engine));
-			val = fu_bios_settings_to_variant(
-			    attrs,
-			    fu_engine_request_get_device_flags(request) &
-				FWUPD_DEVICE_FLAG_TRUSTED);
+			val =
+			    fwupd_codec_to_variant(FWUPD_CODEC(attrs),
+						   fu_engine_request_get_converter_flags(request));
 			g_dbus_method_invocation_return_value(invocation, val);
 		} else {
 			g_autoptr(FuMainAuthHelper) helper = NULL;

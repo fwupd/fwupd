@@ -35,7 +35,7 @@ static void
 fu_scsi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
-	fu_string_append_kx(str, idt, "FfuTimeout", self->ffu_timeout);
+	fwupd_codec_string_append_hex(str, idt, "FfuTimeout", self->ffu_timeout);
 }
 
 static gboolean

@@ -601,9 +601,9 @@ static void
 fu_genesys_gl32xx_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuGenesysGl32xxDevice *self = FU_GENESYS_GL32XX_DEVICE(device);
-	fu_string_append(str, idt, "ChipName", self->chip_name);
-	fu_string_append_kx(str, idt, "BlockTransferSize", self->packetsz);
-	fu_string_append_kx(str, idt, "CustomerId", self->customer_id);
+	fwupd_codec_string_append(str, idt, "ChipName", self->chip_name);
+	fwupd_codec_string_append_hex(str, idt, "BlockTransferSize", self->packetsz);
+	fwupd_codec_string_append_hex(str, idt, "CustomerId", self->customer_id);
 }
 
 static gboolean

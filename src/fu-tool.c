@@ -21,12 +21,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "fwupd-bios-setting-private.h"
 #include "fwupd-client-private.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
-#include "fwupd-plugin-private.h"
 #include "fwupd-remote-private.h"
 
 #include "fu-bios-settings-private.h"
@@ -456,9 +454,7 @@ fu_util_get_plugins_as_json(FuUtilPrivate *priv, GPtrArray *plugins, GError **er
 	json_builder_begin_array(builder);
 	for (guint i = 0; i < plugins->len; i++) {
 		FwupdPlugin *plugin = g_ptr_array_index(plugins, i);
-		json_builder_begin_object(builder);
-		fwupd_plugin_to_json(plugin, builder);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(plugin), builder, FWUPD_CODEC_FLAG_TRUSTED);
 	}
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
@@ -828,9 +824,7 @@ fu_util_get_devices_as_json(FuUtilPrivate *priv, GPtrArray *devs, GError **error
 		}
 
 		/* add to builder */
-		json_builder_begin_object(builder);
-		fwupd_device_to_json_full(FWUPD_DEVICE(dev), builder, FWUPD_DEVICE_FLAG_TRUSTED);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
 	}
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
@@ -1891,7 +1885,7 @@ fu_util_report_metadata_to_string(GHashTable *metadata, guint idt, GString *str)
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		const gchar *value = g_hash_table_lookup(metadata, key);
-		fu_string_append(str, idt, key, value);
+		fwupd_codec_string_append(str, idt, key, value);
 	}
 }
 
@@ -1938,17 +1932,17 @@ fu_util_get_report_metadata(FuUtilPrivate *priv, gchar **values, GError **error)
 		metadata_pre = fu_device_report_metadata_pre(device);
 		metadata_post = fu_device_report_metadata_post(device);
 		if (metadata_pre != NULL || metadata_post != NULL) {
-			fu_string_append(str,
-					 0,
-					 FWUPD_RESULT_KEY_DEVICE_ID,
-					 fu_device_get_id(device));
+			fwupd_codec_string_append(str,
+						  0,
+						  FWUPD_RESULT_KEY_DEVICE_ID,
+						  fu_device_get_id(device));
 		}
 		if (metadata_pre != NULL) {
-			fu_string_append(str, 1, "pre", NULL);
+			fwupd_codec_string_append(str, 1, "pre", NULL);
 			fu_util_report_metadata_to_string(metadata_pre, 3, str);
 		}
 		if (metadata_post != NULL) {
-			fu_string_append(str, 1, "post", NULL);
+			fwupd_codec_string_append(str, 1, "post", NULL);
 			fu_util_report_metadata_to_string(metadata_post, 3, str);
 		}
 	}
@@ -3482,7 +3476,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* print the "why" */
 	if (priv->as_json) {
-		str = fu_security_attrs_to_json_string(attrs, error);
+		str = fwupd_codec_to_json_string(FWUPD_CODEC(attrs), FWUPD_CODEC_FLAG_NONE, error);
 		if (str == NULL)
 			return FALSE;
 		fu_console_print_literal(priv->console, str);

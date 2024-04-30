@@ -36,7 +36,7 @@ fu_uefi_backend_to_string(FuBackend *backend, guint idt, GString *str)
 {
 	FuUefiBackend *self = FU_UEFI_BACKEND(backend);
 	FuUefiBackendPrivate *priv = GET_PRIVATE(self);
-	fu_string_append(str, idt, "DeviceGType", g_type_name(priv->device_gtype));
+	fwupd_codec_string_append(str, idt, "DeviceGType", g_type_name(priv->device_gtype));
 }
 
 /* create virtual object not backed by an ESRT entry */

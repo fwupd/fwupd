@@ -22,7 +22,7 @@ static void
 fu_uefi_pk_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuUefiPkDevice *self = FU_UEFI_PK_DEVICE(device);
-	fu_string_append_kb(str, idt, "HasPkTestKey", self->has_pk_test_key);
+	fwupd_codec_string_append_bool(str, idt, "HasPkTestKey", self->has_pk_test_key);
 }
 
 #define FU_UEFI_PK_CHECKSUM_AMI_TEST_KEY "a773113bafaf5129aa83fd0912e95da4fa555f91"

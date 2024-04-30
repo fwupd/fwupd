@@ -22,7 +22,7 @@ static void
 fu_fresco_pd_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuFrescoPdDevice *self = FU_FRESCO_PD_DEVICE(device);
-	fu_string_append_ku(str, idt, "CustomerID", self->customer_id);
+	fwupd_codec_string_append_int(str, idt, "CustomerID", self->customer_id);
 }
 
 static gboolean

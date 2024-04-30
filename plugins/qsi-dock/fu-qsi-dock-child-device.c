@@ -26,7 +26,7 @@ static void
 fu_qsi_dock_child_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuQsiDockChildDevice *self = FU_QSI_DOCK_CHILD_DEVICE(device);
-	fu_string_append_kx(str, idt, "ChipIdx", self->chip_idx);
+	fwupd_codec_string_append_hex(str, idt, "ChipIdx", self->chip_idx);
 }
 
 /* use the parents parser */

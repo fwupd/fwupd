@@ -38,16 +38,16 @@ fu_cfu_device_map_to_string(GString *str, guint idt, FuCfuDeviceMap *map, const 
 	g_autofree gchar *title_op = g_strdup_printf("%sOp", title);
 	g_autofree gchar *title_id = g_strdup_printf("%sId", title);
 	g_autofree gchar *title_ct = g_strdup_printf("%sCt", title);
-	fu_string_append_kx(str, idt, title_op, map->op);
-	fu_string_append_kx(str, idt, title_id, map->id);
-	fu_string_append_kx(str, idt, title_ct, map->ct);
+	fwupd_codec_string_append_hex(str, idt, title_op, map->op);
+	fwupd_codec_string_append_hex(str, idt, title_id, map->id);
+	fwupd_codec_string_append_hex(str, idt, title_ct, map->ct);
 }
 
 static void
 fu_cfu_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCfuDevice *self = FU_CFU_DEVICE(device);
-	fu_string_append_kx(str, idt, "ProtocolVersion", self->protocol_version);
+	fwupd_codec_string_append_hex(str, idt, "ProtocolVersion", self->protocol_version);
 	fu_cfu_device_map_to_string(str, idt, &self->version_get_report, "VersionGetReport");
 	fu_cfu_device_map_to_string(str, idt, &self->offer_set_report, "OfferSetReport");
 	fu_cfu_device_map_to_string(str, idt, &self->offer_get_report, "OfferGetReport");

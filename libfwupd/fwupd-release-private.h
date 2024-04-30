@@ -13,10 +13,6 @@
 
 G_BEGIN_DECLS
 
-GVariant *
-fwupd_release_to_variant(FwupdRelease *self) G_GNUC_NON_NULL(1);
-void
-fwupd_release_to_json(FwupdRelease *self, JsonBuilder *builder) G_GNUC_NON_NULL(1, 2);
 void
 fwupd_release_incorporate(FwupdRelease *self, FwupdRelease *donor) G_GNUC_NON_NULL(1, 2);
 

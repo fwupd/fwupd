@@ -325,17 +325,19 @@ fu_fpc_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuFpcDevice *self = FU_FPC_DEVICE(device);
 
-	fu_string_append_kx(str, idt, "MaxBlockSize", self->max_block_size);
-	fu_string_append_kb(str,
-			    idt,
-			    "LegacyDfu",
-			    fu_device_has_private_flag(device, FU_FPC_DEVICE_FLAG_LEGACY_DFU));
-	fu_string_append_kb(str,
-			    idt,
-			    "MocDevice",
-			    !fu_device_has_private_flag(device, FU_FPC_DEVICE_FLAG_MOH_DEVICE));
+	fwupd_codec_string_append_hex(str, idt, "MaxBlockSize", self->max_block_size);
+	fwupd_codec_string_append_bool(
+	    str,
+	    idt,
+	    "LegacyDfu",
+	    fu_device_has_private_flag(device, FU_FPC_DEVICE_FLAG_LEGACY_DFU));
+	fwupd_codec_string_append_bool(
+	    str,
+	    idt,
+	    "MocDevice",
+	    !fu_device_has_private_flag(device, FU_FPC_DEVICE_FLAG_MOH_DEVICE));
 	if (fu_device_has_private_flag(device, FU_FPC_DEVICE_FLAG_MOH_DEVICE)) {
-		fu_string_append_kb(
+		fwupd_codec_string_append_bool(
 		    str,
 		    idt,
 		    "RtsDevice",

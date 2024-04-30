@@ -43,7 +43,7 @@ static void
 fu_ch347_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCh347Device *self = FU_CH347_DEVICE(device);
-	fu_string_append_kx(str, idt, "Divisor", self->divisor);
+	fwupd_codec_string_append_hex(str, idt, "Divisor", self->divisor);
 }
 
 static gboolean

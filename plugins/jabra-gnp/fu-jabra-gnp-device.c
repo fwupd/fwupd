@@ -43,9 +43,9 @@ static void
 fu_jabra_gnp_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
-	fu_string_append_kx(str, idt, "IfaceHid", self->iface_hid);
-	fu_string_append_kx(str, idt, "SequenceNumber", self->sequence_number);
-	fu_string_append_kx(str, idt, "DfuPid", self->dfu_pid);
+	fwupd_codec_string_append_hex(str, idt, "IfaceHid", self->iface_hid);
+	fwupd_codec_string_append_hex(str, idt, "SequenceNumber", self->sequence_number);
+	fwupd_codec_string_append_hex(str, idt, "DfuPid", self->dfu_pid);
 }
 
 static guint8

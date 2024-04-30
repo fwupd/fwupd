@@ -25,7 +25,7 @@ static void
 fu_{{vendor}}_{{example}}_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
-	fu_string_append_kx(str, idt, "StartAddr", self->start_addr);
+	fwupd_codec_string_append_hex(str, idt, "StartAddr", self->start_addr);
 }
 
 /* TODO: this is only required if the device instance state is required elsewhere */

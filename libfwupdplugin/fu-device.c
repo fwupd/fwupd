@@ -4124,67 +4124,70 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 		const gchar *instance_id = g_ptr_array_index(priv->instance_id_quirks, i);
 		g_autofree gchar *guid = fwupd_guid_hash_string(instance_id);
 		g_autofree gchar *tmp2 = g_strdup_printf("%s ← %s", guid, instance_id);
-		fu_string_append(str, idt, "Guid[quirk]", tmp2);
+		fwupd_codec_string_append(str, idt, "Guid[quirk]", tmp2);
 	}
 	if (priv->equivalent_id != NULL)
-		fu_string_append(str, idt, "EquivalentId", priv->equivalent_id);
+		fwupd_codec_string_append(str, idt, "EquivalentId", priv->equivalent_id);
 	if (priv->physical_id != NULL)
-		fu_string_append(str, idt, "PhysicalId", priv->physical_id);
+		fwupd_codec_string_append(str, idt, "PhysicalId", priv->physical_id);
 	if (priv->logical_id != NULL)
-		fu_string_append(str, idt, "LogicalId", priv->logical_id);
+		fwupd_codec_string_append(str, idt, "LogicalId", priv->logical_id);
 	if (priv->backend_id != NULL)
-		fu_string_append(str, idt, "BackendId", priv->backend_id);
+		fwupd_codec_string_append(str, idt, "BackendId", priv->backend_id);
 	if (priv->update_request_id != NULL)
-		fu_string_append(str, idt, "UpdateRequestId", priv->update_request_id);
+		fwupd_codec_string_append(str, idt, "UpdateRequestId", priv->update_request_id);
 	if (priv->proxy != NULL)
-		fu_string_append(str, idt, "ProxyId", fu_device_get_id(priv->proxy));
+		fwupd_codec_string_append(str, idt, "ProxyId", fu_device_get_id(priv->proxy));
 	if (priv->proxy_guid != NULL)
-		fu_string_append(str, idt, "ProxyGuid", priv->proxy_guid);
+		fwupd_codec_string_append(str, idt, "ProxyGuid", priv->proxy_guid);
 	if (priv->remove_delay != 0)
-		fu_string_append_ku(str, idt, "RemoveDelay", priv->remove_delay);
+		fwupd_codec_string_append_int(str, idt, "RemoveDelay", priv->remove_delay);
 	if (priv->acquiesce_delay != 0)
-		fu_string_append_ku(str, idt, "AcquiesceDelay", priv->acquiesce_delay);
+		fwupd_codec_string_append_int(str, idt, "AcquiesceDelay", priv->acquiesce_delay);
 	if (priv->custom_flags != NULL)
-		fu_string_append(str, idt, "CustomFlags", priv->custom_flags);
+		fwupd_codec_string_append(str, idt, "CustomFlags", priv->custom_flags);
 	if (priv->specialized_gtype != G_TYPE_INVALID)
-		fu_string_append(str, idt, "GType", g_type_name(priv->specialized_gtype));
+		fwupd_codec_string_append(str, idt, "GType", g_type_name(priv->specialized_gtype));
 	if (priv->proxy_gtype != G_TYPE_INVALID)
-		fu_string_append(str, idt, "ProxyGType", g_type_name(priv->proxy_gtype));
+		fwupd_codec_string_append(str, idt, "ProxyGType", g_type_name(priv->proxy_gtype));
 	if (priv->firmware_gtype != G_TYPE_INVALID)
-		fu_string_append(str, idt, "FirmwareGType", g_type_name(priv->firmware_gtype));
+		fwupd_codec_string_append(str,
+					  idt,
+					  "FirmwareGType",
+					  g_type_name(priv->firmware_gtype));
 	if (priv->size_min > 0) {
 		g_autofree gchar *sz = g_strdup_printf("%" G_GUINT64_FORMAT, priv->size_min);
-		fu_string_append(str, idt, "FirmwareSizeMin", sz);
+		fwupd_codec_string_append(str, idt, "FirmwareSizeMin", sz);
 	}
 	if (priv->size_max > 0) {
 		g_autofree gchar *sz = g_strdup_printf("%" G_GUINT64_FORMAT, priv->size_max);
-		fu_string_append(str, idt, "FirmwareSizeMax", sz);
+		fwupd_codec_string_append(str, idt, "FirmwareSizeMax", sz);
 	}
 	if (priv->order != G_MAXINT) {
 		g_autofree gchar *order = g_strdup_printf("%i", priv->order);
-		fu_string_append(str, idt, "Order", order);
+		fwupd_codec_string_append(str, idt, "Order", order);
 	}
 	if (priv->priority > 0)
-		fu_string_append_ku(str, idt, "Priority", priv->priority);
+		fwupd_codec_string_append_int(str, idt, "Priority", priv->priority);
 	if (priv->metadata != NULL) {
 		g_autoptr(GList) keys = g_hash_table_get_keys(priv->metadata);
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *key = l->data;
 			const gchar *value = g_hash_table_lookup(priv->metadata, key);
-			fu_string_append(str, idt, key, value);
+			fwupd_codec_string_append(str, idt, key, value);
 		}
 	}
 	for (guint i = 0; i < priv->possible_plugins->len; i++) {
 		const gchar *name = g_ptr_array_index(priv->possible_plugins, i);
-		fu_string_append(str, idt, "PossiblePlugin", name);
+		fwupd_codec_string_append(str, idt, "PossiblePlugin", name);
 	}
 	if (priv->parent_physical_ids != NULL && priv->parent_physical_ids->len > 0) {
 		g_autofree gchar *flags = fu_strjoin(",", priv->parent_physical_ids);
-		fu_string_append(str, idt, "ParentPhysicalIds", flags);
+		fwupd_codec_string_append(str, idt, "ParentPhysicalIds", flags);
 	}
 	if (priv->parent_backend_ids != NULL && priv->parent_backend_ids->len > 0) {
 		g_autofree gchar *flags = fu_strjoin(",", priv->parent_backend_ids);
-		fu_string_append(str, idt, "ParentBackendIds", flags);
+		fwupd_codec_string_append(str, idt, "ParentBackendIds", flags);
 	}
 	if (priv->internal_flags != FU_DEVICE_INTERNAL_FLAG_NONE) {
 		g_autoptr(GString) tmp2 = g_string_new("");
@@ -4197,7 +4200,7 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 		}
 		if (tmp2->len > 0)
 			g_string_truncate(tmp2, tmp2->len - 1);
-		fu_string_append(str, idt, "InternalFlags", tmp2->str);
+		fwupd_codec_string_append(str, idt, "InternalFlags", tmp2->str);
 	}
 	if (priv->private_flags > 0) {
 		g_autoptr(GPtrArray) tmpv = g_ptr_array_new();
@@ -4213,7 +4216,7 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 			g_ptr_array_add(tmpv, item->value_str);
 		}
 		tmps = fu_strjoin(",", tmpv);
-		fu_string_append(str, idt, "PrivateFlags", tmps);
+		fwupd_codec_string_append(str, idt, "PrivateFlags", tmps);
 	}
 	if (priv->inhibits != NULL) {
 		g_autoptr(GList) values = g_hash_table_get_values(priv->inhibits);
@@ -4221,7 +4224,7 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 			FuDeviceInhibit *inhibit = (FuDeviceInhibit *)l->data;
 			g_autofree gchar *val =
 			    g_strdup_printf("[%s] %s", inhibit->inhibit_id, inhibit->reason);
-			fu_string_append(str, idt, "Inhibit", val);
+			fwupd_codec_string_append(str, idt, "Inhibit", val);
 		}
 	}
 }
@@ -4241,13 +4244,10 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 {
 	GPtrArray *children;
 	gpointer device_class_to_string_last = NULL;
-	g_autofree gchar *tmp = NULL;
 	g_autoptr(GList) device_class_list = NULL;
 
 	/* add baseclass */
-	tmp = fwupd_device_to_string(FWUPD_DEVICE(self));
-	if (tmp != NULL && tmp[0] != '\0')
-		g_string_append(str, tmp);
+	fwupd_codec_add_string(FWUPD_CODEC(self), 0, str);
 
 	/* run every unique ->to_string() in each subclass */
 	for (GType gtype = G_OBJECT_TYPE(self); gtype != G_TYPE_INVALID;

@@ -30,8 +30,8 @@ static void
 fu_fastboot_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
-	fu_string_append_kx(str, idt, "BlockSize", self->blocksz);
-	fu_string_append_kb(str, idt, "Secure", self->secure);
+	fwupd_codec_string_append_hex(str, idt, "BlockSize", self->blocksz);
+	fwupd_codec_string_append_bool(str, idt, "Secure", self->secure);
 }
 
 static gboolean
