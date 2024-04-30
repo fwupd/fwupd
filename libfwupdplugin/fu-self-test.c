@@ -13,7 +13,6 @@
 #include <glib/gstdio.h>
 #include <string.h>
 
-#include "fwupd-bios-setting-private.h"
 #include "fwupd-security-attr-private.h"
 
 #include "fu-bios-settings-private.h"
@@ -212,12 +211,12 @@ static void
 fu_string_append_func(void)
 {
 	g_autoptr(GString) str = g_string_new(NULL);
-	fu_string_append(str, 0, "hdr", NULL);
-	fu_string_append(str, 0, "key", "value");
-	fu_string_append(str, 0, "key1", "value1");
-	fu_string_append(str, 1, "key2", "value2");
-	fu_string_append(str, 1, "", "value2");
-	fu_string_append(str, 2, "key3", "value3");
+	fwupd_codec_string_append(str, 0, "hdr", "");
+	fwupd_codec_string_append(str, 0, "key", "value");
+	fwupd_codec_string_append(str, 0, "key1", "value1");
+	fwupd_codec_string_append(str, 1, "key2", "value2");
+	fwupd_codec_string_append(str, 1, "", "value2");
+	fwupd_codec_string_append(str, 2, "key3", "value3");
 	g_assert_cmpstr(str->str,
 			==,
 			"hdr:\n"
@@ -4841,6 +4840,7 @@ fu_composite_input_stream_func(void)
 	gsize streamsz = 0;
 	gssize rc;
 	guint8 buf[2] = {0x0};
+	g_autofree gchar *str = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) blob1 = g_bytes_new_static("ab", 2);
 	g_autoptr(GBytes) blob2 = g_bytes_new_static("cde", 3);
@@ -4880,6 +4880,10 @@ fu_composite_input_stream_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(streamsz, ==, 7);
+
+	/* to string */
+	str = fwupd_codec_to_string(FWUPD_CODEC(composite_stream));
+	g_print("%s", str);
 
 	/* first block */
 	ret = fu_input_stream_read_safe(composite_stream,

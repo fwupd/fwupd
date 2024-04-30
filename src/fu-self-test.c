@@ -13,7 +13,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "fwupd-bios-setting-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-security-attr-private.h"
 
@@ -2588,12 +2587,11 @@ fu_engine_history_func(gconstpointer user_data)
 			    "  Created:              2018-01-07\n"
 			    "  Modified:             2017-12-27\n"
 			    "  UpdateState:          success\n"
-			    "  \n"
-			    "  [Release]\n"
-			    "  AppstreamId:          com.hughski.test.firmware\n"
-			    "  Version:              1.2.3\n"
-			    "  Checksum:             SHA1(%s)\n"
-			    "  Flags:                trusted-payload|trusted-metadata\n"
+			    "  FuRelease:\n"
+			    "    AppstreamId:        com.hughski.test.firmware\n"
+			    "    Version:            1.2.3\n"
+			    "    Checksum:           SHA1(%s)\n"
+			    "    Flags:              trusted-payload|trusted-metadata\n"
 			    "  AcquiesceDelay:       50\n",
 			    checksum);
 	ret = fu_test_compare_lines(device_str, device_str_expected, &error);
@@ -3249,12 +3247,11 @@ fu_engine_history_error_func(gconstpointer user_data)
 			    "  Modified:             2017-12-27\n"
 			    "  UpdateState:          failed\n"
 			    "  UpdateError:          device was not in supported mode\n"
-			    "  \n"
-			    "  [Release]\n"
-			    "  AppstreamId:          com.hughski.test.firmware\n"
-			    "  Version:              1.2.3\n"
-			    "  Checksum:             SHA1(%s)\n"
-			    "  Flags:                trusted-payload|trusted-metadata\n"
+			    "  FuRelease:\n"
+			    "    AppstreamId:        com.hughski.test.firmware\n"
+			    "    Version:            1.2.3\n"
+			    "    Checksum:           SHA1(%s)\n"
+			    "    Flags:              trusted-payload|trusted-metadata\n"
 			    "  AcquiesceDelay:       50\n",
 			    checksum);
 	ret = fu_test_compare_lines(device_str, device_str_expected, &error);
@@ -4721,7 +4718,6 @@ fu_security_attr_func(gconstpointer user_data)
 	g_autoptr(FwupdSecurityAttr) attr1 = fwupd_security_attr_new("org.fwupd.hsi.foo");
 	g_autoptr(FwupdSecurityAttr) attr2 = fwupd_security_attr_new("org.fwupd.hsi.bar");
 	g_autoptr(GError) error = NULL;
-	g_autoptr(JsonParser) parser = json_parser_new();
 
 	fwupd_security_attr_set_plugin(attr1, "foo");
 	fwupd_security_attr_set_created(attr1, 0);
@@ -4730,7 +4726,7 @@ fu_security_attr_func(gconstpointer user_data)
 	fu_security_attrs_append(attrs1, attr1);
 	fu_security_attrs_append(attrs1, attr2);
 
-	json1 = fu_security_attrs_to_json_string(attrs1, &error);
+	json1 = fwupd_codec_to_json_string(FWUPD_CODEC(attrs1), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json1);
 	ret = fu_test_compare_lines(
@@ -4757,10 +4753,7 @@ fu_security_attr_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	ret = json_parser_load_from_data(parser, json1, -1, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = fu_security_attrs_from_json(attrs2, json_parser_get_root(parser), &error);
+	ret = fwupd_codec_from_json_string(FWUPD_CODEC(attrs2), json1, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 		g_test_skip(error->message);
 		return;
@@ -4768,7 +4761,7 @@ fu_security_attr_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	json2 = fu_security_attrs_to_json_string(attrs2, &error);
+	json2 = fwupd_codec_to_json_string(FWUPD_CODEC(attrs2), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json2);
 	ret = fu_test_compare_lines(json2, json1, &error);
@@ -5956,31 +5949,6 @@ fu_remote_download_func(void)
 	g_assert_cmpstr(fwupd_remote_get_filename_cache_sig(remote), ==, expected_signature);
 }
 
-static gchar *
-fwupd_remote_to_json_string(FwupdRemote *remote, GError **error)
-{
-	g_autofree gchar *data = NULL;
-	g_autoptr(JsonGenerator) json_generator = NULL;
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	g_autoptr(JsonNode) json_root = NULL;
-	json_builder_begin_object(builder);
-	fwupd_remote_to_json(remote, builder);
-	json_builder_end_object(builder);
-	json_root = json_builder_get_root(builder);
-	json_generator = json_generator_new();
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	data = json_generator_to_data(json_generator, NULL);
-	if (data == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "Failed to convert remote to json.");
-		return NULL;
-	}
-	return g_steal_pointer(&data);
-}
-
 static void
 fu_remote_auth_func(void)
 {
@@ -5990,7 +5958,7 @@ fu_remote_auth_func(void)
 	g_autofree gchar *remotes_dir = NULL;
 	g_autofree gchar *json = NULL;
 	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
-	g_autoptr(FwupdRemote) remote2 = NULL;
+	g_autoptr(FwupdRemote) remote2 = fwupd_remote_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) data = NULL;
 
@@ -6030,8 +5998,10 @@ fu_remote_auth_func(void)
 
 	/* to/from GVariant */
 	fwupd_remote_set_priority(remote, 999);
-	data = fwupd_remote_to_variant(remote);
-	remote2 = fwupd_remote_from_variant(data);
+	data = fwupd_codec_to_variant(FWUPD_CODEC(remote), FWUPD_CODEC_FLAG_NONE);
+	ret = fwupd_codec_from_variant(FWUPD_CODEC(remote2), data, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	g_assert_cmpstr(fwupd_remote_get_username(remote2), ==, "user");
 	g_assert_cmpint(fwupd_remote_get_priority(remote2), ==, 999);
 
@@ -6054,7 +6024,7 @@ fu_remote_auth_func(void)
 	    remote2,
 	    "dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2");
 	fwupd_remote_set_filename_cache(remote2, "./libfwupd/tests/auth/metadata.xml.gz");
-	json = fwupd_remote_to_json_string(remote2, &error);
+	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
 	ret = fu_test_compare_lines(
@@ -6162,7 +6132,7 @@ fu_remote_local_func(void)
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *json = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
-	g_autoptr(FwupdRemote) remote2 = NULL;
+	g_autoptr(FwupdRemote) remote2 = fwupd_remote_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) data = NULL;
 
@@ -6187,13 +6157,15 @@ fu_remote_local_func(void)
 	g_assert_cmpstr(fwupd_remote_get_checksum(remote), ==, NULL);
 
 	/* to/from GVariant */
-	data = fwupd_remote_to_variant(remote);
-	remote2 = fwupd_remote_from_variant(data);
+	data = fwupd_codec_to_variant(FWUPD_CODEC(remote), FWUPD_CODEC_FLAG_NONE);
+	ret = fwupd_codec_from_variant(FWUPD_CODEC(remote2), data, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	g_assert_null(fwupd_remote_get_metadata_uri(remote));
 
 	/* to JSON */
 	fwupd_remote_set_filename_source(remote2, NULL);
-	json = fwupd_remote_to_json_string(remote2, &error);
+	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
 	ret = fu_test_compare_lines(

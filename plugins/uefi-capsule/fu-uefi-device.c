@@ -63,30 +63,33 @@ fu_uefi_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 
-	fu_string_append(str, idt, "Kind", fu_uefi_device_kind_to_string(priv->kind));
-	fu_string_append(str, idt, "FwClass", priv->fw_class);
-	fu_string_append_kx(str, idt, "CapsuleFlags", priv->capsule_flags);
-	fu_string_append_kx(str, idt, "FwVersion", priv->fw_version);
-	fu_string_append_kx(str, idt, "FwVersionLowest", priv->fw_version_lowest);
-	fu_string_append(str,
-			 idt,
-			 "LastAttemptStatus",
-			 fu_uefi_device_status_to_string(priv->last_attempt_status));
-	fu_string_append_kx(str, idt, "LastAttemptVersion", priv->last_attempt_version);
+	fwupd_codec_string_append(str, idt, "Kind", fu_uefi_device_kind_to_string(priv->kind));
+	fwupd_codec_string_append(str, idt, "FwClass", priv->fw_class);
+	fwupd_codec_string_append_hex(str, idt, "CapsuleFlags", priv->capsule_flags);
+	fwupd_codec_string_append_hex(str, idt, "FwVersion", priv->fw_version);
+	fwupd_codec_string_append_hex(str, idt, "FwVersionLowest", priv->fw_version_lowest);
+	fwupd_codec_string_append(str,
+				  idt,
+				  "LastAttemptStatus",
+				  fu_uefi_device_status_to_string(priv->last_attempt_status));
+	fwupd_codec_string_append_hex(str, idt, "LastAttemptVersion", priv->last_attempt_version);
 	if (priv->esp != NULL) {
 		g_autofree gchar *kind = fu_volume_get_partition_kind(priv->esp);
 		g_autofree gchar *mount_point = fu_volume_get_mount_point(priv->esp);
-		fu_string_append(str, idt, "EspId", fu_volume_get_id(priv->esp));
+		fwupd_codec_string_append(str, idt, "EspId", fu_volume_get_id(priv->esp));
 		if (mount_point != NULL)
-			fu_string_append(str, idt, "EspPath", mount_point);
+			fwupd_codec_string_append(str, idt, "EspPath", mount_point);
 		if (kind != NULL) {
 			const gchar *guid = fu_volume_kind_convert_to_gpt(kind);
-			fu_string_append(str, idt, "EspKind", kind);
+			fwupd_codec_string_append(str, idt, "EspKind", kind);
 			if (g_strcmp0(kind, guid) != 0)
-				fu_string_append(str, idt, "EspGuid", guid);
+				fwupd_codec_string_append(str, idt, "EspGuid", guid);
 		}
 	}
-	fu_string_append_ku(str, idt, "RequireESPFreeSpace", priv->require_esp_free_space);
+	fwupd_codec_string_append_int(str,
+				      idt,
+				      "RequireESPFreeSpace",
+				      priv->require_esp_free_space);
 }
 
 static void

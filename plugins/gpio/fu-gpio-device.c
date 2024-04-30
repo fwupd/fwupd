@@ -25,8 +25,8 @@ static void
 fu_gpio_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuGpioDevice *self = FU_GPIO_DEVICE(device);
-	fu_string_append_ku(str, idt, "NumLines", self->num_lines);
-	fu_string_append_kb(str, idt, "FdOpen", self->fd > 0);
+	fwupd_codec_string_append_int(str, idt, "NumLines", self->num_lines);
+	fwupd_codec_string_append_bool(str, idt, "FdOpen", self->fd > 0);
 }
 
 static gboolean

@@ -21,8 +21,8 @@ static void
 fu_cfu_module_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCfuModule *self = FU_CFU_MODULE(device);
-	fu_string_append_kx(str, idt, "ComponentId", self->component_id);
-	fu_string_append_kx(str, idt, "Bank", self->bank);
+	fwupd_codec_string_append_hex(str, idt, "ComponentId", self->component_id);
+	fwupd_codec_string_append_hex(str, idt, "Bank", self->bank);
 }
 
 guint8

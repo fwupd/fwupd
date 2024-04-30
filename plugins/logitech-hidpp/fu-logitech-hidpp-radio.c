@@ -20,7 +20,7 @@ static void
 fu_logitech_hidpp_radio_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuLogitechHidppRadio *self = FU_HIDPP_RADIO(device);
-	fu_string_append_kx(str, idt, "Entity", self->entity);
+	fwupd_codec_string_append_hex(str, idt, "Entity", self->entity);
 }
 
 static gboolean

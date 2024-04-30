@@ -69,8 +69,6 @@ typedef enum {
 
 FwupdReport *
 fwupd_report_new(void);
-gchar *
-fwupd_report_to_string(FwupdReport *self) G_GNUC_NON_NULL(1);
 
 guint64
 fwupd_report_get_created(FwupdReport *self) G_GNUC_NON_NULL(1);
@@ -116,11 +114,6 @@ fwupd_report_add_metadata_item(FwupdReport *self, const gchar *key, const gchar 
     G_GNUC_NON_NULL(1, 2);
 const gchar *
 fwupd_report_get_metadata_item(FwupdReport *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
-
-FwupdReport *
-fwupd_report_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
-GVariant *
-fwupd_report_to_variant(FwupdReport *self) G_GNUC_NON_NULL(1);
 
 guint64
 fwupd_report_get_flags(FwupdReport *self) G_GNUC_NON_NULL(1);

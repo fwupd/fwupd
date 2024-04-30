@@ -31,8 +31,6 @@ struct _FwupdDeviceClass {
 
 FwupdDevice *
 fwupd_device_new(void);
-gchar *
-fwupd_device_to_string(FwupdDevice *self) G_GNUC_NON_NULL(1);
 
 const gchar *
 fwupd_device_get_id(FwupdDevice *self) G_GNUC_NON_NULL(1);
@@ -263,10 +261,6 @@ gboolean
 fwupd_device_match_flags(FwupdDevice *self, FwupdDeviceFlags include, FwupdDeviceFlags exclude)
     G_GNUC_NON_NULL(1);
 
-FwupdDevice *
-fwupd_device_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
-GPtrArray *
-fwupd_device_array_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
 void
 fwupd_device_array_ensure_parents(GPtrArray *devices) G_GNUC_NON_NULL(1);
 GPtrArray *

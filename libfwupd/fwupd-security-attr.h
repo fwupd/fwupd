@@ -128,8 +128,6 @@ typedef enum {
 
 FwupdSecurityAttr *
 fwupd_security_attr_new(const gchar *appstream_id);
-gchar *
-fwupd_security_attr_to_string(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);
 
 const gchar *
 fwupd_security_attr_get_bios_setting_id(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);
@@ -255,10 +253,5 @@ const gchar *
 fwupd_security_attr_result_to_string(FwupdSecurityAttrResult result);
 FwupdSecurityAttrResult
 fwupd_security_attr_result_from_string(const gchar *result);
-
-FwupdSecurityAttr *
-fwupd_security_attr_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
-GPtrArray *
-fwupd_security_attr_array_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

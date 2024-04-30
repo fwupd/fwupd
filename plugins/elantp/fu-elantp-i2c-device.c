@@ -38,15 +38,15 @@ static void
 fu_elantp_i2c_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE(device);
-	fu_string_append_kx(str, idt, "I2cAddr", self->i2c_addr);
-	fu_string_append_kx(str, idt, "ModuleId", self->module_id);
-	fu_string_append_kx(str, idt, "Pattern", self->pattern);
-	fu_string_append_kx(str, idt, "FwPageSize", self->fw_page_size);
-	fu_string_append_kx(str, idt, "IcPageCount", self->ic_page_count);
-	fu_string_append_kx(str, idt, "IapType", self->iap_type);
-	fu_string_append_kx(str, idt, "IapCtrl", self->iap_ctrl);
-	fu_string_append(str, idt, "BindPath", self->bind_path);
-	fu_string_append(str, idt, "BindId", self->bind_id);
+	fwupd_codec_string_append_hex(str, idt, "I2cAddr", self->i2c_addr);
+	fwupd_codec_string_append_hex(str, idt, "ModuleId", self->module_id);
+	fwupd_codec_string_append_hex(str, idt, "Pattern", self->pattern);
+	fwupd_codec_string_append_hex(str, idt, "FwPageSize", self->fw_page_size);
+	fwupd_codec_string_append_hex(str, idt, "IcPageCount", self->ic_page_count);
+	fwupd_codec_string_append_hex(str, idt, "IapType", self->iap_type);
+	fwupd_codec_string_append_hex(str, idt, "IapCtrl", self->iap_ctrl);
+	fwupd_codec_string_append(str, idt, "BindPath", self->bind_path);
+	fwupd_codec_string_append(str, idt, "BindId", self->bind_id);
 }
 
 static gboolean

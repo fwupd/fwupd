@@ -38,10 +38,10 @@ fu_uefi_capsule_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	fu_backend_add_string(self->backend, idt, str);
 	if (self->bgrt != NULL) {
-		fu_string_append_kb(str,
-				    idt,
-				    "BgrtSupported",
-				    fu_uefi_bgrt_get_supported(self->bgrt));
+		fwupd_codec_string_append_bool(str,
+					       idt,
+					       "BgrtSupported",
+					       fu_uefi_bgrt_get_supported(self->bgrt));
 	}
 }
 

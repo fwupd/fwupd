@@ -184,12 +184,12 @@ fu_backend_add_string(FuBackend *self, guint idt, GString *str)
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
 	FuBackendPrivate *priv = GET_PRIVATE(self);
 
-	fu_string_append(str, idt, G_OBJECT_TYPE_NAME(self), "");
+	fwupd_codec_string_append(str, idt, G_OBJECT_TYPE_NAME(self), "");
 	if (priv->name != NULL)
-		fu_string_append(str, idt + 1, "Name", priv->name);
-	fu_string_append_kb(str, idt + 1, "Enabled", priv->enabled);
-	fu_string_append_kb(str, idt + 1, "DoneSetup", priv->done_setup);
-	fu_string_append_kb(str, idt + 1, "CanInvalidate", priv->can_invalidate);
+		fwupd_codec_string_append(str, idt + 1, "Name", priv->name);
+	fwupd_codec_string_append_bool(str, idt + 1, "Enabled", priv->enabled);
+	fwupd_codec_string_append_bool(str, idt + 1, "DoneSetup", priv->done_setup);
+	fwupd_codec_string_append_bool(str, idt + 1, "CanInvalidate", priv->can_invalidate);
 
 	/* subclassed */
 	if (klass->to_string != NULL)

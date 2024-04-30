@@ -191,9 +191,4 @@ fwupd_remote_load_signature_bytes(FwupdRemote *self,
 				  GBytes *bytes,
 				  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 
-FwupdRemote *
-fwupd_remote_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
-GPtrArray *
-fwupd_remote_array_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
-
 G_END_DECLS

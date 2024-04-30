@@ -23,9 +23,9 @@ static void
 fu_rts54hid_module_to_string(FuDevice *module, guint idt, GString *str)
 {
 	FuRts54HidModule *self = FU_RTS54HID_MODULE(module);
-	fu_string_append_kx(str, idt, "TargetAddr", self->target_addr);
-	fu_string_append_kx(str, idt, "I2cSpeed", self->i2c_speed);
-	fu_string_append_kx(str, idt, "RegisterAddrLen", self->register_addr_len);
+	fwupd_codec_string_append_hex(str, idt, "TargetAddr", self->target_addr);
+	fwupd_codec_string_append_hex(str, idt, "I2cSpeed", self->i2c_speed);
+	fwupd_codec_string_append_hex(str, idt, "RegisterAddrLen", self->register_addr_len);
 }
 
 static FuRts54HidDevice *

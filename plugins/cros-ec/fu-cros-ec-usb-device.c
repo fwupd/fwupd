@@ -1016,17 +1016,20 @@ fu_cros_ec_usb_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 	g_autofree gchar *min_rollback = NULL;
 
-	fu_string_append(str, idt, "GitHash", self->version.sha1);
-	fu_string_append_kb(str, idt, "Dirty", self->version.dirty);
-	fu_string_append_ku(str, idt, "ProtocolVersion", self->protocol_version);
-	fu_string_append_ku(str, idt, "HeaderType", self->header_type);
-	fu_string_append_ku(str, idt, "MaxPDUSize", self->targ.common.maximum_pdu_size);
-	fu_string_append_kx(str, idt, "FlashProtectionStatus", self->targ.common.flash_protection);
-	fu_string_append(str, idt, "RawVersion", self->targ.common.version);
-	fu_string_append_ku(str, idt, "KeyVersion", self->targ.common.key_version);
+	fwupd_codec_string_append(str, idt, "GitHash", self->version.sha1);
+	fwupd_codec_string_append_bool(str, idt, "Dirty", self->version.dirty);
+	fwupd_codec_string_append_int(str, idt, "ProtocolVersion", self->protocol_version);
+	fwupd_codec_string_append_int(str, idt, "HeaderType", self->header_type);
+	fwupd_codec_string_append_int(str, idt, "MaxPDUSize", self->targ.common.maximum_pdu_size);
+	fwupd_codec_string_append_hex(str,
+				      idt,
+				      "FlashProtectionStatus",
+				      self->targ.common.flash_protection);
+	fwupd_codec_string_append(str, idt, "RawVersion", self->targ.common.version);
+	fwupd_codec_string_append_int(str, idt, "KeyVersion", self->targ.common.key_version);
 	min_rollback = g_strdup_printf("%" G_GINT32_FORMAT, self->targ.common.min_rollback);
-	fu_string_append(str, idt, "MinRollback", min_rollback);
-	fu_string_append_kx(str, idt, "WriteableOffset", self->writeable_offset);
+	fwupd_codec_string_append(str, idt, "MinRollback", min_rollback);
+	fwupd_codec_string_append_hex(str, idt, "WriteableOffset", self->writeable_offset);
 }
 
 static void

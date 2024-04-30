@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fwupd-bios-setting-private.h"
-
 #include "fu-console.h"
 
 gchar *

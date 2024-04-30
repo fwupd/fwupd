@@ -16,8 +16,6 @@ G_DECLARE_FINAL_TYPE(FuEngineRequest, fu_engine_request, FU, ENGINE_REQUEST, GOb
 FuEngineRequest *
 fu_engine_request_new(void);
 void
-fu_engine_request_add_string(FuEngineRequest *self, guint idt, GString *str) G_GNUC_NON_NULL(1, 3);
-void
 fu_engine_request_add_flag(FuEngineRequest *self, FuEngineRequestFlag flag) G_GNUC_NON_NULL(1);
 gboolean
 fu_engine_request_has_flag(FuEngineRequest *self, FuEngineRequestFlag flag) G_GNUC_NON_NULL(1);
@@ -34,10 +32,10 @@ gboolean
 fu_engine_request_has_feature_flag(FuEngineRequest *self, FwupdFeatureFlags feature_flag)
     G_GNUC_NON_NULL(1);
 gboolean
-fu_engine_request_has_device_flag(FuEngineRequest *self, FwupdDeviceFlags device_flag)
+fu_engine_request_has_converter_flag(FuEngineRequest *self, FwupdCodecFlags device_flag)
     G_GNUC_NON_NULL(1);
-FwupdDeviceFlags
-fu_engine_request_get_device_flags(FuEngineRequest *self) G_GNUC_NON_NULL(1);
+FwupdCodecFlags
+fu_engine_request_get_converter_flags(FuEngineRequest *self) G_GNUC_NON_NULL(1);
 void
-fu_engine_request_set_device_flags(FuEngineRequest *self, FwupdDeviceFlags device_flags)
+fu_engine_request_set_converter_flags(FuEngineRequest *self, FwupdCodecFlags device_flags)
     G_GNUC_NON_NULL(1);

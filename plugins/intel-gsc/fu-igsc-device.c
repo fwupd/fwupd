@@ -44,14 +44,14 @@ static void
 fu_igsc_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuIgscDevice *self = FU_IGSC_DEVICE(device);
-	fu_string_append(str, idt, "Project", self->project);
-	fu_string_append_kx(str, idt, "HwSku", self->hw_sku);
-	fu_string_append_kx(str, idt, "SubsystemVendor", self->subsystem_vendor);
-	fu_string_append_kx(str, idt, "SubsystemModel", self->subsystem_model);
-	fu_string_append_kb(str,
-			    idt,
-			    "OpromCodeDevidEnforcement",
-			    self->oprom_code_devid_enforcement);
+	fwupd_codec_string_append(str, idt, "Project", self->project);
+	fwupd_codec_string_append_hex(str, idt, "HwSku", self->hw_sku);
+	fwupd_codec_string_append_hex(str, idt, "SubsystemVendor", self->subsystem_vendor);
+	fwupd_codec_string_append_hex(str, idt, "SubsystemModel", self->subsystem_model);
+	fwupd_codec_string_append_bool(str,
+				       idt,
+				       "OpromCodeDevidEnforcement",
+				       self->oprom_code_devid_enforcement);
 }
 
 gboolean

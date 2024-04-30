@@ -428,8 +428,8 @@ static void
 fu_corsair_bp_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCorsairBp *self = FU_CORSAIR_BP(device);
-	fu_string_append_kx(str, idt, "InEndpoint", self->epin);
-	fu_string_append_kx(str, idt, "OutEndpoint", self->epout);
+	fwupd_codec_string_append_hex(str, idt, "InEndpoint", self->epin);
+	fwupd_codec_string_append_hex(str, idt, "OutEndpoint", self->epout);
 }
 
 static void

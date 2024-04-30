@@ -74,7 +74,7 @@ fu_ccgx_dmc_devx_device_hexver_to_string(FuCcgxDmcDevxDevice *self,
 	g_autofree gchar *val =
 	    fu_version_from_uint64(fu_memread_uint64(fw_version + offset, G_LITTLE_ENDIAN),
 				   FWUPD_VERSION_FORMAT_HEX);
-	fu_string_append(str, idt, key, val);
+	fwupd_codec_string_append(str, idt, key, val);
 }
 
 static void
@@ -86,7 +86,7 @@ fu_ccgx_dmc_devx_device_hx3ver_to_string(FuCcgxDmcDevxDevice *self,
 {
 	g_autofree gchar *key = g_strdup_printf("FwVersion[%s]", kind);
 	g_autofree gchar *val = fu_ccgx_dmc_devx_device_version_hx3(self, offset);
-	fu_string_append(str, idt, key, val);
+	fwupd_codec_string_append(str, idt, key, val);
 }
 
 static void
@@ -100,7 +100,7 @@ fu_ccgx_dmc_devx_device_dmcver_to_string(FuCcgxDmcDevxDevice *self,
 	g_autofree gchar *bfw_val = fu_ccgx_dmc_devx_device_version_dmc_bfw(self, offset);
 	g_autofree gchar *app_val = fu_ccgx_dmc_devx_device_version_dmc_app(self, offset);
 	g_autofree gchar *tmp = g_strdup_printf("base:%s\tapp:%s", bfw_val, app_val);
-	fu_string_append(str, idt, key, tmp);
+	fwupd_codec_string_append(str, idt, key, tmp);
 }
 
 static FuCcgxDmcDevxDeviceType
@@ -129,31 +129,32 @@ fu_ccgx_dmc_devx_device_to_string(FuDevice *device, guint idt, GString *str)
 
 	if (device_type_str != NULL) {
 		g_autofree gchar *tmp = g_strdup_printf("0x%x [%s]", device_type, device_type_str);
-		fu_string_append(str, idt, "DeviceType", tmp);
+		fwupd_codec_string_append(str, idt, "DeviceType", tmp);
 	} else {
-		fu_string_append_kx(str, idt, "DeviceType", device_type);
+		fwupd_codec_string_append_hex(str, idt, "DeviceType", device_type);
 	}
 	if (image_mode < FU_CCGX_DMC_IMG_MODE_LAST) {
 		g_autofree gchar *tmp = g_strdup_printf("0x%x [%s]",
 							image_mode,
 							fu_ccgx_dmc_img_mode_to_string(image_mode));
-		fu_string_append(str, idt, "ImageMode", tmp);
+		fwupd_codec_string_append(str, idt, "ImageMode", tmp);
 	} else {
-		fu_string_append_kx(str, idt, "ImageMode", image_mode);
+		fwupd_codec_string_append_hex(str, idt, "ImageMode", image_mode);
 	}
 
-	fu_string_append_kx(str,
-			    idt,
-			    "CurrentImage",
-			    fu_struct_ccgx_dmc_devx_status_get_current_image(self->status));
-	fu_string_append(str,
-			 idt,
-			 "ImgStatus1",
-			 fu_ccgx_dmc_img_status_to_string(img_status & 0x0F));
-	fu_string_append(str,
-			 idt,
-			 "ImgStatus2",
-			 fu_ccgx_dmc_img_status_to_string((img_status >> 4) & 0x0F));
+	fwupd_codec_string_append_hex(
+	    str,
+	    idt,
+	    "CurrentImage",
+	    fu_struct_ccgx_dmc_devx_status_get_current_image(self->status));
+	fwupd_codec_string_append(str,
+				  idt,
+				  "ImgStatus1",
+				  fu_ccgx_dmc_img_status_to_string(img_status & 0x0F));
+	fwupd_codec_string_append(str,
+				  idt,
+				  "ImgStatus2",
+				  fu_ccgx_dmc_img_status_to_string((img_status >> 4) & 0x0F));
 
 	/* versions */
 	if (device_version_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_DMC) {
