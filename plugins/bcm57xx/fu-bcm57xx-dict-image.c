@@ -50,7 +50,9 @@ fu_bcm57xx_dict_image_parse(FuFirmware *firmware,
 		if (!fu_bcm57xx_verify_crc(stream, error))
 			return FALSE;
 	}
-	stream_nocrc = fu_partial_input_stream_new(stream, 0x0, streamsz - sizeof(guint32));
+	stream_nocrc = fu_partial_input_stream_new(stream, 0x0, streamsz - sizeof(guint32), error);
+	if (stream_nocrc == NULL)
+		return FALSE;
 	return fu_firmware_set_stream(firmware, stream_nocrc, error);
 }
 

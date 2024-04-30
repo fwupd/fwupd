@@ -37,7 +37,9 @@ fu_bcm57xx_stage2_image_parse(FuFirmware *image,
 				    "stage2 image is too small");
 		return FALSE;
 	}
-	stream_nocrc = fu_partial_input_stream_new(stream, 0x0, streamsz - sizeof(guint32));
+	stream_nocrc = fu_partial_input_stream_new(stream, 0x0, streamsz - sizeof(guint32), error);
+	if (stream_nocrc == NULL)
+		return FALSE;
 	return fu_firmware_set_stream(image, stream_nocrc, error);
 }
 

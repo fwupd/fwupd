@@ -135,8 +135,12 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 		ish = fu_struct_image_slot_header_parse_stream(stream, loc, error);
 		if (ish == NULL)
 			return FALSE;
-		l1_stream =
-		    fu_partial_input_stream_new(stream, loc, FU_STRUCT_IMAGE_SLOT_HEADER_SIZE);
+		l1_stream = fu_partial_input_stream_new(stream,
+							loc,
+							FU_STRUCT_IMAGE_SLOT_HEADER_SIZE,
+							error);
+		if (l1_stream == NULL)
+			return FALSE;
 		if (!fu_firmware_parse_stream(ish_img,
 					      l1_stream,
 					      0x0,
@@ -173,7 +177,9 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 		}
 		fu_firmware_add_image(l2_img, csm_img);
 
-		l2_stream = fu_partial_input_stream_new(stream, loc, sz);
+		l2_stream = fu_partial_input_stream_new(stream, loc, sz, error);
+		if (l2_stream == NULL)
+			return FALSE;
 		if (l2_stream == NULL)
 			return FALSE;
 		fu_firmware_set_addr(l2_img, loc);

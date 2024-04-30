@@ -122,7 +122,10 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	fu_firmware_set_offset(img, sect_offset);
 	img_stream = fu_partial_input_stream_new(stream,
 						 sect_offset,
-						 fu_struct_pe_coff_section_get_virtual_size(st));
+						 fu_struct_pe_coff_section_get_virtual_size(st),
+						 error);
+	if (img_stream == NULL)
+		return FALSE;
 	if (!fu_firmware_parse_stream(img, img_stream, 0x0, flags, error)) {
 		g_prefix_error(error, "failed to parse raw data %s: ", sect_id);
 		return FALSE;

@@ -86,7 +86,12 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 		g_autoptr(FuFirmware) img = fu_firmware_new();
 		if (sect_size > 0) {
 			g_autoptr(GInputStream) img_stream =
-			    fu_partial_input_stream_new(stream, offset + sect_offset, sect_size);
+			    fu_partial_input_stream_new(stream,
+							offset + sect_offset,
+							sect_size,
+							error);
+			if (img_stream == NULL)
+				return FALSE;
 			if (fu_firmware_parse_stream(img, img_stream, 0x0, flags, error))
 				return FALSE;
 		}

@@ -59,7 +59,9 @@ fu_genesys_gl32xx_firmware_parse(FuFirmware *firmware,
 		}
 		if (!fu_input_stream_read_u8(stream, streamsz - 1, &chksum_expected, error))
 			return FALSE;
-		stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - 2);
+		stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - 2, error);
+		if (stream_tmp == NULL)
+			return FALSE;
 		if (!fu_input_stream_compute_sum8(stream_tmp, &chksum_actual, error))
 			return FALSE;
 		if (FU_GENESYS_GL32XX_CHECKSUM_MAGIC - chksum_actual != chksum_expected) {

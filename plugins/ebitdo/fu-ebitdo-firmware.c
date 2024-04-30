@@ -55,14 +55,18 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_version_raw(firmware, version);
 
 	/* add header */
-	stream_hdr = fu_partial_input_stream_new(stream, 0x0, st->len);
+	stream_hdr = fu_partial_input_stream_new(stream, 0x0, st->len, error);
+	if (stream_hdr == NULL)
+		return FALSE;
 	if (!fu_firmware_parse_stream(img_hdr, stream_hdr, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_hdr, FU_FIRMWARE_ID_HEADER);
 	fu_firmware_add_image(firmware, img_hdr);
 
 	/* add payload */
-	stream_payload = fu_partial_input_stream_new(stream, st->len, payload_len);
+	stream_payload = fu_partial_input_stream_new(stream, st->len, payload_len, error);
+	if (stream_payload == NULL)
+		return FALSE;
 	if (!fu_firmware_set_stream(firmware, stream_payload, error))
 		return FALSE;
 	fu_firmware_set_id(firmware, FU_FIRMWARE_ID_PAYLOAD);

@@ -133,7 +133,9 @@ fu_genesys_usbhub_firmware_verify_checksum(GInputStream *stream, GError **error)
 	}
 
 	/* calculate checksum */
-	stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - sizeof(checksum));
+	stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - sizeof(checksum), error);
+	if (stream_tmp == NULL)
+		return FALSE;
 	if (!fu_input_stream_compute_sum16(stream_tmp, &checksum, error))
 		return FALSE;
 	if (checksum != fw_checksum) {
@@ -293,7 +295,9 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* truncate to correct size */
-	stream_trunc = fu_partial_input_stream_new(stream, offset, code_size);
+	stream_trunc = fu_partial_input_stream_new(stream, offset, code_size, error);
+	if (stream_trunc == NULL)
+		return FALSE;
 	if (!fu_firmware_set_stream(firmware, stream_trunc, error))
 		return FALSE;
 

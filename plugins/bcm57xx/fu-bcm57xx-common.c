@@ -43,7 +43,9 @@ fu_bcm57xx_verify_crc(GInputStream *stream, GError **error)
 		return FALSE;
 
 	/* reality */
-	stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - sizeof(guint32));
+	stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - sizeof(guint32), error);
+	if (stream_tmp == NULL)
+		return FALSE;
 	if (!fu_input_stream_compute_crc32(stream_tmp, &crc_actual, 0xEDB88320, error))
 		return FALSE;
 	if (crc_actual != crc_file) {
