@@ -20,7 +20,7 @@ static void
 fu_logitech_bulkcontroller_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuLogitechBulkcontrollerPlugin *self = FU_LOGITECH_BULKCONTROLLER_PLUGIN(plugin);
-	fu_string_append_kb(str, idt, "PostInstall", self->post_install);
+	fwupd_codec_string_append_bool(str, idt, "PostInstall", self->post_install);
 }
 
 static void

@@ -1744,18 +1744,21 @@ fu_genesys_usbhub_device_codesign_to_string(FuDevice *device, guint idt, GString
 	guint32 bank_addr2 = self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_CODESIGN];
 	guint idt_detail = idt + 1;
 
-	fu_string_append(str, idt, "Codesign", fu_genesys_fw_codesign_to_string(self->codesign));
-	fu_string_append(str,
-			 idt_detail,
-			 "CodesignCheck",
-			 fu_genesys_vs_codesign_check_to_string(self->codesign_check));
+	fwupd_codec_string_append(str,
+				  idt,
+				  "Codesign",
+				  fu_genesys_fw_codesign_to_string(self->codesign));
+	fwupd_codec_string_append(str,
+				  idt_detail,
+				  "CodesignCheck",
+				  fu_genesys_vs_codesign_check_to_string(self->codesign_check));
 
 	if (self->spec.support_dual_bank) {
-		fu_string_append_kx(str, idt_detail, "Bank1Addr", bank_addr1);
+		fwupd_codec_string_append_hex(str, idt_detail, "Bank1Addr", bank_addr1);
 
 		if (fw_max_size <= bank_addr2) /* capacity too small */
 			return;
-		fu_string_append_kx(str, idt_detail, "Bank2Addr", bank_addr2);
+		fwupd_codec_string_append_hex(str, idt_detail, "Bank2Addr", bank_addr2);
 	}
 }
 
@@ -1767,19 +1770,19 @@ fu_genesys_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 	guint idt_detail = idt + 1;
 	guint idt_bank_detail = idt_detail + 1;
 
-	fu_string_append(str, idt, "CFI", fu_device_get_name(FU_DEVICE(self->cfi_device)));
-	fu_string_append_ku(str, idt_detail, "FlashEraseDelay", self->flash_erase_delay);
-	fu_string_append_ku(str, idt_detail, "FlashWriteDelay", self->flash_write_delay);
-	fu_string_append_kx(str, idt_detail, "FlashBlockSize", self->flash_block_size);
-	fu_string_append_kx(str, idt_detail, "FlashSectorSize", self->flash_sector_size);
-	fu_string_append_kx(str, idt_detail, "FlashRwSize", self->flash_rw_size);
+	fwupd_codec_string_append(str, idt, "CFI", fu_device_get_name(FU_DEVICE(self->cfi_device)));
+	fwupd_codec_string_append_int(str, idt_detail, "FlashEraseDelay", self->flash_erase_delay);
+	fwupd_codec_string_append_int(str, idt_detail, "FlashWriteDelay", self->flash_write_delay);
+	fwupd_codec_string_append_hex(str, idt_detail, "FlashBlockSize", self->flash_block_size);
+	fwupd_codec_string_append_hex(str, idt_detail, "FlashSectorSize", self->flash_sector_size);
+	fwupd_codec_string_append_hex(str, idt_detail, "FlashRwSize", self->flash_rw_size);
 
-	fu_string_append(str,
-			 idt,
-			 "RunningBank",
-			 fu_genesys_fw_status_to_string(self->running_bank));
-	fu_string_append_kb(str, idt, "SupportDualBank", self->spec.support_dual_bank);
-	fu_string_append_kb(str, idt, "SupportCodeSize", self->spec.support_code_size);
+	fwupd_codec_string_append(str,
+				  idt,
+				  "RunningBank",
+				  fu_genesys_fw_status_to_string(self->running_bank));
+	fwupd_codec_string_append_bool(str, idt, "SupportDualBank", self->spec.support_dual_bank);
+	fwupd_codec_string_append_bool(str, idt, "SupportCodeSize", self->spec.support_code_size);
 
 	for (gint i = 0; i < FU_GENESYS_FW_TYPE_INSIDE_HUB_COUNT; i++) {
 		if (self->spec.fw_bank_capacity[i] == 0 ||		  /* unsupported fw type */
@@ -1792,49 +1795,55 @@ fu_genesys_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 			continue;
 		}
 
-		fu_string_append(str, idt_detail, "FwBank", fu_genesys_fw_type_to_string(i));
-		fu_string_append_kx(str,
-				    idt_bank_detail,
-				    "DataTotalCount",
-				    self->spec.fw_bank_capacity[i]);
-		fu_string_append_ku(str, idt_bank_detail, "UpdateBank", self->update_fw_banks[i]);
+		fwupd_codec_string_append(str,
+					  idt_detail,
+					  "FwBank",
+					  fu_genesys_fw_type_to_string(i));
+		fwupd_codec_string_append_hex(str,
+					      idt_bank_detail,
+					      "DataTotalCount",
+					      self->spec.fw_bank_capacity[i]);
+		fwupd_codec_string_append_int(str,
+					      idt_bank_detail,
+					      "UpdateBank",
+					      self->update_fw_banks[i]);
 
 		if (self->spec.chip.model == ISP_MODEL_HUB_GL3523 && i == FU_GENESYS_FW_TYPE_HUB)
-			fu_string_append_kb(str,
-					    idt_bank_detail,
-					    "BackupHubFwBank1",
-					    self->backup_hub_fw_bank1);
+			fwupd_codec_string_append_bool(str,
+						       idt_bank_detail,
+						       "BackupHubFwBank1",
+						       self->backup_hub_fw_bank1);
 
 		if (self->spec.support_dual_bank) {
-			fu_string_append_kx(str,
-					    idt_bank_detail,
-					    "Bank1Addr",
-					    self->spec.fw_bank_addr[FW_BANK_1][i]);
-			fu_string_append_kx(str,
-					    idt_bank_detail,
-					    "Bank1Ver",
-					    self->fw_bank_vers[FW_BANK_1][i]);
-			fu_string_append_kx(str,
-					    idt_bank_detail,
-					    "Bank1CodeSize",
-					    self->fw_bank_code_sizes[FW_BANK_1][i]);
+			fwupd_codec_string_append_hex(str,
+						      idt_bank_detail,
+						      "Bank1Addr",
+						      self->spec.fw_bank_addr[FW_BANK_1][i]);
+			fwupd_codec_string_append_hex(str,
+						      idt_bank_detail,
+						      "Bank1Ver",
+						      self->fw_bank_vers[FW_BANK_1][i]);
+			fwupd_codec_string_append_hex(str,
+						      idt_bank_detail,
+						      "Bank1CodeSize",
+						      self->fw_bank_code_sizes[FW_BANK_1][i]);
 
 			if (fw_max_size <=
 			    self->spec.fw_bank_addr[FW_BANK_2][i]) /* capacity too small */
 				continue;
 
-			fu_string_append_kx(str,
-					    idt_bank_detail,
-					    "Bank2Addr",
-					    self->spec.fw_bank_addr[FW_BANK_2][i]);
-			fu_string_append_kx(str,
-					    idt_bank_detail,
-					    "Bank2Ver",
-					    self->fw_bank_vers[FW_BANK_2][i]);
-			fu_string_append_kx(str,
-					    idt_bank_detail,
-					    "Bank2CodeSize",
-					    self->fw_bank_code_sizes[FW_BANK_2][i]);
+			fwupd_codec_string_append_hex(str,
+						      idt_bank_detail,
+						      "Bank2Addr",
+						      self->spec.fw_bank_addr[FW_BANK_2][i]);
+			fwupd_codec_string_append_hex(str,
+						      idt_bank_detail,
+						      "Bank2Ver",
+						      self->fw_bank_vers[FW_BANK_2][i]);
+			fwupd_codec_string_append_hex(str,
+						      idt_bank_detail,
+						      "Bank2CodeSize",
+						      self->fw_bank_code_sizes[FW_BANK_2][i]);
 		}
 	}
 }

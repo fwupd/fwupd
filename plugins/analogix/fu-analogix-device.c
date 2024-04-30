@@ -22,8 +22,8 @@ static void
 fu_analogix_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuAnalogixDevice *self = FU_ANALOGIX_DEVICE(device);
-	fu_string_append_kx(str, idt, "OcmVersion", self->ocm_version);
-	fu_string_append_kx(str, idt, "CustomVersion", self->custom_version);
+	fwupd_codec_string_append_hex(str, idt, "OcmVersion", self->ocm_version);
+	fwupd_codec_string_append_hex(str, idt, "CustomVersion", self->custom_version);
 }
 
 static gboolean

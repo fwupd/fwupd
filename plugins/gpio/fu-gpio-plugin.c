@@ -23,7 +23,7 @@ fu_gpio_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 	for (guint i = 0; i < self->current_logical_ids->len; i++) {
 		const gchar *current_logical_id = g_ptr_array_index(self->current_logical_ids, i);
 		g_autofree gchar *title = g_strdup_printf("CurrentLogicalId[0x%02x]", i);
-		fu_string_append(str, idt, title, current_logical_id);
+		fwupd_codec_string_append(str, idt, title, current_logical_id);
 	}
 }
 

@@ -8,15 +8,6 @@
 
 #include "fu-common.h"
 
-void
-fu_string_append(GString *str, guint idt, const gchar *key, const gchar *value) G_GNUC_NON_NULL(1);
-void
-fu_string_append_ku(GString *str, guint idt, const gchar *key, guint64 value) G_GNUC_NON_NULL(1);
-void
-fu_string_append_kx(GString *str, guint idt, const gchar *key, guint64 value) G_GNUC_NON_NULL(1);
-void
-fu_string_append_kb(GString *str, guint idt, const gchar *key, gboolean value) G_GNUC_NON_NULL(1);
-
 gchar *
 fu_strsafe(const gchar *str, gsize maxsz);
 gchar *

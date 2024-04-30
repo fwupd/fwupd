@@ -35,14 +35,17 @@ static void
 fu_synaptics_cxaudio_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuSynapticsCxaudioDevice *self = FU_SYNAPTICS_CXAUDIO_DEVICE(device);
-	fu_string_append_ku(str, idt, "ChipIdBase", self->chip_id_base);
-	fu_string_append_ku(str, idt, "ChipId", self->chip_id);
-	fu_string_append_kx(str, idt, "EepromLayoutVersion", self->eeprom_layout_version);
-	fu_string_append_kx(str, idt, "EepromStorageAddress", self->eeprom_storage_address);
-	fu_string_append_kx(str, idt, "EepromStorageSz", self->eeprom_storage_sz);
-	fu_string_append_kx(str, idt, "EepromSz", self->eeprom_sz);
-	fu_string_append_kb(str, idt, "SwResetSupported", self->sw_reset_supported);
-	fu_string_append_kb(str, idt, "SerialNumberSet", self->serial_number_set);
+	fwupd_codec_string_append_int(str, idt, "ChipIdBase", self->chip_id_base);
+	fwupd_codec_string_append_int(str, idt, "ChipId", self->chip_id);
+	fwupd_codec_string_append_hex(str, idt, "EepromLayoutVersion", self->eeprom_layout_version);
+	fwupd_codec_string_append_hex(str,
+				      idt,
+				      "EepromStorageAddress",
+				      self->eeprom_storage_address);
+	fwupd_codec_string_append_hex(str, idt, "EepromStorageSz", self->eeprom_storage_sz);
+	fwupd_codec_string_append_hex(str, idt, "EepromSz", self->eeprom_sz);
+	fwupd_codec_string_append_bool(str, idt, "SwResetSupported", self->sw_reset_supported);
+	fwupd_codec_string_append_bool(str, idt, "SerialNumberSet", self->serial_number_set);
 }
 
 static gboolean

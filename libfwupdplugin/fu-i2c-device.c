@@ -43,7 +43,7 @@ fu_i2c_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuI2cDevice *self = FU_I2C_DEVICE(device);
 	FuI2cDevicePrivate *priv = GET_PRIVATE(self);
-	fu_string_append_kx(str, idt, "BusNumber", priv->bus_number);
+	fwupd_codec_string_append_hex(str, idt, "BusNumber", priv->bus_number);
 }
 
 static void

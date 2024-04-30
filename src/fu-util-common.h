@@ -10,7 +10,6 @@
 
 #include <json-glib/json-glib.h>
 
-#include "fwupd-bios-setting-private.h"
 #include "fwupd-security-attr-private.h"
 
 #include "fu-console.h"

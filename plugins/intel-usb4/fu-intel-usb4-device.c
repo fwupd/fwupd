@@ -569,9 +569,9 @@ static void
 fu_intel_usb4_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuIntelUsb4Device *self = FU_INTEL_USB4_DEVICE(device);
-	fu_string_append_kx(str, idt, "NvmVendorId", self->nvm_vendor_id);
-	fu_string_append_kx(str, idt, "NvmModelId", self->nvm_model_id);
-	fu_string_append_kx(str, idt, "NvmDeviceId", self->nvm_device_id);
+	fwupd_codec_string_append_hex(str, idt, "NvmVendorId", self->nvm_vendor_id);
+	fwupd_codec_string_append_hex(str, idt, "NvmModelId", self->nvm_model_id);
+	fwupd_codec_string_append_hex(str, idt, "NvmDeviceId", self->nvm_device_id);
 }
 
 static void

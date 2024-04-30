@@ -86,15 +86,15 @@ static void
 fu_vli_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE(device);
-	fu_string_append_kb(str, idt, "DisablePowersave", self->disable_powersave);
-	fu_string_append_kx(str, idt, "UpdateProtocol", self->update_protocol);
+	fwupd_codec_string_append_bool(str, idt, "DisablePowersave", self->disable_powersave);
+	fwupd_codec_string_append_hex(str, idt, "UpdateProtocol", self->update_protocol);
 	if (self->update_protocol >= 0x2) {
 		g_autofree gchar *st_hd1str = fu_struct_vli_usbhub_hdr_to_string(self->st_hd1);
-		fu_string_append(str, idt, "H1Hdr@0x0", st_hd1str);
+		fwupd_codec_string_append(str, idt, "H1Hdr@0x0", st_hd1str);
 		if (fu_struct_vli_usbhub_hdr_get_dev_id(self->st_hd2) != 0xFFFF) {
 			g_autofree gchar *st_hd2str =
 			    fu_struct_vli_usbhub_hdr_to_string(self->st_hd2);
-			fu_string_append(str, idt, "H2Hdr@0x1000", st_hd2str);
+			fwupd_codec_string_append(str, idt, "H2Hdr@0x1000", st_hd2str);
 		}
 	}
 }

@@ -30,9 +30,9 @@ static void
 fu_qc_s5gen2_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuQcS5gen2Device *self = FU_QC_S5GEN2_DEVICE(device);
-	fu_string_append_kx(str, idt, "FileId", self->file_id);
-	fu_string_append_kx(str, idt, "FileVersion", self->file_version);
-	fu_string_append_kx(str, idt, "BatteryRaw", self->battery_raw);
+	fwupd_codec_string_append_hex(str, idt, "FileId", self->file_id);
+	fwupd_codec_string_append_hex(str, idt, "FileVersion", self->file_version);
+	fwupd_codec_string_append_hex(str, idt, "BatteryRaw", self->battery_raw);
 }
 
 static gboolean

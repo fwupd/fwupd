@@ -1447,7 +1447,7 @@ fu_nordic_hid_cfg_channel_module_to_string(FuNordicCfgChannelModule *mod, guint 
 	for (guint i = 0; i < mod->options->len; i++) {
 		FuNordicCfgChannelModuleOption *opt = g_ptr_array_index(mod->options, i);
 		g_autofree gchar *title = g_strdup_printf("Option%02x", i);
-		fu_string_append(str, idt, title, opt->name);
+		fwupd_codec_string_append(str, idt, title, opt->name);
 	}
 }
 
@@ -1456,25 +1456,25 @@ fu_nordic_hid_cfg_channel_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuNordicHidCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(device);
 
-	fu_string_append(str, idt, "BoardName", self->board_name);
-	fu_string_append_kx(str, idt, "PeerId", self->peer_id);
+	fwupd_codec_string_append(str, idt, "BoardName", self->board_name);
+	fwupd_codec_string_append_hex(str, idt, "PeerId", self->peer_id);
 
 	if (self->vid != 0x00 && self->pid != 0x00) {
-		fu_string_append_kx(str, idt, "VendorId", self->vid);
-		fu_string_append_kx(str, idt, "ProductId", self->pid);
+		fwupd_codec_string_append_hex(str, idt, "VendorId", self->vid);
+		fwupd_codec_string_append_hex(str, idt, "ProductId", self->pid);
 	}
 
 	if (self->dfu_support) {
-		fu_string_append(str, idt, "Bootloader", self->bl_name);
-		fu_string_append(str, idt, "Generation", self->generation);
-		fu_string_append_kx(str, idt, "FlashAreaId", self->flash_area_id);
-		fu_string_append_kx(str, idt, "FlashedImageLen", self->flashed_image_len);
+		fwupd_codec_string_append(str, idt, "Bootloader", self->bl_name);
+		fwupd_codec_string_append(str, idt, "Generation", self->generation);
+		fwupd_codec_string_append_hex(str, idt, "FlashAreaId", self->flash_area_id);
+		fwupd_codec_string_append_hex(str, idt, "FlashedImageLen", self->flashed_image_len);
 	}
 
 	for (guint i = 0; i < self->modules->len; i++) {
 		FuNordicCfgChannelModule *mod = g_ptr_array_index(self->modules, i);
 		g_autofree gchar *title = g_strdup_printf("Module%02x", i);
-		fu_string_append(str, idt, title, mod->name);
+		fwupd_codec_string_append(str, idt, title, mod->name);
 		fu_nordic_hid_cfg_channel_module_to_string(mod, idt + 1, str);
 	}
 }

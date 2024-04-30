@@ -523,11 +523,14 @@ fu_vli_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuVliDevicePrivate *priv = GET_PRIVATE(self);
 
 	if (priv->kind != FU_VLI_DEVICE_KIND_UNKNOWN)
-		fu_string_append(str, idt, "DeviceKind", fu_vli_device_kind_to_string(priv->kind));
-	fu_string_append_kb(str, idt, "SpiAutoDetect", priv->spi_auto_detect);
+		fwupd_codec_string_append(str,
+					  idt,
+					  "DeviceKind",
+					  fu_vli_device_kind_to_string(priv->kind));
+	fwupd_codec_string_append_bool(str, idt, "SpiAutoDetect", priv->spi_auto_detect);
 	if (priv->flash_id != 0x0) {
 		g_autofree gchar *tmp = fu_vli_device_get_flash_id_str(self);
-		fu_string_append(str, idt, "FlashId", tmp);
+		fwupd_codec_string_append(str, idt, "FlashId", tmp);
 	}
 	fu_device_add_string(FU_DEVICE(priv->cfi_device), idt + 1, str);
 }

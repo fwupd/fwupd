@@ -1204,24 +1204,24 @@ fu_usb_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 
 	if (priv->configuration > 0)
-		fu_string_append_kx(str, idt, "Configuration", priv->configuration);
+		fwupd_codec_string_append_hex(str, idt, "Configuration", priv->configuration);
 	if (priv->claim_retry_count > 0)
-		fu_string_append_kx(str, idt, "ClaimRetryCount", priv->claim_retry_count);
+		fwupd_codec_string_append_hex(str, idt, "ClaimRetryCount", priv->claim_retry_count);
 	if (priv->open_retry_count > 0)
-		fu_string_append_kx(str, idt, "OpenRetryCount", priv->open_retry_count);
+		fwupd_codec_string_append_hex(str, idt, "OpenRetryCount", priv->open_retry_count);
 	for (guint i = 0; priv->interfaces != NULL && i < priv->interfaces->len; i++) {
 		FuUsbDeviceInterface *iface = g_ptr_array_index(priv->interfaces, i);
 		g_autofree gchar *tmp = g_strdup_printf("InterfaceNumber#%02x", iface->number);
-		fu_string_append(str, idt, tmp, iface->claimed ? "claimed" : "released");
+		fwupd_codec_string_append(str, idt, tmp, iface->claimed ? "claimed" : "released");
 	}
 
 #ifdef HAVE_GUSB
 	if (priv->usb_device != NULL) {
 		GUsbDeviceClassCode code = g_usb_device_get_device_class(priv->usb_device);
-		fu_string_append(str,
-				 idt,
-				 "UsbDeviceClass",
-				 fu_usb_device_class_code_to_string(code));
+		fwupd_codec_string_append(str,
+					  idt,
+					  "UsbDeviceClass",
+					  fu_usb_device_class_code_to_string(code));
 	}
 #endif
 }

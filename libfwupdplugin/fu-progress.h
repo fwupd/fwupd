@@ -66,5 +66,3 @@ void
 fu_progress_sleep(FuProgress *self, guint delay_ms) G_GNUC_NON_NULL(1);
 gchar *
 fu_progress_traceback(FuProgress *self) G_GNUC_NON_NULL(1);
-gchar *
-fu_progress_to_string(FuProgress *self) G_GNUC_NON_NULL(1);

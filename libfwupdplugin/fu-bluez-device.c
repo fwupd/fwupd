@@ -234,7 +234,10 @@ fu_bluez_device_to_string(FuDevice *device, guint idt, GString *str)
 		g_hash_table_iter_init(&iter, priv->uuids);
 		while (g_hash_table_iter_next(&iter, &key, &value)) {
 			FuBluezDeviceUuidHelper *uuid_helper = (FuBluezDeviceUuidHelper *)value;
-			fu_string_append(str, idt + 1, (const gchar *)key, uuid_helper->path);
+			fwupd_codec_string_append(str,
+						  idt + 1,
+						  (const gchar *)key,
+						  uuid_helper->path);
 		}
 	}
 }

@@ -35,11 +35,14 @@ fu_redfish_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 	fu_backend_add_string(FU_BACKEND(self->backend), idt, str);
 	if (self->smbios != NULL) {
 		g_autofree gchar *smbios = fu_firmware_to_string(FU_FIRMWARE(self->smbios));
-		fu_string_append(str, idt, "Smbios", smbios);
+		fwupd_codec_string_append(str, idt, "Smbios", smbios);
 	}
-	fu_string_append(str, idt, "Vendor", fu_redfish_backend_get_vendor(self->backend));
-	fu_string_append(str, idt, "Version", fu_redfish_backend_get_version(self->backend));
-	fu_string_append(str, idt, "UUID", fu_redfish_backend_get_uuid(self->backend));
+	fwupd_codec_string_append(str, idt, "Vendor", fu_redfish_backend_get_vendor(self->backend));
+	fwupd_codec_string_append(str,
+				  idt,
+				  "Version",
+				  fu_redfish_backend_get_version(self->backend));
+	fwupd_codec_string_append(str, idt, "UUID", fu_redfish_backend_get_uuid(self->backend));
 }
 
 static gchar *

@@ -73,9 +73,9 @@ static void
 fu_ipmi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuIpmiDevice *self = FU_IPMI_DEVICE(device);
-	fu_string_append_kx(str, idt, "DeviceId", self->device_id);
-	fu_string_append_kx(str, idt, "DeviceRev", self->device_rev);
-	fu_string_append_kx(str, idt, "VersionIpmi", self->version_ipmi);
+	fwupd_codec_string_append_hex(str, idt, "DeviceId", self->device_id);
+	fwupd_codec_string_append_hex(str, idt, "DeviceRev", self->device_rev);
+	fwupd_codec_string_append_hex(str, idt, "VersionIpmi", self->version_ipmi);
 }
 
 static gboolean

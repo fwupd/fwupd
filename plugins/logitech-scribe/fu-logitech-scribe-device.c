@@ -329,9 +329,9 @@ static void
 fu_logitech_scribe_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuLogitechScribeDevice *self = FU_LOGITECH_SCRIBE_DEVICE(device);
-	fu_string_append_kx(str, idt, "UpdateIface", self->update_iface);
-	fu_string_append_kx(str, idt, "UpdateEpOut", self->update_ep[EP_OUT]);
-	fu_string_append_kx(str, idt, "UpdateEpIn", self->update_ep[EP_IN]);
+	fwupd_codec_string_append_hex(str, idt, "UpdateIface", self->update_iface);
+	fwupd_codec_string_append_hex(str, idt, "UpdateEpOut", self->update_ep[EP_OUT]);
+	fwupd_codec_string_append_hex(str, idt, "UpdateEpIn", self->update_ep[EP_IN]);
 }
 
 static gboolean

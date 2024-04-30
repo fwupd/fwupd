@@ -71,14 +71,14 @@ fu_synaptics_rmi_flash_to_string(FuSynapticsRmiFlash *flash, guint idt, GString 
 	if (flash->bootloader_id[0] != 0x0) {
 		g_autofree gchar *tmp =
 		    g_strdup_printf("%02x.%02x", flash->bootloader_id[0], flash->bootloader_id[1]);
-		fu_string_append(str, idt, "BootloaderId", tmp);
+		fwupd_codec_string_append(str, idt, "BootloaderId", tmp);
 	}
-	fu_string_append_kx(str, idt, "BlockSize", flash->block_size);
-	fu_string_append_kx(str, idt, "BlockCountFw", flash->block_count_fw);
-	fu_string_append_kx(str, idt, "BlockCountCfg", flash->block_count_cfg);
-	fu_string_append_kx(str, idt, "FlashConfigLength", flash->config_length);
-	fu_string_append_kx(str, idt, "PayloadLength", flash->payload_length);
-	fu_string_append_kx(str, idt, "BuildID", flash->build_id);
+	fwupd_codec_string_append_hex(str, idt, "BlockSize", flash->block_size);
+	fwupd_codec_string_append_hex(str, idt, "BlockCountFw", flash->block_count_fw);
+	fwupd_codec_string_append_hex(str, idt, "BlockCountCfg", flash->block_count_cfg);
+	fwupd_codec_string_append_hex(str, idt, "FlashConfigLength", flash->config_length);
+	fwupd_codec_string_append_hex(str, idt, "PayloadLength", flash->payload_length);
+	fwupd_codec_string_append_hex(str, idt, "BuildID", flash->build_id);
 }
 
 static void
@@ -86,12 +86,12 @@ fu_synaptics_rmi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
-	fu_string_append_kx(str, idt, "CurrentPage", priv->current_page);
-	fu_string_append_kx(str, idt, "InIepMode", priv->in_iep_mode);
-	fu_string_append_kx(str, idt, "MaxPage", priv->max_page);
-	fu_string_append_kx(str, idt, "SigSize", priv->sig_size);
+	fwupd_codec_string_append_hex(str, idt, "CurrentPage", priv->current_page);
+	fwupd_codec_string_append_hex(str, idt, "InIepMode", priv->in_iep_mode);
+	fwupd_codec_string_append_hex(str, idt, "MaxPage", priv->max_page);
+	fwupd_codec_string_append_hex(str, idt, "SigSize", priv->sig_size);
 	if (priv->f34 != NULL) {
-		fu_string_append_kx(str, idt, "BlVer", priv->f34->function_version + 0x5);
+		fwupd_codec_string_append_hex(str, idt, "BlVer", priv->f34->function_version + 0x5);
 	}
 	fu_synaptics_rmi_flash_to_string(&priv->flash, idt, str);
 }

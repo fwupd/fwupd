@@ -21,8 +21,8 @@ static void
 fu_rts54hid_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuRts54HidDevice *self = FU_RTS54HID_DEVICE(device);
-	fu_string_append_kb(str, idt, "FwAuth", self->fw_auth);
-	fu_string_append_kb(str, idt, "DualBank", self->dual_bank);
+	fwupd_codec_string_append_bool(str, idt, "FwAuth", self->fw_auth);
+	fwupd_codec_string_append_bool(str, idt, "DualBank", self->dual_bank);
 }
 
 static gboolean
