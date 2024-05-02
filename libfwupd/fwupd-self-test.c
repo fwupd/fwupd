@@ -665,7 +665,6 @@ fwupd_device_func(void)
 				    "  \"Checksums\" : [\n"
 				    "    \"beefdead\"\n"
 				    "  ],\n"
-				    "  \"VendorId\" : \"USB:0x1234|PCI:0x5678\",\n"
 				    "  \"VendorIds\" : [\n"
 				    "    \"USB:0x1234\",\n"
 				    "    \"PCI:0x5678\"\n"
