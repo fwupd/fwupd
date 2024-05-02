@@ -14,7 +14,6 @@
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
-#include "fwupd-release-private.h"
 
 /**
  * FwupdDevice:
