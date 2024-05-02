@@ -127,7 +127,6 @@ if introspection.allowed()
       'fwupd-security-attr-private.h',
       'fwupd-release.c',
       'fwupd-release.h',
-      'fwupd-release-private.h',
       'fwupd-plugin.c',
       'fwupd-plugin.h',
       'fwupd-remote.c',

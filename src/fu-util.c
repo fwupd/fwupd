@@ -23,7 +23,6 @@
 
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
-#include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 
 #include "fu-console.h"
