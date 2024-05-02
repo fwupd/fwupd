@@ -2412,7 +2412,6 @@ fu_udev_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	guint number_reads = 0;
 	g_autofree gchar *fn = NULL;
-	g_autofree gchar *rom_fn = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GFile) file = NULL;
