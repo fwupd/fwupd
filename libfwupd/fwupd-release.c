@@ -1681,11 +1681,6 @@ fwupd_release_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 		    FWUPD_RESULT_KEY_LOCATIONS,
 		    g_variant_new_strv((const gchar *const *)priv->locations->pdata,
 				       priv->locations->len));
-		/* for compatibility */
-		g_variant_builder_add(&builder,
-				      "{sv}",
-				      FWUPD_RESULT_KEY_URI,
-				      g_variant_new_string(g_ptr_array_index(priv->locations, 0)));
 	}
 	if (priv->tags->len > 0) {
 		g_variant_builder_add(
@@ -2012,10 +2007,6 @@ fwupd_release_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFla
 			json_builder_add_string_value(builder, location);
 		}
 		json_builder_end_array(builder);
-		/* for compatibility */
-		fwupd_codec_json_append(builder,
-					FWUPD_RESULT_KEY_URI,
-					(const gchar *)g_ptr_array_index(priv->locations, 0));
 	}
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
