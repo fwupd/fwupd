@@ -180,8 +180,6 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 		l2_stream = fu_partial_input_stream_new(stream, loc, sz, error);
 		if (l2_stream == NULL)
 			return FALSE;
-		if (l2_stream == NULL)
-			return FALSE;
 		fu_firmware_set_addr(l2_img, loc);
 		if (!fu_firmware_parse_stream(l2_img,
 					      l2_stream,
