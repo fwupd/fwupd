@@ -693,7 +693,6 @@ fwupd_device_func(void)
 				    "        \"http://foo.com\",\n"
 				    "        \"ftp://foo.com\"\n"
 				    "      ],\n"
-				    "      \"Uri\" : \"http://foo.com\",\n"
 				    "      \"Flags\" : [\n"
 				    "        \"trusted-payload\"\n"
 				    "      ]\n"
