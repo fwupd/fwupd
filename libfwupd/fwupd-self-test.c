@@ -18,7 +18,7 @@
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
 #include "fwupd-plugin.h"
-#include "fwupd-release-private.h"
+#include "fwupd-release.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-report.h"
 #include "fwupd-request-private.h"
@@ -293,13 +293,6 @@ fwupd_release_func(void)
 				    &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-
-	/* copy properties */
-	fwupd_release_incorporate(release3, release2);
-	g_assert_cmpstr(fwupd_release_get_metadata_item(release3, "foo"), ==, "bar");
-	g_assert_cmpstr(fwupd_release_get_remote_id(release3), ==, "remote-id");
-	g_assert_cmpstr(fwupd_release_get_appstream_id(release3), ==, "appstream-id");
-	g_assert_cmpstr(fwupd_release_get_id(release3), ==, "id");
 }
 
 static void

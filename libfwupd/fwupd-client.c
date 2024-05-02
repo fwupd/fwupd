@@ -28,7 +28,7 @@
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
 #include "fwupd-plugin.h"
-#include "fwupd-release-private.h"
+#include "fwupd-release.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-request-private.h"
 #include "fwupd-security-attr-private.h"

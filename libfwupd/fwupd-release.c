@@ -13,7 +13,7 @@
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
-#include "fwupd-release-private.h"
+#include "fwupd-release.h"
 #include "fwupd-report.h"
 
 /**
@@ -2275,27 +2275,6 @@ fwupd_release_codec_iface_init(FwupdCodecInterface *iface)
 	iface->to_json = fwupd_release_to_json;
 	iface->to_variant = fwupd_release_to_variant;
 	iface->from_variant_iter = fwupd_release_from_variant_iter;
-}
-
-/**
- * fwupd_release_incorporate:
- * @self: a #FwupdRelease
- * @donor: another #FwupdRelease
- *
- * Copy all properties from the donor object.
- *
- * Since: 1.8.8
- **/
-void
-fwupd_release_incorporate(FwupdRelease *self, FwupdRelease *donor)
-{
-	g_autoptr(GVariant) variant = NULL;
-
-	g_return_if_fail(FWUPD_IS_RELEASE(self));
-	g_return_if_fail(FWUPD_IS_RELEASE(donor));
-
-	variant = fwupd_codec_to_variant(FWUPD_CODEC(donor), FWUPD_CODEC_FLAG_NONE);
-	fwupd_codec_from_variant(FWUPD_CODEC(self), variant, NULL);
 }
 
 /**
