@@ -46,7 +46,6 @@ typedef struct {
 	gchar *summary;
 	gchar *branch;
 	gchar *vendor;
-	gchar *vendor_id; /* for compat only */
 	gchar *homepage;
 	gchar *plugin;
 	gchar *version;
@@ -973,7 +972,6 @@ void
 fwupd_device_add_vendor_id(FwupdDevice *self, const gchar *vendor_id)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
-	g_auto(GStrv) vendor_ids_tmp = NULL;
 
 	g_return_if_fail(FWUPD_IS_DEVICE(self));
 	g_return_if_fail(vendor_id != NULL);
@@ -981,15 +979,6 @@ fwupd_device_add_vendor_id(FwupdDevice *self, const gchar *vendor_id)
 	if (fwupd_device_has_vendor_id(self, vendor_id))
 		return;
 	g_ptr_array_add(priv->vendor_ids, g_strdup(vendor_id));
-
-	/* build for compatibility */
-	vendor_ids_tmp = g_new0(gchar *, priv->vendor_ids->len + 1);
-	for (guint i = 0; i < priv->vendor_ids->len; i++) {
-		const gchar *vendor_id_tmp = g_ptr_array_index(priv->vendor_ids, i);
-		vendor_ids_tmp[i] = g_strdup(vendor_id_tmp);
-	}
-	g_free(priv->vendor_id);
-	priv->vendor_id = g_strjoinv("|", vendor_ids_tmp);
 }
 
 /**
@@ -2992,8 +2981,7 @@ fwupd_device_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlag
 		json_builder_end_array(builder);
 	}
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
-	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_VENDOR_ID, priv->vendor_id);
-	if (priv->vendor_ids->len > 1) { /* --> 0 when bumping API */
+	if (priv->vendor_ids->len > 0) {
 		json_builder_set_member_name(builder, "VendorIds");
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->vendor_ids->len; i++) {
@@ -3936,7 +3924,6 @@ fwupd_device_finalize(GObject *object)
 	g_free(priv->summary);
 	g_free(priv->branch);
 	g_free(priv->vendor);
-	g_free(priv->vendor_id);
 	g_free(priv->plugin);
 	g_free(priv->update_error);
 	g_free(priv->update_message);
