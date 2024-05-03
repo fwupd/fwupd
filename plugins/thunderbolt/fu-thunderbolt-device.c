@@ -266,6 +266,7 @@ fu_thunderbolt_device_write_data(FuThunderboltDevice *self,
 	nwritten = 0;
 	fw_size = g_bytes_get_size(blob_fw);
 
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	do {
 		g_autoptr(GBytes) fw_data = NULL;
 
