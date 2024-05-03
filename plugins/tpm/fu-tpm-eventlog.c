@@ -62,7 +62,7 @@ fu_tmp_eventlog_process(const gchar *fn, gint pcr, GError **error)
 			    pcr);
 		return FALSE;
 	}
-	fwupd_codec_string_append(str, 0, "Reconstructed PCRs", NULL);
+	fwupd_codec_string_append(str, 0, "Reconstructed PCRs", "");
 	for (guint8 i = 0; i <= max_pcr; i++) {
 		g_autoptr(GPtrArray) pcrs = fu_tpm_eventlog_calc_checksums(items, i, NULL);
 		if (pcrs == NULL)

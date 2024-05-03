@@ -51,10 +51,8 @@ fu_release_to_string(FuRelease *self)
 	fwupd_codec_add_string(FWUPD_CODEC(self), 0, str);
 
 	/* instance */
-	if (self->request != NULL) {
-		fwupd_codec_string_append(str, idt, "Request", NULL);
-		fwupd_codec_add_string(FWUPD_CODEC(self->request), idt + 1, str);
-	}
+	if (self->request != NULL)
+		fwupd_codec_add_string(FWUPD_CODEC(self->request), idt, str);
 	if (self->device != NULL)
 		fwupd_codec_string_append(str, idt, "Device", fu_device_get_id(self->device));
 	if (self->device_version_old != NULL)
