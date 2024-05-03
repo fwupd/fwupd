@@ -37,17 +37,17 @@ static void
 fu_pci_mei_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuPciMeiPlugin *self = FU_PCI_MEI_PLUGIN(plugin);
-	fwupd_codec_string_append(str, idt, "HFSTS1", NULL);
+	fwupd_codec_string_append(str, idt, "HFSTS1", "");
 	fu_mei_hfsts1_to_string(self->hfsts1, idt + 1, str);
-	fwupd_codec_string_append(str, idt, "HFSTS2", NULL);
+	fwupd_codec_string_append(str, idt, "HFSTS2", "");
 	fu_mei_hfsts2_to_string(self->hfsts2, idt + 1, str);
-	fwupd_codec_string_append(str, idt, "HFSTS3", NULL);
+	fwupd_codec_string_append(str, idt, "HFSTS3", "");
 	fu_mei_hfsts3_to_string(self->hfsts3, idt + 1, str);
-	fwupd_codec_string_append(str, idt, "HFSTS4", NULL);
+	fwupd_codec_string_append(str, idt, "HFSTS4", "");
 	fu_mei_hfsts4_to_string(self->hfsts4, idt + 1, str);
-	fwupd_codec_string_append(str, idt, "HFSTS5", NULL);
+	fwupd_codec_string_append(str, idt, "HFSTS5", "");
 	fu_mei_hfsts5_to_string(self->hfsts5, idt + 1, str);
-	fwupd_codec_string_append(str, idt, "HFSTS6", NULL);
+	fwupd_codec_string_append(str, idt, "HFSTS6", "");
 	fu_mei_hfsts6_to_string(self->hfsts6, idt + 1, str);
 }
 

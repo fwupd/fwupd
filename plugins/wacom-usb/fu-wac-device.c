@@ -98,7 +98,7 @@ fu_wac_device_to_string(FuDevice *device, guint idt, GString *str)
 	for (guint i = 0; i < self->flash_descriptors->len; i++) {
 		FuWacFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
 		g_autofree gchar *title = g_strdup_printf("FlashDescriptor%02u", i);
-		fwupd_codec_string_append(str, idt, title, NULL);
+		fwupd_codec_string_append(str, idt, title, "");
 		fu_wac_device_flash_descriptor_to_string(fd, idt + 1, str);
 	}
 	status_str = fu_wac_device_status_to_string(self->status_word);

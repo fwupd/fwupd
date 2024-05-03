@@ -96,7 +96,7 @@ fu_util_bios_setting_to_string(FwupdBiosSetting *setting, guint idt)
 	debug_str = fwupd_codec_to_string(FWUPD_CODEC(setting));
 	g_debug("%s", debug_str);
 	tmp = fwupd_bios_setting_get_name(setting);
-	fwupd_codec_string_append(str, idt, tmp, NULL);
+	fwupd_codec_string_append(str, idt, tmp, "");
 
 	type = fwupd_bios_setting_get_kind(setting);
 	tmp = fu_util_bios_setting_kind_to_string(type);
