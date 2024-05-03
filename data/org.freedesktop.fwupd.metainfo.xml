@@ -38,6 +38,31 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.19" date="2024-05-03">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Drop heap as part of a housekeeping action</li>
+          <li>Retry downloads to workaround flaky network connections</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Assume new ME versions are called CSME</li>
+          <li>Fix a buffer-overread when parsing invalid CoSWID entity data</li>
+          <li>Fix a logic thinko when parsing GUID strings</li>
+          <li>Fix downloading files on Windows with libcurl >= 7.77.0</li>
+          <li>Revert back to a simpler syscall blocklist-based filter</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Acer U32 dock</li>
+          <li>Luxshare 7-in-1 dock</li>
+          <li>Pixart models 2404, 4206, 2440, 2418, 2752, 2840 and 2818</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.18" date="2024-04-23">
       <description>
         <p>This release fixes the following bugs:</p>
