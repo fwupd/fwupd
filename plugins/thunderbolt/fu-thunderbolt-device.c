@@ -388,6 +388,14 @@ fu_thunderbolt_device_write_firmware(FuDevice *device,
 		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
 	}
 
+	/* this is weird, but if we've just updated the firmware, we want to wait for the device
+	 * to "come back" after the controller is re-setup() and the 5 seconds has elapsed to
+	 * reprobe the retimer */
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)) {
+		g_warning("\n\nNO_AUTO_REMOVE, so waiting for replug\n\n");
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	}
+
 	return TRUE;
 }
 
@@ -427,6 +435,7 @@ fu_thunderbolt_device_init(FuThunderboltDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "thunderbolt");
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.thunderbolt");
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
