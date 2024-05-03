@@ -332,6 +332,7 @@ fu_wistron_dock_device_write_blocks(FuWistronDockDevice *self,
 static FuFirmware *
 fu_wistron_dock_device_prepare_firmware(FuDevice *device,
 					GInputStream *stream,
+					FuProgress *progress,
 					FwupdInstallFlags flags,
 					GError **error)
 {

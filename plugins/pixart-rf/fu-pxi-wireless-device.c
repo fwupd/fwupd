@@ -53,6 +53,7 @@ fu_pxi_wireless_device_get_parent(FuDevice *self, GError **error)
 static FuFirmware *
 fu_pxi_wireless_device_prepare_firmware(FuDevice *device,
 					GInputStream *stream,
+					FuProgress *progress,
 					FwupdInstallFlags flags,
 					GError **error)
 {

@@ -20,6 +20,7 @@ G_DEFINE_TYPE(FuUf2Device, fu_uf2_device, FU_TYPE_UDEV_DEVICE)
 static FuFirmware *
 fu_uf2_device_prepare_firmware(FuDevice *device,
 			       GInputStream *stream,
+			       FuProgress *progress,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {

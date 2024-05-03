@@ -215,6 +215,7 @@ fu_vbe_simple_device_get_cfg_compatible(FuVbeSimpleDevice *self,
 static FuFirmware *
 fu_vbe_simple_device_prepare_firmware(FuDevice *device,
 				      GInputStream *stream,
+				      FuProgress *progress,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {

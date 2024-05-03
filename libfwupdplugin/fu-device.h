@@ -42,6 +42,7 @@ struct _FuDeviceClass {
 	gboolean (*rescan)(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	FuFirmware *(*prepare_firmware)(FuDevice *self,
 					GInputStream *stream,
+					FuProgress *progress,
 					FwupdInstallFlags flags,
 					GError **error)G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*set_quirk_kv)(FuDevice *self,
@@ -792,8 +793,9 @@ fu_device_write_firmware(FuDevice *self,
 FuFirmware *
 fu_device_prepare_firmware(FuDevice *self,
 			   GInputStream *stream,
+			   FuProgress *progress,
 			   FwupdInstallFlags flags,
-			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 FuFirmware *
 fu_device_read_firmware(FuDevice *self,
 			FuProgress *progress,

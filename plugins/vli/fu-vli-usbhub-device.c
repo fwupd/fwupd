@@ -912,6 +912,7 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 static FuFirmware *
 fu_vli_usbhub_device_prepare_firmware(FuDevice *device,
 				      GInputStream *stream,
+				      FuProgress *progress,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {

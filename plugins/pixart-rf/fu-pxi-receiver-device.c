@@ -56,6 +56,7 @@ fu_pxi_receiver_device_to_string(FuDevice *device, guint idt, GString *str)
 static FuFirmware *
 fu_pxi_receiver_device_prepare_firmware(FuDevice *device,
 					GInputStream *stream,
+					FuProgress *progress,
 					FwupdInstallFlags flags,
 					GError **error)
 {

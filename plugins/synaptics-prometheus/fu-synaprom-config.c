@@ -107,6 +107,7 @@ fu_synaprom_config_setup(FuDevice *device, GError **error)
 static FuFirmware *
 fu_synaprom_config_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
+				    FuProgress *progress,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {

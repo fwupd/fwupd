@@ -149,6 +149,7 @@ fu_vli_usbhub_pd_device_reload(FuDevice *device, GError **error)
 static FuFirmware *
 fu_vli_usbhub_pd_device_prepare_firmware(FuDevice *device,
 					 GInputStream *stream,
+					 FuProgress *progress,
 					 FwupdInstallFlags flags,
 					 GError **error)
 {

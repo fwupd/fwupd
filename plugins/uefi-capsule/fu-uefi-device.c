@@ -619,6 +619,7 @@ fu_uefi_device_get_esp(FuUefiDevice *self)
 static FuFirmware *
 fu_uefi_device_prepare_firmware(FuDevice *device,
 				GInputStream *stream,
+				FuProgress *progress,
 				FwupdInstallFlags flags,
 				GError **error)
 {
