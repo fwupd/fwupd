@@ -243,54 +243,58 @@ fu_thunderbolt_device_rescan(FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_thunderbolt_device_write_stream(GOutputStream *ostream,
+				   GBytes *bytes,
+				   FuProgress *progress,
+				   GError **error)
+{
+	gsize bufsz = g_bytes_get_size(bytes);
+	gsize total_written = 0;
+
+	do {
+		gssize wrote;
+		g_autoptr(GBytes) fw_data = NULL;
+		fw_data = fu_bytes_new_offset(bytes, total_written, bufsz - total_written, error);
+		if (fw_data == NULL)
+			return FALSE;
+		wrote = g_output_stream_write_bytes(ostream, fw_data, NULL, error);
+		if (wrote < 0)
+			return FALSE;
+		total_written += wrote;
+		fu_progress_set_percentage_full(progress, total_written, bufsz);
+	} while (total_written < bufsz);
+	if (total_written != bufsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "only wrote 0x%x of 0x%x",
+			    (guint)total_written,
+			    (guint)bufsz);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_thunderbolt_device_write_data(FuThunderboltDevice *self,
 				 GBytes *blob_fw,
 				 FuProgress *progress,
 				 GError **error)
 {
-	gsize fw_size;
-	gsize nwritten;
-	gssize n;
 	g_autoptr(GFile) nvmem = NULL;
-	g_autoptr(GOutputStream) os = NULL;
+	g_autoptr(GOutputStream) ostream = NULL;
 
 	nvmem = fu_thunderbolt_device_find_nvmem(self, FALSE, error);
 	if (nvmem == NULL)
 		return FALSE;
-
-	os = (GOutputStream *)g_file_append_to(nvmem, G_FILE_CREATE_NONE, NULL, error);
-
-	if (os == NULL)
+	ostream = (GOutputStream *)g_file_append_to(nvmem, G_FILE_CREATE_NONE, NULL, error);
+	if (ostream == NULL)
 		return FALSE;
-
-	nwritten = 0;
-	fw_size = g_bytes_get_size(blob_fw);
-
-	do {
-		g_autoptr(GBytes) fw_data = NULL;
-
-		fw_data = fu_bytes_new_offset(blob_fw, nwritten, fw_size - nwritten, error);
-		if (fw_data == NULL)
-			return FALSE;
-
-		n = g_output_stream_write_bytes(os, fw_data, NULL, error);
-		if (n < 0)
-			return FALSE;
-
-		nwritten += n;
-		fu_progress_set_percentage_full(progress, nwritten, fw_size);
-
-	} while (nwritten < fw_size);
-
-	if (nwritten != fw_size) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "Could not write all data to nvmem");
+	if (!fu_thunderbolt_device_write_stream(ostream, blob_fw, progress, error))
 		return FALSE;
-	}
-
-	return g_output_stream_close(os, NULL, error);
+	return g_output_stream_close(ostream, NULL, error);
 }
 
 static FuFirmware *
