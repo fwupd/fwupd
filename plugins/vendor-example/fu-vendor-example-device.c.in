@@ -149,6 +149,7 @@ fu_{{vendor}}_{{example}}_device_cleanup(FuDevice *device,
 static FuFirmware *
 fu_{{vendor}}_{{example}}_device_prepare_firmware(FuDevice *device,
 					  GInputStream *stream,
+					  FuProgress *progress,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {

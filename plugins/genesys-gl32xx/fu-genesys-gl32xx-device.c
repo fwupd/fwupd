@@ -761,6 +761,7 @@ fu_genesys_gl32xx_device_read_firmware(FuDevice *device, FuProgress *progress, G
 static FuFirmware *
 fu_genesys_gl32xx_device_prepare_firmware(FuDevice *device,
 					  GInputStream *stream,
+					  FuProgress *progress,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {

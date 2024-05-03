@@ -33,6 +33,7 @@ fu_usi_dock_child_device_to_string(FuDevice *device, guint idt, GString *str)
 static FuFirmware *
 fu_usi_dock_mcu_device_prepare_firmware(FuDevice *device,
 					GInputStream *stream,
+					FuProgress *progress,
 					FwupdInstallFlags flags,
 					GError **error)
 {
@@ -41,7 +42,7 @@ fu_usi_dock_mcu_device_prepare_firmware(FuDevice *device,
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no parent");
 		return NULL;
 	}
-	return fu_device_prepare_firmware(parent, stream, flags, error);
+	return fu_device_prepare_firmware(parent, stream, progress, flags, error);
 }
 
 /* only update this specific child component */

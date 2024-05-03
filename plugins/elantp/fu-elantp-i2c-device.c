@@ -420,6 +420,7 @@ fu_elantp_i2c_device_open(FuDevice *device, GError **error)
 static FuFirmware *
 fu_elantp_i2c_device_prepare_firmware(FuDevice *device,
 				      GInputStream *stream,
+				      FuProgress *progress,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {

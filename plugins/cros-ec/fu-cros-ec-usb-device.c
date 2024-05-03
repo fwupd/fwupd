@@ -904,6 +904,7 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 static FuFirmware *
 fu_cros_ec_usb_device_prepare_firmware(FuDevice *device,
 				       GInputStream *stream,
+				       FuProgress *progress,
 				       FwupdInstallFlags flags,
 				       GError **error)
 {
