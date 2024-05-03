@@ -163,6 +163,14 @@ typedef enum {
 	 **/
 	FU_FIRMWARE_FLAG_NO_AUTO_DETECTION = 1u << 7,
 	/**
+	 * FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE:
+	 *
+	 * The firmware subclass implements a compatibility check.
+	 *
+	 * Since: 1.9.20
+	 **/
+	FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE = 1u << 8,
+	/**
 	 * FU_FIRMWARE_FLAG_UNKNOWN:
 	 *
 	 * Unknown flag value.
