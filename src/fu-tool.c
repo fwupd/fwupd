@@ -1938,11 +1938,11 @@ fu_util_get_report_metadata(FuUtilPrivate *priv, gchar **values, GError **error)
 						  fu_device_get_id(device));
 		}
 		if (metadata_pre != NULL) {
-			fwupd_codec_string_append(str, 1, "pre", NULL);
+			fwupd_codec_string_append(str, 1, "pre", "");
 			fu_util_report_metadata_to_string(metadata_pre, 3, str);
 		}
 		if (metadata_post != NULL) {
-			fwupd_codec_string_append(str, 1, "post", NULL);
+			fwupd_codec_string_append(str, 1, "post", "");
 			fu_util_report_metadata_to_string(metadata_post, 3, str);
 		}
 	}
