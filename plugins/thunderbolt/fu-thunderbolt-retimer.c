@@ -150,5 +150,6 @@ fu_thunderbolt_retimer_class_init(FuThunderboltRetimerClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->setup = fu_thunderbolt_retimer_setup;
+	device_class->reload = fu_thunderbolt_retimer_setup;
 	device_class->probe = fu_thunderbolt_retimer_probe;
 }
