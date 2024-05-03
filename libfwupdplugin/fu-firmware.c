@@ -87,6 +87,8 @@ fu_firmware_flag_to_string(FuFirmwareFlags flag)
 		return "always-search";
 	if (flag == FU_FIRMWARE_FLAG_NO_AUTO_DETECTION)
 		return "no-auto-detection";
+	if (flag == FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE)
+		return "has-check-compatible";
 	return NULL;
 }
 
@@ -119,6 +121,8 @@ fu_firmware_flag_from_string(const gchar *flag)
 		return FU_FIRMWARE_FLAG_ALWAYS_SEARCH;
 	if (g_strcmp0(flag, "no-auto-detection") == 0)
 		return FU_FIRMWARE_FLAG_NO_AUTO_DETECTION;
+	if (g_strcmp0(flag, "has-check-compatible") == 0)
+		return FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE;
 	return FU_FIRMWARE_FLAG_NONE;
 }
 
@@ -1054,6 +1058,10 @@ fu_firmware_parse_stream(FuFirmware *self,
 	/* any FuFirmware subclass that gets past this point might have allocated memory in
 	 * ->tokenize() or ->parse() and needs to be destroyed before parsing again */
 	fu_firmware_add_flag(self, FU_FIRMWARE_FLAG_DONE_PARSE);
+
+	/* this allows devices to skip reading the old firmware if the GType is unsuitable */
+	if (klass->check_compatible != NULL)
+		fu_firmware_add_flag(self, FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE);
 
 	/* optional */
 	if (klass->tokenize != NULL) {
