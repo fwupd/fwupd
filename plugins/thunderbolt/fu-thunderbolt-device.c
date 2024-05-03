@@ -170,7 +170,7 @@ static gboolean
 fu_thunderbolt_device_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuUdevDevice *udev = FU_UDEV_DEVICE(device);
-
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 	return fu_udev_device_write_sysfs(udev, "nvm_authenticate", "1", error);
 }
 
