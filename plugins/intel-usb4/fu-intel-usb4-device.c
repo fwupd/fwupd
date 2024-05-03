@@ -452,6 +452,7 @@ fu_intel_usb4_device_activate(FuDevice *device, FuProgress *progress, GError **e
 static FuFirmware *
 fu_intel_usb4_device_prepare_firmware(FuDevice *device,
 				      GInputStream *stream,
+				      FuProgress *progress,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {

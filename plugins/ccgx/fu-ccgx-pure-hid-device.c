@@ -196,6 +196,7 @@ fu_ccgx_pure_hid_device_setup(FuDevice *device, GError **error)
 static FuFirmware *
 fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 					 GInputStream *stream,
+					 FuProgress *progress,
 					 FwupdInstallFlags flags,
 					 GError **error)
 {

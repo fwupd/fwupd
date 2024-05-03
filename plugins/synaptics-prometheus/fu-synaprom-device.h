@@ -61,6 +61,7 @@ fu_synaprom_device_set_version(FuSynapromDevice *self,
 FuFirmware *
 fu_synaprom_device_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
+				    FuProgress *progress,
 				    FwupdInstallFlags flags,
 				    GError **error);
 

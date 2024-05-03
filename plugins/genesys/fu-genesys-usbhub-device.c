@@ -2159,6 +2159,7 @@ fu_genesys_usbhub_device_adjust_fw_addr(FuGenesysUsbhubDevice *self,
 static FuFirmware *
 fu_genesys_usbhub_device_prepare_firmware(FuDevice *device,
 					  GInputStream *stream,
+					  FuProgress *progress,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {

@@ -939,6 +939,7 @@ fu_mediatek_scaler_device_write_firmware(FuDevice *device,
 static FuFirmware *
 fu_mediatek_scaler_device_prepare_firmware(FuDevice *device,
 					   GInputStream *stream,
+					   FuProgress *progress,
 					   FwupdInstallFlags flags,
 					   GError **error)
 {

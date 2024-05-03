@@ -4399,18 +4399,25 @@ fu_device_write_firmware(FuDevice *self,
 		return FALSE;
 	}
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 1, "prepare-firmware");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, "write-firmware");
+
 	/* prepare (e.g. decompress) firmware */
-	fu_progress_set_status(progress, FWUPD_STATUS_DECOMPRESSING);
-	firmware = fu_device_prepare_firmware(self, stream, flags, error);
+	firmware =
+	    fu_device_prepare_firmware(self, stream, fu_progress_get_child(progress), flags, error);
 	if (firmware == NULL)
 		return FALSE;
 	str = fu_firmware_to_string(firmware);
 	g_info("installing onto %s:\n%s", fu_device_get_id(self), str);
+	fu_progress_step_done(progress);
 
 	/* call vfunc */
-	g_set_object(&priv->progress, progress);
-	if (!device_class->write_firmware(self, firmware, progress, flags, error))
+	g_set_object(&priv->progress, fu_progress_get_child(progress));
+	if (!device_class->write_firmware(self, firmware, priv->progress, flags, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* the device set an UpdateMessage (possibly from a quirk, or XML file)
 	 * but did not do an event; guess something */
@@ -4458,6 +4465,7 @@ fu_device_write_firmware(FuDevice *self,
 FuFirmware *
 fu_device_prepare_firmware(FuDevice *self,
 			   GInputStream *stream,
+			   FuProgress *progress,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
@@ -4468,11 +4476,12 @@ fu_device_prepare_firmware(FuDevice *self,
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* optionally subclassed */
 	if (device_class->prepare_firmware != NULL) {
-		firmware = device_class->prepare_firmware(self, stream, flags, error);
+		firmware = device_class->prepare_firmware(self, stream, progress, flags, error);
 		if (firmware == NULL)
 			return NULL;
 	} else if (priv->firmware_gtype != G_TYPE_INVALID) {
