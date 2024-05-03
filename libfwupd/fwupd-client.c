@@ -1665,6 +1665,7 @@ fwupd_client_get_devices_cb(GObject *source, GAsyncResult *res, gpointer user_da
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	fwupd_device_array_ensure_parents(array);
 
 	/* success */
 	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
@@ -1833,6 +1834,7 @@ fwupd_client_get_history_cb(GObject *source, GAsyncResult *res, gpointer user_da
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	fwupd_device_array_ensure_parents(array);
 
 	/* success */
 	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
