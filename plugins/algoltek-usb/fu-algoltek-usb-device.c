@@ -403,7 +403,9 @@ fu_algoltek_usb_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	version_data = fu_algoltek_usb_device_rdv(self, error);
-	version_str = g_strdup_printf("%s", version_data->data);
+	if (version_data == NULL)
+		return FALSE;
+	version_str = fu_strsafe((const gchar *)version_data->data, version_data->len);
 
 	fu_device_set_version(device, version_str);
 
