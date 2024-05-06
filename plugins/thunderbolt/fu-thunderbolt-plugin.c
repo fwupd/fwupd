@@ -17,9 +17,6 @@ struct _FuThunderboltPlugin {
 
 G_DEFINE_TYPE(FuThunderboltPlugin, fu_thunderbolt_plugin, FU_TYPE_PLUGIN)
 
-/* 5 seconds sleep until retimer is available after nvm update */
-#define FU_THUNDERBOLT_RETIMER_CLEANUP_DELAY 5000 /* ms */
-
 static gboolean
 fu_thunderbolt_plugin_safe_kernel(FuPlugin *plugin, GError **error)
 {

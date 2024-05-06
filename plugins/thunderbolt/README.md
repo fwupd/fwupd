@@ -57,6 +57,39 @@ If a user sets `DelayedActivation` configuration option then the update will
 be staged but not completed until `activate` is separately called such as at
 logout or shutdown.
 
+## USB4 Retimer Fun
+
+To update the retimer we need to set the port offline (`echo 1 > offline`), and then
+rescan it (`echo 1 > rescan`).
+This will cause the retimer to be visible to the OS, it will be added to sysfs and thus a fwupd
+`FuThunderboltRetimer` device will be created.
+
+If the system is on AC power, and the controller is offlined, the system will think that is has
+been unplugged and so the fwupd plugin should inhibit the system power change until the controller
+is onlined with `echo 0 > offline`.
+
+When the controller is offlined (perhaps after enumeration), the retimer device will disappear
+from sysfs which is why the device flag `no-auto-remove` is required.
+
+A further complication is that we need to re-start the retimer to get the new version number,
+for example:
+
+    1->offline
+    ->write_firmware()
+    0->offline ()
+    ...
+    retimer gets removed, which we ignore, due to no-auto-remove
+    ...
+    1->offline
+    1->rescan
+    ...
+    retimer gets added
+    ...
+    1->online
+    ...
+    retimer gets removed, which we ignore again
+    ...
+
 ## Vendor ID Security
 
 The vendor ID is set from the udev vendor, for example set to `TBT:0x$(vid)`

@@ -18,6 +18,9 @@ G_DECLARE_FINAL_TYPE(FuThunderboltRetimer,
 		     THUNDERBOLT_RETIMER,
 		     FuThunderboltDevice)
 
+/* 5 seconds sleep until retimer is available after nvm update */
+#define FU_THUNDERBOLT_RETIMER_CLEANUP_DELAY 5000 /* ms */
+
 gboolean
 fu_thunderbolt_retimer_set_parent_port_offline(FuDevice *device, GError **error);
 

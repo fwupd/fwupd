@@ -182,6 +182,8 @@ fu_thunderbolt_controller_setup_usb4(FuThunderboltController *self, GError **err
 {
 	if (!fu_thunderbolt_udev_set_port_offline(FU_UDEV_DEVICE(self), error))
 		return FALSE;
+	if (!fu_thunderbolt_udev_rescan_port(FU_UDEV_DEVICE(self), error))
+		return FALSE;
 	if (self->host_online_timer_id > 0)
 		g_source_remove(self->host_online_timer_id);
 	self->host_online_timer_id =
@@ -212,6 +214,15 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 	g_autofree gchar *attr_vendor_name = NULL;
 	g_autoptr(GError) error_gen = NULL;
 	g_autoptr(GError) error_version = NULL;
+
+	/* discover retimers */
+	if (self->controller_kind == FU_THUNDERBOLT_CONTROLLER_KIND_HOST &&
+	    fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION)) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_thunderbolt_controller_setup_usb4(self, &error_local))
+			g_warning("failed to setup host: %s", error_local->message);
+	}
 
 	/* try to read the version */
 	if (!fu_thunderbolt_device_get_version(FU_THUNDERBOLT_DEVICE(self), &error_version)) {
@@ -330,13 +341,6 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
 	} else {
 		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	}
-	if (self->controller_kind == FU_THUNDERBOLT_CONTROLLER_KIND_HOST &&
-	    fu_device_has_private_flag(FU_DEVICE(self),
-				       FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION)) {
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_thunderbolt_controller_setup_usb4(self, &error_local))
-			g_warning("failed to setup host: %s", error_local->message);
 	}
 
 	/* set up signed payload attribute */

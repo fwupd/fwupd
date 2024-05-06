@@ -13,3 +13,7 @@ Flags = retimer-offline-mode
 # Google Rex
 [​​fe682559-28dc-58b3-bf61-aa8414d9f363]
 Flags = retimer-offline-mode
+
+# Google Screebo
+[967000fc-42df-5a17-a0a2-70a43738e78b]
+Flags = retimer-offline-mode
