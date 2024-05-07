@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-fpc-device.h"
+#include "fu-fpc-ff2-firmware.h"
 #include "fu-fpc-plugin.h"
 
 struct _FuFpcPlugin {
@@ -25,6 +26,7 @@ fu_fpc_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_FPC_DEVICE);
+	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_FPC_FF2_FIRMWARE);
 }
 
 static void
