@@ -301,6 +301,10 @@ fwupd_client_rebuild_user_agent(FwupdClient *self)
 	if (system != NULL)
 		g_string_append_printf(str, "(%s) ", system);
 
+	/* am running in CI */
+	if (g_getenv("CI") != NULL)
+		g_string_append_printf(str, "ci/%s ", g_getenv("CI"));
+
 	/* platform, unless the application name is fwupd itself */
 	if (priv->daemon_version != NULL && g_strcmp0(priv->package_name, "fwupd") != 0)
 		g_string_append_printf(str, "fwupd/%s", priv->daemon_version);
