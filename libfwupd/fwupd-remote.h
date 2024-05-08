@@ -145,8 +145,6 @@ fwupd_remote_get_filename_source(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_report_uri(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
-fwupd_remote_get_security_report_uri(FwupdRemote *self) G_GNUC_NON_NULL(1);
-const gchar *
 fwupd_remote_get_metadata_uri(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_metadata_uri_sig(FwupdRemote *self) G_GNUC_NON_NULL(1);

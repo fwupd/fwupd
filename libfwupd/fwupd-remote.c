@@ -38,7 +38,6 @@ typedef struct {
 	gchar *id;
 	gchar *firmware_base_uri;
 	gchar *report_uri;
-	gchar *security_report_uri;
 	gchar *metadata_uri;
 	gchar *metadata_uri_sig;
 	gchar *username;
@@ -161,7 +160,6 @@ fwupd_remote_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlag
 					fwupd_keyring_kind_to_string(priv->keyring_kind));
 	}
 	fwupd_codec_json_append(builder, "ReportUri", priv->report_uri);
-	fwupd_codec_json_append(builder, "SecurityReportUri", priv->security_report_uri);
 	fwupd_codec_json_append(builder, "MetadataUri", priv->metadata_uri);
 	fwupd_codec_json_append(builder, "MetadataUriSig", priv->metadata_uri_sig);
 	fwupd_codec_json_append(builder, "Username", priv->username);
@@ -643,29 +641,6 @@ fwupd_remote_set_report_uri(FwupdRemote *self, const gchar *report_uri)
 
 	g_free(priv->report_uri);
 	priv->report_uri = g_steal_pointer(&report_uri_safe);
-}
-
-/**
- * fwupd_remote_set_security_report_uri:
- * @self: a #FwupdRemote
- * @security_report_uri: (nullable): security report URI
- *
- * Sets the security report URI.
- *
- * Since: 2.0.0
- **/
-void
-fwupd_remote_set_security_report_uri(FwupdRemote *self, const gchar *security_report_uri)
-{
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	g_autofree gchar *security_report_uri_safe = fwupd_strdup_nonempty(security_report_uri);
-
-	/* not changed */
-	if (g_strcmp0(priv->security_report_uri, security_report_uri_safe) == 0)
-		return;
-
-	g_free(priv->security_report_uri);
-	priv->security_report_uri = g_steal_pointer(&security_report_uri_safe);
 }
 
 /**
@@ -1365,24 +1340,6 @@ fwupd_remote_get_report_uri(FwupdRemote *self)
 }
 
 /**
- * fwupd_remote_get_security_report_uri:
- * @self: a #FwupdRemote
- *
- * Gets the URI for the security report.
- *
- * Returns: (transfer none): a URI, or %NULL for invalid.
- *
- * Since: 1.5.0
- **/
-const gchar *
-fwupd_remote_get_security_report_uri(FwupdRemote *self)
-{
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
-	return priv->security_report_uri;
-}
-
-/**
  * fwupd_remote_get_metadata_uri:
  * @self: a #FwupdRemote
  *
@@ -1612,9 +1569,6 @@ fwupd_remote_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
 			fwupd_remote_set_filename_source(self, g_variant_get_string(value, NULL));
 		if (g_strcmp0(key, "ReportUri") == 0)
 			fwupd_remote_set_report_uri(self, g_variant_get_string(value, NULL));
-		if (g_strcmp0(key, "SecurityReportUri") == 0)
-			fwupd_remote_set_security_report_uri(self,
-							     g_variant_get_string(value, NULL));
 	}
 	while (g_variant_iter_loop(iter3, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, "Username") == 0) {
@@ -1712,12 +1666,6 @@ fwupd_remote_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 				      "{sv}",
 				      "ReportUri",
 				      g_variant_new_string(priv->report_uri));
-	}
-	if (priv->security_report_uri != NULL) {
-		g_variant_builder_add(&builder,
-				      "{sv}",
-				      "SecurityReportUri",
-				      g_variant_new_string(priv->security_report_uri));
 	}
 	if (priv->priority != 0) {
 		g_variant_builder_add(&builder,
@@ -1983,7 +1931,6 @@ fwupd_remote_finalize(GObject *obj)
 	g_free(priv->metadata_uri_sig);
 	g_free(priv->firmware_base_uri);
 	g_free(priv->report_uri);
-	g_free(priv->security_report_uri);
 	g_free(priv->username);
 	g_free(priv->password);
 	g_free(priv->title);

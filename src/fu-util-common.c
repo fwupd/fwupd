@@ -2673,6 +2673,8 @@ fu_util_send_report(FwupdClient *client,
 		    const gchar *data,
 		    const gchar *sig,
 		    gchar **uri, /* (nullable) (out) */
+		    FwupdClientUploadFlags flags,
+		    GCancellable *cancellable,
 		    GError **error)
 {
 	const gchar *server_msg = NULL;
@@ -2683,13 +2685,8 @@ fu_util_send_report(FwupdClient *client,
 	g_autoptr(JsonParser) json_parser = NULL;
 
 	/* POST request */
-	upload_response = fwupd_client_upload_bytes(client,
-						    report_uri,
-						    data,
-						    sig,
-						    FWUPD_CLIENT_UPLOAD_FLAG_NONE,
-						    NULL,
-						    error);
+	upload_response =
+	    fwupd_client_upload_bytes(client, report_uri, data, sig, flags, cancellable, error);
 	if (upload_response == NULL)
 		return FALSE;
 

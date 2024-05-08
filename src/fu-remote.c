@@ -119,10 +119,6 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "ReportURI", NULL);
 		fwupd_remote_set_report_uri(self, tmp);
 	}
-	if (g_key_file_has_key(kf, group, "SecurityReportURI", NULL)) {
-		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "SecurityReportURI", NULL);
-		fwupd_remote_set_security_report_uri(self, tmp);
-	}
 	if (g_key_file_has_key(kf, group, "Username", NULL)) {
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "Username", NULL);
 		fwupd_remote_set_username(self, tmp);
@@ -213,11 +209,6 @@ fwupd_remote_save_to_filename(FwupdRemote *self,
 				      group,
 				      "RefreshInterval",
 				      fwupd_remote_get_refresh_interval(self));
-	if (fwupd_remote_get_security_report_uri(self) != NULL)
-		g_key_file_set_string(kf,
-				      group,
-				      "SecurityReportURI",
-				      fwupd_remote_get_security_report_uri(self));
 	if (fwupd_remote_get_username(self) != NULL)
 		g_key_file_set_string(kf, group, "Username", fwupd_remote_get_username(self));
 	if (fwupd_remote_get_password(self) != NULL)

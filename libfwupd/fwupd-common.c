@@ -644,6 +644,8 @@ fwupd_build_history_report_json(GPtrArray *devices, GError **error)
 	/* create header */
 	builder = json_builder_new();
 	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "ReportType");
+	json_builder_add_string_value(builder, "history");
 	json_builder_set_member_name(builder, "ReportVersion");
 	json_builder_add_int_value(builder, 2);
 	json_builder_set_member_name(builder, "MachineId");
