@@ -122,6 +122,8 @@ fu_util_send_report(FwupdClient *client,
 		    const gchar *data,
 		    const gchar *sig,
 		    gchar **uri,
+		    FwupdClientUploadFlags flags,
+		    GCancellable *cancellable,
 		    GError **error);
 gint
 fu_util_sort_devices_by_flags_cb(gconstpointer a, gconstpointer b);
