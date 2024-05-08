@@ -8,7 +8,7 @@
 
 #include <string.h>
 
-#include "fwupd-codec.h"
+#include "fwupd-codec-private.h"
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-plugin.h"
