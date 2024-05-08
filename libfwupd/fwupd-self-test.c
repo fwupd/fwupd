@@ -518,6 +518,7 @@ fwupd_common_history_report_func(void)
 	g_assert_cmpstr(json,
 			==,
 			"{\n"
+			"  \"ReportType\" : \"history\",\n"
 			"  \"ReportVersion\" : 2,\n"
 			"  \"MachineId\" : "
 			"\"36b2e7b8bb9a1344db8d6736dd10bcc169a95fc66decbac99c22718a54f434e3\",\n"
