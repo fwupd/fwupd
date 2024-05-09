@@ -516,7 +516,7 @@ fu_synaprom_device_init(FuSynapromDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "Prometheus");
 	fu_device_set_summary(FU_DEVICE(self), "Fingerprint reader");
 	fu_device_set_vendor(FU_DEVICE(self), "Synaptics");
-	fu_device_add_icon(FU_DEVICE(self), "touchpad-disabled");
+	fu_device_add_icon(FU_DEVICE(self), "auth-fingerprint");
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x0);
 }
 
