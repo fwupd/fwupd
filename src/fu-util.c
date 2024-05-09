@@ -4622,7 +4622,8 @@ fu_util_report_devices_build(FuUtilPrivate *priv, JsonBuilder *builder, GError *
 	json_builder_begin_array(builder);
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devs, i);
-		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
+		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+		    !fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN))
 			continue;
 		json_builder_begin_object(builder);
 		fwupd_device_to_json(dev, builder);
