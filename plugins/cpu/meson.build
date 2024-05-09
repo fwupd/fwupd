@@ -23,7 +23,7 @@ static void __attribute__((noinline,noclone)) f(void) {}
 '''
 
 # verify the compiler knows what to do
-if cc.has_argument('-fcf-protection')
+if host_cpu == 'x86_64' and cc.has_argument('-fcf-protection')
   build_fwupdcethelper = cc.compiles(code,
     name: '__attribute__((noinline,noclone))',
   )
