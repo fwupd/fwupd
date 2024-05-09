@@ -31,4 +31,5 @@ RestrictNamespaces=yes
 RestrictRealtime=yes
 RestrictSUIDSGID=yes
 SystemCallArchitectures=native
+Environment="GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK"
 @dynamic_options@
