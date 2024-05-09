@@ -16,4 +16,5 @@ PrivateTmp=yes
 ProtectHome=yes
 ProtectSystem=full
 SystemCallFilter=~@mount
+Environment="GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK"
 @dynamic_options@
