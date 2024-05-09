@@ -34,7 +34,7 @@ endif
 if build_fwupdcethelper
   libfwupdcethelper = static_library('fwupdcethelper',
     sources: [
-      'fu-cpu-helper-cet-common.c',
+      'fu-cpu-helper-cet-common.S',
     ],
     include_directories: [
       root_incdir,
