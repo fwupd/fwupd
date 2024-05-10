@@ -970,10 +970,6 @@ fu_weida_raw_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 44, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 35, NULL);
 
-	/* get default image */
-	// stream = fu_firmware_get_stream(firmware, error);
-	// if (stream == NULL)
-	//	return FALSE;
 
 	/* write each block */
 
