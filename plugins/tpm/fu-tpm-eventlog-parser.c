@@ -44,8 +44,7 @@ fu_tpm_eventlog_item_to_string(FuTpmEventlogItem *item, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "PCR", pcrstr);
 	fwupd_codec_string_append_hex(str, idt, "Type", item->kind);
 	tmp = fu_tpm_eventlog_item_kind_to_string(item->kind);
-	if (tmp != NULL)
-		fwupd_codec_string_append(str, idt, "Description", tmp);
+	fwupd_codec_string_append(str, idt, "Description", tmp);
 	if (item->checksum_sha1 != NULL) {
 		g_autofree gchar *csum = fu_tpm_eventlog_strhex(item->checksum_sha1);
 		fwupd_codec_string_append(str, idt, "ChecksumSha1", csum);

@@ -151,26 +151,16 @@ fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 #ifdef HAVE_GUDEV
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->vendor != 0x0)
-		fwupd_codec_string_append_hex(str, idt, "Vendor", priv->vendor);
-	if (priv->model != 0x0)
-		fwupd_codec_string_append_hex(str, idt, "Model", priv->model);
-	if (priv->subsystem_vendor != 0x0 || priv->subsystem_model != 0x0) {
-		fwupd_codec_string_append_hex(str, idt, "SubsystemVendor", priv->subsystem_vendor);
-		fwupd_codec_string_append_hex(str, idt, "SubsystemModel", priv->subsystem_model);
-	}
-	if (priv->class != 0x0)
-		fwupd_codec_string_append_hex(str, idt, "Class", priv->class);
-	if (priv->revision != 0x0)
-		fwupd_codec_string_append_hex(str, idt, "Revision", priv->revision);
-	if (priv->subsystem != NULL)
-		fwupd_codec_string_append(str, idt, "Subsystem", priv->subsystem);
-	if (priv->driver != NULL)
-		fwupd_codec_string_append(str, idt, "Driver", priv->driver);
-	if (priv->bind_id != NULL)
-		fwupd_codec_string_append(str, idt, "BindId", priv->bind_id);
-	if (priv->device_file != NULL)
-		fwupd_codec_string_append(str, idt, "DeviceFile", priv->device_file);
+	fwupd_codec_string_append_hex(str, idt, "Vendor", priv->vendor);
+	fwupd_codec_string_append_hex(str, idt, "Model", priv->model);
+	fwupd_codec_string_append_hex(str, idt, "SubsystemVendor", priv->subsystem_vendor);
+	fwupd_codec_string_append_hex(str, idt, "SubsystemModel", priv->subsystem_model);
+	fwupd_codec_string_append_hex(str, idt, "Class", priv->class);
+	fwupd_codec_string_append_hex(str, idt, "Revision", priv->revision);
+	fwupd_codec_string_append(str, idt, "Subsystem", priv->subsystem);
+	fwupd_codec_string_append(str, idt, "Driver", priv->driver);
+	fwupd_codec_string_append(str, idt, "BindId", priv->bind_id);
+	fwupd_codec_string_append(str, idt, "DeviceFile", priv->device_file);
 	if (priv->udev_device != NULL) {
 		fwupd_codec_string_append(str,
 					  idt,

@@ -3402,20 +3402,14 @@ fwupd_device_add_string(FwupdCodec *converter, guint idt, GString *str)
 					  priv->parent_id);
 	}
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_COMPOSITE_ID, priv->composite_id);
-	if (priv->name != NULL)
-		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_NAME, priv->name);
 	if (priv->status != FWUPD_STATUS_UNKNOWN) {
 		fwupd_codec_string_append(str,
 					  idt,
 					  FWUPD_RESULT_KEY_STATUS,
 					  fwupd_status_to_string(priv->status));
 	}
-	if (priv->percentage != 0) {
-		fwupd_codec_string_append_int(str,
-					      idt,
-					      FWUPD_RESULT_KEY_PERCENTAGE,
-					      priv->percentage);
-	}
+	fwupd_codec_string_append_int(str, idt, FWUPD_RESULT_KEY_PERCENTAGE, priv->percentage);
 
 	/* show instance IDs optionally mapped to GUIDs, and also "standalone" GUIDs */
 	guid_helpers = g_ptr_array_new_with_free_func((GDestroyNotify)fwupd_device_guid_helper_new);
@@ -3515,12 +3509,10 @@ fwupd_device_add_string(FwupdCodec *converter, guint idt, GString *str)
 		g_autofree gchar *tmp = fwupd_device_verstr_raw(priv->version_lowest_raw);
 		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VERSION_LOWEST_RAW, tmp);
 	}
-	if (priv->version_build_date > 0) {
-		fwupd_codec_string_append_time(str,
-					       idt,
-					       FWUPD_RESULT_KEY_VERSION_BUILD_DATE,
-					       priv->version_build_date);
-	}
+	fwupd_codec_string_append_time(str,
+				       idt,
+				       FWUPD_RESULT_KEY_VERSION_BUILD_DATE,
+				       priv->version_build_date);
 	if (priv->version_bootloader_raw > 0) {
 		g_autofree gchar *tmp = fwupd_device_verstr_raw(priv->version_bootloader_raw);
 		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW, tmp);

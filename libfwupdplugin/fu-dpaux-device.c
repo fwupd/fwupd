@@ -43,12 +43,9 @@ fu_dpaux_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuDpauxDevice *self = FU_DPAUX_DEVICE(device);
 	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->dpcd_ieee_oui != 0)
-		fwupd_codec_string_append_hex(str, idt, "DpcdIeeeOui", priv->dpcd_ieee_oui);
-	if (priv->dpcd_hw_rev != 0)
-		fwupd_codec_string_append_hex(str, idt, "DpcdHwRev", priv->dpcd_hw_rev);
-	if (priv->dpcd_dev_id != NULL)
-		fwupd_codec_string_append(str, idt, "DpcdDevId", priv->dpcd_dev_id);
+	fwupd_codec_string_append_hex(str, idt, "DpcdIeeeOui", priv->dpcd_ieee_oui);
+	fwupd_codec_string_append_hex(str, idt, "DpcdHwRev", priv->dpcd_hw_rev);
+	fwupd_codec_string_append(str, idt, "DpcdDevId", priv->dpcd_dev_id);
 }
 
 static void

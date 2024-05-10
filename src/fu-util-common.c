@@ -1862,13 +1862,11 @@ fu_util_report_add_string(FwupdReport *report, guint idt, GString *str)
 		/* TRANSLATORS: the OS the release was tested on */
 		fwupd_codec_string_append(str, idt + 1, _("Distribution"), str2->str);
 	}
-	if (fwupd_report_get_version_old(report) != NULL) {
-		fwupd_codec_string_append(str,
-					  idt + 1,
-					  /* TRANSLATORS: the firmware old version */
-					  _("Old version"),
-					  fwupd_report_get_version_old(report));
-	}
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: the firmware old version */
+				  _("Old version"),
+				  fwupd_report_get_version_old(report));
 	fwupd_codec_string_append(
 	    str,
 	    idt + 1,

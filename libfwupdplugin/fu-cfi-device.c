@@ -590,12 +590,9 @@ fu_cfi_device_to_string(FuDevice *device, guint idt, GString *str)
 					      fu_cfi_device_cmd_to_string(i),
 					      priv->cmds[i]);
 	}
-	if (priv->page_size > 0)
-		fwupd_codec_string_append_hex(str, idt, "PageSize", priv->page_size);
-	if (priv->sector_size > 0)
-		fwupd_codec_string_append_hex(str, idt, "SectorSize", priv->sector_size);
-	if (priv->block_size > 0)
-		fwupd_codec_string_append_hex(str, idt, "BlockSize", priv->block_size);
+	fwupd_codec_string_append_hex(str, idt, "PageSize", priv->page_size);
+	fwupd_codec_string_append_hex(str, idt, "SectorSize", priv->sector_size);
+	fwupd_codec_string_append_hex(str, idt, "BlockSize", priv->block_size);
 }
 
 /**

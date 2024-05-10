@@ -78,10 +78,8 @@ fu_ccgx_hpi_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "EpBulkIn", self->ep_bulk_in);
 	fwupd_codec_string_append_hex(str, idt, "EpBulkOut", self->ep_bulk_out);
 	fwupd_codec_string_append_hex(str, idt, "EpIntrIn", self->ep_intr_in);
-	if (self->flash_row_size > 0)
-		fwupd_codec_string_append_hex(str, idt, "CcgxFlashRowSize", self->flash_row_size);
-	if (self->flash_size > 0)
-		fwupd_codec_string_append_hex(str, idt, "CcgxFlashSize", self->flash_size);
+	fwupd_codec_string_append_hex(str, idt, "CcgxFlashRowSize", self->flash_row_size);
+	fwupd_codec_string_append_hex(str, idt, "CcgxFlashSize", self->flash_size);
 }
 
 typedef struct {

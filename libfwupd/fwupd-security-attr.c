@@ -1649,8 +1649,7 @@ fwupd_security_attr_add_string(FwupdCodec *converter, guint idt, GString *str)
 	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(converter);
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
-	if (priv->created > 0)
-		fwupd_codec_string_append_time(str, idt, FWUPD_RESULT_KEY_CREATED, priv->created);
+	fwupd_codec_string_append_time(str, idt, FWUPD_RESULT_KEY_CREATED, priv->created);
 	fwupd_codec_string_append_int(str, idt, FWUPD_RESULT_KEY_HSI_LEVEL, priv->level);
 	fwupd_codec_string_append(str,
 				  idt,

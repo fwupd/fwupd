@@ -408,8 +408,7 @@ static void
 fu_uf2_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuUf2Device *self = FU_UF2_DEVICE(device);
-	if (self->family_id > 0)
-		fwupd_codec_string_append_hex(str, idt, "FamilyId", self->family_id);
+	fwupd_codec_string_append_hex(str, idt, "FamilyId", self->family_id);
 }
 
 static void

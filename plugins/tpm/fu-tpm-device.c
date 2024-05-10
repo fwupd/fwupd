@@ -75,8 +75,7 @@ fu_tpm_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuTpmDevice *self = FU_TPM_DEVICE(device);
 	FuTpmDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->family != NULL)
-		fwupd_codec_string_append(str, idt, "Family", priv->family);
+	fwupd_codec_string_append(str, idt, "Family", priv->family);
 }
 
 static void

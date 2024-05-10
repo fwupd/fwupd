@@ -185,8 +185,7 @@ fu_backend_add_string(FuBackend *self, guint idt, GString *str)
 	FuBackendPrivate *priv = GET_PRIVATE(self);
 
 	fwupd_codec_string_append(str, idt, G_OBJECT_TYPE_NAME(self), "");
-	if (priv->name != NULL)
-		fwupd_codec_string_append(str, idt + 1, "Name", priv->name);
+	fwupd_codec_string_append(str, idt + 1, "Name", priv->name);
 	fwupd_codec_string_append_bool(str, idt + 1, "Enabled", priv->enabled);
 	fwupd_codec_string_append_bool(str, idt + 1, "DoneSetup", priv->done_setup);
 	fwupd_codec_string_append_bool(str, idt + 1, "CanInvalidate", priv->can_invalidate);

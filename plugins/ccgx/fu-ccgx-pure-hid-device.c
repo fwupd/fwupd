@@ -419,8 +419,7 @@ fu_ccgx_pure_hid_device_to_string(FuDevice *device, guint idt, GString *str)
 				  idt,
 				  "FwMode",
 				  fu_ccgx_pure_hid_fw_mode_to_string(self->operating_mode));
-	if (self->flash_row_size > 0)
-		fwupd_codec_string_append_hex(str, idt, "CcgxFlashRowSize", self->flash_row_size);
+	fwupd_codec_string_append_hex(str, idt, "CcgxFlashRowSize", self->flash_row_size);
 }
 
 static gboolean
