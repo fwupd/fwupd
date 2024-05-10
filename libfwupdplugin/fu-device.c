@@ -4126,49 +4126,34 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 		g_autofree gchar *tmp2 = g_strdup_printf("%s ← %s", guid, instance_id);
 		fwupd_codec_string_append(str, idt, "Guid[quirk]", tmp2);
 	}
-	if (priv->equivalent_id != NULL)
-		fwupd_codec_string_append(str, idt, "EquivalentId", priv->equivalent_id);
-	if (priv->physical_id != NULL)
-		fwupd_codec_string_append(str, idt, "PhysicalId", priv->physical_id);
-	if (priv->logical_id != NULL)
-		fwupd_codec_string_append(str, idt, "LogicalId", priv->logical_id);
-	if (priv->backend_id != NULL)
-		fwupd_codec_string_append(str, idt, "BackendId", priv->backend_id);
-	if (priv->update_request_id != NULL)
-		fwupd_codec_string_append(str, idt, "UpdateRequestId", priv->update_request_id);
+	fwupd_codec_string_append(str, idt, "EquivalentId", priv->equivalent_id);
+	fwupd_codec_string_append(str, idt, "PhysicalId", priv->physical_id);
+	fwupd_codec_string_append(str, idt, "LogicalId", priv->logical_id);
+	fwupd_codec_string_append(str, idt, "BackendId", priv->backend_id);
+	fwupd_codec_string_append(str, idt, "UpdateRequestId", priv->update_request_id);
 	if (priv->proxy != NULL)
 		fwupd_codec_string_append(str, idt, "ProxyId", fu_device_get_id(priv->proxy));
-	if (priv->proxy_guid != NULL)
-		fwupd_codec_string_append(str, idt, "ProxyGuid", priv->proxy_guid);
-	if (priv->remove_delay != 0)
-		fwupd_codec_string_append_int(str, idt, "RemoveDelay", priv->remove_delay);
-	if (priv->acquiesce_delay != 0)
-		fwupd_codec_string_append_int(str, idt, "AcquiesceDelay", priv->acquiesce_delay);
-	if (priv->custom_flags != NULL)
-		fwupd_codec_string_append(str, idt, "CustomFlags", priv->custom_flags);
+	fwupd_codec_string_append(str, idt, "ProxyGuid", priv->proxy_guid);
+	fwupd_codec_string_append_int(str, idt, "RemoveDelay", priv->remove_delay);
+	fwupd_codec_string_append_int(str, idt, "AcquiesceDelay", priv->acquiesce_delay);
+	fwupd_codec_string_append(str, idt, "CustomFlags", priv->custom_flags);
 	if (priv->specialized_gtype != G_TYPE_INVALID)
 		fwupd_codec_string_append(str, idt, "GType", g_type_name(priv->specialized_gtype));
 	if (priv->proxy_gtype != G_TYPE_INVALID)
 		fwupd_codec_string_append(str, idt, "ProxyGType", g_type_name(priv->proxy_gtype));
-	if (priv->firmware_gtype != G_TYPE_INVALID)
+	if (priv->firmware_gtype != G_TYPE_INVALID) {
 		fwupd_codec_string_append(str,
 					  idt,
 					  "FirmwareGType",
 					  g_type_name(priv->firmware_gtype));
-	if (priv->size_min > 0) {
-		g_autofree gchar *sz = g_strdup_printf("%" G_GUINT64_FORMAT, priv->size_min);
-		fwupd_codec_string_append(str, idt, "FirmwareSizeMin", sz);
 	}
-	if (priv->size_max > 0) {
-		g_autofree gchar *sz = g_strdup_printf("%" G_GUINT64_FORMAT, priv->size_max);
-		fwupd_codec_string_append(str, idt, "FirmwareSizeMax", sz);
-	}
+	fwupd_codec_string_append_size(str, idt, "FirmwareSizeMin", priv->size_min);
+	fwupd_codec_string_append_size(str, idt, "FirmwareSizeMax", priv->size_max);
 	if (priv->order != G_MAXINT) {
 		g_autofree gchar *order = g_strdup_printf("%i", priv->order);
 		fwupd_codec_string_append(str, idt, "Order", order);
 	}
-	if (priv->priority > 0)
-		fwupd_codec_string_append_int(str, idt, "Priority", priv->priority);
+	fwupd_codec_string_append_int(str, idt, "Priority", priv->priority);
 	if (priv->metadata != NULL) {
 		g_autoptr(GList) keys = g_hash_table_get_keys(priv->metadata);
 		for (GList *l = keys; l != NULL; l = l->next) {

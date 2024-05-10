@@ -30,10 +30,8 @@ fu_redfish_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuRedfishDevice *self = FU_REDFISH_DEVICE(device);
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->milestone > 0x0)
-		fwupd_codec_string_append_hex(str, idt, "Milestone", priv->milestone);
-	if (priv->build != NULL)
-		fwupd_codec_string_append(str, idt, "Build", priv->build);
+	fwupd_codec_string_append_hex(str, idt, "Milestone", priv->milestone);
+	fwupd_codec_string_append(str, idt, "Build", priv->build);
 	fwupd_codec_string_append_int(str, idt, "ResetPretDelay", priv->reset_pre_delay);
 	fwupd_codec_string_append_int(str, idt, "ResetPostDelay", priv->reset_post_delay);
 }

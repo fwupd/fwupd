@@ -1203,12 +1203,9 @@ fu_usb_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 
-	if (priv->configuration > 0)
-		fwupd_codec_string_append_hex(str, idt, "Configuration", priv->configuration);
-	if (priv->claim_retry_count > 0)
-		fwupd_codec_string_append_hex(str, idt, "ClaimRetryCount", priv->claim_retry_count);
-	if (priv->open_retry_count > 0)
-		fwupd_codec_string_append_hex(str, idt, "OpenRetryCount", priv->open_retry_count);
+	fwupd_codec_string_append_hex(str, idt, "Configuration", priv->configuration);
+	fwupd_codec_string_append_hex(str, idt, "ClaimRetryCount", priv->claim_retry_count);
+	fwupd_codec_string_append_hex(str, idt, "OpenRetryCount", priv->open_retry_count);
 	for (guint i = 0; priv->interfaces != NULL && i < priv->interfaces->len; i++) {
 		FuUsbDeviceInterface *iface = g_ptr_array_index(priv->interfaces, i);
 		g_autofree gchar *tmp = g_strdup_printf("InterfaceNumber#%02x", iface->number);

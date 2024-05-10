@@ -84,17 +84,11 @@ fu_dfu_device_to_string(FuDevice *device, guint idt, GString *str)
 				       "DoneUploadOrDownload",
 				       priv->done_upload_or_download);
 	fwupd_codec_string_append_bool(str, idt, "ClaimedInterface", priv->claimed_interface);
-	if (priv->chip_id != NULL)
-		fwupd_codec_string_append(str, idt, "ChipId", priv->chip_id);
+	fwupd_codec_string_append(str, idt, "ChipId", priv->chip_id);
 	fwupd_codec_string_append_hex(str, idt, "Version", priv->version);
 	if (priv->force_version != G_MAXUINT16)
 		fwupd_codec_string_append_hex(str, idt, "ForceVersion", priv->force_version);
-	if (priv->force_transfer_size != 0x0) {
-		fwupd_codec_string_append_hex(str,
-					      idt,
-					      "ForceTransferSize",
-					      priv->force_transfer_size);
-	}
+	fwupd_codec_string_append_hex(str, idt, "ForceTransferSize", priv->force_transfer_size);
 	fwupd_codec_string_append_hex(str, idt, "RuntimePid", priv->runtime_pid);
 	fwupd_codec_string_append_hex(str, idt, "RuntimeVid", priv->runtime_vid);
 	fwupd_codec_string_append_hex(str, idt, "RuntimeRelease", priv->runtime_release);

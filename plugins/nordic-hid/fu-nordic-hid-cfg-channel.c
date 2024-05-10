@@ -1458,11 +1458,8 @@ fu_nordic_hid_cfg_channel_to_string(FuDevice *device, guint idt, GString *str)
 
 	fwupd_codec_string_append(str, idt, "BoardName", self->board_name);
 	fwupd_codec_string_append_hex(str, idt, "PeerId", self->peer_id);
-
-	if (self->vid != 0x00 && self->pid != 0x00) {
-		fwupd_codec_string_append_hex(str, idt, "VendorId", self->vid);
-		fwupd_codec_string_append_hex(str, idt, "ProductId", self->pid);
-	}
+	fwupd_codec_string_append_hex(str, idt, "VendorId", self->vid);
+	fwupd_codec_string_append_hex(str, idt, "ProductId", self->pid);
 
 	if (self->dfu_support) {
 		fwupd_codec_string_append(str, idt, "Bootloader", self->bl_name);

@@ -982,20 +982,16 @@ fu_progress_add_string(FwupdCodec *converter, guint idt, GString *str)
 	if (self->id == NULL && self->name == NULL)
 		return;
 
-	if (self->id != NULL)
-		fwupd_codec_string_append(str, idt, "Id", self->id);
-	if (self->name != NULL)
-		fwupd_codec_string_append(str, idt, "Name", self->name);
+	fwupd_codec_string_append(str, idt, "Id", self->id);
+	fwupd_codec_string_append(str, idt, "Name", self->name);
 	if (self->percentage != G_MAXUINT)
 		fwupd_codec_string_append_int(str, idt, "Percentage", self->percentage);
 	if (self->status != FWUPD_STATUS_UNKNOWN)
 		fwupd_codec_string_append(str, idt, "Status", fwupd_status_to_string(self->status));
 	if (self->duration > 0.0001)
 		fwupd_codec_string_append_int(str, idt, "DurationMs", self->duration * 1000.f);
-	if (self->step_weighting > 0)
-		fwupd_codec_string_append_int(str, idt, "StepWeighting", self->step_weighting);
-	if (self->step_now > 0)
-		fwupd_codec_string_append_int(str, idt, "StepNow", self->step_now);
+	fwupd_codec_string_append_int(str, idt, "StepWeighting", self->step_weighting);
+	fwupd_codec_string_append_int(str, idt, "StepNow", self->step_now);
 	for (guint i = 0; i < self->children->len; i++) {
 		FuProgress *child = g_ptr_array_index(self->children, i);
 		fwupd_codec_add_string(FWUPD_CODEC(child), idt + 1, str);

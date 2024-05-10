@@ -45,8 +45,7 @@ fu_drm_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuDrmDevice *self = FU_DRM_DEVICE(device);
 	FuDrmDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->connector_id != NULL)
-		fwupd_codec_string_append(str, idt, "ConnectorId", priv->connector_id);
+	fwupd_codec_string_append(str, idt, "ConnectorId", priv->connector_id);
 	fwupd_codec_string_append_bool(str, idt, "Enabled", priv->enabled);
 	fwupd_codec_string_append(str,
 				  idt,

@@ -39,8 +39,7 @@ fu_engine_request_add_string(FwupdCodec *converter, guint idt, GString *str)
 	}
 	fwupd_codec_string_append_hex(str, idt, "FeatureFlags", self->feature_flags);
 	fwupd_codec_string_append_hex(str, idt, "ConverterFlags", self->converter_flags);
-	if (self->locale != NULL)
-		fwupd_codec_string_append(str, idt, "Locale", self->locale);
+	fwupd_codec_string_append(str, idt, "Locale", self->locale);
 }
 
 static void

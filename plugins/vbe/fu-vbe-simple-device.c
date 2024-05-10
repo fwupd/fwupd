@@ -39,14 +39,11 @@ static void
 fu_vbe_simple_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuVbeSimpleDevice *self = FU_VBE_SIMPLE_DEVICE(device);
-	if (self->storage != NULL)
-		fwupd_codec_string_append(str, idt, "Storage", self->storage);
-	if (self->devname != NULL)
-		fwupd_codec_string_append(str, idt, "Devname", self->devname);
+	fwupd_codec_string_append(str, idt, "Storage", self->storage);
+	fwupd_codec_string_append(str, idt, "Devname", self->devname);
 	fwupd_codec_string_append_hex(str, idt, "AreaStart", self->area_start);
 	fwupd_codec_string_append_hex(str, idt, "AreaSize", self->area_size);
-	if (self->skip_offset != 0)
-		fwupd_codec_string_append_hex(str, idt, "SkipOffset", self->skip_offset);
+	fwupd_codec_string_append_hex(str, idt, "SkipOffset", self->skip_offset);
 }
 
 static gboolean
