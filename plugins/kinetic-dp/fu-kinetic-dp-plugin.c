@@ -91,9 +91,7 @@ fu_kinetic_dp_plugin_backend_device_added(FuPlugin *plugin,
 					  GError **error)
 {
 	FuKineticDpPlugin *self = FU_KINETIC_DP_PLUGIN(plugin);
-	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuKineticDpDevice) dev = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	/* check to see if this is device we care about? */
 	if (!FU_IS_DPAUX_DEVICE(device))
@@ -103,15 +101,6 @@ fu_kinetic_dp_plugin_backend_device_added(FuPlugin *plugin,
 	dev = fu_kinetic_dp_plugin_create_device(FU_DPAUX_DEVICE(device), error);
 	if (dev == NULL)
 		return FALSE;
-	locker = fu_device_locker_new(dev, &error_local);
-	if (locker == NULL) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-			g_debug("no device found: %s", error_local->message);
-			return TRUE;
-		}
-		g_propagate_error(error, g_steal_pointer(&error_local));
-		return FALSE;
-	}
 	fu_plugin_device_add(FU_PLUGIN(self), FU_DEVICE(dev));
 	return TRUE;
 }
