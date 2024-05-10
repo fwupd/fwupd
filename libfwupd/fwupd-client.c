@@ -4298,7 +4298,7 @@ fwupd_client_refresh_remote2_async(FwupdClient *self,
 	}
 	fwupd_client_download_bytes_async(self,
 					  uri,
-					  download_flags,
+					  download_flags & ~FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P,
 					  cancellable,
 					  fwupd_client_refresh_remote_signature_cb,
 					  g_steal_pointer(&task));
