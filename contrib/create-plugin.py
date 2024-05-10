@@ -24,7 +24,7 @@ def _subst_add_string(key: str, value: str) -> None:
     # sanity check
     if not value.isascii():
         raise NotImplementedError(f"{key} can only be ASCII, got {value}")
-    if len(value) < 3:
+    if len(value) < 2:
         raise NotImplementedError(f"{key} has to be at least length 3, got {value}")
 
     subst[key] = value
