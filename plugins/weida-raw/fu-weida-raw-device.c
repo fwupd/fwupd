@@ -132,7 +132,7 @@ fu_weida_raw_device_get_feature(FuWeidaRawDevice *self, guint8 *data, guint data
 static void
 fu_weida_raw_device_to_string(FuDevice *device, guint idt, GString *str)
 {
-	FuWeidaRawDevice *self = FU_WEIDA_RAW_DEVICE(device);
+	return;
 }
 
 static gboolean
@@ -1012,8 +1012,6 @@ fu_weida_raw_device_set_quirk_kv(FuDevice *device,
 				 const gchar *value,
 				 GError **error)
 {
-	FuWeidaRawDevice *self = FU_WEIDA_RAW_DEVICE(device);
-
 	/* TODO: parse value from quirk file */
 
 	/* failed */
