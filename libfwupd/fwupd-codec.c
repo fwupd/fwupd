@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include "fwupd-codec.h"
+#include "fwupd-codec-private.h"
 #include "fwupd-error.h"
 
 /**

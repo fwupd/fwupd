@@ -36,6 +36,7 @@ _fwupdmgr_cmd_list=(
 	'quit'
 	'reinstall'
 	'refresh'
+	'report-devices'
 	'report-history'
 	'report-export'
 	'security'

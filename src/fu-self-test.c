@@ -5971,9 +5971,9 @@ fu_remote_auth_func(void)
 	g_assert_true(ret);
 	g_assert_cmpstr(fwupd_remote_get_username(remote), ==, "user");
 	g_assert_cmpstr(fwupd_remote_get_password(remote), ==, "pass");
-	g_assert_cmpstr(fwupd_remote_get_security_report_uri(remote),
+	g_assert_cmpstr(fwupd_remote_get_report_uri(remote),
 			==,
-			"https://fwupd.org/lvfs/hsireports/upload");
+			"https://fwupd.org/lvfs/firmware/report");
 	g_assert_false(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED));
 	g_assert_false(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS));
 	g_assert_true(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS));
@@ -6034,7 +6034,6 @@ fu_remote_auth_func(void)
 	    "  \"Kind\" : \"download\",\n"
 	    "  \"KeyringKind\" : \"jcat\",\n"
 	    "  \"ReportUri\" : \"https://fwupd.org/lvfs/firmware/report\",\n"
-	    "  \"SecurityReportUri\" : \"https://fwupd.org/lvfs/hsireports/upload\",\n"
 	    "  \"MetadataUri\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz\",\n"
 	    "  \"MetadataUriSig\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz.jcat\",\n"
 	    "  \"Username\" : \"user\",\n"

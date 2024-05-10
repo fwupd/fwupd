@@ -301,6 +301,10 @@ fwupd_client_rebuild_user_agent(FwupdClient *self)
 	if (system != NULL)
 		g_string_append_printf(str, "(%s) ", system);
 
+	/* am running in CI */
+	if (g_getenv("CI") != NULL)
+		g_string_append_printf(str, "ci/%s ", g_getenv("CI"));
+
 	/* platform, unless the application name is fwupd itself */
 	if (priv->daemon_version != NULL && g_strcmp0(priv->package_name, "fwupd") != 0)
 		g_string_append_printf(str, "fwupd/%s", priv->daemon_version);
@@ -803,8 +807,10 @@ fwupd_client_curl_new(FwupdClient *self, GError **error)
 #endif
 
 	/* relax the SSL checks for broken corporate proxies */
-	if (g_getenv("DISABLE_SSL_STRICT") != NULL)
+	if (g_getenv("DISABLE_SSL_STRICT") != NULL) {
 		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYPEER, 0L);
+		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYHOST, 0L);
+	}
 
 	/* this disables the double-compression of the firmware.xml.gz file */
 	(void)curl_easy_setopt(helper->curl, CURLOPT_HTTP_CONTENT_DECODING, 0L);

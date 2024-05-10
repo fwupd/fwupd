@@ -516,7 +516,6 @@ LIBFWUPD_1.5.0 {
     fwupd_plugin_set_name;
     fwupd_release_get_branch;
     fwupd_release_set_branch;
-    fwupd_remote_get_security_report_uri;
     fwupd_security_attr_add_flag;
     fwupd_security_attr_add_metadata;
     fwupd_security_attr_add_obsolete;
@@ -976,7 +975,6 @@ LIBFWUPD_2.0.0 {
     fwupd_remote_set_password;
     fwupd_remote_set_refresh_interval;
     fwupd_remote_set_report_uri;
-    fwupd_remote_set_security_report_uri;
     fwupd_remote_set_username;
   local: *;
 } LIBFWUPD_1.9.19;

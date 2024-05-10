@@ -1480,7 +1480,14 @@ fu_util_report_history_for_remote(FuUtilPrivate *priv,
 	}
 
 	/* POST request and parse reply */
-	if (!fu_util_send_report(priv->client, report_uri, data, sig, &uri, error))
+	if (!fu_util_send_report(priv->client,
+				 report_uri,
+				 data,
+				 sig,
+				 &uri,
+				 FWUPD_CLIENT_UPLOAD_FLAG_NONE,
+				 priv->cancellable,
+				 error))
 		return FALSE;
 
 	/* server wanted us to see a message */
@@ -3665,7 +3672,7 @@ fu_util_reset_config(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static FwupdRemote *
-fu_util_get_remote_with_security_report_uri(FuUtilPrivate *priv, GError **error)
+fu_util_get_remote_with_report_uri(FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GPtrArray) remotes = NULL;
 
@@ -3678,7 +3685,7 @@ fu_util_get_remote_with_security_report_uri(FuUtilPrivate *priv, GError **error)
 		FwupdRemote *remote = g_ptr_array_index(remotes, i);
 		if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED))
 			continue;
-		if (fwupd_remote_get_security_report_uri(remote) != NULL)
+		if (fwupd_remote_get_report_uri(remote) != NULL)
 			return g_object_ref(remote);
 	}
 
@@ -3686,7 +3693,7 @@ fu_util_get_remote_with_security_report_uri(FuUtilPrivate *priv, GError **error)
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "No remotes specified SecurityReportURI");
+			    "No remotes specified ReportURI");
 	return NULL;
 }
 
@@ -3698,8 +3705,8 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 	const gchar *value;
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *sig = NULL;
+	g_autofree gchar *uri = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
-	g_autoptr(GBytes) upload_response = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GHashTable) metadata = NULL;
 	g_autoptr(JsonBuilder) builder = NULL;
@@ -3707,7 +3714,7 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 	g_autoptr(JsonNode) json_root = NULL;
 
 	/* can we find a remote with a security attr */
-	remote = fu_util_get_remote_with_security_report_uri(priv, &error_local);
+	remote = fu_util_get_remote_with_report_uri(priv, &error_local);
 	if (remote == NULL) {
 		g_debug("failed to find suitable remote: %s", error_local->message);
 		return TRUE;
@@ -3721,19 +3728,6 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 					   _("Upload these anonymous results to the %s to help "
 					     "other users?"),
 					   fwupd_remote_get_title(remote))) {
-			if (!fu_console_input_bool(priv->console,
-						   TRUE,
-						   "%s",
-						   /* TRANSLATORS: stop nagging the user */
-						   _("Ask again next time?"))) {
-				if (!fwupd_client_modify_remote(priv->client,
-								fwupd_remote_get_id(remote),
-								"SecurityReportURI",
-								"",
-								priv->cancellable,
-								error))
-					return FALSE;
-			}
 			return TRUE;
 		}
 	}
@@ -3746,6 +3740,8 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 	/* create header */
 	builder = json_builder_new();
 	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "ReportType");
+	json_builder_add_string_value(builder, "hsi");
 	json_builder_set_member_name(builder, "ReportVersion");
 	json_builder_add_int_value(builder, 2);
 	json_builder_set_member_name(builder, "MachineId");
@@ -3804,7 +3800,7 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 	    !fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)) {
 		fu_console_print_kv(priv->console,
 				    _("Target"),
-				    fwupd_remote_get_security_report_uri(remote));
+				    fwupd_remote_get_report_uri(remote));
 		fu_console_print_kv(priv->console, _("Payload"), data);
 		if (sig != NULL)
 			fu_console_print_kv(priv->console, _("Signature"), sig);
@@ -3818,16 +3814,18 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 	}
 
 	/* POST request */
-	upload_response = fwupd_client_upload_bytes(priv->client,
-						    fwupd_remote_get_security_report_uri(remote),
-						    data,
-						    sig,
-						    FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART,
-						    priv->cancellable,
-						    error);
-	if (upload_response == NULL)
+	uri = fwupd_remote_build_report_uri(remote, error);
+	if (uri == NULL)
 		return FALSE;
-
+	if (!fu_util_send_report(priv->client,
+				 uri,
+				 data,
+				 sig,
+				 NULL,
+				 FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART,
+				 priv->cancellable,
+				 error))
+		return FALSE;
 	fu_console_print_literal(priv->console,
 				 /* TRANSLATORS: success, so say thank you to the user */
 				 _("Host Security ID attributes uploaded successfully, thanks!"));
@@ -4613,6 +4611,114 @@ fu_util_security_fix(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_report_devices_build(FuUtilPrivate *priv, JsonBuilder *builder, GError **error)
+{
+	g_autoptr(GPtrArray) devs = NULL;
+
+	/* get all devices */
+	devs = fwupd_client_get_devices(priv->client, priv->cancellable, error);
+	if (devs == NULL)
+		return FALSE;
+
+	/* build into a JSON object */
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "ReportType");
+	json_builder_add_string_value(builder, "device-list");
+	json_builder_set_member_name(builder, "ReportVersion");
+	json_builder_add_int_value(builder, 2);
+	json_builder_set_member_name(builder, "MachineId");
+	json_builder_add_string_value(builder, fwupd_client_get_host_machine_id(priv->client));
+	json_builder_set_member_name(builder, "Devices");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < devs->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devs, i);
+		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+		    !fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN))
+			continue;
+		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_util_report_devices(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autofree gchar *data = NULL;
+	g_autofree gchar *report_uri = NULL;
+	g_autoptr(FwupdRemote) remote = NULL;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonNode) json_root = NULL;
+
+	/* we only know how to upload to the LVFS */
+	remote = fwupd_client_get_remote_by_id(priv->client, "lvfs", priv->cancellable, error);
+	if (remote == NULL)
+		return FALSE;
+	report_uri = fwupd_remote_build_report_uri(remote, error);
+	if (report_uri == NULL)
+		return FALSE;
+
+	/* include all the devices */
+	if (!fu_util_report_devices_build(priv, builder, error))
+		return FALSE;
+
+	/* convert to a JSON blob */
+	json_root = json_builder_get_root(builder);
+	json_generator = json_generator_new();
+	json_generator_set_pretty(json_generator, TRUE);
+	json_generator_set_root(json_generator, json_root);
+	data = json_generator_to_data(json_generator, NULL);
+	if (data == NULL) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed to convert to json");
+		return FALSE;
+	}
+
+	/* show the user the entire data blob */
+	fu_console_print_kv(priv->console, _("Target"), report_uri);
+	fu_console_print_kv(priv->console, _("Payload"), data);
+	fu_console_print(priv->console,
+			 /* TRANSLATORS: explain why we want to upload */
+			 _("Uploading a device list allows the %s team to know what hardware "
+			   "exists, and allows us to put pressure on vendors that do not upload "
+			   "firmware updates for their hardware."),
+			 fwupd_remote_get_title(remote));
+	if (!fu_console_input_bool(priv->console,
+				   TRUE,
+				   "%s (%s)",
+				   /* TRANSLATORS: ask the user to upload */
+				   _("Upload data now?"),
+				   /* TRANSLATORS: metadata is downloaded */
+				   _("Requires internet connection"))) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "Declined upload");
+		return FALSE;
+	}
+
+	/* send to the LVFS */
+	if (!fu_util_send_report(priv->client,
+				 report_uri,
+				 data,
+				 NULL,
+				 NULL,
+				 FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART,
+				 priv->cancellable,
+				 error))
+		return FALSE;
+
+	/* success */
+	fu_console_print_literal(priv->console,
+				 /* TRANSLATORS: success, so say thank you to the user */
+				 _("Device list uploaded successfully, thanks!"));
+	return TRUE;
+}
+
+static gboolean
 fu_util_security_undo(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 #ifndef HAVE_HSI
@@ -5375,6 +5481,12 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Undo the host security attribute fix"),
 			      fu_util_security_undo);
+	fu_util_cmd_array_add(cmd_array,
+			      "report-devices",
+			      NULL,
+			      /* TRANSLATORS: command description */
+			      _("Upload the list of updatable devices to a remote server"),
+			      fu_util_report_devices);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();
