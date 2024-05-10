@@ -124,6 +124,8 @@ G_DEFINE_TYPE_WITH_PRIVATE(FwupdClient, fwupd_client, G_TYPE_OBJECT)
 
 #ifdef HAVE_LIBCURL
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
+typedef char CURLSTR;
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLSTR, curl_free)
 
 static void
 fwupd_client_curl_helper_free(FwupdCurlHelper *helper)
@@ -784,10 +786,6 @@ fwupd_client_curl_new(FwupdClient *self, GError **error)
 #if CURL_AT_LEAST_VERSION(7, 71, 0)
 	(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_OPTIONS, CURLSSLOPT_NATIVE_CA);
 #endif
-
-	/* relax the SSL checks for broken corporate proxies */
-	if (g_getenv("DISABLE_SSL_STRICT") != NULL)
-		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYPEER, 0L);
 
 	/* this disables the double-compression of the firmware.xml.gz file */
 	(void)curl_easy_setopt(helper->curl, CURLOPT_HTTP_CONTENT_DECODING, 0L);
@@ -3255,13 +3253,31 @@ fwupd_client_is_url_ipfs(const gchar *perhaps_url)
 }
 
 static gboolean
+fwupd_client_is_localhost(const gchar *url)
+{
+#ifdef HAVE_LIBCURL
+	g_autoptr(CURLU) h = curl_url();
+	g_autoptr(CURLSTR) hostname = NULL;
+	if (curl_url_set(h, CURLUPART_URL, url, 0) != CURLUE_OK)
+		return FALSE;
+	curl_url_get(h, CURLUPART_HOST, &hostname, 0);
+	return g_strcmp0(hostname, "localhost") == 0;
+#else
+	if (g_str_has_prefix(url, "https://localhost/") ||
+	    g_str_has_prefix(url, "https://localhost:"))
+		return TRUE;
+	return FALSE;
+#endif
+}
+
+static gboolean
 fwupd_client_is_url_p2p(const gchar *perhaps_url)
 {
 	if (perhaps_url == NULL)
 		return FALSE;
 	if (fwupd_client_is_url_ipfs(perhaps_url))
 		return TRUE;
-	if (g_str_has_prefix(perhaps_url, "https://localhost/"))
+	if (fwupd_client_is_localhost(perhaps_url))
 		return TRUE;
 	return FALSE;
 }
@@ -5343,6 +5359,15 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 	gchar errbuf[CURL_ERROR_SIZE] = {'\0'};
 	glong status_code = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	/* relax the SSL checks on localhost URLs and broken corporate proxies */
+	if (fwupd_client_is_localhost(url) || g_getenv("DISABLE_SSL_STRICT") != NULL) {
+		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+	} else {
+		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
+	}
 
 	fwupd_client_set_status(self, FWUPD_STATUS_DOWNLOADING);
 	(void)curl_easy_setopt(curl, CURLOPT_URL, url);
