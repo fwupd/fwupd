@@ -17,7 +17,14 @@ This plugin supports the following protocol ID:
 
 ## GUID Generation
 
-These devices use custom GUID values, e.g.
+These devices use the standard DPAUX GUID values, e.g.
+
+* `DPAUX\OUI_0090CC24` (only-quirk)
+* `DPAUX\OUI_0090CC24&HWREV_10` (only-quirk)
+* `DPAUX\OUI_0090CC24&HWREV_10&DEVID_SYNAB2` (only-quirk)
+* `DPAUX\OUI_0090CC24&DEVID_SYNAB2` (only-quirk)
+
+These devices also use custom GUID values, e.g.
 
 * `MST\VEN_60AD&DEV_${dev_id}&CID_${customer_id}&CHW_${customer_board}`
 * `MST\VEN_60AD&DEV_${dev_id}&CID_${customer_id}` (only-quirk)
