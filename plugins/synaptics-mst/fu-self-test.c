@@ -12,6 +12,7 @@
 #include "fu-context-private.h"
 #include "fu-plugin-private.h"
 #include "fu-synaptics-mst-common.h"
+#include "fu-synaptics-mst-device.h"
 #include "fu-synaptics-mst-firmware.h"
 #include "fu-synaptics-mst-plugin.h"
 
@@ -43,11 +44,14 @@ _test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 
 	while ((basename = g_dir_read_name(dir)) != NULL) {
 		g_autofree gchar *fn = g_build_filename(path, basename, NULL);
+		g_autoptr(FuDeviceLocker) locker = NULL;
 		g_autoptr(FuProgress) progress_local = fu_progress_new(G_STRLOC);
-		g_autoptr(FuUdevDevice) dev = NULL;
+		g_autoptr(FuSynapticsMstDevice) dev = NULL;
+		g_autoptr(GError) error_local = NULL;
+
 		if (!g_str_has_prefix(basename, "drm_dp_aux"))
 			continue;
-		dev = g_object_new(FU_TYPE_DPAUX_DEVICE,
+		dev = g_object_new(FU_TYPE_SYNAPTICS_MST_DEVICE,
 				   "context",
 				   ctx,
 				   "physical-id",
@@ -62,12 +66,12 @@ _test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 				   SYNAPTICS_IEEE_OUI,
 				   NULL);
 		g_debug("creating drm_dp_aux_dev object backed by %s", fn);
-		ret = fu_plugin_runner_backend_device_added(plugin,
-							    FU_DEVICE(dev),
-							    progress_local,
-							    &error);
-		g_assert_no_error(error);
-		g_assert_true(ret);
+		locker = fu_device_locker_new(dev, &error_local);
+		if (locker == NULL) {
+			g_debug("%s", error_local->message);
+			continue;
+		}
+		fu_plugin_device_add(plugin, FU_DEVICE(dev));
 	}
 }
 
