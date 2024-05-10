@@ -2,7 +2,7 @@ typedef GByteArray {{obj.name}};
 G_DEFINE_AUTOPTR_CLEANUP_FUNC({{obj.name}}, g_byte_array_unref)
 
 {%- if obj.export('New') == Export.PUBLIC %}
-GByteArray *{{obj.c_method('New')}}(void);
+{{obj.name}} *{{obj.c_method('New')}}(void);
 {%- endif %}
 {%- if obj.export('Parse') == Export.PUBLIC %}
 {{obj.name}} *{{obj.c_method('Parse')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error);
