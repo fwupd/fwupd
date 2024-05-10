@@ -55,10 +55,8 @@ fu_wistron_dock_device_to_string(FuDevice *device, guint idt, GString *str)
 				  "StatusCode",
 				  fu_wistron_dock_status_code_to_string(self->status_code));
 	fwupd_codec_string_append_hex(str, idt, "ImgMode", self->imgmode);
-	if (self->icp_bbinfo != NULL)
-		fwupd_codec_string_append(str, idt, "IcpBbInfo", self->icp_bbinfo);
-	if (self->icp_userinfo != NULL)
-		fwupd_codec_string_append(str, idt, "IcpUserInfo", self->icp_userinfo);
+	fwupd_codec_string_append(str, idt, "IcpBbInfo", self->icp_bbinfo);
+	fwupd_codec_string_append(str, idt, "IcpUserInfo", self->icp_userinfo);
 }
 
 typedef struct {

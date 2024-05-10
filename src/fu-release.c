@@ -55,20 +55,17 @@ fu_release_to_string(FuRelease *self)
 		fwupd_codec_add_string(FWUPD_CODEC(self->request), idt, str);
 	if (self->device != NULL)
 		fwupd_codec_string_append(str, idt, "Device", fu_device_get_id(self->device));
-	if (self->device_version_old != NULL)
-		fwupd_codec_string_append(str, idt, "DeviceVersionOld", self->device_version_old);
+	fwupd_codec_string_append(str, idt, "DeviceVersionOld", self->device_version_old);
 	if (self->remote != NULL)
 		fwupd_codec_string_append(str, idt, "Remote", fwupd_remote_get_id(self->remote));
 	fwupd_codec_string_append_bool(str, idt, "HasConfig", self->config != NULL);
 	fwupd_codec_string_append_bool(str, idt, "HasStream", self->stream != NULL);
-	if (self->update_request_id != NULL)
-		fwupd_codec_string_append(str, idt, "UpdateRequestId", self->update_request_id);
+	fwupd_codec_string_append(str, idt, "UpdateRequestId", self->update_request_id);
 	if (self->soft_reqs != NULL)
 		fwupd_codec_string_append_hex(str, idt, "SoftReqs", self->soft_reqs->len);
 	if (self->hard_reqs != NULL)
 		fwupd_codec_string_append_hex(str, idt, "HardReqs", self->hard_reqs->len);
-	if (self->priority != 0)
-		fwupd_codec_string_append_hex(str, idt, "Priority", self->priority);
+	fwupd_codec_string_append_hex(str, idt, "Priority", self->priority);
 	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 

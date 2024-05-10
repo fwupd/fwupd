@@ -50,10 +50,8 @@ fu_hid_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
 	fwupd_codec_string_append_bool(str, idt, "InterfaceAutodetect", priv->interface_autodetect);
 	fwupd_codec_string_append_hex(str, idt, "Interface", priv->interface);
-	if (priv->ep_addr_in != 0)
-		fwupd_codec_string_append_hex(str, idt, "EpAddrIn", priv->ep_addr_in);
-	if (priv->ep_addr_out != 0)
-		fwupd_codec_string_append_hex(str, idt, "EpAddrOut", priv->ep_addr_out);
+	fwupd_codec_string_append_hex(str, idt, "EpAddrIn", priv->ep_addr_in);
+	fwupd_codec_string_append_hex(str, idt, "EpAddrOut", priv->ep_addr_out);
 }
 
 static void

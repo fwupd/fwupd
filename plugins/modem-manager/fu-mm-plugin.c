@@ -45,11 +45,12 @@ fu_mm_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuModemManagerPlugin *self = FU_MODEM_MANAGER_PLUGIN(plugin);
 	fwupd_codec_string_append_bool(str, idt, "ManagerReady", self->manager_ready);
-	if (self->shadow_device != NULL)
+	if (self->shadow_device != NULL) {
 		fwupd_codec_string_append(str,
 					  idt,
 					  "ShadowDevice",
 					  fu_device_get_id(self->shadow_device));
+	}
 }
 
 static void

@@ -458,6 +458,9 @@ fwupd_codec_string_append_hex(GString *str, guint idt, const gchar *key, guint64
 	g_return_if_fail(str != NULL);
 	g_return_if_fail(key != NULL);
 
+	/* ignore */
+	if (value == 0)
+		return;
 	tmp = g_strdup_printf("0x%x", (guint)value);
 	fwupd_codec_string_append(str, idt, key, tmp);
 }

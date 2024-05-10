@@ -28,12 +28,9 @@ static void
 fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
-	if (self->erasesize > 0)
-		fwupd_codec_string_append_hex(str, idt, "EraseSize", self->erasesize);
-	if (self->metadata_offset > 0)
-		fwupd_codec_string_append_hex(str, idt, "MetadataOffset", self->metadata_offset);
-	if (self->metadata_size > 0)
-		fwupd_codec_string_append_hex(str, idt, "MetadataSize", self->metadata_size);
+	fwupd_codec_string_append_hex(str, idt, "EraseSize", self->erasesize);
+	fwupd_codec_string_append_hex(str, idt, "MetadataOffset", self->metadata_offset);
+	fwupd_codec_string_append_hex(str, idt, "MetadataSize", self->metadata_size);
 }
 
 static FuFirmware *

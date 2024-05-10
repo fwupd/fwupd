@@ -381,10 +381,8 @@ fu_plugin_add_string(FuPlugin *self, guint idt, GString *str)
 
 	/* attributes */
 	fwupd_codec_add_string(FWUPD_CODEC(self), idt, str);
-	if (priv->order != 0)
-		fwupd_codec_string_append_int(str, idt, "Order", priv->order);
-	if (priv->priority != 0)
-		fwupd_codec_string_append_int(str, idt, "Priority", priv->priority);
+	fwupd_codec_string_append_int(str, idt, "Order", priv->order);
+	fwupd_codec_string_append_int(str, idt, "Priority", priv->priority);
 	if (priv->device_gtype_default != G_TYPE_INVALID) {
 		fwupd_codec_string_append(str,
 					  idt,

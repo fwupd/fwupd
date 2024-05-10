@@ -137,12 +137,9 @@ fu_synaptics_mst_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
 	fwupd_codec_string_append(str, idt, "DeviceKind", self->device_kind);
-	if (self->family == FU_SYNAPTICS_MST_FAMILY_PANAMERA)
-		fwupd_codec_string_append_hex(str, idt, "ActiveBank", self->active_bank);
-	if (self->board_id != 0x0)
-		fwupd_codec_string_append_int(str, idt, "BoardId", self->board_id);
-	if (self->chip_id != 0x0)
-		fwupd_codec_string_append_hex(str, idt, "ChipId", self->chip_id);
+	fwupd_codec_string_append_hex(str, idt, "ActiveBank", self->active_bank);
+	fwupd_codec_string_append_int(str, idt, "BoardId", self->board_id);
+	fwupd_codec_string_append_hex(str, idt, "ChipId", self->chip_id);
 }
 
 static gboolean
