@@ -12,7 +12,6 @@
 
 #include "fu-weida-raw-common.h"
 #include "fu-weida-raw-device.h"
-#include "fu-weida-raw-firmware.h"
 #include "fu-weida-raw-struct.h"
 
 /* this can be set using Flags=example in the quirk file  */
@@ -89,11 +88,11 @@ typedef enum {
 
 struct _FuWeidaRawDevice {
 	FuUdevDevice parent_instance;
-	guint16 start_addr;
 	gint32 dev_type;
 	gint32 firmware_id;
 	gint32 hardware_id;
 	gint32 serial_number;
+	guint8 firmware_rev_ext;
 };
 
 G_DEFINE_TYPE(FuWeidaRawDevice, fu_weida_raw_device, FU_TYPE_UDEV_DEVICE)
@@ -134,15 +133,6 @@ static void
 fu_weida_raw_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuWeidaRawDevice *self = FU_WEIDA_RAW_DEVICE(device);
-	fu_string_append_kx(str, idt, "StartAddr", self->start_addr);
-}
-
-/* TODO: this is only required if the device instance state is required elsewhere */
-guint16
-fu_weida_raw_device_get_start_addr(FuWeidaRawDevice *self)
-{
-	g_return_val_if_fail(FU_IS_WEIDA_RAW_DEVICE(self), G_MAXUINT16);
-	return self->start_addr;
 }
 
 static gboolean
@@ -213,8 +203,22 @@ fu_weida_raw_device_ensure_status(FuWeidaRawDevice *self, GError **error)
 	if (self->firmware_id == 0) {
 		self->dev_type = self->dev_type | FU_WEIDA_RAW_FW_MAYBE_ISP;
 	}
-	fu_device_set_version(FU_DEVICE(self),
-			      fu_version_from_uint32(self->firmware_id, FWUPD_VERSION_FORMAT_HEX));
+	self->firmware_rev_ext = 0;
+	if (self->dev_type == FU_WEIDA_RAW_FW8760)
+		self->firmware_rev_ext = buf[33];
+	else if (self->dev_type == FU_WEIDA_RAW_FW8790)
+		self->firmware_rev_ext = buf[14];
+
+	if (self->dev_type == FU_WEIDA_RAW_FW8755) {
+		fu_device_set_version(
+		    FU_DEVICE(self),
+		    fu_version_from_uint16(self->firmware_id, FWUPD_VERSION_FORMAT_HEX));
+	} else {
+		fu_device_set_version(FU_DEVICE(self),
+				      fu_version_from_uint16(((self->firmware_id & 0x0FFF) << 4) |
+								 (self->firmware_rev_ext & 0x000F),
+							     FWUPD_VERSION_FORMAT_HEX));
+	}
 	fu_device_set_serial(FU_DEVICE(self),
 			     fu_version_from_uint32(self->serial_number, FWUPD_VERSION_FORMAT_HEX));
 
@@ -946,32 +950,6 @@ fu_weida_raw_device_cleanup(FuDevice *device,
 	return TRUE;
 }
 
-static FuFirmware *
-fu_weida_raw_device_prepare_firmware(FuDevice *device,
-				     GInputStream *stream,
-				     FwupdInstallFlags flags,
-				     GError **error)
-{
-	FuWeidaRawDevice *self = FU_WEIDA_RAW_DEVICE(device);
-	g_autoptr(FuFirmware) firmware = fu_weida_raw_firmware_new();
-
-	/* TODO: you do not need to use this vfunc if not checking attributes */
-	if (self->start_addr !=
-	    fu_weida_raw_firmware_get_start_addr(FU_WEIDA_RAW_FIRMWARE(firmware))) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "start address mismatch, got 0x%04x, expected 0x%04x",
-			    fu_weida_raw_firmware_get_start_addr(FU_WEIDA_RAW_FIRMWARE(firmware)),
-			    self->start_addr);
-		return NULL;
-	}
-
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
-}
-
 static gboolean
 fu_weida_raw_device_write_firmware(FuDevice *device,
 				   FuFirmware *firmware,
@@ -1041,13 +1019,6 @@ fu_weida_raw_device_set_quirk_kv(FuDevice *device,
 	FuWeidaRawDevice *self = FU_WEIDA_RAW_DEVICE(device);
 
 	/* TODO: parse value from quirk file */
-	if (g_strcmp0(key, "WeidaRawStartAddr") == 0) {
-		guint64 tmp = 0;
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
-			return FALSE;
-		self->start_addr = tmp;
-		return TRUE;
-	}
 
 	/* failed */
 	g_set_error_literal(error,
@@ -1122,7 +1093,6 @@ fu_weida_raw_device_class_init(FuWeidaRawDeviceClass *klass)
 	device_class->cleanup = fu_weida_raw_device_cleanup;
 	device_class->attach = fu_weida_raw_device_attach;
 	device_class->detach = fu_weida_raw_device_detach;
-	device_class->prepare_firmware = fu_weida_raw_device_prepare_firmware;
 	device_class->write_firmware = fu_weida_raw_device_write_firmware;
 	device_class->set_quirk_kv = fu_weida_raw_device_set_quirk_kv;
 	device_class->set_progress = fu_weida_raw_device_set_progress;
