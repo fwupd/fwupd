@@ -20,43 +20,6 @@ struct _FuSynapticsMstPlugin {
 G_DEFINE_TYPE(FuSynapticsMstPlugin, fu_synaptics_mst_plugin, FU_TYPE_PLUGIN)
 
 static gboolean
-fu_synaptics_mst_plugin_backend_device_added(FuPlugin *plugin,
-					     FuDevice *device,
-					     FuProgress *progress,
-					     GError **error)
-{
-	FuSynapticsMstPlugin *self = FU_SYNAPTICS_MST_PLUGIN(plugin);
-	FuContext *ctx = fu_plugin_get_context(plugin);
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuSynapticsMstDevice) dev = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	/* interesting device? */
-	if (!FU_IS_DPAUX_DEVICE(device))
-		return TRUE;
-
-	/* for SynapticsMstDeviceKind=system devices */
-	dev = fu_synaptics_mst_device_new(FU_DPAUX_DEVICE(device));
-	fu_synaptics_mst_device_set_system_type(
-	    dev,
-	    fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_SKU));
-
-	/* open */
-	locker = fu_device_locker_new(dev, &error_local);
-	if (locker == NULL) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
-		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {
-			g_debug("no device found: %s", error_local->message);
-			return TRUE;
-		}
-		g_propagate_error(error, g_steal_pointer(&error_local));
-		return FALSE;
-	}
-	fu_plugin_device_add(FU_PLUGIN(self), FU_DEVICE(dev));
-	return TRUE;
-}
-
-static gboolean
 fu_synaptics_mst_plugin_write_firmware(FuPlugin *plugin,
 				       FuDevice *device,
 				       GInputStream *stream,
@@ -87,6 +50,7 @@ fu_synaptics_mst_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "SynapticsMstDeviceKind");
 	fu_plugin_add_udev_subsystem(plugin, "drm"); /* used for uevent only */
 	fu_plugin_add_device_udev_subsystem(plugin, "drm_dp_aux_dev");
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_SYNAPTICS_MST_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_SYNAPTICS_MST_FIRMWARE);
 }
 
@@ -96,5 +60,4 @@ fu_synaptics_mst_plugin_class_init(FuSynapticsMstPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	plugin_class->constructed = fu_synaptics_mst_plugin_constructed;
 	plugin_class->write_firmware = fu_synaptics_mst_plugin_write_firmware;
-	plugin_class->backend_device_added = fu_synaptics_mst_plugin_backend_device_added;
 }
