@@ -1663,7 +1663,7 @@ fu_util_report_export(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_report_history_full(FuUtilPrivate *priv, gboolean only_automatic_reports, GError **error)
 {
 	g_autoptr(GHashTable) report_map = NULL;
 	g_autoptr(GList) ids = NULL;
@@ -1742,6 +1742,13 @@ fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		}
 
+		/* filter this so we can use it from fwupd-refresh */
+		if (only_automatic_reports &&
+		    !fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)) {
+			g_debug("%s has no AutomaticReports set", remote_id);
+			continue;
+		}
+
 		/* add this to the hash map */
 		devices_tmp = g_hash_table_lookup(report_map, remote_id);
 		if (devices_tmp == NULL) {
@@ -1754,7 +1761,7 @@ fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* nothing to report, but try harder with --force */
 	if (g_hash_table_size(report_map) == 0) {
-		if (priv->flags & FWUPD_INSTALL_FLAG_FORCE)
+		if (!only_automatic_reports && priv->flags & FWUPD_INSTALL_FLAG_FORCE)
 			return fu_util_report_history_force(priv, error);
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -1794,6 +1801,19 @@ fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 			       g_hash_table_size(report_map));
 	fu_console_print_literal(priv->console, str->str);
 	return TRUE;
+}
+
+static gboolean
+fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (g_strv_length(values) != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+	return fu_util_report_history_full(priv, FALSE, error);
 }
 
 static gboolean
@@ -2055,6 +2075,7 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 	g_autoptr(GPtrArray) devs = NULL;
 	g_autoptr(GPtrArray) remotes = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
+	g_autoptr(GError) error_local = NULL;
 
 	remotes = fwupd_client_get_remotes(priv->client, priv->cancellable, error);
 	if (remotes == NULL)
@@ -2132,6 +2153,17 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 					devices_supported_cnt),
 			       devices_supported_cnt);
 	fu_console_print_literal(priv->console, str->str);
+
+	/* auto-upload any reports */
+	if (!fu_util_report_history_full(priv, TRUE, &error_local)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		g_debug("failed to auto-upload reports: %s", error_local->message);
+	}
+
+	/* success */
 	return TRUE;
 }
 
