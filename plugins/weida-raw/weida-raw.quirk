@@ -1,6 +1,4 @@
 # Raw
-[UDEV\ID_XXX]
-Plugin = weida_raw
 [HIDRAW\VEN_2575]
 Plugin = weida_raw
 GType = FuWeidaRawDevice
