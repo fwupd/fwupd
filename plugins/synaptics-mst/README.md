@@ -42,6 +42,10 @@ The vendor ID is set from the PCI vendor, for example set to `DRM_DP_AUX_DEV:0x$
 
 This plugin uses the following plugin-specific quirks:
 
+### SynapticsMstDeviceKind
+
+The comma-seporated kind of device, e.g. `system` or `wd15,tb16,tb18`
+
 ### Flags:manual-restart-required
 
 The device must be restarted manually after the update has completed.
