@@ -70,7 +70,7 @@ This will display all devices detected by fwupd.
 
 `# fwupdmgr refresh`
 
-This will download the latest metadata from LVFS.
+This will download the latest metadata from LVFS, and start serving the cache on `0.0.0.0:27500`. Other clients on the same network will make use of this via mDNS/LLMNR.
 
 `# fwupdmgr get-updates`
 
