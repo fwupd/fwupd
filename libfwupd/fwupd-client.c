@@ -5865,6 +5865,170 @@ fwupd_client_upload_bytes_finish(FwupdClient *self, GAsyncResult *res, GError **
 }
 
 static void
+fwupd_client_upload_report_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	const gchar *server_msg = NULL;
+	JsonNode *json_root;
+	JsonObject *json_object;
+	g_autofree gchar *str = NULL;
+	g_autofree gchar *uri = NULL;
+	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GTask) task = G_TASK(user_data);
+	g_autoptr(JsonParser) json_parser = NULL;
+
+	/* parse */
+	bytes = fwupd_client_upload_bytes_finish(FWUPD_CLIENT(source), res, &error);
+	if (bytes == NULL) {
+		g_prefix_error(&error, "failed to upload report: ");
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* server returned nothing, and probably exploded in a ball of flames */
+	if (g_bytes_get_size(bytes) == 0) {
+		g_task_return_new_error(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_INVALID_FILE,
+					"failed to upload, zero length data");
+		return;
+	}
+
+	/* parse JSON reply */
+	json_parser = json_parser_new();
+	str = g_strndup(g_bytes_get_data(bytes, NULL), g_bytes_get_size(bytes));
+	if (!json_parser_load_from_data(json_parser, str, -1, &error)) {
+		g_task_return_new_error(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_INVALID_DATA,
+					"failed to parse JSON response from '%s': %s",
+					str,
+					error->message);
+		return;
+	}
+	json_root = json_parser_get_root(json_parser);
+	if (json_root == NULL) {
+		g_task_return_new_error(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_INVALID_DATA,
+					"JSON response was malformed: '%s'",
+					str);
+		return;
+	}
+	json_object = json_node_get_object(json_root);
+	if (json_object == NULL) {
+		g_task_return_new_error(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_INVALID_DATA,
+					"JSON response object was malformed: '%s'",
+					str);
+		return;
+	}
+
+	/* get any optional server message */
+	if (json_object_has_member(json_object, "msg"))
+		server_msg = json_object_get_string_member(json_object, "msg");
+
+	/* server reported failed */
+	if (!json_object_get_boolean_member(json_object, "success")) {
+		g_task_return_new_error(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_PERMISSION_DENIED,
+					"server rejected report: %s",
+					server_msg != NULL ? server_msg : "unspecified");
+		return;
+	}
+
+	/* server wanted us to see the message */
+	if (server_msg != NULL) {
+		g_info("server message: %s", server_msg);
+		if (json_object_has_member(json_object, "uri"))
+			uri = g_strdup(json_object_get_string_member(json_object, "uri"));
+	}
+
+	/* fallback */
+	if (uri == NULL)
+		uri = g_strdup("");
+
+	/* success */
+	g_task_return_pointer(task, g_steal_pointer(&uri), g_free);
+}
+
+/**
+ * fwupd_client_upload_report_async:
+ * @self: a #FwupdClient
+ * @url: (not nullable): the remote URL
+ * @payload: (not nullable): payload string
+ * @signature: (nullable): signature string
+ * @flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: (scope async) (closure callback_data): the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Uploads a report to a remote server. The [method@Client.set_user_agent] function
+ * should be called before this method is used.
+ *
+ * You must have called [method@Client.connect_async] on @self before using
+ * this method.
+ *
+ * NOTE: This method is thread-safe, but progress signals will be
+ * emitted in the global default main context, if not explicitly set with
+ * [method@Client.set_main_context].
+ *
+ * Since: 1.9.20
+ **/
+void
+fwupd_client_upload_report_async(FwupdClient *self,
+				 const gchar *url,
+				 const gchar *payload,
+				 const gchar *signature,
+				 FwupdClientUploadFlags flags,
+				 GCancellable *cancellable,
+				 GAsyncReadyCallback callback,
+				 gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(url != NULL);
+	g_return_if_fail(payload != NULL);
+	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
+	g_return_if_fail(priv->proxy != NULL);
+
+	task = g_task_new(self, cancellable, callback, callback_data);
+	fwupd_client_upload_bytes_async(self,
+					url,
+					payload,
+					signature,
+					flags,
+					cancellable,
+					fwupd_client_upload_report_cb,
+					g_steal_pointer(&task));
+}
+
+/**
+ * fwupd_client_upload_report_finish:
+ * @self: a #FwupdClient
+ * @res: (not nullable): the asynchronous result
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the result of [method@FwupdClient.upload_report_async].
+ *
+ * Returns: (transfer full): a URI (perhaps an empty string), or %NULL for error
+ *
+ * Since: 1.9.20
+ **/
+gchar *
+fwupd_client_upload_report_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(g_task_is_valid(res, self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer(G_TASK(res), error);
+}
+
+static void
 fwupd_client_inhibit_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autofree gchar *inhibit_id = NULL;
@@ -6370,6 +6534,445 @@ fwupd_client_undo_host_security_attr_finish(FwupdClient *self, GAsyncResult *res
 	g_return_val_if_fail(g_task_is_valid(res, self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return g_task_propagate_boolean(G_TASK(res), error);
+}
+
+static void
+fwupd_client_build_report_metadata(JsonBuilder *builder, GHashTable *metadata)
+{
+	GHashTableIter iter;
+	const gchar *key;
+	const gchar *value;
+
+	g_hash_table_iter_init(&iter, metadata);
+	while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value)) {
+		json_builder_set_member_name(builder, key);
+		json_builder_add_string_value(builder, value);
+	}
+}
+
+/**
+ * fwupd_client_build_report_devices:
+ * @self: a #FwupdClient
+ * @devices: (element-type FwupdDevice): devices
+ * @metadata: (element-type utf8 utf8): attributes
+ * @error: (nullable): optional return location for an error
+ *
+ * Builds a JSON report for the list of devices.
+ *
+ * This function should be called *before* asking the interactive user if they want to upload a
+ * report -- as this function filters devices and may return an error if there is nothing to do.
+ *
+ * You must have called [method@Client.connect_async] on @self before using
+ * this method.
+ *
+ * Returns: a string, or %NULL if the ID is not present
+ *
+ * Since: 1.9.20
+ **/
+gchar *
+fwupd_client_build_report_devices(FwupdClient *self,
+				  GPtrArray *devices,
+				  GHashTable *metadata,
+				  GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	guint cnt = 0;
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonNode) json_root = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(devices != NULL, NULL);
+	g_return_val_if_fail(metadata != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "ReportType");
+	json_builder_add_string_value(builder, "device-list");
+	json_builder_set_member_name(builder, "ReportVersion");
+	json_builder_add_int_value(builder, 2);
+	if (priv->host_machine_id != NULL) {
+		json_builder_set_member_name(builder, "MachineId");
+		json_builder_add_string_value(builder, priv->host_machine_id);
+	}
+
+	/* this is system metadata not stored in the database */
+	if (g_hash_table_size(metadata) > 0) {
+		json_builder_set_member_name(builder, "Metadata");
+		json_builder_begin_object(builder);
+		fwupd_client_build_report_metadata(builder, metadata);
+		json_builder_end_object(builder);
+	}
+
+	/* devices */
+	json_builder_set_member_name(builder, "Devices");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+		    !fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
+			g_debug("ignoring %s as not updatable", fwupd_device_get_id(dev));
+			continue;
+		}
+		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
+		cnt++;
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+
+	/* nothing to do */
+	if (cnt == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "no devices to upload");
+		return NULL;
+	}
+
+	/* export as a string */
+	json_root = json_builder_get_root(builder);
+	json_generator = json_generator_new();
+	json_generator_set_pretty(json_generator, TRUE);
+	json_generator_set_root(json_generator, json_root);
+	data = json_generator_to_data(json_generator, NULL);
+	if (data == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to convert to JSON string");
+		return NULL;
+	}
+	return g_steal_pointer(&data);
+}
+
+static void
+fwupd_client_build_report_history_device(JsonBuilder *builder, FwupdDevice *dev)
+{
+	FwupdRelease *rel = fwupd_device_get_release_default(dev);
+	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
+	GHashTable *metadata = fwupd_release_get_metadata(rel);
+	GPtrArray *checksums;
+	GPtrArray *guids;
+
+	/* identify the firmware used */
+	checksums = fwupd_release_get_checksums(rel);
+	for (guint i = 0; checksum_types[i] != 0; i++) {
+		const gchar *checksum = fwupd_checksum_get_by_kind(checksums, checksum_types[i]);
+		if (checksum != NULL) {
+			json_builder_set_member_name(builder, "Checksum");
+			json_builder_add_string_value(builder, checksum);
+			break;
+		}
+	}
+
+	/* identify the firmware written */
+	checksums = fwupd_device_get_checksums(dev);
+	if (checksums->len > 0) {
+		json_builder_set_member_name(builder, "ChecksumDevice");
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < checksums->len; i++) {
+			const gchar *checksum = g_ptr_array_index(checksums, i);
+			json_builder_add_string_value(builder, checksum);
+		}
+		json_builder_end_array(builder);
+	}
+
+	/* allow matching the specific component */
+	json_builder_set_member_name(builder, "ReleaseId");
+	json_builder_add_string_value(builder, fwupd_release_get_id(rel));
+
+	/* include the protocol used */
+	if (fwupd_release_get_protocol(rel) != NULL) {
+		json_builder_set_member_name(builder, "Protocol");
+		json_builder_add_string_value(builder, fwupd_release_get_protocol(rel));
+	}
+
+	/* set the error state of the report */
+	json_builder_set_member_name(builder, "UpdateState");
+	json_builder_add_int_value(builder, fwupd_device_get_update_state(dev));
+	if (fwupd_device_get_update_error(dev) != NULL) {
+		json_builder_set_member_name(builder, "UpdateError");
+		json_builder_add_string_value(builder, fwupd_device_get_update_error(dev));
+	}
+	if (fwupd_release_get_update_message(rel) != NULL) {
+		json_builder_set_member_name(builder, "UpdateMessage");
+		json_builder_add_string_value(builder, fwupd_release_get_update_message(rel));
+	}
+
+	/* find out if the predicted duration was accurate */
+	if (fwupd_device_get_install_duration(dev) != 0) {
+		json_builder_set_member_name(builder, "InstallDuration");
+		json_builder_add_int_value(builder, fwupd_device_get_install_duration(dev));
+	}
+
+	/* map back to the dev type on the LVFS */
+	guids = fwupd_device_get_guids(dev);
+	if (guids->len > 0) {
+		json_builder_set_member_name(builder, "Guid");
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < guids->len; i++) {
+			const gchar *guid = g_ptr_array_index(guids, i);
+			json_builder_add_string_value(builder, guid);
+		}
+		json_builder_end_array(builder);
+	}
+
+	json_builder_set_member_name(builder, "Plugin");
+	json_builder_add_string_value(builder, fwupd_device_get_plugin(dev));
+
+	/* report what we're trying to update *from* and *to* */
+	json_builder_set_member_name(builder, "VersionOld");
+	json_builder_add_string_value(builder, fwupd_device_get_version(dev));
+	json_builder_set_member_name(builder, "VersionNew");
+	json_builder_add_string_value(builder, fwupd_release_get_version(rel));
+
+	/* to know the state of the dev we're trying to update */
+	json_builder_set_member_name(builder, "Flags");
+	json_builder_add_int_value(builder, fwupd_device_get_flags(dev));
+
+	/* to know when the update tried to happen, and how soon after boot */
+	json_builder_set_member_name(builder, "Created");
+	json_builder_add_int_value(builder, fwupd_device_get_created(dev));
+	json_builder_set_member_name(builder, "Modified");
+	json_builder_add_int_value(builder, fwupd_device_get_modified(dev));
+
+	/* add saved metadata to the report */
+	if (g_hash_table_size(metadata) > 0) {
+		json_builder_set_member_name(builder, "Metadata");
+		json_builder_begin_object(builder);
+		fwupd_client_build_report_metadata(builder, metadata);
+		json_builder_end_object(builder);
+	}
+}
+
+/**
+ * fwupd_client_build_report_history:
+ * @self: a #FwupdClient
+ * @devices: (element-type FwupdDevice): devices
+ * @remote: (nullable): optional #FwupdRemote
+ * @metadata: (element-type utf8 utf8): attributes
+ * @error: (nullable): optional return location for an error
+ *
+ * Builds a JSON report for the list of devices.
+ *
+ * This function should be called *before* asking the interactive user if they want to upload a
+ * report -- as this function filters devices and may return an error if there is nothing to do.
+ *
+ * You must have called [method@Client.connect_async] on @self before using
+ * this method.
+ *
+ * Returns: a string, or %NULL on error
+ *
+ * Since: 2.0.0
+ **/
+gchar *
+fwupd_client_build_report_history(FwupdClient *self,
+				  GPtrArray *devices,
+				  FwupdRemote *remote,
+				  GHashTable *metadata,
+				  GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	guint cnt = 0;
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(JsonGenerator) json_generator = json_generator_new();
+	g_autoptr(JsonNode) json_root = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(devices != NULL, NULL);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(remote) || remote == NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* sanity check */
+	if (remote != NULL && fwupd_remote_get_report_uri(remote) == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    "%s has no ReportURI",
+			    fwupd_remote_get_id(remote));
+		return NULL;
+	}
+
+	/* create header */
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "ReportType");
+	json_builder_add_string_value(builder, "history");
+	json_builder_set_member_name(builder, "ReportVersion");
+	json_builder_add_int_value(builder, 2);
+	if (priv->host_machine_id != NULL) {
+		json_builder_set_member_name(builder, "MachineId");
+		json_builder_add_string_value(builder, priv->host_machine_id);
+	}
+
+	/* this is system metadata not stored in the database */
+	if (g_hash_table_size(metadata) > 0) {
+		json_builder_set_member_name(builder, "Metadata");
+		json_builder_begin_object(builder);
+		fwupd_client_build_report_metadata(builder, metadata);
+		json_builder_end_object(builder);
+	}
+
+	/* add each device */
+	json_builder_set_member_name(builder, "Reports");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+
+		if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_REPORTED)) {
+			g_debug("ignoring %s as already reported", fwupd_device_get_id(dev));
+			continue;
+		}
+		if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+			g_debug("ignoring %s as needs-activation", fwupd_device_get_id(dev));
+			continue;
+		}
+		if (fwupd_device_get_update_state(dev) != FWUPD_UPDATE_STATE_FAILED &&
+		    fwupd_device_get_update_state(dev) != FWUPD_UPDATE_STATE_SUCCESS) {
+			g_debug("ignoring %s with UpdateState %s",
+				fwupd_device_get_id(dev),
+				fwupd_update_state_to_string(fwupd_device_get_update_state(dev)));
+			continue;
+		}
+
+		/* is this the correct remote */
+		if (remote != NULL) {
+			FwupdRelease *rel = fwupd_device_get_release_default(dev);
+			if (fwupd_release_get_remote_id(rel) == NULL) {
+				g_debug("%s has no RemoteID", fwupd_device_get_id(dev));
+				continue;
+			}
+			if (g_strcmp0(fwupd_release_get_remote_id(rel),
+				      fwupd_remote_get_id(remote)) != 0) {
+				g_debug("%s has incorrect RemoteID: %s != %s",
+					fwupd_device_get_id(dev),
+					fwupd_release_get_remote_id(rel),
+					fwupd_remote_get_id(remote));
+				continue;
+			}
+		}
+
+		json_builder_begin_object(builder);
+		fwupd_client_build_report_history_device(builder, dev);
+		json_builder_end_object(builder);
+		cnt++;
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+
+	/* nothing to do */
+	if (cnt == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "no history to upload");
+		return NULL;
+	}
+
+	/* export as a string */
+	json_root = json_builder_get_root(builder);
+	json_generator_set_pretty(json_generator, TRUE);
+	json_generator_set_root(json_generator, json_root);
+	data = json_generator_to_data(json_generator, NULL);
+	if (data == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to convert to JSON string");
+		return NULL;
+	}
+	return g_steal_pointer(&data);
+}
+
+/**
+ * fwupd_client_build_report_security:
+ * @self: a #FwupdClient
+ * @attrs: (element-type FwupdSecurityAttr): attributes
+ * @metadata: (element-type utf8 utf8): attributes
+ * @error: (nullable): optional return location for an error
+ *
+ * Builds a JSON security report.
+ *
+ * You must have called [method@Client.connect_async] on @self before using
+ * this method.
+ *
+ * Returns: a string, or %NULL on error
+ *
+ * Since: 2.0.0
+ **/
+gchar *
+fwupd_client_build_report_security(FwupdClient *self,
+				   GPtrArray *attrs,
+				   GHashTable *metadata,
+				   GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	guint cnt = 0;
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(JsonGenerator) json_generator = json_generator_new();
+	g_autoptr(JsonNode) json_root = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(attrs != NULL, NULL);
+	g_return_val_if_fail(metadata != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* create header */
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "ReportType");
+	json_builder_add_string_value(builder, "hsi");
+	json_builder_set_member_name(builder, "ReportVersion");
+	json_builder_add_int_value(builder, 2);
+	if (priv->host_machine_id != NULL) {
+		json_builder_set_member_name(builder, "MachineId");
+		json_builder_add_string_value(builder, priv->host_machine_id);
+	}
+
+	/* this is system metadata not stored in the database */
+	if (g_hash_table_size(metadata) > 0 || fwupd_client_get_host_security_id(self) != NULL) {
+		json_builder_set_member_name(builder, "Metadata");
+		json_builder_begin_object(builder);
+		fwupd_client_build_report_metadata(builder, metadata);
+		json_builder_set_member_name(builder, "HostSecurityId");
+		json_builder_add_string_value(builder, fwupd_client_get_host_security_id(self));
+		json_builder_end_object(builder);
+	}
+
+	/* attrs */
+	json_builder_set_member_name(builder, "SecurityAttributes");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < attrs->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
+		fwupd_codec_to_json(FWUPD_CODEC(attr), builder, FWUPD_CODEC_FLAG_TRUSTED);
+		cnt++;
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+
+	/* nothing to do */
+	if (cnt == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "no attributes to upload");
+		return NULL;
+	}
+
+	/* export as a string */
+	json_root = json_builder_get_root(builder);
+	json_generator_set_pretty(json_generator, TRUE);
+	json_generator_set_root(json_generator, json_root);
+	data = json_generator_to_data(json_generator, NULL);
+	if (data == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to convert to JSON string");
+		return NULL;
+	}
+	return g_steal_pointer(&data);
 }
 
 static void

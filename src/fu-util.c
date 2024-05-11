@@ -1430,18 +1430,26 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 
 static gboolean
 fu_util_report_history_for_remote(FuUtilPrivate *priv,
-				  const gchar *remote_id,
 				  GPtrArray *devices,
+				  FwupdRemote *remote_filter,
+				  FwupdRemote *remote_upload,
 				  GError **error)
 {
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *report_uri = NULL;
 	g_autofree gchar *sig = NULL;
 	g_autofree gchar *uri = NULL;
-	g_autoptr(FwupdRemote) remote = NULL;
+	g_autoptr(GHashTable) metadata = NULL;
 
 	/* convert to JSON */
-	data = fwupd_build_history_report_json(devices, error);
+	metadata = fwupd_client_get_report_metadata(priv->client, priv->cancellable, error);
+	if (metadata == NULL)
+		return FALSE;
+	data = fwupd_client_build_report_history(priv->client,
+						 devices,
+						 remote_filter,
+						 metadata,
+						 error);
 	if (data == NULL)
 		return FALSE;
 
@@ -1456,16 +1464,12 @@ fu_util_report_history_for_remote(FuUtilPrivate *priv,
 			return FALSE;
 	}
 
-	remote = fwupd_client_get_remote_by_id(priv->client, remote_id, priv->cancellable, error);
-	if (remote == NULL)
-		return FALSE;
-
 	/* ask for permission */
-	report_uri = fwupd_remote_build_report_uri(remote, error);
+	report_uri = fwupd_remote_build_report_uri(remote_upload, error);
 	if (report_uri == NULL)
 		return FALSE;
 	if (!priv->assume_yes &&
-	    !fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)) {
+	    !fwupd_remote_has_flag(remote_upload, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)) {
 		fu_console_print_kv(priv->console, _("Target"), report_uri);
 		fu_console_print_kv(priv->console, _("Payload"), data);
 		if (sig != NULL)
@@ -1480,18 +1484,18 @@ fu_util_report_history_for_remote(FuUtilPrivate *priv,
 	}
 
 	/* POST request and parse reply */
-	if (!fu_util_send_report(priv->client,
-				 report_uri,
-				 data,
-				 sig,
-				 &uri,
-				 FWUPD_CLIENT_UPLOAD_FLAG_NONE,
-				 priv->cancellable,
-				 error))
+	uri = fwupd_client_upload_report(priv->client,
+					 report_uri,
+					 data,
+					 sig,
+					 FWUPD_CLIENT_UPLOAD_FLAG_NONE,
+					 priv->cancellable,
+					 error);
+	if (uri == NULL)
 		return FALSE;
 
 	/* server wanted us to see a message */
-	if (uri != NULL) {
+	if (g_strcmp0(uri, "") != 0) {
 		fu_console_print(
 		    priv->console,
 		    "%s %s",
@@ -1507,6 +1511,7 @@ fu_util_report_history_for_remote(FuUtilPrivate *priv,
 static gboolean
 fu_util_report_history_force(FuUtilPrivate *priv, GError **error)
 {
+	g_autoptr(FwupdRemote) remote_upload = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 
@@ -1516,7 +1521,15 @@ fu_util_report_history_force(FuUtilPrivate *priv, GError **error)
 		return FALSE;
 
 	/* just assume every report goes to this remote */
-	if (!fu_util_report_history_for_remote(priv, "lvfs", devices, error))
+	remote_upload =
+	    fwupd_client_get_remote_by_id(priv->client, "lvfs", priv->cancellable, error);
+	if (remote_upload == NULL)
+		return FALSE;
+	if (!fu_util_report_history_for_remote(priv,
+					       devices,
+					       NULL, /* no filter */
+					       remote_upload,
+					       error))
 		return FALSE;
 
 	/* mark each device as reported */
@@ -1547,6 +1560,7 @@ fu_util_report_history_force(FuUtilPrivate *priv, GError **error)
 static gboolean
 fu_util_report_export(FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	g_autoptr(GHashTable) metadata = NULL;
 	g_autoptr(GPtrArray) devices_filtered =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1600,10 +1614,15 @@ fu_util_report_export(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (devices_filtered->len == 0 && (priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR_NOTHING_TO_DO,
 				    "No reports require uploading");
 		return FALSE;
 	}
+
+	/* get metadata */
+	metadata = fwupd_client_get_report_metadata(priv->client, priv->cancellable, error);
+	if (metadata == NULL)
+		return FALSE;
 
 	/* write each device report as a new file */
 	for (guint i = 0; i < devices->len; i++) {
@@ -1618,7 +1637,11 @@ fu_util_report_export(FuUtilPrivate *priv, gchar **values, GError **error)
 
 		/* convert single device to JSON */
 		g_ptr_array_add(devices_tmp, dev);
-		data = fwupd_build_history_report_json(devices, error);
+		data = fwupd_client_build_report_history(priv->client,
+							 devices,
+							 NULL, /* remote */
+							 metadata,
+							 error);
 		if (data == NULL)
 			return FALSE;
 		payload_blob = g_bytes_new(data, strlen(data));
@@ -1665,10 +1688,9 @@ fu_util_report_export(FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_report_history_full(FuUtilPrivate *priv, gboolean only_automatic_reports, GError **error)
 {
-	g_autoptr(GHashTable) report_map = NULL;
-	g_autoptr(GList) ids = NULL;
+	guint cnt = 0;
 	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(GString) str = g_string_new(NULL);
+	g_autoptr(GPtrArray) remotes = NULL;
 
 	/* get all devices from the history database, then filter them,
 	 * adding to a hash map of report-ids */
@@ -1676,34 +1698,18 @@ fu_util_report_history_full(FuUtilPrivate *priv, gboolean only_automatic_reports
 	if (devices == NULL)
 		return FALSE;
 	g_debug("%u devices with history", devices->len);
-	report_map = g_hash_table_new_full(g_str_hash,
-					   g_str_equal,
-					   g_free,
-					   (GDestroyNotify)g_ptr_array_unref);
+
+	/* ignore the previous reported flag */
+	if (priv->flags & FWUPD_INSTALL_FLAG_FORCE) {
+		for (guint i = 0; i < devices->len; i++) {
+			FwupdDevice *dev = g_ptr_array_index(devices, i);
+			fwupd_device_remove_flag(dev, FWUPD_DEVICE_FLAG_REPORTED);
+		}
+	}
+
+	/* needs an extra action, show something to the user */
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
-		FwupdRelease *rel = fwupd_device_get_release_default(dev);
-		const gchar *remote_id;
-		GPtrArray *devices_tmp;
-		g_autoptr(FwupdRemote) remote = NULL;
-
-		/* filter, if not forcing */
-		if (!fwupd_device_match_flags(dev,
-					      priv->filter_device_include,
-					      priv->filter_device_exclude))
-			continue;
-		if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
-			if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_REPORTED)) {
-				g_debug("%s has already been reported", fwupd_device_get_id(dev));
-				continue;
-			}
-			if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
-				g_debug("%s is not supported", fwupd_device_get_id(dev));
-				continue;
-			}
-		}
-
-		/* needs an extra action */
 		if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 			g_autofree gchar *cmd = g_strdup_printf("%s activate", g_get_prgname());
 			fu_console_print(
@@ -1713,93 +1719,66 @@ fu_util_report_history_full(FuUtilPrivate *priv, gboolean only_automatic_reports
 			    _("%s is pending activation; use %s to complete the update."),
 			    fwupd_device_get_name(dev),
 			    cmd);
-			continue;
 		}
+	}
 
-		/* only send success and failure */
-		if (fwupd_device_get_update_state(dev) != FWUPD_UPDATE_STATE_FAILED &&
-		    fwupd_device_get_update_state(dev) != FWUPD_UPDATE_STATE_SUCCESS) {
-			g_debug("ignoring %s with UpdateState %s",
-				fwupd_device_get_id(dev),
-				fwupd_update_state_to_string(fwupd_device_get_update_state(dev)));
-			continue;
-		}
-
-		/* find the RemoteURI to use for the device */
-		remote_id = fwupd_release_get_remote_id(rel);
-		if (remote_id == NULL) {
-			g_debug("%s has no RemoteID", fwupd_device_get_id(dev));
-			continue;
-		}
-		remote = fwupd_client_get_remote_by_id(priv->client,
-						       remote_id,
-						       priv->cancellable,
-						       error);
-		if (remote == NULL)
-			return FALSE;
-		if (fwupd_remote_get_report_uri(remote) == NULL) {
-			g_debug("%s has no ReportURI", remote_id);
-			continue;
-		}
+	/* get all remotes */
+	remotes = fwupd_client_get_remotes(priv->client, priv->cancellable, error);
+	if (remotes == NULL)
+		return FALSE;
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index(remotes, i);
+		g_autoptr(GError) error_local = NULL;
 
 		/* filter this so we can use it from fwupd-refresh */
 		if (only_automatic_reports &&
 		    !fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)) {
-			g_debug("%s has no AutomaticReports set", remote_id);
+			g_debug("%s has no AutomaticReports set", fwupd_remote_get_id(remote));
 			continue;
 		}
 
-		/* add this to the hash map */
-		devices_tmp = g_hash_table_lookup(report_map, remote_id);
-		if (devices_tmp == NULL) {
-			devices_tmp = g_ptr_array_new();
-			g_hash_table_insert(report_map, g_strdup(remote_id), devices_tmp);
+		/* try to upload */
+		if (!fu_util_report_history_for_remote(priv,
+						       devices,
+						       remote, /* filter */
+						       remote, /* upload */
+						       &error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+				continue;
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
 		}
-		g_debug("using %s for %s", remote_id, fwupd_device_get_id(dev));
-		g_ptr_array_add(devices_tmp, dev);
+
+		/* keep track to make sure *something* worked */
+		cnt += 1;
 	}
 
 	/* nothing to report, but try harder with --force */
-	if (g_hash_table_size(report_map) == 0) {
+	if (cnt == 0) {
 		if (!only_automatic_reports && priv->flags & FWUPD_INSTALL_FLAG_FORCE)
 			return fu_util_report_history_force(priv, error);
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
+				    FWUPD_ERROR_NOTHING_TO_DO,
 				    "No reports require uploading");
 		return FALSE;
 	}
 
-	/* process each uri */
-	ids = g_hash_table_get_keys(report_map);
-	for (GList *l = ids; l != NULL; l = l->next) {
-		const gchar *id = l->data;
-		GPtrArray *devices_tmp = g_hash_table_lookup(report_map, id);
-		if (!fu_util_report_history_for_remote(priv, id, devices_tmp, error))
+	/* mark each device as reported */
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		g_debug("setting flag on %s", fwupd_device_get_id(dev));
+		if (!fwupd_client_modify_device(priv->client,
+						fwupd_device_get_id(dev),
+						"Flags",
+						"reported",
+						priv->cancellable,
+						error))
 			return FALSE;
-
-		/* mark each device as reported */
-		for (guint i = 0; i < devices_tmp->len; i++) {
-			FwupdDevice *dev = g_ptr_array_index(devices_tmp, i);
-			g_debug("setting flag on %s", fwupd_device_get_id(dev));
-			if (!fwupd_client_modify_device(priv->client,
-							fwupd_device_get_id(dev),
-							"Flags",
-							"reported",
-							priv->cancellable,
-							error))
-				return FALSE;
-		}
 	}
 
-	g_string_append_printf(str,
-			       /* TRANSLATORS: success message -- where the user has uploaded
-				* success and/or failure reports to the remote server */
-			       ngettext("Successfully uploaded %u report",
-					"Successfully uploaded %u reports",
-					g_hash_table_size(report_map)),
-			       g_hash_table_size(report_map));
-	fu_console_print_literal(priv->console, str->str);
+	/* TRANSLATORS: where the user has uploaded success and/or failure report to the server */
+	fu_console_print_literal(priv->console, "Successfully uploaded report");
 	return TRUE;
 }
 
@@ -2156,7 +2135,7 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 
 	/* auto-upload any reports */
 	if (!fu_util_report_history_full(priv, TRUE, &error_local)) {
-		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
@@ -3732,18 +3711,13 @@ fu_util_get_remote_with_report_uri(FuUtilPrivate *priv, GError **error)
 static gboolean
 fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 {
-	GHashTableIter iter;
-	const gchar *key;
-	const gchar *value;
 	g_autofree gchar *data = NULL;
+	g_autofree gchar *report_uri = NULL;
 	g_autofree gchar *sig = NULL;
 	g_autofree gchar *uri = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GHashTable) metadata = NULL;
-	g_autoptr(JsonBuilder) builder = NULL;
-	g_autoptr(JsonGenerator) json_generator = NULL;
-	g_autoptr(JsonNode) json_root = NULL;
 
 	/* can we find a remote with a security attr */
 	remote = fu_util_get_remote_with_report_uri(priv, &error_local);
@@ -3751,6 +3725,16 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 		g_debug("failed to find suitable remote: %s", error_local->message);
 		return TRUE;
 	}
+
+	/* export as a string */
+	metadata = fwupd_client_get_report_metadata(priv->client, priv->cancellable, error);
+	if (metadata == NULL)
+		return FALSE;
+	data = fwupd_client_build_report_security(priv->client, attrs, metadata, error);
+	if (data == NULL)
+		return FALSE;
+
+	/* ask for permission */
 	if (!priv->assume_yes &&
 	    !fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)) {
 		if (!fu_console_input_bool(priv->console,
@@ -3762,58 +3746,6 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 					   fwupd_remote_get_title(remote))) {
 			return TRUE;
 		}
-	}
-
-	/* get metadata */
-	metadata = fwupd_client_get_report_metadata(priv->client, priv->cancellable, error);
-	if (metadata == NULL)
-		return FALSE;
-
-	/* create header */
-	builder = json_builder_new();
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "ReportType");
-	json_builder_add_string_value(builder, "hsi");
-	json_builder_set_member_name(builder, "ReportVersion");
-	json_builder_add_int_value(builder, 2);
-	json_builder_set_member_name(builder, "MachineId");
-	json_builder_add_string_value(builder, fwupd_client_get_host_machine_id(priv->client));
-
-	/* this is system metadata not stored in the database */
-	json_builder_set_member_name(builder, "Metadata");
-	json_builder_begin_object(builder);
-
-	g_hash_table_iter_init(&iter, metadata);
-	while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value)) {
-		json_builder_set_member_name(builder, key);
-		json_builder_add_string_value(builder, value);
-	}
-	json_builder_set_member_name(builder, "HostSecurityId");
-	json_builder_add_string_value(builder, fwupd_client_get_host_security_id(priv->client));
-	json_builder_end_object(builder);
-
-	/* attrs */
-	json_builder_set_member_name(builder, "SecurityAttributes");
-	json_builder_begin_array(builder);
-	for (guint i = 0; i < attrs->len; i++) {
-		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
-		fwupd_codec_to_json(FWUPD_CODEC(attr), builder, FWUPD_CODEC_FLAG_TRUSTED);
-	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
-
-	/* export as a string */
-	json_root = json_builder_get_root(builder);
-	json_generator = json_generator_new();
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	data = json_generator_to_data(json_generator, NULL);
-	if (data == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "Failed to convert to JSON string");
-		return FALSE;
 	}
 
 	/* self sign data */
@@ -3846,17 +3778,17 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 	}
 
 	/* POST request */
-	uri = fwupd_remote_build_report_uri(remote, error);
-	if (uri == NULL)
+	report_uri = fwupd_remote_build_report_uri(remote, error);
+	if (report_uri == NULL)
 		return FALSE;
-	if (!fu_util_send_report(priv->client,
-				 uri,
-				 data,
-				 sig,
-				 NULL,
-				 FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART,
-				 priv->cancellable,
-				 error))
+	uri = fwupd_client_upload_report(priv->client,
+					 report_uri,
+					 data,
+					 sig,
+					 FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART,
+					 priv->cancellable,
+					 error);
+	if (uri == NULL)
 		return FALSE;
 	fu_console_print_literal(priv->console,
 				 /* TRANSLATORS: success, so say thank you to the user */
@@ -4643,48 +4575,14 @@ fu_util_security_fix(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_report_devices_build(FuUtilPrivate *priv, JsonBuilder *builder, GError **error)
-{
-	g_autoptr(GPtrArray) devs = NULL;
-
-	/* get all devices */
-	devs = fwupd_client_get_devices(priv->client, priv->cancellable, error);
-	if (devs == NULL)
-		return FALSE;
-
-	/* build into a JSON object */
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "ReportType");
-	json_builder_add_string_value(builder, "device-list");
-	json_builder_set_member_name(builder, "ReportVersion");
-	json_builder_add_int_value(builder, 2);
-	json_builder_set_member_name(builder, "MachineId");
-	json_builder_add_string_value(builder, fwupd_client_get_host_machine_id(priv->client));
-	json_builder_set_member_name(builder, "Devices");
-	json_builder_begin_array(builder);
-	for (guint i = 0; i < devs->len; i++) {
-		FwupdDevice *dev = g_ptr_array_index(devs, i);
-		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
-		    !fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN))
-			continue;
-		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
-	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_util_report_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *report_uri = NULL;
+	g_autofree gchar *uri = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	g_autoptr(JsonGenerator) json_generator = NULL;
-	g_autoptr(JsonNode) json_root = NULL;
+	g_autoptr(GHashTable) metadata = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
 
 	/* we only know how to upload to the LVFS */
 	remote = fwupd_client_get_remote_by_id(priv->client, "lvfs", priv->cancellable, error);
@@ -4695,19 +4593,15 @@ fu_util_report_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* include all the devices */
-	if (!fu_util_report_devices_build(priv, builder, error))
+	devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
+	if (devices == NULL)
 		return FALSE;
-
-	/* convert to a JSON blob */
-	json_root = json_builder_get_root(builder);
-	json_generator = json_generator_new();
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	data = json_generator_to_data(json_generator, NULL);
-	if (data == NULL) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed to convert to json");
+	metadata = fwupd_client_get_report_metadata(priv->client, priv->cancellable, error);
+	if (metadata == NULL)
 		return FALSE;
-	}
+	data = fwupd_client_build_report_devices(priv->client, devices, metadata, error);
+	if (data == NULL)
+		return FALSE;
 
 	/* show the user the entire data blob */
 	fu_console_print_kv(priv->console, _("Target"), report_uri);
@@ -4733,14 +4627,14 @@ fu_util_report_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* send to the LVFS */
-	if (!fu_util_send_report(priv->client,
-				 report_uri,
-				 data,
-				 NULL,
-				 NULL,
-				 FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART,
-				 priv->cancellable,
-				 error))
+	uri = fwupd_client_upload_report(priv->client,
+					 report_uri,
+					 data,
+					 NULL,
+					 FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART,
+					 priv->cancellable,
+					 error);
+	if (uri == NULL)
 		return FALSE;
 
 	/* success */
