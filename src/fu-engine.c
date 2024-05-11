@@ -8194,7 +8194,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 						"MachineGuid",
 						&error_local);
 #else
-	self->host_machine_id = fwupd_build_machine_id("fwupd", &error_local);
+	self->host_machine_id = fu_engine_build_machine_id("fwupd", &error_local);
 #endif
 	if (self->host_machine_id == NULL)
 		g_info("failed to build machine-id: %s", error_local->message);

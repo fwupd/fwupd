@@ -27,6 +27,7 @@
 #include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-engine-config.h"
+#include "fu-engine-helper.h"
 #include "fu-engine-requirements.h"
 #include "fu-engine.h"
 #include "fu-history.h"
@@ -6363,6 +6364,38 @@ fu_config_migrate_1_7_func(void)
 	g_assert_cmpstr(localconf_data, ==, "");
 }
 
+static void
+fu_engine_machine_hash_func(void)
+{
+	gsize sz = 0;
+	g_autofree gchar *buf = NULL;
+	g_autofree gchar *mhash1 = NULL;
+	g_autofree gchar *mhash2 = NULL;
+	g_autoptr(GError) error = NULL;
+
+	if (!g_file_test("/etc/machine-id", G_FILE_TEST_EXISTS)) {
+		g_test_skip("Missing /etc/machine-id");
+		return;
+	}
+	if (!g_file_get_contents("/etc/machine-id", &buf, &sz, &error)) {
+		g_test_skip("/etc/machine-id is unreadable");
+		return;
+	}
+
+	if (sz == 0) {
+		g_test_skip("Empty /etc/machine-id");
+		return;
+	}
+
+	mhash1 = fu_engine_build_machine_id("salt1", &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(mhash1, !=, NULL);
+	mhash2 = fu_engine_build_machine_id("salt2", &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(mhash2, !=, NULL);
+	g_assert_cmpstr(mhash2, !=, mhash1);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -6388,6 +6421,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
+	(void)g_setenv("FWUPD_MACHINE_ID", "test", TRUE);
 
 	/* ensure empty tree */
 	fu_self_test_mkroot();
@@ -6482,6 +6516,7 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/device-list{replug-user}",
 			     self,
 			     fu_device_list_replug_user_func);
+	g_test_add_func("/fwupd/engine{machine-hash}", fu_engine_machine_hash_func);
 	g_test_add_data_func("/fwupd/engine{require-hwid}", self, fu_engine_require_hwid_func);
 	g_test_add_data_func("/fwupd/engine{requires-reboot}",
 			     self,

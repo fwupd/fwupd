@@ -4,6 +4,11 @@
 
 * Typedef `FwupdFeatureFlags` to `guint64` so it's the same size on all platforms
 
+## Migration from Version 1.9.x
+
+* Migrate from `fwupd_build_machine_id()` to `fwupd_client_get_host_machine_id()`
+* Migrate from `fwupd_build_history_report_json()` to `fwupd_client_build_report_history()`
+
 ## Migration from Version 1.x.x
 
 * Add section to `fwupd_client_modify_config()`
