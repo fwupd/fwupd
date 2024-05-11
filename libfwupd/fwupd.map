@@ -197,8 +197,6 @@ LIBFWUPD_1.0.0 {
 
 LIBFWUPD_1.0.4 {
   global:
-    fwupd_build_history_report_json;
-    fwupd_build_machine_id;
     fwupd_client_get_history;
     fwupd_client_modify_device;
     fwupd_release_add_metadata;
@@ -941,8 +939,19 @@ LIBFWUPD_1.9.19 {
   local: *;
 } LIBFWUPD_1.9.17;
 
+LIBFWUPD_1.9.20 {
+  global:
+    fwupd_client_build_report_devices;
+    fwupd_client_upload_report;
+    fwupd_client_upload_report_async;
+    fwupd_client_upload_report_finish;
+  local: *;
+} LIBFWUPD_1.9.19;
+
 LIBFWUPD_2.0.0 {
   global:
+    fwupd_client_build_report_history;
+    fwupd_client_build_report_security;
     fwupd_client_install_release;
     fwupd_client_install_release_async;
     fwupd_client_modify_config;
@@ -977,4 +986,4 @@ LIBFWUPD_2.0.0 {
     fwupd_remote_set_report_uri;
     fwupd_remote_set_username;
   local: *;
-} LIBFWUPD_1.9.19;
+} LIBFWUPD_1.9.20;
