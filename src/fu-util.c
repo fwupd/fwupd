@@ -3907,8 +3907,8 @@ fu_util_security_as_json(FuUtilPrivate *priv,
 	if (events != NULL && events->len > 0) {
 		json_builder_set_member_name(builder, "SecurityEvents");
 		json_builder_begin_array(builder);
-		for (guint i = 0; i < attrs->len; i++) {
-			FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
+		for (guint i = 0; i < events->len; i++) {
+			FwupdSecurityAttr *attr = g_ptr_array_index(events, i);
 			fwupd_codec_to_json(FWUPD_CODEC(attr), builder, FWUPD_CODEC_FLAG_TRUSTED);
 		}
 		json_builder_end_array(builder);
