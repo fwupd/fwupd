@@ -614,16 +614,35 @@ fwupd_client_upload_bytes_async(FwupdClient *self,
 				FwupdClientUploadFlags flags,
 				GCancellable *cancellable,
 				GAsyncReadyCallback callback,
-				gpointer callback_data) G_GNUC_NON_NULL(1, 2, 3) G_GNUC_NON_NULL(1);
+				gpointer callback_data) G_GNUC_NON_NULL(1, 2, 3);
 GBytes *
 fwupd_client_upload_bytes_finish(FwupdClient *self,
 				 GAsyncResult *res,
 				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+void
+fwupd_client_upload_report_async(FwupdClient *self,
+				 const gchar *url,
+				 const gchar *payload,
+				 const gchar *signature,
+				 FwupdClientUploadFlags flags,
+				 GCancellable *cancellable,
+				 GAsyncReadyCallback callback,
+				 gpointer callback_data) G_GNUC_NON_NULL(1, 2, 3);
+gchar *
+fwupd_client_upload_report_finish(FwupdClient *self,
+				  GAsyncResult *res,
+				  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fwupd_client_ensure_networking(FwupdClient *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 void
 fwupd_client_add_hint(FwupdClient *self, const gchar *key, const gchar *value)
     G_GNUC_NON_NULL(1, 2, 3);
+
+gchar *
+fwupd_client_build_report_devices(FwupdClient *self,
+				  GPtrArray *devices,
+				  GHashTable *metadata,
+				  GError **error) G_GNUC_NON_NULL(1, 2, 3);
 
 G_END_DECLS

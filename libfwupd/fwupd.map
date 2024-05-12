@@ -1023,3 +1023,12 @@ LIBFWUPD_1.9.19 {
     fwupd_client_download_set_retries;
   local: *;
 } LIBFWUPD_1.9.17;
+
+LIBFWUPD_1.9.20 {
+  global:
+    fwupd_client_build_report_devices;
+    fwupd_client_upload_report;
+    fwupd_client_upload_report_async;
+    fwupd_client_upload_report_finish;
+  local: *;
+} LIBFWUPD_1.9.19;
