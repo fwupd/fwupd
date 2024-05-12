@@ -4601,50 +4601,14 @@ fu_util_security_fix(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_report_devices_build(FuUtilPrivate *priv, JsonBuilder *builder, GError **error)
-{
-	g_autoptr(GPtrArray) devs = NULL;
-
-	/* get all devices */
-	devs = fwupd_client_get_devices(priv->client, priv->cancellable, error);
-	if (devs == NULL)
-		return FALSE;
-
-	/* build into a JSON object */
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "ReportType");
-	json_builder_add_string_value(builder, "device-list");
-	json_builder_set_member_name(builder, "ReportVersion");
-	json_builder_add_int_value(builder, 2);
-	json_builder_set_member_name(builder, "MachineId");
-	json_builder_add_string_value(builder, fwupd_client_get_host_machine_id(priv->client));
-	json_builder_set_member_name(builder, "Devices");
-	json_builder_begin_array(builder);
-	for (guint i = 0; i < devs->len; i++) {
-		FwupdDevice *dev = g_ptr_array_index(devs, i);
-		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
-		    !fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN))
-			continue;
-		json_builder_begin_object(builder);
-		fwupd_device_to_json(dev, builder);
-		json_builder_end_object(builder);
-	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_util_report_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *report_uri = NULL;
+	g_autofree gchar *uri = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	g_autoptr(JsonGenerator) json_generator = NULL;
-	g_autoptr(JsonNode) json_root = NULL;
+	g_autoptr(GHashTable) metadata = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
 
 	/* we only know how to upload to the LVFS */
 	remote = fwupd_client_get_remote_by_id(priv->client, "lvfs", priv->cancellable, error);
@@ -4655,19 +4619,15 @@ fu_util_report_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* include all the devices */
-	if (!fu_util_report_devices_build(priv, builder, error))
+	devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
+	if (devices == NULL)
 		return FALSE;
-
-	/* convert to a JSON blob */
-	json_root = json_builder_get_root(builder);
-	json_generator = json_generator_new();
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	data = json_generator_to_data(json_generator, NULL);
-	if (data == NULL) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed to convert to json");
+	metadata = fwupd_client_get_report_metadata(priv->client, priv->cancellable, error);
+	if (metadata == NULL)
 		return FALSE;
-	}
+	data = fwupd_client_build_report_devices(priv->client, devices, metadata, error);
+	if (data == NULL)
+		return FALSE;
 
 	/* show the user the entire data blob */
 	fu_console_print_kv(priv->console, _("Target"), report_uri);
@@ -4693,14 +4653,14 @@ fu_util_report_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* send to the LVFS */
-	if (!fu_util_send_report(priv->client,
-				 report_uri,
-				 data,
-				 NULL,
-				 NULL,
-				 FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART,
-				 priv->cancellable,
-				 error))
+	uri = fwupd_client_upload_report(priv->client,
+					 report_uri,
+					 data,
+					 NULL,
+					 FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART,
+					 priv->cancellable,
+					 error);
+	if (uri == NULL)
 		return FALSE;
 
 	/* success */

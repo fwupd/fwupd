@@ -263,6 +263,14 @@ fwupd_client_upload_bytes(FwupdClient *self,
 			  FwupdClientUploadFlags flags,
 			  GCancellable *cancellable,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
+gchar *
+fwupd_client_upload_report(FwupdClient *self,
+			   const gchar *url,
+			   const gchar *payload,
+			   const gchar *signature,
+			   FwupdClientUploadFlags flags,
+			   GCancellable *cancellable,
+			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 gboolean
 fwupd_client_emulation_load(FwupdClient *self,
 			    GBytes *data,

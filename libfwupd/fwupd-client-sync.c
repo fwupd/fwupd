@@ -2601,6 +2601,70 @@ fwupd_client_upload_bytes(FwupdClient *self,
 }
 
 static void
+fwupd_client_upload_report_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
+	helper->str = fwupd_client_upload_report_finish(FWUPD_CLIENT(source), res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+/**
+ * fwupd_client_upload_report:
+ * @self: a #FwupdClient
+ * @url: (not nullable): the remote URL
+ * @payload: (not nullable): payload string
+ * @signature: (nullable): signature string
+ * @flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Uploads a report to a remote server. The [method@Client.set_user_agent] function
+ * should be called before this method is used.
+ *
+ * Returns: (transfer full): a URI (perhaps an empty string), or %NULL for error
+ *
+ * Since: 1.9.20
+ **/
+gchar *
+fwupd_client_upload_report(FwupdClient *self,
+			   const gchar *url,
+			   const gchar *payload,
+			   const gchar *signature,
+			   FwupdClientUploadFlags flags,
+			   GCancellable *cancellable,
+			   GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(url != NULL, NULL);
+	g_return_val_if_fail(payload != NULL, NULL);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect(self, cancellable, error))
+		return NULL;
+
+	/* call async version and run loop until complete */
+	helper = fwupd_client_helper_new(self);
+	fwupd_client_upload_report_async(self,
+					 url,
+					 payload,
+					 signature,
+					 flags,
+					 cancellable,
+					 fwupd_client_upload_report_cb,
+					 helper);
+	g_main_loop_run(helper->loop);
+	if (helper->str == NULL) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return NULL;
+	}
+	return g_steal_pointer(&helper->str);
+}
+
+static void
 fwupd_client_emulation_load_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
