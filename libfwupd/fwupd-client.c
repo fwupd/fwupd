@@ -3398,7 +3398,7 @@ fwupd_client_is_localhost(const gchar *url)
 	g_autoptr(CURLSTR) hostname = NULL;
 	if (curl_url_set(h, CURLUPART_URL, url, 0) != CURLUE_OK)
 		return FALSE;
-	curl_url_get(h, CURLUPART_HOST, &hostname, 0);
+	(void)curl_url_get(h, CURLUPART_HOST, &hostname, 0);
 	return g_strcmp0(hostname, "localhost") == 0;
 #else
 	if (g_str_has_prefix(url, "https://localhost/") ||
