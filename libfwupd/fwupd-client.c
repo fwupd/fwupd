@@ -5822,6 +5822,15 @@ fwupd_client_upload_bytes_async(FwupdClient *self,
 		(void)curl_easy_setopt(helper->curl, CURLOPT_COPYPOSTFIELDS, payload);
 	}
 
+	/* relax the SSL checks on localhost URLs and broken corporate proxies */
+	if (fwupd_client_is_localhost(url) || g_getenv("DISABLE_SSL_STRICT") != NULL) {
+		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYPEER, 0L);
+		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYHOST, 0L);
+	} else {
+		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYPEER, 1L);
+		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYHOST, 1L);
+	}
+
 	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
 	g_info("uploading to %s", url);
 	(void)curl_easy_setopt(helper->curl, CURLOPT_URL, url);
