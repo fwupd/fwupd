@@ -10,8 +10,8 @@
 #include <string.h>
 
 #include "fwupd-bios-setting.h"
+#include "fwupd-client-private.h"
 #include "fwupd-client-sync.h"
-#include "fwupd-client.h"
 #include "fwupd-codec.h"
 #include "fwupd-common.h"
 #include "fwupd-device-private.h"
@@ -494,11 +494,15 @@ static void
 fwupd_common_history_report_func(void)
 {
 	g_autofree gchar *json = NULL;
+	g_autoptr(FwupdClient) client = fwupd_client_new();
 	g_autoptr(FwupdDevice) dev = fwupd_device_new();
 	g_autoptr(FwupdRelease) rel = fwupd_release_new();
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GHashTable) metadata = g_hash_table_new(g_str_hash, g_str_equal);
 	g_autoptr(GPtrArray) devs = g_ptr_array_new();
 
+	fwupd_device_set_id(dev, "foobar");
+	fwupd_device_set_update_state(dev, FWUPD_UPDATE_STATE_FAILED);
 	fwupd_device_add_checksum(dev, "beefdead");
 	fwupd_device_add_guid(dev, "2082b5e0-7a64-478a-b1b2-e3404fab6dad");
 	fwupd_device_add_protocol(dev, "org.hughski.colorhug");
@@ -511,8 +515,13 @@ fwupd_common_history_report_func(void)
 	fwupd_release_set_version(rel, "1.2.4");
 	fwupd_device_add_release(dev, rel);
 
+	/* metadata */
+	g_hash_table_insert(metadata, (gpointer) "DistroId", (gpointer) "generic");
+	g_hash_table_insert(metadata, (gpointer) "DistroVersion", (gpointer) "39");
+	g_hash_table_insert(metadata, (gpointer) "DistroVariant", (gpointer) "workstation");
+
 	g_ptr_array_add(devs, dev);
-	json = fwupd_build_history_report_json(devs, &error);
+	json = fwupd_client_build_report_history(client, devs, NULL, metadata, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
 	g_assert_cmpstr(json,
@@ -520,15 +529,11 @@ fwupd_common_history_report_func(void)
 			"{\n"
 			"  \"ReportType\" : \"history\",\n"
 			"  \"ReportVersion\" : 2,\n"
-			"  \"MachineId\" : "
-			"\"36b2e7b8bb9a1344db8d6736dd10bcc169a95fc66decbac99c22718a54f434e3\",\n"
-#ifndef _WIN32
 			"  \"Metadata\" : {\n"
 			"    \"DistroId\" : \"generic\",\n"
-			"    \"DistroVersion\" : \"39\",\n"
-			"    \"DistroVariant\" : \"workstation\"\n"
+			"    \"DistroVariant\" : \"workstation\",\n"
+			"    \"DistroVersion\" : \"39\"\n"
 			"  },\n"
-#endif
 			"  \"Reports\" : [\n"
 			"    {\n"
 			"      \"Checksum\" : \"beefdead\",\n"
@@ -536,7 +541,7 @@ fwupd_common_history_report_func(void)
 			"        \"beefdead\"\n"
 			"      ],\n"
 			"      \"ReleaseId\" : \"123\",\n"
-			"      \"UpdateState\" : 0,\n"
+			"      \"UpdateState\" : 3,\n"
 			"      \"UpdateError\" : \"device dead\",\n"
 			"      \"UpdateMessage\" : \"oops\",\n"
 			"      \"Guid\" : [\n"
@@ -846,38 +851,6 @@ fwupd_has_system_bus(void)
 		return TRUE;
 	g_debug("D-Bus system bus unavailable, skipping tests.");
 	return FALSE;
-}
-
-static void
-fwupd_common_machine_hash_func(void)
-{
-	gsize sz = 0;
-	g_autofree gchar *buf = NULL;
-	g_autofree gchar *mhash1 = NULL;
-	g_autofree gchar *mhash2 = NULL;
-	g_autoptr(GError) error = NULL;
-
-	if (!g_file_test("/etc/machine-id", G_FILE_TEST_EXISTS)) {
-		g_test_skip("Missing /etc/machine-id");
-		return;
-	}
-	if (!g_file_get_contents("/etc/machine-id", &buf, &sz, &error)) {
-		g_test_skip("/etc/machine-id is unreadable");
-		return;
-	}
-
-	if (sz == 0) {
-		g_test_skip("Empty /etc/machine-id");
-		return;
-	}
-
-	mhash1 = fwupd_build_machine_id("salt1", &error);
-	g_assert_no_error(error);
-	g_assert_cmpstr(mhash1, !=, NULL);
-	mhash2 = fwupd_build_machine_id("salt2", &error);
-	g_assert_no_error(error);
-	g_assert_cmpstr(mhash2, !=, NULL);
-	g_assert_cmpstr(mhash2, !=, mhash1);
 }
 
 static void
@@ -1264,7 +1237,6 @@ main(int argc, char **argv)
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
-	(void)g_setenv("FWUPD_MACHINE_ID", "test", TRUE);
 
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
@@ -1274,7 +1246,6 @@ main(int argc, char **argv)
 
 	/* tests go here */
 	g_test_add_func("/fwupd/enums", fwupd_enums_func);
-	g_test_add_func("/fwupd/common{machine-hash}", fwupd_common_machine_hash_func);
 	g_test_add_func("/fwupd/common{device-id}", fwupd_common_device_id_func);
 	g_test_add_func("/fwupd/common{guid}", fwupd_common_guid_func);
 	g_test_add_func("/fwupd/common{history-report}", fwupd_common_history_report_func);

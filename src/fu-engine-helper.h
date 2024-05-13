@@ -20,3 +20,5 @@ fu_engine_integrity_to_string(GHashTable *self);
 
 GError *
 fu_engine_error_array_get_best(GPtrArray *errors);
+gchar *
+fu_engine_build_machine_id(const gchar *salt, GError **error);

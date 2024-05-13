@@ -119,15 +119,6 @@ fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags
     G_GNUC_NON_NULL(1);
 gchar *
 fu_util_security_issues_to_string(GPtrArray *devices) G_GNUC_NON_NULL(1);
-gboolean
-fu_util_send_report(FwupdClient *client,
-		    const gchar *report_uri,
-		    const gchar *data,
-		    const gchar *sig,
-		    gchar **uri,
-		    FwupdClientUploadFlags flags,
-		    GCancellable *cancellable,
-		    GError **error) G_GNUC_NON_NULL(1, 2, 3);
 gint
 fu_util_sort_devices_by_flags_cb(gconstpointer a, gconstpointer b) G_GNUC_NON_NULL(1, 2);
 
