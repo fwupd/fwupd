@@ -6,34 +6,34 @@
 
 #include "config.h"
 
-#include "fu-{{vendor}}-{{example}}-device.h"
-#include "fu-{{vendor}}-{{example}}-firmware.h"
-#include "fu-{{vendor}}-{{example}}-plugin.h"
+#include "fu-{{vendor_dash_example}}-device.h"
+#include "fu-{{vendor_dash_example}}-firmware.h"
+#include "fu-{{vendor_dash_example}}-plugin.h"
 
-struct _Fu{{Vendor}}{{Example}}Plugin {
+struct _Fu{{VendorExample}}Plugin {
 	FuPlugin parent_instance;
 };
 
-G_DEFINE_TYPE(Fu{{Vendor}}{{Example}}Plugin, fu_{{vendor}}_{{example}}_plugin, FU_TYPE_PLUGIN)
+G_DEFINE_TYPE(Fu{{VendorExample}}Plugin, fu_{{vendor_example}}_plugin, FU_TYPE_PLUGIN)
 
 static void
-fu_{{vendor}}_{{example}}_plugin_init(Fu{{Vendor}}{{Example}}Plugin *self)
+fu_{{vendor_example}}_plugin_init(Fu{{VendorExample}}Plugin *self)
 {
 }
 
 static void
-fu_{{vendor}}_{{example}}_plugin_constructed(GObject *obj)
+fu_{{vendor_example}}_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	fu_context_add_quirk_key(ctx, "{{Vendor}}{{Example}}StartAddr");
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_{{VENDOR}}_{{EXAMPLE}}_DEVICE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE);
+	fu_context_add_quirk_key(ctx, "{{VendorExample}}StartAddr");
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_{{VENDOR_EXAMPLE}}_DEVICE);
+	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_{{VENDOR_EXAMPLE}}_FIRMWARE);
 }
 
 static void
-fu_{{vendor}}_{{example}}_plugin_class_init(Fu{{Vendor}}{{Example}}PluginClass *klass)
+fu_{{vendor_example}}_plugin_class_init(Fu{{VendorExample}}PluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	plugin_class->constructed = fu_{{vendor}}_{{example}}_plugin_constructed;
+	plugin_class->constructed = fu_{{vendor_example}}_plugin_constructed;
 }

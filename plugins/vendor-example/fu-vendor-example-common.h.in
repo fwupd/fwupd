@@ -9,4 +9,4 @@
 #include <glib-object.h>
 
 const gchar *
-fu_{{vendor}}_{{example}}_strerror(guint8 code);
+fu_{{vendor_example}}_strerror(guint8 code);

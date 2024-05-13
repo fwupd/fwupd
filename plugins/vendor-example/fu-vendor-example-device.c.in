@@ -6,40 +6,40 @@
 
 #include "config.h"
 
-#include "fu-{{vendor}}-{{example}}-common.h"
-#include "fu-{{vendor}}-{{example}}-device.h"
-#include "fu-{{vendor}}-{{example}}-firmware.h"
-#include "fu-{{vendor}}-{{example}}-struct.h"
+#include "fu-{{vendor_dash_example}}-common.h"
+#include "fu-{{vendor_dash_example}}-device.h"
+#include "fu-{{vendor_dash_example}}-firmware.h"
+#include "fu-{{vendor_dash_example}}-struct.h"
 
 /* this can be set using Flags=example in the quirk file  */
-#define FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE_FLAG_EXAMPLE (1 << 0)
+#define FU_{{VENDOR_EXAMPLE}}_DEVICE_FLAG_EXAMPLE (1 << 0)
 
-struct _Fu{{Vendor}}{{Example}}Device {
+struct _Fu{{VendorExample}}Device {
 	Fu{{Parent}}Device parent_instance;
 	guint16 start_addr;
 };
 
-G_DEFINE_TYPE(Fu{{Vendor}}{{Example}}Device, fu_{{vendor}}_{{example}}_device, FU_TYPE_{{PARENT}}_DEVICE)
+G_DEFINE_TYPE(Fu{{VendorExample}}Device, fu_{{vendor_example}}_device, FU_TYPE_{{PARENT}}_DEVICE)
 
 static void
-fu_{{vendor}}_{{example}}_device_to_string(FuDevice *device, guint idt, GString *str)
+fu_{{vendor_example}}_device_to_string(FuDevice *device, guint idt, GString *str)
 {
-	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	Fu{{VendorExample}}Device *self = FU_{{VENDOR_EXAMPLE}}_DEVICE(device);
 	fwupd_codec_string_append_hex(str, idt, "StartAddr", self->start_addr);
 }
 
 /* TODO: this is only required if the device instance state is required elsewhere */
 guint16
-fu_{{vendor}}_{{example}}_device_get_start_addr(Fu{{Vendor}}{{Example}}Device *self)
+fu_{{vendor_example}}_device_get_start_addr(Fu{{VendorExample}}Device *self)
 {
-	g_return_val_if_fail(FU_IS_{{VENDOR}}_{{EXAMPLE}}_DEVICE(self), G_MAXUINT16);
+	g_return_val_if_fail(FU_IS_{{VENDOR_EXAMPLE}}_DEVICE(self), G_MAXUINT16);
 	return self->start_addr;
 }
 
 static gboolean
-fu_{{vendor}}_{{example}}_device_detach(FuDevice *device, FuProgress *progress, GError **error)
+fu_{{vendor_example}}_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	Fu{{VendorExample}}Device *self = FU_{{VENDOR_EXAMPLE}}_DEVICE(device);
 
 	/* sanity check */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -55,9 +55,9 @@ fu_{{vendor}}_{{example}}_device_detach(FuDevice *device, FuProgress *progress, 
 }
 
 static gboolean
-fu_{{vendor}}_{{example}}_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+fu_{{vendor_example}}_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	Fu{{VendorExample}}Device *self = FU_{{VENDOR_EXAMPLE}}_DEVICE(device);
 
 	/* sanity check */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -73,25 +73,25 @@ fu_{{vendor}}_{{example}}_device_attach(FuDevice *device, FuProgress *progress, 
 }
 
 static gboolean
-fu_{{vendor}}_{{example}}_device_reload(FuDevice *device, GError **error)
+fu_{{vendor_example}}_device_reload(FuDevice *device, GError **error)
 {
-	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	Fu{{VendorExample}}Device *self = FU_{{VENDOR_EXAMPLE}}_DEVICE(device);
 	/* TODO: reprobe the hardware, or delete this vfunc to use ->setup() as a fallback */
 	g_assert(self != NULL);
 	return TRUE;
 }
 
 static gboolean
-fu_{{vendor}}_{{example}}_device_probe(FuDevice *device, GError **error)
+fu_{{vendor_example}}_device_probe(FuDevice *device, GError **error)
 {
-	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	Fu{{VendorExample}}Device *self = FU_{{VENDOR_EXAMPLE}}_DEVICE(device);
 
 	/* Fu{{Parent}}Device->probe */
-	if (!FU_DEVICE_CLASS(fu_{{vendor}}_{{example}}_device_parent_class)->probe(device, error))
+	if (!FU_DEVICE_CLASS(fu_{{vendor_example}}_device_parent_class)->probe(device, error))
 		return FALSE;
 
 	/* TODO: probe the device for properties available before it is opened */
-	if (fu_device_has_private_flag(device, FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE_FLAG_EXAMPLE))
+	if (fu_device_has_private_flag(device, FU_{{VENDOR_EXAMPLE}}_DEVICE_FLAG_EXAMPLE))
 		self->start_addr = 0x100;
 
 {%- if Parent == 'Udev' -%}
@@ -104,13 +104,13 @@ fu_{{vendor}}_{{example}}_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_{{vendor}}_{{example}}_device_setup(FuDevice *device, GError **error)
+fu_{{vendor_example}}_device_setup(FuDevice *device, GError **error)
 {
-	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	Fu{{VendorExample}}Device *self = FU_{{VENDOR_EXAMPLE}}_DEVICE(device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 
 	/* {{Parent}}Device->setup */
-	if (!FU_DEVICE_CLASS(fu_{{vendor}}_{{example}}_device_parent_class)->setup(device, error))
+	if (!FU_DEVICE_CLASS(fu_{{vendor_example}}_device_parent_class)->setup(device, error))
 		return FALSE;
 
 	/* TODO: get the version and other properties from the hardware while open */
@@ -123,48 +123,48 @@ fu_{{vendor}}_{{example}}_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_{{vendor}}_{{example}}_device_prepare(FuDevice *device,
+fu_{{vendor_example}}_device_prepare(FuDevice *device,
 				 FuProgress *progress,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
-	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	Fu{{VendorExample}}Device *self = FU_{{VENDOR_EXAMPLE}}_DEVICE(device);
 	/* TODO: anything the device has to do before the update starts */
 	g_assert(self != NULL);
 	return TRUE;
 }
 
 static gboolean
-fu_{{vendor}}_{{example}}_device_cleanup(FuDevice *device,
+fu_{{vendor_example}}_device_cleanup(FuDevice *device,
 				 FuProgress *progress,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
-	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	Fu{{VendorExample}}Device *self = FU_{{VENDOR_EXAMPLE}}_DEVICE(device);
 	/* TODO: anything the device has to do when the update has completed */
 	g_assert(self != NULL);
 	return TRUE;
 }
 
 static FuFirmware *
-fu_{{vendor}}_{{example}}_device_prepare_firmware(FuDevice *device,
+fu_{{vendor_example}}_device_prepare_firmware(FuDevice *device,
 					  GInputStream *stream,
 					  FuProgress *progress,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {
-	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
-	g_autoptr(FuFirmware) firmware = fu_{{vendor}}_{{example}}_firmware_new();
+	Fu{{VendorExample}}Device *self = FU_{{VENDOR_EXAMPLE}}_DEVICE(device);
+	g_autoptr(FuFirmware) firmware = fu_{{vendor_example}}_firmware_new();
 
 	/* TODO: you do not need to use this vfunc if not checking attributes */
 	if (self->start_addr !=
-	    fu_{{vendor}}_{{example}}_firmware_get_start_addr(FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware))) {
+	    fu_{{vendor_example}}_firmware_get_start_addr(FU_{{VENDOR_EXAMPLE}}_FIRMWARE(firmware))) {
 		g_set_error(
 		    error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_INVALID_FILE,
 		    "start address mismatch, got 0x%04x, expected 0x%04x",
-		    fu_{{vendor}}_{{example}}_firmware_get_start_addr(FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware)),
+		    fu_{{vendor_example}}_firmware_get_start_addr(FU_{{VENDOR_EXAMPLE}}_FIRMWARE(firmware)),
 		    self->start_addr);
 		return NULL;
 	}
@@ -175,7 +175,7 @@ fu_{{vendor}}_{{example}}_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_{{vendor}}_{{example}}_device_write_blocks(Fu{{Vendor}}{{Example}}Device *self,
+fu_{{vendor_example}}_device_write_blocks(Fu{{VendorExample}}Device *self,
 				      FuChunkArray *chunks,
 				      FuProgress *progress,
 				      GError **error)
@@ -235,13 +235,13 @@ fu_{{vendor}}_{{example}}_device_write_blocks(Fu{{Vendor}}{{Example}}Device *sel
 }
 
 static gboolean
-fu_{{vendor}}_{{example}}_device_write_firmware(FuDevice *device,
+fu_{{vendor_example}}_device_write_firmware(FuDevice *device,
 					FuFirmware *firmware,
 					FuProgress *progress,
 					FwupdInstallFlags flags,
 					GError **error)
 {
-	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	Fu{{VendorExample}}Device *self = FU_{{VENDOR_EXAMPLE}}_DEVICE(device);
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -257,10 +257,10 @@ fu_{{vendor}}_{{example}}_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* write each block */
-	chunks = fu_chunk_array_new_from_stream(fw, self->start_addr, 64 /* block_size */, error);
+	chunks = fu_chunk_array_new_from_stream(stream, self->start_addr, 64 /* block_size */, error);
 	if (chunks == NULL)
 		return FALSE;
-	if (!fu_{{vendor}}_{{example}}_device_write_blocks(self,
+	if (!fu_{{vendor_example}}_device_write_blocks(self,
 						   chunks,
 						   fu_progress_get_child(progress),
 						   error))
@@ -275,15 +275,15 @@ fu_{{vendor}}_{{example}}_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_{{vendor}}_{{example}}_device_set_quirk_kv(FuDevice *device,
+fu_{{vendor_example}}_device_set_quirk_kv(FuDevice *device,
 				      const gchar *key,
 				      const gchar *value,
 				      GError **error)
 {
-	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(device);
+	Fu{{VendorExample}}Device *self = FU_{{VENDOR_EXAMPLE}}_DEVICE(device);
 
 	/* TODO: parse value from quirk file */
-	if (g_strcmp0(key, "{{Vendor}}{{Example}}StartAddr") == 0) {
+	if (g_strcmp0(key, "{{VendorExample}}StartAddr") == 0) {
 		guint64 tmp = 0;
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
@@ -297,7 +297,7 @@ fu_{{vendor}}_{{example}}_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
-fu_{{vendor}}_{{example}}_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_{{vendor_example}}_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
@@ -308,7 +308,7 @@ fu_{{vendor}}_{{example}}_device_set_progress(FuDevice *self, FuProgress *progre
 }
 
 static void
-fu_{{vendor}}_{{example}}_device_init(Fu{{Vendor}}{{Example}}Device *self)
+fu_{{vendor_example}}_device_init(Fu{{VendorExample}}Device *self)
 {
 	self->start_addr = 0x5000;
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
@@ -318,7 +318,7 @@ fu_{{vendor}}_{{example}}_device_init(Fu{{Vendor}}{{Example}}Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE_FLAG_EXAMPLE,
+					FU_{{VENDOR_EXAMPLE}}_DEVICE_FLAG_EXAMPLE,
 					"example");
 {%- if Parent == 'Usb' %}
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x01);
@@ -329,32 +329,32 @@ fu_{{vendor}}_{{example}}_device_init(Fu{{Vendor}}{{Example}}Device *self)
 }
 
 static void
-fu_{{vendor}}_{{example}}_device_finalize(GObject *object)
+fu_{{vendor_example}}_device_finalize(GObject *object)
 {
-	Fu{{Vendor}}{{Example}}Device *self = FU_{{VENDOR}}_{{EXAMPLE}}_DEVICE(object);
+	Fu{{VendorExample}}Device *self = FU_{{VENDOR_EXAMPLE}}_DEVICE(object);
 
 	/* TODO: free any allocated instance state here */
 	g_assert(self != NULL);
 
-	G_OBJECT_CLASS(fu_{{vendor}}_{{example}}_device_parent_class)->finalize(object);
+	G_OBJECT_CLASS(fu_{{vendor_example}}_device_parent_class)->finalize(object);
 }
 
 static void
-fu_{{vendor}}_{{example}}_device_class_init(Fu{{Vendor}}{{Example}}DeviceClass *klass)
+fu_{{vendor_example}}_device_class_init(Fu{{VendorExample}}DeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	object_class->finalize = fu_{{vendor}}_{{example}}_device_finalize;
-	device_class->to_string = fu_{{vendor}}_{{example}}_device_to_string;
-	device_class->probe = fu_{{vendor}}_{{example}}_device_probe;
-	device_class->setup = fu_{{vendor}}_{{example}}_device_setup;
-	device_class->reload = fu_{{vendor}}_{{example}}_device_reload;
-	device_class->prepare = fu_{{vendor}}_{{example}}_device_prepare;
-	device_class->cleanup = fu_{{vendor}}_{{example}}_device_cleanup;
-	device_class->attach = fu_{{vendor}}_{{example}}_device_attach;
-	device_class->detach = fu_{{vendor}}_{{example}}_device_detach;
-	device_class->prepare_firmware = fu_{{vendor}}_{{example}}_device_prepare_firmware;
-	device_class->write_firmware = fu_{{vendor}}_{{example}}_device_write_firmware;
-	device_class->set_quirk_kv = fu_{{vendor}}_{{example}}_device_set_quirk_kv;
-	device_class->set_progress = fu_{{vendor}}_{{example}}_device_set_progress;
+	object_class->finalize = fu_{{vendor_example}}_device_finalize;
+	device_class->to_string = fu_{{vendor_example}}_device_to_string;
+	device_class->probe = fu_{{vendor_example}}_device_probe;
+	device_class->setup = fu_{{vendor_example}}_device_setup;
+	device_class->reload = fu_{{vendor_example}}_device_reload;
+	device_class->prepare = fu_{{vendor_example}}_device_prepare;
+	device_class->cleanup = fu_{{vendor_example}}_device_cleanup;
+	device_class->attach = fu_{{vendor_example}}_device_attach;
+	device_class->detach = fu_{{vendor_example}}_device_detach;
+	device_class->prepare_firmware = fu_{{vendor_example}}_device_prepare_firmware;
+	device_class->write_firmware = fu_{{vendor_example}}_device_write_firmware;
+	device_class->set_quirk_kv = fu_{{vendor_example}}_device_set_quirk_kv;
+	device_class->set_progress = fu_{{vendor_example}}_device_set_progress;
 }
