@@ -8,29 +8,29 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-{{vendor}}-{{example}}-firmware.h"
-#include "fu-{{vendor}}-{{example}}-struct.h"
+#include "fu-{{vendor_dash_example}}-firmware.h"
+#include "fu-{{vendor_dash_example}}-struct.h"
 
-struct _Fu{{Vendor}}{{Example}}Firmware {
+struct _Fu{{VendorExample}}Firmware {
 	FuFirmware parent_instance;
 	guint16 start_addr;
 };
 
-G_DEFINE_TYPE(Fu{{Vendor}}{{Example}}Firmware, fu_{{vendor}}_{{example}}_firmware, FU_TYPE_FIRMWARE)
+G_DEFINE_TYPE(Fu{{VendorExample}}Firmware, fu_{{vendor_example}}_firmware, FU_TYPE_FIRMWARE)
 
 static void
-fu_{{vendor}}_{{example}}_firmware_export(FuFirmware *firmware,
+fu_{{vendor_example}}_firmware_export(FuFirmware *firmware,
 				   FuFirmwareExportFlags flags,
 				   XbBuilderNode *bn)
 {
-	Fu{{Vendor}}{{Example}}Firmware *self = FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware);
+	Fu{{VendorExample}}Firmware *self = FU_{{VENDOR_EXAMPLE}}_FIRMWARE(firmware);
 	fu_xmlb_builder_insert_kx(bn, "start_addr", self->start_addr);
 }
 
 static gboolean
-fu_{{vendor}}_{{example}}_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_{{vendor_example}}_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 {
-	Fu{{Vendor}}{{Example}}Firmware *self = FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware);
+	Fu{{VendorExample}}Firmware *self = FU_{{VENDOR_EXAMPLE}}_FIRMWARE(firmware);
 	guint64 tmp;
 
 	/* TODO: load from .builder.xml */
@@ -43,28 +43,28 @@ fu_{{vendor}}_{{example}}_firmware_build(FuFirmware *firmware, XbNode *n, GError
 }
 
 static gboolean
-fu_{{vendor}}_{{example}}_validate(FuFirmware *firmware,
+fu_{{vendor_example}}_validate(FuFirmware *firmware,
 					GInputStream *stream,
 					gsize offset,
 					GError **error)
 {
-	return fu_struct_{{vendor}}_{{example}}_header_validate_stream(stream,
+	return fu_struct_{{vendor_example}}_header_validate_stream(stream,
 						     offset,
 						     error);
 }
 
 static gboolean
-fu_{{vendor}}_{{example}}_firmware_parse(FuFirmware *firmware,
+fu_{{vendor_example}}_firmware_parse(FuFirmware *firmware,
 				 GInputStream *stream,
 				 gsize offset,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
-	Fu{{Vendor}}{{Example}}Firmware *self = FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware);
+	Fu{{VendorExample}}Firmware *self = FU_{{VENDOR_EXAMPLE}}_FIRMWARE(firmware);
 	g_autoptr(GByteArray) st_hdr = NULL;
 
 	/* TODO: parse firmware into images */
-	st_hdr = fu_struct_{{vendor}}_{{example}}_hdr_parse_stream(buf, bufsz, offset, error);
+	st_hdr = fu_struct_{{vendor_example}}_hdr_parse_stream(stream, offset, error);
 	if (st_hdr == NULL)
 		return FALSE;
 	self->start_addr = 0x1234;
@@ -74,9 +74,9 @@ fu_{{vendor}}_{{example}}_firmware_parse(FuFirmware *firmware,
 }
 
 static GByteArray *
-fu_{{vendor}}_{{example}}_firmware_write(FuFirmware *firmware, GError **error)
+fu_{{vendor_example}}_firmware_write(FuFirmware *firmware, GError **error)
 {
-	Fu{{Vendor}}{{Example}}Firmware *self = FU_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(firmware);
+	Fu{{VendorExample}}Firmware *self = FU_{{VENDOR_EXAMPLE}}_FIRMWARE(firmware);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GBytes) fw = NULL;
 
@@ -94,14 +94,14 @@ fu_{{vendor}}_{{example}}_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 guint16
-fu_{{vendor}}_{{example}}_firmware_get_start_addr(Fu{{Vendor}}{{Example}}Firmware *self)
+fu_{{vendor_example}}_firmware_get_start_addr(Fu{{VendorExample}}Firmware *self)
 {
-	g_return_val_if_fail(FU_IS_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE(self), G_MAXUINT16);
+	g_return_val_if_fail(FU_IS_{{VENDOR_EXAMPLE}}_FIRMWARE(self), G_MAXUINT16);
 	return self->start_addr;
 }
 
 static void
-fu_{{vendor}}_{{example}}_firmware_init(Fu{{Vendor}}{{Example}}Firmware *self)
+fu_{{vendor_example}}_firmware_init(Fu{{VendorExample}}Firmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
@@ -109,18 +109,18 @@ fu_{{vendor}}_{{example}}_firmware_init(Fu{{Vendor}}{{Example}}Firmware *self)
 }
 
 static void
-fu_{{vendor}}_{{example}}_firmware_class_init(Fu{{Vendor}}{{Example}}FirmwareClass *klass)
+fu_{{vendor_example}}_firmware_class_init(Fu{{VendorExample}}FirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
-	firmware_class->validate = fu_{{vendor}}_{{example}}_validate;
-	firmware_class->parse = fu_{{vendor}}_{{example}}_firmware_parse;
-	firmware_class->write = fu_{{vendor}}_{{example}}_firmware_write;
-	firmware_class->build = fu_{{vendor}}_{{example}}_firmware_build;
-	firmware_class->export = fu_{{vendor}}_{{example}}_firmware_export;
+	firmware_class->validate = fu_{{vendor_example}}_validate;
+	firmware_class->parse = fu_{{vendor_example}}_firmware_parse;
+	firmware_class->write = fu_{{vendor_example}}_firmware_write;
+	firmware_class->build = fu_{{vendor_example}}_firmware_build;
+	firmware_class->export = fu_{{vendor_example}}_firmware_export;
 }
 
 FuFirmware *
-fu_{{vendor}}_{{example}}_firmware_new(void)
+fu_{{vendor_example}}_firmware_new(void)
 {
-	return FU_FIRMWARE(g_object_new(FU_TYPE_{{VENDOR}}_{{EXAMPLE}}_FIRMWARE, NULL));
+	return FU_FIRMWARE(g_object_new(FU_TYPE_{{VENDOR_EXAMPLE}}_FIRMWARE, NULL));
 }

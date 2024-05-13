@@ -44,7 +44,7 @@ The vendor ID is set from the TODO vendor, in this instance set to `TODO:0x273F`
 
 This plugin uses the following plugin-specific quirks:
 
-### {{Vendor}}{{Example}}StartAddr
+### {{VendorExample}}StartAddr
 
 The bla bla bla.
 
