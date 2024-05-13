@@ -85,6 +85,9 @@ fu_logitech_rallysystem_audio_device_set_version(FuLogitechRallysystemAudioDevic
 {
 	guint8 buf[TOPOLOGY_DATA_LEN] = {0x3E, 0x0};
 	guint32 fwversion = 0;
+	guint8 major = 0;
+	guint8 minor = 0;
+	guint8 build = 0;
 
 	/* setup HID report to query current device version */
 	if (!fu_logitech_rallysystem_audio_device_get_feature(self, buf, sizeof(buf), error))
@@ -97,6 +100,14 @@ fu_logitech_rallysystem_audio_device_set_version(FuLogitechRallysystemAudioDevic
 		G_BIG_ENDIAN,
 		error))
 		return FALSE;
+	/*
+	 * device reports system version in 3 bytes: major.minor.build
+	 * convert major.minor.build -> major.minor.0.build
+	 */
+	major = (fwversion >> 16) & 0xFF;
+	minor = (fwversion >> 8) & 0xFF;
+	build = (fwversion >> 0) & 0xFF;
+	fwversion = ((major << 24) | (minor << 16) | 0 | (build << 0));
 	fu_device_set_version_raw(FU_DEVICE(self), fwversion);
 
 	/* success */
