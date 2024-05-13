@@ -503,3 +503,7 @@ Flags = enforce-requires
 [USB\VID_10A5&PID_9800]
 DfuForceVersion = 0x0
 Flags = enforce-requires
+[USB\VID_10A5&PID_D805]
+DfuForceVersion = 0x0
+Flags = enforce-requires
+
