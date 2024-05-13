@@ -27,7 +27,7 @@ The firmware is written to the device by switching to a flash program mode where
 
 ## Vendor ID Security
 
-The vendor ID is set from the TODO vendor, in this instance set to 'HIDRAW:0x2575'
+The vendor ID is set from the udev vendor, in this instance set to 'HIDRAW:0x2575'
 
 ## External Interface Access
 
