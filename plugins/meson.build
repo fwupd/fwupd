@@ -105,6 +105,7 @@ plugins = {
   'synaptics-mst': false,
   'synaptics-prometheus': false,
   'synaptics-rmi': false,
+  'synaptics-vmm9': false,
   'system76-launch': false,
   'test': false,
   'thelio-io': false,
