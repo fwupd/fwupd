@@ -4,7 +4,6 @@
 #[derive(New, ValidateBytes, Parse)]
 struct FuStructWeidaRaw {
     signature: u8 == 0xDE,
-    address: u16le,
 }
 
 #[derive(ToString)]

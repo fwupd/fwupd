@@ -1,4 +1,3 @@
 # Raw
 [HIDRAW\VEN_2575]
 Plugin = weida_raw
-GType = FuWeidaRawDevice
