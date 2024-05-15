@@ -33,18 +33,47 @@ Plugin = jabra_gnp
 # Jabra Link 380 [runtime]
 [USB\VID_0B0E&PID_24C7]
 Plugin = jabra_gnp
+JabraGnpAddress = 0x01
 
 # Jabra Link 380 [runtime]
 [USB\VID_0B0E&PID_24C8]
 Plugin = jabra_gnp
+JabraGnpAddress = 0x01
 
 # Jabra Link 380 [runtime]
 [USB\VID_0B0E&PID_24C9]
 Plugin = jabra_gnp
+JabraGnpAddress = 0x01
 
 # Jabra Link 380 [runtime]
 [USB\VID_0B0E&PID_24CA]
 Plugin = jabra_gnp
+JabraGnpAddress = 0x01
+
+# Jabra Link 380 [runtime]
+[USB\VID_0B0E&PID_24E9]
+Plugin = jabra_gnp
+JabraGnpAddress = 0x01
+
+# Jabra Link 390 [runtime]
+[USB\VID_0B0E&PID_2E50]
+Plugin = jabra_gnp
+JabraGnpAddress = 0x01
+
+# Jabra Link 390 [runtime]
+[USB\VID_0B0E&PID_2E51]
+Plugin = jabra_gnp
+JabraGnpAddress = 0x01
+
+# Jabra Link 390 [runtime]
+[USB\VID_0B0E&PID_2E56]
+Plugin = jabra_gnp
+JabraGnpAddress = 0x01
+
+# Jabra Link 390 [runtime]
+[USB\VID_0B0E&PID_2E57]
+Plugin = jabra_gnp
+JabraGnpAddress = 0x01
 
 # Jabra Evolve2 65 Mono [runtime]
 [USB\VID_0B0E&PID_24B3]
@@ -118,20 +147,12 @@ Plugin = jabra_gnp
 [USB\VID_0B0E&PID_AE6B]
 Plugin = jabra_gnp
 
-# Jabra Speak2 40 [runtime]
-[USB\VID_0B0E&PID_AE6F]
-Plugin = jabra_gnp
-
 # Jabra Speak2 55 [runtime]
 [USB\VID_0B0E&PID_AE6C]
 Plugin = jabra_gnp
 
 # Jabra Speak2 55 [runtime]
 [USB\VID_0B0E&PID_AE6A]
-Plugin = jabra_gnp
-
-# Jabra Speak2 55 [runtime]
-[USB\VID_0B0E&PID_AE6E]
 Plugin = jabra_gnp
 
 # Jabra Speak2 55 [runtime]
@@ -233,3 +254,23 @@ Plugin = jabra_gnp
 # Jabra Evolve2 65 Flex Secure [runtime]
 [USB\VID_0B0E&PID_2525]
 Plugin = jabra_gnp
+
+# Jabra Link 390 [runtime]
+[USB\VID_0B0E&PID_2E50]
+Plugin = jabra_gnp
+JabraGnpAddress = 0x01
+
+# Jabra Link 390 [runtime]
+[USB\VID_0B0E&PID_2E51]
+Plugin = jabra_gnp
+JabraGnpAddress = 0x01
+
+# Jabra Link 390 [runtime]
+[USB\VID_0B0E&PID_2E56]
+Plugin = jabra_gnp
+JabraGnpAddress = 0x01
+
+# Jabra Link 390 [runtime]
+[USB\VID_0B0E&PID_2E57]
+Plugin = jabra_gnp
+JabraGnpAddress = 0x01
