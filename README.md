@@ -86,6 +86,18 @@ This will download and apply all updates for your system.
 You can find more information about the update workflow in the end
 users section of the [fwupd website](https://fwupd.org).
 
+## Passim
+
+If the [Passim](https://github.com/hughsie/passim/blob/main/README.md) project is also installed
+and enabled, fwupd will re-publish the downloaded metadata file to be served on `0.0.0.0:27500`
+by default.
+
+Other clients on the same network can make use of this via mDNS/LLMNR to reduce network bandwidth
+to configured remotes.
+
+To disable this functionality either set `P2pPolicy=none` in `/etc/fwupd/daemon.conf`, uninstall
+the passim package or use `systemctl mask passim.service` on the terminal.
+
 ## Reporting status
 
 fwupd will encourage users to report both successful and failed updates back
