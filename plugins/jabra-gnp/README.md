@@ -22,6 +22,16 @@ The device is updated at runtime using USB control and interrupt transfers.
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x0B0E`
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### JabraGnpAddress
+
+Address to use, defaulting to `0x08`.
+
+Since: 1.9.25
+
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.
