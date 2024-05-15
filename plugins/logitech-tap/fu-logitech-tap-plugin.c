@@ -39,6 +39,7 @@ fu_logitech_tap_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, G
 				FU_LOGITECH_TAP_SENSOR_DEVICE(fu_device_get_proxy(dev)),
 				error))
 				return FALSE;
+			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 			break;
 		}
 	}
