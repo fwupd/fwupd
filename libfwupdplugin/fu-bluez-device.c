@@ -385,7 +385,7 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 		fu_device_set_name(device, g_variant_get_string(val_name, NULL));
 	val_icon = g_dbus_proxy_get_cached_property(priv->proxy, "Icon");
 	if (val_icon != NULL)
-		fu_device_add_icon(device, g_variant_get_string(val_name, NULL));
+		fu_device_add_icon(device, g_variant_get_string(val_icon, NULL));
 	val_modalias = g_dbus_proxy_get_cached_property(priv->proxy, "Modalias");
 	if (val_modalias != NULL)
 		fu_bluez_device_set_modalias(self, g_variant_get_string(val_modalias, NULL));
