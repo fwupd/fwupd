@@ -270,7 +270,12 @@ fu_bluez_device_get_ble_property(const gchar *obj_path,
 	g_dbus_proxy_set_default_timeout(proxy, DEFAULT_PROXY_TIMEOUT);
 	val = g_dbus_proxy_get_cached_property(proxy, prop_name);
 	if (val == NULL) {
-		g_prefix_error(error, "property %s not found in %s: ", prop_name, obj_path);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "property %s not found in %s: ",
+			    prop_name,
+			    obj_path);
 		return NULL;
 	}
 
