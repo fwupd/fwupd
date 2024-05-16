@@ -24,17 +24,6 @@
 #define FU_WEIDA_RAW_FLASH_PAGE_SIZE	  256
 #define FU_WEIDA_RAW_USB_MAX_PAYLOAD_SIZE 63
 
-#define FU_WEIDA_RAW_FOURCC_ID_RIFF 0x46464952
-#define FU_WEIDA_RAW_FOURCC_ID_WIF2 0x32464957
-#define FU_WEIDA_RAW_FOURCC_ID_WHIF 0x46494857
-#define FU_WEIDA_RAW_FOURCC_ID_INFO 0x4f464e49
-#define FU_WEIDA_RAW_FOURCC_ID_FSUM 0x4d555346
-#define FU_WEIDA_RAW_FOURCC_ID_FERA 0x41524546
-#define FU_WEIDA_RAW_FOURCC_ID_FBIN 0x4e494246
-#define FU_WEIDA_RAW_FOURCC_ID_FRMT 0x544D5246
-#define FU_WEIDA_RAW_FOURCC_ID_FRWR 0x52575246
-#define FU_WEIDA_RAW_FOURCC_ID_CNFG 0x47464E43
-
 typedef struct {
 	guint32 fourcc;
 	guint32 file_size;
@@ -58,15 +47,10 @@ typedef struct {
 } FuWeidaSpiBinary;
 
 
-typedef enum {
-	FU_WDT8760_UnprotectLower508k = 0x0044,
-	FU_WDT8760_ProtectAll512k = 0x007C,
-} FU_WDT8760_FlashProtect;
-
 #define FU_WEIDA_RAW_FW_NOT_SUPPORT 0x00
 #define FU_WEIDA_RAW_FW_MAYBE_ISP   0x01
 #define FU_WEIDA_RAW_FW8755	    0x02
-#define FU_WEIDA_RAW_FW8760	    0x4
+#define FU_WEIDA_RAW_FW8760	    0x04
 #define FU_WEIDA_RAW_FW8762	    0x08
 #define FU_WEIDA_RAW_FW8790	    0X10
 
@@ -795,7 +779,9 @@ fu_weida_raw_w8760_wif_chunk_write(FuWeidaRawDevice *self,
 		g_debug("SET DEVICE TO FLASH PROGRAM FAIL\n");
 		return FALSE;
 	}
-	if (!fu_weida_raw_w8760_protect_flash(self, FU_WDT8760_UnprotectLower508k, error)) {
+	if (!fu_weida_raw_w8760_protect_flash(self,
+					      FU_WEIDA_RAW_CMD8760U16_UNPROTECT_LOWER508K,
+					      error)) {
 		g_debug("W8760_UnprotectLower508k fail\n");
 		return FALSE;
 	}
@@ -812,8 +798,8 @@ fu_weida_raw_w8760_wif_chunk_write(FuWeidaRawDevice *self,
 		}
 		offset += sizeof(guint32);
 
-		if (!(hed1.fourcc == FU_WEIDA_RAW_FOURCC_ID_FRWR) &&
-		    !(hed1.fourcc == FU_WEIDA_RAW_FOURCC_ID_CNFG)) {
+		if (!(hed1.fourcc == FU_WEIDA_RAW_FIRMWARE_FOURCC_FRWR) &&
+		    !(hed1.fourcc == FU_WEIDA_RAW_FIRMWARE_FOURCC_CNFG)) {
 			ret = FALSE;
 			break;
 		}
@@ -858,8 +844,8 @@ fu_weida_raw_w8760_wif_chunk_write(FuWeidaRawDevice *self,
 			break;
 		}
 	}
-	if (!fu_weida_raw_w8760_protect_flash(self, FU_WDT8760_ProtectAll512k, error)) {
-		g_debug("W8760_UnprotectLower508k fail\n");
+	if (!fu_weida_raw_w8760_protect_flash(self, FU_WEIDA_RAW_CMD8760U16_PROTECT_ALL, error)) {
+		g_debug("protect all fail\n");
 	}
 	return ret;
 }
@@ -879,7 +865,7 @@ fu_weida_raw_w8760_write_wif1(FuWeidaRawDevice *self,
 	if (!fu_memread_uint32_safe(data, bufsz, offset, &he.fourcc, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	offset += sizeof(guint32);
-	if (he.fourcc != FU_WEIDA_RAW_FOURCC_ID_RIFF)
+	if (he.fourcc != FU_WEIDA_RAW_FIRMWARE_FOURCC_RIFF)
 		return FALSE;
 	if (!fu_memread_uint32_safe(data, bufsz, offset, &he.file_size, G_LITTLE_ENDIAN, error))
 		return FALSE;
@@ -889,9 +875,9 @@ fu_weida_raw_w8760_write_wif1(FuWeidaRawDevice *self,
 		return FALSE;
 	offset += sizeof(guint32);
 
-	if (he.data_type == FU_WEIDA_RAW_FOURCC_ID_WIF2) {
+	if (he.data_type == FU_WEIDA_RAW_FIRMWARE_FOURCC_WIF2) {
 		return FALSE;
-	} else if (he.data_type == FU_WEIDA_RAW_FOURCC_ID_WHIF) {
+	} else if (he.data_type == FU_WEIDA_RAW_FIRMWARE_FOURCC_WHIF) {
 		if (!fu_memread_uint32_safe(data,
 					    bufsz,
 					    offset,
@@ -900,7 +886,7 @@ fu_weida_raw_w8760_write_wif1(FuWeidaRawDevice *self,
 					    error))
 			return FALSE;
 		offset += sizeof(guint32);
-		if (hed1.fourcc != FU_WEIDA_RAW_FOURCC_ID_FRMT) {
+		if (hed1.fourcc != FU_WEIDA_RAW_FIRMWARE_FOURCC_FRMT) {
 			return FALSE;
 		}
 		if (!fu_memread_uint32_safe(data,
