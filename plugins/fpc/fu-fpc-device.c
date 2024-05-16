@@ -577,12 +577,6 @@ fu_fpc_device_write_firmware(FuDevice *device,
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	/* progress */
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "init");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "check");
-
 	/* new format */
 	if (FU_IS_FPC_FF2_FIRMWARE(firmware)) {
 		return fu_fpc_device_write_ff2_firmware(self,
@@ -591,6 +585,12 @@ fu_fpc_device_write_firmware(FuDevice *device,
 							flags,
 							error);
 	}
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "init");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "check");
 
 	/*  write old fw format */
 	stream = fu_firmware_get_stream(firmware, error);
