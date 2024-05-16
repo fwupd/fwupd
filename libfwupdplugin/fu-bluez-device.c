@@ -411,6 +411,10 @@ fu_bluez_device_read(FuBluezDevice *self, const gchar *uuid, GError **error)
 	g_autoptr(GVariantIter) iter = NULL;
 	g_autoptr(GVariant) val = NULL;
 
+	g_return_val_if_fail(FU_IS_BLUEZ_DEVICE(self), NULL);
+	g_return_val_if_fail(uuid != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	uuid_helper = fu_bluez_device_get_uuid_helper(self, uuid, error);
 	if (uuid_helper == NULL)
 		return NULL;
@@ -491,6 +495,11 @@ fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, G
 	GVariant *opt_variant = NULL;
 	GVariant *val_variant = NULL;
 
+	g_return_val_if_fail(FU_IS_BLUEZ_DEVICE(self), FALSE);
+	g_return_val_if_fail(uuid != NULL, FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	uuid_helper = fu_bluez_device_get_uuid_helper(self, uuid, error);
 	if (uuid_helper == NULL)
 		return FALSE;
@@ -543,6 +552,10 @@ fu_bluez_device_notify_start(FuBluezDevice *self, const gchar *uuid, GError **er
 	FuBluezDeviceUuidHelper *uuid_helper;
 	g_autoptr(GVariant) retval = NULL;
 
+	g_return_val_if_fail(FU_IS_BLUEZ_DEVICE(self), FALSE);
+	g_return_val_if_fail(uuid != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	uuid_helper = fu_bluez_device_get_uuid_helper(self, uuid, error);
 	if (uuid_helper == NULL)
 		return FALSE;
@@ -581,6 +594,10 @@ fu_bluez_device_notify_stop(FuBluezDevice *self, const gchar *uuid, GError **err
 {
 	FuBluezDeviceUuidHelper *uuid_helper;
 	g_autoptr(GVariant) retval = NULL;
+
+	g_return_val_if_fail(FU_IS_BLUEZ_DEVICE(self), FALSE);
+	g_return_val_if_fail(uuid != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	uuid_helper = fu_bluez_device_get_uuid_helper(self, uuid, error);
 	if (uuid_helper == NULL)
