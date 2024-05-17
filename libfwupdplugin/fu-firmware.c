@@ -582,6 +582,9 @@ fu_firmware_set_bytes(FuFirmware *self, GBytes *bytes)
 	if (priv->bytes != NULL)
 		g_bytes_unref(priv->bytes);
 	priv->bytes = g_bytes_ref(bytes);
+
+	/* the input stream is no longer valid */
+	g_clear_object(&priv->stream);
 }
 
 /**
