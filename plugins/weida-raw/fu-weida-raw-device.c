@@ -326,6 +326,11 @@ fu_weida_w8760_set_n_check_device_mode_cb(FuDevice *device, gpointer user_data, 
 		fu_device_sleep(device, 30);
 		if (fu_weida_raw_w8760_get_device_mode(self, error) == req->cmd)
 			return TRUE;
+		else
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "The device is not ready yet");
 	}
 
 	return FALSE;
@@ -779,17 +784,6 @@ fu_weida_raw_w8760_wif_chunk_write(FuWeidaRawDevice *self,
 		return FALSE;
 	}
 
-	/*
-
-	if (!fu_weida_w8760_set_n_check_device_mode(self,
-						    FU_WEIDA_RAW_CMD8760_MODE_FLASH_PROGRAM,
-						    0,
-						    0,
-						    error)) {
-		g_debug("SET DEVICE TO FLASH PROGRAM FAIL\n");
-		return FALSE;
-	}
-	*/
 
 	if (!fu_weida_raw_w8760_protect_flash(self,
 					      FU_WEIDA_RAW_CMD8760U16_UNPROTECT_LOWER508K,
