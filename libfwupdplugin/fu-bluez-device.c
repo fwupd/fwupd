@@ -672,17 +672,25 @@ fu_bluez_device_read(FuBluezDevice *self, const gchar *uuid, GError **error)
  *
  * Reads a string from a UUID on the device.
  *
- * Returns: (transfer full): data, or %NULL for error
+ * Returns: (transfer full): NUL-terminated string, or %NULL for error
  *
  * Since: 1.5.7
  **/
 gchar *
 fu_bluez_device_read_string(FuBluezDevice *self, const gchar *uuid, GError **error)
 {
-	GByteArray *buf = fu_bluez_device_read(self, uuid, error);
+	g_autoptr(GByteArray) buf = fu_bluez_device_read(self, uuid, error);
 	if (buf == NULL)
 		return NULL;
-	return (gchar *)g_byte_array_free(buf, FALSE);
+	if (!g_utf8_validate((const gchar *)buf->data, buf->len, NULL)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "UUID %s did not return a valid UTF-8 string",
+			    uuid);
+		return NULL;
+	}
+	return g_strndup((const gchar *)buf->data, buf->len);
 }
 
 /**
