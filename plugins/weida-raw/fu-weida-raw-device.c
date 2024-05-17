@@ -365,7 +365,7 @@ fu_weida_raw_w8760_erase_flash(FuWeidaRawDevice *self,
 	guint8 cmd[10] = {0};
 
 	cmd[0] = FU_WEIDA_RAW_CMD8760_COMMAND9;
-	cmd[1] = FU_WEIDA_RAW_CMD8760_RASE_FLASH;
+	cmd[1] = FU_WEIDA_RAW_CMD8760_ERASE_FLASH;
 	cmd[2] = (guint8)(address >> 12);
 	cmd[3] = (guint8)(((address & 0x0FFF) + size + 4095) >> 12);
 
