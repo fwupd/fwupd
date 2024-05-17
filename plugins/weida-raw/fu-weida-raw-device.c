@@ -312,63 +312,42 @@ fu_weida_raw_w8760_protect_flash(FuWeidaRawDevice *self, guint16 protect_mask, G
 		return TRUE;
 }
 
+typedef struct {
+	guint8 cmd;
+} FuWeidaRawDeviceReq;
+
 static gboolean
-fu_weida_w8760_set_n_check_device_mode(FuWeidaRawDevice *pdev,
-				       guint8 mode,
-				       int timeout_ms,
-				       int intv_ms,
-				       GError **error)
+fu_weida_w8760_set_n_check_device_mode_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	int polling_timeout_ms = 300 * 1000;
-	int polling_intv_ms = 30;
+	FuWeidaRawDevice *self = FU_WEIDA_RAW_DEVICE(device);
+	FuWeidaRawDeviceReq *req = (FuWeidaRawDeviceReq *)user_data;
 
-	if (timeout_ms)
-		polling_timeout_ms = timeout_ms;
-	if (intv_ms)
-		polling_intv_ms = intv_ms;
-
-	do {
-		if (fu_weida_raw_w8760_set_device_mode(pdev, mode, error)) {
-			if (fu_weida_raw_w8760_get_device_mode(pdev, error) == mode)
-				return TRUE;
-		}
-
-		g_usleep(polling_intv_ms * 1000);
-		polling_timeout_ms -= polling_intv_ms;
-	} while (polling_timeout_ms > 0);
+	if (fu_weida_raw_w8760_set_device_mode(self, req->cmd, error)) {
+		fu_device_sleep(device, 30);
+		if (fu_weida_raw_w8760_get_device_mode(self, error) == req->cmd)
+			return TRUE;
+	}
 
 	return FALSE;
 }
 
 static gboolean
-fu_weida_raw_w8760_wait_cmd_end(FuWeidaRawDevice *self, int timeout_ms, int invt_ms, GError **error)
+fu_weida_w8760_wait_cmd_end_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	int polling_timeout_ms = 5000;
-	int polling_intv_ms = 30;
+	FuWeidaRawDevice *self = FU_WEIDA_RAW_DEVICE(device);
 	int status;
 	guint8 status_buf[10] = {0};
 
-	if (timeout_ms)
-		polling_timeout_ms = timeout_ms;
-	if (invt_ms)
-		polling_intv_ms = invt_ms;
+	if (fu_weida_raw_w8760_get_status(self, &status_buf[0], 0, 1, error) <= 0) {
+		g_debug("fail %s \n", __func__);
+		return FALSE;
+	}
 
-	do {
-		if (fu_weida_raw_w8760_get_status(self, &status_buf[0], 0, 1, error) <= 0) {
-			g_debug("fail %s \n", __func__);
-			return FALSE;
-		}
-
-		status = status_buf[0];
-		if ((status & 0x01) == 0) {
-			return TRUE;
-		}
-
-		fu_device_sleep(FU_DEVICE(self), polling_intv_ms);
-		polling_timeout_ms -= polling_intv_ms;
-	} while (polling_timeout_ms > 0);
-	g_debug("wait_cmd_end timeout fail");
-
+	status = status_buf[0];
+	if ((status & 0x01) == 0) {
+		return TRUE;
+	}
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "The device is not ready yet");
 	return FALSE;
 }
 
@@ -388,7 +367,14 @@ fu_weida_raw_w8760_erase_flash(FuWeidaRawDevice *self,
 	if (!fu_weida_raw_device_set_feature(self, cmd, sizeof(cmd), error)) {
 		return FALSE;
 	}
-	if (!fu_weida_raw_w8760_wait_cmd_end(self, 0, 0, error)) {
+
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_weida_w8760_wait_cmd_end_cb,
+				  200,
+				  30,
+				  NULL,
+				  error)) {
+		g_prefix_error(error, "failed to erase: ");
 		return FALSE;
 	}
 
@@ -425,10 +411,17 @@ fu_weida_raw_w8760_batch_write_flash(FuWeidaRawDevice *self,
 	cmd[2] = (guint8)size;
 	memcpy(&cmd[3], &buf[start], size);
 
-	if (fu_weida_raw_w8760_command_write(self, cmd, 0, size + 3, error) > 0)
-		return fu_weida_raw_w8760_wait_cmd_end(self, 0, 0, error);
+	if (fu_weida_raw_w8760_command_write(self, cmd, 0, size + 3, error) > 0) {
+		if (!fu_device_retry_full(FU_DEVICE(self),
+					  fu_weida_w8760_wait_cmd_end_cb,
+					  200,
+					  30,
+					  NULL,
+					  error))
+			return FALSE;
+	}
 
-	return FALSE;
+	return TRUE;
 }
 
 static gboolean
@@ -478,7 +471,12 @@ fu_weida_raw_w8760_checksum_flash(FuWeidaRawDevice *self,
 	if (fu_weida_raw_w8760_command_write(self, cmd, 0, sizeof(cmd), error) <= 0)
 		return FALSE;
 
-	if (fu_weida_raw_w8760_wait_cmd_end(self, 0, 0, error) <= 0)
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_weida_w8760_wait_cmd_end_cb,
+				  200,
+				  30,
+				  NULL,
+				  error))
 		return FALSE;
 
 	if (fu_weida_raw_w8760_read_buf_response(self, buf, 2, error) <= 0)
@@ -565,7 +563,7 @@ fu_weida_raw_w8760_write_flash_page(FuWeidaRawDevice *pdev,
 
 	while (size) {
 		if ((addr & 0xfff) == 0)
-			g_debug("base addr: 0x%x\n", addr);
+			g_message("base addr: 0x%x\n", addr);
 		if (size > (int)write_base) {
 			write_size = write_base;
 			size = size - write_base;
@@ -769,7 +767,19 @@ fu_weida_raw_w8760_wif_chunk_write(FuWeidaRawDevice *self,
 	FuWeidaSpiBinary spi_bin;
 	gboolean ret = TRUE;
 	gsize offset = start;
+	FuWeidaRawDeviceReq req = {.cmd = FU_WEIDA_RAW_CMD8760_MODE_FLASH_PROGRAM};
 	g_debug("%s\n", __func__);
+
+	if (!fu_device_retry(FU_DEVICE(self),
+			     fu_weida_w8760_set_n_check_device_mode_cb,
+			     20,
+			     &req,
+			     error)) {
+		g_prefix_error(error, "failed to set device to flash program mode ");
+		return FALSE;
+	}
+
+	/*
 
 	if (!fu_weida_w8760_set_n_check_device_mode(self,
 						    FU_WEIDA_RAW_CMD8760_MODE_FLASH_PROGRAM,
@@ -779,6 +789,8 @@ fu_weida_raw_w8760_wif_chunk_write(FuWeidaRawDevice *self,
 		g_debug("SET DEVICE TO FLASH PROGRAM FAIL\n");
 		return FALSE;
 	}
+	*/
+
 	if (!fu_weida_raw_w8760_protect_flash(self,
 					      FU_WEIDA_RAW_CMD8760U16_UNPROTECT_LOWER508K,
 					      error)) {

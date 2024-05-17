@@ -1,6 +1,7 @@
 // Copyright 2024 Randy Lai <randy.lai@weidahitech.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+#[repr(u32le)]
 enum FuWeidaRawFirmwareFourcc {
     RIFF = 0x46464952,
     WIF2 = 0x32464957,
@@ -31,7 +32,7 @@ enum FuWeidaRawCmd8760 {
     CALCULATE_FLASH_CHECKSUM = 0xD5,
 }
 
-#[repr(u16)]
+#[repr(u16le)]
 enum FuWeidaRawCmd8760u16 {
     UNPROTECT_LOWER508K = 0x0044,
     PROTECT_ALL = 0x007C,
