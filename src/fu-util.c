@@ -5416,7 +5416,6 @@ main(int argc, char *argv[])
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();
-	fu_util_setup_signal_handlers(priv);
 	g_signal_connect(G_CANCELLABLE(priv->cancellable),
 			 "cancelled",
 			 G_CALLBACK(fu_util_cancelled_cb),
@@ -5522,6 +5521,9 @@ main(int argc, char *argv[])
 	} else {
 		g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, fu_util_ignore_cb, NULL);
 	}
+
+	/* set up ctrl+c */
+	fu_util_setup_signal_handlers(priv);
 
 	/* set flags */
 #ifdef HAVE_FWUPDOFFLINE
