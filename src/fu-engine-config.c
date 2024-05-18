@@ -167,7 +167,7 @@ fu_engine_config_reload(FuEngineConfig *self)
 	/* get the domains to run in verbose */
 	domains = fu_config_get_value(FU_CONFIG(self), "fwupd", "VerboseDomains");
 	if (domains != NULL && domains[0] != '\0')
-		(void)g_setenv("FWUPD_VERBOSE", domains, TRUE);
+		(void)g_setenv("FWUPD_VERBOSE", domains, FALSE);
 
 	/* fetch host best known configuration */
 	host_bkc = fu_config_get_value(FU_CONFIG(self), "fwupd", "HostBkc");
