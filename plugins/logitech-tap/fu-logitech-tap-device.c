@@ -29,8 +29,8 @@ fu_logitech_tap_device_init(FuLogitechTapDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_NEEDS_REBOOT,
-					"needs-reboot");
+					FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_SENSOR_NEEDS_REBOOT,
+					"sensor-needs-reboot");
 }
 
 static void
