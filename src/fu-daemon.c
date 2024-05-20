@@ -883,6 +883,7 @@ fu_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 	}
 
 	/* sync update message from CAB */
+	fu_device_ensure_from_component(device, component);
 	fu_device_incorporate_from_component(device, component);
 
 	/* install each intermediate release */

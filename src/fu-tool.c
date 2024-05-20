@@ -1386,6 +1386,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 			}
 
 			/* if component should have an update message from CAB */
+			fu_device_ensure_from_component(device, component);
 			fu_device_incorporate_from_component(device, component);
 
 			/* success */
