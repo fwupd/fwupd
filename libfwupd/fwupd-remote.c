@@ -43,6 +43,7 @@ typedef struct {
 	gchar *username;
 	gchar *password;
 	gchar *title;
+	gchar *privacy_uri;
 	gchar *agreement;
 	gchar *checksum;     /* of metadata */
 	gchar *checksum_sig; /* of the signature */
@@ -165,6 +166,7 @@ fwupd_remote_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlag
 	fwupd_codec_json_append(builder, "Username", priv->username);
 	fwupd_codec_json_append(builder, "Password", priv->password);
 	fwupd_codec_json_append(builder, "Title", priv->title);
+	fwupd_codec_json_append(builder, "PrivacyUri", priv->privacy_uri);
 	fwupd_codec_json_append(builder, "Agreement", priv->agreement);
 	fwupd_codec_json_append(builder, "Checksum", priv->checksum);
 	fwupd_codec_json_append(builder, "ChecksumSig", priv->checksum_sig);
@@ -343,6 +345,30 @@ fwupd_remote_set_title(FwupdRemote *self, const gchar *title)
 }
 
 /**
+ * fwupd_remote_set_privacy_uri:
+ * @self: a #FwupdRemote
+ * @privacy_uri: (nullable): privacy URL, e.g. "https://lvfs.readthedocs.io/en/latest/privacy.html"
+ *
+ * Sets the remote privacy policy URL.
+ *
+ * Since: 2.0.0
+ **/
+void
+fwupd_remote_set_privacy_uri(FwupdRemote *self, const gchar *privacy_uri)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FWUPD_IS_REMOTE(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->privacy_uri, privacy_uri) == 0)
+		return;
+
+	g_free(priv->privacy_uri);
+	priv->privacy_uri = g_strdup(privacy_uri);
+}
+
+/**
  * fwupd_remote_set_agreement:
  * @self: a #FwupdRemote
  * @agreement: (nullable): agreement markup text
@@ -466,7 +492,7 @@ fwupd_remote_set_keyring_kind(FwupdRemote *self, FwupdKeyringKind keyring_kind)
  * @self: a #FwupdRemote
  * @id: (nullable): remote ID, e.g. "lvfs"
  *
- * Sets the remote title.
+ * Sets the remote ID.
  *
  * NOTE: the ID has to be set before the URL.
  *
@@ -1174,6 +1200,24 @@ fwupd_remote_get_title(FwupdRemote *self)
 }
 
 /**
+ * fwupd_remote_get_privacy_uri:
+ * @self: a #FwupdRemote
+ *
+ * Gets the remote privacy policy URL, e.g. `https://lvfs.readthedocs.io/en/latest/privacy.html`
+ *
+ * Returns: a string, or %NULL if unset
+ *
+ * Since: 2.0.0
+ **/
+const gchar *
+fwupd_remote_get_privacy_uri(FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
+	return priv->privacy_uri;
+}
+
+/**
  * fwupd_remote_get_agreement:
  * @self: a #FwupdRemote
  *
@@ -1583,6 +1627,8 @@ fwupd_remote_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
 			fwupd_remote_set_password(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, "Title") == 0) {
 			fwupd_remote_set_title(self, g_variant_get_string(value, NULL));
+		} else if (g_strcmp0(key, "PrivacyUri") == 0) {
+			fwupd_remote_set_privacy_uri(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, "Agreement") == 0) {
 			fwupd_remote_set_agreement(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
@@ -1648,6 +1694,12 @@ fwupd_remote_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 	}
 	if (priv->title != NULL) {
 		g_variant_builder_add(&builder, "{sv}", "Title", g_variant_new_string(priv->title));
+	}
+	if (priv->privacy_uri != NULL) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      "PrivacyUri",
+				      g_variant_new_string(priv->privacy_uri));
 	}
 	if (priv->agreement != NULL) {
 		g_variant_builder_add(&builder,
@@ -1940,6 +1992,7 @@ fwupd_remote_finalize(GObject *obj)
 	g_free(priv->username);
 	g_free(priv->password);
 	g_free(priv->title);
+	g_free(priv->privacy_uri);
 	g_free(priv->agreement);
 	g_free(priv->remotes_dir);
 	g_free(priv->checksum);

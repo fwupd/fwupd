@@ -20,6 +20,8 @@ fwupd_remote_set_id(FwupdRemote *self, const gchar *id) G_GNUC_NON_NULL(1);
 void
 fwupd_remote_set_title(FwupdRemote *self, const gchar *title) G_GNUC_NON_NULL(1);
 void
+fwupd_remote_set_privacy_uri(FwupdRemote *self, const gchar *privacy_uri) G_GNUC_NON_NULL(1);
+void
 fwupd_remote_set_priority(FwupdRemote *self, gint priority) G_GNUC_NON_NULL(1);
 void
 fwupd_remote_set_agreement(FwupdRemote *self, const gchar *agreement) G_GNUC_NON_NULL(1);
