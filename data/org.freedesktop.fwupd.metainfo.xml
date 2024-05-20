@@ -38,6 +38,31 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.20" date="2024-05-20">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add some API to allow uploading reports for use in gnome-firmware</li>
+          <li>Allow the user to upload the entire devicelist to the LVFS</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Correctly detect Synaptics Cayenne and Spyder firmware</li>
+          <li>Do not offer the UEFI DBX update on Lenovo ideacentre 300-20ISH</li>
+          <li>Explicitly enable shadow stack support in fwupd.service</li>
+          <li>Fix a potential buffer overread when reading the algoltek-usb version number</li>
+          <li>Fix the CET HSI test by rewriting it in assembly</li>
+          <li>Fix using --verbose in fwupdmgr</li>
+          <li>Ignore --p2p when downloading the metadata signature</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>FPC FF2 fingerprint devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.19" date="2024-05-03">
       <description>
         <p>
