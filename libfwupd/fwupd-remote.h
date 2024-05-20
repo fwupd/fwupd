@@ -125,6 +125,8 @@ fwupd_remote_get_id(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_title(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
+fwupd_remote_get_privacy_uri(FwupdRemote *self) G_GNUC_NON_NULL(1);
+const gchar *
 fwupd_remote_get_agreement(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_remotes_dir(FwupdRemote *self) G_GNUC_NON_NULL(1);
