@@ -204,7 +204,7 @@ fu_logitech_rallysystem_audio_device_convert_version(FuDevice *device, guint64 v
 	major = (version_raw >> 16) & 0xFF;
 	minor = (version_raw >> 8) & 0xFF;
 	build = (version_raw >> 0) & 0xFF;
-	version_raw = (major << 24) | (minor << 16) | (build << 0);
+	version_raw = (((guint32)major) << 24) | (((guint32)minor) << 16) | (((guint32)build) << 0);
 	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
 }
 
