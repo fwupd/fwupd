@@ -99,11 +99,10 @@ static void
 fu_weida_raw_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuWeidaRawDevice *self = FU_WEIDA_RAW_DEVICE(device);
-
-	fu_string_append_kx(str, idt, "DevType", self->dev_type);
-	fu_string_append_kx(str, idt, "FirmwareId", self->firmware_id);
-	fu_string_append_kx(str, idt, "HardwareId", self->hardware_id);
-	fu_string_append_kx(str, idt, "FirmwareRevExt", self->firmware_rev_ext);
+	fwupd_codec_string_append_hex(str, idt, "DevType", self->dev_type);
+	fwupd_codec_string_append_hex(str, idt, "FirmwareId", self->firmware_id);
+	fwupd_codec_string_append_hex(str, idt, "HardwareId", self->hardware_id);
+	fwupd_codec_string_append_hex(str, idt, "FirmwareRevExt", self->firmware_rev_ext);
 
 	return;
 }
@@ -738,7 +737,7 @@ fu_weida_raw_w8760_write_spi_bin(FuWeidaRawDevice *pdev, FuWeidaSpiBinary spi_bi
 							    page_size,
 							    error);
 
-			calc_checksum = fu_weida_raw_misr_for_bytes(0, pdata, 0, page_size);
+			calc_checksum = fu_misr16(0, pdata, page_size);
 			fu_weida_raw_w8760_checksum_flash(pdev,
 							  &read_checksum,
 							  start_addr,
