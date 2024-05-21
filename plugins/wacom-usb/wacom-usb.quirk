@@ -1,3 +1,7 @@
+# Movink (USB) [DTH135K0C]
+[USB\VID_056A&PID_03F0]
+Plugin = wacom_usb
+GType = FuWacDevice
 
 # Intuos Pro medium (2nd-gen USB) [PTH-660]
 [USB\VID_056A&PID_0357]
