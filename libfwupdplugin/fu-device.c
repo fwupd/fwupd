@@ -432,7 +432,8 @@ fu_device_add_internal_flag(FuDevice *self, FuDeviceInternalFlags flag)
 		GPtrArray *children = fu_device_get_children(self);
 		for (guint i = 0; i < children->len; i++) {
 			FuDevice *child_tmp = g_ptr_array_index(children, i);
-			fu_device_set_order(child_tmp, G_MAXINT);
+			fu_device_add_internal_flag(child_tmp,
+						    FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER);
 		}
 		fu_device_set_order(self, G_MAXINT);
 	}
