@@ -8,13 +8,6 @@
 
 #include "fu-weida-raw-common.h"
 
-const gchar *
-fu_weida_raw_strerror(guint8 code)
-{
-	if (code == 0)
-		return "success";
-	return NULL;
-}
 
 gboolean
 fu_weida_raw_block_is_empty(const guint8 *data, gsize datasz)

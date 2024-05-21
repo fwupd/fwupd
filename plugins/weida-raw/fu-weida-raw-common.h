@@ -8,8 +8,6 @@
 
 #include <glib-object.h>
 
-const gchar *
-fu_weida_raw_strerror(guint8 code);
 
 gboolean
 fu_weida_raw_block_is_empty(const guint8 *data, gsize datasz);

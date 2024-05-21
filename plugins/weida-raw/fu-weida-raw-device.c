@@ -14,8 +14,6 @@
 #include "fu-weida-raw-device.h"
 #include "fu-weida-raw-struct.h"
 
-/* this can be set using Flags=example in the quirk file  */
-#define FU_WEIDA_RAW_DEVICE_FLAG_EXAMPLE (1 << 0)
 
 #define FU_WEIDA_RAW_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
 #define FU_WEIDA_RAW_REQ_DEV_INFO	  0xF2
@@ -143,27 +141,26 @@ fu_weida_raw_check_firmware_id(FuWeidaRawDevice *self, guint32 fwid)
 	self->dev_type = FU_WEIDA_RAW_FW_NOT_SUPPORT;
 
 	if ((fwid & 0xFF000000) == 0x51000000) {
-		fu_device_set_summary(FU_DEVICE(self), "SR3.0");
+		fu_device_set_summary(FU_DEVICE(self), "SR3.0 touchscreen controller");
 		return;
 	}
 	if ((fwid & 0xFF000000) == 0x50000000) {
-		fu_device_set_summary(FU_DEVICE(self), "CI5.0");
+		fu_device_set_summary(FU_DEVICE(self), "CI5.0 touchscreen controller");
 		self->dev_type = FU_WEIDA_RAW_FW8790;
 		return;
 	}
 	if ((fwid & 0xF0000000) == 0x40000000) {
-		fu_device_set_summary(FU_DEVICE(self), "CI4.0_TM4.0");
+		fu_device_set_summary(FU_DEVICE(self), "CI4.0 or TM4.0 touchscreen controller");
 		self->dev_type = FU_WEIDA_RAW_FW8760;
 		return;
 	}
 	if ((fwid & 0xF0000000) == 0x30000000) {
-		g_message("It is WDT8752 fw !\n");
-		fu_device_set_summary(FU_DEVICE(self), "CI3.0_SR2.0");
+		fu_device_set_summary(FU_DEVICE(self), "CI3.0 or SR2.0 touchscreen controller");
 		self->dev_type = FU_WEIDA_RAW_FW8755;
 		return;
 	}
 	if ((fwid & 0xFFFF0000) == 0xFFFF0000) {
-		fu_device_set_summary(FU_DEVICE(self), "CI3.0_SR2.0");
+		fu_device_set_summary(FU_DEVICE(self), "CI3.0 or SR2.0 touchscreen controller");
 		self->dev_type = FU_WEIDA_RAW_FW8755;
 		return;
 	}
