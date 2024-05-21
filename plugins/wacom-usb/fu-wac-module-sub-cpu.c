@@ -29,7 +29,7 @@ fu_wac_module_sub_cpu_create_chunk(GPtrArray *srec_records, guint32 *record_num,
 	guint32 base_addr = 0;
 	guint32 expect_addr = 0;
 	g_autoptr(GByteArray) data = g_byte_array_new();
-	g_autoptr(GBytes) blob;
+	g_autoptr(GBytes) blob = NULL;
 
 	for (; *record_num < srec_records->len; *record_num += 1) {
 		FuSrecFirmwareRecord *rcd = g_ptr_array_index(srec_records, *record_num);
