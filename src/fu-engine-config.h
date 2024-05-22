@@ -49,6 +49,8 @@ gboolean
 fu_engine_config_get_allow_emulation(FuEngineConfig *self);
 gboolean
 fu_engine_config_get_release_dedupe(FuEngineConfig *self);
+gboolean
+fu_engine_config_get_ignore_requirements(FuEngineConfig *self);
 FuReleasePriority
 fu_engine_config_get_release_priority(FuEngineConfig *self);
 FuP2pPolicy

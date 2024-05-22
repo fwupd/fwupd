@@ -1909,6 +1909,10 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 			return;
 		}
 
+		/* relax these */
+		if (fu_engine_config_get_ignore_requirements(fu_engine_get_config(self->engine)))
+			helper->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
+
 		/* install all the things in the store */
 		helper->client = fu_client_list_register(self->client_list, sender);
 		helper->client_sender_changed_id =
