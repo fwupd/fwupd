@@ -633,6 +633,7 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 			guint score = 0;
 			g_autofree gchar *name = NULL;
 			g_autofree gchar *kind = NULL;
+			g_autofree gchar *id_type = NULL;
 			g_autoptr(FuDeviceLocker) locker = NULL;
 			g_autoptr(GError) error_local = NULL;
 
@@ -671,6 +672,13 @@ fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
 					}
 					continue;
 				}
+			}
+
+			/* in case an installer messes up the kind */
+			id_type = fu_volume_get_id_type(esp);
+			if (g_strcmp0(id_type, "btrfs") == 0) {
+				g_debug("skipping %s as it's a %s type", name, id_type);
+				continue;
 			}
 
 			/* big partitions are better than small partitions */
