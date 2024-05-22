@@ -870,7 +870,7 @@ fu_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 	}
 	if (!fu_engine_requirements_check(self->engine,
 					  release,
-					  helper->flags | FWUPD_INSTALL_FLAG_FORCE,
+					  helper->flags | FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS,
 					  &error_local)) {
 		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("first pass requirement on %s:%s failed: %s",

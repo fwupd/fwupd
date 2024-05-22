@@ -345,7 +345,10 @@ fu_engine_requirements_soft_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_FORCE, &error);
+	ret = fu_engine_requirements_check(engine,
+					   release,
+					   FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS,
+					   &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -892,7 +895,10 @@ fu_engine_requirements_device_func(gconstpointer user_data)
 #ifndef SUPPORTED_BUILD
 	/* we can force this */
 	g_clear_error(&error);
-	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_FORCE, &error);
+	ret = fu_engine_requirements_check(engine,
+					   release,
+					   FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS,
+					   &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 #endif
