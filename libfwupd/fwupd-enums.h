@@ -1011,21 +1011,23 @@ typedef guint64 FwupdPluginFlags;
  * @FWUPD_INSTALL_FLAG_IGNORE_POWER:		Ignore requirement of external power source
  *(Deprecated since 1.7.0)
  * @FWUPD_INSTALL_FLAG_NO_SEARCH:		Do not use heuristics when parsing the image
+ * @FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS:	Ignore version requirement checks
  *
  * Flags to set when performing the firmware update or install.
  **/
 typedef enum {
-	FWUPD_INSTALL_FLAG_NONE = 0,			 /* Since: 0.7.0 */
-	FWUPD_INSTALL_FLAG_OFFLINE = 1 << 0,		 /* Since: 0.7.0 */
-	FWUPD_INSTALL_FLAG_ALLOW_REINSTALL = 1 << 1,	 /* Since: 0.7.0 */
-	FWUPD_INSTALL_FLAG_ALLOW_OLDER = 1 << 2,	 /* Since: 0.7.0 */
-	FWUPD_INSTALL_FLAG_FORCE = 1 << 3,		 /* Since: 0.7.1 */
-	FWUPD_INSTALL_FLAG_NO_HISTORY = 1 << 4,		 /* Since: 1.0.8 */
-	FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH = 1 << 5, /* Since: 1.5.0 */
-	FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM = 1 << 6,	 /* Since: 1.5.0 */
-	FWUPD_INSTALL_FLAG_IGNORE_VID_PID = 1 << 7,	 /* Since: 1.5.0 */
-	FWUPD_INSTALL_FLAG_IGNORE_POWER = 1 << 8,	 /* Since: 1.5.0 */
-	FWUPD_INSTALL_FLAG_NO_SEARCH = 1 << 9,		 /* Since: 1.5.0 */
+	FWUPD_INSTALL_FLAG_NONE = 0,			  /* Since: 0.7.0 */
+	FWUPD_INSTALL_FLAG_OFFLINE = 1 << 0,		  /* Since: 0.7.0 */
+	FWUPD_INSTALL_FLAG_ALLOW_REINSTALL = 1 << 1,	  /* Since: 0.7.0 */
+	FWUPD_INSTALL_FLAG_ALLOW_OLDER = 1 << 2,	  /* Since: 0.7.0 */
+	FWUPD_INSTALL_FLAG_FORCE = 1 << 3,		  /* Since: 0.7.1 */
+	FWUPD_INSTALL_FLAG_NO_HISTORY = 1 << 4,		  /* Since: 1.0.8 */
+	FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH = 1 << 5,  /* Since: 1.5.0 */
+	FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM = 1 << 6,	  /* Since: 1.5.0 */
+	FWUPD_INSTALL_FLAG_IGNORE_VID_PID = 1 << 7,	  /* Since: 1.5.0 */
+	FWUPD_INSTALL_FLAG_IGNORE_POWER = 1 << 8,	  /* Since: 1.5.0 */
+	FWUPD_INSTALL_FLAG_NO_SEARCH = 1 << 9,		  /* Since: 1.5.0 */
+	FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS = 1 << 10, /* Since: 1.9.21 */
 	/*< private >*/
 	FWUPD_INSTALL_FLAG_LAST
 } FwupdInstallFlags;

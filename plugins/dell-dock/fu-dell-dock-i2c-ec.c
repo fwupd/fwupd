@@ -815,7 +815,7 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 	g_info("writing EC firmware version %s", dynamic_version);
 
 	/* meet the minimum EC version */
-	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS) == 0 &&
 	    (fu_version_compare(dynamic_version,
 				self->ec_minimum_version,
 				FWUPD_VERSION_FORMAT_QUAD) < 0)) {
