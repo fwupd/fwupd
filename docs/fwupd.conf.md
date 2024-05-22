@@ -97,6 +97,12 @@ The `[fwupd]` section can contain the following parameters:
 
   Ignore power levels of devices when running updates.
 
+**IgnoreRequirements={{IgnoreRequirements}}**
+
+  Ignore some device requirements, for instance removing the generic GUID requirement of a CHID,
+  child, parent or sibling.
+  This is not recommended for production systems, although it may be useful for firmware development.
+
 **OnlyTrusted={{OnlyTrusted}}**
 
   Only support installing firmware signed with a trusted key.
