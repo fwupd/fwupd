@@ -24,7 +24,6 @@ struct _FuEngineConfig {
 	GArray *trusted_uids;	      /* (element-type guint64) */
 	gchar *host_bkc;
 	gchar *esp_location;
-	gboolean allow_emulation;
 };
 
 G_DEFINE_TYPE(FuEngineConfig, fu_engine_config, FU_TYPE_CONFIG)
