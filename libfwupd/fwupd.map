@@ -977,6 +977,7 @@ LIBFWUPD_2.0.0 {
     fwupd_codec_to_string;
     fwupd_codec_to_variant;
     fwupd_error_convert;
+    fwupd_install_flags_to_string;
     fwupd_remote_set_checksum_sig;
     fwupd_remote_set_kind;
     fwupd_remote_set_order_after;

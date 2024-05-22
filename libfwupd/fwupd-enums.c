@@ -892,3 +892,39 @@ fwupd_version_format_to_string(FwupdVersionFormat kind)
 		return "hex";
 	return NULL;
 }
+
+/**
+ * fwupd_install_flags_to_string:
+ * @install_flags: a #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
+ *
+ * Converts an install flag to text.
+ *
+ * Returns: a string, e.g. `force`, or %NULL if not known
+ *
+ * Since: 2.0.0
+ **/
+const gchar *
+fwupd_install_flags_to_string(FwupdInstallFlags install_flags)
+{
+	if (install_flags == FWUPD_INSTALL_FLAG_NONE)
+		return "none";
+	if (install_flags == FWUPD_INSTALL_FLAG_OFFLINE)
+		return "offline";
+	if (install_flags == FWUPD_INSTALL_FLAG_ALLOW_REINSTALL)
+		return "allow-reinstall";
+	if (install_flags == FWUPD_INSTALL_FLAG_ALLOW_OLDER)
+		return "allow-older";
+	if (install_flags == FWUPD_INSTALL_FLAG_FORCE)
+		return "force";
+	if (install_flags == FWUPD_INSTALL_FLAG_NO_HISTORY)
+		return "no-history";
+	if (install_flags == FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH)
+		return "allow-branch-switch";
+	if (install_flags == FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM)
+		return "ignore-checksum";
+	if (install_flags == FWUPD_INSTALL_FLAG_IGNORE_VID_PID)
+		return "ignore-vid-pid";
+	if (install_flags == FWUPD_INSTALL_FLAG_NO_SEARCH)
+		return "no-search";
+	return NULL;
+}
