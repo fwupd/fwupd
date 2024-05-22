@@ -926,5 +926,7 @@ fwupd_install_flags_to_string(FwupdInstallFlags install_flags)
 		return "ignore-vid-pid";
 	if (install_flags == FWUPD_INSTALL_FLAG_NO_SEARCH)
 		return "no-search";
+	if (install_flags == FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS)
+		return "ignore-requirements";
 	return NULL;
 }

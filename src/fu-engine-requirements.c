@@ -746,9 +746,8 @@ fu_engine_requirements_check_soft(FuEngine *self,
 					       fwupd_version,
 					       flags,
 					       &error_local)) {
-		if (flags & FWUPD_INSTALL_FLAG_FORCE) {
-			g_info("ignoring soft-requirement due to --force: %s",
-			       error_local->message);
+		if (flags & FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS) {
+			g_info("ignoring soft-requirement: %s", error_local->message);
 			return TRUE;
 		}
 		g_propagate_error(error, g_steal_pointer(&error_local));
@@ -866,7 +865,7 @@ fu_engine_requirements_check(FuEngine *self,
 		    "generic GUID requires a CHID, child, parent or sibling requirement");
 		return FALSE;
 #else
-		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS) == 0) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,

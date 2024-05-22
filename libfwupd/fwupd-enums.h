@@ -1168,6 +1168,14 @@ typedef enum {
 	 * Since: 2.0.0
 	 */
 	FWUPD_INSTALL_FLAG_NO_SEARCH = 1 << 8,
+	/**
+	 * FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS:
+	 *
+	 * Ignore version requirement checks.
+	 *
+	 * Since: 1.9.21
+	 */
+	FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS = 1 << 9,
 	/*< private >*/
 	FWUPD_INSTALL_FLAG_UNKNOWN = G_MAXUINT64,
 } FwupdInstallFlags;

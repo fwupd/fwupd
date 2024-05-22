@@ -74,7 +74,8 @@ G_DEFINE_TYPE(FuDaemon, fu_daemon, G_TYPE_OBJECT)
 #define FU_DAEMON_INSTALL_FLAG_MASK_SAFE                                                           \
 	(FWUPD_INSTALL_FLAG_OFFLINE | FWUPD_INSTALL_FLAG_ALLOW_OLDER |                             \
 	 FWUPD_INSTALL_FLAG_ALLOW_REINSTALL | FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH |             \
-	 FWUPD_INSTALL_FLAG_FORCE | FWUPD_INSTALL_FLAG_NO_HISTORY)
+	 FWUPD_INSTALL_FLAG_FORCE | FWUPD_INSTALL_FLAG_NO_HISTORY |                                \
+	 FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS)
 
 static gboolean
 fu_daemon_schedule_housekeeping_cb(gpointer user_data)
@@ -846,7 +847,7 @@ fu_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 	}
 	if (!fu_engine_requirements_check(self->engine,
 					  release,
-					  helper->flags | FWUPD_INSTALL_FLAG_FORCE,
+					  helper->flags | FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS,
 					  &error_local)) {
 		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("first pass requirement on %s:%s failed: %s",
