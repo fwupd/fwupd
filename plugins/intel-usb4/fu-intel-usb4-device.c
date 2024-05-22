@@ -463,7 +463,7 @@ fu_intel_usb4_device_prepare_firmware(FuDevice *device,
 	fw_vendor_id = fu_intel_thunderbolt_nvm_get_vendor_id(FU_INTEL_THUNDERBOLT_NVM(firmware));
 	fw_model_id = fu_intel_thunderbolt_nvm_get_model_id(FU_INTEL_THUNDERBOLT_NVM(firmware));
 	if (self->nvm_vendor_id != fw_vendor_id || self->nvm_model_id != fw_model_id) {
-		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
