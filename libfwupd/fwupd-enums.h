@@ -1165,7 +1165,7 @@ typedef enum {
 	 *
 	 * Do not use heuristics when parsing the image.
 	 *
-	 * Since: 2.0.0
+	 * Since: 1.5.0
 	 */
 	FWUPD_INSTALL_FLAG_NO_SEARCH = 1 << 8,
 	/**
