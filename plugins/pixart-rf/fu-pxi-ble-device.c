@@ -127,7 +127,7 @@ fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 
 		/* check is compatible with hardware */
 		model_name = fu_pxi_firmware_get_model_name(FU_PXI_FIRMWARE(firmware));
-		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
 			if (self->model_name == NULL || model_name == NULL) {
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
