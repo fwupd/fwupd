@@ -71,6 +71,11 @@ G_DEFINE_TYPE(FuDaemon, fu_daemon, G_TYPE_OBJECT)
 
 #define FU_DAEMON_HOUSEKEEPING_DELAY 10 /* seconds */
 
+#define FU_DAEMON_INSTALL_FLAG_MASK_SAFE                                                           \
+	(FWUPD_INSTALL_FLAG_OFFLINE | FWUPD_INSTALL_FLAG_ALLOW_OLDER |                             \
+	 FWUPD_INSTALL_FLAG_ALLOW_REINSTALL | FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH |             \
+	 FWUPD_INSTALL_FLAG_FORCE | FWUPD_INSTALL_FLAG_NO_HISTORY)
+
 static gboolean
 fu_daemon_schedule_housekeeping_cb(gpointer user_data)
 {
@@ -1856,25 +1861,23 @@ fu_daemon_daemon_method_call(GDBusConnection *connection,
 		/* get flags */
 		while (g_variant_iter_next(iter, "{&sv}", &prop_key, &prop_value)) {
 			g_debug("got option %s", prop_key);
-			if (g_strcmp0(prop_key, "offline") == 0 &&
-			    g_variant_get_boolean(prop_value) == TRUE)
-				helper->flags |= FWUPD_INSTALL_FLAG_OFFLINE;
-			if (g_strcmp0(prop_key, "allow-older") == 0 &&
-			    g_variant_get_boolean(prop_value) == TRUE)
-				helper->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
-			if (g_strcmp0(prop_key, "allow-reinstall") == 0 &&
-			    g_variant_get_boolean(prop_value) == TRUE)
-				helper->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
-			if (g_strcmp0(prop_key, "allow-branch-switch") == 0 &&
-			    g_variant_get_boolean(prop_value) == TRUE)
-				helper->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
-			if (g_strcmp0(prop_key, "force") == 0 &&
-			    g_variant_get_boolean(prop_value) == TRUE)
-				helper->flags |= FWUPD_INSTALL_FLAG_FORCE;
-			if (g_strcmp0(prop_key, "no-history") == 0 &&
-			    g_variant_get_boolean(prop_value) == TRUE)
-				helper->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
+			if (g_strcmp0(prop_key, "install-flags") == 0)
+				helper->flags = g_variant_get_uint64(prop_value);
 			g_variant_unref(prop_value);
+		}
+
+		/* verify the client didn't send "internal" flags like no-search */
+		if (helper->flags & ~FU_DAEMON_INSTALL_FLAG_MASK_SAFE) {
+			FwupdInstallFlags flags_unsafe =
+			    helper->flags & ~FU_DAEMON_INSTALL_FLAG_MASK_SAFE;
+			g_set_error(&error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "client sent unsupported flag: 0x%x [%s]",
+				    (guint)flags_unsafe,
+				    fwupd_install_flags_to_string(flags_unsafe));
+			fu_daemon_method_invocation_return_gerror(invocation, error);
+			return;
 		}
 
 #ifndef HAVE_FWUPDOFFLINE
