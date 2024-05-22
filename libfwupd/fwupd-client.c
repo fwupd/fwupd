@@ -3064,30 +3064,10 @@ fwupd_client_install_stream_async(FwupdClient *self,
 				      "filename",
 				      g_variant_new_string(filename_hint));
 	}
-	if (install_flags & FWUPD_INSTALL_FLAG_OFFLINE) {
-		g_variant_builder_add(&builder, "{sv}", "offline", g_variant_new_boolean(TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
-		g_variant_builder_add(&builder, "{sv}", "allow-older", g_variant_new_boolean(TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
-		g_variant_builder_add(&builder,
-				      "{sv}",
-				      "allow-reinstall",
-				      g_variant_new_boolean(TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH) {
-		g_variant_builder_add(&builder,
-				      "{sv}",
-				      "allow-branch-switch",
-				      g_variant_new_boolean(TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_FORCE) {
-		g_variant_builder_add(&builder, "{sv}", "force", g_variant_new_boolean(TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_NO_HISTORY) {
-		g_variant_builder_add(&builder, "{sv}", "no-history", g_variant_new_boolean(TRUE));
-	}
+	g_variant_builder_add(&builder,
+			      "{sv}",
+			      "install-flags",
+			      g_variant_new_uint64(install_flags));
 
 	/* set out of band file descriptor */
 	fd_list = g_unix_fd_list_new();
