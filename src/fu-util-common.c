@@ -1290,7 +1290,7 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 	}
 	if (problem == FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED) {
 		/* TRANSLATORS: lid means "laptop top cover" */
-		return g_strdup(_("Device cannot be used while the lid is closed"));
+		return g_strdup(_("Device cannot be updated while the lid is closed"));
 	}
 	if (problem == FWUPD_DEVICE_PROBLEM_IS_EMULATED) {
 		/* TRANSLATORS: emulated means we are pretending to be a different model */
