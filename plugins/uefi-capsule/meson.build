@@ -64,7 +64,7 @@ foreach ux_lingua: ux_linguas
 endforeach
 
 if get_option('efi_binary')
-  efi_binary = dependency('fwupd-efi', fallback: ['fwupd-efi', 'fwupd_efi_dep'])
+  efi_binary = dependency('fwupd-efi', version: '>= 1.6', fallback: ['fwupd-efi', 'fwupd_efi_dep'])
 endif
 
 if get_option('plugin_uefi_capsule_splash')

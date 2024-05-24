@@ -49,13 +49,14 @@ fu_pxi_receiver_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuPxiReceiverDevice *self = FU_PXI_RECEIVER_DEVICE(device);
 	fu_pxi_ota_fw_state_to_string(&self->fwstate, idt, str);
-	fu_string_append_kx(str, idt, "Vendor", self->vendor);
-	fu_string_append_kx(str, idt, "Product", self->product);
+	fwupd_codec_string_append_hex(str, idt, "Vendor", self->vendor);
+	fwupd_codec_string_append_hex(str, idt, "Product", self->product);
 }
 
 static FuFirmware *
 fu_pxi_receiver_device_prepare_firmware(FuDevice *device,
 					GInputStream *stream,
+					FuProgress *progress,
 					FwupdInstallFlags flags,
 					GError **error)
 {
@@ -71,7 +72,9 @@ fu_pxi_receiver_device_prepare_firmware(FuDevice *device,
 
 		if (!fu_input_stream_read_u32(stream, 9, &hpac_fw_size, G_LITTLE_ENDIAN, error))
 			return NULL;
-		stream_new = fu_partial_input_stream_new(stream, 9, hpac_fw_size + 264);
+		stream_new = fu_partial_input_stream_new(stream, 9, hpac_fw_size + 264, error);
+		if (stream_new == NULL)
+			return NULL;
 		if (!fu_firmware_set_stream(firmware, stream_new, error))
 			return NULL;
 	} else if (fu_device_has_private_flag(device, FU_PXI_DEVICE_FLAG_IS_HPAC) !=

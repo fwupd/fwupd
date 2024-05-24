@@ -20,6 +20,7 @@ G_DEFINE_TYPE(FuUf2Device, fu_uf2_device, FU_TYPE_UDEV_DEVICE)
 static FuFirmware *
 fu_uf2_device_prepare_firmware(FuDevice *device,
 			       GInputStream *stream,
+			       FuProgress *progress,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
@@ -408,8 +409,7 @@ static void
 fu_uf2_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuUf2Device *self = FU_UF2_DEVICE(device);
-	if (self->family_id > 0)
-		fu_string_append_kx(str, idt, "FamilyId", self->family_id);
+	fwupd_codec_string_append_hex(str, idt, "FamilyId", self->family_id);
 }
 
 static void

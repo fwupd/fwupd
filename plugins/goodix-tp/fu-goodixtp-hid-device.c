@@ -67,10 +67,10 @@ fu_goodixtp_hid_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuGoodixtpHidDevice *self = FU_GOODIXTP_HID_DEVICE(device);
 	FuGoodixtpHidDevicePrivate *priv = GET_PRIVATE(self);
-	fu_string_append(str, idt, "patch_pid", priv->patch_pid);
-	fu_string_append(str, idt, "patch_vid", priv->patch_vid);
-	fu_string_append_kx(str, idt, "sensor_id", priv->sensor_id);
-	fu_string_append_kx(str, idt, "cfg_ver", priv->cfg_ver);
+	fwupd_codec_string_append(str, idt, "patch_pid", priv->patch_pid);
+	fwupd_codec_string_append(str, idt, "patch_vid", priv->patch_vid);
+	fwupd_codec_string_append_hex(str, idt, "sensor_id", priv->sensor_id);
+	fwupd_codec_string_append_hex(str, idt, "cfg_ver", priv->cfg_ver);
 }
 
 gboolean

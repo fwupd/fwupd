@@ -6,7 +6,8 @@
 
 #include "config.h"
 
-#include "fwupd-bios-setting-private.h"
+#include "fwupd-bios-setting.h"
+#include "fwupd-codec-private.h"
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
@@ -34,7 +35,17 @@ typedef struct {
 	GPtrArray *possible_values;
 } FwupdBiosSettingPrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(FwupdBiosSetting, fwupd_bios_setting, G_TYPE_OBJECT)
+static void
+fwupd_bios_setting_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FwupdBiosSetting,
+		       fwupd_bios_setting,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_ADD_PRIVATE(FwupdBiosSetting)
+			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
+						 fwupd_bios_setting_codec_iface_init));
+
 #define GET_PRIVATE(o) (fwupd_bios_setting_get_instance_private(o))
 
 /**
@@ -754,20 +765,10 @@ fwupd_bios_setting_trusted(FwupdBiosSetting *self, gboolean trusted)
 	return FALSE;
 }
 
-/**
- * fwupd_bios_setting_to_variant:
- * @self: a #FwupdBiosSetting
- * @trusted: whether the caller should receive trusted values
- *
- * Serialize the bios setting.
- *
- * Returns: the serialized data, or %NULL for error.
- *
- * Since: 1.8.4
- **/
-GVariant *
-fwupd_bios_setting_to_variant(FwupdBiosSetting *self, gboolean trusted)
+static GVariant *
+fwupd_bios_setting_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 {
+	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 	GVariantBuilder builder;
 
@@ -806,7 +807,7 @@ fwupd_bios_setting_to_variant(FwupdBiosSetting *self, gboolean trusted)
 			      "{sv}",
 			      FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
 			      g_variant_new_boolean(priv->read_only));
-	if (fwupd_bios_setting_trusted(self, trusted)) {
+	if (fwupd_bios_setting_trusted(self, flags & FWUPD_CODEC_FLAG_TRUSTED)) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
@@ -895,21 +896,10 @@ fwupd_bios_setting_from_key_value(FwupdBiosSetting *self, const gchar *key, GVar
 	}
 }
 
-/**
- * fwupd_bios_setting_from_json:
- * @self: a #FwupdBiosSetting
- * @json_node: a JSON node
- * @error: (nullable): optional return location for an error
- *
- * Loads a fwupd bios setting from a JSON node.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.8.4
- **/
-gboolean
-fwupd_bios_setting_from_json(FwupdBiosSetting *self, JsonNode *json_node, GError **error)
+static gboolean
+fwupd_bios_setting_from_json(FwupdCodec *converter, JsonNode *json_node, GError **error)
 {
+	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
 	JsonObject *obj;
 
 	/* sanity check */
@@ -978,34 +968,23 @@ fwupd_bios_setting_from_json(FwupdBiosSetting *self, JsonNode *json_node, GError
 	return TRUE;
 }
 
-/**
- * fwupd_bios_setting_to_json:
- * @self: a #FwupdBiosSetting
- * @builder: a JSON builder
- *
- * Adds a fwupd bios setting to a JSON builder.
- *
- * Since: 1.8.4
- **/
-void
-fwupd_bios_setting_to_json(FwupdBiosSetting *self, JsonBuilder *builder)
+static void
+fwupd_bios_setting_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
 {
+	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 
-	g_return_if_fail(FWUPD_IS_BIOS_SETTING(self));
-	g_return_if_fail(builder != NULL);
-
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_NAME, priv->name);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_FILENAME, priv->path);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->id);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
-				     priv->current_value);
-	fwupd_common_json_add_boolean(builder,
-				      FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
-				      priv->read_only);
-	fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_BIOS_SETTING_TYPE, priv->kind);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_FILENAME, priv->path);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->id);
+	fwupd_codec_json_append(builder,
+				FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
+				priv->current_value);
+	fwupd_codec_json_append_bool(builder,
+				     FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
+				     priv->read_only);
+	fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_BIOS_SETTING_TYPE, priv->kind);
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
 		if (priv->possible_values->len > 0) {
 			json_builder_set_member_name(builder,
@@ -1020,67 +999,66 @@ fwupd_bios_setting_to_json(FwupdBiosSetting *self, JsonBuilder *builder)
 	}
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_INTEGER ||
 	    priv->kind == FWUPD_BIOS_SETTING_KIND_STRING) {
-		fwupd_common_json_add_int(builder,
-					  FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND,
-					  priv->lower_bound);
-		fwupd_common_json_add_int(builder,
-					  FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND,
-					  priv->upper_bound);
+		fwupd_codec_json_append_int(builder,
+					    FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND,
+					    priv->lower_bound);
+		fwupd_codec_json_append_int(builder,
+					    FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND,
+					    priv->upper_bound);
 		if (priv->kind == FWUPD_BIOS_SETTING_KIND_INTEGER) {
-			fwupd_common_json_add_int(builder,
-						  FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT,
-						  priv->scalar_increment);
+			fwupd_codec_json_append_int(builder,
+						    FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT,
+						    priv->scalar_increment);
 		}
 	}
 }
 
-/**
- * fwupd_bios_setting_to_string:
- * @self: a #FwupdBiosSetting
- *
- * Builds a text representation of the object.
- *
- * Returns: text, or %NULL for invalid
- *
- * Since: 1.8.4
- **/
-gchar *
-fwupd_bios_setting_to_string(FwupdBiosSetting *self)
+static void
+fwupd_bios_setting_add_string(FwupdCodec *converter, guint idt, GString *str)
 {
+	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
-	GString *str;
 
-	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), NULL);
-
-	str = g_string_new(NULL);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_NAME, priv->name);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->id);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_FILENAME, priv->path);
-	fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_BIOS_SETTING_TYPE, priv->kind);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE, priv->current_value);
-	fwupd_pad_kv_str(str,
-			 FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
-			 priv->read_only ? "True" : "False");
-
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->id);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_FILENAME, priv->path);
+	fwupd_codec_string_append_int(str, idt, FWUPD_RESULT_KEY_BIOS_SETTING_TYPE, priv->kind);
+	fwupd_codec_string_append(str,
+				  idt,
+				  FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
+				  priv->current_value);
+	fwupd_codec_string_append(str,
+				  idt,
+				  FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
+				  priv->read_only ? "True" : "False");
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
 		for (guint i = 0; i < priv->possible_values->len; i++) {
 			const gchar *tmp = g_ptr_array_index(priv->possible_values, i);
-			fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES, tmp);
+			fwupd_codec_string_append(str,
+						  idt,
+						  FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES,
+						  tmp);
 		}
 	}
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_INTEGER ||
 	    priv->kind == FWUPD_BIOS_SETTING_KIND_STRING) {
-		fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND, priv->lower_bound);
-		fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND, priv->upper_bound);
+		fwupd_codec_string_append_int(str,
+					      idt,
+					      FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND,
+					      priv->lower_bound);
+		fwupd_codec_string_append_int(str,
+					      idt,
+					      FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND,
+					      priv->upper_bound);
 		if (priv->kind == FWUPD_BIOS_SETTING_KIND_INTEGER) {
-			fwupd_pad_kv_int(str,
-					 FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT,
-					 priv->scalar_increment);
+			fwupd_codec_string_append_int(
+			    str,
+			    idt,
+			    FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT,
+			    priv->scalar_increment);
 		}
 	}
-
-	return g_string_free(str, FALSE);
 }
 
 static void
@@ -1114,8 +1092,9 @@ fwupd_bios_setting_finalize(GObject *object)
 }
 
 static void
-fwupd_bios_setting_set_from_variant_iter(FwupdBiosSetting *self, GVariantIter *iter)
+fwupd_bios_setting_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
 {
+	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {
@@ -1124,73 +1103,14 @@ fwupd_bios_setting_set_from_variant_iter(FwupdBiosSetting *self, GVariantIter *i
 	}
 }
 
-/**
- * fwupd_bios_setting_from_variant:
- * @value: (not nullable): the serialized data
- *
- * Creates a new bios setting using serialized data.
- *
- * Returns: (transfer full): a new #FwupdBiosSetting, or %NULL if @value was invalid.
- *
- * Since: 1.8.4
- **/
-FwupdBiosSetting *
-fwupd_bios_setting_from_variant(GVariant *value)
+static void
+fwupd_bios_setting_codec_iface_init(FwupdCodecInterface *iface)
 {
-	FwupdBiosSetting *rel = NULL;
-	const gchar *type_string;
-	g_autoptr(GVariantIter) iter = NULL;
-
-	g_return_val_if_fail(value != NULL, NULL);
-
-	type_string = g_variant_get_type_string(value);
-	if (g_strcmp0(type_string, "(a{sv})") == 0) {
-		rel = g_object_new(FWUPD_TYPE_BIOS_SETTING, NULL);
-		g_variant_get(value, "(a{sv})", &iter);
-		fwupd_bios_setting_set_from_variant_iter(rel, iter);
-	} else if (g_strcmp0(type_string, "a{sv}") == 0) {
-		rel = g_object_new(FWUPD_TYPE_BIOS_SETTING, NULL);
-		g_variant_get(value, "a{sv}", &iter);
-		fwupd_bios_setting_set_from_variant_iter(rel, iter);
-	} else {
-		g_warning("type %s not known", type_string);
-	}
-	return rel;
-}
-
-/**
- * fwupd_bios_setting_array_from_variant:
- * @value: (not nullable): the serialized data
- *
- * Creates an array of new bios settings using serialized data.
- *
- * Returns: (transfer container) (element-type FwupdBiosSetting): attributes,
- * or %NULL if @value was invalid.
- *
- * Since: 1.8.4
- **/
-GPtrArray *
-fwupd_bios_setting_array_from_variant(GVariant *value)
-{
-	GPtrArray *array = NULL;
-	gsize sz;
-	g_autoptr(GVariant) untuple = NULL;
-
-	g_return_val_if_fail(value != NULL, NULL);
-
-	array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	untuple = g_variant_get_child_value(value, 0);
-	sz = g_variant_n_children(untuple);
-	for (guint i = 0; i < sz; i++) {
-		FwupdBiosSetting *rel;
-		g_autoptr(GVariant) data = NULL;
-		data = g_variant_get_child_value(untuple, i);
-		rel = fwupd_bios_setting_from_variant(data);
-		if (rel == NULL)
-			continue;
-		g_ptr_array_add(array, rel);
-	}
-	return array;
+	iface->add_string = fwupd_bios_setting_add_string;
+	iface->to_json = fwupd_bios_setting_to_json;
+	iface->from_json = fwupd_bios_setting_from_json;
+	iface->to_variant = fwupd_bios_setting_to_variant;
+	iface->from_variant_iter = fwupd_bios_setting_from_variant_iter;
 }
 
 /**

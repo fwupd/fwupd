@@ -156,7 +156,7 @@ fu_thunderbolt_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);
 	FuThunderboltDevicePrivate *priv = GET_PRIVATE(self);
-	fu_string_append(str, idt, "AuthMethod", priv->auth_method);
+	fwupd_codec_string_append(str, idt, "AuthMethod", priv->auth_method);
 }
 
 void
@@ -243,67 +243,69 @@ fu_thunderbolt_device_rescan(FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_thunderbolt_device_write_stream(GOutputStream *ostream,
+				   GBytes *bytes,
+				   FuProgress *progress,
+				   GError **error)
+{
+	gsize bufsz = g_bytes_get_size(bytes);
+	gsize total_written = 0;
+
+	do {
+		gssize wrote;
+		g_autoptr(GBytes) fw_data = NULL;
+		fw_data = fu_bytes_new_offset(bytes, total_written, bufsz - total_written, error);
+		if (fw_data == NULL)
+			return FALSE;
+		wrote = g_output_stream_write_bytes(ostream, fw_data, NULL, error);
+		if (wrote < 0)
+			return FALSE;
+		total_written += wrote;
+		fu_progress_set_percentage_full(progress, total_written, bufsz);
+	} while (total_written < bufsz);
+	if (total_written != bufsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "only wrote 0x%x of 0x%x",
+			    (guint)total_written,
+			    (guint)bufsz);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_thunderbolt_device_write_data(FuThunderboltDevice *self,
 				 GBytes *blob_fw,
 				 FuProgress *progress,
 				 GError **error)
 {
-	gsize fw_size;
-	gsize nwritten;
-	gssize n;
 	g_autoptr(GFile) nvmem = NULL;
-	g_autoptr(GOutputStream) os = NULL;
+	g_autoptr(GOutputStream) ostream = NULL;
 
 	nvmem = fu_thunderbolt_device_find_nvmem(self, FALSE, error);
 	if (nvmem == NULL)
 		return FALSE;
-
-	os = (GOutputStream *)g_file_append_to(nvmem, G_FILE_CREATE_NONE, NULL, error);
-
-	if (os == NULL)
+	ostream = (GOutputStream *)g_file_append_to(nvmem, G_FILE_CREATE_NONE, NULL, error);
+	if (ostream == NULL)
 		return FALSE;
-
-	nwritten = 0;
-	fw_size = g_bytes_get_size(blob_fw);
-
-	do {
-		g_autoptr(GBytes) fw_data = NULL;
-
-		fw_data = fu_bytes_new_offset(blob_fw, nwritten, fw_size - nwritten, error);
-		if (fw_data == NULL)
-			return FALSE;
-
-		n = g_output_stream_write_bytes(os, fw_data, NULL, error);
-		if (n < 0)
-			return FALSE;
-
-		nwritten += n;
-		fu_progress_set_percentage_full(progress, nwritten, fw_size);
-
-	} while (nwritten < fw_size);
-
-	if (nwritten != fw_size) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "Could not write all data to nvmem");
+	if (!fu_thunderbolt_device_write_stream(ostream, blob_fw, progress, error))
 		return FALSE;
-	}
-
-	return g_output_stream_close(os, NULL, error);
+	return g_output_stream_close(ostream, NULL, error);
 }
 
 static FuFirmware *
 fu_thunderbolt_device_prepare_firmware(FuDevice *device,
 				       GInputStream *stream,
+				       FuProgress *progress,
 				       FwupdInstallFlags flags,
 				       GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(FuFirmware) firmware_old = NULL;
-	g_autoptr(GInputStream) controller_fw = NULL;
-	g_autoptr(GFile) nvmem = NULL;
 
 	/* parse */
 	firmware = fu_firmware_new_from_gtypes(stream,
@@ -317,23 +319,30 @@ fu_thunderbolt_device_prepare_firmware(FuDevice *device,
 		return NULL;
 
 	/* get current NVMEM */
-	nvmem = fu_thunderbolt_device_find_nvmem(self, TRUE, error);
-	if (nvmem == NULL)
-		return NULL;
-	controller_fw = G_INPUT_STREAM(g_file_read(nvmem, NULL, error));
-	if (controller_fw == NULL)
-		return NULL;
-	firmware_old = fu_firmware_new_from_gtypes(controller_fw,
-						   0x0,
-						   flags,
-						   error,
-						   FU_TYPE_INTEL_THUNDERBOLT_NVM,
-						   FU_TYPE_FIRMWARE,
-						   G_TYPE_INVALID);
-	if (firmware_old == NULL)
-		return NULL;
-	if (!fu_firmware_check_compatible(firmware_old, firmware, flags, error))
-		return NULL;
+	if (fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE)) {
+		g_autoptr(FuFirmware) firmware_old = NULL;
+		g_autoptr(GFile) nvmem = NULL;
+		g_autoptr(GInputStream) controller_fw = NULL;
+
+		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
+		nvmem = fu_thunderbolt_device_find_nvmem(self, TRUE, error);
+		if (nvmem == NULL)
+			return NULL;
+		controller_fw = G_INPUT_STREAM(g_file_read(nvmem, NULL, error));
+		if (controller_fw == NULL)
+			return NULL;
+		firmware_old = fu_firmware_new_from_gtypes(controller_fw,
+							   0x0,
+							   flags,
+							   error,
+							   FU_TYPE_INTEL_THUNDERBOLT_NVM,
+							   FU_TYPE_FIRMWARE,
+							   G_TYPE_INVALID);
+		if (firmware_old == NULL)
+			return NULL;
+		if (!fu_firmware_check_compatible(firmware_old, firmware, flags, error))
+			return NULL;
+	}
 
 	/* success */
 	return g_steal_pointer(&firmware);

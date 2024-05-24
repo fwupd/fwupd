@@ -475,7 +475,7 @@ fu_synaptics_cape_device_to_string(FuDevice *device, guint idt, GString *str)
 
 	g_return_if_fail(FU_IS_SYNAPTICS_CAPE_DEVICE(self));
 
-	fu_string_append_ku(str, idt, "ActivePartition", self->active_partition);
+	fwupd_codec_string_append_int(str, idt, "ActivePartition", self->active_partition);
 }
 
 /* resets device */
@@ -605,6 +605,7 @@ fu_synaptics_cape_device_setup(FuDevice *device, GError **error)
 static FuFirmware *
 fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
 					  GInputStream *stream,
+					  FuProgress *progress,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {
@@ -631,7 +632,9 @@ fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
 	if (self->active_partition == 1)
 		offset = bufsz / 2;
 
-	stream_fw = fu_partial_input_stream_new(stream, offset, bufsz / 2);
+	stream_fw = fu_partial_input_stream_new(stream, offset, bufsz / 2, error);
+	if (stream_fw == NULL)
+		return NULL;
 	if (!fu_firmware_parse_stream(firmware, stream_fw, 0x0, flags, error))
 		return NULL;
 

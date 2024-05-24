@@ -360,23 +360,6 @@ fu_plugin_open(FuPlugin *self, const gchar *filename, GError **error)
 	return TRUE;
 }
 
-static gchar *
-fu_plugin_flags_to_string(FwupdPluginFlags flags)
-{
-	g_autoptr(GString) str = g_string_new(NULL);
-	for (guint i = 0; i < 64; i++) {
-		FwupdPluginFlags flag = (guint64)1 << i;
-		if ((flags & flag) == 0)
-			continue;
-		if (str->len > 0)
-			g_string_append_c(str, ',');
-		g_string_append(str, fwupd_plugin_flag_to_string(flag));
-	}
-	if (str->len == 0)
-		return NULL;
-	return g_string_free(g_steal_pointer(&str), FALSE);
-}
-
 /**
  * fu_plugin_add_string:
  * @self: a #FuPlugin
@@ -392,33 +375,24 @@ fu_plugin_add_string(FuPlugin *self, guint idt, GString *str)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
 	FuPluginVfuncs *vfuncs = fu_plugin_get_vfuncs(self);
-	const gchar *name = fwupd_plugin_get_name(FWUPD_PLUGIN(self));
-	g_autofree gchar *flags = NULL;
 
 	g_return_if_fail(FU_IS_PLUGIN(self));
 	g_return_if_fail(str != NULL);
 
 	/* attributes */
-	fu_string_append(str, idt, G_OBJECT_TYPE_NAME(self), "");
-	if (name != NULL)
-		fu_string_append(str, idt + 1, "Name", name);
-	flags = fu_plugin_flags_to_string(fwupd_plugin_get_flags(FWUPD_PLUGIN(self)));
-	if (flags != NULL)
-		fu_string_append(str, idt + 1, "Flags", flags);
-	if (priv->order != 0)
-		fu_string_append_ku(str, idt + 1, "Order", priv->order);
-	if (priv->priority != 0)
-		fu_string_append_ku(str, idt + 1, "Priority", priv->priority);
+	fwupd_codec_add_string(FWUPD_CODEC(self), idt, str);
+	fwupd_codec_string_append_int(str, idt, "Order", priv->order);
+	fwupd_codec_string_append_int(str, idt, "Priority", priv->priority);
 	if (priv->device_gtype_default != G_TYPE_INVALID) {
-		fu_string_append(str,
-				 idt,
-				 "DeviceGTypeDefault",
-				 g_type_name(priv->device_gtype_default));
+		fwupd_codec_string_append(str,
+					  idt,
+					  "DeviceGTypeDefault",
+					  g_type_name(priv->device_gtype_default));
 	}
 
 	/* optional */
 	if (vfuncs->to_string != NULL)
-		vfuncs->to_string(self, idt + 1, str);
+		vfuncs->to_string(self, idt, str);
 }
 
 /**

@@ -10,7 +10,6 @@
 
 #include <json-glib/json-glib.h>
 
-#include "fwupd-bios-setting-private.h"
 #include "fwupd-security-attr-private.h"
 
 #include "fu-console.h"
@@ -36,8 +35,14 @@ typedef enum {
 	FU_SECURITY_ATTR_TO_STRING_FLAG_LAST
 } FuSecurityAttrToStringFlags;
 
+/* node with refcounted data */
+typedef GNode FuUtilNode;
 void
-fu_util_print_tree(FuConsole *console, FwupdClient *client, GNode *n) G_GNUC_NON_NULL(1, 2, 3);
+fu_util_print_node(FuConsole *console, FwupdClient *client, FuUtilNode *n) G_GNUC_NON_NULL(1, 2, 3);
+void
+fu_util_free_node(FuUtilNode *n) G_GNUC_NON_NULL(1);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilNode, fu_util_free_node)
+
 gboolean
 fu_util_is_interesting_device(FwupdDevice *dev) G_GNUC_NON_NULL(1);
 gchar *
@@ -114,13 +119,6 @@ fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags
     G_GNUC_NON_NULL(1);
 gchar *
 fu_util_security_issues_to_string(GPtrArray *devices) G_GNUC_NON_NULL(1);
-gboolean
-fu_util_send_report(FwupdClient *client,
-		    const gchar *report_uri,
-		    const gchar *data,
-		    const gchar *sig,
-		    gchar **uri,
-		    GError **error) G_GNUC_NON_NULL(1, 2, 3);
 gint
 fu_util_sort_devices_by_flags_cb(gconstpointer a, gconstpointer b) G_GNUC_NON_NULL(1, 2);
 

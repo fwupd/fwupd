@@ -46,7 +46,7 @@ static void
 fu_bcm57xx_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE(device);
-	fu_string_append(str, idt, "EthtoolIface", self->ethtool_iface);
+	fwupd_codec_string_append(str, idt, "EthtoolIface", self->ethtool_iface);
 }
 
 static gboolean
@@ -328,6 +328,7 @@ fu_bcm57xx_device_read_firmware(FuDevice *device, FuProgress *progress, GError *
 static FuFirmware *
 fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 				   GInputStream *stream,
+				   FuProgress *progress,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
@@ -340,7 +341,6 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) img_ape = NULL;
 	g_autoptr(FuFirmware) img_stage1 = NULL;
 	g_autoptr(FuFirmware) img_stage2 = NULL;
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GPtrArray) images = NULL;
 
 	/* try to parse NVRAM, stage1 or APE */
@@ -370,6 +370,7 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 	}
 
 	/* get the existing firmware from the device */
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 	fw_old = fu_bcm57xx_device_dump_firmware(device, progress, error);
 	if (fw_old == NULL)
 		return NULL;

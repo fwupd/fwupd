@@ -242,7 +242,10 @@ fu_kinetic_dp_puma_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* add ISP driver as a new image into firmware */
-	isp_drv_stream = fu_partial_input_stream_new(stream, HEADER_LEN_ISP_DRV_SIZE, isp_drv_size);
+	isp_drv_stream =
+	    fu_partial_input_stream_new(stream, HEADER_LEN_ISP_DRV_SIZE, isp_drv_size, error);
+	if (isp_drv_stream == NULL)
+		return FALSE;
 	if (!fu_firmware_parse_stream(isp_drv_img, isp_drv_stream, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_idx(isp_drv_img, FU_KINETIC_DP_FIRMWARE_IDX_ISP_DRV);
@@ -255,7 +258,10 @@ fu_kinetic_dp_puma_firmware_parse(FuFirmware *firmware,
 	app_fw_size = streamsz - HEADER_LEN_ISP_DRV_SIZE - isp_drv_size;
 	app_fw_stream = fu_partial_input_stream_new(stream,
 						    HEADER_LEN_ISP_DRV_SIZE + isp_drv_size,
-						    app_fw_size);
+						    app_fw_size,
+						    error);
+	if (app_fw_stream == NULL)
+		return FALSE;
 	if (!fu_firmware_parse_stream(app_fw_img, app_fw_stream, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_idx(app_fw_img, FU_KINETIC_DP_FIRMWARE_IDX_APP_FW);

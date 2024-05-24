@@ -8,7 +8,10 @@
 
 #include "config.h"
 
+#include "fwupd-codec.h"
+
 #include "fu-composite-input-stream.h"
+#include "fu-partial-input-stream-private.h"
 
 /**
  * FuCompositeInputStream:
@@ -44,12 +47,36 @@ struct _FuCompositeInputStream {
 
 static void
 fu_composite_input_stream_seekable_iface_init(GSeekableIface *iface);
+static void
+fu_composite_input_stream_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(FuCompositeInputStream,
 			fu_composite_input_stream,
 			G_TYPE_INPUT_STREAM,
 			G_IMPLEMENT_INTERFACE(G_TYPE_SEEKABLE,
-					      fu_composite_input_stream_seekable_iface_init))
+					      fu_composite_input_stream_seekable_iface_init)
+			    G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
+						  fu_composite_input_stream_codec_iface_init))
+
+static void
+fu_composite_input_stream_add_string(FwupdCodec *converter, guint idt, GString *str)
+{
+	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(converter);
+	fwupd_codec_string_append_hex(str, idt, "Pos", self->pos);
+	fwupd_codec_string_append_hex(str, idt, "PosOffset", self->pos_offset);
+	fwupd_codec_string_append_hex(str, idt, "TotalSize", self->total_size);
+	for (guint i = 0; i < self->items->len; i++) {
+		FuCompositeInputStreamItem *item = g_ptr_array_index(self->items, i);
+		fwupd_codec_add_string(FWUPD_CODEC(item->partial_stream), idt, str);
+		fwupd_codec_string_append_hex(str, idt + 1, "GlobalOffset", item->global_offset);
+	}
+}
+
+static void
+fu_composite_input_stream_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_string = fu_composite_input_stream_add_string;
+}
 
 static void
 fu_composite_input_stream_item_free(FuCompositeInputStreamItem *item)
@@ -77,7 +104,7 @@ fu_composite_input_stream_add_bytes(FuCompositeInputStream *self, GBytes *bytes)
 	g_return_if_fail(bytes != NULL);
 
 	stream = g_memory_input_stream_new_from_bytes(bytes);
-	partial_stream = fu_partial_input_stream_new(stream, 0x0, g_bytes_get_size(bytes));
+	partial_stream = fu_partial_input_stream_new(stream, 0x0, g_bytes_get_size(bytes), NULL);
 	fu_composite_input_stream_add_partial_stream(self, FU_PARTIAL_INPUT_STREAM(partial_stream));
 }
 

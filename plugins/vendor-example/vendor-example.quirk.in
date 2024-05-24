@@ -4,4 +4,4 @@
 {%- else %}
 [{{PARENT}}\ID_XXX]
 {%- endif %}
-Plugin = {{vendor}}_{{example}}
+Plugin = {{vendor_example}}

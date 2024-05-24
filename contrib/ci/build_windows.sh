@@ -8,12 +8,19 @@ if [ "$CI" != "true" ]; then
 fi
 
 # install deps
-./contrib/ci/fwupd_setup_helpers.py --yes -o fedora -v mingw64 install-dependencies
+if [ "$(id -u)" -eq 0 ]; then
+    ./contrib/ci/fwupd_setup_helpers.py --yes -o fedora -v mingw64 install-dependencies
+fi
 
 # update to latest version of meson
 if [ "$(id -u)" -eq 0 ]; then
     dnf install -y python-pip
     pip install meson --force-reinstall
+fi
+
+# get a libxmlb with the workaround for the GLib regression
+if [ "$(id -u)" -eq 0 ]; then
+    dnf upgrade --enablerepo=updates-testing --refresh --advisory=FEDORA-2024-584ab295c8 -y
 fi
 
 #prep
@@ -47,8 +54,6 @@ meson setup .. \
     -Dbash_completion=false \
     -Dfirmware-packager=false \
     -Dmetainfo=false \
-    -Dlibxmlb:introspection=false \
-    -Dlibxmlb:gtkdoc=false \
     -Dlibjcat:man=false \
     -Dlibjcat:gpg=false \
     -Dlibjcat:tests=false \
@@ -112,6 +117,7 @@ find $MINGW32BINDIR \
 	-o -name libusb-1.0.dll \
 	-o -name libwinpthread-1.dll \
 	-o -name libxml2-2.dll \
+	-o -name libxmlb-2.dll \
 	-o -name libzstd.dll \
 	-o -name zlib1.dll \
 	| wixl-heat \
@@ -121,6 +127,15 @@ find $MINGW32BINDIR \
 	--var "var.MINGW32BINDIR" \
 	--component-group "CG.fwupd-deps" | \
 	tee $build/contrib/fwupd-deps.wxs
+
+echo $CERTDIR/ca-bundle.crt \
+	| wixl-heat \
+	-p $CERTDIR/ \
+	--win64 \
+	--directory-ref BINDIR \
+	--var "var.CERTDIR" \
+	--component-group "CG.fwupd-crts" | \
+	tee $build/contrib/fwupd-crts.wxs
 
 # no static libraries
 find "$DESTDIR/" -type f -name "*.a" -print0 | xargs rm -f
@@ -151,19 +166,20 @@ MSI_FILENAME="$DESTDIR/setup/fwupd-$VERSION-setup-x86_64.msi"
 mkdir -p "$DESTDIR/setup"
 wixl -v \
 	"$build/contrib/fwupd.wxs" \
+	"$build/contrib/fwupd-crts.wxs" \
 	"$build/contrib/fwupd-deps.wxs" \
 	"$build/contrib/fwupd-files.wxs" \
-	-D CRTDIR=$CERTDIR \
+	-D CERTDIR=$CERTDIR \
 	-D MINGW32BINDIR=$MINGW32BINDIR \
 	-D Win64="yes" \
 	-D DESTDIR="$DESTDIR" \
 	-o "${MSI_FILENAME}"
 
 # check the msi archive can be installed and removed (use "wine uninstaller" to do manually)
-# wine msiexec /i "${MSI_FILENAME}"
-# ls -R ~/.wine/drive_c/Program\ Files/fwupd/
-# wine ~/.wine/drive_c/Program\ Files/fwupd/bin/fwupdtool get-plugins --json
-# wine msiexec /x "${MSI_FILENAME}"
+wine msiexec /i "${MSI_FILENAME}"
+ls -R ~/.wine/drive_c/Program\ Files/fwupd/
+wine ~/.wine/drive_c/Program\ Files/fwupd/bin/fwupdtool.exe get-plugins --json
+wine msiexec /x "${MSI_FILENAME}"
 
 #generate news release
 contrib/ci/generate_news.py $VERSION > $DESTDIR/news.txt

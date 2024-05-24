@@ -28,7 +28,6 @@ enum FuCcgxFwMode {
     Boot,
     Fw1,
     Fw2,
-    Last,
 }
 
 #[derive(ToString)]

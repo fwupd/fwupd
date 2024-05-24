@@ -58,12 +58,10 @@ fu_mei_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuMeiDevice *self = FU_MEI_DEVICE(device);
 	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
-	fu_string_append(str, idt, "Uuid", priv->uuid);
-	fu_string_append(str, idt, "ParentDeviceFile", priv->parent_device_file);
-	if (priv->max_msg_length > 0x0)
-		fu_string_append_kx(str, idt, "MaxMsgLength", priv->max_msg_length);
-	if (priv->protocol_version > 0x0)
-		fu_string_append_kx(str, idt, "ProtocolVer", priv->protocol_version);
+	fwupd_codec_string_append(str, idt, "Uuid", priv->uuid);
+	fwupd_codec_string_append(str, idt, "ParentDeviceFile", priv->parent_device_file);
+	fwupd_codec_string_append_hex(str, idt, "MaxMsgLength", priv->max_msg_length);
+	fwupd_codec_string_append_hex(str, idt, "ProtocolVer", priv->protocol_version);
 }
 
 static gboolean

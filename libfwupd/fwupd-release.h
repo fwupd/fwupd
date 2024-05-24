@@ -28,8 +28,6 @@ struct _FwupdReleaseClass {
 
 FwupdRelease *
 fwupd_release_new(void);
-gchar *
-fwupd_release_to_string(FwupdRelease *self) G_GNUC_NON_NULL(1);
 
 const gchar *
 fwupd_release_get_version(FwupdRelease *self) G_GNUC_NON_NULL(1);
@@ -193,10 +191,5 @@ fwupd_release_array_filter_flags(GPtrArray *rels,
 				 FwupdReleaseFlags include,
 				 FwupdReleaseFlags exclude,
 				 GError **error) G_GNUC_NON_NULL(1);
-
-FwupdRelease *
-fwupd_release_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
-GPtrArray *
-fwupd_release_array_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

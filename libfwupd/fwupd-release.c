@@ -9,11 +9,12 @@
 #include <gio/gio.h>
 #include <string.h>
 
+#include "fwupd-codec-private.h"
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
-#include "fwupd-release-private.h"
-#include "fwupd-report-private.h"
+#include "fwupd-release.h"
+#include "fwupd-report.h"
 
 /**
  * FwupdRelease:
@@ -66,7 +67,16 @@ typedef struct {
 
 enum { PROP_0, PROP_REMOTE_ID, PROP_LAST };
 
-G_DEFINE_TYPE_WITH_PRIVATE(FwupdRelease, fwupd_release, G_TYPE_OBJECT)
+static void
+fwupd_release_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FwupdRelease,
+		       fwupd_release,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_ADD_PRIVATE(FwupdRelease)
+			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fwupd_release_codec_iface_init));
+
 #define GET_PRIVATE(o) (fwupd_release_get_instance_private(o))
 
 /**
@@ -1522,23 +1532,12 @@ fwupd_release_set_install_duration(FwupdRelease *self, guint32 duration)
 	priv->install_duration = duration;
 }
 
-/**
- * fwupd_release_to_variant:
- * @self: a #FwupdRelease
- *
- * Serialize the release data.
- *
- * Returns: the serialized data, or %NULL for error
- *
- * Since: 1.0.0
- **/
-GVariant *
-fwupd_release_to_variant(FwupdRelease *self)
+static GVariant *
+fwupd_release_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 {
+	FwupdRelease *self = FWUPD_RELEASE(converter);
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	GVariantBuilder builder;
-
-	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 
 	/* create an array with all the metadata in */
 	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
@@ -1682,11 +1681,6 @@ fwupd_release_to_variant(FwupdRelease *self)
 		    FWUPD_RESULT_KEY_LOCATIONS,
 		    g_variant_new_strv((const gchar *const *)priv->locations->pdata,
 				       priv->locations->len));
-		/* for compatibility */
-		g_variant_builder_add(&builder,
-				      "{sv}",
-				      FWUPD_RESULT_KEY_URI,
-				      g_variant_new_string(g_ptr_array_index(priv->locations, 0)));
 	}
 	if (priv->tags->len > 0) {
 		g_variant_builder_add(
@@ -1754,7 +1748,7 @@ fwupd_release_to_variant(FwupdRelease *self)
 		children = g_new0(GVariant *, priv->reports->len);
 		for (guint i = 0; i < priv->reports->len; i++) {
 			FwupdReport *report = g_ptr_array_index(priv->reports, i);
-			children[i] = fwupd_report_to_variant(report);
+			children[i] = fwupd_codec_to_variant(FWUPD_CODEC(report), flags);
 		}
 		g_variant_builder_add(
 		    &builder,
@@ -1915,8 +1909,8 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 		GVariant *child;
 		g_variant_iter_init(&iter, value);
 		while ((child = g_variant_iter_next_value(&iter))) {
-			g_autoptr(FwupdReport) report = fwupd_report_from_variant(child);
-			if (report != NULL)
+			g_autoptr(FwupdReport) report = fwupd_report_new();
+			if (fwupd_codec_from_variant(FWUPD_CODEC(report), child, NULL))
 				fwupd_release_add_report(self, report);
 			g_variant_unref(child);
 		}
@@ -1925,19 +1919,10 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 }
 
 static void
-fwupd_pad_kv_siz(GString *str, const gchar *key, guint64 value)
-{
-	g_autofree gchar *tmp = NULL;
-
-	/* ignore */
-	if (value == 0)
-		return;
-	tmp = g_format_size(value);
-	fwupd_pad_kv_str(str, key, tmp);
-}
-
-static void
-fwupd_pad_kv_tfl(GString *str, const gchar *key, FwupdReleaseFlags release_flags)
+fwupd_release_string_append_flags(GString *str,
+				  guint idt,
+				  const gchar *key,
+				  FwupdReleaseFlags release_flags)
 {
 	g_autoptr(GString) tmp = g_string_new("");
 	for (guint i = 0; i < 64; i++) {
@@ -1950,40 +1935,29 @@ fwupd_pad_kv_tfl(GString *str, const gchar *key, FwupdReleaseFlags release_flags
 	} else {
 		g_string_truncate(tmp, tmp->len - 1);
 	}
-	fwupd_pad_kv_str(str, key, tmp->str);
+	fwupd_codec_string_append(str, idt, key, tmp->str);
 }
 
-/**
- * fwupd_release_to_json:
- * @self: a #FwupdRelease
- * @builder: a JSON builder
- *
- * Adds a fwupd release to a JSON builder
- *
- * Since: 1.2.6
- **/
-void
-fwupd_release_to_json(FwupdRelease *self, JsonBuilder *builder)
+static void
+fwupd_release_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
 {
+	FwupdRelease *self = FWUPD_RELEASE(converter);
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GList) keys = NULL;
 
-	g_return_if_fail(FWUPD_IS_RELEASE(self));
-	g_return_if_fail(builder != NULL);
-
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_RELEASE_ID, priv->id);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_NAME, priv->name);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX,
-				     priv->name_variant_suffix);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_VERSION, priv->version);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_FILENAME, priv->filename);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_RELEASE_ID, priv->id);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_codec_json_append(builder,
+				FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX,
+				priv->name_variant_suffix);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_VERSION, priv->version);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_FILENAME, priv->filename);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
 	if (priv->categories->len > 0) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_CATEGORIES);
 		json_builder_begin_array(builder);
@@ -2020,11 +1994,11 @@ fwupd_release_to_json(FwupdRelease *self, JsonBuilder *builder)
 		}
 		json_builder_end_array(builder);
 	}
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_LICENSE, priv->license);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_LICENSE, priv->license);
 	if (priv->size > 0)
-		fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_SIZE, priv->size);
+		fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_SIZE, priv->size);
 	if (priv->created > 0)
-		fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_CREATED, priv->created);
+		fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_CREATED, priv->created);
 	if (priv->locations->len > 0) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_LOCATIONS);
 		json_builder_begin_array(builder);
@@ -2033,15 +2007,11 @@ fwupd_release_to_json(FwupdRelease *self, JsonBuilder *builder)
 			json_builder_add_string_value(builder, location);
 		}
 		json_builder_end_array(builder);
-		/* for compatibility */
-		fwupd_common_json_add_string(builder,
-					     FWUPD_RESULT_KEY_URI,
-					     (const gchar *)g_ptr_array_index(priv->locations, 0));
 	}
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
 	if (priv->flags != FWUPD_RELEASE_FLAG_NONE) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_FLAGS);
 		json_builder_begin_array(builder);
@@ -2055,25 +2025,21 @@ fwupd_release_to_json(FwupdRelease *self, JsonBuilder *builder)
 		json_builder_end_array(builder);
 	}
 	if (priv->install_duration > 0) {
-		fwupd_common_json_add_int(builder,
-					  FWUPD_RESULT_KEY_INSTALL_DURATION,
-					  priv->install_duration);
+		fwupd_codec_json_append_int(builder,
+					    FWUPD_RESULT_KEY_INSTALL_DURATION,
+					    priv->install_duration);
 	}
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_DETACH_CAPTION,
-				     priv->detach_caption);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DETACH_IMAGE, priv->detach_image);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_UPDATE_MESSAGE,
-				     priv->update_message);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DETACH_CAPTION, priv->detach_caption);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DETACH_IMAGE, priv->detach_image);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 
 	/* metadata */
 	keys = g_hash_table_get_keys(priv->metadata);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		const gchar *value = g_hash_table_lookup(priv->metadata, key);
-		fwupd_common_json_add_string(builder, key, value);
+		fwupd_codec_json_append(builder, key, value);
 	}
 
 	/* reports */
@@ -2082,100 +2048,88 @@ fwupd_release_to_json(FwupdRelease *self, JsonBuilder *builder)
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->reports->len; i++) {
 			FwupdReport *report = g_ptr_array_index(priv->reports, i);
-			json_builder_begin_object(builder);
-			fwupd_report_to_json(report, builder);
-			json_builder_end_object(builder);
+			fwupd_codec_to_json(FWUPD_CODEC(report), builder, flags);
 		}
 		json_builder_end_array(builder);
 	}
 }
 
-/**
- * fwupd_release_to_string:
- * @self: a #FwupdRelease
- *
- * Builds a text representation of the object.
- *
- * Returns: text, or %NULL for invalid
- *
- * Since: 0.9.3
- **/
-gchar *
-fwupd_release_to_string(FwupdRelease *self)
+static void
+fwupd_release_add_string(FwupdCodec *converter, guint idt, GString *str)
 {
+	FwupdRelease *self = FWUPD_RELEASE(converter);
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
-	GString *str;
 	g_autoptr(GList) keys = NULL;
 
-	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
-
-	str = g_string_new("");
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_RELEASE_ID, priv->id);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_NAME, priv->name);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX, priv->name_variant_suffix);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BRANCH, priv->branch);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VERSION, priv->version);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_FILENAME, priv->filename);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_RELEASE_ID, priv->id);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_codec_string_append(str,
+				  idt,
+				  FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX,
+				  priv->name_variant_suffix);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_BRANCH, priv->branch);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VERSION, priv->version);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_FILENAME, priv->filename);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
 	for (guint i = 0; i < priv->categories->len; i++) {
 		const gchar *tmp = g_ptr_array_index(priv->categories, i);
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_CATEGORIES, tmp);
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_CATEGORIES, tmp);
 	}
 	for (guint i = 0; i < priv->issues->len; i++) {
 		const gchar *tmp = g_ptr_array_index(priv->issues, i);
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_ISSUES, tmp);
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_ISSUES, tmp);
 	}
 	for (guint i = 0; i < priv->checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index(priv->checksums, i);
 		g_autofree gchar *checksum_display = fwupd_checksum_format_for_display(checksum);
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_CHECKSUM, checksum_display);
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_CHECKSUM, checksum_display);
 	}
 	for (guint i = 0; i < priv->tags->len; i++) {
 		const gchar *tag = g_ptr_array_index(priv->tags, i);
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_TAGS, tag);
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_TAGS, tag);
 	}
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_LICENSE, priv->license);
-	fwupd_pad_kv_siz(str, FWUPD_RESULT_KEY_SIZE, priv->size);
-	fwupd_pad_kv_unx(str, FWUPD_RESULT_KEY_CREATED, priv->created);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_LICENSE, priv->license);
+	fwupd_codec_string_append_size(str, idt, FWUPD_RESULT_KEY_SIZE, priv->size);
+	fwupd_codec_string_append_time(str, idt, FWUPD_RESULT_KEY_CREATED, priv->created);
 	for (guint i = 0; i < priv->locations->len; i++) {
 		const gchar *location = g_ptr_array_index(priv->locations, i);
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_URI, location);
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_URI, location);
 	}
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
 	if (priv->urgency != FWUPD_RELEASE_URGENCY_UNKNOWN) {
-		fwupd_pad_kv_str(str,
-				 FWUPD_RESULT_KEY_URGENCY,
-				 fwupd_release_urgency_to_string(priv->urgency));
+		fwupd_codec_string_append(str,
+					  idt,
+					  FWUPD_RESULT_KEY_URGENCY,
+					  fwupd_release_urgency_to_string(priv->urgency));
 	}
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
-	fwupd_pad_kv_tfl(str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
-	fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DETACH_CAPTION, priv->detach_caption);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DETACH_IMAGE, priv->detach_image);
-	if (priv->update_message != NULL)
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
-	if (priv->update_image != NULL)
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
+	fwupd_release_string_append_flags(str, idt, FWUPD_RESULT_KEY_FLAGS, priv->flags);
+	fwupd_codec_string_append_int(str,
+				      idt,
+				      FWUPD_RESULT_KEY_INSTALL_DURATION,
+				      priv->install_duration);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DETACH_CAPTION, priv->detach_caption);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DETACH_IMAGE, priv->detach_image);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
+
 	/* metadata */
 	keys = g_hash_table_get_keys(priv->metadata);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		const gchar *value = g_hash_table_lookup(priv->metadata, key);
-		fwupd_pad_kv_str(str, key, value);
+		fwupd_codec_string_append(str, idt, key, value);
 	}
 	for (guint i = 0; i < priv->reports->len; i++) {
 		FwupdReport *report = g_ptr_array_index(priv->reports, i);
-		g_autofree gchar *tmp = fwupd_report_to_string(report);
-		g_string_append_printf(str, "  \n  [%s]\n%s", FWUPD_RESULT_KEY_REPORTS, tmp);
+		fwupd_codec_add_string(FWUPD_CODEC(report), idt, str);
 	}
-
-	return g_string_free(str, FALSE);
 }
 
 static void
@@ -2284,8 +2238,9 @@ fwupd_release_finalize(GObject *object)
 }
 
 static void
-fwupd_release_set_from_variant_iter(FwupdRelease *self, GVariantIter *iter)
+fwupd_release_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
 {
+	FwupdRelease *self = FWUPD_RELEASE(converter);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {
@@ -2294,97 +2249,13 @@ fwupd_release_set_from_variant_iter(FwupdRelease *self, GVariantIter *iter)
 	}
 }
 
-/**
- * fwupd_release_from_variant:
- * @value: (not nullable): the serialized data
- *
- * Creates a new release using serialized data.
- *
- * Returns: (transfer full): a new #FwupdRelease, or %NULL if @value was invalid
- *
- * Since: 1.0.0
- **/
-FwupdRelease *
-fwupd_release_from_variant(GVariant *value)
+static void
+fwupd_release_codec_iface_init(FwupdCodecInterface *iface)
 {
-	FwupdRelease *self = NULL;
-	const gchar *type_string;
-	g_autoptr(GVariantIter) iter = NULL;
-
-	g_return_val_if_fail(value != NULL, NULL);
-
-	/* format from GetDetails */
-	type_string = g_variant_get_type_string(value);
-	if (g_strcmp0(type_string, "(a{sv})") == 0) {
-		self = fwupd_release_new();
-		g_variant_get(value, "(a{sv})", &iter);
-		fwupd_release_set_from_variant_iter(self, iter);
-	} else if (g_strcmp0(type_string, "a{sv}") == 0) {
-		self = fwupd_release_new();
-		g_variant_get(value, "a{sv}", &iter);
-		fwupd_release_set_from_variant_iter(self, iter);
-	} else {
-		g_warning("type %s not known", type_string);
-	}
-	return self;
-}
-
-/**
- * fwupd_release_array_from_variant:
- * @value: (not nullable): the serialized data
- *
- * Creates an array of new releases using serialized data.
- *
- * Returns: (transfer container) (element-type FwupdRelease): releases, or %NULL if @value was
- *invalid
- *
- * Since: 1.2.10
- **/
-GPtrArray *
-fwupd_release_array_from_variant(GVariant *value)
-{
-	GPtrArray *array = NULL;
-	gsize sz;
-	g_autoptr(GVariant) untuple = NULL;
-
-	g_return_val_if_fail(value != NULL, NULL);
-
-	array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	untuple = g_variant_get_child_value(value, 0);
-	sz = g_variant_n_children(untuple);
-	for (guint i = 0; i < sz; i++) {
-		FwupdRelease *self;
-		g_autoptr(GVariant) data = NULL;
-		data = g_variant_get_child_value(untuple, i);
-		self = fwupd_release_from_variant(data);
-		if (self == NULL)
-			continue;
-		g_ptr_array_add(array, self);
-	}
-	return array;
-}
-
-/**
- * fwupd_release_incorporate:
- * @self: a #FwupdRelease
- * @donor: another #FwupdRelease
- *
- * Copy all properties from the donor object.
- *
- * Since: 1.8.8
- **/
-void
-fwupd_release_incorporate(FwupdRelease *self, FwupdRelease *donor)
-{
-	g_autoptr(GVariant) variant = NULL;
-	g_autoptr(GVariantIter) iter = NULL;
-
-	g_return_if_fail(FWUPD_IS_RELEASE(self));
-	g_return_if_fail(FWUPD_IS_RELEASE(donor));
-
-	variant = fwupd_release_to_variant(donor);
-	g_variant_get(variant, "a{sv}", &iter);
-	fwupd_release_set_from_variant_iter(self, iter);
+	iface->add_string = fwupd_release_add_string;
+	iface->to_json = fwupd_release_to_json;
+	iface->to_variant = fwupd_release_to_variant;
+	iface->from_variant_iter = fwupd_release_from_variant_iter;
 }
 
 /**

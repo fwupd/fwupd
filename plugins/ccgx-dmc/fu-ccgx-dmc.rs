@@ -22,7 +22,7 @@ enum FuCcgxDmcImgStatus {
 #[repr(u8)]
 enum FuCcgxDmcImgMode {
     // indicates that the device has a single image
-    SingleImg = 0,
+    SingleImg,
     // the device supports symmetric boot. In symmetric mode the bootloader
     // boots the image with higher version, when they are valid
     DualImgSym,
@@ -31,7 +31,6 @@ enum FuCcgxDmcImgMode {
     // image. Secondary acts as recovery
     DualImgAsym,
     SingleImgWithRamImg,
-    Last,
 }
 
 // dock status
@@ -42,17 +41,17 @@ enum FuCcgxDmcDeviceStatus {
     // no outstanding request or event
     Idle = 0,
     // status code indicating dock FW update in progress
-    UpdateInProgress,
+    UpdatePhase1InProgress,
     // status code indicating dock FW update is partially complete
-    UpdatePartial,
+    UpdatePhase1Partial,
     // status code indicating dock FW update SUCCESS - all m_images of all
     // devices are valid
     UpdateCompleteFull,
     // status code indicating dock FW update SUCCESS - not all m_images of all
     // devices are valid
-    UpdateCompletePartial,
+    UpdatePhase1CompletePartial,
     // fw download status
-    UpdatePhase1Complete,
+    UpdatePhase1CompleteFullPhase2NotDone,
     FwDownloadedUpdatePend,
     FwDownloadedPartialUpdatePend,
     Phase2UpdateInProgress = 0x81,
@@ -123,6 +122,7 @@ enum FuCcgxDmcFwctAnalysisStatus {
     InvalidCompositeVersion,
     AuthenticationFailed,
     InvalidAlgorithm,
+    InvalidFence,
 }
 
 #[derive(ToString)]

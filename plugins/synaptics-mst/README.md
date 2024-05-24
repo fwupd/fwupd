@@ -18,7 +18,14 @@ This plugin supports the following protocol ID:
 
 ## GUID Generation
 
-These devices use custom GUID values, e.g.
+These devices use the standard DPAUX GUID values, e.g.
+
+* `DPAUX\OUI_0090CC24` (only-quirk)
+* `DPAUX\OUI_0090CC24&HWREV_10` (only-quirk)
+* `DPAUX\OUI_0090CC24&HWREV_10&DEVID_SYNAB2` (only-quirk)
+* `DPAUX\OUI_0090CC24&DEVID_SYNAB2` (only-quirk)
+
+These devices also use custom GUID values, e.g.
 
 * `MST-$(board-ID)`
 * `MST-$(device_kind)-$(chip-ID)-$(board-ID)`
@@ -41,6 +48,10 @@ The vendor ID is set from the PCI vendor, for example set to `DRM_DP_AUX_DEV:0x$
 ## Quirk Use
 
 This plugin uses the following plugin-specific quirks:
+
+### SynapticsMstDeviceKind
+
+The comma-seporated kind of device, e.g. `system` or `wd15,tb16,tb18`
 
 ### Flags:manual-restart-required
 

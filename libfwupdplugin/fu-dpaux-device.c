@@ -43,12 +43,9 @@ fu_dpaux_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuDpauxDevice *self = FU_DPAUX_DEVICE(device);
 	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->dpcd_ieee_oui != 0)
-		fu_string_append_kx(str, idt, "DpcdIeeeOui", priv->dpcd_ieee_oui);
-	if (priv->dpcd_hw_rev != 0)
-		fu_string_append_kx(str, idt, "DpcdHwRev", priv->dpcd_hw_rev);
-	if (priv->dpcd_dev_id != NULL)
-		fu_string_append(str, idt, "DpcdDevId", priv->dpcd_dev_id);
+	fwupd_codec_string_append_hex(str, idt, "DpcdIeeeOui", priv->dpcd_ieee_oui);
+	fwupd_codec_string_append_hex(str, idt, "DpcdHwRev", priv->dpcd_hw_rev);
+	fwupd_codec_string_append(str, idt, "DpcdDevId", priv->dpcd_dev_id);
 }
 
 static void
@@ -128,6 +125,41 @@ fu_dpaux_device_setup(FuDevice *device, GError **error)
 	priv->dpcd_hw_rev = fu_struct_dpaux_dpcd_get_hw_rev(st);
 	priv->dpcd_dev_id = fu_struct_dpaux_dpcd_get_dev_id(st);
 	fu_device_set_version_raw(device, fu_struct_dpaux_dpcd_get_fw_ver(st));
+
+	/* build some extra GUIDs */
+	fu_device_add_instance_u32(device, "OUI", priv->dpcd_ieee_oui);
+	fu_device_add_instance_u8(device, "HWREV", priv->dpcd_hw_rev);
+	fu_device_add_instance_strup(device, "DEVID", priv->dpcd_dev_id);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "DPAUX",
+					 "OUI",
+					 NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "DPAUX",
+					 "OUI",
+					 "HWREV",
+					 NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "DPAUX",
+					 "OUI",
+					 "DEVID",
+					 NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "DPAUX",
+					 "OUI",
+					 "HWREV",
+					 "DEVID",
+					 NULL);
+
+	/* success */
 	return TRUE;
 }
 

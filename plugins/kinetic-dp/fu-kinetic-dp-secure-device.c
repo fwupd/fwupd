@@ -47,11 +47,14 @@ static void
 fu_kinetic_dp_secure_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuKineticDpSecureDevice *self = FU_KINETIC_DP_SECURE_DEVICE(device);
-	fu_string_append_kx(str, idt, "ReadFlashProgTime", self->read_flash_prog_time);
-	fu_string_append_kx(str, idt, "FlashId", self->flash_id);
-	fu_string_append_kx(str, idt, "FlashSize", self->flash_size);
-	fu_string_append_kx(str, idt, "IspSecureAuthMode", self->isp_secure_auth_mode);
-	fu_string_append(str, idt, "FlashBank", fu_kinetic_dp_bank_to_string(self->flash_bank));
+	fwupd_codec_string_append_hex(str, idt, "ReadFlashProgTime", self->read_flash_prog_time);
+	fwupd_codec_string_append_hex(str, idt, "FlashId", self->flash_id);
+	fwupd_codec_string_append_hex(str, idt, "FlashSize", self->flash_size);
+	fwupd_codec_string_append_hex(str, idt, "IspSecureAuthMode", self->isp_secure_auth_mode);
+	fwupd_codec_string_append(str,
+				  idt,
+				  "FlashBank",
+				  fu_kinetic_dp_bank_to_string(self->flash_bank));
 }
 
 static gboolean

@@ -45,7 +45,7 @@ typedef struct {
 } FuUtilPrintTreeHelper;
 
 static gboolean
-fu_util_traverse_tree(GNode *n, gpointer data)
+fu_util_traverse_tree(FuUtilNode *n, gpointer data)
 {
 	FuUtilPrintTreeHelper *helper = (FuUtilPrintTreeHelper *)data;
 	guint idx = g_node_depth(n) - 1;
@@ -122,8 +122,23 @@ fu_util_traverse_tree(GNode *n, gpointer data)
 	return FALSE;
 }
 
+static gboolean
+fu_util_free_tree_cb(FuUtilNode *n, gpointer data)
+{
+	if (n->data != NULL)
+		g_object_unref(n->data);
+	return FALSE;
+}
+
 void
-fu_util_print_tree(FuConsole *console, FwupdClient *client, GNode *n)
+fu_util_free_node(FuUtilNode *n)
+{
+	g_node_traverse(n, G_POST_ORDER, G_TRAVERSE_ALL, -1, fu_util_free_tree_cb, NULL);
+	g_node_destroy(n);
+}
+
+void
+fu_util_print_node(FuConsole *console, FwupdClient *client, FuUtilNode *n)
 {
 	FuUtilPrintTreeHelper helper = {.client = client, .console = console};
 	g_node_traverse(n, G_PRE_ORDER, G_TRAVERSE_ALL, -1, fu_util_traverse_tree, &helper);
@@ -1322,8 +1337,7 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 
 	/* some fields are intentionally not included and are only shown in --verbose */
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
-		g_autofree gchar *debug_str = NULL;
-		debug_str = fwupd_device_to_string(dev);
+		g_autofree gchar *debug_str = fwupd_codec_to_string(FWUPD_CODEC(dev));
 		g_info("%s", debug_str);
 		return NULL;
 	}
@@ -1333,20 +1347,13 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 		/* TRANSLATORS: Name of hardware */
 		tmp = _("Unknown Device");
 	}
-	fu_string_append(str, idt, tmp, NULL);
+	fwupd_codec_string_append(str, idt, tmp, "");
 
-	tmp = fwupd_device_get_id(dev);
-	if (tmp != NULL) {
-		/* TRANSLATORS: ID for hardware, typically a SHA1 sum */
-		fu_string_append(str, idt + 1, _("Device ID"), tmp);
-	}
+	/* TRANSLATORS: ID for hardware, typically a SHA1 sum */
+	fwupd_codec_string_append(str, idt + 1, _("Device ID"), fwupd_device_get_id(dev));
 
-	/* summary */
-	tmp = fwupd_device_get_summary(dev);
-	if (tmp != NULL) {
-		/* TRANSLATORS: one line summary of device */
-		fu_string_append(str, idt + 1, _("Summary"), tmp);
-	}
+	/* TRANSLATORS: one line summary of device */
+	fwupd_codec_string_append(str, idt + 1, _("Summary"), fwupd_device_get_summary(dev));
 
 	/* versions */
 	tmp = fwupd_device_get_version(dev);
@@ -1359,26 +1366,27 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 			g_string_append_printf(verstr, " [%s]", datestr);
 		}
 		if (flags & FWUPD_DEVICE_FLAG_HISTORICAL) {
-			fu_string_append(str,
-					 idt + 1,
-					 /* TRANSLATORS: version number of previous firmware */
-					 _("Previous version"),
-					 verstr->str);
+			fwupd_codec_string_append(
+			    str,
+			    idt + 1,
+			    /* TRANSLATORS: version number of previous firmware */
+			    _("Previous version"),
+			    verstr->str);
 		} else {
 			/* TRANSLATORS: version number of current firmware */
-			fu_string_append(str, idt + 1, _("Current version"), verstr->str);
+			fwupd_codec_string_append(str, idt + 1, _("Current version"), verstr->str);
 		}
 	}
-	tmp = fwupd_device_get_version_lowest(dev);
-	if (tmp != NULL) {
-		/* TRANSLATORS: smallest version number installable on device */
-		fu_string_append(str, idt + 1, _("Minimum Version"), tmp);
-	}
-	tmp = fwupd_device_get_version_bootloader(dev);
-	if (tmp != NULL) {
-		/* TRANSLATORS: firmware version of bootloader */
-		fu_string_append(str, idt + 1, _("Bootloader Version"), tmp);
-	}
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: smallest version number installable on device */
+				  _("Minimum Version"),
+				  fwupd_device_get_version_lowest(dev));
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: firmware version of bootloader */
+				  _("Bootloader Version"),
+				  fwupd_device_get_version_bootloader(dev));
 
 	/* vendor */
 	tmp = fwupd_device_get_vendor(dev);
@@ -1386,56 +1394,49 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 		g_autofree gchar *strv = fu_strjoin(", ", vendor_ids);
 		g_autofree gchar *both = g_strdup_printf("%s (%s)", tmp, strv);
 		/* TRANSLATORS: manufacturer of hardware */
-		fu_string_append(str, idt + 1, _("Vendor"), both);
+		fwupd_codec_string_append(str, idt + 1, _("Vendor"), both);
 	} else if (tmp != NULL) {
 		/* TRANSLATORS: manufacturer of hardware */
-		fu_string_append(str, idt + 1, _("Vendor"), tmp);
+		fwupd_codec_string_append(str, idt + 1, _("Vendor"), tmp);
 	} else if (vendor_ids->len > 0) {
 		g_autofree gchar *strv = fu_strjoin("|", vendor_ids);
 		/* TRANSLATORS: manufacturer of hardware */
-		fu_string_append(str, idt + 1, _("Vendor"), strv);
+		fwupd_codec_string_append(str, idt + 1, _("Vendor"), strv);
 	}
 
 	/* branch */
-	if (fwupd_device_get_branch(dev) != NULL) {
-		fu_string_append(
-		    str,
-		    idt + 1,
-		    /* TRANSLATORS: the stream of firmware, e.g. nonfree or open-source */
-		    _("Release Branch"),
-		    fwupd_device_get_branch(dev));
-	}
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: the stream of firmware, e.g. nonfree */
+				  _("Release Branch"),
+				  fwupd_device_get_branch(dev));
 
 	/* install duration */
 	if (fwupd_device_get_install_duration(dev) > 0) {
 		g_autofree gchar *time =
 		    fu_util_time_to_str(fwupd_device_get_install_duration(dev));
 		/* TRANSLATORS: length of time the update takes to apply */
-		fu_string_append(str, idt + 1, _("Install Duration"), time);
+		fwupd_codec_string_append(str, idt + 1, _("Install Duration"), time);
 	}
 
-	/* serial # */
-	tmp = fwupd_device_get_serial(dev);
-	if (tmp != NULL) {
-		/* TRANSLATORS: serial number of hardware */
-		fu_string_append(str, idt + 1, _("Serial Number"), tmp);
-	}
+	/* TRANSLATORS: serial number of hardware */
+	fwupd_codec_string_append(str, idt + 1, _("Serial Number"), fwupd_device_get_serial(dev));
 
 	/* update state */
 	state = fwupd_device_get_update_state(dev);
 	if (state != FWUPD_UPDATE_STATE_UNKNOWN) {
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: hardware state, e.g. "pending" */
-				 _("Update State"),
-				 fu_util_update_state_to_string(state));
+		fwupd_codec_string_append(str,
+					  idt + 1,
+					  /* TRANSLATORS: hardware state, e.g. "pending" */
+					  _("Update State"),
+					  fu_util_update_state_to_string(state));
 
 		if (state == FWUPD_UPDATE_STATE_SUCCESS) {
 			tmp = fwupd_device_get_update_message(dev);
 			if (tmp != NULL) {
 				g_autofree gchar *color =
 				    fu_console_color_format(tmp, FU_CONSOLE_COLOR_BLUE);
-				fu_string_append(
+				fwupd_codec_string_append(
 				    str,
 				    idt + 1,
 				    /* TRANSLATORS: helpful messages from last update */
@@ -1456,12 +1457,12 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 					      fwupd_device_get_battery_level(dev),
 					      fwupd_device_get_battery_threshold(dev));
 			/* TRANSLATORS: refers to the battery inside the peripheral device */
-			fu_string_append(str, idt + 1, _("Battery"), val);
+			fwupd_codec_string_append(str, idt + 1, _("Battery"), val);
 		} else if (fwupd_device_get_battery_level(dev) != FWUPD_BATTERY_LEVEL_INVALID) {
 			g_autofree gchar *val = NULL;
 			val = g_strdup_printf("%u%%", fwupd_device_get_battery_level(dev));
 			/* TRANSLATORS: refers to the battery inside the peripheral device */
-			fu_string_append(str, idt + 1, _("Battery"), val);
+			fwupd_codec_string_append(str, idt + 1, _("Battery"), val);
 		}
 	}
 
@@ -1472,7 +1473,7 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 			g_autofree gchar *color =
 			    fu_console_color_format(tmp, FU_CONSOLE_COLOR_RED);
 			/* TRANSLATORS: error message from last update attempt */
-			fu_string_append(str, idt + 1, _("Update Error"), color);
+			fwupd_codec_string_append(str, idt + 1, _("Update Error"), color);
 		}
 	} else {
 		/* TRANSLATORS: reasons the device is not updatable */
@@ -1490,20 +1491,13 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 				continue;
 			bullet = g_strdup_printf("• %s", desc);
 			color = fu_console_color_format(bullet, FU_CONSOLE_COLOR_RED);
-			fu_string_append(str, idt + 1, tmp, color);
+			fwupd_codec_string_append(str, idt + 1, tmp, color);
 			tmp = NULL;
 		}
 	}
 
-	/* modified date: for history devices */
-	if (modified > 0) {
-		g_autoptr(GDateTime) date = NULL;
-		g_autofree gchar *time_str = NULL;
-		date = g_date_time_new_from_unix_utc(modified);
-		time_str = g_date_time_format(date, "%F %R");
-		/* TRANSLATORS: the original time/date the device was modified */
-		fu_string_append(str, idt + 1, _("Last modified"), time_str);
-	}
+	/* TRANSLATORS: the original time/date the device was modified */
+	fwupd_codec_string_append_time(str, idt + 1, _("Last modified"), modified);
 
 	/* all GUIDs for this hardware, with IDs if available */
 	ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
@@ -1525,13 +1519,14 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 			guid_src = g_strdup_printf("%s ← %s", guid, instance_id);
 		}
 		if (i == 0) {
-			fu_string_append(str,
-					 idt + 1,
-					 /* TRANSLATORS: global ID common to all similar hardware */
-					 ngettext("GUID", "GUIDs", guids->len),
-					 guid_src);
+			fwupd_codec_string_append(
+			    str,
+			    idt + 1,
+			    /* TRANSLATORS: global ID common to all similar hardware */
+			    ngettext("GUID", "GUIDs", guids->len),
+			    guid_src);
 		} else {
-			fu_string_append(str, idt + 1, "", guid_src);
+			fwupd_codec_string_append(str, idt + 1, "", guid_src);
 		}
 	}
 
@@ -1547,12 +1542,12 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 		if (tmp != NULL) {
 			g_autofree gchar *bullet = NULL;
 			bullet = g_strdup_printf("• %s", tmp2);
-			fu_string_append(str, idt + 1, tmp, bullet);
+			fwupd_codec_string_append(str, idt + 1, tmp, bullet);
 			tmp = NULL;
 		} else {
 			g_autofree gchar *bullet = NULL;
 			bullet = g_strdup_printf("• %s", tmp2);
-			fu_string_append(str, idt + 1, "", bullet);
+			fwupd_codec_string_append(str, idt + 1, "", bullet);
 		}
 	}
 
@@ -1568,21 +1563,21 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 		if (tmp != NULL) {
 			g_autofree gchar *bullet = NULL;
 			bullet = g_strdup_printf("• %s", tmp2);
-			fu_string_append(str, idt + 1, tmp, bullet);
+			fwupd_codec_string_append(str, idt + 1, tmp, bullet);
 			tmp = NULL;
 		} else {
 			g_autofree gchar *bullet = NULL;
 			bullet = g_strdup_printf("• %s", tmp2);
-			fu_string_append(str, idt + 1, "", bullet);
+			fwupd_codec_string_append(str, idt + 1, "", bullet);
 		}
 	}
 	for (guint i = 0; i < issues->len; i++) {
 		const gchar *issue = g_ptr_array_index(issues, i);
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: issue fixed with the release, e.g. CVE */
-				 i == 0 ? ngettext("Issue", "Issues", issues->len) : "",
-				 issue);
+		fwupd_codec_string_append(str,
+					  idt + 1,
+					  /* TRANSLATORS: issue fixed with the release, e.g. CVE */
+					  i == 0 ? ngettext("Issue", "Issues", issues->len) : "",
+					  issue);
 	}
 
 	return g_string_free(g_steal_pointer(&str), FALSE);
@@ -1718,14 +1713,14 @@ fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt)
 	const gchar *hdr;
 	guint64 flags = fwupd_plugin_get_flags(plugin);
 
-	fu_string_append(str, idt, fwupd_plugin_get_name(plugin), NULL);
+	fwupd_codec_string_append(str, idt, fwupd_plugin_get_name(plugin), NULL);
 
 	/* TRANSLATORS: description of plugin state, e.g. disabled */
 	hdr = _("Flags");
 	if (flags == 0x0) {
 		g_autofree gchar *tmp = fu_util_plugin_flag_to_cli_text(flags);
 		g_autofree gchar *li = g_strdup_printf("• %s", tmp);
-		fu_string_append(str, idt + 1, hdr, li);
+		fwupd_codec_string_append(str, idt + 1, hdr, li);
 	} else {
 		for (guint i = 0; i < 64; i++) {
 			g_autofree gchar *li = NULL;
@@ -1736,7 +1731,7 @@ fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt)
 			if (tmp == NULL)
 				continue;
 			li = g_strdup_printf("• %s", tmp);
-			fu_string_append(str, idt + 1, hdr, li);
+			fwupd_codec_string_append(str, idt + 1, hdr, li);
 
 			/* clear header */
 			hdr = "";
@@ -1746,19 +1741,33 @@ fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt)
 	return g_string_free(str, FALSE);
 }
 
-static const gchar *
-fu_util_license_to_string(const gchar *license)
+static gchar *
+fu_util_license_to_string(const gchar *spdx_license)
 {
-	if (license == NULL) {
+	g_autofree const gchar **new = NULL;
+	g_auto(GStrv) old = NULL;
+
+	/* sanity check */
+	if (spdx_license == NULL) {
 		/* TRANSLATORS: we don't know the license of the update */
-		return _("Unknown");
+		return g_strdup(_("Unknown"));
 	}
-	if (g_strcmp0(license, "LicenseRef-proprietary") == 0 ||
-	    g_strcmp0(license, "proprietary") == 0) {
-		/* TRANSLATORS: a non-free software license */
-		return _("Proprietary");
+
+	/* replace any LicenseRef-proprietary with it's translated form */
+	old = g_strsplit(spdx_license, " AND ", -1);
+	new = g_new0(const gchar *, g_strv_length(old) + 1);
+	for (guint i = 0; old[i] != NULL; i++) {
+		const gchar *license = old[i];
+		if (g_strcmp0(license, "LicenseRef-proprietary") == 0 ||
+		    g_strcmp0(license, "proprietary") == 0) {
+			/* TRANSLATORS: a non-free software license */
+			license = _("Proprietary");
+		}
+		new[i] = license;
 	}
-	return license;
+
+	/* this is no longer SPDX */
+	return g_strjoinv(", ", (gchar **)new);
 }
 
 static const gchar *
@@ -1833,19 +1842,13 @@ fu_util_release_flag_to_string(FwupdReleaseFlags release_flag)
 static void
 fu_util_report_add_string(FwupdReport *report, guint idt, GString *str)
 {
-	const gchar *tmp2;
 	g_autofree gchar *title = NULL;
 
 	/* TRANSLATORS: the %s is a vendor name, e.g. Lenovo */
 	title = g_strdup_printf(_("Tested by %s"), fwupd_report_get_vendor(report));
-	fu_string_append(str, idt, title, NULL);
-	if (fwupd_report_get_created(report) != 0) {
-		gint64 value = (gint64)fwupd_report_get_created(report);
-		g_autoptr(GDateTime) date = g_date_time_new_from_unix_utc(value);
-		g_autofree gchar *tmp = g_date_time_format(date, "%F");
-		/* TRANSLATORS: when the release was tested */
-		fu_string_append(str, idt + 1, _("Tested"), tmp);
-	}
+	fwupd_codec_string_append(str, idt, title, NULL);
+	/* TRANSLATORS: when the release was tested */
+	fwupd_codec_string_append_time(str, idt + 1, _("Tested"), fwupd_report_get_created(report));
 	if (fwupd_report_get_distro_id(report) != NULL) {
 		g_autoptr(GString) str2 = g_string_new(fwupd_report_get_distro_id(report));
 		if (fwupd_report_get_distro_version(report) != NULL)
@@ -1857,20 +1860,19 @@ fu_util_report_add_string(FwupdReport *report, guint idt, GString *str)
 					       " (%s)",
 					       fwupd_report_get_distro_variant(report));
 		/* TRANSLATORS: the OS the release was tested on */
-		fu_string_append(str, idt + 1, _("Distribution"), str2->str);
+		fwupd_codec_string_append(str, idt + 1, _("Distribution"), str2->str);
 	}
-	if (fwupd_report_get_version_old(report) != NULL) {
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: the firmware old version */
-				 _("Old version"),
-				 fwupd_report_get_version_old(report));
-	}
-	tmp2 = fwupd_report_get_metadata_item(report, "RuntimeVersion(org.freedesktop.fwupd)");
-	if (tmp2 != NULL) {
-		/* TRANSLATORS: the fwupd version the release was tested on */
-		fu_string_append(str, idt + 1, _("Version[fwupd]"), tmp2);
-	}
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: the firmware old version */
+				  _("Old version"),
+				  fwupd_report_get_version_old(report));
+	fwupd_codec_string_append(
+	    str,
+	    idt + 1,
+	    /* TRANSLATORS: the fwupd version the release was tested on */
+	    _("Version[fwupd]"),
+	    fwupd_report_get_metadata_item(report, "RuntimeVersion(org.freedesktop.fwupd)"));
 }
 
 static gchar *
@@ -1889,119 +1891,89 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 
 	g_return_val_if_fail(FWUPD_IS_RELEASE(rel), NULL);
 
-	fu_string_append(str, idt, name, NULL);
+	fwupd_codec_string_append(str, idt, name, "");
 
 	/* TRANSLATORS: version number of new firmware */
-	fu_string_append(str, idt + 1, _("New version"), fwupd_release_get_version(rel));
+	fwupd_codec_string_append(str, idt + 1, _("New version"), fwupd_release_get_version(rel));
 
-	if (fwupd_release_get_remote_id(rel) != NULL) {
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: the server the file is coming from */
-				 _("Remote ID"),
-				 fwupd_release_get_remote_id(rel));
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: the server the file is coming from */
+				  _("Remote ID"),
+				  fwupd_release_get_remote_id(rel));
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: the exact component on the server */
+				  _("Release ID"),
+				  fwupd_release_get_id(rel));
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: the stream of firmware, e.g. nonfree */
+				  _("Branch"),
+				  fwupd_release_get_branch(rel));
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: one line summary of device */
+				  _("Summary"),
+				  fwupd_release_get_summary(rel));
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: one line variant of release (e.g. 'China') */
+				  _("Variant"),
+				  fwupd_release_get_name_variant_suffix(rel));
+	if (fwupd_release_get_license(rel) != NULL) {
+		g_autofree gchar *license =
+		    fu_util_license_to_string(fwupd_release_get_license(rel));
+		/* TRANSLATORS: e.g. GPLv2+, Proprietary etc */
+		fwupd_codec_string_append(str, idt + 1, _("License"), license);
 	}
-	if (fwupd_release_get_id(rel) != NULL) {
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: the exact component on the server */
-				 _("Release ID"),
-				 fwupd_release_get_id(rel));
-	}
-	if (fwupd_release_get_branch(rel) != NULL) {
-		fu_string_append(
-		    str,
-		    idt + 1,
-		    /* TRANSLATORS: the stream of firmware, e.g. nonfree or open-source */
-		    _("Branch"),
-		    fwupd_release_get_branch(rel));
-	}
-	if (fwupd_release_get_summary(rel) != NULL) {
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: one line summary of device */
-				 _("Summary"),
-				 fwupd_release_get_summary(rel));
-	}
-	if (fwupd_release_get_name_variant_suffix(rel) != NULL) {
-		fu_string_append(
-		    str,
-		    idt + 1,
-		    /* TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China') */
-		    _("Variant"),
-		    fwupd_release_get_name_variant_suffix(rel));
-	}
-	fu_string_append(str,
-			 idt + 1,
-			 /* TRANSLATORS: e.g. GPLv2+, Proprietary etc */
-			 _("License"),
-			 fu_util_license_to_string(fwupd_release_get_license(rel)));
-	if (fwupd_release_get_size(rel) != 0) {
-		g_autofree gchar *tmp = NULL;
-		tmp = g_format_size(fwupd_release_get_size(rel));
-		/* TRANSLATORS: file size of the download */
-		fu_string_append(str, idt + 1, _("Size"), tmp);
-	}
-	if (fwupd_release_get_created(rel) != 0) {
-		gint64 value = (gint64)fwupd_release_get_created(rel);
-		g_autoptr(GDateTime) date = g_date_time_new_from_unix_utc(value);
-		g_autofree gchar *tmp = g_date_time_format(date, "%F");
-		/* TRANSLATORS: when the update was built */
-		fu_string_append(str, idt + 1, _("Created"), tmp);
-	}
+	/* TRANSLATORS: file size of the download */
+	fwupd_codec_string_append_size(str, idt + 1, _("Size"), fwupd_release_get_size(rel));
+	/* TRANSLATORS: when the update was built */
+	fwupd_codec_string_append_time(str, idt + 1, _("Created"), fwupd_release_get_created(rel));
 	if (fwupd_release_get_urgency(rel) != FWUPD_RELEASE_URGENCY_UNKNOWN) {
 		FwupdReleaseUrgency tmp = fwupd_release_get_urgency(rel);
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: how important the release is */
-				 _("Urgency"),
-				 fu_util_release_urgency_to_string(tmp));
+		fwupd_codec_string_append(str,
+					  idt + 1,
+					  /* TRANSLATORS: how important the release is */
+					  _("Urgency"),
+					  fu_util_release_urgency_to_string(tmp));
 	}
 	for (guint i = 0; i < reports->len; i++) {
 		FwupdReport *report = g_ptr_array_index(reports, i);
 		fu_util_report_add_string(report, idt + 1, str);
 	}
-	if (fwupd_release_get_details_url(rel) != NULL) {
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: more details about the update link */
-				 _("Details"),
-				 fwupd_release_get_details_url(rel));
-	}
-	if (fwupd_release_get_source_url(rel) != NULL) {
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: source (as in code) link */
-				 _("Source"),
-				 fwupd_release_get_source_url(rel));
-	}
-	if (fwupd_release_get_vendor(rel) != NULL) {
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: manufacturer of hardware */
-				 _("Vendor"),
-				 fwupd_release_get_vendor(rel));
-	}
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: more details about the update link */
+				  _("Details"),
+				  fwupd_release_get_details_url(rel));
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: source (as in code) link */
+				  _("Source"),
+				  fwupd_release_get_source_url(rel));
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: manufacturer of hardware */
+				  _("Vendor"),
+				  fwupd_release_get_vendor(rel));
 	if (fwupd_release_get_install_duration(rel) != 0) {
 		g_autofree gchar *tmp =
 		    fu_util_time_to_str(fwupd_release_get_install_duration(rel));
 		/* TRANSLATORS: length of time the update takes to apply */
-		fu_string_append(str, idt + 1, _("Duration"), tmp);
+		fwupd_codec_string_append(str, idt + 1, _("Duration"), tmp);
 	}
-	if (fwupd_release_get_update_message(rel) != NULL) {
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: helpful messages for the update */
-				 _("Update Message"),
-				 fwupd_release_get_update_message(rel));
-	}
-	if (fwupd_release_get_update_image(rel) != NULL) {
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: helpful image for the update */
-				 _("Update Image"),
-				 fwupd_release_get_update_image(rel));
-	}
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: helpful messages for the update */
+				  _("Update Message"),
+				  fwupd_release_get_update_message(rel));
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: helpful image for the update */
+				  _("Update Image"),
+				  fwupd_release_get_update_image(rel));
 
 	/* TRANSLATORS: release attributes */
 	title = _("Release Flags");
@@ -2013,7 +1985,7 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 		if (tmp2 == NULL)
 			continue;
 		bullet = g_strdup_printf("• %s", tmp2);
-		fu_string_append(str, idt + 1, title, bullet);
+		fwupd_codec_string_append(str, idt + 1, title, bullet);
 		title = "";
 	}
 
@@ -2024,27 +1996,29 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 		if (desc == NULL)
 			desc = g_strdup(fwupd_release_get_description(rel));
 		/* TRANSLATORS: multiline description of device */
-		fu_string_append(str, idt + 1, _("Description"), desc);
+		fwupd_codec_string_append(str, idt + 1, _("Description"), desc);
 	}
 	for (guint i = 0; i < issues->len; i++) {
 		const gchar *issue = g_ptr_array_index(issues, i);
 		if (i == 0) {
-			fu_string_append(str,
-					 idt + 1,
-					 /* TRANSLATORS: issue fixed with the release, e.g. CVE */
-					 ngettext("Issue", "Issues", issues->len),
-					 issue);
+			fwupd_codec_string_append(
+			    str,
+			    idt + 1,
+			    /* TRANSLATORS: issue fixed with the release, e.g. CVE */
+			    ngettext("Issue", "Issues", issues->len),
+			    issue);
 		} else {
-			fu_string_append(str, idt + 1, "", issue);
+			fwupd_codec_string_append(str, idt + 1, "", issue);
 		}
 	}
 	if (tags->len > 0) {
 		g_autofree gchar *tag_strs = fu_strjoin(", ", tags);
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: release tag set for release, e.g. lenovo-2021q3 */
-				 ngettext("Tag", "Tags", tags->len),
-				 tag_strs);
+		fwupd_codec_string_append(
+		    str,
+		    idt + 1,
+		    /* TRANSLATORS: release tag set for release, e.g. lenovo-2021q3 */
+		    ngettext("Tag", "Tags", tags->len),
+		    tag_strs);
 	}
 	for (guint i = 0; i < checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index(checksums, i);
@@ -2055,7 +2029,7 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 			continue;
 
 		/* TRANSLATORS: hash to that exact firmware archive */
-		fu_string_append(str, idt + 1, _("Checksum"), checksum);
+		fwupd_codec_string_append(str, idt + 1, _("Checksum"), checksum);
 	}
 
 	return g_string_free(g_steal_pointer(&str), FALSE);
@@ -2072,118 +2046,112 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 
 	g_return_val_if_fail(FWUPD_IS_REMOTE(remote), NULL);
 
-	fu_string_append(str, idt, fwupd_remote_get_title(remote), NULL);
+	fwupd_codec_string_append(str, idt, fwupd_remote_get_title(remote), NULL);
 
 	/* TRANSLATORS: remote identifier, e.g. lvfs-testing */
-	fu_string_append(str, idt + 1, _("Remote ID"), fwupd_remote_get_id(remote));
+	fwupd_codec_string_append(str, idt + 1, _("Remote ID"), fwupd_remote_get_id(remote));
 
 	/* TRANSLATORS: remote type, e.g. remote or local */
-	fu_string_append(str, idt + 1, _("Type"), fwupd_remote_kind_to_string(kind));
+	fwupd_codec_string_append(str, idt + 1, _("Type"), fwupd_remote_kind_to_string(kind));
 
 	if (keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: keyring type, e.g. GPG or PKCS7 */
-				 _("Keyring"),
-				 fwupd_keyring_kind_to_string(keyring_kind));
+		fwupd_codec_string_append(str,
+					  idt + 1,
+					  /* TRANSLATORS: keyring type, e.g. GPG or PKCS7 */
+					  _("Keyring"),
+					  fwupd_keyring_kind_to_string(keyring_kind));
 	}
 
-	fu_string_append(str,
-			 idt + 1,
-			 /* TRANSLATORS: if the remote is enabled */
-			 _("Enabled"),
-			 fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED) ? "true"
-										  : "false");
+	fwupd_codec_string_append(
+	    str,
+	    idt + 1,
+	    /* TRANSLATORS: if the remote is enabled */
+	    _("Enabled"),
+	    fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED) ? "true" : "false");
 	if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD) {
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: if we can get metadata from peer-to-peer clients */
-				 _("P2P Metadata"),
-				 fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA)
-				     ? "true"
-				     : "false");
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: if we can get metadata from peer-to-peer clients */
-				 _("P2P Firmware"),
-				 fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE)
-				     ? "true"
-				     : "false");
+		fwupd_codec_string_append(
+		    str,
+		    idt + 1,
+		    /* TRANSLATORS: if we can get metadata from peer-to-peer clients */
+		    _("P2P Metadata"),
+		    fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA) ? "true"
+											: "false");
+		fwupd_codec_string_append(
+		    str,
+		    idt + 1,
+		    /* TRANSLATORS: if we can get metadata from peer-to-peer clients */
+		    _("P2P Firmware"),
+		    fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE) ? "true"
+											: "false");
 	}
 
-	tmp = fwupd_remote_get_checksum(remote);
-	if (tmp != NULL) {
-		/* TRANSLATORS: remote checksum */
-		fu_string_append(str, idt + 1, _("Checksum"), tmp);
-	}
+	/* TRANSLATORS: remote checksum */
+	fwupd_codec_string_append(str, idt + 1, _("Checksum"), fwupd_remote_get_checksum(remote));
 
 	/* optional parameters */
 	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD && fwupd_remote_get_age(remote) > 0 &&
 	    fwupd_remote_get_age(remote) != G_MAXUINT64) {
 		g_autofree gchar *age_str = fu_util_time_to_str(fwupd_remote_get_age(remote));
 		/* TRANSLATORS: the age of the metadata */
-		fu_string_append(str, idt + 1, _("Age"), age_str);
+		fwupd_codec_string_append(str, idt + 1, _("Age"), age_str);
 	}
 	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD && fwupd_remote_get_refresh_interval(remote) > 0) {
 		g_autofree gchar *age_str =
 		    fu_util_time_to_str(fwupd_remote_get_refresh_interval(remote));
 		/* TRANSLATORS: how often we should refresh the metadata */
-		fu_string_append(str, idt + 1, _("Refresh Interval"), age_str);
+		fwupd_codec_string_append(str, idt + 1, _("Refresh Interval"), age_str);
 	}
 	priority = fwupd_remote_get_priority(remote);
 	if (priority != 0) {
 		g_autofree gchar *priority_str = NULL;
 		priority_str = g_strdup_printf("%i", priority);
 		/* TRANSLATORS: the numeric priority */
-		fu_string_append(str, idt + 1, _("Priority"), priority_str);
+		fwupd_codec_string_append(str, idt + 1, _("Priority"), priority_str);
 	}
-	tmp = fwupd_remote_get_username(remote);
-	if (tmp != NULL) {
-		/* TRANSLATORS: remote filename base */
-		fu_string_append(str, idt + 1, _("Username"), tmp);
-	}
+	/* TRANSLATORS: remote filename base */
+	fwupd_codec_string_append(str, idt + 1, _("Username"), fwupd_remote_get_username(remote));
 	tmp = fwupd_remote_get_password(remote);
 	if (tmp != NULL) {
 		g_autofree gchar *hidden = g_strnfill(fu_strwidth(tmp), '*');
 		/* TRANSLATORS: remote filename base */
-		fu_string_append(str, idt + 1, _("Password"), hidden);
+		fwupd_codec_string_append(str, idt + 1, _("Password"), hidden);
 	}
-	tmp = fwupd_remote_get_filename_cache(remote);
-	if (tmp != NULL) {
-		/* TRANSLATORS: filename of the local file */
-		fu_string_append(str, idt + 1, _("Filename"), tmp);
-	}
-	tmp = fwupd_remote_get_filename_cache_sig(remote);
-	if (tmp != NULL) {
-		/* TRANSLATORS: filename of the local file */
-		fu_string_append(str, idt + 1, _("Filename Signature"), tmp);
-	}
-	tmp = fwupd_remote_get_filename_source(remote);
-	if (tmp != NULL) {
-		/* TRANSLATORS: full path of the remote.conf file */
-		fu_string_append(str, idt + 1, _("Filename Source"), tmp);
-	}
-	tmp = fwupd_remote_get_metadata_uri(remote);
-	if (tmp != NULL) {
-		/* TRANSLATORS: remote URI */
-		fu_string_append(str, idt + 1, _("Metadata URI"), tmp);
-	}
-	tmp = fwupd_remote_get_metadata_uri_sig(remote);
-	if (tmp != NULL) {
-		/* TRANSLATORS: remote URI */
-		fu_string_append(str, idt + 1, _("Metadata Signature"), tmp);
-	}
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: filename of the local file */
+				  _("Filename"),
+				  fwupd_remote_get_filename_cache(remote));
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: filename of the local file */
+				  _("Filename Signature"),
+				  fwupd_remote_get_filename_cache_sig(remote));
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: full path of the remote.conf file */
+				  _("Filename Source"),
+				  fwupd_remote_get_filename_source(remote));
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: remote URI */
+				  _("Metadata URI"),
+				  fwupd_remote_get_metadata_uri(remote));
+	fwupd_codec_string_append(str,
+				  idt + 1,
+				  /* TRANSLATORS: remote URI */
+				  _("Metadata Signature"),
+				  fwupd_remote_get_metadata_uri_sig(remote));
 	tmp = fwupd_remote_get_report_uri(remote);
 	if (tmp != NULL) {
 		/* TRANSLATORS: URI to send success/failure reports */
-		fu_string_append(str, idt + 1, _("Report URI"), tmp);
-		fu_string_append(str,
-				 idt + 1,
-				 /* TRANSLATORS: Boolean value to automatically send reports */
-				 _("Automatic Reporting"),
-				 fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)
-				     ? "true"
-				     : "false");
+		fwupd_codec_string_append(str, idt + 1, _("Report URI"), tmp);
+		fwupd_codec_string_append(
+		    str,
+		    idt + 1,
+		    /* TRANSLATORS: Boolean value to automatically send reports */
+		    _("Automatic Reporting"),
+		    fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS) ? "true"
+										       : "false");
 	}
 
 	return g_string_free(g_steal_pointer(&str), FALSE);
@@ -2525,7 +2493,7 @@ fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
 		for (guint i = 0; i < events->len; i++) {
 			FwupdSecurityAttr *attr = g_ptr_array_index(events, i);
-			g_autofree gchar *tmp = fwupd_security_attr_to_string(attr);
+			g_autofree gchar *tmp = fwupd_codec_to_string(FWUPD_CODEC(attr));
 			g_info("%s", tmp);
 		}
 	}
@@ -2695,96 +2663,6 @@ fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags s
 	}
 
 	return g_string_free(str, FALSE);
-}
-
-gboolean
-fu_util_send_report(FwupdClient *client,
-		    const gchar *report_uri,
-		    const gchar *data,
-		    const gchar *sig,
-		    gchar **uri, /* (nullable) (out) */
-		    GError **error)
-{
-	const gchar *server_msg = NULL;
-	JsonNode *json_root;
-	JsonObject *json_object;
-	g_autofree gchar *str = NULL;
-	g_autoptr(GBytes) upload_response = NULL;
-	g_autoptr(JsonParser) json_parser = NULL;
-
-	/* POST request */
-	upload_response = fwupd_client_upload_bytes(client,
-						    report_uri,
-						    data,
-						    sig,
-						    FWUPD_CLIENT_UPLOAD_FLAG_NONE,
-						    NULL,
-						    error);
-	if (upload_response == NULL)
-		return FALSE;
-
-	/* server returned nothing, and probably exploded in a ball of flames */
-	if (g_bytes_get_size(upload_response) == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "Failed to upload to %s",
-			    report_uri);
-		return FALSE;
-	}
-
-	/* parse JSON reply */
-	json_parser = json_parser_new();
-	str = g_strndup(g_bytes_get_data(upload_response, NULL), g_bytes_get_size(upload_response));
-	if (!json_parser_load_from_data(json_parser, str, -1, error)) {
-		g_prefix_error(error, "Failed to parse JSON response from '%s': ", str);
-		return FALSE;
-	}
-	json_root = json_parser_get_root(json_parser);
-	if (json_root == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_PERMISSION_DENIED,
-			    "JSON response was malformed: '%s'",
-			    str);
-		return FALSE;
-	}
-	json_object = json_node_get_object(json_root);
-	if (json_object == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_PERMISSION_DENIED,
-			    "JSON response object was malformed: '%s'",
-			    str);
-		return FALSE;
-	}
-
-	/* get any optional server message */
-	if (json_object_has_member(json_object, "msg"))
-		server_msg = json_object_get_string_member(json_object, "msg");
-
-	/* server reported failed */
-	if (!json_object_get_boolean_member(json_object, "success")) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_PERMISSION_DENIED,
-			    "Server rejected report: %s",
-			    server_msg != NULL ? server_msg : "unspecified");
-		return FALSE;
-	}
-
-	/* server wanted us to see the message */
-	if (server_msg != NULL) {
-		g_info("server message: %s", server_msg);
-		if (g_strstr_len(server_msg, -1, "known issue") != NULL &&
-		    json_object_has_member(json_object, "uri")) {
-			if (uri != NULL)
-				*uri = g_strdup(json_object_get_string_member(json_object, "uri"));
-		}
-	}
-
-	/* success */
-	return TRUE;
 }
 
 gint

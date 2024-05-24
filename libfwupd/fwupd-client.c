@@ -19,15 +19,16 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "fwupd-bios-setting-private.h"
+#include "fwupd-bios-setting.h"
 #include "fwupd-client-private.h"
 #include "fwupd-client-sync.h"
+#include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
-#include "fwupd-plugin-private.h"
-#include "fwupd-release-private.h"
+#include "fwupd-plugin.h"
+#include "fwupd-release.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-request-private.h"
 #include "fwupd-security-attr-private.h"
@@ -58,6 +59,7 @@ typedef struct {
 	guint percentage;
 	guint32 battery_level;
 	guint32 battery_threshold;
+	guint download_retries;
 	GMutex idle_mutex; /* for @idle_id and @idle_sources */
 	guint idle_id;
 	GPtrArray *idle_sources; /* element-type FwupdClientContextHelper */
@@ -75,6 +77,7 @@ typedef struct {
 	gchar *package_version;
 	gchar *user_agent;
 	GHashTable *hints; /* str:str */
+	GHashTable *immediate_requests; /* str:FwupdRequest */
 } FwupdClientPrivate;
 
 #ifdef HAVE_LIBCURL
@@ -121,6 +124,8 @@ G_DEFINE_TYPE_WITH_PRIVATE(FwupdClient, fwupd_client, G_TYPE_OBJECT)
 
 #ifdef HAVE_LIBCURL
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
+typedef char CURLSTR;
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLSTR, curl_free)
 
 static void
 fwupd_client_curl_helper_free(FwupdCurlHelper *helper)
@@ -187,6 +192,8 @@ fwupd_client_context_idle_cb(gpointer user_data)
 		/* property */
 		if (helper->property_name != NULL)
 			fwupd_client_context_object_notify(self, helper->property_name);
+		if (g_strcmp0(helper->property_name, "FwupdRequest") == 0)
+			fwupd_request_emit_invalidate(FWUPD_REQUEST(helper->payload));
 
 		/* payload signal */
 		if (helper->signal_id != 0 && helper->payload != NULL)
@@ -240,6 +247,27 @@ fwupd_client_object_notify(FwupdClient *self, const gchar *property_name)
 
 /* run callback in the correct thread */
 static void
+fwupd_client_request_invalidate(FwupdClient *self, FwupdRequest *request)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	FwupdClientContextHelper *helper = NULL;
+
+	/* shortcut */
+	if (g_main_context_is_owner(priv->main_ctx)) {
+		fwupd_request_emit_invalidate(request);
+		return;
+	}
+
+	/* run in the correct GMainContext and thread */
+	helper = g_new0(FwupdClientContextHelper, 1);
+	helper->self = g_object_ref(self);
+	helper->property_name = g_strdup("FwupdRequest");
+	helper->payload = G_OBJECT(g_object_ref(request));
+	fwupd_client_context_helper(self, helper);
+}
+
+/* run callback in the correct thread */
+static void
 fwupd_client_signal_emit_object(FwupdClient *self, guint signal_id, GObject *payload)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
@@ -274,6 +302,10 @@ fwupd_client_rebuild_user_agent(FwupdClient *self)
 	system = fwupd_build_user_agent_system();
 	if (system != NULL)
 		g_string_append_printf(str, "(%s) ", system);
+
+	/* am running in CI */
+	if (g_getenv("CI") != NULL)
+		g_string_append_printf(str, "ci/%s ", g_getenv("CI"));
 
 	/* platform, unless the application name is fwupd itself */
 	if (priv->daemon_version != NULL && g_strcmp0(priv->package_name, "fwupd") != 0)
@@ -362,6 +394,23 @@ fwupd_client_set_daemon_version(FwupdClient *self, const gchar *daemon_version)
 	priv->daemon_version = g_strdup(daemon_version);
 	fwupd_client_object_notify(self, "daemon-version");
 	fwupd_client_rebuild_user_agent(self);
+}
+
+/**
+ * fwupd_client_download_set_retries:
+ * @self: a #FwupdClient
+ * @retries: number of tries, defaulting to 0
+ *
+ * Sets the number of retries should be attempted on transient download errors.
+ *
+ * Since: 1.9.19
+ **/
+void
+fwupd_client_download_set_retries(FwupdClient *self, guint retries)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	priv->download_retries = retries;
 }
 
 static void
@@ -526,34 +575,71 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 		       GVariant *parameters,
 		       FwupdClient *self)
 {
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FwupdDevice) dev = NULL;
+	g_autoptr(GError) error = NULL;
 	if (g_strcmp0(signal_name, "Changed") == 0) {
 		g_debug("Emitting ::changed()");
 		g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
 		return;
 	}
 	if (g_strcmp0(signal_name, "DeviceAdded") == 0) {
-		dev = fwupd_device_from_variant(parameters);
+		dev = fwupd_device_new();
+		if (!fwupd_codec_from_variant(FWUPD_CODEC(dev), parameters, &error)) {
+			g_warning("failed to build FwupdDevice[DeviceAdded]: %s", error->message);
+			return;
+		}
 		g_debug("Emitting ::device-added(%s)", fwupd_device_get_id(dev));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_ADDED, G_OBJECT(dev));
 		return;
 	}
 	if (g_strcmp0(signal_name, "DeviceRemoved") == 0) {
-		dev = fwupd_device_from_variant(parameters);
+		dev = fwupd_device_new();
+		if (!fwupd_codec_from_variant(FWUPD_CODEC(dev), parameters, &error)) {
+			g_warning("failed to build FwupdDevice[DeviceRemoved]: %s", error->message);
+			return;
+		}
 		g_debug("Emitting ::device-removed(%s)", fwupd_device_get_id(dev));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REMOVED, G_OBJECT(dev));
 		return;
 	}
 	if (g_strcmp0(signal_name, "DeviceChanged") == 0) {
-		dev = fwupd_device_from_variant(parameters);
+		dev = fwupd_device_new();
+		if (!fwupd_codec_from_variant(FWUPD_CODEC(dev), parameters, &error)) {
+			g_warning("failed to build FwupdDevice[DeviceChanged]: %s", error->message);
+			return;
+		}
 		g_debug("Emitting ::device-changed(%s)", fwupd_device_get_id(dev));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_CHANGED, G_OBJECT(dev));
+
+		/* invalidate request */
+		if (fwupd_device_get_status(dev) != FWUPD_STATUS_WAITING_FOR_USER) {
+			FwupdRequest *req =
+			    g_hash_table_lookup(priv->immediate_requests, fwupd_device_get_id(dev));
+			if (req != NULL) {
+				fwupd_client_request_invalidate(self, req);
+				g_hash_table_remove(priv->immediate_requests,
+						    fwupd_device_get_id(dev));
+			}
+		}
 		return;
 	}
 	if (g_strcmp0(signal_name, "DeviceRequest") == 0) {
-		g_autoptr(FwupdRequest) req = fwupd_request_from_variant(parameters);
+		g_autoptr(FwupdRequest) req = fwupd_request_new();
+		if (!fwupd_codec_from_variant(FWUPD_CODEC(req), parameters, &error)) {
+			g_warning("failed to convert DeviceRequest: %s", error->message);
+			return;
+		}
 		g_debug("Emitting ::device-request(%s)", fwupd_request_get_id(req));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REQUEST, G_OBJECT(req));
+
+		/* we may need to invalidate this later */
+		if (fwupd_request_get_kind(req) == FWUPD_REQUEST_KIND_IMMEDIATE &&
+		    fwupd_request_get_device_id(req) != NULL) {
+			g_hash_table_insert(priv->immediate_requests,
+					    g_strdup(fwupd_request_get_device_id(req)),
+					    g_object_ref(req));
+		}
 		return;
 	}
 	g_debug("Unknown signal name '%s' from %s", signal_name, sender_name);
@@ -664,20 +750,25 @@ fwupd_client_progress_callback_cb(void *clientp,
 	return 0;
 }
 
-static void
-fwupd_client_curl_helper_set_proxy(FwupdClient *self, FwupdCurlHelper *helper, const gchar *url)
+static gboolean
+fwupd_client_curl_helper_set_proxy(FwupdClient *self,
+				   FwupdCurlHelper *helper,
+				   const gchar *url,
+				   GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_auto(GStrv) proxies = NULL;
-	g_autoptr(GError) error_local = NULL;
 
-	proxies = g_proxy_resolver_lookup(priv->proxy_resolver, url, NULL, &error_local);
+	proxies = g_proxy_resolver_lookup(priv->proxy_resolver, url, NULL, error);
 	if (proxies == NULL) {
-		g_warning("failed to lookup proxy for %s: %s", url, error_local->message);
-		return;
+		g_prefix_error(error, "failed to lookup proxy for %s: ", url);
+		return FALSE;
 	}
 	if (g_strcmp0(proxies[0], "direct://") != 0)
 		(void)curl_easy_setopt(helper->curl, CURLOPT_PROXY, proxies[0]);
+
+	/* success */
+	return TRUE;
 }
 
 static FwupdCurlHelper *
@@ -710,13 +801,12 @@ fwupd_client_curl_new(FwupdClient *self, GError **error)
 	(void)curl_easy_setopt(helper->curl, CURLOPT_NOPROGRESS, 0L);
 	(void)curl_easy_setopt(helper->curl, CURLOPT_FOLLOWLOCATION, 1L);
 	(void)curl_easy_setopt(helper->curl, CURLOPT_MAXREDIRS, 5L);
+#ifdef _WIN32
+	(void)curl_easy_setopt(helper->curl, CURLOPT_CAINFO, "ca-bundle.crt");
+#endif
 #if CURL_AT_LEAST_VERSION(7, 71, 0)
 	(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_OPTIONS, CURLSSLOPT_NATIVE_CA);
 #endif
-
-	/* relax the SSL checks for broken corporate proxies */
-	if (g_getenv("DISABLE_SSL_STRICT") != NULL)
-		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYPEER, 0L);
 
 	/* this disables the double-compression of the firmware.xml.gz file */
 	(void)curl_easy_setopt(helper->curl, CURLOPT_HTTP_CONTENT_DECODING, 0L);
@@ -1118,6 +1208,7 @@ fwupd_client_get_host_security_attrs_cb(GObject *source, GAsyncResult *res, gpoi
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -1126,11 +1217,14 @@ fwupd_client_get_host_security_attrs_cb(GObject *source, GAsyncResult *res, gpoi
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_SECURITY_ATTR, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_security_attr_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -1288,6 +1382,7 @@ fwupd_client_get_bios_settings_cb(GObject *source, GAsyncResult *res, gpointer u
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -1296,11 +1391,14 @@ fwupd_client_get_bios_settings_cb(GObject *source, GAsyncResult *res, gpointer u
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_BIOS_SETTING, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_bios_setting_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -1368,6 +1466,7 @@ fwupd_client_get_host_security_events_cb(GObject *source, GAsyncResult *res, gpo
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -1376,11 +1475,14 @@ fwupd_client_get_host_security_events_cb(GObject *source, GAsyncResult *res, gpo
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_SECURITY_ATTR, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_security_attr_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -1551,6 +1653,7 @@ fwupd_client_get_devices_cb(GObject *source, GAsyncResult *res, gpointer user_da
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -1559,11 +1662,15 @@ fwupd_client_get_devices_cb(GObject *source, GAsyncResult *res, gpointer user_da
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_DEVICE, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+	fwupd_device_array_ensure_parents(array);
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_device_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -1631,6 +1738,7 @@ fwupd_client_get_plugins_cb(GObject *source, GAsyncResult *res, gpointer user_da
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -1639,11 +1747,14 @@ fwupd_client_get_plugins_cb(GObject *source, GAsyncResult *res, gpointer user_da
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_PLUGIN, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_plugin_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -1711,6 +1822,7 @@ fwupd_client_get_history_cb(GObject *source, GAsyncResult *res, gpointer user_da
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -1719,11 +1831,15 @@ fwupd_client_get_history_cb(GObject *source, GAsyncResult *res, gpointer user_da
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_DEVICE, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+	fwupd_device_array_ensure_parents(array);
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_device_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -1999,6 +2115,7 @@ fwupd_client_get_releases_cb(GObject *source, GAsyncResult *res, gpointer user_d
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -2007,11 +2124,14 @@ fwupd_client_get_releases_cb(GObject *source, GAsyncResult *res, gpointer user_d
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_RELEASE, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_release_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -2082,6 +2202,7 @@ fwupd_client_get_downgrades_cb(GObject *source, GAsyncResult *res, gpointer user
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -2090,11 +2211,14 @@ fwupd_client_get_downgrades_cb(GObject *source, GAsyncResult *res, gpointer user
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_RELEASE, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_release_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -2165,6 +2289,7 @@ fwupd_client_get_upgrades_cb(GObject *source, GAsyncResult *res, gpointer user_d
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -2173,11 +2298,14 @@ fwupd_client_get_upgrades_cb(GObject *source, GAsyncResult *res, gpointer user_d
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_RELEASE, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_release_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -2801,6 +2929,7 @@ fwupd_client_clear_results_finish(FwupdClient *self, GAsyncResult *res, GError *
 static void
 fwupd_client_get_results_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
+	g_autoptr(FwupdDevice) device = fwupd_device_new();
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) val = NULL;
@@ -2811,11 +2940,13 @@ fwupd_client_get_results_cb(GObject *source, GAsyncResult *res, gpointer user_da
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	if (!fwupd_codec_from_variant(FWUPD_CODEC(device), val, &error)) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_device_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&device), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -2933,30 +3064,10 @@ fwupd_client_install_stream_async(FwupdClient *self,
 				      "filename",
 				      g_variant_new_string(filename_hint));
 	}
-	if (install_flags & FWUPD_INSTALL_FLAG_OFFLINE) {
-		g_variant_builder_add(&builder, "{sv}", "offline", g_variant_new_boolean(TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
-		g_variant_builder_add(&builder, "{sv}", "allow-older", g_variant_new_boolean(TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
-		g_variant_builder_add(&builder,
-				      "{sv}",
-				      "allow-reinstall",
-				      g_variant_new_boolean(TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH) {
-		g_variant_builder_add(&builder,
-				      "{sv}",
-				      "allow-branch-switch",
-				      g_variant_new_boolean(TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_FORCE) {
-		g_variant_builder_add(&builder, "{sv}", "force", g_variant_new_boolean(TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_NO_HISTORY) {
-		g_variant_builder_add(&builder, "{sv}", "no-history", g_variant_new_boolean(TRUE));
-	}
+	g_variant_builder_add(&builder,
+			      "{sv}",
+			      "install-flags",
+			      g_variant_new_uint64(install_flags));
 
 	/* set out of band file descriptor */
 	fd_list = g_unix_fd_list_new();
@@ -3260,13 +3371,31 @@ fwupd_client_is_url_ipfs(const gchar *perhaps_url)
 }
 
 static gboolean
+fwupd_client_is_localhost(const gchar *url)
+{
+#ifdef HAVE_LIBCURL
+	g_autoptr(CURLU) h = curl_url();
+	g_autoptr(CURLSTR) hostname = NULL;
+	if (curl_url_set(h, CURLUPART_URL, url, 0) != CURLUE_OK)
+		return FALSE;
+	(void)curl_url_get(h, CURLUPART_HOST, &hostname, 0);
+	return g_strcmp0(hostname, "localhost") == 0;
+#else
+	if (g_str_has_prefix(url, "https://localhost/") ||
+	    g_str_has_prefix(url, "https://localhost:"))
+		return TRUE;
+	return FALSE;
+#endif
+}
+
+static gboolean
 fwupd_client_is_url_p2p(const gchar *perhaps_url)
 {
 	if (perhaps_url == NULL)
 		return FALSE;
 	if (fwupd_client_is_url_ipfs(perhaps_url))
 		return TRUE;
-	if (g_str_has_prefix(perhaps_url, "https://localhost/"))
+	if (fwupd_client_is_localhost(perhaps_url))
 		return TRUE;
 	return FALSE;
 }
@@ -3499,6 +3628,7 @@ fwupd_client_get_details_stream_cb(GObject *source, GAsyncResult *res, gpointer 
 {
 	g_autoptr(GDBusMessage) msg = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GTask) task = G_TASK(user_data);
 
 	msg = g_dbus_connection_send_message_with_reply_finish(G_DBUS_CONNECTION(source),
@@ -3514,11 +3644,15 @@ fwupd_client_get_details_stream_cb(GObject *source, GAsyncResult *res, gpointer 
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array =
+	    fwupd_codec_array_from_variant(g_dbus_message_get_body(msg), FWUPD_TYPE_DEVICE, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_device_array_from_variant(g_dbus_message_get_body(msg)),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 void
@@ -4249,7 +4383,7 @@ fwupd_client_refresh_remote_async(FwupdClient *self,
 	}
 	fwupd_client_download_bytes_async(self,
 					  uri,
-					  download_flags,
+					  download_flags & ~FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P,
 					  cancellable,
 					  fwupd_client_refresh_remote_signature_cb,
 					  g_steal_pointer(&task));
@@ -4281,6 +4415,7 @@ fwupd_client_get_remotes_cb(GObject *source, GAsyncResult *res, gpointer user_da
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
@@ -4289,11 +4424,14 @@ fwupd_client_get_remotes_cb(GObject *source, GAsyncResult *res, gpointer user_da
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_REMOTE, &error);
+	if (array == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      fwupd_remote_array_from_variant(val),
-			      (GDestroyNotify)g_ptr_array_unref);
+	g_task_return_pointer(task, g_steal_pointer(&array), (GDestroyNotify)g_ptr_array_unref);
 }
 
 /**
@@ -5277,6 +5415,15 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 	glong status_code = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
+	/* relax the SSL checks on localhost URLs and broken corporate proxies */
+	if (fwupd_client_is_localhost(url) || g_getenv("DISABLE_SSL_STRICT") != NULL) {
+		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+	} else {
+		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+		(void)curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
+	}
+
 	fwupd_client_set_status(self, FWUPD_STATUS_DOWNLOADING);
 	(void)curl_easy_setopt(curl, CURLOPT_URL, url);
 	(void)curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
@@ -5314,6 +5461,24 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 				    "Failed to download due to server limit");
 		return NULL;
 	}
+	if (status_code == 502 || status_code == 503 || status_code == 504) {
+		g_autofree gchar *str = g_strndup((const gchar *)buf->data, MIN(buf->len, 4000));
+		if (g_str_is_ascii(str)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_TIMED_OUT,
+				    "Transient failure to download, server response was %u: %s",
+				    (guint)status_code,
+				    str);
+			return NULL;
+		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_TIMED_OUT,
+			    "Transient failure to download, server response was %u",
+			    (guint)status_code);
+		return NULL;
+	}
 	if (status_code >= 400) {
 		g_autofree gchar *str = g_strndup((const gchar *)buf->data, MIN(buf->len, 4000));
 		if (g_str_is_ascii(str)) {
@@ -5336,6 +5501,36 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 	return g_bytes_new(buf->data, buf->len);
 }
 
+static gboolean
+fwupd_client_download_error_is_fatal(const GError *error)
+{
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT))
+		return FALSE;
+	return TRUE;
+}
+
+static GBytes *
+fwupd_client_download_http_retry(FwupdClient *self, CURL *curl, const gchar *url, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	guint delay_ms = 2500;
+	for (guint i = 0;; i++, delay_ms *= 2) {
+		g_autoptr(GBytes) blob = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		blob = fwupd_client_download_http(self, curl, url, &error_local);
+		if (blob != NULL)
+			return g_steal_pointer(&blob);
+		if (i >= priv->download_retries ||
+		    fwupd_client_download_error_is_fatal(error_local)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			break;
+		}
+		g_debug("ignoring and trying again: %s", error_local->message);
+		g_usleep(delay_ms * 1000);
+	}
+	return NULL;
+}
 static void
 fwupd_client_download_bytes_thread_cb(GTask *task,
 				      gpointer source_object,
@@ -5350,9 +5545,12 @@ fwupd_client_download_bytes_thread_cb(GTask *task,
 		const gchar *url = g_ptr_array_index(helper->urls, i);
 		g_autoptr(GError) error = NULL;
 		g_info("downloading %s", url);
-		fwupd_client_curl_helper_set_proxy(self, helper, url);
+		if (!fwupd_client_curl_helper_set_proxy(self, helper, url, &error)) {
+			g_task_return_error(task, g_steal_pointer(&error));
+			return;
+		}
 		if (fwupd_client_is_url_http(url)) {
-			blob = fwupd_client_download_http(self, helper->curl, url, &error);
+			blob = fwupd_client_download_http_retry(self, helper->curl, url, &error);
 			if (blob != NULL)
 				break;
 		} else if (fwupd_client_is_url_ipfs(url)) {
@@ -5604,6 +5802,15 @@ fwupd_client_upload_bytes_async(FwupdClient *self,
 		(void)curl_easy_setopt(helper->curl, CURLOPT_COPYPOSTFIELDS, payload);
 	}
 
+	/* relax the SSL checks on localhost URLs and broken corporate proxies */
+	if (fwupd_client_is_localhost(url) || g_getenv("DISABLE_SSL_STRICT") != NULL) {
+		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYPEER, 0L);
+		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYHOST, 0L);
+	} else {
+		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYPEER, 1L);
+		(void)curl_easy_setopt(helper->curl, CURLOPT_SSL_VERIFYHOST, 1L);
+	}
+
 	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
 	g_info("uploading to %s", url);
 	(void)curl_easy_setopt(helper->curl, CURLOPT_URL, url);
@@ -5630,6 +5837,170 @@ fwupd_client_upload_bytes_async(FwupdClient *self,
  **/
 GBytes *
 fwupd_client_upload_bytes_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(g_task_is_valid(res, self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer(G_TASK(res), error);
+}
+
+static void
+fwupd_client_upload_report_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	const gchar *server_msg = NULL;
+	JsonNode *json_root;
+	JsonObject *json_object;
+	g_autofree gchar *str = NULL;
+	g_autofree gchar *uri = NULL;
+	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GTask) task = G_TASK(user_data);
+	g_autoptr(JsonParser) json_parser = NULL;
+
+	/* parse */
+	bytes = fwupd_client_upload_bytes_finish(FWUPD_CLIENT(source), res, &error);
+	if (bytes == NULL) {
+		g_prefix_error(&error, "failed to upload report: ");
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* server returned nothing, and probably exploded in a ball of flames */
+	if (g_bytes_get_size(bytes) == 0) {
+		g_task_return_new_error(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_INVALID_FILE,
+					"failed to upload, zero length data");
+		return;
+	}
+
+	/* parse JSON reply */
+	json_parser = json_parser_new();
+	str = g_strndup(g_bytes_get_data(bytes, NULL), g_bytes_get_size(bytes));
+	if (!json_parser_load_from_data(json_parser, str, -1, &error)) {
+		g_task_return_new_error(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_INVALID_DATA,
+					"failed to parse JSON response from '%s': %s",
+					str,
+					error->message);
+		return;
+	}
+	json_root = json_parser_get_root(json_parser);
+	if (json_root == NULL) {
+		g_task_return_new_error(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_INVALID_DATA,
+					"JSON response was malformed: '%s'",
+					str);
+		return;
+	}
+	json_object = json_node_get_object(json_root);
+	if (json_object == NULL) {
+		g_task_return_new_error(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_INVALID_DATA,
+					"JSON response object was malformed: '%s'",
+					str);
+		return;
+	}
+
+	/* get any optional server message */
+	if (json_object_has_member(json_object, "msg"))
+		server_msg = json_object_get_string_member(json_object, "msg");
+
+	/* server reported failed */
+	if (!json_object_get_boolean_member(json_object, "success")) {
+		g_task_return_new_error(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_PERMISSION_DENIED,
+					"server rejected report: %s",
+					server_msg != NULL ? server_msg : "unspecified");
+		return;
+	}
+
+	/* server wanted us to see the message */
+	if (server_msg != NULL) {
+		g_info("server message: %s", server_msg);
+		if (json_object_has_member(json_object, "uri"))
+			uri = g_strdup(json_object_get_string_member(json_object, "uri"));
+	}
+
+	/* fallback */
+	if (uri == NULL)
+		uri = g_strdup("");
+
+	/* success */
+	g_task_return_pointer(task, g_steal_pointer(&uri), g_free);
+}
+
+/**
+ * fwupd_client_upload_report_async:
+ * @self: a #FwupdClient
+ * @url: (not nullable): the remote URL
+ * @payload: (not nullable): payload string
+ * @signature: (nullable): signature string
+ * @flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: (scope async) (closure callback_data): the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Uploads a report to a remote server. The [method@Client.set_user_agent] function
+ * should be called before this method is used.
+ *
+ * You must have called [method@Client.connect_async] on @self before using
+ * this method.
+ *
+ * NOTE: This method is thread-safe, but progress signals will be
+ * emitted in the global default main context, if not explicitly set with
+ * [method@Client.set_main_context].
+ *
+ * Since: 1.9.20
+ **/
+void
+fwupd_client_upload_report_async(FwupdClient *self,
+				 const gchar *url,
+				 const gchar *payload,
+				 const gchar *signature,
+				 FwupdClientUploadFlags flags,
+				 GCancellable *cancellable,
+				 GAsyncReadyCallback callback,
+				 gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(url != NULL);
+	g_return_if_fail(payload != NULL);
+	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
+	g_return_if_fail(priv->proxy != NULL);
+
+	task = g_task_new(self, cancellable, callback, callback_data);
+	fwupd_client_upload_bytes_async(self,
+					url,
+					payload,
+					signature,
+					flags,
+					cancellable,
+					fwupd_client_upload_report_cb,
+					g_steal_pointer(&task));
+}
+
+/**
+ * fwupd_client_upload_report_finish:
+ * @self: a #FwupdClient
+ * @res: (not nullable): the asynchronous result
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the result of [method@FwupdClient.upload_report_async].
+ *
+ * Returns: (transfer full): a URI (perhaps an empty string), or %NULL for error
+ *
+ * Since: 1.9.20
+ **/
+gchar *
+fwupd_client_upload_report_finish(FwupdClient *self, GAsyncResult *res, GError **error)
 {
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
 	g_return_val_if_fail(g_task_is_valid(res, self), NULL);
@@ -6146,6 +6517,445 @@ fwupd_client_undo_host_security_attr_finish(FwupdClient *self, GAsyncResult *res
 }
 
 static void
+fwupd_client_build_report_metadata(JsonBuilder *builder, GHashTable *metadata)
+{
+	GHashTableIter iter;
+	const gchar *key;
+	const gchar *value;
+
+	g_hash_table_iter_init(&iter, metadata);
+	while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value)) {
+		json_builder_set_member_name(builder, key);
+		json_builder_add_string_value(builder, value);
+	}
+}
+
+/**
+ * fwupd_client_build_report_devices:
+ * @self: a #FwupdClient
+ * @devices: (element-type FwupdDevice): devices
+ * @metadata: (element-type utf8 utf8): attributes
+ * @error: (nullable): optional return location for an error
+ *
+ * Builds a JSON report for the list of devices.
+ *
+ * This function should be called *before* asking the interactive user if they want to upload a
+ * report -- as this function filters devices and may return an error if there is nothing to do.
+ *
+ * You must have called [method@Client.connect_async] on @self before using
+ * this method.
+ *
+ * Returns: a string, or %NULL if the ID is not present
+ *
+ * Since: 1.9.20
+ **/
+gchar *
+fwupd_client_build_report_devices(FwupdClient *self,
+				  GPtrArray *devices,
+				  GHashTable *metadata,
+				  GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	guint cnt = 0;
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonNode) json_root = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(devices != NULL, NULL);
+	g_return_val_if_fail(metadata != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "ReportType");
+	json_builder_add_string_value(builder, "device-list");
+	json_builder_set_member_name(builder, "ReportVersion");
+	json_builder_add_int_value(builder, 2);
+	if (priv->host_machine_id != NULL) {
+		json_builder_set_member_name(builder, "MachineId");
+		json_builder_add_string_value(builder, priv->host_machine_id);
+	}
+
+	/* this is system metadata not stored in the database */
+	if (g_hash_table_size(metadata) > 0) {
+		json_builder_set_member_name(builder, "Metadata");
+		json_builder_begin_object(builder);
+		fwupd_client_build_report_metadata(builder, metadata);
+		json_builder_end_object(builder);
+	}
+
+	/* devices */
+	json_builder_set_member_name(builder, "Devices");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+		    !fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
+			g_debug("ignoring %s as not updatable", fwupd_device_get_id(dev));
+			continue;
+		}
+		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
+		cnt++;
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+
+	/* nothing to do */
+	if (cnt == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "no devices to upload");
+		return NULL;
+	}
+
+	/* export as a string */
+	json_root = json_builder_get_root(builder);
+	json_generator = json_generator_new();
+	json_generator_set_pretty(json_generator, TRUE);
+	json_generator_set_root(json_generator, json_root);
+	data = json_generator_to_data(json_generator, NULL);
+	if (data == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to convert to JSON string");
+		return NULL;
+	}
+	return g_steal_pointer(&data);
+}
+
+static void
+fwupd_client_build_report_history_device(JsonBuilder *builder, FwupdDevice *dev)
+{
+	FwupdRelease *rel = fwupd_device_get_release_default(dev);
+	GChecksumType checksum_types[] = {G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
+	GHashTable *metadata = fwupd_release_get_metadata(rel);
+	GPtrArray *checksums;
+	GPtrArray *guids;
+
+	/* identify the firmware used */
+	checksums = fwupd_release_get_checksums(rel);
+	for (guint i = 0; checksum_types[i] != 0; i++) {
+		const gchar *checksum = fwupd_checksum_get_by_kind(checksums, checksum_types[i]);
+		if (checksum != NULL) {
+			json_builder_set_member_name(builder, "Checksum");
+			json_builder_add_string_value(builder, checksum);
+			break;
+		}
+	}
+
+	/* identify the firmware written */
+	checksums = fwupd_device_get_checksums(dev);
+	if (checksums->len > 0) {
+		json_builder_set_member_name(builder, "ChecksumDevice");
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < checksums->len; i++) {
+			const gchar *checksum = g_ptr_array_index(checksums, i);
+			json_builder_add_string_value(builder, checksum);
+		}
+		json_builder_end_array(builder);
+	}
+
+	/* allow matching the specific component */
+	json_builder_set_member_name(builder, "ReleaseId");
+	json_builder_add_string_value(builder, fwupd_release_get_id(rel));
+
+	/* include the protocol used */
+	if (fwupd_release_get_protocol(rel) != NULL) {
+		json_builder_set_member_name(builder, "Protocol");
+		json_builder_add_string_value(builder, fwupd_release_get_protocol(rel));
+	}
+
+	/* set the error state of the report */
+	json_builder_set_member_name(builder, "UpdateState");
+	json_builder_add_int_value(builder, fwupd_device_get_update_state(dev));
+	if (fwupd_device_get_update_error(dev) != NULL) {
+		json_builder_set_member_name(builder, "UpdateError");
+		json_builder_add_string_value(builder, fwupd_device_get_update_error(dev));
+	}
+	if (fwupd_release_get_update_message(rel) != NULL) {
+		json_builder_set_member_name(builder, "UpdateMessage");
+		json_builder_add_string_value(builder, fwupd_release_get_update_message(rel));
+	}
+
+	/* find out if the predicted duration was accurate */
+	if (fwupd_device_get_install_duration(dev) != 0) {
+		json_builder_set_member_name(builder, "InstallDuration");
+		json_builder_add_int_value(builder, fwupd_device_get_install_duration(dev));
+	}
+
+	/* map back to the dev type on the LVFS */
+	guids = fwupd_device_get_guids(dev);
+	if (guids->len > 0) {
+		json_builder_set_member_name(builder, "Guid");
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < guids->len; i++) {
+			const gchar *guid = g_ptr_array_index(guids, i);
+			json_builder_add_string_value(builder, guid);
+		}
+		json_builder_end_array(builder);
+	}
+
+	json_builder_set_member_name(builder, "Plugin");
+	json_builder_add_string_value(builder, fwupd_device_get_plugin(dev));
+
+	/* report what we're trying to update *from* and *to* */
+	json_builder_set_member_name(builder, "VersionOld");
+	json_builder_add_string_value(builder, fwupd_device_get_version(dev));
+	json_builder_set_member_name(builder, "VersionNew");
+	json_builder_add_string_value(builder, fwupd_release_get_version(rel));
+
+	/* to know the state of the dev we're trying to update */
+	json_builder_set_member_name(builder, "Flags");
+	json_builder_add_int_value(builder, fwupd_device_get_flags(dev));
+
+	/* to know when the update tried to happen, and how soon after boot */
+	json_builder_set_member_name(builder, "Created");
+	json_builder_add_int_value(builder, fwupd_device_get_created(dev));
+	json_builder_set_member_name(builder, "Modified");
+	json_builder_add_int_value(builder, fwupd_device_get_modified(dev));
+
+	/* add saved metadata to the report */
+	if (g_hash_table_size(metadata) > 0) {
+		json_builder_set_member_name(builder, "Metadata");
+		json_builder_begin_object(builder);
+		fwupd_client_build_report_metadata(builder, metadata);
+		json_builder_end_object(builder);
+	}
+}
+
+/**
+ * fwupd_client_build_report_history:
+ * @self: a #FwupdClient
+ * @devices: (element-type FwupdDevice): devices
+ * @remote: (nullable): optional #FwupdRemote
+ * @metadata: (element-type utf8 utf8): attributes
+ * @error: (nullable): optional return location for an error
+ *
+ * Builds a JSON report for the list of devices.
+ *
+ * This function should be called *before* asking the interactive user if they want to upload a
+ * report -- as this function filters devices and may return an error if there is nothing to do.
+ *
+ * You must have called [method@Client.connect_async] on @self before using
+ * this method.
+ *
+ * Returns: a string, or %NULL on error
+ *
+ * Since: 2.0.0
+ **/
+gchar *
+fwupd_client_build_report_history(FwupdClient *self,
+				  GPtrArray *devices,
+				  FwupdRemote *remote,
+				  GHashTable *metadata,
+				  GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	guint cnt = 0;
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(JsonGenerator) json_generator = json_generator_new();
+	g_autoptr(JsonNode) json_root = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(devices != NULL, NULL);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(remote) || remote == NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* sanity check */
+	if (remote != NULL && fwupd_remote_get_report_uri(remote) == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    "%s has no ReportURI",
+			    fwupd_remote_get_id(remote));
+		return NULL;
+	}
+
+	/* create header */
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "ReportType");
+	json_builder_add_string_value(builder, "history");
+	json_builder_set_member_name(builder, "ReportVersion");
+	json_builder_add_int_value(builder, 2);
+	if (priv->host_machine_id != NULL) {
+		json_builder_set_member_name(builder, "MachineId");
+		json_builder_add_string_value(builder, priv->host_machine_id);
+	}
+
+	/* this is system metadata not stored in the database */
+	if (g_hash_table_size(metadata) > 0) {
+		json_builder_set_member_name(builder, "Metadata");
+		json_builder_begin_object(builder);
+		fwupd_client_build_report_metadata(builder, metadata);
+		json_builder_end_object(builder);
+	}
+
+	/* add each device */
+	json_builder_set_member_name(builder, "Reports");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+
+		if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_REPORTED)) {
+			g_debug("ignoring %s as already reported", fwupd_device_get_id(dev));
+			continue;
+		}
+		if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+			g_debug("ignoring %s as needs-activation", fwupd_device_get_id(dev));
+			continue;
+		}
+		if (fwupd_device_get_update_state(dev) != FWUPD_UPDATE_STATE_FAILED &&
+		    fwupd_device_get_update_state(dev) != FWUPD_UPDATE_STATE_SUCCESS) {
+			g_debug("ignoring %s with UpdateState %s",
+				fwupd_device_get_id(dev),
+				fwupd_update_state_to_string(fwupd_device_get_update_state(dev)));
+			continue;
+		}
+
+		/* is this the correct remote */
+		if (remote != NULL) {
+			FwupdRelease *rel = fwupd_device_get_release_default(dev);
+			if (fwupd_release_get_remote_id(rel) == NULL) {
+				g_debug("%s has no RemoteID", fwupd_device_get_id(dev));
+				continue;
+			}
+			if (g_strcmp0(fwupd_release_get_remote_id(rel),
+				      fwupd_remote_get_id(remote)) != 0) {
+				g_debug("%s has incorrect RemoteID: %s != %s",
+					fwupd_device_get_id(dev),
+					fwupd_release_get_remote_id(rel),
+					fwupd_remote_get_id(remote));
+				continue;
+			}
+		}
+
+		json_builder_begin_object(builder);
+		fwupd_client_build_report_history_device(builder, dev);
+		json_builder_end_object(builder);
+		cnt++;
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+
+	/* nothing to do */
+	if (cnt == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "no history to upload");
+		return NULL;
+	}
+
+	/* export as a string */
+	json_root = json_builder_get_root(builder);
+	json_generator_set_pretty(json_generator, TRUE);
+	json_generator_set_root(json_generator, json_root);
+	data = json_generator_to_data(json_generator, NULL);
+	if (data == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to convert to JSON string");
+		return NULL;
+	}
+	return g_steal_pointer(&data);
+}
+
+/**
+ * fwupd_client_build_report_security:
+ * @self: a #FwupdClient
+ * @attrs: (element-type FwupdSecurityAttr): attributes
+ * @metadata: (element-type utf8 utf8): attributes
+ * @error: (nullable): optional return location for an error
+ *
+ * Builds a JSON security report.
+ *
+ * You must have called [method@Client.connect_async] on @self before using
+ * this method.
+ *
+ * Returns: a string, or %NULL on error
+ *
+ * Since: 2.0.0
+ **/
+gchar *
+fwupd_client_build_report_security(FwupdClient *self,
+				   GPtrArray *attrs,
+				   GHashTable *metadata,
+				   GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	guint cnt = 0;
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(JsonGenerator) json_generator = json_generator_new();
+	g_autoptr(JsonNode) json_root = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(attrs != NULL, NULL);
+	g_return_val_if_fail(metadata != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* create header */
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "ReportType");
+	json_builder_add_string_value(builder, "hsi");
+	json_builder_set_member_name(builder, "ReportVersion");
+	json_builder_add_int_value(builder, 2);
+	if (priv->host_machine_id != NULL) {
+		json_builder_set_member_name(builder, "MachineId");
+		json_builder_add_string_value(builder, priv->host_machine_id);
+	}
+
+	/* this is system metadata not stored in the database */
+	if (g_hash_table_size(metadata) > 0 || fwupd_client_get_host_security_id(self) != NULL) {
+		json_builder_set_member_name(builder, "Metadata");
+		json_builder_begin_object(builder);
+		fwupd_client_build_report_metadata(builder, metadata);
+		json_builder_set_member_name(builder, "HostSecurityId");
+		json_builder_add_string_value(builder, fwupd_client_get_host_security_id(self));
+		json_builder_end_object(builder);
+	}
+
+	/* attrs */
+	json_builder_set_member_name(builder, "SecurityAttributes");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < attrs->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
+		fwupd_codec_to_json(FWUPD_CODEC(attr), builder, FWUPD_CODEC_FLAG_TRUSTED);
+		cnt++;
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+
+	/* nothing to do */
+	if (cnt == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "no attributes to upload");
+		return NULL;
+	}
+
+	/* export as a string */
+	json_root = json_builder_get_root(builder);
+	json_generator_set_pretty(json_generator, TRUE);
+	json_generator_set_root(json_generator, json_root);
+	data = json_generator_to_data(json_generator, NULL);
+	if (data == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to convert to JSON string");
+		return NULL;
+	}
+	return g_steal_pointer(&data);
+}
+
+static void
 fwupd_client_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
 	FwupdClient *self = FWUPD_CLIENT(object);
@@ -6577,6 +7387,8 @@ fwupd_client_init(FwupdClient *self)
 	priv->hints = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	priv->battery_level = FWUPD_BATTERY_LEVEL_INVALID;
 	priv->battery_threshold = FWUPD_BATTERY_LEVEL_INVALID;
+	priv->immediate_requests =
+	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_object_unref);
 
 	/* we get this one for free */
 	fwupd_client_add_hint(self, "locale", g_getenv("LANG"));
@@ -6599,6 +7411,7 @@ fwupd_client_finalize(GObject *object)
 	g_free(priv->host_machine_id);
 	g_free(priv->host_security_id);
 	g_hash_table_unref(priv->hints);
+	g_hash_table_unref(priv->immediate_requests);
 	g_mutex_clear(&priv->idle_mutex);
 	if (priv->idle_id != 0)
 		g_source_remove(priv->idle_id);

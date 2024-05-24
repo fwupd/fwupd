@@ -95,14 +95,10 @@ static void
 fu_mm_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
-	if (self->port_at != NULL)
-		fu_string_append(str, idt, "AtPort", self->port_at);
-	if (self->port_qmi != NULL)
-		fu_string_append(str, idt, "QmiPort", self->port_qmi);
-	if (self->port_mbim != NULL)
-		fu_string_append(str, idt, "MbimPort", self->port_mbim);
-	if (self->port_qcdm != NULL)
-		fu_string_append(str, idt, "QcdmPort", self->port_qcdm);
+	fwupd_codec_string_append(str, idt, "AtPort", self->port_at);
+	fwupd_codec_string_append(str, idt, "QmiPort", self->port_qmi);
+	fwupd_codec_string_append(str, idt, "MbimPort", self->port_mbim);
+	fwupd_codec_string_append(str, idt, "QcdmPort", self->port_qcdm);
 }
 
 const gchar *

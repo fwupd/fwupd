@@ -26,6 +26,7 @@ fu_test_synaprom_firmware_func(void)
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuFirmware) firmware2 = NULL;
 	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "test.pkg", NULL);
 	if (!g_file_test(filename, G_FILE_TEST_EXISTS) && ci == NULL) {
@@ -66,6 +67,7 @@ fu_test_synaprom_firmware_func(void)
 	stream = g_memory_input_stream_new_from_bytes(fw);
 	firmware2 = fu_synaprom_device_prepare_firmware(FU_DEVICE(device),
 							stream,
+							progress,
 							FWUPD_INSTALL_FLAG_NONE,
 							&error);
 	g_assert_no_error(error);

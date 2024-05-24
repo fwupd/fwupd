@@ -82,7 +82,7 @@ static void
 fu_ch341a_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCh341aDevice *self = FU_CH341A_DEVICE(device);
-	fu_string_append(str, idt, "Speed", fu_ch341a_device_speed_to_string(self->speed));
+	fwupd_codec_string_append(str, idt, "Speed", fu_ch341a_device_speed_to_string(self->speed));
 }
 
 static gboolean

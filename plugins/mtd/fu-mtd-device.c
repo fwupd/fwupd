@@ -28,12 +28,9 @@ static void
 fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
-	if (self->erasesize > 0)
-		fu_string_append_kx(str, idt, "EraseSize", self->erasesize);
-	if (self->metadata_offset > 0)
-		fu_string_append_kx(str, idt, "MetadataOffset", self->metadata_offset);
-	if (self->metadata_size > 0)
-		fu_string_append_kx(str, idt, "MetadataSize", self->metadata_size);
+	fwupd_codec_string_append_hex(str, idt, "EraseSize", self->erasesize);
+	fwupd_codec_string_append_hex(str, idt, "MetadataOffset", self->metadata_offset);
+	fwupd_codec_string_append_hex(str, idt, "MetadataSize", self->metadata_size);
 }
 
 static FuFirmware *
@@ -60,8 +57,12 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 		return NULL;
 	}
 	if (self->metadata_size > 0) {
-		stream_partial =
-		    fu_partial_input_stream_new(stream, self->metadata_offset, self->metadata_size);
+		stream_partial = fu_partial_input_stream_new(stream,
+							     self->metadata_offset,
+							     self->metadata_size,
+							     error);
+		if (stream_partial == NULL)
+			return NULL;
 	} else {
 		stream_partial = g_object_ref(stream);
 	}

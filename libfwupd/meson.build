@@ -20,6 +20,7 @@ install_headers([
     'fwupd-client.h',
     'fwupd-client-sync.h',
     'fwupd-common.h',
+    'fwupd-codec.h',
     'fwupd-device.h',
     'fwupd-enums.h',
     'fwupd-error.h',
@@ -46,6 +47,7 @@ libfwupd_src = [
   'fwupd-client.c',
   'fwupd-client-sync.c',
   'fwupd-common.c',         # fuzzing
+  'fwupd-codec.c',      # fuzzing
   'fwupd-device.c',         # fuzzing
   'fwupd-enums.c',          # fuzzing
   'fwupd-error.c',          # fuzzing
@@ -108,6 +110,9 @@ if introspection.allowed()
       'fwupd-common.c',
       'fwupd-common.h',
       'fwupd-common-private.h',
+      'fwupd-codec.c',
+      'fwupd-codec.h',
+      'fwupd-codec-private.h',
       'fwupd-device.c',
       'fwupd-device.h',
       'fwupd-device-private.h',
@@ -118,22 +123,18 @@ if introspection.allowed()
       'fwupd-error.h',
       'fwupd-bios-setting.c',
       'fwupd-bios-setting.h',
-      'fwupd-bios-setting-private.h',
       'fwupd-security-attr.c',
       'fwupd-security-attr.h',
       'fwupd-security-attr-private.h',
       'fwupd-release.c',
       'fwupd-release.h',
-      'fwupd-release-private.h',
       'fwupd-plugin.c',
       'fwupd-plugin.h',
-      'fwupd-plugin-private.h',
       'fwupd-remote.c',
       'fwupd-remote.h',
       'fwupd-remote-private.h',
       'fwupd-report.c',
       'fwupd-report.h',
-      'fwupd-report-private.h',
       'fwupd-request.c',
       'fwupd-request.h',
       'fwupd-request-private.h',

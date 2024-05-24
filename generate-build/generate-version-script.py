@@ -97,6 +97,8 @@ class LdVersionScript:
                 self._add_cls(cls)
             for cls in ns.findall(XMLNS + "class"):
                 self._add_cls(cls)
+            for cls in ns.findall(XMLNS + "interface"):
+                self._add_cls(cls)
 
     def render(self):
         # get a sorted list of all the versions

@@ -659,6 +659,28 @@ fu_remote_list_load_metainfos(XbBuilder *builder, GError **error)
 }
 
 gboolean
+fu_remote_list_set_testing_remote_enabled(FuRemoteList *self, gboolean enable, GError **error)
+{
+	g_return_val_if_fail(FU_IS_REMOTE_LIST(self), FALSE);
+
+	/* not yet initialized */
+	if (self->silo == NULL)
+		return TRUE;
+
+	if (self->testing_remote == enable)
+		return TRUE;
+
+	self->testing_remote = enable;
+
+	if (!fu_remote_list_reload(self, error))
+		return FALSE;
+
+	fu_remote_list_emit_changed(self);
+
+	return TRUE;
+}
+
+gboolean
 fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **error)
 {
 	const gchar *const *locales = g_get_language_names();

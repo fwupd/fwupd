@@ -192,7 +192,7 @@ _show_reset_config()
 _show_remotes()
 {
 	local remotes
-	remotes="$(command fwupdtool get-remotes | command awk '/Remote ID/ { print $4 }')"
+	remotes="$(command fwupdtool get-remotes --json 2>/dev/null | jq '.Remotes | .[] | .Id')"
 	COMPREPLY+=( $(compgen -W "${remotes}" -- "$cur") )
 }
 

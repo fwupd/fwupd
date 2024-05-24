@@ -88,10 +88,6 @@ The `[fwupd Remote]` section can contain the following parameters:
   If `true`, automatically sent success reports for firmware obtained from this remote after the
   firmware update has completed.
 
-**SecurityReportURI=**
-
-  The endpoint to use for sending HSI platform security reports, or blank to disable this feature.
-
 **AutomaticSecurityReports=false**
 
   If `true`, automatically sent HSI platform security reports when running `fwupdmgr security`.

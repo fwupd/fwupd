@@ -26,13 +26,14 @@ static void
 fu_usi_dock_child_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuUsiDockChildDevice *self = FU_USI_DOCK_CHILD_DEVICE(device);
-	fu_string_append_kx(str, idt, "ChipIdx", self->chip_idx);
+	fwupd_codec_string_append_hex(str, idt, "ChipIdx", self->chip_idx);
 }
 
 /* use the parents parser */
 static FuFirmware *
 fu_usi_dock_mcu_device_prepare_firmware(FuDevice *device,
 					GInputStream *stream,
+					FuProgress *progress,
 					FwupdInstallFlags flags,
 					GError **error)
 {
@@ -41,7 +42,7 @@ fu_usi_dock_mcu_device_prepare_firmware(FuDevice *device,
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no parent");
 		return NULL;
 	}
-	return fu_device_prepare_firmware(parent, stream, flags, error);
+	return fu_device_prepare_firmware(parent, stream, progress, flags, error);
 }
 
 /* only update this specific child component */

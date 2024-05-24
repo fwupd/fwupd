@@ -1165,9 +1165,17 @@ typedef enum {
 	 *
 	 * Do not use heuristics when parsing the image.
 	 *
-	 * Since: 2.0.0
+	 * Since: 1.5.0
 	 */
 	FWUPD_INSTALL_FLAG_NO_SEARCH = 1 << 8,
+	/**
+	 * FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS:
+	 *
+	 * Ignore version requirement checks.
+	 *
+	 * Since: 1.9.21
+	 */
+	FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS = 1 << 9,
 	/*< private >*/
 	FWUPD_INSTALL_FLAG_UNKNOWN = G_MAXUINT64,
 } FwupdInstallFlags;
@@ -1479,5 +1487,7 @@ FwupdVersionFormat
 fwupd_version_format_from_string(const gchar *str);
 const gchar *
 fwupd_version_format_to_string(FwupdVersionFormat kind);
+const gchar *
+fwupd_install_flags_to_string(FwupdInstallFlags install_flags);
 
 G_END_DECLS

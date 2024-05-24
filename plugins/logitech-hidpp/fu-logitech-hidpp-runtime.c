@@ -72,59 +72,6 @@ fu_logitech_hidpp_runtime_close(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_logitech_hidpp_runtime_poll(FuDevice *device, GError **error)
-{
-	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
-	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
-	const guint timeout = 1; /* ms */
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	/* open */
-	locker = fu_device_locker_new(self, error);
-	if (locker == NULL)
-		return FALSE;
-
-	/* is there any pending data to read */
-	msg->hidpp_version = 1;
-	if (!fu_logitech_hidpp_receive(priv->io_channel, msg, timeout, &error_local)) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
-			return TRUE;
-		}
-		g_warning("failed to get pending read: %s", error_local->message);
-		return TRUE;
-	}
-
-	/* HID++1.0 error */
-	if (!fu_logitech_hidpp_msg_is_error(msg, &error_local)) {
-		g_warning("failed to get pending read: %s", error_local->message);
-		return TRUE;
-	}
-
-	/* unifying receiver notification */
-	if (msg->report_id == FU_LOGITECH_HIDPP_REPORT_ID_SHORT) {
-		switch (msg->sub_id) {
-		case FU_LOGITECH_HIDPP_SUBID_DEVICE_CONNECTION:
-		case FU_LOGITECH_HIDPP_SUBID_DEVICE_DISCONNECTION:
-		case FU_LOGITECH_HIDPP_SUBID_DEVICE_LOCKING_CHANGED:
-			g_debug("device connection event, do something");
-			break;
-		case FU_LOGITECH_HIDPP_SUBID_LINK_QUALITY:
-			g_debug("ignoring link quality message");
-			break;
-		case FU_LOGITECH_HIDPP_SUBID_ERROR_MSG:
-			g_debug("ignoring error message");
-			break;
-		default:
-			g_debug("unknown SubID %02x", msg->sub_id);
-			break;
-		}
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_logitech_hidpp_runtime_open(FuDevice *device, GError **error)
 {
 	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
@@ -242,7 +189,6 @@ fu_logitech_hidpp_runtime_class_init(FuLogitechHidppRuntimeClass *klass)
 	device_class->open = fu_logitech_hidpp_runtime_open;
 	device_class->probe = fu_logitech_hidpp_runtime_probe;
 	device_class->close = fu_logitech_hidpp_runtime_close;
-	device_class->poll = fu_logitech_hidpp_runtime_poll;
 }
 
 static void

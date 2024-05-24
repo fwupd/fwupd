@@ -15,6 +15,9 @@
 # To override this behavior add FWUPD_DEVICE_FLAG_SKIPS_RESTART
 #
 
+[DPAUX\OUI_0090CC24]
+Plugin = synaptics_mst
+
 [MST-162]
 Name = Luxshare Quad USB4 Dock
 SynapticsMstDeviceKind = dock

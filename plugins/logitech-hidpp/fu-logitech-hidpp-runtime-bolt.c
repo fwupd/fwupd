@@ -57,7 +57,7 @@ static void
 fu_logitech_hidpp_runtime_bolt_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuLogitechHidppRuntimeBolt *self = FU_HIDPP_RUNTIME_BOLT(device);
-	fu_string_append_ku(str, idt, "PairingSlots", self->pairing_slots);
+	fwupd_codec_string_append_int(str, idt, "PairingSlots", self->pairing_slots);
 }
 
 static FuLogitechHidppDevice *

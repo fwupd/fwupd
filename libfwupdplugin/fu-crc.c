@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-crc.h"
+#include "fu-mem.h"
 
 /**
  * fu_crc8_full:
@@ -143,4 +144,46 @@ guint32
 fu_crc32(const guint8 *buf, gsize bufsz)
 {
 	return fu_crc32_full(buf, bufsz, 0xFFFFFFFF, 0xEDB88320);
+}
+
+static guint16
+fu_misr16_step(guint16 cur, guint16 new)
+{
+	guint16 bit0;
+	guint16 res;
+
+	bit0 = cur ^ (new & 1);
+	bit0 ^= cur >> 1;
+	bit0 ^= cur >> 2;
+	bit0 ^= cur >> 4;
+	bit0 ^= cur >> 5;
+	bit0 ^= cur >> 7;
+	bit0 ^= cur >> 11;
+	bit0 ^= cur >> 15;
+	res = (cur << 1) ^ new;
+	res = (res & ~1) | (bit0 & 1);
+	return res;
+}
+
+/**
+ * fu_misr16:
+ * @buf: memory buffer
+ * @bufsz: size of @buf
+ * @init: initial value, typically 0x0
+ *
+ * Returns the MISR check value for the given memory buffer.
+ *
+ * Returns: value
+ *
+ * Since: 1.9.17
+ **/
+guint16
+fu_misr16(guint16 init, const guint8 *buf, gsize bufsz)
+{
+	g_return_val_if_fail(buf != NULL, G_MAXUINT16);
+	g_return_val_if_fail(bufsz % 2 == 0, G_MAXUINT16);
+
+	for (gsize i = 0; i < bufsz; i += 2)
+		init = fu_misr16_step(init, fu_memread_uint16(buf + i, G_LITTLE_ENDIAN));
+	return init;
 }

@@ -25,9 +25,9 @@ static void
 fu_pci_bcr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuPciBcrPlugin *self = FU_PCI_BCR_PLUGIN(plugin);
-	fu_string_append_kb(str, idt, "HasDevice", self->has_device);
-	fu_string_append_kx(str, idt, "BcrAddr", self->bcr_addr);
-	fu_string_append_kx(str, idt, "Bcr", self->bcr);
+	fwupd_codec_string_append_bool(str, idt, "HasDevice", self->has_device);
+	fwupd_codec_string_append_hex(str, idt, "BcrAddr", self->bcr_addr);
+	fwupd_codec_string_append_hex(str, idt, "Bcr", self->bcr);
 }
 
 static void

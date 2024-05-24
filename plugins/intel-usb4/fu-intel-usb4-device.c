@@ -452,6 +452,7 @@ fu_intel_usb4_device_activate(FuDevice *device, FuProgress *progress, GError **e
 static FuFirmware *
 fu_intel_usb4_device_prepare_firmware(FuDevice *device,
 				      GInputStream *stream,
+				      FuProgress *progress,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
@@ -468,7 +469,7 @@ fu_intel_usb4_device_prepare_firmware(FuDevice *device,
 	fw_vendor_id = fu_intel_thunderbolt_nvm_get_vendor_id(FU_INTEL_THUNDERBOLT_NVM(firmware));
 	fw_model_id = fu_intel_thunderbolt_nvm_get_model_id(FU_INTEL_THUNDERBOLT_NVM(firmware));
 	if (self->nvm_vendor_id != fw_vendor_id || self->nvm_model_id != fw_model_id) {
-		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -569,9 +570,9 @@ static void
 fu_intel_usb4_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuIntelUsb4Device *self = FU_INTEL_USB4_DEVICE(device);
-	fu_string_append_kx(str, idt, "NvmVendorId", self->nvm_vendor_id);
-	fu_string_append_kx(str, idt, "NvmModelId", self->nvm_model_id);
-	fu_string_append_kx(str, idt, "NvmDeviceId", self->nvm_device_id);
+	fwupd_codec_string_append_hex(str, idt, "NvmVendorId", self->nvm_vendor_id);
+	fwupd_codec_string_append_hex(str, idt, "NvmModelId", self->nvm_model_id);
+	fwupd_codec_string_append_hex(str, idt, "NvmDeviceId", self->nvm_device_id);
 }
 
 static void

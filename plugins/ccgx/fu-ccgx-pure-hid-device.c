@@ -196,6 +196,7 @@ fu_ccgx_pure_hid_device_setup(FuDevice *device, GError **error)
 static FuFirmware *
 fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 					 GInputStream *stream,
+					 FuProgress *progress,
 					 FwupdInstallFlags flags,
 					 GError **error)
 {
@@ -414,13 +415,12 @@ static void
 fu_ccgx_pure_hid_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCcgxPureHidDevice *self = FU_CCGX_PURE_HID_DEVICE(device);
-	fu_string_append_kx(str, idt, "SiliconId", self->silicon_id);
-	fu_string_append(str,
-			 idt,
-			 "FwMode",
-			 fu_ccgx_pure_hid_fw_mode_to_string(self->operating_mode));
-	if (self->flash_row_size > 0)
-		fu_string_append_kx(str, idt, "CcgxFlashRowSize", self->flash_row_size);
+	fwupd_codec_string_append_hex(str, idt, "SiliconId", self->silicon_id);
+	fwupd_codec_string_append(str,
+				  idt,
+				  "FwMode",
+				  fu_ccgx_pure_hid_fw_mode_to_string(self->operating_mode));
+	fwupd_codec_string_append_hex(str, idt, "CcgxFlashRowSize", self->flash_row_size);
 }
 
 static gboolean

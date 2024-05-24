@@ -6,7 +6,6 @@ Before=display-manager.service
 ConditionVirtualization=!container
 
 [Service]
-Environment="FWUPD_SYSCALL_FILTER=systemd"
 Type=dbus
 TimeoutSec=180
 RuntimeDirectory=@motd_dir@
@@ -32,5 +31,5 @@ RestrictNamespaces=yes
 RestrictRealtime=yes
 RestrictSUIDSGID=yes
 SystemCallArchitectures=native
-SystemCallErrorNumber=EPERM
+Environment="GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK"
 @dynamic_options@

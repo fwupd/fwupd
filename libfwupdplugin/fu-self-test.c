@@ -13,7 +13,6 @@
 #include <glib/gstdio.h>
 #include <string.h>
 
-#include "fwupd-bios-setting-private.h"
 #include "fwupd-security-attr-private.h"
 
 #include "fu-bios-settings-private.h"
@@ -204,18 +203,20 @@ fu_common_crc_func(void)
 	g_assert_cmpint(fu_crc8(buf, sizeof(buf)), ==, 0x7A);
 	g_assert_cmpint(fu_crc16(buf, sizeof(buf)), ==, 0x4DF1);
 	g_assert_cmpint(fu_crc32(buf, sizeof(buf)), ==, 0x40EFAB9E);
+	g_assert_cmpint(fu_misr16(0, buf, (sizeof(buf) / 2) * 2), ==, 0x40D);
+	g_assert_cmpint(fu_misr16(0xFFFF, buf, (sizeof(buf) / 2) * 2), ==, 0xFBFA);
 }
 
 static void
 fu_string_append_func(void)
 {
 	g_autoptr(GString) str = g_string_new(NULL);
-	fu_string_append(str, 0, "hdr", NULL);
-	fu_string_append(str, 0, "key", "value");
-	fu_string_append(str, 0, "key1", "value1");
-	fu_string_append(str, 1, "key2", "value2");
-	fu_string_append(str, 1, "", "value2");
-	fu_string_append(str, 2, "key3", "value3");
+	fwupd_codec_string_append(str, 0, "hdr", "");
+	fwupd_codec_string_append(str, 0, "key", "value");
+	fwupd_codec_string_append(str, 0, "key1", "value1");
+	fwupd_codec_string_append(str, 1, "key2", "value2");
+	fwupd_codec_string_append(str, 1, "", "value2");
+	fwupd_codec_string_append(str, 2, "key3", "value3");
 	g_assert_cmpstr(str->str,
 			==,
 			"hdr:\n"
@@ -4658,9 +4659,10 @@ fu_partial_input_stream_func(void)
 	g_autoptr(GBytes) blob2 = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GInputStream) base_stream = g_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) stream_complete = NULL;
+	g_autoptr(GInputStream) stream_error = NULL;
 	g_autoptr(GInputStream) stream_file = NULL;
-	g_autoptr(GInputStream) stream_complete = fu_partial_input_stream_new(base_stream, 0, 8);
-	g_autoptr(GInputStream) stream = fu_partial_input_stream_new(base_stream, 2, 4);
+	g_autoptr(GInputStream) stream = NULL;
 
 	/* check the behavior of GFileInputStream */
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "dfu.builder.xml", NULL);
@@ -4746,6 +4748,9 @@ fu_partial_input_stream_func(void)
 	g_assert_cmpint(buf[0], ==, '8');
 
 	/* seek to non-start */
+	stream = fu_partial_input_stream_new(base_stream, 2, 4, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream);
 	ret = g_seekable_seek(G_SEEKABLE(stream), 0x2, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -4812,12 +4817,20 @@ fu_partial_input_stream_func(void)
 	g_clear_error(&error);
 
 	/* read right up against the end of the base stream */
+	stream_complete = fu_partial_input_stream_new(base_stream, 0, 8, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream_complete);
 	ret = g_seekable_seek(G_SEEKABLE(stream_complete), 0x8, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	rc = g_input_stream_read(stream_complete, buf, sizeof(buf), NULL, &error);
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 0);
+
+	/* try to create an out-of-range partial stream */
+	stream_error = fu_partial_input_stream_new(base_stream, 0, 9, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(stream_error);
 }
 
 static void
@@ -4827,6 +4840,7 @@ fu_composite_input_stream_func(void)
 	gsize streamsz = 0;
 	gssize rc;
 	guint8 buf[2] = {0x0};
+	g_autofree gchar *str = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) blob1 = g_bytes_new_static("ab", 2);
 	g_autoptr(GBytes) blob2 = g_bytes_new_static("cde", 3);
@@ -4857,13 +4871,19 @@ fu_composite_input_stream_func(void)
 	g_assert_cmpint(streamsz, ==, 5);
 
 	/* add partial stream */
-	stream4 = fu_partial_input_stream_new(stream3, 0x3, 2);
+	stream4 = fu_partial_input_stream_new(stream3, 0x3, 2, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream4);
 	fu_composite_input_stream_add_partial_stream(FU_COMPOSITE_INPUT_STREAM(composite_stream),
 						     FU_PARTIAL_INPUT_STREAM(stream4));
 	ret = fu_input_stream_size(composite_stream, &streamsz, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(streamsz, ==, 7);
+
+	/* to string */
+	str = fwupd_codec_to_string(FWUPD_CODEC(composite_stream));
+	g_print("%s", str);
 
 	/* first block */
 	ret = fu_input_stream_read_safe(composite_stream,

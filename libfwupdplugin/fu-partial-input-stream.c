@@ -8,7 +8,11 @@
 
 #include "config.h"
 
-#include "fu-partial-input-stream.h"
+#include "fwupd-codec.h"
+#include "fwupd-common-private.h"
+
+#include "fu-input-stream.h"
+#include "fu-partial-input-stream-private.h"
 
 /**
  * FuPartialInputStream:
@@ -36,12 +40,30 @@ struct _FuPartialInputStream {
 
 static void
 fu_partial_input_stream_seekable_iface_init(GSeekableIface *iface);
+static void
+fu_partial_input_stream_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(FuPartialInputStream,
 			fu_partial_input_stream,
 			G_TYPE_INPUT_STREAM,
 			G_IMPLEMENT_INTERFACE(G_TYPE_SEEKABLE,
-					      fu_partial_input_stream_seekable_iface_init))
+					      fu_partial_input_stream_seekable_iface_init)
+			    G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
+						  fu_partial_input_stream_codec_iface_init))
+
+static void
+fu_partial_input_stream_add_string(FwupdCodec *converter, guint idt, GString *str)
+{
+	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(converter);
+	fwupd_codec_string_append_hex(str, idt, "Offset", self->offset);
+	fwupd_codec_string_append_hex(str, idt, "Size", self->size);
+}
+
+static void
+fu_partial_input_stream_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_string = fu_partial_input_stream_add_string;
+}
 
 static goffset
 fu_partial_input_stream_tell(GSeekable *seekable)
@@ -125,21 +147,45 @@ fu_partial_input_stream_seekable_iface_init(GSeekableIface *iface)
  * @stream: a base #GInputStream
  * @offset: offset into @stream
  * @size: size of @stream in bytes
+ * @error: (nullable): optional return location for an error
  *
  * Creates a partial input stream where content is read from the donor stream.
  *
- * Returns: (transfer full): a #FuPartialInputStream
+ * Returns: (transfer full): a #FuPartialInputStream, or %NULL on error
  *
  * Since: 2.0.0
  **/
 GInputStream *
-fu_partial_input_stream_new(GInputStream *stream, gsize offset, gsize size)
+fu_partial_input_stream_new(GInputStream *stream, gsize offset, gsize size, GError **error)
 {
+	gsize base_sz = 0;
 	g_autoptr(FuPartialInputStream) self = g_object_new(FU_TYPE_PARTIAL_INPUT_STREAM, NULL);
+
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	self->base_stream = g_object_ref(stream);
 	self->offset = offset;
 	self->size = size;
+
+	/* sanity check */
+	if (!fu_input_stream_size(stream, &base_sz, error)) {
+		g_prefix_error(error, "failed to get size: ");
+		return NULL;
+	}
+	if (offset + size > base_sz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "base stream was 0x%x bytes in size, and tried to create partial "
+			    "stream @0x%x of 0x%x bytes",
+			    (guint)base_sz,
+			    (guint)offset,
+			    (guint)size);
+		return NULL;
+	}
+
+	/* success */
 	return G_INPUT_STREAM(g_steal_pointer(&self));
 }
 

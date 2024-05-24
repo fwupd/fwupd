@@ -61,15 +61,21 @@ fu_synaptics_cape_hid_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_version(FU_FIRMWARE(self), version_str);
 
 	/* top-most part of header */
-	stream_hdr =
-	    fu_partial_input_stream_new(stream, 0, FU_STRUCT_SYNAPTICS_CAPE_HID_HDR_OFFSET_VER_W);
+	stream_hdr = fu_partial_input_stream_new(stream,
+						 0,
+						 FU_STRUCT_SYNAPTICS_CAPE_HID_HDR_OFFSET_VER_W,
+						 error);
+	if (stream_hdr == NULL)
+		return FALSE;
 	if (!fu_firmware_parse_stream(img_hdr, stream_hdr, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_hdr, FU_FIRMWARE_ID_HEADER);
 	fu_firmware_add_image(firmware, img_hdr);
 
 	/* body */
-	stream_body = fu_partial_input_stream_new(stream, st->len, streamsz - st->len);
+	stream_body = fu_partial_input_stream_new(stream, st->len, streamsz - st->len, error);
+	if (stream_body == NULL)
+		return FALSE;
 	if (!fu_firmware_set_stream(firmware, stream_body, error))
 		return FALSE;
 	fu_firmware_set_id(firmware, FU_FIRMWARE_ID_PAYLOAD);

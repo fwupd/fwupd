@@ -25,9 +25,15 @@ fu_tpm_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
 	if (self->tpm_device != NULL)
-		fu_string_append(str, idt, "TpmDevice", fu_device_get_id(self->tpm_device));
+		fwupd_codec_string_append(str,
+					  idt,
+					  "TpmDevice",
+					  fu_device_get_id(self->tpm_device));
 	if (self->bios_device != NULL)
-		fu_string_append(str, idt, "BiosDevice", fu_device_get_id(self->bios_device));
+		fwupd_codec_string_append(str,
+					  idt,
+					  "BiosDevice",
+					  fu_device_get_id(self->bios_device));
 }
 
 static void

@@ -284,7 +284,7 @@ fu_debug_post_parse_hook(GOptionContext *context,
 
 	/* for compat */
 	if (self->log_level == G_LOG_LEVEL_DEBUG)
-		(void)g_setenv("FWUPD_VERBOSE", "1", TRUE);
+		(void)g_setenv("FWUPD_VERBOSE", "1", FALSE);
 
 	/* redirect all domains */
 	g_log_set_default_handler(fu_debug_handler_cb, self);

@@ -34,9 +34,9 @@ static void
 fu_kinetic_dp_puma_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuKineticDpPumaDevice *self = FU_KINETIC_DP_PUMA_DEVICE(device);
-	fu_string_append_kx(str, idt, "ReadFlashProgTime", self->read_flash_prog_time);
-	fu_string_append_kx(str, idt, "FlashId", self->flash_id);
-	fu_string_append_kx(str, idt, "FlashSize", self->flash_size);
+	fwupd_codec_string_append_hex(str, idt, "ReadFlashProgTime", self->read_flash_prog_time);
+	fwupd_codec_string_append_hex(str, idt, "FlashId", self->flash_id);
+	fwupd_codec_string_append_hex(str, idt, "FlashSize", self->flash_size);
 }
 
 static gboolean

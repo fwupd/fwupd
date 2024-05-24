@@ -55,10 +55,11 @@ fu_mediatek_scaler_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
 	if (self->i2c_dev != NULL) {
-		fu_string_append(str,
-				 idt,
-				 "I2cDeviceFile",
-				 fu_udev_device_get_device_file(FU_UDEV_DEVICE(self->i2c_dev)));
+		fwupd_codec_string_append(
+		    str,
+		    idt,
+		    "I2cDeviceFile",
+		    fu_udev_device_get_device_file(FU_UDEV_DEVICE(self->i2c_dev)));
 	}
 }
 
@@ -938,6 +939,7 @@ fu_mediatek_scaler_device_write_firmware(FuDevice *device,
 static FuFirmware *
 fu_mediatek_scaler_device_prepare_firmware(FuDevice *device,
 					   GInputStream *stream,
+					   FuProgress *progress,
 					   FwupdInstallFlags flags,
 					   GError **error)
 {

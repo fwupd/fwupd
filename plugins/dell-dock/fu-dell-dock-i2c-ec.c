@@ -596,21 +596,27 @@ fu_dell_dock_ec_to_string(FuDevice *device, guint idt, GString *str)
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	gchar service_tag[8] = {0x00};
 
-	fu_string_append_ku(str, idt, "BaseType", self->base_type);
-	fu_string_append_ku(str, idt, "BoardId", self->data->board_id);
-	fu_string_append_ku(str, idt, "PowerSupply", self->data->power_supply_wattage);
-	fu_string_append_kx(str, idt, "StatusPort0", self->data->port0_dock_status);
-	fu_string_append_kx(str, idt, "StatusPort1", self->data->port1_dock_status);
+	fwupd_codec_string_append_int(str, idt, "BaseType", self->base_type);
+	fwupd_codec_string_append_int(str, idt, "BoardId", self->data->board_id);
+	fwupd_codec_string_append_int(str, idt, "PowerSupply", self->data->power_supply_wattage);
+	fwupd_codec_string_append_hex(str, idt, "StatusPort0", self->data->port0_dock_status);
+	fwupd_codec_string_append_hex(str, idt, "StatusPort1", self->data->port1_dock_status);
 	memcpy(service_tag, self->data->service_tag, 7);
-	fu_string_append(str, idt, "ServiceTag", service_tag);
-	fu_string_append_ku(str, idt, "Configuration", self->data->dock_configuration);
-	fu_string_append_kx(str, idt, "PackageFirmwareVersion", self->data->dock_firmware_pkg_ver);
-	fu_string_append_ku(str, idt, "ModuleSerial", self->data->module_serial);
-	fu_string_append_ku(str, idt, "OriginalModuleSerial", self->data->original_module_serial);
-	fu_string_append_ku(str, idt, "Type", self->data->dock_type);
-	fu_string_append_kx(str, idt, "ModuleType", self->data->module_type);
-	fu_string_append(str, idt, "MinimumEc", self->ec_minimum_version);
-	fu_string_append_ku(str, idt, "PassiveFlow", self->passive_flow);
+	fwupd_codec_string_append(str, idt, "ServiceTag", service_tag);
+	fwupd_codec_string_append_int(str, idt, "Configuration", self->data->dock_configuration);
+	fwupd_codec_string_append_hex(str,
+				      idt,
+				      "PackageFirmwareVersion",
+				      self->data->dock_firmware_pkg_ver);
+	fwupd_codec_string_append_int(str, idt, "ModuleSerial", self->data->module_serial);
+	fwupd_codec_string_append_int(str,
+				      idt,
+				      "OriginalModuleSerial",
+				      self->data->original_module_serial);
+	fwupd_codec_string_append_int(str, idt, "Type", self->data->dock_type);
+	fwupd_codec_string_append_hex(str, idt, "ModuleType", self->data->module_type);
+	fwupd_codec_string_append(str, idt, "MinimumEc", self->ec_minimum_version);
+	fwupd_codec_string_append_int(str, idt, "PassiveFlow", self->passive_flow);
 }
 
 gboolean
@@ -815,7 +821,7 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 	g_info("writing EC firmware version %s", dynamic_version);
 
 	/* meet the minimum EC version */
-	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS) == 0 &&
 	    (fu_version_compare(dynamic_version,
 				self->ec_minimum_version,
 				FWUPD_VERSION_FORMAT_QUAD) < 0)) {

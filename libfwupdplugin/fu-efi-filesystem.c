@@ -57,7 +57,9 @@ fu_efi_filesystem_parse(FuFirmware *firmware,
 				(guint)streamsz);
 			break;
 		}
-		stream_tmp = fu_partial_input_stream_new(stream, offset, streamsz - offset);
+		stream_tmp = fu_partial_input_stream_new(stream, offset, streamsz - offset, error);
+		if (stream_tmp == NULL)
+			return FALSE;
 		if (!fu_firmware_parse_stream(img,
 					      stream_tmp,
 					      0x0,

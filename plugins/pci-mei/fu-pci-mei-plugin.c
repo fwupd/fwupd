@@ -37,17 +37,17 @@ static void
 fu_pci_mei_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuPciMeiPlugin *self = FU_PCI_MEI_PLUGIN(plugin);
-	fu_string_append(str, idt, "HFSTS1", NULL);
+	fwupd_codec_string_append(str, idt, "HFSTS1", "");
 	fu_mei_hfsts1_to_string(self->hfsts1, idt + 1, str);
-	fu_string_append(str, idt, "HFSTS2", NULL);
+	fwupd_codec_string_append(str, idt, "HFSTS2", "");
 	fu_mei_hfsts2_to_string(self->hfsts2, idt + 1, str);
-	fu_string_append(str, idt, "HFSTS3", NULL);
+	fwupd_codec_string_append(str, idt, "HFSTS3", "");
 	fu_mei_hfsts3_to_string(self->hfsts3, idt + 1, str);
-	fu_string_append(str, idt, "HFSTS4", NULL);
+	fwupd_codec_string_append(str, idt, "HFSTS4", "");
 	fu_mei_hfsts4_to_string(self->hfsts4, idt + 1, str);
-	fu_string_append(str, idt, "HFSTS5", NULL);
+	fwupd_codec_string_append(str, idt, "HFSTS5", "");
 	fu_mei_hfsts5_to_string(self->hfsts5, idt + 1, str);
-	fu_string_append(str, idt, "HFSTS6", NULL);
+	fwupd_codec_string_append(str, idt, "HFSTS6", "");
 	fu_mei_hfsts6_to_string(self->hfsts6, idt + 1, str);
 }
 
@@ -57,6 +57,8 @@ fu_mei_detect_family(FuPlugin *plugin)
 	FuPciMeiPlugin *self = FU_PCI_MEI_PLUGIN(plugin);
 	guint8 ver = self->vers.major;
 
+	if (ver == 0)
+		return FU_MEI_FAMILY_UNKNOWN;
 	if (ver == 1 || ver == 2) {
 		if (self->hfsts1.fields.operation_mode == 0xf)
 			return FU_MEI_FAMILY_SPS;
@@ -66,9 +68,7 @@ fu_mei_detect_family(FuPlugin *plugin)
 		return FU_MEI_FAMILY_TXE;
 	if (ver == 6 || ver == 7 || ver == 8 || ver == 9 || ver == 10)
 		return FU_MEI_FAMILY_ME;
-	if (ver == 11 || ver == 12 || ver == 13 || ver == 14 || ver == 15 || ver == 16)
-		return FU_MEI_FAMILY_CSME;
-	return FU_MEI_FAMILY_UNKNOWN;
+	return FU_MEI_FAMILY_CSME;
 }
 
 static gboolean

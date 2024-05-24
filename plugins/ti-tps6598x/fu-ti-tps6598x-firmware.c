@@ -51,24 +51,30 @@ fu_ti_tps6598x_firmware_parse(FuFirmware *firmware,
 
 	/* pubkey */
 	stream_pubkey =
-	    fu_partial_input_stream_new(stream, offset, FU_TI_TPS6598X_FIRMWARE_PUBKEY_SIZE);
+	    fu_partial_input_stream_new(stream, offset, FU_TI_TPS6598X_FIRMWARE_PUBKEY_SIZE, error);
+	if (stream_pubkey == NULL)
+		return FALSE;
 	if (!fu_firmware_parse_stream(img_pubkey, stream_pubkey, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_pubkey, "pubkey");
 	fu_firmware_add_image(firmware, img_pubkey);
-	offset += fu_partial_input_stream_get_size(FU_PARTIAL_INPUT_STREAM(stream_pubkey));
+	offset += FU_TI_TPS6598X_FIRMWARE_PUBKEY_SIZE;
 
 	/* RSA signature */
 	stream_sig =
-	    fu_partial_input_stream_new(stream, offset, FU_TI_TPS6598X_FIRMWARE_PUBKEY_SIZE);
+	    fu_partial_input_stream_new(stream, offset, FU_TI_TPS6598X_FIRMWARE_PUBKEY_SIZE, error);
+	if (stream_sig == NULL)
+		return FALSE;
 	if (!fu_firmware_parse_stream(img_sig, stream_sig, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_sig, FU_FIRMWARE_ID_SIGNATURE);
 	fu_firmware_add_image(firmware, img_sig);
-	offset += fu_partial_input_stream_get_size(FU_PARTIAL_INPUT_STREAM(stream_sig));
+	offset += FU_TI_TPS6598X_FIRMWARE_PUBKEY_SIZE;
 
 	/* payload */
-	stream_payload = fu_partial_input_stream_new(stream, offset, streamsz - offset);
+	stream_payload = fu_partial_input_stream_new(stream, offset, streamsz - offset, error);
+	if (stream_payload == NULL)
+		return FALSE;
 	if (!fu_firmware_parse_stream(img_payload, stream_payload, 0x0, flags, error))
 		return FALSE;
 	if (!fu_input_stream_read_safe(stream,

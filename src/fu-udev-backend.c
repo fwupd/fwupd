@@ -33,7 +33,7 @@ static void
 fu_udev_backend_to_string(FuBackend *backend, guint idt, GString *str)
 {
 	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
-	fu_string_append_kb(str, idt, "DoneColdplug", self->done_coldplug);
+	fwupd_codec_string_append_bool(str, idt, "DoneColdplug", self->done_coldplug);
 }
 
 static void

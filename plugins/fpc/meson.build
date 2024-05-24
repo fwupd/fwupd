@@ -8,6 +8,7 @@ plugin_builtins += static_library('fu_plugin_fpc',
   sources: [
     'fu-fpc-device.c',
     'fu-fpc-plugin.c',
+    'fu-fpc-ff2-firmware.c',
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,

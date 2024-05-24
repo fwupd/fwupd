@@ -74,7 +74,6 @@
 struct _FuSynapticsMstDevice {
 	FuDpauxDevice parent_instance;
 	gchar *device_kind;
-	gchar *system_type;
 	guint64 write_block_size;
 	FuSynapticsMstFamily family;
 	guint8 active_bank;
@@ -90,7 +89,6 @@ fu_synaptics_mst_device_finalize(GObject *object)
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(object);
 
 	g_free(self->device_kind);
-	g_free(self->system_type);
 
 	G_OBJECT_CLASS(fu_synaptics_mst_device_parent_class)->finalize(object);
 }
@@ -138,13 +136,10 @@ static void
 fu_synaptics_mst_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
-	fu_string_append(str, idt, "DeviceKind", self->device_kind);
-	if (self->family == FU_SYNAPTICS_MST_FAMILY_PANAMERA)
-		fu_string_append_kx(str, idt, "ActiveBank", self->active_bank);
-	if (self->board_id != 0x0)
-		fu_string_append_ku(str, idt, "BoardId", self->board_id);
-	if (self->chip_id != 0x0)
-		fu_string_append_kx(str, idt, "ChipId", self->chip_id);
+	fwupd_codec_string_append(str, idt, "DeviceKind", self->device_kind);
+	fwupd_codec_string_append_hex(str, idt, "ActiveBank", self->active_bank);
+	fwupd_codec_string_append_int(str, idt, "BoardId", self->board_id);
+	fwupd_codec_string_append_hex(str, idt, "ChipId", self->chip_id);
 }
 
 static gboolean
@@ -1349,6 +1344,7 @@ fu_synaptics_mst_device_restart(FuSynapticsMstDevice *self, GError **error)
 static FuFirmware *
 fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
 					 GInputStream *stream,
+					 FuProgress *progress,
 					 FwupdInstallFlags flags,
 					 GError **error)
 {
@@ -1485,15 +1481,6 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
-FuSynapticsMstDevice *
-fu_synaptics_mst_device_new(FuDpauxDevice *device)
-{
-	FuSynapticsMstDevice *self = g_object_new(FU_TYPE_SYNAPTICS_MST_DEVICE, NULL);
-	if (device != NULL)
-		fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(device));
-	return self;
-}
-
 static gboolean
 fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **error)
 {
@@ -1574,13 +1561,6 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 	return TRUE;
 }
 
-void
-fu_synaptics_mst_device_set_system_type(FuSynapticsMstDevice *self, const gchar *system_type)
-{
-	g_return_if_fail(FU_IS_SYNAPTICS_MST_DEVICE(self));
-	self->system_type = g_strdup(system_type);
-}
-
 static gboolean
 fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 {
@@ -1599,16 +1579,6 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error_local = NULL;
-
-	/* not a correct device */
-	if (fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)) != SYNAPTICS_IEEE_OUI) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "not a supported OUI, got 0x%x",
-			    fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)));
-		return FALSE;
-	}
 
 	/* read support for remote control */
 	if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(self),
@@ -1728,9 +1698,10 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	/* this is a host system, use system ID */
 	name_family = fu_synaptics_mst_family_to_string(self->family);
 	if (g_strcmp0(self->device_kind, "system") == 0) {
-		g_autofree gchar *guid = NULL;
-		guid =
-		    g_strdup_printf("MST-%s-%s-%u", name_family, self->system_type, self->board_id);
+		FuContext *ctx = fu_device_get_context(device);
+		const gchar *system_type = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_SKU);
+		g_autofree gchar *guid =
+		    g_strdup_printf("MST-%s-%s-%u", name_family, system_type, self->board_id);
 		fu_device_add_instance_id(FU_DEVICE(self), guid);
 
 		/* docks or something else */

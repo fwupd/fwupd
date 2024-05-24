@@ -225,7 +225,10 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 	hdr_sz = st->len + helper->rsvd_block;
 
 	/* verify checksum */
-	partial_stream = fu_partial_input_stream_new(helper->stream, *offset + hdr_sz, blob_comp);
+	partial_stream =
+	    fu_partial_input_stream_new(helper->stream, *offset + hdr_sz, blob_comp, error);
+	if (partial_stream == NULL)
+		return FALSE;
 	if ((helper->install_flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint32 checksum = fu_struct_cab_data_get_checksum(st);
 		if (checksum != 0) {
@@ -446,7 +449,10 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 	}
 	stream = fu_partial_input_stream_new(folder_data,
 					     fu_struct_cab_file_get_uoffset(st),
-					     fu_struct_cab_file_get_usize(st));
+					     fu_struct_cab_file_get_usize(st),
+					     error);
+	if (stream == NULL)
+		return FALSE;
 	if (!fu_firmware_parse_stream(FU_FIRMWARE(img), stream, 0x0, helper->install_flags, error))
 		return FALSE;
 	if (!fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(img), error))

@@ -44,7 +44,9 @@ fu_steelseries_firmware_parse(FuFirmware *firmware,
 				      error))
 		return FALSE;
 
-	stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - sizeof(checksum_tmp));
+	stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - sizeof(checksum_tmp), error);
+	if (stream_tmp == NULL)
+		return FALSE;
 	if (!fu_input_stream_compute_crc32(stream_tmp, &checksum_tmp, 0xEDB88320, error))
 		return FALSE;
 	if (checksum_tmp != checksum) {

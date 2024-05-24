@@ -1694,6 +1694,7 @@ fu_genesys_scaler_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 static FuFirmware *
 fu_genesys_scaler_device_prepare_firmware(FuDevice *device,
 					  GInputStream *stream,
+					  FuProgress *progress,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {
@@ -1829,7 +1830,7 @@ fu_genesys_scaler_device_to_string(FuDevice *device, guint idt, GString *str)
 	g_autoptr(GError) error_local_e = NULL;
 	g_autoptr(GError) error_local_n = NULL;
 
-	fu_string_append_kx(str, idt, "Level", self->level);
+	fwupd_codec_string_append_hex(str, idt, "Level", self->level);
 	if (fu_memcpy_safe((guint8 *)public_key_e,
 			   sizeof(public_key_e),
 			   0, /* dst */
@@ -1838,7 +1839,7 @@ fu_genesys_scaler_device_to_string(FuDevice *device, guint idt, GString *str)
 			   sizeof(self->public_key) - 2 - (sizeof(public_key_e) - 1), /* src */
 			   sizeof(public_key_e) - 1,
 			   &error_local_e)) {
-		fu_string_append(str, idt, "PublicKeyE", public_key_e);
+		fwupd_codec_string_append(str, idt, "PublicKeyE", public_key_e);
 	} else {
 		g_debug("ignoring public-key parameter E: %s", error_local_e->message);
 	}
@@ -1850,19 +1851,19 @@ fu_genesys_scaler_device_to_string(FuDevice *device, guint idt, GString *str)
 			   4, /* src */
 			   sizeof(public_key_n) - 1,
 			   &error_local_n)) {
-		fu_string_append(str, idt, "PublicKeyN", public_key_n);
+		fwupd_codec_string_append(str, idt, "PublicKeyN", public_key_n);
 	} else {
 		g_debug("ignoring public-key parameter N: %s", error_local_n->message);
 	}
-	fu_string_append_kx(str, idt, "ReadRequestRead", self->vc.req_read);
-	fu_string_append_kx(str, idt, "WriteRequest", self->vc.req_write);
-	fu_string_append_kx(str, idt, "SectorSize", self->sector_size);
-	fu_string_append_kx(str, idt, "PageSize", self->page_size);
-	fu_string_append_kx(str, idt, "TransferSize", self->transfer_size);
-	fu_string_append_kx(str, idt, "GpioOutputRegister", self->gpio_out_reg);
-	fu_string_append_kx(str, idt, "GpioEnableRegister", self->gpio_en_reg);
-	fu_string_append_kx(str, idt, "GpioValue", self->gpio_val);
-	fu_string_append_kx(str, idt, "CfiFlashId", self->cfi_flash_id);
+	fwupd_codec_string_append_hex(str, idt, "ReadRequestRead", self->vc.req_read);
+	fwupd_codec_string_append_hex(str, idt, "WriteRequest", self->vc.req_write);
+	fwupd_codec_string_append_hex(str, idt, "SectorSize", self->sector_size);
+	fwupd_codec_string_append_hex(str, idt, "PageSize", self->page_size);
+	fwupd_codec_string_append_hex(str, idt, "TransferSize", self->transfer_size);
+	fwupd_codec_string_append_hex(str, idt, "GpioOutputRegister", self->gpio_out_reg);
+	fwupd_codec_string_append_hex(str, idt, "GpioEnableRegister", self->gpio_en_reg);
+	fwupd_codec_string_append_hex(str, idt, "GpioValue", self->gpio_val);
+	fwupd_codec_string_append_hex(str, idt, "CfiFlashId", self->cfi_flash_id);
 }
 
 static gboolean

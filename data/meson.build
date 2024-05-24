@@ -94,12 +94,37 @@ if build_daemon
       dynamic_options += 'RestrictAddressFamilies=AF_NETLINK AF_UNIX'
     endif
 
-    # flashrom requires raw-io
-    system_call_filter = ['~@clock', '@cpu-emulation', '@debug', '@memlock', '@module', '@mount', '@obsolete', '@pkey', '@reboot', '@resources', '@swap']
-    if not allow_flashrom
-      system_call_filter += ['@raw-io']
+    # allow-list, see `systemd-analyze syscall-filter` for what each group adds
+    syscall_filter = [
+      '@basic-io',
+      '@file-system',
+      '@io-event',
+      '@ipc',
+      '@network-io',
+      '@process',
+      '@sync',
+      '@signal',  # for g_local_file_monitor_new
+      '@timer',   # for usbi_create_timer
+      '@chown',   # for sqlite3Step
+      'ioctl',
+      'uname',
+      'sysinfo',  # for sysconf
+      'madvise',  # for mtrim
+      'mremap',   # for g_realloc
+      'splice', 'vmsplice', 'copy_file_range', # for g_file_copy
+    ]
+    if allow_flashrom
+      syscall_filter += ['@raw-io']
     endif
-    dynamic_options += ['SystemCallFilter=' + ' '.join(system_call_filter)]
+    if supported_build
+      dynamic_options += ['Environment="FWUPD_SYSCALL_FILTER=systemd"']
+      dynamic_options += ['SystemCallErrorNumber=EPERM']
+    else
+      # to debug what additional syscalls are required, we set SystemCallErrorNumber=SIGSYS
+      # and then can do `coredumpctl debug` and get the syscall number with `(gdb) p $rax`
+      dynamic_options += ['SystemCallErrorNumber=SIGSYS']
+    endif
+    dynamic_options += ['SystemCallFilter=' + ' '.join(syscall_filter)]
 
     con2.set('dynamic_options', '\n'.join(dynamic_options))
     con2.set('motd_dir', motd_dir)

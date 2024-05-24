@@ -42,23 +42,21 @@ static void
 fu_wistron_dock_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuWistronDockDevice *self = FU_WISTRON_DOCK_DEVICE(device);
-	fu_string_append(str,
-			 idt,
-			 "ComponentIdx",
-			 fu_wistron_dock_component_idx_to_string(self->component_idx));
-	fu_string_append(str,
-			 idt,
-			 "UpdatePhase",
-			 fu_wistron_dock_update_phase_to_string(self->update_phase));
-	fu_string_append(str,
-			 idt,
-			 "StatusCode",
-			 fu_wistron_dock_status_code_to_string(self->status_code));
-	fu_string_append_kx(str, idt, "ImgMode", self->imgmode);
-	if (self->icp_bbinfo != NULL)
-		fu_string_append(str, idt, "IcpBbInfo", self->icp_bbinfo);
-	if (self->icp_userinfo != NULL)
-		fu_string_append(str, idt, "IcpUserInfo", self->icp_userinfo);
+	fwupd_codec_string_append(str,
+				  idt,
+				  "ComponentIdx",
+				  fu_wistron_dock_component_idx_to_string(self->component_idx));
+	fwupd_codec_string_append(str,
+				  idt,
+				  "UpdatePhase",
+				  fu_wistron_dock_update_phase_to_string(self->update_phase));
+	fwupd_codec_string_append(str,
+				  idt,
+				  "StatusCode",
+				  fu_wistron_dock_status_code_to_string(self->status_code));
+	fwupd_codec_string_append_hex(str, idt, "ImgMode", self->imgmode);
+	fwupd_codec_string_append(str, idt, "IcpBbInfo", self->icp_bbinfo);
+	fwupd_codec_string_append(str, idt, "IcpUserInfo", self->icp_userinfo);
 }
 
 typedef struct {
@@ -334,6 +332,7 @@ fu_wistron_dock_device_write_blocks(FuWistronDockDevice *self,
 static FuFirmware *
 fu_wistron_dock_device_prepare_firmware(FuDevice *device,
 					GInputStream *stream,
+					FuProgress *progress,
 					FwupdInstallFlags flags,
 					GError **error)
 {

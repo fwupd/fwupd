@@ -14,8 +14,3 @@ G_DECLARE_FINAL_TYPE(FuSynapticsMstDevice,
 		     FU,
 		     SYNAPTICS_MST_DEVICE,
 		     FuDpauxDevice)
-
-FuSynapticsMstDevice *
-fu_synaptics_mst_device_new(FuDpauxDevice *device);
-void
-fu_synaptics_mst_device_set_system_type(FuSynapticsMstDevice *self, const gchar *system_type);

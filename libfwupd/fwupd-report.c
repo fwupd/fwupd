@@ -9,10 +9,11 @@
 #include <gio/gio.h>
 #include <string.h>
 
+#include "fwupd-codec-private.h"
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
-#include "fwupd-report-private.h"
+#include "fwupd-report.h"
 
 /**
  * FwupdReport:
@@ -40,7 +41,16 @@ typedef struct {
 
 enum { PROP_0, PROP_FLAGS, PROP_LAST };
 
-G_DEFINE_TYPE_WITH_PRIVATE(FwupdReport, fwupd_report, G_TYPE_OBJECT)
+static void
+fwupd_report_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FwupdReport,
+		       fwupd_report,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_ADD_PRIVATE(FwupdReport)
+			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fwupd_report_codec_iface_init));
+
 #define GET_PRIVATE(o) (fwupd_report_get_instance_private(o))
 
 /**
@@ -460,23 +470,12 @@ fwupd_report_get_metadata_item(FwupdReport *self, const gchar *key)
 	return g_hash_table_lookup(priv->metadata, key);
 }
 
-/**
- * fwupd_report_to_variant:
- * @self: a #FwupdReport
- *
- * Serialize the report data.
- *
- * Returns: the serialized data, or %NULL for error
- *
- * Since: 1.8.8
- **/
-GVariant *
-fwupd_report_to_variant(FwupdReport *self)
+static GVariant *
+fwupd_report_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 {
+	FwupdReport *self = FWUPD_REPORT(converter);
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
 	GVariantBuilder builder;
-
-	g_return_val_if_fail(FWUPD_IS_REPORT(self), NULL);
 
 	/* create an array with all the metadata in */
 	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
@@ -600,37 +599,23 @@ fwupd_report_from_key_value(FwupdReport *self, const gchar *key, GVariant *value
 	}
 }
 
-/**
- * fwupd_report_to_json:
- * @self: a #FwupdReport
- * @builder: a JSON builder
- *
- * Adds a fwupd report to a JSON builder
- *
- * Since: 1.8.8
- **/
-void
-fwupd_report_to_json(FwupdReport *self, JsonBuilder *builder)
+static void
+fwupd_report_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
 {
+	FwupdReport *self = FWUPD_REPORT(converter);
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GList) keys = NULL;
 
-	g_return_if_fail(FWUPD_IS_REPORT(self));
-	g_return_if_fail(builder != NULL);
-
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DEVICE_NAME, priv->device_name);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DISTRO_ID, priv->distro_id);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_DISTRO_VARIANT,
-				     priv->distro_variant);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_DISTRO_VERSION,
-				     priv->distro_version);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_VERSION_OLD, priv->version_old);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
-	if (priv->vendor_id > 0)
-		fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_VENDOR_ID, priv->vendor_id);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DEVICE_NAME, priv->device_name);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DISTRO_ID, priv->distro_id);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DISTRO_VARIANT, priv->distro_variant);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DISTRO_VERSION, priv->distro_version);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_VERSION_OLD, priv->version_old);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
+	if (priv->vendor_id > 0) {
+		fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_VENDOR_ID, priv->vendor_id);
+	}
 
 	if (priv->flags != FWUPD_REPORT_FLAG_NONE) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_FLAGS);
@@ -650,12 +635,12 @@ fwupd_report_to_json(FwupdReport *self, JsonBuilder *builder)
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		const gchar *value = g_hash_table_lookup(priv->metadata, key);
-		fwupd_common_json_add_string(builder, key, value);
+		fwupd_codec_json_append(builder, key, value);
 	}
 }
 
 static void
-fwupd_pad_kv_dfl(GString *str, const gchar *key, guint64 report_flags)
+fwupd_report_string_append_flags(GString *str, guint idt, const gchar *key, guint64 report_flags)
 {
 	g_autoptr(GString) tmp = g_string_new("");
 	for (guint i = 0; i < 64; i++) {
@@ -668,48 +653,33 @@ fwupd_pad_kv_dfl(GString *str, const gchar *key, guint64 report_flags)
 	} else {
 		g_string_truncate(tmp, tmp->len - 1);
 	}
-	fwupd_pad_kv_str(str, key, tmp->str);
+	fwupd_codec_string_append(str, idt, key, tmp->str);
 }
 
-/**
- * fwupd_report_to_string:
- * @self: a #FwupdReport
- *
- * Builds a text representation of the object.
- *
- * Returns: text, or %NULL for invalid
- *
- * Since: 1.8.8
- **/
-gchar *
-fwupd_report_to_string(FwupdReport *self)
+static void
+fwupd_report_add_string(FwupdCodec *converter, guint idt, GString *str)
 {
+	FwupdReport *self = FWUPD_REPORT(converter);
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
-	GString *str;
 	g_autoptr(GList) keys = NULL;
 
-	g_return_val_if_fail(FWUPD_IS_REPORT(self), NULL);
-
-	str = g_string_new("");
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DEVICE_NAME, priv->device_name);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DISTRO_ID, priv->distro_id);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DISTRO_VARIANT, priv->distro_variant);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DISTRO_VERSION, priv->distro_version);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VERSION_OLD, priv->version_old);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
-	fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_VENDOR_ID, priv->vendor_id);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
-	fwupd_pad_kv_dfl(str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DEVICE_NAME, priv->device_name);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DISTRO_ID, priv->distro_id);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DISTRO_VARIANT, priv->distro_variant);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DISTRO_VERSION, priv->distro_version);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VERSION_OLD, priv->version_old);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
+	fwupd_codec_string_append_int(str, idt, FWUPD_RESULT_KEY_VENDOR_ID, priv->vendor_id);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
+	fwupd_report_string_append_flags(str, idt, FWUPD_RESULT_KEY_FLAGS, priv->flags);
 
 	/* metadata */
 	keys = g_hash_table_get_keys(priv->metadata);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		const gchar *value = g_hash_table_lookup(priv->metadata, key);
-		fwupd_pad_kv_str(str, key, value);
+		fwupd_codec_string_append(str, idt, key, value);
 	}
-
-	return g_string_free(str, FALSE);
 }
 
 /**
@@ -939,8 +909,9 @@ fwupd_report_class_init(FwupdReportClass *klass)
 }
 
 static void
-fwupd_report_set_from_variant_iter(FwupdReport *self, GVariantIter *iter)
+fwupd_report_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
 {
+	FwupdReport *self = FWUPD_REPORT(converter);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {
@@ -949,37 +920,13 @@ fwupd_report_set_from_variant_iter(FwupdReport *self, GVariantIter *iter)
 	}
 }
 
-/**
- * fwupd_report_from_variant:
- * @value: (not nullable): the serialized data
- *
- * Creates a new report using serialized data.
- *
- * Returns: (transfer full): a new #FwupdReport, or %NULL if @value was invalid
- *
- * Since: 1.8.8
- **/
-FwupdReport *
-fwupd_report_from_variant(GVariant *value)
+static void
+fwupd_report_codec_iface_init(FwupdCodecInterface *iface)
 {
-	FwupdReport *self = NULL;
-	const gchar *type_string;
-	g_autoptr(GVariantIter) iter = NULL;
-
-	/* format from GetDetails */
-	type_string = g_variant_get_type_string(value);
-	if (g_strcmp0(type_string, "(a{sv})") == 0) {
-		self = fwupd_report_new();
-		g_variant_get(value, "(a{sv})", &iter);
-		fwupd_report_set_from_variant_iter(self, iter);
-	} else if (g_strcmp0(type_string, "a{sv}") == 0) {
-		self = fwupd_report_new();
-		g_variant_get(value, "a{sv}", &iter);
-		fwupd_report_set_from_variant_iter(self, iter);
-	} else {
-		g_warning("type %s not known", type_string);
-	}
-	return self;
+	iface->add_string = fwupd_report_add_string;
+	iface->to_json = fwupd_report_to_json;
+	iface->to_variant = fwupd_report_to_variant;
+	iface->from_variant_iter = fwupd_report_from_variant_iter;
 }
 
 /**

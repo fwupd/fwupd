@@ -110,7 +110,10 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GInputStream *stream, 
 		}
 		partial_stream = fu_partial_input_stream_new(stream,
 							     offset + st_mex->len,
-							     extension_length - st_mex->len);
+							     extension_length - st_mex->len,
+							     error);
+		if (partial_stream == NULL)
+			return FALSE;
 		if (!fu_firmware_parse_stream(img,
 					      partial_stream,
 					      0x0,
@@ -197,7 +200,10 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 		partial_stream =
 		    fu_partial_input_stream_new(stream,
 						img_offset,
-						fu_struct_ifwi_cpd_entry_get_length(st_ent));
+						fu_struct_ifwi_cpd_entry_get_length(st_ent),
+						error);
+		if (partial_stream == NULL)
+			return FALSE;
 		if (!fu_firmware_parse_stream(img, partial_stream, 0x0, flags, error))
 			return FALSE;
 

@@ -15,6 +15,7 @@ meson setup build-openbmc \
     -Dtests=true \
     -Dudevdir=/tmp \
     -Dsystemd_root_prefix=/tmp \
+    -Dlibxmlb:gtkdoc=false \
     $@
 
 ninja install -C build-openbmc

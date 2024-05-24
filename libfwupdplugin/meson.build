@@ -64,6 +64,7 @@ fwupdplugin_src = [
   'fu-composite-input-stream.c', # fuzzing
   'fu-config.c', # fuzzing
   'fu-context.c', # fuzzing
+  'fu-coswid-common.c', # fuzzing
   'fu-coswid-firmware.c', # fuzzing
   'fu-crc.c', # fuzzing
   'fu-csv-entry.c', # fuzzing
@@ -192,6 +193,7 @@ fwupdplugin_headers = [
   'fu-config-private.h',
   'fu-context.h',
   'fu-context-private.h',
+  'fu-coswid-common.h',
   'fu-coswid-firmware.h',
   'fu-crc.h',
   'fu-csv-entry.h',
@@ -247,6 +249,7 @@ fwupdplugin_headers = [
   'fu-mem-private.h',
   'fu-oprom-firmware.h',
   'fu-partial-input-stream.h',
+  'fu-partial-input-stream-private.h',
   'fu-path.h',
   'fu-pefile-firmware.h',
   'fu-plugin.h',
@@ -345,7 +348,7 @@ if introspection.allowed()
   endif
   if libxmlb.type_name() == 'internal'
     girtargets += subproject('libxmlb').get_variable('gir')[0]
-  elif libxmlb.version().version_compare ('>= 0.3.2')
+  else
     girtargets += 'Xmlb-2.0'
   endif
   fwupdplugin_gir = gnome.generate_gir(fwupd,

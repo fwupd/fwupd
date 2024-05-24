@@ -7,7 +7,6 @@ enum FuIntelThunderboltNvmSection {
     Drom,
     ArcParams,
     DramUcode,
-    Last,
 }
 
 #[repr(u8)]
