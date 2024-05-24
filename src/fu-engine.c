@@ -641,6 +641,10 @@ fu_engine_load_release(FuEngine *self,
 	if (!fu_release_load(release, component, rel, install_flags, error))
 		return FALSE;
 
+	/* relax these */
+	if (fu_engine_config_get_ignore_requirements(self->config))
+		install_flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
+
 	/* additional requirements */
 	if (!fu_engine_requirements_check(self, release, install_flags, error))
 		return FALSE;
