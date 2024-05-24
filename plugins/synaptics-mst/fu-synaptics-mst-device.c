@@ -42,6 +42,7 @@
 
 #define FU_SYNAPTICS_MST_DEVICE_READ_TIMEOUT 2000 /* ms */
 
+#define CARRERA_FIRMWARE_SIZE  0x7F000 /* bytes */
 #define CAYENNE_FIRMWARE_SIZE  0x50000 /* bytes */
 #define PANAMERA_FIRMWARE_SIZE 0x1A000 /* bytes */
 
@@ -51,6 +52,8 @@
 #define ADDR_MEMORY_BOARD_ID_CAYENNE	0x9000024F
 #define ADDR_MEMORY_CUSTOMER_ID_SPYDER	0x9000020E
 #define ADDR_MEMORY_BOARD_ID_SPYDER	0x9000020F
+#define ADDR_MEMORY_CUSTOMER_ID_CARRERA 0x9000014E
+#define ADDR_MEMORY_BOARD_ID_CARRERA	0x9000014F
 #define ADDR_MEMORY_CUSTOMER_ID		0x170E
 #define ADDR_MEMORY_BOARD_ID		0x170F
 
@@ -78,7 +81,7 @@ struct _FuSynapticsMstDevice {
 	guint64 write_block_size;
 	FuSynapticsMstFamily family;
 	guint8 active_bank;
-	guint32 board_id;
+	guint16 board_id;
 	guint16 chip_id;
 };
 
@@ -1184,9 +1187,7 @@ fu_synaptics_mst_device_panamera_prepare_write(FuSynapticsMstDevice *self, GErro
 }
 
 static gboolean
-fu_synaptics_mst_device_update_cayenne_firmware_cb(FuDevice *device,
-						   gpointer user_data,
-						   GError **error)
+fu_synaptics_mst_device_update_firmware_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
 	FuSynapticsMstDeviceHelper *helper = (FuSynapticsMstDeviceHelper *)user_data;
@@ -1230,6 +1231,10 @@ fu_synaptics_mst_device_update_cayenne_firmware_cb(FuDevice *device,
 		fu_progress_step_done(helper->progress);
 	}
 
+	/* no need to check CRC here, it will be done in Activate Firmware command */
+	if (self->family == FU_SYNAPTICS_MST_FAMILY_CARRERA)
+		return TRUE;
+
 	/* verify CRC */
 	if (!fu_synaptics_mst_device_rc_special_get_command(
 		self,
@@ -1259,14 +1264,15 @@ fu_synaptics_mst_device_update_cayenne_firmware_cb(FuDevice *device,
 }
 
 static gboolean
-fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
-						GBytes *fw,
-						FuProgress *progress,
-						GError **error)
+fu_synaptics_mst_device_update_firmware(FuSynapticsMstDevice *self,
+					GBytes *fw,
+					FuProgress *progress,
+					GError **error)
 {
 	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
 
-	helper->fw = fu_bytes_new_offset(fw, 0x0, CAYENNE_FIRMWARE_SIZE, error);
+	helper->fw =
+	    fu_bytes_new_offset(fw, 0x0, fu_device_get_firmware_size_max(FU_DEVICE(self)), error);
 	if (helper->fw == NULL)
 		return FALSE;
 	helper->checksum = fu_synaptics_mst_calculate_crc16(0,
@@ -1275,7 +1281,7 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 	helper->progress = g_object_ref(progress);
 	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw, 0x0, BLOCK_UNIT);
 	if (!fu_device_retry(FU_DEVICE(self),
-			     fu_synaptics_mst_device_update_cayenne_firmware_cb,
+			     fu_synaptics_mst_device_update_firmware_cb,
 			     MAX_RETRY_COUNTS,
 			     helper,
 			     error))
@@ -1310,6 +1316,9 @@ fu_synaptics_mst_device_restart(FuSynapticsMstDevice *self, GError **error)
 	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
 	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
 		offset = 0x2020021C;
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
+		offset = 0x2020A024;
 		break;
 	default:
 		g_set_error(error,
@@ -1449,7 +1458,8 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 		break;
 	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
 	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
-		if (!fu_synaptics_mst_device_update_cayenne_firmware(self, fw, progress, error)) {
+	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
+		if (!fu_synaptics_mst_device_update_firmware(self, fw, progress, error)) {
 			g_prefix_error(error, "Firmware update failed: ");
 			return FALSE;
 		}
@@ -1482,7 +1492,7 @@ static gboolean
 fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **error)
 {
 	gint offset;
-	guint8 buf[2] = {0x0};
+	guint8 buf[4] = {0x0};
 
 	/* in test mode we need to open a different file node instead */
 	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) == NULL) {
@@ -1524,37 +1534,65 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 		return TRUE;
 	}
 
-	switch (self->family) {
-	case FU_SYNAPTICS_MST_FAMILY_TESLA:
-	case FU_SYNAPTICS_MST_FAMILY_LEAF:
-	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
-		offset = (gint)ADDR_MEMORY_CUSTOMER_ID;
-		break;
-	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
-		offset = (gint)ADDR_MEMORY_CUSTOMER_ID_CAYENNE;
-		break;
-	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
-		offset = (gint)ADDR_MEMORY_CUSTOMER_ID_SPYDER;
-		break;
-	default:
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Unsupported chip family");
-		return FALSE;
+	if (self->family == FU_SYNAPTICS_MST_FAMILY_CARRERA) {
+		/* get ID via RC command */
+		if (!fu_synaptics_mst_device_rc_get_command(self,
+							    FU_SYNAPTICS_MST_UPDC_CMD_GET_ID,
+							    0,
+							    buf,
+							    sizeof(buf),
+							    error)) {
+			g_prefix_error(error, "RC command failed: ");
+			return FALSE;
+		}
+		if (!fu_memread_uint16_safe(buf,
+					    sizeof(buf),
+					    0x2,
+					    &self->board_id,
+					    G_BIG_ENDIAN,
+					    error))
+			return FALSE;
+	} else {
+		/* older chip reads customer&board ID from memory */
+		switch (self->family) {
+		case FU_SYNAPTICS_MST_FAMILY_TESLA:
+		case FU_SYNAPTICS_MST_FAMILY_LEAF:
+		case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
+			offset = (gint)ADDR_MEMORY_CUSTOMER_ID;
+			break;
+		case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
+			offset = (gint)ADDR_MEMORY_CUSTOMER_ID_CAYENNE;
+			break;
+		case FU_SYNAPTICS_MST_FAMILY_SPYDER:
+			offset = (gint)ADDR_MEMORY_CUSTOMER_ID_SPYDER;
+			break;
+		default:
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Unsupported chip family");
+			return FALSE;
+		}
+
+		if (!fu_synaptics_mst_device_rc_get_command(
+			self,
+			FU_SYNAPTICS_MST_UPDC_CMD_READ_FROM_MEMORY,
+			offset,
+			buf,
+			sizeof(buf),
+			error)) {
+			g_prefix_error(error, "memory query failed: ");
+			return FALSE;
+		}
+		if (!fu_memread_uint16_safe(buf,
+					    sizeof(buf),
+					    0x0,
+					    &self->board_id,
+					    G_BIG_ENDIAN,
+					    error))
+			return FALSE;
 	}
 
-	/* get board ID via MCU address 0x170E instead of flash access due to HDCP2.2 running */
-	if (!fu_synaptics_mst_device_rc_get_command(self,
-						    FU_SYNAPTICS_MST_UPDC_CMD_READ_FROM_MEMORY,
-						    offset,
-						    buf,
-						    sizeof(buf),
-						    error)) {
-		g_prefix_error(error, "memory query failed: ");
-		return FALSE;
-	}
-	self->board_id = fu_memread_uint16(buf, G_BIG_ENDIAN);
 	return TRUE;
 }
 
@@ -1669,6 +1707,7 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 		break;
 	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
 	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
+	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 		break;
 	default:
@@ -1748,6 +1787,14 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
 		fu_device_set_firmware_size_max(device, 0x80000);
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
+	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
+		fu_device_set_firmware_size_max(device, CAYENNE_FIRMWARE_SIZE);
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+		fu_device_set_firmware_size_max(device, CARRERA_FIRMWARE_SIZE);
 		break;
 	default:
 		break;
