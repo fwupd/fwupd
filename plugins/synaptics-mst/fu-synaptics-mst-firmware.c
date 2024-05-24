@@ -17,8 +17,10 @@ struct _FuSynapticsMstFirmware {
 
 G_DEFINE_TYPE(FuSynapticsMstFirmware, fu_synaptics_mst_firmware, FU_TYPE_FIRMWARE)
 
+#define ADDR_CUSTOMER_ID_CARRERA 0x620E
 #define ADDR_CUSTOMER_ID_CAYENNE 0x20E
 #define ADDR_CUSTOMER_ID_TESLA	 0x10E
+#define ADDR_CONFIG_CARRERA	 0x6200
 #define ADDR_CONFIG_CAYENNE	 0x200
 #define ADDR_CONFIG_TESLA	 0x100
 
@@ -49,7 +51,7 @@ fu_synaptics_mst_firmware_export(FuFirmware *firmware,
 static gboolean
 fu_synaptics_mst_firmware_detect_family(FuSynapticsMstFirmware *self, GBytes *fw, GError **error)
 {
-	guint16 addrs[] = {ADDR_CONFIG_TESLA, ADDR_CONFIG_CAYENNE};
+	guint16 addrs[] = {ADDR_CONFIG_TESLA, ADDR_CONFIG_CAYENNE, ADDR_CONFIG_CARRERA};
 	for (guint i = 0; i < G_N_ELEMENTS(addrs); i++) {
 		g_autoptr(GByteArray) st = NULL;
 		st = fu_struct_synaptics_firmware_config_parse_bytes(fw, addrs[i], error);
@@ -96,6 +98,9 @@ fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
 	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
 		addr = ADDR_CUSTOMER_ID_CAYENNE;
 		break;
+	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
+		addr = ADDR_CUSTOMER_ID_CARRERA;
+		break;
 	default:
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -129,6 +134,9 @@ fu_synaptics_mst_firmware_write(FuFirmware *firmware, GError **error)
 	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
 	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
 		addr = ADDR_CUSTOMER_ID_CAYENNE;
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
+		addr = ADDR_CUSTOMER_ID_CARRERA;
 		break;
 	default:
 		g_set_error(error,
