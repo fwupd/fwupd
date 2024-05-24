@@ -42,6 +42,7 @@
 
 #define FU_SYNAPTICS_MST_DEVICE_READ_TIMEOUT 2000 /* ms */
 
+#define CARRERA_FIRMWARE_SIZE  0x7F000 /* bytes */
 #define CAYENNE_FIRMWARE_SIZE  0x50000 /* bytes */
 #define PANAMERA_FIRMWARE_SIZE 0x1A000 /* bytes */
 
@@ -51,6 +52,8 @@
 #define ADDR_MEMORY_BOARD_ID_CAYENNE	0x9000024F
 #define ADDR_MEMORY_CUSTOMER_ID_SPYDER	0x9000020E
 #define ADDR_MEMORY_BOARD_ID_SPYDER	0x9000020F
+#define ADDR_MEMORY_CUSTOMER_ID_CARRERA 0x9000014E
+#define ADDR_MEMORY_BOARD_ID_CARRERA	0x9000014F
 #define ADDR_MEMORY_CUSTOMER_ID		0x170E
 #define ADDR_MEMORY_BOARD_ID		0x170F
 
@@ -1191,9 +1194,7 @@ fu_synaptics_mst_device_panamera_prepare_write(FuSynapticsMstDevice *self, GErro
 }
 
 static gboolean
-fu_synaptics_mst_device_update_cayenne_firmware_cb(FuDevice *device,
-						   gpointer user_data,
-						   GError **error)
+fu_synaptics_mst_device_update_firmware_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
 	FuSynapticsMstDeviceHelper *helper = (FuSynapticsMstDeviceHelper *)user_data;
@@ -1241,6 +1242,10 @@ fu_synaptics_mst_device_update_cayenne_firmware_cb(FuDevice *device,
 		fu_progress_step_done(helper->progress);
 	}
 
+	/* Carrera no need to check CRC here, it will be done in Activate Firmware command*/
+	if (self->family == FU_SYNAPTICS_MST_FAMILY_CARRERA)
+		return TRUE;
+
 	/* verify CRC */
 	if (!fu_synaptics_mst_device_rc_special_get_command(
 		self,
@@ -1270,14 +1275,31 @@ fu_synaptics_mst_device_update_cayenne_firmware_cb(FuDevice *device,
 }
 
 static gboolean
-fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
-						GBytes *fw,
-						FuProgress *progress,
-						GError **error)
+fu_synaptics_mst_device_update_firmware(FuSynapticsMstDevice *self,
+					GBytes *fw,
+					FuProgress *progress,
+					GError **error)
 {
 	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
 
-	helper->fw = fu_bytes_new_offset(fw, 0x0, CAYENNE_FIRMWARE_SIZE, error);
+	guint32 fwSize;
+	switch (self->family) {
+	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
+		fwSize = CARRERA_FIRMWARE_SIZE;
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
+	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
+		fwSize = CAYENNE_FIRMWARE_SIZE;
+		break;
+	default:
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Unsupported chip family");
+		return FALSE;
+	}
+
+	helper->fw = fu_bytes_new_offset(fw, 0x0, fwSize, error);
 	if (helper->fw == NULL)
 		return FALSE;
 	helper->checksum = fu_synaptics_mst_calculate_crc16(0,
@@ -1286,7 +1308,7 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 	helper->progress = g_object_ref(progress);
 	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw, 0x0, BLOCK_UNIT);
 	if (!fu_device_retry(FU_DEVICE(self),
-			     fu_synaptics_mst_device_update_cayenne_firmware_cb,
+			     fu_synaptics_mst_device_update_firmware_cb,
 			     MAX_RETRY_COUNTS,
 			     helper,
 			     error))
@@ -1321,6 +1343,9 @@ fu_synaptics_mst_device_restart(FuSynapticsMstDevice *self, GError **error)
 	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
 	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
 		offset = 0x2020021C;
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
+		offset = 0x2020A024;
 		break;
 	default:
 		g_set_error(error,
@@ -1461,7 +1486,8 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 		break;
 	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
 	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
-		if (!fu_synaptics_mst_device_update_cayenne_firmware(self, fw, progress, error)) {
+	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
+		if (!fu_synaptics_mst_device_update_firmware(self, fw, progress, error)) {
 			g_prefix_error(error, "Firmware update failed: ");
 			return FALSE;
 		}
@@ -1538,6 +1564,9 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 		break;
 	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
 		offset = (gint)ADDR_MEMORY_CUSTOMER_ID_SPYDER;
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
+		offset = (gint)ADDR_MEMORY_CUSTOMER_ID_CARRERA;
 		break;
 	default:
 		g_set_error(error,
@@ -1658,6 +1687,7 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 		break;
 	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
 	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
+	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 		break;
 	default:
