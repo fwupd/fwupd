@@ -661,7 +661,7 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 
 	/* in bootloader mode */
-	if (fu_device_has_private_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
 
 	/* FuUsbDevice->setup */
@@ -669,7 +669,7 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* skip if in bootloader mode */
-	if (fu_device_has_private_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
 
 	/* it is a USB receiver */
