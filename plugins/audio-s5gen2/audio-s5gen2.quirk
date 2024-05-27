@@ -3,3 +3,9 @@
 Plugin = audio_s5gen2
 Flags = enforce-requires
 ProxyGType = FuQcS5gen2HidDevice
+
+[BLUETOOTH\ALIAS_C5171]
+Plugin = audio_s5gen2
+ProxyGType = FuQcS5gen2BleDevice
+AudioS5gen2Gaia2VendorId = 0x000A
+AudioS5gen2Gaia3VendorId = 0x001D
