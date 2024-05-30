@@ -1,27 +1,27 @@
 {
-  "name": "Synaptics VMM9430 EVB",
+  "name": "Synaptics VMM9430 EVB Rev1",
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/5067c3351aad79cb51099f094559b54d314acfa2e5b8ad0d8e53607cd72f554d-Synaptics-Carrera_EVB-9.02.007.cab",
-      "emulation-url": "https://fwupd.org/downloads/c64d012bcdd2b9163452a4cdb258d859c95cb8ddb542143dcc7b492127e1fe19-Synaptics-Carrera_EVB-9.02.007.zip",
+      "url": "https://fwupd.org/downloads/85caf8d1913b9d6ec29b8c9d3db8609c5376b1ac9eaf3a109d1867493bc283ef-Synaptics-Carrera_EVB-9.02.008.cab",
+      "emulation-url": "https://fwupd.org/downloads/7d8faaa922e0a46e83bfed30ce04170f9f76ae2c6966080152a26ec183f4a527-Synaptics-Carrera_EVB-9.02.008.zip",
       "components": [
         {
-          "version": "9.02.007",
+          "version": "9.02.008",
           "guids": [
-            "7a336029-115e-51a4-a168-f9cb1db5318c"
+            "e9a4b794-ba14-5b59-9035-b423bddaf82f"
           ]
         }
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/c33e6d242cfe538ecd0611107bad4d45472750a87b2dc4b2dd7712eed5bd548a-Synaptics-Carrera_EVB-9.02.008.cab",
-      "emulation-url": "https://fwupd.org/downloads/7d7be3993983a36fcf35a1f72201c7d321f9bf487973dd020005ecee768c1445-Synaptics-Carrera_EVB-9.02.008.zip",
+      "url": "https://fwupd.org/downloads/54925eceadd0dfca3d203230041c45623e8f99b2ff20d7aee4a55a67a94e5369-Synaptics-Carrera_EVB-9.02.009.cab",
+      "emulation-url": "https://fwupd.org/downloads/4023ba7cb2a6cb370116eefe75a8d07db95ff6f0157044d005fc38a004f1781c-Synaptics-Carrera_EVB-9.02.009.zip",
       "components": [
         {
-          "version": "9.02.008",
+          "version": "9.02.009",
           "guids": [
-            "7a336029-115e-51a4-a168-f9cb1db5318c"
+            "e9a4b794-ba14-5b59-9035-b423bddaf82f"
           ]
         }
       ]
