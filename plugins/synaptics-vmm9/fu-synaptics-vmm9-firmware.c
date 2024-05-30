@@ -13,13 +13,15 @@
 
 struct _FuSynapticsVmm9Firmware {
 	FuFirmware parent_instance;
-	guint16 board_id;
+	guint8 board_id;
+	guint8 customer_id;
 };
 
 G_DEFINE_TYPE(FuSynapticsVmm9Firmware, fu_synaptics_vmm9_firmware, FU_TYPE_FIRMWARE)
 
-#define FU_SYNAPTICS_VMM9_FIRMWARE_OFFSET_BOARD_ID 0x0000620E
-#define FU_SYNAPTICS_VMM9_FIRMWARE_OFFSET_VERSION  0x0000E000
+#define FU_SYNAPTICS_VMM9_FIRMWARE_OFFSET_CUSTOMER_ID 0x0000620E
+#define FU_SYNAPTICS_VMM9_FIRMWARE_OFFSET_BOARD_ID    0x0000620F
+#define FU_SYNAPTICS_VMM9_FIRMWARE_OFFSET_VERSION     0x0000E000
 
 static void
 fu_synaptics_vmm9_firmware_export(FuFirmware *firmware,
@@ -28,6 +30,7 @@ fu_synaptics_vmm9_firmware_export(FuFirmware *firmware,
 {
 	FuSynapticsVmm9Firmware *self = FU_SYNAPTICS_VMM9_FIRMWARE(firmware);
 	fu_xmlb_builder_insert_kx(bn, "board_id", self->board_id);
+	fu_xmlb_builder_insert_kx(bn, "customer_id", self->customer_id);
 }
 
 static gboolean
@@ -75,23 +78,34 @@ fu_synaptics_vmm9_firmware_parse(FuFirmware *firmware,
 	version = g_strdup_printf("%u.%02u.%03u", version_major, version_minor, version_micro);
 	fu_firmware_set_version(firmware, version);
 
-	/* board-id */
-	if (!fu_input_stream_read_u16(stream,
-				      FU_SYNAPTICS_VMM9_FIRMWARE_OFFSET_BOARD_ID,
-				      &self->board_id,
-				      G_LITTLE_ENDIAN,
-				      error))
+	/* board and customer IDs */
+	if (!fu_input_stream_read_u8(stream,
+				     FU_SYNAPTICS_VMM9_FIRMWARE_OFFSET_BOARD_ID,
+				     &self->board_id,
+				     error))
+		return FALSE;
+	if (!fu_input_stream_read_u8(stream,
+				     FU_SYNAPTICS_VMM9_FIRMWARE_OFFSET_CUSTOMER_ID,
+				     &self->customer_id,
+				     error))
 		return FALSE;
 
 	/* success */
 	return TRUE;
 }
 
-guint16
+guint8
 fu_synaptics_vmm9_firmware_get_board_id(FuSynapticsVmm9Firmware *self)
 {
-	g_return_val_if_fail(FU_IS_SYNAPTICS_VMM9_FIRMWARE(self), G_MAXUINT16);
+	g_return_val_if_fail(FU_IS_SYNAPTICS_VMM9_FIRMWARE(self), G_MAXUINT8);
 	return self->board_id;
+}
+
+guint8
+fu_synaptics_vmm9_firmware_get_customer_id(FuSynapticsVmm9Firmware *self)
+{
+	g_return_val_if_fail(FU_IS_SYNAPTICS_VMM9_FIRMWARE(self), G_MAXUINT8);
+	return self->customer_id;
 }
 
 static void

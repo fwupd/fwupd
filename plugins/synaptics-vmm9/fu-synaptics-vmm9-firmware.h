@@ -17,5 +17,7 @@ G_DECLARE_FINAL_TYPE(FuSynapticsVmm9Firmware,
 
 FuFirmware *
 fu_synaptics_vmm9_firmware_new(void);
-guint16
+guint8
 fu_synaptics_vmm9_firmware_get_board_id(FuSynapticsVmm9Firmware *self);
+guint8
+fu_synaptics_vmm9_firmware_get_customer_id(FuSynapticsVmm9Firmware *self);
