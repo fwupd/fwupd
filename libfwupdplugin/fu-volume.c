@@ -941,7 +941,7 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 		id_type = fu_volume_get_id_type(vol);
 		g_info("device %s, type: %s, internal: %d, fs: %s",
 		       g_dbus_proxy_get_object_path(proxy_blk),
-		       type_str,
+		       fu_volume_is_mdraid(vol) ? "mdraid" : type_str,
 		       fu_volume_is_internal(vol),
 		       id_type);
 		if (g_strcmp0(type_str, kind) != 0)
