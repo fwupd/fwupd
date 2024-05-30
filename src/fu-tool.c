@@ -4086,6 +4086,7 @@ main(int argc, char *argv[])
 	gboolean ret;
 	gboolean version = FALSE;
 	gboolean ignore_checksum = FALSE;
+	gboolean ignore_requirements = FALSE;
 	gboolean ignore_vid_pid = FALSE;
 	g_auto(GStrv) plugin_glob = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -4152,6 +4153,14 @@ main(int argc, char *argv[])
 	     &ignore_vid_pid,
 	     /* TRANSLATORS: command line option */
 	     N_("Ignore firmware hardware mismatch failures"),
+	     NULL},
+	    {"ignore-requirements",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &ignore_requirements,
+	     /* TRANSLATORS: command line option */
+	     N_("Ignore non-critical firmware requirements"),
 	     NULL},
 	    {"no-reboot-check",
 	     '\0',
@@ -4799,16 +4808,16 @@ main(int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	if (allow_branch_switch)
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
-	if (force) {
+	if (force)
 		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
-		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
-	}
 	if (no_search)
 		priv->flags |= FWUPD_INSTALL_FLAG_NO_SEARCH;
 	if (ignore_checksum)
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM;
 	if (ignore_vid_pid)
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_VID_PID;
+	if (ignore_requirements)
+		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
 
 	/* load engine */
 	priv->engine = fu_engine_new(ctx);

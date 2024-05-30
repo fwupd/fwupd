@@ -78,6 +78,7 @@ _fwupdtool_opts=(
 	'--no-search'
 	'--ignore-checksum'
 	'--ignore-vid-pid'
+	'--ignore-requirements'
 	'--save-backends'
 )
 
