@@ -3475,7 +3475,7 @@ fu_device_list_replug_user_func(gconstpointer user_data)
 	fu_device_set_name(device2, "device2");
 	fu_device_add_internal_flag(device2, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_instance_id(device2, "baz");
-	fu_device_add_instance_id(device2, "bar"); /* matches */
+	fu_device_add_counterpart_guid(device2, "bar"); /* matches */
 	fu_device_set_plugin(device2, "self-test");
 	fu_device_set_remove_delay(device2, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 	fu_device_convert_instance_ids(device2);
@@ -3562,7 +3562,7 @@ fu_device_list_compatible_func(gconstpointer user_data)
 	fu_device_set_version(device1, "1.2.3");
 	fu_device_add_internal_flag(device1, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_instance_id(device1, "foobar");
-	fu_device_add_instance_id(device1, "bootloader");
+	fu_device_add_counterpart_guid(device1, "bootloader");
 	fu_device_set_remove_delay(device1, 100);
 	fu_device_convert_instance_ids(device1);
 	fu_device_list_add(device_list, device1);
@@ -3709,6 +3709,42 @@ fu_device_list_explicit_order_post_func(gconstpointer user_data)
 	fu_device_add_internal_flag(device_root, FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER);
 	g_assert_cmpint(fu_device_get_order(device_root), ==, G_MAXINT);
 	g_assert_cmpint(fu_device_get_order(device_child), ==, G_MAXINT);
+}
+
+static void
+fu_device_list_counterpart_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(FuDevice) device1 = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new(self->ctx);
+
+	/* add and then remove runtime */
+	fu_device_set_id(device1, "device-runtime");
+	fu_device_add_instance_id(device1, "runtime"); /* 420dde7c-3102-5d8f-86bc-aaabd7920150 */
+	fu_device_add_counterpart_guid(device1, "bootloader");
+	fu_device_convert_instance_ids(device1);
+	fu_device_add_internal_flag(device1, FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_device_set_remove_delay(device1, 100);
+	fu_device_list_add(device_list, device1);
+	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_list_remove(device_list, device1);
+	g_assert_true(fu_device_has_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
+
+	/* add bootloader */
+	fu_device_set_id(device2, "device-bootloader");
+	fu_device_add_instance_id(device2, "bootloader"); /* 015370aa-26f2-5daa-9661-a75bf4c1a913 */
+	fu_device_add_internal_flag(device2, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
+	fu_device_convert_instance_ids(device2);
+	fu_device_list_add(device_list, device2);
+
+	/* should have matched the runtime */
+	g_assert_false(fu_device_has_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
+
+	/* should not have *visible* GUID of runtime */
+	g_assert_false(fu_device_has_guid(device2, "runtime"));
+	g_assert_true(fu_device_has_counterpart_guid(device2, "runtime"));
 }
 
 static void
@@ -6482,6 +6518,9 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/device-list{remove-chain}",
 			     self,
 			     fu_device_list_remove_chain_func);
+	g_test_add_data_func("/fwupd/device-list{counterpart}",
+			     self,
+			     fu_device_list_counterpart_func);
 	g_test_add_data_func("/fwupd/release{compare}", self, fu_release_compare_func);
 	g_test_add_func("/fwupd/release{uri-scheme}", fu_release_uri_scheme_func);
 	g_test_add_data_func("/fwupd/release{trusted-report}",

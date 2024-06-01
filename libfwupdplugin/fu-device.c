@@ -56,6 +56,7 @@ typedef struct {
 	GPtrArray *parent_guids;
 	GPtrArray *parent_physical_ids; /* (nullable) */
 	GPtrArray *parent_backend_ids;	/* (nullable) */
+	GPtrArray *counterpart_guids;	/* (nullable) */
 	guint remove_delay;		/* ms */
 	guint acquiesce_delay;		/* ms */
 	guint request_cnts[FWUPD_REQUEST_KIND_LAST];
@@ -2498,6 +2499,74 @@ fu_device_add_guid_full(FuDevice *self, const gchar *guid, FuDeviceInstanceFlags
 }
 
 /**
+ * fu_device_has_counterpart_guid:
+ * @self: a #FuDevice
+ * @guid: a GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
+ *
+ * Finds out if the device has a specific counterpart GUID.
+ *
+ * Returns: %TRUE if the counterpart GUID is found
+ *
+ * Since: 1.9.21
+ **/
+gboolean
+fu_device_has_counterpart_guid(FuDevice *self, const gchar *guid)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(guid != NULL, FALSE);
+
+	/* never added */
+	if (priv->counterpart_guids == NULL)
+		return FALSE;
+
+	/* convert and try again */
+	if (!fwupd_guid_is_valid(guid)) {
+		g_autofree gchar *tmp = fwupd_guid_hash_string(guid);
+		return fu_device_has_counterpart_guid(self, tmp);
+	}
+
+	/* any defined? */
+	for (guint i = 0; i < priv->counterpart_guids->len; i++) {
+		const gchar *counterpart_guid = g_ptr_array_index(priv->counterpart_guids, i);
+		if (g_strcmp0(guid, counterpart_guid) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static void
+fu_device_ensure_counterpart_guids(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	if (priv->counterpart_guids != NULL)
+		return;
+	priv->counterpart_guids = g_ptr_array_new_with_free_func(g_free);
+}
+
+/**
+ * fu_device_get_counterpart_guids:
+ * @self: a #FuDevice
+ *
+ * Returns all the counterpart GUIDs.
+ *
+ * Returns: (transfer none) (element-type utf8): list of GUIDs
+ *
+ * Since: 1.9.21
+ **/
+GPtrArray *
+fu_device_get_counterpart_guids(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+
+	fu_device_ensure_counterpart_guids(self);
+	return priv->counterpart_guids;
+}
+
+/**
  * fu_device_add_counterpart_guid:
  * @self: a #FuDevice
  * @guid: a GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
@@ -2514,18 +2583,26 @@ fu_device_add_guid_full(FuDevice *self, const gchar *guid, FuDeviceInstanceFlags
 void
 fu_device_add_counterpart_guid(FuDevice *self, const gchar *guid)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(guid != NULL);
 
+	/* already present */
+	if (fu_device_has_counterpart_guid(self, guid))
+		return;
+
+	/* ensure exists */
+	fu_device_ensure_counterpart_guids(self);
+
 	/* make valid */
 	if (!fwupd_guid_is_valid(guid)) {
-		g_autofree gchar *tmp = fwupd_guid_hash_string(guid);
-		fwupd_device_add_guid(FWUPD_DEVICE(self), tmp);
+		g_ptr_array_add(priv->counterpart_guids, fwupd_guid_hash_string(guid));
 		return;
 	}
 
 	/* already valid */
-	fwupd_device_add_guid(FWUPD_DEVICE(self), guid);
+	g_ptr_array_add(priv->counterpart_guids, g_strdup(guid));
 }
 
 /**
@@ -4127,6 +4204,12 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 		g_autofree gchar *tmp2 = g_strdup_printf("%s ← %s", guid, instance_id);
 		fwupd_codec_string_append(str, idt, "Guid[quirk]", tmp2);
 	}
+	if (priv->counterpart_guids != NULL) {
+		for (guint i = 0; i < priv->counterpart_guids->len; i++) {
+			const gchar *guid = g_ptr_array_index(priv->counterpart_guids, i);
+			fwupd_codec_string_append(str, idt, "Guid[counterpart]", guid);
+		}
+	}
 	fwupd_codec_string_append(str, idt, "EquivalentId", priv->equivalent_id);
 	fwupd_codec_string_append(str, idt, "PhysicalId", priv->physical_id);
 	fwupd_codec_string_append(str, idt, "LogicalId", priv->logical_id);
@@ -5552,6 +5635,12 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 			fu_device_add_parent_backend_id(self, tmp);
 		}
 	}
+	if (priv_donor->counterpart_guids != NULL) {
+		for (guint i = 0; i < priv_donor->counterpart_guids->len; i++) {
+			const gchar *tmp = g_ptr_array_index(priv_donor->counterpart_guids, i);
+			fu_device_add_counterpart_guid(self, tmp);
+		}
+	}
 	if (priv->metadata != NULL) {
 		g_hash_table_iter_init(&iter, priv_donor->metadata);
 		while (g_hash_table_iter_next(&iter, &key, &value)) {
@@ -6637,6 +6726,8 @@ fu_device_finalize(GObject *object)
 		g_ptr_array_unref(priv->parent_physical_ids);
 	if (priv->parent_backend_ids != NULL)
 		g_ptr_array_unref(priv->parent_backend_ids);
+	if (priv->counterpart_guids != NULL)
+		g_ptr_array_unref(priv->counterpart_guids);
 	if (priv->private_flag_items != NULL)
 		g_ptr_array_unref(priv->private_flag_items);
 	g_ptr_array_unref(priv->parent_guids);
