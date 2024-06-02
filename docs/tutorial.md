@@ -888,7 +888,7 @@ rustc*, so small differences may be noticeable.
 The struct types currently supported are:
 
 - `u8`: a `guint8`
-- `u16le`: a `guint16
+- `u16le`: little endian `guint16`
 - `u24`: a 24 bit number represented as a `guint32`
 - `u32le`:  little endian `guint32`
 - `u64be`:  big endian `guint64`
