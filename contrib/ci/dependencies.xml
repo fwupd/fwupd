@@ -1216,6 +1216,7 @@
     </distro>
     <distro id="fedora">
       <package variant="x86_64" />
+      <package variant="aarch64" />
     </distro>
     <distro id="darwin">
       <package>virtualenv</package>
