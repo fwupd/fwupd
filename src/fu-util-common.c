@@ -1713,7 +1713,7 @@ fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt)
 	const gchar *hdr;
 	guint64 flags = fwupd_plugin_get_flags(plugin);
 
-	fwupd_codec_string_append(str, idt, fwupd_plugin_get_name(plugin), NULL);
+	fwupd_codec_string_append(str, idt, fwupd_plugin_get_name(plugin), "");
 
 	/* TRANSLATORS: description of plugin state, e.g. disabled */
 	hdr = _("Flags");
