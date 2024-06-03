@@ -486,10 +486,6 @@ fu_util_get_plugins(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_autofree gchar *str = fu_util_plugin_to_string(FWUPD_PLUGIN(plugin), 0);
 		fu_console_print_literal(priv->console, str);
 	}
-	if (plugins->len == 0) {
-		/* TRANSLATORS: nothing found */
-		fu_console_print_literal(priv->console, _("No plugins found"));
-	}
 
 	return TRUE;
 }
