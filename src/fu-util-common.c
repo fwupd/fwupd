@@ -1583,6 +1583,12 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
+gint
+fu_util_plugin_name_sort_cb(FwupdPlugin **item1, FwupdPlugin **item2)
+{
+	return g_strcmp0(fwupd_plugin_get_name(*item1), fwupd_plugin_get_name(*item2));
+}
+
 const gchar *
 fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 {

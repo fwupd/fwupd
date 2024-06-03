@@ -438,12 +438,6 @@ fu_util_watch(FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-static gint
-fu_util_plugin_name_sort_cb(FuPlugin **item1, FuPlugin **item2)
-{
-	return fu_plugin_name_compare(*item1, *item2);
-}
-
 static gboolean
 fu_util_get_plugins_as_json(FuUtilPrivate *priv, GPtrArray *plugins, GError **error)
 {
