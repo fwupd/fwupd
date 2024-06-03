@@ -642,6 +642,7 @@ fu_util_get_plugins(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* get results from daemon */
 	plugins = fwupd_client_get_plugins(priv->client, priv->cancellable, error);
+	g_ptr_array_sort(plugins, (GCompareFunc)fu_util_plugin_name_sort_cb);
 	if (plugins == NULL)
 		return FALSE;
 	if (priv->as_json)
