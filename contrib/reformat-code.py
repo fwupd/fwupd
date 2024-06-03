@@ -14,6 +14,7 @@ CLANG_DIFF_FORMATTERS = [
     "clang-format-diff-11",
     "clang-format-diff-13",
     "clang-format-diff",
+    "/usr/share/clang/clang-format-diff.py",
 ]
 
 
