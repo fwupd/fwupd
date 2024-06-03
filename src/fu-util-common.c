@@ -1598,15 +1598,15 @@ fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 		return NULL;
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_USER_WARNING)
 		return NULL;
-	if (plugin_flag == FWUPD_PLUGIN_FLAG_READY)
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_NONE)
 		return NULL;
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_REQUIRE_HWID) {
 		/* TRANSLATORS: Plugin is active only if hardware is found */
 		return _("Enabled if hardware matches");
 	}
-	if (plugin_flag == FWUPD_PLUGIN_FLAG_NONE) {
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_READY) {
 		/* TRANSLATORS: Plugin is active and in use */
-		return _("Enabled");
+		return _("Ready");
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_DISABLED) {
 		/* TRANSLATORS: Plugin is inactive and not used */
@@ -1680,9 +1680,9 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 	case FWUPD_PLUGIN_FLAG_UNKNOWN:
 	case FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE:
 	case FWUPD_PLUGIN_FLAG_USER_WARNING:
-	case FWUPD_PLUGIN_FLAG_READY:
-		return NULL;
 	case FWUPD_PLUGIN_FLAG_NONE:
+		return NULL;
+	case FWUPD_PLUGIN_FLAG_READY:
 	case FWUPD_PLUGIN_FLAG_REQUIRE_HWID:
 	case FWUPD_PLUGIN_FLAG_MODULAR:
 	case FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY:
