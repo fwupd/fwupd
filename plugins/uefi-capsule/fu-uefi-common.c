@@ -168,62 +168,6 @@ fu_uefi_get_framebuffer_size(guint32 *width, guint32 *height, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_uefi_get_bitmap_size(const guint8 *buf,
-			gsize bufsz,
-			guint32 *width,
-			guint32 *height,
-			GError **error)
-{
-	guint32 ui32;
-
-	g_return_val_if_fail(buf != NULL, FALSE);
-
-	/* check header */
-	if (bufsz < 26 || memcmp(buf, "BM", 2) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "invalid BMP header signature");
-		return FALSE;
-	}
-
-	/* starting address */
-	if (!fu_memread_uint32_safe(buf, bufsz, 10, &ui32, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (ui32 < 26) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "BMP header invalid @ %" G_GUINT32_FORMAT "x",
-			    ui32);
-		return FALSE;
-	}
-
-	/* BITMAPINFOHEADER header */
-	if (!fu_memread_uint32_safe(buf, bufsz, 14, &ui32, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (ui32 < 26 - 14) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "BITMAPINFOHEADER invalid @ %" G_GUINT32_FORMAT "x",
-			    ui32);
-		return FALSE;
-	}
-
-	/* dimensions */
-	if (width != NULL) {
-		if (!fu_memread_uint32_safe(buf, bufsz, 18, width, G_LITTLE_ENDIAN, error))
-			return FALSE;
-	}
-	if (height != NULL) {
-		if (!fu_memread_uint32_safe(buf, bufsz, 22, height, G_LITTLE_ENDIAN, error))
-			return FALSE;
-	}
-	return TRUE;
-}
-
 /* return without the ESP dir prepended */
 gchar *
 fu_uefi_get_esp_path_for_os(void)

@@ -24,12 +24,6 @@ fu_uefi_get_esp_app_path(const gchar *cmd, GError **error);
 gchar *
 fu_uefi_get_built_app_path(const gchar *binary, GError **error);
 gboolean
-fu_uefi_get_bitmap_size(const guint8 *buf,
-			gsize bufsz,
-			guint32 *width,
-			guint32 *height,
-			GError **error);
-gboolean
 fu_uefi_get_framebuffer_size(guint32 *width, guint32 *height, GError **error);
 gchar *
 fu_uefi_get_esp_path_for_os(void);

@@ -10,6 +10,7 @@
 #include <glib/gi18n.h>
 
 #include "fu-acpi-uefi.h"
+#include "fu-bitmap-image.h"
 #include "fu-uefi-backend.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-bootmgr.h"
@@ -304,9 +305,8 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 					 GError **error)
 {
 	guint32 screen_x, screen_y;
-	gsize buf_size = g_bytes_get_size(blob);
 	gssize size;
-	guint32 height, width;
+	guint32 width;
 	guint8 csum = 0;
 	fwupd_guid_t guid = {0x0};
 	g_autofree gchar *capsule_path = NULL;
@@ -314,6 +314,7 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *directory = NULL;
+	g_autoptr(FuBitmapImage) bmp_image = fu_bitmap_image_new();
 	g_autoptr(GByteArray) st_cap = fu_struct_efi_capsule_header_new();
 	g_autoptr(GByteArray) st_uxh = fu_struct_efi_ux_capsule_header_new();
 	g_autoptr(GFile) ofile = NULL;
@@ -322,14 +323,15 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	/* get screen dimensions */
 	if (!fu_uefi_get_framebuffer_size(&screen_x, &screen_y, error))
 		return FALSE;
-	if (!fu_uefi_get_bitmap_size((const guint8 *)g_bytes_get_data(blob, NULL),
-				     buf_size,
-				     &width,
-				     &height,
-				     error)) {
+	if (!fu_firmware_parse_full(FU_FIRMWARE(bmp_image),
+				    blob,
+				    0x0,
+				    FWUPD_INSTALL_FLAG_NONE,
+				    error)) {
 		g_prefix_error(error, "splash invalid: ");
 		return FALSE;
 	}
+	width = fu_bitmap_image_get_width(bmp_image);
 
 	/* save to a predictable filename */
 	esp_path = fu_volume_get_mount_point(self->esp);
@@ -1322,6 +1324,7 @@ fu_uefi_capsule_plugin_constructed(GObject *obj)
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "uefi"); /* old name */
 	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_ACPI_UEFI);
 	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_UEFI_UPDATE_INFO);
+	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_BITMAP_IMAGE);
 
 	/* defaults changed here will also be reflected in the fwupd.conf man page */
 	fu_plugin_set_config_default(plugin, "DisableCapsuleUpdateOnDisk", "false");
