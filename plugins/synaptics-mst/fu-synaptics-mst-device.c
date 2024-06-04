@@ -80,7 +80,8 @@ struct _FuSynapticsMstDevice {
 	guint64 write_block_size;
 	FuSynapticsMstFamily family;
 	guint8 active_bank;
-	guint32 board_id;
+	guint8 board_id;
+	guint8 customer_id;
 	guint16 chip_id;
 };
 
@@ -141,7 +142,8 @@ fu_synaptics_mst_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
 	fwupd_codec_string_append(str, idt, "DeviceKind", self->device_kind);
 	fwupd_codec_string_append_hex(str, idt, "ActiveBank", self->active_bank);
-	fwupd_codec_string_append_int(str, idt, "BoardId", self->board_id);
+	fwupd_codec_string_append_hex(str, idt, "BoardId", self->board_id);
+	fwupd_codec_string_append_hex(str, idt, "CustomerId", self->customer_id);
 	fwupd_codec_string_append_hex(str, idt, "ChipId", self->chip_id);
 }
 
@@ -1511,7 +1513,7 @@ static gboolean
 fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **error)
 {
 	gint offset;
-	guint8 buf[2] = {0x0};
+	guint8 buf[4] = {0x0};
 
 	/* in test mode we need to open a different file node instead */
 	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) == NULL) {
@@ -1553,40 +1555,59 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 		return TRUE;
 	}
 
-	switch (self->family) {
-	case FU_SYNAPTICS_MST_FAMILY_TESLA:
-	case FU_SYNAPTICS_MST_FAMILY_LEAF:
-	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
-		offset = (gint)ADDR_MEMORY_CUSTOMER_ID;
-		break;
-	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
-		offset = (gint)ADDR_MEMORY_CUSTOMER_ID_CAYENNE;
-		break;
-	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
-		offset = (gint)ADDR_MEMORY_CUSTOMER_ID_SPYDER;
-		break;
-	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
-		offset = (gint)ADDR_MEMORY_CUSTOMER_ID_CARRERA;
-		break;
-	default:
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Unsupported chip family");
-		return FALSE;
+	if (self->family == FU_SYNAPTICS_MST_FAMILY_CARRERA) {
+		/* Carrera should get customer&board ID via RC command */
+		if (!fu_synaptics_mst_device_rc_get_command(self,
+							    FU_SYNAPTICS_MST_UPDC_CMD_GET_ID,
+							    0,
+							    buf,
+							    sizeof(buf),
+							    error)) {
+			g_prefix_error(error, "RC command failed: ");
+			return FALSE;
+		}
+		if (!fu_memread_uint8_safe(buf, sizeof(buf), 3, &self->board_id, error))
+			return FALSE;
+		if (!fu_memread_uint8_safe(buf, sizeof(buf), 2, &self->customer_id, error))
+			return FALSE;
+	} else {
+		/* older chip reads customer&board ID from memory */
+		switch (self->family) {
+		case FU_SYNAPTICS_MST_FAMILY_TESLA:
+		case FU_SYNAPTICS_MST_FAMILY_LEAF:
+		case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
+			offset = (gint)ADDR_MEMORY_CUSTOMER_ID;
+			break;
+		case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
+			offset = (gint)ADDR_MEMORY_CUSTOMER_ID_CAYENNE;
+			break;
+		case FU_SYNAPTICS_MST_FAMILY_SPYDER:
+			offset = (gint)ADDR_MEMORY_CUSTOMER_ID_SPYDER;
+			break;
+		default:
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Unsupported chip family");
+			return FALSE;
+		}
+
+		if (!fu_synaptics_mst_device_rc_get_command(
+			self,
+			FU_SYNAPTICS_MST_UPDC_CMD_READ_FROM_MEMORY,
+			offset,
+			buf,
+			sizeof(buf),
+			error)) {
+			g_prefix_error(error, "memory query failed: ");
+			return FALSE;
+		}
+		if (!fu_memread_uint8_safe(buf, sizeof(buf), 1, &self->board_id, error))
+			return FALSE;
+		if (!fu_memread_uint8_safe(buf, sizeof(buf), 0, &self->customer_id, error))
+			return FALSE;
 	}
 
-	/* get board ID via MCU address 0x170E instead of flash access due to HDCP2.2 running */
-	if (!fu_synaptics_mst_device_rc_get_command(self,
-						    FU_SYNAPTICS_MST_UPDC_CMD_READ_FROM_MEMORY,
-						    offset,
-						    buf,
-						    sizeof(buf),
-						    error)) {
-		g_prefix_error(error, "memory query failed: ");
-		return FALSE;
-	}
-	self->board_id = fu_memread_uint16(buf, G_BIG_ENDIAN);
 	return TRUE;
 }
 
@@ -1782,7 +1803,7 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	fu_device_add_instance_id_full(FU_DEVICE(self), guid3, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 
 	/* whitebox customers */
-	if ((self->board_id >> 8) == 0x0)
+	if (self->customer_id == 0x0)
 		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
 
 	return TRUE;
