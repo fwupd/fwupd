@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-bitmap-image.h"
 #include "fu-context-private.h"
 #include "fu-uefi-backend.h"
 #include "fu-uefi-bgrt.h"
@@ -46,23 +47,24 @@ static void
 fu_uefi_bitmap_func(void)
 {
 	gboolean ret;
-	gsize sz = 0;
-	guint32 height = 0;
-	guint32 width = 0;
 	g_autofree gchar *fn = NULL;
-	g_autofree gchar *buf = NULL;
+	g_autoptr(FuBitmapImage) bmp_image = fu_bitmap_image_new();
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "test.bmp", NULL);
-	ret = g_file_get_contents(fn, &buf, &sz, &error);
+	stream = fu_input_stream_from_path(fn, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream);
+	ret = fu_firmware_parse_stream(FU_FIRMWARE(bmp_image),
+				       stream,
+				       0x0,
+				       FWUPD_INSTALL_FLAG_NONE,
+				       &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_nonnull(buf);
-	ret = fu_uefi_get_bitmap_size((guint8 *)buf, sz, &width, &height, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(width, ==, 54);
-	g_assert_cmpint(height, ==, 24);
+	g_assert_cmpint(fu_bitmap_image_get_width(bmp_image), ==, 54);
+	g_assert_cmpint(fu_bitmap_image_get_height(bmp_image), ==, 24);
 }
 
 static GByteArray *
