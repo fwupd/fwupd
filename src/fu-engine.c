@@ -7655,7 +7655,17 @@ static void
 fu_engine_backend_device_added_cb(FuBackend *backend, FuDevice *device, FuEngine *self)
 {
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GPtrArray) possible_plugins = NULL;
+
 	fu_engine_backend_device_added(self, device, progress);
+
+	/* there's no point keeping this in the cache */
+	possible_plugins = fu_device_get_possible_plugins(device);
+	if (possible_plugins->len == 0) {
+		g_debug("removing %s from backend cache as no possible plugin",
+			fu_device_get_backend_id(device));
+		fu_backend_device_removed(backend, device);
+	}
 }
 
 static void
@@ -8042,8 +8052,18 @@ fu_engine_backends_coldplug_backend_add_devices(FuEngine *self,
 	fu_progress_set_steps(progress, devices->len);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
+		g_autoptr(GPtrArray) possible_plugins = NULL;
+
 		fu_engine_backend_device_added(self, device, fu_progress_get_child(progress));
 		fu_progress_step_done(progress);
+
+		/* there's no point keeping this in the cache */
+		possible_plugins = fu_device_get_possible_plugins(device);
+		if (possible_plugins->len == 0) {
+			g_debug("removing %s from backend cache as no possible plugin",
+				fu_device_get_backend_id(device));
+			fu_backend_device_removed(backend, device);
+		}
 	}
 
 	/* success */
