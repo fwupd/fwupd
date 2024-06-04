@@ -16,6 +16,7 @@ with a non-standard filesystem layout.
 * `FWUPD_XMLB_VERBOSE` can be set to show Xmlb silo regeneration and quirk matches
 * `FWUPD_DBUS_SOCKET` is used to set the socket filename if running without a dbus-daemon
 * `FWUPD_PROFILE` can be used to set the profile traceback threshold value in ms
+* `FWUPD_EFIVARS` can be set to `dummy` to emulate an EFI variable store
 * `FWUPD_FUZZER_RUNNING` if the firmware format is being fuzzed
 * `FWUPD_POLKIT_NOCHECK` if we should not check for polkit policies to be installed
 * standard glibc variables like `LANG` are also honored for CLI tools that are translated

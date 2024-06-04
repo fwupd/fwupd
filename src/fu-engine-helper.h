@@ -14,7 +14,7 @@ gboolean
 fu_engine_update_devices_file(FuEngine *self, GError **error) G_GNUC_NON_NULL(1);
 
 GHashTable *
-fu_engine_integrity_new(GError **error);
+fu_engine_integrity_new(FuContext *ctx, GError **error);
 gchar *
 fu_engine_integrity_to_string(GHashTable *self);
 

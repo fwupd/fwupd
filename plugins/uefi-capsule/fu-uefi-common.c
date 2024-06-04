@@ -86,7 +86,7 @@ fu_uefi_get_esp_app_path(const gchar *cmd, GError **error)
  * Since: 1.8.1
  **/
 gchar *
-fu_uefi_get_built_app_path(const gchar *binary, GError **error)
+fu_uefi_get_built_app_path(FuEfivars *efivars, const gchar *binary, GError **error)
 {
 	const gchar *suffix;
 	g_autofree gchar *prefix = NULL;
@@ -106,7 +106,7 @@ fu_uefi_get_built_app_path(const gchar *binary, GError **error)
 	source_path_exists = g_file_test(source_path, G_FILE_TEST_EXISTS);
 	source_path_signed_exists = g_file_test(source_path_signed, G_FILE_TEST_EXISTS);
 
-	if (fu_efivar_secure_boot_enabled(NULL)) {
+	if (fu_efivars_secure_boot_enabled(efivars, NULL)) {
 		if (!source_path_signed_exists) {
 			g_set_error(error,
 				    FWUPD_ERROR,

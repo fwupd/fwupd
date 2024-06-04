@@ -12,6 +12,7 @@
 #include "fu-common-private.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
+#include "fu-dummy-efivars.h"
 #include "fu-fdt-firmware.h"
 #include "fu-hwids-private.h"
 #include "fu-path.h"
@@ -32,6 +33,7 @@ typedef struct {
 	FuSmbios *smbios;
 	FuSmbiosChassisKind chassis_kind;
 	FuQuirks *quirks;
+	FuEfivars *efivars;
 	GHashTable *runtime_versions;
 	GHashTable *compile_versions;
 	GHashTable *udev_subsystems; /* utf8:GPtrArray */
@@ -133,6 +135,24 @@ fu_context_get_fdt(FuContext *self, GError **error)
 
 	/* success */
 	return g_object_ref(priv->fdt);
+}
+
+/**
+ * fu_context_get_efivars:
+ * @self: a #FuContext
+ *
+ * Gets the EFI variable store.
+ *
+ * Returns: (transfer none): a #FuEfivars
+ *
+ * Since: 2.0.0
+ **/
+FuEfivars *
+fu_context_get_efivars(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	return priv->efivars;
 }
 
 /**
@@ -1566,6 +1586,8 @@ fu_context_finalize(GObject *object)
 
 	if (priv->fdt != NULL)
 		g_object_unref(priv->fdt);
+	if (priv->efivars != NULL)
+		g_object_unref(priv->efivars);
 	g_free(priv->esp_location);
 	g_hash_table_unref(priv->runtime_versions);
 	g_hash_table_unref(priv->compile_versions);
@@ -1720,6 +1742,8 @@ fu_context_init(FuContext *self)
 	priv->smbios = fu_smbios_new();
 	priv->hwids = fu_hwids_new();
 	priv->config = fu_config_new();
+	priv->efivars = g_strcmp0(g_getenv("FWUPD_EFIVARS"), "dummy") == 0 ? fu_dummy_efivars_new()
+									   : fu_efivars_new();
 	priv->hwid_flags = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	priv->udev_subsystems = g_hash_table_new_full(g_str_hash,
 						      g_str_equal,

@@ -22,6 +22,7 @@
 #include "fu-coswid-firmware.h"
 #include "fu-device-private.h"
 #include "fu-device-progress.h"
+#include "fu-dummy-efivars.h"
 #include "fu-efi-lz77-decompressor.h"
 #include "fu-lzma-common.h"
 #include "fu-plugin-private.h"
@@ -3610,82 +3611,94 @@ fu_efivar_func(void)
 	gsize sz = 0;
 	guint32 attr = 0;
 	guint64 total;
-	g_autofree gchar *sysfsfwdir = NULL;
 	g_autofree guint8 *data = NULL;
+	g_autoptr(FuEfivars) efivars = fu_dummy_efivars_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) names = NULL;
 
-#ifndef __linux__
-	g_test_skip("only works on Linux");
-	return;
-#endif
-
-	/* these tests will write */
-	sysfsfwdir = g_test_build_filename(G_TEST_BUILT, "tests", NULL);
-	(void)g_setenv("FWUPD_SYSFSFWDIR", sysfsfwdir, TRUE);
-
 	/* check supported */
-	ret = fu_efivar_supported(&error);
+	ret = fu_efivars_supported(efivars, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-
-	/* check we can get the space used */
-	total = fu_efivar_space_used(&error);
-	g_assert_no_error(error);
-	g_assert_cmpint(total, >=, 0x100);
-
-	/* check existing keys */
-	g_assert_false(fu_efivar_exists(FU_EFIVAR_GUID_EFI_GLOBAL, "NotGoingToExist"));
-	g_assert_true(fu_efivar_exists(FU_EFIVAR_GUID_EFI_GLOBAL, "SecureBoot"));
-
-	/* list a few keys */
-	names = fu_efivar_get_names(FU_EFIVAR_GUID_EFI_GLOBAL, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(names);
-	g_assert_cmpint(names->len, ==, 2);
 
 	/* write and read a key */
-	ret = fu_efivar_set_data(FU_EFIVAR_GUID_EFI_GLOBAL,
-				 "Test",
-				 (guint8 *)"1",
-				 1,
-				 FU_EFIVAR_ATTR_NON_VOLATILE | FU_EFIVAR_ATTR_RUNTIME_ACCESS,
-				 &error);
+	ret = fu_efivars_set_data(efivars,
+				  FU_EFIVARS_GUID_EFI_GLOBAL,
+				  "Test",
+				  (guint8 *)"1",
+				  1,
+				  FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				  &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_efivar_get_data(FU_EFIVAR_GUID_EFI_GLOBAL, "Test", &data, &sz, &attr, &error);
+	ret = fu_efivars_get_data(efivars,
+				  FU_EFIVARS_GUID_EFI_GLOBAL,
+				  "Test",
+				  &data,
+				  &sz,
+				  &attr,
+				  &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(sz, ==, 1);
-	g_assert_cmpint(attr, ==, FU_EFIVAR_ATTR_NON_VOLATILE | FU_EFIVAR_ATTR_RUNTIME_ACCESS);
+	g_assert_cmpint(attr, ==, FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_RUNTIME_ACCESS);
 	g_assert_cmpint(data[0], ==, '1');
 
+	/* check existing keys */
+	g_assert_false(fu_efivars_exists(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "NotGoingToExist"));
+	g_assert_true(fu_efivars_exists(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "Test"));
+
+	/* list a few keys */
+	names = fu_efivars_get_names(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(names);
+	g_assert_cmpint(names->len, ==, 1);
+
+	/* check we can get the space used */
+	total = fu_efivars_space_used(efivars, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(total, >=, 0x10);
+
 	/* delete single key */
-	ret = fu_efivar_delete(FU_EFIVAR_GUID_EFI_GLOBAL, "Test", &error);
+	ret = fu_efivars_delete(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "Test", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_false(fu_efivar_exists(FU_EFIVAR_GUID_EFI_GLOBAL, "Test"));
+	g_assert_false(fu_efivars_exists(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "Test"));
+	g_assert_false(fu_efivars_delete(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "Test", NULL));
 
 	/* delete multiple keys */
-	ret = fu_efivar_set_data(FU_EFIVAR_GUID_EFI_GLOBAL, "Test1", (guint8 *)"1", 1, 0, &error);
+	ret = fu_efivars_set_data(efivars,
+				  FU_EFIVARS_GUID_EFI_GLOBAL,
+				  "Test1",
+				  (guint8 *)"1",
+				  1,
+				  0,
+				  &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_efivar_set_data(FU_EFIVAR_GUID_EFI_GLOBAL, "Test2", (guint8 *)"1", 1, 0, &error);
+	ret = fu_efivars_set_data(efivars,
+				  FU_EFIVARS_GUID_EFI_GLOBAL,
+				  "Test2",
+				  (guint8 *)"1",
+				  1,
+				  0,
+				  &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_efivar_delete_with_glob(FU_EFIVAR_GUID_EFI_GLOBAL, "Test*", &error);
+	ret = fu_efivars_delete_with_glob(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "Test*", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_false(fu_efivar_exists(FU_EFIVAR_GUID_EFI_GLOBAL, "Test1"));
-	g_assert_false(fu_efivar_exists(FU_EFIVAR_GUID_EFI_GLOBAL, "Test2"));
+	g_assert_false(fu_efivars_exists(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "Test1"));
+	g_assert_false(fu_efivars_exists(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "Test2"));
 
 	/* read a key that doesn't exist */
-	ret = fu_efivar_get_data(FU_EFIVAR_GUID_EFI_GLOBAL,
-				 "NotGoingToExist",
-				 NULL,
-				 NULL,
-				 NULL,
-				 &error);
+	ret = fu_efivars_get_data(efivars,
+				  FU_EFIVARS_GUID_EFI_GLOBAL,
+				  "NotGoingToExist",
+				  NULL,
+				  NULL,
+				  NULL,
+				  &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_false(ret);
 }
@@ -5354,6 +5367,7 @@ fu_plugin_struct_wrapped_func(void)
 static void
 fu_efi_load_option_func(void)
 {
+	g_autoptr(FuEfivars) efivars = fu_efivars_new();
 	/*
 	 * 0000 = Linux-Firmware-Updater
 	 * 0001 = Fedora
@@ -5362,7 +5376,7 @@ fu_efi_load_option_func(void)
 	for (guint16 i = 0; i < 3; i++) {
 		g_autoptr(GError) error = NULL;
 		g_autoptr(FuEfiLoadOption) load_option =
-		    fu_efi_load_option_new_esp_for_boot_entry(i, &error);
+		    fu_efi_load_option_new_esp_for_boot_entry(efivars, i, &error);
 		g_autoptr(GBytes) fw = NULL;
 		g_autofree gchar *str = NULL;
 
@@ -5402,6 +5416,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
+	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
 
 	g_test_add_func("/fwupd/efi-lz77{decompressor}", fu_efi_lz77_decompressor_func);
 	g_test_add_func("/fwupd/input-stream", fu_input_stream_func);

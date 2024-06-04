@@ -111,7 +111,7 @@ fu_uefi_cod_device_write_efi_name(const gchar *name, GByteArray *array)
 {
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
-	g_autofree gchar *fn = g_strdup_printf("%s-%s", name, FU_EFIVAR_GUID_EFI_CAPSULE_REPORT);
+	g_autofree gchar *fn = g_strdup_printf("%s-%s", name, FU_EFIVARS_GUID_EFI_CAPSULE_REPORT);
 	g_autofree gchar *path = NULL;
 	path = g_test_build_filename(G_TEST_DIST, "tests", "efi", "efivars", fn, NULL);
 	ret = g_file_set_contents(path, (gchar *)array->data, array->len, &error);
@@ -123,6 +123,7 @@ static void
 fu_uefi_cod_device_func(void)
 {
 	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *str = NULL;
@@ -146,6 +147,8 @@ fu_uefi_cod_device_func(void)
 
 	/* create device */
 	dev = g_object_new(FU_TYPE_UEFI_COD_DEVICE,
+			   "context",
+			   ctx,
 			   "fw-class",
 			   "cc4cbfa9-bf9d-540b-b92b-172ce31013c1",
 			   NULL);

@@ -19,7 +19,7 @@ fu_uefi_dbx_get_authenticode_hash(const gchar *fn, GError **error)
 }
 
 static GPtrArray *
-fu_uefi_dbx_get_basenames_bootxxxx(void)
+fu_uefi_dbx_get_basenames_bootxxxx(FuEfivars *efivars)
 {
 	g_autoptr(GPtrArray) files = g_ptr_array_new_with_free_func(g_free);
 
@@ -39,7 +39,11 @@ fu_uefi_dbx_get_basenames_bootxxxx(void)
 		g_autoptr(GError) error_local = NULL;
 
 		/* load EFI load option */
-		blob = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL, name, NULL, NULL);
+		blob = fu_efivars_get_data_bytes(efivars,
+						 FU_EFIVARS_GUID_EFI_GLOBAL,
+						 name,
+						 NULL,
+						 NULL);
 		if (blob == NULL)
 			continue;
 		loadopt = fu_efi_load_option_new();
@@ -90,11 +94,13 @@ fu_uefi_dbx_get_basenames_bootxxxx(void)
 }
 
 static gboolean
-fu_uefi_dbx_signature_list_validate_volume(FuEfiSignatureList *siglist,
+fu_uefi_dbx_signature_list_validate_volume(FuContext *ctx,
+					   FuEfiSignatureList *siglist,
 					   FuVolume *esp,
 					   FwupdInstallFlags flags,
 					   GError **error)
 {
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	g_autofree gchar *esp_path = NULL;
 	g_autoptr(GPtrArray) files = NULL;
 	g_autoptr(GPtrArray) basenames = NULL;
@@ -109,7 +115,7 @@ fu_uefi_dbx_signature_list_validate_volume(FuEfiSignatureList *siglist,
 
 	/* filter the list of possible names from BootXXXX */
 	if (flags & FWUPD_INSTALL_FLAG_FORCE) {
-		basenames = fu_uefi_dbx_get_basenames_bootxxxx();
+		basenames = fu_uefi_dbx_get_basenames_bootxxxx(efivars);
 		if (basenames->len > 0) {
 			g_autofree gchar *str = fu_strjoin(",", basenames);
 			g_info("EFI binaries to check: %s", str);
@@ -184,7 +190,7 @@ fu_uefi_dbx_signature_list_validate(FuContext *ctx,
 			g_debug("failed to mount ESP: %s", error_local->message);
 			continue;
 		}
-		if (!fu_uefi_dbx_signature_list_validate_volume(siglist, esp, flags, error))
+		if (!fu_uefi_dbx_signature_list_validate_volume(ctx, siglist, esp, flags, error))
 			return FALSE;
 	}
 	return TRUE;

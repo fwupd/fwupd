@@ -11,6 +11,7 @@
 #include "fu-bios-settings.h"
 #include "fu-common-struct.h"
 #include "fu-common.h"
+#include "fu-efivars.h"
 #include "fu-firmware.h"
 #include "fu-smbios.h"
 
@@ -174,3 +175,5 @@ void
 fu_context_set_esp_location(FuContext *self, const gchar *location);
 const gchar *
 fu_context_get_esp_location(FuContext *self);
+FuEfivars *
+fu_context_get_efivars(FuContext *self) G_GNUC_NON_NULL(1);

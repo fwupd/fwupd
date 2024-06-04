@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
+#define G_LOG_DOMAIN "FuLinuxEfivars"
+
 #include "config.h"
 
 #include <errno.h>
@@ -18,40 +20,46 @@
 #include "fwupd-error.h"
 
 #include "fu-common.h"
-#include "fu-efivar-impl.h"
+#include "fu-linux-efivars.h"
 #include "fu-path.h"
 
+struct _FuLinuxEfivars {
+	FuEfivars parent_instance;
+};
+
+G_DEFINE_TYPE(FuLinuxEfivars, fu_linux_efivars, FU_TYPE_EFIVARS)
+
 static gchar *
-fu_efivar_get_path(void)
+fu_linux_efivars_get_path(void)
 {
 	g_autofree gchar *sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
 	return g_build_filename(sysfsfwdir, "efi", "efivars", NULL);
 }
 
 static gchar *
-fu_efivar_get_filename(const gchar *guid, const gchar *name)
+fu_linux_efivars_get_filename(const gchar *guid, const gchar *name)
 {
-	g_autofree gchar *efivardir = fu_efivar_get_path();
-	return g_strdup_printf("%s/%s-%s", efivardir, name, guid);
+	g_autofree gchar *efivarsdir = fu_linux_efivars_get_path();
+	return g_strdup_printf("%s/%s-%s", efivarsdir, name, guid);
 }
 
-gboolean
-fu_efivar_supported_impl(GError **error)
+static gboolean
+fu_linux_efivars_supported(FuEfivars *efivars, GError **error)
 {
-	g_autofree gchar *efivardir = fu_efivar_get_path();
-	if (!g_file_test(efivardir, G_FILE_TEST_IS_DIR)) {
+	g_autofree gchar *efivarsdir = fu_linux_efivars_get_path();
+	if (!g_file_test(efivarsdir, G_FILE_TEST_IS_DIR)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "kernel efivars support missing: %s",
-			    efivardir);
+			    efivarsdir);
 		return FALSE;
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_efivar_set_immutable_fd(int fd, gboolean value, gboolean *value_old, GError **error)
+fu_linux_efivars_set_immutable_fd(int fd, gboolean value, gboolean *value_old, GError **error)
 {
 	guint flags;
 	gboolean is_immutable;
@@ -104,7 +112,7 @@ fu_efivar_set_immutable_fd(int fd, gboolean value, gboolean *value_old, GError *
 }
 
 static gboolean
-fu_efivar_set_immutable(const gchar *fn, gboolean value, gboolean *value_old, GError **error)
+fu_linux_efivars_set_immutable(const gchar *fn, gboolean value, gboolean *value_old, GError **error)
 {
 	gint fd;
 	g_autoptr(GInputStream) istr = NULL;
@@ -127,43 +135,48 @@ fu_efivar_set_immutable(const gchar *fn, gboolean value, gboolean *value_old, GE
 				    "failed to create stream");
 		return FALSE;
 	}
-	return fu_efivar_set_immutable_fd(fd, value, value_old, error);
+	return fu_linux_efivars_set_immutable_fd(fd, value, value_old, error);
 }
 
-gboolean
-fu_efivar_delete_impl(const gchar *guid, const gchar *name, GError **error)
+static gboolean
+fu_linux_efivars_delete(FuEfivars *efivars, const gchar *guid, const gchar *name, GError **error)
 {
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GFile) file = NULL;
 
-	fn = fu_efivar_get_filename(guid, name);
+	fn = fu_linux_efivars_get_filename(guid, name);
 	file = g_file_new_for_path(fn);
-	if (!g_file_query_exists(file, NULL))
-		return TRUE;
-	if (!fu_efivar_set_immutable(fn, FALSE, NULL, error)) {
+	if (!g_file_query_exists(file, NULL)) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no key to delete");
+		return FALSE;
+	}
+	if (!fu_linux_efivars_set_immutable(fn, FALSE, NULL, error)) {
 		g_prefix_error(error, "failed to set %s as mutable: ", fn);
 		return FALSE;
 	}
 	return g_file_delete(file, NULL, error);
 }
 
-gboolean
-fu_efivar_delete_with_glob_impl(const gchar *guid, const gchar *name_glob, GError **error)
+static gboolean
+fu_linux_efivars_delete_with_glob(FuEfivars *efivars,
+				  const gchar *guid,
+				  const gchar *name_glob,
+				  GError **error)
 {
 	const gchar *fn;
 	g_autofree gchar *nameguid_glob = NULL;
-	g_autofree gchar *efivardir = fu_efivar_get_path();
+	g_autofree gchar *efivarsdir = fu_linux_efivars_get_path();
 	g_autoptr(GDir) dir = NULL;
 
-	dir = g_dir_open(efivardir, 0, error);
+	dir = g_dir_open(efivarsdir, 0, error);
 	if (dir == NULL)
 		return FALSE;
 	nameguid_glob = g_strdup_printf("%s-%s", name_glob, guid);
 	while ((fn = g_dir_read_name(dir)) != NULL) {
 		if (g_pattern_match_simple(nameguid_glob, fn)) {
-			g_autofree gchar *keyfn = g_build_filename(efivardir, fn, NULL);
+			g_autofree gchar *keyfn = g_build_filename(efivarsdir, fn, NULL);
 			g_autoptr(GFile) file = g_file_new_for_path(keyfn);
-			if (!fu_efivar_set_immutable(keyfn, FALSE, NULL, error)) {
+			if (!fu_linux_efivars_set_immutable(keyfn, FALSE, NULL, error)) {
 				g_prefix_error(error, "failed to set %s as mutable: ", keyfn);
 				return FALSE;
 			}
@@ -175,13 +188,13 @@ fu_efivar_delete_with_glob_impl(const gchar *guid, const gchar *name_glob, GErro
 }
 
 static gboolean
-fu_efivar_exists_guid(const gchar *guid)
+fu_linux_efivars_exists_guid(const gchar *guid)
 {
 	const gchar *fn;
-	g_autofree gchar *efivardir = fu_efivar_get_path();
+	g_autofree gchar *efivarsdir = fu_linux_efivars_get_path();
 	g_autoptr(GDir) dir = NULL;
 
-	dir = g_dir_open(efivardir, 0, NULL);
+	dir = g_dir_open(efivarsdir, 0, NULL);
 	if (dir == NULL)
 		return FALSE;
 	while ((fn = g_dir_read_name(dir)) != NULL) {
@@ -191,26 +204,27 @@ fu_efivar_exists_guid(const gchar *guid)
 	return TRUE;
 }
 
-gboolean
-fu_efivar_exists_impl(const gchar *guid, const gchar *name)
+static gboolean
+fu_linux_efivars_exists(FuEfivars *efivars, const gchar *guid, const gchar *name)
 {
 	g_autofree gchar *fn = NULL;
 
 	/* any name */
 	if (name == NULL)
-		return fu_efivar_exists_guid(guid);
+		return fu_linux_efivars_exists_guid(guid);
 
-	fn = fu_efivar_get_filename(guid, name);
+	fn = fu_linux_efivars_get_filename(guid, name);
 	return g_file_test(fn, G_FILE_TEST_EXISTS);
 }
 
-gboolean
-fu_efivar_get_data_impl(const gchar *guid,
-			const gchar *name,
-			guint8 **data,
-			gsize *data_sz,
-			guint32 *attr,
-			GError **error)
+static gboolean
+fu_linux_efivars_get_data(FuEfivars *efivars,
+			  const gchar *guid,
+			  const gchar *name,
+			  guint8 **data,
+			  gsize *data_sz,
+			  guint32 *attr,
+			  GError **error)
 {
 	gssize attr_sz;
 	gssize data_sz_tmp;
@@ -222,7 +236,7 @@ fu_efivar_get_data_impl(const gchar *guid,
 	g_autoptr(GInputStream) istr = NULL;
 
 	/* open file as stream */
-	fn = fu_efivar_get_filename(guid, name);
+	fn = fu_linux_efivars_get_filename(guid, name);
 	file = g_file_new_for_path(fn);
 	istr = G_INPUT_STREAM(g_file_read(file, NULL, error));
 	if (istr == NULL) {
@@ -282,11 +296,11 @@ fu_efivar_get_data_impl(const gchar *guid,
 	return TRUE;
 }
 
-GPtrArray *
-fu_efivar_get_names_impl(const gchar *guid, GError **error)
+static GPtrArray *
+fu_linux_efivars_get_names(FuEfivars *efivars, const gchar *guid, GError **error)
 {
 	const gchar *name_guid;
-	g_autofree gchar *path = fu_efivar_get_path();
+	g_autofree gchar *path = fu_linux_efivars_get_path();
 	g_autoptr(GDir) dir = NULL;
 	g_autoptr(GPtrArray) names = g_ptr_array_new_with_free_func(g_free);
 
@@ -317,14 +331,17 @@ fu_efivar_get_names_impl(const gchar *guid, GError **error)
 	return g_steal_pointer(&names);
 }
 
-GFileMonitor *
-fu_efivar_get_monitor_impl(const gchar *guid, const gchar *name, GError **error)
+static GFileMonitor *
+fu_linux_efivars_get_monitor(FuEfivars *efivars,
+			     const gchar *guid,
+			     const gchar *name,
+			     GError **error)
 {
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GFileMonitor) monitor = NULL;
 
-	fn = fu_efivar_get_filename(guid, name);
+	fn = fu_linux_efivars_get_filename(guid, name);
 	file = g_file_new_for_path(fn);
 	monitor = g_file_monitor_file(file, G_FILE_MONITOR_NONE, NULL, error);
 	if (monitor == NULL) {
@@ -335,13 +352,13 @@ fu_efivar_get_monitor_impl(const gchar *guid, const gchar *name, GError **error)
 	return g_steal_pointer(&monitor);
 }
 
-guint64
-fu_efivar_space_used_impl(GError **error)
+static guint64
+fu_linux_efivars_space_used(FuEfivars *efivars, GError **error)
 {
 	const gchar *fn;
 	guint64 total = 0;
 	g_autoptr(GDir) dir = NULL;
-	g_autofree gchar *path = fu_efivar_get_path();
+	g_autofree gchar *path = fu_linux_efivars_get_path();
 	g_autoptr(GFile) file_fs = g_file_new_for_path(path);
 	g_autoptr(GFileInfo) info_fs = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -353,7 +370,7 @@ fu_efivar_space_used_impl(GError **error)
 				    NULL,
 				    &error_local);
 	if (info_fs == NULL) {
-		g_debug("failed to get efivar used space: %s", error_local->message);
+		g_debug("failed to get efivars used space: %s", error_local->message);
 	} else {
 		total = g_file_info_get_attribute_uint64(info_fs, G_FILE_ATTRIBUTE_FILESYSTEM_USED);
 		if (total > 0)
@@ -391,18 +408,19 @@ fu_efivar_space_used_impl(GError **error)
 	return total;
 }
 
-gboolean
-fu_efivar_set_data_impl(const gchar *guid,
-			const gchar *name,
-			const guint8 *data,
-			gsize sz,
-			guint32 attr,
-			GError **error)
+static gboolean
+fu_linux_efivars_set_data(FuEfivars *efivars,
+			  const gchar *guid,
+			  const gchar *name,
+			  const guint8 *data,
+			  gsize sz,
+			  guint32 attr,
+			  GError **error)
 {
 	int fd;
 	int open_wflags;
 	gboolean was_immutable;
-	g_autofree gchar *fn = fu_efivar_get_filename(guid, name);
+	g_autofree gchar *fn = fu_linux_efivars_get_filename(guid, name);
 	g_autofree guint8 *buf = g_malloc0(sizeof(guint32) + sz);
 	g_autoptr(GFile) file = g_file_new_for_path(fn);
 	g_autoptr(GOutputStream) ostr = NULL;
@@ -416,19 +434,19 @@ fu_efivar_set_data_impl(const gchar *guid,
 			return FALSE;
 		}
 		if (!g_output_stream_close(G_OUTPUT_STREAM(ostr_tmp), NULL, error)) {
-			g_prefix_error(error, "failed to touch efivarfs: ");
+			g_prefix_error(error, "failed to touch efivarsfs: ");
 			fwupd_error_convert(error);
 			return FALSE;
 		}
 	}
-	if (!fu_efivar_set_immutable(fn, FALSE, &was_immutable, error)) {
+	if (!fu_linux_efivars_set_immutable(fn, FALSE, &was_immutable, error)) {
 		g_prefix_error(error, "failed to set %s as mutable: ", fn);
 		return FALSE;
 	}
 
 	/* open file for writing, optionally append */
 	open_wflags = O_WRONLY;
-	if (attr & FU_EFIVAR_ATTR_APPEND_WRITE)
+	if (attr & FU_EFIVARS_ATTR_APPEND_WRITE)
 		open_wflags |= O_APPEND;
 	fd = open(fn, open_wflags);
 	if (fd < 0) {
@@ -444,13 +462,13 @@ fu_efivar_set_data_impl(const gchar *guid,
 	memcpy(buf, &attr, sizeof(attr));
 	memcpy(buf + sizeof(attr), data, sz);
 	if (g_output_stream_write(ostr, buf, sizeof(attr) + sz, NULL, error) < 0) {
-		g_prefix_error(error, "failed to write data to efivarfs: ");
+		g_prefix_error(error, "failed to write data to efivarsfs: ");
 		fwupd_error_convert(error);
 		return FALSE;
 	}
 
 	/* set as immutable again */
-	if (was_immutable && !fu_efivar_set_immutable(fn, TRUE, NULL, error)) {
+	if (was_immutable && !fu_linux_efivars_set_immutable(fn, TRUE, NULL, error)) {
 		g_prefix_error(error, "failed to set %s as immutable: ", fn);
 		fwupd_error_convert(error);
 		return FALSE;
@@ -458,4 +476,30 @@ fu_efivar_set_data_impl(const gchar *guid,
 
 	/* success */
 	return TRUE;
+}
+
+static void
+fu_linux_efivars_init(FuLinuxEfivars *self)
+{
+}
+
+static void
+fu_linux_efivars_class_init(FuLinuxEfivarsClass *klass)
+{
+	FuEfivarsClass *efivars_class = FU_EFIVARS_CLASS(klass);
+	efivars_class->supported = fu_linux_efivars_supported;
+	efivars_class->space_used = fu_linux_efivars_space_used;
+	efivars_class->exists = fu_linux_efivars_exists;
+	efivars_class->get_monitor = fu_linux_efivars_get_monitor;
+	efivars_class->get_data = fu_linux_efivars_get_data;
+	efivars_class->set_data = fu_linux_efivars_set_data;
+	efivars_class->delete = fu_linux_efivars_delete;
+	efivars_class->delete_with_glob = fu_linux_efivars_delete_with_glob;
+	efivars_class->get_names = fu_linux_efivars_get_names;
+}
+
+FuEfivars *
+fu_efivars_new(void)
+{
+	return FU_EFIVARS(g_object_new(FU_TYPE_LINUX_EFIVARS, NULL));
 }

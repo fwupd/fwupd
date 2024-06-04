@@ -247,6 +247,8 @@ fu_uefi_device_build_varname(FuUefiDevice *self)
 FuUefiUpdateInfo *
 fu_uefi_device_load_update_info(FuUefiDevice *self, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	g_autofree gchar *varname = fu_uefi_device_build_varname(self);
 	g_autoptr(FuUefiUpdateInfo) info = fu_uefi_update_info_new();
 	g_autoptr(GBytes) fw = NULL;
@@ -255,7 +257,7 @@ fu_uefi_device_load_update_info(FuUefiDevice *self, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* get the existing status */
-	fw = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_FWUPDATE, varname, NULL, error);
+	fw = fu_efivars_get_data_bytes(efivars, FU_EFIVARS_GUID_FWUPDATE, varname, NULL, error);
 	if (fw == NULL)
 		return NULL;
 	if (!fu_firmware_parse(FU_FIRMWARE(info), fw, FWUPD_INSTALL_FLAG_NONE, error))
@@ -266,6 +268,8 @@ fu_uefi_device_load_update_info(FuUefiDevice *self, GError **error)
 gboolean
 fu_uefi_device_clear_status(FuUefiDevice *self, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	gsize datasz = 0;
 	g_autofree gchar *varname = fu_uefi_device_build_varname(self);
 	g_autofree guint8 *data = NULL;
@@ -275,7 +279,13 @@ fu_uefi_device_clear_status(FuUefiDevice *self, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* get the existing status */
-	if (!fu_efivar_get_data(FU_EFIVAR_GUID_FWUPDATE, varname, &data, &datasz, NULL, error))
+	if (!fu_efivars_get_data(efivars,
+				 FU_EFIVARS_GUID_FWUPDATE,
+				 varname,
+				 &data,
+				 &datasz,
+				 NULL,
+				 error))
 		return FALSE;
 	st_inf = fu_struct_efi_update_info_parse(data, datasz, 0x0, error);
 	if (st_inf == NULL) {
@@ -286,13 +296,14 @@ fu_uefi_device_clear_status(FuUefiDevice *self, GError **error)
 	/* just copy the new EfiUpdateInfo and save it back */
 	fu_struct_efi_update_info_set_status(st_inf, FU_UEFI_UPDATE_INFO_STATUS_UNKNOWN);
 	memcpy(data, st_inf->data, st_inf->len);
-	if (!fu_efivar_set_data(FU_EFIVAR_GUID_FWUPDATE,
-				varname,
-				data,
-				datasz,
-				FU_EFIVAR_ATTR_NON_VOLATILE | FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
-				    FU_EFIVAR_ATTR_RUNTIME_ACCESS,
-				error)) {
+	if (!fu_efivars_set_data(efivars,
+				 FU_EFIVARS_GUID_FWUPDATE,
+				 varname,
+				 data,
+				 datasz,
+				 FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
+				     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				 error)) {
 		g_prefix_error(error, "could not set EfiUpdateInfo: ");
 		return FALSE;
 	}
@@ -382,6 +393,8 @@ fu_uefi_device_write_update_info(FuUefiDevice *self,
 				 const gchar *guid_str,
 				 GError **error)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 	fwupd_guid_t guid = {0x0};
 	g_autoptr(FuEfiDevicePathList) dp_buf = NULL;
@@ -410,13 +423,14 @@ fu_uefi_device_write_update_info(FuUefiDevice *self,
 	fu_struct_efi_update_info_set_status(st_inf, FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE);
 	fu_struct_efi_update_info_set_guid(st_inf, &guid);
 	fu_byte_array_append_bytes(st_inf, dp_blob);
-	if (!fu_efivar_set_data(FU_EFIVAR_GUID_FWUPDATE,
-				varname,
-				st_inf->data,
-				st_inf->len,
-				FU_EFIVAR_ATTR_NON_VOLATILE | FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
-				    FU_EFIVAR_ATTR_RUNTIME_ACCESS,
-				error)) {
+	if (!fu_efivars_set_data(efivars,
+				 FU_EFIVARS_GUID_FWUPDATE,
+				 varname,
+				 st_inf->data,
+				 st_inf->len,
+				 FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
+				     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				 error)) {
 		g_prefix_error(error, "could not set DP_BUF with %s: ", capsule_path);
 		return FALSE;
 	}
@@ -428,9 +442,11 @@ fu_uefi_device_write_update_info(FuUefiDevice *self,
 static gboolean
 fu_uefi_check_asset(FuDevice *device, GError **error)
 {
-	g_autofree gchar *source_app = fu_uefi_get_built_app_path("fwupd", error);
+	FuContext *ctx = fu_device_get_context(device);
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
+	g_autofree gchar *source_app = fu_uefi_get_built_app_path(efivars, "fwupd", error);
 	if (source_app == NULL) {
-		if (fu_efivar_secure_boot_enabled(NULL))
+		if (fu_efivars_secure_boot_enabled(efivars, NULL))
 			g_prefix_error(error, "missing signed bootloader for secure boot: ");
 		return FALSE;
 	}
@@ -540,15 +556,18 @@ fu_uefi_device_probe(FuDevice *device, GError **error)
 static void
 fu_uefi_device_capture_efi_debugging(FuDevice *device)
 {
+	FuContext *ctx = fu_device_get_context(device);
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	g_autofree gchar *str = NULL;
 	g_autoptr(GBytes) buf = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* get the EFI variable contents */
-	buf = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_FWUPDATE,
-				       "FWUPDATE_DEBUG_LOG",
-				       NULL,
-				       &error_local);
+	buf = fu_efivars_get_data_bytes(efivars,
+					FU_EFIVARS_GUID_FWUPDATE,
+					"FWUPDATE_DEBUG_LOG",
+					NULL,
+					&error_local);
 	if (buf == NULL) {
 		g_warning("failed to capture EFI debugging: %s", error_local->message);
 		return;
@@ -568,16 +587,20 @@ fu_uefi_device_capture_efi_debugging(FuDevice *device)
 gboolean
 fu_uefi_device_perhaps_enable_debugging(FuUefiDevice *self, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
+
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING)) {
 		const guint8 data = 1;
-		if (!fu_efivar_set_data(FU_EFIVAR_GUID_FWUPDATE,
-					"FWUPDATE_VERBOSE",
-					&data,
-					sizeof(data),
-					FU_EFIVAR_ATTR_NON_VOLATILE |
-					    FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
-					    FU_EFIVAR_ATTR_RUNTIME_ACCESS,
-					error)) {
+		if (!fu_efivars_set_data(efivars,
+					 FU_EFIVARS_GUID_FWUPDATE,
+					 "FWUPDATE_VERBOSE",
+					 &data,
+					 sizeof(data),
+					 FU_EFIVARS_ATTR_NON_VOLATILE |
+					     FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
+					     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+					 error)) {
 			g_prefix_error(error, "failed to enable debugging: ");
 			return FALSE;
 		}
@@ -585,8 +608,11 @@ fu_uefi_device_perhaps_enable_debugging(FuUefiDevice *self, GError **error)
 	}
 
 	/* unset this */
-	if (fu_efivar_exists(FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_VERBOSE")) {
-		if (!fu_efivar_delete(FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_VERBOSE", error))
+	if (fu_efivars_exists(efivars, FU_EFIVARS_GUID_FWUPDATE, "FWUPDATE_VERBOSE")) {
+		if (!fu_efivars_delete(efivars,
+				       FU_EFIVARS_GUID_FWUPDATE,
+				       "FWUPDATE_VERBOSE",
+				       error))
 			return FALSE;
 	}
 

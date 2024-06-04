@@ -108,10 +108,11 @@ static gboolean
 fu_uefi_capsule_plugin_fwupd_efi_probe(FuUefiCapsulePlugin *self, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	g_autofree gchar *fn = NULL;
 
 	/* find the app binary */
-	fn = fu_uefi_get_built_app_path("fwupd", error);
+	fn = fu_uefi_get_built_app_path(efivars, "fwupd", error);
 	if (fn == NULL)
 		return FALSE;
 	self->fwupd_efi_file = g_file_new_for_path(fn);
@@ -138,23 +139,23 @@ fu_uefi_capsule_plugin_clear_results(FuPlugin *plugin, FuDevice *device, GError 
 }
 
 static gchar *
-fu_uefi_capsule_plugin_efivar_attrs_to_string(guint32 attrs)
+fu_uefi_capsule_plugin_efivars_attrs_to_string(guint32 attrs)
 {
 	const gchar *data[7] = {0};
 	guint idx = 0;
-	if (attrs & FU_EFIVAR_ATTR_NON_VOLATILE)
+	if (attrs & FU_EFIVARS_ATTR_NON_VOLATILE)
 		data[idx++] = "non-volatile";
-	if (attrs & FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS)
+	if (attrs & FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS)
 		data[idx++] = "bootservice-access";
-	if (attrs & FU_EFIVAR_ATTR_RUNTIME_ACCESS)
+	if (attrs & FU_EFIVARS_ATTR_RUNTIME_ACCESS)
 		data[idx++] = "runtime-access";
-	if (attrs & FU_EFIVAR_ATTR_HARDWARE_ERROR_RECORD)
+	if (attrs & FU_EFIVARS_ATTR_HARDWARE_ERROR_RECORD)
 		data[idx++] = "hardware-error-record";
-	if (attrs & FU_EFIVAR_ATTR_AUTHENTICATED_WRITE_ACCESS)
+	if (attrs & FU_EFIVARS_ATTR_AUTHENTICATED_WRITE_ACCESS)
 		data[idx++] = "authenticated-write-access";
-	if (attrs & FU_EFIVAR_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS)
+	if (attrs & FU_EFIVARS_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS)
 		data[idx++] = "time-based-authenticated-write-access";
-	if (attrs & FU_EFIVAR_ATTR_APPEND_WRITE)
+	if (attrs & FU_EFIVARS_ATTR_APPEND_WRITE)
 		data[idx++] = "append-write";
 	return g_strjoinv(",", (gchar **)data);
 }
@@ -162,6 +163,7 @@ fu_uefi_capsule_plugin_efivar_attrs_to_string(guint32 attrs)
 static void
 fu_uefi_capsule_plugin_add_security_attrs_secureboot(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuEfivars *efivars = fu_context_get_efivars(fu_plugin_get_context(plugin));
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -171,7 +173,7 @@ fu_uefi_capsule_plugin_add_security_attrs_secureboot(FuPlugin *plugin, FuSecurit
 	fu_security_attrs_append(attrs, attr);
 
 	/* SB not available or disabled */
-	if (!fu_efivar_secure_boot_enabled(&error)) {
+	if (!fu_efivars_secure_boot_enabled(efivars, &error)) {
 		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 			return;
@@ -190,15 +192,16 @@ fu_uefi_capsule_plugin_add_security_attrs_secureboot(FuPlugin *plugin, FuSecurit
 static void
 fu_uefi_capsule_plugin_add_security_attrs_bootservices(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuEfivars *efivars = fu_context_get_efivars(fu_plugin_get_context(plugin));
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
-	const gchar *guids[] = {FU_EFIVAR_GUID_SECURITY_DATABASE, FU_EFIVAR_GUID_EFI_GLOBAL};
+	const gchar *guids[] = {FU_EFIVARS_GUID_SECURITY_DATABASE, FU_EFIVARS_GUID_EFI_GLOBAL};
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_UEFI_BOOTSERVICE_VARS);
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr);
 	for (guint j = 0; j < G_N_ELEMENTS(guids); j++) {
-		g_autoptr(GPtrArray) names = fu_efivar_get_names(guids[j], NULL);
+		g_autoptr(GPtrArray) names = fu_efivars_get_names(efivars, guids[j], NULL);
 
 		/* sanity check */
 		if (names == NULL)
@@ -209,25 +212,26 @@ fu_uefi_capsule_plugin_add_security_attrs_bootservices(FuPlugin *plugin, FuSecur
 			gsize data_sz = 0;
 			guint32 data_attr = 0;
 
-			if (!fu_efivar_get_data(guids[j],
-						name,
-						NULL,
-						&data_sz,
-						&data_attr,
-						&error_local)) {
+			if (!fu_efivars_get_data(efivars,
+						 guids[j],
+						 name,
+						 NULL,
+						 &data_sz,
+						 &data_attr,
+						 &error_local)) {
 				g_warning("failed to read %s-%s: %s",
 					  name,
 					  guids[j],
 					  error_local->message);
 				continue;
 			}
-			if ((data_attr & FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS) > 0 &&
-			    (data_attr & FU_EFIVAR_ATTR_RUNTIME_ACCESS) == 0) {
+			if ((data_attr & FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS) > 0 &&
+			    (data_attr & FU_EFIVARS_ATTR_RUNTIME_ACCESS) == 0) {
 				g_debug("%s-%s attr of size 0x%x had flags %s",
 					name,
 					guids[j],
 					(guint)data_sz,
-					fu_uefi_capsule_plugin_efivar_attrs_to_string(data_attr));
+					fu_uefi_capsule_plugin_efivars_attrs_to_string(data_attr));
 				fwupd_security_attr_add_metadata(attr, "guid", guids[j]);
 				fwupd_security_attr_add_metadata(attr, "name", name);
 				fwupd_security_attr_add_flag(
@@ -336,7 +340,7 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	/* save to a predictable filename */
 	esp_path = fu_volume_get_mount_point(self->esp);
 	directory = fu_uefi_get_esp_path_for_os();
-	basename = g_strdup_printf("fwupd-%s.cap", FU_EFIVAR_GUID_UX_CAPSULE);
+	basename = g_strdup_printf("fwupd-%s.cap", FU_EFIVARS_GUID_UX_CAPSULE);
 	capsule_path = g_build_filename(directory, "fw", basename, NULL);
 	fn = g_build_filename(esp_path, capsule_path, NULL);
 	if (!fu_path_mkdir_parent(fn, error))
@@ -349,7 +353,7 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 
 	fu_struct_efi_capsule_header_set_flags(st_cap,
 					       EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET);
-	if (!fwupd_guid_from_string(FU_EFIVAR_GUID_UX_CAPSULE,
+	if (!fwupd_guid_from_string(FU_EFIVARS_GUID_UX_CAPSULE,
 				    &guid,
 				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
 				    error))
@@ -390,13 +394,14 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	return fu_uefi_device_write_update_info(FU_UEFI_DEVICE(device),
 						capsule_path,
 						"fwupd-ux-capsule",
-						FU_EFIVAR_GUID_UX_CAPSULE,
+						FU_EFIVARS_GUID_UX_CAPSULE,
 						error);
 }
 
 static gboolean
 fu_uefi_capsule_plugin_update_splash(FuPlugin *plugin, FuDevice *device, GError **error)
 {
+	FuEfivars *efivars = fu_context_get_efivars(fu_plugin_get_context(plugin));
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	guint best_idx = G_MAXUINT;
 	guint32 lowest_border_pixels = G_MAXUINT;
@@ -418,9 +423,13 @@ fu_uefi_capsule_plugin_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 		     {0, 0}};
 
 	/* no UX capsule support, so deleting var if it exists */
-	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE)) {
+	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE) &&
+	    fu_efivars_exists(efivars, FU_EFIVARS_GUID_FWUPDATE, "fwupd-ux-capsule")) {
 		g_info("not providing UX capsule");
-		return fu_efivar_delete(FU_EFIVAR_GUID_FWUPDATE, "fwupd-ux-capsule", error);
+		return fu_efivars_delete(efivars,
+					 FU_EFIVARS_GUID_FWUPDATE,
+					 "fwupd-ux-capsule",
+					 error);
 	}
 
 	/* get the boot graphics resource table data */
@@ -916,8 +925,9 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 static void
 fu_uefi_capsule_plugin_test_secure_boot(FuPlugin *plugin)
 {
+	FuEfivars *efivars = fu_context_get_efivars(fu_plugin_get_context(plugin));
 	const gchar *result_str = "Disabled";
-	if (fu_efivar_secure_boot_enabled(NULL))
+	if (fu_efivars_secure_boot_enabled(efivars, NULL))
 		result_str = "Enabled";
 	fu_plugin_add_report_metadata(plugin, "SecureBoot", result_str);
 }
@@ -942,6 +952,7 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 {
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	guint64 nvram_total;
 	g_autofree gchar *nvram_total_str = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -977,13 +988,13 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 	}
 
 	/* are the EFI dirs set up so we can update each device */
-	if (!fu_efivar_supported(error))
+	if (!fu_efivars_supported(efivars, error))
 		return FALSE;
-	nvram_total = fu_efivar_space_used(error);
+	nvram_total = fu_efivars_space_used(efivars, error);
 	if (nvram_total == G_MAXUINT64)
 		return FALSE;
 	nvram_total_str = g_strdup_printf("%" G_GUINT64_FORMAT, nvram_total);
-	fu_plugin_add_report_metadata(plugin, "EfivarNvramUsed", nvram_total_str);
+	fu_plugin_add_report_metadata(plugin, "EfivarsNvramUsed", nvram_total_str);
 
 	/* we use this both for quirking the CoD implementation sanity and the CoD filename */
 	if (!fu_uefi_capsule_plugin_parse_acpi_uefi(self, &error_acpi_uefi))
@@ -1045,16 +1056,19 @@ fu_plugin_uefi_update_state_notify_cb(GObject *object, GParamSpec *pspec, FuPlug
 static gboolean
 fu_uefi_capsule_plugin_check_cod_support(FuUefiCapsulePlugin *self, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	gsize bufsz = 0;
 	guint64 value = 0;
 	g_autofree guint8 *buf = NULL;
 
-	if (!fu_efivar_get_data(FU_EFIVAR_GUID_EFI_GLOBAL,
-				"OsIndicationsSupported",
-				&buf,
-				&bufsz,
-				NULL,
-				error)) {
+	if (!fu_efivars_get_data(efivars,
+				 FU_EFIVARS_GUID_EFI_GLOBAL,
+				 "OsIndicationsSupported",
+				 &buf,
+				 &bufsz,
+				 NULL,
+				 error)) {
 		g_prefix_error(error, "failed to read EFI variable: ");
 		return FALSE;
 	}
@@ -1203,6 +1217,8 @@ fu_uefi_capsule_plugin_cleanup_esp(FuUefiCapsulePlugin *self, GError **error)
 static gboolean
 fu_uefi_capsule_plugin_cleanup_bootnext(FuUefiCapsulePlugin *self, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	guint16 boot_next = 0;
 	g_autofree gchar *boot_xxxxstr = NULL;
 	g_autofree gchar *loadoptstr = NULL;
@@ -1211,11 +1227,12 @@ fu_uefi_capsule_plugin_cleanup_bootnext(FuUefiCapsulePlugin *self, GError **erro
 	g_autoptr(GBytes) boot_xxxxbuf = NULL;
 
 	/* unset */
-	if (!fu_efivar_exists(FU_EFIVAR_GUID_EFI_GLOBAL, "BootNext"))
+	if (!fu_efivars_exists(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "BootNext"))
 		return TRUE;
 
 	/* get the value of BootNext */
-	boot_nextbuf = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL, "BootNext", NULL, error);
+	boot_nextbuf =
+	    fu_efivars_get_data_bytes(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "BootNext", NULL, error);
 	if (boot_nextbuf == NULL)
 		return FALSE;
 	if (!fu_memread_uint16_safe(g_bytes_get_data(boot_nextbuf, NULL),
@@ -1228,8 +1245,11 @@ fu_uefi_capsule_plugin_cleanup_bootnext(FuUefiCapsulePlugin *self, GError **erro
 
 	/* get the correct BootXXXX key */
 	boot_xxxxstr = g_strdup_printf("Boot%04X", boot_next);
-	boot_xxxxbuf =
-	    fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL, boot_xxxxstr, NULL, error);
+	boot_xxxxbuf = fu_efivars_get_data_bytes(efivars,
+						 FU_EFIVARS_GUID_EFI_GLOBAL,
+						 boot_xxxxstr,
+						 NULL,
+						 error);
 	if (boot_xxxxbuf == NULL)
 		return FALSE;
 	if (!fu_firmware_parse(FU_FIRMWARE(loadopt), boot_xxxxbuf, FWUPD_INSTALL_FLAG_NONE, error))
@@ -1242,7 +1262,7 @@ fu_uefi_capsule_plugin_cleanup_bootnext(FuUefiCapsulePlugin *self, GError **erro
 	    g_strcmp0(fu_firmware_get_id(FU_FIRMWARE(loadopt)), "Linux-Firmware-Updater") == 0) {
 		g_warning("BootNext was not deleted automatically, so removing: "
 			  "this normally indicates a BIOS bug");
-		if (!fu_efivar_delete(FU_EFIVAR_GUID_EFI_GLOBAL, "BootNext", error))
+		if (!fu_efivars_delete(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "BootNext", error))
 			return FALSE;
 	}
 
@@ -1253,6 +1273,8 @@ fu_uefi_capsule_plugin_cleanup_bootnext(FuUefiCapsulePlugin *self, GError **erro
 static gboolean
 fu_uefi_capsule_plugin_reboot_cleanup(FuPlugin *plugin, FuDevice *device, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 
 	/* provide an escape hatch for debugging */
@@ -1264,7 +1286,7 @@ fu_uefi_capsule_plugin_reboot_cleanup(FuPlugin *plugin, FuDevice *device, GError
 		return FALSE;
 
 	/* delete any old variables */
-	if (!fu_efivar_delete_with_glob(FU_EFIVAR_GUID_FWUPDATE, "fwupd*-*", error))
+	if (!fu_efivars_delete_with_glob(efivars, FU_EFIVARS_GUID_FWUPDATE, "fwupd*-*", error))
 		return FALSE;
 
 	/* this should not be required, but, hey -- here were are */

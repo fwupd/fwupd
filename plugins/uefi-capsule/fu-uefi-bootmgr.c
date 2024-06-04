@@ -13,7 +13,7 @@
 #include "fu-uefi-device.h"
 
 static gboolean
-fu_uefi_bootmgr_add_to_boot_order(guint16 boot_entry, GError **error)
+fu_uefi_bootmgr_add_to_boot_order(FuEfivars *efivars, guint16 boot_entry, GError **error)
 {
 	gsize boot_order_size = 0;
 	guint i = 0;
@@ -22,12 +22,13 @@ fu_uefi_bootmgr_add_to_boot_order(guint16 boot_entry, GError **error)
 	g_autofree guint16 *new_boot_order = NULL;
 
 	/* get the current boot order */
-	if (!fu_efivar_get_data(FU_EFIVAR_GUID_EFI_GLOBAL,
-				"BootOrder",
-				(guint8 **)&boot_order,
-				&boot_order_size,
-				&attr,
-				error))
+	if (!fu_efivars_get_data(efivars,
+				 FU_EFIVARS_GUID_EFI_GLOBAL,
+				 "BootOrder",
+				 (guint8 **)&boot_order,
+				 &boot_order_size,
+				 &attr,
+				 error))
 		return FALSE;
 
 	/* already set next */
@@ -42,18 +43,19 @@ fu_uefi_bootmgr_add_to_boot_order(guint16 boot_entry, GError **error)
 	if (boot_order_size != 0)
 		memcpy(new_boot_order, boot_order, boot_order_size);
 
-	attr |= FU_EFIVAR_ATTR_NON_VOLATILE | FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
-		FU_EFIVAR_ATTR_RUNTIME_ACCESS;
+	attr |= FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
+		FU_EFIVARS_ATTR_RUNTIME_ACCESS;
 
 	i = boot_order_size / sizeof(guint16);
 	new_boot_order[i] = boot_entry;
 	boot_order_size += sizeof(guint16);
-	if (!fu_efivar_set_data(FU_EFIVAR_GUID_EFI_GLOBAL,
-				"BootOrder",
-				(guint8 *)new_boot_order,
-				boot_order_size,
-				attr,
-				error)) {
+	if (!fu_efivars_set_data(efivars,
+				 FU_EFIVARS_GUID_EFI_GLOBAL,
+				 "BootOrder",
+				 (guint8 *)new_boot_order,
+				 boot_order_size,
+				 attr,
+				 error)) {
 		g_prefix_error(error, "could not set BootOrder(%u): ", boot_entry);
 		return FALSE;
 	}
@@ -77,11 +79,11 @@ fu_uefi_bootmgr_parse_name(const gchar *name)
 }
 
 gboolean
-fu_uefi_bootmgr_verify_fwupd(GError **error)
+fu_uefi_bootmgr_verify_fwupd(FuEfivars *efivars, GError **error)
 {
 	g_autoptr(GPtrArray) names = NULL;
 
-	names = fu_efivar_get_names(FU_EFIVAR_GUID_EFI_GLOBAL, error);
+	names = fu_efivars_get_names(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, error);
 	if (names == NULL)
 		return FALSE;
 	for (guint i = 0; i < names->len; i++) {
@@ -98,8 +100,11 @@ fu_uefi_bootmgr_verify_fwupd(GError **error)
 			continue;
 
 		/* parse key */
-		loadopt_blob =
-		    fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL, name, NULL, &error_local);
+		loadopt_blob = fu_efivars_get_data_bytes(efivars,
+							 FU_EFIVARS_GUID_EFI_GLOBAL,
+							 name,
+							 NULL,
+							 &error_local);
 		if (loadopt_blob == NULL) {
 			g_debug("failed to get data for name %s: %s", name, error_local->message);
 			continue;
@@ -128,7 +133,8 @@ fu_uefi_bootmgr_verify_fwupd(GError **error)
 }
 
 static gboolean
-fu_uefi_setup_bootnext_with_loadopt(FuEfiLoadOption *loadopt,
+fu_uefi_setup_bootnext_with_loadopt(FuEfivars *efivars,
+				    FuEfiLoadOption *loadopt,
 				    FuUefiBootmgrFlags flags,
 				    GError **error)
 {
@@ -147,7 +153,7 @@ fu_uefi_setup_bootnext_with_loadopt(FuEfiLoadOption *loadopt,
 		return FALSE;
 
 	/* find existing BootXXXX entry for fwupd */
-	names = fu_efivar_get_names(FU_EFIVAR_GUID_EFI_GLOBAL, error);
+	names = fu_efivars_get_names(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, error);
 	if (names == NULL)
 		return FALSE;
 	for (guint i = 0; i < names->len; i++) {
@@ -166,8 +172,11 @@ fu_uefi_setup_bootnext_with_loadopt(FuEfiLoadOption *loadopt,
 		/* mark this as used */
 		set_entries[entry] = 1;
 
-		loadopt_blob_tmp =
-		    fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL, name, &attr, &error_local);
+		loadopt_blob_tmp = fu_efivars_get_data_bytes(efivars,
+							     FU_EFIVARS_GUID_EFI_GLOBAL,
+							     name,
+							     &attr,
+							     &error_local);
 		if (loadopt_blob_tmp == NULL) {
 			g_debug("failed to get data for name %s: %s", name, error_local->message);
 			continue;
@@ -196,11 +205,12 @@ fu_uefi_setup_bootnext_with_loadopt(FuEfiLoadOption *loadopt,
 		/* is different than before */
 		if (!fu_bytes_compare(loadopt_blob, loadopt_blob_old, NULL)) {
 			g_debug("%s: updating existing boot entry", name);
-			if (!fu_efivar_set_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL,
-						      name,
-						      loadopt_blob,
-						      attr,
-						      error)) {
+			if (!fu_efivars_set_data_bytes(efivars,
+						       FU_EFIVARS_GUID_EFI_GLOBAL,
+						       name,
+						       loadopt_blob,
+						       attr,
+						       error)) {
 				g_prefix_error(error, "could not set boot variable active: ");
 				return FALSE;
 			}
@@ -226,13 +236,14 @@ fu_uefi_setup_bootnext_with_loadopt(FuEfiLoadOption *loadopt,
 		}
 		boot_next_name = g_strdup_printf("Boot%04X", (guint)boot_next);
 		g_debug("%s -> creating new entry", boot_next_name);
-		if (!fu_efivar_set_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL,
-					      boot_next_name,
-					      loadopt_blob,
-					      FU_EFIVAR_ATTR_NON_VOLATILE |
-						  FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
-						  FU_EFIVAR_ATTR_RUNTIME_ACCESS,
-					      error)) {
+		if (!fu_efivars_set_data_bytes(efivars,
+					       FU_EFIVARS_GUID_EFI_GLOBAL,
+					       boot_next_name,
+					       loadopt_blob,
+					       FU_EFIVARS_ATTR_NON_VOLATILE |
+						   FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
+						   FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+					       error)) {
 			g_prefix_error(error, "could not set boot variable %s: ", boot_next_name);
 			return FALSE;
 		}
@@ -240,19 +251,20 @@ fu_uefi_setup_bootnext_with_loadopt(FuEfiLoadOption *loadopt,
 
 	/* TODO: conditionalize this on the UEFI version? */
 	if (flags & FU_UEFI_BOOTMGR_FLAG_MODIFY_BOOTORDER) {
-		if (!fu_uefi_bootmgr_add_to_boot_order(boot_next, error))
+		if (!fu_uefi_bootmgr_add_to_boot_order(efivars, boot_next, error))
 			return FALSE;
 	}
 
 	/* set the boot next */
 	fu_memwrite_uint16(boot_nextbuf, boot_next, G_LITTLE_ENDIAN);
-	if (!fu_efivar_set_data(FU_EFIVAR_GUID_EFI_GLOBAL,
-				"BootNext",
-				boot_nextbuf,
-				sizeof(boot_nextbuf),
-				FU_EFIVAR_ATTR_NON_VOLATILE | FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
-				    FU_EFIVAR_ATTR_RUNTIME_ACCESS,
-				error)) {
+	if (!fu_efivars_set_data(efivars,
+				 FU_EFIVARS_GUID_EFI_GLOBAL,
+				 "BootNext",
+				 boot_nextbuf,
+				 sizeof(boot_nextbuf),
+				 FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
+				     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				 error)) {
 		g_prefix_error(error, "could not set BootNext(%u): ", boot_next);
 		return FALSE;
 	}
@@ -260,7 +272,7 @@ fu_uefi_setup_bootnext_with_loadopt(FuEfiLoadOption *loadopt,
 }
 
 static gboolean
-fu_uefi_bootmgr_shim_is_safe(const gchar *source_shim, GError **error)
+fu_uefi_bootmgr_shim_is_safe(FuEfivars *efivars, const gchar *source_shim, GError **error)
 {
 	g_autoptr(GBytes) current_sbatlevel_bytes = NULL;
 	g_autoptr(FuFirmware) shim = fu_pefile_firmware_new();
@@ -288,7 +300,7 @@ fu_uefi_bootmgr_shim_is_safe(const gchar *source_shim, GError **error)
 
 	/* not safe if variable is not set but new shim would set it */
 	current_sbatlevel_bytes =
-	    fu_efivar_get_data_bytes(FU_EFIVAR_GUID_SHIM, "SbatLevelRT", NULL, error);
+	    fu_efivars_get_data_bytes(efivars, FU_EFIVARS_GUID_SHIM, "SbatLevelRT", NULL, error);
 	if (current_sbatlevel_bytes == NULL)
 		return FALSE;
 	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(current_sbatlevel), "$id");
@@ -378,7 +390,8 @@ fu_uefi_bootmgr_shim_is_safe(const gchar *source_shim, GError **error)
 }
 
 gboolean
-fu_uefi_bootmgr_bootnext(FuVolume *esp,
+fu_uefi_bootmgr_bootnext(FuEfivars *efivars,
+			 FuVolume *esp,
 			 const gchar *description,
 			 FuUefiBootmgrFlags flags,
 			 GError **error)
@@ -399,22 +412,22 @@ fu_uefi_bootmgr_bootnext(FuVolume *esp,
 		return TRUE;
 
 	/* if secure boot was turned on this might need to be installed separately */
-	source_app = fu_uefi_get_built_app_path("fwupd", error);
+	source_app = fu_uefi_get_built_app_path(efivars, "fwupd", error);
 	if (source_app == NULL)
 		return FALSE;
 
 	/* test if we should use shim */
-	secure_boot = fu_efivar_secure_boot_enabled(NULL);
+	secure_boot = fu_efivars_secure_boot_enabled(efivars, NULL);
 	if (secure_boot) {
 		shim_app = fu_uefi_get_esp_app_path("shim", error);
 		if (shim_app == NULL)
 			return FALSE;
 
 		/* copy in an updated shim if we have one */
-		source_shim = fu_uefi_get_built_app_path("shim", NULL);
+		source_shim = fu_uefi_get_built_app_path(efivars, "shim", NULL);
 		if (source_shim != NULL) {
 			if (!fu_uefi_esp_target_verify(source_shim, esp, shim_app)) {
-				if (!fu_uefi_bootmgr_shim_is_safe(source_shim, error))
+				if (!fu_uefi_bootmgr_shim_is_safe(efivars, source_shim, error))
 					return FALSE;
 				if (!fu_uefi_esp_target_copy(source_shim, esp, shim_app, error))
 					return FALSE;
@@ -478,5 +491,5 @@ fu_uefi_bootmgr_bootnext(FuVolume *esp,
 	fu_firmware_set_id(FU_FIRMWARE(loadopt), description);
 
 	/* save as BootNext */
-	return fu_uefi_setup_bootnext_with_loadopt(loadopt, flags, error);
+	return fu_uefi_setup_bootnext_with_loadopt(efivars, loadopt, flags, error);
 }

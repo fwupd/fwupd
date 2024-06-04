@@ -67,6 +67,7 @@ struct FuUtilPrivate {
 	GMainContext *main_ctx;
 	GMainLoop *loop;
 	GOptionContext *context;
+	FuContext *ctx;
 	FuEngine *engine;
 	FuEngineRequest *request;
 	FuProgress *progress;
@@ -334,6 +335,8 @@ fu_util_private_free(FuUtilPrivate *priv)
 {
 	if (priv->current_device != NULL)
 		g_object_unref(priv->current_device);
+	if (priv->ctx != NULL)
+		g_object_unref(priv->ctx);
 	if (priv->engine != NULL)
 		g_object_unref(priv->engine);
 	if (priv->request != NULL)
@@ -3950,6 +3953,7 @@ fu_util_reboot_cleanup(FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_efivar_list(FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	FuEfivars *efivars = fu_context_get_efivars(priv->ctx);
 	g_autoptr(GPtrArray) names = NULL;
 
 	/* sanity check */
@@ -3961,7 +3965,7 @@ fu_util_efivar_list(FuUtilPrivate *priv, gchar **values, GError **error)
 				    _("Invalid arguments, expected GUID"));
 		return FALSE;
 	}
-	names = fu_efivar_get_names(values[0], error);
+	names = fu_efivars_get_names(efivars, values[0], error);
 	if (names == NULL)
 		return FALSE;
 	for (guint i = 0; i < names->len; i++) {
@@ -4098,7 +4102,6 @@ main(int argc, char *argv[])
 	gboolean ignore_requirements = FALSE;
 	gboolean ignore_vid_pid = FALSE;
 	g_auto(GStrv) plugin_glob = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
 	g_autoptr(GError) error_console = NULL;
 	g_autoptr(GError) error = NULL;
@@ -4829,7 +4832,8 @@ main(int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
 
 	/* load engine */
-	priv->engine = fu_engine_new(ctx);
+	priv->ctx = fu_context_new();
+	priv->engine = fu_engine_new(priv->ctx);
 	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),

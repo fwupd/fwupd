@@ -2130,7 +2130,7 @@ fu_engine_install_releases(FuEngine *self,
 static void
 fu_engine_update_release_integrity(FuEngine *self, FuRelease *release, const gchar *key)
 {
-	g_autoptr(GHashTable) integrity = fu_engine_integrity_new(NULL);
+	g_autoptr(GHashTable) integrity = fu_engine_integrity_new(self->ctx, NULL);
 	if (integrity != NULL) {
 		g_autofree gchar *str = fu_engine_integrity_to_string(integrity);
 		fu_release_add_metadata_item(release, key, str);

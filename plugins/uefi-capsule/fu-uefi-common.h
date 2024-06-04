@@ -22,7 +22,7 @@
 gchar *
 fu_uefi_get_esp_app_path(const gchar *cmd, GError **error);
 gchar *
-fu_uefi_get_built_app_path(const gchar *binary, GError **error);
+fu_uefi_get_built_app_path(FuEfivars *efivars, const gchar *binary, GError **error);
 gboolean
 fu_uefi_get_framebuffer_size(guint32 *width, guint32 *height, GError **error);
 gchar *
