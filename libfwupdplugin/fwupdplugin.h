@@ -52,7 +52,7 @@
 #include <libfwupdplugin/fu-efi-signature-list.h>
 #include <libfwupdplugin/fu-efi-signature.h>
 #include <libfwupdplugin/fu-efi-volume.h>
-#include <libfwupdplugin/fu-efivar.h>
+#include <libfwupdplugin/fu-efivars.h>
 #include <libfwupdplugin/fu-elf-firmware.h>
 #include <libfwupdplugin/fu-fdt-firmware.h>
 #include <libfwupdplugin/fu-fdt-image.h>

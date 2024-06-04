@@ -17,8 +17,10 @@ G_DEFINE_TYPE(FuUefiRecoveryPlugin, fu_uefi_recovery_plugin, FU_TYPE_PLUGIN)
 static gboolean
 fu_uefi_recovery_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	/* are the EFI dirs set up so we can update each device */
-	return fu_efivar_supported(error);
+	return fu_efivars_supported(efivars, error);
 }
 
 static gboolean

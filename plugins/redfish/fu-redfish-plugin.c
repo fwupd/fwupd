@@ -146,6 +146,8 @@ fu_redfish_plugin_set_credentials(FuPlugin *plugin, const gchar *username, const
 static gboolean
 fu_redfish_plugin_discover_uefi_credentials(FuPlugin *plugin, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
 	gsize bufsz = 0;
 	guint32 indications = 0x0;
@@ -155,12 +157,13 @@ fu_redfish_plugin_discover_uefi_credentials(FuPlugin *plugin, GError **error)
 	g_autoptr(GBytes) userpass = NULL;
 
 	/* get the uint32 specifying if there are EFI variables set */
-	if (!fu_efivar_get_data(REDFISH_EFI_INFORMATION_GUID,
-				REDFISH_EFI_INFORMATION_INDICATIONS,
-				&buf,
-				&bufsz,
-				NULL,
-				error))
+	if (!fu_efivars_get_data(efivars,
+				 REDFISH_EFI_INFORMATION_GUID,
+				 REDFISH_EFI_INFORMATION_INDICATIONS,
+				 &buf,
+				 &bufsz,
+				 NULL,
+				 error))
 		return FALSE;
 	if (!fu_memread_uint32_safe(buf, bufsz, 0x0, &indications, G_LITTLE_ENDIAN, error))
 		return FALSE;
@@ -173,10 +176,11 @@ fu_redfish_plugin_discover_uefi_credentials(FuPlugin *plugin, GError **error)
 	}
 
 	/* read the correct EFI var for runtime */
-	userpass = fu_efivar_get_data_bytes(REDFISH_EFI_INFORMATION_GUID,
-					    REDFISH_EFI_INFORMATION_OS_CREDENTIALS,
-					    NULL,
-					    error);
+	userpass = fu_efivars_get_data_bytes(efivars,
+					     REDFISH_EFI_INFORMATION_GUID,
+					     REDFISH_EFI_INFORMATION_OS_CREDENTIALS,
+					     NULL,
+					     error);
 	if (userpass == NULL)
 		return FALSE;
 

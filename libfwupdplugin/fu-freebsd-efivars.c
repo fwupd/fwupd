@@ -7,6 +7,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
+#define G_LOG_DOMAIN "FuFreebsdEfivars"
+
 #include "config.h"
 
 #include <efivar.h>
@@ -14,10 +16,16 @@
 #include "fwupd-error.h"
 
 #include "fu-common.h"
-#include "fu-efivar-impl.h"
+#include "fu-freebsd-efivars.h"
 
-gboolean
-fu_efivar_supported_impl(GError **error)
+struct _FuFreebsdEfivars {
+	FuEfivars parent_instance;
+};
+
+G_DEFINE_TYPE(FuFreebsdEfivars, fu_freebsd_efivars, FU_TYPE_EFIVARS)
+
+static gboolean
+fu_freebsd_efivars_supported(FuEfivars *efivars, GError **error)
 {
 	if (efi_variables_supported() == 0) {
 		g_set_error(error,
@@ -29,8 +37,8 @@ fu_efivar_supported_impl(GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_efivar_delete_impl(const gchar *guid, const gchar *name, GError **error)
+static gboolean
+fu_freebsd_efivars_delete(FuEfivars *efivars, const gchar *guid, const gchar *name, GError **error)
 {
 	efi_guid_t guidt;
 	efi_str_to_guid(guid, &guidt);
@@ -41,13 +49,16 @@ fu_efivar_delete_impl(const gchar *guid, const gchar *name, GError **error)
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_INVALID_DATA,
-		    "failed to delete efivar %s",
+		    "failed to delete efivars %s",
 		    name);
 	return FALSE;
 }
 
-gboolean
-fu_efivar_delete_with_glob_impl(const gchar *guid, const gchar *name_glob, GError **error)
+static gboolean
+fu_freebsd_efivars_delete_with_glob(FuEfivars *efivars,
+				    const gchar *guid,
+				    const gchar *name_glob,
+				    GError **error)
 {
 	efi_guid_t *guidt = NULL;
 	gchar *name = NULL;
@@ -61,7 +72,7 @@ fu_efivar_delete_with_glob_impl(const gchar *guid, const gchar *name_glob, GErro
 			continue;
 		if (!g_pattern_match_simple(name, name_glob))
 			continue;
-		rv = fu_efivar_delete(guid, name, error);
+		rv = fu_freebsd_efivars_delete(efivars, guid, name, error);
 		if (!rv)
 			break;
 	}
@@ -69,7 +80,7 @@ fu_efivar_delete_with_glob_impl(const gchar *guid, const gchar *name_glob, GErro
 }
 
 static gboolean
-fu_efivar_exists_guid(const gchar *guid)
+fu_freebsd_efivars_exists_guid(const gchar *guid)
 {
 	efi_guid_t *guidt = NULL;
 	gchar *name = NULL;
@@ -84,31 +95,32 @@ fu_efivar_exists_guid(const gchar *guid)
 	return FALSE;
 }
 
-gboolean
-fu_efivar_exists_impl(const gchar *guid, const gchar *name)
+static gboolean
+fu_freebsd_efivars_exists(FuEfivars *efivars, const gchar *guid, const gchar *name)
 {
 	/* any name */
 	if (name == NULL)
-		return fu_efivar_exists_guid(guid);
+		return fu_freebsd_efivars_exists_guid(guid);
 
-	return fu_efivar_get_data(guid, name, NULL, NULL, NULL, NULL);
+	return fu_freebsd_efivars_get_data(efivars, guid, name, NULL, NULL, NULL, NULL);
 }
 
-gboolean
-fu_efivar_get_data_impl(const gchar *guid,
-			const gchar *name,
-			guint8 **data,
-			gsize *data_sz,
-			guint32 *attr,
-			GError **error)
+static gboolean
+fu_freebsd_efivars_get_data(FuEfivars *efivars,
+			    const gchar *guid,
+			    const gchar *name,
+			    guint8 **data,
+			    gsize *data_sz,
+			    guint32 *attr,
+			    GError **error)
 {
 	efi_guid_t guidt;
 	efi_str_to_guid(guid, &guidt);
 	return (efi_get_variable(guidt, name, data, data_sz, attr) != 0);
 }
 
-GPtrArray *
-fu_efivar_get_names_impl(const gchar *guid, GError **error)
+static GPtrArray *
+fu_freebsd_efivars_get_names(FuEfivars *efivars, const gchar *guid, GError **error)
 {
 	g_autoptr(GPtrArray) names = g_ptr_array_new_with_free_func(g_free);
 	efi_guid_t *guidt = NULL;
@@ -137,18 +149,8 @@ fu_efivar_get_names_impl(const gchar *guid, GError **error)
 	return g_steal_pointer(&names);
 }
 
-GFileMonitor *
-fu_efivar_get_monitor_impl(const gchar *guid, const gchar *name, GError **error)
-{
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "efivarfs monitoring not supported on FreeBSD");
-	return NULL;
-}
-
-guint64
-fu_efivar_space_used_impl(GError **error)
+static guint64
+fu_freebsd_efivars_space_used(FuEfivars *efivars, GError **error)
 {
 	guint64 total = 0;
 	efi_guid_t *guidt = NULL;
@@ -160,7 +162,7 @@ fu_efivar_space_used_impl(GError **error)
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "failed to get efivar size");
+				    "failed to get efivars size");
 			return G_MAXUINT64;
 		}
 		total += size;
@@ -170,13 +172,14 @@ fu_efivar_space_used_impl(GError **error)
 	return total;
 }
 
-gboolean
-fu_efivar_set_data_impl(const gchar *guid,
-			const gchar *name,
-			const guint8 *data,
-			gsize sz,
-			guint32 attr,
-			GError **error)
+static gboolean
+fu_freebsd_efivars_set_data(FuEfivars *efivars,
+			    const gchar *guid,
+			    const gchar *name,
+			    const guint8 *data,
+			    gsize sz,
+			    guint32 attr,
+			    GError **error)
 {
 	efi_guid_t guidt;
 	efi_str_to_guid(guid, &guidt);
@@ -185,11 +188,37 @@ fu_efivar_set_data_impl(const gchar *guid,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "failed to write data to efivar %s",
+			    "failed to write data to efivars %s",
 			    name);
 		return FALSE;
 	}
 
 	/* success */
 	return TRUE;
+}
+
+static void
+fu_freebsd_efivars_init(FuFreebsdEfivars *self)
+{
+}
+
+static void
+fu_freebsd_efivars_class_init(FuFreebsdEfivarsClass *klass)
+{
+	FuEfivarsClass *efivars_class = FU_EFIVARS_CLASS(klass);
+	efivars_class->supported = fu_freebsd_efivars_supported;
+	efivars_class->space_used = fu_freebsd_efivars_space_used;
+	efivars_class->exists = fu_freebsd_efivars_exists;
+	efivars_class->get_monitor = fu_freebsd_efivars_get_monitor;
+	efivars_class->get_data = fu_freebsd_efivars_get_data;
+	efivars_class->set_data = fu_freebsd_efivars_set_data;
+	efivars_class->delete = fu_freebsd_efivars_delete;
+	efivars_class->delete_with_glob = fu_freebsd_efivars_delete_with_glob;
+	efivars_class->get_names = fu_freebsd_efivars_get_names;
+}
+
+FuEfivars *
+fu_efivars_new(void)
+{
+	return FU_EFIVARS(g_object_new(FU_TYPE_FREEBSD_EFIVARS, NULL));
 }

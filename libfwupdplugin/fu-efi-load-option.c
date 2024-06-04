@@ -15,7 +15,6 @@
 #include "fu-efi-hard-drive-device-path.h"
 #include "fu-efi-load-option.h"
 #include "fu-efi-struct.h"
-#include "fu-efivar.h"
 #include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-string.h"
@@ -319,10 +318,10 @@ fu_efi_load_option_init(FuEfiLoadOption *self)
  *
  * Returns: (transfer full): a #FuEfiLoadOption, or %NULL if invalid
  *
- * Since: 1.9.3
+ * Since: 2.0.0
  **/
 FuEfiLoadOption *
-fu_efi_load_option_new_esp_for_boot_entry(guint16 boot_entry, GError **error)
+fu_efi_load_option_new_esp_for_boot_entry(FuEfivars *efivars, guint16 boot_entry, GError **error)
 {
 	g_autofree gchar *name = g_strdup_printf("Boot%04X", boot_entry);
 	g_autoptr(FuEfiLoadOption) self = g_object_new(FU_TYPE_EFI_LOAD_OPTION, NULL);
@@ -331,7 +330,7 @@ fu_efi_load_option_new_esp_for_boot_entry(guint16 boot_entry, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* get data */
-	fw = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL, name, NULL, error);
+	fw = fu_efivars_get_data_bytes(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, name, NULL, error);
 	if (fw == NULL)
 		return NULL;
 	if (!fu_firmware_parse(FU_FIRMWARE(self), fw, FWUPD_INSTALL_FLAG_NONE, error))

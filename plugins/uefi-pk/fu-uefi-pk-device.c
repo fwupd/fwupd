@@ -168,13 +168,15 @@ fu_uefi_pk_device_parse_signature(FuUefiPkDevice *self, FuEfiSignature *sig, GEr
 static gboolean
 fu_uefi_pk_device_probe(FuDevice *device, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(device);
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	FuUefiPkDevice *self = FU_UEFI_PK_DEVICE(device);
 	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(FuFirmware) pk = fu_efi_signature_list_new();
 	g_autoptr(GBytes) pk_blob = NULL;
 	g_autoptr(GPtrArray) sigs = NULL;
 
-	pk_blob = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL, "PK", NULL, error);
+	pk_blob = fu_efivars_get_data_bytes(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "PK", NULL, error);
 	if (pk_blob == NULL)
 		return FALSE;
 	if (!fu_firmware_parse(pk, pk_blob, FWUPD_INSTALL_FLAG_NONE, error)) {

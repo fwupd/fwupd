@@ -76,6 +76,7 @@ fwupdplugin_src = [
   'fu-dfuse-firmware.c', # fuzzing
   'fu-dpaux-device.c',
   'fu-drm-device.c',
+  'fu-dummy-efivars.c',
   'fu-dump.c', # fuzzing
   'fu-edid.c', # fuzzing
   'fu-efi-common.c', # fuzzing
@@ -91,7 +92,7 @@ fwupdplugin_src = [
   'fu-efi-load-option.c', # fuzzing
   'fu-efi-signature.c',
   'fu-efi-signature-list.c',
-  'fu-efivar.c', # fuzzing
+  'fu-efivars.c', # fuzzing
   'fu-elf-firmware.c', # fuzzing
   'fu-fdt-firmware.c', # fuzzing
   'fu-fdt-image.c', # fuzzing
@@ -154,18 +155,16 @@ fwupdplugin_src = [
 
 if host_machine.system() == 'linux'
   fwupdplugin_src += 'fu-common-linux.c' # fuzzing
-  fwupdplugin_src += 'fu-efivar-linux.c'
+  fwupdplugin_src += 'fu-linux-efivars.c'
 elif host_machine.system() == 'freebsd'
   fwupdplugin_src += 'fu-common-freebsd.c'
-  fwupdplugin_src += 'fu-efivar-freebsd.c'
+  fwupdplugin_src += 'fu-freebsd-efivars.c'
 elif host_machine.system() == 'windows'
   fwupdplugin_src += 'fu-common-windows.c'
-  fwupdplugin_src += 'fu-efivar-windows.c'
+  fwupdplugin_src += 'fu-windows-efivars.c'
 elif host_machine.system() == 'darwin'
   fwupdplugin_src += 'fu-common-darwin.c'
-  fwupdplugin_src += 'fu-efivar-darwin.c'
-else
-  fwupdplugin_src += 'fu-efivar-impl.c' # fuzzing
+  fwupdplugin_src += 'fu-darwin-efivars.c'
 endif
 
 fwupdplugin_headers = [
@@ -220,7 +219,7 @@ fwupdplugin_headers = [
   'fu-efi-load-option.h',
   'fu-efi-signature.h',
   'fu-efi-signature-list.h',
-  'fu-efivar.h',
+  'fu-efivars.h',
   'fu-elf-firmware.h',
   'fu-fdt-firmware.h',
   'fu-fdt-image.h',

@@ -34,9 +34,11 @@ fu_uefi_esrt_check_esrt(void)
 static void
 fu_uefi_esrt_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
-	if (!fu_efivar_supported(NULL))
+	if (!fu_efivars_supported(efivars, NULL))
 		return;
 
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_BIOS_CAPSULE_UPDATES);
