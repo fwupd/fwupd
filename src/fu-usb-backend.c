@@ -174,6 +174,20 @@ fu_usb_backend_load(FuBackend *backend,
 }
 
 static gboolean
+fu_usb_backend_clear(FuBackend *backend, GError **error)
+{
+	FuUsbBackend *self = FU_USB_BACKEND(backend);
+	g_autoptr(GPtrArray) devices = g_usb_context_get_devices(self->usb_ctx);
+
+	for (guint i = 0; i < devices->len; i++) {
+		GUsbDevice *usb_device = g_ptr_array_index(devices, i);
+		g_usb_device_clear_events(usb_device);
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_usb_backend_save(FuBackend *backend,
 		    JsonBuilder *json_builder,
 		    const gchar *tag,
@@ -198,10 +212,6 @@ fu_usb_backend_save(FuBackend *backend,
 		return TRUE;
 	if (!g_usb_context_save_with_tag(self->usb_ctx, json_builder, tag, error))
 		return FALSE;
-	for (guint i = 0; i < devices->len; i++) {
-		GUsbDevice *usb_device = g_ptr_array_index(devices, i);
-		g_usb_device_clear_events(usb_device);
-	}
 	return TRUE;
 }
 
@@ -251,6 +261,7 @@ fu_usb_backend_class_init(FuUsbBackendClass *klass)
 	backend_class->coldplug = fu_usb_backend_coldplug;
 	backend_class->load = fu_usb_backend_load;
 	backend_class->save = fu_usb_backend_save;
+	backend_class->clear = fu_usb_backend_clear;
 	backend_class->registered = fu_usb_backend_registered;
 }
 
