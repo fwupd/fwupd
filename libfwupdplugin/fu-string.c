@@ -9,8 +9,10 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-chunk-array.h"
 #include "fu-input-stream.h"
 #include "fu-mem.h"
+#include "fu-partial-input-stream.h"
 #include "fu-string.h"
 
 /**
@@ -339,6 +341,60 @@ fu_strsplit(const gchar *str, gsize sz, const gchar *delimiter, gint max_tokens)
 	return g_strsplit(str, delimiter, max_tokens);
 }
 
+typedef struct {
+	FuStrsplitFunc callback;
+	gpointer user_data;
+	guint token_idx;
+	const gchar *delimiter;
+	gsize delimiter_sz;
+	gboolean detected_nul;
+} FuStrsplitHelper;
+
+static gboolean
+fu_strsplit_buffer_drain(GByteArray *buf,
+			 FuStrsplitHelper *helper,
+			 gboolean is_last,
+			 GError **error)
+{
+	while (buf->len > 0) {
+		gsize offset;
+		g_autoptr(GString) token = g_string_new(NULL);
+
+		for (offset = 0; offset < buf->len; offset++) {
+			if (buf->data[offset] == 0x0) {
+				helper->detected_nul = TRUE;
+				break;
+			}
+			if (strncmp((const gchar *)buf->data + offset,
+				    helper->delimiter,
+				    helper->delimiter_sz) == 0)
+				break;
+		}
+
+		/* no token found */
+		if (offset == buf->len && !is_last)
+			break;
+
+		/* sanity check is valid UTF-8 */
+		g_string_append_len(token, (const gchar *)buf->data, offset);
+		if (!g_utf8_validate_len(token->str, token->len, NULL)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "text must be UTF-8");
+			return FALSE;
+		}
+		if (!helper->callback(token, helper->token_idx++, helper->user_data, error))
+			return FALSE;
+		if (helper->detected_nul) {
+			g_byte_array_set_size(buf, 0);
+			break;
+		}
+		g_byte_array_remove_range(buf, 0, MIN(offset + helper->delimiter_sz, buf->len));
+	}
+	return TRUE;
+}
+
 /**
  * fu_strsplit_stream:
  * @stream: a #GInputStream to split
@@ -366,34 +422,47 @@ fu_strsplit_stream(GInputStream *stream,
 		   gpointer user_data,
 		   GError **error)
 {
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GInputStream) stream_partial = NULL;
+	FuStrsplitHelper helper = {
+	    .callback = callback,
+	    .user_data = user_data,
+	    .delimiter = delimiter,
+	    .token_idx = 0,
+	};
 
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(delimiter != NULL && delimiter[0] != '\0', FALSE);
 	g_return_val_if_fail(callback != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* this is dumb */
-	fw = fu_input_stream_read_bytes(stream, offset, G_MAXSIZE, error);
-	if (fw == NULL)
-		return FALSE;
-
-	/* sanity check */
-	if (!g_utf8_validate_len((const gchar *)g_bytes_get_data(fw, NULL),
-				 g_bytes_get_size(fw),
-				 NULL)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "text must be UTF-8");
-		return FALSE;
+	helper.delimiter_sz = strlen(delimiter);
+	if (offset > 0) {
+		gsize streamsz = 0;
+		if (!fu_input_stream_size(stream, &streamsz, error))
+			return FALSE;
+		stream_partial =
+		    fu_partial_input_stream_new(stream, offset, streamsz - offset, error);
+		if (stream_partial == NULL)
+			return FALSE;
+	} else {
+		stream_partial = g_object_ref(stream);
 	}
-	return fu_strsplit_full((const gchar *)g_bytes_get_data(fw, NULL),
-				(gssize)g_bytes_get_size(fw),
-				delimiter,
-				callback,
-				user_data,
-				error);
+	chunks = fu_chunk_array_new_from_stream(stream_partial, 0x0, 0x8000, error);
+	if (chunks == NULL)
+		return FALSE;
+	for (gsize i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		g_byte_array_append(buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		if (!fu_strsplit_buffer_drain(buf, &helper, FALSE, error))
+			return FALSE;
+		if (helper.detected_nul)
+			break;
+	}
+	return fu_strsplit_buffer_drain(buf, &helper, TRUE, error);
 }
 
 /**
@@ -424,8 +493,8 @@ fu_strsplit_full(const gchar *str,
 		 GError **error)
 {
 	gsize delimiter_sz;
+	gsize offset_old = 0;
 	gsize str_sz;
-	guint found_idx = 0;
 	guint token_idx = 0;
 
 	g_return_val_if_fail(str != NULL, FALSE);
@@ -444,25 +513,18 @@ fu_strsplit_full(const gchar *str,
 	}
 
 	/* start splittin' */
-	for (gsize i = 0; i < (str_sz - delimiter_sz) + 1;) {
-		if (strncmp(str + i, delimiter, delimiter_sz) == 0) {
-			g_autoptr(GString) token = g_string_new(NULL);
-			g_string_append_len(token, str + found_idx, i - found_idx);
-			if (!callback(token, token_idx++, user_data, error))
-				return FALSE;
-			i += delimiter_sz;
-			found_idx = i;
-		} else {
-			i++;
-		}
-	}
-
-	/* any bits left over? */
-	if (found_idx != str_sz) {
+	while (offset_old <= str_sz) {
+		gsize offset;
 		g_autoptr(GString) token = g_string_new(NULL);
-		g_string_append_len(token, str + found_idx, str_sz - found_idx);
-		if (!callback(token, token_idx, user_data, error))
+
+		for (offset = offset_old; offset < str_sz; offset++) {
+			if (strncmp(str + offset, delimiter, delimiter_sz) == 0)
+				break;
+		}
+		g_string_append_len(token, str + offset_old, offset - offset_old);
+		if (!callback(token, token_idx++, user_data, error))
 			return FALSE;
+		offset_old = offset + delimiter_sz;
 	}
 
 	/* success */

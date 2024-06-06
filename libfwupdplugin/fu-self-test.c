@@ -657,10 +657,11 @@ fu_strsplit_func(void)
 	ret = fu_strsplit_full(str, -1, "123", _strnsplit_add_cb, array, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(array->len, ==, 3);
+	g_assert_cmpint(array->len, ==, 4);
 	g_assert_cmpstr(g_ptr_array_index(array, 0), ==, "");
 	g_assert_cmpstr(g_ptr_array_index(array, 1), ==, "foo");
 	g_assert_cmpstr(g_ptr_array_index(array, 2), ==, "bar");
+	g_assert_cmpstr(g_ptr_array_index(array, 3), ==, "");
 
 	/* lets try something insane */
 	for (guint i = 0; i < bigsz; i++)
@@ -668,7 +669,8 @@ fu_strsplit_func(void)
 	ret = fu_strsplit_full(bigstr->str, -1, "\n", _strnsplit_nop_cb, &cnt, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(cnt, ==, bigsz);
+	/* we have an empty last section */
+	g_assert_cmpint(cnt, ==, bigsz + 1);
 }
 
 static void
@@ -4969,6 +4971,52 @@ fu_composite_input_stream_func(void)
 	g_assert_cmpint(memcmp(g_bytes_get_data(blob4, NULL), "abcdefg", 7), ==, 0);
 }
 
+static gboolean
+fu_strsplit_stream_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
+{
+	guint *cnt = (guint *)user_data;
+	g_debug(">%s<", token->str);
+	(*cnt)++;
+	return TRUE;
+}
+
+static void
+fu_strsplit_stream_func(void)
+{
+	gboolean ret;
+	guint cnt1 = 0;
+	guint cnt2 = 0;
+	guint cnt3 = 0;
+	const gchar str1[] = "simple string";
+	const gchar str2[] = "123delimited123start123and123end123";
+	const gchar str3[] = "this|has|trailing|nuls\0\0\0\0";
+	g_autoptr(GInputStream) stream1 = NULL;
+	g_autoptr(GInputStream) stream2 = NULL;
+	g_autoptr(GInputStream) stream3 = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* check includes NUL */
+	g_assert_cmpint(sizeof(str1), ==, 14);
+
+	stream1 = G_INPUT_STREAM(g_memory_input_stream_new_from_data(str1, sizeof(str1), NULL));
+	ret = fu_strsplit_stream(stream1, 0x0, " ", fu_strsplit_stream_cb, &cnt1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(cnt1, ==, 2);
+
+	stream2 = G_INPUT_STREAM(g_memory_input_stream_new_from_data(str2, sizeof(str2), NULL));
+	ret = fu_strsplit_stream(stream2, 0x0, "123", fu_strsplit_stream_cb, &cnt2, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(cnt2, ==, 6);
+
+	stream3 = G_INPUT_STREAM(g_memory_input_stream_new_from_data(str3, sizeof(str3), NULL));
+	ret = fu_strsplit_stream(stream3, 0x0, "|", fu_strsplit_stream_cb, &cnt3, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(cnt3, ==, 4);
+}
+
 static void
 fu_input_stream_chunkify_func(void)
 {
@@ -5364,6 +5412,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/struct{wrapped}", fu_plugin_struct_wrapped_func);
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/string{password-mask}", fu_strpassmask_func);
+	g_test_add_func("/fwupd/string{strsplit-stream}", fu_strsplit_stream_func);
 	g_test_add_func("/fwupd/lzma", fu_lzma_func);
 	g_test_add_func("/fwupd/common{strnsplit}", fu_strsplit_func);
 	g_test_add_func("/fwupd/common{olson-timezone-id}", fu_common_olson_timezone_id_func);
