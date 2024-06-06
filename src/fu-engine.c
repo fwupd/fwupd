@@ -128,7 +128,7 @@ struct _FuEngine {
 	GHashTable *approved_firmware;	      /* (nullable) */
 	GHashTable *blocked_firmware;	      /* (nullable) */
 	GHashTable *emulation_phases;	      /* (element-type int utf8) */
-	GHashTable *emulation_backend_ids;    /* (element-type str int) */
+	GHashTable *emulation_ids;	      /* (element-type str int) */
 	GHashTable *device_changed_allowlist; /* (element-type str int) */
 	gchar *host_machine_id;
 	JcatContext *jcat_context;
@@ -952,7 +952,7 @@ fu_engine_modify_bios_settings(FuEngine *self,
 static void
 fu_engine_check_context_flag_save_events(FuEngine *self)
 {
-	if (g_hash_table_size(self->emulation_backend_ids) > 0 &&
+	if (g_hash_table_size(self->emulation_ids) > 0 &&
 	    fu_engine_config_get_allow_emulation(self->config)) {
 		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
 	} else {
@@ -990,7 +990,7 @@ fu_engine_remove_device_flag(FuEngine *self,
 				    fu_device_get_id(proxy));
 			return FALSE;
 		}
-		g_hash_table_remove(self->emulation_backend_ids, fu_device_get_backend_id(device));
+		g_hash_table_remove(self->emulation_ids, fu_device_get_id(device));
 		return TRUE;
 	}
 	g_set_error_literal(error,
@@ -1043,8 +1043,8 @@ fu_engine_add_device_flag(FuEngine *self,
 				    fu_device_get_id(proxy));
 			return FALSE;
 		}
-		g_hash_table_insert(self->emulation_backend_ids,
-				    g_strdup(fu_device_get_backend_id(device)),
+		g_hash_table_insert(self->emulation_ids,
+				    g_strdup(fu_device_get_id(device)),
 				    GUINT_TO_POINTER(1));
 		fu_engine_emit_device_request_replug_and_install(self, device);
 		return TRUE;
@@ -6308,9 +6308,9 @@ fu_engine_ensure_device_emulation_tag(FuEngine *self, FuDevice *device)
 		return;
 
 	/* we matched this physical ID */
-	if (fu_device_get_backend_id(device) == NULL)
+	if (fu_device_get_id(device) == NULL)
 		return;
-	if (!g_hash_table_contains(self->emulation_backend_ids, fu_device_get_backend_id(device)))
+	if (!g_hash_table_contains(self->emulation_ids, fu_device_get_id(device)))
 		return;
 
 	/* success */
@@ -8909,7 +8909,7 @@ fu_engine_init(FuEngine *self)
 	self->local_monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->acquiesce_loop = g_main_loop_new(NULL, FALSE);
 	self->emulation_phases = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
-	self->emulation_backend_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	self->emulation_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	self->device_changed_allowlist =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 #ifdef HAVE_PASSIM
@@ -8977,7 +8977,7 @@ fu_engine_finalize(GObject *obj)
 	g_ptr_array_unref(self->backends);
 	g_ptr_array_unref(self->local_monitors);
 	g_hash_table_unref(self->emulation_phases);
-	g_hash_table_unref(self->emulation_backend_ids);
+	g_hash_table_unref(self->emulation_ids);
 	g_hash_table_unref(self->device_changed_allowlist);
 	g_object_unref(self->plugin_list);
 
