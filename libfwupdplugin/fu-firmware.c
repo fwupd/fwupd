@@ -2230,7 +2230,15 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 										    priv->streamsz,
 										    NULL);
 			if (buf != NULL) {
-				datastr = g_base64_encode(buf->data, buf->len);
+				if (flags & FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA) {
+					datastr = fu_memstrsafe(buf->data,
+								buf->len,
+								0x0,
+								MIN(buf->len, 0x100),
+								NULL);
+				} else {
+					datastr = g_base64_encode(buf->data, buf->len);
+				}
 			} else {
 				datastr = g_strdup("[??GInputStream??]");
 			}
