@@ -79,7 +79,8 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	/* create new firmware */
 	if (g_strcmp0(sect_id, ".sbom") == 0) {
 		img = fu_coswid_firmware_new();
-	} else if (g_strcmp0(sect_id, ".sbat") == 0) {
+	} else if (g_strcmp0(sect_id, ".sbat") == 0 || g_strcmp0(sect_id, ".sbata") == 0 ||
+		   g_strcmp0(sect_id, ".sbatl") == 0) {
 		img = fu_csv_firmware_new();
 		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "$id");
 		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "$version_raw");
