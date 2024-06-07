@@ -113,6 +113,10 @@ fu_csv_firmware_parse_line_cb(GString *token, guint token_idx, gpointer user_dat
 	g_autoptr(FuFirmware) entry = fu_csv_entry_new();
 	g_autoptr(GBytes) fw = NULL;
 
+	/* ignore blank lines */
+	if (token->len == 0)
+		return TRUE;
+
 	/* title */
 	if (g_str_has_prefix(token->str, "#")) {
 		return fu_strsplit_full(token->str + 1,
