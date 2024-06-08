@@ -239,6 +239,7 @@ fu_engine_gtypes_func(void)
 {
 	GPtrArray *plugins;
 	gboolean ret;
+	g_autofree gchar *sysfsdir_fw = NULL;
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx =
 	    fu_context_new_full(FU_CONTEXT_FLAG_NO_QUIRKS | FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT);
@@ -258,6 +259,8 @@ fu_engine_gtypes_func(void)
 	/* set up test harness */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	fu_context_set_path(ctx, FU_PATH_KIND_SYSCONFDIR_PKG, testdatadir);
+	sysfsdir_fw = g_build_filename(testdatadir, "sys", "firmware", NULL);
+	fu_context_set_path(ctx, FU_PATH_KIND_SYSFSDIR_FW, sysfsdir_fw);
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);

@@ -1,0 +1,24 @@
+{
+  "id": "org.fwupd.hsi.SspPolicyVars",
+  "name": "Missing SkuSiPolicy EFI Attributes",
+  "description": [
+    "This system is missing the Microsoft SkuSiPolicy boot-service EFI variables that prevent using an insecure Microsoft bootmgr binary to disable secure boot.",
+    "These variables are normally created by Microsoft Windows automatically, but on Linux-only systems they may be missing."
+  ],
+  "failure-impact": [
+    "A local attacker could use an insecure bootmgr binary to disable secure boot and achieve arbitrary code execution of the early boot process.",
+    "This allows running attacker-controlled payloads even when secure boot is enabled and configured correctly."
+  ],
+  "failure-results": {
+    "not-found": "no SkuSiPolicy variable were found",
+    "not-valid": "possible dual-boot system detected, and you should boot Windows"
+  },
+  "success-results": {
+    "found": "SkuSiPolicy attributes exist"
+  },
+  "hsi-level": 2,
+  "references": {
+    "https://support.microsoft.com/en-us/topic/kb5027455-guidance-for-blocking-vulnerable-windows-boot-managers-522bb851-0a61-44ad-aa94-ad11119c5e91": "KB5027455: Guidance for blocking vulnerable Windows boot managers"
+  },
+  "fwupd-version": "2.0.0"
+}

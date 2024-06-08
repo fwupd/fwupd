@@ -468,6 +468,15 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_COREBOOT_VBOOT "org.fwupd.hsi.Coreboot.Vboot"
 
+/**
+ * FWUPD_SECURITY_ATTR_ID_SSP_POLICY_VARS:
+ *
+ * Host Security ID attribute for missing SspPolicy variables
+ *
+ * Since: 2.2.1
+ **/
+#define FWUPD_SECURITY_ATTR_ID_SSP_POLICY_VARS "org.fwupd.hsi.SspPolicyVars"
+
 FwupdSecurityAttr *
 fwupd_security_attr_copy(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);
 void
