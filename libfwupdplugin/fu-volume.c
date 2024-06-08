@@ -46,7 +46,45 @@ enum {
 	PROP_LAST
 };
 
-G_DEFINE_TYPE(FuVolume, fu_volume, G_TYPE_OBJECT)
+static void
+fu_volume_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuVolume,
+		       fu_volume,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_volume_codec_iface_init))
+
+static void
+fu_volume_add_string(FwupdCodec *converter, guint idt, GString *str)
+{
+	FuVolume *self = FU_VOLUME(converter);
+	g_autofree gchar *mount_point = fu_volume_get_mount_point(self);
+	g_autofree gchar *partition_kind = fu_volume_get_partition_kind(self);
+	g_autofree gchar *partition_name = fu_volume_get_partition_name(self);
+	g_autofree gchar *partition_uuid = fu_volume_get_partition_uuid(self);
+
+	fwupd_codec_string_append_bool(str, idt, "IsMounted", fu_volume_is_mounted(self));
+	fwupd_codec_string_append_bool(str, idt, "IsEncrypted", fu_volume_is_encrypted(self));
+	fwupd_codec_string_append_hex(str, idt, "Size", fu_volume_get_size(self));
+	fwupd_codec_string_append_hex(str, idt, "BlockSize", fu_volume_get_block_size(self, NULL));
+	fwupd_codec_string_append(str, idt, "MountPoint", mount_point);
+	fwupd_codec_string_append(str, idt, "PartitionKind", partition_kind);
+	fwupd_codec_string_append(str, idt, "PartitionName", partition_name);
+	fwupd_codec_string_append_hex(str,
+				      idt,
+				      "PartitionSize",
+				      fu_volume_get_partition_size(self));
+	fwupd_codec_string_append_hex(str,
+				      idt,
+				      "PartitionOffset",
+				      fu_volume_get_partition_offset(self));
+	fwupd_codec_string_append_hex(str,
+				      idt,
+				      "PartitionNumber",
+				      fu_volume_get_partition_number(self));
+	fwupd_codec_string_append(str, idt, "PartitionUuid", partition_uuid);
+}
 
 static void
 fu_volume_finalize(GObject *obj)
@@ -842,6 +880,12 @@ fu_volume_check_block_device_symlinks(const gchar *const *symlinks, GError **err
 
 	/* success */
 	return TRUE;
+}
+
+static void
+fu_volume_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_string = fu_volume_add_string;
 }
 
 /**
