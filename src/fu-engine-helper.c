@@ -249,15 +249,10 @@ fu_engine_integrity_measure_uefi(FuContext *ctx, GHashTable *self)
 
 	/* Boot#### */
 	for (guint i = 0; i < 0xFF; i++) {
-		g_autofree gchar *name = g_strdup_printf("Boot%04X", i);
-		g_autoptr(GBytes) blob = fu_efivars_get_data_bytes(efivars,
-								   FU_EFIVARS_GUID_EFI_GLOBAL,
-								   name,
-								   NULL,
-								   NULL);
+		g_autoptr(GBytes) blob = fu_efivars_get_boot_data(efivars, i, NULL);
 		if (blob != NULL && g_bytes_get_size(blob) > 0) {
 			const guint8 needle[] = "f\0w\0u\0p\0d";
-			g_autofree gchar *id = g_strdup_printf("UEFI:%s", name);
+			g_autofree gchar *id = g_strdup_printf("UEFI:Boot%04X", i);
 			if (fu_memmem_safe(g_bytes_get_data(blob, NULL),
 					   g_bytes_get_size(blob),
 					   needle,

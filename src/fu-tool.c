@@ -3951,6 +3951,25 @@ fu_util_reboot_cleanup(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_efivar_boot(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	FuEfivars *efivars = fu_context_get_efivars(priv->ctx);
+	g_autoptr(GPtrArray) entries = NULL;
+
+	entries = fu_efivars_get_boot_entries(efivars, error);
+	if (entries == NULL)
+		return FALSE;
+	for (guint i = 0; i < entries->len; i++) {
+		FuEfiLoadOption *entry = g_ptr_array_index(entries, i);
+		g_autofree gchar *str = fu_firmware_to_string(FU_FIRMWARE(entry));
+		fu_console_print_literal(priv->console, str);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_util_efivar_list(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuEfivars *efivars = fu_context_get_efivars(priv->ctx);
@@ -4652,6 +4671,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("List EFI variables with a specific GUID"),
 			      fu_util_efivar_list);
+	fu_util_cmd_array_add(cmd_array,
+			      "efivar-boot",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      NULL,
+			      /* TRANSLATORS: command description */
+			      _("List EFI boot parameters"),
+			      fu_util_efivar_boot);
 	fu_util_cmd_array_add(cmd_array,
 			      "security-fix",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */

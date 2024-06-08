@@ -310,35 +310,6 @@ fu_efi_load_option_init(FuEfiLoadOption *self)
 }
 
 /**
- * fu_efi_load_option_new_esp_for_boot_entry:
- * @boot_entry: a boot entry number
- * @error: (nullable): optional return location for an error
- *
- * Gets the platform ESP using a UNIX or UDisks path
- *
- * Returns: (transfer full): a #FuEfiLoadOption, or %NULL if invalid
- *
- * Since: 2.0.0
- **/
-FuEfiLoadOption *
-fu_efi_load_option_new_esp_for_boot_entry(FuEfivars *efivars, guint16 boot_entry, GError **error)
-{
-	g_autofree gchar *name = g_strdup_printf("Boot%04X", boot_entry);
-	g_autoptr(FuEfiLoadOption) self = g_object_new(FU_TYPE_EFI_LOAD_OPTION, NULL);
-	g_autoptr(GBytes) fw = NULL;
-
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	/* get data */
-	fw = fu_efivars_get_data_bytes(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, name, NULL, error);
-	if (fw == NULL)
-		return NULL;
-	if (!fu_firmware_parse(FU_FIRMWARE(self), fw, FWUPD_INSTALL_FLAG_NONE, error))
-		return NULL;
-	return g_steal_pointer(&self);
-}
-
-/**
  * fu_efi_load_option_new:
  *
  * Returns: (transfer full): a #FuEfiLoadOption

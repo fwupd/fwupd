@@ -35,22 +35,11 @@ fu_uefi_dbx_get_basenames_bootxxxx(FuEfivars *efivars)
 		g_autoptr(FuEfiLoadOption) loadopt = NULL;
 		g_autoptr(FuFirmware) dp_buf = NULL;
 		g_autoptr(FuFirmware) dp_file = NULL;
-		g_autoptr(GBytes) blob = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		/* load EFI load option */
-		blob = fu_efivars_get_data_bytes(efivars,
-						 FU_EFIVARS_GUID_EFI_GLOBAL,
-						 name,
-						 NULL,
-						 NULL);
-		if (blob == NULL)
-			continue;
-		loadopt = fu_efi_load_option_new();
-		if (!fu_firmware_parse(FU_FIRMWARE(loadopt),
-				       blob,
-				       FWUPD_INSTALL_FLAG_NONE,
-				       &error_local)) {
+		loadopt = fu_efivars_get_boot_entry(efivars, i, &error_local);
+		if (loadopt == NULL) {
 			g_warning("failed to parse %s: %s", name, error_local->message);
 			continue;
 		}

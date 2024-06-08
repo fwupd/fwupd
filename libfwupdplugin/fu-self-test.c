@@ -3703,6 +3703,81 @@ fu_efivar_func(void)
 	g_assert_false(ret);
 }
 
+static void
+fu_efivar_boot_func(void)
+{
+	gboolean ret;
+	const guint8 buf[] = {0x01, 0x00};
+	guint16 idx = 0;
+	g_autoptr(FuEfiDevicePathList) devpath_list = fu_efi_device_path_list_new();
+	g_autoptr(FuEfiLoadOption) loadopt1 = fu_efi_load_option_new();
+	g_autoptr(FuEfiLoadOption) loadopt2 = NULL;
+	g_autoptr(FuEfivars) efivars = fu_dummy_efivars_new();
+	g_autoptr(GArray) bootorder1 = g_array_new(FALSE, FALSE, sizeof(guint16));
+	g_autoptr(GArray) bootorder2 = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) entries = NULL;
+
+	/* write and read a key */
+	ret = fu_efivars_set_data(efivars,
+				  FU_EFIVARS_GUID_EFI_GLOBAL,
+				  "BootCurrent",
+				  buf,
+				  sizeof(buf),
+				  FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* get BootCurrent */
+	ret = fu_efivars_get_boot_current(efivars, &idx, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(idx, ==, 0x0001);
+
+	/* set and get BootNext */
+	ret = fu_efivars_set_boot_next(efivars, 0x0002, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_efivars_get_boot_next(efivars, &idx, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(idx, ==, 0x0002);
+
+	/* set and get BootOrder */
+	idx = 1;
+	g_array_append_val(bootorder1, idx);
+	idx = 2;
+	g_array_append_val(bootorder1, idx);
+	ret = fu_efivars_set_boot_order(efivars, bootorder1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	bootorder2 = fu_efivars_get_boot_order(efivars, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(bootorder2);
+	g_assert_cmpint(bootorder2->len, ==, 2);
+	idx = g_array_index(bootorder2, guint16, 0);
+	g_assert_cmpint(idx, ==, 0x0001);
+	idx = g_array_index(bootorder2, guint16, 1);
+	g_assert_cmpint(idx, ==, 0x0002);
+
+	fu_firmware_set_id(FU_FIRMWARE(loadopt1), "Fedora");
+	fu_firmware_add_image(FU_FIRMWARE(loadopt1), FU_FIRMWARE(devpath_list));
+	ret = fu_efivars_set_boot_entry(efivars, 0x0001, loadopt1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	loadopt2 = fu_efivars_get_boot_entry(efivars, 0x0001, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(loadopt2);
+	ret = fu_efivars_set_boot_entry(efivars, 0x0002, loadopt1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	entries = fu_efivars_get_boot_entries(efivars, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(bootorder2);
+	g_assert_cmpint(bootorder2->len, ==, 2);
+}
+
 typedef struct {
 	guint cnt_success;
 	guint cnt_failed;
@@ -5376,7 +5451,7 @@ fu_efi_load_option_func(void)
 	for (guint16 i = 0; i < 3; i++) {
 		g_autoptr(GError) error = NULL;
 		g_autoptr(FuEfiLoadOption) load_option =
-		    fu_efi_load_option_new_esp_for_boot_entry(efivars, i, &error);
+		    fu_efivars_get_boot_entry(efivars, i, &error);
 		g_autoptr(GBytes) fw = NULL;
 		g_autofree gchar *str = NULL;
 
@@ -5479,6 +5554,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
 	g_test_add_func("/fwupd/efi-load-option", fu_efi_load_option_func);
 	g_test_add_func("/fwupd/efivar", fu_efivar_func);
+	g_test_add_func("/fwupd/efivar{bootxxxx}", fu_efivar_boot_func);
 	g_test_add_func("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func("/fwupd/context{flags}", fu_context_flags_func);
 	g_test_add_func("/fwupd/context{hwids-dmi}", fu_context_hwids_dmi_func);

@@ -5,6 +5,7 @@ _fwupdtool_cmd_list=(
 	'disable-remote'
 	'disable-test-devices'
 	'efivar-list'
+	'efivar-boot'
 	'enable-remote'
 	'enable-test-devices'
 	'esp-list'
