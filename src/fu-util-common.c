@@ -2393,6 +2393,22 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      /* TRANSLATORS: HSI event title */
 		      _("Secure Boot enabled")},
 		     /* ------------------------------------------*/
+		     {FWUPD_SECURITY_ATTR_ID_SSP_POLICY_VARS,
+		      FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
+		      /* TRANSLATORS: HSI event title */
+		      _("SspPolicy variables are not found")},
+		     {FWUPD_SECURITY_ATTR_ID_SSP_POLICY_VARS,
+		      FWUPD_SECURITY_ATTR_RESULT_FOUND,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
+		      /* TRANSLATORS: HSI event title */
+		      _("SspPolicy variables have been removed")},
+		     {FWUPD_SECURITY_ATTR_ID_SSP_POLICY_VARS,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
+		      FWUPD_SECURITY_ATTR_RESULT_FOUND,
+		      /* TRANSLATORS: HSI event title */
+		      _("SspPolicy variables have been created")},
+		     /* ------------------------------------------*/
 		     {FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR,
 		      FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
 		      FWUPD_SECURITY_ATTR_RESULT_VALID,

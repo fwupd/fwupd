@@ -117,6 +117,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: Bootservice is when only readable from early-boot */
 		return g_strdup(_("UEFI bootservice variables"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SSP_POLICY_VARS) == 0) {
+		/* TRANSLATORS: Title: we're missing some boot-time variables */
+		return g_strdup(_("Microsoft SSP variables"));
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR) == 0) {
 		/* TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be empty */
 		return g_strdup(_("TPM empty PCRs"));
@@ -332,6 +336,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be empty */
 		return _("TPM Platform Configuration");
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SSP_POLICY_VARS) == 0) {
+		/* TRANSLATORS: Title: we're missing some boot-time variables */
+		return _("Microsoft SSP Policy Variables");
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0) == 0) {
 		/* TRANSLATORS: Title: the PCR is rebuilt from the TPM event log */
 		return _("TPM Reconstruction");
@@ -527,6 +535,11 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("The TPM (Trusted Platform Module) Platform Configuration is used to "
 			 "check whether the device start process has been modified.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_SSP_POLICY_VARS) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("This system is missing the Microsoft SkuSiPolicy boot-service EFI "
+			 "variables that prevent using an insecure binary to disable secure boot.");
 	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0) == 0) {
 		/* TRANSLATORS: longer description */

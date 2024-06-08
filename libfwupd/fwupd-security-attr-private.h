@@ -388,6 +388,14 @@ G_BEGIN_DECLS
  * Since: 2.0.2
  **/
 #define FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED "org.fwupd.hsi.Amd.SmmLocked"
+/**
+ * FWUPD_SECURITY_ATTR_ID_SSP_POLICY_VARS:
+ *
+ * Host Security ID attribute for missing SspPolicy variables
+ *
+ * Since: 2.0.6
+ **/
+#define FWUPD_SECURITY_ATTR_ID_SSP_POLICY_VARS "org.fwupd.hsi.SspPolicyVars"
 
 FwupdSecurityAttr *
 fwupd_security_attr_copy(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);
