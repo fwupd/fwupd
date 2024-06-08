@@ -27,6 +27,7 @@ hsi_test_jsons = files([
   'org.fwupd.hsi.Spi.Ble.json',
   'org.fwupd.hsi.Spi.Descriptor.json',
   'org.fwupd.hsi.Spi.SmmBwp.json',
+  'org.fwupd.hsi.SspPolicyVars.json',
   'org.fwupd.hsi.SupportedCpu.json',
   'org.fwupd.hsi.SuspendToIdle.json',
   'org.fwupd.hsi.SuspendToRam.json',

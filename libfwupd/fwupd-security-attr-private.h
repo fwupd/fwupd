@@ -380,6 +380,14 @@ G_BEGIN_DECLS
  * Since: 2.0.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_CET_ACTIVE "org.fwupd.hsi.Cet.Active"
+/**
+ * FWUPD_SECURITY_ATTR_ID_SSP_POLICY_VARS:
+ *
+ * Host Security ID attribute for missing SspPolicy variables
+ *
+ * Since: 2.0.0
+ **/
+#define FWUPD_SECURITY_ATTR_ID_SSP_POLICY_VARS "org.fwupd.hsi.SspPolicyVars"
 
 FwupdSecurityAttr *
 fwupd_security_attr_copy(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);
