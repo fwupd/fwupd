@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "fu-efivars.h"
 #include "fu-firmware.h"
 
 #define FU_TYPE_EFI_LOAD_OPTION (fu_efi_load_option_get_type())
@@ -25,7 +24,3 @@ fu_efi_load_option_set_optional_path(FuEfiLoadOption *self,
 
 FuEfiLoadOption *
 fu_efi_load_option_new(void) G_GNUC_WARN_UNUSED_RESULT;
-FuEfiLoadOption *
-fu_efi_load_option_new_esp_for_boot_entry(FuEfivars *efivars,
-					  guint16 boot_entry,
-					  GError **error) G_GNUC_WARN_UNUSED_RESULT;

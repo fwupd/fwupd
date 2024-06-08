@@ -1220,39 +1220,18 @@ fu_uefi_capsule_plugin_cleanup_bootnext(FuUefiCapsulePlugin *self, GError **erro
 	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	guint16 boot_next = 0;
-	g_autofree gchar *boot_xxxxstr = NULL;
 	g_autofree gchar *loadoptstr = NULL;
-	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
-	g_autoptr(GBytes) boot_nextbuf = NULL;
-	g_autoptr(GBytes) boot_xxxxbuf = NULL;
+	g_autoptr(FuEfiLoadOption) loadopt = NULL;
 
 	/* unset */
 	if (!fu_efivars_exists(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "BootNext"))
 		return TRUE;
 
-	/* get the value of BootNext */
-	boot_nextbuf =
-	    fu_efivars_get_data_bytes(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "BootNext", NULL, error);
-	if (boot_nextbuf == NULL)
+	/* get the BootXXXX entry for BootNext */
+	if (!fu_efivars_get_boot_next(efivars, &boot_next, error))
 		return FALSE;
-	if (!fu_memread_uint16_safe(g_bytes_get_data(boot_nextbuf, NULL),
-				    g_bytes_get_size(boot_nextbuf),
-				    0x0,
-				    &boot_next,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-
-	/* get the correct BootXXXX key */
-	boot_xxxxstr = g_strdup_printf("Boot%04X", boot_next);
-	boot_xxxxbuf = fu_efivars_get_data_bytes(efivars,
-						 FU_EFIVARS_GUID_EFI_GLOBAL,
-						 boot_xxxxstr,
-						 NULL,
-						 error);
-	if (boot_xxxxbuf == NULL)
-		return FALSE;
-	if (!fu_firmware_parse(FU_FIRMWARE(loadopt), boot_xxxxbuf, FWUPD_INSTALL_FLAG_NONE, error))
+	loadopt = fu_efivars_get_boot_entry(efivars, boot_next, error);
+	if (loadopt == NULL)
 		return FALSE;
 
 	/* is this us? */

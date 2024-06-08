@@ -10,6 +10,7 @@
 #include "fwupd-error.h"
 
 #include "fu-efivars.h"
+#include "fu-mem.h"
 
 G_DEFINE_TYPE(FuEfivars, fu_efivars, G_TYPE_OBJECT)
 
@@ -400,6 +401,347 @@ fu_efivars_secure_boot_enabled(FuEfivars *self, GError **error)
 	/* available, but not enabled */
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "SecureBoot is not enabled");
 	return FALSE;
+}
+
+/**
+ * fu_efivars_get_boot_next:
+ * @self: a #FuEfivars
+ * @idx: (out) (nullable): boot index, typically 0x0001
+ * @error: #GError
+ *
+ * Gets the index of the `BootNext` variable.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_efivars_get_boot_next(FuEfivars *self, guint16 *idx, GError **error)
+{
+	g_autofree guint8 *buf = NULL;
+	gsize bufsz = 0;
+
+	g_return_val_if_fail(FU_IS_EFIVARS(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!fu_efivars_get_data(self,
+				 FU_EFIVARS_GUID_EFI_GLOBAL,
+				 "BootNext",
+				 &buf,
+				 &bufsz,
+				 NULL,
+				 error))
+		return FALSE;
+	if (bufsz != sizeof(guint16)) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "invalid size");
+		return FALSE;
+	}
+	if (idx != NULL)
+		*idx = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_efivars_set_boot_next:
+ * @self: a #FuEfivars
+ * @idx: boot index, typically 0x0001
+ * @error: #GError
+ *
+ * Sets the index of the `BootNext` variable.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_efivars_set_boot_next(FuEfivars *self, guint16 idx, GError **error)
+{
+	guint8 buf[2] = {0};
+	g_return_val_if_fail(FU_IS_EFIVARS(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	fu_memwrite_uint16(buf, idx, G_LITTLE_ENDIAN);
+	return fu_efivars_set_data(self,
+				   FU_EFIVARS_GUID_EFI_GLOBAL,
+				   "BootNext",
+				   buf,
+				   sizeof(buf),
+				   FU_EFIVARS_ATTR_NON_VOLATILE |
+				       FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
+				       FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				   error);
+}
+
+/**
+ * fu_efivars_get_boot_current:
+ * @self: a #FuEfivars
+ * @idx: (out): boot index, typically 0x0001
+ * @error: #GError
+ *
+ * Gets the index of the `BootCurrent` variable.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_efivars_get_boot_current(FuEfivars *self, guint16 *idx, GError **error)
+{
+	g_autofree guint8 *buf = NULL;
+	gsize bufsz = 0;
+
+	g_return_val_if_fail(FU_IS_EFIVARS(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!fu_efivars_get_data(self,
+				 FU_EFIVARS_GUID_EFI_GLOBAL,
+				 "BootCurrent",
+				 &buf,
+				 &bufsz,
+				 NULL,
+				 error))
+		return FALSE;
+	if (bufsz != sizeof(guint16)) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "invalid size");
+		return FALSE;
+	}
+	if (idx != NULL)
+		*idx = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_efivars_get_boot_order:
+ * @self: a #FuEfivars
+ * @error: #GError
+ *
+ * Gets the indexes of the `BootOrder` variable.
+ *
+ * Returns: (transfer full) (element-type guint16): boot order, or %NULL on error
+ *
+ * Since: 2.0.0
+ **/
+GArray *
+fu_efivars_get_boot_order(FuEfivars *self, GError **error)
+{
+	gsize bufsz = 0;
+	g_autofree guint8 *buf = NULL;
+	g_autoptr(GArray) order = g_array_new(FALSE, FALSE, sizeof(guint16));
+
+	g_return_val_if_fail(FU_IS_EFIVARS(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	if (!fu_efivars_get_data(self,
+				 FU_EFIVARS_GUID_EFI_GLOBAL,
+				 "BootOrder",
+				 &buf,
+				 &bufsz,
+				 NULL,
+				 error))
+		return NULL;
+	if (bufsz % sizeof(guint16) != 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "invalid size");
+		return NULL;
+	}
+	for (gsize i = 0; i < bufsz; i += sizeof(guint16)) {
+		guint16 idx = fu_memread_uint16(buf + i, G_LITTLE_ENDIAN);
+		g_array_append_val(order, idx);
+	}
+
+	/* success */
+	return g_steal_pointer(&order);
+}
+
+/**
+ * fu_efivars_set_boot_order:
+ * @self: a #FuEfivars
+ * @order: (element-type guint16): boot order
+ * @error: #GError
+ *
+ * Sets the index of the `BootNext` variable.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_efivars_set_boot_order(FuEfivars *self, GArray *order, GError **error)
+{
+	gsize bufsz;
+	g_autofree guint8 *buf = NULL;
+
+	g_return_val_if_fail(FU_IS_EFIVARS(self), FALSE);
+	g_return_val_if_fail(order != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	bufsz = order->len * sizeof(guint16);
+	buf = g_malloc0(bufsz);
+	for (guint i = 0; i < order->len; i++) {
+		guint16 idx = g_array_index(order, guint16, i);
+		fu_memwrite_uint16(buf + (i * 2), idx, G_LITTLE_ENDIAN);
+	}
+	return fu_efivars_set_data(self,
+				   FU_EFIVARS_GUID_EFI_GLOBAL,
+				   "BootOrder",
+				   buf,
+				   bufsz,
+				   FU_EFIVARS_ATTR_NON_VOLATILE |
+				       FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
+				       FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				   error);
+}
+
+/**
+ * fu_efivars_get_boot_data:
+ * @self: a #FuEfivars
+ * @idx: boot index, typically 0x0001
+ * @error: #GError
+ *
+ * Gets the raw data of the `BootXXXX` variable.
+ *
+ * Returns: (transfer full): boot data
+ *
+ * Since: 2.0.0
+ **/
+GBytes *
+fu_efivars_get_boot_data(FuEfivars *self, guint16 idx, GError **error)
+{
+	g_autofree gchar *name = g_strdup_printf("Boot%04X", idx);
+	g_return_val_if_fail(FU_IS_EFIVARS(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return fu_efivars_get_data_bytes(self, FU_EFIVARS_GUID_EFI_GLOBAL, name, NULL, error);
+}
+
+/**
+ * fu_efivars_set_boot_data:
+ * @self: a #FuEfivars
+ * @idx: boot index, typically 0x0001
+ * @blob: #GBytes
+ * @error: #GError
+ *
+ * Sets the raw data of the `BootXXXX` variable.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_efivars_set_boot_data(FuEfivars *self, guint16 idx, GBytes *blob, GError **error)
+{
+	g_autofree gchar *name = g_strdup_printf("Boot%04X", idx);
+	g_return_val_if_fail(FU_IS_EFIVARS(self), FALSE);
+	g_return_val_if_fail(blob != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return fu_efivars_set_data_bytes(self,
+					 FU_EFIVARS_GUID_EFI_GLOBAL,
+					 name,
+					 blob,
+					 FU_EFIVARS_ATTR_NON_VOLATILE |
+					     FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
+					     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+					 error);
+}
+
+/**
+ * fu_efivars_get_boot_entry:
+ * @self: a #FuEfivars
+ * @idx: boot index, typically 0x0001
+ * @error: #GError
+ *
+ * Gets the loadopt data of the `BootXXXX` variable.
+ *
+ * Returns: (transfer full): a #FuEfiLoadOption, or %NULL
+ *
+ * Since: 2.0.0
+ **/
+FuEfiLoadOption *
+fu_efivars_get_boot_entry(FuEfivars *self, guint16 idx, GError **error)
+{
+	g_autofree gchar *name = g_strdup_printf("Boot%04X", idx);
+	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
+	g_autoptr(GBytes) blob = NULL;
+
+	g_return_val_if_fail(FU_IS_EFIVARS(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* get data */
+	blob = fu_efivars_get_data_bytes(self, FU_EFIVARS_GUID_EFI_GLOBAL, name, NULL, error);
+	if (blob == NULL)
+		return NULL;
+	if (!fu_firmware_parse(FU_FIRMWARE(loadopt), blob, FWUPD_INSTALL_FLAG_NONE, error))
+		return NULL;
+	fu_firmware_set_idx(FU_FIRMWARE(loadopt), idx);
+	return g_steal_pointer(&loadopt);
+}
+
+/**
+ * fu_efivars_set_boot_entry:
+ * @self: a #FuEfivars
+ * @idx: boot index, typically 0x0001
+ * @entry: a #FuEfiLoadOption
+ * @error: #GError
+ *
+ * Sets the loadopt data of the `BootXXXX` variable.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_efivars_set_boot_entry(FuEfivars *self, guint16 idx, FuEfiLoadOption *entry, GError **error)
+{
+	g_autoptr(GBytes) blob = NULL;
+
+	g_return_val_if_fail(FU_IS_EFIVARS(self), FALSE);
+	g_return_val_if_fail(FU_IS_EFI_LOAD_OPTION(entry), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	blob = fu_firmware_write(FU_FIRMWARE(entry), error);
+	if (blob == NULL)
+		return FALSE;
+	return fu_efivars_set_boot_data(self, idx, blob, error);
+}
+
+/**
+ * fu_efivars_get_boot_entries:
+ * @self: a #FuEfivars
+ * @error: #GError
+ *
+ * Gets the loadopt data for all the entries listed in `BootOrder`.
+ *
+ * Returns: (transfer full) (element-type FuEfiLoadOption): boot data
+ *
+ * Since: 2.0.0
+ **/
+GPtrArray *
+fu_efivars_get_boot_entries(FuEfivars *self, GError **error)
+{
+	g_autoptr(GArray) order = NULL;
+	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+
+	g_return_val_if_fail(FU_IS_EFIVARS(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	order = fu_efivars_get_boot_order(self, error);
+	if (order == NULL)
+		return NULL;
+	for (guint i = 0; i < order->len; i++) {
+		guint16 idx = g_array_index(order, guint16, i);
+		g_autoptr(FuEfiLoadOption) loadopt = NULL;
+
+		loadopt = fu_efivars_get_boot_entry(self, idx, error);
+		if (loadopt == NULL) {
+			g_prefix_error(error, "failed to load Boot%04X: ", i);
+			return NULL;
+		}
+		g_ptr_array_add(array, g_steal_pointer(&loadopt));
+	}
+
+	/* success */
+	return g_steal_pointer(&array);
 }
 
 static void

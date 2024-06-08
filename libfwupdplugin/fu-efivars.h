@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <fwupd.h>
+#include "fu-efi-load-option.h"
 
 #define FU_TYPE_EFIVARS (fu_efivars_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuEfivars, fu_efivars, FU, EFIVARS, GObject)
@@ -116,3 +116,26 @@ fu_efivars_get_names(FuEfivars *self, const gchar *guid, GError **error) G_GNUC_
     G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_efivars_secure_boot_enabled(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
+
+gboolean
+fu_efivars_get_boot_next(FuEfivars *self, guint16 *idx, GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fu_efivars_set_boot_next(FuEfivars *self, guint16 idx, GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fu_efivars_get_boot_current(FuEfivars *self, guint16 *idx, GError **error) G_GNUC_NON_NULL(1);
+GArray *
+fu_efivars_get_boot_order(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fu_efivars_set_boot_order(FuEfivars *self, GArray *order, GError **error) G_GNUC_NON_NULL(1, 2);
+GBytes *
+fu_efivars_get_boot_data(FuEfivars *self, guint16 idx, GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fu_efivars_set_boot_data(FuEfivars *self, guint16 idx, GBytes *blob, GError **error)
+    G_GNUC_NON_NULL(1, 3);
+FuEfiLoadOption *
+fu_efivars_get_boot_entry(FuEfivars *self, guint16 idx, GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fu_efivars_set_boot_entry(FuEfivars *self, guint16 idx, FuEfiLoadOption *entry, GError **error)
+    G_GNUC_NON_NULL(1, 3);
+GPtrArray *
+fu_efivars_get_boot_entries(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);

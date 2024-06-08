@@ -15,47 +15,23 @@
 static gboolean
 fu_uefi_bootmgr_add_to_boot_order(FuEfivars *efivars, guint16 boot_entry, GError **error)
 {
-	gsize boot_order_size = 0;
-	guint i = 0;
-	guint32 attr = 0;
-	g_autofree guint16 *boot_order = NULL;
-	g_autofree guint16 *new_boot_order = NULL;
+	g_autoptr(GArray) order = NULL;
 
 	/* get the current boot order */
-	if (!fu_efivars_get_data(efivars,
-				 FU_EFIVARS_GUID_EFI_GLOBAL,
-				 "BootOrder",
-				 (guint8 **)&boot_order,
-				 &boot_order_size,
-				 &attr,
-				 error))
+	order = fu_efivars_get_boot_order(efivars, error);
+	if (order == NULL)
 		return FALSE;
 
-	/* already set next */
-	for (i = 0; i < boot_order_size / sizeof(guint16); i++) {
-		guint16 val = boot_order[i];
+	/* already set */
+	for (guint i = 0; i < order->len; i++) {
+		guint16 val = g_array_index(order, guint16, i);
 		if (val == boot_entry)
 			return TRUE;
 	}
 
 	/* add the new boot index to the end of the list */
-	new_boot_order = g_malloc0(boot_order_size + sizeof(guint16));
-	if (boot_order_size != 0)
-		memcpy(new_boot_order, boot_order, boot_order_size);
-
-	attr |= FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-		FU_EFIVARS_ATTR_RUNTIME_ACCESS;
-
-	i = boot_order_size / sizeof(guint16);
-	new_boot_order[i] = boot_entry;
-	boot_order_size += sizeof(guint16);
-	if (!fu_efivars_set_data(efivars,
-				 FU_EFIVARS_GUID_EFI_GLOBAL,
-				 "BootOrder",
-				 (guint8 *)new_boot_order,
-				 boot_order_size,
-				 attr,
-				 error)) {
+	g_array_append_val(order, boot_entry);
+	if (!fu_efivars_set_boot_order(efivars, order, error)) {
 		g_prefix_error(error, "could not set BootOrder(%u): ", boot_entry);
 		return FALSE;
 	}
@@ -90,8 +66,7 @@ fu_uefi_bootmgr_verify_fwupd(FuEfivars *efivars, GError **error)
 		const gchar *desc;
 		const gchar *name = g_ptr_array_index(names, i);
 		guint16 entry;
-		g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
-		g_autoptr(GBytes) loadopt_blob = NULL;
+		g_autoptr(FuEfiLoadOption) loadopt = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		/* not BootXXXX */
@@ -100,19 +75,8 @@ fu_uefi_bootmgr_verify_fwupd(FuEfivars *efivars, GError **error)
 			continue;
 
 		/* parse key */
-		loadopt_blob = fu_efivars_get_data_bytes(efivars,
-							 FU_EFIVARS_GUID_EFI_GLOBAL,
-							 name,
-							 NULL,
-							 &error_local);
-		if (loadopt_blob == NULL) {
-			g_debug("failed to get data for name %s: %s", name, error_local->message);
-			continue;
-		}
-		if (!fu_firmware_parse(FU_FIRMWARE(loadopt),
-				       loadopt_blob,
-				       FWUPD_INSTALL_FLAG_NONE,
-				       &error_local)) {
+		loadopt = fu_efivars_get_boot_entry(efivars, entry, &error_local);
+		if (loadopt == NULL) {
 			g_debug("%s -> load option was invalid: %s", name, error_local->message);
 			continue;
 		}
@@ -139,9 +103,7 @@ fu_uefi_setup_bootnext_with_loadopt(FuEfivars *efivars,
 				    GError **error)
 {
 	const gchar *name = NULL;
-	guint32 attr;
 	guint16 boot_next = G_MAXUINT16;
-	guint8 boot_nextbuf[2] = {0};
 	g_autofree guint8 *set_entries = g_malloc0(G_MAXUINT16);
 	g_autoptr(GBytes) loadopt_blob = NULL;
 	g_autoptr(GBytes) loadopt_blob_old = NULL;
@@ -172,11 +134,7 @@ fu_uefi_setup_bootnext_with_loadopt(FuEfivars *efivars,
 		/* mark this as used */
 		set_entries[entry] = 1;
 
-		loadopt_blob_tmp = fu_efivars_get_data_bytes(efivars,
-							     FU_EFIVARS_GUID_EFI_GLOBAL,
-							     name,
-							     &attr,
-							     &error_local);
+		loadopt_blob_tmp = fu_efivars_get_boot_data(efivars, entry, &error_local);
 		if (loadopt_blob_tmp == NULL) {
 			g_debug("failed to get data for name %s: %s", name, error_local->message);
 			continue;
@@ -205,12 +163,7 @@ fu_uefi_setup_bootnext_with_loadopt(FuEfivars *efivars,
 		/* is different than before */
 		if (!fu_bytes_compare(loadopt_blob, loadopt_blob_old, NULL)) {
 			g_debug("%s: updating existing boot entry", name);
-			if (!fu_efivars_set_data_bytes(efivars,
-						       FU_EFIVARS_GUID_EFI_GLOBAL,
-						       name,
-						       loadopt_blob,
-						       attr,
-						       error)) {
+			if (!fu_efivars_set_boot_data(efivars, boot_next, loadopt_blob, error)) {
 				g_prefix_error(error, "could not set boot variable active: ");
 				return FALSE;
 			}
@@ -256,15 +209,7 @@ fu_uefi_setup_bootnext_with_loadopt(FuEfivars *efivars,
 	}
 
 	/* set the boot next */
-	fu_memwrite_uint16(boot_nextbuf, boot_next, G_LITTLE_ENDIAN);
-	if (!fu_efivars_set_data(efivars,
-				 FU_EFIVARS_GUID_EFI_GLOBAL,
-				 "BootNext",
-				 boot_nextbuf,
-				 sizeof(boot_nextbuf),
-				 FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-				     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
-				 error)) {
+	if (!fu_efivars_set_boot_next(efivars, boot_next, error)) {
 		g_prefix_error(error, "could not set BootNext(%u): ", boot_next);
 		return FALSE;
 	}
