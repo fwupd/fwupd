@@ -1465,8 +1465,10 @@ fu_firmware_parse_file(FuFirmware *self, GFile *file, FwupdInstallFlags flags, G
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	stream = g_file_read(file, NULL, error);
-	if (stream == NULL)
+	if (stream == NULL) {
+		fu_error_convert(error);
 		return FALSE;
+	}
 	return fu_firmware_parse_stream(self, G_INPUT_STREAM(stream), 0, flags, error);
 }
 
