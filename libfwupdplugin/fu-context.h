@@ -11,6 +11,7 @@
 #include "fu-bios-settings.h"
 #include "fu-common-struct.h"
 #include "fu-common.h"
+#include "fu-efi-hard-drive-device-path.h"
 #include "fu-efivars.h"
 #include "fu-firmware.h"
 #include "fu-smbios.h"
@@ -167,6 +168,12 @@ fu_context_get_bios_setting(FuContext *self, const gchar *name) G_GNUC_NON_NULL(
 GPtrArray *
 fu_context_get_esp_volumes(FuContext *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
+FuVolume *
+fu_context_get_esp_volume_by_hard_drive_device_path(FuContext *self,
+						    FuEfiHardDriveDevicePath *dp,
+						    GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
+
 FuFirmware *
 fu_context_get_fdt(FuContext *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 FuSmbiosChassisKind

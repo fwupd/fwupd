@@ -3951,21 +3951,68 @@ fu_util_reboot_cleanup(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_efivar_boot_as_json(FuUtilPrivate *priv, GPtrArray *entries, GError **error)
+{
+	FuEfivars *efivars = fu_context_get_efivars(priv->ctx);
+	guint16 idx = 0;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+
+	json_builder_begin_object(builder);
+	if (fu_efivars_get_boot_current(efivars, &idx, NULL))
+		fwupd_codec_json_append_int(builder, "BootCurrent", idx);
+	if (fu_efivars_get_boot_next(efivars, &idx, NULL))
+		fwupd_codec_json_append_int(builder, "BootNext", idx);
+
+	json_builder_set_member_name(builder, "Entries");
+	json_builder_begin_object(builder);
+	for (guint i = 0; i < entries->len; i++) {
+		FuEfiLoadOption *entry = g_ptr_array_index(entries, i);
+		g_autofree gchar *title =
+		    g_strdup_printf("Boot%04X", (guint)fu_firmware_get_idx(FU_FIRMWARE(entry)));
+		json_builder_set_member_name(builder, title);
+		json_builder_begin_array(builder);
+		json_builder_begin_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(entry), builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
+		json_builder_end_array(builder);
+	}
+	json_builder_end_object(builder);
+
+	json_builder_end_object(builder);
+	return fu_util_print_builder(priv->console, builder, error);
+}
+
+static gboolean
 fu_util_efivar_boot(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuEfivars *efivars = fu_context_get_efivars(priv->ctx);
 	g_autoptr(GPtrArray) entries = NULL;
+	g_autoptr(GString) str = g_string_new(NULL);
+	guint16 idx = 0;
 
 	entries = fu_efivars_get_boot_entries(efivars, error);
 	if (entries == NULL)
 		return FALSE;
+
+	/* dump to the screen in the most appropriate format */
+	if (priv->as_json)
+		return fu_util_efivar_boot_as_json(priv, entries, error);
+
+	if (fu_efivars_get_boot_current(efivars, &idx, NULL))
+		fwupd_codec_string_append_hex(str, 0, "BootCurrent", idx);
+	if (fu_efivars_get_boot_next(efivars, &idx, NULL))
+		fwupd_codec_string_append_hex(str, 0, "BootNext", idx);
+
 	for (guint i = 0; i < entries->len; i++) {
 		FuEfiLoadOption *entry = g_ptr_array_index(entries, i);
-		g_autofree gchar *str = fu_firmware_to_string(FU_FIRMWARE(entry));
-		fu_console_print_literal(priv->console, str);
+		g_autofree gchar *title =
+		    g_strdup_printf("Boot%04X", (guint)fu_firmware_get_idx(FU_FIRMWARE(entry)));
+		fwupd_codec_string_append(str, 0, title, "");
+		fwupd_codec_add_string(FWUPD_CODEC(entry), 1, str);
 	}
 
 	/* success */
+	fu_console_print_literal(priv->console, str->str);
 	return TRUE;
 }
 
