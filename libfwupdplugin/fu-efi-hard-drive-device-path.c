@@ -173,6 +173,110 @@ fu_efi_hard_drive_device_path_class_init(FuEfiHardDriveDevicePathClass *klass)
 }
 
 /**
+ * fu_efi_hard_drive_device_path_get_partition_signature:
+ * @self: a #FuEfiHardDriveDevicePath
+ *
+ * Gets the DP partition signature.
+ *
+ * Returns: a #fwupd_guid_t
+ *
+ * Since: 2.0.0
+ **/
+const fwupd_guid_t *
+fu_efi_hard_drive_device_path_get_partition_signature(FuEfiHardDriveDevicePath *self)
+{
+	g_return_val_if_fail(FU_IS_EFI_HARD_DRIVE_DEVICE_PATH(self), NULL);
+	return &self->partition_signature;
+}
+
+/**
+ * fu_efi_hard_drive_device_path_get_partition_size:
+ * @self: a #FuEfiHardDriveDevicePath
+ *
+ * Gets the DP partition size.
+ *
+ * NOTE: This are multiples of the block size, which can be found using fu_volume_get_block_size()
+ *
+ * Returns: integer
+ *
+ * Since: 2.0.0
+ **/
+guint64
+fu_efi_hard_drive_device_path_get_partition_size(FuEfiHardDriveDevicePath *self)
+{
+	g_return_val_if_fail(FU_IS_EFI_HARD_DRIVE_DEVICE_PATH(self), 0);
+	return self->partition_size;
+}
+
+/**
+ * fu_efi_hard_drive_device_path_get_partition_start:
+ * @self: a #FuEfiHardDriveDevicePath
+ *
+ * Gets the DP partition start.
+ *
+ * NOTE: This are multiples of the block size, which can be found using fu_volume_get_block_size()
+ *
+ * Returns: integer
+ *
+ * Since: 2.0.0
+ **/
+guint64
+fu_efi_hard_drive_device_path_get_partition_start(FuEfiHardDriveDevicePath *self)
+{
+	g_return_val_if_fail(FU_IS_EFI_HARD_DRIVE_DEVICE_PATH(self), 0);
+	return self->partition_start;
+}
+
+/**
+ * fu_efi_hard_drive_device_path_get_partition_number:
+ * @self: a #FuEfiHardDriveDevicePath
+ *
+ * Gets the DP partition number.
+ *
+ * Returns: integer
+ *
+ * Since: 2.0.0
+ **/
+guint32
+fu_efi_hard_drive_device_path_get_partition_number(FuEfiHardDriveDevicePath *self)
+{
+	g_return_val_if_fail(FU_IS_EFI_HARD_DRIVE_DEVICE_PATH(self), 0);
+	return self->partition_number;
+}
+
+/**
+ * fu_efi_hard_drive_device_path_compare:
+ * @dp1: a #FuEfiHardDriveDevicePath
+ * @dp2: a #FuEfiHardDriveDevicePath
+ *
+ * Compares two EFI HardDrive `DEVICE_PATH`s.
+ *
+ * Returns: %TRUE is considered equal
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_efi_hard_drive_device_path_compare(FuEfiHardDriveDevicePath *dp1, FuEfiHardDriveDevicePath *dp2)
+{
+	g_return_val_if_fail(FU_IS_EFI_HARD_DRIVE_DEVICE_PATH(dp1), FALSE);
+	g_return_val_if_fail(FU_IS_EFI_HARD_DRIVE_DEVICE_PATH(dp2), FALSE);
+
+	if (dp1->partition_format != dp2->partition_format)
+		return FALSE;
+	if (dp1->signature_type != dp2->signature_type)
+		return FALSE;
+	if (memcmp(dp1->partition_signature, dp2->partition_signature, sizeof(fwupd_guid_t)) != 0)
+		return FALSE;
+	if (dp1->partition_number != dp2->partition_number)
+		return FALSE;
+	if (dp1->partition_start != dp2->partition_start)
+		return FALSE;
+	if (dp1->partition_size != dp2->partition_size)
+		return FALSE;
+	return TRUE;
+}
+
+/**
  * fu_efi_hard_drive_device_path_new:
  *
  * Creates a new EFI `DEVICE_PATH`.
