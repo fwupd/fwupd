@@ -317,9 +317,9 @@ fu_efi_hard_drive_device_path_new_from_volume(FuVolume *volume, GError **error)
 	/* common to both */
 	block_size = fu_volume_get_block_size(volume, &error_local);
 	if (block_size == 0) {
-		g_warning("failed to get volume block size, falling back to 0x%x: %s",
-			  (guint)BLOCK_SIZE_FALLBACK,
-			  error_local->message);
+		g_debug("failed to get volume block size, falling back to 0x%x: %s",
+			(guint)BLOCK_SIZE_FALLBACK,
+			error_local->message);
 		block_size = BLOCK_SIZE_FALLBACK;
 	}
 	self->partition_number = fu_volume_get_partition_number(volume);
