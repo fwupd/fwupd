@@ -13,9 +13,13 @@
 #include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-dummy-efivars.h"
+#include "fu-efi-device-path-list.h"
+#include "fu-efi-file-path-device-path.h"
+#include "fu-efi-hard-drive-device-path.h"
 #include "fu-fdt-firmware.h"
 #include "fu-hwids-private.h"
 #include "fu-path.h"
+#include "fu-pefile-firmware.h"
 #include "fu-smbios-private.h"
 #include "fu-volume-private.h"
 
@@ -1562,6 +1566,169 @@ fu_context_get_esp_volume_by_hard_drive_device_path(FuContext *self,
 	/* failed */
 	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "could not find EFI DP");
 	return NULL;
+}
+
+static FuFirmware *
+fu_context_esp_load_pe_file(const gchar *filename, GError **error)
+{
+	g_autoptr(FuFirmware) firmware = fu_pefile_firmware_new();
+	g_autoptr(GFile) file = g_file_new_for_path(filename);
+	fu_firmware_set_filename(firmware, filename);
+	if (!fu_firmware_parse_file(firmware, file, FWUPD_INSTALL_FLAG_NONE, error)) {
+		g_prefix_error(error, "failed to load %s: ", filename);
+		return NULL;
+	}
+	return g_steal_pointer(&firmware);
+}
+
+static gchar *
+fu_context_build_uefi_basename_for_arch(const gchar *app_name)
+{
+#if defined(__x86_64__)
+	return g_strdup_printf("%sx64.efi", app_name);
+#endif
+#if defined(__aarch64__)
+	return g_strdup_printf("%saa64.efi", app_name);
+#endif
+#if defined(__loongarch_lp64)
+	return g_strdup_printf("%sloongarch64.efi", app_name);
+#endif
+#if (defined(__riscv) && __riscv_xlen == 64)
+	return g_strdup_printf("%sriscv64.efi", app_name);
+#endif
+#if defined(__i386__) || defined(__i686__)
+	return g_strdup_printf("%sia32.efi", app_name);
+#endif
+#if defined(__arm__)
+	return g_strdup_printf("%sarm.efi", app_name);
+#endif
+	return NULL;
+}
+
+static gboolean
+fu_context_get_esp_files_for_entry(FuContext *self,
+				   FuEfiLoadOption *entry,
+				   GPtrArray *files,
+				   FuContextEspFileFlags flags,
+				   GError **error)
+{
+	g_autofree gchar *dp_filename = NULL;
+	g_autofree gchar *filename = NULL;
+	g_autofree gchar *mount_point = NULL;
+	g_autofree gchar *shim_name = fu_context_build_uefi_basename_for_arch("shim");
+	g_autoptr(FuDeviceLocker) volume_locker = NULL;
+	g_autoptr(FuEfiFilePathDevicePath) dp_path = NULL;
+	g_autoptr(FuEfiHardDriveDevicePath) dp_hdd = NULL;
+	g_autoptr(FuFirmware) dp_list = NULL;
+	g_autoptr(FuVolume) volume = NULL;
+
+	/* all entries should have a list */
+	dp_list =
+	    fu_firmware_get_image_by_gtype(FU_FIRMWARE(entry), FU_TYPE_EFI_DEVICE_PATH_LIST, NULL);
+	if (dp_list == NULL)
+		return TRUE;
+
+	/* HDD */
+	dp_hdd = FU_EFI_HARD_DRIVE_DEVICE_PATH(
+	    fu_firmware_get_image_by_gtype(FU_FIRMWARE(dp_list),
+					   FU_TYPE_EFI_HARD_DRIVE_DEVICE_PATH,
+					   NULL));
+	if (dp_hdd == NULL)
+		return TRUE;
+
+	/* FILE */
+	dp_path = FU_EFI_FILE_PATH_DEVICE_PATH(
+	    fu_firmware_get_image_by_gtype(FU_FIRMWARE(dp_list),
+					   FU_TYPE_EFI_FILE_PATH_DEVICE_PATH,
+					   NULL));
+	if (dp_path == NULL)
+		return TRUE;
+
+	/* can we match the volume? */
+	volume = fu_context_get_esp_volume_by_hard_drive_device_path(self, dp_hdd, error);
+	if (volume == NULL)
+		return FALSE;
+	volume_locker = fu_volume_locker(volume, error);
+	if (volume_locker == NULL)
+		return FALSE;
+	dp_filename = fu_efi_file_path_device_path_get_name(dp_path, error);
+	if (dp_filename == NULL)
+		return FALSE;
+
+	/* the file itself */
+	mount_point = fu_volume_get_mount_point(volume);
+	filename = g_build_filename(mount_point, dp_filename, NULL);
+	g_debug("check for 1st stage bootloader: %s", filename);
+	if (flags & FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_FIRST_STAGE) {
+		g_autoptr(FuFirmware) firmware = fu_context_esp_load_pe_file(filename, error);
+		if (firmware == NULL)
+			return FALSE;
+		fu_firmware_set_idx(firmware, fu_firmware_get_idx(FU_FIRMWARE(entry)));
+		g_ptr_array_add(files, g_steal_pointer(&firmware));
+	}
+
+	/* the 2nd stage bootloader, typically grub */
+	if (flags & FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE &&
+	    g_str_has_suffix(filename, shim_name)) {
+		g_autoptr(GString) filename2 = g_string_new(filename);
+		g_autofree gchar *optional_path = NULL;
+
+		optional_path = fu_efi_load_option_get_optional_path(entry, NULL);
+		if (optional_path != NULL) {
+			g_string_replace(filename2, shim_name, optional_path, 1);
+		} else {
+			g_autofree gchar *grub_name =
+			    fu_context_build_uefi_basename_for_arch("grub");
+			g_string_replace(filename2, shim_name, grub_name, 1);
+		}
+		g_debug("check for 2nd stage bootloader: %s", filename2->str);
+		if (g_file_test(filename2->str, G_FILE_TEST_EXISTS)) {
+			g_autoptr(FuFirmware) firmware =
+			    fu_context_esp_load_pe_file(filename2->str, error);
+			if (firmware == NULL)
+				return FALSE;
+			fu_firmware_set_idx(firmware, fu_firmware_get_idx(FU_FIRMWARE(entry)));
+			g_ptr_array_add(files, g_steal_pointer(&firmware));
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_context_get_esp_files:
+ * @self: a #FuContext
+ * @flags: some #FuContextEspFileFlags, e.g. #FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_FIRST_STAGE
+ * @error: #GError
+ *
+ * Gets the PE files for all the entries listed in `BootOrder`.
+ *
+ * Returns: (transfer full) (element-type FuPefileFirmware): PE firmware data
+ *
+ * Since: 2.0.0
+ **/
+GPtrArray *
+fu_context_get_esp_files(FuContext *self, FuContextEspFileFlags flags, GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GPtrArray) entries = NULL;
+	g_autoptr(GPtrArray) files = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	entries = fu_efivars_get_boot_entries(priv->efivars, error);
+	if (entries == NULL)
+		return NULL;
+	for (guint i = 0; i < entries->len; i++) {
+		FuEfiLoadOption *entry = g_ptr_array_index(entries, i);
+		if (!fu_context_get_esp_files_for_entry(self, entry, files, flags, error))
+			return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer(&files);
 }
 
 static void

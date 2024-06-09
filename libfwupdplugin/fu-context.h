@@ -184,3 +184,47 @@ const gchar *
 fu_context_get_esp_location(FuContext *self);
 FuEfivars *
 fu_context_get_efivars(FuContext *self) G_GNUC_NON_NULL(1);
+
+/**
+ * FuContextEspFileFlags:
+ *
+ * The flags to use when loading files in the ESP.
+ **/
+typedef enum {
+	/**
+	 * FU_CONTEXT_ESP_FILE_FLAG_NONE:
+	 *
+	 * No flags set.
+	 *
+	 * Since: 2.0.0
+	 **/
+	FU_CONTEXT_ESP_FILE_FLAG_NONE = 0,
+	/**
+	 * FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_FIRST_STAGE:
+	 *
+	 * Include 1st stage bootloaders like shim.
+	 *
+	 * Since: 2.0.0
+	 **/
+	FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_FIRST_STAGE = 1 << 0,
+	/**
+	 * FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE:
+	 *
+	 * Include 2nd stage bootloaders like shim.
+	 *
+	 * Since: 2.0.0
+	 **/
+	FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE = 1 << 1,
+	/**
+	 * FU_CONTEXT_ESP_FILE_FLAG_UNKNOWN:
+	 *
+	 * Unknown flag value.
+	 *
+	 * Since: 2.0.0
+	 **/
+	FU_CONTEXT_ESP_FILE_FLAG_UNKNOWN = G_MAXUINT64,
+} FuContextEspFileFlags;
+
+GPtrArray *
+fu_context_get_esp_files(FuContext *self, FuContextEspFileFlags flags, GError **error)
+    G_GNUC_NON_NULL(1);

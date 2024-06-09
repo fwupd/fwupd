@@ -4017,6 +4017,79 @@ fu_util_efivar_boot(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_efivar_files_as_json(FuUtilPrivate *priv, GPtrArray *files, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(GHashTable) hash = g_hash_table_new_full(g_str_hash,
+							   g_str_equal,
+							   g_free,
+							   (GDestroyNotify)g_ptr_array_unref);
+	GHashTableIter iter;
+	gpointer key, value;
+
+	/* convert an array of FuPeFirmware to a map with the BootXXXX ID as the hash key and the
+	 * filename as an array */
+	for (guint i = 0; i < files->len; i++) {
+		FuFirmware *firmware = g_ptr_array_index(files, i);
+		GPtrArray *array;
+		g_autofree gchar *name = NULL;
+
+		name = g_strdup_printf("Boot%04X", (guint)fu_firmware_get_idx(firmware));
+		array = g_hash_table_lookup(hash, name);
+		if (array == NULL) {
+			array = g_ptr_array_new_with_free_func(g_free);
+			g_hash_table_insert(hash, g_steal_pointer(&name), array);
+		}
+		g_ptr_array_add(array, g_strdup(fu_firmware_get_filename(firmware)));
+	}
+
+	/* export */
+	json_builder_begin_object(builder);
+	g_hash_table_iter_init(&iter, hash);
+	while (g_hash_table_iter_next(&iter, &key, &value)) {
+		const gchar *bootvar = (const gchar *)key;
+		GPtrArray *array = (GPtrArray *)value;
+
+		json_builder_set_member_name(builder, bootvar);
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < array->len; i++) {
+			const gchar *filename = g_ptr_array_index(array, i);
+			json_builder_add_string_value(builder, filename);
+		}
+		json_builder_end_array(builder);
+	}
+	json_builder_end_object(builder);
+	return fu_util_print_builder(priv->console, builder, error);
+}
+
+static gboolean
+fu_util_efivar_files(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) files = NULL;
+
+	files = fu_context_get_esp_files(priv->ctx,
+					 FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_FIRST_STAGE |
+					     FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE,
+					 error);
+	if (files == NULL)
+		return FALSE;
+	if (priv->as_json)
+		return fu_util_efivar_files_as_json(priv, files, error);
+	for (guint i = 0; i < files->len; i++) {
+		FuFirmware *firmware = g_ptr_array_index(files, i);
+		g_autofree gchar *name =
+		    g_strdup_printf("Boot%04X", (guint)fu_firmware_get_idx(firmware));
+		fu_console_print(priv->console,
+				 "%s → %s",
+				 name,
+				 fu_firmware_get_filename(firmware));
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_util_efivar_list(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuEfivars *efivars = fu_context_get_efivars(priv->ctx);
@@ -4725,6 +4798,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("List EFI boot parameters"),
 			      fu_util_efivar_boot);
+	fu_util_cmd_array_add(cmd_array,
+			      "efivar-files",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      NULL,
+			      /* TRANSLATORS: command description */
+			      _("List EFI boot files"),
+			      fu_util_efivar_files);
 	fu_util_cmd_array_add(cmd_array,
 			      "security-fix",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
