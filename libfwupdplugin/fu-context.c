@@ -1518,6 +1518,52 @@ fu_context_get_esp_volumes(FuContext *self, GError **error)
 	return g_ptr_array_ref(priv->esp_volumes);
 }
 
+/**
+ * fu_context_get_esp_volume_by_hard_drive_device_path:
+ * @self: a #FuContext
+ * @dp: a #FuEfiHardDriveDevicePath
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets a volume that matches the EFI device path
+ *
+ * Returns: (transfer full): a volume, or %NULL if it was not found
+ *
+ * Since: 2.0.0
+ **/
+FuVolume *
+fu_context_get_esp_volume_by_hard_drive_device_path(FuContext *self,
+						    FuEfiHardDriveDevicePath *dp,
+						    GError **error)
+{
+	g_autoptr(GPtrArray) volumes = NULL;
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(FU_IS_EFI_HARD_DRIVE_DEVICE_PATH(dp), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	volumes = fu_context_get_esp_volumes(self, error);
+	if (volumes == NULL)
+		return NULL;
+	for (guint i = 0; i < volumes->len; i++) {
+		FuVolume *volume = g_ptr_array_index(volumes, i);
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(FuEfiHardDriveDevicePath) dp_tmp = NULL;
+
+		dp_tmp = fu_efi_hard_drive_device_path_new_from_volume(volume, &error_local);
+		if (dp_tmp == NULL) {
+			g_debug("%s", error_local->message);
+			continue;
+		}
+		if (!fu_efi_hard_drive_device_path_compare(dp, dp_tmp))
+			continue;
+		return g_object_ref(volume);
+	}
+
+	/* failed */
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "could not find EFI DP");
+	return NULL;
+}
+
 static void
 fu_context_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
