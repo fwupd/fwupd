@@ -123,7 +123,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	fu_firmware_set_offset(img, sect_offset);
 	img_stream = fu_partial_input_stream_new(stream,
 						 sect_offset,
-						 fu_struct_pe_coff_section_get_virtual_size(st),
+						 fu_struct_pe_coff_section_get_size_of_raw_data(st),
 						 error);
 	if (img_stream == NULL)
 		return FALSE;
@@ -259,10 +259,10 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 		FuPefileSection *section = g_ptr_array_index(sections, i);
 		g_autoptr(GByteArray) st_sect = fu_struct_pe_coff_section_new();
 
-		fu_struct_pe_coff_section_set_size_of_raw_data(st_sect, section->blobsz_aligned);
+		fu_struct_pe_coff_section_set_size_of_raw_data(st_sect,
+							       g_bytes_get_size(section->blob));
 		fu_struct_pe_coff_section_set_virtual_address(st_sect, 0x0);
-		fu_struct_pe_coff_section_set_virtual_size(st_sect,
-							   g_bytes_get_size(section->blob));
+		fu_struct_pe_coff_section_set_virtual_size(st_sect, section->blobsz_aligned);
 		fu_struct_pe_coff_section_set_pointer_to_raw_data(st_sect, section->offset);
 
 		/* set the name directly, or add to the string table */
