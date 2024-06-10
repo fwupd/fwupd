@@ -5671,7 +5671,7 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 			fu_device_add_counterpart_guid(self, tmp);
 		}
 	}
-	if (priv->metadata != NULL) {
+	if (priv_donor->metadata != NULL) {
 		g_hash_table_iter_init(&iter, priv_donor->metadata);
 		while (g_hash_table_iter_next(&iter, &key, &value)) {
 			if (fu_device_get_metadata(self, key) == NULL)
