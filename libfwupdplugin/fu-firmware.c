@@ -852,8 +852,16 @@ fu_firmware_get_checksum(FuFirmware *self, GChecksumType csum_kind, GError **err
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* subclassed */
-	if (klass->get_checksum != NULL)
-		return klass->get_checksum(self, csum_kind, error);
+	if (klass->get_checksum != NULL) {
+		g_autoptr(GError) error_local = NULL;
+		g_autofree gchar *checksum = klass->get_checksum(self, csum_kind, &error_local);
+		if (checksum != NULL)
+			return g_steal_pointer(&checksum);
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return NULL;
+		}
+	}
 
 	/* internal data */
 	if (priv->bytes != NULL)

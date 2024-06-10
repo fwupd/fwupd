@@ -3,12 +3,10 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('uefi-dbx.quirk')
 plugin_builtin_uefi_dbx = static_library('fu_plugin_uefi_dbx',
-  rustgen.process('fu-efi-image.rs'),
   sources: [
     'fu-uefi-dbx-plugin.c',
     'fu-uefi-dbx-common.c',
     'fu-uefi-dbx-device.c',
-    'fu-efi-image.c',
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,

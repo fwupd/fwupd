@@ -6,27 +6,16 @@
 
 #include "config.h"
 
-#include "fu-efi-image.h"
 #include "fu-uefi-dbx-common.h"
 
 static gchar *
 fu_uefi_dbx_get_authenticode_hash(const gchar *fn, GError **error)
 {
-	g_autoptr(FuEfiImage) img = NULL;
-	g_autoptr(GBytes) bytes = NULL;
-	g_autoptr(GMappedFile) mmap = NULL;
-
-	g_debug("getting Authenticode hash of %s", fn);
-	mmap = g_mapped_file_new(fn, FALSE, error);
-	if (mmap == NULL)
+	g_autoptr(FuFirmware) firmware = fu_pefile_firmware_new();
+	g_autoptr(GFile) file = g_file_new_for_path(fn);
+	if (!fu_firmware_parse_file(firmware, file, FWUPD_INSTALL_FLAG_NONE, error))
 		return NULL;
-	bytes = g_mapped_file_get_bytes(mmap);
-
-	img = fu_efi_image_new(bytes, error);
-	if (img == NULL)
-		return NULL;
-	g_debug("Authenticode hash was %s", fu_efi_image_get_checksum(img));
-	return g_strdup(fu_efi_image_get_checksum(img));
+	return fu_firmware_get_checksum(firmware, G_CHECKSUM_SHA256, error);
 }
 
 static GPtrArray *

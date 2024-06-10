@@ -4257,7 +4257,7 @@ fu_firmware_builder_round_trip_func(void)
 	     "c1ff429f0e381c8fe8e1b2ee41a5a9a79e2f2ff7"},
 	    {FU_TYPE_PEFILE_FIRMWARE,
 	     "pefile.builder.xml",
-	     "6c5864c6d2fbbb3cc8ec3ba1382c0d14c4a12ca2"},
+	     "73b0e0dc9f6175b7bc27b77f20e0d9eca2d2d141"},
 	    {FU_TYPE_LINEAR_FIRMWARE,
 	     "linear.builder.xml",
 	     "18fa8201652c82dc717df1905d8ab72e46e3d82b"},
