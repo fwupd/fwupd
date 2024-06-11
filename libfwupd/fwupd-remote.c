@@ -146,9 +146,9 @@ fwupd_remote_flag_from_string(const gchar *flag)
 }
 
 static void
-fwupd_remote_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_remote_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdRemote *self = FWUPD_REMOTE(converter);
+	FwupdRemote *self = FWUPD_REMOTE(codec);
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 
 	fwupd_codec_json_append(builder, "Id", priv->id);
@@ -1590,9 +1590,9 @@ fwupd_remote_get_id(FwupdRemote *self)
 }
 
 static void
-fwupd_remote_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
+fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
-	FwupdRemote *self = FWUPD_REMOTE(converter);
+	FwupdRemote *self = FWUPD_REMOTE(codec);
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	GVariant *value;
 	const gchar *key;
@@ -1658,9 +1658,9 @@ fwupd_remote_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
 }
 
 static void
-fwupd_remote_add_variant(FwupdCodec *converter, GVariantBuilder *builder, FwupdCodecFlags flags)
+fwupd_remote_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdRemote *self = FWUPD_REMOTE(converter);
+	FwupdRemote *self = FWUPD_REMOTE(codec);
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 
 	/* create an array with all the metadata in */

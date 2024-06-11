@@ -1930,9 +1930,9 @@ fwupd_device_incorporate(FwupdDevice *self, FwupdDevice *donor)
 }
 
 static void
-fwupd_device_add_variant(FwupdCodec *converter, GVariantBuilder *builder, FwupdCodecFlags flags)
+fwupd_device_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdDevice *self = FWUPD_DEVICE(converter);
+	FwupdDevice *self = FWUPD_DEVICE(codec);
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 
 	if (priv->id != NULL) {
@@ -2879,9 +2879,9 @@ fwupd_device_string_append_update_state(GString *str,
 }
 
 static void
-fwupd_device_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdDevice *self = FWUPD_DEVICE(converter);
+	FwupdDevice *self = FWUPD_DEVICE(codec);
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_NAME, priv->name);
@@ -3067,9 +3067,9 @@ fwupd_device_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFla
 }
 
 static gboolean
-fwupd_device_from_json(FwupdCodec *converter, JsonNode *json_node, GError **error)
+fwupd_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 {
-	FwupdDevice *self = FWUPD_DEVICE(converter);
+	FwupdDevice *self = FWUPD_DEVICE(codec);
 	JsonObject *obj;
 
 	g_return_val_if_fail(FWUPD_IS_DEVICE(self), FALSE);
@@ -3382,9 +3382,9 @@ fwupd_device_guid_helper_array_find(GPtrArray *array, const gchar *guid)
 }
 
 static void
-fwupd_device_add_string(FwupdCodec *converter, guint idt, GString *str)
+fwupd_device_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FwupdDevice *self = FWUPD_DEVICE(converter);
+	FwupdDevice *self = FWUPD_DEVICE(codec);
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) guid_helpers = NULL;
 
@@ -3931,9 +3931,9 @@ fwupd_device_finalize(GObject *object)
 }
 
 static void
-fwupd_device_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
+fwupd_device_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
-	FwupdDevice *self = FWUPD_DEVICE(converter);
+	FwupdDevice *self = FWUPD_DEVICE(codec);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {

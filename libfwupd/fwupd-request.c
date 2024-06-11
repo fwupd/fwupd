@@ -285,9 +285,9 @@ fwupd_request_set_created(FwupdRequest *self, guint64 created)
 }
 
 static void
-fwupd_request_add_variant(FwupdCodec *converter, GVariantBuilder *builder, FwupdCodecFlags flags)
+fwupd_request_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdRequest *self = FWUPD_REQUEST(converter);
+	FwupdRequest *self = FWUPD_REQUEST(codec);
 	FwupdRequestPrivate *priv = GET_PRIVATE(self);
 
 	if (priv->id != NULL) {
@@ -606,9 +606,9 @@ fwupd_request_has_flag(FwupdRequest *self, FwupdRequestFlags flag)
 }
 
 static void
-fwupd_request_add_string(FwupdCodec *converter, guint idt, GString *str)
+fwupd_request_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FwupdRequest *self = FWUPD_REQUEST(converter);
+	FwupdRequest *self = FWUPD_REQUEST(codec);
 	FwupdRequestPrivate *priv = GET_PRIVATE(self);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->id);
 	if (priv->kind != FWUPD_REQUEST_KIND_UNKNOWN) {
@@ -820,9 +820,9 @@ fwupd_request_class_init(FwupdRequestClass *klass)
 }
 
 static void
-fwupd_request_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
+fwupd_request_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
-	FwupdRequest *self = FWUPD_REQUEST(converter);
+	FwupdRequest *self = FWUPD_REQUEST(codec);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {
