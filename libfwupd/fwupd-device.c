@@ -9,7 +9,7 @@
 #include <gio/gio.h>
 #include <string.h>
 
-#include "fwupd-codec-private.h"
+#include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"

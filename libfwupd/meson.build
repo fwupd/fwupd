@@ -112,7 +112,6 @@ if introspection.allowed()
       'fwupd-common-private.h',
       'fwupd-codec.c',
       'fwupd-codec.h',
-      'fwupd-codec-private.h',
       'fwupd-device.c',
       'fwupd-device.h',
       'fwupd-device-private.h',

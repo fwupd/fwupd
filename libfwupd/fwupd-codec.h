@@ -81,3 +81,16 @@ fwupd_codec_string_append_time(GString *str, guint idt, const gchar *key, guint6
 void
 fwupd_codec_string_append_size(GString *str, guint idt, const gchar *key, guint64 value)
     G_GNUC_NON_NULL(1, 3);
+
+void
+fwupd_codec_json_append(JsonBuilder *builder, const gchar *key, const gchar *value)
+    G_GNUC_NON_NULL(1, 2);
+void
+fwupd_codec_json_append_strv(JsonBuilder *builder, const gchar *key, gchar **value)
+    G_GNUC_NON_NULL(1, 2);
+void
+fwupd_codec_json_append_int(JsonBuilder *builder, const gchar *key, guint64 value)
+    G_GNUC_NON_NULL(1, 2);
+void
+fwupd_codec_json_append_bool(JsonBuilder *builder, const gchar *key, gboolean value)
+    G_GNUC_NON_NULL(1, 2);
