@@ -1657,144 +1657,139 @@ fwupd_remote_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
 	}
 }
 
-static GVariant *
-fwupd_remote_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
+static void
+fwupd_remote_add_variant(FwupdCodec *converter, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
 	FwupdRemote *self = FWUPD_REMOTE(converter);
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	GVariantBuilder builder;
-
-	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
 
 	/* create an array with all the metadata in */
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
 	if (priv->id != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_REMOTE_ID,
 				      g_variant_new_string(priv->id));
 	}
 	if (priv->flags != 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FLAGS,
 				      g_variant_new_uint64(priv->flags));
 	}
 	if (priv->username != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "Username",
 				      g_variant_new_string(priv->username));
 	}
 	if (priv->password != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "Password",
 				      g_variant_new_string(priv->password));
 	}
 	if (priv->title != NULL) {
-		g_variant_builder_add(&builder, "{sv}", "Title", g_variant_new_string(priv->title));
+		g_variant_builder_add(builder, "{sv}", "Title", g_variant_new_string(priv->title));
 	}
 	if (priv->privacy_uri != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "PrivacyUri",
 				      g_variant_new_string(priv->privacy_uri));
 	}
 	if (priv->agreement != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "Agreement",
 				      g_variant_new_string(priv->agreement));
 	}
 	if (priv->checksum_sig != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_CHECKSUM,
 				      g_variant_new_string(priv->checksum_sig));
 	}
 	if (priv->metadata_uri != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_URI,
 				      g_variant_new_string(priv->metadata_uri));
 	}
 	if (priv->report_uri != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "ReportUri",
 				      g_variant_new_string(priv->report_uri));
 	}
 	if (priv->priority != 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "Priority",
 				      g_variant_new_int32(priv->priority));
 	}
 	if (priv->kind != FWUPD_REMOTE_KIND_UNKNOWN) {
-		g_variant_builder_add(&builder, "{sv}", "Type", g_variant_new_uint32(priv->kind));
+		g_variant_builder_add(builder, "{sv}", "Type", g_variant_new_uint32(priv->kind));
 	}
 	if (priv->keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "Keyring",
 				      g_variant_new_uint32(priv->keyring_kind));
 	}
 	if (priv->mtime != 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "ModificationTime",
 				      g_variant_new_uint64(priv->mtime));
 	}
 	if (priv->refresh_interval != 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "RefreshInterval",
 				      g_variant_new_uint64(priv->refresh_interval));
 	}
 	if (priv->filename_cache != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "FilenameCache",
 				      g_variant_new_string(priv->filename_cache));
 	}
 	if (priv->filename_source != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "FilenameSource",
 				      g_variant_new_string(priv->filename_source));
 	}
 	if (priv->remotes_dir != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "RemotesDir",
 				      g_variant_new_string(priv->remotes_dir));
 	}
 	/* we can probably stop doing proxying flags when we next branch */
 	g_variant_builder_add(
-	    &builder,
+	    builder,
 	    "{sv}",
 	    "Enabled",
 	    g_variant_new_boolean(fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_ENABLED)));
 	g_variant_builder_add(
-	    &builder,
+	    builder,
 	    "{sv}",
 	    "ApprovalRequired",
 	    g_variant_new_boolean(
 		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED)));
 	g_variant_builder_add(
-	    &builder,
+	    builder,
 	    "{sv}",
 	    "AutomaticReports",
 	    g_variant_new_boolean(
 		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)));
 	g_variant_builder_add(
-	    &builder,
+	    builder,
 	    "{sv}",
 	    "AutomaticSecurityReports",
 	    g_variant_new_boolean(
 		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)));
-	return g_variant_new("a{sv}", &builder);
 }
 
 static void
@@ -2010,7 +2005,7 @@ static void
 fwupd_remote_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->to_json = fwupd_remote_to_json;
-	iface->to_variant = fwupd_remote_to_variant;
+	iface->add_variant = fwupd_remote_add_variant;
 	iface->from_variant_iter = fwupd_remote_from_variant_iter;
 }
 

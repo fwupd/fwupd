@@ -765,66 +765,64 @@ fwupd_bios_setting_trusted(FwupdBiosSetting *self, gboolean trusted)
 	return FALSE;
 }
 
-static GVariant *
-fwupd_bios_setting_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
+static void
+fwupd_bios_setting_add_variant(FwupdCodec *converter,
+			       GVariantBuilder *builder,
+			       FwupdCodecFlags flags)
 {
 	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
-	GVariantBuilder builder;
 
-	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), NULL);
-
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
-	g_variant_builder_add(&builder,
+	g_variant_builder_add(builder,
 			      "{sv}",
 			      FWUPD_RESULT_KEY_BIOS_SETTING_TYPE,
 			      g_variant_new_uint64(priv->kind));
 	if (priv->id != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_ID,
 				      g_variant_new_string(priv->id));
 	}
 	if (priv->name != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_NAME,
 				      g_variant_new_string(priv->name));
 	}
 	if (priv->path != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FILENAME,
 				      g_variant_new_string(priv->path));
 	}
 	if (priv->description != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_DESCRIPTION,
 				      g_variant_new_string(priv->description));
 	}
-	g_variant_builder_add(&builder,
+	g_variant_builder_add(builder,
 			      "{sv}",
 			      FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
 			      g_variant_new_boolean(priv->read_only));
 	if (fwupd_bios_setting_trusted(self, flags & FWUPD_CODEC_FLAG_TRUSTED)) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
 				      g_variant_new_string(priv->current_value));
 	}
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_INTEGER ||
 	    priv->kind == FWUPD_BIOS_SETTING_KIND_STRING) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND,
 				      g_variant_new_uint64(priv->lower_bound));
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND,
 				      g_variant_new_uint64(priv->upper_bound));
 		if (priv->kind == FWUPD_BIOS_SETTING_KIND_INTEGER) {
-			g_variant_builder_add(&builder,
+			g_variant_builder_add(builder,
 					      "{sv}",
 					      FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT,
 					      g_variant_new_uint64(priv->scalar_increment));
@@ -836,13 +834,12 @@ fwupd_bios_setting_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 			for (guint i = 0; i < priv->possible_values->len; i++)
 				strv[i] =
 				    (const gchar *)g_ptr_array_index(priv->possible_values, i);
-			g_variant_builder_add(&builder,
+			g_variant_builder_add(builder,
 					      "{sv}",
 					      FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES,
 					      g_variant_new_strv(strv, -1));
 		}
 	}
-	return g_variant_new("a{sv}", &builder);
 }
 
 static void
@@ -1109,7 +1106,7 @@ fwupd_bios_setting_codec_iface_init(FwupdCodecInterface *iface)
 	iface->add_string = fwupd_bios_setting_add_string;
 	iface->to_json = fwupd_bios_setting_to_json;
 	iface->from_json = fwupd_bios_setting_from_json;
-	iface->to_variant = fwupd_bios_setting_to_variant;
+	iface->add_variant = fwupd_bios_setting_add_variant;
 	iface->from_variant_iter = fwupd_bios_setting_from_variant_iter;
 }
 

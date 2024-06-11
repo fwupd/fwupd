@@ -187,28 +187,24 @@ fwupd_plugin_has_flag(FwupdPlugin *self, FwupdPluginFlags flag)
 	return (priv->flags & flag) > 0;
 }
 
-static GVariant *
-fwupd_plugin_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
+static void
+fwupd_plugin_add_variant(FwupdCodec *converter, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
 	FwupdPlugin *self = FWUPD_PLUGIN(converter);
 	FwupdPluginPrivate *priv = GET_PRIVATE(self);
-	GVariantBuilder builder;
 
-	/* create an array with all the metadata in */
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
 	if (priv->name != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_NAME,
 				      g_variant_new_string(priv->name));
 	}
 	if (priv->flags > 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FLAGS,
 				      g_variant_new_uint64(priv->flags));
 	}
-	return g_variant_new("a{sv}", &builder);
 }
 
 static void
@@ -378,7 +374,7 @@ fwupd_plugin_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fwupd_plugin_add_string;
 	iface->to_json = fwupd_plugin_to_json;
-	iface->to_variant = fwupd_plugin_to_variant;
+	iface->add_variant = fwupd_plugin_add_variant;
 	iface->from_variant_iter = fwupd_plugin_from_variant_iter;
 }
 

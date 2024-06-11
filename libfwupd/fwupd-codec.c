@@ -336,11 +336,17 @@ fwupd_codec_to_variant(FwupdCodec *self, FwupdCodecFlags flags)
 	g_return_val_if_fail(FWUPD_IS_CODEC(self), NULL);
 
 	iface = FWUPD_CODEC_GET_IFACE(self);
-	if (iface->to_variant == NULL) {
-		g_critical("FwupdCodec->to_variant not implemented");
-		return NULL;
+	if (iface->to_variant != NULL)
+		return iface->to_variant(self, flags);
+	if (iface->add_variant != NULL) {
+		GVariantBuilder builder;
+		g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
+		iface->add_variant(self, &builder, flags);
+		return g_variant_new("a{sv}", &builder);
 	}
-	return (*iface->to_variant)(self, flags);
+
+	g_critical("FwupdCodec->add_variant and iface->add_variant not implemented");
+	return NULL;
 }
 
 static gsize
