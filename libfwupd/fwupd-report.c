@@ -470,82 +470,78 @@ fwupd_report_get_metadata_item(FwupdReport *self, const gchar *key)
 	return g_hash_table_lookup(priv->metadata, key);
 }
 
-static GVariant *
-fwupd_report_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
+static void
+fwupd_report_add_variant(FwupdCodec *converter, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
 	FwupdReport *self = FWUPD_REPORT(converter);
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
-	GVariantBuilder builder;
 
-	/* create an array with all the metadata in */
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
 	if (priv->distro_id != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_DISTRO_ID,
 				      g_variant_new_string(priv->distro_id));
 	}
 	if (priv->distro_variant != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_DISTRO_VARIANT,
 				      g_variant_new_string(priv->distro_variant));
 	}
 	if (priv->distro_version != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_DISTRO_VERSION,
 				      g_variant_new_string(priv->distro_version));
 	}
 	if (priv->vendor != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_VENDOR,
 				      g_variant_new_string(priv->vendor));
 	}
 	if (priv->device_name != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_DEVICE_NAME,
 				      g_variant_new_string(priv->device_name));
 	}
 	if (priv->created != 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_CREATED,
 				      g_variant_new_uint64(priv->created));
 	}
 	if (priv->version_old != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_VERSION_OLD,
 				      g_variant_new_string(priv->version_old));
 	}
 	if (priv->vendor_id > 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_VENDOR_ID,
 				      g_variant_new_uint32(priv->vendor_id));
 	}
 	if (priv->remote_id != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_REMOTE_ID,
 				      g_variant_new_string(priv->remote_id));
 	}
 	if (g_hash_table_size(priv->metadata) > 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_METADATA,
 				      fwupd_hash_kv_to_variant(priv->metadata));
 	}
 	if (priv->flags > 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FLAGS,
 				      g_variant_new_uint64(priv->flags));
 	}
-	return g_variant_new("a{sv}", &builder);
 }
 
 static void
@@ -925,7 +921,7 @@ fwupd_report_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fwupd_report_add_string;
 	iface->to_json = fwupd_report_to_json;
-	iface->to_variant = fwupd_report_to_variant;
+	iface->add_variant = fwupd_report_add_variant;
 	iface->from_variant_iter = fwupd_report_from_variant_iter;
 }
 
