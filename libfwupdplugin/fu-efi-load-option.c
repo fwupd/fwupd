@@ -24,7 +24,14 @@ struct _FuEfiLoadOption {
 	GBytes *optional_data;
 };
 
-G_DEFINE_TYPE(FuEfiLoadOption, fu_efi_load_option, FU_TYPE_FIRMWARE)
+static void
+fu_efi_load_option_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuEfiLoadOption,
+		       fu_efi_load_option,
+		       FU_TYPE_FIRMWARE,
+		       0,
+		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_efi_load_option_codec_iface_init))
 
 #define FU_EFI_LOAD_OPTION_DESCRIPTION_SIZE_MAX 0x1000u /* bytes */
 
@@ -252,6 +259,28 @@ fu_efi_load_option_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 		g_autofree gchar *datastr = g_base64_encode(buf, bufsz);
 		xb_builder_node_insert_text(bn, "optional_data", datastr, NULL);
 	}
+}
+
+#include "fu-efi-file-path-device-path.h"
+#include "fu-efi-hard-drive-device-path.h"
+
+static void
+fu_efi_load_option_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+{
+	FuEfiLoadOption *self = FU_EFI_LOAD_OPTION(codec);
+	g_autoptr(FuFirmware) dp_list = NULL;
+
+	fwupd_codec_json_append(builder, "Name", fu_firmware_get_id(FU_FIRMWARE(self)));
+	dp_list =
+	    fu_firmware_get_image_by_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_DEVICE_PATH_LIST, NULL);
+	if (dp_list != NULL)
+		fwupd_codec_to_json(FWUPD_CODEC(dp_list), builder, flags);
+}
+
+static void
+fu_efi_load_option_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_json = fu_efi_load_option_add_json;
 }
 
 static void
