@@ -966,6 +966,10 @@ LIBFWUPD_2.0.0 {
     fwupd_codec_from_json_string;
     fwupd_codec_from_variant;
     fwupd_codec_get_type;
+    fwupd_codec_json_append;
+    fwupd_codec_json_append_bool;
+    fwupd_codec_json_append_int;
+    fwupd_codec_json_append_strv;
     fwupd_codec_string_append;
     fwupd_codec_string_append_bool;
     fwupd_codec_string_append_hex;

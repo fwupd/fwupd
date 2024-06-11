@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include "fwupd-codec-private.h"
+#include "fwupd-codec.h"
 #include "fwupd-error.h"
 
 /**
@@ -545,11 +545,20 @@ fwupd_codec_string_append_size(GString *str, guint idt, const gchar *key, guint6
 }
 
 /**
- * fwupd_codec_json_append: (skip):
- **/
+ * fwupd_codec_json_append:
+ * @builder: (not nullable): a #JsonBuilder
+ * @key: (not nullable): a string
+ * @value: a string to append
+ *
+ * Appends a key and value to a JSON builder.
+ *
+ * Since: 2.0.0
+ */
 void
 fwupd_codec_json_append(JsonBuilder *builder, const gchar *key, const gchar *value)
 {
+	g_return_if_fail(JSON_IS_BUILDER(builder));
+	g_return_if_fail(key != NULL);
 	if (value == NULL)
 		return;
 	json_builder_set_member_name(builder, key);
@@ -557,31 +566,58 @@ fwupd_codec_json_append(JsonBuilder *builder, const gchar *key, const gchar *val
 }
 
 /**
- * fwupd_codec_json_append_int: (skip):
- **/
+ * fwupd_codec_json_append_int:
+ * @builder: (not nullable): a #JsonBuilder
+ * @key: (not nullable): a string
+ * @value: guint64
+ *
+ * Appends a key and unsigned integer to a JSON builder.
+ *
+ * Since: 2.0.0
+ */
 void
 fwupd_codec_json_append_int(JsonBuilder *builder, const gchar *key, guint64 value)
 {
+	g_return_if_fail(JSON_IS_BUILDER(builder));
+	g_return_if_fail(key != NULL);
 	json_builder_set_member_name(builder, key);
 	json_builder_add_int_value(builder, value);
 }
 
 /**
- * fwupd_codec_json_append_bool: (skip):
- **/
+ * fwupd_codec_json_append_bool:
+ * @builder: (not nullable): a #JsonBuilder
+ * @key: (not nullable): a string
+ * @value: boolean
+ *
+ * Appends a key and boolean value to a JSON builder.
+ *
+ * Since: 2.0.0
+ */
 void
 fwupd_codec_json_append_bool(JsonBuilder *builder, const gchar *key, gboolean value)
 {
+	g_return_if_fail(JSON_IS_BUILDER(builder));
+	g_return_if_fail(key != NULL);
 	json_builder_set_member_name(builder, key);
 	json_builder_add_string_value(builder, value ? "true" : "false");
 }
 
 /**
- * fwupd_codec_json_append_strv: (skip):
- **/
+ * fwupd_codec_json_append_strv:
+ * @builder: (not nullable): a #JsonBuilder
+ * @key: (not nullable): a string
+ * @value: a #GStrv
+ *
+ * Appends a key and string array to a JSON builder.
+ *
+ * Since: 2.0.0
+ */
 void
 fwupd_codec_json_append_strv(JsonBuilder *builder, const gchar *key, gchar **value)
 {
+	g_return_if_fail(JSON_IS_BUILDER(builder));
+	g_return_if_fail(key != NULL);
 	if (value == NULL)
 		return;
 	json_builder_set_member_name(builder, key);
