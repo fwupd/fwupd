@@ -600,7 +600,7 @@ fwupd_codec_json_append_bool(JsonBuilder *builder, const gchar *key, gboolean va
 	g_return_if_fail(JSON_IS_BUILDER(builder));
 	g_return_if_fail(key != NULL);
 	json_builder_set_member_name(builder, key);
-	json_builder_add_string_value(builder, value ? "true" : "false");
+	json_builder_add_boolean_value(builder, value);
 }
 
 /**
