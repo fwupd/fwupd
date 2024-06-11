@@ -3576,6 +3576,28 @@ fu_util_esp_unmount(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_esp_list_as_json(FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(GPtrArray) volumes = NULL;
+
+	volumes = fu_context_get_esp_volumes(fu_engine_get_context(priv->engine), error);
+	if (volumes == NULL)
+		return FALSE;
+
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "Volumes");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < volumes->len; i++) {
+		FuVolume *volume = g_ptr_array_index(volumes, i);
+		fwupd_codec_to_json(FWUPD_CODEC(volume), builder, FWUPD_CODEC_FLAG_TRUSTED);
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+	return fu_util_print_builder(priv->console, builder, error);
+}
+
+static gboolean
 fu_util_esp_list(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autofree gchar *mount_point = NULL;
@@ -3585,6 +3607,8 @@ fu_util_esp_list(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_READONLY, priv->progress, error))
 		return FALSE;
+	if (priv->as_json)
+		return fu_util_esp_list_as_json(priv, error);
 
 	volume = fu_util_prompt_for_volume(priv, error);
 	if (volume == NULL)
