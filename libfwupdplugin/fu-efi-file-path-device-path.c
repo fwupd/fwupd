@@ -23,7 +23,15 @@ struct _FuEfiFilePathDevicePath {
 	FuEfiDevicePath parent_instance;
 };
 
-G_DEFINE_TYPE(FuEfiFilePathDevicePath, fu_efi_file_path_device_path, FU_TYPE_EFI_DEVICE_PATH)
+static void
+fu_efi_file_path_device_path_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuEfiFilePathDevicePath,
+		       fu_efi_file_path_device_path,
+		       FU_TYPE_EFI_DEVICE_PATH,
+		       0,
+		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
+					     fu_efi_file_path_device_path_codec_iface_init))
 
 /**
  * fu_efi_file_path_device_path_get_name:
@@ -105,6 +113,16 @@ fu_efi_file_path_device_path_export(FuFirmware *firmware,
 	fu_xmlb_builder_insert_kv(bn, "name", name);
 }
 
+static void
+fu_efi_file_path_device_path_add_json(FwupdCodec *codec,
+				      JsonBuilder *builder,
+				      FwupdCodecFlags flags)
+{
+	FuEfiFilePathDevicePath *self = FU_EFI_FILE_PATH_DEVICE_PATH(codec);
+	g_autofree gchar *name = fu_efi_file_path_device_path_get_name(self, NULL);
+	fwupd_codec_json_append(builder, "Name", name);
+}
+
 static gboolean
 fu_efi_file_path_device_path_build(FuFirmware *firmware, XbNode *n, GError **error)
 {
@@ -120,6 +138,12 @@ fu_efi_file_path_device_path_build(FuFirmware *firmware, XbNode *n, GError **err
 
 	/* success */
 	return TRUE;
+}
+
+static void
+fu_efi_file_path_device_path_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_json = fu_efi_file_path_device_path_add_json;
 }
 
 static void
