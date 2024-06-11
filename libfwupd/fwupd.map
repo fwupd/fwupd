@@ -961,6 +961,7 @@ LIBFWUPD_2.0.0 {
     fwupd_client_refresh_remote_async;
     fwupd_codec_add_string;
     fwupd_codec_array_from_variant;
+    fwupd_codec_array_to_json;
     fwupd_codec_array_to_variant;
     fwupd_codec_from_json;
     fwupd_codec_from_json_string;

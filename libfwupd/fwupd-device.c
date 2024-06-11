@@ -3055,15 +3055,8 @@ fwupd_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags f
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
-	if (priv->releases->len > 0) {
-		json_builder_set_member_name(builder, "Releases");
-		json_builder_begin_array(builder);
-		for (guint i = 0; i < priv->releases->len; i++) {
-			FwupdRelease *release = g_ptr_array_index(priv->releases, i);
-			fwupd_codec_to_json(FWUPD_CODEC(release), builder, flags);
-		}
-		json_builder_end_array(builder);
-	}
+	if (priv->releases->len > 0)
+		fwupd_codec_array_to_json(priv->releases, "Releases", builder, flags);
 }
 
 static gboolean

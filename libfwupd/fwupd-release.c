@@ -2038,15 +2038,8 @@ fwupd_release_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags 
 	}
 
 	/* reports */
-	if (priv->reports->len > 0) {
-		json_builder_set_member_name(builder, "Reports");
-		json_builder_begin_array(builder);
-		for (guint i = 0; i < priv->reports->len; i++) {
-			FwupdReport *report = g_ptr_array_index(priv->reports, i);
-			fwupd_codec_to_json(FWUPD_CODEC(report), builder, flags);
-		}
-		json_builder_end_array(builder);
-	}
+	if (priv->reports->len > 0)
+		fwupd_codec_array_to_json(priv->reports, "Reports", builder, flags);
 }
 
 static void

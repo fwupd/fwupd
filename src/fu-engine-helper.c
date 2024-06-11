@@ -164,17 +164,10 @@ fu_engine_update_devices_file(FuEngine *self, GError **error)
 
 	builder = json_builder_new();
 	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Devices");
-	json_builder_begin_array(builder);
+
 	devices = fu_engine_get_devices(self, NULL);
-	if (devices != NULL) {
-		for (guint i = 0; i < devices->len; i++) {
-			FwupdDevice *dev = g_ptr_array_index(devices, i);
-			fwupd_codec_to_json(FWUPD_CODEC(dev), builder, flags);
-		}
-	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
+	if (devices != NULL)
+		fwupd_codec_array_to_json(devices, "Devices", builder, flags);
 
 	root = json_builder_get_root(builder);
 	generator = json_generator_new();

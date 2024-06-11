@@ -439,23 +439,6 @@ fu_util_watch(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_get_plugins_as_json(FuUtilPrivate *priv, GPtrArray *plugins, GError **error)
-{
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	json_builder_begin_object(builder);
-
-	json_builder_set_member_name(builder, "Plugins");
-	json_builder_begin_array(builder);
-	for (guint i = 0; i < plugins->len; i++) {
-		FwupdPlugin *plugin = g_ptr_array_index(plugins, i);
-		fwupd_codec_to_json(FWUPD_CODEC(plugin), builder, FWUPD_CODEC_FLAG_TRUSTED);
-	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
-	return fu_util_print_builder(priv->console, builder, error);
-}
-
-static gboolean
 fu_util_get_plugins(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	GPtrArray *plugins;
@@ -471,8 +454,13 @@ fu_util_get_plugins(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* print */
 	plugins = fu_engine_get_plugins(priv->engine);
 	g_ptr_array_sort(plugins, (GCompareFunc)fu_util_plugin_name_sort_cb);
-	if (priv->as_json)
-		return fu_util_get_plugins_as_json(priv, plugins, error);
+	if (priv->as_json) {
+		g_autoptr(JsonBuilder) builder = json_builder_new();
+		json_builder_begin_object(builder);
+		fwupd_codec_array_to_json(plugins, "Plugins", builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
+		return fu_util_print_builder(priv->console, builder, error);
+	}
 
 	/* print */
 	for (guint i = 0; i < plugins->len; i++) {
@@ -3425,6 +3413,13 @@ fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
 				    "no remotes available");
 		return FALSE;
 	}
+	if (priv->as_json) {
+		g_autoptr(JsonBuilder) builder = json_builder_new();
+		json_builder_begin_object(builder);
+		fwupd_codec_array_to_json(remotes, "Remotes", builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
+		return fu_util_print_builder(priv->console, builder, error);
+	}
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote_tmp = g_ptr_array_index(remotes, i);
 		g_node_append_data(root, g_object_ref(remote_tmp));
@@ -3586,13 +3581,7 @@ fu_util_esp_list_as_json(FuUtilPrivate *priv, GError **error)
 		return FALSE;
 
 	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Volumes");
-	json_builder_begin_array(builder);
-	for (guint i = 0; i < volumes->len; i++) {
-		FuVolume *volume = g_ptr_array_index(volumes, i);
-		fwupd_codec_to_json(FWUPD_CODEC(volume), builder, FWUPD_CODEC_FLAG_TRUSTED);
-	}
-	json_builder_end_array(builder);
+	fwupd_codec_array_to_json(volumes, "Volumes", builder, FWUPD_CODEC_FLAG_TRUSTED);
 	json_builder_end_object(builder);
 	return fu_util_print_builder(priv->console, builder, error);
 }
