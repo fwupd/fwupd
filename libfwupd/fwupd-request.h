@@ -180,8 +180,6 @@ fwupd_request_flag_from_string(const gchar *flag);
 
 FwupdRequest *
 fwupd_request_new(void);
-gchar *
-fwupd_request_to_string(FwupdRequest *self) G_GNUC_NON_NULL(1);
 
 const gchar *
 fwupd_request_get_id(FwupdRequest *self) G_GNUC_NON_NULL(1);
@@ -219,8 +217,5 @@ fwupd_request_remove_flag(FwupdRequest *self, FwupdRequestFlags flag) G_GNUC_NON
 gboolean
 fwupd_request_has_flag(FwupdRequest *self, FwupdRequestFlags flag) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
-
-FwupdRequest *
-fwupd_request_from_variant(GVariant *value);
 
 G_END_DECLS

@@ -149,7 +149,7 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 gboolean
 fu_engine_update_devices_file(FuEngine *self, GError **error)
 {
-	FwupdDeviceFlags flags = FWUPD_DEVICE_FLAG_NONE;
+	FwupdCodecFlags flags = FWUPD_CODEC_FLAG_NONE;
 	gsize len;
 	g_autoptr(JsonBuilder) builder = NULL;
 	g_autoptr(JsonGenerator) generator = NULL;
@@ -160,23 +160,14 @@ fu_engine_update_devices_file(FuEngine *self, GError **error)
 	g_autofree gchar *target = NULL;
 
 	if (fu_engine_config_get_show_device_private(fu_engine_get_config(self)))
-		flags |= FWUPD_DEVICE_FLAG_TRUSTED;
+		flags |= FWUPD_CODEC_FLAG_TRUSTED;
 
 	builder = json_builder_new();
 	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Devices");
-	json_builder_begin_array(builder);
+
 	devices = fu_engine_get_devices(self, NULL);
-	if (devices != NULL) {
-		for (guint i = 0; i < devices->len; i++) {
-			FwupdDevice *dev = g_ptr_array_index(devices, i);
-			json_builder_begin_object(builder);
-			fwupd_device_to_json_full(dev, builder, flags);
-			json_builder_end_object(builder);
-		}
-	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
+	if (devices != NULL)
+		fwupd_codec_array_to_json(devices, "Devices", builder, flags);
 
 	root = json_builder_get_root(builder);
 	generator = json_generator_new();
@@ -414,4 +405,75 @@ fu_engine_error_array_get_best(GPtrArray *errors)
 
 	/* fall back to something */
 	return g_error_new(FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "No supported devices found");
+}
+
+/**
+ * fu_engine_build_machine_id:
+ * @salt: (nullable): optional salt
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets a salted hash of the /etc/machine-id contents. This can be used to
+ * identify a specific machine. It is not possible to recover the original
+ * machine-id from the machine-hash.
+ *
+ * Returns: the SHA256 machine hash, or %NULL if the ID is not present
+ **/
+gchar *
+fu_engine_build_machine_id(const gchar *salt, GError **error)
+{
+	const gchar *machine_id;
+	gsize bufsz = 0;
+	g_autofree gchar *buf = NULL;
+	g_autoptr(GChecksum) csum = NULL;
+
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* in test mode */
+	machine_id = g_getenv("FWUPD_MACHINE_ID");
+	if (machine_id != NULL) {
+		buf = g_strdup(machine_id);
+		bufsz = strlen(buf);
+	} else {
+		const gchar *fn = NULL;
+		g_autoptr(GPtrArray) fns = g_ptr_array_new_with_free_func(g_free);
+
+		/* one of these has to exist */
+		g_ptr_array_add(fns, g_build_filename(FWUPD_SYSCONFDIR, "machine-id", NULL));
+		g_ptr_array_add(
+		    fns,
+		    g_build_filename(FWUPD_LOCALSTATEDIR, "lib", "dbus", "machine-id", NULL));
+		g_ptr_array_add(fns, g_strdup("/etc/machine-id"));
+		g_ptr_array_add(fns, g_strdup("/var/lib/dbus/machine-id"));
+		g_ptr_array_add(fns, g_strdup("/var/db/dbus/machine-id"));
+		/* this is the hardcoded path for homebrew, e.g. `sudo dbus-uuidgen --ensure` */
+		g_ptr_array_add(fns, g_strdup("/usr/local/var/lib/dbus/machine-id"));
+		for (guint i = 0; i < fns->len; i++) {
+			const gchar *fn_tmp = g_ptr_array_index(fns, i);
+			if (g_file_test(fn_tmp, G_FILE_TEST_EXISTS)) {
+				fn = fn_tmp;
+				break;
+			}
+		}
+		if (fn == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_READ,
+					    "The machine-id is not present");
+			return NULL;
+		}
+		if (!g_file_get_contents(fn, &buf, &bufsz, error))
+			return NULL;
+		if (bufsz == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_READ,
+					    "The machine-id is present but unset");
+			return NULL;
+		}
+	}
+	csum = g_checksum_new(G_CHECKSUM_SHA256);
+	if (salt != NULL)
+		g_checksum_update(csum, (const guchar *)salt, (gssize)strlen(salt));
+	g_checksum_update(csum, (const guchar *)buf, (gssize)bufsz);
+	return g_strdup(g_checksum_get_string(csum));
 }

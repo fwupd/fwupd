@@ -87,6 +87,8 @@ fu_firmware_flag_to_string(FuFirmwareFlags flag)
 		return "always-search";
 	if (flag == FU_FIRMWARE_FLAG_NO_AUTO_DETECTION)
 		return "no-auto-detection";
+	if (flag == FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE)
+		return "has-check-compatible";
 	return NULL;
 }
 
@@ -119,6 +121,8 @@ fu_firmware_flag_from_string(const gchar *flag)
 		return FU_FIRMWARE_FLAG_ALWAYS_SEARCH;
 	if (g_strcmp0(flag, "no-auto-detection") == 0)
 		return FU_FIRMWARE_FLAG_NO_AUTO_DETECTION;
+	if (g_strcmp0(flag, "has-check-compatible") == 0)
+		return FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE;
 	return FU_FIRMWARE_FLAG_NONE;
 }
 
@@ -578,6 +582,9 @@ fu_firmware_set_bytes(FuFirmware *self, GBytes *bytes)
 	if (priv->bytes != NULL)
 		g_bytes_unref(priv->bytes);
 	priv->bytes = g_bytes_ref(bytes);
+
+	/* the input stream is no longer valid */
+	g_clear_object(&priv->stream);
 }
 
 /**
@@ -845,8 +852,16 @@ fu_firmware_get_checksum(FuFirmware *self, GChecksumType csum_kind, GError **err
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* subclassed */
-	if (klass->get_checksum != NULL)
-		return klass->get_checksum(self, csum_kind, error);
+	if (klass->get_checksum != NULL) {
+		g_autoptr(GError) error_local = NULL;
+		g_autofree gchar *checksum = klass->get_checksum(self, csum_kind, &error_local);
+		if (checksum != NULL)
+			return g_steal_pointer(&checksum);
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return NULL;
+		}
+	}
 
 	/* internal data */
 	if (priv->bytes != NULL)
@@ -1054,6 +1069,10 @@ fu_firmware_parse_stream(FuFirmware *self,
 	/* any FuFirmware subclass that gets past this point might have allocated memory in
 	 * ->tokenize() or ->parse() and needs to be destroyed before parsing again */
 	fu_firmware_add_flag(self, FU_FIRMWARE_FLAG_DONE_PARSE);
+
+	/* this allows devices to skip reading the old firmware if the GType is unsuitable */
+	if (klass->check_compatible != NULL)
+		fu_firmware_add_flag(self, FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE);
 
 	/* optional */
 	if (klass->tokenize != NULL) {
@@ -1454,8 +1473,10 @@ fu_firmware_parse_file(FuFirmware *self, GFile *file, FwupdInstallFlags flags, G
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	stream = g_file_read(file, NULL, error);
-	if (stream == NULL)
+	if (stream == NULL) {
+		fu_error_convert(error);
 		return FALSE;
+	}
 	return fu_firmware_parse_stream(self, G_INPUT_STREAM(stream), 0, flags, error);
 }
 
@@ -2219,7 +2240,15 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 										    priv->streamsz,
 										    NULL);
 			if (buf != NULL) {
-				datastr = g_base64_encode(buf->data, buf->len);
+				if (flags & FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA) {
+					datastr = fu_memstrsafe(buf->data,
+								buf->len,
+								0x0,
+								MIN(buf->len, 0x100),
+								NULL);
+				} else {
+					datastr = g_base64_encode(buf->data, buf->len);
+				}
 			} else {
 				datastr = g_strdup("[??GInputStream??]");
 			}
@@ -2231,7 +2260,7 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 		g_autofree gchar *datastr = NULL;
 		g_autofree gchar *dataszstr = g_strdup_printf("0x%x", (guint)bufsz);
 		if (flags & FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA) {
-			datastr = fu_memstrsafe(buf, bufsz, 0x0, MIN(bufsz, 16), NULL);
+			datastr = fu_memstrsafe(buf, bufsz, 0x0, MIN(bufsz, 0x100), NULL);
 		} else {
 			datastr = g_base64_encode(buf, bufsz);
 		}

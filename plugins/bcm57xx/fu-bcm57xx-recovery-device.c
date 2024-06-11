@@ -540,6 +540,7 @@ fu_bcm57xx_recovery_device_dump_firmware(FuDevice *device, FuProgress *progress,
 static FuFirmware *
 fu_bcm57xx_recovery_device_prepare_firmware(FuDevice *device,
 					    GInputStream *stream,
+					    FuProgress *progress,
 					    FwupdInstallFlags flags,
 					    GError **error)
 {

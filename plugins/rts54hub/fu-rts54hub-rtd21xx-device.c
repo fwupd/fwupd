@@ -31,9 +31,9 @@ fu_rts54hub_rtd21xx_device_to_string(FuDevice *module, guint idt, GString *str)
 {
 	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE(module);
 	FuRts54hubRtd21xxDevicePrivate *priv = GET_PRIVATE(self);
-	fu_string_append_kx(str, idt, "TargetAddr", priv->target_addr);
-	fu_string_append_kx(str, idt, "I2cSpeed", priv->i2c_speed);
-	fu_string_append_kx(str, idt, "RegisterAddrLen", priv->register_addr_len);
+	fwupd_codec_string_append_hex(str, idt, "TargetAddr", priv->target_addr);
+	fwupd_codec_string_append_hex(str, idt, "I2cSpeed", priv->i2c_speed);
+	fwupd_codec_string_append_hex(str, idt, "RegisterAddrLen", priv->register_addr_len);
 }
 
 static FuRts54HubDevice *

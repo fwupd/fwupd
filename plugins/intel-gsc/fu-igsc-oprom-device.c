@@ -25,8 +25,8 @@ static void
 fu_igsc_oprom_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
-	fu_string_append_kx(str, idt, "PayloadType", self->payload_type);
-	fu_string_append_kx(str, idt, "PartitionVersion", self->partition_version);
+	fwupd_codec_string_append_hex(str, idt, "PayloadType", self->payload_type);
+	fwupd_codec_string_append_hex(str, idt, "PartitionVersion", self->partition_version);
 }
 
 static gboolean
@@ -104,6 +104,7 @@ fu_igsc_oprom_device_setup(FuDevice *device, GError **error)
 static FuFirmware *
 fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 				      GInputStream *stream,
+				      FuProgress *progress,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {

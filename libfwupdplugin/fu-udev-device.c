@@ -151,31 +151,21 @@ fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 #ifdef HAVE_GUDEV
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->vendor != 0x0)
-		fu_string_append_kx(str, idt, "Vendor", priv->vendor);
-	if (priv->model != 0x0)
-		fu_string_append_kx(str, idt, "Model", priv->model);
-	if (priv->subsystem_vendor != 0x0 || priv->subsystem_model != 0x0) {
-		fu_string_append_kx(str, idt, "SubsystemVendor", priv->subsystem_vendor);
-		fu_string_append_kx(str, idt, "SubsystemModel", priv->subsystem_model);
-	}
-	if (priv->class != 0x0)
-		fu_string_append_kx(str, idt, "Class", priv->class);
-	if (priv->revision != 0x0)
-		fu_string_append_kx(str, idt, "Revision", priv->revision);
-	if (priv->subsystem != NULL)
-		fu_string_append(str, idt, "Subsystem", priv->subsystem);
-	if (priv->driver != NULL)
-		fu_string_append(str, idt, "Driver", priv->driver);
-	if (priv->bind_id != NULL)
-		fu_string_append(str, idt, "BindId", priv->bind_id);
-	if (priv->device_file != NULL)
-		fu_string_append(str, idt, "DeviceFile", priv->device_file);
+	fwupd_codec_string_append_hex(str, idt, "Vendor", priv->vendor);
+	fwupd_codec_string_append_hex(str, idt, "Model", priv->model);
+	fwupd_codec_string_append_hex(str, idt, "SubsystemVendor", priv->subsystem_vendor);
+	fwupd_codec_string_append_hex(str, idt, "SubsystemModel", priv->subsystem_model);
+	fwupd_codec_string_append_hex(str, idt, "Class", priv->class);
+	fwupd_codec_string_append_hex(str, idt, "Revision", priv->revision);
+	fwupd_codec_string_append(str, idt, "Subsystem", priv->subsystem);
+	fwupd_codec_string_append(str, idt, "Driver", priv->driver);
+	fwupd_codec_string_append(str, idt, "BindId", priv->bind_id);
+	fwupd_codec_string_append(str, idt, "DeviceFile", priv->device_file);
 	if (priv->udev_device != NULL) {
-		fu_string_append(str,
-				 idt,
-				 "SysfsPath",
-				 g_udev_device_get_sysfs_path(priv->udev_device));
+		fwupd_codec_string_append(str,
+					  idt,
+					  "SysfsPath",
+					  g_udev_device_get_sysfs_path(priv->udev_device));
 	}
 #endif
 }
@@ -2412,7 +2402,6 @@ fu_udev_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	guint number_reads = 0;
 	g_autofree gchar *fn = NULL;
-	g_autofree gchar *rom_fn = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GFile) file = NULL;

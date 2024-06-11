@@ -366,17 +366,17 @@ static void
 fu_ccgx_dmc_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
-	fu_string_append(str,
-			 idt,
-			 "UpdateModel",
-			 fu_ccgx_dmc_update_model_to_string(self->update_model));
-	fu_string_append_kx(str, idt, "EpBulkOut", self->ep_bulk_out);
-	fu_string_append_kx(str, idt, "EpIntrIn", self->ep_intr_in);
-	fu_string_append_kx(str, idt, "TriggerCode", self->trigger_code);
-	fu_string_append(str,
-			 idt,
-			 "DeviceStatus",
-			 fu_ccgx_dmc_device_status_to_string(self->device_status));
+	fwupd_codec_string_append(str,
+				  idt,
+				  "UpdateModel",
+				  fu_ccgx_dmc_update_model_to_string(self->update_model));
+	fwupd_codec_string_append_hex(str, idt, "EpBulkOut", self->ep_bulk_out);
+	fwupd_codec_string_append_hex(str, idt, "EpIntrIn", self->ep_intr_in);
+	fwupd_codec_string_append_hex(str, idt, "TriggerCode", self->trigger_code);
+	fwupd_codec_string_append(str,
+				  idt,
+				  "DeviceStatus",
+				  fu_ccgx_dmc_device_status_to_string(self->device_status));
 }
 
 static gboolean
@@ -646,6 +646,7 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 static FuFirmware *
 fu_ccgx_dmc_device_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
+				    FuProgress *progress,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {

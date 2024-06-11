@@ -34,9 +34,9 @@ fu_pxi_wireless_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuPxiWirelessDevice *self = FU_PXI_WIRELESS_DEVICE(device);
 	fu_pxi_ota_fw_state_to_string(&self->fwstate, idt, str);
-	fu_string_append(str, idt, "ModelName", (gchar *)self->model.name);
-	fu_string_append_kx(str, idt, "ModelType", self->model.type);
-	fu_string_append_kx(str, idt, "ModelTarget", self->model.target);
+	fwupd_codec_string_append(str, idt, "ModelName", (gchar *)self->model.name);
+	fwupd_codec_string_append_hex(str, idt, "ModelType", self->model.type);
+	fwupd_codec_string_append_hex(str, idt, "ModelTarget", self->model.target);
 }
 
 static FuPxiReceiverDevice *
@@ -53,6 +53,7 @@ fu_pxi_wireless_device_get_parent(FuDevice *self, GError **error)
 static FuFirmware *
 fu_pxi_wireless_device_prepare_firmware(FuDevice *device,
 					GInputStream *stream,
+					FuProgress *progress,
 					FwupdInstallFlags flags,
 					GError **error)
 {

@@ -36,6 +36,7 @@ _fwupdmgr_cmd_list=(
 	'quit'
 	'reinstall'
 	'refresh'
+	'report-devices'
 	'report-history'
 	'report-export'
 	'security'
@@ -280,7 +281,7 @@ _show_reset_config()
 _show_remotes()
 {
 	local remotes
-	remotes="$(command fwupdmgr get-remotes | command awk '/Remote ID/ { print $4 }')"
+	remotes="$(command fwupdmgr get-remotes --json 2>/dev/null | jq '.Remotes | .[] | .Id')"
 	COMPREPLY+=( $(compgen -W "${remotes}" -- "$cur") )
 }
 

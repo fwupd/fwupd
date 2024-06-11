@@ -49,13 +49,14 @@ fu_pxi_receiver_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuPxiReceiverDevice *self = FU_PXI_RECEIVER_DEVICE(device);
 	fu_pxi_ota_fw_state_to_string(&self->fwstate, idt, str);
-	fu_string_append_kx(str, idt, "Vendor", self->vendor);
-	fu_string_append_kx(str, idt, "Product", self->product);
+	fwupd_codec_string_append_hex(str, idt, "Vendor", self->vendor);
+	fwupd_codec_string_append_hex(str, idt, "Product", self->product);
 }
 
 static FuFirmware *
 fu_pxi_receiver_device_prepare_firmware(FuDevice *device,
 					GInputStream *stream,
+					FuProgress *progress,
 					FwupdInstallFlags flags,
 					GError **error)
 {

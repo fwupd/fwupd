@@ -62,23 +62,24 @@ static void
 fu_ccgx_hpi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
-	fu_string_append_kx(str, idt, "ScbIndex", self->scb_index);
-	fu_string_append_kx(str, idt, "SiliconId", self->silicon_id);
-	fu_string_append_kx(str, idt, "FwAppType", self->fw_app_type);
-	fu_string_append_kx(str, idt, "HpiAddrsz", self->hpi_addrsz);
-	fu_string_append_kx(str, idt, "NumPorts", self->num_ports);
-	fu_string_append(str, idt, "FuCcgxFwMode", fu_ccgx_fw_mode_to_string(self->fw_mode));
-	fu_string_append(str,
-			 idt,
-			 "FwImageType",
-			 fu_ccgx_image_type_to_string(self->fw_image_type));
-	fu_string_append_kx(str, idt, "EpBulkIn", self->ep_bulk_in);
-	fu_string_append_kx(str, idt, "EpBulkOut", self->ep_bulk_out);
-	fu_string_append_kx(str, idt, "EpIntrIn", self->ep_intr_in);
-	if (self->flash_row_size > 0)
-		fu_string_append_kx(str, idt, "CcgxFlashRowSize", self->flash_row_size);
-	if (self->flash_size > 0)
-		fu_string_append_kx(str, idt, "CcgxFlashSize", self->flash_size);
+	fwupd_codec_string_append_hex(str, idt, "ScbIndex", self->scb_index);
+	fwupd_codec_string_append_hex(str, idt, "SiliconId", self->silicon_id);
+	fwupd_codec_string_append_hex(str, idt, "FwAppType", self->fw_app_type);
+	fwupd_codec_string_append_hex(str, idt, "HpiAddrsz", self->hpi_addrsz);
+	fwupd_codec_string_append_hex(str, idt, "NumPorts", self->num_ports);
+	fwupd_codec_string_append(str,
+				  idt,
+				  "FuCcgxFwMode",
+				  fu_ccgx_fw_mode_to_string(self->fw_mode));
+	fwupd_codec_string_append(str,
+				  idt,
+				  "FwImageType",
+				  fu_ccgx_image_type_to_string(self->fw_image_type));
+	fwupd_codec_string_append_hex(str, idt, "EpBulkIn", self->ep_bulk_in);
+	fwupd_codec_string_append_hex(str, idt, "EpBulkOut", self->ep_bulk_out);
+	fwupd_codec_string_append_hex(str, idt, "EpIntrIn", self->ep_intr_in);
+	fwupd_codec_string_append_hex(str, idt, "CcgxFlashRowSize", self->flash_row_size);
+	fwupd_codec_string_append_hex(str, idt, "CcgxFlashSize", self->flash_size);
 }
 
 typedef struct {
@@ -1098,6 +1099,7 @@ fu_ccgx_hpi_device_attach(FuDevice *device, FuProgress *progress, GError **error
 static FuFirmware *
 fu_ccgx_hpi_device_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
+				    FuProgress *progress,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {

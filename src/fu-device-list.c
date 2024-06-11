@@ -378,7 +378,8 @@ fu_device_list_get_by_guids_removed(FuDeviceList *self, GPtrArray *guids)
 			continue;
 		for (guint j = 0; j < guids->len; j++) {
 			const gchar *guid = g_ptr_array_index(guids, j);
-			if (fu_device_has_guid(item->device, guid))
+			if (fu_device_has_guid(item->device, guid) ||
+			    fu_device_has_counterpart_guid(item->device, guid))
 				return item;
 		}
 	}
@@ -390,7 +391,8 @@ fu_device_list_get_by_guids_removed(FuDeviceList *self, GPtrArray *guids)
 			continue;
 		for (guint j = 0; j < guids->len; j++) {
 			const gchar *guid = g_ptr_array_index(guids, j);
-			if (fu_device_has_guid(item->device_old, guid))
+			if (fu_device_has_guid(item->device_old, guid) ||
+			    fu_device_has_counterpart_guid(item->device_old, guid))
 				return item;
 		}
 	}
@@ -536,7 +538,8 @@ fu_device_list_add_missing_guids(FuDevice *device_new, FuDevice *device_old)
 	GPtrArray *guids_old = fu_device_get_guids(device_old);
 	for (guint i = 0; i < guids_old->len; i++) {
 		const gchar *guid_tmp = g_ptr_array_index(guids_old, i);
-		if (!fu_device_has_guid(device_new, guid_tmp)) {
+		if (!fu_device_has_guid(device_new, guid_tmp) &&
+		    !fu_device_has_counterpart_guid(device_new, guid_tmp)) {
 			if (fu_device_has_flag(device_new,
 					       FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS)) {
 				g_info("adding GUID %s to device", guid_tmp);
@@ -798,6 +801,10 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 
 	/* verify a compatible device does not already exist */
 	item = fu_device_list_get_by_guids_removed(self, fu_device_get_guids(device));
+	if (item == NULL) {
+		item = fu_device_list_get_by_guids_removed(self,
+							   fu_device_get_counterpart_guids(device));
+	}
 	if (item != NULL) {
 		if (fu_device_has_internal_flag(device,
 						FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID)) {

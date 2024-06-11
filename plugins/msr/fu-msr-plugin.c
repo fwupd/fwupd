@@ -105,54 +105,54 @@ fu_msr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	if (self->ia32_debug_supported) {
-		fu_string_append_kb(str,
-				    idt,
-				    "Ia32DebugInterfaceEnabled",
-				    self->ia32_debug.fields.enabled);
-		fu_string_append_kb(str,
-				    idt,
-				    "Ia32DebugInterfaceLocked",
-				    self->ia32_debug.fields.locked);
-		fu_string_append_kb(str,
-				    idt,
-				    "Ia32DebugInterfaceDebugOccurred",
-				    self->ia32_debug.fields.debug_occurred);
+		fwupd_codec_string_append_bool(str,
+					       idt,
+					       "Ia32DebugInterfaceEnabled",
+					       self->ia32_debug.fields.enabled);
+		fwupd_codec_string_append_bool(str,
+					       idt,
+					       "Ia32DebugInterfaceLocked",
+					       self->ia32_debug.fields.locked);
+		fwupd_codec_string_append_bool(str,
+					       idt,
+					       "Ia32DebugInterfaceDebugOccurred",
+					       self->ia32_debug.fields.debug_occurred);
 	}
 	if (self->ia32_tme_supported) {
-		fu_string_append_kb(str,
-				    idt,
-				    "Ia32TmeActivateLockRo",
-				    self->ia32_tme_activation.fields.lock_ro);
-		fu_string_append_kb(str,
-				    idt,
-				    "Ia32TmeActivateEnable",
-				    self->ia32_tme_activation.fields.enable);
-		fu_string_append_kb(str,
-				    idt,
-				    "Ia32TmeActivateBypassEnable",
-				    self->ia32_tme_activation.fields.bypass_enable);
+		fwupd_codec_string_append_bool(str,
+					       idt,
+					       "Ia32TmeActivateLockRo",
+					       self->ia32_tme_activation.fields.lock_ro);
+		fwupd_codec_string_append_bool(str,
+					       idt,
+					       "Ia32TmeActivateEnable",
+					       self->ia32_tme_activation.fields.enable);
+		fwupd_codec_string_append_bool(str,
+					       idt,
+					       "Ia32TmeActivateBypassEnable",
+					       self->ia32_tme_activation.fields.bypass_enable);
 	}
 	if (self->ia32_mcu_opt_ctrl_supported) {
-		fu_string_append_kb(str,
-				    idt,
-				    "GdsMitgDis",
-				    self->ia32_mcu_opt_ctrl.fields.gds_mitg_dis > 0);
-		fu_string_append_kb(str,
-				    idt,
-				    "GdsMitgLock",
-				    self->ia32_mcu_opt_ctrl.fields.gds_mitg_lock > 0);
+		fwupd_codec_string_append_bool(str,
+					       idt,
+					       "GdsMitgDis",
+					       self->ia32_mcu_opt_ctrl.fields.gds_mitg_dis > 0);
+		fwupd_codec_string_append_bool(str,
+					       idt,
+					       "GdsMitgLock",
+					       self->ia32_mcu_opt_ctrl.fields.gds_mitg_lock > 0);
 	}
 	if (self->amd64_syscfg_supported) {
-		fu_string_append_kb(str,
-				    idt,
-				    "Amd64SyscfgSmeIsEnabled",
-				    self->amd64_syscfg.fields.sme_is_enabled);
+		fwupd_codec_string_append_bool(str,
+					       idt,
+					       "Amd64SyscfgSmeIsEnabled",
+					       self->amd64_syscfg.fields.sme_is_enabled);
 	}
 	if (self->amd64_sev_supported) {
-		fu_string_append_kb(str,
-				    idt,
-				    "Amd64SevIsEnabled",
-				    self->amd64_sev.fields.sev_is_enabled);
+		fwupd_codec_string_append_bool(str,
+					       idt,
+					       "Amd64SevIsEnabled",
+					       self->amd64_sev.fields.sev_is_enabled);
 	}
 }
 

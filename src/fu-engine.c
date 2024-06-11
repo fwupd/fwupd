@@ -31,11 +31,9 @@
 
 #include <fwupdplugin.h>
 
-#include "fwupd-bios-setting-private.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
-#include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-resources.h"
 #include "fwupd-security-attr-private.h"
@@ -130,7 +128,7 @@ struct _FuEngine {
 	GHashTable *approved_firmware;	      /* (nullable) */
 	GHashTable *blocked_firmware;	      /* (nullable) */
 	GHashTable *emulation_phases;	      /* (element-type int utf8) */
-	GHashTable *emulation_backend_ids;    /* (element-type str int) */
+	GHashTable *emulation_ids;	      /* (element-type str int) */
 	GHashTable *device_changed_allowlist; /* (element-type str int) */
 	gchar *host_machine_id;
 	JcatContext *jcat_context;
@@ -591,7 +589,8 @@ fu_engine_add_trusted_report(FuEngine *self, FuRelease *release)
 		for (guint j = 0; j < trusted_reports->len; j++) {
 			FwupdReport *trusted_report = g_ptr_array_index(trusted_reports, j);
 			if (fu_engine_compare_report_trusted(trusted_report, report)) {
-				g_autofree gchar *str = fwupd_report_to_string(trusted_report);
+				g_autofree gchar *str =
+				    fwupd_codec_to_string(FWUPD_CODEC(trusted_report));
 				g_debug("add trusted-report to %s:%s as trusted: %s",
 					fu_release_get_appstream_id(release),
 					fu_release_get_version(release),
@@ -626,6 +625,10 @@ fu_engine_load_release(FuEngine *self,
 	/* requirements we can check without the daemon */
 	if (!fu_release_load(release, cabinet, component, rel, install_flags, error))
 		return FALSE;
+
+	/* relax these */
+	if (fu_engine_config_get_ignore_requirements(self->config))
+		install_flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
 
 	/* additional requirements */
 	if (!fu_engine_requirements_check(self, release, install_flags, error))
@@ -845,7 +848,6 @@ fu_engine_modify_remote(FuEngine *self,
 	    "Enabled",
 	    "MetadataURI",
 	    "ReportURI",
-	    "SecurityReportURI",
 	    "Username",
 	    "Password",
 	    NULL,
@@ -950,7 +952,7 @@ fu_engine_modify_bios_settings(FuEngine *self,
 static void
 fu_engine_check_context_flag_save_events(FuEngine *self)
 {
-	if (g_hash_table_size(self->emulation_backend_ids) > 0 &&
+	if (g_hash_table_size(self->emulation_ids) > 0 &&
 	    fu_engine_config_get_allow_emulation(self->config)) {
 		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
 	} else {
@@ -988,7 +990,7 @@ fu_engine_remove_device_flag(FuEngine *self,
 				    fu_device_get_id(proxy));
 			return FALSE;
 		}
-		g_hash_table_remove(self->emulation_backend_ids, fu_device_get_backend_id(device));
+		g_hash_table_remove(self->emulation_ids, fu_device_get_id(device));
 		return TRUE;
 	}
 	g_set_error_literal(error,
@@ -1041,8 +1043,8 @@ fu_engine_add_device_flag(FuEngine *self,
 				    fu_device_get_id(proxy));
 			return FALSE;
 		}
-		g_hash_table_insert(self->emulation_backend_ids,
-				    g_strdup(fu_device_get_backend_id(device)),
+		g_hash_table_insert(self->emulation_ids,
+				    g_strdup(fu_device_get_id(device)),
 				    GUINT_TO_POINTER(1));
 		fu_engine_emit_device_request_replug_and_install(self, device);
 		return TRUE;
@@ -1905,7 +1907,8 @@ fu_engine_publish_release(FuEngine *self, FuRelease *release, GError **error)
 		g_autofree gchar *checksum = NULL;
 		g_autoptr(GError) error_passim = NULL;
 		g_autoptr(PassimItem) passim_item = passim_item_new();
-		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT) ||
+		    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
 			passim_item_add_flag(passim_item, PASSIM_ITEM_FLAG_NEXT_REBOOT);
 		passim_item_set_max_age(passim_item, 30 * 24 * 60 * 60);
 		passim_item_set_share_limit(passim_item, 50);
@@ -1944,6 +1947,7 @@ fu_engine_install_release_version_check(FuEngine *self,
 	if (version_rel != NULL && fu_version_compare(version_old, version_rel, fmt) != 0 &&
 	    fu_version_compare(version_old, fu_device_get_version(device), fmt) == 0 &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED);
 		g_set_error(error,
@@ -5225,13 +5229,13 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 		/* invalid */
 		locations = fwupd_release_get_locations(FWUPD_RELEASE(release));
 		if (locations->len == 0) {
-			g_autofree gchar *str = fwupd_release_to_string(FWUPD_RELEASE(release));
+			g_autofree gchar *str = fwupd_codec_to_string(FWUPD_CODEC(release));
 			g_debug("no locations for %s", str);
 			continue;
 		}
 		checksums = fu_release_get_checksums(release);
 		if (checksums->len == 0) {
-			g_autofree gchar *str = fwupd_release_to_string(FWUPD_RELEASE(release));
+			g_autofree gchar *str = fwupd_codec_to_string(FWUPD_CODEC(release));
 			g_debug("no locations for %s", str);
 			continue;
 		}
@@ -6304,9 +6308,9 @@ fu_engine_ensure_device_emulation_tag(FuEngine *self, FuDevice *device)
 		return;
 
 	/* we matched this physical ID */
-	if (fu_device_get_backend_id(device) == NULL)
+	if (fu_device_get_id(device) == NULL)
 		return;
-	if (!g_hash_table_contains(self->emulation_backend_ids, fu_device_get_backend_id(device)))
+	if (!g_hash_table_contains(self->emulation_ids, fu_device_get_id(device)))
 		return;
 
 	/* success */
@@ -6731,7 +6735,9 @@ fu_engine_record_security_attrs(FuEngine *self, GError **error)
 	g_autofree gchar *json = NULL;
 
 	/* convert attrs to json string */
-	json = fu_security_attrs_to_json_string(self->host_security_attrs, error);
+	json = fwupd_codec_to_json_string(FWUPD_CODEC(self->host_security_attrs),
+					  FWUPD_CODEC_FLAG_NONE,
+					  error);
 	if (json == NULL) {
 		g_prefix_error(error, "cannot convert current attrs to string: ");
 		return FALSE;
@@ -7025,7 +7031,7 @@ fu_engine_security_attrs_from_json(FuEngine *self, JsonNode *json_node, GError *
 	obj = json_node_get_object(json_node);
 	if (!json_object_has_member(obj, "SecurityAttributes"))
 		return TRUE;
-	if (!fu_security_attrs_from_json(self->host_security_attrs, json_node, error))
+	if (!fwupd_codec_from_json(FWUPD_CODEC(self->host_security_attrs), json_node, error))
 		return FALSE;
 
 	/* success */
@@ -7057,7 +7063,7 @@ fu_engine_devices_from_json(FuEngine *self, JsonNode *json_node, GError **error)
 	for (guint i = 0; i < json_array_get_length(array); i++) {
 		JsonNode *node_tmp = json_array_get_element(array, i);
 		g_autoptr(FuDevice) device = fu_device_new(self->ctx);
-		if (!fwupd_device_from_json(FWUPD_DEVICE(device), node_tmp, error))
+		if (!fwupd_codec_from_json(FWUPD_CODEC(device), node_tmp, error))
 			return FALSE;
 		fu_device_set_plugin(device, "dummy");
 		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_IS_EMULATED);
@@ -7104,7 +7110,7 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 		return FALSE;
 	if (!fu_engine_security_attrs_from_json(self, json_parser_get_root(parser), error))
 		return FALSE;
-	if (!fu_bios_settings_from_json(bios_settings, json_parser_get_root(parser), error))
+	if (!fwupd_codec_from_json(FWUPD_CODEC(bios_settings), json_parser_get_root(parser), error))
 		return FALSE;
 
 #ifdef HAVE_HSI
@@ -7444,12 +7450,15 @@ fu_engine_apply_default_bios_settings_policy(FuEngine *self, GError **error)
 	if (dir == NULL)
 		return FALSE;
 	while ((tmp = g_dir_read_name(dir)) != NULL) {
+		g_autofree gchar *data = NULL;
 		g_autofree gchar *fn = NULL;
 		if (!g_str_has_suffix(tmp, ".json"))
 			continue;
 		fn = g_build_filename(dirname, tmp, NULL);
 		g_info("loading default BIOS settings policy from %s", fn);
-		if (!fu_bios_settings_from_json_file(new_bios_settings, fn, error))
+		if (!g_file_get_contents(fn, &data, NULL, error))
+			return FALSE;
+		if (!fwupd_codec_from_json_string(FWUPD_CODEC(new_bios_settings), data, error))
 			return FALSE;
 	}
 	hashtable = fu_bios_settings_to_hash_kv(new_bios_settings);
@@ -7646,7 +7655,17 @@ static void
 fu_engine_backend_device_added_cb(FuBackend *backend, FuDevice *device, FuEngine *self)
 {
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GPtrArray) possible_plugins = NULL;
+
 	fu_engine_backend_device_added(self, device, progress);
+
+	/* there's no point keeping this in the cache */
+	possible_plugins = fu_device_get_possible_plugins(device);
+	if (possible_plugins->len == 0) {
+		g_debug("removing %s from backend cache as no possible plugin",
+			fu_device_get_backend_id(device));
+		fu_backend_device_removed(backend, device);
+	}
 }
 
 static void
@@ -8033,8 +8052,18 @@ fu_engine_backends_coldplug_backend_add_devices(FuEngine *self,
 	fu_progress_set_steps(progress, devices->len);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
+		g_autoptr(GPtrArray) possible_plugins = NULL;
+
 		fu_engine_backend_device_added(self, device, fu_progress_get_child(progress));
 		fu_progress_step_done(progress);
+
+		/* there's no point keeping this in the cache */
+		possible_plugins = fu_device_get_possible_plugins(device);
+		if (possible_plugins->len == 0) {
+			g_debug("removing %s from backend cache as no possible plugin",
+				fu_device_get_backend_id(device));
+			fu_backend_device_removed(backend, device);
+		}
 	}
 
 	/* success */
@@ -8191,7 +8220,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 						"MachineGuid",
 						&error_local);
 #else
-	self->host_machine_id = fwupd_build_machine_id("fwupd", &error_local);
+	self->host_machine_id = fu_engine_build_machine_id("fwupd", &error_local);
 #endif
 	if (self->host_machine_id == NULL)
 		g_info("failed to build machine-id: %s", error_local->message);
@@ -8880,7 +8909,7 @@ fu_engine_init(FuEngine *self)
 	self->local_monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->acquiesce_loop = g_main_loop_new(NULL, FALSE);
 	self->emulation_phases = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
-	self->emulation_backend_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	self->emulation_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	self->device_changed_allowlist =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 #ifdef HAVE_PASSIM
@@ -8948,7 +8977,7 @@ fu_engine_finalize(GObject *obj)
 	g_ptr_array_unref(self->backends);
 	g_ptr_array_unref(self->local_monitors);
 	g_hash_table_unref(self->emulation_phases);
-	g_hash_table_unref(self->emulation_backend_ids);
+	g_hash_table_unref(self->emulation_ids);
 	g_hash_table_unref(self->device_changed_allowlist);
 	g_object_unref(self->plugin_list);
 

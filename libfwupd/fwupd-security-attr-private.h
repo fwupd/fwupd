@@ -381,13 +381,6 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_CET_ACTIVE "org.fwupd.hsi.Cet.Active"
 
-GVariant *
-fwupd_security_attr_to_variant(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);
-void
-fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder) G_GNUC_NON_NULL(1, 2);
-gboolean
-fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GError **error)
-    G_GNUC_NON_NULL(1, 2);
 FwupdSecurityAttr *
 fwupd_security_attr_copy(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);
 

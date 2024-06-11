@@ -26,15 +26,18 @@ static void
 fu_vli_usbhub_pd_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE(device);
-	fu_string_append(str, idt, "DeviceKind", fu_vli_device_kind_to_string(self->device_kind));
-	fu_string_append_kx(str,
-			    idt,
-			    "FwOffset",
-			    fu_vli_common_device_kind_get_offset(self->device_kind));
-	fu_string_append_kx(str,
-			    idt,
-			    "FwSize",
-			    fu_vli_common_device_kind_get_size(self->device_kind));
+	fwupd_codec_string_append(str,
+				  idt,
+				  "DeviceKind",
+				  fu_vli_device_kind_to_string(self->device_kind));
+	fwupd_codec_string_append_hex(str,
+				      idt,
+				      "FwOffset",
+				      fu_vli_common_device_kind_get_offset(self->device_kind));
+	fwupd_codec_string_append_hex(str,
+				      idt,
+				      "FwSize",
+				      fu_vli_common_device_kind_get_size(self->device_kind));
 }
 
 static gboolean
@@ -146,6 +149,7 @@ fu_vli_usbhub_pd_device_reload(FuDevice *device, GError **error)
 static FuFirmware *
 fu_vli_usbhub_pd_device_prepare_firmware(FuDevice *device,
 					 GInputStream *stream,
+					 FuProgress *progress,
 					 FwupdInstallFlags flags,
 					 GError **error)
 {

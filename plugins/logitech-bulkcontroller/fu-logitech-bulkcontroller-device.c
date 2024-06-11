@@ -51,22 +51,23 @@ static void
 fu_logitech_bulkcontroller_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
-	fu_string_append_kx(str, idt, "BufferSize", self->transfer_bufsz);
-	fu_string_append_kx(str, idt, "SyncIface", self->sync_iface);
-	fu_string_append_kx(str, idt, "UpdateIface", self->update_iface);
-	fu_string_append(str,
-			 idt,
-			 "State",
-			 fu_logitech_bulkcontroller_device_state_to_string(self->status));
-	fu_string_append(str,
-			 idt,
-			 "UpdateState",
-			 fu_logitech_bulkcontroller_update_state_to_string(self->update_status));
+	fwupd_codec_string_append_hex(str, idt, "BufferSize", self->transfer_bufsz);
+	fwupd_codec_string_append_hex(str, idt, "SyncIface", self->sync_iface);
+	fwupd_codec_string_append_hex(str, idt, "UpdateIface", self->update_iface);
+	fwupd_codec_string_append(str,
+				  idt,
+				  "State",
+				  fu_logitech_bulkcontroller_device_state_to_string(self->status));
+	fwupd_codec_string_append(
+	    str,
+	    idt,
+	    "UpdateState",
+	    fu_logitech_bulkcontroller_update_state_to_string(self->update_status));
 	if (self->device_info_response_json->len > 0) {
-		fu_string_append(str,
-				 idt,
-				 "DeviceInfoResponse",
-				 self->device_info_response_json->str);
+		fwupd_codec_string_append(str,
+					  idt,
+					  "DeviceInfoResponse",
+					  self->device_info_response_json->str);
 	}
 }
 

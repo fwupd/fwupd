@@ -110,6 +110,10 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "Title", NULL);
 		fwupd_remote_set_title(self, tmp);
 	}
+	if (g_key_file_has_key(kf, group, "PrivacyURI", NULL)) {
+		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "PrivacyURI", NULL);
+		fwupd_remote_set_privacy_uri(self, tmp);
+	}
 	if (g_key_file_has_key(kf, group, "RefreshInterval", NULL)) {
 		fwupd_remote_set_refresh_interval(
 		    self,
@@ -118,10 +122,6 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
 	if (g_key_file_has_key(kf, group, "ReportURI", NULL)) {
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "ReportURI", NULL);
 		fwupd_remote_set_report_uri(self, tmp);
-	}
-	if (g_key_file_has_key(kf, group, "SecurityReportURI", NULL)) {
-		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "SecurityReportURI", NULL);
-		fwupd_remote_set_security_report_uri(self, tmp);
 	}
 	if (g_key_file_has_key(kf, group, "Username", NULL)) {
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "Username", NULL);
@@ -206,6 +206,8 @@ fwupd_remote_save_to_filename(FwupdRemote *self,
 				      fwupd_remote_get_metadata_uri(self));
 	if (fwupd_remote_get_title(self) != NULL)
 		g_key_file_set_string(kf, group, "Title", fwupd_remote_get_title(self));
+	if (fwupd_remote_get_privacy_uri(self) != NULL)
+		g_key_file_set_string(kf, group, "PrivacyURI", fwupd_remote_get_privacy_uri(self));
 	if (fwupd_remote_get_report_uri(self) != NULL)
 		g_key_file_set_string(kf, group, "ReportURI", fwupd_remote_get_report_uri(self));
 	if (fwupd_remote_get_refresh_interval(self) != 0)
@@ -213,11 +215,6 @@ fwupd_remote_save_to_filename(FwupdRemote *self,
 				      group,
 				      "RefreshInterval",
 				      fwupd_remote_get_refresh_interval(self));
-	if (fwupd_remote_get_security_report_uri(self) != NULL)
-		g_key_file_set_string(kf,
-				      group,
-				      "SecurityReportURI",
-				      fwupd_remote_get_security_report_uri(self));
 	if (fwupd_remote_get_username(self) != NULL)
 		g_key_file_set_string(kf, group, "Username", fwupd_remote_get_username(self));
 	if (fwupd_remote_get_password(self) != NULL)

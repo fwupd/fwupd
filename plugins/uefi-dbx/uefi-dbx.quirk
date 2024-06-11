@@ -115,3 +115,8 @@ Flags = no-dbx-updates
 # BaseboardProduct=8620
 [3f4f41b0-f419-5715-879e-73500cdb3c5d]
 Flags = no-dbx-updates
+
+# Manufacturer=LENOVO
+# Family=ideacentre 300-20ISH
+[fbc17b82-0f29-561d-be80-578285ec4477]
+Flags = no-dbx-updates

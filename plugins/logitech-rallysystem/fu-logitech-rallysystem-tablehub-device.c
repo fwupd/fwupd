@@ -29,8 +29,8 @@ static void
 fu_logitech_rallysystem_tablehub_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuLogitechRallysystemTablehubDevice *self = FU_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE(device);
-	fu_string_append_kx(str, idt, "EpBulkIn", self->bulk_ep[EP_IN]);
-	fu_string_append_kx(str, idt, "EpBulkOut", self->bulk_ep[EP_OUT]);
+	fwupd_codec_string_append_hex(str, idt, "EpBulkIn", self->bulk_ep[EP_IN]);
+	fwupd_codec_string_append_hex(str, idt, "EpBulkOut", self->bulk_ep[EP_OUT]);
 }
 
 static gboolean

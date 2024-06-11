@@ -8,6 +8,9 @@
 
 #include "config.h"
 
+#include "fwupd-codec.h"
+#include "fwupd-common-private.h"
+
 #include "fu-input-stream.h"
 #include "fu-partial-input-stream-private.h"
 
@@ -37,12 +40,30 @@ struct _FuPartialInputStream {
 
 static void
 fu_partial_input_stream_seekable_iface_init(GSeekableIface *iface);
+static void
+fu_partial_input_stream_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(FuPartialInputStream,
 			fu_partial_input_stream,
 			G_TYPE_INPUT_STREAM,
 			G_IMPLEMENT_INTERFACE(G_TYPE_SEEKABLE,
-					      fu_partial_input_stream_seekable_iface_init))
+					      fu_partial_input_stream_seekable_iface_init)
+			    G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
+						  fu_partial_input_stream_codec_iface_init))
+
+static void
+fu_partial_input_stream_add_string(FwupdCodec *codec, guint idt, GString *str)
+{
+	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(codec);
+	fwupd_codec_string_append_hex(str, idt, "Offset", self->offset);
+	fwupd_codec_string_append_hex(str, idt, "Size", self->size);
+}
+
+static void
+fu_partial_input_stream_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_string = fu_partial_input_stream_add_string;
+}
 
 static goffset
 fu_partial_input_stream_tell(GSeekable *seekable)

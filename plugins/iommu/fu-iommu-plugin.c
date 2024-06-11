@@ -19,7 +19,7 @@ static void
 fu_iommu_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuIommuPlugin *self = FU_IOMMU_PLUGIN(plugin);
-	fu_string_append_kb(str, idt, "HasIommu", self->has_iommu);
+	fwupd_codec_string_append_bool(str, idt, "HasIommu", self->has_iommu);
 }
 
 static gboolean

@@ -9,7 +9,7 @@ EXTRA_ARGS="-Dsystemd=disabled -Dlaunchd=disabled"
 if [ -d /opt/homebrew/opt/libarchive/lib/pkgconfig ]; then
         EXTRA_ARGS="${EXTRA_ARGS} -Dpkg_config_path=/opt/homebrew/opt/libarchive/lib/pkgconfig"
 fi
-if [ ! -d ${BUILD} ]; then
+if [ ! -d ${BUILD} ] || ! [ -e ${BUILD}/build.ninja ]; then
         meson setup ${BUILD} --prefix=${DIST} -Dudevdir=${DIST} ${EXTRA_ARGS} $@
 fi
 ninja -C ${BUILD} install

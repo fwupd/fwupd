@@ -37,22 +37,22 @@ static void
 fu_cpu_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCpuDevice *self = FU_CPU_DEVICE(device);
-	fu_string_append_kb(str,
-			    idt,
-			    "HasSHSTK",
-			    fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_SHSTK));
-	fu_string_append_kb(str,
-			    idt,
-			    "HasIBT",
-			    fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_IBT));
-	fu_string_append_kb(str,
-			    idt,
-			    "HasTME",
-			    fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_TME));
-	fu_string_append_kb(str,
-			    idt,
-			    "HasSMAP",
-			    fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_SMAP));
+	fwupd_codec_string_append_bool(str,
+				       idt,
+				       "HasSHSTK",
+				       fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_SHSTK));
+	fwupd_codec_string_append_bool(str,
+				       idt,
+				       "HasIBT",
+				       fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_IBT));
+	fwupd_codec_string_append_bool(str,
+				       idt,
+				       "HasTME",
+				       fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_TME));
+	fwupd_codec_string_append_bool(str,
+				       idt,
+				       "HasSMAP",
+				       fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_SMAP));
 }
 
 static const gchar *

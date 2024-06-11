@@ -1004,6 +1004,7 @@ fu_steelseries_sonic_parse_firmware(FuFirmware *firmware, FwupdInstallFlags flag
 static FuFirmware *
 fu_steelseries_sonic_prepare_firmware(FuDevice *device,
 				      GInputStream *stream,
+				      FuProgress *progress,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {

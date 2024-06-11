@@ -9,6 +9,7 @@
 #include <gio/gio.h>
 #include <string.h>
 
+#include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
@@ -46,7 +47,17 @@ typedef struct {
 	gchar *kernel_target_value;
 } FwupdSecurityAttrPrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(FwupdSecurityAttr, fwupd_security_attr, G_TYPE_OBJECT)
+static void
+fwupd_security_attr_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FwupdSecurityAttr,
+		       fwupd_security_attr,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_ADD_PRIVATE(FwupdSecurityAttr)
+			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
+						 fwupd_security_attr_codec_iface_init));
+
 #define GET_PRIVATE(o) (fwupd_security_attr_get_instance_private(o))
 
 /**
@@ -1140,63 +1151,50 @@ fwupd_security_attr_get_result_success(FwupdSecurityAttr *self)
 	return priv->result_success;
 }
 
-/**
- * fwupd_security_attr_to_variant:
- * @self: a #FwupdSecurityAttr
- *
- * Serialize the security attribute.
- *
- * Returns: the serialized data, or %NULL for error
- *
- * Since: 1.5.0
- **/
-GVariant *
-fwupd_security_attr_to_variant(FwupdSecurityAttr *self)
+static void
+fwupd_security_attr_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
+	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
-	GVariantBuilder builder;
 
-	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
-
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
 	if (priv->appstream_id != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_APPSTREAM_ID,
 				      g_variant_new_string(priv->appstream_id));
 	}
 	if (priv->created > 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_CREATED,
 				      g_variant_new_uint64(priv->created));
 	}
 	if (priv->name != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_NAME,
 				      g_variant_new_string(priv->name));
 	}
 	if (priv->title != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_SUMMARY,
 				      g_variant_new_string(priv->title));
 	}
 	if (priv->description != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_DESCRIPTION,
 				      g_variant_new_string(priv->description));
 	}
 	if (priv->plugin != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_PLUGIN,
 				      g_variant_new_string(priv->plugin));
 	}
 	if (priv->url != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_URI,
 				      g_variant_new_string(priv->url));
@@ -1205,7 +1203,7 @@ fwupd_security_attr_to_variant(FwupdSecurityAttr *self)
 		g_autofree const gchar **strv = g_new0(const gchar *, priv->obsoletes->len + 1);
 		for (guint i = 0; i < priv->obsoletes->len; i++)
 			strv[i] = (const gchar *)g_ptr_array_index(priv->obsoletes, i);
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_CATEGORIES,
 				      g_variant_new_strv(strv, -1));
@@ -1214,78 +1212,77 @@ fwupd_security_attr_to_variant(FwupdSecurityAttr *self)
 		g_autofree const gchar **strv = g_new0(const gchar *, priv->guids->len + 1);
 		for (guint i = 0; i < priv->guids->len; i++)
 			strv[i] = (const gchar *)g_ptr_array_index(priv->guids, i);
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_GUID,
 				      g_variant_new_strv(strv, -1));
 	}
 	if (priv->flags != 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FLAGS,
 				      g_variant_new_uint64(priv->flags));
 	}
 	if (priv->level > 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_HSI_LEVEL,
 				      g_variant_new_uint32(priv->level));
 	}
 	if (priv->result != FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_HSI_RESULT,
 				      g_variant_new_uint32(priv->result));
 	}
 	if (priv->result_fallback != FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
 				      g_variant_new_uint32(priv->result_fallback));
 	}
 	if (priv->result_success != FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS,
 				      g_variant_new_uint32(priv->result_success));
 	}
 	if (priv->metadata != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_METADATA,
 				      fwupd_hash_kv_to_variant(priv->metadata));
 	}
 	if (priv->bios_setting_id != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_ID,
 				      g_variant_new_string(priv->bios_setting_id));
 	}
 	if (priv->bios_setting_target_value != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE,
 				      g_variant_new_string(priv->bios_setting_target_value));
 	}
 	if (priv->bios_setting_current_value != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
 				      g_variant_new_string(priv->bios_setting_current_value));
 	}
 	if (priv->kernel_current_value != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE,
 				      g_variant_new_string(priv->kernel_current_value));
 	}
 	if (priv->kernel_target_value != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE,
 				      g_variant_new_string(priv->kernel_target_value));
 	}
-	return g_variant_new("a{sv}", &builder);
 }
 
 /**
@@ -1430,7 +1427,10 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 }
 
 static void
-fwupd_pad_kv_tfl(GString *str, const gchar *key, FwupdSecurityAttrFlags security_attr_flags)
+fwupd_security_attr_string_append_tfl(GString *str,
+				      guint idt,
+				      const gchar *key,
+				      FwupdSecurityAttrFlags security_attr_flags)
 {
 	g_autoptr(GString) tmp = g_string_new("");
 	for (guint i = 0; i < 64; i++) {
@@ -1445,29 +1445,14 @@ fwupd_pad_kv_tfl(GString *str, const gchar *key, FwupdSecurityAttrFlags security
 	} else {
 		g_string_truncate(tmp, tmp->len - 1);
 	}
-	fwupd_pad_kv_str(str, key, tmp->str);
+	fwupd_codec_string_append(str, idt, key, tmp->str);
 }
 
-/**
- * fwupd_security_attr_from_json:
- * @self: a #FwupdSecurityAttr
- * @json_node: (not nullable): a JSON node
- * @error: (nullable): optional return location for an error
- *
- * Loads a fwupd security attribute from a JSON node.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.7.1
- **/
-gboolean
-fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GError **error)
+static gboolean
+fwupd_security_attr_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 {
+	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
 	JsonObject *obj;
-
-	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), FALSE);
-	g_return_val_if_fail(json_node != NULL, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* sanity check */
 	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
@@ -1586,56 +1571,43 @@ fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GErr
 	return TRUE;
 }
 
-/**
- * fwupd_security_attr_to_json:
- * @self: a #FwupdSecurityAttr
- * @builder: a JSON builder
- *
- * Adds a fwupd security attribute to a JSON builder
- *
- * Since: 1.5.0
- **/
-void
-fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder)
+static void
+fwupd_security_attr_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
+	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 
-	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
-	g_return_if_fail(builder != NULL);
-
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
 	if (priv->created > 0)
-		fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_CREATED, priv->created);
-	fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_HSI_LEVEL, priv->level);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_HSI_RESULT,
-				     fwupd_security_attr_result_to_string(priv->result));
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
-				     fwupd_security_attr_result_to_string(priv->result_fallback));
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS,
-				     fwupd_security_attr_result_to_string(priv->result_success));
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_NAME, priv->name);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_SUMMARY, priv->title);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_URI, priv->url);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE,
-				     priv->bios_setting_target_value);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
-				     priv->bios_setting_current_value);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_BIOS_SETTING_ID,
-				     priv->bios_setting_id);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE,
-				     priv->kernel_current_value);
-	fwupd_common_json_add_string(builder,
-				     FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE,
-				     priv->kernel_target_value);
+		fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_CREATED, priv->created);
+	fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_HSI_LEVEL, priv->level);
+	fwupd_codec_json_append(builder,
+				FWUPD_RESULT_KEY_HSI_RESULT,
+				fwupd_security_attr_result_to_string(priv->result));
+	fwupd_codec_json_append(builder,
+				FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
+				fwupd_security_attr_result_to_string(priv->result_fallback));
+	fwupd_codec_json_append(builder,
+				FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS,
+				fwupd_security_attr_result_to_string(priv->result_success));
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_SUMMARY, priv->title);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_URI, priv->url);
+	fwupd_codec_json_append(builder,
+				FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE,
+				priv->bios_setting_target_value);
+	fwupd_codec_json_append(builder,
+				FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
+				priv->bios_setting_current_value);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->bios_setting_id);
+	fwupd_codec_json_append(builder,
+				FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE,
+				priv->kernel_current_value);
+	fwupd_codec_json_append(builder,
+				FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE,
+				priv->kernel_target_value);
 
 	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_FLAGS);
@@ -1663,78 +1635,78 @@ fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder)
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *key = l->data;
 			const gchar *value = g_hash_table_lookup(priv->metadata, key);
-			fwupd_common_json_add_string(builder, key, value);
+			fwupd_codec_json_append(builder, key, value);
 		}
 	}
 }
 
-/**
- * fwupd_security_attr_to_string:
- * @self: a #FwupdSecurityAttr
- *
- * Builds a text representation of the object.
- *
- * Returns: text, or %NULL for invalid
- *
- * Since: 1.5.0
- **/
-gchar *
-fwupd_security_attr_to_string(FwupdSecurityAttr *self)
+static void
+fwupd_security_attr_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
+	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
-	GString *str;
-
-	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
-
-	str = g_string_new("");
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
-	if (priv->created > 0)
-		fwupd_pad_kv_unx(str, FWUPD_RESULT_KEY_CREATED, priv->created);
-	fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_HSI_LEVEL, priv->level);
-	fwupd_pad_kv_str(str,
-			 FWUPD_RESULT_KEY_HSI_RESULT,
-			 fwupd_security_attr_result_to_string(priv->result));
-	fwupd_pad_kv_str(str,
-			 FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
-			 fwupd_security_attr_result_to_string(priv->result_fallback));
-	fwupd_pad_kv_str(str,
-			 FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS,
-			 fwupd_security_attr_result_to_string(priv->result_success));
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	fwupd_codec_string_append_time(str, idt, FWUPD_RESULT_KEY_CREATED, priv->created);
+	fwupd_codec_string_append_int(str, idt, FWUPD_RESULT_KEY_HSI_LEVEL, priv->level);
+	fwupd_codec_string_append(str,
+				  idt,
+				  FWUPD_RESULT_KEY_HSI_RESULT,
+				  fwupd_security_attr_result_to_string(priv->result));
+	fwupd_codec_string_append(str,
+				  idt,
+				  FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
+				  fwupd_security_attr_result_to_string(priv->result_fallback));
+	fwupd_codec_string_append(str,
+				  idt,
+				  FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS,
+				  fwupd_security_attr_result_to_string(priv->result_success));
 	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE)
-		fwupd_pad_kv_tfl(str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_NAME, priv->name);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_SUMMARY, priv->title);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_URI, priv->url);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BIOS_SETTING_ID, priv->bios_setting_id);
-	fwupd_pad_kv_str(str,
-			 FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE,
-			 priv->bios_setting_target_value);
-	fwupd_pad_kv_str(str,
-			 FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
-			 priv->bios_setting_current_value);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE, priv->kernel_current_value);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE, priv->kernel_target_value);
+		fwupd_security_attr_string_append_tfl(str,
+						      idt,
+						      FWUPD_RESULT_KEY_FLAGS,
+						      priv->flags);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_SUMMARY, priv->title);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_URI, priv->url);
+	fwupd_codec_string_append(str,
+				  idt,
+				  FWUPD_RESULT_KEY_BIOS_SETTING_ID,
+				  priv->bios_setting_id);
+	fwupd_codec_string_append(str,
+				  idt,
+				  FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE,
+				  priv->bios_setting_target_value);
+	fwupd_codec_string_append(str,
+				  idt,
+				  FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
+				  priv->bios_setting_current_value);
+	fwupd_codec_string_append(str,
+				  idt,
+				  FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE,
+				  priv->kernel_current_value);
+	fwupd_codec_string_append(str,
+				  idt,
+				  FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE,
+				  priv->kernel_target_value);
 
 	for (guint i = 0; i < priv->obsoletes->len; i++) {
 		const gchar *appstream_id = g_ptr_array_index(priv->obsoletes, i);
-		fwupd_pad_kv_str(str, "Obsolete", appstream_id);
+		fwupd_codec_string_append(str, idt, "Obsolete", appstream_id);
 	}
 	for (guint i = 0; i < priv->guids->len; i++) {
 		const gchar *guid = g_ptr_array_index(priv->guids, i);
-		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_GUID, guid);
+		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_GUID, guid);
 	}
 	if (priv->metadata != NULL) {
 		g_autoptr(GList) keys = g_hash_table_get_keys(priv->metadata);
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *key = l->data;
 			const gchar *value = g_hash_table_lookup(priv->metadata, key);
-			fwupd_pad_kv_str(str, key, value);
+			fwupd_codec_string_append(str, idt, key, value);
 		}
 	}
-
-	return g_string_free(str, FALSE);
 }
 
 static void
@@ -1780,8 +1752,9 @@ fwupd_security_attr_finalize(GObject *object)
 }
 
 static void
-fwupd_security_attr_set_from_variant_iter(FwupdSecurityAttr *self, GVariantIter *iter)
+fwupd_security_attr_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
+	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {
@@ -1790,73 +1763,14 @@ fwupd_security_attr_set_from_variant_iter(FwupdSecurityAttr *self, GVariantIter 
 	}
 }
 
-/**
- * fwupd_security_attr_from_variant:
- * @value: (not nullable): the serialized data
- *
- * Creates a new security attribute using serialized data.
- *
- * Returns: (transfer full): a new #FwupdSecurityAttr, or %NULL if @value was invalid
- *
- * Since: 1.5.0
- **/
-FwupdSecurityAttr *
-fwupd_security_attr_from_variant(GVariant *value)
+static void
+fwupd_security_attr_codec_iface_init(FwupdCodecInterface *iface)
 {
-	FwupdSecurityAttr *rel = NULL;
-	const gchar *type_string;
-	g_autoptr(GVariantIter) iter = NULL;
-
-	g_return_val_if_fail(value != NULL, NULL);
-
-	type_string = g_variant_get_type_string(value);
-	if (g_strcmp0(type_string, "(a{sv})") == 0) {
-		rel = fwupd_security_attr_new(NULL);
-		g_variant_get(value, "(a{sv})", &iter);
-		fwupd_security_attr_set_from_variant_iter(rel, iter);
-	} else if (g_strcmp0(type_string, "a{sv}") == 0) {
-		rel = fwupd_security_attr_new(NULL);
-		g_variant_get(value, "a{sv}", &iter);
-		fwupd_security_attr_set_from_variant_iter(rel, iter);
-	} else {
-		g_warning("type %s not known", type_string);
-	}
-	return rel;
-}
-
-/**
- * fwupd_security_attr_array_from_variant:
- * @value: (not nullable): the serialized data
- *
- * Creates an array of new security attributes using serialized data.
- *
- * Returns: (transfer container) (element-type FwupdSecurityAttr): attributes, or %NULL if @value
- *was invalid
- *
- * Since: 1.5.0
- **/
-GPtrArray *
-fwupd_security_attr_array_from_variant(GVariant *value)
-{
-	GPtrArray *array = NULL;
-	gsize sz;
-	g_autoptr(GVariant) untuple = NULL;
-
-	g_return_val_if_fail(value != NULL, NULL);
-
-	array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	untuple = g_variant_get_child_value(value, 0);
-	sz = g_variant_n_children(untuple);
-	for (guint i = 0; i < sz; i++) {
-		FwupdSecurityAttr *rel;
-		g_autoptr(GVariant) data = NULL;
-		data = g_variant_get_child_value(untuple, i);
-		rel = fwupd_security_attr_from_variant(data);
-		if (rel == NULL)
-			continue;
-		g_ptr_array_add(array, rel);
-	}
-	return array;
+	iface->add_string = fwupd_security_attr_add_string;
+	iface->add_json = fwupd_security_attr_add_json;
+	iface->from_json = fwupd_security_attr_from_json;
+	iface->add_variant = fwupd_security_attr_add_variant;
+	iface->from_variant_iter = fwupd_security_attr_from_variant_iter;
 }
 
 /**

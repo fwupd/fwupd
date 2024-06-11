@@ -160,8 +160,8 @@ fu_steelseries_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuSteelseriesDevice *self = FU_STEELSERIES_DEVICE(device);
 	FuSteelseriesDevicePrivate *priv = GET_PRIVATE(self);
-	fu_string_append_kx(str, idt, "Interface", priv->iface_idx);
-	fu_string_append_kx(str, idt, "Endpoint", priv->ep);
+	fwupd_codec_string_append_hex(str, idt, "Interface", priv->iface_idx);
+	fwupd_codec_string_append_hex(str, idt, "Endpoint", priv->ep);
 }
 
 static void

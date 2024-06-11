@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash -e
 gcc=$(gcc -dumpmachine)
 DIST="$(dirname $0)/../dist"
 BIN="$(basename $0)"
@@ -23,10 +23,11 @@ if [ ! -f ${EXE} ]; then
         echo "# build-fwupd"
         exit 1
 fi
-SUDO="$(which sudo) \
-        LD_LIBRARY_PATH=${LD_LIBRARY_PATH} \
-        FWUPD_LOCALSTATEDIR=${FWUPD_LOCALSTATEDIR} \
-        FWUPD_SYSCONFDIR=${FWUPD_SYSCONFDIR} \
-        G_DEBUG=${G_DEBUG} \
-        FWUPD_POLKIT_NOCHECK=1"
-${SUDO} ${DEBUG} ${EXE} "$@"
+ENV="FWUPD_POLKIT_NOCHECK=1 \
+     G_DEBUG=${G_DEBUG} \
+     LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
+for var in $(env | grep FWUPD | cut -d= -f1); do
+        ENV="${ENV} ${var}=${!var}"
+done
+SUDO=$(which sudo)
+${SUDO} ${ENV} ${DEBUG} ${EXE} "$@"

@@ -10,7 +10,6 @@
 
 #include <json-glib/json-glib.h>
 
-#include "fwupd-bios-setting-private.h"
 #include "fwupd-security-attr-private.h"
 
 #include "fu-console.h"
@@ -109,6 +108,8 @@ gchar *
 fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt) G_GNUC_NON_NULL(1);
 const gchar *
 fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag);
+gint
+fu_util_plugin_name_sort_cb(FwupdPlugin **item1, FwupdPlugin **item2);
 gchar *
 fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDeviceProblem problem)
     G_GNUC_NON_NULL(1, 2);
@@ -120,13 +121,6 @@ fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags
     G_GNUC_NON_NULL(1);
 gchar *
 fu_util_security_issues_to_string(GPtrArray *devices) G_GNUC_NON_NULL(1);
-gboolean
-fu_util_send_report(FwupdClient *client,
-		    const gchar *report_uri,
-		    const gchar *data,
-		    const gchar *sig,
-		    gchar **uri,
-		    GError **error) G_GNUC_NON_NULL(1, 2, 3);
 gint
 fu_util_sort_devices_by_flags_cb(gconstpointer a, gconstpointer b) G_GNUC_NON_NULL(1, 2);
 

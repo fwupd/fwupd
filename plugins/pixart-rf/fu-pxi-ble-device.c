@@ -74,16 +74,17 @@ static void
 fu_pxi_ble_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuPxiBleDevice *self = FU_PXI_BLE_DEVICE(device);
-	fu_string_append(str, idt, "ModelName", self->model_name);
+	fwupd_codec_string_append(str, idt, "ModelName", self->model_name);
 	fu_pxi_ota_fw_state_to_string(&self->fwstate, idt, str);
-	fu_string_append_kx(str, idt, "RetransmitID", self->retransmit_id);
-	fu_string_append_kx(str, idt, "FeatureReportID", self->feature_report_id);
-	fu_string_append_kx(str, idt, "InputReportID", self->input_report_id);
+	fwupd_codec_string_append_hex(str, idt, "RetransmitID", self->retransmit_id);
+	fwupd_codec_string_append_hex(str, idt, "FeatureReportID", self->feature_report_id);
+	fwupd_codec_string_append_hex(str, idt, "InputReportID", self->input_report_id);
 }
 
 static FuFirmware *
 fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 				   GInputStream *stream,
+				   FuProgress *progress,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
@@ -112,7 +113,7 @@ fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 
 		/* check is compatible with hardware */
 		model_name = fu_pxi_firmware_get_model_name(FU_PXI_FIRMWARE(firmware));
-		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
 			if (self->model_name == NULL || model_name == NULL) {
 				g_set_error_literal(error,
 						    FWUPD_ERROR,

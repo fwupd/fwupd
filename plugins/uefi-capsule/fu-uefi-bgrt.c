@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-bitmap-image.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-common.h"
 
@@ -22,13 +23,13 @@ G_DEFINE_TYPE(FuUefiBgrt, fu_uefi_bgrt, G_TYPE_OBJECT)
 gboolean
 fu_uefi_bgrt_setup(FuUefiBgrt *self, GError **error)
 {
-	gsize sz = 0;
 	guint64 type;
 	guint64 version;
 	g_autofree gchar *bgrtdir = NULL;
-	g_autofree gchar *data = NULL;
 	g_autofree gchar *imagefn = NULL;
 	g_autofree gchar *sysfsfwdir = NULL;
+	g_autoptr(FuBitmapImage) bmp_image = fu_bitmap_image_new();
+	g_autoptr(GFile) file = NULL;
 
 	g_return_val_if_fail(FU_IS_UEFI_BGRT(self), FALSE);
 
@@ -64,14 +65,13 @@ fu_uefi_bgrt_setup(FuUefiBgrt *self, GError **error)
 	self->xoffset = fu_uefi_read_file_as_uint64(bgrtdir, "xoffset");
 	self->yoffset = fu_uefi_read_file_as_uint64(bgrtdir, "yoffset");
 	imagefn = g_build_filename(bgrtdir, "image", NULL);
-	if (!g_file_get_contents(imagefn, &data, &sz, error)) {
-		g_prefix_error(error, "failed to load BGRT image: ");
-		return FALSE;
-	}
-	if (!fu_uefi_get_bitmap_size((guint8 *)data, sz, &self->width, &self->height, error)) {
+	file = g_file_new_build_filename(bgrtdir, "image", NULL);
+	if (!fu_firmware_parse_file(FU_FIRMWARE(bmp_image), file, FWUPD_INSTALL_FLAG_NONE, error)) {
 		g_prefix_error(error, "BGRT image invalid: ");
 		return FALSE;
 	}
+	self->width = fu_bitmap_image_get_width(bmp_image);
+	self->height = fu_bitmap_image_get_height(bmp_image);
 
 	/* success */
 	return TRUE;

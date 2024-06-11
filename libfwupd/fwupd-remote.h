@@ -125,6 +125,8 @@ fwupd_remote_get_id(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_title(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
+fwupd_remote_get_privacy_uri(FwupdRemote *self) G_GNUC_NON_NULL(1);
+const gchar *
 fwupd_remote_get_agreement(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_remotes_dir(FwupdRemote *self) G_GNUC_NON_NULL(1);
@@ -144,8 +146,6 @@ const gchar *
 fwupd_remote_get_filename_source(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_report_uri(FwupdRemote *self) G_GNUC_NON_NULL(1);
-const gchar *
-fwupd_remote_get_security_report_uri(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_metadata_uri(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
@@ -190,10 +190,5 @@ gboolean
 fwupd_remote_load_signature_bytes(FwupdRemote *self,
 				  GBytes *bytes,
 				  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
-
-FwupdRemote *
-fwupd_remote_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
-GPtrArray *
-fwupd_remote_array_from_variant(GVariant *value) G_GNUC_NON_NULL(1);
 
 G_END_DECLS

@@ -29,10 +29,10 @@ fu_android_boot_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuAndroidBootDevice *self = FU_ANDROID_BOOT_DEVICE(device);
 
-	fu_string_append(str, idt, "BootSlot", self->boot_slot);
-	fu_string_append(str, idt, "Label", self->label);
-	fu_string_append(str, idt, "UUID", self->uuid);
-	fu_string_append_kx(str, idt, "MaxSize", self->max_size);
+	fwupd_codec_string_append(str, idt, "BootSlot", self->boot_slot);
+	fwupd_codec_string_append(str, idt, "Label", self->label);
+	fwupd_codec_string_append(str, idt, "UUID", self->uuid);
+	fwupd_codec_string_append_hex(str, idt, "MaxSize", self->max_size);
 }
 
 static gboolean

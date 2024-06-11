@@ -13,7 +13,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "fwupd-bios-setting-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-security-attr-private.h"
 
@@ -28,6 +27,7 @@
 #include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-engine-config.h"
+#include "fu-engine-helper.h"
 #include "fu-engine-requirements.h"
 #include "fu-engine.h"
 #include "fu-history.h"
@@ -350,7 +350,10 @@ fu_engine_requirements_soft_func(gconstpointer user_data)
 	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_FORCE, &error);
+	ret = fu_engine_requirements_check(engine,
+					   release,
+					   FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS,
+					   &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -897,7 +900,10 @@ fu_engine_requirements_device_func(gconstpointer user_data)
 #ifndef SUPPORTED_BUILD
 	/* we can force this */
 	g_clear_error(&error);
-	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_FORCE, &error);
+	ret = fu_engine_requirements_check(engine,
+					   release,
+					   FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS,
+					   &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 #endif
@@ -2588,12 +2594,11 @@ fu_engine_history_func(gconstpointer user_data)
 			    "  Created:              2018-01-07\n"
 			    "  Modified:             2017-12-27\n"
 			    "  UpdateState:          success\n"
-			    "  \n"
-			    "  [Release]\n"
-			    "  AppstreamId:          com.hughski.test.firmware\n"
-			    "  Version:              1.2.3\n"
-			    "  Checksum:             SHA1(%s)\n"
-			    "  Flags:                trusted-payload|trusted-metadata\n"
+			    "  FuRelease:\n"
+			    "    AppstreamId:        com.hughski.test.firmware\n"
+			    "    Version:            1.2.3\n"
+			    "    Checksum:           SHA1(%s)\n"
+			    "    Flags:              trusted-payload|trusted-metadata\n"
 			    "  AcquiesceDelay:       50\n",
 			    checksum);
 	ret = fu_test_compare_lines(device_str, device_str_expected, &error);
@@ -3249,12 +3254,11 @@ fu_engine_history_error_func(gconstpointer user_data)
 			    "  Modified:             2017-12-27\n"
 			    "  UpdateState:          failed\n"
 			    "  UpdateError:          device was not in supported mode\n"
-			    "  \n"
-			    "  [Release]\n"
-			    "  AppstreamId:          com.hughski.test.firmware\n"
-			    "  Version:              1.2.3\n"
-			    "  Checksum:             SHA1(%s)\n"
-			    "  Flags:                trusted-payload|trusted-metadata\n"
+			    "  FuRelease:\n"
+			    "    AppstreamId:        com.hughski.test.firmware\n"
+			    "    Version:            1.2.3\n"
+			    "    Checksum:           SHA1(%s)\n"
+			    "    Flags:              trusted-payload|trusted-metadata\n"
 			    "  AcquiesceDelay:       50\n",
 			    checksum);
 	ret = fu_test_compare_lines(device_str, device_str_expected, &error);
@@ -3471,7 +3475,7 @@ fu_device_list_replug_user_func(gconstpointer user_data)
 	fu_device_set_name(device2, "device2");
 	fu_device_add_internal_flag(device2, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_instance_id(device2, "baz");
-	fu_device_add_instance_id(device2, "bar"); /* matches */
+	fu_device_add_counterpart_guid(device2, "bar"); /* matches */
 	fu_device_set_plugin(device2, "self-test");
 	fu_device_set_remove_delay(device2, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 	fu_device_convert_instance_ids(device2);
@@ -3558,7 +3562,7 @@ fu_device_list_compatible_func(gconstpointer user_data)
 	fu_device_set_version(device1, "1.2.3");
 	fu_device_add_internal_flag(device1, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_instance_id(device1, "foobar");
-	fu_device_add_instance_id(device1, "bootloader");
+	fu_device_add_counterpart_guid(device1, "bootloader");
 	fu_device_set_remove_delay(device1, 100);
 	fu_device_convert_instance_ids(device1);
 	fu_device_list_add(device_list, device1);
@@ -3705,6 +3709,42 @@ fu_device_list_explicit_order_post_func(gconstpointer user_data)
 	fu_device_add_internal_flag(device_root, FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER);
 	g_assert_cmpint(fu_device_get_order(device_root), ==, G_MAXINT);
 	g_assert_cmpint(fu_device_get_order(device_child), ==, G_MAXINT);
+}
+
+static void
+fu_device_list_counterpart_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(FuDevice) device1 = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new(self->ctx);
+
+	/* add and then remove runtime */
+	fu_device_set_id(device1, "device-runtime");
+	fu_device_add_instance_id(device1, "runtime"); /* 420dde7c-3102-5d8f-86bc-aaabd7920150 */
+	fu_device_add_counterpart_guid(device1, "bootloader");
+	fu_device_convert_instance_ids(device1);
+	fu_device_add_internal_flag(device1, FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_device_set_remove_delay(device1, 100);
+	fu_device_list_add(device_list, device1);
+	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_list_remove(device_list, device1);
+	g_assert_true(fu_device_has_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
+
+	/* add bootloader */
+	fu_device_set_id(device2, "device-bootloader");
+	fu_device_add_instance_id(device2, "bootloader"); /* 015370aa-26f2-5daa-9661-a75bf4c1a913 */
+	fu_device_add_internal_flag(device2, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
+	fu_device_convert_instance_ids(device2);
+	fu_device_list_add(device_list, device2);
+
+	/* should have matched the runtime */
+	g_assert_false(fu_device_has_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
+
+	/* should not have *visible* GUID of runtime */
+	g_assert_false(fu_device_has_guid(device2, "runtime"));
+	g_assert_true(fu_device_has_counterpart_guid(device2, "runtime"));
 }
 
 static void
@@ -4721,7 +4761,6 @@ fu_security_attr_func(gconstpointer user_data)
 	g_autoptr(FwupdSecurityAttr) attr1 = fwupd_security_attr_new("org.fwupd.hsi.foo");
 	g_autoptr(FwupdSecurityAttr) attr2 = fwupd_security_attr_new("org.fwupd.hsi.bar");
 	g_autoptr(GError) error = NULL;
-	g_autoptr(JsonParser) parser = json_parser_new();
 
 	fwupd_security_attr_set_plugin(attr1, "foo");
 	fwupd_security_attr_set_created(attr1, 0);
@@ -4730,7 +4769,7 @@ fu_security_attr_func(gconstpointer user_data)
 	fu_security_attrs_append(attrs1, attr1);
 	fu_security_attrs_append(attrs1, attr2);
 
-	json1 = fu_security_attrs_to_json_string(attrs1, &error);
+	json1 = fwupd_codec_to_json_string(FWUPD_CODEC(attrs1), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json1);
 	ret = fu_test_compare_lines(
@@ -4757,10 +4796,7 @@ fu_security_attr_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	ret = json_parser_load_from_data(parser, json1, -1, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	ret = fu_security_attrs_from_json(attrs2, json_parser_get_root(parser), &error);
+	ret = fwupd_codec_from_json_string(FWUPD_CODEC(attrs2), json1, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 		g_test_skip(error->message);
 		return;
@@ -4768,7 +4804,7 @@ fu_security_attr_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	json2 = fu_security_attrs_to_json_string(attrs2, &error);
+	json2 = fwupd_codec_to_json_string(FWUPD_CODEC(attrs2), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json2);
 	ret = fu_test_compare_lines(json2, json1, &error);
@@ -5956,31 +5992,6 @@ fu_remote_download_func(void)
 	g_assert_cmpstr(fwupd_remote_get_filename_cache_sig(remote), ==, expected_signature);
 }
 
-static gchar *
-fwupd_remote_to_json_string(FwupdRemote *remote, GError **error)
-{
-	g_autofree gchar *data = NULL;
-	g_autoptr(JsonGenerator) json_generator = NULL;
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	g_autoptr(JsonNode) json_root = NULL;
-	json_builder_begin_object(builder);
-	fwupd_remote_to_json(remote, builder);
-	json_builder_end_object(builder);
-	json_root = json_builder_get_root(builder);
-	json_generator = json_generator_new();
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	data = json_generator_to_data(json_generator, NULL);
-	if (data == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "Failed to convert remote to json.");
-		return NULL;
-	}
-	return g_steal_pointer(&data);
-}
-
 static void
 fu_remote_auth_func(void)
 {
@@ -5990,7 +6001,7 @@ fu_remote_auth_func(void)
 	g_autofree gchar *remotes_dir = NULL;
 	g_autofree gchar *json = NULL;
 	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
-	g_autoptr(FwupdRemote) remote2 = NULL;
+	g_autoptr(FwupdRemote) remote2 = fwupd_remote_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) data = NULL;
 
@@ -6003,9 +6014,9 @@ fu_remote_auth_func(void)
 	g_assert_true(ret);
 	g_assert_cmpstr(fwupd_remote_get_username(remote), ==, "user");
 	g_assert_cmpstr(fwupd_remote_get_password(remote), ==, "pass");
-	g_assert_cmpstr(fwupd_remote_get_security_report_uri(remote),
+	g_assert_cmpstr(fwupd_remote_get_report_uri(remote),
 			==,
-			"https://fwupd.org/lvfs/hsireports/upload");
+			"https://fwupd.org/lvfs/firmware/report");
 	g_assert_false(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED));
 	g_assert_false(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS));
 	g_assert_true(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS));
@@ -6030,8 +6041,10 @@ fu_remote_auth_func(void)
 
 	/* to/from GVariant */
 	fwupd_remote_set_priority(remote, 999);
-	data = fwupd_remote_to_variant(remote);
-	remote2 = fwupd_remote_from_variant(data);
+	data = fwupd_codec_to_variant(FWUPD_CODEC(remote), FWUPD_CODEC_FLAG_NONE);
+	ret = fwupd_codec_from_variant(FWUPD_CODEC(remote2), data, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	g_assert_cmpstr(fwupd_remote_get_username(remote2), ==, "user");
 	g_assert_cmpint(fwupd_remote_get_priority(remote2), ==, 999);
 
@@ -6054,7 +6067,7 @@ fu_remote_auth_func(void)
 	    remote2,
 	    "dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2");
 	fwupd_remote_set_filename_cache(remote2, "./libfwupd/tests/auth/metadata.xml.gz");
-	json = fwupd_remote_to_json_string(remote2, &error);
+	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
 	ret = fu_test_compare_lines(
@@ -6064,7 +6077,6 @@ fu_remote_auth_func(void)
 	    "  \"Kind\" : \"download\",\n"
 	    "  \"KeyringKind\" : \"jcat\",\n"
 	    "  \"ReportUri\" : \"https://fwupd.org/lvfs/firmware/report\",\n"
-	    "  \"SecurityReportUri\" : \"https://fwupd.org/lvfs/hsireports/upload\",\n"
 	    "  \"MetadataUri\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz\",\n"
 	    "  \"MetadataUriSig\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz.jcat\",\n"
 	    "  \"Username\" : \"user\",\n"
@@ -6074,10 +6086,10 @@ fu_remote_auth_func(void)
 	    "  \"FilenameCache\" : \"./libfwupd/tests/auth/metadata.xml.gz\",\n"
 	    "  \"FilenameCacheSig\" : \"./libfwupd/tests/auth/metadata.xml.gz.jcat\",\n"
 	    "  \"Flags\" : 9,\n"
-	    "  \"Enabled\" : \"true\",\n"
-	    "  \"ApprovalRequired\" : \"false\",\n"
-	    "  \"AutomaticReports\" : \"false\",\n"
-	    "  \"AutomaticSecurityReports\" : \"true\",\n"
+	    "  \"Enabled\" : true,\n"
+	    "  \"ApprovalRequired\" : false,\n"
+	    "  \"AutomaticReports\" : false,\n"
+	    "  \"AutomaticSecurityReports\" : true,\n"
 	    "  \"Priority\" : 999,\n"
 	    "  \"Mtime\" : 0,\n"
 	    "  \"RefreshInterval\" : 86400\n"
@@ -6162,7 +6174,7 @@ fu_remote_local_func(void)
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *json = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
-	g_autoptr(FwupdRemote) remote2 = NULL;
+	g_autoptr(FwupdRemote) remote2 = fwupd_remote_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) data = NULL;
 
@@ -6187,13 +6199,15 @@ fu_remote_local_func(void)
 	g_assert_cmpstr(fwupd_remote_get_checksum(remote), ==, NULL);
 
 	/* to/from GVariant */
-	data = fwupd_remote_to_variant(remote);
-	remote2 = fwupd_remote_from_variant(data);
+	data = fwupd_codec_to_variant(FWUPD_CODEC(remote), FWUPD_CODEC_FLAG_NONE);
+	ret = fwupd_codec_from_variant(FWUPD_CODEC(remote2), data, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	g_assert_null(fwupd_remote_get_metadata_uri(remote));
 
 	/* to JSON */
 	fwupd_remote_set_filename_source(remote2, NULL);
-	json = fwupd_remote_to_json_string(remote2, &error);
+	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
 	ret = fu_test_compare_lines(
@@ -6205,10 +6219,10 @@ fu_remote_local_func(void)
 	    "  \"Title\" : \"Enable UEFI capsule updates on Dell systems\",\n"
 	    "  \"FilenameCache\" : \"@datadir@/fwupd/remotes.d/dell-esrt/metadata.xml\",\n"
 	    "  \"Flags\" : 1,\n"
-	    "  \"Enabled\" : \"true\",\n"
-	    "  \"ApprovalRequired\" : \"false\",\n"
-	    "  \"AutomaticReports\" : \"false\",\n"
-	    "  \"AutomaticSecurityReports\" : \"false\",\n"
+	    "  \"Enabled\" : true,\n"
+	    "  \"ApprovalRequired\" : false,\n"
+	    "  \"AutomaticReports\" : false,\n"
+	    "  \"AutomaticSecurityReports\" : false,\n"
 	    "  \"Priority\" : 0,\n"
 	    "  \"Mtime\" : 0,\n"
 	    "  \"RefreshInterval\" : 0\n"
@@ -6392,6 +6406,38 @@ fu_config_migrate_1_7_func(void)
 	g_assert_cmpstr(localconf_data, ==, "");
 }
 
+static void
+fu_engine_machine_hash_func(void)
+{
+	gsize sz = 0;
+	g_autofree gchar *buf = NULL;
+	g_autofree gchar *mhash1 = NULL;
+	g_autofree gchar *mhash2 = NULL;
+	g_autoptr(GError) error = NULL;
+
+	if (!g_file_test("/etc/machine-id", G_FILE_TEST_EXISTS)) {
+		g_test_skip("Missing /etc/machine-id");
+		return;
+	}
+	if (!g_file_get_contents("/etc/machine-id", &buf, &sz, &error)) {
+		g_test_skip("/etc/machine-id is unreadable");
+		return;
+	}
+
+	if (sz == 0) {
+		g_test_skip("Empty /etc/machine-id");
+		return;
+	}
+
+	mhash1 = fu_engine_build_machine_id("salt1", &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(mhash1, !=, NULL);
+	mhash2 = fu_engine_build_machine_id("salt2", &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(mhash2, !=, NULL);
+	g_assert_cmpstr(mhash2, !=, mhash1);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -6417,6 +6463,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
+	(void)g_setenv("FWUPD_MACHINE_ID", "test", TRUE);
 
 	/* ensure empty tree */
 	fu_self_test_mkroot();
@@ -6471,6 +6518,9 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/device-list{remove-chain}",
 			     self,
 			     fu_device_list_remove_chain_func);
+	g_test_add_data_func("/fwupd/device-list{counterpart}",
+			     self,
+			     fu_device_list_counterpart_func);
 	g_test_add_data_func("/fwupd/release{compare}", self, fu_release_compare_func);
 	g_test_add_func("/fwupd/release{uri-scheme}", fu_release_uri_scheme_func);
 	g_test_add_data_func("/fwupd/release{trusted-report}",
@@ -6511,6 +6561,7 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/device-list{replug-user}",
 			     self,
 			     fu_device_list_replug_user_func);
+	g_test_add_func("/fwupd/engine{machine-hash}", fu_engine_machine_hash_func);
 	g_test_add_data_func("/fwupd/engine{require-hwid}", self, fu_engine_require_hwid_func);
 	g_test_add_data_func("/fwupd/engine{requires-reboot}",
 			     self,

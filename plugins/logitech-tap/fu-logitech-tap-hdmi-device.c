@@ -328,7 +328,8 @@ fu_logitech_tap_hdmi_device_write_fw(FuLogitechTapHdmiDevice *self,
 		return FALSE;
 
 	/* signal for sensor device to trigger composite device reboot */
-	fu_device_add_private_flag(FU_DEVICE(self), FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_NEEDS_REBOOT);
+	fu_device_add_private_flag(FU_DEVICE(self),
+				   FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_SENSOR_NEEDS_REBOOT);
 	return TRUE;
 }
 
@@ -500,6 +501,7 @@ fu_logitech_tap_hdmi_device_init(FuLogitechTapHdmiDevice *self)
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 }
 
 static void

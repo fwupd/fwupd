@@ -30,14 +30,16 @@ fu_logitech_tap_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, G
 
 		if ((g_strcmp0(fu_device_get_plugin(dev), "logitech_tap") == 0) &&
 		    (FU_IS_LOGITECH_TAP_HDMI_DEVICE(dev)) &&
-		    (fu_device_has_private_flag(dev,
-						FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_NEEDS_REBOOT)) &&
+		    (fu_device_has_private_flag(
+			dev,
+			FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_SENSOR_NEEDS_REBOOT)) &&
 		    self->hdmi_device != NULL) {
 			g_debug("device needs reboot");
 			if (!fu_logitech_tap_sensor_device_reboot_device(
 				FU_LOGITECH_TAP_SENSOR_DEVICE(fu_device_get_proxy(dev)),
 				error))
 				return FALSE;
+			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 			break;
 		}
 	}

@@ -43,37 +43,29 @@ gchar *
 fu_release_to_string(FuRelease *self)
 {
 	const guint idt = 1;
-	g_autofree gchar *tmp = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	g_return_val_if_fail(FU_IS_RELEASE(self), NULL);
 
 	/* parent */
-	tmp = fwupd_release_to_string(FWUPD_RELEASE(self));
-	if (tmp != NULL && tmp[0] != '\0')
-		g_string_append(str, tmp);
+	fwupd_codec_add_string(FWUPD_CODEC(self), 0, str);
 
 	/* instance */
-	if (self->request != NULL) {
-		fu_string_append(str, idt, "Request", NULL);
-		fu_engine_request_add_string(self->request, idt + 1, str);
-	}
+	if (self->request != NULL)
+		fwupd_codec_add_string(FWUPD_CODEC(self->request), idt, str);
 	if (self->device != NULL)
-		fu_string_append(str, idt, "Device", fu_device_get_id(self->device));
-	if (self->device_version_old != NULL)
-		fu_string_append(str, idt, "DeviceVersionOld", self->device_version_old);
+		fwupd_codec_string_append(str, idt, "Device", fu_device_get_id(self->device));
+	fwupd_codec_string_append(str, idt, "DeviceVersionOld", self->device_version_old);
 	if (self->remote != NULL)
-		fu_string_append(str, idt, "Remote", fwupd_remote_get_id(self->remote));
-	fu_string_append_kb(str, idt, "HasConfig", self->config != NULL);
-	fu_string_append_kb(str, idt, "HasStream", self->stream != NULL);
-	if (self->update_request_id != NULL)
-		fu_string_append(str, idt, "UpdateRequestId", self->update_request_id);
+		fwupd_codec_string_append(str, idt, "Remote", fwupd_remote_get_id(self->remote));
+	fwupd_codec_string_append_bool(str, idt, "HasConfig", self->config != NULL);
+	fwupd_codec_string_append_bool(str, idt, "HasStream", self->stream != NULL);
+	fwupd_codec_string_append(str, idt, "UpdateRequestId", self->update_request_id);
 	if (self->soft_reqs != NULL)
-		fu_string_append_kx(str, idt, "SoftReqs", self->soft_reqs->len);
+		fwupd_codec_string_append_hex(str, idt, "SoftReqs", self->soft_reqs->len);
 	if (self->hard_reqs != NULL)
-		fu_string_append_kx(str, idt, "HardReqs", self->hard_reqs->len);
-	if (self->priority != 0)
-		fu_string_append_kx(str, idt, "Priority", self->priority);
+		fwupd_codec_string_append_hex(str, idt, "HardReqs", self->hard_reqs->len);
+	fwupd_codec_string_append_hex(str, idt, "Priority", self->priority);
 	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 

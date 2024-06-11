@@ -88,6 +88,7 @@ fu_uefi_dbx_device_version_notify_cb(FuDevice *device, GParamSpec *pspec, gpoint
 static FuFirmware *
 fu_uefi_dbx_prepare_firmware(FuDevice *device,
 			     GInputStream *stream,
+			     FuProgress *progress,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
@@ -101,7 +102,7 @@ fu_uefi_dbx_prepare_firmware(FuDevice *device,
 
 	/* validate this is safe to apply */
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
-		//		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_VERIFY);
+		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_VERIFY);
 		if (!fu_uefi_dbx_signature_list_validate(ctx,
 							 FU_EFI_SIGNATURE_LIST(siglist),
 							 flags,

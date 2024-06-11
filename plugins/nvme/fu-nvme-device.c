@@ -47,7 +47,7 @@ static void
 fu_nvme_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE(device);
-	fu_string_append_ku(str, idt, "PciDepth", self->pci_depth);
+	fwupd_codec_string_append_int(str, idt, "PciDepth", self->pci_depth);
 }
 
 /* @addr_start and @addr_end are *inclusive* to match the NMVe specification */

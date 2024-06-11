@@ -53,9 +53,10 @@ typedef struct {
 	FuContext *ctx;
 	GHashTable *inhibits; /* (nullable) */
 	GHashTable *metadata; /* (nullable) */
-	GPtrArray *parent_guids;
+	GPtrArray *parent_guids;	/* (nullable) (element-type utf-8) */
 	GPtrArray *parent_physical_ids; /* (nullable) */
 	GPtrArray *parent_backend_ids;	/* (nullable) */
+	GPtrArray *counterpart_guids;	/* (nullable) */
 	guint remove_delay;		/* ms */
 	guint acquiesce_delay;		/* ms */
 	guint request_cnts[FWUPD_REQUEST_KIND_LAST];
@@ -72,16 +73,16 @@ typedef struct {
 	GType specialized_gtype;
 	GType proxy_gtype;
 	GType firmware_gtype;
-	GPtrArray *possible_plugins;
-	GPtrArray *instance_id_quirks; /* of utf-8 */
-	GPtrArray *retry_recs;	       /* of FuDeviceRetryRecovery */
+	GPtrArray *possible_plugins;   /* (element-type utf-8) */
+	GPtrArray *instance_id_quirks; /* (nullable) (element-type utf-8) */
+	GPtrArray *retry_recs;	       /* (nullable) (element-type FuDeviceRetryRecovery) */
 	guint retry_delay;
 	FuDeviceInternalFlags internal_flags;
 	guint64 private_flags;
 	GPtrArray *private_flag_items; /* (nullable) */
 	gchar *custom_flags;
 	gulong notify_flags_handler_id;
-	GHashTable *instance_hash;
+	GHashTable *instance_hash; /* (nullable) */
 	FuProgress *progress; /* provided for FuDevice notify callbacks */
 } FuDevicePrivate;
 
@@ -432,7 +433,8 @@ fu_device_add_internal_flag(FuDevice *self, FuDeviceInternalFlags flag)
 		GPtrArray *children = fu_device_get_children(self);
 		for (guint i = 0; i < children->len; i++) {
 			FuDevice *child_tmp = g_ptr_array_index(children, i);
-			fu_device_set_order(child_tmp, G_MAXINT);
+			fu_device_add_internal_flag(child_tmp,
+						    FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER);
 		}
 		fu_device_set_order(self, G_MAXINT);
 	}
@@ -714,6 +716,10 @@ fu_device_retry_add_recovery(FuDevice *self, GQuark domain, gint code, FuDeviceR
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(domain != 0);
 
+	/* ensure */
+	if (priv->retry_recs == NULL)
+		priv->retry_recs = g_ptr_array_new_with_free_func(g_free);
+
 	rec = g_new(FuDeviceRetryRecovery, 1);
 	rec->domain = domain;
 	rec->code = code;
@@ -803,7 +809,7 @@ fu_device_retry_full(FuDevice *self,
 		}
 
 		/* show recoverable error on the console */
-		if (priv->retry_recs->len == 0) {
+		if (priv->retry_recs == NULL || priv->retry_recs->len == 0) {
 			g_info("failed on try %u of %u: %s", i + 1, count, error_local->message);
 			continue;
 		}
@@ -1528,6 +1534,15 @@ fu_device_remove_child(FuDevice *self, FuDevice *child)
 	g_signal_emit(self, signals[SIGNAL_CHILD_REMOVED], 0, child);
 }
 
+static void
+fu_device_ensure_parent_guids(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	if (priv->parent_guids != NULL)
+		return;
+	priv->parent_guids = g_ptr_array_new_with_free_func(g_free);
+}
+
 /**
  * fu_device_get_parent_guids:
  * @self: a #FuDevice
@@ -1544,6 +1559,7 @@ fu_device_get_parent_guids(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	fu_device_ensure_parent_guids(self);
 	return priv->parent_guids;
 }
 
@@ -1566,6 +1582,8 @@ fu_device_has_parent_guid(FuDevice *self, const gchar *guid)
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(guid != NULL, FALSE);
 
+	if (priv->parent_guids == NULL)
+		return FALSE;
 	for (guint i = 0; i < priv->parent_guids->len; i++) {
 		const gchar *guid_tmp = g_ptr_array_index(priv->parent_guids, i);
 		if (g_strcmp0(guid_tmp, guid) == 0)
@@ -1597,6 +1615,9 @@ fu_device_add_parent_guid(FuDevice *self, const gchar *guid)
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(guid != NULL);
+
+	/* ensure */
+	fu_device_ensure_parent_guids(self);
 
 	/* make valid */
 	if (!fwupd_guid_is_valid(guid)) {
@@ -2357,6 +2378,8 @@ static gboolean
 fu_device_has_instance_id_quirk(FuDevice *self, const gchar *instance_id)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	if (priv->instance_id_quirks == NULL)
+		return FALSE;
 	for (guint i = 0; i < priv->instance_id_quirks->len; i++) {
 		const gchar *instance_id_tmp = g_ptr_array_index(priv->instance_id_quirks, i);
 		if (g_strcmp0(instance_id, instance_id_tmp) == 0)
@@ -2374,6 +2397,8 @@ fu_device_add_instance_id_quirk(FuDevice *self, const gchar *instance_id)
 		return;
 	if (fu_device_has_instance_id_quirk(self, instance_id))
 		return;
+	if (priv->instance_id_quirks == NULL)
+		priv->instance_id_quirks = g_ptr_array_new_with_free_func(g_free);
 	g_ptr_array_add(priv->instance_id_quirks, g_strdup(instance_id));
 }
 
@@ -2497,6 +2522,74 @@ fu_device_add_guid_full(FuDevice *self, const gchar *guid, FuDeviceInstanceFlags
 }
 
 /**
+ * fu_device_has_counterpart_guid:
+ * @self: a #FuDevice
+ * @guid: a GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
+ *
+ * Finds out if the device has a specific counterpart GUID.
+ *
+ * Returns: %TRUE if the counterpart GUID is found
+ *
+ * Since: 1.9.21
+ **/
+gboolean
+fu_device_has_counterpart_guid(FuDevice *self, const gchar *guid)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(guid != NULL, FALSE);
+
+	/* never added */
+	if (priv->counterpart_guids == NULL)
+		return FALSE;
+
+	/* convert and try again */
+	if (!fwupd_guid_is_valid(guid)) {
+		g_autofree gchar *tmp = fwupd_guid_hash_string(guid);
+		return fu_device_has_counterpart_guid(self, tmp);
+	}
+
+	/* any defined? */
+	for (guint i = 0; i < priv->counterpart_guids->len; i++) {
+		const gchar *counterpart_guid = g_ptr_array_index(priv->counterpart_guids, i);
+		if (g_strcmp0(guid, counterpart_guid) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static void
+fu_device_ensure_counterpart_guids(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	if (priv->counterpart_guids != NULL)
+		return;
+	priv->counterpart_guids = g_ptr_array_new_with_free_func(g_free);
+}
+
+/**
+ * fu_device_get_counterpart_guids:
+ * @self: a #FuDevice
+ *
+ * Returns all the counterpart GUIDs.
+ *
+ * Returns: (transfer none) (element-type utf8): list of GUIDs
+ *
+ * Since: 1.9.21
+ **/
+GPtrArray *
+fu_device_get_counterpart_guids(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+
+	fu_device_ensure_counterpart_guids(self);
+	return priv->counterpart_guids;
+}
+
+/**
  * fu_device_add_counterpart_guid:
  * @self: a #FuDevice
  * @guid: a GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
@@ -2513,18 +2606,26 @@ fu_device_add_guid_full(FuDevice *self, const gchar *guid, FuDeviceInstanceFlags
 void
 fu_device_add_counterpart_guid(FuDevice *self, const gchar *guid)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(guid != NULL);
 
+	/* already present */
+	if (fu_device_has_counterpart_guid(self, guid))
+		return;
+
+	/* ensure exists */
+	fu_device_ensure_counterpart_guids(self);
+
 	/* make valid */
 	if (!fwupd_guid_is_valid(guid)) {
-		g_autofree gchar *tmp = fwupd_guid_hash_string(guid);
-		fwupd_device_add_guid(FWUPD_DEVICE(self), tmp);
+		g_ptr_array_add(priv->counterpart_guids, fwupd_guid_hash_string(guid));
 		return;
 	}
 
 	/* already valid */
-	fwupd_device_add_guid(FWUPD_DEVICE(self), guid);
+	g_ptr_array_add(priv->counterpart_guids, g_strdup(guid));
 }
 
 /**
@@ -4120,71 +4221,67 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
-	for (guint i = 0; i < priv->instance_id_quirks->len; i++) {
-		const gchar *instance_id = g_ptr_array_index(priv->instance_id_quirks, i);
-		g_autofree gchar *guid = fwupd_guid_hash_string(instance_id);
-		g_autofree gchar *tmp2 = g_strdup_printf("%s ← %s", guid, instance_id);
-		fu_string_append(str, idt, "Guid[quirk]", tmp2);
+	if (priv->instance_id_quirks != NULL) {
+		for (guint i = 0; i < priv->instance_id_quirks->len; i++) {
+			const gchar *instance_id = g_ptr_array_index(priv->instance_id_quirks, i);
+			g_autofree gchar *guid = fwupd_guid_hash_string(instance_id);
+			g_autofree gchar *tmp2 = g_strdup_printf("%s ← %s", guid, instance_id);
+			fwupd_codec_string_append(str, idt, "Guid[quirk]", tmp2);
+		}
 	}
-	if (priv->equivalent_id != NULL)
-		fu_string_append(str, idt, "EquivalentId", priv->equivalent_id);
-	if (priv->physical_id != NULL)
-		fu_string_append(str, idt, "PhysicalId", priv->physical_id);
-	if (priv->logical_id != NULL)
-		fu_string_append(str, idt, "LogicalId", priv->logical_id);
-	if (priv->backend_id != NULL)
-		fu_string_append(str, idt, "BackendId", priv->backend_id);
-	if (priv->update_request_id != NULL)
-		fu_string_append(str, idt, "UpdateRequestId", priv->update_request_id);
+	if (priv->counterpart_guids != NULL) {
+		for (guint i = 0; i < priv->counterpart_guids->len; i++) {
+			const gchar *guid = g_ptr_array_index(priv->counterpart_guids, i);
+			fwupd_codec_string_append(str, idt, "Guid[counterpart]", guid);
+		}
+	}
+	fwupd_codec_string_append(str, idt, "EquivalentId", priv->equivalent_id);
+	fwupd_codec_string_append(str, idt, "PhysicalId", priv->physical_id);
+	fwupd_codec_string_append(str, idt, "LogicalId", priv->logical_id);
+	fwupd_codec_string_append(str, idt, "BackendId", priv->backend_id);
+	fwupd_codec_string_append(str, idt, "UpdateRequestId", priv->update_request_id);
 	if (priv->proxy != NULL)
-		fu_string_append(str, idt, "ProxyId", fu_device_get_id(priv->proxy));
-	if (priv->proxy_guid != NULL)
-		fu_string_append(str, idt, "ProxyGuid", priv->proxy_guid);
-	if (priv->remove_delay != 0)
-		fu_string_append_ku(str, idt, "RemoveDelay", priv->remove_delay);
-	if (priv->acquiesce_delay != 0)
-		fu_string_append_ku(str, idt, "AcquiesceDelay", priv->acquiesce_delay);
-	if (priv->custom_flags != NULL)
-		fu_string_append(str, idt, "CustomFlags", priv->custom_flags);
+		fwupd_codec_string_append(str, idt, "ProxyId", fu_device_get_id(priv->proxy));
+	fwupd_codec_string_append(str, idt, "ProxyGuid", priv->proxy_guid);
+	fwupd_codec_string_append_int(str, idt, "RemoveDelay", priv->remove_delay);
+	fwupd_codec_string_append_int(str, idt, "AcquiesceDelay", priv->acquiesce_delay);
+	fwupd_codec_string_append(str, idt, "CustomFlags", priv->custom_flags);
 	if (priv->specialized_gtype != G_TYPE_INVALID)
-		fu_string_append(str, idt, "GType", g_type_name(priv->specialized_gtype));
+		fwupd_codec_string_append(str, idt, "GType", g_type_name(priv->specialized_gtype));
 	if (priv->proxy_gtype != G_TYPE_INVALID)
-		fu_string_append(str, idt, "ProxyGType", g_type_name(priv->proxy_gtype));
-	if (priv->firmware_gtype != G_TYPE_INVALID)
-		fu_string_append(str, idt, "FirmwareGType", g_type_name(priv->firmware_gtype));
-	if (priv->size_min > 0) {
-		g_autofree gchar *sz = g_strdup_printf("%" G_GUINT64_FORMAT, priv->size_min);
-		fu_string_append(str, idt, "FirmwareSizeMin", sz);
+		fwupd_codec_string_append(str, idt, "ProxyGType", g_type_name(priv->proxy_gtype));
+	if (priv->firmware_gtype != G_TYPE_INVALID) {
+		fwupd_codec_string_append(str,
+					  idt,
+					  "FirmwareGType",
+					  g_type_name(priv->firmware_gtype));
 	}
-	if (priv->size_max > 0) {
-		g_autofree gchar *sz = g_strdup_printf("%" G_GUINT64_FORMAT, priv->size_max);
-		fu_string_append(str, idt, "FirmwareSizeMax", sz);
-	}
+	fwupd_codec_string_append_size(str, idt, "FirmwareSizeMin", priv->size_min);
+	fwupd_codec_string_append_size(str, idt, "FirmwareSizeMax", priv->size_max);
 	if (priv->order != G_MAXINT) {
 		g_autofree gchar *order = g_strdup_printf("%i", priv->order);
-		fu_string_append(str, idt, "Order", order);
+		fwupd_codec_string_append(str, idt, "Order", order);
 	}
-	if (priv->priority > 0)
-		fu_string_append_ku(str, idt, "Priority", priv->priority);
+	fwupd_codec_string_append_int(str, idt, "Priority", priv->priority);
 	if (priv->metadata != NULL) {
 		g_autoptr(GList) keys = g_hash_table_get_keys(priv->metadata);
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *key = l->data;
 			const gchar *value = g_hash_table_lookup(priv->metadata, key);
-			fu_string_append(str, idt, key, value);
+			fwupd_codec_string_append(str, idt, key, value);
 		}
 	}
 	for (guint i = 0; i < priv->possible_plugins->len; i++) {
 		const gchar *name = g_ptr_array_index(priv->possible_plugins, i);
-		fu_string_append(str, idt, "PossiblePlugin", name);
+		fwupd_codec_string_append(str, idt, "PossiblePlugin", name);
 	}
 	if (priv->parent_physical_ids != NULL && priv->parent_physical_ids->len > 0) {
 		g_autofree gchar *flags = fu_strjoin(",", priv->parent_physical_ids);
-		fu_string_append(str, idt, "ParentPhysicalIds", flags);
+		fwupd_codec_string_append(str, idt, "ParentPhysicalIds", flags);
 	}
 	if (priv->parent_backend_ids != NULL && priv->parent_backend_ids->len > 0) {
 		g_autofree gchar *flags = fu_strjoin(",", priv->parent_backend_ids);
-		fu_string_append(str, idt, "ParentBackendIds", flags);
+		fwupd_codec_string_append(str, idt, "ParentBackendIds", flags);
 	}
 	if (priv->internal_flags != FU_DEVICE_INTERNAL_FLAG_NONE) {
 		g_autoptr(GString) tmp2 = g_string_new("");
@@ -4197,7 +4294,7 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 		}
 		if (tmp2->len > 0)
 			g_string_truncate(tmp2, tmp2->len - 1);
-		fu_string_append(str, idt, "InternalFlags", tmp2->str);
+		fwupd_codec_string_append(str, idt, "InternalFlags", tmp2->str);
 	}
 	if (priv->private_flags > 0) {
 		g_autoptr(GPtrArray) tmpv = g_ptr_array_new();
@@ -4213,7 +4310,7 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 			g_ptr_array_add(tmpv, item->value_str);
 		}
 		tmps = fu_strjoin(",", tmpv);
-		fu_string_append(str, idt, "PrivateFlags", tmps);
+		fwupd_codec_string_append(str, idt, "PrivateFlags", tmps);
 	}
 	if (priv->inhibits != NULL) {
 		g_autoptr(GList) values = g_hash_table_get_values(priv->inhibits);
@@ -4221,7 +4318,7 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 			FuDeviceInhibit *inhibit = (FuDeviceInhibit *)l->data;
 			g_autofree gchar *val =
 			    g_strdup_printf("[%s] %s", inhibit->inhibit_id, inhibit->reason);
-			fu_string_append(str, idt, "Inhibit", val);
+			fwupd_codec_string_append(str, idt, "Inhibit", val);
 		}
 	}
 }
@@ -4241,13 +4338,10 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 {
 	GPtrArray *children;
 	gpointer device_class_to_string_last = NULL;
-	g_autofree gchar *tmp = NULL;
 	g_autoptr(GList) device_class_list = NULL;
 
 	/* add baseclass */
-	tmp = fwupd_device_to_string(FWUPD_DEVICE(self));
-	if (tmp != NULL && tmp[0] != '\0')
-		g_string_append(str, tmp);
+	fwupd_codec_add_string(FWUPD_CODEC(self), 0, str);
 
 	/* run every unique ->to_string() in each subclass */
 	for (GType gtype = G_OBJECT_TYPE(self); gtype != G_TYPE_INVALID;
@@ -4414,18 +4508,25 @@ fu_device_write_firmware(FuDevice *self,
 		return FALSE;
 	}
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 1, "prepare-firmware");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, "write-firmware");
+
 	/* prepare (e.g. decompress) firmware */
-	fu_progress_set_status(progress, FWUPD_STATUS_DECOMPRESSING);
-	firmware = fu_device_prepare_firmware(self, stream, flags, error);
+	firmware =
+	    fu_device_prepare_firmware(self, stream, fu_progress_get_child(progress), flags, error);
 	if (firmware == NULL)
 		return FALSE;
 	str = fu_firmware_to_string(firmware);
 	g_info("installing onto %s:\n%s", fu_device_get_id(self), str);
+	fu_progress_step_done(progress);
 
 	/* call vfunc */
-	g_set_object(&priv->progress, progress);
-	if (!device_class->write_firmware(self, firmware, progress, flags, error))
+	g_set_object(&priv->progress, fu_progress_get_child(progress));
+	if (!device_class->write_firmware(self, firmware, priv->progress, flags, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* the device set an UpdateMessage (possibly from a quirk, or XML file)
 	 * but did not do an event; guess something */
@@ -4473,6 +4574,7 @@ fu_device_write_firmware(FuDevice *self,
 FuFirmware *
 fu_device_prepare_firmware(FuDevice *self,
 			   GInputStream *stream,
+			   FuProgress *progress,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
@@ -4483,11 +4585,12 @@ fu_device_prepare_firmware(FuDevice *self,
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* optionally subclassed */
 	if (device_class->prepare_firmware != NULL) {
-		firmware = device_class->prepare_firmware(self, stream, flags, error);
+		firmware = device_class->prepare_firmware(self, stream, progress, flags, error);
 		if (firmware == NULL)
 			return NULL;
 	} else if (priv->firmware_gtype != G_TYPE_INVALID) {
@@ -5452,6 +5555,8 @@ fu_device_get_instance_str(FuDevice *self, const gchar *key)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(key != NULL, NULL);
+	if (priv->instance_hash == NULL)
+		return NULL;
 	return g_hash_table_lookup(priv->instance_hash, key);
 }
 
@@ -5514,7 +5619,6 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	FuDevicePrivate *priv_donor = GET_PRIVATE(donor);
 	GPtrArray *instance_ids = fu_device_get_instance_ids(donor);
-	GPtrArray *parent_guids = fu_device_get_parent_guids(donor);
 	GPtrArray *parent_physical_ids = fu_device_get_parent_physical_ids(donor);
 	GPtrArray *parent_backend_ids = fu_device_get_parent_backend_ids(donor);
 	GHashTableIter iter;
@@ -5543,8 +5647,12 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 		fu_device_set_custom_flags(self, priv_donor->custom_flags);
 	if (priv->ctx == NULL)
 		fu_device_set_context(self, fu_device_get_context(donor));
-	for (guint i = 0; i < parent_guids->len; i++)
-		fu_device_add_parent_guid(self, g_ptr_array_index(parent_guids, i));
+	if (priv_donor->parent_guids != NULL) {
+		for (guint i = 0; i < priv_donor->parent_guids->len; i++) {
+			const gchar *guid = g_ptr_array_index(priv_donor->parent_guids, i);
+			fu_device_add_parent_guid(self, guid);
+		}
+	}
 	if (parent_physical_ids != NULL) {
 		for (guint i = 0; i < parent_physical_ids->len; i++) {
 			const gchar *tmp = g_ptr_array_index(parent_physical_ids, i);
@@ -5557,7 +5665,13 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 			fu_device_add_parent_backend_id(self, tmp);
 		}
 	}
-	if (priv->metadata != NULL) {
+	if (priv_donor->counterpart_guids != NULL) {
+		for (guint i = 0; i < priv_donor->counterpart_guids->len; i++) {
+			const gchar *tmp = g_ptr_array_index(priv_donor->counterpart_guids, i);
+			fu_device_add_counterpart_guid(self, tmp);
+		}
+	}
+	if (priv_donor->metadata != NULL) {
 		g_hash_table_iter_init(&iter, priv_donor->metadata);
 		while (g_hash_table_iter_next(&iter, &key, &value)) {
 			if (fu_device_get_metadata(self, key) == NULL)
@@ -5570,16 +5684,23 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 		const gchar *possible_plugin = g_ptr_array_index(priv_donor->possible_plugins, i);
 		fu_device_add_possible_plugin(self, possible_plugin);
 	}
-	for (guint i = 0; i < priv_donor->instance_id_quirks->len; i++) {
-		const gchar *instance_id = g_ptr_array_index(priv_donor->instance_id_quirks, i);
-		fu_device_add_instance_id_full(self, instance_id, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+	if (priv_donor->instance_id_quirks != NULL) {
+		for (guint i = 0; i < priv_donor->instance_id_quirks->len; i++) {
+			const gchar *instance_id =
+			    g_ptr_array_index(priv_donor->instance_id_quirks, i);
+			fu_device_add_instance_id_full(self,
+						       instance_id,
+						       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+		}
 	}
 
 	/* copy all instance ID keys if not already set */
-	g_hash_table_iter_init(&iter, priv_donor->instance_hash);
-	while (g_hash_table_iter_next(&iter, &key, &value)) {
-		if (fu_device_get_instance_str(self, key) == NULL)
-			fu_device_add_instance_str(self, key, value);
+	if (priv_donor->instance_hash != NULL) {
+		g_hash_table_iter_init(&iter, priv_donor->instance_hash);
+		while (g_hash_table_iter_next(&iter, &key, &value)) {
+			if (fu_device_get_instance_str(self, key) == NULL)
+				fu_device_add_instance_str(self, key, value);
+		}
 	}
 
 	/* now the base class, where all the interesting bits are */
@@ -6054,6 +6175,15 @@ fu_device_flags_notify_cb(FuDevice *self, GParamSpec *pspec, gpointer user_data)
 		fu_device_ensure_inhibits(self);
 }
 
+static void
+fu_device_ensure_instance_hash(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	if (priv->instance_hash != NULL)
+		return;
+	priv->instance_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+}
+
 /**
  * fu_device_add_instance_str:
  * @self: a #FuDevice
@@ -6070,6 +6200,7 @@ fu_device_add_instance_str(FuDevice *self, const gchar *key, const gchar *value)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
+	fu_device_ensure_instance_hash(self);
 	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup(value));
 }
 
@@ -6142,6 +6273,7 @@ fu_device_add_instance_strsafe(FuDevice *self, const gchar *key, const gchar *va
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
+	fu_device_ensure_instance_hash(self);
 	g_hash_table_insert(priv->instance_hash,
 			    g_strdup(key),
 			    fu_common_instance_id_strsafe(value));
@@ -6163,6 +6295,7 @@ fu_device_add_instance_strup(FuDevice *self, const gchar *key, const gchar *valu
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
+	fu_device_ensure_instance_hash(self);
 	g_hash_table_insert(priv->instance_hash,
 			    g_strdup(key),
 			    value != NULL ? g_utf8_strup(value, -1) : NULL);
@@ -6184,6 +6317,7 @@ fu_device_add_instance_u4(FuDevice *self, const gchar *key, guint8 value)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
+	fu_device_ensure_instance_hash(self);
 	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup_printf("%01X", value));
 }
 
@@ -6203,6 +6337,7 @@ fu_device_add_instance_u8(FuDevice *self, const gchar *key, guint8 value)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
+	fu_device_ensure_instance_hash(self);
 	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup_printf("%02X", value));
 }
 
@@ -6222,6 +6357,7 @@ fu_device_add_instance_u16(FuDevice *self, const gchar *key, guint16 value)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
+	fu_device_ensure_instance_hash(self);
 	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup_printf("%04X", value));
 }
 
@@ -6241,6 +6377,7 @@ fu_device_add_instance_u32(FuDevice *self, const gchar *key, guint32 value)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(key != NULL);
+	fu_device_ensure_instance_hash(self);
 	g_hash_table_insert(priv->instance_hash, g_strdup(key), g_strdup_printf("%08X", value));
 }
 
@@ -6341,6 +6478,13 @@ fu_device_build_instance_id_full(FuDevice *self,
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(subsystem != NULL, FALSE);
 
+	if (priv->instance_hash == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no instance hash values defined");
+		return FALSE;
+	}
 	va_start(args, subsystem);
 	for (guint i = 0;; i++) {
 		const gchar *key = va_arg(args, const gchar *);
@@ -6602,11 +6746,7 @@ fu_device_init(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	priv->order = G_MAXINT;
-	priv->parent_guids = g_ptr_array_new_with_free_func(g_free);
 	priv->possible_plugins = g_ptr_array_new_with_free_func(g_free);
-	priv->instance_id_quirks = g_ptr_array_new_with_free_func(g_free);
-	priv->retry_recs = g_ptr_array_new_with_free_func(g_free);
-	priv->instance_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	priv->acquiesce_delay = 50; /* ms */
 	priv->notify_flags_handler_id = g_signal_connect(FWUPD_DEVICE(self),
 							 "notify::flags",
@@ -6638,16 +6778,23 @@ fu_device_finalize(GObject *object)
 		g_hash_table_unref(priv->metadata);
 	if (priv->inhibits != NULL)
 		g_hash_table_unref(priv->inhibits);
+	if (priv->instance_hash != NULL)
+		g_hash_table_unref(priv->instance_hash);
 	if (priv->parent_physical_ids != NULL)
 		g_ptr_array_unref(priv->parent_physical_ids);
 	if (priv->parent_backend_ids != NULL)
 		g_ptr_array_unref(priv->parent_backend_ids);
+	if (priv->counterpart_guids != NULL)
+		g_ptr_array_unref(priv->counterpart_guids);
 	if (priv->private_flag_items != NULL)
 		g_ptr_array_unref(priv->private_flag_items);
-	g_ptr_array_unref(priv->parent_guids);
+	if (priv->retry_recs != NULL)
+		g_ptr_array_unref(priv->retry_recs);
+	if (priv->instance_id_quirks != NULL)
+		g_ptr_array_unref(priv->instance_id_quirks);
+	if (priv->parent_guids != NULL)
+		g_ptr_array_unref(priv->parent_guids);
 	g_ptr_array_unref(priv->possible_plugins);
-	g_ptr_array_unref(priv->instance_id_quirks);
-	g_ptr_array_unref(priv->retry_recs);
 	g_free(priv->equivalent_id);
 	g_free(priv->physical_id);
 	g_free(priv->logical_id);
@@ -6655,7 +6802,6 @@ fu_device_finalize(GObject *object)
 	g_free(priv->update_request_id);
 	g_free(priv->proxy_guid);
 	g_free(priv->custom_flags);
-	g_hash_table_unref(priv->instance_hash);
 
 	G_OBJECT_CLASS(fu_device_parent_class)->finalize(object);
 }

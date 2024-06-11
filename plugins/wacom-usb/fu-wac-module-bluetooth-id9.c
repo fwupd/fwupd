@@ -132,6 +132,7 @@ fu_wac_module_bluetooth_id9_write_blocks(FuWacModule *self,
 static FuFirmware *
 fu_wac_module_bluetooth_id9_prepare_firmware(FuDevice *device,
 					     GInputStream *stream,
+					     FuProgress *progress,
 					     FwupdInstallFlags flags,
 					     GError **error)
 {

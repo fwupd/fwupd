@@ -1592,7 +1592,6 @@ fu_history_get_security_attrs(FuHistory *self, guint limit, GError **error)
 		guint hash;
 		const gchar *timestamp;
 		g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-		g_autoptr(JsonParser) parser = NULL;
 		g_autoptr(GDateTime) created_dt = NULL;
 		g_autoptr(GTimeZone) tz_utc = g_time_zone_new_utc();
 
@@ -1615,11 +1614,8 @@ fu_history_get_security_attrs(FuHistory *self, guint limit, GError **error)
 		old_hash = hash;
 
 		/* parse JSON */
-		parser = json_parser_new();
 		g_debug("parsing %s", timestamp);
-		if (!json_parser_load_from_data(parser, json, -1, error))
-			return NULL;
-		if (!fu_security_attrs_from_json(attrs, json_parser_get_root(parser), error))
+		if (!fwupd_codec_from_json_string(FWUPD_CODEC(attrs), json, error))
 			return NULL;
 
 		/* parse timestamp */

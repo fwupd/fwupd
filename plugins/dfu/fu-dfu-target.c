@@ -63,13 +63,13 @@ fu_dfu_target_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuDfuTarget *self = FU_DFU_TARGET(device);
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-	fu_string_append_kx(str, idt, "AltSetting", priv->alt_setting);
-	fu_string_append_kx(str, idt, "AltIdx", priv->alt_idx);
+	fwupd_codec_string_append_hex(str, idt, "AltSetting", priv->alt_setting);
+	fwupd_codec_string_append_hex(str, idt, "AltIdx", priv->alt_idx);
 	for (guint i = 0; i < priv->sectors->len; i++) {
 		FuDfuSector *sector = g_ptr_array_index(priv->sectors, i);
 		g_autofree gchar *tmp1 = g_strdup_printf("Idx%02x", i);
 		g_autofree gchar *tmp2 = fu_dfu_sector_to_string(sector);
-		fu_string_append(str, idt + 1, tmp1, tmp2);
+		fwupd_codec_string_append(str, idt + 1, tmp1, tmp2);
 	}
 }
 

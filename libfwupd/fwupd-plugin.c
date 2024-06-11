@@ -8,9 +8,10 @@
 
 #include <string.h>
 
+#include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
-#include "fwupd-plugin-private.h"
+#include "fwupd-plugin.h"
 
 /**
  * FwupdPlugin:
@@ -30,7 +31,16 @@ typedef struct {
 
 enum { PROP_0, PROP_NAME, PROP_FLAGS, PROP_LAST };
 
-G_DEFINE_TYPE_WITH_PRIVATE(FwupdPlugin, fwupd_plugin, G_TYPE_OBJECT)
+static void
+fwupd_plugin_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FwupdPlugin,
+		       fwupd_plugin,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_ADD_PRIVATE(FwupdPlugin)
+			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fwupd_plugin_codec_iface_init));
+
 #define GET_PRIVATE(o) (fwupd_plugin_get_instance_private(o))
 
 /**
@@ -177,39 +187,24 @@ fwupd_plugin_has_flag(FwupdPlugin *self, FwupdPluginFlags flag)
 	return (priv->flags & flag) > 0;
 }
 
-/**
- * fwupd_plugin_to_variant:
- * @self: a #FwupdPlugin
- *
- * Serialize the plugin data omitting sensitive fields
- *
- * Returns: the serialized data, or %NULL for error
- *
- * Since: 1.5.0
- **/
-GVariant *
-fwupd_plugin_to_variant(FwupdPlugin *self)
+static void
+fwupd_plugin_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
+	FwupdPlugin *self = FWUPD_PLUGIN(codec);
 	FwupdPluginPrivate *priv = GET_PRIVATE(self);
-	GVariantBuilder builder;
 
-	g_return_val_if_fail(FWUPD_IS_PLUGIN(self), NULL);
-
-	/* create an array with all the metadata in */
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
 	if (priv->name != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_NAME,
 				      g_variant_new_string(priv->name));
 	}
 	if (priv->flags > 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FLAGS,
 				      g_variant_new_uint64(priv->flags));
 	}
-	return g_variant_new("a{sv}", &builder);
 }
 
 static void
@@ -226,7 +221,7 @@ fwupd_plugin_from_key_value(FwupdPlugin *self, const gchar *key, GVariant *value
 }
 
 static void
-fwupd_pad_kv_dfl(GString *str, const gchar *key, guint64 plugin_flags)
+fwupd_plugin_string_append_flags(GString *str, guint idt, const gchar *key, guint64 plugin_flags)
 {
 	g_autoptr(GString) tmp = g_string_new("");
 	for (guint i = 0; i < 64; i++) {
@@ -239,27 +234,19 @@ fwupd_pad_kv_dfl(GString *str, const gchar *key, guint64 plugin_flags)
 	} else {
 		g_string_truncate(tmp, tmp->len - 1);
 	}
-	fwupd_pad_kv_str(str, key, tmp->str);
+	fwupd_codec_string_append(str, idt, key, tmp->str);
 }
 
-/**
- * fwupd_plugin_to_json:
- * @self: a #FwupdPlugin
- * @builder: a JSON builder
- *
- * Adds a fwupd plugin to a JSON builder
- *
- * Since: 1.5.0
- **/
-void
-fwupd_plugin_to_json(FwupdPlugin *self, JsonBuilder *builder)
+static void
+fwupd_plugin_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
+	FwupdPlugin *self = FWUPD_PLUGIN(codec);
 	FwupdPluginPrivate *priv = GET_PRIVATE(self);
 
 	g_return_if_fail(FWUPD_IS_PLUGIN(self));
 	g_return_if_fail(builder != NULL);
 
-	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_NAME, priv->name);
 	if (priv->flags != FWUPD_PLUGIN_FLAG_NONE) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_FLAGS);
 		json_builder_begin_array(builder);
@@ -274,28 +261,13 @@ fwupd_plugin_to_json(FwupdPlugin *self, JsonBuilder *builder)
 	}
 }
 
-/**
- * fwupd_plugin_to_string:
- * @self: a #FwupdPlugin
- *
- * Builds a text representation of the object.
- *
- * Returns: text, or %NULL for invalid
- *
- * Since: 1.5.0
- **/
-gchar *
-fwupd_plugin_to_string(FwupdPlugin *self)
+static void
+fwupd_plugin_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
+	FwupdPlugin *self = FWUPD_PLUGIN(codec);
 	FwupdPluginPrivate *priv = GET_PRIVATE(self);
-	GString *str;
-
-	g_return_val_if_fail(FWUPD_IS_PLUGIN(self), NULL);
-
-	str = g_string_new(NULL);
-	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_NAME, priv->name);
-	fwupd_pad_kv_dfl(str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
-	return g_string_free(str, FALSE);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_plugin_string_append_flags(str, idt, FWUPD_RESULT_KEY_FLAGS, priv->flags);
 }
 
 static void
@@ -386,8 +358,9 @@ fwupd_plugin_finalize(GObject *object)
 }
 
 static void
-fwupd_plugin_set_from_variant_iter(FwupdPlugin *self, GVariantIter *iter)
+fwupd_plugin_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
+	FwupdPlugin *self = FWUPD_PLUGIN(codec);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {
@@ -396,73 +369,13 @@ fwupd_plugin_set_from_variant_iter(FwupdPlugin *self, GVariantIter *iter)
 	}
 }
 
-/**
- * fwupd_plugin_from_variant:
- * @value: (not nullable): the serialized data
- *
- * Creates a new plugin using serialized data.
- *
- * Returns: (transfer full): a new #FwupdPlugin, or %NULL if @value was invalid
- *
- * Since: 1.5.0
- **/
-FwupdPlugin *
-fwupd_plugin_from_variant(GVariant *value)
+static void
+fwupd_plugin_codec_iface_init(FwupdCodecInterface *iface)
 {
-	FwupdPlugin *self = NULL;
-	const gchar *type_string;
-	g_autoptr(GVariantIter) iter = NULL;
-
-	g_return_val_if_fail(value != NULL, NULL);
-
-	/* format from GetDetails */
-	type_string = g_variant_get_type_string(value);
-	if (g_strcmp0(type_string, "(a{sv})") == 0) {
-		self = fwupd_plugin_new();
-		g_variant_get(value, "(a{sv})", &iter);
-		fwupd_plugin_set_from_variant_iter(self, iter);
-	} else if (g_strcmp0(type_string, "a{sv}") == 0) {
-		self = fwupd_plugin_new();
-		g_variant_get(value, "a{sv}", &iter);
-		fwupd_plugin_set_from_variant_iter(self, iter);
-	} else {
-		g_warning("type %s not known", type_string);
-	}
-	return self;
-}
-
-/**
- * fwupd_plugin_array_from_variant:
- * @value: (not nullable): the serialized data
- *
- * Creates an array of new plugins using serialized data.
- *
- * Returns: (transfer container) (element-type FwupdPlugin): plugins, or %NULL if @value was invalid
- *
- * Since: 1.5.0
- **/
-GPtrArray *
-fwupd_plugin_array_from_variant(GVariant *value)
-{
-	GPtrArray *array = NULL;
-	gsize sz;
-	g_autoptr(GVariant) untuple = NULL;
-
-	g_return_val_if_fail(value != NULL, NULL);
-
-	array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	untuple = g_variant_get_child_value(value, 0);
-	sz = g_variant_n_children(untuple);
-	for (guint i = 0; i < sz; i++) {
-		FwupdPlugin *self;
-		g_autoptr(GVariant) data = NULL;
-		data = g_variant_get_child_value(untuple, i);
-		self = fwupd_plugin_from_variant(data);
-		if (self == NULL)
-			continue;
-		g_ptr_array_add(array, self);
-	}
-	return array;
+	iface->add_string = fwupd_plugin_add_string;
+	iface->add_json = fwupd_plugin_add_json;
+	iface->add_variant = fwupd_plugin_add_variant;
+	iface->from_variant_iter = fwupd_plugin_from_variant_iter;
 }
 
 /**

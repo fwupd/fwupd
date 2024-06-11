@@ -3,17 +3,17 @@ if gusb.found()
 {%- elif Parent == 'Udev' -%}
 if gudev.found()
 {%- endif %}
-cargs = ['-DG_LOG_DOMAIN="FuPlugin{{Vendor}}{{Example}}"']
+cargs = ['-DG_LOG_DOMAIN="FuPlugin{{VendorExample}}"']
 
 plugins += {meson.current_source_dir().split('/')[-1]: true}
-plugin_quirks += files('{{vendor}}-{{example}}.quirk')
-plugin_builtins += static_library('fu_plugin_{{vendor}}_{{example}}',
-  rustgen.process('fu-{{vendor}}-{{example}}.rs'),
+plugin_quirks += files('{{vendor_dash_example}}.quirk')
+plugin_builtins += static_library('fu_plugin_{{vendor_example}}',
+  rustgen.process('fu-{{vendor_dash_example}}.rs'),
   sources: [
-    'fu-{{vendor}}-{{example}}-common.c',
-    'fu-{{vendor}}-{{example}}-device.c',
-    'fu-{{vendor}}-{{example}}-firmware.c',
-    'fu-{{vendor}}-{{example}}-plugin.c',
+    'fu-{{vendor_dash_example}}-common.c',
+    'fu-{{vendor_dash_example}}-device.c',
+    'fu-{{vendor_dash_example}}-firmware.c',
+    'fu-{{vendor_dash_example}}-plugin.c',
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,

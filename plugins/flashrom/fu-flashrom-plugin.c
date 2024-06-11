@@ -27,8 +27,7 @@ static void
 fu_flashrom_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuFlashromPlugin *self = FU_FLASHROM_PLUGIN(plugin);
-	if (self->guid != NULL)
-		fu_string_append(str, idt, "Guid", self->guid);
+	fwupd_codec_string_append(str, idt, "Guid", self->guid);
 }
 
 static int

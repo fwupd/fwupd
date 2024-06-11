@@ -27,11 +27,14 @@ fu_kinetic_dp_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuKineticDpDevice *self = FU_KINETIC_DP_DEVICE(device);
 	FuKineticDpDevicePrivate *priv = GET_PRIVATE(self);
-	fu_string_append(str, idt, "Family", fu_kinetic_dp_family_to_string(priv->family));
-	fu_string_append(str, idt, "ChipId", fu_kinetic_dp_chip_to_string(priv->chip_id));
-	fu_string_append(str, idt, "FwState", fu_kinetic_dp_fw_state_to_string(priv->fw_state));
-	fu_string_append_kx(str, idt, "CustomerId", priv->customer_id);
-	fu_string_append_kx(str, idt, "CustomerBoard", priv->customer_board);
+	fwupd_codec_string_append(str, idt, "Family", fu_kinetic_dp_family_to_string(priv->family));
+	fwupd_codec_string_append(str, idt, "ChipId", fu_kinetic_dp_chip_to_string(priv->chip_id));
+	fwupd_codec_string_append(str,
+				  idt,
+				  "FwState",
+				  fu_kinetic_dp_fw_state_to_string(priv->fw_state));
+	fwupd_codec_string_append_hex(str, idt, "CustomerId", priv->customer_id);
+	fwupd_codec_string_append_hex(str, idt, "CustomerBoard", priv->customer_board);
 }
 
 void

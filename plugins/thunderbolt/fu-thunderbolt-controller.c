@@ -67,10 +67,13 @@ static void
 fu_thunderbolt_controller_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuThunderboltController *self = FU_THUNDERBOLT_CONTROLLER(device);
-	fu_string_append(str, idt, "DeviceType", fu_thunderbolt_controller_kind_to_string(self));
-	fu_string_append_kb(str, idt, "SafeMode", self->safe_mode);
-	fu_string_append_kb(str, idt, "NativeMode", self->is_native);
-	fu_string_append_ku(str, idt, "Generation", self->gen);
+	fwupd_codec_string_append(str,
+				  idt,
+				  "DeviceType",
+				  fu_thunderbolt_controller_kind_to_string(self));
+	fwupd_codec_string_append_bool(str, idt, "SafeMode", self->safe_mode);
+	fwupd_codec_string_append_bool(str, idt, "NativeMode", self->is_native);
+	fwupd_codec_string_append_int(str, idt, "Generation", self->gen);
 }
 
 static gboolean
@@ -168,6 +171,8 @@ fu_thunderbolt_controller_setup_usb4(FuThunderboltController *self, GError **err
 {
 	if (!fu_thunderbolt_udev_set_port_offline(FU_UDEV_DEVICE(self), error))
 		return FALSE;
+	if (self->host_online_timer_id > 0)
+		g_source_remove(self->host_online_timer_id);
 	self->host_online_timer_id =
 	    g_timeout_add_seconds(5, fu_thunderbolt_controller_set_port_online_cb, self);
 	return TRUE;

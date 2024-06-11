@@ -21,6 +21,7 @@ run_device_tests()
 				--no-unreported-check \
 				--no-remote-check \
 				--no-metadata-check \
+				--verbose \
 				"$f"
 		        rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 		done

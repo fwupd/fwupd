@@ -78,7 +78,7 @@ static void
 fu_emmc_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuEmmcDevice *self = FU_EMMC_DEVICE(device);
-	fu_string_append_ku(str, idt, "SectorSize", self->sect_size);
+	fwupd_codec_string_append_int(str, idt, "SectorSize", self->sect_size);
 }
 
 static const gchar *
@@ -329,6 +329,7 @@ fu_emmc_device_setup(FuDevice *device, GError **error)
 static FuFirmware *
 fu_emmc_device_prepare_firmware(FuDevice *device,
 				GInputStream *stream,
+				FuProgress *progress,
 				FwupdInstallFlags flags,
 				GError **error)
 {

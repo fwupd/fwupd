@@ -21,12 +21,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "fwupd-bios-setting-private.h"
 #include "fwupd-client-private.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
-#include "fwupd-plugin-private.h"
 #include "fwupd-remote-private.h"
 
 #include "fu-bios-settings-private.h"
@@ -440,55 +438,35 @@ fu_util_watch(FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-static gint
-fu_util_plugin_name_sort_cb(FuPlugin **item1, FuPlugin **item2)
-{
-	return fu_plugin_name_compare(*item1, *item2);
-}
-
-static gboolean
-fu_util_get_plugins_as_json(FuUtilPrivate *priv, GPtrArray *plugins, GError **error)
-{
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	json_builder_begin_object(builder);
-
-	json_builder_set_member_name(builder, "Plugins");
-	json_builder_begin_array(builder);
-	for (guint i = 0; i < plugins->len; i++) {
-		FwupdPlugin *plugin = g_ptr_array_index(plugins, i);
-		json_builder_begin_object(builder);
-		fwupd_plugin_to_json(plugin, builder);
-		json_builder_end_object(builder);
-	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
-	return fu_util_print_builder(priv->console, builder, error);
-}
-
 static gboolean
 fu_util_get_plugins(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	GPtrArray *plugins;
 
 	/* load engine */
-	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_READONLY, priv->progress, error))
+	if (!fu_util_start_engine(priv,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+				  priv->progress,
+				  error))
 		return FALSE;
 
 	/* print */
 	plugins = fu_engine_get_plugins(priv->engine);
 	g_ptr_array_sort(plugins, (GCompareFunc)fu_util_plugin_name_sort_cb);
-	if (priv->as_json)
-		return fu_util_get_plugins_as_json(priv, plugins, error);
+	if (priv->as_json) {
+		g_autoptr(JsonBuilder) builder = json_builder_new();
+		json_builder_begin_object(builder);
+		fwupd_codec_array_to_json(plugins, "Plugins", builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
+		return fu_util_print_builder(priv->console, builder, error);
+	}
 
 	/* print */
 	for (guint i = 0; i < plugins->len; i++) {
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
 		g_autofree gchar *str = fu_util_plugin_to_string(FWUPD_PLUGIN(plugin), 0);
 		fu_console_print_literal(priv->console, str);
-	}
-	if (plugins->len == 0) {
-		/* TRANSLATORS: nothing found */
-		fu_console_print_literal(priv->console, _("No plugins found"));
 	}
 
 	return TRUE;
@@ -828,9 +806,7 @@ fu_util_get_devices_as_json(FuUtilPrivate *priv, GPtrArray *devs, GError **error
 		}
 
 		/* add to builder */
-		json_builder_begin_object(builder);
-		fwupd_device_to_json_full(FWUPD_DEVICE(dev), builder, FWUPD_DEVICE_FLAG_TRUSTED);
-		json_builder_end_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
 	}
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
@@ -1389,6 +1365,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 			}
 
 			/* if component should have an update message from CAB */
+			fu_device_ensure_from_component(device, component);
 			fu_device_incorporate_from_component(device, component);
 
 			/* success */
@@ -1891,7 +1868,7 @@ fu_util_report_metadata_to_string(GHashTable *metadata, guint idt, GString *str)
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		const gchar *value = g_hash_table_lookup(metadata, key);
-		fu_string_append(str, idt, key, value);
+		fwupd_codec_string_append(str, idt, key, value);
 	}
 }
 
@@ -1938,17 +1915,17 @@ fu_util_get_report_metadata(FuUtilPrivate *priv, gchar **values, GError **error)
 		metadata_pre = fu_device_report_metadata_pre(device);
 		metadata_post = fu_device_report_metadata_post(device);
 		if (metadata_pre != NULL || metadata_post != NULL) {
-			fu_string_append(str,
-					 0,
-					 FWUPD_RESULT_KEY_DEVICE_ID,
-					 fu_device_get_id(device));
+			fwupd_codec_string_append(str,
+						  0,
+						  FWUPD_RESULT_KEY_DEVICE_ID,
+						  fu_device_get_id(device));
 		}
 		if (metadata_pre != NULL) {
-			fu_string_append(str, 1, "pre", NULL);
+			fwupd_codec_string_append(str, 1, "pre", "");
 			fu_util_report_metadata_to_string(metadata_pre, 3, str);
 		}
 		if (metadata_post != NULL) {
-			fu_string_append(str, 1, "post", NULL);
+			fwupd_codec_string_append(str, 1, "post", "");
 			fu_util_report_metadata_to_string(metadata_post, 3, str);
 		}
 	}
@@ -3436,6 +3413,13 @@ fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
 				    "no remotes available");
 		return FALSE;
 	}
+	if (priv->as_json) {
+		g_autoptr(JsonBuilder) builder = json_builder_new();
+		json_builder_begin_object(builder);
+		fwupd_codec_array_to_json(remotes, "Remotes", builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
+		return fu_util_print_builder(priv->console, builder, error);
+	}
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote_tmp = g_ptr_array_index(remotes, i);
 		g_node_append_data(root, g_object_ref(remote_tmp));
@@ -3482,7 +3466,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* print the "why" */
 	if (priv->as_json) {
-		str = fu_security_attrs_to_json_string(attrs, error);
+		str = fwupd_codec_to_json_string(FWUPD_CODEC(attrs), FWUPD_CODEC_FLAG_NONE, error);
 		if (str == NULL)
 			return FALSE;
 		fu_console_print_literal(priv->console, str);
@@ -3587,6 +3571,22 @@ fu_util_esp_unmount(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_esp_list_as_json(FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(GPtrArray) volumes = NULL;
+
+	volumes = fu_context_get_esp_volumes(fu_engine_get_context(priv->engine), error);
+	if (volumes == NULL)
+		return FALSE;
+
+	json_builder_begin_object(builder);
+	fwupd_codec_array_to_json(volumes, "Volumes", builder, FWUPD_CODEC_FLAG_TRUSTED);
+	json_builder_end_object(builder);
+	return fu_util_print_builder(priv->console, builder, error);
+}
+
+static gboolean
 fu_util_esp_list(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autofree gchar *mount_point = NULL;
@@ -3596,6 +3596,8 @@ fu_util_esp_list(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_READONLY, priv->progress, error))
 		return FALSE;
+	if (priv->as_json)
+		return fu_util_esp_list_as_json(priv, error);
 
 	volume = fu_util_prompt_for_volume(priv, error);
 	if (volume == NULL)
@@ -4091,6 +4093,7 @@ main(int argc, char *argv[])
 	gboolean ret;
 	gboolean version = FALSE;
 	gboolean ignore_checksum = FALSE;
+	gboolean ignore_requirements = FALSE;
 	gboolean ignore_vid_pid = FALSE;
 	g_auto(GStrv) plugin_glob = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -4157,6 +4160,14 @@ main(int argc, char *argv[])
 	     &ignore_vid_pid,
 	     /* TRANSLATORS: command line option */
 	     N_("Ignore firmware hardware mismatch failures"),
+	     NULL},
+	    {"ignore-requirements",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &ignore_requirements,
+	     /* TRANSLATORS: command line option */
+	     N_("Ignore non-critical firmware requirements"),
 	     NULL},
 	    {"no-reboot-check",
 	     '\0',
@@ -4812,6 +4823,8 @@ main(int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM;
 	if (ignore_vid_pid)
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_VID_PID;
+	if (ignore_requirements)
+		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
 
 	/* load engine */
 	priv->engine = fu_engine_new(ctx);

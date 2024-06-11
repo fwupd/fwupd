@@ -10,7 +10,6 @@
 
 #include <glib/gi18n.h>
 
-#include "fwupd-bios-setting-private.h"
 #include "fwupd-error.h"
 
 #include "fu-bios-setting.h"
@@ -27,7 +26,14 @@ struct _FuBiosSettings {
 	GPtrArray *attrs;
 };
 
-G_DEFINE_TYPE(FuBiosSettings, fu_bios_settings, G_TYPE_OBJECT)
+static void
+fwupd_bios_settings_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_WITH_CODE(FuBiosSettings,
+			fu_bios_settings,
+			G_TYPE_OBJECT,
+			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
+					      fwupd_bios_settings_codec_iface_init))
 
 static void
 fu_bios_settings_finalize(GObject *obj)
@@ -610,48 +616,25 @@ fu_bios_settings_get_pending_reboot(FuBiosSettings *self, gboolean *result, GErr
 	return TRUE;
 }
 
-/**
- * fu_bios_settings_to_variant:
- * @self: a #FuBiosSettings
- * @trusted: whether the caller should receive trusted values
- *
- * Serializes the #FwupdBiosSetting objects.
- *
- * Returns: a #GVariant or %NULL
- *
- * Since: 1.8.4
- **/
-GVariant *
-fu_bios_settings_to_variant(FuBiosSettings *self, gboolean trusted)
+static GVariant *
+fu_bios_settings_to_variant(FwupdCodec *codec, FwupdCodecFlags flags)
 {
+	FuBiosSettings *self = FU_BIOS_SETTINGS(codec);
 	GVariantBuilder builder;
-
-	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), NULL);
 
 	g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
 	for (guint i = 0; i < self->attrs->len; i++) {
 		FwupdBiosSetting *bios_setting = g_ptr_array_index(self->attrs, i);
-		g_variant_builder_add_value(&builder,
-					    fwupd_bios_setting_to_variant(bios_setting, trusted));
+		GVariant *value = fwupd_codec_to_variant(FWUPD_CODEC(bios_setting), flags);
+		g_variant_builder_add_value(&builder, value);
 	}
 	return g_variant_new("(aa{sv})", &builder);
 }
 
-/**
- * fu_bios_settings_from_json:
- * @self: a #FuBiosSettings
- * @json_node: a Json node to parse from
- * @error: (nullable): optional return location for an error
- *
- * Loads #FwupdBiosSetting objects from a JSON node.
- *
- * Returns: TRUE if the objects were imported
- *
- * Since: 1.8.4
- **/
-gboolean
-fu_bios_settings_from_json(FuBiosSettings *self, JsonNode *json_node, GError **error)
+static gboolean
+fu_bios_settings_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 {
+	FuBiosSettings *self = FU_BIOS_SETTINGS(codec);
 	JsonArray *array;
 	JsonObject *obj;
 
@@ -677,7 +660,7 @@ fu_bios_settings_from_json(FuBiosSettings *self, JsonNode *json_node, GError **e
 	for (guint i = 0; i < json_array_get_length(array); i++) {
 		JsonNode *node_tmp = json_array_get_element(array, i);
 		g_autoptr(FwupdBiosSetting) attr = fwupd_bios_setting_new(NULL, NULL);
-		if (!fwupd_bios_setting_from_json(attr, node_tmp, error))
+		if (!fwupd_codec_from_json(FWUPD_CODEC(attr), node_tmp, error))
 			return FALSE;
 		g_ptr_array_add(self->attrs, g_steal_pointer(&attr));
 	}
@@ -686,31 +669,11 @@ fu_bios_settings_from_json(FuBiosSettings *self, JsonNode *json_node, GError **e
 	return TRUE;
 }
 
-/**
- * fu_bios_settings_from_json_file:
- * @self: A #FuBiosSettings
- * @fn: a path to a JSON file
- * @error: (nullable): optional return location for an error
- *
- * Adds all BIOS attributes from a JSON filename
- *
- * Returns: TRUE for success, FALSE for failure
- *
- * Since: 1.8.4
- **/
-gboolean
-fu_bios_settings_from_json_file(FuBiosSettings *self, const gchar *fn, GError **error)
+static void
+fwupd_bios_settings_codec_iface_init(FwupdCodecInterface *iface)
 {
-	g_autofree gchar *data = NULL;
-	g_autoptr(JsonParser) parser = json_parser_new();
-
-	if (!g_file_get_contents(fn, &data, NULL, error))
-		return FALSE;
-	if (!json_parser_load_from_data(parser, data, -1, error)) {
-		g_prefix_error(error, "%s doesn't look like JSON data: ", fn);
-		return FALSE;
-	}
-	return fu_bios_settings_from_json(self, json_parser_get_root(parser), error);
+	iface->to_variant = fu_bios_settings_to_variant;
+	iface->from_json = fu_bios_settings_from_json;
 }
 
 /**

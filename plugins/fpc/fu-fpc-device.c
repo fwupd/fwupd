@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-fpc-device.h"
+#include "fu-fpc-ff2-firmware.h"
 #include "fu-fpc-struct.h"
 
 #define FPC_USB_INTERFACE	     0
@@ -19,6 +20,7 @@
 #define FPC_CMD_DFU_GETSTATUS	  0x03
 #define FPC_CMD_DFU_CLRSTATUS	  0x04
 #define FPC_CMD_DFU_GET_FW_STATUS 0x09
+#define FPC_CMD_DFU_DNLOAD_FF2	  0x10
 
 #define FPC_CMD_BOOT0		0x04
 #define FPC_CMD_GET_STATE	0x0B
@@ -33,6 +35,8 @@
 #define FPC_DEVICE_DFU_MODE_PORT     0x02
 #define FPC_DEVICE_NORMAL_MODE_CLASS 0xFF
 #define FPC_DEVICE_NORMAL_MODE_PORT  0xFF
+
+#define FPC_FF2_BLK_SEC_LINK_LEN 100
 
 /**
  * FU_FPC_DEVICE_FLAG_MOH_DEVICE:
@@ -72,6 +76,22 @@ struct _FuFpcDevice {
 
 G_DEFINE_TYPE(FuFpcDevice, fu_fpc_device, FU_TYPE_USB_DEVICE)
 
+static FuFirmware *
+fu_fpc_device_prepare_firmware(FuDevice *device,
+			       GInputStream *stream,
+			       FuProgress *progress,
+			       FwupdInstallFlags flags,
+			       GError **error)
+{
+	return fu_firmware_new_from_gtypes(stream,
+					   0x0,
+					   flags,
+					   error,
+					   FU_TYPE_FPC_FF2_FIRMWARE,
+					   FU_TYPE_FIRMWARE,
+					   G_TYPE_INVALID);
+}
+
 static gboolean
 fu_fpc_device_dfu_cmd(FuFpcDevice *self,
 		      guint8 request,
@@ -104,8 +124,10 @@ fu_fpc_device_dfu_cmd(FuFpcDevice *self,
 					   length ? &actual_len : NULL,
 					   FPC_USB_TRANSFER_TIMEOUT,
 					   NULL,
-					   error))
+					   error)) {
+		fu_error_convert(error);
 		return FALSE;
+	}
 	if (actual_len != length) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -147,8 +169,10 @@ fu_fpc_device_fw_cmd(FuFpcDevice *self,
 					   length ? &actual_len : NULL,
 					   FPC_USB_TRANSFER_TIMEOUT,
 					   NULL,
-					   error))
+					   error)) {
+		fu_error_convert(error);
 		return FALSE;
+	}
 	if (actual_len != length) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -325,17 +349,19 @@ fu_fpc_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuFpcDevice *self = FU_FPC_DEVICE(device);
 
-	fu_string_append_kx(str, idt, "MaxBlockSize", self->max_block_size);
-	fu_string_append_kb(str,
-			    idt,
-			    "LegacyDfu",
-			    fu_device_has_private_flag(device, FU_FPC_DEVICE_FLAG_LEGACY_DFU));
-	fu_string_append_kb(str,
-			    idt,
-			    "MocDevice",
-			    !fu_device_has_private_flag(device, FU_FPC_DEVICE_FLAG_MOH_DEVICE));
+	fwupd_codec_string_append_hex(str, idt, "MaxBlockSize", self->max_block_size);
+	fwupd_codec_string_append_bool(
+	    str,
+	    idt,
+	    "LegacyDfu",
+	    fu_device_has_private_flag(device, FU_FPC_DEVICE_FLAG_LEGACY_DFU));
+	fwupd_codec_string_append_bool(
+	    str,
+	    idt,
+	    "MocDevice",
+	    !fu_device_has_private_flag(device, FU_FPC_DEVICE_FLAG_MOH_DEVICE));
 	if (fu_device_has_private_flag(device, FU_FPC_DEVICE_FLAG_MOH_DEVICE)) {
-		fu_string_append_kb(
+		fwupd_codec_string_append_bool(
 		    str,
 		    idt,
 		    "RtsDevice",
@@ -410,6 +436,136 @@ fu_fpc_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_fpc_device_write_ff2_blocks(FuFpcDevice *self, GInputStream *stream, GError **error)
+{
+	g_autoptr(FuChunkArray) chunks = NULL;
+
+	chunks = fu_chunk_array_new_from_stream(stream, 0x0, FPC_FLASH_BLOCK_SIZE_4096, error);
+	if (chunks == NULL)
+		return FALSE;
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = NULL;
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		if (!fu_fpc_device_dfu_cmd(self,
+					   FPC_CMD_DFU_DNLOAD_FF2,
+					   0,
+					   (guint8 *)fu_chunk_get_data(chk),
+					   fu_chunk_get_data_sz(chk),
+					   FALSE,
+					   FALSE,
+					   error)) {
+			g_prefix_error(error,
+				       "failed to write at 0x%x: ",
+				       (guint)fu_chunk_get_address(chk));
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_fpc_device_write_ff2_firmware(FuFpcDevice *self,
+				 FuFpcFf2Firmware *firmware,
+				 FuProgress *progress,
+				 FwupdInstallFlags flags,
+				 GError **error)
+{
+	gsize offset = 0;
+	guint32 blocks_num;
+	g_autoptr(GInputStream) stream = NULL;
+
+	stream = fu_firmware_get_stream(FU_FIRMWARE(firmware), error);
+	if (stream == NULL)
+		return FALSE;
+	blocks_num = fu_fpc_ff2_firmware_get_blocks_num(firmware);
+	offset += FU_STRUCT_FPC_FF2_HDR_SIZE;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, blocks_num);
+	for (guint i = 0; i < blocks_num; i++) {
+		FuFpcFf2BlockDir direction;
+		g_autoptr(FuStructFpcFf2BlockHdr) st_blkhdr = NULL;
+		g_autoptr(FuStructFpcFf2BlockSec) st_blksec = NULL;
+		guint16 payload_len;
+
+		/* parse dfu_meta_content_hdr_t */
+		st_blkhdr = fu_struct_fpc_ff2_block_hdr_parse_stream(stream, offset, error);
+		if (st_blkhdr == NULL)
+			return FALSE;
+		direction = fu_struct_fpc_ff2_block_hdr_get_dir(st_blkhdr);
+		offset += st_blkhdr->len;
+
+		/* validate dfu_sec_link_t and include the size in payload */
+		st_blksec = fu_struct_fpc_ff2_block_sec_parse_stream(stream, offset, error);
+		if (st_blksec == NULL)
+			return FALSE;
+		payload_len = fu_struct_fpc_ff2_block_sec_get_payload_len(st_blksec);
+		payload_len += st_blksec->len;
+
+		if (direction == FU_FPC_FF2_BLOCK_DIR_OUT) {
+			g_autoptr(GInputStream) partial_stream = NULL;
+			g_autoptr(GByteArray) buf_sec = NULL;
+
+			/* write sec-link chunk? */
+			buf_sec = fu_input_stream_read_byte_array(stream,
+								  offset,
+								  FPC_FF2_BLK_SEC_LINK_LEN,
+								  error);
+			if (buf_sec == NULL)
+				return FALSE;
+			if (!fu_fpc_device_dfu_cmd(self,
+						   FPC_CMD_DFU_DNLOAD_FF2,
+						   0,
+						   buf_sec->data,
+						   buf_sec->len,
+						   FALSE,
+						   FALSE,
+						   error)) {
+				g_prefix_error(error, "failed to write sec-link: ");
+				return FALSE;
+			}
+
+			/* write data in 4k blocks */
+			partial_stream =
+			    fu_partial_input_stream_new(stream,
+							offset + FPC_FF2_BLK_SEC_LINK_LEN,
+							payload_len - FPC_FF2_BLK_SEC_LINK_LEN,
+							error);
+			if (partial_stream == NULL)
+				return FALSE;
+			if (!fu_fpc_device_write_ff2_blocks(self, partial_stream, error))
+				return FALSE;
+		} else if (direction == FU_FPC_FF2_BLOCK_DIR_IN) {
+			if (!fu_device_retry_full(FU_DEVICE(self),
+						  fu_fpc_device_check_dfu_status_cb,
+						  FPC_DFU_MAX_ATTEMPTS,
+						  20,
+						  NULL,
+						  error))
+				return FALSE;
+		} else {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "unsupported direction");
+			return FALSE;
+		}
+
+		/* there is a block terminator of 0xFF */
+		offset += payload_len + sizeof(guint8);
+		fu_progress_step_done(progress);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_fpc_device_write_firmware(FuDevice *device,
 			     FuFirmware *firmware,
 			     FuProgress *progress,
@@ -421,13 +577,22 @@ fu_fpc_device_write_firmware(FuDevice *device,
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
+	/* new format */
+	if (FU_IS_FPC_FF2_FIRMWARE(firmware)) {
+		return fu_fpc_device_write_ff2_firmware(self,
+							FU_FPC_FF2_FIRMWARE(firmware),
+							progress,
+							flags,
+							error);
+	}
+
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "init");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "check");
 
-	/* get default image */
+	/*  write old fw format */
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
 		return FALSE;
@@ -570,6 +735,7 @@ fu_fpc_device_class_init(FuFpcDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_fpc_device_to_string;
+	device_class->prepare_firmware = fu_fpc_device_prepare_firmware;
 	device_class->write_firmware = fu_fpc_device_write_firmware;
 	device_class->setup = fu_fpc_device_setup;
 	device_class->reload = fu_fpc_device_setup;

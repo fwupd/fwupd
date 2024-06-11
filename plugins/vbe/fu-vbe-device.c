@@ -29,7 +29,7 @@ fu_vbe_device_to_string(FuDevice *device, guint idt, GString *str)
 
 	if (priv->compatible != NULL) {
 		g_autofree gchar *tmp = g_strjoinv(":", priv->compatible);
-		fu_string_append(str, idt, "Compatible", tmp);
+		fwupd_codec_string_append(str, idt, "Compatible", tmp);
 	}
 }
 

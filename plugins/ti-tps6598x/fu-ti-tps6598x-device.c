@@ -32,8 +32,8 @@ static void
 fu_ti_tps6598x_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuTiTps6598xDevice *self = FU_TI_TPS6598X_DEVICE(device);
-	fu_string_append(str, idt, "UID", self->uid);
-	fu_string_append(str, idt, "oUID", self->ouid);
+	fwupd_codec_string_append(str, idt, "UID", self->uid);
+	fwupd_codec_string_append(str, idt, "oUID", self->ouid);
 }
 
 /* read @length bytes from address @addr */
