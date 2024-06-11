@@ -22,6 +22,53 @@ fwupd_codec_default_init(FwupdCodecInterface *iface)
 {
 }
 
+static void
+fwupd_codec_add_string_from_json_node(FwupdCodec *self,
+				      const gchar *member_name,
+				      JsonNode *json_node,
+				      guint idt,
+				      GString *str)
+{
+	JsonNodeType node_type = json_node_get_node_type(json_node);
+	if (node_type == JSON_NODE_VALUE) {
+		GType gtype = json_node_get_value_type(json_node);
+		if (gtype == G_TYPE_STRING) {
+			fwupd_codec_string_append(str,
+						  idt,
+						  member_name,
+						  json_node_get_string(json_node));
+		} else if (gtype == G_TYPE_INT64) {
+			fwupd_codec_string_append_hex(str,
+						      idt,
+						      member_name,
+						      json_node_get_int(json_node));
+		} else if (gtype == G_TYPE_BOOLEAN) {
+			fwupd_codec_string_append_bool(str,
+						       idt,
+						       member_name,
+						       json_node_get_boolean(json_node));
+		} else {
+			fwupd_codec_string_append(str, idt, member_name, "GType value unknown");
+		}
+	} else if (node_type == JSON_NODE_ARRAY) {
+		JsonArray *json_array = json_node_get_array(json_node);
+		g_autoptr(GList) json_nodes = json_array_get_elements(json_array);
+		fwupd_codec_string_append(str, idt, member_name, "");
+		for (GList *l = json_nodes; l != NULL; l = l->next)
+			fwupd_codec_add_string_from_json_node(self, "", l->data, idt + 1, str);
+	} else if (node_type == JSON_NODE_OBJECT) {
+		JsonObjectIter iter;
+		json_object_iter_init(&iter, json_node_get_object(json_node));
+		while (json_object_iter_next(&iter, &member_name, &json_node)) {
+			fwupd_codec_add_string_from_json_node(self,
+							      member_name,
+							      json_node,
+							      idt,
+							      str);
+		}
+	}
+}
+
 /**
  * fwupd_codec_add_string:
  * @self: a #FwupdCodec
@@ -40,13 +87,23 @@ fwupd_codec_add_string(FwupdCodec *self, guint idt, GString *str)
 	g_return_if_fail(FWUPD_IS_CODEC(self));
 	g_return_if_fail(str != NULL);
 
+	fwupd_codec_string_append(str, idt, G_OBJECT_TYPE_NAME(self), "");
 	iface = FWUPD_CODEC_GET_IFACE(self);
-	if (iface->add_string == NULL) {
-		g_critical("FwupdCodec->add_string not implemented");
+	if (iface->add_string != NULL) {
+		iface->add_string(self, idt + 1, str);
 		return;
 	}
-	fwupd_codec_string_append(str, idt, G_OBJECT_TYPE_NAME(self), "");
-	(*iface->add_string)(self, idt + 1, str);
+	if (iface->add_json != NULL) {
+		g_autoptr(JsonBuilder) builder = json_builder_new();
+		g_autoptr(JsonNode) root_node = NULL;
+		json_builder_begin_object(builder);
+		iface->add_json(self, builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
+		root_node = json_builder_get_root(builder);
+		fwupd_codec_add_string_from_json_node(self, NULL, root_node, idt + 1, str);
+		return;
+	}
+	g_critical("FwupdCodec->add_string or iface->add_json not implemented");
 }
 
 /**
@@ -69,10 +126,9 @@ fwupd_codec_to_string(FwupdCodec *self)
 	iface = FWUPD_CODEC_GET_IFACE(self);
 	if (iface->to_string != NULL)
 		iface->to_string(self);
-	if (iface->add_string != NULL) {
+	if (iface->add_string != NULL || iface->add_json != NULL) {
 		GString *str = g_string_new(NULL);
-		fwupd_codec_string_append(str, 0, G_OBJECT_TYPE_NAME(self), "");
-		iface->add_string(self, 1, str);
+		fwupd_codec_add_string(self, 0, str);
 		return g_string_free(str, FALSE);
 	}
 	g_critical("FwupdCodec->to_string and iface->add_string not implemented");
