@@ -67,17 +67,16 @@ fwupd_codec_to_string(FwupdCodec *self)
 	g_return_val_if_fail(FWUPD_IS_CODEC(self), NULL);
 
 	iface = FWUPD_CODEC_GET_IFACE(self);
-	if (iface->to_string == NULL) {
-		if (iface->add_string != NULL) {
-			GString *str = g_string_new(NULL);
-			fwupd_codec_string_append(str, 0, G_OBJECT_TYPE_NAME(self), "");
-			iface->add_string(self, 1, str);
-			return g_string_free(str, FALSE);
-		}
-		g_critical("FwupdCodec->to_string not implemented");
-		return NULL;
+	if (iface->to_string != NULL)
+		iface->to_string(self);
+	if (iface->add_string != NULL) {
+		GString *str = g_string_new(NULL);
+		fwupd_codec_string_append(str, 0, G_OBJECT_TYPE_NAME(self), "");
+		iface->add_string(self, 1, str);
+		return g_string_free(str, FALSE);
 	}
-	return (*iface->to_string)(self);
+	g_critical("FwupdCodec->to_string and iface->add_string not implemented");
+	return NULL;
 }
 
 /**
