@@ -32,7 +32,15 @@ struct _FuEfiHardDriveDevicePath {
 	FuEfiHardDriveDevicePathSignatureType signature_type;
 };
 
-G_DEFINE_TYPE(FuEfiHardDriveDevicePath, fu_efi_hard_drive_device_path, FU_TYPE_EFI_DEVICE_PATH)
+static void
+fu_efi_hard_drive_device_path_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuEfiHardDriveDevicePath,
+		       fu_efi_hard_drive_device_path,
+		       FU_TYPE_EFI_DEVICE_PATH,
+		       0,
+		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
+					     fu_efi_hard_drive_device_path_codec_iface_init))
 
 #define BLOCK_SIZE_FALLBACK 0x200
 
@@ -55,6 +63,29 @@ fu_efi_hard_drive_device_path_export(FuFirmware *firmware,
 	fu_xmlb_builder_insert_kv(
 	    bn,
 	    "signature_type",
+	    fu_efi_hard_drive_device_path_signature_type_to_string(self->signature_type));
+}
+
+static void
+fu_efi_hard_drive_device_path_add_json(FwupdCodec *codec,
+				       JsonBuilder *builder,
+				       FwupdCodecFlags flags)
+{
+	FuEfiHardDriveDevicePath *self = FU_EFI_HARD_DRIVE_DEVICE_PATH(codec);
+	g_autofree gchar *partition_signature =
+	    fwupd_guid_to_string(&self->partition_signature, FWUPD_GUID_FLAG_MIXED_ENDIAN);
+
+	fwupd_codec_json_append_int(builder, "PartitionNumber", self->partition_number);
+	fwupd_codec_json_append_int(builder, "PartitionStart", self->partition_start);
+	fwupd_codec_json_append_int(builder, "PartitionSize", self->partition_size);
+	fwupd_codec_json_append(builder, "PartitionSignature", partition_signature);
+	fwupd_codec_json_append(
+	    builder,
+	    "PartitionFormat",
+	    fu_efi_hard_drive_device_path_partition_format_to_string(self->partition_format));
+	fwupd_codec_json_append(
+	    builder,
+	    "SignatureType",
 	    fu_efi_hard_drive_device_path_signature_type_to_string(self->signature_type));
 }
 
@@ -274,6 +305,12 @@ fu_efi_hard_drive_device_path_compare(FuEfiHardDriveDevicePath *dp1, FuEfiHardDr
 	if (dp1->partition_size != dp2->partition_size)
 		return FALSE;
 	return TRUE;
+}
+
+static void
+fu_efi_hard_drive_device_path_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_json = fu_efi_hard_drive_device_path_add_json;
 }
 
 /**
