@@ -11,6 +11,8 @@
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-efi-device-path-list.h"
+#include "fu-efi-file-path-device-path.h"
+#include "fu-efi-hard-drive-device-path.h"
 #include "fu-efi-load-option.h"
 #include "fu-efi-struct.h"
 #include "fu-efivar.h"
@@ -260,9 +262,6 @@ fu_efi_load_option_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 		xb_builder_node_insert_text(bn, "optional_data", datastr, NULL);
 	}
 }
-
-#include "fu-efi-file-path-device-path.h"
-#include "fu-efi-hard-drive-device-path.h"
 
 static void
 fu_efi_load_option_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
