@@ -347,6 +347,36 @@ fwupd_codec_array_from_variant(GVariant *value, GType gtype, GError **error)
 }
 
 /**
+ * fwupd_codec_array_to_json:
+ * @array: (element-type GObject): (not nullable): array of objects that much implement `FwupdCodec`
+ * @member_name: (not nullable): member name of the array
+ * @builder: (not nullable): a #JsonBuilder
+ * @flags: a #FwupdCodecFlags, e.g. %FWUPD_CODEC_FLAG_TRUSTED
+ *
+ * Converts an array of objects into a #GVariant value.
+ *
+ * Since: 2.0.0
+ */
+void
+fwupd_codec_array_to_json(GPtrArray *array,
+			  const gchar *member_name,
+			  JsonBuilder *builder,
+			  FwupdCodecFlags flags)
+{
+	g_return_if_fail(array != NULL);
+	g_return_if_fail(member_name != NULL);
+	g_return_if_fail(JSON_IS_BUILDER(builder));
+
+	json_builder_set_member_name(builder, member_name);
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < array->len; i++) {
+		FwupdCodec *codec = FWUPD_CODEC(g_ptr_array_index(array, i));
+		fwupd_codec_to_json(codec, builder, flags);
+	}
+	json_builder_end_array(builder);
+}
+
+/**
  * fwupd_codec_array_to_variant:
  * @array: (element-type GObject): (not nullable): array of objects that much implement `FwupdCodec`
  * @flags: a #FwupdCodecFlags, e.g. %FWUPD_CODEC_FLAG_TRUSTED

@@ -53,6 +53,13 @@ fwupd_codec_to_json(FwupdCodec *self, JsonBuilder *builder, FwupdCodecFlags flag
     G_GNUC_NON_NULL(1, 2);
 gchar *
 fwupd_codec_to_json_string(FwupdCodec *self, FwupdCodecFlags flags, GError **error);
+
+void
+fwupd_codec_array_to_json(GPtrArray *array,
+			  const gchar *member_name,
+			  JsonBuilder *builder,
+			  FwupdCodecFlags flags);
+
 GVariant *
 fwupd_codec_to_variant(FwupdCodec *self, FwupdCodecFlags flags) G_GNUC_NON_NULL(1);
 gboolean
