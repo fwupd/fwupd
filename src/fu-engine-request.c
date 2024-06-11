@@ -30,9 +30,9 @@ G_DEFINE_TYPE_WITH_CODE(FuEngineRequest,
 					      fwupd_engine_request_codec_iface_init))
 
 static void
-fu_engine_request_add_string(FwupdCodec *converter, guint idt, GString *str)
+fu_engine_request_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FuEngineRequest *self = FU_ENGINE_REQUEST(converter);
+	FuEngineRequest *self = FU_ENGINE_REQUEST(codec);
 	if (self->flags != FU_ENGINE_REQUEST_FLAG_NONE) {
 		g_autofree gchar *flags = fu_engine_request_flag_to_string(self->flags);
 		fwupd_codec_string_append(str, idt, "Flags", flags);

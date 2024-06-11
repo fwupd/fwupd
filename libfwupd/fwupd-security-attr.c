@@ -1152,11 +1152,9 @@ fwupd_security_attr_get_result_success(FwupdSecurityAttr *self)
 }
 
 static void
-fwupd_security_attr_add_variant(FwupdCodec *converter,
-				GVariantBuilder *builder,
-				FwupdCodecFlags flags)
+fwupd_security_attr_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(converter);
+	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 
 	if (priv->appstream_id != NULL) {
@@ -1451,9 +1449,9 @@ fwupd_security_attr_string_append_tfl(GString *str,
 }
 
 static gboolean
-fwupd_security_attr_from_json(FwupdCodec *converter, JsonNode *json_node, GError **error)
+fwupd_security_attr_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 {
-	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(converter);
+	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
 	JsonObject *obj;
 
 	/* sanity check */
@@ -1574,9 +1572,9 @@ fwupd_security_attr_from_json(FwupdCodec *converter, JsonNode *json_node, GError
 }
 
 static void
-fwupd_security_attr_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_security_attr_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(converter);
+	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
@@ -1643,9 +1641,9 @@ fwupd_security_attr_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdC
 }
 
 static void
-fwupd_security_attr_add_string(FwupdCodec *converter, guint idt, GString *str)
+fwupd_security_attr_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(converter);
+	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
 	fwupd_codec_string_append_time(str, idt, FWUPD_RESULT_KEY_CREATED, priv->created);
@@ -1754,9 +1752,9 @@ fwupd_security_attr_finalize(GObject *object)
 }
 
 static void
-fwupd_security_attr_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
+fwupd_security_attr_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
-	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(converter);
+	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {

@@ -188,9 +188,9 @@ fwupd_plugin_has_flag(FwupdPlugin *self, FwupdPluginFlags flag)
 }
 
 static void
-fwupd_plugin_add_variant(FwupdCodec *converter, GVariantBuilder *builder, FwupdCodecFlags flags)
+fwupd_plugin_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdPlugin *self = FWUPD_PLUGIN(converter);
+	FwupdPlugin *self = FWUPD_PLUGIN(codec);
 	FwupdPluginPrivate *priv = GET_PRIVATE(self);
 
 	if (priv->name != NULL) {
@@ -238,9 +238,9 @@ fwupd_plugin_string_append_flags(GString *str, guint idt, const gchar *key, guin
 }
 
 static void
-fwupd_plugin_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_plugin_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdPlugin *self = FWUPD_PLUGIN(converter);
+	FwupdPlugin *self = FWUPD_PLUGIN(codec);
 	FwupdPluginPrivate *priv = GET_PRIVATE(self);
 
 	g_return_if_fail(FWUPD_IS_PLUGIN(self));
@@ -262,9 +262,9 @@ fwupd_plugin_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFla
 }
 
 static void
-fwupd_plugin_add_string(FwupdCodec *converter, guint idt, GString *str)
+fwupd_plugin_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FwupdPlugin *self = FWUPD_PLUGIN(converter);
+	FwupdPlugin *self = FWUPD_PLUGIN(codec);
 	FwupdPluginPrivate *priv = GET_PRIVATE(self);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_NAME, priv->name);
 	fwupd_plugin_string_append_flags(str, idt, FWUPD_RESULT_KEY_FLAGS, priv->flags);
@@ -358,9 +358,9 @@ fwupd_plugin_finalize(GObject *object)
 }
 
 static void
-fwupd_plugin_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
+fwupd_plugin_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
-	FwupdPlugin *self = FWUPD_PLUGIN(converter);
+	FwupdPlugin *self = FWUPD_PLUGIN(codec);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {

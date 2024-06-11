@@ -59,9 +59,9 @@ G_DEFINE_TYPE_WITH_CODE(FuCompositeInputStream,
 						  fu_composite_input_stream_codec_iface_init))
 
 static void
-fu_composite_input_stream_add_string(FwupdCodec *converter, guint idt, GString *str)
+fu_composite_input_stream_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(converter);
+	FuCompositeInputStream *self = FU_COMPOSITE_INPUT_STREAM(codec);
 	fwupd_codec_string_append_hex(str, idt, "Pos", self->pos);
 	fwupd_codec_string_append_hex(str, idt, "PosOffset", self->pos_offset);
 	fwupd_codec_string_append_hex(str, idt, "TotalSize", self->total_size);

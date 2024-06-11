@@ -766,11 +766,9 @@ fwupd_bios_setting_trusted(FwupdBiosSetting *self, gboolean trusted)
 }
 
 static void
-fwupd_bios_setting_add_variant(FwupdCodec *converter,
-			       GVariantBuilder *builder,
-			       FwupdCodecFlags flags)
+fwupd_bios_setting_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
+	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(codec);
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 
 	g_variant_builder_add(builder,
@@ -894,9 +892,9 @@ fwupd_bios_setting_from_key_value(FwupdBiosSetting *self, const gchar *key, GVar
 }
 
 static gboolean
-fwupd_bios_setting_from_json(FwupdCodec *converter, JsonNode *json_node, GError **error)
+fwupd_bios_setting_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 {
-	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
+	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(codec);
 	JsonObject *obj;
 
 	/* sanity check */
@@ -966,9 +964,9 @@ fwupd_bios_setting_from_json(FwupdCodec *converter, JsonNode *json_node, GError 
 }
 
 static void
-fwupd_bios_setting_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_bios_setting_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
+	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(codec);
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_NAME, priv->name);
@@ -1011,9 +1009,9 @@ fwupd_bios_setting_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCo
 }
 
 static void
-fwupd_bios_setting_add_string(FwupdCodec *converter, guint idt, GString *str)
+fwupd_bios_setting_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
+	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(codec);
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_NAME, priv->name);
@@ -1089,9 +1087,9 @@ fwupd_bios_setting_finalize(GObject *object)
 }
 
 static void
-fwupd_bios_setting_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
+fwupd_bios_setting_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
-	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
+	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(codec);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {

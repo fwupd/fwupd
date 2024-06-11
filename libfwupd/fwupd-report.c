@@ -471,9 +471,9 @@ fwupd_report_get_metadata_item(FwupdReport *self, const gchar *key)
 }
 
 static void
-fwupd_report_add_variant(FwupdCodec *converter, GVariantBuilder *builder, FwupdCodecFlags flags)
+fwupd_report_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdReport *self = FWUPD_REPORT(converter);
+	FwupdReport *self = FWUPD_REPORT(codec);
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
 
 	if (priv->distro_id != NULL) {
@@ -596,9 +596,9 @@ fwupd_report_from_key_value(FwupdReport *self, const gchar *key, GVariant *value
 }
 
 static void
-fwupd_report_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_report_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdReport *self = FWUPD_REPORT(converter);
+	FwupdReport *self = FWUPD_REPORT(codec);
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GList) keys = NULL;
 
@@ -653,9 +653,9 @@ fwupd_report_string_append_flags(GString *str, guint idt, const gchar *key, guin
 }
 
 static void
-fwupd_report_add_string(FwupdCodec *converter, guint idt, GString *str)
+fwupd_report_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FwupdReport *self = FWUPD_REPORT(converter);
+	FwupdReport *self = FWUPD_REPORT(codec);
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GList) keys = NULL;
 
@@ -905,9 +905,9 @@ fwupd_report_class_init(FwupdReportClass *klass)
 }
 
 static void
-fwupd_report_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
+fwupd_report_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
-	FwupdReport *self = FWUPD_REPORT(converter);
+	FwupdReport *self = FWUPD_REPORT(codec);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {

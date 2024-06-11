@@ -1533,9 +1533,9 @@ fwupd_release_set_install_duration(FwupdRelease *self, guint32 duration)
 }
 
 static void
-fwupd_release_add_variant(FwupdCodec *converter, GVariantBuilder *builder, FwupdCodecFlags flags)
+fwupd_release_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdRelease *self = FWUPD_RELEASE(converter);
+	FwupdRelease *self = FWUPD_RELEASE(codec);
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 
 	if (priv->remote_id != NULL) {
@@ -1934,9 +1934,9 @@ fwupd_release_string_append_flags(GString *str,
 }
 
 static void
-fwupd_release_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_release_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdRelease *self = FWUPD_RELEASE(converter);
+	FwupdRelease *self = FWUPD_RELEASE(codec);
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GList) keys = NULL;
 
@@ -2050,9 +2050,9 @@ fwupd_release_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFl
 }
 
 static void
-fwupd_release_add_string(FwupdCodec *converter, guint idt, GString *str)
+fwupd_release_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FwupdRelease *self = FWUPD_RELEASE(converter);
+	FwupdRelease *self = FWUPD_RELEASE(codec);
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GList) keys = NULL;
 
@@ -2233,9 +2233,9 @@ fwupd_release_finalize(GObject *object)
 }
 
 static void
-fwupd_release_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
+fwupd_release_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
-	FwupdRelease *self = FWUPD_RELEASE(converter);
+	FwupdRelease *self = FWUPD_RELEASE(codec);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {

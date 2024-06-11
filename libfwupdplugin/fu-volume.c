@@ -56,9 +56,9 @@ G_DEFINE_TYPE_EXTENDED(FuVolume,
 		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_volume_codec_iface_init))
 
 static void
-fu_volume_add_string(FwupdCodec *converter, guint idt, GString *str)
+fu_volume_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FuVolume *self = FU_VOLUME(converter);
+	FuVolume *self = FU_VOLUME(codec);
 	g_autofree gchar *mount_point = fu_volume_get_mount_point(self);
 	g_autofree gchar *partition_kind = fu_volume_get_partition_kind(self);
 	g_autofree gchar *partition_name = fu_volume_get_partition_name(self);

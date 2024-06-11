@@ -974,9 +974,9 @@ fu_progress_traceback(FuProgress *self)
 }
 
 static void
-fu_progress_add_string(FwupdCodec *converter, guint idt, GString *str)
+fu_progress_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FuProgress *self = FU_PROGRESS(converter);
+	FuProgress *self = FU_PROGRESS(codec);
 
 	/* not interesting */
 	if (self->id == NULL && self->name == NULL)
