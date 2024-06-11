@@ -218,9 +218,7 @@ fwupd_codec_to_json(FwupdCodec *self, JsonBuilder *builder, FwupdCodecFlags flag
 		g_critical("FwupdCodec->add_json not implemented");
 		return;
 	}
-	json_builder_begin_object(builder);
 	iface->add_json(self, builder, flags);
-	json_builder_end_object(builder);
 }
 
 /**
@@ -246,7 +244,9 @@ fwupd_codec_to_json_string(FwupdCodec *self, FwupdCodecFlags flags, GError **err
 	g_return_val_if_fail(FWUPD_IS_CODEC(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
+	json_builder_begin_object(builder);
 	fwupd_codec_to_json(self, builder, flags);
+	json_builder_end_object(builder);
 	json_root = json_builder_get_root(builder);
 	json_generator = json_generator_new();
 	json_generator_set_pretty(json_generator, TRUE);
@@ -371,7 +371,9 @@ fwupd_codec_array_to_json(GPtrArray *array,
 	json_builder_begin_array(builder);
 	for (guint i = 0; i < array->len; i++) {
 		FwupdCodec *codec = FWUPD_CODEC(g_ptr_array_index(array, i));
+		json_builder_begin_object(builder);
 		fwupd_codec_to_json(codec, builder, flags);
+		json_builder_end_object(builder);
 	}
 	json_builder_end_array(builder);
 }

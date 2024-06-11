@@ -6595,7 +6595,9 @@ fwupd_client_build_report_devices(FwupdClient *self,
 			g_debug("ignoring %s as not updatable", fwupd_device_get_id(dev));
 			continue;
 		}
+		json_builder_begin_object(builder);
 		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
 		cnt++;
 	}
 	json_builder_end_array(builder);
@@ -6925,7 +6927,9 @@ fwupd_client_build_report_security(FwupdClient *self,
 	json_builder_begin_array(builder);
 	for (guint i = 0; i < attrs->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
+		json_builder_begin_object(builder);
 		fwupd_codec_to_json(FWUPD_CODEC(attr), builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
 		cnt++;
 	}
 	json_builder_end_array(builder);
