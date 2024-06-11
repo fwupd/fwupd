@@ -506,7 +506,9 @@ fu_security_attrs_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFl
 		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
 			continue;
 		fwupd_security_attr_set_created(attr, 0);
+		json_builder_begin_object(builder);
 		fwupd_codec_to_json(FWUPD_CODEC(attr), builder, FWUPD_CODEC_FLAG_NONE);
+		json_builder_end_object(builder);
 		fwupd_security_attr_set_created(attr, created);
 	}
 	json_builder_end_array(builder);
