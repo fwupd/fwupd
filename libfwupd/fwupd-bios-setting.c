@@ -966,7 +966,7 @@ fwupd_bios_setting_from_json(FwupdCodec *converter, JsonNode *json_node, GError 
 }
 
 static void
-fwupd_bios_setting_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_bios_setting_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
 {
 	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
@@ -1104,7 +1104,7 @@ static void
 fwupd_bios_setting_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fwupd_bios_setting_add_string;
-	iface->to_json = fwupd_bios_setting_to_json;
+	iface->add_json = fwupd_bios_setting_add_json;
 	iface->from_json = fwupd_bios_setting_from_json;
 	iface->add_variant = fwupd_bios_setting_add_variant;
 	iface->from_variant_iter = fwupd_bios_setting_from_variant_iter;

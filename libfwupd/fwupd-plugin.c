@@ -238,7 +238,7 @@ fwupd_plugin_string_append_flags(GString *str, guint idt, const gchar *key, guin
 }
 
 static void
-fwupd_plugin_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_plugin_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
 {
 	FwupdPlugin *self = FWUPD_PLUGIN(converter);
 	FwupdPluginPrivate *priv = GET_PRIVATE(self);
@@ -373,7 +373,7 @@ static void
 fwupd_plugin_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fwupd_plugin_add_string;
-	iface->to_json = fwupd_plugin_to_json;
+	iface->add_json = fwupd_plugin_add_json;
 	iface->add_variant = fwupd_plugin_add_variant;
 	iface->from_variant_iter = fwupd_plugin_from_variant_iter;
 }

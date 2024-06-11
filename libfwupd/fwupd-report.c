@@ -596,7 +596,7 @@ fwupd_report_from_key_value(FwupdReport *self, const gchar *key, GVariant *value
 }
 
 static void
-fwupd_report_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_report_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
 {
 	FwupdReport *self = FWUPD_REPORT(converter);
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
@@ -920,7 +920,7 @@ static void
 fwupd_report_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fwupd_report_add_string;
-	iface->to_json = fwupd_report_to_json;
+	iface->add_json = fwupd_report_add_json;
 	iface->add_variant = fwupd_report_add_variant;
 	iface->from_variant_iter = fwupd_report_from_variant_iter;
 }

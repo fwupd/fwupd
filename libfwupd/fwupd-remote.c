@@ -146,7 +146,7 @@ fwupd_remote_flag_from_string(const gchar *flag)
 }
 
 static void
-fwupd_remote_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_remote_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
 {
 	FwupdRemote *self = FWUPD_REMOTE(converter);
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
@@ -2004,7 +2004,7 @@ fwupd_remote_finalize(GObject *obj)
 static void
 fwupd_remote_codec_iface_init(FwupdCodecInterface *iface)
 {
-	iface->to_json = fwupd_remote_to_json;
+	iface->add_json = fwupd_remote_add_json;
 	iface->add_variant = fwupd_remote_add_variant;
 	iface->from_variant_iter = fwupd_remote_from_variant_iter;
 }

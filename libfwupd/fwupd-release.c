@@ -1934,7 +1934,7 @@ fwupd_release_string_append_flags(GString *str,
 }
 
 static void
-fwupd_release_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_release_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
 {
 	FwupdRelease *self = FWUPD_RELEASE(converter);
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
@@ -2248,7 +2248,7 @@ static void
 fwupd_release_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fwupd_release_add_string;
-	iface->to_json = fwupd_release_to_json;
+	iface->add_json = fwupd_release_add_json;
 	iface->add_variant = fwupd_release_add_variant;
 	iface->from_variant_iter = fwupd_release_from_variant_iter;
 }
