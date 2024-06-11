@@ -1574,7 +1574,7 @@ fwupd_security_attr_from_json(FwupdCodec *converter, JsonNode *json_node, GError
 }
 
 static void
-fwupd_security_attr_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_security_attr_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
 {
 	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(converter);
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
@@ -1769,7 +1769,7 @@ static void
 fwupd_security_attr_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fwupd_security_attr_add_string;
-	iface->to_json = fwupd_security_attr_to_json;
+	iface->add_json = fwupd_security_attr_add_json;
 	iface->from_json = fwupd_security_attr_from_json;
 	iface->add_variant = fwupd_security_attr_add_variant;
 	iface->from_variant_iter = fwupd_security_attr_from_variant_iter;

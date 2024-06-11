@@ -23,7 +23,7 @@ struct _FwupdCodecInterface {
 	GTypeInterface g_iface;
 	void (*add_string)(FwupdCodec *self, guint idt, GString *str);
 	gchar *(*to_string)(FwupdCodec *self);
-	void (*to_json)(FwupdCodec *self, JsonBuilder *builder, FwupdCodecFlags flags);
+	void (*add_json)(FwupdCodec *self, JsonBuilder *builder, FwupdCodecFlags flags);
 	gboolean (*from_json)(FwupdCodec *self, JsonNode *json_node, GError **error);
 	void (*add_variant)(FwupdCodec *self, GVariantBuilder *builder, FwupdCodecFlags flags);
 	GVariant *(*to_variant)(FwupdCodec *self, FwupdCodecFlags flags);

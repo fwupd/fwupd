@@ -492,7 +492,7 @@ fu_security_attrs_depsolve(FuSecurityAttrs *self)
 }
 
 static void
-fu_security_attrs_to_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_security_attrs_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
 	FuSecurityAttrs *self = FU_SECURITY_ATTRS(codec);
 	g_autoptr(GPtrArray) items = NULL;
@@ -555,7 +555,7 @@ fu_security_attrs_from_json(FwupdCodec *codec, JsonNode *json_node, GError **err
 static void
 fwupd_security_attrs_codec_iface_init(FwupdCodecInterface *iface)
 {
-	iface->to_json = fu_security_attrs_to_json;
+	iface->add_json = fu_security_attrs_add_json;
 	iface->from_json = fu_security_attrs_from_json;
 }
 

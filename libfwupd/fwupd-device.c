@@ -2879,7 +2879,7 @@ fwupd_device_string_append_update_state(GString *str,
 }
 
 static void
-fwupd_device_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_device_add_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
 {
 	FwupdDevice *self = FWUPD_DEVICE(converter);
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
@@ -3946,7 +3946,7 @@ static void
 fwupd_device_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fwupd_device_add_string;
-	iface->to_json = fwupd_device_to_json;
+	iface->add_json = fwupd_device_add_json;
 	iface->from_json = fwupd_device_from_json;
 	iface->add_variant = fwupd_device_add_variant;
 	iface->from_variant_iter = fwupd_device_from_variant_iter;

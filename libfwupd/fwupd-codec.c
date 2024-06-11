@@ -158,12 +158,12 @@ fwupd_codec_to_json(FwupdCodec *self, JsonBuilder *builder, FwupdCodecFlags flag
 	g_return_if_fail(builder != NULL);
 
 	iface = FWUPD_CODEC_GET_IFACE(self);
-	if (iface->to_json == NULL) {
-		g_critical("FwupdCodec->to_json not implemented");
+	if (iface->add_json == NULL) {
+		g_critical("FwupdCodec->add_json not implemented");
 		return;
 	}
 	json_builder_begin_object(builder);
-	(*iface->to_json)(self, builder, flags);
+	iface->add_json(self, builder, flags);
 	json_builder_end_object(builder);
 }
 
