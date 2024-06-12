@@ -45,6 +45,7 @@ install_data([
     'logitech-rqr24.json',
     'logitech-rqr24-signed.json',
     'nordic-hid-nrf52840-mcuboot.json',
+    'pixart-rf-GCBBTM25.json',
     'qualcomm-qcc5171.json',
     'realtek-rts5423.json',
     'realtek-rts5855.json',
