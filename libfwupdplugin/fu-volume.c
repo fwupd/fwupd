@@ -35,6 +35,8 @@ struct _FuVolume {
 	GDBusProxy *proxy_fs;
 	GDBusProxy *proxy_part;
 	gchar *mount_path; /* only when mounted ourselves */
+	gchar *partition_kind; /* only for tests */
+	gchar *partition_uuid; /* only for tests */
 };
 
 enum {
@@ -86,6 +88,8 @@ fu_volume_finalize(GObject *obj)
 {
 	FuVolume *self = FU_VOLUME(obj);
 	g_free(self->mount_path);
+	g_free(self->partition_kind);
+	g_free(self->partition_uuid);
 	if (self->proxy_blk != NULL)
 		g_object_unref(self->proxy_blk);
 	if (self->proxy_fs != NULL)
@@ -357,6 +361,8 @@ fu_volume_get_partition_uuid(FuVolume *self)
 
 	g_return_val_if_fail(FU_IS_VOLUME(self), NULL);
 
+	if (self->partition_uuid != NULL)
+		return g_strdup(self->partition_uuid);
 	if (self->proxy_part == NULL)
 		return NULL;
 	val = g_dbus_proxy_get_cached_property(self->proxy_part, "UUID");
@@ -385,12 +391,50 @@ fu_volume_get_partition_kind(FuVolume *self)
 
 	g_return_val_if_fail(FU_IS_VOLUME(self), NULL);
 
+	if (self->partition_kind != NULL)
+		return g_strdup(self->partition_kind);
 	if (self->proxy_part == NULL)
 		return NULL;
 	val = g_dbus_proxy_get_cached_property(self->proxy_part, "Type");
 	if (val == NULL)
 		return NULL;
 	return g_variant_dup_string(val, NULL);
+}
+
+/**
+ * fu_volume_set_partition_kind:
+ * @self: a @FuVolume
+ * @partition_kind: a partition kind, e.g. %FU_VOLUME_KIND_ESP
+ *
+ * Sets the partition name of the volume mount point.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_volume_set_partition_kind(FuVolume *self, const gchar *partition_kind)
+{
+	g_return_if_fail(FU_IS_VOLUME(self));
+	g_return_if_fail(partition_kind != NULL);
+	g_return_if_fail(self->partition_kind == NULL);
+	self->partition_kind = g_strdup(partition_kind);
+}
+
+/**
+ * fu_volume_set_partition_uuid:
+ * @self: a @FuVolume
+ * @partition_uuid: a UUID
+ *
+ * Sets the partition UUID of the volume mount point.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_volume_set_partition_uuid(FuVolume *self, const gchar *partition_uuid)
+{
+	g_return_if_fail(FU_IS_VOLUME(self));
+	g_return_if_fail(partition_uuid != NULL);
+	g_return_if_fail(self->partition_uuid == NULL);
+	self->partition_uuid = g_strdup(partition_uuid);
 }
 
 /**
