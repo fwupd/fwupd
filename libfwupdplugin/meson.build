@@ -76,7 +76,7 @@ fwupdplugin_src = [
   'fu-dfuse-firmware.c', # fuzzing
   'fu-dpaux-device.c',
   'fu-drm-device.c',
-  'fu-dummy-efivars.c',
+  'fu-dummy-efivars.c', # fuzzing
   'fu-dump.c', # fuzzing
   'fu-edid.c', # fuzzing
   'fu-efi-common.c', # fuzzing
@@ -164,7 +164,7 @@ elif host_machine.system() == 'windows'
   fwupdplugin_src += 'fu-windows-efivars.c'
 elif host_machine.system() == 'darwin'
   fwupdplugin_src += 'fu-common-darwin.c'
-  fwupdplugin_src += 'fu-darwin-efivars.c'
+  fwupdplugin_src += 'fu-darwin-efivars.c' # fuzzing
 endif
 
 fwupdplugin_headers = [
