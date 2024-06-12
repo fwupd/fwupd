@@ -472,6 +472,34 @@ if get_option('tests')
     install_dir: installed_test_bindir,
   )
   test('fwupdplugin-self-test', e, is_parallel: false, timeout: 180, env: env)
+
+  e = executable(
+    'fwupdplugin-efibootmgr-self-test',
+    installed_firmware_zip,
+    rustgen.process('fu-self-test.rs'),
+    sources: [
+      'fu-efibootmgr-self-test.c'
+    ],
+    include_directories: [
+      root_incdir,
+      fwupd_incdir,
+    ],
+    dependencies: [
+      library_deps,
+      fwupdplugin_rs_dep,
+    ],
+    link_with: [
+      fwupd,
+      fwupdplugin
+    ],
+    c_args: [
+      '-DSRCDIR="' + meson.current_source_dir() + '"',
+    ],
+    install: true,
+    install_rpath: libdir_pkg,
+    install_dir: installed_test_bindir,
+  )
+  test('fwupdplugin-efibootmgr-self-test', e, env: env)
 endif
 
 fwupdplugin_incdir = include_directories('.')
