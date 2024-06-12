@@ -20,7 +20,7 @@ struct FuStructEfiCapsuleHeader {
     image_size: u32le,
 }
 
-#[derive(ToString)]
+#[derive(ToString, FromString)]
 #[repr(u32le)]
 enum FuUefiUpdateInfoStatus {
     Unknown,

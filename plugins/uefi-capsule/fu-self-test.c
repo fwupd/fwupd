@@ -67,56 +67,26 @@ fu_uefi_bitmap_func(void)
 	g_assert_cmpint(fu_bitmap_image_get_height(bmp_image), ==, 24);
 }
 
-static GByteArray *
-fu_uefi_cod_device_build_efi_string(const gchar *text)
-{
-	GByteArray *array = g_byte_array_new();
-	glong items_written = 0;
-	g_autofree gunichar2 *test_utf16 = NULL;
-	g_autoptr(GError) error = NULL;
-
-	fu_byte_array_append_uint32(array, 0x0, G_LITTLE_ENDIAN); /* attrs */
-	test_utf16 = g_utf8_to_utf16(text, -1, NULL, &items_written, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(test_utf16);
-	g_byte_array_append(array, (const guint8 *)test_utf16, items_written * 2);
-	return array;
-}
-
-static GByteArray *
+static GBytes *
 fu_uefi_cod_device_build_efi_result(const gchar *guidstr)
 {
-	GByteArray *array = g_byte_array_new();
 	fwupd_guid_t guid = {0x0};
 	gboolean ret;
 	guint8 timestamp[16] = {0x0};
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error = NULL;
 
-	fu_byte_array_append_uint32(array, 0x0, G_LITTLE_ENDIAN);  /* attrs */
-	fu_byte_array_append_uint32(array, 0x3A, G_LITTLE_ENDIAN); /* VariableTotalSize */
-	fu_byte_array_append_uint32(array, 0xFF, G_LITTLE_ENDIAN); /* Reserved */
+	fu_byte_array_append_uint32(buf, 0x3A, G_LITTLE_ENDIAN); /* VariableTotalSize */
+	fu_byte_array_append_uint32(buf, 0xFF, G_LITTLE_ENDIAN); /* Reserved */
 	ret = fwupd_guid_from_string(guidstr, &guid, FWUPD_GUID_FLAG_MIXED_ENDIAN, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_byte_array_append(array, guid, sizeof(guid));		  /* CapsuleGuid */
-	g_byte_array_append(array, timestamp, sizeof(timestamp)); /* CapsuleProcessed */
-	fu_byte_array_append_uint32(array,
+	g_byte_array_append(buf, guid, sizeof(guid));		/* CapsuleGuid */
+	g_byte_array_append(buf, timestamp, sizeof(timestamp)); /* CapsuleProcessed */
+	fu_byte_array_append_uint32(buf,
 				    FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_BATT,
 				    G_LITTLE_ENDIAN); /* Status */
-	return array;
-}
-
-static void
-fu_uefi_cod_device_write_efi_name(const gchar *name, GByteArray *array)
-{
-	gboolean ret;
-	g_autoptr(GError) error = NULL;
-	g_autofree gchar *fn = g_strdup_printf("%s-%s", name, FU_EFIVARS_GUID_EFI_CAPSULE_REPORT);
-	g_autofree gchar *path = NULL;
-	path = g_test_build_filename(G_TEST_DIST, "tests", "efi", "efivars", fn, NULL);
-	ret = g_file_set_contents(path, (gchar *)array->data, array->len, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
+	return g_bytes_new(buf->data, buf->len);
 }
 
 static void
@@ -127,23 +97,60 @@ fu_uefi_cod_device_func(void)
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *str = NULL;
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 
-	/* these are checked into git and so are not required */
-	if (g_getenv("FWUPD_UEFI_CAPSULE_RECREATE_COD_DATA") != NULL) {
-		g_autoptr(GByteArray) cap0 = NULL;
-		g_autoptr(GByteArray) cap1 = NULL;
-		g_autoptr(GByteArray) last = NULL;
-		g_autoptr(GByteArray) max = NULL;
+	g_autoptr(GBytes) cap0 = NULL;
+	g_autoptr(GBytes) cap1 = NULL;
+	g_autoptr(GBytes) last = NULL;
+	g_autoptr(GBytes) max = NULL;
 
-		last = fu_uefi_cod_device_build_efi_string("Capsule0001");
-		max = fu_uefi_cod_device_build_efi_string("Capsule9999");
-		cap0 = fu_uefi_cod_device_build_efi_result("99999999-bf9d-540b-b92b-172ce31013c1");
-		cap1 = fu_uefi_cod_device_build_efi_result("cc4cbfa9-bf9d-540b-b92b-172ce31013c1");
-		fu_uefi_cod_device_write_efi_name("CapsuleLast", last);
-		fu_uefi_cod_device_write_efi_name("CapsuleMax", max);
-		fu_uefi_cod_device_write_efi_name("Capsule0000", cap0);
-		fu_uefi_cod_device_write_efi_name("Capsule0001", cap1);
-	}
+	last = fu_utf8_to_utf16_bytes("Capsule0001",
+				      G_LITTLE_ENDIAN,
+				      FU_UTF_CONVERT_FLAG_NONE,
+				      &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(last);
+	ret = fu_efivars_set_data_bytes(efivars,
+					FU_EFIVARS_GUID_EFI_CAPSULE_REPORT,
+					"CapsuleLast",
+					last,
+					0,
+					&error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	max = fu_utf8_to_utf16_bytes("Capsule9999",
+				     G_LITTLE_ENDIAN,
+				     FU_UTF_CONVERT_FLAG_NONE,
+				     &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(last);
+	ret = fu_efivars_set_data_bytes(efivars,
+					FU_EFIVARS_GUID_EFI_CAPSULE_REPORT,
+					"CapsuleMax",
+					max,
+					0,
+					&error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	cap0 = fu_uefi_cod_device_build_efi_result("99999999-bf9d-540b-b92b-172ce31013c1");
+	ret = fu_efivars_set_data_bytes(efivars,
+					FU_EFIVARS_GUID_EFI_CAPSULE_REPORT,
+					"Capsule0000",
+					cap0,
+					0,
+					&error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	cap1 = fu_uefi_cod_device_build_efi_result("cc4cbfa9-bf9d-540b-b92b-172ce31013c1");
+	ret = fu_efivars_set_data_bytes(efivars,
+					FU_EFIVARS_GUID_EFI_CAPSULE_REPORT,
+					"Capsule0001",
+					cap1,
+					0,
+					&error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* create device */
 	dev = g_object_new(FU_TYPE_UEFI_COD_DEVICE,
@@ -240,14 +247,32 @@ fu_uefi_update_info_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuBackend) backend = fu_uefi_backend_new(ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuUefiUpdateInfo) info2 = fu_uefi_update_info_new();
 	g_autoptr(FuUefiUpdateInfo) info = NULL;
+	g_autoptr(GBytes) info2_blob = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 
-#ifndef __linux__
-	g_test_skip("ESRT data is mocked only on Linux");
-	return;
-#endif
+	/* create some fake data */
+	fu_uefi_update_info_set_guid(info2, "697bd920-12cf-4da9-8385-996909bc6559");
+	fu_uefi_update_info_set_capsule_fn(
+	    info2,
+	    "/EFI/fedora/fw/fwupd-697bd920-12cf-4da9-8385-996909bc6559.cap");
+	fu_uefi_update_info_set_hw_inst(info2, 0);
+	fu_uefi_update_info_set_capsule_flags(info2, 0x50000);
+	fu_uefi_update_info_set_status(info2, FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE);
+	info2_blob = fu_firmware_write(FU_FIRMWARE(info2), &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(info2_blob);
+	ret = fu_efivars_set_data_bytes(efivars,
+					FU_EFIVARS_GUID_FWUPDATE,
+					"fwupd-ddc0ee61-e7f0-4e7d-acc5-c070a398838e-0",
+					info2_blob,
+					0,
+					&error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* add each device */
 	ret = fu_backend_coldplug(backend, progress, &error);
@@ -286,6 +311,7 @@ main(int argc, char **argv)
 
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
 	(void)g_setenv("FWUPD_SYSFSDRIVERDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
