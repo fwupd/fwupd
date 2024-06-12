@@ -138,11 +138,6 @@ install_data([
   ],
   install_dir: join_paths(installed_test_datadir, 'efi/esrt/entries/entry0'),
 )
-install_data([
-    'tests/efi/efivars/CapsuleMax-39b68c46-f7fb-441b-b6ec-16b0f69821f3',
-  ],
-  install_dir: join_paths(installed_test_datadir, 'efi/efivars'),
-)
 endif
 
 summary({

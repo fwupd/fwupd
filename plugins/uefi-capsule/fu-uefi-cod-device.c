@@ -112,8 +112,9 @@ fu_uefi_cod_device_get_variable_idx(FuUefiCodDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "wrong contents, got %s",
-			    str);
+			    "wrong contents, got '%s' for %s",
+			    str,
+			    name);
 		return FALSE;
 	}
 	if (!fu_strtoull(str + strlen("Capsule"), &tmp, 0, G_MAXUINT32, error))
