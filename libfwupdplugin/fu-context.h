@@ -219,6 +219,14 @@ typedef enum {
 	 **/
 	FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE = 1 << 1,
 	/**
+	 * FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_REVOCATIONS:
+	 *
+	 * Include revokcations, for example the `revocations.efi` file used by shim.
+	 *
+	 * Since: 2.0.0
+	 **/
+	FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_REVOCATIONS = 1 << 2,
+	/**
 	 * FU_CONTEXT_ESP_FILE_FLAG_UNKNOWN:
 	 *
 	 * Unknown flag value.
