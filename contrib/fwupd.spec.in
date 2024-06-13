@@ -17,7 +17,7 @@
 %global __meson_wrap_mode nodownload
 
 # fwupd.efi is only available on these arches
-%ifarch x86_64 aarch64
+%ifarch x86_64 aarch64 riscv64
 %global have_uefi 1
 %endif
 
@@ -27,7 +27,7 @@
 %endif
 
 # flashrom is only available on these arches
-%ifarch i686 x86_64 armv7hl aarch64 ppc64le
+%ifarch i686 x86_64 armv7hl aarch64 ppc64le riscv64
 %global have_flashrom 1
 %endif
 
@@ -83,11 +83,7 @@ BuildRequires: gnutls-utils
 BuildRequires: meson
 BuildRequires: json-glib-devel >= %{json_glib_version}
 BuildRequires: vala
-%if 0%{?rhel} >= 10 || 0%{?fedora} >= 41
-BuildRequires: bash-completion-devel
-%else
-BuildRequires: bash-completion
-%endif
+BuildRequires: pkgconfig(bash-completion)
 BuildRequires: git-core
 %if 0%{?have_flashrom}
 BuildRequires: flashrom-devel >= 1.2-2
@@ -329,7 +325,7 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %config(noreplace)%{_sysconfdir}/fwupd/fwupd.conf
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
-%ifarch i686 x86_64
+%ifarch x86_64
 %{_libexecdir}/fwupd/fwupd-detect-cet
 %endif
 %{_libexecdir}/fwupd/fwupdoffline
