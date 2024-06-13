@@ -38,6 +38,27 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.21" date="2024-06-13">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a fwupd.conf option to ignore CHID requirements for development</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow loading Wacom device flags from metadata</li>
+          <li>Check for needs-shutdown like we do needs-reboot</li>
+          <li>Fix updating the Aerox 3 Wireless Mouse</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Synaptics Carrera devices</li>
+          <li>Wacom Movink devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.20" date="2024-05-20">
       <description>
         <p>
