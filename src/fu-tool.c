@@ -4072,7 +4072,8 @@ fu_util_efivar_files(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	files = fu_context_get_esp_files(priv->ctx,
 					 FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_FIRST_STAGE |
-					     FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE,
+					     FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE |
+					     FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_REVOCATIONS,
 					 error);
 	if (files == NULL)
 		return FALSE;
