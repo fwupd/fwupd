@@ -9,8 +9,13 @@
 
 #include "fwupd-error.h"
 
-#include "fu-efivars.h"
+#include "fu-efi-device-path-list.h"
+#include "fu-efi-file-path-device-path.h"
+#include "fu-efi-hard-drive-device-path.h"
+#include "fu-efivars-private.h"
 #include "fu-mem.h"
+#include "fu-pefile-firmware.h"
+#include "fu-volume-private.h"
 
 G_DEFINE_TYPE(FuEfivars, fu_efivars, G_TYPE_OBJECT)
 
@@ -363,8 +368,9 @@ fu_efivars_set_data_bytes(FuEfivars *self,
 }
 
 /**
- * fu_efivars_secure_boot_enabled:
+ * fu_efivars_get_secure_boot:
  * @self: a #FuEfivars
+ * @enabled: (out): SecureBoot value
  * @error: (nullable): optional return location for an error
  *
  * Determines if secure boot was enabled
@@ -374,7 +380,7 @@ fu_efivars_set_data_bytes(FuEfivars *self,
  * Since: 2.0.0
  **/
 gboolean
-fu_efivars_secure_boot_enabled(FuEfivars *self, GError **error)
+fu_efivars_get_secure_boot(FuEfivars *self, gboolean *enabled, GError **error)
 {
 	gsize data_size = 0;
 	g_autofree guint8 *data = NULL;
@@ -395,12 +401,38 @@ fu_efivars_secure_boot_enabled(FuEfivars *self, GError **error)
 				    "SecureBoot is not available");
 		return FALSE;
 	}
-	if (data_size >= 1 && data[0] & 1)
-		return TRUE;
+	if (data_size == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "SecureBoot variable was empty");
+		return FALSE;
+	}
 
 	/* available, but not enabled */
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "SecureBoot is not enabled");
-	return FALSE;
+	if (enabled != NULL)
+		*enabled = (data[0] & 0x01) > 0;
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_efivars_set_secure_boot: (skip):
+ **/
+gboolean
+fu_efivars_set_secure_boot(FuEfivars *self, gboolean enabled, GError **error)
+{
+	guint8 value = enabled ? 0x01 : 0x00;
+	g_return_val_if_fail(FU_IS_EFIVARS(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return fu_efivars_set_data(self,
+				   FU_EFIVARS_GUID_EFI_GLOBAL,
+				   "SecureBoot",
+				   &value,
+				   sizeof(value),
+				   FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS,
+				   error);
 }
 
 /**
@@ -514,6 +546,27 @@ fu_efivars_get_boot_current(FuEfivars *self, guint16 *idx, GError **error)
 }
 
 /**
+ * fu_efivars_set_boot_current: (skip):
+ **/
+gboolean
+fu_efivars_set_boot_current(FuEfivars *self, guint16 idx, GError **error)
+{
+	guint8 buf[2] = {0};
+
+	g_return_val_if_fail(FU_IS_EFIVARS(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	fu_memwrite_uint16(buf, idx, G_LITTLE_ENDIAN);
+	return fu_efivars_set_data(self,
+				   FU_EFIVARS_GUID_EFI_GLOBAL,
+				   "BootCurrent",
+				   buf,
+				   sizeof(buf),
+				   FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				   error);
+}
+
+/**
  * fu_efivars_get_boot_order:
  * @self: a #FuEfivars
  * @error: #GError
@@ -592,6 +645,90 @@ fu_efivars_set_boot_order(FuEfivars *self, GArray *order, GError **error)
 				       FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
 				       FU_EFIVARS_ATTR_RUNTIME_ACCESS,
 				   error);
+}
+
+/**
+ * fu_efivars_build_boot_order: (skip)
+ **/
+gboolean
+fu_efivars_build_boot_order(FuEfivars *self, GError **error, ...)
+{
+	va_list args;
+	g_autoptr(GArray) order = g_array_new(FALSE, FALSE, sizeof(guint16));
+
+	g_return_val_if_fail(FU_IS_EFIVARS(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	va_start(args, error);
+	while (TRUE) {
+		guint idx = va_arg(args, guint);
+		if (idx == G_MAXUINT16)
+			break;
+		g_array_append_val(order, idx);
+	}
+	va_end(args);
+
+	/* success */
+	return fu_efivars_set_boot_order(self, order, error);
+}
+
+/**
+ * fu_efivars_create_boot_entry_for_volume: (skip)
+ **/
+gboolean
+fu_efivars_create_boot_entry_for_volume(FuEfivars *self,
+					guint16 idx,
+					FuVolume *volume,
+					const gchar *name,
+					const gchar *target,
+					GError **error)
+{
+	g_autoptr(FuEfiDevicePathList) devpath_list = fu_efi_device_path_list_new();
+	g_autoptr(FuEfiFilePathDevicePath) dp_fp = NULL;
+	g_autoptr(FuEfiHardDriveDevicePath) dp_hdd = NULL;
+	g_autoptr(FuEfiLoadOption) entry = fu_efi_load_option_new();
+	g_autoptr(GFile) file = NULL;
+	g_autofree gchar *mount_point = NULL;
+
+	g_return_val_if_fail(FU_IS_EFIVARS(self), FALSE);
+	g_return_val_if_fail(FU_IS_VOLUME(volume), FALSE);
+	g_return_val_if_fail(name != NULL, FALSE);
+	g_return_val_if_fail(target != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* create plausible EFI file if not already exists */
+	mount_point = fu_volume_get_mount_point(volume);
+	if (mount_point == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "volume has no mount point");
+		return FALSE;
+	}
+	file = g_file_new_build_filename(mount_point, target, NULL);
+	if (!g_file_query_exists(file, NULL)) {
+		g_autoptr(FuFirmware) img_text = fu_firmware_new();
+		g_autoptr(FuFirmware) pefile = fu_pefile_firmware_new();
+		g_autoptr(GBytes) img_blob = g_bytes_new_static("hello", 5);
+		fu_firmware_set_id(img_text, ".text");
+		fu_firmware_set_bytes(img_text, img_blob);
+		fu_firmware_add_image(pefile, img_text);
+		if (!fu_firmware_write_file(pefile, file, error))
+			return FALSE;
+	}
+
+	dp_hdd = fu_efi_hard_drive_device_path_new_from_volume(volume, error);
+	if (dp_hdd == NULL)
+		return FALSE;
+	dp_fp = fu_efi_file_path_device_path_new();
+	if (!fu_efi_file_path_device_path_set_name(dp_fp, target, error))
+		return FALSE;
+	fu_firmware_add_image(FU_FIRMWARE(devpath_list), FU_FIRMWARE(dp_hdd));
+	fu_firmware_add_image(FU_FIRMWARE(devpath_list), FU_FIRMWARE(dp_fp));
+
+	fu_firmware_set_id(FU_FIRMWARE(entry), name);
+	fu_firmware_add_image(FU_FIRMWARE(entry), FU_FIRMWARE(devpath_list));
+	return fu_efivars_set_boot_entry(self, idx, entry, error);
 }
 
 /**
