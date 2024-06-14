@@ -14,8 +14,27 @@
 #define FWUPD_TYPE_CODEC (fwupd_codec_get_type())
 G_DECLARE_INTERFACE(FwupdCodec, fwupd_codec, FWUPD, CODEC, GObject)
 
+/**
+ * FwupdCodecFlags:
+ *
+ * The flags to use when converting data from one form to another.
+ **/
 typedef enum {
+	/**
+	 * FWUPD_CODEC_FLAG_NONE:
+	 *
+	 * No flags set.
+	 *
+	 * Since: 2.0.0
+	 */
 	FWUPD_CODEC_FLAG_NONE = 0,
+	/**
+	 * FWUPD_CODEC_FLAG_TRUSTED:
+	 *
+	 * Include values that may be regarded as trusted or sensitive.
+	 *
+	 * Since: 2.0.0
+	 */
 	FWUPD_CODEC_FLAG_TRUSTED = 1 << 0,
 } FwupdCodecFlags;
 

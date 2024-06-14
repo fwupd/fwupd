@@ -29,18 +29,36 @@ struct _FwupdRemoteClass {
 
 /**
  * FwupdRemoteKind:
- * @FWUPD_REMOTE_KIND_UNKNOWN:			Unknown kind
- * @FWUPD_REMOTE_KIND_DOWNLOAD:			Requires files to be downloaded
- * @FWUPD_REMOTE_KIND_LOCAL:			Reads files from the local machine
- * @FWUPD_REMOTE_KIND_DIRECTORY:		Reads directory from the local machine
  *
  * The kind of remote.
  **/
 typedef enum {
+	/**
+	 * FWUPD_REMOTE_KIND_UNKNOWN:
+	 *
+	 * Unknown kind.
+	 */
 	FWUPD_REMOTE_KIND_UNKNOWN,
+	/**
+	 * FWUPD_REMOTE_KIND_DOWNLOAD:
+	 *
+	 * Requires files to be downloaded.
+	 */
 	FWUPD_REMOTE_KIND_DOWNLOAD,
+	/**
+	 * FWUPD_REMOTE_KIND_LOCAL:
+	 *
+	 * Reads files from the local machine.
+	 */
 	FWUPD_REMOTE_KIND_LOCAL,
-	FWUPD_REMOTE_KIND_DIRECTORY, /* Since: 1.2.4 */
+	/**
+	 * FWUPD_REMOTE_KIND_DIRECTORY:
+	 *
+	 * Reads directory from the local machine.
+	 *
+	 * Since: 1.2.4
+	 */
+	FWUPD_REMOTE_KIND_DIRECTORY,
 	/*< private >*/
 	FWUPD_REMOTE_KIND_LAST
 } FwupdRemoteKind;
