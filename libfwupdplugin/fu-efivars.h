@@ -115,7 +115,7 @@ GPtrArray *
 fu_efivars_get_names(FuEfivars *self, const gchar *guid, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_efivars_secure_boot_enabled(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
+fu_efivars_get_secure_boot(FuEfivars *self, gboolean *enabled, GError **error) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_efivars_get_boot_next(FuEfivars *self, guint16 *idx, GError **error) G_GNUC_NON_NULL(1);

@@ -343,7 +343,7 @@ fu_uefi_bootmgr_bootnext(FuEfivars *efivars,
 {
 	const gchar *filepath = NULL;
 	gboolean use_fwup_path = TRUE;
-	gboolean secure_boot = FALSE;
+	gboolean secureboot_enabled = FALSE;
 	g_autofree gchar *shim_app = NULL;
 	g_autofree gchar *shim_cpy = NULL;
 	g_autofree gchar *source_app = NULL;
@@ -362,8 +362,9 @@ fu_uefi_bootmgr_bootnext(FuEfivars *efivars,
 		return FALSE;
 
 	/* test if we should use shim */
-	secure_boot = fu_efivars_secure_boot_enabled(efivars, NULL);
-	if (secure_boot) {
+	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, error))
+		return FALSE;
+	if (secureboot_enabled) {
 		shim_app = fu_uefi_get_esp_app_path("shim", error);
 		if (shim_app == NULL)
 			return FALSE;

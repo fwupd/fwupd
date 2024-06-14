@@ -92,6 +92,7 @@ fu_uefi_get_built_app_path(FuEfivars *efivars, const gchar *binary, GError **err
 	g_autofree gchar *prefix = NULL;
 	g_autofree gchar *source_path = NULL;
 	g_autofree gchar *source_path_signed = NULL;
+	gboolean secureboot_enabled = FALSE;
 	gboolean source_path_exists = FALSE;
 	gboolean source_path_signed_exists = FALSE;
 
@@ -106,7 +107,9 @@ fu_uefi_get_built_app_path(FuEfivars *efivars, const gchar *binary, GError **err
 	source_path_exists = g_file_test(source_path, G_FILE_TEST_EXISTS);
 	source_path_signed_exists = g_file_test(source_path_signed, G_FILE_TEST_EXISTS);
 
-	if (fu_efivars_secure_boot_enabled(efivars, NULL)) {
+	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, error))
+		return NULL;
+	if (secureboot_enabled) {
 		if (!source_path_signed_exists) {
 			g_set_error(error,
 				    FWUPD_ERROR,

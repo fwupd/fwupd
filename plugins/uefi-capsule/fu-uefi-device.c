@@ -444,10 +444,14 @@ fu_uefi_check_asset(FuDevice *device, GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
-	g_autofree gchar *source_app = fu_uefi_get_built_app_path(efivars, "fwupd", error);
-	if (source_app == NULL) {
-		if (fu_efivars_secure_boot_enabled(efivars, NULL))
-			g_prefix_error(error, "missing signed bootloader for secure boot: ");
+	gboolean secureboot_enabled = FALSE;
+	g_autofree gchar *source_app = NULL;
+
+	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, error))
+		return FALSE;
+	source_app = fu_uefi_get_built_app_path(efivars, "fwupd", error);
+	if (source_app == NULL && secureboot_enabled) {
+		g_prefix_error(error, "missing signed bootloader for secure boot: ");
 		return FALSE;
 	}
 

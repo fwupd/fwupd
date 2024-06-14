@@ -164,6 +164,7 @@ static void
 fu_uefi_capsule_plugin_add_security_attrs_secureboot(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuEfivars *efivars = fu_context_get_efivars(fu_plugin_get_context(plugin));
+	gboolean secureboot_enabled = FALSE;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -173,7 +174,9 @@ fu_uefi_capsule_plugin_add_security_attrs_secureboot(FuPlugin *plugin, FuSecurit
 	fu_security_attrs_append(attrs, attr);
 
 	/* SB not available or disabled */
-	if (!fu_efivars_secure_boot_enabled(efivars, &error)) {
+	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, NULL))
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+	if (!secureboot_enabled) {
 		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 			return;
@@ -926,10 +929,16 @@ static void
 fu_uefi_capsule_plugin_test_secure_boot(FuPlugin *plugin)
 {
 	FuEfivars *efivars = fu_context_get_efivars(fu_plugin_get_context(plugin));
-	const gchar *result_str = "Disabled";
-	if (fu_efivars_secure_boot_enabled(efivars, NULL))
-		result_str = "Enabled";
-	fu_plugin_add_report_metadata(plugin, "SecureBoot", result_str);
+	gboolean secureboot_enabled = FALSE;
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, &error_local)) {
+		fu_plugin_add_report_metadata(plugin, "SecureBoot", error_local->message);
+		return;
+	}
+	fu_plugin_add_report_metadata(plugin,
+				      "SecureBoot",
+				      secureboot_enabled ? "Enabled" : "Disabled");
 }
 
 static gboolean

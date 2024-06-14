@@ -93,6 +93,7 @@ fu_linux_lockdown_plugin_ensure_security_attr_flags(FuLinuxLockdownPlugin *self,
 	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	const gchar *value;
+	gboolean secureboot_enabled = FALSE;
 	g_autoptr(GHashTable) cmdline = NULL;
 	g_autoptr(GHashTable) config = NULL;
 
@@ -118,8 +119,9 @@ fu_linux_lockdown_plugin_ensure_security_attr_flags(FuLinuxLockdownPlugin *self,
 	}
 
 	/* we cannot change this */
+	fu_efivars_get_secure_boot(efivars, &secureboot_enabled, NULL);
 	if (g_hash_table_contains(config, "CONFIG_LOCK_DOWN_IN_EFI_SECURE_BOOT") &&
-	    fu_efivars_secure_boot_enabled(efivars, NULL)) {
+	    secureboot_enabled) {
 		g_set_error_literal(
 		    error,
 		    FWUPD_ERROR,

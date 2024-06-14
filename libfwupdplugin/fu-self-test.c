@@ -24,6 +24,7 @@
 #include "fu-device-progress.h"
 #include "fu-dummy-efivars.h"
 #include "fu-efi-lz77-decompressor.h"
+#include "fu-efivars-private.h"
 #include "fu-lzma-common.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
@@ -3705,58 +3706,26 @@ fu_efivar_func(void)
 }
 
 static void
-fu_test_create_pefile(const gchar *fn)
-{
-	gboolean ret;
-	g_autoptr(FuFirmware) img_text = fu_firmware_new();
-	g_autoptr(FuFirmware) pefile = fu_pefile_firmware_new();
-	g_autoptr(GBytes) img_blob = g_bytes_new_static("hello", 5);
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GFile) file = g_file_new_for_path(fn);
-
-	fu_firmware_set_id(img_text, ".text");
-	fu_firmware_set_bytes(img_text, img_blob);
-	fu_firmware_add_image(pefile, img_text);
-	ret = fu_firmware_write_file(pefile, file, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-}
-
-static void
 fu_efivar_boot_func(void)
 {
 	FuFirmware *firmware_tmp;
 	gboolean ret;
-	const guint8 buf[] = {0x01, 0x00};
 	const gchar *tmpdir = g_getenv("FWUPD_LOCALSTATEDIR");
 	guint16 idx = 0;
-	g_autofree gchar *pefile_fn = g_build_filename(tmpdir, "fwupdx64.efi", NULL);
+	g_autofree gchar *pefile_fn = g_build_filename(tmpdir, "grubx64.efi", NULL);
 	g_autoptr(FuContext) ctx = fu_context_new();
-	g_autoptr(FuEfiDevicePathList) devpath_list = fu_efi_device_path_list_new();
-	g_autoptr(FuEfiFilePathDevicePath) dp_fp = NULL;
-	g_autoptr(FuEfiHardDriveDevicePath) dp_hdd = NULL;
-	g_autoptr(FuEfiLoadOption) loadopt1 = fu_efi_load_option_new();
 	g_autoptr(FuEfiLoadOption) loadopt2 = NULL;
 	g_autoptr(FuVolume) volume = fu_volume_new_from_mount_path(tmpdir);
-	g_autoptr(GArray) bootorder1 = g_array_new(FALSE, FALSE, sizeof(guint16));
 	g_autoptr(GArray) bootorder2 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) entries = NULL;
 	g_autoptr(GPtrArray) esp_files = NULL;
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 
-	/* write and read a key */
-	ret = fu_efivars_set_data(efivars,
-				  FU_EFIVARS_GUID_EFI_GLOBAL,
-				  "BootCurrent",
-				  buf,
-				  sizeof(buf),
-				  FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_RUNTIME_ACCESS,
-				  &error);
+	/* set and get BootCurrent */
+	ret = fu_efivars_set_boot_current(efivars, 0x0001, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-
-	/* get BootCurrent */
 	ret = fu_efivars_get_boot_current(efivars, &idx, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -3772,11 +3741,7 @@ fu_efivar_boot_func(void)
 	g_assert_cmpint(idx, ==, 0x0002);
 
 	/* set and get BootOrder */
-	idx = 1;
-	g_array_append_val(bootorder1, idx);
-	idx = 2;
-	g_array_append_val(bootorder1, idx);
-	ret = fu_efivars_set_boot_order(efivars, bootorder1, &error);
+	ret = fu_efivars_build_boot_order(efivars, &error, 0x0001, 0x0002, G_MAXUINT16);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	bootorder2 = fu_efivars_get_boot_order(efivars, &error);
@@ -3788,37 +3753,33 @@ fu_efivar_boot_func(void)
 	idx = g_array_index(bootorder2, guint16, 1);
 	g_assert_cmpint(idx, ==, 0x0002);
 
-	/* create a plausible EFI binary */
-	fu_test_create_pefile(pefile_fn);
-
 	/* add a plausible ESP */
 	fu_volume_set_partition_kind(volume, FU_VOLUME_KIND_ESP);
 	fu_volume_set_partition_uuid(volume, "41f5e9b7-eb4f-5c65-b8a6-f94b0ad54815");
 	fu_context_add_esp_volume(ctx, volume);
 
-	/* create plausible DPs */
-	dp_hdd = fu_efi_hard_drive_device_path_new_from_volume(volume, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(dp_hdd);
-	dp_fp = fu_efi_file_path_device_path_new();
-	ret = fu_efi_file_path_device_path_set_name(dp_fp, "fwupdx64.efi", &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	fu_firmware_add_image(FU_FIRMWARE(devpath_list), FU_FIRMWARE(dp_hdd));
-	fu_firmware_add_image(FU_FIRMWARE(devpath_list), FU_FIRMWARE(dp_fp));
-
 	/* create Boot0001 and Boot0002 */
-	fu_firmware_set_id(FU_FIRMWARE(loadopt1), "Fedora");
-	fu_firmware_add_image(FU_FIRMWARE(loadopt1), FU_FIRMWARE(devpath_list));
-	ret = fu_efivars_set_boot_entry(efivars, 0x0001, loadopt1, &error);
+	ret = fu_efivars_create_boot_entry_for_volume(efivars,
+						      0x0001,
+						      volume,
+						      "Fedora",
+						      "grubx64.efi",
+						      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	ret = fu_efivars_create_boot_entry_for_volume(efivars,
+						      0x0002,
+						      volume,
+						      "Firmware Update",
+						      "fwupdx64.efi",
+						      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* check BootXXXX exists */
 	loadopt2 = fu_efivars_get_boot_entry(efivars, 0x0001, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(loadopt2);
-	ret = fu_efivars_set_boot_entry(efivars, 0x0002, loadopt1, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
 	entries = fu_efivars_get_boot_entries(efivars, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(bootorder2);
@@ -3831,8 +3792,6 @@ fu_efivar_boot_func(void)
 	g_assert_nonnull(esp_files);
 	g_assert_cmpint(esp_files->len, ==, 2);
 	firmware_tmp = g_ptr_array_index(esp_files, 0);
-	g_assert_cmpstr(fu_firmware_get_filename(firmware_tmp), ==, pefile_fn);
-	firmware_tmp = g_ptr_array_index(esp_files, 1);
 	g_assert_cmpstr(fu_firmware_get_filename(firmware_tmp), ==, pefile_fn);
 }
 
@@ -5545,7 +5504,6 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSFSDMIDIR", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_LOCALSTATEDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
