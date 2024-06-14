@@ -43,6 +43,8 @@ struct _FuLogitechBulkcontrollerDevice {
 	gsize transfer_bufsz;
 	gchar *child_firmware_version;
 	FuLogitechBulkcontrollerDeviceState child_status;
+	gchar *child_type;
+	gchar *child_serial;
 };
 
 G_DEFINE_TYPE(FuLogitechBulkcontrollerDevice, fu_logitech_bulkcontroller_device, FU_TYPE_USB_DEVICE)
@@ -780,16 +782,22 @@ fu_logitech_bulkcontroller_device_json_parser(FuLogitechBulkcontrollerDevice *se
 	for (guint i = 1; i < json_array_get_length(json_devices); i++) {
 		json_device = json_array_get_object_element(json_devices, i);
 		if (json_object_has_member(json_device, "vid") &&
-		    json_object_has_member(json_device, "name") &&
-		    json_object_has_member(json_device, "sw") &&
-		    json_object_has_member(json_device, "status")) {
+		    json_object_has_member(json_device, "name")) {
 			const gchar *vid = json_object_get_string_member(json_device, "vid");
 			const gchar *name = json_object_get_string_member(json_device, "name");
 			if ((g_strcmp0(vid, "0x046d") == 0) && (g_strcmp0(name, "Sight") == 0)) {
-				self->child_firmware_version =
-				    g_strdup(json_object_get_string_member(json_device, "sw"));
-				self->child_status =
-				    json_object_get_int_member(json_device, "status");
+				if (json_object_has_member(json_device, "sw"))
+					self->child_firmware_version = g_strdup(
+					    json_object_get_string_member(json_device, "sw"));
+				if (json_object_has_member(json_device, "status"))
+					self->child_status =
+					    json_object_get_int_member(json_device, "status");
+				if (json_object_has_member(json_device, "serial"))
+					self->child_serial = g_strdup(
+					    json_object_get_string_member(json_device, "serial"));
+				if (json_object_has_member(json_device, "type"))
+					self->child_type = g_strdup(
+					    json_object_get_string_member(json_device, "type"));
 				break;
 			}
 		}
@@ -1353,120 +1361,28 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST);
 
-	/* Only Logitech Sight is supported as pheripheral device for now */
-	if ((self->child_status == FU_LOGITECH_BULKCONTROLLER_DEVICE_STATE_ONLINE) &&
-	    (self->device_info_response_json->len > 0)) {
-		JsonArray *json_devices;
-		JsonNode *json_root;
-		JsonObject *json_device;
-		JsonObject *json_object;
-		JsonObject *json_payload;
-		g_autoptr(JsonParser) json_parser = json_parser_new();
-
-		/* parse JSON reply */
-		if (!json_parser_load_from_data(json_parser,
-						self->device_info_response_json->str,
-						self->device_info_response_json->len,
-						error)) {
-			g_prefix_error(error, "failed to parse child json data: ");
+	/* only Logitech Sight is supported as pheripheral device for now */
+	if ((self->child_status == FU_LOGITECH_BULKCONTROLLER_DEVICE_STATE_ONLINE)) {
+		g_autoptr(FuDevice) child = NULL;
+		child = fu_device_new(fu_device_get_context(FU_DEVICE(self)));
+		// TODO setting id required for child!!!
+		// fu_device_set_id(device, "logitech-sight");
+		fu_device_set_name(child, "Sight");
+		fu_device_set_physical_id(child, fu_device_get_physical_id(FU_DEVICE(self)));
+		fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
+		fu_device_set_logical_id(child, "Sight");
+		fu_device_set_version(child, self->child_firmware_version);
+		fu_device_set_serial(child, self->child_serial);
+		fu_device_add_instance_id_full(child,
+					       self->child_type,
+					       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+		fu_device_add_instance_u16(child, "VID", FU_LOGITECH_SIGHT_DEVICE_VID);
+		fu_device_add_instance_u16(child, "PID", FU_LOGITECH_SIGHT_DEVICE_PID);
+		if (!fu_device_build_instance_id(child, error, "USB", "VID", "PID", NULL))
 			return FALSE;
-		}
-		json_root = json_parser_get_root(json_parser);
-		if (json_root == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "did not get child JSON root");
-			return FALSE;
-		}
-		json_object = json_node_get_object(json_root);
-		json_payload = json_object_get_object_member(json_object, "payload");
-		if (json_payload == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "did not get child JSON payload");
-			return FALSE;
-		}
-		json_devices = json_object_get_array_member(json_payload, "devices");
-		if (json_devices == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "did not get child JSON devices");
-			return FALSE;
-		}
-		json_device = json_array_get_object_element(json_devices, 0);
-		if (json_device == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "did not get child JSON device");
-			return FALSE;
-		}
-
-		for (guint i = 1; i < json_array_get_length(json_devices); i++) {
-			json_device = json_array_get_object_element(json_devices, i);
-			if (json_object_has_member(json_device, "vid") &&
-			    json_object_has_member(json_device, "name") &&
-			    json_object_has_member(json_device, "status") &&
-			    json_object_has_member(json_device, "sw")) {
-				const gchar *vid =
-				    json_object_get_string_member(json_device, "vid");
-				const gchar *name =
-				    json_object_get_string_member(json_device, "name");
-				FuLogitechBulkcontrollerDeviceState status =
-				    json_object_get_int_member(json_device, "status");
-				if ((g_strcmp0(vid, "0x046d") == 0) &&
-				    (g_strcmp0(name, "Sight") == 0) &&
-				    (status == FU_LOGITECH_BULKCONTROLLER_DEVICE_STATE_ONLINE)) {
-					g_autoptr(FuDevice) child = NULL;
-					child =
-					    fu_device_new(fu_device_get_context(FU_DEVICE(self)));
-					// TODO setting id required for child!!!
-					// fu_device_set_id(device, "logitech-sight");
-					fu_device_set_name(child, name);
-					fu_device_set_physical_id(
-					    child,
-					    fu_device_get_physical_id(FU_DEVICE(self)));
-					fu_device_set_version_format(child,
-								     FWUPD_VERSION_FORMAT_TRIPLET);
-					fu_device_set_logical_id(child, name);
-					fu_device_set_version(
-					    child,
-					    json_object_get_string_member(json_device, "sw"));
-					if (json_object_has_member(json_device, "serial"))
-						fu_device_set_serial(
-						    child,
-						    json_object_get_string_member(json_device,
-										  "serial"));
-					if (json_object_has_member(json_device, "type")) {
-						fu_device_add_instance_id_full(
-						    child,
-						    json_object_get_string_member(json_device,
-										  "type"),
-						    FU_DEVICE_INSTANCE_FLAG_QUIRKS);
-					}
-					fu_device_add_instance_u16(child,
-								   "VID",
-								   FU_LOGITECH_SIGHT_DEVICE_VID);
-					fu_device_add_instance_u16(child,
-								   "PID",
-								   FU_LOGITECH_SIGHT_DEVICE_PID);
-					if (!fu_device_build_instance_id(child,
-									 error,
-									 "USB",
-									 "VID",
-									 "PID",
-									 NULL))
-						return FALSE;
-					fu_device_add_icon(child, "camera-web");
-					g_debug("SRS TODO TEMP LOGITECH_PLUGIN Child: %s",
-						fu_device_to_string(child));
-					fu_device_add_child(FU_DEVICE(self), child);
-				}
-			}
-		}
+		fu_device_add_icon(child, "camera-web");
+		g_debug("SRS TODO TEMP LOGITECH_PLUGIN Child: %s", fu_device_to_string(child));
+		fu_device_add_child(FU_DEVICE(self), child);
 	}
 	/* success */
 	return TRUE;
