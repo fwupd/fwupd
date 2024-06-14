@@ -35,21 +35,44 @@ struct _FwupdBiosSettingClass {
 
 /**
  * FwupdBiosSettingKind:
- * @FWUPD_BIOS_SETTING_KIND_UNKNOWN:		BIOS setting type is unknown
- * @FWUPD_BIOS_SETTING_KIND_ENUMERATION:		BIOS setting that has enumerated possible
- *values
- * @FWUPD_BIOS_SETTING_KIND_INTEGER:		BIOS setting that is an integer
- * @FWUPD_BIOS_SETTING_KIND_STRING:		BIOS setting that accepts a string
  *
  * The type of BIOS setting.
  **/
 typedef enum {
-	FWUPD_BIOS_SETTING_KIND_UNKNOWN = 0,	 /* Since: 1.8.4 */
-	FWUPD_BIOS_SETTING_KIND_ENUMERATION = 1, /* Since: 1.8.4 */
-	FWUPD_BIOS_SETTING_KIND_INTEGER = 2,	 /* Since: 1.8.4 */
-	FWUPD_BIOS_SETTING_KIND_STRING = 3,	 /* Since: 1.8.4 */
+	/**
+	 * FWUPD_BIOS_SETTING_KIND_UNKNOWN:
+	 *
+	 * BIOS setting type is unknown.
+	 *
+	 * Since: 1.8.4
+	 */
+	FWUPD_BIOS_SETTING_KIND_UNKNOWN = 0,
+	/**
+	 * FWUPD_BIOS_SETTING_KIND_ENUMERATION:
+	 *
+	 * BIOS setting that has enumerated possible values.
+	 *
+	 * Since: 1.8.4
+	 */
+	FWUPD_BIOS_SETTING_KIND_ENUMERATION = 1,
+	/**
+	 * FWUPD_BIOS_SETTING_KIND_INTEGER:
+	 *
+	 * BIOS setting that is an integer.
+	 *
+	 * Since: 1.8.4
+	 */
+	FWUPD_BIOS_SETTING_KIND_INTEGER = 2,
+	/**
+	 * FWUPD_BIOS_SETTING_KIND_STRING:
+	 *
+	 * BIOS setting that accepts a string.
+	 *
+	 * Since: 1.8.4
+	 */
+	FWUPD_BIOS_SETTING_KIND_STRING = 3,
 	/*< private >*/
-	FWUPD_BIOS_SETTING_KIND_LAST = 4 /* perhaps increased in the future */
+	FWUPD_BIOS_SETTING_KIND_LAST = 4
 } FwupdBiosSettingKind;
 
 FwupdBiosSetting *

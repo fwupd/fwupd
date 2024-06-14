@@ -27,16 +27,34 @@ struct _FwupdRequestClass {
 
 /**
  * FwupdRequestKind:
- * @FWUPD_REQUEST_KIND_UNKNOWN:		Unknown kind
- * @FWUPD_REQUEST_KIND_POST:		After the update
- * @FWUPD_REQUEST_KIND_IMMEDIATE:	Immediately
  *
  * The kind of request we are asking of the user.
  **/
 typedef enum {
-	FWUPD_REQUEST_KIND_UNKNOWN,   /* Since: 1.6.2 */
-	FWUPD_REQUEST_KIND_POST,      /* Since: 1.6.2 */
-	FWUPD_REQUEST_KIND_IMMEDIATE, /* Since: 1.6.2 */
+	/**
+	 * FWUPD_REQUEST_KIND_UNKNOWN:
+	 *
+	 * Unknown kind.
+	 *
+	 * Since: 1.6.2
+	 */
+	FWUPD_REQUEST_KIND_UNKNOWN,
+	/**
+	 * FWUPD_REQUEST_KIND_POST:
+	 *
+	 * After the update.
+	 *
+	 * Since: 1.6.2
+	 */
+	FWUPD_REQUEST_KIND_POST,
+	/**
+	 * FWUPD_REQUEST_KIND_IMMEDIATE:
+	 *
+	 * Immediately.
+	 *
+	 * Since: 1.6.2
+	 */
+	FWUPD_REQUEST_KIND_IMMEDIATE,
 	/*< private >*/
 	FWUPD_REQUEST_KIND_LAST
 } FwupdRequestKind;
