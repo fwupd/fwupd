@@ -92,7 +92,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 							error);
 			if (img_stream == NULL)
 				return FALSE;
-			if (fu_firmware_parse_stream(img, img_stream, 0x0, flags, error))
+			if (!fu_firmware_parse_stream(img, img_stream, 0x0, flags, error))
 				return FALSE;
 		}
 		fu_firmware_set_idx(img, i);
