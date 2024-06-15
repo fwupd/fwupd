@@ -1193,6 +1193,9 @@ fu_uefi_capsule_plugin_cleanup_esp(FuUefiCapsulePlugin *self, GError **error)
 	g_autoptr(FuDeviceLocker) esp_locker = NULL;
 	g_autoptr(GPtrArray) files = NULL;
 
+	if (self->esp == NULL)
+		return TRUE;
+
 	/* delete any files matching the glob in the ESP */
 	esp_locker = fu_volume_locker(self->esp, error);
 	if (esp_locker == NULL)
