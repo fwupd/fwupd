@@ -29,8 +29,10 @@ static gboolean
 fu_main_sigterm_cb(gpointer user_data)
 {
 	FuDaemon *daemon = FU_DAEMON(user_data);
+	g_autoptr(GError) error = NULL;
 	g_warning("Received SIGTERM");
-	fu_daemon_stop(daemon);
+	if (!fu_daemon_stop(daemon, &error))
+		g_warning("failed to stop daemon, will wait: %s\n", error->message);
 	return G_SOURCE_CONTINUE;
 }
 #endif
@@ -39,7 +41,9 @@ static gboolean
 fu_main_timed_exit_cb(gpointer user_data)
 {
 	FuDaemon *daemon = FU_DAEMON(user_data);
-	fu_daemon_stop(daemon);
+	g_autoptr(GError) error = NULL;
+	if (!fu_daemon_stop(daemon, &error))
+		g_warning("failed to stop daemon, will wait: %s\n", error->message);
 	return G_SOURCE_REMOVE;
 }
 
@@ -51,8 +55,10 @@ fu_main_argv_changed_cb(GFileMonitor *monitor,
 			gpointer user_data)
 {
 	FuDaemon *daemon = FU_DAEMON(user_data);
+	g_autoptr(GError) error = NULL;
 	g_info("binary changed, shutting down");
-	fu_daemon_stop(daemon);
+	if (!fu_daemon_stop(daemon, &error))
+		g_warning("failed to stop daemon, will wait: %s\n", error->message);
 }
 
 static void
@@ -60,8 +66,10 @@ fu_main_memory_monitor_warning_cb(GMemoryMonitor *memory_monitor,
 				  GMemoryMonitorWarningLevel level,
 				  FuDaemon *daemon)
 {
+	g_autoptr(GError) error = NULL;
 	g_info("OOM event, shutting down");
-	fu_daemon_stop(daemon);
+	if (!fu_daemon_stop(daemon, &error))
+		g_warning("failed to stop daemon, will wait: %s\n", error->message);
 }
 
 static gboolean
@@ -207,7 +215,10 @@ main(int argc, char *argv[])
 
 	/* wait */
 	g_message("Daemon ready for requests (locale %s)", g_getenv("LANG"));
-	fu_daemon_start(daemon);
+	if (!fu_daemon_start(daemon, &error)) {
+		g_printerr("Failed to start daemon: %s\n", error->message);
+		return EXIT_FAILURE;
+	}
 
 #ifdef HAVE_SYSTEMD
 	/* notify the service manager */

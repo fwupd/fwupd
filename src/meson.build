@@ -346,6 +346,7 @@ executable(
   sources: [
     daemon_loader_src,
     'fu-daemon.c',
+    'fu-dbus-daemon.c',
   ],
   include_directories: [
     root_incdir,
