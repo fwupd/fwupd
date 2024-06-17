@@ -338,6 +338,11 @@ if gnutls.found()
   conf.set('HAVE_GNUTLS', '1')
 endif
 
+libgbinder = dependency('libgbinder', version: '>= 1.1.0', required: get_option('binder'))
+if libgbinder.found()
+  conf.set('HAVE_BINDER', '1')
+endif
+
 lzma = dependency('liblzma')
 cbor = dependency('libcbor', version: '>= 0.7.0', required: get_option('cbor'))
 if cbor.found()
