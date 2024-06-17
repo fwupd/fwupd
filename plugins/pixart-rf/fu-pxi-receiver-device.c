@@ -893,6 +893,28 @@ fu_pxi_receiver_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_pxi_receiver_device_probe(FuDevice *device, GError **error)
 {
+	guint64 iface_nr = 0;
+	g_autoptr(FuUdevDevice) usb_parent = NULL;
+
+	/* check USB interface number */
+	usb_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "usb");
+	if (usb_parent == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no parent with USB subsystem");
+		return FALSE;
+	}
+	if (!fu_udev_device_get_sysfs_attr_uint64(usb_parent, "bInterfaceNumber", &iface_nr, error))
+		return FALSE;
+	if (iface_nr != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "only USB interface 0 supported");
+		return FALSE;
+	}
+
 	/* set the logical and physical ID */
 	if (!fu_udev_device_set_logical_id(FU_UDEV_DEVICE(device), "hid", error))
 		return FALSE;
