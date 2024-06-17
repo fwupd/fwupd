@@ -243,6 +243,10 @@ else
   includedir = join_paths(prefix, get_option('includedir'))
   sysconfdir = join_paths(prefix, get_option('sysconfdir'))
   localstatedir = join_paths(prefix, get_option('localstatedir'))
+  if host_machine.system() == 'android'
+    datadir = join_paths(prefix, 'usr/share')
+    localstatedir = '/data/vendor/fwupd'
+  endif
   installed_test_bindir = join_paths(libexecdir, 'installed-tests', meson.project_name())
   installed_test_datadir = join_paths(datadir, 'installed-tests', meson.project_name())
   daemon_dir = join_paths(libexecdir, 'fwupd')
@@ -307,33 +311,39 @@ if build_standalone
     version: '>= 0.1.27',
   )
   conf.set_quoted('LIBUSB_VERSION', libusb.version())
-  if cc.has_header_symbol(
-    'libusb.h',
-    'libusb_set_option',
-    dependencies: libusb,
-  )
+  if libusb.type_name() == 'internal'
     conf.set('HAVE_LIBUSB_SET_OPTION', '1')
-  endif
-  if cc.has_header_symbol(
-    'libusb.h',
-    'libusb_init_context',
-    dependencies: libusb,
-  )
     conf.set('HAVE_LIBUSB_INIT_CONTEXT', '1')
-  endif
-  if cc.has_header_symbol(
-    'libusb.h',
-    'libusb_get_parent',
-    dependencies: libusb,
-  )
     conf.set('HAVE_LIBUSB_GET_PARENT', '1')
-  endif
-  if cc.has_header_symbol(
-    'libusb.h',
-    'libusb_wrap_sys_device',
-    dependencies: libusb,
-  )
-    conf.set('HAVE_LIBUSB_WRAP_SYS_DEVICE', '1')
+  else
+    if cc.has_header_symbol(
+      'libusb.h',
+      'libusb_set_option',
+      dependencies: libusb,
+    )
+      conf.set('HAVE_LIBUSB_SET_OPTION', '1')
+    endif
+    if cc.has_header_symbol(
+      'libusb.h',
+      'libusb_init_context',
+      dependencies: libusb,
+    )
+      conf.set('HAVE_LIBUSB_INIT_CONTEXT', '1')
+    endif
+    if cc.has_header_symbol(
+      'libusb.h',
+      'libusb_get_parent',
+      dependencies: libusb,
+    )
+      conf.set('HAVE_LIBUSB_GET_PARENT', '1')
+    endif
+    if cc.has_header_symbol(
+      'libusb.h',
+      'libusb_wrap_sys_device',
+      dependencies: libusb,
+    )
+      conf.set('HAVE_LIBUSB_WRAP_SYS_DEVICE', '1')
+    endif
   endif
 
   readline = dependency(
@@ -469,6 +479,47 @@ if jcat_crypto == 'none'
   if libcrypto.found()
     jcat_crypto = 'libcrypto'
     conf.set('HAVE_LIBCRYPTO', '1')
+  endif
+endif
+
+enable_binder = get_option('binder').enable_auto_if(host_machine.system() == 'android').enabled()
+if enable_binder
+
+  android_frameworks = dependency('android_frameworks')
+  binder_ndk_platform_incdir = subproject('android_frameworks').get_variable('binder_dirs')
+  binder_ndk = cc.find_library('binder_ndk',
+    dirs: [ meson.current_source_dir() / 'contrib/android/lib_ndk' ],
+    has_headers: [ 'android/binder_manager.h' ],
+    header_include_directories: binder_ndk_platform_incdir,
+    required: true,
+    )
+
+  binder_link_test_src = '''
+    #include <android/binder_manager.h>
+    void main() { AServiceManager_waitForService("fwupd"); }
+  '''
+  conf.set10('HAS_BINDER_NDK', binder_ndk.found() and
+    cc.has_header('android/binder_status.h') and
+    cc.has_header_symbol('android/binder_parcel.h', 'AParcel_create',
+      dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir) and
+    cc.has_header_symbol('android/binder_parcel.h', 'AParcel_marshal',
+      dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir) and
+    cc.has_header_symbol('android/binder_manager.h', 'AServiceManager_waitForService',
+      dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir) and
+    cc.has_header_symbol('android/binder_manager.h', 'AServiceManager_addService',
+      dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir) and
+    cc.has_header_symbol('android/persistable_bundle.h', 'APersistableBundle_new',
+      dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir)
+    )
+
+  # Verify that service management symbols are present in libbinder_ndk.so
+  links_service = cc.links(binder_link_test_src,
+    name: 'binder link test',
+    dependencies: binder_ndk,
+    include_directories: binder_ndk_platform_incdir,
+    required: false)
+  if not links_service
+    error('libbinder_ndk.so is incompatible')
   endif
 endif
 
@@ -762,6 +813,12 @@ endif
 
 configure_file(
   output: 'config.h',
+  configuration: conf,
+)
+
+configure_file(
+  input: 'contrib/android/adb_fwupd_env.sh.in',
+  output: 'adb_fwupd_env.sh',
   configuration: conf,
 )
 
