@@ -114,6 +114,10 @@ option(
   value: true,
   description: 'enable man pages',
 )
+option('binder',
+  type: 'feature',
+  description: 'Android binder support',
+)
 option(
   'metainfo',
   type: 'boolean',
