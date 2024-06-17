@@ -506,6 +506,43 @@ if jcat_crypto == 'none'
   endif
 endif
 
+enable_binder = get_option('binder').enable_auto_if(host_machine.system() == 'android').enabled()
+if enable_binder
+  # Read the exact arch string directly from the injected .ini cross-file.
+  # This will intentionally fail the build if 'android_ndk_sysroot_arch' is missing.
+  ndk_arch_dir = meson.get_external_property('android_ndk_sysroot_arch')
+
+  # Construct the precise path
+  ndk_sysroot_lib = '/opt/android/android-ndk-r27/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/' + ndk_arch_dir + '/35'
+
+  binder_ndk = cc.find_library('binder_ndk', dirs: ndk_sysroot_lib, required: true)
+
+  if not subproject('android_frameworks').found()
+    error('android binder requires the android_frameworks subproject')
+  endif
+  binder_ndk_platform_incdir = subproject('android_frameworks').get_variable('binder_dirs')
+
+  conf.set10('HAS_BINDER_NDK', binder_ndk.found() and
+    cc.has_header('android/binder_status.h') and
+    cc.has_header_symbol('android/binder_parcel.h', 'AParcel_create',
+      dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir) and
+    cc.has_header_symbol('android/binder_parcel.h', 'AParcel_marshal',
+      dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir) and
+    cc.has_header_symbol('android/persistable_bundle.h', 'APersistableBundle_new',
+      dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir)
+  )
+
+  links_service = cc.links('int main() { return 0; }',
+    name: 'binder link test',
+    dependencies: binder_ndk,
+    include_directories: binder_ndk_platform_incdir,
+    required: false)
+
+  if not links_service
+    error('libbinder_ndk.so from NDK sysroot is incompatible')
+  endif
+endif
+
 lzma = dependency('liblzma')
 
 platform_deps = []
@@ -796,6 +833,12 @@ endif
 
 configure_file(
   output: 'config.h',
+  configuration: conf,
+)
+
+configure_file(
+  input: 'contrib/android/adb_fwupd_env.sh.in',
+  output: 'adb_fwupd_env.sh',
   configuration: conf,
 )
 
