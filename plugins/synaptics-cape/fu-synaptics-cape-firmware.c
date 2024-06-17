@@ -569,6 +569,17 @@ fu_synaptics_cape_firmware_parse_sngl(FuFirmware *firmware,
 			    "Cannot find firmware file \"SFS\" in blob");
 	}
 
+
+	g_autoptr(GBytes) sig =
+	    fu_firmware_get_image_by_id_bytes(FU_FIRMWARE(self), FW_CAPE_FIRMWARE_ID_SFS_SIGNATURE, error);
+
+	if (sig != NULL) {
+		g_autoptr(FuFirmware) img_sig = fu_firmware_new();
+		fu_firmware_set_id(img_sig, FU_FIRMWARE_ID_SIGNATURE);
+		fu_firmware_set_bytes(img_sig, sig);
+		fu_firmware_add_image(firmware, img_sig);
+	}
+
 	// generate new fw for header.
 
 	//	gsize sfssz;

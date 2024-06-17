@@ -41,6 +41,7 @@
 #define FU_SYNAPTICS_CAPE_MODULE_RC_MODULE_TYPE_HAS_NO_API (-1034)
 #define FU_SYNAPTICS_CAPE_MODULE_RC_BAD_MAGIC_NUMBER	   (-1052)
 #define FU_SYNAPTICS_CAPE_MODULE_RC_CMD_MODE_UNSUPPORTED   (-1056)
+#define FU_SYNAPTICS_CAPE_MODULE_RC_CMD_CODE_UNSUPPORTED   (-1057)
 #define FU_SYNAPTICS_CAPE_ERROR_EAGAIN			   (-11)
 
 #define FU_SYNAPTICS_CAPE_ERROR_SFU_FAIL				  (-200)
@@ -90,6 +91,7 @@ typedef enum {
 	FU_SYNAPTICS_CMD_FW_UPDATE_CRC_CHECK =
 	    0xCD, /* triggere firmware to check flash integrity with CRC checksum in background */
 	FU_SYNAPTICS_CMD_MCU_SOFT_RESET = 0xAF,		  /* reset device*/
+	FU_SYNAPTICS_CMD_FW_UPDATE_SIGNATURE = 0xDC,  /* send digital signture to device */
 	FU_SYNAPTICS_CMD_FW_GET_ACTIVE_PARTITION = 0x1CF, /* gets cur active partition number */
 	FU_SYNAPTICS_CMD_GET_VERSION = 0x103,		  /* gets cur firmware version */
 } FuCommand;
@@ -240,6 +242,13 @@ fu_synaptics_cape_device_rc_set_error(const FuCapCmd *rsp, GError **error)
 			    G_IO_ERROR_NOT_SUPPORTED,
 			    "CMD ERROR: mode unsupported");
 		break;
+	case FU_SYNAPTICS_CAPE_MODULE_RC_CMD_CODE_UNSUPPORTED:
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "CMD ERROR: command code unsupported");
+		break;
+
 	case FU_SYNAPTICS_CAPE_ERROR_EAGAIN:
 		g_set_error(error, G_IO_ERROR, G_IO_ERROR_TIMED_OUT, "CMD ERROR: query timeout");
 		break;
@@ -835,6 +844,69 @@ fu_synaptics_cape_device_write_firmware_header(FuSynapticsCapeDevice *self,
 						error);
 }
 
+/* sends firmware header to device */
+static gboolean
+fu_synaptics_cape_device_write_signature(FuSynapticsCapeDevice *self,
+					       GBytes *fw,
+					       GError **error)
+{
+	guint8 *buf = NULL;
+	gsize bufsz = 0;
+	const gsize dataoffset = 2;
+	const gsize posoffset = 0;
+	const gsize sizeoffset = 1;
+	g_autofree guint32 *buf32 = NULL;
+	gsize sendsz32 = 0;
+    const gsize stepsz = 8 * sizeof(guint32);
+
+	FuCapCmd cmd = {0};
+
+	g_return_val_if_fail(FU_IS_SYNAPTICS_CAPE_DEVICE(self), FALSE);
+	g_return_val_if_fail(fw != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+
+	buf = g_bytes_get_data(fw, &bufsz);
+
+	for (gsize pos = 0; pos < bufsz; pos += stepsz )
+	{
+        gint32 sendsz = MIN(sendsz, bufsz - pos);
+		sendsz32 = (sendsz + sizeof(guint32) - 1) / sizeof(guint32);
+		if (!fu_memcpy_safe(cmd.data,
+			    stepsz,
+			    dataoffset * sizeof(guint32) , /* dst */
+			    buf,
+			    buf,
+			    0x0, /* src */
+			    sendsz,
+			    error))
+		return FALSE;
+
+		cmd.cmd_id  = GUINT16_TO_LE(FU_SYNAPTICS_CMD_FW_UPDATE_SIGNATURE);
+		cmd.module_id = GUINT32_TO_LE(FU_SYNAPTICS_CAPE_CMD_APP_ID_CTRL);
+		cmd.data[posoffset]  = GUINT32_TO_LE(pos);
+		cmd.data[sizeoffset] = GUINT32_TO_LE(sendsz);
+		cmd.data_len =  GUINT16_TO_LE(sendsz32);
+		if(!fu_synaptics_cape_device_sendcmd_ex(self, &cmd, 0, error))
+		{
+			return FALSE;
+		}
+	}
+
+	// after the last transcation sent, notify device all transcation are done by
+	// send the same command with 0 buffer length, the pos argurment indicates the total data length
+	// for debug purpose.
+	cmd.cmd_id  = GUINT16_TO_LE(FU_SYNAPTICS_CMD_FW_UPDATE_SIGNATURE);
+	cmd.module_id = GUINT32_TO_LE(FU_SYNAPTICS_CAPE_CMD_APP_ID_CTRL);
+	cmd.data[posoffset]  = GUINT32_TO_LE(bufsz);
+	cmd.data[sizeoffset] = 0;
+	cmd.data[dataoffset] = 0;
+	cmd.data_len =  GUINT16_TO_LE(3);
+
+	return fu_synaptics_cape_device_sendcmd_ex(self, &cmd, 0, error);
+}
+
+
 /* sends firmware image to device */
 static gboolean
 fu_synaptics_cape_device_write_firmware_image(FuSynapticsCapeDevice *self,
@@ -900,6 +972,7 @@ fu_synaptics_cape_device_write_firmware(FuDevice *device,
 	FuSynapticsCapeDevice *self = FU_SYNAPTICS_CAPE_DEVICE(device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_header = NULL;
+	g_autoptr(GBytes) fw_sig = NULL;
 
 	g_return_val_if_fail(FU_IS_SYNAPTICS_CAPE_DEVICE(self), FALSE);
 	g_return_val_if_fail(firmware != NULL, FALSE);
@@ -922,6 +995,22 @@ fu_synaptics_cape_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
+
+	fw_sig = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_SIGNATURE, error);
+	if (fw_sig)
+	{
+		g_autoptr(GError) error_local = NULL;
+		g_debug("update: send digital signature...");
+		if(!fu_synaptics_cape_device_write_signature(self,fw_sig,&error_local))
+		{
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_debug("ignoring: skip sending digital signature to the device as it doesn't support digital signature verfication");
+			} else {
+				g_propagate_error(error, g_steal_pointer(&error_local));
+				return FALSE;
+			}
+		}
+	}
 
 	/* performs the actual write */
 	if (self->legacy_fw_format) {
