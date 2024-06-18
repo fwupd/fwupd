@@ -16,6 +16,7 @@
 
 #include "fu-bytes.h"
 #include "fu-common.h"
+#include "fu-device-event-private.h"
 #include "fu-device-private.h"
 #include "fu-input-stream.h"
 #include "fu-quirks.h"
@@ -57,6 +58,8 @@ typedef struct {
 	GPtrArray *parent_physical_ids; /* (nullable) */
 	GPtrArray *parent_backend_ids;	/* (nullable) */
 	GPtrArray *counterpart_guids;	/* (nullable) */
+	GPtrArray *events;		/* (nullable) (element-type FuDeviceEvent) */
+	guint event_idx;
 	guint remove_delay;		/* ms */
 	guint acquiesce_delay;		/* ms */
 	guint request_cnts[FWUPD_REQUEST_KIND_LAST];
@@ -6555,6 +6558,158 @@ fu_device_security_attr_new(FuDevice *self, const gchar *appstream_id)
 }
 
 static void
+fu_device_ensure_events(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	if (priv->events != NULL)
+		return;
+	priv->events = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+}
+
+/**
+ * fu_device_add_event:
+ * @self: a #FuDevice
+ * @event: (not nullable): a #FuDeviceEvent
+ *
+ * Adds an event to the device.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_add_event(FuDevice *self, FuDeviceEvent *event)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(FU_IS_DEVICE_EVENT(event));
+	fu_device_ensure_events(self);
+	g_ptr_array_add(priv->events, g_object_ref(event));
+}
+
+/**
+ * fu_device_save_event:
+ * @self: a #FuDevice
+ * @id: (nullable): the event ID, e.g. `usb:AA:AA:06`
+ *
+ * Creates a new event with a specific ID and adds it to the device.
+ *
+ * Returns: (transfer none): a #FuDeviceEvent
+ *
+ * Since: 2.0.0
+ **/
+FuDeviceEvent *
+fu_device_save_event(FuDevice *self, const gchar *id)
+{
+	g_autoptr(FuDeviceEvent) event = NULL;
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(id != NULL, NULL);
+
+	/* success */
+	event = fu_device_event_new(id);
+	fu_device_add_event(self, event);
+	return event;
+}
+
+/**
+ * fu_device_load_event:
+ * @self: a #FuDevice
+ * @id: (not nullable): the event ID, e.g. `usb:AA:AA:06`
+ * @error: (nullable): optional return location for an error
+ *
+ * Loads a new event with a specific ID from the device.
+ *
+ * Returns: (transfer none) (nullable): a #FuDeviceEvent
+ *
+ * Since: 2.0.0
+ **/
+FuDeviceEvent *
+fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(id != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* sanity check */
+	if (priv->events == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no events loaded");
+		return NULL;
+	}
+
+	/* reset back to the beginning */
+	if (priv->event_idx >= priv->events->len) {
+		g_debug("resetting event index");
+		priv->event_idx = 0;
+	}
+
+	/* look for the next event in the sequence */
+	for (guint i = priv->event_idx; i < priv->events->len; i++) {
+		FuDeviceEvent *event = g_ptr_array_index(priv->events, i);
+		if (g_strcmp0(fu_device_event_get_id(event), id) == 0) {
+			g_debug("found in-order %s at position %u", id, i);
+			priv->event_idx = i + 1;
+			return event;
+		}
+	}
+
+	/* look for *any* event that matches */
+	for (guint i = 0; i < priv->events->len; i++) {
+		FuDeviceEvent *event = g_ptr_array_index(priv->events, i);
+		if (g_strcmp0(fu_device_event_get_id(event), id) == 0) {
+			g_debug("found out-of-order %s at position %u", id, i);
+			priv->event_idx = i + 1;
+			return event;
+		}
+	}
+
+	/* nothing found */
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no event with ID %s", id);
+	return NULL;
+}
+
+/**
+ * fu_device_get_events:
+ * @self: a #FuDevice
+ *
+ * Gets all the #FuDeviceEvent objects added with fu_device_add_event().
+ *
+ * These events should be added by #FuDevice subclasses to enable the daemon to emulate a specific
+ * device type.
+ *
+ * Returns: (transfer none) (element-type FuDeviceEvent): events
+ *
+ * Since: 2.0.0
+ **/
+GPtrArray *
+fu_device_get_events(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	fu_device_ensure_events(self);
+	return priv->events;
+}
+
+/**
+ * fu_device_clear_events:
+ * @self: a #FuDevice
+ *
+ * Clears all the #FuDeviceEvent objects added with fu_device_add_event(), typically after saving
+ * the device to an emulation.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_clear_events(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	if (priv->events == NULL)
+		return;
+	g_ptr_array_set_size(priv->events, 0);
+}
+
+static void
 fu_device_class_init(FuDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -6786,6 +6941,8 @@ fu_device_finalize(GObject *object)
 		g_ptr_array_unref(priv->parent_backend_ids);
 	if (priv->counterpart_guids != NULL)
 		g_ptr_array_unref(priv->counterpart_guids);
+	if (priv->events != NULL)
+		g_ptr_array_unref(priv->events);
 	if (priv->private_flag_items != NULL)
 		g_ptr_array_unref(priv->private_flag_items);
 	if (priv->retry_recs != NULL)

@@ -364,5 +364,12 @@ fu_udev_backend_class_init(FuUdevBackendClass *klass)
 FuBackend *
 fu_udev_backend_new(FuContext *ctx)
 {
-	return FU_BACKEND(g_object_new(FU_TYPE_UDEV_BACKEND, "name", "udev", "context", ctx, NULL));
+	return FU_BACKEND(g_object_new(FU_TYPE_UDEV_BACKEND,
+				       "name",
+				       "udev",
+				       "context",
+				       ctx,
+				       "device-gtype",
+				       FU_TYPE_UDEV_DEVICE,
+				       NULL));
 }

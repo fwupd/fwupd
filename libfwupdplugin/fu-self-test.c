@@ -15,11 +15,13 @@
 
 #include "fwupd-security-attr-private.h"
 
+#include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
 #include "fu-common-private.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-coswid-firmware.h"
+#include "fu-device-event-private.h"
 #include "fu-device-private.h"
 #include "fu-device-progress.h"
 #include "fu-dummy-efivars.h"
@@ -1648,6 +1650,49 @@ fu_device_func(void)
 }
 
 static void
+fu_device_event_func(void)
+{
+	gboolean ret;
+	const gchar *str;
+	g_autofree gchar *json = NULL;
+	g_autoptr(FuDeviceEvent) event1 = fu_device_event_new("foo:bar:baz");
+	g_autoptr(FuDeviceEvent) event2 = fu_device_event_new(NULL);
+	g_autoptr(GBytes) blob1 = g_bytes_new_static("hello", 6);
+	g_autoptr(GBytes) blob2 = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_device_event_set_str(event1, "Name", "Richard");
+	fu_device_event_set_i64(event1, "Age", 123);
+	fu_device_event_set_bytes(event1, "Blob", blob1);
+
+	json = fwupd_codec_to_json_string(FWUPD_CODEC(event1), FWUPD_CODEC_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(json,
+			==,
+			"{\n"
+			"  \"Id\" : \"foo:bar:baz\",\n"
+			"  \"Age\" : 123,\n"
+			"  \"Name\" : \"Richard\",\n"
+			"  \"Blob\" : \"aGVsbG8A\"\n"
+			"}");
+
+	ret = fwupd_codec_from_json_string(FWUPD_CODEC(event2), json, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_device_event_get_id(event2), ==, "foo:bar:baz");
+	g_assert_cmpint(fu_device_event_get_i64(event2, "Age", NULL), ==, 123);
+	g_assert_cmpstr(fu_device_event_get_str(event2, "Name", NULL), ==, "Richard");
+	blob2 = fu_device_event_get_bytes(event2, "Blob", &error);
+	g_assert_nonnull(blob2);
+	g_assert_cmpstr(g_bytes_get_data(blob2, NULL), ==, "hello");
+
+	/* invalid type */
+	str = fu_device_event_get_str(event2, "Age", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(str);
+}
+
+static void
 fu_device_vfuncs_func(void)
 {
 	gboolean ret;
@@ -2068,6 +2113,157 @@ fu_device_incorporate_func(void)
 	g_assert_true(ret);
 	g_assert_true(fu_device_has_instance_id(device, "USB\\VID_0A5C"));
 	g_assert_cmpstr(fu_device_get_custom_flags(device), ==, "ignore-runtime");
+}
+
+static void
+fu_backend_emulate_count_cb(FuBackend *backend, FuDevice *device, gpointer user_data)
+{
+	guint *cnt = (guint *)user_data;
+	(*cnt)++;
+}
+
+static gboolean
+fu_backend_load_json(FuBackend *backend, const gchar *json, GError **error)
+{
+	JsonObject *json_obj;
+	g_autoptr(JsonParser) parser = json_parser_new();
+
+	if (!json_parser_load_from_data(parser, json, -1, error))
+		return FALSE;
+	json_obj = json_node_get_object(json_parser_get_root(parser));
+	return fu_backend_load(backend, json_obj, "emulation", FU_BACKEND_LOAD_FLAG_NONE, error);
+}
+
+static void
+fu_backend_emulate_func(void)
+{
+	gboolean ret;
+	guint8 buf[] = {0x00, 0x00};
+	guint added_cnt = 0;
+	guint changed_cnt = 0;
+	guint removed_cnt = 0;
+	FuDevice *device;
+	g_autofree gchar *json3 = NULL;
+	g_autoptr(FuBackend) backend = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(GError) error = NULL;
+	const gchar *json1 = "{"
+			     "  \"UdevDevices\" : ["
+			     "    {"
+			     "      \"BackendId\" : \"foo:bar:baz\","
+			     "      \"Created\" : \"2023-02-01T16:35:03.302027Z\","
+			     "      \"Events\" : ["
+			     "        {"
+			     "          \"Id\" : \"Ioctl:Request=0x007b,Data=AAA=,Length=0x2\","
+			     "          \"Data\" : \"Aw==\""
+			     "        },"
+			     "        {"
+			     "          \"Id\" : \"Ioctl:Request=0x007b,Data=AAA=,Length=0x2\","
+			     "          \"Data\" : \"Aw==\""
+			     "        }"
+			     "      ]"
+			     "    }"
+			     "  ]"
+			     "}";
+	const gchar *json2 = "{\n"
+			     "  \"UdevDevices\" : [\n"
+			     "    {\n"
+			     "      \"BackendId\" : \"usb:FF:FF:06\",\n"
+			     "      \"Created\" : \"2099-02-01T16:35:03Z\"\n"
+			     "    }\n"
+			     "  ]\n"
+			     "}";
+
+	/* watch events */
+	backend = g_object_new(FU_TYPE_BACKEND,
+			       "context",
+			       ctx,
+			       "name",
+			       "udev",
+			       "device-gtype",
+			       FU_TYPE_UDEV_DEVICE,
+			       NULL);
+	g_signal_connect(FU_BACKEND(backend),
+			 "device-added",
+			 G_CALLBACK(fu_backend_emulate_count_cb),
+			 &added_cnt);
+	g_signal_connect(FU_BACKEND(backend),
+			 "device-removed",
+			 G_CALLBACK(fu_backend_emulate_count_cb),
+			 &removed_cnt);
+	g_signal_connect(FU_BACKEND(backend),
+			 "device-changed",
+			 G_CALLBACK(fu_backend_emulate_count_cb),
+			 &changed_cnt);
+
+	/* parse */
+	ret = fu_backend_load_json(backend, json1, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
+	g_assert_cmpint(added_cnt, ==, 1);
+	g_assert_cmpint(removed_cnt, ==, 0);
+	g_assert_cmpint(changed_cnt, ==, 0);
+
+	/* get device */
+	device = fu_backend_lookup_by_id(backend, "foo:bar:baz");
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED));
+
+#ifndef HAVE_IOCTL_H
+	g_test_skip("no <ioctl.h> support");
+	return;
+#endif
+
+	/* in-order */
+	ret = fu_udev_device_ioctl(FU_UDEV_DEVICE(device), 123, buf, sizeof(buf), NULL, 0, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
+
+	/* in-order, repeat */
+	buf[0] = 0x00;
+	buf[1] = 0x00;
+	ret = fu_udev_device_ioctl(FU_UDEV_DEVICE(device), 123, buf, sizeof(buf), NULL, 0, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
+
+	/* out-of-order */
+	buf[0] = 0x00;
+	buf[1] = 0x00;
+	ret = fu_udev_device_ioctl(FU_UDEV_DEVICE(device), 123, buf, sizeof(buf), NULL, 0, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
+
+	/* load the same data */
+	ret = fu_backend_load_json(backend, json1, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
+	g_assert_cmpint(added_cnt, ==, 1);
+	g_assert_cmpint(removed_cnt, ==, 0);
+	g_assert_cmpint(changed_cnt, ==, 1);
+	device = fu_backend_lookup_by_id(backend, "foo:bar:baz");
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED));
+
+	/* load a different device */
+	ret = fu_backend_load_json(backend, json2, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
+	g_assert_cmpint(added_cnt, ==, 2);
+	g_assert_cmpint(changed_cnt, ==, 1);
+	g_assert_cmpint(removed_cnt, ==, 1);
+	device = fu_backend_lookup_by_id(backend, "usb:FF:FF:06");
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+
+	/* save to string */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG);
+	json3 = fwupd_codec_to_json_string(FWUPD_CODEC(backend), FWUPD_CODEC_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json3);
+	g_debug("%s", json3);
+	g_assert_cmpstr(json3, ==, json2);
 }
 
 static void
@@ -5550,6 +5746,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/plugin{quirks-performance}", fu_plugin_quirks_performance_func);
 	g_test_add_func("/fwupd/plugin{quirks-device}", fu_plugin_quirks_device_func);
 	g_test_add_func("/fwupd/backend", fu_backend_func);
+	g_test_add_func("/fwupd/backend{emulate}", fu_backend_emulate_func);
 	g_test_add_func("/fwupd/chunk", fu_chunk_func);
 	g_test_add_func("/fwupd/chunks", fu_chunk_array_func);
 	g_test_add_func("/fwupd/common{align-up}", fu_common_align_up_func);
@@ -5610,6 +5807,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func("/fwupd/device", fu_device_func);
+	g_test_add_func("/fwupd/device{event}", fu_device_event_func);
 	g_test_add_func("/fwupd/device{vfuncs}", fu_device_vfuncs_func);
 	g_test_add_func("/fwupd/device{instance-ids}", fu_device_instance_ids_func);
 	g_test_add_func("/fwupd/device{composite-id}", fu_device_composite_id_func);
