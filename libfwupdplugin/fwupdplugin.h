@@ -32,6 +32,7 @@
 #include <libfwupdplugin/fu-crc.h>
 #include <libfwupdplugin/fu-csv-entry.h>
 #include <libfwupdplugin/fu-csv-firmware.h>
+#include <libfwupdplugin/fu-device-event.h>
 #include <libfwupdplugin/fu-device-locker.h>
 #include <libfwupdplugin/fu-device-metadata.h>
 #include <libfwupdplugin/fu-device.h>

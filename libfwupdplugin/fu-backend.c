@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-backend-private.h"
+#include "fu-device-private.h"
 #include "fu-string.h"
 
 /**
@@ -25,17 +26,27 @@ typedef struct {
 	gboolean enabled;
 	gboolean done_setup;
 	gboolean can_invalidate;
+	GType device_gtype;
 	GHashTable *devices; /* device_id : * FuDevice */
 	GThread *thread_init;
 } FuBackendPrivate;
 
 enum { SIGNAL_ADDED, SIGNAL_REMOVED, SIGNAL_CHANGED, SIGNAL_LAST };
 
-enum { PROP_0, PROP_NAME, PROP_CAN_INVALIDATE, PROP_CONTEXT, PROP_LAST };
+enum { PROP_0, PROP_NAME, PROP_CAN_INVALIDATE, PROP_CONTEXT, PROP_DEVICE_GTYPE, PROP_LAST };
 
 static guint signals[SIGNAL_LAST] = {0};
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuBackend, fu_backend, G_TYPE_OBJECT)
+static void
+fu_backend_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuBackend,
+		       fu_backend,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_ADD_PRIVATE(FuBackend)
+			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_backend_codec_iface_init));
+
 #define GET_PRIVATE(o) (fu_backend_get_instance_private(o))
 
 /**
@@ -229,6 +240,16 @@ fu_backend_setup(FuBackend *self, FuProgress *progress, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_backend_get_emulation_array_member_name(FuBackend *self)
+{
+	FuBackendPrivate *priv = GET_PRIVATE(self);
+
+	if (priv->name == NULL)
+		return NULL;
+	return g_strdup_printf("%c%sDevices", g_ascii_toupper(priv->name[0]), priv->name + 1);
+}
+
 /**
  * fu_backend_load:
  * @self: a #FuBackend
@@ -251,15 +272,83 @@ fu_backend_load(FuBackend *self,
 		GError **error)
 {
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
+	FuBackendPrivate *priv = GET_PRIVATE(self);
+	JsonArray *json_array;
+	g_autofree gchar *list_name = NULL;
+	g_autoptr(GPtrArray) devices_added =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(GPtrArray) devices_remove =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(GList) devices = NULL;
 
 	g_return_val_if_fail(FU_IS_BACKEND(self), FALSE);
+	g_return_val_if_fail(json_object != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* optional */
-	if (klass->load != NULL) {
-		if (!klass->load(self, json_object, tag, flags, error))
-			return FALSE;
+	if (klass->load != NULL)
+		return klass->load(self, json_object, tag, flags, error);
+
+	/* sanity check */
+	list_name = fu_backend_get_emulation_array_member_name(self);
+	if (!json_object_has_member(json_object, list_name))
+		return TRUE;
+
+	/* four steps:
+	 *
+	 * 1. store all the existing devices matching the tag in devices_remove
+	 * 2. read the devices in the array:
+	 *    - if the platform-id exists: replace the event data & remove from devices_remove
+	 *    - otherwise add to devices_added
+	 * 3. emit devices in devices_remove
+	 * 4. emit devices in devices_added
+	 */
+	devices = g_hash_table_get_values(priv->devices);
+	for (GList *l = devices; l != NULL; l = l->next) {
+		FuDevice *device = FU_DEVICE(l->data);
+		g_ptr_array_add(devices_remove, g_object_ref(device));
 	}
+	json_array = json_object_get_array_member(json_object, list_name);
+	for (guint i = 0; i < json_array_get_length(json_array); i++) {
+		JsonNode *node_tmp = json_array_get_element(json_array, i);
+		FuDevice *device_old;
+		g_autoptr(FuDevice) device_tmp =
+		    g_object_new(priv->device_gtype, "context", priv->ctx, NULL);
+
+		if (!fwupd_codec_from_json(FWUPD_CODEC(device_tmp), node_tmp, error))
+			return FALSE;
+
+		/* does a device with this platform ID [and the same created date] already exist */
+		device_old = fu_backend_lookup_by_id(self, fu_device_get_backend_id(device_tmp));
+		if (device_old != NULL &&
+		    fu_device_get_created(device_old) == fu_device_get_created(device_tmp)) {
+			GPtrArray *events = fu_device_get_events(device_tmp);
+			fu_device_clear_events(device_old);
+			for (guint j = 0; j < events->len; j++) {
+				FuDeviceEvent *event = g_ptr_array_index(events, j);
+				fu_device_add_event(device_old, event);
+			}
+			fu_backend_device_changed(self, device_old);
+			g_ptr_array_remove(devices_remove, device_old);
+			continue;
+		}
+
+		/* new to us! */
+		g_ptr_array_add(devices_added, g_object_ref(device_tmp));
+	}
+
+	/* emit removes then adds */
+	for (guint i = 0; i < devices_remove->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices_remove, i);
+		fu_backend_device_removed(self, device);
+	}
+	for (guint i = 0; i < devices_added->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices_added, i);
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
+		fu_backend_device_added(self, device);
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -290,11 +379,37 @@ fu_backend_save(FuBackend *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* optional */
-	if (klass->save != NULL) {
-		if (!klass->save(self, json_builder, tag, flags, error))
-			return FALSE;
-	}
+	if (klass->save != NULL)
+		return klass->save(self, json_builder, tag, flags, error);
+
+	/* internal */
+	json_builder_begin_object(json_builder);
+	fwupd_codec_to_json(FWUPD_CODEC(self), json_builder, FWUPD_CODEC_FLAG_NONE);
+	json_builder_end_object(json_builder);
 	return TRUE;
+}
+
+static void
+fu_backend_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+{
+	FuBackend *self = FU_BACKEND(codec);
+	FuBackendPrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *list_name = NULL;
+	g_autoptr(GList) devices = NULL;
+
+	list_name = fu_backend_get_emulation_array_member_name(self);
+	json_builder_set_member_name(builder, list_name);
+	json_builder_begin_array(builder);
+	devices = g_hash_table_get_values(priv->devices);
+	for (GList *l = devices; l != NULL; l = l->next) {
+		FuDevice *device = FU_DEVICE(l->data);
+		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG))
+			continue;
+		json_builder_begin_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(device), builder, FWUPD_CODEC_FLAG_NONE);
+		json_builder_end_object(builder);
+	}
+	json_builder_end_array(builder);
 }
 
 /**
@@ -463,6 +578,9 @@ fu_backend_get_property(GObject *object, guint prop_id, GValue *value, GParamSpe
 	case PROP_CONTEXT:
 		g_value_set_object(value, priv->ctx);
 		break;
+	case PROP_DEVICE_GTYPE:
+		g_value_set_gtype(value, priv->device_gtype);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -484,6 +602,9 @@ fu_backend_set_property(GObject *object, guint prop_id, const GValue *value, GPa
 	case PROP_CONTEXT:
 		g_set_object(&priv->ctx, g_value_get_object(value));
 		break;
+	case PROP_DEVICE_GTYPE:
+		priv->device_gtype = g_value_get_gtype(value);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -491,10 +612,17 @@ fu_backend_set_property(GObject *object, guint prop_id, const GValue *value, GPa
 }
 
 static void
+fu_backend_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_json = fu_backend_add_json;
+}
+
+static void
 fu_backend_init(FuBackend *self)
 {
 	FuBackendPrivate *priv = GET_PRIVATE(self);
 	priv->enabled = TRUE;
+	priv->device_gtype = FU_TYPE_DEVICE;
 	priv->thread_init = g_thread_self();
 	priv->devices =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_object_unref);
@@ -576,6 +704,21 @@ fu_backend_class_init(FuBackendClass *klass)
 				FU_TYPE_CONTEXT,
 				G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_CONTEXT, pspec);
+
+	/**
+	 * FuBackend:device-gtype:
+	 *
+	 * The #GType to use when creating emulated devices.
+	 *
+	 * Since: 2.0.0
+	 */
+	pspec =
+	    g_param_spec_gtype("device-gtype",
+			       NULL,
+			       NULL,
+			       FU_TYPE_DEVICE,
+			       G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_DEVICE_GTYPE, pspec);
 
 	/**
 	 * FuBackend::device-added:

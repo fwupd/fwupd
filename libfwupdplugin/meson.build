@@ -70,6 +70,7 @@ fwupdplugin_src = [
   'fu-csv-entry.c', # fuzzing
   'fu-csv-firmware.c', # fuzzing
   'fu-device.c', # fuzzing
+  'fu-device-event.c', # fuzzing
   'fu-device-locker.c', # fuzzing
   'fu-device-progress.c',
   'fu-dfu-firmware.c', # fuzzing
@@ -198,6 +199,7 @@ fwupdplugin_headers = [
   'fu-csv-entry.h',
   'fu-csv-firmware.h',
   'fu-device.h',
+  'fu-device-event.h',
   'fu-device-locker.h',
   'fu-device-metadata.h',
   'fu-device-private.h',

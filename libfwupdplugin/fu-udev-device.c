@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "fu-device-event-private.h"
 #include "fu-device-private.h"
 #include "fu-i2c-device.h"
 #include "fu-string.h"
@@ -52,7 +53,16 @@ typedef struct {
 	FuUdevDeviceFlags flags;
 } FuUdevDevicePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuUdevDevice, fu_udev_device, FU_TYPE_DEVICE)
+static void
+fu_udev_device_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuUdevDevice,
+		       fu_udev_device,
+		       FU_TYPE_DEVICE,
+		       0,
+		       G_ADD_PRIVATE(FuUdevDevice)
+			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
+						 fu_udev_device_codec_iface_init));
 
 enum {
 	PROP_0,
@@ -1717,11 +1727,42 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	gint rc_tmp;
 	g_autoptr(GTimer) timer = g_timer_new();
+	FuDeviceEvent *event = NULL;
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	g_autofree gchar *event_id = NULL;
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
 	g_return_val_if_fail(request != 0x0, FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		g_autofree gchar *buf_base64 = g_base64_encode(buf, bufsz);
+		event_id = g_strdup_printf("Ioctl:"
+					   "Request=0x%04x,"
+					   "Data=%s,"
+					   "Length=0x%x",
+					   (guint)request,
+					   buf_base64,
+					   (guint)bufsz);
+		g_debug("%s", event_id);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return FALSE;
+		return fu_device_event_copy_data(event, "Data", buf, bufsz, error);
+	}
+
+	/* save */
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+		fu_device_event_set_data(event, "Data", buf, bufsz);
+	}
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
@@ -1771,6 +1812,12 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 #endif
 		return FALSE;
 	}
+
+	/* save response */
+	if (event != NULL)
+		fu_device_event_set_data(event, "DataOut", buf, bufsz);
+
+	/* success */
 	return TRUE;
 #else
 	g_set_error(error,
@@ -2469,6 +2516,86 @@ fu_udev_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 }
 
 static void
+fu_udev_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+{
+	FuDevice *device = FU_DEVICE(codec);
+	FuUdevDevice *self = FU_UDEV_DEVICE(codec);
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	GPtrArray *events = fu_device_get_events(device);
+
+	/* optional properties */
+	if (priv->device_file != NULL) {
+		json_builder_set_member_name(builder, "DeviceFile");
+		json_builder_add_string_value(builder, priv->device_file);
+	}
+	if (fu_device_get_backend_id(device) != NULL) {
+		json_builder_set_member_name(builder, "BackendId");
+		json_builder_add_string_value(builder, fu_device_get_backend_id(device));
+	}
+#if GLIB_CHECK_VERSION(2, 62, 0)
+	if (fu_device_get_created(device) != 0) {
+		g_autoptr(GDateTime) dt =
+		    g_date_time_new_from_unix_utc(fu_device_get_created(device));
+		g_autofree gchar *str = g_date_time_format_iso8601(dt);
+		json_builder_set_member_name(builder, "Created");
+		json_builder_add_string_value(builder, str);
+	}
+#endif
+
+	/* events */
+	if (events->len > 0) {
+		json_builder_set_member_name(builder, "Events");
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < events->len; i++) {
+			FuDeviceEvent *event = g_ptr_array_index(events, i);
+			fwupd_codec_to_json(FWUPD_CODEC(event), builder, flags);
+		}
+		json_builder_end_array(builder);
+	}
+}
+
+static gboolean
+fu_udev_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+{
+	FuDevice *device = FU_DEVICE(codec);
+	FuUdevDevice *self = FU_UDEV_DEVICE(codec);
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	JsonObject *json_object = json_node_get_object(json_node);
+	const gchar *tmp;
+
+	tmp = json_object_get_string_member_with_default(json_object, "DeviceFile", NULL);
+	if (tmp != NULL) {
+		g_free(priv->device_file);
+		priv->device_file = g_strdup(tmp);
+	}
+	tmp = json_object_get_string_member_with_default(json_object, "BackendId", NULL);
+	if (tmp != NULL)
+		fu_device_set_backend_id(device, tmp);
+
+	tmp = json_object_get_string_member_with_default(json_object, "Created", NULL);
+	if (tmp != NULL) {
+		g_autoptr(GDateTime) dt = g_date_time_new_from_iso8601(tmp, NULL);
+		if (dt != NULL)
+			fu_device_set_created(device, g_date_time_to_unix(dt));
+	}
+
+	/* array of events */
+	if (json_object_has_member(json_object, "Events")) {
+		JsonArray *json_array = json_object_get_array_member(json_object, "Events");
+		for (guint i = 0; i < json_array_get_length(json_array); i++) {
+			JsonNode *node_tmp = json_array_get_element(json_array, i);
+			g_autoptr(FuDeviceEvent) event = fu_device_event_new(NULL);
+			if (!fwupd_codec_from_json(FWUPD_CODEC(event), node_tmp, error))
+				return FALSE;
+			fu_device_add_event(device, event);
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static void
 fu_udev_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(object);
@@ -2653,6 +2780,13 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 				    NULL,
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_DEVICE_FILE, pspec);
+}
+
+static void
+fu_udev_device_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_json = fu_udev_device_add_json;
+	iface->from_json = fu_udev_device_from_json;
 }
 
 /**

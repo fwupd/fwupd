@@ -6,8 +6,10 @@
 
 #pragma once
 
-#include <fu-device.h>
 #include <xmlb.h>
+
+#include "fu-device-event.h"
+#include "fu-device.h"
 
 #define fu_device_set_plugin(d, v) fwupd_device_set_plugin(FWUPD_DEVICE(d), v)
 
@@ -75,3 +77,14 @@ gboolean
 fu_device_has_counterpart_guid(FuDevice *self, const gchar *guid) G_GNUC_NON_NULL(1, 2);
 GPtrArray *
 fu_device_get_counterpart_guids(FuDevice *self) G_GNUC_NON_NULL(1);
+
+void
+fu_device_add_event(FuDevice *self, FuDeviceEvent *event);
+void
+fu_device_clear_events(FuDevice *self);
+GPtrArray *
+fu_device_get_events(FuDevice *self);
+FuDeviceEvent *
+fu_device_save_event(FuDevice *self, const gchar *id);
+FuDeviceEvent *
+fu_device_load_event(FuDevice *self, const gchar *id, GError **error);
