@@ -619,6 +619,7 @@ fu_pxi_receiver_device_write_firmware(FuDevice *device,
 	if (!fu_pxi_receiver_device_reset(device, error))
 		return FALSE;
 	fu_progress_step_done(progress);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
 	return TRUE;
@@ -939,6 +940,7 @@ fu_pxi_receiver_device_init(FuPxiReceiverDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC, "is-hpac");
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }
 
 static void
