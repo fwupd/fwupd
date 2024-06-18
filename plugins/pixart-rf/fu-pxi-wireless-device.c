@@ -99,6 +99,7 @@ fu_pxi_wireless_device_set_feature(FuDevice *self, const guint8 *buf, guint bufs
 	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				    HIDIOCSFEATURE(bufsz),
 				    (guint8 *)buf,
+				    bufsz,
 				    NULL,
 				    FU_PXI_DEVICE_IOCTL_TIMEOUT,
 				    error);
@@ -118,6 +119,7 @@ fu_pxi_wireless_device_get_feature(FuDevice *self, guint8 *buf, guint bufsz, GEr
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  HIDIOCGFEATURE(bufsz),
 				  buf,
+				  bufsz,
 				  NULL,
 				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
 				  error)) {

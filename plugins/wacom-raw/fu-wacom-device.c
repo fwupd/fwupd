@@ -228,6 +228,7 @@ fu_wacom_device_set_feature(FuWacomDevice *self, const guint8 *data, guint datas
 	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				    HIDIOCSFEATURE(datasz),
 				    (guint8 *)data,
+				    datasz,
 				    NULL,
 				    FU_WACOM_DEVICE_IOCTL_TIMEOUT,
 				    error);
@@ -239,6 +240,7 @@ fu_wacom_device_get_feature(FuWacomDevice *self, guint8 *data, guint datasz, GEr
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  HIDIOCGFEATURE(datasz),
 				  data,
+				  datasz,
 				  NULL,
 				  FU_WACOM_DEVICE_IOCTL_TIMEOUT,
 				  error))

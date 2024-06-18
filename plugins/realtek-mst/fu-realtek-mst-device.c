@@ -257,6 +257,7 @@ mst_ensure_device_address(FuRealtekMstDevice *self, guint8 address, GError **err
 	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				    I2C_SLAVE,
 				    (guint8 *)(guintptr)address,
+				    sizeof(guintptr),
 				    NULL,
 				    FU_REALTEK_MST_DEVICE_IOCTL_TIMEOUT,
 				    error);

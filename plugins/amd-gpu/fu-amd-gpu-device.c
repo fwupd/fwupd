@@ -156,6 +156,7 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
 				  DRM_IOCTL_AMDGPU_INFO,
 				  (void *)&request,
+				  sizeof(request),
 				  NULL,
 				  1000,
 				  error))

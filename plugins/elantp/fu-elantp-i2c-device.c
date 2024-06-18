@@ -397,12 +397,14 @@ fu_elantp_i2c_device_open(FuDevice *device, GError **error)
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
 				  I2C_SLAVE,
 				  GINT_TO_POINTER(addr),
+				  sizeof(gpointer),
 				  NULL,
 				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
 				  NULL)) {
 		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
 					  I2C_SLAVE_FORCE,
 					  GINT_TO_POINTER(addr),
+					  sizeof(gpointer),
 					  NULL,
 					  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
 					  error)) {

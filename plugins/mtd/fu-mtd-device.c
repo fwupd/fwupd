@@ -283,6 +283,7 @@ fu_mtd_device_erase(FuMtdDevice *self, GInputStream *stream, FuProgress *progres
 		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 					  2,
 					  (guint8 *)&erase,
+					  sizeof(erase),
 					  NULL,
 					  FU_MTD_DEVICE_IOCTL_TIMEOUT,
 					  error)) {

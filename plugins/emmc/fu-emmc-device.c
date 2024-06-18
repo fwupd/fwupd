@@ -270,6 +270,7 @@ fu_emmc_read_extcsd(FuEmmcDevice *self, guint8 *ext_csd, gsize ext_csd_sz, GErro
 	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				    MMC_IOC_CMD,
 				    (guint8 *)&idata,
+				    sizeof(idata),
 				    NULL,
 				    FU_EMMC_DEVICE_IOCTL_TIMEOUT,
 				    error);
@@ -362,6 +363,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	guint32 sect_done = 0;
 	guint32 sector_size;
 	gboolean check_sect_done = FALSE;
+	gsize multi_cmdsz;
 	guint8 ext_csd[512];
 	guint failure_cnt = 0;
 	g_autofree struct mmc_ioc_multi_cmd *multi_cmd = NULL;
@@ -392,7 +394,8 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	      ext_csd[EXT_CSD_FFU_ARG_2] << 16 | ext_csd[EXT_CSD_FFU_ARG_3] << 24;
 
 	/* prepare multi_cmd to be sent */
-	multi_cmd = g_malloc0(sizeof(struct mmc_ioc_multi_cmd) + 4 * sizeof(struct mmc_ioc_cmd));
+	multi_cmdsz = sizeof(struct mmc_ioc_multi_cmd) + 4 * sizeof(struct mmc_ioc_cmd);
+	multi_cmd = g_malloc0(multi_cmdsz);
 	multi_cmd->num_of_cmds = 4;
 
 	/* put device into ffu mode */
@@ -441,6 +444,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 			if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 						  MMC_IOC_MULTI_CMD,
 						  (guint8 *)multi_cmd,
+						  multi_cmdsz,
 						  NULL,
 						  FU_EMMC_DEVICE_IOCTL_TIMEOUT,
 						  error)) {
@@ -450,6 +454,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 				if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 							  MMC_IOC_CMD,
 							  (guint8 *)&multi_cmd->cmds[3],
+							  sizeof(struct mmc_ioc_cmd),
 							  NULL,
 							  FU_EMMC_DEVICE_IOCTL_TIMEOUT,
 							  &error_local)) {
@@ -509,6 +514,8 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	} else {
 		/* re-enter ffu mode and install the firmware */
 		multi_cmd->num_of_cmds = 2;
+		multi_cmdsz = sizeof(struct mmc_ioc_multi_cmd) +
+			      multi_cmd->num_of_cmds * sizeof(struct mmc_ioc_cmd);
 
 		/* set ext_csd to install mode */
 		multi_cmd->cmds[1].opcode = MMC_SWITCH;
@@ -524,6 +531,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 					  MMC_IOC_MULTI_CMD,
 					  (guint8 *)multi_cmd,
+					  multi_cmdsz,
 					  NULL,
 					  FU_EMMC_DEVICE_IOCTL_TIMEOUT,
 					  error)) {
@@ -533,6 +541,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 			if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 						  MMC_IOC_CMD,
 						  (guint8 *)&multi_cmd->cmds[2],
+						  sizeof(struct mmc_ioc_cmd),
 						  NULL,
 						  FU_EMMC_DEVICE_IOCTL_TIMEOUT,
 						  &error_local)) {

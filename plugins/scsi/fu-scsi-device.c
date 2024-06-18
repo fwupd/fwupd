@@ -180,6 +180,7 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  SG_IO,
 				  (guint8 *)&io_hdr,
+				  sizeof(io_hdr),
 				  NULL,
 				  FU_SCSI_DEVICE_IOCTL_TIMEOUT,
 				  error))

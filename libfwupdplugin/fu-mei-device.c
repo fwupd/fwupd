@@ -304,6 +304,7 @@ fu_mei_device_connect(FuMeiDevice *self, guchar req_protocol_version, GError **e
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  IOCTL_MEI_CONNECT_CLIENT,
 				  (guint8 *)&data,
+				  sizeof(data),
 				  NULL, /* rc */
 				  FU_MEI_DEVICE_IOCTL_TIMEOUT,
 				  error))

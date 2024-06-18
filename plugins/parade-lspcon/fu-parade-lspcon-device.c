@@ -154,6 +154,7 @@ fu_parade_lspcon_ensure_i2c_address(FuParadeLspconDevice *self, guint8 address, 
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  I2C_SLAVE,
 				  (guint8 *)(guintptr)address,
+				  sizeof(guintptr),
 				  NULL,
 				  FU_PARADE_LSPCON_DEVICE_IOCTL_TIMEOUT,
 				  error)) {
