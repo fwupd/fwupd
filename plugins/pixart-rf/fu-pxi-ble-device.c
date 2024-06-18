@@ -802,6 +802,7 @@ fu_pxi_ble_device_write_firmware(FuDevice *device,
 	if (!fu_pxi_ble_device_reset(self, error))
 		return FALSE;
 	fu_progress_step_done(progress);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
 	return TRUE;
@@ -1008,6 +1009,7 @@ fu_pxi_ble_device_init(FuPxiBleDevice *self)
 	self->feature_report_id = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
 	self->input_report_id = PXI_HID_DEV_OTA_INPUT_REPORT_ID;
 	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC, "is-hpac");
+	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }
 
 static void
