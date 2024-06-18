@@ -55,6 +55,7 @@ fu_gpio_device_setup(FuDevice *device, GError **error)
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  GPIO_GET_CHIPINFO_IOCTL,
 				  (guint8 *)&info,
+				  sizeof(info),
 				  NULL,
 				  FU_GPIO_DEVICE_IOCTL_TIMEOUT,
 				  error)) {
@@ -131,6 +132,7 @@ fu_gpio_device_assign_full(FuGpioDevice *self, guint64 line, gboolean value, GEr
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  GPIO_V2_GET_LINE_IOCTL,
 				  (guint8 *)&req,
+				  sizeof(req),
 				  NULL,
 				  FU_GPIO_DEVICE_IOCTL_TIMEOUT,
 				  error)) {
@@ -164,6 +166,7 @@ fu_gpio_device_assign(FuGpioDevice *self, const gchar *id, gboolean value, GErro
 		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 					  GPIO_V2_GET_LINEINFO_IOCTL,
 					  (guint8 *)&info,
+					  sizeof(info),
 					  NULL,
 					  FU_GPIO_DEVICE_IOCTL_TIMEOUT,
 					  error)) {
@@ -177,6 +180,7 @@ fu_gpio_device_assign(FuGpioDevice *self, const gchar *id, gboolean value, GErro
 			if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 						  GPIO_V2_GET_LINEINFO_IOCTL,
 						  (guint8 *)&info,
+						  sizeof(info),
 						  NULL,
 						  FU_GPIO_DEVICE_IOCTL_TIMEOUT,
 						  error)) {

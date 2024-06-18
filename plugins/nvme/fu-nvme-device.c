@@ -96,6 +96,7 @@ fu_nvme_device_submit_admin_passthru(FuNvmeDevice *self, struct nvme_admin_cmd *
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  NVME_IOCTL_ADMIN_CMD,
 				  (guint8 *)cmd,
+				  sizeof(*cmd),
 				  &rc,
 				  FU_NVME_DEVICE_IOCTL_TIMEOUT,
 				  error)) {

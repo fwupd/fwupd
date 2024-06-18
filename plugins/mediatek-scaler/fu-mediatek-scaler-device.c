@@ -71,6 +71,7 @@ fu_mediatek_scaler_ensure_device_address(FuMediatekScalerDevice *self,
 	if (!fu_udev_device_ioctl(self->i2c_dev,
 				  I2C_SLAVE,
 				  (guint8 *)(guintptr)address,
+				  sizeof(guintptr),
 				  NULL,
 				  FU_MEDIATEK_SCALER_DEVICE_IOCTL_TIMEOUT,
 				  error)) {

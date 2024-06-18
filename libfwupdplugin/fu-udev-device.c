@@ -1689,11 +1689,15 @@ fu_udev_device_close(FuDevice *device, GError **error)
  * @self: a #FuUdevDevice
  * @request: request number
  * @buf: a buffer to use, which *must* be large enough for the request
+ * @bufsz: the size of @buf
  * @rc: (out) (nullable): the raw return value from the ioctl
  * @timeout: timeout in ms for the retry action, see %FU_UDEV_DEVICE_FLAG_IOCTL_RETRY
  * @error: (nullable): optional return location for an error
  *
  * Control a device using a low-level request.
+ *
+ * NOTE: In version 2.0.0 the @bufsz parameter was added -- which isn't required to perform the
+ * ioctl, but *is* required to accurately track and emulate the device buffer.
  *
  * Returns: %TRUE for success
  *
@@ -1703,6 +1707,7 @@ gboolean
 fu_udev_device_ioctl(FuUdevDevice *self,
 		     gulong request,
 		     guint8 *buf,
+		     gsize bufsz,
 		     gint *rc,
 		     guint timeout,
 		     GError **error)

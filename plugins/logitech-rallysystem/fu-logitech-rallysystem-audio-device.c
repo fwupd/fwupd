@@ -38,6 +38,7 @@ fu_logitech_rallysystem_audio_device_set_feature(FuLogitechRallysystemAudioDevic
 	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				    HIDIOCSFEATURE(bufsz),
 				    (guint8 *)buf,
+				    bufsz,
 				    NULL,
 				    FU_LOGITECH_RALLYSYSTEM_AUDIO_DEVICE_IOCTL_TIMEOUT,
 				    error);
@@ -62,6 +63,7 @@ fu_logitech_rallysystem_audio_device_get_feature(FuLogitechRallysystemAudioDevic
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  HIDIOCGFEATURE(bufsz),
 				  buf,
+				  bufsz,
 				  NULL,
 				  FU_LOGITECH_RALLYSYSTEM_AUDIO_DEVICE_IOCTL_TIMEOUT,
 				  error)) {

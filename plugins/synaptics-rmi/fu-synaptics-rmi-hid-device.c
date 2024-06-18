@@ -297,6 +297,7 @@ fu_synaptics_rmi_hid_device_set_mode(FuSynapticsRmiHidDevice *self,
 	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				    HIDIOCSFEATURE(sizeof(data)),
 				    (guint8 *)data,
+				    sizeof(data),
 				    NULL,
 				    FU_SYNAPTICS_RMI_HID_DEVICE_IOCTL_TIMEOUT,
 				    error);
