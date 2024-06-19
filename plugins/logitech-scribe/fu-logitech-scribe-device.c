@@ -437,26 +437,14 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GUsbInterface) intf = NULL;
 	g_autoptr(GPtrArray) endpoints = NULL;
-	g_autoptr(GUsbDevice) g_usb_device = NULL;
 	g_autoptr(FuUsbDevice) usb_device = NULL;
 
 	/* convert GUdevDevice to GUsbDevice */
-	g_usb_device = fu_udev_device_find_usb_device(FU_UDEV_DEVICE(device), error);
-	if (g_usb_device == NULL) {
+	usb_device = FU_USB_DEVICE(fu_udev_device_find_usb_device(FU_UDEV_DEVICE(device), error));
+	if (usb_device == NULL)
 		return FALSE;
-	}
-
-	usb_device = fu_usb_device_new(fu_device_get_context(device), g_usb_device);
-	if (usb_device == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to create usb device instance");
-		return FALSE;
-	}
 
 	/* re-open with new device set */
-	fu_usb_device_set_dev(usb_device, g_usb_device);
 	if (!fu_device_open(FU_DEVICE(usb_device), error))
 		return FALSE;
 
