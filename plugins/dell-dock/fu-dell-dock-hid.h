@@ -1,6 +1,6 @@
 /*
  * Copyright 2018 Realtek Semiconductor Corporation
- * Copyright 2018 Dell Inc.
+ * Copyright 2024 Dell Inc.
  * All rights reserved.
  *
  * This software and associated documentation (if any) is furnished
@@ -18,6 +18,9 @@
 
 #include <fwupdplugin.h>
 
+#define HIDI2C_MAX_READ	 192
+#define HIDI2C_MAX_WRITE 128
+
 typedef struct __attribute__((packed)) {
 	guint8 i2ctargetaddr;
 	guint8 regaddrlen;
@@ -32,9 +35,6 @@ typedef enum {
 	I2C_SPEED_LAST,
 } BridgedI2CSpeed;
 
-#define HIDI2C_MAX_READ	 192
-#define HIDI2C_MAX_WRITE 128
-
 gboolean
 fu_dell_dock_hid_i2c_write(FuDevice *self,
 			   const guint8 *input,
@@ -47,6 +47,7 @@ fu_dell_dock_hid_i2c_read(FuDevice *self,
 			  gsize read_size,
 			  GBytes **bytes,
 			  const FuHIDI2CParameters *parameters,
+			  guint delayms,
 			  GError **error);
 
 gboolean

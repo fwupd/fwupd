@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Dell Inc.
+ * Copyright 2024 Dell Inc.
  * All rights reserved.
  *
  * This software and associated documentation (if any) is furnished
@@ -16,7 +16,6 @@
 #include "config.h"
 
 #include "fu-dell-dock-common.h"
-#include "fu-dell-dock-i2c-ec.h"
 
 gboolean
 fu_dell_dock_set_power(FuDevice *device, guint8 target, gboolean enabled, GError **error)
@@ -26,7 +25,12 @@ fu_dell_dock_set_power(FuDevice *device, guint8 target, gboolean enabled, GError
 
 	g_return_val_if_fail(device != NULL, FALSE);
 
-	parent = FU_IS_DELL_DOCK_EC(device) ? device : fu_device_get_parent(device);
+	if (FU_IS_DELL_DOCK_EC(device))
+		parent = device;
+	else if (FU_IS_DELL_DOCK_EC_V2(device))
+		parent = device;
+	else
+		parent = fu_device_get_parent(device);
 
 	if (parent == NULL) {
 		g_set_error(error,
@@ -41,11 +45,24 @@ fu_dell_dock_set_power(FuDevice *device, guint8 target, gboolean enabled, GError
 	if (locker == NULL)
 		return FALSE;
 
-	return fu_dell_dock_ec_modify_lock(parent, target, enabled, error);
+	if (FU_IS_DELL_DOCK_EC(parent))
+		return fu_dell_dock_ec_modify_lock(parent, target, enabled, error);
+	else if (FU_IS_DELL_DOCK_EC_V2(parent))
+		return fu_dell_dock_ec_v2_modify_lock(parent, target, enabled, error);
+	else {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no valid parent to set device power");
+		return FALSE;
+	}
 }
 
 const gchar *
-fu_dell_dock_get_instance_id(guint8 type, DellDockComponent *dev_list, guint16 vid, guint16 pid)
+fu_dell_dock_get_instance_id(DockBaseType type,
+			     const DellDockComponent *dev_list,
+			     guint16 vid,
+			     guint16 pid)
 {
 	/* The last instance_id must be NULL */
 	for (guint i = 0; dev_list[i].instance_id != NULL; i++) {

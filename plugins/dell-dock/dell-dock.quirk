@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Dell Inc.
+# Copyright 2024 Dell Inc.
 # All rights reserved.
 #
 # This software and associated documentation (if any) is furnished
@@ -17,16 +17,31 @@
 [USB\VID_413C&PID_B06F]
 Name = Unprobed Dell accessory endpoint
 Plugin = dell_dock
+
 [USB\VID_413C&PID_B06E]
 Name = Unprobed Dell accessory endpoint
 Plugin = dell_dock
-Flags = has-bridge
+
+[USB\VID_413C&PID_B0A1]
+Name = Unprobed Dell accessory endpoint
+Plugin = dell_dock
+
+[USB\VID_413C&PID_B0A2]
+Name = Unprobed Dell accessory endpoint
+Plugin = dell_dock
+
+[USB\VID_413C&PID_B0A3]
+Name = Unprobed Dell accessory endpoint
+Plugin = dell_dock
+
+[USB\VID_413C&PID_B0A4]
+Name = Unprobed Dell accessory endpoint
+Plugin = dell_dock
 
 # USB hub1
 [USB\VID_413C&PID_B06F&hub]
 Name = RTS5413 in Dell dock
 Summary = USB 3.1 Generation 1 Hub
-ParentGuid = USB\VID_413C&PID_B06E&hub&embedded
 Plugin = dell_dock
 Vendor = Dell Inc.
 Icon = dock-usb
@@ -41,7 +56,6 @@ InstallDuration = 14
 [USB\VID_413C&PID_B06E&hub]
 Name = RTS5487 in Dell dock
 Summary = USB 3.1 Generation 2 Hub
-ParentGuid = USB\VID_413C&PID_B06E&hub&embedded
 Vendor = Dell Inc.
 Plugin = dell_dock
 Icon = dock-usb
@@ -56,7 +70,6 @@ InstallDuration = 3
 [USB\VID_413C&PID_B06F&atomic_hub]
 Name = RTS5413 in Dell dock
 Summary = USB 3.1 Generation 1 Hub
-ParentGuid = USB\VID_413C&PID_B06E&hub&atomic_embedded
 Plugin = dell_dock
 Vendor = Dell Inc.
 Icon = dock-usb
@@ -71,7 +84,6 @@ InstallDuration = 14
 [USB\VID_413C&PID_B06E&atomic_hub]
 Name = RTS5487 in Dell dock
 Summary = USB 3.1 Generation 2 Hub
-ParentGuid = USB\VID_413C&PID_B06E&hub&atomic_embedded
 Vendor = Dell Inc.
 Plugin = dell_dock
 Icon = dock-usb
@@ -95,7 +107,6 @@ FirmwareSizeMin = 0x1FFC0
 FirmwareSizeMax = 0x20000
 Flags = dual-image,self-recovery,usable-during-update
 DellDockUnlockTarget = 1
-DellDockBoardMin = 6
 DellDockVersionLowest = 01.01.00.01
 DellDockBlobVersionOffset = 0x1AFC0
 InstallDuration = 60
@@ -118,33 +129,24 @@ InstallDuration = 60
 
 # Representation of overall dock update
 [USB\VID_413C&PID_B06E&hub&status]
-Name = Package level of Dell dock
-Summary = A representation of dock update status
 Plugin = dell_dock
 Vendor = Dell Inc.
-Flags = self-recovery,usable-during-update
 FirmwareSize = 24
 InstallDuration = 5
 DellDockBlobVersionOffset = 0x14
 
 # Representation of overall dock update
 [USB\VID_413C&PID_B06E&hub&salomon_mlk_status]
-Name = Package level of Dell dock
-Summary = A representation of dock update status
 Plugin = dell_dock
 Vendor = Dell Inc.
-Flags = self-recovery,usable-during-update
 FirmwareSize = 24
 InstallDuration = 5
 DellDockBlobVersionOffset = 0x14
 
 # Representation of overall dock update
 [USB\VID_413C&PID_B06E&hub&atomic_status]
-Name = Package level of Dell dock
-Summary = A representation of dock update status
 Plugin = dell_dock
 Vendor = Dell Inc.
-Flags = self-recovery,usable-during-update
 FirmwareSize = 24
 InstallDuration = 5
 DellDockBlobVersionOffset = 0x14
@@ -155,7 +157,6 @@ Name = VMM5331 in Dell dock
 Summary = Multi Stream Transport controller
 Vendor = Dell Inc.
 Plugin = dell_dock
-ParentGuid = USB\VID_413C&PID_B06E&hub&embedded
 Flags = skips-restart,dual-image,usable-during-update
 FirmwareSize = 524288
 DellDockUnlockTarget = 9
@@ -172,7 +173,6 @@ Name = VMM6210 in Dell dock
 Summary = Multi Stream Transport controller
 Vendor = Dell Inc.
 Plugin = dell_dock
-ParentGuid = USB\VID_413C&PID_B06E&hub&atomic_embedded
 Flags = skips-restart,dual-image,usable-during-update
 FirmwareSize = 1048576
 DellDockUnlockTarget = 9
@@ -189,7 +189,6 @@ Name = Thunderbolt controller in Dell dock
 Summary = Thunderbolt controller
 Vendor = Dell Inc.
 VendorId = TBT:0x00D4
-ParentGuid = USB\VID_413C&PID_B06E&hub&embedded
 FirmwareSizeMin = 0x40000
 FirmwareSizeMax = 0x80000
 Flags = dual-image
@@ -207,9 +206,121 @@ Name = USB4 controller in Dell dock
 Summary = USB4 controller
 Vendor = Dell Inc.
 VendorId = TBT:0x00D4
-ParentGuid = USB\VID_413C&PID_B06E&hub&embedded
 FirmwareSizeMin = 0x40000
 FirmwareSizeMax = 0x80000
 Flags = skips-restart,dual-image,usable-during-update
 Icon = thunderbolt
 InstallDuration = 46
+
+# K2 DPALT DOCK status package
+[USB\VID_413C&PID_B06E&hub&k2_sku1_pkg]
+Plugin = dell_dock
+Vendor = Dell Inc.
+FirmwareSize = 64
+InstallDuration = 5
+DellDockBlobVersionOffset = 0x14
+
+# K2 TBT4 DOCK status package
+[USB\VID_413C&PID_B06E&hub&k2_sku2_pkg]
+Plugin = dell_dock
+Vendor = Dell Inc.
+FirmwareSize = 64
+InstallDuration = 5
+DellDockBlobVersionOffset = 0x14
+
+# K2 TBT5 DOCK status package
+[USB\VID_413C&PID_B06E&hub&k2_sku3_pkg]
+Plugin = dell_dock
+Vendor = Dell Inc.
+FirmwareSize = 64
+InstallDuration = 5
+DellDockBlobVersionOffset = 0x14
+
+# K2 Embedded Controller
+[USB\VID_413C&PID_B06E&hub&k2_embedded]
+Name = Dell dock
+Summary = High performance dock
+Plugin = dell_dock
+Vendor = Dell Inc.
+VendorId = USB:0x413C
+Icon = dock-usb
+Flags = dual-image,self-recovery,usable-during-update
+InstallDuration = 60
+DellDockUnlockTarget = 1
+
+# K2 USB4v2 controller
+[TBT-00d4b072]
+Name = USB4v2 controller in Dell dock
+Summary = USB4v2 controller
+Vendor = Dell Inc.
+VendorId = TBT:0x00D4
+Flags = skips-restart,dual-image,usable-during-update
+Icon = thunderbolt
+InstallDuration = 46
+
+# K2 USB4 controller
+[TBT-00d4b073]
+Name = USB4 controller in Dell dock
+Summary = USB4 controller
+Vendor = Dell Inc.
+VendorId = TBT:0x00D4
+Flags = skips-restart,dual-image,usable-during-update
+Icon = thunderbolt
+InstallDuration = 46
+
+# K2 MST Hub
+[USB\VID_06CB&PID_9430]
+Vendor = Dell Inc.
+Plugin = dell_dock
+Flags = skips-restart,dual-image,usable-during-update
+
+# K2 MST Hub
+[USB\VID_06CB&PID_8430]
+Vendor = Dell Inc.
+Plugin = dell_dock
+Flags = skips-restart,dual-image,usable-during-update
+
+[USB\VID_413C&PID_B0A1&k2_hub]
+Name = RTS5480 USB 3.2 Gen 1 Hub
+Plugin = dell_dock
+Vendor = Dell Inc.
+Icon = dock-usb
+DellDockUnlockTarget = 8
+DellDockBlobMajorOffset = 0x7FA6
+DellDockBlobMinorOffset = 0x7FA7
+InstallDuration = 14
+
+[USB\VID_413C&PID_B0A2&k2_hub]
+Name = RTS5480 USB 3.2 Gen 2 Hub
+Plugin = dell_dock
+Vendor = Dell Inc.
+Icon = dock-usb
+DellDockUnlockTarget = 8
+DellDockBlobMajorOffset = 0x7F52
+DellDockBlobMinorOffset = 0x7F53
+InstallDuration = 14
+
+[USB\VID_413C&PID_B0A3&k2_hub]
+Name = RTS5485 USB 3.2 Gen 2 Hub
+Plugin = dell_dock
+Vendor = Dell Inc.
+Icon = dock-usb
+DellDockUnlockTarget = 8
+DellDockBlobMajorOffset = 0x7F52
+DellDockBlobMinorOffset = 0x7F53
+InstallDuration = 14
+Vendor = Dell Inc.
+Icon = dock-usb
+
+# K2 RMM
+[USB\VID_413C&PID_B0A4&k2_rmm]
+Name = RMM USB Hub
+Plugin = dell_dock
+Vendor = Dell Inc.
+Icon = dock-usb
+
+# K2 LAN
+[PCI\VID_8086&PID_5503]
+Name = Intel i226-LM in Dell dock
+Plugin = dell_dock
+Vendor = Dell Inc.
