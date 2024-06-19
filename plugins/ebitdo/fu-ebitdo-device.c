@@ -374,10 +374,9 @@ fu_ebitdo_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 
 	/* generate a message if not already set from the metadata */
 	if (fu_device_get_update_message(device) == NULL) {
-		GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 		g_autoptr(GString) msg = g_string_new(NULL);
 		g_string_append(msg, "Not in bootloader mode: Disconnect the controller, ");
-		switch (g_usb_device_get_pid(usb_device)) {
+		switch (fu_usb_device_get_pid(FU_USB_DEVICE(device))) {
 		case 0xab11: /* FC30 */
 		case 0xab12: /* NES30 */
 		case 0xab21: /* SFC30 */

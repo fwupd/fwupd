@@ -11,6 +11,7 @@
 #else
 #define GUsbContext		      GObject
 #define GUsbDevice		      GObject
+#define GUsbInterface		      GObject
 #define GUsbDeviceDirection	      gint
 #define GUsbDeviceRequestType	      gint
 #define GUsbDeviceRecipient	      gint
@@ -41,8 +42,20 @@ guint16
 fu_usb_device_get_release(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 guint16
 fu_usb_device_get_spec(FuUsbDevice *self) G_GNUC_NON_NULL(1);
-GUsbDevice *
-fu_usb_device_get_dev(FuUsbDevice *device) G_GNUC_NON_NULL(1);
+guint8
+fu_usb_device_get_device_class(FuUsbDevice *self);
+
+guint8
+fu_usb_device_get_configuration_index(FuUsbDevice *self);
+guint8
+fu_usb_device_get_serial_number_index(FuUsbDevice *self);
+guint8
+fu_usb_device_get_custom_index(FuUsbDevice *self,
+			       guint8 class_id,
+			       guint8 subclass_id,
+			       guint8 protocol_id,
+			       GError **error);
+
 gboolean
 fu_usb_device_is_open(FuUsbDevice *device) G_GNUC_NON_NULL(1);
 FuDevice *
@@ -74,7 +87,7 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
 			       gsize *actual_length,
 			       guint timeout,
 			       GCancellable *cancellable,
-			       GError **error);
+			       GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_usb_device_bulk_transfer(FuUsbDevice *self,
 			    guint8 endpoint,
@@ -97,13 +110,36 @@ gboolean
 fu_usb_device_claim_interface(FuUsbDevice *self,
 			      guint8 iface,
 			      GUsbDeviceClaimInterfaceFlags flags,
-			      GError **error);
+			      GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_usb_device_release_interface(FuUsbDevice *self,
 				guint8 iface,
 				GUsbDeviceClaimInterfaceFlags flags,
-				GError **error);
+				GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_usb_device_reset(FuUsbDevice *self, GError **error) G_GNUC_NON_NULL(1);
 GPtrArray *
-fu_usb_device_get_interfaces(FuUsbDevice *self, GError **error);
+fu_usb_device_get_interfaces(FuUsbDevice *self, GError **error) G_GNUC_NON_NULL(1);
+GUsbInterface *
+fu_usb_device_get_interface(FuUsbDevice *self,
+			    guint8 class_id,
+			    guint8 subclass_id,
+			    guint8 protocol_id,
+			    GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fu_usb_device_set_interface_alt(FuUsbDevice *self, guint8 iface, guint8 alt, GError **error)
+    G_GNUC_NON_NULL(1);
+gchar *
+fu_usb_device_get_string_descriptor(FuUsbDevice *self, guint8 desc_index, GError **error)
+    G_GNUC_NON_NULL(1);
+GBytes *
+fu_usb_device_get_string_descriptor_bytes(FuUsbDevice *self,
+					  guint8 desc_index,
+					  guint16 langid,
+					  GError **error) G_GNUC_NON_NULL(1);
+GBytes *
+fu_usb_device_get_string_descriptor_bytes_full(FuUsbDevice *self,
+					       guint8 desc_index,
+					       guint16 langid,
+					       gsize length,
+					       GError **error) G_GNUC_NON_NULL(1);

@@ -1038,8 +1038,8 @@ fu_genesys_usbhub_device_validate_token(FuGenesysUsbhubDevice *self, GError **er
 	g_autoptr(GError) error_local = NULL;
 
 	/* get 0x80 string descriptor */
-	token_blob = g_usb_device_get_string_descriptor_bytes_full(
-	    fu_usb_device_get_dev(FU_USB_DEVICE(self)),
+	token_blob = fu_usb_device_get_string_descriptor_bytes_full(
+	    FU_USB_DEVICE(self),
 	    0x80,
 	    G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
 	    64,
@@ -1437,9 +1437,7 @@ fu_genesys_usbhub_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 static gboolean
 fu_genesys_usbhub_device_probe(FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	if (g_usb_device_get_device_class(usb_device) != G_USB_DEVICE_CLASS_HUB) {
+	if (fu_usb_device_get_device_class(FU_USB_DEVICE(device)) != G_USB_DEVICE_CLASS_HUB) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1504,7 +1502,6 @@ static gboolean
 fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 {
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	guint32 block_size;
 	guint32 sector_size;
 	guint8 static_idx = 0;
@@ -1545,12 +1542,12 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	buf = g_malloc0(bufsz);
 
 	/* parse static tool string */
-	static_buf =
-	    g_usb_device_get_string_descriptor_bytes_full(usb_device,
-							  static_idx,
-							  G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
-							  64,
-							  error);
+	static_buf = fu_usb_device_get_string_descriptor_bytes_full(
+	    FU_USB_DEVICE(device),
+	    static_idx,
+	    G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
+	    64,
+	    error);
 	if (static_buf == NULL) {
 		g_prefix_error(error,
 			       "failed to get static tool info from device (idx=0x%02x): ",
@@ -1565,12 +1562,12 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* parse dynamic tool string */
-	dynamic_buf =
-	    g_usb_device_get_string_descriptor_bytes_full(usb_device,
-							  dynamic_idx,
-							  G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
-							  64,
-							  error);
+	dynamic_buf = fu_usb_device_get_string_descriptor_bytes_full(
+	    FU_USB_DEVICE(device),
+	    dynamic_idx,
+	    G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
+	    64,
+	    error);
 	if (dynamic_buf == NULL) {
 		g_prefix_error(error,
 			       "failed to get dynamic tool info from device (idx=0x%02x): ",
@@ -1585,12 +1582,12 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* parse firmware info tool string */
-	fw_buf =
-	    g_usb_device_get_string_descriptor_bytes_full(usb_device,
-							  GENESYS_USBHUB_FW_INFO_DESC_IDX,
-							  G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
-							  64,
-							  error);
+	fw_buf = fu_usb_device_get_string_descriptor_bytes_full(
+	    FU_USB_DEVICE(device),
+	    GENESYS_USBHUB_FW_INFO_DESC_IDX,
+	    G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
+	    64,
+	    error);
 	if (fw_buf == NULL) {
 		g_prefix_error(error, "failed to get firmware tool info from device: ");
 		return FALSE;
@@ -1607,8 +1604,8 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 
 	/* parse vendor support tool string */
 	if (self->tool_string_version >= FU_GENESYS_TS_VERSION_VENDOR_SUPPORT) {
-		g_autoptr(GBytes) vendor_buf = g_usb_device_get_string_descriptor_bytes_full(
-		    usb_device,
+		g_autoptr(GBytes) vendor_buf = fu_usb_device_get_string_descriptor_bytes_full(
+		    FU_USB_DEVICE(device),
 		    GENESYS_USBHUB_VENDOR_SUPPORT_DESC_IDX,
 		    G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
 		    64,
@@ -1631,8 +1628,8 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 
 	/* parse brand project tool string */
 	if (self->tool_string_version >= FU_GENESYS_TS_VERSION_BRAND_PROJECT) {
-		g_autoptr(GBytes) project_buf = g_usb_device_get_string_descriptor_bytes_full(
-		    usb_device,
+		g_autoptr(GBytes) project_buf = fu_usb_device_get_string_descriptor_bytes_full(
+		    FU_USB_DEVICE(device),
 		    GENESYS_USBHUB_BRAND_PROJECT_DESC_IDX,
 		    G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
 		    64,
