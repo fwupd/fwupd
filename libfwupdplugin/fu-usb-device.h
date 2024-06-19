@@ -9,8 +9,12 @@
 #ifdef HAVE_GUSB
 #include <gusb.h>
 #else
-#define GUsbContext GObject
-#define GUsbDevice  GObject
+#define GUsbContext		      GObject
+#define GUsbDevice		      GObject
+#define GUsbDeviceDirection	      gint
+#define GUsbDeviceRequestType	      gint
+#define GUsbDeviceRecipient	      gint
+#define GUsbDeviceClaimInterfaceFlags gint
 #ifndef __GI_SCANNER__
 #define G_USB_CHECK_VERSION(a, c, b) 0
 #endif
@@ -32,6 +36,8 @@ guint16
 fu_usb_device_get_vid(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 guint16
 fu_usb_device_get_pid(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+guint16
+fu_usb_device_get_release(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 guint16
 fu_usb_device_get_spec(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 GUsbDevice *
@@ -55,3 +61,50 @@ void
 fu_usb_device_set_open_retry_count(FuUsbDevice *self, guint open_retry_count) G_GNUC_NON_NULL(1);
 guint
 fu_usb_device_get_open_retry_count(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+
+gboolean
+fu_usb_device_control_transfer(FuUsbDevice *self,
+			       GUsbDeviceDirection direction,
+			       GUsbDeviceRequestType request_type,
+			       GUsbDeviceRecipient recipient,
+			       guint8 request,
+			       guint16 value,
+			       guint16 idx,
+			       guint8 *data,
+			       gsize length,
+			       gsize *actual_length,
+			       guint timeout,
+			       GCancellable *cancellable,
+			       GError **error);
+gboolean
+fu_usb_device_bulk_transfer(FuUsbDevice *self,
+			    guint8 endpoint,
+			    guint8 *data,
+			    gsize length,
+			    gsize *actual_length,
+			    guint timeout,
+			    GCancellable *cancellable,
+			    GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fu_usb_device_interrupt_transfer(FuUsbDevice *self,
+				 guint8 endpoint,
+				 guint8 *data,
+				 gsize length,
+				 gsize *actual_length,
+				 guint timeout,
+				 GCancellable *cancellable,
+				 GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fu_usb_device_claim_interface(FuUsbDevice *self,
+			      guint8 iface,
+			      GUsbDeviceClaimInterfaceFlags flags,
+			      GError **error);
+gboolean
+fu_usb_device_release_interface(FuUsbDevice *self,
+				guint8 iface,
+				GUsbDeviceClaimInterfaceFlags flags,
+				GError **error);
+gboolean
+fu_usb_device_reset(FuUsbDevice *self, GError **error) G_GNUC_NON_NULL(1);
+GPtrArray *
+fu_usb_device_get_interfaces(FuUsbDevice *self, GError **error);

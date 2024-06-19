@@ -44,14 +44,14 @@ fu_system76_launch_device_response_cb(FuDevice *device, gpointer user_data, GErr
 	FuSystem76LaunchDeviceHelper *helper = (FuSystem76LaunchDeviceHelper *)user_data;
 
 	/* receive response */
-	if (!g_usb_device_interrupt_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(device)),
-					     ep_in,
-					     helper->data,
-					     helper->len,
-					     &actual_len,
-					     SYSTEM76_LAUNCH_TIMEOUT,
-					     NULL,
-					     error)) {
+	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(device),
+					      ep_in,
+					      helper->data,
+					      helper->len,
+					      &actual_len,
+					      SYSTEM76_LAUNCH_TIMEOUT,
+					      NULL,
+					      error)) {
 		g_prefix_error(error, "failed to read response: ");
 		return FALSE;
 	}
@@ -71,20 +71,19 @@ fu_system76_launch_device_response_cb(FuDevice *device, gpointer user_data, GErr
 static gboolean
 fu_system76_launch_device_command(FuDevice *device, guint8 *data, gsize len, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	const guint8 ep_out = 0x03;
 	gsize actual_len = 0;
 	FuSystem76LaunchDeviceHelper helper = {.data = data, .len = len};
 
 	/* send command */
-	if (!g_usb_device_interrupt_transfer(usb_device,
-					     ep_out,
-					     data,
-					     len,
-					     &actual_len,
-					     SYSTEM76_LAUNCH_TIMEOUT,
-					     NULL,
-					     error)) {
+	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(device),
+					      ep_out,
+					      data,
+					      len,
+					      &actual_len,
+					      SYSTEM76_LAUNCH_TIMEOUT,
+					      NULL,
+					      error)) {
 		g_prefix_error(error, "failed to send command: ");
 		return FALSE;
 	}

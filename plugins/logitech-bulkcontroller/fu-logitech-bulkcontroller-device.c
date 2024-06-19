@@ -73,7 +73,7 @@ fu_logitech_bulkcontroller_device_probe(FuDevice *device, GError **error)
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
 	g_autoptr(GPtrArray) intfs = NULL;
 
-	intfs = g_usb_device_get_interfaces(fu_usb_device_get_dev(FU_USB_DEVICE(self)), error);
+	intfs = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
 	if (intfs == NULL)
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {
@@ -142,14 +142,14 @@ fu_logitech_bulkcontroller_device_send(FuLogitechBulkcontrollerDevice *self,
 		return FALSE;
 	}
 	fu_dump_full(G_LOG_DOMAIN, "request", buf, bufsz, 20, FU_DUMP_FLAGS_SHOW_ASCII);
-	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					ep,
-					buf,
-					bufsz,
-					NULL, /* transferred */
-					BULK_TRANSFER_TIMEOUT,
-					NULL,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 ep,
+					 buf,
+					 bufsz,
+					 NULL, /* transferred */
+					 BULK_TRANSFER_TIMEOUT,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "failed to send using bulk transfer: ");
 		fu_error_convert(error);
 		return FALSE;
@@ -182,16 +182,15 @@ fu_logitech_bulkcontroller_device_recv(FuLogitechBulkcontrollerDevice *self,
 		return FALSE;
 	}
 	g_debug("read response");
-	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					ep,
-					buf,
-					bufsz,
-					&actual_length,
-					timeout,
-					NULL,
-					error)) {
-		g_prefix_error(error, "failed to receive using bulk transfer: ");
-		fu_error_convert(error);
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 ep,
+					 buf,
+					 bufsz,
+					 &actual_length,
+					 timeout,
+					 NULL,
+					 error)) {
+		g_prefix_error(error, "failed to receive: ");
 		return FALSE;
 	}
 	fu_dump_full(G_LOG_DOMAIN, "response", buf, actual_length, 20, FU_DUMP_FLAGS_SHOW_ASCII);

@@ -65,15 +65,13 @@ typedef struct __attribute__((packed)) {
 G_DEFINE_TYPE(FuSynapromDevice, fu_synaprom_device, FU_TYPE_USB_DEVICE)
 
 gboolean
-fu_synaprom_device_cmd_send(FuSynapromDevice *device,
+fu_synaprom_device_cmd_send(FuSynapromDevice *self,
 			    GByteArray *request,
 			    GByteArray *reply,
 			    FuProgress *progress,
 			    guint timeout_ms,
 			    GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	gboolean ret;
 	gsize actual_len = 0;
 
 	/* progress */
@@ -88,15 +86,14 @@ fu_synaprom_device_cmd_send(FuSynapromDevice *device,
 		     request->len,
 		     16,
 		     FU_DUMP_FLAGS_SHOW_ADDRESSES);
-	ret = g_usb_device_bulk_transfer(usb_device,
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 FU_SYNAPROM_USB_REQUEST_EP,
 					 request->data,
 					 request->len,
 					 &actual_len,
 					 timeout_ms,
 					 NULL,
-					 error);
-	if (!ret) {
+					 error)) {
 		g_prefix_error(error, "failed to request: ");
 		return FALSE;
 	}
@@ -111,15 +108,14 @@ fu_synaprom_device_cmd_send(FuSynapromDevice *device,
 	}
 	fu_progress_step_done(progress);
 
-	ret = g_usb_device_bulk_transfer(usb_device,
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 FU_SYNAPROM_USB_REPLY_EP,
 					 reply->data,
 					 reply->len,
 					 NULL, /* allowed to return short read */
 					 timeout_ms,
 					 NULL,
-					 error);
-	if (!ret) {
+					 error)) {
 		g_prefix_error(error, "failed to reply: ");
 		return FALSE;
 	}
@@ -407,7 +403,6 @@ fu_synaprom_device_write_firmware(FuDevice *device,
 static gboolean
 fu_synaprom_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	gboolean ret;
 	gsize actual_len = 0;
 	guint8 data[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -418,19 +413,19 @@ fu_synaprom_device_attach(FuDevice *device, FuProgress *progress, GError **error
 		return TRUE;
 	}
 
-	ret = g_usb_device_control_transfer(usb_device,
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
-					    FU_SYNAPROM_USB_CTRLREQUEST_VENDOR_WRITEDFT,
-					    0x0000,
-					    0x0000,
-					    data,
-					    sizeof(data),
-					    &actual_len,
-					    2000,
-					    NULL,
-					    error);
+	ret = fu_usb_device_control_transfer(FU_USB_DEVICE(device),
+					     G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					     G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					     G_USB_DEVICE_RECIPIENT_DEVICE,
+					     FU_SYNAPROM_USB_CTRLREQUEST_VENDOR_WRITEDFT,
+					     0x0000,
+					     0x0000,
+					     data,
+					     sizeof(data),
+					     &actual_len,
+					     2000,
+					     NULL,
+					     error);
 	if (!ret)
 		return FALSE;
 	if (actual_len != sizeof(data)) {
@@ -442,7 +437,7 @@ fu_synaprom_device_attach(FuDevice *device, FuProgress *progress, GError **error
 			    (guint)sizeof(data));
 		return FALSE;
 	}
-	if (!g_usb_device_reset(usb_device, error)) {
+	if (!fu_usb_device_reset(FU_USB_DEVICE(device), error)) {
 		g_prefix_error(error, "failed to force-reset device: ");
 		return FALSE;
 	}
@@ -453,8 +448,6 @@ fu_synaprom_device_attach(FuDevice *device, FuProgress *progress, GError **error
 static gboolean
 fu_synaprom_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	gboolean ret;
 	gsize actual_len = 0;
 	guint8 data[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
 
@@ -464,7 +457,7 @@ fu_synaprom_device_detach(FuDevice *device, FuProgress *progress, GError **error
 		return TRUE;
 	}
 
-	ret = g_usb_device_control_transfer(usb_device,
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(device),
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
@@ -476,8 +469,7 @@ fu_synaprom_device_detach(FuDevice *device, FuProgress *progress, GError **error
 					    &actual_len,
 					    2000,
 					    NULL,
-					    error);
-	if (!ret)
+					    error))
 		return FALSE;
 	if (actual_len != sizeof(data)) {
 		g_set_error(error,
@@ -489,7 +481,7 @@ fu_synaprom_device_detach(FuDevice *device, FuProgress *progress, GError **error
 		return FALSE;
 	}
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
-	if (!g_usb_device_reset(usb_device, error)) {
+	if (!fu_usb_device_reset(FU_USB_DEVICE(device), error)) {
 		g_prefix_error(error, "failed to force-reset device: ");
 		return FALSE;
 	}

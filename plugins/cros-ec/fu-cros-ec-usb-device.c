@@ -99,13 +99,11 @@ fu_cros_ec_usb_device_get_configuration(FuCrosEcUsbDevice *self, GError **error)
 static gboolean
 fu_cros_ec_usb_device_find_interface(FuUsbDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(device);
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 	g_autoptr(GPtrArray) intfs = NULL;
 
 	/* based on usb_updater2's find_interfacei() and find_endpoint() */
-
-	intfs = g_usb_device_get_interfaces(usb_device, error);
+	intfs = fu_usb_device_get_interfaces(device, error);
 	if (intfs == NULL)
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {
@@ -165,7 +163,6 @@ fu_cros_ec_usb_device_do_xfer(FuCrosEcUsbDevice *self,
 			      gsize *rxed_count,
 			      GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual = 0;
 
 	/* send data out */
@@ -177,17 +174,15 @@ fu_cros_ec_usb_device_do_xfer(FuCrosEcUsbDevice *self,
 		if (outbuf_tmp == NULL)
 			return FALSE;
 
-		if (!g_usb_device_bulk_transfer(usb_device,
-						self->ep_num,
-						outbuf_tmp,
-						outlen,
-						&actual,
-						BULK_SEND_TIMEOUT_MS,
-						NULL,
-						error)) {
-			fu_error_convert(error);
+		if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+						 self->ep_num,
+						 outbuf_tmp,
+						 outlen,
+						 &actual,
+						 BULK_SEND_TIMEOUT_MS,
+						 NULL,
+						 error))
 			return FALSE;
-		}
 		if (actual != outlen) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -202,14 +197,14 @@ fu_cros_ec_usb_device_do_xfer(FuCrosEcUsbDevice *self,
 	/* read reply back */
 	if (inbuf != NULL && inlen > 0) {
 		actual = 0;
-		if (!g_usb_device_bulk_transfer(usb_device,
-						self->ep_num | 0x80,
-						inbuf,
-						inlen,
-						&actual,
-						BULK_RECV_TIMEOUT_MS,
-						NULL,
-						error)) {
+		if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+						 self->ep_num | 0x80,
+						 inbuf,
+						 inlen,
+						 &actual,
+						 BULK_RECV_TIMEOUT_MS,
+						 NULL,
+						 error)) {
 			fu_error_convert(error);
 			return FALSE;
 		}
@@ -233,7 +228,6 @@ fu_cros_ec_usb_device_do_xfer(FuCrosEcUsbDevice *self,
 static gboolean
 fu_cros_ec_usb_device_flush(FuDevice *device, gpointer user_data, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 	gsize actual = 0;
 	g_autofree guint8 *inbuf = g_malloc0(self->chunk_len);
@@ -241,14 +235,14 @@ fu_cros_ec_usb_device_flush(FuDevice *device, gpointer user_data, GError **error
 	/* bulk transfer expected to fail normally (ie, no stale data)
 	 * but if bulk transfer succeeds, indicates stale bytes on the device
 	 * so this will retry until they're emptied */
-	if (g_usb_device_bulk_transfer(usb_device,
-				       self->ep_num | 0x80,
-				       inbuf,
-				       self->chunk_len,
-				       &actual,
-				       FLUSH_TIMEOUT_MS,
-				       NULL,
-				       NULL)) {
+	if (fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					self->ep_num | 0x80,
+					inbuf,
+					self->chunk_len,
+					&actual,
+					FLUSH_TIMEOUT_MS,
+					NULL,
+					NULL)) {
 		g_debug("flushing %" G_GSIZE_FORMAT " bytes", actual);
 		g_set_error(error,
 			    FWUPD_ERROR,

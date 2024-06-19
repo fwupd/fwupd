@@ -664,7 +664,6 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 			     GError **error)
 {
 	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	g_autoptr(GError) error_local = NULL;
 	gsize actual_length;
 
@@ -674,19 +673,19 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 
 	/* low level packet debugging */
 	fu_dump_raw(G_LOG_DOMAIN, "Message", buf->data, buf->len);
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   FU_DFU_REQUEST_DNLOAD,
-					   index,
-					   fu_dfu_device_get_interface(device),
-					   buf->data,
-					   buf->len,
-					   &actual_length,
-					   timeout_ms,
-					   NULL,
-					   &error_local)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(device),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
+					    G_USB_DEVICE_RECIPIENT_INTERFACE,
+					    FU_DFU_REQUEST_DNLOAD,
+					    index,
+					    fu_dfu_device_get_interface(device),
+					    buf->data,
+					    buf->len,
+					    &actual_length,
+					    timeout_ms,
+					    NULL,
+					    &error_local)) {
 		/* refresh the error code */
 		fu_dfu_device_error_fixup(device, &error_local);
 		g_set_error(error,
@@ -730,7 +729,6 @@ fu_dfu_target_upload_chunk(FuDfuTarget *self,
 			   GError **error)
 {
 	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	g_autoptr(GError) error_local = NULL;
 	guint8 *buf;
 	gsize actual_length;
@@ -740,19 +738,19 @@ fu_dfu_target_upload_chunk(FuDfuTarget *self,
 		buf_sz = (gsize)fu_dfu_device_get_transfer_size(device);
 
 	buf = g_new0(guint8, buf_sz);
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   FU_DFU_REQUEST_UPLOAD,
-					   index,
-					   fu_dfu_device_get_interface(device),
-					   buf,
-					   buf_sz,
-					   &actual_length,
-					   fu_dfu_device_get_timeout(device),
-					   NULL,
-					   &error_local)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(device),
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
+					    G_USB_DEVICE_RECIPIENT_INTERFACE,
+					    FU_DFU_REQUEST_UPLOAD,
+					    index,
+					    fu_dfu_device_get_interface(device),
+					    buf,
+					    buf_sz,
+					    &actual_length,
+					    fu_dfu_device_get_timeout(device),
+					    NULL,
+					    &error_local)) {
 		/* refresh the error code */
 		fu_dfu_device_error_fixup(device, &error_local);
 		g_set_error(error,

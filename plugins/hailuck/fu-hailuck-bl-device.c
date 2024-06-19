@@ -32,7 +32,7 @@ fu_hailuck_bl_device_attach(FuDevice *device, FuProgress *progress, GError **err
 				      FU_HID_DEVICE_FLAG_IS_FEATURE,
 				      error))
 		return FALSE;
-	if (!g_usb_device_reset(fu_usb_device_get_dev(FU_USB_DEVICE(device)), error))
+	if (!fu_usb_device_reset(FU_USB_DEVICE(device), error))
 		return FALSE;
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;

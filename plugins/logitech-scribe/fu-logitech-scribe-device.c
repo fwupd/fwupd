@@ -102,14 +102,14 @@ fu_logitech_scribe_device_send(FuLogitechScribeDevice *self,
 				    "interface is invalid");
 		return FALSE;
 	}
-	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(usb_device)),
-					ep,
-					(guint8 *)buf->data,
-					buf->len,
-					&transferred,
-					BULK_TRANSFER_TIMEOUT,
-					cancellable,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(usb_device),
+					 ep,
+					 (guint8 *)buf->data,
+					 buf->len,
+					 &transferred,
+					 BULK_TRANSFER_TIMEOUT,
+					 cancellable,
+					 error)) {
 		g_prefix_error(error, "failed to send using bulk transfer: ");
 		return FALSE;
 	}
@@ -137,15 +137,15 @@ fu_logitech_scribe_device_recv(FuLogitechScribeDevice *self,
 				    "interface is invalid");
 		return FALSE;
 	}
-	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(usb_device)),
-					ep,
-					buf->data,
-					buf->len,
-					&received_length,
-					timeout,
-					NULL,
-					error)) {
-		g_prefix_error(error, "failed to receive using bulk transfer: ");
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(usb_device),
+					 ep,
+					 buf->data,
+					 buf->len,
+					 &received_length,
+					 timeout,
+					 NULL,
+					 error)) {
+		g_prefix_error(error, "failed to receive: ");
 		return FALSE;
 	}
 	return TRUE;

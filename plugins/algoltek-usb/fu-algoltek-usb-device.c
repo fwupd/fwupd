@@ -27,24 +27,19 @@ fu_algoltek_usb_device_ctrl_transfer(FuAlgoltekUsbDevice *self,
 				     guint8 len,
 				     GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-
-	if (!g_usb_device_control_transfer(usb_device,
-					   direction,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   algoltek_cmd,
-					   value,
-					   index,
-					   buf->data,
-					   len,
-					   NULL,
-					   ALGOLTEK_DEVICE_USB_TIMEOUT,
-					   NULL,
-					   error))
-		return FALSE;
-
-	return TRUE;
+	return fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					      direction,
+					      G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					      G_USB_DEVICE_RECIPIENT_INTERFACE,
+					      algoltek_cmd,
+					      value,
+					      index,
+					      buf->data,
+					      len,
+					      NULL,
+					      ALGOLTEK_DEVICE_USB_TIMEOUT,
+					      NULL,
+					      error);
 }
 
 static GByteArray *

@@ -341,12 +341,11 @@ static gboolean
 fu_usb_device_claim_interface_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuUsbDevice *self = FU_USB_DEVICE(device);
-	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	FuUsbDeviceInterface *iface = (FuUsbDeviceInterface *)user_data;
-	return g_usb_device_claim_interface(priv->usb_device,
-					    iface->number,
-					    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					    error);
+	return fu_usb_device_claim_interface(self,
+					     iface->number,
+					     G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+					     error);
 }
 
 static gboolean
@@ -441,8 +440,8 @@ fu_usb_device_open(FuDevice *device, GError **error)
 				return FALSE;
 			}
 		} else {
-			if (!g_usb_device_claim_interface(
-				priv->usb_device,
+			if (!fu_usb_device_claim_interface(
+				self,
 				iface->number,
 				G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
 				error)) {
@@ -615,10 +614,10 @@ fu_usb_device_close(FuDevice *device, GError **error)
 			g_debug("re-binding kernel driver as not waiting for replug");
 			claim_flags |= G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER;
 		}
-		if (!g_usb_device_release_interface(priv->usb_device,
-						    iface->number,
-						    claim_flags,
-						    &error_local)) {
+		if (!fu_usb_device_release_interface(self,
+						     iface->number,
+						     claim_flags,
+						     &error_local)) {
 			if (g_error_matches(error_local,
 					    G_USB_DEVICE_ERROR,
 					    G_USB_DEVICE_ERROR_NO_DEVICE) ||
@@ -762,7 +761,7 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	fu_device_add_vendor_id(device, vendor_id);
 
 	/* set the version if the release has been set */
-	release = g_usb_device_get_release(priv->usb_device);
+	release = fu_usb_device_get_release(self);
 	if (release != 0x0 &&
 	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_BCD);
@@ -909,6 +908,30 @@ fu_usb_device_get_pid(FuUsbDevice *self)
 	if (priv->usb_device == NULL)
 		return 0x0;
 	return g_usb_device_get_pid(priv->usb_device);
+#else
+	return 0x0;
+#endif
+}
+
+/**
+ * fu_usb_device_get_release:
+ * @self: a #FuUsbDevice
+ *
+ * Gets the device release.
+ *
+ * Returns: integer, or 0x0 if unset or invalid
+ *
+ * Since: 2.0.0
+ **/
+guint16
+fu_usb_device_get_release(FuUsbDevice *self)
+{
+#ifdef HAVE_GUSB
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), 0x0000);
+	if (priv->usb_device == NULL)
+		return 0x0;
+	return g_usb_device_get_release(priv->usb_device);
 #else
 	return 0x0;
 #endif
@@ -1064,6 +1087,8 @@ fu_usb_device_find_udev_device(FuUsbDevice *device, GError **error)
  *
  * Gets the #GUsbDevice.
  *
+ * Most plugins should not need to use this escape hatch.
+ *
  * Returns: (transfer none): a USB device, or %NULL
  *
  * Since: 1.0.2
@@ -1121,6 +1146,377 @@ fu_udev_device_unbind_driver(FuDevice *device, GError **error)
 		return FALSE;
 	udev_device = fu_udev_device_new(fu_device_get_context(device), dev);
 	return fu_device_unbind_driver(FU_DEVICE(udev_device), error);
+}
+
+/**
+ * fu_usb_device_control_transfer:
+ * @self: a #FuUsbDevice
+ * @request_type: the request type field for the setup packet
+ * @request: the request field for the setup packet
+ * @value: the value field for the setup packet
+ * @idx: the index field for the setup packet
+ * @data: (array length=length): a suitably-sized data buffer for
+ * either input or output
+ * @length: the length field for the setup packet.
+ * @actual_length: (out) (optional): the actual number of bytes sent, or %NULL
+ * @timeout: timeout timeout (in milliseconds) that this function should wait
+ * before giving up due to no response being received. For an unlimited
+ * timeout, use 0.
+ * @cancellable: a #GCancellable, or %NULL
+ * @error: a #GError, or %NULL
+ *
+ * Perform a USB control transfer.
+ *
+ * Warning: this function is synchronous, and cannot be cancelled.
+ *
+ * Return value: %TRUE on success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_usb_device_control_transfer(FuUsbDevice *self,
+			       GUsbDeviceDirection direction,
+			       GUsbDeviceRequestType request_type,
+			       GUsbDeviceRecipient recipient,
+			       guint8 request,
+			       guint16 value,
+			       guint16 idx,
+			       guint8 *data,
+			       gsize length,
+			       gsize *actual_length,
+			       guint timeout,
+			       GCancellable *cancellable,
+			       GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulating? */
+	if (priv->usb_device == NULL)
+		return TRUE;
+
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
+#ifdef HAVE_GUSB
+	if (!g_usb_device_control_transfer(priv->usb_device,
+					   direction,
+					   request_type,
+					   recipient,
+					   request,
+					   value,
+					   idx,
+					   data,
+					   length,
+					   actual_length,
+					   timeout,
+					   cancellable,
+					   error)) {
+		fu_error_convert(error);
+		return FALSE;
+	}
+#else
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	return FALSE;
+#endif
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_usb_device_bulk_transfer:
+ * @self: a #FuUsbDevice
+ * @endpoint: the address of a valid endpoint to communicate with
+ * @data: (array length=length): a suitably-sized data buffer for
+ * either input or output
+ * @length: the length field for the setup packet.
+ * @actual_length: (out) (optional): the actual number of bytes sent, or %NULL
+ * @timeout: timeout timeout (in milliseconds) that this function should wait
+ * before giving up due to no response being received. For an unlimited
+ * timeout, use 0.
+ * @cancellable: a #GCancellable, or %NULL
+ * @error: a #GError, or %NULL
+ *
+ * Perform a USB bulk transfer.
+ *
+ * Warning: this function is synchronous, and cannot be cancelled.
+ *
+ * Return value: %TRUE on success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_usb_device_bulk_transfer(FuUsbDevice *self,
+			    guint8 endpoint,
+			    guint8 *data,
+			    gsize length,
+			    gsize *actual_length,
+			    guint timeout,
+			    GCancellable *cancellable,
+			    GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulating? */
+	if (priv->usb_device == NULL)
+		return TRUE;
+
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
+#ifdef HAVE_GUSB
+	if (!g_usb_device_bulk_transfer(priv->usb_device,
+					endpoint,
+					data,
+					length,
+					actual_length,
+					timeout,
+					cancellable,
+					error)) {
+		fu_error_convert(error);
+		return FALSE;
+	}
+#else
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	return FALSE;
+#endif
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_usb_device_interrupt_transfer:
+ * @self: a #FuUsbDevice
+ * @endpoint: the address of a valid endpoint to communicate with
+ * @data: (array length=length): a suitably-sized data buffer for either input or output
+ * @length: the length field for the setup packet.
+ * @actual_length: (out) (optional): the actual number of bytes sent, or %NULL
+ * @timeout: timeout (in milliseconds) that this function should wait -- use 0 for unlimited
+ * @cancellable: a #GCancellable, or %NULL
+ * @error: a #GError, or %NULL
+ *
+ * Perform a USB interrupt transfer.
+ *
+ * Warning: this function is synchronous, and cannot be cancelled.
+ *
+ * Return value: %TRUE on success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_usb_device_interrupt_transfer(FuUsbDevice *self,
+				 guint8 endpoint,
+				 guint8 *data,
+				 gsize length,
+				 gsize *actual_length,
+				 guint timeout,
+				 GCancellable *cancellable,
+				 GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulating? */
+	if (priv->usb_device == NULL)
+		return TRUE;
+
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
+#ifdef HAVE_GUSB
+	if (!g_usb_device_interrupt_transfer(priv->usb_device,
+					     endpoint,
+					     data,
+					     length,
+					     actual_length,
+					     timeout,
+					     cancellable,
+					     error)) {
+		fu_error_convert(error);
+		return FALSE;
+	}
+#else
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	return FALSE;
+#endif
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_usb_device_reset:
+ * @self: a #FuUsbDevice
+ * @error: a #GError, or %NULL
+ *
+ * Perform a USB port reset to reinitialize a device.
+ *
+ * If the reset succeeds, the device will appear to disconnected and reconnected.
+ * This means the @self will no longer be valid and should be closed and
+ * rediscovered.
+ *
+ * This is a blocking function which usually incurs a noticeable delay.
+ *
+ * Return value: %TRUE on success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_usb_device_reset(FuUsbDevice *self, GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulating? */
+	if (priv->usb_device == NULL)
+		return TRUE;
+
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
+#ifdef HAVE_GUSB
+	if (!g_usb_device_reset(priv->usb_device, error)) {
+		fu_error_convert(error);
+		return FALSE;
+	}
+#else
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	return FALSE;
+#endif
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_usb_device_get_interfaces:
+ * @self: a #FuUsbDevice
+ * @error: a #GError, or %NULL
+ *
+ * Gets all the interfaces exported by the device.
+ *
+ * Return value: (transfer container) (element-type GUsbInterface): an array of interfaces or %NULL
+ *
+ * Since: 2.0.0
+ **/
+GPtrArray *
+fu_usb_device_get_interfaces(FuUsbDevice *self, GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+#ifdef HAVE_GUSB
+	g_autoptr(GPtrArray) ifaces = NULL;
+#endif
+
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* emulating? */
+	if (priv->usb_device == NULL)
+		return g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
+#ifdef HAVE_GUSB
+	ifaces = g_usb_device_get_interfaces(priv->usb_device, error);
+	if (ifaces == NULL) {
+		fu_error_convert(error);
+		return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer(&ifaces);
+#else
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	return NULL;
+#endif
+}
+
+/**
+ * fu_usb_device_claim_interface:
+ * @self: a #FuUsbDevice
+ * @iface: bInterfaceNumber of the interface you wish to claim
+ * @flags: #GUsbDeviceClaimInterfaceFlags
+ * @error: a #GError, or %NULL
+ *
+ * Claim an interface of the device.
+ *
+ * Return value: %TRUE on success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_usb_device_claim_interface(FuUsbDevice *self,
+			      guint8 iface,
+			      GUsbDeviceClaimInterfaceFlags flags,
+			      GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulating? */
+	if (priv->usb_device == NULL)
+		return TRUE;
+
+#ifdef HAVE_GUSB
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
+	if (!g_usb_device_claim_interface(priv->usb_device, iface, flags, error)) {
+		fu_error_convert(error);
+		return FALSE;
+	}
+#else
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	return FALSE;
+#endif
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_usb_device_release_interface:
+ * @self: a #FuUsbDevice
+ * @iface: bInterfaceNumber of the interface you wish to release
+ * @flags: #GUsbDeviceClaimInterfaceFlags
+ * @error: a #GError, or %NULL
+ *
+ * Release an interface of the device.
+ *
+ * Return value: %TRUE on success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_usb_device_release_interface(FuUsbDevice *self,
+				guint8 iface,
+				GUsbDeviceClaimInterfaceFlags flags,
+				GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulating? */
+	if (priv->usb_device == NULL)
+		return TRUE;
+
+#ifdef HAVE_GUSB
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
+	if (!g_usb_device_release_interface(priv->usb_device, iface, flags, error)) {
+		fu_error_convert(error);
+		return FALSE;
+	}
+#else
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	return FALSE;
+#endif
+
+	/* success */
+	return TRUE;
 }
 
 /**

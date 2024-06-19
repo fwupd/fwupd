@@ -71,7 +71,6 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 {
 #ifdef HAVE_GUSB
 	FuUsbDeviceDs20Class *klass = FU_USB_DEVICE_DS20_GET_CLASS(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(device);
 	gsize actual_length = 0;
 	gsize total_length = fu_firmware_get_size(FU_FIRMWARE(self));
 	guint8 vendor_code = fu_firmware_get_idx(FU_FIRMWARE(self));
@@ -82,19 +81,19 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 	g_return_val_if_fail(FU_IS_USB_DEVICE(device), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   vendor_code, /* bRequest */
-					   0x0,		/* wValue */
-					   0x07,	/* wIndex */
-					   buf,
-					   total_length,
-					   &actual_length,
-					   500,
-					   NULL, /* cancellable */
-					   error)) {
+	if (!fu_usb_device_control_transfer(device,
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    vendor_code, /* bRequest */
+					    0x0,	 /* wValue */
+					    0x07,	 /* wIndex */
+					    buf,
+					    total_length,
+					    &actual_length,
+					    500,
+					    NULL, /* cancellable */
+					    error)) {
 		g_prefix_error(error, "requested vendor code 0x%02x: ", vendor_code);
 		return FALSE;
 	}

@@ -53,7 +53,6 @@ fu_ch347_device_write(FuCh347Device *self,
 		      gsize bufsz,
 		      GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_length = 0;
 	g_autoptr(GByteArray) cmdbuf = g_byte_array_new();
 
@@ -65,14 +64,14 @@ fu_ch347_device_write(FuCh347Device *self,
 
 	/* debug */
 	fu_dump_raw(G_LOG_DOMAIN, "write", cmdbuf->data, cmdbuf->len);
-	if (!g_usb_device_bulk_transfer(usb_device,
-					FU_CH347_EP_OUT,
-					cmdbuf->data,
-					cmdbuf->len,
-					&actual_length,
-					FU_CH347_USB_TIMEOUT,
-					NULL,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 FU_CH347_EP_OUT,
+					 cmdbuf->data,
+					 cmdbuf->len,
+					 &actual_length,
+					 FU_CH347_USB_TIMEOUT,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "failed to write 0x%x bytes: ", (guint)bufsz);
 		return FALSE;
 	}
@@ -93,7 +92,6 @@ fu_ch347_device_write(FuCh347Device *self,
 static gboolean
 fu_ch347_device_read(FuCh347Device *self, guint8 cmd, guint8 *buf, gsize bufsz, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_length = 0;
 	guint8 cmd_rsp;
 	guint16 size_rsp;
@@ -105,14 +103,14 @@ fu_ch347_device_read(FuCh347Device *self, guint8 cmd, guint8 *buf, gsize bufsz, 
 	fu_byte_array_append_uint32(cmdbuf, bufsz, G_LITTLE_ENDIAN);
 	fu_byte_array_set_size(cmdbuf, FU_CH347_PACKET_SIZE, 0x0);
 
-	if (!g_usb_device_bulk_transfer(usb_device,
-					FU_CH347_EP_IN,
-					cmdbuf->data,
-					cmdbuf->len,
-					&actual_length,
-					FU_CH347_USB_TIMEOUT,
-					NULL,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 FU_CH347_EP_IN,
+					 cmdbuf->data,
+					 cmdbuf->len,
+					 &actual_length,
+					 FU_CH347_USB_TIMEOUT,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "failed to read 0x%x bytes: ", (guint)bufsz);
 		return FALSE;
 	}

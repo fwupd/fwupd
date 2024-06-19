@@ -77,21 +77,19 @@ fu_intel_usb4_device_get_mmio(FuDevice *device,
 			      gsize bufsz,
 			      GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   REQ_HUB_GET_MMIO, /* request */
-					   MBOX_ACCESS,	     /* value */
-					   mbox_reg,	     /* index */
-					   buf,
-					   bufsz,
-					   NULL, /* actual length */
-					   MBOX_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(device),
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    REQ_HUB_GET_MMIO, /* request */
+					    MBOX_ACCESS,      /* value */
+					    mbox_reg,	      /* index */
+					    buf,
+					    bufsz,
+					    NULL, /* actual length */
+					    MBOX_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error,
 			       "GET_MMIO failed to set control on mbox register index [0x%x]: ",
 			       mbox_reg);
@@ -137,21 +135,19 @@ fu_intel_usb4_device_set_mmio(FuDevice *device,
 			      gsize bufsz,
 			      GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   REQ_HUB_SET_MMIO, /* request */
-					   MBOX_ACCESS,	     /* value */
-					   mbox_reg,	     /* index */
-					   buf,
-					   bufsz,
-					   NULL, /* actual length */
-					   MBOX_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(device),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    REQ_HUB_SET_MMIO, /* request */
+					    MBOX_ACCESS,      /* value */
+					    mbox_reg,	      /* index */
+					    buf,
+					    bufsz,
+					    NULL, /* actual length */
+					    MBOX_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to set mmio 0x%x: ", mbox_reg);
 		return FALSE;
 	}

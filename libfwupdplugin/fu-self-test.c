@@ -1355,6 +1355,7 @@ fu_plugin_backend_proxy_device_func(void)
 	g_autoptr(GError) error = NULL;
 
 	fu_device_set_id(device, "testdev");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
 	ret = fu_plugin_runner_backend_device_changed(plugin, device, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

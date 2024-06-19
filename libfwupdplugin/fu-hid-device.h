@@ -42,8 +42,6 @@ typedef enum {
 	FU_HID_DEVICE_FLAG_LAST
 } FuHidDeviceFlags;
 
-FuHidDevice *
-fu_hid_device_new(GUsbDevice *usb_device) G_GNUC_NON_NULL(1);
 void
 fu_hid_device_add_flag(FuHidDevice *self, FuHidDeviceFlags flag) G_GNUC_NON_NULL(1);
 void

@@ -156,11 +156,10 @@ static gboolean
 fu_steelseries_fizz_tunnel_probe(FuDevice *device, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent));
 	guint16 release;
 
 	/* set the version if the release has been set */
-	release = g_usb_device_get_release(usb_device);
+	release = fu_usb_device_get_release(FU_USB_DEVICE(parent));
 	if (release != 0x0 &&
 	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_BCD);
@@ -169,8 +168,8 @@ fu_steelseries_fizz_tunnel_probe(FuDevice *device, GError **error)
 
 	/* add GUIDs in order of priority */
 	fu_device_add_instance_str(device, "PROTOCOL", "FIZZ_TUNNEL");
-	fu_device_add_instance_u16(device, "VID", g_usb_device_get_vid(usb_device));
-	fu_device_add_instance_u16(device, "PID", g_usb_device_get_pid(usb_device));
+	fu_device_add_instance_u16(device, "VID", fu_usb_device_get_vid(FU_USB_DEVICE(parent)));
+	fu_device_add_instance_u16(device, "PID", fu_usb_device_get_pid(FU_USB_DEVICE(parent)));
 	fu_device_add_instance_u16(device, "REV", release);
 	fu_device_build_instance_id_full(device,
 					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,

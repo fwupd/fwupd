@@ -120,22 +120,21 @@ fu_sahara_loader_find_interface(FuSaharaLoader *self, FuUsbDevice *usb_device, G
 {
 #ifdef HAVE_GUSB
 	g_autoptr(GPtrArray) intfs = NULL;
-	GUsbDevice *g_usb_device = fu_usb_device_get_dev(usb_device);
 
 	/* all sahara devices use the same vid:pid pair */
-	if (g_usb_device_get_vid(g_usb_device) != 0x05c6 ||
-	    g_usb_device_get_pid(g_usb_device) != 0x9008) {
+	if (fu_usb_device_get_vid(usb_device) != 0x05c6 ||
+	    fu_usb_device_get_pid(usb_device) != 0x9008) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "wrong device and/or vendor id: 0x%04x 0x%04x",
-			    g_usb_device_get_vid(g_usb_device),
-			    g_usb_device_get_pid(g_usb_device));
+			    fu_usb_device_get_vid(usb_device),
+			    fu_usb_device_get_pid(usb_device));
 		return FALSE;
 	}
 
-	/* Parse usb interfaces and find suitable endpoints */
-	intfs = g_usb_device_get_interfaces(g_usb_device, error);
+	/* parse usb interfaces and find suitable endpoints */
+	intfs = fu_usb_device_get_interfaces(usb_device, error);
 	if (intfs == NULL)
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {
@@ -217,14 +216,14 @@ fu_sahara_loader_qdl_read(FuSaharaLoader *self, GError **error)
 	g_autoptr(GByteArray) buf = g_byte_array_sized_new(SAHARA_RAW_BUFFER_SIZE);
 	fu_byte_array_set_size(buf, SAHARA_RAW_BUFFER_SIZE, 0x00);
 
-	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(self->usb_device),
-					self->ep_in,
-					buf->data,
-					buf->len,
-					&actual_len,
-					IO_TIMEOUT_MS,
-					NULL,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(self->usb_device,
+					 self->ep_in,
+					 buf->data,
+					 buf->len,
+					 &actual_len,
+					 IO_TIMEOUT_MS,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "failed to do bulk transfer (read): ");
 		return NULL;
 	}
@@ -254,14 +253,14 @@ fu_sahara_loader_qdl_write(FuSaharaLoader *self, const guint8 *data, gsize sz, G
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 
-		if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(self->usb_device),
-						self->ep_out,
-						fu_chunk_get_data_out(chk),
-						fu_chunk_get_data_sz(chk),
-						&actual_len,
-						IO_TIMEOUT_MS,
-						NULL,
-						error)) {
+		if (!fu_usb_device_bulk_transfer(self->usb_device,
+						 self->ep_out,
+						 fu_chunk_get_data_out(chk),
+						 fu_chunk_get_data_sz(chk),
+						 &actual_len,
+						 IO_TIMEOUT_MS,
+						 NULL,
+						 error)) {
 			g_prefix_error(error, "failed to do bulk transfer (write data): ");
 			return FALSE;
 		}
@@ -276,14 +275,14 @@ fu_sahara_loader_qdl_write(FuSaharaLoader *self, const guint8 *data, gsize sz, G
 	}
 	if (sz % self->maxpktsize_out == 0) {
 		/* sent zlp packet if needed */
-		if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(self->usb_device),
-						self->ep_out,
-						NULL,
-						0,
-						NULL,
-						IO_TIMEOUT_MS,
-						NULL,
-						error)) {
+		if (!fu_usb_device_bulk_transfer(self->usb_device,
+						 self->ep_out,
+						 NULL,
+						 0,
+						 NULL,
+						 IO_TIMEOUT_MS,
+						 NULL,
+						 error)) {
 			g_prefix_error(error, "failed to do bulk transfer (write zlp): ");
 			return FALSE;
 		}

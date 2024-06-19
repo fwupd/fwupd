@@ -54,7 +54,6 @@ fu_vli_usbhub_device_i2c_write(FuVliUsbhubDevice *self,
 			       gsize datasz,
 			       GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize bufsz = datasz + 2;
 	g_autofree guint8 *buf = g_malloc0(bufsz);
 
@@ -70,19 +69,19 @@ fu_vli_usbhub_device_i2c_write(FuVliUsbhubDevice *self,
 			    error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "I2cWriteData", buf, datasz + 2);
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   I2C_WRITE_REQUEST,
-					   0x0000,
-					   0x0000,
-					   buf,
-					   datasz + 2,
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    I2C_WRITE_REQUEST,
+					    0x0000,
+					    0x0000,
+					    buf,
+					    datasz + 2,
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to write I2C @0x%02x:%02x: ", target_addr, sub_addr);
 		return FALSE;
 	}
@@ -98,20 +97,19 @@ fu_vli_usbhub_device_i2c_read(FuVliUsbhubDevice *self,
 			      gsize datasz,
 			      GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   I2C_READ_REQUEST,
-					   0x0000,
-					   ((guint16)sub_addr << 8) + target_addr,
-					   data,
-					   datasz,
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    I2C_READ_REQUEST,
+					    0x0000,
+					    ((guint16)sub_addr << 8) + target_addr,
+					    data,
+					    datasz,
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to read I2C: ");
 		return FALSE;
 	}

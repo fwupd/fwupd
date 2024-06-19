@@ -848,13 +848,11 @@ fu_wac_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_wac_device_close(FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
 	/* reattach wacom.ko */
-	if (!g_usb_device_release_interface(usb_device,
-					    0x00, /* HID */
-					    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					    error)) {
+	if (!fu_usb_device_release_interface(FU_USB_DEVICE(device),
+					     0x00, /* HID */
+					     G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+					     error)) {
 		g_prefix_error(error, "failed to re-attach interface: ");
 		return FALSE;
 	}

@@ -55,7 +55,7 @@ fu_dfu_target_dfuse_func(void)
 	gboolean ret;
 	gchar *tmp;
 	g_autoptr(FuContext) ctx = fu_context_new();
-	g_autoptr(FuDfuDevice) device = fu_dfu_device_new(ctx, NULL);
+	g_autoptr(FuDfuDevice) device = g_object_new(FU_TYPE_DFU_DEVICE, "context", ctx, NULL);
 	g_autoptr(FuDfuTarget) target = NULL;
 	g_autoptr(GError) error = NULL;
 
