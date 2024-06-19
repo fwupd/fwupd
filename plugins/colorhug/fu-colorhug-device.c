@@ -57,7 +57,6 @@ fu_colorhug_device_msg(FuColorhugDevice *self,
 		       gsize obufsz,
 		       GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint8 buf[] = {[0] = cmd, [1 ... CH_USB_HID_EP_SIZE - 1] = 0x00};
 	gsize actual_length = 0;
 	g_autoptr(GError) error_local = NULL;
@@ -95,17 +94,16 @@ fu_colorhug_device_msg(FuColorhugDevice *self,
 
 	/* request */
 	fu_dump_raw(G_LOG_DOMAIN, "REQ", buf, ibufsz + 1);
-	if (!g_usb_device_interrupt_transfer(usb_device,
-					     CH_USB_HID_EP_OUT,
-					     buf,
-					     sizeof(buf),
-					     &actual_length,
-					     CH_DEVICE_USB_TIMEOUT,
-					     NULL, /* cancellable */
-					     &error_local)) {
-		if (cmd == CH_CMD_RESET && g_error_matches(error_local,
-							   G_USB_DEVICE_ERROR,
-							   G_USB_DEVICE_ERROR_NO_DEVICE)) {
+	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
+					      CH_USB_HID_EP_OUT,
+					      buf,
+					      sizeof(buf),
+					      &actual_length,
+					      CH_DEVICE_USB_TIMEOUT,
+					      NULL, /* cancellable */
+					      &error_local)) {
+		if (cmd == CH_CMD_RESET &&
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("ignoring '%s' on reset", error_local->message);
 			return TRUE;
 		}
@@ -124,17 +122,16 @@ fu_colorhug_device_msg(FuColorhugDevice *self,
 	}
 
 	/* read reply */
-	if (!g_usb_device_interrupt_transfer(usb_device,
-					     CH_USB_HID_EP_IN,
-					     buf,
-					     sizeof(buf),
-					     &actual_length,
-					     CH_DEVICE_USB_TIMEOUT,
-					     NULL, /* cancellable */
-					     &error_local)) {
-		if (cmd == CH_CMD_RESET && g_error_matches(error_local,
-							   G_USB_DEVICE_ERROR,
-							   G_USB_DEVICE_ERROR_NO_DEVICE)) {
+	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
+					      CH_USB_HID_EP_IN,
+					      buf,
+					      sizeof(buf),
+					      &actual_length,
+					      CH_DEVICE_USB_TIMEOUT,
+					      NULL, /* cancellable */
+					      &error_local)) {
+		if (cmd == CH_CMD_RESET &&
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("ignoring '%s' on reset", error_local->message);
 			return TRUE;
 		}

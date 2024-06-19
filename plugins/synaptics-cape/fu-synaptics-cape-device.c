@@ -153,19 +153,18 @@ fu_synaptics_cape_device_get_report_intr(FuSynapticsCapeDevice *self,
 					 FuCapCmdHidReport *data,
 					 GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(FU_HID_DEVICE(self)));
 	gsize actual_len = 0;
 	g_return_val_if_fail(FU_IS_SYNAPTICS_CAPE_DEVICE(self), FALSE);
 	g_return_val_if_fail(data != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-	if (!g_usb_device_interrupt_transfer(usb_device,
-					     FU_SYNAPTICS_CAPE_FM3_HID_INTR_IN_EP,
-					     (guint8 *)data,
-					     sizeof(*data),
-					     &actual_len,
-					     FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_INTR_TIMEOUT,
-					     NULL,
-					     error)) {
+	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
+					      FU_SYNAPTICS_CAPE_FM3_HID_INTR_IN_EP,
+					      (guint8 *)data,
+					      sizeof(*data),
+					      &actual_len,
+					      FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_INTR_TIMEOUT,
+					      NULL,
+					      error)) {
 		g_prefix_error(error, "failed to get report over interrupt ep: ");
 		return FALSE;
 	}
@@ -610,7 +609,6 @@ fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
 					  GError **error)
 {
 	FuSynapticsCapeDevice *self = FU_SYNAPTICS_CAPE_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize bufsz = 0;
 	gsize offset = 0;
 	g_autoptr(FuFirmware) firmware = fu_synaptics_cape_hid_firmware_new();
@@ -645,8 +643,8 @@ fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
 		const guint16 pid =
 		    fu_synaptics_cape_firmware_get_pid(FU_SYNAPTICS_CAPE_FIRMWARE(firmware));
 		if (vid != 0x0 && pid != 0x0 &&
-		    (g_usb_device_get_vid(usb_device) != vid ||
-		     g_usb_device_get_pid(usb_device) != pid)) {
+		    (fu_usb_device_get_vid(FU_USB_DEVICE(self)) != vid ||
+		     fu_usb_device_get_pid(FU_USB_DEVICE(self)) != pid)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -654,8 +652,8 @@ fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
 				    "got: %04X:%04X expected %04X:%04X",
 				    vid,
 				    pid,
-				    g_usb_device_get_vid(usb_device),
-				    g_usb_device_get_pid(usb_device));
+				    fu_usb_device_get_vid(FU_USB_DEVICE(self)),
+				    fu_usb_device_get_pid(FU_USB_DEVICE(self)));
 			return NULL;
 		}
 	}

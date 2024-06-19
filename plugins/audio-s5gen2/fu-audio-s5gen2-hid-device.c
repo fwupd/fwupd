@@ -107,11 +107,10 @@ static gboolean
 fu_qc_s5gen2_hid_device_probe(FuDevice *device, GError **error)
 {
 	FuHidDevice *hid_device = FU_HID_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	GUsbInterface *iface = NULL;
 	g_autoptr(GPtrArray) ifaces = NULL;
 
-	ifaces = g_usb_device_get_interfaces(usb_device, error);
+	ifaces = fu_usb_device_get_interfaces(FU_USB_DEVICE(device), error);
 	if (ifaces == NULL)
 		return FALSE;
 

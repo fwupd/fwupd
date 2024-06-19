@@ -539,25 +539,24 @@ static gboolean
 fu_vli_device_spi_read_flash_id(FuVliDevice *self, GError **error)
 {
 	FuVliDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint8 buf[4] = {0x0};
 	guint8 spi_cmd = 0x0;
 
 	if (!fu_cfi_device_get_cmd(priv->cfi_device, FU_CFI_DEVICE_CMD_READ_ID, &spi_cmd, error))
 		return FALSE;
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0xc0 | (priv->spi_cmd_read_id_sz * 2),
-					   spi_cmd,
-					   0x0000,
-					   buf,
-					   sizeof(buf),
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    0xc0 | (priv->spi_cmd_read_id_sz * 2),
+					    spi_cmd,
+					    0x0000,
+					    buf,
+					    sizeof(buf),
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to read chip ID: ");
 		return FALSE;
 	}

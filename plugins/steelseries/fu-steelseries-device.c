@@ -34,11 +34,9 @@ fu_steelseries_device_cmd(FuSteelseriesDevice *self,
 			  GError **error)
 {
 	FuSteelseriesDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_len = 0;
-	gboolean ret;
 
-	ret = g_usb_device_control_transfer(usb_device,
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
@@ -50,10 +48,8 @@ fu_steelseries_device_cmd(FuSteelseriesDevice *self,
 					    &actual_len,
 					    STEELSERIES_TRANSACTION_TIMEOUT,
 					    NULL,
-					    error);
-	if (!ret) {
+					    error)) {
 		g_prefix_error(error, "failed to do control transfer: ");
-		fu_error_convert(error);
 		return FALSE;
 	}
 	if (actual_len != datasz) {
@@ -72,15 +68,14 @@ fu_steelseries_device_cmd(FuSteelseriesDevice *self,
 	if (answer != TRUE)
 		return TRUE;
 
-	ret = g_usb_device_interrupt_transfer(usb_device,
+	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 					      priv->ep,
 					      data,
 					      priv->ep_in_size,
 					      &actual_len,
 					      STEELSERIES_TRANSACTION_TIMEOUT,
 					      NULL,
-					      error);
-	if (!ret) {
+					      error)) {
 		g_prefix_error(error, "failed to do EP transfer: ");
 		fu_error_convert(error);
 		return FALSE;
@@ -103,7 +98,6 @@ fu_steelseries_device_probe(FuDevice *device, GError **error)
 {
 	FuSteelseriesDevice *self = FU_STEELSERIES_DEVICE(device);
 	FuSteelseriesDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	GUsbInterface *iface = NULL;
 	GUsbEndpoint *ep = NULL;
 	guint8 ep_id;
@@ -111,7 +105,7 @@ fu_steelseries_device_probe(FuDevice *device, GError **error)
 	g_autoptr(GPtrArray) ifaces = NULL;
 	g_autoptr(GPtrArray) endpoints = NULL;
 
-	ifaces = g_usb_device_get_interfaces(usb_device, error);
+	ifaces = fu_usb_device_get_interfaces(FU_USB_DEVICE(device), error);
 	if (ifaces == NULL)
 		return FALSE;
 

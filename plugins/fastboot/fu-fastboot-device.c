@@ -53,7 +53,6 @@ static gboolean
 fu_fastboot_device_write(FuDevice *device, const guint8 *buf, gsize buflen, GError **error)
 {
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	gboolean ret;
 	gsize actual_len = 0;
 	g_autofree guint8 *buf2 = NULL;
@@ -63,14 +62,14 @@ fu_fastboot_device_write(FuDevice *device, const guint8 *buf, gsize buflen, GErr
 	buf2 = fu_memdup_safe(buf, buflen, error);
 	if (buf2 == NULL)
 		return FALSE;
-	ret = g_usb_device_bulk_transfer(usb_device,
-					 FASTBOOT_EP_OUT,
-					 buf2,
-					 buflen,
-					 &actual_len,
-					 FASTBOOT_TRANSACTION_TIMEOUT,
-					 NULL,
-					 error);
+	ret = fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					  FASTBOOT_EP_OUT,
+					  buf2,
+					  buflen,
+					  &actual_len,
+					  FASTBOOT_TRANSACTION_TIMEOUT,
+					  NULL,
+					  error);
 
 	/* give device some time to handle action */
 	fu_device_sleep(device, self->operation_delay);
@@ -118,7 +117,6 @@ fu_fastboot_device_read(FuDevice *device,
 			GError **error)
 {
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	guint retries = 1;
 
 	/* these commands may return INFO or take some time to complete */
@@ -132,21 +130,19 @@ fu_fastboot_device_read(FuDevice *device,
 		g_autofree gchar *tmp = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		ret = g_usb_device_bulk_transfer(usb_device,
-						 FASTBOOT_EP_IN,
-						 buf,
-						 sizeof(buf),
-						 &actual_len,
-						 FASTBOOT_TRANSACTION_TIMEOUT,
-						 NULL,
-						 &error_local);
+		ret = fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+						  FASTBOOT_EP_IN,
+						  buf,
+						  sizeof(buf),
+						  &actual_len,
+						  FASTBOOT_TRANSACTION_TIMEOUT,
+						  NULL,
+						  &error_local);
 		/* give device some time to handle action */
 		fu_device_sleep(device, self->operation_delay);
 
 		if (!ret) {
-			if (g_error_matches(error_local,
-					    G_USB_DEVICE_ERROR,
-					    G_USB_DEVICE_ERROR_TIMED_OUT)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 				g_debug("ignoring %s", error_local->message);
 				continue;
 			}

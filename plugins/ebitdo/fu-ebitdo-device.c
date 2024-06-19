@@ -35,7 +35,6 @@ fu_ebitdo_device_send(FuEbitdoDevice *self,
 		      gsize in_len,
 		      GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_length;
 	guint8 ep_out = FU_EBITDO_USB_RUNTIME_EP_OUT;
 	g_autoptr(GByteArray) st_hdr = fu_struct_ebitdo_pkt_new();
@@ -80,14 +79,14 @@ fu_ebitdo_device_send(FuEbitdoDevice *self,
 	fu_dump_raw(G_LOG_DOMAIN, "->DEVICE", st_hdr->data, st_hdr->len);
 
 	/* get data from device */
-	if (!g_usb_device_interrupt_transfer(usb_device,
-					     ep_out,
-					     st_hdr->data,
-					     st_hdr->len,
-					     &actual_length,
-					     FU_EBITDO_USB_TIMEOUT,
-					     NULL, /* cancellable */
-					     &error_local)) {
+	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
+					      ep_out,
+					      st_hdr->data,
+					      st_hdr->len,
+					      &actual_length,
+					      FU_EBITDO_USB_TIMEOUT,
+					      NULL, /* cancellable */
+					      &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -102,7 +101,6 @@ fu_ebitdo_device_send(FuEbitdoDevice *self,
 static gboolean
 fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint8 packet[FU_EBITDO_USB_EP_SIZE] = {0};
 	gsize actual_length;
 	guint8 ep_in = FU_EBITDO_USB_RUNTIME_EP_IN;
@@ -114,14 +112,14 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 		ep_in = FU_EBITDO_USB_BOOTLOADER_EP_IN;
 
 	/* get data from device */
-	if (!g_usb_device_interrupt_transfer(usb_device,
-					     ep_in,
-					     packet,
-					     sizeof(packet),
-					     &actual_length,
-					     FU_EBITDO_USB_TIMEOUT,
-					     NULL, /* cancellable */
-					     &error_local)) {
+	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
+					      ep_in,
+					      packet,
+					      sizeof(packet),
+					      &actual_length,
+					      FU_EBITDO_USB_TIMEOUT,
+					      NULL, /* cancellable */
+					      &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -278,7 +276,6 @@ fu_ebitdo_device_validate(FuEbitdoDevice *self, GError **error)
 static gboolean
 fu_ebitdo_device_open(FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE(device);
 
 	/* FuUsbDevice->open */
@@ -288,10 +285,10 @@ fu_ebitdo_device_open(FuDevice *device, GError **error)
 	/* open, then ensure this is actually 8BitDo hardware */
 	if (!fu_ebitdo_device_validate(self, error))
 		return FALSE;
-	if (!g_usb_device_claim_interface(usb_device,
-					  0, /* 0 = idx? */
-					  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					  error)) {
+	if (!fu_usb_device_claim_interface(FU_USB_DEVICE(self),
+					   0, /* 0 = idx? */
+					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+					   error)) {
 		return FALSE;
 	}
 
@@ -599,12 +596,11 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 static gboolean
 fu_ebitdo_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	g_autoptr(GError) error_local = NULL;
 
 	/* when doing a soft-reboot the device does not re-enumerate properly
 	 * so manually reboot the GUsbDevice */
-	if (!g_usb_device_reset(usb_device, &error_local)) {
+	if (!fu_usb_device_reset(FU_USB_DEVICE(device), &error_local)) {
 		g_prefix_error(&error_local, "failed to force-reset device: ");
 		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
 			fu_device_set_remove_delay(device, 0);

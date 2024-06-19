@@ -40,7 +40,7 @@ fu_logitech_rallysystem_tablehub_device_probe(FuDevice *device, GError **error)
 	guint8 bulk_iface = G_MAXUINT8;
 	g_autoptr(GPtrArray) intfs = NULL;
 
-	intfs = g_usb_device_get_interfaces(fu_usb_device_get_dev(FU_USB_DEVICE(self)), error);
+	intfs = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
 	if (intfs == NULL)
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {
@@ -77,14 +77,14 @@ fu_logitech_rallysystem_tablehub_device_send(FuLogitechRallysystemTablehubDevice
 					     GError **error)
 {
 	gsize actual_length = 0;
-	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					self->bulk_ep[EP_OUT],
-					buf,
-					bufsz,
-					&actual_length,
-					FU_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE_IOCTL_TIMEOUT,
-					NULL,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 self->bulk_ep[EP_OUT],
+					 buf,
+					 bufsz,
+					 &actual_length,
+					 FU_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE_IOCTL_TIMEOUT,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "failed to send using bulk transfer: ");
 		return FALSE;
 	}
@@ -107,14 +107,14 @@ fu_logitech_rallysystem_tablehub_device_recv(FuLogitechRallysystemTablehubDevice
 					     GError **error)
 {
 	gsize actual_length = 0;
-	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					self->bulk_ep[EP_IN],
-					buf,
-					bufsz,
-					&actual_length,
-					timeout,
-					NULL,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 self->bulk_ep[EP_IN],
+					 buf,
+					 bufsz,
+					 &actual_length,
+					 timeout,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "failed to receive using bulk transfer: ");
 		return FALSE;
 	}

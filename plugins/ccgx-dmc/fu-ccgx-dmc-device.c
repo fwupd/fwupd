@@ -48,19 +48,19 @@ static gboolean
 fu_ccgx_dmc_device_ensure_dock_id(FuCcgxDmcDevice *self, GError **error)
 {
 	g_autoptr(GByteArray) st_id = fu_struct_ccgx_dmc_dock_identity_new();
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   FU_CCGX_DMC_RQT_CODE_DOCK_IDENTITY, /* request */
-					   0,				       /* value */
-					   0,				       /* index */
-					   st_id->data,
-					   st_id->len,
-					   NULL, /* actual length */
-					   DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_CCGX_DMC_RQT_CODE_DOCK_IDENTITY, /* request */
+					    0,					/* value */
+					    0,					/* index */
+					    st_id->data,
+					    st_id->len,
+					    NULL, /* actual length */
+					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "get_dock_id error: ");
 		return FALSE;
 	}
@@ -79,19 +79,19 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 
 	/* read minimum status length */
 	fu_byte_array_set_size(st, 32, 0x0);
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   FU_CCGX_DMC_RQT_CODE_DOCK_STATUS, /* request */
-					   0,				     /* value */
-					   0,				     /* index */
-					   st->data,
-					   st->len,
-					   NULL, /* actual length */
-					   DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_CCGX_DMC_RQT_CODE_DOCK_STATUS, /* request */
+					    0,				      /* value */
+					    0,				      /* index */
+					    st->data,
+					    st->len,
+					    NULL, /* actual length */
+					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "get_dock_status min size error: ");
 		return FALSE;
 	}
@@ -105,19 +105,19 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 		if (!fu_memcpy_safe(buf, bufsz, 0x0, st->data, st->len, 0x0, st->len, error))
 			return FALSE;
 	}
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   FU_CCGX_DMC_RQT_CODE_DOCK_STATUS, /* request */
-					   0,				     /* value */
-					   0,				     /* index */
-					   buf,
-					   bufsz,
-					   NULL, /* actual length */
-					   DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_CCGX_DMC_RQT_CODE_DOCK_STATUS, /* request */
+					    0,				      /* value */
+					    0,				      /* index */
+					    buf,
+					    bufsz,
+					    NULL, /* actual length */
+					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "get_dock_status actual size error: ");
 		return FALSE;
 	}
@@ -154,19 +154,19 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 static gboolean
 fu_ccgx_dmc_device_send_reset_state_machine(FuCcgxDmcDevice *self, GError **error)
 {
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   FU_CCGX_DMC_RQT_CODE_RESET_STATE_MACHINE, /* request */
-					   0,					     /* value */
-					   0,					     /* index */
-					   0,					     /* data */
-					   0,					     /* length */
-					   NULL, /* actual length */
-					   DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_CCGX_DMC_RQT_CODE_RESET_STATE_MACHINE, /* request */
+					    0,					      /* value */
+					    0,					      /* index */
+					    0,					      /* data */
+					    0,					      /* length */
+					    NULL, /* actual length */
+					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "send reset state machine error: ");
 		return FALSE;
 	}
@@ -176,19 +176,19 @@ fu_ccgx_dmc_device_send_reset_state_machine(FuCcgxDmcDevice *self, GError **erro
 static gboolean
 fu_ccgx_dmc_device_send_soft_reset(FuCcgxDmcDevice *self, gboolean reset_later, GError **error)
 {
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   FU_CCGX_DMC_RQT_CODE_SOFT_RESET, /* request */
-					   reset_later,			    /* value */
-					   0,				    /* index */
-					   0,				    /* data */
-					   0,				    /* length */
-					   NULL,			    /* actual length */
-					   DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_CCGX_DMC_RQT_CODE_SOFT_RESET, /* request */
+					    reset_later,		     /* value */
+					    0,				     /* index */
+					    0,				     /* data */
+					    0,				     /* length */
+					    NULL,			     /* actual length */
+					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "send reset error: ");
 		return FALSE;
 	}
@@ -209,19 +209,19 @@ fu_ccgx_dmc_device_send_start_upgrade(FuCcgxDmcDevice *self, GBytes *fw, GError 
 		if (buf_mut == NULL)
 			return FALSE;
 	}
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   FU_CCGX_DMC_RQT_CODE_UPGRADE_START, /* request */
-					   bufsz > 0 ? 1 : 0,		       /* value */
-					   1,	    /* index, forced update */
-					   buf_mut, /* data */
-					   bufsz,   /* length */
-					   NULL,    /* actual length */
-					   DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_CCGX_DMC_RQT_CODE_UPGRADE_START, /* request */
+					    bufsz > 0 ? 1 : 0,			/* value */
+					    1,	     /* index, forced update */
+					    buf_mut, /* data */
+					    bufsz,   /* length */
+					    NULL,    /* actual length */
+					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "send reset error: ");
 		return FALSE;
 	}
@@ -231,19 +231,19 @@ fu_ccgx_dmc_device_send_start_upgrade(FuCcgxDmcDevice *self, GBytes *fw, GError 
 static gboolean
 fu_ccgx_dmc_device_send_download_trigger(FuCcgxDmcDevice *self, guint16 trigger, GError **error)
 {
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   FU_CCGX_DMC_RQT_CODE_TRIGGER, /* request */
-					   trigger,			 /* value */
-					   0,				 /* index */
-					   0,				 /* data */
-					   0,				 /* length */
-					   NULL,			 /* actual length */
-					   DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_CCGX_DMC_RQT_CODE_TRIGGER, /* request */
+					    trigger,			  /* value */
+					    0,				  /* index */
+					    0,				  /* data */
+					    0,				  /* length */
+					    NULL,			  /* actual length */
+					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "send download trigger error: ");
 		return FALSE;
 	}
@@ -263,19 +263,19 @@ fu_ccgx_dmc_device_send_fwct(FuCcgxDmcDevice *self,
 	buf_mut = fu_memdup_safe(buf, bufsz, error);
 	if (buf_mut == NULL)
 		return FALSE;
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   FU_CCGX_DMC_RQT_CODE_FWCT_WRITE, /* request */
-					   0,				    /* value */
-					   0,				    /* index */
-					   buf_mut,			    /* data */
-					   bufsz,			    /* length */
-					   NULL,			    /* actual length */
-					   DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_CCGX_DMC_RQT_CODE_FWCT_WRITE, /* request */
+					    0,				     /* value */
+					    0,				     /* index */
+					    buf_mut,			     /* data */
+					    bufsz,			     /* length */
+					    NULL,			     /* actual length */
+					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "send fwct error: ");
 		return FALSE;
 	}
@@ -290,14 +290,14 @@ fu_ccgx_dmc_device_read_intr_req(FuCcgxDmcDevice *self, GByteArray *intr_rqt, GE
 
 	g_return_val_if_fail(intr_rqt != NULL, FALSE);
 
-	if (!g_usb_device_interrupt_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					     self->ep_intr_in,
-					     intr_rqt->data,
-					     intr_rqt->len,
-					     NULL,
-					     DMC_GET_REQUEST_TIMEOUT,
-					     NULL,
-					     error)) {
+	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
+					      self->ep_intr_in,
+					      intr_rqt->data,
+					      intr_rqt->len,
+					      NULL,
+					      DMC_GET_REQUEST_TIMEOUT,
+					      NULL,
+					      error)) {
 		g_prefix_error(error, "read intr rqt error: ");
 		return FALSE;
 	}
@@ -321,19 +321,19 @@ fu_ccgx_dmc_device_send_write_command(FuCcgxDmcDevice *self,
 				      guint16 num_of_row,
 				      GError **error)
 {
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   FU_CCGX_DMC_RQT_CODE_IMG_WRITE, /* request */
-					   start_row,			   /* value */
-					   num_of_row,			   /* index */
-					   0,				   /* data */
-					   0,				   /* length */
-					   NULL,			   /* actual length */
-					   DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_CCGX_DMC_RQT_CODE_IMG_WRITE, /* request */
+					    start_row,			    /* value */
+					    num_of_row,			    /* index */
+					    0,				    /* data */
+					    0,				    /* length */
+					    NULL,			    /* actual length */
+					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "send fwct error: ");
 		return FALSE;
 	}
@@ -348,14 +348,14 @@ fu_ccgx_dmc_device_send_row_data(FuCcgxDmcDevice *self,
 {
 	g_return_val_if_fail(row_buffer != NULL, FALSE);
 
-	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					self->ep_bulk_out,
-					(guint8 *)row_buffer,
-					row_size,
-					NULL,
-					DMC_BULK_OUT_PIPE_TIMEOUT,
-					NULL,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 self->ep_bulk_out,
+					 (guint8 *)row_buffer,
+					 row_size,
+					 NULL,
+					 DMC_BULK_OUT_PIPE_TIMEOUT,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "write row data error: ");
 		return FALSE;
 	}

@@ -107,7 +107,6 @@ static gboolean
 fu_{{vendor_example}}_device_setup(FuDevice *device, GError **error)
 {
 	Fu{{VendorExample}}Device *self = FU_{{VENDOR_EXAMPLE}}_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 
 	/* {{Parent}}Device->setup */
 	if (!FU_DEVICE_CLASS(fu_{{vendor_example}}_device_parent_class)->setup(device, error))
@@ -115,7 +114,6 @@ fu_{{vendor_example}}_device_setup(FuDevice *device, GError **error)
 
 	/* TODO: get the version and other properties from the hardware while open */
 	g_assert(self != NULL);
-	g_assert(usb_device != NULL);
 	fu_device_set_version(device, "1.2.3");
 
 	/* success */

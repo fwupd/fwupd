@@ -21,8 +21,6 @@ struct _FuDfuDeviceClass {
 	FuUsbDeviceClass parent_class;
 };
 
-FuDfuDevice *
-fu_dfu_device_new(FuContext *ctx, GUsbDevice *usb_device);
 const gchar *
 fu_dfu_device_get_chip_id(FuDfuDevice *self);
 gboolean

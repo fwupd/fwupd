@@ -102,7 +102,6 @@ fu_fpc_device_dfu_cmd(FuFpcDevice *self,
 		      gboolean type_vendor,
 		      GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_len = 0;
 
 	if (data == NULL && length > 0) {
@@ -110,21 +109,21 @@ fu_fpc_device_dfu_cmd(FuFpcDevice *self,
 		return FALSE;
 	}
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   device2host ? G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST
-						       : G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   type_vendor ? G_USB_DEVICE_REQUEST_TYPE_VENDOR
-						       : G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   request,
-					   value,
-					   0x0000,
-					   data,
-					   length,
-					   length ? &actual_len : NULL,
-					   FPC_USB_TRANSFER_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    device2host ? G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST
+							: G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    type_vendor ? G_USB_DEVICE_REQUEST_TYPE_VENDOR
+							: G_USB_DEVICE_REQUEST_TYPE_CLASS,
+					    G_USB_DEVICE_RECIPIENT_INTERFACE,
+					    request,
+					    value,
+					    0x0000,
+					    data,
+					    length,
+					    length ? &actual_len : NULL,
+					    FPC_USB_TRANSFER_TIMEOUT,
+					    NULL,
+					    error)) {
 		fu_error_convert(error);
 		return FALSE;
 	}
@@ -148,7 +147,6 @@ fu_fpc_device_fw_cmd(FuFpcDevice *self,
 		     gboolean device2host,
 		     GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_len = 0;
 
 	if (data == NULL && length > 0) {
@@ -156,20 +154,20 @@ fu_fpc_device_fw_cmd(FuFpcDevice *self,
 		return FALSE;
 	}
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   device2host ? G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST
-						       : G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   request,
-					   0x0000,
-					   0x0000,
-					   data,
-					   length,
-					   length ? &actual_len : NULL,
-					   FPC_USB_TRANSFER_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    device2host ? G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST
+							: G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    request,
+					    0x0000,
+					    0x0000,
+					    data,
+					    length,
+					    length ? &actual_len : NULL,
+					    FPC_USB_TRANSFER_TIMEOUT,
+					    NULL,
+					    error)) {
 		fu_error_convert(error);
 		return FALSE;
 	}
@@ -188,10 +186,9 @@ fu_fpc_device_fw_cmd(FuFpcDevice *self,
 static gboolean
 fu_fpc_device_setup_mode(FuFpcDevice *self, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GPtrArray) intfs = NULL;
 
-	intfs = g_usb_device_get_interfaces(usb_device, error);
+	intfs = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
 	if (intfs == NULL)
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {

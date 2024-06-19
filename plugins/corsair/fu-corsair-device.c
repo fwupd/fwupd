@@ -56,7 +56,7 @@ fu_corsair_device_probe(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_corsair_device_parent_class)->probe(device, error))
 		return FALSE;
 
-	ifaces = g_usb_device_get_interfaces(usb_device, error);
+	ifaces = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
 	if (ifaces == NULL || (ifaces->len < (self->vendor_interface + 1u))) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

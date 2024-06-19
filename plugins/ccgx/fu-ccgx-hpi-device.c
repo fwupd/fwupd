@@ -107,19 +107,19 @@ fu_ccgx_hpi_device_i2c_reset_cb(FuDevice *device, gpointer user_data, GError **e
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
 	FuCcgxHpiDeviceRetryHelper *helper = (FuCcgxHpiDeviceRetryHelper *)user_data;
 	g_autoptr(GError) error_local = NULL;
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   CY_I2C_RESET_CMD,
-					   (self->scb_index << CY_SCB_INDEX_POS) | helper->mode,
-					   0x0,
-					   NULL,
-					   0x0,
-					   NULL,
-					   FU_CCGX_HPI_WAIT_TIMEOUT,
-					   NULL,
-					   &error_local)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    CY_I2C_RESET_CMD,
+					    (self->scb_index << CY_SCB_INDEX_POS) | helper->mode,
+					    0x0,
+					    NULL,
+					    0x0,
+					    NULL,
+					    FU_CCGX_HPI_WAIT_TIMEOUT,
+					    NULL,
+					    &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -135,19 +135,19 @@ fu_ccgx_hpi_device_check_i2c_status(FuCcgxHpiDevice *self, guint8 mode, GError *
 {
 	guint8 buf[CY_I2C_GET_STATUS_LEN] = {0x0};
 	g_autoptr(GError) error_local = NULL;
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   CY_I2C_GET_STATUS_CMD,
-					   (((guint16)self->scb_index) << CY_SCB_INDEX_POS) | mode,
-					   0x0,
-					   buf,
-					   sizeof(buf),
-					   NULL,
-					   FU_CCGX_HPI_WAIT_TIMEOUT,
-					   NULL,
-					   &error_local)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    CY_I2C_GET_STATUS_CMD,
+					    (((guint16)self->scb_index) << CY_SCB_INDEX_POS) | mode,
+					    0x0,
+					    buf,
+					    sizeof(buf),
+					    NULL,
+					    FU_CCGX_HPI_WAIT_TIMEOUT,
+					    NULL,
+					    &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -178,19 +178,19 @@ static gboolean
 fu_ccgx_hpi_device_get_i2c_config(FuCcgxHpiDevice *self, CyI2CConfig *i2c_config, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   CY_I2C_GET_CONFIG_CMD,
-					   ((guint16)self->scb_index) << CY_SCB_INDEX_POS,
-					   0x0,
-					   (guint8 *)i2c_config,
-					   sizeof(*i2c_config),
-					   NULL,
-					   FU_CCGX_HPI_WAIT_TIMEOUT,
-					   NULL,
-					   &error_local)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    CY_I2C_GET_CONFIG_CMD,
+					    ((guint16)self->scb_index) << CY_SCB_INDEX_POS,
+					    0x0,
+					    (guint8 *)i2c_config,
+					    sizeof(*i2c_config),
+					    NULL,
+					    FU_CCGX_HPI_WAIT_TIMEOUT,
+					    NULL,
+					    &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -205,19 +205,19 @@ static gboolean
 fu_ccgx_hpi_device_set_i2c_config(FuCcgxHpiDevice *self, CyI2CConfig *i2c_config, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   CY_I2C_SET_CONFIG_CMD,
-					   ((guint16)self->scb_index) << CY_SCB_INDEX_POS,
-					   0x0,
-					   (guint8 *)i2c_config,
-					   sizeof(*i2c_config),
-					   NULL,
-					   FU_CCGX_HPI_WAIT_TIMEOUT,
-					   NULL,
-					   &error_local)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    CY_I2C_SET_CONFIG_CMD,
+					    ((guint16)self->scb_index) << CY_SCB_INDEX_POS,
+					    0x0,
+					    (guint8 *)i2c_config,
+					    sizeof(*i2c_config),
+					    NULL,
+					    FU_CCGX_HPI_WAIT_TIMEOUT,
+					    NULL,
+					    &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -234,14 +234,14 @@ fu_ccgx_hpi_device_wait_for_notify(FuCcgxHpiDevice *self, guint16 *bytes_pending
 	guint8 buf[CY_I2C_EVENT_NOTIFICATION_LEN] = {0x0};
 	g_autoptr(GError) error_local = NULL;
 
-	if (!g_usb_device_interrupt_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					     self->ep_intr_in,
-					     buf,
-					     sizeof(buf),
-					     NULL,
-					     FU_CCGX_HPI_WAIT_TIMEOUT,
-					     NULL,
-					     &error_local)) {
+	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
+					      self->ep_intr_in,
+					      buf,
+					      sizeof(buf),
+					      NULL,
+					      FU_CCGX_HPI_WAIT_TIMEOUT,
+					      NULL,
+					      &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -293,30 +293,30 @@ fu_ccgx_hpi_device_i2c_read(FuCcgxHpiDevice *self,
 		return FALSE;
 	}
 	target_address = (self->target_address & 0x7F) | (self->scb_index << 7);
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   CY_I2C_READ_CMD,
-					   (((guint16)target_address) << 8) | cfg_bits,
-					   bufsz,
-					   NULL,
-					   0x0,
-					   NULL,
-					   FU_CCGX_HPI_WAIT_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    CY_I2C_READ_CMD,
+					    (((guint16)target_address) << 8) | cfg_bits,
+					    bufsz,
+					    NULL,
+					    0x0,
+					    NULL,
+					    FU_CCGX_HPI_WAIT_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "i2c read error: control xfer: ");
 		return FALSE;
 	}
-	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					self->ep_bulk_in,
-					buf,
-					bufsz,
-					NULL,
-					FU_CCGX_HPI_WAIT_TIMEOUT,
-					NULL,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 self->ep_bulk_in,
+					 buf,
+					 bufsz,
+					 NULL,
+					 FU_CCGX_HPI_WAIT_TIMEOUT,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "i2c read error: bulk xfer: ");
 		return FALSE;
 	}
@@ -344,31 +344,31 @@ fu_ccgx_hpi_device_i2c_write(FuCcgxHpiDevice *self,
 		return FALSE;
 	}
 	target_address = (self->target_address & 0x7F) | (self->scb_index << 7);
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   CY_I2C_WRITE_CMD,
-					   ((guint16)target_address << 8) |
-					       (cfg_bits & CY_I2C_DATA_CONFIG_STOP),
-					   bufsz, /* idx */
-					   NULL,
-					   0x0,
-					   NULL,
-					   FU_CCGX_HPI_WAIT_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    CY_I2C_WRITE_CMD,
+					    ((guint16)target_address << 8) |
+						(cfg_bits & CY_I2C_DATA_CONFIG_STOP),
+					    bufsz, /* idx */
+					    NULL,
+					    0x0,
+					    NULL,
+					    FU_CCGX_HPI_WAIT_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "i2c write error: control xfer: ");
 		return FALSE;
 	}
-	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					self->ep_bulk_out,
-					buf,
-					bufsz,
-					NULL,
-					FU_CCGX_HPI_WAIT_TIMEOUT,
-					NULL,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 self->ep_bulk_out,
+					 buf,
+					 bufsz,
+					 NULL,
+					 FU_CCGX_HPI_WAIT_TIMEOUT,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "i2c write error: bulk xfer: ");
 		return FALSE;
 	}
@@ -397,33 +397,33 @@ fu_ccgx_hpi_device_i2c_write_no_resp(FuCcgxHpiDevice *self,
 		return FALSE;
 	}
 	target_address = (self->target_address & 0x7F) | (self->scb_index << 7);
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   CY_I2C_WRITE_CMD,
-					   ((guint16)target_address << 8) |
-					       (cfg_bits & CY_I2C_DATA_CONFIG_STOP),
-					   bufsz,
-					   NULL,
-					   0x0,
-					   NULL,
-					   FU_CCGX_HPI_WAIT_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    CY_I2C_WRITE_CMD,
+					    ((guint16)target_address << 8) |
+						(cfg_bits & CY_I2C_DATA_CONFIG_STOP),
+					    bufsz,
+					    NULL,
+					    0x0,
+					    NULL,
+					    FU_CCGX_HPI_WAIT_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "i2c write error: control xfer: ");
 		return FALSE;
 	}
 
 	/* device will reboot after this, so txfer will fail */
-	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					self->ep_bulk_out,
-					buf,
-					bufsz,
-					NULL,
-					FU_CCGX_HPI_WAIT_TIMEOUT,
-					NULL,
-					&error_local)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 self->ep_bulk_out,
+					 buf,
+					 bufsz,
+					 NULL,
+					 FU_CCGX_HPI_WAIT_TIMEOUT,
+					 NULL,
+					 &error_local)) {
 		g_debug("ignoring i2c write error: bulk xfer: %s", error_local->message);
 	}
 	return TRUE;

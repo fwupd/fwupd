@@ -194,19 +194,19 @@ fu_genesys_usbhub_device_ctrl_transfer(FuGenesysUsbhubDevice *self,
 							    length,
 							    error);
 	} else {
-		return g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-						     direction,
-						     request_type,
-						     recipient,
-						     request,
-						     value,
-						     idx,
-						     data,
-						     length,
-						     actual_length,
-						     timeout,
-						     cancellable,
-						     error);
+		return fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+						      direction,
+						      request_type,
+						      recipient,
+						      request,
+						      value,
+						      idx,
+						      data,
+						      length,
+						      actual_length,
+						      timeout,
+						      cancellable,
+						      error);
 	}
 }
 
@@ -650,7 +650,7 @@ fu_genesys_usbhub_device_authentication_request(FuGenesysUsbhubDevice *self,
 static gboolean
 fu_genesys_usbhub_device_authenticate(FuGenesysUsbhubDevice *self, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
+	guint16 release = fu_usb_device_get_release(FU_USB_DEVICE(self));
 	guint8 low_byte;
 	guint8 high_byte;
 	guint8 temp_byte;
@@ -665,8 +665,8 @@ fu_genesys_usbhub_device_authenticate(FuGenesysUsbhubDevice *self, GError **erro
 		return FALSE;
 	}
 
-	low_byte = g_usb_device_get_release(usb_device) & 0xff;
-	high_byte = (g_usb_device_get_release(usb_device) & 0xff00) >> 8;
+	low_byte = release & 0xff;
+	high_byte = (release & 0xff00) >> 8;
 	temp_byte = low_byte ^ high_byte;
 
 	offset_start = g_random_int_range(GENESYS_USBHUB_ENCRYPT_REGION_START,
@@ -1045,7 +1045,7 @@ fu_genesys_usbhub_device_validate_token(FuGenesysUsbhubDevice *self, GError **er
 	    64,
 	    &error_local);
 	if (token_blob == NULL) {
-		if (g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_IO)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1446,14 +1446,14 @@ fu_genesys_usbhub_device_probe(FuDevice *device, GError **error)
 				    "is not a usb hub");
 		return FALSE;
 	}
-	if (g_usb_device_get_spec(usb_device) < 0x210) {
+	if (fu_usb_device_get_spec(FU_USB_DEVICE(device)) < 0x210) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "unsupported USB2 hub");
 		return FALSE;
 	}
-	if (g_usb_device_get_spec(usb_device) >= 0x300) {
+	if (fu_usb_device_get_spec(FU_USB_DEVICE(device)) >= 0x300) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1526,11 +1526,11 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* [DEBUG] - additional info from device:
-	 * release version: g_usb_device_get_release(usb_device)
+	 * release version: fu_usb_device_get_release(FU_USB_DEVICE(device))
 	 */
 
 	/* read standard string descriptors */
-	if (g_usb_device_get_spec(usb_device) >= 0x300) {
+	if (fu_usb_device_get_spec(FU_USB_DEVICE(device)) >= 0x300) {
 		static_idx = GENESYS_USBHUB_STATIC_TOOL_DESC_IDX_USB_3_0;
 		dynamic_idx = GENESYS_USBHUB_DYNAMIC_TOOL_DESC_IDX_USB_3_0;
 	} else {

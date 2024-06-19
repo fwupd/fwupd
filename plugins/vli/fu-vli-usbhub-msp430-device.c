@@ -37,22 +37,21 @@ fu_vli_usbhub_device_i2c_read(FuVliUsbhubDevice *self,
 			      gsize bufsz,
 			      GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint16 value = ((guint16)I2C_ADDR_WRITE << 8) | cmd;
 	guint16 index = (guint16)I2C_ADDR_READ << 8;
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   I2C_R_VDR,
-					   value,
-					   index,
-					   buf,
-					   bufsz,
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    I2C_R_VDR,
+					    value,
+					    index,
+					    buf,
+					    bufsz,
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to read I2C: ");
 		return FALSE;
 	}
@@ -81,7 +80,6 @@ fu_vli_usbhub_device_i2c_write_data(FuVliUsbhubDevice *self,
 				    gsize bufsz,
 				    GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint16 value = (((guint16)disable_start_bit) << 8) | disable_end_bit;
 	g_autofree guint8 *buf_mut = NULL;
 
@@ -89,19 +87,19 @@ fu_vli_usbhub_device_i2c_write_data(FuVliUsbhubDevice *self,
 	buf_mut = fu_memdup_safe(buf, bufsz, error);
 	if (buf_mut == NULL)
 		return FALSE;
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   I2C_W_VDR,
-					   value,
-					   0x0,
-					   buf_mut,
-					   bufsz,
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    I2C_W_VDR,
+					    value,
+					    0x0,
+					    buf_mut,
+					    bufsz,
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to write I2C @0x%x: ", value);
 		return FALSE;
 	}
