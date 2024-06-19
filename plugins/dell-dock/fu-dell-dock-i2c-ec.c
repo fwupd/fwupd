@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Dell Inc.
+ * Copyright 2024 Dell Inc.
  * All rights reserved.
  *
  * This software and associated documentation (if any) is furnished
@@ -934,7 +934,6 @@ static gboolean
 fu_dell_dock_ec_setup(FuDevice *device, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
-	GPtrArray *children;
 
 	/* if query looks bad, wait a few seconds and retry */
 	if (!fu_dell_dock_ec_query(device, &error_local)) {
@@ -948,18 +947,6 @@ fu_dell_dock_ec_setup(FuDevice *device, GError **error)
 			return FALSE;
 		}
 	}
-
-	/* call setup on all the children we produced */
-	children = fu_device_get_children(device);
-	for (guint i = 0; i < children->len; i++) {
-		FuDevice *child = g_ptr_array_index(children, i);
-		g_autoptr(FuDeviceLocker) locker = NULL;
-		g_debug("setup %s", fu_device_get_name(child));
-		locker = fu_device_locker_new(child, error);
-		if (locker == NULL)
-			return FALSE;
-	}
-
 	return TRUE;
 }
 
