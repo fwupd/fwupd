@@ -10,5 +10,7 @@
 
 #define FU_USB_DEVICE_EMULATION_TAG "org.freedesktop.fwupd.emulation.v1"
 
+FuUsbDevice *
+fu_usb_device_new(FuContext *ctx, GUsbDevice *usb_device) G_GNUC_NON_NULL(1);
 const gchar *
 fu_usb_device_get_platform_id(FuUsbDevice *self) G_GNUC_NON_NULL(1);

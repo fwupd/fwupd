@@ -25,6 +25,7 @@
 #include "fu-i2c-device.h"
 #include "fu-string.h"
 #include "fu-udev-device-private.h"
+#include "fu-usb-device-private.h"
 
 /**
  * FuUdevDevice:
