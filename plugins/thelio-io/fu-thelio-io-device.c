@@ -22,17 +22,17 @@ fu_thelio_io_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *buf = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GUdevDevice) udev_device = NULL;
+	g_autoptr(FuUdevDevice) udev_device = NULL;
 
 	/* this is the atmel bootloader */
 	fu_device_add_counterpart_guid(device, "USB\\VID_03EB&PID_2FF4");
 
 	/* convert GUsbDevice to GUdevDevice */
-	udev_device = fu_usb_device_find_udev_device(FU_USB_DEVICE(device), error);
+	udev_device = FU_UDEV_DEVICE(fu_usb_device_find_udev_device(FU_USB_DEVICE(device), error));
 	if (udev_device == NULL)
 		return FALSE;
 
-	devpath = g_udev_device_get_sysfs_path(udev_device);
+	devpath = fu_udev_device_get_sysfs_path(udev_device);
 	if (G_UNLIKELY(devpath == NULL)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -64,14 +64,14 @@ fu_thelio_io_device_detach(FuDevice *device, FuProgress *progress, GError **erro
 	const gchar *devpath;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuIOChannel) io_channel = NULL;
-	g_autoptr(GUdevDevice) udev_device = NULL;
+	g_autoptr(FuUdevDevice) udev_device = NULL;
 	const guint8 buf[] = {'1', '\n'};
 
 	/* convert GUsbDevice to GUdevDevice */
-	udev_device = fu_usb_device_find_udev_device(FU_USB_DEVICE(device), error);
+	udev_device = FU_UDEV_DEVICE(fu_usb_device_find_udev_device(FU_USB_DEVICE(device), error));
 	if (udev_device == NULL)
 		return FALSE;
-	devpath = g_udev_device_get_sysfs_path(udev_device);
+	devpath = fu_udev_device_get_sysfs_path(udev_device);
 	if (G_UNLIKELY(devpath == NULL)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

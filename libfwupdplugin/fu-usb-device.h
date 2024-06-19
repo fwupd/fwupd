@@ -44,7 +44,7 @@ GUsbDevice *
 fu_usb_device_get_dev(FuUsbDevice *device) G_GNUC_NON_NULL(1);
 gboolean
 fu_usb_device_is_open(FuUsbDevice *device) G_GNUC_NON_NULL(1);
-GUdevDevice *
+FuDevice *
 fu_usb_device_find_udev_device(FuUsbDevice *device, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 void
