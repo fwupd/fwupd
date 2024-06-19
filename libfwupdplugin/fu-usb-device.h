@@ -30,6 +30,9 @@ struct _FuUsbDeviceClass {
 	FuDeviceClass parent_class;
 };
 
+FuUsbDevice *
+fu_usb_device_get_parent(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+
 guint16
 fu_usb_device_get_vid(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 guint16

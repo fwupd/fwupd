@@ -143,6 +143,34 @@ fu_usb_device_constructed(GObject *obj)
 }
 
 /**
+ * fu_usb_device_get_parent:
+ * @self: a #FuUsbDevice
+ *
+ * Gets the USB device parent.
+ *
+ * Returns: (transfer full): a #FuUsbDevice, or %NULL for error
+ *
+ * Since: 2.0.0
+ **/
+FuUsbDevice *
+fu_usb_device_get_parent(FuUsbDevice *self)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GUsbDevice) usb_device = NULL;
+
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), NULL);
+
+	if (priv->usb_device == NULL)
+		return NULL;
+#ifdef HAVE_GUSB
+	usb_device = g_usb_device_get_parent(priv->usb_device);
+#endif
+	if (usb_device == NULL)
+		return NULL;
+	return fu_usb_device_new(fu_device_get_context(FU_DEVICE(self)), usb_device);
+}
+
+/**
  * fu_usb_device_set_claim_retry_count:
  * @self: a #FuUsbDevice
  * @claim_retry_count: integer
