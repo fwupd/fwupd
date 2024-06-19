@@ -30,6 +30,7 @@
 #include "fu-security-attrs-private.h"
 #include "fu-self-test-struct.h"
 #include "fu-smbios-private.h"
+#include "fu-usb-device-private.h"
 #include "fu-volume-private.h"
 
 static GMainLoop *_test_loop = NULL;
