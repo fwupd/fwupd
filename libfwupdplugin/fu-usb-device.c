@@ -1023,11 +1023,11 @@ fu_usb_device_set_dev(FuUsbDevice *device, GUsbDevice *usb_device)
  *
  * Gets the matching #GUdevDevice for the #GUsbDevice.
  *
- * Returns: (transfer full): a #GUdevDevice, or NULL if unset or invalid
+ * Returns: (transfer full): a #FuUdevDevice, or NULL if unset or invalid
  *
  * Since: 1.3.2
  **/
-GUdevDevice *
+FuDevice *
 fu_usb_device_find_udev_device(FuUsbDevice *device, GError **error)
 {
 #if defined(HAVE_GUDEV) && defined(HAVE_GUSB)
@@ -1056,7 +1056,7 @@ fu_usb_device_find_udev_device(FuUsbDevice *device, GError **error)
 			g_usb_device_get_bus(priv->usb_device),
 			g_usb_device_get_address(priv->usb_device),
 			g_udev_device_get_sysfs_path(dev));
-		return g_object_ref(dev);
+		return FU_DEVICE(fu_udev_device_new(fu_device_get_context(FU_DEVICE(device)), dev));
 	}
 
 	/* failure */
@@ -1116,30 +1116,26 @@ fu_udev_device_bind_driver(FuDevice *device,
 			   GError **error)
 {
 	FuUsbDevice *self = FU_USB_DEVICE(device);
-	g_autoptr(GUdevDevice) dev = NULL;
-	g_autoptr(FuUdevDevice) udev_device = NULL;
+	g_autoptr(FuDevice) udev_device = NULL;
 
 	/* use udev for this */
-	dev = fu_usb_device_find_udev_device(self, error);
-	if (dev == NULL)
+	udev_device = fu_usb_device_find_udev_device(self, error);
+	if (udev_device == NULL)
 		return FALSE;
-	udev_device = fu_udev_device_new(fu_device_get_context(device), dev);
-	return fu_device_bind_driver(FU_DEVICE(udev_device), subsystem, driver, error);
+	return fu_device_bind_driver(udev_device, subsystem, driver, error);
 }
 
 static gboolean
 fu_udev_device_unbind_driver(FuDevice *device, GError **error)
 {
 	FuUsbDevice *self = FU_USB_DEVICE(device);
-	g_autoptr(GUdevDevice) dev = NULL;
-	g_autoptr(FuUdevDevice) udev_device = NULL;
+	g_autoptr(FuDevice) udev_device = NULL;
 
 	/* use udev for this */
-	dev = fu_usb_device_find_udev_device(self, error);
-	if (dev == NULL)
+	udev_device = fu_usb_device_find_udev_device(self, error);
+	if (udev_device == NULL)
 		return FALSE;
-	udev_device = fu_udev_device_new(fu_device_get_context(device), dev);
-	return fu_device_unbind_driver(FU_DEVICE(udev_device), error);
+	return fu_device_unbind_driver(udev_device, error);
 }
 
 /**
