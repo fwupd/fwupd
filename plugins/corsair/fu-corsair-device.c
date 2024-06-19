@@ -38,7 +38,6 @@ static gboolean
 fu_corsair_device_probe(FuDevice *device, GError **error)
 {
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	GUsbInterface *iface = NULL;
 	GUsbEndpoint *ep1 = NULL;
 	GUsbEndpoint *ep2 = NULL;
@@ -100,7 +99,7 @@ fu_corsair_device_probe(FuDevice *device, GError **error)
 
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), self->vendor_interface);
 
-	self->bp = fu_corsair_bp_new(usb_device, FALSE);
+	self->bp = fu_corsair_bp_new(FU_USB_DEVICE(device), FALSE);
 	fu_corsair_bp_set_cmd_size(self->bp, cmd_write_size, cmd_read_size);
 	fu_corsair_bp_set_endpoints(self->bp, epin, epout);
 
@@ -111,7 +110,6 @@ static gboolean
 fu_corsair_poll_subdevice(FuDevice *device, gboolean *subdevice_added, GError **error)
 {
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	guint32 subdevices;
 	g_autoptr(FuCorsairDevice) child = NULL;
 	g_autoptr(FuCorsairBp) child_bp = NULL;
@@ -129,7 +127,7 @@ fu_corsair_poll_subdevice(FuDevice *device, gboolean *subdevice_added, GError **
 		return TRUE;
 	}
 
-	child_bp = fu_corsair_bp_new(usb_device, TRUE);
+	child_bp = fu_corsair_bp_new(FU_USB_DEVICE(device), TRUE);
 	fu_device_incorporate(FU_DEVICE(child_bp), FU_DEVICE(self->bp));
 
 	child = fu_corsair_device_new(self, child_bp);
@@ -568,14 +566,12 @@ static FuCorsairDevice *
 fu_corsair_device_new(FuCorsairDevice *parent, FuCorsairBp *bp)
 {
 	FuCorsairDevice *self = NULL;
-	FuDevice *device = FU_DEVICE(parent);
 
 	self = g_object_new(FU_TYPE_CORSAIR_DEVICE,
 			    "context",
-			    fu_device_get_context(device),
-			    "usb_device",
-			    fu_usb_device_get_dev(FU_USB_DEVICE(device)),
+			    fu_device_get_context(FU_DEVICE(parent)),
 			    NULL);
+	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(parent));
 	self->bp = g_object_ref(bp);
 	return self;
 }

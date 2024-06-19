@@ -386,7 +386,6 @@ static gboolean
 fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 {
 	FuSynapticsCxaudioDevice *self = FU_SYNAPTICS_CXAUDIO_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	guint32 addr = FU_SYNAPTICS_CXAUDIO_EEPROM_CPX_PATCH_VERSION_ADDRESS;
 	guint8 chip_id_offset = 0x0;
 	guint8 sigbuf[FU_STRUCT_SYNAPTICS_CXAUDIO_VALIDITY_SIGNATURE_SIZE] = {0x0};
@@ -590,9 +589,9 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 
 	/* find out if patch supports additional capabilities (optional) */
 	cap_str =
-	    g_usb_device_get_string_descriptor(usb_device,
-					       FU_SYNAPTICS_CXAUDIO_DEVICE_CAPABILITIES_STRIDX,
-					       NULL);
+	    fu_usb_device_get_string_descriptor(FU_USB_DEVICE(device),
+						FU_SYNAPTICS_CXAUDIO_DEVICE_CAPABILITIES_STRIDX,
+						NULL);
 	if (cap_str != NULL) {
 		g_auto(GStrv) split = g_strsplit(cap_str, ";", -1);
 		for (guint i = 0; split[i] != NULL; i++) {

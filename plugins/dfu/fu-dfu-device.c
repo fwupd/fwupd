@@ -927,16 +927,17 @@ fu_dfu_device_open(FuDevice *device, GError **error)
 	/* GD32VF103 encodes the serial number in UTF-8 (rather than UTF-16)
 	 * and also uses the first two bytes as the model identifier */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_GD32)) {
-		GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 		const guint8 *buf;
 		gsize bufsz = 0;
 		guint16 langid = G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES;
-		guint8 idx = g_usb_device_get_serial_number_index(usb_device);
+		guint8 idx = fu_usb_device_get_serial_number_index(FU_USB_DEVICE(device));
 		g_autofree gchar *chip_id = NULL;
 		g_autofree gchar *serial_str = NULL;
 		g_autoptr(GBytes) serial_blob = NULL;
-		serial_blob =
-		    g_usb_device_get_string_descriptor_bytes(usb_device, idx, langid, error);
+		serial_blob = fu_usb_device_get_string_descriptor_bytes(FU_USB_DEVICE(device),
+									idx,
+									langid,
+									error);
 		if (serial_blob == NULL)
 			return FALSE;
 		fu_dump_bytes(G_LOG_DOMAIN, "GD32 serial", serial_blob);

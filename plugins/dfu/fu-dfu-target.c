@@ -516,7 +516,6 @@ fu_dfu_target_use_alt_setting(FuDfuTarget *self, GError **error)
 {
 	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_DFU_TARGET(self), FALSE);
@@ -528,10 +527,10 @@ fu_dfu_target_use_alt_setting(FuDfuTarget *self, GError **error)
 
 	/* use the correct setting */
 	if (fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		if (!g_usb_device_set_interface_alt(usb_device,
-						    (gint)fu_dfu_device_get_interface(device),
-						    (gint)priv->alt_setting,
-						    &error_local)) {
+		if (!fu_usb_device_set_interface_alt(FU_USB_DEVICE(device),
+						     fu_dfu_device_get_interface(device),
+						     priv->alt_setting,
+						     &error_local)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -622,9 +621,9 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error)
 
 	/* get string */
 	if (priv->alt_idx != 0x00 && fu_device_get_logical_id(FU_DEVICE(self)) == NULL) {
-		GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 		g_autofree gchar *alt_name = NULL;
-		alt_name = g_usb_device_get_string_descriptor(usb_device, priv->alt_idx, NULL);
+		alt_name =
+		    fu_usb_device_get_string_descriptor(FU_USB_DEVICE(device), priv->alt_idx, NULL);
 		fu_device_set_logical_id(FU_DEVICE(self), alt_name);
 	}
 

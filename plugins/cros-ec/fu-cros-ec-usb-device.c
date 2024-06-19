@@ -75,12 +75,11 @@ typedef struct {
 static gboolean
 fu_cros_ec_usb_device_get_configuration(FuCrosEcUsbDevice *self, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint8 index;
 	g_autofree gchar *configuration = NULL;
 
-	index = g_usb_device_get_configuration_index(usb_device);
-	configuration = g_usb_device_get_string_descriptor(usb_device, index, error);
+	index = fu_usb_device_get_configuration_index(FU_USB_DEVICE(self));
+	configuration = fu_usb_device_get_string_descriptor(FU_USB_DEVICE(self), index, error);
 	if (configuration == NULL)
 		return FALSE;
 

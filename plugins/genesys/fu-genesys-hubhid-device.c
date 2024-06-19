@@ -349,9 +349,8 @@ fu_genesys_hubhid_device_validate_token(FuGenesysHubhidDevice *self, GError **er
 static gboolean
 fu_genesys_hubhid_device_probe(FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	if (g_usb_device_get_device_class(usb_device) != G_USB_DEVICE_CLASS_INTERFACE_DESC) {
+	if (fu_usb_device_get_device_class(FU_USB_DEVICE(device)) !=
+	    G_USB_DEVICE_CLASS_INTERFACE_DESC) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

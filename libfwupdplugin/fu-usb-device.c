@@ -561,7 +561,7 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* get the hub descriptor if this is a hub */
-	if (g_usb_device_get_device_class(priv->usb_device) == G_USB_DEVICE_CLASS_HUB) {
+	if (fu_usb_device_get_device_class(self) == G_USB_DEVICE_CLASS_HUB) {
 		if (!fu_usb_device_query_hub(self, error))
 			return FALSE;
 	}
@@ -1016,6 +1016,30 @@ fu_usb_device_get_spec(FuUsbDevice *self)
 #endif
 }
 
+/**
+ * fu_usb_device_get_device_class:
+ * @self: a #FuUsbDevice
+ *
+ * Gets the device class, typically a #FuUsbDeviceClassCode.
+ *
+ * Return value: a device class number, e.g. 0x09 is a USB hub.
+ *
+ * Since: 2.0.0
+ **/
+guint8
+fu_usb_device_get_device_class(FuUsbDevice *self)
+{
+#ifdef HAVE_GUSB
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), 0x0);
+	if (priv->usb_device == NULL)
+		return 0x0;
+	return g_usb_device_get_device_class(priv->usb_device);
+#else
+	return 0x0;
+#endif
+}
+
 static void
 fu_usb_device_set_dev(FuUsbDevice *device, GUsbDevice *usb_device)
 {
@@ -1233,13 +1257,11 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
 		fu_error_convert(error);
 		return FALSE;
 	}
+	return TRUE;
 #else
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
 	return FALSE;
 #endif
-
-	/* success */
-	return TRUE;
 }
 
 /**
@@ -1296,13 +1318,11 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
 		fu_error_convert(error);
 		return FALSE;
 	}
+	return TRUE;
 #else
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
 	return FALSE;
 #endif
-
-	/* success */
-	return TRUE;
 }
 
 /**
@@ -1356,13 +1376,11 @@ fu_usb_device_interrupt_transfer(FuUsbDevice *self,
 		fu_error_convert(error);
 		return FALSE;
 	}
+	return TRUE;
 #else
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
 	return FALSE;
 #endif
-
-	/* success */
-	return TRUE;
 }
 
 /**
@@ -1400,13 +1418,11 @@ fu_usb_device_reset(FuUsbDevice *self, GError **error)
 		fu_error_convert(error);
 		return FALSE;
 	}
+	return TRUE;
 #else
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
 	return FALSE;
 #endif
-
-	/* success */
-	return TRUE;
 }
 
 /**
@@ -1452,6 +1468,187 @@ fu_usb_device_get_interfaces(FuUsbDevice *self, GError **error)
 }
 
 /**
+ * fu_usb_device_get_interface:
+ * @self: a #FuUsbDevice
+ * @class_id: a device class, e.g. 0xff for VENDOR
+ * @subclass_id: a device subclass
+ * @protocol_id: a protocol number
+ * @error: a #GError, or %NULL
+ *
+ * Gets the first interface that matches the vendor class interface descriptor.
+ * If you want to find all the interfaces that match (there may be other
+ * 'alternate' interfaces you have to use fu_usb_device_get_interfaces() and
+ * check each one manally.
+ *
+ * Return value: (transfer full): a #GUsbInterface or %NULL for not found
+ *
+ * Since: 0.2.8
+ **/
+GUsbInterface *
+fu_usb_device_get_interface(FuUsbDevice *self,
+			    guint8 class_id,
+			    guint8 subclass_id,
+			    guint8 protocol_id,
+			    GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+#ifdef HAVE_GUSB
+	g_autoptr(GUsbInterface) intf = NULL;
+#endif
+
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* emulating? */
+	if (priv->usb_device == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "device emulated");
+		return NULL;
+	}
+
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
+#ifdef HAVE_GUSB
+	intf =
+	    g_usb_device_get_interface(priv->usb_device, class_id, subclass_id, protocol_id, error);
+	if (intf == NULL) {
+		fu_error_convert(error);
+		return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer(&intf);
+#else
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	return NULL;
+#endif
+}
+
+/**
+ * fu_usb_device_get_string_descriptor:
+ * @desc_index: the index for the string descriptor to retrieve
+ * @error: a #GError, or %NULL
+ *
+ * Get a string descriptor from the device. The returned string should be freed
+ * with g_free() when no longer needed.
+ *
+ * Return value: a newly-allocated string holding the descriptor, or NULL on error.
+ *
+ * Since: 2.0.0
+ **/
+gchar *
+fu_usb_device_get_string_descriptor(FuUsbDevice *self, guint8 desc_index, GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+#ifdef HAVE_GUSB
+	g_autofree gchar *value = NULL;
+#endif
+
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* emulating? */
+	if (priv->usb_device == NULL)
+		return g_strdup("test");
+
+		/* just proxy to GUsb, but longer term use the libusb_device directly */
+#ifdef HAVE_GUSB
+	value = g_usb_device_get_string_descriptor(priv->usb_device, desc_index, error);
+	if (value == NULL) {
+		fu_error_convert(error);
+		return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer(&value);
+#else
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	return NULL;
+#endif
+}
+
+/**
+ * fu_usb_device_get_string_descriptor_bytes:
+ * @desc_index: the index for the string descriptor to retrieve
+ * @langid: the language ID
+ * @error: a #GError, or %NULL
+ *
+ * Get a raw string descriptor from the device. The returned string should be freed
+ * with g_bytes_unref() when no longer needed.
+ * The descriptor will be at most 128 btes in length, if you need to
+ * issue a request with either a smaller or larger descriptor, you can
+ * use fu_usb_device_get_string_descriptor_bytes_full instead.
+ *
+ * Return value: (transfer full): a possibly UTF-16 string, or NULL on error.
+ *
+ * Since: 2.0.0
+ **/
+GBytes *
+fu_usb_device_get_string_descriptor_bytes(FuUsbDevice *self,
+					  guint8 desc_index,
+					  guint16 langid,
+					  GError **error)
+{
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return fu_usb_device_get_string_descriptor_bytes_full(self, desc_index, langid, 128, error);
+}
+
+/**
+ * fu_usb_device_get_string_descriptor_bytes_full:
+ * @desc_index: the index for the string descriptor to retrieve
+ * @langid: the language ID
+ * @length: size of the request data buffer
+ * @error: a #GError, or %NULL
+ *
+ * Get a raw string descriptor from the device. The returned string should be freed
+ * with g_bytes_unref() when no longer needed.
+ *
+ * Return value: (transfer full): a possibly UTF-16 string, or NULL on error.
+ *
+ * Since: 2.0.0
+ **/
+GBytes *
+fu_usb_device_get_string_descriptor_bytes_full(FuUsbDevice *self,
+					       guint8 desc_index,
+					       guint16 langid,
+					       gsize length,
+					       GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+#ifdef HAVE_GUSB
+	g_autoptr(GBytes) blob = NULL;
+#endif
+
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* emulating? */
+	if (priv->usb_device == NULL)
+		return g_bytes_new_static(NULL, 0);
+
+		/* just proxy to GUsb, but longer term use the libusb_device directly */
+#ifdef HAVE_GUSB
+	blob = g_usb_device_get_string_descriptor_bytes_full(priv->usb_device,
+							     desc_index,
+							     langid,
+							     length,
+							     error);
+	if (blob == NULL) {
+		fu_error_convert(error);
+		return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer(&blob);
+#else
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	return NULL;
+#endif
+}
+
+/**
  * fu_usb_device_claim_interface:
  * @self: a #FuUsbDevice
  * @iface: bInterfaceNumber of the interface you wish to claim
@@ -1485,13 +1682,11 @@ fu_usb_device_claim_interface(FuUsbDevice *self,
 		fu_error_convert(error);
 		return FALSE;
 	}
+	return TRUE;
 #else
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
 	return FALSE;
 #endif
-
-	/* success */
-	return TRUE;
 }
 
 /**
@@ -1528,13 +1723,159 @@ fu_usb_device_release_interface(FuUsbDevice *self,
 		fu_error_convert(error);
 		return FALSE;
 	}
+	return TRUE;
 #else
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
 	return FALSE;
 #endif
+}
 
-	/* success */
+/**
+ * fu_usb_device_get_configuration_index
+ * @self: a #FuUsbDevice
+ *
+ * Get the index for the active Configuration string descriptor
+ * ie, iConfiguration.
+ *
+ * Return value: a string descriptor index.
+ *
+ * Since: 2.0.0
+ **/
+guint8
+fu_usb_device_get_configuration_index(FuUsbDevice *self)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), 0x0);
+
+	/* emulating? */
+	if (priv->usb_device == NULL)
+		return 0x0;
+
+#ifdef HAVE_GUSB
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
+	return g_usb_device_get_configuration_index(priv->usb_device);
+#else
+	return 0x0;
+#endif
+}
+
+/**
+ * fu_usb_device_get_serial_number_index:
+ * @self: a #FuUsbDevice
+ *
+ * Gets the index for the Serial Number string descriptor.
+ *
+ * Return value: a string descriptor index.
+ *
+ * Since: 2.0.0
+ **/
+guint8
+fu_usb_device_get_serial_number_index(FuUsbDevice *self)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), 0x0);
+
+	/* emulating? */
+	if (priv->usb_device == NULL)
+		return 0x0;
+
+#ifdef HAVE_GUSB
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
+	return g_usb_device_get_serial_number_index(priv->usb_device);
+#else
+	return 0x0;
+#endif
+}
+
+/**
+ * fu_usb_device_get_custom_index:
+ * @self: a #FuUsbDevice
+ * @class_id: a device class, e.g. 0xff for VENDOR
+ * @subclass_id: a device subclass
+ * @protocol_id: a protocol number
+ * @error: a #GError, or %NULL
+ *
+ * Gets the string index from the vendor class interface descriptor.
+ *
+ * Return value: a non-zero index, or 0x00 for failure
+ *
+ * Since: 2.0.0
+ **/
+guint8
+fu_usb_device_get_custom_index(FuUsbDevice *self,
+			       guint8 class_id,
+			       guint8 subclass_id,
+			       guint8 protocol_id,
+			       GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+#ifdef HAVE_GUSB
+	guint8 idx;
+#endif
+
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), 0x0);
+	g_return_val_if_fail(error == NULL || *error == NULL, 0x0);
+
+	/* emulating? */
+	if (priv->usb_device == NULL)
+		return 0x12;
+
+#ifdef HAVE_GUSB
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
+	idx = g_usb_device_get_custom_index(priv->usb_device,
+					    class_id,
+					    subclass_id,
+					    protocol_id,
+					    error);
+	if (idx == 0x0) {
+		fu_error_convert(error);
+		return 0x0;
+	}
+	return idx;
+#else
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	return 0x0;
+#endif
+}
+
+/**
+ * fu_usb_device_set_interface_alt:
+ * @self: a #FuUsbDevice
+ * @iface: bInterfaceNumber of the interface you wish to release
+ * @alt: alternative setting number
+ * @error: a #GError, or %NULL
+ *
+ * Sets an alternate setting on an interface.
+ *
+ * Return value: %TRUE on success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_usb_device_set_interface_alt(FuUsbDevice *self, guint8 iface, guint8 alt, GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulating? */
+	if (priv->usb_device == NULL)
+		return TRUE;
+
+#ifdef HAVE_GUSB
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
+	if (!g_usb_device_set_interface_alt(priv->usb_device, iface, alt, error)) {
+		fu_error_convert(error);
+		return FALSE;
+	}
 	return TRUE;
+#else
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	return FALSE;
+#endif
 }
 
 /**
@@ -1628,7 +1969,7 @@ fu_usb_device_to_string(FuDevice *device, guint idt, GString *str)
 
 #ifdef HAVE_GUSB
 	if (priv->usb_device != NULL) {
-		GUsbDeviceClassCode code = g_usb_device_get_device_class(priv->usb_device);
+		GUsbDeviceClassCode code = fu_usb_device_get_device_class(self);
 		fwupd_codec_string_append(str,
 					  idt,
 					  "UsbDeviceClass",
