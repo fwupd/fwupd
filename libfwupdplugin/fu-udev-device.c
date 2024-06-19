@@ -2337,11 +2337,11 @@ fu_udev_device_get_children_with_subsystem(FuUdevDevice *self, const gchar *cons
  * for `GUsbDevice` may be different to the `FuUdevDevice`. Every time the `GUsbDevice` is used
  * this function should be called.
  *
- * Returns: (transfer full): a #GUsbDevice, or NULL if unset or invalid
+ * Returns: (transfer full): a #FuUsbDevice, or NULL if unset or invalid
  *
  * Since: 1.8.7
  **/
-GUsbDevice *
+FuDevice *
 fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error)
 {
 #if defined(HAVE_GUDEV) && defined(HAVE_GUSB)
@@ -2390,7 +2390,7 @@ fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error)
 	if (usb_device == NULL)
 		return NULL;
 	g_usb_device_add_tag(usb_device, "is-transient");
-	return g_steal_pointer(&usb_device);
+	return FU_DEVICE(fu_usb_device_new(fu_device_get_context(FU_DEVICE(self)), usb_device));
 #else
 	g_set_error_literal(error,
 			    FWUPD_ERROR,

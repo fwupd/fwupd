@@ -47,6 +47,9 @@ enum { PROP_0, PROP_USB_DEVICE, PROP_LAST };
 #define FU_USB_DEVICE_OPEN_DELAY	    50	/* ms */
 
 static void
+fu_usb_device_set_dev(FuUsbDevice *device, GUsbDevice *usb_device);
+
+static void
 fu_usb_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
 	FuUsbDevice *device = FU_USB_DEVICE(object);
@@ -985,16 +988,7 @@ fu_usb_device_get_spec(FuUsbDevice *self)
 #endif
 }
 
-/**
- * fu_usb_device_set_dev:
- * @device: a #FuUsbDevice
- * @usb_device: (nullable): optional #GUsbDevice
- *
- * Sets the #GUsbDevice to use.
- *
- * Since: 1.0.2
- **/
-void
+static void
 fu_usb_device_set_dev(FuUsbDevice *device, GUsbDevice *usb_device)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(device);

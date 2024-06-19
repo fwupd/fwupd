@@ -13,13 +13,6 @@
 #define GUdevDevice	   GObject
 #endif
 
-#ifdef HAVE_GUSB
-#include <gusb.h>
-#else
-#define GUsbContext GObject
-#define GUsbDevice  GObject
-#endif
-
 #include "fu-io-channel.h"
 #include "fu-plugin.h"
 
@@ -210,6 +203,6 @@ FuUdevDevice *
 fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self, const gchar *subsystem, GError **error)
     G_GNUC_NON_NULL(1);
 
-GUsbDevice *
+FuDevice *
 fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);

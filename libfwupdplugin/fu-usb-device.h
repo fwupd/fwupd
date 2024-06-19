@@ -42,8 +42,6 @@ guint16
 fu_usb_device_get_spec(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 GUsbDevice *
 fu_usb_device_get_dev(FuUsbDevice *device) G_GNUC_NON_NULL(1);
-void
-fu_usb_device_set_dev(FuUsbDevice *device, GUsbDevice *usb_device) G_GNUC_NON_NULL(1);
 gboolean
 fu_usb_device_is_open(FuUsbDevice *device) G_GNUC_NON_NULL(1);
 GUdevDevice *
