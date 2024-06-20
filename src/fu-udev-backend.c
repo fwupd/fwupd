@@ -124,7 +124,7 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 
 	/* these are used without a subclass */
 	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "msr") == 0)
-		fu_udev_device_add_flag(device, FU_UDEV_DEVICE_FLAG_OPEN_READ);
+		fu_linux_device_add_flag(FU_LINUX_DEVICE(device), FU_LINUX_DEVICE_FLAG_OPEN_READ);
 
 	/* notify plugins using fu_plugin_add_udev_subsystem() */
 	possible_plugins =
@@ -217,11 +217,11 @@ fu_udev_backend_device_changed_cb(gpointer user_data)
 {
 	FuUdevBackendHelper *helper = (FuUdevBackendHelper *)user_data;
 	fu_backend_device_changed(FU_BACKEND(helper->self), helper->device);
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(helper->device)), "drm") != 0)
+	if (g_strcmp0(fu_linux_device_get_subsystem(FU_LINUX_DEVICE(helper->device)), "drm") != 0)
 		fu_udev_backend_rescan_dpaux_devices(helper->self);
 	helper->idle_id = 0;
 	g_hash_table_remove(helper->self->changed_idle_ids,
-			    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(helper->device)));
+			    fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(helper->device)));
 	return FALSE;
 }
 

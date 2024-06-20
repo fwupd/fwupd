@@ -51,13 +51,13 @@ fu_genesys_gl32xx_device_cmd_none(FuGenesysGl32xxDevice *self,
 	gint rc = 0;
 
 	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  SG_IO,
-				  (guint8 *)&io_hdr,
-				  sizeof(io_hdr),
-				  &rc,
-				  5 * FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   SG_IO,
+				   (guint8 *)&io_hdr,
+				   sizeof(io_hdr),
+				   &rc,
+				   5 * FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS,
+				   error))
 		return FALSE;
 	if (io_hdr.status) {
 		g_set_error(error,
@@ -107,13 +107,13 @@ fu_genesys_gl32xx_device_cmd_in(FuGenesysGl32xxDevice *self,
 	gint rc = 0;
 
 	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  SG_IO,
-				  (guint8 *)&io_hdr,
-				  sizeof(io_hdr),
-				  &rc,
-				  5 * FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   SG_IO,
+				   (guint8 *)&io_hdr,
+				   sizeof(io_hdr),
+				   &rc,
+				   5 * FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS,
+				   error))
 		return FALSE;
 	if (io_hdr.status) {
 		g_set_error(error,
@@ -166,13 +166,13 @@ fu_genesys_gl32xx_device_cmd_out(FuGenesysGl32xxDevice *self,
 	gint rc = 0;
 
 	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  SG_IO,
-				  (guint8 *)&io_hdr,
-				  sizeof(io_hdr),
-				  &rc,
-				  5 * FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   SG_IO,
+				   (guint8 *)&io_hdr,
+				   sizeof(io_hdr),
+				   &rc,
+				   5 * FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS,
+				   error))
 		return FALSE;
 	if (io_hdr.status) {
 		g_set_error(error,
@@ -465,7 +465,7 @@ static void
 fu_genesys_gl32xx_device_ensure_enforce_requires(FuGenesysGl32xxDevice *self)
 {
 	const gchar *version = fu_device_get_version(FU_DEVICE(self));
-	const guint16 model = fu_udev_device_get_model(FU_UDEV_DEVICE(self));
+	const guint16 model = fu_linux_device_get_model(FU_LINUX_DEVICE(self));
 
 	/* GL3224 */
 	if (model == 0x0749 && self->customer_id == 0xFFFFFFFF && g_str_has_prefix(version, "15")) {
@@ -488,7 +488,7 @@ fu_genesys_gl32xx_device_ensure_cid(FuGenesysGl32xxDevice *self, GError **error)
 	const guint8 cmd_gl3224_cid[] = {0xE4, 0x01, 0xBF, 0x80, 0x04, 0x00};
 	const guint8 cmd_gl323x_cid[] = {0xE4, 0x01, 0x35, 0x00, 0x04, 0x00};
 	const guint8 *cmd = NULL;
-	const guint16 model = fu_udev_device_get_model(FU_UDEV_DEVICE(self));
+	const guint16 model = fu_linux_device_get_model(FU_LINUX_DEVICE(self));
 	guint8 data[4] = {0};
 
 	switch (model) {
@@ -651,12 +651,12 @@ fu_genesys_gl32xx_device_probe(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_genesys_gl32xx_device_parent_class)->probe(device, error))
 		return FALSE;
 
-	if (g_strcmp0(fu_udev_device_get_devtype(udev_device), "disk") != 0) {
+	if (g_strcmp0(fu_linux_device_get_devtype(FU_LINUX_DEVICE(udev_device)), "disk") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not correct devtype=%s, expected disk",
-			    fu_udev_device_get_devtype(udev_device));
+			    fu_linux_device_get_devtype(FU_LINUX_DEVICE(udev_device)));
 		return FALSE;
 	}
 
@@ -683,7 +683,7 @@ fu_genesys_gl32xx_device_setup(FuDevice *device, GError **error)
 		fu_genesys_gl32xx_device_set_chip_name(self, "GL32xx");
 	name = g_strdup_printf("%s SD reader [0x%04X]",
 			       self->chip_name,
-			       fu_udev_device_get_model(FU_UDEV_DEVICE(device)));
+			       fu_linux_device_get_model(FU_LINUX_DEVICE(device)));
 	fu_device_set_name(device, name);
 
 	if (!fu_genesys_gl32xx_device_ensure_cid(self, error))
@@ -925,10 +925,10 @@ fu_genesys_gl32xx_device_init(FuGenesysGl32xxDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_NONBLOCK);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_IOCTL_RETRY);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS);

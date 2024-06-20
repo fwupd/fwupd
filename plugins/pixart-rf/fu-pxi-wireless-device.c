@@ -96,13 +96,13 @@ fu_pxi_wireless_device_set_feature(FuDevice *self, const guint8 *buf, guint bufs
 {
 #ifdef HAVE_HIDRAW_H
 	fu_dump_raw(G_LOG_DOMAIN, "SetFeature", buf, bufsz);
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    HIDIOCSFEATURE(bufsz),
-				    (guint8 *)buf,
-				    bufsz,
-				    NULL,
-				    FU_PXI_DEVICE_IOCTL_TIMEOUT,
-				    error);
+	return fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				     HIDIOCSFEATURE(bufsz),
+				     (guint8 *)buf,
+				     bufsz,
+				     NULL,
+				     FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				     error);
 #else
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -116,13 +116,13 @@ static gboolean
 fu_pxi_wireless_device_get_feature(FuDevice *self, guint8 *buf, guint bufsz, GError **error)
 {
 #ifdef HAVE_HIDRAW_H
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(bufsz),
-				  buf,
-				  bufsz,
-				  NULL,
-				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
-				  error)) {
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   HIDIOCGFEATURE(bufsz),
+				   buf,
+				   bufsz,
+				   NULL,
+				   FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				   error)) {
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "GetFeature", buf, bufsz);

@@ -69,10 +69,10 @@ fu_dpaux_device_probe(FuDevice *device, GError **error)
 
 	/* get from sysfs if not set from tests */
 	if (fu_device_get_logical_id(device) == NULL &&
-	    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)) != NULL) {
+	    fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(device)) != NULL) {
 		g_autofree gchar *logical_id = NULL;
 		logical_id =
-		    g_path_get_basename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
+		    g_path_get_basename(fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(device)));
 		fu_device_set_logical_id(device, logical_id);
 	}
 
@@ -295,7 +295,7 @@ fu_dpaux_device_write(FuDpauxDevice *self,
 		      guint timeout_ms,
 		      GError **error)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	FuIOChannel *io_channel = fu_linux_device_get_io_channel(FU_LINUX_DEVICE(self));
 	g_autofree gchar *title = g_strdup_printf("DPAUX write @0x%x", (guint)offset);
 
 	g_return_val_if_fail(FU_IS_DPAUX_DEVICE(self), FALSE);
@@ -347,7 +347,7 @@ fu_dpaux_device_read(FuDpauxDevice *self,
 		     guint timeout_ms,
 		     GError **error)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	FuIOChannel *io_channel = fu_linux_device_get_io_channel(FU_LINUX_DEVICE(self));
 	g_autofree gchar *title = g_strdup_printf("DPAUX read @0x%x", (guint)offset);
 
 	g_return_val_if_fail(FU_IS_DPAUX_DEVICE(self), FALSE);
@@ -439,9 +439,9 @@ fu_dpaux_device_init(FuDpauxDevice *self)
 {
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_NONBLOCK);
 }
 
 static void

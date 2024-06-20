@@ -89,7 +89,7 @@ fu_parade_lspcon_device_init(FuParadeLspconDevice *self)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
 	fu_device_set_firmware_size(device, 0x10000);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
 }
@@ -151,13 +151,13 @@ fu_parade_lspcon_device_probe(FuDevice *device, GError **error)
 static gboolean
 fu_parade_lspcon_ensure_i2c_address(FuParadeLspconDevice *self, guint8 address, GError **error)
 {
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  I2C_SLAVE,
-				  (guint8 *)(guintptr)address,
-				  sizeof(guintptr),
-				  NULL,
-				  FU_PARADE_LSPCON_DEVICE_IOCTL_TIMEOUT,
-				  error)) {
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   I2C_SLAVE,
+				   (guint8 *)(guintptr)address,
+				   sizeof(guintptr),
+				   NULL,
+				   FU_PARADE_LSPCON_DEVICE_IOCTL_TIMEOUT,
+				   error)) {
 		g_prefix_error(error, "failed to set I2C address: ");
 		return FALSE;
 	}
@@ -597,7 +597,7 @@ fu_parade_lspcon_device_reload(FuDevice *device, GError **error)
 				  "udev-device",
 				  aux_devices->data,
 				  NULL);
-	g_debug("using aux dev %s", fu_udev_device_get_sysfs_path(aux_device));
+	g_debug("using aux dev %s", fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(aux_device)));
 
 	/* the following open() requires the device have IDs set */
 	if (!fu_udev_device_set_physical_id(aux_device, "drm_dp_aux_dev", error))
@@ -623,7 +623,11 @@ fu_parade_lspcon_device_reload(FuDevice *device, GError **error)
 
 	/* DPCD address 0x50A, 0x50B: branch device firmware
 	 * major and minor revision */
-	if (!fu_udev_device_pread(aux_device, 0x50a, version_buf, sizeof(version_buf), error))
+	if (!fu_linux_device_pread(FU_LINUX_DEVICE(aux_device),
+				   0x50a,
+				   version_buf,
+				   sizeof(version_buf),
+				   error))
 		return FALSE;
 	version = g_strdup_printf("%d.%d", version_buf[0], version_buf[1]);
 	fu_device_set_version(device, version);

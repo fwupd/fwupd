@@ -170,7 +170,7 @@ fu_pci_mei_plugin_backend_device_added(FuPlugin *plugin,
 	/* interesting device? */
 	if (!FU_IS_UDEV_DEVICE(device))
 		return TRUE;
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "pci") != 0)
+	if (g_strcmp0(fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device)), "pci") != 0)
 		return TRUE;
 
 	/* open the config */
@@ -182,32 +182,56 @@ fu_pci_mei_plugin_backend_device_added(FuPlugin *plugin,
 		return FALSE;
 
 	/* grab MEI config registers */
-	if (!fu_udev_device_pread(FU_UDEV_DEVICE(device), PCI_CFG_HFS_1, buf, sizeof(buf), error)) {
+	if (!fu_linux_device_pread(FU_LINUX_DEVICE(device),
+				   PCI_CFG_HFS_1,
+				   buf,
+				   sizeof(buf),
+				   error)) {
 		g_prefix_error(error, "could not read HFS1: ");
 		return FALSE;
 	}
 	self->hfsts1.data = fu_memread_uint32(buf, G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pread(FU_UDEV_DEVICE(device), PCI_CFG_HFS_2, buf, sizeof(buf), error)) {
+	if (!fu_linux_device_pread(FU_LINUX_DEVICE(device),
+				   PCI_CFG_HFS_2,
+				   buf,
+				   sizeof(buf),
+				   error)) {
 		g_prefix_error(error, "could not read HFS2: ");
 		return FALSE;
 	}
 	self->hfsts2.data = fu_memread_uint32(buf, G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pread(FU_UDEV_DEVICE(device), PCI_CFG_HFS_3, buf, sizeof(buf), error)) {
+	if (!fu_linux_device_pread(FU_LINUX_DEVICE(device),
+				   PCI_CFG_HFS_3,
+				   buf,
+				   sizeof(buf),
+				   error)) {
 		g_prefix_error(error, "could not read HFS3: ");
 		return FALSE;
 	}
 	self->hfsts3.data = fu_memread_uint32(buf, G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pread(FU_UDEV_DEVICE(device), PCI_CFG_HFS_4, buf, sizeof(buf), error)) {
+	if (!fu_linux_device_pread(FU_LINUX_DEVICE(device),
+				   PCI_CFG_HFS_4,
+				   buf,
+				   sizeof(buf),
+				   error)) {
 		g_prefix_error(error, "could not read HFS4: ");
 		return FALSE;
 	}
 	self->hfsts4.data = fu_memread_uint32(buf, G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pread(FU_UDEV_DEVICE(device), PCI_CFG_HFS_5, buf, sizeof(buf), error)) {
+	if (!fu_linux_device_pread(FU_LINUX_DEVICE(device),
+				   PCI_CFG_HFS_5,
+				   buf,
+				   sizeof(buf),
+				   error)) {
 		g_prefix_error(error, "could not read HFS5: ");
 		return FALSE;
 	}
 	self->hfsts5.data = fu_memread_uint32(buf, G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pread(FU_UDEV_DEVICE(device), PCI_CFG_HFS_6, buf, sizeof(buf), error)) {
+	if (!fu_linux_device_pread(FU_LINUX_DEVICE(device),
+				   PCI_CFG_HFS_6,
+				   buf,
+				   sizeof(buf),
+				   error)) {
 		g_prefix_error(error, "could not read HFS6: ");
 		return FALSE;
 	}

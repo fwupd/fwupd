@@ -127,6 +127,7 @@ fwupdplugin_src = [
   'fu-kenv.c', # fuzzing
   'fu-kernel.c', # fuzzing
   'fu-linear-firmware.c',
+  'fu-linux-device.c',
   'fu-lzma-common.c', # fuzzing
   'fu-mei-device.c',
   'fu-mem.c', # fuzzing
@@ -248,6 +249,7 @@ fwupdplugin_headers = [
   'fu-kenv.h',
   'fu-kernel.h',
   'fu-linear-firmware.h',
+  'fu-linux-device.h',
   'fu-mei-device.h',
   'fu-mem.h',
   'fu-mem-private.h',

@@ -32,7 +32,7 @@ fu_thelio_io_device_probe(FuDevice *device, GError **error)
 	if (udev_device == NULL)
 		return FALSE;
 
-	devpath = fu_udev_device_get_sysfs_path(udev_device);
+	devpath = fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(udev_device));
 	if (G_UNLIKELY(devpath == NULL)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -71,7 +71,7 @@ fu_thelio_io_device_detach(FuDevice *device, FuProgress *progress, GError **erro
 	udev_device = FU_UDEV_DEVICE(fu_usb_device_find_udev_device(FU_USB_DEVICE(device), error));
 	if (udev_device == NULL)
 		return FALSE;
-	devpath = fu_udev_device_get_sysfs_path(udev_device);
+	devpath = fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(udev_device));
 	if (G_UNLIKELY(devpath == NULL)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

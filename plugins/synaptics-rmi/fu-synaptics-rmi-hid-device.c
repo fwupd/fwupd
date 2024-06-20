@@ -65,7 +65,7 @@ fu_synaptics_rmi_hid_device_read(FuSynapticsRmiDevice *rmi_device,
 				 GError **error)
 {
 	FuSynapticsRmiHidDevice *self = FU_SYNAPTICS_RMI_HID_DEVICE(rmi_device);
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	FuIOChannel *io_channel = fu_linux_device_get_io_channel(FU_LINUX_DEVICE(self));
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
@@ -179,7 +179,7 @@ fu_synaptics_rmi_hid_device_write(FuSynapticsRmiDevice *rmi_device,
 				  GError **error)
 {
 	FuSynapticsRmiHidDevice *self = FU_SYNAPTICS_RMI_HID_DEVICE(rmi_device);
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	FuIOChannel *io_channel = fu_linux_device_get_io_channel(FU_LINUX_DEVICE(self));
 	guint8 len = 0x0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
@@ -228,7 +228,7 @@ fu_synaptics_rmi_hid_device_wait_for_attr(FuSynapticsRmiDevice *rmi_device,
 					  GError **error)
 {
 	FuSynapticsRmiHidDevice *self = FU_SYNAPTICS_RMI_HID_DEVICE(rmi_device);
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	FuIOChannel *io_channel = fu_linux_device_get_io_channel(FU_LINUX_DEVICE(self));
 	g_autoptr(GTimer) timer = g_timer_new();
 
 	/* wait for event from hardware */
@@ -294,13 +294,13 @@ fu_synaptics_rmi_hid_device_set_mode(FuSynapticsRmiHidDevice *self,
 {
 	const guint8 data[] = {0x0f, mode};
 	fu_dump_raw(G_LOG_DOMAIN, "SetMode", data, sizeof(data));
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    HIDIOCSFEATURE(sizeof(data)),
-				    (guint8 *)data,
-				    sizeof(data),
-				    NULL,
-				    FU_SYNAPTICS_RMI_HID_DEVICE_IOCTL_TIMEOUT,
-				    error);
+	return fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				     HIDIOCSFEATURE(sizeof(data)),
+				     (guint8 *)data,
+				     sizeof(data),
+				     NULL,
+				     FU_SYNAPTICS_RMI_HID_DEVICE_IOCTL_TIMEOUT,
+				     error);
 }
 
 static gboolean

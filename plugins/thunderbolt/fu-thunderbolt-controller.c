@@ -34,7 +34,7 @@ G_DEFINE_TYPE(FuThunderboltController, fu_thunderbolt_controller, FU_TYPE_THUNDE
 static void
 fu_thunderbolt_controller_check_safe_mode(FuThunderboltController *self)
 {
-	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
+	const gchar *devpath = fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(self));
 	/* failed to read, for host check for safe mode */
 	if (self->controller_kind != FU_THUNDERBOLT_CONTROLLER_KIND_DEVICE)
 		return;
@@ -212,11 +212,11 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 	}
 
 	/* these may be missing on ICL or later */
-	vid = fu_udev_device_get_vendor(FU_UDEV_DEVICE(self));
+	vid = fu_linux_device_get_vendor(FU_LINUX_DEVICE(self));
 	if (vid == 0x0)
 		g_debug("failed to get Vendor ID");
 
-	did = fu_udev_device_get_model(FU_UDEV_DEVICE(self));
+	did = fu_linux_device_get_model(FU_LINUX_DEVICE(self));
 	if (did == 0x0)
 		g_debug("failed to get Device ID");
 
@@ -252,7 +252,8 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 		g_autofree gchar *device_id = NULL;
 		g_autofree gchar *domain_id = NULL;
 		if (fu_thunderbolt_controller_can_update(self)) {
-			const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
+			const gchar *devpath =
+			    fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(self));
 			g_autofree gchar *vendor_id = NULL;
 			g_autofree gchar *domain = g_path_get_basename(devpath);
 			/* USB4 controllers don't have a concept of legacy vs native

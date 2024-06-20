@@ -33,7 +33,7 @@ fu_iommu_plugin_backend_device_added(FuPlugin *plugin,
 	/* interesting device? */
 	if (!FU_IS_UDEV_DEVICE(device))
 		return TRUE;
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "iommu") != 0)
+	if (g_strcmp0(fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device)), "iommu") != 0)
 		return TRUE;
 	self->has_iommu = TRUE;
 

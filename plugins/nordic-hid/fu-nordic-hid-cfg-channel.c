@@ -167,13 +167,13 @@ fu_nordic_hid_cfg_channel_send(FuNordicHidCfgChannel *self,
 	if (udev_device == NULL)
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "Sent", buf, bufsz);
-	if (!fu_udev_device_ioctl(udev_device,
-				  HIDIOCSFEATURE(bufsz),
-				  buf,
-				  bufsz,
-				  NULL,
-				  FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(udev_device),
+				   HIDIOCSFEATURE(bufsz),
+				   buf,
+				   bufsz,
+				   NULL,
+				   FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT,
+				   error))
 		return FALSE;
 	return TRUE;
 #else
@@ -199,13 +199,13 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 	for (gint i = 1; i < 100; i++) {
 		recv_msg->report_id = HID_REPORT_ID;
 		recv_msg->recipient = self->peer_id;
-		if (!fu_udev_device_ioctl(udev_device,
-					  HIDIOCGFEATURE(sizeof(*recv_msg)),
-					  (guint8 *)recv_msg,
-					  sizeof(*recv_msg),
-					  NULL,
-					  FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT,
-					  error))
+		if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(udev_device),
+					   HIDIOCGFEATURE(sizeof(*recv_msg)),
+					   (guint8 *)recv_msg,
+					   sizeof(*recv_msg),
+					   NULL,
+					   FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT,
+					   error))
 			return FALSE;
 		/* if the device is busy it return 06 00 00 00 00 response */
 		if (recv_msg->report_id == HID_REPORT_ID &&

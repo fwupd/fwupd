@@ -165,7 +165,7 @@ fu_android_boot_device_write(FuAndroidBootDevice *self,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 
 	/* rewind */
-	if (!fu_udev_device_seek(FU_UDEV_DEVICE(self), 0x0, error)) {
+	if (!fu_linux_device_seek(FU_LINUX_DEVICE(self), 0x0, error)) {
 		g_prefix_error(error, "failed to rewind: ");
 		return FALSE;
 	}
@@ -178,11 +178,11 @@ fu_android_boot_device_write(FuAndroidBootDevice *self,
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_udev_device_pwrite(FU_UDEV_DEVICE(self),
-					   fu_chunk_get_address(chk),
-					   fu_chunk_get_data(chk),
-					   fu_chunk_get_data_sz(chk),
-					   error)) {
+		if (!fu_linux_device_pwrite(FU_LINUX_DEVICE(self),
+					    fu_chunk_get_address(chk),
+					    fu_chunk_get_data(chk),
+					    fu_chunk_get_data_sz(chk),
+					    error)) {
 			g_prefix_error(error,
 				       "failed to write @0x%x: ",
 				       (guint)fu_chunk_get_address(chk));
@@ -228,11 +228,11 @@ fu_android_boot_device_verify(FuAndroidBootDevice *self,
 			return FALSE;
 
 		buf = g_malloc0(fu_chunk_get_data_sz(chk));
-		if (!fu_udev_device_pread(FU_UDEV_DEVICE(self),
-					  fu_chunk_get_address(chk),
-					  buf,
-					  fu_chunk_get_data_sz(chk),
-					  error)) {
+		if (!fu_linux_device_pread(FU_LINUX_DEVICE(self),
+					   fu_chunk_get_address(chk),
+					   buf,
+					   fu_chunk_get_data_sz(chk),
+					   error)) {
 			g_prefix_error(error,
 				       "failed to read @0x%x: ",
 				       (guint)fu_chunk_get_address(chk));
@@ -352,9 +352,9 @@ fu_android_boot_device_init(FuAndroidBootDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_SYNC);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_SYNC);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
 
 	/*

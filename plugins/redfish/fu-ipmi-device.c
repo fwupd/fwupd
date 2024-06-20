@@ -104,13 +104,13 @@ fu_ipmi_device_send(FuIpmiDevice *self,
 		req.msg.data = buf2;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "ipmi-send", buf2, bufsz);
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    IPMICTL_SEND_COMMAND,
-				    (guint8 *)&req,
-				    sizeof(req),
-				    NULL,
-				    FU_IPMI_DEVICE_IOCTL_TIMEOUT,
-				    error);
+	return fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				     IPMICTL_SEND_COMMAND,
+				     (guint8 *)&req,
+				     sizeof(req),
+				     NULL,
+				     FU_IPMI_DEVICE_IOCTL_TIMEOUT,
+				     error);
 }
 
 static gboolean
@@ -130,13 +130,13 @@ fu_ipmi_device_recv(FuIpmiDevice *self,
 	    .msg.data = buf,
 	    .msg.data_len = bufsz,
 	};
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  IPMICTL_RECEIVE_MSG_TRUNC,
-				  (guint8 *)&recv,
-				  sizeof(recv),
-				  NULL,
-				  FU_IPMI_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   IPMICTL_RECEIVE_MSG_TRUNC,
+				   (guint8 *)&recv,
+				   sizeof(recv),
+				   NULL,
+				   FU_IPMI_DEVICE_IOCTL_TIMEOUT,
+				   error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "ipmi-recv", buf, bufsz);
 	if (netfn != NULL)
@@ -154,7 +154,7 @@ static gboolean
 fu_ipmi_device_lock(GObject *device, GError **error)
 {
 	FuIpmiDevice *self = FU_IPMI_DEVICE(device);
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	FuIOChannel *io_channel = fu_linux_device_get_io_channel(FU_LINUX_DEVICE(self));
 	struct flock lock = {.l_type = F_WRLCK, .l_whence = SEEK_SET};
 	if (fcntl(fu_io_channel_unix_get_fd(io_channel), F_SETLKW, &lock) == -1) {
 		g_set_error(error,
@@ -170,7 +170,7 @@ static gboolean
 fu_ipmi_device_unlock(GObject *device, GError **error)
 {
 	FuIpmiDevice *self = FU_IPMI_DEVICE(device);
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	FuIOChannel *io_channel = fu_linux_device_get_io_channel(FU_LINUX_DEVICE(self));
 	struct flock lock = {.l_type = F_UNLCK};
 	if (fcntl(fu_io_channel_unix_get_fd(io_channel), F_SETLKW, &lock) == -1) {
 		g_set_error(error,
@@ -288,7 +288,7 @@ static gboolean
 fu_ipmi_device_transaction_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuIpmiDevice *self = FU_IPMI_DEVICE(device);
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	FuIOChannel *io_channel = fu_linux_device_get_io_channel(FU_LINUX_DEVICE(self));
 	FuIpmiDeviceTransactionHelper *helper = (FuIpmiDeviceTransactionHelper *)user_data;
 	GPollFD pollfds[1];
 	gsize resp_buf2sz = helper->resp_bufsz + 1;

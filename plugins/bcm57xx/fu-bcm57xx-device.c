@@ -250,8 +250,8 @@ fu_bcm57xx_device_nvram_check(FuBcm57xxDevice *self, GError **error)
 	if (drvinfo.eedump_len == fu_device_get_firmware_size_max(FU_DEVICE(self)) * 2) {
 		g_autofree gchar *subsys =
 		    g_strdup_printf("%04X%04X",
-				    fu_udev_device_get_subsystem_vendor(FU_UDEV_DEVICE(self)),
-				    fu_udev_device_get_subsystem_model(FU_UDEV_DEVICE(self)));
+				    fu_linux_device_get_subsystem_vendor(FU_LINUX_DEVICE(self)),
+				    fu_linux_device_get_subsystem_model(FU_LINUX_DEVICE(self)));
 		g_debug("auto-sizing expected EEPROM size for OEM SUBSYS %s", subsys);
 		fu_device_set_firmware_size(FU_DEVICE(self), drvinfo.eedump_len);
 	} else if (drvinfo.eedump_len != fu_device_get_firmware_size_max(FU_DEVICE(self))) {
@@ -354,8 +354,8 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 		guint16 vid = fu_bcm57xx_firmware_get_vendor(FU_BCM57XX_FIRMWARE(firmware_tmp));
 		guint16 did = fu_bcm57xx_firmware_get_model(FU_BCM57XX_FIRMWARE(firmware_tmp));
 		if (vid != 0x0 && did != 0x0 &&
-		    (fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)) != vid ||
-		     fu_udev_device_get_model(FU_UDEV_DEVICE(device)) != did)) {
+		    (fu_linux_device_get_vendor(FU_LINUX_DEVICE(device)) != vid ||
+		     fu_linux_device_get_model(FU_LINUX_DEVICE(device)) != did)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -363,8 +363,8 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 				    "got: %04X:%04X expected %04X:%04X",
 				    vid,
 				    did,
-				    fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)),
-				    fu_udev_device_get_model(FU_UDEV_DEVICE(device)));
+				    fu_linux_device_get_vendor(FU_LINUX_DEVICE(device)),
+				    fu_linux_device_get_model(FU_LINUX_DEVICE(device)));
 			return NULL;
 		}
 	}

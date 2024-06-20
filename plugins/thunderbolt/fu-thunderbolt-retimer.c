@@ -74,7 +74,7 @@ fu_thunderbolt_retimer_set_parent_port_online(FuDevice *device, GError **error)
 static gboolean
 fu_thunderbolt_retimer_probe(FuDevice *device, GError **error)
 {
-	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
+	const gchar *devpath = fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(device));
 	g_autofree gchar *physical_id = g_path_get_basename(devpath);
 
 	/* device */
@@ -97,7 +97,7 @@ fu_thunderbolt_retimer_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* as defined in PCIe 4.0 spec */
-	vid = fu_udev_device_get_vendor(FU_UDEV_DEVICE(self));
+	vid = fu_linux_device_get_vendor(FU_LINUX_DEVICE(self));
 	if (vid == 0x0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -105,7 +105,7 @@ fu_thunderbolt_retimer_setup(FuDevice *device, GError **error)
 				    "missing vendor id");
 		return FALSE;
 	}
-	did = fu_udev_device_get_model(FU_UDEV_DEVICE(self));
+	did = fu_linux_device_get_model(FU_LINUX_DEVICE(self));
 	if (did == 0x0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

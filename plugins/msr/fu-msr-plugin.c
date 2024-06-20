@@ -212,11 +212,11 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 	/* interesting device? */
 	if (!FU_IS_UDEV_DEVICE(device))
 		return TRUE;
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "msr") != 0)
+	if (g_strcmp0(fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device)), "msr") != 0)
 		return TRUE;
 
 	/* we only care about the first processor */
-	basename = g_path_get_basename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
+	basename = g_path_get_basename(fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(device)));
 	if (g_strcmp0(basename, "msr0") != 0)
 		return TRUE;
 
@@ -228,11 +228,11 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 
 	/* grab Intel MSR */
 	if (self->ia32_debug_supported) {
-		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
-					  PCI_MSR_IA32_DEBUG_INTERFACE,
-					  buf,
-					  sizeof(buf),
-					  error)) {
+		if (!fu_linux_device_pread(FU_LINUX_DEVICE(device),
+					   PCI_MSR_IA32_DEBUG_INTERFACE,
+					   buf,
+					   sizeof(buf),
+					   error)) {
 			g_prefix_error(error, "could not read IA32_DEBUG_INTERFACE: ");
 			return FALSE;
 		}
@@ -245,11 +245,11 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 			return FALSE;
 	}
 	if (self->ia32_tme_supported) {
-		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
-					  PCI_MSR_IA32_TME_ACTIVATION,
-					  buf,
-					  sizeof(buf),
-					  error)) {
+		if (!fu_linux_device_pread(FU_LINUX_DEVICE(device),
+					   PCI_MSR_IA32_TME_ACTIVATION,
+					   buf,
+					   sizeof(buf),
+					   error)) {
 			g_prefix_error(error, "could not read IA32_TME_ACTIVATION: ");
 			return FALSE;
 		}
@@ -262,11 +262,11 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 			return FALSE;
 	}
 	if (self->ia32_arch_capabilities_supported) {
-		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
-					  PCI_MSR_IA32_ARCH_CAPABILITIES,
-					  buf,
-					  sizeof(buf),
-					  error)) {
+		if (!fu_linux_device_pread(FU_LINUX_DEVICE(device),
+					   PCI_MSR_IA32_ARCH_CAPABILITIES,
+					   buf,
+					   sizeof(buf),
+					   error)) {
 			g_prefix_error(error, "could not read IA32_ARCH_CAPABILITIES: ");
 			return FALSE;
 		}
@@ -279,11 +279,11 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 			return FALSE;
 	}
 	if (self->ia32_mcu_opt_ctrl_supported) {
-		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
-					  PCI_MSR_IA32_MCU_OPT_CTRL,
-					  buf,
-					  sizeof(buf),
-					  error)) {
+		if (!fu_linux_device_pread(FU_LINUX_DEVICE(device),
+					   PCI_MSR_IA32_MCU_OPT_CTRL,
+					   buf,
+					   sizeof(buf),
+					   error)) {
 			g_prefix_error(error, "could not read IA32_MCU_OPT_CTRL: ");
 			return FALSE;
 		}
@@ -298,11 +298,11 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 
 	/* grab AMD MSRs */
 	if (self->amd64_syscfg_supported) {
-		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
-					  PCI_MSR_AMD64_SYSCFG,
-					  buf,
-					  sizeof(buf),
-					  error)) {
+		if (!fu_linux_device_pread(FU_LINUX_DEVICE(device),
+					   PCI_MSR_AMD64_SYSCFG,
+					   buf,
+					   sizeof(buf),
+					   error)) {
 			g_prefix_error(error, "could not read PCI_MSR_AMD64_SYSCFG: ");
 			return FALSE;
 		}
@@ -315,11 +315,11 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 			return FALSE;
 	}
 	if (self->amd64_sev_supported) {
-		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
-					  PCI_MSR_AMD64_SEV,
-					  buf,
-					  sizeof(buf),
-					  error)) {
+		if (!fu_linux_device_pread(FU_LINUX_DEVICE(device),
+					   PCI_MSR_AMD64_SEV,
+					   buf,
+					   sizeof(buf),
+					   error)) {
 			g_prefix_error(error, "could not read PCI_MSR_AMD64_SEV: ");
 			return FALSE;
 		}
@@ -339,11 +339,11 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 
 		if (!fu_cpuid(0x1, NULL, NULL, NULL, NULL, error))
 			return FALSE;
-		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
-					  PCI_MSR_IA32_BIOS_SIGN_ID,
-					  buf,
-					  sizeof(buf),
-					  error)) {
+		if (!fu_linux_device_pread(FU_LINUX_DEVICE(device),
+					   PCI_MSR_IA32_BIOS_SIGN_ID,
+					   buf,
+					   sizeof(buf),
+					   error)) {
 			g_prefix_error(error, "could not read IA32_BIOS_SIGN_ID: ");
 			return FALSE;
 		}

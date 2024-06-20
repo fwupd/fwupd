@@ -76,7 +76,7 @@ fu_logitech_hidpp_runtime_open(FuDevice *device, GError **error)
 {
 	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
 	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
-	const gchar *devpath = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
+	const gchar *devpath = fu_linux_device_get_device_file(FU_LINUX_DEVICE(device));
 	g_autoptr(FuIOChannel) io_channel = NULL;
 
 	/* open, but don't block */

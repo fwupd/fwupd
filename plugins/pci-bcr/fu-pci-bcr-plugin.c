@@ -177,7 +177,7 @@ fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin,
 	/* interesting device? */
 	if (!FU_IS_UDEV_DEVICE(device))
 		return TRUE;
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "pci") != 0)
+	if (g_strcmp0(fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device)), "pci") != 0)
 		return TRUE;
 
 	/* open the config */
@@ -189,7 +189,7 @@ fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin,
 		return FALSE;
 
 	/* grab BIOS Control Register */
-	if (!fu_udev_device_pread(FU_UDEV_DEVICE(device), self->bcr_addr, &self->bcr, 1, error)) {
+	if (!fu_linux_device_pread(FU_LINUX_DEVICE(device), self->bcr_addr, &self->bcr, 1, error)) {
 		g_prefix_error(error, "could not read BCR: ");
 		return FALSE;
 	}

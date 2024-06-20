@@ -2150,7 +2150,7 @@ fu_backend_emulate_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
 	const gchar *json1 = "{"
-			     "  \"UdevDevices\" : ["
+			     "  \"LinuxDevices\" : ["
 			     "    {"
 			     "      \"BackendId\" : \"foo:bar:baz\","
 			     "      \"Created\" : \"2023-02-01T16:35:03.302027Z\","
@@ -2168,7 +2168,7 @@ fu_backend_emulate_func(void)
 			     "  ]"
 			     "}";
 	const gchar *json2 = "{\n"
-			     "  \"UdevDevices\" : [\n"
+			     "  \"LinuxDevices\" : [\n"
 			     "    {\n"
 			     "      \"BackendId\" : \"usb:FF:FF:06\",\n"
 			     "      \"Created\" : \"2099-02-01T16:35:03Z\"\n"
@@ -2181,9 +2181,9 @@ fu_backend_emulate_func(void)
 			       "context",
 			       ctx,
 			       "name",
-			       "udev",
+			       "linux",
 			       "device-gtype",
-			       FU_TYPE_UDEV_DEVICE,
+			       FU_TYPE_LINUX_DEVICE,
 			       NULL);
 	g_signal_connect(FU_BACKEND(backend),
 			 "device-added",
@@ -2218,21 +2218,24 @@ fu_backend_emulate_func(void)
 #endif
 
 	/* in-order */
-	ret = fu_udev_device_ioctl(FU_UDEV_DEVICE(device), 123, buf, sizeof(buf), NULL, 0, &error);
+	ret =
+	    fu_linux_device_ioctl(FU_LINUX_DEVICE(device), 123, buf, sizeof(buf), NULL, 0, &error);
 	g_assert_no_error(error);
 	g_assert(ret);
 
 	/* in-order, repeat */
 	buf[0] = 0x00;
 	buf[1] = 0x00;
-	ret = fu_udev_device_ioctl(FU_UDEV_DEVICE(device), 123, buf, sizeof(buf), NULL, 0, &error);
+	ret =
+	    fu_linux_device_ioctl(FU_LINUX_DEVICE(device), 123, buf, sizeof(buf), NULL, 0, &error);
 	g_assert_no_error(error);
 	g_assert(ret);
 
 	/* out-of-order */
 	buf[0] = 0x00;
 	buf[1] = 0x00;
-	ret = fu_udev_device_ioctl(FU_UDEV_DEVICE(device), 123, buf, sizeof(buf), NULL, 0, &error);
+	ret =
+	    fu_linux_device_ioctl(FU_LINUX_DEVICE(device), 123, buf, sizeof(buf), NULL, 0, &error);
 	g_assert_no_error(error);
 	g_assert(ret);
 

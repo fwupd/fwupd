@@ -89,7 +89,7 @@ fu_uf2_device_probe_current_fw(FuDevice *device, GBytes *fw, GError **error)
 static gchar *
 fu_block_device_get_full_path(FuUf2Device *self, const gchar *filename, GError **error)
 {
-	const gchar *devfile = fu_udev_device_get_device_file(FU_UDEV_DEVICE(self));
+	const gchar *devfile = fu_linux_device_get_device_file(FU_LINUX_DEVICE(self));
 	g_autoptr(FuVolume) volume = NULL;
 	g_autofree gchar *mount_point = NULL;
 
@@ -198,7 +198,7 @@ fu_uf2_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 static gboolean
 fu_uf2_device_volume_mount(FuUf2Device *self, GError **error)
 {
-	const gchar *devfile = fu_udev_device_get_device_file(FU_UDEV_DEVICE(self));
+	const gchar *devfile = fu_linux_device_get_device_file(FU_LINUX_DEVICE(self));
 
 	/* mount volume if required */
 	self->volume = fu_volume_new_by_device(devfile, error);
@@ -210,7 +210,7 @@ fu_uf2_device_volume_mount(FuUf2Device *self, GError **error)
 static gboolean
 fu_uf2_device_check_volume_mounted_cb(FuDevice *self, gpointer user_data, GError **error)
 {
-	const gchar *devfile = fu_udev_device_get_device_file(FU_UDEV_DEVICE(user_data));
+	const gchar *devfile = fu_linux_device_get_device_file(FU_LINUX_DEVICE(user_data));
 	g_autoptr(FuVolume) volume = NULL;
 
 	/* mount volume if required */

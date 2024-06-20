@@ -7474,7 +7474,7 @@ fu_engine_check_firmware_attributes(FuEngine *self, FuDevice *device, gboolean a
 		return;
 	if (self->host_emulation)
 		return;
-	subsystem = fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device));
+	subsystem = fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device));
 	if (g_strcmp0(subsystem, "firmware-attributes") == 0) {
 		g_autoptr(GError) error = NULL;
 		if (added) {
@@ -7683,8 +7683,8 @@ fu_engine_backend_device_changed_cb(FuBackend *backend, FuDevice *device, FuEngi
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
 		if (!FU_IS_UDEV_DEVICE(device_tmp) || !FU_IS_UDEV_DEVICE(device))
 			continue;
-		if (g_strcmp0(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device_tmp)),
-			      fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device))) == 0) {
+		if (g_strcmp0(fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(device_tmp)),
+			      fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(device))) == 0) {
 			fu_udev_device_emit_changed(FU_UDEV_DEVICE(device));
 		}
 	}

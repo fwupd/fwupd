@@ -66,13 +66,13 @@ fu_logitech_tap_hdmi_device_query_data_size(FuLogitechTapHdmiDevice *self,
 
 	g_debug("data size query request, unit: 0x%x selector: 0x%x", unit_id, control_selector);
 
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  UVCIOC_CTRL_QUERY,
-				  (guint8 *)&size_query,
-				  sizeof(size_query),
-				  NULL,
-				  FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   UVCIOC_CTRL_QUERY,
+				   (guint8 *)&size_query,
+				   sizeof(size_query),
+				   NULL,
+				   FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
+				   error))
 		return FALSE;
 
 	/* convert the data byte to int */
@@ -114,13 +114,13 @@ fu_logitech_tap_hdmi_device_get_xu_control(FuLogitechTapHdmiDevice *self,
 		unit_id,
 		control_selector);
 
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  UVCIOC_CTRL_QUERY,
-				  (guint8 *)&control_query,
-				  sizeof(control_query),
-				  NULL,
-				  FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   UVCIOC_CTRL_QUERY,
+				   (guint8 *)&control_query,
+				   sizeof(control_query),
+				   NULL,
+				   FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
+				   error))
 		return FALSE;
 
 	g_debug("received get xu control response, size: %u unit: 0x%x selector: 0x%x",
@@ -147,13 +147,13 @@ fu_logitech_tap_hdmi_device_set_xu_control(FuLogitechTapHdmiDevice *self,
 						     .size = data_size,
 						     .data = data};
 
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  UVCIOC_CTRL_QUERY,
-				  (guint8 *)&control_query,
-				  sizeof(control_query),
-				  NULL,
-				  FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   UVCIOC_CTRL_QUERY,
+				   (guint8 *)&control_query,
+				   sizeof(control_query),
+				   NULL,
+				   FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
+				   error))
 		return FALSE;
 
 	g_debug("received set xu control response, size: %u unit: 0x%x selector: 0x%x",
@@ -452,12 +452,12 @@ fu_logitech_tap_hdmi_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* ignore unsupported subsystems */
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "video4linux") != 0) {
+	if (g_strcmp0(fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device)), "video4linux") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not correct subsystem=%s, expected video4linux",
-			    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)));
+			    fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device)));
 		return FALSE;
 	}
 
@@ -500,10 +500,10 @@ static void
 fu_logitech_tap_hdmi_device_init(FuLogitechTapHdmiDevice *self)
 {
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_NONBLOCK);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_IOCTL_RETRY);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 }
 

@@ -55,16 +55,16 @@ fu_goodixtp_plugin_backend_device_added(FuPlugin *plugin,
 	FuGoodixtpIcType ic_type;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "hidraw") != 0) {
+	if (g_strcmp0(fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device)), "hidraw") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not correct subsystem=%s, expected hidraw",
-			    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)));
+			    fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device)));
 		return FALSE;
 	}
 
-	hid_pid = fu_udev_device_get_model(FU_UDEV_DEVICE(device));
+	hid_pid = fu_linux_device_get_model(FU_LINUX_DEVICE(device));
 	ic_type = fu_goodixtp_plugin_ic_type_from_pid(hid_pid);
 	if (ic_type == FU_GOODIXTP_IC_TYPE_NORMANDYL) {
 		g_autoptr(FuDevice) dev = g_object_new(FU_TYPE_GOODIXTP_GTX8_DEVICE,

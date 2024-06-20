@@ -88,7 +88,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 
 		/* check if this is a UFS device */
 		g_info("found ufshci controller at %s",
-		       fu_udev_device_get_sysfs_path(ufshci_parent));
+		       fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(ufshci_parent)));
 		if (fu_udev_device_get_sysfs_attr_uint64(ufshci_parent,
 							 "device_descriptor/ufs_features",
 							 &ufs_features,
@@ -177,13 +177,13 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 	io_hdr.timeout = 60000; /* ms */
 
 	g_debug("cmd=0x%x len=0x%x", cdb[0], (guint)bufsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  SG_IO,
-				  (guint8 *)&io_hdr,
-				  sizeof(io_hdr),
-				  NULL,
-				  FU_SCSI_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   SG_IO,
+				   (guint8 *)&io_hdr,
+				   sizeof(io_hdr),
+				   NULL,
+				   FU_SCSI_DEVICE_IOCTL_TIMEOUT,
+				   error))
 		return FALSE;
 
 	if (io_hdr.status) {
@@ -283,9 +283,9 @@ fu_scsi_device_init(FuScsiDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary(FU_DEVICE(self), "SCSI device");
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_SYNC);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_SYNC);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_IOCTL_RETRY);
 }
 
 static void

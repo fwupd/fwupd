@@ -103,7 +103,7 @@ enum EStickDeviceType {
 static gboolean
 fu_synaptics_rmi_ps2_device_read_ack(FuSynapticsRmiPs2Device *self, guint8 *pbuf, GError **error)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	FuIOChannel *io_channel = fu_linux_device_get_io_channel(FU_LINUX_DEVICE(self));
 	for (guint i = 0; i < 60; i++) {
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_io_channel_read_raw(io_channel,
@@ -134,7 +134,7 @@ fu_synaptics_rmi_ps2_device_read_byte(FuSynapticsRmiPs2Device *self,
 				      guint timeout,
 				      GError **error)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	FuIOChannel *io_channel = fu_linux_device_get_io_channel(FU_LINUX_DEVICE(self));
 	g_return_val_if_fail(timeout > 0, FALSE);
 	return fu_io_channel_read_raw(io_channel,
 				      pbuf,
@@ -153,7 +153,7 @@ fu_synaptics_rmi_ps2_device_write_byte(FuSynapticsRmiPs2Device *self,
 				       FuSynapticsRmiDeviceFlags flags,
 				       GError **error)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	FuIOChannel *io_channel = fu_linux_device_get_io_channel(FU_LINUX_DEVICE(self));
 	gboolean do_write = TRUE;
 	g_return_val_if_fail(timeout > 0, FALSE);
 	for (guint i = 0;; i++) {
@@ -778,7 +778,7 @@ static gboolean
 fu_synaptics_rmi_ps2_device_probe(FuDevice *device, GError **error)
 {
 	/* psmouse is the usual mode, but serio is needed for update */
-	if (g_strcmp0(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), "serio_raw") == 0) {
+	if (g_strcmp0(fu_linux_device_get_driver(FU_LINUX_DEVICE(device)), "serio_raw") == 0) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	} else {
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
@@ -861,7 +861,7 @@ fu_synaptics_rmi_ps2_device_detach(FuDevice *device, FuProgress *progress, GErro
 	}
 
 	/* put in serio_raw mode so that we can do register writes */
-	if (!fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device), "drvctl", "serio_raw", error)) {
+	if (!fu_linux_device_write_attr(FU_LINUX_DEVICE(device), "drvctl", "serio_raw", error)) {
 		g_prefix_error(error, "failed to write to drvctl: ");
 		return FALSE;
 	}
@@ -945,7 +945,7 @@ fu_synaptics_rmi_ps2_device_attach(FuDevice *device, FuProgress *progress, GErro
 	fu_device_sleep_full(device, 5000, progress); /* ms */
 
 	/* back to psmouse */
-	if (!fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device), "drvctl", "psmouse", error)) {
+	if (!fu_linux_device_write_attr(FU_LINUX_DEVICE(device), "drvctl", "psmouse", error)) {
 		g_prefix_error(error, "failed to write to drvctl: ");
 		return FALSE;
 	}
@@ -962,8 +962,8 @@ fu_synaptics_rmi_ps2_device_init(FuSynapticsRmiPs2Device *self)
 	fu_device_set_vendor(FU_DEVICE(self), "Synaptics");
 	fu_device_add_vendor_id(FU_DEVICE(self), "HIDRAW:0x06CB");
 	fu_synaptics_rmi_device_set_max_page(FU_SYNAPTICS_RMI_DEVICE(self), 0x1);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
 }
 
 static gboolean

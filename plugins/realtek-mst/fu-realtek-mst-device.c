@@ -149,18 +149,18 @@ locate_i2c_bus(const GPtrArray *i2c_devices)
 
 		if (i2c_buses->len == 0) {
 			g_debug("no i2c-dev found under %s",
-				fu_udev_device_get_sysfs_path(i2c_device));
+				fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(i2c_device)));
 			continue;
 		}
 		if (i2c_buses->len > 1) {
 			g_debug("ignoring %u additional i2c-dev under %s",
 				i2c_buses->len - 1,
-				fu_udev_device_get_sysfs_path(i2c_device));
+				fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(i2c_device)));
 		}
 
 		bus_device = g_object_ref(g_ptr_array_index(i2c_buses, 0));
 		g_debug("found I2C bus at %s, using this device",
-			fu_udev_device_get_sysfs_path(bus_device));
+			fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(bus_device)));
 		return bus_device;
 	}
 	return NULL;
@@ -189,7 +189,7 @@ fu_realtek_mst_device_use_aux_dev(FuRealtekMstDevice *self, GError **error)
 		device = fu_udev_device_new(fu_device_get_context(FU_DEVICE(self)), element->data);
 		if (bus_device != NULL) {
 			g_debug("ignoring additional aux device %s",
-				fu_udev_device_get_sysfs_path(device));
+				fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(device)));
 			continue;
 		}
 
@@ -231,7 +231,7 @@ fu_realtek_mst_device_use_drm_card(FuRealtekMstDevice *self, GError **error)
 		    fu_udev_device_new(fu_device_get_context(FU_DEVICE(self)), element->data);
 		if (bus_device != NULL) {
 			g_debug("ignoring additional drm device %s",
-				fu_udev_device_get_sysfs_path(drm_device));
+				fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(drm_device)));
 			continue;
 		}
 
@@ -254,13 +254,13 @@ fu_realtek_mst_device_use_drm_card(FuRealtekMstDevice *self, GError **error)
 static gboolean
 mst_ensure_device_address(FuRealtekMstDevice *self, guint8 address, GError **error)
 {
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    I2C_SLAVE,
-				    (guint8 *)(guintptr)address,
-				    sizeof(guintptr),
-				    NULL,
-				    FU_REALTEK_MST_DEVICE_IOCTL_TIMEOUT,
-				    error);
+	return fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				     I2C_SLAVE,
+				     (guint8 *)(guintptr)address,
+				     sizeof(guintptr),
+				     NULL,
+				     FU_REALTEK_MST_DEVICE_IOCTL_TIMEOUT,
+				     error);
 }
 
 /** Write a value to a device register */
@@ -943,7 +943,7 @@ fu_realtek_mst_device_init(FuRealtekMstDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "DisplayPort MST hub");
 	fu_device_add_icon(FU_DEVICE(self), "video-display");
 	fu_device_set_firmware_size(FU_DEVICE(self), FLASH_USER_SIZE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
 }
 
 static void

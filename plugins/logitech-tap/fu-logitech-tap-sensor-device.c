@@ -64,13 +64,13 @@ fu_logitech_tap_sensor_device_set_feature(FuLogitechTapSensorDevice *self,
 {
 #ifdef HAVE_HIDRAW_H
 	fu_dump_raw(G_LOG_DOMAIN, "HidSetFeature", data, datasz);
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    HIDIOCSFEATURE(datasz),
-				    (guint8 *)data,
-				    datasz,
-				    NULL,
-				    FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
-				    error);
+	return fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				     HIDIOCSFEATURE(datasz),
+				     (guint8 *)data,
+				     datasz,
+				     NULL,
+				     FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
+				     error);
 #else
 	/* failed */
 	g_set_error_literal(error,
@@ -92,21 +92,21 @@ fu_logitech_tap_sensor_device_get_feature(FuLogitechTapSensorDevice *self,
 	fu_dump_raw(G_LOG_DOMAIN, "HidGetFeatureReq", data, datasz);
 
 	/* try HIDIOCGINPUT request in case of failure */
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(datasz),
-				  data,
-				  datasz,
-				  NULL,
-				  FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
-				  &error_local)) {
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   HIDIOCGFEATURE(datasz),
+				   data,
+				   datasz,
+				   NULL,
+				   FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
+				   &error_local)) {
 		g_debug("failed to send get request, retrying: %s", error_local->message);
-		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-					  HIDIOCGINPUT(datasz),
-					  data,
-					  datasz,
-					  NULL,
-					  FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
-					  error))
+		if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+					   HIDIOCGINPUT(datasz),
+					   data,
+					   datasz,
+					   NULL,
+					   FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
+					   error))
 			return FALSE;
 	}
 
@@ -319,12 +319,12 @@ fu_logitech_tap_sensor_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* ignore unsupported subsystems */
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "hidraw") != 0) {
+	if (g_strcmp0(fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device)), "hidraw") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not correct subsystem=%s, expected hidraw",
-			    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)));
+			    fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device)));
 		return FALSE;
 	}
 
@@ -352,10 +352,10 @@ static void
 fu_logitech_tap_sensor_device_init(FuLogitechTapSensorDevice *self)
 {
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_NONBLOCK);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_IOCTL_RETRY);
 }
 
 static void

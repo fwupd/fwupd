@@ -20,7 +20,7 @@ fu_optionrom_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *fn = NULL;
 
 	/* does the device even have ROM? */
-	fn = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)), "rom", NULL);
+	fn = g_build_filename(fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(device)), "rom", NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -28,7 +28,7 @@ fu_optionrom_device_probe(FuDevice *device, GError **error)
 				    "Unable to read firmware from device");
 		return FALSE;
 	}
-	fu_udev_device_set_device_file(FU_UDEV_DEVICE(device), fn);
+	fu_linux_device_set_device_file(FU_LINUX_DEVICE(device), fn);
 
 	/* FuUdevDevice->probe -- needed by FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT */
 	if (!FU_DEVICE_CLASS(fu_optionrom_device_parent_class)->probe(device, error))
@@ -65,7 +65,7 @@ fu_optionrom_device_init(FuOptionromDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_logical_id(FU_DEVICE(self), "rom");
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 }
 

@@ -61,7 +61,7 @@ fu_amd_gpu_set_device_file(FuDevice *device, const gchar *base, GError **error)
 
 			devbase = fu_path_from_kind(FU_PATH_KIND_DEVFS);
 			device_file = g_build_filename(devbase, "dri", f, NULL);
-			fu_udev_device_set_device_file(FU_UDEV_DEVICE(device), device_file);
+			fu_linux_device_set_device_file(FU_LINUX_DEVICE(device), device_file);
 			return TRUE;
 		}
 	}
@@ -78,7 +78,7 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *psp_vbflash = NULL;
 	g_autofree gchar *psp_vbflash_status = NULL;
 
-	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
+	base = fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(device));
 	if (!fu_amd_gpu_set_device_file(device, base, error))
 		return FALSE;
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
@@ -88,12 +88,12 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 	rom = g_build_filename(base, "rom", NULL);
 	if (!g_file_test(rom, G_FILE_TEST_EXISTS)) {
 		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD);
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(device), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+		fu_linux_device_add_flag(FU_LINUX_DEVICE(device), FU_LINUX_DEVICE_FLAG_OPEN_READ);
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 	} else {
 		fu_device_set_logical_id(device, "rom");
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(device), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+		fu_linux_device_add_flag(FU_LINUX_DEVICE(device), FU_LINUX_DEVICE_FLAG_OPEN_READ);
 		fu_udev_device_add_flag(FU_UDEV_DEVICE(device),
 					FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 	}
@@ -119,7 +119,7 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 static void
 fu_amd_gpu_device_set_marketing_name(FuDevice *device)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(device));
+	FuIOChannel *io_channel = fu_linux_device_get_io_channel(FU_LINUX_DEVICE(device));
 	FuAmdGpuDevice *self = FU_AMDGPU_DEVICE(device);
 	amdgpu_device_handle device_handle = {0};
 	gint r;
@@ -153,13 +153,13 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 
 	fu_amd_gpu_device_set_marketing_name(device);
 
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
-				  DRM_IOCTL_AMDGPU_INFO,
-				  (void *)&request,
-				  sizeof(request),
-				  NULL,
-				  1000,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(device),
+				   DRM_IOCTL_AMDGPU_INFO,
+				   (void *)&request,
+				   sizeof(request),
+				   NULL,
+				   1000,
+				   error))
 		return FALSE;
 	self->vbios_pn =
 	    fu_strsafe((const gchar *)vbios_info.vbios_pn, sizeof(vbios_info.vbios_pn));
@@ -219,7 +219,7 @@ fu_amd_gpu_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_amd_gpu_device_wait_for_completion_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	const gchar *base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
+	const gchar *base = fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(device));
 	gsize sz = 0;
 	guint64 status = 0;
 	g_autofree gchar *buf = NULL;
@@ -255,7 +255,7 @@ fu_amd_gpu_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) fw = NULL;
 	const gchar *base;
 
-	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
+	base = fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(device));
 	psp_vbflash = g_build_filename(base, "psp_vbflash", NULL);
 
 	image_io = fu_io_channel_new_file(psp_vbflash, error);

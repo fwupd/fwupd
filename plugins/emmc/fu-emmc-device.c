@@ -267,13 +267,13 @@ fu_emmc_read_extcsd(FuEmmcDevice *self, guint8 *ext_csd, gsize ext_csd_sz, GErro
 	    .blocks = 1,
 	};
 	mmc_ioc_cmd_set_data(idata, ext_csd);
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    MMC_IOC_CMD,
-				    (guint8 *)&idata,
-				    sizeof(idata),
-				    NULL,
-				    FU_EMMC_DEVICE_IOCTL_TIMEOUT,
-				    error);
+	return fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				     MMC_IOC_CMD,
+				     (guint8 *)&idata,
+				     sizeof(idata),
+				     NULL,
+				     FU_EMMC_DEVICE_IOCTL_TIMEOUT,
+				     error);
 }
 
 static gboolean
@@ -441,23 +441,23 @@ fu_emmc_device_write_firmware(FuDevice *device,
 
 			mmc_ioc_cmd_set_data(multi_cmd->cmds[2], fu_chunk_get_data(chk));
 
-			if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-						  MMC_IOC_MULTI_CMD,
-						  (guint8 *)multi_cmd,
-						  multi_cmdsz,
-						  NULL,
-						  FU_EMMC_DEVICE_IOCTL_TIMEOUT,
-						  error)) {
+			if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+						   MMC_IOC_MULTI_CMD,
+						   (guint8 *)multi_cmd,
+						   multi_cmdsz,
+						   NULL,
+						   FU_EMMC_DEVICE_IOCTL_TIMEOUT,
+						   error)) {
 				g_autoptr(GError) error_local = NULL;
 				g_prefix_error(error, "multi-cmd failed: ");
 				/* multi-cmd ioctl failed before exiting from ffu mode */
-				if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-							  MMC_IOC_CMD,
-							  (guint8 *)&multi_cmd->cmds[3],
-							  sizeof(struct mmc_ioc_cmd),
-							  NULL,
-							  FU_EMMC_DEVICE_IOCTL_TIMEOUT,
-							  &error_local)) {
+				if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+							   MMC_IOC_CMD,
+							   (guint8 *)&multi_cmd->cmds[3],
+							   sizeof(struct mmc_ioc_cmd),
+							   NULL,
+							   FU_EMMC_DEVICE_IOCTL_TIMEOUT,
+							   &error_local)) {
 					g_prefix_error(error, "%s: ", error_local->message);
 				}
 				return FALSE;
@@ -528,23 +528,23 @@ fu_emmc_device_write_firmware(FuDevice *device,
 		multi_cmd->cmds[1].write_flag = 1;
 
 		/* send ioctl with multi-cmd */
-		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-					  MMC_IOC_MULTI_CMD,
-					  (guint8 *)multi_cmd,
-					  multi_cmdsz,
-					  NULL,
-					  FU_EMMC_DEVICE_IOCTL_TIMEOUT,
-					  error)) {
+		if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+					   MMC_IOC_MULTI_CMD,
+					   (guint8 *)multi_cmd,
+					   multi_cmdsz,
+					   NULL,
+					   FU_EMMC_DEVICE_IOCTL_TIMEOUT,
+					   error)) {
 			g_autoptr(GError) error_local = NULL;
 			/* In case multi-cmd ioctl failed before exiting from ffu mode */
 			g_prefix_error(error, "multi-cmd failed setting install mode: ");
-			if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-						  MMC_IOC_CMD,
-						  (guint8 *)&multi_cmd->cmds[2],
-						  sizeof(struct mmc_ioc_cmd),
-						  NULL,
-						  FU_EMMC_DEVICE_IOCTL_TIMEOUT,
-						  &error_local)) {
+			if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+						   MMC_IOC_CMD,
+						   (guint8 *)&multi_cmd->cmds[2],
+						   sizeof(struct mmc_ioc_cmd),
+						   NULL,
+						   FU_EMMC_DEVICE_IOCTL_TIMEOUT,
+						   &error_local)) {
 				g_prefix_error(error, "%s: ", error_local->message);
 			}
 			return FALSE;
@@ -603,8 +603,8 @@ fu_emmc_device_init(FuEmmcDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "org.jedec.mmc");
 	fu_device_add_icon(FU_DEVICE(self), "media-memory");
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
 }
 
 static void

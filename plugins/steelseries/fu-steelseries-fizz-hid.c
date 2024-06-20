@@ -40,12 +40,16 @@ fu_steelseries_fizz_hid_command_cb(FuDevice *device, gpointer user_data, GError 
 
 	/* force the request for each iteration to avoid a loop due the lost single packet --
 	 * this is safe since the device doesn't support update over bluetooth */
-	if (!fu_udev_device_pwrite(FU_UDEV_DEVICE(device), 0, helper->buf, helper->bufsz, error)) {
+	if (!fu_linux_device_pwrite(FU_LINUX_DEVICE(device),
+				    0,
+				    helper->buf,
+				    helper->bufsz,
+				    error)) {
 		g_prefix_error(error, "failed to write report: ");
 		return FALSE;
 	}
 
-	ret = fu_udev_device_pread(FU_UDEV_DEVICE(device), 0, rdata, sizeof(rdata), &error_local);
+	ret = fu_linux_device_pread(FU_LINUX_DEVICE(device), 0, rdata, sizeof(rdata), &error_local);
 
 	if (!fu_memread_uint8_safe(rdata,
 				   sizeof(rdata),
@@ -55,7 +59,7 @@ fu_steelseries_fizz_hid_command_cb(FuDevice *device, gpointer user_data, GError 
 		return FALSE;
 
 	if (!ret) {
-		/* since fu_udev_device_pread() treats unexpected data size as error
+		/* since fu_linux_device_pread() treats unexpected data size as error
 		 * we have to check the output additionally since the size of
 		 * unexpected data size from mouse input data is only 16b */
 		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL) ||

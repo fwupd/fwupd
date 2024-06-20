@@ -48,17 +48,17 @@ static gboolean
 fu_focalfp_hid_device_probe(FuDevice *device, GError **error)
 {
 	/* check is valid */
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "hidraw") != 0) {
+	if (g_strcmp0(fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device)), "hidraw") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not correct subsystem=%s, expected hidraw",
-			    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)));
+			    fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device)));
 		return FALSE;
 	}
 
 	/* i2c-hid */
-	if (fu_udev_device_get_model(FU_UDEV_DEVICE(device)) != 0x0106) {
+	if (fu_linux_device_get_model(FU_LINUX_DEVICE(device)) != 0x0106) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -97,13 +97,13 @@ fu_focalfp_hid_device_io(FuFocalfpHidDevice *self,
 			return FALSE;
 		buf[cmdlen] = fu_focaltp_buffer_generate_checksum(&buf[1], cmdlen - 1);
 		fu_dump_raw(G_LOG_DOMAIN, "SetReport", buf, sizeof(buf));
-		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-					  HIDIOCSFEATURE(cmdlen + 1),
-					  buf,
-					  sizeof(buf),
-					  NULL,
-					  FU_FOCALFP_DEVICE_IOCTL_TIMEOUT,
-					  error)) {
+		if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+					   HIDIOCSFEATURE(cmdlen + 1),
+					   buf,
+					   sizeof(buf),
+					   NULL,
+					   FU_FOCALFP_DEVICE_IOCTL_TIMEOUT,
+					   error)) {
 			return FALSE;
 		}
 	}
@@ -111,13 +111,13 @@ fu_focalfp_hid_device_io(FuFocalfpHidDevice *self,
 	/* GetReport */
 	if (rbuf != NULL && rbufsz > 0) {
 		guint8 buf[64] = {0x06};
-		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-					  HIDIOCGFEATURE(sizeof(buf)),
-					  buf,
-					  sizeof(buf),
-					  NULL,
-					  FU_FOCALFP_DEVICE_IOCTL_TIMEOUT,
-					  error)) {
+		if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+					   HIDIOCGFEATURE(sizeof(buf)),
+					   buf,
+					   sizeof(buf),
+					   NULL,
+					   FU_FOCALFP_DEVICE_IOCTL_TIMEOUT,
+					   error)) {
 			return FALSE;
 		}
 		fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, sizeof(buf));
@@ -661,9 +661,9 @@ fu_focalfp_hid_device_init(FuFocalfpHidDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "input-touchpad");
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.focalfp");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_NONBLOCK);
 }
 
 static void

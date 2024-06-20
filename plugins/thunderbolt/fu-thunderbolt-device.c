@@ -32,7 +32,7 @@ fu_thunderbolt_device_find_nvmem(FuThunderboltDevice *self, gboolean active, GEr
 {
 	const gchar *nvmem_dir = active ? "nvm_active" : "nvm_non_active";
 	const gchar *name;
-	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
+	const gchar *devpath = fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(self));
 	g_autoptr(GDir) d = NULL;
 
 	if (G_UNLIKELY(devpath == NULL)) {
@@ -67,7 +67,7 @@ fu_thunderbolt_device_check_authorized(FuThunderboltDevice *self, GError **error
 {
 	guint64 status;
 	g_autofree gchar *attribute = NULL;
-	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
+	const gchar *devpath = fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(self));
 	/* read directly from file to prevent udev caching */
 	g_autofree gchar *safe_path = g_build_path("/", devpath, "authorized", NULL);
 
@@ -102,7 +102,7 @@ fu_thunderbolt_device_check_authorized(FuThunderboltDevice *self, GError **error
 gboolean
 fu_thunderbolt_device_get_version(FuThunderboltDevice *self, GError **error)
 {
-	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
+	const gchar *devpath = fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(self));
 	g_auto(GStrv) split = NULL;
 	g_autofree gchar *version_raw = NULL;
 	g_autofree gchar *version = NULL;
@@ -169,9 +169,8 @@ fu_thunderbolt_device_set_auth_method(FuThunderboltDevice *self, const gchar *au
 static gboolean
 fu_thunderbolt_device_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuUdevDevice *udev = FU_UDEV_DEVICE(device);
-
-	return fu_udev_device_write_sysfs(udev, "nvm_authenticate", "1", error);
+	FuLinuxDevice *linux_device = FU_LINUX_DEVICE(device);
+	return fu_linux_device_write_attr(linux_device, "nvm_authenticate", "1", error);
 }
 
 static gboolean
@@ -179,9 +178,8 @@ fu_thunderbolt_device_authenticate(FuDevice *device, GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);
 	FuThunderboltDevicePrivate *priv = GET_PRIVATE(self);
-	FuUdevDevice *udev = FU_UDEV_DEVICE(device);
-
-	return fu_udev_device_write_sysfs(udev, priv->auth_method, "1", error);
+	FuLinuxDevice *linux_device = FU_LINUX_DEVICE(device);
+	return fu_linux_device_write_attr(linux_device, priv->auth_method, "1", error);
 }
 
 static gboolean
@@ -189,9 +187,9 @@ fu_thunderbolt_device_flush_update(FuDevice *device, GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);
 	FuThunderboltDevicePrivate *priv = GET_PRIVATE(self);
-	FuUdevDevice *udev = FU_UDEV_DEVICE(device);
+	FuLinuxDevice *linux_device = FU_LINUX_DEVICE(device);
 
-	return fu_udev_device_write_sysfs(udev, priv->auth_method, "2", error);
+	return fu_linux_device_write_attr(linux_device, priv->auth_method, "2", error);
 }
 
 static gboolean
@@ -367,7 +365,7 @@ fu_thunderbolt_device_write_firmware(FuDevice *device,
 	if (!fu_thunderbolt_device_write_data(self, blob_fw, progress, error)) {
 		g_prefix_error(error,
 			       "could not write firmware to thunderbolt device at %s: ",
-			       fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self)));
+			       fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(self)));
 		return FALSE;
 	}
 
@@ -410,7 +408,7 @@ fu_thunderbolt_device_probe(FuDevice *device, GError **error)
 	if (udev_parent != NULL) {
 		if (!fu_device_probe(FU_DEVICE(udev_parent), error))
 			return FALSE;
-		if (fu_udev_device_get_vendor(udev_parent) == 0x8086)
+		if (fu_linux_device_get_vendor(FU_LINUX_DEVICE(udev_parent)) == 0x8086)
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	}
 

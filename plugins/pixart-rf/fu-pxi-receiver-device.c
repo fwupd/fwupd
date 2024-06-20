@@ -17,14 +17,14 @@
 #include "fu-pxi-wireless-device.h"
 
 struct _FuPxiReceiverDevice {
-	FuUdevDevice parent_instance;
+	FuLinuxDevice parent_instance;
 	struct ota_fw_state fwstate;
 	guint8 sn;
 	guint vendor;
 	guint product;
 };
 
-G_DEFINE_TYPE(FuPxiReceiverDevice, fu_pxi_receiver_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE(FuPxiReceiverDevice, fu_pxi_receiver_device, FU_TYPE_LINUX_DEVICE)
 
 #ifdef HAVE_HIDRAW_H
 static gboolean
@@ -32,13 +32,13 @@ fu_pxi_receiver_device_get_raw_info(FuPxiReceiverDevice *self,
 				    struct hidraw_devinfo *info,
 				    GError **error)
 {
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGRAWINFO,
-				  (guint8 *)info,
-				  sizeof(*info),
-				  NULL,
-				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
-				  error)) {
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   HIDIOCGRAWINFO,
+				   (guint8 *)info,
+				   sizeof(*info),
+				   NULL,
+				   FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				   error)) {
 		return FALSE;
 	}
 	return TRUE;
@@ -98,13 +98,13 @@ fu_pxi_receiver_device_set_feature(FuPxiReceiverDevice *self,
 {
 #ifdef HAVE_HIDRAW_H
 	fu_dump_raw(G_LOG_DOMAIN, "SetFeature", buf, bufsz);
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    HIDIOCSFEATURE(bufsz),
-				    (guint8 *)buf,
-				    bufsz,
-				    NULL,
-				    FU_PXI_DEVICE_IOCTL_TIMEOUT,
-				    error);
+	return fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				     HIDIOCSFEATURE(bufsz),
+				     (guint8 *)buf,
+				     bufsz,
+				     NULL,
+				     FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				     error);
 #else
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -121,13 +121,13 @@ fu_pxi_receiver_device_get_feature(FuPxiReceiverDevice *self,
 				   GError **error)
 {
 #ifdef HAVE_HIDRAW_H
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(bufsz),
-				  buf,
-				  bufsz,
-				  NULL,
-				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
-				  error)) {
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   HIDIOCGFEATURE(bufsz),
+				   buf,
+				   bufsz,
+				   NULL,
+				   FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				   error)) {
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "GetFeature", buf, bufsz);
@@ -941,8 +941,8 @@ fu_pxi_receiver_device_init(FuPxiReceiverDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_PXI_FIRMWARE);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC, "is-hpac");
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }
 

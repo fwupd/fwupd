@@ -32,7 +32,7 @@ fu_bcm57xx_plugin_backend_device_added(FuPlugin *plugin,
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* only enumerate number 0 */
-	if (fu_udev_device_get_number(FU_UDEV_DEVICE(device)) != 0) {
+	if (fu_linux_device_get_number(FU_LINUX_DEVICE(device)) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -41,7 +41,7 @@ fu_bcm57xx_plugin_backend_device_added(FuPlugin *plugin,
 	}
 
 	/* is in recovery mode if has no ethtool interface */
-	fn = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)), "net", NULL);
+	fn = g_build_filename(fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(device)), "net", NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_debug("waiting for net devices to appear");
 		fu_device_sleep(device, 50); /* ms */

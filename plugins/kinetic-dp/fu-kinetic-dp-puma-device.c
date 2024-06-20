@@ -260,7 +260,7 @@ fu_kinetic_dp_puma_device_send_isp_drv(FuKineticDpPumaDevice *self,
 				       FuProgress *progress,
 				       GError **error)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	FuIOChannel *io_channel = fu_linux_device_get_io_channel(FU_LINUX_DEVICE(self));
 	if (!fu_kinetic_dp_puma_device_enter_code_loading_mode(self, error)) {
 		g_prefix_error(error, "enter code loading mode failed: ");
 		return FALSE;
@@ -466,7 +466,7 @@ fu_kinetic_dp_puma_device_write_firmware(FuDevice *device,
 {
 	FuKineticDpPumaDevice *self = FU_KINETIC_DP_PUMA_DEVICE(device);
 	FuKineticDpPumaFirmware *dp_firmware = FU_KINETIC_DP_PUMA_FIRMWARE(firmware);
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	FuIOChannel *io_channel = fu_linux_device_get_io_channel(FU_LINUX_DEVICE(self));
 	g_autoptr(GBytes) app_fw_blob = NULL;
 
 	/* progress */

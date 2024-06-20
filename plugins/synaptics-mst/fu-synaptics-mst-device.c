@@ -102,10 +102,10 @@ fu_synaptics_mst_device_udev_device_notify_cb(FuUdevDevice *udev_device,
 					      gpointer user_data)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(user_data);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) != NULL)
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+		fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
 }
 
 static void
@@ -1502,7 +1502,8 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 		g_autofree gchar *filename = NULL;
 		g_autofree gchar *dirname = NULL;
 		gint fd;
-		dirname = g_path_get_dirname(fu_udev_device_get_device_file(FU_UDEV_DEVICE(self)));
+		dirname =
+		    g_path_get_dirname(fu_linux_device_get_device_file(FU_LINUX_DEVICE(self)));
 		filename = g_strdup_printf("%s/remote/%s_eeprom",
 					   dirname,
 					   fu_device_get_logical_id(FU_DEVICE(self)));

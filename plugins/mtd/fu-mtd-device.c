@@ -43,7 +43,7 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 	g_autoptr(GInputStream) stream_partial = NULL;
 
 	/* read contents at the search offset */
-	fn = fu_udev_device_get_device_file(FU_UDEV_DEVICE(self));
+	fn = fu_linux_device_get_device_file(FU_LINUX_DEVICE(self));
 	if (fn == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -247,7 +247,7 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	}
 	if (flags & MTD_WRITEABLE) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+		fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
 	}
 #endif
 
@@ -280,13 +280,13 @@ fu_mtd_device_erase(FuMtdDevice *self, GInputStream *stream, FuProgress *progres
 			return FALSE;
 		erase.start = fu_chunk_get_address(chk);
 		erase.length = fu_chunk_get_data_sz(chk);
-		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-					  2,
-					  (guint8 *)&erase,
-					  sizeof(erase),
-					  NULL,
-					  FU_MTD_DEVICE_IOCTL_TIMEOUT,
-					  error)) {
+		if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+					   2,
+					   (guint8 *)&erase,
+					   sizeof(erase),
+					   NULL,
+					   FU_MTD_DEVICE_IOCTL_TIMEOUT,
+					   error)) {
 			g_prefix_error(error, "failed to erase @0x%x: ", (guint)erase.start);
 			return FALSE;
 		}
@@ -312,7 +312,7 @@ fu_mtd_device_write(FuMtdDevice *self, FuChunkArray *chunks, FuProgress *progres
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 
 	/* rewind */
-	if (!fu_udev_device_seek(FU_UDEV_DEVICE(self), 0x0, error)) {
+	if (!fu_linux_device_seek(FU_LINUX_DEVICE(self), 0x0, error)) {
 		g_prefix_error(error, "failed to rewind: ");
 		return FALSE;
 	}
@@ -325,11 +325,11 @@ fu_mtd_device_write(FuMtdDevice *self, FuChunkArray *chunks, FuProgress *progres
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_udev_device_pwrite(FU_UDEV_DEVICE(self),
-					   fu_chunk_get_address(chk),
-					   fu_chunk_get_data(chk),
-					   fu_chunk_get_data_sz(chk),
-					   error)) {
+		if (!fu_linux_device_pwrite(FU_LINUX_DEVICE(self),
+					    fu_chunk_get_address(chk),
+					    fu_chunk_get_data(chk),
+					    fu_chunk_get_data_sz(chk),
+					    error)) {
 			g_prefix_error(error,
 				       "failed to write @0x%x: ",
 				       (guint)fu_chunk_get_address(chk));
@@ -361,11 +361,11 @@ fu_mtd_device_verify(FuMtdDevice *self, FuChunkArray *chunks, FuProgress *progre
 		if (chk == NULL)
 			return FALSE;
 		buf = g_malloc0(fu_chunk_get_data_sz(chk));
-		if (!fu_udev_device_pread(FU_UDEV_DEVICE(self),
-					  fu_chunk_get_address(chk),
-					  buf,
-					  fu_chunk_get_data_sz(chk),
-					  error)) {
+		if (!fu_linux_device_pread(FU_LINUX_DEVICE(self),
+					   fu_chunk_get_address(chk),
+					   buf,
+					   fu_chunk_get_data_sz(chk),
+					   error)) {
 			g_prefix_error(error,
 				       "failed to read @0x%x: ",
 				       (guint)fu_chunk_get_address(chk));
@@ -435,11 +435,11 @@ fu_mtd_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **err
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		if (!fu_udev_device_pread(FU_UDEV_DEVICE(self),
-					  fu_chunk_get_address(chk),
-					  fu_chunk_get_data_out(chk),
-					  fu_chunk_get_data_sz(chk),
-					  error)) {
+		if (!fu_linux_device_pread(FU_LINUX_DEVICE(self),
+					   fu_chunk_get_address(chk),
+					   fu_chunk_get_data_out(chk),
+					   fu_chunk_get_data_sz(chk),
+					   error)) {
 			g_prefix_error(error,
 				       "failed to read @0x%x: ",
 				       (guint)fu_chunk_get_address(chk));
@@ -543,8 +543,8 @@ fu_mtd_device_init(FuMtdDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk-solidstate");
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_SYNC);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_SYNC);
 }
 
 static void

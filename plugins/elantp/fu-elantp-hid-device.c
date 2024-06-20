@@ -51,15 +51,15 @@ fu_elantp_hid_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_elantp_hid_device_probe(FuDevice *device, GError **error)
 {
-	guint16 device_id = fu_udev_device_get_model(FU_UDEV_DEVICE(device));
+	guint16 device_id = fu_linux_device_get_model(FU_LINUX_DEVICE(device));
 
 	/* check is valid */
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "hidraw") != 0) {
+	if (g_strcmp0(fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device)), "hidraw") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not correct subsystem=%s, expected hidraw",
-			    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)));
+			    fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device)));
 		return FALSE;
 	}
 
@@ -88,13 +88,13 @@ fu_elantp_hid_device_send_cmd(FuElantpHidDevice *self,
 	gsize bufsz = rxsz + 3;
 
 	fu_dump_raw(G_LOG_DOMAIN, "SetReport", tx, txsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCSFEATURE(txsz),
-				  tx,
-				  txsz,
-				  NULL,
-				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   HIDIOCSFEATURE(txsz),
+				   tx,
+				   txsz,
+				   NULL,
+				   FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
+				   error))
 		return FALSE;
 	if (rxsz == 0)
 		return TRUE;
@@ -102,13 +102,13 @@ fu_elantp_hid_device_send_cmd(FuElantpHidDevice *self,
 	/* GetFeature */
 	buf = g_malloc0(bufsz);
 	buf[0] = tx[0]; /* report number */
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(bufsz),
-				  buf,
-				  sizeof(buf),
-				  NULL,
-				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   HIDIOCGFEATURE(bufsz),
+				   buf,
+				   sizeof(buf),
+				   NULL,
+				   FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
+				   error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, bufsz);
 
@@ -359,8 +359,12 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	self->module_id = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	/* define the extra instance IDs */
-	fu_device_add_instance_u16(device, "VEN", fu_udev_device_get_vendor(udev_device));
-	fu_device_add_instance_u16(device, "DEV", fu_udev_device_get_model(udev_device));
+	fu_device_add_instance_u16(device,
+				   "VEN",
+				   fu_linux_device_get_vendor(FU_LINUX_DEVICE(udev_device)));
+	fu_device_add_instance_u16(device,
+				   "DEV",
+				   fu_linux_device_get_model(FU_LINUX_DEVICE(udev_device)));
 	fu_device_add_instance_u16(device, "MOD", self->module_id);
 	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "MOD", NULL))
 		return FALSE;
@@ -960,9 +964,9 @@ fu_elantp_hid_device_init(FuElantpHidDevice *self)
 	fu_device_set_vendor(FU_DEVICE(self), "ELAN Microelectronics");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_NONBLOCK);
 }
 
 static void

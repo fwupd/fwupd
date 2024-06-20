@@ -80,14 +80,15 @@ fu_mei_device_ensure_parent_device_file(FuMeiDevice *self, GError **error)
 		return FALSE;
 
 	/* look for the only child with this subsystem */
-	parent_mei_path = g_build_filename(fu_udev_device_get_sysfs_path(parent), "mei", NULL);
+	parent_mei_path =
+	    g_build_filename(fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(parent)), "mei", NULL);
 	dir = g_dir_open(parent_mei_path, 0, NULL);
 	if (dir == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "no MEI parent dir for %s",
-			    fu_udev_device_get_sysfs_path(parent));
+			    fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(parent)));
 		return FALSE;
 	}
 	fn = g_dir_read_name(dir);
@@ -101,7 +102,10 @@ fu_mei_device_ensure_parent_device_file(FuMeiDevice *self, GError **error)
 	}
 
 	/* success */
-	parent_tmp = g_build_filename(fu_udev_device_get_sysfs_path(parent), "mei", fn, NULL);
+	parent_tmp = g_build_filename(fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(parent)),
+				      "mei",
+				      fn,
+				      NULL);
 	if (g_strcmp0(parent_tmp, priv->parent_device_file) != 0) {
 		g_free(priv->parent_device_file);
 		priv->parent_device_file = g_steal_pointer(&parent_tmp);
@@ -143,10 +147,10 @@ fu_mei_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* the kernel is missing `dev` on mei_me children */
-	if (fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)) == NULL) {
+	if (fu_linux_device_get_device_file(FU_LINUX_DEVICE(device)) == NULL) {
 		g_autofree gchar *basename = g_path_get_basename(priv->parent_device_file);
 		g_autofree gchar *device_file = g_build_filename("/dev", basename, NULL);
-		fu_udev_device_set_device_file(FU_UDEV_DEVICE(device), device_file);
+		fu_linux_device_set_device_file(FU_LINUX_DEVICE(device), device_file);
 	}
 
 	/* FuUdevDevice->probe */
@@ -301,13 +305,13 @@ fu_mei_device_connect(FuMeiDevice *self, guchar req_protocol_version, GError **e
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "guid_le", (guint8 *)&guid_le, sizeof(guid_le));
 	memcpy(&data.in_client_uuid, &guid_le, sizeof(guid_le));
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  IOCTL_MEI_CONNECT_CLIENT,
-				  (guint8 *)&data,
-				  sizeof(data),
-				  NULL, /* rc */
-				  FU_MEI_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   IOCTL_MEI_CONNECT_CLIENT,
+				   (guint8 *)&data,
+				   sizeof(data),
+				   NULL, /* rc */
+				   FU_MEI_DEVICE_IOCTL_TIMEOUT,
+				   error))
 		return FALSE;
 
 	cl = &data.out_client_properties;
@@ -357,7 +361,7 @@ fu_mei_device_read(FuMeiDevice *self,
 		   GError **error)
 {
 	gssize rc;
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	FuIOChannel *io_channel = fu_linux_device_get_io_channel(FU_LINUX_DEVICE(self));
 
 	g_return_val_if_fail(FU_IS_MEI_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
@@ -405,7 +409,7 @@ fu_mei_device_write(FuMeiDevice *self,
 	gssize written;
 	gssize rc;
 	fd_set set;
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+	FuIOChannel *io_channel = fu_linux_device_get_io_channel(FU_LINUX_DEVICE(self));
 	guint fd = fu_io_channel_unix_get_fd(io_channel);
 
 	g_return_val_if_fail(FU_IS_MEI_DEVICE(self), FALSE);
@@ -491,8 +495,8 @@ fu_mei_device_init(FuMeiDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 }
 

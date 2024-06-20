@@ -83,13 +83,13 @@ fu_goodixtp_hid_device_get_report(FuGoodixtpHidDevice *self,
 	guint8 rcv_buf[PACKAGE_LEN + 1] = {0};
 
 	rcv_buf[0] = REPORT_ID;
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(PACKAGE_LEN),
-				  rcv_buf,
-				  sizeof(rcv_buf),
-				  NULL,
-				  GOODIX_DEVICE_IOCTL_TIMEOUT,
-				  error)) {
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   HIDIOCGFEATURE(PACKAGE_LEN),
+				   rcv_buf,
+				   sizeof(rcv_buf),
+				   NULL,
+				   GOODIX_DEVICE_IOCTL_TIMEOUT,
+				   error)) {
 		g_prefix_error(error, "failed get report: ");
 		return FALSE;
 	}
@@ -121,13 +121,13 @@ fu_goodixtp_hid_device_set_report(FuGoodixtpHidDevice *self,
 				  GError **error)
 {
 #ifdef HAVE_HIDRAW_H
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCSFEATURE(bufsz),
-				  buf,
-				  bufsz,
-				  NULL,
-				  GOODIX_DEVICE_IOCTL_TIMEOUT,
-				  error)) {
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   HIDIOCSFEATURE(bufsz),
+				   buf,
+				   bufsz,
+				   NULL,
+				   GOODIX_DEVICE_IOCTL_TIMEOUT,
+				   error)) {
 		g_prefix_error(error, "failed set report: ");
 		return FALSE;
 	}
@@ -145,12 +145,12 @@ static gboolean
 fu_goodixtp_hid_device_probe(FuDevice *device, GError **error)
 {
 	/* check is valid */
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "hidraw") != 0) {
+	if (g_strcmp0(fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device)), "hidraw") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not correct subsystem=%s, expected hidraw",
-			    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)));
+			    fu_linux_device_get_subsystem(FU_LINUX_DEVICE(device)));
 		return FALSE;
 	}
 
@@ -188,9 +188,9 @@ fu_goodixtp_hid_device_init(FuGoodixtpHidDevice *self)
 	fu_device_set_vendor(FU_DEVICE(self), "Goodix inc.");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_NONBLOCK);
 }
 
 static void

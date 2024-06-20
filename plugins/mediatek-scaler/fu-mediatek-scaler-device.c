@@ -59,7 +59,7 @@ fu_mediatek_scaler_device_to_string(FuDevice *device, guint idt, GString *str)
 		    str,
 		    idt,
 		    "I2cDeviceFile",
-		    fu_udev_device_get_device_file(FU_UDEV_DEVICE(self->i2c_dev)));
+		    fu_linux_device_get_device_file(FU_LINUX_DEVICE(self->i2c_dev)));
 	}
 }
 
@@ -68,17 +68,17 @@ fu_mediatek_scaler_ensure_device_address(FuMediatekScalerDevice *self,
 					 guint8 address,
 					 GError **error)
 {
-	if (!fu_udev_device_ioctl(self->i2c_dev,
-				  I2C_SLAVE,
-				  (guint8 *)(guintptr)address,
-				  sizeof(guintptr),
-				  NULL,
-				  FU_MEDIATEK_SCALER_DEVICE_IOCTL_TIMEOUT,
-				  error)) {
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self->i2c_dev),
+				   I2C_SLAVE,
+				   (guint8 *)(guintptr)address,
+				   sizeof(guintptr),
+				   NULL,
+				   FU_MEDIATEK_SCALER_DEVICE_IOCTL_TIMEOUT,
+				   error)) {
 		g_prefix_error(error,
 			       "failed to set address '0x%02x' on %s: ",
 			       address,
-			       fu_udev_device_get_device_file(FU_UDEV_DEVICE(self->i2c_dev)));
+			       fu_linux_device_get_device_file(FU_LINUX_DEVICE(self->i2c_dev)));
 		return FALSE;
 	}
 	return TRUE;
@@ -95,19 +95,20 @@ fu_mediatek_scaler_device_set_i2c_dev(FuMediatekScalerDevice *self,
 		    fu_udev_device_get_children_with_subsystem(device, "i2c-dev");
 
 		if (i2c_devs->len == 0) {
-			g_debug("no i2c-dev found under %s", fu_udev_device_get_sysfs_path(device));
+			g_debug("no i2c-dev found under %s",
+				fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(device)));
 			continue;
 		}
 		if (i2c_devs->len > 1) {
 			g_debug("ignoring %u additional i2c-dev under %s",
 				i2c_devs->len - 1,
-				fu_udev_device_get_sysfs_path(device));
+				fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(device)));
 		}
 
 		/* the first i2c_dev is enforced to represent the dp aux device */
 		self->i2c_dev = g_object_ref(g_ptr_array_index(i2c_devs, 0));
 		g_debug("found I2C bus at %s, using this device",
-			fu_udev_device_get_sysfs_path(self->i2c_dev));
+			fu_linux_device_get_sysfs_path(FU_LINUX_DEVICE(self->i2c_dev)));
 		return fu_udev_device_set_physical_id(self->i2c_dev, "i2c", error);
 	}
 	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no devices on the i2c bus");
@@ -148,11 +149,11 @@ fu_mediatek_scaler_device_ddc_write(FuMediatekScalerDevice *self,
 		    ddc_msgbox_write->data,
 		    ddc_msgbox_write->len);
 
-	return fu_udev_device_pwrite(FU_UDEV_DEVICE(self->i2c_dev),
-				     0x0,
-				     ddc_msgbox_write->data,
-				     ddc_msgbox_write->len,
-				     error);
+	return fu_linux_device_pwrite(FU_LINUX_DEVICE(self->i2c_dev),
+				      0x0,
+				      ddc_msgbox_write->data,
+				      ddc_msgbox_write->len,
+				      error);
 }
 
 static GByteArray *
@@ -172,7 +173,7 @@ fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self, GByteArray *st_
 	fu_device_sleep(FU_DEVICE(self), FU_MEDIATEK_SCALER_DDC_MSG_DELAY_MS);
 
 	/* read into tmp buffer */
-	if (!fu_udev_device_pread(FU_UDEV_DEVICE(self->i2c_dev), 0x0, buf, sizeof(buf), error))
+	if (!fu_linux_device_pread(FU_LINUX_DEVICE(self->i2c_dev), 0x0, buf, sizeof(buf), error))
 		return NULL;
 
 	/* read buffer = addr(src) + length + data + checksum */
@@ -297,8 +298,8 @@ fu_mediatek_scaler_display_is_connected(FuMediatekScalerDevice *self, GError **e
 	}
 
 	g_info("found mediatek display controller: %s, i2c-dev: %s",
-	       fu_udev_device_get_device_file(FU_UDEV_DEVICE(self)),
-	       fu_udev_device_get_device_file(FU_UDEV_DEVICE(self->i2c_dev)));
+	       fu_linux_device_get_device_file(FU_LINUX_DEVICE(self)),
+	       fu_linux_device_get_device_file(FU_LINUX_DEVICE(self->i2c_dev)));
 	return TRUE;
 }
 
@@ -501,8 +502,14 @@ fu_mediatek_scaler_device_probe(FuDevice *device, GError **error)
 	if (!fu_device_probe(FU_DEVICE(udev_parent), error))
 		return FALSE;
 
-	fu_device_add_instance_u16(device, "VID", fu_udev_device_get_subsystem_vendor(udev_parent));
-	fu_device_add_instance_u16(device, "PID", fu_udev_device_get_subsystem_model(udev_parent));
+	fu_device_add_instance_u16(
+	    device,
+	    "VID",
+	    fu_linux_device_get_subsystem_vendor(FU_LINUX_DEVICE(udev_parent)));
+	fu_device_add_instance_u16(
+	    device,
+	    "PID",
+	    fu_linux_device_get_subsystem_model(FU_LINUX_DEVICE(udev_parent)));
 	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
 					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					      error,
@@ -516,8 +523,8 @@ fu_mediatek_scaler_device_probe(FuDevice *device, GError **error)
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "%04X:%04X: is not supported",
-			    fu_udev_device_get_subsystem_vendor(udev_parent),
-			    fu_udev_device_get_subsystem_model(udev_parent));
+			    fu_linux_device_get_subsystem_vendor(FU_LINUX_DEVICE(udev_parent)),
+			    fu_linux_device_get_subsystem_model(FU_LINUX_DEVICE(udev_parent)));
 		return FALSE;
 	}
 
@@ -526,9 +533,11 @@ fu_mediatek_scaler_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* add IDs */
-	vendor_id = g_strdup_printf("PCI:0x%04X", fu_udev_device_get_subsystem_vendor(udev_parent));
+	vendor_id =
+	    g_strdup_printf("PCI:0x%04X",
+			    fu_linux_device_get_subsystem_vendor(FU_LINUX_DEVICE(udev_parent)));
 	fu_device_add_vendor_id(device, vendor_id);
-	fu_device_set_physical_id(device, fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)));
+	fu_device_set_physical_id(device, fu_linux_device_get_device_file(FU_LINUX_DEVICE(device)));
 
 	/* success */
 	return TRUE;

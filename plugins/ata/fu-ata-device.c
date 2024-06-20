@@ -559,13 +559,13 @@ fu_ata_device_command(FuAtaDevice *self,
 	io_hdr.sbp = sb;
 	io_hdr.pack_id = fu_ata_device_tf_to_pack_id(tf);
 	io_hdr.timeout = timeout_ms;
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  SG_IO,
-				  (guint8 *)&io_hdr,
-				  sizeof(io_hdr),
-				  NULL,
-				  FU_ATA_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   SG_IO,
+				   (guint8 *)&io_hdr,
+				   sizeof(io_hdr),
+				   NULL,
+				   FU_ATA_DEVICE_IOCTL_TIMEOUT,
+				   error))
 		return FALSE;
 	g_debug("ATA_%u status=0x%x, host_status=0x%x, driver_status=0x%x",
 		io_hdr.cmd_len,
@@ -901,7 +901,7 @@ fu_ata_device_init(FuAtaDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk");
 	fu_device_add_protocol(FU_DEVICE(self), "org.t13.ata");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
 }
 
 static void

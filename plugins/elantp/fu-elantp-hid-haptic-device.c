@@ -81,13 +81,13 @@ fu_elantp_hid_haptic_device_send_cmd(FuDevice *self,
 	gsize bufsz = rxsz + 3;
 
 	fu_dump_raw(G_LOG_DOMAIN, "SetReport", tx, txsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCSFEATURE(txsz),
-				  (guint8 *)tx,
-				  rxsz,
-				  NULL,
-				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   HIDIOCSFEATURE(txsz),
+				   (guint8 *)tx,
+				   rxsz,
+				   NULL,
+				   FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
+				   error))
 		return FALSE;
 
 	if (rxsz == 0)
@@ -96,13 +96,13 @@ fu_elantp_hid_haptic_device_send_cmd(FuDevice *self,
 	/* GetFeature */
 	buf = g_malloc0(bufsz);
 	buf[0] = tx[0]; /* report number */
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(bufsz),
-				  buf,
-				  bufsz,
-				  NULL,
-				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   HIDIOCGFEATURE(bufsz),
+				   buf,
+				   bufsz,
+				   NULL,
+				   FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
+				   error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, bufsz);
 
@@ -548,8 +548,12 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 
 	/* define the extra instance IDs */
 	udev_parent = FU_UDEV_DEVICE(parent);
-	fu_device_add_instance_u16(device, "VEN", fu_udev_device_get_vendor(udev_parent));
-	fu_device_add_instance_u16(device, "DEV", fu_udev_device_get_model(udev_parent));
+	fu_device_add_instance_u16(device,
+				   "VEN",
+				   fu_linux_device_get_vendor(FU_LINUX_DEVICE(udev_parent)));
+	fu_device_add_instance_u16(device,
+				   "DEV",
+				   fu_linux_device_get_model(FU_LINUX_DEVICE(udev_parent)));
 	fu_device_add_instance_u16(device, "DRIVERIC", self->driver_ic);
 	fu_device_add_instance_u16(device, "MOD", self->module_id);
 	if (!fu_device_build_instance_id(device,

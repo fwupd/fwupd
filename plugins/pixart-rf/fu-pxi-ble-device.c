@@ -58,13 +58,13 @@ G_DEFINE_TYPE(FuPxiBleDevice, fu_pxi_ble_device, FU_TYPE_UDEV_DEVICE)
 static gboolean
 fu_pxi_ble_device_get_raw_info(FuPxiBleDevice *self, struct hidraw_devinfo *info, GError **error)
 {
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGRAWINFO,
-				  (guint8 *)info,
-				  sizeof(*info),
-				  NULL,
-				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
-				  error)) {
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   HIDIOCGRAWINFO,
+				   (guint8 *)info,
+				   sizeof(*info),
+				   NULL,
+				   FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				   error)) {
 		return FALSE;
 	}
 	return TRUE;
@@ -149,13 +149,13 @@ static gboolean
 fu_pxi_ble_device_set_feature_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	GByteArray *req = (GByteArray *)user_data;
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
-				    HIDIOCSFEATURE(req->len),
-				    (guint8 *)req->data,
-				    sizeof(req->len),
-				    NULL,
-				    FU_PXI_DEVICE_IOCTL_TIMEOUT,
-				    error);
+	return fu_linux_device_ioctl(FU_LINUX_DEVICE(device),
+				     HIDIOCSFEATURE(req->len),
+				     (guint8 *)req->data,
+				     sizeof(req->len),
+				     NULL,
+				     FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				     error);
 }
 #endif
 
@@ -182,13 +182,13 @@ static gboolean
 fu_pxi_ble_device_get_feature(FuPxiBleDevice *self, guint8 *buf, guint bufsz, GError **error)
 {
 #ifdef HAVE_HIDRAW_H
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(bufsz),
-				  buf,
-				  bufsz,
-				  NULL,
-				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
-				  error)) {
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   HIDIOCGFEATURE(bufsz),
+				   buf,
+				   bufsz,
+				   NULL,
+				   FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				   error)) {
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "GetFeature", buf, bufsz);
@@ -291,23 +291,23 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 	struct hidraw_report_descriptor rpt_desc = {0x0};
 
 	/* Get Report Descriptor Size */
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGRDESCSIZE,
-				  (guint8 *)&desc_size,
-				  sizeof(desc_size),
-				  NULL,
-				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   HIDIOCGRDESCSIZE,
+				   (guint8 *)&desc_size,
+				   sizeof(desc_size),
+				   NULL,
+				   FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				   error))
 		return FALSE;
 
 	rpt_desc.size = desc_size;
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGRDESC,
-				  (guint8 *)&rpt_desc,
-				  sizeof(rpt_desc),
-				  NULL,
-				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_linux_device_ioctl(FU_LINUX_DEVICE(self),
+				   HIDIOCGRDESC,
+				   (guint8 *)&rpt_desc,
+				   sizeof(rpt_desc),
+				   NULL,
+				   FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				   error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "HID descriptor", rpt_desc.value, rpt_desc.size);
 
@@ -441,11 +441,11 @@ fu_pxi_ble_device_wait_notify(FuPxiBleDevice *self,
 
 	/* skip the wrong report id ,and keep polling until result is correct */
 	while (g_timer_elapsed(timer, NULL) * 1000.f < FU_PXI_BLE_DEVICE_NOTIFY_TIMEOUT_MS) {
-		if (!fu_udev_device_pread(FU_UDEV_DEVICE(self),
-					  port,
-					  res,
-					  (FU_PXI_BLE_DEVICE_NOTIFY_RET_LEN + 1) - port,
-					  error))
+		if (!fu_linux_device_pread(FU_LINUX_DEVICE(self),
+					   port,
+					   res,
+					   (FU_PXI_BLE_DEVICE_NOTIFY_RET_LEN + 1) - port,
+					   error))
 			return FALSE;
 		if (res[0] == self->input_report_id)
 			break;
@@ -1011,8 +1011,8 @@ fu_pxi_ble_device_init(FuPxiBleDevice *self)
 	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x093A");
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
 	fu_device_retry_set_delay(FU_DEVICE(self), 50);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_WRITE);
 	self->retransmit_id = PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
 	self->feature_report_id = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
 	self->input_report_id = PXI_HID_DEV_OTA_INPUT_REPORT_ID;

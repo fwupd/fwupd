@@ -102,8 +102,8 @@ fu_i2c_device_open(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	io_channel = fu_io_channel_unix_new(bus_fd);
-	fu_udev_device_set_io_channel(FU_UDEV_DEVICE(self), io_channel);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IGNORE_NONE);
+	fu_linux_device_set_io_channel(FU_LINUX_DEVICE(self), io_channel);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_IGNORE_NONE);
 #endif
 
 	/* FuUdevDevice->open */
@@ -210,7 +210,7 @@ fu_i2c_device_set_bus_number(FuI2cDevice *self, guint bus_number)
 gboolean
 fu_i2c_device_write(FuI2cDevice *self, const guint8 *buf, gsize bufsz, GError **error)
 {
-	return fu_udev_device_pwrite(FU_UDEV_DEVICE(self), 0x0, buf, bufsz, error);
+	return fu_linux_device_pwrite(FU_LINUX_DEVICE(self), 0x0, buf, bufsz, error);
 }
 
 /**
@@ -229,7 +229,7 @@ fu_i2c_device_write(FuI2cDevice *self, const guint8 *buf, gsize bufsz, GError **
 gboolean
 fu_i2c_device_read(FuI2cDevice *self, guint8 *buf, gsize bufsz, GError **error)
 {
-	return fu_udev_device_pread(FU_UDEV_DEVICE(self), 0x0, buf, bufsz, error);
+	return fu_linux_device_pread(FU_LINUX_DEVICE(self), 0x0, buf, bufsz, error);
 }
 
 static void
@@ -249,7 +249,7 @@ fu_i2c_device_incorporate(FuDevice *device, FuDevice *donor)
 static void
 fu_i2c_device_init(FuI2cDevice *self)
 {
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_linux_device_add_flag(FU_LINUX_DEVICE(self), FU_LINUX_DEVICE_FLAG_OPEN_READ);
 }
 
 static void

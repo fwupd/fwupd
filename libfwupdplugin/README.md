@@ -47,9 +47,9 @@ Remember: Plugins should be upstream!
 
 ## 1.8.2
 
-* `fu_udev_device_pread_full()`: Use `fu_udev_device_pread()` instead -- as the latter now specifies the buffer length.
-* `fu_udev_device_pread_full()`: Use `fu_udev_device_pwrite()` instead -- as the latter now specifies the buffer length.
-* `fu_udev_device_ioctl_full()`: Use `fu_udev_device_ioctl()` instead -- as the latter now always specifies the timeout.
+* `fu_linux_device_pread_full()`: Use `fu_linux_device_pread()` instead -- as the latter now specifies the buffer length.
+* `fu_linux_device_pread_full()`: Use `fu_udev_device_pwrite()` instead -- as the latter now specifies the buffer length.
+* `fu_linux_device_ioctl_full()`: Use `fu_linux_device_ioctl()` instead -- as the latter now always specifies the timeout.
 * `fu_udev_device_new_full()`: Use `fu_udev_device_new()` instead -- as the latter always specifies the context.
 * `fu_usb_device_new_full()`: Use `fu_usb_device_new()` instead -- as the latter always specifies the context.
 * `fu_device_new_with_context()`: Use `fu_device_new()` instead -- as the latter always specifies the context.
@@ -118,7 +118,7 @@ Remember: Plugins should be upstream!
 
 * `fu_device_build_instance_id_quirk": rename to`fu_device_build_instance_id_full()`
 * `fu_smbios_get_data()`: Now returns a array of `GByte`s
-* `fu_udev_device_get_fd()`: Use `fu_udev_device_get_io_channel()` instead
+* `fu_udev_device_get_fd()`: Use `fu_linux_device_get_io_channel()` instead
 * `fu_device_emit_request()`: Add `FuProgress` and `GError`
 * `fu_device_set_version_from_uint16()`: Use `fu_version_from_uint16()` from `FuDeviceClass->convert_version` instead
 * `fu_device_set_version_from_uint24()`: Use `fu_version_from_uint24()` from `FuDeviceClass->convert_version` instead

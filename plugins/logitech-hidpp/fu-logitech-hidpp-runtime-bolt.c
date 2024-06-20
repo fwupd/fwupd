@@ -409,11 +409,11 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 			fu_device_add_instance_u16(
 			    FU_DEVICE(radio),
 			    "VEN",
-			    fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)));
+			    fu_linux_device_get_vendor(FU_LINUX_DEVICE(device)));
 			fu_device_add_instance_u16(
 			    FU_DEVICE(radio),
 			    "DEV",
-			    fu_udev_device_get_model(FU_UDEV_DEVICE(device)));
+			    fu_linux_device_get_model(FU_LINUX_DEVICE(device)));
 			fu_device_add_instance_u8(FU_DEVICE(radio), "ENT", msg->data[0]);
 			fu_device_set_physical_id(FU_DEVICE(radio),
 						  fu_device_get_physical_id(device));
