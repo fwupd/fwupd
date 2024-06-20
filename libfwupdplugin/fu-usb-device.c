@@ -313,7 +313,6 @@ fu_usb_device_add_interface(FuUsbDevice *device, guint8 number)
 static gboolean
 fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 {
-	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	gsize sz = 0;
 	guint16 value = 0x29;
 	guint8 data[0x0c] = {0x0};
@@ -322,19 +321,19 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 	/* longer descriptor for SuperSpeed */
 	if (fu_usb_device_get_spec(self) >= 0x0300)
 		value = 0x2a;
-	if (!g_usb_device_control_transfer(priv->usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0x06, /* LIBUSB_REQUEST_GET_DESCRIPTOR */
-					   value << 8,
-					   0x00,
-					   data,
-					   sizeof(data),
-					   &sz,
-					   1000,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(self,
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    0x06, /* LIBUSB_REQUEST_GET_DESCRIPTOR */
+					    value << 8,
+					    0x00,
+					    data,
+					    sizeof(data),
+					    &sz,
+					    1000,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to get USB descriptor: ");
 		return FALSE;
 	}
@@ -543,7 +542,7 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 	/* get serial number */
 	if (!fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER) &&
 	    fu_device_get_serial(device) == NULL) {
-		idx = g_usb_device_get_serial_number_index(priv->usb_device);
+		idx = fu_usb_device_get_serial_number_index(self);
 		if (idx != 0x00) {
 			g_autofree gchar *tmp = NULL;
 			g_autoptr(GError) error_local = NULL;
@@ -584,7 +583,7 @@ fu_usb_device_ready(FuDevice *device, GError **error)
 		return TRUE;
 
 	/* get the interface GUIDs */
-	intfs = g_usb_device_get_interfaces(priv->usb_device, error);
+	intfs = fu_usb_device_get_interfaces(self, error);
 	if (intfs == NULL) {
 		g_prefix_error(error, "failed to get interfaces: ");
 		return FALSE;
@@ -833,7 +832,7 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* add the interface GUIDs */
-	intfs = g_usb_device_get_interfaces(priv->usb_device, error);
+	intfs = fu_usb_device_get_interfaces(self, error);
 	if (intfs == NULL) {
 		g_prefix_error(error, "failed to get interfaces: ");
 		return FALSE;
@@ -962,7 +961,7 @@ fu_usb_device_get_release(FuUsbDevice *self)
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), 0x0000);
 	if (priv->usb_device == NULL)
 		return 0x0;
-	return g_usb_device_get_release(priv->usb_device);
+	return g_usb_device_get_release(priv->usb_device); /* nocheck */
 #else
 	return 0x0;
 #endif
@@ -1034,7 +1033,7 @@ fu_usb_device_get_device_class(FuUsbDevice *self)
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), 0x0);
 	if (priv->usb_device == NULL)
 		return 0x0;
-	return g_usb_device_get_device_class(priv->usb_device);
+	return g_usb_device_get_device_class(priv->usb_device); /* nocheck */
 #else
 	return 0x0;
 #endif
@@ -1241,7 +1240,7 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
 
 	/* just proxy to GUsb, but longer term use the libusb_device directly */
 #ifdef HAVE_GUSB
-	if (!g_usb_device_control_transfer(priv->usb_device,
+	if (!g_usb_device_control_transfer(priv->usb_device, /* nocheck */
 					   direction,
 					   request_type,
 					   recipient,
@@ -1307,7 +1306,7 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
 
 	/* just proxy to GUsb, but longer term use the libusb_device directly */
 #ifdef HAVE_GUSB
-	if (!g_usb_device_bulk_transfer(priv->usb_device,
+	if (!g_usb_device_bulk_transfer(priv->usb_device, /* nocheck */
 					endpoint,
 					data,
 					length,
@@ -1365,7 +1364,7 @@ fu_usb_device_interrupt_transfer(FuUsbDevice *self,
 
 	/* just proxy to GUsb, but longer term use the libusb_device directly */
 #ifdef HAVE_GUSB
-	if (!g_usb_device_interrupt_transfer(priv->usb_device,
+	if (!g_usb_device_interrupt_transfer(priv->usb_device, /* nocheck */
 					     endpoint,
 					     data,
 					     length,
@@ -1414,7 +1413,7 @@ fu_usb_device_reset(FuUsbDevice *self, GError **error)
 
 	/* just proxy to GUsb, but longer term use the libusb_device directly */
 #ifdef HAVE_GUSB
-	if (!g_usb_device_reset(priv->usb_device, error)) {
+	if (!g_usb_device_reset(priv->usb_device, error)) { /* nocheck */
 		fu_error_convert(error);
 		return FALSE;
 	}
@@ -1453,7 +1452,7 @@ fu_usb_device_get_interfaces(FuUsbDevice *self, GError **error)
 
 	/* just proxy to GUsb, but longer term use the libusb_device directly */
 #ifdef HAVE_GUSB
-	ifaces = g_usb_device_get_interfaces(priv->usb_device, error);
+	ifaces = g_usb_device_get_interfaces(priv->usb_device, error); /* nocheck */
 	if (ifaces == NULL) {
 		fu_error_convert(error);
 		return NULL;
@@ -1510,8 +1509,11 @@ fu_usb_device_get_interface(FuUsbDevice *self,
 
 	/* just proxy to GUsb, but longer term use the libusb_device directly */
 #ifdef HAVE_GUSB
-	intf =
-	    g_usb_device_get_interface(priv->usb_device, class_id, subclass_id, protocol_id, error);
+	intf = g_usb_device_get_interface(priv->usb_device, /* nocheck */
+					  class_id,
+					  subclass_id,
+					  protocol_id,
+					  error);
 	if (intf == NULL) {
 		fu_error_convert(error);
 		return NULL;
@@ -1554,7 +1556,8 @@ fu_usb_device_get_string_descriptor(FuUsbDevice *self, guint8 desc_index, GError
 
 		/* just proxy to GUsb, but longer term use the libusb_device directly */
 #ifdef HAVE_GUSB
-	value = g_usb_device_get_string_descriptor(priv->usb_device, desc_index, error);
+	value =
+	    g_usb_device_get_string_descriptor(priv->usb_device, desc_index, error); /* nocheck */
 	if (value == NULL) {
 		fu_error_convert(error);
 		return NULL;
@@ -1630,7 +1633,7 @@ fu_usb_device_get_string_descriptor_bytes_full(FuUsbDevice *self,
 
 		/* just proxy to GUsb, but longer term use the libusb_device directly */
 #ifdef HAVE_GUSB
-	blob = g_usb_device_get_string_descriptor_bytes_full(priv->usb_device,
+	blob = g_usb_device_get_string_descriptor_bytes_full(priv->usb_device, /* nocheck */
 							     desc_index,
 							     langid,
 							     length,
@@ -1678,7 +1681,7 @@ fu_usb_device_claim_interface(FuUsbDevice *self,
 
 #ifdef HAVE_GUSB
 	/* just proxy to GUsb, but longer term use the libusb_device directly */
-	if (!g_usb_device_claim_interface(priv->usb_device, iface, flags, error)) {
+	if (!g_usb_device_claim_interface(priv->usb_device, iface, flags, error)) { /* nocheck */
 		fu_error_convert(error);
 		return FALSE;
 	}
@@ -1719,7 +1722,7 @@ fu_usb_device_release_interface(FuUsbDevice *self,
 
 #ifdef HAVE_GUSB
 	/* just proxy to GUsb, but longer term use the libusb_device directly */
-	if (!g_usb_device_release_interface(priv->usb_device, iface, flags, error)) {
+	if (!g_usb_device_release_interface(priv->usb_device, iface, flags, error)) { /* nocheck */
 		fu_error_convert(error);
 		return FALSE;
 	}
@@ -1754,7 +1757,7 @@ fu_usb_device_get_configuration_index(FuUsbDevice *self)
 
 #ifdef HAVE_GUSB
 	/* just proxy to GUsb, but longer term use the libusb_device directly */
-	return g_usb_device_get_configuration_index(priv->usb_device);
+	return g_usb_device_get_configuration_index(priv->usb_device); /* nocheck */
 #else
 	return 0x0;
 #endif
@@ -1783,7 +1786,7 @@ fu_usb_device_get_serial_number_index(FuUsbDevice *self)
 
 #ifdef HAVE_GUSB
 	/* just proxy to GUsb, but longer term use the libusb_device directly */
-	return g_usb_device_get_serial_number_index(priv->usb_device);
+	return g_usb_device_get_serial_number_index(priv->usb_device); /* nocheck */
 #else
 	return 0x0;
 #endif
@@ -1824,7 +1827,7 @@ fu_usb_device_get_custom_index(FuUsbDevice *self,
 
 #ifdef HAVE_GUSB
 	/* just proxy to GUsb, but longer term use the libusb_device directly */
-	idx = g_usb_device_get_custom_index(priv->usb_device,
+	idx = g_usb_device_get_custom_index(priv->usb_device, /* nocheck */
 					    class_id,
 					    subclass_id,
 					    protocol_id,
@@ -1867,7 +1870,7 @@ fu_usb_device_set_interface_alt(FuUsbDevice *self, guint8 iface, guint8 alt, GEr
 
 #ifdef HAVE_GUSB
 	/* just proxy to GUsb, but longer term use the libusb_device directly */
-	if (!g_usb_device_set_interface_alt(priv->usb_device, iface, alt, error)) {
+	if (!g_usb_device_set_interface_alt(priv->usb_device, iface, alt, error)) { /* nocheck */
 		fu_error_convert(error);
 		return FALSE;
 	}
