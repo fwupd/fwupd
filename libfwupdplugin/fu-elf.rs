@@ -47,6 +47,7 @@ struct FuStructElfProgramHeader64le {
 }
 
 #[repr(u32le)]
+#[derive(ToString)]
 enum FuElfSectionHeaderType {
     Null = 0x0,
     Progbits = 0x1,
