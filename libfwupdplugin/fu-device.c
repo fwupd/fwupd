@@ -5563,17 +5563,6 @@ fu_device_get_instance_str(FuDevice *self, const gchar *key)
 	return g_hash_table_lookup(priv->instance_hash, key);
 }
 
-/* check whether @gtype_child is a descendant of @gtype_parent */
-static gboolean
-_g_type_is_a_recursive(GType gtype_child, GType gtype_parent)
-{
-	for (GType gtype = gtype_parent; gtype != G_TYPE_INVALID; gtype = g_type_parent(gtype)) {
-		if (gtype == gtype_child)
-			return TRUE;
-	}
-	return FALSE;
-}
-
 static void
 fu_device_incorporate_subclasses(FuDevice *self, FuDevice *donor)
 {
@@ -5581,20 +5570,21 @@ fu_device_incorporate_subclasses(FuDevice *self, FuDevice *donor)
 	g_autoptr(GList) device_class_list = NULL;
 
 	/* run every unique ->incorporate() in each subclass */
-	for (GType gtype = G_OBJECT_TYPE(self); gtype != G_TYPE_INVALID;
+	for (GType gtype = G_OBJECT_TYPE(self); gtype != FWUPD_TYPE_DEVICE;
 	     gtype = g_type_parent(gtype)) {
 		FuDeviceClass *device_class = g_type_class_peek(gtype);
-		if (gtype == FU_TYPE_DEVICE)
-			break;
-		if (!_g_type_is_a_recursive(gtype, G_OBJECT_TYPE(donor))) {
-			g_debug("not calling ->incorporate(%s, %s)",
-				g_type_name(gtype),
-				G_OBJECT_TYPE_NAME(donor));
-		} else {
-			g_debug("calling ->incorporate(%s, %s)",
-				g_type_name(gtype),
-				G_OBJECT_TYPE_NAME(donor));
-			device_class_list = g_list_prepend(device_class_list, device_class);
+		for (GType gtype_donor = G_OBJECT_TYPE(donor); gtype_donor != FWUPD_TYPE_DEVICE;
+		     gtype_donor = g_type_parent(gtype_donor)) {
+			if (gtype == gtype_donor) {
+				g_debug("calling incorporate on %s->%s",
+					g_type_name(gtype_donor),
+					g_type_name(gtype));
+				device_class_list = g_list_prepend(device_class_list, device_class);
+			} else {
+				g_debug("not calling incorporate on %s->%s",
+					g_type_name(gtype_donor),
+					g_type_name(gtype));
+			}
 		}
 	}
 	for (GList *l = device_class_list; l != NULL; l = l->next) {
