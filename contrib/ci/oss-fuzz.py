@@ -398,6 +398,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("cab"),
         Fuzzer("dfuse"),
         Fuzzer("edid", pattern="edid"),
+        Fuzzer("elf"),
         Fuzzer("fdt"),
         Fuzzer("fit"),
         Fuzzer("fmap"),
