@@ -1,0 +1,10 @@
+<firmware gtype="FuElfFirmware">
+  <firmware>
+    <id>.text</id>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+  <firmware>
+    <id>.rodata</id>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+</firmware>

@@ -37,6 +37,7 @@ install_data([
     'efi-section.builder.xml',
     'efi-signature-list.builder.xml',
     'efi-volume.builder.xml',
+    'elf.builder.xml',
     'fdt.builder.xml',
     'fit.builder.xml',
     'fmap.builder.xml',
