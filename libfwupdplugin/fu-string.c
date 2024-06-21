@@ -16,26 +16,31 @@
 #include "fu-string.h"
 
 /**
- * fu_strtoull:
+ * fu_strtoull_full:
  * @str: a string, e.g. `0x1234`
  * @value: (out) (nullable): parsed value
  * @min: minimum acceptable value, typically 0
  * @max: maximum acceptable value, typically G_MAXUINT64
+ * @base: default log base, usually `10` or `16`
  * @error: (nullable): optional return location for an error
  *
- * Converts a string value to an integer. Values are assumed base 10, unless
- * prefixed with "0x" where they are parsed as base 16.
+ * Converts a string value to an integer. If the @value is prefixed with `0x` then the base is
+ * set to 16 automatically.
  *
  * Returns: %TRUE if the value was parsed correctly, or %FALSE for error
  *
- * Since: 1.8.2
+ * Since: 2.0.0
  **/
 gboolean
-fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError **error)
+fu_strtoull_full(const gchar *str,
+		 guint64 *value,
+		 guint64 min,
+		 guint64 max,
+		 guint base,
+		 GError **error)
 {
 	gchar *endptr = NULL;
 	guint64 value_tmp;
-	guint base = 10;
 
 	/* sanity check */
 	if (str == NULL) {
@@ -46,7 +51,7 @@ fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError *
 		return FALSE;
 	}
 
-	/* detect hex */
+	/* auto-detect hex */
 	if (g_str_has_prefix(str, "0x")) {
 		str += 2;
 		base = 16;
@@ -93,6 +98,27 @@ fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError *
 	if (value != NULL)
 		*value = value_tmp;
 	return TRUE;
+}
+
+/**
+ * fu_strtoull:
+ * @str: a string, e.g. `0x1234`
+ * @value: (out) (nullable): parsed value
+ * @min: minimum acceptable value, typically 0
+ * @max: maximum acceptable value, typically G_MAXUINT64
+ * @error: (nullable): optional return location for an error
+ *
+ * Converts a string value to an integer. Values are assumed base 10, unless
+ * prefixed with "0x" where they are parsed as base 16.
+ *
+ * Returns: %TRUE if the value was parsed correctly, or %FALSE for error
+ *
+ * Since: 1.8.2
+ **/
+gboolean
+fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError **error)
+{
+	return fu_strtoull_full(str, value, min, max, 10, error);
 }
 
 /**

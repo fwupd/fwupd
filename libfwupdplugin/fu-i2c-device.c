@@ -17,6 +17,7 @@
 #endif
 
 #include "fu-i2c-device.h"
+#include "fu-linux-device-private.h"
 #include "fu-string.h"
 #include "fu-udev-device-private.h"
 

@@ -158,14 +158,34 @@ fu_linux_device_remove_flag(FuLinuxDevice *self, FuLinuxDeviceFlags flag) G_GNUC
 
 FuIOChannel *
 fu_linux_device_get_io_channel(FuLinuxDevice *self) G_GNUC_NON_NULL(1);
-void
-fu_linux_device_set_io_channel(FuLinuxDevice *self, FuIOChannel *io_channel) G_GNUC_NON_NULL(1, 2);
 
+gchar *
+fu_linux_device_read_attr(FuLinuxDevice *self,
+			  const gchar *attribute,
+			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_linux_device_write_attr(FuLinuxDevice *self,
 			   const gchar *attribute,
 			   const gchar *val,
 			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
+gchar *
+fu_linux_device_read_prop(FuLinuxDevice *self,
+			  const gchar *key,
+			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+
+FuLinuxDevice *
+fu_linux_device_get_parent_with_subsystem(FuLinuxDevice *self,
+					  const gchar *subsystem,
+					  GError **error) G_GNUC_NON_NULL(1);
+
+gboolean
+fu_linux_device_set_physical_id(FuLinuxDevice *self,
+				const gchar *subsystems,
+				GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+gboolean
+fu_linux_device_set_logical_id(FuLinuxDevice *self,
+			       const gchar *subsystem,
+			       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 
 gboolean
 fu_linux_device_ioctl(FuLinuxDevice *self,

@@ -27,6 +27,7 @@
 #include "fu-dummy-efivars.h"
 #include "fu-efi-lz77-decompressor.h"
 #include "fu-efivars-private.h"
+#include "fu-linux-device-private.h"
 #include "fu-lzma-common.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
@@ -4694,6 +4695,77 @@ fu_progress_percentage_changed_cb(FuProgress *progress, guint percentage, gpoint
 }
 
 static void
+fu_linux_device_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *value = NULL;
+	g_autofree gchar *value2 = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuLinuxDevice) linux_device = NULL;
+	g_autoptr(FuLinuxDevice) linux_device2 = NULL;
+	g_autoptr(FuLinuxDevice) linux_device3 = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fn = g_build_filename("../libfwupdplugin/tests",
+			      "sys",
+			      "devices",
+			      "pci0000:00",
+			      "0000:00:14.0",
+			      "usb1",
+			      "1-1",
+			      "1-1:1.1",
+			      "0003:093A:2862.0076",
+			      NULL);
+	linux_device = fu_linux_device_new(ctx, fn);
+	value = fu_linux_device_read_prop(linux_device, "HID_PHYS", &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(value, ==, "usb-0000:00:14.0-1/input1");
+	value2 = fu_linux_device_read_attr(linux_device, "modalias", &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(value2, ==, "hid:b0003g0001v0000093Ap00002862\n");
+
+	ret = fu_device_probe(FU_DEVICE(linux_device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_linux_device_get_subsystem(linux_device), ==, "hid");
+	g_assert_cmpstr(fu_linux_device_get_driver(linux_device), ==, "hid-generic");
+	g_assert_cmpint(fu_linux_device_get_vendor(linux_device), ==, 0x093a);
+	g_assert_cmpint(fu_linux_device_get_model(linux_device), ==, 0x2862);
+	g_assert_cmpint(fu_linux_device_get_revision(linux_device), ==, 0x0);
+
+	/* get child, unspecified */
+	linux_device2 = fu_linux_device_get_parent_with_subsystem(linux_device, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(linux_device2);
+	g_assert_cmpstr(fu_linux_device_get_subsystem(linux_device2), ==, "usb");
+
+	/* get child, initially unprobed */
+	linux_device3 = fu_linux_device_get_parent_with_subsystem(linux_device, "usb", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(linux_device3);
+	g_assert_cmpstr(fu_linux_device_get_subsystem(linux_device3), ==, "usb");
+	g_assert_cmpstr(fu_linux_device_get_driver(linux_device3), ==, NULL);
+	ret = fu_device_probe(FU_DEVICE(linux_device3), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_linux_device_get_subsystem(linux_device3), ==, "usb");
+	g_assert_cmpstr(fu_linux_device_get_driver(linux_device3), ==, "usb");
+
+	/* set physical and logical IDs */
+	ret = fu_linux_device_set_physical_id(linux_device,
+					      "notgoing,usb:usb_device,toexist",
+					      &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_device_get_physical_id(FU_DEVICE(linux_device)), ==, "bus/usb/001/024");
+	ret = fu_linux_device_set_logical_id(linux_device, "hid", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_device_get_logical_id(FU_DEVICE(linux_device)), ==, "");
+}
+
+static void
 fu_progress_func(void)
 {
 	FuProgressHelper helper = {0};
@@ -5726,6 +5798,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);
 	if (g_test_slow())
 		g_test_add_func("/fwupd/progress", fu_progress_func);
+	g_test_add_func("/fwupd/linux-device", fu_linux_device_func);
 	g_test_add_func("/fwupd/progress{scaling}", fu_progress_scaling_func);
 	g_test_add_func("/fwupd/progress{child}", fu_progress_child_func);
 	g_test_add_func("/fwupd/progress{child-finished}", fu_progress_child_finished);

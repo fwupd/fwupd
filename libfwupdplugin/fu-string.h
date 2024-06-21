@@ -15,6 +15,13 @@ fu_strpassmask(const gchar *str) G_GNUC_NON_NULL(1);
 gboolean
 fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError **error);
 gboolean
+fu_strtoull_full(const gchar *str,
+		 guint64 *value,
+		 guint64 min,
+		 guint64 max,
+		 guint base,
+		 GError **error);
+gboolean
 fu_strtoll(const gchar *str, gint64 *value, gint64 min, gint64 max, GError **error);
 gboolean
 fu_strtobool(const gchar *str, gboolean *value, GError **error);

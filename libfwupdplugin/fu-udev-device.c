@@ -396,7 +396,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* number */
-	{
+	if (g_udev_device_get_number(priv->udev_device) != NULL) {
 		guint64 tmp64 = 0;
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_strtoull(g_udev_device_get_number(priv->udev_device),
@@ -1371,7 +1371,6 @@ fu_udev_device_finalize(GObject *object)
 static void
 fu_udev_device_init(FuUdevDevice *self)
 {
-	fu_device_set_acquiesce_delay(FU_DEVICE(self), 2500);
 }
 
 static void
