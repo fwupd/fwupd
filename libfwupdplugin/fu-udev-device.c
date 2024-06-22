@@ -135,47 +135,6 @@ fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "UdevDeviceFlags", priv->flags);
 }
 
-static gboolean
-fu_udev_device_ensure_bind_id(FuUdevDevice *self, GError **error)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	const gchar *subsystem = fu_linux_device_get_subsystem(FU_LINUX_DEVICE(self));
-
-	/* sanity check */
-	if (fu_linux_device_get_bind_id(FU_LINUX_DEVICE(self)) != NULL)
-		return TRUE;
-
-#ifdef HAVE_GUDEV
-	/* automatically set the bind ID from the subsystem */
-	if (g_strcmp0(subsystem, "pci") == 0) {
-		fu_linux_device_set_bind_id(
-		    FU_LINUX_DEVICE(self),
-		    g_udev_device_get_property(priv->udev_device, "PCI_SLOT_NAME"));
-		return TRUE;
-	}
-	if (g_strcmp0(subsystem, "hid") == 0) {
-		fu_linux_device_set_bind_id(
-		    FU_LINUX_DEVICE(self),
-		    g_udev_device_get_property(priv->udev_device, "HID_PHYS"));
-		return TRUE;
-	}
-	if (g_strcmp0(subsystem, "usb") == 0) {
-		g_autofree gchar *bind_id =
-		    g_path_get_basename(g_udev_device_get_sysfs_path(priv->udev_device));
-		fu_linux_device_set_bind_id(FU_LINUX_DEVICE(self), bind_id);
-		return TRUE;
-	}
-#endif
-
-	/* nothing found automatically */
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "cannot derive bind-id from subsystem %s",
-		    subsystem);
-	return FALSE;
-}
-
 #ifdef HAVE_GUDEV
 static const gchar *
 fu_linux_device_get_vendor_fallback(GUdevDevice *udev_device)
@@ -409,8 +368,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		fu_linux_device_set_number(FU_LINUX_DEVICE(self), tmp64);
 	}
 
-	fu_udev_device_ensure_bind_id(self, NULL);
-
 	/* add firmware_id */
 	if (g_strcmp0(g_udev_device_get_subsystem(priv->udev_device), "serio") == 0) {
 		if (!fu_udev_device_probe_serio(self, error))
@@ -549,37 +506,6 @@ fu_udev_device_set_dev(FuUdevDevice *self, GUdevDevice *udev_device)
 	if (summary != NULL)
 		fu_device_set_summary(FU_DEVICE(self), summary);
 #endif
-}
-
-/**
- * fu_udev_device_get_slot_depth:
- * @self: a #FuUdevDevice
- * @subsystem: a subsystem
- *
- * Determine how far up a chain a given device is
- *
- * Returns: unsigned integer
- *
- * Since: 1.2.4
- **/
-guint
-fu_udev_device_get_slot_depth(FuUdevDevice *self, const gchar *subsystem)
-{
-#ifdef HAVE_GUDEV
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(self));
-	g_autoptr(GUdevDevice) device_tmp = NULL;
-
-	device_tmp = g_udev_device_get_parent_with_subsystem(udev_device, subsystem, NULL);
-	if (device_tmp == NULL)
-		return 0;
-	for (guint i = 0; i < 0xff; i++) {
-		g_autoptr(GUdevDevice) parent = g_udev_device_get_parent(device_tmp);
-		if (parent == NULL)
-			return i;
-		g_set_object(&device_tmp, parent);
-	}
-#endif
-	return 0;
 }
 
 static void

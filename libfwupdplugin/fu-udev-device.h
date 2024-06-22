@@ -45,8 +45,6 @@ GUdevDevice *
 fu_udev_device_get_dev(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_udev_device_set_dev(FuUdevDevice *self, GUdevDevice *udev_device) G_GNUC_NON_NULL(1);
-guint
-fu_udev_device_get_slot_depth(FuUdevDevice *self, const gchar *subsystem) G_GNUC_NON_NULL(1);
 gboolean
 fu_udev_device_set_physical_id(FuUdevDevice *self,
 			       const gchar *subsystems,

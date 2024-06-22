@@ -4717,6 +4717,10 @@ fu_linux_device_func(void)
 			      "1-1:1.1",
 			      "0003:093A:2862.0076",
 			      NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_test_skip("skipping sysfs tests for installed-tests");
+		return;
+	}
 	linux_device = fu_linux_device_new(ctx, fn);
 	value = fu_linux_device_read_prop(linux_device, "HID_PHYS", &error);
 	g_assert_no_error(error);

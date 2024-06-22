@@ -305,7 +305,7 @@ fu_nvme_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* look at the PCI depth to work out if in an external enclosure */
-	//	self->pci_depth = fu_linux_device_get_slot_depth(FU_LINUX_DEVICE(device), "pci");
+	self->pci_depth = fu_linux_device_get_subsystem_depth(FU_LINUX_DEVICE(device), "pci");
 	if (self->pci_depth <= 2) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);

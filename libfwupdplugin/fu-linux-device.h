@@ -207,3 +207,6 @@ fu_linux_device_pread(FuLinuxDevice *self, goffset port, guint8 *buf, gsize bufs
 gboolean
 fu_linux_device_seek(FuLinuxDevice *self, goffset offset, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
+
+guint
+fu_linux_device_get_subsystem_depth(FuLinuxDevice *self, const gchar *subsystem) G_GNUC_NON_NULL(1);

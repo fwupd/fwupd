@@ -897,9 +897,40 @@ fu_linux_device_pwrite(FuLinuxDevice *self,
 }
 
 static gboolean
+fu_linux_device_ensure_bind_id(FuLinuxDevice *self, GError **error)
+{
+	FuLinuxDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* sanity check */
+	if (priv->bind_id != NULL)
+		return TRUE;
+
+	/* automatically set the bind ID from the subsystem */
+	if (g_strcmp0(priv->subsystem, "pci") == 0) {
+		priv->bind_id = fu_linux_device_read_prop(self, "PCI_SLOT_NAME", error);
+		return priv->bind_id != NULL;
+	}
+	if (g_strcmp0(priv->subsystem, "hid") == 0) {
+		priv->bind_id = fu_linux_device_read_prop(self, "HID_PHYS", error);
+		return priv->bind_id != NULL;
+	}
+	if (g_strcmp0(priv->subsystem, "usb") == 0) {
+		priv->bind_id = g_path_get_basename(fu_linux_device_get_sysfs_path(self));
+		return TRUE;
+	}
+
+	/* nothing found automatically */
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "cannot derive bind-id from subsystem %s",
+		    priv->subsystem);
+	return FALSE;
+}
+
+static gboolean
 fu_linux_device_unbind_driver(FuDevice *device, GError **error)
 {
-#ifdef HAVE_GUDEV
 	FuLinuxDevice *self = FU_LINUX_DEVICE(device);
 	FuLinuxDevicePrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *fn = NULL;
@@ -920,9 +951,8 @@ fu_linux_device_unbind_driver(FuDevice *device, GError **error)
 		return TRUE;
 
 	/* write bus ID to file */
-	//	if (!fu_linux_device_ensure_bind_id(self, error))
-	//		return FALSE;
-	// FIXME
+	if (!fu_linux_device_ensure_bind_id(self, error))
+		return FALSE;
 	file = g_file_new_for_path(fn);
 	stream =
 	    G_OUTPUT_STREAM(g_file_replace(file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error));
@@ -934,13 +964,6 @@ fu_linux_device_unbind_driver(FuDevice *device, GError **error)
 					 NULL,
 					 NULL,
 					 error);
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "driver unbinding not supported");
-	return FALSE;
-#endif
 }
 
 static gboolean
@@ -979,9 +1002,8 @@ fu_linux_device_bind_driver(FuDevice *device,
 	}
 
 	/* write bus ID to file */
-	//	if (!fu_linux_device_ensure_bind_id(self, error))
-	//		return FALSE;
-	// FIXME
+	if (!fu_linux_device_ensure_bind_id(self, error))
+		return FALSE;
 	if (priv->bind_id == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -1001,6 +1023,37 @@ fu_linux_device_bind_driver(FuDevice *device,
 					 NULL,
 					 NULL,
 					 error);
+}
+
+/**
+ * fu_linux_device_get_subsystem_depth:
+ * @self: a #FuLinuxDevice
+ * @subsystem: a subsystem
+ *
+ * Determine how far deep an initial subsystem is.
+ * This allows the caller to work out if the device is "internal" or layered on top of a different
+ * transport, for instance NVME-over-fabric or PCI-over-Thunderbolt.
+ *
+ * Returns: unsigned integer
+ *
+ * Since: 2.0.0
+ **/
+guint
+fu_linux_device_get_subsystem_depth(FuLinuxDevice *self, const gchar *subsystem)
+{
+	g_autoptr(FuLinuxDevice) device_tmp = NULL;
+
+	device_tmp = fu_linux_device_get_parent_with_subsystem(self, subsystem, NULL);
+	if (device_tmp == NULL)
+		return 0;
+	for (guint i = 0;; i++) {
+		g_autoptr(FuLinuxDevice) parent =
+		    fu_linux_device_get_parent_with_subsystem(device_tmp, NULL, NULL);
+		if (parent == NULL)
+			return i;
+		g_set_object(&device_tmp, parent);
+	}
+	return 0;
 }
 
 /**
