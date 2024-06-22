@@ -635,19 +635,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 						 subsystem,
 						 "DRIVER",
 						 NULL);
-
-		/* add the modalias */
-		fu_device_add_instance_strsafe(
-		    device,
-		    "MODALIAS",
-		    g_udev_device_get_property(priv->udev_device, "MODALIAS"));
-		fu_device_build_instance_id_full(device,
-						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
-						 NULL,
-						 subsystem,
-						 "MODALIAS",
-						 NULL);
 	}
 
 	/* add firmware_id */
