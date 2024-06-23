@@ -378,14 +378,11 @@ fu_strsplit_buffer_drain(GByteArray *buf,
 		/* sanity check is valid UTF-8 */
 		g_string_append_len(token, (const gchar *)buf->data, offset);
 		if (!g_utf8_validate_len(token->str, token->len, NULL)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "text must be UTF-8");
-			return FALSE;
+			g_debug("ignoring invalid UTF-8, got: %s", token->str);
+		} else {
+			if (!helper->callback(token, helper->token_idx++, helper->user_data, error))
+				return FALSE;
 		}
-		if (!helper->callback(token, helper->token_idx++, helper->user_data, error))
-			return FALSE;
 		if (helper->detected_nul) {
 			g_byte_array_set_size(buf, 0);
 			break;
