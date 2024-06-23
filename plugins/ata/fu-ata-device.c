@@ -400,7 +400,7 @@ fu_ata_device_parse_id(FuAtaDevice *self, const guint8 *buf, gsize sz, GError **
 	self->oui = ((guint32)(id[108] & 0x0fff)) << 12 | ((guint32)(id[109] & 0xfff0)) >> 4;
 	if (self->oui > 0x0) {
 		g_autofree gchar *tmp = NULL;
-		tmp = g_strdup_printf("OUI\\%06x", self->oui);
+		tmp = g_strdup_printf("OUI\\VID_%06x", self->oui);
 		fu_device_add_instance_id_full(device, tmp, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 		has_oui_quirk = fu_device_get_vendor(FU_DEVICE(self)) != NULL;
 	}
