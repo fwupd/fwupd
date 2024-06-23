@@ -263,7 +263,7 @@ fu_input_stream_read_u64(GInputStream *stream,
 GByteArray *
 fu_input_stream_read_byte_array(GInputStream *stream, gsize offset, gsize count, GError **error)
 {
-	guint8 tmp[0x8000] = {0x0};
+	guint8 tmp[0x8000];
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
 
