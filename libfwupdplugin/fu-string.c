@@ -353,14 +353,15 @@ typedef struct {
 static gboolean
 fu_strsplit_buffer_drain(GByteArray *buf,
 			 FuStrsplitHelper *helper,
-			 gboolean is_last,
 			 GError **error)
 {
-	while (buf->len > 0) {
+	gsize buf_offset = 0;
+	while (buf_offset < buf->len) {
 		gsize offset;
 		g_autoptr(GString) token = g_string_new(NULL);
 
-		for (offset = 0; offset < buf->len; offset++) {
+		/* find first match in buffer, starting at the buffer offset */
+		for (offset = buf_offset; offset < buf->len; offset++) {
 			if (buf->data[offset] == 0x0) {
 				helper->detected_nul = TRUE;
 				break;
@@ -371,12 +372,14 @@ fu_strsplit_buffer_drain(GByteArray *buf,
 				break;
 		}
 
-		/* no token found */
-		if (offset == buf->len && !is_last)
+		/* no token found, keep going */
+		if (offset == buf->len)
 			break;
 
 		/* sanity check is valid UTF-8 */
-		g_string_append_len(token, (const gchar *)buf->data, offset);
+		g_string_append_len(token,
+				    (const gchar *)buf->data + buf_offset,
+				    offset - buf_offset);
 		if (!g_utf8_validate_len(token->str, token->len, NULL)) {
 			g_debug("ignoring invalid UTF-8, got: %s", token->str);
 		} else {
@@ -384,11 +387,12 @@ fu_strsplit_buffer_drain(GByteArray *buf,
 				return FALSE;
 		}
 		if (helper->detected_nul) {
-			g_byte_array_set_size(buf, 0);
+			buf_offset = buf->len;
 			break;
 		}
-		g_byte_array_remove_range(buf, 0, MIN(offset + helper->delimiter_sz, buf->len));
+		buf_offset = offset + helper->delimiter_sz;
 	}
+	g_byte_array_remove_range(buf, 0, MIN(buf_offset, buf->len));
 	return TRUE;
 }
 
@@ -454,12 +458,12 @@ fu_strsplit_stream(GInputStream *stream,
 		if (chk == NULL)
 			return FALSE;
 		g_byte_array_append(buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
-		if (!fu_strsplit_buffer_drain(buf, &helper, FALSE, error))
+		if (!fu_strsplit_buffer_drain(buf, &helper, error))
 			return FALSE;
 		if (helper.detected_nul)
 			break;
 	}
-	return fu_strsplit_buffer_drain(buf, &helper, TRUE, error);
+	return TRUE;
 }
 
 /**
