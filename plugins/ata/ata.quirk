@@ -1,95 +1,95 @@
 [ThinkSystem M.2 VD]
 Flags = ~updatable
 
-[OUI\000039]
+[OUI\VID_000039]
 Vendor = Toshiba
 VendorId = ATA:0x1179
 
-[OUI\0000f0]
+[OUI\VID_0000F0]
 Vendor = Samsung
 VendorId = ATA:0x144D
 
-[OUI\000120]
+[OUI\VID_000120]
 Vendor = Corsair
 VendorId = ATA:0x1987
 
-[OUI\0004cf]
+[OUI\VID_0004CF]
 Vendor = Seagate
 VendorId = ATA:0x1BB1
 
-[OUI\00080d]
+[OUI\VID_00080D]
 Vendor = Toshiba
 VendorId = ATA:0x1179
 
-[OUI\000c50]
+[OUI\VID_000C50]
 Vendor = Seagate
 VendorId = ATA:0x1BB1
 
-[OUI\000cca]
+[OUI\VID_000CCA]
 Vendor = Western Digital
 VendorId = ATA:0x101C
 
-[OUI\0014ee]
+[OUI\VID_0014EE]
 Vendor = Western Digital
 VendorId = ATA:0x101C
 
-[OUI\001517]
+[OUI\VID_001517]
 Vendor = Intel
 VendorId = ATA:0x8086
 
-[OUI\001b44]
+[OUI\VID_001B44]
 Vendor = Western Digital
 VendorId = ATA:0x101C
 
-[OUI\002303]
+[OUI\VID_002303]
 Vendor = LITE-ON
 VendorId = ATA:0x14A4
 
-[OUI\0024e9]
+[OUI\VID_0024E9]
 Vendor = Samsung
 VendorId = ATA:0x144D
 
-[OUI\002538]
+[OUI\VID_002538]
 Vendor = Samsung
 VendorId = ATA:0x144D
 
-[OUI\0026b7]
+[OUI\VID_0026B7]
 Vendor = Kingston
 VendorId = ATA:0x2646
 Flags = needs-shutdown
 
-[OUI\00a075]
+[OUI\VID_00A075]
 Vendor = Micron
 VendorId = ATA:0x1344
 
-[OUI\030302]
+[OUI\VID_030302]
 Vendor = SK hynix
 VendorId = ATA:0x1C5C
 
-[OUI\5cd2e4]
+[OUI\VID_5CD2E4]
 Vendor = Intel
 VendorId = ATA:0x8086
 
-[OUI\707c18]
+[OUI\VID_707C18]
 Vendor = ADATA
 VendorId = ATA:0x1CC1
 
-[OUI\7c3548]
+[OUI\VID_7C3548]
 Vendor = Transcend
 VendorId = ATA:0x8564
 
-[OUI\001b44]
+[OUI\VID_001B44]
 Vendor = SanDisk
 VendorId = ATA:0x15B7
 
-[OUI\96a060]
+[OUI\VID_96A060]
 Vendor = Western Digital
 VendorId = ATA:0x101C
 
-[OUI\f8db4c]
+[OUI\VID_F8DB4C]
 Vendor = PNY
 VendorId = ATA:0x196E
 
-[OUI\e83a97]
+[OUI\VID_E83A97]
 Vendor = Toshiba
 VendorId = ATA:0x1179
