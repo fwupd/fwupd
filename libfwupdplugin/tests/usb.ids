@@ -1,0 +1,5 @@
+#	List of USB ID's
+8086  Intel Corp.
+	0001  AnyPoint (TM) Home Network 1.6 Mbps Wireless Adapter
+# List of known device classes, subclasses and protocols
+C 00  (Defined at Interface level)

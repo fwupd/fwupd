@@ -280,6 +280,28 @@ endif
 libm = cc.find_library('m', required: false)
 zlib = dependency('zlib')
 
+fs = import('fs')
+
+# look for usb.ids in both of the Debian and Fedora locations,
+# and fall back to the system datadir in case we're building in a venv or prefix
+vendor_ids_dir = get_option('vendor_ids_dir')
+if vendor_ids_dir == ''
+  vendor_ids_dir = join_paths(datadir, 'misc')
+  if not fs.is_file(join_paths(vendor_ids_dir, 'usb.ids'))
+    vendor_ids_dir = join_paths(datadir, 'hwdata')
+  endif
+  if not fs.is_file(join_paths(vendor_ids_dir, 'usb.ids'))
+    vendor_ids_dir = '/usr/share/hwdata'
+  endif
+  if not fs.is_file(join_paths(vendor_ids_dir, 'usb.ids'))
+    vendor_ids_dir = '/usr/share/misc'
+  endif
+  if not fs.is_file(join_paths(vendor_ids_dir, 'usb.ids'))
+    error('could not auto-detect -Dvendor_ids_dir=')
+  endif
+endif
+conf.set_quoted ('FWUPD_DATADIR_VENDOR_IDS', vendor_ids_dir)
+
 bashcomp = dependency('bash-completion', required: false)
 python3path = get_option('python')
 if python3path == ''
@@ -697,6 +719,7 @@ summary({
   'cbor': cbor,
   'consolekit': consolekit,
   'dbus_socket_address': get_option('dbus_socket_address'),
+  'vendor_ids_dir': vendor_ids_dir,
   'docs': build_docs,
   'elogind': elogind,
   'gnutls': gnutls,

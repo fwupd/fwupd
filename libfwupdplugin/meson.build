@@ -307,6 +307,7 @@ library_deps = [
   lzma,
   libarchive,
   cbor,
+  sqlite,
   platform_deps,
 ]
 
@@ -412,7 +413,6 @@ if get_option('tests')
 
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'fwupdplugin-self-test',
     installed_firmware_zip,

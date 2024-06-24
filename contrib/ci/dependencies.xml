@@ -1,5 +1,24 @@
 <?xml version="1.0"?>
 <dependencies>
+  <dependency id="hwdata">
+    <distro id="arch">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+      <package variant="mingw64" />
+    </distro>
+  </dependency>
   <dependency id="pesign">
     <distro id="fedora">
       <package variant="x86_64" />

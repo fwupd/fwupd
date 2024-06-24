@@ -483,6 +483,11 @@ option('udevdir',
   value: '',
   description: 'Directory for udev rules',
 )
+option('vendor_ids_dir',
+  type: 'string',
+  value: '',
+  description: 'Directory for usb.ids, pci.ids etc.',
+)
 option('vendor_metadata',
   type: 'boolean',
   value: false,
