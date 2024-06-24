@@ -191,6 +191,8 @@ fu_elf_firmware_strtab_insert(GPtrArray *strtab, const gchar *name)
 	FuElfFirmwareStrtabEntry *entry = g_new0(FuElfFirmwareStrtabEntry, 1);
 	gsize offset = 0;
 
+	g_return_if_fail(name != NULL);
+
 	/* get the previous entry */
 	if (strtab->len > 0) {
 		FuElfFirmwareStrtabEntry *entry_old = g_ptr_array_index(strtab, strtab->len - 1);
@@ -257,6 +259,14 @@ fu_elf_firmware_write(FuFirmware *firmware, GError **error)
 	imgs = fu_firmware_get_images(firmware);
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
+		if (fu_firmware_get_id(img) == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "section 0x%x must have an ID",
+				    (guint)fu_firmware_get_idx(img));
+			return NULL;
+		}
 		fu_elf_firmware_strtab_insert(strtab, fu_firmware_get_id(img));
 	}
 	shstrtab = fu_elf_firmware_strtab_write(strtab);
