@@ -51,6 +51,7 @@
  * @FU_PATH_KIND_LOCALTIME:		The timezone symlink (IE /etc/localtime)
  * @FU_PATH_KIND_LIBEXECDIR:		The directory to launch executables
  * @FU_PATH_KIND_LIBEXECDIR_PKG		The directory launch executables packaged with daemon
+ * @FU_PATH_KIND_DATADIR_VENDOR_IDS:	The vendor ID store (IE /usr/share/hwdata)
  *
  * Path types to use when dynamically determining a path at runtime
  **/
@@ -87,6 +88,7 @@ typedef enum {
 	FU_PATH_KIND_LOCALTIME,
 	FU_PATH_KIND_LIBEXECDIR,
 	FU_PATH_KIND_LIBEXECDIR_PKG,
+	FU_PATH_KIND_DATADIR_VENDOR_IDS,
 	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;

@@ -60,6 +60,7 @@ lintian ../*changes \
 	--suppress-tags gzip-file-is-not-multi-arch-same-safe \
 	--suppress-tags missing-dependency-on-libc \
 	--suppress-tags arch-dependent-file-not-in-arch-specific-directory \
+	--suppress-tags package-installs-ieee-data \
 	--allow-root
 
 #place built packages in dist outside docker

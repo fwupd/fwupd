@@ -1255,6 +1255,41 @@ fu_plugin_quirks_append_func(void)
 }
 
 static void
+fu_quirks_vendor_ids_func(void)
+{
+	gboolean ret;
+	const gchar *tmp;
+	g_autofree gchar *guid1 = fwupd_guid_hash_string("PCI\\VEN_8086");
+	g_autofree gchar *guid2 = fwupd_guid_hash_string("USB\\VID_8086");
+	g_autofree gchar *guid3 = fwupd_guid_hash_string("PNP\\VID_ICO");
+	g_autofree gchar *datadata = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
+	g_autofree gchar *quirksdb = g_build_filename(datadata, "quirks.db", NULL);
+	g_autoptr(FuQuirks) quirks = fu_quirks_new();
+	g_autoptr(GError) error = NULL;
+
+#ifndef HAVE_SQLITE
+	g_test_skip("no sqlite");
+	return;
+#endif
+	g_debug("deleting %s if exists", quirksdb);
+	g_unlink(quirksdb);
+
+	/* lookup a duplicate group name */
+	ret = fu_quirks_load(quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	tmp = fu_quirks_lookup_by_id(quirks, guid1, "Vendor");
+	g_assert_true(ret);
+	g_assert_cmpstr(tmp, ==, "Intel Corporation");
+	tmp = fu_quirks_lookup_by_id(quirks, guid2, "Vendor");
+	g_assert_true(ret);
+	g_assert_cmpstr(tmp, ==, "Intel Corp.");
+	tmp = fu_quirks_lookup_by_id(quirks, guid3, "Vendor");
+	g_assert_true(ret);
+	g_assert_cmpstr(tmp, ==, "Intel Corp");
+}
+
+static void
 fu_plugin_func(void)
 {
 	GHashTable *metadata;
@@ -5692,6 +5727,7 @@ main(int argc, char **argv)
 
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("FWUPD_DATADIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_DATADIR_VENDOR_IDS", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_LIBDIR_PKG", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
@@ -5701,6 +5737,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
 	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
+	(void)g_setenv("CACHE_DIRECTORY", "/tmp/fwupd-self-test/cache", TRUE);
 
 	g_test_add_func("/fwupd/efi-lz77{decompressor}", fu_efi_lz77_decompressor_func);
 	g_test_add_func("/fwupd/input-stream", fu_input_stream_func);
@@ -5710,6 +5747,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/struct", fu_plugin_struct_func);
 	g_test_add_func("/fwupd/struct{wrapped}", fu_plugin_struct_wrapped_func);
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
+	g_test_add_func("/fwupd/quirks{vendor-ids}", fu_quirks_vendor_ids_func);
 	g_test_add_func("/fwupd/string{password-mask}", fu_strpassmask_func);
 	g_test_add_func("/fwupd/string{strsplit-stream}", fu_strsplit_stream_func);
 	g_test_add_func("/fwupd/lzma", fu_lzma_func);

@@ -1,0 +1,7 @@
+#	List of PCI ID's
+0001  SafeNet (wrong ID)
+8086  Intel Corporation
+	0007  82379AB
+# List of known device classes, subclasses and programming interfaces
+C 00  Unclassified device
+	00  Non-VGA unclassified device

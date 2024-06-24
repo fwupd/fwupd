@@ -364,6 +364,15 @@ fu_path_from_kind(FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_build_filename(tmp, FWUPD_LIBEXECDIR, PACKAGE_NAME, NULL);
 		return g_build_filename(FWUPD_LIBEXECDIR, PACKAGE_NAME, NULL);
+	/* /usr/share/hwdata */
+	case FU_PATH_KIND_DATADIR_VENDOR_IDS:
+		tmp = g_getenv("FWUPD_DATADIR_VENDOR_IDS");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		tmp = g_getenv("SNAP");
+		if (tmp != NULL)
+			return g_build_filename(tmp, FWUPD_DATADIR_VENDOR_IDS, NULL);
+		return g_strdup(FWUPD_DATADIR_VENDOR_IDS);
 	/* /usr/share/fwupd/quirks.d */
 	case FU_PATH_KIND_DATADIR_QUIRKS:
 		tmp = g_getenv("FWUPD_DATADIR_QUIRKS");

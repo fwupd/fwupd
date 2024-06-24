@@ -54,6 +54,7 @@ for details.
 * `FWUPD_ACPITABLESDIR`
 * `FWUPD_DATADIR`
 * `FWUPD_DATADIR_QUIRKS`
+* `FWUPD_DATADIR_VENDOR_IDS`
 * `FWUPD_EFIAPPDIR`
 * `FWUPD_FIRMWARESEARCH`
 * `FWUPD_HOSTDIR` looks for host OS `os-release` in this sysroot, default is /

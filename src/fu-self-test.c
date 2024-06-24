@@ -117,15 +117,26 @@ static gboolean
 fu_test_compare_lines(const gchar *txt1, const gchar *txt2, GError **error)
 {
 	g_autofree gchar *output = NULL;
+	g_autofree gchar *diff = g_find_program_in_path("diff");
+	g_autofree gchar *cmd = g_strdup_printf("%s -urNp /tmp/b /tmp/a", diff);
 	if (g_strcmp0(txt1, txt2) == 0)
 		return TRUE;
 	if (g_pattern_match_simple(txt2, txt1))
 		return TRUE;
+	if (diff == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "does not match: %s vs %s",
+			    txt1,
+			    txt2);
+		return FALSE;
+	}
 	if (!g_file_set_contents("/tmp/a", txt1, -1, error))
 		return FALSE;
 	if (!g_file_set_contents("/tmp/b", txt2, -1, error))
 		return FALSE;
-	if (!g_spawn_command_line_sync("diff -urNp /tmp/b /tmp/a", &output, NULL, NULL, error))
+	if (!g_spawn_command_line_sync(cmd, &output, NULL, NULL, error))
 		return FALSE;
 	g_set_error_literal(error, 1, 0, output);
 	return FALSE;
@@ -2967,7 +2978,7 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	fu_engine_add_plugin(engine, self->plugin);
-	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NONE, progress, &error);
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -3078,7 +3089,7 @@ fu_engine_install_request(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	fu_engine_add_plugin(engine, self->plugin);
-	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NONE, progress, &error);
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
