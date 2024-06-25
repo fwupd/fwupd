@@ -1,3 +1,6 @@
+[BLOCK\VEN_05E3]
+Vendor = Genesys
+
 [BLOCK\VEN_05E3&DEV_0749]
 Plugin = genesys_gl32xx
 FirmwareSize = 0x10000

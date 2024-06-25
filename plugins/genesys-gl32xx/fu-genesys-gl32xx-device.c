@@ -681,10 +681,12 @@ fu_genesys_gl32xx_device_setup(FuDevice *device, GError **error)
 	/* if not detected above */
 	if (self->chip_name == NULL)
 		fu_genesys_gl32xx_device_set_chip_name(self, "GL32xx");
-	name = g_strdup_printf("%s SD reader [0x%04X]",
-			       self->chip_name,
-			       fu_udev_device_get_model(FU_UDEV_DEVICE(device)));
-	fu_device_set_name(device, name);
+	if (fu_device_has_vendor_id(device, "BLOCK:0x05E3")) {
+		name = g_strdup_printf("%s SD reader [0x%04X]",
+				       self->chip_name,
+				       fu_udev_device_get_model(FU_UDEV_DEVICE(device)));
+		fu_device_set_name(device, name);
+	}
 
 	if (!fu_genesys_gl32xx_device_ensure_cid(self, error))
 		return FALSE;
@@ -916,7 +918,7 @@ static void
 fu_genesys_gl32xx_device_init(FuGenesysGl32xxDevice *self)
 {
 	self->packetsz = 64;
-	fu_device_set_vendor(FU_DEVICE(self), "Genesys");
+
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_firmware_size(FU_DEVICE(self),
