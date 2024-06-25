@@ -182,8 +182,6 @@ fu_udev_device_get_sysfs_attr_uint64(FuUdevDevice *self,
 				     const gchar *attr,
 				     guint64 *value,
 				     GError **error) G_GNUC_NON_NULL(1);
-gchar *
-fu_udev_device_get_parent_name(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_udev_device_write_sysfs(FuUdevDevice *self,
