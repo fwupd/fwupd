@@ -75,7 +75,10 @@ fu_mei_device_ensure_parent_device_file(FuMeiDevice *self, GError **error)
 	g_autoptr(GDir) dir = NULL;
 
 	/* get direct parent */
-	parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self), NULL, error);
+	parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self),
+							  NULL, /* subsystem */
+							  NULL, /* devtype */
+							  error);
 	if (parent == NULL)
 		return FALSE;
 

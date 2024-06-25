@@ -81,6 +81,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 	for (guint i = 0; subsystem_parents[i] != NULL && ufshci_parent == NULL; i++) {
 		ufshci_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
 									 subsystem_parents[i],
+									 NULL, /* devtype */
 									 NULL);
 	}
 	if (ufshci_parent != NULL) {
