@@ -5,3 +5,9 @@ FirmwareSize = 0x10000
 [BLOCK\VEN_05E3&DEV_0764]
 Plugin = genesys_gl32xx
 FirmwareSize = 0x1C000
+
+[BLOCK\VEN_32AC&DEV_0009]
+Plugin = genesys_gl32xx
+FirmwareSize = 0x1C000
+Name = Framework SD Expansion Card
+Vendor = Framework
