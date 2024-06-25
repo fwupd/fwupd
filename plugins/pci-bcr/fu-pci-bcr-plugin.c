@@ -163,6 +163,7 @@ fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin,
 {
 	FuPciBcrPlugin *self = FU_PCI_BCR_PLUGIN(plugin);
 	FuDevice *device_msf;
+	g_autofree gchar *device_file = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* not supported */
@@ -181,7 +182,9 @@ fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin,
 		return TRUE;
 
 	/* open the config */
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(device), FU_UDEV_DEVICE_FLAG_USE_CONFIG);
+	device_file =
+	    g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)), "config", NULL);
+	fu_udev_device_set_device_file(FU_UDEV_DEVICE(device), device_file);
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
 		return FALSE;
 	locker = fu_device_locker_new(device, error);
