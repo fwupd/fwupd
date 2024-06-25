@@ -6569,8 +6569,16 @@ void
 fu_device_add_event(FuDevice *self, FuDeviceEvent *event)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(FU_IS_DEVICE_EVENT(event));
+
+	/* redirect */
+	if (priv->proxy != NULL) {
+		fu_device_add_event(priv->proxy, event);
+		return;
+	}
+
 	fu_device_ensure_events(self);
 	g_ptr_array_add(priv->events, g_object_ref(event));
 }
@@ -6589,10 +6597,15 @@ fu_device_add_event(FuDevice *self, FuDeviceEvent *event)
 FuDeviceEvent *
 fu_device_save_event(FuDevice *self, const gchar *id)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuDeviceEvent) event = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(id != NULL, NULL);
+
+	/* redirect */
+	if (priv->proxy != NULL)
+		return fu_device_save_event(priv->proxy, id);
 
 	/* success */
 	event = fu_device_event_new(id);
@@ -6620,6 +6633,10 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(id != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* redirect */
+	if (priv->proxy != NULL)
+		return fu_device_load_event(priv->proxy, id, error);
 
 	/* sanity check */
 	if (priv->events == NULL) {
@@ -6675,7 +6692,13 @@ GPtrArray *
 fu_device_get_events(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+
+	/* redirect */
+	if (priv->proxy != NULL)
+		return fu_device_get_events(priv->proxy);
+
 	fu_device_ensure_events(self);
 	return priv->events;
 }
@@ -6693,7 +6716,15 @@ void
 fu_device_clear_events(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+
 	g_return_if_fail(FU_IS_DEVICE(self));
+
+	/* redirect */
+	if (priv->proxy != NULL) {
+		fu_device_clear_events(priv->proxy);
+		return;
+	}
+
 	if (priv->events == NULL)
 		return;
 	g_ptr_array_set_size(priv->events, 0);
