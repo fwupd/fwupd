@@ -55,14 +55,22 @@ fu_dell_get_system_id(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *system_id_str = NULL;
-	guint16 system_id = 0;
-	gchar *endptr = NULL;
+	guint64 system_id_val = 0;
 
 	system_id_str = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_SKU);
-	if (system_id_str != NULL)
-		system_id = g_ascii_strtoull(system_id_str, &endptr, 16);
+	if (system_id_str != NULL) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_strtoull(system_id_str,
+				 &system_id_val,
+				 0,
+				 G_MAXUINT16,
+				 FU_INTEGER_BASE_16,
+				 &error_local)) {
+			g_warning("failed to parse system ID: %s", error_local->message);
+		}
+	}
 
-	return system_id;
+	return (guint16)system_id_val;
 }
 
 static gboolean

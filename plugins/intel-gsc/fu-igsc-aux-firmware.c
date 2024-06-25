@@ -263,21 +263,21 @@ fu_igsc_aux_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	tmp = xb_node_query_text(n, "oem_version", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT32, error))
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->oem_version = val;
 	}
 	tmp = xb_node_query_text(n, "major_version", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, error))
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->major_version = val;
 	}
 	tmp = xb_node_query_text(n, "major_vcn", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, error))
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->major_vcn = val;
 	}

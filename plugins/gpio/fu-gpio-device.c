@@ -161,7 +161,7 @@ fu_gpio_device_assign(FuGpioDevice *self, const gchar *id, gboolean value, GErro
 	}
 
 	/* specified as a number, or look for @id as named pin */
-	if (fu_strtoull(id, &line, 0, self->num_lines - 1, NULL)) {
+	if (fu_strtoull(id, &line, 0, self->num_lines - 1, FU_INTEGER_BASE_AUTO, NULL)) {
 		struct gpio_v2_line_info info = {.offset = line};
 		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 					  GPIO_V2_GET_LINEINFO_IOCTL,

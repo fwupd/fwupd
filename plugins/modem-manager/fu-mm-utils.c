@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
 
 #include "fu-mm-utils.h"
 
@@ -45,7 +45,7 @@ fu_mm_utils_get_udev_port_info(GUdevDevice *device,
 			       gint *out_port_usb_ifnum,
 			       GError **error)
 {
-	gint port_usb_ifnum = -1;
+	guint64 port_usb_ifnum = 0;
 	g_autoptr(GUdevDevice) parent = NULL;
 	g_autofree gchar *device_sysfs_path = NULL;
 	g_autofree gchar *device_bus = NULL;
@@ -64,8 +64,15 @@ fu_mm_utils_get_udev_port_info(GUdevDevice *device,
 	if (g_strcmp0(device_bus, "USB") == 0) {
 		/* ID_USB_INTERFACE_NUM is set on the port device itself */
 		const gchar *aux = g_udev_device_get_property(device, "ID_USB_INTERFACE_NUM");
-		if (aux != NULL)
-			port_usb_ifnum = (guint16)g_ascii_strtoull(aux, NULL, 16);
+		if (aux != NULL) {
+			if (!fu_strtoull(aux,
+					 &port_usb_ifnum,
+					 0,
+					 G_MAXUINT16,
+					 FU_INTEGER_BASE_16,
+					 error))
+				return FALSE;
+		}
 
 		/* we need to traverse all parents of the give udev device until we find
 		 * the first 'usb_device' reported, which is the GUdevDevice associated with

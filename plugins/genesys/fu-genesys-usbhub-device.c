@@ -3020,7 +3020,7 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 	guint64 tmp;
 
 	if (g_strcmp0(key, "GenesysUsbhubDeviceTransferSize") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->flash_rw_size = tmp;
 
@@ -3028,7 +3028,7 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysUsbhubSwitchRequest") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->vcs.req_switch = tmp;
 
@@ -3036,7 +3036,7 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysUsbhubReadRequest") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->vcs.req_read = tmp;
 
@@ -3044,7 +3044,7 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysUsbhubWriteRequest") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->vcs.req_write = tmp;
 

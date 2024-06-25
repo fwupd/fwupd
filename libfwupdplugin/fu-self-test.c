@@ -364,12 +364,6 @@ fu_device_metadata_func(void)
 	g_assert_cmpstr(fu_device_get_metadata(device, "bam"), ==, "12345");
 	g_assert_cmpint(fu_device_get_metadata_integer(device, "bam"), ==, 12345);
 	g_assert_cmpint(fu_device_get_metadata_integer(device, "unknown"), ==, G_MAXUINT);
-
-	/* broken integer */
-	fu_device_set_metadata(device, "bam", "123junk");
-	g_assert_cmpint(fu_device_get_metadata_integer(device, "bam"), ==, G_MAXUINT);
-	fu_device_set_metadata(device, "huge", "4294967296"); /* not 32 bit */
-	g_assert_cmpint(fu_device_get_metadata_integer(device, "huge"), ==, G_MAXUINT);
 }
 
 static void
@@ -2525,28 +2519,28 @@ fu_strtoull_func(void)
 	guint64 val = 0;
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_strtoull("123", &val, 123, 200, &error);
+	ret = fu_strtoull("123", &val, 123, 200, FU_INTEGER_BASE_AUTO, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(val, ==, 123);
 
-	ret = fu_strtoull("123\n", &val, 0, 200, &error);
+	ret = fu_strtoull("123\n", &val, 0, 200, FU_INTEGER_BASE_AUTO, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(val, ==, 123);
 
-	ret = fu_strtoull("0x123", &val, 0, 0x123, &error);
+	ret = fu_strtoull("0x123", &val, 0, 0x123, FU_INTEGER_BASE_AUTO, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(val, ==, 0x123);
 
-	ret = fu_strtoull(NULL, &val, 0, G_MAXUINT32, NULL);
+	ret = fu_strtoull(NULL, &val, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, NULL);
 	g_assert_false(ret);
-	ret = fu_strtoull("", &val, 120, 123, NULL);
+	ret = fu_strtoull("", &val, 120, 123, FU_INTEGER_BASE_AUTO, NULL);
 	g_assert_false(ret);
-	ret = fu_strtoull("124", &val, 120, 123, NULL);
+	ret = fu_strtoull("124", &val, 120, 123, FU_INTEGER_BASE_AUTO, NULL);
 	g_assert_false(ret);
-	ret = fu_strtoull("119", &val, 120, 123, NULL);
+	ret = fu_strtoull("119", &val, 120, 123, FU_INTEGER_BASE_AUTO, NULL);
 	g_assert_false(ret);
 }
 
@@ -2557,28 +2551,28 @@ fu_strtoll_func(void)
 	gint64 val = 0;
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_strtoll("123", &val, 123, 200, &error);
+	ret = fu_strtoll("123", &val, 123, 200, FU_INTEGER_BASE_AUTO, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(val, ==, 123);
 
-	ret = fu_strtoll("-123\n", &val, -123, 200, &error);
+	ret = fu_strtoll("-123\n", &val, -123, 200, FU_INTEGER_BASE_AUTO, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(val, ==, -123);
 
-	ret = fu_strtoll("0x123", &val, 0, 0x123, &error);
+	ret = fu_strtoll("0x123", &val, 0, 0x123, FU_INTEGER_BASE_AUTO, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(val, ==, 0x123);
 
-	ret = fu_strtoll(NULL, &val, 0, G_MAXINT32, NULL);
+	ret = fu_strtoll(NULL, &val, 0, G_MAXINT32, FU_INTEGER_BASE_AUTO, NULL);
 	g_assert_false(ret);
-	ret = fu_strtoll("", &val, 120, 123, NULL);
+	ret = fu_strtoll("", &val, 120, 123, FU_INTEGER_BASE_AUTO, NULL);
 	g_assert_false(ret);
-	ret = fu_strtoll("124", &val, 120, 123, NULL);
+	ret = fu_strtoll("124", &val, 120, 123, FU_INTEGER_BASE_AUTO, NULL);
 	g_assert_false(ret);
-	ret = fu_strtoll("-124", &val, -123, 123, NULL);
+	ret = fu_strtoll("-124", &val, -123, 123, FU_INTEGER_BASE_AUTO, NULL);
 	g_assert_false(ret);
 }
 

@@ -433,13 +433,13 @@ fu_ccgx_pure_hid_device_set_quirk_kv(FuDevice *device,
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "SiliconId") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->silicon_id = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CcgxFlashRowSize") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->flash_row_size = tmp;
 		return TRUE;

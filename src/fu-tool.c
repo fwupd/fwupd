@@ -2344,7 +2344,9 @@ fu_util_hwids(FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		if (g_strcmp0(hwid_key, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE) == 0 ||
 		    g_strcmp0(hwid_key, FU_HWIDS_KEY_BIOS_MINOR_RELEASE) == 0) {
-			guint64 val = g_ascii_strtoull(value, NULL, 16);
+			guint64 val = 0;
+			if (!fu_strtoull(value, &val, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error))
+				return FALSE;
 			fu_console_print(priv->console, "%s: %" G_GUINT64_FORMAT, hwid_key, val);
 		} else {
 			fu_console_print(priv->console, "%s: %s", hwid_key, value);
@@ -3113,7 +3115,7 @@ fu_util_firmware_patch(FuUtilPrivate *priv, gchar **values, GError **error)
 		firmware_type = g_strdup(values[3]);
 
 	/* parse offset */
-	if (!fu_strtoull(values[1], &offset, 0x0, G_MAXUINT32, error)) {
+	if (!fu_strtoull(values[1], &offset, 0x0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error)) {
 		g_prefix_error(error, "failed to parse offset: ");
 		return FALSE;
 	}

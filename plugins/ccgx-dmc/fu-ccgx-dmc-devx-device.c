@@ -184,7 +184,7 @@ fu_ccgx_dmc_devx_device_set_quirk_kv(FuDevice *device,
 	if (g_strcmp0(key, "CcgxDmcCompositeVersion") == 0) {
 		guint64 tmp = 0;
 		FuDevice *proxy = fu_device_get_proxy(device);
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		if (fu_device_get_version_raw(proxy) != tmp) {
 			g_debug("overriding composite version from %u to %u from %s",

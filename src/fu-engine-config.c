@@ -73,7 +73,12 @@ fu_engine_config_report_from_spec(FuEngineConfig *self, const gchar *report_spec
 			if (g_strcmp0(value, "$OEM") == 0) {
 				fwupd_report_add_flag(report, FWUPD_REPORT_FLAG_FROM_OEM);
 			} else {
-				if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error)) {
+				if (!fu_strtoull(value,
+						 &tmp,
+						 0,
+						 G_MAXUINT32,
+						 FU_INTEGER_BASE_AUTO,
+						 error)) {
 					g_prefix_error(error, "failed to parse '%s': ", value);
 					return NULL;
 				}
@@ -185,7 +190,12 @@ fu_engine_config_reload(FuEngineConfig *self)
 		for (guint i = 0; uids[i] != NULL; i++) {
 			guint64 val = 0;
 			g_autoptr(GError) error_local = NULL;
-			if (!fu_strtoull(uids[i], &val, 0, G_MAXUINT64, &error_local)) {
+			if (!fu_strtoull(uids[i],
+					 &val,
+					 0,
+					 G_MAXUINT64,
+					 FU_INTEGER_BASE_AUTO,
+					 &error_local)) {
 				g_warning("failed to parse UID '%s': %s",
 					  uids[i],
 					  error_local->message);

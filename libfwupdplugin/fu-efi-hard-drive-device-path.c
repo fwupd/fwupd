@@ -146,19 +146,19 @@ fu_efi_hard_drive_device_path_build(FuFirmware *firmware, XbNode *n, GError **er
 	/* optional data */
 	tmp = xb_node_query_text(n, "partition_number", NULL);
 	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT32, error))
+		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->partition_number = value;
 	}
 	tmp = xb_node_query_text(n, "partition_start", NULL);
 	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT64, error))
+		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->partition_start = value;
 	}
 	tmp = xb_node_query_text(n, "partition_size", NULL);
 	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT64, error))
+		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->partition_size = value;
 	}

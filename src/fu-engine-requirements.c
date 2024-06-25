@@ -189,7 +189,7 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 	/* look at the parent device */
 	depth_str = xb_node_get_attr(req, "depth");
 	if (depth_str != NULL) {
-		if (!fu_strtoll(depth_str, &depth, -1, 10, error))
+		if (!fu_strtoll(depth_str, &depth, -1, 10, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		for (gint64 i = 0; i < depth; i++) {
 			FuDevice *device_tmp = fu_device_get_parent(device_actual);

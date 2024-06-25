@@ -348,13 +348,17 @@ fu_uf2_device_probe(FuDevice *device, GError **error)
 
 	/* more instance IDs */
 	tmp = g_udev_device_get_property(udev_device, "ID_VENDOR_ID");
-	if (tmp != NULL)
-		vid = g_ascii_strtoull(tmp, NULL, 16);
+	if (tmp != NULL) {
+		if (!fu_strtoull(tmp, &vid, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
+			return FALSE;
+	}
 	if (vid != 0x0)
 		fu_device_add_instance_u16(device, "VID", vid);
 	tmp = g_udev_device_get_property(udev_device, "ID_MODEL_ID");
-	if (tmp != NULL)
-		pid = g_ascii_strtoull(tmp, NULL, 16);
+	if (tmp != NULL) {
+		if (!fu_strtoull(tmp, &pid, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
+			return FALSE;
+	}
 	if (pid != 0x0)
 		fu_device_add_instance_u16(device, "PID", pid);
 	if (!fu_device_build_instance_id_full(device,

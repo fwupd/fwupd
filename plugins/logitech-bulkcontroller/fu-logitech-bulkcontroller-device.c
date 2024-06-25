@@ -406,7 +406,12 @@ fu_logitech_bulkcontroller_device_sync_check_ack_cmd(GByteArray *buf,
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "ack_payload", (guint8 *)ack_payload, sizeof(ack_payload));
-	if (!fu_strtoull((const gchar *)ack_payload, &ack_cmd, 0, G_MAXUINT32, error)) {
+	if (!fu_strtoull((const gchar *)ack_payload,
+			 &ack_cmd,
+			 0,
+			 G_MAXUINT32,
+			 FU_INTEGER_BASE_AUTO,
+			 error)) {
 		g_prefix_error(error, "failed to parse ack payload cmd: ");
 		return FALSE;
 	}

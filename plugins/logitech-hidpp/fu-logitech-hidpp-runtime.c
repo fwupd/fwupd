@@ -98,7 +98,7 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
 	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
 	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
-	guint16 release = 0xffff;
+	guint64 release = 0xFFFF;
 	g_autoptr(GUdevDevice) udev_parent = NULL;
 	g_autoptr(GUdevDevice) udev_parent_usb_interface = NULL;
 
@@ -111,10 +111,17 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 	if (udev_parent != NULL) {
 		const gchar *release_str;
 		release_str = g_udev_device_get_property(udev_parent, "ID_REVISION");
-		if (release_str != NULL)
-			release = g_ascii_strtoull(release_str, NULL, 16);
+		if (release_str != NULL) {
+			if (!fu_strtoull(release_str,
+					 &release,
+					 0,
+					 G_MAXUINT64,
+					 FU_INTEGER_BASE_16,
+					 error))
+				return FALSE;
+		}
 	}
-	if (release != 0xffff) {
+	if (release != 0xFFFF) {
 		g_autofree gchar *devid2 = NULL;
 		const gchar *interface_str;
 		switch (release &= 0xff00) {
@@ -166,7 +173,7 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 			priv->version_bl_major = 0x03;
 			break;
 		default:
-			g_warning("bootloader release %04x invalid", release);
+			g_warning("bootloader release %04x invalid", (guint)release);
 			break;
 		}
 	}

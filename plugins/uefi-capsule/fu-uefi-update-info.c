@@ -81,14 +81,14 @@ fu_uefi_update_info_build(FuFirmware *firmware, XbNode *n, GError **error)
 	tmp = xb_node_query_text(n, "capsule_flags", NULL);
 	if (tmp != NULL) {
 		guint64 tmp64 = 0;
-		if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		fu_uefi_update_info_set_capsule_flags(self, tmp64);
 	}
 	tmp = xb_node_query_text(n, "hw_inst", NULL);
 	if (tmp != NULL) {
 		guint64 tmp64 = 0;
-		if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT64, error))
+		if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		fu_uefi_update_info_set_hw_inst(self, tmp64);
 	}

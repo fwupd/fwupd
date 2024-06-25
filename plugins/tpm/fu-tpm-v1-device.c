@@ -45,7 +45,7 @@ fu_tpm_device_parse_line(const gchar *line, gpointer user_data)
 
 	/* get index */
 	idxstr = fu_strstrip(split[0]);
-	if (!fu_strtoull(idxstr, &idx, 0, 64, &error_local)) {
+	if (!fu_strtoull(idxstr, &idx, 0, 64, FU_INTEGER_BASE_AUTO, &error_local)) {
 		g_debug("unexpected index %s, skipping: %s", idxstr, error_local->message);
 		return;
 	}

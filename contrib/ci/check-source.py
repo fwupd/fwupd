@@ -50,6 +50,8 @@ def test_files() -> int:
                     "g_usb_device_release_interface(": "Use fu_usb_device_release_interface() instead",
                     "g_usb_device_reset error(": "Use fu_usb_device_reset error() instead",
                     "g_usb_device_set_interface_alt(": "Use fu_usb_device_set_interface_alt() instead",
+                    "g_ascii_strtoull(": "Use fu_strtoull() instead",
+                    "g_ascii_strtoll(": "Use fu_strtoll() instead",
                 }.items():
                     if line.find(token) != -1:
                         print(

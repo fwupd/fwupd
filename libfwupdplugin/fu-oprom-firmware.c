@@ -246,35 +246,35 @@ fu_oprom_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	tmp = xb_node_query_text(n, "machine_type", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, error))
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->machine_type = val;
 	}
 	tmp = xb_node_query_text(n, "subsystem", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, error))
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->subsystem = val;
 	}
 	tmp = xb_node_query_text(n, "compression_type", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, error))
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->compression_type = val;
 	}
 	tmp = xb_node_query_text(n, "vendor_id", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, error))
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->vendor_id = val;
 	}
 	tmp = xb_node_query_text(n, "device_id", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, error))
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->device_id = val;
 	}

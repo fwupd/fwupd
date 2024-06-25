@@ -963,7 +963,12 @@ fu_progress_traceback(FuProgress *self)
 	/* allow override */
 	if (tmp != NULL) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_strtoull(tmp, &threshold_ms, 0, G_MAXUINT, &error_local))
+		if (!fu_strtoull(tmp,
+				 &threshold_ms,
+				 0,
+				 G_MAXUINT,
+				 FU_INTEGER_BASE_AUTO,
+				 &error_local))
 			g_warning("invalid threshold value: %s", tmp);
 	}
 

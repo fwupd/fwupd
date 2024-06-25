@@ -101,7 +101,7 @@ fu_linux_tainted_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *at
 
 	/* do not assume NUL terminated */
 	str = g_strndup(buf, bufsz);
-	if (!fu_strtoull(str, &value, 0, G_MAXUINT64, &error_local)) {
+	if (!fu_strtoull(str, &value, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, &error_local)) {
 		g_warning("could not parse %s: %s", str, error_local->message);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;

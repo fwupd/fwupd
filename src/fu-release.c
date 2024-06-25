@@ -296,7 +296,12 @@ fu_release_get_release_version(FuRelease *self, const gchar *version, GError **e
 		return g_strdup(version);
 
 	/* parse as integer */
-	if (!fu_strtoull(version, &ver_uint32, 1, G_MAXUINT32, &error_local)) {
+	if (!fu_strtoull(version,
+			 &ver_uint32,
+			 1,
+			 G_MAXUINT32,
+			 FU_INTEGER_BASE_AUTO,
+			 &error_local)) {
 		g_warning("invalid release version %s: %s", version, error_local->message);
 		return g_strdup(version);
 	}

@@ -57,8 +57,8 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 #ifdef HAVE_GUDEV
 		const gchar *sysfs_path = NULL;
 		const gchar *tmp;
-		guint16 pid = 0;
-		guint16 vid = 0;
+		guint64 pid = 0;
+		guint64 vid = 0;
 		g_autoptr(GVariant) udi = NULL;
 		g_autoptr(GUdevClient) udev_client = NULL;
 		g_autoptr(GUdevDevice) udev_device = NULL;
@@ -74,14 +74,18 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 		if (udev_device == NULL)
 			return TRUE;
 		tmp = g_udev_device_get_property(udev_device, "ID_VENDOR_ID");
-		if (tmp != NULL)
-			vid = g_ascii_strtoull(tmp, NULL, 16);
+		if (tmp != NULL) {
+			if (!fu_strtoull(tmp, &vid, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
+				return FALSE;
+		}
 		tmp = g_udev_device_get_property(udev_device, "ID_MODEL_ID");
-		if (tmp != NULL)
-			pid = g_ascii_strtoull(tmp, NULL, 16);
+		if (tmp != NULL) {
+			if (!fu_strtoull(tmp, &pid, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
+				return FALSE;
+		}
 
 		/* verify */
-		g_debug("%s: 0x%04x, 0x%04x", sysfs_path, vid, pid);
+		g_debug("%s: 0x%04x, 0x%04x", sysfs_path, (guint)vid, (guint)pid);
 		if (vid == helper->vid && pid == helper->pid)
 			helper->device = fu_redfish_network_device_new(object_path);
 #else

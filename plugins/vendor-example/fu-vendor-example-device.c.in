@@ -283,7 +283,7 @@ fu_{{vendor_example}}_device_set_quirk_kv(FuDevice *device,
 	/* TODO: parse value from quirk file */
 	if (g_strcmp0(key, "{{VendorExample}}StartAddr") == 0) {
 		guint64 tmp = 0;
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->start_addr = tmp;
 		return TRUE;

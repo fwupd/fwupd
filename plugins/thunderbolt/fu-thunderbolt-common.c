@@ -73,20 +73,12 @@ guint16
 fu_thunderbolt_udev_get_attr_uint16(FuUdevDevice *device, const gchar *name, GError **error)
 {
 	const gchar *str;
-	guint64 val;
+	guint64 val = 0;
 
 	str = fu_udev_device_get_sysfs_attr(device, name, error);
 	if (str == NULL)
 		return 0x0;
-
-	val = g_ascii_strtoull(str, NULL, 16);
-	if (val == 0x0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed to parse %s", str);
-		return 0;
-	}
-	if (val > G_MAXUINT16) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "%s overflows", name);
+	if (!fu_strtoull(str, &val, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
 		return 0x0;
-	}
 	return (guint16)val;
 }

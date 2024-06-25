@@ -159,7 +159,7 @@ fu_hid_report_item_build(FuFirmware *firmware, XbNode *n, GError **error)
 	/* optional data */
 	tmp = xb_node_query_text(n, "idx", NULL);
 	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT8, error))
+		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		fu_firmware_set_idx(firmware, value);
 		fu_firmware_set_id(firmware, fu_hid_item_tag_to_string(value));
@@ -171,7 +171,7 @@ fu_hid_report_item_build(FuFirmware *firmware, XbNode *n, GError **error)
 	}
 	tmp = xb_node_query_text(n, "value", NULL);
 	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT32, error))
+		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->value = value;
 	}
