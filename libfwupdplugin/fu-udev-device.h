@@ -29,7 +29,6 @@ struct _FuUdevDeviceClass {
  * @FU_UDEV_DEVICE_FLAG_OPEN_READ:		Open the device read-only
  * @FU_UDEV_DEVICE_FLAG_OPEN_WRITE:		Open the device write-only
  * @FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT:	Get the vendor ID from a parent or grandparent
- * @FU_UDEV_DEVICE_FLAG_USE_CONFIG:		Read and write from the device config
  * @FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK:		Open nonblocking, e.g. O_NONBLOCK
  * @FU_UDEV_DEVICE_FLAG_OPEN_SYNC:		Open sync, e.g. O_SYNC
  * @FU_UDEV_DEVICE_FLAG_IOCTL_RETRY:		Retry the ioctl() call when required
@@ -42,7 +41,6 @@ typedef enum {
 	FU_UDEV_DEVICE_FLAG_OPEN_READ = 1 << 0,
 	FU_UDEV_DEVICE_FLAG_OPEN_WRITE = 1 << 1,
 	FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT = 1 << 2,
-	FU_UDEV_DEVICE_FLAG_USE_CONFIG = 1 << 3,
 	FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK = 1 << 4,
 	FU_UDEV_DEVICE_FLAG_OPEN_SYNC = 1 << 5,
 	FU_UDEV_DEVICE_FLAG_IOCTL_RETRY = 1 << 6,
