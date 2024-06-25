@@ -38,8 +38,7 @@ fu_firmware_strparse_uint4_safe(const gchar *data,
 				GError **error)
 {
 	gchar buffer[2] = {'\0'};
-	gchar *endptr = NULL;
-	guint64 valuetmp;
+	guint64 valuetmp = 0;
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -49,14 +48,9 @@ fu_firmware_strparse_uint4_safe(const gchar *data,
 			    sizeof(buffer) - 1,
 			    error))
 		return FALSE;
-	valuetmp = g_ascii_strtoull(buffer, &endptr, 16);
-	if (endptr - buffer != sizeof(buffer) - 1) {
+	if (!fu_strtoull(buffer, &valuetmp, 0, 0xF, FU_INTEGER_BASE_16, error)) {
 		g_autofree gchar *str = fu_strsafe(buffer, sizeof(buffer));
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "cannot parse %s as hex",
-			    str);
+		g_prefix_error(error, "cannot parse %s as hex: ", str);
 		return FALSE;
 	}
 	if (value != NULL)
@@ -87,8 +81,7 @@ fu_firmware_strparse_uint8_safe(const gchar *data,
 				GError **error)
 {
 	gchar buffer[3] = {'\0'};
-	gchar *endptr = NULL;
-	guint64 valuetmp;
+	guint64 valuetmp = 0;
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -98,14 +91,9 @@ fu_firmware_strparse_uint8_safe(const gchar *data,
 			    sizeof(buffer) - 1,
 			    error))
 		return FALSE;
-	valuetmp = g_ascii_strtoull(buffer, &endptr, 16);
-	if (endptr - buffer != sizeof(buffer) - 1) {
+	if (!fu_strtoull(buffer, &valuetmp, 0, G_MAXUINT8, FU_INTEGER_BASE_16, error)) {
 		g_autofree gchar *str = fu_strsafe(buffer, sizeof(buffer));
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "cannot parse %s as hex",
-			    str);
+		g_prefix_error(error, "cannot parse %s as hex: ", str);
 		return FALSE;
 	}
 	if (value != NULL)
@@ -136,8 +124,7 @@ fu_firmware_strparse_uint16_safe(const gchar *data,
 				 GError **error)
 {
 	gchar buffer[5] = {'\0'};
-	gchar *endptr = NULL;
-	guint64 valuetmp;
+	guint64 valuetmp = 0;
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -147,14 +134,9 @@ fu_firmware_strparse_uint16_safe(const gchar *data,
 			    sizeof(buffer) - 1,
 			    error))
 		return FALSE;
-	valuetmp = g_ascii_strtoull(buffer, &endptr, 16);
-	if (endptr - buffer != sizeof(buffer) - 1) {
+	if (!fu_strtoull(buffer, &valuetmp, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error)) {
 		g_autofree gchar *str = fu_strsafe(buffer, sizeof(buffer));
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "cannot parse %s as hex",
-			    str);
+		g_prefix_error(error, "cannot parse %s as hex: ", str);
 		return FALSE;
 	}
 	if (value != NULL)
@@ -185,8 +167,7 @@ fu_firmware_strparse_uint24_safe(const gchar *data,
 				 GError **error)
 {
 	gchar buffer[7] = {'\0'};
-	gchar *endptr = NULL;
-	guint64 valuetmp;
+	guint64 valuetmp = 0;
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -196,14 +177,9 @@ fu_firmware_strparse_uint24_safe(const gchar *data,
 			    sizeof(buffer) - 1,
 			    error))
 		return FALSE;
-	valuetmp = g_ascii_strtoull(buffer, &endptr, 16);
-	if (endptr - buffer != sizeof(buffer) - 1) {
+	if (!fu_strtoull(buffer, &valuetmp, 0, G_MAXUINT32, FU_INTEGER_BASE_16, error)) {
 		g_autofree gchar *str = fu_strsafe(buffer, sizeof(buffer));
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "cannot parse %s as hex",
-			    str);
+		g_prefix_error(error, "cannot parse %s as hex: ", str);
 		return FALSE;
 	}
 	if (value != NULL)
@@ -234,8 +210,7 @@ fu_firmware_strparse_uint32_safe(const gchar *data,
 				 GError **error)
 {
 	gchar buffer[9] = {'\0'};
-	gchar *endptr = NULL;
-	guint64 valuetmp;
+	guint64 valuetmp = 0;
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -245,14 +220,9 @@ fu_firmware_strparse_uint32_safe(const gchar *data,
 			    sizeof(buffer) - 1,
 			    error))
 		return FALSE;
-	valuetmp = g_ascii_strtoull(buffer, &endptr, 16);
-	if (endptr - buffer != sizeof(buffer) - 1) {
+	if (!fu_strtoull(buffer, &valuetmp, 0, G_MAXUINT32, FU_INTEGER_BASE_16, error)) {
 		g_autofree gchar *str = fu_strsafe(buffer, sizeof(buffer));
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "cannot parse %s as hex",
-			    str);
+		g_prefix_error(error, "cannot parse %s as hex: ", str);
 		return FALSE;
 	}
 	if (value != NULL)

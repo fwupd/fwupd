@@ -117,7 +117,12 @@ fu_uefi_cod_device_get_variable_idx(FuUefiCodDevice *self,
 			    name);
 		return FALSE;
 	}
-	if (!fu_strtoull(str + strlen("Capsule"), &tmp, 0, G_MAXUINT32, error))
+	if (!fu_strtoull(str + strlen("Capsule"),
+			 &tmp,
+			 0,
+			 G_MAXUINT32,
+			 FU_INTEGER_BASE_AUTO,
+			 error))
 		return FALSE;
 	if (value != NULL)
 		*value = tmp;

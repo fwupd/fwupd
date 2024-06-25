@@ -510,18 +510,20 @@ fu_mtd_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 
 	/* load from quirks */
 	if (g_strcmp0(key, "MtdMetadataOffset") == 0) {
-		if (!fu_strtoull(value, &self->metadata_offset, 0x0, G_MAXUINT32, error))
-			return FALSE;
-		return TRUE;
+		return fu_strtoull(value,
+				   &self->metadata_offset,
+				   0x0,
+				   G_MAXUINT32,
+				   FU_INTEGER_BASE_AUTO,
+				   error);
 	}
 	if (g_strcmp0(key, "MtdMetadataSize") == 0) {
-		if (!fu_strtoull(value,
-				 &self->metadata_size,
-				 0x100,
-				 FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX,
-				 error))
-			return FALSE;
-		return TRUE;
+		return fu_strtoull(value,
+				   &self->metadata_size,
+				   0x100,
+				   FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX,
+				   FU_INTEGER_BASE_AUTO,
+				   error);
 	}
 
 	/* failed */

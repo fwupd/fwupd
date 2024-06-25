@@ -65,7 +65,7 @@ fu_thunderbolt_device_find_nvmem(FuThunderboltDevice *self, gboolean active, GEr
 gboolean
 fu_thunderbolt_device_check_authorized(FuThunderboltDevice *self, GError **error)
 {
-	guint64 status;
+	guint64 status = 0;
 	g_autofree gchar *attribute = NULL;
 	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
 	/* read directly from file to prevent udev caching */
@@ -81,14 +81,8 @@ fu_thunderbolt_device_check_authorized(FuThunderboltDevice *self, GError **error
 
 	if (!g_file_get_contents(safe_path, &attribute, NULL, error))
 		return FALSE;
-	status = g_ascii_strtoull(attribute, NULL, 16);
-	if (status == G_MAXUINT64 && errno == ERANGE) {
-		g_set_error(error,
-			    G_IO_ERROR, /* nocheck */
-			    g_io_error_from_errno(errno),
-			    "failed to read 'authorized: %s",
-			    g_strerror(errno));
-		fu_error_convert(error);
+	if (!fu_strtoull(attribute, &status, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error)) {
+		g_prefix_error(error, "failed to read authorized: ");
 		return FALSE;
 	}
 	if (status == 1 || status == 2)
@@ -103,6 +97,8 @@ gboolean
 fu_thunderbolt_device_get_version(FuThunderboltDevice *self, GError **error)
 {
 	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
+	guint64 version_major = 0;
+	guint64 version_minor = 0;
 	g_auto(GStrv) split = NULL;
 	g_autofree gchar *version_raw = NULL;
 	g_autofree gchar *version = NULL;
@@ -143,10 +139,11 @@ fu_thunderbolt_device_get_version(FuThunderboltDevice *self, GError **error)
 			    version_raw);
 		return FALSE;
 	}
-
-	version = g_strdup_printf("%02x.%02x",
-				  (guint)g_ascii_strtoull(split[0], NULL, 16),
-				  (guint)g_ascii_strtoull(split[1], NULL, 16));
+	if (!fu_strtoull(split[0], &version_major, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error))
+		return FALSE;
+	if (!fu_strtoull(split[1], &version_minor, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error))
+		return FALSE;
+	version = g_strdup_printf("%02x.%02x", (guint)version_major, (guint)version_minor);
 	fu_device_set_version(FU_DEVICE(self), version);
 	return TRUE;
 }
@@ -198,21 +195,15 @@ static gboolean
 fu_thunderbolt_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	const gchar *attribute;
-	guint64 status;
+	guint64 status = 0;
 
 	/* now check if the update actually worked */
 	attribute =
 	    fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "nvm_authenticate", error);
 	if (attribute == NULL)
 		return FALSE;
-	status = g_ascii_strtoull(attribute, NULL, 16);
-	if (status == G_MAXUINT64 && errno == ERANGE) {
-		g_set_error(error,
-			    G_IO_ERROR, /* nocheck */
-			    g_io_error_from_errno(errno),
-			    "failed to read 'nvm_authenticate: %s",
-			    g_strerror(errno));
-		fu_error_convert(error);
+	if (!fu_strtoull(attribute, &status, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error)) {
+		g_prefix_error(error, "failed to read nvm_authenticate: ");
 		return FALSE;
 	}
 

@@ -60,6 +60,7 @@ fu_hwids_dmi_setup(FuContext *ctx, FuHwids *self, GError **error)
 					 &val,
 					 FU_SMBIOS_CHASSIS_KIND_OTHER,
 					 FU_SMBIOS_CHASSIS_KIND_LAST,
+					 FU_INTEGER_BASE_AUTO,
 					 &error_local)) {
 				g_warning("ignoring enclosure kind %s", buf);
 				continue;

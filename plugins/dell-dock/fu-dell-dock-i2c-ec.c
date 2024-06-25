@@ -884,13 +884,13 @@ fu_dell_dock_ec_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *va
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "DellDockUnlockTarget") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->unlock_target = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DellDockBoardMin") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->board_min = tmp;
 		return TRUE;
@@ -904,7 +904,7 @@ fu_dell_dock_ec_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *va
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DellDockBlobVersionOffset") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->blob_version_offset = tmp;
 		return TRUE;

@@ -456,8 +456,15 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 
 		split = g_strsplit(ip_str, ":", 2);
 		fu_redfish_backend_set_hostname(self->backend, split[0]);
-		if (g_strv_length(split) > 1)
-			port = g_ascii_strtoull(split[1], NULL, 10);
+		if (g_strv_length(split) > 1) {
+			if (!fu_strtoull(split[1],
+					 &port,
+					 0,
+					 G_MAXUINT64,
+					 FU_INTEGER_BASE_10,
+					 error))
+				return FALSE;
+		}
 		if (port == 0 || port == G_MAXUINT64) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -607,7 +614,12 @@ fu_redfish_plugin_cleanup(FuPlugin *plugin,
 
 	/* read the config file to work out how long to wait */
 	restart_timeout_str = fu_plugin_get_config_value(plugin, "ManagerResetTimeout");
-	if (!fu_strtoull(restart_timeout_str, &reset_timeout, 1, 86400, error))
+	if (!fu_strtoull(restart_timeout_str,
+			 &reset_timeout,
+			 1,
+			 86400,
+			 FU_INTEGER_BASE_AUTO,
+			 error))
 		return FALSE;
 
 	/* wait for the BMC to come back */

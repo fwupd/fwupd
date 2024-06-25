@@ -439,7 +439,7 @@ fu_igsc_device_get_fw_status(FuIgscDevice *self, guint line, guint32 *fw_status,
 		return FALSE;
 	}
 	hex = g_strdup_printf("0x%s", tmp);
-	if (!fu_strtoull(hex, &tmp64, 0x1, G_MAXUINT32 - 0x1, error)) {
+	if (!fu_strtoull(hex, &tmp64, 0x1, G_MAXUINT32 - 0x1, FU_INTEGER_BASE_AUTO, error)) {
 		g_prefix_error(error, "fw_status %s is invalid: ", tmp);
 		return FALSE;
 	}

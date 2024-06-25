@@ -21,21 +21,26 @@
  * @value: (out) (nullable): parsed value
  * @min: minimum acceptable value, typically 0
  * @max: maximum acceptable value, typically G_MAXUINT64
+ * @base: default log base, usually %FU_INTEGER_BASE_AUTO
  * @error: (nullable): optional return location for an error
  *
- * Converts a string value to an integer. Values are assumed base 10, unless
- * prefixed with "0x" where they are parsed as base 16.
+ * Converts a string value to an integer. If the @value is prefixed with `0x` then the base is
+ * set to 16 automatically.
  *
  * Returns: %TRUE if the value was parsed correctly, or %FALSE for error
  *
- * Since: 1.8.2
+ * Since: 2.0.0
  **/
 gboolean
-fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError **error)
+fu_strtoull(const gchar *str,
+	    guint64 *value,
+	    guint64 min,
+	    guint64 max,
+	    FuIntegerBase base,
+	    GError **error)
 {
 	gchar *endptr = NULL;
 	guint64 value_tmp;
-	guint base = 10;
 
 	/* sanity check */
 	if (str == NULL) {
@@ -47,13 +52,25 @@ fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError *
 	}
 
 	/* detect hex */
-	if (g_str_has_prefix(str, "0x")) {
+	if (base == FU_INTEGER_BASE_AUTO) {
+		if (g_str_has_prefix(str, "0x")) {
+			str += 2;
+			base = FU_INTEGER_BASE_16;
+		} else {
+			base = FU_INTEGER_BASE_10;
+		}
+	} else if (base == FU_INTEGER_BASE_16 && g_str_has_prefix(str, "0x")) {
 		str += 2;
-		base = 16;
+	} else if (base == FU_INTEGER_BASE_10 && g_str_has_prefix(str, "0x")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "cannot parse 0x-prefixed base-10 string");
+		return FALSE;
 	}
 
 	/* convert */
-	value_tmp = g_ascii_strtoull(str, &endptr, base);
+	value_tmp = g_ascii_strtoull(str, &endptr, base); /* nocheck */
 	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "cannot parse %s", str);
 		return FALSE;
@@ -101,6 +118,7 @@ fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError *
  * @value: (out) (nullable): parsed value
  * @min: minimum acceptable value, typically 0
  * @max: maximum acceptable value, typically G_MAXINT64
+ * @base: default log base, usually %FU_INTEGER_BASE_AUTO
  * @error: (nullable): optional return location for an error
  *
  * Converts a string value to an integer. Values are assumed base 10, unless
@@ -108,14 +126,18 @@ fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError *
  *
  * Returns: %TRUE if the value was parsed correctly, or %FALSE for error
  *
- * Since: 1.9.7
+ * Since: 2.0.0
  **/
 gboolean
-fu_strtoll(const gchar *str, gint64 *value, gint64 min, gint64 max, GError **error)
+fu_strtoll(const gchar *str,
+	   gint64 *value,
+	   gint64 min,
+	   gint64 max,
+	   FuIntegerBase base,
+	   GError **error)
 {
 	gchar *endptr = NULL;
 	gint64 value_tmp;
-	guint base = 10;
 
 	/* sanity check */
 	if (str == NULL) {
@@ -127,13 +149,25 @@ fu_strtoll(const gchar *str, gint64 *value, gint64 min, gint64 max, GError **err
 	}
 
 	/* detect hex */
-	if (g_str_has_prefix(str, "0x")) {
+	if (base == FU_INTEGER_BASE_AUTO) {
+		if (g_str_has_prefix(str, "0x")) {
+			str += 2;
+			base = FU_INTEGER_BASE_16;
+		} else {
+			base = FU_INTEGER_BASE_10;
+		}
+	} else if (base == FU_INTEGER_BASE_16 && g_str_has_prefix(str, "0x")) {
 		str += 2;
-		base = 16;
+	} else if (base == FU_INTEGER_BASE_10 && g_str_has_prefix(str, "0x")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "cannot parse 0x-prefixed base-10 string");
+		return FALSE;
 	}
 
 	/* convert */
-	value_tmp = g_ascii_strtoll(str, &endptr, base);
+	value_tmp = g_ascii_strtoll(str, &endptr, base); /* nocheck */
 	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "cannot parse %s", str);
 		return FALSE;

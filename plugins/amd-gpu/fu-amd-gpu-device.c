@@ -228,7 +228,7 @@ fu_amd_gpu_device_wait_for_completion_cb(FuDevice *device, gpointer user_data, G
 	psp_vbflash_status = g_build_filename(base, "psp_vbflash_status", NULL);
 	if (!g_file_get_contents(psp_vbflash_status, &buf, &sz, error))
 		return FALSE;
-	if (!fu_strtoull(buf, &status, 0, G_MAXUINT64, error))
+	if (!fu_strtoull(buf, &status, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
 	if (status != PSPVBFLASH_SUCCESS) {
 		g_set_error(error,

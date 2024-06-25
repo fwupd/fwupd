@@ -7948,7 +7948,12 @@ fu_engine_context_set_battery_threshold(FuContext *ctx)
 		minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;
 	} else {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_strtoull(battery_str, &minimum_battery, 0, 100, &error_local)) {
+		if (!fu_strtoull(battery_str,
+				 &minimum_battery,
+				 0,
+				 100,
+				 FU_INTEGER_BASE_AUTO,
+				 &error_local)) {
 			g_warning("invalid minimum battery level specified: %s",
 				  error_local->message);
 			minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;

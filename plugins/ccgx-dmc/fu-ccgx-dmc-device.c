@@ -781,7 +781,7 @@ fu_ccgx_dmc_device_set_quirk_kv(FuDevice *device,
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
 	if (g_strcmp0(key, "CcgxDmcTriggerCode") == 0) {
 		guint64 tmp = 0;
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->trigger_code = tmp;
 		return TRUE;

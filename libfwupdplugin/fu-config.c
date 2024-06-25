@@ -659,7 +659,7 @@ fu_config_get_value_u64(FuConfig *self, const gchar *section, const gchar *key)
 	} else {
 		value_tmp = tmp;
 	}
-	if (!fu_strtoull(value_tmp, &value, 0, G_MAXUINT64, &error_local)) {
+	if (!fu_strtoull(value_tmp, &value, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, &error_local)) {
 		g_warning("failed to parse [%s] %s = %s as integer", section, key, value_tmp);
 		return G_MAXUINT64;
 	}

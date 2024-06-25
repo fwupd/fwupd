@@ -274,7 +274,12 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 	fu_struct_edid_set_product_code(st, self->product_code);
 
 	/* if this is a integer, store it in the header rather than in a descriptor */
-	if (fu_strtoull(self->serial_number, &serial_number, 0, G_MAXUINT32, NULL))
+	if (fu_strtoull(self->serial_number,
+			&serial_number,
+			0,
+			G_MAXUINT32,
+			FU_INTEGER_BASE_AUTO,
+			NULL))
 		fu_struct_edid_set_serial_number(st, serial_number);
 
 	/* store descriptors */
@@ -378,7 +383,7 @@ fu_edid_build(FuFirmware *firmware, XbNode *n, GError **error)
 	value = xb_node_query_text(n, "product_code", NULL);
 	if (value != NULL) {
 		guint64 tmp = 0;
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		fu_edid_set_product_code(self, tmp);
 	}

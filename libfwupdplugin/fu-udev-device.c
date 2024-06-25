@@ -110,7 +110,7 @@ fu_udev_device_get_sysfs_attr_as_uint32(GUdevDevice *udev_device, const gchar *n
 	tmp = g_udev_device_get_sysfs_attr(udev_device, name);
 	if (tmp == NULL)
 		return 0x0;
-	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT32, &error_local)) {
+	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, &error_local)) {
 		g_warning("reading %s for %s was invalid: %s", name, tmp, error_local->message);
 		return 0x0;
 	}
@@ -127,7 +127,7 @@ fu_udev_device_get_sysfs_attr_as_uint16(GUdevDevice *udev_device, const gchar *n
 	tmp = g_udev_device_get_sysfs_attr(udev_device, name);
 	if (tmp == NULL)
 		return 0x0;
-	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT16, &error_local)) {
+	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, &error_local)) {
 		g_warning("reading %s for %s was invalid: %s", name, tmp, error_local->message);
 		return 0x0;
 	}
@@ -144,7 +144,7 @@ fu_udev_device_get_sysfs_attr_as_uint8(GUdevDevice *udev_device, const gchar *na
 	tmp = g_udev_device_get_sysfs_attr(udev_device, name);
 	if (tmp == NULL)
 		return 0x0;
-	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT8, &error_local)) {
+	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, &error_local)) {
 		g_warning("reading %s for %s was invalid: %s",
 			  name,
 			  g_udev_device_get_sysfs_path(udev_device),
@@ -343,7 +343,7 @@ fu_udev_device_get_property_as_uint16(GUdevDevice *udev_device, const gchar *key
 	if (tmp == NULL)
 		return 0x0;
 	str = g_strdup_printf("0x%s", tmp);
-	if (!fu_strtoull(str, &value, 0x0, G_MAXUINT16, NULL))
+	if (!fu_strtoull(str, &value, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, NULL))
 		return 0x0;
 	return (guint16)value;
 }
@@ -417,19 +417,32 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		if (tmp != NULL) {
 			g_auto(GStrv) split = g_strsplit(tmp, ":", -1);
 			if (g_strv_length(split) == 3) {
-				guint64 val = g_ascii_strtoull(split[1], NULL, 16);
-				if (val > G_MAXUINT16) {
-					g_warning("reading %s for %s overflowed",
+				guint64 val = 0;
+				g_autoptr(GError) error_local = NULL;
+
+				if (!fu_strtoull(split[1],
+						 &val,
+						 0,
+						 G_MAXUINT16,
+						 FU_INTEGER_BASE_16,
+						 &error_local)) {
+					g_warning("reading %s for %s failed: %s",
 						  split[1],
-						  g_udev_device_get_sysfs_path(priv->udev_device));
+						  g_udev_device_get_sysfs_path(priv->udev_device),
+						  error_local->message);
 				} else {
 					priv->vendor = val;
 				}
-				val = g_ascii_strtoull(split[2], NULL, 16);
-				if (val > G_MAXUINT32) {
-					g_warning("reading %s for %s overflowed",
+				if (!fu_strtoull(split[2],
+						 &val,
+						 0,
+						 G_MAXUINT16,
+						 FU_INTEGER_BASE_16,
+						 &error_local)) {
+					g_warning("reading %s for %s failed: %s",
 						  split[2],
-						  g_udev_device_get_sysfs_path(priv->udev_device));
+						  g_udev_device_get_sysfs_path(priv->udev_device),
+						  error_local->message);
 				} else {
 					priv->model = val;
 				}
@@ -1082,6 +1095,7 @@ fu_udev_device_get_number(FuUdevDevice *self)
 				 &tmp,
 				 0x0,
 				 G_MAXUINT64,
+				 FU_INTEGER_BASE_AUTO,
 				 &error_local)) {
 			g_warning("failed to convert udev number: %s", error_local->message);
 			return G_MAXUINT64;
@@ -2058,7 +2072,7 @@ fu_udev_device_get_sysfs_attr_uint64(FuUdevDevice *self,
 	tmp = fu_udev_device_get_sysfs_attr(self, attr, error);
 	if (tmp == NULL)
 		return FALSE;
-	return fu_strtoull(tmp, value, 0, G_MAXUINT64, error);
+	return fu_strtoull(tmp, value, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error);
 }
 
 /**

@@ -125,7 +125,12 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 		guint64 str_idx = 0x0;
 		guint8 buf[FU_PEFILE_SECTION_ID_STRTAB_SIZE] = {0};
 
-		if (!fu_strtoull(sect_id_tmp + 1, &str_idx, 0, G_MAXUINT32, error)) {
+		if (!fu_strtoull(sect_id_tmp + 1,
+				 &str_idx,
+				 0,
+				 G_MAXUINT32,
+				 FU_INTEGER_BASE_10,
+				 error)) {
 			g_prefix_error(error, "failed to parse section ID '%s': ", sect_id_tmp + 1);
 			return FALSE;
 		}

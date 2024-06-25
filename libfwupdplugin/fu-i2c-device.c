@@ -147,7 +147,12 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 	if (devname != NULL && g_str_has_prefix(devname, "i2c-")) {
 		guint64 tmp64 = 0;
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_strtoull(devname + 4, &tmp64, 0, G_MAXUINT, &error_local)) {
+		if (!fu_strtoull(devname + 4,
+				 &tmp64,
+				 0,
+				 G_MAXUINT,
+				 FU_INTEGER_BASE_AUTO,
+				 &error_local)) {
 			g_debug("ignoring i2c devname bus number: %s", error_local->message);
 		} else {
 			priv->bus_number = tmp64;

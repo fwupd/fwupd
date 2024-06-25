@@ -103,7 +103,7 @@ fu_mei_parse_fwvers(FuPlugin *plugin, const gchar *fwvers, GError **error)
 	}
 
 	/* parse platform and versions */
-	if (!fu_strtoull(sections[0], &tmp64, 0, G_MAXUINT8, error)) {
+	if (!fu_strtoull(sections[0], &tmp64, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error)) {
 		g_prefix_error(error, "failed to process platform version %s: ", sections[0]);
 		return FALSE;
 	}
@@ -118,22 +118,22 @@ fu_mei_parse_fwvers(FuPlugin *plugin, const gchar *fwvers, GError **error)
 		return FALSE;
 	}
 
-	if (!fu_strtoull(split[0], &tmp64, 0, G_MAXUINT8, error)) {
+	if (!fu_strtoull(split[0], &tmp64, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error)) {
 		g_prefix_error(error, "failed to process major version %s: ", split[0]);
 		return FALSE;
 	}
 	self->vers.major = tmp64;
-	if (!fu_strtoull(split[1], &tmp64, 0, G_MAXUINT8, error)) {
+	if (!fu_strtoull(split[1], &tmp64, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error)) {
 		g_prefix_error(error, "failed to process minor version %s: ", split[1]);
 		return FALSE;
 	}
 	self->vers.minor = tmp64;
-	if (!fu_strtoull(split[2], &tmp64, 0, G_MAXUINT8, error)) {
+	if (!fu_strtoull(split[2], &tmp64, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error)) {
 		g_prefix_error(error, "failed to process hotfix version %s: ", split[2]);
 		return FALSE;
 	}
 	self->vers.hotfix = tmp64;
-	if (!fu_strtoull(split[3], &tmp64, 0, G_MAXUINT16, error)) {
+	if (!fu_strtoull(split[3], &tmp64, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error)) {
 		g_prefix_error(error, "failed to process buildno version %s: ", split[3]);
 		return FALSE;
 	}

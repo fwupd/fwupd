@@ -1990,49 +1990,49 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_SIZE_MIN) == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT64, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		fu_device_set_firmware_size_min(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_SIZE_MAX) == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT64, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		fu_device_set_firmware_size_max(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_SIZE) == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT64, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		fu_device_set_firmware_size(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_INSTALL_DURATION) == 0) {
-		if (!fu_strtoull(value, &tmp, 0, 60 * 60 * 24, error))
+		if (!fu_strtoull(value, &tmp, 0, 60 * 60 * 24, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		fu_device_set_install_duration(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_PRIORITY) == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		fu_device_set_priority(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_BATTERY_THRESHOLD) == 0) {
-		if (!fu_strtoull(value, &tmp, 0, 100, error))
+		if (!fu_strtoull(value, &tmp, 0, 100, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		fu_device_set_battery_threshold(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_REMOVE_DELAY) == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		fu_device_set_remove_delay(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_ACQUIESCE_DELAY) == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		fu_device_set_acquiesce_delay(self, tmp);
 		return TRUE;
@@ -2697,8 +2697,8 @@ fu_device_get_metadata_integer(FuDevice *self, const gchar *key)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
-	gchar *endptr = NULL;
-	guint64 val;
+	guint64 val = 0;
+	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), G_MAXUINT);
 	g_return_val_if_fail(key != NULL, G_MAXUINT);
@@ -2708,11 +2708,10 @@ fu_device_get_metadata_integer(FuDevice *self, const gchar *key)
 	tmp = g_hash_table_lookup(priv->metadata, key);
 	if (tmp == NULL)
 		return G_MAXUINT;
-	val = g_ascii_strtoull(tmp, &endptr, 10);
-	if (endptr != NULL && endptr[0] != '\0')
+	if (!fu_strtoull(tmp, &val, 0, G_MAXUINT, FU_INTEGER_BASE_AUTO, &error_local)) {
+		g_warning("could not convert %s to integer: %s", tmp, error_local->message);
 		return G_MAXUINT;
-	if (val > G_MAXUINT)
-		return G_MAXUINT;
+	}
 	return (guint)val;
 }
 

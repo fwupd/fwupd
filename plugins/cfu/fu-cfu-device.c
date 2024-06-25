@@ -513,35 +513,35 @@ fu_cfu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	/* load from quirks */
 	if (g_strcmp0(key, "CfuVersionGetReport") == 0) {
 		guint64 tmp = 0;
-		if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->version_get_report.op = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CfuOfferSetReport") == 0) {
 		guint64 tmp = 0;
-		if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->offer_set_report.op = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CfuOfferGetReport") == 0) {
 		guint64 tmp = 0;
-		if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->offer_get_report.op = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CfuContentSetReport") == 0) {
 		guint64 tmp = 0;
-		if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->content_set_report.op = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CfuContentGetReport") == 0) {
 		guint64 tmp = 0;
-		if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->content_get_report.op = tmp;
 		return TRUE;

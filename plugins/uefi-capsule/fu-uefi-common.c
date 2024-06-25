@@ -221,7 +221,7 @@ fu_uefi_read_file_as_uint64(const gchar *path, const gchar *attr_name)
 
 	if (!g_file_get_contents(fn, &data, NULL, NULL))
 		return 0x0;
-	if (!fu_strtoull(data, &tmp, 0, G_MAXUINT64, &error_local)) {
+	if (!fu_strtoull(data, &tmp, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, &error_local)) {
 		g_warning("invalid string specified: %s", error_local->message);
 		return G_MAXUINT64;
 	}

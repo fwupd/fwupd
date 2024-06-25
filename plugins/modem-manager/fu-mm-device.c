@@ -477,14 +477,21 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 		} else if (!g_file_get_contents(path, &value_str, NULL, &error_local)) {
 			g_warning("failed to set vendor ID: %s", error_local->message);
 		} else {
-			guint64 value_int;
+			guint64 value_int = 0;
+			g_autoptr(GError) error_local2 = NULL;
 
 			/* note: the string value may be prefixed with '0x' (e.g. when reading
 			 * the PCI 'vendor' attribute, or not prefixed with anything, as in the
 			 * USB 'idVendor' attribute. */
-			value_int = g_ascii_strtoull(value_str, NULL, 16);
-			if (value_int > G_MAXUINT16) {
-				g_warning("failed to set vendor ID: invalid value: %s", value_str);
+			if (!fu_strtoull(value_str,
+					 &value_int,
+					 0,
+					 G_MAXUINT16,
+					 FU_INTEGER_BASE_16,
+					 &error_local2)) {
+				g_warning("failed to set vendor ID %s: %s",
+					  value_str,
+					  error_local2->message);
 			} else {
 				g_autofree gchar *vendor_id =
 				    g_strdup_printf("%s:0x%04X", device_bus, (guint)value_int);

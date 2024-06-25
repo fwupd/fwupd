@@ -104,7 +104,7 @@ fu_bios_setting_get_key_as_integer(FwupdBiosSetting *attr, const gchar *key, GEr
 
 	if (!fu_bios_setting_get_key(attr, key, &str, error))
 		return G_MAXUINT64;
-	if (!fu_strtoull(str, &tmp, 0, G_MAXUINT64, error)) {
+	if (!fu_strtoull(str, &tmp, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error)) {
 		g_prefix_error(error, "failed to convert %s to integer: ", key);
 		return G_MAXUINT64;
 	}
@@ -608,7 +608,7 @@ fu_bios_settings_get_pending_reboot(FuBiosSettings *self, gboolean *result, GErr
 	if (!fu_bios_setting_get_key(attr, NULL, &data, error))
 		return FALSE;
 	fwupd_bios_setting_set_current_value(attr, data);
-	if (!fu_strtoull(data, &val, 0, G_MAXUINT32, error))
+	if (!fu_strtoull(data, &val, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
 
 	*result = (val == 1);

@@ -63,7 +63,7 @@ fu_pci_psp_device_get_attr(FwupdSecurityAttr *attr,
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return FALSE;
 	}
-	if (!fu_strtoull(buf, &val, 0, G_MAXUINT32, error))
+	if (!fu_strtoull(buf, &val, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
 	*out = val ? TRUE : FALSE;
 	return TRUE;

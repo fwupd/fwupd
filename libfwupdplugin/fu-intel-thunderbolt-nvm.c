@@ -751,21 +751,21 @@ fu_intel_thunderbolt_nvm_build(FuFirmware *firmware, XbNode *n, GError **error)
 	tmp = xb_node_query_text(n, "vendor_id", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, error))
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->vendor_id = val;
 	}
 	tmp = xb_node_query_text(n, "device_id", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, error))
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->device_id = val;
 	}
 	tmp = xb_node_query_text(n, "model_id", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, error))
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->model_id = val;
 	}
@@ -784,7 +784,7 @@ fu_intel_thunderbolt_nvm_build(FuFirmware *firmware, XbNode *n, GError **error)
 	tmp = xb_node_query_text(n, "flash_size", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, 0x07, error))
+		if (!fu_strtoull(tmp, &val, 0x0, 0x07, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->flash_size = val;
 	}

@@ -1450,19 +1450,19 @@ fu_dfu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, FU_QUIRKS_DFU_FORCE_VERSION) == 0) {
-		if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->force_version = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DfuForceTimeout") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->timeout_ms = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DfuForceTransferSize") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->force_transfer_size = tmp;
 		return TRUE;

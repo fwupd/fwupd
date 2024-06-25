@@ -1082,7 +1082,7 @@ fu_jabra_gnp_device_set_quirk_kv(FuDevice *device,
 
 	if (g_strcmp0(key, "JabraGnpAddress") == 0) {
 		guint64 val = 0;
-		if (!fu_strtoull(value, &val, 0x0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &val, 0x0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->address = (guint8)val;
 		return TRUE;

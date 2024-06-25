@@ -167,7 +167,7 @@ fu_test_plugin_get_version(GBytes *blob_fw)
 
 	if (str_safe == NULL)
 		return NULL;
-	if (!fu_strtoull(str_safe, &val, 0, G_MAXSIZE, &error_local)) {
+	if (!fu_strtoull(str_safe, &val, 0, G_MAXSIZE, FU_INTEGER_BASE_AUTO, &error_local)) {
 		g_debug("invalid version specified: %s", error_local->message);
 		return NULL;
 	}
@@ -203,7 +203,12 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 	fu_progress_set_status(progress, FWUPD_STATUS_DECOMPRESSING);
 	decompress_delay_str = fu_plugin_get_config_value(plugin, "DecompressDelay");
 	if (decompress_delay_str != NULL) {
-		if (!fu_strtoull(decompress_delay_str, &delay_decompress_ms, 0, 10000, error)) {
+		if (!fu_strtoull(decompress_delay_str,
+				 &delay_decompress_ms,
+				 0,
+				 10000,
+				 FU_INTEGER_BASE_AUTO,
+				 error)) {
 			g_prefix_error(error, "failed to parse DecompressDelay: ");
 			return FALSE;
 		}
@@ -228,7 +233,12 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 			return FALSE;
 		request_delay_str = fu_plugin_get_config_value(plugin, "RequestDelay");
 		if (request_delay_str != NULL) {
-			if (!fu_strtoull(request_delay_str, &delay_request_ms, 0, 10000, error)) {
+			if (!fu_strtoull(request_delay_str,
+					 &delay_request_ms,
+					 0,
+					 10000,
+					 FU_INTEGER_BASE_AUTO,
+					 error)) {
 				g_prefix_error(error, "failed to parse RequestDelay: ");
 				return FALSE;
 			}
@@ -239,7 +249,12 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	write_delay_str = fu_plugin_get_config_value(plugin, "WriteDelay");
 	if (write_delay_str != NULL) {
-		if (!fu_strtoull(write_delay_str, &delay_write_ms, 0, 10000, error)) {
+		if (!fu_strtoull(write_delay_str,
+				 &delay_write_ms,
+				 0,
+				 10000,
+				 FU_INTEGER_BASE_AUTO,
+				 error)) {
 			g_prefix_error(error, "failed to parse WriteDelay: ");
 			return FALSE;
 		}
@@ -251,7 +266,12 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_VERIFY);
 	verify_delay_str = fu_plugin_get_config_value(plugin, "VerifyDelay");
 	if (verify_delay_str != NULL) {
-		if (!fu_strtoull(verify_delay_str, &delay_verify_ms, 0, 10000, error)) {
+		if (!fu_strtoull(verify_delay_str,
+				 &delay_verify_ms,
+				 0,
+				 10000,
+				 FU_INTEGER_BASE_AUTO,
+				 error)) {
 			g_prefix_error(error, "failed to parse VerifyDelay: ");
 			return FALSE;
 		}

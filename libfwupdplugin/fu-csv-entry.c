@@ -107,7 +107,7 @@ fu_csv_entry_get_value_by_column_id_uint64(FuCsvEntry *self,
 		return FALSE;
 	}
 
-	return fu_strtoull(str_value, value, 0, G_MAXUINT64, error);
+	return fu_strtoull(str_value, value, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error);
 }
 
 static void
@@ -171,7 +171,7 @@ fu_csv_entry_parse_token_cb(GString *token, guint token_idx, gpointer user_data,
 	}
 	if (g_strcmp0(column_id, "$idx") == 0) {
 		guint64 value = 0;
-		if (!fu_strtoull(token->str, &value, 0, G_MAXUINT64, error))
+		if (!fu_strtoull(token->str, &value, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		g_ptr_array_add(priv->values, NULL);
 		fu_firmware_set_idx(FU_FIRMWARE(self), value);
@@ -184,7 +184,7 @@ fu_csv_entry_parse_token_cb(GString *token, guint token_idx, gpointer user_data,
 	}
 	if (g_strcmp0(column_id, "$version_raw") == 0) {
 		guint64 value = 0;
-		if (!fu_strtoull(token->str, &value, 0, G_MAXUINT64, error))
+		if (!fu_strtoull(token->str, &value, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		g_ptr_array_add(priv->values, NULL);
 		fu_firmware_set_version_raw(FU_FIRMWARE(self), value);

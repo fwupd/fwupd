@@ -1578,6 +1578,7 @@ fu_nordic_hid_cfg_channel_write_firmware(FuDevice *device,
 	FuNordicHidCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(device);
 	gsize streamsz = 0;
 	guint32 checksum;
+	guint64 val = 0;
 	g_autofree gchar *csum_str = NULL;
 	g_autofree gchar *image_id = NULL;
 	g_autoptr(GInputStream) stream = NULL;
@@ -1595,7 +1596,9 @@ fu_nordic_hid_cfg_channel_write_firmware(FuDevice *device,
 	if (csum_str == NULL)
 		return FALSE;
 	/* expecting checksum string in hex */
-	checksum = g_ascii_strtoull(csum_str, NULL, 16);
+	if (!fu_strtoull(csum_str, &val, 0, G_MAXUINT32, FU_INTEGER_BASE_16, error))
+		return FALSE;
+	checksum = (guint32)val;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
