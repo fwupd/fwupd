@@ -761,7 +761,7 @@ fu_igsc_device_set_pci_power_policy(FuIgscDevice *self, const gchar *val, GError
 	g_autoptr(FuUdevDevice) parent = NULL;
 
 	/* get PCI parent */
-	parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self), "pci", error);
+	parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self), "pci", NULL, error);
 	if (parent == NULL)
 		return FALSE;
 	return fu_udev_device_write_sysfs(parent, "power/control", val, error);

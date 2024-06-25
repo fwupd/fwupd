@@ -901,7 +901,10 @@ fu_pxi_receiver_device_probe(FuDevice *device, GError **error)
 	g_autoptr(FuUdevDevice) usb_parent = NULL;
 
 	/* check USB interface number */
-	usb_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "usb", error);
+	usb_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
+							      "usb",
+							      NULL, /* devtype */
+							      error);
 	if (usb_parent == NULL)
 		return FALSE;
 	if (!fu_udev_device_get_sysfs_attr_uint64(usb_parent, "bInterfaceNumber", &iface_nr, error))

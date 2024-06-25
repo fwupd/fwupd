@@ -1273,22 +1273,6 @@ fu_udev_device_match_subsystem_devtype(GUdevDevice *udev_device,
 	}
 	return TRUE;
 }
-
-static GUdevDevice *
-fu_udev_device_get_parent_with_subsystem_devtype(GUdevDevice *udev_device,
-						 const gchar *subsystem,
-						 const gchar *devtype)
-{
-	g_autoptr(GUdevDevice) udev_device_tmp = g_object_ref(udev_device);
-	while (udev_device_tmp != NULL) {
-		g_autoptr(GUdevDevice) parent = NULL;
-		if (fu_udev_device_match_subsystem_devtype(udev_device_tmp, subsystem, devtype))
-			return g_object_ref(udev_device_tmp);
-		parent = g_udev_device_get_parent(udev_device_tmp);
-		g_set_object(&udev_device_tmp, parent);
-	}
-	return NULL;
-}
 #endif
 
 /**
@@ -1332,13 +1316,16 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 	split = g_strsplit(subsystems, ",", -1);
 	for (guint i = 0; split[i] != NULL; i++) {
 		g_auto(GStrv) subsys_devtype = g_strsplit(split[i], ":", 2);
+		g_autoptr(FuUdevDevice) device_parent = NULL;
 
 		/* matching on devtype is optional */
-		udev_device = fu_udev_device_get_parent_with_subsystem_devtype(priv->udev_device,
-									       subsys_devtype[0],
-									       subsys_devtype[1]);
-		if (udev_device != NULL) {
+		device_parent = fu_udev_device_get_parent_with_subsystem(self,
+									 subsys_devtype[0],
+									 subsys_devtype[1],
+									 NULL);
+		if (device_parent != NULL) {
 			subsystem = g_strdup(subsys_devtype[0]);
+			udev_device = g_object_ref(fu_udev_device_get_dev(device_parent));
 			break;
 		}
 	}
@@ -2244,17 +2231,21 @@ fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self,
 /**
  * fu_udev_device_get_parent_with_subsystem
  * @self: a #FuUdevDevice
- * @subsystem: (nullable): the name of a udev subsystem
+ * @subsystem: (nullable): the name of a udev subsystem, or %NULL for any
+ * @devtype: (nullable): the name of a udev devtype, e.g. `usb_interface`, or %NULL for any
  * @error: (nullable): optional return location for an error
  *
- * Get the device that is a parent of self and has the provided subsystem.
+ * Get the device that is a ancestor of self and has the provided subsystem and device type.
  *
  * Returns: (transfer full): device, or %NULL
  *
  * Since: 2.0.0
  */
 FuUdevDevice *
-fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self, const gchar *subsystem, GError **error)
+fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self,
+					 const gchar *subsystem,
+					 const gchar *devtype,
+					 GError **error)
 {
 #ifdef HAVE_GUDEV
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
@@ -2265,13 +2256,24 @@ fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self, const gchar *subsys
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "not initialized");
 		return NULL;
 	}
-	if (subsystem == NULL) {
-		device_tmp = g_udev_device_get_parent(priv->udev_device);
-	} else {
-		device_tmp =
-		    g_udev_device_get_parent_with_subsystem(priv->udev_device, subsystem, NULL);
+	device_tmp = g_object_ref(priv->udev_device);
+	while (device_tmp != NULL) {
+		g_autoptr(GUdevDevice) parent = NULL;
+		if (fu_udev_device_match_subsystem_devtype(device_tmp, subsystem, devtype))
+			break;
+		parent = g_udev_device_get_parent(device_tmp);
+		g_set_object(&device_tmp, parent);
 	}
 	if (device_tmp == NULL) {
+		if (devtype != NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no parent with subsystem %s and devtype %s",
+				    subsystem,
+				    devtype);
+			return NULL;
+		}
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
