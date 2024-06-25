@@ -752,7 +752,7 @@ fu_udev_device_set_dev(FuUdevDevice *self, GUdevDevice *udev_device)
 }
 
 /**
- * fu_udev_device_get_slot_depth:
+ * fu_udev_device_get_subsystem_depth:
  * @self: a #FuUdevDevice
  * @subsystem: a subsystem
  *
@@ -760,10 +760,10 @@ fu_udev_device_set_dev(FuUdevDevice *self, GUdevDevice *udev_device)
  *
  * Returns: unsigned integer
  *
- * Since: 1.2.4
+ * Since: 2.0.0
  **/
 guint
-fu_udev_device_get_slot_depth(FuUdevDevice *self, const gchar *subsystem)
+fu_udev_device_get_subsystem_depth(FuUdevDevice *self, const gchar *subsystem)
 {
 #ifdef HAVE_GUDEV
 	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(self));
