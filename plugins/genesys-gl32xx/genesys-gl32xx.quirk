@@ -14,3 +14,5 @@ Plugin = genesys_gl32xx
 FirmwareSize = 0x1C000
 Name = Framework SD Expansion Card
 Vendor = Framework
+# Compatible with Genesys PID 0x0764
+GenesysGl32xxCompatibleModel = 0x0764

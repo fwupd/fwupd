@@ -23,6 +23,7 @@ struct _FuGenesysGl32xxDevice {
 	gchar *chip_name;
 	guint32 packetsz;
 	guint32 customer_id;
+	guint16 compatible_model;
 };
 
 G_DEFINE_TYPE(FuGenesysGl32xxDevice, fu_genesys_gl32xx_device, FU_TYPE_UDEV_DEVICE)
@@ -488,8 +489,11 @@ fu_genesys_gl32xx_device_ensure_cid(FuGenesysGl32xxDevice *self, GError **error)
 	const guint8 cmd_gl3224_cid[] = {0xE4, 0x01, 0xBF, 0x80, 0x04, 0x00};
 	const guint8 cmd_gl323x_cid[] = {0xE4, 0x01, 0x35, 0x00, 0x04, 0x00};
 	const guint8 *cmd = NULL;
-	const guint16 model = fu_udev_device_get_model(FU_UDEV_DEVICE(self));
+	guint16 model = fu_udev_device_get_model(FU_UDEV_DEVICE(self));
 	guint8 data[4] = {0};
+
+	if (self->compatible_model != 0)
+		model = self->compatible_model;
 
 	switch (model) {
 	case 0x0749:
@@ -914,6 +918,30 @@ fu_genesys_gl32xx_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 45, "reload");
 }
 
+static gboolean
+fu_genesys_gl32xx_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, GError **error)
+{
+	FuGenesysGl32xxDevice *self = FU_GENESYS_GL32XX_DEVICE(device);
+	guint64 tmp;
+
+	/* load from quirks */
+	if (g_strcmp0(key, "GenesysGl32xxCompatibleModel") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+			return FALSE;
+
+		self->compatible_model = tmp;
+		return TRUE;
+	}
+
+	/* failed */
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
+	return FALSE;
+}
+
+
 static void
 fu_genesys_gl32xx_device_init(FuGenesysGl32xxDevice *self)
 {
@@ -960,4 +988,5 @@ fu_genesys_gl32xx_device_class_init(FuGenesysGl32xxDeviceClass *klass)
 	device_class->read_firmware = fu_genesys_gl32xx_device_read_firmware;
 	device_class->prepare_firmware = fu_genesys_gl32xx_device_prepare_firmware;
 	device_class->set_progress = fu_genesys_gl32xx_device_set_progress;
+	device_class->set_quirk_kv = fu_genesys_gl32xx_device_set_quirk_kv;
 }
