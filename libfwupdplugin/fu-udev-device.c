@@ -49,6 +49,7 @@ typedef struct {
 	gchar *bind_id;
 	gchar *driver;
 	gchar *device_file;
+	gchar *devtype;
 	FuIOChannel *io_channel;
 	FuUdevDeviceFlags flags;
 } FuUdevDevicePrivate;
@@ -71,6 +72,7 @@ enum {
 	PROP_DRIVER,
 	PROP_DEVICE_FILE,
 	PROP_BIND_ID,
+	PROP_DEVTYPE,
 	PROP_LAST
 };
 
@@ -378,6 +380,20 @@ fu_udev_device_set_vendor_from_parent(FuUdevDevice *self)
 	}
 }
 #endif
+
+static void
+fu_udev_device_set_devtype(FuUdevDevice *self, const gchar *devtype)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* not changed */
+	if (g_strcmp0(priv->devtype, devtype) == 0)
+		return;
+
+	g_free(priv->devtype);
+	priv->devtype = g_strdup(devtype);
+	g_object_notify(G_OBJECT(self), "devtype");
+}
 
 static gboolean
 fu_udev_device_probe(FuDevice *device, GError **error)
@@ -729,6 +745,7 @@ fu_udev_device_set_dev(FuUdevDevice *self, GUdevDevice *udev_device)
 	fu_udev_device_set_subsystem(self, g_udev_device_get_subsystem(priv->udev_device));
 	fu_udev_device_set_driver(self, g_udev_device_get_driver(priv->udev_device));
 	fu_udev_device_set_device_file(self, g_udev_device_get_device_file(priv->udev_device));
+	fu_udev_device_set_devtype(self, g_udev_device_get_devtype(priv->udev_device));
 
 	/* so we can display something sensible for unclaimed devices */
 	fu_device_set_backend_id(FU_DEVICE(self), g_udev_device_get_sysfs_path(priv->udev_device));
@@ -922,6 +939,7 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 		fu_udev_device_set_subsystem(uself, fu_udev_device_get_subsystem(udonor));
 		fu_udev_device_set_bind_id(uself, fu_udev_device_get_bind_id(udonor));
 		fu_udev_device_set_device_file(uself, fu_udev_device_get_device_file(udonor));
+		fu_udev_device_set_devtype(uself, fu_udev_device_get_devtype(udonor));
 		fu_udev_device_set_driver(uself, fu_udev_device_get_driver(udonor));
 	}
 	if (priv->vendor == 0x0 && priv_donor->vendor != 0x0)
@@ -1716,7 +1734,6 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 					   (guint)request,
 					   buf_base64,
 					   (guint)bufsz);
-		g_debug("%s", event_id);
 	}
 
 	/* emulated */
@@ -2108,7 +2125,7 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 }
 
 /**
- * fu_udev_device_get_devtype
+ * fu_udev_device_get_devtype:
  * @self: a #FuUdevDevice
  *
  * Returns the Udev device type
@@ -2120,15 +2137,9 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 const gchar *
 fu_udev_device_get_devtype(FuUdevDevice *self)
 {
-#ifdef HAVE_GUDEV
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-
-	if (priv->udev_device == NULL)
-		return NULL;
-	return g_udev_device_get_devtype(priv->udev_device);
-#else
-	return NULL;
-#endif
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
+	return priv->devtype;
 }
 
 /**
@@ -2545,6 +2556,9 @@ fu_udev_device_get_property(GObject *object, guint prop_id, GValue *value, GPara
 	case PROP_DEVICE_FILE:
 		g_value_set_string(value, priv->device_file);
 		break;
+	case PROP_DEVTYPE:
+		g_value_set_string(value, priv->devtype);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -2571,6 +2585,9 @@ fu_udev_device_set_property(GObject *object, guint prop_id, const GValue *value,
 	case PROP_DEVICE_FILE:
 		fu_udev_device_set_device_file(self, g_value_get_string(value));
 		break;
+	case PROP_DEVTYPE:
+		fu_udev_device_set_devtype(self, g_value_get_string(value));
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -2584,6 +2601,7 @@ fu_udev_device_finalize(GObject *object)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_free(priv->subsystem);
+	g_free(priv->devtype);
 	g_free(priv->bind_id);
 	g_free(priv->driver);
 	g_free(priv->device_file);
@@ -2709,6 +2727,20 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 				    NULL,
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_DEVICE_FILE, pspec);
+
+	/**
+	 * FuUdevDevice:devtype:
+	 *
+	 * The device type.
+	 *
+	 * Since: 2.0.0
+	 */
+	pspec = g_param_spec_string("devtype",
+				    NULL,
+				    NULL,
+				    NULL,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_DEVTYPE, pspec);
 }
 
 static void
