@@ -926,10 +926,9 @@ fu_genesys_gl32xx_device_set_quirk_kv(FuDevice *device, const gchar *key, const 
 
 	/* load from quirks */
 	if (g_strcmp0(key, "GenesysGl32xxCompatibleModel") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
-
-		self->compatible_model = tmp;
+		self->compatible_model = (guint16)tmp;
 		return TRUE;
 	}
 
