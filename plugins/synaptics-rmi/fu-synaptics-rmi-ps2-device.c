@@ -100,6 +100,8 @@ enum EStickDeviceType {
 	esdtUnknown = 0xFFFFFFFF
 };
 
+#define FU_SYNAPTICS_RMI_DEVICE_BIND_TIMEOUT 1000 /* ms */
+
 static gboolean
 fu_synaptics_rmi_ps2_device_read_ack(FuSynapticsRmiPs2Device *self, guint8 *pbuf, GError **error)
 {
@@ -861,7 +863,11 @@ fu_synaptics_rmi_ps2_device_detach(FuDevice *device, FuProgress *progress, GErro
 	}
 
 	/* put in serio_raw mode so that we can do register writes */
-	if (!fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device), "drvctl", "serio_raw", error)) {
+	if (!fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device),
+					"drvctl",
+					"serio_raw",
+					FU_SYNAPTICS_RMI_DEVICE_BIND_TIMEOUT,
+					error)) {
 		g_prefix_error(error, "failed to write to drvctl: ");
 		return FALSE;
 	}
@@ -945,7 +951,11 @@ fu_synaptics_rmi_ps2_device_attach(FuDevice *device, FuProgress *progress, GErro
 	fu_device_sleep_full(device, 5000, progress); /* ms */
 
 	/* back to psmouse */
-	if (!fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device), "drvctl", "psmouse", error)) {
+	if (!fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device),
+					"drvctl",
+					"psmouse",
+					FU_SYNAPTICS_RMI_DEVICE_BIND_TIMEOUT,
+					error)) {
 		g_prefix_error(error, "failed to write to drvctl: ");
 		return FALSE;
 	}

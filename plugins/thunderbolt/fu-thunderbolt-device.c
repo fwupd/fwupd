@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "fu-thunderbolt-common.h"
 #include "fu-thunderbolt-device.h"
 
 typedef struct {
@@ -168,7 +169,11 @@ fu_thunderbolt_device_activate(FuDevice *device, FuProgress *progress, GError **
 {
 	FuUdevDevice *udev = FU_UDEV_DEVICE(device);
 
-	return fu_udev_device_write_sysfs(udev, "nvm_authenticate", "1", error);
+	return fu_udev_device_write_sysfs(udev,
+					  "nvm_authenticate",
+					  "1",
+					  FU_THUNDERBOLT_DEVICE_WRITE_TIMEOUT,
+					  error);
 }
 
 static gboolean
@@ -178,7 +183,11 @@ fu_thunderbolt_device_authenticate(FuDevice *device, GError **error)
 	FuThunderboltDevicePrivate *priv = GET_PRIVATE(self);
 	FuUdevDevice *udev = FU_UDEV_DEVICE(device);
 
-	return fu_udev_device_write_sysfs(udev, priv->auth_method, "1", error);
+	return fu_udev_device_write_sysfs(udev,
+					  priv->auth_method,
+					  "1",
+					  FU_THUNDERBOLT_DEVICE_WRITE_TIMEOUT,
+					  error);
 }
 
 static gboolean
@@ -188,7 +197,11 @@ fu_thunderbolt_device_flush_update(FuDevice *device, GError **error)
 	FuThunderboltDevicePrivate *priv = GET_PRIVATE(self);
 	FuUdevDevice *udev = FU_UDEV_DEVICE(device);
 
-	return fu_udev_device_write_sysfs(udev, priv->auth_method, "2", error);
+	return fu_udev_device_write_sysfs(udev,
+					  priv->auth_method,
+					  "2",
+					  FU_THUNDERBOLT_DEVICE_WRITE_TIMEOUT,
+					  error);
 }
 
 static gboolean

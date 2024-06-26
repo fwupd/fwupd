@@ -131,3 +131,4 @@ Remember: Plugins should be upstream!
 * `fu_udev_device_set_flags()`: Use `fu_udev_device_add_flag()` instead
 * `fu_udev_device_get_slot_depth()`: Use `fu_udev_device_get_subsystem_depth()` instead
 * `fu_io_channel_new_file()`: Add some `FuIOChannelOpenFlags`, e.g. `FU_IO_CHANNEL_OPEN_FLAG_READ|FU_IO_CHANNEL_OPEN_FLAG_WRITE`
+* `fu_udev_device_write_sysfs()`: Add a timeout in milliseconds
