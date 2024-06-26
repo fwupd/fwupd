@@ -36,7 +36,11 @@ fu_thunderbolt_udev_set_port_offline(FuUdevDevice *device, GError **error)
 		g_debug("failed to check usb4 offline path: %s", error_local->message);
 		return TRUE;
 	}
-	if (!fu_udev_device_write_sysfs(device, offline, "1", error)) {
+	if (!fu_udev_device_write_sysfs(device,
+					offline,
+					"1",
+					FU_THUNDERBOLT_DEVICE_WRITE_TIMEOUT,
+					error)) {
 		g_prefix_error(error, "setting usb4 port offline failed: ");
 		return FALSE;
 	}
@@ -44,7 +48,11 @@ fu_thunderbolt_udev_set_port_offline(FuUdevDevice *device, GError **error)
 		g_debug("failed to check usb4 rescan path: %s", error_local->message);
 		return TRUE;
 	}
-	if (!fu_udev_device_write_sysfs(device, rescan, "1", error)) {
+	if (!fu_udev_device_write_sysfs(device,
+					rescan,
+					"1",
+					FU_THUNDERBOLT_DEVICE_WRITE_TIMEOUT,
+					error)) {
 		g_prefix_error(error, "rescan on port failed: ");
 		return FALSE;
 	}
@@ -62,7 +70,11 @@ fu_thunderbolt_udev_set_port_online(FuUdevDevice *device, GError **error)
 		g_debug("failed to check usb4 port path: %s", error_local->message);
 		return TRUE;
 	}
-	if (!fu_udev_device_write_sysfs(udev, offline, "0", error)) {
+	if (!fu_udev_device_write_sysfs(udev,
+					offline,
+					"0",
+					FU_THUNDERBOLT_DEVICE_WRITE_TIMEOUT,
+					error)) {
 		g_prefix_error(error, "setting port online failed: ");
 		return FALSE;
 	}
