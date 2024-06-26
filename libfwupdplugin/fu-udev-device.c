@@ -549,7 +549,8 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* set vendor ID */
-	subsystem = g_ascii_strup(g_udev_device_get_subsystem(priv->udev_device), -1);
+	if (priv->subsystem != NULL)
+		subsystem = g_ascii_strup(priv->subsystem, -1);
 	if (subsystem != NULL && priv->vendor != 0x0000) {
 		g_autofree gchar *vendor_id = NULL;
 		vendor_id = g_strdup_printf("%s:0x%04X", subsystem, (guint)priv->vendor);
