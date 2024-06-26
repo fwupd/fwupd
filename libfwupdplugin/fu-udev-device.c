@@ -803,20 +803,24 @@ fu_udev_device_set_dev(FuUdevDevice *self, GUdevDevice *udev_device)
 guint
 fu_udev_device_get_subsystem_depth(FuUdevDevice *self, const gchar *subsystem)
 {
-#ifdef HAVE_GUDEV
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(self));
-	g_autoptr(GUdevDevice) device_tmp = NULL;
+	g_autoptr(FuUdevDevice) device_tmp = NULL;
 
-	device_tmp = g_udev_device_get_parent_with_subsystem(udev_device, subsystem, NULL);
+	device_tmp = fu_udev_device_get_parent_with_subsystem(self,
+							      subsystem,
+							      NULL, /* devtype */
+							      NULL);
 	if (device_tmp == NULL)
 		return 0;
-	for (guint i = 0; i < 0xff; i++) {
-		g_autoptr(GUdevDevice) parent = g_udev_device_get_parent(device_tmp);
+	for (guint i = 0;; i++) {
+		g_autoptr(FuUdevDevice) parent =
+		    fu_udev_device_get_parent_with_subsystem(device_tmp,
+							     NULL, /* subsystem */
+							     NULL, /* devtype */
+							     NULL);
 		if (parent == NULL)
 			return i;
 		g_set_object(&device_tmp, parent);
 	}
-#endif
 	return 0;
 }
 
