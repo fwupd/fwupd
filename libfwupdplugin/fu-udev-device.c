@@ -834,7 +834,6 @@ fu_udev_device_probe_complete(FuDevice *device)
 static gboolean
 fu_udev_device_unbind_driver(FuDevice *device, GError **error)
 {
-#ifdef HAVE_GUDEV
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *fn = NULL;
@@ -842,14 +841,11 @@ fu_udev_device_unbind_driver(FuDevice *device, GError **error)
 	g_autoptr(GOutputStream) stream = NULL;
 
 	/* is already unbound */
-	if (priv->udev_device == NULL) {
+	if (fu_udev_device_get_sysfs_path(self) == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "not initialized");
 		return FALSE;
 	}
-	fn = g_build_filename(g_udev_device_get_sysfs_path(priv->udev_device),
-			      "driver",
-			      "unbind",
-			      NULL);
+	fn = g_build_filename(fu_udev_device_get_sysfs_path(self), "driver", "unbind", NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS))
 		return TRUE;
 
@@ -867,13 +863,6 @@ fu_udev_device_unbind_driver(FuDevice *device, GError **error)
 					 NULL,
 					 NULL,
 					 error);
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "driver unbinding not supported");
-	return FALSE;
-#endif
 }
 
 static gboolean
@@ -882,7 +871,6 @@ fu_udev_device_bind_driver(FuDevice *device,
 			   const gchar *driver,
 			   GError **error)
 {
-#ifdef HAVE_GUDEV
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *driver_safe = g_strdup(driver);
@@ -930,13 +918,6 @@ fu_udev_device_bind_driver(FuDevice *device,
 					 NULL,
 					 NULL,
 					 error);
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "driver binding not supported on Windows");
-	return FALSE;
-#endif
 }
 
 static void
@@ -1092,13 +1073,8 @@ fu_udev_device_get_device_file(FuUdevDevice *self)
 const gchar *
 fu_udev_device_get_sysfs_path(FuUdevDevice *self)
 {
-#ifdef HAVE_GUDEV
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
-	if (priv->udev_device != NULL)
-		return g_udev_device_get_sysfs_path(priv->udev_device);
-#endif
-	return NULL;
+	return fu_device_get_backend_id(FU_DEVICE(self));
 }
 
 /**
