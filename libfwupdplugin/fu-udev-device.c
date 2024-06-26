@@ -2458,10 +2458,19 @@ fu_udev_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 	if (g_str_has_prefix(fn, "/sys")) {
 		g_autoptr(GFileOutputStream) output_stream = NULL;
 		output_stream = g_file_replace(file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error);
-		if (output_stream == NULL)
+		if (output_stream == NULL) {
+			fu_error_convert(error);
 			return NULL;
-		if (g_output_stream_write(G_OUTPUT_STREAM(output_stream), "1", 1, NULL, error) < 0)
+		}
+		if (!g_output_stream_write_all(G_OUTPUT_STREAM(output_stream),
+					       "1",
+					       1,
+					       NULL,
+					       NULL,
+					       error)) {
+			fu_error_convert(error);
 			return NULL;
+		}
 	}
 
 	/* ensure we got enough data to fill the buffer */
