@@ -52,6 +52,7 @@ typedef struct {
 	gchar *driver;
 	gchar *device_file;
 	gchar *devtype;
+	guint64 number;
 	FuIOChannel *io_channel;
 	FuUdevDeviceFlags flags;
 } FuUdevDevicePrivate;
@@ -508,6 +509,19 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 			fu_device_set_vendor(device, tmp);
 	}
 
+	/* set number */
+	if (g_udev_device_get_number(priv->udev_device) != NULL) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_strtoull(g_udev_device_get_number(priv->udev_device),
+				 &priv->number,
+				 0x0,
+				 G_MAXUINT64,
+				 FU_INTEGER_BASE_AUTO,
+				 &error_local)) {
+			g_warning("failed to convert udev number: %s", error_local->message);
+		}
+	}
+
 	/* try harder to find a vendor name the user will recognize */
 	if (priv->flags & FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT && udev_parent != NULL &&
 	    fu_device_get_vendor(device) == NULL) {
@@ -956,6 +970,8 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 		priv->subsystem_model = priv_donor->subsystem_model;
 	if (priv->revision == 0x0 && priv_donor->revision != 0x0)
 		priv->revision = priv_donor->revision;
+	if (priv->number == 0x0 && priv_donor->number != 0x0)
+		priv->number = priv_donor->number;
 	if (priv->io_channel == NULL && priv_donor->io_channel != 0x0)
 		priv->io_channel = g_object_ref(priv_donor->io_channel);
 }
@@ -1091,33 +1107,16 @@ fu_udev_device_get_sysfs_path(FuUdevDevice *self)
  *
  * Gets the device number, if any.
  *
- * Returns: integer, 0 if the data is unavailable, or %G_MAXUINT64 if the
- * feature is not available
+ * Returns: integer, 0 if the data is unavailable.
  *
  * Since: 1.5.0
  **/
 guint64
 fu_udev_device_get_number(FuUdevDevice *self)
 {
-#ifdef HAVE_GUDEV
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), 0);
-	if (priv->udev_device != NULL) {
-		guint64 tmp = 0;
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_strtoull(g_udev_device_get_number(priv->udev_device),
-				 &tmp,
-				 0x0,
-				 G_MAXUINT64,
-				 FU_INTEGER_BASE_AUTO,
-				 &error_local)) {
-			g_warning("failed to convert udev number: %s", error_local->message);
-			return G_MAXUINT64;
-		}
-		return tmp;
-	}
-#endif
-	return G_MAXUINT64;
+	return priv->number;
 }
 
 /**
