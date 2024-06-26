@@ -1244,7 +1244,7 @@ fu_udev_device_get_parent_subsystems(FuUdevDevice *self)
 		if (g_udev_device_get_subsystem(parent) != NULL) {
 			g_string_append_printf(str, "%s,", g_udev_device_get_subsystem(parent));
 		}
-		g_set_object(&udev_device, g_steal_pointer(&parent));
+		g_set_object(&udev_device, parent);
 	}
 	if (str->len > 0)
 		g_string_truncate(str, str->len - 1);
