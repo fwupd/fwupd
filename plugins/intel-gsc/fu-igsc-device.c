@@ -25,6 +25,7 @@ struct _FuIgscDevice {
 #define FU_IGSC_DEVICE_FLAG_HAS_AUX   (1 << 0)
 #define FU_IGSC_DEVICE_FLAG_HAS_OPROM (1 << 1)
 
+#define FU_IGSC_DEVICE_POWER_WRITE_TIMEOUT 1500	  /* ms */
 #define FU_IGSC_DEVICE_MEI_WRITE_TIMEOUT 60000	/* 60 sec */
 #define FU_IGSC_DEVICE_MEI_READ_TIMEOUT	 480000 /* 480 sec */
 
@@ -764,7 +765,11 @@ fu_igsc_device_set_pci_power_policy(FuIgscDevice *self, const gchar *val, GError
 	parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self), "pci", NULL, error);
 	if (parent == NULL)
 		return FALSE;
-	return fu_udev_device_write_sysfs(parent, "power/control", val, error);
+	return fu_udev_device_write_sysfs(parent,
+					  "power/control",
+					  val,
+					  FU_IGSC_DEVICE_POWER_WRITE_TIMEOUT,
+					  error);
 }
 
 static gboolean

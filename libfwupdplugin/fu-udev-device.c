@@ -2064,76 +2064,52 @@ fu_udev_device_get_sysfs_attr_uint64(FuUdevDevice *self,
  * @self: a #FuUdevDevice
  * @attr: sysfs attribute name
  * @val: data to write into the attribute
+ * @timeout_ms: IO timeout in milliseconds
  * @error: (nullable): optional return location for an error
  *
  * Writes data into a sysfs attribute
  *
  * Returns: %TRUE for success
  *
- * Since: 1.4.5
+ * Since: 2.0.0
  **/
 gboolean
-fu_udev_device_write_sysfs(FuUdevDevice *self, const gchar *attr, const gchar *val, GError **error)
+fu_udev_device_write_sysfs(FuUdevDevice *self,
+			   const gchar *attr,
+			   const gchar *val,
+			   guint timeout_ms,
+			   GError **error)
 {
-#ifdef __linux__
-	ssize_t n;
-	int r;
-	int fd;
 	g_autofree gchar *path = NULL;
+	g_autoptr(FuIOChannel) io_channel = NULL;
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
 	g_return_val_if_fail(attr != NULL, FALSE);
 	g_return_val_if_fail(val != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
+
+	/* open the file */
+	if (fu_udev_device_get_sysfs_path(self) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "sysfs_path undefined");
+		return FALSE;
+	}
 	path = g_build_filename(fu_udev_device_get_sysfs_path(self), attr, NULL);
-	fd = open(path, O_WRONLY | O_CLOEXEC);
-	if (fd < 0) {
-		g_set_error(error,
-			    G_IO_ERROR, /* nocheck */
-			    g_io_error_from_errno(errno),
-			    "could not open %s: %s",
-			    path,
-			    g_strerror(errno));
-		fwupd_error_convert(error);
+	io_channel = fu_io_channel_new_file(path, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
+	if (io_channel == NULL)
 		return FALSE;
-	}
-
-	do {
-		n = write(fd, val, strlen(val));
-		if (n < 1 && errno != EINTR) {
-			g_set_error(error,
-				    G_IO_ERROR, /* nocheck */
-				    g_io_error_from_errno(errno),
-				    "could not write to %s: %s",
-				    path,
-				    g_strerror(errno));
-			(void)close(fd);
-			fwupd_error_convert(error);
-			return FALSE;
-		}
-	} while (n < 1);
-
-	r = close(fd);
-	if (r < 0 && errno != EINTR) {
-		g_set_error(error,
-			    G_IO_ERROR, /* nocheck */
-			    g_io_error_from_errno(errno),
-			    "could not close %s: %s",
-			    path,
-			    g_strerror(errno));
-		fwupd_error_convert(error);
-		return FALSE;
-	}
-
-	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "sysfs attributes not supported on Windows");
-	return FALSE;
-#endif
+	return fu_io_channel_write_raw(io_channel,
+				       (const guint8 *)val,
+				       strlen(val),
+				       timeout_ms,
+				       FU_IO_CHANNEL_FLAG_NONE,
+				       error);
 }
 
 /**
