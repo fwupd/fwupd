@@ -13,8 +13,8 @@
 #define GUdevDevice	   GObject
 #endif
 
+#include "fu-device.h"
 #include "fu-io-channel.h"
-#include "fu-plugin.h"
 
 #define FU_TYPE_UDEV_DEVICE (fu_udev_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuUdevDevice, fu_udev_device, FU, UDEV_DEVICE, FuDevice)
