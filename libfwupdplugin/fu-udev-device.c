@@ -840,6 +840,10 @@ fu_udev_device_unbind_driver(FuDevice *device, GError **error)
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GOutputStream) stream = NULL;
 
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
+
 	/* is already unbound */
 	if (fu_udev_device_get_sysfs_path(self) == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "not initialized");
@@ -877,6 +881,10 @@ fu_udev_device_bind_driver(FuDevice *device,
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GOutputStream) stream = NULL;
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
 
 	/* copy the logic from modprobe */
 	g_strdelimit(driver_safe, "-", '_');
@@ -1559,6 +1567,10 @@ fu_udev_device_open(FuDevice *device, GError **error)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	gint fd;
 
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
+
 	/* old versions of fwupd used to start with OPEN_READ|OPEN_WRITE and then plugins
 	 * could add more flags, or set the flags back to NONE -- detect and fixup */
 	if (priv->device_file != NULL && priv->flags == FU_UDEV_DEVICE_FLAG_NONE) {
@@ -1654,10 +1666,18 @@ fu_udev_device_close(FuDevice *device, GError **error)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
+
+	/* optional */
 	if (priv->io_channel != NULL) {
 		if (!fu_io_channel_shutdown(priv->io_channel, error))
 			return FALSE;
 	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -1813,10 +1833,36 @@ gboolean
 fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz, GError **error)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		g_autofree gchar *buf_base64 = g_base64_encode(buf, bufsz);
+		event_id = g_strdup_printf("Pread:"
+					   "Port=0x%x,"
+					   "Length=0x%x",
+					   (guint)port,
+					   (guint)bufsz);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return FALSE;
+		return fu_device_event_copy_data(event, "Data", buf, bufsz, NULL, error);
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
@@ -1844,6 +1890,10 @@ fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz,
 		fwupd_error_convert(error);
 		return FALSE;
 	}
+
+	/* save response */
+	if (event != NULL)
+		fu_device_event_set_data(event, "Data", buf, bufsz);
 	return TRUE;
 #else
 	g_set_error_literal(error,
@@ -1873,6 +1923,10 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
@@ -1935,6 +1989,10 @@ fu_udev_device_pwrite(FuUdevDevice *self,
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
