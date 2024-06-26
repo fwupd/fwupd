@@ -2265,7 +2265,7 @@ fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self,
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "not initialized");
 		return NULL;
 	}
-	device_tmp = g_object_ref(priv->udev_device);
+	device_tmp = g_udev_device_get_parent(priv->udev_device);
 	while (device_tmp != NULL) {
 		g_autoptr(GUdevDevice) parent = NULL;
 		if (fu_udev_device_match_subsystem_devtype(device_tmp, subsystem, devtype))
