@@ -2065,7 +2065,7 @@ fu_udev_device_get_sysfs_attr_uint64(FuUdevDevice *self,
 /**
  * fu_udev_device_write_sysfs:
  * @self: a #FuUdevDevice
- * @attribute: sysfs attribute name
+ * @attr: sysfs attribute name
  * @val: data to write into the attribute
  * @error: (nullable): optional return location for an error
  *
@@ -2076,10 +2076,7 @@ fu_udev_device_get_sysfs_attr_uint64(FuUdevDevice *self,
  * Since: 1.4.5
  **/
 gboolean
-fu_udev_device_write_sysfs(FuUdevDevice *self,
-			   const gchar *attribute,
-			   const gchar *val,
-			   GError **error)
+fu_udev_device_write_sysfs(FuUdevDevice *self, const gchar *attr, const gchar *val, GError **error)
 {
 #ifdef __linux__
 	ssize_t n;
@@ -2088,11 +2085,11 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 	g_autofree gchar *path = NULL;
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
-	g_return_val_if_fail(attribute != NULL, FALSE);
+	g_return_val_if_fail(attr != NULL, FALSE);
 	g_return_val_if_fail(val != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	path = g_build_filename(fu_udev_device_get_sysfs_path(self), attribute, NULL);
+	path = g_build_filename(fu_udev_device_get_sysfs_path(self), attr, NULL);
 	fd = open(path, O_WRONLY | O_CLOEXEC);
 	if (fd < 0) {
 		g_set_error(error,
