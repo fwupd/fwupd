@@ -34,7 +34,7 @@ struct _FuVolume {
 	GDBusProxy *proxy_blk;
 	GDBusProxy *proxy_fs;
 	GDBusProxy *proxy_part;
-	gchar *mount_path; /* only when mounted ourselves */
+	gchar *mount_path;     /* only when mounted ourselves */
 	gchar *partition_kind; /* only for tests */
 	gchar *partition_uuid; /* only for tests */
 };
