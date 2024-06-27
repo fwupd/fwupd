@@ -300,12 +300,19 @@ fu_nvme_device_probe(FuDevice *device, GError **error)
 	if (g_strcmp0(fu_device_get_vendor(FU_DEVICE(device)), "Samsung Electronics Co Ltd") == 0)
 		fu_device_set_vendor(FU_DEVICE(device), "Samsung");
 
+	/* nvme devices expose a model */
+	if (fu_device_get_name(device) == NULL) {
+		g_autofree gchar *attr_model = NULL;
+		attr_model = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+						       "model",
+						       FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						       NULL);
+		if (attr_model != NULL)
+			fu_device_set_name(device, attr_model);
+	}
+
 	/* ignore non-PCI NVMe devices */
 	if (!fu_nvme_device_is_pci(self, error))
-		return FALSE;
-
-	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
 		return FALSE;
 
 	/* look at the PCI depth to work out if in an external enclosure */
@@ -469,8 +476,7 @@ fu_nvme_device_init(FuNvmeDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "NVM Express solid state drive");
 	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk");
 	fu_device_add_protocol(FU_DEVICE(self), "org.nvmexpress");
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_NVME_DEVICE_FLAG_FORCE_ALIGN,
 					"force-align");

@@ -875,12 +875,6 @@ fu_bcm57xx_recovery_device_init(FuBcm57xxRecoveryDevice *self)
 	}
 }
 
-static gboolean
-fu_bcm57xx_recovery_device_probe(FuDevice *device, GError **error)
-{
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error);
-}
-
 static void
 fu_bcm57xx_recovery_device_class_init(FuBcm57xxRecoveryDeviceClass *klass)
 {
@@ -895,7 +889,6 @@ fu_bcm57xx_recovery_device_class_init(FuBcm57xxRecoveryDeviceClass *klass)
 	device_class->dump_firmware = fu_bcm57xx_recovery_device_dump_firmware;
 	device_class->attach = fu_bcm57xx_recovery_device_attach;
 	device_class->detach = fu_bcm57xx_recovery_device_detach;
-	device_class->probe = fu_bcm57xx_recovery_device_probe;
 	device_class->set_progress = fu_bcm57xx_recovery_device_set_progress;
 	device_class->convert_version = fu_bcm57xx_recovery_device_convert_version;
 }

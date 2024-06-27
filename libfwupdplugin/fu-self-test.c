@@ -32,6 +32,7 @@
 #include "fu-security-attrs-private.h"
 #include "fu-self-test-struct.h"
 #include "fu-smbios-private.h"
+#include "fu-udev-device-private.h"
 #include "fu-usb-device-private.h"
 #include "fu-volume-private.h"
 
@@ -4742,6 +4743,377 @@ fu_progress_percentage_changed_cb(FuProgress *progress, guint percentage, gpoint
 }
 
 static void
+fu_udev_device_hid_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *value = NULL;
+	g_autofree gchar *value2 = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuUdevDevice) udev_device = NULL;
+	g_autoptr(FuUdevDevice) udev_device2 = NULL;
+	g_autoptr(FuUdevDevice) udev_device3 = NULL;
+	g_autoptr(GError) error = NULL;
+
+#ifndef HAVE_POLL_H
+	g_test_skip("O_NONBLOCK is unavailable");
+	return;
+#endif
+	fn = g_build_filename("../libfwupdplugin/tests",
+			      "sys",
+			      "devices",
+			      "pci0000:00",
+			      "0000:00:14.0",
+			      "usb1",
+			      "1-1",
+			      "1-1:1.1",
+			      "0003:093A:2862.0076",
+			      NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_test_skip("skipping sysfs tests for installed-tests");
+		return;
+	}
+	udev_device = fu_udev_device_new_from_sysfs_path(ctx, fn);
+	value = fu_udev_device_read_property(udev_device, "HID_PHYS", &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(value, ==, "usb-0000:00:14.0-1/input1");
+	value2 = fu_udev_device_read_sysfs(udev_device,
+					   "modalias",
+					   FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					   &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(value2, ==, "hid:b0003g0001v0000093Ap00002862");
+
+	ret = fu_device_probe(FU_DEVICE(udev_device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device), ==, "hid");
+	g_assert_cmpstr(fu_udev_device_get_devtype(udev_device), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_driver(udev_device), ==, "hid-generic");
+	g_assert_cmpint(fu_udev_device_get_vendor(udev_device), ==, 0x093a);
+	g_assert_cmpint(fu_udev_device_get_model(udev_device), ==, 0x2862);
+	g_assert_cmpint(fu_udev_device_get_revision(udev_device), ==, 0x0);
+
+	/* get child, both specified */
+	udev_device2 =
+	    fu_udev_device_get_parent_with_subsystem(udev_device, "usb", "usb_interface", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(udev_device2);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device2), ==, "usb");
+
+	/* get child, initially unprobed */
+	udev_device3 = fu_udev_device_get_parent_with_subsystem(udev_device, "usb", NULL, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(udev_device3);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device3), ==, "usb");
+	g_assert_cmpstr(fu_udev_device_get_driver(udev_device3), ==, NULL);
+	ret = fu_device_probe(FU_DEVICE(udev_device3), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device3), ==, "usb");
+	g_assert_cmpstr(fu_udev_device_get_driver(udev_device3), ==, "usb");
+
+	/* set physical and logical IDs */
+	g_assert_cmpstr(fu_device_get_physical_id(FU_DEVICE(udev_device)),
+			==,
+			"usb-0000:00:14.0-1/input1");
+	g_assert_cmpstr(fu_device_get_logical_id(FU_DEVICE(udev_device)), ==, "");
+}
+
+static void
+fu_udev_device_usb_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuUdevDevice) udev_device = NULL;
+	g_autoptr(GError) error = NULL;
+
+#ifndef HAVE_POLL_H
+	g_test_skip("O_NONBLOCK is unavailable");
+	return;
+#endif
+	fn = g_build_filename("../libfwupdplugin/tests",
+			      "sys",
+			      "devices",
+			      "pci0000:00",
+			      "0000:00:14.0",
+			      "usb1",
+			      "1-1",
+			      "1-1:1.1",
+			      NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_test_skip("skipping sysfs tests for installed-tests");
+		return;
+	}
+	udev_device = fu_udev_device_new_from_sysfs_path(ctx, fn);
+	ret = fu_device_probe(FU_DEVICE(udev_device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device), ==, "usb");
+	g_assert_cmpstr(fu_udev_device_get_devtype(udev_device), ==, "usb_interface");
+	g_assert_cmpstr(fu_udev_device_get_driver(udev_device), ==, "usb");
+	g_assert_cmpint(fu_udev_device_get_vendor(udev_device), ==, 0x093a);
+	g_assert_cmpint(fu_udev_device_get_model(udev_device), ==, 0x2862);
+	g_assert_cmpint(fu_udev_device_get_revision(udev_device), ==, 0x0);
+	g_assert_cmpstr(fu_device_get_physical_id(FU_DEVICE(udev_device)), ==, "bus/usb/001/024");
+	g_assert_cmpstr(fu_device_get_logical_id(FU_DEVICE(udev_device)), ==, NULL);
+}
+
+static void
+fu_udev_device_pci_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuUdevDevice) udev_device = NULL;
+	g_autoptr(GError) error = NULL;
+
+#ifndef HAVE_POLL_H
+	g_test_skip("O_NONBLOCK is unavailable");
+	return;
+#endif
+	fn = g_build_filename("../libfwupdplugin/tests",
+			      "sys",
+			      "devices",
+			      "pci0000:00",
+			      "0000:00:14.0",
+			      NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_test_skip("skipping sysfs tests for installed-tests");
+		return;
+	}
+	udev_device = fu_udev_device_new_from_sysfs_path(ctx, fn);
+	ret = fu_device_probe(FU_DEVICE(udev_device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device), ==, "pci");
+	g_assert_cmpstr(fu_udev_device_get_devtype(udev_device), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_driver(udev_device), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_device_file(udev_device), ==, NULL);
+	g_assert_cmpint(fu_udev_device_get_vendor(udev_device), ==, 0x8086);
+	g_assert_cmpint(fu_udev_device_get_model(udev_device), ==, 0x06ed);
+	g_assert_cmpint(fu_udev_device_get_revision(udev_device), ==, 0x0);
+	g_assert_cmpstr(fu_device_get_physical_id(FU_DEVICE(udev_device)),
+			==,
+			"PCI_SLOT_NAME=0000:00:14.0");
+	g_assert_cmpstr(fu_device_get_logical_id(FU_DEVICE(udev_device)), ==, NULL);
+}
+
+static void
+fu_udev_device_nvme_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuUdevDevice) udev_device = NULL;
+	g_autoptr(GError) error = NULL;
+
+#ifndef HAVE_POLL_H
+	g_test_skip("O_NONBLOCK is unavailable");
+	return;
+#endif
+	fn = g_build_filename("../libfwupdplugin/tests",
+			      "sys",
+			      "devices",
+			      "pci0000:00",
+			      "0000:00:1b.0",
+			      "0000:02:00.0",
+			      "nvme",
+			      "nvme1",
+			      NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_test_skip("skipping sysfs tests for installed-tests");
+		return;
+	}
+	udev_device = fu_udev_device_new_from_sysfs_path(ctx, fn);
+	ret = fu_device_probe(FU_DEVICE(udev_device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device), ==, "nvme");
+	g_assert_cmpstr(fu_udev_device_get_devtype(udev_device), ==, NULL);
+	g_assert_cmpint(fu_udev_device_get_number(udev_device), ==, 1);
+	g_assert_cmpstr(fu_udev_device_get_driver(udev_device), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_device_file(udev_device), ==, "/dev/nvme1");
+	g_assert_cmpint(fu_udev_device_get_vendor(udev_device), ==, 0x1179);
+	g_assert_cmpint(fu_udev_device_get_model(udev_device), ==, 0x010F);
+	g_assert_cmpint(fu_udev_device_get_revision(udev_device), ==, 0x1);
+	g_assert_cmpstr(fu_device_get_physical_id(FU_DEVICE(udev_device)),
+			==,
+			"PCI_SLOT_NAME=0000:00:1b.0");
+	g_assert_cmpstr(fu_device_get_logical_id(FU_DEVICE(udev_device)), ==, NULL);
+}
+
+static void
+fu_udev_device_scsi_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuUdevDevice) udev_device = NULL;
+	g_autoptr(GError) error = NULL;
+
+#ifndef HAVE_POLL_H
+	g_test_skip("O_NONBLOCK is unavailable");
+	return;
+#endif
+	fn = g_build_filename("../libfwupdplugin/tests",
+			      "sys",
+			      "devices",
+			      "pci0000:50",
+			      "0000:50:02.0",
+			      "0000:51:00.0",
+			      "host17",
+			      "port-17:3",
+			      "end_device-17:3",
+			      "target17:0:3",
+			      "17:0:3:0",
+			      "block",
+			      "sde",
+			      "sde5",
+			      NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_test_skip("skipping sysfs tests for installed-tests");
+		return;
+	}
+	udev_device = fu_udev_device_new_from_sysfs_path(ctx, fn);
+	ret = fu_device_probe(FU_DEVICE(udev_device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device), ==, "block");
+	g_assert_cmpstr(fu_udev_device_get_devtype(udev_device), ==, "partition");
+	g_assert_cmpint(fu_udev_device_get_number(udev_device), ==, 5);
+	g_assert_cmpstr(fu_udev_device_get_driver(udev_device), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_device_file(udev_device), ==, "/dev/sde5");
+	g_assert_cmpstr(fu_device_get_vendor(FU_DEVICE(udev_device)), ==, "IBM-ESXS");
+	g_assert_cmpstr(fu_device_get_name(FU_DEVICE(udev_device)), ==, "ST1000NM0001");
+	g_assert_cmpstr(fu_device_get_physical_id(FU_DEVICE(udev_device)), ==, "DEVPATH=17:0:3:0");
+	g_assert_cmpstr(fu_device_get_logical_id(FU_DEVICE(udev_device)), ==, NULL);
+}
+
+static void
+fu_udev_device_mei_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuUdevDevice) udev_device = NULL;
+	g_autoptr(GError) error = NULL;
+
+#ifndef HAVE_POLL_H
+	g_test_skip("O_NONBLOCK is unavailable");
+	return;
+#endif
+	fn = g_build_filename("../libfwupdplugin/tests",
+			      "sys",
+			      "devices",
+			      "pci0000:00",
+			      "0000:00:16.0",
+			      "0000:00:16.0-12f80028-b4b7-4b2d-aca8-46e0ff65814c",
+			      NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_test_skip("skipping sysfs tests for installed-tests");
+		return;
+	}
+	udev_device = g_object_new(FU_TYPE_MEI_DEVICE, "context", ctx, "backend-id", fn, NULL);
+	ret = fu_device_probe(FU_DEVICE(udev_device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device), ==, "mei");
+	g_assert_cmpstr(fu_udev_device_get_devtype(udev_device), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_driver(udev_device), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_device_file(udev_device), ==, "/dev/mei0");
+	g_assert_cmpint(fu_udev_device_get_vendor(udev_device), ==, 0x8086);
+	g_assert_cmpint(fu_udev_device_get_model(udev_device), ==, 0x06E0);
+	g_assert_cmpint(fu_udev_device_get_revision(udev_device), ==, 0x0);
+	g_assert_cmpstr(fu_device_get_physical_id(FU_DEVICE(udev_device)),
+			==,
+			"PCI_SLOT_NAME=0000:00:16.0");
+	g_assert_cmpstr(fu_device_get_logical_id(FU_DEVICE(udev_device)), ==, NULL);
+}
+
+static void
+fu_udev_device_tpm_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuUdevDevice) udev_device = NULL;
+	g_autoptr(GError) error = NULL;
+
+#ifndef HAVE_POLL_H
+	g_test_skip("O_NONBLOCK is unavailable");
+	return;
+#endif
+	fn = g_build_filename("../libfwupdplugin/tests",
+			      "sys",
+			      "devices",
+			      "platform",
+			      "STM0125:00",
+			      "tpm",
+			      "tpm0",
+			      NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_test_skip("skipping sysfs tests for installed-tests");
+		return;
+	}
+	udev_device = fu_udev_device_new_from_sysfs_path(ctx, fn);
+	ret = fu_device_probe(FU_DEVICE(udev_device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device), ==, "tpm");
+	g_assert_cmpstr(fu_udev_device_get_devtype(udev_device), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_driver(udev_device), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_device_file(udev_device), ==, "/dev/tpm0");
+	g_assert_cmpint(fu_udev_device_get_vendor(udev_device), ==, 0x0);
+	g_assert_cmpint(fu_udev_device_get_model(udev_device), ==, 0x0);
+	g_assert_cmpint(fu_udev_device_get_revision(udev_device), ==, 0x0);
+	g_assert_cmpstr(fu_device_get_physical_id(FU_DEVICE(udev_device)), ==, "DEVNAME=/dev/tpm0");
+	g_assert_cmpstr(fu_device_get_logical_id(FU_DEVICE(udev_device)), ==, NULL);
+}
+
+static void
+fu_udev_device_serio_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuUdevDevice) udev_device = NULL;
+	g_autoptr(GError) error = NULL;
+
+#ifndef HAVE_POLL_H
+	g_test_skip("O_NONBLOCK is unavailable");
+	return;
+#endif
+	fn = g_build_filename("../libfwupdplugin/tests",
+			      "sys",
+			      "devices",
+			      "platform",
+			      "i8042",
+			      "serio1",
+			      NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_test_skip("skipping sysfs tests for installed-tests");
+		return;
+	}
+	udev_device = fu_udev_device_new_from_sysfs_path(ctx, fn);
+	ret = fu_device_probe(FU_DEVICE(udev_device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device), ==, "serio");
+	g_assert_cmpstr(fu_udev_device_get_devtype(udev_device), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_driver(udev_device), ==, "psmouse");
+	g_assert_cmpstr(fu_udev_device_get_device_file(udev_device), ==, NULL);
+	g_assert_cmpint(fu_udev_device_get_vendor(udev_device), ==, 0x0);
+	g_assert_cmpint(fu_udev_device_get_model(udev_device), ==, 0x0);
+	g_assert_cmpint(fu_udev_device_get_revision(udev_device), ==, 0x0);
+	g_assert_cmpstr(fu_device_get_physical_id(FU_DEVICE(udev_device)), ==, NULL);
+	g_assert_cmpstr(fu_device_get_logical_id(FU_DEVICE(udev_device)), ==, NULL);
+	g_assert_true(
+	    fu_device_has_instance_id(FU_DEVICE(udev_device), "SERIO\\FWID_LEN0305-PNP0F13"));
+}
+
+static void
 fu_progress_func(void)
 {
 	FuProgressHelper helper = {0};
@@ -5777,6 +6149,14 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);
 	if (g_test_slow())
 		g_test_add_func("/fwupd/progress", fu_progress_func);
+	g_test_add_func("/fwupd/udev-device{hid}", fu_udev_device_hid_func);
+	g_test_add_func("/fwupd/udev-device{usb}", fu_udev_device_usb_func);
+	g_test_add_func("/fwupd/udev-device{pci}", fu_udev_device_pci_func);
+	g_test_add_func("/fwupd/udev-device{nvme}", fu_udev_device_nvme_func);
+	g_test_add_func("/fwupd/udev-device{scsi}", fu_udev_device_scsi_func);
+	g_test_add_func("/fwupd/udev-device{mei}", fu_udev_device_mei_func);
+	g_test_add_func("/fwupd/udev-device{tpm}", fu_udev_device_tpm_func);
+	g_test_add_func("/fwupd/udev-device{serio}", fu_udev_device_serio_func);
 	g_test_add_func("/fwupd/progress{scaling}", fu_progress_scaling_func);
 	g_test_add_func("/fwupd/progress{child}", fu_progress_child_func);
 	g_test_add_func("/fwupd/progress{child-finished}", fu_progress_child_finished);

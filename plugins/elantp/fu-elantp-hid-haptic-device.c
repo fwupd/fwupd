@@ -63,13 +63,6 @@ fu_elantp_hid_haptic_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_elantp_hid_haptic_device_probe(FuDevice *device, GError **error)
-{
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
-}
-
-static gboolean
 fu_elantp_hid_haptic_device_send_cmd(FuDevice *self,
 				     const guint8 *tx,
 				     gsize txsz,
@@ -1143,7 +1136,6 @@ fu_elantp_hid_haptic_device_class_init(FuElantpHidHapticDeviceClass *klass)
 	device_class->reload = fu_elantp_hid_haptic_device_setup;
 	device_class->write_firmware = fu_elantp_hid_haptic_device_write_firmware;
 	device_class->prepare_firmware = fu_elantp_hid_haptic_device_prepare_firmware;
-	device_class->probe = fu_elantp_hid_haptic_device_probe;
 	device_class->set_progress = fu_elantp_hid_haptic_device_set_progress;
 }
 

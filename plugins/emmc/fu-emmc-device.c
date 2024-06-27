@@ -242,10 +242,6 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 	fu_device_add_vendor_id(device, vendor_id);
 	fu_device_set_vendor(device, fu_emmc_device_get_manufacturer(manfid));
 
-	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "mmc", error))
-		return FALSE;
-
 	/* internal */
 	if (!fu_emmc_device_get_sysattr_guint64(FU_UDEV_DEVICE(device), "removable", &flag, error))
 		return FALSE;
@@ -608,8 +604,8 @@ fu_emmc_device_init(FuEmmcDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "org.jedec.mmc");
 	fu_device_add_icon(FU_DEVICE(self), "media-memory");
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
 
 static void

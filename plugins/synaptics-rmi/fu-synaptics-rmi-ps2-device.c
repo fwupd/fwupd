@@ -786,8 +786,8 @@ fu_synaptics_rmi_ps2_device_probe(FuDevice *device, GError **error)
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	}
 
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "platform", error);
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -972,8 +972,8 @@ fu_synaptics_rmi_ps2_device_init(FuSynapticsRmiPs2Device *self)
 	fu_device_set_vendor(FU_DEVICE(self), "Synaptics");
 	fu_device_add_vendor_id(FU_DEVICE(self), "HIDRAW:0x06CB");
 	fu_synaptics_rmi_device_set_max_page(FU_SYNAPTICS_RMI_DEVICE(self), 0x1);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
 
 static gboolean

@@ -81,21 +81,17 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
 	if (!fu_amd_gpu_set_device_file(device, base, error))
 		return FALSE;
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
-		return FALSE;
 
 	/* APUs don't have 'rom' sysfs file */
 	rom = g_build_filename(base, "rom", NULL);
 	if (!g_file_test(rom, G_FILE_TEST_EXISTS)) {
 		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD);
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(device), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(device), FU_IO_CHANNEL_OPEN_FLAG_READ);
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 	} else {
 		fu_device_set_logical_id(device, "rom");
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(device), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(device),
-					FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(device), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	}
 
 	/* firmware upgrade support */

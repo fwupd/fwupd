@@ -104,10 +104,6 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 	g_autoptr(FuUdevDevice) device_usb = NULL;
 	g_autoptr(FuUdevDevice) device_usb_iface = NULL;
 
-	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "usb", error))
-		return FALSE;
-
 	/* generate bootloader-specific GUID */
 	device_usb = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
 							      "usb",

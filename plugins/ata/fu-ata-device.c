@@ -462,8 +462,6 @@ static gboolean
 fu_ata_device_probe(FuDevice *device, GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE(device);
-	g_autofree gchar *prop_ata_sata = NULL;
-	g_autofree gchar *prop_ata_download_microcode = NULL;
 
 	/* check is valid */
 	if (g_strcmp0(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), "disk") != 0) {
@@ -474,28 +472,6 @@ fu_ata_device_probe(FuDevice *device, GError **error)
 			    fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)));
 		return FALSE;
 	}
-	prop_ata_sata = fu_udev_device_read_property(FU_UDEV_DEVICE(device), "ID_ATA_SATA", NULL);
-	if (prop_ata_sata == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "has no ID_ATA_SATA");
-		return FALSE;
-	}
-	prop_ata_download_microcode = fu_udev_device_read_property(FU_UDEV_DEVICE(device),
-								   "ID_ATA_DOWNLOAD_MICROCODE",
-								   error);
-	if (prop_ata_sata == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "has no ID_ATA_DOWNLOAD_MICROCODE");
-		return FALSE;
-	}
-
-	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "scsi", error))
-		return FALSE;
 
 	/* look at the PCI and USB depth to work out if in an external enclosure */
 	self->pci_depth = fu_udev_device_get_subsystem_depth(FU_UDEV_DEVICE(device), "pci");
@@ -913,7 +889,7 @@ fu_ata_device_init(FuAtaDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk");
 	fu_device_add_protocol(FU_DEVICE(self), "org.t13.ata");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 }
 
 static void

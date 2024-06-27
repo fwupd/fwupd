@@ -84,13 +84,6 @@ fu_wacom_device_check_mpu(FuWacomDevice *self, GError **error)
 }
 
 static gboolean
-fu_wacom_device_probe(FuDevice *device, GError **error)
-{
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
-}
-
-static gboolean
 fu_wacom_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuWacomDevice *self = FU_WACOM_DEVICE(device);
@@ -354,8 +347,8 @@ fu_wacom_device_init(FuWacomDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_IHEX_FIRMWARE);
@@ -373,7 +366,6 @@ fu_wacom_device_class_init(FuWacomDeviceClass *klass)
 	device_class->write_firmware = fu_wacom_device_write_firmware;
 	device_class->detach = fu_wacom_device_detach;
 	device_class->set_quirk_kv = fu_wacom_device_set_quirk_kv;
-	device_class->probe = fu_wacom_device_probe;
 	device_class->set_progress = fu_wacom_device_set_progress;
 	device_class->replace = fu_wacom_device_replace;
 }

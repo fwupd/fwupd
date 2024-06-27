@@ -41,8 +41,8 @@ fu_gpio_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "gpio", error);
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -208,7 +208,7 @@ fu_gpio_device_assign(FuGpioDevice *self, const gchar *id, gboolean value, GErro
 static void
 fu_gpio_device_init(FuGpioDevice *self)
 {
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 }
 
 static void

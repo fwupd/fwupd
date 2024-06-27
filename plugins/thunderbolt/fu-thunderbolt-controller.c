@@ -84,7 +84,7 @@ fu_thunderbolt_controller_probe(FuDevice *device, GError **error)
 	g_autofree gchar *attr_unique_id = NULL;
 	g_autoptr(FuUdevDevice) device_parent = NULL;
 
-	/* FuUdevDevice->probe */
+	/* FuThunderboltDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_thunderbolt_controller_parent_class)->probe(device, error))
 		return FALSE;
 

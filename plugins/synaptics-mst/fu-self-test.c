@@ -65,6 +65,10 @@ _test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 				   "dpcd-ieee-oui",
 				   SYNAPTICS_IEEE_OUI,
 				   NULL);
+		fu_device_add_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_UNREACHABLE);
+		fu_udev_device_remove_open_flag(FU_UDEV_DEVICE(dev), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+		fu_udev_device_remove_open_flag(FU_UDEV_DEVICE(dev),
+						FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK);
 		g_debug("creating drm_dp_aux_dev object backed by %s", fn);
 		locker = fu_device_locker_new(dev, &error_local);
 		if (locker == NULL) {

@@ -922,15 +922,6 @@ fu_pxi_ble_device_get_model_info(FuPxiBleDevice *self, GError **error)
 }
 
 static gboolean
-fu_pxi_ble_device_probe(FuDevice *device, GError **error)
-{
-	/* set the logical and physical ID */
-	if (!fu_udev_device_set_logical_id(FU_UDEV_DEVICE(device), "hid", error))
-		return FALSE;
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
-}
-
-static gboolean
 fu_pxi_ble_device_setup_guid(FuPxiBleDevice *self, GError **error)
 {
 #ifdef HAVE_HIDRAW_H
@@ -1016,8 +1007,8 @@ fu_pxi_ble_device_init(FuPxiBleDevice *self)
 	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x093A");
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
 	fu_device_retry_set_delay(FU_DEVICE(self), 50);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	self->retransmit_id = PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
 	self->feature_report_id = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
 	self->input_report_id = PXI_HID_DEV_OTA_INPUT_REPORT_ID;
@@ -1039,7 +1030,6 @@ fu_pxi_ble_device_class_init(FuPxiBleDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_pxi_ble_device_finalize;
-	device_class->probe = fu_pxi_ble_device_probe;
 	device_class->setup = fu_pxi_ble_device_setup;
 	device_class->to_string = fu_pxi_ble_device_to_string;
 	device_class->write_firmware = fu_pxi_ble_device_write_firmware;

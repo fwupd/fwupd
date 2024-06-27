@@ -18,6 +18,10 @@ struct _FuScsiDevice {
 
 G_DEFINE_TYPE(FuScsiDevice, fu_scsi_device, FU_TYPE_UDEV_DEVICE)
 
+#define INQUIRY_CMD	  0x12
+#define INQUIRY_CMDLEN	  6
+#define SCSI_INQ_BUFF_LEN 254
+
 #define BUFFER_VENDOR_MODE 0x01
 #define BUFFER_DUFS_MODE   0x02
 #define BUFFER_FFU_MODE	   0x0E
@@ -43,7 +47,6 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 {
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
 	g_autofree gchar *attr_removable = NULL;
-	g_autofree gchar *prop_id_scsi = NULL;
 	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(FuUdevDevice) ufshci_parent = NULL;
 	const gchar *subsystem_parents[] = {"pci", "platform", NULL};
@@ -55,14 +58,6 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not correct devtype=%s, expected disk",
 			    fu_udev_device_get_devtype(FU_UDEV_DEVICE(self)));
-		return FALSE;
-	}
-	prop_id_scsi = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "ID_SCSI", NULL);
-	if (prop_id_scsi == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "has no ID_SCSI");
 		return FALSE;
 	}
 
@@ -134,22 +129,6 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 		}
 	}
 
-	/* add GUIDs */
-	fu_device_add_instance_strsafe(device, "VEN", fu_device_get_vendor(device));
-	fu_device_add_instance_strsafe(device, "DEV", fu_device_get_name(device));
-	fu_device_add_instance_strsafe(device, "REV", fu_device_get_version(device));
-	if (!fu_device_build_instance_id_full(device,
-					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
-					      error,
-					      "SCSI",
-					      "VEN",
-					      NULL))
-		return FALSE;
-	if (!fu_device_build_instance_id(device, error, "SCSI", "VEN", "DEV", NULL))
-		return FALSE;
-	if (!fu_device_build_instance_id(device, error, "SCSI", "VEN", "DEV", "REV", NULL))
-		return FALSE;
-
 	/* is internal? */
 	attr_removable = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
 						   "removable",
@@ -168,8 +147,8 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 	}
 
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "scsi:scsi_target", error);
+	/* success */
+	return TRUE;
 }
 
 static FuFirmware *
@@ -230,6 +209,67 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 			    sense_buffer[13]);
 		return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_scsi_device_setup(FuDevice *device, GError **error)
+{
+	FuScsiDevice *self = FU_SCSI_DEVICE(device);
+	guint8 buf[SCSI_INQ_BUFF_LEN] = {0};
+	guint8 cdb[INQUIRY_CMDLEN] = {
+	    INQUIRY_CMD,
+	    0, /* evpd */
+	    0, /* page */
+	    0,
+	    sizeof(buf),
+	    0,
+	};
+	g_autofree gchar *model = NULL;
+	g_autofree gchar *revision = NULL;
+	g_autofree gchar *vendor = NULL;
+
+	/* prepare chunk */
+	if (!fu_scsi_device_send_scsi_cmd_v3(self,
+					     cdb,
+					     sizeof(cdb),
+					     buf,
+					     sizeof(buf),
+					     SG_DXFER_FROM_DEV,
+					     error)) {
+		g_prefix_error(error, "SG_IO INQUIRY_CMD data error: ");
+		return FALSE;
+	}
+	fu_dump_raw(G_LOG_DOMAIN, "INQUIRY", buf, sizeof(buf));
+
+	/* parse */
+	vendor = fu_strsafe((const gchar *)buf + 8, 8);
+	if (vendor != NULL)
+		fu_device_set_vendor(device, vendor);
+	model = fu_strsafe((const gchar *)buf + 16, 8);
+	if (model != NULL)
+		fu_device_set_name(device, model);
+	revision = fu_strsafe((const gchar *)buf + 32, 4);
+	if (revision != NULL)
+		fu_device_set_version(device, revision);
+
+	/* add GUIDs */
+	fu_device_add_instance_str(device, "VEN", vendor);
+	fu_device_add_instance_str(device, "DEV", model);
+	fu_device_add_instance_str(device, "REV", revision);
+	if (!fu_device_build_instance_id_full(device,
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "SCSI",
+					      "VEN",
+					      NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, error, "SCSI", "VEN", "DEV", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, error, "SCSI", "VEN", "DEV", "REV", NULL))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -316,8 +356,8 @@ fu_scsi_device_init(FuScsiDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary(FU_DEVICE(self), "SCSI device");
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_SYNC);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_SYNC);
 }
 
 static void
@@ -326,6 +366,7 @@ fu_scsi_device_class_init(FuScsiDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_scsi_device_to_string;
 	device_class->probe = fu_scsi_device_probe;
+	device_class->setup = fu_scsi_device_setup;
 	device_class->prepare_firmware = fu_scsi_device_prepare_firmware;
 	device_class->write_firmware = fu_scsi_device_write_firmware;
 	device_class->set_progress = fu_scsi_device_set_progress;

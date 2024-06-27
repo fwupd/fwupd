@@ -414,7 +414,34 @@ fu_thunderbolt_device_write_firmware(FuDevice *device,
 static gboolean
 fu_thunderbolt_device_probe(FuDevice *device, GError **error)
 {
+	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);
+	guint64 tmp64 = 0;
 	g_autoptr(FuUdevDevice) udev_parent = NULL;
+	g_autofree gchar *vendor_str = NULL;
+	g_autofree gchar *model_str = NULL;
+
+	/* vendor=0x8086 */
+	vendor_str = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+					       "vendor",
+					       FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					       error);
+	if (vendor_str == NULL)
+		return FALSE;
+	if (!fu_strtoull(vendor_str, &tmp64, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+		return FALSE;
+	fu_udev_device_set_vendor(FU_UDEV_DEVICE(self), (guint16)tmp64);
+	fu_device_add_instance_u16(device, "VEN", tmp64);
+
+	/* device=0x06ed */
+	model_str = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+					      "device",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      error);
+	if (model_str == NULL)
+		return FALSE;
+	if (!fu_strtoull(model_str, &tmp64, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+		return FALSE;
+	fu_udev_device_set_model(FU_UDEV_DEVICE(self), (guint16)tmp64);
 
 	/* if the PCI ID is Intel then it's signed, no idea otherwise */
 	udev_parent =
@@ -425,6 +452,10 @@ fu_thunderbolt_device_probe(FuDevice *device, GError **error)
 		if (fu_udev_device_get_vendor(udev_parent) == 0x8086)
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	}
+
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS(fu_thunderbolt_device_parent_class)->probe(device, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;

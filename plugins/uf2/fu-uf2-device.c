@@ -346,10 +346,6 @@ fu_uf2_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(self), "block", error))
-		return FALSE;
-
 	/* more instance IDs */
 	prop_vendor_id = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "ID_VENDOR_ID", NULL);
 	if (prop_vendor_id != NULL) {
