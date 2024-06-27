@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-bytes.h"
 #include "fu-drm-device.h"
 #include "fu-string.h"
 
@@ -170,13 +171,12 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 	if (priv->display_state == FU_DISPLAY_STATE_CONNECTED) {
 		g_autofree gchar *edid_path = g_build_filename(sysfs_path, "edid", NULL);
 		g_autoptr(FuEdid) edid = fu_edid_new();
-		g_autoptr(GFile) file = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
-		file = g_file_new_for_path(edid_path);
-		if (!fu_firmware_parse_file(FU_FIRMWARE(edid),
-					    file,
-					    FWUPD_INSTALL_FLAG_NONE,
-					    error))
+		blob = fu_bytes_get_contents(edid_path, error);
+		if (blob == NULL)
+			return FALSE;
+		if (!fu_firmware_parse(FU_FIRMWARE(edid), blob, FWUPD_INSTALL_FLAG_NONE, error))
 			return FALSE;
 		g_set_object(&priv->edid, edid);
 
