@@ -22,6 +22,7 @@
 
 #include "fu-common.h"
 #include "fu-io-channel.h"
+#include "fu-string.h"
 
 /**
  * FuIOChannel:
@@ -36,6 +37,52 @@ struct _FuIOChannel {
 
 G_DEFINE_TYPE(FuIOChannel, fu_io_channel, G_TYPE_OBJECT)
 
+/**
+ * fu_io_channel_open_flag_to_string:
+ * @open_flags: an #FuIOChannelOpenFlags, e.g. %FU_IO_CHANNEL_OPEN_FLAG_READ
+ *
+ * Converts a single open flag to a string.
+ *
+ * Returns: identifier string
+ *
+ * Since: 2.0.0
+ **/
+const gchar *
+fu_io_channel_open_flag_to_string(FuIOChannelOpenFlags open_flags)
+{
+	if (open_flags == FU_IO_CHANNEL_OPEN_FLAG_READ)
+		return "read";
+	if (open_flags == FU_IO_CHANNEL_OPEN_FLAG_WRITE)
+		return "write";
+	if (open_flags == FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK)
+		return "nonblock";
+	if (open_flags == FU_IO_CHANNEL_OPEN_FLAG_SYNC)
+		return "sync";
+	return NULL;
+}
+
+/**
+ * fu_io_channel_open_flags_to_string:
+ * @open_flags: an #FuIOChannelOpenFlags, e.g. %FU_IO_CHANNEL_OPEN_FLAG_READ
+ *
+ * Converts a bifield of open flags to a string.
+ *
+ * Returns: (transfer full): identifier string
+ *
+ * Since: 2.0.0
+ **/
+gchar *
+fu_io_channel_open_flags_to_string(FuIOChannelOpenFlags open_flags)
+{
+	g_autoptr(GPtrArray) array = g_ptr_array_new();
+	for (guint i = 1; i < FU_IO_CHANNEL_OPEN_FLAG_LAST; i <<= 1) {
+		if (open_flags & i)
+			g_ptr_array_add(array, (gpointer)fu_io_channel_open_flag_to_string(i));
+	}
+	if (array->len == 0)
+		return NULL;
+	return fu_strjoin("|", array);
+}
 /**
  * fu_io_channel_unix_get_fd:
  * @self: a #FuIOChannel
@@ -517,40 +564,57 @@ fu_io_channel_unix_new(gint fd)
 /**
  * fu_io_channel_new_file:
  * @filename: device file
+ * @open_flags: some #FuIOChannelOpenFlags typically %FU_IO_CHANNEL_OPEN_FLAG_READ
  * @error: (nullable): optional return location for an error
  *
- * Creates a new object to write and read from.
+ * Creates a new object to write and/or read from.
  *
  * Returns: a #FuIOChannel
  *
- * Since: 1.2.2
+ * Since: 2.0.0
  **/
 FuIOChannel *
-fu_io_channel_new_file(const gchar *filename, GError **error)
+fu_io_channel_new_file(const gchar *filename, FuIOChannelOpenFlags open_flags, GError **error)
 {
-#ifdef HAVE_POLL_H
 	gint fd;
+	int flags = 0;
 
 	g_return_val_if_fail(filename != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	fd = g_open(filename, O_RDWR | O_NONBLOCK, S_IRWXU);
+#ifdef HAVE_POLL_H
+	flags |= O_NONBLOCK;
+#endif
+	if (open_flags & FU_IO_CHANNEL_OPEN_FLAG_READ &&
+	    open_flags & FU_IO_CHANNEL_OPEN_FLAG_WRITE) {
+		flags = O_RDWR;
+	} else if (open_flags & FU_IO_CHANNEL_OPEN_FLAG_READ) {
+		flags |= O_RDONLY;
+	} else if (open_flags & FU_IO_CHANNEL_OPEN_FLAG_WRITE) {
+		flags |= O_WRONLY;
+	}
+#ifdef O_NONBLOCK
+	if (open_flags & FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK)
+		flags |= O_NONBLOCK;
+#endif
+#ifdef O_SYNC
+	if (open_flags & FU_IO_CHANNEL_OPEN_FLAG_SYNC)
+		flags |= O_SYNC;
+#endif
+	fd = g_open(filename, flags, S_IRWXU);
 	if (fd < 0) {
 		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "failed to open %s",
-			    filename);
+			    G_IO_ERROR, /* nocheck */
+#ifdef HAVE_ERRNO_H
+			    g_io_error_from_errno(errno),
+#else
+			    G_IO_ERROR_FAILED, /* nocheck */
+#endif
+			    "failed to open %s: %s",
+			    filename,
+			    g_strerror(errno));
+		fwupd_error_convert(error);
 		return NULL;
 	}
 	return fu_io_channel_unix_new(fd);
-#else
-	g_return_val_if_fail(filename != NULL, NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Not supported as <poll.h> is unavailable");
-	return NULL;
-#endif
 }
