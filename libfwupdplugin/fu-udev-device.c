@@ -385,6 +385,62 @@ fu_udev_device_set_vendor_from_parent(FuUdevDevice *self)
 #endif
 
 static void
+fu_udev_device_set_vendor(FuUdevDevice *self, guint16 vendor)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
+	priv->vendor = vendor;
+}
+
+static void
+fu_udev_device_set_model(FuUdevDevice *self, guint16 model)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
+	priv->model = model;
+}
+
+static void
+fu_udev_device_set_subsystem_vendor(FuUdevDevice *self, guint16 subsystem_vendor)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
+	priv->subsystem_vendor = subsystem_vendor;
+}
+
+static void
+fu_udev_device_set_subsystem_model(FuUdevDevice *self, guint16 subsystem_model)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
+	priv->subsystem_model = subsystem_model;
+}
+
+static void
+fu_udev_device_set_cls(FuUdevDevice *self, guint32 class)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
+	priv->class = class;
+}
+
+static void
+fu_udev_device_set_revision(FuUdevDevice *self, guint8 revision)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
+	priv->revision = revision;
+}
+
+static void
+fu_udev_device_set_number(FuUdevDevice *self, guint64 number)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
+	priv->number = number;
+}
+
+static void
 fu_udev_device_set_devtype(FuUdevDevice *self, const gchar *devtype)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
@@ -2540,14 +2596,31 @@ fu_udev_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags
 	GPtrArray *events = fu_device_get_events(device);
 
 	/* optional properties */
-	if (priv->device_file != NULL) {
-		json_builder_set_member_name(builder, "DeviceFile");
-		json_builder_add_string_value(builder, priv->device_file);
-	}
-	if (fu_device_get_backend_id(device) != NULL) {
-		json_builder_set_member_name(builder, "BackendId");
-		json_builder_add_string_value(builder, fu_device_get_backend_id(device));
-	}
+	if (fu_udev_device_get_sysfs_path(self) != NULL)
+		fwupd_codec_json_append(builder, "BackendId", fu_udev_device_get_sysfs_path(self));
+	if (priv->device_file != NULL)
+		fwupd_codec_json_append(builder, "DeviceFile", priv->device_file);
+	if (priv->subsystem != NULL)
+		fwupd_codec_json_append(builder, "Subsystem", priv->subsystem);
+	if (priv->driver != NULL)
+		fwupd_codec_json_append(builder, "Driver", priv->driver);
+	if (priv->bind_id != NULL)
+		fwupd_codec_json_append(builder, "BindId", priv->bind_id);
+	if (priv->vendor != 0)
+		fwupd_codec_json_append_int(builder, "Vendor", priv->vendor);
+	if (priv->model != 0)
+		fwupd_codec_json_append_int(builder, "Model", priv->model);
+	if (priv->subsystem_vendor != 0)
+		fwupd_codec_json_append_int(builder, "SubsystemVendor", priv->subsystem_vendor);
+	if (priv->subsystem_model != 0)
+		fwupd_codec_json_append_int(builder, "SubsystemModel", priv->subsystem_model);
+	if (priv->class != 0)
+		fwupd_codec_json_append_int(builder, "PciClass", priv->class);
+	if (priv->revision != 0)
+		fwupd_codec_json_append_int(builder, "Revision", priv->revision);
+	if (priv->number != 0)
+		fwupd_codec_json_append_int(builder, "Number", priv->number);
+
 #if GLIB_CHECK_VERSION(2, 80, 0)
 	if (fu_device_get_created_usec(device) != 0) {
 		g_autoptr(GDateTime) dt =
@@ -2575,18 +2648,47 @@ fu_udev_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 {
 	FuDevice *device = FU_DEVICE(codec);
 	FuUdevDevice *self = FU_UDEV_DEVICE(codec);
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	JsonObject *json_object = json_node_get_object(json_node);
 	const gchar *tmp;
+	gint64 tmp64;
 
-	tmp = json_object_get_string_member_with_default(json_object, "DeviceFile", NULL);
-	if (tmp != NULL) {
-		g_free(priv->device_file);
-		priv->device_file = g_strdup(tmp);
-	}
 	tmp = json_object_get_string_member_with_default(json_object, "BackendId", NULL);
 	if (tmp != NULL)
 		fu_device_set_backend_id(device, tmp);
+	tmp = json_object_get_string_member_with_default(json_object, "Subsystem", NULL);
+	if (tmp != NULL)
+		fu_udev_device_set_subsystem(self, tmp);
+	tmp = json_object_get_string_member_with_default(json_object, "Driver", NULL);
+	if (tmp != NULL)
+		fu_udev_device_set_driver(self, tmp);
+	tmp = json_object_get_string_member_with_default(json_object, "BindId", NULL);
+	if (tmp != NULL)
+		fu_udev_device_set_bind_id(self, tmp);
+	tmp = json_object_get_string_member_with_default(json_object, "DeviceFile", NULL);
+	if (tmp != NULL)
+		fu_udev_device_set_device_file(self, tmp);
+	tmp64 = json_object_get_int_member_with_default(json_object, "Vendor", 0);
+	if (tmp64 != 0)
+		fu_udev_device_set_vendor(self, tmp64);
+	tmp64 = json_object_get_int_member_with_default(json_object, "Model", 0);
+	if (tmp64 != 0)
+		fu_udev_device_set_model(self, tmp64);
+	tmp64 = json_object_get_int_member_with_default(json_object, "SubsystemVendor", 0);
+	if (tmp64 != 0)
+		fu_udev_device_set_subsystem_vendor(self, tmp64);
+	tmp64 = json_object_get_int_member_with_default(json_object, "SubsystemModel", 0);
+	if (tmp64 != 0)
+		fu_udev_device_set_subsystem_model(self, tmp64);
+	tmp64 = json_object_get_int_member_with_default(json_object, "PciClass", 0);
+	if (tmp64 != 0)
+		fu_udev_device_set_cls(self, tmp64);
+	tmp64 = json_object_get_int_member_with_default(json_object, "Revision", 0);
+	if (tmp64 != 0)
+		fu_udev_device_set_revision(self, tmp64);
+	tmp64 = json_object_get_int_member_with_default(json_object, "Number", 0);
+	if (tmp64 != 0)
+		fu_udev_device_set_number(self, tmp64);
+
 #if GLIB_CHECK_VERSION(2, 80, 0)
 	tmp = json_object_get_string_member_with_default(json_object, "Created", NULL);
 	if (tmp != NULL) {
