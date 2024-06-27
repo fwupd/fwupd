@@ -53,6 +53,7 @@ typedef struct {
 	FuIOChannel *io_channel;
 	FuIoChannelOpenFlag open_flags;
 	FuUdevDeviceFlags flags;
+	gchar **uevent_lines;
 } FuUdevDevicePrivate;
 
 static void
@@ -924,6 +925,7 @@ fu_udev_device_probe_complete(FuDevice *device)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* free memory */
+	g_clear_pointer(&priv->uevent_lines, g_strfreev);
 	g_clear_object(&priv->udev_device);
 	priv->udev_device_cleared = TRUE;
 }
@@ -2446,19 +2448,55 @@ fu_udev_device_read_property(FuUdevDevice *self, const gchar *key, GError **erro
 		return g_strdup(fu_device_event_get_str(event, "Data", error));
 	}
 
-	/* sanity check */
-	if (priv->udev_device == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no device to use");
-		return NULL;
-	}
-
 	/* save */
 	if (event_id != NULL)
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
-#ifdef HAVE_GUDEV
 	/* parse key */
-	value = g_strdup(g_udev_device_get_property(priv->udev_device, key)); /* nocheck */
+	if (priv->uevent_lines == NULL) {
+		g_autofree gchar *str = NULL;
+		str = fu_udev_device_read_sysfs(self,
+						"uevent",
+						FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						error);
+		if (str == NULL)
+			return NULL;
+		priv->uevent_lines = g_strsplit(str, "\n", -1);
+	}
+	for (guint i = 0; priv->uevent_lines[i] != NULL; i++) {
+		g_auto(GStrv) kv = g_strsplit(priv->uevent_lines[i], "=", 2);
+		if (g_strcmp0(kv[0], key) == 0) {
+			value = g_strdup(kv[1]);
+			break;
+		}
+	}
+	if (value == NULL) {
+#ifdef HAVE_GUDEV
+		/* sanity check */
+		if (priv->udev_device == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "no device to use");
+			return NULL;
+		}
+
+		/* retain fallback until we merge the improved probing branch */
+		value = g_strdup(g_udev_device_get_property(priv->udev_device, key)); /* nocheck */
+		if (value != NULL) {
+			g_debug("found udev property %s=%s not in %s/uevent",
+				key,
+				value,
+				fu_udev_device_get_sysfs_path(self));
+		}
+#else
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "not supported as <gudev.h> is unavailable");
+		return NULL;
+#endif
+	}
 	if (value == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -2467,13 +2505,6 @@ fu_udev_device_read_property(FuUdevDevice *self, const gchar *key, GError **erro
 			    key);
 		return NULL;
 	}
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "not supported as <gudev.h> is unavailable");
-	return NULL;
-#endif
 
 	/* save response */
 	if (event != NULL)
@@ -2677,6 +2708,8 @@ fu_udev_device_finalize(GObject *object)
 	FuUdevDevice *self = FU_UDEV_DEVICE(object);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 
+	if (priv->uevent_lines != NULL)
+		g_strfreev(priv->uevent_lines);
 	g_free(priv->subsystem);
 	g_free(priv->devtype);
 	g_free(priv->bind_id);
