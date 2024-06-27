@@ -1349,18 +1349,31 @@ fu_udev_device_get_parent_subsystems(FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	GString *str = g_string_new(NULL);
-	g_autoptr(GUdevDevice) udev_device = g_object_ref(priv->udev_device);
+	g_autoptr(FuUdevDevice) udev_device = g_object_ref(self);
+
+	/* not true, but good enough for emulation */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+		return g_strdup(priv->subsystem);
 
 	/* find subsystems of self and all parent devices */
-	if (priv->subsystem != NULL)
-		g_string_append_printf(str, "%s,", priv->subsystem);
 	while (TRUE) {
-		g_autoptr(GUdevDevice) parent = g_udev_device_get_parent(udev_device);
+		g_autoptr(FuUdevDevice) parent = NULL;
+		if (fu_udev_device_get_devtype(udev_device) != NULL) {
+			g_string_append_printf(str,
+					       "%s:%s,",
+					       fu_udev_device_get_subsystem(udev_device),
+					       fu_udev_device_get_devtype(udev_device));
+		} else {
+			g_string_append_printf(str,
+					       "%s,",
+					       fu_udev_device_get_subsystem(udev_device));
+		}
+		parent = FU_UDEV_DEVICE(
+		    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(udev_device),
+								NULL,
+								NULL));
 		if (parent == NULL)
 			break;
-		if (g_udev_device_get_subsystem(parent) != NULL) {
-			g_string_append_printf(str, "%s,", g_udev_device_get_subsystem(parent));
-		}
 		g_set_object(&udev_device, parent);
 	}
 	if (str->len > 0)
