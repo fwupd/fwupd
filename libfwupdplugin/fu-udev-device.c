@@ -2103,6 +2103,93 @@ fu_udev_device_pwrite(FuUdevDevice *self,
 }
 
 /**
+ * fu_udev_device_read_sysfs:
+ * @self: a #FuUdevDevice
+ * @attr: sysfs attribute name
+ * @timeout_ms: IO timeout in milliseconds
+ * @error: (nullable): optional return location for an error
+ *
+ * Reads data from a sysfs attribute, removing any newline trailing chars.
+ *
+ * Returns: (transfer full): string value, or %NULL
+ *
+ * Since: 2.0.0
+ **/
+gchar *
+fu_udev_device_read_sysfs(FuUdevDevice *self, const gchar *attr, guint timeout_ms, GError **error)
+{
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
+	g_autofree gchar *path = NULL;
+	g_autofree gchar *value = NULL;
+	g_autoptr(FuIOChannel) io_channel = NULL;
+	g_autoptr(GByteArray) buf = NULL;
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
+	g_return_val_if_fail(attr != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("ReadAttr:Attr=%s", attr);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		return g_strdup(fu_device_event_get_str(event, "Data", error));
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* open the file */
+	if (fu_udev_device_get_sysfs_path(self) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "sysfs_path undefined");
+		return NULL;
+	}
+	path = g_build_filename(fu_udev_device_get_sysfs_path(self), attr, NULL);
+	io_channel = fu_io_channel_new_file(path, error);
+	if (io_channel == NULL)
+		return NULL;
+	buf = fu_io_channel_read_byte_array(io_channel,
+					    -1,
+					    timeout_ms,
+					    FU_IO_CHANNEL_FLAG_NONE,
+					    error);
+	if (buf == NULL)
+		return NULL;
+	if (!g_utf8_validate((const gchar *)buf->data, buf->len, NULL)) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "non UTF-8 data");
+		return NULL;
+	}
+
+	/* save response */
+	value = g_strndup((const gchar *)buf->data, buf->len);
+
+	/* remove the trailing newline */
+	if (buf->len > 0) {
+		if (value[buf->len - 1] == '\n')
+			value[buf->len - 1] = '\0';
+	}
+
+	/* save for emulation */
+	if (event != NULL)
+		fu_device_event_set_str(event, "Data", value);
+
+	/* success */
+	return g_steal_pointer(&value);
+}
+
+/**
  * fu_udev_device_get_sysfs_attr:
  * @self: a #FuUdevDevice
  * @attr: name of attribute to get

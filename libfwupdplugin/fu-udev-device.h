@@ -99,6 +99,13 @@ typedef enum {
 	FU_PCI_BASE_CLS_UNDEFINED = 0xff
 } FuPciBaseCls;
 
+/**
+ * FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT:
+ *
+ * The default IO timeout when rading sysfs attributes.
+ */
+#define FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT 50 /* ms */
+
 FuUdevDevice *
 fu_udev_device_new(FuContext *ctx, GUdevDevice *udev_device) G_GNUC_NON_NULL(1, 2);
 GUdevDevice *
@@ -180,6 +187,9 @@ fu_udev_device_get_sysfs_attr_uint64(FuUdevDevice *self,
 				     const gchar *attr,
 				     guint64 *value,
 				     GError **error) G_GNUC_NON_NULL(1);
+gchar *
+fu_udev_device_read_sysfs(FuUdevDevice *self, const gchar *attr, guint timeout_ms, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 
 gboolean
 fu_udev_device_write_sysfs(FuUdevDevice *self,
