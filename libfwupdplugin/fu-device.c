@@ -4862,6 +4862,16 @@ fu_device_open(FuDevice *self, GError **error)
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* skip */
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		fu_device_add_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IS_OPEN);
+		if (!fu_device_probe(self, error))
+			return FALSE;
+		if (!fu_device_setup(self, error))
+			return FALSE;
+		return fu_device_ensure_id(self, error);
+	}
+
 	/* use parent */
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN)) {
 		FuDevice *parent = fu_device_get_parent(self);
@@ -4945,6 +4955,12 @@ fu_device_close(FuDevice *self, GError **error)
 {
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* skip */
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		fu_device_remove_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IS_OPEN);
+		return TRUE;
+	}
 
 	/* close the device first in case the plugin needs to use the proxy or parent */
 	if (!fu_device_close_internal(self, error))
@@ -5160,6 +5176,12 @@ fu_device_setup(FuDevice *self, GError **error)
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* skip */
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		fu_device_convert_instance_ids(self);
+		return TRUE;
+	}
 
 	/* should have already been called */
 	if (!fu_device_probe(self, error))
@@ -6941,6 +6963,7 @@ fu_device_init(FuDevice *self)
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION);
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
+	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IS_FAKE);
 }
 
 static void

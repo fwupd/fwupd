@@ -173,6 +173,14 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 		}
 	}
 
+	/* fake something as we cannot use ioctls */
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		fu_device_add_instance_str(device, "VEN", "fwupd");
+		fu_device_add_instance_str(device, "DEV", "DEVICE");
+		if (!fu_device_build_instance_id(device, error, "SCSI", "VEN", "DEV", NULL))
+			return FALSE;
+	}
+
 	/* success */
 	return TRUE;
 }

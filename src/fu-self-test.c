@@ -6264,10 +6264,333 @@ fu_engine_machine_hash_func(void)
 	g_assert_cmpstr(mhash2, !=, mhash1);
 }
 
+static void
+fu_test_engine_fake_hidraw(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autofree gchar *value2 = NULL;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuUdevDevice) udev_device2 = NULL;
+	g_autoptr(FuUdevDevice) udev_device3 = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* load engine and check the device was found */
+	fu_engine_add_plugin_filter(engine, "pixart_rf");
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* hidraw -> pixart_rf */
+	device = fu_engine_get_device(engine, "6acd27f1feb25ba3b604063de4c13b604776b2f5", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "hidraw");
+	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpint(fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)), ==, 0x093a);
+	g_assert_cmpint(fu_udev_device_get_model(FU_UDEV_DEVICE(device)), ==, 0x2862);
+	g_assert_cmpint(fu_udev_device_get_revision(FU_UDEV_DEVICE(device)), ==, 0x0);
+	g_assert_cmpstr(fu_device_get_plugin(device), ==, "pixart_rf");
+	g_assert_cmpstr(fu_device_get_name(device), ==, "PIXART Pixart dual-mode mouse");
+	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "usb-0000:00:14.0-1/input1");
+	g_assert_cmpstr(fu_device_get_logical_id(device), ==, NULL);
+
+	/* check can read random files */
+	value2 = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					   "dev",
+					   FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					   &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(value2, ==, "241:1");
+
+	/* get child, both specified */
+	udev_device2 = FU_UDEV_DEVICE(
+	    fu_device_get_backend_parent_with_subsystem(device, "usb:usb_interface", &error));
+	g_assert_no_error(error);
+	g_assert_nonnull(udev_device2);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device2), ==, "usb");
+
+	/* get child, initially unprobed */
+	udev_device3 =
+	    FU_UDEV_DEVICE(fu_device_get_backend_parent_with_subsystem(device, "usb", &error));
+	g_assert_no_error(error);
+	g_assert_nonnull(udev_device3);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(udev_device3), ==, "usb");
+	g_assert_cmpstr(fu_udev_device_get_driver(udev_device3), ==, "usb");
+}
+
+static void
+fu_test_engine_fake_usb(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	/* load engine and check the device was found */
+	fu_engine_add_plugin_filter(engine, "colorhug");
+	fu_engine_add_plugin_filter(engine, "optionrom");     /* for pci */
+	fu_engine_add_plugin_filter(engine, "synaptics_rmi"); /* for serio */
+	fu_engine_add_plugin_filter(engine, "tpm");	      /* for tpm */
+	fu_engine_add_plugin_filter(engine, "intel_me");      /* for mei */
+	fu_engine_add_plugin_filter(engine, "nvme");	      /* for nvme */
+	fu_engine_add_plugin_filter(engine, "scsi");	      /* for scsi */
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* USB -> colorhug */
+	device = fu_engine_get_device(engine, "d787669ee4a103fe0b361fe31c10ea037c72f27c", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "usb");
+	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, "usb_device");
+	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, "usb");
+	g_assert_cmpint(fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)), ==, 0x093a);
+	g_assert_cmpint(fu_udev_device_get_model(FU_UDEV_DEVICE(device)), ==, 0x2862);
+	g_assert_cmpint(fu_udev_device_get_revision(FU_UDEV_DEVICE(device)), ==, 0x0);
+	g_assert_cmpstr(fu_device_get_plugin(device), ==, "colorhug");
+	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "1-1");
+	g_assert_cmpstr(fu_device_get_logical_id(device), ==, NULL);
+}
+
+static void
+fu_test_engine_fake_pci(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	/* load engine and check the device was found */
+	fu_engine_add_plugin_filter(engine, "optionrom");
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* PCI -> optionrom */
+	device = fu_engine_get_device(engine, "20c947afbdc42deee9a7333290008cb384b10f74", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "pci");
+	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_true(
+	    g_str_has_suffix(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)), "/rom"));
+	g_assert_cmpint(fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)), ==, 0x8086);
+	g_assert_cmpint(fu_udev_device_get_model(FU_UDEV_DEVICE(device)), ==, 0x06ed);
+	g_assert_cmpint(fu_udev_device_get_revision(FU_UDEV_DEVICE(device)), ==, 0x0);
+	g_assert_cmpstr(fu_device_get_plugin(device), ==, "optionrom");
+	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "PCI_SLOT_NAME=0000:00:14.0");
+	g_assert_cmpstr(fu_device_get_logical_id(device), ==, "rom");
+}
+
+static void
+fu_test_engine_fake_nvme(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	/* load engine and check the device was found */
+	fu_engine_add_plugin_filter(engine, "nvme");
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* NVMe -> nvme */
+	device = fu_engine_get_device(engine, "4c263c95f596030b430d65dc934f6722bcee5720", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "nvme");
+	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpint(fu_udev_device_get_number(FU_UDEV_DEVICE(device)), ==, 1);
+	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)), ==, "/dev/nvme1");
+	g_assert_cmpint(fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)), ==, 0x1179);
+	g_assert_cmpint(fu_udev_device_get_model(FU_UDEV_DEVICE(device)), ==, 0x010F);
+	g_assert_true(fu_device_has_vendor_id(device, "PCI:0x1179"));
+	g_assert_cmpstr(fu_device_get_vendor(device), ==, "Toshiba Corporation");
+	g_assert_cmpstr(fu_device_get_plugin(device), ==, "nvme");
+	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "PCI_SLOT_NAME=0000:00:1b.0");
+	g_assert_cmpstr(fu_device_get_logical_id(device), ==, NULL);
+}
+
+static void
+fu_test_engine_fake_serio(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	/* load engine and check the device was found */
+	fu_engine_add_plugin_filter(engine, "synaptics_rmi");
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* serio */
+	device = fu_engine_get_device(engine, "d8419b7614e50c6fb6162b5dca34df5236a62a8d", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "serio");
+	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, "psmouse");
+	g_assert_cmpstr(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpint(fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)), ==, 0x0);
+	g_assert_cmpint(fu_udev_device_get_model(FU_UDEV_DEVICE(device)), ==, 0x0);
+	g_assert_cmpint(fu_udev_device_get_revision(FU_UDEV_DEVICE(device)), ==, 0x0);
+	g_assert_cmpstr(fu_device_get_name(device), ==, "TouchStyk");
+	g_assert_cmpstr(fu_device_get_plugin(device), ==, "synaptics_rmi");
+	g_assert_cmpstr(fu_device_get_physical_id(device),
+			==,
+			"DEVPATH=/devices/platform/i8042/serio1");
+	g_assert_cmpstr(fu_device_get_logical_id(device), ==, NULL);
+	g_assert_true(fu_device_has_instance_id(device, "SERIO\\FWID_LEN0305-PNP0F13"));
+}
+
+static void
+fu_test_engine_fake_tpm(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	/* load engine and check the device was found */
+	fu_engine_add_plugin_filter(engine, "tpm");
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* tpm */
+	device = fu_engine_get_device(engine, "1d8d50a4dbc65618f5c399c2ae827b632b3ccc11", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "tpm");
+	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)), ==, "/dev/tpm0");
+	g_assert_cmpint(fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)), ==, 0x0);
+	g_assert_cmpint(fu_udev_device_get_model(FU_UDEV_DEVICE(device)), ==, 0x0);
+	g_assert_cmpint(fu_udev_device_get_revision(FU_UDEV_DEVICE(device)), ==, 0x0);
+	g_assert_cmpstr(fu_device_get_plugin(device), ==, "tpm");
+	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "DEVNAME=tpm0");
+	g_assert_cmpstr(fu_device_get_logical_id(device), ==, NULL);
+}
+
+static void
+fu_test_engine_fake_mei(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	/* load engine and check the device was found */
+	fu_engine_add_plugin_filter(engine, "intel_me");
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* mei */
+	device = fu_engine_get_device(engine, "8d5470e73fd9a31eaa460b2b6aea95483fe3f14c", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "mei");
+	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)), ==, "/dev/mei0");
+	g_assert_cmpint(fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)), ==, 0x8086);
+	g_assert_cmpint(fu_udev_device_get_model(FU_UDEV_DEVICE(device)), ==, 0x06E0);
+	g_assert_cmpint(fu_udev_device_get_revision(FU_UDEV_DEVICE(device)), ==, 0x0);
+	g_assert_cmpstr(fu_device_get_plugin(device), ==, "intel_me");
+	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "PCI_SLOT_NAME=0000:00:16.0");
+	g_assert_cmpstr(fu_device_get_logical_id(device), ==, "AMT");
+}
+
+static void
+fu_test_engine_fake_block(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	/* load engine and check the device was found */
+	fu_engine_add_plugin_filter(engine, "scsi");
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* block */
+	device = fu_engine_get_device(engine, "7772d9fe9419e3ea564216e12913a16e233378a6", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "block");
+	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, "disk");
+	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)), ==, "/dev/sde");
+	g_assert_cmpstr(fu_device_get_plugin(device), ==, "scsi");
+	g_assert_cmpstr(fu_device_get_vendor(device), ==, "IBM-ESXS");
+}
+
 int
 main(int argc, char **argv)
 {
 	gboolean ret;
+	g_autofree gchar *sysfsdir = NULL;
 	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -6287,6 +6610,8 @@ main(int argc, char **argv)
 	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
+	sysfsdir = g_test_build_filename(G_TEST_DIST, "tests", "sys", NULL);
+	(void)g_setenv("FWUPD_SYSFSDIR", sysfsdir, TRUE);
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
 	(void)g_setenv("FWUPD_MACHINE_ID", "test", TRUE);
 
@@ -6375,6 +6700,14 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/engine{history-verfmt}", self, fu_engine_history_verfmt_func);
 	g_test_add_data_func("/fwupd/engine{history-modify}", self, fu_engine_history_modify_func);
 	g_test_add_data_func("/fwupd/engine{history-error}", self, fu_engine_history_error_func);
+	g_test_add_data_func("/fwupd/engine{fake-hidraw}", self, fu_test_engine_fake_hidraw);
+	g_test_add_data_func("/fwupd/engine{fake-usb}", self, fu_test_engine_fake_usb);
+	g_test_add_data_func("/fwupd/engine{fake-serio}", self, fu_test_engine_fake_serio);
+	g_test_add_data_func("/fwupd/engine{fake-nvme}", self, fu_test_engine_fake_nvme);
+	g_test_add_data_func("/fwupd/engine{fake-block}", self, fu_test_engine_fake_block);
+	g_test_add_data_func("/fwupd/engine{fake-mei}", self, fu_test_engine_fake_mei);
+	g_test_add_data_func("/fwupd/engine{fake-tpm}", self, fu_test_engine_fake_tpm);
+	g_test_add_data_func("/fwupd/engine{fake-pci}", self, fu_test_engine_fake_pci);
 	if (g_test_slow()) {
 		g_test_add_data_func("/fwupd/device-list{replug-auto}",
 				     self,
