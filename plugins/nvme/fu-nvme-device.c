@@ -271,22 +271,18 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError
  * %FALSE: device is, probably, NVMe-over-Fabrics
  */
 static gboolean
-fu_nvme_device_is_pci(FuDevice *device, GError **error)
+fu_nvme_device_is_pci(FuNvmeDevice *self, GError **error)
 {
-	g_autoptr(GUdevDevice) device_tmp = NULL;
-	GUdevDevice *gdev;
+	g_autoptr(FuUdevDevice) parent_pci = NULL;
 
-	gdev = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
-
-	device_tmp = g_udev_device_get_parent_with_subsystem(gdev, "pci", NULL);
-	if (device_tmp == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "device is not on PCI subsystem");
+	parent_pci = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self),
+							      "pci",
+							      NULL, /* devtype */
+							      error);
+	if (parent_pci == NULL)
 		return FALSE;
-	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -304,7 +300,7 @@ fu_nvme_device_probe(FuDevice *device, GError **error)
 		fu_device_set_vendor(FU_DEVICE(device), "Samsung");
 
 	/* ignore non-PCI NVMe devices */
-	if (!fu_nvme_device_is_pci(device, error))
+	if (!fu_nvme_device_is_pci(self, error))
 		return FALSE;
 
 	/* set the physical ID */
