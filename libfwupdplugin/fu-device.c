@@ -5574,16 +5574,8 @@ fu_device_incorporate_subclasses(FuDevice *self, FuDevice *donor)
 		FuDeviceClass *device_class = g_type_class_peek(gtype);
 		for (GType gtype_donor = G_OBJECT_TYPE(donor); gtype_donor != FWUPD_TYPE_DEVICE;
 		     gtype_donor = g_type_parent(gtype_donor)) {
-			if (gtype == gtype_donor) {
-				g_debug("calling incorporate on %s->%s",
-					g_type_name(gtype_donor),
-					g_type_name(gtype));
+			if (gtype == gtype_donor)
 				device_class_list = g_list_prepend(device_class_list, device_class);
-			} else {
-				g_debug("not calling incorporate on %s->%s",
-					g_type_name(gtype_donor),
-					g_type_name(gtype));
-			}
 		}
 	}
 	for (GList *l = device_class_list; l != NULL; l = l->next) {
