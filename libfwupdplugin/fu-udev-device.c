@@ -2488,43 +2488,39 @@ fu_udev_device_get_children_with_subsystem(FuUdevDevice *self, const gchar *cons
 FuDevice *
 fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error)
 {
-#if defined(HAVE_GUDEV) && defined(HAVE_GUSB)
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	guint8 bus = 0;
-	guint8 address = 0;
-	g_autoptr(GUdevDevice) udev_device = NULL;
+#ifdef HAVE_GUSB
+	guint64 bus = 0;
+	guint64 address = 0;
+	g_autofree gchar *attr_bus = NULL;
+	g_autofree gchar *attr_dev = NULL;
+	g_autoptr(FuUdevDevice) device_usb = NULL;
 	g_autoptr(GUsbContext) usb_ctx = NULL;
 	g_autoptr(GUsbDevice) usb_device = NULL;
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	/* sanity check */
-	if (priv->udev_device == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "not initialized");
-		return NULL;
-	}
-
 	/* look at the current device and all the parent devices until we can find the USB data */
-	udev_device = g_object_ref(priv->udev_device);
-	while (udev_device != NULL) {
-		g_autoptr(GUdevDevice) udev_device_parent = NULL;
-		bus = g_udev_device_get_sysfs_attr_as_int(udev_device, "busnum");     /* nocheck */
-		address = g_udev_device_get_sysfs_attr_as_int(udev_device, "devnum"); /* nocheck */
-		if (bus != 0 || address != 0)
-			break;
-		udev_device_parent = g_udev_device_get_parent(udev_device);
-		g_set_object(&udev_device, udev_device_parent);
-	}
-
-	/* nothing found */
-	if (bus == 0x0 && address == 0x0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "No parent device with busnum and devnum");
+	device_usb = fu_udev_device_get_parent_with_subsystem(self, "usb", "usb_device", NULL);
+	if (device_usb == NULL)
 		return NULL;
-	}
+
+	attr_bus = fu_udev_device_read_sysfs(device_usb,
+					     "busnum",
+					     FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					     error);
+	if (attr_bus == NULL)
+		return NULL;
+	if (!fu_strtoull(attr_bus, &bus, 0, G_MAXUINT8, FU_INTEGER_BASE_16, error))
+		return NULL;
+	attr_dev = fu_udev_device_read_sysfs(device_usb,
+					     "devnum",
+					     FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					     error);
+	if (attr_dev == NULL)
+		return NULL;
+	if (!fu_strtoull(attr_dev, &bus, 0, G_MAXUINT8, FU_INTEGER_BASE_16, error))
+		return NULL;
 
 	/* match device */
 	usb_ctx = g_usb_context_new(error);
@@ -2539,7 +2535,7 @@ fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error)
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Not supported as <gudev.h> or <gusb.h> is unavailable");
+			    "Not supported as <gusb.h> is unavailable");
 	return NULL;
 #endif
 }
