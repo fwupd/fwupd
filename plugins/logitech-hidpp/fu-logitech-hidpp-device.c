@@ -252,7 +252,10 @@ fu_logitech_hidpp_device_open(FuDevice *device, GError **error)
 	const gchar *devpath = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
 
 	/* open */
-	priv->io_channel = fu_io_channel_new_file(devpath, error);
+	priv->io_channel =
+	    fu_io_channel_new_file(devpath,
+				   FU_IO_CHANNEL_OPEN_FLAG_READ | FU_IO_CHANNEL_OPEN_FLAG_WRITE,
+				   error);
 	if (priv->io_channel == NULL)
 		return FALSE;
 

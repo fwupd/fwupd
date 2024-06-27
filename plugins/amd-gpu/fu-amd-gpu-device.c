@@ -259,7 +259,10 @@ fu_amd_gpu_device_write_firmware(FuDevice *device,
 	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
 	psp_vbflash = g_build_filename(base, "psp_vbflash", NULL);
 
-	image_io = fu_io_channel_new_file(psp_vbflash, error);
+	image_io =
+	    fu_io_channel_new_file(psp_vbflash,
+				   FU_IO_CHANNEL_OPEN_FLAG_READ | FU_IO_CHANNEL_OPEN_FLAG_WRITE,
+				   error);
 	if (image_io == NULL)
 		return FALSE;
 

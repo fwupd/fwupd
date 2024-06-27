@@ -22,27 +22,13 @@ G_DEFINE_TYPE(FuBiosSetting, fu_bios_setting, FWUPD_TYPE_BIOS_SETTING)
 static gboolean
 fu_bios_setting_write_value(FwupdBiosSetting *self, const gchar *value, GError **error)
 {
-	int fd;
 	g_autofree gchar *fn =
 	    g_build_filename(fwupd_bios_setting_get_path(self), "current_value", NULL);
 	g_autoptr(FuIOChannel) io = NULL;
 
-	fd = open(fn, O_WRONLY);
-	if (fd < 0) {
-		g_set_error(error,
-			    G_IO_ERROR, /* nocheck */
-#ifdef HAVE_ERRNO_H
-			    g_io_error_from_errno(errno),
-#else
-			    G_IO_ERROR_FAILED, /* nocheck */
-#endif
-			    "could not open %s: %s",
-			    fn,
-			    g_strerror(errno));
-		fwupd_error_convert(error);
+	io = fu_io_channel_new_file(fn, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
+	if (io == NULL)
 		return FALSE;
-	}
-	io = fu_io_channel_unix_new(fd);
 	if (!fu_io_channel_write_raw(io,
 				     (const guint8 *)value,
 				     strlen(value),
