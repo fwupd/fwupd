@@ -23,12 +23,14 @@ fu_amd_pmc_device_probe(FuDevice *device, GError **error)
 {
 	guint64 program = 0;
 	g_autofree gchar *attr_smu_program = NULL;
-	const gchar *version;
+	g_autofree gchar *version = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *summary = NULL;
 
-	version =
-	    fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "smu_fw_version", &error_local);
+	version = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					    "smu_fw_version",
+					    FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					    &error_local);
 	if (version == NULL) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_set_error_literal(error,
