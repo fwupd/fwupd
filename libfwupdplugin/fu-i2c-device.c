@@ -79,7 +79,6 @@ fu_i2c_device_set_property(GObject *object, guint prop_id, const GValue *value, 
 static gboolean
 fu_i2c_device_open(FuDevice *device, GError **error)
 {
-#ifdef HAVE_GUDEV
 	FuI2cDevice *self = FU_I2C_DEVICE(device);
 	FuI2cDevicePrivate *priv = GET_PRIVATE(self);
 	gint bus_fd;
@@ -104,7 +103,6 @@ fu_i2c_device_open(FuDevice *device, GError **error)
 	io_channel = fu_io_channel_unix_new(bus_fd);
 	fu_udev_device_set_io_channel(FU_UDEV_DEVICE(self), io_channel);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IGNORE_NONE);
-#endif
 
 	/* FuUdevDevice->open */
 	return FU_DEVICE_CLASS(fu_i2c_device_parent_class)->open(device, error);
@@ -114,15 +112,10 @@ static gboolean
 fu_i2c_device_probe(FuDevice *device, GError **error)
 {
 	FuI2cDevice *self = FU_I2C_DEVICE(device);
-#ifdef HAVE_GUDEV
 	FuI2cDevicePrivate *priv = GET_PRIVATE(self);
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
-#endif
 	g_autofree gchar *attr_name = NULL;
-#ifdef HAVE_GUDEV
 	g_autofree gchar *devname = NULL;
-	g_autoptr(GUdevDevice) udev_parent = NULL;
-#endif
+	g_autoptr(FuUdevDevice) udev_parent = NULL;
 
 	/* set physical ID */
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "i2c", error))
@@ -145,11 +138,11 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 					      NULL))
 		return FALSE;
 
-#ifdef HAVE_GUDEV
 	/* get bus number out of sysfs path */
-	udev_parent = g_udev_device_get_parent(udev_device);
+	udev_parent =
+	    fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), NULL, NULL, NULL);
 	if (udev_parent != NULL)
-		devname = g_path_get_basename(g_udev_device_get_sysfs_path(udev_parent));
+		devname = g_path_get_basename(fu_udev_device_get_sysfs_path(udev_parent));
 	if (devname != NULL && g_str_has_prefix(devname, "i2c-")) {
 		guint64 tmp64 = 0;
 		g_autoptr(GError) error_local = NULL;
@@ -164,7 +157,6 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 			priv->bus_number = tmp64;
 		}
 	}
-#endif
 
 	/* success */
 	return TRUE;
