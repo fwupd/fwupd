@@ -80,7 +80,10 @@ fu_logitech_hidpp_runtime_open(FuDevice *device, GError **error)
 	g_autoptr(FuIOChannel) io_channel = NULL;
 
 	/* open, but don't block */
-	io_channel = fu_io_channel_new_file(devpath, error);
+	io_channel =
+	    fu_io_channel_new_file(devpath,
+				   FU_IO_CHANNEL_OPEN_FLAG_READ | FU_IO_CHANNEL_OPEN_FLAG_WRITE,
+				   error);
 	if (io_channel == NULL)
 		return FALSE;
 	g_set_object(&priv->io_channel, io_channel);

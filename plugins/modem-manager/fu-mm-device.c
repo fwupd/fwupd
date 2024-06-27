@@ -559,7 +559,10 @@ fu_mm_device_io_open_qcdm(FuMmDevice *self, GError **error)
 	}
 
 	/* open device */
-	self->io_channel = fu_io_channel_new_file(self->port_qcdm, error);
+	self->io_channel =
+	    fu_io_channel_new_file(self->port_qcdm,
+				   FU_IO_CHANNEL_OPEN_FLAG_READ | FU_IO_CHANNEL_OPEN_FLAG_WRITE,
+				   error);
 	if (self->io_channel == NULL)
 		return FALSE;
 
@@ -798,7 +801,10 @@ fu_mm_device_io_open(FuMmDevice *self, GError **error)
 	}
 
 	/* open device */
-	self->io_channel = fu_io_channel_new_file(self->port_at, error);
+	self->io_channel =
+	    fu_io_channel_new_file(self->port_at,
+				   FU_IO_CHANNEL_OPEN_FLAG_READ | FU_IO_CHANNEL_OPEN_FLAG_WRITE,
+				   error);
 	if (self->io_channel == NULL)
 		return FALSE;
 
@@ -1164,15 +1170,10 @@ fu_mm_device_get_firmware_version_mbim(FuDevice *device, GError **error)
 static gboolean
 fu_mm_device_writeln(const gchar *fn, const gchar *buf, GError **error)
 {
-	int fd;
 	g_autoptr(FuIOChannel) io = NULL;
-
-	fd = open(fn, O_WRONLY);
-	if (fd < 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "could not open %s", fn);
+	io = fu_io_channel_new_file(fn, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
+	if (io == NULL)
 		return FALSE;
-	}
-	io = fu_io_channel_unix_new(fd);
 	return fu_io_channel_write_raw(io,
 				       (const guint8 *)buf,
 				       strlen(buf),

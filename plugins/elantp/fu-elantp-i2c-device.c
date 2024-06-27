@@ -52,25 +52,15 @@ fu_elantp_i2c_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_elantp_i2c_device_writeln(const gchar *fn, const gchar *buf, GError **error)
 {
-	int fd;
 	g_autoptr(FuIOChannel) io = NULL;
 
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "%s does not exist", fn);
 		return FALSE;
 	}
-
-	fd = open(fn, O_WRONLY);
-	if (fd < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_PERMISSION_DENIED,
-			    "could not open %s",
-			    fn);
+	io = fu_io_channel_new_file(fn, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
+	if (io == NULL)
 		return FALSE;
-	}
-
-	io = fu_io_channel_unix_new(fd);
 	return fu_io_channel_write_raw(io,
 				       (const guint8 *)buf,
 				       strlen(buf),

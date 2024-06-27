@@ -507,24 +507,32 @@ fu_io_channel_unix_new(gint fd)
 /**
  * fu_io_channel_new_file:
  * @filename: device file
+ * @open_flags: some #FuIOChannelOpenFlags typically %FU_IO_CHANNEL_OPEN_FLAG_READ
  * @error: (nullable): optional return location for an error
  *
- * Creates a new object to write and read from.
+ * Creates a new object to write and/or read from.
  *
  * Returns: a #FuIOChannel
  *
- * Since: 1.2.2
+ * Since: 2.0.0
  **/
 FuIOChannel *
-fu_io_channel_new_file(const gchar *filename, GError **error)
+fu_io_channel_new_file(const gchar *filename, FuIOChannelOpenFlags open_flags, GError **error)
 {
-#ifdef HAVE_POLL_H
 	gint fd;
+	int flags = 0;
 
 	g_return_val_if_fail(filename != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	fd = g_open(filename, O_RDWR | O_NONBLOCK, S_IRWXU);
+#ifdef HAVE_POLL_H
+	flags |= O_NONBLOCK;
+#endif
+	if (open_flags & FU_IO_CHANNEL_OPEN_FLAG_READ)
+		flags |= O_RDONLY;
+	if (open_flags & FU_IO_CHANNEL_OPEN_FLAG_WRITE)
+		flags |= O_WRONLY;
+	fd = g_open(filename, flags, S_IRWXU);
 	if (fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -534,13 +542,4 @@ fu_io_channel_new_file(const gchar *filename, GError **error)
 		return NULL;
 	}
 	return fu_io_channel_unix_new(fd);
-#else
-	g_return_val_if_fail(filename != NULL, NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Not supported as <poll.h> is unavailable");
-	return NULL;
-#endif
 }

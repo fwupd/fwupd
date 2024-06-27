@@ -81,7 +81,7 @@ fu_thelio_io_device_detach(FuDevice *device, FuProgress *progress, GError **erro
 	}
 
 	fn = g_build_filename(devpath, "bootloader", NULL);
-	io_channel = fu_io_channel_new_file(fn, error);
+	io_channel = fu_io_channel_new_file(fn, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
 	if (io_channel == NULL)
 		return FALSE;
 	if (!fu_io_channel_write_raw(io_channel,

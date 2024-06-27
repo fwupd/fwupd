@@ -13,6 +13,22 @@
 G_DECLARE_FINAL_TYPE(FuIOChannel, fu_io_channel, FU, IO_CHANNEL, GObject)
 
 /**
+ * FuIOChannelOpenFlags:
+ * @FU_IO_CHANNEL_OPEN_FLAG_NONE:		No flags are set
+ * @FU_IO_CHANNEL_OPEN_FLAG_READ:		Read access is required
+ * @FU_IO_CHANNEL_OPEN_FLAG_WRITE:		Write access is required
+ *
+ * The flags used when opening the file.
+ **/
+typedef enum {
+	FU_IO_CHANNEL_OPEN_FLAG_NONE = 0,	/* Since: 2.0.0 */
+	FU_IO_CHANNEL_OPEN_FLAG_READ = 1 << 0,	/* Since: 2.0.0 */
+	FU_IO_CHANNEL_OPEN_FLAG_WRITE = 1 << 1, /* Since: 2.0.0 */
+	/*< private >*/
+	FU_IO_CHANNEL_OPEN_FLAG_LAST
+} FuIOChannelOpenFlags;
+
+/**
  * FuIOChannelFlags:
  * @FU_IO_CHANNEL_FLAG_NONE:			No flags are set
  * @FU_IO_CHANNEL_FLAG_SINGLE_SHOT:		Only one read or write is expected
@@ -33,8 +49,9 @@ typedef enum {
 FuIOChannel *
 fu_io_channel_unix_new(gint fd);
 FuIOChannel *
-fu_io_channel_new_file(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT
-    G_GNUC_NON_NULL(1);
+fu_io_channel_new_file(const gchar *filename,
+		       FuIOChannelOpenFlags open_flags,
+		       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 
 gint
 fu_io_channel_unix_get_fd(FuIOChannel *self) G_GNUC_NON_NULL(1);
