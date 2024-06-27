@@ -361,6 +361,7 @@ def _build(bld: Builder) -> None:
         "config.h",
         {
             "FWUPD_DATADIR": "/tmp",
+            "FWUPD_DATADIR_VENDOR_IDS": "/tmp",
             "FWUPD_LOCALSTATEDIR": "/tmp",
             "FWUPD_LIBDIR_PKG": "/tmp",
             "FWUPD_SYSCONFDIR": "/tmp",
