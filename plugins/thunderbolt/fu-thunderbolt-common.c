@@ -84,10 +84,13 @@ fu_thunderbolt_udev_set_port_online(FuUdevDevice *device, GError **error)
 guint16
 fu_thunderbolt_udev_get_attr_uint16(FuUdevDevice *device, const gchar *name, GError **error)
 {
-	const gchar *str;
 	guint64 val = 0;
+	g_autofree gchar *str = NULL;
 
-	str = fu_udev_device_get_sysfs_attr(device, name, error);
+	str = fu_udev_device_read_sysfs(device,
+					name,
+					FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					error);
 	if (str == NULL)
 		return 0x0;
 	if (!fu_strtoull(str, &val, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))

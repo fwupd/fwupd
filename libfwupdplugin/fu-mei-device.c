@@ -127,15 +127,20 @@ fu_mei_device_probe(FuDevice *device, GError **error)
 {
 	FuMeiDevice *self = FU_MEI_DEVICE(device);
 	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
-	const gchar *uuid;
+	g_autofree gchar *uuid = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* this has to exist */
-	uuid = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "uuid", NULL);
+	uuid = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					 "uuid",
+					 FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					 &error_local);
 	if (uuid == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "UUID not provided");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "UUID not provided: %s",
+			    error_local->message);
 		return FALSE;
 	}
 	fu_mei_device_set_uuid(self, uuid);

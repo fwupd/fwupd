@@ -226,15 +226,22 @@ fu_thunderbolt_device_flush_update(FuDevice *device, GError **error)
 static gboolean
 fu_thunderbolt_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	const gchar *attribute;
+	g_autofree gchar *attr_nvm_authenticate = NULL;
 	guint64 status = 0;
 
 	/* now check if the update actually worked */
-	attribute =
-	    fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "nvm_authenticate", error);
-	if (attribute == NULL)
+	attr_nvm_authenticate = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+							  "nvm_authenticate",
+							  FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+							  error);
+	if (attr_nvm_authenticate == NULL)
 		return FALSE;
-	if (!fu_strtoull(attribute, &status, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error)) {
+	if (!fu_strtoull(attr_nvm_authenticate,
+			 &status,
+			 0,
+			 G_MAXUINT64,
+			 FU_INTEGER_BASE_16,
+			 error)) {
 		g_prefix_error(error, "failed to read nvm_authenticate: ");
 		return FALSE;
 	}
