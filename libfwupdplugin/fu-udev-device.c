@@ -966,8 +966,6 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 		priv->revision = priv_donor->revision;
 	if (priv->number == 0x0 && priv_donor->number != 0x0)
 		priv->number = priv_donor->number;
-	if (priv->io_channel == NULL && priv_donor->io_channel != 0x0)
-		priv->io_channel = g_object_ref(priv_donor->io_channel);
 }
 
 /**
