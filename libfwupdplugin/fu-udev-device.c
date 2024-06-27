@@ -2226,37 +2226,6 @@ fu_udev_device_get_sysfs_attr(FuUdevDevice *self, const gchar *attr, GError **er
 }
 
 /**
- * fu_udev_device_get_sysfs_attr_uint64:
- * @self: a #FuUdevDevice
- * @attr: name of attribute to get
- * @value: (out) (optional): value to return
- * @error: (nullable): optional return location for an error
- *
- * Reads an arbitrary sysfs attribute 'attr' associated with UDEV device as a uint64.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.7.2
- **/
-gboolean
-fu_udev_device_get_sysfs_attr_uint64(FuUdevDevice *self,
-				     const gchar *attr,
-				     guint64 *value,
-				     GError **error)
-{
-	const gchar *tmp;
-
-	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
-	g_return_val_if_fail(attr != NULL, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	tmp = fu_udev_device_get_sysfs_attr(self, attr, error);
-	if (tmp == NULL)
-		return FALSE;
-	return fu_strtoull(tmp, value, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error);
-}
-
-/**
  * fu_udev_device_write_sysfs:
  * @self: a #FuUdevDevice
  * @attr: sysfs attribute name

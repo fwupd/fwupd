@@ -195,11 +195,6 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error) G_GNUC_W
 const gchar *
 fu_udev_device_get_sysfs_attr(FuUdevDevice *self, const gchar *attr, GError **error)
     G_GNUC_NON_NULL(1);
-gboolean
-fu_udev_device_get_sysfs_attr_uint64(FuUdevDevice *self,
-				     const gchar *attr,
-				     guint64 *value,
-				     GError **error) G_GNUC_NON_NULL(1);
 gchar *
 fu_udev_device_read_sysfs(FuUdevDevice *self, const gchar *attr, guint timeout_ms, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);

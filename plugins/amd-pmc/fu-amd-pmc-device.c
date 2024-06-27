@@ -21,7 +21,8 @@ G_DEFINE_TYPE(FuAmdPmcDevice, fu_amd_pmc_device, FU_TYPE_UDEV_DEVICE)
 static gboolean
 fu_amd_pmc_device_probe(FuDevice *device, GError **error)
 {
-	guint64 program;
+	guint64 program = 0;
+	g_autofree gchar *attr_smu_program = NULL;
 	const gchar *version;
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *summary = NULL;
@@ -40,10 +41,13 @@ fu_amd_pmc_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	if (!fu_udev_device_get_sysfs_attr_uint64(FU_UDEV_DEVICE(device),
-						  "smu_program",
-						  &program,
-						  error))
+	attr_smu_program = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+						     "smu_program",
+						     FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						     error);
+	if (attr_smu_program == NULL)
+		return FALSE;
+	if (!fu_strtoull(attr_smu_program, &program, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
 
 	fu_device_set_version(device, version);
