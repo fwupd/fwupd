@@ -43,7 +43,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 {
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
 	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
-	guint64 removable = 0;
+	g_autofree gchar *attr_removable = NULL;
 	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(FuUdevDevice) ufshci_parent = NULL;
 	const gchar *subsystem_parents[] = {"pci", "platform", NULL};
@@ -85,30 +85,51 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 									 NULL);
 	}
 	if (ufshci_parent != NULL) {
-		guint64 ufs_features = 0;
+		g_autofree gchar *attr_ufs_features = NULL;
+		g_autofree gchar *attr_ffu_timeout = NULL;
 
 		/* check if this is a UFS device */
 		g_info("found ufshci controller at %s",
 		       fu_udev_device_get_sysfs_path(ufshci_parent));
-		if (fu_udev_device_get_sysfs_attr_uint64(ufshci_parent,
-							 "device_descriptor/ufs_features",
-							 &ufs_features,
-							 NULL)) {
+
+		attr_ufs_features =
+		    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+					      "device_descriptor/ufs_features",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      NULL);
+		if (attr_ufs_features != NULL) {
+			guint64 ufs_features = 0;
 			fu_device_set_summary(device, "UFS device");
 			/* least significant bit specifies FFU capability */
+			if (!fu_strtoull(attr_ufs_features,
+					 &ufs_features,
+					 0,
+					 G_MAXUINT64,
+					 FU_INTEGER_BASE_AUTO,
+					 error))
+				return FALSE;
 			if (ufs_features & 0x1) {
 				fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 				fu_device_add_internal_flag(FU_DEVICE(self),
 							    FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 				fu_device_add_protocol(device, "org.jedec.ufs");
 			}
-			if (!fu_udev_device_get_sysfs_attr_uint64(ufshci_parent,
-								  "device_descriptor/ffu_timeout",
-								  &self->ffu_timeout,
-								  error)) {
+			attr_ffu_timeout =
+			    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+						      "device_descriptor/ffu_timeout",
+						      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						      error);
+			if (attr_ffu_timeout == NULL) {
 				g_prefix_error(error, "no ffu timeout specified: ");
 				return FALSE;
 			}
+			if (!fu_strtoull(attr_ffu_timeout,
+					 &self->ffu_timeout,
+					 0,
+					 G_MAXUINT64,
+					 FU_INTEGER_BASE_AUTO,
+					 error))
+				return FALSE;
 		}
 	}
 
@@ -129,10 +150,19 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* is internal? */
-	if (fu_udev_device_get_sysfs_attr_uint64(FU_UDEV_DEVICE(device),
-						 "removable",
-						 &removable,
-						 NULL)) {
+	attr_removable = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+						   "removable",
+						   FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						   NULL);
+	if (attr_removable != NULL) {
+		guint64 removable = 0;
+		if (!fu_strtoull(attr_removable,
+				 &removable,
+				 0,
+				 G_MAXUINT64,
+				 FU_INTEGER_BASE_AUTO,
+				 error))
+			return FALSE;
 		if (removable == 0x0)
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 	}
