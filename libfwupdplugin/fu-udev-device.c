@@ -844,6 +844,33 @@ fu_udev_device_set_dev(FuUdevDevice *self, GUdevDevice *udev_device)
 #endif
 }
 
+static FuUdevDevice *
+fu_udev_device_get_parent(FuUdevDevice *self, GError **error)
+{
+#ifdef HAVE_GUDEV
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GUdevDevice) device_tmp = NULL;
+
+	/* sanity check */
+	if (priv->udev_device == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "not initialized");
+		return NULL;
+	}
+	device_tmp = g_udev_device_get_parent(priv->udev_device);
+	if (device_tmp == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no parent");
+		return NULL;
+	}
+	return fu_udev_device_new(fu_device_get_context(FU_DEVICE(self)), device_tmp);
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "not supported as <gudev.h> is unavailable");
+	return NULL;
+#endif
+}
+
 /**
  * fu_udev_device_get_subsystem_depth:
  * @self: a #FuUdevDevice
@@ -867,11 +894,7 @@ fu_udev_device_get_subsystem_depth(FuUdevDevice *self, const gchar *subsystem)
 	if (device_tmp == NULL)
 		return 0;
 	for (guint i = 0;; i++) {
-		g_autoptr(FuUdevDevice) parent =
-		    fu_udev_device_get_parent_with_subsystem(device_tmp,
-							     NULL, /* subsystem */
-							     NULL, /* devtype */
-							     NULL);
+		g_autoptr(FuUdevDevice) parent = fu_udev_device_get_parent(device_tmp, NULL);
 		if (parent == NULL)
 			return i;
 		g_set_object(&device_tmp, parent);
@@ -1318,7 +1341,7 @@ fu_udev_device_get_parent_subsystems(FuUdevDevice *self)
 					       "%s,",
 					       fu_udev_device_get_subsystem(udev_device));
 		}
-		parent = fu_udev_device_get_parent_with_subsystem(udev_device, NULL, NULL, NULL);
+		parent = fu_udev_device_get_parent(udev_device, NULL);
 		if (parent == NULL)
 			break;
 		g_set_object(&udev_device, parent);
@@ -2375,6 +2398,15 @@ fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self,
 			    subsystem);
 		return NULL;
 	}
+#ifndef SUPPORTED_BUILD
+	if ((subsystem == NULL && g_udev_device_get_subsystem(device_tmp) != NULL) &&
+	    (devtype == NULL && g_udev_device_get_devtype(device_tmp) != NULL)) {
+		g_critical("fu_udev_device_get_parent_with_subsystem() called with ambiguity; "
+			   "should have been %s, %s",
+			   g_udev_device_get_subsystem(device_tmp),
+			   g_udev_device_get_devtype(device_tmp));
+	}
+#endif
 	return fu_udev_device_new(fu_device_get_context(FU_DEVICE(self)), device_tmp);
 #else
 	g_set_error_literal(error,
