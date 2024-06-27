@@ -339,8 +339,8 @@ fu_logitech_scribe_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_logitech_scribe_device_probe(FuDevice *device, GError **error)
 {
+	g_autofree gchar *attr_index = NULL;
 	const gchar *id_v4l_capabilities;
-	const gchar *index;
 	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
 
 	/* check is valid */
@@ -365,8 +365,11 @@ fu_logitech_scribe_device_probe(FuDevice *device, GError **error)
 
 	/* interested in lowest index only e,g, video0, ignore low format siblings like
 	 * video1/video2/video3 etc */
-	index = g_udev_device_get_sysfs_attr(udev_device, "index");
-	if (g_strcmp0(index, "0") != 0) {
+	attr_index = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					       "index",
+					       FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					       NULL);
+	if (g_strcmp0(attr_index, "0") != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

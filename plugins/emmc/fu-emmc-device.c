@@ -109,66 +109,58 @@ fu_emmc_device_get_manufacturer(guint64 mmc_id)
 }
 
 static gboolean
-fu_emmc_device_get_sysattr_guint64(GUdevDevice *device,
+fu_emmc_device_get_sysattr_guint64(FuUdevDevice *device,
 				   const gchar *name,
 				   guint64 *val_out,
 				   GError **error)
 {
-	const gchar *sysfs;
+	g_autofree gchar *value = NULL;
 
-	sysfs = g_udev_device_get_sysfs_attr(device, name);
-	if (sysfs == NULL) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed get %s", name);
+	value = fu_udev_device_read_sysfs(device,
+					  name,
+					  FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					  error);
+	if (value == NULL)
 		return FALSE;
-	}
-	return fu_strtoull(sysfs, val_out, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error);
+	return fu_strtoull(value, val_out, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error);
 }
 
 static gboolean
 fu_emmc_device_probe(FuDevice *device, GError **error)
 {
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
 	guint64 flag;
 	guint64 oemid = 0;
 	guint64 manfid = 0;
-	const gchar *tmp;
-	g_autoptr(GUdevDevice) udev_parent = NULL;
+	g_autofree gchar *attr_fwrev = NULL;
+	g_autofree gchar *attr_manfid = NULL;
+	g_autofree gchar *attr_name = NULL;
 	g_autofree gchar *man_oem_name = NULL;
 	g_autofree gchar *vendor_id = NULL;
+	g_autoptr(FuUdevDevice) udev_parent = NULL;
 	g_autoptr(GRegex) dev_regex = NULL;
 
-	udev_parent = g_udev_device_get_parent_with_subsystem(udev_device, "mmc", NULL);
+	udev_parent =
+	    fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "mmc", "disk", NULL);
 	if (udev_parent == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no MMC parent");
 		return FALSE;
 	}
 
-	/* look for only the parent node */
-	if (g_strcmp0(g_udev_device_get_devtype(udev_device), "disk") != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "is not correct devtype=%s, expected disk",
-			    g_udev_device_get_devtype(udev_device));
-		return FALSE;
-	}
-
 	/* ignore *rpmb and *boot* mmc block devices */
 	dev_regex = g_regex_new("mmcblk\\d$", 0, 0, NULL);
-	tmp = g_udev_device_get_name(udev_device);
-	if (tmp == NULL) {
+	if (fu_device_get_name(device) == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "device has no name");
 		return FALSE;
 	}
-	if (!g_regex_match(dev_regex, tmp, 0, NULL)) {
+	if (!g_regex_match(dev_regex, fu_device_get_name(device), 0, NULL)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not raw mmc block device, devname=%s",
-			    g_udev_device_get_name(udev_device));
+			    fu_device_get_name(device));
 		return FALSE;
 	}
 
@@ -185,8 +177,11 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* name */
-	tmp = g_udev_device_get_sysfs_attr(udev_parent, "name");
-	if (tmp == NULL) {
+	attr_name = fu_udev_device_read_sysfs(udev_parent,
+					      "name",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      NULL);
+	if (attr_name == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -194,17 +189,20 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 			    fu_device_get_name(device));
 		return FALSE;
 	}
-	fu_device_add_instance_strsafe(device, "NAME", tmp);
+	fu_device_add_instance_strsafe(device, "NAME", attr_name);
 	fu_device_build_instance_id(device, NULL, "EMMC", "NAME", NULL);
-	fu_device_set_name(device, tmp);
+	fu_device_set_name(device, attr_name);
 
 	/* firmware version */
-	tmp = g_udev_device_get_sysfs_attr(udev_parent, "fwrev");
-	if (tmp != NULL) {
+	attr_fwrev = fu_udev_device_read_sysfs(udev_parent,
+					       "fwrev",
+					       FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					       NULL);
+	if (attr_fwrev != NULL) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_NUMBER);
-		fu_device_set_version(device, tmp);
+		fu_device_set_version(device, attr_fwrev);
 	}
-	fu_device_add_instance_strsafe(device, "REV", tmp);
+	fu_device_add_instance_strsafe(device, "REV", attr_fwrev);
 	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV))
 		fu_device_build_instance_id(device, NULL, "EMMC", "NAME", "REV", NULL);
 
@@ -234,8 +232,13 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_id(device, man_oem_name);
 
 	/* set the vendor */
-	tmp = g_udev_device_get_sysfs_attr(udev_parent, "manfid");
-	vendor_id = g_strdup_printf("EMMC:%s", tmp);
+	attr_manfid = fu_udev_device_read_sysfs(udev_parent,
+						"manfid",
+						FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						error);
+	if (attr_manfid == NULL)
+		return FALSE;
+	vendor_id = g_strdup_printf("EMMC:%s", attr_manfid);
 	fu_device_add_vendor_id(device, vendor_id);
 	fu_device_set_vendor(device, fu_emmc_device_get_manufacturer(manfid));
 
@@ -244,7 +247,7 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* internal */
-	if (!fu_emmc_device_get_sysattr_guint64(udev_device, "removable", &flag, error))
+	if (!fu_emmc_device_get_sysattr_guint64(FU_UDEV_DEVICE(device), "removable", &flag, error))
 		return FALSE;
 	if (flag == 0)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);

@@ -897,7 +897,7 @@ fu_pxi_receiver_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_pxi_receiver_device_probe(FuDevice *device, GError **error)
 {
-	guint64 iface_nr = 0;
+	g_autofree gchar *iface_nr = NULL;
 	g_autoptr(FuUdevDevice) usb_parent = NULL;
 
 	/* check USB interface number */
@@ -907,13 +907,17 @@ fu_pxi_receiver_device_probe(FuDevice *device, GError **error)
 							      error);
 	if (usb_parent == NULL)
 		return FALSE;
-	if (!fu_udev_device_get_sysfs_attr_uint64(usb_parent, "bInterfaceNumber", &iface_nr, error))
+	iface_nr = fu_udev_device_read_sysfs(usb_parent,
+					     "bInterfaceNumber",
+					     FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					     error);
+	if (iface_nr == NULL)
 		return FALSE;
-	if (iface_nr != 0) {
+	if (g_strcmp0(iface_nr, "01") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "only USB interface 0 supported");
+			    "only USB interface 1 supported");
 		return FALSE;
 	}
 
