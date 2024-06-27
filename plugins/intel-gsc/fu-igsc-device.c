@@ -26,8 +26,8 @@ struct _FuIgscDevice {
 #define FU_IGSC_DEVICE_FLAG_HAS_OPROM (1 << 1)
 
 #define FU_IGSC_DEVICE_POWER_WRITE_TIMEOUT 1500	  /* ms */
-#define FU_IGSC_DEVICE_MEI_WRITE_TIMEOUT 60000	/* 60 sec */
-#define FU_IGSC_DEVICE_MEI_READ_TIMEOUT	 480000 /* 480 sec */
+#define FU_IGSC_DEVICE_MEI_WRITE_TIMEOUT   60000  /* 60 sec */
+#define FU_IGSC_DEVICE_MEI_READ_TIMEOUT	   480000 /* 480 sec */
 
 G_DEFINE_TYPE(FuIgscDevice, fu_igsc_device, FU_TYPE_MEI_DEVICE)
 

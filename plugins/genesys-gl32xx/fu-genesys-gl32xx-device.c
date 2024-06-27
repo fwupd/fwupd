@@ -919,7 +919,10 @@ fu_genesys_gl32xx_device_set_progress(FuDevice *self, FuProgress *progress)
 }
 
 static gboolean
-fu_genesys_gl32xx_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, GError **error)
+fu_genesys_gl32xx_device_set_quirk_kv(FuDevice *device,
+				      const gchar *key,
+				      const gchar *value,
+				      GError **error)
 {
 	FuGenesysGl32xxDevice *self = FU_GENESYS_GL32XX_DEVICE(device);
 	guint64 tmp;
@@ -939,7 +942,6 @@ fu_genesys_gl32xx_device_set_quirk_kv(FuDevice *device, const gchar *key, const 
 			    "quirk key not supported");
 	return FALSE;
 }
-
 
 static void
 fu_genesys_gl32xx_device_init(FuGenesysGl32xxDevice *self)

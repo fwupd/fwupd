@@ -52,16 +52,16 @@ typedef struct {
 	gchar *proxy_guid;
 	FuDevice *proxy; /* noref */
 	FuContext *ctx;
-	GHashTable *inhibits; /* (nullable) */
-	GHashTable *metadata; /* (nullable) */
+	GHashTable *inhibits;		/* (nullable) */
+	GHashTable *metadata;		/* (nullable) */
 	GPtrArray *parent_guids;	/* (nullable) (element-type utf-8) */
 	GPtrArray *parent_physical_ids; /* (nullable) */
 	GPtrArray *parent_backend_ids;	/* (nullable) */
 	GPtrArray *counterpart_guids;	/* (nullable) */
 	GPtrArray *events;		/* (nullable) (element-type FuDeviceEvent) */
 	guint event_idx;
-	guint remove_delay;		/* ms */
-	guint acquiesce_delay;		/* ms */
+	guint remove_delay;    /* ms */
+	guint acquiesce_delay; /* ms */
 	guint request_cnts[FWUPD_REQUEST_KIND_LAST];
 	gint order;
 	guint priority;
@@ -86,7 +86,7 @@ typedef struct {
 	gchar *custom_flags;
 	gulong notify_flags_handler_id;
 	GHashTable *instance_hash; /* (nullable) */
-	FuProgress *progress; /* provided for FuDevice notify callbacks */
+	FuProgress *progress;	   /* provided for FuDevice notify callbacks */
 } FuDevicePrivate;
 
 typedef struct {

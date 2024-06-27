@@ -325,8 +325,8 @@ fu_error_convert(GError **perror)
 	if (error->domain == FWUPD_ERROR)
 		return;
 
-	/* fallback */
 #ifndef SUPPORTED_BUILD
+	/* fallback */
 	g_critical("GError %s:%i sending over D-Bus was not converted to FwupdError",
 		   g_quark_to_string(error->domain),
 		   error->code);
