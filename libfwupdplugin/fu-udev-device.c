@@ -2145,7 +2145,7 @@ fu_udev_device_read_sysfs(FuUdevDevice *self, const gchar *attr, guint timeout_m
 		return NULL;
 	}
 	path = g_build_filename(fu_udev_device_get_sysfs_path(self), attr, NULL);
-	io_channel = fu_io_channel_new_file(path, error);
+	io_channel = fu_io_channel_new_file(path, FU_IO_CHANNEL_OPEN_FLAG_READ, error);
 	if (io_channel == NULL)
 		return NULL;
 	buf = fu_io_channel_read_byte_array(io_channel,
@@ -2175,54 +2175,6 @@ fu_udev_device_read_sysfs(FuUdevDevice *self, const gchar *attr, guint timeout_m
 
 	/* success */
 	return g_steal_pointer(&value);
-}
-
-/**
- * fu_udev_device_get_sysfs_attr:
- * @self: a #FuUdevDevice
- * @attr: name of attribute to get
- * @error: (nullable): optional return location for an error
- *
- * Reads an arbitrary sysfs attribute 'attr' associated with UDEV device
- *
- * Returns: string or NULL
- *
- * Since: 1.4.5
- **/
-const gchar *
-fu_udev_device_get_sysfs_attr(FuUdevDevice *self, const gchar *attr, GError **error)
-{
-#ifdef HAVE_GUDEV
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	const gchar *result;
-
-	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
-	g_return_val_if_fail(attr != NULL, NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	/* nothing to do */
-	if (priv->udev_device == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "not initialized");
-		return NULL;
-	}
-	result = g_udev_device_get_sysfs_attr(priv->udev_device, attr);
-	if (result == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "attribute %s returned no data",
-			    attr);
-		return NULL;
-	}
-
-	return result;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "getting attributes is not supported as no GUdev support");
-	return NULL;
-#endif
 }
 
 /**

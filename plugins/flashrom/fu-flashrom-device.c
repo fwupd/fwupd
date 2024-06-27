@@ -55,7 +55,7 @@ fu_flashrom_device_set_quirk_kv(FuDevice *device,
 static gboolean
 fu_flashrom_device_probe(FuDevice *device, GError **error)
 {
-	const gchar *dev_name = NULL;
+	g_autofree gchar *dev_name = NULL;
 	const gchar *sysfs_path = NULL;
 
 	sysfs_path = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
@@ -64,10 +64,12 @@ fu_flashrom_device_probe(FuDevice *device, GError **error)
 		physical_id = g_strdup_printf("DEVNAME=%s", sysfs_path);
 		fu_device_set_physical_id(device, physical_id);
 	}
-	dev_name = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "name", NULL);
-	if (dev_name != NULL) {
+	dev_name = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					     "name",
+					     FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					     NULL);
+	if (dev_name != NULL)
 		fu_device_add_instance_id_full(device, dev_name, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
-	}
 	return TRUE;
 }
 

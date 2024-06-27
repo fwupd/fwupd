@@ -185,12 +185,12 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
-	const gchar *name;
 	const gchar *vendor;
 	guint64 flags = 0;
 	guint64 size = 0;
 	g_autofree gchar *attr_flags = NULL;
 	g_autofree gchar *attr_size = NULL;
+	g_autofree gchar *attr_name = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* set physical ID */
@@ -217,9 +217,12 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get name */
-	name = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "name", NULL);
-	if (name != NULL)
-		fu_device_set_name(FU_DEVICE(self), name);
+	attr_name = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					      "name",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      NULL);
+	if (attr_name != NULL)
+		fu_device_set_name(FU_DEVICE(self), attr_name);
 
 	/* set vendor ID as the BIOS vendor */
 	vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER);
@@ -229,7 +232,7 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* use vendor and product as an optional instance ID prefix */
-	fu_device_add_instance_strsafe(device, "NAME", name);
+	fu_device_add_instance_strsafe(device, "NAME", attr_name);
 	fu_device_add_instance_strsafe(device, "VENDOR", vendor);
 	fu_device_add_instance_strsafe(device,
 				       "PRODUCT",

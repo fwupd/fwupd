@@ -113,11 +113,13 @@ fu_i2c_device_open(FuDevice *device, GError **error)
 static gboolean
 fu_i2c_device_probe(FuDevice *device, GError **error)
 {
-#ifdef HAVE_GUDEV
 	FuI2cDevice *self = FU_I2C_DEVICE(device);
+#ifdef HAVE_GUDEV
 	FuI2cDevicePrivate *priv = GET_PRIVATE(self);
 	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
-	const gchar *tmp;
+#endif
+	g_autofree gchar *attr_name = NULL;
+#ifdef HAVE_GUDEV
 	g_autofree gchar *devname = NULL;
 	g_autoptr(GUdevDevice) udev_parent = NULL;
 #endif
@@ -126,10 +128,14 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "i2c", error))
 		return FALSE;
 
-#ifdef HAVE_GUDEV
 	/* i2c devices all expose a name */
-	tmp = g_udev_device_get_sysfs_attr(udev_device, "name");
-	fu_device_add_instance_strsafe(device, "NAME", tmp);
+	attr_name = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+					      "name",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      error);
+	if (attr_name == NULL)
+		return FALSE;
+	fu_device_add_instance_strsafe(device, "NAME", attr_name);
 	if (!fu_device_build_instance_id_full(device,
 					      FU_DEVICE_INSTANCE_FLAG_GENERIC |
 						  FU_DEVICE_INSTANCE_FLAG_QUIRKS,
@@ -139,6 +145,7 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 					      NULL))
 		return FALSE;
 
+#ifdef HAVE_GUDEV
 	/* get bus number out of sysfs path */
 	udev_parent = g_udev_device_get_parent(udev_device);
 	if (udev_parent != NULL)
