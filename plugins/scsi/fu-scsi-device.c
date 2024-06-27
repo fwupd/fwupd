@@ -42,22 +42,23 @@ static gboolean
 fu_scsi_device_probe(FuDevice *device, GError **error)
 {
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
 	g_autofree gchar *attr_removable = NULL;
+	g_autofree gchar *prop_id_scsi = NULL;
 	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(FuUdevDevice) ufshci_parent = NULL;
 	const gchar *subsystem_parents[] = {"pci", "platform", NULL};
 
 	/* check is valid */
-	if (g_strcmp0(g_udev_device_get_devtype(udev_device), "disk") != 0) {
+	if (g_strcmp0(fu_udev_device_get_devtype(FU_UDEV_DEVICE(self)), "disk") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not correct devtype=%s, expected disk",
-			    g_udev_device_get_devtype(udev_device));
+			    fu_udev_device_get_devtype(FU_UDEV_DEVICE(self)));
 		return FALSE;
 	}
-	if (!g_udev_device_get_property_as_boolean(udev_device, "ID_SCSI")) {
+	prop_id_scsi = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "ID_SCSI", NULL);
+	if (prop_id_scsi == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

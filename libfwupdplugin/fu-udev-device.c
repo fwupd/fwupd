@@ -53,6 +53,7 @@ typedef struct {
 	guint64 number;
 	FuIOChannel *io_channel;
 	FuUdevDeviceFlags flags;
+	gchar **uevent_lines;
 } FuUdevDevicePrivate;
 
 static void
@@ -185,23 +186,19 @@ fu_udev_device_ensure_bind_id(FuUdevDevice *self, GError **error)
 	if (priv->bind_id != NULL)
 		return TRUE;
 
-#ifdef HAVE_GUDEV
 	/* automatically set the bind ID from the subsystem */
 	if (g_strcmp0(priv->subsystem, "pci") == 0) {
-		priv->bind_id =
-		    g_strdup(g_udev_device_get_property(priv->udev_device, "PCI_SLOT_NAME"));
-		return TRUE;
+		priv->bind_id = fu_udev_device_read_property(self, "PCI_SLOT_NAME", error);
+		return priv->bind_id != NULL;
 	}
 	if (g_strcmp0(priv->subsystem, "hid") == 0) {
-		priv->bind_id = g_strdup(g_udev_device_get_property(priv->udev_device, "HID_PHYS"));
-		return TRUE;
+		priv->bind_id = fu_udev_device_read_property(self, "HID_PHYS", error);
+		return priv->bind_id != NULL;
 	}
 	if (g_strcmp0(priv->subsystem, "usb") == 0) {
-		priv->bind_id =
-		    g_path_get_basename(g_udev_device_get_sysfs_path(priv->udev_device));
+		priv->bind_id = g_path_get_basename(fu_udev_device_get_sysfs_path(self));
 		return TRUE;
 	}
-#endif
 
 	/* nothing found automatically */
 	g_set_error(error,
@@ -909,6 +906,7 @@ fu_udev_device_probe_complete(FuDevice *device)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* free memory */
+	g_clear_pointer(&priv->uevent_lines, g_strfreev);
 	g_clear_object(&priv->udev_device);
 	priv->udev_device_cleared = TRUE;
 }
@@ -2614,6 +2612,84 @@ fu_udev_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 	return g_bytes_new(buf->data, buf->len);
 }
 
+/**
+ * fu_udev_device_read_property:
+ * @self: a #FuUdevDevice
+ * @key: uevent key name, e.g. `HID_PHYS`
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets a value from the `uevent` file.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.0
+ **/
+gchar *
+fu_udev_device_read_property(FuUdevDevice *self, const gchar *key, GError **error)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
+	g_autofree gchar *value = NULL;
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
+	g_return_val_if_fail(key != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("ReadProp:Key=%s", key);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		return g_strdup(fu_device_event_get_str(event, "Data", error));
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* parse key */
+	if (priv->uevent_lines == NULL) {
+		g_autofree gchar *str = NULL;
+		str = fu_udev_device_read_sysfs(self,
+						"uevent",
+						FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						error);
+		if (str == NULL)
+			return NULL;
+		priv->uevent_lines = g_strsplit(str, "\n", -1);
+	}
+	for (guint i = 0; priv->uevent_lines[i] != NULL; i++) {
+		g_auto(GStrv) kv = g_strsplit(priv->uevent_lines[i], "=", 2);
+		if (g_strcmp0(kv[0], key) == 0) {
+			value = g_strdup(kv[1]);
+			break;
+		}
+	}
+	if (value == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "uevent %s was not found",
+			    key);
+		return NULL;
+	}
+
+	/* save response */
+	if (event != NULL)
+		fu_device_event_set_str(event, "Data", value);
+
+	/* success */
+	return g_steal_pointer(&value);
+}
+
 static void
 fu_udev_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
@@ -2804,6 +2880,8 @@ fu_udev_device_finalize(GObject *object)
 	FuUdevDevice *self = FU_UDEV_DEVICE(object);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 
+	if (priv->uevent_lines != NULL)
+		g_strfreev(priv->uevent_lines);
 	g_free(priv->subsystem);
 	g_free(priv->devtype);
 	g_free(priv->bind_id);
