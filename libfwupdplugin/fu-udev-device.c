@@ -159,7 +159,6 @@ fu_udev_device_get_sysfs_attr_as_uint8(GUdevDevice *udev_device, const gchar *na
 static void
 fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 {
-#ifdef HAVE_GUDEV
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	fwupd_codec_string_append_hex(str, idt, "Vendor", priv->vendor);
@@ -172,13 +171,6 @@ fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "Driver", priv->driver);
 	fwupd_codec_string_append(str, idt, "BindId", priv->bind_id);
 	fwupd_codec_string_append(str, idt, "DeviceFile", priv->device_file);
-	if (priv->udev_device != NULL) {
-		fwupd_codec_string_append(str,
-					  idt,
-					  "SysfsPath",
-					  g_udev_device_get_sysfs_path(priv->udev_device));
-	}
-#endif
 }
 
 static gboolean
