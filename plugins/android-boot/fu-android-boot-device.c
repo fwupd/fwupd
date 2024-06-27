@@ -61,8 +61,7 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 	self->boot_slot = g_strdup(g_hash_table_lookup(cmdline, "androidboot.slot_suffix"));
 
 	/* extract label and check if it matches boot slot*/
-	self->label =
-	    fu_udev_device_read_property(FU_UDEV_DEVICE(device), "ID_PART_ENTRY_NAME", NULL);
+	self->label = fu_udev_device_read_property(FU_UDEV_DEVICE(device), "PARTNAME", NULL);
 	if (self->label != NULL) {
 		fu_device_set_name(device, self->label);
 
@@ -78,8 +77,10 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* set max firmware size, required to avoid writing firmware bigger than partition */
-	prop_size =
-	    fu_udev_device_read_property(FU_UDEV_DEVICE(device), "ID_PART_ENTRY_SIZE", NULL);
+	prop_size = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					      "size",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      NULL);
 	if (prop_size == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
