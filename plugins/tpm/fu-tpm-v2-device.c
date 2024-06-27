@@ -30,6 +30,13 @@ fu_tpm_v2_device_probe(FuDevice *device, GError **error)
 	physical_id = g_strdup_printf("DEVNAME=%s", prop_devname);
 	fu_device_set_physical_id(device, physical_id);
 
+	/* fake something as we cannot talk to tpmd */
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		fu_device_add_instance_str(device, "VEN", "fwupd");
+		fu_device_add_instance_str(device, "DEV", "TPM");
+		return fu_device_build_instance_id(device, error, "TPM", "VEN", "DEV", NULL);
+	}
+
 	/* success */
 	return TRUE;
 }

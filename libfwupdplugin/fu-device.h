@@ -640,6 +640,15 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART "skips-restart"
 
+/**
+ * FU_DEVICE_PRIVATE_FLAG_IS_FAKE:
+ *
+ * The device is fake, and constructed from a fake sysfs test directory.
+ *
+ * Since: 2.0.0
+ */
+#define FU_DEVICE_PRIVATE_FLAG_IS_FAKE "is-fake"
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);
