@@ -90,8 +90,8 @@ fu_thunderbolt_controller_probe(FuDevice *device, GError **error)
 
 	/* determine if host controller or not */
 	device_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self),
-								 NULL, /* subsystem */
-								 NULL, /* devtype */
+								 "thunderbolt",
+								 "thunderbolt_domain",
 								 NULL);
 	if (device_parent != NULL)
 		parent_name = fu_device_get_name(FU_DEVICE(device_parent));
