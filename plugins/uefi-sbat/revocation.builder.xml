@@ -1,0 +1,16 @@
+<firmware gtype="FuPefileFirmware">
+  <firmware gtype="FuFirmware">
+    <id>.text</id>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+  <firmware gtype="FuCsvFirmware">
+    <id>.sbata</id>
+    <write_column_ids>false</write_column_ids>
+    <firmware gtype="FuCsvEntry">
+      <values>
+        <component_name>sbat</component_name>
+        <component_generation>2</component_generation>
+      </values>
+    </firmware>
+  </firmware>
+</firmware>
