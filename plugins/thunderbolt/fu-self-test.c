@@ -779,22 +779,22 @@ static MockDevice root_one = {
 
     .name = "Laptop",
     .id = "0x23",
-    .nvm_version = "20.2",
-    .nvm_parsed_version = "20.02",
+    .nvm_version = "20.02",
+    .nvm_parsed_version = "20.2",
 
     .children =
 	(MockDevice[]){
 	    {
 		.name = "Thunderbolt Cable",
 		.id = "0x24",
-		.nvm_version = "20.0",
-		.nvm_parsed_version = "20.00",
+		.nvm_version = "20.00",
+		.nvm_parsed_version = "20.0",
 
 		.children = (MockDevice[]){{
 					       .name = "Thunderbolt Dock",
 					       .id = "0x25",
-					       .nvm_version = "10.0",
-					       .nvm_parsed_version = "10.00",
+					       .nvm_version = "10.00",
+					       .nvm_parsed_version = "10.0",
 					   },
 					   {
 					       NULL,
@@ -805,15 +805,15 @@ static MockDevice root_one = {
 	    {
 		.name = "Thunderbolt Cable",
 		.id = "0x24",
-		.nvm_version = "23.0",
-		.nvm_parsed_version = "23.00",
+		.nvm_version = "23.00",
+		.nvm_parsed_version = "23.0",
 
 		.children = (MockDevice[]){{
 					       .name = "Thunderbolt SSD",
 					       .id = "0x26",
 
-					       .nvm_version = "5.0",
-					       .nvm_parsed_version = "05.00",
+					       .nvm_version = "05.00",
+					       .nvm_parsed_version = "5.0",
 					   },
 					   {
 					       NULL,

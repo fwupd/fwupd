@@ -554,6 +554,8 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	switch (priv->family) {
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE:
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_GOSHEN_RIDGE:
+		guint16 version_tmp = 0;
+
 		if (!fu_intel_thunderbolt_nvm_read_uint16(
 			self,
 			FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
@@ -563,9 +565,14 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to read version: ");
 			return FALSE;
 		}
-		fu_firmware_set_version_raw(FU_FIRMWARE(self), version_raw);
-		version = fu_version_from_uint16(version_raw, FWUPD_VERSION_FORMAT_BCD);
+		/* LE: major=[15:8], prod=[7], reserved=[6], minor=[5:0] */
+		g_debug("NVM firmware type: %s", (version_raw & 0x0080) ? "prod" : "dev");
+
+		version_tmp = version_raw & 0xff3f;
+		fu_firmware_set_version_raw(FU_FIRMWARE(self), version_tmp);
+		version = fu_version_from_uint16(version_tmp, FWUPD_VERSION_FORMAT_BCD);
 		fu_firmware_set_version(FU_FIRMWARE(self), version);
+		g_debug("NVM version_raw: 0x%04x, convention: %s", version_raw, version);
 		break;
 	default:
 		break;
