@@ -231,6 +231,7 @@ fu_wacom_device_set_feature(FuWacomDevice *self, const guint8 *data, guint datas
 				    datasz,
 				    NULL,
 				    FU_WACOM_DEVICE_IOCTL_TIMEOUT,
+				    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				    error);
 }
 
@@ -243,6 +244,7 @@ fu_wacom_device_get_feature(FuWacomDevice *self, guint8 *data, guint datasz, GEr
 				  datasz,
 				  NULL,
 				  FU_WACOM_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "GetFeature", data, datasz);

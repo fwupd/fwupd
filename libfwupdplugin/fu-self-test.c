@@ -2247,21 +2247,42 @@ fu_backend_emulate_func(void)
 #endif
 
 	/* in-order */
-	ret = fu_udev_device_ioctl(FU_UDEV_DEVICE(device), 123, buf, sizeof(buf), NULL, 0, &error);
+	ret = fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
+				   123,
+				   buf,
+				   sizeof(buf),
+				   NULL,
+				   0,
+				   FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+				   &error);
 	g_assert_no_error(error);
 	g_assert(ret);
 
 	/* in-order, repeat */
 	buf[0] = 0x00;
 	buf[1] = 0x00;
-	ret = fu_udev_device_ioctl(FU_UDEV_DEVICE(device), 123, buf, sizeof(buf), NULL, 0, &error);
+	ret = fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
+				   123,
+				   buf,
+				   sizeof(buf),
+				   NULL,
+				   0,
+				   FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+				   &error);
 	g_assert_no_error(error);
 	g_assert(ret);
 
 	/* out-of-order */
 	buf[0] = 0x00;
 	buf[1] = 0x00;
-	ret = fu_udev_device_ioctl(FU_UDEV_DEVICE(device), 123, buf, sizeof(buf), NULL, 0, &error);
+	ret = fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
+				   123,
+				   buf,
+				   sizeof(buf),
+				   NULL,
+				   0,
+				   FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+				   &error);
 	g_assert_no_error(error);
 	g_assert(ret);
 

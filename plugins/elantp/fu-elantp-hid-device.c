@@ -94,6 +94,7 @@ fu_elantp_hid_device_send_cmd(FuElantpHidDevice *self,
 				  txsz,
 				  NULL,
 				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	if (rxsz == 0)
@@ -108,6 +109,7 @@ fu_elantp_hid_device_send_cmd(FuElantpHidDevice *self,
 				  sizeof(buf),
 				  NULL,
 				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, bufsz);

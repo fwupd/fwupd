@@ -72,6 +72,7 @@ fu_logitech_tap_hdmi_device_query_data_size(FuLogitechTapHdmiDevice *self,
 				  sizeof(size_query),
 				  NULL,
 				  FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				  error))
 		return FALSE;
 
@@ -120,6 +121,7 @@ fu_logitech_tap_hdmi_device_get_xu_control(FuLogitechTapHdmiDevice *self,
 				  sizeof(control_query),
 				  NULL,
 				  FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				  error))
 		return FALSE;
 
@@ -153,6 +155,7 @@ fu_logitech_tap_hdmi_device_set_xu_control(FuLogitechTapHdmiDevice *self,
 				  sizeof(control_query),
 				  NULL,
 				  FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				  error))
 		return FALSE;
 
@@ -503,7 +506,6 @@ fu_logitech_tap_hdmi_device_init(FuLogitechTapHdmiDevice *self)
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 }
 

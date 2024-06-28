@@ -38,6 +38,7 @@ fu_pxi_receiver_device_get_raw_info(FuPxiReceiverDevice *self,
 				  sizeof(*info),
 				  NULL,
 				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error)) {
 		return FALSE;
 	}
@@ -104,6 +105,7 @@ fu_pxi_receiver_device_set_feature(FuPxiReceiverDevice *self,
 				    bufsz,
 				    NULL,
 				    FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				    error);
 #else
 	g_set_error_literal(error,
@@ -127,6 +129,7 @@ fu_pxi_receiver_device_get_feature(FuPxiReceiverDevice *self,
 				  bufsz,
 				  NULL,
 				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error)) {
 		return FALSE;
 	}

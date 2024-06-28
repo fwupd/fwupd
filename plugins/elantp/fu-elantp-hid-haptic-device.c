@@ -87,6 +87,7 @@ fu_elantp_hid_haptic_device_send_cmd(FuDevice *self,
 				  rxsz,
 				  NULL,
 				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 
@@ -102,6 +103,7 @@ fu_elantp_hid_haptic_device_send_cmd(FuDevice *self,
 				  bufsz,
 				  NULL,
 				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, bufsz);
