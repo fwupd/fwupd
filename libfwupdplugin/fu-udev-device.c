@@ -171,6 +171,7 @@ fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "SubsystemModel", priv->subsystem_model);
 	fwupd_codec_string_append_hex(str, idt, "Class", priv->class);
 	fwupd_codec_string_append_hex(str, idt, "Revision", priv->revision);
+	fwupd_codec_string_append_hex(str, idt, "Number", priv->number);
 	fwupd_codec_string_append(str, idt, "Subsystem", priv->subsystem);
 	fwupd_codec_string_append(str, idt, "Driver", priv->driver);
 	fwupd_codec_string_append(str, idt, "BindId", priv->bind_id);
