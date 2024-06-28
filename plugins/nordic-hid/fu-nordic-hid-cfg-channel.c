@@ -173,6 +173,7 @@ fu_nordic_hid_cfg_channel_send(FuNordicHidCfgChannel *self,
 				  bufsz,
 				  NULL,
 				  FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	return TRUE;
@@ -205,6 +206,7 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 					  sizeof(*recv_msg),
 					  NULL,
 					  FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 					  error))
 			return FALSE;
 		/* if the device is busy it return 06 00 00 00 00 response */

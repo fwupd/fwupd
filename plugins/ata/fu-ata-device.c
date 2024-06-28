@@ -576,6 +576,7 @@ fu_ata_device_command(FuAtaDevice *self,
 				  sizeof(io_hdr),
 				  NULL,
 				  FU_ATA_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	g_debug("ATA_%u status=0x%x, host_status=0x%x, driver_status=0x%x",

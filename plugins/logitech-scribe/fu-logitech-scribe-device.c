@@ -276,6 +276,7 @@ fu_logitech_scribe_device_query_data_size(FuLogitechScribeDevice *self,
 				  sizeof(size_query),
 				  NULL,
 				  FU_LOGITECH_SCRIBE_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	/* convert the data byte to int */
@@ -315,6 +316,7 @@ fu_logitech_scribe_device_get_xu_control(FuLogitechScribeDevice *self,
 				  sizeof(control_query),
 				  NULL,
 				  FU_LOGITECH_SCRIBE_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	g_debug("received get xu control response, size: %u unit: 0x%x selector: 0x%x",

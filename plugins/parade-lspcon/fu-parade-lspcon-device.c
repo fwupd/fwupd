@@ -157,6 +157,7 @@ fu_parade_lspcon_ensure_i2c_address(FuParadeLspconDevice *self, guint8 address, 
 				  sizeof(guintptr),
 				  NULL,
 				  FU_PARADE_LSPCON_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error)) {
 		g_prefix_error(error, "failed to set I2C address: ");
 		return FALSE;

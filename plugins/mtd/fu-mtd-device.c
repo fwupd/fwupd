@@ -309,6 +309,7 @@ fu_mtd_device_erase(FuMtdDevice *self, GInputStream *stream, FuProgress *progres
 					  sizeof(erase),
 					  NULL,
 					  FU_MTD_DEVICE_IOCTL_TIMEOUT,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 					  error)) {
 			g_prefix_error(error, "failed to erase @0x%x: ", (guint)erase.start);
 			return FALSE;

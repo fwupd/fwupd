@@ -74,6 +74,7 @@ fu_mediatek_scaler_ensure_device_address(FuMediatekScalerDevice *self,
 				  sizeof(guintptr),
 				  NULL,
 				  FU_MEDIATEK_SCALER_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error)) {
 		g_prefix_error(error,
 			       "failed to set address '0x%02x' on %s: ",

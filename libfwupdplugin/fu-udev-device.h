@@ -31,7 +31,6 @@ struct _FuUdevDeviceClass {
  * @FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT:	Get the vendor ID from a parent or grandparent
  * @FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK:		Open nonblocking, e.g. O_NONBLOCK
  * @FU_UDEV_DEVICE_FLAG_OPEN_SYNC:		Open sync, e.g. O_SYNC
- * @FU_UDEV_DEVICE_FLAG_IOCTL_RETRY:		Retry the ioctl() call when required
  * @FU_UDEV_DEVICE_FLAG_IGNORE_NONE:		The device deliberately has no open flags
  *
  * Flags used when opening the device using fu_device_open().
@@ -43,11 +42,24 @@ typedef enum {
 	FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT = 1 << 2,
 	FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK = 1 << 4,
 	FU_UDEV_DEVICE_FLAG_OPEN_SYNC = 1 << 5,
-	FU_UDEV_DEVICE_FLAG_IOCTL_RETRY = 1 << 6,
 	FU_UDEV_DEVICE_FLAG_IGNORE_NONE = 1 << 7,
 	/*< private >*/
 	FU_UDEV_DEVICE_FLAG_LAST
 } FuUdevDeviceFlags;
+
+/**
+ * FuUdevDeviceIoctlFlags:
+ * @FU_UDEV_DEVICE_IOCTL_FLAG:			No flags set
+ * @FU_UDEV_DEVICE_IOCTL_FLAG_RETRY:		Retry the ioctl() call on failure
+ *
+ * Flags used when calling fu_udev_device_ioctl().
+ **/
+typedef enum {
+	FU_UDEV_DEVICE_IOCTL_FLAG_NONE = 0,
+	FU_UDEV_DEVICE_IOCTL_FLAG_RETRY = 1 << 0,
+	/*< private >*/
+	FU_UDEV_DEVICE_IOCTL_FLAG_LAST
+} FuUdevDeviceIoctlFlags;
 
 /**
  * FuPciBaseCls:
@@ -166,6 +178,7 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 		     gsize bufsz,
 		     gint *rc,
 		     guint timeout,
+		     FuUdevDeviceIoctlFlags flags,
 		     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_udev_device_pwrite(FuUdevDevice *self,

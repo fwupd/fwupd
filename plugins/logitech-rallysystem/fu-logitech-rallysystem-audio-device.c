@@ -41,6 +41,7 @@ fu_logitech_rallysystem_audio_device_set_feature(FuLogitechRallysystemAudioDevic
 				    bufsz,
 				    NULL,
 				    FU_LOGITECH_RALLYSYSTEM_AUDIO_DEVICE_IOCTL_TIMEOUT,
+				    FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				    error);
 #else
 	/* failed */
@@ -66,6 +67,7 @@ fu_logitech_rallysystem_audio_device_get_feature(FuLogitechRallysystemAudioDevic
 				  bufsz,
 				  NULL,
 				  FU_LOGITECH_RALLYSYSTEM_AUDIO_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				  error)) {
 		return FALSE;
 	}
@@ -219,7 +221,6 @@ fu_logitech_rallysystem_audio_device_init(FuLogitechRallysystemAudioDevice *self
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
 }
 
 static void

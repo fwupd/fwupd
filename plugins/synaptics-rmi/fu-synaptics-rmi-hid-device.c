@@ -300,6 +300,7 @@ fu_synaptics_rmi_hid_device_set_mode(FuSynapticsRmiHidDevice *self,
 				    sizeof(data),
 				    NULL,
 				    FU_SYNAPTICS_RMI_HID_DEVICE_IOCTL_TIMEOUT,
+				    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				    error);
 }
 
