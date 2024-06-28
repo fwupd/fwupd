@@ -42,7 +42,7 @@ def test_files() -> int:
         lic: str = ""
         cprts: list[str] = []
         lines: list[str] = []
-        with open(fn, "r") as f:
+        with open(fn) as f:
             for line in f.read().split("\n"):
                 lines.append(line)
         if len(lines) < 2:

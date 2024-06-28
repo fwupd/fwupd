@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     for fn in fns:
         modified: bool = False
-        with open(fn, "r") as f:
+        with open(fn) as f:
             buf = f.read()
         for old, new in {
             "fu_common_sum8": "fu_sum8",
