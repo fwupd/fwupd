@@ -18,7 +18,7 @@ def list_tests(module):
     for name, obj in inspect.getmembers(module):
         if inspect.isclass(obj) and issubclass(obj, unittest.TestCase):
             cases = unittest.defaultTestLoader.getTestCaseNames(obj)
-            tests += [(obj, "{}.{}".format(name, t)) for t in cases]
+            tests += [(obj, f"{name}.{t}") for t in cases]
     return tests
 
 

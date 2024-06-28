@@ -43,7 +43,7 @@ if __name__ == "__main__":
         print("License:")
         license = sys.stdin.read()
     else:
-        with open(args.file, "r") as fd:
+        with open(args.file) as fd:
             license = fd.read()
 
     sslctx = ssl.create_default_context()

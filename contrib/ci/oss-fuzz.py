@@ -142,7 +142,7 @@ class Builder:
         """map changes"""
 
         dst = os.path.basename(src).replace(".in", "")
-        with open(os.path.join(self.srcdir, src), "r") as f:
+        with open(os.path.join(self.srcdir, src)) as f:
             blob = f.read()
             for key in replacements:
                 blob = blob.replace(key, replacements[key])
@@ -252,7 +252,7 @@ class Builder:
     def grep_meson(self, src: str, token: str = "fuzzing") -> List[str]:
         """find source files tagged with a specific comment"""
         srcs = []
-        with open(os.path.join(self.srcdir, src, "meson.build"), "r") as f:
+        with open(os.path.join(self.srcdir, src, "meson.build")) as f:
             for line in f.read().split("\n"):
                 if line.find(token) == -1:
                     continue

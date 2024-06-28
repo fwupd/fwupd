@@ -14,7 +14,7 @@ from typing import List
 
 def __get_includes(fn: str) -> List[str]:
     includes: List[str] = []
-    with open(fn, "r") as f:
+    with open(fn) as f:
         for line in f.read().split("\n"):
             if line.find("#include") == -1:
                 continue

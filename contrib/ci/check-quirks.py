@@ -12,7 +12,7 @@ def test_files() -> int:
     rc: int = 0
 
     for fn in glob.glob("**/*.quirk", recursive=True):
-        with open(fn, "r") as f:
+        with open(fn) as f:
             for line in f.read().split("\n"):
                 if line.startswith(" ") or line.endswith(" "):
                     print(f"{fn} has leading or trailing whitespace: {line}")
