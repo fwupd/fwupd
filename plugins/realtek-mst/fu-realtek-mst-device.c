@@ -260,6 +260,7 @@ mst_ensure_device_address(FuRealtekMstDevice *self, guint8 address, GError **err
 				    sizeof(guintptr),
 				    NULL,
 				    FU_REALTEK_MST_DEVICE_IOCTL_TIMEOUT,
+				    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				    error);
 }
 

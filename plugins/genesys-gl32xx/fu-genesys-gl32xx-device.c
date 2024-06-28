@@ -58,6 +58,7 @@ fu_genesys_gl32xx_device_cmd_none(FuGenesysGl32xxDevice *self,
 				  sizeof(io_hdr),
 				  &rc,
 				  5 * FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				  error))
 		return FALSE;
 	if (io_hdr.status) {
@@ -114,6 +115,7 @@ fu_genesys_gl32xx_device_cmd_in(FuGenesysGl32xxDevice *self,
 				  sizeof(io_hdr),
 				  &rc,
 				  5 * FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				  error))
 		return FALSE;
 	if (io_hdr.status) {
@@ -173,6 +175,7 @@ fu_genesys_gl32xx_device_cmd_out(FuGenesysGl32xxDevice *self,
 				  sizeof(io_hdr),
 				  &rc,
 				  5 * FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				  error))
 		return FALSE;
 	if (io_hdr.status) {
@@ -957,7 +960,6 @@ fu_genesys_gl32xx_device_init(FuGenesysGl32xxDevice *self)
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS);

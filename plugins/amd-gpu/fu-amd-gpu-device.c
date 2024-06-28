@@ -159,6 +159,7 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 				  sizeof(request),
 				  NULL,
 				  1000,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	self->vbios_pn =

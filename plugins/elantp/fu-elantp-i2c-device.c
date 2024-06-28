@@ -403,6 +403,7 @@ fu_elantp_i2c_device_open(FuDevice *device, GError **error)
 				  sizeof(gpointer),
 				  NULL,
 				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  NULL)) {
 		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
 					  I2C_SLAVE_FORCE,
@@ -410,6 +411,7 @@ fu_elantp_i2c_device_open(FuDevice *device, GError **error)
 					  sizeof(gpointer),
 					  NULL,
 					  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 					  error)) {
 			g_prefix_error(error,
 				       "failed to set target address to 0x%x: ",

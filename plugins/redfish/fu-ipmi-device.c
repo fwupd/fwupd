@@ -110,6 +110,7 @@ fu_ipmi_device_send(FuIpmiDevice *self,
 				    sizeof(req),
 				    NULL,
 				    FU_IPMI_DEVICE_IOCTL_TIMEOUT,
+				    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				    error);
 }
 
@@ -136,6 +137,7 @@ fu_ipmi_device_recv(FuIpmiDevice *self,
 				  sizeof(recv),
 				  NULL,
 				  FU_IPMI_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "ipmi-recv", buf, bufsz);

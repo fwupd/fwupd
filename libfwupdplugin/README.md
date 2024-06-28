@@ -131,3 +131,4 @@ Remember: Plugins should be upstream!
 * `fu_udev_device_set_flags()`: Use `fu_udev_device_add_flag()` instead
 * `fu_udev_device_get_slot_depth()`: Use `fu_udev_device_get_subsystem_depth()` instead
 * `fu_usb_device_is_open()`: Use `fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_IS_OPEN)` instead
+* `fu_udev_device_ioctl`: Add some `FuUdevDeviceIoctlFlags`, e.g. `FU_UDEV_DEVICE_IOCTL_FLAG_RETRY`

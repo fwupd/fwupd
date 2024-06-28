@@ -103,6 +103,7 @@ fu_focalfp_hid_device_io(FuFocalfpHidDevice *self,
 					  sizeof(buf),
 					  NULL,
 					  FU_FOCALFP_DEVICE_IOCTL_TIMEOUT,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 					  error)) {
 			return FALSE;
 		}
@@ -117,6 +118,7 @@ fu_focalfp_hid_device_io(FuFocalfpHidDevice *self,
 					  sizeof(buf),
 					  NULL,
 					  FU_FOCALFP_DEVICE_IOCTL_TIMEOUT,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 					  error)) {
 			return FALSE;
 		}

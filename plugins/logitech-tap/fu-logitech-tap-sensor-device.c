@@ -70,6 +70,7 @@ fu_logitech_tap_sensor_device_set_feature(FuLogitechTapSensorDevice *self,
 				    datasz,
 				    NULL,
 				    FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
+				    FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				    error);
 #else
 	/* failed */
@@ -98,6 +99,7 @@ fu_logitech_tap_sensor_device_get_feature(FuLogitechTapSensorDevice *self,
 				  datasz,
 				  NULL,
 				  FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				  &error_local)) {
 		g_debug("failed to send get request, retrying: %s", error_local->message);
 		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
@@ -106,6 +108,7 @@ fu_logitech_tap_sensor_device_get_feature(FuLogitechTapSensorDevice *self,
 					  datasz,
 					  NULL,
 					  FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 					  error))
 			return FALSE;
 	}
@@ -355,7 +358,6 @@ fu_logitech_tap_sensor_device_init(FuLogitechTapSensorDevice *self)
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
 }
 
 static void

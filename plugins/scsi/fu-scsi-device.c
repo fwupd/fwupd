@@ -184,6 +184,7 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 				  sizeof(io_hdr),
 				  NULL,
 				  FU_SCSI_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				  error))
 		return FALSE;
 
@@ -286,7 +287,6 @@ fu_scsi_device_init(FuScsiDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_SYNC);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
 }
 
 static void

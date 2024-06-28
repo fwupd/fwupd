@@ -99,6 +99,7 @@ fu_nvme_device_submit_admin_passthru(FuNvmeDevice *self, struct nvme_admin_cmd *
 				  sizeof(*cmd),
 				  &rc,
 				  FU_NVME_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error)) {
 		g_prefix_error(error, "failed to issue admin command 0x%02x: ", cmd->opcode);
 		return FALSE;

@@ -1673,7 +1673,8 @@ fu_udev_device_close(FuDevice *device, GError **error)
  * @buf: a buffer to use, which *must* be large enough for the request
  * @bufsz: the size of @buf
  * @rc: (out) (nullable): the raw return value from the ioctl
- * @timeout: timeout in ms for the retry action, see %FU_UDEV_DEVICE_FLAG_IOCTL_RETRY
+ * @timeout: timeout in ms for the retry action, see %FU_UDEV_DEVICE_IOCTL_FLAG_RETRY
+ * @flags: some #FuUdevDeviceIoctlFlags, e.g. %FU_UDEV_DEVICE_IOCTL_FLAG_RETRY
  * @error: (nullable): optional return location for an error
  *
  * Control a device using a low-level request.
@@ -1683,7 +1684,7 @@ fu_udev_device_close(FuDevice *device, GError **error)
  *
  * Returns: %TRUE for success
  *
- * Since: 1.8.2
+ * Since: 2.0.0
  **/
 gboolean
 fu_udev_device_ioctl(FuUdevDevice *self,
@@ -1692,6 +1693,7 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 		     gsize bufsz,
 		     gint *rc,
 		     guint timeout,
+		     FuUdevDeviceIoctlFlags flags,
 		     GError **error)
 {
 #ifdef HAVE_IOCTL_H
@@ -1751,8 +1753,7 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 		rc_tmp = ioctl(fu_io_channel_unix_get_fd(priv->io_channel), request, buf);
 		if (rc_tmp >= 0)
 			break;
-	} while ((priv->flags & FU_UDEV_DEVICE_FLAG_IOCTL_RETRY) &&
-		 (errno == EINTR || errno == EAGAIN) &&
+	} while ((flags & FU_UDEV_DEVICE_IOCTL_FLAG_RETRY) && (errno == EINTR || errno == EAGAIN) &&
 		 g_timer_elapsed(timer, NULL) < timeout * 1000.f);
 	if (rc != NULL)
 		*rc = rc_tmp;
