@@ -98,11 +98,12 @@ fu_usb_device_finalize(GObject *object)
 static void
 fu_usb_device_flags_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	if (usb_device == NULL)
+	FuUsbDevice *self = FU_USB_DEVICE(device);
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	if (priv->usb_device == NULL)
 		return;
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG))
-		g_usb_device_add_tag(usb_device, FU_USB_DEVICE_EMULATION_TAG);
+		g_usb_device_add_tag(priv->usb_device, FU_USB_DEVICE_EMULATION_TAG);
 }
 #endif
 
@@ -1126,32 +1127,13 @@ fu_usb_device_find_udev_device(FuUsbDevice *device, GError **error)
 	return NULL;
 }
 
-/**
- * fu_usb_device_get_dev:
- * @device: a #FuUsbDevice
- *
- * Gets the #GUsbDevice.
- *
- * Most plugins should not need to use this escape hatch.
- *
- * Returns: (transfer none): a USB device, or %NULL
- *
- * Since: 1.0.2
- **/
-GUsbDevice *
-fu_usb_device_get_dev(FuUsbDevice *device)
-{
-	FuUsbDevicePrivate *priv = GET_PRIVATE(device);
-	g_return_val_if_fail(FU_IS_USB_DEVICE(device), NULL);
-	return priv->usb_device;
-}
-
 static void
-fu_usb_device_incorporate(FuDevice *self, FuDevice *donor)
+fu_usb_device_incorporate(FuDevice *device, FuDevice *device_donor)
 {
-	g_return_if_fail(FU_IS_USB_DEVICE(self));
-	g_return_if_fail(FU_IS_USB_DEVICE(donor));
-	fu_usb_device_set_dev(FU_USB_DEVICE(self), fu_usb_device_get_dev(FU_USB_DEVICE(donor)));
+	FuUsbDevice *self = FU_USB_DEVICE(device);
+	FuUsbDevice *donor = FU_USB_DEVICE(device_donor);
+	FuUsbDevicePrivate *priv_donor = GET_PRIVATE(donor);
+	fu_usb_device_set_dev(self, priv_donor->usb_device);
 }
 
 static gchar *
@@ -1878,6 +1860,41 @@ fu_usb_device_set_interface_alt(FuUsbDevice *self, guint8 iface, guint8 alt, GEr
 #else
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
 	return FALSE;
+#endif
+}
+
+/**
+ * fu_usb_device_get_hid_descriptors:
+ * @self: a #FuUsbDevice
+ * @error: a #GError, or %NULL
+ *
+ * Gets all the HID descriptors exported by the device.
+ *
+ * The first time this method is used the hardware is queried and then after that cached results
+ * are returned. To invalidate the caches use fu_usb_device_invalidate().
+ *
+ * Return value: (transfer container) (element-type GBytes): an array of HID descriptors
+ *
+ * Since: 2.0.0
+ **/
+GPtrArray *
+fu_usb_device_get_hid_descriptors(FuUsbDevice *self, GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* emulating? */
+	if (priv->usb_device == NULL)
+		return g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
+
+#ifdef HAVE_GUSB
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
+	return g_usb_device_get_hid_descriptors(priv->usb_device, error);
+#else
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
+	return NULL;
 #endif
 }
 

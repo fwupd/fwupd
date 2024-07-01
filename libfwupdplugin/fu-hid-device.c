@@ -106,7 +106,7 @@ fu_hid_device_parse_descriptors(FuHidDevice *self, GError **error)
 	g_return_val_if_fail(FU_HID_DEVICE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	fws = g_usb_device_get_hid_descriptors(fu_usb_device_get_dev(FU_USB_DEVICE(self)), error);
+	fws = fu_usb_device_get_hid_descriptors(FU_USB_DEVICE(self), error);
 	if (fws == NULL)
 		return NULL;
 	for (guint i = 0; i < fws->len; i++) {
@@ -171,7 +171,7 @@ fu_hid_device_open(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* self tests */
-	if (fu_usb_device_get_dev(FU_USB_DEVICE(device)) == NULL)
+	if (fu_usb_device_get_spec(FU_USB_DEVICE(device)) == 0x0)
 		return TRUE;
 
 	/* auto-detect */
@@ -224,7 +224,7 @@ fu_hid_device_close(FuDevice *device, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	/* self tests */
-	if (fu_usb_device_get_dev(FU_USB_DEVICE(device)) == NULL)
+	if (fu_usb_device_get_spec(FU_USB_DEVICE(device)) == 0x0)
 		return TRUE;
 
 	/* release */

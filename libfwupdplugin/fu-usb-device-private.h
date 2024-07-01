@@ -12,7 +12,5 @@
 
 FuUsbDevice *
 fu_usb_device_new(FuContext *ctx, GUsbDevice *usb_device) G_GNUC_NON_NULL(1);
-GUsbDevice *
-fu_usb_device_get_dev(FuUsbDevice *device) G_GNUC_NON_NULL(1);
 const gchar *
 fu_usb_device_get_platform_id(FuUsbDevice *self) G_GNUC_NON_NULL(1);
