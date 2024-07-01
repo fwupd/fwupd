@@ -1064,20 +1064,20 @@ typedef enum {
 	 */
 	FWUPD_PLUGIN_FLAG_READY = 1ull << 17,
 	/**
-	 * FWUPD_PLUGIN_FLAG_UNKNOWN:
-	 *
-	 * The plugin flag is Unknown.
-	 * This is usually caused by a mismatched libfwupdplugin and daemon.
-	 *
-	 * Since: 1.5.0
-	 */
-	FWUPD_PLUGIN_FLAG_TEST_ONLY = 1ull << 18,
-	/**
 	 * FWUPD_PLUGIN_FLAG_TEST_ONLY:
 	 *
 	 * The plugin is used for virtual devices that exercising daemon flows.
 	 *
 	 * Since: 2.0.0
+	 */
+	FWUPD_PLUGIN_FLAG_TEST_ONLY = 1ull << 18,
+	/**
+	 * FWUPD_PLUGIN_FLAG_UNKNOWN:
+	 *
+	 * The plugin flag is unknown.
+	 * This is usually caused by a mismatched libfwupdplugin and daemon.
+	 *
+	 * Since: 1.5.0
 	 */
 	FWUPD_PLUGIN_FLAG_UNKNOWN = G_MAXUINT64
 } FwupdPluginFlags;
