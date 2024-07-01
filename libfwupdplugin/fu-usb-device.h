@@ -143,3 +143,5 @@ fu_usb_device_get_string_descriptor_bytes_full(FuUsbDevice *self,
 					       guint16 langid,
 					       gsize length,
 					       GError **error) G_GNUC_NON_NULL(1);
+GPtrArray *
+fu_usb_device_get_hid_descriptors(FuUsbDevice *self, GError **error) G_GNUC_NON_NULL(1);
