@@ -163,9 +163,9 @@ fu_pci_mei_plugin_backend_device_added(FuPlugin *plugin,
 				       GError **error)
 {
 	FuPciMeiPlugin *self = FU_PCI_MEI_PLUGIN(plugin);
-	const gchar *fwvers;
 	guint8 buf[4] = {0x0};
 	g_autofree gchar *device_file = NULL;
+	g_autofree gchar *fwvers = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* interesting device? */
@@ -178,9 +178,6 @@ fu_pci_mei_plugin_backend_device_added(FuPlugin *plugin,
 	device_file =
 	    g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)), "config", NULL);
 	fu_udev_device_set_device_file(FU_UDEV_DEVICE(device), device_file);
-
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
-		return FALSE;
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
@@ -219,7 +216,10 @@ fu_pci_mei_plugin_backend_device_added(FuPlugin *plugin,
 	g_set_object(&self->pci_device, device);
 
 	/* check firmware version */
-	fwvers = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "mei/mei0/fw_ver", NULL);
+	fwvers = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					   "mei/mei0/fw_ver",
+					   FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					   NULL);
 	if (fwvers != NULL) {
 		if (!fu_mei_parse_fwvers(plugin, fwvers, error))
 			return FALSE;

@@ -385,9 +385,7 @@ typedef struct {
 } FuStrsplitHelper;
 
 static gboolean
-fu_strsplit_buffer_drain(GByteArray *buf,
-			 FuStrsplitHelper *helper,
-			 GError **error)
+fu_strsplit_buffer_drain(GByteArray *buf, FuStrsplitHelper *helper, GError **error)
 {
 	gsize buf_offset = 0;
 	while (buf_offset < buf->len) {

@@ -38,6 +38,7 @@ fu_pxi_receiver_device_get_raw_info(FuPxiReceiverDevice *self,
 				  sizeof(*info),
 				  NULL,
 				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error)) {
 		return FALSE;
 	}
@@ -104,6 +105,7 @@ fu_pxi_receiver_device_set_feature(FuPxiReceiverDevice *self,
 				    bufsz,
 				    NULL,
 				    FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				    error);
 #else
 	g_set_error_literal(error,
@@ -127,6 +129,7 @@ fu_pxi_receiver_device_get_feature(FuPxiReceiverDevice *self,
 				  bufsz,
 				  NULL,
 				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error)) {
 		return FALSE;
 	}
@@ -897,7 +900,7 @@ fu_pxi_receiver_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_pxi_receiver_device_probe(FuDevice *device, GError **error)
 {
-	guint64 iface_nr = 0;
+	g_autofree gchar *iface_nr = NULL;
 	g_autoptr(FuUdevDevice) usb_parent = NULL;
 
 	/* check USB interface number */
@@ -907,20 +910,22 @@ fu_pxi_receiver_device_probe(FuDevice *device, GError **error)
 							      error);
 	if (usb_parent == NULL)
 		return FALSE;
-	if (!fu_udev_device_get_sysfs_attr_uint64(usb_parent, "bInterfaceNumber", &iface_nr, error))
+	iface_nr = fu_udev_device_read_sysfs(usb_parent,
+					     "bInterfaceNumber",
+					     FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					     error);
+	if (iface_nr == NULL)
 		return FALSE;
-	if (iface_nr != 0) {
+	if (g_strcmp0(iface_nr, "01") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "only USB interface 0 supported");
+			    "only USB interface 1 supported");
 		return FALSE;
 	}
 
-	/* set the logical and physical ID */
-	if (!fu_udev_device_set_logical_id(FU_UDEV_DEVICE(device), "hid", error))
-		return FALSE;
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
+	/* success */
+	return TRUE;
 }
 
 static void
@@ -944,8 +949,8 @@ fu_pxi_receiver_device_init(FuPxiReceiverDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_PXI_FIRMWARE);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC, "is-hpac");
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }
 

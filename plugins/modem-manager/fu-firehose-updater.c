@@ -226,7 +226,10 @@ fu_firehose_updater_open(FuFirehoseUpdater *self, GError **error)
 	g_debug("opening firehose port...");
 
 	if (self->port != NULL) {
-		self->io_channel = fu_io_channel_new_file(self->port, error);
+		self->io_channel = fu_io_channel_new_file(self->port,
+							  FU_IO_CHANNEL_OPEN_FLAG_READ |
+							      FU_IO_CHANNEL_OPEN_FLAG_WRITE,
+							  error);
 		return self->io_channel != NULL;
 	}
 

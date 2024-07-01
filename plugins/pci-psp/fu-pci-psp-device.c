@@ -23,25 +23,29 @@ G_DEFINE_TYPE(FuPciPspDevice, fu_pci_psp_device, FU_TYPE_UDEV_DEVICE)
 static gboolean
 fu_pci_psp_device_probe(FuDevice *device, GError **error)
 {
-	const gchar *bootloader_version;
-	const gchar *tee_version;
+	g_autofree gchar *attr_bootloader_version = NULL;
+	g_autofree gchar *attr_tee_version = NULL;
 	g_autoptr(GError) error_boot = NULL;
 	g_autoptr(GError) error_tee = NULL;
 
-	bootloader_version = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device),
-							   "bootloader_version",
-							   &error_boot);
-	if (bootloader_version == NULL)
+	attr_bootloader_version =
+	    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+				      "bootloader_version",
+				      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+				      &error_boot);
+	if (attr_bootloader_version == NULL)
 		g_info("failed to read bootloader version: %s", error_boot->message);
 	else
-		fu_device_set_version_bootloader(device, bootloader_version);
+		fu_device_set_version_bootloader(device, attr_bootloader_version);
 
-	tee_version =
-	    fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "tee_version", &error_tee);
-	if (tee_version == NULL)
+	attr_tee_version = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+						     "tee_version",
+						     FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						     &error_tee);
+	if (attr_tee_version == NULL)
 		g_info("failed to read bootloader version: %s", error_tee->message);
 	else
-		fu_device_set_version(device, tee_version);
+		fu_device_set_version(device, attr_tee_version);
 
 	return TRUE;
 }

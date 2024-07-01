@@ -185,21 +185,20 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
-	const gchar *name;
 	const gchar *vendor;
 	guint64 flags = 0;
 	guint64 size = 0;
+	g_autofree gchar *attr_flags = NULL;
+	g_autofree gchar *attr_size = NULL;
+	g_autofree gchar *attr_name = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	/* set physical ID */
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "mtd", error))
-		return FALSE;
-
 	/* flags have to exist */
-	if (!fu_udev_device_get_sysfs_attr_uint64(FU_UDEV_DEVICE(device),
-						  "flags",
-						  &flags,
-						  &error_local)) {
+	attr_flags = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+					       "flags",
+					       FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					       &error_local);
+	if (attr_flags == NULL) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -210,11 +209,16 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
 	}
+	if (!fu_strtoull(attr_flags, &flags, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
+		return FALSE;
 
 	/* get name */
-	name = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "name", NULL);
-	if (name != NULL)
-		fu_device_set_name(FU_DEVICE(self), name);
+	attr_name = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					      "name",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      NULL);
+	if (attr_name != NULL)
+		fu_device_set_name(FU_DEVICE(self), attr_name);
 
 	/* set vendor ID as the BIOS vendor */
 	vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER);
@@ -224,7 +228,7 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* use vendor and product as an optional instance ID prefix */
-	fu_device_add_instance_strsafe(device, "NAME", name);
+	fu_device_add_instance_strsafe(device, "NAME", attr_name);
 	fu_device_add_instance_strsafe(device, "VENDOR", vendor);
 	fu_device_add_instance_strsafe(device,
 				       "PRODUCT",
@@ -234,20 +238,35 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	fu_device_build_instance_id(device, NULL, "MTD", "VENDOR", "PRODUCT", "NAME", NULL);
 
 	/* get properties about the device */
-	if (!fu_udev_device_get_sysfs_attr_uint64(FU_UDEV_DEVICE(device), "size", &size, error))
+	attr_size = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+					      "size",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      error);
+	if (attr_size == NULL)
+		return FALSE;
+	if (!fu_strtoull(attr_size, &size, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
 	fu_device_set_firmware_size_max(device, size);
 #ifdef HAVE_MTD_USER_H
 	if ((flags & MTD_NO_ERASE) == 0) {
-		if (!fu_udev_device_get_sysfs_attr_uint64(FU_UDEV_DEVICE(device),
-							  "erasesize",
-							  &self->erasesize,
-							  error))
+		g_autofree gchar *attr_erasesize = NULL;
+		attr_erasesize = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+							   "erasesize",
+							   FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+							   error);
+		if (attr_erasesize == NULL)
+			return FALSE;
+		if (!fu_strtoull(attr_erasesize,
+				 &self->erasesize,
+				 0,
+				 G_MAXUINT64,
+				 FU_INTEGER_BASE_AUTO,
+				 error))
 			return FALSE;
 	}
 	if (flags & MTD_WRITEABLE) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	}
 #endif
 
@@ -286,6 +305,7 @@ fu_mtd_device_erase(FuMtdDevice *self, GInputStream *stream, FuProgress *progres
 					  sizeof(erase),
 					  NULL,
 					  FU_MTD_DEVICE_IOCTL_TIMEOUT,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 					  error)) {
 			g_prefix_error(error, "failed to erase @0x%x: ", (guint)erase.start);
 			return FALSE;
@@ -545,8 +565,8 @@ fu_mtd_device_init(FuMtdDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk-solidstate");
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_SYNC);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_SYNC);
 }
 
 static void

@@ -97,18 +97,6 @@ fu_synaptics_mst_device_finalize(GObject *object)
 }
 
 static void
-fu_synaptics_mst_device_udev_device_notify_cb(FuUdevDevice *udev_device,
-					      GParamSpec *pspec,
-					      gpointer user_data)
-{
-	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(user_data);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
-	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) != NULL)
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-}
-
-static void
 fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 {
 	self->family = FU_SYNAPTICS_MST_FAMILY_UNKNOWN;
@@ -127,12 +115,8 @@ fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
-
-	/* this is set from ->incorporate() */
-	g_signal_connect(FU_UDEV_DEVICE(self),
-			 "notify::udev-device",
-			 G_CALLBACK(fu_synaptics_mst_device_udev_device_notify_cb),
-			 self);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
 
 static void
@@ -416,11 +400,7 @@ fu_synaptics_mst_device_disable_rc(FuSynapticsMstDevice *self, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	/* in test mode */
-	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) == NULL)
-		return TRUE;
-
-	/* in test mode */
-	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) == NULL)
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNREACHABLE))
 		return TRUE;
 
 	if (!fu_synaptics_mst_device_rc_set_command(self,
@@ -446,7 +426,7 @@ fu_synaptics_mst_device_enable_rc(FuSynapticsMstDevice *self, GError **error)
 	const gchar *sc = "PRIUS";
 
 	/* in test mode */
-	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) == NULL)
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNREACHABLE))
 		return TRUE;
 
 	if (!fu_synaptics_mst_device_disable_rc(self, error)) {
@@ -1498,7 +1478,7 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 	guint8 buf[4] = {0x0};
 
 	/* in test mode we need to open a different file node instead */
-	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) == NULL) {
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNREACHABLE)) {
 		g_autofree gchar *filename = NULL;
 		g_autofree gchar *dirname = NULL;
 		gint fd;

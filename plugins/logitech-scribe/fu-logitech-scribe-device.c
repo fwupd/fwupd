@@ -276,6 +276,7 @@ fu_logitech_scribe_device_query_data_size(FuLogitechScribeDevice *self,
 				  sizeof(size_query),
 				  NULL,
 				  FU_LOGITECH_SCRIBE_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	/* convert the data byte to int */
@@ -315,6 +316,7 @@ fu_logitech_scribe_device_get_xu_control(FuLogitechScribeDevice *self,
 				  sizeof(control_query),
 				  NULL,
 				  FU_LOGITECH_SCRIBE_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	g_debug("received get xu control response, size: %u unit: 0x%x selector: 0x%x",
@@ -339,9 +341,8 @@ fu_logitech_scribe_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_logitech_scribe_device_probe(FuDevice *device, GError **error)
 {
-	const gchar *id_v4l_capabilities;
-	const gchar *index;
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
+	g_autofree gchar *attr_index = NULL;
+	g_autofree gchar *prop_id_v4l_capabilities = NULL;
 
 	/* check is valid */
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "video4linux") != 0) {
@@ -354,8 +355,11 @@ fu_logitech_scribe_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* only interested in video capture device */
-	id_v4l_capabilities = g_udev_device_get_property(udev_device, "ID_V4L_CAPABILITIES");
-	if (g_strcmp0(id_v4l_capabilities, ":capture:") != 0) {
+	prop_id_v4l_capabilities =
+	    fu_udev_device_read_property(FU_UDEV_DEVICE(device), "ID_V4L_CAPABILITIES", error);
+	if (prop_id_v4l_capabilities == NULL)
+		return FALSE;
+	if (g_strcmp0(prop_id_v4l_capabilities, ":capture:") != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -365,8 +369,11 @@ fu_logitech_scribe_device_probe(FuDevice *device, GError **error)
 
 	/* interested in lowest index only e,g, video0, ignore low format siblings like
 	 * video1/video2/video3 etc */
-	index = g_udev_device_get_sysfs_attr(udev_device, "index");
-	if (g_strcmp0(index, "0") != 0) {
+	attr_index = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					       "index",
+					       FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					       NULL);
+	if (g_strcmp0(attr_index, "0") != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -374,8 +381,8 @@ fu_logitech_scribe_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	};
 
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "video4linux", error);
+	/* success */
+	return TRUE;
 }
 
 static gboolean

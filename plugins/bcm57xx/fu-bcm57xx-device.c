@@ -50,12 +50,6 @@ fu_bcm57xx_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_bcm57xx_device_probe(FuDevice *device, GError **error)
-{
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error);
-}
-
-static gboolean
 fu_bcm57xx_device_nvram_write(FuBcm57xxDevice *self,
 			      guint32 address,
 			      const guint8 *buf,
@@ -679,7 +673,6 @@ fu_bcm57xx_device_class_init(FuBcm57xxDeviceClass *klass)
 	device_class->attach = fu_bcm57xx_device_attach;
 	device_class->read_firmware = fu_bcm57xx_device_read_firmware;
 	device_class->dump_firmware = fu_bcm57xx_device_dump_firmware;
-	device_class->probe = fu_bcm57xx_device_probe;
 	device_class->to_string = fu_bcm57xx_device_to_string;
 	device_class->set_progress = fu_bcm57xx_device_set_progress;
 	device_class->convert_version = fu_bcm57xx_device_convert_version;

@@ -52,25 +52,15 @@ fu_elantp_i2c_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_elantp_i2c_device_writeln(const gchar *fn, const gchar *buf, GError **error)
 {
-	int fd;
 	g_autoptr(FuIOChannel) io = NULL;
 
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "%s does not exist", fn);
 		return FALSE;
 	}
-
-	fd = open(fn, O_WRONLY);
-	if (fd < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_PERMISSION_DENIED,
-			    "could not open %s",
-			    fn);
+	io = fu_io_channel_new_file(fn, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
+	if (io == NULL)
 		return FALSE;
-	}
-
-	io = fu_io_channel_unix_new(fd);
 	return fu_io_channel_write_raw(io,
 				       (const guint8 *)buf,
 				       strlen(buf),
@@ -159,8 +149,8 @@ fu_elantp_i2c_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "i2c", error);
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -403,6 +393,7 @@ fu_elantp_i2c_device_open(FuDevice *device, GError **error)
 				  sizeof(gpointer),
 				  NULL,
 				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  NULL)) {
 		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
 					  I2C_SLAVE_FORCE,
@@ -410,6 +401,7 @@ fu_elantp_i2c_device_open(FuDevice *device, GError **error)
 					  sizeof(gpointer),
 					  NULL,
 					  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 					  error)) {
 			g_prefix_error(error,
 				       "failed to set target address to 0x%x: ",
@@ -823,8 +815,8 @@ fu_elantp_i2c_device_init(FuElantpI2cDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elantp");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_vendor(FU_DEVICE(self), "ELAN Microelectronics");
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_ELANTP_I2C_DEVICE_ABSOLUTE,
 					"elantp-absolute");

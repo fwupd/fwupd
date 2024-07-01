@@ -18,12 +18,6 @@ struct _FuTpmV2Device {
 G_DEFINE_TYPE(FuTpmV2Device, fu_tpm_v2_device, FU_TYPE_TPM_DEVICE)
 
 static gboolean
-fu_tpm_v2_device_probe(FuDevice *device, GError **error)
-{
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "tpm", error);
-}
-
-static gboolean
 fu_tpm_v2_device_get_uint32(FuTpmV2Device *self, guint32 query, guint32 *val, GError **error)
 {
 	TSS2_RC rc;
@@ -577,7 +571,6 @@ fu_tpm_v2_device_class_init(FuTpmV2DeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->setup = fu_tpm_v2_device_setup;
-	device_class->probe = fu_tpm_v2_device_probe;
 	device_class->open = fu_tpm_v2_device_open;
 	device_class->close = fu_tpm_v2_device_close;
 	device_class->write_firmware = fu_tpm_v2_device_write_firmware;

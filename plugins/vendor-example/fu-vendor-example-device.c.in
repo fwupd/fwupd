@@ -94,13 +94,8 @@ fu_{{vendor_example}}_device_probe(FuDevice *device, GError **error)
 	if (fu_device_has_private_flag(device, FU_{{VENDOR_EXAMPLE}}_DEVICE_FLAG_EXAMPLE))
 		self->start_addr = 0x100;
 
-{%- if Parent == 'Udev' -%}
-	/* get from sysfs */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error);
-{%- else %}
 	/* success */
 	return TRUE;
-{%- endif %}
 }
 
 static gboolean

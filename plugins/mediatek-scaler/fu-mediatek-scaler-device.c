@@ -74,6 +74,7 @@ fu_mediatek_scaler_ensure_device_address(FuMediatekScalerDevice *self,
 				  sizeof(guintptr),
 				  NULL,
 				  FU_MEDIATEK_SCALER_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error)) {
 		g_prefix_error(error,
 			       "failed to set address '0x%02x' on %s: ",
@@ -108,7 +109,7 @@ fu_mediatek_scaler_device_set_i2c_dev(FuMediatekScalerDevice *self,
 		self->i2c_dev = g_object_ref(g_ptr_array_index(i2c_devs, 0));
 		g_debug("found I2C bus at %s, using this device",
 			fu_udev_device_get_sysfs_path(self->i2c_dev));
-		return fu_udev_device_set_physical_id(self->i2c_dev, "i2c", error);
+		return TRUE;
 	}
 	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no devices on the i2c bus");
 	return FALSE;

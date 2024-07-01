@@ -81,21 +81,17 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
 	if (!fu_amd_gpu_set_device_file(device, base, error))
 		return FALSE;
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
-		return FALSE;
 
 	/* APUs don't have 'rom' sysfs file */
 	rom = g_build_filename(base, "rom", NULL);
 	if (!g_file_test(rom, G_FILE_TEST_EXISTS)) {
 		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD);
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(device), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(device), FU_IO_CHANNEL_OPEN_FLAG_READ);
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 	} else {
 		fu_device_set_logical_id(device, "rom");
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(device), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(device),
-					FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(device), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	}
 
 	/* firmware upgrade support */
@@ -159,6 +155,7 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 				  sizeof(request),
 				  NULL,
 				  1000,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	self->vbios_pn =
@@ -258,7 +255,10 @@ fu_amd_gpu_device_write_firmware(FuDevice *device,
 	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
 	psp_vbflash = g_build_filename(base, "psp_vbflash", NULL);
 
-	image_io = fu_io_channel_new_file(psp_vbflash, error);
+	image_io =
+	    fu_io_channel_new_file(psp_vbflash,
+				   FU_IO_CHANNEL_OPEN_FLAG_READ | FU_IO_CHANNEL_OPEN_FLAG_WRITE,
+				   error);
 	if (image_io == NULL)
 		return FALSE;
 

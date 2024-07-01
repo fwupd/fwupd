@@ -99,6 +99,7 @@ fu_nvme_device_submit_admin_passthru(FuNvmeDevice *self, struct nvme_admin_cmd *
 				  sizeof(*cmd),
 				  &rc,
 				  FU_NVME_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error)) {
 		g_prefix_error(error, "failed to issue admin command 0x%02x: ", cmd->opcode);
 		return FALSE;
@@ -271,22 +272,18 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError
  * %FALSE: device is, probably, NVMe-over-Fabrics
  */
 static gboolean
-fu_nvme_device_is_pci(FuDevice *device, GError **error)
+fu_nvme_device_is_pci(FuNvmeDevice *self, GError **error)
 {
-	g_autoptr(GUdevDevice) device_tmp = NULL;
-	GUdevDevice *gdev;
+	g_autoptr(FuUdevDevice) parent_pci = NULL;
 
-	gdev = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
-
-	device_tmp = g_udev_device_get_parent_with_subsystem(gdev, "pci", NULL);
-	if (device_tmp == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "device is not on PCI subsystem");
+	parent_pci = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self),
+							      "pci",
+							      NULL, /* devtype */
+							      error);
+	if (parent_pci == NULL)
 		return FALSE;
-	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -303,12 +300,19 @@ fu_nvme_device_probe(FuDevice *device, GError **error)
 	if (g_strcmp0(fu_device_get_vendor(FU_DEVICE(device)), "Samsung Electronics Co Ltd") == 0)
 		fu_device_set_vendor(FU_DEVICE(device), "Samsung");
 
-	/* ignore non-PCI NVMe devices */
-	if (!fu_nvme_device_is_pci(device, error))
-		return FALSE;
+	/* nvme devices expose a model */
+	if (fu_device_get_name(device) == NULL) {
+		g_autofree gchar *attr_model = NULL;
+		attr_model = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+						       "model",
+						       FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						       NULL);
+		if (attr_model != NULL)
+			fu_device_set_name(device, attr_model);
+	}
 
-	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
+	/* ignore non-PCI NVMe devices */
+	if (!fu_nvme_device_is_pci(self, error))
 		return FALSE;
 
 	/* look at the PCI depth to work out if in an external enclosure */
@@ -472,8 +476,7 @@ fu_nvme_device_init(FuNvmeDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "NVM Express solid state drive");
 	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk");
 	fu_device_add_protocol(FU_DEVICE(self), "org.nvmexpress");
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_NVME_DEVICE_FLAG_FORCE_ALIGN,
 					"force-align");

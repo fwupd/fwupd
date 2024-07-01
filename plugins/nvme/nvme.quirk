@@ -1,29 +1,29 @@
 # Phison
-[NVME\VEN_1987]
+[NVME\VEN_1987&CLASS_010802]
 Flags = force-align,needs-shutdown
 
 # Kingston
-[NVME\VEN_2646]
+[NVME\VEN_2646&CLASS_010802]
 Flags = needs-shutdown
 
 # KIOXIA
-[NVME\VEN_1179]
+[NVME\VEN_1179&CLASS_010802]
 Flags = signed-payload
-[NVME\VEN_1E0F]
+[NVME\VEN_1E0F&CLASS_010802]
 Flags = signed-payload
 
 # Samsung
-[NVME\VEN_144D]
+[NVME\VEN_144D&CLASS_010802]
 Flags = signed-payload
 
 # SSSTC
-[NVME\VEN_14A4]
+[NVME\VEN_14A4&CLASS_010802]
 Flags = signed-payload
-[NVME\VEN_1E95]
+[NVME\VEN_1E95&CLASS_010802]
 Flags = signed-payload
 
 # SK Hynix
-[NVME\VEN_1C5C]
+[NVME\VEN_1C5C&CLASS_010802]
 Flags = signed-payload
 [NVME\VEN_1C5C&DEV_1D59]
 Flags = commit-ca3
@@ -39,7 +39,7 @@ Flags = unsigned-payload
 Flags = unsigned-payload
 
 # Western Digital
-[NVME\VEN_101C]
+[NVME\VEN_101C&CLASS_010802]
 Flags = signed-payload
 
 # Solidigm

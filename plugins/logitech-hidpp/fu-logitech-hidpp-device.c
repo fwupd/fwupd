@@ -252,7 +252,10 @@ fu_logitech_hidpp_device_open(FuDevice *device, GError **error)
 	const gchar *devpath = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
 
 	/* open */
-	priv->io_channel = fu_io_channel_new_file(devpath, error);
+	priv->io_channel =
+	    fu_io_channel_new_file(devpath,
+				   FU_IO_CHANNEL_OPEN_FLAG_READ | FU_IO_CHANNEL_OPEN_FLAG_WRITE,
+				   error);
 	if (priv->io_channel == NULL)
 		return FALSE;
 
@@ -659,10 +662,6 @@ fu_logitech_hidpp_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error))
-		return FALSE;
-
 	/* nearly... */
 	fu_device_add_vendor_id(device, "USB:0x046D");
 
@@ -707,17 +706,6 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE)) {
 		priv->hidpp_version = FU_HIDPP_VERSION_BLE;
 		priv->device_idx = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
-		/*
-		 * Set the logical ID for BLE devices. Note that for BLE
-		 * devices, physical_id = HID_PHYS = MAC of the BT adapter,
-		 * logical_id = HID_UNIQ = MAC of the device. The physical id is
-		 * not enough to differentiate two BLE devices connected to the
-		 * same adapter. This is done here because private flags
-		 * are not loaded when the probe method runs, so we
-		 * can't tell the device is in BLE mode.
-		 */
-		if (!fu_udev_device_set_logical_id(FU_UDEV_DEVICE(device), "hid", error))
-			return FALSE;
 		/*
 		 * BLE devices might not be ready for ping right after
 		 * they come up -> wait a bit before pinging.

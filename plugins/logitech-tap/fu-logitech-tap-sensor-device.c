@@ -70,6 +70,7 @@ fu_logitech_tap_sensor_device_set_feature(FuLogitechTapSensorDevice *self,
 				    datasz,
 				    NULL,
 				    FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
+				    FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				    error);
 #else
 	/* failed */
@@ -98,6 +99,7 @@ fu_logitech_tap_sensor_device_get_feature(FuLogitechTapSensorDevice *self,
 				  datasz,
 				  NULL,
 				  FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				  &error_local)) {
 		g_debug("failed to send get request, retrying: %s", error_local->message);
 		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
@@ -106,6 +108,7 @@ fu_logitech_tap_sensor_device_get_feature(FuLogitechTapSensorDevice *self,
 					  datasz,
 					  NULL,
 					  FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 					  error))
 			return FALSE;
 	}
@@ -328,8 +331,8 @@ fu_logitech_tap_sensor_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
+	/* success */
+	return TRUE;
 }
 
 static void
@@ -352,10 +355,9 @@ static void
 fu_logitech_tap_sensor_device_init(FuLogitechTapSensorDevice *self)
 {
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK);
 }
 
 static void

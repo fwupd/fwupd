@@ -173,6 +173,7 @@ fu_nordic_hid_cfg_channel_send(FuNordicHidCfgChannel *self,
 				  bufsz,
 				  NULL,
 				  FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	return TRUE;
@@ -205,6 +206,7 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 					  sizeof(*recv_msg),
 					  NULL,
 					  FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 					  error))
 			return FALSE;
 		/* if the device is busy it return 06 00 00 00 00 response */
@@ -1290,12 +1292,6 @@ fu_nordic_hid_cfg_channel_dfu_start(FuNordicHidCfgChannel *self,
 }
 
 static gboolean
-fu_nordic_hid_cfg_channel_probe(FuDevice *device, GError **error)
-{
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
-}
-
-static gboolean
 fu_nordic_hid_cfg_channel_generate_ids(FuNordicHidCfgChannel *self, GError **error)
 {
 	FuDevice *device = FU_DEVICE(self);
@@ -1690,7 +1686,6 @@ fu_nordic_hid_cfg_channel_class_init(FuNordicHidCfgChannelClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	device_class->probe = fu_nordic_hid_cfg_channel_probe;
 	device_class->set_progress = fu_nordic_hid_cfg_channel_set_progress;
 	device_class->set_quirk_kv = fu_nordic_hid_cfg_channel_set_quirk_kv;
 	device_class->setup = fu_nordic_hid_cfg_channel_setup;

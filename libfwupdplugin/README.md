@@ -128,5 +128,10 @@ Remember: Plugins should be upstream!
 ## 2.0.0
 
 * `fu_hid_device_parse_descriptor()`: Use `fu_hid_device_parse_descriptors()` instead
-* `fu_udev_device_set_flags()`: Use `fu_udev_device_add_flag()` instead
+* `fu_udev_device_set_flags()`: Use `fu_udev_device_add_open_flag()` instead
 * `fu_udev_device_get_slot_depth()`: Use `fu_udev_device_get_subsystem_depth()` instead
+* `fu_io_channel_new_file()`: Add some `FuIOChannelOpenFlags`, e.g. `FU_IO_CHANNEL_OPEN_FLAG_READ|FU_IO_CHANNEL_OPEN_FLAG_WRITE`
+* `fu_udev_device_write_sysfs()`: Add a timeout in milliseconds
+* `fu_udev_device_get_sysfs_attr_uint64()`: Use `fu_udev_device_read_sysfs()` instead
+* `fu_udev_device_get_sysfs_attr`: Use `fu_udev_device_read_sysfs()` instead
+* `fu_udev_device_ioctl`: Add some `FuUdevDeviceIoctlFlags`, e.g. `FU_UDEV_DEVICE_IOCTL_FLAG_RETRY`

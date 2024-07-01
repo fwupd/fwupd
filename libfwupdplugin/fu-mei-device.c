@@ -127,15 +127,20 @@ fu_mei_device_probe(FuDevice *device, GError **error)
 {
 	FuMeiDevice *self = FU_MEI_DEVICE(device);
 	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
-	const gchar *uuid;
+	g_autofree gchar *uuid = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* this has to exist */
-	uuid = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "uuid", NULL);
+	uuid = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					 "uuid",
+					 FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					 &error_local);
 	if (uuid == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "UUID not provided");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "UUID not provided: %s",
+			    error_local->message);
 		return FALSE;
 	}
 	fu_mei_device_set_uuid(self, uuid);
@@ -156,8 +161,8 @@ fu_mei_device_probe(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_mei_device_parent_class)->probe(device, error))
 		return FALSE;
 
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error);
+	/* success */
+	return TRUE;
 }
 
 static gchar *
@@ -310,6 +315,7 @@ fu_mei_device_connect(FuMeiDevice *self, guchar req_protocol_version, GError **e
 				  sizeof(data),
 				  NULL, /* rc */
 				  FU_MEI_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 
@@ -371,8 +377,8 @@ fu_mei_device_read(FuMeiDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,
-			    "read failed %u: %s",
-			    (guint)rc,
+			    "read failed %i: %s",
+			    (gint)rc,
 			    g_strerror(errno));
 		return FALSE;
 	}
@@ -493,10 +499,8 @@ static void
 fu_mei_device_init(FuMeiDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
 
 static void

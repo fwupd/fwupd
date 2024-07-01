@@ -133,7 +133,9 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 	FuDrmDevice *self = FU_DRM_DEVICE(device);
 	FuDrmDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *sysfs_path = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
-	const gchar *tmp;
+	g_autofree gchar *attr_enabled = NULL;
+	g_autofree gchar *attr_status = NULL;
+	g_autofree gchar *attr_connector_id = NULL;
 	g_autofree gchar *physical_id = g_path_get_basename(sysfs_path);
 
 	/* FuUdevDevice->probe */
@@ -141,13 +143,22 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* basic properties */
-	tmp = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(self), "enabled", NULL);
-	priv->enabled = g_strcmp0(tmp, "enabled") == 0;
-	tmp = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(self), "status", NULL);
-	priv->display_state = fu_display_state_from_string(tmp);
-	tmp = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(self), "connector_id", NULL);
-	if (tmp != NULL && tmp[0] != '\0')
-		priv->connector_id = g_strdup(tmp);
+	attr_enabled = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+						 "enabled",
+						 FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						 NULL);
+	priv->enabled = g_strcmp0(attr_enabled, "enabled") == 0;
+	attr_status = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+						"status",
+						FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						NULL);
+	priv->display_state = fu_display_state_from_string(attr_status);
+	attr_connector_id = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+						      "connector_id",
+						      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						      NULL);
+	if (attr_connector_id != NULL && attr_connector_id[0] != '\0')
+		priv->connector_id = g_strdup(attr_connector_id);
 
 	/* this is a heuristic */
 	if (physical_id != NULL) {

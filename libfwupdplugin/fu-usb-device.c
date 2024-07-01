@@ -1238,8 +1238,8 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
 	if (priv->usb_device == NULL)
 		return TRUE;
 
-	/* just proxy to GUsb, but longer term use the libusb_device directly */
 #ifdef HAVE_GUSB
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
 	if (!g_usb_device_control_transfer(priv->usb_device, /* nocheck */
 					   direction,
 					   request_type,
@@ -1304,8 +1304,8 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
 	if (priv->usb_device == NULL)
 		return TRUE;
 
-	/* just proxy to GUsb, but longer term use the libusb_device directly */
 #ifdef HAVE_GUSB
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
 	if (!g_usb_device_bulk_transfer(priv->usb_device, /* nocheck */
 					endpoint,
 					data,
@@ -1362,8 +1362,8 @@ fu_usb_device_interrupt_transfer(FuUsbDevice *self,
 	if (priv->usb_device == NULL)
 		return TRUE;
 
-	/* just proxy to GUsb, but longer term use the libusb_device directly */
 #ifdef HAVE_GUSB
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
 	if (!g_usb_device_interrupt_transfer(priv->usb_device, /* nocheck */
 					     endpoint,
 					     data,
@@ -1411,8 +1411,8 @@ fu_usb_device_reset(FuUsbDevice *self, GError **error)
 	if (priv->usb_device == NULL)
 		return TRUE;
 
-	/* just proxy to GUsb, but longer term use the libusb_device directly */
 #ifdef HAVE_GUSB
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
 	if (!g_usb_device_reset(priv->usb_device, error)) { /* nocheck */
 		fu_error_convert(error);
 		return FALSE;
@@ -1450,8 +1450,8 @@ fu_usb_device_get_interfaces(FuUsbDevice *self, GError **error)
 	if (priv->usb_device == NULL)
 		return g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 
-	/* just proxy to GUsb, but longer term use the libusb_device directly */
 #ifdef HAVE_GUSB
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
 	ifaces = g_usb_device_get_interfaces(priv->usb_device, error); /* nocheck */
 	if (ifaces == NULL) {
 		fu_error_convert(error);
@@ -1554,8 +1554,8 @@ fu_usb_device_get_string_descriptor(FuUsbDevice *self, guint8 desc_index, GError
 	if (priv->usb_device == NULL)
 		return g_strdup("test");
 
-		/* just proxy to GUsb, but longer term use the libusb_device directly */
 #ifdef HAVE_GUSB
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
 	value =
 	    g_usb_device_get_string_descriptor(priv->usb_device, desc_index, error); /* nocheck */
 	if (value == NULL) {
@@ -1631,8 +1631,8 @@ fu_usb_device_get_string_descriptor_bytes_full(FuUsbDevice *self,
 	if (priv->usb_device == NULL)
 		return g_bytes_new_static(NULL, 0);
 
-		/* just proxy to GUsb, but longer term use the libusb_device directly */
 #ifdef HAVE_GUSB
+	/* just proxy to GUsb, but longer term use the libusb_device directly */
 	blob = g_usb_device_get_string_descriptor_bytes_full(priv->usb_device, /* nocheck */
 							     desc_index,
 							     langid,

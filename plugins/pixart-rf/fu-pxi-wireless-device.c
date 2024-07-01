@@ -102,6 +102,7 @@ fu_pxi_wireless_device_set_feature(FuDevice *self, const guint8 *buf, guint bufs
 				    bufsz,
 				    NULL,
 				    FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				    error);
 #else
 	g_set_error_literal(error,
@@ -122,6 +123,7 @@ fu_pxi_wireless_device_get_feature(FuDevice *self, guint8 *buf, guint bufsz, GEr
 				  bufsz,
 				  NULL,
 				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error)) {
 		return FALSE;
 	}

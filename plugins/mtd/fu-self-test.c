@@ -43,7 +43,7 @@ fu_test_mtd_device_func(void)
 		g_test_skip("could not find mtdram device");
 		return;
 	}
-	dev_name = g_udev_device_get_property(udev_device, "DEVNAME");
+	dev_name = g_udev_device_get_property(udev_device, "DEVNAME"); /* nocheck */
 	if (g_strcmp0(dev_name, "/dev/mtd0") != 0) {
 		g_test_skip("DEVNAME not /dev/mtd0");
 		return;
