@@ -481,7 +481,7 @@ fu_cros_ec_usb_device_reload(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_cros_ec_usb_device_transfer_block(FuDevice *device, gpointer user_data, GError **error)
+fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 	FuCrosEcUsbBlockHelper *helper = (FuCrosEcUsbBlockHelper *)user_data;
@@ -512,6 +512,9 @@ fu_cros_ec_usb_device_transfer_block(FuDevice *device, gpointer user_data, GErro
 		g_prefix_error(error, "failed at sending header: ");
 		return FALSE;
 	}
+
+	/* we're in a retry handler */
+	fu_progress_reset(helper->progress);
 
 	/* send the block, chunk by chunk */
 	chunks = fu_chunk_array_new(fu_chunk_get_data(helper->block),
@@ -630,7 +633,7 @@ fu_cros_ec_usb_device_transfer_section(FuDevice *device,
 		    .progress = fu_progress_get_child(progress),
 		};
 		if (!fu_device_retry(device,
-				     fu_cros_ec_usb_device_transfer_block,
+				     fu_cros_ec_usb_device_transfer_block_cb,
 				     MAX_BLOCK_XFER_RETRIES,
 				     &helper,
 				     error)) {
