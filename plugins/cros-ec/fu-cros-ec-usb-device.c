@@ -479,7 +479,7 @@ fu_cros_ec_usb_device_reload(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_cros_ec_usb_device_transfer_block(FuDevice *device, gpointer user_data, GError **error)
+fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 	FuCrosEcUsbBlockHelper *helper = (FuCrosEcUsbBlockHelper *)user_data;
@@ -510,6 +510,9 @@ fu_cros_ec_usb_device_transfer_block(FuDevice *device, gpointer user_data, GErro
 		g_prefix_error(error, "failed at sending header: ");
 		return FALSE;
 	}
+
+	/* we're in a retry handler */
+	fu_progress_reset(helper->progress);
 
 	/* send the block, chunk by chunk */
 	chunks = fu_chunk_array_new(fu_chunk_get_data(helper->block),
@@ -628,7 +631,7 @@ fu_cros_ec_usb_device_transfer_section(FuDevice *device,
 		    .progress = fu_progress_get_child(progress),
 		};
 		if (!fu_device_retry(device,
-				     fu_cros_ec_usb_device_transfer_block,
+				     fu_cros_ec_usb_device_transfer_block_cb,
 				     MAX_BLOCK_XFER_RETRIES,
 				     &helper,
 				     error)) {
@@ -922,7 +925,6 @@ fu_cros_ec_usb_device_attach(FuDevice *device, FuProgress *progress, GError **er
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 
-	fu_device_set_remove_delay(device, CROS_EC_REMOVE_DELAY_RE_ENUMERATE);
 	if (self->in_bootloader &&
 	    fu_device_has_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL)) {
 		/*
@@ -971,7 +973,6 @@ fu_cros_ec_usb_device_detach(FuDevice *device, FuProgress *progress, GError **er
 	if (self->targ.common.flash_protection != 0x0) {
 		/* in RW, and RO region is write protected, so jump to RO */
 		fu_device_add_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN);
-		fu_device_set_remove_delay(device, CROS_EC_REMOVE_DELAY_RE_ENUMERATE);
 		if (!fu_cros_ec_usb_device_reset_to_ro(device, error))
 			return FALSE;
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -988,6 +989,7 @@ fu_cros_ec_usb_device_init(FuCrosEcUsbDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_remove_delay(FU_DEVICE(self), CROS_EC_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_register_private_flag(FU_DEVICE(self),
