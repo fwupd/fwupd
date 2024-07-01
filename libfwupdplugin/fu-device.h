@@ -929,3 +929,8 @@ fu_device_build_instance_id_full(FuDevice *self,
 				 ...) G_GNUC_NULL_TERMINATED G_GNUC_NON_NULL(1, 4);
 FuDeviceLocker *
 fu_device_poll_locker_new(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
+
+void
+fu_device_add_plugin_inhibit(FuDevice *self, const gchar *plugin_name) G_GNUC_NON_NULL(1, 2);
+GPtrArray *
+fu_device_get_plugin_inhibits(FuDevice *self) G_GNUC_NON_NULL(1);

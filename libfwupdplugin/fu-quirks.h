@@ -439,3 +439,11 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key) G_GNUC_NON
  * Since: 1.8.2
  **/
 #define FU_QUIRKS_CFI_DEVICE_BLOCK_SIZE "CfiDeviceBlockSize"
+/**
+ * FU_QUIRKS_PLUGIN_INHIBIT:
+ *
+ * The quirk key for the list of plugin inhibits, split by comma if required.
+ *
+ * Since: 1.9.22
+ **/
+#define FU_QUIRKS_PLUGIN_INHIBIT "PluginInhibit"

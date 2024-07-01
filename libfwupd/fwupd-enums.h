@@ -1064,13 +1064,21 @@ typedef enum {
 	 */
 	FWUPD_PLUGIN_FLAG_READY = 1ull << 17,
 	/**
+	 * FWUPD_PLUGIN_FLAG_INHIBITED:
+	 *
+	 * The plugin is being inhibited by other plugin.
+	 *
+	 * Since: 1.9.22
+	 */
+	FWUPD_PLUGIN_FLAG_INHIBITED = 1ull << 18,
+	/**
 	 * FWUPD_PLUGIN_FLAG_TEST_ONLY:
 	 *
 	 * The plugin is used for virtual devices that exercising daemon flows.
 	 *
 	 * Since: 2.0.0
 	 */
-	FWUPD_PLUGIN_FLAG_TEST_ONLY = 1ull << 18,
+	FWUPD_PLUGIN_FLAG_TEST_ONLY = 1ull << 19,
 	/**
 	 * FWUPD_PLUGIN_FLAG_UNKNOWN:
 	 *

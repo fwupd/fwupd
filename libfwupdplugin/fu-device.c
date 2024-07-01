@@ -58,6 +58,7 @@ typedef struct {
 	GPtrArray *parent_physical_ids; /* (nullable) */
 	GPtrArray *parent_backend_ids;	/* (nullable) */
 	GPtrArray *counterpart_guids;	/* (nullable) */
+	GPtrArray *plugin_inhibits;	/* (nullable) (element-type utf8) */
 	GPtrArray *events;		/* (nullable) (element-type FuDeviceEvent) */
 	guint event_idx;
 	guint remove_delay;		/* ms */
@@ -2109,6 +2110,12 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 			if (!fu_device_add_child_by_kv(self, sections[i], error))
 				return FALSE;
 		}
+		return TRUE;
+	}
+	if (g_strcmp0(key, FU_QUIRKS_PLUGIN_INHIBIT) == 0) {
+		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
+		for (guint i = 0; sections[i] != NULL; i++)
+			fu_device_add_plugin_inhibit(self, sections[i]);
 		return TRUE;
 	}
 
@@ -4277,6 +4284,12 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 		const gchar *name = g_ptr_array_index(priv->possible_plugins, i);
 		fwupd_codec_string_append(str, idt, "PossiblePlugin", name);
 	}
+	if (priv->plugin_inhibits != NULL) {
+		for (guint i = 0; i < priv->plugin_inhibits->len; i++) {
+			const gchar *plugin_name = g_ptr_array_index(priv->plugin_inhibits, i);
+			fwupd_codec_string_append(str, idt, "PluginInhibits", plugin_name);
+		}
+	}
 	if (priv->parent_physical_ids != NULL && priv->parent_physical_ids->len > 0) {
 		g_autofree gchar *flags = fu_strjoin(",", priv->parent_physical_ids);
 		fwupd_codec_string_append(str, idt, "ParentPhysicalIds", flags);
@@ -5655,6 +5668,12 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 			fu_device_add_counterpart_guid(self, tmp);
 		}
 	}
+	if (priv_donor->plugin_inhibits != NULL) {
+		for (guint i = 0; i < priv_donor->plugin_inhibits->len; i++) {
+			const gchar *tmp = g_ptr_array_index(priv_donor->plugin_inhibits, i);
+			fu_device_add_plugin_inhibit(self, tmp);
+		}
+	}
 	if (priv_donor->metadata != NULL) {
 		g_hash_table_iter_init(&iter, priv_donor->metadata);
 		while (g_hash_table_iter_next(&iter, &key, &value)) {
@@ -6031,6 +6050,54 @@ fu_device_ensure_from_component(FuDevice *self, XbNode *component)
 		fu_device_ensure_from_component_verfmt(self, component);
 	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS))
 		fu_device_ensure_from_component_flags(self, component);
+}
+
+/**
+ * fu_device_add_plugin_inhibit:
+ * @self: a device
+ * @plugin_name: a plugin name
+ *
+ * Adds a plugin inhibit.
+ *
+ * This means that this automatically causes @plugin_name to be inhibited for the duration of the
+ * device update.
+ *
+ * Since: 1.9.22
+ **/
+void
+fu_device_add_plugin_inhibit(FuDevice *self, const gchar *plugin_name)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(plugin_name != NULL);
+
+	if (priv->plugin_inhibits == NULL)
+		priv->plugin_inhibits = g_ptr_array_new_with_free_func(g_free);
+	for (guint i = 0; i < priv->plugin_inhibits->len; i++) {
+		const gchar *plugin_name_tmp = g_ptr_array_index(priv->plugin_inhibits, i);
+		if (g_strcmp0(plugin_name_tmp, plugin_name) == 0)
+			return;
+	}
+	g_ptr_array_add(priv->plugin_inhibits, g_strdup(plugin_name));
+}
+
+/**
+ * fu_device_get_plugin_inhibits:
+ * @self: a #FuDevice
+ *
+ * Gets all the plugin inhibits.
+ *
+ * Returns: (transfer none) (element-type utf8) (nullable): a list of plugin inhibits, or %NULL
+ *
+ * Since: 1.9.22
+ **/
+GPtrArray *
+fu_device_get_plugin_inhibits(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	return priv->plugin_inhibits;
 }
 
 /**
@@ -6953,6 +7020,8 @@ fu_device_finalize(GObject *object)
 		g_ptr_array_unref(priv->parent_backend_ids);
 	if (priv->counterpart_guids != NULL)
 		g_ptr_array_unref(priv->counterpart_guids);
+	if (priv->plugin_inhibits != NULL)
+		g_ptr_array_unref(priv->plugin_inhibits);
 	if (priv->events != NULL)
 		g_ptr_array_unref(priv->events);
 	if (priv->private_flag_items != NULL)
