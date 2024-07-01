@@ -22,6 +22,9 @@ G_DEFINE_TYPE(FuRts54hubRtd21xxBackground,
 #define ISP_DATA_BLOCKSIZE 32
 #define ISP_PACKET_SIZE	   257
 
+#define FU_RTS54HUB_RTD21XX_BACKGROUND_DETACH_RETRY_COUNT 10
+#define FU_RTS54HUB_RTD21XX_BACKGROUND_DETACH_RETRY_DELAY 300 /* ms */
+
 typedef enum {
 	ISP_CMD_FW_UPDATE_START = 0x01,
 	ISP_CMD_FW_UPDATE_ISP_DONE = 0x02,
@@ -80,9 +83,6 @@ fu_rts54hub_rtd21xx_background_detach_raw(FuRts54hubRtd21xxBackground *self, GEr
 		g_prefix_error(error, "failed to detach: ");
 		return FALSE;
 	}
-
-	/* wait for device ready */
-	fu_device_sleep(FU_DEVICE(self), 300); /* ms */
 	return TRUE;
 }
 
@@ -121,7 +121,12 @@ fu_rts54hub_rtd21xx_background_detach(FuDevice *device, FuProgress *progress, GE
 	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_retry(device, fu_rts54hub_rtd21xx_background_detach_cb, 100, NULL, error);
+	return fu_device_retry_full(device,
+				    fu_rts54hub_rtd21xx_background_detach_cb,
+				    FU_RTS54HUB_RTD21XX_BACKGROUND_DETACH_RETRY_COUNT,
+				    FU_RTS54HUB_RTD21XX_BACKGROUND_DETACH_RETRY_DELAY,
+				    NULL,
+				    error);
 }
 
 static gboolean
