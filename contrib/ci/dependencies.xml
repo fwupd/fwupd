@@ -864,6 +864,12 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency id="libgbinder-dev">
+    <distro id="fedora">
+      <package variant="x86_64">libgbinder-devel</package>
+      <package variant="aarch64">libgbinder-devel</package>
+    </distro>
+  </dependency>
   <dependency id="libgusb-dev">
     <distro id="arch">
       <package variant="x86_64">libgusb</package>
