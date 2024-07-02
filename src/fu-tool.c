@@ -125,6 +125,7 @@ fu_util_show_plugin_warnings(FuUtilPrivate *priv)
 
 	/* never show these, they're way too generic */
 	flags &= ~FWUPD_PLUGIN_FLAG_DISABLED;
+	flags &= ~FWUPD_PLUGIN_FLAG_INHIBITED;
 	flags &= ~FWUPD_PLUGIN_FLAG_NO_HARDWARE;
 	flags &= ~FWUPD_PLUGIN_FLAG_REQUIRE_HWID;
 	flags &= ~FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY;

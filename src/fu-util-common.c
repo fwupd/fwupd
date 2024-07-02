@@ -1612,6 +1612,10 @@ fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 		/* TRANSLATORS: Plugin is inactive and not used */
 		return _("Disabled");
 	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_INHIBITED) {
+		/* TRANSLATORS: Plugin is inhibited by another plugin */
+		return _("Inhibited");
+	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_NO_HARDWARE) {
 		/* TRANSLATORS: not required for this system */
 		return _("Required hardware was not found");
@@ -1690,6 +1694,7 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 		return fu_console_color_format(fu_util_plugin_flag_to_string(plugin_flag),
 					       FU_CONSOLE_COLOR_GREEN);
 	case FWUPD_PLUGIN_FLAG_DISABLED:
+	case FWUPD_PLUGIN_FLAG_INHIBITED:
 	case FWUPD_PLUGIN_FLAG_NO_HARDWARE:
 	case FWUPD_PLUGIN_FLAG_TEST_ONLY:
 		return fu_console_color_format(fu_util_plugin_flag_to_string(plugin_flag),
