@@ -56,8 +56,6 @@ fu_usb_device_get_custom_index(FuUsbDevice *self,
 			       guint8 protocol_id,
 			       GError **error);
 
-gboolean
-fu_usb_device_is_open(FuUsbDevice *device) G_GNUC_NON_NULL(1);
 FuDevice *
 fu_usb_device_find_udev_device(FuUsbDevice *device, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);

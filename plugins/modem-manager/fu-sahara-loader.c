@@ -204,8 +204,8 @@ fu_sahara_loader_qdl_is_open(FuSaharaLoader *self)
 {
 	if (self == NULL)
 		return FALSE;
-
-	return fu_usb_device_is_open(self->usb_device);
+	return fu_device_has_internal_flag(FU_DEVICE(self->usb_device),
+					   FU_DEVICE_INTERNAL_FLAG_IS_OPEN);
 }
 
 GByteArray *
