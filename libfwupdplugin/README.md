@@ -130,3 +130,4 @@ Remember: Plugins should be upstream!
 * `fu_hid_device_parse_descriptor()`: Use `fu_hid_device_parse_descriptors()` instead
 * `fu_udev_device_set_flags()`: Use `fu_udev_device_add_flag()` instead
 * `fu_udev_device_get_slot_depth()`: Use `fu_udev_device_get_subsystem_depth()` instead
+* `fu_usb_device_is_open()`: Use `fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_IS_OPEN)` instead
