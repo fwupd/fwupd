@@ -46,7 +46,7 @@ guint8
 fu_usb_device_get_device_class(FuUsbDevice *self);
 
 guint8
-fu_usb_device_get_configuration_index(FuUsbDevice *self);
+fu_usb_device_get_configuration_index(FuUsbDevice *self, GError **error);
 guint8
 fu_usb_device_get_serial_number_index(FuUsbDevice *self);
 guint8
