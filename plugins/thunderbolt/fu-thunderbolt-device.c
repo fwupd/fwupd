@@ -149,6 +149,7 @@ fu_thunderbolt_device_get_version(FuThunderboltDevice *self, GError **error)
 		if (!fu_strtoull(split[1], &minor_raw, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error))
 			return FALSE;
 		version_minor = ((minor_raw & 0x3f) >> 4) * 10 + (minor_raw & 0x0f);
+		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
 	} else {
 		if (!fu_strtoull(split[1],
 				 &version_minor,
@@ -157,6 +158,7 @@ fu_thunderbolt_device_get_version(FuThunderboltDevice *self, GError **error)
 				 FU_INTEGER_BASE_10,
 				 error))
 			return FALSE;
+		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	}
 
 	version = g_strdup_printf("%u.%u", (guint)version_major, (guint)(version_minor));
@@ -445,7 +447,6 @@ fu_thunderbolt_device_init(FuThunderboltDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "thunderbolt");
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.thunderbolt");
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
 }
 
 static void
