@@ -96,8 +96,11 @@
 #include <libfwupdplugin/fu-string.h>
 #include <libfwupdplugin/fu-sum.h>
 #include <libfwupdplugin/fu-udev-device.h>
-#include <libfwupdplugin/fu-usb-common.h>
+#include <libfwupdplugin/fu-usb-bos-descriptor.h>
+// #include <libfwupdplugin/fu-usb-common.h>
 #include <libfwupdplugin/fu-usb-device.h>
+#include <libfwupdplugin/fu-usb-endpoint.h>
+#include <libfwupdplugin/fu-usb-interface.h>
 #include <libfwupdplugin/fu-uswid-firmware.h>
 #include <libfwupdplugin/fu-version-common.h>
 #include <libfwupdplugin/fu-volume.h>

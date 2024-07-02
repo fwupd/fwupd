@@ -31,14 +31,10 @@ meson setup .. \
     -Dlibjcat:man=false \
     -Dlibjcat:gpg=false \
     -Dlibjcat:tests=false \
-    -Dlibjcat:introspection=false \
-    -Dgusb:tests=false \
-    -Dgusb:docs=false \
-    -Dgusb:introspection=false \
-    -Dgusb:vapi=false
+    -Dlibjcat:introspection=false
 
 # run tests
-export WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/;$build/libfwupd/;$build/libfwupdplugin/;$build/subprojects/libxmlb/src/;$build/subprojects/libjcat/libjcat/;$build/subprojects/gusb/gusb/"
+export WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/;$build/libfwupd/;$build/libfwupdplugin/;$build/subprojects/libxmlb/src/;$build/subprojects/libjcat/libjcat/"
 ninja -C "$build" install
 ninja -C "$build" test
 
@@ -66,7 +62,6 @@ cp -f -v \
 	$MINGW32BINDIR/libgmp-10.dll \
 	$MINGW32BINDIR/libgnutls-30.dll \
 	$MINGW32BINDIR/libgobject-2.0-0.dll \
-	$MINGW32BINDIR/libgusb-2.dll \
 	$MINGW32BINDIR/libhogweed-*.dll \
 	$MINGW32BINDIR/libidn2-0.dll \
 	$MINGW32BINDIR/libintl-8.dll \

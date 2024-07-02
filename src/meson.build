@@ -11,7 +11,7 @@ engine_dep = [
   giounix,
   gmodule,
   gudev,
-  gusb,
+  libusb,
   libjsonglib,
   polkit,
   sqlite,
@@ -25,7 +25,6 @@ endif
 
 client_dep = [
   gudev,
-  gusb,
   libcurl,
   libjcat,
   libjsonglib,
@@ -69,7 +68,7 @@ endif
 if gudev.found()
   fwupd_engine_src += 'fu-udev-backend.c'
 endif
-if gusb.found()
+if libusb.found()
   fwupd_engine_src += 'fu-usb-backend.c'
 endif
 if bluez.allowed()

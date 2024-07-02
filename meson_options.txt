@@ -78,13 +78,9 @@ option('gudev',
     'false': 'disabled',
   },
 )
-option('gusb',
+option('usb',
   type: 'feature',
-  description: 'GUsb support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
+  description: 'USB support',
 )
 option('bluez',
   type: 'feature',

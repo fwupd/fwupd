@@ -866,30 +866,30 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
-  <dependency id="libgusb-dev">
+  <dependency id="libusb-1.0-0-dev">
     <distro id="arch">
-      <package variant="x86_64">libgusb</package>
+      <package variant="x86_64">libusb</package>
     </distro>
     <distro id="centos">
-      <package variant="x86_64">libgusb-devel</package>
+      <package variant="x86_64">libusb1-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="x86_64">libgusb-devel</package>
-      <package variant="aarch64">libgusb-devel</package>
-      <package variant="mingw64">mingw64-libgusb</package>
+      <package variant="x86_64">libusb1-devel</package>
+      <package variant="aarch64">libusb1-devel</package>
+      <package variant="mingw64">mingw64-libusbx</package>
     </distro>
     <distro id="void">
-      <package variant="x86_64">libgusb-devel</package>
+      <package variant="x86_64">libusb-devel</package>
     </distro>
     <distro id="darwin">
-      <package>libgusb</package>
+      <package>libusb</package>
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 0.3.5)</version>
+        <version>(>= 1.0.9)</version>
       </control>
       <package variant="x86_64" />
-      <package variant="s390x">libgusb-dev:s390x</package>
+      <package variant="s390x">libusb-1.0-0-dev:s390x</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">

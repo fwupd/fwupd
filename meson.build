@@ -231,10 +231,20 @@ else
   lvfs_metadata_format = 'gz'
 endif
 conf.set_quoted('FU_LVFS_METADATA_FORMAT', lvfs_metadata_format)
-gusb = dependency('gusb', version: '>= 0.4.8', fallback: ['gusb', 'gusb_dep'], required: get_option('gusb'))
-if gusb.found()
-  conf.set('HAVE_GUSB', '1')
+
+# FreeBSD is missing some libusb symbols
+libusb = dependency('libusb-1.0', version : '>= 0.1.12', required: get_option('usb'))
+if libusb.found()
+  conf.set('HAVE_LIBUSB', '1')
+  conf.set_quoted('LIBUSB_VERSION', libusb.version())
+  if cc.has_header_symbol('libusb.h', 'libusb_set_option', dependencies: libusb)
+    conf.set('HAVE_LIBUSB_SET_OPTION', '1')
+  endif
+  if cc.has_header_symbol('libusb.h', 'libusb_get_parent', dependencies: libusb)
+    conf.set('HAVE_LIBUSB_GET_PARENT', '1')
+  endif
 endif
+
 sqlite = dependency('sqlite3', required: get_option('sqlite'))
 if sqlite.found()
   conf.set('HAVE_SQLITE', '1')
@@ -549,8 +559,8 @@ conf.set_quoted('FWUPD_LIBDIR_PKG', libdir_pkg)
 endif
 
 # sanity check, otherwise there is not point building
-if build_standalone and host_machine.system() == 'windows' and not gusb.found()
-  error('gusb feature is required for Windows build')
+if build_standalone and host_machine.system() == 'windows' and not libusb.found()
+  error('libusb is required for Windows build')
 endif
 
 conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
@@ -737,7 +747,7 @@ summary({
 if build_daemon
   summary({
     'bluez': bluez.allowed(),
-    'gusb': gusb,
+    'libusb': libusb,
     'gudev': gudev,
     'hsi': hsi,
     'lvfs_metadata_format': lvfs_metadata_format,

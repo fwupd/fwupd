@@ -23,6 +23,7 @@ fwupdplugin_structs = [
   'fu-sbatlevel-section.rs', # fuzzing
   'fu-smbios.rs', # fuzzing
   'fu-usb-device-ds20.rs', # fuzzing
+  'fu-usb.rs', # fuzzing
   'fu-uswid.rs', # fuzzing
 ]
 
@@ -103,7 +104,6 @@ fwupdplugin_src = [
   'fu-fit-firmware.c', # fuzzing
   'fu-fmap-firmware.c', # fuzzing
   'fu-hid-descriptor.c', # fuzzing
-  'fu-hid-device.c',
   'fu-hid-report-item.c', # fuzzing
   'fu-hid-report.c', # fuzzing
   'fu-hwids.c', # fuzzing
@@ -146,14 +146,23 @@ fwupdplugin_src = [
   'fu-string.c', # fuzzing
   'fu-sum.c', # fuzzing
   'fu-udev-device.c',
-  'fu-usb-device.c',
-  'fu-usb-device-ds20.c', # fuzzing
-  'fu-usb-device-fw-ds20.c', # fuzzing
-  'fu-usb-device-ms-ds20.c', # fuzzing
   'fu-uswid-firmware.c', # fuzzing
   'fu-version-common.c', # fuzzing
   'fu-volume.c', # fuzzing
 ]
+
+if libusb.found()
+  fwupdplugin_src += [
+    'fu-hid-device.c',
+    'fu-usb-bos-descriptor.c',
+    'fu-usb-device.c',
+    'fu-usb-device-ds20.c',
+    'fu-usb-device-fw-ds20.c',
+    'fu-usb-device-ms-ds20.c',
+    'fu-usb-endpoint.c',
+    'fu-usb-interface.c',
+  ]
+endif
 
 if host_machine.system() == 'linux'
   fwupdplugin_src += 'fu-common-linux.c' # fuzzing
@@ -174,7 +183,6 @@ fwupdplugin_headers = [
   'fu-archive-firmware.h',
   'fu-archive.h',
   'fu-backend.h',
-  'fu-backend-private.h',
   'fu-bios-settings.h',
   'fu-bios-settings-private.h',
   'fu-bluez-device.h',
@@ -274,7 +282,13 @@ fwupdplugin_headers = [
   'fu-udev-device-private.h',
   'fu-usb-device-ds20.h',
   'fu-usb-device-fw-ds20.h',
+  'fu-usb-bos-descriptor.h',
+  'fu-usb-bos-descriptor-private.h',
   'fu-usb-device.h',
+  'fu-usb-endpoint.h',
+  'fu-usb-endpoint-private.h',
+  'fu-usb-interface.h',
+  'fu-usb-interface-private.h',
   'fu-usb-device-ms-ds20.h',
   'fu-usb-device-private.h',
   'fu-uswid-firmware.h',
@@ -285,7 +299,7 @@ fwupdplugin_headers = [
 introspection_deps = [
   libxmlb,
   giounix,
-  gusb,
+  libusb,
   gudev,
 ]
 
@@ -296,7 +310,7 @@ pkgg_requires = [ 'gio-2.0',
                   'json-glib-1.0',
                   'libarchive',
                   'xmlb',
-                  'gusb'
+                  'libusb',
 ]
 
 library_deps = [
@@ -307,6 +321,7 @@ library_deps = [
   valgrind,
   lzma,
   libarchive,
+  libusb,
   cbor,
   sqlite,
   platform_deps,
@@ -344,14 +359,6 @@ if introspection.allowed()
   gir_dep = declare_dependency(sources: fwupd_gir)
   girtargets = []
   extra_args = []
-  if gusb.found()
-    if gusb.type_name() == 'internal'
-      girtargets += subproject('gusb').get_variable('libgusb_girtarget')[0]
-    else
-      girtargets += 'GUsb-1.0'
-    endif
-    extra_args += '-DHAVE_GUSB'
-  endif
   if libxmlb.type_name() == 'internal'
     girtargets += subproject('libxmlb').get_variable('gir')[0]
   else

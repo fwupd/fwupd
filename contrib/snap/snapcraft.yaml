@@ -88,10 +88,6 @@ parts:
                        -Dplugin_powerd=disabled,
                        -Dudevdir=$CRAFT_STAGE/lib/udev,
                        -Defi_os_dir=fwupd,
-                       "-Dgusb:tests=false",
-                       "-Dgusb:docs=false",
-                       "-Dgusb:introspection=false",
-                       "-Dgusb:vapi=false",
                        "-Dlibxmlb:gtkdoc=false",
                        "-Dlibxmlb:introspection=false",
                        "-Dlibjcat:man=false",
@@ -147,7 +143,7 @@ parts:
       - libglib2.0-dev
       - libgnutls28-dev
       - libgpgme11-dev
-      - libgusb-dev
+      - libusb-1.0-0-dev
       - libjson-glib-dev
       - libjcat-dev
       - liblzma-dev
@@ -185,7 +181,6 @@ parts:
       - libffi8
       - libjcat1
       - liblzma5
-      - libgusb2
       - libusb-1.0-0
       - libgudev-1.0-0
       - libgpgme11

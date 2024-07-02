@@ -15,7 +15,6 @@
 
 #include "fwupd-security-attr-private.h"
 
-#include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
 #include "fu-common-private.h"
 #include "fu-config-private.h"
@@ -2153,18 +2152,6 @@ fu_backend_emulate_count_cb(FuBackend *backend, FuDevice *device, gpointer user_
 	(*cnt)++;
 }
 
-static gboolean
-fu_backend_load_json(FuBackend *backend, const gchar *json, GError **error)
-{
-	JsonObject *json_obj;
-	g_autoptr(JsonParser) parser = json_parser_new();
-
-	if (!json_parser_load_from_data(parser, json, -1, error))
-		return FALSE;
-	json_obj = json_node_get_object(json_parser_get_root(parser));
-	return fu_backend_load(backend, json_obj, "emulation", FU_BACKEND_LOAD_FLAG_NONE, error);
-}
-
 static void
 fu_backend_emulate_func(void)
 {
@@ -2228,7 +2215,7 @@ fu_backend_emulate_func(void)
 			 &changed_cnt);
 
 	/* parse */
-	ret = fu_backend_load_json(backend, json1, &error);
+	ret = fwupd_codec_from_json_string(FWUPD_CODEC(backend), json1, &error);
 	g_assert_no_error(error);
 	g_assert(ret);
 	g_assert_cmpint(added_cnt, ==, 1);
@@ -2287,7 +2274,7 @@ fu_backend_emulate_func(void)
 	g_assert(ret);
 
 	/* load the same data */
-	ret = fu_backend_load_json(backend, json1, &error);
+	ret = fwupd_codec_from_json_string(FWUPD_CODEC(backend), json1, &error);
 	g_assert_no_error(error);
 	g_assert(ret);
 	g_assert_cmpint(added_cnt, ==, 1);
@@ -2299,7 +2286,7 @@ fu_backend_emulate_func(void)
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED));
 
 	/* load a different device */
-	ret = fu_backend_load_json(backend, json2, &error);
+	ret = fwupd_codec_from_json_string(FWUPD_CODEC(backend), json2, &error);
 	g_assert_no_error(error);
 	g_assert(ret);
 	g_assert_cmpint(added_cnt, ==, 2);

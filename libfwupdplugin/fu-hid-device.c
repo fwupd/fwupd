@@ -12,6 +12,7 @@
 #include "fu-hid-device.h"
 #include "fu-string.h"
 #include "fu-usb-device-private.h"
+#include "fu-usb-endpoint.h"
 
 #define FU_HID_REPORT_GET 0x01
 #define FU_HID_REPORT_SET 0x09
@@ -98,7 +99,6 @@ fu_hid_device_set_property(GObject *object, guint prop_id, const GValue *value, 
 GPtrArray *
 fu_hid_device_parse_descriptors(FuHidDevice *self, GError **error)
 {
-#ifdef HAVE_GUSB
 	g_autoptr(GPtrArray) fws = NULL;
 	g_autoptr(GPtrArray) descriptors =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
@@ -119,31 +119,23 @@ fu_hid_device_parse_descriptors(FuHidDevice *self, GError **error)
 		g_ptr_array_add(descriptors, g_steal_pointer(&descriptor));
 	}
 	return g_steal_pointer(&descriptors);
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "not supported as <gusb.h> is unavailable");
-	return NULL;
-#endif
 }
 
-#ifdef HAVE_GUSB
 static gboolean
 fu_hid_device_autodetect_eps(FuHidDevice *self, FuUsbInterface *iface, GError **error)
 {
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) eps = fu_usb_interface_get_endpoints(iface);
 	for (guint i = 0; eps != NULL && i < eps->len; i++) {
-		GUsbEndpoint *ep = g_ptr_array_index(eps, i);
-		if (g_usb_endpoint_get_direction(ep) == FU_USB_DIRECTION_DEVICE_TO_HOST &&
+		FuUsbEndpoint *ep = g_ptr_array_index(eps, i);
+		if (fu_usb_endpoint_get_direction(ep) == FU_USB_DIRECTION_DEVICE_TO_HOST &&
 		    priv->ep_addr_in == 0) {
-			priv->ep_addr_in = g_usb_endpoint_get_address(ep);
+			priv->ep_addr_in = fu_usb_endpoint_get_address(ep);
 			continue;
 		}
-		if (g_usb_endpoint_get_direction(ep) == FU_USB_DIRECTION_HOST_TO_DEVICE &&
+		if (fu_usb_endpoint_get_direction(ep) == FU_USB_DIRECTION_HOST_TO_DEVICE &&
 		    priv->ep_addr_out == 0) {
-			priv->ep_addr_out = g_usb_endpoint_get_address(ep);
+			priv->ep_addr_out = fu_usb_endpoint_get_address(ep);
 			continue;
 		}
 	}
@@ -156,12 +148,10 @@ fu_hid_device_autodetect_eps(FuHidDevice *self, FuUsbInterface *iface, GError **
 	}
 	return TRUE;
 }
-#endif
 
 static gboolean
 fu_hid_device_open(FuDevice *device, GError **error)
 {
-#ifdef HAVE_GUSB
 	FuHidDevice *self = FU_HID_DEVICE(device);
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
 	FuUsbDeviceClaimFlags flags = 0;
@@ -208,7 +198,6 @@ fu_hid_device_open(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to claim HID interface: ");
 		return FALSE;
 	}
-#endif
 
 	/* success */
 	return TRUE;
@@ -217,7 +206,6 @@ fu_hid_device_open(FuDevice *device, GError **error)
 static gboolean
 fu_hid_device_close(FuDevice *device, GError **error)
 {
-#ifdef HAVE_GUSB
 	FuHidDevice *self = FU_HID_DEVICE(device);
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
 	FuUsbDeviceClaimFlags flags = 0;
@@ -244,7 +232,6 @@ fu_hid_device_close(FuDevice *device, GError **error)
 					   "failed to release HID interface: ");
 		return FALSE;
 	}
-#endif
 
 	/* FuUsbDevice->close */
 	return FU_DEVICE_CLASS(fu_hid_device_parent_class)->close(device, error);
@@ -396,7 +383,6 @@ typedef struct {
 static gboolean
 fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *helper, GError **error)
 {
-#ifdef HAVE_GUSB
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
 	gsize actual_len = 0;
 
@@ -461,7 +447,6 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 			    helper->bufsz);
 		return FALSE;
 	}
-#endif
 	return TRUE;
 }
 
@@ -529,7 +514,6 @@ fu_hid_device_set_report(FuHidDevice *self,
 static gboolean
 fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *helper, GError **error)
 {
-#ifdef HAVE_GUSB
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
 	gsize actual_len = 0;
 
@@ -593,7 +577,6 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 			    helper->bufsz);
 		return FALSE;
 	}
-#endif
 	return TRUE;
 }
 

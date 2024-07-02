@@ -8,7 +8,8 @@
 
 #include "fu-plugin.h"
 #include "fu-udev-device.h"
-#include "fu-usb-common.h"
+#include "fu-usb-interface.h"
+#include "fu-usb-struct.h"
 
 #define FU_TYPE_USB_DEVICE (fu_usb_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuUsbDevice, fu_usb_device, FU, USB_DEVICE, FuDevice)
@@ -17,9 +18,24 @@ struct _FuUsbDeviceClass {
 	FuDeviceClass parent_class;
 };
 
+/**
+ * FuUsbDeviceClaimFlags:
+ *
+ * Flags for the fu_usb_device_claim_interface and
+ * fu_usb_device_release_interface methods flags parameters.
+ **/
+typedef enum {
+	FU_USB_DEVICE_CLAIM_FLAG_NONE = 0,
+	FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER = 1 << 0,
+} FuUsbDeviceClaimFlags;
+
 FuUsbDevice *
 fu_usb_device_get_parent(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 
+guint8
+fu_usb_device_get_bus(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+guint8
+fu_usb_device_get_address(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 guint16
 fu_usb_device_get_vid(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 guint16
@@ -28,19 +44,19 @@ guint16
 fu_usb_device_get_release(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 guint16
 fu_usb_device_get_spec(FuUsbDevice *self) G_GNUC_NON_NULL(1);
-guint8
-fu_usb_device_get_class(FuUsbDevice *self);
+FuUsbClass
+fu_usb_device_get_class(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 
 guint8
-fu_usb_device_get_configuration_index(FuUsbDevice *self, GError **error);
+fu_usb_device_get_configuration_index(FuUsbDevice *self, GError **error) G_GNUC_NON_NULL(1);
 guint8
-fu_usb_device_get_serial_number_index(FuUsbDevice *self);
+fu_usb_device_get_serial_number_index(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 guint8
 fu_usb_device_get_custom_index(FuUsbDevice *self,
 			       guint8 class_id,
 			       guint8 subclass_id,
 			       guint8 protocol_id,
-			       GError **error);
+			       GError **error) G_GNUC_NON_NULL(1);
 
 FuDevice *
 fu_usb_device_find_udev_device(FuUsbDevice *device, GError **error) G_GNUC_WARN_UNUSED_RESULT

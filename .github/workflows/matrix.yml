@@ -114,7 +114,7 @@ jobs:
     steps:
     - name: install dependencies
       run: |
-        brew install meson libgusb gobject-introspection sqlite libarchive json-glib curl gnutls protobuf-c vala gi-docgen
+        brew install meson libusb usb.ids gobject-introspection sqlite libarchive json-glib curl gnutls protobuf-c vala gi-docgen
         python3 -m pip install --user jinja2
     - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
     - name: configure

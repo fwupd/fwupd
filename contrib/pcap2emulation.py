@@ -520,7 +520,7 @@ class Pcap2Emulation:
 
                             if descriptor_type == DESCRIPTOR_CONFIGURATION:
                                 if "usb_usb_iConfiguration" in layers:
-                                    # The GetConfigurationIndex GUsb event is not directly
+                                    # The GetConfigurationIndex USB event is not directly
                                     # related to a specific USB event, but data can be
                                     # retrieved from the DESCRIPTOR CONFIGURATION request
                                     index = (
@@ -603,7 +603,7 @@ class Pcap2Emulation:
                                     and "InterfaceSubClass" in interface
                                     and "InterfaceProtocol" in interface
                                 ):
-                                    # The GetCustomIndex GUsb event is not directly
+                                    # The GetCustomIndex USB event is not directly
                                     # related to a specific USB event, but data can be
                                     # retrieved from the DESCRIPTOR INTERFACE request
                                     index = interface["Interface"].to_bytes(1, "big")
