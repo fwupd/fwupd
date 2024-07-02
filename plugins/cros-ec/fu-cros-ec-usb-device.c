@@ -108,18 +108,18 @@ fu_cros_ec_usb_device_find_interface(FuUsbDevice *device, GError **error)
 	if (intfs == NULL)
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {
-		GUsbInterface *intf = g_ptr_array_index(intfs, i);
-		if (g_usb_interface_get_class(intf) == 255 &&
-		    g_usb_interface_get_subclass(intf) == USB_SUBCLASS_GOOGLE_UPDATE &&
-		    g_usb_interface_get_protocol(intf) == USB_PROTOCOL_GOOGLE_UPDATE) {
-			GUsbEndpoint *ep;
-			g_autoptr(GPtrArray) endpoints = g_usb_interface_get_endpoints(intf);
+		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
+		if (fu_usb_interface_get_class(intf) == 255 &&
+		    fu_usb_interface_get_subclass(intf) == USB_SUBCLASS_GOOGLE_UPDATE &&
+		    fu_usb_interface_get_protocol(intf) == USB_PROTOCOL_GOOGLE_UPDATE) {
+			FuUsbEndpoint *ep;
+			g_autoptr(GPtrArray) endpoints = fu_usb_interface_get_endpoints(intf);
 			if (NULL == endpoints || 0 == endpoints->len)
 				continue;
 			ep = g_ptr_array_index(endpoints, 0);
-			self->iface_idx = g_usb_interface_get_number(intf);
-			self->ep_num = g_usb_endpoint_get_address(ep) & 0x7f;
-			self->chunk_len = g_usb_endpoint_get_maximum_packet_size(ep);
+			self->iface_idx = fu_usb_interface_get_number(intf);
+			self->ep_num = fu_usb_endpoint_get_address(ep) & 0x7f;
+			self->chunk_len = fu_usb_endpoint_get_maximum_packet_size(ep);
 
 			return TRUE;
 		}

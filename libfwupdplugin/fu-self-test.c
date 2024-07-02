@@ -32,7 +32,9 @@
 #include "fu-security-attrs-private.h"
 #include "fu-self-test-struct.h"
 #include "fu-smbios-private.h"
+#ifdef HAVE_LIBUSB
 #include "fu-usb-device-private.h"
+#endif
 #include "fu-volume-private.h"
 
 static GMainLoop *_test_loop = NULL;
@@ -1329,6 +1331,7 @@ fu_plugin_vfuncs_func(void)
 static void
 fu_plugin_device_gtype_func(void)
 {
+#ifdef HAVE_LIBUSB
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
 
@@ -1344,6 +1347,7 @@ fu_plugin_device_gtype_func(void)
 	/* make it explicit */
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_USB_DEVICE);
 	g_assert_cmpint(fu_plugin_get_device_gtype_default(plugin), ==, FU_TYPE_USB_DEVICE);
+#endif
 }
 
 static void
@@ -1367,16 +1371,19 @@ fu_plugin_backend_device_func(void)
 	g_assert_true(ret);
 }
 
+#ifdef HAVE_LIBUSB
 static void
 _plugin_backend_proxy_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	FuDevice **dev = (FuDevice **)user_data;
 	*dev = g_object_ref(device);
 }
+#endif
 
 static void
 fu_plugin_backend_proxy_device_func(void)
 {
+#ifdef HAVE_LIBUSB
 	gboolean ret;
 	FuDevice *proxy;
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -1412,6 +1419,7 @@ fu_plugin_backend_proxy_device_func(void)
 	proxy = fu_device_get_proxy(device_new);
 	g_assert_nonnull(proxy);
 	g_assert_true(FU_IS_USB_DEVICE(proxy));
+#endif
 }
 
 static void
@@ -2069,6 +2077,7 @@ fu_device_parent_func(void)
 static void
 fu_device_incorporate_descendant_func(void)
 {
+#ifdef HAVE_LIBUSB
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuUsbDevice) usb_device = fu_usb_device_new(ctx, NULL);
@@ -2082,6 +2091,7 @@ fu_device_incorporate_descendant_func(void)
 	/* this won't explode as device_class->incorporate is checking types */
 	fu_device_incorporate(device, FU_DEVICE(usb_device));
 	g_assert_cmpstr(fu_device_get_summary(device), ==, "FuUsbDevice");
+#endif
 }
 
 static void

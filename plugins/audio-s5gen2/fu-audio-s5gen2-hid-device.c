@@ -107,7 +107,7 @@ static gboolean
 fu_qc_s5gen2_hid_device_probe(FuDevice *device, GError **error)
 {
 	FuHidDevice *hid_device = FU_HID_DEVICE(device);
-	GUsbInterface *iface = NULL;
+	FuUsbInterface *iface = NULL;
 	g_autoptr(GPtrArray) ifaces = NULL;
 
 	ifaces = fu_usb_device_get_interfaces(FU_USB_DEVICE(device), error);
@@ -124,7 +124,7 @@ fu_qc_s5gen2_hid_device_probe(FuDevice *device, GError **error)
 	}
 
 	iface = g_ptr_array_index(ifaces, HID_IFACE);
-	if (g_usb_interface_get_class(iface) != G_USB_DEVICE_CLASS_HID) {
+	if (fu_usb_interface_get_class(iface) != FU_USB_DEVICE_CLASS_HID) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

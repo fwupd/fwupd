@@ -11,9 +11,6 @@
 #include <glib/gi18n.h>
 #include <stdio.h>
 #include <unistd.h>
-#ifdef HAVE_GUSB
-#include <gusb.h>
-#endif
 
 #include <xmlb.h>
 #ifdef HAVE_LIBCURL

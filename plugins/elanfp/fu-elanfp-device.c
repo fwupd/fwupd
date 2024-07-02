@@ -32,11 +32,11 @@
 #define TAG_SEND_COMMAND 0xFA
 
 /**
- * FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER:
+ * FU_ELAN_FP_DEVICE_FLAFU_USB_BULK_TRANSFER:
  *
  * Use usb bulk transfer.
  */
-#define FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER (1 << 0)
+#define FU_ELAN_FP_DEVICE_FLAFU_USB_BULK_TRANSFER (1 << 0)
 
 struct _FuElanfpDevice {
 	FuUsbDevice parent_instance;
@@ -60,7 +60,7 @@ fu_elanfp_iap_send_command(FuElanfpDevice *self,
 
 	if (buf != NULL) {
 		if (fu_device_has_private_flag(FU_DEVICE(self),
-					       FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER)) {
+					       FU_ELAN_FP_DEVICE_FLAFU_USB_BULK_TRANSFER)) {
 			buftmp[0] = TAG_SEND_COMMAND;
 			buftmp[1] = rspsz;
 			buftmp[2] = bufsz + 1;
@@ -79,7 +79,8 @@ fu_elanfp_iap_send_command(FuElanfpDevice *self,
 			return FALSE;
 	}
 
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER)) {
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_ELAN_FP_DEVICE_FLAFU_USB_BULK_TRANSFER)) {
 		if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 						 ELAN_EP_CMD_OUT,
 						 buftmp,
@@ -93,9 +94,9 @@ fu_elanfp_iap_send_command(FuElanfpDevice *self,
 		}
 	} else {
 		if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						    G_USB_DEVICE_RECIPIENT_INTERFACE,
+						    FU_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_DEVICE_REQUEST_TYPE_VENDOR,
+						    FU_USB_DEVICE_RECIPIENT_INTERFACE,
 						    request, /* request */
 						    0x00,    /* value */
 						    0x00,    /* index */
@@ -129,7 +130,8 @@ fu_elanfp_iap_recv_status(FuElanfpDevice *self, guint8 *buf, gsize bufsz, GError
 	guint8 endpoint = ELAN_EP_CMD_IN;
 	gsize actual = 0;
 
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER)) {
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_ELAN_FP_DEVICE_FLAFU_USB_BULK_TRANSFER)) {
 		endpoint = ELAN_EP_IMG_IN;
 	}
 
@@ -435,7 +437,7 @@ fu_elanfp_device_init(FuElanfpDevice *device)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ELANFP_FIRMWARE);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), ELANFP_USB_INTERFACE);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER,
+					FU_ELAN_FP_DEVICE_FLAFU_USB_BULK_TRANSFER,
 					"usb-bulk-transfer");
 }
 

@@ -38,13 +38,13 @@ static gboolean
 fu_fastboot_device_probe(FuDevice *device, GError **error)
 {
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
-	g_autoptr(GUsbInterface) intf = NULL;
+	g_autoptr(FuUsbInterface) intf = NULL;
 
 	/* find the correct fastboot interface */
 	intf = fu_usb_device_get_interface(FU_USB_DEVICE(self), 0xff, 0x42, 0x03, error);
 	if (intf == NULL)
 		return FALSE;
-	fu_usb_device_add_interface(FU_USB_DEVICE(self), g_usb_interface_get_number(intf));
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), fu_usb_interface_get_number(intf));
 	return TRUE;
 }
 

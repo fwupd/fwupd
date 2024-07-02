@@ -80,7 +80,7 @@ option('gudev',
 )
 option('gusb',
   type: 'feature',
-  description: 'GUsb support',
+  description: 'FuUsb support',
   deprecated: {
     'true': 'enabled',
     'false': 'disabled',

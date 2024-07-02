@@ -27,7 +27,7 @@ fu_thelio_io_device_probe(FuDevice *device, GError **error)
 	/* this is the atmel bootloader */
 	fu_device_add_counterpart_guid(device, "USB\\VID_03EB&PID_2FF4");
 
-	/* convert GUsbDevice to GUdevDevice */
+	/* convert FuUsbDevice to GUdevDevice */
 	udev_device = FU_UDEV_DEVICE(fu_usb_device_find_udev_device(FU_USB_DEVICE(device), error));
 	if (udev_device == NULL)
 		return FALSE;
@@ -67,7 +67,7 @@ fu_thelio_io_device_detach(FuDevice *device, FuProgress *progress, GError **erro
 	g_autoptr(FuUdevDevice) udev_device = NULL;
 	const guint8 buf[] = {'1', '\n'};
 
-	/* convert GUsbDevice to GUdevDevice */
+	/* convert FuUsbDevice to GUdevDevice */
 	udev_device = FU_UDEV_DEVICE(fu_usb_device_find_udev_device(FU_USB_DEVICE(device), error));
 	if (udev_device == NULL)
 		return FALSE;

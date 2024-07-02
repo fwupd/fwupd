@@ -86,8 +86,8 @@ class ReturnValidator:
         # is invalid
         if self._nret and self._value_relaxed in self._nret:
             self.warnings.append(
-                "{} line {} got {}, which is not valid".format(
-                    self._fn, self._line_num, self._value
+                "{} line {} got {}, which is not valid -- expected {}".format(
+                    self._fn, self._line_num, self._value, "|".join(self._rvif)
                 )
             )
 
@@ -99,6 +99,7 @@ class ReturnValidator:
             self._line_num = 0
             for line in f.readlines():
                 self._line_num += 1
+                line = line.replace("LIBUSB_CALL", "")
                 line = line.rstrip()
                 if not line:
                     continue
@@ -211,7 +212,7 @@ class ReturnValidator:
                     self._rvif = ["0", "-1", "G_MAXSSIZE"]
                     self._nret = ["NULL", "TRUE", "FALSE"]
                     continue
-                # print('unknown return type {}'.format(line))
+                # print(f"unknown return type {line}")
                 self._rvif = None
                 self._nret = None
 

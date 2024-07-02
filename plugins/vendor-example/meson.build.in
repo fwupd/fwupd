@@ -1,5 +1,5 @@
 {%- if Parent in ['Usb', 'Hid'] -%}
-if gusb.found()
+if libusb.found()
 {%- elif Parent == 'Udev' -%}
 if gudev.found()
 {%- endif %}

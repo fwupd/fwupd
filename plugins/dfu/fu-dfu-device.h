@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include <gusb.h>
-
 #include "fu-dfu-common.h"
 #include "fu-dfu-struct.h"
 #include "fu-dfu-target.h"

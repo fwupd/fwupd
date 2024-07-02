@@ -64,7 +64,9 @@
 #include "fu-udev-device-private.h"
 #include "fu-usb-device-fw-ds20.h"
 #include "fu-usb-device-ms-ds20.h"
+#ifdef HAVE_LIBUSB
 #include "fu-usb-device-private.h"
+#endif
 
 #ifdef HAVE_GIO_UNIX
 #include "fu-unix-seekable-input-stream.h"
@@ -72,7 +74,7 @@
 #ifdef HAVE_GUDEV
 #include "fu-udev-backend.h"
 #endif
-#ifdef HAVE_GUSB
+#ifdef HAVE_LIBUSB
 #include "fu-usb-backend.h"
 #endif
 #ifdef HAVE_BLUEZ
@@ -2677,7 +2679,7 @@ fu_engine_emulation_load_json(FuEngine *self, const gchar *json, GError **error)
 		FuBackend *backend = g_ptr_array_index(self->backends, i);
 		if (!fu_backend_load(backend,
 				     json_node_get_object(root),
-				     FU_USB_DEVICE_EMULATION_TAG,
+				     NULL,
 				     FU_BACKEND_LOAD_FLAG_NONE,
 				     error))
 			return FALSE;
@@ -2831,11 +2833,7 @@ fu_engine_backends_save_phase(FuEngine *self, GError **error)
 	/* all devices in all backends */
 	for (guint i = 0; i < self->backends->len; i++) {
 		FuBackend *backend = g_ptr_array_index(self->backends, i);
-		if (!fu_backend_save(backend,
-				     json_builder,
-				     FU_USB_DEVICE_EMULATION_TAG,
-				     FU_BACKEND_SAVE_FLAG_NONE,
-				     error))
+		if (!fu_backend_save(backend, json_builder, NULL, FU_BACKEND_SAVE_FLAG_NONE, error))
 			return FALSE;
 	}
 	json_root = json_builder_get_root(json_builder);
@@ -7689,20 +7687,22 @@ fu_engine_backend_device_changed_cb(FuBackend *backend, FuDevice *device, FuEngi
 		}
 	}
 
-	/* get the new GUsbDevice for emulated devices */
+#ifdef HAVE_LIBUSB
+	/* get the new FuUsbDevice for emulated devices */
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
 		if (!fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_EMULATED))
 			continue;
 		if (!FU_IS_USB_DEVICE(device_tmp) || !FU_IS_USB_DEVICE(device))
 			continue;
-		if (g_strcmp0(fu_usb_device_get_platform_id(FU_USB_DEVICE(device_tmp)),
-			      fu_usb_device_get_platform_id(FU_USB_DEVICE(device))) == 0) {
-			g_debug("incorporating new GUsbDevice for %s",
+		if (g_strcmp0(fu_device_get_backend_id(device_tmp),
+			      fu_device_get_backend_id(device)) == 0) {
+			g_debug("incorporating new FuUsbDevice for %s",
 				fu_device_get_id(device_tmp));
 			fu_device_incorporate(device_tmp, device);
 		}
 	}
+#endif
 
 	/* run all plugins */
 	for (guint j = 0; j < plugins->len; j++) {
@@ -8397,8 +8397,10 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_context_add_firmware_gtype(self->ctx,
 				      "intel-thunderbolt-nvm",
 				      FU_TYPE_INTEL_THUNDERBOLT_NVM);
+#ifdef HAVE_LIBUSB
 	fu_context_add_firmware_gtype(self->ctx, "usb-device-fw-ds20", FU_TYPE_USB_DEVICE_FW_DS20);
 	fu_context_add_firmware_gtype(self->ctx, "usb-device-ms-ds20", FU_TYPE_USB_DEVICE_MS_DS20);
+#endif
 
 	/* we are emulating a different host */
 	if (host_emulate != NULL) {
@@ -8813,7 +8815,7 @@ fu_engine_constructed(GObject *obj)
 			 self);
 
 	/* backends */
-#ifdef HAVE_GUSB
+#ifdef HAVE_LIBUSB
 	g_ptr_array_add(self->backends, fu_usb_backend_new(self->ctx));
 #endif
 #ifdef HAVE_GUDEV
@@ -8839,9 +8841,6 @@ fu_engine_constructed(GObject *obj)
 
 	/* add some runtime versions of things the daemon depends on */
 	fu_engine_add_runtime_version(self, "org.freedesktop.fwupd", VERSION);
-#ifdef HAVE_GUSB
-	fu_engine_add_runtime_version(self, "org.freedesktop.gusb", g_usb_version_string());
-#endif
 	fu_engine_add_runtime_version(self, "com.hughsie.libjcat", jcat_version_string());
 #if LIBXMLB_CHECK_VERSION(0, 3, 19)
 	fu_engine_add_runtime_version(self, "com.hughsie.libxmlb", xb_version_string());
@@ -8857,15 +8856,6 @@ fu_engine_constructed(GObject *obj)
 #endif
 
 	fu_context_add_compile_version(self->ctx, "org.freedesktop.fwupd", VERSION);
-#ifdef HAVE_GUSB
-	{
-		g_autofree gchar *version = g_strdup_printf("%i.%i.%i",
-							    G_USB_MAJOR_VERSION,
-							    G_USB_MINOR_VERSION,
-							    G_USB_MICRO_VERSION);
-		fu_context_add_compile_version(self->ctx, "org.freedesktop.gusb", version);
-	}
-#endif
 #ifdef HAVE_PASSIM
 	{
 		g_autofree gchar *version = g_strdup_printf("%i.%i.%i",
