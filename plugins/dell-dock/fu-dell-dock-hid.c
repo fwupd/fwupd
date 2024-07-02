@@ -1,6 +1,6 @@
 /*
  * Copyright 2018 Realtek Semiconductor Corporation
- * Copyright 2018 Dell Inc.
+ * Copyright 2024 Dell Inc.
  * All rights reserved.
  *
  * This software and associated documentation (if any) is furnished
@@ -285,6 +285,7 @@ fu_dell_dock_hid_i2c_read(FuDevice *self,
 			  gsize read_size,
 			  GBytes **bytes,
 			  const FuHIDI2CParameters *parameters,
+			  guint delayms,
 			  GError **error)
 {
 	FuHIDCmdBuffer cmd_buffer = {
@@ -305,6 +306,10 @@ fu_dell_dock_hid_i2c_read(FuDevice *self,
 
 	if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error))
 		return FALSE;
+
+	if (delayms > 0)
+		fu_device_sleep(self, delayms);
+
 	if (!fu_dell_dock_hid_get_report(self, cmd_buffer.data, error))
 		return FALSE;
 

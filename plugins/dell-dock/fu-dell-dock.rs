@@ -9,4 +9,5 @@ enum DockBaseType {
     Unknown = 0x0,
     Salomon = 0x4,
     Atomic = 0x5,
+    K2 = 0x10,
 }

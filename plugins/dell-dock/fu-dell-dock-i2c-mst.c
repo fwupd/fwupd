@@ -1,6 +1,6 @@
 /*
  * Copyright 2018 Synaptics
- * Copyright 2018 Dell Inc.
+ * Copyright 2024 Dell Inc.
  * All rights reserved.
  *
  * This software and associated documentation (if any) is furnished
@@ -203,7 +203,7 @@ fu_dell_dock_mst_read_register(FuDevice *proxy,
 		return FALSE;
 
 	/* read data for the result */
-	if (!fu_dell_dock_hid_i2c_read(proxy, 0, length, bytes, &mst_base_settings, error))
+	if (!fu_dell_dock_hid_i2c_read(proxy, 0, length, bytes, &mst_base_settings, 0, error))
 		return FALSE;
 
 	return TRUE;
@@ -426,11 +426,12 @@ static gboolean
 fu_d19_mst_check_fw(FuDevice *device, GError **error)
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
+	FuDevice *proxy = fu_device_get_proxy(device);
 	g_autoptr(GBytes) bytes = NULL;
 	const guint8 *data;
 	gsize length = 4;
 
-	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(device),
+	if (!fu_dell_dock_mst_read_register(proxy,
 					    self->mst_core_mcu_bootloader_addr,
 					    length,
 					    &bytes,

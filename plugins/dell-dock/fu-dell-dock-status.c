@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Dell Inc.
+ * Copyright 2024 Dell Inc.
  * All rights reserved.
  *
  * This software and associated documentation (if any) is furnished
@@ -45,7 +45,12 @@ fu_dell_dock_status_setup(FuDevice *device, GError **error)
 	g_autofree gchar *dynamic_version = NULL;
 
 	parent = fu_device_get_parent(device);
-	status_version = fu_dell_dock_ec_get_status_version(parent);
+	if (FU_IS_DELL_DOCK_EC(parent))
+		status_version = fu_dell_dock_ec_get_status_version(parent);
+	else if (FU_IS_DELL_DOCK_EC_V2(parent))
+		status_version = fu_dell_dock_ec_v2_get_package_version(parent);
+	else
+		return FALSE;
 
 	dynamic_version = fu_dell_dock_status_ver_string(status_version);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_QUAD);
@@ -62,6 +67,7 @@ fu_dell_dock_status_write(FuDevice *device,
 			  GError **error)
 {
 	FuDellDockStatus *self = FU_DELL_DOCK_STATUS(device);
+	FuDevice *proxy = fu_device_get_proxy(device);
 	gsize length = 0;
 	guint32 status_version = 0;
 	const guint8 *data;
@@ -88,8 +94,19 @@ fu_dell_dock_status_write(FuDevice *device,
 	dynamic_version = fu_dell_dock_status_ver_string(status_version);
 	g_info("writing status firmware version %s", dynamic_version);
 
-	if (!fu_dell_dock_ec_commit_package(fu_device_get_proxy(device), fw, error))
-		return FALSE;
+	/* varied by ec version */
+	if (FU_IS_DELL_DOCK_EC(proxy)) {
+		if (!fu_dell_dock_ec_commit_package(proxy, fw, error))
+			return FALSE;
+	} else if (FU_IS_DELL_DOCK_EC_V2(proxy)) {
+		if (!fu_dell_dock_ec_v2_commit_package(proxy, fw, error))
+			return FALSE;
+	} else {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no valid proxy for package update.");
+	}
 
 	/* dock will reboot to re-read; this is to appease the daemon */
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_QUAD);
@@ -156,7 +173,7 @@ fu_dell_dock_status_init(FuDellDockStatus *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.dock");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 }
 
 static void

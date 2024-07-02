@@ -33,7 +33,7 @@
 #define PASSIVE_REBOOT_MASK 0x02
 #define PASSIVE_TBT_MASK    0x04
 
-DellDockComponent dock_component_ec[] = {
+const DellDockComponent dock_component_ec[] = {
     {DOCK_BASE_TYPE_SALOMON, 0, 0, "USB\\VID_413C&PID_B06E&hub&embedded"},
     {DOCK_BASE_TYPE_ATOMIC, 0, 0, "USB\\VID_413C&PID_B06E&hub&atomic_embedded"},
     {DOCK_BASE_TYPE_UNKNOWN, 0, 0, NULL},
@@ -227,7 +227,7 @@ fu_dell_dock_ec_needs_tbt(FuDevice *device)
 }
 
 gboolean
-fu_dell_dock_ec_tbt_passive(FuDevice *device)
+fu_dell_dock_ec_enable_tbt_passive(FuDevice *device)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 
@@ -279,6 +279,7 @@ fu_dell_dock_ec_read(FuDevice *device, guint32 cmd, gsize length, GBytes **bytes
 				       result_length,
 				       &bytes_local,
 				       &ec_base_settings,
+				       0,
 				       error)) {
 		g_prefix_error(error, "read over HID-I2C failed: ");
 		return FALSE;
@@ -681,7 +682,7 @@ fu_dell_dock_ec_activate(FuDevice *device, FuProgress *progress, GError **error)
 }
 
 gboolean
-fu_dell_dock_ec_reboot_dock(FuDevice *device, GError **error)
+fu_dell_dock_ec_trigger_passive_flow(FuDevice *device, GError **error)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	guint32 cmd = EC_CMD_SET_PASSIVE | /* cmd */
@@ -944,6 +945,8 @@ fu_dell_dock_ec_setup(FuDevice *device, GError **error)
 			return FALSE;
 		}
 	}
+
+	g_debug("dock-ec-v1->setup done successfully");
 	return TRUE;
 }
 

@@ -1,4 +1,5 @@
 /*
+ * Copyright 2024 Realtek Semiconductor Corporation
  * Copyright 2024 Dell Inc.
  * All rights reserved.
  *
@@ -17,8 +18,17 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_DELL_DOCK_STATUS (fu_dell_dock_status_get_type())
-G_DECLARE_FINAL_TYPE(FuDellDockStatus, fu_dell_dock_status, FU, DELL_DOCK_STATUS, FuDevice)
+#define HID_v2_CMD_WRITE_DATA  0xAB
+#define HID_v2_EXT_WRITE_DATA  0x80
+#define HID_v2_SUBCMD_FWUPDATE 0x00
+#define HID_v2_DATA_PAGE_SZ    192
+#define HID_v2_RESPONSE_LENGTH 0x03
 
-FuDellDockStatus *
-fu_dell_dock_status_new(FuContext *ctx);
+gboolean
+fu_dell_dock_hid_v2_write(FuDevice *device, GBytes *buf, GError **error);
+
+gboolean
+fu_dell_dock_hid_v2_read(FuDevice *device, GByteArray *res, GError **error);
+
+GBytes *
+fu_dell_dock_hid_v2_fwup_pkg_new(GBytes *fw, guint8 dev_type, guint8 dev_identifier);

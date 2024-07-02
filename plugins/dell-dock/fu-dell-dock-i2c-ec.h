@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Dell Inc.
+ * Copyright 2024 Dell Inc.
  * All rights reserved.
  *
  * This software and associated documentation (if any) is furnished
@@ -30,12 +30,12 @@ fu_dell_dock_ec_get_module_type(FuDevice *device);
 gboolean
 fu_dell_dock_ec_needs_tbt(FuDevice *device);
 gboolean
-fu_dell_dock_ec_tbt_passive(FuDevice *device);
+fu_dell_dock_ec_enable_tbt_passive(FuDevice *device);
 gboolean
 fu_dell_dock_ec_modify_lock(FuDevice *device, guint8 target, gboolean unlocked, GError **error);
 
 gboolean
-fu_dell_dock_ec_reboot_dock(FuDevice *device, GError **error);
+fu_dell_dock_ec_trigger_passive_flow(FuDevice *device, GError **error);
 
 const gchar *
 fu_dell_dock_ec_get_mst_version(FuDevice *device);

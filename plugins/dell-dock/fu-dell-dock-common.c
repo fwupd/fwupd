@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Dell Inc.
+ * Copyright 2024 Dell Inc.
  * All rights reserved.
  *
  * This software and associated documentation (if any) is furnished
@@ -16,7 +16,6 @@
 #include "config.h"
 
 #include "fu-dell-dock-common.h"
-#include "fu-dell-dock-i2c-ec.h"
 
 gboolean
 fu_dell_dock_set_power(FuDevice *device, guint8 target, gboolean enabled, GError **error)
@@ -45,7 +44,10 @@ fu_dell_dock_set_power(FuDevice *device, guint8 target, gboolean enabled, GError
 }
 
 const gchar *
-fu_dell_dock_get_instance_id(guint8 type, DellDockComponent *dev_list, guint16 vid, guint16 pid)
+fu_dell_dock_get_instance_id(DockBaseType type,
+			     const DellDockComponent *dev_list,
+			     guint16 vid,
+			     guint16 pid)
 {
 	/* The last instance_id must be NULL */
 	for (guint i = 0; dev_list[i].instance_id != NULL; i++) {
