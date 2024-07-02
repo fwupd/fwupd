@@ -1718,16 +1718,17 @@ fu_usb_device_release_interface(FuUsbDevice *self,
 /**
  * fu_usb_device_get_configuration_index
  * @self: a #FuUsbDevice
+ * @error: a #GError, or %NULL
  *
  * Get the index for the active Configuration string descriptor
  * ie, iConfiguration.
  *
- * Return value: a string descriptor index.
+ * Return value: a string descriptor index, or 0x0 on error
  *
  * Since: 2.0.0
  **/
 guint8
-fu_usb_device_get_configuration_index(FuUsbDevice *self)
+fu_usb_device_get_configuration_index(FuUsbDevice *self, GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 

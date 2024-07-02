@@ -78,7 +78,9 @@ fu_cros_ec_usb_device_get_configuration(FuCrosEcUsbDevice *self, GError **error)
 	guint8 index;
 	g_autofree gchar *configuration = NULL;
 
-	index = fu_usb_device_get_configuration_index(FU_USB_DEVICE(self));
+	index = fu_usb_device_get_configuration_index(FU_USB_DEVICE(self), error);
+	if (index == 0x0)
+		return FALSE;
 	configuration = fu_usb_device_get_string_descriptor(FU_USB_DEVICE(self), index, error);
 	if (configuration == NULL)
 		return FALSE;
