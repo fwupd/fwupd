@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "fu-thunderbolt-controller.h"
 #include "fu-thunderbolt-device.h"
 
 typedef struct {
@@ -139,11 +140,29 @@ fu_thunderbolt_device_get_version(FuThunderboltDevice *self, GError **error)
 			    version_raw);
 		return FALSE;
 	}
-	if (!fu_strtoull(split[0], &version_major, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error))
+	if (!fu_strtoull(split[0], &version_major, 0, G_MAXUINT64, FU_INTEGER_BASE_10, error))
 		return FALSE;
-	if (!fu_strtoull(split[1], &version_minor, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error))
-		return FALSE;
-	version = g_strdup_printf("%02x.%02x", (guint)version_major, (guint)version_minor);
+
+	/* thunderbolt versioning convention on controller type only, don't apply retimer */
+	if (FU_IS_THUNDERBOLT_CONTROLLER(self)) {
+		guint64 minor_raw = 0;
+		if (!fu_strtoull(split[1], &minor_raw, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error))
+			return FALSE;
+		version_minor = ((minor_raw & 0x3f) >> 4) * 10 + (minor_raw & 0x0f);
+		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
+	} else {
+		if (!fu_strtoull(split[1],
+				 &version_minor,
+				 0,
+				 G_MAXUINT64,
+				 FU_INTEGER_BASE_10,
+				 error))
+			return FALSE;
+		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
+	}
+
+	version = g_strdup_printf("%u.%u", (guint)version_major, (guint)(version_minor));
+	g_debug("Thunderbolt version_raw: %s, convention: %s", g_strchomp(version_raw), version);
 	fu_device_set_version(FU_DEVICE(self), version);
 	return TRUE;
 }
@@ -428,7 +447,6 @@ fu_thunderbolt_device_init(FuThunderboltDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "thunderbolt");
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.thunderbolt");
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static void
