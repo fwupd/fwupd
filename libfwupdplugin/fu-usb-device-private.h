@@ -6,11 +6,11 @@
 
 #pragma once
 
+#include <libusb.h>
+
 #include "fu-usb-device.h"
 
-#define FU_USB_DEVICE_EMULATION_TAG "org.freedesktop.fwupd.emulation.v1"
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(libusb_context, libusb_exit)
 
 FuUsbDevice *
-fu_usb_device_new(FuContext *ctx, GUsbDevice *usb_device) G_GNUC_NON_NULL(1);
-const gchar *
-fu_usb_device_get_platform_id(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+fu_usb_device_new(FuContext *ctx, libusb_device *usb_device) G_GNUC_NON_NULL(1);

@@ -8,7 +8,7 @@ pkgdesc='A system daemon to allow session software to update firmware'
 arch=('i686' 'x86_64')
 url='https://github.com/fwupd/fwupd'
 license=('GPL2')
-depends=('libgusb' 'modemmanager' 'tpm2-tss')
+depends=('libusb' 'modemmanager' 'tpm2-tss')
 makedepends=('meson' 'valgrind' 'gobject-introspection' 'gi-docgen' 'git'
              'python-cairo' 'noto-fonts' 'noto-fonts-cjk' 'python-gobject' 'vala'
              'python-dbusmock' 'libdrm' 'curl' 'polkit' 'xz')

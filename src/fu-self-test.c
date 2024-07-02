@@ -17,7 +17,6 @@
 #include "fwupd-security-attr-private.h"
 
 #include "../plugins/test/fu-test-plugin.h"
-#include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
 #include "fu-cabinet.h"
 #include "fu-client-list.h"
@@ -4015,7 +4014,7 @@ _plugin_device_register_cb(FuPlugin *plugin, FuDevice *device, gpointer user_dat
 	fu_plugin_runner_device_register(plugin, device);
 }
 
-#ifdef HAVE_GUSB
+#ifdef HAVE_LIBUSB
 static void
 fu_backend_usb_hotplug_cb(FuBackend *backend, FuDevice *device, gpointer user_data)
 {
@@ -4033,11 +4032,7 @@ fu_backend_usb_load_file(FuBackend *backend, const gchar *fn)
 	ret = json_parser_load_from_file(parser, fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_backend_load(backend,
-			      json_node_get_object(json_parser_get_root(parser)),
-			      NULL,
-			      FU_BACKEND_LOAD_FLAG_NONE,
-			      &error);
+	ret = fwupd_codec_from_json(FWUPD_CODEC(backend), json_parser_get_root(parser), &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -4069,15 +4064,15 @@ fu_backend_usb_load_file(FuBackend *backend, const gchar *fn)
 static void
 fu_backend_usb_func(gconstpointer user_data)
 {
-#ifdef HAVE_GUSB
+#ifdef HAVE_LIBUSB
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	guint cnt_added = 0;
 	guint cnt_removed = 0;
 	FuDevice *device_tmp;
-	g_autofree gchar *gusb_emulate_fn = NULL;
-	g_autofree gchar *gusb_emulate_fn2 = NULL;
-	g_autofree gchar *gusb_emulate_fn3 = NULL;
+	g_autofree gchar *usb_emulate_fn = NULL;
+	g_autofree gchar *usb_emulate_fn2 = NULL;
+	g_autofree gchar *usb_emulate_fn3 = NULL;
 	g_autofree gchar *devicestr = NULL;
 	g_autoptr(FuBackend) backend = fu_usb_backend_new(self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -4099,16 +4094,20 @@ fu_backend_usb_func(gconstpointer user_data)
 	g_assert_cmpstr(fu_backend_get_name(backend), ==, "usb");
 	g_assert_true(fu_backend_get_enabled(backend));
 	ret = fu_backend_setup(backend, progress, &error);
+	g_assert_cmpint(cnt_added, ==, 0);
+	g_assert_cmpint(cnt_removed, ==, 0);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	gusb_emulate_fn = g_test_build_filename(G_TEST_DIST, "tests", "usb-devices.json", NULL);
-	g_assert_nonnull(gusb_emulate_fn);
-	fu_backend_usb_load_file(backend, gusb_emulate_fn);
 	g_assert_cmpint(cnt_added, ==, 0);
 	g_assert_cmpint(cnt_removed, ==, 0);
 	ret = fu_backend_coldplug(backend, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	g_assert_cmpint(cnt_added, ==, 0);
+	g_assert_cmpint(cnt_removed, ==, 0);
+	usb_emulate_fn = g_test_build_filename(G_TEST_DIST, "tests", "usb-devices.json", NULL);
+	g_assert_nonnull(usb_emulate_fn);
+	fu_backend_usb_load_file(backend, usb_emulate_fn);
 	g_assert_cmpint(cnt_added, ==, 1);
 	g_assert_cmpint(cnt_removed, ==, 0);
 	devices = fu_backend_get_devices(backend);
@@ -4131,18 +4130,18 @@ fu_backend_usb_func(gconstpointer user_data)
 	g_assert_cmpstr(g_ptr_array_index(possible_plugins, 0), ==, "dfu");
 
 	/* load another device with the same VID:PID, and check that we did not get a replug */
-	gusb_emulate_fn2 =
+	usb_emulate_fn2 =
 	    g_test_build_filename(G_TEST_DIST, "tests", "usb-devices-replace.json", NULL);
-	g_assert_nonnull(gusb_emulate_fn2);
-	fu_backend_usb_load_file(backend, gusb_emulate_fn2);
+	g_assert_nonnull(usb_emulate_fn2);
+	fu_backend_usb_load_file(backend, usb_emulate_fn2);
 	g_assert_cmpint(cnt_added, ==, 1);
 	g_assert_cmpint(cnt_removed, ==, 0);
 
 	/* load another device with a different VID:PID, and check that we *did* get a replug */
-	gusb_emulate_fn3 =
+	usb_emulate_fn3 =
 	    g_test_build_filename(G_TEST_DIST, "tests", "usb-devices-bootloader.json", NULL);
-	g_assert_nonnull(gusb_emulate_fn3);
-	fu_backend_usb_load_file(backend, gusb_emulate_fn3);
+	g_assert_nonnull(usb_emulate_fn3);
+	fu_backend_usb_load_file(backend, usb_emulate_fn3);
 	g_assert_cmpint(cnt_added, ==, 2);
 	g_assert_cmpint(cnt_removed, ==, 1);
 #else
@@ -4153,11 +4152,11 @@ fu_backend_usb_func(gconstpointer user_data)
 static void
 fu_backend_usb_invalid_func(gconstpointer user_data)
 {
-#ifdef HAVE_GUSB
+#ifdef HAVE_LIBUSB
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	FuDevice *device_tmp;
-	g_autofree gchar *gusb_emulate_fn = NULL;
+	g_autofree gchar *usb_emulate_fn = NULL;
 	g_autoptr(FuBackend) backend = fu_usb_backend_new(self->ctx);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -4166,19 +4165,15 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 	g_autoptr(JsonParser) parser = json_parser_new();
 
 	/* load the JSON into the backend */
-	gusb_emulate_fn =
+	usb_emulate_fn =
 	    g_test_build_filename(G_TEST_DIST, "tests", "usb-devices-invalid.json", NULL);
-	ret = json_parser_load_from_file(parser, gusb_emulate_fn, &error);
+	ret = json_parser_load_from_file(parser, usb_emulate_fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_backend_setup(backend, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_backend_load(backend,
-			      json_node_get_object(json_parser_get_root(parser)),
-			      NULL,
-			      FU_BACKEND_LOAD_FLAG_NONE,
-			      &error);
+	ret = fwupd_codec_from_json(FWUPD_CODEC(backend), json_parser_get_root(parser), &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_backend_coldplug(backend, progress, &error);

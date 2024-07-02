@@ -5,7 +5,7 @@ plugin_deps = [
   gnutls,
   gmodule,
   gudev,
-  gusb,
+  libusb,
   libarchive,
   libjsonglib,
   libxmlb,

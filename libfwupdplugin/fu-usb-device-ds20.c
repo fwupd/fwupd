@@ -69,7 +69,6 @@ fu_usb_device_ds20_set_version_lowest(FuUsbDeviceDs20 *self, guint32 version_low
 gboolean
 fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, GError **error)
 {
-#ifdef HAVE_GUSB
 	FuUsbDeviceDs20Class *klass = FU_USB_DEVICE_DS20_GET_CLASS(self);
 	gsize actual_length = 0;
 	gsize total_length = fu_firmware_get_size(FU_FIRMWARE(self));
@@ -114,13 +113,6 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 	/* FuUsbDeviceDs20->parse */
 	stream = g_memory_input_stream_new_from_data(buf, actual_length, NULL);
 	return klass->parse(self, stream, device, error);
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "GUsb support is unavailable");
-	return FALSE;
-#endif
 }
 
 static gboolean

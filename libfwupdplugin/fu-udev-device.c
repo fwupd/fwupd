@@ -26,7 +26,9 @@
 #include "fu-i2c-device.h"
 #include "fu-string.h"
 #include "fu-udev-device-private.h"
+#ifdef HAVE_LIBUSB
 #include "fu-usb-device-private.h"
+#endif
 
 /**
  * FuUdevDevice:
@@ -1701,7 +1703,6 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 	gint rc_tmp;
 	g_autoptr(GTimer) timer = g_timer_new();
 	FuDeviceEvent *event = NULL;
-	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	g_autofree gchar *event_id = NULL;
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
@@ -1711,7 +1712,8 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 
 	/* emulated */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
-	    fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
 		g_autofree gchar *buf_base64 = g_base64_encode(buf, bufsz);
 		event_id = g_strdup_printf("Ioctl:"
 					   "Request=0x%04x,"
@@ -1720,7 +1722,6 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 					   (guint)request,
 					   buf_base64,
 					   (guint)bufsz);
-		g_debug("%s", event_id);
 	}
 
 	/* emulated */
@@ -1732,7 +1733,8 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 	}
 
 	/* save */
-	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+	if (fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
 		fu_device_event_set_data(event, "Data", buf, bufsz);
 	}
@@ -2335,10 +2337,10 @@ fu_udev_device_get_children_with_subsystem(FuUdevDevice *self, const gchar *cons
  * @self: a #FuUdevDevice
  * @error: (nullable): optional return location for an error
  *
- * Gets the matching #GUsbDevice for the #GUdevDevice.
+ * Gets the matching #FuUsbDevice for the #GUdevDevice.
  *
  * NOTE: This should never be stored in the device class as an instance variable, as the lifecycle
- * for `GUsbDevice` may be different to the `FuUdevDevice`. Every time the `GUsbDevice` is used
+ * for `FuUsbDevice` may be different to the `FuUdevDevice`. Every time the `FuUsbDevice` is used
  * this function should be called.
  *
  * Returns: (transfer full): a #FuUsbDevice, or NULL if unset or invalid
@@ -2348,13 +2350,15 @@ fu_udev_device_get_children_with_subsystem(FuUdevDevice *self, const gchar *cons
 FuDevice *
 fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error)
 {
-#if defined(HAVE_GUDEV) && defined(HAVE_GUSB)
+#if defined(HAVE_GUDEV) && defined(HAVE_LIBUSB)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 bus = 0;
 	guint8 address = 0;
+	gint rc;
+	libusb_device **dev_list = NULL;
 	g_autoptr(GUdevDevice) udev_device = NULL;
-	g_autoptr(GUsbContext) usb_ctx = NULL;
-	g_autoptr(GUsbDevice) usb_device = NULL;
+	g_autoptr(FuUsbDevice) usb_device = NULL;
+	g_autoptr(libusb_context) ctx = NULL;
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
@@ -2386,20 +2390,43 @@ fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error)
 		return NULL;
 	}
 
-	/* match device */
-	usb_ctx = g_usb_context_new(error);
-	if (usb_ctx == NULL)
+	/* match device with libusb */
+	rc = libusb_init(&ctx);
+	if (rc < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to init libusb: %s [%i]",
+			    libusb_strerror(rc),
+			    rc);
 		return NULL;
-	usb_device = g_usb_context_find_by_bus_address(usb_ctx, bus, address, error);
-	if (usb_device == NULL)
+	}
+	libusb_get_device_list(ctx, &dev_list);
+	for (guint i = 0; dev_list != NULL && dev_list[i] != NULL; i++) {
+		if (libusb_get_bus_number(dev_list[i]) == bus &&
+		    libusb_get_device_address(dev_list[i]) == address) {
+			usb_device =
+			    fu_usb_device_new(fu_device_get_context(FU_DEVICE(self)), dev_list[i]);
+			break;
+		}
+	}
+	libusb_free_device_list(dev_list, 1);
+
+	if (usb_device == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no device with busnum=%02x and devnum=%02x",
+			    bus,
+			    address);
 		return NULL;
-	g_usb_device_add_tag(usb_device, "is-transient");
-	return FU_DEVICE(fu_usb_device_new(fu_device_get_context(FU_DEVICE(self)), usb_device));
+	}
+	return FU_DEVICE(g_steal_pointer(&usb_device));
 #else
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Not supported as <gudev.h> or <gusb.h> is unavailable");
+			    "Not supported as <gudev.h> or <libusb.h> is unavailable");
 	return NULL;
 #endif
 }
