@@ -99,6 +99,7 @@ class ReturnValidator:
             self._line_num = 0
             for line in f.readlines():
                 self._line_num += 1
+                line = line.replace("LIBUSB_CALL", "")
                 line = line.rstrip()
                 if not line:
                     continue
