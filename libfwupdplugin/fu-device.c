@@ -4323,6 +4323,13 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 			fwupd_codec_string_append(str, idt, "Inhibit", val);
 		}
 	}
+	if (priv->events != NULL) {
+		fwupd_codec_string_append(str, idt, "Events", "");
+		for (guint i = 0; i < priv->events->len; i++) {
+			FuDeviceEvent *event = g_ptr_array_index(priv->events, i);
+			fwupd_codec_add_string(FWUPD_CODEC(event), idt + 1, str);
+		}
+	}
 }
 
 /**
