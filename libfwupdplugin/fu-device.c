@@ -5662,6 +5662,12 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 				fu_device_set_metadata(self, key, value);
 		}
 	}
+	if (priv_donor->events != NULL) {
+		for (guint i = 0; i < priv_donor->events->len; i++) {
+			FuDeviceEvent *event = g_ptr_array_index(priv_donor->events, i);
+			fu_device_add_event(self, event);
+		}
+	}
 
 	/* probably not required, but seems safer */
 	for (guint i = 0; i < priv_donor->possible_plugins->len; i++) {
