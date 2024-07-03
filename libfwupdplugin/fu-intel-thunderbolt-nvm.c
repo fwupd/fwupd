@@ -419,6 +419,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	FuIntelThunderboltNvmPrivate *priv = GET_PRIVATE(self);
 	guint8 tmp = 0;
 	guint16 version_raw = 0;
+	guint16 version_tmp = 0;
 	struct {
 		guint16 device_id;
 		guint gen;
@@ -554,8 +555,6 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	switch (priv->family) {
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE:
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_GOSHEN_RIDGE:
-		guint16 version_tmp = 0;
-
 		if (!fu_intel_thunderbolt_nvm_read_uint16(
 			self,
 			FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
