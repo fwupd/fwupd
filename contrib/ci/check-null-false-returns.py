@@ -86,8 +86,8 @@ class ReturnValidator:
         # is invalid
         if self._nret and self._value_relaxed in self._nret:
             self.warnings.append(
-                "{} line {} got {}, which is not valid".format(
-                    self._fn, self._line_num, self._value
+                "{} line {} got {}, which is not valid -- expected {}".format(
+                    self._fn, self._line_num, self._value, "|".join(self._rvif)
                 )
             )
 
