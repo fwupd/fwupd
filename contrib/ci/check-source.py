@@ -55,7 +55,7 @@ def test_files() -> int:
                 }.items():
                     if line.find(token) != -1:
                         print(
-                            f"{fn} contains blocked token {token}: {msg} -- "
+                            f"{fn}:{linecnt} contains blocked token {token}: {msg} -- "
                             "use a nocheck comment to ignore"
                         )
                         rc = 1
@@ -67,7 +67,7 @@ def test_files() -> int:
                     for error_domain in ["G_IO_ERROR", "G_FILE_ERROR"]:
                         if line.find(error_domain) != -1:
                             print(
-                                f"{fn} uses g_set_error() without using FWUPD_ERROR: -- "
+                                f"{fn}:{linecnt} uses g_set_error() without using FWUPD_ERROR: -- "
                                 "use a nocheck comment to ignore"
                             )
                             rc = 1
