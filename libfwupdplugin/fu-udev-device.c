@@ -924,6 +924,8 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 		fu_udev_device_set_device_file(uself, fu_udev_device_get_device_file(udonor));
 		fu_udev_device_set_driver(uself, fu_udev_device_get_driver(udonor));
 	}
+	if (priv->flags == FU_UDEV_DEVICE_FLAG_NONE)
+		priv->flags = priv_donor->flags;
 	if (priv->vendor == 0x0 && priv_donor->vendor != 0x0)
 		priv->vendor = priv_donor->vendor;
 	if (priv->model == 0x0 && priv_donor->model != 0x0)
