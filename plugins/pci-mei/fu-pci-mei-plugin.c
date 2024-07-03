@@ -181,6 +181,7 @@ fu_pci_mei_plugin_backend_device_added(FuPlugin *plugin,
 
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
 		return FALSE;
+	fu_udev_device_add_flag(FU_UDEV_DEVICE(device), FU_UDEV_DEVICE_FLAG_OPEN_READ);
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
