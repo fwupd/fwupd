@@ -274,8 +274,9 @@ fu_device_event_get_bytes(FuDeviceEvent *self, const gchar *key, GError **error)
  * fu_device_event_copy_data:
  * @self: a #FuDeviceEvent
  * @key: (not nullable): a unique key, e.g. `Name`
- * @buf: (not nullable): a buffer
+ * @buf: (nullable): a buffer
  * @bufsz: size of @buf
+ * @actual_length: (out) (optional): the actual number of bytes sent, or %NULL
  * @error: (nullable): optional return location for an error
  *
  * Copies memory from the event.
@@ -289,6 +290,7 @@ fu_device_event_copy_data(FuDeviceEvent *self,
 			  const gchar *key,
 			  guint8 *buf,
 			  gsize bufsz,
+			  gsize *actual_length,
 			  GError **error)
 {
 	const gchar *blobstr;
@@ -297,14 +299,17 @@ fu_device_event_copy_data(FuDeviceEvent *self,
 
 	g_return_val_if_fail(FU_IS_DEVICE_EVENT(self), FALSE);
 	g_return_val_if_fail(key != NULL, FALSE);
-	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	blobstr = fu_device_event_lookup(self, key, G_TYPE_STRING, error);
 	if (blobstr == NULL)
 		return FALSE;
 	buf_src = g_base64_decode(blobstr, &bufsz_src);
-	return fu_memcpy_safe(buf, bufsz, 0x0, buf_src, bufsz_src, 0x0, bufsz_src, error);
+	if (actual_length != NULL)
+		*actual_length = bufsz_src;
+	if (buf != NULL)
+		return fu_memcpy_safe(buf, bufsz, 0x0, buf_src, bufsz_src, 0x0, bufsz_src, error);
+	return TRUE;
 }
 
 static void
