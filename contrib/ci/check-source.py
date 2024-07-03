@@ -59,6 +59,7 @@ def test_files() -> int:
                             "use a nocheck comment to ignore"
                         )
                         rc = 1
+                        break
 
                 # do not use G_IO_ERROR internally
                 if line.find("g_set_error") != -1:
@@ -71,6 +72,7 @@ def test_files() -> int:
                                 "use a nocheck comment to ignore"
                             )
                             rc = 1
+                            break
 
     return rc
 
