@@ -367,15 +367,23 @@ fu_qc_s5gen2_device_ensure_version(FuQcS5gen2Device *self, GError **error)
 				      (FuDeviceLockerFunc)fu_qc_s5gen2_device_cmd_req_connect,
 				      (FuDeviceLockerFunc)fu_qc_s5gen2_device_cmd_req_disconnect,
 				      error);
-	if (locker == NULL)
+	if (locker == NULL) {
+		g_prefix_error(error, "failed to connect: ");
 		return FALSE;
-	if (!fu_qc_s5gen2_device_msg_out(self, version_req->data, version_req->len, error))
+	}
+	if (!fu_qc_s5gen2_device_msg_out(self, version_req->data, version_req->len, error)) {
+		g_prefix_error(error, "failed to write: ");
 		return FALSE;
-	if (!fu_qc_s5gen2_device_msg_in(self, ver_raw, sizeof(ver_raw), error))
+	}
+	if (!fu_qc_s5gen2_device_msg_in(self, ver_raw, sizeof(ver_raw), error)) {
+		g_prefix_error(error, "failed to read: ");
 		return FALSE;
+	}
 	version = fu_struct_qc_version_parse(ver_raw, sizeof(ver_raw), 0, error);
-	if (version == NULL)
+	if (version == NULL) {
+		g_prefix_error(error, "failed to parse: ");
 		return FALSE;
+	}
 
 	ver_str = g_strdup_printf("%u.%u.%u",
 				  fu_struct_qc_version_get_major(version),
@@ -425,14 +433,22 @@ static gboolean
 fu_qc_s5gen2_device_reload(FuDevice *device, GError **error)
 {
 	FuQcS5gen2Device *self = FU_QC_S5GEN2_DEVICE(device);
-	return fu_qc_s5gen2_device_ensure_version(self, error);
+	if (!fu_qc_s5gen2_device_ensure_version(self, error)) {
+		g_prefix_error(error, "failed to ensure version on reload: ");
+		return FALSE;
+	}
+	return TRUE;
 }
 
 static gboolean
 fu_qc_s5gen2_device_setup(FuDevice *device, GError **error)
 {
 	FuQcS5gen2Device *self = FU_QC_S5GEN2_DEVICE(device);
-	return fu_qc_s5gen2_device_ensure_version(self, error);
+	if (!fu_qc_s5gen2_device_ensure_version(self, error)) {
+		g_prefix_error(error, "failed to ensure version: ");
+		return FALSE;
+	}
+	return TRUE;
 }
 
 static gboolean
@@ -456,8 +472,10 @@ fu_qc_s5gen2_device_prepare(FuDevice *device,
 
 	/* FIXME: do abort of any stalled upgrade for USB only
 	 * rework that part to continue update for wireless/USB */
-	if (!fu_qc_s5gen2_device_cmd_abort(self, error))
+	if (!fu_qc_s5gen2_device_cmd_abort(self, error)) {
+		g_prefix_error(error, "failed to abort: ");
 		return FALSE;
+	}
 
 	return TRUE;
 }
