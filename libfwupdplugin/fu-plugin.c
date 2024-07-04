@@ -535,7 +535,8 @@ fu_plugin_device_add(FuPlugin *self, FuDevice *device)
 	}
 
 	g_debug("emit added from %s: %s", fu_plugin_get_name(self), fu_device_get_id(device));
-	fu_device_set_created(device, (guint64)g_get_real_time() / G_USEC_PER_SEC);
+	if (fu_device_get_created(device) == 0)
+		fu_device_set_created(device, (guint64)g_get_real_time() / G_USEC_PER_SEC);
 	fu_device_set_plugin(device, fu_plugin_get_name(self));
 	g_signal_emit(self, signals[SIGNAL_DEVICE_ADDED], 0, device);
 
