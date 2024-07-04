@@ -4953,12 +4953,16 @@ fu_device_open_internal(FuDevice *self, GError **error)
 		return TRUE;
 
 	/* probe */
-	if (!fu_device_probe(self, error))
+	if (!fu_device_probe(self, error)) {
+		g_prefix_error(error, "failed to probe: ");
 		return FALSE;
+	}
 
 	/* ensure the device ID is already setup */
-	if (!fu_device_ensure_id(self, error))
+	if (!fu_device_ensure_id(self, error)) {
+		g_prefix_error(error, "failed to ensure ID: ");
 		return FALSE;
+	}
 
 	/* subclassed */
 	if (device_class->open != NULL) {
@@ -4968,21 +4972,29 @@ fu_device_open_internal(FuDevice *self, GError **error)
 						  FU_DEVICE_RETRY_OPEN_COUNT,
 						  FU_DEVICE_RETRY_OPEN_DELAY,
 						  NULL,
-						  error))
+						  error)) {
+				g_prefix_error(error, "failed to retry subclass open: ");
 				return FALSE;
+			}
 		} else {
-			if (!device_class->open(self, error))
+			if (!device_class->open(self, error)) {
+				g_prefix_error(error, "failed to subclass open: ");
 				return FALSE;
+			}
 		}
 	}
 
 	/* setup */
-	if (!fu_device_setup(self, error))
+	if (!fu_device_setup(self, error)) {
+		g_prefix_error(error, "failed to setup: ");
 		return FALSE;
+	}
 
 	/* ensure the device ID is still valid */
-	if (!fu_device_ensure_id(self, error))
+	if (!fu_device_ensure_id(self, error)) {
+		g_prefix_error(error, "failed to ensure ID: ");
 		return FALSE;
+	}
 
 	/* success */
 	fu_device_add_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_IS_OPEN);
