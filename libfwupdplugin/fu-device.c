@@ -77,6 +77,7 @@ typedef struct {
 	GType proxy_gtype;
 	GType firmware_gtype;
 	GPtrArray *possible_plugins;   /* (element-type utf-8) */
+	GHashTable *guid_quirks;       /* (nullable) (element-type utf-8 int) */
 	GPtrArray *instance_id_quirks; /* (nullable) (element-type utf-8) */
 	GPtrArray *retry_recs;	       /* (nullable) (element-type FuDeviceRetryRecovery) */
 	guint retry_delay;
@@ -2248,6 +2249,17 @@ fu_device_add_guid_quirks(FuDevice *self, const gchar *guid)
 		g_critical("no FuContext assigned for %s", str);
 		return;
 	}
+
+	/* do not run the query multiple times on the same device */
+	if (priv->guid_quirks == NULL) {
+		priv->guid_quirks = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	} else {
+		if (g_hash_table_contains(priv->guid_quirks, guid))
+			return;
+	}
+	g_hash_table_add(priv->guid_quirks, g_strdup(guid));
+
+	/* run the query */
 	fu_context_lookup_quirk_by_id_iter(priv->ctx, guid, NULL, fu_device_quirks_iter_cb, self);
 }
 
@@ -6958,6 +6970,8 @@ fu_device_finalize(GObject *object)
 		g_hash_table_unref(priv->metadata);
 	if (priv->inhibits != NULL)
 		g_hash_table_unref(priv->inhibits);
+	if (priv->guid_quirks != NULL)
+		g_hash_table_unref(priv->guid_quirks);
 	if (priv->instance_hash != NULL)
 		g_hash_table_unref(priv->instance_hash);
 	if (priv->parent_physical_ids != NULL)
