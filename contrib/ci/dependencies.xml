@@ -783,10 +783,12 @@
       <package variant="x86_64" />
       <package variant="s390x">libgudev-1.0-dev:s390x</package>
       <package variant="i386" />
+      <package variant="aarch64" />
     </distro>
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="aarch64" />
     </distro>
   </dependency>
   <dependency id="libgusb-dev">
