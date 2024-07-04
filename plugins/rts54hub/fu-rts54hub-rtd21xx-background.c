@@ -153,7 +153,6 @@ fu_rts54hub_rtd21xx_background_attach(FuDevice *device, FuProgress *progress, GE
 	fu_device_sleep_full(device, 1000, progress); /* ms */
 
 	/* success */
-	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	return TRUE;
 }
 
