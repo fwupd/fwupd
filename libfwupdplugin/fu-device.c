@@ -4348,8 +4348,6 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "LogicalId", priv->logical_id);
 	fwupd_codec_string_append(str, idt, "BackendId", priv->backend_id);
 	fwupd_codec_string_append(str, idt, "UpdateRequestId", priv->update_request_id);
-	if (priv->proxy != NULL)
-		fwupd_codec_string_append(str, idt, "ProxyId", fu_device_get_id(priv->proxy));
 	fwupd_codec_string_append(str, idt, "ProxyGuid", priv->proxy_guid);
 	fwupd_codec_string_append_int(str, idt, "RemoveDelay", priv->remove_delay);
 	fwupd_codec_string_append_int(str, idt, "AcquiesceDelay", priv->acquiesce_delay);
@@ -4435,6 +4433,10 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 			FuDeviceEvent *event = g_ptr_array_index(priv->events, i);
 			fwupd_codec_add_string(FWUPD_CODEC(event), idt + 1, str);
 		}
+	}
+	if (priv->proxy != NULL) {
+		fwupd_codec_string_append(str, idt, "Proxy", "");
+		fu_device_to_string_impl(priv->proxy, idt + 1, str);
 	}
 }
 
