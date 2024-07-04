@@ -419,8 +419,10 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 						      &actual_len,
 						      helper->timeout,
 						      NULL, /* cancellable */
-						      error))
+						      error)) {
+			g_prefix_error(error, "failed to SetReport [interrupt-transfer]: ");
 			return FALSE;
+		}
 	} else {
 		guint16 wvalue = (FU_HID_REPORT_TYPE_OUTPUT << 8) | helper->value;
 		g_autofree gchar *title = NULL;
