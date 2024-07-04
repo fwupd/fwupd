@@ -47,7 +47,14 @@ typedef struct {
 	guint remove_id;
 } FuDeviceItem;
 
-G_DEFINE_TYPE(FuDeviceList, fu_device_list, G_TYPE_OBJECT)
+static void
+fu_device_list_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuDeviceList,
+		       fu_device_list,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_device_list_codec_iface_init));
 
 static void
 fu_device_list_emit_device_added(FuDeviceList *self, FuDevice *device)
@@ -70,10 +77,11 @@ fu_device_list_emit_device_changed(FuDeviceList *self, FuDevice *device)
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0, device);
 }
 
-static gchar *
-fu_device_list_to_string(FuDeviceList *self)
+static void
+fu_device_list_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	GString *str = g_string_new(NULL);
+	FuDeviceList *self = FU_DEVICE_LIST(codec);
+
 	g_rw_lock_reader_lock(&self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index(self->devices, i);
@@ -101,7 +109,6 @@ fu_device_list_to_string(FuDeviceList *self)
 		}
 	}
 	g_rw_lock_reader_unlock(&self->devices_mutex);
-	return g_string_free(str, FALSE);
 }
 
 /* we cannot use fu_device_get_children() as this will not find "parent-only"
@@ -606,7 +613,7 @@ fu_device_list_clear_wait_for_replug(FuDeviceList *self, FuDeviceItem *item)
 	fu_device_remove_internal_flag(item->device, FU_DEVICE_INTERNAL_FLAG_UNCONNECTED);
 
 	/* debug */
-	str = fu_device_list_to_string(self);
+	str = fwupd_codec_to_string(FWUPD_CODEC(self));
 	g_debug("\n%s", str);
 }
 
@@ -715,7 +722,7 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 	fu_device_list_emit_device_changed(self, device);
 
 	/* debug */
-	str = fu_device_list_to_string(self);
+	str = fwupd_codec_to_string(FWUPD_CODEC(self));
 	g_debug("\n%s", str);
 
 	/* we were waiting for this... */
@@ -937,7 +944,7 @@ fu_device_list_wait_for_replug(FuDeviceList *self, GError **error)
 		g_autofree gchar *str = NULL;
 
 		/* dump to console */
-		str = fu_device_list_to_string(self);
+		str = fwupd_codec_to_string(FWUPD_CODEC(self));
 		g_debug("\n%s", str);
 
 		/* unset and build error string */
@@ -1017,6 +1024,12 @@ fu_device_list_item_free(FuDeviceItem *item)
 		g_object_unref(item->device_old);
 	fu_device_list_item_set_device(item, NULL);
 	g_free(item);
+}
+
+static void
+fu_device_list_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_string = fu_device_list_add_string;
 }
 
 static void
