@@ -50,9 +50,6 @@ fu_rts54hub_rtd21xx_ensure_version_unlocked(FuRts54hubRtd21xxBackground *self, G
 		g_prefix_error(error, "failed to get version number: ");
 		return FALSE;
 	}
-
-	/* wait for device ready */
-	fu_device_sleep(FU_DEVICE(self), 300); /* ms */
 	if (!fu_rts54hub_rtd21xx_device_i2c_read(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						 UC_ISP_TARGET_ADDR,
 						 0x00,
