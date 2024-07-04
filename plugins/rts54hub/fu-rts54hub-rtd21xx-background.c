@@ -73,11 +73,11 @@ fu_rts54hub_rtd21xx_ensure_version_unlocked(FuRts54hubRtd21xxBackground *self, G
 static gboolean
 fu_rts54hub_rtd21xx_background_detach_raw(FuRts54hubRtd21xxBackground *self, GError **error)
 {
-	guint8 buf = 0x02;
+	guint8 buf[] = {ISP_CMD_FW_UPDATE_ISP_DONE};
 	if (!fu_rts54hub_rtd21xx_device_i2c_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						  0x6A,
-						  0x31,
-						  &buf,
+						  UC_BACKGROUND_OPCODE,
+						  buf,
 						  sizeof(buf),
 						  error)) {
 		g_prefix_error(error, "failed to detach: ");
