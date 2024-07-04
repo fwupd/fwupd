@@ -88,6 +88,7 @@ typedef struct {
 	GPtrArray *private_flag_items; /* (nullable) */
 	gchar *custom_flags;
 	gulong notify_flags_handler_id;
+	gulong notify_flags_proxy_id;
 	GHashTable *instance_hash; /* (nullable) */
 	FuProgress *progress; /* provided for FuDevice notify callbacks */
 } FuDevicePrivate;
@@ -1319,6 +1320,12 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 	if (proxy == priv->proxy)
 		return;
 
+	/* disconnect from old proxy */
+	if (priv->proxy != NULL && priv->notify_flags_proxy_id != 0) {
+		g_signal_handler_disconnect(priv->proxy, priv->notify_flags_proxy_id);
+		priv->notify_flags_proxy_id = 0;
+	}
+
 	/* copy from proxy */
 	if (proxy != NULL) {
 		if (fu_device_get_context(self) == NULL && fu_device_get_context(proxy) != NULL)
@@ -1326,10 +1333,11 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 		if (fu_device_get_physical_id(self) == NULL &&
 		    fu_device_get_physical_id(proxy) != NULL)
 			fu_device_set_physical_id(self, fu_device_get_physical_id(proxy));
-		g_signal_connect(FWUPD_DEVICE(proxy),
-				 "notify::flags",
-				 G_CALLBACK(fu_device_proxy_flags_notify_cb),
-				 self);
+		priv->notify_flags_proxy_id =
+		    g_signal_connect(FWUPD_DEVICE(proxy),
+				     "notify::flags",
+				     G_CALLBACK(fu_device_proxy_flags_notify_cb),
+				     self);
 		fu_device_incorporate_from_proxy_flags(self, proxy);
 	}
 
@@ -7068,6 +7076,8 @@ fu_device_finalize(GObject *object)
 	if (priv->progress != NULL)
 		g_object_unref(priv->progress);
 	if (priv->proxy != NULL) {
+		if (priv->notify_flags_proxy_id != 0)
+			g_signal_handler_disconnect(priv->proxy, priv->notify_flags_proxy_id);
 		if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY)) {
 			g_object_unref(priv->proxy);
 		} else {
