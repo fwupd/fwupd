@@ -1,0 +1,17 @@
+{
+  "name": "Acer D501",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/1aca09b306293eab77af46f02c4ef913538ac99d33e53ff8cc70f71850ef405a-Baklava_11022021_sign.cab",
+      "components": [
+        {
+          "version": "2.0.10832",
+          "guids": [
+            "d58a9b10-fb95-58ec-91a2-13764eca99f9"
+          ]
+        }
+      ]
+    }
+  ]
+}
