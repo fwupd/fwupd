@@ -3330,6 +3330,7 @@ fu_engine_write_firmware(FuEngine *self,
 					     progress,
 					     flags,
 					     &error_write)) {
+		g_autofree gchar *str_write = NULL;
 		g_autoptr(GError) error_attach = NULL;
 		g_autoptr(GError) error_cleanup = NULL;
 
@@ -3341,6 +3342,11 @@ fu_engine_write_firmware(FuEngine *self,
 		} else {
 			fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED);
 		}
+
+		/* this is really helpful for debugging, as we want to dump the device *before*
+		 * we run cleanup */
+		str_write = fu_device_to_string(device);
+		g_debug("failed write-firmware '%s': %s", error_write->message, str_write);
 
 		/* attach back into runtime then cleanup */
 		fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_ATTACH);
