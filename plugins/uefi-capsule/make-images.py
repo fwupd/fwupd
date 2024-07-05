@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Copyright 2017 Peter Jones <pjones@redhat.com>
 # Copyright 2020 Richard Hughes <richard@hughsie.com>
