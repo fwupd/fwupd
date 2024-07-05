@@ -3231,7 +3231,9 @@ fu_engine_history_error_func(gconstpointer user_data)
 					FWUPD_INSTALL_FLAG_NONE,
 					&error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
-	g_assert_cmpstr(error->message, ==, "device was not in supported mode");
+	g_assert_cmpstr(error->message,
+			==,
+			"failed to write-firmware: device was not in supported mode");
 	g_assert_false(ret);
 
 	/* check the history database */
@@ -3252,26 +3254,26 @@ fu_engine_history_error_func(gconstpointer user_data)
 	checksum = fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA1, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(checksum);
-	device_str_expected =
-	    g_strdup_printf("FuDevice:\n"
-			    "  DeviceId:             894e8c17a29428b09d10cd90d1db74ea76fbcfe8\n"
-			    "  Name:                 Test Device\n"
-			    "  Guid:                 12345678-1234-1234-1234-123456789012\n"
-			    "  Plugin:               test\n"
-			    "  Flags:                updatable|historical|unsigned-payload\n"
-			    "  Version:              1.2.2\n"
-			    "  VersionFormat:        triplet\n"
-			    "  Created:              2018-01-07\n"
-			    "  Modified:             2017-12-27\n"
-			    "  UpdateState:          failed\n"
-			    "  UpdateError:          device was not in supported mode\n"
-			    "  FuRelease:\n"
-			    "    AppstreamId:        com.hughski.test.firmware\n"
-			    "    Version:            1.2.3\n"
-			    "    Checksum:           SHA1(%s)\n"
-			    "    Flags:              trusted-payload|trusted-metadata\n"
-			    "  AcquiesceDelay:       50\n",
-			    checksum);
+	device_str_expected = g_strdup_printf(
+	    "FuDevice:\n"
+	    "  DeviceId:             894e8c17a29428b09d10cd90d1db74ea76fbcfe8\n"
+	    "  Name:                 Test Device\n"
+	    "  Guid:                 12345678-1234-1234-1234-123456789012\n"
+	    "  Plugin:               test\n"
+	    "  Flags:                updatable|historical|unsigned-payload\n"
+	    "  Version:              1.2.2\n"
+	    "  VersionFormat:        triplet\n"
+	    "  Created:              2018-01-07\n"
+	    "  Modified:             2017-12-27\n"
+	    "  UpdateState:          failed\n"
+	    "  UpdateError:          failed to write-firmware: device was not in supported mode\n"
+	    "  FuRelease:\n"
+	    "    AppstreamId:        com.hughski.test.firmware\n"
+	    "    Version:            1.2.3\n"
+	    "    Checksum:           SHA1(%s)\n"
+	    "    Flags:              trusted-payload|trusted-metadata\n"
+	    "  AcquiesceDelay:       50\n",
+	    checksum);
 	ret = fu_test_compare_lines(device_str, device_str_expected, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

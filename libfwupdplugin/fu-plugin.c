@@ -720,9 +720,12 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 {
 	FuDevice *proxy = fu_device_get_proxy_with_fallback(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
+
 	locker = fu_device_locker_new(proxy, error);
-	if (locker == NULL)
+	if (locker == NULL) {
+		g_prefix_error(error, "failed to open device: ");
 		return FALSE;
+	}
 
 	/* back the old firmware up to /var/lib/fwupd */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL)) {
