@@ -82,9 +82,9 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	if (!fu_usb_device_control_transfer(device,
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    vendor_code, /* bRequest */
 					    0x0,	 /* wValue */
 					    0x07,	 /* wIndex */

@@ -851,7 +851,7 @@ fu_wac_device_close(FuDevice *device, GError **error)
 	/* reattach wacom.ko */
 	if (!fu_usb_device_release_interface(FU_USB_DEVICE(device),
 					     0x00, /* HID */
-					     G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+					     FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER,
 					     error)) {
 		g_prefix_error(error, "failed to re-attach interface: ");
 		return FALSE;

@@ -37,9 +37,9 @@ fu_steelseries_device_cmd(FuSteelseriesDevice *self,
 	gsize actual_len = 0;
 
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_CLASS,
+					    FU_USB_RECIPIENT_INTERFACE,
 					    0x09,
 					    0x0200,
 					    priv->iface_idx,
@@ -98,8 +98,8 @@ fu_steelseries_device_probe(FuDevice *device, GError **error)
 {
 	FuSteelseriesDevice *self = FU_STEELSERIES_DEVICE(device);
 	FuSteelseriesDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbInterface *iface = NULL;
-	GUsbEndpoint *ep = NULL;
+	FuUsbInterface *iface = NULL;
+	FuUsbEndpoint *ep = NULL;
 	guint8 ep_id;
 	guint16 packet_size;
 	g_autoptr(GPtrArray) ifaces = NULL;
@@ -126,7 +126,7 @@ fu_steelseries_device_probe(FuDevice *device, GError **error)
 	}
 	iface = g_ptr_array_index(ifaces, priv->iface_idx);
 
-	endpoints = g_usb_interface_get_endpoints(iface);
+	endpoints = fu_usb_interface_get_endpoints(iface);
 	/* expecting to have only one endpoint for communication */
 	if (endpoints == NULL || endpoints->len != 1) {
 		g_set_error_literal(error,
@@ -137,8 +137,8 @@ fu_steelseries_device_probe(FuDevice *device, GError **error)
 	}
 
 	ep = g_ptr_array_index(endpoints, 0);
-	ep_id = g_usb_endpoint_get_address(ep);
-	packet_size = g_usb_endpoint_get_maximum_packet_size(ep);
+	ep_id = fu_usb_endpoint_get_address(ep);
+	packet_size = fu_usb_endpoint_get_maximum_packet_size(ep);
 
 	priv->ep = ep_id;
 	priv->ep_in_size = packet_size;

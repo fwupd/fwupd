@@ -130,18 +130,18 @@ fu_hid_device_parse_descriptors(FuHidDevice *self, GError **error)
 
 #ifdef HAVE_GUSB
 static gboolean
-fu_hid_device_autodetect_eps(FuHidDevice *self, GUsbInterface *iface, GError **error)
+fu_hid_device_autodetect_eps(FuHidDevice *self, FuUsbInterface *iface, GError **error)
 {
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GPtrArray) eps = g_usb_interface_get_endpoints(iface);
+	g_autoptr(GPtrArray) eps = fu_usb_interface_get_endpoints(iface);
 	for (guint i = 0; i < eps->len; i++) {
 		GUsbEndpoint *ep = g_ptr_array_index(eps, i);
-		if (g_usb_endpoint_get_direction(ep) == G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST &&
+		if (g_usb_endpoint_get_direction(ep) == FU_USB_DIRECTION_DEVICE_TO_HOST &&
 		    priv->ep_addr_in == 0) {
 			priv->ep_addr_in = g_usb_endpoint_get_address(ep);
 			continue;
 		}
-		if (g_usb_endpoint_get_direction(ep) == G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE &&
+		if (g_usb_endpoint_get_direction(ep) == FU_USB_DIRECTION_HOST_TO_DEVICE &&
 		    priv->ep_addr_out == 0) {
 			priv->ep_addr_out = g_usb_endpoint_get_address(ep);
 			continue;
@@ -164,7 +164,7 @@ fu_hid_device_open(FuDevice *device, GError **error)
 #ifdef HAVE_GUSB
 	FuHidDevice *self = FU_HID_DEVICE(device);
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbDeviceClaimInterfaceFlags flags = 0;
+	FuUsbDeviceClaimFlags flags = 0;
 
 	/* FuUsbDevice->open */
 	if (!FU_DEVICE_CLASS(fu_hid_device_parent_class)->open(device, error))
@@ -181,9 +181,9 @@ fu_hid_device_open(FuDevice *device, GError **error)
 		if (ifaces == NULL)
 			return FALSE;
 		for (guint i = 0; i < ifaces->len; i++) {
-			GUsbInterface *iface = g_ptr_array_index(ifaces, i);
-			if (g_usb_interface_get_class(iface) == G_USB_DEVICE_CLASS_HID) {
-				priv->interface = g_usb_interface_get_number(iface);
+			FuUsbInterface *iface = g_ptr_array_index(ifaces, i);
+			if (fu_usb_interface_get_class(iface) == FU_USB_DEVICE_CLASS_HID) {
+				priv->interface = fu_usb_interface_get_number(iface);
 				priv->interface_autodetect = FALSE;
 				if (priv->flags & FU_HID_DEVICE_FLAG_AUTODETECT_EPS) {
 					if (!fu_hid_device_autodetect_eps(self, iface, error))
@@ -203,7 +203,7 @@ fu_hid_device_open(FuDevice *device, GError **error)
 
 	/* claim */
 	if ((priv->flags & FU_HID_DEVICE_FLAG_NO_KERNEL_UNBIND) == 0)
-		flags |= G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER;
+		flags |= FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER;
 	if (!fu_usb_device_claim_interface(FU_USB_DEVICE(self), priv->interface, flags, error)) {
 		g_prefix_error(error, "failed to claim HID interface: ");
 		return FALSE;
@@ -220,7 +220,7 @@ fu_hid_device_close(FuDevice *device, GError **error)
 #ifdef HAVE_GUSB
 	FuHidDevice *self = FU_HID_DEVICE(device);
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbDeviceClaimInterfaceFlags flags = 0;
+	FuUsbDeviceClaimFlags flags = 0;
 	g_autoptr(GError) error_local = NULL;
 
 	/* self tests */
@@ -229,7 +229,7 @@ fu_hid_device_close(FuDevice *device, GError **error)
 
 	/* release */
 	if ((priv->flags & FU_HID_DEVICE_FLAG_NO_KERNEL_REBIND) == 0)
-		flags |= G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER;
+		flags |= FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER;
 	if (!fu_usb_device_release_interface(FU_USB_DEVICE(self),
 					     priv->interface,
 					     flags,
@@ -434,9 +434,9 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 					priv->interface);
 		fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
 		if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-						    G_USB_DEVICE_RECIPIENT_INTERFACE,
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_CLASS,
+						    FU_USB_RECIPIENT_INTERFACE,
 						    FU_HID_REPORT_SET,
 						    wvalue,
 						    priv->interface,
@@ -565,9 +565,9 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 					priv->interface);
 		fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, helper->bufsz);
 		if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-						    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-						    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-						    G_USB_DEVICE_RECIPIENT_INTERFACE,
+						    FU_USB_DIRECTION_DEVICE_TO_HOST,
+						    FU_USB_REQUEST_TYPE_CLASS,
+						    FU_USB_RECIPIENT_INTERFACE,
 						    FU_HID_REPORT_GET,
 						    wvalue,
 						    priv->interface,

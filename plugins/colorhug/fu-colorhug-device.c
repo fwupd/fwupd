@@ -349,7 +349,7 @@ fu_colorhug_device_setup(FuDevice *device, GError **error)
 
 	/* get version number, falling back to the USB device release */
 	idx = fu_usb_device_get_custom_index(FU_USB_DEVICE(device),
-					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
+					     FU_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
 					     'F',
 					     'W',
 					     NULL);
@@ -367,7 +367,7 @@ fu_colorhug_device_setup(FuDevice *device, GError **error)
 
 	/* get GUID from the descriptor if set */
 	idx = fu_usb_device_get_custom_index(FU_USB_DEVICE(device),
-					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
+					     FU_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
 					     'G',
 					     'U',
 					     NULL);

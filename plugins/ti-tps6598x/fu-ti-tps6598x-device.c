@@ -51,9 +51,9 @@ fu_ti_tps6598x_device_usbep_read_raw(FuTiTps6598xDevice *self,
 	fu_byte_array_set_size(buf, length + 1, 0x0);
 
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    TI_TPS6598X_USB_REQUEST_READ,
 					    addr,
 					    0x0, /* idx */
@@ -132,9 +132,9 @@ fu_ti_tps6598x_device_usbep_write(FuTiTps6598xDevice *self,
 		if (i == 0)
 			idx = buf->len;
 		if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						    G_USB_DEVICE_RECIPIENT_DEVICE,
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
 						    TI_TPS6598X_USB_REQUEST_WRITE,
 						    addr,
 						    idx, /* idx */
@@ -495,7 +495,7 @@ fu_ti_tps6598x_device_setup(FuDevice *device, GError **error)
 
 	/* there are two devices with the same VID:PID -- ignore the non-vendor one */
 	if (fu_usb_device_get_device_class(FU_USB_DEVICE(self)) !=
-	    G_USB_DEVICE_CLASS_VENDOR_SPECIFIC) {
+	    FU_USB_DEVICE_CLASS_VENDOR_SPECIFIC) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,

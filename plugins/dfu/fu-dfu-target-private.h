@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <gusb.h>
-
 #include "fu-dfu-device.h"
 #include "fu-dfu-sector.h"
 #include "fu-dfu-target.h"

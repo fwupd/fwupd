@@ -242,7 +242,7 @@ fu_dfu_device_parse_iface_data(FuDfuDevice *self, GBytes *iface_data, GError **e
 }
 
 static void
-fu_dfu_device_guess_state_from_iface(FuDfuDevice *self, GUsbInterface *iface)
+fu_dfu_device_guess_state_from_iface(FuDfuDevice *self, FuUsbInterface *iface)
 {
 	/* some devices use the wrong interface */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_FORCE_DFU_MODE)) {
@@ -252,18 +252,18 @@ fu_dfu_device_guess_state_from_iface(FuDfuDevice *self, GUsbInterface *iface)
 	}
 
 	/* runtime */
-	if (g_usb_interface_get_protocol(iface) == 0x01) {
+	if (fu_usb_interface_get_protocol(iface) == 0x01) {
 		fu_dfu_device_set_state(self, FU_DFU_STATE_APP_IDLE);
 		return;
 	}
 
 	/* DFU */
-	if (g_usb_interface_get_protocol(iface) == 0x02) {
+	if (fu_usb_interface_get_protocol(iface) == 0x02) {
 		fu_dfu_device_set_state(self, FU_DFU_STATE_DFU_IDLE);
 		return;
 	}
 	g_warning("unable to guess initial device state from interface %u",
-		  g_usb_interface_get_protocol(iface));
+		  fu_usb_interface_get_protocol(iface));
 }
 
 static gboolean
@@ -291,19 +291,19 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 		FuDfuTarget *target;
 		g_autoptr(GError) error_local = NULL;
 
-		GUsbInterface *iface = g_ptr_array_index(ifaces, i);
+		FuUsbInterface *iface = g_ptr_array_index(ifaces, i);
 
 		/* some devices don't use the right class and subclass */
 		if (!fu_device_has_private_flag(FU_DEVICE(self),
 						FU_DFU_DEVICE_FLAG_USE_ANY_INTERFACE)) {
-			if (g_usb_interface_get_class(iface) !=
-			    G_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
+			if (fu_usb_interface_get_class(iface) !=
+			    FU_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
 				continue;
-			if (g_usb_interface_get_subclass(iface) != 0x01)
+			if (fu_usb_interface_get_subclass(iface) != 0x01)
 				continue;
 		}
 		/* parse any interface data */
-		iface_data = g_usb_interface_get_extra(iface);
+		iface_data = fu_usb_interface_get_extra(iface);
 		if (iface_data != NULL && g_bytes_get_size(iface_data) > 0) {
 			if (!fu_dfu_device_parse_iface_data(self, iface_data, &error_local)) {
 				g_warning("failed to parse interface data for %04x:%04x: %s",
@@ -371,11 +371,11 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 			break;
 		}
 		fu_device_set_proxy(FU_DEVICE(target), FU_DEVICE(self));
-		fu_dfu_target_set_alt_idx(target, g_usb_interface_get_index(iface));
-		fu_dfu_target_set_alt_setting(target, g_usb_interface_get_alternate(iface));
+		fu_dfu_target_set_alt_idx(target, fu_usb_interface_get_index(iface));
+		fu_dfu_target_set_alt_setting(target, fu_usb_interface_get_alternate(iface));
 
 		/* add target */
-		priv->iface_number = g_usb_interface_get_number(iface);
+		priv->iface_number = fu_usb_interface_get_number(iface);
 		g_ptr_array_add(priv->targets, target);
 		fu_dfu_device_guess_state_from_iface(self, iface);
 	}
@@ -550,7 +550,7 @@ fu_dfu_device_ensure_interface(FuDfuDevice *self, GError **error)
 	/* claim, without detaching kernel driver */
 	if (!fu_usb_device_claim_interface(FU_USB_DEVICE(self),
 					   (gint)priv->iface_number,
-					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+					   FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER,
 					   &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -634,9 +634,9 @@ fu_dfu_device_refresh(FuDfuDevice *self, guint timeout_ms, GError **error)
 		return TRUE;
 
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_CLASS,
+					    FU_USB_RECIPIENT_INTERFACE,
 					    FU_DFU_REQUEST_GETSTATUS,
 					    0,
 					    priv->iface_number,
@@ -700,9 +700,9 @@ fu_dfu_device_request_detach(FuDfuDevice *self, FuProgress *progress, GError **e
 		ctrl_setup_index |= 0x01u << 8;
 
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_CLASS,
+					    FU_USB_RECIPIENT_INTERFACE,
 					    FU_DFU_REQUEST_DETACH,
 					    timeout_reset_ms,
 					    ctrl_setup_index,
@@ -714,6 +714,7 @@ fu_dfu_device_request_detach(FuDfuDevice *self, FuProgress *progress, GError **e
 					    &error_local)) {
 		/* some devices just reboot and stall the endpoint :/ */
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
+		    //		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
 			g_debug("ignoring while detaching: %s", error_local->message);
 		} else {
@@ -811,9 +812,9 @@ fu_dfu_device_abort(FuDfuDevice *self, GError **error)
 		return FALSE;
 
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_CLASS,
+					    FU_USB_RECIPIENT_INTERFACE,
 					    FU_DFU_REQUEST_ABORT,
 					    0,
 					    priv->iface_number,
@@ -857,9 +858,9 @@ fu_dfu_device_clear_status(FuDfuDevice *self, GError **error)
 		return FALSE;
 
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_CLASS,
+					    FU_USB_RECIPIENT_INTERFACE,
 					    FU_DFU_REQUEST_CLRSTATUS,
 					    0,
 					    priv->iface_number,
@@ -929,7 +930,7 @@ fu_dfu_device_open(FuDevice *device, GError **error)
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_GD32)) {
 		const guint8 *buf;
 		gsize bufsz = 0;
-		guint16 langid = G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES;
+		guint16 langid = FU_USB_LANGID_ENGLISH_UNITED_STATES;
 		guint8 idx = fu_usb_device_get_serial_number_index(FU_USB_DEVICE(device));
 		g_autofree gchar *chip_id = NULL;
 		g_autofree gchar *serial_str = NULL;

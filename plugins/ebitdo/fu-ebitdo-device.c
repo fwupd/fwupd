@@ -287,7 +287,7 @@ fu_ebitdo_device_open(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_usb_device_claim_interface(FU_USB_DEVICE(self),
 					   0, /* 0 = idx? */
-					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+					   FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER,
 					   error)) {
 		return FALSE;
 	}
@@ -598,7 +598,7 @@ fu_ebitdo_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	/* when doing a soft-reboot the device does not re-enumerate properly
-	 * so manually reboot the GUsbDevice */
+	 * so manually reboot the FuUsbDevice */
 	if (!fu_usb_device_reset(FU_USB_DEVICE(device), &error_local)) {
 		g_prefix_error(&error_local, "failed to force-reset device: ");
 		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {

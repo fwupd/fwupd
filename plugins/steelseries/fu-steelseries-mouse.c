@@ -32,9 +32,9 @@ fu_steelseries_mouse_setup(FuDevice *device, GError **error)
 	memset(data, 0x00, sizeof(data));
 	data[0] = 0x16;
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(device),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_CLASS,
+					    FU_USB_RECIPIENT_INTERFACE,
 					    0x09,
 					    0x0200,
 					    0x0000,

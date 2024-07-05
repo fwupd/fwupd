@@ -168,9 +168,9 @@ fu_genesys_usbhub_device_set_hid_channel(FuDevice *device, FuDevice *channel)
 static gboolean
 fu_genesys_usbhub_device_ctrl_transfer(FuGenesysUsbhubDevice *self,
 				       FuProgress *progress,
-				       GUsbDeviceDirection direction,
-				       GUsbDeviceRequestType request_type,
-				       GUsbDeviceRecipient recipient,
+				       FuUsbDirection direction,
+				       FuUsbRequestType request_type,
+				       FuUsbRecipient recipient,
 				       guint8 request,
 				       guint16 value,
 				       guint16 idx,
@@ -251,9 +251,9 @@ fu_genesys_usbhub_device_read_flash(FuGenesysUsbhubDevice *self,
 		if (!fu_genesys_usbhub_device_ctrl_transfer(
 			self,
 			progress_child, /* progress */
-			G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-			G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-			G_USB_DEVICE_RECIPIENT_DEVICE,
+			FU_USB_DIRECTION_DEVICE_TO_HOST,
+			FU_USB_REQUEST_TYPE_VENDOR,
+			FU_USB_RECIPIENT_DEVICE,
 			self->vcs.req_read,
 			(fu_chunk_get_page(chk) & 0x000f) << 12, /* value */
 			fu_chunk_get_address(chk) & 0xffff,	 /* idx */
@@ -315,9 +315,9 @@ fu_genesys_usbhub_device_compare_flash_blank(FuGenesysUsbhubDevice *self,
 		if (!fu_genesys_usbhub_device_ctrl_transfer(
 			self,
 			fu_progress_get_child(progress), /* progress */
-			G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-			G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-			G_USB_DEVICE_RECIPIENT_DEVICE,
+			FU_USB_DIRECTION_DEVICE_TO_HOST,
+			FU_USB_REQUEST_TYPE_VENDOR,
+			FU_USB_RECIPIENT_DEVICE,
 			self->vcs.req_read,
 			(fu_chunk_get_page(chk) & 0x000f) << 12, /* value */
 			fu_chunk_get_address(chk) & 0xffff,	 /* idx */
@@ -375,9 +375,9 @@ fu_genesys_usbhub_device_compare_flash_data(FuGenesysUsbhubDevice *self,
 		if (!fu_genesys_usbhub_device_ctrl_transfer(
 			self,
 			fu_progress_get_child(progress), /* progress */
-			G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-			G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-			G_USB_DEVICE_RECIPIENT_DEVICE,
+			FU_USB_DIRECTION_DEVICE_TO_HOST,
+			FU_USB_REQUEST_TYPE_VENDOR,
+			FU_USB_RECIPIENT_DEVICE,
 			self->vcs.req_read,
 			(fu_chunk_get_page(chk) & 0x000f) << 12, /* value */
 			fu_chunk_get_address(chk) & 0xffff,	 /* idx */
@@ -417,9 +417,9 @@ fu_genesys_usbhub_device_reset(FuGenesysUsbhubDevice *self, GError **error)
 {
 	if (!fu_genesys_usbhub_device_ctrl_transfer(self,
 						    NULL, /* progress */
-						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						    G_USB_DEVICE_RECIPIENT_DEVICE,
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
 						    self->vcs.req_switch,
 						    0x0003, /* value */
 						    0,	    /* idx */
@@ -456,9 +456,9 @@ fu_genesys_usbhub_device_cfi_setup(FuGenesysUsbhubDevice *self, GError **error)
 
 		if (!fu_genesys_usbhub_device_ctrl_transfer(self,
 							    NULL, /* progress */
-							    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-							    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-							    G_USB_DEVICE_RECIPIENT_DEVICE,
+							    FU_USB_DIRECTION_DEVICE_TO_HOST,
+							    FU_USB_REQUEST_TYPE_VENDOR,
+							    FU_USB_RECIPIENT_DEVICE,
 							    self->vcs.req_read,
 							    rdid[i].cmd, /* value */
 							    0,		 /* idx */
@@ -514,9 +514,9 @@ fu_genesys_usbhub_device_wait_flash_status_register_cb(FuDevice *device,
 
 	if (!fu_genesys_usbhub_device_ctrl_transfer(self,
 						    NULL, /* progress */
-						    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						    G_USB_DEVICE_RECIPIENT_DEVICE,
+						    FU_USB_DIRECTION_DEVICE_TO_HOST,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
 						    self->vcs.req_read,
 						    helper->reg << 8 | 0x02, /* value */
 						    0,			     /* idx */
@@ -550,9 +550,9 @@ fu_genesys_usbhub_device_set_isp_mode(FuGenesysUsbhubDevice *self,
 {
 	if (!fu_genesys_usbhub_device_ctrl_transfer(self,
 						    NULL, /* progress */
-						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						    G_USB_DEVICE_RECIPIENT_DEVICE,
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
 						    self->vcs.req_switch,
 						    mode, /* value */
 						    0,	  /* idx */
@@ -598,9 +598,9 @@ fu_genesys_usbhub_device_authentication_request(FuGenesysUsbhubDevice *self,
 
 	if (!fu_genesys_usbhub_device_ctrl_transfer(self,
 						    NULL, /* progress */
-						    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						    G_USB_DEVICE_RECIPIENT_DEVICE,
+						    FU_USB_DIRECTION_DEVICE_TO_HOST,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
 						    GENESYS_USBHUB_GL_HUB_VERIFY,
 						    (offset_end << 8) | offset_start, /* value */
 						    0,				      /* idx */
@@ -618,9 +618,9 @@ fu_genesys_usbhub_device_authentication_request(FuGenesysUsbhubDevice *self,
 
 	if (!fu_genesys_usbhub_device_ctrl_transfer(self,
 						    NULL, /* progress */
-						    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						    G_USB_DEVICE_RECIPIENT_DEVICE,
+						    FU_USB_DIRECTION_DEVICE_TO_HOST,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
 						    GENESYS_USBHUB_GL_HUB_VERIFY,
 						    (offset_end << 8) | offset_start, /* value */
 						    1 | (data_check << 8),	      /* idx */
@@ -1038,12 +1038,12 @@ fu_genesys_usbhub_device_validate_token(FuGenesysUsbhubDevice *self, GError **er
 	g_autoptr(GError) error_local = NULL;
 
 	/* get 0x80 string descriptor */
-	token_blob = fu_usb_device_get_string_descriptor_bytes_full(
-	    FU_USB_DEVICE(self),
-	    0x80,
-	    G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
-	    64,
-	    &error_local);
+	token_blob =
+	    fu_usb_device_get_string_descriptor_bytes_full(FU_USB_DEVICE(self),
+							   0x80,
+							   FU_USB_LANGID_ENGLISH_UNITED_STATES,
+							   64,
+							   &error_local);
 	if (token_blob == NULL) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {
 			g_set_error(error,
@@ -1437,7 +1437,7 @@ fu_genesys_usbhub_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 static gboolean
 fu_genesys_usbhub_device_probe(FuDevice *device, GError **error)
 {
-	if (fu_usb_device_get_device_class(FU_USB_DEVICE(device)) != G_USB_DEVICE_CLASS_HUB) {
+	if (fu_usb_device_get_device_class(FU_USB_DEVICE(device)) != FU_USB_DEVICE_CLASS_HUB) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1542,12 +1542,12 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	buf = g_malloc0(bufsz);
 
 	/* parse static tool string */
-	static_buf = fu_usb_device_get_string_descriptor_bytes_full(
-	    FU_USB_DEVICE(device),
-	    static_idx,
-	    G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
-	    64,
-	    error);
+	static_buf =
+	    fu_usb_device_get_string_descriptor_bytes_full(FU_USB_DEVICE(device),
+							   static_idx,
+							   FU_USB_LANGID_ENGLISH_UNITED_STATES,
+							   64,
+							   error);
 	if (static_buf == NULL) {
 		g_prefix_error(error,
 			       "failed to get static tool info from device (idx=0x%02x): ",
@@ -1562,12 +1562,12 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* parse dynamic tool string */
-	dynamic_buf = fu_usb_device_get_string_descriptor_bytes_full(
-	    FU_USB_DEVICE(device),
-	    dynamic_idx,
-	    G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
-	    64,
-	    error);
+	dynamic_buf =
+	    fu_usb_device_get_string_descriptor_bytes_full(FU_USB_DEVICE(device),
+							   dynamic_idx,
+							   FU_USB_LANGID_ENGLISH_UNITED_STATES,
+							   64,
+							   error);
 	if (dynamic_buf == NULL) {
 		g_prefix_error(error,
 			       "failed to get dynamic tool info from device (idx=0x%02x): ",
@@ -1582,12 +1582,11 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* parse firmware info tool string */
-	fw_buf = fu_usb_device_get_string_descriptor_bytes_full(
-	    FU_USB_DEVICE(device),
-	    GENESYS_USBHUB_FW_INFO_DESC_IDX,
-	    G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
-	    64,
-	    error);
+	fw_buf = fu_usb_device_get_string_descriptor_bytes_full(FU_USB_DEVICE(device),
+								GENESYS_USBHUB_FW_INFO_DESC_IDX,
+								FU_USB_LANGID_ENGLISH_UNITED_STATES,
+								64,
+								error);
 	if (fw_buf == NULL) {
 		g_prefix_error(error, "failed to get firmware tool info from device: ");
 		return FALSE;
@@ -1607,7 +1606,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		g_autoptr(GBytes) vendor_buf = fu_usb_device_get_string_descriptor_bytes_full(
 		    FU_USB_DEVICE(device),
 		    GENESYS_USBHUB_VENDOR_SUPPORT_DESC_IDX,
-		    G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
+		    FU_USB_LANGID_ENGLISH_UNITED_STATES,
 		    64,
 		    error);
 		if (vendor_buf == NULL) {
@@ -1631,7 +1630,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		g_autoptr(GBytes) project_buf = fu_usb_device_get_string_descriptor_bytes_full(
 		    FU_USB_DEVICE(device),
 		    GENESYS_USBHUB_BRAND_PROJECT_DESC_IDX,
-		    G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES,
+		    FU_USB_LANGID_ENGLISH_UNITED_STATES,
 		    64,
 		    error);
 		if (project_buf == NULL) {
@@ -2224,9 +2223,9 @@ fu_genesys_usbhub_device_erase_flash(FuGenesysUsbhubDevice *self,
 
 		if (!fu_genesys_usbhub_device_ctrl_transfer(self,
 							    NULL, /* progress */
-							    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-							    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-							    G_USB_DEVICE_RECIPIENT_DEVICE,
+							    FU_USB_DIRECTION_HOST_TO_DEVICE,
+							    FU_USB_REQUEST_TYPE_VENDOR,
+							    FU_USB_RECIPIENT_DEVICE,
 							    self->vcs.req_write,
 							    0x2001, /* value */
 							    index,  /* idx */
@@ -2283,9 +2282,9 @@ fu_genesys_usbhub_device_write_flash(FuGenesysUsbhubDevice *self,
 		if (!fu_genesys_usbhub_device_ctrl_transfer(
 			self,
 			fu_progress_get_child(progress), /* progress */
-			G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-			G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-			G_USB_DEVICE_RECIPIENT_DEVICE,
+			FU_USB_DIRECTION_HOST_TO_DEVICE,
+			FU_USB_REQUEST_TYPE_VENDOR,
+			FU_USB_RECIPIENT_DEVICE,
 			self->vcs.req_write,
 			(fu_chunk_get_page(chk) & 0x000f) << 12, /* value */
 			fu_chunk_get_address(chk) & 0xffff,	 /* idx */
@@ -2543,9 +2542,9 @@ fu_genesys_usbhub_device_setup_hw_module(FuGenesysUsbhubDevice *self, GError **e
 {
 	if (!fu_genesys_usbhub_device_ctrl_transfer(self,
 						    NULL, /* progress */
-						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						    G_USB_DEVICE_RECIPIENT_DEVICE,
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
 						    GENESYS_USBHUB_GL_HUB_HW_SECURITY,
 						    0,	  /* value */
 						    0,	  /* idx */
@@ -2572,9 +2571,9 @@ fu_genesys_usbhub_device_send_hash_data_length(FuGenesysUsbhubDevice *self,
 
 	if (!fu_genesys_usbhub_device_ctrl_transfer(self,
 						    NULL, /* progress */
-						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						    G_USB_DEVICE_RECIPIENT_DEVICE,
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
 						    GENESYS_USBHUB_GL_HUB_HW_SECURITY,
 						    0x040b,	  /* value */
 						    length_by_4k, /* idx */
@@ -2615,9 +2614,9 @@ fu_genesys_usbhub_device_send_hash_digest(FuGenesysUsbhubDevice *self,
 
 	if (!fu_genesys_usbhub_device_ctrl_transfer(self,
 						    NULL, /* progress */
-						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						    G_USB_DEVICE_RECIPIENT_DEVICE,
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
 						    GENESYS_USBHUB_GL_HUB_HW_SECURITY,
 						    0x000b,	/* value */
 						    0,		/* idx */
@@ -2642,9 +2641,9 @@ fu_genesys_usbhub_device_check_hash_digest_verification(FuGenesysUsbhubDevice *s
 
 	if (!fu_genesys_usbhub_device_ctrl_transfer(self,
 						    NULL, /* progress */
-						    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						    G_USB_DEVICE_RECIPIENT_DEVICE,
+						    FU_USB_DIRECTION_DEVICE_TO_HOST,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
 						    GENESYS_USBHUB_GL_HUB_HW_SECURITY,
 						    0x000b,	   /* value */
 						    0,		   /* idx */
@@ -2678,9 +2677,9 @@ fu_genesys_usbhub_device_toggle_hw_read_key(FuGenesysUsbhubDevice *self,
 {
 	if (!fu_genesys_usbhub_device_ctrl_transfer(self,
 						    NULL, /* progress */
-						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						    G_USB_DEVICE_RECIPIENT_DEVICE,
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
 						    GENESYS_USBHUB_GL_HUB_HW_SECURITY,
 						    0x020c,   /* value */
 						    key_addr, /* idx */
@@ -2721,9 +2720,9 @@ fu_genesys_usbhub_device_send_signature(FuGenesysUsbhubDevice *self,
 
 	if (!fu_genesys_usbhub_device_ctrl_transfer(self,
 						    NULL, /* progress */
-						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						    G_USB_DEVICE_RECIPIENT_DEVICE,
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
 						    GENESYS_USBHUB_GL_HUB_HW_SECURITY,
 						    0x010c,    /* value */
 						    0,	       /* idx */
@@ -2748,9 +2747,9 @@ fu_genesys_usbhub_device_check_signature_verification(FuGenesysUsbhubDevice *sel
 
 	if (!fu_genesys_usbhub_device_ctrl_transfer(self,
 						    NULL, /* progress */
-						    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						    G_USB_DEVICE_RECIPIENT_DEVICE,
+						    FU_USB_DIRECTION_DEVICE_TO_HOST,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
 						    GENESYS_USBHUB_GL_HUB_HW_SECURITY,
 						    0x000c,	   /* value */
 						    0,		   /* idx */

@@ -78,9 +78,9 @@ fu_intel_usb4_device_get_mmio(FuDevice *device,
 			      GError **error)
 {
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(device),
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    REQ_HUB_GET_MMIO, /* request */
 					    MBOX_ACCESS,      /* value */
 					    mbox_reg,	      /* index */
@@ -136,9 +136,9 @@ fu_intel_usb4_device_set_mmio(FuDevice *device,
 			      GError **error)
 {
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(device),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    REQ_HUB_SET_MMIO, /* request */
 					    MBOX_ACCESS,      /* value */
 					    mbox_reg,	      /* index */

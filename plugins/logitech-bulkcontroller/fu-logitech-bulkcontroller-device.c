@@ -77,39 +77,39 @@ fu_logitech_bulkcontroller_device_probe(FuDevice *device, GError **error)
 	if (intfs == NULL)
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {
-		GUsbInterface *intf = g_ptr_array_index(intfs, i);
-		if (g_usb_interface_get_class(intf) == G_USB_DEVICE_CLASS_VENDOR_SPECIFIC &&
-		    g_usb_interface_get_protocol(intf) == 0x1) {
-			if (g_usb_interface_get_subclass(intf) == SYNC_INTERFACE_SUBPROTOCOL_ID) {
+		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
+		if (fu_usb_interface_get_class(intf) == FU_USB_DEVICE_CLASS_VENDOR_SPECIFIC &&
+		    fu_usb_interface_get_protocol(intf) == 0x1) {
+			if (fu_usb_interface_get_subclass(intf) == SYNC_INTERFACE_SUBPROTOCOL_ID) {
 				g_autoptr(GPtrArray) endpoints =
-				    g_usb_interface_get_endpoints(intf);
-				self->sync_iface = g_usb_interface_get_number(intf);
+				    fu_usb_interface_get_endpoints(intf);
+				self->sync_iface = fu_usb_interface_get_number(intf);
 				if (endpoints == NULL)
 					continue;
 				for (guint j = 0; j < endpoints->len; j++) {
-					GUsbEndpoint *ep = g_ptr_array_index(endpoints, j);
+					FuUsbEndpoint *ep = g_ptr_array_index(endpoints, j);
 					if (j == EP_OUT)
 						self->sync_ep[EP_OUT] =
-						    g_usb_endpoint_get_address(ep);
+						    fu_usb_endpoint_get_address(ep);
 					else
 						self->sync_ep[EP_IN] =
-						    g_usb_endpoint_get_address(ep);
+						    fu_usb_endpoint_get_address(ep);
 				}
-			} else if (g_usb_interface_get_subclass(intf) ==
+			} else if (fu_usb_interface_get_subclass(intf) ==
 				   UPD_INTERFACE_SUBPROTOCOL_ID) {
 				g_autoptr(GPtrArray) endpoints =
-				    g_usb_interface_get_endpoints(intf);
-				self->update_iface = g_usb_interface_get_number(intf);
+				    fu_usb_interface_get_endpoints(intf);
+				self->update_iface = fu_usb_interface_get_number(intf);
 				if (endpoints == NULL)
 					continue;
 				for (guint j = 0; j < endpoints->len; j++) {
-					GUsbEndpoint *ep = g_ptr_array_index(endpoints, j);
+					FuUsbEndpoint *ep = g_ptr_array_index(endpoints, j);
 					if (j == EP_OUT)
 						self->update_ep[EP_OUT] =
-						    g_usb_endpoint_get_address(ep);
+						    fu_usb_endpoint_get_address(ep);
 					else
 						self->update_ep[EP_IN] =
-						    g_usb_endpoint_get_address(ep);
+						    fu_usb_endpoint_get_address(ep);
 				}
 			}
 		}

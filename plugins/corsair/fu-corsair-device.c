@@ -38,9 +38,9 @@ static gboolean
 fu_corsair_device_probe(FuDevice *device, GError **error)
 {
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
-	GUsbInterface *iface = NULL;
-	GUsbEndpoint *ep1 = NULL;
-	GUsbEndpoint *ep2 = NULL;
+	FuUsbInterface *iface = NULL;
+	FuUsbEndpoint *ep1 = NULL;
+	FuUsbEndpoint *ep2 = NULL;
 	g_autoptr(GPtrArray) ifaces = NULL;
 	g_autoptr(GPtrArray) endpoints = NULL;
 	guint16 cmd_write_size;
@@ -65,7 +65,7 @@ fu_corsair_device_probe(FuDevice *device, GError **error)
 	}
 
 	iface = g_ptr_array_index(ifaces, self->vendor_interface);
-	endpoints = g_usb_interface_get_endpoints(iface);
+	endpoints = fu_usb_interface_get_endpoints(iface);
 	/* expecting to have two endpoints for communication */
 	if (endpoints == NULL || endpoints->len != 2) {
 		g_set_error_literal(error,
@@ -77,16 +77,16 @@ fu_corsair_device_probe(FuDevice *device, GError **error)
 
 	ep1 = g_ptr_array_index(endpoints, 0);
 	ep2 = g_ptr_array_index(endpoints, 1);
-	if (g_usb_endpoint_get_direction(ep1) == G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST) {
-		epin = g_usb_endpoint_get_address(ep1);
-		epout = g_usb_endpoint_get_address(ep2);
-		cmd_read_size = g_usb_endpoint_get_maximum_packet_size(ep1);
-		cmd_write_size = g_usb_endpoint_get_maximum_packet_size(ep2);
+	if (fu_usb_endpoint_get_direction(ep1) == FU_USB_DIRECTION_DEVICE_TO_HOST) {
+		epin = fu_usb_endpoint_get_address(ep1);
+		epout = fu_usb_endpoint_get_address(ep2);
+		cmd_read_size = fu_usb_endpoint_get_maximum_packet_size(ep1);
+		cmd_write_size = fu_usb_endpoint_get_maximum_packet_size(ep2);
 	} else {
-		epin = g_usb_endpoint_get_address(ep2);
-		epout = g_usb_endpoint_get_address(ep1);
-		cmd_read_size = g_usb_endpoint_get_maximum_packet_size(ep2);
-		cmd_write_size = g_usb_endpoint_get_maximum_packet_size(ep1);
+		epin = fu_usb_endpoint_get_address(ep2);
+		epout = fu_usb_endpoint_get_address(ep1);
+		cmd_read_size = fu_usb_endpoint_get_maximum_packet_size(ep2);
+		cmd_write_size = fu_usb_endpoint_get_maximum_packet_size(ep1);
 	}
 
 	if (cmd_write_size > FU_CORSAIR_MAX_CMD_SIZE || cmd_read_size > FU_CORSAIR_MAX_CMD_SIZE) {

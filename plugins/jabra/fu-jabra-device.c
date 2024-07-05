@@ -32,9 +32,9 @@ _fu_usb_device_get_interface_for_class(FuUsbDevice *usb_device, guint8 intf_clas
 	if (intfs == NULL)
 		return 0xff;
 	for (guint i = 0; i < intfs->len; i++) {
-		GUsbInterface *intf = g_ptr_array_index(intfs, i);
-		if (g_usb_interface_get_class(intf) == intf_class)
-			return g_usb_interface_get_number(intf);
+		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
+		if (fu_usb_interface_get_class(intf) == intf_class)
+			return fu_usb_interface_get_number(intf);
 	}
 	return 0xff;
 }
@@ -69,7 +69,7 @@ fu_jabra_device_prepare(FuDevice *device,
 
 	/* detach the HID interface from the kernel driver */
 	iface_hid = _fu_usb_device_get_interface_for_class(FU_USB_DEVICE(self),
-							   G_USB_DEVICE_CLASS_HID,
+							   FU_USB_DEVICE_CLASS_HID,
 							   &error_local);
 	if (iface_hid == 0xff) {
 		g_set_error(error,
@@ -82,7 +82,7 @@ fu_jabra_device_prepare(FuDevice *device,
 	g_debug("claiming interface 0x%02x", iface_hid);
 	if (!fu_usb_device_claim_interface(FU_USB_DEVICE(self),
 					   (gint)iface_hid,
-					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+					   FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER,
 					   &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -95,9 +95,9 @@ fu_jabra_device_prepare(FuDevice *device,
 
 	/* send magic to device */
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_CLASS,
+					    FU_USB_RECIPIENT_INTERFACE,
 					    0x09,
 					    0x0200 | rep,
 					    0x0003,

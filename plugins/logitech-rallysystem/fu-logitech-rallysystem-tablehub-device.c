@@ -44,18 +44,18 @@ fu_logitech_rallysystem_tablehub_device_probe(FuDevice *device, GError **error)
 	if (intfs == NULL)
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {
-		GUsbInterface *intf = g_ptr_array_index(intfs, i);
-		if (g_usb_interface_get_class(intf) == G_USB_DEVICE_CLASS_VENDOR_SPECIFIC) {
-			g_autoptr(GPtrArray) endpoints = g_usb_interface_get_endpoints(intf);
-			bulk_iface = g_usb_interface_get_number(intf);
+		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
+		if (fu_usb_interface_get_class(intf) == FU_USB_DEVICE_CLASS_VENDOR_SPECIFIC) {
+			g_autoptr(GPtrArray) endpoints = fu_usb_interface_get_endpoints(intf);
+			bulk_iface = fu_usb_interface_get_number(intf);
 			if (endpoints == NULL)
 				continue;
 			for (guint j = 0; j < endpoints->len; j++) {
-				GUsbEndpoint *ep = g_ptr_array_index(endpoints, j);
+				FuUsbEndpoint *ep = g_ptr_array_index(endpoints, j);
 				if (j == EP_OUT)
-					self->bulk_ep[EP_OUT] = g_usb_endpoint_get_address(ep);
+					self->bulk_ep[EP_OUT] = fu_usb_endpoint_get_address(ep);
 				else
-					self->bulk_ep[EP_IN] = g_usb_endpoint_get_address(ep);
+					self->bulk_ep[EP_IN] = fu_usb_endpoint_get_address(ep);
 			}
 		}
 	}
