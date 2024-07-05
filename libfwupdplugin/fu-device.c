@@ -6744,6 +6744,7 @@ fu_device_clear_events(FuDevice *self)
 	if (priv->events == NULL)
 		return;
 	g_ptr_array_set_size(priv->events, 0);
+	priv->event_idx = 0;
 }
 
 static void
