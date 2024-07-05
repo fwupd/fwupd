@@ -944,8 +944,16 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 				  priv->cancellable,
 				  &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
-			json_builder_set_member_name(helper->builder, "info");
-			json_builder_add_string_value(helper->builder, error_local->message);
+			if (priv->as_json) {
+				json_builder_set_member_name(helper->builder, "info");
+				json_builder_add_string_value(helper->builder,
+							      error_local->message);
+			} else {
+				g_autofree gchar *msg = NULL;
+				msg = fu_console_color_format(error_local->message,
+							      FU_CONSOLE_COLOR_YELLOW);
+				fu_console_print(priv->console, "%s: %s", helper->name, msg);
+			}
 			helper->nr_missing++;
 			return TRUE;
 		}
