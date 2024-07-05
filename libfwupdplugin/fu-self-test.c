@@ -2121,14 +2121,14 @@ fu_device_incorporate_func(void)
 
 	/* base properties */
 	fu_device_add_flag(donor, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fu_device_set_created(donor, 123);
-	fu_device_set_modified(donor, 456);
+	fu_device_set_created_usec(donor, 1514338000ull * G_USEC_PER_SEC);
+	fu_device_set_modified_usec(donor, 1514338999ull * G_USEC_PER_SEC);
 	fu_device_add_icon(donor, "computer");
 
 	/* existing properties */
 	fu_device_set_equivalent_id(device, "DO_NOT_OVERWRITE");
 	fu_device_set_metadata(device, "test2", "DO_NOT_OVERWRITE");
-	fu_device_set_modified(device, 789);
+	fu_device_set_modified_usec(device, 1514340000ull * G_USEC_PER_SEC);
 
 	/* incorporate properties from donor to device */
 	fu_device_incorporate(device, donor);
@@ -2136,8 +2136,8 @@ fu_device_incorporate_func(void)
 	g_assert_cmpstr(fu_device_get_metadata(device, "test"), ==, "me");
 	g_assert_cmpstr(fu_device_get_metadata(device, "test2"), ==, "DO_NOT_OVERWRITE");
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC));
-	g_assert_cmpint(fu_device_get_created(device), ==, 123);
-	g_assert_cmpint(fu_device_get_modified(device), ==, 789);
+	g_assert_cmpint(fu_device_get_created_usec(device), ==, 1514338000ull * G_USEC_PER_SEC);
+	g_assert_cmpint(fu_device_get_modified_usec(device), ==, 1514340000ull * G_USEC_PER_SEC);
 	g_assert_cmpint(fu_device_get_icons(device)->len, ==, 1);
 	ret = fu_device_build_instance_id(device, &error, "USB", "VID", NULL);
 	g_assert_no_error(error);

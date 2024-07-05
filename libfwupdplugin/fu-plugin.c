@@ -509,8 +509,8 @@ fu_plugin_device_add(FuPlugin *self, FuDevice *device)
 	}
 
 	g_debug("emit added from %s: %s", fu_plugin_get_name(self), fu_device_get_id(device));
-	if (fu_device_get_created(device) == 0)
-		fu_device_set_created(device, (guint64)g_get_real_time() / G_USEC_PER_SEC);
+	if (fu_device_get_created_usec(device) == 0)
+		fu_device_set_created_usec(device, g_get_real_time());
 	fu_device_set_plugin(device, fu_plugin_get_name(self));
 	g_signal_emit(self, signals[SIGNAL_DEVICE_ADDED], 0, device);
 
@@ -518,7 +518,7 @@ fu_plugin_device_add(FuPlugin *self, FuDevice *device)
 	children = fu_device_get_children(device);
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *child = g_ptr_array_index(children, i);
-		if (fu_device_get_created(child) == 0)
+		if (fu_device_get_created_usec(child) == 0)
 			fu_plugin_device_add(self, child);
 	}
 
@@ -2105,7 +2105,7 @@ fu_plugin_runner_activate(FuPlugin *self, FuDevice *device, FuProgress *progress
 
 	/* update with correct flags */
 	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-	fu_device_set_modified(device, (guint64)g_get_real_time() / G_USEC_PER_SEC);
+	fu_device_set_modified_usec(device, g_get_real_time());
 	return TRUE;
 }
 
@@ -2152,7 +2152,7 @@ fu_plugin_runner_unlock(FuPlugin *self, FuDevice *device, GError **error)
 
 	/* update with correct flags */
 	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_LOCKED);
-	fu_device_set_modified(device, (guint64)g_get_real_time() / G_USEC_PER_SEC);
+	fu_device_set_modified_usec(device, g_get_real_time());
 	return TRUE;
 }
 

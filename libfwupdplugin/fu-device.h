@@ -158,10 +158,8 @@ fu_device_new(FuContext *ctx);
 #define fu_device_add_icon(d, v)	   fwupd_device_add_icon(FWUPD_DEVICE(d), v)
 #define fu_device_has_icon(d, v)	   fwupd_device_has_icon(FWUPD_DEVICE(d), v)
 #define fu_device_add_issue(d, v)	   fwupd_device_add_issue(FWUPD_DEVICE(d), v)
-#define fu_device_set_created(d, v)	   fwupd_device_set_created(FWUPD_DEVICE(d), v)
 #define fu_device_set_description(d, v)	   fwupd_device_set_description(FWUPD_DEVICE(d), v)
 #define fu_device_set_flags(d, v)	   fwupd_device_set_flags(FWUPD_DEVICE(d), v)
-#define fu_device_set_modified(d, v)	   fwupd_device_set_modified(FWUPD_DEVICE(d), v)
 #define fu_device_set_plugin(d, v)	   fwupd_device_set_plugin(FWUPD_DEVICE(d), v)
 #define fu_device_set_serial(d, v)	   fwupd_device_set_serial(FWUPD_DEVICE(d), v)
 #define fu_device_set_summary(d, v)	   fwupd_device_set_summary(FWUPD_DEVICE(d), v)
@@ -181,8 +179,6 @@ fu_device_new(FuContext *ctx);
 #define fu_device_set_install_duration(d, v) fwupd_device_set_install_duration(FWUPD_DEVICE(d), v)
 #define fu_device_get_checksums(d)	     fwupd_device_get_checksums(FWUPD_DEVICE(d))
 #define fu_device_get_flags(d)		     fwupd_device_get_flags(FWUPD_DEVICE(d))
-#define fu_device_get_created(d)	     fwupd_device_get_created(FWUPD_DEVICE(d))
-#define fu_device_get_modified(d)	     fwupd_device_get_modified(FWUPD_DEVICE(d))
 #define fu_device_get_guids(d)		     fwupd_device_get_guids(FWUPD_DEVICE(d))
 #define fu_device_get_guid_default(d)	     fwupd_device_get_guid_default(FWUPD_DEVICE(d))
 #define fu_device_get_instance_ids(d)	     fwupd_device_get_instance_ids(FWUPD_DEVICE(d))
@@ -762,6 +758,16 @@ guint
 fu_device_get_battery_threshold(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_set_battery_threshold(FuDevice *self, guint battery_threshold) G_GNUC_NON_NULL(1);
+
+gint64
+fu_device_get_created_usec(FuDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_device_set_created_usec(FuDevice *self, gint64 created_usec) G_GNUC_NON_NULL(1);
+gint64
+fu_device_get_modified_usec(FuDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_device_set_modified_usec(FuDevice *self, gint64 modified_usec) G_GNUC_NON_NULL(1);
+
 void
 fu_device_set_update_state(FuDevice *self, FwupdUpdateState update_state) G_GNUC_NON_NULL(1);
 void

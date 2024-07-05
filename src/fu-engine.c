@@ -3485,7 +3485,7 @@ fu_engine_install_blob(FuEngine *self,
 	}
 
 	/* mark this as modified even if we actually fail to do the update */
-	fu_device_set_modified(device, (guint64)g_get_real_time() / G_USEC_PER_SEC);
+	fu_device_set_modified_usec(device, g_get_real_time());
 
 	/* signal to all the plugins the update is about to happen */
 	device_id = g_strdup(fu_device_get_id(device));
