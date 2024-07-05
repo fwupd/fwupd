@@ -6,23 +6,9 @@
 
 #pragma once
 
-#ifdef HAVE_GUSB
-#include <gusb.h>
-#else
-#define GUsbContext		      GObject
-#define GUsbDevice		      GObject
-#define GUsbInterface		      GObject
-#define GUsbDeviceDirection	      gint
-#define GUsbDeviceRequestType	      gint
-#define GUsbDeviceRecipient	      gint
-#define GUsbDeviceClaimInterfaceFlags gint
-#ifndef __GI_SCANNER__
-#define G_USB_CHECK_VERSION(a, c, b) 0
-#endif
-#endif
-
 #include "fu-plugin.h"
 #include "fu-udev-device.h"
+#include "fu-usb-common.h"
 
 #define FU_TYPE_USB_DEVICE (fu_usb_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuUsbDevice, fu_usb_device, FU, USB_DEVICE, FuDevice)
@@ -74,9 +60,9 @@ fu_usb_device_get_open_retry_count(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_usb_device_control_transfer(FuUsbDevice *self,
-			       GUsbDeviceDirection direction,
-			       GUsbDeviceRequestType request_type,
-			       GUsbDeviceRecipient recipient,
+			       FuUsbDirection direction,
+			       FuUsbRequestType request_type,
+			       FuUsbRecipient recipient,
 			       guint8 request,
 			       guint16 value,
 			       guint16 idx,
@@ -107,18 +93,18 @@ fu_usb_device_interrupt_transfer(FuUsbDevice *self,
 gboolean
 fu_usb_device_claim_interface(FuUsbDevice *self,
 			      guint8 iface,
-			      GUsbDeviceClaimInterfaceFlags flags,
+			      FuUsbDeviceClaimFlags flags,
 			      GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_usb_device_release_interface(FuUsbDevice *self,
 				guint8 iface,
-				GUsbDeviceClaimInterfaceFlags flags,
+				FuUsbDeviceClaimFlags flags,
 				GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_usb_device_reset(FuUsbDevice *self, GError **error) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_usb_device_get_interfaces(FuUsbDevice *self, GError **error) G_GNUC_NON_NULL(1);
-GUsbInterface *
+FuUsbInterface *
 fu_usb_device_get_interface(FuUsbDevice *self,
 			    guint8 class_id,
 			    guint8 subclass_id,

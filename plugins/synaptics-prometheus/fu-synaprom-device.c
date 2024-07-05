@@ -414,9 +414,9 @@ fu_synaprom_device_attach(FuDevice *device, FuProgress *progress, GError **error
 	}
 
 	ret = fu_usb_device_control_transfer(FU_USB_DEVICE(device),
-					     G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					     G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					     G_USB_DEVICE_RECIPIENT_DEVICE,
+					     FU_USB_DIRECTION_HOST_TO_DEVICE,
+					     FU_USB_REQUEST_TYPE_VENDOR,
+					     FU_USB_RECIPIENT_DEVICE,
 					     FU_SYNAPROM_USB_CTRLREQUEST_VENDOR_WRITEDFT,
 					     0x0000,
 					     0x0000,
@@ -458,9 +458,9 @@ fu_synaprom_device_detach(FuDevice *device, FuProgress *progress, GError **error
 	}
 
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(device),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    FU_SYNAPROM_USB_CTRLREQUEST_VENDOR_WRITEDFT,
 					    0x0000,
 					    0x0000,

@@ -109,21 +109,20 @@ fu_fpc_device_dfu_cmd(FuFpcDevice *self,
 		return FALSE;
 	}
 
-	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    device2host ? G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST
-							: G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    type_vendor ? G_USB_DEVICE_REQUEST_TYPE_VENDOR
-							: G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    request,
-					    value,
-					    0x0000,
-					    data,
-					    length,
-					    length ? &actual_len : NULL,
-					    FPC_USB_TRANSFER_TIMEOUT,
-					    NULL,
-					    error)) {
+	if (!fu_usb_device_control_transfer(
+		FU_USB_DEVICE(self),
+		device2host ? FU_USB_DIRECTION_DEVICE_TO_HOST : FU_USB_DIRECTION_HOST_TO_DEVICE,
+		type_vendor ? FU_USB_REQUEST_TYPE_VENDOR : FU_USB_REQUEST_TYPE_CLASS,
+		FU_USB_RECIPIENT_INTERFACE,
+		request,
+		value,
+		0x0000,
+		data,
+		length,
+		length ? &actual_len : NULL,
+		FPC_USB_TRANSFER_TIMEOUT,
+		NULL,
+		error)) {
 		fu_error_convert(error);
 		return FALSE;
 	}
@@ -155,10 +154,10 @@ fu_fpc_device_fw_cmd(FuFpcDevice *self,
 	}
 
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    device2host ? G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST
-							: G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    device2host ? FU_USB_DIRECTION_DEVICE_TO_HOST
+							: FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    request,
 					    0x0000,
 					    0x0000,
@@ -192,14 +191,14 @@ fu_fpc_device_setup_mode(FuFpcDevice *self, GError **error)
 	if (intfs == NULL)
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {
-		GUsbInterface *intf = g_ptr_array_index(intfs, i);
-		if (g_usb_interface_get_class(intf) == FPC_DEVICE_DFU_MODE_CLASS &&
-		    g_usb_interface_get_protocol(intf) == FPC_DEVICE_DFU_MODE_PORT) {
+		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
+		if (fu_usb_interface_get_class(intf) == FPC_DEVICE_DFU_MODE_CLASS &&
+		    fu_usb_interface_get_protocol(intf) == FPC_DEVICE_DFU_MODE_PORT) {
 			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 			return TRUE;
 		}
-		if (g_usb_interface_get_class(intf) == FPC_DEVICE_NORMAL_MODE_CLASS &&
-		    g_usb_interface_get_protocol(intf) == FPC_DEVICE_NORMAL_MODE_PORT) {
+		if (fu_usb_interface_get_class(intf) == FPC_DEVICE_NORMAL_MODE_CLASS &&
+		    fu_usb_interface_get_protocol(intf) == FPC_DEVICE_NORMAL_MODE_PORT) {
 			fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 			return TRUE;
 		}

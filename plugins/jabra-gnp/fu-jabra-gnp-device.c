@@ -62,9 +62,9 @@ _fu_usb_device_get_interface_for_class(FuUsbDevice *usb_device, guint8 intf_clas
 	if (intfs == NULL)
 		return 0xFF;
 	for (guint i = 0; i < intfs->len; i++) {
-		GUsbInterface *intf = g_ptr_array_index(intfs, i);
-		if (g_usb_interface_get_class(intf) == intf_class)
-			return g_usb_interface_get_number(intf);
+		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
+		if (fu_usb_interface_get_class(intf) == intf_class)
+			return fu_usb_interface_get_number(intf);
 	}
 	return 0xFF;
 }
@@ -78,9 +78,9 @@ fu_jabra_gnp_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 				  ? FU_USB_DEVICE(fu_device_get_parent(device))
 				  : FU_USB_DEVICE(self);
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(target),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_CLASS,
+					    FU_USB_RECIPIENT_INTERFACE,
 					    0x09,
 					    0x0200 | FU_JABRA_GNP_IFACE,
 					    self->iface_hid,
@@ -846,7 +846,7 @@ fu_jabra_gnp_device_probe(FuDevice *device, GError **error)
 		return TRUE;
 
 	self->iface_hid = _fu_usb_device_get_interface_for_class(FU_USB_DEVICE(self),
-								 G_USB_DEVICE_CLASS_HID,
+								 FU_USB_DEVICE_CLASS_HID,
 								 &error_local);
 	if (self->iface_hid == 0xFF) {
 		g_set_error(error,

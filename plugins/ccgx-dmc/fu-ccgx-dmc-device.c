@@ -49,9 +49,9 @@ fu_ccgx_dmc_device_ensure_dock_id(FuCcgxDmcDevice *self, GError **error)
 {
 	g_autoptr(GByteArray) st_id = fu_struct_ccgx_dmc_dock_identity_new();
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    FU_CCGX_DMC_RQT_CODE_DOCK_IDENTITY, /* request */
 					    0,					/* value */
 					    0,					/* index */
@@ -80,9 +80,9 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 	/* read minimum status length */
 	fu_byte_array_set_size(st, 32, 0x0);
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    FU_CCGX_DMC_RQT_CODE_DOCK_STATUS, /* request */
 					    0,				      /* value */
 					    0,				      /* index */
@@ -106,9 +106,9 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 			return FALSE;
 	}
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    FU_CCGX_DMC_RQT_CODE_DOCK_STATUS, /* request */
 					    0,				      /* value */
 					    0,				      /* index */
@@ -155,9 +155,9 @@ static gboolean
 fu_ccgx_dmc_device_send_reset_state_machine(FuCcgxDmcDevice *self, GError **error)
 {
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    FU_CCGX_DMC_RQT_CODE_RESET_STATE_MACHINE, /* request */
 					    0,					      /* value */
 					    0,					      /* index */
@@ -177,9 +177,9 @@ static gboolean
 fu_ccgx_dmc_device_send_soft_reset(FuCcgxDmcDevice *self, gboolean reset_later, GError **error)
 {
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    FU_CCGX_DMC_RQT_CODE_SOFT_RESET, /* request */
 					    reset_later,		     /* value */
 					    0,				     /* index */
@@ -210,9 +210,9 @@ fu_ccgx_dmc_device_send_start_upgrade(FuCcgxDmcDevice *self, GBytes *fw, GError 
 			return FALSE;
 	}
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    FU_CCGX_DMC_RQT_CODE_UPGRADE_START, /* request */
 					    bufsz > 0 ? 1 : 0,			/* value */
 					    1,	     /* index, forced update */
@@ -232,9 +232,9 @@ static gboolean
 fu_ccgx_dmc_device_send_download_trigger(FuCcgxDmcDevice *self, guint16 trigger, GError **error)
 {
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    FU_CCGX_DMC_RQT_CODE_TRIGGER, /* request */
 					    trigger,			  /* value */
 					    0,				  /* index */
@@ -264,9 +264,9 @@ fu_ccgx_dmc_device_send_fwct(FuCcgxDmcDevice *self,
 	if (buf_mut == NULL)
 		return FALSE;
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    FU_CCGX_DMC_RQT_CODE_FWCT_WRITE, /* request */
 					    0,				     /* value */
 					    0,				     /* index */
@@ -322,9 +322,9 @@ fu_ccgx_dmc_device_send_write_command(FuCcgxDmcDevice *self,
 				      GError **error)
 {
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    FU_CCGX_DMC_RQT_CODE_IMG_WRITE, /* request */
 					    start_row,			    /* value */
 					    num_of_row,			    /* index */

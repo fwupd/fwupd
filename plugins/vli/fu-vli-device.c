@@ -545,9 +545,9 @@ fu_vli_device_spi_read_flash_id(FuVliDevice *self, GError **error)
 	if (!fu_cfi_device_get_cmd(priv->cfi_device, FU_CFI_DEVICE_CMD_READ_ID, &spi_cmd, error))
 		return FALSE;
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    0xc0 | (priv->spi_cmd_read_id_sz * 2),
 					    spi_cmd,
 					    0x0000,

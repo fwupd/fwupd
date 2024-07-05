@@ -93,9 +93,9 @@ fu_elanfp_iap_send_command(FuElanfpDevice *self,
 		}
 	} else {
 		if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						    G_USB_DEVICE_RECIPIENT_INTERFACE,
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_INTERFACE,
 						    request, /* request */
 						    0x00,    /* value */
 						    0x00,    /* index */

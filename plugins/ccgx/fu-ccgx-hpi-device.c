@@ -108,9 +108,9 @@ fu_ccgx_hpi_device_i2c_reset_cb(FuDevice *device, gpointer user_data, GError **e
 	FuCcgxHpiDeviceRetryHelper *helper = (FuCcgxHpiDeviceRetryHelper *)user_data;
 	g_autoptr(GError) error_local = NULL;
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    CY_I2C_RESET_CMD,
 					    (self->scb_index << CY_SCB_INDEX_POS) | helper->mode,
 					    0x0,
@@ -136,9 +136,9 @@ fu_ccgx_hpi_device_check_i2c_status(FuCcgxHpiDevice *self, guint8 mode, GError *
 	guint8 buf[CY_I2C_GET_STATUS_LEN] = {0x0};
 	g_autoptr(GError) error_local = NULL;
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    CY_I2C_GET_STATUS_CMD,
 					    (((guint16)self->scb_index) << CY_SCB_INDEX_POS) | mode,
 					    0x0,
@@ -179,9 +179,9 @@ fu_ccgx_hpi_device_get_i2c_config(FuCcgxHpiDevice *self, CyI2CConfig *i2c_config
 {
 	g_autoptr(GError) error_local = NULL;
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    CY_I2C_GET_CONFIG_CMD,
 					    ((guint16)self->scb_index) << CY_SCB_INDEX_POS,
 					    0x0,
@@ -206,9 +206,9 @@ fu_ccgx_hpi_device_set_i2c_config(FuCcgxHpiDevice *self, CyI2CConfig *i2c_config
 {
 	g_autoptr(GError) error_local = NULL;
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    CY_I2C_SET_CONFIG_CMD,
 					    ((guint16)self->scb_index) << CY_SCB_INDEX_POS,
 					    0x0,
@@ -294,9 +294,9 @@ fu_ccgx_hpi_device_i2c_read(FuCcgxHpiDevice *self,
 	}
 	target_address = (self->target_address & 0x7F) | (self->scb_index << 7);
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    CY_I2C_READ_CMD,
 					    (((guint16)target_address) << 8) | cfg_bits,
 					    bufsz,
@@ -345,9 +345,9 @@ fu_ccgx_hpi_device_i2c_write(FuCcgxHpiDevice *self,
 	}
 	target_address = (self->target_address & 0x7F) | (self->scb_index << 7);
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    CY_I2C_WRITE_CMD,
 					    ((guint16)target_address << 8) |
 						(cfg_bits & CY_I2C_DATA_CONFIG_STOP),
@@ -398,9 +398,9 @@ fu_ccgx_hpi_device_i2c_write_no_resp(FuCcgxHpiDevice *self,
 	}
 	target_address = (self->target_address & 0x7F) | (self->scb_index << 7);
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    CY_I2C_WRITE_CMD,
 					    ((guint16)target_address << 8) |
 						(cfg_bits & CY_I2C_DATA_CONFIG_STOP),

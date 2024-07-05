@@ -43,7 +43,7 @@ enum { PROP_0, PROP_USB_DEVICE, PROP_LAST };
 
 #define GET_PRIVATE(o) (fu_usb_device_get_instance_private(o))
 
-#define FU_USB_DEVICE_CLAIM_INTERFACE_DELAY 500 /* ms */
+#define FU_DEVICE_CLAIM_INTERFACE_DELAY	    500 /* ms */
 #define FU_USB_DEVICE_OPEN_DELAY	    50	/* ms */
 
 static void
@@ -305,9 +305,9 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 	if (fu_usb_device_get_spec(self) >= 0x0300)
 		value = 0x2a;
 	if (!fu_usb_device_control_transfer(self,
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_CLASS,
+					    FU_USB_RECIPIENT_DEVICE,
 					    0x06, /* LIBUSB_REQUEST_GET_DESCRIPTOR */
 					    value << 8,
 					    0x00,
@@ -357,7 +357,7 @@ fu_usb_device_claim_interface_cb(FuDevice *device, gpointer user_data, GError **
 	FuUsbDeviceInterface *iface = (FuUsbDeviceInterface *)user_data;
 	return fu_usb_device_claim_interface(self,
 					     iface->number,
-					     G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+					     FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER,
 					     error);
 }
 
@@ -444,7 +444,7 @@ fu_usb_device_open(FuDevice *device, GError **error)
 			if (!fu_device_retry_full(device,
 						  fu_usb_device_claim_interface_cb,
 						  priv->claim_retry_count,
-						  FU_USB_DEVICE_CLAIM_INTERFACE_DELAY,
+						  FU_DEVICE_CLAIM_INTERFACE_DELAY,
 						  iface,
 						  error)) {
 				g_prefix_error(error,
@@ -453,11 +453,10 @@ fu_usb_device_open(FuDevice *device, GError **error)
 				return FALSE;
 			}
 		} else {
-			if (!fu_usb_device_claim_interface(
-				self,
-				iface->number,
-				G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-				error)) {
+			if (!fu_usb_device_claim_interface(self,
+							   iface->number,
+							   FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER,
+							   error)) {
 				g_prefix_error(error,
 					       "failed to claim interface 0x%02x: ",
 					       iface->number);
@@ -543,7 +542,7 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* get the hub descriptor if this is a hub */
-	if (fu_usb_device_get_device_class(self) == G_USB_DEVICE_CLASS_HUB) {
+	if (fu_usb_device_get_device_class(self) == FU_USB_DEVICE_CLASS_HUB) {
 		if (!fu_usb_device_query_hub(self, error))
 			return FALSE;
 	}
@@ -575,24 +574,24 @@ fu_usb_device_ready(FuDevice *device, GError **error)
 	/* add fallback icon if there is nothing added already */
 	if (fu_device_get_icons(device)->len == 0) {
 		for (guint i = 0; i < intfs->len; i++) {
-			GUsbInterface *intf = g_ptr_array_index(intfs, i);
+			FuUsbInterface *intf = g_ptr_array_index(intfs, i);
 
 			/* Video: Video Control: i.e. a webcam */
-			if (g_usb_interface_get_class(intf) == G_USB_DEVICE_CLASS_VIDEO &&
-			    g_usb_interface_get_subclass(intf) == 0x01) {
+			if (fu_usb_interface_get_class(intf) == FU_USB_DEVICE_CLASS_VIDEO &&
+			    fu_usb_interface_get_subclass(intf) == 0x01) {
 				fu_device_add_icon(device, "camera-web");
 			}
 
 			/* Audio */
-			if (g_usb_interface_get_class(intf) == G_USB_DEVICE_CLASS_AUDIO)
+			if (fu_usb_interface_get_class(intf) == FU_USB_DEVICE_CLASS_AUDIO)
 				fu_device_add_icon(device, "audio-card");
 
 			/* Mass Storage */
-			if (g_usb_interface_get_class(intf) == G_USB_DEVICE_CLASS_MASS_STORAGE)
+			if (fu_usb_interface_get_class(intf) == FU_USB_DEVICE_CLASS_MASS_STORAGE)
 				fu_device_add_icon(device, "drive-harddisk");
 
 			/* Printer */
-			if (g_usb_interface_get_class(intf) == G_USB_DEVICE_CLASS_PRINTER)
+			if (fu_usb_interface_get_class(intf) == FU_USB_DEVICE_CLASS_PRINTER)
 				fu_device_add_icon(device, "printer");
 		}
 	}
@@ -619,13 +618,13 @@ fu_usb_device_close(FuDevice *device, GError **error)
 	/* release interfaces, ignoring errors */
 	for (guint i = 0; priv->interfaces != NULL && i < priv->interfaces->len; i++) {
 		FuUsbDeviceInterface *iface = g_ptr_array_index(priv->interfaces, i);
-		GUsbDeviceClaimInterfaceFlags claim_flags = G_USB_DEVICE_CLAIM_INTERFACE_NONE;
+		FuUsbDeviceClaimFlags claim_flags = FU_USB_DEVICE_CLAIM_FLAG_NONE;
 		g_autoptr(GError) error_local = NULL;
 		if (!iface->claimed)
 			continue;
 		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
 			g_debug("re-binding kernel driver as not waiting for replug");
-			claim_flags |= G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER;
+			claim_flags |= FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER;
 		}
 		if (!fu_usb_device_release_interface(self,
 						     iface->number,
@@ -821,10 +820,10 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	for (guint i = 0; i < intfs->len; i++) {
-		GUsbInterface *intf = g_ptr_array_index(intfs, i);
-		fu_device_add_instance_u8(device, "CLASS", g_usb_interface_get_class(intf));
-		fu_device_add_instance_u8(device, "SUBCLASS", g_usb_interface_get_subclass(intf));
-		fu_device_add_instance_u8(device, "PROT", g_usb_interface_get_protocol(intf));
+		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
+		fu_device_add_instance_u8(device, "CLASS", fu_usb_interface_get_class(intf));
+		fu_device_add_instance_u8(device, "SUBCLASS", fu_usb_interface_get_subclass(intf));
+		fu_device_add_instance_u8(device, "PROT", fu_usb_interface_get_protocol(intf));
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
@@ -1180,9 +1179,9 @@ fu_udev_device_unbind_driver(FuDevice *device, GError **error)
  **/
 gboolean
 fu_usb_device_control_transfer(FuUsbDevice *self,
-			       GUsbDeviceDirection direction,
-			       GUsbDeviceRequestType request_type,
-			       GUsbDeviceRecipient recipient,
+			       FuUsbDirection direction,
+			       FuUsbRequestType request_type,
+			       FuUsbRecipient recipient,
 			       guint8 request,
 			       guint16 value,
 			       guint16 idx,
@@ -1395,7 +1394,7 @@ fu_usb_device_reset(FuUsbDevice *self, GError **error)
  *
  * Gets all the interfaces exported by the device.
  *
- * Return value: (transfer container) (element-type GUsbInterface): an array of interfaces or %NULL
+ * Return value: (transfer container) (element-type FuUsbInterface): an array of interfaces or %NULL
  *
  * Since: 2.0.0
  **/
@@ -1443,11 +1442,11 @@ fu_usb_device_get_interfaces(FuUsbDevice *self, GError **error)
  * 'alternate' interfaces you have to use fu_usb_device_get_interfaces() and
  * check each one manally.
  *
- * Return value: (transfer full): a #GUsbInterface or %NULL for not found
+ * Return value: (transfer full): a #FuUsbInterface or %NULL for not found
  *
  * Since: 0.2.8
  **/
-GUsbInterface *
+FuUsbInterface *
 fu_usb_device_get_interface(FuUsbDevice *self,
 			    guint8 class_id,
 			    guint8 subclass_id,
@@ -1456,7 +1455,7 @@ fu_usb_device_get_interface(FuUsbDevice *self,
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 #ifdef HAVE_GUSB
-	g_autoptr(GUsbInterface) intf = NULL;
+	g_autoptr(FuUsbInterface) intf = NULL;
 #endif
 
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), NULL);
@@ -1619,7 +1618,7 @@ fu_usb_device_get_string_descriptor_bytes_full(FuUsbDevice *self,
  * fu_usb_device_claim_interface:
  * @self: a #FuUsbDevice
  * @iface: bInterfaceNumber of the interface you wish to claim
- * @flags: #GUsbDeviceClaimInterfaceFlags
+ * @flags: #FuUsbDeviceClaimFlags
  * @error: a #GError, or %NULL
  *
  * Claim an interface of the device.
@@ -1631,7 +1630,7 @@ fu_usb_device_get_string_descriptor_bytes_full(FuUsbDevice *self,
 gboolean
 fu_usb_device_claim_interface(FuUsbDevice *self,
 			      guint8 iface,
-			      GUsbDeviceClaimInterfaceFlags flags,
+			      FuUsbDeviceClaimFlags flags,
 			      GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
@@ -1660,7 +1659,7 @@ fu_usb_device_claim_interface(FuUsbDevice *self,
  * fu_usb_device_release_interface:
  * @self: a #FuUsbDevice
  * @iface: bInterfaceNumber of the interface you wish to release
- * @flags: #GUsbDeviceClaimInterfaceFlags
+ * @flags: #FuUsbDeviceClaimFlags
  * @error: a #GError, or %NULL
  *
  * Release an interface of the device.
@@ -1672,7 +1671,7 @@ fu_usb_device_claim_interface(FuUsbDevice *self,
 gboolean
 fu_usb_device_release_interface(FuUsbDevice *self,
 				guint8 iface,
-				GUsbDeviceClaimInterfaceFlags flags,
+				FuUsbDeviceClaimFlags flags,
 				GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
@@ -1909,47 +1908,47 @@ fu_usb_device_new(FuContext *ctx, GUsbDevice *usb_device)
 static const gchar *
 fu_usb_device_class_code_to_string(GUsbDeviceClassCode code)
 {
-	if (code == G_USB_DEVICE_CLASS_INTERFACE_DESC)
+	if (code == FU_USB_DEVICE_CLASS_INTERFACE_DESC)
 		return "interface-desc";
-	if (code == G_USB_DEVICE_CLASS_AUDIO)
+	if (code == FU_USB_DEVICE_CLASS_AUDIO)
 		return "audio";
-	if (code == G_USB_DEVICE_CLASS_COMMUNICATIONS)
+	if (code == FU_USB_DEVICE_CLASS_COMMUNICATIONS)
 		return "communications";
-	if (code == G_USB_DEVICE_CLASS_HID)
+	if (code == FU_USB_DEVICE_CLASS_HID)
 		return "hid";
-	if (code == G_USB_DEVICE_CLASS_PHYSICAL)
+	if (code == FU_USB_DEVICE_CLASS_PHYSICAL)
 		return "physical";
-	if (code == G_USB_DEVICE_CLASS_IMAGE)
+	if (code == FU_USB_DEVICE_CLASS_IMAGE)
 		return "image";
-	if (code == G_USB_DEVICE_CLASS_PRINTER)
+	if (code == FU_USB_DEVICE_CLASS_PRINTER)
 		return "printer";
-	if (code == G_USB_DEVICE_CLASS_MASS_STORAGE)
+	if (code == FU_USB_DEVICE_CLASS_MASS_STORAGE)
 		return "mass-storage";
-	if (code == G_USB_DEVICE_CLASS_HUB)
+	if (code == FU_USB_DEVICE_CLASS_HUB)
 		return "hub";
-	if (code == G_USB_DEVICE_CLASS_CDC_DATA)
+	if (code == FU_USB_DEVICE_CLASS_CDC_DATA)
 		return "cdc-data";
-	if (code == G_USB_DEVICE_CLASS_SMART_CARD)
+	if (code == FU_USB_DEVICE_CLASS_SMART_CARD)
 		return "smart-card";
-	if (code == G_USB_DEVICE_CLASS_CONTENT_SECURITY)
+	if (code == FU_USB_DEVICE_CLASS_CONTENT_SECURITY)
 		return "content-security";
-	if (code == G_USB_DEVICE_CLASS_VIDEO)
+	if (code == FU_USB_DEVICE_CLASS_VIDEO)
 		return "video";
-	if (code == G_USB_DEVICE_CLASS_PERSONAL_HEALTHCARE)
+	if (code == FU_USB_DEVICE_CLASS_PERSONAL_HEALTHCARE)
 		return "personal-healthcare";
-	if (code == G_USB_DEVICE_CLASS_AUDIO_VIDEO)
+	if (code == FU_USB_DEVICE_CLASS_AUDIO_VIDEO)
 		return "audio-video";
-	if (code == G_USB_DEVICE_CLASS_BILLBOARD)
+	if (code == FU_USB_DEVICE_CLASS_BILLBOARD)
 		return "billboard";
-	if (code == G_USB_DEVICE_CLASS_DIAGNOSTIC)
+	if (code == FU_USB_DEVICE_CLASS_DIAGNOSTIC)
 		return "diagnostic";
-	if (code == G_USB_DEVICE_CLASS_WIRELESS_CONTROLLER)
+	if (code == FU_USB_DEVICE_CLASS_WIRELESS_CONTROLLER)
 		return "wireless-controller";
-	if (code == G_USB_DEVICE_CLASS_MISCELLANEOUS)
+	if (code == FU_USB_DEVICE_CLASS_MISCELLANEOUS)
 		return "miscellaneous";
-	if (code == G_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
+	if (code == FU_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
 		return "application-specific";
-	if (code == G_USB_DEVICE_CLASS_VENDOR_SPECIFIC)
+	if (code == FU_USB_DEVICE_CLASS_VENDOR_SPECIFIC)
 		return "vendor-specific";
 	return NULL;
 }

@@ -435,11 +435,11 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	g_autoptr(GByteArray) start_pkt = g_byte_array_new();
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GUsbInterface) intf = NULL;
+	g_autoptr(FuUsbInterface) intf = NULL;
 	g_autoptr(GPtrArray) endpoints = NULL;
 	g_autoptr(FuUsbDevice) usb_device = NULL;
 
-	/* convert GUdevDevice to GUsbDevice */
+	/* convert GUdevDevice to FuUsbDevice */
 	usb_device = FU_USB_DEVICE(fu_udev_device_find_usb_device(FU_UDEV_DEVICE(device), error));
 	if (usb_device == NULL)
 		return FALSE;
@@ -450,14 +450,14 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 
 	/* find the correct interface */
 	intf = fu_usb_device_get_interface(FU_USB_DEVICE(usb_device),
-					   G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
+					   FU_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
 					   UPD_INTERFACE_SUBPROTOCOL_ID,
 					   FU_LOGITECH_SCRIBE_PROTOCOL_ID,
 					   error);
 	if (intf == NULL)
 		return FALSE;
 
-	endpoints = g_usb_interface_get_endpoints(intf);
+	endpoints = fu_usb_interface_get_endpoints(intf);
 	if (endpoints == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -466,13 +466,13 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	self->update_iface = g_usb_interface_get_number(intf);
+	self->update_iface = fu_usb_interface_get_number(intf);
 	for (guint j = 0; j < endpoints->len; j++) {
-		GUsbEndpoint *ep = g_ptr_array_index(endpoints, j);
+		FuUsbEndpoint *ep = g_ptr_array_index(endpoints, j);
 		if (j == EP_OUT)
-			self->update_ep[EP_OUT] = g_usb_endpoint_get_address(ep);
+			self->update_ep[EP_OUT] = fu_usb_endpoint_get_address(ep);
 		else
-			self->update_ep[EP_IN] = g_usb_endpoint_get_address(ep);
+			self->update_ep[EP_IN] = fu_usb_endpoint_get_address(ep);
 	}
 	fu_usb_device_add_interface(usb_device, self->update_iface);
 	g_debug("usb data, iface: %u ep_out: %u ep_in: %u",

@@ -140,10 +140,6 @@ CFI Flash Id.
 
 Since 1.8.2.
 
-## Runtime Requirement
-
-The USB Hub devices and its attached Scaler require libgusb version [0.3.8][1] or later to be detected.
-
 ## Update Behavior
 
 The devices are independently updated at runtime using USB control transfers.
@@ -159,8 +155,6 @@ The vendor ID is set from the USB vendor, for example set to `USB:0x03F0` for HP
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.
-
-[1]: https://github.com/hughsie/libgusb/commit/4e118c154dde70e196c4381bd97790a9413c3552
 
 ## Version Considerations
 
