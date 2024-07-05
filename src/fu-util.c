@@ -865,6 +865,40 @@ fu_util_emulation_load_with_fallback(FuUtilPrivate *priv, GBytes *emulation_data
 }
 
 static gboolean
+fu_util_device_test_remove_emulated_devices(FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
+	if (devices == NULL)
+		return FALSE;
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *device = g_ptr_array_index(devices, i);
+		g_autoptr(GError) error_local = NULL;
+		if (!fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+			continue;
+		if (!fwupd_client_modify_device(priv->client,
+						fwupd_device_get_id(device),
+						"Flags",
+						"~emulated",
+						priv->cancellable,
+						&error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+				g_debug("ignoring: %s", error_local->message);
+				continue;
+			}
+			g_propagate_prefixed_error(error,
+						   g_steal_pointer(&error_local),
+						   "failed to modify device: ");
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_util_device_test_step(FuUtilPrivate *priv,
 			 FuUtilDeviceTestHelper *helper,
 			 JsonObject *json_obj,
@@ -960,6 +994,14 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 		JsonObject *json_obj_tmp = json_node_get_object(json_node);
 		if (!fu_util_device_test_component(priv, helper, json_obj_tmp, fw, error))
 			return FALSE;
+	}
+
+	/* remove emulated devices */
+	if (helper->use_emulation) {
+		if (!fu_util_device_test_remove_emulated_devices(priv, error)) {
+			g_prefix_error(error, "failed to remove emulated devices: ");
+			return FALSE;
+		}
 	}
 
 	/* success */

@@ -976,6 +976,21 @@ fu_engine_remove_device_flag(FuEngine *self,
 		fu_device_remove_flag(device, flag);
 		return fu_history_modify_device(self->history, device, error);
 	}
+	if (flag == FWUPD_DEVICE_FLAG_EMULATED) {
+		device = fu_device_list_get_by_id(self->device_list, device_id, error);
+		if (device == NULL)
+			return FALSE;
+		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "device %s is not emulated",
+				    fu_device_get_id(device));
+			return FALSE;
+		}
+		fu_device_list_remove(self->device_list, device);
+		return TRUE;
+	}
 	if (flag == FWUPD_DEVICE_FLAG_EMULATION_TAG) {
 		device = fu_device_list_get_by_id(self->device_list, device_id, error);
 		if (device == NULL)
