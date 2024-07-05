@@ -2534,7 +2534,7 @@ fu_engine_history_func(gconstpointer user_data)
 	fu_device_add_checksum(device, "0123456789abcdef0123456789abcdef01234567");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_set_created(device, 1515338000);
+	fu_device_set_created_usec(device, 1515338000ull * G_USEC_PER_SEC);
 	fu_engine_add_device(engine, device);
 	devices = fu_engine_get_devices(engine, &error);
 	g_assert_no_error(error);
@@ -2587,7 +2587,7 @@ fu_engine_history_func(gconstpointer user_data)
 	g_assert_nonnull(device2);
 	g_assert_cmpint(fu_device_get_update_state(device2), ==, FWUPD_UPDATE_STATE_SUCCESS);
 	g_assert_cmpstr(fu_device_get_update_error(device2), ==, NULL);
-	fu_device_set_modified(device2, 1514338000);
+	fu_device_set_modified_usec(device2, 1514338000ull * G_USEC_PER_SEC);
 	g_hash_table_remove_all(fwupd_release_get_metadata(fu_device_get_release_default(device2)));
 	device_str = fu_device_to_string(device2);
 	checksum = fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA1, &error);
@@ -2667,7 +2667,7 @@ fu_engine_history_verfmt_func(gconstpointer user_data)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
-	fu_device_set_created(device, 1515338000);
+	fu_device_set_created_usec(device, 1515338000ull * G_USEC_PER_SEC);
 	fu_engine_add_device(engine, device);
 	g_assert_cmpint(fu_device_get_version_format(device), ==, FWUPD_VERSION_FORMAT_TRIPLET);
 	g_assert_cmpstr(fu_device_get_version(device), ==, "0.1.27");
@@ -2726,7 +2726,7 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES);
-	fu_device_set_created(device, 1515338000);
+	fu_device_set_created_usec(device, 1515338000ull * G_USEC_PER_SEC);
 	fu_engine_add_device(engine, device);
 
 	filename = g_test_build_filename(G_TEST_BUILT,
@@ -2853,7 +2853,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_set_created(device, 1515338000);
+	fu_device_set_created_usec(device, 1515338000ull * G_USEC_PER_SEC);
 	fu_engine_add_device(engine, device);
 	devices = fu_engine_get_devices(engine, &error);
 	g_assert_no_error(error);
@@ -2993,7 +2993,7 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_set_created(device, 1515338000);
+	fu_device_set_created_usec(device, 1515338000ull * G_USEC_PER_SEC);
 	fu_engine_add_device(engine, device);
 	devices = fu_engine_get_devices(engine, &error);
 	g_assert_no_error(error);
@@ -3105,7 +3105,7 @@ fu_engine_install_request(gconstpointer user_data)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_request_flag(device, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
-	fu_device_set_created(device, 1515338000);
+	fu_device_set_created_usec(device, 1515338000ull * G_USEC_PER_SEC);
 	fu_engine_add_device(engine, device);
 	devices = fu_engine_get_devices(engine, &error);
 	g_assert_no_error(error);
@@ -3200,7 +3200,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_set_created(device, 1515338000);
+	fu_device_set_created_usec(device, 1515338000ull * G_USEC_PER_SEC);
 	fu_engine_add_device(engine, device);
 	devices = fu_engine_get_devices(engine, &error);
 	g_assert_no_error(error);
@@ -3246,7 +3246,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	g_assert_cmpint(fu_device_get_update_state(device2), ==, FWUPD_UPDATE_STATE_FAILED);
 	g_assert_cmpstr(fu_device_get_update_error(device2), ==, error->message);
 	g_clear_error(&error);
-	fu_device_set_modified(device2, 1514338000);
+	fu_device_set_modified_usec(device2, 1514338000ull * G_USEC_PER_SEC);
 	g_hash_table_remove_all(fwupd_release_get_metadata(fu_device_get_release_default(device2)));
 	device_str = fu_device_to_string(device2);
 	checksum = fu_input_stream_compute_checksum(stream, G_CHECKSUM_SHA1, &error);
@@ -4407,8 +4407,8 @@ fu_history_func(gconstpointer user_data)
 	fu_device_set_update_error(device, "word");
 	fu_device_add_guid(device, "827edddd-9bb6-5632-889f-2c01255503da");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_set_created(device, 123);
-	fu_device_set_modified(device, 456);
+	fu_device_set_created_usec(device, 1514338000ull * G_USEC_PER_SEC);
+	fu_device_set_modified_usec(device, 1514338999ull * G_USEC_PER_SEC);
 	release = fu_release_new();
 	fu_release_set_filename(release, "/var/lib/dave.cap"),
 	    fu_release_add_checksum(release, "abcdef");
@@ -4441,8 +4441,8 @@ fu_history_func(gconstpointer user_data)
 	g_assert_cmpint(fu_device_get_flags(device),
 			==,
 			FWUPD_DEVICE_FLAG_INTERNAL | FWUPD_DEVICE_FLAG_HISTORICAL);
-	g_assert_cmpint(fu_device_get_created(device), ==, 123);
-	g_assert_cmpint(fu_device_get_modified(device), ==, 456);
+	g_assert_cmpint(fu_device_get_created_usec(device), ==, 1514338000ull * G_USEC_PER_SEC);
+	g_assert_cmpint(fu_device_get_modified_usec(device), ==, 1514338999ull * G_USEC_PER_SEC);
 	release = FU_RELEASE(fu_device_get_release_default(device));
 	g_assert_nonnull(release);
 	g_assert_cmpstr(fu_release_get_version(release), ==, "3.0.2");

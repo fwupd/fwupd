@@ -2496,10 +2496,10 @@ fu_udev_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags
 		json_builder_set_member_name(builder, "BackendId");
 		json_builder_add_string_value(builder, fu_device_get_backend_id(device));
 	}
-#if GLIB_CHECK_VERSION(2, 62, 0)
-	if (fu_device_get_created(device) != 0) {
+#if GLIB_CHECK_VERSION(2, 80, 0)
+	if (fu_device_get_created_usec(device) != 0) {
 		g_autoptr(GDateTime) dt =
-		    g_date_time_new_from_unix_utc(fu_device_get_created(device));
+		    g_date_time_new_from_unix_utc_usec(fu_device_get_created_usec(device));
 		g_autofree gchar *str = g_date_time_format_iso8601(dt);
 		json_builder_set_member_name(builder, "Created");
 		json_builder_add_string_value(builder, str);
@@ -2535,13 +2535,14 @@ fu_udev_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	tmp = json_object_get_string_member_with_default(json_object, "BackendId", NULL);
 	if (tmp != NULL)
 		fu_device_set_backend_id(device, tmp);
-
+#if GLIB_CHECK_VERSION(2, 80, 0)
 	tmp = json_object_get_string_member_with_default(json_object, "Created", NULL);
 	if (tmp != NULL) {
 		g_autoptr(GDateTime) dt = g_date_time_new_from_iso8601(tmp, NULL);
 		if (dt != NULL)
-			fu_device_set_created(device, g_date_time_to_unix(dt));
+			fu_device_set_created_usec(device, g_date_time_to_unix_usec(dt));
 	}
+#endif
 
 	/* array of events */
 	if (json_object_has_member(json_object, "Events")) {

@@ -52,6 +52,8 @@ typedef struct {
 	gchar *proxy_guid;
 	FuDevice *proxy; /* noref */
 	FuContext *ctx;
+	gint64 created_usec;
+	gint64 modified_usec;
 	GHashTable *inhibits; /* (nullable) */
 	GHashTable *metadata; /* (nullable) */
 	GPtrArray *parent_guids;	/* (nullable) (element-type utf-8) */
@@ -4230,6 +4232,98 @@ fu_device_set_battery_threshold(FuDevice *self, guint battery_threshold)
 	fu_device_ensure_battery_inhibit(self);
 }
 
+/**
+ * fu_device_get_created_usec:
+ * @self: a #FuDevice
+ *
+ * Gets when the device was created.
+ *
+ * If the usec-precision value has not been set with fu_device_set_created_usec(),
+ * the exported seconds-precision fallback value is returned instead.
+ *
+ * Returns: value in microseconds, or -1 for invalid
+ *
+ * Since: 2.0.0
+ **/
+gint64
+fu_device_get_created_usec(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), -1);
+
+	if (priv->created_usec > 0)
+		return priv->created_usec;
+	return fwupd_device_get_created(FWUPD_DEVICE(self)) * G_USEC_PER_SEC;
+}
+
+/**
+ * fu_device_set_created_usec:
+ * @self: a #FuDevice
+ * @created_usec: value in microseconds
+ *
+ * Sets when the device was created.
+ *
+ * NOTE: This also sets the seconds-precision fallback value.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_set_created_usec(FuDevice *self, gint64 created_usec)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(created_usec == 0 || created_usec > 10000000000);
+
+	priv->created_usec = created_usec;
+	fwupd_device_set_created(FWUPD_DEVICE(self), created_usec / G_USEC_PER_SEC);
+}
+
+/**
+ * fu_device_get_modified_usec:
+ * @self: a #FuDevice
+ *
+ * Gets when the device was modified.
+ *
+ * If the usec-precision value has not been set with fu_device_set_modified_usec(),
+ * the exported seconds-precision fallback value is returned instead.
+ *
+ * Returns: value in microseconds, or -1 for invalid
+ *
+ * Since: 2.0.0
+ **/
+gint64
+fu_device_get_modified_usec(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), -1);
+
+	if (priv->modified_usec > 0)
+		return priv->modified_usec;
+	return fwupd_device_get_modified(FWUPD_DEVICE(self)) * G_USEC_PER_SEC;
+}
+
+/**
+ * fu_device_set_modified_usec:
+ * @self: a #FuDevice
+ * @modified_usec: value in microseconds
+ *
+ * Sets when the device was modified.
+ *
+ * NOTE: This also sets the seconds-precision fallback value.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_set_modified_usec(FuDevice *self, gint64 modified_usec)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(modified_usec == 0 || modified_usec > 10000000000);
+
+	priv->modified_usec = modified_usec;
+	fwupd_device_set_modified(FWUPD_DEVICE(self), modified_usec / G_USEC_PER_SEC);
+}
+
 static void
 fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 {
@@ -5632,6 +5726,10 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 
 	/* copy from donor FuDevice if has not already been set */
 	fu_device_add_internal_flag(self, fu_device_get_internal_flags(donor));
+	if (priv->created_usec == 0 && priv_donor->created_usec != 0)
+		fu_device_set_created_usec(self, priv_donor->created_usec);
+	if (priv->modified_usec == 0 && priv_donor->modified_usec != 0)
+		fu_device_set_modified_usec(self, priv_donor->modified_usec);
 	if (priv->equivalent_id == NULL && fu_device_get_equivalent_id(donor) != NULL)
 		fu_device_set_equivalent_id(self, fu_device_get_equivalent_id(donor));
 	if (priv->physical_id == NULL && priv_donor->physical_id != NULL)

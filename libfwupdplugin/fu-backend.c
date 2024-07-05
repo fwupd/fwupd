@@ -320,8 +320,8 @@ fu_backend_load(FuBackend *self,
 
 		/* does a device with this platform ID [and the same created date] already exist */
 		device_old = fu_backend_lookup_by_id(self, fu_device_get_backend_id(device_tmp));
-		if (device_old != NULL &&
-		    fu_device_get_created(device_old) == fu_device_get_created(device_tmp)) {
+		if (device_old != NULL && fu_device_get_created_usec(device_old) ==
+					      fu_device_get_created_usec(device_tmp)) {
 			GPtrArray *events = fu_device_get_events(device_tmp);
 			fu_device_clear_events(device_old);
 			for (guint j = 0; j < events->len; j++) {
