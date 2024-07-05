@@ -3349,18 +3349,22 @@ fu_engine_write_firmware(FuEngine *self,
 		g_debug("failed write-firmware '%s': %s", error_write->message, str_write);
 
 		/* attach back into runtime then cleanup */
-		fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_ATTACH);
-		fu_progress_reset(progress);
-		if (!fu_plugin_runner_attach(plugin, device, progress, &error_attach)) {
-			g_warning("failed to attach device after failed update: %s",
-				  error_attach->message);
+		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+			fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_ATTACH);
+			fu_progress_reset(progress);
+			if (!fu_plugin_runner_attach(plugin, device, progress, &error_attach)) {
+				g_warning("failed to attach device after failed update: %s",
+					  error_attach->message);
+			}
+			fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_CLEANUP);
+			fu_progress_reset(progress);
+			if (!fu_engine_cleanup(self, device_id, progress, flags, &error_cleanup)) {
+				g_warning("failed to update-cleanup after failed update: %s",
+					  error_cleanup->message);
+			}
 		}
-		fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_CLEANUP);
-		fu_progress_reset(progress);
-		if (!fu_engine_cleanup(self, device_id, progress, flags, &error_cleanup)) {
-			g_warning("failed to update-cleanup after failed update: %s",
-				  error_cleanup->message);
-		}
+
+		/* return error to client */
 		g_propagate_error(error, g_steal_pointer(&error_write));
 		return FALSE;
 	}
