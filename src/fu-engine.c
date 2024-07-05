@@ -3554,8 +3554,10 @@ fu_engine_install_blob(FuEngine *self,
 				      device_id,
 				      fu_progress_get_child(progress_local),
 				      feature_flags,
-				      error))
+				      error)) {
+			g_prefix_error(error, "failed to detach: ");
 			return FALSE;
+		}
 		fu_progress_step_done(progress_local);
 
 		/* install */
@@ -3565,8 +3567,10 @@ fu_engine_install_blob(FuEngine *self,
 					      stream_fw,
 					      fu_progress_get_child(progress_local),
 					      flags,
-					      error))
+					      error)) {
+			g_prefix_error(error, "failed to write-firmware: ");
 			return FALSE;
+		}
 		fu_progress_step_done(progress_local);
 
 		/* attach into runtime mode */
@@ -3574,14 +3578,18 @@ fu_engine_install_blob(FuEngine *self,
 		if (!fu_engine_attach(self,
 				      device_id,
 				      fu_progress_get_child(progress_local),
-				      error))
+				      error)) {
+			g_prefix_error(error, "failed to attach: ");
 			return FALSE;
+		}
 		fu_progress_step_done(progress_local);
 
 		/* get the new version number */
 		fu_engine_set_install_phase(self, FU_ENGINE_INSTALL_PHASE_RELOAD);
-		if (!fu_engine_reload(self, device_id, error))
+		if (!fu_engine_reload(self, device_id, error)) {
+			g_prefix_error(error, "failed to reload: ");
 			return FALSE;
+		}
 		fu_progress_step_done(progress_local);
 
 		/* the device and plugin both may have changed */
