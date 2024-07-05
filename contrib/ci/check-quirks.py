@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Copyright 2021 Richard Hughes <richard@hughsie.com>
 #
