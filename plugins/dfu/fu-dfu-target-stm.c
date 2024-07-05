@@ -36,7 +36,9 @@ fu_dfu_target_stm_attach(FuDfuTarget *target, FuProgress *progress, GError **err
 			g_debug("ignoring: %s", error_local->message);
 			return TRUE;
 		}
-		g_propagate_error(error, g_steal_pointer(&error_local));
+		g_propagate_prefixed_error(error,
+					   g_steal_pointer(&error_local),
+					   "failed to attach: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -393,8 +395,10 @@ fu_dfu_target_stm_download_element3(FuDfuTarget *target,
 						  buf,
 						  0, /* timeout default */
 						  fu_progress_get_child(progress),
-						  error))
+						  error)) {
+			g_prefix_error(error, "failed to write STM chunk %u: ", i);
 			return FALSE;
+		}
 
 		/* getting the status moves the state machine to DNLOAD-IDLE */
 		if (!fu_dfu_target_check_status(target, error))

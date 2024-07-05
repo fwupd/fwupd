@@ -624,8 +624,10 @@ fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
 						  buf,
 						  0, /* timeout default */
 						  fu_progress_get_child(progress),
-						  error))
+						  error)) {
+			g_prefix_error(error, "failed to write AVR chunk %u: ", i);
 			return FALSE;
+		}
 
 		/* update UI */
 		fu_progress_step_done(progress);
