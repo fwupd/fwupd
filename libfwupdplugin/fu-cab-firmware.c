@@ -405,6 +405,14 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 			return FALSE;
 		if (value == 0)
 			break;
+		if (!g_ascii_isprint((gchar)value)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "non-ASCII filenames are not supported: 0x%02x",
+				    value);
+			return FALSE;
+		}
 		/* convert to UNIX path */
 		if (value == '\\')
 			value = '/';
