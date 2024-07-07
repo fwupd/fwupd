@@ -481,6 +481,13 @@ fu_efi_lz77_decompressor_decode_c(FuEfiLz77DecompressHelper *helper, guint16 *va
 	}
 
 	/* get one code according to code&set huffman table */
+	if (helper->block_size == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no blocks remained");
+		return FALSE;
+	}
 	helper->block_size--;
 	index2 = helper->c_table[helper->bit_buf >> (BITBUFSIZ - 12)];
 	if (index2 >= NC) {
