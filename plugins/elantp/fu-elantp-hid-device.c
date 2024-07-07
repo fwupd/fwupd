@@ -105,7 +105,7 @@ fu_elantp_hid_device_send_cmd(FuElantpHidDevice *self,
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  HIDIOCGFEATURE(bufsz),
 				  buf,
-				  sizeof(buf),
+				  bufsz,
 				  NULL,
 				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
 				  error))
