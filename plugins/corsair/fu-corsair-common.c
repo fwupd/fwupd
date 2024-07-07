@@ -18,7 +18,7 @@ fu_corsair_calculate_crc(const guint8 *data, guint32 data_len)
 	while (data_len--) {
 		c = *data++;
 		for (guint i = 0x80; i > 0; i >>= 1) {
-			bit = crc & 0x80000000;
+			bit = (crc & 0x80000000) > 0;
 			if (c & i) {
 				bit = !bit;
 			}
