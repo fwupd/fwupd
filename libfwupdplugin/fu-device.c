@@ -6128,16 +6128,20 @@ fu_device_add_instance_str(FuDevice *self, const gchar *key, const gchar *value)
 static gboolean
 fu_strsafe_instance_id_is_valid_char(gchar c)
 {
-	if (c == ' ')
+	switch (c) {
+	case ' ':
+	case '_':
+	case '&':
+	case '/':
+	case '\\':
+	case '-':
+	case '(':
+	case ')':
+	case ',':
 		return FALSE;
-	if (c == '_')
-		return FALSE;
-	if (c == '&')
-		return FALSE;
-	if (c == '/')
-		return FALSE;
-	if (c == '\\')
-		return FALSE;
+	default:
+		break;
+	}
 	return g_ascii_isprint(c);
 }
 
