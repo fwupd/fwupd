@@ -144,7 +144,7 @@ fu_wac_module_bluetooth_id9_prepare_firmware(FuDevice *device,
 		return NULL;
 	}
 
-	if (loader_len > blob_len - 2) {
+	if (blob_len < 2 || loader_len > blob_len - 2) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
