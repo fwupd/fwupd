@@ -89,7 +89,11 @@ fu_common_get_block_devices(GError **error)
 guint64
 fu_common_get_memory_size_impl(void)
 {
-	return (guint64)sysconf(_SC_PHYS_PAGES) * (guint64)sysconf(_SC_PAGE_SIZE);
+	glong phys_pages = sysconf(_SC_PHYS_PAGES);
+	glong page_size = sysconf(_SC_PAGE_SIZE);
+	if (phys_pages > 0 && page_size > 0)
+		return (guint64)phys_pages * (guint64)page_size;
+	return 0;
 }
 
 gchar *
