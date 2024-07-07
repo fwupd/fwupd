@@ -104,11 +104,6 @@ fu_fpc_device_dfu_cmd(FuFpcDevice *self,
 {
 	gsize actual_len = 0;
 
-	if (data == NULL && length > 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "Invalid input data");
-		return FALSE;
-	}
-
 	if (!fu_usb_device_control_transfer(
 		FU_USB_DEVICE(self),
 		device2host ? FU_USB_DIRECTION_DEVICE_TO_HOST : FU_USB_DIRECTION_HOST_TO_DEVICE,
@@ -147,11 +142,6 @@ fu_fpc_device_fw_cmd(FuFpcDevice *self,
 		     GError **error)
 {
 	gsize actual_len = 0;
-
-	if (data == NULL && length > 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "Invalid input data");
-		return FALSE;
-	}
 
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    device2host ? FU_USB_DIRECTION_DEVICE_TO_HOST
