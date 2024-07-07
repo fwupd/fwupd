@@ -614,7 +614,7 @@ fu_cros_ec_usb_device_transfer_section(FuDevice *device,
 	}
 
 	/* smart update: trim trailing bytes */
-	while (data_len != 0 && (data_ptr[data_len - 1] == 0xff))
+	while (data_len > 1 && (data_ptr[data_len - 1] == 0xff))
 		data_len--;
 	g_debug("trimmed %" G_GSIZE_FORMAT " trailing bytes", section->size - data_len);
 	g_debug("sending 0x%x bytes to 0x%x", (guint)data_len, section->offset);
