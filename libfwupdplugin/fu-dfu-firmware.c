@@ -203,6 +203,13 @@ fu_dfu_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 	gsize streamsz = 0;
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (streamsz < FU_STRUCT_DFU_FTR_SIZE) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "stream was too small");
+		return FALSE;
+	}
 	return fu_struct_dfu_ftr_validate_stream(stream, streamsz - FU_STRUCT_DFU_FTR_SIZE, error);
 }
 
