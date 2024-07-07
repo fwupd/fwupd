@@ -19,6 +19,7 @@ static gboolean
 fu_thelio_io_device_probe(FuDevice *device, GError **error)
 {
 	const gchar *devpath;
+	gsize bufsz = 0;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *buf = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -43,7 +44,7 @@ fu_thelio_io_device_probe(FuDevice *device, GError **error)
 
 	/* pre-1.0.0 firmware versions do not implement this */
 	fn = g_build_filename(devpath, "revision", NULL);
-	if (!g_file_get_contents(fn, &buf, NULL, &error_local)) {
+	if (!g_file_get_contents(fn, &buf, &bufsz, &error_local)) {
 		if (g_error_matches(error_local, G_FILE_ERROR, G_FILE_ERROR_FAILED)) {
 			g_debug("FW revision unimplemented: %s", error_local->message);
 			fu_device_set_version(device, "0.0.0");
@@ -52,7 +53,8 @@ fu_thelio_io_device_probe(FuDevice *device, GError **error)
 			return FALSE;
 		}
 	} else {
-		fu_device_set_version(device, (const gchar *)buf);
+		g_autofree gchar *version = fu_strsafe((const gchar *)buf, bufsz);
+		fu_device_set_version(device, version);
 	}
 
 	return TRUE;
