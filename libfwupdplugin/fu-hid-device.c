@@ -134,7 +134,7 @@ fu_hid_device_autodetect_eps(FuHidDevice *self, FuUsbInterface *iface, GError **
 {
 	FuHidDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) eps = fu_usb_interface_get_endpoints(iface);
-	for (guint i = 0; i < eps->len; i++) {
+	for (guint i = 0; eps != NULL && i < eps->len; i++) {
 		GUsbEndpoint *ep = g_ptr_array_index(eps, i);
 		if (g_usb_endpoint_get_direction(ep) == FU_USB_DIRECTION_DEVICE_TO_HOST &&
 		    priv->ep_addr_in == 0) {
