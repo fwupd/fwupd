@@ -46,6 +46,13 @@ fu_pxi_firmware_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GErr
 	FuPxiFirmware *self = FU_PXI_FIRMWARE(firmware);
 
 	/* is a footer, in normal bin file, the header is starts from the 32nd byte from the end. */
+	if (g_bytes_get_size(fw) < PIXART_RF_FW_HEADER_SIZE) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "stream was too small");
+		return FALSE;
+	}
 	if (!fu_memread_uint64_safe(g_bytes_get_data(fw, NULL),
 				    g_bytes_get_size(fw),
 				    g_bytes_get_size(fw) - PIXART_RF_FW_HEADER_SIZE +
@@ -105,6 +112,13 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 	/* get fw header from buf */
 	buf = g_bytes_get_data(fw, &bufsz);
 	if (fu_pxi_firmware_is_hpac(self)) {
+		if (bufsz < PIXART_RF_FW_HEADER_HPAC_POS_FROM_END) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "buf was too small");
+			return FALSE;
+		}
 		if (!fu_memcpy_safe(fw_header,
 				    sizeof(fw_header),
 				    0x0,
@@ -117,6 +131,13 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 	} else {
+		if (bufsz < sizeof(fw_header)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "buf was too small");
+			return FALSE;
+		}
 		if (!fu_memcpy_safe(fw_header,
 				    sizeof(fw_header),
 				    0x0,
