@@ -51,20 +51,6 @@ struct _FuDellDockPlugin {
 
 G_DEFINE_TYPE(FuDellDockPlugin, fu_dell_dock_plugin, FU_TYPE_PLUGIN)
 
-static gboolean
-fu_dell_dock_plugin_create_node(FuPlugin *plugin, FuDevice *device, GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	locker = fu_device_locker_new(device, error);
-	if (locker == NULL)
-		return FALSE;
-
-	fu_plugin_device_add(plugin, device);
-
-	return TRUE;
-}
-
 static DockBaseType
 fu_dell_dock_plugin_get_dock_type(FuDevice *device, GError **error)
 {
@@ -75,9 +61,74 @@ fu_dell_dock_plugin_get_dock_type(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_dell_dock_plugin_probe_ec_v1_subcomponents(FuPlugin *plugin, FuDevice *ec_device, GError **error)
+fu_dell_dock_plugin_probe_ec_v1_mst(FuPlugin *plugin,
+				    FuDevice *ec_device,
+				    guint8 dock_type,
+				    GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
+	const gchar *instance_id;
+	g_autoptr(FuDellDockMst) mst_device = fu_dell_dock_mst_new(ctx);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	instance_id = fu_dell_dock_get_instance_id(dock_type, dock_component_mst, 0, 0);
+	fu_device_add_instance_id(FU_DEVICE(mst_device), instance_id);
+	locker = fu_device_locker_new(FU_DEVICE(mst_device), error);
+	if (locker == NULL)
+		return FALSE;
+
+	/* the plugin adds this to the daemon here */
+	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(mst_device));
+	return TRUE;
+}
+
+static gboolean
+fu_dell_dock_plugin_probe_ec_v1_package(FuPlugin *plugin,
+					FuDevice *ec_device,
+					guint8 dock_type,
+					GError **error)
+{
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	const gchar *instance_id;
+	guint16 dock_variant;
+	g_autoptr(FuDellDockStatus) status_device = fu_dell_dock_status_new(ctx);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	dock_variant = fu_dell_dock_module_is_usb4(FU_DEVICE(ec_device)) ? 1 : 0;
+	instance_id = fu_dell_dock_get_instance_id(dock_type, dock_component_pkg, 0, dock_variant);
+	fu_device_add_instance_id(FU_DEVICE(status_device), instance_id);
+	locker = fu_device_locker_new(FU_DEVICE(status_device), error);
+	if (locker == NULL)
+		return FALSE;
+
+	/* the plugin adds this to the daemon here */
+	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(status_device));
+	return TRUE;
+}
+
+static gboolean
+fu_dell_dock_plugin_probe_ec_v1_tbt3(FuPlugin *plugin, FuDevice *ec_device, GError **error)
+{
+	g_autoptr(FuDellDockTbt) tbt_device = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	if (!fu_dell_dock_ec_needs_tbt(FU_DEVICE(ec_device)))
+		return TRUE;
+	tbt_device = fu_dell_dock_tbt_new(fu_device_get_proxy(ec_device));
+	fu_device_add_instance_id(FU_DEVICE(tbt_device), DELL_DOCK_TBT3);
+	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(tbt_device));
+	locker = fu_device_locker_new(FU_DEVICE(tbt_device), error);
+	if (locker == NULL)
+		return FALSE;
+
+	/* the plugin adds this to the daemon here */
+	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(tbt_device));
+	return TRUE;
+}
+
+static gboolean
+fu_dell_dock_plugin_probe_ec_v1_subcomponents(FuPlugin *plugin, FuDevice *ec_device, GError **error)
+{
 	guint8 dock_type;
 
 	/* determine dock type said by ec */
@@ -90,62 +141,14 @@ fu_dell_dock_plugin_probe_ec_v1_subcomponents(FuPlugin *plugin, FuDevice *ec_dev
 		return FALSE;
 	}
 
-	/* MST */
-	{
-		g_autoptr(FuDellDockMst) mst_device = NULL;
-		g_autofree const gchar *instance_id;
-		g_autofree const gchar *instance_guid = NULL;
+	if (!fu_dell_dock_plugin_probe_ec_v1_mst(plugin, ec_device, dock_type, error))
+		return FALSE;
+	if (!fu_dell_dock_plugin_probe_ec_v1_package(plugin, ec_device, dock_type, error))
+		return FALSE;
+	if (!fu_dell_dock_plugin_probe_ec_v1_tbt3(plugin, ec_device, error))
+		return FALSE;
 
-		mst_device = fu_dell_dock_mst_new(ctx);
-		instance_id =
-		    g_strdup(fu_dell_dock_get_instance_id(dock_type, dock_component_mst, 0, 0));
-		instance_guid = fwupd_guid_hash_string(instance_id);
-		fu_device_add_instance_id(FU_DEVICE(mst_device), instance_id);
-		fu_device_add_guid(FU_DEVICE(mst_device), instance_guid);
-		fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(mst_device));
-
-		if (!fu_device_probe(FU_DEVICE(mst_device), error))
-			return FALSE;
-
-		if (!fu_dell_dock_plugin_create_node(plugin, FU_DEVICE(mst_device), error))
-			return FALSE;
-	}
-
-	/* PACKAGE */
-	{
-		g_autoptr(FuDellDockStatus) status_device = NULL;
-		g_autofree const gchar *instance_id = NULL;
-		g_autofree const gchar *instance_guid = NULL;
-		guint16 dock_variant = 0;
-
-		status_device = fu_dell_dock_status_new(ctx);
-		dock_variant = fu_dell_dock_module_is_usb4(FU_DEVICE(ec_device)) ? 1 : 0;
-		instance_id = g_strdup(
-		    fu_dell_dock_get_instance_id(dock_type, dock_component_pkg, 0, dock_variant));
-		instance_guid = fwupd_guid_hash_string(instance_id);
-		fu_device_add_instance_id(FU_DEVICE(status_device), instance_id);
-		fu_device_add_guid(FU_DEVICE(status_device), fwupd_guid_hash_string(instance_guid));
-		fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(status_device));
-		if (!fu_dell_dock_plugin_create_node(plugin, FU_DEVICE(status_device), error))
-			return FALSE;
-	}
-
-	/* TBT 3 */
-	{
-		g_autoptr(FuDellDockTbt) tbt_device = NULL;
-		g_autofree const gchar *instance_id = NULL;
-		g_autofree const gchar *instance_guid = NULL;
-
-		if (fu_dell_dock_ec_needs_tbt(FU_DEVICE(ec_device))) {
-			tbt_device = fu_dell_dock_tbt_new(fu_device_get_proxy(ec_device));
-			instance_id = DELL_DOCK_TBT3;
-			instance_guid = fwupd_guid_hash_string(instance_id);
-			fu_device_add_guid(FU_DEVICE(tbt_device), instance_guid);
-			fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(tbt_device));
-			if (!fu_dell_dock_plugin_create_node(plugin, FU_DEVICE(tbt_device), error))
-				return FALSE;
-		}
-	}
+	/* success */
 	return TRUE;
 }
 
@@ -296,6 +299,7 @@ fu_dell_dock_plugin_backend_device_added(FuPlugin *plugin,
 			g_autoptr(FuDellDockHub) hub_device = NULL;
 			g_autoptr(FuDellDockEc) ec_v1_dev = NULL;
 			g_autoptr(FuDeviceLocker) locker = NULL;
+			g_autoptr(FuDeviceLocker) locker_ec = NULL;
 
 			hub_device = fu_dell_dock_hub_new(FU_USB_DEVICE(device));
 			locker = fu_device_locker_new(FU_DEVICE(hub_device), error);
@@ -306,9 +310,10 @@ fu_dell_dock_plugin_backend_device_added(FuPlugin *plugin,
 			ec_v1_dev = fu_dell_dock_ec_new(FU_DEVICE(hub_device));
 			if (ec_v1_dev == NULL)
 				return FALSE;
-
-			if (!fu_dell_dock_plugin_create_node(plugin, FU_DEVICE(ec_v1_dev), error))
+			locker_ec = fu_device_locker_new(FU_DEVICE(ec_v1_dev), error);
+			if (locker_ec == NULL)
 				return FALSE;
+			fu_plugin_device_add(plugin, FU_DEVICE(ec_v1_dev));
 
 			/* add dock ec sub-components */
 			if (!fu_dell_dock_plugin_probe_ec_v1_subcomponents(plugin,
