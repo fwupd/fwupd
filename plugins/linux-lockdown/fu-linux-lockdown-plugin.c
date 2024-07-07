@@ -119,7 +119,8 @@ fu_linux_lockdown_plugin_ensure_security_attr_flags(FuLinuxLockdownPlugin *self,
 	}
 
 	/* we cannot change this */
-	fu_efivars_get_secure_boot(efivars, &secureboot_enabled, NULL);
+	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, error))
+		return FALSE;
 	if (g_hash_table_contains(config, "CONFIG_LOCK_DOWN_IN_EFI_SECURE_BOOT") &&
 	    secureboot_enabled) {
 		g_set_error_literal(
