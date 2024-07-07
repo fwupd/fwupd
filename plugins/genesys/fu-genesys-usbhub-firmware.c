@@ -122,6 +122,13 @@ fu_genesys_usbhub_firmware_verify_checksum(GBytes *fw, GError **error)
 	guint16 checksum;
 
 	/* get checksum */
+	if (bufsz < sizeof(checksum)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "buf was too small");
+		return FALSE;
+	}
 	if (!fu_memread_uint16_safe(buf,
 				    bufsz,
 				    bufsz - sizeof(checksum),

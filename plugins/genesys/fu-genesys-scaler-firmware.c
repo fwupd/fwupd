@@ -31,6 +31,13 @@ fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GBytes) blob_payload = NULL;
 	g_autoptr(GBytes) blob_public_key = NULL;
 
+	if (bufsz < sizeof(self->public_key)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "buf was too small");
+		return FALSE;
+	}
 	if (!fu_memcpy_safe((guint8 *)&self->public_key,
 			    sizeof(self->public_key),
 			    0, /* dst */
