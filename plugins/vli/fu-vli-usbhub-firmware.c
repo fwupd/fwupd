@@ -107,6 +107,14 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to get offset addr: ");
 			return FALSE;
 		}
+		if (adr_ofs32 < 0x20000 + 0x2000 + 4) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid U4ID_Address_In_FW_Zone=0x%x",
+				    adr_ofs32);
+			return FALSE;
+		}
 		if (!fu_memread_uint16_safe(buf,
 					    bufsz,
 					    adr_ofs32 - 0x20000 + 0x2000 + 4,
@@ -299,6 +307,13 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 					    G_LITTLE_ENDIAN,
 					    error)) {
 			g_prefix_error(error, "failed to get binveraddr: ");
+			return FALSE;
+		}
+		if (binveraddr < 0x20000 + 0x2000) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "buf was too small");
 			return FALSE;
 		}
 		if (!fu_memread_uint8_safe(buf,
