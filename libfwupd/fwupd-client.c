@@ -5458,7 +5458,7 @@ static GBytes *
 fwupd_client_download_http_retry(FwupdClient *self, CURL *curl, const gchar *url, GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	guint delay_ms = 2500;
+	gulong delay_ms = 2500;
 	for (guint i = 0;; i++, delay_ms *= 2) {
 		g_autoptr(GBytes) blob = NULL;
 		g_autoptr(GError) error_local = NULL;
