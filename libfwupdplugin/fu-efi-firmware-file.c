@@ -64,7 +64,7 @@ fu_efi_firmware_file_hdr_checksum8(GBytes *blob)
 			continue;
 		checksum += buf[i];
 	}
-	return 0x100 - checksum;
+	return (guint8)(0x100u - (guint)checksum);
 }
 
 static gboolean
