@@ -88,6 +88,13 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 		guint16 crc_file = 0x0;
 		g_autoptr(GInputStream) stream_tmp = NULL;
 
+		if (streamsz < 2) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "stream was too small");
+			return FALSE;
+		}
 		if (!fu_input_stream_read_u16(stream,
 					      streamsz - 2,
 					      &crc_file,

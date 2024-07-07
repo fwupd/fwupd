@@ -289,6 +289,13 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to get binveraddr: ");
 			return FALSE;
 		}
+		if (binveraddr < 0x20000 + 0x2000) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "stream was too small");
+			return FALSE;
+		}
 		if (!fu_input_stream_read_u8(stream,
 					     binveraddr - 0x20000 + 0x2000,
 					     &binver,
