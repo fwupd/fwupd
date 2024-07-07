@@ -561,6 +561,13 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 	sbuf = g_bytes_get_data(spi_fw, &sbufsz);
 	if (sbufsz != 0x8000)
 		sec_addr = 0x30000;
+	if (sbufsz < 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "buffer was too small");
+		return FALSE;
+	}
 	if (!fu_memread_uint16_safe(sbuf, sbufsz, sbufsz - 2, &crc_file, G_LITTLE_ENDIAN, error)) {
 		g_prefix_error(error, "failed to read file CRC: ");
 		return FALSE;
