@@ -123,6 +123,13 @@ fu_genesys_usbhub_firmware_verify_checksum(GInputStream *stream, GError **error)
 	/* get checksum */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (streamsz < sizeof(checksum)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "stream was too small");
+		return FALSE;
+	}
 	if (!fu_input_stream_read_u16(stream,
 				      streamsz - sizeof(checksum),
 				      &fw_checksum,
