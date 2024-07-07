@@ -156,6 +156,15 @@ fu_algoltek_usb_device_rst(FuAlgoltekUsbDevice *self, guint16 address, GError **
 	fu_struct_algoltek_cmd_address_pkt_set_address(st, address);
 	fu_struct_algoltek_cmd_address_pkt_set_checksum(st, ~fu_sum8(st->data, st->len) + 1);
 
+	if (st->data[0] > st->len) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "rst length invalid, 0x%x > 0x%x",
+			    st->data[0],
+			    st->len);
+		return FALSE;
+	}
 	if (!fu_algoltek_usb_device_ctrl_transfer(self,
 						  G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 						  FU_ALGOLTEK_CMD_RST,
@@ -182,6 +191,15 @@ fu_algoltek_usb_device_wrr(FuAlgoltekUsbDevice *self, int address, int value, GE
 	fu_struct_algoltek_cmd_address_pkt_set_value(st, value);
 	fu_struct_algoltek_cmd_address_pkt_set_checksum(st, ~fu_sum8(st->data, st->len) + 1);
 
+	if (st->data[0] > st->len) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "wrr length invalid, 0x%x > 0x%x",
+			    st->data[0],
+			    st->len);
+		return FALSE;
+	}
 	if (!fu_algoltek_usb_device_ctrl_transfer(self,
 						  G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 						  FU_ALGOLTEK_CMD_WRR,
@@ -234,7 +252,15 @@ fu_algoltek_usb_device_isp(FuAlgoltekUsbDevice *self,
 		}
 		fu_struct_algoltek_cmd_transfer_pkt_set_checksum(st,
 								 ~fu_sum8(st->data, st->len) + 1);
-
+		if (st->data[0] > st->len) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "isp length invalid, 0x%x > 0x%x",
+				    st->data[0],
+				    st->len);
+			return FALSE;
+		}
 		if (!fu_algoltek_usb_device_ctrl_transfer(self,
 							  G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 							  FU_ALGOLTEK_CMD_ISP,
@@ -262,6 +288,15 @@ fu_algoltek_usb_device_bot(FuAlgoltekUsbDevice *self, int address, GError **erro
 	fu_struct_algoltek_cmd_address_pkt_set_address(st, address);
 	fu_struct_algoltek_cmd_address_pkt_set_checksum(st, ~fu_sum8(st->data, st->len) + 1);
 
+	if (st->data[0] > st->len) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "bot length invalid, 0x%x > 0x%x",
+			    st->data[0],
+			    st->len);
+		return FALSE;
+	}
 	if (!fu_algoltek_usb_device_ctrl_transfer(self,
 						  G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 						  FU_ALGOLTEK_CMD_BOT,
