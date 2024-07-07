@@ -133,6 +133,13 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GBytes *fw, GError **e
 		g_prefix_error(error, "RmiContainerDescriptor invalid: ");
 		return FALSE;
 	}
+	if (bufsz < sizeof(guint32) + st_dsc->len) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "stream was too small");
+		return FALSE;
+	}
 	container_id = fu_struct_rmi_container_descriptor_get_container_id(st_dsc);
 	if (container_id != FU_RMI_CONTAINER_ID_TOP_LEVEL) {
 		g_set_error(error,
@@ -397,6 +404,13 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "data not aligned to 16 bits");
+		return FALSE;
+	}
+	if (bufsz < 4) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "stream was too small");
 		return FALSE;
 	}
 
