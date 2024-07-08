@@ -1,0 +1,30 @@
+{
+  "name": "Parade PS5512 EVB",
+  "interactive": true,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/f8b4534e1cec74910797f9de77b8821a4989672b503a7d0362238c2266d80a40-Parade-PS5512_EVB-1.1.0.21.cab",
+      "emulation-url": "https://fwupd.org/downloads/dff3d1869ac203dc6531fd43eab0172c635ca24d3bf94619635267e68915addb-Parade-PS5512_EVB-1.1.0.21.zip",
+      "components": [
+        {
+          "version": "1.1.0.21",
+          "guids": [
+            "92ac3e32-0949-593d-8fa4-7e9b1561836f"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/2de6371c452521a6913945ab45c0e0585982e0448762fd984a0e55570872fc2a-Parade-PS5512_EVB-1.1.0.22.cab",
+      "emulation-url": "https://fwupd.org/downloads/2b9b7ac4bb571687ccaa51287e2b67569b22517520222e6c70fa976df2a2b72d-Parade-PS5512_EVB-1.1.0.22.zip",
+      "components": [
+        {
+          "version": "1.1.0.22",
+          "guids": [
+            "92ac3e32-0949-593d-8fa4-7e9b1561836f"
+          ]
+        }
+      ]
+    }
+  ]
+}
