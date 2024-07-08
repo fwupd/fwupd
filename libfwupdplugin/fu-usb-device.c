@@ -542,7 +542,7 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* get the hub descriptor if this is a hub */
-	if (fu_usb_device_get_device_class(self) == FU_USB_DEVICE_CLASS_HUB) {
+	if (fu_usb_device_get_class(self) == FU_USB_CLASS_HUB) {
 		if (!fu_usb_device_query_hub(self, error))
 			return FALSE;
 	}
@@ -577,21 +577,21 @@ fu_usb_device_ready(FuDevice *device, GError **error)
 			FuUsbInterface *intf = g_ptr_array_index(intfs, i);
 
 			/* Video: Video Control: i.e. a webcam */
-			if (fu_usb_interface_get_class(intf) == FU_USB_DEVICE_CLASS_VIDEO &&
+			if (fu_usb_interface_get_class(intf) == FU_USB_CLASS_VIDEO &&
 			    fu_usb_interface_get_subclass(intf) == 0x01) {
 				fu_device_add_icon(device, "camera-web");
 			}
 
 			/* Audio */
-			if (fu_usb_interface_get_class(intf) == FU_USB_DEVICE_CLASS_AUDIO)
+			if (fu_usb_interface_get_class(intf) == FU_USB_CLASS_AUDIO)
 				fu_device_add_icon(device, "audio-card");
 
 			/* Mass Storage */
-			if (fu_usb_interface_get_class(intf) == FU_USB_DEVICE_CLASS_MASS_STORAGE)
+			if (fu_usb_interface_get_class(intf) == FU_USB_CLASS_MASS_STORAGE)
 				fu_device_add_icon(device, "drive-harddisk");
 
 			/* Printer */
-			if (fu_usb_interface_get_class(intf) == FU_USB_DEVICE_CLASS_PRINTER)
+			if (fu_usb_interface_get_class(intf) == FU_USB_CLASS_PRINTER)
 				fu_device_add_icon(device, "printer");
 		}
 	}
@@ -998,7 +998,7 @@ fu_usb_device_get_spec(FuUsbDevice *self)
 }
 
 /**
- * fu_usb_device_get_device_class:
+ * fu_usb_device_get_class:
  * @self: a #FuUsbDevice
  *
  * Gets the device class, typically a #FuUsbDeviceClassCode.
@@ -1008,7 +1008,7 @@ fu_usb_device_get_spec(FuUsbDevice *self)
  * Since: 2.0.0
  **/
 guint8
-fu_usb_device_get_device_class(FuUsbDevice *self)
+fu_usb_device_get_class(FuUsbDevice *self)
 {
 #ifdef HAVE_GUSB
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
@@ -1908,47 +1908,47 @@ fu_usb_device_new(FuContext *ctx, GUsbDevice *usb_device)
 static const gchar *
 fu_usb_device_class_code_to_string(GUsbDeviceClassCode code)
 {
-	if (code == FU_USB_DEVICE_CLASS_INTERFACE_DESC)
+	if (code == FU_USB_CLASS_INTERFACE_DESC)
 		return "interface-desc";
-	if (code == FU_USB_DEVICE_CLASS_AUDIO)
+	if (code == FU_USB_CLASS_AUDIO)
 		return "audio";
-	if (code == FU_USB_DEVICE_CLASS_COMMUNICATIONS)
+	if (code == FU_USB_CLASS_COMMUNICATIONS)
 		return "communications";
-	if (code == FU_USB_DEVICE_CLASS_HID)
+	if (code == FU_USB_CLASS_HID)
 		return "hid";
-	if (code == FU_USB_DEVICE_CLASS_PHYSICAL)
+	if (code == FU_USB_CLASS_PHYSICAL)
 		return "physical";
-	if (code == FU_USB_DEVICE_CLASS_IMAGE)
+	if (code == FU_USB_CLASS_IMAGE)
 		return "image";
-	if (code == FU_USB_DEVICE_CLASS_PRINTER)
+	if (code == FU_USB_CLASS_PRINTER)
 		return "printer";
-	if (code == FU_USB_DEVICE_CLASS_MASS_STORAGE)
+	if (code == FU_USB_CLASS_MASS_STORAGE)
 		return "mass-storage";
-	if (code == FU_USB_DEVICE_CLASS_HUB)
+	if (code == FU_USB_CLASS_HUB)
 		return "hub";
-	if (code == FU_USB_DEVICE_CLASS_CDC_DATA)
+	if (code == FU_USB_CLASS_CDC_DATA)
 		return "cdc-data";
-	if (code == FU_USB_DEVICE_CLASS_SMART_CARD)
+	if (code == FU_USB_CLASS_SMART_CARD)
 		return "smart-card";
-	if (code == FU_USB_DEVICE_CLASS_CONTENT_SECURITY)
+	if (code == FU_USB_CLASS_CONTENT_SECURITY)
 		return "content-security";
-	if (code == FU_USB_DEVICE_CLASS_VIDEO)
+	if (code == FU_USB_CLASS_VIDEO)
 		return "video";
-	if (code == FU_USB_DEVICE_CLASS_PERSONAL_HEALTHCARE)
+	if (code == FU_USB_CLASS_PERSONAL_HEALTHCARE)
 		return "personal-healthcare";
-	if (code == FU_USB_DEVICE_CLASS_AUDIO_VIDEO)
+	if (code == FU_USB_CLASS_AUDIO_VIDEO)
 		return "audio-video";
-	if (code == FU_USB_DEVICE_CLASS_BILLBOARD)
+	if (code == FU_USB_CLASS_BILLBOARD)
 		return "billboard";
-	if (code == FU_USB_DEVICE_CLASS_DIAGNOSTIC)
+	if (code == FU_USB_CLASS_DIAGNOSTIC)
 		return "diagnostic";
-	if (code == FU_USB_DEVICE_CLASS_WIRELESS_CONTROLLER)
+	if (code == FU_USB_CLASS_WIRELESS_CONTROLLER)
 		return "wireless-controller";
-	if (code == FU_USB_DEVICE_CLASS_MISCELLANEOUS)
+	if (code == FU_USB_CLASS_MISCELLANEOUS)
 		return "miscellaneous";
-	if (code == FU_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
+	if (code == FU_USB_CLASS_APPLICATION_SPECIFIC)
 		return "application-specific";
-	if (code == FU_USB_DEVICE_CLASS_VENDOR_SPECIFIC)
+	if (code == FU_USB_CLASS_VENDOR_SPECIFIC)
 		return "vendor-specific";
 	return NULL;
 }
@@ -1972,7 +1972,7 @@ fu_usb_device_to_string(FuDevice *device, guint idt, GString *str)
 
 #ifdef HAVE_GUSB
 	if (priv->usb_device != NULL) {
-		GUsbDeviceClassCode code = fu_usb_device_get_device_class(self);
+		GUsbDeviceClassCode code = fu_usb_device_get_class(self);
 		fwupd_codec_string_append(str,
 					  idt,
 					  "UsbDeviceClass",

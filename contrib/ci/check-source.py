@@ -39,7 +39,7 @@ def test_files() -> int:
                     "g_usb_device_control_transfer(": "Use fu_usb_device_control_transfer() instead",
                     "g_usb_device_get_configuration_index(": "Use fu_usb_device_get_configuration_index() instead",
                     "g_usb_device_get_custom_index(": "Use fu_usb_device_get_custom_index() instead",
-                    "g_usb_device_get_device_class(": "Use fu_usb_device_get_device_class() instead",
+                    "g_usb_device_get_device_class(": "Use fu_usb_device_get_class() instead",
                     "g_usb_device_get_interface(": "Use fu_usb_device_get_interface() instead",
                     "g_usb_device_get_interfaces(": "Use fu_usb_device_get_interfaces() instead",
                     "g_usb_device_get_release(": "Use fu_usb_device_get_release() instead",
