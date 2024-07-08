@@ -38,52 +38,6 @@ struct _FuIOChannel {
 G_DEFINE_TYPE(FuIOChannel, fu_io_channel, G_TYPE_OBJECT)
 
 /**
- * fu_io_channel_open_flag_to_string:
- * @open_flags: an #FuIOChannelOpenFlags, e.g. %FU_IO_CHANNEL_OPEN_FLAG_READ
- *
- * Converts a single open flag to a string.
- *
- * Returns: identifier string
- *
- * Since: 2.0.0
- **/
-const gchar *
-fu_io_channel_open_flag_to_string(FuIOChannelOpenFlags open_flags)
-{
-	if (open_flags == FU_IO_CHANNEL_OPEN_FLAG_READ)
-		return "read";
-	if (open_flags == FU_IO_CHANNEL_OPEN_FLAG_WRITE)
-		return "write";
-	if (open_flags == FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK)
-		return "nonblock";
-	if (open_flags == FU_IO_CHANNEL_OPEN_FLAG_SYNC)
-		return "sync";
-	return NULL;
-}
-
-/**
- * fu_io_channel_open_flags_to_string:
- * @open_flags: an #FuIOChannelOpenFlags, e.g. %FU_IO_CHANNEL_OPEN_FLAG_READ
- *
- * Converts a bifield of open flags to a string.
- *
- * Returns: (transfer full): identifier string
- *
- * Since: 2.0.0
- **/
-gchar *
-fu_io_channel_open_flags_to_string(FuIOChannelOpenFlags open_flags)
-{
-	g_autoptr(GPtrArray) array = g_ptr_array_new();
-	for (guint i = 1; i < FU_IO_CHANNEL_OPEN_FLAG_LAST; i <<= 1) {
-		if (open_flags & i)
-			g_ptr_array_add(array, (gpointer)fu_io_channel_open_flag_to_string(i));
-	}
-	if (array->len == 0)
-		return NULL;
-	return fu_strjoin("|", array);
-}
-/**
  * fu_io_channel_unix_get_fd:
  * @self: a #FuIOChannel
  *
@@ -564,7 +518,7 @@ fu_io_channel_unix_new(gint fd)
 /**
  * fu_io_channel_new_file:
  * @filename: device file
- * @open_flags: some #FuIOChannelOpenFlags typically %FU_IO_CHANNEL_OPEN_FLAG_READ
+ * @open_flags: some #FuIoChannelOpenFlag typically %FU_IO_CHANNEL_OPEN_FLAG_READ
  * @error: (nullable): optional return location for an error
  *
  * Creates a new object to write and/or read from.
@@ -574,7 +528,7 @@ fu_io_channel_unix_new(gint fd)
  * Since: 2.0.0
  **/
 FuIOChannel *
-fu_io_channel_new_file(const gchar *filename, FuIOChannelOpenFlags open_flags, GError **error)
+fu_io_channel_new_file(const gchar *filename, FuIoChannelOpenFlag open_flags, GError **error)
 {
 	gint fd;
 	int flags = 0;
