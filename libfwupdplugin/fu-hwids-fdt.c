@@ -18,6 +18,7 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 	g_autofree gchar *chassis_type = NULL;
 	g_auto(GStrv) compatible = NULL;
 	g_autoptr(FuFirmware) fdt_img = NULL;
+	g_autoptr(FuFdtImage) fdt_img_baseb = NULL;
 	g_autoptr(FuFdtImage) fdt_img_fwver = NULL;
 	g_autoptr(FuFirmware) fdt = NULL;
 	struct {
@@ -91,6 +92,23 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 		g_autofree gchar *version = NULL;
 		fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img), "version", &version, NULL);
 		fu_hwids_add_value(self, FU_HWIDS_KEY_BIOS_VERSION, version);
+	}
+	fdt_img_baseb = fu_fdt_firmware_get_image_by_path(
+	    FU_FDT_FIRMWARE(fdt),
+	    "/vpd/root-node-vpd@a000/enclosure@1e00/backplane@800",
+	    NULL);
+	if (fdt_img_baseb != NULL) {
+		g_autofree gchar *vendor = NULL;
+		g_autofree gchar *product = NULL;
+		fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img_baseb), "vendor", &vendor, NULL);
+		fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img_baseb),
+					  "part-number",
+					  &product,
+					  NULL);
+		if (vendor != NULL)
+			fu_hwids_add_value(self, FU_HWIDS_KEY_BASEBOARD_MANUFACTURER, vendor);
+		if (product != NULL)
+			fu_hwids_add_value(self, FU_HWIDS_KEY_BASEBOARD_PRODUCT, product);
 	}
 
 	/* success */
