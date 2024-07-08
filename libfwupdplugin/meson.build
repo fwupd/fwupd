@@ -419,6 +419,7 @@ if get_option('tests')
     installed_firmware_zip,
     rustgen.process('fu-self-test.rs'),
     sources: [
+      'fu-test-device.c',
       'fu-self-test.c'
     ],
     include_directories: [
