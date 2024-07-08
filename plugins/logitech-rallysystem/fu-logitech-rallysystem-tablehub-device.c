@@ -45,7 +45,7 @@ fu_logitech_rallysystem_tablehub_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {
 		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
-		if (fu_usb_interface_get_class(intf) == FU_USB_DEVICE_CLASS_VENDOR_SPECIFIC) {
+		if (fu_usb_interface_get_class(intf) == FU_USB_CLASS_VENDOR_SPECIFIC) {
 			g_autoptr(GPtrArray) endpoints = fu_usb_interface_get_endpoints(intf);
 			bulk_iface = fu_usb_interface_get_number(intf);
 			if (endpoints == NULL)

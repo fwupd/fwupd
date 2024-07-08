@@ -1437,7 +1437,7 @@ fu_genesys_usbhub_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 static gboolean
 fu_genesys_usbhub_device_probe(FuDevice *device, GError **error)
 {
-	if (fu_usb_device_get_device_class(FU_USB_DEVICE(device)) != FU_USB_DEVICE_CLASS_HUB) {
+	if (fu_usb_device_get_class(FU_USB_DEVICE(device)) != FU_USB_CLASS_HUB) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

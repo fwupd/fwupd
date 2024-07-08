@@ -78,7 +78,7 @@ fu_logitech_bulkcontroller_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {
 		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
-		if (fu_usb_interface_get_class(intf) == FU_USB_DEVICE_CLASS_VENDOR_SPECIFIC &&
+		if (fu_usb_interface_get_class(intf) == FU_USB_CLASS_VENDOR_SPECIFIC &&
 		    fu_usb_interface_get_protocol(intf) == 0x1) {
 			if (fu_usb_interface_get_subclass(intf) == SYNC_INTERFACE_SUBPROTOCOL_ID) {
 				g_autoptr(GPtrArray) endpoints =

@@ -29,7 +29,7 @@ fu_usb_device_get_release(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 guint16
 fu_usb_device_get_spec(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 guint8
-fu_usb_device_get_device_class(FuUsbDevice *self);
+fu_usb_device_get_class(FuUsbDevice *self);
 
 guint8
 fu_usb_device_get_configuration_index(FuUsbDevice *self, GError **error);
