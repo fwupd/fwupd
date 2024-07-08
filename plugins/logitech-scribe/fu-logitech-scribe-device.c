@@ -452,7 +452,7 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 
 	/* find the correct interface */
 	intf = fu_usb_device_get_interface(FU_USB_DEVICE(usb_device),
-					   FU_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
+					   FU_USB_CLASS_VENDOR_SPECIFIC,
 					   UPD_INTERFACE_SUBPROTOCOL_ID,
 					   FU_LOGITECH_SCRIBE_PROTOCOL_ID,
 					   error);

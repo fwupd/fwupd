@@ -846,7 +846,7 @@ fu_jabra_gnp_device_probe(FuDevice *device, GError **error)
 		return TRUE;
 
 	self->iface_hid = _fu_usb_device_get_interface_for_class(FU_USB_DEVICE(self),
-								 FU_USB_DEVICE_CLASS_HID,
+								 FU_USB_CLASS_HID,
 								 &error_local);
 	if (self->iface_hid == 0xFF) {
 		g_set_error(error,

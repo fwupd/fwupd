@@ -182,7 +182,7 @@ fu_hid_device_open(FuDevice *device, GError **error)
 			return FALSE;
 		for (guint i = 0; i < ifaces->len; i++) {
 			FuUsbInterface *iface = g_ptr_array_index(ifaces, i);
-			if (fu_usb_interface_get_class(iface) == FU_USB_DEVICE_CLASS_HID) {
+			if (fu_usb_interface_get_class(iface) == FU_USB_CLASS_HID) {
 				priv->interface = fu_usb_interface_get_number(iface);
 				priv->interface_autodetect = FALSE;
 				if (priv->flags & FU_HID_DEVICE_FLAG_AUTODETECT_EPS) {

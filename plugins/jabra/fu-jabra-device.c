@@ -69,7 +69,7 @@ fu_jabra_device_prepare(FuDevice *device,
 
 	/* detach the HID interface from the kernel driver */
 	iface_hid = _fu_usb_device_get_interface_for_class(FU_USB_DEVICE(self),
-							   FU_USB_DEVICE_CLASS_HID,
+							   FU_USB_CLASS_HID,
 							   &error_local);
 	if (iface_hid == 0xff) {
 		g_set_error(error,
