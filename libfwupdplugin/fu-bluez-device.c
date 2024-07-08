@@ -365,6 +365,12 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 	g_autoptr(GVariant) val_modalias = NULL;
 	g_autoptr(GVariant) val_name = NULL;
 
+	/* sanity check */
+	if (priv->proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy set");
+		return FALSE;
+	}
+
 	val_address = g_dbus_proxy_get_cached_property(priv->proxy, "Address");
 	if (val_address == NULL) {
 		g_set_error_literal(error,
@@ -690,8 +696,10 @@ fu_bluez_device_finalize(GObject *object)
 	FuBluezDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_hash_table_unref(priv->uuids);
-	g_object_unref(priv->proxy);
-	g_object_unref(priv->object_manager);
+	if (priv->proxy != NULL)
+		g_object_unref(priv->proxy);
+	if (priv->object_manager != NULL)
+		g_object_unref(priv->object_manager);
 	G_OBJECT_CLASS(fu_bluez_device_parent_class)->finalize(object);
 }
 
