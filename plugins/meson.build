@@ -89,6 +89,7 @@ plugins = {
   'nvme': false,
   'optionrom': false,
   'parade-lspcon': false,
+  'parade-usbhub': false,
   'pci-bcr': false,
   'pci-mei': false,
   'pci-psp': false,
