@@ -19,30 +19,36 @@
 #include "fu-dell-dock-plugin.h"
 
 DellDockComponent dock_component_hub[] = {
-    {DOCK_BASE_TYPE_SALOMON, DELL_DOCK_VID, DELL_DOCK_HID_PID, "USB\\VID_413C&PID_B06E&hub"},
-    {DOCK_BASE_TYPE_SALOMON,
+    {FU_DELL_DOCK_BASE_TYPE_SALOMON,
+     DELL_DOCK_VID,
+     DELL_DOCK_HID_PID,
+     "USB\\VID_413C&PID_B06E&hub"},
+    {FU_DELL_DOCK_BASE_TYPE_SALOMON,
      DELL_DOCK_VID,
      DELL_DOCK_USB_HUB_RTS5413_PID,
      "USB\\VID_413C&PID_B06F&hub"},
-    {DOCK_BASE_TYPE_ATOMIC, DELL_DOCK_VID, DELL_DOCK_HID_PID, "USB\\VID_413C&PID_B06E&atomic_hub"},
-    {DOCK_BASE_TYPE_ATOMIC,
+    {FU_DELL_DOCK_BASE_TYPE_ATOMIC,
+     DELL_DOCK_VID,
+     DELL_DOCK_HID_PID,
+     "USB\\VID_413C&PID_B06E&atomic_hub"},
+    {FU_DELL_DOCK_BASE_TYPE_ATOMIC,
      DELL_DOCK_VID,
      DELL_DOCK_USB_HUB_RTS5413_PID,
      "USB\\VID_413C&PID_B06F&atomic_hub"},
-    {DOCK_BASE_TYPE_UNKNOWN, 0, 0, NULL},
+    {FU_DELL_DOCK_BASE_TYPE_UNKNOWN, 0, 0, NULL},
 };
 
 DellDockComponent dock_component_mst[] = {
-    {DOCK_BASE_TYPE_SALOMON, 0, 0, "MST-panamera-vmm5331-259"},
-    {DOCK_BASE_TYPE_ATOMIC, 0, 0, "MST-cayenne-vmm6210-257"},
-    {DOCK_BASE_TYPE_UNKNOWN, 0, 0, NULL},
+    {FU_DELL_DOCK_BASE_TYPE_SALOMON, 0, 0, "MST-panamera-vmm5331-259"},
+    {FU_DELL_DOCK_BASE_TYPE_ATOMIC, 0, 0, "MST-cayenne-vmm6210-257"},
+    {FU_DELL_DOCK_BASE_TYPE_UNKNOWN, 0, 0, NULL},
 };
 
 DellDockComponent dock_component_pkg[] = {
-    {DOCK_BASE_TYPE_SALOMON, 0, 0, "USB\\VID_413C&PID_B06E&hub&status"},
-    {DOCK_BASE_TYPE_SALOMON, 0, 1, "USB\\VID_413C&PID_B06E&hub&salomon_mlk_status"},
-    {DOCK_BASE_TYPE_ATOMIC, 0, 0, "USB\\VID_413C&PID_B06E&hub&atomic_status"},
-    {DOCK_BASE_TYPE_UNKNOWN, 0, 0, NULL},
+    {FU_DELL_DOCK_BASE_TYPE_SALOMON, 0, 0, "USB\\VID_413C&PID_B06E&hub&status"},
+    {FU_DELL_DOCK_BASE_TYPE_SALOMON, 0, 1, "USB\\VID_413C&PID_B06E&hub&salomon_mlk_status"},
+    {FU_DELL_DOCK_BASE_TYPE_ATOMIC, 0, 0, "USB\\VID_413C&PID_B06E&hub&atomic_status"},
+    {FU_DELL_DOCK_BASE_TYPE_UNKNOWN, 0, 0, NULL},
 };
 
 struct _FuDellDockPlugin {
@@ -51,13 +57,13 @@ struct _FuDellDockPlugin {
 
 G_DEFINE_TYPE(FuDellDockPlugin, fu_dell_dock_plugin, FU_TYPE_PLUGIN)
 
-static DockBaseType
+static FuDellDockBaseType
 fu_dell_dock_plugin_get_dock_type(FuDevice *device, GError **error)
 {
 	if (FU_IS_DELL_DOCK_EC(device))
 		return fu_dell_dock_get_dock_type(device);
 
-	return DOCK_BASE_TYPE_UNKNOWN;
+	return FU_DELL_DOCK_BASE_TYPE_UNKNOWN;
 }
 
 static gboolean
@@ -133,7 +139,7 @@ fu_dell_dock_plugin_probe_ec_v1_subcomponents(FuPlugin *plugin, FuDevice *ec_dev
 
 	/* determine dock type said by ec */
 	dock_type = fu_dell_dock_plugin_get_dock_type(ec_device, error);
-	if (dock_type == DOCK_BASE_TYPE_UNKNOWN) {
+	if (dock_type == FU_DELL_DOCK_BASE_TYPE_UNKNOWN) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,
@@ -198,7 +204,7 @@ fu_dell_dock_plugin_device_add(FuPlugin *plugin,
 
 	/* determine dock type said by ec */
 	dock_type = fu_dell_dock_plugin_get_dock_type(ec_device, error);
-	if (dock_type == DOCK_BASE_TYPE_UNKNOWN) {
+	if (dock_type == FU_DELL_DOCK_BASE_TYPE_UNKNOWN) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,
@@ -244,7 +250,7 @@ fu_dell_dock_plugin_ec_add_cached_devices(FuPlugin *plugin, FuDevice *ec_device,
 
 	/* determine dock type said by ec */
 	dock_type = fu_dell_dock_plugin_get_dock_type(ec_device, error);
-	if (dock_type == DOCK_BASE_TYPE_UNKNOWN) {
+	if (dock_type == FU_DELL_DOCK_BASE_TYPE_UNKNOWN) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,

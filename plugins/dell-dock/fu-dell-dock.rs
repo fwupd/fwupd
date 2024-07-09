@@ -5,7 +5,7 @@
  */
 
 #[repr(u8)]
-enum DockBaseType {
+enum FuDellDockBaseType {
     Unknown = 0x0,
     Salomon = 0x4,
     Atomic = 0x5,

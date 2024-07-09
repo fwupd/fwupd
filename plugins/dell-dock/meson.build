@@ -7,6 +7,7 @@ plugin_builtins += static_library('fu_plugin_dell_dock',
   rustgen.process(
     'fu-dell-dock.rs',        # fuzzing
     'fu-dell-dock-i2c-ec.rs', # fuzzing
+    'fu-dell-dock-i2c-mst.rs', # fuzzing
   ),
   sources: [
     'fu-dell-dock-plugin.c',

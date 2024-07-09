@@ -34,9 +34,9 @@
 #define PASSIVE_TBT_MASK    0x04
 
 DellDockComponent dock_component_ec[] = {
-    {DOCK_BASE_TYPE_SALOMON, 0, 0, "USB\\VID_413C&PID_B06E&hub&embedded"},
-    {DOCK_BASE_TYPE_ATOMIC, 0, 0, "USB\\VID_413C&PID_B06E&hub&atomic_embedded"},
-    {DOCK_BASE_TYPE_UNKNOWN, 0, 0, NULL},
+    {FU_DELL_DOCK_BASE_TYPE_SALOMON, 0, 0, "USB\\VID_413C&PID_B06E&hub&embedded"},
+    {FU_DELL_DOCK_BASE_TYPE_ATOMIC, 0, 0, "USB\\VID_413C&PID_B06E&hub&atomic_embedded"},
+    {FU_DELL_DOCK_BASE_TYPE_UNKNOWN, 0, 0, NULL},
 };
 
 typedef enum {
@@ -52,8 +52,8 @@ const FuHIDI2CParameters ec_base_settings = {
 };
 
 typedef enum {
-	LOCATION_BASE,
-	LOCATION_MODULE,
+	FU_DELL_DOCK_LOCATION_BASE,
+	FU_DELL_DOCK_LOCATION_MODULE,
 } FuDellDockLocationEnum;
 
 typedef enum {
@@ -92,14 +92,14 @@ typedef struct __attribute__((packed)) {
 } FuDellDockEcQueryEntry;
 
 typedef enum {
-	MODULE_TYPE_45_TBT = 1,
-	MODULE_TYPE_45,
-	MODULE_TYPE_130_TBT,
-	MODULE_TYPE_130_DP,
-	MODULE_TYPE_130_UNIVERSAL,
-	MODULE_TYPE_240_TRIN,
-	MODULE_TYPE_210_DUAL,
-	MODULE_TYPE_130_USB4,
+	FU_DELL_DOCK_MODULE_TYPE_45_TBT = 1,
+	FU_DELL_DOCK_MODULE_TYPE_45,
+	FU_DELL_DOCK_MODULE_TYPE_130_TBT,
+	FU_DELL_DOCK_MODULE_TYPE_130_DP,
+	FU_DELL_DOCK_MODULE_TYPE_130_UNIVERSAL,
+	FU_DELL_DOCK_MODULE_TYPE_240_TRIN,
+	FU_DELL_DOCK_MODULE_TYPE_210_DUAL,
+	FU_DELL_DOCK_MODULE_TYPE_130_USB4,
 } FuDellDockDockModule;
 
 typedef struct __attribute__((packed)) {
@@ -130,7 +130,7 @@ struct _FuDellDockEc {
 	FuDevice parent_instance;
 	FuDellDockDockDataStructure *data;
 	FuDellDockDockPackageFWVersion *raw_versions;
-	DockBaseType base_type;
+	FuDellDockBaseType base_type;
 	gchar *ec_version;
 	gchar *mst_version;
 	gchar *tbt_version;
@@ -175,10 +175,10 @@ gboolean
 fu_dell_dock_module_is_usb4(FuDevice *device)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
-	return self->data->module_type == MODULE_TYPE_130_USB4;
+	return self->data->module_type == FU_DELL_DOCK_MODULE_TYPE_130_USB4;
 }
 
-DockBaseType
+FuDellDockBaseType
 fu_dell_dock_get_dock_type(FuDevice *device)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
@@ -190,21 +190,21 @@ fu_dell_dock_ec_get_module_type(FuDevice *device)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	switch (self->data->module_type) {
-	case MODULE_TYPE_45_TBT:
+	case FU_DELL_DOCK_MODULE_TYPE_45_TBT:
 		return "45 (TBT)";
-	case MODULE_TYPE_45:
+	case FU_DELL_DOCK_MODULE_TYPE_45:
 		return "45";
-	case MODULE_TYPE_130_TBT:
+	case FU_DELL_DOCK_MODULE_TYPE_130_TBT:
 		return "130 (TBT)";
-	case MODULE_TYPE_130_DP:
+	case FU_DELL_DOCK_MODULE_TYPE_130_DP:
 		return "130 (DP)";
-	case MODULE_TYPE_130_UNIVERSAL:
+	case FU_DELL_DOCK_MODULE_TYPE_130_UNIVERSAL:
 		return "130 (Universal)";
-	case MODULE_TYPE_240_TRIN:
+	case FU_DELL_DOCK_MODULE_TYPE_240_TRIN:
 		return "240 (Trinity)";
-	case MODULE_TYPE_210_DUAL:
+	case FU_DELL_DOCK_MODULE_TYPE_210_DUAL:
 		return "210 (Dual)";
-	case MODULE_TYPE_130_USB4:
+	case FU_DELL_DOCK_MODULE_TYPE_130_USB4:
 		return "130 (TBT4)";
 	default:
 		return "unknown";
@@ -218,8 +218,8 @@ fu_dell_dock_ec_needs_tbt(FuDevice *device)
 	gboolean port0_tbt_mode = self->data->port0_dock_status & TBT_MODE_MASK;
 
 	/* check for TBT module type */
-	if (self->data->module_type != MODULE_TYPE_130_TBT &&
-	    self->data->module_type != MODULE_TYPE_45_TBT)
+	if (self->data->module_type != FU_DELL_DOCK_MODULE_TYPE_130_TBT &&
+	    self->data->module_type != FU_DELL_DOCK_MODULE_TYPE_45_TBT)
 		return FALSE;
 	g_info("found thunderbolt dock, port mode: %d", port0_tbt_mode);
 
@@ -419,7 +419,7 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 		g_debug("#%u: %s in %s (A: %u I: %u)",
 			i,
 			type_str,
-			(map->location == LOCATION_BASE) ? "Base" : "Module",
+			(map->location == FU_DELL_DOCK_LOCATION_BASE) ? "Base" : "Module",
 			map->arg,
 			map->instance);
 		g_debug("\tVersion32: %08x\tVersion8: %x %x %x %x",
@@ -454,9 +454,9 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 							    device_entry[i].version.version_8[3]);
 			g_debug("\tParsed version %s", self->mst_version);
 		} else if (map->device_type == FU_DELL_DOCK_DEVICETYPE_TBT &&
-			   (self->data->module_type == MODULE_TYPE_130_TBT ||
-			    self->data->module_type == MODULE_TYPE_45_TBT ||
-			    self->data->module_type == MODULE_TYPE_130_USB4)) {
+			   (self->data->module_type == FU_DELL_DOCK_MODULE_TYPE_130_TBT ||
+			    self->data->module_type == FU_DELL_DOCK_MODULE_TYPE_45_TBT ||
+			    self->data->module_type == FU_DELL_DOCK_MODULE_TYPE_130_USB4)) {
 			/* guard against invalid Thunderbolt version read from EC */
 			if (!fu_dell_dock_test_valid_byte(device_entry[i].version.version_8, 2)) {
 				g_warning("[EC bug] EC read invalid Thunderbolt version %08x",
@@ -477,7 +477,7 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 				self->raw_versions->hub1_version =
 				    device_entry[i].version.version_32;
 		} else if (map->device_type == FU_DELL_DOCK_DEVICETYPE_PD &&
-			   map->location == LOCATION_BASE && map->sub_type == 0) {
+			   map->location == FU_DELL_DOCK_LOCATION_BASE && map->sub_type == 0) {
 			if (oldest_base_pd == 0 ||
 			    device_entry[i].version.version_32 < oldest_base_pd)
 				oldest_base_pd = GUINT32_TO_BE(device_entry[i].version.version_32);
@@ -490,9 +490,9 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 	}
 
 	/* Thunderbolt SKU takes a little longer */
-	if (self->data->module_type == MODULE_TYPE_130_TBT ||
-	    self->data->module_type == MODULE_TYPE_45_TBT ||
-	    self->data->module_type == MODULE_TYPE_130_USB4) {
+	if (self->data->module_type == FU_DELL_DOCK_MODULE_TYPE_130_TBT ||
+	    self->data->module_type == FU_DELL_DOCK_MODULE_TYPE_45_TBT ||
+	    self->data->module_type == FU_DELL_DOCK_MODULE_TYPE_130_USB4) {
 		guint64 tmp = fu_device_get_install_duration(device);
 		fu_device_set_install_duration(device, tmp + 20);
 	}
