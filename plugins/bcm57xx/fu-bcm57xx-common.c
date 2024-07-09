@@ -11,16 +11,10 @@
 
 #include "fu-bcm57xx-common.h"
 
-guint32
-fu_bcm57xx_nvram_crc(const guint8 *buf, gsize bufsz)
-{
-	return fu_crc32(buf, bufsz);
-}
-
 gboolean
 fu_bcm57xx_verify_crc(GInputStream *stream, GError **error)
 {
-	guint32 crc_actual = 0;
+	guint32 crc_actual = 0xFFFFFFFF;
 	guint32 crc_file = 0;
 	gsize streamsz = 0;
 	g_autoptr(GInputStream) stream_tmp = NULL;
@@ -46,7 +40,7 @@ fu_bcm57xx_verify_crc(GInputStream *stream, GError **error)
 	stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - sizeof(guint32), error);
 	if (stream_tmp == NULL)
 		return FALSE;
-	if (!fu_input_stream_compute_crc32(stream_tmp, &crc_actual, 0xEDB88320, error))
+	if (!fu_input_stream_compute_crc32(stream_tmp, FU_CRC32_KIND_STANDARD, &crc_actual, error))
 		return FALSE;
 	if (crc_actual != crc_file) {
 		g_set_error(error,

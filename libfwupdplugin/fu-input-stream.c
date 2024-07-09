@@ -497,28 +497,28 @@ fu_input_stream_compute_sum16(GInputStream *stream, guint16 *value, GError **err
 }
 
 typedef struct {
+	FuCrc32Kind kind;
 	guint32 crc;
-	guint32 polynomial;
 } FuInputStreamComputeCrc32Helper;
 
 static gboolean
 fu_input_stream_compute_crc32_cb(const guint8 *buf, gsize bufsz, gpointer user_data, GError **error)
 {
 	FuInputStreamComputeCrc32Helper *helper = (FuInputStreamComputeCrc32Helper *)user_data;
-	helper->crc = fu_crc32_full(buf, bufsz, ~helper->crc, helper->polynomial);
+	helper->crc = fu_crc32_step(helper->kind, buf, bufsz, helper->crc);
 	return TRUE;
 }
 
 /**
  * fu_input_stream_compute_crc32:
  * @stream: a #GInputStream
- * @crc: (out): initial and final CRC value, typically 0x0
- * @polynomial: CRC polynomial, typically 0xEDB88320
+ * @kind: a #FuCrc32Kind, typically %FU_CRC32_KIND_STANDARD
+ * @crc: (inout): initial and final CRC value
  * @error: (nullable): optional return location for an error
  *
  * Returns the cyclic redundancy check value for the given memory buffer.
  *
- * NOTE: The initial @crc differs from fu_crc32_full() in that it is inverted (to make it
+ * NOTE: The initial @crc differs from fu_crc32_step() in that it is inverted (to make it
  * symmetrical, and chainable), so for most uses you want to use the value of 0x0, not 0xFFFFFFFF.
  *
  * Returns: %TRUE for success
@@ -526,18 +526,15 @@ fu_input_stream_compute_crc32_cb(const guint8 *buf, gsize bufsz, gpointer user_d
  * Since: 2.0.0
  **/
 gboolean
-fu_input_stream_compute_crc32(GInputStream *stream,
-			      guint32 *crc,
-			      guint32 polynomial,
-			      GError **error)
+fu_input_stream_compute_crc32(GInputStream *stream, FuCrc32Kind kind, guint32 *crc, GError **error)
 {
-	FuInputStreamComputeCrc32Helper helper = {.crc = *crc, .polynomial = polynomial};
+	FuInputStreamComputeCrc32Helper helper = {.crc = *crc, .kind = kind};
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(crc != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	if (!fu_input_stream_chunkify(stream, fu_input_stream_compute_crc32_cb, &helper, error))
 		return FALSE;
-	*crc = helper.crc;
+	*crc = fu_crc32_done(kind, helper.crc);
 	return TRUE;
 }
 

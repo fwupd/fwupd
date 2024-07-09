@@ -23,7 +23,7 @@ fu_steelseries_firmware_parse(FuFirmware *firmware,
 			      GError **error)
 {
 	FuSteelseriesFirmware *self = FU_STEELSERIES_FIRMWARE(firmware);
-	guint32 checksum_tmp = 0;
+	guint32 checksum_tmp = 0xFFFFFFFF;
 	guint32 checksum = 0;
 	gsize streamsz = 0;
 	g_autoptr(GInputStream) stream_tmp = NULL;
@@ -47,7 +47,10 @@ fu_steelseries_firmware_parse(FuFirmware *firmware,
 	stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - sizeof(checksum_tmp), error);
 	if (stream_tmp == NULL)
 		return FALSE;
-	if (!fu_input_stream_compute_crc32(stream_tmp, &checksum_tmp, 0xEDB88320, error))
+	if (!fu_input_stream_compute_crc32(stream_tmp,
+					   FU_CRC32_KIND_STANDARD,
+					   &checksum_tmp,
+					   error))
 		return FALSE;
 	if (checksum_tmp != checksum) {
 		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {

@@ -27,8 +27,5 @@ typedef enum {
 	FU_CORSAIR_DEVICE_MODE_BOOTLOADER = 0x03
 } FuCorsairDeviceMode;
 
-guint32
-fu_corsair_calculate_crc(const guint8 *data, guint32 data_len);
-
 gchar *
 fu_corsair_version_from_uint32(guint32 val);
