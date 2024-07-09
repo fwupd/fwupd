@@ -64,13 +64,16 @@ fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
 
 	/* check CRC */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		guint32 crc_calc = 0;
+		guint32 crc_calc = 0xFFFFFFFF;
 		g_autoptr(GInputStream) stream_tmp = NULL;
 
 		stream_tmp = fu_partial_input_stream_new(stream, 8, streamsz - 8, error);
 		if (stream_tmp == NULL)
 			return FALSE;
-		if (!fu_input_stream_compute_crc32(stream_tmp, &crc_calc, 0xEDB88320, error))
+		if (!fu_input_stream_compute_crc32(stream_tmp,
+						   FU_CRC32_KIND_STANDARD,
+						   &crc_calc,
+						   error))
 			return FALSE;
 		if (crc_calc != fu_struct_synaptics_cape_sngl_hdr_get_file_crc(st)) {
 			g_set_error(error,

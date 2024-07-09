@@ -47,7 +47,7 @@ if __name__ == "__main__":
             "fu_common_crc16": "fu_crc16",
             "fu_common_crc16_full": "fu_crc16_full",
             "fu_common_crc32": "fu_crc32",
-            "fu_common_crc32_full": "fu_crc32_full",
+            "fu_common_crc32_full": "fu_crc32",
             "fu_byte_array_set_size_full": "fu_byte_array_set_size",
             "fu_common_string_replace": "g_string_replace",
             "fu_common_string_append_kv": "fwupd_codec_string_append",

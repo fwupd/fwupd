@@ -87,7 +87,7 @@ fu_qc_s5gen2_firmware_parse(FuFirmware *firmware,
 
 	if (!fu_firmware_set_stream(firmware, stream, error))
 		return FALSE;
-	if (!fu_input_stream_compute_crc32(stream, &self->file_id, 0xEDB88320, error))
+	if (!fu_input_stream_compute_crc32(stream, FU_CRC32_KIND_STANDARD, &self->file_id, error))
 		return FALSE;
 
 	/* success */
@@ -115,6 +115,7 @@ static void
 fu_qc_s5gen2_firmware_init(FuQcS5gen2Firmware *self)
 {
 	self->device_variant = NULL;
+	self->file_id = 0xFFFFFFFF;
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);

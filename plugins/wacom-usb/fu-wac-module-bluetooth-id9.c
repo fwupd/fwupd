@@ -27,7 +27,6 @@ G_DEFINE_TYPE(FuWacModuleBluetoothId9, fu_wac_module_bluetooth_id9, FU_TYPE_WAC_
 #define FU_WAC_MODULE_BLUETOOTH_ID9_LOADER_RAM	   0x02
 #define FU_WAC_MODULE_BLUETOOTH_ID9_LOADER_BEGIN   0x03
 #define FU_WAC_MODULE_BLUETOOTH_ID9_LOADER_DATA	   0x04
-#define FU_WAC_MODULE_BLUETOOTH_ID9_CRC_POLYNOMIAL 0xEDB88320
 
 #define FU_WAC_MODULE_BLUETOOTH_ID9_POLL_INTERVAL 5	/* ms */
 #define FU_WAC_MODULE_BLUETOOTH_ID9_START_TIMEOUT 75000 /* ms */
@@ -56,14 +55,8 @@ fu_wac_module_bluetooth_id9_get_startcmd(GInputStream *stream, gboolean full_era
 	fu_struct_id9_loader_cmd_set_command(loader_cmd, command);
 	fu_struct_id9_loader_cmd_set_size(loader_cmd, streamsz + FU_STRUCT_ID9_SPI_CMD_SIZE);
 	/* CRC(concat(spi_cmd, *data)) */
-	crc = fu_crc32_full(spi_cmd->data,
-			    FU_STRUCT_ID9_SPI_CMD_SIZE,
-			    ~0,
-			    FU_WAC_MODULE_BLUETOOTH_ID9_CRC_POLYNOMIAL);
-	if (!fu_input_stream_compute_crc32(stream,
-					   &crc,
-					   FU_WAC_MODULE_BLUETOOTH_ID9_CRC_POLYNOMIAL,
-					   error))
+	crc = fu_crc32(FU_CRC32_KIND_STANDARD, spi_cmd->data, FU_STRUCT_ID9_SPI_CMD_SIZE);
+	if (!fu_input_stream_compute_crc32(stream, FU_CRC32_KIND_STANDARD, &crc, error))
 		return NULL;
 	fu_struct_id9_loader_cmd_set_crc(loader_cmd, crc);
 	if (!fu_struct_id9_loader_cmd_set_data(loader_cmd, spi_cmd, error))

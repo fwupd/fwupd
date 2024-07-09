@@ -207,9 +207,20 @@ fu_common_crc_func(void)
 	guint8 buf[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 	g_assert_cmpint(fu_crc8(buf, sizeof(buf)), ==, 0x7A);
 	g_assert_cmpint(fu_crc16(buf, sizeof(buf)), ==, 0x4DF1);
-	g_assert_cmpint(fu_crc32(buf, sizeof(buf)), ==, 0x40EFAB9E);
 	g_assert_cmpint(fu_misr16(0, buf, (sizeof(buf) / 2) * 2), ==, 0x40D);
 	g_assert_cmpint(fu_misr16(0xFFFF, buf, (sizeof(buf) / 2) * 2), ==, 0xFBFA);
+
+	/* all the CRC32 variants, verified using https://crccalc.com/?method=CRC-32 */
+	g_assert_cmpint(fu_crc32(FU_CRC32_KIND_STANDARD, buf, sizeof(buf)), ==, 0x40EFAB9E);
+	g_assert_cmpint(fu_crc32(FU_CRC32_KIND_BZIP2, buf, sizeof(buf)), ==, 0x89AE7A5C);
+	g_assert_cmpint(fu_crc32(FU_CRC32_KIND_JAMCRC, buf, sizeof(buf)), ==, 0xBF105461);
+	g_assert_cmpint(fu_crc32(FU_CRC32_KIND_MPEG2, buf, sizeof(buf)), ==, 0x765185A3);
+	g_assert_cmpint(fu_crc32(FU_CRC32_KIND_POSIX, buf, sizeof(buf)), ==, 0x037915C4);
+	g_assert_cmpint(fu_crc32(FU_CRC32_KIND_SATA, buf, sizeof(buf)), ==, 0xBA55CCAC);
+	g_assert_cmpint(fu_crc32(FU_CRC32_KIND_XFER, buf, sizeof(buf)), ==, 0x868E70FC);
+	g_assert_cmpint(fu_crc32(FU_CRC32_KIND_C, buf, sizeof(buf)), ==, 0x5A14B9F9);
+	g_assert_cmpint(fu_crc32(FU_CRC32_KIND_D, buf, sizeof(buf)), ==, 0x68AD8D3C);
+	g_assert_cmpint(fu_crc32(FU_CRC32_KIND_Q, buf, sizeof(buf)), ==, 0xE955C875);
 }
 
 static void
@@ -5363,7 +5374,8 @@ fu_input_stream_chunkify_func(void)
 {
 	gboolean ret;
 	guint8 sum8 = 0;
-	guint32 crc32 = 0;
+	guint32 crc32 = 0xffffffff;
+	//	guint32 crc32 = 0x0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GError) error = NULL;
@@ -5387,10 +5399,10 @@ fu_input_stream_chunkify_func(void)
 	checksum2 = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, blob);
 	g_assert_cmpstr(checksum, ==, checksum2);
 
-	ret = fu_input_stream_compute_crc32(stream, &crc32, 0xEDB88320, &error);
+	ret = fu_input_stream_compute_crc32(stream, FU_CRC32_KIND_STANDARD, &crc32, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(crc32, ==, fu_crc32(buf->data, buf->len));
+	g_assert_cmpint(crc32, ==, fu_crc32(FU_CRC32_KIND_STANDARD, buf->data, buf->len));
 }
 
 static void

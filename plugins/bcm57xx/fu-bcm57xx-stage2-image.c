@@ -66,7 +66,9 @@ fu_bcm57xx_stage2_image_write(FuFirmware *image, GError **error)
 	fu_byte_array_append_bytes(blob, fw_nocrc);
 
 	/* add CRC */
-	fu_byte_array_append_uint32(blob, fu_bcm57xx_nvram_crc(buf, bufsz), G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32(blob,
+				    fu_crc32(FU_CRC32_KIND_STANDARD, buf, bufsz),
+				    G_LITTLE_ENDIAN);
 	return g_steal_pointer(&blob);
 }
 
