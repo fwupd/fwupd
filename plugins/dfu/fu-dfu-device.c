@@ -1491,6 +1491,18 @@ fu_dfu_device_set_progress(FuDevice *self, FuProgress *progress)
 }
 
 static void
+fu_dfu_device_dispose(GObject *object)
+{
+	FuDfuDevice *self = FU_DFU_DEVICE(object);
+	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
+
+	if (priv->targets != NULL)
+		g_ptr_array_set_size(priv->targets, 0);
+
+	G_OBJECT_CLASS(fu_dfu_device_parent_class)->dispose(object);
+}
+
+static void
 fu_dfu_device_finalize(GObject *object)
 {
 	FuDfuDevice *self = FU_DFU_DEVICE(object);
@@ -1519,6 +1531,7 @@ fu_dfu_device_class_init(FuDfuDeviceClass *klass)
 	device_class->close = fu_dfu_device_close;
 	device_class->probe = fu_dfu_device_probe;
 	device_class->set_progress = fu_dfu_device_set_progress;
+	object_class->dispose = fu_dfu_device_dispose;
 	object_class->finalize = fu_dfu_device_finalize;
 }
 

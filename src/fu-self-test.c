@@ -146,8 +146,6 @@ fu_test_free(FuTest *self)
 {
 	if (self->ctx != NULL)
 		g_object_unref(self->ctx);
-	if (self->plugin != NULL)
-		g_object_unref(self->plugin);
 	g_free(self);
 }
 
@@ -2493,6 +2491,7 @@ fu_engine_history_func(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FwupdDevice) device3 = NULL;
 	g_autoptr(FwupdDevice) device4 = NULL;
@@ -2509,13 +2508,13 @@ fu_engine_history_func(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	ret = fu_plugin_reset_config_values(self->plugin, &error);
+	ret = fu_plugin_reset_config_values(plugin, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_plugin_set_config_value(self->plugin, "AnotherWriteRequired", "true", &error);
+	ret = fu_plugin_set_config_value(plugin, "AnotherWriteRequired", "true", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	fu_engine_add_plugin(engine, self->plugin);
+	fu_engine_add_plugin(engine, plugin);
 
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
 	g_assert_no_error(error);
@@ -2641,6 +2640,7 @@ fu_engine_history_verfmt_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_DPAUX_DEVICE, "context", self->ctx, NULL);
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -2649,7 +2649,7 @@ fu_engine_history_verfmt_func(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	fu_engine_add_plugin(engine, self->plugin);
+	fu_engine_add_plugin(engine, plugin);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -2681,6 +2681,7 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GInputStream) stream = NULL;
@@ -2703,10 +2704,10 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	ret = fu_plugin_reset_config_values(self->plugin, &error);
+	ret = fu_plugin_reset_config_values(plugin, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	fu_engine_add_plugin(engine, self->plugin);
+	fu_engine_add_plugin(engine, plugin);
 
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
 	g_assert_no_error(error);
@@ -2809,6 +2810,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GInputStream) stream = NULL;
@@ -2830,13 +2832,13 @@ fu_engine_history_inherit(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	ret = fu_plugin_reset_config_values(self->plugin, &error);
+	ret = fu_plugin_reset_config_values(plugin, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_plugin_set_config_value(self->plugin, "NeedsActivation", "true", &error);
+	ret = fu_plugin_set_config_value(plugin, "NeedsActivation", "true", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	fu_engine_add_plugin(engine, self->plugin);
+	fu_engine_add_plugin(engine, plugin);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -2918,7 +2920,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_object_unref(device);
 	engine = fu_engine_new(self->ctx);
 	fu_engine_set_silo(engine, silo_empty);
-	fu_engine_add_plugin(engine, self->plugin);
+	fu_engine_add_plugin(engine, plugin);
 	device = fu_device_new(self->ctx);
 	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION);
 	fu_device_set_id(device, "test_device");
@@ -2936,7 +2938,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_object_unref(device);
 	engine = fu_engine_new(self->ctx);
 	fu_engine_set_silo(engine, silo_empty);
-	fu_engine_add_plugin(engine, self->plugin);
+	fu_engine_add_plugin(engine, plugin);
 	device = fu_device_new(self->ctx);
 	fu_device_set_id(device, "test_device");
 	fu_device_add_vendor_id(device, "USB:FFFF");
@@ -2959,6 +2961,7 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GInputStream) stream = NULL;
@@ -2970,13 +2973,13 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	ret = fu_plugin_reset_config_values(self->plugin, &error);
+	ret = fu_plugin_reset_config_values(plugin, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_plugin_set_config_value(self->plugin, "NeedsReboot", "true", &error);
+	ret = fu_plugin_set_config_value(plugin, "NeedsReboot", "true", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	fu_engine_add_plugin(engine, self->plugin);
+	fu_engine_add_plugin(engine, plugin);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -3070,6 +3073,7 @@ fu_engine_install_request(gconstpointer user_data)
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GInputStream) stream = NULL;
@@ -3081,13 +3085,10 @@ fu_engine_install_request(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	ret = fu_plugin_reset_config_values(self->plugin, &error);
+	ret = fu_plugin_set_config_value(plugin, "RequestSupported", "true", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_plugin_set_config_value(self->plugin, "RequestSupported", "true", &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	fu_engine_add_plugin(engine, self->plugin);
+	fu_engine_add_plugin(engine, plugin);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -3168,6 +3169,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error2 = NULL;
 	g_autoptr(GError) error = NULL;
@@ -3180,10 +3182,10 @@ fu_engine_history_error_func(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
-	ret = fu_plugin_set_config_value(self->plugin, "WriteSupported", "false", &error);
+	ret = fu_plugin_set_config_value(plugin, "WriteSupported", "false", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	fu_engine_add_plugin(engine, self->plugin);
+	fu_engine_add_plugin(engine, plugin);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -4215,6 +4217,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 #ifdef HAVE_FWUPDOFFLINE
@@ -4238,21 +4241,21 @@ fu_plugin_module_func(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* create a fake device */
-	ret = fu_plugin_set_config_value(self->plugin, "RegistrationSupported", "true", &error);
+	ret = fu_plugin_set_config_value(plugin, "RegistrationSupported", "true", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_plugin_runner_startup(self->plugin, progress, &error);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_signal_connect(FU_PLUGIN(self->plugin),
+	g_signal_connect(FU_PLUGIN(plugin),
 			 "device-added",
 			 G_CALLBACK(_plugin_device_added_cb),
 			 &device);
-	g_signal_connect(FU_PLUGIN(self->plugin),
+	g_signal_connect(FU_PLUGIN(plugin),
 			 "device-register",
 			 G_CALLBACK(_plugin_device_register_cb),
 			 &device);
-	ret = fu_plugin_runner_coldplug(self->plugin, progress, &error);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -4266,7 +4269,7 @@ fu_plugin_module_func(gconstpointer user_data)
 			==,
 			"b585990a-003e-5270-89d5-3705a17f9a43");
 	g_assert_cmpstr(fu_device_get_name(device), ==, "Integrated Webcam™");
-	g_signal_handlers_disconnect_by_data(self->plugin, &device);
+	g_signal_handlers_disconnect_by_data(plugin, &device);
 
 #ifdef HAVE_FWUPDOFFLINE
 	/* schedule an offline update */
@@ -4310,7 +4313,7 @@ fu_plugin_module_func(gconstpointer user_data)
 
 	/* lets do this online */
 	fu_engine_add_device(engine, device);
-	fu_engine_add_plugin(engine, self->plugin);
+	fu_engine_add_plugin(engine, plugin);
 	stream = fu_input_stream_from_path(mapped_file_fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(stream);
@@ -4339,14 +4342,14 @@ fu_plugin_module_func(gconstpointer user_data)
 	/* get the status */
 	device_tmp = fu_device_new(NULL);
 	fu_device_set_id(device_tmp, "FakeDevice");
-	ret = fu_plugin_runner_get_results(self->plugin, device_tmp, &error);
+	ret = fu_plugin_runner_get_results(plugin, device_tmp, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fu_device_get_update_state(device_tmp), ==, FWUPD_UPDATE_STATE_SUCCESS);
 	g_assert_cmpstr(fu_device_get_update_error(device_tmp), ==, NULL);
 
 	/* clear */
-	ret = fu_plugin_runner_clear_results(self->plugin, device_tmp, &error);
+	ret = fu_plugin_runner_clear_results(plugin, device_tmp, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -4574,6 +4577,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), self->ctx);
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -4636,24 +4640,24 @@ fu_plugin_composite_func(gconstpointer user_data)
 	g_assert_cmpint(components->len, ==, 3);
 
 	/* set up dummy plugin */
-	ret = fu_plugin_reset_config_values(self->plugin, &error);
+	ret = fu_plugin_reset_config_values(plugin, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_plugin_set_config_value(self->plugin, "CompositeChild", "true", &error);
+	ret = fu_plugin_set_config_value(plugin, "CompositeChild", "true", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	fu_engine_add_plugin(engine, self->plugin);
+	fu_engine_add_plugin(engine, plugin);
 
-	ret = fu_plugin_runner_startup(self->plugin, progress, &error);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	g_signal_connect(FU_PLUGIN(self->plugin),
+	g_signal_connect(FU_PLUGIN(plugin),
 			 "device-added",
 			 G_CALLBACK(_plugin_composite_device_added_cb),
 			 devices);
 
-	ret = fu_plugin_runner_coldplug(self->plugin, progress, &error);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -6486,9 +6490,6 @@ main(int argc, char **argv)
 	ret = fu_context_load_hwinfo(self->ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-
-	/* load the test plugin */
-	self->plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), self->ctx);
 
 	/* tests go here */
 	if (g_test_slow()) {

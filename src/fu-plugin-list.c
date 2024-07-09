@@ -299,9 +299,23 @@ fu_plugin_list_depsolve(FuPluginList *self, GError **error)
 }
 
 static void
+fu_plugin_list_dispose(GObject *obj)
+{
+	FuPluginList *self = FU_PLUGIN_LIST(obj);
+
+	if (self->plugins != NULL)
+		g_ptr_array_set_size(self->plugins, 0);
+	if (self->plugins_hash != NULL)
+		g_hash_table_remove_all(self->plugins_hash);
+
+	G_OBJECT_CLASS(fu_plugin_list_parent_class)->dispose(obj);
+}
+
+static void
 fu_plugin_list_class_init(FuPluginListClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->dispose = fu_plugin_list_dispose;
 	object_class->finalize = fu_plugin_list_finalize;
 }
 
