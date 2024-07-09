@@ -557,205 +557,6 @@ fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING);
 }
 
-static gboolean
-fu_uefi_capsule_plugin_is_esp_linux(FuVolume *esp, GError **error)
-{
-	const gchar *prefixes[] = {"grub", "shim", "systemd-boot", "zfsbootmenu", NULL};
-	g_autofree gchar *prefixes_str = NULL;
-	g_autofree gchar *mount_point = fu_volume_get_mount_point(esp);
-	g_autoptr(GPtrArray) files = NULL;
-
-	/* look for any likely basenames */
-	if (mount_point == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no mountpoint for ESP");
-		return FALSE;
-	}
-	files = fu_path_get_files(mount_point, error);
-	if (files == NULL)
-		return FALSE;
-	for (guint i = 0; i < files->len; i++) {
-		const gchar *fn = g_ptr_array_index(files, i);
-		g_autofree gchar *basename = g_path_get_basename(fn);
-		g_autofree gchar *basename_lower = g_utf8_strdown(basename, -1);
-
-		for (guint j = 0; prefixes[j] != NULL; j++) {
-			if (!g_str_has_prefix(basename_lower, prefixes[j]))
-				continue;
-			if (!g_str_has_suffix(basename_lower, ".efi"))
-				continue;
-			g_info("found %s which indicates a Linux ESP, using %s", fn, mount_point);
-			return TRUE;
-		}
-	}
-
-	/* failed */
-	prefixes_str = g_strjoinv("|", (gchar **)prefixes);
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_FOUND,
-		    "did not any files with prefix %s in %s",
-		    prefixes_str,
-		    mount_point);
-	return FALSE;
-}
-
-static gint
-fu_uefi_capsule_plugin_sort_volume_score_cb(gconstpointer a, gconstpointer b, gpointer user_data)
-{
-	GHashTable *esp_scores = (GHashTable *)user_data;
-	guint esp1_score = GPOINTER_TO_UINT(g_hash_table_lookup(esp_scores, *((FuVolume **)a)));
-	guint esp2_score = GPOINTER_TO_UINT(g_hash_table_lookup(esp_scores, *((FuVolume **)b)));
-	if (esp1_score < esp2_score)
-		return 1;
-	if (esp1_score > esp2_score)
-		return -1;
-	return 0;
-}
-
-static FuVolume *
-fu_uefi_capsule_plugin_get_default_esp(FuPlugin *plugin, GError **error)
-{
-	g_autoptr(GPtrArray) esp_volumes = NULL;
-	const gchar *recovery_partitions[] = {
-	    "DELLRESTORE",
-	    "DELLUTILITY",
-	    "DIAGS",
-	    "HP_RECOVERY",
-	    "IBM_SERVICE",
-	    "INTELRST",
-	    "LENOVO_RECOVERY",
-	    "OS",
-	    "PQSERVICE",
-	    "RECOVERY",
-	    "RECOVERY_PARTITION",
-	    "SERVICEV001",
-	    "SERVICEV002",
-	    "SYSTEM_RESERVED",
-	    "WINRE_DRV",
-	    NULL,
-	}; /* from https://github.com/storaged-project/udisks/blob/master/data/80-udisks2.rules */
-	const gchar *user_esp_location = fu_context_get_esp_location(fu_plugin_get_context(plugin));
-
-	/* show which volumes we're choosing from */
-	esp_volumes = fu_context_get_esp_volumes(fu_plugin_get_context(plugin), error);
-	if (esp_volumes == NULL)
-		return NULL;
-
-	/* we found more than one: lets look for the best one */
-	if (esp_volumes->len > 1) {
-		g_autoptr(GString) str = g_string_new("more than one ESP possible:");
-		g_autoptr(GHashTable) esp_scores = g_hash_table_new(g_direct_hash, g_direct_equal);
-		for (guint i = 0; i < esp_volumes->len; i++) {
-			FuVolume *esp = g_ptr_array_index(esp_volumes, i);
-			guint score = 0;
-			g_autofree gchar *name = NULL;
-			g_autofree gchar *kind = NULL;
-			g_autoptr(FuDeviceLocker) locker = NULL;
-			g_autoptr(GError) error_local = NULL;
-
-			/* ignore the volume completely if we cannot mount it */
-			locker = fu_volume_locker(esp, &error_local);
-			if (locker == NULL) {
-				g_warning("failed to mount ESP: %s", error_local->message);
-				continue;
-			}
-
-			/* if user specified, make sure that it matches */
-			if (user_esp_location != NULL) {
-				g_autofree gchar *mount = fu_volume_get_mount_point(esp);
-				if (g_strcmp0(mount, user_esp_location) != 0) {
-					g_debug("skipping %s as it's not the user "
-						"specified ESP",
-						mount);
-					continue;
-				}
-			}
-
-			/* ignore a partition that claims to be a recovery partition */
-			name = fu_volume_get_partition_name(esp);
-			if (name != NULL) {
-				g_autoptr(GString) name_safe = g_string_new(name);
-				g_string_replace(name_safe, " ", "_", 0);
-				g_string_replace(name_safe, "\"", "", 0);
-				g_string_ascii_up(name_safe);
-				if (g_strv_contains(recovery_partitions, name_safe->str)) {
-					if (g_strcmp0(name_safe->str, name) == 0) {
-						g_debug("skipping partition '%s'", name);
-					} else {
-						g_debug("skipping partition '%s' -> '%s'",
-							name,
-							name_safe->str);
-					}
-					continue;
-				}
-			}
-
-			/* big partitions are better than small partitions */
-			score += fu_volume_get_size(esp) / (1024 * 1024);
-
-			/* prefer partitions with the ESP flag set over msftdata */
-			kind = fu_volume_get_partition_kind(esp);
-			if (g_strcmp0(kind, FU_VOLUME_KIND_ESP) == 0)
-				score += 0x20000;
-
-			/* prefer linux ESP */
-			if (!fu_uefi_capsule_plugin_is_esp_linux(esp, &error_local)) {
-				g_debug("not a Linux ESP: %s", error_local->message);
-			} else {
-				score += 0x10000;
-			}
-			g_hash_table_insert(esp_scores, (gpointer)esp, GUINT_TO_POINTER(score));
-		}
-
-		if (g_hash_table_size(esp_scores) == 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no EFI system partition found");
-			return NULL;
-		}
-
-		g_ptr_array_sort_with_data(esp_volumes,
-					   fu_uefi_capsule_plugin_sort_volume_score_cb,
-					   esp_scores);
-		for (guint i = 0; i < esp_volumes->len; i++) {
-			FuVolume *esp = g_ptr_array_index(esp_volumes, i);
-			guint score = GPOINTER_TO_UINT(g_hash_table_lookup(esp_scores, esp));
-			g_string_append_printf(str, "\n - 0x%x:\t%s", score, fu_volume_get_id(esp));
-		}
-		g_debug("%s", str->str);
-	}
-
-	if (esp_volumes->len == 1) {
-		FuVolume *esp = g_ptr_array_index(esp_volumes, 0);
-		g_autoptr(FuDeviceLocker) locker = NULL;
-
-		/* ensure it can be mounted */
-		locker = fu_volume_locker(esp, error);
-		if (locker == NULL)
-			return NULL;
-
-		/* if user specified, does it match mountpoints ? */
-		if (user_esp_location != NULL) {
-			g_autofree gchar *mount = fu_volume_get_mount_point(esp);
-
-			if (g_strcmp0(mount, user_esp_location) != 0) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "user specified ESP %s not found",
-					    user_esp_location);
-				return NULL;
-			}
-		}
-	}
-
-	/* "success" */
-	return g_object_ref(g_ptr_array_index(esp_volumes, 0));
-}
 
 static void
 fu_uefi_capsule_plugin_validate_esp(FuUefiCapsulePlugin *self)
@@ -790,7 +591,7 @@ fu_uefi_capsule_plugin_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 	dev = fu_uefi_backend_device_new_from_dev(FU_UEFI_BACKEND(self->backend), device);
 	fu_uefi_capsule_plugin_load_config(plugin, FU_DEVICE(dev));
 	if (self->esp == NULL) {
-		self->esp = fu_uefi_capsule_plugin_get_default_esp(plugin, &error_local);
+		self->esp = fu_context_get_default_esp(fu_plugin_get_context(plugin), &error_local);
 		if (self->esp == NULL)
 			g_warning("cannot find default ESP: %s", error_local->message);
 		fu_uefi_capsule_plugin_validate_esp(self);
@@ -919,7 +720,7 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 
 	/* find and set ESP */
 	if (self->esp == NULL) {
-		self->esp = fu_uefi_capsule_plugin_get_default_esp(plugin, &error_udisks2);
+		self->esp = fu_context_get_default_esp(fu_plugin_get_context(plugin), &error_udisks2);
 		if (self->esp == NULL)
 			g_warning("cannot find default ESP: %s", error_udisks2->message);
 		fu_uefi_capsule_plugin_validate_esp(self);
