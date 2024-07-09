@@ -1,0 +1,50 @@
+$ sudo ipmi-fru --fru-file=/sys/bus/i2c/devices/1-0051/eeprom --interpret-oem-data
+FRU Inventory From File: /sys/bus/i2c/devices/1-0051/eeprom
+
+  FRU Board Manufacturing Date/Time: 05/13/24 - 18:26:00
+  FRU Board Manufacturer: XILINX
+  FRU Board Product Name: SCK-KV-G
+  FRU Board Serial Number: XFL1XEYN4SLK
+  FRU Board Part Number: 5066-01
+  FRU FRU File ID: 00h
+  FRU Board Custom Info: 1
+  FRU Board Custom Info: 10h EEh 00h 00h 00h 00h 00h 00h
+  FRU Board Custom Info: C5h 4Eh 65h 57h B5h 9Ah 4Bh 48h A0h C4h 53h 7Ah 9Fh 53h B0h CBh
+
+  FRU DC Load Output Number: 1
+  FRU DC Load Nominal Voltage: 12000 mV
+  FRU DC Load Spec'd Minimum Voltage: 11500 mV
+  FRU DC Load Spec'd Maximum Voltage: 12500 mV
+  FRU DC Load Spec'd Ripple and Noise pk-pk: 100 mV
+  FRU DC Load Minimum Current Load: 0 mA
+  FRU DC Load Maximum Current Load: 3000 mA
+
+  FRU Error: multirecord area checksum invalid
+ipmi_fru_next: multirecord area checksum invalid
+$ sudo ipmi-fru --fru-file=/sys/bus/i2c/devices/1-0050/eeprom --interpret-oem-data
+FRU Inventory From File: /sys/bus/i2c/devices/1-0050/eeprom
+
+  FRU Board Manufacturing Date/Time: 05/13/24 - 18:28:00
+  FRU Board Manufacturer: XILINX
+  FRU Board Product Name: SMK-K26-XCL2G
+  FRU Board Serial Number: XFL1T4UVG44P
+  FRU Board Part Number: 5057-01
+  FRU FRU File ID: 00h
+  FRU Board Custom Info: 1
+  FRU Board Custom Info: 10h EEh 00h 00h 00h 00h 00h 00h
+  FRU Board Custom Info: 92h 2Ah B2h C5h F9h F1h 43h BFh 81h 38h DDh 73h 55h ABh 62h 71h
+
+  FRU DC Load Output Number: 1
+  FRU DC Load Nominal Voltage: 5000 mV
+  FRU DC Load Spec'd Minimum Voltage: 4500 mV
+  FRU DC Load Spec'd Maximum Voltage: 5500 mV
+  FRU DC Load Spec'd Ripple and Noise pk-pk: 100 mV
+  FRU DC Load Minimum Current Load: 0 mA
+  FRU DC Load Maximum Current Load: 4000 mA
+
+  FRU OEM Manufacturer ID: Xilinx, Inc. (10DAh)
+  FRU OEM MAC Version: DUT - MAC (31h)
+  FRU OEM MAC ID 0: 00:0a:35:17:98:8f
+
+  FRU Error: multirecord area checksum invalid
+ipmi_fru_next: multirecord area checksum invalid
