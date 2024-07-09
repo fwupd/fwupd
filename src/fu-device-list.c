@@ -1033,9 +1033,21 @@ fu_device_list_codec_iface_init(FwupdCodecInterface *iface)
 }
 
 static void
+fu_device_list_dispose(GObject *obj)
+{
+	FuDeviceList *self = FU_DEVICE_LIST(obj);
+
+	if (self->devices != NULL)
+		g_ptr_array_set_size(self->devices, 0);
+
+	G_OBJECT_CLASS(fu_device_list_parent_class)->dispose(obj);
+}
+
+static void
 fu_device_list_class_init(FuDeviceListClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->dispose = fu_device_list_dispose;
 	object_class->finalize = fu_device_list_finalize;
 
 	/**

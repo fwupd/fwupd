@@ -2829,12 +2829,27 @@ fu_plugin_set_property(GObject *object, guint prop_id, const GValue *value, GPar
 }
 
 static void
+fu_plugin_dispose(GObject *object)
+{
+	FuPlugin *self = FU_PLUGIN(object);
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+
+	if (priv->devices != NULL)
+		g_ptr_array_set_size(priv->devices, 0);
+	if (priv->cache != NULL)
+		g_hash_table_remove_all(priv->cache);
+
+	G_OBJECT_CLASS(fu_plugin_parent_class)->dispose(object);
+}
+
+static void
 fu_plugin_class_init(FuPluginClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	GParamSpec *pspec;
 
 	object_class->finalize = fu_plugin_finalize;
+	object_class->dispose = fu_plugin_dispose;
 	object_class->get_property = fu_plugin_get_property;
 	object_class->set_property = fu_plugin_set_property;
 

@@ -8602,10 +8602,24 @@ fu_engine_set_property(GObject *object, guint prop_id, const GValue *value, GPar
 }
 
 static void
+fu_engine_dispose(GObject *obj)
+{
+	FuEngine *self = FU_ENGINE(obj);
+
+	if (self->plugin_list != NULL)
+		g_object_run_dispose(G_OBJECT(self->plugin_list));
+	if (self->device_list != NULL)
+		g_object_run_dispose(G_OBJECT(self->device_list));
+
+	G_OBJECT_CLASS(fu_engine_parent_class)->dispose(obj);
+}
+
+static void
 fu_engine_class_init(FuEngineClass *klass)
 {
 	GParamSpec *pspec;
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->dispose = fu_engine_dispose;
 	object_class->finalize = fu_engine_finalize;
 	object_class->get_property = fu_engine_get_property;
 	object_class->set_property = fu_engine_set_property;
