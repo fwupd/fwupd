@@ -16,21 +16,3 @@ Flags = no-probe
 [MTD\NAME_BIOS]
 Name = Internal SPI Controller
 #FirmwareGType = FuIfdFirmware
-
-# AMD Kria System on Module
-[MTD\VENDOR_xlnx&PRODUCT_ZynqMP-KV260-revB&NAME_Image-A-FSBL-PMU-ATF-U-Boot]
-Name = Image A
-[MTD\VENDOR_xlnx&PRODUCT_ZynqMP-KV260-revB&NAME_Image-B-FSBL-PMU-ATF-U-Boot]
-Name = Image B
-[MTD\VENDOR_xlnx&NAME_Open-1]
-Flags = no-probe
-[MTD\VENDOR_xlnx&NAME_Open-2]
-Flags = no-probe
-[MTD\VENDOR_xlnx&NAME_Secure-OS-Storage]
-Flags = no-probe
-[MTD\VENDOR_xlnx&NAME_U-Boot-storage-variables]
-Flags = no-probe
-[MTD\VENDOR_xlnx&NAME_U-Boot-storage-variables-backup]
-Flags = no-probe
-[MTD\VENDOR_xlnx&NAME_User]
-Flags = no-probe
