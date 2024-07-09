@@ -169,6 +169,9 @@ GPtrArray *
 fu_context_get_esp_volumes(FuContext *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 FuVolume *
+fu_context_get_default_esp(FuContext *ctx, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
+FuVolume *
 fu_context_get_esp_volume_by_hard_drive_device_path(FuContext *self,
 						    FuEfiHardDriveDevicePath *dp,
 						    GError **error) G_GNUC_WARN_UNUSED_RESULT
