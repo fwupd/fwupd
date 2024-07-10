@@ -1495,26 +1495,16 @@ fu_context_get_esp_volumes(FuContext *self, GError **error)
 
 	/* nothing found */
 	if (priv->esp_volumes->len == 0) {
-		g_autofree gchar *base = NULL;
-		g_autofree gchar *path = NULL;
 		g_autoptr(GPtrArray) devices = NULL;
 
-		/* udisks2 is working */
-		devices = fu_common_get_block_devices(NULL);
-		if (devices != NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_FOUND,
-					    "No ESP or BDP found");
+		/* check if udisks2 is working */
+		devices = fu_common_get_block_devices(error);
+		if (devices == NULL)
 			return NULL;
-		}
-		base = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
-		path = g_build_filename(base, "fwupd.conf", NULL);
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "No valid 'EspLocation' specified in %s",
-			    path);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "No ESP or BDP found");
 		return NULL;
 	}
 
