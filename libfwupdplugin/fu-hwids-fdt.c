@@ -86,7 +86,7 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 			fu_context_set_chassis_kind(ctx, FU_SMBIOS_CHASSIS_KIND_PORTABLE);
 	}
 	fdt_img_fwver =
-	    fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(fdt), "ibm,firmware-versions", NULL);
+	    fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(fdt), "/ibm,firmware-versions", NULL);
 	if (fdt_img_fwver != NULL) {
 		g_autofree gchar *version = NULL;
 		fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img), "version", &version, NULL);
