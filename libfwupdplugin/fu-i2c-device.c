@@ -132,7 +132,6 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_strsafe(device, "NAME", tmp);
 	if (!fu_device_build_instance_id_full(device,
 					      FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						  FU_DEVICE_INSTANCE_FLAG_VISIBLE |
 						  FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					      error,
 					      "I2C",
