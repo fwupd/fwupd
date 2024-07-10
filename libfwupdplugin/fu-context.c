@@ -1573,13 +1573,13 @@ fu_context_sort_esp_score_cb(gconstpointer a, gconstpointer b, gpointer user_dat
 
 /**
  * fu_context_get_default_esp:
- * @self: a #FuContext
+ * @ctx: a #FuContext
  * @error: (nullable): optional return location for an error
  *
  * Finds the volume that represents the ESP that plugins should nominally
  * use for accessing storing data.
  *
- * Returns: The #FuVolume representing the ESP, or %NULL if no ESP was found
+ * Returns: (transfer full): a volume, or %NULL if no ESP was found
  *
  * Since: 2.0.0
  **/
