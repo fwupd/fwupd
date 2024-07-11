@@ -14,6 +14,3 @@ G_DECLARE_FINAL_TYPE(FuAlgoltekAuxDevice,
 		     FU,
 		     ALGOLTEK_AUX_DEVICE,
 		     FuDpauxDevice)
-
-FuAlgoltekAuxDevice *
-fu_algoltek_aux_device_new(FuDpauxDevice *device);

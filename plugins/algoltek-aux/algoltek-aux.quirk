@@ -1,2 +1,3 @@
-[MST\VEN_25A4&DEV_AG9421]
-Plugin = algoltek-aux
+# awaiting better firmware
+[DPAUX\OUI_00000000]
+Plugin = algoltek_aux
