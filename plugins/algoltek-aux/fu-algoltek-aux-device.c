@@ -25,15 +25,6 @@ G_DEFINE_TYPE(FuAlgoltekAuxDevice, fu_algoltek_aux_device, FU_TYPE_DPAUX_DEVICE)
 #define FU_ALGOLTEK_AUX_CRC_INIT_POLINOM 0x1021
 #define FU_ALGOLTEK_AUX_CRC_POLINOM	 0x1021
 
-FuAlgoltekAuxDevice *
-fu_algoltek_aux_device_new(FuDpauxDevice *device)
-{
-	FuAlgoltekAuxDevice *self = g_object_new(FU_TYPE_ALGOLTEK_AUX_DEVICE, NULL);
-	if (device != NULL)
-		fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(device));
-	return self;
-}
-
 static gboolean
 fu_algoltek_dpaux_device_write(FuAlgoltekAuxDevice *self,
 			       GByteArray *buf,
