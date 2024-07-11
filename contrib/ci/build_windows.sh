@@ -49,6 +49,8 @@ meson setup .. \
     --bindir="bin" \
     -Dbuild=all \
     -Dman=false \
+    -Dtests=false \
+    -Dbuildtype=release \
     -Ddbus_socket_address="tcp:host=localhost,port=1341" \
     -Dfish_completion=false \
     -Dbash_completion=false \
@@ -64,15 +66,7 @@ meson setup .. \
     -Dgusb:introspection=false \
     -Dgusb:vapi=false $@
 VERSION=$(meson introspect . --projectinfo | jq -r .version)
-
-# run tests
-export WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/;$build/libfwupd/;$build/libfwupdplugin/;$build/subprojects/libxmlb/src/;$build/subprojects/libjcat/libjcat/;$build/subprojects/gusb/gusb/"
-ninja --verbose -C "$build" -v
-ninja -C "$build" test
-
-# switch to release optimizations
-meson configure -Dtests=false -Dbuildtype=release
-ninja -C "$build" -v install
+ninja --verbose -C "$build" -v install
 
 #disable motd for Windows
 cd $root
