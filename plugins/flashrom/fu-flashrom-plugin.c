@@ -193,8 +193,8 @@ fu_flashrom_plugin_add_device(FuPlugin *plugin,
 		g_autofree gchar *vendor_id = g_strdup_printf("DMI:%s", dmi_vendor);
 		fu_device_add_vendor_id(FU_DEVICE(device), vendor_id);
 	}
-	fu_flashrom_plugin_device_set_version(plugin, device);
 	fu_flashrom_plugin_device_set_hwids(plugin, device);
+	fu_flashrom_plugin_device_set_version(plugin, device);
 	if (!fu_flashrom_plugin_device_set_bios_info(plugin, device, &error_local))
 		g_warning("failed to set bios info: %s", error_local->message);
 	if (!fu_device_setup(device, error))
