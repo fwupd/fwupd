@@ -1,3 +1,15 @@
+# raspberrypi+brcm,bcm2712 HWID
+[abe2c65a-0295-5818-a254-2ec5379881c5]
+Plugin = flashrom
+FlashromProgrammer = linux_spi
+FlashromArgs = dev=/dev/spidev10.0,spispeed=16000
+
+# Raspberry Pi 5 Model B Rev 1.0 (HwId)
+[909e4cd3-bdf0-581d-955c-f7709d9fb316]
+Vendor = Raspberry Pi
+VendorId = DMI:raspberrypi
+VersionFormat = number
+
 # Purism
 [a0ce5085-2dea-5086-ae72-45810a186ad0]
 Plugin = flashrom
