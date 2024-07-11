@@ -483,13 +483,17 @@ fu_path_from_kind(FuPathKind path_kind)
 	case FU_PATH_KIND_LOCALTIME: {
 		g_autofree gchar *sysconfdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR);
 		g_autofree gchar *localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR);
+		g_autofree gchar *localtime = NULL;
 		tmp = g_getenv("FWUPD_LOCALTIME");
 		if (tmp != NULL)
 			return g_strdup(tmp);
 		basedir = g_build_filename(localstatedir, "lib", "timezone", "localtime", NULL);
 		if (g_file_test(basedir, G_FILE_TEST_EXISTS))
 			return g_steal_pointer(&basedir);
-		return g_build_filename(sysconfdir, "localtime", NULL);
+		localtime = g_build_filename(sysconfdir, "localtime", NULL);
+		if (g_file_test(localtime, G_FILE_TEST_EXISTS))
+			return g_steal_pointer(&localtime);
+		return g_strdup("/etc/localtime");
 	}
 	/* this shouldn't happen */
 	default:
