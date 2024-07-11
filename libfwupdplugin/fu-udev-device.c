@@ -925,6 +925,7 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 {
 	const gchar *subsystem = NULL;
 	g_autofree gchar *physical_id = NULL;
+	g_autofree gchar *of_prop = NULL;
 	g_auto(GStrv) split = NULL;
 	g_autoptr(FuUdevDevice) udev_device = NULL;
 
@@ -963,7 +964,10 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 	}
 
 	subsystem = fu_udev_device_get_subsystem(udev_device);
-	if (g_strcmp0(subsystem, "pci") == 0) {
+	of_prop = fu_udev_device_read_property(udev_device, "OF_FULLNAME", NULL);
+	if (of_prop != NULL) {
+		physical_id = g_strdup_printf("OF_FULLNAME=%s", of_prop);
+	} else if (g_strcmp0(subsystem, "pci") == 0) {
 		g_autofree gchar *prop_id =
 		    fu_udev_device_read_property(udev_device, "PCI_SLOT_NAME", error);
 		if (prop_id == NULL)
