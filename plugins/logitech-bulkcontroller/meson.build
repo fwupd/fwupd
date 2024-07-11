@@ -11,6 +11,7 @@ plugin_builtins += static_library('fu_plugin_logitech_bulkcontroller',
   sources: [
     generated,
     'fu-logitech-bulkcontroller-common.c',
+    'fu-logitech-bulkcontroller-child.c',
     'fu-logitech-bulkcontroller-device.c',
     'fu-logitech-bulkcontroller-plugin.c',
   ],
