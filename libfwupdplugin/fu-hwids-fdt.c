@@ -93,6 +93,26 @@ fu_hwids_fdt_setup(FuContext *ctx, FuHwids *self, GError **error)
 		fu_fdt_image_get_attr_str(FU_FDT_IMAGE(fdt_img), "version", &version, NULL);
 		fu_hwids_add_value(self, FU_HWIDS_KEY_BIOS_VERSION, version);
 	}
+
+	/* fall back to the firmware unix time */
+	if (fdt_img_fwver == NULL) {
+		fdt_img_fwver = fu_fdt_firmware_get_image_by_path(FU_FDT_FIRMWARE(fdt),
+								  "/chosen/bootloader",
+								  NULL);
+	}
+	if (fdt_img_fwver != NULL) {
+		guint32 timestamp = 0;
+		fu_fdt_image_get_attr_u32(FU_FDT_IMAGE(fdt_img_fwver),
+					  "build-timestamp",
+					  &timestamp,
+					  NULL);
+		if (timestamp != 0) {
+			g_autoptr(GDateTime) dt = g_date_time_new_from_unix_utc(timestamp);
+			g_autofree gchar *version = g_date_time_format(dt, "%Y%m%d");
+			fu_hwids_add_value(self, FU_HWIDS_KEY_BIOS_VERSION, version);
+		}
+	}
+
 	fdt_img_baseb = fu_fdt_firmware_get_image_by_path(
 	    FU_FDT_FIRMWARE(fdt),
 	    "/vpd/root-node-vpd@a000/enclosure@1e00/backplane@800",
