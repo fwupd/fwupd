@@ -250,7 +250,7 @@ static gboolean
 fu_usb_backend_setup(FuBackend *backend, FuProgress *progress, GError **error)
 {
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
-	gint log_level = g_getenv("FWUPD_VERBOSE") != NULL ? 3 : 1;
+	gint log_level = g_getenv("FWUPD_VERBOSE") != NULL ? 3 : 0;
 	gint rc;
 	libusb_context *ctx;
 
