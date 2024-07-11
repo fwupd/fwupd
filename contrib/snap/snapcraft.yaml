@@ -52,6 +52,11 @@ apps:
     plugs: [fwupdmgr, home, network, polkit, shutdown]
     completer:
       share/bash-completion/completions/fwupdmgr
+  refresh:
+    command: fwupdmgr.wrapper refresh
+    daemon: oneshot
+    plugs: [fwupdmgr, network]
+    timer: "00:00-24:00/24"
 
 parts:
   #needed for UEFI plugin to build UX labels
