@@ -21,6 +21,7 @@
  * /usr/lib/[triplet]/fwupd-plugins-3)
  * @FU_PATH_KIND_SYSCONFDIR:		The configuration location (IE /etc)
  * @FU_PATH_KIND_SYSCONFDIR_PKG:	The package configuration location (IE /etc/fwupd)
+ * @FU_PATH_KIND_SYSFSDIR:	The sysfs base location (IE /sys)
  * @FU_PATH_KIND_SYSFSDIR_FW:		The sysfs firmware location (IE /sys/firmware)
  * @FU_PATH_KIND_SYSFSDIR_DRIVERS:	The platform sysfs directory (IE /sys/bus/platform/drivers)
  * @FU_PATH_KIND_SYSFSDIR_TPM:		The TPM sysfs directory (IE /sys/class/tpm)
@@ -64,6 +65,7 @@ typedef enum {
 	FU_PATH_KIND_LIBDIR_PKG,
 	FU_PATH_KIND_SYSCONFDIR,
 	FU_PATH_KIND_SYSCONFDIR_PKG,
+	FU_PATH_KIND_SYSFSDIR,
 	FU_PATH_KIND_SYSFSDIR_FW,
 	FU_PATH_KIND_SYSFSDIR_DRIVERS,
 	FU_PATH_KIND_SYSFSDIR_TPM,
