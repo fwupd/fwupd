@@ -287,7 +287,7 @@ fu_usb_device_get_parent(FuUsbDevice *self)
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), NULL);
 
 	/* sanity check */
-	if (priv->usb_device == NULL)
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return NULL;
 	usb_device = libusb_get_parent(priv->usb_device);
 	if (usb_device == NULL)
@@ -491,7 +491,7 @@ fu_usb_device_open_internal(FuUsbDevice *self, GError **error)
 	gint rc;
 
 	/* sanity check */
-	if (priv->usb_device == NULL)
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return TRUE;
 	if (priv->handle != NULL) {
 		g_set_error(error,
@@ -544,7 +544,7 @@ fu_usb_device_close_internal(FuUsbDevice *self, GError **error)
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* emulated */
-	if (priv->usb_device == NULL)
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return TRUE;
 	if (priv->handle == NULL)
 		return fu_usb_device_not_open_error(self, error);
@@ -565,7 +565,7 @@ fu_usb_device_set_configuration_internal(FuUsbDevice *self, gint configuration, 
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* emulated */
-	if (priv->usb_device == NULL)
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return TRUE;
 	if (priv->handle == NULL)
 		return fu_usb_device_not_open_error(self, error);
@@ -592,7 +592,7 @@ fu_usb_device_open(FuDevice *device, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* self tests */
-	if (priv->usb_device == NULL)
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return TRUE;
 
 	/* open */
@@ -655,7 +655,7 @@ guint8
 fu_usb_device_get_bus(FuUsbDevice *self)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->usb_device == 0x0)
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return 0x0;
 	return libusb_get_bus_number(priv->usb_device);
 }
@@ -674,7 +674,7 @@ guint8
 fu_usb_device_get_address(FuUsbDevice *self)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->usb_device == 0x0)
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return 0x0;
 	return libusb_get_device_address(priv->usb_device);
 }
@@ -802,11 +802,10 @@ static gboolean
 fu_usb_device_ready(FuDevice *device, GError **error)
 {
 	FuUsbDevice *self = FU_USB_DEVICE(device);
-	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) intfs = NULL;
 
 	/* self tests */
-	if (priv->usb_device == NULL)
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return TRUE;
 
 	/* get the interface GUIDs */
@@ -1776,7 +1775,7 @@ fu_usb_device_reset(FuUsbDevice *self, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* emulating? */
-	if (priv->usb_device == NULL)
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return TRUE;
 	if (priv->handle == NULL)
 		return fu_usb_device_not_open_error(self, error);
@@ -1797,7 +1796,7 @@ fu_usb_device_ensure_interfaces(FuUsbDevice *self, GError **error)
 	/* sanity check */
 	if (priv->interfaces_valid)
 		return TRUE;
-	if (priv->usb_device == NULL)
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return TRUE;
 
 	rc = libusb_get_active_config_descriptor(priv->usb_device, &config);
@@ -2112,7 +2111,7 @@ fu_usb_device_claim_interface(FuUsbDevice *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* emulating? */
-	if (priv->usb_device == NULL)
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return TRUE;
 
 	if (priv->handle == NULL)
@@ -2156,7 +2155,7 @@ fu_usb_device_release_interface(FuUsbDevice *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* emulating? */
-	if (priv->usb_device == NULL)
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return TRUE;
 
 	if (priv->handle == NULL)
@@ -2397,7 +2396,7 @@ fu_usb_device_set_interface_alt(FuUsbDevice *self, guint8 iface, guint8 alt, GEr
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* emulating? */
-	if (priv->usb_device == NULL)
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return TRUE;
 
 	if (priv->handle == NULL)
