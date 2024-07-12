@@ -462,23 +462,14 @@ static gboolean
 fu_ata_device_probe(FuDevice *device, GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE(device);
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
 
 	/* check is valid */
-	if (g_strcmp0(g_udev_device_get_devtype(udev_device), "disk") != 0) {
+	if (g_strcmp0(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), "disk") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not correct devtype=%s, expected disk",
-			    g_udev_device_get_devtype(udev_device));
-		return FALSE;
-	}
-	if (!g_udev_device_get_property_as_boolean(udev_device, "ID_ATA_SATA") ||
-	    !g_udev_device_get_property_as_boolean(udev_device, "ID_ATA_DOWNLOAD_MICROCODE")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "has no ID_ATA_DOWNLOAD_MICROCODE");
+			    fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)));
 		return FALSE;
 	}
 

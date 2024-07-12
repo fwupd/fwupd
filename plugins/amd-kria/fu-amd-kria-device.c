@@ -114,8 +114,8 @@ fu_amd_kria_device_probe(FuDevice *device, GError **error)
 {
 	FuAmdKriaDevice *self = FU_AMD_KRIA_DEVICE(device);
 	FuAmdKriaDevicePrivate *priv = GET_PRIVATE(self);
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
 	const gchar *tmp;
+	g_autofree gchar *prop_of_fullname = NULL;
 	g_auto(GStrv) of_name = NULL;
 
 	/* FuI2cDevice->probe */
@@ -126,20 +126,17 @@ fu_amd_kria_device_probe(FuDevice *device, GError **error)
 	 * Fetch the OF_FULLNAME udev property and look for the I2C address in it
 	 * sample format: OF_FULLNAME=/axi/i2c@ff030000/eeprom@50
 	 */
-	tmp = g_udev_device_get_property(udev_device, "OF_FULLNAME");
-	if (tmp == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no OF_FULLNAME property");
+	prop_of_fullname =
+	    fu_udev_device_read_property(FU_UDEV_DEVICE(device), "OF_FULLNAME", error);
+	if (prop_of_fullname == NULL)
 		return FALSE;
-	}
-	of_name = fu_strsplit(tmp, strlen(tmp), "@", -1);
+	of_name = fu_strsplit(prop_of_fullname, strlen(prop_of_fullname), "@", -1);
 	if (of_name == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "no '@' found in %s", tmp);
+			    "no '@' found in %s",
+			    prop_of_fullname);
 		return FALSE;
 	}
 	tmp = of_name[g_strv_length(of_name) - 1];
