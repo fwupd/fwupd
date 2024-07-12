@@ -268,48 +268,66 @@ fu_path_from_kind(FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_strdup(tmp);
 		return g_strdup("/proc");
+	/* /sys */
+	case FU_PATH_KIND_SYSFSDIR:
+		tmp = g_getenv("FWUPD_SYSFSDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return g_strdup("/sys");
 	/* /sys/firmware */
 	case FU_PATH_KIND_SYSFSDIR_FW:
 		tmp = g_getenv("FWUPD_SYSFSFWDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		return g_strdup("/sys/firmware");
+		basedir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
+		return g_build_filename(basedir, "firmware", NULL);
 	/* /sys/class/tpm */
 	case FU_PATH_KIND_SYSFSDIR_TPM:
 		tmp = g_getenv("FWUPD_SYSFSTPMDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		return g_strdup("/sys/class/tpm");
+		basedir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
+		return g_build_filename(basedir, "class", "tpm", NULL);
 	/* /sys/bus/platform/drivers */
 	case FU_PATH_KIND_SYSFSDIR_DRIVERS:
 		tmp = g_getenv("FWUPD_SYSFSDRIVERDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		return g_strdup("/sys/bus/platform/drivers");
+		basedir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
+		return g_build_filename(basedir, "bus", "platform", "drivers", NULL);
 	/* /sys/kernel/security */
 	case FU_PATH_KIND_SYSFSDIR_SECURITY:
 		tmp = g_getenv("FWUPD_SYSFSSECURITYDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		return g_strdup("/sys/kernel/security");
+		basedir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
+		return g_build_filename(basedir, "kernel", "security", NULL);
 	/* /sys/class/dmi/id */
 	case FU_PATH_KIND_SYSFSDIR_DMI:
 		tmp = g_getenv("FWUPD_SYSFSDMIDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		return g_strdup("/sys/class/dmi/id");
+		basedir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
+		return g_build_filename(basedir, "class", "dmi", "id", NULL);
 	/* /sys/firmware/acpi/tables */
 	case FU_PATH_KIND_ACPI_TABLES:
 		tmp = g_getenv("FWUPD_ACPITABLESDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		return g_strdup("/sys/firmware/acpi/tables");
+		basedir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
+		return g_build_filename(basedir, "firmware", "acpi", "tables", NULL);
 	/* /sys/module/firmware_class/parameters/path */
 	case FU_PATH_KIND_FIRMWARE_SEARCH:
 		tmp = g_getenv("FWUPD_FIRMWARESEARCH");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		return g_strdup("/sys/module/firmware_class/parameters/path");
+		basedir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
+		return g_build_filename(basedir,
+					"module",
+					"firmware_class",
+					"parameters",
+					"path",
+					NULL);
 	/* /etc */
 	case FU_PATH_KIND_SYSCONFDIR:
 		tmp = g_getenv("FWUPD_SYSCONFDIR");
@@ -455,7 +473,8 @@ fu_path_from_kind(FuPathKind path_kind)
 		tmp = g_getenv("FWUPD_SYSFSFWATTRIBDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
-		return g_strdup("/sys/class/firmware-attributes");
+		basedir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
+		return g_build_filename(basedir, "class", "firmware-attributes", NULL);
 	case FU_PATH_KIND_OFFLINE_TRIGGER:
 		tmp = g_getenv("FWUPD_OFFLINE_TRIGGER");
 		if (tmp != NULL)
