@@ -1417,7 +1417,11 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 		return FALSE;
 	}
 
-	if (g_strcmp0(subsystem, "pci") == 0) {
+	/* check for FDT first */
+	tmp = g_udev_device_get_property(udev_device, "OF_FULLNAME");
+	if (tmp != NULL) {
+		physical_id = g_strdup_printf("OF_FULLNAME=%s", tmp);
+	} else if (g_strcmp0(subsystem, "pci") == 0) {
 		tmp = g_udev_device_get_property(udev_device, "PCI_SLOT_NAME");
 		if (tmp == NULL) {
 			g_set_error_literal(error,
