@@ -54,6 +54,7 @@ typedef struct {
 	gchar *devtype;
 	guint64 number;
 	FuIOChannel *io_channel;
+	FuIoChannelOpenFlag open_flags;
 	FuUdevDeviceFlags flags;
 } FuUdevDevicePrivate;
 
@@ -166,6 +167,8 @@ fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *open_flags = fu_io_channel_open_flag_to_string(priv->open_flags);
+
 	fwupd_codec_string_append_hex(str, idt, "Vendor", priv->vendor);
 	fwupd_codec_string_append_hex(str, idt, "Model", priv->model);
 	fwupd_codec_string_append_hex(str, idt, "SubsystemVendor", priv->subsystem_vendor);
@@ -177,6 +180,7 @@ fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "Driver", priv->driver);
 	fwupd_codec_string_append(str, idt, "BindId", priv->bind_id);
 	fwupd_codec_string_append(str, idt, "DeviceFile", priv->device_file);
+	fwupd_codec_string_append(str, idt, "OpenFlags", open_flags);
 }
 
 static gboolean
@@ -990,6 +994,14 @@ fu_udev_device_bind_driver(FuDevice *device,
 					 error);
 }
 
+static FuIoChannelOpenFlag
+fu_udev_device_get_open_flags(FuUdevDevice *self)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), 0);
+	return priv->open_flags;
+}
+
 static void
 fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 {
@@ -1021,6 +1033,8 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 		fu_udev_device_set_subsystem_vendor(uself,
 						    fu_udev_device_get_subsystem_vendor(udonor));
 	}
+	if (priv->open_flags == FU_IO_CHANNEL_OPEN_FLAG_NONE)
+		priv->open_flags = fu_udev_device_get_open_flags(udonor);
 	if (priv->subsystem_model == 0x0) {
 		fu_udev_device_set_subsystem_model(uself,
 						   fu_udev_device_get_subsystem_model(udonor));
@@ -1588,7 +1602,7 @@ fu_udev_device_set_io_channel(FuUdevDevice *self, FuIOChannel *io_channel)
 /**
  * fu_udev_device_remove_flag:
  * @self: a #FuUdevDevice
- * @flag: udev device flag, e.g. %FU_UDEV_DEVICE_FLAG_OPEN_READ
+ * @flag: udev device flag, e.g. %FU_IO_CHANNEL_OPEN_FLAG_READ
  *
  * Removes a parameters flag.
  *
@@ -1605,11 +1619,11 @@ fu_udev_device_remove_flag(FuUdevDevice *self, FuUdevDeviceFlags flag)
 /**
  * fu_udev_device_add_flag:
  * @self: a #FuUdevDevice
- * @flag: udev device flag, e.g. %FU_UDEV_DEVICE_FLAG_OPEN_READ
+ * @flag: udev device flag, e.g. %FU_IO_CHANNEL_OPEN_FLAG_READ
  *
  * Sets the parameters to use when opening the device.
  *
- * For example %FU_UDEV_DEVICE_FLAG_OPEN_READ means that fu_device_open()
+ * For example %FU_IO_CHANNEL_OPEN_FLAG_READ means that fu_device_open()
  * would use `O_RDONLY` rather than `O_RDWR` which is the default.
  *
  * Since: 2.0.0
@@ -1626,12 +1640,52 @@ fu_udev_device_add_flag(FuUdevDevice *self, FuUdevDeviceFlags flag)
 	priv->flags |= flag;
 }
 
+/**
+ * fu_udev_device_remove_open_flag:
+ * @self: a #FuUdevDevice
+ * @flag: udev device flag, e.g. %FU_IO_CHANNEL_OPEN_FLAG_READ
+ *
+ * Removes a open flag.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_udev_device_remove_open_flag(FuUdevDevice *self, FuIoChannelOpenFlag flag)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
+	priv->open_flags &= ~flag;
+}
+
+/**
+ * fu_udev_device_add_open_flag:
+ * @self: a #FuUdevDevice
+ * @flag: udev device flag, e.g. %FU_IO_CHANNEL_OPEN_FLAG_READ
+ *
+ * Sets the parameters to use when opening the device.
+ *
+ * For example %FU_IO_CHANNEL_OPEN_FLAG_READ means that fu_device_open()
+ * would use `O_RDONLY` rather than `O_RDWR` which is the default.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_udev_device_add_open_flag(FuUdevDevice *self, FuIoChannelOpenFlag flag)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
+
+	/* already set */
+	if (priv->open_flags & flag)
+		return;
+	priv->open_flags |= flag;
+}
+
 static gboolean
 fu_udev_device_open(FuDevice *device, GError **error)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	gint fd;
 
 	/* emulated */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
@@ -1639,53 +1693,24 @@ fu_udev_device_open(FuDevice *device, GError **error)
 
 	/* old versions of fwupd used to start with OPEN_READ|OPEN_WRITE and then plugins
 	 * could add more flags, or set the flags back to NONE -- detect and fixup */
-	if (priv->device_file != NULL && priv->flags == FU_UDEV_DEVICE_FLAG_NONE) {
+	if (priv->device_file != NULL && priv->open_flags == FU_IO_CHANNEL_OPEN_FLAG_NONE) {
 #ifndef SUPPORTED_BUILD
-		g_critical("%s [%s] forgot to call fu_udev_device_add_flag() with OPEN_READ and/or "
-			   "OPEN_WRITE",
-			   fu_device_get_name(device),
-			   fu_device_get_id(device));
+		g_critical(
+		    "%s [%s] forgot to call fu_udev_device_add_open_flag() with OPEN_READ and/or "
+		    "OPEN_WRITE",
+		    fu_device_get_name(device),
+		    fu_device_get_id(device));
 #endif
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	}
 
 	/* open device */
-	if (priv->device_file != NULL && priv->flags != FU_UDEV_DEVICE_FLAG_NONE) {
-		gint flags;
+	if (priv->device_file != NULL) {
 		g_autoptr(FuIOChannel) io_channel = NULL;
-		if (priv->flags & FU_UDEV_DEVICE_FLAG_OPEN_READ &&
-		    priv->flags & FU_UDEV_DEVICE_FLAG_OPEN_WRITE) {
-			flags = O_RDWR;
-		} else if (priv->flags & FU_UDEV_DEVICE_FLAG_OPEN_WRITE) {
-			flags = O_WRONLY;
-		} else {
-			flags = O_RDONLY;
-		}
-#ifdef O_NONBLOCK
-		if (priv->flags & FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK)
-			flags |= O_NONBLOCK;
-#endif
-#ifdef O_SYNC
-		if (priv->flags & FU_UDEV_DEVICE_FLAG_OPEN_SYNC)
-			flags |= O_SYNC;
-#endif
-		fd = g_open(priv->device_file, flags, 0);
-		if (fd < 0) {
-			g_set_error(error,
-				    G_IO_ERROR, /* nocheck */
-#ifdef HAVE_ERRNO_H
-				    g_io_error_from_errno(errno),
-#else
-				    G_IO_ERROR_FAILED, /* nocheck */
-#endif
-				    "failed to open %s: %s",
-				    priv->device_file,
-				    g_strerror(errno));
-			fwupd_error_convert(error);
+		io_channel = fu_io_channel_new_file(priv->device_file, priv->open_flags, error);
+		if (io_channel == NULL)
 			return FALSE;
-		}
-		io_channel = fu_io_channel_unix_new(fd);
 		g_set_object(&priv->io_channel, io_channel);
 	}
 

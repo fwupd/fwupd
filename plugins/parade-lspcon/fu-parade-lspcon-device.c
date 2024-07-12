@@ -89,7 +89,7 @@ fu_parade_lspcon_device_init(FuParadeLspconDevice *self)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_set_firmware_size(device, 0x10000);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
 }
