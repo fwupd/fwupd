@@ -471,6 +471,35 @@ fu_udev_device_set_devtype(FuUdevDevice *self, const gchar *devtype)
 	g_object_notify(G_OBJECT(self), "devtype");
 }
 
+/* private */
+gboolean
+fu_udev_device_parse_number(FuUdevDevice *self, GError **error)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GString) path = g_string_new(fu_udev_device_get_sysfs_path(self));
+
+	if (path->len == 0)
+		return TRUE;
+	for (guint i = path->len - 1; i > 0; i--) {
+		if (!g_ascii_isdigit(path->str[i])) {
+			g_string_erase(path, 0, i + 1);
+			break;
+		}
+	}
+	if (path->len > 0) {
+		if (!fu_strtoull(path->str,
+				 &priv->number,
+				 0x0,
+				 G_MAXUINT64,
+				 FU_INTEGER_BASE_AUTO,
+				 error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_udev_device_probe(FuDevice *device, GError **error)
 {
@@ -583,16 +612,10 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* set number */
-	if (g_udev_device_get_number(priv->udev_device) != NULL) {
+	if (fu_udev_device_get_sysfs_path(self) != NULL) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_strtoull(g_udev_device_get_number(priv->udev_device),
-				 &priv->number,
-				 0x0,
-				 G_MAXUINT64,
-				 FU_INTEGER_BASE_AUTO,
-				 &error_local)) {
-			g_warning("failed to convert udev number: %s", error_local->message);
-		}
+		if (!fu_udev_device_parse_number(self, &error_local))
+			g_debug("failed to convert udev number: %s", error_local->message);
 	}
 
 	/* try harder to find a vendor name the user will recognize */

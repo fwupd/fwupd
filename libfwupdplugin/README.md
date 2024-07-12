@@ -136,3 +136,4 @@ Remember: Plugins should be upstream!
 * `fu_udev_device_write_sysfs()`: Add a timeout in milliseconds
 * `fu_udev_device_get_sysfs_attr_uint64()`: Use `fu_udev_device_read_sysfs()` instead
 * `fu_udev_device_get_sysfs_attr`: Use `fu_udev_device_read_sysfs()` instead
+* `fu_i2c_device_get_bus_number()`: Use `fu_udev_device_get_number()` instead
