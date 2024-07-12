@@ -556,3 +556,45 @@ fu_path_glob(const gchar *directory, const gchar *pattern, GError **error)
 	g_ptr_array_sort(files, fu_path_glob_sort_cb);
 	return g_steal_pointer(&files);
 }
+
+/**
+ * fu_path_make_absolute:
+ * @filename: a path to a filename, perhaps symlinked
+ * @error: (nullable): optional return location for an error
+ *
+ * Returns the resolved absolute file name.
+ *
+ * Returns: (transfer full): path, or %NULL on error
+ *
+ * Since: 2.0.0
+ **/
+gchar *
+fu_path_make_absolute(const gchar *filename, GError **error)
+{
+	char full_tmp[PATH_MAX];
+
+	g_return_val_if_fail(filename != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+#ifdef HAVE_REALPATH
+	if (realpath(filename, full_tmp) == NULL) {
+#else
+	if (_fullpath(full_tmp, filename, sizeof(full_tmp)) == NULL) {
+#endif
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "cannot resolve path: %s",
+			    g_strerror(errno));
+		return NULL;
+	}
+	if (!g_file_test(full_tmp, G_FILE_TEST_EXISTS)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "cannot find path: %s",
+			    full_tmp);
+		return NULL;
+	}
+	return g_strdup(full_tmp);
+}
