@@ -9,12 +9,14 @@
 
 #include "config.h"
 
+#include "fu-context-private.h"
 #include "fu-usb-backend.h"
 #include "fu-usb-device-private.h"
 
 struct _FuUsbBackend {
 	FuBackend parent_instance;
 	libusb_context *ctx;
+#ifndef HAVE_GUDEV
 	libusb_hotplug_callback_handle hotplug_id;
 	GThread *thread_event;
 	volatile gint thread_event_run;
@@ -23,6 +25,7 @@ struct _FuUsbBackend {
 	guint idle_events_id;
 	guint hotplug_poll_id;
 	guint hotplug_poll_interval;
+#endif
 };
 
 G_DEFINE_TYPE(FuUsbBackend, fu_usb_backend, FU_TYPE_BACKEND)
@@ -30,6 +33,7 @@ G_DEFINE_TYPE(FuUsbBackend, fu_usb_backend, FU_TYPE_BACKEND)
 #define FU_USB_BACKEND_POLL_INTERVAL_DEFAULT	 1000 /* ms */
 #define FU_USB_BACKEND_POLL_INTERVAL_WAIT_REPLUG 5    /* ms */
 
+#ifndef HAVE_GUDEV
 static gchar *
 fu_usb_backend_get_usb_device_backend_id(libusb_device *usb_device)
 {
@@ -258,16 +262,17 @@ fu_usb_backend_event_thread_cb(gpointer data)
 		libusb_handle_events_timeout_completed(self->ctx, &tv, NULL);
 	return NULL;
 }
+#endif
 
 static gboolean
 fu_usb_backend_setup(FuBackend *backend, FuProgress *progress, GError **error)
 {
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	gint log_level = g_getenv("FWUPD_VERBOSE") != NULL ? 3 : 0;
 	gint rc;
-	libusb_context *ctx;
 
-	rc = libusb_init(&ctx);
+	rc = libusb_init(&self->ctx);
 	if (rc < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -282,8 +287,10 @@ fu_usb_backend_setup(FuBackend *backend, FuProgress *progress, GError **error)
 #else
 	libusb_set_debug(self->ctx, log_level);
 #endif
+	fu_context_set_data(ctx, "libusb_context", self->ctx);
+	fu_context_add_udev_subsystem(ctx, "usb", NULL);
 
-	self->ctx = ctx;
+#ifndef HAVE_GUDEV
 	self->thread_event_run = 1;
 	self->thread_event = g_thread_new("FuUsbBackendEvt", fu_usb_backend_event_thread_cb, self);
 
@@ -312,11 +319,13 @@ fu_usb_backend_setup(FuBackend *backend, FuProgress *progress, GError **error)
 		fu_usb_backend_set_hotplug_poll_interval(self,
 							 FU_USB_BACKEND_POLL_INTERVAL_DEFAULT);
 	}
+#endif
 
 	/* success */
 	return TRUE;
 }
 
+#ifndef HAVE_GUDEV
 static gboolean
 fu_usb_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
 {
@@ -363,10 +372,12 @@ fu_usb_backend_get_device_parent(FuBackend *backend,
 	}
 	return FU_DEVICE(fu_usb_backend_create_device(self, usb_parent));
 }
+#endif
 
 static void
 fu_usb_backend_finalize(GObject *object)
 {
+#ifndef HAVE_GUDEV
 	FuUsbBackend *self = FU_USB_BACKEND(object);
 
 	/* this is safe to call even when self->hotplug_id is unset */
@@ -382,10 +393,12 @@ fu_usb_backend_finalize(GObject *object)
 		libusb_exit(self->ctx);
 	g_clear_pointer(&self->idle_events, g_ptr_array_unref);
 	g_mutex_clear(&self->idle_events_mutex);
+#endif
 
 	G_OBJECT_CLASS(fu_usb_backend_parent_class)->finalize(object);
 }
 
+#ifndef HAVE_GUDEV
 static void
 fu_usb_backend_idle_helper_free(FuUsbBackendIdleHelper *helper)
 {
@@ -393,14 +406,17 @@ fu_usb_backend_idle_helper_free(FuUsbBackendIdleHelper *helper)
 	libusb_unref_device(helper->dev);
 	g_free(helper);
 }
+#endif
 
 static void
 fu_usb_backend_init(FuUsbBackend *self)
 {
+#ifndef HAVE_GUDEV
 	/* to escape the thread into the mainloop */
 	g_mutex_init(&self->idle_events_mutex);
 	self->idle_events =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_usb_backend_idle_helper_free);
+#endif
 }
 
 static void
@@ -410,9 +426,11 @@ fu_usb_backend_class_init(FuUsbBackendClass *klass)
 	FuBackendClass *backend_class = FU_BACKEND_CLASS(klass);
 	object_class->finalize = fu_usb_backend_finalize;
 	backend_class->setup = fu_usb_backend_setup;
+#ifndef HAVE_GUDEV
 	backend_class->coldplug = fu_usb_backend_coldplug;
 	backend_class->registered = fu_usb_backend_registered;
 	backend_class->get_device_parent = fu_usb_backend_get_device_parent;
+#endif
 }
 
 FuBackend *
