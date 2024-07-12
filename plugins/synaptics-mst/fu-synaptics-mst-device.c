@@ -102,10 +102,10 @@ fu_synaptics_mst_device_udev_device_notify_cb(FuUdevDevice *udev_device,
 					      gpointer user_data)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(user_data);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) != NULL)
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
 
 static void

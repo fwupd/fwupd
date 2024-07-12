@@ -26,22 +26,14 @@ struct _FuUdevDeviceClass {
 /**
  * FuUdevDeviceFlags:
  * @FU_UDEV_DEVICE_FLAG_NONE:			No flags set
- * @FU_UDEV_DEVICE_FLAG_OPEN_READ:		Open the device read-only
- * @FU_UDEV_DEVICE_FLAG_OPEN_WRITE:		Open the device write-only
  * @FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT:	Get the vendor ID from a parent or grandparent
- * @FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK:		Open nonblocking, e.g. O_NONBLOCK
- * @FU_UDEV_DEVICE_FLAG_OPEN_SYNC:		Open sync, e.g. O_SYNC
  * @FU_UDEV_DEVICE_FLAG_IGNORE_NONE:		The device deliberately has no open flags
  *
  * Flags used when opening the device using fu_device_open().
  **/
 typedef enum {
 	FU_UDEV_DEVICE_FLAG_NONE = 0,
-	FU_UDEV_DEVICE_FLAG_OPEN_READ = 1 << 0,
-	FU_UDEV_DEVICE_FLAG_OPEN_WRITE = 1 << 1,
 	FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT = 1 << 2,
-	FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK = 1 << 4,
-	FU_UDEV_DEVICE_FLAG_OPEN_SYNC = 1 << 5,
 	FU_UDEV_DEVICE_FLAG_IGNORE_NONE = 1 << 7,
 	/*< private >*/
 	FU_UDEV_DEVICE_FLAG_LAST
@@ -168,6 +160,10 @@ void
 fu_udev_device_add_flag(FuUdevDevice *self, FuUdevDeviceFlags flag) G_GNUC_NON_NULL(1);
 void
 fu_udev_device_remove_flag(FuUdevDevice *self, FuUdevDeviceFlags flag) G_GNUC_NON_NULL(1);
+void
+fu_udev_device_add_open_flag(FuUdevDevice *self, FuIoChannelOpenFlag flag) G_GNUC_NON_NULL(1);
+void
+fu_udev_device_remove_open_flag(FuUdevDevice *self, FuIoChannelOpenFlag flag) G_GNUC_NON_NULL(1);
 
 FuIOChannel *
 fu_udev_device_get_io_channel(FuUdevDevice *self) G_GNUC_NON_NULL(1);

@@ -944,7 +944,7 @@ fu_realtek_mst_device_init(FuRealtekMstDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "DisplayPort MST hub");
 	fu_device_add_icon(FU_DEVICE(self), "video-display");
 	fu_device_set_firmware_size(FU_DEVICE(self), FLASH_USER_SIZE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
 
 static void
