@@ -29,9 +29,6 @@ typedef enum {
 	FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER = 1 << 0,
 } FuUsbDeviceClaimFlags;
 
-FuUsbDevice *
-fu_usb_device_get_parent(FuUsbDevice *self) G_GNUC_NON_NULL(1);
-
 guint8
 fu_usb_device_get_bus(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 guint8
