@@ -385,7 +385,16 @@ fu_udev_device_set_vendor_from_parent(FuUdevDevice *self)
 }
 #endif
 
-static void
+/**
+ * fu_udev_device_set_vendor:
+ * @self: a #FuUdevDevice
+ * @vendor: an ID
+ *
+ * Sets the vendor ID.
+ *
+ * Since: 2.0.0
+ **/
+void
 fu_udev_device_set_vendor(FuUdevDevice *self, guint16 vendor)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
@@ -393,7 +402,16 @@ fu_udev_device_set_vendor(FuUdevDevice *self, guint16 vendor)
 	priv->vendor = vendor;
 }
 
-static void
+/**
+ * fu_udev_device_set_model:
+ * @self: a #FuUdevDevice
+ * @model: an ID
+ *
+ * Sets the model ID.
+ *
+ * Since: 2.0.0
+ **/
+void
 fu_udev_device_set_model(FuUdevDevice *self, guint16 model)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
