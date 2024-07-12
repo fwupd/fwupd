@@ -123,6 +123,7 @@ fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device)
 		GType gtype;
 	} subsystem_gtype_map[] = {{"mei", FU_TYPE_MEI_DEVICE},
 				   {"drm", FU_TYPE_DRM_DEVICE},
+				   {"usb", FU_TYPE_USB_DEVICE},
 				   {"i2c", FU_TYPE_I2C_DEVICE},
 				   {"i2c-dev", FU_TYPE_I2C_DEVICE},
 				   {"drm_dp_aux_dev", FU_TYPE_DPAUX_DEVICE},
@@ -137,6 +138,11 @@ fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device)
 			break;
 		}
 	}
+
+	/* ensure this is the actual device */
+	if (gtype == FU_TYPE_USB_DEVICE &&
+	    g_strcmp0(g_udev_device_get_devtype(udev_device), "usb_device") != 0)
+		return NULL;
 
 	/* create device of correct kind */
 	device = g_object_new(gtype, "backend", FU_BACKEND(self), "udev-device", udev_device, NULL);
@@ -166,6 +172,8 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 
 	/* use the subsystem to create the correct GType */
 	device = fu_udev_backend_create_device(self, udev_device);
+	if (device == NULL)
+		return;
 
 	/* these are used without a subclass */
 	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "msr") == 0)
@@ -185,7 +193,6 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 
 	/* DP AUX devices are *weird* and can only read the DPCD when a DRM device is attached */
 	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "drm_dp_aux_dev") == 0) {
-
 		/* add and rescan, regardless of if we can open it */
 		g_ptr_array_add(self->dpaux_devices, g_object_ref(device));
 		fu_udev_backend_rescan_dpaux_devices(self);
@@ -388,7 +395,16 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 		return NULL;
 	}
 	if (subsystem == NULL) {
-		g_autoptr(GUdevDevice) parent = g_udev_device_get_parent(udev_device);
+		g_autoptr(GUdevDevice) udev_parent = g_udev_device_get_parent(udev_device);
+		g_autoptr(FuUdevDevice) parent = NULL;
+		if (udev_parent == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "no udev parent");
+			return NULL;
+		}
+		parent = fu_udev_backend_create_device(self, udev_parent);
 		if (parent == NULL) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -396,7 +412,7 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 					    "no parent");
 			return NULL;
 		}
-		return FU_DEVICE(fu_udev_backend_create_device(self, parent));
+		return FU_DEVICE(g_steal_pointer(&parent));
 	}
 	device_tmp = g_udev_device_get_parent(udev_device);
 	while (device_tmp != NULL) {
@@ -405,6 +421,8 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 
 		/* a match! */
 		device_new = fu_udev_backend_create_device(self, device_tmp);
+		if (device_new == NULL)
+			break;
 		if (fu_udev_device_match_subsystem(device_new, subsystem))
 			return FU_DEVICE(g_steal_pointer(&device_new));
 

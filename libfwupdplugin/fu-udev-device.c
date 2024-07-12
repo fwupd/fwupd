@@ -26,7 +26,6 @@
 #include "fu-i2c-device.h"
 #include "fu-string.h"
 #include "fu-udev-device-private.h"
-#include "fu-usb-device-private.h"
 
 /**
  * FuUdevDevice:
@@ -2317,102 +2316,6 @@ fu_udev_device_get_devtype(FuUdevDevice *self)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
 	return priv->devtype;
-}
-
-/**
- * fu_udev_device_find_usb_device:
- * @self: a #FuUdevDevice
- * @error: (nullable): optional return location for an error
- *
- * Gets the matching #FuUsbDevice for the #GUdevDevice.
- *
- * NOTE: This should never be stored in the device class as an instance variable, as the lifecycle
- * for `FuUsbDevice` may be different to the `FuUdevDevice`. Every time the `FuUsbDevice` is used
- * this function should be called.
- *
- * Returns: (transfer full): a #FuUsbDevice, or NULL if unset or invalid
- *
- * Since: 1.8.7
- **/
-FuDevice *
-fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error)
-{
-#if defined(HAVE_GUDEV)
-	guint64 bus = 0;
-	guint64 address = 0;
-	gint rc;
-	libusb_device **dev_list = NULL;
-	g_autofree gchar *attr_bus = NULL;
-	g_autofree gchar *attr_dev = NULL;
-	g_autoptr(FuUdevDevice) udev_device = NULL;
-	g_autoptr(FuUsbDevice) usb_device = NULL;
-	g_autoptr(libusb_context) ctx = NULL;
-
-	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	/* look at the current device and all the parent devices until we can find the USB data */
-	udev_device = FU_UDEV_DEVICE(
-	    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "usb:usb_device", error));
-	if (udev_device == NULL)
-		return NULL;
-
-	attr_bus = fu_udev_device_read_sysfs(udev_device,
-					     "busnum",
-					     FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
-					     error);
-	if (attr_bus == NULL)
-		return NULL;
-	if (!fu_strtoull(attr_bus, &bus, 0, G_MAXUINT8, FU_INTEGER_BASE_16, error))
-		return NULL;
-	attr_dev = fu_udev_device_read_sysfs(udev_device,
-					     "devnum",
-					     FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
-					     error);
-	if (attr_dev == NULL)
-		return NULL;
-	if (!fu_strtoull(attr_dev, &bus, 0, G_MAXUINT8, FU_INTEGER_BASE_16, error))
-		return NULL;
-
-	/* match device with libusb */
-	rc = libusb_init(&ctx);
-	if (rc < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to init libusb: %s [%i]",
-			    libusb_strerror(rc),
-			    rc);
-		return NULL;
-	}
-	libusb_get_device_list(ctx, &dev_list);
-	for (guint i = 0; dev_list != NULL && dev_list[i] != NULL; i++) {
-		if (libusb_get_bus_number(dev_list[i]) == bus &&
-		    libusb_get_device_address(dev_list[i]) == address) {
-			usb_device =
-			    fu_usb_device_new(fu_device_get_context(FU_DEVICE(self)), dev_list[i]);
-			break;
-		}
-	}
-	libusb_free_device_list(dev_list, 1);
-
-	if (usb_device == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "no device with busnum=%02x and devnum=%02x",
-			    (guint)bus,
-			    (guint)address);
-		return NULL;
-	}
-	return FU_DEVICE(g_steal_pointer(&usb_device));
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Not supported as <gudev.h> or <libusb.h> is unavailable");
-	return NULL;
-#endif
 }
 
 static GBytes *

@@ -12,10 +12,10 @@
 #include "fu-usb-struct.h"
 
 #define FU_TYPE_USB_DEVICE (fu_usb_device_get_type())
-G_DECLARE_DERIVABLE_TYPE(FuUsbDevice, fu_usb_device, FU, USB_DEVICE, FuDevice)
+G_DECLARE_DERIVABLE_TYPE(FuUsbDevice, fu_usb_device, FU, USB_DEVICE, FuUdevDevice)
 
 struct _FuUsbDeviceClass {
-	FuDeviceClass parent_class;
+	FuUdevDeviceClass parent_class;
 };
 
 /**
@@ -55,9 +55,6 @@ fu_usb_device_get_custom_index(FuUsbDevice *self,
 			       guint8 protocol_id,
 			       GError **error) G_GNUC_NON_NULL(1);
 
-FuDevice *
-fu_usb_device_find_udev_device(FuUsbDevice *device, GError **error) G_GNUC_WARN_UNUSED_RESULT
-    G_GNUC_NON_NULL(1);
 void
 fu_usb_device_set_configuration(FuUsbDevice *device, gint configuration) G_GNUC_NON_NULL(1);
 void
