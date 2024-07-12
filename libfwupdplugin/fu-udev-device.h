@@ -136,8 +136,12 @@ guint32
 fu_udev_device_get_cls(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 guint16
 fu_udev_device_get_vendor(FuUdevDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_udev_device_set_vendor(FuUdevDevice *self, guint16 vendor);
 guint16
 fu_udev_device_get_model(FuUdevDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_udev_device_set_model(FuUdevDevice *self, guint16 model);
 guint16
 fu_udev_device_get_subsystem_vendor(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 guint16
