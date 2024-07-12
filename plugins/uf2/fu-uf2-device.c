@@ -317,28 +317,32 @@ fu_uf2_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_uf2_device_probe(FuDevice *device, GError **error)
 {
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
-	const gchar *tmp;
+	FuUf2Device *self = FU_UF2_DEVICE(device);
 	guint64 vid = 0;
 	guint64 pid = 0;
+	g_autofree gchar *prop_bus = NULL;
+	g_autofree gchar *prop_fs_type = NULL;
+	g_autofree gchar *prop_fs_uuid = NULL;
+	g_autofree gchar *prop_model_id = NULL;
+	g_autofree gchar *prop_vendor_id = NULL;
 
 	/* check is valid */
-	tmp = g_udev_device_get_property(udev_device, "ID_BUS");
-	if (g_strcmp0(tmp, "usb") != 0) {
+	prop_bus = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "ID_BUS", NULL);
+	if (g_strcmp0(prop_bus, "usb") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not correct ID_BUS=%s, expected usb",
-			    tmp);
+			    prop_bus);
 		return FALSE;
 	}
-	tmp = g_udev_device_get_property(udev_device, "ID_FS_TYPE");
-	if (g_strcmp0(tmp, "vfat") != 0) {
+	prop_fs_type = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "ID_FS_TYPE", NULL);
+	if (g_strcmp0(prop_fs_type, "vfat") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not correct ID_FS_TYPE=%s, expected vfat",
-			    tmp);
+			    prop_fs_type);
 		return FALSE;
 	}
 
@@ -347,16 +351,16 @@ fu_uf2_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* more instance IDs */
-	tmp = g_udev_device_get_property(udev_device, "ID_VENDOR_ID");
-	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &vid, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
+	prop_vendor_id = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "ID_VENDOR_ID", NULL);
+	if (prop_vendor_id != NULL) {
+		if (!fu_strtoull(prop_vendor_id, &vid, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
 			return FALSE;
 	}
 	if (vid != 0x0)
 		fu_device_add_instance_u16(device, "VID", vid);
-	tmp = g_udev_device_get_property(udev_device, "ID_MODEL_ID");
-	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &pid, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
+	prop_model_id = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "ID_MODEL_ID", NULL);
+	if (prop_model_id != NULL) {
+		if (!fu_strtoull(prop_model_id, &pid, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
 			return FALSE;
 	}
 	if (pid != 0x0)
@@ -372,9 +376,9 @@ fu_uf2_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* only add UUID if it is set */
-	tmp = g_udev_device_get_property(udev_device, "ID_FS_UUID");
-	if (tmp != NULL) {
-		fu_device_add_instance_str(device, "UUID", tmp);
+	prop_fs_uuid = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "ID_FS_UUID", NULL);
+	if (prop_fs_uuid != NULL) {
+		fu_device_add_instance_str(device, "UUID", prop_fs_uuid);
 		if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "UUID", NULL))
 			return FALSE;
 	}

@@ -192,12 +192,11 @@ static void
 fu_thunderbolt_controller_set_signed(FuDevice *device)
 {
 	FuThunderboltController *self = FU_THUNDERBOLT_CONTROLLER(device);
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
-	const gchar *tmp;
+	g_autofree gchar *prop_type = NULL;
 
 	/* if it's a USB4 type not of host and generation 3; it's Intel */
-	tmp = g_udev_device_get_property(udev_device, "USB4_TYPE");
-	if (g_strcmp0(tmp, "host") != 0 && self->gen == 3)
+	prop_type = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "USB4_TYPE", NULL);
+	if (g_strcmp0(prop_type, "host") != 0 && self->gen == 3)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 }
 

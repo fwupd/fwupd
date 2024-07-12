@@ -192,23 +192,19 @@ fu_udev_device_ensure_bind_id(FuUdevDevice *self, GError **error)
 	if (priv->bind_id != NULL)
 		return TRUE;
 
-#ifdef HAVE_GUDEV
 	/* automatically set the bind ID from the subsystem */
 	if (g_strcmp0(priv->subsystem, "pci") == 0) {
-		priv->bind_id =
-		    g_strdup(g_udev_device_get_property(priv->udev_device, "PCI_SLOT_NAME"));
-		return TRUE;
+		priv->bind_id = fu_udev_device_read_property(self, "PCI_SLOT_NAME", error);
+		return priv->bind_id != NULL;
 	}
 	if (g_strcmp0(priv->subsystem, "hid") == 0) {
-		priv->bind_id = g_strdup(g_udev_device_get_property(priv->udev_device, "HID_PHYS"));
-		return TRUE;
+		priv->bind_id = fu_udev_device_read_property(self, "HID_PHYS", error);
+		return priv->bind_id != NULL;
 	}
 	if (g_strcmp0(priv->subsystem, "usb") == 0) {
-		priv->bind_id =
-		    g_path_get_basename(g_udev_device_get_sysfs_path(priv->udev_device));
+		priv->bind_id = g_path_get_basename(fu_udev_device_get_sysfs_path(self));
 		return TRUE;
 	}
-#endif
 
 	/* nothing found automatically */
 	g_set_error(error,
@@ -604,9 +600,10 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	/* set revision */
 	if (fu_device_get_version(device) == NULL &&
 	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
-		tmp = g_udev_device_get_property(priv->udev_device, "ID_REVISION");
-		if (tmp != NULL)
-			fu_device_set_version(device, tmp);
+		g_autofree gchar *prop_revision = NULL;
+		prop_revision = fu_udev_device_read_property(self, "ID_REVISION", NULL);
+		if (prop_revision != NULL)
+			fu_device_set_version(device, prop_revision);
 	}
 
 	/* set vendor ID */
@@ -691,11 +688,12 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	/* set serial */
 	if (!fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER) &&
 	    fu_device_get_serial(device) == NULL) {
-		tmp = g_udev_device_get_property(priv->udev_device, "ID_SERIAL_SHORT");
-		if (tmp == NULL)
-			tmp = g_udev_device_get_property(priv->udev_device, "ID_SERIAL");
-		if (tmp != NULL)
-			fu_device_set_serial(device, tmp);
+		g_autofree gchar *prop_serial =
+		    fu_udev_device_read_property(self, "ID_SERIAL_SHORT", NULL);
+		if (prop_serial == NULL)
+			prop_serial = fu_udev_device_read_property(self, "ID_SERIAL", NULL);
+		if (prop_serial != NULL)
+			fu_device_set_serial(device, prop_serial);
 	}
 
 	/* add device class */
@@ -2632,6 +2630,82 @@ fu_udev_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 		}
 	}
 	return g_bytes_new(buf->data, buf->len);
+}
+
+/**
+ * fu_udev_device_read_property:
+ * @self: a #FuUdevDevice
+ * @key: uevent key name, e.g. `HID_PHYS`
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets a value from the `uevent` file.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.0
+ **/
+gchar *
+fu_udev_device_read_property(FuUdevDevice *self, const gchar *key, GError **error)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
+	g_autofree gchar *value = NULL;
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
+	g_return_val_if_fail(key != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("ReadProp:Key=%s", key);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		return g_strdup(fu_device_event_get_str(event, "Data", error));
+	}
+
+	/* sanity check */
+	if (priv->udev_device == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no device to use");
+		return NULL;
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+#ifdef HAVE_GUDEV
+	/* parse key */
+	value = g_strdup(g_udev_device_get_property(priv->udev_device, key));
+	if (value == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "property key %s was not found",
+			    key);
+		return NULL;
+	}
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "not supported as <gudev.h> is unavailable");
+	return NULL;
+#endif
+
+	/* save response */
+	if (event != NULL)
+		fu_device_event_set_str(event, "Data", value);
+
+	/* success */
+	return g_steal_pointer(&value);
 }
 
 static void
