@@ -445,14 +445,17 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	g_autoptr(FuUsbInterface) intf = NULL;
 	g_autoptr(GPtrArray) endpoints = NULL;
 	g_autoptr(FuUsbDevice) usb_device = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	/* convert GUdevDevice to FuUsbDevice */
-	usb_device = FU_USB_DEVICE(fu_udev_device_find_usb_device(FU_UDEV_DEVICE(device), error));
+	/* get USB parent */
+	usb_device = FU_USB_DEVICE(
+	    fu_device_get_backend_parent_with_subsystem(device, "usb:usb_device", error));
 	if (usb_device == NULL)
 		return FALSE;
 
 	/* re-open with new device set */
-	if (!fu_device_open(FU_DEVICE(usb_device), error))
+	locker = fu_device_locker_new(usb_device, error);
+	if (locker == NULL)
 		return FALSE;
 
 	/* find the correct interface */

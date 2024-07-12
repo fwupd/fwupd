@@ -206,7 +206,3 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 const gchar *
 fu_udev_device_get_devtype(FuUdevDevice *self) G_GNUC_NON_NULL(1);
-
-FuDevice *
-fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
-    G_GNUC_NON_NULL(1);

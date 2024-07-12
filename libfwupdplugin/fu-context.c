@@ -1912,6 +1912,24 @@ fu_context_get_esp_files(FuContext *self, FuContextEspFileFlags flags, GError **
 	return g_steal_pointer(&files);
 }
 
+/* private */
+gpointer
+fu_context_get_data(FuContext *self, const gchar *key)
+{
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(key != NULL, NULL);
+	return g_object_get_data(G_OBJECT(self), key);
+}
+
+/* private */
+void
+fu_context_set_data(FuContext *self, const gchar *key, gpointer data)
+{
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	g_return_if_fail(key != NULL);
+	g_object_set_data(G_OBJECT(self), key, data);
+}
+
 static void
 fu_context_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
