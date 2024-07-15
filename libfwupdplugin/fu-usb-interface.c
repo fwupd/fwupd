@@ -25,7 +25,7 @@ struct _FuUsbInterface {
 	GObject parent_instance;
 	struct libusb_interface_descriptor iface;
 	GBytes *extra;
-	GPtrArray *endpoints;
+	GPtrArray *endpoints; /* element-type FuUsbEndpoint */
 };
 
 static void
@@ -74,7 +74,6 @@ fu_usb_interface_from_json(FwupdCodec *codec, JsonNode *json_node, GError **erro
 	/* array of endpoints */
 	if (json_object_has_member(json_object, "UsbEndpoints")) {
 		JsonArray *json_array = json_object_get_array_member(json_object, "UsbEndpoints");
-		self->endpoints = g_ptr_array_new_with_free_func(g_object_unref);
 		for (guint i = 0; i < json_array_get_length(json_array); i++) {
 			JsonNode *node_tmp = json_array_get_element(json_array, i);
 			g_autoptr(FuUsbEndpoint) endpoint =
@@ -139,7 +138,7 @@ fu_usb_interface_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFla
 	}
 
 	/* array of endpoints */
-	if (self->endpoints != NULL && self->endpoints->len > 0) {
+	if (self->endpoints->len > 0) {
 		json_builder_set_member_name(builder, "UsbEndpoints");
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < self->endpoints->len; i++) {
@@ -175,8 +174,6 @@ fu_usb_interface_new(const struct libusb_interface_descriptor *iface)
 	/* copy the data */
 	memcpy(&self->iface, iface, sizeof(struct libusb_interface_descriptor));
 	self->extra = g_bytes_new(iface->extra, iface->extra_length);
-
-	self->endpoints = g_ptr_array_new_with_free_func(g_object_unref);
 	for (guint i = 0; i < iface->bNumEndpoints; i++)
 		g_ptr_array_add(self->endpoints, fu_usb_endpoint_new(&iface->endpoint[i]));
 
@@ -344,8 +341,7 @@ fu_usb_interface_get_extra(FuUsbInterface *self)
  *
  * Gets interface endpoints.
  *
- * Return value: (transfer container) (element-type FuUsbEndpoint): an array of endpoints,
- * or %NULL on failure.
+ * Return value: (transfer container) (element-type FuUsbEndpoint): an array of endpoints.
  *
  * Since: 2.0.0
  **/
@@ -353,8 +349,6 @@ GPtrArray *
 fu_usb_interface_get_endpoints(FuUsbInterface *self)
 {
 	g_return_val_if_fail(FU_IS_USB_INTERFACE(self), NULL);
-	if (self->endpoints == NULL)
-		return NULL;
 	return g_ptr_array_ref(self->endpoints);
 }
 
@@ -371,14 +365,14 @@ fu_usb_interface_finalize(GObject *object)
 	FuUsbInterface *self = FU_USB_INTERFACE(object);
 	if (self->extra != NULL)
 		g_bytes_unref(self->extra);
-	if (self->endpoints != NULL)
-		g_ptr_array_unref(self->endpoints);
+	g_ptr_array_unref(self->endpoints);
 	G_OBJECT_CLASS(fu_usb_interface_parent_class)->finalize(object);
 }
 
 static void
 fu_usb_interface_init(FuUsbInterface *self)
 {
+	self->endpoints = g_ptr_array_new_with_free_func(g_object_unref);
 }
 
 static void
