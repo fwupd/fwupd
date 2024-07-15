@@ -23,7 +23,6 @@
 struct _FuUsbEndpoint {
 	GObject parent_instance;
 	struct libusb_endpoint_descriptor endpoint_descriptor;
-	GBytes *extra;
 };
 
 static void
@@ -39,7 +38,6 @@ static gboolean
 fu_usb_endpoint_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 {
 	FuUsbEndpoint *self = FU_USB_ENDPOINT(codec);
-	const gchar *str;
 	JsonObject *json_object;
 
 	/* sanity check */
@@ -65,16 +63,6 @@ fu_usb_endpoint_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error
 	    json_object_get_int_member_with_default(json_object, "SynchAddress", 0x0);
 	self->endpoint_descriptor.wMaxPacketSize =
 	    json_object_get_int_member_with_default(json_object, "MaxPacketSize", 0x0);
-
-	/* extra data */
-	str = json_object_get_string_member_with_default(json_object, "ExtraData", NULL);
-	if (str != NULL) {
-		gsize bufsz = 0;
-		g_autofree guchar *buf = g_base64_decode(str, &bufsz);
-		if (self->extra != NULL)
-			g_bytes_unref(self->extra);
-		self->extra = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
-	}
 
 	/* success */
 	return TRUE;
@@ -109,14 +97,6 @@ fu_usb_endpoint_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlag
 	if (self->endpoint_descriptor.wMaxPacketSize != 0) {
 		json_builder_set_member_name(builder, "MaxPacketSize");
 		json_builder_add_int_value(builder, self->endpoint_descriptor.wMaxPacketSize);
-	}
-
-	/* extra data */
-	if (self->extra != NULL && g_bytes_get_size(self->extra) > 0) {
-		g_autofree gchar *str = g_base64_encode(g_bytes_get_data(self->extra, NULL),
-							g_bytes_get_size(self->extra));
-		json_builder_set_member_name(builder, "ExtraData");
-		json_builder_add_string_value(builder, str);
 	}
 }
 
@@ -258,36 +238,11 @@ fu_usb_endpoint_get_direction(FuUsbEndpoint *self)
 		   : FU_USB_DIRECTION_HOST_TO_DEVICE;
 }
 
-/**
- * fu_usb_endpoint_get_extra:
- * @self: a #FuUsbEndpoint
- *
- * Gets any extra data from the endpoint.
- *
- * Return value: (transfer none): a #GBytes, or %NULL for failure
- *
- * Since: 2.0.0
- **/
-GBytes *
-fu_usb_endpoint_get_extra(FuUsbEndpoint *self)
-{
-	g_return_val_if_fail(FU_IS_USB_ENDPOINT(self), NULL);
-	return self->extra;
-}
-
 static void
 fu_usb_endpoint_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_json = fu_usb_endpoint_add_json;
 	iface->from_json = fu_usb_endpoint_from_json;
-}
-
-static void
-fu_usb_endpoint_finalize(GObject *object)
-{
-	FuUsbEndpoint *self = FU_USB_ENDPOINT(object);
-	g_bytes_unref(self->extra);
-	G_OBJECT_CLASS(fu_usb_endpoint_parent_class)->finalize(object);
 }
 
 static void
@@ -298,8 +253,6 @@ fu_usb_endpoint_init(FuUsbEndpoint *self)
 static void
 fu_usb_endpoint_class_init(FuUsbEndpointClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->finalize = fu_usb_endpoint_finalize;
 }
 
 /**
@@ -318,6 +271,5 @@ fu_usb_endpoint_new(const struct libusb_endpoint_descriptor *endpoint_descriptor
 	memcpy(&self->endpoint_descriptor,
 	       endpoint_descriptor,
 	       sizeof(struct libusb_endpoint_descriptor));
-	self->extra = g_bytes_new(endpoint_descriptor->extra, endpoint_descriptor->extra_length);
 	return FU_USB_ENDPOINT(self);
 }

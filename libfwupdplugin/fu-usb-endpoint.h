@@ -28,5 +28,3 @@ guint8
 fu_usb_endpoint_get_number(FuUsbEndpoint *self) G_GNUC_NON_NULL(1);
 FuUsbDirection
 fu_usb_endpoint_get_direction(FuUsbEndpoint *self) G_GNUC_NON_NULL(1);
-GBytes *
-fu_usb_endpoint_get_extra(FuUsbEndpoint *self) G_GNUC_NON_NULL(1);
