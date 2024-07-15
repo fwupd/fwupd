@@ -21,7 +21,7 @@
 #include "fu-usb-endpoint-private.h"
 
 struct _FuUsbEndpoint {
-	GObject parent_instance;
+	FuFirmware parent_instance;
 	struct libusb_endpoint_descriptor endpoint_descriptor;
 };
 
@@ -30,7 +30,7 @@ fu_usb_endpoint_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_EXTENDED(FuUsbEndpoint,
 		       fu_usb_endpoint,
-		       G_TYPE_OBJECT,
+		       FU_TYPE_FIRMWARE,
 		       0,
 		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_usb_endpoint_codec_iface_init));
 
@@ -204,6 +204,34 @@ fu_usb_endpoint_get_direction(FuUsbEndpoint *self)
 		   : FU_USB_DIRECTION_HOST_TO_DEVICE;
 }
 
+static gboolean
+fu_usb_endpoint_parse(FuFirmware *firmware,
+		      GInputStream *stream,
+		      gsize offset,
+		      FwupdInstallFlags flags,
+		      GError **error)
+{
+	FuUsbEndpoint *self = FU_USB_ENDPOINT(firmware);
+	g_autoptr(FuUsbEndpointHdr) st = NULL;
+
+	/* parse */
+	st = fu_usb_endpoint_hdr_parse_stream(stream, offset, error);
+	if (st == NULL)
+		return FALSE;
+	self->endpoint_descriptor.bLength = fu_usb_endpoint_hdr_get_length(st);
+	self->endpoint_descriptor.bDescriptorType = fu_usb_endpoint_hdr_get_descriptor_type(st);
+	self->endpoint_descriptor.bEndpointAddress = fu_usb_endpoint_hdr_get_endpoint_address(st);
+	self->endpoint_descriptor.bmAttributes = fu_usb_endpoint_hdr_get_attributes(st);
+	self->endpoint_descriptor.wMaxPacketSize = fu_usb_endpoint_hdr_get_max_packet_size(st);
+	self->endpoint_descriptor.bInterval = fu_usb_endpoint_hdr_get_interval(st);
+	self->endpoint_descriptor.bRefresh = 0;
+	self->endpoint_descriptor.bSynchAddress = 0;
+	fu_firmware_set_size(FU_FIRMWARE(self), self->endpoint_descriptor.bLength);
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_usb_endpoint_codec_iface_init(FwupdCodecInterface *iface)
 {
@@ -219,6 +247,8 @@ fu_usb_endpoint_init(FuUsbEndpoint *self)
 static void
 fu_usb_endpoint_class_init(FuUsbEndpointClass *klass)
 {
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->parse = fu_usb_endpoint_parse;
 }
 
 /**
