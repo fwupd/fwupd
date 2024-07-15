@@ -62,6 +62,33 @@ Icon = input-mouse
 FirmwareSize = 0x27000
 Flags = is-bootloader,~usable-during-update
 
+[USB\VID_1038&PID_2230]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen2
+Name = Arctis Nova 5
+Icon = audio-headphones
+#CounterpartGuid = USB\VID_1038&PID_183B,HIDRAW\VEN_0111&DEV_183A
+#FirmwareSize = 0x27000
+SteelSeriesFizzInterface = 0
+
+[STEELSERIES\VID_1038&PID_2230&PROTOCOL_FIZZ_TUNNEL]
+Plugin = steelseries
+GType = FuSteelseriesFizzTunnel
+Name = Arctis Nova 5 via USB Receiver
+Icon = audio-headphones
+#FirmwareSize = 0x27000
+
+[USB\VID_1038&PID_2232]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen2
+Name = Arctis Nova 5 USB Receiver
+Icon = usb-receiver
+Flags = is-receiver
+#CounterpartGuid = USB\VID_1038&PID_183B,HIDRAW\VEN_0111&DEV_183A
+#FirmwareSize = 0x27000
+
 # Stratus Duo RX
 [USB\VID_1038&PID_1430]
 Plugin = steelseries
