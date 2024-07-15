@@ -17,10 +17,11 @@
 
 #include <string.h>
 
+#include "fu-input-stream.h"
 #include "fu-usb-bos-descriptor-private.h"
 
 struct _FuUsbBosDescriptor {
-	GObject parent_instance;
+	FuFirmware parent_instance;
 	struct libusb_bos_dev_capability_descriptor bos_cap;
 	GBytes *extra;
 };
@@ -30,7 +31,7 @@ fu_usb_bos_descriptor_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_EXTENDED(FuUsbBosDescriptor,
 		       fu_usb_bos_descriptor,
-		       G_TYPE_OBJECT,
+		       FU_TYPE_FIRMWARE,
 		       0,
 		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
 					     fu_usb_bos_descriptor_codec_iface_init));
@@ -124,6 +125,38 @@ fu_usb_bos_descriptor_get_extra(FuUsbBosDescriptor *self)
 	return self->extra;
 }
 
+static gboolean
+fu_usb_bos_descriptor_parse(FuFirmware *firmware,
+			    GInputStream *stream,
+			    gsize offset,
+			    FwupdInstallFlags flags,
+			    GError **error)
+{
+	FuUsbBosDescriptor *self = FU_USB_BOS_DESCRIPTOR(firmware);
+	g_autoptr(FuUsbBosHdr) st = NULL;
+
+	/* parse */
+	st = fu_usb_bos_hdr_parse_stream(stream, offset, error);
+	if (st == NULL)
+		return FALSE;
+	self->bos_cap.bLength = fu_usb_bos_hdr_get_length(st);
+	self->bos_cap.bDevCapabilityType = fu_usb_bos_hdr_get_dev_capability_type(st);
+	fu_firmware_set_size(FU_FIRMWARE(self), self->bos_cap.bLength);
+
+	/* extra data */
+	if (self->bos_cap.bLength > st->len) {
+		self->extra = fu_input_stream_read_bytes(stream,
+							 offset + st->len,
+							 self->bos_cap.bLength - st->len,
+							 error);
+		if (self->extra == NULL)
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_usb_bos_descriptor_codec_iface_init(FwupdCodecInterface *iface)
 {
@@ -143,7 +176,9 @@ static void
 fu_usb_bos_descriptor_class_init(FuUsbBosDescriptorClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_usb_bos_descriptor_finalize;
+	firmware_class->parse = fu_usb_bos_descriptor_parse;
 }
 
 static void
@@ -165,6 +200,7 @@ fu_usb_bos_descriptor_new(const struct libusb_bos_dev_capability_descriptor *bos
 
 	/* copy the data */
 	memcpy(&self->bos_cap, bos_cap, sizeof(*bos_cap));
-	self->extra = g_bytes_new(bos_cap->dev_capability_data, bos_cap->bLength - 0x03);
+	self->extra =
+	    g_bytes_new(bos_cap->dev_capability_data, bos_cap->bLength - FU_USB_BOS_HDR_SIZE);
 	return FU_USB_BOS_DESCRIPTOR(self);
 }
