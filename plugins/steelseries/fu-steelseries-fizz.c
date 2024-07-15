@@ -6,7 +6,9 @@
 
 #include "config.h"
 
+#include "fu-steelseries-device.h"
 #include "fu-steelseries-firmware.h"
+#include "fu-steelseries-fizz-impl.h"
 #include "fu-steelseries-fizz-tunnel.h"
 #include "fu-steelseries-fizz.h"
 
@@ -23,22 +25,6 @@
 
 #define STEELSERIES_FIZZ_COMMAND_OFFSET 0x00U
 #define STEELSERIES_FIZZ_ERROR_OFFSET	0x01U
-
-#define STEELSERIES_FIZZ_VERSION_COMMAND	0x90U
-#define STEELSERIES_FIZZ_VERSION_COMMAND_OFFSET 0x00U
-#define STEELSERIES_FIZZ_VERSION_MODE_OFFSET	0x01U
-
-#define STEELSERIES_FIZZ_BATTERY_LEVEL_COMMAND	      0x92U
-#define STEELSERIES_FIZZ_BATTERY_LEVEL_COMMAND_OFFSET 0x00U
-#define STEELSERIES_FIZZ_BATTERY_LEVEL_LEVEL_OFFSET   0x01U
-
-#define STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND	      0xBBU
-#define STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND_OFFSET 0x00U
-#define STEELSERIES_FIZZ_PAIRED_STATUS_STATUS_OFFSET  0x01U
-
-#define STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND	  0xBCU
-#define STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND_OFFSET 0x00U
-#define STEELSERIES_FIZZ_CONNECTION_STATUS_STATUS_OFFSET  0x01U
 
 #define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND	     0x03U
 #define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND_OFFSET    0x00U
@@ -73,80 +59,72 @@
 #define STEELSERIES_FIZZ_FILE_CRC32_STORED_CRC_OFFSET	  0x06U
 
 struct _FuSteelseriesFizz {
-	FuSteelseriesDevice parent_instance;
+	FuDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuSteelseriesFizz, fu_steelseries_fizz, FU_TYPE_STEELSERIES_DEVICE)
+G_DEFINE_TYPE(FuSteelseriesFizz, fu_steelseries_fizz, FU_TYPE_DEVICE)
 
 static gboolean
 fu_steelseries_fizz_command_error_to_error(guint8 cmd, guint8 err, GError **error)
 {
+	FwupdError err_code;
+
+	switch (err) {
 	/* success */
-	if (err == STEELSERIES_FIZZ_COMMAND_ERROR_SUCCESS)
+	case STEELSERIES_FIZZ_COMMAND_ERROR_SUCCESS:
 		return TRUE;
 
-	if (err == STEELSERIES_FIZZ_COMMAND_ERROR_FILE_NOT_FOUND) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "command 0x%02x returned error 0x%02x",
-			    cmd,
-			    err);
-		return FALSE;
-	}
+	case STEELSERIES_FIZZ_COMMAND_ERROR_FILE_NOT_FOUND:
+		err_code = FWUPD_ERROR_NOT_FOUND;
+		break;
 
 	/* targeted offset is past the file end */
-	if (err == STEELSERIES_FIZZ_COMMAND_ERROR_FILE_TOO_SHORT) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "command 0x%02x returned error 0x%02x",
-			    cmd,
-			    err);
-		return FALSE;
-	}
+	case STEELSERIES_FIZZ_COMMAND_ERROR_FILE_TOO_SHORT:
+		err_code = FWUPD_ERROR_INVALID_DATA;
+		break;
 
 	/* when internal flash returns error */
-	if (err == STEELSERIES_FIZZ_COMMAND_ERROR_FLASH_FAILED) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "command 0x%02x returned error 0x%02x",
-			    cmd,
-			    err);
-		return FALSE;
-	}
+	case STEELSERIES_FIZZ_COMMAND_ERROR_FLASH_FAILED:
+		err_code = FWUPD_ERROR_INTERNAL;
+		break;
 
 	/* USB API doesn't have permission to access this file */
-	if (err == STEELSERIES_FIZZ_COMMAND_ERROR_PERMISSION_DENIED) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_PERMISSION_DENIED,
-			    "command 0x%02x returned error 0x%02x",
-			    cmd,
-			    err);
-		return FALSE;
-	}
+	case STEELSERIES_FIZZ_COMMAND_ERROR_PERMISSION_DENIED:
+		err_code = FWUPD_ERROR_PERMISSION_DENIED;
+		break;
 
 	/* USB API doesn't have permission to access this file */
-	if (err == STEELSERIES_FIZZ_COMMAND_ERROR_OPERATION_NO_SUPPORTED) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "command 0x%02x returned error 0x%02x",
-			    cmd,
-			    err);
-		return FALSE;
-	}
+	case STEELSERIES_FIZZ_COMMAND_ERROR_OPERATION_NO_SUPPORTED:
+		err_code = FWUPD_ERROR_NOT_SUPPORTED;
+		break;
 
 	/* fallback */
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_INTERNAL,
-		    "command 0x%02x returned error 0x%02x",
-		    cmd,
-		    err);
+	default:
+		err_code = FWUPD_ERROR_INTERNAL;
+		break;
+	}
+
+	g_set_error(error, FWUPD_ERROR, err_code, "command 0x%02x returned error 0x%02x", cmd, err);
 	return FALSE;
+}
+
+static gboolean
+fu_steelseries_fizz_cmd(FuDevice *device,
+			guint8 *data,
+			gsize datasz,
+			gboolean answer,
+			GError **error)
+{
+	FuDevice *proxy = fu_device_get_proxy(device);
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+		return FALSE;
+	}
+	return fu_steelseries_fizz_impl_cmd(FU_STEELSERIES_FIZZ_IMPL(proxy),
+					    data,
+					    datasz,
+					    answer,
+					    error);
 }
 
 static gboolean
@@ -159,7 +137,7 @@ fu_steelseries_fizz_command_and_check_error(FuDevice *device,
 	guint8 err;
 	guint8 cmd;
 
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device), data, datasz, TRUE, error))
+	if (!fu_steelseries_fizz_cmd(device, data, datasz, TRUE, error))
 		return FALSE;
 
 	if (!fu_memread_uint8_safe(data, datasz, STEELSERIES_FIZZ_COMMAND_OFFSET, &cmd, error))
@@ -184,38 +162,12 @@ fu_steelseries_fizz_command_and_check_error(FuDevice *device,
 gchar *
 fu_steelseries_fizz_get_version(FuDevice *device, gboolean tunnel, GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint8 cmd = STEELSERIES_FIZZ_VERSION_COMMAND;
-	const guint8 mode = 0U; /* string */
-
-	if (tunnel)
-		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
-
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_VERSION_COMMAND_OFFSET,
-				    cmd,
-				    error))
+	FuDevice *proxy = fu_device_get_proxy(device);
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
 		return NULL;
-
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_VERSION_MODE_OFFSET,
-				    mode,
-				    error))
-		return NULL;
-
-	fu_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-				       data,
-				       sizeof(data),
-				       TRUE,
-				       error))
-		return NULL;
-	fu_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
-
-	/* success */
-	return fu_memstrsafe(data, sizeof(data), 0x0, sizeof(data), error);
+	}
+	return fu_steelseries_fizz_impl_get_version(FU_STEELSERIES_FIZZ_IMPL(proxy), tunnel, error);
 }
 
 static gboolean
@@ -371,11 +323,7 @@ fu_steelseries_fizz_reset(FuDevice *device, gboolean tunnel, guint8 mode, GError
 		return FALSE;
 
 	fu_dump_raw(G_LOG_DOMAIN, "Reset", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-				       data,
-				       sizeof(data),
-				       FALSE,
-				       error))
+	if (!fu_steelseries_fizz_cmd(device, data, sizeof(data), FALSE, error))
 		return FALSE;
 
 	/* success */
@@ -529,115 +477,41 @@ fu_steelseries_fizz_read_fs(FuDevice *device,
 	return TRUE;
 }
 
-gboolean
-fu_steelseries_fizz_get_battery_level(FuDevice *device,
-				      gboolean tunnel,
-				      guint8 *level,
-				      GError **error)
-{
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint8 cmd = STEELSERIES_FIZZ_BATTERY_LEVEL_COMMAND;
-
-	if (tunnel)
-		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
-
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_BATTERY_LEVEL_COMMAND_OFFSET,
-				    cmd,
-				    error))
-		return FALSE;
-
-	fu_dump_raw(G_LOG_DOMAIN, "BatteryLevel", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-				       data,
-				       sizeof(data),
-				       TRUE,
-				       error))
-		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "BatteryLevel", data, sizeof(data));
-
-	if (!fu_memread_uint8_safe(data,
-				   sizeof(data),
-				   STEELSERIES_FIZZ_BATTERY_LEVEL_LEVEL_OFFSET,
-				   level,
-				   error))
-		return FALSE;
-
-	/* success */
-	return TRUE;
-}
-
 static gboolean
 fu_steelseries_fizz_get_paired_status(FuDevice *device, guint8 *status, GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	const guint8 cmd = STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND;
-
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_PAIRED_STATUS_COMMAND_OFFSET,
-				    cmd,
-				    error))
+	FuDevice *proxy = fu_device_get_proxy(device);
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
 		return FALSE;
-
-	fu_dump_raw(G_LOG_DOMAIN, "PairedStatus", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-				       data,
-				       sizeof(data),
-				       TRUE,
-				       error))
-		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "PairedStatus", data, sizeof(data));
-
-	if (!fu_memread_uint8_safe(data,
-				   sizeof(data),
-				   STEELSERIES_FIZZ_PAIRED_STATUS_STATUS_OFFSET,
-				   status,
-				   error))
-		return FALSE;
-
-	/* success */
-	return TRUE;
+	}
+	return fu_steelseries_fizz_impl_get_paired_status(FU_STEELSERIES_FIZZ_IMPL(proxy),
+							  status,
+							  error);
 }
 
 gboolean
 fu_steelseries_fizz_get_connection_status(FuDevice *device, guint8 *status, GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	const guint8 cmd = STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND;
-
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND_OFFSET,
-				    cmd,
-				    error))
+	FuDevice *proxy = fu_device_get_proxy(device);
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
 		return FALSE;
-
-	fu_dump_raw(G_LOG_DOMAIN, "ConnectionStatus", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-				       data,
-				       sizeof(data),
-				       TRUE,
-				       error))
-		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "ConnectionStatus", data, sizeof(data));
-
-	if (!fu_memread_uint8_safe(data,
-				   sizeof(data),
-				   STEELSERIES_FIZZ_CONNECTION_STATUS_STATUS_OFFSET,
-				   status,
-				   error))
-		return FALSE;
-
-	/* success */
-	return TRUE;
+	}
+	return fu_steelseries_fizz_impl_get_connection_status(FU_STEELSERIES_FIZZ_IMPL(proxy),
+							      status,
+							      error);
 }
 
 static gboolean
 fu_steelseries_fizz_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
+	FuDevice *proxy = fu_device_get_proxy(device);
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+		return FALSE;
+	}
 
 	if (!fu_steelseries_fizz_reset(device,
 				       FALSE,
@@ -656,24 +530,23 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 {
 	guint32 calculated_crc;
 	guint32 stored_crc;
-	guint8 fs = STEELSERIES_FIZZ_FILESYSTEM_MOUSE;
-	guint8 id = STEELSERIES_FIZZ_MOUSE_FILESYSTEM_BACKUP_APP_ID;
+	guint8 fs;
+	guint8 id;
+	gboolean is_receiver = FALSE;
 	g_autofree gchar *version = NULL;
 
-	/* in bootloader mode */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
-		return TRUE;
-
-	/* FuUsbDevice->setup */
-	if (!FU_DEVICE_CLASS(fu_steelseries_fizz_parent_class)->setup(device, error))
+	FuDevice *proxy = fu_device_get_proxy(device);
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
 		return FALSE;
+	}
 
-	/* skip if in bootloader mode */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+	/* in bootloader mode */
+	if (fu_device_has_flag(proxy, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
 
 	/* it is a USB receiver */
-	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
+	if (fu_device_has_private_flag(proxy, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
 		guint8 status;
 
 		if (!fu_steelseries_fizz_get_paired_status(device, &status, error)) {
@@ -685,10 +558,9 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 			    fu_steelseries_fizz_tunnel_new(FU_STEELSERIES_FIZZ(device));
 
 			fu_device_add_child(device, FU_DEVICE(mouse_device));
+			fu_device_set_proxy(FU_DEVICE(mouse_device), FU_DEVICE(proxy));
 		}
-
-		fs = STEELSERIES_FIZZ_FILESYSTEM_RECEIVER;
-		id = STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_BACKUP_APP_ID;
+		is_receiver = TRUE;
 	}
 
 	version = fu_steelseries_fizz_get_version(device, FALSE, error);
@@ -698,12 +570,11 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 	}
 	fu_device_set_version(device, version);
 
-	/* it is a USB receiver */
-	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
-		fs = STEELSERIES_FIZZ_FILESYSTEM_RECEIVER;
-		id = STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_BACKUP_APP_ID;
-	}
-
+	fs =
+	    fu_steelseries_fizz_impl_get_fs_id(FU_STEELSERIES_FIZZ_IMPL(proxy), is_receiver, error);
+	id = fu_steelseries_fizz_impl_get_file_id(FU_STEELSERIES_FIZZ_IMPL(proxy),
+						  is_receiver,
+						  error);
 	if (!fu_steelseries_fizz_get_crc32_fs(device,
 					      FALSE,
 					      fs,
@@ -805,14 +676,21 @@ fu_steelseries_fizz_write_firmware(FuDevice *device,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
-	guint8 fs = STEELSERIES_FIZZ_FILESYSTEM_MOUSE;
-	guint8 id = STEELSERIES_FIZZ_MOUSE_FILESYSTEM_BACKUP_APP_ID;
-
-	/* it is a USB receiver */
-	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
-		fs = STEELSERIES_FIZZ_FILESYSTEM_RECEIVER;
-		id = STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_BACKUP_APP_ID;
+	guint8 fs;
+	guint8 id;
+	gboolean is_receiver = FALSE;
+	FuDevice *proxy = fu_device_get_proxy(device);
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+		return FALSE;
 	}
+
+	is_receiver = fu_device_has_private_flag(proxy, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER);
+	fs =
+	    fu_steelseries_fizz_impl_get_fs_id(FU_STEELSERIES_FIZZ_IMPL(proxy), is_receiver, error);
+	id = fu_steelseries_fizz_impl_get_file_id(FU_STEELSERIES_FIZZ_IMPL(proxy),
+						  is_receiver,
+						  error);
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, 1);
@@ -874,18 +752,25 @@ fu_steelseries_fizz_read_firmware_fs(FuDevice *device,
 static FuFirmware *
 fu_steelseries_fizz_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
-	guint8 fs = STEELSERIES_FIZZ_FILESYSTEM_MOUSE;
-	guint8 id = STEELSERIES_FIZZ_MOUSE_FILESYSTEM_BACKUP_APP_ID;
+	guint8 fs;
+	guint8 id;
+	gboolean is_receiver;
+	FuDevice *proxy = fu_device_get_proxy(device);
 	g_autoptr(FuFirmware) firmware = NULL;
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+		return NULL;
+	}
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 100, NULL);
 
-	/* it is a USB receiver */
-	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
-		fs = STEELSERIES_FIZZ_FILESYSTEM_RECEIVER;
-		id = STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_BACKUP_APP_ID;
-	}
+	is_receiver = fu_device_has_private_flag(proxy, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER);
+	fs =
+	    fu_steelseries_fizz_impl_get_fs_id(FU_STEELSERIES_FIZZ_IMPL(proxy), is_receiver, error);
+	id = fu_steelseries_fizz_impl_get_file_id(FU_STEELSERIES_FIZZ_IMPL(proxy),
+						  is_receiver,
+						  error);
 
 	firmware = fu_steelseries_fizz_read_firmware_fs(device,
 							FALSE,
@@ -927,13 +812,13 @@ fu_steelseries_fizz_class_init(FuSteelseriesFizzClass *klass)
 static void
 fu_steelseries_fizz_init(FuSteelseriesFizz *self)
 {
-	fu_steelseries_device_set_iface_idx_offset(FU_STEELSERIES_DEVICE(self), 0x03);
-
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
 	fu_device_add_protocol(FU_DEVICE(self), "com.steelseries.fizz");
 	fu_device_set_install_duration(FU_DEVICE(self), 13);				 /* 13 s */
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG); /* 40 s */
