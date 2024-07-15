@@ -152,40 +152,6 @@ fu_usb_endpoint_get_polling_interval(FuUsbEndpoint *self)
 }
 
 /**
- * fu_usb_endpoint_get_refresh:
- * @self: a #FuUsbEndpoint
- *
- * Gets the rate at which synchronization feedback is provided, for audio device only.
- *
- * Return value: The endpoint refresh
- *
- * Since: 2.0.0
- **/
-guint8
-fu_usb_endpoint_get_refresh(FuUsbEndpoint *self)
-{
-	g_return_val_if_fail(FU_IS_USB_ENDPOINT(self), 0);
-	return self->endpoint_descriptor.bRefresh;
-}
-
-/**
- * fu_usb_endpoint_get_synch_address:
- * @self: a #FuUsbEndpoint
- *
- * Gets the address if the synch endpoint, for audio device only.
- *
- * Return value: The synch endpoint address
- *
- * Since: 2.0.0
- **/
-guint8
-fu_usb_endpoint_get_synch_address(FuUsbEndpoint *self)
-{
-	g_return_val_if_fail(FU_IS_USB_ENDPOINT(self), 0);
-	return self->endpoint_descriptor.bSynchAddress;
-}
-
-/**
  * fu_usb_endpoint_get_address:
  * @self: a #FuUsbEndpoint
  *

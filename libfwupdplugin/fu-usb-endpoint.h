@@ -19,10 +19,6 @@ fu_usb_endpoint_get_maximum_packet_size(FuUsbEndpoint *self) G_GNUC_NON_NULL(1);
 guint8
 fu_usb_endpoint_get_polling_interval(FuUsbEndpoint *self) G_GNUC_NON_NULL(1);
 guint8
-fu_usb_endpoint_get_refresh(FuUsbEndpoint *self) G_GNUC_NON_NULL(1);
-guint8
-fu_usb_endpoint_get_synch_address(FuUsbEndpoint *self) G_GNUC_NON_NULL(1);
-guint8
 fu_usb_endpoint_get_address(FuUsbEndpoint *self) G_GNUC_NON_NULL(1);
 guint8
 fu_usb_endpoint_get_number(FuUsbEndpoint *self) G_GNUC_NON_NULL(1);
