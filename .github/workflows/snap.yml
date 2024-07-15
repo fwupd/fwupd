@@ -30,7 +30,7 @@ jobs:
       run: |
         mkdir -p snap
         ln -s ../contrib/snap/snapcraft.yaml snap/snapcraft.yaml
-    - uses: snapcore/action-build@2096990827aa966f773676c8a53793c723b6b40f # v1.2.0
+    - uses: snapcore/action-build@3bdaa03e1ba6bf59a65f84a751d943d549a54e79 # v1.3.0
       id: snapcraft
     - uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
       with:
