@@ -21,6 +21,7 @@ Icon = input-mouse
 [USB\VID_1038&PID_1838]
 Plugin = steelseries
 GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen1
 Name = Aerox 3 Wireless USB Receiver
 Icon = usb-receiver
 CounterpartGuid = USB\VID_1038&PID_1839
@@ -30,6 +31,7 @@ Flags = is-receiver
 [USB\VID_1038&PID_1839]
 Plugin = steelseries
 GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen1
 Name = Aerox 3 Wireless USB Receiver bootloader
 Icon = usb-receiver
 FirmwareSize = 0x23000
@@ -45,6 +47,7 @@ FirmwareSize = 0x27000
 [USB\VID_1038&PID_183A]
 Plugin = steelseries
 GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen1
 Name = Aerox 3 Wireless Mouse
 Icon = input-mouse
 CounterpartGuid = USB\VID_1038&PID_183B,HIDRAW\VEN_0111&DEV_183A
@@ -53,6 +56,7 @@ FirmwareSize = 0x27000
 [USB\VID_1038&PID_183B]
 Plugin = steelseries
 GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen1
 Name = Aerox 3 Wireless Mouse bootloader
 Icon = input-mouse
 FirmwareSize = 0x27000
