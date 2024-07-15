@@ -26,9 +26,7 @@
 #include "fu-i2c-device.h"
 #include "fu-string.h"
 #include "fu-udev-device-private.h"
-#ifdef HAVE_LIBUSB
 #include "fu-usb-device-private.h"
-#endif
 
 /**
  * FuUdevDevice:
@@ -2497,7 +2495,7 @@ fu_udev_device_get_children_with_subsystem(FuUdevDevice *self, const gchar *cons
 FuDevice *
 fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error)
 {
-#if defined(HAVE_GUDEV) && defined(HAVE_LIBUSB)
+#if defined(HAVE_GUDEV)
 	guint64 bus = 0;
 	guint64 address = 0;
 	gint rc;

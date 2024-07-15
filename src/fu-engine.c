@@ -61,20 +61,16 @@
 #include "fu-security-attr-common.h"
 #include "fu-security-attrs-private.h"
 #include "fu-udev-device-private.h"
+#include "fu-usb-backend.h"
 #include "fu-usb-device-fw-ds20.h"
 #include "fu-usb-device-ms-ds20.h"
-#ifdef HAVE_LIBUSB
 #include "fu-usb-device-private.h"
-#endif
 
 #ifdef HAVE_GIO_UNIX
 #include "fu-unix-seekable-input-stream.h"
 #endif
 #ifdef HAVE_GUDEV
 #include "fu-udev-backend.h"
-#endif
-#ifdef HAVE_LIBUSB
-#include "fu-usb-backend.h"
 #endif
 #ifdef HAVE_BLUEZ
 #include "fu-bluez-backend.h"
@@ -8388,10 +8384,8 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_context_add_firmware_gtype(self->ctx,
 				      "intel-thunderbolt-nvm",
 				      FU_TYPE_INTEL_THUNDERBOLT_NVM);
-#ifdef HAVE_LIBUSB
 	fu_context_add_firmware_gtype(self->ctx, "usb-device-fw-ds20", FU_TYPE_USB_DEVICE_FW_DS20);
 	fu_context_add_firmware_gtype(self->ctx, "usb-device-ms-ds20", FU_TYPE_USB_DEVICE_MS_DS20);
-#endif
 
 	/* we are emulating a different host */
 	if (host_emulate != NULL) {
@@ -8820,9 +8814,7 @@ fu_engine_constructed(GObject *obj)
 			 self);
 
 	/* backends */
-#ifdef HAVE_LIBUSB
 	g_ptr_array_add(self->backends, fu_usb_backend_new(self->ctx));
-#endif
 #ifdef HAVE_GUDEV
 	g_ptr_array_add(self->backends, fu_udev_backend_new(self->ctx));
 #endif
@@ -8861,9 +8853,7 @@ fu_engine_constructed(GObject *obj)
 #endif
 
 	fu_context_add_compile_version(self->ctx, "org.freedesktop.fwupd", VERSION);
-#ifdef HAVE_LIBUSB
 	fu_context_add_compile_version(self->ctx, "info.libusb", LIBUSB_VERSION);
-#endif
 #ifdef HAVE_PASSIM
 	{
 		g_autofree gchar *version = g_strdup_printf("%i.%i.%i",
