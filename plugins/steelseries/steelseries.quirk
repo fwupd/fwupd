@@ -1,67 +1,3 @@
-# Rival 100
-[USB\VID_1038&PID_1702]
-Plugin = steelseries
-GType = FuSteelseriesMouse
-Summary = An optical gaming mouse
-Icon = input-mouse
-
-# Rival 3 Wireless
-[USB\VID_1038&PID_1830]
-Plugin = steelseries
-GType = FuSteelseriesSonic
-Icon = input-mouse
-
-# Aerox 3 Wireless
-[HIDRAW\VEN_0111&DEV_183A]
-Plugin = steelseries
-GType = FuSteelseriesFizzHid
-Name = Aerox 3 Wireless Mouse via Bluetooth
-Icon = input-mouse
-
-[USB\VID_1038&PID_1838]
-Plugin = steelseries
-GType = FuSteelseriesFizz
-ProxyGType = FuSteelseriesFizzGen1
-Name = Aerox 3 Wireless USB Receiver
-Icon = usb-receiver
-CounterpartGuid = USB\VID_1038&PID_1839
-FirmwareSize = 0x23000
-Flags = is-receiver
-
-[USB\VID_1038&PID_1839]
-Plugin = steelseries
-GType = FuSteelseriesFizz
-ProxyGType = FuSteelseriesFizzGen1
-Name = Aerox 3 Wireless USB Receiver bootloader
-Icon = usb-receiver
-FirmwareSize = 0x23000
-Flags = is-bootloader,is-receiver,~usable-during-update
-
-[STEELSERIES\VID_1038&PID_1838&PROTOCOL_FIZZ_TUNNEL]
-Plugin = steelseries
-GType = FuSteelseriesFizzTunnel
-Name = Aerox 3 Wireless Mouse via USB Receiver
-Icon = input-mouse
-FirmwareSize = 0x27000
-
-[USB\VID_1038&PID_183A]
-Plugin = steelseries
-GType = FuSteelseriesFizz
-ProxyGType = FuSteelseriesFizzGen1
-Name = Aerox 3 Wireless Mouse
-Icon = input-mouse
-CounterpartGuid = USB\VID_1038&PID_183B,HIDRAW\VEN_0111&DEV_183A
-FirmwareSize = 0x27000
-
-[USB\VID_1038&PID_183B]
-Plugin = steelseries
-GType = FuSteelseriesFizz
-ProxyGType = FuSteelseriesFizzGen1
-Name = Aerox 3 Wireless Mouse bootloader
-Icon = input-mouse
-FirmwareSize = 0x27000
-Flags = is-bootloader,~usable-during-update
-
 # Stratus Duo RX
 [USB\VID_1038&PID_1430]
 Plugin = steelseries
@@ -108,3 +44,129 @@ GType = FuSteelseriesGamepad
 Name = Stratus+ bootloader
 CounterpartGuid = USB\VID_1038&PID_1434
 Flags = is-bootloader
+
+# Rival 100
+[USB\VID_1038&PID_1702]
+Plugin = steelseries
+GType = FuSteelseriesMouse
+Summary = An optical gaming mouse
+Icon = input-mouse
+
+# Rival 3 Wireless
+[USB\VID_1038&PID_1830]
+Plugin = steelseries
+GType = FuSteelseriesSonic
+Icon = input-mouse
+
+# Aerox 3 Wireless
+[HIDRAW\VEN_0111&DEV_183A]
+Plugin = steelseries
+GType = FuSteelseriesFizzHid
+Name = Aerox 3 Wireless Mouse via Bluetooth
+Icon = input-mouse
+
+[USB\VID_1038&PID_1838]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen1
+Name = Aerox 3 Wireless USB Receiver
+Icon = usb-receiver
+CounterpartGuid = USB\VID_1038&PID_1839
+FirmwareSize = 0x23000
+Flags = is-receiver
+InstallDuration = 13
+
+[USB\VID_1038&PID_1839]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen1
+Name = Aerox 3 Wireless USB Receiver bootloader
+Icon = usb-receiver
+CounterpartGuid = USB\VID_1038&PID_1838
+FirmwareSize = 0x23000
+Flags = is-bootloader,is-receiver,~usable-during-update
+InstallDuration = 13
+
+[STEELSERIES\VID_1038&PID_1838&PROTOCOL_FIZZ_TUNNEL]
+Plugin = steelseries
+GType = FuSteelseriesFizzTunnel
+Name = Aerox 3 Wireless Mouse via USB Receiver
+Icon = input-mouse
+FirmwareSize = 0x27000
+InstallDuration = 37
+
+[USB\VID_1038&PID_183A]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen1
+Name = Aerox 3 Wireless Mouse
+Icon = input-mouse
+CounterpartGuid = USB\VID_1038&PID_183B,HIDRAW\VEN_0111&DEV_183A
+FirmwareSize = 0x27000
+InstallDuration = 13
+
+[USB\VID_1038&PID_183B]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen1
+Name = Aerox 3 Wireless Mouse bootloader
+Icon = input-mouse
+CounterpartGuid = USB\VID_1038&PID_183A
+FirmwareSize = 0x27000
+Flags = is-bootloader,~usable-during-update
+InstallDuration = 13
+
+# Arctis Nova 5
+[USB\VID_1038&PID_2230]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen2
+Name = Arctis Nova 5 Headset
+Icon = usb-headset
+FirmwareSize = 0x14B000
+SteelSeriesFizzInterface = 0
+Flags = ~usable-during-update
+InstallDuration = 87
+CounterpartGuid = USB\VID_1038&PID_2231,STEELSERIES\VID_1038&PID_2232&PROTOCOL_FIZZ_TUNNE
+
+[USB\VID_1038&PID_2231]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen2
+Name = Arctis Nova 5 Headset bootloader
+Icon = usb-headset
+FirmwareSize = 0x14B000
+CounterpartGuid = USB\VID_1038&PID_2230,STEELSERIES\VID_1038&PID_2232&PROTOCOL_FIZZ_TUNNE
+Flags = is-bootloader,~usable-during-update
+InstallDuration = 87
+
+[STEELSERIES\VID_1038&PID_2232&PROTOCOL_FIZZ_TUNNEL]
+Plugin = steelseries
+GType = FuSteelseriesFizzTunnel
+Name = Arctis Nova 5 Headset via USB Receiver
+Icon = usb-headset
+Flags = ~usable-during-update
+FirmwareSize = 0x14B000
+CounterpartGuid = USB\VID_1038&PID_2230,USB\VID_1038&PID_2231
+
+[USB\VID_1038&PID_2232]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen2
+Name = Arctis Nova 5 USB Receiver
+Icon = usb-receiver
+CounterpartGuid = USB\VID_1038&PID_2233
+FirmwareSize = 0x14B000
+Flags = is-receiver
+InstallDuration = 165
+
+[USB\VID_1038&PID_2233]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen2
+Name = Arctis Nova 5 USB Receiver bootloader
+Icon = usb-receiver
+FirmwareSize = 0x14B000
+CounterpartGuid = USB\VID_1038&PID_2232
+Flags = is-bootloader,is-receiver,~usable-during-update
+InstallDuration = 165
