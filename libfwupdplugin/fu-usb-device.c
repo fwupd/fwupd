@@ -33,6 +33,8 @@ typedef struct {
 	libusb_device *usb_device;
 	libusb_device_handle *handle;
 	struct libusb_device_descriptor desc;
+	guint8 busnum;
+	guint8 devnum;
 	gboolean interfaces_valid;
 	gboolean bos_descriptors_valid;
 	gboolean hid_descriptors_valid;
@@ -657,7 +659,7 @@ fu_usb_device_get_bus(FuUsbDevice *self)
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return 0x0;
-	return libusb_get_bus_number(priv->usb_device);
+	return priv->busnum;
 }
 
 /**
@@ -676,7 +678,7 @@ fu_usb_device_get_address(FuUsbDevice *self)
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return 0x0;
-	return libusb_get_device_address(priv->usb_device);
+	return priv->devnum;
 }
 
 static guint8
@@ -1066,6 +1068,8 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 				    libusb_strerror(rc));
 			return FALSE;
 		}
+		priv->busnum = libusb_get_bus_number(priv->usb_device);
+		priv->devnum = libusb_get_device_address(priv->usb_device);
 	}
 
 	/* this does not change on plug->unplug->plug */
@@ -2813,6 +2817,8 @@ fu_usb_device_to_string(FuDevice *device, guint idt, GString *str)
 		fwupd_codec_string_append_hex(str, idt, "Configuration", priv->configuration);
 	fwupd_codec_string_append_hex(str, idt, "ClaimRetryCount", priv->claim_retry_count);
 	fwupd_codec_string_append_hex(str, idt, "OpenRetryCount", priv->open_retry_count);
+	fwupd_codec_string_append_hex(str, idt, "BusNum", priv->busnum);
+	fwupd_codec_string_append_hex(str, idt, "DevNum", priv->devnum);
 	for (guint i = 0; priv->device_interfaces != NULL && i < priv->device_interfaces->len;
 	     i++) {
 		FuUsbDeviceInterface *iface = g_ptr_array_index(priv->device_interfaces, i);
