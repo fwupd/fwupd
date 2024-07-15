@@ -78,10 +78,6 @@ option('gudev',
     'false': 'disabled',
   },
 )
-option('usb',
-  type: 'feature',
-  description: 'USB support',
-)
 option('bluez',
   type: 'feature',
   description: 'BlueZ support',

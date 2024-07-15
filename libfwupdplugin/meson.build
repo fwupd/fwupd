@@ -104,6 +104,7 @@ fwupdplugin_src = [
   'fu-fit-firmware.c', # fuzzing
   'fu-fmap-firmware.c', # fuzzing
   'fu-hid-descriptor.c', # fuzzing
+  'fu-hid-device.c',
   'fu-hid-report-item.c', # fuzzing
   'fu-hid-report.c', # fuzzing
   'fu-hwids.c', # fuzzing
@@ -146,23 +147,17 @@ fwupdplugin_src = [
   'fu-string.c', # fuzzing
   'fu-sum.c', # fuzzing
   'fu-udev-device.c',
+  'fu-usb-bos-descriptor.c',
+  'fu-usb-device.c',
+  'fu-usb-device-ds20.c',
+  'fu-usb-device-fw-ds20.c',
+  'fu-usb-device-ms-ds20.c',
+  'fu-usb-endpoint.c',
+  'fu-usb-interface.c',
   'fu-uswid-firmware.c', # fuzzing
   'fu-version-common.c', # fuzzing
   'fu-volume.c', # fuzzing
 ]
-
-if libusb.found()
-  fwupdplugin_src += [
-    'fu-hid-device.c',
-    'fu-usb-bos-descriptor.c',
-    'fu-usb-device.c',
-    'fu-usb-device-ds20.c',
-    'fu-usb-device-fw-ds20.c',
-    'fu-usb-device-ms-ds20.c',
-    'fu-usb-endpoint.c',
-    'fu-usb-interface.c',
-  ]
-endif
 
 if host_machine.system() == 'linux'
   fwupdplugin_src += 'fu-common-linux.c' # fuzzing

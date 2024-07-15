@@ -2,10 +2,6 @@ libmm_glib = dependency('mm-glib', version: '>= 1.18.0', required: get_option('p
 libqmi_glib = dependency('qmi-glib', version: '>= 1.30.0', required: get_option('plugin_modem_manager'))
 libmbim_glib = dependency('mbim-glib', version: '>= 1.26.0', required: get_option('plugin_modem_manager'))
 
-if get_option('plugin_modem_manager').require(libusb.found(),
-    error_message: 'libusb is needed for plugin_modem_manager').allowed()
-endif
-
 if libmm_glib.found() and \
    libqmi_glib.found() and \
    libmbim_glib.found() and \

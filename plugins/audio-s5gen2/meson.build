@@ -1,4 +1,3 @@
-if libusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginQcS5gen2"']
 
 plugins += {meson.current_source_dir().split('/')[-1]: true}
@@ -19,4 +18,3 @@ plugin_builtins += static_library('fu_plugin_audio_s5gen2',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-endif

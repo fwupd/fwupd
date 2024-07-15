@@ -1,4 +1,4 @@
-if get_option('plugin_nitrokey').disable_auto_if(host_machine.system() != 'linux').disable_auto_if(not libusb.found()).allowed()
+if get_option('plugin_nitrokey').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginNitrokey"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

@@ -4016,7 +4016,6 @@ _plugin_device_register_cb(FuPlugin *plugin, FuDevice *device, gpointer user_dat
 	fu_plugin_runner_device_register(plugin, device);
 }
 
-#ifdef HAVE_LIBUSB
 static void
 fu_backend_usb_hotplug_cb(FuBackend *backend, FuDevice *device, gpointer user_data)
 {
@@ -4038,7 +4037,6 @@ fu_backend_usb_load_file(FuBackend *backend, const gchar *fn)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
-#endif
 
 /*
  * To generate the fwupd DS20 descriptor in the usb-devices.json file save fw-ds20.builder.xml:
@@ -4066,7 +4064,6 @@ fu_backend_usb_load_file(FuBackend *backend, const gchar *fn)
 static void
 fu_backend_usb_func(gconstpointer user_data)
 {
-#ifdef HAVE_LIBUSB
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	guint cnt_added = 0;
@@ -4146,15 +4143,11 @@ fu_backend_usb_func(gconstpointer user_data)
 	fu_backend_usb_load_file(backend, usb_emulate_fn3);
 	g_assert_cmpint(cnt_added, ==, 2);
 	g_assert_cmpint(cnt_removed, ==, 1);
-#else
-	g_test_skip("No GUsb support");
-#endif
 }
 
 static void
 fu_backend_usb_invalid_func(gconstpointer user_data)
 {
-#ifdef HAVE_LIBUSB
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	FuDevice *device_tmp;
@@ -4204,9 +4197,6 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 
 	/* check the fwupd DS20 descriptor was *not* parsed */
 	g_assert_false(fu_device_has_icon(device_tmp, "computer"));
-#else
-	g_test_skip("No GUsb support");
-#endif
 }
 
 static void
