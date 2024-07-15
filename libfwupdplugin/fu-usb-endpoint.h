@@ -8,11 +8,12 @@
 #pragma once
 
 #include "fu-usb-device.h"
+#include "fu-usb-struct.h"
 
 #define FU_TYPE_USB_ENDPOINT (fu_usb_endpoint_get_type())
 G_DECLARE_FINAL_TYPE(FuUsbEndpoint, fu_usb_endpoint, FU, USB_ENDPOINT, GObject)
 
-guint8
+FuUsbDescriptorKind
 fu_usb_endpoint_get_kind(FuUsbEndpoint *self) G_GNUC_NON_NULL(1);
 guint16
 fu_usb_endpoint_get_maximum_packet_size(FuUsbEndpoint *self) G_GNUC_NON_NULL(1);

@@ -206,11 +206,11 @@ fu_usb_interface_get_length(FuUsbInterface *self)
  *
  * Gets the type of interface.
  *
- * Return value: The 8-bit address
+ * Return value: a #FuUsbDescriptorKind
  *
  * Since: 2.0.0
  **/
-guint8
+FuUsbDescriptorKind
 fu_usb_interface_get_kind(FuUsbInterface *self)
 {
 	g_return_val_if_fail(FU_IS_USB_INTERFACE(self), 0);

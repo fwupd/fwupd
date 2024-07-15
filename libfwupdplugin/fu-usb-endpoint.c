@@ -106,11 +106,11 @@ fu_usb_endpoint_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlag
  *
  * Gets the type of endpoint.
  *
- * Return value: The 8-bit type
+ * Return value: a #FuUsbDescriptorKind
  *
  * Since: 2.0.0
  **/
-guint8
+FuUsbDescriptorKind
 fu_usb_endpoint_get_kind(FuUsbEndpoint *self)
 {
 	g_return_val_if_fail(FU_IS_USB_ENDPOINT(self), 0);

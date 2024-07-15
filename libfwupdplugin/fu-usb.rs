@@ -49,3 +49,21 @@ enum FuUsbLangid {
     Invalid = 0x0000,
     EnglishUnitedStates = 0x0409,
 }
+
+#[repr(u8)]
+enum FuUsbDescriptorKind {
+    Device = 0x01,
+    Config = 0x02,
+    String = 0x03,
+    Interface = 0x04,
+    Endpoint = 0x05,
+    InterfaceAssociation = 0x0B,
+    Bos = 0x0F,
+    DeviceCapability = 0x10,
+    Hid = 0x21,
+    Report = 0x22,
+    Physical = 0x23,
+    Hub = 0x29,
+    SuperspeedHub = 0x2A,
+    SsEndpointCompanion = 0x30,
+}
