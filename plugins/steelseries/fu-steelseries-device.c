@@ -100,6 +100,7 @@ fu_steelseries_device_probe(FuDevice *device, GError **error)
 	FuSteelseriesDevicePrivate *priv = GET_PRIVATE(self);
 	FuUsbInterface *iface = NULL;
 	FuUsbEndpoint *ep = NULL;
+	guint8 iface_idx;
 	guint8 ep_id;
 	guint16 packet_size;
 	g_autoptr(GPtrArray) ifaces = NULL;
@@ -120,11 +121,12 @@ fu_steelseries_device_probe(FuDevice *device, GError **error)
 				    (guint)priv->iface_idx_offset);
 			return FALSE;
 		}
-		priv->iface_idx = priv->iface_idx_offset;
+		iface_idx = priv->iface_idx_offset;
 	} else {
-		priv->iface_idx = ifaces->len - 1;
+		iface_idx = ifaces->len - 1;
 	}
-	iface = g_ptr_array_index(ifaces, priv->iface_idx);
+	iface = g_ptr_array_index(ifaces, iface_idx);
+	priv->iface_idx = fu_usb_interface_get_number(iface);
 
 	endpoints = fu_usb_interface_get_endpoints(iface);
 	/* expecting to have only one endpoint for communication */
