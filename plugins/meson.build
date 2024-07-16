@@ -117,6 +117,7 @@ plugins = {
   'uefi-esrt': false,
   'uefi-pk': false,
   'uefi-recovery': false,
+  'uefi-ssp-policy': false,
   'uf2': false,
   'upower': false,
   'usi-dock': false,
