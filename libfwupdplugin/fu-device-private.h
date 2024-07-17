@@ -8,6 +8,7 @@
 
 #include <xmlb.h>
 
+#include "fu-backend.h"
 #include "fu-device-event.h"
 #include "fu-device.h"
 
@@ -88,3 +89,8 @@ FuDeviceEvent *
 fu_device_save_event(FuDevice *self, const gchar *id);
 FuDeviceEvent *
 fu_device_load_event(FuDevice *self, const gchar *id, GError **error);
+
+FuBackend *
+fu_device_get_backend(FuDevice *self);
+void
+fu_device_set_backend(FuDevice *self, FuBackend *backend);

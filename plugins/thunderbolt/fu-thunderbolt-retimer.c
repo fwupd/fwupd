@@ -20,27 +20,21 @@ G_DEFINE_TYPE(FuThunderboltRetimer, fu_thunderbolt_retimer, FU_TYPE_THUNDERBOLT_
 gboolean
 fu_thunderbolt_retimer_set_parent_port_offline(FuDevice *device, GError **error)
 {
-	g_autoptr(FuUdevDevice) parent =
-	    fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
-						     "thunderbolt",
-						     "thunderbolt_domain",
-						     error);
+	g_autoptr(FuDevice) parent =
+	    fu_device_get_backend_parent_with_kind(device, "thunderbolt:thunderbolt_domain", error);
 	if (parent == NULL)
 		return FALSE;
-	return fu_thunderbolt_udev_set_port_offline(parent, error);
+	return fu_thunderbolt_udev_set_port_offline(FU_UDEV_DEVICE(parent), error);
 }
 
 gboolean
 fu_thunderbolt_retimer_set_parent_port_online(FuDevice *device, GError **error)
 {
-	g_autoptr(FuUdevDevice) parent =
-	    fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
-						     "thunderbolt",
-						     "thunderbolt_domain",
-						     error);
+	g_autoptr(FuDevice) parent =
+	    fu_device_get_backend_parent_with_kind(device, "thunderbolt:thunderbolt_domain", error);
 	if (parent == NULL)
 		return FALSE;
-	return fu_thunderbolt_udev_set_port_online(parent, error);
+	return fu_thunderbolt_udev_set_port_online(FU_UDEV_DEVICE(parent), error);
 }
 
 static gboolean

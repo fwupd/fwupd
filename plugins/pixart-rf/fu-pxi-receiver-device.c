@@ -901,16 +901,13 @@ static gboolean
 fu_pxi_receiver_device_probe(FuDevice *device, GError **error)
 {
 	g_autofree gchar *iface_nr = NULL;
-	g_autoptr(FuUdevDevice) usb_parent = NULL;
+	g_autoptr(FuDevice) usb_parent = NULL;
 
 	/* check USB interface number */
-	usb_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
-							      "usb",
-							      NULL, /* devtype */
-							      error);
+	usb_parent = fu_device_get_backend_parent_with_kind(device, "usb", error);
 	if (usb_parent == NULL)
 		return FALSE;
-	iface_nr = fu_udev_device_read_sysfs(usb_parent,
+	iface_nr = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(usb_parent),
 					     "bInterfaceNumber",
 					     FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 					     error);

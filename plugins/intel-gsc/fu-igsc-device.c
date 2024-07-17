@@ -759,13 +759,13 @@ fu_igsc_device_write_firmware(FuDevice *device,
 static gboolean
 fu_igsc_device_set_pci_power_policy(FuIgscDevice *self, const gchar *val, GError **error)
 {
-	g_autoptr(FuUdevDevice) parent = NULL;
+	g_autoptr(FuDevice) parent = NULL;
 
 	/* get PCI parent */
-	parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self), "pci", NULL, error);
+	parent = fu_device_get_backend_parent_with_kind(FU_DEVICE(self), "pci", error);
 	if (parent == NULL)
 		return FALSE;
-	return fu_udev_device_write_sysfs(parent,
+	return fu_udev_device_write_sysfs(FU_UDEV_DEVICE(parent),
 					  "power/control",
 					  val,
 					  FU_IGSC_DEVICE_POWER_WRITE_TIMEOUT,

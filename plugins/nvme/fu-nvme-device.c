@@ -274,12 +274,9 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError
 static gboolean
 fu_nvme_device_is_pci(FuNvmeDevice *self, GError **error)
 {
-	g_autoptr(FuUdevDevice) parent_pci = NULL;
+	g_autoptr(FuDevice) parent_pci = NULL;
 
-	parent_pci = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self),
-							      "pci",
-							      NULL, /* devtype */
-							      error);
+	parent_pci = fu_device_get_backend_parent_with_kind(FU_DEVICE(self), "pci", error);
 	if (parent_pci == NULL)
 		return FALSE;
 

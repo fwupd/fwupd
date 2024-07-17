@@ -101,21 +101,19 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
 	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
 	guint64 release = 0xFFFF;
-	g_autoptr(FuUdevDevice) device_usb = NULL;
-	g_autoptr(FuUdevDevice) device_usb_iface = NULL;
+	g_autoptr(FuDevice) device_usb = NULL;
+	g_autoptr(FuDevice) device_usb_iface = NULL;
 
 	/* set the physical ID */
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "usb", error))
 		return FALSE;
 
 	/* generate bootloader-specific GUID */
-	device_usb = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
-							      "usb",
-							      "usb_device",
-							      NULL);
+	device_usb = fu_device_get_backend_parent_with_kind(device, "usb:usb_device", NULL);
 	if (device_usb != NULL) {
 		g_autofree gchar *prop_revision = NULL;
-		prop_revision = fu_udev_device_read_property(device_usb, "ID_REVISION", NULL);
+		prop_revision =
+		    fu_udev_device_read_property(FU_UDEV_DEVICE(device_usb), "ID_REVISION", NULL);
 		if (prop_revision != NULL) {
 			if (!fu_strtoull(prop_revision,
 					 &release,
@@ -151,14 +149,15 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 		case 0x0500:
 			/* Bolt */
 			device_usb_iface =
-			    fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
-								     "usb",
-								     "usb_interface",
-								     error);
+			    fu_device_get_backend_parent_with_kind(device,
+								   "usb:usb_interface",
+								   error);
 			if (device_usb_iface == NULL)
 				return FALSE;
 			prop_interface =
-			    fu_udev_device_read_property(device_usb_iface, "INTERFACE", error);
+			    fu_udev_device_read_property(FU_UDEV_DEVICE(device_usb_iface),
+							 "INTERFACE",
+							 error);
 			if (prop_interface == NULL)
 				return FALSE;
 			if (g_strcmp0(prop_interface, "3/0/0") != 0) {

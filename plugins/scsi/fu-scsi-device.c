@@ -48,7 +48,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
 	g_autofree gchar *attr_removable = NULL;
 	g_autofree gchar *vendor_id = NULL;
-	g_autoptr(FuUdevDevice) ufshci_parent = NULL;
+	g_autoptr(FuDevice) ufshci_parent = NULL;
 	const gchar *subsystem_parents[] = {"pci", "platform", NULL};
 
 	/* check is valid */
@@ -75,10 +75,8 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 
 	/* the ufshci controller could really be on any bus... search in order of priority */
 	for (guint i = 0; subsystem_parents[i] != NULL && ufshci_parent == NULL; i++) {
-		ufshci_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
-									 subsystem_parents[i],
-									 NULL, /* devtype */
-									 NULL);
+		ufshci_parent =
+		    fu_device_get_backend_parent_with_kind(device, subsystem_parents[i], NULL);
 	}
 	if (ufshci_parent != NULL) {
 		g_autofree gchar *attr_ufs_features = NULL;
@@ -86,7 +84,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 
 		/* check if this is a UFS device */
 		g_info("found ufshci controller at %s",
-		       fu_udev_device_get_sysfs_path(ufshci_parent));
+		       fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(ufshci_parent)));
 
 		attr_ufs_features =
 		    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
