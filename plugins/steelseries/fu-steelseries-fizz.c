@@ -528,11 +528,6 @@ fu_steelseries_fizz_attach(FuDevice *device, FuProgress *progress, GError **erro
 static gboolean
 fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 {
-	guint32 calculated_crc;
-	guint32 stored_crc;
-	guint8 fs;
-	guint8 id;
-	gboolean is_receiver = FALSE;
 	g_autofree gchar *version = NULL;
 
 	FuDevice *proxy = fu_device_get_proxy(device);
@@ -560,7 +555,6 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 			fu_device_add_child(device, FU_DEVICE(mouse_device));
 			fu_device_set_proxy(FU_DEVICE(mouse_device), FU_DEVICE(proxy));
 		}
-		is_receiver = TRUE;
 	}
 
 	version = fu_steelseries_fizz_get_version(device, FALSE, error);
@@ -569,28 +563,6 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	fu_device_set_version(device, version);
-
-	fs =
-	    fu_steelseries_fizz_impl_get_fs_id(FU_STEELSERIES_FIZZ_IMPL(proxy), is_receiver, error);
-	id = fu_steelseries_fizz_impl_get_file_id(FU_STEELSERIES_FIZZ_IMPL(proxy),
-						  is_receiver,
-						  error);
-	if (!fu_steelseries_fizz_get_crc32_fs(device,
-					      FALSE,
-					      fs,
-					      id,
-					      &calculated_crc,
-					      &stored_crc,
-					      error)) {
-		g_prefix_error(error, "failed to get CRC32 FS 0x%02x ID 0x%02x: ", fs, id);
-		return FALSE;
-	}
-
-	if (calculated_crc != stored_crc)
-		g_warning("%s: checksum mismatch, got 0x%08x, expected 0x%08x",
-			  fu_device_get_name(device),
-			  calculated_crc,
-			  stored_crc);
 
 	/* success */
 	return TRUE;

@@ -202,21 +202,9 @@ fu_steelseries_fizz_tunnel_probe(FuDevice *device, GError **error)
 static gboolean
 fu_steelseries_fizz_tunnel_setup(FuDevice *device, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
-	FuDevice *proxy = fu_device_get_proxy(device);
-	guint32 calculated_crc;
-	guint32 stored_crc;
 	gboolean reached;
-	guint8 fs =
-	    fu_steelseries_fizz_impl_get_fs_id(FU_STEELSERIES_FIZZ_IMPL(proxy), FALSE, error);
-	guint8 id =
-	    fu_steelseries_fizz_impl_get_file_id(FU_STEELSERIES_FIZZ_IMPL(proxy), FALSE, error);
 	g_autoptr(GError) error_local = NULL;
 
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
-		return FALSE;
-	}
 	/* ping */
 	if (!fu_steelseries_fizz_tunnel_ping(device, &reached, &error_local)) {
 		g_debug("ignoring error on ping: %s", error_local->message);
@@ -229,27 +217,6 @@ fu_steelseries_fizz_tunnel_setup(FuDevice *device, GError **error)
 
 		/* success */
 		return TRUE;
-	}
-
-	if (!fu_steelseries_fizz_get_crc32_fs(parent,
-					      TRUE,
-					      fs,
-					      id,
-					      &calculated_crc,
-					      &stored_crc,
-					      error)) {
-		g_prefix_error(error,
-			       "failed to get file CRC32 from FS 0x%02x ID 0x%02x: ",
-			       fs,
-			       id);
-		return FALSE;
-	}
-
-	if (calculated_crc != stored_crc) {
-		g_warning("%s: checksum mismatch, got 0x%08x, expected 0x%08x",
-			  fu_device_get_name(device),
-			  calculated_crc,
-			  stored_crc);
 	}
 
 	/* success */
