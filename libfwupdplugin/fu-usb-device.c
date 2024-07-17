@@ -169,6 +169,17 @@ fu_usb_device_libusb_status_to_gerror(gint status, GError **error)
 	return ret;
 }
 
+/**
+ * fu_usb_device_get_dev: (skip):
+ **/
+libusb_device *
+fu_usb_device_get_dev(FuUsbDevice *self)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_USB_DEVICE(self), NULL);
+	return priv->usb_device;
+}
+
 static gboolean
 fu_usb_device_not_open_error(FuUsbDevice *self, GError **error)
 {
@@ -268,33 +279,6 @@ fu_usb_device_init(FuUsbDevice *device)
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_PERMISSION_DENIED,
 				     NULL);
-}
-
-/**
- * fu_usb_device_get_parent:
- * @self: a #FuUsbDevice
- *
- * Gets the USB device parent.
- *
- * Returns: (transfer full): a #FuUsbDevice, or %NULL for error
- *
- * Since: 2.0.0
- **/
-FuUsbDevice *
-fu_usb_device_get_parent(FuUsbDevice *self)
-{
-	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
-	libusb_device *usb_device;
-
-	g_return_val_if_fail(FU_IS_USB_DEVICE(self), NULL);
-
-	/* sanity check */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
-		return NULL;
-	usb_device = libusb_get_parent(priv->usb_device);
-	if (usb_device == NULL)
-		return NULL;
-	return fu_usb_device_new(fu_device_get_context(FU_DEVICE(self)), usb_device);
 }
 
 /**

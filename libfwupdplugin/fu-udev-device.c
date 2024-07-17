@@ -902,20 +902,14 @@ fu_udev_device_set_dev(FuUdevDevice *self, GUdevDevice *udev_device)
 guint
 fu_udev_device_get_subsystem_depth(FuUdevDevice *self, const gchar *subsystem)
 {
-	g_autoptr(FuUdevDevice) device_tmp = NULL;
+	g_autoptr(FuDevice) device_tmp = NULL;
 
-	device_tmp = fu_udev_device_get_parent_with_subsystem(self,
-							      subsystem,
-							      NULL, /* devtype */
-							      NULL);
+	device_tmp = fu_device_get_backend_parent_with_kind(FU_DEVICE(self), subsystem, NULL);
 	if (device_tmp == NULL)
 		return 0;
 	for (guint i = 0;; i++) {
-		g_autoptr(FuUdevDevice) parent =
-		    fu_udev_device_get_parent_with_subsystem(device_tmp,
-							     NULL, /* subsystem */
-							     NULL, /* devtype */
-							     NULL);
+		g_autoptr(FuDevice) parent =
+		    fu_device_get_backend_parent(FU_DEVICE(device_tmp), NULL);
 		if (parent == NULL)
 			return i;
 		g_set_object(&device_tmp, parent);
@@ -1371,22 +1365,6 @@ fu_udev_device_get_parent_subsystems(FuUdevDevice *self)
 		g_string_truncate(str, str->len - 1);
 	return g_string_free(str, FALSE);
 }
-
-static gboolean
-fu_udev_device_match_subsystem_devtype(GUdevDevice *udev_device,
-				       const gchar *subsystem,
-				       const gchar *devtype)
-{
-	if (subsystem != NULL) {
-		if (g_strcmp0(g_udev_device_get_subsystem(udev_device), subsystem) != 0)
-			return FALSE;
-	}
-	if (devtype != NULL) {
-		if (g_strcmp0(g_udev_device_get_devtype(udev_device), devtype) != 0)
-			return FALSE;
-	}
-	return TRUE;
-}
 #endif
 
 /**
@@ -1429,15 +1407,13 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 	/* look for each subsystem[:devtype] in turn */
 	split = g_strsplit(subsystems, ",", -1);
 	for (guint i = 0; split[i] != NULL; i++) {
-		g_auto(GStrv) subsys_devtype = g_strsplit(split[i], ":", 2);
 		g_autoptr(FuUdevDevice) device_parent = NULL;
 
 		/* matching on devtype is optional */
-		device_parent = fu_udev_device_get_parent_with_subsystem(self,
-									 subsys_devtype[0],
-									 subsys_devtype[1],
-									 NULL);
+		device_parent = FU_UDEV_DEVICE(
+		    fu_device_get_backend_parent_with_kind(FU_DEVICE(self), split[i], NULL));
 		if (device_parent != NULL) {
+			g_auto(GStrv) subsys_devtype = g_strsplit(split[i], ":", 2);
 			subsystem = g_strdup(subsys_devtype[0]);
 			udev_device = g_object_ref(fu_udev_device_get_dev(device_parent));
 			break;
@@ -2380,80 +2356,6 @@ fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self,
 }
 
 /**
- * fu_udev_device_get_parent_with_subsystem
- * @self: a #FuUdevDevice
- * @subsystem: (nullable): the name of a udev subsystem, or %NULL for any
- * @devtype: (nullable): the name of a udev devtype, e.g. `usb_interface`, or %NULL for any
- * @error: (nullable): optional return location for an error
- *
- * Get the device that is a ancestor of self and has the provided subsystem and device type.
- *
- * Returns: (transfer full): device, or %NULL
- *
- * Since: 2.0.0
- */
-FuUdevDevice *
-fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self,
-					 const gchar *subsystem,
-					 const gchar *devtype,
-					 GError **error)
-{
-#ifdef HAVE_GUDEV
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GUdevDevice) device_tmp = NULL;
-
-	/* sanity check */
-	if (priv->udev_device == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "not initialized");
-		return NULL;
-	}
-	if (subsystem == NULL && devtype == NULL) {
-		g_autoptr(GUdevDevice) parent = g_udev_device_get_parent(priv->udev_device);
-		if (parent == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "no parent");
-			return NULL;
-		}
-		return fu_udev_device_new(fu_device_get_context(FU_DEVICE(self)), parent);
-	}
-	device_tmp = g_object_ref(priv->udev_device);
-	while (device_tmp != NULL) {
-		g_autoptr(GUdevDevice) parent = NULL;
-		if (fu_udev_device_match_subsystem_devtype(device_tmp, subsystem, devtype))
-			break;
-		parent = g_udev_device_get_parent(device_tmp);
-		g_set_object(&device_tmp, parent);
-	}
-	if (device_tmp == NULL) {
-		if (devtype != NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no parent with subsystem %s and devtype %s",
-				    subsystem,
-				    devtype);
-			return NULL;
-		}
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "no parent with subsystem %s",
-			    subsystem);
-		return NULL;
-	}
-	return fu_udev_device_new(fu_device_get_context(FU_DEVICE(self)), device_tmp);
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "not supported as <gudev.h> is unavailable");
-	return NULL;
-#endif
-}
-
-/**
  * fu_udev_device_get_children_with_subsystem
  * @self: a #FuUdevDevice
  * @subsystem: the name of a udev subsystem
@@ -2533,7 +2435,8 @@ fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* look at the current device and all the parent devices until we can find the USB data */
-	udev_device = fu_udev_device_get_parent_with_subsystem(self, "usb", "usb_device", error);
+	udev_device = FU_UDEV_DEVICE(
+	    fu_device_get_backend_parent_with_kind(FU_DEVICE(self), "usb:usb_device", error));
 	if (udev_device == NULL)
 		return NULL;
 

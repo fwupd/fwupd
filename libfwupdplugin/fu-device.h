@@ -640,6 +640,11 @@ FuDevice *
 fu_device_get_root(FuDevice *self) G_GNUC_NON_NULL(1);
 FuDevice *
 fu_device_get_parent(FuDevice *self) G_GNUC_NON_NULL(1);
+FuDevice *
+fu_device_get_backend_parent(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
+FuDevice *
+fu_device_get_backend_parent_with_kind(FuDevice *self, const gchar *kind, GError **error)
+    G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_device_get_children(FuDevice *self) G_GNUC_NON_NULL(1);
 void

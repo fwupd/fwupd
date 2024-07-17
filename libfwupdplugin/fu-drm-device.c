@@ -129,7 +129,7 @@ fu_drm_device_get_edid(FuDrmDevice *self)
 static gboolean
 fu_drm_device_probe(FuDevice *device, GError **error)
 {
-	g_autoptr(FuUdevDevice) parent = NULL;
+	g_autoptr(FuDevice) parent = NULL;
 	FuDrmDevice *self = FU_DRM_DEVICE(device);
 	FuDrmDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *sysfs_path = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
@@ -171,12 +171,12 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* set the parent */
-	parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self),
-							  "pci",
-							  NULL, /* devtype */
-							  NULL);
-	if (parent != NULL)
-		fu_device_add_parent_backend_id(device, fu_udev_device_get_sysfs_path(parent));
+	parent = fu_device_get_backend_parent_with_kind(FU_DEVICE(self), "pci", NULL);
+	if (parent != NULL) {
+		fu_device_add_parent_backend_id(
+		    device,
+		    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(parent)));
+	}
 
 	/* read EDID and parse it */
 	if (priv->display_state == FU_DISPLAY_STATE_CONNECTED) {

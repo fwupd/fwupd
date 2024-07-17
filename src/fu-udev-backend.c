@@ -88,13 +88,10 @@ fu_udev_backend_rescan_dpaux_devices(FuUdevBackend *self)
 				  self);
 }
 
-static void
-fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
+static FuUdevDevice *
+fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device)
 {
-	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	GType gtype = FU_TYPE_UDEV_DEVICE;
-	g_autoptr(FuUdevDevice) device = NULL;
-	g_autoptr(GPtrArray) possible_plugins = NULL;
 	struct {
 		const gchar *subsystem;
 		GType gtype;
@@ -113,14 +110,18 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 			break;
 		}
 	}
+	return g_object_new(gtype, "backend", FU_BACKEND(self), "udev-device", udev_device, NULL);
+}
 
-	/* success */
-	device = g_object_new(gtype,
-			      "context",
-			      fu_backend_get_context(FU_BACKEND(self)),
-			      "udev-device",
-			      udev_device,
-			      NULL);
+static void
+fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
+{
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
+	g_autoptr(FuUdevDevice) device = NULL;
+	g_autoptr(GPtrArray) possible_plugins = NULL;
+
+	/* use the subsystem to create the correct GType */
+	device = fu_udev_backend_create_device(self, udev_device);
 
 	/* these are used without a subclass */
 	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "msr") == 0)
@@ -327,6 +328,80 @@ fu_udev_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **erro
 	return TRUE;
 }
 
+static gboolean
+fu_udev_device_match_subsystem_devtype(GUdevDevice *udev_device,
+				       const gchar *subsystem,
+				       const gchar *devtype)
+{
+	if (subsystem != NULL) {
+		if (g_strcmp0(g_udev_device_get_subsystem(udev_device), subsystem) != 0)
+			return FALSE;
+	}
+	if (devtype != NULL) {
+		if (g_strcmp0(g_udev_device_get_devtype(udev_device), devtype) != 0)
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static FuDevice *
+fu_udev_backend_get_device_parent(FuBackend *backend,
+				  FuDevice *device,
+				  const gchar *kind,
+				  GError **error)
+{
+	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
+	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
+	g_autoptr(GUdevDevice) device_tmp = NULL;
+	g_auto(GStrv) subsystem_devtype = NULL;
+
+	/* sanity check */
+	if (udev_device == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "not initialized");
+		return NULL;
+	}
+	if (kind == NULL) {
+		g_autoptr(GUdevDevice) parent = g_udev_device_get_parent(udev_device);
+		if (parent == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "no parent");
+			return NULL;
+		}
+		return FU_DEVICE(fu_udev_backend_create_device(self, parent));
+	}
+	subsystem_devtype = g_strsplit(kind, ",", 2);
+	device_tmp = g_object_ref(udev_device);
+	while (device_tmp != NULL) {
+		g_autoptr(GUdevDevice) parent = NULL;
+		if (fu_udev_device_match_subsystem_devtype(device_tmp,
+							   subsystem_devtype[0],
+							   subsystem_devtype[1]))
+			break;
+		parent = g_udev_device_get_parent(device_tmp);
+		g_set_object(&device_tmp, parent);
+	}
+	if (device_tmp == NULL) {
+		if (subsystem_devtype[1] != NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no parent with subsystem %s and devtype %s",
+				    subsystem_devtype[0],
+				    subsystem_devtype[1]);
+			return NULL;
+		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no parent with subsystem %s",
+			    subsystem_devtype[0]);
+		return NULL;
+	}
+	return FU_DEVICE(fu_udev_backend_create_device(self, device_tmp));
+}
+
 static void
 fu_udev_backend_finalize(GObject *object)
 {
@@ -359,6 +434,7 @@ fu_udev_backend_class_init(FuUdevBackendClass *klass)
 	object_class->finalize = fu_udev_backend_finalize;
 	backend_class->coldplug = fu_udev_backend_coldplug;
 	backend_class->to_string = fu_udev_backend_to_string;
+	backend_class->get_device_parent = fu_udev_backend_get_device_parent;
 }
 
 FuBackend *

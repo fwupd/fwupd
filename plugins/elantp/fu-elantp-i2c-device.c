@@ -102,10 +102,7 @@ fu_elantp_i2c_device_probe(FuDevice *device, GError **error)
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "i2c") == 0) {
 		g_autoptr(GPtrArray) i2c_buses = NULL;
 		FuUdevDevice *i2c_device =
-		    fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
-							     "i2c",
-							     NULL, /* devtype */
-							     error);
+		    FU_UDEV_DEVICE(fu_device_get_backend_parent_with_kind(device, "i2c", error));
 		if (i2c_device == NULL)
 			return FALSE;
 

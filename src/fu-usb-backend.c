@@ -38,6 +38,20 @@ fu_usb_backend_get_usb_device_backend_id(libusb_device *usb_device)
 			       libusb_get_device_address(usb_device));
 }
 
+static FuUsbDevice *
+fu_usb_backend_create_device(FuUsbBackend *self, libusb_device *usb_device)
+{
+	g_autofree gchar *backend_id = fu_usb_backend_get_usb_device_backend_id(usb_device);
+	return g_object_new(FU_TYPE_USB_DEVICE,
+			    "backend",
+			    FU_BACKEND(self),
+			    "backend-id",
+			    backend_id,
+			    "libusb-device",
+			    usb_device,
+			    NULL);
+}
+
 static void
 fu_usb_backend_add_device(FuUsbBackend *self, libusb_device *usb_device)
 {
@@ -48,8 +62,7 @@ fu_usb_backend_add_device(FuUsbBackend *self, libusb_device *usb_device)
 	device_old = fu_backend_lookup_by_id(FU_BACKEND(self), backend_id);
 	if (device_old != NULL)
 		return;
-	device = fu_usb_device_new(fu_backend_get_context(FU_BACKEND(self)), usb_device);
-	fu_device_set_backend_id(FU_DEVICE(device), backend_id);
+	device = fu_usb_backend_create_device(self, usb_device);
 	fu_backend_device_added(FU_BACKEND(self), FU_DEVICE(device));
 }
 
@@ -328,6 +341,29 @@ fu_usb_backend_registered(FuBackend *backend, FuDevice *device)
 #endif
 }
 
+static FuDevice *
+fu_usb_backend_get_device_parent(FuBackend *backend,
+				 FuDevice *device,
+				 const gchar *kind,
+				 GError **error)
+{
+	FuUsbBackend *self = FU_USB_BACKEND(backend);
+	libusb_device *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
+	libusb_device *usb_parent;
+
+	/* libusb or kernel */
+	if (usb_device == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no device");
+		return NULL;
+	}
+	usb_parent = libusb_get_parent(usb_device);
+	if (usb_parent == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no parent");
+		return NULL;
+	}
+	return FU_DEVICE(fu_usb_backend_create_device(self, usb_parent));
+}
+
 static void
 fu_usb_backend_finalize(GObject *object)
 {
@@ -376,6 +412,7 @@ fu_usb_backend_class_init(FuUsbBackendClass *klass)
 	backend_class->setup = fu_usb_backend_setup;
 	backend_class->coldplug = fu_usb_backend_coldplug;
 	backend_class->registered = fu_usb_backend_registered;
+	backend_class->get_device_parent = fu_usb_backend_get_device_parent;
 }
 
 FuBackend *

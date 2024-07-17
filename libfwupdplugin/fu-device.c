@@ -51,6 +51,7 @@ typedef struct {
 	gchar *update_request_id;
 	gchar *proxy_guid;
 	FuDevice *proxy; /* noref */
+	FuBackend *backend; /* noref */
 	FuContext *ctx;
 	gint64 created_usec;
 	gint64 modified_usec;
@@ -116,6 +117,7 @@ enum {
 	PROP_LOGICAL_ID,
 	PROP_BACKEND_ID,
 	PROP_CONTEXT,
+	PROP_BACKEND,
 	PROP_PROXY,
 	PROP_PARENT,
 	PROP_INTERNAL_FLAGS,
@@ -151,6 +153,9 @@ fu_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec
 	case PROP_CONTEXT:
 		g_value_set_object(value, priv->ctx);
 		break;
+	case PROP_BACKEND:
+		g_value_set_object(value, priv->backend);
+		break;
 	case PROP_PROXY:
 		g_value_set_object(value, priv->proxy);
 		break;
@@ -185,6 +190,9 @@ fu_device_set_property(GObject *object, guint prop_id, const GValue *value, GPar
 		break;
 	case PROP_CONTEXT:
 		fu_device_set_context(self, g_value_get_object(value));
+		break;
+	case PROP_BACKEND:
+		fu_device_set_backend(self, g_value_get_object(value));
 		break;
 	case PROP_PROXY:
 		fu_device_set_proxy(self, g_value_get_object(value));
@@ -3615,6 +3623,117 @@ fu_device_set_backend_id(FuDevice *self, const gchar *backend_id)
 }
 
 /**
+ * fu_device_get_backend:
+ * @self: a #FuDevice
+ *
+ * Gets the backend, if set with fu_device_set_backend().
+ *
+ * Returns: (transfer none): a #FuBackend or %NULL if not sset
+ *
+ * Since: 2.0.0
+ **/
+FuBackend *
+fu_device_get_backend(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	return priv->backend;
+}
+
+/**
+ * fu_device_set_backend:
+ * @self: a #FuDevice
+ * @backend: a #FuBackend
+ *
+ * Sets the backend that created this device.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_set_backend(FuDevice *self, FuBackend *backend)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(backend == NULL || FU_IS_BACKEND(backend));
+
+	/* same */
+	if (priv->backend == backend)
+		return;
+
+	/* not already set */
+	if (priv->ctx == NULL)
+		fu_device_set_context(self, fu_backend_get_context(backend));
+
+	/* there is no ref on backend to prevent a loop */
+	if (priv->backend != NULL)
+		g_object_remove_weak_pointer(G_OBJECT(priv->backend), (gpointer *)&priv->backend);
+	if (backend != NULL)
+		g_object_add_weak_pointer(G_OBJECT(backend), (gpointer *)&priv->backend);
+	priv->backend = backend; /* no ref */
+
+	/* in case anything cares */
+	g_object_notify(G_OBJECT(self), "backend");
+}
+
+/**
+ * fu_device_get_backend_parent_with_kind:
+ * @self: a #FuDevice
+ * @kind: (nullable): an optional device kind, e.g. "usb:usb_device"
+ * @error: (nullable): optional return location for an error
+ *
+ * Creates a device parent (of the correct type) using the current backend for a given device kind.
+ *
+ * NOTE: The backend must implement `FuBackendClass->get_device_parent` for this method to work --
+ * for cases where the plugin has created both parent and child, and used `fu_device_add_child()`,
+ * using `fu_device_get_parent()` is probably more appropriate.
+ *
+ * Returns: (transfer full): a #FuDevice or %NULL if not found or unimplemented
+ *
+ * Since: 2.0.0
+ **/
+FuDevice *
+fu_device_get_backend_parent_with_kind(FuDevice *self, const gchar *kind, GError **error)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	if (priv->backend == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no backend set for device");
+		return NULL;
+	}
+	return fu_backend_get_device_parent(priv->backend, self, kind, error);
+}
+
+/**
+ * fu_device_get_backend_parent:
+ * @self: a #FuDevice
+ * @error: (nullable): optional return location for an error
+ *
+ * Creates a device parent (of the correct type) using the current backend.
+ *
+ * NOTE: The backend must implement `FuBackendClass->get_device_parent` for this method to work --
+ * for cases where the plugin has created both parent and child, and used `fu_device_add_child()`,
+ * using `fu_device_get_parent()` is probably more appropriate.
+ *
+ * Returns: (transfer full): a #FuDevice or %NULL if not found or unimplemented
+ *
+ * Since: 2.0.0
+ **/
+FuDevice *
+fu_device_get_backend_parent(FuDevice *self, GError **error)
+{
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return fu_device_get_backend_parent_with_kind(self, NULL, error);
+}
+
+/**
  * fu_device_get_update_request_id:
  * @self: a #FuDevice
  *
@@ -5768,6 +5887,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 		fu_device_set_proxy_guid(self, priv_donor->proxy_guid);
 	if (priv->custom_flags == NULL && priv_donor->custom_flags != NULL)
 		fu_device_set_custom_flags(self, priv_donor->custom_flags);
+	if (priv->backend == NULL && priv_donor->backend != NULL)
+		fu_device_set_backend(self, priv_donor->backend);
 	if (priv->ctx == NULL)
 		fu_device_set_context(self, fu_device_get_context(donor));
 	if (priv_donor->parent_guids != NULL) {
@@ -6998,6 +7119,20 @@ fu_device_class_init(FuDeviceClass *klass)
 	g_object_class_install_property(object_class, PROP_CONTEXT, pspec);
 
 	/**
+	 * FuDevice:backend:
+	 *
+	 * The #FuBackend that created the device.
+	 *
+	 * Since: 2.0.0
+	 */
+	pspec = g_param_spec_object("backend",
+				    NULL,
+				    NULL,
+				    FU_TYPE_BACKEND,
+				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_BACKEND, pspec);
+
+	/**
 	 * FuDevice:proxy:
 	 *
 	 * The device proxy to use.
@@ -7089,6 +7224,8 @@ fu_device_finalize(GObject *object)
 						     (gpointer *)&priv->proxy);
 		}
 	}
+	if (priv->backend != NULL)
+		g_object_remove_weak_pointer(G_OBJECT(priv->backend), (gpointer *)&priv->backend);
 	if (priv->ctx != NULL)
 		g_object_unref(priv->ctx);
 	if (priv->poll_id != 0)

@@ -349,33 +349,28 @@ fu_synaptics_rmi_hid_device_rebind_driver(FuSynapticsRmiDevice *self, GError **e
 	const gchar *subsystem;
 	g_autofree gchar *fn_rebind = NULL;
 	g_autofree gchar *fn_unbind = NULL;
-	g_autoptr(FuUdevDevice) parent_hid = NULL;
+	g_autoptr(FuDevice) parent_hid = NULL;
 	g_autoptr(FuUdevDevice) parent_phys = NULL;
 	g_auto(GStrv) hid_strs = NULL;
 
 	/* get actual HID node */
-	parent_hid = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self),
-							      "hid",
-							      NULL, /* devtype */
-							      error);
+	parent_hid = fu_device_get_backend_parent_with_kind(FU_DEVICE(self), "hid", error);
 	if (parent_hid == NULL)
 		return FALSE;
 
 	/* build paths */
 	parent_phys =
-	    fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self), "i2c", NULL, NULL);
+	    FU_UDEV_DEVICE(fu_device_get_backend_parent_with_kind(FU_DEVICE(self), "i2c", NULL));
 	if (parent_phys == NULL) {
-		parent_phys = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self),
-								       "usb",
-								       NULL, /* devtype */
-								       NULL);
+		parent_phys = FU_UDEV_DEVICE(
+		    fu_device_get_backend_parent_with_kind(FU_DEVICE(self), "usb", NULL));
 	}
 	if (parent_phys == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "no parent device for %s",
-			    fu_udev_device_get_sysfs_path(parent_hid));
+			    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(parent_hid)));
 		return FALSE;
 	}
 
