@@ -25,8 +25,6 @@ fu_steelseries_fizz_new(FuDevice *self);
 #define STEELSERIES_FIZZ_BATTERY_LEVEL_CHARGING_BIT 0x80U
 #define STEELSERIES_FIZZ_BATTERY_LEVEL_STATUS_BITS  0x7fU
 
-gchar *
-fu_steelseries_fizz_get_version(FuDevice *device, gboolean tunnel, GError **error);
 gboolean
 fu_steelseries_fizz_reset(FuDevice *device, gboolean tunnel, guint8 mode, GError **error);
 gboolean

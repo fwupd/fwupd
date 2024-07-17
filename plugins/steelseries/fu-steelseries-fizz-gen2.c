@@ -22,7 +22,7 @@
 #define STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT 1U << 6
 
 #define STEELSERIES_FIZZ_GEN2_FILESYSTEM_RECEIVER 0x01U
-#define STEELSERIES_FIZZ_GEN2_FILESYSTEM_HEADSET  0x02U
+#define STEELSERIES_FIZZ_GEN2_FILESYSTEM_HEADSET  0x01U
 #define STEELSERIES_FIZZ_GEN2_APP_ID		  0x01U
 
 #define STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND	  0xB0U
@@ -233,14 +233,14 @@ fu_steelseries_fizz_gen2_get_connection_status(FuSteelseriesFizzImpl *self,
 }
 
 static gboolean
-fu_steelseries_fizz_gen2_setup(FuDevice *device, GError **error)
+fu_steelseries_fizz_gen2_probe(FuDevice *device, GError **error)
 {
 	/* in bootloader mode */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
-		return TRUE;
+		fu_steelseries_device_set_iface_idx_offset(FU_STEELSERIES_DEVICE(device), 0x00);
 
 	/* FuUsbDevice->setup */
-	return FU_DEVICE_CLASS(fu_steelseries_fizz_gen2_parent_class)->setup(device, error);
+	return FU_DEVICE_CLASS(fu_steelseries_fizz_gen2_parent_class)->probe(device, error);
 }
 
 static void
@@ -281,7 +281,7 @@ fu_steelseries_fizz_gen2_class_init(FuSteelseriesFizzGen2Class *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
-	device_class->setup = fu_steelseries_fizz_gen2_setup;
+	device_class->probe = fu_steelseries_fizz_gen2_probe;
 	device_class->set_quirk_kv = fu_steelseries_fizz_gen2_set_quirk_kv;
 }
 
