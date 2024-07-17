@@ -564,6 +564,9 @@
       <package variant="mingw64">glib2-devel</package>
       <package variant="mingw64">mingw64-glib2</package>
     </distro>
+    <distro id="arch">
+      <package variant="x86_64">gsettings-desktop-schemas</package>
+    </distro>
     <distro id="void">
       <package variant="x86_64">glib-devel</package>
     </distro>
