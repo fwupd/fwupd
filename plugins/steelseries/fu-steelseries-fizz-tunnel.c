@@ -386,7 +386,6 @@ fu_steelseries_fizz_tunnel_init(FuSteelseriesFizzTunnel *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING);
 	fu_device_add_protocol(FU_DEVICE(self), "com.steelseries.fizz");
 	fu_device_set_logical_id(FU_DEVICE(self), "tunnel");
-	fu_device_set_install_duration(FU_DEVICE(self), 38);				  /* 38 s */
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE); /* 10 s */
 	fu_device_set_poll_interval(FU_DEVICE(self), 60000); /* 1 min */
 	fu_device_set_battery_threshold(FU_DEVICE(self), 20);
