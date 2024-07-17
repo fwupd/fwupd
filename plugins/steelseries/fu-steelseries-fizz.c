@@ -159,17 +159,6 @@ fu_steelseries_fizz_command_and_check_error(FuDevice *device,
 	return fu_steelseries_fizz_command_error_to_error(cmd, err, error);
 }
 
-gchar *
-fu_steelseries_fizz_get_version(FuDevice *device, gboolean tunnel, GError **error)
-{
-	FuDevice *proxy = fu_device_get_proxy(device);
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
-		return NULL;
-	}
-	return fu_steelseries_fizz_impl_get_version(FU_STEELSERIES_FIZZ_IMPL(proxy), tunnel, error);
-}
-
 static gboolean
 fu_steelseries_fizz_write_fs(FuDevice *device,
 			     gboolean tunnel,
@@ -504,14 +493,30 @@ fu_steelseries_fizz_get_connection_status(FuDevice *device, guint8 *status, GErr
 }
 
 static gboolean
+fu_steelseries_fizz_detach(FuDevice *device, FuProgress *progress, GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER) &&
+	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
+		if (!fu_steelseries_fizz_reset(device,
+					       FALSE,
+					       STEELSERIES_FIZZ_RESET_MODE_BOOTLOADER,
+					       &error_local))
+			g_warning("failed to reset: %s", error_local->message);
+
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_steelseries_fizz_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
-	FuDevice *proxy = fu_device_get_proxy(device);
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
-		return FALSE;
-	}
 
 	if (!fu_steelseries_fizz_reset(device,
 				       FALSE,
@@ -519,6 +524,7 @@ fu_steelseries_fizz_attach(FuDevice *device, FuProgress *progress, GError **erro
 				       &error_local))
 		g_warning("failed to reset: %s", error_local->message);
 
+	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
@@ -537,7 +543,7 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 	}
 
 	/* in bootloader mode */
-	if (fu_device_has_flag(proxy, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
 
 	/* it is a USB receiver */
@@ -549,15 +555,16 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 			return FALSE;
 		}
 		if (status != 0) {
-			g_autoptr(FuSteelseriesFizzTunnel) mouse_device =
+			g_autoptr(FuSteelseriesFizzTunnel) paired_device =
 			    fu_steelseries_fizz_tunnel_new(FU_STEELSERIES_FIZZ(device));
 
-			fu_device_add_child(device, FU_DEVICE(mouse_device));
-			fu_device_set_proxy(FU_DEVICE(mouse_device), FU_DEVICE(proxy));
+			fu_device_add_child(device, FU_DEVICE(paired_device));
+			fu_device_set_proxy(FU_DEVICE(paired_device), FU_DEVICE(proxy));
 		}
 	}
 
-	version = fu_steelseries_fizz_get_version(device, FALSE, error);
+	version =
+	    fu_steelseries_fizz_impl_get_version(FU_STEELSERIES_FIZZ_IMPL(proxy), FALSE, error);
 	if (version == NULL) {
 		g_prefix_error(error, "failed to get version: ");
 		return FALSE;
@@ -601,7 +608,6 @@ fu_steelseries_fizz_write_firmware_fs(FuDevice *device,
 	buf = fu_bytes_get_data_safe(blob, &bufsz, error);
 	if (buf == NULL)
 		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "File", buf, bufsz);
 	if (!fu_steelseries_fizz_erase_fs(device, tunnel, fs, id, error)) {
 		g_prefix_error(error, "failed to erase FS 0x%02x ID 0x%02x: ", fs, id);
 		return FALSE;
@@ -763,9 +769,9 @@ static void
 fu_steelseries_fizz_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 82, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 18, "reload");
 }
 
@@ -774,6 +780,7 @@ fu_steelseries_fizz_class_init(FuSteelseriesFizzClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
+	device_class->detach = fu_steelseries_fizz_detach;
 	device_class->attach = fu_steelseries_fizz_attach;
 	device_class->setup = fu_steelseries_fizz_setup;
 	device_class->write_firmware = fu_steelseries_fizz_write_firmware;
@@ -792,7 +799,6 @@ fu_steelseries_fizz_init(FuSteelseriesFizz *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
 	fu_device_add_protocol(FU_DEVICE(self), "com.steelseries.fizz");
-	fu_device_set_install_duration(FU_DEVICE(self), 13);				 /* 13 s */
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG); /* 40 s */
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_STEELSERIES_FIRMWARE);
 }
