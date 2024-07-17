@@ -48,7 +48,7 @@ fwupdplugin_src = [
   'fu-acpi-table.c', # fuzzing
   'fu-archive.c',
   'fu-archive-firmware.c',
-  'fu-backend.c',
+  'fu-backend.c', # fuzzing
   'fu-bios-setting.c', # fuzzing
   'fu-bios-settings.c', # fuzzing
   'fu-bluez-device.c',
