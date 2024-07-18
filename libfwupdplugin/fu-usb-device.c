@@ -1300,15 +1300,6 @@ static void
 fu_usb_device_add_interface_internal(FuUsbDevice *self, FuUsbInterface *iface)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
-	for (guint i = 0; i < priv->interfaces->len; i++) {
-		FuUsbInterface *iface_tmp = g_ptr_array_index(priv->interfaces, i);
-		if (fu_usb_interface_get_number(iface) == fu_usb_interface_get_number(iface_tmp) &&
-		    fu_usb_interface_get_alternate(iface) ==
-			fu_usb_interface_get_alternate(iface_tmp)) {
-			g_warning("not adding duplicate interface");
-			return;
-		}
-	}
 	g_ptr_array_add(priv->interfaces, g_object_ref(iface));
 }
 
