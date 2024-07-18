@@ -96,6 +96,8 @@ warning_flags = [
   '-Wno-unknown-warning-option',
   '-Wno-unused-parameter',
   '-Wno-nonnull-compare',
+  '-Wno-analyzer-use-of-uninitialized-value', # incompatible with g_autoptr()
+  '-Wno-analyzer-fd-double-close',
   '-Wold-style-definition',
   '-Woverride-init',
   '-Wpointer-arith',
