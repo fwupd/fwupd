@@ -278,11 +278,6 @@ if build_daemon
   if not polkit.found()
     warning('Polkit is disabled, the daemon will allow ALL client actions')
   endif
-  udevdir = get_option('udevdir')
-  if udevdir == '' and host_machine.system() == 'linux'
-    udev = dependency('udev')
-    udevdir = udev.get_variable(pkgconfig: 'udevdir')
-  endif
 endif
 libm = cc.find_library('m', required: false)
 zlib = dependency('zlib')

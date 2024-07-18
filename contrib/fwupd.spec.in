@@ -384,7 +384,6 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %endif
 %{_libdir}/libfwupd.so.3*
 %{_libdir}/girepository-1.0/Fwupd-2.0.typelib
-/usr/lib/udev/rules.d/*.rules
 /usr/lib/systemd/system-shutdown/fwupd.shutdown
 %dir %{_libdir}/fwupd-%{version}
 %{_libdir}/fwupd-%{version}/libfwupd*.so
