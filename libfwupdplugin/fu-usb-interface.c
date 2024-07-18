@@ -334,6 +334,15 @@ fu_usb_interface_get_endpoints(FuUsbInterface *self)
 	return g_ptr_array_ref(self->endpoints);
 }
 
+/* private */
+void
+fu_usb_interface_add_endpoint(FuUsbInterface *self, FuUsbEndpoint *endpoint)
+{
+	g_return_if_fail(FU_IS_USB_INTERFACE(self));
+	g_return_if_fail(FU_IS_USB_ENDPOINT(endpoint));
+	g_ptr_array_add(self->endpoints, g_object_ref(endpoint));
+}
+
 static gboolean
 fu_usb_interface_parse(FuFirmware *firmware,
 		       GInputStream *stream,
@@ -342,7 +351,6 @@ fu_usb_interface_parse(FuFirmware *firmware,
 		       GError **error)
 {
 	FuUsbInterface *self = FU_USB_INTERFACE(firmware);
-	gsize offset_start = offset;
 	g_autoptr(FuUsbInterfaceHdr) st = NULL;
 
 	/* FuUsbDescriptor */
@@ -363,6 +371,7 @@ fu_usb_interface_parse(FuFirmware *firmware,
 	self->iface.bInterfaceSubClass = fu_usb_interface_hdr_get_interface_sub_class(st);
 	self->iface.bInterfaceProtocol = fu_usb_interface_hdr_get_interface_protocol(st);
 	self->iface.iInterface = fu_usb_interface_hdr_get_interface(st);
+	fu_firmware_set_size(FU_FIRMWARE(self), self->iface.bLength);
 
 	/* extra data */
 	if (self->iface.bLength > st->len) {
@@ -376,21 +385,6 @@ fu_usb_interface_parse(FuFirmware *firmware,
 		if (!fu_usb_interface_parse_extra(self, buf->data, buf->len, error))
 			return FALSE;
 	}
-
-	/* endpoints */
-	offset += self->iface.bLength;
-	for (guint i = 0; i < self->iface.bNumEndpoints; i++) {
-		g_autoptr(FuUsbEndpoint) endpoint = g_object_new(FU_TYPE_USB_ENDPOINT, NULL);
-		if (!fu_firmware_parse_stream(FU_FIRMWARE(endpoint),
-					      stream,
-					      offset,
-					      FWUPD_INSTALL_FLAG_NONE,
-					      error))
-			return FALSE;
-		offset += fu_firmware_get_size(FU_FIRMWARE(endpoint));
-		g_ptr_array_add(self->endpoints, g_steal_pointer(&endpoint));
-	}
-	fu_firmware_set_size(FU_FIRMWARE(self), offset - offset_start);
 
 	/* success */
 	return TRUE;
