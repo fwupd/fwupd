@@ -28,7 +28,7 @@ struct _FuBackendClass {
 	void (*to_string)(FuBackend *self, guint indent, GString *str);
 	FuDevice *(*get_device_parent)(FuBackend *self,
 				       FuDevice *device,
-				       const gchar *kind,
+				       const gchar *subsystem,
 				       GError **error)G_GNUC_WARN_UNUSED_RESULT;
 };
 
@@ -63,4 +63,7 @@ fu_backend_invalidate(FuBackend *self) G_GNUC_NON_NULL(1);
 void
 fu_backend_add_string(FuBackend *self, guint idt, GString *str) G_GNUC_NON_NULL(1, 3);
 FuDevice *
-fu_backend_get_device_parent(FuBackend *self, FuDevice *device, const gchar *kind, GError **error);
+fu_backend_get_device_parent(FuBackend *self,
+			     FuDevice *device,
+			     const gchar *subsystem,
+			     GError **error);

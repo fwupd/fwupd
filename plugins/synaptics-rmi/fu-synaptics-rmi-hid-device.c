@@ -354,16 +354,16 @@ fu_synaptics_rmi_hid_device_rebind_driver(FuSynapticsRmiDevice *self, GError **e
 	g_auto(GStrv) hid_strs = NULL;
 
 	/* get actual HID node */
-	parent_hid = fu_device_get_backend_parent_with_kind(FU_DEVICE(self), "hid", error);
+	parent_hid = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "hid", error);
 	if (parent_hid == NULL)
 		return FALSE;
 
 	/* build paths */
-	parent_phys =
-	    FU_UDEV_DEVICE(fu_device_get_backend_parent_with_kind(FU_DEVICE(self), "i2c", NULL));
+	parent_phys = FU_UDEV_DEVICE(
+	    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "i2c", NULL));
 	if (parent_phys == NULL) {
 		parent_phys = FU_UDEV_DEVICE(
-		    fu_device_get_backend_parent_with_kind(FU_DEVICE(self), "usb", NULL));
+		    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "usb", NULL));
 	}
 	if (parent_phys == NULL) {
 		g_set_error(error,

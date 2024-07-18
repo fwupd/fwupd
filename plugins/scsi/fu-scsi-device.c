@@ -76,7 +76,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 	/* the ufshci controller could really be on any bus... search in order of priority */
 	for (guint i = 0; subsystem_parents[i] != NULL && ufshci_parent == NULL; i++) {
 		ufshci_parent =
-		    fu_device_get_backend_parent_with_kind(device, subsystem_parents[i], NULL);
+		    fu_device_get_backend_parent_with_subsystem(device, subsystem_parents[i], NULL);
 	}
 	if (ufshci_parent != NULL) {
 		g_autofree gchar *attr_ufs_features = NULL;
