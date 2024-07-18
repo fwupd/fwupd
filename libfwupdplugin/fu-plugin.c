@@ -2593,11 +2593,21 @@ fu_plugin_get_config_value(FuPlugin *self, const gchar *key)
 {
 	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
 	FuConfig *config = fu_context_get_config(priv->ctx);
+	const gchar *name;
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), NULL);
+	g_return_val_if_fail(key != NULL, NULL);
+
 	if (config == NULL) {
 		g_critical("cannot get config value with no loaded context!");
 		return NULL;
 	}
-	return fu_config_get_value(config, fu_plugin_get_name(self), key);
+	name = fu_plugin_get_name(self);
+	if (name == NULL) {
+		g_critical("cannot get config value with no plugin name!");
+		return NULL;
+	}
+	return fu_config_get_value(config, name, key);
 }
 
 /**
@@ -2615,11 +2625,21 @@ fu_plugin_set_config_default(FuPlugin *self, const gchar *key, const gchar *valu
 {
 	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
 	FuConfig *config = fu_context_get_config(priv->ctx);
+	const gchar *name;
+
+	g_return_if_fail(FU_IS_PLUGIN(self));
+	g_return_if_fail(key != NULL);
+
 	if (config == NULL) {
 		g_critical("cannot set config default with no loaded context!");
 		return;
 	}
-	fu_config_set_default(config, fu_plugin_get_name(self), key, value);
+	name = fu_plugin_get_name(self);
+	if (name == NULL) {
+		g_critical("cannot set config default with no plugin name!");
+		return;
+	}
+	fu_config_set_default(config, name, key, value);
 }
 
 /**
@@ -2665,9 +2685,12 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
 {
 	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
 	FuConfig *config = fu_context_get_config(priv->ctx);
+	const gchar *name;
+
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
 	g_return_val_if_fail(key != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	if (config == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -2675,7 +2698,12 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
 				    "cannot get config value with no loaded context");
 		return FALSE;
 	}
-	return fu_config_set_value(config, fu_plugin_get_name(self), key, value, error);
+	name = fu_plugin_get_name(self);
+	if (name == NULL) {
+		g_critical("cannot get config value with no plugin name!");
+		return FALSE;
+	}
+	return fu_config_set_value(config, name, key, value, error);
 }
 
 /**
@@ -2694,8 +2722,11 @@ fu_plugin_reset_config_values(FuPlugin *self, GError **error)
 {
 	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
 	FuConfig *config = fu_context_get_config(priv->ctx);
+	const gchar *name;
+
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	if (config == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -2703,7 +2734,12 @@ fu_plugin_reset_config_values(FuPlugin *self, GError **error)
 				    "cannot reset config values with no loaded context");
 		return FALSE;
 	}
-	return fu_config_reset_defaults(config, fu_plugin_get_name(self), error);
+	name = fu_plugin_get_name(self);
+	if (name == NULL) {
+		g_critical("cannot reset config values with no plugin name!");
+		return FALSE;
+	}
+	return fu_config_reset_defaults(config, name, error);
 }
 
 /**
@@ -2722,11 +2758,21 @@ fu_plugin_get_config_value_boolean(FuPlugin *self, const gchar *key)
 {
 	FuPluginPrivate *priv = fu_plugin_get_instance_private(self);
 	FuConfig *config = fu_context_get_config(priv->ctx);
+	const gchar *name;
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(key != NULL, FALSE);
+
 	if (config == NULL) {
 		g_critical("cannot get config value with no loaded context!");
 		return FALSE;
 	}
-	return fu_config_get_value_bool(config, fu_plugin_get_name(self), key);
+	name = fu_plugin_get_name(self);
+	if (name == NULL) {
+		g_critical("cannot get config value with no plugin name!");
+		return FALSE;
+	}
+	return fu_config_get_value_bool(config, name, key);
 }
 
 /**
