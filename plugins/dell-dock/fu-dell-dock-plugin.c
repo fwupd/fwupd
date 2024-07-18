@@ -310,6 +310,10 @@ fu_dell_dock_plugin_backend_device_added(FuPlugin *plugin,
 			if (!fu_dell_dock_plugin_create_node(plugin, FU_DEVICE(ec_v1_dev), error))
 				return FALSE;
 
+			/* hub delayed version setup until dock type is known to be supported */
+			if (!fu_dell_dock_hid_get_hub_version(FU_DEVICE(hub_device), error))
+				return FALSE;
+
 			/* add dock ec sub-components */
 			if (!fu_dell_dock_plugin_probe_ec_v1_subcomponents(plugin,
 									   FU_DEVICE(ec_v1_dev),
