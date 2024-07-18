@@ -230,6 +230,7 @@
 {{export.value}}gboolean
 {{obj.c_method('ValidateInternal')}}({{obj.name}} *st, GError **error)
 {
+    g_return_val_if_fail(st != NULL, FALSE);
 {%- for item in obj.items | selectattr('constant') %}
 {%- if item.type == Type.STRING %}
     if (strncmp((const gchar *) (st->data + {{item.offset}}), "{{item.constant}}", {{item.size}}) != 0) {

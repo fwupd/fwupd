@@ -342,6 +342,9 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 	g_autofree gchar *guid_new = NULL;
 	g_autoptr(GByteArray) st_cap = fu_struct_efi_capsule_header_new();
 
+	g_return_val_if_fail(FU_IS_UEFI_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	priv->missing_header = FALSE;
 
 	/* GUID is the first 16 bytes */
