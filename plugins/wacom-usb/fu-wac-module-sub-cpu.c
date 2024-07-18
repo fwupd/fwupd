@@ -87,6 +87,8 @@ fu_wac_module_sub_cpu_parse_chunks(FuSrecFirmware *srec_firmware, guint32 *data_
 	while (record_num < records->len) {
 		g_autofree FuChunk *chunk =
 		    fu_wac_module_sub_cpu_create_chunk(records, &record_num, error);
+		if (chunk == NULL)
+			return NULL;
 		*data_len += fu_chunk_get_data_sz(chunk);
 
 		g_ptr_array_add(chunks, g_steal_pointer(&chunk));
