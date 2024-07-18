@@ -326,13 +326,10 @@ fu_sahara_loader_write_prog(FuSaharaLoader *self,
 static gboolean
 fu_sahara_loader_send_packet(FuSaharaLoader *self, GByteArray *pkt, GError **error)
 {
-	guint8 *data = pkt->data;
-	gsize sz = pkt->len;
-
 	g_return_val_if_fail(pkt != NULL, FALSE);
 
 	fu_dump_raw(G_LOG_DOMAIN, "tx packet", pkt->data, pkt->len);
-	return fu_sahara_loader_qdl_write(self, data, sz, error);
+	return fu_sahara_loader_qdl_write(self, pkt->data, pkt->len, error);
 }
 
 /* packet composers */

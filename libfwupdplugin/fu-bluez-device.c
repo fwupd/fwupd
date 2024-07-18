@@ -152,7 +152,7 @@ fu_bluez_device_add_uuid_path(FuBluezDevice *self, const gchar *uuid, const gcha
 static void
 fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 {
-	gsize modaliaslen = strlen(modalias);
+	gsize modaliaslen;
 	guint16 vid = 0x0;
 	guint16 pid = 0x0;
 	guint16 rev = 0x0;
@@ -160,6 +160,7 @@ fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 	g_return_if_fail(modalias != NULL);
 
 	/* usb:v0461p4EEFd0001 */
+	modaliaslen = strlen(modalias);
 	if (g_str_has_prefix(modalias, "usb:")) {
 		fu_firmware_strparse_uint16_safe(modalias, modaliaslen, 5, &vid, NULL);
 		fu_firmware_strparse_uint16_safe(modalias, modaliaslen, 10, &pid, NULL);
