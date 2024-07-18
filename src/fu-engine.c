@@ -7577,7 +7577,8 @@ fu_engine_backend_device_added_run_plugins(FuEngine *self, FuDevice *device, FuP
 							       plugin_name,
 							       fu_progress_get_child(progress),
 							       &error_local)) {
-			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
+			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 				g_debug("%s ignoring: %s", plugin_name, error_local->message);
 			} else {
 				g_warning("failed to add device %s: %s",
