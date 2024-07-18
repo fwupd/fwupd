@@ -51,6 +51,7 @@ enum FuUsbLangid {
     EnglishUnitedStates = 0x0409,
 }
 
+#[derive(ToString)]
 #[repr(u8)]
 enum FuUsbDescriptorKind {
     Device = 0x01,

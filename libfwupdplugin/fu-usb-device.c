@@ -1728,6 +1728,7 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 	gsize offset = 0;
 	gsize streamsz = 0;
 	g_autoptr(FuUsbDeviceHdr) st = NULL;
+	g_autoptr(FuUsbInterface) iface_last = NULL;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
@@ -1751,7 +1752,7 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 
 	offset += fu_usb_device_hdr_get_length(st);
 	while (offset < streamsz) {
-		gsize offset_tmp = offset;
+		FuUsbDescriptorKind descriptor_kind;
 		g_autoptr(FuUsbBaseHdr) st_base = NULL;
 
 		/* this is common to all descriptor types */
@@ -1759,31 +1760,44 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 		if (st_base == NULL)
 			return FALSE;
 
-		/* config */
-		if (fu_usb_base_hdr_get_descriptor_type(st_base) == FU_USB_DESCRIPTOR_KIND_CONFIG) {
+		/* config, interface or endpoint */
+		descriptor_kind = fu_usb_base_hdr_get_descriptor_type(st_base);
+		if (descriptor_kind == FU_USB_DESCRIPTOR_KIND_CONFIG) {
 			g_autoptr(FuUsbDescriptorHdr) st_desc = NULL;
 			st_desc = fu_usb_descriptor_hdr_parse_stream(stream, offset, error);
 			if (st_desc == NULL)
 				return FALSE;
-			offset += fu_usb_base_hdr_get_length(st_base);
-
-			/* interface */
-		} else if (fu_usb_base_hdr_get_descriptor_type(st_base) ==
-			   FU_USB_DESCRIPTOR_KIND_INTERFACE) {
+		} else if (descriptor_kind == FU_USB_DESCRIPTOR_KIND_INTERFACE) {
 			g_autoptr(FuUsbInterface) iface = g_object_new(FU_TYPE_USB_INTERFACE, NULL);
 			if (!fu_firmware_parse_stream(FU_FIRMWARE(iface),
 						      stream,
-						      offset_tmp,
+						      offset,
 						      FWUPD_INSTALL_FLAG_NONE,
 						      error))
 				return FALSE;
 			fu_usb_device_add_interface_internal(self, iface);
-			offset += fu_firmware_get_size(FU_FIRMWARE(iface));
-
-			/* something else */
+			g_set_object(&iface_last, iface);
+		} else if (descriptor_kind == FU_USB_DESCRIPTOR_KIND_ENDPOINT) {
+			g_autoptr(FuUsbEndpoint) ep = g_object_new(FU_TYPE_USB_ENDPOINT, NULL);
+			if (!fu_firmware_parse_stream(FU_FIRMWARE(ep),
+						      stream,
+						      offset,
+						      FWUPD_INSTALL_FLAG_NONE,
+						      error))
+				return FALSE;
+			if (iface_last == NULL) {
+				g_warning("endpoint 0x%x without prior interface, ignoring",
+					  fu_usb_endpoint_get_number(ep));
+			} else {
+				fu_usb_interface_add_endpoint(iface_last, ep);
+			}
 		} else {
-			offset += fu_usb_base_hdr_get_length(st_base);
+			const gchar *str = fu_usb_descriptor_kind_to_string(descriptor_kind);
+			g_debug("usb descriptor type 0x%x [%s] not processed",
+				descriptor_kind,
+				str != NULL ? str : "unknown");
 		}
+		offset += fu_usb_base_hdr_get_length(st_base);
 	}
 
 	/* success */
