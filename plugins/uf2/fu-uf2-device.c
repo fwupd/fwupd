@@ -300,6 +300,8 @@ fu_uf2_device_setup(FuDevice *device, GError **error)
 
 	/* this might exist */
 	fn2 = fu_block_device_get_full_path(self, "CURRENT.UF2", error);
+	if (fn2 == NULL)
+		return FALSE;
 	fw = fu_bytes_get_contents(fn2, NULL);
 	if (fw != NULL) {
 		if (!fu_uf2_device_probe_current_fw(device, fw, error))
