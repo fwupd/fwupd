@@ -21,4 +21,5 @@ enum IntelThunderboltNvmFamily {
     Bb,
     MapleRidge,
     GoshenRidge,
+    BarlowRidge,
 }
