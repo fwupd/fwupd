@@ -171,7 +171,7 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* set the parent */
-	parent = fu_device_get_backend_parent_with_kind(FU_DEVICE(self), "pci", NULL);
+	parent = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", NULL);
 	if (parent != NULL) {
 		fu_device_add_parent_backend_id(
 		    device,

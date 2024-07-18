@@ -495,7 +495,8 @@ fu_mediatek_scaler_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* set vid and pid from PCI bus */
-	udev_parent = FU_UDEV_DEVICE(fu_device_get_backend_parent_with_kind(device, "pci", error));
+	udev_parent =
+	    FU_UDEV_DEVICE(fu_device_get_backend_parent_with_subsystem(device, "pci", error));
 	if (udev_parent == NULL)
 		return FALSE;
 	if (!fu_device_probe(FU_DEVICE(udev_parent), error))

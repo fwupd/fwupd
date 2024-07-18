@@ -276,7 +276,7 @@ fu_nvme_device_is_pci(FuNvmeDevice *self, GError **error)
 {
 	g_autoptr(FuDevice) parent_pci = NULL;
 
-	parent_pci = fu_device_get_backend_parent_with_kind(FU_DEVICE(self), "pci", error);
+	parent_pci = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", error);
 	if (parent_pci == NULL)
 		return FALSE;
 

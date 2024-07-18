@@ -59,7 +59,8 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get bus number out of sysfs path */
-	udev_parent = FU_UDEV_DEVICE(fu_device_get_backend_parent_with_kind(device, "i2c", NULL));
+	udev_parent =
+	    FU_UDEV_DEVICE(fu_device_get_backend_parent_with_subsystem(device, "i2c", NULL));
 	if (udev_parent != NULL) {
 		g_autofree gchar *devfile = NULL;
 		if (!fu_udev_device_parse_number(udev_parent, error))

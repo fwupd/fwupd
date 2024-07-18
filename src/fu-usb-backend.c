@@ -344,7 +344,7 @@ fu_usb_backend_registered(FuBackend *backend, FuDevice *device)
 static FuDevice *
 fu_usb_backend_get_device_parent(FuBackend *backend,
 				 FuDevice *device,
-				 const gchar *kind,
+				 const gchar *subsystem,
 				 GError **error)
 {
 	FuUsbBackend *self = FU_USB_BACKEND(backend);

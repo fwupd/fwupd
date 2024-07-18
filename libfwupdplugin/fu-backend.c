@@ -153,17 +153,20 @@ fu_backend_registered(FuBackend *self, FuDevice *device)
  * fu_backend_get_device_parent:
  * @self: a #FuBackend
  * @device: a #FuDevice
- * @kind: (nullable): an optional device kind, e.g. "usb:usb_device"
+ * @subsystem: (nullable): an optional device subsystem, e.g. "usb:usb_device"
  * @error: (nullable): optional return location for an error
  *
- * Asks the backend to create the parent device (of the correct type) for a given device kind.
+ * Asks the backend to create the parent device (of the correct type) for a given device subsystem.
  *
  * Returns: (transfer full): a #FuDevice or %NULL if not found or unimplemented
  *
  * Since: 2.0.0
  **/
 FuDevice *
-fu_backend_get_device_parent(FuBackend *self, FuDevice *device, const gchar *kind, GError **error)
+fu_backend_get_device_parent(FuBackend *self,
+			     FuDevice *device,
+			     const gchar *subsystem,
+			     GError **error)
 {
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
 
@@ -178,7 +181,7 @@ fu_backend_get_device_parent(FuBackend *self, FuDevice *device, const gchar *kin
 				    "not implemented");
 		return NULL;
 	}
-	return klass->get_device_parent(self, device, kind, error);
+	return klass->get_device_parent(self, device, subsystem, error);
 }
 
 /**

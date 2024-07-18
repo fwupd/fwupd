@@ -89,9 +89,10 @@ fu_thunderbolt_controller_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* determine if host controller or not */
-	device_parent = fu_device_get_backend_parent_with_kind(FU_DEVICE(self),
-							       "thunderbolt:thunderbolt_domain",
-							       NULL);
+	device_parent =
+	    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self),
+							"thunderbolt:thunderbolt_domain",
+							NULL);
 	if (device_parent != NULL)
 		parent_name = fu_device_get_name(device_parent);
 	if (parent_name != NULL && g_str_has_prefix(parent_name, "domain"))

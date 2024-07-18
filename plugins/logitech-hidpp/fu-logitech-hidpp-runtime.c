@@ -109,7 +109,7 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* generate bootloader-specific GUID */
-	device_usb = fu_device_get_backend_parent_with_kind(device, "usb:usb_device", NULL);
+	device_usb = fu_device_get_backend_parent_with_subsystem(device, "usb:usb_device", NULL);
 	if (device_usb != NULL) {
 		g_autofree gchar *prop_revision = NULL;
 		prop_revision =
@@ -149,9 +149,9 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 		case 0x0500:
 			/* Bolt */
 			device_usb_iface =
-			    fu_device_get_backend_parent_with_kind(device,
-								   "usb:usb_interface",
-								   error);
+			    fu_device_get_backend_parent_with_subsystem(device,
+									"usb:usb_interface",
+									error);
 			if (device_usb_iface == NULL)
 				return FALSE;
 			prop_interface =

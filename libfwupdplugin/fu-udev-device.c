@@ -904,7 +904,7 @@ fu_udev_device_get_subsystem_depth(FuUdevDevice *self, const gchar *subsystem)
 {
 	g_autoptr(FuDevice) device_tmp = NULL;
 
-	device_tmp = fu_device_get_backend_parent_with_kind(FU_DEVICE(self), subsystem, NULL);
+	device_tmp = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), subsystem, NULL);
 	if (device_tmp == NULL)
 		return 0;
 	for (guint i = 0;; i++) {
@@ -1367,6 +1367,25 @@ fu_udev_device_get_parent_subsystems(FuUdevDevice *self)
 }
 #endif
 
+/* private */
+gboolean
+fu_udev_device_match_subsystem(FuUdevDevice *self, const gchar *subsystem)
+{
+	g_auto(GStrv) subsys_devtype = NULL;
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
+	g_return_val_if_fail(subsystem != NULL, FALSE);
+
+	subsys_devtype = g_strsplit(subsystem, ",", 2);
+	if (g_strcmp0(fu_udev_device_get_subsystem(self), subsys_devtype[0]) != 0)
+		return FALSE;
+	if (subsys_devtype[1] != NULL &&
+	    g_strcmp0(fu_udev_device_get_devtype(self), subsys_devtype[1]) != 0) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /**
  * fu_udev_device_set_physical_id:
  * @self: a #FuUdevDevice
@@ -1391,8 +1410,8 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 #ifdef HAVE_GUDEV
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
+	const gchar *subsystem = NULL;
 	g_autofree gchar *physical_id = NULL;
-	g_autofree gchar *subsystem = NULL;
 	g_auto(GStrv) split = NULL;
 	g_autoptr(GUdevDevice) udev_device = NULL;
 
@@ -1409,12 +1428,16 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 	for (guint i = 0; split[i] != NULL; i++) {
 		g_autoptr(FuUdevDevice) device_parent = NULL;
 
-		/* matching on devtype is optional */
+		/* do we match */
+		if (fu_udev_device_match_subsystem(self, split[i])) {
+			udev_device = g_object_ref(fu_udev_device_get_dev(self));
+			break;
+		}
+
+		/* does a parent match? */
 		device_parent = FU_UDEV_DEVICE(
-		    fu_device_get_backend_parent_with_kind(FU_DEVICE(self), split[i], NULL));
+		    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), split[i], NULL));
 		if (device_parent != NULL) {
-			g_auto(GStrv) subsys_devtype = g_strsplit(split[i], ":", 2);
-			subsystem = g_strdup(subsys_devtype[0]);
 			udev_device = g_object_ref(fu_udev_device_get_dev(device_parent));
 			break;
 		}
@@ -1430,6 +1453,7 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 		return FALSE;
 	}
 
+	subsystem = g_udev_device_get_subsystem(udev_device);
 	if (g_strcmp0(subsystem, "pci") == 0) {
 		tmp = g_udev_device_get_property(udev_device, "PCI_SLOT_NAME");
 		if (tmp == NULL) {
@@ -2435,7 +2459,7 @@ fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error)
 
 	/* look at the current device and all the parent devices until we can find the USB data */
 	udev_device = FU_UDEV_DEVICE(
-	    fu_device_get_backend_parent_with_kind(FU_DEVICE(self), "usb:usb_device", error));
+	    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "usb:usb_device", error));
 	if (udev_device == NULL)
 		return NULL;
 

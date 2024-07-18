@@ -3677,9 +3677,9 @@ fu_device_set_backend(FuDevice *self, FuBackend *backend)
 }
 
 /**
- * fu_device_get_backend_parent_with_kind:
+ * fu_device_get_backend_parent_with_subsystem:
  * @self: a #FuDevice
- * @kind: (nullable): an optional device kind, e.g. "usb:usb_device"
+ * @subsystem: (nullable): an optional device subsystem, e.g. "usb:usb_device"
  * @error: (nullable): optional return location for an error
  *
  * Creates a device parent (of the correct type) using the current backend for a given device kind.
@@ -3693,7 +3693,7 @@ fu_device_set_backend(FuDevice *self, FuBackend *backend)
  * Since: 2.0.0
  **/
 FuDevice *
-fu_device_get_backend_parent_with_kind(FuDevice *self, const gchar *kind, GError **error)
+fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsystem, GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
@@ -3707,7 +3707,7 @@ fu_device_get_backend_parent_with_kind(FuDevice *self, const gchar *kind, GError
 				    "no backend set for device");
 		return NULL;
 	}
-	return fu_backend_get_device_parent(priv->backend, self, kind, error);
+	return fu_backend_get_device_parent(priv->backend, self, subsystem, error);
 }
 
 /**
@@ -3730,7 +3730,7 @@ fu_device_get_backend_parent(FuDevice *self, GError **error)
 {
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-	return fu_device_get_backend_parent_with_kind(self, NULL, error);
+	return fu_device_get_backend_parent_with_subsystem(self, NULL, error);
 }
 
 /**
