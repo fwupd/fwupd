@@ -25,6 +25,7 @@ enum FuIntelThunderboltNvmFamily {
     Bb,
     MapleRidge,
     GoshenRidge,
+    BarlowRidge,
 }
 
 #[derive(New)]
