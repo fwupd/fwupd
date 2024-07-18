@@ -357,6 +357,10 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 	fu_struct_efi_capsule_header_set_flags(st_cap, priv->capsule_flags);
 	fu_struct_efi_capsule_header_set_header_size(st_cap, hdrsize);
 	fu_struct_efi_capsule_header_set_image_size(st_cap, bufsz + hdrsize);
+	if (fu_uefi_device_get_guid(self) == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no GUID set");
+		return NULL;
+	}
 	if (!fwupd_guid_from_string(fu_uefi_device_get_guid(self),
 				    &esrt_guid,
 				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
