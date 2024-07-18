@@ -470,11 +470,6 @@ option('curl',
     'false': 'disabled',
   },
 )
-option('udevdir',
-  type: 'string',
-  value: '',
-  description: 'Directory for udev rules',
-)
 option('vendor_ids_dir',
   type: 'string',
   value: '',
