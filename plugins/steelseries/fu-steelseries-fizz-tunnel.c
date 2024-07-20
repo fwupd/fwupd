@@ -119,6 +119,20 @@ fu_steelseries_fizz_tunnel_wait_for_reconnect(FuDevice *device, guint delay, GEr
 }
 
 static gboolean
+fu_steelseries_fizz_tunnel_detach(FuDevice *device, FuProgress *progress, GError **error)
+{
+	FuDevice *proxy = fu_device_get_proxy(device);
+
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+		return FALSE;
+	}
+	return fu_steelseries_fizz_impl_is_updatable(FU_STEELSERIES_FIZZ_IMPL(proxy),
+						     device,
+						     error);
+}
+
+static gboolean
 fu_steelseries_fizz_tunnel_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
@@ -202,8 +216,14 @@ fu_steelseries_fizz_tunnel_probe(FuDevice *device, GError **error)
 static gboolean
 fu_steelseries_fizz_tunnel_setup(FuDevice *device, GError **error)
 {
+	FuDevice *proxy = fu_device_get_proxy(device);
 	gboolean reached;
 	g_autoptr(GError) error_local = NULL;
+
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+		return FALSE;
+	}
 
 	/* ping */
 	if (!fu_steelseries_fizz_tunnel_ping(device, &reached, &error_local)) {
@@ -365,6 +385,7 @@ fu_steelseries_fizz_tunnel_class_init(FuSteelseriesFizzTunnelClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
+	device_class->detach = fu_steelseries_fizz_tunnel_detach;
 	device_class->attach = fu_steelseries_fizz_tunnel_attach;
 	device_class->probe = fu_steelseries_fizz_tunnel_probe;
 	device_class->setup = fu_steelseries_fizz_tunnel_setup;
