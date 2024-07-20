@@ -252,6 +252,38 @@ fu_steelseries_fizz_gen2_get_connection_status(FuSteelseriesFizzImpl *self,
 }
 
 static gboolean
+fu_steelseries_fizz_gen2_is_updatable(FuSteelseriesFizzImpl *self, FuDevice *device, GError **error)
+{
+	g_autoptr(FwupdRequest) request = NULL;
+	g_autofree gchar *msg = NULL;
+
+	/* requires direct USB only */
+	if (g_strcmp0(fu_device_get_composite_id(device), fu_device_get_id(device)) == 0)
+		return TRUE;
+
+	fu_device_add_request_flag(device, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+
+	/* the user has to do something */
+	msg = g_strdup_printf("%s needs to be connected via the USB cable, "
+			      "to start the update. "
+			      "Please plug the USB-C cable.",
+			      fu_device_get_name(device));
+	request = fwupd_request_new();
+	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+	fwupd_request_set_id(request, FWUPD_REQUEST_ID_INSERT_USB_CABLE);
+	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	fwupd_request_set_message(request, msg);
+	if (!fu_device_emit_request(device, request, NULL, error))
+		return FALSE;
+
+	fu_device_set_remove_delay(device, FU_DEVICE_REMOVE_DELAY_USER_REPLUG); /* 40 sec */
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_steelseries_fizz_gen2_probe(FuDevice *device, GError **error)
 {
 	/* in bootloader mode */
@@ -272,6 +304,7 @@ fu_steelseries_fizz_gen2_impl_iface_init(FuSteelseriesFizzImplInterface *iface)
 	iface->get_paired_status = fu_steelseries_fizz_gen2_get_paired_status;
 	iface->get_connection_status = fu_steelseries_fizz_gen2_get_connection_status;
 	iface->get_battery_level = fu_steelseries_fizz_gen2_get_battery_level;
+	iface->is_updatable = fu_steelseries_fizz_gen2_is_updatable;
 }
 
 static gboolean

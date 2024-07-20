@@ -77,7 +77,9 @@ fu_steelseries_fizz_impl_get_battery_level(FuSteelseriesFizzImpl *self,
 }
 
 guint8
-fu_steelseries_fizz_impl_get_fs_id(FuSteelseriesFizzImpl *self, gboolean tunnel, GError **error)
+fu_steelseries_fizz_impl_get_fs_id(FuSteelseriesFizzImpl *self,
+				   gboolean is_receiver,
+				   GError **error)
 {
 	FuSteelseriesFizzImplInterface *iface;
 
@@ -91,11 +93,13 @@ fu_steelseries_fizz_impl_get_fs_id(FuSteelseriesFizzImpl *self, gboolean tunnel,
 				    "iface->get_fs_id not implemented");
 		return 0;
 	}
-	return (*iface->get_fs_id)(self, tunnel, error);
+	return (*iface->get_fs_id)(self, is_receiver, error);
 }
 
 guint8
-fu_steelseries_fizz_impl_get_file_id(FuSteelseriesFizzImpl *self, gboolean tunnel, GError **error)
+fu_steelseries_fizz_impl_get_file_id(FuSteelseriesFizzImpl *self,
+				     gboolean is_receiver,
+				     GError **error)
 {
 	FuSteelseriesFizzImplInterface *iface;
 
@@ -109,7 +113,7 @@ fu_steelseries_fizz_impl_get_file_id(FuSteelseriesFizzImpl *self, gboolean tunne
 				    "iface->get_file_id not implemented");
 		return 0;
 	}
-	return (*iface->get_file_id)(self, tunnel, error);
+	return (*iface->get_file_id)(self, is_receiver, error);
 }
 
 gboolean
@@ -150,4 +154,19 @@ fu_steelseries_fizz_impl_get_connection_status(FuSteelseriesFizzImpl *self,
 		return FALSE;
 	}
 	return (*iface->get_connection_status)(self, status, error);
+}
+
+gboolean
+fu_steelseries_fizz_impl_is_updatable(FuSteelseriesFizzImpl *self, FuDevice *device, GError **error)
+{
+	FuSteelseriesFizzImplInterface *iface;
+
+	g_return_val_if_fail(FU_IS_STEELSERIES_FIZZ_IMPL(self), FALSE);
+
+	iface = FU_STEELSERIES_FIZZ_IMPL_GET_IFACE(self);
+	if (iface->is_updatable != NULL)
+		return (*iface->is_updatable)(self, device, error);
+
+	/* assume device is supported by default */
+	return TRUE;
 }
