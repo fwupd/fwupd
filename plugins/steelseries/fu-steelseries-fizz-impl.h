@@ -33,6 +33,8 @@ struct _FuSteelseriesFizzImplInterface {
 	gboolean (*get_connection_status)(FuSteelseriesFizzImpl *self,
 					  guint8 *status,
 					  GError **error);
+	gboolean (*is_updatable)(FuSteelseriesFizzImpl *self, FuDevice *device, GError **error);
+	gchar *(*get_serial)(FuSteelseriesFizzImpl *self, gboolean tunnel, GError **error);
 };
 
 gboolean
@@ -70,3 +72,8 @@ gboolean
 fu_steelseries_fizz_impl_get_connection_status(FuSteelseriesFizzImpl *self,
 					       guint8 *status,
 					       GError **error);
+
+gboolean
+fu_steelseries_fizz_impl_is_updatable(FuSteelseriesFizzImpl *self,
+				      FuDevice *device,
+				      GError **error);
