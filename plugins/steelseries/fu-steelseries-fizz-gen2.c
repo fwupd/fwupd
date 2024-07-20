@@ -17,8 +17,6 @@
 #define STEELSERIES_FIZZ_VERSION_RECEIVER_OFFSET 0x01U
 #define STEELSERIES_FIZZ_VERSION_DEVICE_OFFSET	 0x19U
 
-#define STEELSERIES_FIZZ_VERSION_MODE_OFFSET 0x01U
-
 #define STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT 1U << 6
 
 #define STEELSERIES_FIZZ_GEN2_FILESYSTEM_RECEIVER 0x01U
@@ -70,6 +68,9 @@ fu_steelseries_fizz_gen2_get_version(FuSteelseriesFizzImpl *self, gboolean tunne
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	guint8 cmd = STEELSERIES_FIZZ_VERSION_COMMAND;
+	gsize offset = STEELSERIES_FIZZ_VERSION_RECEIVER_OFFSET;
+	guint64 version[3] = {0};
+	g_autofree gchar *version_raw = NULL;
 
 	if (!fu_memwrite_uint8_safe(data,
 				    sizeof(data),
@@ -87,20 +88,38 @@ fu_steelseries_fizz_gen2_get_version(FuSteelseriesFizzImpl *self, gboolean tunne
 		return NULL;
 	fu_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
 
-	/* success */
-	if (tunnel) {
-		return fu_memstrsafe(data,
-				     sizeof(data),
-				     STEELSERIES_FIZZ_VERSION_DEVICE_OFFSET,
-				     STEELSERIES_FIZZ_VERSION_SIZE,
-				     error);
-	}
+	if (tunnel)
+		offset = STEELSERIES_FIZZ_VERSION_DEVICE_OFFSET;
 
-	return fu_memstrsafe(data,
-			     sizeof(data),
-			     STEELSERIES_FIZZ_VERSION_RECEIVER_OFFSET,
-			     STEELSERIES_FIZZ_VERSION_SIZE,
-			     error);
+	version_raw =
+	    fu_memstrsafe(data, sizeof(data), offset, STEELSERIES_FIZZ_VERSION_SIZE, error);
+	if (version_raw == NULL)
+		return NULL;
+
+	/* very interesting version format */
+	if (version_raw[1] == 0x2E && version_raw[4] == 0x2E && version_raw[8] == 0x2E) {
+		/* format triple */
+		version[0] = ((version_raw[2] - 0x30) << 4) + (version_raw[3] - 0x30);
+		version[1] = ((version_raw[6] - 0x30) << 4) + (version_raw[7] - 0x30);
+		version[2] = ((version_raw[9] - 0x30) << 4) + (version_raw[10] - 0x30);
+		/* FIXME: check with vendor */
+		// version[0] = (version_raw[2] - 0x30) << 4 + (version_raw[3] - 0x30);
+		// /* no minor version */
+		// version[2] = (version_raw[6] - 0x30) << 4 + (version_raw[7] - 0x30);
+		/* ignoring test subversion */
+	} else {
+		/* format dual */
+		version[0] = ((version_raw[7] - 0x30) << 4) + (version_raw[8] - 0x30);
+		version[1] = ((version_raw[10] - 0x30) << 4) + (version_raw[11] - 0x30);
+		version[2] = 0x00U;
+	};
+
+	return g_strdup_printf("%" G_GUINT64_FORMAT "."
+			       "%" G_GUINT64_FORMAT "."
+			       "%" G_GUINT64_FORMAT "",
+			       version[0],
+			       version[1],
+			       version[2]);
 }
 
 static gboolean
