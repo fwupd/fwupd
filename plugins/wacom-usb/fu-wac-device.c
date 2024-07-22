@@ -26,7 +26,8 @@ typedef struct {
 	guint16 write_sz; /* bit 15 is write protection flag */
 } FuWacFlashDescriptor;
 
-#define FU_WAC_DEVICE_TIMEOUT 5000 /* ms */
+#define FU_WAC_DEVICE_TIMEOUT		 5000 /* ms */
+#define FU_WAC_DEVICE_MODULE_RETRY_DELAY 100  /* ms */
 
 struct _FuWacDevice {
 	FuHidDevice parent_instance;
@@ -216,7 +217,6 @@ fu_wac_device_ensure_status(FuWacDevice *self, GError **error)
 	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_GET_STATUS, [1 ... 4] = 0xff};
 
 	/* hit hardware */
-	buf[0] = FU_WAC_REPORT_ID_GET_STATUS;
 	if (!fu_wac_device_get_feature_report(self,
 					      buf,
 					      sizeof(buf),
@@ -684,18 +684,17 @@ fu_wac_device_add_modules_legacy(FuWacDevice *self, GError **error)
 }
 
 static gboolean
-fu_wac_device_add_modules(FuWacDevice *self, GError **error)
+fu_wac_device_add_modules_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	g_autofree gchar *version_bootloader = NULL;
 	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_FW_DESCRIPTOR, [1 ... 31] = 0xff};
-	guint16 boot_ver;
+	GByteArray *out = (GByteArray *)user_data;
 
-	if (!fu_wac_device_get_feature_report(self,
+	if (!fu_wac_device_get_feature_report(FU_WAC_DEVICE(device),
 					      buf,
 					      sizeof(buf),
 					      FU_HID_DEVICE_FLAG_NONE,
 					      error)) {
-		g_prefix_error(error, "Failed to get DeviceFirmwareDescriptor: ");
+		g_prefix_error(error, "failed to get DeviceFirmwareDescriptor: ");
 		return FALSE;
 	}
 
@@ -717,22 +716,76 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 		return FALSE;
 	}
 
+	/* copy here, since version 0 is valid for transitional module state */
+	if (!fu_memcpy_safe(out->data, out->len, 0, buf, sizeof(buf), 0, out->len, error))
+		return FALSE;
+
+	/* validate versions of each module */
+	for (guint8 i = 0; i < buf[3]; i++) {
+		guint8 fw_type = buf[(i * 4) + 4] & ~0x80;
+		guint16 ver;
+
+		/* check if module is in transitional state or requires re-flashing */
+		if (!fu_memread_uint16_safe(buf,
+					    sizeof(buf),
+					    (i * 4) + 5,
+					    &ver,
+					    G_BIG_ENDIAN,
+					    error))
+			return FALSE;
+		if (ver == 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "module %u has error state",
+				    fw_type);
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_wac_device_add_modules(FuWacDevice *self, GError **error)
+{
+	g_autofree gchar *version_bootloader = NULL;
+	guint16 boot_ver;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GError) error_local = NULL;
+
+	g_byte_array_set_size(buf, 32);
+	/* wait for all modules started successfully */
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_wac_device_add_modules_cb,
+				  FU_WAC_DEVICE_MODULE_RETRY_DELAY,
+				  FU_WAC_DEVICE_TIMEOUT / FU_WAC_DEVICE_MODULE_RETRY_DELAY,
+				  buf,
+				  &error_local)) {
+		if (error_local->code != FWUPD_ERROR_INVALID_FILE) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		g_warning("%s", error_local->message);
+	}
+	fu_dump_raw(G_LOG_DOMAIN, "modules", buf->data, buf->len);
+
 	/* bootloader version */
-	if (!fu_memread_uint16_safe(buf, sizeof(buf), 1, &boot_ver, G_BIG_ENDIAN, error))
+	if (!fu_memread_uint16_safe(buf->data, buf->len, 1, &boot_ver, G_BIG_ENDIAN, error))
 		return FALSE;
 	version_bootloader = fu_version_from_uint16(boot_ver, FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_version_bootloader(FU_DEVICE(self), version_bootloader);
 	fu_device_set_version_bootloader_raw(FU_DEVICE(self), boot_ver);
 
-	/* get versions of each submodule */
-	for (guint8 i = 0; i < buf[3]; i++) {
-		guint8 fw_type = buf[(i * 4) + 4] & ~0x80;
+	/* get versions of each module */
+	for (guint8 i = 0; i < buf->data[3]; i++) {
+		guint8 fw_type = buf->data[(i * 4) + 4] & ~0x80;
 		g_autofree gchar *name = NULL;
 		g_autoptr(FuWacModule) module = NULL;
 		guint16 ver;
 
-		if (!fu_memread_uint16_safe(buf,
-					    sizeof(buf),
+		if (!fu_memread_uint16_safe(buf->data,
+					    buf->len,
 					    (i * 4) + 5,
 					    &ver,
 					    G_BIG_ENDIAN,
