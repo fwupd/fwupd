@@ -9,6 +9,15 @@ Plugin = logitech_bulkcontroller
 InstallDuration = 1500
 Flags = is-mini
 
+# Logi Sight
+[USB\VID_046D&PID_087A]
+Plugin = logitech_bulkcontroller
+InstallDuration = 1500
+
 [USB\VID_046D&PID_087C]
 Plugin = logitech_bulkcontroller
+InstallDuration = 1500
+
+# Logi Sight, using the Rallybar as a proxy
+[LOGI\MODEL_VU0067]
 InstallDuration = 1500
