@@ -14,7 +14,7 @@
 #include "fu-efi-hard-drive-device-path.h"
 #include "fu-efivars.h"
 #include "fu-firmware.h"
-#include "fu-smbios.h"
+#include "fu-smbios-struct.h"
 
 #define FU_TYPE_CONTEXT (fu_context_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuContext, fu_context, FU, CONTEXT, GObject)

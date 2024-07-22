@@ -6682,7 +6682,8 @@ fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 	/* if emulating, force the chassis type to be valid */
 	if (self->host_emulation && (chassis_kind == FU_SMBIOS_CHASSIS_KIND_OTHER ||
 				     chassis_kind == FU_SMBIOS_CHASSIS_KIND_UNKNOWN)) {
-		g_info("forcing chassis kind [0x%x] to be valid", chassis_kind);
+		g_info("forcing chassis kind %s to be valid",
+		       fu_smbios_chassis_kind_to_string(chassis_kind));
 		chassis_kind = FU_SMBIOS_CHASSIS_KIND_DESKTOP;
 	}
 
@@ -6711,8 +6712,8 @@ fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 		break;
 	}
 
-	return g_strdup_printf("HSI:INVALID:chassis[0x%02x] (v%d.%d.%d)",
-			       chassis_kind,
+	return g_strdup_printf("HSI:INVALID:chassis[%s] (v%d.%d.%d)",
+			       fu_smbios_chassis_kind_to_string(chassis_kind),
 			       FWUPD_MAJOR_VERSION,
 			       FWUPD_MINOR_VERSION,
 			       FWUPD_MICRO_VERSION);
