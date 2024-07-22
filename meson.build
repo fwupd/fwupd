@@ -486,11 +486,12 @@ if build_standalone
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
 endif
 
-allow_flashrom = get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux').allowed()
+flashrom = get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux')
+allow_flashrom = flashrom.allowed()
 if build_standalone
-  libflashrom = dependency('flashrom', 
-                            fallback: ['flashrom', 'flashrom_dep'], 
-                            required: allow_flashrom)
+  libflashrom = dependency('flashrom',
+                            fallback: ['flashrom', 'flashrom_dep'],
+                            required: flashrom)
 endif
 
 if libsystemd.found()
