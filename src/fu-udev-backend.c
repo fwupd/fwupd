@@ -120,6 +120,14 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 	g_autoptr(FuUdevDevice) device = NULL;
 	g_autoptr(GPtrArray) possible_plugins = NULL;
 
+	/* ignore zram and loop block devices -- of which there are dozens on systems with snap */
+	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "block") == 0) {
+		g_autofree gchar *basename =
+		    g_path_get_basename(g_udev_device_get_sysfs_path(udev_device));
+		if (g_str_has_prefix(basename, "zram") || g_str_has_prefix(basename, "loop"))
+			return;
+	}
+
 	/* use the subsystem to create the correct GType */
 	device = fu_udev_backend_create_device(self, udev_device);
 
