@@ -1948,7 +1948,6 @@ fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *buf_base64 = g_base64_encode(buf, bufsz);
 		event_id = g_strdup_printf("Pread:"
 					   "Port=0x%x,"
 					   "Length=0x%x",
