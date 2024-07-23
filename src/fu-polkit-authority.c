@@ -148,7 +148,8 @@ fu_polkit_authority_finalize(GObject *obj)
 {
 #ifdef HAVE_POLKIT
 	FuPolkitAuthority *self = FU_POLKIT_AUTHORITY(obj);
-	g_object_unref(self->pkauthority);
+	if (self->pkauthority != NULL)
+		g_object_unref(self->pkauthority);
 #endif
 	G_OBJECT_CLASS(fu_polkit_authority_parent_class)->finalize(obj);
 }
