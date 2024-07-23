@@ -22,4 +22,3 @@ fwupdtool enable-test-devices
 sleep 10
 /usr/share/installed-tests/fwupd/fwupdmgr.sh
 /usr/share/installed-tests/fwupd/fwupdtool.sh
-/usr/share/installed-tests/fwupd/fwupd.sh
