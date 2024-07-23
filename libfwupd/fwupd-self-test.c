@@ -157,7 +157,6 @@ fwupd_release_func(void)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FwupdRelease) release1 = NULL;
 	g_autoptr(FwupdRelease) release2 = fwupd_release_new();
-	g_autoptr(FwupdRelease) release3 = fwupd_release_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) data = NULL;
 

@@ -365,7 +365,6 @@ fu_bluez_device_add_instance_by_service_uuid(FuBluezDevice *self,
 					     GError **error)
 {
 	g_autofree gchar *obj_uuid = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	/* register device by service UUID */
 	obj_uuid = fu_bluez_device_get_interface_uuid(self, obj, obj_path, iface_name, error);

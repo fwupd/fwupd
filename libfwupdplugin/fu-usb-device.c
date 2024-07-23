@@ -2011,7 +2011,6 @@ fu_usb_device_get_string_descriptor_bytes_full(FuUsbDevice *self,
 	gint rc;
 	g_autofree gchar *event_id = NULL;
 	g_autofree guint8 *buf = g_malloc0(length);
-	g_autoptr(GBytes) blob = NULL;
 
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
