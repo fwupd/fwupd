@@ -424,17 +424,6 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 }
 
 static gboolean
-fu_usb_device_claim_interface_cb(FuDevice *device, gpointer user_data, GError **error)
-{
-	FuUsbDevice *self = FU_USB_DEVICE(device);
-	FuUsbDeviceInterface *iface = (FuUsbDeviceInterface *)user_data;
-	return fu_usb_device_claim_interface(self,
-					     iface->number,
-					     FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER,
-					     error);
-}
-
-static gboolean
 fu_usb_device_open_internal(FuUsbDevice *self, GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
@@ -541,28 +530,12 @@ fu_usb_device_open(FuDevice *device, GError **error)
 	for (guint i = 0; priv->device_interfaces != NULL && i < priv->device_interfaces->len;
 	     i++) {
 		FuUsbDeviceInterface *iface = g_ptr_array_index(priv->device_interfaces, i);
-		if (priv->claim_retry_count > 0) {
-			if (!fu_device_retry_full(device,
-						  fu_usb_device_claim_interface_cb,
-						  priv->claim_retry_count,
-						  FU_DEVICE_CLAIM_INTERFACE_DELAY,
-						  iface,
-						  error)) {
-				g_prefix_error(error,
-					       "failed to claim interface 0x%02x with retries: ",
-					       iface->number);
-				return FALSE;
-			}
-		} else {
-			if (!fu_usb_device_claim_interface(self,
-							   iface->number,
-							   FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER,
-							   error)) {
-				g_prefix_error(error,
-					       "failed to claim interface 0x%02x: ",
-					       iface->number);
-				return FALSE;
-			}
+		if (!fu_usb_device_claim_interface(self,
+						   iface->number,
+						   FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER,
+						   error)) {
+			g_prefix_error(error, "failed to claim interface 0x%02x: ", iface->number);
+			return FALSE;
 		}
 		iface->claimed = TRUE;
 	}
@@ -2009,6 +1982,40 @@ fu_usb_device_get_string_descriptor_bytes_full(FuUsbDevice *self,
 	return g_bytes_new(buf, rc);
 }
 
+static gboolean
+fu_usb_device_claim_interface_internal(FuUsbDevice *self,
+				       guint8 iface,
+				       FuUsbDeviceClaimFlags flags,
+				       GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	gint rc;
+
+	if (flags & FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER) {
+		rc = libusb_detach_kernel_driver(priv->handle, iface);
+		if (rc != LIBUSB_SUCCESS && rc != LIBUSB_ERROR_NOT_FOUND && /* No driver attached */
+		    rc != LIBUSB_ERROR_NOT_SUPPORTED &&			    /* win32 */
+		    rc != LIBUSB_ERROR_BUSY /* driver rebound already */)
+			return fu_usb_device_libusb_error_to_gerror(rc, error);
+	}
+
+	rc = libusb_claim_interface(priv->handle, iface);
+	return fu_usb_device_libusb_error_to_gerror(rc, error);
+}
+
+typedef struct {
+	guint8 iface;
+	FuUsbDeviceClaimFlags flags;
+} FuUsbDeviceClaimHelper;
+
+static gboolean
+fu_usb_device_claim_interface_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuUsbDevice *self = FU_USB_DEVICE(device);
+	FuUsbDeviceClaimHelper *helper = (FuUsbDeviceClaimHelper *)user_data;
+	return fu_usb_device_claim_interface_internal(self, helper->iface, helper->flags, error);
+}
+
 /**
  * fu_usb_device_claim_interface:
  * @self: a #FuUsbDevice
@@ -2029,7 +2036,6 @@ fu_usb_device_claim_interface(FuUsbDevice *self,
 			      GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
-	gint rc;
 
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -2041,16 +2047,16 @@ fu_usb_device_claim_interface(FuUsbDevice *self,
 	if (priv->handle == NULL)
 		return fu_usb_device_not_open_error(self, error);
 
-	if (flags & FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER) {
-		rc = libusb_detach_kernel_driver(priv->handle, iface);
-		if (rc != LIBUSB_SUCCESS && rc != LIBUSB_ERROR_NOT_FOUND && /* No driver attached */
-		    rc != LIBUSB_ERROR_NOT_SUPPORTED &&			    /* win32 */
-		    rc != LIBUSB_ERROR_BUSY /* driver rebound already */)
-			return fu_usb_device_libusb_error_to_gerror(rc, error);
+	if (priv->claim_retry_count > 0) {
+		FuUsbDeviceClaimHelper helper = {.iface = iface, .flags = flags};
+		return fu_device_retry_full(FU_DEVICE(self),
+					    fu_usb_device_claim_interface_cb,
+					    priv->claim_retry_count,
+					    FU_DEVICE_CLAIM_INTERFACE_DELAY,
+					    &helper,
+					    error);
 	}
-
-	rc = libusb_claim_interface(priv->handle, iface);
-	return fu_usb_device_libusb_error_to_gerror(rc, error);
+	return fu_usb_device_claim_interface_internal(self, iface, flags, error);
 }
 
 /**
