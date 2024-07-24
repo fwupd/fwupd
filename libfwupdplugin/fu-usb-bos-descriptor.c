@@ -21,7 +21,7 @@
 #include "fu-usb-bos-descriptor-private.h"
 
 struct _FuUsbBosDescriptor {
-	FuFirmware parent_instance;
+	FuUsbDescriptor parent_instance;
 	struct libusb_bos_dev_capability_descriptor bos_cap;
 };
 
@@ -30,7 +30,7 @@ fu_usb_bos_descriptor_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_EXTENDED(FuUsbBosDescriptor,
 		       fu_usb_bos_descriptor,
-		       FU_TYPE_FIRMWARE,
+		       FU_TYPE_USB_DESCRIPTOR,
 		       0,
 		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
 					     fu_usb_bos_descriptor_codec_iface_init));
@@ -126,13 +126,17 @@ fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 	FuUsbBosDescriptor *self = FU_USB_BOS_DESCRIPTOR(firmware);
 	g_autoptr(FuUsbBosHdr) st = NULL;
 
+	/* FuUsbDescriptor */
+	if (!FU_FIRMWARE_CLASS(fu_usb_bos_descriptor_parent_class)
+		 ->parse(firmware, stream, offset, flags, error))
+		return FALSE;
+
 	/* parse */
 	st = fu_usb_bos_hdr_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
 	self->bos_cap.bLength = fu_usb_bos_hdr_get_length(st);
 	self->bos_cap.bDevCapabilityType = fu_usb_bos_hdr_get_dev_capability_type(st);
-	fu_firmware_set_size(FU_FIRMWARE(self), self->bos_cap.bLength);
 
 	/* data */
 	if (self->bos_cap.bLength > st->len) {

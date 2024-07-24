@@ -21,7 +21,7 @@
 #include "fu-usb-endpoint-private.h"
 
 struct _FuUsbEndpoint {
-	FuFirmware parent_instance;
+	FuUsbDescriptor parent_instance;
 	struct libusb_endpoint_descriptor endpoint_descriptor;
 };
 
@@ -30,7 +30,7 @@ fu_usb_endpoint_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_EXTENDED(FuUsbEndpoint,
 		       fu_usb_endpoint,
-		       FU_TYPE_FIRMWARE,
+		       FU_TYPE_USB_DESCRIPTOR,
 		       0,
 		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_usb_endpoint_codec_iface_init));
 
@@ -98,23 +98,6 @@ fu_usb_endpoint_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlag
 		json_builder_set_member_name(builder, "MaxPacketSize");
 		json_builder_add_int_value(builder, self->endpoint_descriptor.wMaxPacketSize);
 	}
-}
-
-/**
- * fu_usb_endpoint_get_kind:
- * @self: a #FuUsbEndpoint
- *
- * Gets the type of endpoint.
- *
- * Return value: a #FuUsbDescriptorKind
- *
- * Since: 2.0.0
- **/
-FuUsbDescriptorKind
-fu_usb_endpoint_get_kind(FuUsbEndpoint *self)
-{
-	g_return_val_if_fail(FU_IS_USB_ENDPOINT(self), 0);
-	return self->endpoint_descriptor.bDescriptorType;
 }
 
 /**
@@ -214,6 +197,11 @@ fu_usb_endpoint_parse(FuFirmware *firmware,
 	FuUsbEndpoint *self = FU_USB_ENDPOINT(firmware);
 	g_autoptr(FuUsbEndpointHdr) st = NULL;
 
+	/* FuUsbDescriptor */
+	if (!FU_FIRMWARE_CLASS(fu_usb_endpoint_parent_class)
+		 ->parse(firmware, stream, offset, flags, error))
+		return FALSE;
+
 	/* parse */
 	st = fu_usb_endpoint_hdr_parse_stream(stream, offset, error);
 	if (st == NULL)
@@ -226,7 +214,6 @@ fu_usb_endpoint_parse(FuFirmware *firmware,
 	self->endpoint_descriptor.bInterval = fu_usb_endpoint_hdr_get_interval(st);
 	self->endpoint_descriptor.bRefresh = 0;
 	self->endpoint_descriptor.bSynchAddress = 0;
-	fu_firmware_set_size(FU_FIRMWARE(self), self->endpoint_descriptor.bLength);
 
 	/* success */
 	return TRUE;

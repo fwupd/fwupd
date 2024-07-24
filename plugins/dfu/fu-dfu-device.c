@@ -173,70 +173,49 @@ fu_dfu_device_set_download_timeout(FuDfuDevice *self, guint dnload_timeout)
 	priv->dnload_timeout = dnload_timeout;
 }
 
-typedef struct __attribute__((packed)) {
-	guint8 bLength;
-	guint8 bDescriptorType;
-	guint8 bmAttributes;
-	guint16 wDetachTimeOut;
-	guint16 wTransferSize;
-	guint16 bcdDFUVersion;
-} DfuFuncDescriptor;
-
 static gboolean
 fu_dfu_device_parse_iface_data(FuDfuDevice *self, GBytes *iface_data, GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	DfuFuncDescriptor desc = {0x0};
-	const guint8 *buf;
-	gsize sz;
+	guint8 attributes;
+	g_autoptr(FuUsbDfuDescriptorHdr) st = NULL;
+	g_autoptr(GBytes) bytes = NULL;
 
-	/* parse the functional descriptor */
-	buf = g_bytes_get_data(iface_data, &sz);
-	if (sz == sizeof(DfuFuncDescriptor)) {
-		memcpy(&desc, buf, sz);
-	} else if (sz > sizeof(DfuFuncDescriptor)) {
-		g_debug("DFU interface with %" G_GSIZE_FORMAT " bytes vendor data",
-			sz - sizeof(DfuFuncDescriptor));
-		memcpy(&desc, buf, sizeof(DfuFuncDescriptor));
-	} else if (sz == sizeof(DfuFuncDescriptor) - 2) {
+	/* weirdly, quite common */
+	if (g_bytes_get_size(iface_data) == FU_USB_DFU_DESCRIPTOR_HDR_SIZE - 2) {
+		g_autoptr(GByteArray) buf = g_byte_array_new();
 		g_warning("truncated DFU interface data, no bcdDFUVersion");
-		memcpy(&desc, buf, sz);
-		desc.bcdDFUVersion = FU_DFU_FIRMARE_VERSION_DFU_1_1;
+		fu_byte_array_append_bytes(buf, iface_data);
+		fu_byte_array_append_uint8(buf, 0x1);
+		fu_byte_array_append_uint8(buf, 0x1);
+		bytes = g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck */
 	} else {
-		g_autoptr(GString) bufstr = g_string_new(NULL);
-		for (gsize i = 0; i < sz; i++)
-			g_string_append_printf(bufstr, "%02x ", buf[i]);
-		if (bufstr->len > 0)
-			g_string_truncate(bufstr, bufstr->len - 1);
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "interface found, but not the correct length for "
-			    "functional data: %" G_GSIZE_FORMAT " bytes: %s",
-			    sz,
-			    bufstr->str);
-		return FALSE;
+		bytes = g_bytes_ref(iface_data);
 	}
 
-	/* get transfer size and version */
-	priv->transfer_size = GUINT16_FROM_LE(desc.wTransferSize);
-	priv->version = GUINT16_FROM_LE(desc.bcdDFUVersion);
+	/* parse the functional descriptor */
+	st = fu_usb_dfu_descriptor_hdr_parse_bytes(bytes, 0x0, error);
+	if (st == NULL)
+		return FALSE;
+	priv->transfer_size = fu_usb_dfu_descriptor_hdr_get_transfer_size(st);
+	priv->version = fu_usb_dfu_descriptor_hdr_get_dfu_version(st);
+	attributes = fu_usb_dfu_descriptor_hdr_get_attributes(st);
 
 	/* ST-specific */
 	if (priv->version == FU_DFU_FIRMARE_VERSION_DFUSE &&
-	    desc.bmAttributes & FU_DFU_DEVICE_FLAG_CAN_ACCELERATE)
+	    attributes & FU_DFU_DEVICE_FLAG_CAN_ACCELERATE)
 		priv->transfer_size = 0x1000;
 
 	/* get attributes about the DFU operation */
-	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD)
+	if (attributes & FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD)
 		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
-	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_CAN_UPLOAD)
+	if (attributes & FU_DFU_DEVICE_FLAG_CAN_UPLOAD)
 		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
-	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_MANIFEST_TOL)
+	if (attributes & FU_DFU_DEVICE_FLAG_MANIFEST_TOL)
 		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_MANIFEST_TOL);
-	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_WILL_DETACH)
+	if (attributes & FU_DFU_DEVICE_FLAG_WILL_DETACH)
 		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_WILL_DETACH);
-	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_CAN_ACCELERATE)
+	if (attributes & FU_DFU_DEVICE_FLAG_CAN_ACCELERATE)
 		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_ACCELERATE);
 	return TRUE;
 }
@@ -287,8 +266,8 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 		return FALSE;
 	g_ptr_array_set_size(priv->targets, 0);
 	for (guint i = 0; i < ifaces->len; i++) {
-		GBytes *iface_data = NULL;
 		FuDfuTarget *target;
+		g_autoptr(GBytes) iface_data = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		FuUsbInterface *iface = g_ptr_array_index(ifaces, i);
@@ -301,9 +280,17 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 			if (fu_usb_interface_get_subclass(iface) != 0x01)
 				continue;
 		}
-		/* parse any interface data */
-		iface_data = fu_usb_interface_get_extra(iface);
-		if (iface_data != NULL && g_bytes_get_size(iface_data) > 0) {
+
+		/* re-parse as a FuUsbDfuDescriptorHdr -- yes DFU FUNCTIONAL is 0x21 like HID... */
+		iface_data = fu_firmware_get_image_by_idx_bytes(FU_FIRMWARE(iface),
+								FU_USB_DESCRIPTOR_KIND_HID,
+								&error_local);
+		if (iface_data == NULL) {
+			g_warning("failed to parse interface data: %s", error_local->message);
+			fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
+			fu_device_add_private_flag(FU_DEVICE(self),
+						   FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
+		} else {
 			if (!fu_dfu_device_parse_iface_data(self, iface_data, &error_local)) {
 				g_warning("failed to parse interface data for %04x:%04x: %s",
 					  fu_usb_device_get_vid(FU_USB_DEVICE(self)),
@@ -311,10 +298,6 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 					  error_local->message);
 				continue;
 			}
-		} else {
-			fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
-			fu_device_add_private_flag(FU_DEVICE(self),
-						   FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
 		}
 
 		/* fix up the version */

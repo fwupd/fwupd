@@ -1788,7 +1788,9 @@ fu_usb_device_ensure_interfaces(FuUsbDevice *self, GError **error)
 		for (guint j = 0; j < (guint)config->interface[i].num_altsetting; j++) {
 			const struct libusb_interface_descriptor *ifp =
 			    &config->interface[i].altsetting[j];
-			g_autoptr(FuUsbInterface) iface = fu_usb_interface_new(ifp);
+			g_autoptr(FuUsbInterface) iface = fu_usb_interface_new(ifp, error);
+			if (iface == NULL)
+				return FALSE;
 			fu_usb_device_add_interface_internal(self, iface);
 		}
 	}
@@ -2390,45 +2392,25 @@ fu_usb_device_get_hid_descriptor_for_interface(FuUsbDevice *self,
 					       FuUsbInterface *intf,
 					       GError **error)
 {
-	GBytes *extra;
-	gsize bufsz = 0;
-	const guint8 *buf;
 	gsize actual_length = 0;
-	gsize buf2sz;
-	guint16 buf2szle = 0;
-	g_autofree guint8 *buf2 = NULL;
+	gsize bufsz;
+	g_autofree guint8 *buf = NULL;
+	g_autoptr(FuUsbHidDescriptorHdr) st = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
-	extra = fu_usb_interface_get_extra(intf);
-	if (extra == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "no data found on HID interface 0x%x",
-			    fu_usb_interface_get_number(intf));
+	/* re-parse as a FuUsbHidDescriptorHdr */
+	stream = fu_firmware_get_image_by_idx_stream(FU_FIRMWARE(intf), FU_USB_CLASS_HID, error);
+	if (stream == NULL) {
+		g_prefix_error(error,
+			       "no data found on HID interface 0x%x: ",
+			       fu_usb_interface_get_number(intf));
 		return NULL;
 	}
-	buf = g_bytes_get_data(extra, &bufsz);
-	if (bufsz < 9) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "invalid data on HID interface 0x%x",
-			    fu_usb_interface_get_number(intf));
+	st = fu_usb_hid_descriptor_hdr_parse_stream(stream, 0x0, error);
+	if (st == NULL)
 		return NULL;
-	}
-	if (buf[1] != LIBUSB_DT_HID) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "invalid data on HID interface 0x%x, got 0x%x and expected 0x%x",
-			    fu_usb_interface_get_number(intf),
-			    buf[1],
-			    (guint)LIBUSB_DT_HID);
-		return NULL;
-	}
-	memcpy(&buf2szle, buf + 7, sizeof(buf2szle));
-	buf2sz = GUINT16_FROM_LE(buf2szle);
-	if (buf2sz == 0) {
+	bufsz = fu_usb_hid_descriptor_hdr_get_class_descriptor_length(st);
+	if (bufsz == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_FOUND,
@@ -2437,11 +2419,11 @@ fu_usb_device_get_hid_descriptor_for_interface(FuUsbDevice *self,
 		return NULL;
 	}
 	g_debug("get 0x%x bytes of HID descriptor on iface 0x%x",
-		(guint)buf2sz,
+		(guint)bufsz,
 		fu_usb_interface_get_number(intf));
 
 	/* get HID descriptor */
-	buf2 = g_malloc0(buf2sz);
+	buf = g_malloc0(bufsz);
 	if (!fu_usb_device_control_transfer(self,
 					    FU_USB_DIRECTION_DEVICE_TO_HOST,
 					    FU_USB_REQUEST_TYPE_STANDARD,
@@ -2449,8 +2431,8 @@ fu_usb_device_get_hid_descriptor_for_interface(FuUsbDevice *self,
 					    LIBUSB_REQUEST_GET_DESCRIPTOR,
 					    LIBUSB_DT_REPORT << 8,
 					    fu_usb_interface_get_number(intf),
-					    buf2,
-					    buf2sz,
+					    buf,
+					    bufsz,
 					    &actual_length,
 					    5000,
 					    NULL,
@@ -2458,19 +2440,19 @@ fu_usb_device_get_hid_descriptor_for_interface(FuUsbDevice *self,
 		g_prefix_error(error, "failed to get HID report descriptor: ");
 		return NULL;
 	}
-	if (actual_length < buf2sz) {
+	if (actual_length < bufsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_FOUND,
 			    "invalid data on HID interface 0x%x, got 0x%x and expected 0x%x",
 			    fu_usb_interface_get_number(intf),
 			    (guint)actual_length,
-			    (guint)buf2sz);
+			    (guint)bufsz);
 		return NULL;
 	}
 
 	/* success */
-	return g_bytes_new_take(g_steal_pointer(&buf2), actual_length);
+	return g_bytes_new_take(g_steal_pointer(&buf), actual_length);
 }
 
 static gboolean

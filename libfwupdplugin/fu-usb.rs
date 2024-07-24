@@ -69,7 +69,7 @@ enum FuUsbDescriptorKind {
     SsEndpointCompanion = 0x30,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, Parse)]
 struct FuUsbBaseHdr {
     length: u8,
     descriptor_type: FuUsbDescriptorKind,
@@ -103,6 +103,27 @@ struct FuUsbDescriptorHdr {
     configuration: u8,
     attributes: u8,
     max_power: u8,
+}
+
+#[derive(ParseStream)]
+struct FuUsbHidDescriptorHdr {
+    length: u8,
+    descriptor_type: FuUsbDescriptorKind == Hid,
+    hid: u16le,
+    country_code: u8,
+    num_descriptors: u8,
+    class_descriptor_type: u8,
+    class_descriptor_length: u16le,
+}
+
+#[derive(ParseBytes)]
+struct FuUsbDfuDescriptorHdr {
+    length: u8,
+    descriptor_type: FuUsbDescriptorKind == Hid,
+    attributes: u8,
+    detach_timeout: u16le,
+    transfer_size: u16le,
+    dfu_version: u16le,
 }
 
 #[derive(ParseStream)]

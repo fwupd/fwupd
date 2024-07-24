@@ -18,14 +18,16 @@
 
 #include <string.h>
 
+#include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-input-stream.h"
+#include "fu-mem-private.h"
 #include "fu-usb-endpoint-private.h"
 #include "fu-usb-interface-private.h"
 
 struct _FuUsbInterface {
-	FuFirmware parent_instance;
+	FuUsbDescriptor parent_instance;
 	struct libusb_interface_descriptor iface;
-	GBytes *extra;
 	GPtrArray *endpoints; /* element-type FuUsbEndpoint */
 };
 
@@ -34,9 +36,31 @@ fu_usb_interface_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_EXTENDED(FuUsbInterface,
 		       fu_usb_interface,
-		       FU_TYPE_FIRMWARE,
+		       FU_TYPE_USB_DESCRIPTOR,
 		       0,
 		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_usb_interface_codec_iface_init));
+
+static gboolean
+fu_usb_interface_parse_extra(FuUsbInterface *self, const guint8 *buf, gsize bufsz, GError **error)
+{
+	gsize offset = 0;
+	g_autoptr(GBytes) bytes = g_bytes_new(buf, bufsz);
+
+	/* this is common to all descriptor types */
+	while (offset < bufsz) {
+		g_autoptr(FuUsbDescriptor) img = g_object_new(FU_TYPE_USB_DESCRIPTOR, NULL);
+		if (!fu_firmware_parse_full(FU_FIRMWARE(img),
+					    bytes,
+					    offset,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    error))
+			return FALSE;
+		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(img), error))
+			return FALSE;
+		offset += fu_firmware_get_size(FU_FIRMWARE(img));
+	}
+	return TRUE;
+}
 
 static gboolean
 fu_usb_interface_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
@@ -90,9 +114,8 @@ fu_usb_interface_from_json(FwupdCodec *codec, JsonNode *json_node, GError **erro
 	if (str != NULL) {
 		gsize bufsz = 0;
 		g_autofree guchar *buf = g_base64_decode(str, &bufsz);
-		if (self->extra != NULL)
-			g_bytes_unref(self->extra);
-		self->extra = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
+		if (!fu_usb_interface_parse_extra(self, (const guint8 *)buf, bufsz, error))
+			return FALSE;
 	}
 
 	/* success */
@@ -103,6 +126,7 @@ static void
 fu_usb_interface_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
 	FuUsbInterface *self = FU_USB_INTERFACE(codec);
+	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(FU_FIRMWARE(self));
 
 	/* optional properties */
 	if (self->iface.bLength != 0) {
@@ -152,9 +176,16 @@ fu_usb_interface_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFla
 	}
 
 	/* extra data */
-	if (self->extra != NULL && g_bytes_get_size(self->extra) > 0) {
-		g_autofree gchar *str = g_base64_encode(g_bytes_get_data(self->extra, NULL),
-							g_bytes_get_size(self->extra));
+	if (imgs->len > 0) {
+		g_autofree gchar *str = NULL;
+		g_autoptr(GByteArray) buf = g_byte_array_new();
+		for (guint i = 0; i < imgs->len; i++) {
+			FuUsbDescriptor *img = g_ptr_array_index(imgs, i);
+			g_autoptr(GBytes) blob = fu_firmware_get_bytes(FU_FIRMWARE(img), NULL);
+			if (blob != NULL)
+				fu_byte_array_append_bytes(buf, blob);
+		}
+		str = g_base64_encode(buf->data, buf->len);
 		json_builder_set_member_name(builder, "ExtraData");
 		json_builder_add_string_value(builder, str);
 	}
@@ -168,34 +199,18 @@ fu_usb_interface_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFla
  * Since: 2.0.0
  **/
 FuUsbInterface *
-fu_usb_interface_new(const struct libusb_interface_descriptor *iface)
+fu_usb_interface_new(const struct libusb_interface_descriptor *iface, GError **error)
 {
 	FuUsbInterface *self = g_object_new(FU_TYPE_USB_INTERFACE, NULL);
 
 	/* copy the data */
 	memcpy(&self->iface, iface, sizeof(struct libusb_interface_descriptor));
-	self->extra = g_bytes_new(iface->extra, iface->extra_length);
+	if (!fu_usb_interface_parse_extra(self, iface->extra, iface->extra_length, error))
+		return NULL;
 	for (guint i = 0; i < iface->bNumEndpoints; i++)
 		g_ptr_array_add(self->endpoints, fu_usb_endpoint_new(&iface->endpoint[i]));
 
 	return FU_USB_INTERFACE(self);
-}
-
-/**
- * fu_usb_interface_get_kind:
- * @self: a #FuUsbInterface
- *
- * Gets the type of interface.
- *
- * Return value: a #FuUsbDescriptorKind
- *
- * Since: 2.0.0
- **/
-FuUsbDescriptorKind
-fu_usb_interface_get_kind(FuUsbInterface *self)
-{
-	g_return_val_if_fail(FU_IS_USB_INTERFACE(self), 0);
-	return self->iface.bDescriptorType;
 }
 
 /**
@@ -303,23 +318,6 @@ fu_usb_interface_get_index(FuUsbInterface *self)
 }
 
 /**
- * fu_usb_interface_get_extra:
- * @self: a #FuUsbInterface
- *
- * Gets any extra data from the interface.
- *
- * Return value: (transfer none): a #GBytes, or %NULL for failure
- *
- * Since: 2.0.0
- **/
-GBytes *
-fu_usb_interface_get_extra(FuUsbInterface *self)
-{
-	g_return_val_if_fail(FU_IS_USB_INTERFACE(self), NULL);
-	return self->extra;
-}
-
-/**
  * fu_usb_interface_get_endpoints:
  * @self: a #FuUsbInterface
  *
@@ -347,6 +345,11 @@ fu_usb_interface_parse(FuFirmware *firmware,
 	gsize offset_start = offset;
 	g_autoptr(FuUsbInterfaceHdr) st = NULL;
 
+	/* FuUsbDescriptor */
+	if (!FU_FIRMWARE_CLASS(fu_usb_interface_parent_class)
+		 ->parse(firmware, stream, offset, flags, error))
+		return FALSE;
+
 	/* parse as proper interface with endpoints */
 	st = fu_usb_interface_hdr_parse_stream(stream, offset, error);
 	if (st == NULL)
@@ -363,11 +366,14 @@ fu_usb_interface_parse(FuFirmware *firmware,
 
 	/* extra data */
 	if (self->iface.bLength > st->len) {
-		self->extra = fu_input_stream_read_bytes(stream,
-							 offset + st->len,
-							 self->iface.bLength - st->len,
-							 error);
-		if (self->extra == NULL)
+		g_autoptr(GByteArray) buf = NULL;
+		buf = fu_input_stream_read_byte_array(stream,
+						      offset + st->len,
+						      self->iface.bLength - st->len,
+						      error);
+		if (buf == NULL)
+			return FALSE;
+		if (!fu_usb_interface_parse_extra(self, buf->data, buf->len, error))
 			return FALSE;
 	}
 
@@ -401,8 +407,6 @@ static void
 fu_usb_interface_finalize(GObject *object)
 {
 	FuUsbInterface *self = FU_USB_INTERFACE(object);
-	if (self->extra != NULL)
-		g_bytes_unref(self->extra);
 	g_ptr_array_unref(self->endpoints);
 	G_OBJECT_CLASS(fu_usb_interface_parent_class)->finalize(object);
 }
