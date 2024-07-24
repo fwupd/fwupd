@@ -18,9 +18,17 @@
 #include <string.h>
 
 #include "fu-dell-dock-common.h"
-#include "fu-dell-dock-i2c-ec-struct.h"
 
 #define I2C_EC_ADDRESS 0xec
+
+#define EC_CMD_SET_DOCK_PKG	0x01
+#define EC_CMD_GET_DOCK_INFO	0x02
+#define EC_CMD_GET_DOCK_DATA	0x03
+#define EC_CMD_GET_DOCK_TYPE	0x05
+#define EC_CMD_MODIFY_LOCK	0x0a
+#define EC_CMD_RESET		0x0b
+#define EC_CMD_PASSIVE		0x0d
+#define EC_GET_FW_UPDATE_STATUS 0x0f
 
 #define EXPECTED_DOCK_INFO_SIZE 0xb7
 
@@ -32,12 +40,6 @@
 #define PASSIVE_RESET_MASK  0x01
 #define PASSIVE_REBOOT_MASK 0x02
 #define PASSIVE_TBT_MASK    0x04
-
-DellDockComponent dock_component_ec[] = {
-    {DOCK_BASE_TYPE_SALOMON, 0, 0, "USB\\VID_413C&PID_B06E&hub&embedded"},
-    {DOCK_BASE_TYPE_ATOMIC, 0, 0, "USB\\VID_413C&PID_B06E&hub&atomic_embedded"},
-    {DOCK_BASE_TYPE_UNKNOWN, 0, 0, NULL},
-};
 
 typedef enum {
 	FW_UPDATE_IN_PROGRESS,
@@ -130,7 +132,7 @@ struct _FuDellDockEc {
 	FuDevice parent_instance;
 	FuDellDockDockDataStructure *data;
 	FuDellDockDockPackageFWVersion *raw_versions;
-	DockBaseType base_type;
+	guint8 base_type;
 	gchar *ec_version;
 	gchar *mst_version;
 	gchar *tbt_version;
@@ -178,7 +180,7 @@ fu_dell_dock_module_is_usb4(FuDevice *device)
 	return self->data->module_type == MODULE_TYPE_130_USB4;
 }
 
-DockBaseType
+guint8
 fu_dell_dock_get_dock_type(FuDevice *device)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
@@ -325,7 +327,6 @@ fu_dell_dock_is_valid_dock(FuDevice *device, GError **error)
 	const guint8 *result = NULL;
 	gsize sz = 0;
 	g_autoptr(GBytes) data = NULL;
-	g_autofree const gchar *instance_id = NULL;
 
 	g_return_val_if_fail(device != NULL, FALSE);
 
@@ -343,19 +344,21 @@ fu_dell_dock_is_valid_dock(FuDevice *device, GError **error)
 	}
 	self->base_type = result[0];
 
-	/* instance id */
-	instance_id =
-	    g_strdup(fu_dell_dock_get_instance_id(self->base_type, dock_component_ec, 0, 0));
-	if (instance_id == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "No valid dock was found");
-		return FALSE;
+	/* this will trigger setting up all the quirks */
+	if (self->base_type == DOCK_BASE_TYPE_SALOMON) {
+		fu_device_add_instance_id(device, DELL_DOCK_EC_INSTANCE_ID);
+		return TRUE;
 	}
-
-	fu_device_add_instance_id(device, instance_id);
-	return TRUE;
+	if (self->base_type == DOCK_BASE_TYPE_ATOMIC) {
+		fu_device_add_instance_id(device, DELL_DOCK_ATOMIC_EC_INSTANCE_ID);
+		return TRUE;
+	}
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "Invalid dock type: %x",
+		    self->base_type);
+	return FALSE;
 }
 
 static gboolean
@@ -625,10 +628,10 @@ fu_dell_dock_ec_modify_lock(FuDevice *device, guint8 target, gboolean unlocked, 
 	g_return_val_if_fail(device != NULL, FALSE);
 	g_return_val_if_fail(target != 0, FALSE);
 
-	cmd = EC_CMD_SET_MODIFY_LOCK | /* cmd */
-	      2 << 8 |		       /* length of data arguments */
-	      target << 16 |	       /* device to operate on */
-	      unlocked << 24;	       /* unlock/lock */
+	cmd = EC_CMD_MODIFY_LOCK | /* cmd */
+	      2 << 8 |		   /* length of data arguments */
+	      target << 16 |	   /* device to operate on */
+	      unlocked << 24;	   /* unlock/lock */
 
 	if (!fu_dell_dock_ec_write(device, 4, (guint8 *)&cmd, error)) {
 		g_prefix_error(error, "Failed to unlock device %d: ", target);
@@ -652,7 +655,7 @@ fu_dell_dock_ec_modify_lock(FuDevice *device, guint8 target, gboolean unlocked, 
 static gboolean
 fu_dell_dock_ec_reset(FuDevice *device, GError **error)
 {
-	guint16 cmd = EC_CMD_SET_DOCK_RESET;
+	guint16 cmd = EC_CMD_RESET;
 
 	g_return_val_if_fail(device != NULL, FALSE);
 
@@ -684,8 +687,8 @@ gboolean
 fu_dell_dock_ec_reboot_dock(FuDevice *device, GError **error)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
-	guint32 cmd = EC_CMD_SET_PASSIVE | /* cmd */
-		      1 << 8 |		   /* length of data arguments */
+	guint32 cmd = EC_CMD_PASSIVE | /* cmd */
+		      1 << 8 |	       /* length of data arguments */
 		      self->passive_flow << 16;
 
 	g_return_val_if_fail(device != NULL, FALSE);
@@ -705,7 +708,7 @@ fu_dell_dock_get_ec_status(FuDevice *device, FuDellDockECFWUpdateStatus *status_
 	g_return_val_if_fail(device != NULL, FALSE);
 	g_return_val_if_fail(status_out != NULL, FALSE);
 
-	if (!fu_dell_dock_ec_read(device, EC_CMD_GET_FW_UPDATE_STATUS, 1, &data, error)) {
+	if (!fu_dell_dock_ec_read(device, EC_GET_FW_UPDATE_STATUS, 1, &data, error)) {
 		g_prefix_error(error, "Failed to read FW update status: ");
 		return FALSE;
 	}

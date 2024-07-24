@@ -17,8 +17,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-dell-dock-struct.h"
-
 #define FU_TYPE_DELL_DOCK_EC (fu_dell_dock_ec_get_type())
 G_DECLARE_FINAL_TYPE(FuDellDockEc, fu_dell_dock_ec, FU, DELL_DOCK_EC, FuDevice)
 
@@ -47,5 +45,5 @@ gboolean
 fu_dell_dock_ec_commit_package(FuDevice *device, GBytes *blob_fw, GError **error);
 gboolean
 fu_dell_dock_module_is_usb4(FuDevice *device);
-DockBaseType
+guint8
 fu_dell_dock_get_dock_type(FuDevice *device);

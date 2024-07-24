@@ -18,33 +18,6 @@
 #include "fu-dell-dock-common.h"
 #include "fu-dell-dock-plugin.h"
 
-DellDockComponent dock_component_hub[] = {
-    {DOCK_BASE_TYPE_SALOMON, DELL_DOCK_VID, DELL_DOCK_HID_PID, "USB\\VID_413C&PID_B06E&hub"},
-    {DOCK_BASE_TYPE_SALOMON,
-     DELL_DOCK_VID,
-     DELL_DOCK_USB_HUB_RTS5413_PID,
-     "USB\\VID_413C&PID_B06F&hub"},
-    {DOCK_BASE_TYPE_ATOMIC, DELL_DOCK_VID, DELL_DOCK_HID_PID, "USB\\VID_413C&PID_B06E&atomic_hub"},
-    {DOCK_BASE_TYPE_ATOMIC,
-     DELL_DOCK_VID,
-     DELL_DOCK_USB_HUB_RTS5413_PID,
-     "USB\\VID_413C&PID_B06F&atomic_hub"},
-    {DOCK_BASE_TYPE_UNKNOWN, 0, 0, NULL},
-};
-
-DellDockComponent dock_component_mst[] = {
-    {DOCK_BASE_TYPE_SALOMON, 0, 0, "MST-panamera-vmm5331-259"},
-    {DOCK_BASE_TYPE_ATOMIC, 0, 0, "MST-cayenne-vmm6210-257"},
-    {DOCK_BASE_TYPE_UNKNOWN, 0, 0, NULL},
-};
-
-DellDockComponent dock_component_pkg[] = {
-    {DOCK_BASE_TYPE_SALOMON, 0, 0, "USB\\VID_413C&PID_B06E&hub&status"},
-    {DOCK_BASE_TYPE_SALOMON, 0, 1, "USB\\VID_413C&PID_B06E&hub&salomon_mlk_status"},
-    {DOCK_BASE_TYPE_ATOMIC, 0, 0, "USB\\VID_413C&PID_B06E&hub&atomic_status"},
-    {DOCK_BASE_TYPE_UNKNOWN, 0, 0, NULL},
-};
-
 struct _FuDellDockPlugin {
 	FuPlugin parent_instance;
 };
@@ -65,97 +38,72 @@ fu_dell_dock_plugin_create_node(FuPlugin *plugin, FuDevice *device, GError **err
 	return TRUE;
 }
 
-static DockBaseType
-fu_dell_dock_plugin_get_dock_type(FuDevice *device, GError **error)
-{
-	if (FU_IS_DELL_DOCK_EC(device))
-		return fu_dell_dock_get_dock_type(device);
-
-	return DOCK_BASE_TYPE_UNKNOWN;
-}
-
 static gboolean
-fu_dell_dock_plugin_probe_ec_v1_subcomponents(FuPlugin *plugin, FuDevice *ec_device, GError **error)
+fu_dell_dock_plugin_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 {
+	const gchar *instance_id_mst;
+	const gchar *instance_id_status;
+	g_autofree const gchar *instance_guid_mst = NULL;
+	g_autofree const gchar *instance_guid_status = NULL;
+	g_autoptr(FuDellDockEc) ec_device = NULL;
+	g_autoptr(FuDellDockMst) mst_device = NULL;
+	g_autoptr(FuDellDockStatus) status_device = NULL;
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	guint8 dock_type;
 
-	/* determine dock type said by ec */
-	dock_type = fu_dell_dock_plugin_get_dock_type(ec_device, error);
-	if (dock_type == DOCK_BASE_TYPE_UNKNOWN) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_READ,
-			    "can't read base dock type from EC");
+	/* create ec endpoint */
+	ec_device = fu_dell_dock_ec_new(proxy);
+	if (!fu_dell_dock_plugin_create_node(plugin, FU_DEVICE(ec_device), error))
 		return FALSE;
-	}
 
-	/* MST */
-	{
-		g_autoptr(FuDellDockMst) mst_device = NULL;
-		g_autofree const gchar *instance_id;
-		g_autofree const gchar *instance_guid = NULL;
+	/* create mst endpoint */
+	mst_device = fu_dell_dock_mst_new(ctx);
+	if (fu_dell_dock_get_dock_type(FU_DEVICE(ec_device)) == DOCK_BASE_TYPE_ATOMIC)
+		instance_id_mst = DELL_DOCK_VMM6210_INSTANCE_ID;
+	else
+		instance_id_mst = DELL_DOCK_VM5331_INSTANCE_ID;
+	fu_device_add_instance_id(FU_DEVICE(mst_device), instance_id_mst);
+	instance_guid_mst = fwupd_guid_hash_string(instance_id_mst);
+	fu_device_add_guid(FU_DEVICE(mst_device), instance_guid_mst);
+	if (!fu_device_probe(FU_DEVICE(mst_device), error))
+		return FALSE;
+	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(mst_device));
+	if (!fu_dell_dock_plugin_create_node(plugin, FU_DEVICE(mst_device), error))
+		return FALSE;
 
-		mst_device = fu_dell_dock_mst_new(ctx);
-		instance_id =
-		    g_strdup(fu_dell_dock_get_instance_id(dock_type, dock_component_mst, 0, 0));
-		instance_guid = fwupd_guid_hash_string(instance_id);
-		fu_device_add_instance_id(FU_DEVICE(mst_device), instance_id);
-		fu_device_add_guid(FU_DEVICE(mst_device), instance_guid);
-		fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(mst_device));
+	/* create package version endpoint */
+	status_device = fu_dell_dock_status_new(ctx);
+	if (fu_dell_dock_get_dock_type(FU_DEVICE(ec_device)) == DOCK_BASE_TYPE_ATOMIC)
+		instance_id_status = DELL_DOCK_ATOMIC_STATUS_INSTANCE_ID;
+	else if (fu_dell_dock_module_is_usb4(FU_DEVICE(ec_device)))
+		instance_id_status = DELL_DOCK_DOCK2_INSTANCE_ID;
+	else
+		instance_id_status = DELL_DOCK_DOCK1_INSTANCE_ID;
+	instance_guid_status = fwupd_guid_hash_string(instance_id_status);
+	fu_device_add_guid(FU_DEVICE(status_device), fwupd_guid_hash_string(instance_guid_status));
+	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(status_device));
+	fu_device_add_instance_id(FU_DEVICE(status_device), instance_id_status);
+	if (!fu_dell_dock_plugin_create_node(plugin, FU_DEVICE(status_device), error))
+		return FALSE;
 
-		if (!fu_device_probe(FU_DEVICE(mst_device), error))
+	/* create TBT endpoint if Thunderbolt SKU and Thunderbolt link inactive */
+	if (fu_dell_dock_ec_needs_tbt(FU_DEVICE(ec_device))) {
+		g_autoptr(FuDellDockTbt) tbt_device = fu_dell_dock_tbt_new(proxy);
+		g_autofree const gchar *instance_guid_tbt =
+		    fwupd_guid_hash_string(DELL_DOCK_TBT_INSTANCE_ID);
+		fu_device_add_guid(FU_DEVICE(tbt_device), instance_guid_tbt);
+		fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(tbt_device));
+		if (!fu_dell_dock_plugin_create_node(plugin, FU_DEVICE(tbt_device), error))
 			return FALSE;
-
-		if (!fu_dell_dock_plugin_create_node(plugin, FU_DEVICE(mst_device), error))
-			return FALSE;
 	}
 
-	/* PACKAGE */
-	{
-		g_autoptr(FuDellDockStatus) status_device = NULL;
-		g_autofree const gchar *instance_id = NULL;
-		g_autofree const gchar *instance_guid = NULL;
-		guint16 dock_variant = 0;
-
-		status_device = fu_dell_dock_status_new(ctx);
-		dock_variant = fu_dell_dock_module_is_usb4(FU_DEVICE(ec_device)) ? 1 : 0;
-		instance_id = g_strdup(
-		    fu_dell_dock_get_instance_id(dock_type, dock_component_pkg, 0, dock_variant));
-		instance_guid = fwupd_guid_hash_string(instance_id);
-		fu_device_add_instance_id(FU_DEVICE(status_device), instance_id);
-		fu_device_add_guid(FU_DEVICE(status_device), fwupd_guid_hash_string(instance_guid));
-		fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(status_device));
-		if (!fu_dell_dock_plugin_create_node(plugin, FU_DEVICE(status_device), error))
-			return FALSE;
-	}
-
-	/* TBT 3 */
-	{
-		g_autoptr(FuDellDockTbt) tbt_device = NULL;
-		g_autofree const gchar *instance_id = NULL;
-		g_autofree const gchar *instance_guid = NULL;
-
-		if (fu_dell_dock_ec_needs_tbt(FU_DEVICE(ec_device))) {
-			tbt_device = fu_dell_dock_tbt_new(fu_device_get_proxy(ec_device));
-			instance_id = DELL_DOCK_TBT3;
-			instance_guid = fwupd_guid_hash_string(instance_id);
-			fu_device_add_guid(FU_DEVICE(tbt_device), instance_guid);
-			fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(tbt_device));
-			if (!fu_dell_dock_plugin_create_node(plugin, FU_DEVICE(tbt_device), error))
-				return FALSE;
-		}
-	}
 	return TRUE;
 }
 
 /* prefer to use EC if in the transaction and parent if it is not */
 static FuDevice *
-fu_dell_dock_plugin_get_ec(FuPlugin *plugin)
+fu_dell_dock_plugin_get_ec(GPtrArray *devices)
 {
 	FuDevice *ec_parent = NULL;
-	GPtrArray *devices = fu_plugin_get_devices(plugin);
-
 	for (gint i = devices->len - 1; i >= 0; i--) {
 		FuDevice *dev = g_ptr_array_index(devices, i);
 		FuDevice *parent;
@@ -170,171 +118,61 @@ fu_dell_dock_plugin_get_ec(FuPlugin *plugin)
 }
 
 static gboolean
-fu_dell_dock_plugin_device_add(FuPlugin *plugin,
-			       FuDevice *device,
-			       gboolean is_newdev,
-			       GError **error)
-{
-	FuDevice *ec_device;
-	guint8 dock_type;
-	guint16 vid, pid;
-	g_autofree const gchar *instance_id = NULL;
-
-	/* VID and PID */
-	vid = fu_usb_device_get_vid(FU_USB_DEVICE(device));
-	pid = fu_usb_device_get_pid(FU_USB_DEVICE(device));
-
-	/* cache current device until EC dock type is available */
-	ec_device = fu_dell_dock_plugin_get_ec(plugin);
-	if (ec_device == NULL) {
-		const gchar *key;
-		key = g_strdup_printf("USB\\VID_%04X&PID_%04X", vid, pid);
-		fu_plugin_cache_add(plugin, key, device);
-		return TRUE;
-	}
-
-	/* determine dock type said by ec */
-	dock_type = fu_dell_dock_plugin_get_dock_type(ec_device, error);
-	if (dock_type == DOCK_BASE_TYPE_UNKNOWN) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_READ,
-			    "can't read base dock type from EC");
-		return FALSE;
-	}
-
-	/* USB HUB Devices */
-	instance_id =
-	    g_strdup(fu_dell_dock_get_instance_id(dock_type, dock_component_hub, vid, pid));
-	if (instance_id != NULL) {
-		g_autofree const gchar *instance_guid = NULL;
-		g_autoptr(FuDellDockHub) hub_device = NULL;
-		g_autoptr(FuDeviceLocker) locker = NULL;
-
-		instance_guid = fwupd_guid_hash_string(instance_id);
-		if (is_newdev) {
-			hub_device = fu_dell_dock_hub_new(FU_USB_DEVICE(device));
-			locker = fu_device_locker_new(FU_DEVICE(hub_device), error);
-			if (locker == NULL)
-				return FALSE;
-
-			fu_device_add_instance_id(FU_DEVICE(hub_device), instance_id);
-			fu_device_add_guid(FU_DEVICE(hub_device), instance_guid);
-			fu_device_add_child(ec_device, FU_DEVICE(hub_device));
-			fu_plugin_device_add(plugin, FU_DEVICE(hub_device));
-		} else {
-			fu_device_add_instance_id(device, instance_id);
-			fu_device_add_guid(device, instance_guid);
-			fu_device_add_child(ec_device, device);
-			fu_plugin_device_add(plugin, device);
-		}
-	}
-
-	return TRUE;
-}
-
-static gboolean
-fu_dell_dock_plugin_ec_add_cached_devices(FuPlugin *plugin, FuDevice *ec_device, GError **error)
-{
-	guint8 dock_type;
-	g_autofree const gchar *instance_id = NULL;
-
-	/* determine dock type said by ec */
-	dock_type = fu_dell_dock_plugin_get_dock_type(ec_device, error);
-	if (dock_type == DOCK_BASE_TYPE_UNKNOWN) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_READ,
-			    "can't read base dock type from EC");
-		return FALSE;
-	}
-
-	for (guint i = 0; dock_component_hub[i].instance_id != NULL; i++) {
-		FuDevice *device;
-		guint16 vid, pid;
-		const gchar *key;
-
-		if (dock_component_hub[i].dock_type != dock_type)
-			continue;
-
-		vid = dock_component_hub[i].vid;
-		pid = dock_component_hub[i].pid;
-		key = g_strdup_printf("USB\\VID_%04X&PID_%04X", vid, pid);
-
-		device = fu_plugin_cache_lookup(plugin, key);
-		if (device != NULL) {
-			if (!(fu_dell_dock_plugin_device_add(plugin, device, TRUE, error)))
-				return FALSE;
-
-			fu_plugin_cache_remove(plugin, key);
-		}
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_dell_dock_plugin_backend_device_added(FuPlugin *plugin,
 					 FuDevice *device,
 					 FuProgress *progress,
 					 GError **error)
 {
-	g_autofree const gchar *instance_id = NULL;
-	guint16 vid, pid;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuDellDockHub) hub = NULL;
+	const gchar *hub_cache_key = "hub-usb3-gen1";
+	GPtrArray *devices;
+	FuDevice *ec_device;
+	FuDevice *hub_dev;
+	guint8 dock_type;
 
 	/* not interesting */
 	if (!FU_IS_USB_DEVICE(device))
 		return TRUE;
 
-	/* VID and PID */
-	vid = fu_usb_device_get_vid(FU_USB_DEVICE(device));
-	pid = fu_usb_device_get_pid(FU_USB_DEVICE(device));
+	hub = fu_dell_dock_hub_new(FU_USB_DEVICE(device));
+	locker = fu_device_locker_new(FU_DEVICE(hub), error);
+	if (locker == NULL)
+		return FALSE;
 
-	/* USB HUB HID bridge device */
-	if ((vid == DELL_DOCK_VID && pid == DELL_DOCK_HID_PID)) {
-		/* API version 1 */
-		{
-			g_autoptr(FuDellDockHub) hub_device = NULL;
-			g_autoptr(FuDellDockEc) ec_v1_dev = NULL;
-			g_autoptr(FuDeviceLocker) locker = NULL;
+	/* probe extend devices under Usb3.1 Gen 2 Hub */
+	if (fu_device_has_private_flag(FU_DEVICE(hub), FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE)) {
+		if (!fu_dell_dock_plugin_probe(plugin, FU_DEVICE(hub), error))
+			return FALSE;
+	}
 
-			hub_device = fu_dell_dock_hub_new(FU_USB_DEVICE(device));
-			locker = fu_device_locker_new(FU_DEVICE(hub_device), error);
-			if (locker == NULL)
-				return FALSE;
-
-			/* create ec device */
-			ec_v1_dev = fu_dell_dock_ec_new(FU_DEVICE(hub_device));
-			if (ec_v1_dev == NULL)
-				return FALSE;
-
-			if (!fu_dell_dock_plugin_create_node(plugin, FU_DEVICE(ec_v1_dev), error))
-				return FALSE;
-
-			/* add dock ec sub-components */
-			if (!fu_dell_dock_plugin_probe_ec_v1_subcomponents(plugin,
-									   FU_DEVICE(ec_v1_dev),
-									   error))
-				return FALSE;
-
-			/* add the hub device */
-			if (!(fu_dell_dock_plugin_device_add(plugin,
-							     FU_DEVICE(hub_device),
-							     FALSE,
-							     error)))
-				return FALSE;
-
-			/* flush the cached devices to plugin */
-			if (!fu_dell_dock_plugin_ec_add_cached_devices(plugin,
-								       FU_DEVICE(ec_v1_dev),
-								       error))
-				return FALSE;
-		}
+	/* process hub devices if ec device is added */
+	devices = fu_plugin_get_devices(plugin);
+	ec_device = fu_dell_dock_plugin_get_ec(devices);
+	if (ec_device == NULL) {
+		fu_plugin_cache_add(plugin, hub_cache_key, FU_DEVICE(hub));
 		return TRUE;
 	}
 
-	if (!fu_dell_dock_plugin_device_add(plugin, device, TRUE, error))
+	/* determine dock type by ec */
+	dock_type = fu_dell_dock_get_dock_type(ec_device);
+	if (dock_type == DOCK_BASE_TYPE_UNKNOWN) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_READ,
+			    "can't read base dock type from EC");
 		return FALSE;
+	}
+	fu_dell_dock_hub_add_instance(FU_DEVICE(hub), dock_type);
+	fu_plugin_device_add(plugin, FU_DEVICE(hub));
 
+	/* add hub instance id for the cached device */
+	hub_dev = fu_plugin_cache_lookup(plugin, hub_cache_key);
+	if (hub_dev != NULL) {
+		fu_dell_dock_hub_add_instance(FU_DEVICE(hub_dev), dock_type);
+		fu_plugin_device_add(plugin, FU_DEVICE(hub_dev));
+		fu_plugin_cache_remove(plugin, hub_cache_key);
+	}
 	return TRUE;
 }
 
@@ -361,11 +199,11 @@ static void
 fu_dell_dock_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 {
 	/* dell dock delays the activation so skips device restart */
-	if (fu_device_has_guid(device, DELL_DOCK_TBT3)) {
+	if (fu_device_has_guid(device, DELL_DOCK_TBT_INSTANCE_ID)) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
 		fu_plugin_cache_add(plugin, "tbt", device);
 	}
-	if (fu_device_has_guid(device, DELL_DOCK_TBT4)) {
+	if (fu_device_has_guid(device, DELL_DOCK_USB4_INSTANCE_ID)) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
 		fu_plugin_cache_add(plugin, "usb4", device);
 	}
@@ -374,7 +212,7 @@ fu_dell_dock_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 
 	/* usb4 device from thunderbolt plugin */
 	if (g_strcmp0(fu_device_get_plugin(device), "thunderbolt") == 0 &&
-	    fu_device_has_guid(device, DELL_DOCK_TBT4)) {
+	    fu_device_has_guid(device, DELL_DOCK_USB4_INSTANCE_ID)) {
 		g_autofree gchar *msg = NULL;
 		msg = g_strdup_printf("firmware update inhibited by [%s] plugin",
 				      fu_plugin_get_name(plugin));
@@ -412,7 +250,7 @@ fu_dell_dock_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device, G
 static gboolean
 fu_dell_dock_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
-	FuDevice *parent = fu_dell_dock_plugin_get_ec(plugin);
+	FuDevice *parent = fu_dell_dock_plugin_get_ec(devices);
 	const gchar *sku;
 	if (parent == NULL)
 		return TRUE;
@@ -426,7 +264,7 @@ fu_dell_dock_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GErr
 static gboolean
 fu_dell_dock_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
-	FuDevice *parent = fu_dell_dock_plugin_get_ec(plugin);
+	FuDevice *parent = fu_dell_dock_plugin_get_ec(devices);
 	FuDevice *dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	gboolean needs_activation = FALSE;

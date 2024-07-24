@@ -43,20 +43,3 @@ fu_dell_dock_set_power(FuDevice *device, guint8 target, gboolean enabled, GError
 
 	return fu_dell_dock_ec_modify_lock(parent, target, enabled, error);
 }
-
-const gchar *
-fu_dell_dock_get_instance_id(guint8 type, DellDockComponent *dev_list, guint16 vid, guint16 pid)
-{
-	/* The last instance_id must be NULL */
-	for (guint i = 0; dev_list[i].instance_id != NULL; i++) {
-		if (dev_list[i].dock_type != type)
-			continue;
-		if (dev_list[i].vid != 0 && vid != 0 && dev_list[i].vid != vid)
-			continue;
-		if (dev_list[i].pid != 0 && pid != 0 && dev_list[i].pid != pid)
-			continue;
-		return dev_list[i].instance_id;
-	}
-
-	return NULL;
-}
