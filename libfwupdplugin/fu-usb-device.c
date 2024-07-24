@@ -876,22 +876,15 @@ fu_usb_device_close(FuDevice *device, GError **error)
 static gboolean
 fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, FuUsbBosDescriptor *bos, GError **error)
 {
-	GBytes *extra = fu_usb_bos_descriptor_get_extra(bos);
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuFirmware) ds20 = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 
-	/* sanity check */
-	if (g_bytes_get_size(extra) == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "zero sized data");
-		return FALSE;
-	}
-
 	/* parse either type */
-	stream = g_memory_input_stream_new_from_bytes(extra);
+	stream =
+	    fu_firmware_get_image_by_id_stream(FU_FIRMWARE(bos), FU_FIRMWARE_ID_PAYLOAD, error);
+	if (stream == NULL)
+		return FALSE;
 	ds20 = fu_firmware_new_from_gtypes(stream,
 					   0x0,
 					   FWUPD_INSTALL_FLAG_NONE,
