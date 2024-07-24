@@ -148,6 +148,7 @@ fwupdplugin_src = [
   'fu-sum.c', # fuzzing
   'fu-udev-device.c',
   'fu-usb-bos-descriptor.c',
+  'fu-usb-descriptor.c',
   'fu-usb-device.c',
   'fu-usb-device-ds20.c',
   'fu-usb-device-fw-ds20.c',

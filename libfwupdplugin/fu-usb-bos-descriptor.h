@@ -6,11 +6,14 @@
 
 #pragma once
 
-#include "fu-firmware.h"
-#include "fu-usb-struct.h"
+#include "fu-usb-descriptor.h"
 
 #define FU_TYPE_USB_BOS_DESCRIPTOR (fu_usb_bos_descriptor_get_type())
-G_DECLARE_FINAL_TYPE(FuUsbBosDescriptor, fu_usb_bos_descriptor, FU, USB_BOS_DESCRIPTOR, FuFirmware)
+G_DECLARE_FINAL_TYPE(FuUsbBosDescriptor,
+		     fu_usb_bos_descriptor,
+		     FU,
+		     USB_BOS_DESCRIPTOR,
+		     FuUsbDescriptor)
 
 guint8
 fu_usb_bos_descriptor_get_capability(FuUsbBosDescriptor *self);
