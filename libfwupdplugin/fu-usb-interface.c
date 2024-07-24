@@ -182,23 +182,6 @@ fu_usb_interface_new(const struct libusb_interface_descriptor *iface)
 }
 
 /**
- * fu_usb_interface_get_length:
- * @self: a #FuUsbInterface
- *
- * Gets the USB bus number for the interface.
- *
- * Return value: The 8-bit bus number
- *
- * Since: 2.0.0
- **/
-guint8
-fu_usb_interface_get_length(FuUsbInterface *self)
-{
-	g_return_val_if_fail(FU_IS_USB_INTERFACE(self), 0);
-	return self->iface.bLength;
-}
-
-/**
  * fu_usb_interface_get_kind:
  * @self: a #FuUsbInterface
  *

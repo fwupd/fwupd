@@ -13,8 +13,6 @@
 #define FU_TYPE_USB_INTERFACE (fu_usb_interface_get_type())
 G_DECLARE_FINAL_TYPE(FuUsbInterface, fu_usb_interface, FU, USB_INTERFACE, FuFirmware)
 
-guint8
-fu_usb_interface_get_length(FuUsbInterface *self) G_GNUC_NON_NULL(1);
 FuUsbDescriptorKind
 fu_usb_interface_get_kind(FuUsbInterface *self) G_GNUC_NON_NULL(1);
 guint8
