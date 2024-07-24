@@ -365,6 +365,7 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 	const FuDellDockDockInfoHeader *header = NULL;
 	const FuDellDockEcQueryEntry *device_entry = NULL;
 	const FuDellDockEcAddrMap *map = NULL;
+	const gchar *hub_version;
 	guint32 oldest_base_pd = 0;
 	g_autoptr(GBytes) data = NULL;
 
@@ -496,7 +497,16 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 		fu_device_set_install_duration(device, tmp + 20);
 	}
 
-	/* passive flow is default enabled for production docks */
+	/* Determine if the passive flow should be used when flashing */
+	hub_version = fu_device_get_version(fu_device_get_proxy(device));
+	if (fu_version_compare(hub_version, "1.42", FWUPD_VERSION_FORMAT_PAIR) < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "dock containing hub2 version %s is not supported",
+			    hub_version);
+		return FALSE;
+	}
 	self->passive_flow = PASSIVE_REBOOT_MASK;
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
 	return TRUE;
