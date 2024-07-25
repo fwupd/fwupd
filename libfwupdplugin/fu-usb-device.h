@@ -66,10 +66,6 @@ void
 fu_usb_device_set_claim_retry_count(FuUsbDevice *self, guint claim_retry_count) G_GNUC_NON_NULL(1);
 guint
 fu_usb_device_get_claim_retry_count(FuUsbDevice *self) G_GNUC_NON_NULL(1);
-void
-fu_usb_device_set_open_retry_count(FuUsbDevice *self, guint open_retry_count) G_GNUC_NON_NULL(1);
-guint
-fu_usb_device_get_open_retry_count(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_usb_device_control_transfer(FuUsbDevice *self,
