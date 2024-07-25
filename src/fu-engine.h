@@ -30,6 +30,7 @@ G_DECLARE_FINAL_TYPE(FuEngine, fu_engine, FU, ENGINE, GObject)
  * @FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES:Do not load idle sources
  * @FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS:	Load built-in plugins
  * @FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT:	Ensure the client certificate exists
+ * @FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS:	Load external dload'ed plugins such as flashrom
  *
  * The flags to use when loading the engine.
  **/
@@ -43,6 +44,7 @@ typedef enum {
 	FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES = 1 << 5,
 	FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS = 1 << 6,
 	FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT = 1 << 7,
+	FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS = 1 << 8,
 	/*< private >*/
 	FU_ENGINE_LOAD_FLAG_LAST
 } FuEngineLoadFlags;
