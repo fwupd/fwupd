@@ -4456,6 +4456,47 @@ fu_progress_child_finished(void)
 }
 
 static void
+fu_plugin_struct_bits_func(void)
+{
+	g_autofree gchar *str1 = NULL;
+	g_autoptr(GByteArray) st2 = NULL;
+	g_autoptr(GByteArray) st = fu_struct_self_test_bits_new();
+	g_autoptr(GError) error = NULL;
+
+	/* 0b1111 + 0b1 + 0b0010 = 0b111110010 -> 0x1F2 */
+	g_assert_cmpint(st->len, ==, 4);
+	fu_dump_raw(G_LOG_DOMAIN, "buf", st->data, st->len);
+	g_assert_cmpint(st->data[0], ==, 0xF2);
+	g_assert_cmpint(st->data[1], ==, 0x01);
+	g_assert_cmpint(st->data[2], ==, 0x0);
+	g_assert_cmpint(st->data[3], ==, 0x0);
+
+	st2 = fu_struct_self_test_bits_parse(st->data, st->len, 0x0, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(st2);
+
+	g_assert_cmpint(fu_struct_self_test_bits_get_lower(st2), ==, 0x2);
+	g_assert_cmpint(fu_struct_self_test_bits_get_middle(st2), ==, 0b1);
+	g_assert_cmpint(fu_struct_self_test_bits_get_upper(st2), ==, 0xF);
+
+	str1 = fu_struct_self_test_bits_to_string(st2);
+	g_assert_cmpstr(str1,
+			==,
+			"FuStructSelfTestBits:\n"
+			"  lower: 0x2 [two]\n"
+			"  middle: 0x1\n"
+			"  upper: 0xf");
+
+	/* set all to maximum value */
+	fu_struct_self_test_bits_set_lower(st2, G_MAXUINT32);
+	fu_struct_self_test_bits_set_middle(st2, G_MAXUINT32);
+	fu_struct_self_test_bits_set_upper(st2, G_MAXUINT32);
+	g_assert_cmpint(fu_struct_self_test_bits_get_lower(st2), ==, 0xF);
+	g_assert_cmpint(fu_struct_self_test_bits_get_middle(st2), ==, 0x1);
+	g_assert_cmpint(fu_struct_self_test_bits_get_upper(st2), ==, 0xF);
+}
+
+static void
 fu_plugin_struct_func(void)
 {
 	gboolean ret;
@@ -4644,6 +4685,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_PROFILE", "1", TRUE);
 
 	g_test_add_func("/fwupd/struct", fu_plugin_struct_func);
+	g_test_add_func("/fwupd/struct{bits}", fu_plugin_struct_bits_func);
 	g_test_add_func("/fwupd/struct{wrapped}", fu_plugin_struct_wrapped_func);
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/string{password-mask}", fu_strpassmask_func);
