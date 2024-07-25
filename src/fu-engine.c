@@ -8255,7 +8255,8 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_progress_step_done(progress);
 
 	/* create client certificate */
-	fu_engine_ensure_client_certificate(self);
+	if (flags & FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT)
+		fu_engine_ensure_client_certificate(self);
 	fu_progress_step_done(progress);
 
 	/* get hardcoded approved and blocked firmware */

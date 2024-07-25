@@ -2318,7 +2318,8 @@ fu_dbus_daemon_setup(FuDaemon *daemon,
 			 self);
 	if (!fu_engine_load(engine,
 			    FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+				FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+				FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT,
 			    fu_progress_get_child(progress),
 			    error)) {
 		g_prefix_error(error, "failed to load engine: ");
