@@ -248,6 +248,7 @@ fu_util_start_engine(FuUtilPrivate *priv,
 	flags |= FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES;
 	flags |= FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS;
 	flags |= FU_ENGINE_LOAD_FLAG_HWINFO;
+	flags |= FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT;
 	if (!fu_engine_load(priv->engine, flags, progress, error))
 		return FALSE;
 	fu_util_show_plugin_warnings(priv);
