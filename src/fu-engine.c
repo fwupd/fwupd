@@ -7306,9 +7306,11 @@ fu_engine_load_plugins(FuEngine *self,
 
 	/* search */
 	plugin_path = fu_path_from_kind(FU_PATH_KIND_LIBDIR_PKG);
-	filenames = fu_path_get_files(plugin_path, &error_local);
-	if (filenames == NULL)
-		g_debug("no external plugins found: %s", error_local->message);
+	if (flags & FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS) {
+		filenames = fu_path_get_files(plugin_path, &error_local);
+		if (filenames == NULL)
+			g_debug("no external plugins found: %s", error_local->message);
+	}
 	fu_progress_step_done(progress);
 
 	/* load */
