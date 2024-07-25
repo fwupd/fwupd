@@ -225,12 +225,12 @@ fu_hid_device_close(FuDevice *device, GError **error)
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
 			g_debug("ignoring: %s", error_local->message);
-			return TRUE;
+		} else {
+			g_propagate_prefixed_error(error,
+						   g_steal_pointer(&error_local),
+						   "failed to release HID interface: ");
+			return FALSE;
 		}
-		g_propagate_prefixed_error(error,
-					   g_steal_pointer(&error_local),
-					   "failed to release HID interface: ");
-		return FALSE;
 	}
 
 	/* FuUsbDevice->close */
