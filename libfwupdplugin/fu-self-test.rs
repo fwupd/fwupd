@@ -26,3 +26,17 @@ struct SelfTestWrapped {
     base: SelfTest,
     more: u8,
 }
+
+#[repr(u4)]
+enum FuStructSelfTestLower {
+    None = 0x0,
+    One = 0x1,
+    Two = 0x2,
+}
+
+#[derive(New, Parse, ToString)]
+struct FuStructSelfTestBits {
+    lower: FuStructSelfTestLower = Two,
+    middle: u1 = 0b1,
+    upper: u4 = 0xF,
+}

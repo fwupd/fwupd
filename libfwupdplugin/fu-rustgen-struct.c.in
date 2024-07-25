@@ -51,6 +51,15 @@
     g_return_val_if_fail(st != NULL, 0x0);
     return fu_memread_{{item.type_mem}}(st->data + {{item.offset}}, {{item.endian_glib}});
 }
+{%- elif item.type in [Type.B32] %}
+{{export.value}}{{item.type_glib}}
+{{item.c_getter}}(const GByteArray *st)
+{
+    guint32 val;
+    g_return_val_if_fail(st != NULL, 0x0);
+    val = fu_memread_{{item.type_mem}}(st->data + {{item.offset}}, {{item.endian_glib}});
+    return (val >> {{item.bits_offset}}) & {{item.bits_mask}};
+}
 {%- endif %}
 {%- endif %}
 {%- endfor %}
@@ -119,6 +128,17 @@
     g_return_if_fail(st != NULL);
     st->data[{{item.offset}}] = value;
 }
+{%- elif item.type == Type.B32 %}
+{{export.value}}void
+{{item.c_setter}}(GByteArray *st, {{item.type_glib}} value)
+{
+    guint32 tmp;
+    g_return_if_fail(st != NULL);
+    tmp = fu_memread_{{item.type_mem}}(st->data + {{item.offset}}, {{item.endian_glib}});
+    tmp &= ~({{item.bits_mask}} << {{item.bits_offset}});
+    tmp |= (value & {{item.bits_mask}}) << {{item.bits_offset}};
+    fu_memwrite_{{item.type_mem}}(st->data + {{item.offset}}, tmp, {{item.endian_glib}});
+}
 {%- elif not item.multiplier and item.type in [Type.U16, Type.U24, Type.U32, Type.U64] %}
 {{export.value}}void
 {{item.c_setter}}(GByteArray *st, {{item.type_glib}} value)
@@ -175,7 +195,7 @@
     g_autoptr(GString) str = g_string_new("{{obj.name}}:\n");
     g_return_val_if_fail(st != NULL, NULL);
 {%- for item in obj.items | selectattr('enabled') | rejectattr('constant') %}
-{%- if not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64] %}
+{%- if not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64, Type.B32] %}
 {%- if item.enum_obj %}
     {
         const gchar *tmp = {{item.enum_obj.c_method('ToString')}}({{item.c_getter}}(st));
