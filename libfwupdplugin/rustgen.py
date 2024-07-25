@@ -201,7 +201,7 @@ class StructObj:
             for item in self.items:
                 if item.struct_obj:
                     item.struct_obj.add_private_export("ToString")
-                if item.enum_obj and not item.constant:
+                if item.enum_obj and not item.constant and item.enabled:
                     item.enum_obj.add_private_export("ToString")
         elif derive == "Parse":
             self.add_private_export("ParseInternal")
