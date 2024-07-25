@@ -44,7 +44,6 @@ typedef struct {
 	gint configuration;
 	GPtrArray *device_interfaces; /* (nullable) (element-type FuUsbDeviceInterface) */
 	guint claim_retry_count;
-	guint open_retry_count;
 	FuDeviceLocker *usb_device_locker;
 } FuUsbDevicePrivate;
 
@@ -318,41 +317,6 @@ fu_usb_device_get_claim_retry_count(FuUsbDevice *self)
 }
 
 /**
- * fu_usb_device_set_open_retry_count:
- * @self: a #FuUsbDevice
- * @open_retry_count: integer
- *
- * Sets the number of tries we should attempt when opening the device.
- *
- * Since: 1.9.9
- **/
-void
-fu_usb_device_set_open_retry_count(FuUsbDevice *self, guint open_retry_count)
-{
-	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_USB_DEVICE(self));
-	priv->open_retry_count = open_retry_count;
-}
-
-/**
- * fu_usb_device_get_open_retry_count:
- * @self: a #FuUsbDevice
- *
- * Sets the number of tries we should attempt when opening the device.
- *
- * Returns: integer, or `0` if no attempt should be made.
- *
- * Since: 1.9.9
- **/
-guint
-fu_usb_device_get_open_retry_count(FuUsbDevice *self)
-{
-	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_USB_DEVICE(self), G_MAXUINT);
-	return priv->open_retry_count;
-}
-
-/**
  * fu_usb_device_set_configuration:
  * @device: a #FuUsbDevice
  * @configuration: the configuration value to set
@@ -503,28 +467,6 @@ fu_usb_device_open_internal(FuUsbDevice *self, GError **error)
 }
 
 static gboolean
-fu_usb_device_open_retry_cb(FuDevice *device, gpointer user_data, GError **error)
-{
-	FuUsbDevice *self = FU_USB_DEVICE(device);
-	return fu_usb_device_open_internal(self, error);
-}
-
-static gboolean
-fu_usb_device_open_full(FuUsbDevice *self, GError **error)
-{
-	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->open_retry_count > 0) {
-		return fu_device_retry_full(FU_DEVICE(self),
-					    fu_usb_device_open_retry_cb,
-					    priv->open_retry_count,
-					    FU_USB_DEVICE_OPEN_DELAY,
-					    NULL,
-					    error);
-	}
-	return fu_usb_device_open_internal(self, error);
-}
-
-static gboolean
 fu_usb_device_close_internal(FuUsbDevice *self, GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
@@ -582,7 +524,7 @@ fu_usb_device_open(FuDevice *device, GError **error)
 		return TRUE;
 
 	/* open */
-	if (!fu_usb_device_open_full(self, error)) {
+	if (!fu_usb_device_open_internal(self, error)) {
 		g_prefix_error(error, "failed to open device: ");
 		return FALSE;
 	}
@@ -2774,7 +2716,6 @@ fu_usb_device_to_string(FuDevice *device, guint idt, GString *str)
 	if (priv->configuration >= 0)
 		fwupd_codec_string_append_hex(str, idt, "Configuration", priv->configuration);
 	fwupd_codec_string_append_hex(str, idt, "ClaimRetryCount", priv->claim_retry_count);
-	fwupd_codec_string_append_hex(str, idt, "OpenRetryCount", priv->open_retry_count);
 	fwupd_codec_string_append_hex(str, idt, "BusNum", priv->busnum);
 	fwupd_codec_string_append_hex(str, idt, "DevNum", priv->devnum);
 	for (guint i = 0; priv->device_interfaces != NULL && i < priv->device_interfaces->len;
