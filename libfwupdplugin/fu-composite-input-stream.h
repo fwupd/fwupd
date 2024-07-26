@@ -25,3 +25,7 @@ void
 fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
 					     FuPartialInputStream *partial_stream)
     G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_composite_input_stream_add_stream(FuCompositeInputStream *self,
+				     GInputStream *stream,
+				     GError **error) G_GNUC_NON_NULL(1, 2);
