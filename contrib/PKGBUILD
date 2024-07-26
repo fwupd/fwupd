@@ -35,7 +35,7 @@ build() {
         -Defi_binary=false \
         -Dsupported_build=enabled
 
-    ninja -v -C ../build
+    XDG_DATA_HOME=/tmp ninja -v -C ../build
 }
 
 check() {
