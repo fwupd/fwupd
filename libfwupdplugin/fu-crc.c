@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#include "fu-crc.h"
+#include "fu-crc-private.h"
 #include "fu-mem.h"
 
 /**

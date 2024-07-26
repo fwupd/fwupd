@@ -52,10 +52,6 @@ typedef enum {
 
 guint32
 fu_crc32(FuCrc32Kind kind, const guint8 *buf, gsize bufsz);
-guint32
-fu_crc32_step(FuCrc32Kind kind, const guint8 *buf, gsize bufsz, guint32 crc);
-guint32
-fu_crc32_done(FuCrc32Kind kind, guint32 crc);
 FuCrc32Kind
 fu_crc32_find(const guint8 *buf, gsize bufsz, guint32 crc_target);
 
