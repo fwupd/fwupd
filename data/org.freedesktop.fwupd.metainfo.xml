@@ -38,6 +38,41 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.22" date="2024-07-26">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a device test for the Acer D501 dock</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a PCB tag in the usi-dock GUID to distinguish different revisions</li>
+          <li>Add explicit hidraw permission to fwupd.service to fix several devices</li>
+          <li>Always load the flashrom plugin when using coreboot</li>
+          <li>Be explicit with the rts54hub detach retry delay to fix the Acer D501</li>
+          <li>Be more careful when setting thelio-io version strings</li>
+          <li>Fix a critical warning if a device returns unexpected data from DFU upload</li>
+          <li>Fix a critical warning if the DMI manufacturer is an empty string</li>
+          <li>Fix several reported integer overflows from Coverity</li>
+          <li>Fix the Blackbird and Talos II baseboard details</li>
+          <li>Fix transient version number issue after flashing wacom-usb devices</li>
+          <li>Increase the cros_ec acquiesce delay to manage additional reboots</li>
+          <li>Only accept valid ASCII cabinet filenames</li>
+          <li>Only require udevdir when gudev support is enabled</li>
+          <li>Only show one PixArt receiver device per physical device</li>
+          <li>Set the rts54hub version in more cases</li>
+          <li>Speed up the daemon self tests by ~60%</li>
+          <li>Use the bootloader build-timestamp as the fallback HWID BIOS version</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Framework SD</li>
+          <li>Raspberry Pi 5 (unofficial)</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.21" date="2024-06-13">
       <description>
         <p>
