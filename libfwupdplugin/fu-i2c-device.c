@@ -64,13 +64,17 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 	udev_parent =
 	    FU_UDEV_DEVICE(fu_device_get_backend_parent_with_subsystem(device, "i2c", NULL));
 	if (udev_parent != NULL) {
-		g_autofree gchar *devfile = NULL;
 		if (!fu_udev_device_parse_number(udev_parent, error))
 			return FALSE;
 		fu_udev_device_set_number(FU_UDEV_DEVICE(self),
 					  fu_udev_device_get_number(udev_parent));
-		devfile =
-		    g_strdup_printf("/dev/i2c-%u", (guint)fu_udev_device_get_number(udev_parent));
+	}
+
+	/* set the device file manually */
+	if (fu_udev_device_get_device_file(FU_UDEV_DEVICE(self)) == NULL) {
+		g_autofree gchar *devfile =
+		    g_strdup_printf("/dev/i2c-%u",
+				    (guint)fu_udev_device_get_number(FU_UDEV_DEVICE(self)));
 		fu_udev_device_set_device_file(FU_UDEV_DEVICE(self), devfile);
 	}
 
