@@ -9,7 +9,7 @@
 #include "config.h"
 
 #include "fu-chunk-array.h"
-#include "fu-crc.h"
+#include "fu-crc-private.h"
 #include "fu-input-stream.h"
 #include "fu-mem-private.h"
 #include "fu-sum.h"
