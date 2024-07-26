@@ -34,6 +34,7 @@ static gboolean
 fu_i2c_device_probe(FuDevice *device, GError **error)
 {
 	FuI2cDevice *self = FU_I2C_DEVICE(device);
+	GPtrArray *hwid_guids = fu_context_get_hwid_guids(fu_device_get_context(device));
 	g_autofree gchar *attr_name = NULL;
 	g_autoptr(FuUdevDevice) udev_parent = NULL;
 
@@ -78,6 +79,20 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 		    g_strdup_printf("/dev/i2c-%u",
 				    (guint)fu_udev_device_get_number(FU_UDEV_DEVICE(self)));
 		fu_udev_device_set_device_file(FU_UDEV_DEVICE(self), devfile);
+	}
+
+	/* i2c devices are often tied to the platform, and usually have very unhelpful names */
+	for (guint i = 0; i < hwid_guids->len; i++) {
+		const gchar *hwid_guid = g_ptr_array_index(hwid_guids, i);
+		fu_device_add_instance_str(device, "HWID", hwid_guid);
+		fu_device_build_instance_id_full(device,
+						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						 NULL,
+						 "I2C",
+						 "NAME",
+						 "HWID",
+						 NULL);
 	}
 
 	/* success */
