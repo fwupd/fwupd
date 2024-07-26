@@ -449,7 +449,8 @@ fu_udev_device_set_revision(FuUdevDevice *self, guint8 revision)
 	priv->revision = revision;
 }
 
-static void
+/* private */
+void
 fu_udev_device_set_number(FuUdevDevice *self, guint64 number)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);

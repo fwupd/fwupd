@@ -65,6 +65,8 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 		g_autofree gchar *devfile = NULL;
 		if (!fu_udev_device_parse_number(udev_parent, error))
 			return FALSE;
+		fu_udev_device_set_number(FU_UDEV_DEVICE(self),
+					  fu_udev_device_get_number(udev_parent));
 		devfile =
 		    g_strdup_printf("/dev/i2c-%u", (guint)fu_udev_device_get_number(udev_parent));
 		fu_udev_device_set_device_file(FU_UDEV_DEVICE(self), devfile);
