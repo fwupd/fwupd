@@ -16,6 +16,7 @@
 #include <errno.h>
 #endif
 
+#include "fu-hwids.h"
 #include "fu-i2c-device.h"
 #include "fu-string.h"
 #include "fu-udev-device-private.h"
@@ -33,6 +34,7 @@ G_DEFINE_TYPE(FuI2cDevice, fu_i2c_device, FU_TYPE_UDEV_DEVICE)
 static gboolean
 fu_i2c_device_probe(FuDevice *device, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(device);
 	FuI2cDevice *self = FU_I2C_DEVICE(device);
 	g_autofree gchar *attr_name = NULL;
 	g_autoptr(FuUdevDevice) udev_parent = NULL;
@@ -69,6 +71,36 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 		    g_strdup_printf("/dev/i2c-%u", (guint)fu_udev_device_get_number(udev_parent));
 		fu_udev_device_set_device_file(FU_UDEV_DEVICE(self), devfile);
 	}
+
+	/* i2c devices are often tied to the platform, and usually have very unhelpful names */
+	fu_device_add_instance_strsafe(device,
+				       "PMANU",
+				       fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER));
+	fu_device_add_instance_strsafe(device,
+				       "PSKU",
+				       fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_SKU));
+	fu_device_add_instance_strsafe(device,
+				       "PNAME",
+				       fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME));
+	fu_device_add_instance_u16(device, "NUM", fu_udev_device_get_number(FU_UDEV_DEVICE(self)));
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "I2C",
+					 "PMANU",
+					 "PSKU",
+					 "NUM",
+					 NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "I2C",
+					 "PMANU",
+					 "PNAME",
+					 "NUM",
+					 NULL);
 
 	/* success */
 	return TRUE;
