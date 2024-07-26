@@ -129,6 +129,15 @@ fu_dpaux_device_setup(FuDevice *device, GError **error)
 	priv->dpcd_dev_id = fu_struct_dpaux_dpcd_get_dev_id(st);
 	fu_device_set_version_raw(device, fu_struct_dpaux_dpcd_get_fw_ver(st));
 
+	/* sanity check */
+	if (priv->dpcd_ieee_oui == 0x0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no DPCD OUI data was provided");
+		return FALSE;
+	}
+
 	/* build some extra GUIDs */
 	fu_device_add_instance_u32(device, "OUI", priv->dpcd_ieee_oui);
 	fu_device_add_instance_u8(device, "HWREV", priv->dpcd_hw_rev);
