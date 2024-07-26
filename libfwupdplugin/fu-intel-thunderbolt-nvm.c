@@ -566,6 +566,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	switch (priv->family) {
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE:
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_GOSHEN_RIDGE:
+	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_BARLOW_RIDGE:
 		if (!fu_intel_thunderbolt_nvm_read_uint16(
 			self,
 			FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
