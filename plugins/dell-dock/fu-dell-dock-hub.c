@@ -140,6 +140,11 @@ fu_dell_dock_hub_setup(FuDevice *device, GError **error)
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_dell_dock_hub_parent_class)->setup(device, error))
 		return FALSE;
+
+	/* skip version setup here as we don't know HID header format yet */
+	if (fu_device_has_private_flag(device, FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE))
+		return TRUE;
+
 	return fu_dell_dock_hid_get_hub_version(device, error);
 }
 
