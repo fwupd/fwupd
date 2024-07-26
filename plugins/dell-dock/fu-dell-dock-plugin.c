@@ -55,6 +55,10 @@ fu_dell_dock_plugin_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 	if (!fu_dell_dock_plugin_create_node(plugin, FU_DEVICE(ec_device), error))
 		return FALSE;
 
+	/* setup hub version after knowing the dock type is supported */
+	if (!fu_dell_dock_hid_get_hub_version(proxy, error))
+		return FALSE;
+
 	/* create mst endpoint */
 	mst_device = fu_dell_dock_mst_new(ctx);
 	if (fu_dell_dock_get_dock_type(FU_DEVICE(ec_device)) == DOCK_BASE_TYPE_ATOMIC)
