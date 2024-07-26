@@ -77,7 +77,8 @@ fu_usi_dock_mcu_device_rx(FuUsiDockMcuDevice *self,
 				      buf,
 				      sizeof(buf),
 				      FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
+				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER |
+					  FU_HID_DEVICE_FLAG_RETRY_FAILURE,
 				      error)) {
 		return FALSE;
 	}
