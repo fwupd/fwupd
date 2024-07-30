@@ -11,7 +11,6 @@ TimeoutSec=180
 RuntimeDirectory=@motd_dir@
 RuntimeDirectoryPreserve=yes
 BusName=org.freedesktop.fwupd
-DeviceAllow=char-hidraw rw
 ExecStart=@libexecdir@/fwupd/fwupd
 PrivateTmp=yes
 ProtectHome=yes
