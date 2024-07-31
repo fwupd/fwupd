@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/usr/bin/env -S bash -e
 gcc=$(gcc -dumpmachine)
 DIST="$(dirname $0)/../dist"
 BIN="$(basename $0)"
