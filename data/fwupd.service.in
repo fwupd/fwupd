@@ -15,6 +15,7 @@ DeviceAllow=char-hidraw rw
 DeviceAllow=char-tpm rw
 DeviceAllow=char-nvme rw
 DeviceAllow=char-drm rw
+DeviceAllow=char-aux rw
 DeviceAllow=char-cpu/* rw
 DeviceAllow=char-gpiochip rw
 DeviceAllow=char-usb rw
