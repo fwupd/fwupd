@@ -17,6 +17,7 @@ DeviceAllow=char-nvme rw
 DeviceAllow=char-drm rw
 DeviceAllow=char-aux rw
 DeviceAllow=char-cpu/* rw
+DeviceAllow=char-mei rw
 DeviceAllow=char-gpiochip rw
 DeviceAllow=char-usb rw
 DeviceAllow=char-usb_device rw
