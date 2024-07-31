@@ -319,6 +319,11 @@ if gnutls.found()
   conf.set('HAVE_GNUTLS', '1')
 endif
 
+libgbinder = dependency('libgbinder', version: '>= 1.1.0', required: get_option('binder'))
+if libgbinder.found()
+  conf.set('HAVE_BINDER', '1')
+endif
+
 lzma = dependency('liblzma', required: get_option('lzma'))
 if lzma.found()
   conf.set('HAVE_LZMA', '1')

@@ -76,6 +76,7 @@ build() {
   arch-meson -D b_lto=false $CI ../build \
     -Dplugin_powerd=disabled \
     -Dlaunchd=disabled \
+    -Dbinder=disabled \
     -Ddocs=enabled \
     -Defi_binary=false \
     -Dplugin_uefi_capsule_splash=false \

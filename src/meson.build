@@ -363,6 +363,57 @@ executable(
   install_dir: daemon_dir
 )
 
+if libgbinder.found()
+  executable(
+    'fwupd-binder',
+    fwupdengine_rs,
+    fwupddaemon_rs,
+    plugins_hdr,
+    sources: [
+      daemon_loader_src,
+      'fu-daemon.c',
+      'fu-binder-daemon.c',
+    ],
+    include_directories: [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    dependencies: [
+      valgrind,
+      libsystemd,
+      engine_dep,
+      libgbinder,
+    ],
+    link_with: [
+      fwupdengine,
+      plugin_libs,
+    ],
+  )
+  fwupdmgr = executable(
+    'fwupdmgr-binder',
+    sources: [
+      'fu-binder-client.c',
+      'fu-debug.c',
+    ],
+    include_directories: [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    dependencies: [
+      libfwupd_deps,
+      client_dep,
+      libgbinder,
+    ],
+    link_with: [
+      fwupd,
+      fwupdplugin,
+      fwupdutil,
+    ],
+  )
+endif
+
 endif
 
 if get_option('tests')

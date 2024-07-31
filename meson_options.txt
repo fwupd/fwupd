@@ -102,6 +102,10 @@ option('gnutls',
     'false': 'disabled',
   },
 )
+option('binder',
+  type: 'feature',
+  description: 'Android binder support',
+)
 option('sqlite',
   type: 'feature',
   description: 'sqlite support',
