@@ -2067,6 +2067,7 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 {
 	gboolean download_remote_enabled = FALSE;
 	guint devices_supported_cnt = 0;
+	guint devices_updatable_cnt = 0;
 	guint refresh_cnt = 0;
 	g_autoptr(GPtrArray) devs = NULL;
 	g_autoptr(GPtrArray) remotes = NULL;
@@ -2136,6 +2137,8 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 		FwupdDevice *dev = g_ptr_array_index(devs, i);
 		if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED))
 			devices_supported_cnt++;
+		if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
+			devices_updatable_cnt++;
 	}
 
 	/* TRANSLATORS: success message -- where 'metadata' is information
@@ -2144,10 +2147,11 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 
 	g_string_append_printf(str,
 			       /* TRANSLATORS: how many local devices can expect updates now */
-			       ngettext("%u local device supported",
-					"%u local devices supported",
+			       ngettext("%u local device has updates published",
+					"%u of %u local devices have updates published",
 					devices_supported_cnt),
-			       devices_supported_cnt);
+			       devices_supported_cnt,
+			       devices_updatable_cnt);
 	fu_console_print_literal(priv->console, str->str);
 
 	/* auto-upload any reports */
