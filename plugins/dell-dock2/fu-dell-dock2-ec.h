@@ -42,8 +42,6 @@ guint8
 fu_dell_dock2_ec_get_dock_sku(FuDevice *device);
 const gchar *
 fu_dell_dock2_ec_devicetype_to_str(guint8 device_type, guint8 sub_type, guint8 instance);
-struct FuDellDock2EcQueryEntry *
-fu_dell_dock2_ec_dev_entry(FuDevice *device, guint8 device_type, guint8 sub_type, guint8 instance);
 gboolean
 fu_dell_dock2_ec_is_fwupdate_available_cmd(FuDevice *device, GError **error);
 gboolean

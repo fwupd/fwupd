@@ -98,6 +98,27 @@ struct _FuDellDock2Ec {
 
 G_DEFINE_TYPE(FuDellDock2Ec, fu_dell_dock2_ec, FU_TYPE_HID_DEVICE)
 
+static struct FuDellDock2EcQueryEntry *
+fu_dell_dock2_ec_dev_entry(FuDevice *device, guint8 device_type, guint8 sub_type, guint8 instance)
+{
+	FuDellDock2Ec *self = FU_DELL_DOCK2_EC(device);
+
+	for (guint i = 0; i < self->dock_info->header.total_devices; i++) {
+		if (self->dock_info->devices[i].ec_addr_map.device_type != device_type)
+			continue;
+		if (sub_type != 0 && self->dock_info->devices[i].ec_addr_map.sub_type != sub_type)
+			continue;
+
+		/* vary by instance index */
+		if (device_type == DELL_DOCK2_EC_DEV_TYPE_PD &&
+		    self->dock_info->devices[i].ec_addr_map.instance != instance)
+			continue;
+
+		return &self->dock_info->devices[i];
+	}
+	return NULL;
+}
+
 const gchar *
 fu_dell_dock2_ec_devicetype_to_str(guint8 device_type, guint8 sub_type, guint8 instance)
 {
@@ -582,27 +603,6 @@ fu_dell_dock2_ec_run_passive_update(FuDevice *device, GError **error)
 
 	g_info("Registered passive update for dock");
 	return fu_dell_dock2_ec_write(device, req, error);
-}
-
-struct FuDellDock2EcQueryEntry *
-fu_dell_dock2_ec_dev_entry(FuDevice *device, guint8 device_type, guint8 sub_type, guint8 instance)
-{
-	FuDellDock2Ec *self = FU_DELL_DOCK2_EC(device);
-
-	for (guint i = 0; i < self->dock_info->header.total_devices; i++) {
-		if (self->dock_info->devices[i].ec_addr_map.device_type != device_type)
-			continue;
-		if (sub_type != 0 && self->dock_info->devices[i].ec_addr_map.sub_type != sub_type)
-			continue;
-
-		/* vary by instance index */
-		if (device_type == DELL_DOCK2_EC_DEV_TYPE_PD &&
-		    self->dock_info->devices[i].ec_addr_map.instance != instance)
-			continue;
-
-		return &self->dock_info->devices[i];
-	}
-	return NULL;
 }
 
 static gboolean
