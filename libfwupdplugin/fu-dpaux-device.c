@@ -129,13 +129,10 @@ fu_dpaux_device_setup(FuDevice *device, GError **error)
 	priv->dpcd_dev_id = fu_struct_dpaux_dpcd_get_dev_id(st);
 	fu_device_set_version_raw(device, fu_struct_dpaux_dpcd_get_fw_ver(st));
 
-	/* sanity check */
+	/* sanity check, for broader display support it's not enforced */
 	if (priv->dpcd_ieee_oui == 0x0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no DPCD OUI data was provided");
-		return FALSE;
+		g_debug("DPAUX device has no IEEE OUI implemented");
+		return TRUE;
 	}
 
 	/* build some extra GUIDs */
