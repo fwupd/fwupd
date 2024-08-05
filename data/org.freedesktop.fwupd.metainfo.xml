@@ -38,6 +38,15 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.23" date="2024-08-05">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fix a regression in 1.9.22 that caused some devices not to probe correctly</li>
+          <li>Try harder to get a valid response when flashing usi-dock devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.22" date="2024-07-26">
       <description>
         <p>
