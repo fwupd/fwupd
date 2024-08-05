@@ -12,4 +12,4 @@
 G_DECLARE_FINAL_TYPE(FuDellDock2Wtpd, fu_dell_dock2_wtpd, FU, DELL_DOCK2_WTPD, FuDevice)
 
 FuDellDock2Wtpd *
-fu_dell_dock2_wtpd_new(FuDevice *parent);
+fu_dell_dock2_wtpd_new(FuDevice *proxy);

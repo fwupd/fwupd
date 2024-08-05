@@ -12,6 +12,7 @@
 /* register the firmware types */
 #include "fu-dell-dock2-dpmux-firmware.h"
 #include "fu-dell-dock2-ec-firmware.h"
+#include "fu-dell-dock2-ilan-firmware.h"
 #include "fu-dell-dock2-pd-firmware.h"
 #include "fu-dell-dock2-rtshub-firmware.h"
 
@@ -73,19 +74,6 @@ fu_dell_dock2_plugin_device_add(FuPlugin *plugin, FuDevice *device, GError **err
 			return FALSE;
 
 		fu_device_add_child(ec_device, FU_DEVICE(hub_device));
-	} else if (vid == DELL_DOCK2_RMM_USB_VID && pid == DELL_DOCK2_RMM_USB_PID) {
-		g_autoptr(FuDellDock2Rmm) rmm_device = NULL;
-		g_autoptr(FuDeviceLocker) locker = NULL;
-		guint32 rmm_version_raw = fu_dell_dock2_ec_get_rmm_version(ec_device);
-
-		rmm_device = fu_dell_dock2_rmm_new(FU_USB_DEVICE(device), dock_type);
-		locker = fu_device_locker_new(FU_DEVICE(rmm_device), error);
-		if (locker == NULL)
-			return FALSE;
-
-		fu_device_add_child(ec_device, FU_DEVICE(rmm_device));
-		fu_dell_dock2_rmm_setup_version_raw(FU_DEVICE(rmm_device),
-						    GUINT32_FROM_BE(rmm_version_raw));
 	} else {
 		g_debug("ignoring unknown device, vid: %04X, pid: %04X", vid, pid);
 		return TRUE;
@@ -103,7 +91,6 @@ fu_dell_dock2_plugin_ec_add_cached_devices(FuPlugin *plugin, FuDevice *ec_device
 	    {DELL_VID, DELL_DOCK2_USB_RTS5480_GEN1_PID},
 	    {DELL_VID, DELL_DOCK2_USB_RTS5480_GEN2_PID},
 	    {DELL_VID, DELL_DOCK2_USB_RTS5485_GEN2_PID},
-	    {DELL_DOCK2_RMM_USB_VID, DELL_DOCK2_RMM_USB_PID},
 	    {0},
 	};
 
@@ -181,28 +168,36 @@ fu_dell_dock2_plugin_backend_device_added(FuPlugin *plugin,
 }
 
 static void
-fu_dell_dock2_plugin_config_mst_dev(FuDevice *device_mst)
+fu_dell_dock2_plugin_config_mst_dev(FuPlugin *plugin)
 {
 	g_autofree const gchar *devname = NULL;
-	guint16 vid = fu_usb_device_get_vid(FU_USB_DEVICE(device_mst));
-	guint16 pid = fu_usb_device_get_pid(FU_USB_DEVICE(device_mst));
+	FuDevice *device_ec = fu_plugin_cache_lookup(plugin, "ec");
+	FuDevice *device_mst = fu_plugin_cache_lookup(plugin, "mst");
+	DellDock2EcDevType mst_devtype = DELL_DOCK2_EC_DEV_TYPE_MST;
+	DellDock2EcDevMstSubtype mst_subtype;
+
+	if (device_ec == NULL || device_mst == NULL)
+		return;
+
+	/* run only once */
+	if (fu_device_has_internal_flag(device_mst, FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER))
+		return;
 
 	/* vmm8430 */
-	if (vid == MST_VMM8430_USB_VID && pid == MST_VMM8430_USB_PID)
-		devname = g_strdup(
-		    fu_dell_dock2_ec_devicetype_to_str(DELL_DOCK2_EC_DEV_TYPE_MST,
-						       DELL_DOCK2_EC_DEV_MST_SUBTYPE_VMM8430,
-						       0));
+	mst_subtype = DELL_DOCK2_EC_DEV_MST_SUBTYPE_VMM8430;
+	if (fu_dell_dock2_ec_is_dev_present(device_ec, mst_devtype, mst_subtype, 0))
+		devname = g_strdup(fu_dell_dock2_ec_devicetype_to_str(mst_devtype, mst_subtype, 0));
 
 	/* vmm9430 */
-	if (vid == MST_VMM9430_USB_VID && pid == MST_VMM9430_USB_PID)
-		devname = g_strdup(
-		    fu_dell_dock2_ec_devicetype_to_str(DELL_DOCK2_EC_DEV_TYPE_MST,
-						       DELL_DOCK2_EC_DEV_MST_SUBTYPE_VMM9430,
-						       0));
+	mst_subtype = DELL_DOCK2_EC_DEV_MST_SUBTYPE_VMM9430;
+	if (fu_dell_dock2_ec_is_dev_present(device_ec, mst_devtype, mst_subtype, 0))
+		devname = g_strdup(fu_dell_dock2_ec_devicetype_to_str(mst_devtype, mst_subtype, 0));
 
 	/* device name */
-	g_return_if_fail(devname != NULL);
+	if (devname == NULL) {
+		g_warning("no mst device found in ec, device name is undetermined");
+		return;
+	}
 	fu_device_set_name(device_mst, devname);
 
 	/* flags */
@@ -217,7 +212,7 @@ fu_dell_dock2_plugin_config_mst_dev(FuDevice *device_mst)
 }
 
 static void
-fu_dell_dock2_plugin_setup_relationship(FuPlugin *plugin, FuDevice *device)
+fu_dell_dock2_plugin_config_parentship(FuPlugin *plugin)
 {
 	FuDevice *device_ec = fu_plugin_cache_lookup(plugin, "ec");
 	FuDevice *device_usb4 = fu_plugin_cache_lookup(plugin, "usb4");
@@ -263,17 +258,19 @@ fu_dell_dock2_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	vid = fu_usb_device_get_vid(FU_USB_DEVICE(device));
 	pid = fu_usb_device_get_pid(FU_USB_DEVICE(device));
 	if ((vid == MST_VMM8430_USB_VID && pid == MST_VMM8430_USB_PID) ||
-	    (vid == MST_VMM9430_USB_VID && pid == MST_VMM9430_USB_PID)) {
-		fu_dell_dock2_plugin_config_mst_dev(device);
+	    (vid == MST_VMM9430_USB_VID && pid == MST_VMM9430_USB_PID) ||
+	    (vid == MST_VMM89430_USB_VID && pid == MST_VMM89430_USB_PID))
 		fu_plugin_cache_add(plugin, "mst", device);
-	}
 
 	/* add ec to cache */
 	if (FU_IS_DELL_DOCK2_EC(device))
 		fu_plugin_cache_add(plugin, "ec", device);
 
+	/* config mst device */
+	fu_dell_dock2_plugin_config_mst_dev(plugin);
+
 	/* setup parent device */
-	fu_dell_dock2_plugin_setup_relationship(plugin, device);
+	fu_dell_dock2_plugin_config_parentship(plugin);
 }
 
 static gboolean
@@ -375,6 +372,7 @@ fu_dell_dock2_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_DELL_DOCK2_EC_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_DELL_DOCK2_RTSHUB_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_DELL_DOCK2_DPMUX_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_DELL_DOCK2_ILAN_FIRMWARE);
 }
 
 static void

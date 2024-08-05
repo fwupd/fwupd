@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-dell-dock2-common.h"
 #include "fu-dell-dock2-wtpd-firmware.h"
 
 #define DOCK_WTPD_VERSION_OFFSET 0x2019
@@ -33,7 +34,7 @@ fu_dell_dock2_wtpd_firmware_parse(FuFirmware *firmware,
 				      error))
 		return FALSE;
 
-	version_str = fu_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_BCD);
+	version_str = fu_hex_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_QUAD);
 	fu_firmware_set_version_raw(firmware, version_raw);
 	fu_firmware_set_version(firmware, version_str);
 	return TRUE;

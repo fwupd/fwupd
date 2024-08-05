@@ -12,4 +12,4 @@
 G_DECLARE_FINAL_TYPE(FuDellDock2Dpmux, fu_dell_dock2_dpmux, FU, DELL_DOCK2_DPMUX, FuDevice)
 
 FuDellDock2Dpmux *
-fu_dell_dock2_dpmux_new(FuDevice *parent);
+fu_dell_dock2_dpmux_new(FuDevice *proxy);

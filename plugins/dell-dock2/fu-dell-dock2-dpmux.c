@@ -13,7 +13,6 @@
 
 struct _FuDellDock2Dpmux {
 	FuDevice parent_instance;
-	guint8 dpmux_identifier;
 };
 
 G_DEFINE_TYPE(FuDellDock2Dpmux, fu_dell_dock2_dpmux, FU_TYPE_DEVICE)
@@ -60,7 +59,6 @@ fu_dell_dock2_dpmux_write(FuDevice *device,
 			  GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy(device);
-	FuDellDock2Dpmux *self = FU_DELL_DOCK2_DPMUX(device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_whdr = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
@@ -78,9 +76,7 @@ fu_dell_dock2_dpmux_write(FuDevice *device,
 		return FALSE;
 
 	/* construct writing buffer */
-	fw_whdr = fu_dell_dock2_hid_fwup_pkg_new(fw,
-						 DELL_DOCK2_EC_DEV_TYPE_DP_MUX,
-						 self->dpmux_identifier);
+	fw_whdr = fu_dell_dock2_hid_fwup_pkg_new(fw, DELL_DOCK2_EC_DEV_TYPE_DP_MUX, 0);
 
 	/* prepare the chunks */
 	chunks = fu_chunk_array_new_from_bytes(fw_whdr, 0, DELL_DOCK2_EC_HID_DATA_PAGE_SZ);
@@ -146,7 +142,6 @@ fu_dell_dock2_dpmux_new(FuDevice *proxy)
 	FuContext *ctx = fu_device_get_context(proxy);
 	FuDellDock2Dpmux *self = NULL;
 	self = g_object_new(FU_TYPE_DELL_DOCK2_DPMUX, "context", ctx, NULL);
-	self->dpmux_identifier = 0;
 	fu_device_set_proxy(FU_DEVICE(self), proxy);
 	return self;
 }

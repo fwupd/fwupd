@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-dell-dock2-common.h"
 #include "fu-dell-dock2-pd-firmware.h"
 
 #define DOCK_PD_VERSION_OFFSET 0x46
@@ -76,7 +77,7 @@ fu_dell_dock2_pd_firmware_set_version(FuFirmware *firmware,
 	if (!fu_input_stream_read_u32(stream, version_offset, &raw_version, G_LITTLE_ENDIAN, error))
 		return FALSE;
 
-	ver = fu_version_from_uint32(raw_version, FWUPD_VERSION_FORMAT_QUAD);
+	ver = fu_hex_version_from_uint32(raw_version, FWUPD_VERSION_FORMAT_QUAD);
 	fu_firmware_set_version(firmware, ver);
 	fu_firmware_set_version_raw(firmware, raw_version);
 

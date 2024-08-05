@@ -27,6 +27,8 @@ fu_dell_dock2_ec_run_passive_update(FuDevice *device, GError **error);
 guint32
 fu_dell_dock2_ec_get_pd_version(FuDevice *device, guint8 sub_type, guint8 instance);
 guint32
+fu_dell_dock2_ec_get_ilan_version(FuDevice *device);
+guint32
 fu_dell_dock2_ec_get_wtpd_version(FuDevice *device);
 guint32
 fu_dell_dock2_ec_get_rmm_version(FuDevice *device);
@@ -46,3 +48,8 @@ gboolean
 fu_dell_dock2_ec_is_fwupdate_available_cmd(FuDevice *device, GError **error);
 gboolean
 fu_dell_dock2_ec_is_dock_ready4update(FuDevice *device, GError **error);
+gboolean
+fu_dell_dock2_ec_is_dev_present(FuDevice *device,
+				guint8 dev_type,
+				guint8 sub_type,
+				guint8 instance);

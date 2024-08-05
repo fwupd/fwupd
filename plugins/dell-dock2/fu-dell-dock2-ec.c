@@ -119,6 +119,12 @@ fu_dell_dock2_ec_dev_entry(FuDevice *device, guint8 device_type, guint8 sub_type
 	return NULL;
 }
 
+gboolean
+fu_dell_dock2_ec_is_dev_present(FuDevice *device, guint8 dev_type, guint8 sub_type, guint8 instance)
+{
+	return fu_dell_dock2_ec_dev_entry(device, dev_type, sub_type, instance) != NULL;
+}
+
 const gchar *
 fu_dell_dock2_ec_devicetype_to_str(guint8 device_type, guint8 sub_type, guint8 instance)
 {
@@ -160,7 +166,7 @@ fu_dell_dock2_ec_devicetype_to_str(guint8 device_type, guint8 sub_type, guint8 i
 	case DELL_DOCK2_EC_DEV_TYPE_DP_MUX:
 		return "DP Mux";
 	case DELL_DOCK2_EC_DEV_TYPE_LAN:
-		return "LAN";
+		return "Intel i226-LM";
 	case DELL_DOCK2_EC_DEV_TYPE_FAN:
 		return "Fan";
 	case DELL_DOCK2_EC_DEV_TYPE_RMM:
@@ -306,6 +312,24 @@ fu_dell_dock2_ec_probe_subcomponents(FuDevice *device, GError **error)
 
 		weltrend_device = fu_dell_dock2_wtpd_new(device);
 		if (!fu_dell_dock2_ec_create_node(device, FU_DEVICE(weltrend_device), error))
+			return FALSE;
+	}
+
+	/* Remote Management */
+	if (fu_dell_dock2_ec_dev_entry(device, DELL_DOCK2_EC_DEV_TYPE_RMM, 0, 0) != NULL) {
+		g_autoptr(FuDellDock2Rmm) rmm_device = NULL;
+
+		rmm_device = fu_dell_dock2_rmm_new(device);
+		if (!fu_dell_dock2_ec_create_node(device, FU_DEVICE(rmm_device), error))
+			return FALSE;
+	}
+
+	/* Intel i266-LM */
+	if (fu_dell_dock2_ec_dev_entry(device, DELL_DOCK2_EC_DEV_TYPE_LAN, 0, 0) != NULL) {
+		g_autoptr(FuDellDock2Ilan) ilan_device = NULL;
+
+		ilan_device = fu_dell_dock2_ilan_new(device);
+		if (!fu_dell_dock2_ec_create_node(device, FU_DEVICE(ilan_device), error))
 			return FALSE;
 	}
 
@@ -643,9 +667,19 @@ guint32
 fu_dell_dock2_ec_get_pd_version(FuDevice *device, guint8 sub_type, guint8 instance)
 {
 	struct FuDellDock2EcQueryEntry *dev_entry = NULL;
+	DellDock2EcDevType dev_type = DELL_DOCK2_EC_DEV_TYPE_PD;
 
-	dev_entry =
-	    fu_dell_dock2_ec_dev_entry(device, DELL_DOCK2_EC_DEV_TYPE_PD, sub_type, instance);
+	dev_entry = fu_dell_dock2_ec_dev_entry(device, dev_type, sub_type, instance);
+	return (dev_entry == NULL) ? 0 : dev_entry->version.version_32;
+}
+
+guint32
+fu_dell_dock2_ec_get_ilan_version(FuDevice *device)
+{
+	struct FuDellDock2EcQueryEntry *dev_entry = NULL;
+	DellDock2EcDevType dev_type = DELL_DOCK2_EC_DEV_TYPE_LAN;
+
+	dev_entry = fu_dell_dock2_ec_dev_entry(device, dev_type, 0, 0);
 	return (dev_entry == NULL) ? 0 : dev_entry->version.version_32;
 }
 
@@ -653,8 +687,9 @@ guint32
 fu_dell_dock2_ec_get_wtpd_version(FuDevice *device)
 {
 	struct FuDellDock2EcQueryEntry *dev_entry = NULL;
+	DellDock2EcDevType dev_type = DELL_DOCK2_EC_DEV_TYPE_WTPD;
 
-	dev_entry = fu_dell_dock2_ec_dev_entry(device, DELL_DOCK2_EC_DEV_TYPE_WTPD, 0, 0);
+	dev_entry = fu_dell_dock2_ec_dev_entry(device, dev_type, 0, 0);
 	return (dev_entry == NULL) ? 0 : dev_entry->version.version_32;
 }
 
@@ -662,8 +697,9 @@ guint32
 fu_dell_dock2_ec_get_dpmux_version(FuDevice *device)
 {
 	struct FuDellDock2EcQueryEntry *dev_entry = NULL;
+	DellDock2EcDevType dev_type = DELL_DOCK2_EC_DEV_TYPE_DP_MUX;
 
-	dev_entry = fu_dell_dock2_ec_dev_entry(device, DELL_DOCK2_EC_DEV_TYPE_DP_MUX, 0, 0);
+	dev_entry = fu_dell_dock2_ec_dev_entry(device, dev_type, 0, 0);
 	return (dev_entry == NULL) ? 0 : dev_entry->version.version_32;
 }
 
@@ -671,8 +707,9 @@ guint32
 fu_dell_dock2_ec_get_rmm_version(FuDevice *device)
 {
 	struct FuDellDock2EcQueryEntry *dev_entry = NULL;
+	DellDock2EcDevType dev_type = DELL_DOCK2_EC_DEV_TYPE_RMM;
 
-	dev_entry = fu_dell_dock2_ec_dev_entry(device, DELL_DOCK2_EC_DEV_TYPE_RMM, 0, 0);
+	dev_entry = fu_dell_dock2_ec_dev_entry(device, dev_type, 0, 0);
 	return (dev_entry == NULL) ? 0 : dev_entry->version.version_32;
 }
 
@@ -680,8 +717,9 @@ static guint32
 fu_dell_dock2_ec_get_ec_version(FuDevice *device)
 {
 	struct FuDellDock2EcQueryEntry *dev_entry = NULL;
+	DellDock2EcDevType dev_type = DELL_DOCK2_EC_DEV_TYPE_MAIN_EC;
 
-	dev_entry = fu_dell_dock2_ec_dev_entry(device, DELL_DOCK2_EC_DEV_TYPE_MAIN_EC, 0, 0);
+	dev_entry = fu_dell_dock2_ec_dev_entry(device, dev_type, 0, 0);
 	return (dev_entry == NULL) ? 0 : dev_entry->version.version_32;
 }
 
@@ -858,7 +896,7 @@ static gboolean
 fu_dell_dock2_ec_open(FuDevice *device, GError **error)
 {
 	/* FuUdevDevice->open */
-	fu_device_sleep(device, 5000);
+	fu_device_sleep(device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	return FU_DEVICE_CLASS(fu_dell_dock2_ec_parent_class)->open(device, error);
 }
 
@@ -905,7 +943,6 @@ fu_dell_dock2_ec_init(FuDellDock2Ec *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_DELL_DOCK2_EC_FIRMWARE);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 }
 
 static void

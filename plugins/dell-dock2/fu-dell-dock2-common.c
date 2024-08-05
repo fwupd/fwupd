@@ -20,8 +20,8 @@ fu_hex_version_from_uint32(guint32 val, FwupdVersionFormat kind)
 				       val & 0xff);
 	}
 	if (kind == FWUPD_VERSION_FORMAT_PAIR) {
-		/* AABB.CCDD */
-		return g_strdup_printf("%x.%x", (val >> 16) & 0xffff, val & 0xffff);
+		/* AA.BB */
+		return g_strdup_printf("%x.%x", (val >> 8) & 0xff, val & 0xff);
 	}
 	return NULL;
 }

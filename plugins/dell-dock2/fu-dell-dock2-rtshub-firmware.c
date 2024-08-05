@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-dell-dock2-common.h"
 #include "fu-dell-dock2-rtshub-firmware.h"
 
 #define DOCK_RTSHUB_GEN2_VERSION_OFFSET 0x7F52
@@ -77,7 +78,7 @@ fu_dell_dock2_rtshub_firmware_parse(FuFirmware *firmware,
 	if (!fu_input_stream_read_u16(stream, version_offset, &version_raw, G_BIG_ENDIAN, error))
 		return FALSE;
 
-	version_str = fu_version_from_uint16(version_raw, FWUPD_VERSION_FORMAT_BCD);
+	version_str = fu_hex_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_PAIR);
 	fu_firmware_set_version_raw(firmware, version_raw);
 	fu_firmware_set_version(firmware, version_str);
 
