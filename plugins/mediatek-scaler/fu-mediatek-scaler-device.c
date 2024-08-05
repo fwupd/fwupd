@@ -92,6 +92,12 @@ fu_mediatek_scaler_device_set_i2c_dev(FuMediatekScalerDevice *self,
 {
 	for (guint i = 0; i < devices->len; i++) {
 		FuUdevDevice *device = g_ptr_array_index(devices, i);
+		g_autoptr(GUdevClient) udev_client = NULL;
+		g_autoptr(GUdevDevice) udev_i2c_dev = NULL;
+		g_autofree gchar *physical_id = NULL;
+		const gchar *devpath = NULL;
+		const gchar *syspath = NULL;
+
 		g_autoptr(GPtrArray) i2c_devs =
 		    fu_udev_device_get_children_with_subsystem(device, "i2c-dev");
 
@@ -107,9 +113,39 @@ fu_mediatek_scaler_device_set_i2c_dev(FuMediatekScalerDevice *self,
 
 		/* the first i2c_dev is enforced to represent the dp aux device */
 		self->i2c_dev = g_object_ref(g_ptr_array_index(i2c_devs, 0));
-		g_debug("found I2C bus at %s, using this device",
-			fu_udev_device_get_sysfs_path(self->i2c_dev));
-		return fu_udev_device_set_physical_id(self->i2c_dev, "i2c", error);
+		syspath = fu_udev_device_get_sysfs_path(self->i2c_dev);
+		g_debug("found I2C bus at %s, using this device", syspath);
+
+		/* set device open flags */
+		fu_udev_device_add_open_flag(self->i2c_dev, FU_IO_CHANNEL_OPEN_FLAG_READ);
+		fu_udev_device_add_open_flag(self->i2c_dev, FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+
+		/* get devpath by its sysfs */
+		udev_client = g_udev_client_new(NULL);
+		udev_i2c_dev = g_udev_client_query_by_sysfs_path(udev_client, syspath);
+		if (udev_i2c_dev == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "failed to find udev device for i2c-dev (%s)",
+				    syspath);
+			return FALSE;
+		}
+
+		devpath = g_udev_device_get_property(udev_i2c_dev, "DEVPATH");
+		if (devpath == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "failed to find DEVPATH for i2c-dev (%s)",
+				    syspath);
+			return FALSE;
+		}
+
+		/* set devpath to physical id */
+		physical_id = g_strdup_printf("DEVPATH=%s", devpath);
+		fu_device_set_physical_id(FU_DEVICE(self->i2c_dev), physical_id);
+		return TRUE;
 	}
 	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no devices on the i2c bus");
 	return FALSE;
