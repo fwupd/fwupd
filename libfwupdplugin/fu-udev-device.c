@@ -1468,6 +1468,7 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 		   g_strcmp0(subsystem, "i2c") == 0 || g_strcmp0(subsystem, "platform") == 0 ||
 		   g_strcmp0(subsystem, "scsi") == 0 || g_strcmp0(subsystem, "mtd") == 0 ||
 		   g_strcmp0(subsystem, "block") == 0 || g_strcmp0(subsystem, "gpio") == 0 ||
+		   g_strcmp0(subsystem, "i2c-dev") == 0 ||
 		   g_strcmp0(subsystem, "video4linux") == 0) {
 		tmp = g_udev_device_get_property(udev_device, "DEVPATH");
 		if (tmp == NULL) {
