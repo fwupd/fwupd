@@ -22,6 +22,9 @@ G_DEFINE_TYPE(FuTelinkDfuFirmware, fu_telink_dfu_firmware, FU_TYPE_FIRMWARE)
 #define TELINK_IMAGE_MAGIC_1 0x00112233
 #define TELINK_IMAGE_MAGIC_2 0x44556677
 
+// FIXME REMOVE
+#define DEVEL_STAGE_IGNORED 1
+
 static void
 fu_telink_dfu_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
