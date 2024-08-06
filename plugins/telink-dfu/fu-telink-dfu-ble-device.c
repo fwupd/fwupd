@@ -14,13 +14,10 @@
 #include "fu-telink-dfu-firmware.h"
 #include "fu-telink-dfu-struct.h"
 
-/* this can be set using Flags=example in the quirk file  */
-#define FU_TELINK_DFU_BLE_DEVICE_FLAG_EXAMPLE (1 << 0)
-
 struct _FuTelinkDfuBleDevice {
 	FuBluezDevice parent_instance;
-	gchar *board_name;
-	gchar *bl_name;
+	gchar *board_name; // FIXME: unused?
+	gchar *bl_name;	   // FIXME: unused?
 	guint16 start_addr;
 };
 
@@ -46,6 +43,7 @@ typedef struct _TelinkDfuBlePacket {
 	guint8 raw[OTA_PREAMBLE_SIZE + OTA_PAYLOAD_SIZE + OTA_CRC_SIZE];
 } DfuBlePkt;
 
+// FIXME: these have to be in FuTelinkDfuBleDevice
 static gboolean sendOTAPacketFinish = FALSE;
 static guint32 fw_ver_raw = 0;
 static guint32
@@ -57,15 +55,12 @@ fu_telink_dfu_ble_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuTelinkDfuBleDevice *self = FU_TELINK_DFU_BLE_DEVICE(device);
 	fwupd_codec_string_append(str, idt, "BoardName", self->board_name);
 	fwupd_codec_string_append(str, idt, "Bootloader", self->bl_name);
-
-	LOGD("BoardName=%s,Bootloader=%s", self->board_name, self->bl_name);
 }
 
 static gboolean
 fu_telink_dfu_ble_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuTelinkDfuBleDevice *self = FU_TELINK_DFU_BLE_DEVICE(device);
-	g_debug("==========callback fu_telink_dfu_ble_device_detach");
 
 	/* sanity check */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -86,7 +81,7 @@ fu_telink_dfu_ble_device_attach(FuDevice *device, FuProgress *progress, GError *
 	gchar *device_fw_ver;
 	guint32 device_fw_ver_raw = 0;
 	FuTelinkDfuBleDevice *self = FU_TELINK_DFU_BLE_DEVICE(device);
-	g_debug("==========callback fu_telink_dfu_ble_device_attach");
+
 	/* sanity check */
 	// if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 	// 	g_debug("already in runtime mode, skipping");
@@ -94,7 +89,6 @@ fu_telink_dfu_ble_device_attach(FuDevice *device, FuProgress *progress, GError *
 	// }
 
 	/* TODO: switch the device into runtime mode */
-	g_assert(self != NULL);
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	if (sendOTAPacketFinish) {
@@ -104,13 +98,14 @@ fu_telink_dfu_ble_device_attach(FuDevice *device, FuProgress *progress, GError *
 		device_fw_ver =
 		    fu_bluez_device_read_string(FU_BLUEZ_DEVICE(self), CHAR_UUID_FW_REV, error);
 		device_fw_ver_raw = convert_fw_rev_to_uint(device_fw_ver);
-		LOGD("device version=%s", device_fw_ver);
-		LOGD("device version=%u, fw version=%u", device_fw_ver_raw, fw_ver_raw);
+		g_debug("device version=%s", device_fw_ver);
+		g_debug("device version=%u, fw version=%u", device_fw_ver_raw, fw_ver_raw);
 		if (device_fw_ver_raw != fw_ver_raw)
 			return FALSE;
 		fu_progress_step_done(progress);
 	} else {
 		// todo: not used in keyBoard ota
+		// FIXME: set GError
 		return FALSE;
 	}
 	return TRUE;
@@ -122,7 +117,6 @@ fu_telink_dfu_ble_device_reload(FuDevice *device, GError **error)
 	FuTelinkDfuBleDevice *self = FU_TELINK_DFU_BLE_DEVICE(device);
 	/* TODO: reprobe the hardware, or delete this vfunc to use ->setup() as a fallback */
 	g_assert(self != NULL);
-	g_debug("==========callback fu_telink_dfu_ble_device_reload");
 	return TRUE;
 }
 
@@ -170,24 +164,24 @@ fu_telink_dfu_ble_device_prepare(FuDevice *device,
 	buf_read = fu_bluez_device_read(FU_BLUEZ_DEVICE(self), CHAR_UUID_BATT, error);
 	if (buf_read) {
 		for (guint i = 0; i < buf_read->len; i++) {
-			LOGD("BATT:0x%x", buf_read->data[i]);
+			g_debug("BATT:0x%x", buf_read->data[i]);
 		}
 	}
 	buf_read = fu_bluez_device_read(FU_BLUEZ_DEVICE(self), CHAR_UUID_PNP, error);
 	if (buf_read) {
 		for (guint i = 0; i < buf_read->len; i++) {
-			LOGD("PNP:0x%x", buf_read->data[i]);
+			g_debug("PNP:0x%x", buf_read->data[i]);
 		}
 	}
 	buf_read = fu_bluez_device_read(FU_BLUEZ_DEVICE(self), CHAR_UUID_OTA, error);
 	if (buf_read) {
 		for (guint i = 0; i < buf_read->len; i++) {
-			LOGD("OTA:0x%x", buf_read->data[i]);
+			g_debug("OTA:0x%x", buf_read->data[i]);
 		}
 	}
 	g_byte_array_append(buf_write, (guint8 *)"12345abcde", 10);
 	res = fu_bluez_device_write(FU_BLUEZ_DEVICE(self), CHAR_UUID_OTA, buf_write, error);
-	LOGD("fu_bluez_device_write, res=%d", res);
+	g_debug("fu_bluez_device_write, res=%d", res);
 #endif
 
 	return TRUE;
@@ -278,25 +272,6 @@ fu_telink_dfu_ble_device_write_blocks(FuTelinkDfuBleDevice *self,
 }
 #else
 // DFU_WRITE_METHOD == DFU_WRITE_METHOD_CUST_PACKET or not defined
-#if DEBUG_WRITE_METHOD_CUST_PACKET == 1
-static void
-dump_hex(gpointer buf, gsize buf_len)
-{
-	gpointer hex_str_buf = g_malloc(buf_len * 3 + 1);
-	gsize i;
-	gchar *hex_str = (gchar *)hex_str_buf;
-	gchar *hex_buf = (gchar *)buf;
-
-	for (i = 0; i < buf_len; i++) {
-		g_snprintf(hex_str + i * 3, 4, "%02x ", (guint)(*((guint8 *)(hex_buf + i))));
-	}
-	hex_str[buf_len * 3] = 0;
-
-	LOGD("%s", hex_str);
-
-	g_free(hex_str_buf);
-}
-#endif
 
 static guint16
 calc_crc16(guint8 *buf, gsize buf_len)
@@ -348,7 +323,7 @@ create_dfu_packet(DfuBlePkt *pkt, guint16 preamble, const guint8 *payload)
 
 #if DEBUG_WRITE_METHOD_CUST_PACKET == 1
 	if (preamble < 32) {
-		dump_hex((gpointer)pkt, sizeof(DfuBlePkt));
+		fu_dump_raw(G_LOG_DOMAIN, "Ble", (const guint8 *)pkt, sizeof(DfuBlePkt));
 	}
 #endif
 }
@@ -356,18 +331,11 @@ create_dfu_packet(DfuBlePkt *pkt, guint16 preamble, const guint8 *payload)
 static gboolean
 send_dfu_packet(FuTelinkDfuBleDevice *self, DfuBlePkt *pkt, GError **error)
 {
-	gboolean res = TRUE;
 	g_autoptr(GByteArray) buf_write = g_byte_array_new();
-
 	g_byte_array_append(buf_write,
 			    pkt->raw,
 			    OTA_PREAMBLE_SIZE + OTA_PAYLOAD_SIZE + OTA_CRC_SIZE);
-	res = fu_bluez_device_write(FU_BLUEZ_DEVICE(self), CHAR_UUID_OTA, buf_write, error);
-	if (res != TRUE) {
-		LOGD("fu_bluez_device_write, res=%d", res);
-	}
-
-	return res;
+	return fu_bluez_device_write(FU_BLUEZ_DEVICE(self), CHAR_UUID_OTA, buf_write, error);
 }
 
 static gboolean
@@ -383,20 +351,21 @@ fu_telink_dfu_ble_device_write_packets(FuTelinkDfuBleDevice *self,
 	gsize image_len = 0, len;
 	DfuBlePkt pkt;
 	guint8 payload[OTA_PAYLOAD_SIZE] = {0};
+
 	// dummy for now
-	LOGD("OTA Phase: Get Info");
+	g_debug("OTA Phase: Get Info");
 	create_dfu_packet(&pkt, CMD_OTA_FW_VERSION, NULL);
 	send_dfu_packet(self, &pkt, error);
 	fu_device_sleep(FU_DEVICE(self), 5);
 
 	// 1. OTA start command
-	LOGD("OTA Phase: Start");
+	g_debug("OTA Phase: Start");
 	create_dfu_packet(&pkt, CMD_OTA_START, NULL);
 	send_dfu_packet(self, &pkt, error);
 	fu_device_sleep(FU_DEVICE(self), 5);
 
 	// 2. OTA firmware data
-	LOGD("OTA Phase: Send Data");
+	g_debug("OTA Phase: Send Data");
 	raw_data = g_bytes_get_data(blob, &image_len);
 	for (i = 0; i < image_len; i += OTA_PAYLOAD_SIZE) {
 		d = raw_data + i;
@@ -413,10 +382,10 @@ fu_telink_dfu_ble_device_write_packets(FuTelinkDfuBleDevice *self,
 			return FALSE;
 		fu_device_sleep(FU_DEVICE(self), 5);
 	}
-	LOGD("OTA Phase: Data Sent; total=0x%04x", (i >> 4) - 1);
+	g_debug("OTA Phase: Data Sent; total=0x%04x", (i >> 4) - 1);
 
 	// 3. OTA stop command
-	LOGD("OTA Phase: End");
+	g_debug("OTA Phase: End");
 	fu_device_sleep(FU_DEVICE(self), 5);
 	i = (i >> 4) - 1; // last data packet index
 	d = (guint8 *)&i;
@@ -429,7 +398,7 @@ fu_telink_dfu_ble_device_write_packets(FuTelinkDfuBleDevice *self,
 	send_dfu_packet(self, &pkt, error);
 	fu_device_sleep(FU_DEVICE(self), 20000);
 
-	LOGD("OTA Phase: Success");
+	g_debug("OTA Phase: Success");
 
 	/* success */
 	return TRUE;
@@ -442,17 +411,15 @@ convert_fw_rev_to_uint(const gchar *version)
 	gint rc;
 	guint32 v_major, v_minor, v_patch;
 
-	if (!version) {
-		// revision not available; forced update
-		LOGD("null string");
+	// revision not available; forced update
+	if (version == NULL)
 		return 0;
-	}
 
 	/* version format: aa.bb.cc */
 	rc = sscanf(version, "%u.%u.%u", &v_major, &v_minor, &v_patch);
 	if (rc != 3 || v_major > 999 || v_minor > 999 || v_patch > 999) {
 		// invalid version format; forced update
-		LOGD("invalid string: %s", version);
+		g_debug("invalid string: %s", version);
 		return 0;
 	}
 
@@ -468,8 +435,9 @@ fu_telink_dfu_ble_device_write_firmware(FuDevice *device,
 {
 	FuTelinkDfuBleDevice *self = FU_TELINK_DFU_BLE_DEVICE(device);
 	g_autoptr(GInputStream) stream = NULL;
-	const gchar *fw_ver = "\0", *device_fw_ver = "\0";
-	guint32 device_fw_ver_raw = 0;
+	const gchar *fw_ver;
+	const gchar *device_fw_ver;
+	guint32 device_fw_ver_raw;
 #if DFU_WRITE_METHOD == DFU_WRITE_METHOD_CHUNKS
 	g_autoptr(FuChunkArray) chunks = NULL;
 #endif
@@ -477,10 +445,6 @@ fu_telink_dfu_ble_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuArchive) archive = NULL;
 	const gchar *filename = "firmware.bin";
-#if DEBUG_WRITE_METHOD_CUST_PACKET == 1
-	const guint8 *d;
-	gsize image_len = 0;
-#endif
 #endif
 
 	/* progress */
@@ -489,12 +453,14 @@ fu_telink_dfu_ble_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 0, NULL);
 
-	LOGD("OTA Phase: Compare firmware revision");
+	g_debug("OTA Phase: Compare firmware revision");
 	fw_ver = fu_firmware_get_version(firmware);
 	fw_ver_raw = fu_firmware_get_version_raw(firmware);
 	device_fw_ver = fu_bluez_device_read_string(FU_BLUEZ_DEVICE(self), CHAR_UUID_FW_REV, error);
 	device_fw_ver_raw = convert_fw_rev_to_uint(device_fw_ver);
-	LOGD("device version=%s, fw version=%s", device_fw_ver, fw_ver);
+	g_debug("device version=%s, fw version=%s", device_fw_ver, fw_ver);
+
+	// FIXME needs to set GError, downgrade?
 	if (fw_ver_raw <= device_fw_ver_raw)
 		return FALSE;
 
@@ -525,11 +491,6 @@ fu_telink_dfu_ble_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-#if DEBUG_WRITE_METHOD_CUST_PACKET == 1
-	d = g_bytes_get_data(blob, &image_len);
-	LOGD("image_len=%lu", image_len);
-	dump_hex((gpointer)d, 16);
-#endif
 	sendOTAPacketFinish = FALSE;
 	if (!fu_telink_dfu_ble_device_write_packets(self,
 						    blob,
@@ -608,9 +569,6 @@ fu_telink_dfu_ble_device_init(FuTelinkDfuBleDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_retry_set_delay(FU_DEVICE(self), FU_TELINK_DFU_HID_DEVICE_RETRY_INTERVAL);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_TELINK_DFU_BLE_DEVICE_FLAG_EXAMPLE,
-					"example");
 }
 
 static void

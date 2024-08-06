@@ -18,7 +18,7 @@ iter_archive_callback(FuArchive *archive,
 		      gpointer user_data,
 		      GError **error)
 {
-	LOGD("found %s", filename);
+	g_debug("found %s", filename);
 	return TRUE;
 }
 #endif
@@ -224,7 +224,7 @@ fu_telink_dfu_archive_parse(FuFirmware *firmware,
 				    "unsupported manifest version");
 		return FALSE;
 	}
-	LOGD("manifest_ver=0x%u", manifest_ver);
+	g_debug("manifest_ver=0x%u", manifest_ver);
 
 	/* get files */
 	json_files = json_object_get_array_member(json_obj, "files");

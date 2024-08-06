@@ -6,46 +6,11 @@
 
 #pragma once
 
-#define DEBUG_TRACE 1
-#define LOG_LEVEL   3
-#if DEBUG_TRACE == 1
-#define LOGW(fmt, ...)                                                                             \
-	do {                                                                                       \
-		if (LOG_LEVEL >= 2) {                                                              \
-			g_warning("%s: " fmt, __FUNCTION__, ##__VA_ARGS__);                        \
-		}                                                                                  \
-	} while (0)
-#define LOGD(fmt, ...)                                                                             \
-	do {                                                                                       \
-		if (LOG_LEVEL >= 3) {                                                              \
-			g_debug("%s: " fmt, __FUNCTION__, ##__VA_ARGS__);                          \
-		}                                                                                  \
-	} while (0)
-#define LOGI(fmt, ...)                                                                             \
-	do {                                                                                       \
-		if (LOG_LEVEL >= 0) {                                                              \
-			g_info("%s: " fmt, __FUNCTION__, ##__VA_ARGS__);                           \
-		}                                                                                  \
-	} while (0)
-#define LOGM(fmt, ...)                                                                             \
-	do {                                                                                       \
-		if (LOG_LEVEL >= 0) {                                                              \
-			g_message("%s: " fmt, __FUNCTION__, ##__VA_ARGS__);                        \
-		}                                                                                  \
-	} while (0)
-#else
-#define LOGW(...)
-#define LOGD(...)
-#define LOGI(...)
-#define LOGM(...)
-#endif
-
 #define DEBUG_ARCHIVE	    1
 #define DEVEL_STAGE_IGNORED 1
 #define DEBUG_GATT_CHAR_RW  0
 // prepare_firmware and fireware_gtype are mutual exclusive methods
 #define USE_FIRMWARE_GTYPE	1
-#define DEBUG_FIRMWARE_RAW_DATA 0
 
 #define DFU_WRITE_METHOD_CHUNKS	       1
 #define DFU_WRITE_METHOD_CUST_PACKET   2

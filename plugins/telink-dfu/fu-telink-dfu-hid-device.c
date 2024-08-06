@@ -16,9 +16,6 @@
 #include "fu-telink-dfu-hid-device.h"
 #include "fu-telink-dfu-struct.h"
 
-/* this can be set using Flags=example in the quirk file  */
-#define FU_TELINK_DFU_HID_DEVICE_FLAG_EXAMPLE (1 << 0)
-
 struct _FuTelinkDfuHidDevice {
 	FuUdevDevice parent_instance;
 	gchar *board_name;
@@ -363,9 +360,6 @@ fu_telink_dfu_hid_device_init(FuTelinkDfuHidDevice *self)
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_retry_set_delay(FU_DEVICE(self), FU_TELINK_DFU_HID_DEVICE_RETRY_INTERVAL);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_TELINK_DFU_HID_DEVICE_FLAG_EXAMPLE,
-					"example");
 }
 
 static void

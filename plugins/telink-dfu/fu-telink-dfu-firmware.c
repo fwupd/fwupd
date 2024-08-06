@@ -93,32 +93,6 @@ fu_telink_dfu_firmware_parse(FuFirmware *firmware,
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuStructTelinkDfuHdr) st_hdr = NULL;
 #endif
-#if DEBUG_FIRMWARE_RAW_DATA == 1
-	g_autoptr(GBytes) blob = NULL;
-	const guint8 *d;
-	gsize image_len = 0;
-
-	blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
-	d = g_bytes_get_data(blob, &image_len);
-	LOGD("image_len=%u", image_len);
-	LOGD("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
-	     d[0],
-	     d[1],
-	     d[2],
-	     d[3],
-	     d[4],
-	     d[5],
-	     d[6],
-	     d[7],
-	     d[8],
-	     d[9],
-	     d[10],
-	     d[11],
-	     d[12],
-	     d[13],
-	     d[14],
-	     d[15]);
-#endif
 
 #if DEVEL_STAGE_IGNORED == 1
 	// todo: checksum
