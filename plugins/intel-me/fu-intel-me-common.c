@@ -9,17 +9,18 @@
 #include <fwupd.h>
 
 #include "fu-intel-me-common.h"
+#include "fu-intel-me-mkhi-struct.h"
 
-static gboolean
-fu_intel_me_mkhi_result_to_error(FuMkhiResult result, GError **error)
+gboolean
+fu_intel_me_mkhi_result_to_error(FuMkhiStatus result, GError **error)
 {
-	if (result == MKHI_STATUS_SUCCESS)
+	if (result == FU_MKHI_STATUS_SUCCESS)
 		return TRUE;
 
 	switch (result) {
-	case MKHI_STATUS_NOT_SUPPORTED:
-	case MKHI_STATUS_NOT_AVAILABLE:
-	case MKHI_STATUS_NOT_SET:
+	case FU_MKHI_STATUS_NOT_SUPPORTED:
+	case FU_MKHI_STATUS_NOT_AVAILABLE:
+	case FU_MKHI_STATUS_NOT_SET:
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -35,39 +36,6 @@ fu_intel_me_mkhi_result_to_error(FuMkhiResult result, GError **error)
 		break;
 	}
 	return FALSE;
-}
-
-gboolean
-fu_intel_me_mkhi_verify_header(const FuMkhiHeader *hdr_req,
-			       const FuMkhiHeader *hdr_res,
-			       GError **error)
-{
-	if (hdr_req->group_id != hdr_res->group_id) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "invalid response group ID, requested 0x%x and got 0x%x",
-			    hdr_req->group_id,
-			    hdr_res->group_id);
-		return FALSE;
-	}
-	if (hdr_req->command != hdr_res->command) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "invalid response command, requested 0x%x and got 0x%x",
-			    (guint)hdr_req->command,
-			    (guint)hdr_res->command);
-		return FALSE;
-	}
-	if (!hdr_res->is_resp) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "invalid response group ID, not a response!");
-		return FALSE;
-	}
-	return fu_intel_me_mkhi_result_to_error(hdr_res->result, error);
 }
 
 GString *
