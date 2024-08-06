@@ -38,7 +38,8 @@ HIDRAW is expected to be supported in the future.
 
 ## Update Behavior
 
-The upgrade mechanism resembles the way used in Telink OTA App. Read the [handbook on Telink Wiki site](https://wiki.telink-semi.cn/wiki/index.html) for details.
+The upgrade mechanism resembles the way used in Telink OTA App.
+Read the [handbook on Telink Wiki site](https://wiki.telink-semi.cn/wiki/index.html) for details.
 
 ## Vendor ID Security
 
@@ -52,13 +53,13 @@ This plugin uses the following plugin-specific quirks:
 
 This is reserved for bootloader variants and should be set to either `beta` or `otav1` for now.
 
-Since fwupd version 1.9.9
+Since fwupd version 2.0.0
 
 ### TelinkDfuBoardType
 
 The bla bla bla.
 
-Since fwupd version 1.9.9
+Since fwupd version 2.0.0
 
 ## External Interface Access
 
@@ -67,7 +68,7 @@ This plugin requires ioctl `HIDIOCSFEATURE` and `HIDIOCGFEATURE` access when DFU
 
 ## Version Considerations
 
-This plugin has been available since fwupd version `1.9.9`.
+This plugin has been available since fwupd version `2.0.0`.
 
 ## Owners
 

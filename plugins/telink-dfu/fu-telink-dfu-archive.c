@@ -16,7 +16,7 @@ struct _FuTelinkDfuArchive {
 
 G_DEFINE_TYPE(FuTelinkDfuArchive, fu_telink_dfu_archive, FU_TYPE_FIRMWARE)
 
-#define JSON_FORMAT_VERSION_MAX 0
+#define FU_TELINK_DFU_FIRMWARE_JSON_FORMAT_VERSION_MAX 0
 
 static gboolean
 fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
@@ -162,7 +162,7 @@ fu_telink_dfu_archive_parse(FuFirmware *firmware,
 
 	/* maximum-allowed format version(backward compatibility) */
 	manifest_ver = json_object_get_int_member(json_obj, "format-version");
-	if (manifest_ver > JSON_FORMAT_VERSION_MAX) {
+	if (manifest_ver > FU_TELINK_DFU_FIRMWARE_JSON_FORMAT_VERSION_MAX) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
