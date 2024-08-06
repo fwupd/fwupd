@@ -556,24 +556,24 @@ fu_telink_dfu_ble_device_set_quirk_kv(FuDevice *device,
 	if (g_strcmp0(key, "TelinkDfuBootType") == 0) {
 		if (g_strcmp0(value, "beta") == 0 || g_strcmp0(value, "otav1") == 0) {
 			self->bl_name = g_strdup(value);
-		} else {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "bad TelinkDfuBootType");
-			return FALSE;
+			return TRUE;
 		}
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "bad TelinkDfuBootType");
+		return FALSE;
 	}
 	if (g_strcmp0(key, "TelinkDfuBoardType") == 0) {
 		if (g_strcmp0(value, "tlsr8278") == 0 || g_strcmp0(value, "tlsr8208") == 0) {
 			self->board_name = g_strdup(value);
-		} else {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "bad TelinkDfuBoardType");
-			return FALSE;
+			return TRUE;
 		}
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "bad TelinkDfuBoardType");
+		return FALSE;
 	}
 
 	/* failed */
@@ -605,7 +605,6 @@ fu_telink_dfu_ble_device_init(FuTelinkDfuBleDevice *self)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_TELINK_DFU_ARCHIVE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.telink.dfu");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	// todo: FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD?
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_retry_set_delay(FU_DEVICE(self), FU_TELINK_DFU_HID_DEVICE_RETRY_INTERVAL);

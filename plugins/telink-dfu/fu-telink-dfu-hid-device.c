@@ -49,8 +49,10 @@ fu_telink_dfu_hid_device_get_report(FuTelinkDfuHidDevice *self,
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  HIDIOCGFEATURE(bufsz),
 				  buf,
+				  bufsz,
 				  NULL,
 				  FU_TELINK_DFU_HID_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error)) {
 		g_prefix_error(error, "failed get report: ");
 		return FALSE;
@@ -75,8 +77,10 @@ fu_telink_dfu_hid_device_set_report(FuTelinkDfuHidDevice *self,
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  HIDIOCSFEATURE(bufsz),
 				  buf,
+				  bufsz,
 				  NULL,
 				  FU_TELINK_DFU_HID_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error)) {
 		g_prefix_error(error, "failed set report: ");
 		return FALSE;
@@ -355,9 +359,8 @@ fu_telink_dfu_hid_device_init(FuTelinkDfuHidDevice *self)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_TELINK_DFU_ARCHIVE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.telink.dfu");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	// todo: FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD?
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_retry_set_delay(FU_DEVICE(self), FU_TELINK_DFU_HID_DEVICE_RETRY_INTERVAL);
 	fu_device_register_private_flag(FU_DEVICE(self),

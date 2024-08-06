@@ -7,7 +7,7 @@ title: Plugin: Telink Dfu
 This plugin is to upgrade Telink OTA-compliant devices.
 Supported devices:
 
-* [8208 Dual Keyboard](./)
+* 8208 Dual Keyboard
 
 ## Firmware Format
 
@@ -15,7 +15,6 @@ The daemon will decompress the cabinet archive and extract a firmware blob in
 a packed binary file format.
 
 This plugin supports the following protocol ID:
-
 
 The cabinet file contains ZIP archive prepared by Nordic Semiconductor.
 This ZIP archive includes 2 signed image blobs for the target

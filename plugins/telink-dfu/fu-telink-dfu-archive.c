@@ -137,17 +137,18 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 	}
 
 	priv->version_raw = 0;
-	fu_strtoull(splits[0], &tmp_u64, 0, G_MAXUINT32, error);
+	if (!fu_strtoull(splits[0], &tmp_u64, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+		return FALSE;
 	priv->version_raw |= (guint32)(tmp_u64 << 24);
-	fu_strtoull(splits[1], &tmp_u64, 0, G_MAXUINT32, error);
+	if (!fu_strtoull(splits[1], &tmp_u64, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+		return FALSE;
 	priv->version_raw |= (guint32)(tmp_u64 << 16);
-	fu_strtoull(splits[2], &tmp_u64, 0, G_MAXUINT32, error);
+	if (!fu_strtoull(splits[2], &tmp_u64, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+		return FALSE;
 	priv->version_raw |= (guint32)tmp_u64;
 	priv->version = fu_version_from_uint32(priv->version_raw, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_firmware_set_version_raw(FU_FIRMWARE(self), priv->version_raw);
 	fu_firmware_set_version(FU_FIRMWARE(self), priv->version);
-	LOGD("version_raw=0x%x", priv->version_raw);
-	LOGD("version=%s", priv->version);
 
 	/* success */
 	return TRUE;
