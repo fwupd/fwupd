@@ -18,12 +18,6 @@
 
 #define DEFAULT_PROXY_TIMEOUT 5000
 
-/* Device Information service attributes to check */
-#define DI_MODEL_NUMBER_UUID	  "00002a24-0000-1000-8000-00805f9b34fb"
-#define DI_SERIAL_NUMBER_UUID	  "00002a25-0000-1000-8000-00805f9b34fb"
-#define DI_FIRMWARE_REVISION_UUID "00002a26-0000-1000-8000-00805f9b34fb"
-#define DI_MANUFACTURER_NAME_UUID "00002a29-0000-1000-8000-00805f9b34fb"
-
 /**
  * FuBluezDevice:
  *
@@ -433,7 +427,8 @@ fu_bluez_device_parse_device_information_service(FuBluezDevice *self, GError **e
 	g_autofree gchar *fw_revision = NULL;
 	g_autofree gchar *manufacturer = NULL;
 
-	model_number = fu_bluez_device_read_string(self, DI_MODEL_NUMBER_UUID, NULL);
+	model_number =
+	    fu_bluez_device_read_string(self, FU_BLUEZ_DEVICE_UUID_DI_MODEL_NUMBER, NULL);
 	if (model_number != NULL) {
 		fu_device_add_instance_str(FU_DEVICE(self), "MODEL", model_number);
 		if (!fu_device_build_instance_id_full(FU_DEVICE(self),
@@ -446,7 +441,10 @@ fu_bluez_device_parse_device_information_service(FuBluezDevice *self, GError **e
 			g_prefix_error(error, "failed to register model %s: ", model_number);
 			return FALSE;
 		}
-		manufacturer = fu_bluez_device_read_string(self, DI_MANUFACTURER_NAME_UUID, NULL);
+		manufacturer =
+		    fu_bluez_device_read_string(self,
+						FU_BLUEZ_DEVICE_UUID_DI_MANUFACTURER_NAME,
+						NULL);
 		if (manufacturer != NULL) {
 			fu_device_add_instance_str(FU_DEVICE(self), "MANUFACTURER", manufacturer);
 			if (!fu_device_build_instance_id_full(FU_DEVICE(self),
@@ -465,11 +463,13 @@ fu_bluez_device_parse_device_information_service(FuBluezDevice *self, GError **e
 		}
 	}
 
-	serial_number = fu_bluez_device_read_string(self, DI_SERIAL_NUMBER_UUID, NULL);
+	serial_number =
+	    fu_bluez_device_read_string(self, FU_BLUEZ_DEVICE_UUID_DI_SERIAL_NUMBER, NULL);
 	if (serial_number != NULL)
 		fu_device_set_serial(FU_DEVICE(self), serial_number);
 
-	fw_revision = fu_bluez_device_read_string(self, DI_FIRMWARE_REVISION_UUID, NULL);
+	fw_revision =
+	    fu_bluez_device_read_string(self, FU_BLUEZ_DEVICE_UUID_DI_FIRMWARE_REVISION, NULL);
 	if (fw_revision != NULL)
 		fu_device_set_version(FU_DEVICE(self), fw_revision);
 
