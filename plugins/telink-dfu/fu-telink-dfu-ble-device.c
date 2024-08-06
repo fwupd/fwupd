@@ -166,35 +166,6 @@ fu_telink_dfu_ble_device_cleanup(FuDevice *device,
 	return TRUE;
 }
 
-#if USE_FIRMWARE_GTYPE != 1
-static FuFirmware *
-fu_telink_dfu_ble_device_prepare_firmware(FuDevice *device,
-					  GInputStream *stream,
-					  FuProgress *progress,
-					  FwupdInstallFlags flags,
-					  GError **error)
-{
-	FuTelinkDfuBleDevice *self = FU_TELINK_DFU_BLE_DEVICE(device);
-	g_autoptr(FuFirmware) firmware = fu_telink_dfu_firmware_new();
-
-	/* TODO: you do not need to use this vfunc if not checking attributes */
-	if (self->start_addr !=
-	    fu_telink_dfu_firmware_get_crc32(FU_TELINK_DFU_FIRMWARE(firmware))) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "start address mismatch, got 0x%04x, expected 0x%04x",
-			    fu_telink_dfu_firmware_get_crc32(FU_TELINK_DFU_FIRMWARE(firmware)),
-			    self->start_addr);
-		return NULL;
-	}
-
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
-}
-#endif // USE_FIRMWARE_GTYPE
-
 #if DFU_WRITE_METHOD == DFU_WRITE_METHOD_CHUNKS
 static gboolean
 fu_telink_dfu_ble_device_write_blocks(FuTelinkDfuBleDevice *self,
@@ -516,15 +487,8 @@ fu_telink_dfu_ble_device_class_init(FuTelinkDfuBleDeviceClass *klass)
 	device_class->reload = fu_telink_dfu_ble_device_reload;
 	device_class->prepare = fu_telink_dfu_ble_device_prepare;
 	device_class->cleanup = fu_telink_dfu_ble_device_cleanup;
-	// #if DEVEL_STAGE_IGNORED == 1
-	// 	//todo: not used
-	// #else
 	device_class->attach = fu_telink_dfu_ble_device_attach;
 	device_class->detach = fu_telink_dfu_ble_device_detach;
-// #endif
-#if USE_FIRMWARE_GTYPE != 1
-	device_class->prepare_firmware = fu_telink_dfu_ble_device_prepare_firmware;
-#endif
 	device_class->write_firmware = fu_telink_dfu_ble_device_write_firmware;
 	device_class->set_quirk_kv = fu_telink_dfu_ble_device_set_quirk_kv;
 	device_class->set_progress = fu_telink_dfu_ble_device_set_progress;

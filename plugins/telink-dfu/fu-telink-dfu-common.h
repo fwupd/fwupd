@@ -9,8 +9,6 @@
 #include <fwupdplugin.h>
 
 #define DEVEL_STAGE_IGNORED 1
-// prepare_firmware and fireware_gtype are mutual exclusive methods
-#define USE_FIRMWARE_GTYPE	1
 
 #define DFU_WRITE_METHOD_CHUNKS	       1
 #define DFU_WRITE_METHOD_CUST_PACKET   2
