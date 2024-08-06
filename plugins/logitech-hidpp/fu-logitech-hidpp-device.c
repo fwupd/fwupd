@@ -1421,10 +1421,8 @@ fu_logitech_hidpp_device_new(FuUdevDevice *parent)
 	FuLogitechHidppDevice *self = NULL;
 	FuLogitechHidppDevicePrivate *priv;
 	self = g_object_new(FU_TYPE_HIDPP_DEVICE,
-			    "context",
-			    fu_device_get_context(FU_DEVICE(parent)),
-			    "physical-id",
-			    fu_device_get_physical_id(FU_DEVICE(parent)),
+			    "proxy",
+			    parent,
 			    "udev-device",
 			    fu_udev_device_get_dev(parent),
 			    NULL);
