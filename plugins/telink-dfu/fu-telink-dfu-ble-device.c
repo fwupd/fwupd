@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <stdio.h>
-
 #include "fu-telink-dfu-archive.h"
 #include "fu-telink-dfu-ble-device.h"
 #include "fu-telink-dfu-common.h"
@@ -46,8 +44,6 @@ typedef struct _TelinkDfuBlePacket {
 // FIXME: these have to be in FuTelinkDfuBleDevice
 static gboolean sendOTAPacketFinish = FALSE;
 static guint32 fw_ver_raw = 0;
-static guint32
-convert_fw_rev_to_uint(const gchar *version);
 
 static void
 fu_telink_dfu_ble_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -97,7 +93,7 @@ fu_telink_dfu_ble_device_attach(FuDevice *device, FuProgress *progress, GError *
 		fu_device_sleep(FU_DEVICE(self), 2000);
 		device_fw_ver =
 		    fu_bluez_device_read_string(FU_BLUEZ_DEVICE(self), CHAR_UUID_FW_REV, error);
-		device_fw_ver_raw = convert_fw_rev_to_uint(device_fw_ver);
+		device_fw_ver_raw = fu_telink_dfu_parse_image_version(device_fw_ver);
 		g_debug("device version=%s", device_fw_ver);
 		g_debug("device version=%u, fw version=%u", device_fw_ver_raw, fw_ver_raw);
 		if (device_fw_ver_raw != fw_ver_raw)
@@ -151,38 +147,9 @@ fu_telink_dfu_ble_device_prepare(FuDevice *device,
 				 GError **error)
 {
 	FuTelinkDfuBleDevice *self = FU_TELINK_DFU_BLE_DEVICE(device);
-#if DEBUG_GATT_CHAR_RW == 1
-	g_autoptr(GByteArray) buf_read = g_byte_array_new();
-	g_autoptr(GByteArray) buf_write = g_byte_array_new();
-	gboolean res;
-#endif
 
 	/* TODO: anything the device has to do before the update starts */
 	g_assert(self != NULL);
-
-#if DEBUG_GATT_CHAR_RW == 1
-	buf_read = fu_bluez_device_read(FU_BLUEZ_DEVICE(self), CHAR_UUID_BATT, error);
-	if (buf_read) {
-		for (guint i = 0; i < buf_read->len; i++) {
-			g_debug("BATT:0x%x", buf_read->data[i]);
-		}
-	}
-	buf_read = fu_bluez_device_read(FU_BLUEZ_DEVICE(self), CHAR_UUID_PNP, error);
-	if (buf_read) {
-		for (guint i = 0; i < buf_read->len; i++) {
-			g_debug("PNP:0x%x", buf_read->data[i]);
-		}
-	}
-	buf_read = fu_bluez_device_read(FU_BLUEZ_DEVICE(self), CHAR_UUID_OTA, error);
-	if (buf_read) {
-		for (guint i = 0; i < buf_read->len; i++) {
-			g_debug("OTA:0x%x", buf_read->data[i]);
-		}
-	}
-	g_byte_array_append(buf_write, (guint8 *)"12345abcde", 10);
-	res = fu_bluez_device_write(FU_BLUEZ_DEVICE(self), CHAR_UUID_OTA, buf_write, error);
-	g_debug("fu_bluez_device_write, res=%d", res);
-#endif
 
 	return TRUE;
 }
@@ -273,25 +240,6 @@ fu_telink_dfu_ble_device_write_blocks(FuTelinkDfuBleDevice *self,
 #else
 // DFU_WRITE_METHOD == DFU_WRITE_METHOD_CUST_PACKET or not defined
 
-static guint16
-calc_crc16(guint8 *buf, gsize buf_len)
-{
-	guint16 poly[2] = {0, 0xa001};
-	guint16 ret = 0xffff;
-	gint i, j;
-
-	for (j = buf_len; j > 0; j--) {
-		guint8 ds = *buf++;
-
-		for (i = 0; i < 8; i++) {
-			ret = (ret >> 1) ^ poly[(ret ^ ds) & 1];
-			ds = ds >> 1;
-		}
-	}
-
-	return ret;
-}
-
 static void
 create_dfu_packet(DfuBlePkt *pkt, guint16 preamble, const guint8 *payload)
 {
@@ -313,7 +261,7 @@ create_dfu_packet(DfuBlePkt *pkt, guint16 preamble, const guint8 *payload)
 		crc_val = 0;
 	} else {
 		memcpy(pkt_field, payload, OTA_PAYLOAD_SIZE);
-		crc_val = calc_crc16(pkt->raw, OTA_PREAMBLE_SIZE + OTA_PAYLOAD_SIZE);
+		crc_val = fu_crc16(pkt->raw, OTA_PREAMBLE_SIZE + OTA_PAYLOAD_SIZE);
 	}
 
 	d = (guint8 *)&crc_val;
@@ -321,11 +269,8 @@ create_dfu_packet(DfuBlePkt *pkt, guint16 preamble, const guint8 *payload)
 	pkt_field[0] = d[0];
 	pkt_field[1] = d[1];
 
-#if DEBUG_WRITE_METHOD_CUST_PACKET == 1
-	if (preamble < 32) {
+	if (preamble < 32)
 		fu_dump_raw(G_LOG_DOMAIN, "Ble", (const guint8 *)pkt, sizeof(DfuBlePkt));
-	}
-#endif
 }
 
 static gboolean
@@ -405,27 +350,6 @@ fu_telink_dfu_ble_device_write_packets(FuTelinkDfuBleDevice *self,
 }
 #endif // DFU_WRITE_METHOD
 
-static guint32
-convert_fw_rev_to_uint(const gchar *version)
-{
-	gint rc;
-	guint32 v_major, v_minor, v_patch;
-
-	// revision not available; forced update
-	if (version == NULL)
-		return 0;
-
-	/* version format: aa.bb.cc */
-	rc = sscanf(version, "%u.%u.%u", &v_major, &v_minor, &v_patch);
-	if (rc != 3 || v_major > 999 || v_minor > 999 || v_patch > 999) {
-		// invalid version format; forced update
-		g_debug("invalid string: %s", version);
-		return 0;
-	}
-
-	return (v_major << 24) | (v_minor << 16) | v_patch;
-}
-
 static gboolean
 fu_telink_dfu_ble_device_write_firmware(FuDevice *device,
 					FuFirmware *firmware,
@@ -457,7 +381,7 @@ fu_telink_dfu_ble_device_write_firmware(FuDevice *device,
 	fw_ver = fu_firmware_get_version(firmware);
 	fw_ver_raw = fu_firmware_get_version_raw(firmware);
 	device_fw_ver = fu_bluez_device_read_string(FU_BLUEZ_DEVICE(self), CHAR_UUID_FW_REV, error);
-	device_fw_ver_raw = convert_fw_rev_to_uint(device_fw_ver);
+	device_fw_ver_raw = fu_telink_dfu_parse_image_version(device_fw_ver);
 	g_debug("device version=%s, fw version=%s", device_fw_ver, fw_ver);
 
 	// FIXME needs to set GError, downgrade?

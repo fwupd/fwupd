@@ -10,31 +10,11 @@
 #include "fu-telink-dfu-common.h"
 #include "fu-telink-dfu-firmware.h"
 
-#if DEBUG_ARCHIVE == 1
-static gboolean
-iter_archive_callback(FuArchive *archive,
-		      const gchar *filename,
-		      GBytes *bytes,
-		      gpointer user_data,
-		      GError **error)
-{
-	g_debug("found %s", filename);
-	return TRUE;
-}
-#endif
-
 struct _FuTelinkDfuArchive {
 	FuFirmware parent_instance;
 };
 
-typedef struct {
-	guint32 version_raw;
-	gchar *version;
-} FuTelinkDfuArchivePrivate;
-
-// G_DEFINE_TYPE(FuTelinkDfuArchive, fu_telink_dfu_archive, FU_TYPE_FIRMWARE)
-G_DEFINE_TYPE_WITH_PRIVATE(FuTelinkDfuArchive, fu_telink_dfu_archive, FU_TYPE_FIRMWARE)
-#define GET_PRIVATE(o) (fu_telink_dfu_archive_get_instance_private(o))
+G_DEFINE_TYPE(FuTelinkDfuArchive, fu_telink_dfu_archive, FU_TYPE_FIRMWARE)
 
 #define JSON_FORMAT_VERSION_MAX 0
 
@@ -46,19 +26,15 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 				FwupdInstallFlags flags,
 				GError **error)
 {
-	const gchar *bootloader_name = NULL;
-	const gchar *filename = NULL;
-	const gchar *board_name = NULL;
-	g_autofree gchar *image_id = NULL;
-	g_auto(GStrv) splits = NULL;
-	g_auto(GStrv) fw_ver = NULL;
-	g_autoptr(FuFirmware) image = NULL;
-	g_autoptr(GBytes) blob = NULL;
-	FuTelinkDfuArchivePrivate *priv = GET_PRIVATE(self);
-	guint idx;
-	guint64 tmp_u64;
 	const gchar *bl_type_keys[] = {"beta", "ota-v1"};
-	gboolean res;
+	const gchar *board_name;
+	const gchar *bootloader_name;
+	const gchar *filename;
+	const gchar *version;
+	gboolean supported_bootloader = FALSE;
+	g_autofree gchar *image_id = NULL;
+	g_autoptr(FuFirmware) image = fu_telink_dfu_firmware_new();
+	g_autoptr(GBytes) blob = NULL;
 
 	if (!json_object_has_member(obj, "file")) {
 		g_set_error_literal(error,
@@ -72,7 +48,6 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 	if (blob == NULL)
 		return FALSE;
 
-	res = FALSE;
 	if (!json_object_has_member(obj, "bootloader_type")) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -81,19 +56,19 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 		return FALSE;
 	}
 	bootloader_name = json_object_get_string_member(obj, "bootloader_type");
-	for (idx = 0; idx < sizeof(bl_type_keys) / sizeof(bl_type_keys[0]); idx++) {
+	for (guint idx = 0; idx < sizeof(bl_type_keys) / sizeof(bl_type_keys[0]); idx++) {
 		if (g_strcmp0(bootloader_name, bl_type_keys[idx])) {
-			res = TRUE;
+			supported_bootloader = TRUE;
+			break;
 		}
 	}
-	if (res == FALSE) {
+	if (!supported_bootloader) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "bad param: bootloader_type");
 		return FALSE;
 	}
-	image = fu_telink_dfu_firmware_new();
 
 	if (!json_object_has_member(obj, "board")) {
 		g_set_error_literal(error,
@@ -127,28 +102,9 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 				    "missing param: image_version");
 		return FALSE;
 	}
-	splits = g_strsplit(json_object_get_string_member(obj, "image_version"), ".", 3);
-	if (g_strv_length(splits) < 3) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "bad param: image_version");
-		return FALSE;
-	}
-
-	priv->version_raw = 0;
-	if (!fu_strtoull(splits[0], &tmp_u64, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
-		return FALSE;
-	priv->version_raw |= (guint32)(tmp_u64 << 24);
-	if (!fu_strtoull(splits[1], &tmp_u64, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
-		return FALSE;
-	priv->version_raw |= (guint32)(tmp_u64 << 16);
-	if (!fu_strtoull(splits[2], &tmp_u64, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
-		return FALSE;
-	priv->version_raw |= (guint32)tmp_u64;
-	priv->version = fu_version_from_uint32(priv->version_raw, FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_firmware_set_version_raw(FU_FIRMWARE(self), priv->version_raw);
-	fu_firmware_set_version(FU_FIRMWARE(self), priv->version);
+	version = json_object_get_string_member(obj, "image_version");
+	fu_firmware_set_version_raw(FU_FIRMWARE(self), fu_telink_dfu_parse_image_version(version));
+	fu_firmware_set_version(FU_FIRMWARE(self), version);
 
 	/* success */
 	return TRUE;
@@ -170,27 +126,16 @@ fu_telink_dfu_archive_parse(FuFirmware *firmware,
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(GBytes) manifest = NULL;
 	g_autoptr(JsonParser) parser = json_parser_new();
-#if DEBUG_ARCHIVE == 1
-	gboolean ret;
-#endif
 
-	// 1. load archive
+	/* load archive */
 	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
 	if (archive == NULL)
 		return FALSE;
 
-		// 2. parse manifest.json
-#if DEBUG_ARCHIVE == 1
-	ret = fu_archive_iterate(archive, iter_archive_callback, NULL, error);
-	if (!ret) {
-		// todo
-	}
-#endif
-
+	/* parse manifest.json */
 	manifest = fu_archive_lookup_by_fn(archive, "manifest.json", error);
 	if (manifest == NULL)
 		return FALSE;
-
 	if (!json_parser_load_from_data(parser,
 					g_bytes_get_data(manifest, NULL),
 					g_bytes_get_size(manifest),

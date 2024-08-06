@@ -6,6 +6,7 @@ plugin_builtins += static_library('fu_plugin_telink_dfu',
   rustgen.process('fu-telink-dfu.rs'),
   sources: [
     'fu-telink-dfu-archive.c',
+    'fu-telink-dfu-common.c',
     'fu-telink-dfu-ble-device.c',
     'fu-telink-dfu-firmware.c',
     'fu-telink-dfu-hid-device.c',
