@@ -227,11 +227,13 @@ fu_logitech_hidpp_device_poll(FuDevice *device, GError **error)
 	}
 
 	/* just ping */
-	if (!fu_logitech_hidpp_device_ping(self, &error_local)) {
-		g_warning("failed to ping %s: %s",
-			  fu_device_get_name(FU_DEVICE(self)),
-			  error_local->message);
-		return TRUE;
+	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH)) {
+		if (!fu_logitech_hidpp_device_ping(self, &error_local)) {
+			g_warning("failed to ping %s: %s",
+				  fu_device_get_name(device),
+				  error_local->message);
+			return TRUE;
+		}
 	}
 
 	/* this is the first time the device has been active */
