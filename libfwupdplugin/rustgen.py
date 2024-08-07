@@ -412,7 +412,10 @@ class StructItem:
         # is array
         if val.startswith("[") and val.endswith("]"):
             typestr, multiplier = val[1:-1].split(";", maxsplit=1)
-            self.multiplier = int(multiplier)
+            if multiplier.startswith("0x"):
+                self.multiplier = int(multiplier[2:], 16)
+            else:
+                self.multiplier = int(multiplier)
         else:
             typestr = val
 
