@@ -29,7 +29,7 @@ fu_telink_dfu_ble_device_create_packet(guint16 preamble, const guint8 *buf, gsiz
 	fu_struct_telink_dfu_ble_pkt_set_preamble(pkt, preamble);
 	if (buf != NULL)
 		fu_struct_telink_dfu_ble_pkt_set_payload(pkt, buf, bufsz, NULL);
-	fu_struct_telink_dfu_ble_pkt_set_crc(pkt, fu_crc16(pkt->data, pkt->len - 2));
+	fu_struct_telink_dfu_ble_pkt_set_crc(pkt, ~fu_crc16(pkt->data, pkt->len - 2));
 	return pkt;
 }
 
@@ -203,11 +203,12 @@ fu_telink_dfu_ble_device_init(FuTelinkDfuBleDevice *self)
 {
 	fu_device_set_vendor(FU_DEVICE(self), "Telink");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_remove_delay(FU_DEVICE(self), 10000); /* ms */
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_TELINK_DFU_ARCHIVE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.telink.dfu");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 }
 
