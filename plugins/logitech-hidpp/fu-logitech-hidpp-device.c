@@ -251,6 +251,15 @@ fu_logitech_hidpp_device_open(FuDevice *device, GError **error)
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *devpath = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
 
+	if (devpath == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "device path is not detected for '%s'",
+			    fu_device_get_name(device));
+		return FALSE;
+	}
+
 	/* open */
 	priv->io_channel =
 	    fu_io_channel_new_file(devpath,
@@ -1425,6 +1434,8 @@ fu_logitech_hidpp_device_new(FuUdevDevice *parent)
 			    parent,
 			    "udev-device",
 			    fu_udev_device_get_dev(parent),
+			    "device-file",
+			    fu_udev_device_get_device_file(parent),
 			    NULL);
 	priv = GET_PRIVATE(self);
 	priv->io_channel = fu_logitech_hidpp_runtime_get_io_channel(FU_HIDPP_RUNTIME(parent));
