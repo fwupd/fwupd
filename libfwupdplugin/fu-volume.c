@@ -529,6 +529,33 @@ fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **err
 }
 
 /**
+ * fu_volume_get_block_label:
+ * @self: a @FuVolume
+ *
+ * Gets the block name of the volume
+ *
+ * Returns: (transfer full): block device name, e.g 'Recovery Partition'
+ *
+ * Since: 1.9.24
+ **/
+gchar *
+fu_volume_get_block_name(FuVolume *self)
+{
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail(FU_IS_VOLUME(self), NULL);
+
+	if (self->proxy_blk == NULL)
+		return NULL;
+
+	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "IdLabel");
+	if (val == NULL)
+		return NULL;
+
+	return g_variant_dup_string(val, NULL);
+}
+
+/**
  * fu_volume_get_block_size:
  * @self: a @FuVolume
  *

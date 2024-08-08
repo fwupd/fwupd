@@ -1644,6 +1644,8 @@ fu_context_get_default_esp(FuContext *ctx, GError **error)
 
 			/* ignore a partition that claims to be a recovery partition */
 			name = fu_volume_get_partition_name(esp);
+			if (name == NULL)
+				name = fu_volume_get_block_name(esp);
 			if (name != NULL) {
 				g_autoptr(GString) name_safe = g_string_new(name);
 				g_string_replace(name_safe, " ", "_", 0);
