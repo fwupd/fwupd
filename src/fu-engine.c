@@ -38,6 +38,7 @@
 #include "fwupd-resources.h"
 #include "fwupd-security-attr-private.h"
 
+#include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
@@ -2793,6 +2794,62 @@ fu_engine_emulation_save(FuEngine *self, GError **error)
 	return g_bytes_new(buf->data, buf->len);
 }
 
+static void
+fu_engine_backends_to_json(FuEngine *self, JsonBuilder *json_builder)
+{
+	GHashTableIter iter;
+	GPtrArray *devices_array;
+	const gchar *list_name;
+	g_autoptr(GHashTable) backend_devices = NULL;
+	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
+
+	/* create a map of { list_name: [devices] } */
+	backend_devices = g_hash_table_new_full(g_str_hash,
+						g_str_equal,
+						g_free,
+						(GDestroyNotify)g_ptr_array_unref);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		FuBackend *backend = fu_device_get_backend(device);
+		g_autofree gchar *list_name_new = NULL;
+
+		/* interesting? */
+		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG))
+			continue;
+		if (backend == NULL)
+			continue;
+
+		/* find the array, or create if required */
+		list_name_new = fu_backend_get_emulation_array_member_name(backend);
+		devices_array = g_hash_table_lookup(backend_devices, list_name_new);
+		if (devices_array == NULL) {
+			devices_array = g_ptr_array_new();
+			g_hash_table_insert(backend_devices,
+					    g_steal_pointer(&list_name_new),
+					    (gpointer)devices_array);
+		}
+		g_ptr_array_add(devices_array, device);
+	}
+
+	/* devices in per-backend array */
+	json_builder_begin_object(json_builder);
+	g_hash_table_iter_init(&iter, backend_devices);
+	while (g_hash_table_iter_next(&iter, (gpointer *)&list_name, (gpointer *)&devices_array)) {
+		json_builder_set_member_name(json_builder, list_name);
+		json_builder_begin_array(json_builder);
+		for (guint i = 0; i < devices_array->len; i++) {
+			FuDevice *device = g_ptr_array_index(devices_array, i);
+			json_builder_begin_object(json_builder);
+			fwupd_codec_to_json(FWUPD_CODEC(device),
+					    json_builder,
+					    FWUPD_CODEC_FLAG_NONE);
+			json_builder_end_object(json_builder);
+		}
+		json_builder_end_array(json_builder);
+	}
+	json_builder_end_object(json_builder);
+}
+
 static gboolean
 fu_engine_backends_save_phase(FuEngine *self, GError **error)
 {
@@ -2804,12 +2861,8 @@ fu_engine_backends_save_phase(FuEngine *self, GError **error)
 	g_autoptr(JsonNode) json_root = NULL;
 
 	/* all devices in all backends */
-	for (guint i = 0; i < self->backends->len; i++) {
-		FuBackend *backend = g_ptr_array_index(self->backends, i);
-		json_builder_begin_object(json_builder);
-		fwupd_codec_to_json(FWUPD_CODEC(backend), json_builder, FWUPD_CODEC_FLAG_NONE);
-		json_builder_end_object(json_builder);
-	}
+	fu_engine_backends_to_json(self, json_builder);
+
 	json_root = json_builder_get_root(json_builder);
 	json_generator = json_generator_new();
 	json_generator_set_pretty(json_generator, TRUE);

@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#include "fu-backend.h"
+#include "fu-backend-private.h"
 #include "fu-device-private.h"
 #include "fu-string.h"
 
@@ -278,7 +278,8 @@ fu_backend_setup(FuBackend *self, FuProgress *progress, GError **error)
 	return TRUE;
 }
 
-static gchar *
+/* private */
+gchar *
 fu_backend_get_emulation_array_member_name(FuBackend *self)
 {
 	FuBackendPrivate *priv = GET_PRIVATE(self);
