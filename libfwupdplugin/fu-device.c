@@ -6873,6 +6873,7 @@ fu_device_save_event(FuDevice *self, const gchar *id)
 	/* success */
 	event = fu_device_event_new(id);
 	fu_device_add_event(self, event);
+	g_debug("saved event %s", id);
 	return event;
 }
 
