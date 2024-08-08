@@ -947,7 +947,7 @@ fu_engine_modify_bios_settings(FuEngine *self,
 }
 
 static void
-fu_engine_check_context_flag_save_events(FuEngine *self)
+fu_engine_ensure_context_flag_save_events(FuEngine *self)
 {
 	if (g_hash_table_size(self->emulation_ids) > 0 &&
 	    fu_engine_config_get_allow_emulation(self->config)) {
@@ -1003,6 +1003,7 @@ fu_engine_remove_device_flag(FuEngine *self,
 			return FALSE;
 		}
 		g_hash_table_remove(self->emulation_ids, fu_device_get_id(device));
+		fu_engine_ensure_context_flag_save_events(self);
 		return TRUE;
 	}
 	g_set_error_literal(error,
@@ -1058,6 +1059,7 @@ fu_engine_add_device_flag(FuEngine *self,
 		g_hash_table_insert(self->emulation_ids,
 				    g_strdup(fu_device_get_id(device)),
 				    GUINT_TO_POINTER(1));
+		fu_engine_ensure_context_flag_save_events(self);
 		fu_engine_emit_device_request_replug_and_install(self, device);
 		return TRUE;
 	}
@@ -6306,7 +6308,7 @@ fu_engine_ensure_device_emulation_tag(FuEngine *self, FuDevice *device)
 	/* success */
 	g_info("adding emulation-tag to %s", fu_device_get_backend_id(device));
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG);
-	fu_engine_check_context_flag_save_events(self);
+	fu_engine_ensure_context_flag_save_events(self);
 }
 
 void
