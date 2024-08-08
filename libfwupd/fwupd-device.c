@@ -74,6 +74,7 @@ typedef struct {
 
 enum {
 	PROP_0,
+	PROP_ID,
 	PROP_VERSION,
 	PROP_VERSION_FORMAT,
 	PROP_FLAGS,
@@ -392,6 +393,7 @@ fwupd_device_set_id(FwupdDevice *self, const gchar *id)
 
 	g_free(priv->id);
 	priv->id = g_strdup(id);
+	g_object_notify(G_OBJECT(self), "id");
 }
 
 /**
@@ -3539,6 +3541,9 @@ fwupd_device_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	FwupdDevice *self = FWUPD_DEVICE(object);
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 	switch (prop_id) {
+	case PROP_ID:
+		g_value_set_string(value, priv->id);
+		break;
 	case PROP_VERSION:
 		g_value_set_string(value, priv->version);
 		break;
@@ -3594,6 +3599,9 @@ fwupd_device_set_property(GObject *object, guint prop_id, const GValue *value, G
 	switch (prop_id) {
 	case PROP_VERSION:
 		fwupd_device_set_version(self, g_value_get_string(value));
+		break;
+	case PROP_ID:
+		fwupd_device_set_id(self, g_value_get_string(value));
 		break;
 	case PROP_VERSION_FORMAT:
 		fwupd_device_set_version_format(self, g_value_get_uint(value));
@@ -3663,6 +3671,17 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				    NULL,
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_VERSION, pspec);
+
+	/**
+	 * FwupdDevice:id:
+	 *
+	 * The device ID.
+	 *
+	 * Since: 2.0.0
+	 */
+	pspec =
+	    g_param_spec_string("id", NULL, NULL, NULL, G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_ID, pspec);
 
 	/**
 	 * FwupdDevice:version-format:
