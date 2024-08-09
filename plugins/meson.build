@@ -125,6 +125,7 @@ plugins = {
   'vli': false,
   'wacom-raw': false,
   'wacom-usb': false,
+  'weida-raw': false,
   'wistron-dock': false,
 }
 
