@@ -45,7 +45,7 @@ fu_dell_dock2_rmm_setup(FuDevice *device, GError **error)
 	fu_device_build_instance_id(device, error, "EC", "DOCKTYPE", "DEVTYPE", NULL);
 
 	/* version */
-	rmm_version = fu_dell_dock2_ec_get_ilan_version(proxy);
+	rmm_version = fu_dell_dock2_ec_get_rmm_version(proxy);
 	fu_device_set_version_raw(device, GUINT32_FROM_BE(rmm_version));
 
 	return TRUE;

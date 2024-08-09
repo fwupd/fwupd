@@ -261,8 +261,6 @@ fu_dell_dock2_rtshub_is_in_family(FuDevice *device, FuDevice *sibling)
 	const gchar *sib_phyid = fu_device_get_physical_id(sibling);
 	const gchar *dev_phyid_prefix = fu_dell_dock2_rtshub_substr_before_colon(dev_phyid);
 
-	g_debug("device (%s) physical id: %s", fu_device_get_name(sibling), sib_phyid);
-
 	/* compare physical id */
 	return g_str_has_prefix(sib_phyid, dev_phyid_prefix);
 }
@@ -292,7 +290,6 @@ fu_dell_dock2_rtshub_care_family_back(FuDevice *device, GError **error)
 		gchar *dev_phyid_colon = NULL;
 
 		/* physical id should look like usb:ww:xx:yy:zz */
-		g_debug("device (%s) physical id: %s", fu_device_get_name(device), dev_phyid);
 		dev_phyid_colon = g_strrstr(dev_phyid, ":");
 		if (dev_phyid_colon == NULL) {
 			g_set_error(error,
@@ -559,7 +556,6 @@ fu_dell_dock2_rtshub_init(FuDellDock2RtsHub *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_DELL_DOCK2_RTSHUB_FIRMWARE);
-	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 }
 

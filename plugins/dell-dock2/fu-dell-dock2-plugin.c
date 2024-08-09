@@ -366,6 +366,8 @@ fu_dell_dock2_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_DOCK2_PD);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_DOCK2_DPMUX);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_DOCK2_WTPD);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_DOCK2_ILAN);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_DOCK2_RMM);
 
 	/* register firmware parser */
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_DELL_DOCK2_PD_FIRMWARE);

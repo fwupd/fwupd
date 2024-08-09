@@ -29,8 +29,13 @@ fu_dell_dock2_ec_firmware_find_magic_offset(FuFirmware *firmware, gsize *offset,
 		return FALSE;
 
 	data = g_bytes_get_data(fw, &datasz);
-	if (datasz < 5 + DOCK_EC_VERSION_OFFSET)
+	if (datasz < 5 + DOCK_EC_VERSION_OFFSET) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "invalid EC firmware size");
 		return FALSE;
+	}
 
 	for (gsize addr = 0; addr < datasz; addr += 1) {
 		if (!fu_memcmp_safe(data,
@@ -46,6 +51,8 @@ fu_dell_dock2_ec_firmware_find_magic_offset(FuFirmware *firmware, gsize *offset,
 		*offset = addr;
 		return TRUE;
 	}
+
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "EC firmware magic not found");
 	return FALSE;
 }
 

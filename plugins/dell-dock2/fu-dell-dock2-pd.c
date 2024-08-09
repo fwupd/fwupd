@@ -142,13 +142,20 @@ fu_dell_dock2_pd_attach(FuDevice *device, FuProgress *progress, GError **error)
 		GPtrArray *children = fu_device_get_children(parent);
 		g_autoptr(GError) error_local = NULL;
 
-		/* all devices will be gone */
+		/* wait parent back */
+		fu_device_add_flag(parent, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		g_debug("device (%s) wants to wait (%s) after reset",
+			fu_device_get_name(device),
+			fu_device_get_name(parent));
+
+		/* all devices will be disconnected */
 		for (guint i = 0; i < children->len; i++) {
 			FuDevice *child = g_ptr_array_index(children, i);
 			fu_device_add_flag(child, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-			fu_device_set_remove_delay(child, 2000);
+			g_debug("device (%s) wants to wait (%s) after reset",
+				fu_device_get_name(device),
+				fu_device_get_name(child));
 		}
-		fu_device_add_flag(parent, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 		/* poke kernel with any usb packet to ec to poke kernel */
 		if (fu_device_reload(parent, &error_local))

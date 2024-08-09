@@ -34,10 +34,15 @@ fu_dell_dock2_pd_firmware_find_magic_offset(FuFirmware *firmware,
 		return FALSE;
 
 	data = g_bytes_get_data(fw, &datasz);
-	if (datasz < 4)
+	if (datasz < 4) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "invalid pd firmware size");
 		return FALSE;
+	}
 
-	for (gsize addr = 0; addr < datasz; addr += 1) {
+	for (gsize addr = 0; addr + 4 < datasz; addr += 1) {
 		if (!fu_memread_uint32_safe(data, datasz, addr, &value, G_LITTLE_ENDIAN, error))
 			return FALSE;
 
@@ -45,10 +50,9 @@ fu_dell_dock2_pd_firmware_find_magic_offset(FuFirmware *firmware,
 			*offset = addr;
 			return TRUE;
 		}
-
-		if (addr + 4 >= datasz)
-			return FALSE;
 	}
+
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "pd firmware magic not found");
 	return FALSE;
 }
 

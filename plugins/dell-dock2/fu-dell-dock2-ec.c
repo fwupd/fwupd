@@ -938,11 +938,12 @@ fu_dell_dock2_ec_init(FuDellDock2Ec *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
+	fu_device_add_internal_flag(FU_DEVICE(self),
+				    FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
-	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_DELL_DOCK2_EC_FIRMWARE);
-	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	// fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_DELL_DOCK2_EC_FIRMWARE);
 }
 
 static void
