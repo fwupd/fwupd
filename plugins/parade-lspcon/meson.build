@@ -6,6 +6,9 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('parade-lspcon.quirk')
 plugin_builtins += static_library('fu_plugin_parade_lspcon',
+  rustgen.process(
+    'fu-parade-lspcon.rs',
+  ),
   sources: [
     'fu-parade-lspcon-device.c',
     'fu-parade-lspcon-plugin.c',
