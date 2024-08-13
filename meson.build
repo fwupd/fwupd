@@ -380,6 +380,9 @@ endif
 if cc.has_header('linux/ethtool.h')
   conf.set('HAVE_ETHTOOL_H', '1')
 endif
+if cc.has_header('linux/i2c-dev.h')
+  conf.set('HAVE_I2C_DEV_H', '1')
+endif
 if cc.has_header('linux/mei.h')
   conf.set('HAVE_MEI_H', '1')
 endif

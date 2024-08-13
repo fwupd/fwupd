@@ -15,10 +15,15 @@
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
+#ifdef HAVE_I2C_DEV_H
+#include <linux/i2c-dev.h>
+#endif
 
 #include "fu-i2c-device.h"
 #include "fu-string.h"
 #include "fu-udev-device-private.h"
+
+#define FU_I2C_DEVICE_IOCTL_TIMEOUT 2000
 
 /**
  * FuI2cDevice
@@ -97,6 +102,46 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+/**
+ * fu_i2c_device_set_address:
+ * @self: a #FuI2cDevice
+ * @address: address
+ * @force: Force the address, even if the device is device is busy (typically with a kernel driver)
+ * @error: (nullable): optional return location for an error
+ *
+ * Sets the I²C device address.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_i2c_device_set_address(FuI2cDevice *self, guint8 address, gboolean force, GError **error)
+{
+#ifdef HAVE_I2C_DEV_H
+	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
+				  force ? I2C_SLAVE_FORCE : I2C_SLAVE,
+				  (guint8 *)(guintptr)address,
+				  sizeof(guintptr),
+				  NULL,
+				  FU_I2C_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+				  error)) {
+		g_prefix_error(error, "failed to set address 0x%02x: ", address);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+#else
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "Not supported as <linux/i2c-dev.h> not found");
+	return FALSE;
+#endif
 }
 
 /**
