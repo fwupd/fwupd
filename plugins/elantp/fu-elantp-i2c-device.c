@@ -316,15 +316,33 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 
 	/* define the extra instance IDs (ic_type + module_id + driver) */
 	fu_device_add_instance_u8(device, "ICTYPE", ic_type);
-	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", NULL);
-	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", "MOD", NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "ELANTP",
+					 "ICTYPE",
+					 NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "ELANTP",
+					 "ICTYPE",
+					 "MOD",
+					 NULL);
 	if (fu_device_has_private_flag(device, FU_ELANTP_I2C_DEVICE_ABSOLUTE)) {
 		fu_device_add_instance_str(device, "DRIVER", "ELAN_I2C");
 	} else {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 		fu_device_add_instance_str(device, "DRIVER", "HID");
 	}
-	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", "MOD", "DRIVER", NULL);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "ELANTP",
+					 "ICTYPE",
+					 "MOD",
+					 "DRIVER",
+					 NULL);
 
 	/* no quirk entry */
 	if (self->ic_page_count == 0x0) {
