@@ -16,6 +16,9 @@ struct _FuI2cDeviceClass {
 };
 
 gboolean
+fu_i2c_device_set_address(FuI2cDevice *self, guint8 address, gboolean force, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+gboolean
 fu_i2c_device_read(FuI2cDevice *self, guint8 *buf, gsize bufsz, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean

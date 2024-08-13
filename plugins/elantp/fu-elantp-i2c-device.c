@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <fcntl.h>
-#include <linux/i2c-dev.h>
 
 #include "fu-elantp-common.h"
 #include "fu-elantp-firmware.h"
@@ -367,7 +366,6 @@ static gboolean
 fu_elantp_i2c_device_open(FuDevice *device, GError **error)
 {
 	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE(device);
-	gint addr = self->i2c_addr;
 	guint8 tx_buf[] = {0x02, 0x01};
 
 	/* FuUdevDevice->open */
@@ -375,28 +373,8 @@ fu_elantp_i2c_device_open(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* set target address */
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
-				  I2C_SLAVE,
-				  GINT_TO_POINTER(addr),
-				  sizeof(gpointer),
-				  NULL,
-				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  NULL)) {
-		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
-					  I2C_SLAVE_FORCE,
-					  GINT_TO_POINTER(addr),
-					  sizeof(gpointer),
-					  NULL,
-					  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-					  error)) {
-			g_prefix_error(error,
-				       "failed to set target address to 0x%x: ",
-				       self->i2c_addr);
-			return FALSE;
-		}
-	}
+	if (!fu_i2c_device_set_address(FU_I2C_DEVICE(self), self->i2c_addr, TRUE, error))
+		return FALSE;
 
 	/* read i2c device */
 	return fu_udev_device_pwrite(FU_UDEV_DEVICE(device), 0x0, tx_buf, sizeof(tx_buf), error);

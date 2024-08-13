@@ -8,7 +8,6 @@
 
 #include <fcntl.h>
 #include <glib/gstdio.h>
-#include <linux/i2c-dev.h>
 
 #include "fu-realtek-mst-device.h"
 #include "fu-realtek-mst-struct.h"
@@ -76,21 +75,6 @@ fu_realtek_mst_device_to_string(FuDevice *device, guint idt, GString *str)
 				  idt,
 				  "Mode",
 				  fu_realtek_mst_device_dual_bank_mode_to_string(self->mode));
-}
-
-static gboolean
-fu_realtek_mst_device_ensure_device_address(FuRealtekMstDevice *self,
-					    guint8 address,
-					    GError **error)
-{
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    I2C_SLAVE,
-				    (guint8 *)(guintptr)address,
-				    sizeof(guintptr),
-				    NULL,
-				    FU_REALTEK_MST_DEVICE_IOCTL_TIMEOUT,
-				    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				    error);
 }
 
 static gboolean
@@ -249,7 +233,7 @@ fu_realtek_mst_device_setup(FuDevice *device, GError **error)
 	guint8 response[11] = {0x0};
 	g_autofree gchar *version = NULL;
 
-	if (!fu_realtek_mst_device_ensure_device_address(self, I2C_ADDR_DEBUG, error)) {
+	if (!fu_i2c_device_set_address(FU_I2C_DEVICE(self), I2C_ADDR_DEBUG, FALSE, error)) {
 		g_prefix_error(error, "failed to ensure address: ");
 		return FALSE;
 	}
@@ -562,7 +546,7 @@ fu_realtek_mst_device_detach(FuDevice *device, FuProgress *progress, GError **er
 {
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE(device);
 
-	if (!fu_realtek_mst_device_ensure_device_address(self, I2C_ADDR_ISP, error))
+	if (!fu_i2c_device_set_address(FU_I2C_DEVICE(self), I2C_ADDR_ISP, FALSE, error))
 		return FALSE;
 
 	/* Switch to programming mode (stops regular operation) */
@@ -632,7 +616,7 @@ fu_realtek_mst_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 9, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "flag");
 
-	if (!fu_realtek_mst_device_ensure_device_address(self, I2C_ADDR_ISP, error))
+	if (!fu_i2c_device_set_address(FU_I2C_DEVICE(self), I2C_ADDR_ISP, FALSE, error))
 		return FALSE;
 
 	/* erase old image */
@@ -714,7 +698,7 @@ fu_realtek_mst_device_read_firmware(FuDevice *device, FuProgress *progress, GErr
 	}
 
 	image_bytes = g_malloc0(FLASH_USER_SIZE);
-	if (!fu_realtek_mst_device_ensure_device_address(self, I2C_ADDR_ISP, error))
+	if (!fu_i2c_device_set_address(FU_I2C_DEVICE(self), I2C_ADDR_ISP, FALSE, error))
 		return NULL;
 	if (!fu_realtek_mst_device_flash_iface_read(self,
 						    bank_address,
@@ -733,7 +717,7 @@ fu_realtek_mst_device_dump_firmware(FuDevice *device, FuProgress *progress, GErr
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE(device);
 	g_autofree guint8 *flash_contents = g_malloc0(FLASH_SIZE);
 
-	if (!fu_realtek_mst_device_ensure_device_address(self, I2C_ADDR_ISP, error))
+	if (!fu_i2c_device_set_address(FU_I2C_DEVICE(self), I2C_ADDR_ISP, FALSE, error))
 		return NULL;
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 	if (!fu_realtek_mst_device_flash_iface_read(self,
@@ -754,7 +738,7 @@ fu_realtek_mst_device_attach(FuDevice *device, FuProgress *progress, GError **er
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE(device);
 	guint8 value;
 
-	if (!fu_realtek_mst_device_ensure_device_address(self, I2C_ADDR_ISP, error))
+	if (!fu_i2c_device_set_address(FU_I2C_DEVICE(self), I2C_ADDR_ISP, FALSE, error))
 		return FALSE;
 
 	/* re-enable hardware write protect via GPIO */

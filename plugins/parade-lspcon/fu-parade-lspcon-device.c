@@ -7,8 +7,6 @@
 
 #include "config.h"
 
-#include <linux/i2c-dev.h>
-
 #include "fu-dpaux-struct.h"
 #include "fu-parade-lspcon-device.h"
 #include "fu-parade-lspcon-struct.h"
@@ -51,35 +49,19 @@ fu_parade_lspcon_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_parade_lspcon_device_set_i2c_address(FuParadeLspconDevice *self,
-					FuParadeLspconI2cAddr address,
-					GError **error)
-{
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  I2C_SLAVE,
-				  (guint8 *)(guintptr)(self->page_offset + address),
-				  sizeof(guintptr),
-				  NULL,
-				  FU_PARADE_LSPCON_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error)) {
-		g_prefix_error(error, "failed to set I2C address: ");
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_parade_lspcon_device_open(FuDevice *device, GError **error)
 {
+	FuParadeLspconDevice *self = FU_PARADE_LSPCON_DEVICE(device);
+
 	if (!FU_DEVICE_CLASS(fu_parade_lspcon_device_parent_class)->open(device, error))
 		return FALSE;
 
 	/* general assumption is that page 2 is selected: code that uses another address
 	 * should use an address guard to ensure it gets reset */
-	return fu_parade_lspcon_device_set_i2c_address(FU_PARADE_LSPCON_DEVICE(device),
-						       FU_PARADE_LSPCON_I2C_ADDR_PAGE2,
-						       error);
+	return fu_i2c_device_set_address(FU_I2C_DEVICE(self),
+					 self->page_offset + FU_PARADE_LSPCON_I2C_ADDR_PAGE2,
+					 FALSE,
+					 error);
 }
 
 /**
@@ -97,7 +79,10 @@ fu_parade_lspcon_device_i2c_address_guard_new(FuParadeLspconDevice *self,
 {
 	FuParadeLspconI2cAddressGuard *out;
 
-	if (!fu_parade_lspcon_device_set_i2c_address(self, new_address, error))
+	if (!fu_i2c_device_set_address(FU_I2C_DEVICE(self),
+				       self->page_offset + new_address,
+				       FALSE,
+				       error))
 		return NULL;
 	out = g_new0(FuParadeLspconI2cAddressGuard, 1);
 	out->device = self;
@@ -107,10 +92,12 @@ fu_parade_lspcon_device_i2c_address_guard_new(FuParadeLspconDevice *self,
 static void
 fu_parade_lspcon_device_i2c_address_guard_free(FuParadeLspconI2cAddressGuard *guard)
 {
+	FuParadeLspconDevice *self = FU_PARADE_LSPCON_DEVICE(guard->device);
 	g_autoptr(GError) error_local = NULL;
-	if (!fu_parade_lspcon_device_set_i2c_address(guard->device,
-						     FU_PARADE_LSPCON_I2C_ADDR_PAGE2,
-						     &error_local)) {
+	if (!fu_i2c_device_set_address(FU_I2C_DEVICE(self),
+				       self->page_offset + FU_PARADE_LSPCON_I2C_ADDR_PAGE2,
+				       FALSE,
+				       &error_local)) {
 		g_warning("failed to set page2 back: %s", error_local->message);
 	}
 	g_free(guard);
