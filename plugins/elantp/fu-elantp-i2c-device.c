@@ -99,37 +99,6 @@ fu_elantp_i2c_device_probe(FuDevice *device, GError **error)
 	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE(device);
 
 	/* check is valid */
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "i2c") == 0) {
-		g_autoptr(GPtrArray) i2c_buses = NULL;
-		FuUdevDevice *i2c_device = FU_UDEV_DEVICE(
-		    fu_device_get_backend_parent_with_subsystem(device, "i2c", error));
-		if (i2c_device == NULL)
-			return FALSE;
-
-		i2c_buses = fu_udev_device_get_children_with_subsystem(i2c_device, "i2c-dev");
-		if (i2c_buses->len == 1) {
-			FuUdevDevice *bus_device = g_object_ref(g_ptr_array_index(i2c_buses, 0));
-			if (bus_device == NULL) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "did not find the i2c-dev children for device");
-				return FALSE;
-			}
-
-			g_debug("found I2C bus at %s, using this device",
-				fu_udev_device_get_sysfs_path(bus_device));
-			self->bind_path =
-			    g_build_filename("/sys/bus/i2c/drivers",
-					     fu_udev_device_get_driver(FU_UDEV_DEVICE(device)),
-					     NULL);
-			self->bind_id = g_path_get_basename(
-			    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
-			fu_udev_device_set_dev(FU_UDEV_DEVICE(device),
-					       fu_udev_device_get_dev(bus_device));
-		}
-	}
-
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "i2c-dev") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -145,6 +114,10 @@ fu_elantp_i2c_device_probe(FuDevice *device, GError **error)
 				    "no device file");
 		return FALSE;
 	}
+	self->bind_path = g_build_filename("/sys/bus/i2c/drivers",
+					   fu_udev_device_get_driver(FU_UDEV_DEVICE(device)),
+					   NULL);
+	self->bind_id = g_path_get_basename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
 
 	/* set the physical ID */
 	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "i2c", error);
