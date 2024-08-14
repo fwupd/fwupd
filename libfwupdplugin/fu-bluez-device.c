@@ -609,6 +609,13 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 	return fu_bluez_device_parse_device_information_service(self, error);
 }
 
+static gboolean
+fu_bluez_device_reload(FuDevice *device, GError **error)
+{
+	FuBluezDevice *self = FU_BLUEZ_DEVICE(device);
+	return fu_bluez_device_parse_device_information_service(self, error);
+}
+
 /**
  * fu_bluez_device_read:
  * @self: a #FuBluezDevice
@@ -1058,6 +1065,7 @@ fu_bluez_device_class_init(FuBluezDeviceClass *klass)
 	object_class->set_property = fu_bluez_device_set_property;
 	object_class->finalize = fu_bluez_device_finalize;
 	device_class->probe = fu_bluez_device_probe;
+	device_class->reload = fu_bluez_device_reload;
 	device_class->to_string = fu_bluez_device_to_string;
 	device_class->incorporate = fu_bluez_device_incorporate;
 	device_class->convert_version = fu_bluez_device_convert_version;
