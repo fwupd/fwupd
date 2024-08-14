@@ -70,8 +70,9 @@ fu_telink_dfu_ble_device_write_blocks(FuTelinkDfuBleDevice *self,
 }
 
 static gboolean
-fu_telink_dfu_ble_device_ota_start(FuTelinkDfuBleDevice *self, GError **error)
+fu_telink_dfu_ble_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
+	FuTelinkDfuBleDevice *self = FU_TELINK_DFU_BLE_DEVICE(device);
 	g_autoptr(FuStructTelinkDfuBlePkt) pkt = NULL;
 
 	pkt = fu_telink_dfu_ble_device_create_packet(FU_TELINK_DFU_CMD_OTA_START, NULL, 0);
@@ -82,7 +83,7 @@ fu_telink_dfu_ble_device_ota_start(FuTelinkDfuBleDevice *self, GError **error)
 		return FALSE;
 
 	/* success */
-	fu_device_sleep(FU_DEVICE(self), 5);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -106,7 +107,7 @@ fu_telink_dfu_ble_device_ota_stop(FuTelinkDfuBleDevice *self, guint number_chunk
 		return FALSE;
 
 	/* success */
-	fu_device_sleep(FU_DEVICE(self), 20000);
+	fu_device_sleep(FU_DEVICE(self), 5);
 	return TRUE;
 }
 
@@ -122,7 +123,7 @@ fu_telink_dfu_ble_device_write_blob(FuTelinkDfuBleDevice *self,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 10, "ota-start");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 10, "ota-fw-version");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "ota-data");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 10, "ota-stop");
 
@@ -134,10 +135,6 @@ fu_telink_dfu_ble_device_write_blob(FuTelinkDfuBleDevice *self,
 				   error))
 		return FALSE;
 	fu_device_sleep(FU_DEVICE(self), 5);
-
-	/* OTA start command */
-	if (!fu_telink_dfu_ble_device_ota_start(self, error))
-		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* OTA firmware data */
@@ -216,6 +213,7 @@ static void
 fu_telink_dfu_ble_device_class_init(FuTelinkDfuBleDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->detach = fu_telink_dfu_ble_device_detach;
 	device_class->write_firmware = fu_telink_dfu_ble_device_write_firmware;
 	device_class->set_progress = fu_telink_dfu_ble_device_set_progress;
 }
