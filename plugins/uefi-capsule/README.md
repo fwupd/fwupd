@@ -82,9 +82,9 @@ portable to depend on the number -- which will also work if the metadata has not
 Described in  [UEFI specification](https://www.uefi.org/sites/default/files/resources/UEFI%20Spec%202_6.pdf)
 § 8.5.5 - Delivery of Capsules via file on Mass Storage device.
 
-If the firmware supports this, it will be the preferred method of updating on
-aarch64 platforms. You can explicitly disable it by by modifying
-*DisableCapsuleUpdateOnDisk* in `/etc/fwupd/uefi_capsule.conf`.
+If the firmware supports this, it will be the preferred method of updating when supported.
+You can explicitly disable it by by modifying
+*DisableCapsuleUpdateOnDisk* in the `uefi_capsule` section of `/etc/fwupd/fwupd.conf`.
 
 The spec expects runtime *SetVariable* to be available in order to enable this
 feature, we need to set `EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED`
