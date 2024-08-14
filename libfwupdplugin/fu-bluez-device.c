@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "fu-bluez-device.h"
+#include "fu-dump.h"
 #include "fu-firmware-common.h"
 #include "fu-string.h"
 
@@ -625,6 +626,7 @@ fu_bluez_device_read(FuBluezDevice *self, const gchar *uuid, GError **error)
 {
 	FuBluezDeviceUuidHelper *uuid_helper;
 	guint8 byte;
+	g_autofree gchar *title = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GVariantBuilder) builder = NULL;
 	g_autoptr(GVariantIter) iter = NULL;
@@ -665,6 +667,10 @@ fu_bluez_device_read(FuBluezDevice *self, const gchar *uuid, GError **error)
 	g_variant_get(val, "(ay)", &iter);
 	while (g_variant_iter_loop(iter, "y", &byte))
 		g_byte_array_append(buf, &byte, 1);
+
+	/* debug a bit */
+	title = g_strdup_printf("ReadValue[%s]", uuid);
+	fu_dump_raw(G_LOG_DOMAIN, title, buf->data, buf->len);
 
 	/* success */
 	return g_steal_pointer(&buf);
@@ -716,6 +722,7 @@ gboolean
 fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, GError **error)
 {
 	FuBluezDeviceUuidHelper *uuid_helper;
+	g_autofree gchar *title = NULL;
 	g_autoptr(GVariantBuilder) opt_builder = NULL;
 	g_autoptr(GVariantBuilder) val_builder = NULL;
 	g_autoptr(GVariant) ret = NULL;
@@ -732,6 +739,10 @@ fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, G
 		return FALSE;
 	if (!fu_bluez_device_ensure_uuid_helper_proxy(uuid_helper, error))
 		return FALSE;
+
+	/* debug a bit */
+	title = g_strdup_printf("WriteValue[%s]", uuid);
+	fu_dump_raw(G_LOG_DOMAIN, title, buf->data, buf->len);
 
 	/* build the value variant */
 	val_builder = g_variant_builder_new(G_VARIANT_TYPE("ay"));
