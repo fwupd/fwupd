@@ -52,8 +52,13 @@ fu_bluez_backend_object_properties_changed(FuBluezBackend *self, GDBusProxy *pro
 	}
 
 	/* not paired and connected */
-	if (!suitable)
+	if (!suitable) {
+		g_debug("%s connected=%i, paired=%i, ignoring",
+			path,
+			g_variant_get_boolean(val_connected),
+			g_variant_get_boolean(val_paired));
 		return;
+	}
 
 	/* create device */
 	dev = g_object_new(FU_TYPE_BLUEZ_DEVICE,
