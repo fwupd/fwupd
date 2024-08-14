@@ -121,10 +121,9 @@ fu_telink_dfu_ble_device_write_blob(FuTelinkDfuBleDevice *self,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 10, "ota-start");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "ota-data");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 10, "ota-stop");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "ota-start");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 70, "ota-data");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 29, "ota-stop");
 
 	// FIXME: why?
 	pkt = fu_telink_dfu_ble_device_create_packet(FU_TELINK_DFU_CMD_OTA_FW_VERSION, NULL, 0);
@@ -191,7 +190,6 @@ static void
 fu_telink_dfu_ble_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
