@@ -446,7 +446,7 @@ fwupd_client_uninhibit_finish(FwupdClient *self,
 			      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 void
 fwupd_client_emulation_load_async(FwupdClient *self,
-				  GBytes *data,
+				  const gchar *filename,
 				  GCancellable *cancellable,
 				  GAsyncReadyCallback callback,
 				  gpointer callback_data) G_GNUC_NON_NULL(1, 2);

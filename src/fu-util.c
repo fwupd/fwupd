@@ -822,15 +822,12 @@ fu_util_device_test_component(FuUtilPrivate *priv,
 }
 
 static gboolean
-fu_util_emulation_load_with_fallback(FuUtilPrivate *priv, GBytes *emulation_data, GError **error)
+fu_util_emulation_load_with_fallback(FuUtilPrivate *priv, const gchar *filename, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 
 	/* load data, but handle the case when emulation is disabled */
-	if (!fwupd_client_emulation_load(priv->client,
-					 emulation_data,
-					 priv->cancellable,
-					 &error_local)) {
+	if (!fwupd_client_emulation_load(priv->client, filename, priv->cancellable, &error_local)) {
 		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
 		    priv->no_emulation_check) {
 			g_propagate_error(error, g_steal_pointer(&error_local));
@@ -861,7 +858,7 @@ fu_util_emulation_load_with_fallback(FuUtilPrivate *priv, GBytes *emulation_data
 	}
 
 	/* lets try again */
-	return fwupd_client_emulation_load(priv->client, emulation_data, priv->cancellable, error);
+	return fwupd_client_emulation_load(priv->client, filename, priv->cancellable, error);
 }
 
 static gboolean
@@ -914,7 +911,6 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 	/* send this data to the daemon */
 	if (helper->use_emulation) {
 		g_autofree gchar *emulation_filename = NULL;
-		g_autoptr(GBytes) emulation_data = NULL;
 
 		/* just ignore anything without emulation data */
 		if (!json_object_has_member(json_obj, "emulation-url"))
@@ -926,10 +922,7 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 			g_prefix_error(error, "failed to download %s: ", emulation_url);
 			return FALSE;
 		}
-		emulation_data = fu_bytes_get_contents(emulation_filename, error);
-		if (emulation_data == NULL)
-			return FALSE;
-		if (!fu_util_emulation_load_with_fallback(priv, emulation_data, error))
+		if (!fu_util_emulation_load_with_fallback(priv, emulation_filename, error))
 			return FALSE;
 	}
 
@@ -4732,8 +4725,6 @@ fu_util_emulation_save(FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_emulation_load(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(GBytes) data = NULL;
-
 	/* check args */
 	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
@@ -4742,10 +4733,7 @@ fu_util_emulation_load(FuUtilPrivate *priv, gchar **values, GError **error)
 				    "Invalid arguments, expected FILENAME");
 		return FALSE;
 	}
-	data = fu_bytes_get_contents(values[0], error);
-	if (data == NULL)
-		return FALSE;
-	return fu_util_emulation_load_with_fallback(priv, data, error);
+	return fu_util_emulation_load_with_fallback(priv, values[0], error);
 }
 
 static gboolean
