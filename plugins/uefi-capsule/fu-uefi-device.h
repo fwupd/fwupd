@@ -80,6 +80,12 @@ struct _FuUefiDeviceClass {
  * Modify `BootOrder` as well as `BootNext` to work around BIOS bugs.
  */
 #define FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER (1 << 10)
+/**
+ * FU_UEFI_DEVICE_FLAG_COD_DELL_RECOVERY:
+ *
+ * Use Dell customized file location for the capsule on disk.
+ */
+#define FU_UEFI_DEVICE_FLAG_COD_DELL_RECOVERY (1 << 11)
 
 void
 fu_uefi_device_set_esp(FuUefiDevice *self, FuVolume *esp);
