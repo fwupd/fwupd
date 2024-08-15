@@ -604,12 +604,12 @@ fu_plugin_device_remove(FuPlugin *self, FuDevice *device)
 	g_return_if_fail(FU_IS_PLUGIN(self));
 	g_return_if_fail(FU_IS_DEVICE(device));
 
+	g_debug("emit removed from %s: %s", fu_plugin_get_name(self), fu_device_get_id(device));
+	g_signal_emit(self, signals[SIGNAL_DEVICE_REMOVED], 0, device);
+
 	/* remove from array */
 	if (priv->devices != NULL)
 		g_ptr_array_remove(priv->devices, device);
-
-	g_debug("emit removed from %s: %s", fu_plugin_get_name(self), fu_device_get_id(device));
-	g_signal_emit(self, signals[SIGNAL_DEVICE_REMOVED], 0, device);
 }
 
 /**
