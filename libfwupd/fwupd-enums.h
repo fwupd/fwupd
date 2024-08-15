@@ -1428,6 +1428,14 @@ typedef enum {
 	 */
 	FWUPD_VERSION_FORMAT_DELL_BIOS,
 	/**
+	 * FWUPD_VERSION_FORMAT_DELL_BIOS_MSB:
+	 *
+	 * Dell BIOS AA.BB.CC style.
+	 *
+	 * Since: 1.9.24
+	 */
+	FWUPD_VERSION_FORMAT_DELL_BIOS_MSB,
+	/**
 	 * FWUPD_VERSION_FORMAT_HEX:
 	 *
 	 * Hexadecimal 0xAABCCDD style.
