@@ -153,6 +153,13 @@ fu_version_from_uint32(guint32 val, FwupdVersionFormat kind)
 		/* 0xAABBCCDD */
 		return g_strdup_printf("0x%08x", val);
 	}
+	if (kind == FWUPD_VERSION_FORMAT_DELL_BIOS_MSB) {
+		/* AA.BB.CC */
+		return g_strdup_printf("%u.%u.%u",
+				       (val >> 24) & 0xff,
+				       (val >> 16) & 0xff,
+				       (val >> 8) & 0xff);
+	}
 	g_critical("failed to convert version format %s: %u",
 		   fwupd_version_format_to_string(kind),
 		   val);
@@ -293,7 +300,8 @@ fu_version_format_number_sections(FwupdVersionFormat fmt)
 	if (fmt == FWUPD_VERSION_FORMAT_PAIR || fmt == FWUPD_VERSION_FORMAT_BCD)
 		return 2;
 	if (fmt == FWUPD_VERSION_FORMAT_TRIPLET || fmt == FWUPD_VERSION_FORMAT_SURFACE_LEGACY ||
-	    fmt == FWUPD_VERSION_FORMAT_SURFACE || fmt == FWUPD_VERSION_FORMAT_DELL_BIOS)
+	    fmt == FWUPD_VERSION_FORMAT_SURFACE || fmt == FWUPD_VERSION_FORMAT_DELL_BIOS ||
+	    fmt == FWUPD_VERSION_FORMAT_DELL_BIOS_MSB)
 		return 3;
 	if (fmt == FWUPD_VERSION_FORMAT_QUAD || fmt == FWUPD_VERSION_FORMAT_INTEL_ME ||
 	    fmt == FWUPD_VERSION_FORMAT_INTEL_ME2)
@@ -523,7 +531,7 @@ fu_version_format_convert_base(FwupdVersionFormat fmt)
 {
 	if (fmt == FWUPD_VERSION_FORMAT_INTEL_ME || fmt == FWUPD_VERSION_FORMAT_INTEL_ME2)
 		return FWUPD_VERSION_FORMAT_QUAD;
-	if (fmt == FWUPD_VERSION_FORMAT_DELL_BIOS)
+	if (fmt == FWUPD_VERSION_FORMAT_DELL_BIOS || fmt == FWUPD_VERSION_FORMAT_DELL_BIOS_MSB)
 		return FWUPD_VERSION_FORMAT_TRIPLET;
 	if (fmt == FWUPD_VERSION_FORMAT_BCD)
 		return FWUPD_VERSION_FORMAT_PAIR;
