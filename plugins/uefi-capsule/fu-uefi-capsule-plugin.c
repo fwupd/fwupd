@@ -857,6 +857,8 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 	}
 	if (fu_context_has_hwid_flag(ctx, "modify-bootorder"))
 		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER);
+	if (fu_context_has_hwid_flag(ctx, "cod-dell-recovery"))
+		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_COD_DELL_RECOVERY);
 
 	/* detected InsydeH2O */
 	if (self->acpi_uefi != NULL &&

@@ -722,6 +722,9 @@ fu_uefi_device_init(FuUefiDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER,
 					"modify-bootorder");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_DEVICE_FLAG_COD_DELL_RECOVERY,
+					"cod-dell-recovery");
 }
 
 static void
