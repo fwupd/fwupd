@@ -1106,6 +1106,7 @@ typedef enum {
  * @FWUPD_VERSION_FORMAT_SURFACE:		Microsoft Surface 8b.16b.8b
  * @FWUPD_VERSION_FORMAT_DELL_BIOS:		Dell BIOS BB.CC.DD style
  * @FWUPD_VERSION_FORMAT_HEX:			Hexadecimal 0xAABCCDD style
+ * @FWUPD_VERSION_FORMAT_DELL_BIOS_MSB: 	Dell BIOS AA.BB.CC style
  *
  * The flags used when parsing version numbers.
  *
@@ -1126,6 +1127,7 @@ typedef enum {
 	FWUPD_VERSION_FORMAT_SURFACE,	     /* Since: 1.3.4 */
 	FWUPD_VERSION_FORMAT_DELL_BIOS,	     /* Since: 1.3.6 */
 	FWUPD_VERSION_FORMAT_HEX,	     /* Since: 1.4.0 */
+	FWUPD_VERSION_FORMAT_DELL_BIOS_MSB,  /* Since: 1.9.24 */
 	/*< private >*/
 	FWUPD_VERSION_FORMAT_LAST
 } FwupdVersionFormat;

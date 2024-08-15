@@ -926,6 +926,8 @@ fwupd_version_format_from_string(const gchar *str)
 		return FWUPD_VERSION_FORMAT_DELL_BIOS;
 	if (g_strcmp0(str, "hex") == 0)
 		return FWUPD_VERSION_FORMAT_HEX;
+	if (g_strcmp0(str, "dell-bios-msb") == 0)
+		return FWUPD_VERSION_FORMAT_DELL_BIOS_MSB;
 	return FWUPD_VERSION_FORMAT_UNKNOWN;
 }
 
@@ -966,5 +968,7 @@ fwupd_version_format_to_string(FwupdVersionFormat kind)
 		return "dell-bios";
 	if (kind == FWUPD_VERSION_FORMAT_HEX)
 		return "hex";
+	if (kind == FWUPD_VERSION_FORMAT_DELL_BIOS_MSB)
+		return "dell-bios-msb";
 	return NULL;
 }

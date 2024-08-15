@@ -64,11 +64,12 @@ from that. This means that `fwupdmgr get-devices` may return the UEFI device as 
 then once `fwupdmgr refresh` has completed it may start showing the exact same device as `A.B.C.D`,
 aka `quad` format.
 
-The two main formats used by vendors are `triplet`, `quad` and `dell-bios`.
+The main formats used by vendors are `triplet`, `quad`, `dell-bios` and `dell-bios-msb`.
 
     0xAABBCCDD -> 0xAA.0xBB.0xCCCC is `triplet`, used for Lenovo
     0xAABBCCDD -> 0xAA.0xBB.0xCC.0xDD is `quad`, used for HP
     0xAABBCCDD -> 0xBB.0xCC.0xDD is `dell-bios`, used for Dell
+    0xAABBCCDD -> 0xAA.0xBB.0xCC is `dell-bios-msb`, used for Dell since CY24
 
 There are more details about firmware version formats and a full list of all the different allowed
 values on the [LVFS](https://lvfs.readthedocs.io/en/latest/metainfo.html#version-format).
