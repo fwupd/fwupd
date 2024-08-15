@@ -986,7 +986,15 @@ fu_engine_remove_device_flag(FuEngine *self,
 				    fu_device_get_id(device));
 			return FALSE;
 		}
-		fu_device_list_remove(self->device_list, device);
+		if (fu_device_get_backend(device) == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "device %s requires backend",
+				    fu_device_get_id(device));
+			return FALSE;
+		}
+		fu_backend_device_removed(fu_device_get_backend(device), device);
 		return TRUE;
 	}
 	if (flag == FWUPD_DEVICE_FLAG_EMULATION_TAG) {
@@ -7560,6 +7568,7 @@ fu_engine_backend_device_removed_cb(FuBackend *backend, FuDevice *device, FuEngi
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
 		if (g_strcmp0(fu_device_get_backend_id(device_tmp),
 			      fu_device_get_backend_id(device)) == 0) {
+			FuPlugin *plugin;
 			if (fu_device_has_internal_flag(device_tmp,
 							FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)) {
 				g_info("not auto-removing backend device %s [%s] due to flags",
@@ -7567,11 +7576,15 @@ fu_engine_backend_device_removed_cb(FuBackend *backend, FuDevice *device, FuEngi
 				       fu_device_get_id(device_tmp));
 				continue;
 			}
+			plugin = fu_plugin_list_find_by_name(self->plugin_list,
+							     fu_device_get_plugin(device_tmp),
+							     NULL);
+			if (plugin == NULL)
+				continue;
 			g_info("auto-removing backend device %s [%s]",
 			       fu_device_get_name(device_tmp),
 			       fu_device_get_id(device_tmp));
-			fu_device_list_remove(self->device_list, device_tmp);
-			fu_engine_emit_changed(self);
+			fu_plugin_device_remove(plugin, device_tmp);
 		}
 	}
 }
