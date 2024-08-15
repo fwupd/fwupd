@@ -2702,7 +2702,7 @@ fu_engine_emulation_load_phase(FuEngine *self, GError **error)
 }
 
 gboolean
-fu_engine_emulation_load(FuEngine *self, GBytes *data, GError **error)
+fu_engine_emulation_load(FuEngine *self, GInputStream *stream, GError **error)
 {
 	gboolean got_json = FALSE;
 	const gchar *json_empty = "{\"UsbDevices\":[]}";
@@ -2710,7 +2710,7 @@ fu_engine_emulation_load(FuEngine *self, GBytes *data, GError **error)
 	g_autoptr(GBytes) json_blob = g_bytes_new_static(json_empty, strlen(json_empty));
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
-	g_return_val_if_fail(data != NULL, FALSE);
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not supported */
@@ -2727,7 +2727,7 @@ fu_engine_emulation_load(FuEngine *self, GBytes *data, GError **error)
 		return FALSE;
 
 	/* load archive */
-	archive = fu_archive_new(data, FU_ARCHIVE_FLAG_NONE, error);
+	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_NONE, error);
 	if (archive == NULL)
 		return FALSE;
 

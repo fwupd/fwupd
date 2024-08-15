@@ -1038,6 +1038,39 @@ fu_dbus_daemon_client_flags_notify_cb(FuClient *client, GParamSpec *pspec, FuMai
 }
 #endif
 
+static GInputStream *
+fu_dbus_daemon_invocation_get_stream(GDBusMethodInvocation *invocation, GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	GDBusMessage *message;
+	GUnixFDList *fd_list;
+	gint fd;
+	g_autoptr(GInputStream) stream = NULL;
+
+	/* get the fd */
+	message = g_dbus_method_invocation_get_message(invocation);
+	fd_list = g_dbus_message_get_unix_fd_list(message);
+	if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 1) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
+		return NULL;
+	}
+	fd = g_unix_fd_list_get(fd_list, 0, error);
+	if (fd < 0)
+		return NULL;
+
+	/* get details about the file (will close the fd when done) */
+	stream = fu_unix_seekable_input_stream_new(fd, TRUE);
+	if (stream == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid stream");
+		return NULL;
+	}
+	return g_steal_pointer(&stream);
+#else
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
+	return NULL;
+#endif
+}
+
 static void
 fu_dbus_daemon_daemon_method_call(GDBusConnection *connection,
 				  const gchar *sender,
@@ -1384,13 +1417,21 @@ fu_dbus_daemon_daemon_method_call(GDBusConnection *connection,
 		return;
 	}
 	if (g_strcmp0(method_name, "EmulationLoad") == 0) {
-		g_autoptr(GBytes) data = NULL;
+		gint32 fd_handle = 0;
+		g_autoptr(GInputStream) stream = NULL;
 
-		g_debug("Called %s()", method_name);
+		g_variant_get(parameters, "(h)", &fd_handle);
+		g_debug("Called %s(%i)", method_name, fd_handle);
+
+		/* get stream */
+		stream = fu_dbus_daemon_invocation_get_stream(invocation, &error);
+		if (stream == NULL) {
+			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+			return;
+		}
 
 		/* load data into engine */
-		data = g_variant_get_data_as_bytes(g_variant_get_child_value(parameters, 0));
-		if (!fu_engine_emulation_load(engine, data, &error)) {
+		if (!fu_engine_emulation_load(engine, stream, &error)) {
 			g_dbus_method_invocation_return_error(invocation,
 							      error->domain,
 							      error->code,
@@ -1778,9 +1819,6 @@ fu_dbus_daemon_daemon_method_call(GDBusConnection *connection,
 		const gchar *device_id = NULL;
 		const gchar *prop_key;
 		gint32 fd_handle = 0;
-		gint fd;
-		GDBusMessage *message;
-		GUnixFDList *fd_list;
 		g_autoptr(FuMainAuthHelper) helper = NULL;
 		g_autoptr(GVariantIter) iter = NULL;
 
@@ -1832,20 +1870,12 @@ fu_dbus_daemon_daemon_method_call(GDBusConnection *connection,
 			return;
 		}
 #endif
-		/* get the fd */
-		message = g_dbus_method_invocation_get_message(invocation);
-		fd_list = g_dbus_message_get_unix_fd_list(message);
-		if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 1) {
-			g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
+		/* get stream */
+		helper->stream = fu_dbus_daemon_invocation_get_stream(invocation, &error);
+		if (helper->stream == NULL) {
 			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
-		fd = g_unix_fd_list_get(fd_list, 0, &error);
-		if (fd < 0) {
-			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
-			return;
-		}
-		helper->stream = fu_unix_seekable_input_stream_new(fd, TRUE);
 
 		/* relax these */
 		if (fu_engine_config_get_ignore_requirements(fu_engine_get_config(engine)))
@@ -1870,12 +1900,10 @@ fu_dbus_daemon_daemon_method_call(GDBusConnection *connection,
 		/* async return */
 		return;
 	}
+
 	if (g_strcmp0(method_name, "GetDetails") == 0) {
 #ifdef HAVE_GIO_UNIX
-		GDBusMessage *message;
-		GUnixFDList *fd_list;
 		gint32 fd_handle = 0;
-		gint fd;
 		g_autoptr(GPtrArray) results = NULL;
 		g_autoptr(GInputStream) stream = NULL;
 
@@ -1883,26 +1911,14 @@ fu_dbus_daemon_daemon_method_call(GDBusConnection *connection,
 		g_variant_get(parameters, "(h)", &fd_handle);
 		g_debug("Called %s(%i)", method_name, fd_handle);
 
-		/* get the fd */
-		message = g_dbus_method_invocation_get_message(invocation);
-		fd_list = g_dbus_message_get_unix_fd_list(message);
-		if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 1) {
-			g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
-			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
-			return;
-		}
-		fd = g_unix_fd_list_get(fd_list, 0, &error);
-		if (fd < 0) {
-			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
-			return;
-		}
-
-		/* get details about the file (will close the fd when done) */
-		stream = fu_unix_seekable_input_stream_new(fd, TRUE);
+		/* get stream */
+		stream = fu_dbus_daemon_invocation_get_stream(invocation, &error);
 		if (stream == NULL) {
 			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
+
+		/* get details about the file */
 		results = fu_engine_get_details(engine, request, stream, &error);
 		if (results == NULL) {
 			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
