@@ -162,6 +162,17 @@ fu_uefi_cod_device_get_filename(FuUefiDevice *self, GError **error)
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_COD_INDEXED_FILENAME))
 		return fu_uefi_cod_device_get_indexed_filename(self, error);
 
+	/* Dell Inc. */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_COD_DELL_RECOVERY)) {
+		return g_build_filename(esp_path,
+					"EFI",
+					"dell",
+					"bios",
+					"recovery",
+					"BIOS_TRS.rcv",
+					NULL);
+	}
+
 	/* fallback */
 	basename = g_strdup_printf("fwupd-%s.cap", fu_uefi_device_get_guid(self));
 	return g_build_filename(esp_path, "EFI", "UpdateCapsule", basename, NULL);
