@@ -6526,14 +6526,7 @@ fu_engine_plugin_device_removed_cb(FuPlugin *plugin, FuDevice *device, gpointer 
 {
 	FuEngine *self = (FuEngine *)user_data;
 	FuPlugin *plugin_old;
-	g_autoptr(FuDevice) device_tmp = NULL;
 	g_autoptr(GError) error = NULL;
-
-	device_tmp = fu_device_list_get_by_id(self->device_list, fu_device_get_id(device), &error);
-	if (device_tmp == NULL) {
-		g_info("failed to find device %s: %s", fu_device_get_id(device), error->message);
-		return;
-	}
 
 	/* get the plugin */
 	plugin_old =
