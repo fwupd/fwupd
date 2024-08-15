@@ -4560,6 +4560,12 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 		fwupd_codec_string_append(str, idt, "Events", "");
 		for (guint i = 0; i < priv->events->len; i++) {
 			FuDeviceEvent *event = g_ptr_array_index(priv->events, i);
+			if (i > 10) {
+				g_autofree gchar *msg =
+				    g_strdup_printf("…and %u more events", priv->events->len - 10);
+				fwupd_codec_string_append(str, idt + 1, "", msg);
+				break;
+			}
 			fwupd_codec_add_string(FWUPD_CODEC(event), idt + 1, str);
 		}
 	}
