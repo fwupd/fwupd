@@ -125,7 +125,7 @@ struct _FuEngine {
 	FuContext *ctx;
 	GHashTable *approved_firmware;	      /* (nullable) */
 	GHashTable *blocked_firmware;	      /* (nullable) */
-	GHashTable *emulation_phases;	      /* (element-type int utf8) */
+	GHashTable *emulation_phases;	      /* (element-type int GBytes) */
 	GHashTable *emulation_ids;	      /* (element-type str int) */
 	GHashTable *device_changed_allowlist; /* (element-type str int) */
 	gchar *host_machine_id;
@@ -2652,13 +2652,16 @@ fu_engine_get_plugin_by_name(FuEngine *self, const gchar *name, GError **error)
 }
 
 static gboolean
-fu_engine_emulation_load_json(FuEngine *self, const gchar *json, GError **error)
+fu_engine_emulation_load_json_blob(FuEngine *self, GBytes *json_blob, GError **error)
 {
 	JsonNode *root;
 	g_autoptr(JsonParser) parser = json_parser_new();
 
 	/* parse */
-	if (!json_parser_load_from_data(parser, json, -1, error))
+	if (!json_parser_load_from_data(parser,
+					g_bytes_get_data(json_blob, NULL),
+					g_bytes_get_size(json_blob),
+					error))
 		return FALSE;
 
 	/* load into all backends */
@@ -2676,21 +2679,35 @@ fu_engine_emulation_load_json(FuEngine *self, const gchar *json, GError **error)
 static gboolean
 fu_engine_emulation_load_phase(FuEngine *self, GError **error)
 {
-	const gchar *json =
+	GBytes *json_blob;
+	const guint8 *buf;
+	gsize bufsz = 0;
+
+	json_blob =
 	    g_hash_table_lookup(self->emulation_phases, GINT_TO_POINTER(self->install_phase));
-	if (json == NULL)
+	if (json_blob == NULL)
 		return TRUE;
-	g_info("loading phase %s: %s",
-	       fu_engine_install_phase_to_string(self->install_phase),
-	       json);
-	return fu_engine_emulation_load_json(self, json, error);
+
+	/* show a truncated version to the console */
+	buf = g_bytes_get_data(json_blob, &bufsz);
+	if (bufsz > 0) {
+		g_autofree gchar *json_truncated =
+		    g_strndup((const gchar *)buf, MIN(bufsz, 0x2000));
+		g_info("loading phase %s: %s",
+		       fu_engine_install_phase_to_string(self->install_phase),
+		       json_truncated);
+	}
+
+	return fu_engine_emulation_load_json_blob(self, json_blob, error);
 }
 
 gboolean
 fu_engine_emulation_load(FuEngine *self, GBytes *data, GError **error)
 {
 	gboolean got_json = FALSE;
+	const gchar *json_empty = "{\"UsbDevices\":[]}";
 	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(GBytes) json_blob = g_bytes_new_static(json_empty, strlen(json_empty));
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(data != NULL, FALSE);
@@ -2706,7 +2723,7 @@ fu_engine_emulation_load(FuEngine *self, GBytes *data, GError **error)
 	}
 
 	/* unload any existing devices */
-	if (!fu_engine_emulation_load_json(self, "{\"UsbDevices\":[]}", error))
+	if (!fu_engine_emulation_load_json_blob(self, json_blob, error))
 		return FALSE;
 
 	/* load archive */
@@ -2720,23 +2737,21 @@ fu_engine_emulation_load(FuEngine *self, GBytes *data, GError **error)
 	     phase++) {
 		g_autofree gchar *fn =
 		    g_strdup_printf("%s.json", fu_engine_install_phase_to_string(phase));
-		g_autofree gchar *json_safe = NULL;
 		g_autoptr(GBytes) blob = NULL;
 
 		/* not found */
 		blob = fu_archive_lookup_by_fn(archive, fn, NULL);
 		if (blob == NULL)
 			continue;
-		json_safe = g_strndup(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob));
 		got_json = TRUE;
 		g_info("got emulation for phase %s", fu_engine_install_phase_to_string(phase));
 		if (phase == FU_ENGINE_INSTALL_PHASE_SETUP) {
-			if (!fu_engine_emulation_load_json(self, json_safe, error))
+			if (!fu_engine_emulation_load_json_blob(self, blob, error))
 				return FALSE;
 		} else {
 			g_hash_table_insert(self->emulation_phases,
 					    GINT_TO_POINTER(phase),
-					    g_steal_pointer(&json_safe));
+					    g_steal_pointer(&blob));
 		}
 	}
 	if (!got_json) {
@@ -8968,7 +8983,10 @@ fu_engine_init(FuEngine *self)
 	self->backends = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->local_monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->acquiesce_loop = g_main_loop_new(NULL, FALSE);
-	self->emulation_phases = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
+	self->emulation_phases = g_hash_table_new_full(g_direct_hash,
+						       g_direct_equal,
+						       NULL,
+						       (GDestroyNotify)g_bytes_unref);
 	self->emulation_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	self->device_changed_allowlist =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
