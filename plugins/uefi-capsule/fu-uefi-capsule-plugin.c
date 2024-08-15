@@ -267,15 +267,15 @@ fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error
 	g_autofree gchar *filename_archive = NULL;
 	g_autofree gchar *langs_str = NULL;
 	g_autoptr(FuArchive) archive = NULL;
-	g_autoptr(GBytes) blob_archive = NULL;
+	g_autoptr(GInputStream) stream_archive = NULL;
 
 	/* load archive */
 	datadir_pkg = fu_path_from_kind(FU_PATH_KIND_DATADIR_PKG);
 	filename_archive = g_build_filename(datadir_pkg, "uefi-capsule-ux.tar.xz", NULL);
-	blob_archive = fu_bytes_get_contents(filename_archive, error);
-	if (blob_archive == NULL)
+	stream_archive = fu_input_stream_from_path(filename_archive, error);
+	if (stream_archive == NULL)
 		return NULL;
-	archive = fu_archive_new(blob_archive, FU_ARCHIVE_FLAG_NONE, error);
+	archive = fu_archive_new_stream(stream_archive, FU_ARCHIVE_FLAG_NONE, error);
 	if (archive == NULL)
 		return NULL;
 
