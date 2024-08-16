@@ -584,7 +584,7 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 		fu_device_set_physical_id(device, g_variant_get_string(val_adapter, NULL));
 	val_name = g_dbus_proxy_get_cached_property(priv->proxy, "Name");
 	if (val_name != NULL) {
-		fu_device_set_name(device, g_variant_get_string(val_alias, NULL));
+		fu_device_set_name(device, g_variant_get_string(val_name, NULL));
 		/* register the device by its alias, since modalias could be absent */
 		fu_device_add_instance_str(FU_DEVICE(self),
 					   "NAME",
