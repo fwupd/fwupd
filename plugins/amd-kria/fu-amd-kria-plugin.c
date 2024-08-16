@@ -125,21 +125,20 @@ fu_amd_kria_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 static gboolean
 fu_amd_kria_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
+#ifdef __aarch64__
 	g_autofree gchar *sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
 	g_autofree gchar *esrt_path = g_build_filename(sysfsfwdir, "efi", "esrt", NULL);
 
-#if !defined(__aarch64__)
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "only for aarch64");
-	return FALSE;
-#endif
-
-	/* If there is an ESRT use that instead and disable the plugin */
+	/* if there is an ESRT use that instead and disable the plugin */
 	if (g_file_test(esrt_path, G_FILE_TEST_IS_DIR)) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "system uses UEFI ESRT");
 		return FALSE;
 	}
-
 	return TRUE;
+#else
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "only for aarch64");
+	return FALSE;
+#endif
 }
 
 static void
