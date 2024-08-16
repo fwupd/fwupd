@@ -1071,6 +1071,45 @@ fu_dbus_daemon_invocation_get_stream(GDBusMethodInvocation *invocation, GError *
 #endif
 }
 
+static gboolean
+fu_dbus_daemon_hsi_supported(FuDbusDaemon *self, GError **error)
+{
+#ifdef HAVE_HSI
+	g_autofree gchar *sysfsfwdir = NULL;
+	g_autofree gchar *xen_privileged_fn = NULL;
+
+	if (g_getenv("UMOCKDEV_DIR") != NULL)
+		return TRUE;
+	if (fu_daemon_get_machine_kind(FU_DAEMON(self)) == FU_DAEMON_MACHINE_KIND_PHYSICAL)
+		return TRUE;
+
+	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW_ATTRIB);
+	/* privileged xen can access most hardware */
+	xen_privileged_fn =
+	    g_build_filename(sysfsfwdir, "hypervisor", "start_flags", "privileged", NULL);
+	if (g_file_test(xen_privileged_fn, G_FILE_TEST_EXISTS)) {
+		g_autofree gchar *contents = NULL;
+
+		if (g_file_get_contents(xen_privileged_fn, &contents, NULL, NULL)) {
+			if ((g_strchomp(contents), "1") == 0)
+				return TRUE;
+		}
+	}
+
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "HSI unavailable for hypervisor");
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "HSI support not enabled");
+
+#endif
+	return FALSE;
+}
+
 static void
 fu_dbus_daemon_daemon_method_call(GDBusConnection *connection,
 				  const gchar *sender,
@@ -1356,30 +1395,16 @@ fu_dbus_daemon_daemon_method_call(GDBusConnection *connection,
 		return;
 	}
 	if (g_strcmp0(method_name, "GetHostSecurityAttrs") == 0) {
-#ifdef HAVE_HSI
 		g_autoptr(FuSecurityAttrs) attrs = NULL;
-#endif
+
 		g_debug("Called %s()", method_name);
-#ifndef HAVE_HSI
-		g_dbus_method_invocation_return_error_literal(invocation,
-							      FWUPD_ERROR,
-							      FWUPD_ERROR_NOT_SUPPORTED,
-							      "HSI support not enabled");
-#else
-		if (fu_daemon_get_machine_kind(FU_DAEMON(self)) !=
-			FU_DAEMON_MACHINE_KIND_PHYSICAL &&
-		    g_getenv("UMOCKDEV_DIR") == NULL) {
-			g_dbus_method_invocation_return_error_literal(
-			    invocation,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "HSI unavailable for hypervisor");
+		if (!fu_dbus_daemon_hsi_supported(self, &error)) {
+			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 		attrs = fu_engine_get_host_security_attrs(engine);
 		val = fu_security_attrs_to_variant(attrs);
 		g_dbus_method_invocation_return_value(invocation, val);
-#endif
 		return;
 	}
 	if (g_strcmp0(method_name, "GetHostSecurityEvents") == 0) {
