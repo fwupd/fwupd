@@ -150,16 +150,16 @@ fu_version_from_uint32(guint32 val, FwupdVersionFormat kind)
 				       (val >> 8) & 0xff,
 				       val & 0xff);
 	}
+	if (kind == FWUPD_VERSION_FORMAT_HEX) {
+		/* 0xAABBCCDD */
+		return g_strdup_printf("0x%08x", val);
+	}
 	if (kind == FWUPD_VERSION_FORMAT_DELL_BIOS_MSB) {
 		/* AA.BB.CC */
 		return g_strdup_printf("%u.%u.%u",
 				       (val >> 24) & 0xff,
 				       (val >> 16) & 0xff,
 				       (val >> 8) & 0xff);
-	}
-	if (kind == FWUPD_VERSION_FORMAT_HEX) {
-		/* 0xAABBCCDD */
-		return g_strdup_printf("0x%08x", val);
 	}
 	g_critical("failed to convert version format %s: %u",
 		   fwupd_version_format_to_string(kind),
