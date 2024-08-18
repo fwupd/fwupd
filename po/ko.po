@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Seong-ho Cho <darkcircle.0426@gmail.com>, 2017,2019,2021-2023
+# Seong-ho Cho <darkcircle.0426@gmail.com>, 2017,2019,2021-2024
 # Shinjo Park <kde@peremen.name>, 2018-2021,2023
 msgid ""
 msgstr ""
@@ -284,12 +284,6 @@ msgid "%u hour"
 msgid_plural "%u hours"
 msgstr[0] "%u시간"
 
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "%u local device supported"
-msgid_plural "%u local devices supported"
-msgstr[0] "로컬 장치 %u개를 지원함"
-
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u minute"
@@ -423,10 +417,6 @@ msgid "Answer yes to all questions"
 msgstr "모든 질문에 예로 답하기"
 
 #. TRANSLATORS: command line option
-msgid "Apply firmware updates"
-msgstr "펌웨어 업데이트 적용"
-
-#. TRANSLATORS: command line option
 msgid "Apply update even when not advised"
 msgstr "필요하지 않은 경우에도 업데이트 적용"
 
@@ -443,10 +433,6 @@ msgstr "업데이트 적용 중..."
 msgid "Approved firmware:"
 msgid_plural "Approved firmware:"
 msgstr[0] "허용된 펌웨어:"
-
-#. TRANSLATORS: stop nagging the user
-msgid "Ask again next time?"
-msgstr "다음에도 다시 확인하시겠습니까?"
 
 #. TRANSLATORS: command description
 msgid "Asks the daemon to quit"
@@ -528,6 +514,10 @@ msgstr "매번 자동으로 업로드하시겠습니까?"
 msgid "BIOS Rollback Protection"
 msgstr "BIOS 롤백 보호"
 
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS firmware updates"
+msgstr "BIOS 펌웨어 업데이트"
+
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS rollback protection"
 msgstr "BIOS 롤백 보호"
@@ -539,9 +529,6 @@ msgstr "LVFS 또는 윈도우 업데이트에서 BIOS 업데이트를 받아왔�
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "BUILDER-XML FILENAME-DST"
 msgstr "BUILDER-XML FILENAME-DST"
-
-msgid "BYTES"
-msgstr "BYTES"
 
 #. TRANSLATORS: refers to the battery inside the peripheral device
 msgid "Battery"
@@ -571,7 +558,7 @@ msgstr "지정한 펌웨어 설치 방지"
 msgid "Bootloader Version"
 msgstr "부트로더 버전"
 
-#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Branch"
 msgstr "브랜치"
 
@@ -582,6 +569,16 @@ msgstr "펌웨어 블롭과 XML 메타데이터를 활용하여 캐비닛 아카
 #. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "펌웨어 파일 빌드"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * Utilized by OS means the distribution enabled it
+msgid "CET OS Support"
+msgstr "CET OS 지원"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * enabled means supported by the processor
+msgid "CET Platform"
+msgstr "CET 플랫폼"
 
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
@@ -635,10 +632,6 @@ msgid "Choose release"
 msgstr "릴리스를 선택하십시오"
 
 #. TRANSLATORS: get interactive prompt
-msgid "Choose the ESP:"
-msgstr "ESP 선택:"
-
-#. TRANSLATORS: get interactive prompt
 msgid "Choose volume"
 msgstr "볼륨을 선택하십시오"
 
@@ -689,10 +682,6 @@ msgstr "현재 버전"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "DEVICE-ID|GUID"
 msgstr "DEVICE-ID|GUID"
-
-#. TRANSLATORS: DFU stands for device firmware update
-msgid "DFU Utility"
-msgstr "DFU 유틸리티"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
@@ -749,10 +738,6 @@ msgstr "장치 배터리 전원이 매우 부족합니다 (%u%%, 필요 전원 �
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device can recover flash failures"
 msgstr "장치 업데이트 실패 시 복구 가능"
-
-#. TRANSLATORS: lid means "laptop top cover"
-msgid "Device cannot be used while the lid is closed"
-msgstr "덮개가 닫혀있는 동안 사용할 수 없습니다"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
@@ -824,10 +809,6 @@ msgstr "안전한 업데이트 지원"
 msgid "Device supports switching to a different branch of firmware"
 msgstr "장치에서 펌웨어 브랜치 전환을 지원함"
 
-#. TRANSLATORS: command line option
-msgid "Device update method"
-msgstr "장치 업데이트 방식"
-
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
 msgstr "장치 업데이트 활성화 필요"
@@ -860,11 +841,11 @@ msgid "Devices with no available firmware updates: "
 msgstr "펌웨어 업데이트를 사용할 수 없는 장치:"
 
 #. TRANSLATORS: message letting the user know no device upgrade available
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade available
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available
 msgid "Devices with the latest available firmware version:"
 msgstr "최신 펌웨어가 설치된 장치:"
 
@@ -877,16 +858,9 @@ msgstr "일치하는 GUID 장치를 찾지 못했습니다"
 msgid "Disabled"
 msgstr "비활성화됨"
 
-msgid "Disabled fwupdate debugging"
-msgstr "fwupdate 디버깅 비활성화"
-
 #. TRANSLATORS: command description
 msgid "Disables a given remote"
 msgstr "지정한 원격 저장소 비활성화"
-
-#. TRANSLATORS: command line option
-msgid "Display version"
-msgstr "버전 표시"
 
 #. TRANSLATORS: the OS the release was tested on
 msgid "Distribution"
@@ -1007,10 +981,6 @@ msgstr "파일에 저장된 SMBIOS 데이터 덤프 출력"
 msgid "Duration"
 msgstr "예상 시간"
 
-#. TRANSLATORS: ESP is EFI System Partition
-msgid "ESP specified was not valid"
-msgstr "지정한 ESP가 올바르지 않습니다"
-
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
 msgstr "각 시스템에 대해 펌웨어 보안을 확인 시험을 수행해야 합니다."
@@ -1030,10 +1000,6 @@ msgstr "에뮬레이팅 호스트"
 msgid "Enable"
 msgstr "활성"
 
-#. TRANSLATORS: command line option
-msgid "Enable firmware update support on supported systems"
-msgstr "지원하는 시스템의 펌웨어 업데이트 지원 활성화"
-
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
 msgstr "새 원격 저장소를 활성화하시겠습니까?"
@@ -1042,14 +1008,10 @@ msgstr "새 원격 저장소를 활성화하시겠습니까?"
 msgid "Enable this remote?"
 msgstr "이 원격 저장소를 활성화하시겠습니까?"
 
-#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "활성화됨"
-
-msgid "Enabled fwupdate debugging"
-msgstr "fwupdate 디버깅 활성화"
 
 #. TRANSLATORS: Plugin is active only if hardware is found
 msgid "Enabled if hardware matches"
@@ -1126,14 +1088,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "FILENAME CERTIFICATE PRIVATE-KEY"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
-msgstr "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
-msgstr "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ID"
 msgstr "FILENAME DEVICE-ID"
 
@@ -1186,10 +1140,6 @@ msgstr "펌웨어 업데이트를 설치할 수 없음"
 #. TRANSLATORS: could not read file
 msgid "Failed to load local dbx"
 msgstr "로컬 dbx를 불러올 수 없음"
-
-#. TRANSLATORS: quirks are device-specific workarounds
-msgid "Failed to load quirks"
-msgstr "특이 사항을 불러올 수 없음"
 
 #. TRANSLATORS: could not read existing system data
 msgid "Failed to load system dbx"
@@ -1287,10 +1237,6 @@ msgstr "펌웨어 BIOS 영역"
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "펌웨어 BIOS 영역에서 장치 펌웨어 메모리에 펌웨어를 임의로 변경하는 행위를 막습니다"
 
-#. TRANSLATORS: remote URI
-msgid "Firmware Base URI"
-msgstr "펌웨어 기본 URI"
-
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "펌웨어 업데이트 D-Bus 서비스"
@@ -1348,12 +1294,6 @@ msgstr[0] "펌웨어 메타데이터가 %u일 동안 업데이트되지 않았�
 msgid "Firmware updates"
 msgstr "펌웨어 업데이트"
 
-msgid "Firmware updates are not supported on this machine."
-msgstr "이 머신에서 펌웨어 업데이트를 지원하지 않습니다."
-
-msgid "Firmware updates are supported on this machine."
-msgstr "이 머신에서 펌웨어 업데이트를 지원합니다."
-
 #. TRANSLATORS: user needs to run a command
 msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "펌웨어 업그레이드 비활성화됨. 활성화하려면 'fwupdmgr unlock' 명령을 실행하십시오"
@@ -1365,9 +1305,6 @@ msgstr "플래그"
 #. TRANSLATORS: command line option
 msgid "Force the action by relaxing some runtime checks"
 msgstr "런타임 체크를 비활성화하여 강제로 작업 실행"
-
-msgid "Force the action ignoring all warnings"
-msgstr "모든 경고를 무시하고 작업 강제 진행"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
@@ -1394,11 +1331,6 @@ msgstr "퓨징한 플랫폼"
 msgid "GUID"
 msgid_plural "GUIDs"
 msgstr[0] "GUID"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgctxt "A single GUID"
-msgid "GUID"
-msgstr "GUID"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "command-argument"
@@ -1667,24 +1599,6 @@ msgstr "인텔 BootGuard에서 장치 동작을 시작할 때 인증하지 않�
 msgid "Intel BootGuard verified boot"
 msgstr "인텔 BootGuard 검증된 부트"
 
-#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
-msgid "Intel CET"
-msgstr "인텔 CET"
-
-#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
-#. * active means being used by the OS
-msgid "Intel CET Active"
-msgstr "인텔 CET 활성"
-
-#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
-#. * enabled means supported by the processor
-msgid "Intel CET Enabled"
-msgstr "인텔 CET 활성화됨"
-
-#. TRANSLATORS: longer description
-msgid "Intel Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
-msgstr "인텔 CET(제어흐름 강제 기술)은 장치에서 악성 프로그램을 감지하고 일부 실행 방법을 차단합니다."
-
 #. TRANSLATORS: Title: GDS is where the CPU leaks information
 msgid "Intel GDS Mitigation"
 msgstr "인텔 GDS 완화"
@@ -1712,14 +1626,6 @@ msgstr "인텔 관리 엔진 오버라이드는 장치 프로그램의 부당 �
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Version"
 msgstr "인텔 관리 엔진 버전"
-
-#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
-msgid "Intel SMAP"
-msgstr "인텔 SMAP"
-
-#. TRANSLATORS: longer description
-msgid "Intel Supervisor Mode Access Prevention ensures critical parts of device memory are not accessed by less secure programs."
-msgstr "인텔 SMAP(수퍼바이저 모드 접근 방지 정책)은 안전하지 않은 프로그램에서 장치 메모리의 중요한 부분에 접근하는 것을 방지합니다."
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
@@ -1757,10 +1663,6 @@ msgstr "업그레이드 버전"
 msgid "Issue"
 msgid_plural "Issues"
 msgstr[0] "문제점"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "KEY,VALUE"
-msgstr "KEY,VALUE"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel is no longer tainted"
@@ -1845,10 +1747,6 @@ msgstr "지정한 GUID를 사용하는 EFI 변수 표시"
 #. TRANSLATORS: command line option
 msgid "List entries in dbx"
 msgstr "dbx의 항목 표시"
-
-#. TRANSLATORS: command line option
-msgid "List supported firmware updates"
-msgstr "지원하는 펌웨어 업데이트 목록 표시"
 
 #. TRANSLATORS: command description
 msgid "List the available firmware GTypes"
@@ -1955,11 +1853,6 @@ msgstr "최소 길이"
 msgid "Minimum value"
 msgstr "최소값"
 
-#. TRANSLATORS: error message
-#, c-format
-msgid "Mismatched daemon and client, use %s instead"
-msgstr "데몬과 클라이언트가 일치하지 않음, %s을(를) 대신 사용함"
-
 #. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "데몬 설정값 수정"
@@ -2019,10 +1912,6 @@ msgstr "펌웨어가 없습니다"
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "펌웨어를 업데이트할 수 있는 하드웨어가 없음"
-
-#. TRANSLATORS: nothing found
-msgid "No plugins found"
-msgstr "플러그인을 찾을 수 없음"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No releases available"
@@ -2198,12 +2087,6 @@ msgstr "업데이트 과정을 계속하려면 장치 잠금 해제를 누르십
 msgid "Previous version"
 msgstr "이전 버전"
 
-msgid "Print the version number"
-msgstr "버전 번호 표시"
-
-msgid "Print verbose debug statements"
-msgstr "자세한 디버그 정보 표시"
-
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
 msgstr "우선 순위"
@@ -2227,10 +2110,6 @@ msgstr "프로세서 롤백 보호"
 msgid "Proprietary"
 msgstr "독점적"
 
-#. TRANSLATORS: command line option
-msgid "Query for firmware update support"
-msgstr "펌웨어 업데이트 지원 조회"
-
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "REMOTE-ID"
 msgstr "REMOTE-ID"
@@ -2250,14 +2129,6 @@ msgstr "장치에서 펌웨어 바이너리 읽기"
 #. TRANSLATORS: command description
 msgid "Read a firmware from a device"
 msgstr "장치에서 펌웨어 읽기"
-
-#. TRANSLATORS: command description
-msgid "Read firmware from device into a file"
-msgstr "장치 펌웨어를 읽어 파일에 기록"
-
-#. TRANSLATORS: command description
-msgid "Read firmware from one partition into a file"
-msgstr "파티션에서 펌웨어를 읽어 파일에 기록"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -2301,7 +2172,7 @@ msgstr "장치에 펌웨어 다시 설치"
 msgid "Reinstalling %s with %s... "
 msgstr "%s에 %s 다시 설치하는 중..."
 
-#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
 msgstr "릴리스 브랜치"
 
@@ -2322,10 +2193,6 @@ msgstr "원격 ID"
 msgid "Removes devices to watch for future emulation"
 msgstr "향후 에뮬레이션을 감시할 장치를 제거합니다"
 
-#. TRANSLATORS: command description
-msgid "Replace data in an existing firmware file"
-msgstr "기존 펌웨어 파일의 데이터 교체"
-
 #. TRANSLATORS: URI to send success/failure reports
 msgid "Report URI"
 msgstr "보고서 URI"
@@ -2333,10 +2200,6 @@ msgstr "보고서 URI"
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "원격 서버에 보고됨"
-
-#. TRANSLATORS: we asked the user to choose an option and they declined
-msgid "Request canceled"
-msgstr "요청을 취소했습니다"
 
 #. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
 msgid "Required efivarfs filesystem was not found"
@@ -2382,6 +2245,10 @@ msgstr "롤백 보호 정책에서 보안 문제를 야기하는 장치 프로�
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "더 많은 정보를 보려면 `fwupdmgr get-upgrades` 명령을 실행하십시오."
 
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr sync` to complete this action."
+msgstr "이 동작을 끝내려면 `fwupdmgr sync` 명령을 실행하십시오."
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "install-blob 사용 시 플러그인 정리 루틴 실행"
@@ -2410,6 +2277,10 @@ msgstr "<설정> <값>"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SETTING1 VALUE1 [SETTING2] [VALUE2]"
 msgstr "<설정1> <값1> [<설정2>] [<값2>]"
+
+#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
+msgid "SMAP"
+msgstr "SMAP"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -2501,10 +2372,6 @@ msgstr "BIOS 설정 값을 설정"
 msgid "Set one or more BIOS settings"
 msgstr "하나 이상의 BIOS 설정 값 설정"
 
-#. TRANSLATORS: command line option
-msgid "Set the debugging flag during update"
-msgstr "업데이트 중 디버깅 플래그 설정"
-
 #. TRANSLATORS: command description
 msgid "Sets one or more BIOS settings"
 msgstr "하나 이상의 BIOS 설정 값을 설정합니다"
@@ -2561,14 +2428,6 @@ msgstr "펌웨어 업데이트 기록 보기"
 msgid "Show the calculated version of the dbx"
 msgstr "dbx의 계산된 버전 표시"
 
-#. TRANSLATORS: command line option
-msgid "Show the debug log from the last attempted update"
-msgstr "마지막으로 시도한 업데이트의 디버그 정보 표시"
-
-#. TRANSLATORS: command line option
-msgid "Show the information of firmware update status"
-msgstr "펌웨어 업데이트 상태 표시"
-
 #. TRANSLATORS: shutdown to apply the update
 msgid "Shutdown now?"
 msgstr "지금 종료하시겠습니까?"
@@ -2608,15 +2467,9 @@ msgstr "이 펌웨어를 업데이트하면 장치 비밀키 일부가 훼손될
 msgid "Source"
 msgstr "원본"
 
-msgid "Specify Vendor/Product ID(s) of DFU device"
-msgstr "DFU 장치의 제조사/제품 ID 지정"
-
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
 msgstr "dbx 데이터베이스 파일 지정"
-
-msgid "Specify the number of bytes per USB transfer"
-msgstr "USB 전송 당 바이트 수 지정"
 
 #. TRANSLATORS: The BIOS setting accepts strings
 msgid "String"
@@ -2802,6 +2655,7 @@ msgstr "에뮬레이팅 목적으로 태깅함"
 msgid "Tainted"
 msgstr "오염됨"
 
+#. show the user the entire data blob
 msgid "Target"
 msgstr "대상"
 
@@ -2936,10 +2790,6 @@ msgid "This tool allows an administrator to apply UEFI dbx updates."
 msgstr "이 도구를 사용하면 시스템 관리자가 UEFI dbx 업데이트를 적용할 수 있습니다."
 
 #. TRANSLATORS: CLI description
-msgid "This tool allows an administrator to debug UpdateCapsule operation."
-msgstr "이 도구를 사용하면 시스템 관리자가 UpdateCapsule 작업을 디버그할 수 있습니다."
-
-#. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
 msgstr "이 도구를 사용하면 시스템 관리자가 펌웨어 설치 및 다운그레이드 등 동작을 수행하도록 fwupd 데몬에 질의하고 제어할 수 있습니다."
 
@@ -2992,10 +2842,6 @@ msgstr "UEFI ESP 파티션이 올바르게 설정되지 않았을 수도 있음"
 #. TRANSLATORS: partition refers to something on disk, again, hey Arch users
 msgid "UEFI ESP partition not detected or configured"
 msgstr "UEFI ESP 파티션이 감지되지 않았거나 설정되지 않았음"
-
-#. TRANSLATORS: program name
-msgid "UEFI Firmware Utility"
-msgstr "UEFI 펌웨어 유틸리티"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
@@ -3090,10 +2936,6 @@ msgstr "펌웨어에 접근할 수 있도록 장치 잠금을 해제"
 #. TRANSLATORS: command description
 msgid "Unmounts the ESP"
 msgstr "ESP 마운트 해제"
-
-#. TRANSLATORS: command line option
-msgid "Unset the debugging flag during update"
-msgstr "업데이트 중 디버깅 플래그 설정 해제"
 
 #. TRANSLATORS: firmware payload is unsigned and it is possible to modify it
 msgid "Unsigned Payload"
@@ -3206,10 +3048,6 @@ msgstr "취소하려면 CTRL^C를 누르십시오."
 msgid "Use fwupdtool --help for help"
 msgstr "도움말을 보려면 fwupdtool --help를 실행하십시오"
 
-#. TRANSLATORS: command line option
-msgid "Use quirk flags when installing firmware"
-msgstr "펌웨어를 설치할 때 quirk 플래그 사용"
-
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
 msgstr "사용자에게 알림이 표시됨"
@@ -3217,9 +3055,6 @@ msgstr "사용자에게 알림이 표시됨"
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "사용자 이름"
-
-msgid "VID:PID"
-msgstr "VID:PID"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
@@ -3229,7 +3064,7 @@ msgstr "올바름"
 msgid "Validating ESP contents…"
 msgstr "ESP 내용 검사 중..."
 
-#. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
+#. TRANSLATORS: one line variant of release (e.g. 'China')
 msgid "Variant"
 msgstr "파생형"
 
@@ -3269,14 +3104,6 @@ msgstr "하드웨어 변경 사항 감시"
 #. update
 msgid "Will measure elements of system integrity around an update"
 msgstr "업데이트 전후 시스템 무결성 요소를 확인합니다"
-
-#. TRANSLATORS: command description
-msgid "Write firmware from file into device"
-msgstr "파일의 펌웨어를 장치에 기록"
-
-#. TRANSLATORS: command description
-msgid "Write firmware from file into one partition"
-msgstr "파일의 펌웨어를 파티션 하나에 기록"
 
 #. TRANSLATORS: decompressing images from a container firmware
 msgid "Writing file:"

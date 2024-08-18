@@ -261,10 +261,6 @@ msgid "Answer yes to all questions"
 msgstr "Ответить да на все вопросы"
 
 #. TRANSLATORS: command line option
-msgid "Apply firmware updates"
-msgstr "Применить обновления прошивки"
-
-#. TRANSLATORS: command line option
 msgid "Apply update even when not advised"
 msgstr "Применить обновление, даже если это не является рекомендованным"
 
@@ -345,9 +341,6 @@ msgstr "Для обновления хранимых контрольных су
 msgid "BIOS updates delivered via LVFS or Windows Update"
 msgstr "Обновления BIOS доставляются через LVFS или Центр обновления Windows."
 
-msgid "BYTES"
-msgstr "БАЙТЫ"
-
 #. TRANSLATORS: refers to the battery inside the peripheral device
 msgid "Battery"
 msgstr "Аккумулятор"
@@ -372,7 +365,7 @@ msgstr "Блокированная прошивка:"
 msgid "Bootloader Version"
 msgstr "Версия загрузчика"
 
-#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Branch"
 msgstr "Ветка"
 
@@ -434,10 +427,6 @@ msgstr "Критичный"
 msgid "Current version"
 msgstr "Текущая версия"
 
-#. TRANSLATORS: DFU stands for device firmware update
-msgid "DFU Utility"
-msgstr "Средство работы с DFU"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
 msgstr "Параметры отладки"
@@ -493,10 +482,6 @@ msgstr "Удалено устройство:"
 msgid "Device supports switching to a different branch of firmware"
 msgstr "Устройство поддерживает переключение на другую ветку прошивки"
 
-#. TRANSLATORS: command line option
-msgid "Device update method"
-msgstr "Способ обновления устройства"
-
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
 msgstr "Устройства, которые были успешно обновлены:"
@@ -517,11 +502,11 @@ msgid "Devices with no available firmware updates: "
 msgstr "Устройства без доступных обновлений прошивки:"
 
 #. TRANSLATORS: message letting the user know no device upgrade available
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade available
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available
 msgid "Devices with the latest available firmware version:"
 msgstr "Устройства с последней доступной версией прошивки:"
 
@@ -530,16 +515,9 @@ msgstr "Устройства с последней доступной верси
 msgid "Disabled"
 msgstr "Не активировано"
 
-msgid "Disabled fwupdate debugging"
-msgstr "Отладка fwupdate деактивирована"
-
 #. TRANSLATORS: command description
 msgid "Disables a given remote"
 msgstr "Деактивировать данный репозиторий"
-
-#. TRANSLATORS: command line option
-msgid "Display version"
-msgstr "Показать версию"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
@@ -618,14 +596,6 @@ msgstr "Записать данные SMBIOS из файла"
 msgid "Duration"
 msgstr "Продолжительность"
 
-#. TRANSLATORS: ESP is EFI System Partition
-msgid "ESP specified was not valid"
-msgstr "Указанный раздел ESP недействителен"
-
-#. TRANSLATORS: command line option
-msgid "Enable firmware update support on supported systems"
-msgstr "Активировать поддержку обновлений прошивки в поддерживаемых системах."
-
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
 msgstr "Включить новый удалённый репозиторий?"
@@ -634,14 +604,10 @@ msgstr "Включить новый удалённый репозиторий?"
 msgid "Enable this remote?"
 msgstr "Активировать этот репозиторий?"
 
-#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Активировано"
-
-msgid "Enabled fwupdate debugging"
-msgstr "Отладка fwupdate активирована"
 
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
@@ -720,10 +686,6 @@ msgstr "Не удалось установить обновление проши
 msgid "Failed to load local dbx"
 msgstr "Не удалось загрузить локальную dbx"
 
-#. TRANSLATORS: quirks are device-specific workarounds
-msgid "Failed to load quirks"
-msgstr "Не удалось загрузить странности"
-
 #. TRANSLATORS: could not read existing system data
 msgid "Failed to load system dbx"
 msgstr "Не удалось загрузить системную dbx"
@@ -777,10 +739,6 @@ msgstr "Имя файла источника"
 msgid "Filename required"
 msgstr "Требуется имя файла"
 
-#. TRANSLATORS: remote URI
-msgid "Firmware Base URI"
-msgstr "Базовый URI прошивки"
-
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "D-Bus служба обновления прошивки"
@@ -814,18 +772,9 @@ msgstr[3] "Метаданные прошивки не обновлялись в 
 msgid "Firmware updates"
 msgstr "Обновления прошивки"
 
-msgid "Firmware updates are not supported on this machine."
-msgstr "Обновления прошивки не поддерживаются на этой машине."
-
-msgid "Firmware updates are supported on this machine."
-msgstr "Обновления прошивки поддерживаются на этой машине."
-
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
 msgstr "Флаги"
-
-msgid "Force the action ignoring all warnings"
-msgstr "Выполнить действие, игнорируя все предупреждения"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
@@ -843,11 +792,6 @@ msgstr[0] "GUID"
 msgstr[1] "GUID"
 msgstr[2] "GUID"
 msgstr[3] "GUID"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgctxt "A single GUID"
-msgid "GUID"
-msgstr "GUID"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "command-argument"
@@ -957,24 +901,6 @@ msgstr "Политика ошибок Intel BootGuard"
 msgid "Intel BootGuard verified boot"
 msgstr "Проверенная загрузка Intel BootGuard"
 
-#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
-msgid "Intel CET"
-msgstr "Intel CET"
-
-#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
-#. * active means being used by the OS
-msgid "Intel CET Active"
-msgstr "Intel CET активна"
-
-#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
-#. * enabled means supported by the processor
-msgid "Intel CET Enabled"
-msgstr "Intel CET включена"
-
-#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
-msgid "Intel SMAP"
-msgstr "Intel SMAP"
-
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
 msgstr "Внутреннее устройство"
@@ -1037,10 +963,6 @@ msgstr "Ядро линукс с функцией lockdown"
 msgid "List entries in dbx"
 msgstr "Список записей в dbx"
 
-#. TRANSLATORS: command line option
-msgid "List supported firmware updates"
-msgstr "Вывести список поддерживаемых обновлений прошивки"
-
 #. TRANSLATORS: command description
 msgid "Lists files on the ESP"
 msgstr "Вывести список файлов на ESP"
@@ -1092,11 +1014,6 @@ msgstr "Минимальная длина"
 msgid "Minimum value"
 msgstr "Минимальное значение"
 
-#. TRANSLATORS: error message
-#, c-format
-msgid "Mismatched daemon and client, use %s instead"
-msgstr "Несовместимые фоновая служба и клиент, используйте %s"
-
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
 msgstr "Модифицировать данный репозиторий"
@@ -1134,10 +1051,6 @@ msgstr "Идентификаторы прошивок не найдены"
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Не обнаружено оборудования с возможностью обновления прошивки"
-
-#. TRANSLATORS: nothing found
-msgid "No plugins found"
-msgstr "Плагины не найдены"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No releases available"
@@ -1259,12 +1172,6 @@ msgstr "Предзагрузочная защита DMA"
 msgid "Previous version"
 msgstr "Предыдущая версия"
 
-msgid "Print the version number"
-msgstr "Напечатать номер версии"
-
-msgid "Print verbose debug statements"
-msgstr "Напечатать подробные отладочные отчёты"
-
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
 msgstr "Приоритет"
@@ -1280,21 +1187,9 @@ msgstr "Продолжить загрузку?"
 msgid "Proprietary"
 msgstr "Проприетарная"
 
-#. TRANSLATORS: command line option
-msgid "Query for firmware update support"
-msgstr "Запросить поддержку обновления прошивки"
-
 #. TRANSLATORS: BIOS setting is read only
 msgid "Read Only"
 msgstr "Только чтение"
-
-#. TRANSLATORS: command description
-msgid "Read firmware from device into a file"
-msgstr "Считать прошивку из устройства в файл"
-
-#. TRANSLATORS: command description
-msgid "Read firmware from one partition into a file"
-msgstr "Считать прошивку из одного раздела в файл"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -1324,7 +1219,7 @@ msgstr "Переустановить прошивку на устройстве"
 msgid "Reinstalling %s with %s... "
 msgstr "Переустановка %s с %s…"
 
-#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
 msgstr "Ветка выпуска"
 
@@ -1341,17 +1236,9 @@ msgstr "ID выпуска"
 msgid "Remote ID"
 msgstr "Идентификатор репозитория"
 
-#. TRANSLATORS: command description
-msgid "Replace data in an existing firmware file"
-msgstr "Заменить данные в существующем файле прошивки"
-
 #. TRANSLATORS: URI to send success/failure reports
 msgid "Report URI"
 msgstr "URI для отчета"
-
-#. TRANSLATORS: we asked the user to choose an option and they declined
-msgid "Request canceled"
-msgstr "Запрос отменен"
 
 #. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
@@ -1443,10 +1330,6 @@ msgstr "Выбранный том"
 msgid "Serial Number"
 msgstr "Серийный номер"
 
-#. TRANSLATORS: command line option
-msgid "Set the debugging flag during update"
-msgstr "Установить флаг отладки во время обновления"
-
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "Установить список одобренных прошивок"
@@ -1495,14 +1378,6 @@ msgstr "Показать историю обновлений прошивки"
 msgid "Show the calculated version of the dbx"
 msgstr "Показать рассчитанную версию dbx"
 
-#. TRANSLATORS: command line option
-msgid "Show the debug log from the last attempted update"
-msgstr "Показать журнал отладки с последней попытки обновления"
-
-#. TRANSLATORS: command line option
-msgid "Show the information of firmware update status"
-msgstr "Показать информацию о состоянии обновления прошивки"
-
 #. TRANSLATORS: shutdown to apply the update
 msgid "Shutdown now?"
 msgstr "Выключить сейчас?"
@@ -1538,15 +1413,9 @@ msgstr "При обновлении этой прошивки некоторые
 msgid "Source"
 msgstr "Источник"
 
-msgid "Specify Vendor/Product ID(s) of DFU device"
-msgstr "Определить идентификатор(ы) поставщика / продукта устройства DFU"
-
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
 msgstr "Указать файл базы данных dbx"
-
-msgid "Specify the number of bytes per USB transfer"
-msgstr "Определить количество байтов на передачу USB"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Success"
@@ -1655,6 +1524,7 @@ msgstr[1] "Метки"
 msgstr[2] "Меток"
 msgstr[3] "Метки"
 
+#. show the user the entire data blob
 msgid "Target"
 msgstr "Цель"
 
@@ -1682,10 +1552,6 @@ msgstr "Этот репозиторий содержит прошивки, ко�
 msgid "This tool allows an administrator to apply UEFI dbx updates."
 msgstr "Этот инструмент позволяет администратору применять обновления UEFI dbx."
 
-#. TRANSLATORS: CLI description
-msgid "This tool allows an administrator to debug UpdateCapsule operation."
-msgstr "Этот инструмент позволяет администратору выполнять диагностику операции UpdateCapsule."
-
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
 msgstr "Этот инструмент может использовать только пользователь root"
@@ -1701,10 +1567,6 @@ msgstr "Надёжные метаданные"
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Тип"
-
-#. TRANSLATORS: program name
-msgid "UEFI Firmware Utility"
-msgstr "Средство для прошивки UEFI"
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
@@ -1755,10 +1617,6 @@ msgstr "Разблокировать устройство для доступа 
 #. TRANSLATORS: command description
 msgid "Unmounts the ESP"
 msgstr "Размонтировать ESP"
-
-#. TRANSLATORS: command line option
-msgid "Unset the debugging flag during update"
-msgstr "Снять флаг отладки во время обновления"
 
 #. TRANSLATORS: firmware payload is unsigned and it is possible to modify it
 msgid "Unsigned Payload"
@@ -1830,22 +1688,15 @@ msgstr "Загрузка отчетов о прошивке помогает п�
 msgid "Use fwupdtool --help for help"
 msgstr "Используйте «fwupdtool --help» для получения справки"
 
-#. TRANSLATORS: command line option
-msgid "Use quirk flags when installing firmware"
-msgstr "Использовать вариативные флажки при установке прошивки"
-
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Имя пользователя"
-
-msgid "VID:PID"
-msgstr "VID:PID"
 
 #. TRANSLATORS: ESP refers to the EFI System Partition
 msgid "Validating ESP contents…"
 msgstr "Проверка содержимого ESP…"
 
-#. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
+#. TRANSLATORS: one line variant of release (e.g. 'China')
 msgid "Variant"
 msgstr "Вариант"
 
@@ -1872,14 +1723,6 @@ msgstr "Ожидание…"
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"
 msgstr "Следить за аппаратными изменениями"
-
-#. TRANSLATORS: command description
-msgid "Write firmware from file into device"
-msgstr "Записать прошивку из файла на устройство"
-
-#. TRANSLATORS: command description
-msgid "Write firmware from file into one partition"
-msgstr "Записать прошивку из файла на один раздел"
 
 #. TRANSLATORS: decompressing images from a container firmware
 msgid "Writing file:"
