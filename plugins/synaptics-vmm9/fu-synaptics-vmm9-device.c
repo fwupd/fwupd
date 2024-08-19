@@ -257,8 +257,8 @@ fu_synaptics_vmm9_device_setup(FuDevice *device, GError **error)
 	if (self->customer_id == 0x0) {
 		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
 	} else {
-		g_autofree gchar *vendor_id = g_strdup_printf("SYNA:0x%02X", self->customer_id);
-		fu_device_add_vendor_id(device, vendor_id);
+		g_autofree gchar *vendor_id = g_strdup_printf("0x%02X", self->customer_id);
+		fu_device_build_vendor_id(device, "SYNA", vendor_id);
 	}
 
 	/* read version */

@@ -938,5 +938,9 @@ fu_device_build_instance_id_full(FuDevice *self,
 				 GError **error,
 				 const gchar *subsystem,
 				 ...) G_GNUC_NULL_TERMINATED G_GNUC_NON_NULL(1, 4);
+void
+fu_device_build_vendor_id(FuDevice *self, const gchar *prefix, const gchar *value);
+void
+fu_device_build_vendor_id_u16(FuDevice *self, const gchar *prefix, guint16 value);
 FuDeviceLocker *
 fu_device_poll_locker_new(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);

@@ -137,7 +137,7 @@ fu_ch341a_cfi_device_setup(FuDevice *device, GError **error)
 
 	/* this is a generic SPI chip */
 	fu_device_add_instance_id(device, "SPI");
-	fu_device_add_vendor_id(device, "SPI:*");
+	fu_device_build_vendor_id(device, "SPI", "*");
 
 	/* FuCfiDevice->setup */
 	return FU_DEVICE_CLASS(fu_ch341a_cfi_device_parent_class)->setup(device, error);

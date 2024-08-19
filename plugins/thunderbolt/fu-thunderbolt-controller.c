@@ -271,7 +271,6 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 		g_autofree gchar *domain_id = NULL;
 		if (fu_thunderbolt_controller_can_update(self)) {
 			const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
-			g_autofree gchar *vendor_id = NULL;
 			g_autofree gchar *domain = g_path_get_basename(devpath);
 			/* USB4 controllers don't have a concept of legacy vs native
 			 * so don't try to read a native attribute from their NVM */
@@ -288,8 +287,7 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 						    (guint)did,
 						    self->is_native ? "-native" : "",
 						    domain);
-			vendor_id = g_strdup_printf("TBT:0x%04X", (guint)vid);
-			fu_device_add_vendor_id(device, vendor_id);
+			fu_device_build_vendor_id_u16(device, "TBT", vid);
 			device_id = g_strdup_printf("TBT-%04x%04x%s",
 						    (guint)vid,
 						    (guint)did,

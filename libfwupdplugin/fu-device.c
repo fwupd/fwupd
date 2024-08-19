@@ -5824,6 +5824,54 @@ fu_device_get_instance_str(FuDevice *self, const gchar *key)
 	return g_hash_table_lookup(priv->instance_hash, key);
 }
 
+/**
+ * fu_device_build_vendor_id:
+ * @self: a #FuDevice
+ * @prefix: (not nullable): a prefix string, e.g. `USB`
+ * @value: (nullable): a value, e.g. `0x1234`
+ *
+ * Builds a device vendor ID, if @value is not %NULL.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_build_vendor_id(FuDevice *self, const gchar *prefix, const gchar *value)
+{
+	g_autofree gchar *vendor_id = NULL;
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(prefix != NULL);
+
+	if (value == NULL)
+		return;
+	vendor_id = g_strdup_printf("%s:%s", prefix, value);
+	fwupd_device_add_vendor_id(FWUPD_DEVICE(self), vendor_id);
+}
+
+/**
+ * fu_device_build_vendor_id_u16:
+ * @self: a #FuDevice
+ * @prefix: (not nullable): a prefix string, e.g. `USB`
+ * @value: a value, e.g. 0x1234
+ *
+ * Builds a device vendor ID, if @value is not 0.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_build_vendor_id_u16(FuDevice *self, const gchar *prefix, guint16 value)
+{
+	g_autofree gchar *vendor_id = NULL;
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(prefix != NULL);
+
+	if (value == 0x0)
+		return;
+	vendor_id = g_strdup_printf("%s:0x%04X", prefix, value);
+	fwupd_device_add_vendor_id(FWUPD_DEVICE(self), vendor_id);
+}
+
 static void
 fu_device_incorporate_subclasses(FuDevice *self, FuDevice *donor)
 {

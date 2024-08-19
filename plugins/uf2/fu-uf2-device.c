@@ -386,10 +386,7 @@ fu_uf2_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* vendor-id */
-	if (vid != 0x0) {
-		g_autofree gchar *vendor_id = g_strdup_printf("USB:0x%04X", (guint)vid);
-		fu_device_add_vendor_id(device, vendor_id);
-	}
+	fu_device_build_vendor_id_u16(device, "USB", vid);
 
 	/* check the quirk matched to avoid mounting *all* vfat devices */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {

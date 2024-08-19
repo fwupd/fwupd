@@ -208,13 +208,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_memread_uint16_safe(buf, sizeof(buf), 22, &pid, G_LITTLE_ENDIAN, error))
 		return FALSE;
-
-	/* set the vendor ID */
-	if (vid != 0x0000) {
-		g_autofree gchar *vendor_id = NULL;
-		vendor_id = g_strdup_printf("HIDRAW:0x%04X", vid);
-		fu_device_add_vendor_id(device, vendor_id);
-	}
+	fu_device_build_vendor_id_u16(device, "HIDRAW", vid);
 
 	/* add GUIDs in order of priority */
 	fu_device_add_instance_u16(device, "VID", vid);

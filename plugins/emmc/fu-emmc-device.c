@@ -135,7 +135,6 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *attr_manfid = NULL;
 	g_autofree gchar *attr_name = NULL;
 	g_autofree gchar *man_oem_name = NULL;
-	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(FuUdevDevice) udev_parent = NULL;
 	g_autoptr(GRegex) dev_regex = NULL;
 
@@ -238,8 +237,7 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 						error);
 	if (attr_manfid == NULL)
 		return FALSE;
-	vendor_id = g_strdup_printf("EMMC:%s", attr_manfid);
-	fu_device_add_vendor_id(device, vendor_id);
+	fu_device_build_vendor_id(device, "EMMC", attr_manfid);
 	fu_device_set_vendor(device, fu_emmc_device_get_manufacturer(manfid));
 
 	/* set the physical ID */

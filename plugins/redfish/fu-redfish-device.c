@@ -138,11 +138,7 @@ fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *ur
 	}
 
 	/* add vendor ID */
-	if (vendor_id != 0x0) {
-		g_autofree gchar *vendor_id_str = NULL;
-		vendor_id_str = g_strdup_printf("PCI:0x%04X", (guint)vendor_id);
-		fu_device_add_vendor_id(FU_DEVICE(self), vendor_id_str);
-	}
+	fu_device_build_vendor_id_u16(FU_DEVICE(self), "PCI", vendor_id);
 
 	/* add more instance IDs if possible */
 	if (vendor_id != 0x0)
@@ -358,7 +354,6 @@ static void
 fu_redfish_device_set_vendor(FuRedfishDevice *self, const gchar *vendor)
 {
 	g_autofree gchar *vendor_upper = NULL;
-	g_autofree gchar *vendor_id = NULL;
 
 	/* fixup a common mistake */
 	if (g_strcmp0(vendor, "LEN") == 0 || g_strcmp0(vendor, "LNVO") == 0)
@@ -368,8 +363,7 @@ fu_redfish_device_set_vendor(FuRedfishDevice *self, const gchar *vendor)
 	/* add vendor-id */
 	vendor_upper = g_ascii_strup(vendor, -1);
 	g_strdelimit(vendor_upper, " ", '_');
-	vendor_id = g_strdup_printf("REDFISH:%s", vendor_upper);
-	fu_device_add_vendor_id(FU_DEVICE(self), vendor_id);
+	fu_device_build_vendor_id(FU_DEVICE(self), "REDFISH", vendor_upper);
 }
 
 static void

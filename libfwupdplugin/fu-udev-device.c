@@ -649,11 +649,8 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	/* set vendor ID */
 	if (priv->subsystem != NULL)
 		subsystem = g_ascii_strup(priv->subsystem, -1);
-	if (subsystem != NULL && priv->vendor != 0x0000) {
-		g_autofree gchar *vendor_id = NULL;
-		vendor_id = g_strdup_printf("%s:0x%04X", subsystem, (guint)priv->vendor);
-		fu_device_add_vendor_id(device, vendor_id);
-	}
+	if (subsystem != NULL)
+		fu_device_build_vendor_id_u16(device, subsystem, priv->vendor);
 
 	/* add GUIDs in order of priority */
 	if (priv->vendor != 0x0000)

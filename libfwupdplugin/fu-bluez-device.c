@@ -212,8 +212,9 @@ fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 
 	/* set vendor ID */
 	if (vid != 0x0) {
-		g_autofree gchar *vendor_id = g_strdup_printf("BLUETOOTH:%04X", vid);
-		fu_device_add_vendor_id(FU_DEVICE(self), vendor_id);
+		g_autofree gchar *vendor_id = g_strdup_printf("%04X", vid);
+		fu_device_build_vendor_id(FU_DEVICE(self), "BLUETOOTH", vendor_id); /* compat */
+		fu_device_build_vendor_id_u16(FU_DEVICE(self), "BLUETOOTH", vid);
 	}
 
 	/* set version if the revision has been set */

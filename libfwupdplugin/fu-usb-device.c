@@ -945,7 +945,6 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	gint rc;
 	guint16 release;
-	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(GError) error_bos = NULL;
 	g_autoptr(GPtrArray) intfs = NULL;
 
@@ -971,8 +970,7 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* set vendor ID */
-	vendor_id = g_strdup_printf("USB:0x%04X", fu_usb_device_get_vid(self));
-	fu_device_add_vendor_id(device, vendor_id);
+	fu_device_build_vendor_id_u16(device, "USB", fu_usb_device_get_vid(self));
 
 	/* set the version if the release has been set */
 	release = fu_usb_device_get_release(self);

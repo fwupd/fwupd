@@ -20,7 +20,6 @@ fu_uefi_sbat_device_probe(FuDevice *device, GError **error)
 {
 	const gchar *distro_id;
 	g_autoptr(GHashTable) os_release = NULL;
-	g_autofree gchar *vendor_id = NULL;
 
 	os_release = fwupd_get_os_release(error);
 	if (os_release == NULL)
@@ -33,8 +32,7 @@ fu_uefi_sbat_device_probe(FuDevice *device, GError **error)
 				    "no os-release ID");
 		return FALSE;
 	}
-	vendor_id = g_strdup_printf("OS:%s", distro_id);
-	fu_device_add_vendor_id(device, vendor_id);
+	fu_device_build_vendor_id(device, "OS", distro_id);
 
 	/* try to lookup /etc/os-release ID key */
 	fu_device_add_instance_str(device, "OS", distro_id);

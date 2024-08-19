@@ -970,7 +970,7 @@ fu_synaptics_rmi_ps2_device_init(FuSynapticsRmiPs2Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_set_name(FU_DEVICE(self), "TouchStyk");
 	fu_device_set_vendor(FU_DEVICE(self), "Synaptics");
-	fu_device_add_vendor_id(FU_DEVICE(self), "HIDRAW:0x06CB");
+	fu_device_build_vendor_id_u16(FU_DEVICE(self), "HIDRAW", 0x06CB);
 	fu_synaptics_rmi_device_set_max_page(FU_SYNAPTICS_RMI_DEVICE(self), 0x1);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);

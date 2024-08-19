@@ -32,7 +32,7 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 	fu_device_add_protocol(device, "com.acme.test");
 	fu_device_set_summary(device, "Fake webcam");
 	fu_device_set_vendor(device, "ACME Corp.");
-	fu_device_add_vendor_id(device, "USB:0x046D");
+	fu_device_build_vendor_id_u16(device, "USB", 0x046D);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version_bootloader(device, "0.1.2");
 	fu_device_set_version(device, "1.2.2");
@@ -55,7 +55,7 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 		g_autoptr(FuDevice) child2 = NULL;
 
 		child1 = fu_device_new(ctx);
-		fu_device_add_vendor_id(child1, "USB:FFFF");
+		fu_device_build_vendor_id_u16(child1, "USB", 0xFFFF);
 		fu_device_add_protocol(child1, "com.acme");
 		fu_device_set_physical_id(child1, "fake");
 		fu_device_set_logical_id(child1, "child1");
@@ -70,7 +70,7 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 		fu_plugin_device_add(plugin, child1);
 
 		child2 = fu_device_new(ctx);
-		fu_device_add_vendor_id(child2, "USB:FFFF");
+		fu_device_build_vendor_id_u16(child2, "USB", 0xFFFF);
 		fu_device_add_protocol(child2, "com.acme");
 		fu_device_set_physical_id(child2, "fake");
 		fu_device_set_logical_id(child2, "child2");

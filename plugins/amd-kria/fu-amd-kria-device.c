@@ -158,7 +158,6 @@ fu_amd_kria_device_setup(FuDevice *device, GError **error)
 	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
-	g_autofree gchar *vendor_id = NULL;
 	g_autofree gchar *path = g_build_path("/", devpath, "eeprom", NULL);
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GError) error_esp = NULL;
@@ -175,8 +174,7 @@ fu_amd_kria_device_setup(FuDevice *device, GError **error)
 
 	/* build instance IDs from EEPROM data */
 	fu_device_set_vendor(device, fu_amd_kria_som_get_manufacturer(FU_AMD_KRIA_SOM_EEPROM(firmware)));
-	vendor_id = g_strdup_printf("DMI:%s", fu_device_get_vendor(device));
-	fu_device_add_vendor_id(device, vendor_id);
+	fu_device_build_vendor_id(device, "DMI", fu_device_get_vendor(device));
 	fu_device_add_instance_str(device, "VENDOR", fu_device_get_vendor(device));
 	fu_device_add_instance_str(device, "PRODUCT", fu_amd_kria_som_get_product_name(FU_AMD_KRIA_SOM_EEPROM(firmware)));
 	fu_device_set_serial(device, fu_amd_kria_som_get_serial_number(FU_AMD_KRIA_SOM_EEPROM(firmware)));
