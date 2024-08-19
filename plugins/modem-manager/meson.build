@@ -15,6 +15,9 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 plugin_quirks += files('modem-manager.quirk')
 
 shared_module('fu_plugin_modem_manager',
+  rustgen.process(
+    'fu-cinterion-fdl-updater.rs',
+  ),
   sources: [
     'fu-mm-plugin.c',
     'fu-mm-device.c',
@@ -22,6 +25,7 @@ shared_module('fu_plugin_modem_manager',
     'fu-mbim-qdu-updater.c',
     'fu-firehose-updater.c',
     'fu-sahara-loader.c',
+    'fu-cinterion-fdl-updater.c',
     'fu-mm-utils.c'
   ],
   include_directories: plugin_incdirs,

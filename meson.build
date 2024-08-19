@@ -362,6 +362,9 @@ endif
 if cc.has_header('sys/ioctl.h')
   conf.set('HAVE_IOCTL_H', '1')
 endif
+if cc.has_header('termios.h')
+  conf.set('HAVE_TERMIOS_H', '1')
+endif
 if cc.has_header('errno.h')
   conf.set('HAVE_ERRNO_H', '1')
 endif
