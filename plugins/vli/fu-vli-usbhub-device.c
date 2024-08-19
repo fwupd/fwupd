@@ -1454,8 +1454,8 @@ fu_vli_usbhub_device_init(FuVliUsbhubDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_GPIOB,
 					"attach-with-gpiob");
-	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_USBHUB_DEVICE_FLAG_USB2, "usb3");
-	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_USBHUB_DEVICE_FLAG_USB3, "usb2");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_USBHUB_DEVICE_FLAG_USB2, "usb2");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_USBHUB_DEVICE_FLAG_USB3, "usb3");
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_VLI_USBHUB_DEVICE_FLAG_UNLOCK_LEGACY813,
 					"unlock-legacy813");
