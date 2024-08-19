@@ -345,13 +345,15 @@ fu_engine_ensure_device_power_inhibit(FuEngine *self, FuDevice *device)
 	if (fu_engine_config_get_ignore_power(self->config))
 		return;
 
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
+	if (fu_device_is_updatable(device) &&
+	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
 	    !fu_power_state_is_ac(fu_context_get_power_state(self->ctx))) {
 		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER);
 	} else {
 		fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER);
 	}
-	if (!fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_IGNORE_SYSTEM_POWER) &&
+	if (fu_device_is_updatable(device) &&
+	    !fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_IGNORE_SYSTEM_POWER) &&
 	    fu_context_get_battery_level(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_threshold(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_level(self->ctx) < fu_context_get_battery_threshold(self->ctx)) {
@@ -364,7 +366,8 @@ fu_engine_ensure_device_power_inhibit(FuEngine *self, FuDevice *device)
 static void
 fu_engine_ensure_device_lid_inhibit(FuEngine *self, FuDevice *device)
 {
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED) &&
+	if (fu_device_is_updatable(device) &&
+	    fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED) &&
 	    fu_context_get_lid_state(self->ctx) == FU_LID_STATE_CLOSED) {
 		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED);
 		return;
@@ -375,7 +378,8 @@ fu_engine_ensure_device_lid_inhibit(FuEngine *self, FuDevice *device)
 static void
 fu_engine_ensure_device_display_required_inhibit(FuEngine *self, FuDevice *device)
 {
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_DISPLAY_REQUIRED) &&
+	if (fu_device_is_updatable(device) &&
+	    fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_DISPLAY_REQUIRED) &&
 	    fu_context_get_display_state(self->ctx) == FU_DISPLAY_STATE_DISCONNECTED) {
 		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_DISPLAY_REQUIRED);
 		return;
@@ -5421,8 +5425,7 @@ fu_engine_get_releases_for_device(FuEngine *self,
 
 	/* only show devices that can be updated */
 	if (!fu_engine_request_has_feature_flag(request, FWUPD_FEATURE_FLAG_SHOW_PROBLEMS) &&
-	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
-	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
+	    !fu_device_is_updatable(device)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -5820,8 +5823,7 @@ fu_engine_get_upgrades(FuEngine *self,
 		return NULL;
 
 	/* there is no point checking each release */
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
-	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
+	if (!fu_device_is_updatable(device)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
@@ -6430,7 +6432,7 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 
 #ifndef SUPPORTED_BUILD
 	/* we don't know if this device has a signed or unsigned payload */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	if (fu_device_is_updatable(device) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD) &&
 	    !fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED)) {
@@ -6492,8 +6494,7 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	}
 
 	/* no vendor-id, and so no way to lock it down! */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
-	    fu_device_get_vendor_ids(device)->len == 0) {
+	if (fu_device_is_updatable(device) && fu_device_get_vendor_ids(device)->len == 0) {
 		fu_device_inhibit(device, "vendor-id", "No vendor ID set");
 	}
 
