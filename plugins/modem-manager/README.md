@@ -107,6 +107,15 @@ with files described in 'firehose-rawprogram.xml'.
 
 Update protocol: `com.qualcomm.firehose`
 
+## Update method: cinterion-fdl
+
+If the device supports the 'cinterion-fdl' update method, it should have an AT-port
+exposed. The device is then switched to Firmware Download Modem (FDL) and flashed
+with the content of the firmware file. After an update, the device will not replug
+until an ignition is sent, or the device is rebooted.
+
+Update protocol: `com.cinterion.fdl`
+
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb` and `/dev/bus/pci`.
