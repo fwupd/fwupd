@@ -493,9 +493,7 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 					  value_str,
 					  error_local2->message);
 			} else {
-				g_autofree gchar *vendor_id =
-				    g_strdup_printf("%s:0x%04X", device_bus, (guint)value_int);
-				fu_device_add_vendor_id(device, vendor_id);
+				fu_device_build_vendor_id_u16(device, device_bus, value_int);
 			}
 		}
 	}

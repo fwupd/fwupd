@@ -678,7 +678,7 @@ fu_logitech_hidpp_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* nearly... */
-	fu_device_add_vendor_id(device, "USB:0x046D");
+	fu_device_build_vendor_id_u16(device, "USB", 0x046D);
 
 	/*
 	 * All devices connected to a Bolt receiver share the same

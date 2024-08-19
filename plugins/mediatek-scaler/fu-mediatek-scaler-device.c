@@ -487,7 +487,6 @@ static gboolean
 fu_mediatek_scaler_device_probe(FuDevice *device, GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(FuUdevDevice) udev_parent = NULL;
 
 	/* FuUdevDevice->probe */
@@ -527,8 +526,9 @@ fu_mediatek_scaler_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* add IDs */
-	vendor_id = g_strdup_printf("PCI:0x%04X", fu_udev_device_get_subsystem_vendor(udev_parent));
-	fu_device_add_vendor_id(device, vendor_id);
+	fu_device_build_vendor_id_u16(device,
+				      "PCI",
+				      fu_udev_device_get_subsystem_vendor(udev_parent));
 	fu_device_set_physical_id(device, fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)));
 
 	/* success */

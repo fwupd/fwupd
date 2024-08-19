@@ -277,11 +277,11 @@ fu_wac_module_constructed(GObject *object)
 	FuWacModulePrivate *priv = GET_PRIVATE(self);
 	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
 	g_autofree gchar *devid = NULL;
-	g_autofree gchar *vendor_id = NULL;
 
 	/* set vendor ID */
-	vendor_id = g_strdup_printf("USB:0x%04X", fu_usb_device_get_vid(FU_USB_DEVICE(proxy)));
-	fu_device_add_vendor_id(FU_DEVICE(self), vendor_id);
+	fu_device_build_vendor_id_u16(FU_DEVICE(self),
+				      "USB",
+				      fu_usb_device_get_vid(FU_USB_DEVICE(proxy)));
 
 	/* set USB physical and logical IDs */
 	fu_device_set_physical_id(FU_DEVICE(self), fu_device_get_physical_id(proxy));

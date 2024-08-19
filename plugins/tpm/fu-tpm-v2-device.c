@@ -283,7 +283,6 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *model3 = NULL;
 	g_autofree gchar *model4 = NULL;
 	g_autofree gchar *model = NULL;
-	g_autofree gchar *vendor_id = NULL;
 	g_autofree gchar *family = NULL;
 
 	/* suppress warning messages about missing TCTI libraries for tpm2-tss <2.3 */
@@ -338,8 +337,7 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	fu_device_build_instance_id(device, NULL, "TPM", "VEN", "MOD", "VER", NULL);
 
 	/* enforce vendors can only ship updates for their own hardware */
-	vendor_id = g_strdup_printf("TPM:%s", manufacturer);
-	fu_device_add_vendor_id(device, vendor_id);
+	fu_device_build_vendor_id(device, "TPM", manufacturer);
 	tmp = fu_tpm_v2_device_convert_manufacturer(manufacturer);
 	fu_device_set_vendor(device, tmp != NULL ? tmp : manufacturer);
 

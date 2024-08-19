@@ -707,8 +707,7 @@ static gboolean
 fu_parade_lspcon_device_set_ieee_oui(FuParadeLspconDevice *self, guint32 ieee_oui, GError **error)
 {
 	g_autofree gchar *vid = g_strdup_printf("%06X", ieee_oui);
-	g_autofree gchar *vendor_id = g_strdup_printf("OUI:%s", vid);
-	fu_device_add_vendor_id(FU_DEVICE(self), vendor_id);
+	fu_device_build_vendor_id(FU_DEVICE(self), "OUI", vid);
 	fu_device_add_instance_str(FU_DEVICE(self), "VID", vid);
 	return fu_device_build_instance_id_full(FU_DEVICE(self),
 						FU_DEVICE_INSTANCE_FLAG_QUIRKS,

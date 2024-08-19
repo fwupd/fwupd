@@ -662,7 +662,7 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 	for (guint i = 0; i < vendor_ids->len; i++) {
 		const gchar *vendor_id = g_ptr_array_index(vendor_ids, i);
 		g_info("copying old vendor ID %s to new device", vendor_id);
-		fu_device_add_vendor_id(device, vendor_id);
+		fwupd_device_add_vendor_id(FWUPD_DEVICE(device), vendor_id);
 	}
 
 	/* copy inhibit */

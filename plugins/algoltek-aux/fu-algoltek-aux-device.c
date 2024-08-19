@@ -490,7 +490,7 @@ fu_algoltek_aux_device_init(FuAlgoltekAuxDevice *self)
 {
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.algoltek.aux");
-	fu_device_add_vendor_id(FU_DEVICE(self), "DRM_DP_AUX_DEV:0x25A4");
+	fu_device_build_vendor_id_u16(FU_DEVICE(self), "DRM_DP_AUX_DEV", 0x25A4);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
