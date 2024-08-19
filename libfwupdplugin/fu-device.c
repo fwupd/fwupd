@@ -3184,6 +3184,15 @@ fu_device_set_version_raw(FuDevice *self, guint64 version_raw)
 	}
 }
 
+/* private */
+gboolean
+fu_device_is_updatable(FuDevice *self)
+{
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	return fu_device_has_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE) ||
+	       fu_device_has_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
+}
+
 static void
 fu_device_inhibit_free(FuDeviceInhibit *inhibit)
 {
