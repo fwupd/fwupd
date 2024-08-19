@@ -116,7 +116,7 @@ fu_redfish_backend_coldplug_member(FuRedfishBackend *self, JsonObject *member, G
 
 	/* some vendors do not specify the Targets array when updating */
 	if (self->wildcard_targets)
-		fu_device_add_private_flag(dev, FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS);
+		fu_device_add_private_flag(dev, "wildcard-targets");
 
 	/* probe + setup */
 	locker = fu_device_locker_new(dev, &error_local);

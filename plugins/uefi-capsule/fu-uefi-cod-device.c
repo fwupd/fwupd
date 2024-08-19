@@ -177,11 +177,11 @@ fu_uefi_cod_device_get_filename(FuUefiDevice *self, GError **error)
 	g_autofree gchar *basename = NULL;
 
 	/* InsydeH2O */
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_COD_INDEXED_FILENAME))
+	if (fu_device_has_private_flag(FU_DEVICE(self), "cod-indexed-filename"))
 		return fu_uefi_cod_device_get_indexed_filename(self, error);
 
 	/* Dell Inc. */
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_COD_DELL_RECOVERY)) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), "cod-dell-recovery")) {
 		return g_build_filename(esp_path,
 					"EFI",
 					"dell",
@@ -237,7 +237,7 @@ fu_uefi_cod_device_write_firmware(FuDevice *device,
 	 * U-Boot, it applies the capsule even if OsIndications isn't set.
 	 * The capsule is then deleted by U-Boot after it has been deployed.
 	 */
-	if (!fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE)) {
+	if (!fu_device_has_private_flag(device, "no-rt-set-variable")) {
 		gsize bufsz = 0;
 		guint64 os_indications = 0;
 		g_autofree guint8 *buf = NULL;

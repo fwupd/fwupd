@@ -49,7 +49,7 @@ fu_corsair_device_probe(FuDevice *device, GError **error)
 	guint8 epout;
 
 	/* probing are skipped for subdevices */
-	if (fu_device_has_private_flag(device, FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE))
+	if (fu_device_has_private_flag(device, "is-subdevice"))
 		return TRUE;
 
 	if (!FU_DEVICE_CLASS(fu_corsair_device_parent_class)->probe(device, error))
@@ -159,9 +159,7 @@ fu_corsair_device_get_version(FuDevice *device, GError **error)
 		return NULL;
 
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		gboolean broken_by_flag =
-		    fu_device_has_private_flag(device,
-					       FU_CORSAIR_DEVICE_FLAG_NO_VERSION_IN_BOOTLOADER);
+		gboolean broken_by_flag = fu_device_has_private_flag(device, "no-version-in-bl");
 
 		/* Version 0xffffffff means that previous update was interrupted.
 		   Set version to 0.0.0 in both broken and interrupted cases to make sure that new
@@ -220,7 +218,7 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 	}
 	fu_device_set_version_bootloader(device, bootloader_version);
 
-	if (fu_device_has_private_flag(device, FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE) &&
+	if (fu_device_has_private_flag(device, "is-subdevice") &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!fu_corsair_bp_get_property(self->bp,
 						FU_CORSAIR_BP_PROPERTY_BATTERY_LEVEL,
@@ -231,9 +229,8 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 		}
 		fu_device_set_battery_level(device, battery_level / 10);
 	}
-	fu_corsair_bp_set_legacy_attach(
-	    self->bp,
-	    fu_device_has_private_flag(device, FU_CORSAIR_DEVICE_FLAG_LEGACY_ATTACH));
+	fu_corsair_bp_set_legacy_attach(self->bp,
+					fu_device_has_private_flag(device, "legacy-attach"));
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 
@@ -262,7 +259,7 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_corsair_device_reload(FuDevice *device, GError **error)
 {
-	if (fu_device_has_private_flag(device, FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE)) {
+	if (fu_device_has_private_flag(device, "is-subdevice")) {
 		return fu_corsair_device_setup(device, error);
 	}
 
@@ -344,7 +341,7 @@ fu_corsair_ensure_mode(FuDevice *device, FuCorsairDeviceMode mode, GError **erro
 		}
 	}
 
-	if (fu_device_has_private_flag(device, FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE)) {
+	if (fu_device_has_private_flag(device, "is-subdevice")) {
 		if (!fu_corsair_reconnect_subdevice(device, error)) {
 			g_prefix_error(error, "subdevice did not reconnect: ");
 			return FALSE;
@@ -403,7 +400,7 @@ fu_corsair_device_write_firmware(FuDevice *device,
 
 	fu_progress_step_done(progress);
 
-	if (!fu_device_has_private_flag(device, FU_CORSAIR_DEVICE_FLAG_LEGACY_ATTACH)) {
+	if (!fu_device_has_private_flag(device, "legacy-attach")) {
 		if (!fu_corsair_bp_activate_firmware(self->bp, firmware, error)) {
 			g_prefix_error(error, "firmware activation fail: ");
 			return FALSE;
@@ -549,13 +546,10 @@ fu_corsair_device_init(FuCorsairDevice *device)
 	self->vendor_interface = CORSAIR_DEFAULT_VENDOR_INTERFACE_ID;
 
 	fu_device_register_private_flag(FU_DEVICE(device),
-					FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE,
 					"is-subdevice");
 	fu_device_register_private_flag(FU_DEVICE(device),
-					FU_CORSAIR_DEVICE_FLAG_LEGACY_ATTACH,
 					"legacy-attach");
 	fu_device_register_private_flag(FU_DEVICE(device),
-					FU_CORSAIR_DEVICE_FLAG_NO_VERSION_IN_BOOTLOADER,
 					"no-version-in-bl");
 
 	fu_device_set_remove_delay(FU_DEVICE(device), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);

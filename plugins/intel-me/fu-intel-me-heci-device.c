@@ -136,7 +136,7 @@ fu_intel_me_heci_device_read_file_ex(FuIntelMeHeciDevice *self,
 static void
 fu_intel_me_heci_device_version_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
 {
-	if (fu_device_has_private_flag(device, FU_INTEL_ME_HECI_DEVICE_FLAG_LEAKED_KM))
+	if (fu_device_has_private_flag(device, "leaked-km"))
 		fu_device_inhibit(device, "leaked-km", "Provisioned with a leaked private key");
 }
 
@@ -146,7 +146,6 @@ fu_intel_me_heci_device_init(FuIntelMeHeciDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_INTEL_ME_HECI_DEVICE_FLAG_LEAKED_KM,
 					"leaked-km");
 	g_signal_connect(FWUPD_DEVICE(self),
 			 "notify::private-flags",

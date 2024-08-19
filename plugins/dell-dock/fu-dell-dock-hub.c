@@ -142,7 +142,7 @@ fu_dell_dock_hub_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* skip version setup here as we don't know HID header format yet */
-	if (fu_device_has_private_flag(device, FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE))
+	if (fu_device_has_private_flag(device, "has-bridge"))
 		return TRUE;
 
 	return fu_dell_dock_hid_get_hub_version(device, error);
@@ -207,7 +207,6 @@ fu_dell_dock_hub_init(FuDellDockHub *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE,
 					"has-bridge");
 }
 

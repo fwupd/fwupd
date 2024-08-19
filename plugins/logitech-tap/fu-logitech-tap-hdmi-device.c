@@ -334,8 +334,7 @@ fu_logitech_tap_hdmi_device_write_fw(FuLogitechTapHdmiDevice *self,
 		return FALSE;
 
 	/* signal for sensor device to trigger composite device reboot */
-	fu_device_add_private_flag(FU_DEVICE(self),
-				   FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_SENSOR_NEEDS_REBOOT);
+	fu_device_add_private_flag(FU_DEVICE(self), "sensor-needs-reboot");
 	return TRUE;
 }
 

@@ -564,7 +564,7 @@ fu_redfish_plugin_cleanup(FuPlugin *plugin,
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* nothing to do */
-	if (!fu_device_has_private_flag(device, FU_REDFISH_DEVICE_FLAG_MANAGER_RESET))
+	if (!fu_device_has_private_flag(device, "manager-reset"))
 		return TRUE;
 
 	/* update failed; don't reboot BMC */
@@ -580,7 +580,7 @@ fu_redfish_plugin_cleanup(FuPlugin *plugin,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 9, "recoldplug");
 
 	/* ask the BMC to reboot */
-	if (!fu_device_has_private_flag(device, FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST)) {
+	if (!fu_device_has_private_flag(device, "no-manager-reset-request")) {
 		g_autoptr(JsonBuilder) builder = json_builder_new();
 		json_builder_begin_object(builder);
 		json_builder_set_member_name(builder, "ResetType");

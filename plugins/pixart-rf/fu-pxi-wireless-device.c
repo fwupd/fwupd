@@ -67,7 +67,7 @@ fu_pxi_wireless_device_prepare_firmware(FuDevice *device,
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
-	if (fu_device_has_private_flag(FU_DEVICE(parent), FU_PXI_DEVICE_FLAG_IS_HPAC) &&
+	if (fu_device_has_private_flag(FU_DEVICE(parent), "is-hpac") &&
 	    fu_pxi_firmware_is_hpac(FU_PXI_FIRMWARE(firmware))) {
 		guint32 hpac_fw_size = 0;
 		g_autoptr(GInputStream) stream_new = NULL;
@@ -79,7 +79,7 @@ fu_pxi_wireless_device_prepare_firmware(FuDevice *device,
 			return NULL;
 		if (!fu_firmware_set_stream(firmware, stream_new, error))
 			return NULL;
-	} else if (fu_device_has_private_flag(FU_DEVICE(parent), FU_PXI_DEVICE_FLAG_IS_HPAC) !=
+	} else if (fu_device_has_private_flag(FU_DEVICE(parent), "is-hpac") !=
 		   fu_pxi_firmware_is_hpac(FU_PXI_FIRMWARE(firmware))) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -606,7 +606,7 @@ fu_pxi_wireless_device_fw_upgrade(FuDevice *device,
 				    fu_sum16_bytes(fw),
 				    G_LITTLE_ENDIAN); /* ota fw upgrade command checksum */
 
-	if (!fu_device_has_private_flag(FU_DEVICE(parent), FU_PXI_DEVICE_FLAG_IS_HPAC)) {
+	if (!fu_device_has_private_flag(FU_DEVICE(parent), "is-hpac")) {
 		version = fu_firmware_get_version(firmware);
 		if (!fu_memcpy_safe(fw_version,
 				    sizeof(fw_version),

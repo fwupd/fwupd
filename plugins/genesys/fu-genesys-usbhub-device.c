@@ -18,23 +18,6 @@
 #include "fu-genesys-usbhub-firmware.h"
 #include "fu-genesys-usbhub-struct.h"
 
-/**
- * FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER:
- *
- * Device has a MStar scaler attached via I2C.
- *
- * Since 1.7.6
- */
-#define FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER (1 << 0)
-/**
- * FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY:
- *
- * Device has a public-key appended to firmware.
- *
- * Since 1.8.0
- */
-#define FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY (1 << 1)
-
 #define GENESYS_USBHUB_STATIC_TOOL_DESC_IDX_USB_3_0  0x84
 #define GENESYS_USBHUB_DYNAMIC_TOOL_DESC_IDX_USB_3_0 0x85
 #define GENESYS_USBHUB_STATIC_TOOL_DESC_IDX_USB_2_0  0x81
@@ -1647,7 +1630,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 			return FALSE;
 	}
 
-	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY))
+	if (fu_device_has_private_flag(device, "has-public-key"))
 		self->has_codesign = TRUE;
 
 	/* enter isp mode */
@@ -1723,7 +1706,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "PROJECT", NULL);
 
 	/* have MStar scaler */
-	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER))
+	if (fu_device_has_private_flag(device, "has-mstar-scaler"))
 		if (!fu_genesys_usbhub_device_mstar_scaler_setup(self, error))
 			return FALSE;
 
@@ -3070,10 +3053,8 @@ fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 	fu_device_retry_set_delay(FU_DEVICE(self), 30);	   /* 30ms */
 	fu_device_set_remove_delay(FU_DEVICE(self), 5000); /* 5s */
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER,
 					"has-mstar-scaler");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY,
 					"has-public-key");
 	fu_device_set_install_duration(FU_DEVICE(self), 9); /* 9 s */
 

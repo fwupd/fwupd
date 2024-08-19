@@ -254,8 +254,7 @@ fu_logitech_hidpp_bootloader_set_bl_version(FuLogitechHidppBootloader *self, GEr
 	fu_device_set_version_bootloader(FU_DEVICE(self), version);
 
 	if ((major == 0x01 && minor >= 0x04) || (major == 0x03 && minor >= 0x02)) {
-		fu_device_add_private_flag(FU_DEVICE(self),
-					   FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED);
+		fu_device_add_private_flag(FU_DEVICE(self), "is-signed");
 		fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifyingsigned");
 	} else {
 		fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifying");
@@ -409,7 +408,6 @@ fu_logitech_hidpp_bootloader_init(FuLogitechHidppBootloader *self)
 	fu_device_set_summary(FU_DEVICE(self), "Miniaturised USB wireless receiver (bootloader)");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED,
 					"is-signed");
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x00);
 }

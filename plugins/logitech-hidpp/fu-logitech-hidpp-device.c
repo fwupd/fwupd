@@ -226,7 +226,7 @@ fu_logitech_hidpp_device_poll(FuDevice *device, GError **error)
 	}
 
 	/* just ping */
-	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH)) {
+	if (fu_device_has_private_flag(device, "rebind-attach")) {
 		if (!fu_logitech_hidpp_device_ping(self, &error_local)) {
 			g_warning("failed to ping %s: %s",
 				  fu_device_get_name(device),
@@ -430,8 +430,7 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError
 		} else if (msg->data[0] == 2) {
 			fu_device_set_metadata(FU_DEVICE(self), "version-hw", version);
 		} else if (msg->data[0] == 5 &&
-			   fu_device_has_private_flag(FU_DEVICE(self),
-						      FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO)) {
+			   fu_device_has_private_flag(FU_DEVICE(self), "add-radio")) {
 			if (!fu_logitech_hidpp_device_create_radio_child(self, i, build, error)) {
 				g_prefix_error(error, "failed to create radio: ");
 				return FALSE;
@@ -441,8 +440,7 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError
 	}
 
 	/* the device is probably in bootloader mode and the last SoftDevice FW upgrade failed */
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO) &&
-	    !radio_ok) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), "add-radio") && !radio_ok) {
 		g_debug("no radio found, creating a fake one for recovery");
 		if (!fu_logitech_hidpp_device_create_radio_child(self, 1, 0, error)) {
 			g_prefix_error(error, "failed to create radio: ");
@@ -718,7 +716,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 					FU_LOGITECH_HIDPP_FEATURE_DFU,
 					FU_LOGITECH_HIDPP_FEATURE_ROOT};
 
-	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE)) {
+	if (fu_device_has_private_flag(device, "ble")) {
 		priv->hidpp_version = FU_HIDPP_VERSION_BLE;
 		priv->device_idx = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
 		/*
@@ -738,7 +736,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 		 */
 		fu_device_sleep(device, 1000); /* ms */
 	}
-	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID))
+	if (fu_device_has_private_flag(device, "force-receiver-id"))
 		priv->device_idx = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
 
 	/* ping device to get HID++ version */
@@ -900,9 +898,7 @@ fu_logitech_hidpp_device_detach(FuDevice *device, FuProgress *progress, GError *
 		msg->flags = FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_IGNORE_SUB_ID |
 			     FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_LONGER_TIMEOUT;
 		if (!fu_logitech_hidpp_transfer(priv->io_channel, msg, &error_local)) {
-			if (fu_device_has_private_flag(
-				device,
-				FU_LOGITECH_HIDPP_DEVICE_FLAG_NO_REQUEST_REQUIRED)) {
+			if (fu_device_has_private_flag(device, "no-request-required")) {
 				g_debug("ignoring %s", error_local->message);
 				fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 				return TRUE;
@@ -920,9 +916,7 @@ fu_logitech_hidpp_device_detach(FuDevice *device, FuProgress *progress, GError *
 			fu_device_set_poll_interval(parent, 500);
 
 		/* generate a message if not already set */
-		if (!fu_device_has_private_flag(
-			device,
-			FU_LOGITECH_HIDPP_DEVICE_FLAG_NO_REQUEST_REQUIRED)) {
+		if (!fu_device_has_private_flag(device, "no-request-required")) {
 			if (fu_device_get_update_message(device) == NULL) {
 				g_autofree gchar *str = NULL;
 				str = g_strdup_printf(
@@ -1296,7 +1290,7 @@ fu_logitech_hidpp_device_attach(FuLogitechHidppDevice *self,
 		}
 	}
 
-	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH)) {
+	if (fu_device_has_private_flag(device, "rebind-attach")) {
 		fu_device_set_poll_interval(device, 0);
 		/*
 		 * Wait for device to become ready after flashing.
@@ -1320,7 +1314,7 @@ fu_logitech_hidpp_device_attach_cached(FuDevice *device, FuProgress *progress, G
 	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 
-	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH))
+	if (fu_device_has_private_flag(device, "rebind-attach"))
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return fu_logitech_hidpp_device_attach(self, priv->cached_fw_entity, progress, error);
 }
@@ -1410,18 +1404,13 @@ fu_logitech_hidpp_device_init(FuLogitechHidppDevice *self)
 	fu_device_set_vendor(FU_DEVICE(self), "Logitech");
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID,
 					"force-receiver-id");
-	fu_device_register_private_flag(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE, "ble");
+	fu_device_register_private_flag(FU_DEVICE(self), "ble");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH,
 					"rebind-attach");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_DEVICE_FLAG_NO_REQUEST_REQUIRED,
 					"no-request-required");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO,
-					"add-radio");
+	fu_device_register_private_flag(FU_DEVICE(self), "add-radio");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 	fu_device_set_battery_threshold(FU_DEVICE(self), 20);
 }

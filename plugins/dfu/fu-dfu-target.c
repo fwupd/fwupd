@@ -138,7 +138,7 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 
 	/* handle weirdness */
 	if (fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(self)),
-				       FU_DFU_DEVICE_FLAG_ABSENT_SECTOR_SIZE)) {
+				       "absent-sector-size")) {
 		if (tmp[1] == '\0') {
 			tmp[1] = tmp[0];
 			tmp[0] = 'B';
@@ -580,8 +580,7 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error)
 	}
 
 	/* GD32VF103 devices features and peripheral list */
-	if (priv->alt_setting == 0x0 &&
-	    fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_GD32)) {
+	if (priv->alt_setting == 0x0 && fu_device_has_private_flag(device, "gd32")) {
 		/*             RB R8 R6 R4  VB V8
 		 * Flash (KB) 128 64 32 16 128 64
 		 *             TB T8 T6 T4  CB C8 C6 C4
@@ -937,8 +936,7 @@ fu_dfu_target_upload(FuDfuTarget *self,
 		return FALSE;
 
 	/* can the target do this? */
-	if (!fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(self)),
-					FU_DFU_DEVICE_FLAG_CAN_UPLOAD)) {
+	if (!fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(self)), "can-upload")) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1102,7 +1100,7 @@ fu_dfu_target_download_element(FuDfuTarget *self,
 
 	/* progress */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY &&
-	    fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_CAN_UPLOAD)) {
+	    fu_device_has_private_flag(device, "can-upload")) {
 		fu_progress_set_id(progress, G_STRLOC);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 96, NULL);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 4, NULL);
@@ -1131,7 +1129,7 @@ fu_dfu_target_download_element(FuDfuTarget *self,
 
 	/* verify */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY &&
-	    fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_CAN_UPLOAD)) {
+	    fu_device_has_private_flag(device, "can-upload")) {
 		g_autoptr(GBytes) bytes = NULL;
 		g_autoptr(GBytes) bytes_tmp = NULL;
 		g_autoptr(FuChunk) chunk_tmp = NULL;
@@ -1193,7 +1191,7 @@ fu_dfu_target_download(FuDfuTarget *self,
 		return FALSE;
 
 	/* can the target do this? */
-	if (!fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD)) {
+	if (!fu_device_has_private_flag(device, "can-download")) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1244,8 +1242,8 @@ fu_dfu_target_download(FuDfuTarget *self,
 		fu_progress_step_done(progress);
 	}
 
-	if (fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_MANIFEST_POLL) &&
-	    fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_MANIFEST_TOL))
+	if (fu_device_has_private_flag(device, "manifest-poll") &&
+	    fu_device_has_private_flag(device, "manifest-tol"))
 		if (!fu_dfu_target_manifest_wait(self, error))
 			return FALSE;
 

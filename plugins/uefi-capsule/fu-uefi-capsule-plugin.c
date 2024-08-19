@@ -426,7 +426,7 @@ fu_uefi_capsule_plugin_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 		     {0, 0}};
 
 	/* no UX capsule support, so deleting var if it exists */
-	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE) &&
+	if (fu_device_has_private_flag(device, "no-ux-capsule") &&
 	    fu_efivars_exists(efivars, FU_EFIVARS_GUID_FWUPDATE, "fwupd-ux-capsule")) {
 		g_info("not providing UX capsule");
 		return fu_efivars_delete(efivars,
@@ -550,11 +550,11 @@ fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 
 	/* shim used for SB or not? */
 	if (!fu_plugin_get_config_value_boolean(plugin, "DisableShimForSecureBoot"))
-		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB);
+		fu_device_add_private_flag(device, "use-shim-for-sb");
 
 	/* enable the fwupd.efi debug log? */
 	if (fu_plugin_get_config_value_boolean(plugin, "EnableEfiDebugging"))
-		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING);
+		fu_device_add_private_flag(device, "enable-debugging");
 }
 
 
@@ -662,15 +662,13 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 
 	/* if not already set by quirks */
 	if (fu_context_has_hwid_flag(ctx, "use-legacy-bootmgr-desc")) {
-		fu_device_add_private_flag(FU_DEVICE(dev),
-					   FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC);
+		fu_device_add_private_flag(FU_DEVICE(dev), "use-legacy-bootmgr-desc");
 	}
 	if (fu_context_has_hwid_flag(ctx, "supports-boot-order-lock")) {
-		fu_device_add_private_flag(FU_DEVICE(dev),
-					   FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK);
+		fu_device_add_private_flag(FU_DEVICE(dev), "supports-boot-order-lock");
 	}
 	if (fu_context_has_hwid_flag(ctx, "no-ux-capsule"))
-		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE);
+		fu_device_add_private_flag(FU_DEVICE(dev), "no-ux-capsule");
 	if (fu_context_has_hwid_flag(ctx, "no-lid-closed"))
 		fu_device_add_internal_flag(FU_DEVICE(dev), FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED);
 	if (fu_context_has_hwid_flag(ctx, "display-required")) {
@@ -678,15 +676,14 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 					    FU_DEVICE_INTERNAL_FLAG_DISPLAY_REQUIRED);
 	}
 	if (fu_context_has_hwid_flag(ctx, "modify-bootorder"))
-		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER);
+		fu_device_add_private_flag(FU_DEVICE(dev), "modify-bootorder");
 	if (fu_context_has_hwid_flag(ctx, "cod-dell-recovery"))
-		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_COD_DELL_RECOVERY);
+		fu_device_add_private_flag(FU_DEVICE(dev), "cod-dell-recovery");
 
 	/* detected InsydeH2O */
 	if (self->acpi_uefi != NULL &&
 	    fu_acpi_uefi_cod_indexed_filename(FU_ACPI_UEFI(self->acpi_uefi))) {
-		fu_device_add_private_flag(FU_DEVICE(dev),
-					   FU_UEFI_DEVICE_FLAG_COD_INDEXED_FILENAME);
+		fu_device_add_private_flag(FU_DEVICE(dev), "cod-indexed-filename");
 	}
 
 	/* set fallback name if nothing else is set */

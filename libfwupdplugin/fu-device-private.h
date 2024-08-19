@@ -57,10 +57,6 @@ void
 fu_device_add_possible_plugin(FuDevice *self, const gchar *plugin) G_GNUC_NON_NULL(1, 2);
 guint
 fu_device_get_request_cnt(FuDevice *self, FwupdRequestKind request_kind) G_GNUC_NON_NULL(1);
-guint64
-fu_device_get_private_flags(FuDevice *self) G_GNUC_NON_NULL(1);
-void
-fu_device_set_private_flags(FuDevice *self, guint64 flag) G_GNUC_NON_NULL(1);
 void
 fu_device_set_progress(FuDevice *self, FuProgress *progress) G_GNUC_NON_NULL(1);
 FuDeviceInternalFlags

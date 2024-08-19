@@ -43,6 +43,17 @@ although it requires that the firmware branch is also set in the firmware metada
 
 Since: 1.9.8
 
+### Flags=detach-at-fastboot-has-no-response
+
+If no AT response is expected when entering fastboot mode.
+
+### Flags=uninhibit-modemmanager-after-fastboot-reboot
+
+After entering the fastboot state, the modem cannot execute the attach method in the MM plugin
+plugin plugin.
+The shadow device needs to be used to uninhibit the modem when `fu_mm_plugin_udev_uevent_cb`
+detects it.
+
 ## Vendor ID Security
 
 The vendor ID is set from the USB or PCI vendor, for example `USB:0x413C` `PCI:0x105B`

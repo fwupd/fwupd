@@ -27,23 +27,6 @@
 
 #define GENESYS_SCALER_USB_TIMEOUT 5000 /* 5s */
 
-/**
- * FU_SCALER_FLAG_PAUSE_R2_CPU:
- *
- * Pause R2 CPU.
- *
- * Since 1.7.6
- */
-#define FU_SCALER_FLAG_PAUSE_R2_CPU (1 << 1)
-/**
- * FU_SCALER_FLAG_USE_I2C_CH0:
- *
- * Use I2C ch0.
- *
- * Since 1.7.6
- */
-#define FU_SCALER_FLAG_USE_I2C_CH0 (1 << 0)
-
 typedef struct {
 	guint8 req_read;
 	guint8 req_write;
@@ -691,7 +674,7 @@ fu_genesys_scaler_device_detach(FuDevice *device, FuProgress *progress, GError *
 	if (!fu_genesys_scaler_device_enter_single_step_mode(self, error))
 		return FALSE;
 
-	if (fu_device_has_private_flag(device, FU_SCALER_FLAG_USE_I2C_CH0))
+	if (fu_device_has_private_flag(device, "use-i2c-ch0"))
 		if (!fu_genesys_scaler_device_mst_i2c_bus_switch_to_ch0(self, error))
 			return FALSE;
 
@@ -704,7 +687,7 @@ fu_genesys_scaler_device_detach(FuDevice *device, FuProgress *progress, GError *
 	if (!fu_genesys_scaler_device_disable_wp(self, TRUE, error))
 		return FALSE;
 
-	if (fu_device_has_private_flag(device, FU_SCALER_FLAG_PAUSE_R2_CPU)) {
+	if (fu_device_has_private_flag(device, "pause-r2-cpu")) {
 		if (!fu_genesys_scaler_device_mst_i2c_bus_switch_to_ch4(self, error))
 			return FALSE;
 
@@ -1914,9 +1897,8 @@ fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SCALER_FLAG_PAUSE_R2_CPU,
 					"pause-r2-cpu");
-	fu_device_register_private_flag(FU_DEVICE(self), FU_SCALER_FLAG_USE_I2C_CH0, "use-i2c-ch0");
+	fu_device_register_private_flag(FU_DEVICE(self), "use-i2c-ch0");
 	fu_device_set_install_duration(FU_DEVICE(self), 730); /* 12min 10s */
 
 	self->sector_size = 0x1000;						/* 4KB */

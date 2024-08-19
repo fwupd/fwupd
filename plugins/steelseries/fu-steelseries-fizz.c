@@ -673,7 +673,7 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 		return TRUE;
 
 	/* it is a USB receiver */
-	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
+	if (fu_device_has_private_flag(device, "is-receiver")) {
 		guint8 status;
 
 		if (!fu_steelseries_fizz_get_paired_status(device, &status, error)) {
@@ -699,7 +699,7 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 	fu_device_set_version(device, version);
 
 	/* it is a USB receiver */
-	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
+	if (fu_device_has_private_flag(device, "is-receiver")) {
 		fs = STEELSERIES_FIZZ_FILESYSTEM_RECEIVER;
 		id = STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_BACKUP_APP_ID;
 	}
@@ -809,7 +809,7 @@ fu_steelseries_fizz_write_firmware(FuDevice *device,
 	guint8 id = STEELSERIES_FIZZ_MOUSE_FILESYSTEM_BACKUP_APP_ID;
 
 	/* it is a USB receiver */
-	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
+	if (fu_device_has_private_flag(device, "is-receiver")) {
 		fs = STEELSERIES_FIZZ_FILESYSTEM_RECEIVER;
 		id = STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_BACKUP_APP_ID;
 	}
@@ -882,7 +882,7 @@ fu_steelseries_fizz_read_firmware(FuDevice *device, FuProgress *progress, GError
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 100, NULL);
 
 	/* it is a USB receiver */
-	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
+	if (fu_device_has_private_flag(device, "is-receiver")) {
 		fs = STEELSERIES_FIZZ_FILESYSTEM_RECEIVER;
 		id = STEELSERIES_FIZZ_RECEIVER_FILESYSTEM_BACKUP_APP_ID;
 	}

@@ -22,8 +22,6 @@ G_DEFINE_TYPE(FuAverHidDevice, fu_aver_hid_device, FU_TYPE_HID_DEVICE)
 #define FU_AVER_HID_DEVICE_ISP_RETRY_COUNT	    300
 #define FU_AVER_HID_DEVICE_ISP_UNTAR_WAIT_COUNT	    600
 
-#define FU_AVER_HID_FLAG_DUAL_ISP (1 << 0)
-
 static gboolean
 fu_aver_hid_device_transfer(FuAverHidDevice *self, GByteArray *req, GByteArray *res, GError **error)
 {
@@ -160,7 +158,7 @@ fu_aver_hid_device_isp_file_dnload(FuAverHidDevice *self,
 			return FALSE;
 
 		/* copy in payload */
-		if (fu_device_has_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP)) {
+		if (fu_device_has_private_flag(FU_DEVICE(self), "dual-isp")) {
 			fu_struct_aver_hid_req_isp_file_dnload_set_custom_isp_cmd(
 			    req,
 			    FU_AVER_HID_CUSTOM_ISP_CMD_ALL_FILE_DNLOAD);
@@ -241,7 +239,7 @@ fu_aver_hid_device_isp_file_start(FuAverHidDevice *self,
 	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_file_start_new();
 	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
 
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP)) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), "dual-isp")) {
 		fu_struct_aver_hid_req_isp_file_start_set_custom_isp_cmd(
 		    req,
 		    FU_AVER_HID_CUSTOM_ISP_CMD_ALL_FILE_START);
@@ -266,7 +264,7 @@ fu_aver_hid_device_isp_file_end(FuAverHidDevice *self, gsize sz, const gchar *na
 	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_file_end_new();
 	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
 
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP)) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), "dual-isp")) {
 		fu_struct_aver_hid_req_isp_file_end_set_custom_isp_cmd(
 		    req,
 		    FU_AVER_HID_CUSTOM_ISP_CMD_ALL_FILE_END);
@@ -317,7 +315,7 @@ fu_aver_hid_device_isp_start(FuAverHidDevice *self, GError **error)
 	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_new();
 	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
 
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP)) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), "dual-isp")) {
 		fu_struct_aver_hid_req_isp_start_set_custom_isp_cmd(
 		    req,
 		    FU_AVER_HID_CUSTOM_ISP_CMD_ALL_START);
@@ -508,7 +506,7 @@ fu_aver_hid_device_init(FuAverHidDevice *self)
 	fu_usb_device_set_claim_retry_count(FU_USB_DEVICE(self), 5);
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_RETRY_FAILURE);
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP, "dual-isp");
+	fu_device_register_private_flag(FU_DEVICE(self), "dual-isp");
 }
 
 static void

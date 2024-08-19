@@ -72,7 +72,7 @@ fu_uefi_backend_linux_device_new(FuUefiBackendLinux *self,
 
 	/* u-boot for instance */
 	if (!self->use_rt_set_variable)
-		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE);
+		fu_device_add_private_flag(FU_DEVICE(dev), "no-rt-set-variable");
 
 	/* set ID */
 	fu_device_set_backend_id(FU_DEVICE(dev), path);

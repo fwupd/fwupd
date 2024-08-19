@@ -67,7 +67,7 @@ fu_pxi_receiver_device_prepare_firmware(FuDevice *device,
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
-	if (fu_device_has_private_flag(device, FU_PXI_DEVICE_FLAG_IS_HPAC) &&
+	if (fu_device_has_private_flag(device, "is-hpac") &&
 	    fu_pxi_firmware_is_hpac(FU_PXI_FIRMWARE(firmware))) {
 		guint32 hpac_fw_size = 0;
 		g_autoptr(GInputStream) stream_new = NULL;
@@ -79,7 +79,7 @@ fu_pxi_receiver_device_prepare_firmware(FuDevice *device,
 			return NULL;
 		if (!fu_firmware_set_stream(firmware, stream_new, error))
 			return NULL;
-	} else if (fu_device_has_private_flag(device, FU_PXI_DEVICE_FLAG_IS_HPAC) !=
+	} else if (fu_device_has_private_flag(device, "is-hpac") !=
 		   fu_pxi_firmware_is_hpac(FU_PXI_FIRMWARE(firmware))) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -470,7 +470,7 @@ fu_pxi_receiver_device_fw_upgrade(FuDevice *device,
 				    fu_sum16_bytes(fw),
 				    G_LITTLE_ENDIAN); /* ota fw upgrade command checksum */
 
-	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC)) {
+	if (!fu_device_has_private_flag(FU_DEVICE(self), "is-hpac")) {
 		version = fu_firmware_get_version(firmware);
 		if (!fu_memcpy_safe(fw_version,
 				    sizeof(fw_version),
@@ -704,7 +704,7 @@ fu_pxi_receiver_device_get_peripheral_info(FuPxiReceiverDevice *device,
 	/* set current version and model name */
 	model->checksum = checksum;
 	g_debug("checksum %x", model->checksum);
-	if (!fu_device_has_private_flag(FU_DEVICE(device), FU_PXI_DEVICE_FLAG_IS_HPAC)) {
+	if (!fu_device_has_private_flag(FU_DEVICE(device), "is-hpac")) {
 		version_str = g_strndup((gchar *)model->version, 5);
 	} else {
 		if (!fu_memread_uint16_safe(model->version, 5, 3, &hpac_ver, G_BIG_ENDIAN, error))
@@ -770,7 +770,7 @@ fu_pxi_receiver_device_add_peripherals(FuPxiReceiverDevice *device, guint idx, G
 	/* get the all wireless peripherals info */
 	if (!fu_pxi_receiver_device_get_peripheral_info(device, &model, idx, error))
 		return FALSE;
-	if (!fu_device_has_private_flag(FU_DEVICE(device), FU_PXI_DEVICE_FLAG_IS_HPAC)) {
+	if (!fu_device_has_private_flag(FU_DEVICE(device), "is-hpac")) {
 		model_version = g_strndup((gchar *)model.version, 5);
 	} else {
 		if (!fu_memread_uint16_safe(model.version, 5, 3, &hpac_ver, G_BIG_ENDIAN, error))
@@ -947,7 +947,7 @@ fu_pxi_receiver_device_init(FuPxiReceiverDevice *self)
 	fu_device_build_vendor_id_u16(FU_DEVICE(self), "USB", 0x093A);
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_PXI_FIRMWARE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC, "is-hpac");
+	fu_device_register_private_flag(FU_DEVICE(self), "is-hpac");
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);

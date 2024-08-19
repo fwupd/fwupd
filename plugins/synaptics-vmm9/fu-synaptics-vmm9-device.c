@@ -10,9 +10,6 @@
 #include "fu-synaptics-vmm9-firmware.h"
 #include "fu-synaptics-vmm9-struct.h"
 
-/* flags */
-#define FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED (1 << 0)
-
 struct _FuSynapticsVmm9Device {
 	FuHidDevice parent_instance;
 	guint8 board_id;
@@ -296,8 +293,7 @@ fu_synaptics_vmm9_device_setup(FuDevice *device, GError **error)
 	fu_device_set_version_bootloader(device, bootloader_version);
 
 	/* manual replug required */
-	if (fu_device_has_private_flag(device,
-				       FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED)) {
+	if (fu_device_has_private_flag(device, "manual-restart-required")) {
 		fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 		fu_device_add_request_flag(device, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	} else {
@@ -595,8 +591,7 @@ fu_synaptics_vmm9_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* generic request */
-	if (fu_device_has_private_flag(device,
-				       FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED)) {
+	if (fu_device_has_private_flag(device, "manual-restart-required")) {
 		g_autoptr(FwupdRequest) request = fwupd_request_new();
 		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 		fwupd_request_set_id(request, FWUPD_REQUEST_ID_REPLUG_POWER);
@@ -659,7 +654,6 @@ fu_synaptics_vmm9_device_init(FuSynapticsVmm9Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED,
 					"manual-restart-required");
 }
 

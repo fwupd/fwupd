@@ -96,7 +96,7 @@ fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 
-	if (fu_device_has_private_flag(device, FU_PXI_DEVICE_FLAG_IS_HPAC) &&
+	if (fu_device_has_private_flag(device, "is-hpac") &&
 	    fu_pxi_firmware_is_hpac(FU_PXI_FIRMWARE(firmware))) {
 		guint32 hpac_fw_size = 0;
 		g_autoptr(GInputStream) stream_new = NULL;
@@ -109,7 +109,7 @@ fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 		if (!fu_firmware_set_stream(firmware, stream_new, error))
 			return NULL;
 
-	} else if (!fu_device_has_private_flag(device, FU_PXI_DEVICE_FLAG_IS_HPAC) &&
+	} else if (!fu_device_has_private_flag(device, "is-hpac") &&
 		   !fu_pxi_firmware_is_hpac(FU_PXI_FIRMWARE(firmware))) {
 		const gchar *model_name;
 
@@ -697,7 +697,7 @@ fu_pxi_ble_device_fw_upgrade(FuPxiBleDevice *self,
 	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_UPGRADE);
 	fu_byte_array_append_uint32(req, g_bytes_get_size(fw), G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint16(req, checksum, G_LITTLE_ENDIAN);
-	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC)) {
+	if (!fu_device_has_private_flag(FU_DEVICE(self), "is-hpac")) {
 		version = fu_firmware_get_version(firmware);
 		if (!fu_memcpy_safe(fw_version,
 				    sizeof(fw_version),
@@ -853,7 +853,7 @@ fu_pxi_ble_device_fw_get_info(FuPxiBleDevice *self, GError **error)
 		return FALSE;
 	}
 	/* set current version */
-	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC)) {
+	if (!fu_device_has_private_flag(FU_DEVICE(self), "is-hpac")) {
 		version_str = g_strndup((gchar *)res + 0x6, 5);
 	} else {
 		if (!fu_memread_uint16_safe(res,
@@ -1021,7 +1021,7 @@ fu_pxi_ble_device_init(FuPxiBleDevice *self)
 	self->retransmit_id = PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
 	self->feature_report_id = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
 	self->input_report_id = PXI_HID_DEV_OTA_INPUT_REPORT_ID;
-	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC, "is-hpac");
+	fu_device_register_private_flag(FU_DEVICE(self), "is-hpac");
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }
 

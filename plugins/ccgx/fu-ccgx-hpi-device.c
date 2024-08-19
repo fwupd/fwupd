@@ -33,15 +33,6 @@ struct _FuCcgxHpiDevice {
 	guint32 flash_size;
 };
 
-/**
- * FU_CCGX_HPI_DEVICE_IS_IN_RESTART:
- *
- * Device is in restart and should not be closed manually.
- *
- * Since: 1.7.0
- */
-#define FU_CCGX_HPI_DEVICE_IS_IN_RESTART (1 << 0)
-
 G_DEFINE_TYPE(FuCcgxHpiDevice, fu_ccgx_hpi_device, FU_TYPE_USB_DEVICE)
 
 #define HPI_CMD_REG_READ_WRITE_DELAY_MS		 10
@@ -1067,7 +1058,7 @@ fu_ccgx_hpi_device_detach(FuDevice *device, FuProgress *progress, GError **error
 
 	/* sym not required */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	fu_device_add_private_flag(device, FU_CCGX_HPI_DEVICE_IS_IN_RESTART);
+	fu_device_add_private_flag(device, "device-is-in-restart");
 
 	/* success */
 	return TRUE;
@@ -1092,7 +1083,7 @@ fu_ccgx_hpi_device_attach(FuDevice *device, FuProgress *progress, GError **error
 		return FALSE;
 	}
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	fu_device_add_private_flag(device, FU_CCGX_HPI_DEVICE_IS_IN_RESTART);
+	fu_device_add_private_flag(device, "device-is-in-restart");
 	return TRUE;
 }
 
@@ -1559,7 +1550,7 @@ static gboolean
 fu_ccgx_hpi_device_close(FuDevice *device, GError **error)
 {
 	/* do not close handle when device restarts */
-	if (fu_device_has_private_flag(device, FU_CCGX_HPI_DEVICE_IS_IN_RESTART))
+	if (fu_device_has_private_flag(device, "device-is-in-restart"))
 		return TRUE;
 
 	/* FuUsbDevice->close */
@@ -1598,7 +1589,6 @@ fu_ccgx_hpi_device_init(FuCcgxHpiDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_retry_set_delay(FU_DEVICE(self), HPI_CMD_RETRY_DELAY);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_CCGX_HPI_DEVICE_IS_IN_RESTART,
 					"device-is-in-restart");
 
 	/* we can recover the I²C link using reset */

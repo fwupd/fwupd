@@ -30,8 +30,6 @@ G_DEFINE_TYPE(FuCfuDevice, fu_cfu_device, FU_TYPE_HID_DEVICE)
 
 #define FU_CFU_DEVICE_TIMEOUT 5000 /* ms */
 
-#define FU_CFU_DEVICE_FLAG_SEND_OFFER_INFO (1 << 0)
-
 static void
 fu_cfu_device_map_to_string(GString *str, guint idt, FuCfuDeviceMap *map, const gchar *title)
 {
@@ -64,7 +62,7 @@ fu_cfu_device_send_offer_info(FuCfuDevice *self, FuCfuOfferInfoCode info_code, G
 	g_autoptr(GByteArray) st_res = NULL;
 
 	/* not all devices handle this */
-	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_CFU_DEVICE_FLAG_SEND_OFFER_INFO))
+	if (!fu_device_has_private_flag(FU_DEVICE(self), "send-offer-info"))
 		return TRUE;
 
 	/* SetReport */
@@ -566,7 +564,6 @@ fu_cfu_device_init(FuCfuDevice *self)
 	self->content_get_report.op = 0x66;
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_CFU_DEVICE_FLAG_SEND_OFFER_INFO,
 					"send-offer-info");
 }
 

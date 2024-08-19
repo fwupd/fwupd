@@ -28,10 +28,6 @@ G_DEFINE_TYPE(FuUsiDockMcuDevice, fu_usi_dock_mcu_device, FU_TYPE_HID_DEVICE)
 
 #define W25Q16DV_PAGE_SIZE 256
 
-#define FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP	   (1 << 0)
-#define FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE	   (1 << 1)
-#define FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG (1 << 2)
-
 static gboolean
 fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
 			  FuUsiDockTag2 tag2,
@@ -196,8 +192,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
-			if (fu_device_has_private_flag(FU_DEVICE(self),
-						       FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP)) {
+			if (fu_device_has_private_flag(FU_DEVICE(self), "verfmt-hp")) {
 				version = g_strdup_printf("%x.%x.%x.%x",
 							  val[0] >> 4,
 							  val[0] & 0xFu,
@@ -234,8 +229,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
-			if (fu_device_has_private_flag(FU_DEVICE(self),
-						       FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP)) {
+			if (fu_device_has_private_flag(FU_DEVICE(self), "verfmt-hp")) {
 				version =
 				    g_strdup_printf("%d.%d.%d.%d", val[3], val[4], val[1], val[2]);
 				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_QUAD);
@@ -273,8 +267,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
-			if (fu_device_has_private_flag(FU_DEVICE(self),
-						       FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP)) {
+			if (fu_device_has_private_flag(FU_DEVICE(self), "verfmt-hp")) {
 				version =
 				    g_strdup_printf("%x.%x.%x.%x", val[3], val[4], val[2], val[1]);
 				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_QUAD);
@@ -336,8 +329,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
-			if (fu_device_has_private_flag(FU_DEVICE(self),
-						       FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP)) {
+			if (fu_device_has_private_flag(FU_DEVICE(self), "verfmt-hp")) {
 				version = g_strdup_printf("%x.%x.%x.%x",
 							  val[0] >> 4,
 							  val[0] & 0xFu,
@@ -690,7 +682,7 @@ fu_usi_dock_mcu_device_reload(FuDevice *device, GError **error)
 	FuUsiDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
 	guint8 inbuf[] = {FU_USI_DOCK_MCU_CMD_SET_CHIP_TYPE, 1, 1};
 
-	if (fu_device_has_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE)) {
+	if (fu_device_has_private_flag(device, "set-chip-type")) {
 		g_info("repairing device with CMD_SET_CHIP_TYPE");
 		if (!fu_usi_dock_mcu_device_txrx(self,
 						 FU_USI_DOCK_TAG2_CMD_MCU,
@@ -739,14 +731,14 @@ fu_usi_dock_mcu_device_internal_flags_notify_cb(FuDevice *device,
 						gpointer user_data)
 {
 	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_UNCONNECTED) &&
-	    fu_device_has_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG)) {
+	    fu_device_has_private_flag(device, "waiting-for-unplug")) {
 		g_debug("starting 40s countdown");
 		g_timeout_add_seconds_full(G_PRIORITY_DEFAULT,
 					   40, /* seconds */
 					   fu_usi_dock_mcu_device_insert_cb,
 					   g_object_ref(device),
 					   g_object_unref);
-		fu_device_remove_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG);
+		fu_device_remove_private_flag(device, "waiting-for-unplug");
 	}
 }
 
@@ -759,7 +751,7 @@ fu_usi_dock_mcu_device_cleanup(FuDevice *device,
 	g_autoptr(FwupdRequest) request = fwupd_request_new();
 
 	/* wait for the user to unplug then start the 40 second timer */
-	fu_device_add_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG);
+	fu_device_add_private_flag(device, "waiting-for-unplug");
 	fu_device_set_remove_delay(device, 900000);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
@@ -774,8 +766,8 @@ fu_usi_dock_mcu_device_cleanup(FuDevice *device,
 static void
 fu_usi_dock_mcu_device_replace(FuDevice *device, FuDevice *donor)
 {
-	if (fu_device_has_private_flag(donor, FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE))
-		fu_device_add_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE);
+	if (fu_device_has_private_flag(donor, "set-chip-type"))
+		fu_device_add_private_flag(device, "set-chip-type");
 }
 
 static void
@@ -806,13 +798,10 @@ fu_usi_dock_mcu_device_init(FuUsiDockMcuDevice *self)
 			 NULL);
 
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP,
 					"verfmt-hp");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE,
 					"set-chip-type");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG,
 					"waiting-for-unplug");
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
 	fu_device_add_protocol(FU_DEVICE(self), "com.usi.dock");

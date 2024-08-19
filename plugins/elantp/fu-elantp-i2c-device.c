@@ -322,7 +322,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 					 "ICTYPE",
 					 "MOD",
 					 NULL);
-	if (fu_device_has_private_flag(device, FU_ELANTP_I2C_DEVICE_ABSOLUTE)) {
+	if (fu_device_has_private_flag(device, "elantp-absolute")) {
 		fu_device_add_instance_str(device, "DRIVER", "ELAN_I2C");
 	} else {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
@@ -685,7 +685,7 @@ fu_elantp_i2c_device_attach(FuDevice *device, FuProgress *progress, GError **err
 	if (!fu_elantp_i2c_device_ensure_iap_ctrl(self, error))
 		return FALSE;
 
-	if (fu_device_has_private_flag(device, FU_ELANTP_I2C_DEVICE_ABSOLUTE)) {
+	if (fu_device_has_private_flag(device, "elantp-absolute")) {
 		g_autoptr(GError) error_local = NULL;
 
 		if (!fu_elantp_i2c_device_write_cmd(self, 0x0300, 0x001, error)) {
@@ -778,7 +778,6 @@ fu_elantp_i2c_device_init(FuElantpI2cDevice *self)
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_ELANTP_I2C_DEVICE_ABSOLUTE,
 					"elantp-absolute");
 }
 

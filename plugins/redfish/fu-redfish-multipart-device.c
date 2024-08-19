@@ -31,7 +31,7 @@ fu_redfish_multipart_device_get_parameters(FuRedfishMultipartDevice *self)
 	json_builder_begin_object(builder);
 	json_builder_set_member_name(builder, "Targets");
 	json_builder_begin_array(builder);
-	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS)) {
+	if (!fu_device_has_private_flag(FU_DEVICE(self), "wildcard-targets")) {
 		const gchar *logical_id = fu_device_get_logical_id(FU_DEVICE(self));
 		json_builder_add_string_value(builder, logical_id);
 	}

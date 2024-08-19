@@ -16,19 +16,6 @@ struct _FuVliPdDevice {
 	FuVliDevice parent_instance;
 };
 
-/**
- * FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186:
- *
- * Device has a PS186 attached via I²C.
- */
-#define FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186 (1 << 0)
-/**
- * FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM:
- *
- * Device updates while in firmware mode, skips ROM mode in detach.
- */
-#define FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM (1 << 1)
-
 G_DEFINE_TYPE(FuVliPdDevice, fu_vli_pd_device, FU_TYPE_VLI_DEVICE)
 
 static gboolean
@@ -442,7 +429,7 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 		fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 
 	/* detect any I²C child, e.g. parade device */
-	if (fu_device_has_private_flag(device, FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186)) {
+	if (fu_device_has_private_flag(device, "has-i2c-ps186")) {
 		if (!fu_vli_pd_device_parade_setup(self, error))
 			return FALSE;
 	}
@@ -703,7 +690,7 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 
 	/* VL103 only updates in ROM mode, check other devices for skips-rom flag */
 	if (fu_vli_device_get_kind(FU_VLI_DEVICE(device)) != FU_VLI_DEVICE_KIND_VL103 &&
-	    fu_device_has_private_flag(device, FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM)) {
+	    fu_device_has_private_flag(device, "skips-rom")) {
 		return TRUE;
 	}
 
@@ -913,10 +900,8 @@ fu_vli_pd_device_init(FuVliPdDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_vli_device_set_spi_auto_detect(FU_VLI_DEVICE(self), FALSE);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186,
 					"has-i2c-ps186");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM,
 					"skips-rom");
 
 	/* connect up attach or detach vfuncs when kind is known */

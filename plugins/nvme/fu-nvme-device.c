@@ -25,20 +25,6 @@ struct _FuNvmeDevice {
 #define FU_NVME_COMMIT_ACTION_CA2 0b010 /* activate on next reset */
 #define FU_NVME_COMMIT_ACTION_CA3 0b011 /* replace, and activate immediately */
 
-/**
- * FU_NVME_DEVICE_FLAG_FORCE_ALIGN:
- *
- * Force alignment of the firmware file.
- */
-#define FU_NVME_DEVICE_FLAG_FORCE_ALIGN (1 << 0)
-
-/**
- * FU_NVME_DEVICE_FLAG_COMMIT_CA3:
- *
- * Replace, and activate immediately rather than on next reset.
- */
-#define FU_NVME_DEVICE_FLAG_COMMIT_CA3 (1 << 1)
-
 G_DEFINE_TYPE(FuNvmeDevice, fu_nvme_device, FU_TYPE_UDEV_DEVICE)
 
 #define FU_NVME_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
@@ -314,7 +300,7 @@ fu_nvme_device_probe(FuDevice *device, GError **error)
 
 	/* most devices need at least a warm reset, but some quirked drives
 	 * need a full "cold" shutdown and startup */
-	if (!fu_device_has_private_flag(device, FU_NVME_DEVICE_FLAG_COMMIT_CA3) &&
+	if (!fu_device_has_private_flag(device, "commit-ca3") &&
 	    !fu_device_has_flag(self, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 
@@ -380,7 +366,7 @@ fu_nvme_device_write_firmware(FuDevice *device,
 
 	/* some vendors provide firmware files whose sizes are not multiples
 	 * of blksz *and* the device won't accept blocks of different sizes */
-	if (fu_device_has_private_flag(device, FU_NVME_DEVICE_FLAG_FORCE_ALIGN)) {
+	if (fu_device_has_private_flag(device, "force-align")) {
 		fw2 = fu_bytes_align(fw, block_size, 0xff);
 	} else {
 		fw2 = g_bytes_ref(fw);
@@ -410,7 +396,7 @@ fu_nvme_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* commit */
-	if (fu_device_has_private_flag(device, FU_NVME_DEVICE_FLAG_COMMIT_CA3))
+	if (fu_device_has_private_flag(device, "commit-ca3"))
 		commit_action = FU_NVME_COMMIT_ACTION_CA3;
 	if (!fu_nvme_device_fw_commit(self,
 				      0x00, /* let controller choose */
@@ -469,10 +455,8 @@ fu_nvme_device_init(FuNvmeDevice *self)
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_NVME_DEVICE_FLAG_FORCE_ALIGN,
 					"force-align");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_NVME_DEVICE_FLAG_COMMIT_CA3,
 					"commit-ca3");
 }
 

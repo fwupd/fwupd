@@ -60,20 +60,6 @@
 #define REG_CHIP_ID	     0x507
 #define REG_FIRMWARE_VERSION 0x50A
 
-/**
- * FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID:
- *
- * Ignore board ID firmware mismatch.
- */
-#define FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID (1 << 0)
-
-/**
- * FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED:
- *
- * The device must be restarted manually after the update has completed.
- */
-#define FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED (1 << 1)
-
 struct _FuSynapticsMstDevice {
 	FuDpauxDevice parent_instance;
 	gchar *device_kind;
@@ -119,10 +105,8 @@ fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "video-display");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID,
 					"ignore-board-id");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED,
 					"manual-restart-required");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
@@ -1367,7 +1351,7 @@ fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0 &&
-	    !fu_device_has_private_flag(device, FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID)) {
+	    !fu_device_has_private_flag(device, "ignore-board-id")) {
 		guint16 board_id =
 		    fu_synaptics_mst_firmware_get_board_id(FU_SYNAPTICS_MST_FIRMWARE(firmware));
 		if (board_id != self->board_id) {
@@ -1387,8 +1371,7 @@ static gboolean
 fu_synaptics_mst_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	/* some devices do not use a GPIO to reset the chip */
-	if (fu_device_has_private_flag(device,
-				       FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED)) {
+	if (fu_device_has_private_flag(device, "manual-restart-required")) {
 		g_autoptr(FwupdRequest) request = fwupd_request_new();
 		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 		fwupd_request_set_id(request, FWUPD_REQUEST_ID_REPLUG_POWER);
@@ -1729,8 +1712,7 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	fu_device_add_instance_id(FU_DEVICE(self), guid0);
 
 	/* requires user to do something */
-	if (fu_device_has_private_flag(device,
-				       FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED)) {
+	if (fu_device_has_private_flag(device, "manual-restart-required")) {
 		fu_device_set_remove_delay(device, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 	}
 

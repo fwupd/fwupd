@@ -165,7 +165,7 @@ fu_wacom_aes_device_attach(FuDevice *device, FuProgress *progress, GError **erro
 	}
 
 	/* does the device have to replug to bootloader mode */
-	if (fu_device_has_private_flag(device, FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG)) {
+	if (fu_device_has_private_flag(device, "requires-wait-for-replug")) {
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	} else {
 		/* wait for device back to runtime mode */

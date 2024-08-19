@@ -130,7 +130,7 @@ fu_logitech_hidpp_bootloader_texas_write_firmware(FuDevice *device,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED)) {
+	if (fu_device_has_private_flag(device, "is-signed")) {
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 3, NULL);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 1, "clear");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 18, NULL);

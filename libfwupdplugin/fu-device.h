@@ -896,14 +896,13 @@ fu_device_report_metadata_post(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_add_security_attrs(FuDevice *self, FuSecurityAttrs *attrs) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_register_private_flag(FuDevice *self, guint64 value, const gchar *value_str)
-    G_GNUC_NON_NULL(1, 3);
+fu_device_register_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_private_flag(FuDevice *self, guint64 flag) G_GNUC_NON_NULL(1);
+fu_device_add_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_remove_private_flag(FuDevice *self, guint64 flag) G_GNUC_NON_NULL(1);
+fu_device_remove_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_device_has_private_flag(FuDevice *self, guint64 flag) G_GNUC_NON_NULL(1);
+fu_device_has_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progress, GError **error)
     G_GNUC_NON_NULL(1, 2);

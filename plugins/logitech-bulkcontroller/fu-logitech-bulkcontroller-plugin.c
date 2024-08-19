@@ -53,8 +53,7 @@ fu_logitech_bulkcontroller_plugin_device_created(FuPlugin *plugin, FuDevice *dev
 {
 	FuLogitechBulkcontrollerPlugin *self = FU_LOGITECH_BULKCONTROLLER_PLUGIN(plugin);
 	if (self->post_install) {
-		fu_device_add_private_flag(device,
-					   FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL);
+		fu_device_add_private_flag(device, "post-install");
 		self->post_install = FALSE;
 	}
 	return TRUE;

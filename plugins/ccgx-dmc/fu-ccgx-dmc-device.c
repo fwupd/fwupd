@@ -35,13 +35,6 @@ struct _FuCcgxDmcDevice {
 	guint8 custom_meta_flag;
 };
 
-/**
- * FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG:
- *
- * Needs a manual replug from the end-user.
- */
-#define FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG (1 << 0)
-
 G_DEFINE_TYPE(FuCcgxDmcDevice, fu_ccgx_dmc_device, FU_TYPE_USB_DEVICE)
 
 static gboolean
@@ -683,8 +676,7 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
 	gboolean manual_replug;
 
-	manual_replug =
-	    fu_device_has_private_flag(device, FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG);
+	manual_replug = fu_device_has_private_flag(device, "has-manual-replug");
 
 	/* device action required */
 	if (self->update_model == FU_CCGX_DMC_UPDATE_MODEL_DOWNLOAD_TRIGGER) {
@@ -778,7 +770,7 @@ fu_ccgx_dmc_device_setup(FuDevice *device, GError **error)
 	else
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 
-	if (fu_device_has_private_flag(device, FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG)) {
+	if (fu_device_has_private_flag(device, "has-manual-replug")) {
 		fu_device_add_request_flag(FU_DEVICE(self),
 					   FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	}
@@ -836,7 +828,6 @@ fu_ccgx_dmc_device_init(FuCcgxDmcDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG,
 					"has-manual-replug");
 }
 

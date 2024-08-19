@@ -32,7 +32,7 @@ struct FuPluginData {
 	FuMmDevice *shadow_device;
 
 	/*
-	 * Used to mark whether FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT is being used
+	 * Used to mark whether "uninhibit-modemmanager-after-fastboot-reboot" is being used
 	 */
 	gboolean device_ready_uninhibit_manager;
 };
@@ -243,8 +243,7 @@ fu_mm_plugin_inhibit_device(FuPlugin *plugin, FuDevice *device, GError **error)
 	self->shadow_device = g_steal_pointer(&shadow_device);
 
 	/* uninhibit when device re creation is detected */
-	if (fu_device_has_private_flag(device,
-				       FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT)) {
+	if (fu_device_has_private_flag(device, "uninhibit-modemmanager-after-fastboot-reboot")) {
 		self->device_ready_uninhibit_manager = TRUE;
 	} else {
 		self->device_ready_uninhibit_manager = FALSE;

@@ -145,7 +145,7 @@ fu_dell_dock_plugin_backend_device_added(FuPlugin *plugin,
 		return FALSE;
 
 	/* probe extend devices under Usb3.1 Gen 2 Hub */
-	if (fu_device_has_private_flag(FU_DEVICE(hub), FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE)) {
+	if (fu_device_has_private_flag(FU_DEVICE(hub), "has-bridge")) {
 		if (!fu_dell_dock_plugin_probe(plugin, FU_DEVICE(hub), error))
 			return FALSE;
 	}

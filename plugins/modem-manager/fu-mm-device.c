@@ -162,7 +162,7 @@ fu_mm_device_add_instance_id(FuDevice *dev, const gchar *device_id)
 		return;
 	}
 	if (g_pattern_match_simple("???\\VID_????&PID_????&REV_????&CARRIER_*", device_id)) {
-		if (!fu_device_has_private_flag(dev, FU_MM_DEVICE_FLAG_USE_BRANCH))
+		if (!fu_device_has_private_flag(dev, "use-branch"))
 			fu_device_add_instance_id(dev, device_id);
 		return;
 	}
@@ -452,7 +452,7 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 		fu_device_set_name(device, mm_modem_get_model(modem));
 
 	/* only for modems that opt-in */
-	if (fu_device_has_private_flag(device, FU_MM_DEVICE_FLAG_USE_BRANCH))
+	if (fu_device_has_private_flag(device, "use-branch"))
 		fu_device_set_branch(device, mm_modem_get_carrier_configuration(modem));
 
 	fu_device_set_version(device, version);
@@ -835,8 +835,7 @@ fu_mm_device_detach_fastboot(FuDevice *device, GError **error)
 					   error);
 
 	/* expect response for fastboot AT command */
-	if (fu_device_has_private_flag(FU_DEVICE(self),
-				       FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE)) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), "detach-at-fastboot-has-no-response")) {
 		has_response = FALSE;
 	}
 
@@ -1954,13 +1953,10 @@ fu_mm_device_init(FuMmDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "Mobile broadband device");
 	fu_device_add_icon(FU_DEVICE(self), "modem");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE,
 					"detach-at-fastboot-has-no-response");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT,
 					"uninhibit-modemmanager-after-fastboot-reboot");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_MM_DEVICE_FLAG_USE_BRANCH,
 					"use-branch");
 }
 

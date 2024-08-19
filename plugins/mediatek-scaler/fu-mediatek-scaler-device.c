@@ -36,13 +36,6 @@
 /* firmware payload size */
 #define FU_MEDIATEK_SCALER_FW_SIZE_MAX 0x100000
 
-/**
- * FU_MEDIATEK_SCALER_DEVICE_FLAG_PROBE_VCP:
- *
- * Device VCP should be probed.
- */
-#define FU_MEDIATEK_SCALER_DEVICE_FLAG_PROBE_VCP (1 << 0)
-
 struct _FuMediatekScalerDevice {
 	FuUdevDevice parent_instance;
 	FuUdevDevice *i2c_dev;
@@ -511,7 +504,7 @@ fu_mediatek_scaler_device_probe(FuDevice *device, GError **error)
 					      "PID",
 					      NULL))
 		return FALSE;
-	if (!fu_device_has_private_flag(device, FU_MEDIATEK_SCALER_DEVICE_FLAG_PROBE_VCP)) {
+	if (!fu_device_has_private_flag(device, "probe-vcp")) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -986,7 +979,6 @@ fu_mediatek_scaler_device_init(FuMediatekScalerDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "video-display");
 	fu_device_set_firmware_size_max(FU_DEVICE(self), FU_MEDIATEK_SCALER_FW_SIZE_MAX);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_MEDIATEK_SCALER_DEVICE_FLAG_PROBE_VCP,
 					"probe-vcp");
 }
 

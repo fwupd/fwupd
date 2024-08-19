@@ -115,7 +115,7 @@ fu_wacom_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	}
 
 	/* does the device have to replug to bootloader mode */
-	if (fu_device_has_private_flag(device, FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG)) {
+	if (fu_device_has_private_flag(device, "requires-wait-for-replug")) {
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	} else {
 		fu_device_sleep(device, 300); /* ms */
@@ -330,9 +330,8 @@ fu_wacom_device_replace(FuDevice *device, FuDevice *donor)
 	g_return_if_fail(FU_IS_WACOM_DEVICE(donor));
 
 	/* copy private instance data */
-	if (fu_device_has_private_flag(donor, FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG)) {
-		fu_device_add_private_flag(device,
-					   FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG);
+	if (fu_device_has_private_flag(donor, "requires-wait-for-replug")) {
+		fu_device_add_private_flag(device, "requires-wait-for-replug");
 	}
 }
 
@@ -361,7 +360,6 @@ fu_wacom_device_init(FuWacomDevice *self)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_IHEX_FIRMWARE);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG,
 					"requires-wait-for-replug");
 }
 

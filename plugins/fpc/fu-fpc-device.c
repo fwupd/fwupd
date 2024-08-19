@@ -38,37 +38,6 @@
 
 #define FPC_FF2_BLK_SEC_LINK_LEN 100
 
-/**
- * FU_FPC_DEVICE_FLAG_MOH_DEVICE:
- *
- * Device is a moh device
- */
-#define FU_FPC_DEVICE_FLAG_MOH_DEVICE (1 << 0)
-
-/**
- * FU_FPC_DEVICE_FLAG_LEGACY_DFU:
- *
- * Device supports legacy dfu mode
- */
-
-#define FU_FPC_DEVICE_FLAG_LEGACY_DFU (1 << 1)
-
-/**
- * FU_FPC_DEVICE_FLAG_RTS_DEVICE:
- *
- * Device is a RTS device
- */
-
-#define FU_FPC_DEVICE_FLAG_RTS_DEVICE (1 << 2)
-
-/**
- * FU_FPC_DEVICE_FLAG_LENFY_DEVICE:
- *
- * Device is a LENFY MOH device
- */
-
-#define FU_FPC_DEVICE_FLAG_LENFY_DEVICE (1 << 3)
-
 struct _FuFpcDevice {
 	FuUsbDevice parent_instance;
 	guint32 max_block_size;
@@ -206,18 +175,18 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 	g_autofree guint8 *data = NULL;
 	guint32 cmd_id = FPC_CMD_GET_STATE;
 
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_RTS_DEVICE))
+	if (fu_device_has_private_flag(FU_DEVICE(self), "rts"))
 		endian_type = G_BIG_ENDIAN;
 
 	if (!fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		if (fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_MOH_DEVICE)) {
+		if (fu_device_has_private_flag(FU_DEVICE(self), "moh-device")) {
 			data_len = FPC_DEVICE_MOH_STATE_LEN;
 		} else {
 			data_len = FPC_DEVICE_MOC_STATE_LEN;
 		}
 
 		data = g_malloc0(data_len);
-		if (fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LENFY_DEVICE))
+		if (fu_device_has_private_flag(FU_DEVICE(self), "lenfy"))
 			cmd_id = FPC_CMD_GET_STATE_LENFY;
 		if (!fu_fpc_device_fw_cmd(self, cmd_id, data, data_len, TRUE, error))
 			return FALSE;
@@ -226,7 +195,7 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 			return FALSE;
 
 	} else {
-		if (!fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LEGACY_DFU)) {
+		if (!fu_device_has_private_flag(FU_DEVICE(self), "legacy-dfu")) {
 			if (!fu_fpc_device_dfu_cmd(self,
 						   FPC_CMD_DFU_CLRSTATUS,
 						   0x0000,
@@ -298,7 +267,7 @@ fu_fpc_device_check_dfu_status_cb(FuDevice *device, gpointer user_data, GError *
 	}
 
 	if (fu_struct_fpc_dfu_get_max_payload_size(dfu_status) > 0 ||
-	    fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_RTS_DEVICE))
+	    fu_device_has_private_flag(FU_DEVICE(self), "rts"))
 		self->max_block_size = FPC_FLASH_BLOCK_SIZE_4096;
 	else
 		self->max_block_size = FPC_FLASH_BLOCK_SIZE_DEFAULT;
@@ -309,7 +278,7 @@ fu_fpc_device_check_dfu_status_cb(FuDevice *device, gpointer user_data, GError *
 static gboolean
 fu_fpc_device_update_init(FuFpcDevice *self, GError **error)
 {
-	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LEGACY_DFU)) {
+	if (!fu_device_has_private_flag(FU_DEVICE(self), "legacy-dfu")) {
 		if (!fu_fpc_device_dfu_cmd(self,
 					   FPC_CMD_DFU_CLRSTATUS,
 					   0x0000,
@@ -336,22 +305,19 @@ fu_fpc_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuFpcDevice *self = FU_FPC_DEVICE(device);
 
 	fwupd_codec_string_append_hex(str, idt, "MaxBlockSize", self->max_block_size);
-	fwupd_codec_string_append_bool(
-	    str,
-	    idt,
-	    "LegacyDfu",
-	    fu_device_has_private_flag(device, FU_FPC_DEVICE_FLAG_LEGACY_DFU));
-	fwupd_codec_string_append_bool(
-	    str,
-	    idt,
-	    "MocDevice",
-	    !fu_device_has_private_flag(device, FU_FPC_DEVICE_FLAG_MOH_DEVICE));
-	if (fu_device_has_private_flag(device, FU_FPC_DEVICE_FLAG_MOH_DEVICE)) {
-		fwupd_codec_string_append_bool(
-		    str,
-		    idt,
-		    "RtsDevice",
-		    fu_device_has_private_flag(device, FU_FPC_DEVICE_FLAG_RTS_DEVICE));
+	fwupd_codec_string_append_bool(str,
+				       idt,
+				       "LegacyDfu",
+				       fu_device_has_private_flag(device, "legacy-dfu"));
+	fwupd_codec_string_append_bool(str,
+				       idt,
+				       "MocDevice",
+				       !fu_device_has_private_flag(device, "moh-device"));
+	if (fu_device_has_private_flag(device, "moh-device")) {
+		fwupd_codec_string_append_bool(str,
+					       idt,
+					       "RtsDevice",
+					       fu_device_has_private_flag(device, "rts"));
 	}
 }
 
@@ -646,7 +612,7 @@ fu_fpc_device_write_firmware(FuDevice *device,
 						(gsize)fu_chunk_array_length(chunks));
 	}
 
-	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LEGACY_DFU)) {
+	if (!fu_device_has_private_flag(FU_DEVICE(self), "legacy-dfu")) {
 		/* exit fw download loop. send null package */
 		if (!fu_fpc_device_dfu_cmd(self,
 					   FPC_CMD_DFU_DNLOAD,
@@ -707,13 +673,11 @@ fu_fpc_device_init(FuFpcDevice *self)
 	fu_device_set_firmware_size_max(FU_DEVICE(self), 0x64000);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), FPC_USB_INTERFACE);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_FPC_DEVICE_FLAG_MOH_DEVICE,
 					"moh-device");
-	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_RTS_DEVICE, "rts");
+	fu_device_register_private_flag(FU_DEVICE(self), "rts");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_FPC_DEVICE_FLAG_LEGACY_DFU,
 					"legacy-dfu");
-	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LENFY_DEVICE, "lenfy");
+	fu_device_register_private_flag(FU_DEVICE(self), "lenfy");
 }
 
 static void

@@ -1274,8 +1274,7 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* check if the device supports a 16kb transfer buffer */
-	if (fu_device_has_private_flag(device,
-				       FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_CHECK_BUFFER_SIZE)) {
+	if (fu_device_has_private_flag(device, "check-buffer-size")) {
 		if (!fu_logitech_bulkcontroller_device_check_buffer_size(self, error)) {
 			g_prefix_error(error, "failed to check buffer size: ");
 			return FALSE;
@@ -1289,11 +1288,9 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* the hardware is unable to handle requests -- firmware issue */
-	if (fu_device_has_private_flag(device,
-				       FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL)) {
+	if (fu_device_has_private_flag(device, "post-install")) {
 		fu_device_sleep(device, POST_INSTALL_SLEEP_DURATION);
-		fu_device_remove_private_flag(device,
-					      FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL);
+		fu_device_remove_private_flag(device, "post-install");
 	}
 
 	/* set device time */
@@ -1336,10 +1333,8 @@ fu_logitech_bulkcontroller_device_init(FuLogitechBulkcontrollerDevice *self)
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10 * 60 * 1000); /* >1 min to finish init */
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_CHECK_BUFFER_SIZE,
 					"check-buffer-size");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL,
 					"post-install");
 
 	/* these are unrecoverable */

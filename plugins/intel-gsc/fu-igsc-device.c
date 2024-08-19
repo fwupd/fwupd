@@ -22,9 +22,6 @@ struct _FuIgscDevice {
 	gboolean oprom_code_devid_enforcement;
 };
 
-#define FU_IGSC_DEVICE_FLAG_HAS_AUX   (1 << 0)
-#define FU_IGSC_DEVICE_FLAG_HAS_OPROM (1 << 1)
-
 #define FU_IGSC_DEVICE_POWER_WRITE_TIMEOUT 1500	  /* ms */
 #define FU_IGSC_DEVICE_MEI_WRITE_TIMEOUT   60000  /* 60 sec */
 #define FU_IGSC_DEVICE_MEI_READ_TIMEOUT	   480000 /* 480 sec */
@@ -406,11 +403,11 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* some devices have children */
-	if (fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_HAS_AUX)) {
+	if (fu_device_has_private_flag(device, "has-aux")) {
 		g_autoptr(FuIgscAuxDevice) device_child = fu_igsc_aux_device_new(ctx);
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(device_child));
 	}
-	if (fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_HAS_OPROM)) {
+	if (fu_device_has_private_flag(device, "has-oprom")) {
 		g_autoptr(FuIgscOpromDevice) device_code = NULL;
 		g_autoptr(FuIgscOpromDevice) device_data = NULL;
 		device_code = fu_igsc_oprom_device_new(ctx, GSC_FWU_HECI_PAYLOAD_TYPE_OPROM_CODE);
@@ -817,9 +814,8 @@ fu_igsc_device_init(FuIgscDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "gpu");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_remove_delay(FU_DEVICE(self), 60000);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_AUX, "has-aux");
+	fu_device_register_private_flag(FU_DEVICE(self), "has-aux");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_IGSC_DEVICE_FLAG_HAS_OPROM,
 					"has-oprom");
 }
 

@@ -26,8 +26,7 @@ fu_uefi_nvram_device_get_results(FuDevice *device, GError **error)
 
 	/* check if something rudely removed our BOOTXXXX entry */
 	if (!fu_uefi_bootmgr_verify_fwupd(efivars, &error_local)) {
-		if (fu_device_has_private_flag(device,
-					       FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK)) {
+		if (fu_device_has_private_flag(device, "supports-boot-order-lock")) {
 			g_prefix_error(&error_local,
 				       "boot entry missing; "
 				       "perhaps 'Boot Order Lock' enabled in the BIOS: ");
@@ -112,15 +111,15 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* update the firmware before the bootloader runs */
-	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB))
+	if (fu_device_has_private_flag(device, "use-shim-for-sb"))
 		bootmgr_flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB;
-	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE))
+	if (fu_device_has_private_flag(device, "use-shim-unique"))
 		bootmgr_flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE;
-	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER))
+	if (fu_device_has_private_flag(device, "modify-bootorder"))
 		bootmgr_flags |= FU_UEFI_BOOTMGR_FLAG_MODIFY_BOOTORDER;
 
 	/* some legacy devices use the old name to deduplicate boot entries */
-	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC))
+	if (fu_device_has_private_flag(device, "use-legacy-bootmgr-desc"))
 		bootmgr_desc = "Linux-Firmware-Updater";
 	if (!fu_uefi_bootmgr_bootnext(efivars, esp, bootmgr_desc, bootmgr_flags, error))
 		return FALSE;

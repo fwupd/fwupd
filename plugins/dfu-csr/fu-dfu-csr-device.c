@@ -14,16 +14,6 @@
 #include "fu-dfu-csr-struct.h"
 #include "fu-dfu-struct.h"
 
-/**
- * FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY:
- *
- * Respect the write timeout value when performing actions. This is sometimes
- * set to a huge amount of time, and so is not used by default.
- *
- * Since: 1.0.3
- */
-#define FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY (1 << 0)
-
 struct _FuDfuCsrDevice {
 	FuHidDevice parent_instance;
 	FuDfuState dfu_state;
@@ -241,7 +231,7 @@ fu_dfu_csr_device_download_chunk(FuDfuCsrDevice *self, guint16 idx, GBytes *chun
 	}
 
 	/* wait for hardware */
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY)) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), "require-delay")) {
 		g_debug("sleeping for %ums", self->dnload_timeout);
 		fu_device_sleep(FU_DEVICE(self), self->dnload_timeout);
 	}
@@ -373,7 +363,6 @@ fu_dfu_csr_device_init(FuDfuCsrDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_DFU_FIRMWARE);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY,
 					"require-delay");
 }
 

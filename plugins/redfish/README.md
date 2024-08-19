@@ -57,6 +57,13 @@ default 0ms.
 
 Since: 1.8.0
 
+### Flags=wildcard-targets
+
+Do not specify the `odata.id` in the multipart update Targets array and allow the BMC to deploy the
+firmware onto all compatible hardware.
+
+To use this option the payload must contain metadata that restricts it to a specific SoftwareId.
+
 ### Flags=no-manager-reset-request
 
 The BMC device will auto-reboot and so fwupd should not explicitly call

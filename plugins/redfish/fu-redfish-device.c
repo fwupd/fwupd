@@ -260,7 +260,7 @@ fu_redfish_device_set_version_lenovo(FuRedfishDevice *self, const gchar *version
 
 	/* odd numbered builds are unsigned */
 	if (priv->milestone % 2 != 0) {
-		fu_device_add_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD);
+		fu_device_add_private_flag(FU_DEVICE(self), "unsigned-build");
 	}
 
 	/* build is only one letter from A -> Z */
@@ -472,7 +472,7 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 	if (fwupd_guid_is_valid(guid_lower)) {
 		fu_device_add_guid(dev, guid_lower);
 	} else {
-		if (fu_device_has_private_flag(dev, FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD))
+		if (fu_device_has_private_flag(dev, "unsigned-build"))
 			fu_device_add_instance_str(dev, "TYPE", "UNSIGNED");
 
 		fu_device_build_instance_id(dev,
@@ -509,7 +509,7 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 		if (json_object_get_boolean_member(member, "Updateable"))
 			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	}
-	if (fu_device_has_private_flag(dev, FU_REDFISH_DEVICE_FLAG_IS_BACKUP))
+	if (fu_device_has_private_flag(dev, "is-backup"))
 		fu_device_inhibit(dev, "is-backup", "Is a backup partition");
 	else
 		fu_device_uninhibit(dev, "is-backup");
@@ -872,19 +872,14 @@ fu_redfish_device_init(FuRedfishDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_REDFISH_DEVICE_FLAG_IS_BACKUP,
 					"is-backup");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD,
 					"unsigned-build");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS,
 					"wildcard-targets");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_REDFISH_DEVICE_FLAG_MANAGER_RESET,
 					"manager-reset");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST,
 					"no-manager-reset-request");
 }
 

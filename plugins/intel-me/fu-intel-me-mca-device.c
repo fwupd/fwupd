@@ -105,7 +105,7 @@ fu_intel_me_mca_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *att
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return;
 	}
-	if (fu_device_has_private_flag(device, FU_INTEL_ME_HECI_DEVICE_FLAG_LEAKED_KM)) {
+	if (fu_device_has_private_flag(device, "leaked-km")) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}

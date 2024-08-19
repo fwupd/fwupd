@@ -12,18 +12,6 @@
 #include "fu-flashrom-cmos.h"
 #include "fu-flashrom-device.h"
 
-/*
- * Flag to determine if the CMOS checksum should be reset after the flash
- * is reprogrammed.  This will force the CMOS defaults to be reloaded on
- * the next boot.
- */
-#define FU_FLASHROM_DEVICE_FLAG_RESET_CMOS (1 << 0)
-
-/*
- * Flag to determine if manual ME unlocking by pressing Fn + M is supported.
- */
-#define FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK (1 << 1)
-
 struct _FuFlashromDevice {
 	FuUdevDevice parent_instance;
 	FuIfdRegion region;
@@ -234,7 +222,7 @@ fu_flashrom_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* Check if CMOS needs a reset */
-	if (fu_device_has_private_flag(device, FU_FLASHROM_DEVICE_FLAG_RESET_CMOS)) {
+	if (fu_device_has_private_flag(device, "reset-cmos")) {
 		g_debug("attempting CMOS reset");
 		if (!fu_flashrom_cmos_reset(error)) {
 			g_prefix_error(error, "failed CMOS reset: ");
@@ -273,11 +261,11 @@ fu_flashrom_device_init(FuFlashromDevice *self)
 	fu_device_set_physical_id(FU_DEVICE(self), "flashrom");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
+	/* if the CMOS checksum should be reset after the flash */
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_FLASHROM_DEVICE_FLAG_RESET_CMOS,
 					"reset-cmos");
+	/* if manual ME unlocking by pressing Fn + M is supported */
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK,
 					"fn-m-me-unlock");
 }
 
@@ -393,7 +381,7 @@ gboolean
 fu_flashrom_device_unlock(FuFlashromDevice *self, GError **error)
 {
 	if (self->region == FU_IFD_REGION_ME &&
-	    fu_device_has_private_flag(FU_DEVICE(self), FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK)) {
+	    fu_device_has_private_flag(FU_DEVICE(self), "fn-m-me-unlock")) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
