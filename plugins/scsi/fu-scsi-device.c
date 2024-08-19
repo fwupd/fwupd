@@ -47,7 +47,6 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 {
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
 	g_autofree gchar *attr_removable = NULL;
-	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(FuDevice) ufshci_parent = NULL;
 	const gchar *subsystem_parents[] = {"pci", "platform", NULL};
 
@@ -60,18 +59,6 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 			    fu_udev_device_get_devtype(FU_UDEV_DEVICE(self)));
 		return FALSE;
 	}
-
-	/* vendor sanity */
-	if (g_strcmp0(fu_device_get_vendor(device), "ATA") == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no assigned vendor");
-		return FALSE;
-	}
-
-	vendor_id = g_strdup_printf("SCSI:%s", fu_device_get_vendor(device));
-	fu_device_add_vendor_id(device, vendor_id);
 
 	/* the ufshci controller could really be on any bus... search in order of priority */
 	for (guint i = 0; subsystem_parents[i] != NULL && ufshci_parent == NULL; i++) {
@@ -227,6 +214,7 @@ fu_scsi_device_setup(FuDevice *device, GError **error)
 	};
 	g_autofree gchar *model = NULL;
 	g_autofree gchar *revision = NULL;
+	g_autofree gchar *vendor_id = NULL;
 	g_autofree gchar *vendor = NULL;
 
 	/* prepare chunk */
@@ -268,6 +256,17 @@ fu_scsi_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_device_build_instance_id(device, error, "SCSI", "VEN", "DEV", "REV", NULL))
 		return FALSE;
+
+	/* vendor sanity */
+	if (g_strcmp0(fu_device_get_vendor(device), "ATA") == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no assigned vendor");
+		return FALSE;
+	}
+	vendor_id = g_strdup_printf("SCSI:%s", fu_device_get_vendor(device));
+	fu_device_add_vendor_id(device, vendor_id);
 
 	/* success */
 	return TRUE;
