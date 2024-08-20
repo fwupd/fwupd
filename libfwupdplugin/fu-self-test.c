@@ -2228,7 +2228,7 @@ fu_backend_emulate_func(void)
 	/* parse */
 	ret = fwupd_codec_from_json_string(FWUPD_CODEC(backend), json1, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_cmpint(added_cnt, ==, 1);
 	g_assert_cmpint(removed_cnt, ==, 0);
 	g_assert_cmpint(changed_cnt, ==, 0);
@@ -2254,7 +2254,7 @@ fu_backend_emulate_func(void)
 				   FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				   &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* in-order, repeat */
 	buf[0] = 0x00;
@@ -2268,7 +2268,7 @@ fu_backend_emulate_func(void)
 				   FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				   &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* out-of-order */
 	buf[0] = 0x00;
@@ -2282,12 +2282,12 @@ fu_backend_emulate_func(void)
 				   FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				   &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* load the same data */
 	ret = fwupd_codec_from_json_string(FWUPD_CODEC(backend), json1, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_cmpint(added_cnt, ==, 1);
 	g_assert_cmpint(removed_cnt, ==, 0);
 	g_assert_cmpint(changed_cnt, ==, 1);
@@ -2299,7 +2299,7 @@ fu_backend_emulate_func(void)
 	/* load a different device */
 	ret = fwupd_codec_from_json_string(FWUPD_CODEC(backend), json2, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_cmpint(added_cnt, ==, 2);
 	g_assert_cmpint(changed_cnt, ==, 1);
 	g_assert_cmpint(removed_cnt, ==, 1);

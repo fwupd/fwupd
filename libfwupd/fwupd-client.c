@@ -184,7 +184,7 @@ fwupd_client_context_idle_cb(gpointer user_data)
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GMutexLocker) locker = g_mutex_locker_new(&priv->idle_mutex);
 
-	g_assert(locker != NULL);
+	g_return_val_if_fail(locker != NULL, FALSE);
 
 	for (guint i = 0; i < priv->idle_sources->len; i++) {
 		FwupdClientContextHelper *helper = g_ptr_array_index(priv->idle_sources, i);
@@ -212,7 +212,7 @@ fwupd_client_context_helper(FwupdClient *self, FwupdClientContextHelper *helper)
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GMutexLocker) locker = g_mutex_locker_new(&priv->idle_mutex);
 
-	g_assert(locker != NULL);
+	g_return_if_fail(locker != NULL);
 
 	/* no source already attached to the context */
 	if (priv->idle_id == 0) {
@@ -989,7 +989,7 @@ fwupd_client_connect_async(FwupdClient *self,
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
 
-	g_assert(locker != NULL);
+	g_return_if_fail(locker != NULL);
 
 	/* nothing to do */
 	if (priv->proxy != NULL) {
@@ -1080,7 +1080,7 @@ fwupd_client_disconnect(FwupdClient *self, GError **error)
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	g_assert(locker != NULL);
+	g_return_val_if_fail(locker != NULL, FALSE);
 
 	/* sanity check */
 	if (priv->proxy == NULL) {

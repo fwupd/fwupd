@@ -53,6 +53,7 @@ def test_files() -> int:
                     "g_usb_device_set_interface_alt(": "Use fu_usb_device_set_interface_alt() instead",
                     "g_ascii_strtoull(": "Use fu_strtoull() instead",
                     "g_ascii_strtoll(": "Use fu_strtoll() instead",
+                    "g_assert(": "Use g_set_error() or g_return_val_if_fail() instead",
                 }.items():
                     if line.find(token) != -1:
                         print(
