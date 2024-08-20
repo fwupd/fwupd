@@ -17,45 +17,11 @@ struct _FuRedfishDeviceClass {
 	FuDeviceClass parent_class;
 };
 
-/**
- * FU_REDFISH_DEVICE_FLAG_IS_BACKUP:
- *
- * The device is the other half of a dual image firmware.
- */
-#define FU_REDFISH_DEVICE_FLAG_IS_BACKUP (1 << 0)
-
-/**
- * FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD:
- *
- * Use unsigned development builds.
- */
-#define FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD (1 << 1)
-
-/**
- * FU_REDFISH_DEVICE_FLAG_MANAGER_RESET:
- *
- * Reset the manager (typically the BMC) after updating this device.
- */
-#define FU_REDFISH_DEVICE_FLAG_MANAGER_RESET (1 << 2)
-
-/**
- * FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS:
- *
- * Do not specify the `odata.id` in the multipart update Targets array and allow
- * the BMC to deploy the firmware onto all compatible hardware.
- *
- * To use this option the payload must contain metadata that restricts it to a
- * specific SoftwareId.
- */
-#define FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS (1 << 3)
-
-/**
- * FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST:
- *
- * The BMC device will auto-reboot and so fwupd should not explicitly call
- * `/redfish/v1/Managers/1/Actions/Manager.Reset`.
- */
-#define FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST (1 << 4)
+#define FU_REDFISH_DEVICE_FLAG_IS_BACKUP		"is-backup"
+#define FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD		"unsigned-build"
+#define FU_REDFISH_DEVICE_FLAG_MANAGER_RESET		"manager-reset"
+#define FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS		"wildcard-targets"
+#define FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST "no-manager-reset-request"
 
 FuRedfishBackend *
 fu_redfish_device_get_backend(FuRedfishDevice *self);

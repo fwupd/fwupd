@@ -90,6 +90,10 @@ Set the parent composite version, as a 32 bit integer.
 
 Since: 1.8.11
 
+### Flags=has-manual-replug
+
+Needs a manual replug from the end-user.
+
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.

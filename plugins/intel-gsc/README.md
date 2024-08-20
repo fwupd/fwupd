@@ -30,6 +30,18 @@ They also define custom per-part PCI IDs such as:
 * `MEI\VID_8086&DEV_4905&PART_OPROMCODE`
 * `MEI\VID_8086&DEV_4905&PART_OPROMDATA`
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### `Flags=has-aux`
+
+Has an AUX child device.
+
+### `Flags=has-oprom`
+
+Has an option ROM child device.
+
 ## Vendor ID Security
 
 The vendor ID is set from the PCI vendor, in this instance set to `MEI:0x8086`

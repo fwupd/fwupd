@@ -110,6 +110,12 @@ Set the image kind from one of:
 
 Since: 1.4.0
 
+### Flags=device-is-in-restart
+
+Device is in restart and should not be closed manually.
+
+Since: 1.7.0
+
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.

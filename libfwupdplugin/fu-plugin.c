@@ -1696,7 +1696,7 @@ fu_plugin_backend_device_added(FuPlugin *self,
 		g_autoptr(FuDevice) proxy_tmp =
 		    g_object_new(proxy_gtype, "context", priv->ctx, NULL);
 		fu_device_incorporate(proxy_tmp, device);
-		fu_device_add_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY);
+		fu_device_add_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 		fu_device_set_proxy(dev, proxy_tmp);
 	}
 
@@ -1707,7 +1707,7 @@ fu_plugin_backend_device_added(FuPlugin *self,
 
 	/* there are a lot of different devices that match, but not all respond
 	 * well to opening -- so limit some ones with issued updates */
-	if (fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED)) {
+	if (fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_ONLY_SUPPORTED)) {
 		if (!fu_device_probe(dev, error))
 			return FALSE;
 		fu_device_convert_instance_ids(dev);

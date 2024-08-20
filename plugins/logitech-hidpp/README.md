@@ -124,22 +124,51 @@ device of the actual device and is handled by FuLogitechHidppRadio
 (fu-logitech-hidpp-radio.c), which simply defers to the parent device
 for most operations.
 
-### Plugin-specific flags
+### Quirk Use
 
 Even though the same code handles multiple different devices, there are
 some inherent differences in them that makes it necessary to handle some
 exceptional behaviors sometimes.
 
-In order to do that there are a few specific flags that can be used to
-tweak the plugin code for certain device types:
+This plugin uses the following plugin-specific quirks:
 
-* rebind-attach: some devices will have their device file unbound and
-    re-bound after reset, so the device object can't be simply re-probed
-    using the same file descriptor.
-* force-receiver-id: this flag is used to differentiate the receiver device in
-    FuLogitechHidppDevice, since the receiver has a specific HID++ ID.
-* ble: used to differentiate devices in BLE mode. They require all the
-    reports to be _long_.
+### `Flags=rebind-attach`
+
+Some devices will have their device file unbound and re-bound after reset, so the device object
+can't be simply re-probed using the same file descriptor.
+
+Since: 1.7.0
+
+### `Flags=force-receiver-id`
+
+Used to differentiate the receiver device in FuLogitechHidppDevice, since the receiver has a
+specific HID++ ID.
+
+Since: 1.7.0
+
+### `Flags=ble`
+
+Differentiate devices in BLE mode. They require all the reports to be _long_.
+
+Since: 1.7.0
+
+### `Flags=is-signed`
+
+Device requires signed firmware.
+
+Since: 1.7.0
+
+### `Flags=no-request-required`
+
+No user-action is required for detach and attach.
+
+Since: 1.7.0
+
+### `Flags=add-radio`
+
+The device should add a softdevice (index 0x5), typically a radio.
+
+Since: 1.7.0
 
 ## External Interface Access
 

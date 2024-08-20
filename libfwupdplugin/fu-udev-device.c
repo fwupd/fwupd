@@ -662,7 +662,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		    g_strdup_printf("%04X%04X", priv->subsystem_vendor, priv->subsystem_model);
 		fu_device_add_instance_str(device, "SUBSYS", subsys);
 	}
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV) &&
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV) &&
 	    priv->revision != 0xFF) {
 		fu_device_add_instance_u8(device, "REV", priv->revision);
 	}
@@ -683,8 +683,8 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 						 "VEN",
 						 "DEV",
 						 NULL);
-		if (fu_device_has_internal_flag(device,
-						FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV)) {
+		if (fu_device_has_private_flag(device,
+					       FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
 			fu_device_build_instance_id_full(device,
 							 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 							     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
@@ -706,8 +706,8 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 						 "DEV",
 						 "SUBSYS",
 						 NULL);
-		if (fu_device_has_internal_flag(device,
-						FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV)) {
+		if (fu_device_has_private_flag(device,
+					       FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
 			fu_device_build_instance_id_full(device,
 							 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 							     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
@@ -723,7 +723,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* set serial */
-	if (!fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER) &&
+	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER) &&
 	    fu_device_get_serial(device) == NULL) {
 		g_autofree gchar *prop_serial =
 		    fu_udev_device_read_property(self, "ID_SERIAL_SHORT", NULL);
@@ -1081,7 +1081,7 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
  * Gets the #GUdevDevice.
  *
  * NOTE: If a plugin calls this after the `->probe()` and `->setup()` phases then the
- * %FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE flag should be set on the device to avoid a warning.
+ * %FU_DEVICE_PRIVATE_FLAG_NO_PROBE_COMPLETE flag should be set on the device to avoid a warning.
  *
  * Returns: (transfer none): a #GUdevDevice, or %NULL
  *
@@ -1096,7 +1096,7 @@ fu_udev_device_get_dev(FuUdevDevice *self)
 	if (priv->udev_device == NULL && priv->udev_device_cleared) {
 		g_autofree gchar *str = fu_device_to_string(FU_DEVICE(self));
 		g_warning("GUdevDevice is not available post-probe, use "
-			  "FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE in %s plugin to opt-out: %s",
+			  "FU_DEVICE_PRIVATE_FLAG_NO_PROBE_COMPLETE in %s plugin to opt-out: %s",
 			  fu_device_get_plugin(FU_DEVICE(self)),
 			  str);
 	}

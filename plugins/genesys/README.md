@@ -51,17 +51,29 @@ The Public Key is product-specific and is required to identify the product.
 
 This plugin uses the following plugin-specific quirks:
 
-### has-mstar-scaler
+### `Flags=has-mstar-scaler`
 
 USB Hub has a MStar Semiconductor Scaler attached via I²C.
 
 Since 1.7.6.
 
-### has-public-key
+### `Flags=has-public-key`
 
 Device has a public-key appended to firmware.
 
 Since 1.8.0
+
+### `Flags=pause-r2-cpu`
+
+Pause R2 CPU.
+
+Since 1.7.6
+
+### `Flags=use-i2c-ch0`
+
+Use I2C ch0.
+
+Since 1.7.6
 
 ### GenesysUsbhubSwitchRequest
 

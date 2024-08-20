@@ -777,9 +777,7 @@ fu_elantp_i2c_device_init(FuElantpI2cDevice *self)
 	fu_device_set_vendor(FU_DEVICE(self), "ELAN Microelectronics");
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_ELANTP_I2C_DEVICE_ABSOLUTE,
-					"elantp-absolute");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_ELANTP_I2C_DEVICE_ABSOLUTE);
 }
 
 static void

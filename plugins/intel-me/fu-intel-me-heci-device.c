@@ -145,9 +145,7 @@ fu_intel_me_heci_device_init(FuIntelMeHeciDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_INTEL_ME_HECI_DEVICE_FLAG_LEAKED_KM,
-					"leaked-km");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_INTEL_ME_HECI_DEVICE_FLAG_LEAKED_KM);
 	g_signal_connect(FWUPD_DEVICE(self),
 			 "notify::private-flags",
 			 G_CALLBACK(fu_intel_me_heci_device_version_notify_cb),

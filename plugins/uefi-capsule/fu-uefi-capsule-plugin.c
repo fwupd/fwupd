@@ -554,7 +554,7 @@ fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 
 	/* enable the fwupd.efi debug log? */
 	if (fu_plugin_get_config_value_boolean(plugin, "EnableEfiDebugging"))
-		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING);
+		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_DEBUGGING);
 }
 
 
@@ -672,10 +672,9 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 	if (fu_context_has_hwid_flag(ctx, "no-ux-capsule"))
 		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE);
 	if (fu_context_has_hwid_flag(ctx, "no-lid-closed"))
-		fu_device_add_internal_flag(FU_DEVICE(dev), FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED);
+		fu_device_add_private_flag(FU_DEVICE(dev), FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED);
 	if (fu_context_has_hwid_flag(ctx, "display-required")) {
-		fu_device_add_internal_flag(FU_DEVICE(dev),
-					    FU_DEVICE_INTERNAL_FLAG_DISPLAY_REQUIRED);
+		fu_device_add_private_flag(FU_DEVICE(dev), FU_DEVICE_PRIVATE_FLAG_DISPLAY_REQUIRED);
 	}
 	if (fu_context_has_hwid_flag(ctx, "modify-bootorder"))
 		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER);
@@ -697,8 +696,8 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 		if (name != NULL)
 			fu_device_set_name(FU_DEVICE(dev), name);
 		if (device_kind != FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE) {
-			fu_device_add_internal_flag(FU_DEVICE(dev),
-						    FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY);
+			fu_device_add_private_flag(FU_DEVICE(dev),
+						   FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME_CATEGORY);
 		}
 	}
 	/* set fallback vendor if nothing else is set */

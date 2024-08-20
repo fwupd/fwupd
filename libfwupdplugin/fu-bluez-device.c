@@ -196,8 +196,8 @@ fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 					 "VID",
 					 "PID",
 					 NULL);
-	if (fu_device_has_internal_flag(FU_DEVICE(self),
-					FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV)) {
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
 		fu_device_build_instance_id_full(FU_DEVICE(self),
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 						     FU_DEVICE_INSTANCE_FLAG_VISIBLE |

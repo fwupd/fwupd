@@ -33,10 +33,16 @@ device will reset when the new firmware has been written.
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x1395`
 
-### Plugin-specific flags
+## Quirk Use
 
-* use-in-report-interrupt: some devices will support IN_REPORT that allow host communicate with
-  device over interrupt instead of control endpoint, since: 1.7.0
+This plugin uses the following plugin-specific quirks:
+
+### `Flags=use-in-report-interrupt`
+
+Some devices will support IN_REPORT that allow host communicate with device over interrupt instead
+of control endpoint.
+
+Since: 1.7.0
 
 ## External Interface Access
 

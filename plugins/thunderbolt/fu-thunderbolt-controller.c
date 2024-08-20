@@ -328,7 +328,7 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 		/* control the order of activation (less relevant; install too though) */
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST);
 	} else {
-		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	}
 	if (self->controller_kind == FU_THUNDERBOLT_CONTROLLER_KIND_HOST &&
 	    fu_device_has_private_flag(FU_DEVICE(self),
@@ -366,8 +366,7 @@ fu_thunderbolt_controller_init(FuThunderboltController *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION,
-					"force-enumeration");
+					FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION);
 }
 
 static void

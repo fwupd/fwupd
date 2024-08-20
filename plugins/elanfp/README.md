@@ -15,6 +15,14 @@ This plugin supports the following protocol ID:
 
 * `tw.com.emc.elanfp`
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### `Flags=usb-bulk-transfer`
+
+Use USB bulk transfer.
+
 ## GUID Generation
 
 These devices use the standard USB DeviceInstanceId values, e.g.

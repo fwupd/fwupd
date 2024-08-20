@@ -35,6 +35,12 @@ back to the runtime mode.
 For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
 the bootloader and runtime modes are treated as the same device.
 
+### `Flags=halfsize`
+
+Some devices have a compact memory layout and the application code starts earlier.
+
+Since: 1.0.3
+
 ## Vendor ID Security
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x273F`

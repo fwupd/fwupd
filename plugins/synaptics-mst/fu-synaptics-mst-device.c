@@ -60,19 +60,8 @@
 #define REG_CHIP_ID	     0x507
 #define REG_FIRMWARE_VERSION 0x50A
 
-/**
- * FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID:
- *
- * Ignore board ID firmware mismatch.
- */
-#define FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID (1 << 0)
-
-/**
- * FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED:
- *
- * The device must be restarted manually after the update has completed.
- */
-#define FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED (1 << 1)
+#define FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID	     "ignore-board-id"
+#define FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED "manual-restart-required"
 
 struct _FuSynapticsMstDevice {
 	FuDpauxDevice parent_instance;
@@ -119,13 +108,11 @@ fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "video-display");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID,
-					"ignore-board-id");
+					FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED,
-					"manual-restart-required");
+					FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_PROBE_COMPLETE);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 
 	/* this is set from ->incorporate() */
@@ -1800,7 +1787,7 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 
 	/* whitebox customers */
 	if ((self->board_id >> 8) == 0x0)
-		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
+		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES);
 
 	return TRUE;
 }

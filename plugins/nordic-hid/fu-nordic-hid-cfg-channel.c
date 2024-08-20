@@ -443,7 +443,7 @@ fu_nordic_hid_cfg_channel_check_children_update_pending_cb(FuDevice *device,
 
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *peer = g_ptr_array_index(children, i);
-		if (fu_device_has_internal_flag(peer, FU_DEVICE_INTERNAL_FLAG_UPDATE_PENDING)) {
+		if (fu_device_has_private_flag(peer, FU_DEVICE_PRIVATE_FLAG_UPDATE_PENDING)) {
 			update_pending = TRUE;
 			break;
 		}
@@ -477,13 +477,13 @@ fu_nordic_hid_cfg_channel_add_peer(FuNordicHidCfgChannel *self, guint8 peer_id)
 
 	/* if any of the peripherals have a pending update, inhibit the dongle */
 	g_signal_connect(FU_DEVICE(peer),
-			 "notify::internal-flags",
+			 "notify::private-flags",
 			 G_CALLBACK(fu_nordic_hid_cfg_channel_check_children_update_pending_cb),
 			 self);
 
 	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(peer));
 	/* prohibit to close parent's communication descriptor */
-	fu_device_add_internal_flag(FU_DEVICE(peer), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(peer), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
 }
 
 static void

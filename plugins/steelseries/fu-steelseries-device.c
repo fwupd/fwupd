@@ -161,9 +161,7 @@ fu_steelseries_device_to_string(FuDevice *device, guint idt, GString *str)
 static void
 fu_steelseries_device_init(FuSteelseriesDevice *self)
 {
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER,
-					"is-receiver");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER);
 }
 
 static void

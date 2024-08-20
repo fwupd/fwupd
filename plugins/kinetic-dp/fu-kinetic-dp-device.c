@@ -163,8 +163,8 @@ fu_kinetic_dp_device_ensure_customer(FuKineticDpDevice *self, GError **error)
 
 	/* Kinetic EV board */
 	if (priv->customer_id == 0x0) {
-		fu_device_add_internal_flag(FU_DEVICE(self),
-					    FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
+		fu_device_add_private_flag(FU_DEVICE(self),
+					   FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES);
 	}
 
 	/* success */

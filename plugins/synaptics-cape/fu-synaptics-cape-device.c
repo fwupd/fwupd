@@ -92,12 +92,7 @@ struct _FuSynapticsCapeDevice {
 	guint32 active_partition; /* active partition, either 1 or 2 */
 };
 
-/**
- * FU_SYNAPTICS_CAPE_DEVICE_FLAG_USE_IN_REPORT_INTERRUPT:
- *
- * gets HID REPORT via Interrupt instead of Control endpoint.
- */
-#define FU_SYNAPTICS_CAPE_DEVICE_FLAG_USE_IN_REPORT_INTERRUPT (1 << 0)
+#define FU_SYNAPTICS_CAPE_DEVICE_FLAG_USE_IN_REPORT_INTERRUPT "use-in-report-interrupt"
 
 G_DEFINE_TYPE(FuSynapticsCapeDevice, fu_synaptics_cape_device, FU_TYPE_HID_DEVICE)
 
@@ -862,8 +857,7 @@ fu_synaptics_cape_device_init(FuSynapticsCapeDevice *self)
 	fu_device_retry_set_delay(FU_DEVICE(self), 100); /* ms */
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SYNAPTICS_CAPE_DEVICE_FLAG_USE_IN_REPORT_INTERRUPT,
-					"use-in-report-interrupt");
+					FU_SYNAPTICS_CAPE_DEVICE_FLAG_USE_IN_REPORT_INTERRUPT);
 }
 
 static void
