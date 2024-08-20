@@ -27,6 +27,10 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 
 This plugin uses the following plugin-specific quirks:
 
+### `Flags=sensor-needs-reboot`
+
+Firmware updated for HDMI component, trigger composite device reboot.
+
 ## Update Behavior
 
 The peripheral firmware is deployed when the device is in normal runtime mode,

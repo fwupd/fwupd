@@ -131,10 +131,10 @@ Remember: Plugins should be upstream!
 * `fu_io_channel_new_file()`: Add some `FuIoChannelOpenFlag`, e.g. `FU_IO_CHANNEL_OPEN_FLAG_READ|FU_IO_CHANNEL_OPEN_FLAG_WRITE`
 * `fu_udev_device_set_flags()`: Use `fu_udev_device_add_flag()` instead
 * `fu_udev_device_get_slot_depth()`: Use `fu_udev_device_get_subsystem_depth()` instead
-* `fu_usb_device_is_open()`: Use `fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_IS_OPEN)` instead
+* `fu_usb_device_is_open()`: Use `fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_OPEN)` instead
 * `fu_udev_device_ioctl`: Add some `FuUdevDeviceIoctlFlags`, e.g. `FU_UDEV_DEVICE_IOCTL_FLAG_RETRY`
 * `fu_udev_device_write_sysfs()`: Add a timeout in milliseconds
 * `fu_udev_device_get_sysfs_attr_uint64()`: Use `fu_udev_device_read_sysfs()` instead
 * `fu_udev_device_get_sysfs_attr`: Use `fu_udev_device_read_sysfs()` instead
 * `fu_i2c_device_get_bus_number()`: Use `fu_udev_device_get_number()` instead
-* `fu_usb_device_set_open_retry_count()`: Use `FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN` instead
+* `fu_usb_device_set_open_retry_count()`: Use `FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN` instead

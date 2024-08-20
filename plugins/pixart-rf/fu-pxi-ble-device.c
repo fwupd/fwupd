@@ -1021,7 +1021,7 @@ fu_pxi_ble_device_init(FuPxiBleDevice *self)
 	self->retransmit_id = PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
 	self->feature_report_id = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
 	self->input_report_id = PXI_HID_DEV_OTA_INPUT_REPORT_ID;
-	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC, "is-hpac");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }
 

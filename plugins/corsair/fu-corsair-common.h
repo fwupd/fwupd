@@ -8,10 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#define FU_CORSAIR_DEVICE_FLAG_LEGACY_ATTACH		(1 << 0)
-#define FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE		(1 << 1)
-#define FU_CORSAIR_DEVICE_FLAG_NO_VERSION_IN_BOOTLOADER (1 << 2)
-
 #define FU_CORSAIR_MAX_CMD_SIZE 1024
 
 typedef enum {

@@ -353,7 +353,7 @@ fu_engine_ensure_device_power_inhibit(FuEngine *self, FuDevice *device)
 		fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER);
 	}
 	if (fu_device_is_updatable(device) &&
-	    !fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_IGNORE_SYSTEM_POWER) &&
+	    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER) &&
 	    fu_context_get_battery_level(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_threshold(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_level(self->ctx) < fu_context_get_battery_threshold(self->ctx)) {
@@ -367,7 +367,7 @@ static void
 fu_engine_ensure_device_lid_inhibit(FuEngine *self, FuDevice *device)
 {
 	if (fu_device_is_updatable(device) &&
-	    fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED) &&
+	    fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED) &&
 	    fu_context_get_lid_state(self->ctx) == FU_LID_STATE_CLOSED) {
 		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED);
 		return;
@@ -379,7 +379,7 @@ static void
 fu_engine_ensure_device_display_required_inhibit(FuEngine *self, FuDevice *device)
 {
 	if (fu_device_is_updatable(device) &&
-	    fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_DISPLAY_REQUIRED) &&
+	    fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_DISPLAY_REQUIRED) &&
 	    fu_context_get_display_state(self->ctx) == FU_DISPLAY_STATE_DISCONNECTED) {
 		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_DISPLAY_REQUIRED);
 		return;
@@ -1592,7 +1592,7 @@ fu_engine_get_cpu_device(FuEngine *self)
 	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
-		if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_CPU))
+		if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_CPU))
 			return g_object_ref(device);
 	}
 	return NULL;
@@ -2508,7 +2508,7 @@ fu_engine_install_release(FuEngine *self,
 	}
 
 	/* save to persistent storage so that the device can recover without a network */
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE)) {
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE)) {
 		g_autoptr(GBytes) blob_cab =
 		    fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
 		if (blob_cab == NULL)
@@ -3037,7 +3037,7 @@ fu_engine_device_check_power(FuEngine *self,
 	}
 
 	/* not enough just in case */
-	if (!fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_IGNORE_SYSTEM_POWER) &&
+	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER) &&
 	    fu_context_get_battery_level(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_threshold(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_level(self->ctx) < fu_context_get_battery_threshold(self->ctx)) {
@@ -4006,10 +4006,10 @@ fu_engine_ensure_device_supported(FuEngine *self, FuDevice *device)
 			}
 		}
 		if (update_pending) {
-			fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_UPDATE_PENDING);
+			fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_UPDATE_PENDING);
 		} else {
-			fu_device_remove_internal_flag(device,
-						       FU_DEVICE_INTERNAL_FLAG_UPDATE_PENDING);
+			fu_device_remove_private_flag(device,
+						      FU_DEVICE_PRIVATE_FLAG_UPDATE_PENDING);
 		}
 	}
 
@@ -4042,7 +4042,7 @@ fu_engine_md_refresh_devices(FuEngine *self)
 
 		/* fixup the name and format as needed */
 		if (component != NULL &&
-		    !fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM))
+		    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM))
 			fu_device_ensure_from_component(device, component);
 	}
 }
@@ -5112,7 +5112,7 @@ fu_engine_get_history(FuEngine *self, GError **error)
 	/* if this is the system firmware device, add the HSI attrs */
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index(devices, i);
-		if (fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE))
+		if (fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE))
 			fu_engine_get_history_set_hsi_attrs(self, dev);
 	}
 
@@ -5411,8 +5411,8 @@ fu_engine_get_releases_for_device(FuEngine *self,
 	}
 
 	/* get device version */
-	if (!fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION) &&
-	    !fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS)) {
+	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION) &&
+	    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS)) {
 		const gchar *version = fu_device_get_version(device);
 		if (version == NULL) {
 			g_set_error(error,
@@ -6151,26 +6151,26 @@ fu_engine_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer us
 static void
 fu_engine_adopt_children_device(FuEngine *self, FuDevice *device, FuDevice *device_tmp)
 {
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE_CHILD) &&
-	    fu_device_has_internal_flag(device_tmp, FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE)) {
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD) &&
+	    fu_device_has_private_flag(device_tmp, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE)) {
 		fu_device_set_parent(device, device_tmp);
 		fu_engine_ensure_device_supported(self, device_tmp);
 		return;
 	}
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE) &&
-	    fu_device_has_internal_flag(device_tmp, FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE_CHILD)) {
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE) &&
+	    fu_device_has_private_flag(device_tmp, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD)) {
 		fu_device_set_parent(device_tmp, device);
 		fu_engine_ensure_device_supported(self, device_tmp);
 		return;
 	}
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD) &&
-	    fu_device_has_internal_flag(device_tmp, FU_DEVICE_INTERNAL_FLAG_HOST_CPU)) {
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD) &&
+	    fu_device_has_private_flag(device_tmp, FU_DEVICE_PRIVATE_FLAG_HOST_CPU)) {
 		fu_device_set_parent(device, device_tmp);
 		fu_engine_ensure_device_supported(self, device_tmp);
 		return;
 	}
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_CPU) &&
-	    fu_device_has_internal_flag(device_tmp, FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD)) {
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_CPU) &&
+	    fu_device_has_private_flag(device_tmp, FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD)) {
 		fu_device_set_parent(device_tmp, device);
 		fu_engine_ensure_device_supported(self, device_tmp);
 		return;
@@ -6191,9 +6191,9 @@ fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 	if (fu_device_get_parent(device) == NULL) {
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *device_tmp = g_ptr_array_index(devices, i);
-			if (!fu_device_has_internal_flag(
+			if (!fu_device_has_private_flag(
 				device_tmp,
-				FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN))
+				FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN))
 				continue;
 			if (fu_device_get_physical_id(device_tmp) == NULL)
 				continue;
@@ -6209,9 +6209,9 @@ fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 	if (fu_device_get_parent(device) == NULL) {
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *device_tmp = g_ptr_array_index(devices, i);
-			if (!fu_device_has_internal_flag(
+			if (!fu_device_has_private_flag(
 				device_tmp,
-				FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN))
+				FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN))
 				continue;
 			if (fu_device_get_backend_id(device_tmp) == NULL)
 				continue;
@@ -6343,7 +6343,7 @@ fu_engine_device_inherit_history(FuEngine *self, FuDevice *device)
 	/* in an offline environment we may have used the .cab file to find the version-format
 	 * to use for the device -- so when we reboot use the database as the archive data is no
 	 * longer available */
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT) &&
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT) &&
 	    fu_device_get_version_format(device_history) != FWUPD_VERSION_FORMAT_UNKNOWN) {
 		g_debug(
 		    "absorbing version format %s into %s from history database",
@@ -6355,7 +6355,7 @@ fu_engine_device_inherit_history(FuEngine *self, FuDevice *device)
 	/* the device is still running the old firmware version and so if it
 	 * required activation before, it still requires it now -- note:
 	 * we can't just check for version_new=version to allow for re-installs */
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION) &&
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION) &&
 	    fu_device_has_flag(device_history, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 		FwupdRelease *release = fu_device_get_release_default(device_history);
 		if (fu_version_compare(fu_device_get_version(device),
@@ -6435,7 +6435,7 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	if (fu_device_is_updatable(device) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD) &&
-	    !fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED)) {
+	    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED)) {
 		g_warning("%s [%s] does not declare signed/unsigned payload -- perhaps add "
 			  "fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);",
 			  fu_device_get_plugin(device),
@@ -7585,8 +7585,8 @@ fu_engine_backend_device_removed_cb(FuBackend *backend, FuDevice *device, FuEngi
 		if (g_strcmp0(fu_device_get_backend_id(device_tmp),
 			      fu_device_get_backend_id(device)) == 0) {
 			FuPlugin *plugin;
-			if (fu_device_has_internal_flag(device_tmp,
-							FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)) {
+			if (fu_device_has_private_flag(device_tmp,
+						       FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE)) {
 				g_info("not auto-removing backend device %s [%s] due to flags",
 				       fu_device_get_name(device_tmp),
 				       fu_device_get_id(device_tmp));

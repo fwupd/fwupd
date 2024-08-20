@@ -33,7 +33,7 @@ Firehose program file to use during the switch to EDL (Emergency Download) mode.
 
 Since: 1.8.10
 
-### Flags=use-branch
+### `Flags=use-branch`
 
 Use the carrier (e.g. `VODAFONE`) as the device branch name so that `fwupdmgr sync` can downgrade
 the firmware as required.
@@ -42,6 +42,17 @@ This is now the recommended mode for all modem devices with a carrier-specific f
 although it requires that the firmware branch is also set in the firmware metadata.
 
 Since: 1.9.8
+
+### `Flags=detach-at-fastboot-has-no-response`
+
+If no AT response is expected when entering fastboot mode.
+
+### `Flags=uninhibit-modemmanager-after-fastboot-reboot`
+
+After entering the fastboot state, the modem cannot execute the attach method in the MM plugin
+plugin plugin.
+The shadow device needs to be used to uninhibit the modem when `fu_mm_plugin_udev_uevent_cb`
+detects it.
 
 ## Vendor ID Security
 

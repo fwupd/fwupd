@@ -157,7 +157,7 @@ fu_mm_device_add_instance_id(FuDevice *dev, const gchar *device_id)
 		return;
 	}
 	if (g_pattern_match_simple("???\\VID_????&PID_????&REV_????", device_id)) {
-		if (fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV))
+		if (fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV))
 			fu_device_add_instance_id(dev, device_id);
 		return;
 	}
@@ -1891,8 +1891,8 @@ fu_mm_device_setup_secboot_status(FuDevice *device)
 	    fu_device_has_vendor_id(device, "PCI:0x1EAC"))
 		fu_mm_device_setup_secboot_status_quectel(self);
 	else if (fu_device_has_vendor_id(device, "USB:0x2CB7")) {
-		fu_device_add_internal_flag(FU_DEVICE(self),
-					    FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE);
+		fu_device_add_private_flag(FU_DEVICE(self),
+					   FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE);
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	}
 }
@@ -1946,22 +1946,18 @@ fu_mm_device_init(FuMmDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary(FU_DEVICE(self), "Mobile broadband device");
 	fu_device_add_icon(FU_DEVICE(self), "modem");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE,
-					"detach-at-fastboot-has-no-response");
+					FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT,
-					"uninhibit-modemmanager-after-fastboot-reboot");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_MM_DEVICE_FLAG_USE_BRANCH,
-					"use-branch");
+					FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_USE_BRANCH);
 }
 
 static void

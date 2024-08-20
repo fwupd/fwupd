@@ -899,7 +899,7 @@ fu_engine_requirements_device_func(gconstpointer user_data)
 	g_assert_true(ret);
 
 	/* check this fails, as the wrong requirement is specified */
-	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES);
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_nonnull(g_strstr_len(error->message, -1, "child, parent or sibling requirement"));
@@ -1177,7 +1177,7 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	g_assert_true(ret);
 
 	/* check this still works, as a child requirement is specified */
-	fu_device_add_internal_flag(device1, FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
+	fu_device_add_private_flag(device1, FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES);
 	ret = fu_engine_requirements_check(engine, release2, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1577,7 +1577,7 @@ fu_engine_device_parent_id_func(gconstpointer user_data)
 	fu_device_add_protocol(device2, "com.acme");
 	fu_device_add_instance_id(device2, "parent-GUID");
 	fu_device_set_vendor(device2, "oem");
-	fu_device_add_internal_flag(device2, FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN);
+	fu_device_add_private_flag(device2, FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN);
 	fu_device_convert_instance_ids(device2);
 
 	/* add another child */
@@ -1796,13 +1796,13 @@ fu_engine_device_md_set_flags_func(gconstpointer user_data)
 	fu_device_add_guid(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
 	fu_engine_add_device(engine, device);
 
 	/* check the flag got set */
 	g_assert_true(
-	    fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE));
+	    fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE));
 }
 
 static void
@@ -2239,12 +2239,12 @@ fu_engine_md_verfmt_func(gconstpointer user_data)
 	/* add a device with no defined version format */
 	fu_device_set_version(device, "16908291");
 	fu_device_set_version_raw(device, 0x01020003);
-	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY);
-	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON);
-	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR);
-	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
-	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
-	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME_CATEGORY);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
 	fu_device_set_id(device, "test_device");
 	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
 	fu_device_add_protocol(device, "com.acme");
@@ -2260,7 +2260,7 @@ fu_engine_md_verfmt_func(gconstpointer user_data)
 	g_assert_true(fu_device_has_icon(device, "computer"));
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD));
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN));
-	g_assert_true(fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_CPU));
+	g_assert_true(fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_CPU));
 
 	/* ensure the device was added */
 	devices = fu_engine_get_devices(engine, &error);
@@ -2662,7 +2662,7 @@ fu_engine_history_verfmt_func(gconstpointer user_data)
 	fu_device_add_checksum(device, "0123456789abcdef0123456789abcdef01234567");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
 	fu_device_set_created_usec(device, 1515338000ull * G_USEC_PER_SEC);
 	fu_engine_add_device(engine, device);
 	g_assert_cmpint(fu_device_get_version_format(device), ==, FWUPD_VERSION_FORMAT_TRIPLET);
@@ -2919,7 +2919,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 	fu_engine_add_plugin(engine, plugin);
 	device = fu_device_new(self->ctx);
-	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION);
 	fu_device_set_id(device, "test_device");
 	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
 	fu_device_add_protocol(device, "com.acme");
@@ -3305,7 +3305,7 @@ fu_device_list_no_auto_remove_children_func(gconstpointer user_data)
 	g_assert_cmpint(active1->len, ==, 0);
 
 	/* new-style behavior, do not remove child */
-	fu_device_add_internal_flag(parent, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN);
+	fu_device_add_private_flag(parent, FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN);
 	fu_device_list_add(device_list, parent);
 	fu_device_list_add(device_list, child);
 	fu_device_list_remove(device_list, parent);
@@ -3415,13 +3415,13 @@ fu_device_list_replug_auto_func(gconstpointer user_data)
 
 	/* fake child devices */
 	fu_device_set_id(device1, "device1");
-	fu_device_add_internal_flag(device1, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(device1, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_physical_id(device1, "ID");
 	fu_device_set_plugin(device1, "self-test");
 	fu_device_set_remove_delay(device1, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_child(parent, device1);
 	fu_device_set_id(device2, "device2");
-	fu_device_add_internal_flag(device2, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(device2, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_physical_id(device2, "ID"); /* matches */
 	fu_device_set_plugin(device2, "self-test");
 	fu_device_set_remove_delay(device2, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
@@ -3476,7 +3476,7 @@ fu_device_list_replug_user_func(gconstpointer user_data)
 	/* fake devices */
 	fu_device_set_id(device1, "device1");
 	fu_device_set_name(device1, "device1");
-	fu_device_add_internal_flag(device1, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(device1, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_instance_id(device1, "foo");
 	fu_device_add_instance_id(device1, "bar");
 	fu_device_set_plugin(device1, "self-test");
@@ -3484,7 +3484,7 @@ fu_device_list_replug_user_func(gconstpointer user_data)
 	fu_device_convert_instance_ids(device1);
 	fu_device_set_id(device2, "device2");
 	fu_device_set_name(device2, "device2");
-	fu_device_add_internal_flag(device2, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(device2, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_instance_id(device2, "baz");
 	fu_device_add_counterpart_guid(device2, "bar"); /* matches */
 	fu_device_set_plugin(device2, "self-test");
@@ -3571,7 +3571,7 @@ fu_device_list_compatible_func(gconstpointer user_data)
 	fu_device_build_vendor_id(device1, "USB", "0x20A0");
 	fu_device_set_version_format(device1, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device1, "1.2.3");
-	fu_device_add_internal_flag(device1, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(device1, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_instance_id(device1, "foobar");
 	fu_device_add_counterpart_guid(device1, "bootloader");
 	fu_device_set_remove_delay(device1, 100);
@@ -3585,7 +3585,7 @@ fu_device_list_compatible_func(gconstpointer user_data)
 	fu_device_set_id(device2, "device2");
 	fu_device_set_plugin(device2, "plugin-for-bootloader");
 	fu_device_add_instance_id(device2, "bootloader");
-	fu_device_add_internal_flag(device2, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(device2, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_convert_instance_ids(device2);
 
 	/* verify only a changed event was generated */
@@ -3688,7 +3688,7 @@ fu_device_list_explicit_order_func(gconstpointer user_data)
 	fu_device_add_child(device_root, device_child);
 	fu_device_list_add(device_list, device_root);
 
-	fu_device_add_internal_flag(device_root, FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER);
+	fu_device_add_private_flag(device_root, FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER);
 	fu_device_list_depsolve_order(device_list, device_root);
 	g_assert_cmpint(fu_device_get_order(device_root), ==, G_MAXINT);
 	g_assert_cmpint(fu_device_get_order(device_child), ==, G_MAXINT);
@@ -3717,7 +3717,7 @@ fu_device_list_explicit_order_post_func(gconstpointer user_data)
 	g_assert_cmpint(fu_device_get_order(device_root), ==, 0);
 	g_assert_cmpint(fu_device_get_order(device_child), ==, -1);
 
-	fu_device_add_internal_flag(device_root, FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER);
+	fu_device_add_private_flag(device_root, FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER);
 	g_assert_cmpint(fu_device_get_order(device_root), ==, G_MAXINT);
 	g_assert_cmpint(fu_device_get_order(device_child), ==, G_MAXINT);
 }
@@ -3735,7 +3735,7 @@ fu_device_list_counterpart_func(gconstpointer user_data)
 	fu_device_add_instance_id(device1, "runtime"); /* 420dde7c-3102-5d8f-86bc-aaabd7920150 */
 	fu_device_add_counterpart_guid(device1, "bootloader");
 	fu_device_convert_instance_ids(device1);
-	fu_device_add_internal_flag(device1, FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_device_add_private_flag(device1, FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_set_remove_delay(device1, 100);
 	fu_device_list_add(device_list, device1);
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -3745,7 +3745,7 @@ fu_device_list_counterpart_func(gconstpointer user_data)
 	/* add bootloader */
 	fu_device_set_id(device2, "device-bootloader");
 	fu_device_add_instance_id(device2, "bootloader"); /* 015370aa-26f2-5daa-9661-a75bf4c1a913 */
-	fu_device_add_internal_flag(device2, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(device2, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_convert_instance_ids(device2);
 	fu_device_list_add(device_list, device2);

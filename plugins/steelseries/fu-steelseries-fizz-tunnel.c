@@ -179,7 +179,7 @@ fu_steelseries_fizz_tunnel_probe(FuDevice *device, GError **error)
 					 "PROTOCOL",
 					 NULL);
 	fu_device_build_instance_id(device, NULL, "STEELSERIES", "VID", "PID", "PROTOCOL", NULL);
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV)) {
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
 		fu_device_build_instance_id(device,
 					    NULL,
 					    "STEELSERIES",
@@ -394,8 +394,8 @@ fu_steelseries_fizz_tunnel_init(FuSteelseriesFizzTunnel *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_CUSTOM_AUTO_PAUSE_POLLING);
 	fu_device_add_protocol(FU_DEVICE(self), "com.steelseries.fizz");
 	fu_device_set_logical_id(FU_DEVICE(self), "tunnel");
 	fu_device_set_install_duration(FU_DEVICE(self), 38);				  /* 38 s */

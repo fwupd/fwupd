@@ -142,6 +142,47 @@ This plugin uses the following plugin-specific quirks:
 Use a Capsule-on-Disk filename of `CapsuleUpdateFileXXXX.bin` rather than including the ESRT GUID.
 This alternative format may be needed for some early InsydeH2O firmwares.
 
+### `Flags=no-ux-capsule`
+
+Do not use the additional UX capsule.
+
+### `Flags=use-shim-unique`
+
+Use a unique shim filename to work around a common BIOS bug.
+
+### `Flags=use-legacy-bootmgr-desc`
+
+Use the legacy boot manager description to work around a Lenovo BIOS bug.
+
+### `Flags=supports-boot-order-lock`
+
+The BIOS might have Boot Order Lock enabled which can cause failures when not using grub
+chainloading or capsule-on-disk.
+
+### `Flags=use-shim-for-sb`
+
+Use shim to load fwupdx64.efi when SecureBoot is turned on.
+
+### `Flags=no-rt-set-variable`
+
+Do not use RT->SetVariable.
+
+### `Flags=no-capsule-header-fixup`
+
+Do not prepend a plausible missing capsule header.
+
+### `Flags=enable-debugging`
+
+Enable debugging the EFI binary.
+
+### `Flags=modify-bootorder`
+
+Modify `BootOrder` as well as `BootNext` to work around BIOS bugs.
+
+### `Flags=cod-dell-recovery`
+
+Use Dell customized file location for the capsule on disk.
+
 ## External Interface Access
 
 This plugin requires:

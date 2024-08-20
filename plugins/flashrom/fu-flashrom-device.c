@@ -12,17 +12,8 @@
 #include "fu-flashrom-cmos.h"
 #include "fu-flashrom-device.h"
 
-/*
- * Flag to determine if the CMOS checksum should be reset after the flash
- * is reprogrammed.  This will force the CMOS defaults to be reloaded on
- * the next boot.
- */
-#define FU_FLASHROM_DEVICE_FLAG_RESET_CMOS (1 << 0)
-
-/*
- * Flag to determine if manual ME unlocking by pressing Fn + M is supported.
- */
-#define FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK (1 << 1)
+#define FU_FLASHROM_DEVICE_FLAG_RESET_CMOS     "reset-cmos"
+#define FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK "fn-m-me-unlock"
 
 struct _FuFlashromDevice {
 	FuUdevDevice parent_instance;
@@ -266,19 +257,15 @@ fu_flashrom_device_init(FuFlashromDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_protocol(FU_DEVICE(self), "org.flashrom");
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE);
 	fu_device_set_physical_id(FU_DEVICE(self), "flashrom");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_FLASHROM_DEVICE_FLAG_RESET_CMOS,
-					"reset-cmos");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK,
-					"fn-m-me-unlock");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_FLASHROM_DEVICE_FLAG_RESET_CMOS);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK);
 }
 
 static void

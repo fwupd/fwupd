@@ -25,19 +25,8 @@ struct _FuNvmeDevice {
 #define FU_NVME_COMMIT_ACTION_CA2 0b010 /* activate on next reset */
 #define FU_NVME_COMMIT_ACTION_CA3 0b011 /* replace, and activate immediately */
 
-/**
- * FU_NVME_DEVICE_FLAG_FORCE_ALIGN:
- *
- * Force alignment of the firmware file.
- */
-#define FU_NVME_DEVICE_FLAG_FORCE_ALIGN (1 << 0)
-
-/**
- * FU_NVME_DEVICE_FLAG_COMMIT_CA3:
- *
- * Replace, and activate immediately rather than on next reset.
- */
-#define FU_NVME_DEVICE_FLAG_COMMIT_CA3 (1 << 1)
+#define FU_NVME_DEVICE_FLAG_FORCE_ALIGN "force-align"
+#define FU_NVME_DEVICE_FLAG_COMMIT_CA3	"commit-ca3"
 
 G_DEFINE_TYPE(FuNvmeDevice, fu_nvme_device, FU_TYPE_UDEV_DEVICE)
 
@@ -189,7 +178,7 @@ fu_nvme_device_parse_cns_maybe_dell(FuNvmeDevice *self, const guint8 *buf)
 
 	/* do not add the FuUdevDevice instance IDs as generic firmware
 	 * should not be used on these OEM-specific devices */
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_AUTO_INSTANCE_IDS);
 
 	/* add instance ID *and* GUID as using no-auto-instance-ids */
 	devid = g_strdup_printf("STORAGE-DELL-%s", component_id);
@@ -460,20 +449,16 @@ fu_nvme_device_init(FuNvmeDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary(FU_DEVICE(self), "NVM Express solid state drive");
 	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk");
 	fu_device_add_protocol(FU_DEVICE(self), "org.nvmexpress");
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_NVME_DEVICE_FLAG_FORCE_ALIGN,
-					"force-align");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_NVME_DEVICE_FLAG_COMMIT_CA3,
-					"commit-ca3");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_NVME_DEVICE_FLAG_FORCE_ALIGN);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_NVME_DEVICE_FLAG_COMMIT_CA3);
 }
 
 static void

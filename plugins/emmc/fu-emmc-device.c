@@ -202,7 +202,7 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 		fu_device_set_version(device, attr_fwrev);
 	}
 	fu_device_add_instance_strsafe(device, "REV", attr_fwrev);
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV))
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV))
 		fu_device_build_instance_id(device, NULL, "EMMC", "NAME", "REV", NULL);
 
 	/* manfid + oemid, manfid + oemid + name */
@@ -605,7 +605,7 @@ fu_emmc_device_init(FuEmmcDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "org.jedec.mmc");
 	fu_device_add_icon(FU_DEVICE(self), "media-memory");
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }

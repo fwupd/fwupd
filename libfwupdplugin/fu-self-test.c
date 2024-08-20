@@ -324,7 +324,7 @@ static void
 fu_device_version_format_func(void)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
-	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device, "Ver1.2.3 RELEASE");
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.3");
@@ -1082,7 +1082,7 @@ fu_plugin_device_inhibit_children_func(void)
 	fu_device_uninhibit(parent, "test");
 
 	/* make the inhibit propagate to children */
-	fu_device_add_internal_flag(parent, FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN);
+	fu_device_add_private_flag(parent, FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN);
 	fu_device_inhibit(parent, "test", "because");
 	g_assert_false(fu_device_has_flag(parent, FWUPD_DEVICE_FLAG_UPDATABLE));
 	g_assert_false(fu_device_has_flag(child1, FWUPD_DEVICE_FLAG_UPDATABLE));
@@ -1433,7 +1433,7 @@ fu_plugin_backend_device_func(void)
 	g_assert_true(ret);
 
 	fu_device_set_specialized_gtype(device, FU_TYPE_DEVICE);
-	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ONLY_SUPPORTED);
 	ret = fu_plugin_runner_backend_device_added(plugin, device, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1615,7 +1615,7 @@ fu_device_locker_fail_func(void)
 	g_assert_null(locker);
 	g_assert_true(fu_device_get_metadata_boolean(device, "Test::Open"));
 	g_assert_true(fu_device_get_metadata_boolean(device, "Test::Close"));
-	g_assert_false(fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_IS_OPEN));
+	g_assert_false(fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_OPEN));
 }
 
 static void
@@ -1722,7 +1722,7 @@ fu_device_poll_func(void)
 	fu_test_loop_quit();
 
 	/* auto pause */
-	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING);
+	fu_device_add_private_flag(device, FU_DEVICE_CUSTOM_AUTO_PAUSE_POLLING);
 	locker = fu_device_poll_locker_new(device, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(locker);
@@ -1849,7 +1849,7 @@ fu_device_vfuncs_func(void)
 	g_assert_true(ret);
 
 	/* no-probe */
-	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NO_PROBE);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_NO_PROBE);
 	ret = fu_device_probe(device, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false(ret);
@@ -1997,27 +1997,26 @@ fu_device_inhibit_updateable_func(void)
 	g_assert_cmpstr(fu_device_get_update_error(device), ==, NULL);
 }
 
-#define TEST_FLAG_FOO (1 << 0)
-#define TEST_FLAG_BAR (1 << 1)
-#define TEST_FLAG_BAZ (1 << 2)
-
 static void
-fu_device_private_flags_func(void)
+fu_device_custom_flags_func(void)
 {
 	g_autofree gchar *tmp = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 
-	fu_device_register_private_flag(device, TEST_FLAG_FOO, "foo");
-	fu_device_register_private_flag(device, TEST_FLAG_BAR, "bar");
+	fu_device_register_private_flag(device, "foo");
+	fu_device_register_private_flag(device, "bar");
 
 	fu_device_set_custom_flags(device, "foo");
-	g_assert_cmpint(fu_device_get_private_flags(device), ==, TEST_FLAG_FOO);
+	g_assert_true(fu_device_has_private_flag(device, "foo"));
 	fu_device_set_custom_flags(device, "bar");
-	g_assert_cmpint(fu_device_get_private_flags(device), ==, TEST_FLAG_FOO | TEST_FLAG_BAR);
+	g_assert_true(fu_device_has_private_flag(device, "foo"));
+	g_assert_true(fu_device_has_private_flag(device, "bar"));
 	fu_device_set_custom_flags(device, "~bar");
-	g_assert_cmpint(fu_device_get_private_flags(device), ==, TEST_FLAG_FOO);
+	g_assert_true(fu_device_has_private_flag(device, "foo"));
+	g_assert_false(fu_device_has_private_flag(device, "bar"));
 	fu_device_set_custom_flags(device, "baz");
-	g_assert_cmpint(fu_device_get_private_flags(device), ==, TEST_FLAG_FOO);
+	g_assert_true(fu_device_has_private_flag(device, "foo"));
+	g_assert_false(fu_device_has_private_flag(device, "bar"));
 
 	tmp = fu_device_to_string(device);
 	g_assert_cmpstr(tmp,
@@ -2034,14 +2033,6 @@ fu_device_flags_func(void)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	g_autoptr(FuDevice) proxy = fu_device_new(NULL);
-
-	/* bitfield */
-	for (guint64 i = 1; i < FU_DEVICE_INTERNAL_FLAG_UNKNOWN; i *= 2) {
-		const gchar *tmp = fu_device_internal_flag_to_string(i);
-		if (tmp == NULL)
-			break;
-		g_assert_cmpint(fu_device_internal_flag_from_string(tmp), ==, i);
-	}
 
 	g_assert_cmpint(fu_device_get_flags(device), ==, FWUPD_DEVICE_FLAG_NONE);
 
@@ -5973,7 +5964,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{instance-ids}", fu_device_instance_ids_func);
 	g_test_add_func("/fwupd/device{composite-id}", fu_device_composite_id_func);
 	g_test_add_func("/fwupd/device{flags}", fu_device_flags_func);
-	g_test_add_func("/fwupd/device{private-flags}", fu_device_private_flags_func);
+	g_test_add_func("/fwupd/device{private-flags}", fu_device_custom_flags_func);
 	g_test_add_func("/fwupd/device{inhibit}", fu_device_inhibit_func);
 	g_test_add_func("/fwupd/device{inhibit-updateable}", fu_device_inhibit_updateable_func);
 	g_test_add_func("/fwupd/device{parent}", fu_device_parent_func);

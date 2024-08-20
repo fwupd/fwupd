@@ -57,12 +57,31 @@ default 0ms.
 
 Since: 1.8.0
 
-### Flags=no-manager-reset-request
+### `Flags=wildcard-targets`
+
+Do not specify the `odata.id` in the multipart update Targets array and allow the BMC to deploy the
+firmware onto all compatible hardware.
+
+To use this option the payload must contain metadata that restricts it to a specific SoftwareId.
+
+### `Flags=no-manager-reset-request`
 
 The BMC device will auto-reboot and so fwupd should not explicitly call
 `/redfish/v1/Managers/1/Actions/Manager.Reset`.
 
 Since: 1.9.11
+
+### `Flags=is-backup`
+
+The device is the other half of a dual image firmware.
+
+### `Flags=unsigned-build`
+
+Use unsigned development builds.
+
+### `Flags=manager-reset`
+
+Reset the manager (typically the BMC) after updating this device.
 
 ## Setting Service IP Manually
 

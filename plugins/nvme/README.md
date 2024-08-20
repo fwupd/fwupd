@@ -56,10 +56,17 @@ The block size used for NVMe writes
 
 Since: 1.1.3
 
-### Flags
+### `Flags=force-align`
 
-* `force-align` if image should be padded, since 1.2.4
-* `commit-ca3` download and activate immediately, since 1.8.15
+Force alignment of the firmware file.
+
+Since 1.2.4
+
+### `Flags=commit-ca3`
+
+Replace, and activate immediately rather than on next reset.
+
+Since 1.8.15
 
 ## Vendor ID Security
 

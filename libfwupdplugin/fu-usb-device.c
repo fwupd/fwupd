@@ -671,7 +671,7 @@ fu_usb_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* get serial number */
-	if (!fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER) &&
+	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER) &&
 	    fu_device_get_serial(device) == NULL) {
 		guint idx = fu_usb_device_get_serial_number_index(self);
 		if (idx != 0x00) {
@@ -890,7 +890,7 @@ fu_usb_device_probe_bos_descriptors(FuUsbDevice *self, GError **error)
 	g_autoptr(GPtrArray) bos_descriptors = NULL;
 
 	/* already matched a quirk entry */
-	if (fu_device_has_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE)) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_PROBE)) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not probing");
 		return FALSE;
 	}
@@ -1000,7 +1000,7 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 					 "VID",
 					 "PID",
 					 NULL);
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV)) {
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 						     FU_DEVICE_INSTANCE_FLAG_VISIBLE |

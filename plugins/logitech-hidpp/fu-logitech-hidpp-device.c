@@ -1410,18 +1410,13 @@ fu_logitech_hidpp_device_init(FuLogitechHidppDevice *self)
 	fu_device_set_vendor(FU_DEVICE(self), "Logitech");
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID,
-					"force-receiver-id");
-	fu_device_register_private_flag(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE, "ble");
+					FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH,
-					"rebind-attach");
+					FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_DEVICE_FLAG_NO_REQUEST_REQUIRED,
-					"no-request-required");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO,
-					"add-radio");
+					FU_LOGITECH_HIDPP_DEVICE_FLAG_NO_REQUEST_REQUIRED);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 	fu_device_set_battery_threshold(FU_DEVICE(self), 20);
 }
