@@ -7,6 +7,7 @@
 
 import glob
 import sys
+import os
 
 
 def test_files() -> int:
@@ -60,6 +61,33 @@ def test_files() -> int:
                         )
                         rc = 1
                         break
+
+                # no console output expected
+                if os.path.basename(fn) not in [
+                    "fu-console.c",
+                    "fu-daemon.c",
+                    "fu-dbxtool.c",
+                    "fu-debug.c",
+                    "fu-fuzzer-main.c",
+                    "fu-gcab.c",
+                    "fu-main.c",
+                    "fu-main-windows.c",
+                    "fu-offline.c",
+                    "fu-self-test.c",
+                    "fu-tpm-eventlog.c",
+                    "fwupd-self-test.c",
+                ]:
+                    for token, msg in {
+                        "g_print(": "Use g_debug() instead, but probably not required",
+                        "g_printerr(": "Use g_debug() instead, but probably not required",
+                    }.items():
+                        if line.find(token) != -1:
+                            print(
+                                f"{fn}:{linecnt} contains blocked token {token}: {msg} -- "
+                                "use a nocheck comment to ignore"
+                            )
+                            rc = 1
+                            break
 
                 # do not use G_IO_ERROR internally
                 if line.find("g_set_error") != -1:
