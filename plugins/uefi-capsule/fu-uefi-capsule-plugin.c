@@ -519,7 +519,7 @@ fu_uefi_capsule_plugin_write_firmware(FuPlugin *plugin,
 
 	/* TRANSLATORS: this is shown when updating the firmware after the reboot */
 	str = _("Installing firmware update…");
-	g_assert(str != NULL);
+	g_return_val_if_fail(str != NULL, FALSE);
 
 	/* perform the update */
 	fu_progress_set_status(progress, FWUPD_STATUS_SCHEDULING);

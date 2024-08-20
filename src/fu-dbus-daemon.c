@@ -2163,8 +2163,8 @@ fu_dbus_daemon_daemon_get_property(GDBusConnection *connection_,
 	return NULL;
 }
 
-static void
-fu_dbus_daemon_register_object(FuDbusDaemon *self)
+static gboolean
+fu_dbus_daemon_register_object(FuDbusDaemon *self, GError **error)
 {
 	guint registration_id;
 	static const GDBusInterfaceVTable interface_vtable = {fu_dbus_daemon_daemon_method_call,
@@ -2179,7 +2179,16 @@ fu_dbus_daemon_register_object(FuDbusDaemon *self)
 					      self,  /* user_data */
 					      NULL,  /* user_data_free_func */
 					      NULL); /* GError** */
-	g_assert(registration_id > 0);
+	if (registration_id == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "unspecified failure");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static void
@@ -2240,7 +2249,10 @@ fu_dbus_daemon_dbus_bus_acquired_cb(GDBusConnection *connection,
 	g_autoptr(GError) error = NULL;
 
 	fu_dbus_daemon_set_connection(self, connection);
-	fu_dbus_daemon_register_object(self);
+	if (!fu_dbus_daemon_register_object(self, &error)) {
+		g_warning("cannot register object: %s", error->message);
+		return;
+	}
 
 	/* connect to D-Bus directly */
 	self->proxy_uid = g_dbus_proxy_new_sync(self->connection,
@@ -2295,8 +2307,7 @@ fu_dbus_daemon_dbus_new_connection_cb(GDBusServer *server,
 			 "closed",
 			 G_CALLBACK(fu_dbus_daemon_dbus_connection_closed_cb),
 			 self);
-	fu_dbus_daemon_register_object(self);
-	return TRUE;
+	return fu_dbus_daemon_register_object(self, NULL);
 }
 
 static GDBusNodeInfo *

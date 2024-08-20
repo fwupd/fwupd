@@ -1185,7 +1185,7 @@ fu_engine_verify_update(FuEngine *self,
 	if (device == NULL)
 		return FALSE;
 	device_progress = fu_device_progress_new(device, progress);
-	g_assert(device_progress != NULL);
+	g_return_val_if_fail(device_progress != NULL, FALSE);
 
 	/* get the plugin */
 	plugin =
@@ -2024,7 +2024,7 @@ fu_engine_install_releases(FuEngine *self,
 	locker = fu_idle_locker_new(self->idle,
 				    FU_IDLE_INHIBIT_TIMEOUT | FU_IDLE_INHIBIT_SIGNALS,
 				    "update");
-	g_assert(locker != NULL);
+	g_return_val_if_fail(locker != NULL, FALSE);
 
 	/* use an allow-list for device-changed signals -- only allow any of the composite update
 	 * devices to emit signals for the duration of the install */
@@ -3168,7 +3168,7 @@ fu_engine_detach(FuEngine *self,
 		return FALSE;
 	}
 	device_progress = fu_device_progress_new(device, progress);
-	g_assert(device_progress != NULL);
+	g_return_val_if_fail(device_progress != NULL, FALSE);
 
 	/* pause the polling */
 	poll_locker = fu_device_poll_locker_new(device, error);
@@ -3237,7 +3237,7 @@ fu_engine_attach(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 		return FALSE;
 	}
 	device_progress = fu_device_progress_new(device, progress);
-	g_assert(device_progress != NULL);
+	g_return_val_if_fail(device_progress != NULL, FALSE);
 
 	str = fu_device_to_string(device);
 	g_info("attach -> %s", str);
@@ -3389,7 +3389,7 @@ fu_engine_write_firmware(FuEngine *self,
 		return FALSE;
 	}
 	device_progress = fu_device_progress_new(device, progress);
-	g_assert(device_progress != NULL);
+	g_return_val_if_fail(device_progress != NULL, FALSE);
 
 	/* pause the polling */
 	poll_locker = fu_device_poll_locker_new(device, error);
@@ -3528,7 +3528,7 @@ fu_engine_install_blob(FuEngine *self,
 	g_autoptr(GTimer) timer = g_timer_new();
 	g_autoptr(FuDeviceProgress) device_progress = fu_device_progress_new(device, progress);
 
-	g_assert(device_progress != NULL);
+	g_return_val_if_fail(device_progress != NULL, FALSE);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

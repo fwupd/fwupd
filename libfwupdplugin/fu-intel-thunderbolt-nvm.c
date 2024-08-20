@@ -204,7 +204,7 @@ fu_intel_thunderbolt_nvm_export(FuFirmware *firmware,
 						   "offset",
 						   tmp,
 						   NULL);
-			g_assert(bc != NULL);
+			g_return_if_fail(bc != NULL);
 		}
 	}
 }

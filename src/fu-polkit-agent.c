@@ -43,7 +43,7 @@ fork_agent(pid_t *pid, const char *path, ...)
 	va_list ap;
 
 	g_return_val_if_fail(pid != 0, 0);
-	g_assert(path);
+	g_return_val_if_fail(path != NULL, 0);
 
 	parent_pid = getpid();
 
@@ -115,7 +115,7 @@ fork_agent(pid_t *pid, const char *path, ...)
 static int
 close_nointr(int fd)
 {
-	g_assert(fd >= 0);
+	g_return_val_if_fail(fd >= 0, -1);
 	for (;;) {
 		int r;
 		r = close(fd);
@@ -131,7 +131,10 @@ close_nointr_nofail(int fd)
 {
 	int saved_errno = errno;
 	/* cannot fail, and guarantees errno is unchanged */
-	g_assert(close_nointr(fd) == 0);
+	if (close_nointr(fd) != 0) {
+		errno = EBADFD;
+		return;
+	}
 	errno = saved_errno;
 }
 
