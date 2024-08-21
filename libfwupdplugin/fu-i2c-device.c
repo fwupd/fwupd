@@ -41,7 +41,6 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 	FuI2cDevice *self = FU_I2C_DEVICE(device);
 	GPtrArray *hwid_guids = fu_context_get_hwid_guids(fu_device_get_context(device));
 	g_autofree gchar *attr_name = NULL;
-	g_autoptr(FuUdevDevice) udev_parent = NULL;
 
 	/* FuUdevDevice */
 	if (!FU_DEVICE_CLASS(fu_i2c_device_parent_class)->probe(device, error))
@@ -69,13 +68,15 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get bus number out of sysfs path */
-	udev_parent =
-	    FU_UDEV_DEVICE(fu_device_get_backend_parent_with_subsystem(device, "i2c", NULL));
-	if (udev_parent != NULL) {
-		if (!fu_udev_device_parse_number(udev_parent, error))
-			return FALSE;
-		fu_udev_device_set_number(FU_UDEV_DEVICE(self),
-					  fu_udev_device_get_number(udev_parent));
+	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "i2c") != 0) {
+		g_autoptr(FuUdevDevice) udev_parent = FU_UDEV_DEVICE(
+		    fu_device_get_backend_parent_with_subsystem(device, "i2c", NULL));
+		if (udev_parent != NULL) {
+			if (!fu_udev_device_parse_number(udev_parent, error))
+				return FALSE;
+			fu_udev_device_set_number(FU_UDEV_DEVICE(self),
+						  fu_udev_device_get_number(udev_parent));
+		}
 	}
 
 	/* set the device file manually */
