@@ -90,6 +90,31 @@ fu_udev_backend_rescan_dpaux_devices(FuUdevBackend *self)
 }
 
 static FuUdevDevice *
+fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device);
+
+static void
+fu_udev_backend_create_ddc_proxy(FuUdevBackend *self, FuDevice *device)
+{
+	g_autofree gchar *proxy_sysfs_path = NULL;
+	g_autoptr(FuUdevDevice) proxy = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GUdevDevice) proxy_udev_device = NULL;
+
+	proxy_sysfs_path =
+	    g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)), "ddc", NULL);
+	proxy_udev_device = g_udev_client_query_by_sysfs_path(self->gudev_client, proxy_sysfs_path);
+	if (proxy_udev_device == NULL)
+		return;
+	proxy = fu_udev_backend_create_device(self, proxy_udev_device);
+	if (!fu_device_probe(FU_DEVICE(proxy), &error_local)) {
+		g_warning("failed to probe DRM DDC device: %s", error_local->message);
+		return;
+	}
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
+	fu_device_set_proxy(device, FU_DEVICE(proxy));
+}
+
+static FuUdevDevice *
 fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device)
 {
 	GType gtype = FU_TYPE_UDEV_DEVICE;
@@ -102,6 +127,7 @@ fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device)
 				   {"i2c-dev", FU_TYPE_I2C_DEVICE},
 				   {"drm_dp_aux_dev", FU_TYPE_DPAUX_DEVICE},
 				   {NULL, G_TYPE_INVALID}};
+	g_autoptr(FuDevice) device = NULL;
 
 	/* create the correct object depending on the subsystem */
 	for (guint i = 0; subsystem_gtype_map[i].gtype != G_TYPE_INVALID; i++) {
@@ -111,7 +137,16 @@ fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device)
 			break;
 		}
 	}
-	return g_object_new(gtype, "backend", FU_BACKEND(self), "udev-device", udev_device, NULL);
+
+	/* create device of correct kind */
+	device = g_object_new(gtype, "backend", FU_BACKEND(self), "udev-device", udev_device, NULL);
+
+	/* the DRM device has a i2c device that is used for communicating with the scaler */
+	if (gtype == FU_TYPE_DRM_DEVICE)
+		fu_udev_backend_create_ddc_proxy(self, device);
+
+	/* success */
+	return FU_UDEV_DEVICE(g_steal_pointer(&device));
 }
 
 static void
