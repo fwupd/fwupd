@@ -373,7 +373,9 @@ fu_volume_get_partition_kind(FuVolume *self)
 gchar *
 fu_volume_get_partition_name(FuVolume *self)
 {
+	g_autofree gchar *name = NULL;
 	g_autoptr(GVariant) val = NULL;
+	gsize namesz = 0;
 
 	g_return_val_if_fail(FU_IS_VOLUME(self), NULL);
 
@@ -382,7 +384,12 @@ fu_volume_get_partition_name(FuVolume *self)
 	val = g_dbus_proxy_get_cached_property(self->proxy_part, "Name");
 	if (val == NULL)
 		return NULL;
-	return g_variant_dup_string(val, NULL);
+
+	/* only return if non-zero length */
+	name = g_variant_dup_string(val, &namesz);
+	if (namesz == 0)
+		return NULL;
+	return g_steal_pointer(&name);
 }
 
 /**
@@ -462,6 +469,8 @@ fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **err
 gchar *
 fu_volume_get_block_name(FuVolume *self)
 {
+	gsize namesz = 0;
+	g_autofree gchar *name = NULL;
 	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail(FU_IS_VOLUME(self), NULL);
@@ -473,7 +482,11 @@ fu_volume_get_block_name(FuVolume *self)
 	if (val == NULL)
 		return NULL;
 
-	return g_variant_dup_string(val, NULL);
+	/* only return if non-zero length */
+	name = g_variant_dup_string(val, &namesz);
+	if (namesz == 0)
+		return NULL;
+	return g_steal_pointer(&name);
 }
 
 /**
