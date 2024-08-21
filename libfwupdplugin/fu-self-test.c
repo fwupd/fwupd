@@ -70,6 +70,68 @@ fu_test_loop_quit(void)
 }
 
 static void
+fu_msgpack_func(void)
+{
+	g_autoptr(GByteArray) buf1 = NULL;
+	g_autoptr(GByteArray) buf2 = NULL;
+	g_autoptr(GByteArray) buf_in = g_byte_array_new();
+	g_autoptr(GString) str_in = g_string_new("hello world");
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) items_new = NULL;
+	g_autoptr(GPtrArray) items = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	FuMsgpackItemKind kinds[] = {
+	    FU_MSGPACK_ITEM_KIND_MAP,
+	    FU_MSGPACK_ITEM_KIND_STRING,
+	    FU_MSGPACK_ITEM_KIND_INTEGER,
+	    FU_MSGPACK_ITEM_KIND_STRING,
+	    FU_MSGPACK_ITEM_KIND_INTEGER,
+	    FU_MSGPACK_ITEM_KIND_STRING,
+	    FU_MSGPACK_ITEM_KIND_FLOAT,
+	    FU_MSGPACK_ITEM_KIND_STRING,
+	    FU_MSGPACK_ITEM_KIND_ARRAY,
+	    FU_MSGPACK_ITEM_KIND_BINARY,
+	};
+
+	/* empty */
+	buf1 = fu_msgpack_write(items, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(buf1);
+	g_assert_cmpint(buf1->len, ==, 0);
+
+	/* prepare */
+	fu_byte_array_append_uint24(buf_in, 0x1234, G_LITTLE_ENDIAN);
+
+	/* map of stuff */
+	g_ptr_array_add(items, fu_msgpack_item_new_map(4));
+	g_ptr_array_add(items, fu_msgpack_item_new_string("fixint"));
+	g_ptr_array_add(items, fu_msgpack_item_new_integer(6));
+	g_ptr_array_add(items, fu_msgpack_item_new_string("uint8"));
+	g_ptr_array_add(items, fu_msgpack_item_new_integer(256));
+	g_ptr_array_add(items, fu_msgpack_item_new_string("float"));
+	g_ptr_array_add(items, fu_msgpack_item_new_float(1.0));
+	g_ptr_array_add(items, fu_msgpack_item_new_string("array-of-data"));
+	g_ptr_array_add(items, fu_msgpack_item_new_array(1));
+	g_ptr_array_add(items, fu_msgpack_item_new_binary(buf_in));
+	buf2 = fu_msgpack_write(items, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(buf2);
+	g_assert_cmpint(buf2->len, ==, 53);
+
+	/* parse it back */
+	items_new = fu_msgpack_parse(buf2, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(items_new);
+	g_assert_cmpint(items_new->len, ==, 10);
+
+	for (guint i = 0; i < G_N_ELEMENTS(kinds); i++) {
+		FuMsgpackItem *item = g_ptr_array_index(items_new, i);
+		g_assert_cmpint(fu_msgpack_item_get_kind(item), ==, kinds[i]);
+	}
+	g_assert_cmpint(fu_msgpack_item_get_map(g_ptr_array_index(items_new, 0)), ==, 4);
+	g_assert_cmpint(fu_msgpack_item_get_array(g_ptr_array_index(items_new, 8)), ==, 1);
+}
+
+static void
 fu_archive_invalid_func(void)
 {
 	g_autofree gchar *filename = NULL;
@@ -5821,6 +5883,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{bytes-get-data}", fu_common_bytes_get_data_func);
 	g_test_add_func("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
+	g_test_add_func("/fwupd/msgpack", fu_msgpack_func);
 	g_test_add_func("/fwupd/efi-load-option", fu_efi_load_option_func);
 	g_test_add_func("/fwupd/efivar", fu_efivar_func);
 	g_test_add_func("/fwupd/efivar{bootxxxx}", fu_efivar_boot_func);
