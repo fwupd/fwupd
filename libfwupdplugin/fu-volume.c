@@ -1087,11 +1087,15 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 		/* ignore a partition that claims to be a recovery partition */
 		if (g_strcmp0(kind, FU_VOLUME_KIND_BDP) == 0 ||
 		    g_strcmp0(kind, FU_VOLUME_KIND_ESP) == 0) {
-			g_autofree gchar *name = fu_volume_get_partition_name(vol);
+			g_autofree gchar *partition = fu_volume_get_partition_name(vol);
+			g_autofree gchar *block = fu_volume_get_block_name(vol);
+			const gchar *name;
 
-			if (name == NULL)
-				name = fu_volume_get_block_name(vol);
-			if (name != NULL) {
+			if (partition != NULL && strlen(partition) > 0)
+				name = partition;
+			else
+				name = block;
+			if (name != NULL && strlen(name) > 0) {
 				g_autoptr(GString) name_safe = g_string_new(name);
 				g_string_replace(name_safe, " ", "_", 0);
 				g_string_replace(name_safe, "\"", "", 0);
