@@ -450,6 +450,33 @@ fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **err
 }
 
 /**
+ * fu_volume_get_block_label:
+ * @self: a @FuVolume
+ *
+ * Gets the block name of the volume
+ *
+ * Returns: (transfer full): block device name, e.g 'Recovery Partition'
+ *
+ * Since: 1.9.24
+ **/
+gchar *
+fu_volume_get_block_name(FuVolume *self)
+{
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail(FU_IS_VOLUME(self), NULL);
+
+	if (self->proxy_blk == NULL)
+		return NULL;
+
+	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "IdLabel");
+	if (val == NULL)
+		return NULL;
+
+	return g_variant_dup_string(val, NULL);
+}
+
+/**
  * fu_volume_get_block_size:
  * @self: a @FuVolume
  *
@@ -847,7 +874,9 @@ fu_volume_check_block_device_symlinks(const gchar *const *symlinks, GError **err
  * @kind: a volume kind, typically a GUID
  * @error: (nullable): optional return location for an error
  *
- * Finds all volumes of a specific partition type
+ * Finds all volumes of a specific partition type.
+ * For ESP type partitions exclude any known partitions names that
+ * correspond to recovery partitions.
  *
  * Returns: (transfer container) (element-type FuVolume): a #GPtrArray, or %NULL if the kind was not
  *found
@@ -857,6 +886,24 @@ fu_volume_check_block_device_symlinks(const gchar *const *symlinks, GError **err
 GPtrArray *
 fu_volume_new_by_kind(const gchar *kind, GError **error)
 {
+	const gchar *recovery_partitions[] = {
+	    "DELLRESTORE",
+	    "DELLUTILITY",
+	    "DIAGS",
+	    "HP_RECOVERY",
+	    "IBM_SERVICE",
+	    "INTELRST",
+	    "LENOVO_RECOVERY",
+	    "OS",
+	    "PQSERVICE",
+	    "RECOVERY",
+	    "RECOVERY_PARTITION",
+	    "SERVICEV001",
+	    "SERVICEV002",
+	    "SYSTEM_RESERVED",
+	    "WINRE_DRV",
+	    NULL,
+	}; /* from https://github.com/storaged-project/udisks/blob/master/data/80-udisks2.rules */
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) volumes = NULL;
 
@@ -950,6 +997,32 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 			g_debug("ignoring linux_raid_member device %s",
 				g_dbus_proxy_get_object_path(proxy_blk));
 			continue;
+		}
+
+		/* ignore a partition that claims to be a recovery partition */
+		if (g_strcmp0(kind, FU_VOLUME_KIND_BDP) == 0 ||
+		    g_strcmp0(kind, FU_VOLUME_KIND_ESP) == 0) {
+			g_autofree gchar *name = fu_volume_get_partition_name(vol);
+
+			if (name == NULL)
+				name = fu_volume_get_block_name(vol);
+			if (name != NULL) {
+				g_autoptr(GString) name_safe = g_string_new(name);
+				g_string_replace(name_safe, " ", "_", 0);
+				g_string_replace(name_safe, "\"", "", 0);
+				g_string_ascii_up(name_safe);
+				if (g_strv_contains(recovery_partitions, name_safe->str)) {
+					if (g_strcmp0(name_safe->str, name) == 0) {
+						g_debug("skipping partition '%s'", name);
+					} else {
+						g_debug("skipping partition '%s' -> '%s'",
+							name,
+							name_safe->str);
+					}
+					continue;
+				}
+				g_debug("adding partition '%s'", name);
+			}
 		}
 		g_ptr_array_add(volumes, g_steal_pointer(&vol));
 	}
