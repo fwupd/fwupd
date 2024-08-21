@@ -14,4 +14,4 @@ G_DECLARE_FINAL_TYPE(FuMediatekScalerDevice,
 		     fu_mediatek_scaler_device,
 		     FU,
 		     MEDIATEK_SCALER_DEVICE,
-		     FuUdevDevice)
+		     FuDrmDevice)
