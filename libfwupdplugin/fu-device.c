@@ -4946,6 +4946,10 @@ fu_device_close(FuDevice *self, GError **error)
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* close the device first in case the plugin needs to use the proxy or parent */
+	if (!fu_device_close_internal(self, error))
+		return FALSE;
+
 	/* use parent */
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN)) {
 		FuDevice *parent = fu_device_get_parent(self);
@@ -4970,7 +4974,9 @@ fu_device_close(FuDevice *self, GError **error)
 		if (!fu_device_close_internal(proxy, error))
 			return FALSE;
 	}
-	return fu_device_close_internal(self, error);
+
+	/* success */
+	return TRUE;
 }
 
 /**
