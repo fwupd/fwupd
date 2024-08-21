@@ -4602,7 +4602,7 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 	g_autoptr(GList) device_class_list = NULL;
 
 	/* add baseclass */
-	fwupd_codec_add_string(FWUPD_CODEC(self), 0, str);
+	fwupd_codec_add_string(FWUPD_CODEC(self), idt, str);
 
 	/* run every unique ->to_string() in each subclass */
 	for (GType gtype = G_OBJECT_TYPE(self); gtype != G_TYPE_INVALID;
