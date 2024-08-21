@@ -17,6 +17,7 @@ fwupdplugin_structs = [
   'fu-ifwi.rs', # fuzzing
   'fu-intel-thunderbolt.rs', # fuzzing
   'fu-io-channel.rs', # fuzzing
+  'fu-msgpack.rs', # fuzzing
   'fu-oprom.rs', # fuzzing
   'fu-pefile.rs', # fuzzing
   'fu-progress.rs', # fuzzing
@@ -132,6 +133,8 @@ fwupdplugin_src = [
   'fu-lzma-common.c', # fuzzing
   'fu-mei-device.c',
   'fu-mem.c', # fuzzing
+  'fu-msgpack.c',
+  'fu-msgpack-item.c',
   'fu-oprom-firmware.c', # fuzzing
   'fu-partial-input-stream.c', # fuzzing
   'fu-path.c', # fuzzing
@@ -256,6 +259,7 @@ fwupdplugin_headers = [
   'fu-mei-device.h',
   'fu-mem.h',
   'fu-mem-private.h',
+  'fu-msgpack-item.h',
   'fu-oprom-firmware.h',
   'fu-partial-input-stream.h',
   'fu-partial-input-stream-private.h',
