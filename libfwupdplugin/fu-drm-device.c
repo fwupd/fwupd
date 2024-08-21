@@ -208,6 +208,7 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 			fu_device_set_name(device, fu_edid_get_eisa_id(edid));
 		if (fu_edid_get_serial_number(edid) != NULL)
 			fu_device_set_serial(device, fu_edid_get_serial_number(edid));
+		fu_device_build_vendor_id(device, "PNP", fu_edid_get_pnp_id(edid));
 	}
 
 	/* success */
