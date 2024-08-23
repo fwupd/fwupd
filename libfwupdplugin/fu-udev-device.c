@@ -2721,7 +2721,9 @@ fu_udev_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < events->len; i++) {
 			FuDeviceEvent *event = g_ptr_array_index(events, i);
+			json_builder_begin_object(builder);
 			fwupd_codec_to_json(FWUPD_CODEC(event), builder, flags);
+			json_builder_end_object(builder);
 		}
 		json_builder_end_array(builder);
 	}
