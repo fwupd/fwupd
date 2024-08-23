@@ -1037,11 +1037,13 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 	FuUdevDevice *uself = FU_UDEV_DEVICE(self);
 	FuUdevDevice *udonor = FU_UDEV_DEVICE(donor);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(uself);
+	FuUdevDevicePrivate *priv_donor = GET_PRIVATE(udonor);
 
 	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
 	g_return_if_fail(FU_IS_UDEV_DEVICE(donor));
 
-	fu_udev_device_set_dev(uself, fu_udev_device_get_dev(udonor));
+	if (priv_donor->udev_device != NULL)
+		fu_udev_device_set_dev(uself, priv_donor->udev_device);
 	if (priv->device_file == NULL)
 		fu_udev_device_set_device_file(uself, fu_udev_device_get_device_file(udonor));
 	if (priv->subsystem == NULL)
