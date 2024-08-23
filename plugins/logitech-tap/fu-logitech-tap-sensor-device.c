@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2023 Logitech, Inc.
+ * Copyright 2023 Logitech, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -19,8 +19,9 @@
 #include "fu-logitech-tap-sensor-device.h"
 
 #define FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT 50000 /* ms */
-#define HID_SET_DATA_LEN			    5
-#define HID_GET_DATA_LEN			    5
+
+#define HID_SET_DATA_LEN 5
+#define HID_GET_DATA_LEN 5
 
 #ifndef HIDIOCGINPUT
 #define HIDIOCGINPUT(len) _IOC(_IOC_READ, 'H', 0x0A, len)

@@ -9,3 +9,17 @@ Plugin = logitech_tap
 GType = FuLogitechTapHdmiDevice
 InstallDuration = 120
 RemoveDelay = 120000
+
+# Logitech Tap Touch Screen
+[HIDRAW\VEN_222A&DEV_0001]
+Plugin = logitech_tap
+GType = FuLogitechTapTouchDevice
+CounterpartGuid = HIDRAW\VEN_222A&DEV_FF51
+RemoveDelay = 120000
+
+# Logitech Tap Touch Screen bootloader
+[HIDRAW\VEN_222A&DEV_FF51]
+Plugin = logitech_tap
+GType = FuLogitechTapTouchDevice
+CounterpartGuid = HIDRAW\VEN_222A&DEV_0001
+Flags = is-bootloader

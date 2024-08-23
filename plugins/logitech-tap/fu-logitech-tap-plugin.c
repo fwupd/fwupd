@@ -9,11 +9,13 @@
 #include "fu-logitech-tap-hdmi-device.h"
 #include "fu-logitech-tap-plugin.h"
 #include "fu-logitech-tap-sensor-device.h"
+#include "fu-logitech-tap-touch-device.h"
 
 struct _FuLogitechTapPlugin {
 	FuPlugin parent_instance;
 	FuDevice *hdmi_device;	 /* ref */
 	FuDevice *sensor_device; /* ref */
+	FuDevice *touch_device;	 /* ref */
 };
 
 G_DEFINE_TYPE(FuLogitechTapPlugin, fu_logitech_tap_plugin, FU_TYPE_PLUGIN)
@@ -59,6 +61,7 @@ fu_logitech_tap_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_TAP_HDMI_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_TAP_SENSOR_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_TAP_TOUCH_DEVICE);
 }
 
 static void
@@ -87,6 +90,8 @@ fu_logitech_tap_plugin_finalize(GObject *obj)
 		g_object_unref(self->hdmi_device);
 	if (self->sensor_device != NULL)
 		g_object_unref(self->sensor_device);
+	if (self->touch_device != NULL)
+		g_object_unref(self->touch_device);
 	G_OBJECT_CLASS(fu_logitech_tap_plugin_parent_class)->finalize(obj);
 }
 
