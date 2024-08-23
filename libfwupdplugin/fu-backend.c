@@ -371,6 +371,8 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	/* emit removes then adds */
 	for (guint i = 0; i < devices_remove->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices_remove, i);
+		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+			continue;
 		fu_backend_device_removed(self, device);
 	}
 	for (guint i = 0; i < devices_added->len; i++) {
