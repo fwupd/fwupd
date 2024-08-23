@@ -85,6 +85,11 @@ enum FuCcgxDmcDevxDeviceType {
     Hx3 = 0x05,
     Hx3Pd = 0x0A,
     DmcPd = 0x0B,
+    Ccg6 = 0x13,
+    Pmg1s3 = 0xF0,
+    Ccg7sc = 0xF1,
+    Ccg6sf = 0xF2,
+    Ccg8 = 0xF3,
     Spi = 0xFF,
 }
 
