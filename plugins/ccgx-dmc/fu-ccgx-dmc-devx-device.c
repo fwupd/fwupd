@@ -110,7 +110,12 @@ fu_ccgx_dmc_devx_device_version_type(FuCcgxDmcDevxDevice *self)
 	if (device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_DMC ||
 	    device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_CCG3 ||
 	    device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_CCG4 ||
-	    device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_CCG5 || device_type == 0x0B)
+	    device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_CCG5 ||
+	    device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_CCG6 ||
+	    device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_CCG8 ||
+	    device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_CCG6SF ||
+	    device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_CCG7SC ||
+	    device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_PMG1S3 || device_type == 0x0B)
 		return FU_CCGX_DMC_DEVX_DEVICE_TYPE_DMC;
 	if (device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_HX3)
 		return FU_CCGX_DMC_DEVX_DEVICE_TYPE_HX3;
@@ -215,6 +220,16 @@ fu_ccgx_dmc_devx_device_type_to_name(FuCcgxDmcDevxDeviceType device_type)
 		return "HX3 PD";
 	if (device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_DMC_PD)
 		return "DMC PD";
+	if (device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_CCG6)
+		return "CCG6";
+	if (device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_CCG6SF)
+		return "CCG6SF";
+	if (device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_CCG7SC)
+		return "CCG7SC";
+	if (device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_CCG8)
+		return "CCG8";
+	if (device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_PMG1S3)
+		return "PMG1S3";
 	if (device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_SPI)
 		return "SPI";
 	return "Unknown";
