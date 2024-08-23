@@ -21,6 +21,197 @@ struct _FuNordicHidArchive {
 
 G_DEFINE_TYPE(FuNordicHidArchive, fu_nordic_hid_archive, FU_TYPE_FIRMWARE)
 
+static const gchar *
+fu_nordic_hid_archive_parse_file_get_bootloader_name(JsonObject *obj, GError **error)
+{
+	if (json_object_has_member(obj, "version_B0"))
+		return "B0";
+	if (json_object_has_member(obj, "version_MCUBOOT"))
+		return "MCUBOOT";
+	if (json_object_has_member(obj, "version_MCUBOOT+XIP"))
+		return "MCUBOOT+XIP";
+
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "only B0 and MCUboot bootloaders are supported");
+	return NULL;
+}
+
+static FuFirmware *
+fu_nordic_hid_archive_parse_file_image_create(const gchar *bootloader_name, GError **error)
+{
+	if (g_strcmp0(bootloader_name, "B0") == 0)
+		return g_object_new(FU_TYPE_NORDIC_HID_FIRMWARE_B0, NULL);
+	if (g_strcmp0(bootloader_name, "MCUBOOT") == 0 ||
+	    g_strcmp0(bootloader_name, "MCUBOOT+XIP") == 0)
+		return g_object_new(FU_TYPE_NORDIC_HID_FIRMWARE_MCUBOOT, NULL);
+
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "only B0 and MCUboot bootloaders are supported");
+	return NULL;
+}
+
+static gchar *
+fu_nordic_hid_archive_parse_file_get_board_name(JsonObject *obj,
+						gint64 manifest_ver,
+						GError **error)
+{
+	g_auto(GStrv) board_split = NULL;
+	const gchar *board_name_readout = NULL;
+
+	if (!json_object_has_member(obj, "board")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "manifest invalid as has no target board information");
+		return NULL;
+	}
+
+	board_name_readout = json_object_get_string_member(obj, "board");
+	if (board_name_readout == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "manifest invalid as has no target board information");
+		return NULL;
+	}
+
+	if (manifest_ver == 0) {
+		/* for manifest "format-version" of "0", the board name is represented only
+		 * by part of the string before the "_" symbol
+		 */
+		board_split = g_strsplit(board_name_readout, "_", -1);
+		if (board_split[0] == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "manifest invalid as has no board information");
+			return NULL;
+		}
+		return g_strdup(board_split[0]);
+	}
+
+	/* duplicate string for consistent memory management */
+	return g_strdup(board_name_readout);
+}
+
+static gboolean
+fu_nordic_hid_archive_parse_file_get_flash_area_id_v1(JsonObject *obj,
+						      guint *flash_area_id,
+						      const gchar *bootloader_name,
+						      guint files_cnt,
+						      GError **error)
+{
+	const gchar *image_idx_str = NULL;
+	const gchar *slot_str = NULL;
+	gint64 image_idx = -1;
+	gint64 slot = -1;
+
+	/* for MCUboot bootloader with swap, if only a single image is available,
+	 * the "image_index" and "slot" properties may be omitted
+	 */
+	if (g_strcmp0(bootloader_name, "MCUBOOT") == 0 && files_cnt == 1) {
+		*flash_area_id = 0;
+		return TRUE;
+	}
+
+	if (!json_object_has_member(obj, "image_index")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "missing image_index property");
+		return FALSE;
+	}
+	image_idx_str = json_object_get_string_member(obj, "image_index");
+	if (image_idx_str == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "missing image_index property");
+		return FALSE;
+	}
+	if (!fu_strtoll(image_idx_str,
+			&image_idx,
+			G_MININT64,
+			G_MAXINT64,
+			FU_INTEGER_BASE_AUTO,
+			error)) {
+		g_prefix_error(error, "fu_strtoll failed for image_index:");
+		return FALSE;
+	}
+
+	if (!json_object_has_member(obj, "slot")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "missing slot property");
+		return FALSE;
+	}
+	slot_str = json_object_get_string_member(obj, "slot");
+	if (slot_str == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "missing slot property");
+		return FALSE;
+	}
+	if (!fu_strtoll(slot_str, &slot, G_MININT64, G_MAXINT64, FU_INTEGER_BASE_AUTO, error)) {
+		g_prefix_error(error, "fu_strtoll failed for slot:");
+		return FALSE;
+	}
+
+	if (image_idx != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "unsupported image_index property");
+		return FALSE;
+	}
+	if (slot != 0 && slot != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "unsupported slot property");
+		return FALSE;
+	}
+
+	*flash_area_id = slot;
+	return TRUE;
+}
+
+static gboolean
+fu_nordic_hid_archive_parse_file_get_flash_area_id(JsonObject *obj,
+						   guint *flash_area_id,
+						   gint64 manifest_ver,
+						   guint file_idx,
+						   const gchar *bootloader_name,
+						   guint files_cnt,
+						   GError **error)
+{
+	/* for manifest version 0, the images are expected to be listed in strict order */
+	if (manifest_ver == 0) {
+		*flash_area_id = file_idx;
+		return TRUE;
+	}
+
+	if (manifest_ver == 1) {
+		return fu_nordic_hid_archive_parse_file_get_flash_area_id_v1(obj,
+									     flash_area_id,
+									     bootloader_name,
+									     files_cnt,
+									     error);
+	}
+
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "unsupported manifest version");
+	return FALSE;
+}
+
 static gboolean
 fu_nordic_hid_archive_parse(FuFirmware *firmware,
 			    GInputStream *stream,
@@ -101,13 +292,12 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 	for (guint i = 0; i < files_cnt; i++) {
 		const gchar *filename = NULL;
 		const gchar *bootloader_name = NULL;
-		const gchar *board_name = NULL;
 		guint flash_area_id;
 		guint image_addr = 0;
 		JsonObject *obj = json_array_get_object_element(json_files, i);
 		g_autoptr(FuFirmware) image = NULL;
+		g_autofree gchar *board_name = NULL;
 		g_autofree gchar *fwupd_image_id = NULL;
-		g_auto(GStrv) board_split = NULL;
 		g_autoptr(GBytes) blob = NULL;
 
 		if (!json_object_has_member(obj, "file")) {
@@ -122,139 +312,27 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 		if (blob == NULL)
 			return FALSE;
 
-		if (json_object_has_member(obj, "version_B0")) {
-			bootloader_name = "B0";
-			image = g_object_new(FU_TYPE_NORDIC_HID_FIRMWARE_B0, NULL);
-		} else if (json_object_has_member(obj, "version_MCUBOOT")) {
-			bootloader_name = "MCUBOOT";
-			image = g_object_new(FU_TYPE_NORDIC_HID_FIRMWARE_MCUBOOT, NULL);
-		} else if (json_object_has_member(obj, "version_MCUBOOT+XIP")) {
-			bootloader_name = "MCUBOOT+XIP";
-			image = g_object_new(FU_TYPE_NORDIC_HID_FIRMWARE_MCUBOOT, NULL);
-		} else {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "only B0 and MCUboot bootloaders are supported");
+		bootloader_name = fu_nordic_hid_archive_parse_file_get_bootloader_name(obj, error);
+		if (bootloader_name == NULL)
 			return FALSE;
-		}
 
-		if (!json_object_has_member(obj, "board")) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "manifest invalid as has no target board information");
+		image = fu_nordic_hid_archive_parse_file_image_create(bootloader_name, error);
+		if (image == NULL)
 			return FALSE;
-		}
 
-		board_name = json_object_get_string_member(obj, "board");
-		if (board_name == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "no valid board information in manifest");
+		board_name =
+		    fu_nordic_hid_archive_parse_file_get_board_name(obj, manifest_ver, error);
+		if (board_name == NULL)
 			return FALSE;
-		}
 
-		if (manifest_ver == 0) {
-			/* for manifest "format-version" of "0", the board name is represented only
-			 * by part of the string before the "_" symbol
-			 */
-			board_split = g_strsplit(board_name, "_", -1);
-			if (board_split[0] == NULL) {
-				g_set_error_literal(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_INVALID_FILE,
-						    "manifest invalid as has no board information");
-				return FALSE;
-			}
-			board_name = board_split[0];
-		}
-
-		if (manifest_ver == 0) {
-			/* the images are expected to be listed in strict order */
-			flash_area_id = i;
-		} else {
-			gint64 image_idx;
-			gint64 slot;
-
-			/* for MCUboot bootloader with swap, if only a single image is available,
-			 * the "image_index" and "slot" properties may be omitted
-			 */
-			if (g_strcmp0(bootloader_name, "MCUBOOT") == 0 && files_cnt == 1) {
-				flash_area_id = 0;
-			} else {
-				const gchar *image_idx_str = NULL;
-				const gchar *slot_str = NULL;
-
-				if (!json_object_has_member(obj, "image_index")) {
-					g_set_error_literal(error,
-							    FWUPD_ERROR,
-							    FWUPD_ERROR_INVALID_FILE,
-							    "missing image_index property");
-					return FALSE;
-				}
-				image_idx_str = json_object_get_string_member(obj, "image_index");
-				if (image_idx_str == NULL) {
-					g_set_error_literal(error,
-							    FWUPD_ERROR,
-							    FWUPD_ERROR_INVALID_FILE,
-							    "missing image_index property");
-					return FALSE;
-				}
-
-				if (!fu_strtoll(image_idx_str,
-						&image_idx,
-						G_MININT64,
-						G_MAXINT64,
-						FU_INTEGER_BASE_AUTO,
-						error)) {
-					g_prefix_error(error, "fu_strtoll failed for image_index:");
-					return FALSE;
-				}
-
-				if (!json_object_has_member(obj, "slot")) {
-					g_set_error_literal(error,
-							    FWUPD_ERROR,
-							    FWUPD_ERROR_INVALID_FILE,
-							    "missing slot property");
-					return FALSE;
-				}
-				slot_str = json_object_get_string_member(obj, "slot");
-				if (slot_str == NULL) {
-					g_set_error_literal(error,
-							    FWUPD_ERROR,
-							    FWUPD_ERROR_INVALID_FILE,
-							    "missing slot property");
-					return FALSE;
-				}
-				if (!fu_strtoll(slot_str,
-						&slot,
-						G_MININT64,
-						G_MAXINT64,
-						FU_INTEGER_BASE_AUTO,
-						error)) {
-					g_prefix_error(error, "fu_strtoll failed for slot:");
-					return FALSE;
-				}
-
-				if (image_idx != 0) {
-					g_set_error_literal(error,
-							    FWUPD_ERROR,
-							    FWUPD_ERROR_INVALID_FILE,
-							    "unsupported image_index property");
-					return FALSE;
-				}
-				if (slot != 0 && slot != 1) {
-					g_set_error_literal(error,
-							    FWUPD_ERROR,
-							    FWUPD_ERROR_INVALID_FILE,
-							    "unsupported slot property");
-					return FALSE;
-				}
-				flash_area_id = slot;
-			}
-		}
+		if (!fu_nordic_hid_archive_parse_file_get_flash_area_id(obj,
+									&flash_area_id,
+									manifest_ver,
+									i,
+									bootloader_name,
+									files_cnt,
+									error))
+			return FALSE;
 
 		/* used image ID format: <board>_<bl>_<bank>N, i.e "nrf52840dk_B0_bank0" */
 		fwupd_image_id =
