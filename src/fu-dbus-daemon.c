@@ -1091,7 +1091,7 @@ fu_dbus_daemon_hsi_supported(FuDbusDaemon *self, GError **error)
 		g_autofree gchar *contents = NULL;
 
 		if (g_file_get_contents(xen_privileged_fn, &contents, NULL, NULL)) {
-			if ((g_strchomp(contents), "1") == 0)
+			if (g_strcmp0(contents, "1") == 0)
 				return TRUE;
 		}
 	}
