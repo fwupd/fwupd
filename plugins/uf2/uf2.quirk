@@ -153,3 +153,55 @@ Vendor = Raspberry Pi
 [UF2\FAMILY_00FF6919]
 Name = STM32L4
 Vendor = ST
+
+[UF2\FAMILY_9AF03E33]
+Name = GD32VF103
+Vendor = GD
+
+[UF2\FAMILY_4F6ACE52]
+Name = CSK4
+Vendor = LISTENAI
+
+[UF2\FAMILY_6E7348A8]
+Name = CSK6
+Vendor = LISTENAI
+
+[UF2\FAMILY_11DE784A]
+Name = M0SENSE
+Vendor = Sipeed
+
+[UF2\FAMILY_4B684D71]
+Name = MaixPlay-U4
+Vendor = Sipeed
+
+[UF2\FAMILY_9517422F]
+Name = RZA1LU
+Vendor = Renesas
+
+[UF2\FAMILY_2DC309C5]
+Name = STM32F411xE
+Vendor = ST
+
+[UF2\FAMILY_06D1097B]
+Name = STM32F411xC
+Vendor = ST
+
+[UF2\FAMILY_72721D4E]
+Name = NRF52832xxAA
+Vendor = Nordic
+
+[UF2\FAMILY_6F752678]
+Name = NRF52832xxAB
+Vendor = Nordic
+
+[UF2\FAMILY_A0C97B8E]
+Name = AT32F415
+Vendor = ArteryTek
+
+[UF2\FAMILY_699B62EC]
+Name = CH32V
+Vendor = WCH
+
+[UF2\FAMILY_7BE8976D]
+Name = RA4M1
+Vendor = Renesas
