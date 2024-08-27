@@ -79,7 +79,7 @@ struct FuUsbBaseHdr {
 struct FuUsbDeviceHdr {
     length: u8,
     descriptor_type: FuUsbDescriptorKind == Device,
-    usb: u16,
+    usb: u16le,
     device_class: FuUsbClass,
     device_sub_class: u8,
     device_protocol: u8,

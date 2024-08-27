@@ -53,8 +53,8 @@ struct FuMkhiReadFileRequest {
     _rsvd: u8,
     result: u8 == 0x0,
     filename: [char; 0x40],
-    offset: u32 == 0x0,
-    data_size: u32,
+    offset: u32le == 0x0,
+    data_size: u32le,
     flags: u8,
 }
 
@@ -64,7 +64,7 @@ struct FuMkhiReadFileResponse {
     command: FuMkhiCommand == ReadFileResponse,
     _rsvd: u8,
     result: u8,
-    data_size: u32,
+    data_size: u32le,
     // payload here
 }
 
@@ -74,9 +74,9 @@ struct FuMkhiReadFileExRequest {
     command: FuMkhiCommand == ReadFileEx,
     _rsvd: u8,
     result: u8 == 0x0,
-    file_id: u32,
-    offset: u32 == 0x0,
-    data_size: u32,
+    file_id: u32le,
+    offset: u32le == 0x0,
+    data_size: u32le,
     flags: u8,
 }
 
@@ -86,6 +86,6 @@ struct FuMkhiReadFileExResponse {
     command: FuMkhiCommand == ReadFileExResponse,
     _rsvd: u8,
     result: u8,
-    data_size: u32,
+    data_size: u32le,
     // payload here
 }

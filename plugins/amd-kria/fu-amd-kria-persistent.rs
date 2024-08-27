@@ -4,16 +4,16 @@
 #[derive(ParseStream)]
 struct FuStructAmdKriaPersistReg {
     id_sig: [char; 4] == "ABUM",
-    ver: u32,
-    len: u32,
-    checksum: u32,
+    ver: u32le,
+    len: u32le,
+    checksum: u32le,
     last_booted_img: u8,
     requested_booted_img: u8,
     img_b_bootable: u8,
     img_a_bootable: u8,
-    img_a_offset: u32,
-    img_b_offset: u32,
-    recovery_offset: u32,
+    img_a_offset: u32le,
+    img_b_offset: u32le,
+    recovery_offset: u32le,
 }
 
 

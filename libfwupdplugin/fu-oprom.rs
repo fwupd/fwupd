@@ -23,7 +23,7 @@ struct FuStructOpromPci {
     device_list_pointer: u16le,
     structure_length: u16le,
     structure_revision: u8,
-    class_code: u24,
+    class_code: u24le,
     image_length: u16le,		// of 512 bytes
     image_revision: u16le,
     code_type: u8,
