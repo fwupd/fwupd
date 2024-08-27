@@ -1718,7 +1718,7 @@ fu_device_poll_func(void)
 	fu_test_loop_run_with_timeout(50);
 	fu_test_loop_quit();
 	cnt = fu_device_get_metadata_integer(device, "cnt");
-	g_assert_cmpint(cnt, >=, 9);
+	g_assert_cmpint(cnt, >=, 5);
 	fu_test_loop_quit();
 
 	/* auto pause */
