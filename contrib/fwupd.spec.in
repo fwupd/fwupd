@@ -234,8 +234,8 @@ fwupd wrapper for Qubes OS
 %if 0%{?enable_ci}
     --werror \
     -Db_sanitize=address,undefined \
-    -Dumockdev_tests=disabled \
 %endif
+    -Dumockdev_tests=disabled \
     -Ddocs=enabled \
 %if 0%{?enable_tests}
     -Dtests=true \
