@@ -9,6 +9,7 @@
 
 #include "fwupd-error.h"
 
+#include "fu-byte-array.h"
 #include "fu-efi-device-path-list.h"
 #include "fu-efi-file-path-device-path.h"
 #include "fu-efi-hard-drive-device-path.h"
@@ -623,24 +624,21 @@ fu_efivars_get_boot_order(FuEfivars *self, GError **error)
 gboolean
 fu_efivars_set_boot_order(FuEfivars *self, GArray *order, GError **error)
 {
-	gsize bufsz;
-	g_autofree guint8 *buf = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	g_return_val_if_fail(FU_IS_EFIVARS(self), FALSE);
 	g_return_val_if_fail(order != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	bufsz = order->len * sizeof(guint16);
-	buf = g_malloc0(bufsz);
 	for (guint i = 0; i < order->len; i++) {
 		guint16 idx = g_array_index(order, guint16, i);
-		fu_memwrite_uint16(buf + (i * 2), idx, G_LITTLE_ENDIAN);
+		fu_byte_array_append_uint16(buf, idx, G_LITTLE_ENDIAN);
 	}
 	return fu_efivars_set_data(self,
 				   FU_EFIVARS_GUID_EFI_GLOBAL,
 				   "BootOrder",
-				   buf,
-				   bufsz,
+				   buf->data,
+				   buf->len,
 				   FU_EFIVARS_ATTR_NON_VOLATILE |
 				       FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
 				       FU_EFIVARS_ATTR_RUNTIME_ACCESS,
@@ -661,7 +659,7 @@ fu_efivars_build_boot_order(FuEfivars *self, GError **error, ...)
 
 	va_start(args, error);
 	while (TRUE) {
-		guint idx = va_arg(args, guint);
+		guint16 idx = va_arg(args, guint);
 		if (idx == G_MAXUINT16)
 			break;
 		g_array_append_val(order, idx);
