@@ -75,7 +75,6 @@ fu_msgpack_func(void)
 	g_autoptr(GByteArray) buf1 = NULL;
 	g_autoptr(GByteArray) buf2 = NULL;
 	g_autoptr(GByteArray) buf_in = g_byte_array_new();
-	g_autoptr(GString) str_in = g_string_new("hello world");
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) items_new = NULL;
 	g_autoptr(GPtrArray) items = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
