@@ -17,7 +17,7 @@ enum FuAmtProvisioningState {
     Provisioned,
 }
 
-#[repr(u32)]
+#[repr(u32le)]
 enum FuAmtHostIfCommand {
     ProvisioningModeRequest = 0x04000008,
     ProvisioningStateRequest = 0x04000011,
@@ -31,29 +31,29 @@ enum FuAmtHostIfCommand {
 struct FuAmtHostIfMsgCodeVersionRequest {
     version_major: u8 == 0x1,
     version_minor: u8 == 0x1,
-    _reserved: u16,
+    _reserved: u16le,
     command: FuAmtHostIfCommand == CodeVersionsRequest,
-    length: u32 == 0x0,
+    length: u32le == 0x0,
 }
 
 #[derive(Parse)]
 struct FuAmtHostIfMsgCodeVersionResponse {
     version_major: u8 == 0x1,
     version_minor: u8 == 0x1,
-    _reserved: u16,
+    _reserved: u16le,
     command: FuAmtHostIfCommand == CodeVersionsResponse,
-    _length: u32,
-    status: u32,
+    _length: u32le,
+    status: u32le,
     _bios: [char; 65],
-    version_count: u32,
+    version_count: u32le,
     // now variable length of FuAmtUnicodeString
 }
 
 #[derive(Parse)]
 struct FuAmtUnicodeString {
-    description_length: u16,
+    description_length: u16le,
     description_string: [char; 20],
-    version_length: u16,
+    version_length: u16le,
     version_string: [char; 20],
 }
 
@@ -61,18 +61,18 @@ struct FuAmtUnicodeString {
 struct FuAmtHostIfMsgProvisioningStateRequest {
     version_major: u8 == 0x1,
     version_minor: u8 == 0x1,
-    _reserved: u16,
+    _reserved: u16le,
     command: FuAmtHostIfCommand == ProvisioningStateRequest,
-    length: u32 == 0x0,
+    length: u32le == 0x0,
 }
 
 #[derive(Parse)]
 struct FuAmtHostIfMsgProvisioningStateResponse {
     version_major: u8 == 0x1,
     version_minor: u8 == 0x1,
-    _reserved: u16,
+    _reserved: u16le,
     command: FuAmtHostIfCommand == ProvisioningStateResponse,
-    length: u32 == 0x8,
-    status: u32,
+    length: u32le == 0x8,
+    status: u32le,
     provisioning_state: FuAmtProvisioningState,
 }
