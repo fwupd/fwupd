@@ -1071,10 +1071,6 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		/* skip */
 		return NULL;
 	}
-	if (device_flag == FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST) {
-		/* TRANSLATORS: Install composite firmware on the parent before the child */
-		return _("Install to parent device first");
-	}
 	if (device_flag == FWUPD_DEVICE_FLAG_IS_BOOTLOADER) {
 		/* TRANSLATORS: Is currently in bootloader mode */
 		return _("Is in bootloader mode");
