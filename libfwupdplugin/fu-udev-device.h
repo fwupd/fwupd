@@ -211,9 +211,6 @@ GPtrArray *
 fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self,
 					   const gchar *subsystem,
 					   GError **error) G_GNUC_NON_NULL(1, 2);
-GPtrArray *
-fu_udev_device_get_children_with_subsystem(FuUdevDevice *self, const gchar *subsystem)
-    G_GNUC_NON_NULL(1, 2);
 
 FuDevice *
 fu_udev_device_find_usb_device(FuUdevDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
