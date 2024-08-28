@@ -104,7 +104,7 @@ fu_ifd_firmware_fixup_stream(GInputStream *stream, GError **error)
 {
 	const guint8 buf[] = {0xFF};
 	gsize streamsz = 0;
-	g_autoptr(GBytes) blob = g_bytes_new_static(buf, sizeof(buf));
+	g_autoptr(GBytes) blob = g_bytes_new(buf, sizeof(buf));
 	g_autoptr(GInputStream) stream2 = fu_composite_input_stream_new();
 
 	/* already aligned */
