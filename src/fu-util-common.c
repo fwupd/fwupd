@@ -1067,10 +1067,6 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		/* TRANSLATORS: User has been notified */
 		return _("User has been notified");
 	}
-	if (device_flag == FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION) {
-		/* skip */
-		return NULL;
-	}
 	if (device_flag == FWUPD_DEVICE_FLAG_IS_BOOTLOADER) {
 		/* TRANSLATORS: Is currently in bootloader mode */
 		return _("Is in bootloader mode");

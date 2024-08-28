@@ -334,15 +334,6 @@ typedef enum {
 	 */
 	FWUPD_DEVICE_FLAG_NOTIFIED = 1ull << 10,
 	/**
-	 * FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION:
-	 *
-	 * The device will always display use the runtime version rather than the bootloader
-	 * version.
-	 *
-	 * Since: 1.0.6
-	 */
-	FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION = 1ull << 11,
-	/**
 	 * FWUPD_DEVICE_FLAG_IS_BOOTLOADER:
 	 *
 	 * The device is currently in a read-only bootloader mode and not running application code.
