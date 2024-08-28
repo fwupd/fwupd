@@ -12,7 +12,7 @@
 #  * These GUIDs will look like MST-${DEVICEKIND}-${CHIPID}-${BOARDID}
 #
 # By default the Synaptics MST device will restart after update
-# To override this behavior add FWUPD_DEVICE_FLAG_SKIPS_RESTART
+# To override this behavior add FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART
 #
 
 [DPAUX\OUI_0090CC24]

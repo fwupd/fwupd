@@ -1171,10 +1171,6 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		 * specified */
 		return _("Installing a specific release is explicitly required");
 	}
-	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
-		/* skip */
-		return NULL;
-	}
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN) {
 		return NULL;
 	}

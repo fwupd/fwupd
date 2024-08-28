@@ -50,7 +50,7 @@ fu_thunderbolt_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
 		g_info("turning on delayed activation for %s", fu_device_get_name(device));
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
+		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
 		fu_device_remove_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	}
 }

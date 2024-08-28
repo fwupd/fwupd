@@ -465,14 +465,6 @@ typedef enum {
 	 */
 	FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN = 1ull << 37,
 	/**
-	 * FWUPD_DEVICE_FLAG_SKIPS_RESTART:
-	 *
-	 * The device relies upon activation or power cycle to load firmware.
-	 *
-	 * Since: 1.5.0
-	 */
-	FWUPD_DEVICE_FLAG_SKIPS_RESTART = 1ull << 38,
-	/**
 	 * FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES:
 	 *
 	 * The device supports switching to a different stream of firmware.

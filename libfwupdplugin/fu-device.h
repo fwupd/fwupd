@@ -631,6 +631,15 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION "use-runtime-version"
 
+/**
+ * FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART:
+ *
+ * The device relies upon activation or power cycle to load firmware.
+ *
+ * Since: 2.0.0
+ */
+#define FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART "skips-restart"
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);
