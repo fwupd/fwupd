@@ -1195,10 +1195,10 @@ fu_usb_device_find_udev_device(FuUsbDevice *self, GError **error)
 		GUdevDevice *dev = G_UDEV_DEVICE(l->data);
 
 		/* check correct device */
-		if (g_udev_device_get_sysfs_attr_as_int(dev, "busnum") !=
+		if (g_udev_device_get_sysfs_attr_as_int(dev, "busnum") != /* nocheck */
 		    fu_usb_device_get_bus(self))
 			continue;
-		if (g_udev_device_get_sysfs_attr_as_int(dev, "devnum") !=
+		if (g_udev_device_get_sysfs_attr_as_int(dev, "devnum") != /* nocheck */
 		    fu_usb_device_get_address(self))
 			continue;
 
