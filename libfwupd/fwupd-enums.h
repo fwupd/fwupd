@@ -464,15 +464,6 @@ typedef enum {
 	 */
 	FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES = 1ull << 31,
 	/**
-	 * FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS:
-	 *
-	 * The device will add counterpart GUIDs from an alternate mode like bootloader.
-	 * This flag is typically specified in a quirk.
-	 *
-	 * Since: 1.4.0
-	 */
-	FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS = 1ull << 35,
-	/**
 	 * FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN:
 	 *
 	 * The device is updatable but is currently inhibited from updates in the client.

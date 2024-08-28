@@ -165,8 +165,6 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 		return "version-check-required";
 	if (device_flag == FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)
 		return "install-all-releases";
-	if (device_flag == FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS)
-		return "add-counterpart-guids";
 	if (device_flag == FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)
 		return "updatable-hidden";
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART)
@@ -266,8 +264,6 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED;
 	if (g_strcmp0(device_flag, "install-all-releases") == 0)
 		return FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES;
-	if (g_strcmp0(device_flag, "add-counterpart-guids") == 0)
-		return FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS;
 	if (g_strcmp0(device_flag, "updatable-hidden") == 0)
 		return FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN;
 	if (g_strcmp0(device_flag, "skips-restart") == 0)
