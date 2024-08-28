@@ -139,7 +139,8 @@ fu_device_list_depsolve_order_full(FuDeviceList *self, FuDevice *device, guint d
 	children = fu_device_list_get_children(self, device);
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *child = g_ptr_array_index(children, i);
-		if (fu_device_has_flag(child, FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST)) {
+		if (fu_device_has_private_flag(child,
+					       FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST)) {
 			fu_device_list_depsolve_order_full(self, child, depth + 1);
 		} else {
 			fu_device_list_depsolve_order_full(self, child, depth - 1);
@@ -153,8 +154,8 @@ fu_device_list_depsolve_order_full(FuDeviceList *self, FuDevice *device, guint d
  * @device: a device
  *
  * Sets the device order using the logical parent->child relationships -- by default
- * the child is updated first, unless the device has set flag
- * %FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST.
+ * the child is updated first, unless the device has set private flag
+ * %FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST.
  *
  * Since: 1.5.0
  **/

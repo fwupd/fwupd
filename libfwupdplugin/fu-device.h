@@ -591,6 +591,17 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN "use-proxy-for-open"
 
+/**
+ * FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST:
+ *
+ * The composite device requires installation of composite firmware on the parent before
+ * the child.
+ * Normally the child is installed before the parent.
+ *
+ * Since: 2.0.0
+ */
+#define FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST "install-parent-first"
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);

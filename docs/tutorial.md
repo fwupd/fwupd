@@ -776,7 +776,7 @@ device, there might be firmware dependencies between parent and child
 devices that require a specific update ordering (for instance, child
 devices first, then the parent). This can be modeled by setting an
 appropriate firmware priority in the firmware metainfo or by setting the
-`FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST` device flag.
+`FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST` device flag.
 
 ### How to add a delay
 

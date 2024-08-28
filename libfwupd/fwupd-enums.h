@@ -351,16 +351,6 @@ typedef enum {
 	 */
 	FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION = 1ull << 11,
 	/**
-	 * FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST:
-	 *
-	 * The composite device requires installation of composite firmware on the parent before
-	 * the child.
-	 * Normally the child is installed before the parent.
-	 *
-	 * Since: 1.0.8
-	 */
-	FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST = 1ull << 12,
-	/**
 	 * FWUPD_DEVICE_FLAG_IS_BOOTLOADER:
 	 *
 	 * The device is currently in a read-only bootloader mode and not running application code.
