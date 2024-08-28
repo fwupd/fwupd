@@ -430,19 +430,19 @@ fu_msgpack_item_append_string(GByteArray *buf, GString *str, GError **error)
 static gboolean
 fu_msgpack_item_append_binary(GByteArray *buf, GByteArray *donor, GError **error)
 {
-	if (buf->len <= G_MAXUINT8) {
+	if (donor->len <= G_MAXUINT8) {
 		fu_byte_array_append_uint8(buf, FU_MSGPACK_CMD_BIN8);
 		fu_byte_array_append_uint8(buf, donor->len);
 		g_byte_array_append(buf, donor->data, donor->len);
 		return TRUE;
 	}
-	if (buf->len <= G_MAXUINT16) {
+	if (donor->len <= G_MAXUINT16) {
 		fu_byte_array_append_uint8(buf, FU_MSGPACK_CMD_BIN16);
 		fu_byte_array_append_uint16(buf, donor->len, G_BIG_ENDIAN);
 		g_byte_array_append(buf, donor->data, donor->len);
 		return TRUE;
 	}
-	if (buf->len <= G_MAXUINT32) {
+	if (donor->len <= G_MAXUINT32) {
 		fu_byte_array_append_uint8(buf, FU_MSGPACK_CMD_BIN32);
 		fu_byte_array_append_uint32(buf, donor->len, G_BIG_ENDIAN);
 		g_byte_array_append(buf, donor->data, donor->len);
