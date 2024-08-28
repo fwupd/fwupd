@@ -1079,10 +1079,6 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		/* TRANSLATORS: the hardware is waiting to be replugged */
 		return _("Hardware is waiting to be replugged");
 	}
-	if (device_flag == FWUPD_DEVICE_FLAG_IGNORE_VALIDATION) {
-		/* TRANSLATORS: Ignore validation safety checks when flashing this device */
-		return _("Ignore validation safety checks");
-	}
 	if (device_flag == FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED) {
 		/* skip */
 		return NULL;

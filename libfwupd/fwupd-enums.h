@@ -360,15 +360,6 @@ typedef enum {
 	 */
 	FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG = 1ull << 14,
 	/**
-	 * FWUPD_DEVICE_FLAG_IGNORE_VALIDATION:
-	 *
-	 * When processing an update for the device, plugins should ignore all validation safety
-	 * checks.
-	 *
-	 * Since: 1.1.2
-	 */
-	FWUPD_DEVICE_FLAG_IGNORE_VALIDATION = 1ull << 15,
-	/**
 	 * FWUPD_DEVICE_FLAG_TRUSTED:
 	 *
 	 * A trusted client is reading information about the device.
