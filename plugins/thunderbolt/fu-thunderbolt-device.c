@@ -409,7 +409,7 @@ fu_thunderbolt_device_write_firmware(FuDevice *device,
 	}
 
 	/* using an active delayed activation flow later (either shutdown or another plugin) */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART)) {
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART)) {
 		g_debug("skipping Thunderbolt reset per quirk request");
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		return TRUE;

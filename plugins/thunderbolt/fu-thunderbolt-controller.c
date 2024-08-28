@@ -324,7 +324,7 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 		/* flushes image */
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 		/* forces the device to write to authenticate on disconnect attribute */
-		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
+		fu_device_remove_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
 		/* control the order of activation (less relevant; install too though) */
 		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
 	} else {

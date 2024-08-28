@@ -6913,6 +6913,7 @@ fu_device_init(FuDevice *self)
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_REGISTERED);
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION);
+	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
 }
 
 static void

@@ -1181,7 +1181,7 @@ test_update_wd19(ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_nonnull(fw_data);
 
 	/* simulate a wd19 update which will not disappear / re-appear */
-	fu_device_add_flag(tree->fu_device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
+	fu_device_add_private_flag(tree->fu_device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
 	fu_device_add_flag(tree->fu_device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	version_before = fu_device_get_version(tree->fu_device);
 

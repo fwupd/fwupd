@@ -204,11 +204,11 @@ fu_dell_dock_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 {
 	/* dell dock delays the activation so skips device restart */
 	if (fu_device_has_guid(device, DELL_DOCK_TBT_INSTANCE_ID)) {
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
+		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
 		fu_plugin_cache_add(plugin, "tbt", device);
 	}
 	if (fu_device_has_guid(device, DELL_DOCK_USB4_INSTANCE_ID)) {
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
+		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
 		fu_plugin_cache_add(plugin, "usb4", device);
 	}
 	if (FU_IS_DELL_DOCK_EC(device))

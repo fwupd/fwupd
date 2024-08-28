@@ -165,8 +165,6 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 		return "install-all-releases";
 	if (device_flag == FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)
 		return "updatable-hidden";
-	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART)
-		return "skips-restart";
 	if (device_flag == FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES)
 		return "has-multiple-branches";
 	if (device_flag == FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL)
@@ -262,8 +260,6 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES;
 	if (g_strcmp0(device_flag, "updatable-hidden") == 0)
 		return FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN;
-	if (g_strcmp0(device_flag, "skips-restart") == 0)
-		return FWUPD_DEVICE_FLAG_SKIPS_RESTART;
 	if (g_strcmp0(device_flag, "has-multiple-branches") == 0)
 		return FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES;
 	if (g_strcmp0(device_flag, "backup-before-install") == 0)

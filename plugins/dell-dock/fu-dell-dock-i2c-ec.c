@@ -501,7 +501,7 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 
 	/* passive flow is default enabled for production docks */
 	self->passive_flow = PASSIVE_REBOOT_MASK;
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
 	return TRUE;
 }
 
