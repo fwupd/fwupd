@@ -360,15 +360,6 @@ typedef enum {
 	 */
 	FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG = 1ull << 14,
 	/**
-	 * FWUPD_DEVICE_FLAG_TRUSTED:
-	 *
-	 * A trusted client is reading information about the device.
-	 * Extra metadata such as serial number can be exposed about this device.
-	 *
-	 * Since: 1.1.2
-	 */
-	FWUPD_DEVICE_FLAG_TRUSTED = 1ull << 16,
-	/**
 	 * FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN:
 	 *
 	 * The device requires the system to be shutdown to finish application of new firmware.
