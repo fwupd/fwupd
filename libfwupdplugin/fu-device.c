@@ -638,7 +638,7 @@ fu_device_poll_locker_close_cb(GObject *device, GError **error)
  * Returns a device locker that prevents polling on the device. If there are no open poll lockers
  * then the poll callback will be called.
  *
- * Use %FU_DEVICE_CUSTOM_AUTO_PAUSE_POLLING to opt into this functionality.
+ * Use %FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING to opt into this functionality.
  *
  * Returns: (transfer full): a #FuDeviceLocker
  *
@@ -691,7 +691,7 @@ fu_device_poll_cb(gpointer user_data)
 	g_autoptr(GError) error_local = NULL;
 
 	/* device is being detached, written, read, or attached */
-	if (fu_device_has_private_flag(self, FU_DEVICE_CUSTOM_AUTO_PAUSE_POLLING) &&
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING) &&
 	    priv->poll_locker_cnt > 0) {
 		g_debug("ignoring poll callback as an action is in progress");
 		return G_SOURCE_CONTINUE;
@@ -6889,7 +6889,7 @@ fu_device_init(FuDevice *self)
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED);
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_NO_PROBE);
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
-	fu_device_register_private_flag(self, FU_DEVICE_CUSTOM_AUTO_PAUSE_POLLING);
+	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING);
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER);
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_NO_PROBE_COMPLETE);

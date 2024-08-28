@@ -408,13 +408,13 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED "md-set-signed"
 /**
- * FU_DEVICE_CUSTOM_AUTO_PAUSE_POLLING:
+ * FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING:
  *
  * Pause polling when reading or writing to the device
  *
  * Since: 1.8.1
  */
-#define FU_DEVICE_CUSTOM_AUTO_PAUSE_POLLING "auto-pause-polling"
+#define FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING "auto-pause-polling"
 /**
  * FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG:
  *
