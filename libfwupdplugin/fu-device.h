@@ -602,6 +602,15 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST "install-parent-first"
 
+/**
+ * FU_DEVICE_PRIVATE_FLAG_REGISTERED:
+ *
+ * The device has been registered with other plugins.
+ *
+ * Since: 2.0.0
+ */
+#define FU_DEVICE_PRIVATE_FLAG_REGISTERED "registered"
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);

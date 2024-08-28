@@ -2115,7 +2115,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED));
-	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
+	g_assert_true(fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REGISTERED));
 
 	/* get the releases for one device */
 	releases = fu_engine_get_releases(engine, request, fu_device_get_id(device), &error);
@@ -2267,7 +2267,7 @@ fu_engine_md_verfmt_func(gconstpointer user_data)
 	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED));
-	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
+	g_assert_true(fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REGISTERED));
 
 	/* ensure the releases are set */
 	releases = fu_engine_get_releases(engine, request, fu_device_get_id(device), &error);
@@ -2534,7 +2534,7 @@ fu_engine_history_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
-	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
+	g_assert_true(fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REGISTERED));
 
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
@@ -2856,7 +2856,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
-	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
+	g_assert_true(fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REGISTERED));
 
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
@@ -2997,7 +2997,7 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
-	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
+	g_assert_true(fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REGISTERED));
 
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
@@ -3107,7 +3107,7 @@ fu_engine_install_request(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
-	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
+	g_assert_true(fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REGISTERED));
 
 	filename =
 	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
@@ -3203,7 +3203,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
-	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
+	g_assert_true(fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REGISTERED));
 
 	/* install the wrong thing */
 	filename =

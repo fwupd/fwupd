@@ -139,3 +139,4 @@ Remember: Plugins should be upstream!
 * `fu_i2c_device_get_bus_number()`: Use `fu_udev_device_get_number()` instead
 * `fu_usb_device_set_open_retry_count()`: Use `FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN` instead
 * `FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST`: Use `FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST` instead
+* `FWUPD_DEVICE_FLAG_REGISTERED`: Use `FU_DEVICE_PRIVATE_FLAG_REGISTERED` instead

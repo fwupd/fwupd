@@ -6077,7 +6077,7 @@ static void
 fu_engine_plugin_device_register(FuEngine *self, FuDevice *device)
 {
 	GPtrArray *plugins;
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED)) {
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REGISTERED)) {
 		g_warning("already registered %s, ignoring", fu_device_get_id(device));
 		return;
 	}
@@ -6090,7 +6090,7 @@ fu_engine_plugin_device_register(FuEngine *self, FuDevice *device)
 		FuBackend *backend = g_ptr_array_index(self->backends, i);
 		fu_backend_registered(backend, device);
 	}
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_REGISTERED);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REGISTERED);
 }
 
 static void
@@ -6453,7 +6453,7 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	fu_engine_device_inherit_history(self, device);
 
 	/* notify all plugins about this new device */
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED))
+	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REGISTERED))
 		fu_engine_plugin_device_register(self, device);
 
 	if (fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN &&

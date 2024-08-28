@@ -310,14 +310,6 @@ typedef enum {
 	 */
 	FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER = 1ull << 6,
 	/**
-	 * FWUPD_DEVICE_FLAG_REGISTERED:
-	 *
-	 * The device has been registered with other plugins.
-	 *
-	 * Since: 0.9.7
-	 */
-	FWUPD_DEVICE_FLAG_REGISTERED = 1ull << 7,
-	/**
 	 * FWUPD_DEVICE_FLAG_NEEDS_REBOOT:
 	 *
 	 * The device requires a system reboot to apply firmware or to reload hardware.

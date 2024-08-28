@@ -129,8 +129,6 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 		return "supported";
 	if (device_flag == FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)
 		return "needs-bootloader";
-	if (device_flag == FWUPD_DEVICE_FLAG_REGISTERED)
-		return "registered";
 	if (device_flag == FWUPD_DEVICE_FLAG_NEEDS_REBOOT)
 		return "needs-reboot";
 	if (device_flag == FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN)
@@ -236,8 +234,6 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_SUPPORTED;
 	if (g_strcmp0(device_flag, "needs-bootloader") == 0)
 		return FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER;
-	if (g_strcmp0(device_flag, "registered") == 0)
-		return FWUPD_DEVICE_FLAG_REGISTERED;
 	if (g_strcmp0(device_flag, "needs-reboot") == 0)
 		return FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
 	if (g_strcmp0(device_flag, "needs-shutdown") == 0)
