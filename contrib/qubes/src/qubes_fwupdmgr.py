@@ -116,13 +116,6 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
             # actually needing refreshing
             if remote.get("Kind") != "download":
                 continue
-            # skip unsupported keyring kind
-            if remote.get("KeyringKind") not in ("jcat",):
-                print(
-                    "Skipping remote '{}' due to unsupported keyring type '{}'".format(
-                        name, remote.get("KeyringKind")
-                    )
-                )
             assert "MetadataUri" in remote
             remotes[name] = remote["MetadataUri"]
 

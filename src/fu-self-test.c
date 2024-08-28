@@ -2234,7 +2234,6 @@ fu_engine_md_verfmt_func(gconstpointer user_data)
 	remote = fu_engine_get_remote_by_id(engine, "stable", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(remote);
-	fwupd_remote_set_keyring_kind(remote, FWUPD_KEYRING_KIND_JCAT);
 
 	/* add a device with no defined version format */
 	fu_device_set_version(device, "16908291");
@@ -5981,7 +5980,6 @@ fu_remote_download_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
-	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_JCAT);
 	g_assert_cmpint(fwupd_remote_get_priority(remote), ==, 0);
 	g_assert_false(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
 	g_assert_nonnull(fwupd_remote_get_metadata_uri(remote));
@@ -6079,7 +6077,6 @@ fu_remote_auth_func(void)
 	    "{\n"
 	    "  \"Id\" : \"auth\",\n"
 	    "  \"Kind\" : \"download\",\n"
-	    "  \"KeyringKind\" : \"jcat\",\n"
 	    "  \"ReportUri\" : \"https://fwupd.org/lvfs/firmware/report\",\n"
 	    "  \"MetadataUri\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz\",\n"
 	    "  \"MetadataUriSig\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz.jcat\",\n"
@@ -6127,7 +6124,6 @@ fu_remote_duplicate_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_false(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
-	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_NONE);
 	g_assert_cmpstr(fwupd_remote_get_username(remote), ==, NULL);
 	g_assert_cmpstr(fwupd_remote_get_password(remote), ==, "");
 	g_assert_cmpstr(fwupd_remote_get_filename_cache(remote),
@@ -6154,7 +6150,6 @@ fu_remote_nopath_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
-	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_JCAT);
 	g_assert_cmpint(fwupd_remote_get_priority(remote), ==, 0);
 	g_assert_true(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
 	g_assert_cmpstr(fwupd_remote_get_checksum(remote), ==, NULL);
@@ -6188,7 +6183,6 @@ fu_remote_local_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_LOCAL);
-	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_NONE);
 	g_assert_true(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
 	g_assert_null(fwupd_remote_get_metadata_uri(remote));
 	g_assert_null(fwupd_remote_get_metadata_uri_sig(remote));
@@ -6219,7 +6213,6 @@ fu_remote_local_func(void)
 	    "{\n"
 	    "  \"Id\" : \"dell-esrt\",\n"
 	    "  \"Kind\" : \"local\",\n"
-	    "  \"KeyringKind\" : \"none\",\n"
 	    "  \"Title\" : \"Enable UEFI capsule updates on Dell systems\",\n"
 	    "  \"FilenameCache\" : \"@datadir@/fwupd/remotes.d/dell-esrt/metadata.xml\",\n"
 	    "  \"Flags\" : 1,\n"

@@ -2432,7 +2432,6 @@ fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
 	/* create a new remote we can use for re-installing */
 	g_info("creating new backup remote");
 	fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_ENABLED);
-	fwupd_remote_set_keyring_kind(remote, FWUPD_KEYRING_KIND_NONE);
 	fwupd_remote_set_title(remote, "Backup");
 	fwupd_remote_set_metadata_uri(remote, backupdir_uri);
 	return fwupd_remote_save_to_filename(remote, remotes_fn, NULL, error);
@@ -4405,10 +4404,14 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 				GBytes *bytes_sig,
 				GError **error)
 {
-	FwupdKeyringKind keyring_kind;
 	FwupdRemote *remote;
-	JcatVerifyFlags jcat_flags = JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GInputStream) istream = NULL;
+	g_autoptr(GPtrArray) results = NULL;
 	g_autoptr(JcatFile) jcat_file = jcat_file_new();
+	g_autoptr(JcatItem) jcat_item = NULL;
+	g_autoptr(JcatResult) jcat_result = NULL;
+	g_autoptr(JcatResult) jcat_result_old = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(remote_id != NULL, FALSE);
@@ -4436,72 +4439,41 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	}
 
 	/* verify JCatFile, or create a dummy one from legacy data */
-	keyring_kind = fwupd_remote_get_keyring_kind(remote);
-	if (keyring_kind == FWUPD_KEYRING_KIND_JCAT) {
-		g_autoptr(GInputStream) istream = NULL;
-		istream = g_memory_input_stream_new_from_bytes(bytes_sig);
-		if (!jcat_file_import_stream(jcat_file,
-					     istream,
-					     JCAT_IMPORT_FLAG_NONE,
-					     NULL,
-					     error))
-			return FALSE;
-		jcat_flags |= JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM;
-	} else if (keyring_kind == FWUPD_KEYRING_KIND_GPG) {
-		g_autoptr(JcatBlob) jcab_blob = NULL;
-		g_autoptr(JcatItem) jcat_item = jcat_item_new("");
-		jcab_blob = jcat_blob_new(JCAT_BLOB_KIND_GPG, bytes_sig);
-		jcat_item_add_blob(jcat_item, jcab_blob);
-		jcat_file_add_item(jcat_file, jcat_item);
-	} else if (keyring_kind == FWUPD_KEYRING_KIND_PKCS7) {
-		g_autoptr(JcatBlob) jcab_blob = NULL;
-		g_autoptr(JcatItem) jcat_item = jcat_item_new("");
-		jcab_blob = jcat_blob_new(JCAT_BLOB_KIND_PKCS7, bytes_sig);
-		jcat_item_add_blob(jcat_item, jcab_blob);
-		jcat_file_add_item(jcat_file, jcat_item);
-	}
+	istream = g_memory_input_stream_new_from_bytes(bytes_sig);
+	if (!jcat_file_import_stream(jcat_file, istream, JCAT_IMPORT_FLAG_NONE, NULL, error))
+		return FALSE;
 
-	/* verify file */
-	if (keyring_kind != FWUPD_KEYRING_KIND_NONE) {
-		g_autoptr(GError) error_local = NULL;
-		g_autoptr(GPtrArray) results = NULL;
-		g_autoptr(JcatItem) jcat_item = NULL;
-		g_autoptr(JcatResult) jcat_result = NULL;
-		g_autoptr(JcatResult) jcat_result_old = NULL;
+	/* this should only be signing one thing */
+	jcat_item = jcat_file_get_item_default(jcat_file, error);
+	if (jcat_item == NULL)
+		return FALSE;
+	results = jcat_context_verify_item(self->jcat_context,
+					   bytes_raw,
+					   jcat_item,
+					   JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE |
+					       JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM,
+					   error);
+	if (results == NULL)
+		return FALSE;
 
-		/* this should only be signing one thing */
-		jcat_item = jcat_file_get_item_default(jcat_file, error);
-		if (jcat_item == NULL)
-			return FALSE;
-		results = jcat_context_verify_item(self->jcat_context,
-						   bytes_raw,
-						   jcat_item,
-						   jcat_flags,
-						   error);
-		if (results == NULL)
-			return FALSE;
+	/* return the newest signature */
+	jcat_result = fu_engine_get_newest_signature_jcat_result(results, error);
+	if (jcat_result == NULL)
+		return FALSE;
 
-		/* return the newest signature */
-		jcat_result = fu_engine_get_newest_signature_jcat_result(results, error);
-		if (jcat_result == NULL)
-			return FALSE;
-
-		/* verify the metadata was signed later than the existing
-		 * metadata for this remote to mitigate a rollback attack */
-		jcat_result_old = fu_engine_get_system_jcat_result(self, remote, &error_local);
-		if (jcat_result_old == NULL) {
-			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
-				g_info("no existing valid keyrings: %s", error_local->message);
-			} else {
-				g_warning("could not get existing keyring result: %s",
-					  error_local->message);
-			}
+	/* verify the metadata was signed later than the existing
+	 * metadata for this remote to mitigate a rollback attack */
+	jcat_result_old = fu_engine_get_system_jcat_result(self, remote, &error_local);
+	if (jcat_result_old == NULL) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+			g_info("no existing valid keyrings: %s", error_local->message);
 		} else {
-			if (!fu_engine_validate_result_timestamp(jcat_result,
-								 jcat_result_old,
-								 error))
-				return FALSE;
+			g_warning("could not get existing keyring result: %s",
+				  error_local->message);
 		}
+	} else {
+		if (!fu_engine_validate_result_timestamp(jcat_result, jcat_result_old, error))
+			return FALSE;
 	}
 
 	/* save XML and signature to remotes.d */
@@ -4534,12 +4506,8 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 #endif
 
 	/* save signature to remotes.d */
-	if (keyring_kind != FWUPD_KEYRING_KIND_NONE) {
-		if (!fu_bytes_set_contents(fwupd_remote_get_filename_cache_sig(remote),
-					   bytes_sig,
-					   error))
-			return FALSE;
-	}
+	if (!fu_bytes_set_contents(fwupd_remote_get_filename_cache_sig(remote), bytes_sig, error))
+		return FALSE;
 	if (!fu_engine_load_metadata_store(self, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
 

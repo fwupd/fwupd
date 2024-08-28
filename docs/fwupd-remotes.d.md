@@ -54,19 +54,6 @@ The `[fwupd Remote]` section can contain the following parameters:
 
   The single line description to show in any UI tools.
 
-**Keyring=jcat**
-
-  The signing scheme to use when downloading and verifying the metadata.
-  The options are `jcat`, `gpg`, `pkcs`, and `none`.
-
-  **NOTE:** Using `Keyring=none` is only designed when local firmware installed to an immutable
-  location, and should not be used when the metadata could be written by an untrusted user.
-
-  **NOTE:** Using `Keyring=jcat` is usually a better choice than `Keyring=gpg` or `Keyring=pkcs`
-  as deployments may disable either PKCS#7 or GPG support. Using `Keyring=jcat` means it works in
-  both cases, and JCat also provides other benefits like desynchronized CDN mitigation and multiple
-  types of checksum.
-
 **MetadataURI=**
 
   The URL of AppStream metadata to download and use. This should have a suffix of `.xml.gz` for

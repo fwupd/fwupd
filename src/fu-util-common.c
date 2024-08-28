@@ -2042,7 +2042,6 @@ static gchar *
 fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 {
 	FwupdRemoteKind kind = fwupd_remote_get_kind(remote);
-	FwupdKeyringKind keyring_kind = fwupd_remote_get_keyring_kind(remote);
 	const gchar *tmp;
 	gint priority;
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -2056,14 +2055,6 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 
 	/* TRANSLATORS: remote type, e.g. remote or local */
 	fwupd_codec_string_append(str, idt + 1, _("Type"), fwupd_remote_kind_to_string(kind));
-
-	if (keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
-		fwupd_codec_string_append(str,
-					  idt + 1,
-					  /* TRANSLATORS: keyring type, e.g. GPG or PKCS7 */
-					  _("Keyring"),
-					  fwupd_keyring_kind_to_string(keyring_kind));
-	}
 
 	fwupd_codec_string_append(
 	    str,
