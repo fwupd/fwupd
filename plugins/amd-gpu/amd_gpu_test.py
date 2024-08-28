@@ -217,7 +217,7 @@ A: vendor=0x1022
             count += 1
             self.assertEqual(
                 dev.get_flags(),
-                1 | Fwupd.DeviceFlags.INTERNAL | Fwupd.DeviceFlags.REGISTERED,
+                1 | Fwupd.DeviceFlags.INTERNAL,
             )
             self.assertEqual(dev.get_summary(), "AMD AMD_PHOENIX_GENERIC")
             self.assertEqual(dev.get_vendor(), "Advanced Micro Devices, Inc. [AMD/ATI]")

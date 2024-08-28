@@ -190,7 +190,6 @@ A: vendor=0x1022
                 | Fwupd.DeviceFlags.INTERNAL
                 | Fwupd.DeviceFlags.REQUIRE_AC
                 | Fwupd.DeviceFlags.NEEDS_REBOOT
-                | Fwupd.DeviceFlags.REGISTERED
                 | Fwupd.DeviceFlags.USABLE_DURING_UPDATE,
             )
             self.assertEqual(dev.get_name(), "WD PC SN740 SDDPNQD-256G")
