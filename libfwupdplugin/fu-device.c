@@ -6911,6 +6911,7 @@ fu_device_init(FuDevice *self)
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_REGISTERED);
+	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
 }
 
 static void

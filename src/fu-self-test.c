@@ -3745,7 +3745,7 @@ fu_device_list_counterpart_func(gconstpointer user_data)
 	fu_device_set_id(device2, "device-bootloader");
 	fu_device_add_instance_id(device2, "bootloader"); /* 015370aa-26f2-5daa-9661-a75bf4c1a913 */
 	fu_device_add_private_flag(device2, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
+	fu_device_add_private_flag(device2, FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_convert_instance_ids(device2);
 	fu_device_list_add(device_list, device2);
 

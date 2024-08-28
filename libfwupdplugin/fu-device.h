@@ -611,6 +611,16 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_REGISTERED "registered"
 
+/**
+ * FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS:
+ *
+ * The device will add counterpart GUIDs from an alternate mode like bootloader.
+ * This flag is typically specified in a quirk.
+ *
+ * Since: 2.0.0
+ */
+#define FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS "add-counterpart-guids"
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);
