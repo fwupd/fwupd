@@ -1721,7 +1721,7 @@ fu_device_poll_func(void)
 	fu_test_loop_quit();
 
 	/* auto pause */
-	fu_device_add_private_flag(device, FU_DEVICE_CUSTOM_AUTO_PAUSE_POLLING);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING);
 	locker = fu_device_poll_locker_new(device, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(locker);
