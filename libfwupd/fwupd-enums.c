@@ -143,8 +143,6 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 		return "is-bootloader";
 	if (device_flag == FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)
 		return "wait-for-replug";
-	if (device_flag == FWUPD_DEVICE_FLAG_TRUSTED)
-		return "trusted";
 	if (device_flag == FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED)
 		return "another-write-required";
 	if (device_flag == FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)
@@ -246,8 +244,6 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_IS_BOOTLOADER;
 	if (g_strcmp0(device_flag, "wait-for-replug") == 0)
 		return FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG;
-	if (g_strcmp0(device_flag, "trusted") == 0)
-		return FWUPD_DEVICE_FLAG_TRUSTED;
 	if (g_strcmp0(device_flag, "another-write-required") == 0)
 		return FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED;
 	if (g_strcmp0(device_flag, "needs-activation") == 0)
