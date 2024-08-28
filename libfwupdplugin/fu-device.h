@@ -621,6 +621,16 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS "add-counterpart-guids"
 
+/**
+ * FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION:
+ *
+ * The device will always display use the runtime version rather than the bootloader
+ * version.
+ *
+ * Since: 2.0.0
+ */
+#define FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION "use-runtime-version"
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);

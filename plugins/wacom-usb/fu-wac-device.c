@@ -886,7 +886,7 @@ fu_wac_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get version of each sub-module */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION)) {
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION)) {
 		if (!fu_wac_device_add_modules_legacy(self, error))
 			return FALSE;
 	} else {
