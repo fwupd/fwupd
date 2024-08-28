@@ -55,8 +55,6 @@ fwupd_remote_set_remotes_dir(FwupdRemote *self, const gchar *directory) G_GNUC_N
 void
 fwupd_remote_set_filename_source(FwupdRemote *self, const gchar *filename_source)
     G_GNUC_NON_NULL(1);
-void
-fwupd_remote_set_keyring_kind(FwupdRemote *self, FwupdKeyringKind keyring_kind) G_GNUC_NON_NULL(1);
 gboolean
 fwupd_remote_setup(FwupdRemote *self, GError **error) G_GNUC_NON_NULL(1);
 gchar *

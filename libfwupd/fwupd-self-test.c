@@ -133,13 +133,6 @@ fwupd_enums_func(void)
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_request_flag_from_string(tmp), ==, i);
 	}
-	for (guint i = 1; i < FWUPD_KEYRING_KIND_LAST; i++) {
-		const gchar *tmp = fwupd_keyring_kind_to_string(i);
-		if (tmp == NULL)
-			g_warning("missing keyring kind 0x%x", (guint)i);
-		g_assert_cmpstr(tmp, !=, NULL);
-		g_assert_cmpint(fwupd_keyring_kind_from_string(tmp), ==, i);
-	}
 	for (guint64 i = 1; i < FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE; i *= 2) {
 		const gchar *tmp = fwupd_remote_flag_to_string(i);
 		if (tmp == NULL)

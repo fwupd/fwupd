@@ -34,7 +34,6 @@ fwupd_remote_finalize(GObject *obj);
 typedef struct {
 	FwupdRemoteKind kind;
 	FwupdRemoteFlags flags;
-	FwupdKeyringKind keyring_kind;
 	gchar *id;
 	gchar *firmware_base_uri;
 	gchar *report_uri;
@@ -154,11 +153,6 @@ fwupd_remote_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags f
 	fwupd_codec_json_append(builder, "Id", priv->id);
 	if (priv->kind != FWUPD_REMOTE_KIND_UNKNOWN) {
 		fwupd_codec_json_append(builder, "Kind", fwupd_remote_kind_to_string(priv->kind));
-	}
-	if (priv->keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
-		fwupd_codec_json_append(builder,
-					"KeyringKind",
-					fwupd_keyring_kind_to_string(priv->keyring_kind));
 	}
 	fwupd_codec_json_append(builder, "ReportUri", priv->report_uri);
 	fwupd_codec_json_append(builder, "MetadataUri", priv->metadata_uri);
@@ -471,23 +465,6 @@ fwupd_remote_set_kind(FwupdRemote *self, FwupdRemoteKind kind)
 }
 
 /**
- * fwupd_remote_set_keyring_kind:
- * @self: a #FwupdRemote
- * @keyring_kind: keyring kind e.g. #FWUPD_KEYRING_KIND_PKCS7
- *
- * Sets the keyring kind
- *
- * Since: 1.5.3
- **/
-void
-fwupd_remote_set_keyring_kind(FwupdRemote *self, FwupdKeyringKind keyring_kind)
-{
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FWUPD_IS_REMOTE(self));
-	priv->keyring_kind = keyring_kind;
-}
-
-/**
  * fwupd_remote_set_id:
  * @self: a #FwupdRemote
  * @id: (nullable): remote ID, e.g. "lvfs"
@@ -530,18 +507,6 @@ fwupd_remote_set_filename_source(FwupdRemote *self, const gchar *filename_source
 		return;
 	g_free(priv->filename_source);
 	priv->filename_source = g_strdup(filename_source);
-}
-
-static const gchar *
-fwupd_remote_get_suffix_for_keyring_kind(FwupdKeyringKind keyring_kind)
-{
-	if (keyring_kind == FWUPD_KEYRING_KIND_JCAT)
-		return ".jcat";
-	if (keyring_kind == FWUPD_KEYRING_KIND_GPG)
-		return ".asc";
-	if (keyring_kind == FWUPD_KEYRING_KIND_PKCS7)
-		return ".p7b";
-	return NULL;
 }
 
 static gchar *
@@ -632,7 +597,6 @@ void
 fwupd_remote_set_metadata_uri(FwupdRemote *self, const gchar *metadata_uri)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	const gchar *suffix;
 
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
 
@@ -645,11 +609,8 @@ fwupd_remote_set_metadata_uri(FwupdRemote *self, const gchar *metadata_uri)
 	priv->metadata_uri = g_strdup(metadata_uri);
 
 	/* generate the signature URI too */
-	suffix = fwupd_remote_get_suffix_for_keyring_kind(priv->keyring_kind);
-	if (suffix != NULL) {
-		g_free(priv->metadata_uri_sig);
-		priv->metadata_uri_sig = g_strconcat(metadata_uri, suffix, NULL);
-	}
+	g_free(priv->metadata_uri_sig);
+	priv->metadata_uri_sig = g_strconcat(metadata_uri, ".jcat", NULL);
 }
 
 /**
@@ -732,7 +693,6 @@ void
 fwupd_remote_set_filename_cache(FwupdRemote *self, const gchar *filename)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	const gchar *suffix;
 
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
 
@@ -743,11 +703,10 @@ fwupd_remote_set_filename_cache(FwupdRemote *self, const gchar *filename)
 	g_free(priv->filename_cache);
 	priv->filename_cache = g_strdup(filename);
 
-	/* create for all remote types */
-	suffix = fwupd_remote_get_suffix_for_keyring_kind(priv->keyring_kind);
-	if (suffix != NULL) {
+	/* create for all non-local remote types */
+	if (priv->kind != FWUPD_REMOTE_KIND_LOCAL) {
 		g_free(priv->filename_cache_sig);
-		priv->filename_cache_sig = g_strconcat(filename, suffix, NULL);
+		priv->filename_cache_sig = g_strconcat(filename, ".jcat", NULL);
 	}
 }
 
@@ -850,14 +809,6 @@ fwupd_remote_setup(FwupdRemote *self, GError **error)
 
 	/* some validation for DIRECTORY types */
 	if (priv->kind == FWUPD_REMOTE_KIND_DIRECTORY) {
-		if (priv->keyring_kind != FWUPD_KEYRING_KIND_NONE) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "keyring kind %s is not supported with directory remote",
-				    fwupd_keyring_kind_to_string(priv->keyring_kind));
-			return FALSE;
-		}
 		if (priv->firmware_base_uri != NULL) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -1011,24 +962,6 @@ fwupd_remote_get_kind(FwupdRemote *self)
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), 0);
 	return priv->kind;
-}
-
-/**
- * fwupd_remote_get_keyring_kind:
- * @self: a #FwupdRemote
- *
- * Gets the keyring kind of the remote.
- *
- * Returns: a #FwupdKeyringKind, e.g. #FWUPD_KEYRING_KIND_GPG
- *
- * Since: 0.9.7
- **/
-FwupdKeyringKind
-fwupd_remote_get_keyring_kind(FwupdRemote *self)
-{
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_REMOTE(self), 0);
-	return priv->keyring_kind;
 }
 
 /**
@@ -1466,9 +1399,6 @@ fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError 
  *
  * Parses the signature, updating the metadata URI as appropriate.
  *
- * This can only be called for remotes with `Keyring=jcat` which is
- * the default for most remotes.
- *
  * Returns: %TRUE for success
  *
  * Since: 1.4.5
@@ -1476,22 +1406,12 @@ fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError 
 gboolean
 fwupd_remote_load_signature_bytes(FwupdRemote *self, GBytes *bytes, GError **error)
 {
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GInputStream) istr = NULL;
 	g_autoptr(JcatFile) jcat_file = jcat_file_new();
 
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
 	g_return_val_if_fail(bytes != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* sanity check */
-	if (priv->keyring_kind != FWUPD_KEYRING_KIND_JCAT) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "only supported for JCat remotes");
-		return FALSE;
-	}
 
 	istr = g_memory_input_stream_new_from_bytes(bytes);
 	if (!jcat_file_import_stream(jcat_file, istr, JCAT_IMPORT_FLAG_NONE, NULL, error))
@@ -1607,8 +1527,6 @@ fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 			fwupd_remote_set_kind(self, g_variant_get_uint32(value));
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0)
 			fwupd_remote_set_flags(self, g_variant_get_uint64(value));
-		if (g_strcmp0(key, "Keyring") == 0)
-			fwupd_remote_set_keyring_kind(self, g_variant_get_uint32(value));
 	}
 	while (g_variant_iter_loop(iter2, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_URI) == 0)
@@ -1729,12 +1647,6 @@ fwupd_remote_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodec
 	}
 	if (priv->kind != FWUPD_REMOTE_KIND_UNKNOWN) {
 		g_variant_builder_add(builder, "{sv}", "Type", g_variant_new_uint32(priv->kind));
-	}
-	if (priv->keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
-		g_variant_builder_add(builder,
-				      "{sv}",
-				      "Keyring",
-				      g_variant_new_uint32(priv->keyring_kind));
 	}
 	if (priv->mtime != 0) {
 		g_variant_builder_add(builder,
@@ -1969,8 +1881,6 @@ fwupd_remote_class_init(FwupdRemoteClass *klass)
 static void
 fwupd_remote_init(FwupdRemote *self)
 {
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	priv->keyring_kind = FWUPD_KEYRING_KIND_JCAT;
 }
 
 static void

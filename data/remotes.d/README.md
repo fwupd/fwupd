@@ -36,9 +36,7 @@ The metadata should be of the form:
       </component>
     </components>
 
-Ideally, the metadata and firmware should be signed by either GPG or a PKCS7
-certificate. If this is the case also change `Keyring=gpg` or `Keyring=pkcs7`
-in `/etc/fwupd/remotes.d/vendor.conf` and ensure the correct public key or
+The metadata and firmware should be signed using Jcat, ensuring the
 signing certificate is installed in the `/etc/pki/fwupd` location.
 
 ## Automatic metadata generation

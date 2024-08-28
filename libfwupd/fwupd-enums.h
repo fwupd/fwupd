@@ -1273,56 +1273,6 @@ typedef enum {
 } FwupdUpdateState;
 
 /**
- * FwupdKeyringKind:
- *
- * Type of keyring used on a remote.
- **/
-typedef enum {
-	/**
-	 * FWUPD_KEYRING_KIND_UNKNOWN:
-	 *
-	 * Unknown.
-	 *
-	 * Since: 0.9.7
-	 */
-	FWUPD_KEYRING_KIND_UNKNOWN,
-	/**
-	 * FWUPD_KEYRING_KIND_NONE:
-	 *
-	 * No verification.
-	 *
-	 * Since: 0.9.7
-	 */
-	FWUPD_KEYRING_KIND_NONE,
-	/**
-	 * FWUPD_KEYRING_KIND_GPG:
-	 *
-	 * Verification using GPG.
-	 *
-	 * Since: 0.9.7
-	 */
-	FWUPD_KEYRING_KIND_GPG,
-	/**
-	 * FWUPD_KEYRING_KIND_PKCS7:
-	 *
-	 * Verification using PKCS7.
-	 *
-	 * Since: 0.9.7
-	 */
-	FWUPD_KEYRING_KIND_PKCS7,
-	/**
-	 * FWUPD_KEYRING_KIND_JCAT:
-	 *
-	 * Verification using Jcat.
-	 *
-	 * Since: 1.4.0
-	 */
-	FWUPD_KEYRING_KIND_JCAT,
-	/*< private >*/
-	FWUPD_KEYRING_KIND_LAST
-} FwupdKeyringKind;
-
-/**
  * FwupdVersionFormat:
  *
  * The flags used when parsing version numbers.
@@ -1487,10 +1437,6 @@ const gchar *
 fwupd_feature_flag_to_string(FwupdFeatureFlags feature_flag);
 FwupdFeatureFlags
 fwupd_feature_flag_from_string(const gchar *feature_flag);
-FwupdKeyringKind
-fwupd_keyring_kind_from_string(const gchar *keyring_kind);
-const gchar *
-fwupd_keyring_kind_to_string(FwupdKeyringKind keyring_kind);
 FwupdVersionFormat
 fwupd_version_format_from_string(const gchar *str);
 const gchar *

@@ -6,5 +6,4 @@
 
 Enabled=true
 Title=fwupd test suite
-Keyring=none
 MetadataURI=file://@installedtestsdir@/fwupd-tests.xml
