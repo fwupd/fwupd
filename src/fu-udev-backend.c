@@ -121,29 +121,27 @@ fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device)
 	GType gtype = FU_TYPE_UDEV_DEVICE;
 	struct {
 		const gchar *subsystem;
+		const gchar *devtype;
 		GType gtype;
-	} subsystem_gtype_map[] = {{"mei", FU_TYPE_MEI_DEVICE},
-				   {"drm", FU_TYPE_DRM_DEVICE},
-				   {"usb", FU_TYPE_USB_DEVICE},
-				   {"i2c", FU_TYPE_I2C_DEVICE},
-				   {"i2c-dev", FU_TYPE_I2C_DEVICE},
-				   {"drm_dp_aux_dev", FU_TYPE_DPAUX_DEVICE},
-				   {NULL, G_TYPE_INVALID}};
+	} map[] = {
+	    {"mei", NULL, FU_TYPE_MEI_DEVICE},
+	    {"drm", NULL, FU_TYPE_DRM_DEVICE},
+	    {"usb", "usb_device", FU_TYPE_USB_DEVICE},
+	    {"i2c", NULL, FU_TYPE_I2C_DEVICE},
+	    {"i2c-dev", NULL, FU_TYPE_I2C_DEVICE},
+	    {"drm_dp_aux_dev", NULL, FU_TYPE_DPAUX_DEVICE},
+	};
 	g_autoptr(FuDevice) device = NULL;
 
 	/* create the correct object depending on the subsystem */
-	for (guint i = 0; subsystem_gtype_map[i].gtype != G_TYPE_INVALID; i++) {
-		if (g_strcmp0(g_udev_device_get_subsystem(udev_device),
-			      subsystem_gtype_map[i].subsystem) == 0) {
-			gtype = subsystem_gtype_map[i].gtype;
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
+		if (g_strcmp0(g_udev_device_get_subsystem(udev_device), map[i].subsystem) == 0 &&
+		    (map[i].devtype == NULL ||
+		     g_strcmp0(g_udev_device_get_devtype(udev_device), map[i].devtype) == 0)) {
+			gtype = map[i].gtype;
 			break;
 		}
 	}
-
-	/* ensure this is the actual device */
-	if (gtype == FU_TYPE_USB_DEVICE &&
-	    g_strcmp0(g_udev_device_get_devtype(udev_device), "usb_device") != 0)
-		return NULL;
 
 	/* create device of correct kind */
 	device = g_object_new(gtype, "backend", FU_BACKEND(self), "udev-device", udev_device, NULL);
