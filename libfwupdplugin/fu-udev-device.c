@@ -280,35 +280,6 @@ fu_udev_device_set_device_file(FuUdevDevice *self, const gchar *device_file)
 	g_object_notify(G_OBJECT(self), "device-file");
 }
 
-#ifdef HAVE_GUDEV
-static gboolean
-fu_udev_device_probe_serio(FuUdevDevice *self, GError **error)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	const gchar *tmp;
-
-	/* firmware ID */
-	tmp = g_udev_device_get_property(priv->udev_device, /* nocheck:blocked */
-					 "SERIO_FIRMWARE_ID");
-	if (tmp != NULL) {
-		/* this prefix is not useful */
-		if (g_str_has_prefix(tmp, "PNP: "))
-			tmp += 5;
-		fu_device_add_instance_strsafe(FU_DEVICE(self), "FWID", tmp);
-		if (!fu_device_build_instance_id_full(FU_DEVICE(self),
-						      FU_DEVICE_INSTANCE_FLAG_GENERIC |
-							  FU_DEVICE_INSTANCE_FLAG_VISIBLE |
-							  FU_DEVICE_INSTANCE_FLAG_QUIRKS,
-						      error,
-						      "SERIO",
-						      "FWID",
-						      NULL))
-			return FALSE;
-	}
-	return TRUE;
-}
-#endif
-
 /**
  * fu_udev_device_set_vendor:
  * @self: a #FuUdevDevice
@@ -686,12 +657,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 						 NULL);
 	}
 
-	/* add firmware_id */
-	if (g_strcmp0(g_udev_device_get_subsystem(priv->udev_device), "serio") == 0) {
-		if (!fu_udev_device_probe_serio(self, error))
-			return FALSE;
-	}
-
 	/* determine if we're wired internally */
 	parent_i2c = g_udev_device_get_parent_with_subsystem(priv->udev_device, "i2c", NULL);
 	if (parent_i2c != NULL)
@@ -703,24 +668,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 }
 
 #ifdef HAVE_GUDEV
-static gchar *
-fu_udev_device_get_miscdev0(FuUdevDevice *self)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	const gchar *fn;
-	g_autofree gchar *miscdir = NULL;
-	g_autoptr(GDir) dir = NULL;
-
-	miscdir = g_build_filename(g_udev_device_get_sysfs_path(priv->udev_device), "misc", NULL);
-	dir = g_dir_open(miscdir, 0, NULL);
-	if (dir == NULL)
-		return NULL;
-	fn = g_dir_read_name(dir);
-	if (fn == NULL)
-		return NULL;
-	return g_strdup_printf("/dev/%s", fn);
-}
-
 static void
 fu_udev_device_set_dev_internal(FuUdevDevice *self, GUdevDevice *udev_device)
 {
@@ -745,9 +692,6 @@ void
 fu_udev_device_set_dev(FuUdevDevice *self, GUdevDevice *udev_device)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-#ifdef HAVE_GUDEV
-	const gchar *summary;
-#endif
 
 	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
 
@@ -777,29 +721,6 @@ fu_udev_device_set_dev(FuUdevDevice *self, GUdevDevice *udev_device)
 
 	/* so we can display something sensible for unclaimed devices */
 	fu_device_set_backend_id(FU_DEVICE(self), g_udev_device_get_sysfs_path(priv->udev_device));
-
-	/* fall back to the first thing handled by misc drivers */
-	if (priv->device_file == NULL) {
-		/* perhaps we should unconditionally fall back? or perhaps
-		 * require FU_UDEV_DEVICE_FLAG_FALLBACK_MISC... */
-		if (g_strcmp0(priv->subsystem, "serio") == 0)
-			priv->device_file = fu_udev_device_get_miscdev0(self);
-		if (priv->device_file != NULL)
-			g_debug("falling back to misc %s", priv->device_file);
-	}
-
-	/* try to get one line summary */
-	summary =
-	    g_udev_device_get_sysfs_attr(priv->udev_device, "description"); /* nocheck:blocked */
-	if (summary == NULL) {
-		g_autoptr(GUdevDevice) parent = NULL;
-		parent = g_udev_device_get_parent(priv->udev_device);
-		if (parent != NULL)
-			summary = g_udev_device_get_sysfs_attr(parent, /* nocheck:blocked */
-							       "description");
-	}
-	if (summary != NULL)
-		fu_device_set_summary(FU_DEVICE(self), summary);
 #endif
 }
 
