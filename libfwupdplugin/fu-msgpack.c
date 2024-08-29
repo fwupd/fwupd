@@ -72,3 +72,78 @@ fu_msgpack_write(GPtrArray *items, GError **error)
 	/* success */
 	return g_steal_pointer(&buf);
 }
+
+/**
+ * fu_msgpack_map_lookup:
+ * @items: (element-type FuMsgpackItem): items
+ * @idx: index into the items, usually 0
+ * @key: (not nullable): key to find
+ * @error: (nullable): optional return location for an error
+ *
+ * Looks up an item from a map. This is similar in action to looking up an `a{sv}` dictionary
+ * with g_variant_lookup().
+ *
+ * Returns: (transfer full): a #FuMsgpackItem, or %NULL on error
+ *
+ * Since: 2.0.0
+ **/
+FuMsgpackItem *
+fu_msgpack_map_lookup(GPtrArray *items, guint idx, const gchar *key, GError **error)
+{
+	guint64 map_size = 0;
+	FuMsgpackItem *item_map;
+
+	g_return_val_if_fail(items != NULL, NULL);
+	g_return_val_if_fail(key != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* sanity check */
+	if (idx >= items->len) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "index %u of %u would be invalid",
+			    idx,
+			    items->len);
+		return NULL;
+	}
+
+	/* verify is a map */
+	item_map = g_ptr_array_index(items, idx);
+	if (fu_msgpack_item_get_kind(item_map) != FU_MSGPACK_ITEM_KIND_MAP) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "is not a map");
+		return NULL;
+	}
+
+	/* read each {sv} */
+	map_size = fu_msgpack_item_get_map(item_map);
+	if (idx + (map_size * 2) >= items->len) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "map %u with index %u of %u would be invalid",
+			    (guint)map_size,
+			    idx,
+			    items->len);
+		return NULL;
+	}
+	for (guint i = idx + 1; i < idx + (map_size * 2); i += 2) {
+		FuMsgpackItem *item_key = g_ptr_array_index(items, i);
+		FuMsgpackItem *item_value = g_ptr_array_index(items, i + 1);
+		FuMsgpackItemKind kind_key = fu_msgpack_item_get_kind(item_key);
+
+		if (kind_key != FU_MSGPACK_ITEM_KIND_STRING) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "at index %u, key is not a string, got %s",
+				    i,
+				    fu_msgpack_item_kind_to_string(kind_key));
+			return NULL;
+		}
+		if (g_strcmp0(fu_msgpack_item_get_string(item_key)->str, key) == 0)
+			return g_object_ref(item_value);
+	}
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no key %s in map", key);
+	return NULL;
+}
