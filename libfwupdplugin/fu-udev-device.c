@@ -52,7 +52,6 @@ typedef struct {
 	guint64 number;
 	FuIOChannel *io_channel;
 	FuIoChannelOpenFlag open_flags;
-	FuUdevDeviceFlags flags;
 	gchar **uevent_lines;
 } FuUdevDevicePrivate;
 
@@ -1621,47 +1620,6 @@ fu_udev_device_set_io_channel(FuUdevDevice *self, FuIOChannel *io_channel)
 	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
 	g_return_if_fail(FU_IS_IO_CHANNEL(io_channel));
 	g_set_object(&priv->io_channel, io_channel);
-}
-
-/**
- * fu_udev_device_remove_flag:
- * @self: a #FuUdevDevice
- * @flag: udev device flag, e.g. %FU_IO_CHANNEL_OPEN_FLAG_READ
- *
- * Removes a parameters flag.
- *
- * Since: 2.0.0
- **/
-void
-fu_udev_device_remove_flag(FuUdevDevice *self, FuUdevDeviceFlags flag)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
-	priv->flags &= ~flag;
-}
-
-/**
- * fu_udev_device_add_flag:
- * @self: a #FuUdevDevice
- * @flag: udev device flag, e.g. %FU_IO_CHANNEL_OPEN_FLAG_READ
- *
- * Sets the parameters to use when opening the device.
- *
- * For example %FU_IO_CHANNEL_OPEN_FLAG_READ means that fu_device_open()
- * would use `O_RDONLY` rather than `O_RDWR` which is the default.
- *
- * Since: 2.0.0
- **/
-void
-fu_udev_device_add_flag(FuUdevDevice *self, FuUdevDeviceFlags flag)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
-
-	/* already set */
-	if (priv->flags & flag)
-		return;
-	priv->flags |= flag;
 }
 
 /**
