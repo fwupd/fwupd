@@ -30,10 +30,6 @@ fu_optionrom_device_probe(FuDevice *device, GError **error)
 	}
 	fu_udev_device_set_device_file(FU_UDEV_DEVICE(device), fn);
 
-	/* FuUdevDevice->probe -- needed by FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT */
-	if (!FU_DEVICE_CLASS(fu_optionrom_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* set the physical ID */
 	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error);
 }
@@ -66,7 +62,6 @@ fu_optionrom_device_init(FuOptionromDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_logical_id(FU_DEVICE(self), "rom");
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 }
 
 static void
