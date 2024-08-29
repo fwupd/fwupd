@@ -1,0 +1,11 @@
+# AU84610
+[BLOCK\VEN_058F&DEV_8461]
+Plugin = algoltek_usbcr
+
+# AU84612
+[BLOCK\VEN_058F&DEV_8468]
+Plugin = algoltek_usbcr
+
+# AU84616
+[BLOCK\VEN_058F&DEV_8466]
+Plugin = algoltek_usbcr
