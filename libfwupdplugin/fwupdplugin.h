@@ -93,6 +93,7 @@
 #include <libfwupdplugin/fu-sbatlevel-section.h>
 #include <libfwupdplugin/fu-security-attr.h>
 #include <libfwupdplugin/fu-security-attrs.h>
+#include <libfwupdplugin/fu-serio-device.h>
 #include <libfwupdplugin/fu-smbios.h>
 #include <libfwupdplugin/fu-srec-firmware.h>
 #include <libfwupdplugin/fu-string.h>

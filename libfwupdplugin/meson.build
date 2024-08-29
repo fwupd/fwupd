@@ -145,6 +145,7 @@ fwupdplugin_src = [
   'fu-sbatlevel-section.c', # fuzzing
   'fu-security-attr.c', # fuzzing
   'fu-security-attrs.c',
+  'fu-serio-device.c',
   'fu-smbios.c', # fuzzing
   'fu-srec-firmware.c', # fuzzing
   'fu-string.c', # fuzzing
@@ -273,6 +274,7 @@ fwupdplugin_headers = [
   'fu-security-attr.h',
   'fu-security-attrs.h',
   'fu-security-attrs-private.h',
+  'fu-serio-device.h',
   'fu-smbios.h',
   'fu-smbios-private.h',
   'fu-srec-firmware.h',

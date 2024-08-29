@@ -130,6 +130,7 @@ fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device)
 	    {"i2c", NULL, FU_TYPE_I2C_DEVICE},
 	    {"i2c-dev", NULL, FU_TYPE_I2C_DEVICE},
 	    {"drm_dp_aux_dev", NULL, FU_TYPE_DPAUX_DEVICE},
+	    {"serio", NULL, FU_TYPE_SERIO_DEVICE},
 	};
 	g_autoptr(FuDevice) device = NULL;
 
