@@ -406,8 +406,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 #ifdef HAVE_GUDEV
 	const gchar *tmp;
 	g_autofree gchar *subsystem = NULL;
-	g_autoptr(GUdevDevice) udev_parent = NULL;
-	g_autoptr(GUdevDevice) parent_i2c = NULL;
 #endif
 
 	/* nothing to do */
@@ -423,53 +421,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	priv->subsystem_model = fu_udev_device_get_sysfs_attr_as_uint16(self, "subsystem_device");
 
 #ifdef HAVE_GUDEV
-	udev_parent = g_udev_device_get_parent(priv->udev_device);
-
-	/* hidraw helpfully encodes the information in a different place */
-	if (udev_parent != NULL && priv->vendor == 0x0 && priv->model == 0x0 &&
-	    priv->revision == 0x0 && g_strcmp0(priv->subsystem, "hidraw") == 0) {
-		tmp = g_udev_device_get_property(udev_parent, "HID_ID"); /* nocheck:blocked */
-		if (tmp != NULL) {
-			g_auto(GStrv) split = g_strsplit(tmp, ":", -1);
-			if (g_strv_length(split) == 3) {
-				guint64 val = 0;
-				g_autoptr(GError) error_local = NULL;
-
-				if (!fu_strtoull(split[1],
-						 &val,
-						 0,
-						 G_MAXUINT16,
-						 FU_INTEGER_BASE_16,
-						 &error_local)) {
-					g_warning("reading %s for %s failed: %s",
-						  split[1],
-						  g_udev_device_get_sysfs_path(priv->udev_device),
-						  error_local->message);
-				} else {
-					priv->vendor = val;
-				}
-				if (!fu_strtoull(split[2],
-						 &val,
-						 0,
-						 G_MAXUINT16,
-						 FU_INTEGER_BASE_16,
-						 &error_local)) {
-					g_warning("reading %s for %s failed: %s",
-						  split[2],
-						  g_udev_device_get_sysfs_path(priv->udev_device),
-						  error_local->message);
-				} else {
-					priv->model = val;
-				}
-			}
-		}
-		tmp = g_udev_device_get_property(udev_parent, "HID_NAME"); /* nocheck:blocked */
-		if (tmp != NULL) {
-			if (fu_device_get_name(device) == NULL)
-				fu_device_set_name(device, tmp);
-		}
-	}
-
 	/* if the device is a GPU try to fetch it from vbios_version */
 	if (g_strcmp0(priv->subsystem, "pci") == 0 &&
 	    fu_udev_device_is_pci_base_cls(FU_UDEV_DEVICE(device), FU_PCI_BASE_CLS_DISPLAY) &&
@@ -656,12 +607,15 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 						 "DRIVER",
 						 NULL);
 	}
+#endif
 
 	/* determine if we're wired internally */
-	parent_i2c = g_udev_device_get_parent_with_subsystem(priv->udev_device, "i2c", NULL);
-	if (parent_i2c != NULL)
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
-#endif
+	if (g_strcmp0(priv->subsystem, "i2c") != 0) {
+		g_autoptr(FuDevice) parent_i2c =
+		    fu_device_get_backend_parent_with_subsystem(device, "i2c", NULL);
+		if (parent_i2c != NULL)
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
+	}
 
 	/* success */
 	return TRUE;

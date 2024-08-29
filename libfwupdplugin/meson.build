@@ -108,6 +108,7 @@ fwupdplugin_src = [
   'fu-hid-device.c',
   'fu-hid-report-item.c', # fuzzing
   'fu-hid-report.c', # fuzzing
+  'fu-hidraw-device.c',
   'fu-hwids.c', # fuzzing
   'fu-hwids-config.c', # fuzzing
   'fu-hwids-dmi.c', # fuzzing
@@ -241,6 +242,7 @@ fwupdplugin_headers = [
   'fu-hid-descriptor.h',
   'fu-hid-device.h',
   'fu-hid-report.h',
+  'fu-hidraw-device.h',
   'fu-hwids.h',
   'fu-i2c-device.h',
   'fu-ifd-bios.h',
