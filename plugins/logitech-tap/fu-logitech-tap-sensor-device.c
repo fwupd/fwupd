@@ -314,27 +314,6 @@ fu_logitech_tap_sensor_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_logitech_tap_sensor_device_probe(FuDevice *device, GError **error)
-{
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_logitech_tap_sensor_device_parent_class)->probe(device, error))
-		return FALSE;
-
-	/* ignore unsupported subsystems */
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "hidraw") != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "is not correct subsystem=%s, expected hidraw",
-			    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)));
-		return FALSE;
-	}
-
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
-}
-
 static void
 fu_logitech_tap_sensor_device_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -364,7 +343,6 @@ static void
 fu_logitech_tap_sensor_device_class_init(FuLogitechTapSensorDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->probe = fu_logitech_tap_sensor_device_probe;
 	device_class->setup = fu_logitech_tap_sensor_device_setup;
 	device_class->set_progress = fu_logitech_tap_sensor_device_set_progress;
 	device_class->convert_version = fu_logitech_tap_sensor_device_convert_version;
