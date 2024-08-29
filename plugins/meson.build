@@ -22,6 +22,7 @@ plugins = {
   'acpi-phat': false,
   'algoltek-aux': false,
   'algoltek-usb': false,
+  'algoltek-usbcr': false,
   'amd-kria': false,
   'amd-pmc': false,
   'amd-gpu': false,
