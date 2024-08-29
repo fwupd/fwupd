@@ -448,20 +448,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		}
 	}
 
-	/* set model */
-	if (fu_device_get_name(device) == NULL) {
-		tmp = g_udev_device_get_property(priv->udev_device, /* nocheck:blocked */
-						 "ID_MODEL_FROM_DATABASE");
-		if (tmp == NULL)
-			tmp = g_udev_device_get_property(priv->udev_device, /* nocheck:blocked */
-							 "ID_MODEL");
-		if (tmp == NULL)
-			tmp = g_udev_device_get_property(priv->udev_device, /* nocheck:blocked */
-							 "ID_PCI_CLASS_FROM_DATABASE");
-		if (tmp != NULL)
-			fu_device_set_name(device, tmp);
-	}
-
 	/* set number */
 	if (fu_udev_device_get_sysfs_path(self) != NULL) {
 		g_autoptr(GError) error_local = NULL;
