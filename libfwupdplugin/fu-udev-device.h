@@ -138,10 +138,6 @@ gboolean
 fu_udev_device_set_physical_id(FuUdevDevice *self,
 			       const gchar *subsystems,
 			       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
-gboolean
-fu_udev_device_set_logical_id(FuUdevDevice *self,
-			      const gchar *subsystem,
-			      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 void
 fu_udev_device_add_open_flag(FuUdevDevice *self, FuIoChannelOpenFlag flag) G_GNUC_NON_NULL(1);
 void
