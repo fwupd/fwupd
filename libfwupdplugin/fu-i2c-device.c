@@ -39,7 +39,6 @@ static gboolean
 fu_i2c_device_probe(FuDevice *device, GError **error)
 {
 	FuI2cDevice *self = FU_I2C_DEVICE(device);
-	GPtrArray *hwid_guids = fu_context_get_hwid_guids(fu_device_get_context(device));
 	g_autofree gchar *attr_name = NULL;
 
 	/* FuUdevDevice */
@@ -88,17 +87,21 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* i2c devices are often tied to the platform, and usually have very unhelpful names */
-	for (guint i = 0; i < hwid_guids->len; i++) {
-		const gchar *hwid_guid = g_ptr_array_index(hwid_guids, i);
-		fu_device_add_instance_str(device, "HWID", hwid_guid);
-		fu_device_build_instance_id_full(device,
-						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
-						 NULL,
-						 "I2C",
-						 "NAME",
-						 "HWID",
-						 NULL);
+	if (!fu_device_has_private_flag(FU_DEVICE(self),
+					FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS)) {
+		GPtrArray *hwid_guids = fu_context_get_hwid_guids(fu_device_get_context(device));
+		for (guint i = 0; i < hwid_guids->len; i++) {
+			const gchar *hwid_guid = g_ptr_array_index(hwid_guids, i);
+			fu_device_add_instance_str(device, "HWID", hwid_guid);
+			fu_device_build_instance_id_full(device,
+							 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+							     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+							 NULL,
+							 "I2C",
+							 "NAME",
+							 "HWID",
+							 NULL);
+		}
 	}
 
 	/* success */
@@ -188,6 +191,7 @@ fu_i2c_device_init(FuI2cDevice *self)
 {
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS);
 }
 
 static void
