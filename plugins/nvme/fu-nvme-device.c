@@ -255,19 +255,37 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError
 	return TRUE;
 }
 
-/*
- * Returns:
- * %TRUE: device is in PCI subsystem
- * %FALSE: device is, probably, NVMe-over-Fabrics
- */
 static gboolean
-fu_nvme_device_is_pci(FuNvmeDevice *self, GError **error)
+fu_nvme_device_pci_probe(FuNvmeDevice *self, GError **error)
 {
-	g_autoptr(FuDevice) parent_pci = NULL;
+	g_autoptr(FuDevice) pci_donor = NULL;
 
-	parent_pci = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", error);
-	if (parent_pci == NULL)
+	pci_donor = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", error);
+	if (pci_donor == NULL)
 		return FALSE;
+	if (!fu_device_probe(pci_donor, error))
+		return FALSE;
+	fu_device_add_instance_str(FU_DEVICE(self),
+				   "VEN",
+				   fu_device_get_instance_str(pci_donor, "VEN"));
+	fu_device_add_instance_str(FU_DEVICE(self),
+				   "DEV",
+				   fu_device_get_instance_str(pci_donor, "DEV"));
+	fu_device_add_instance_str(FU_DEVICE(self),
+				   "SUBSYS",
+				   fu_device_get_instance_str(pci_donor, "SUBSYS"));
+	if (!fu_device_build_instance_id(FU_DEVICE(self), error, "NVME", "VEN", "DEV", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "NVME",
+					      "VEN",
+					      NULL))
+		return FALSE;
+	fu_device_build_instance_id(FU_DEVICE(self), error, "NVME", "VEN", "DEV", "SUBSYS", NULL);
+	fu_device_set_vendor(FU_DEVICE(self), fu_device_get_vendor(pci_donor));
+	fu_device_incorporate_vendor_ids(FU_DEVICE(self), pci_donor);
 
 	/* success */
 	return TRUE;
@@ -282,13 +300,13 @@ fu_nvme_device_probe(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_nvme_device_parent_class)->probe(device, error))
 		return FALSE;
 
+	/* copy the PCI-specific instance parts and make them NVME for GUID compat */
+	if (!fu_nvme_device_pci_probe(self, error))
+		return FALSE;
+
 	/* fix up vendor name so we can remove it from the product name */
 	if (g_strcmp0(fu_device_get_vendor(FU_DEVICE(device)), "Samsung Electronics Co Ltd") == 0)
 		fu_device_set_vendor(FU_DEVICE(device), "Samsung");
-
-	/* ignore non-PCI NVMe devices */
-	if (!fu_nvme_device_is_pci(self, error))
-		return FALSE;
 
 	/* set the physical ID */
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
@@ -456,7 +474,6 @@ fu_nvme_device_init(FuNvmeDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk");
 	fu_device_add_protocol(FU_DEVICE(self), "org.nvmexpress");
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_NVME_DEVICE_FLAG_FORCE_ALIGN);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_NVME_DEVICE_FLAG_COMMIT_CA3);
 }
