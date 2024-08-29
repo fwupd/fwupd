@@ -66,6 +66,10 @@ msgstr "Vymaže výsledky z poslednej aktualizácie"
 msgid "Command not found"
 msgstr "Príkaz nenájdený"
 
+#. TRANSLATORS: DFU stands for device firmware update
+msgid "DFU Utility"
+msgstr "Nástroj pre DFU"
+
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
 msgstr "Voľby ladenia"
@@ -128,6 +132,11 @@ msgid "Found"
 msgstr "Nájdené"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "command-argument"
 msgid "GUID"
 msgstr "GUID"
@@ -173,6 +182,14 @@ msgid "OK"
 msgstr "OK"
 
 #. TRANSLATORS: command description
+msgid "Read firmware from device into a file"
+msgstr "Prečíta firmvér zo zariadenia do súboru"
+
+#. TRANSLATORS: command description
+msgid "Read firmware from one partition into a file"
+msgstr "Prečíta firmvér z jedného oddielu do súboru"
+
+#. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Obnoví metaúdaje zo vzdialeného servera"
 
@@ -208,3 +225,11 @@ msgstr "Aktualizuje sa %s z verzie %s na verziu %s... "
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Verzia"
+
+#. TRANSLATORS: command description
+msgid "Write firmware from file into device"
+msgstr "Zapíše firmvér zo súboru do zariadenia"
+
+#. TRANSLATORS: command description
+msgid "Write firmware from file into one partition"
+msgstr "Zapíše firmvér zo súboru do jedného oddielu"

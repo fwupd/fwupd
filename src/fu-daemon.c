@@ -168,7 +168,6 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 	g_autoptr(GTimer) timer = g_timer_new();
 
 	g_return_val_if_fail(FU_IS_DAEMON(self), FALSE);
-	g_return_val_if_fail(FU_IS_ENGINE(engine), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* check that the process manager is preventing access to dangerous system calls */

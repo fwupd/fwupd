@@ -2,6 +2,10 @@ libmm_glib = dependency('mm-glib', version: '>= 1.18.0', required: get_option('p
 libqmi_glib = dependency('qmi-glib', version: '>= 1.30.0', required: get_option('plugin_modem_manager'))
 libmbim_glib = dependency('mbim-glib', version: '>= 1.26.0', required: get_option('plugin_modem_manager'))
 
+if get_option('plugin_modem_manager').require(libusb.found(),
+    error_message: 'libusb is needed for plugin_modem_manager').allowed()
+endif
+
 if libmm_glib.found() and \
    libqmi_glib.found() and \
    libmbim_glib.found() and \
@@ -15,9 +19,6 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 plugin_quirks += files('modem-manager.quirk')
 
 shared_module('fu_plugin_modem_manager',
-  rustgen.process(
-    'fu-cinterion-fdl-updater.rs',
-  ),
   sources: [
     'fu-mm-plugin.c',
     'fu-mm-device.c',
@@ -25,7 +26,6 @@ shared_module('fu_plugin_modem_manager',
     'fu-mbim-qdu-updater.c',
     'fu-firehose-updater.c',
     'fu-sahara-loader.c',
-    'fu-cinterion-fdl-updater.c',
     'fu-mm-utils.c'
   ],
   include_directories: plugin_incdirs,

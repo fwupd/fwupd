@@ -1038,78 +1038,6 @@ fu_dbus_daemon_client_flags_notify_cb(FuClient *client, GParamSpec *pspec, FuMai
 }
 #endif
 
-static GInputStream *
-fu_dbus_daemon_invocation_get_stream(GDBusMethodInvocation *invocation, GError **error)
-{
-#ifdef HAVE_GIO_UNIX
-	GDBusMessage *message;
-	GUnixFDList *fd_list;
-	gint fd;
-	g_autoptr(GInputStream) stream = NULL;
-
-	/* get the fd */
-	message = g_dbus_method_invocation_get_message(invocation);
-	fd_list = g_dbus_message_get_unix_fd_list(message);
-	if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 1) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
-		return NULL;
-	}
-	fd = g_unix_fd_list_get(fd_list, 0, error);
-	if (fd < 0)
-		return NULL;
-
-	/* get details about the file (will close the fd when done) */
-	stream = fu_unix_seekable_input_stream_new(fd, TRUE);
-	if (stream == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid stream");
-		return NULL;
-	}
-	return g_steal_pointer(&stream);
-#else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
-	return NULL;
-#endif
-}
-
-static gboolean
-fu_dbus_daemon_hsi_supported(FuDbusDaemon *self, GError **error)
-{
-#ifdef HAVE_HSI
-	g_autofree gchar *sysfsfwdir = NULL;
-	g_autofree gchar *xen_privileged_fn = NULL;
-
-	if (g_getenv("UMOCKDEV_DIR") != NULL)
-		return TRUE;
-	if (fu_daemon_get_machine_kind(FU_DAEMON(self)) == FU_DAEMON_MACHINE_KIND_PHYSICAL)
-		return TRUE;
-
-	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW_ATTRIB);
-	/* privileged xen can access most hardware */
-	xen_privileged_fn =
-	    g_build_filename(sysfsfwdir, "hypervisor", "start_flags", "privileged", NULL);
-	if (g_file_test(xen_privileged_fn, G_FILE_TEST_EXISTS)) {
-		g_autofree gchar *contents = NULL;
-
-		if (g_file_get_contents(xen_privileged_fn, &contents, NULL, NULL)) {
-			if (g_strcmp0(contents, "1") == 0)
-				return TRUE;
-		}
-	}
-
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "HSI unavailable for hypervisor");
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "HSI support not enabled");
-
-#endif
-	return FALSE;
-}
-
 static void
 fu_dbus_daemon_daemon_method_call(GDBusConnection *connection,
 				  const gchar *sender,
@@ -1395,16 +1323,30 @@ fu_dbus_daemon_daemon_method_call(GDBusConnection *connection,
 		return;
 	}
 	if (g_strcmp0(method_name, "GetHostSecurityAttrs") == 0) {
+#ifdef HAVE_HSI
 		g_autoptr(FuSecurityAttrs) attrs = NULL;
-
+#endif
 		g_debug("Called %s()", method_name);
-		if (!fu_dbus_daemon_hsi_supported(self, &error)) {
-			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+#ifndef HAVE_HSI
+		g_dbus_method_invocation_return_error_literal(invocation,
+							      FWUPD_ERROR,
+							      FWUPD_ERROR_NOT_SUPPORTED,
+							      "HSI support not enabled");
+#else
+		if (fu_daemon_get_machine_kind(FU_DAEMON(self)) !=
+			FU_DAEMON_MACHINE_KIND_PHYSICAL &&
+		    g_getenv("UMOCKDEV_DIR") == NULL) {
+			g_dbus_method_invocation_return_error_literal(
+			    invocation,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "HSI unavailable for hypervisor");
 			return;
 		}
 		attrs = fu_engine_get_host_security_attrs(engine);
 		val = fu_security_attrs_to_variant(attrs);
 		g_dbus_method_invocation_return_value(invocation, val);
+#endif
 		return;
 	}
 	if (g_strcmp0(method_name, "GetHostSecurityEvents") == 0) {
@@ -1442,21 +1384,13 @@ fu_dbus_daemon_daemon_method_call(GDBusConnection *connection,
 		return;
 	}
 	if (g_strcmp0(method_name, "EmulationLoad") == 0) {
-		gint32 fd_handle = 0;
-		g_autoptr(GInputStream) stream = NULL;
+		g_autoptr(GBytes) data = NULL;
 
-		g_variant_get(parameters, "(h)", &fd_handle);
-		g_debug("Called %s(%i)", method_name, fd_handle);
-
-		/* get stream */
-		stream = fu_dbus_daemon_invocation_get_stream(invocation, &error);
-		if (stream == NULL) {
-			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
-			return;
-		}
+		g_debug("Called %s()", method_name);
 
 		/* load data into engine */
-		if (!fu_engine_emulation_load(engine, stream, &error)) {
+		data = g_variant_get_data_as_bytes(g_variant_get_child_value(parameters, 0));
+		if (!fu_engine_emulation_load(engine, data, &error)) {
 			g_dbus_method_invocation_return_error(invocation,
 							      error->domain,
 							      error->code,
@@ -1844,6 +1778,9 @@ fu_dbus_daemon_daemon_method_call(GDBusConnection *connection,
 		const gchar *device_id = NULL;
 		const gchar *prop_key;
 		gint32 fd_handle = 0;
+		gint fd;
+		GDBusMessage *message;
+		GUnixFDList *fd_list;
 		g_autoptr(FuMainAuthHelper) helper = NULL;
 		g_autoptr(GVariantIter) iter = NULL;
 
@@ -1895,12 +1832,20 @@ fu_dbus_daemon_daemon_method_call(GDBusConnection *connection,
 			return;
 		}
 #endif
-		/* get stream */
-		helper->stream = fu_dbus_daemon_invocation_get_stream(invocation, &error);
-		if (helper->stream == NULL) {
+		/* get the fd */
+		message = g_dbus_method_invocation_get_message(invocation);
+		fd_list = g_dbus_message_get_unix_fd_list(message);
+		if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 1) {
+			g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
 			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
+		fd = g_unix_fd_list_get(fd_list, 0, &error);
+		if (fd < 0) {
+			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+			return;
+		}
+		helper->stream = fu_unix_seekable_input_stream_new(fd, TRUE);
 
 		/* relax these */
 		if (fu_engine_config_get_ignore_requirements(fu_engine_get_config(engine)))
@@ -1925,10 +1870,12 @@ fu_dbus_daemon_daemon_method_call(GDBusConnection *connection,
 		/* async return */
 		return;
 	}
-
 	if (g_strcmp0(method_name, "GetDetails") == 0) {
 #ifdef HAVE_GIO_UNIX
+		GDBusMessage *message;
+		GUnixFDList *fd_list;
 		gint32 fd_handle = 0;
+		gint fd;
 		g_autoptr(GPtrArray) results = NULL;
 		g_autoptr(GInputStream) stream = NULL;
 
@@ -1936,14 +1883,26 @@ fu_dbus_daemon_daemon_method_call(GDBusConnection *connection,
 		g_variant_get(parameters, "(h)", &fd_handle);
 		g_debug("Called %s(%i)", method_name, fd_handle);
 
-		/* get stream */
-		stream = fu_dbus_daemon_invocation_get_stream(invocation, &error);
-		if (stream == NULL) {
+		/* get the fd */
+		message = g_dbus_method_invocation_get_message(invocation);
+		fd_list = g_dbus_message_get_unix_fd_list(message);
+		if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 1) {
+			g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
+			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+			return;
+		}
+		fd = g_unix_fd_list_get(fd_list, 0, &error);
+		if (fd < 0) {
 			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 			return;
 		}
 
-		/* get details about the file */
+		/* get details about the file (will close the fd when done) */
+		stream = fu_unix_seekable_input_stream_new(fd, TRUE);
+		if (stream == NULL) {
+			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+			return;
+		}
 		results = fu_engine_get_details(engine, request, stream, &error);
 		if (results == NULL) {
 			fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
@@ -2163,8 +2122,8 @@ fu_dbus_daemon_daemon_get_property(GDBusConnection *connection_,
 	return NULL;
 }
 
-static gboolean
-fu_dbus_daemon_register_object(FuDbusDaemon *self, GError **error)
+static void
+fu_dbus_daemon_register_object(FuDbusDaemon *self)
 {
 	guint registration_id;
 	static const GDBusInterfaceVTable interface_vtable = {fu_dbus_daemon_daemon_method_call,
@@ -2179,16 +2138,7 @@ fu_dbus_daemon_register_object(FuDbusDaemon *self, GError **error)
 					      self,  /* user_data */
 					      NULL,  /* user_data_free_func */
 					      NULL); /* GError** */
-	if (registration_id == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "unspecified failure");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	g_assert(registration_id > 0);
 }
 
 static void
@@ -2249,10 +2199,7 @@ fu_dbus_daemon_dbus_bus_acquired_cb(GDBusConnection *connection,
 	g_autoptr(GError) error = NULL;
 
 	fu_dbus_daemon_set_connection(self, connection);
-	if (!fu_dbus_daemon_register_object(self, &error)) {
-		g_warning("cannot register object: %s", error->message);
-		return;
-	}
+	fu_dbus_daemon_register_object(self);
 
 	/* connect to D-Bus directly */
 	self->proxy_uid = g_dbus_proxy_new_sync(self->connection,
@@ -2307,7 +2254,8 @@ fu_dbus_daemon_dbus_new_connection_cb(GDBusServer *server,
 			 "closed",
 			 G_CALLBACK(fu_dbus_daemon_dbus_connection_closed_cb),
 			 self);
-	return fu_dbus_daemon_register_object(self, NULL);
+	fu_dbus_daemon_register_object(self);
+	return TRUE;
 }
 
 static GDBusNodeInfo *
@@ -2370,9 +2318,7 @@ fu_dbus_daemon_setup(FuDaemon *daemon,
 			 self);
 	if (!fu_engine_load(engine,
 			    FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
-				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT,
+				FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    fu_progress_get_child(progress),
 			    error)) {
 		g_prefix_error(error, "failed to load engine: ");

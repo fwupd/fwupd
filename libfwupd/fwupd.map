@@ -815,6 +815,9 @@ LIBFWUPD_1.8.8 {
 
 LIBFWUPD_1.8.11 {
   global:
+    fwupd_client_emulation_load;
+    fwupd_client_emulation_load_async;
+    fwupd_client_emulation_load_finish;
     fwupd_client_emulation_save;
     fwupd_client_emulation_save_async;
     fwupd_client_emulation_save_finish;
@@ -949,9 +952,6 @@ LIBFWUPD_2.0.0 {
   global:
     fwupd_client_build_report_history;
     fwupd_client_build_report_security;
-    fwupd_client_emulation_load;
-    fwupd_client_emulation_load_async;
-    fwupd_client_emulation_load_finish;
     fwupd_client_install_release;
     fwupd_client_install_release_async;
     fwupd_client_modify_config;

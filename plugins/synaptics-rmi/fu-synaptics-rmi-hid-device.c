@@ -349,28 +349,33 @@ fu_synaptics_rmi_hid_device_rebind_driver(FuSynapticsRmiDevice *self, GError **e
 	const gchar *subsystem;
 	g_autofree gchar *fn_rebind = NULL;
 	g_autofree gchar *fn_unbind = NULL;
-	g_autoptr(FuDevice) parent_hid = NULL;
+	g_autoptr(FuUdevDevice) parent_hid = NULL;
 	g_autoptr(FuUdevDevice) parent_phys = NULL;
 	g_auto(GStrv) hid_strs = NULL;
 
 	/* get actual HID node */
-	parent_hid = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "hid", error);
+	parent_hid = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self),
+							      "hid",
+							      NULL, /* devtype */
+							      error);
 	if (parent_hid == NULL)
 		return FALSE;
 
 	/* build paths */
-	parent_phys = FU_UDEV_DEVICE(
-	    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "i2c", NULL));
+	parent_phys =
+	    fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self), "i2c", NULL, NULL);
 	if (parent_phys == NULL) {
-		parent_phys = FU_UDEV_DEVICE(
-		    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "usb", NULL));
+		parent_phys = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self),
+								       "usb",
+								       NULL, /* devtype */
+								       NULL);
 	}
 	if (parent_phys == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "no parent device for %s",
-			    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(parent_hid)));
+			    fu_udev_device_get_sysfs_path(parent_hid));
 		return FALSE;
 	}
 
@@ -537,7 +542,7 @@ fu_synaptics_rmi_hid_device_init(FuSynapticsRmiHidDevice *self)
 {
 	fu_device_set_name(FU_DEVICE(self), "Touchpad");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_PROBE_COMPLETE);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
 	fu_synaptics_rmi_device_set_max_page(FU_SYNAPTICS_RMI_DEVICE(self), 0xff);
 }
 

@@ -130,12 +130,9 @@ fu_dpaux_device_setup(FuDevice *device, GError **error)
 	fu_device_set_version_raw(device, fu_struct_dpaux_dpcd_get_fw_ver(st));
 
 	/* build some extra GUIDs */
-	if (priv->dpcd_ieee_oui != 0x0)
-		fu_device_add_instance_u32(device, "OUI", priv->dpcd_ieee_oui);
-	if (priv->dpcd_hw_rev != 0x0)
-		fu_device_add_instance_u8(device, "HWREV", priv->dpcd_hw_rev);
-	if (priv->dpcd_dev_id != 0x0)
-		fu_device_add_instance_strup(device, "DEVID", priv->dpcd_dev_id);
+	fu_device_add_instance_u32(device, "OUI", priv->dpcd_ieee_oui);
+	fu_device_add_instance_u8(device, "HWREV", priv->dpcd_hw_rev);
+	fu_device_add_instance_strup(device, "DEVID", priv->dpcd_dev_id);
 	fu_device_build_instance_id_full(device,
 					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					 NULL,
@@ -444,7 +441,7 @@ static void
 fu_dpaux_device_init(FuDpauxDevice *self)
 {
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK);

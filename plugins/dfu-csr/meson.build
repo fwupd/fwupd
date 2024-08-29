@@ -1,3 +1,4 @@
+if libusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginDfuCsr"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -23,3 +24,4 @@ plugin_builtins += static_library('fu_plugin_dfu_csr',
     plugin_builtin_dfu,
   ],
 )
+endif

@@ -155,7 +155,7 @@ fu_ata_device_parse_id_maybe_dell(FuAtaDevice *self, const guint16 *buf)
 
 	/* do not add the FuUdevDevice instance IDs as generic firmware
 	 * should not be used on these OEM-specific devices */
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_AUTO_INSTANCE_IDS);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS);
 
 	/* add instance ID *and* GUID as using no-auto-instance-ids */
 	guid_id = g_strdup_printf("STORAGE-DELL-%s", component_id);
@@ -170,7 +170,7 @@ fu_ata_device_parse_id_maybe_dell(FuAtaDevice *self, const guint16 *buf)
 
 	/* owned by Dell */
 	fu_device_set_vendor(FU_DEVICE(self), "Dell");
-	fu_device_build_vendor_id_u16(FU_DEVICE(self), "ATA", 0x1028);
+	fu_device_add_vendor_id(FU_DEVICE(self), "ATA:0x1028");
 }
 
 static void
@@ -275,45 +275,46 @@ fu_ata_device_parse_vendor_name(FuAtaDevice *self, const gchar *name)
 			   {"CS2111*", 0x196e, "PNY"},
 			   {"S?FM*", 0x1987, "Phison"},
 			   {NULL, 0x0000, NULL}};
-	guint16 vid = 0;
 	g_autofree gchar *name_up = g_ascii_strup(name, -1);
+	g_autofree gchar *vendor_id = NULL;
 
 	/* find match */
 	for (guint i = 0; map_name[i].prefix != NULL; i++) {
 		if (g_pattern_match_simple(map_name[i].prefix, name_up)) {
 			name += strlen(map_name[i].prefix) - 1;
 			fu_device_set_vendor(FU_DEVICE(self), map_name[i].name);
-			vid = map_name[i].vid;
+			vendor_id = g_strdup_printf("ATA:0x%X", map_name[i].vid);
 			break;
 		}
 	}
 
 	/* fall back to fuzzy match */
-	if (vid == 0x0) {
+	if (vendor_id == NULL) {
 		for (guint i = 0; map_fuzzy[i].prefix != NULL; i++) {
 			if (g_pattern_match_simple(map_fuzzy[i].prefix, name_up)) {
 				fu_device_set_vendor(FU_DEVICE(self), map_fuzzy[i].name);
-				vid = map_fuzzy[i].vid;
+				vendor_id = g_strdup_printf("ATA:0x%X", map_fuzzy[i].vid);
 				break;
 			}
 		}
 	}
 
 	/* fall back to version */
-	if (vid == 0x0) {
+	if (vendor_id == NULL) {
 		g_autofree gchar *version_up =
 		    g_ascii_strup(fu_device_get_version(FU_DEVICE(self)), -1);
 		for (guint i = 0; map_version[i].prefix != NULL; i++) {
 			if (g_pattern_match_simple(map_version[i].prefix, version_up)) {
 				fu_device_set_vendor(FU_DEVICE(self), map_version[i].name);
-				vid = map_version[i].vid;
+				vendor_id = g_strdup_printf("ATA:0x%X", map_version[i].vid);
 				break;
 			}
 		}
 	}
 
 	/* devices without a vendor ID will not be UPGRADABLE */
-	fu_device_build_vendor_id_u16(FU_DEVICE(self), "ATA", vid);
+	if (vendor_id != NULL)
+		fu_device_add_vendor_id(FU_DEVICE(self), vendor_id);
 
 	/* remove leading junk */
 	while (name[0] == ' ' || name[0] == '_' || name[0] == '-')
@@ -404,8 +405,9 @@ fu_ata_device_parse_id(FuAtaDevice *self, const guint8 *buf, gsize sz, GError **
 		has_oui_quirk = fu_device_get_vendor(FU_DEVICE(self)) != NULL;
 	}
 	if (self->oui > 0x0) {
-		g_autofree gchar *vendor_id = g_strdup_printf("%06x", self->oui);
-		fu_device_build_vendor_id(device, "OUI", vendor_id);
+		g_autofree gchar *vendor_id = NULL;
+		vendor_id = g_strdup_printf("OUI:%06x", self->oui);
+		fu_device_add_vendor_id(device, vendor_id);
 	}
 
 	/* if not already set using the vendor block or a OUI quirk */
@@ -884,9 +886,9 @@ fu_ata_device_init(FuAtaDevice *self)
 	self->transfer_mode = ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS;
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
 	fu_device_set_summary(FU_DEVICE(self), "ATA drive");
 	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk");
 	fu_device_add_protocol(FU_DEVICE(self), "org.t13.ata");

@@ -9,7 +9,12 @@
 
 #include <fwupdplugin.h>
 
-#define FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION "force-enumeration"
+/**
+ * FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION:
+ *
+ * Forces composite device components to be enumerated.
+ */
+#define FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION (1ull << 1)
 
 #define FU_THUNDERBOLT_DEVICE_WRITE_TIMEOUT 1500 /* ms */
 

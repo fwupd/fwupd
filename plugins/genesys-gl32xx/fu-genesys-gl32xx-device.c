@@ -473,15 +473,15 @@ fu_genesys_gl32xx_device_ensure_enforce_requires(FuGenesysGl32xxDevice *self)
 
 	/* GL3224 */
 	if (model == 0x0749 && self->customer_id == 0xFFFFFFFF && g_str_has_prefix(version, "15")) {
-		fu_device_add_private_flag(FU_DEVICE(self),
-					   FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES);
+		fu_device_add_internal_flag(FU_DEVICE(self),
+					    FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
 		return;
 	}
 
 	/* GL323X */
 	if (model == 0x0764 && self->customer_id == 0x22FFFFFF && g_str_has_prefix(version, "29")) {
-		fu_device_add_private_flag(FU_DEVICE(self),
-					   FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES);
+		fu_device_add_internal_flag(FU_DEVICE(self),
+					    FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
 		return;
 	}
 }
@@ -962,9 +962,9 @@ fu_genesys_gl32xx_device_init(FuGenesysGl32xxDevice *self)
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS);
 }
 
 static void

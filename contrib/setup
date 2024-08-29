@@ -1,4 +1,4 @@
-#!/usr/bin/env -S bash -e
+#!/bin/bash -e
 # Setup the repository and local system for development
 
 cd "$(dirname "$0")/.."

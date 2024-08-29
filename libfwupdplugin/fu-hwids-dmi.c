@@ -11,7 +11,6 @@
 #include "fu-context-private.h"
 #include "fu-hwids-private.h"
 #include "fu-path.h"
-#include "fu-smbios-struct.h"
 #include "fu-string.h"
 
 gboolean

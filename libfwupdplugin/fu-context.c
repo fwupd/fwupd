@@ -1587,6 +1587,24 @@ FuVolume *
 fu_context_get_default_esp(FuContext *ctx, GError **error)
 {
 	g_autoptr(GPtrArray) esp_volumes = NULL;
+	const gchar *recovery_partitions[] = {
+	    "DELLRESTORE",
+	    "DELLUTILITY",
+	    "DIAGS",
+	    "HP_RECOVERY",
+	    "IBM_SERVICE",
+	    "INTELRST",
+	    "LENOVO_RECOVERY",
+	    "OS",
+	    "PQSERVICE",
+	    "RECOVERY",
+	    "RECOVERY_PARTITION",
+	    "SERVICEV001",
+	    "SERVICEV002",
+	    "SYSTEM_RESERVED",
+	    "WINRE_DRV",
+	    NULL,
+	}; /* from https://github.com/storaged-project/udisks/blob/master/data/80-udisks2.rules */
 	const gchar *user_esp_location = fu_context_get_esp_location(ctx);
 
 	/* show which volumes we're choosing from */
@@ -1601,6 +1619,7 @@ fu_context_get_default_esp(FuContext *ctx, GError **error)
 		for (guint i = 0; i < esp_volumes->len; i++) {
 			FuVolume *esp = g_ptr_array_index(esp_volumes, i);
 			guint score = 0;
+			g_autofree gchar *name = NULL;
 			g_autofree gchar *kind = NULL;
 			g_autoptr(FuDeviceLocker) locker = NULL;
 			g_autoptr(GError) error_local = NULL;
@@ -1619,6 +1638,25 @@ fu_context_get_default_esp(FuContext *ctx, GError **error)
 					g_debug("skipping %s as it's not the user "
 						"specified ESP",
 						mount);
+					continue;
+				}
+			}
+
+			/* ignore a partition that claims to be a recovery partition */
+			name = fu_volume_get_partition_name(esp);
+			if (name != NULL) {
+				g_autoptr(GString) name_safe = g_string_new(name);
+				g_string_replace(name_safe, " ", "_", 0);
+				g_string_replace(name_safe, "\"", "", 0);
+				g_string_ascii_up(name_safe);
+				if (g_strv_contains(recovery_partitions, name_safe->str)) {
+					if (g_strcmp0(name_safe->str, name) == 0) {
+						g_debug("skipping partition '%s'", name);
+					} else {
+						g_debug("skipping partition '%s' -> '%s'",
+							name,
+							name_safe->str);
+					}
 					continue;
 				}
 			}
@@ -1857,22 +1895,6 @@ fu_context_get_esp_files_for_entry(FuContext *self,
 		}
 	}
 
-	/* revocations, typically for SBAT */
-	if (flags & FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_REVOCATIONS &&
-	    g_str_has_suffix(filename, shim_name)) {
-		g_autoptr(GString) filename2 = g_string_new(filename);
-		g_string_replace(filename2, shim_name, "revocations.efi", 1);
-		g_debug("check for revocation: %s", filename2->str);
-		if (g_file_test(filename2->str, G_FILE_TEST_EXISTS)) {
-			g_autoptr(FuFirmware) firmware =
-			    fu_context_esp_load_pe_file(filename2->str, error);
-			if (firmware == NULL)
-				return FALSE;
-			fu_firmware_set_idx(firmware, fu_firmware_get_idx(FU_FIRMWARE(entry)));
-			g_ptr_array_add(files, g_steal_pointer(&firmware));
-		}
-	}
-
 	/* success */
 	return TRUE;
 }
@@ -1910,24 +1932,6 @@ fu_context_get_esp_files(FuContext *self, FuContextEspFileFlags flags, GError **
 
 	/* success */
 	return g_steal_pointer(&files);
-}
-
-/* private */
-gpointer
-fu_context_get_data(FuContext *self, const gchar *key)
-{
-	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
-	g_return_val_if_fail(key != NULL, NULL);
-	return g_object_get_data(G_OBJECT(self), key);
-}
-
-/* private */
-void
-fu_context_set_data(FuContext *self, const gchar *key, gpointer data)
-{
-	g_return_if_fail(FU_IS_CONTEXT(self));
-	g_return_if_fail(key != NULL);
-	g_object_set_data(G_OBJECT(self), key, data);
 }
 
 static void

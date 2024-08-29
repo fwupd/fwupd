@@ -70,7 +70,7 @@ fu_qsi_dock_mcu_device_write_firmware(FuDevice *device,
 static void
 fu_qsi_dock_child_device_init(FuQsiDockChildDevice *self)
 {
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 }
 
 static void

@@ -14,5 +14,3 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(libusb_context, libusb_exit)
 
 FuUsbDevice *
 fu_usb_device_new(FuContext *ctx, libusb_device *usb_device) G_GNUC_NON_NULL(1);
-libusb_device *
-fu_usb_device_get_dev(FuUsbDevice *self);

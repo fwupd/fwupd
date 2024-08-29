@@ -151,11 +151,11 @@ fu_algoltek_usb_device_rst(FuAlgoltekUsbDevice *self, guint16 address, GError **
 	fu_struct_algoltek_cmd_address_pkt_set_address(st, address);
 	fu_struct_algoltek_cmd_address_pkt_set_checksum(st, ~fu_sum8(st->data, st->len) + 1);
 
-	if (st->data[0] > st->len) {
+	if (st->data[0] < st->len) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "rst length invalid, 0x%x > 0x%x",
+			    "rst length invalid, 0x%x < 0x%x",
 			    st->data[0],
 			    st->len);
 		return FALSE;
@@ -186,11 +186,11 @@ fu_algoltek_usb_device_wrr(FuAlgoltekUsbDevice *self, int address, int value, GE
 	fu_struct_algoltek_cmd_address_pkt_set_value(st, value);
 	fu_struct_algoltek_cmd_address_pkt_set_checksum(st, ~fu_sum8(st->data, st->len) + 1);
 
-	if (st->data[0] > st->len) {
+	if (st->data[0] < st->len) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "wrr length invalid, 0x%x > 0x%x",
+			    "wrr length invalid, 0x%x < 0x%x",
 			    st->data[0],
 			    st->len);
 		return FALSE;
@@ -247,11 +247,11 @@ fu_algoltek_usb_device_isp(FuAlgoltekUsbDevice *self,
 		}
 		fu_struct_algoltek_cmd_transfer_pkt_set_checksum(st,
 								 ~fu_sum8(st->data, st->len) + 1);
-		if (st->data[0] > st->len) {
+		if (st->data[0] < st->len) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "isp length invalid, 0x%x > 0x%x",
+				    "isp length invalid, 0x%x < 0x%x",
 				    st->data[0],
 				    st->len);
 			return FALSE;
@@ -283,11 +283,11 @@ fu_algoltek_usb_device_bot(FuAlgoltekUsbDevice *self, int address, GError **erro
 	fu_struct_algoltek_cmd_address_pkt_set_address(st, address);
 	fu_struct_algoltek_cmd_address_pkt_set_checksum(st, ~fu_sum8(st->data, st->len) + 1);
 
-	if (st->data[0] > st->len) {
+	if (st->data[0] < st->len) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "bot length invalid, 0x%x > 0x%x",
+			    "bot length invalid, 0x%x < 0x%x",
 			    st->data[0],
 			    st->len);
 		return FALSE;
@@ -570,7 +570,7 @@ fu_algoltek_usb_device_init(FuAlgoltekUsbDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ALGOLTEK_USB_FIRMWARE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }

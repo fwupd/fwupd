@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#include "fu-crc-private.h"
+#include "fu-crc.h"
 #include "fu-mem.h"
 
 /**
@@ -231,7 +231,7 @@ fu_crc32(FuCrc32Kind kind, const guint8 *buf, gsize bufsz)
  * You can use a very simple buffer to discover most types of standard CRC-32:
  *
  *    guint8 buf[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
- *    g_info("CRC:%u", fu_crc32_find(buf, sizeof(buf), _custom_crc(buf, sizeof(buf))));
+ *    g_print("CRC:%u", fu_crc32_find(buf, sizeof(buf), _custom_crc(buf, sizeof(buf))));
  *
  * Returns: a #FuCrc32Kind, or %FU_CRC32_KIND_UNKNOWN on error
  *

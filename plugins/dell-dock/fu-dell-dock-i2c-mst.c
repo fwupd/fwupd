@@ -402,17 +402,15 @@ fu_dell_dock_mst_rc_command(FuDevice *device,
 static MSTType
 fu_dell_dock_mst_check_type(FuDevice *device)
 {
-	GPtrArray *instance_ids;
-	const gchar *tmp = NULL;
+	FuDevice *parent = fu_device_get_parent(device);
+	DockBaseType dock_type = fu_dell_dock_get_dock_type(parent);
 
-	instance_ids = fu_device_get_instance_ids(device);
-	for (guint i = 0; i < instance_ids->len; i++) {
-		tmp = g_ptr_array_index(instance_ids, i);
-		if (g_strcmp0(tmp, DELL_DOCK_VMM6210_INSTANCE_ID) == 0)
-			return Cayenne_mst;
-		if (g_strcmp0(tmp, DELL_DOCK_VM5331_INSTANCE_ID) == 0)
-			return Panamera_mst;
-	}
+	if (dock_type == DOCK_BASE_TYPE_SALOMON)
+		return Panamera_mst;
+
+	if (dock_type == DOCK_BASE_TYPE_ATOMIC)
+		return Cayenne_mst;
+
 	return Unknown;
 }
 
@@ -1244,6 +1242,7 @@ fu_dell_dock_mst_init(FuDellDockMst *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.synaptics.mst");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 }
 
 static void

@@ -138,7 +138,11 @@ fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *ur
 	}
 
 	/* add vendor ID */
-	fu_device_build_vendor_id_u16(FU_DEVICE(self), "PCI", vendor_id);
+	if (vendor_id != 0x0) {
+		g_autofree gchar *vendor_id_str = NULL;
+		vendor_id_str = g_strdup_printf("PCI:0x%04X", (guint)vendor_id);
+		fu_device_add_vendor_id(FU_DEVICE(self), vendor_id_str);
+	}
 
 	/* add more instance IDs if possible */
 	if (vendor_id != 0x0)
@@ -354,6 +358,7 @@ static void
 fu_redfish_device_set_vendor(FuRedfishDevice *self, const gchar *vendor)
 {
 	g_autofree gchar *vendor_upper = NULL;
+	g_autofree gchar *vendor_id = NULL;
 
 	/* fixup a common mistake */
 	if (g_strcmp0(vendor, "LEN") == 0 || g_strcmp0(vendor, "LNVO") == 0)
@@ -363,7 +368,8 @@ fu_redfish_device_set_vendor(FuRedfishDevice *self, const gchar *vendor)
 	/* add vendor-id */
 	vendor_upper = g_ascii_strup(vendor, -1);
 	g_strdelimit(vendor_upper, " ", '_');
-	fu_device_build_vendor_id(FU_DEVICE(self), "REDFISH", vendor_upper);
+	vendor_id = g_strdup_printf("REDFISH:%s", vendor_upper);
+	fu_device_add_vendor_id(FU_DEVICE(self), vendor_id);
 }
 
 static void
@@ -866,17 +872,26 @@ fu_redfish_device_init(FuRedfishDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "Redfish device");
 	fu_device_add_protocol(FU_DEVICE(self), "org.dmtf.redfish");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_IS_BACKUP);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_MANAGER_RESET);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST);
+					FU_REDFISH_DEVICE_FLAG_IS_BACKUP,
+					"is-backup");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD,
+					"unsigned-build");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS,
+					"wildcard-targets");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_REDFISH_DEVICE_FLAG_MANAGER_RESET,
+					"manager-reset");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST,
+					"no-manager-reset-request");
 }
 
 static void

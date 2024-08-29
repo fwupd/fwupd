@@ -13,11 +13,16 @@
 #include <string.h>
 
 #include "fu-bluez-device.h"
-#include "fu-dump.h"
 #include "fu-firmware-common.h"
 #include "fu-string.h"
 
 #define DEFAULT_PROXY_TIMEOUT 5000
+
+/* Device Information service attributes to check */
+#define DI_MODEL_NUMBER_UUID	  "00002a24-0000-1000-8000-00805f9b34fb"
+#define DI_SERIAL_NUMBER_UUID	  "00002a25-0000-1000-8000-00805f9b34fb"
+#define DI_FIRMWARE_REVISION_UUID "00002a26-0000-1000-8000-00805f9b34fb"
+#define DI_MANUFACTURER_NAME_UUID "00002a29-0000-1000-8000-00805f9b34fb"
 
 /**
  * FuBluezDevice:
@@ -153,7 +158,7 @@ fu_bluez_device_add_uuid_path(FuBluezDevice *self, const gchar *uuid, const gcha
 static void
 fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 {
-	gsize modaliaslen;
+	gsize modaliaslen = strlen(modalias);
 	guint16 vid = 0x0;
 	guint16 pid = 0x0;
 	guint16 rev = 0x0;
@@ -161,7 +166,6 @@ fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 	g_return_if_fail(modalias != NULL);
 
 	/* usb:v0461p4EEFd0001 */
-	modaliaslen = strlen(modalias);
 	if (g_str_has_prefix(modalias, "usb:")) {
 		fu_firmware_strparse_uint16_safe(modalias, modaliaslen, 5, &vid, NULL);
 		fu_firmware_strparse_uint16_safe(modalias, modaliaslen, 10, &pid, NULL);
@@ -196,8 +200,8 @@ fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 					 "VID",
 					 "PID",
 					 NULL);
-	if (fu_device_has_private_flag(FU_DEVICE(self),
-				       FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
+	if (fu_device_has_internal_flag(FU_DEVICE(self),
+					FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV)) {
 		fu_device_build_instance_id_full(FU_DEVICE(self),
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 						     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
@@ -212,9 +216,8 @@ fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 
 	/* set vendor ID */
 	if (vid != 0x0) {
-		g_autofree gchar *vendor_id = g_strdup_printf("%04X", vid);
-		fu_device_build_vendor_id(FU_DEVICE(self), "BLUETOOTH", vendor_id); /* compat */
-		fu_device_build_vendor_id_u16(FU_DEVICE(self), "BLUETOOTH", vid);
+		g_autofree gchar *vendor_id = g_strdup_printf("BLUETOOTH:%04X", vid);
+		fu_device_add_vendor_id(FU_DEVICE(self), vendor_id);
 	}
 
 	/* set version if the revision has been set */
@@ -361,6 +364,7 @@ fu_bluez_device_add_instance_by_service_uuid(FuBluezDevice *self,
 					     GError **error)
 {
 	g_autofree gchar *obj_uuid = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* register device by service UUID */
 	obj_uuid = fu_bluez_device_get_interface_uuid(self, obj, obj_path, iface_name, error);
@@ -429,8 +433,7 @@ fu_bluez_device_parse_device_information_service(FuBluezDevice *self, GError **e
 	g_autofree gchar *fw_revision = NULL;
 	g_autofree gchar *manufacturer = NULL;
 
-	model_number =
-	    fu_bluez_device_read_string(self, FU_BLUEZ_DEVICE_UUID_DI_MODEL_NUMBER, NULL);
+	model_number = fu_bluez_device_read_string(self, DI_MODEL_NUMBER_UUID, NULL);
 	if (model_number != NULL) {
 		fu_device_add_instance_str(FU_DEVICE(self), "MODEL", model_number);
 		if (!fu_device_build_instance_id_full(FU_DEVICE(self),
@@ -443,10 +446,7 @@ fu_bluez_device_parse_device_information_service(FuBluezDevice *self, GError **e
 			g_prefix_error(error, "failed to register model %s: ", model_number);
 			return FALSE;
 		}
-		manufacturer =
-		    fu_bluez_device_read_string(self,
-						FU_BLUEZ_DEVICE_UUID_DI_MANUFACTURER_NAME,
-						NULL);
+		manufacturer = fu_bluez_device_read_string(self, DI_MANUFACTURER_NAME_UUID, NULL);
 		if (manufacturer != NULL) {
 			fu_device_add_instance_str(FU_DEVICE(self), "MANUFACTURER", manufacturer);
 			if (!fu_device_build_instance_id_full(FU_DEVICE(self),
@@ -465,17 +465,13 @@ fu_bluez_device_parse_device_information_service(FuBluezDevice *self, GError **e
 		}
 	}
 
-	serial_number =
-	    fu_bluez_device_read_string(self, FU_BLUEZ_DEVICE_UUID_DI_SERIAL_NUMBER, NULL);
+	serial_number = fu_bluez_device_read_string(self, DI_SERIAL_NUMBER_UUID, NULL);
 	if (serial_number != NULL)
 		fu_device_set_serial(FU_DEVICE(self), serial_number);
 
-	fw_revision =
-	    fu_bluez_device_read_string(self, FU_BLUEZ_DEVICE_UUID_DI_FIRMWARE_REVISION, NULL);
-	if (fw_revision != NULL) {
-		fu_device_set_version_format(FU_DEVICE(self), fu_version_guess_format(fw_revision));
+	fw_revision = fu_bluez_device_read_string(self, DI_FIRMWARE_REVISION_UUID, NULL);
+	if (fw_revision != NULL)
 		fu_device_set_version(FU_DEVICE(self), fw_revision);
-	}
 
 	/* success */
 	return TRUE;
@@ -562,7 +558,6 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 	g_autoptr(GVariant) val_address = NULL;
 	g_autoptr(GVariant) val_icon = NULL;
 	g_autoptr(GVariant) val_modalias = NULL;
-	g_autoptr(GVariant) val_name = NULL;
 	g_autoptr(GVariant) val_alias = NULL;
 
 	/* sanity check */
@@ -583,21 +578,6 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 	val_adapter = g_dbus_proxy_get_cached_property(priv->proxy, "Adapter");
 	if (val_adapter != NULL)
 		fu_device_set_physical_id(device, g_variant_get_string(val_adapter, NULL));
-	val_name = g_dbus_proxy_get_cached_property(priv->proxy, "Name");
-	if (val_name != NULL) {
-		fu_device_set_name(device, g_variant_get_string(val_name, NULL));
-		/* register the device by its alias, since modalias could be absent */
-		fu_device_add_instance_str(FU_DEVICE(self),
-					   "NAME",
-					   g_variant_get_string(val_name, NULL));
-		fu_device_build_instance_id_full(FU_DEVICE(self),
-						 FU_DEVICE_INSTANCE_FLAG_VISIBLE |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
-						 NULL,
-						 "BLUETOOTH",
-						 "NAME",
-						 NULL);
-	}
 	val_alias = g_dbus_proxy_get_cached_property(priv->proxy, "Alias");
 	if (val_alias != NULL) {
 		fu_device_set_name(device, g_variant_get_string(val_alias, NULL));
@@ -606,7 +586,8 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 					   "ALIAS",
 					   g_variant_get_string(val_alias, NULL));
 		fu_device_build_instance_id_full(FU_DEVICE(self),
-						 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						 FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 						 NULL,
 						 "BLUETOOTH",
 						 "ALIAS",
@@ -627,13 +608,6 @@ fu_bluez_device_probe(FuDevice *device, GError **error)
 	return fu_bluez_device_parse_device_information_service(self, error);
 }
 
-static gboolean
-fu_bluez_device_reload(FuDevice *device, GError **error)
-{
-	FuBluezDevice *self = FU_BLUEZ_DEVICE(device);
-	return fu_bluez_device_parse_device_information_service(self, error);
-}
-
 /**
  * fu_bluez_device_read:
  * @self: a #FuBluezDevice
@@ -651,7 +625,6 @@ fu_bluez_device_read(FuBluezDevice *self, const gchar *uuid, GError **error)
 {
 	FuBluezDeviceUuidHelper *uuid_helper;
 	guint8 byte;
-	g_autofree gchar *title = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GVariantBuilder) builder = NULL;
 	g_autoptr(GVariantIter) iter = NULL;
@@ -692,10 +665,6 @@ fu_bluez_device_read(FuBluezDevice *self, const gchar *uuid, GError **error)
 	g_variant_get(val, "(ay)", &iter);
 	while (g_variant_iter_loop(iter, "y", &byte))
 		g_byte_array_append(buf, &byte, 1);
-
-	/* debug a bit */
-	title = g_strdup_printf("ReadValue[%s]", uuid);
-	fu_dump_raw(G_LOG_DOMAIN, title, buf->data, buf->len);
 
 	/* success */
 	return g_steal_pointer(&buf);
@@ -747,7 +716,6 @@ gboolean
 fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, GError **error)
 {
 	FuBluezDeviceUuidHelper *uuid_helper;
-	g_autofree gchar *title = NULL;
 	g_autoptr(GVariantBuilder) opt_builder = NULL;
 	g_autoptr(GVariantBuilder) val_builder = NULL;
 	g_autoptr(GVariant) ret = NULL;
@@ -764,10 +732,6 @@ fu_bluez_device_write(FuBluezDevice *self, const gchar *uuid, GByteArray *buf, G
 		return FALSE;
 	if (!fu_bluez_device_ensure_uuid_helper_proxy(uuid_helper, error))
 		return FALSE;
-
-	/* debug a bit */
-	title = g_strdup_printf("WriteValue[%s]", uuid);
-	fu_dump_raw(G_LOG_DOMAIN, title, buf->data, buf->len);
 
 	/* build the value variant */
 	val_builder = g_variant_builder_new(G_VARIANT_TYPE("ay"));
@@ -1083,7 +1047,6 @@ fu_bluez_device_class_init(FuBluezDeviceClass *klass)
 	object_class->set_property = fu_bluez_device_set_property;
 	object_class->finalize = fu_bluez_device_finalize;
 	device_class->probe = fu_bluez_device_probe;
-	device_class->reload = fu_bluez_device_reload;
 	device_class->to_string = fu_bluez_device_to_string;
 	device_class->incorporate = fu_bluez_device_incorporate;
 	device_class->convert_version = fu_bluez_device_convert_version;

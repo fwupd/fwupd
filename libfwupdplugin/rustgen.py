@@ -29,7 +29,6 @@ class Type(Enum):
     U64 = "u64"
     STRING = "char"
     GUID = "Guid"
-    B32 = "b32"
 
 
 class Export(Enum):
@@ -165,17 +164,8 @@ class StructObj:
         return f"{_camel_to_snake(self.name).upper()}_{suffix.upper()}"
 
     @property
-    def _has_bits(self) -> bool:
-        for item in self.items:
-            if item.type == Type.B32:
-                return True
-        return False
-
-    @property
     def size(self) -> int:
         size: int = 0
-        if self._has_bits:
-            return 4
         for item in self.items:
             size += item.size
         return size
@@ -211,7 +201,7 @@ class StructObj:
             for item in self.items:
                 if item.struct_obj:
                     item.struct_obj.add_private_export("ToString")
-                if item.enum_obj and not item.constant and item.enabled:
+                if item.enum_obj and not item.constant:
                     item.enum_obj.add_private_export("ToString")
         elif derive == "Parse":
             self.add_private_export("ParseInternal")
@@ -271,8 +261,6 @@ class StructItem:
         self.padding: Optional[str] = None
         self.endian: Endian = Endian.NATIVE
         self.multiplier: int = 0
-        self._bits_size: int = 0
-        self._bits_offset: int = 0
         self.offset: int = 0
         self._exports: Dict[str, Export] = {
             "Getters": Export.NONE,
@@ -290,21 +278,6 @@ class StructItem:
 
     def export(self, derive: str) -> Export:
         return self._exports[derive]
-
-    @property
-    def bits_offset(self) -> int:
-        # from 32 bit word start
-        return self._bits_offset
-
-    @property
-    def bits_size(self) -> int:
-        if self.type == Type.B32:
-            return self._bits_size
-        return self.size * 8
-
-    @property
-    def bits_mask(self) -> int:
-        return (1 << self._bits_size) - 1
 
     @property
     def size(self) -> int:
@@ -368,8 +341,6 @@ class StructItem:
             return "gchar"
         if self.type == Type.GUID:
             return "fwupd_guid_t"
-        if self.type == Type.B32:
-            return "guint32"
         return "void"
 
     @property
@@ -379,8 +350,6 @@ class StructItem:
         if self.type == Type.U24:
             return "uint24"
         if self.type == Type.U32:
-            return "uint32"
-        if self.type == Type.B32:
             return "uint32"
         if self.type == Type.U64:
             return "uint64"
@@ -412,7 +381,6 @@ class StructItem:
             Type.U24,
             Type.U32,
             Type.U64,
-            Type.B32,
         ]:
             if val.startswith("0x") or val.startswith("0b"):
                 val = val.replace("_", "")
@@ -440,10 +408,7 @@ class StructItem:
         # is array
         if val.startswith("[") and val.endswith("]"):
             typestr, multiplier = val[1:-1].split(";", maxsplit=1)
-            if multiplier.startswith("0x"):
-                self.multiplier = int(multiplier[2:], 16)
-            else:
-                self.multiplier = int(multiplier)
+            self.multiplier = int(multiplier)
         else:
             typestr = val
 
@@ -461,28 +426,13 @@ class StructItem:
             if not typestr_maybe:
                 raise ValueError(f"no repr for: {typestr}")
             typestr = typestr_maybe
-
-        # detect endian
-        if typestr.endswith("be"):
-            self.endian = Endian.BIG
-            typestr = typestr[:-2]
-        elif typestr.endswith("le"):
-            self.endian = Endian.LITTLE
-            typestr = typestr[:-2]
-
-        # support partial bytes
-        for bits_size in range(1, 32):
-            if bits_size in [8, 16, 24, 32]:
-                continue
-            if typestr == f"u{bits_size}":
-                self.type = Type.B32
-                self._bits_size = bits_size
-                if self.endian == Endian.NATIVE:
-                    self.endian = Endian.LITTLE
-                return
-
-        # defined types
         try:
+            if typestr.endswith("be"):
+                self.endian = Endian.BIG
+                typestr = typestr[:-2]
+            elif typestr.endswith("le"):
+                self.endian = Endian.LITTLE
+                typestr = typestr[:-2]
             self.type = Type(typestr)
             if self.type == Type.GUID:
                 self.multiplier = 16
@@ -543,7 +493,6 @@ class Generator:
         repr_type: Optional[str] = None
         derives: List[str] = []
         offset: int = 0
-        bits_offset: int = 0
         struct_cur: Optional[StructObj] = None
         enum_cur: Optional[EnumObj] = None
 
@@ -608,7 +557,6 @@ class Generator:
                 repr_type = None
                 derives.clear()
                 offset = 0
-                bits_offset = 0
                 continue
 
             # check for trailing comma
@@ -636,7 +584,6 @@ class Generator:
 
                 # parse one element
                 item = StructItem(struct_cur)
-                item._bits_offset = bits_offset
                 item.offset = offset
                 item.element_id = parts[0]
 
@@ -654,7 +601,6 @@ class Generator:
                 elif len(type_parts) == 2:
                     item.parse_default(type_parts[1])
                 offset += item.size
-                bits_offset += item.bits_size
                 struct_cur.items.append(item)
 
         # process the templates here

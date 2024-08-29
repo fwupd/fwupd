@@ -888,8 +888,7 @@ fu_thunderbolt_gudev_uevent_cb(GUdevClient *gudev_client,
 		return;
 	}
 	if (g_strcmp0(action, "change") == 0) {
-		const gchar *uuid =
-		    g_udev_device_get_sysfs_attr(udev_device, "unique_id"); /* nocheck */
+		const gchar *uuid = g_udev_device_get_sysfs_attr(udev_device, "unique_id");
 		MockTree *target = (MockTree *)mock_tree_find_uuid(tt->tree, uuid);
 		g_assert_nonnull(target);
 		fu_udev_device_emit_changed(FU_UDEV_DEVICE(target->fu_device));

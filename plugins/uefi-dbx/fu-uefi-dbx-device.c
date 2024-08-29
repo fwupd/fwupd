@@ -197,7 +197,7 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	fu_device_set_physical_id(FU_DEVICE(self), "dbx");
 	fu_device_set_name(FU_DEVICE(self), "UEFI dbx");
 	fu_device_set_summary(FU_DEVICE(self), "UEFI revocation database");
-	fu_device_build_vendor_id(FU_DEVICE(self), "UEFI", "Linux Foundation");
+	fu_device_add_vendor_id(FU_DEVICE(self), "UEFI:Linux Foundation");
 	fu_device_add_protocol(FU_DEVICE(self), "org.uefi.dbx");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
 	fu_device_set_install_duration(FU_DEVICE(self), 1);
@@ -207,9 +207,9 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE_CHILD);
 	if (!fu_common_is_live_media())
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	g_signal_connect(FWUPD_DEVICE(self),

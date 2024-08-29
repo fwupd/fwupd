@@ -1,15 +1,6 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-enum FuDfuDeviceAttr {
-    CanDownload = 1 << 0,
-    CanUpload = 1 << 1,
-    ManifestTol = 1 << 2,
-    WillDetach = 1 << 3,
-    CanAccelerate = 1 << 7,
-}
-
-
 enum FuDfuRequest {
     Detach,
     Dnload,

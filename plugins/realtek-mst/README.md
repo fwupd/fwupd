@@ -31,13 +31,19 @@ This plugin supports the following protocol ID:
 
 ## GUID Generation
 
-These devices use the standard I2C DeviceInstanceId values, e.g.
+Devices use an extra instance ID derived from SMBIOS, e.g.
 
-* `I2C\NAME_1AF80175:00`
+* `I2C\NAME_10EC2142:00&FAMILY_Google_Hatch`
 
-In the case where the I2C name is generic, we can also use a per-system HWID value, for example:
+## Quirk Use
 
-* `[I2C\NAME_AUX-C-DDI-C-PHY-C&HWID_9c908a5c-090e-5eb4-a7ba-a2ef8845a6b9]`
+This plugin uses the following plugin-specific quirks:
+
+### RealtekMstDpAuxName
+
+Specifies the name of the drm_dp_aux_dev channel over which the device should be reached.
+
+Since: 1.6.2
 
 ## Vendor ID security
 

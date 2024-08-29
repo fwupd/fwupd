@@ -14,7 +14,7 @@
 #include "fu-efi-hard-drive-device-path.h"
 #include "fu-efivars.h"
 #include "fu-firmware.h"
-#include "fu-smbios-struct.h"
+#include "fu-smbios.h"
 
 #define FU_TYPE_CONTEXT (fu_context_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuContext, fu_context, FU, CONTEXT, GObject)
@@ -218,14 +218,6 @@ typedef enum {
 	 * Since: 2.0.0
 	 **/
 	FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE = 1 << 1,
-	/**
-	 * FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_REVOCATIONS:
-	 *
-	 * Include revokcations, for example the `revocations.efi` file used by shim.
-	 *
-	 * Since: 2.0.0
-	 **/
-	FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_REVOCATIONS = 1 << 2,
 	/**
 	 * FU_CONTEXT_ESP_FILE_FLAG_UNKNOWN:
 	 *

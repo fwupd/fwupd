@@ -19,4 +19,9 @@ struct _FuLogitechTapDeviceClass {
 	FuUdevDeviceClass parent_class;
 };
 
-#define FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_SENSOR_NEEDS_REBOOT "sensor-needs-reboot"
+/**
+ * FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_SENSOR_NEEDS_REBOOT:
+ *
+ * Firmware updated for HDMI component, trigger composite device reboot
+ */
+#define FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_SENSOR_NEEDS_REBOOT (1ull << 1)

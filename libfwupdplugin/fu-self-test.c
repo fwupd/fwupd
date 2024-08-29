@@ -70,67 +70,6 @@ fu_test_loop_quit(void)
 }
 
 static void
-fu_msgpack_func(void)
-{
-	g_autoptr(GByteArray) buf1 = NULL;
-	g_autoptr(GByteArray) buf2 = NULL;
-	g_autoptr(GByteArray) buf_in = g_byte_array_new();
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GPtrArray) items_new = NULL;
-	g_autoptr(GPtrArray) items = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	FuMsgpackItemKind kinds[] = {
-	    FU_MSGPACK_ITEM_KIND_MAP,
-	    FU_MSGPACK_ITEM_KIND_STRING,
-	    FU_MSGPACK_ITEM_KIND_INTEGER,
-	    FU_MSGPACK_ITEM_KIND_STRING,
-	    FU_MSGPACK_ITEM_KIND_INTEGER,
-	    FU_MSGPACK_ITEM_KIND_STRING,
-	    FU_MSGPACK_ITEM_KIND_FLOAT,
-	    FU_MSGPACK_ITEM_KIND_STRING,
-	    FU_MSGPACK_ITEM_KIND_ARRAY,
-	    FU_MSGPACK_ITEM_KIND_BINARY,
-	};
-
-	/* empty */
-	buf1 = fu_msgpack_write(items, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(buf1);
-	g_assert_cmpint(buf1->len, ==, 0);
-
-	/* prepare */
-	fu_byte_array_append_uint24(buf_in, 0x1234, G_LITTLE_ENDIAN);
-
-	/* map of stuff */
-	g_ptr_array_add(items, fu_msgpack_item_new_map(4));
-	g_ptr_array_add(items, fu_msgpack_item_new_string("fixint"));
-	g_ptr_array_add(items, fu_msgpack_item_new_integer(6));
-	g_ptr_array_add(items, fu_msgpack_item_new_string("uint8"));
-	g_ptr_array_add(items, fu_msgpack_item_new_integer(256));
-	g_ptr_array_add(items, fu_msgpack_item_new_string("float"));
-	g_ptr_array_add(items, fu_msgpack_item_new_float(1.0));
-	g_ptr_array_add(items, fu_msgpack_item_new_string("array-of-data"));
-	g_ptr_array_add(items, fu_msgpack_item_new_array(1));
-	g_ptr_array_add(items, fu_msgpack_item_new_binary(buf_in));
-	buf2 = fu_msgpack_write(items, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(buf2);
-	g_assert_cmpint(buf2->len, ==, 53);
-
-	/* parse it back */
-	items_new = fu_msgpack_parse(buf2, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(items_new);
-	g_assert_cmpint(items_new->len, ==, 10);
-
-	for (guint i = 0; i < G_N_ELEMENTS(kinds); i++) {
-		FuMsgpackItem *item = g_ptr_array_index(items_new, i);
-		g_assert_cmpint(fu_msgpack_item_get_kind(item), ==, kinds[i]);
-	}
-	g_assert_cmpint(fu_msgpack_item_get_map(g_ptr_array_index(items_new, 0)), ==, 4);
-	g_assert_cmpint(fu_msgpack_item_get_array(g_ptr_array_index(items_new, 8)), ==, 1);
-}
-
-static void
 fu_archive_invalid_func(void)
 {
 	g_autofree gchar *filename = NULL;
@@ -323,7 +262,7 @@ static void
 fu_device_version_format_func(void)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
-	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device, "Ver1.2.3 RELEASE");
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.3");
@@ -1081,7 +1020,7 @@ fu_plugin_device_inhibit_children_func(void)
 	fu_device_uninhibit(parent, "test");
 
 	/* make the inhibit propagate to children */
-	fu_device_add_private_flag(parent, FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN);
+	fu_device_add_internal_flag(parent, FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN);
 	fu_device_inhibit(parent, "test", "because");
 	g_assert_false(fu_device_has_flag(parent, FWUPD_DEVICE_FLAG_UPDATABLE));
 	g_assert_false(fu_device_has_flag(child1, FWUPD_DEVICE_FLAG_UPDATABLE));
@@ -1432,7 +1371,7 @@ fu_plugin_backend_device_func(void)
 	g_assert_true(ret);
 
 	fu_device_set_specialized_gtype(device, FU_TYPE_DEVICE);
-	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ONLY_SUPPORTED);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED);
 	ret = fu_plugin_runner_backend_device_added(plugin, device, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1614,7 +1553,7 @@ fu_device_locker_fail_func(void)
 	g_assert_null(locker);
 	g_assert_true(fu_device_get_metadata_boolean(device, "Test::Open"));
 	g_assert_true(fu_device_get_metadata_boolean(device, "Test::Close"));
-	g_assert_false(fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_OPEN));
+	g_assert_false(fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_IS_OPEN));
 }
 
 static void
@@ -1717,11 +1656,11 @@ fu_device_poll_func(void)
 	fu_test_loop_run_with_timeout(50);
 	fu_test_loop_quit();
 	cnt = fu_device_get_metadata_integer(device, "cnt");
-	g_assert_cmpint(cnt, >=, 5);
+	g_assert_cmpint(cnt, >=, 9);
 	fu_test_loop_quit();
 
 	/* auto pause */
-	fu_device_add_private_flag(device, FU_DEVICE_CUSTOM_AUTO_PAUSE_POLLING);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING);
 	locker = fu_device_poll_locker_new(device, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(locker);
@@ -1848,7 +1787,7 @@ fu_device_vfuncs_func(void)
 	g_assert_true(ret);
 
 	/* no-probe */
-	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_NO_PROBE);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NO_PROBE);
 	ret = fu_device_probe(device, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false(ret);
@@ -1996,26 +1935,27 @@ fu_device_inhibit_updateable_func(void)
 	g_assert_cmpstr(fu_device_get_update_error(device), ==, NULL);
 }
 
+#define TEST_FLAG_FOO (1 << 0)
+#define TEST_FLAG_BAR (1 << 1)
+#define TEST_FLAG_BAZ (1 << 2)
+
 static void
-fu_device_custom_flags_func(void)
+fu_device_private_flags_func(void)
 {
 	g_autofree gchar *tmp = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 
-	fu_device_register_private_flag(device, "foo");
-	fu_device_register_private_flag(device, "bar");
+	fu_device_register_private_flag(device, TEST_FLAG_FOO, "foo");
+	fu_device_register_private_flag(device, TEST_FLAG_BAR, "bar");
 
 	fu_device_set_custom_flags(device, "foo");
-	g_assert_true(fu_device_has_private_flag(device, "foo"));
+	g_assert_cmpint(fu_device_get_private_flags(device), ==, TEST_FLAG_FOO);
 	fu_device_set_custom_flags(device, "bar");
-	g_assert_true(fu_device_has_private_flag(device, "foo"));
-	g_assert_true(fu_device_has_private_flag(device, "bar"));
+	g_assert_cmpint(fu_device_get_private_flags(device), ==, TEST_FLAG_FOO | TEST_FLAG_BAR);
 	fu_device_set_custom_flags(device, "~bar");
-	g_assert_true(fu_device_has_private_flag(device, "foo"));
-	g_assert_false(fu_device_has_private_flag(device, "bar"));
+	g_assert_cmpint(fu_device_get_private_flags(device), ==, TEST_FLAG_FOO);
 	fu_device_set_custom_flags(device, "baz");
-	g_assert_true(fu_device_has_private_flag(device, "foo"));
-	g_assert_false(fu_device_has_private_flag(device, "bar"));
+	g_assert_cmpint(fu_device_get_private_flags(device), ==, TEST_FLAG_FOO);
 
 	tmp = fu_device_to_string(device);
 	g_assert_cmpstr(tmp,
@@ -2032,6 +1972,14 @@ fu_device_flags_func(void)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	g_autoptr(FuDevice) proxy = fu_device_new(NULL);
+
+	/* bitfield */
+	for (guint64 i = 1; i < FU_DEVICE_INTERNAL_FLAG_UNKNOWN; i *= 2) {
+		const gchar *tmp = fu_device_internal_flag_to_string(i);
+		if (tmp == NULL)
+			break;
+		g_assert_cmpint(fu_device_internal_flag_from_string(tmp), ==, i);
+	}
 
 	g_assert_cmpint(fu_device_get_flags(device), ==, FWUPD_DEVICE_FLAG_NONE);
 
@@ -2249,12 +2197,8 @@ fu_backend_emulate_func(void)
 	const gchar *json2 = "{\n"
 			     "  \"UdevDevices\" : [\n"
 			     "    {\n"
-#if GLIB_CHECK_VERSION(2, 80, 0)
 			     "      \"BackendId\" : \"usb:FF:FF:06\",\n"
 			     "      \"Created\" : \"2099-02-01T16:35:03Z\"\n"
-#else
-			     "      \"BackendId\" : \"usb:FF:FF:06\"\n"
-#endif
 			     "    }\n"
 			     "  ]\n"
 			     "}";
@@ -2284,7 +2228,7 @@ fu_backend_emulate_func(void)
 	/* parse */
 	ret = fwupd_codec_from_json_string(FWUPD_CODEC(backend), json1, &error);
 	g_assert_no_error(error);
-	g_assert_true(ret);
+	g_assert(ret);
 	g_assert_cmpint(added_cnt, ==, 1);
 	g_assert_cmpint(removed_cnt, ==, 0);
 	g_assert_cmpint(changed_cnt, ==, 0);
@@ -2310,7 +2254,7 @@ fu_backend_emulate_func(void)
 				   FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				   &error);
 	g_assert_no_error(error);
-	g_assert_true(ret);
+	g_assert(ret);
 
 	/* in-order, repeat */
 	buf[0] = 0x00;
@@ -2324,7 +2268,7 @@ fu_backend_emulate_func(void)
 				   FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				   &error);
 	g_assert_no_error(error);
-	g_assert_true(ret);
+	g_assert(ret);
 
 	/* out-of-order */
 	buf[0] = 0x00;
@@ -2338,12 +2282,12 @@ fu_backend_emulate_func(void)
 				   FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				   &error);
 	g_assert_no_error(error);
-	g_assert_true(ret);
+	g_assert(ret);
 
 	/* load the same data */
 	ret = fwupd_codec_from_json_string(FWUPD_CODEC(backend), json1, &error);
 	g_assert_no_error(error);
-	g_assert_true(ret);
+	g_assert(ret);
 	g_assert_cmpint(added_cnt, ==, 1);
 	g_assert_cmpint(removed_cnt, ==, 0);
 	g_assert_cmpint(changed_cnt, ==, 1);
@@ -2355,7 +2299,7 @@ fu_backend_emulate_func(void)
 	/* load a different device */
 	ret = fwupd_codec_from_json_string(FWUPD_CODEC(backend), json2, &error);
 	g_assert_no_error(error);
-	g_assert_true(ret);
+	g_assert(ret);
 	g_assert_cmpint(added_cnt, ==, 2);
 	g_assert_cmpint(changed_cnt, ==, 1);
 	g_assert_cmpint(removed_cnt, ==, 1);
@@ -2714,7 +2658,6 @@ fu_common_version_func(void)
 	    {0x226a4b00, "137.2706.768", FWUPD_VERSION_FORMAT_SURFACE_LEGACY},
 	    {0x6001988, "6.25.136", FWUPD_VERSION_FORMAT_SURFACE},
 	    {0x00ff0001, "255.0.1", FWUPD_VERSION_FORMAT_DELL_BIOS},
-	    {0x010f0201, "1.15.2", FWUPD_VERSION_FORMAT_DELL_BIOS_MSB},
 	    {0xc8, "0x000000c8", FWUPD_VERSION_FORMAT_HEX},
 	};
 	struct {
@@ -5626,47 +5569,6 @@ fu_input_stream_func(void)
 }
 
 static void
-fu_plugin_struct_bits_func(void)
-{
-	g_autofree gchar *str1 = NULL;
-	g_autoptr(FuStructSelfTestBits) st2 = NULL;
-	g_autoptr(FuStructSelfTestBits) st = fu_struct_self_test_bits_new();
-	g_autoptr(GError) error = NULL;
-
-	/* 0b1111 + 0b1 + 0b0010 = 0b111110010 -> 0x1F2 */
-	g_assert_cmpint(st->len, ==, 4);
-	fu_dump_raw(G_LOG_DOMAIN, "buf", st->data, st->len);
-	g_assert_cmpint(st->data[0], ==, 0xF2);
-	g_assert_cmpint(st->data[1], ==, 0x01);
-	g_assert_cmpint(st->data[2], ==, 0x0);
-	g_assert_cmpint(st->data[3], ==, 0x0);
-
-	st2 = fu_struct_self_test_bits_parse(st->data, st->len, 0x0, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(st2);
-
-	g_assert_cmpint(fu_struct_self_test_bits_get_lower(st2), ==, 0x2);
-	g_assert_cmpint(fu_struct_self_test_bits_get_middle(st2), ==, 0b1);
-	g_assert_cmpint(fu_struct_self_test_bits_get_upper(st2), ==, 0xF);
-
-	str1 = fu_struct_self_test_bits_to_string(st2);
-	g_assert_cmpstr(str1,
-			==,
-			"FuStructSelfTestBits:\n"
-			"  lower: 0x2 [two]\n"
-			"  middle: 0x1\n"
-			"  upper: 0xf");
-
-	/* set all to maximum value */
-	fu_struct_self_test_bits_set_lower(st2, G_MAXUINT32);
-	fu_struct_self_test_bits_set_middle(st2, G_MAXUINT32);
-	fu_struct_self_test_bits_set_upper(st2, G_MAXUINT32);
-	g_assert_cmpint(fu_struct_self_test_bits_get_lower(st2), ==, 0xF);
-	g_assert_cmpint(fu_struct_self_test_bits_get_middle(st2), ==, 0x1);
-	g_assert_cmpint(fu_struct_self_test_bits_get_upper(st2), ==, 0xF);
-}
-
-static void
 fu_plugin_struct_func(void)
 {
 	gboolean ret;
@@ -5863,7 +5765,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/partial-input-stream", fu_partial_input_stream_func);
 	g_test_add_func("/fwupd/composite-input-stream", fu_composite_input_stream_func);
 	g_test_add_func("/fwupd/struct", fu_plugin_struct_func);
-	g_test_add_func("/fwupd/struct{bits}", fu_plugin_struct_bits_func);
 	g_test_add_func("/fwupd/struct{wrapped}", fu_plugin_struct_wrapped_func);
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/quirks{vendor-ids}", fu_quirks_vendor_ids_func);
@@ -5919,7 +5820,6 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{bytes-get-data}", fu_common_bytes_get_data_func);
 	g_test_add_func("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
-	g_test_add_func("/fwupd/msgpack", fu_msgpack_func);
 	g_test_add_func("/fwupd/efi-load-option", fu_efi_load_option_func);
 	g_test_add_func("/fwupd/efivar", fu_efivar_func);
 	g_test_add_func("/fwupd/efivar{bootxxxx}", fu_efivar_boot_func);
@@ -5967,7 +5867,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{instance-ids}", fu_device_instance_ids_func);
 	g_test_add_func("/fwupd/device{composite-id}", fu_device_composite_id_func);
 	g_test_add_func("/fwupd/device{flags}", fu_device_flags_func);
-	g_test_add_func("/fwupd/device{private-flags}", fu_device_custom_flags_func);
+	g_test_add_func("/fwupd/device{private-flags}", fu_device_private_flags_func);
 	g_test_add_func("/fwupd/device{inhibit}", fu_device_inhibit_func);
 	g_test_add_func("/fwupd/device{inhibit-updateable}", fu_device_inhibit_updateable_func);
 	g_test_add_func("/fwupd/device{parent}", fu_device_parent_func);

@@ -58,13 +58,12 @@ fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpo
 
 		/* allow matching PCB version */
 		serialnum = fu_device_get_serial(device);
-		if (serialnum != NULL && strlen(serialnum) >= 10) {
+		if (serialnum != NULL && strlen(serialnum) >= 8) {
 			if (serialnum[6] == 'Z' && serialnum[7] == 'D') {
-				if (serialnum[9] == 'A' || serialnum[9] == 'B') {
-					fu_device_add_instance_u16(parent, "REV", 0x40);
-				} else {
-					fu_device_add_instance_u16(parent, "REV", 0x42);
-				}
+				/* REV4.0 */
+				fu_device_add_instance_u16(parent, "REV", 0x40);
+			} else {
+				fu_device_add_instance_u16(parent, "REV", 0x30);
 			}
 			if (!fu_device_build_instance_id(parent,
 							 &error,

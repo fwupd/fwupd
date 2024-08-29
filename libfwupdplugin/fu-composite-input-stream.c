@@ -11,7 +11,6 @@
 #include "fwupd-codec.h"
 
 #include "fu-composite-input-stream.h"
-#include "fu-input-stream.h"
 #include "fu-partial-input-stream-private.h"
 
 /**
@@ -146,43 +145,6 @@ fu_composite_input_stream_add_partial_stream(FuCompositeInputStream *self,
 	g_debug("adding partial stream global_offset:0x%x", (guint)item->global_offset);
 	self->total_size += fu_partial_input_stream_get_size(item->partial_stream);
 	g_ptr_array_add(self->items, item);
-}
-
-/**
- * fu_composite_input_stream_add_stream:
- * @self: a #FuCompositeInputStream
- * @stream: a #GInputStream
- * @error: (nullable): optional return location for an error
- *
- * Adds a input stream object, which has to be seekable.
- *
- * Returns: %TRUE for success
- *
- * Since: 2.0.0
- **/
-gboolean
-fu_composite_input_stream_add_stream(FuCompositeInputStream *self,
-				     GInputStream *stream,
-				     GError **error)
-{
-	gsize streamsz = 0;
-	g_autoptr(GInputStream) partial_stream = NULL;
-
-	g_return_val_if_fail(FU_IS_COMPOSITE_INPUT_STREAM(self), FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
-	g_return_val_if_fail(G_INPUT_STREAM(self) != stream, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* create a partial stream that is actually the size of the entire GInputStream */
-	if (!fu_input_stream_size(stream, &streamsz, error))
-		return FALSE;
-	partial_stream = fu_partial_input_stream_new(stream, 0x0, streamsz, error);
-	if (partial_stream == NULL)
-		return FALSE;
-	fu_composite_input_stream_add_partial_stream(self, FU_PARTIAL_INPUT_STREAM(partial_stream));
-
-	/* success */
-	return TRUE;
 }
 
 static goffset

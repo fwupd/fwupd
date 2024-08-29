@@ -1,3 +1,4 @@
+if libusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginCcgx"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -54,4 +55,5 @@ if get_option('tests')
     ],
   )
   test('ccgx-self-test', e, env: env)
+endif
 endif

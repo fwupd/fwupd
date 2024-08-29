@@ -188,7 +188,10 @@ fu_flashrom_plugin_add_device(FuPlugin *plugin,
 
 	/* use same VendorID logic as with UEFI */
 	dmi_vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR);
-	fu_device_build_vendor_id(FU_DEVICE(device), "DMI", dmi_vendor);
+	if (dmi_vendor != NULL) {
+		g_autofree gchar *vendor_id = g_strdup_printf("DMI:%s", dmi_vendor);
+		fu_device_add_vendor_id(FU_DEVICE(device), vendor_id);
+	}
 	fu_flashrom_plugin_device_set_hwids(plugin, device);
 	fu_flashrom_plugin_device_set_version(plugin, device);
 	if (!fu_flashrom_plugin_device_set_bios_info(plugin, device, &error_local))

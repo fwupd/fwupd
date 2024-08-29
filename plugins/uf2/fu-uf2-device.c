@@ -302,8 +302,6 @@ fu_uf2_device_setup(FuDevice *device, GError **error)
 
 	/* this might exist */
 	fn2 = fu_block_device_get_full_path(self, "CURRENT.UF2", error);
-	if (fn2 == NULL)
-		return FALSE;
 	fw = fu_bytes_get_contents(fn2, NULL);
 	if (fw != NULL) {
 		if (!fu_uf2_device_probe_current_fw(device, fw, error))
@@ -386,7 +384,10 @@ fu_uf2_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* vendor-id */
-	fu_device_build_vendor_id_u16(device, "USB", vid);
+	if (vid != 0x0) {
+		g_autofree gchar *vendor_id = g_strdup_printf("USB:0x%04X", (guint)vid);
+		fu_device_add_vendor_id(device, vendor_id);
+	}
 
 	/* check the quirk matched to avoid mounting *all* vfat devices */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
@@ -426,7 +427,7 @@ fu_uf2_device_init(FuUf2Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 }
 
 static void

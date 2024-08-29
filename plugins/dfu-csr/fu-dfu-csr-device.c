@@ -14,7 +14,15 @@
 #include "fu-dfu-csr-struct.h"
 #include "fu-dfu-struct.h"
 
-#define FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY "require-delay"
+/**
+ * FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY:
+ *
+ * Respect the write timeout value when performing actions. This is sometimes
+ * set to a huge amount of time, and so is not used by default.
+ *
+ * Since: 1.0.3
+ */
+#define FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY (1 << 0)
 
 struct _FuDfuCsrDevice {
 	FuHidDevice parent_instance;
@@ -361,10 +369,12 @@ fu_dfu_csr_device_init(FuDfuCsrDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.qualcomm.dfu");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_DFU_FIRMWARE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY,
+					"require-delay");
 }
 
 static void

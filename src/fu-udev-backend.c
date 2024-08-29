@@ -15,7 +15,6 @@
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-udev-backend.h"
-#include "fu-udev-device-private.h"
 
 struct _FuUdevBackend {
 	FuBackend parent_instance;
@@ -89,46 +88,22 @@ fu_udev_backend_rescan_dpaux_devices(FuUdevBackend *self)
 				  self);
 }
 
-static FuUdevDevice *
-fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device);
-
 static void
-fu_udev_backend_create_ddc_proxy(FuUdevBackend *self, FuDevice *device)
+fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 {
-	g_autofree gchar *proxy_sysfs_path = NULL;
-	g_autoptr(FuUdevDevice) proxy = NULL;
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GUdevDevice) proxy_udev_device = NULL;
-
-	proxy_sysfs_path =
-	    g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)), "ddc", NULL);
-	proxy_udev_device = g_udev_client_query_by_sysfs_path(self->gudev_client, proxy_sysfs_path);
-	if (proxy_udev_device == NULL)
-		return;
-	proxy = fu_udev_backend_create_device(self, proxy_udev_device);
-	if (!fu_device_probe(FU_DEVICE(proxy), &error_local)) {
-		g_warning("failed to probe DRM DDC device: %s", error_local->message);
-		return;
-	}
-	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
-	fu_device_set_proxy(device, FU_DEVICE(proxy));
-}
-
-static FuUdevDevice *
-fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device)
-{
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	GType gtype = FU_TYPE_UDEV_DEVICE;
+	g_autoptr(FuUdevDevice) device = NULL;
+	g_autoptr(GPtrArray) possible_plugins = NULL;
 	struct {
 		const gchar *subsystem;
 		GType gtype;
 	} subsystem_gtype_map[] = {{"mei", FU_TYPE_MEI_DEVICE},
 				   {"drm", FU_TYPE_DRM_DEVICE},
-				   {"usb", FU_TYPE_USB_DEVICE},
 				   {"i2c", FU_TYPE_I2C_DEVICE},
 				   {"i2c-dev", FU_TYPE_I2C_DEVICE},
 				   {"drm_dp_aux_dev", FU_TYPE_DPAUX_DEVICE},
 				   {NULL, G_TYPE_INVALID}};
-	g_autoptr(FuDevice) device = NULL;
 
 	/* create the correct object depending on the subsystem */
 	for (guint i = 0; subsystem_gtype_map[i].gtype != G_TYPE_INVALID; i++) {
@@ -139,41 +114,13 @@ fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device)
 		}
 	}
 
-	/* ensure this is the actual device */
-	if (gtype == FU_TYPE_USB_DEVICE &&
-	    g_strcmp0(g_udev_device_get_devtype(udev_device), "usb_device") != 0)
-		return NULL;
-
-	/* create device of correct kind */
-	device = g_object_new(gtype, "backend", FU_BACKEND(self), "udev-device", udev_device, NULL);
-
-	/* the DRM device has a i2c device that is used for communicating with the scaler */
-	if (gtype == FU_TYPE_DRM_DEVICE)
-		fu_udev_backend_create_ddc_proxy(self, device);
-
 	/* success */
-	return FU_UDEV_DEVICE(g_steal_pointer(&device));
-}
-
-static void
-fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
-{
-	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
-	g_autoptr(FuUdevDevice) device = NULL;
-	g_autoptr(GPtrArray) possible_plugins = NULL;
-
-	/* ignore zram and loop block devices -- of which there are dozens on systems with snap */
-	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "block") == 0) {
-		g_autofree gchar *basename =
-		    g_path_get_basename(g_udev_device_get_sysfs_path(udev_device));
-		if (g_str_has_prefix(basename, "zram") || g_str_has_prefix(basename, "loop"))
-			return;
-	}
-
-	/* use the subsystem to create the correct GType */
-	device = fu_udev_backend_create_device(self, udev_device);
-	if (device == NULL)
-		return;
+	device = g_object_new(gtype,
+			      "context",
+			      fu_backend_get_context(FU_BACKEND(self)),
+			      "udev-device",
+			      udev_device,
+			      NULL);
 
 	/* these are used without a subclass */
 	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "msr") == 0)
@@ -193,6 +140,7 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 
 	/* DP AUX devices are *weird* and can only read the DPCD when a DRM device is attached */
 	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "drm_dp_aux_dev") == 0) {
+
 		/* add and rescan, regardless of if we can open it */
 		g_ptr_array_add(self->dpaux_devices, g_object_ref(device));
 		fu_udev_backend_rescan_dpaux_devices(self);
@@ -379,66 +327,6 @@ fu_udev_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **erro
 	return TRUE;
 }
 
-static FuDevice *
-fu_udev_backend_get_device_parent(FuBackend *backend,
-				  FuDevice *device,
-				  const gchar *subsystem,
-				  GError **error)
-{
-	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
-	g_autoptr(GUdevDevice) device_tmp = NULL;
-
-	/* sanity check */
-	if (udev_device == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "not initialized");
-		return NULL;
-	}
-	if (subsystem == NULL) {
-		g_autoptr(GUdevDevice) udev_parent = g_udev_device_get_parent(udev_device);
-		g_autoptr(FuUdevDevice) parent = NULL;
-		if (udev_parent == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "no udev parent");
-			return NULL;
-		}
-		parent = fu_udev_backend_create_device(self, udev_parent);
-		if (parent == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "no parent");
-			return NULL;
-		}
-		return FU_DEVICE(g_steal_pointer(&parent));
-	}
-	device_tmp = g_udev_device_get_parent(udev_device);
-	while (device_tmp != NULL) {
-		g_autoptr(GUdevDevice) udev_parent = NULL;
-		g_autoptr(FuUdevDevice) device_new = NULL;
-
-		/* a match! */
-		device_new = fu_udev_backend_create_device(self, device_tmp);
-		if (device_new == NULL)
-			break;
-		if (fu_udev_device_match_subsystem(device_new, subsystem))
-			return FU_DEVICE(g_steal_pointer(&device_new));
-
-		udev_parent = g_udev_device_get_parent(device_tmp);
-		g_set_object(&device_tmp, udev_parent);
-	}
-
-	/* failed */
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "no parent with subsystem %s",
-		    subsystem);
-	return NULL;
-}
-
 static void
 fu_udev_backend_finalize(GObject *object)
 {
@@ -471,7 +359,6 @@ fu_udev_backend_class_init(FuUdevBackendClass *klass)
 	object_class->finalize = fu_udev_backend_finalize;
 	backend_class->coldplug = fu_udev_backend_coldplug;
 	backend_class->to_string = fu_udev_backend_to_string;
-	backend_class->get_device_parent = fu_udev_backend_get_device_parent;
 }
 
 FuBackend *

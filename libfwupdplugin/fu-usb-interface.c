@@ -18,17 +18,14 @@
 
 #include <string.h>
 
-#include "fu-byte-array.h"
-#include "fu-bytes.h"
-#include "fu-input-stream.h"
-#include "fu-mem-private.h"
 #include "fu-usb-endpoint-private.h"
 #include "fu-usb-interface-private.h"
 
 struct _FuUsbInterface {
-	FuUsbDescriptor parent_instance;
+	GObject parent_instance;
 	struct libusb_interface_descriptor iface;
-	GPtrArray *endpoints; /* element-type FuUsbEndpoint */
+	GBytes *extra;
+	GPtrArray *endpoints;
 };
 
 static void
@@ -36,31 +33,9 @@ fu_usb_interface_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_EXTENDED(FuUsbInterface,
 		       fu_usb_interface,
-		       FU_TYPE_USB_DESCRIPTOR,
+		       G_TYPE_OBJECT,
 		       0,
 		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_usb_interface_codec_iface_init));
-
-static gboolean
-fu_usb_interface_parse_extra(FuUsbInterface *self, const guint8 *buf, gsize bufsz, GError **error)
-{
-	gsize offset = 0;
-	g_autoptr(GBytes) bytes = g_bytes_new(buf, bufsz);
-
-	/* this is common to all descriptor types */
-	while (offset < bufsz) {
-		g_autoptr(FuUsbDescriptor) img = g_object_new(FU_TYPE_USB_DESCRIPTOR, NULL);
-		if (!fu_firmware_parse_full(FU_FIRMWARE(img),
-					    bytes,
-					    offset,
-					    FWUPD_INSTALL_FLAG_NONE,
-					    error))
-			return FALSE;
-		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(img), error))
-			return FALSE;
-		offset += fu_firmware_get_size(FU_FIRMWARE(img));
-	}
-	return TRUE;
-}
 
 static gboolean
 fu_usb_interface_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
@@ -99,6 +74,7 @@ fu_usb_interface_from_json(FwupdCodec *codec, JsonNode *json_node, GError **erro
 	/* array of endpoints */
 	if (json_object_has_member(json_object, "UsbEndpoints")) {
 		JsonArray *json_array = json_object_get_array_member(json_object, "UsbEndpoints");
+		self->endpoints = g_ptr_array_new_with_free_func(g_object_unref);
 		for (guint i = 0; i < json_array_get_length(json_array); i++) {
 			JsonNode *node_tmp = json_array_get_element(json_array, i);
 			g_autoptr(FuUsbEndpoint) endpoint =
@@ -114,8 +90,9 @@ fu_usb_interface_from_json(FwupdCodec *codec, JsonNode *json_node, GError **erro
 	if (str != NULL) {
 		gsize bufsz = 0;
 		g_autofree guchar *buf = g_base64_decode(str, &bufsz);
-		if (!fu_usb_interface_parse_extra(self, (const guint8 *)buf, bufsz, error))
-			return FALSE;
+		if (self->extra != NULL)
+			g_bytes_unref(self->extra);
+		self->extra = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
 	}
 
 	/* success */
@@ -126,7 +103,6 @@ static void
 fu_usb_interface_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
 	FuUsbInterface *self = FU_USB_INTERFACE(codec);
-	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(FU_FIRMWARE(self));
 
 	/* optional properties */
 	if (self->iface.bLength != 0) {
@@ -163,7 +139,7 @@ fu_usb_interface_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFla
 	}
 
 	/* array of endpoints */
-	if (self->endpoints->len > 0) {
+	if (self->endpoints != NULL && self->endpoints->len > 0) {
 		json_builder_set_member_name(builder, "UsbEndpoints");
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < self->endpoints->len; i++) {
@@ -176,16 +152,9 @@ fu_usb_interface_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFla
 	}
 
 	/* extra data */
-	if (imgs->len > 0) {
-		g_autofree gchar *str = NULL;
-		g_autoptr(GByteArray) buf = g_byte_array_new();
-		for (guint i = 0; i < imgs->len; i++) {
-			FuUsbDescriptor *img = g_ptr_array_index(imgs, i);
-			g_autoptr(GBytes) blob = fu_firmware_get_bytes(FU_FIRMWARE(img), NULL);
-			if (blob != NULL)
-				fu_byte_array_append_bytes(buf, blob);
-		}
-		str = g_base64_encode(buf->data, buf->len);
+	if (self->extra != NULL && g_bytes_get_size(self->extra) > 0) {
+		g_autofree gchar *str = g_base64_encode(g_bytes_get_data(self->extra, NULL),
+							g_bytes_get_size(self->extra));
 		json_builder_set_member_name(builder, "ExtraData");
 		json_builder_add_string_value(builder, str);
 	}
@@ -199,18 +168,53 @@ fu_usb_interface_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFla
  * Since: 2.0.0
  **/
 FuUsbInterface *
-fu_usb_interface_new(const struct libusb_interface_descriptor *iface, GError **error)
+fu_usb_interface_new(const struct libusb_interface_descriptor *iface)
 {
 	FuUsbInterface *self = g_object_new(FU_TYPE_USB_INTERFACE, NULL);
 
 	/* copy the data */
 	memcpy(&self->iface, iface, sizeof(struct libusb_interface_descriptor));
-	if (!fu_usb_interface_parse_extra(self, iface->extra, iface->extra_length, error))
-		return NULL;
+	self->extra = g_bytes_new(iface->extra, iface->extra_length);
+
+	self->endpoints = g_ptr_array_new_with_free_func(g_object_unref);
 	for (guint i = 0; i < iface->bNumEndpoints; i++)
 		g_ptr_array_add(self->endpoints, fu_usb_endpoint_new(&iface->endpoint[i]));
 
 	return FU_USB_INTERFACE(self);
+}
+
+/**
+ * fu_usb_interface_get_length:
+ * @self: a #FuUsbInterface
+ *
+ * Gets the USB bus number for the interface.
+ *
+ * Return value: The 8-bit bus number
+ *
+ * Since: 2.0.0
+ **/
+guint8
+fu_usb_interface_get_length(FuUsbInterface *self)
+{
+	g_return_val_if_fail(FU_IS_USB_INTERFACE(self), 0);
+	return self->iface.bLength;
+}
+
+/**
+ * fu_usb_interface_get_kind:
+ * @self: a #FuUsbInterface
+ *
+ * Gets the type of interface.
+ *
+ * Return value: The 8-bit address
+ *
+ * Since: 2.0.0
+ **/
+guint8
+fu_usb_interface_get_kind(FuUsbInterface *self)
+{
+	g_return_val_if_fail(FU_IS_USB_INTERFACE(self), 0);
+	return self->iface.bDescriptorType;
 }
 
 /**
@@ -318,12 +322,30 @@ fu_usb_interface_get_index(FuUsbInterface *self)
 }
 
 /**
+ * fu_usb_interface_get_extra:
+ * @self: a #FuUsbInterface
+ *
+ * Gets any extra data from the interface.
+ *
+ * Return value: (transfer none): a #GBytes, or %NULL for failure
+ *
+ * Since: 2.0.0
+ **/
+GBytes *
+fu_usb_interface_get_extra(FuUsbInterface *self)
+{
+	g_return_val_if_fail(FU_IS_USB_INTERFACE(self), NULL);
+	return self->extra;
+}
+
+/**
  * fu_usb_interface_get_endpoints:
  * @self: a #FuUsbInterface
  *
  * Gets interface endpoints.
  *
- * Return value: (transfer container) (element-type FuUsbEndpoint): an array of endpoints.
+ * Return value: (transfer container) (element-type FuUsbEndpoint): an array of endpoints,
+ * or %NULL on failure.
  *
  * Since: 2.0.0
  **/
@@ -331,63 +353,9 @@ GPtrArray *
 fu_usb_interface_get_endpoints(FuUsbInterface *self)
 {
 	g_return_val_if_fail(FU_IS_USB_INTERFACE(self), NULL);
+	if (self->endpoints == NULL)
+		return NULL;
 	return g_ptr_array_ref(self->endpoints);
-}
-
-/* private */
-void
-fu_usb_interface_add_endpoint(FuUsbInterface *self, FuUsbEndpoint *endpoint)
-{
-	g_return_if_fail(FU_IS_USB_INTERFACE(self));
-	g_return_if_fail(FU_IS_USB_ENDPOINT(endpoint));
-	g_ptr_array_add(self->endpoints, g_object_ref(endpoint));
-}
-
-static gboolean
-fu_usb_interface_parse(FuFirmware *firmware,
-		       GInputStream *stream,
-		       gsize offset,
-		       FwupdInstallFlags flags,
-		       GError **error)
-{
-	FuUsbInterface *self = FU_USB_INTERFACE(firmware);
-	g_autoptr(FuUsbInterfaceHdr) st = NULL;
-
-	/* FuUsbDescriptor */
-	if (!FU_FIRMWARE_CLASS(fu_usb_interface_parent_class)
-		 ->parse(firmware, stream, offset, flags, error))
-		return FALSE;
-
-	/* parse as proper interface with endpoints */
-	st = fu_usb_interface_hdr_parse_stream(stream, offset, error);
-	if (st == NULL)
-		return FALSE;
-	self->iface.bLength = fu_usb_interface_hdr_get_length(st);
-	self->iface.bDescriptorType = FU_USB_INTERFACE_HDR_DEFAULT_DESCRIPTOR_TYPE;
-	self->iface.bInterfaceNumber = fu_usb_interface_hdr_get_interface_number(st);
-	self->iface.bAlternateSetting = fu_usb_interface_hdr_get_alternate_setting(st);
-	self->iface.bNumEndpoints = fu_usb_interface_hdr_get_num_endpoints(st);
-	self->iface.bInterfaceClass = fu_usb_interface_hdr_get_interface_class(st);
-	self->iface.bInterfaceSubClass = fu_usb_interface_hdr_get_interface_sub_class(st);
-	self->iface.bInterfaceProtocol = fu_usb_interface_hdr_get_interface_protocol(st);
-	self->iface.iInterface = fu_usb_interface_hdr_get_interface(st);
-	fu_firmware_set_size(FU_FIRMWARE(self), self->iface.bLength);
-
-	/* extra data */
-	if (self->iface.bLength > st->len) {
-		g_autoptr(GByteArray) buf = NULL;
-		buf = fu_input_stream_read_byte_array(stream,
-						      offset + st->len,
-						      self->iface.bLength - st->len,
-						      error);
-		if (buf == NULL)
-			return FALSE;
-		if (!fu_usb_interface_parse_extra(self, buf->data, buf->len, error))
-			return FALSE;
-	}
-
-	/* success */
-	return TRUE;
 }
 
 static void
@@ -401,21 +369,21 @@ static void
 fu_usb_interface_finalize(GObject *object)
 {
 	FuUsbInterface *self = FU_USB_INTERFACE(object);
-	g_ptr_array_unref(self->endpoints);
+	if (self->extra != NULL)
+		g_bytes_unref(self->extra);
+	if (self->endpoints != NULL)
+		g_ptr_array_unref(self->endpoints);
 	G_OBJECT_CLASS(fu_usb_interface_parent_class)->finalize(object);
 }
 
 static void
 fu_usb_interface_init(FuUsbInterface *self)
 {
-	self->endpoints = g_ptr_array_new_with_free_func(g_object_unref);
 }
 
 static void
 fu_usb_interface_class_init(FuUsbInterfaceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_usb_interface_finalize;
-	firmware_class->parse = fu_usb_interface_parse;
 }

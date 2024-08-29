@@ -27,15 +27,60 @@ struct _FuVliUsbhubDevice {
 
 G_DEFINE_TYPE(FuVliUsbhubDevice, fu_vli_usbhub_device, FU_TYPE_VLI_DEVICE)
 
-#define FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_GPIOB	 "attach-with-gpiob"
-#define FU_VLI_USBHUB_DEVICE_FLAG_USB2			 "usb2"
-#define FU_VLI_USBHUB_DEVICE_FLAG_USB3			 "usb3"
-#define FU_VLI_USBHUB_DEVICE_FLAG_UNLOCK_LEGACY813	 "unlock-legacy813"
-#define FU_VLI_USBHUB_DEVICE_FLAG_HAS_SHARED_SPI_PD	 "has-shared-spi-pd"
-#define FU_VLI_USBHUB_DEVICE_FLAG_HAS_MSP430		 "has-msp430"
-#define FU_VLI_USBHUB_DEVICE_FLAG_HAS_RTD21XX		 "has-rtd21xx"
-#define FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_USB_CABLE	 "attach-with-usb"
-#define FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_POWER_CORD "attach-with-power"
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_GPIOB:
+ *
+ * Use GPIO-B reset to reset the device.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_GPIOB (1 << 0)
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_USB2:
+ *
+ * Device is USB-2 speed.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_USB2 (1 << 1)
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_USB3:
+ *
+ * Device is USB-3 speed.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_USB3 (1 << 2)
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_UNLOCK_LEGACY813:
+ *
+ * Device type VL813 needs unlocking with a custom VDR request.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_UNLOCK_LEGACY813 (1 << 3)
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_HAS_SHARED_SPI_PD:
+ *
+ * Device shares the SPI device with the PD device.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_HAS_SHARED_SPI_PD (1 << 4)
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_HAS_MSP430:
+ *
+ * Device has a MSP430 attached via I²C.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_HAS_MSP430 (1 << 5)
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_HAS_RTD21XX:
+ *
+ * Device has a RTD21XX attached via I²C.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_HAS_RTD21XX (1 << 6)
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_USB_CABLE:
+ *
+ * Unplug & re-plug USB cable to reset the device.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_USB_CABLE (1 << 7)
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_POWER_CORD:
+ *
+ * Unplug & re-plug power cord to reset the device.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_POWER_CORD (1 << 8)
 
 static void
 fu_vli_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -1392,23 +1437,32 @@ fu_vli_usbhub_device_init(FuVliUsbhubDevice *self)
 	self->st_hd2 = fu_struct_vli_usbhub_hdr_new();
 	fu_device_add_icon(FU_DEVICE(self), "usb-hub");
 	fu_device_add_protocol(FU_DEVICE(self), "com.vli.usbhub");
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_GPIOB);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_USBHUB_DEVICE_FLAG_USB2);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_USBHUB_DEVICE_FLAG_USB3);
+					FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_GPIOB,
+					"attach-with-gpiob");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_USBHUB_DEVICE_FLAG_USB2, "usb3");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_USBHUB_DEVICE_FLAG_USB3, "usb2");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_VLI_USBHUB_DEVICE_FLAG_UNLOCK_LEGACY813);
+					FU_VLI_USBHUB_DEVICE_FLAG_UNLOCK_LEGACY813,
+					"unlock-legacy813");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_VLI_USBHUB_DEVICE_FLAG_HAS_SHARED_SPI_PD);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_USBHUB_DEVICE_FLAG_HAS_MSP430);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_USBHUB_DEVICE_FLAG_HAS_RTD21XX);
+					FU_VLI_USBHUB_DEVICE_FLAG_HAS_SHARED_SPI_PD,
+					"has-shared-spi-pd");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_USB_CABLE);
+					FU_VLI_USBHUB_DEVICE_FLAG_HAS_MSP430,
+					"has-msp430");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_POWER_CORD);
+					FU_VLI_USBHUB_DEVICE_FLAG_HAS_RTD21XX,
+					"has-rtd21xx");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_USB_CABLE,
+					"attach-with-usb");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_POWER_CORD,
+					"attach-with-power");
 }
 
 static void

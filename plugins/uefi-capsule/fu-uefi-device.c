@@ -342,9 +342,6 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 	g_autofree gchar *guid_new = NULL;
 	g_autoptr(GByteArray) st_cap = fu_struct_efi_capsule_header_new();
 
-	g_return_val_if_fail(FU_IS_UEFI_DEVICE(self), NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
 	priv->missing_header = FALSE;
 
 	/* GUID is the first 16 bytes */
@@ -374,10 +371,6 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 	fu_struct_efi_capsule_header_set_flags(st_cap, priv->capsule_flags);
 	fu_struct_efi_capsule_header_set_header_size(st_cap, hdrsize);
 	fu_struct_efi_capsule_header_set_image_size(st_cap, bufsz + hdrsize);
-	if (fu_uefi_device_get_guid(self) == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no GUID set");
-		return NULL;
-	}
 	if (!fwupd_guid_from_string(fu_uefi_device_get_guid(self),
 				    &esrt_guid,
 				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
@@ -545,14 +538,14 @@ fu_uefi_device_probe(FuDevice *device, GError **error)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
-	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON);
-	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR);
 
 	/* add icons */
 	if (priv->kind == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE) {
 		fu_device_add_icon(device, "computer");
-		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE);
+		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE);
 	}
 
 	/* whether to create a missing header */
@@ -601,7 +594,7 @@ fu_uefi_device_perhaps_enable_debugging(FuUefiDevice *self, GError **error)
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_ENABLE_DEBUGGING)) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING)) {
 		const guint8 data = 1;
 		if (!fu_efivars_set_data(efivars,
 					 FU_EFIVARS_GUID_FWUPDATE,
@@ -638,7 +631,7 @@ fu_uefi_device_get_results(FuDevice *device, GError **error)
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* capture EFI binary debug output */
-	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_DEBUGGING))
+	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING))
 		fu_uefi_device_capture_efi_debugging(device);
 
 	/* just set the update error */
@@ -730,22 +723,38 @@ static void
 fu_uefi_device_init(FuUefiDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "org.uefi.capsule");
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC);
+					FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE,
+					"no-ux-capsule");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE);
+					FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE,
+					"use-shim-unique");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_ENABLE_DEBUGGING);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_COD_INDEXED_FILENAME);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_COD_DELL_RECOVERY);
+					FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC,
+					"use-legacy-bootmgr-desc");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK,
+					"supports-boot-order-lock");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB,
+					"use-shim-for-sb");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE,
+					"no-rt-set-variable");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP,
+					"no-capsule-header-fixup");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING,
+					"enable-debugging");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_DEVICE_FLAG_COD_INDEXED_FILENAME,
+					"cod-indexed-filename");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER,
+					"modify-bootorder");
 }
 
 static void

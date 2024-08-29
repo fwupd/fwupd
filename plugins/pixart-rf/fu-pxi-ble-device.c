@@ -1013,7 +1013,7 @@ fu_pxi_ble_device_init(FuPxiBleDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_device_build_vendor_id_u16(FU_DEVICE(self), "USB", 0x093A);
+	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x093A");
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
 	fu_device_retry_set_delay(FU_DEVICE(self), 50);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
@@ -1021,7 +1021,7 @@ fu_pxi_ble_device_init(FuPxiBleDevice *self)
 	self->retransmit_id = PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
 	self->feature_report_id = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
 	self->input_report_id = PXI_HID_DEV_OTA_INPUT_REPORT_ID;
-	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC, "is-hpac");
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }
 

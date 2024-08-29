@@ -1,3 +1,4 @@
+if libusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginDfu"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -64,3 +65,4 @@ if get_option('tests')
 endif
 
 plugindfu_incdir = include_directories('.')
+endif

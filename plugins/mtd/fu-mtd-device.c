@@ -226,7 +226,10 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 
 	/* set vendor ID as the BIOS vendor */
 	vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER);
-	fu_device_build_vendor_id(device, "DMI", vendor);
+	if (vendor != NULL) {
+		g_autofree gchar *vendor_id = g_strdup_printf("DMI:%s", vendor);
+		fu_device_add_vendor_id(device, vendor_id);
+	}
 
 	/* use vendor and product as an optional instance ID prefix */
 	fu_device_add_instance_strsafe(device, "NAME", attr_name);
@@ -564,7 +567,7 @@ fu_mtd_device_init(FuMtdDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk-solidstate");
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_SYNC);

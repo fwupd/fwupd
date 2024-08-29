@@ -22,10 +22,6 @@
 #define CORSAIR_SUBDEVICE_RECONNECT_PERIOD  1000
 #define CORSAIR_SUBDEVICE_FIRST_POLL_DELAY  2000 /* ms */
 
-#define FU_CORSAIR_DEVICE_FLAG_LEGACY_ATTACH		"legacy-attach"
-#define FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE		"is-subdevice"
-#define FU_CORSAIR_DEVICE_FLAG_NO_VERSION_IN_BOOTLOADER "no-version-in-bl"
-
 struct _FuCorsairDevice {
 	FuUsbDevice parent_instance;
 	FuCorsairDeviceKind device_kind;
@@ -137,7 +133,7 @@ fu_corsair_poll_subdevice(FuDevice *device, gboolean *subdevice_added, GError **
 	child = fu_corsair_device_new(self, child_bp);
 	fu_device_add_instance_id(FU_DEVICE(child), self->subdevice_id);
 	fu_device_set_logical_id(FU_DEVICE(child), "subdevice");
-	fu_device_add_private_flag(FU_DEVICE(child), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_internal_flag(FU_DEVICE(child), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 
 	if (!fu_device_probe(FU_DEVICE(child), error))
 		return FALSE;
@@ -552,17 +548,22 @@ fu_corsair_device_init(FuCorsairDevice *device)
 	self->device_kind = FU_CORSAIR_DEVICE_KIND_MOUSE;
 	self->vendor_interface = CORSAIR_DEFAULT_VENDOR_INTERFACE_ID;
 
-	fu_device_register_private_flag(FU_DEVICE(device), FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE);
-	fu_device_register_private_flag(FU_DEVICE(device), FU_CORSAIR_DEVICE_FLAG_LEGACY_ATTACH);
 	fu_device_register_private_flag(FU_DEVICE(device),
-					FU_CORSAIR_DEVICE_FLAG_NO_VERSION_IN_BOOTLOADER);
+					FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE,
+					"is-subdevice");
+	fu_device_register_private_flag(FU_DEVICE(device),
+					FU_CORSAIR_DEVICE_FLAG_LEGACY_ATTACH,
+					"legacy-attach");
+	fu_device_register_private_flag(FU_DEVICE(device),
+					FU_CORSAIR_DEVICE_FLAG_NO_VERSION_IN_BOOTLOADER,
+					"no-version-in-bl");
 
 	fu_device_set_remove_delay(FU_DEVICE(device), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(device), FWUPD_VERSION_FORMAT_TRIPLET);
 
 	fu_device_add_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 
-	fu_device_add_private_flag(FU_DEVICE(device), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_internal_flag(FU_DEVICE(device), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_protocol(FU_DEVICE(device), "com.corsair.bp");
 }
 

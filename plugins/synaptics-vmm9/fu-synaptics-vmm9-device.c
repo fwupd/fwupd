@@ -10,7 +10,8 @@
 #include "fu-synaptics-vmm9-firmware.h"
 #include "fu-synaptics-vmm9-struct.h"
 
-#define FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED "manual-restart-required"
+/* flags */
+#define FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED (1 << 0)
 
 struct _FuSynapticsVmm9Device {
 	FuHidDevice parent_instance;
@@ -254,10 +255,10 @@ fu_synaptics_vmm9_device_setup(FuDevice *device, GError **error)
 
 	/* whitebox customers */
 	if (self->customer_id == 0x0) {
-		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES);
+		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
 	} else {
-		g_autofree gchar *vendor_id = g_strdup_printf("0x%02X", self->customer_id);
-		fu_device_build_vendor_id(device, "SYNA", vendor_id);
+		g_autofree gchar *vendor_id = g_strdup_printf("SYNA:0x%02X", self->customer_id);
+		fu_device_add_vendor_id(device, vendor_id);
 	}
 
 	/* read version */
@@ -656,9 +657,10 @@ fu_synaptics_vmm9_device_init(FuSynapticsVmm9Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED);
+					FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED,
+					"manual-restart-required");
 }
 
 static void

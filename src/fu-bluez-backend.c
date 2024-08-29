@@ -29,7 +29,6 @@ fu_bluez_backend_object_properties_changed(FuBluezBackend *self, GDBusProxy *pro
 	g_autoptr(FuBluezDevice) dev = NULL;
 	g_autoptr(GVariant) val_connected = NULL;
 	g_autoptr(GVariant) val_paired = NULL;
-	g_autoptr(GVariant) val_services_resolved = NULL;
 
 	/* device is suitable */
 	val_connected = g_dbus_proxy_get_cached_property(proxy, "Connected");
@@ -38,12 +37,7 @@ fu_bluez_backend_object_properties_changed(FuBluezBackend *self, GDBusProxy *pro
 	val_paired = g_dbus_proxy_get_cached_property(proxy, "Paired");
 	if (val_paired == NULL)
 		return;
-	val_services_resolved = g_dbus_proxy_get_cached_property(proxy, "ServicesResolved");
-	if (val_services_resolved == NULL)
-		return;
-
-	suitable = g_variant_get_boolean(val_connected) && g_variant_get_boolean(val_paired) &&
-		   g_variant_get_boolean(val_services_resolved);
+	suitable = g_variant_get_boolean(val_connected) && g_variant_get_boolean(val_paired);
 
 	/* is this an existing device we've previously added */
 	device_tmp = fu_backend_lookup_by_id(FU_BACKEND(self), path);
@@ -58,14 +52,8 @@ fu_bluez_backend_object_properties_changed(FuBluezBackend *self, GDBusProxy *pro
 	}
 
 	/* not paired and connected */
-	if (!suitable) {
-		g_debug("%s connected=%i, paired=%i, services resolved=%i, ignoring",
-			path,
-			g_variant_get_boolean(val_connected),
-			g_variant_get_boolean(val_paired),
-			g_variant_get_boolean(val_services_resolved));
+	if (!suitable)
 		return;
-	}
 
 	/* create device */
 	dev = g_object_new(FU_TYPE_BLUEZ_DEVICE,

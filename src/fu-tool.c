@@ -246,9 +246,7 @@ fu_util_start_engine(FuUtilPrivate *priv,
 #endif
 	flags |= FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES;
 	flags |= FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS;
-	flags |= FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS;
 	flags |= FU_ENGINE_LOAD_FLAG_HWINFO;
-	flags |= FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT;
 	if (!fu_engine_load(priv->engine, flags, progress, error))
 		return FALSE;
 	fu_util_show_plugin_warnings(priv);
@@ -452,7 +450,6 @@ fu_util_get_plugins(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* load engine */
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG |
-				      FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 				  priv->progress,
 				  error))
@@ -2219,7 +2216,6 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_COLDPLUG |
 				      FU_ENGINE_LOAD_FLAG_REMOTES |
-				      FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 				  fu_progress_get_child(priv->progress),
 				  error))
@@ -2520,8 +2516,7 @@ fu_util_get_firmware_types(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
-				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    priv->progress,
 			    error))
 		return FALSE;
@@ -2547,8 +2542,7 @@ fu_util_get_firmware_gtypes(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
-				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    priv->progress,
 			    error))
 		return FALSE;
@@ -2632,8 +2626,7 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
-				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    priv->progress,
 			    error))
 		return FALSE;
@@ -2747,8 +2740,7 @@ fu_util_firmware_export(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
-				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    priv->progress,
 			    error))
 		return FALSE;
@@ -2806,8 +2798,7 @@ fu_util_firmware_extract(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
-				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    priv->progress,
 			    error))
 		return FALSE;
@@ -2898,8 +2889,7 @@ fu_util_firmware_build(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
-				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    priv->progress,
 			    error))
 		return FALSE;
@@ -2997,8 +2987,7 @@ fu_util_firmware_convert(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
-				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    priv->progress,
 			    error))
 		return FALSE;
@@ -3143,8 +3132,7 @@ fu_util_firmware_patch(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
-				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    priv->progress,
 			    error))
 		return FALSE;
@@ -3848,7 +3836,6 @@ fu_util_security_fix(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES |
-				      FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 				  priv->progress,
 				  error))
@@ -3884,7 +3871,6 @@ fu_util_security_undo(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES |
-				      FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 				  priv->progress,
 				  error))
@@ -4086,8 +4072,7 @@ fu_util_efivar_files(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	files = fu_context_get_esp_files(priv->ctx,
 					 FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_FIRST_STAGE |
-					     FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE |
-					     FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_REVOCATIONS,
+					     FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE,
 					 error);
 	if (files == NULL)
 		return FALSE;
@@ -4200,7 +4185,6 @@ fu_util_version(FuUtilPrivate *priv, GError **error)
 	/* load engine */
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_READONLY |
-				      FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 				  priv->progress,
 				  error))

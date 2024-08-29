@@ -45,7 +45,7 @@ fu_algoltek_usbcardreader_firmware_parse(FuFirmware *firmware,
 	guint16 emmc_ver = 0;
 	g_autoptr(GInputStream) stream_payload = NULL;
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
-	
+
 	/* emmc version */
 	if (!fu_input_stream_read_u16 (
 		stream,
@@ -71,8 +71,7 @@ fu_algoltek_usbcardreader_firmware_parse(FuFirmware *firmware,
 		error))
 		return FALSE;
 
-	
-	/* caculate the offset of the app_ver */
+	/* calculate the offset of the app_ver */
 	offset = fw_addr + fw_len - FU_AG_USBCARDREADER_OFFSET_APP_VER_FROM_END;
 
 	/* app version */
@@ -104,7 +103,6 @@ fu_algoltek_usbcardreader_firmware_parse(FuFirmware *firmware,
 		error))
 		return FALSE;
 
-	
 	if(emmc_ver != emmc_support_ver){
 		g_set_error(error,
 			    FWUPD_ERROR,

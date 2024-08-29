@@ -433,14 +433,15 @@ fu_thunderbolt_device_write_firmware(FuDevice *device,
 static gboolean
 fu_thunderbolt_device_probe(FuDevice *device, GError **error)
 {
-	g_autoptr(FuDevice) udev_parent = NULL;
+	g_autoptr(FuUdevDevice) udev_parent = NULL;
 
 	/* if the PCI ID is Intel then it's signed, no idea otherwise */
-	udev_parent = fu_device_get_backend_parent_with_subsystem(device, "pci", NULL);
+	udev_parent =
+	    fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "pci", NULL, NULL);
 	if (udev_parent != NULL) {
-		if (!fu_device_probe(udev_parent, error))
+		if (!fu_device_probe(FU_DEVICE(udev_parent), error))
 			return FALSE;
-		if (fu_udev_device_get_vendor(FU_UDEV_DEVICE(udev_parent)) == 0x8086)
+		if (fu_udev_device_get_vendor(udev_parent) == 0x8086)
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	}
 
@@ -465,7 +466,7 @@ fu_thunderbolt_device_init(FuThunderboltDevice *self)
 	priv->auth_method = "nvm_authenticate";
 	fu_device_add_icon(FU_DEVICE(self), "thunderbolt");
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.thunderbolt");
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_PROBE_COMPLETE);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
 }
 
 static void

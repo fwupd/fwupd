@@ -8,11 +8,11 @@
     "A local attacker could overwrite the S3 resume script to modify system RAM which can lead to privilege escalation."
   ],
   "failure-results": {
-    "not-enabled": "deep sleep enabled",
+    "enabled": "deep sleep enabled",
     "not-valid": "could not determine the default"
   },
   "success-results": {
-    "enabled": "suspend-to-idle being used"
+    "not-enabled": "suspend-to-idle being used"
   },
   "hsi-level": 3,
   "fwupd-version": "1.5.0"

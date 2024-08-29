@@ -526,20 +526,23 @@ fu_mm_plugin_backend_device_added(FuPlugin *plugin,
 				  GError **error)
 {
 	FuDevice *device_tmp;
+	g_autoptr(FuUdevDevice) udev_device = NULL;
 
 	/* interesting device? */
 	if (!FU_IS_USB_DEVICE(device))
 		return TRUE;
 
 	/* look up the FuMmDevice for the USB device that just appeared */
-	device_tmp =
-	    fu_plugin_cache_lookup(plugin, fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
+	udev_device = FU_UDEV_DEVICE(fu_usb_device_find_udev_device(FU_USB_DEVICE(device), error));
+	if (udev_device == NULL)
+		return FALSE;
+	device_tmp = fu_plugin_cache_lookup(plugin, fu_udev_device_get_sysfs_path(udev_device));
 	if (device_tmp == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "%s not added by ModemManager",
-			    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
+			    fu_udev_device_get_sysfs_path(udev_device));
 		return FALSE;
 	}
 	fu_mm_device_set_usb_device(FU_MM_DEVICE(device_tmp), FU_USB_DEVICE(device));

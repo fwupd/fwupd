@@ -35,9 +35,6 @@
     </distro>
   </dependency>
   <dependency id="bash-completion">
-    <distro id="arch">
-      <package variant="x86_64" />
-    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
@@ -420,11 +417,6 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
-  <dependency id="fwupd-efi">
-    <distro id="arch">
-      <package variant="x86_64">fwupd-efi</package>
-    </distro>
-  </dependency>
   <dependency id="libjaylink-dev">
     <distro id="debian">
       <control>
@@ -442,9 +434,6 @@
     </distro>
   </dependency>
   <dependency id="libflashrom-dev">
-    <distro id="arch">
-      <package variant="x86_64">flashrom</package>
-    </distro>
     <distro id="fedora">
       <package variant="x86_64">flashrom-devel</package>
       <package variant="aarch64">flashrom-devel</package>
@@ -574,9 +563,6 @@
       <!-- need native too until meson fixes https://github.com/mesonbuild/meson/issues/10376 -->
       <package variant="mingw64">glib2-devel</package>
       <package variant="mingw64">mingw64-glib2</package>
-    </distro>
-    <distro id="arch">
-      <package variant="x86_64">gsettings-desktop-schemas</package>
     </distro>
     <distro id="void">
       <package variant="x86_64">glib-devel</package>
@@ -746,9 +732,6 @@
     </distro>
   </dependency>
   <dependency id="libjcat-dev">
-    <distro id="arch">
-      <package variant="x86_64">libjcat</package>
-    </distro>
     <distro id="fedora">
       <package variant="x86_64">libjcat-devel</package>
       <package variant="aarch64">libjcat-devel</package>
@@ -1214,9 +1197,6 @@
     </distro>
   </dependency>
   <dependency id="libpolkit-gobject-1-dev">
-    <distro id="arch">
-      <package variant="x86_64">polkit</package>
-    </distro>
     <distro id="centos">
       <package variant="x86_64">polkit-devel</package>
     </distro>

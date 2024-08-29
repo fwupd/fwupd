@@ -794,14 +794,14 @@ fu_release_ensure_device_by_checksum(FuRelease *self, XbNode *component, XbNode 
 		if (!fu_device_has_checksum(self->device, xb_node_get_text(device_checksum)))
 			continue;
 		fu_device_ensure_from_component(self->device, component);
-		if (fu_device_has_private_flag(self->device,
-					       FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION)) {
+		if (fu_device_has_internal_flag(self->device,
+						FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION)) {
 			const gchar *rel_version = xb_node_get_attr(rel, "version");
 			if (rel_version == NULL)
 				continue;
 			fu_device_set_version(self->device, rel_version);
-			fu_device_remove_private_flag(self->device,
-						      FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
+			fu_device_remove_internal_flag(self->device,
+						       FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION);
 		}
 		break;
 	}
@@ -917,8 +917,8 @@ fu_release_load(FuRelease *self,
 		return FALSE;
 	if (self->device != NULL &&
 	    fu_release_has_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_METADATA)) {
-		if (fu_device_has_private_flag(self->device,
-					       FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM)) {
+		if (fu_device_has_internal_flag(self->device,
+						FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM)) {
 			fu_release_ensure_device_by_checksum(self, component, rel);
 		} else {
 			fu_device_ensure_from_component(self->device, component);

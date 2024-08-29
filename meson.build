@@ -96,8 +96,6 @@ warning_flags = [
   '-Wno-unknown-warning-option',
   '-Wno-unused-parameter',
   '-Wno-nonnull-compare',
-  '-Wno-analyzer-use-of-uninitialized-value', # incompatible with g_autoptr()
-  '-Wno-analyzer-fd-double-close',
   '-Wold-style-definition',
   '-Woverride-init',
   '-Wpointer-arith',
@@ -235,13 +233,16 @@ endif
 conf.set_quoted('FU_LVFS_METADATA_FORMAT', lvfs_metadata_format)
 
 # FreeBSD is missing some libusb symbols
-libusb = dependency('libusb-1.0', version : '>= 0.1.12')
-conf.set_quoted('LIBUSB_VERSION', libusb.version())
-if cc.has_header_symbol('libusb.h', 'libusb_set_option', dependencies: libusb)
-  conf.set('HAVE_LIBUSB_SET_OPTION', '1')
-endif
-if cc.has_header_symbol('libusb.h', 'libusb_get_parent', dependencies: libusb)
-  conf.set('HAVE_LIBUSB_GET_PARENT', '1')
+libusb = dependency('libusb-1.0', version : '>= 0.1.12', required: get_option('usb'))
+if libusb.found()
+  conf.set('HAVE_LIBUSB', '1')
+  conf.set_quoted('LIBUSB_VERSION', libusb.version())
+  if cc.has_header_symbol('libusb.h', 'libusb_set_option', dependencies: libusb)
+    conf.set('HAVE_LIBUSB_SET_OPTION', '1')
+  endif
+  if cc.has_header_symbol('libusb.h', 'libusb_get_parent', dependencies: libusb)
+    conf.set('HAVE_LIBUSB_GET_PARENT', '1')
+  endif
 endif
 
 sqlite = dependency('sqlite3', required: get_option('sqlite'))
@@ -279,6 +280,11 @@ endif
 if build_daemon
   if not polkit.found()
     warning('Polkit is disabled, the daemon will allow ALL client actions')
+  endif
+  udevdir = get_option('udevdir')
+  if udevdir == '' and host_machine.system() == 'linux'
+    udev = dependency('udev')
+    udevdir = udev.get_variable(pkgconfig: 'udevdir')
   endif
 endif
 libm = cc.find_library('m', required: false)
@@ -362,9 +368,6 @@ endif
 if cc.has_header('sys/ioctl.h')
   conf.set('HAVE_IOCTL_H', '1')
 endif
-if cc.has_header('termios.h')
-  conf.set('HAVE_TERMIOS_H', '1')
-endif
 if cc.has_header('errno.h')
   conf.set('HAVE_ERRNO_H', '1')
 endif
@@ -382,9 +385,6 @@ if cc.has_header('sys/io.h') and cc.has_function('outb', prefix: '#include <sys/
 endif
 if cc.has_header('linux/ethtool.h')
   conf.set('HAVE_ETHTOOL_H', '1')
-endif
-if cc.has_header('linux/i2c-dev.h')
-  conf.set('HAVE_I2C_DEV_H', '1')
 endif
 if cc.has_header('linux/mei.h')
   conf.set('HAVE_MEI_H', '1')
@@ -492,12 +492,11 @@ if build_standalone
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
 endif
 
-flashrom = get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux')
-allow_flashrom = flashrom.allowed()
+allow_flashrom = get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux').allowed()
 if build_standalone
-  libflashrom = dependency('flashrom',
-                            fallback: ['flashrom', 'flashrom_dep'],
-                            required: flashrom)
+  libflashrom = dependency('flashrom', 
+                            fallback: ['flashrom', 'flashrom_dep'], 
+                            required: allow_flashrom)
 endif
 
 if libsystemd.found()
@@ -557,6 +556,11 @@ else
   libdir_pkg = join_paths(libdir, 'fwupd-@0@'.format(fwupd_version))
 endif
 conf.set_quoted('FWUPD_LIBDIR_PKG', libdir_pkg)
+endif
+
+# sanity check, otherwise there is not point building
+if build_standalone and host_machine.system() == 'windows' and not libusb.found()
+  error('libusb is required for Windows build')
 endif
 
 conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())

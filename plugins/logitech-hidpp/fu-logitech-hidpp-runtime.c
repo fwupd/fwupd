@@ -101,19 +101,21 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
 	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
 	guint64 release = 0xFFFF;
-	g_autoptr(FuDevice) device_usb = NULL;
-	g_autoptr(FuDevice) device_usb_iface = NULL;
+	g_autoptr(FuUdevDevice) device_usb = NULL;
+	g_autoptr(FuUdevDevice) device_usb_iface = NULL;
 
 	/* set the physical ID */
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "usb", error))
 		return FALSE;
 
 	/* generate bootloader-specific GUID */
-	device_usb = fu_device_get_backend_parent_with_subsystem(device, "usb:usb_device", NULL);
+	device_usb = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
+							      "usb",
+							      "usb_device",
+							      NULL);
 	if (device_usb != NULL) {
 		g_autofree gchar *prop_revision = NULL;
-		prop_revision =
-		    fu_udev_device_read_property(FU_UDEV_DEVICE(device_usb), "ID_REVISION", NULL);
+		prop_revision = fu_udev_device_read_property(device_usb, "ID_REVISION", NULL);
 		if (prop_revision != NULL) {
 			if (!fu_strtoull(prop_revision,
 					 &release,
@@ -149,15 +151,14 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 		case 0x0500:
 			/* Bolt */
 			device_usb_iface =
-			    fu_device_get_backend_parent_with_subsystem(device,
-									"usb:usb_interface",
-									error);
+			    fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
+								     "usb",
+								     "usb_interface",
+								     error);
 			if (device_usb_iface == NULL)
 				return FALSE;
 			prop_interface =
-			    fu_udev_device_read_property(FU_UDEV_DEVICE(device_usb_iface),
-							 "INTERFACE",
-							 error);
+			    fu_udev_device_read_property(device_usb_iface, "INTERFACE", error);
 			if (prop_interface == NULL)
 				return FALSE;
 			if (g_strcmp0(prop_interface, "3/0/0") != 0) {
@@ -204,7 +205,7 @@ static void
 fu_logitech_hidpp_runtime_init(FuLogitechHidppRuntime *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_add_icon(FU_DEVICE(self), "usb-receiver");
 	fu_device_set_name(FU_DEVICE(self), "Unifying Receiver");

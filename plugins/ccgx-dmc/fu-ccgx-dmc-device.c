@@ -35,7 +35,12 @@ struct _FuCcgxDmcDevice {
 	guint8 custom_meta_flag;
 };
 
-#define FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG "has-manual-replug"
+/**
+ * FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG:
+ *
+ * Needs a manual replug from the end-user.
+ */
+#define FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG (1 << 0)
 
 G_DEFINE_TYPE(FuCcgxDmcDevice, fu_ccgx_dmc_device, FU_TYPE_USB_DEVICE)
 
@@ -734,20 +739,6 @@ fu_ccgx_dmc_device_ensure_factory_version(FuCcgxDmcDevice *self)
 }
 
 static gboolean
-fu_ccgx_dmc_device_probe(FuDevice *device, GError **error)
-{
-	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
-	g_autoptr(FuUsbInterface) intf = NULL;
-
-	/* find the correct vendor-specific interface */
-	intf = fu_usb_device_get_interface(FU_USB_DEVICE(self), 0xFF, 0x03, 0x00, error);
-	if (intf == NULL)
-		return FALSE;
-	fu_usb_device_add_interface(FU_USB_DEVICE(self), fu_usb_interface_get_number(intf));
-	return TRUE;
-}
-
-static gboolean
 fu_ccgx_dmc_device_setup(FuDevice *device, GError **error)
 {
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
@@ -828,9 +819,12 @@ fu_ccgx_dmc_device_init(FuCcgxDmcDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x01);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG,
+					"has-manual-replug");
 }
 
 static void
@@ -841,7 +835,6 @@ fu_ccgx_dmc_device_class_init(FuCcgxDmcDeviceClass *klass)
 	device_class->write_firmware = fu_ccgx_dmc_write_firmware;
 	device_class->prepare_firmware = fu_ccgx_dmc_device_prepare_firmware;
 	device_class->attach = fu_ccgx_dmc_device_attach;
-	device_class->probe = fu_ccgx_dmc_device_probe;
 	device_class->setup = fu_ccgx_dmc_device_setup;
 	device_class->set_quirk_kv = fu_ccgx_dmc_device_set_quirk_kv;
 	device_class->set_progress = fu_ccgx_dmc_device_set_progress;

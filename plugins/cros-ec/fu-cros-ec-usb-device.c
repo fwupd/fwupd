@@ -67,10 +67,10 @@ typedef struct {
 	FuProgress *progress;
 } FuCrosEcUsbBlockHelper;
 
-#define FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN	   "ro-written"
-#define FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN	   "rw-written"
-#define FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO "rebooting-to-ro"
-#define FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL	   "special"
+#define FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN	   (1 << 0)
+#define FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN	   (1 << 1)
+#define FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO (1 << 2)
+#define FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL	   (1 << 3)
 
 static gboolean
 fu_cros_ec_usb_device_get_configuration(FuCrosEcUsbDevice *self, GError **error)
@@ -989,17 +989,24 @@ fu_cros_ec_usb_device_init(FuCrosEcUsbDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.google.usb.crosec");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_acquiesce_delay(FU_DEVICE(self), 7500); /* ms */
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_remove_delay(FU_DEVICE(self), CROS_EC_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
+					FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN,
+					"ro-written");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN,
+					"rw-written");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO,
+					"rebooting-to-ro");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL,
+					"special");
 }
 
 static void

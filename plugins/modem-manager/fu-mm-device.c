@@ -11,7 +11,6 @@
 #include <glib/gstdio.h>
 #include <string.h>
 
-#include "fu-cinterion-fdl-updater.h"
 #include "fu-firehose-updater.h"
 #include "fu-mbim-qdu-updater.h"
 #include "fu-mm-device.h"
@@ -81,9 +80,6 @@ struct _FuMmDevice {
 	/* for sahara */
 	FuUsbDevice *usb_device;
 
-	/* cinterion-fdl update handling */
-	FuCinterionFdlUpdater *cinterion_fdl_updater;
-
 	/* firmware path */
 	gchar *firmware_path;
 	gchar *restore_firmware_path;
@@ -130,9 +126,6 @@ validate_firmware_update_method(MMModemFirmwareUpdateMethod methods, GError **er
 #if MM_CHECK_VERSION(1, 19, 1)
 	    MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE | MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA,
 #endif
-#if MM_CHECK_VERSION(1, 24, 0)
-		MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL,
-#endif
 	};
 	g_autofree gchar *methods_str = NULL;
 
@@ -164,7 +157,7 @@ fu_mm_device_add_instance_id(FuDevice *dev, const gchar *device_id)
 		return;
 	}
 	if (g_pattern_match_simple("???\\VID_????&PID_????&REV_????", device_id)) {
-		if (fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV))
+		if (fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV))
 			fu_device_add_instance_id(dev, device_id);
 		return;
 	}
@@ -253,17 +246,6 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 				    "failed to get port information");
 		return FALSE;
 	}
-#if MM_CHECK_VERSION(1, 24, 0)
-	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL) {
-		for (guint i = 0; i < n_ports; i++) {
-			if (ports[i].type == MM_MODEM_PORT_TYPE_AT) {
-				self->port_at = g_strdup_printf("/dev/%s", ports[i].name);
-				break;
-			}
-		}
-		fu_device_add_protocol(device, "com.cinterion.fdl");
-	}
-#endif // MM_CHECK_VERSION(1, 24, 0)
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT) {
 		for (guint i = 0; i < n_ports; i++) {
 			if (ports[i].type == MM_MODEM_PORT_TYPE_AT) {
@@ -511,7 +493,9 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 					  value_str,
 					  error_local2->message);
 			} else {
-				fu_device_build_vendor_id_u16(device, device_bus, value_int);
+				g_autofree gchar *vendor_id =
+				    g_strdup_printf("%s:0x%04X", device_bus, (guint)value_int);
+				fu_device_add_vendor_id(device, vendor_id);
 			}
 		}
 	}
@@ -538,17 +522,6 @@ fu_mm_device_probe_udev(FuDevice *device, GError **error)
 				    "failed to find AT port");
 		return FALSE;
 	}
-
-#if MM_CHECK_VERSION(1, 24, 0)
-	if ((self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL) &&
-	    (self->port_at == NULL)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "failed to find AT port");
-		return FALSE;
-	}
-#endif // MM_CHECK_VERSION(1, 24, 0)
 
 	/* a qmi port is required for qmi-pdc */
 	if ((self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC) &&
@@ -850,60 +823,6 @@ fu_mm_device_io_close(FuMmDevice *self, GError **error)
 	return TRUE;
 }
 
-#if MM_CHECK_VERSION(1, 24, 0)
-static gboolean
-fu_mm_device_cinterion_fdl_open(FuMmDevice *self, GError **error)
-{
-	self->cinterion_fdl_updater = fu_cinterion_fdl_updater_new(self->port_at);
-	return fu_cinterion_fdl_updater_open(self->cinterion_fdl_updater, error);
-}
-
-static gboolean
-fu_mm_device_cinterion_fdl_close(FuMmDevice *self, GError **error)
-{
-	g_autoptr(FuCinterionFdlUpdater) updater = NULL;
-
-	updater = g_steal_pointer(&self->cinterion_fdl_updater);
-	return fu_cinterion_fdl_updater_close(updater, error);
-}
-
-static gboolean
-fu_mm_device_detach_fdl(FuDevice *device, FuProgress *progress, GError **error)
-{
-	FuMmDevice *self = FU_MM_DEVICE(device);
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	locker = fu_device_locker_new_full(device,
-					   (FuDeviceLockerFunc)fu_mm_device_io_open,
-					   (FuDeviceLockerFunc)fu_mm_device_io_close,
-					   error);
-
-	if (locker == NULL)
-		return FALSE;
-	if (!fu_mm_device_at_cmd(self, "AT", TRUE, error))
-		return FALSE;
-	if (!fu_mm_device_at_cmd(self, "AT^SFDL", TRUE, error)) {
-		g_prefix_error(error, "enabling firmware download mode not supported: ");
-		return FALSE;
-	}
-
-	if (!fu_device_locker_close(locker, error))
-		return FALSE;
-
-	/* wait 15 s before reopening port */
-	fu_device_sleep(device, 15000);
-
-	locker = fu_device_locker_new_full(self,
-					   (FuDeviceLockerFunc)fu_mm_device_cinterion_fdl_open,
-					   (FuDeviceLockerFunc)fu_mm_device_cinterion_fdl_close,
-					   error);
-	if (locker == NULL)
-		return FALSE;
-
-	return fu_cinterion_fdl_updater_wait_ready(self->cinterion_fdl_updater, device, error);
-}
-#endif // MM_CHECK_VERSION(1, 24, 0)
-
 static gboolean
 fu_mm_device_detach_fastboot(FuDevice *device, GError **error)
 {
@@ -984,10 +903,6 @@ fu_mm_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 		/* fastboot */
 		if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT)
 			return fu_mm_device_detach_fastboot(device, error);
-#if MM_CHECK_VERSION(1, 24, 0)
-		if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL)
-			return fu_mm_device_detach_fdl(device, progress, error);
-#endif // MM_CHECK_VERSION(1, 24, 0)
 		/* otherwise, assume we don't need any detach */
 		return TRUE;
 	}
@@ -1716,30 +1631,6 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 	return TRUE;
 }
 
-#if MM_CHECK_VERSION(1, 24, 0)
-static gboolean
-fu_mm_device_write_firmware_fdl(FuDevice *device, GBytes *fw, FuProgress *progress, GError **error)
-{
-	FuMmDevice *self = FU_MM_DEVICE(device);
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	locker = fu_device_locker_new_full(device,
-					   (FuDeviceLockerFunc)fu_mm_device_cinterion_fdl_open,
-					   (FuDeviceLockerFunc)fu_mm_device_cinterion_fdl_close,
-					   error);
-	if (locker == NULL)
-		return FALSE;
-
-	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-
-	return fu_cinterion_fdl_updater_write(self->cinterion_fdl_updater,
-					      progress,
-					      device,
-					      fw,
-					      error);
-}
-#endif // MM_CHECK_VERSION(1, 24, 0)
-
 static gboolean
 fu_mm_device_write_firmware(FuDevice *device,
 			    FuFirmware *firmware,
@@ -1775,11 +1666,6 @@ fu_mm_device_write_firmware(FuDevice *device,
 	/* firehose operation */
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE)
 		return fu_mm_device_write_firmware_firehose(device, fw, progress, error);
-
-#if MM_CHECK_VERSION(1, 24, 0)
-	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL)
-		return fu_mm_device_write_firmware_fdl(device, fw, progress, error);
-#endif // MM_CHECK_VERSION(1, 24, 0)
 
 	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "unsupported update method");
 	return FALSE;
@@ -1892,12 +1778,6 @@ fu_mm_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 		self->attach_idle = g_idle_add((GSourceFunc)fu_mm_device_attach_qmi_pdc_idle, self);
 	else
 		self->attach_idle = g_idle_add((GSourceFunc)fu_mm_device_attach_noop_idle, self);
-
-#if MM_CHECK_VERSION(1, 24, 0)
-	/* devices with fdl-based update won't replug */
-	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL)
-		return TRUE;
-#endif // MM_CHECK_VERSION(1, 24, 0)
 
 	/* wait for re-probing after uninhibiting */
 	fu_device_set_remove_delay(device, FU_MM_DEVICE_REMOVE_DELAY_REPROBE);
@@ -2013,8 +1893,8 @@ fu_mm_device_setup_secboot_status(FuDevice *device)
 	    fu_device_has_vendor_id(device, "PCI:0x1EAC"))
 		fu_mm_device_setup_secboot_status_quectel(self);
 	else if (fu_device_has_vendor_id(device, "USB:0x2CB7")) {
-		fu_device_add_private_flag(FU_DEVICE(self),
-					   FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE);
+		fu_device_add_internal_flag(FU_DEVICE(self),
+					    FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE);
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	}
 }
@@ -2068,18 +1948,22 @@ fu_mm_device_init(FuMmDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary(FU_DEVICE(self), "Mobile broadband device");
 	fu_device_add_icon(FU_DEVICE(self), "modem");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE);
+					FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE,
+					"detach-at-fastboot-has-no-response");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_USE_BRANCH);
+					FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT,
+					"uninhibit-modemmanager-after-fastboot-reboot");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_MM_DEVICE_FLAG_USE_BRANCH,
+					"use-branch");
 }
 
 static void

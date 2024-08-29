@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#include "fu-backend-private.h"
+#include "fu-backend.h"
 #include "fu-device-private.h"
 #include "fu-string.h"
 
@@ -69,9 +69,6 @@ fu_backend_device_added(FuBackend *self, FuDevice *device)
 	/* assign context if set */
 	if (priv->ctx != NULL)
 		fu_device_set_context(device, priv->ctx);
-
-	/* we set this here to be able to get the parent in plugins */
-	fu_device_set_backend(device, self);
 
 	/* set backend ID if required */
 	if (fu_device_get_backend_id(device) == NULL)
@@ -147,41 +144,6 @@ fu_backend_registered(FuBackend *self, FuDevice *device)
 	g_return_if_fail(FU_IS_DEVICE(device));
 	if (klass->registered != NULL)
 		klass->registered(self, device);
-}
-
-/**
- * fu_backend_get_device_parent:
- * @self: a #FuBackend
- * @device: a #FuDevice
- * @subsystem: (nullable): an optional device subsystem, e.g. "usb:usb_device"
- * @error: (nullable): optional return location for an error
- *
- * Asks the backend to create the parent device (of the correct type) for a given device subsystem.
- *
- * Returns: (transfer full): a #FuDevice or %NULL if not found or unimplemented
- *
- * Since: 2.0.0
- **/
-FuDevice *
-fu_backend_get_device_parent(FuBackend *self,
-			     FuDevice *device,
-			     const gchar *subsystem,
-			     GError **error)
-{
-	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
-
-	g_return_val_if_fail(FU_IS_BACKEND(self), NULL);
-	g_return_val_if_fail(FU_IS_DEVICE(device), NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	if (klass->get_device_parent == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "not implemented");
-		return NULL;
-	}
-	return klass->get_device_parent(self, device, subsystem, error);
 }
 
 /**
@@ -278,8 +240,7 @@ fu_backend_setup(FuBackend *self, FuProgress *progress, GError **error)
 	return TRUE;
 }
 
-/* private */
-gchar *
+static gchar *
 fu_backend_get_emulation_array_member_name(FuBackend *self)
 {
 	FuBackendPrivate *priv = GET_PRIVATE(self);
@@ -371,8 +332,6 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	/* emit removes then adds */
 	for (guint i = 0; i < devices_remove->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices_remove, i);
-		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
-			continue;
 		fu_backend_device_removed(self, device);
 	}
 	for (guint i = 0; i < devices_added->len; i++) {

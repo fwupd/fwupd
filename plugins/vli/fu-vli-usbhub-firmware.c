@@ -100,14 +100,6 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to get offset addr: ");
 			return FALSE;
 		}
-		if (adr_ofs32 < 0x20000 + 0x2000 + 4) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid U4ID_Address_In_FW_Zone=0x%x",
-				    adr_ofs32);
-			return FALSE;
-		}
 		if (!fu_input_stream_read_u16(stream,
 					      adr_ofs32 - 0x20000 + 0x2000 + 4,
 					      &version,

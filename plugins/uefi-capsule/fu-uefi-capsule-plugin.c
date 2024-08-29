@@ -267,15 +267,15 @@ fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error
 	g_autofree gchar *filename_archive = NULL;
 	g_autofree gchar *langs_str = NULL;
 	g_autoptr(FuArchive) archive = NULL;
-	g_autoptr(GInputStream) stream_archive = NULL;
+	g_autoptr(GBytes) blob_archive = NULL;
 
 	/* load archive */
 	datadir_pkg = fu_path_from_kind(FU_PATH_KIND_DATADIR_PKG);
 	filename_archive = g_build_filename(datadir_pkg, "uefi-capsule-ux.tar.xz", NULL);
-	stream_archive = fu_input_stream_from_path(filename_archive, error);
-	if (stream_archive == NULL)
+	blob_archive = fu_bytes_get_contents(filename_archive, error);
+	if (blob_archive == NULL)
 		return NULL;
-	archive = fu_archive_new_stream(stream_archive, FU_ARCHIVE_FLAG_NONE, error);
+	archive = fu_archive_new(blob_archive, FU_ARCHIVE_FLAG_NONE, error);
 	if (archive == NULL)
 		return NULL;
 
@@ -519,7 +519,7 @@ fu_uefi_capsule_plugin_write_firmware(FuPlugin *plugin,
 
 	/* TRANSLATORS: this is shown when updating the firmware after the reboot */
 	str = _("Installing firmware update…");
-	g_return_val_if_fail(str != NULL, FALSE);
+	g_assert(str != NULL);
 
 	/* perform the update */
 	fu_progress_set_status(progress, FWUPD_STATUS_SCHEDULING);
@@ -554,7 +554,7 @@ fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 
 	/* enable the fwupd.efi debug log? */
 	if (fu_plugin_get_config_value_boolean(plugin, "EnableEfiDebugging"))
-		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_DEBUGGING);
+		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING);
 }
 
 
@@ -672,14 +672,13 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 	if (fu_context_has_hwid_flag(ctx, "no-ux-capsule"))
 		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE);
 	if (fu_context_has_hwid_flag(ctx, "no-lid-closed"))
-		fu_device_add_private_flag(FU_DEVICE(dev), FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED);
+		fu_device_add_internal_flag(FU_DEVICE(dev), FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED);
 	if (fu_context_has_hwid_flag(ctx, "display-required")) {
-		fu_device_add_private_flag(FU_DEVICE(dev), FU_DEVICE_PRIVATE_FLAG_DISPLAY_REQUIRED);
+		fu_device_add_internal_flag(FU_DEVICE(dev),
+					    FU_DEVICE_INTERNAL_FLAG_DISPLAY_REQUIRED);
 	}
 	if (fu_context_has_hwid_flag(ctx, "modify-bootorder"))
 		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER);
-	if (fu_context_has_hwid_flag(ctx, "cod-dell-recovery"))
-		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_COD_DELL_RECOVERY);
 
 	/* detected InsydeH2O */
 	if (self->acpi_uefi != NULL &&
@@ -696,8 +695,8 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 		if (name != NULL)
 			fu_device_set_name(FU_DEVICE(dev), name);
 		if (device_kind != FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE) {
-			fu_device_add_private_flag(FU_DEVICE(dev),
-						   FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME_CATEGORY);
+			fu_device_add_internal_flag(FU_DEVICE(dev),
+						    FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY);
 		}
 	}
 	/* set fallback vendor if nothing else is set */
@@ -710,9 +709,12 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 
 	/* set vendor ID as the BIOS vendor */
 	if (device_kind != FU_UEFI_DEVICE_KIND_FMP) {
-		fu_device_build_vendor_id(FU_DEVICE(dev),
-					  "DMI",
-					  fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR));
+		const gchar *dmi_vendor;
+		dmi_vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR);
+		if (dmi_vendor != NULL) {
+			g_autofree gchar *vendor_id = g_strdup_printf("DMI:%s", dmi_vendor);
+			fu_device_add_vendor_id(FU_DEVICE(dev), vendor_id);
+		}
 	}
 	fu_device_add_request_flag(FU_DEVICE(dev), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 

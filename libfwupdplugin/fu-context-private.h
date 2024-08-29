@@ -66,8 +66,3 @@ FuConfig *
 fu_context_get_config(FuContext *self) G_GNUC_NON_NULL(1);
 void
 fu_context_set_chassis_kind(FuContext *self, FuSmbiosChassisKind chassis_kind) G_GNUC_NON_NULL(1);
-
-gpointer
-fu_context_get_data(FuContext *self, const gchar *key);
-void
-fu_context_set_data(FuContext *self, const gchar *key, gpointer data);

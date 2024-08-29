@@ -20,25 +20,27 @@ G_DEFINE_TYPE(FuThunderboltRetimer, fu_thunderbolt_retimer, FU_TYPE_THUNDERBOLT_
 gboolean
 fu_thunderbolt_retimer_set_parent_port_offline(FuDevice *device, GError **error)
 {
-	g_autoptr(FuDevice) parent =
-	    fu_device_get_backend_parent_with_subsystem(device,
-							"thunderbolt:thunderbolt_domain",
-							error);
+	g_autoptr(FuUdevDevice) parent =
+	    fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
+						     "thunderbolt",
+						     "thunderbolt_domain",
+						     error);
 	if (parent == NULL)
 		return FALSE;
-	return fu_thunderbolt_udev_set_port_offline(FU_UDEV_DEVICE(parent), error);
+	return fu_thunderbolt_udev_set_port_offline(parent, error);
 }
 
 gboolean
 fu_thunderbolt_retimer_set_parent_port_online(FuDevice *device, GError **error)
 {
-	g_autoptr(FuDevice) parent =
-	    fu_device_get_backend_parent_with_subsystem(device,
-							"thunderbolt:thunderbolt_domain",
-							error);
+	g_autoptr(FuUdevDevice) parent =
+	    fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
+						     "thunderbolt",
+						     "thunderbolt_domain",
+						     error);
 	if (parent == NULL)
 		return FALSE;
-	return fu_thunderbolt_udev_set_port_online(FU_UDEV_DEVICE(parent), error);
+	return fu_thunderbolt_udev_set_port_online(parent, error);
 }
 
 static gboolean
@@ -112,8 +114,7 @@ fu_thunderbolt_retimer_init(FuThunderboltRetimer *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE);
 }
 
 static void

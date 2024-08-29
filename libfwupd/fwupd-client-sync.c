@@ -2670,7 +2670,7 @@ fwupd_client_emulation_load_cb(GObject *source, GAsyncResult *res, gpointer user
 /**
  * fwupd_client_emulation_load
  * @self: a #FwupdClient
- * @filename: archive data of JSON files
+ * @data: archive data of JSON files
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
@@ -2680,18 +2680,18 @@ fwupd_client_emulation_load_cb(GObject *source, GAsyncResult *res, gpointer user
  *
  * Returns: %TRUE for success
  *
- * Since: 2.0.0
+ * Since: 1.8.11
  **/
 gboolean
 fwupd_client_emulation_load(FwupdClient *self,
-			    const gchar *filename,
+			    GBytes *data,
 			    GCancellable *cancellable,
 			    GError **error)
 {
 	g_autoptr(FwupdClientHelper) helper = NULL;
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
-	g_return_val_if_fail(filename != NULL, FALSE);
+	g_return_val_if_fail(data != NULL, FALSE);
 	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -2702,7 +2702,7 @@ fwupd_client_emulation_load(FwupdClient *self,
 	/* call async version and run loop until complete */
 	helper = fwupd_client_helper_new(self);
 	fwupd_client_emulation_load_async(self,
-					  filename,
+					  data,
 					  cancellable,
 					  fwupd_client_emulation_load_cb,
 					  helper);

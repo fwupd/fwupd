@@ -75,8 +75,10 @@ fu_mei_device_ensure_parent_device_file(FuMeiDevice *self, GError **error)
 	g_autoptr(GDir) dir = NULL;
 
 	/* get direct parent */
-	parent = FU_UDEV_DEVICE(
-	    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", error));
+	parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self),
+							  "pci", /* subsystem */
+							  NULL,	 /* devtype */
+							  error);
 	if (parent == NULL)
 		return FALSE;
 
@@ -497,7 +499,7 @@ static void
 fu_mei_device_init(FuMeiDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_PROBE_COMPLETE);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);

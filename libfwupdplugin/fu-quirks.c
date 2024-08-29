@@ -936,6 +936,7 @@ fu_quirks_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 #ifdef HAVE_SQLITE
 	g_autofree gchar *cachedirpkg = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
 	g_autofree gchar *quirksdb = g_build_filename(cachedirpkg, "quirks.db", NULL);
+	g_autoptr(sqlite3_stmt) stmt = NULL;
 #endif
 
 	g_return_val_if_fail(FU_IS_QUIRKS(self), FALSE);

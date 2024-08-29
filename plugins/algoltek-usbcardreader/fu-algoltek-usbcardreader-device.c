@@ -74,11 +74,10 @@ fu_algoltek_usbcardreader_device_cmd_in(FuAlgoltekUsbcardreaderDevice *self,
 			    sense_buffer[13]);
 		return FALSE;
 	}
-	
 
 	if (bufsz > 0)
 		fu_dump_raw(G_LOG_DOMAIN, "cmd data", buf, bufsz);
-		
+
 	/* success */
 	return TRUE;
 #else
@@ -138,7 +137,7 @@ fu_algoltek_usbcardreader_device_cmd_out(FuAlgoltekUsbcardreaderDevice *self,
 
 	if (bufsz > 0)
 		fu_dump_raw(G_LOG_DOMAIN, "cmd data", buf, bufsz);
-		
+
 	/* success */
 	return TRUE;
 #else
@@ -177,12 +176,17 @@ fu_algoltek_usbcardreader_device_write_reg(FuAlgoltekUsbcardreaderDevice *self, 
 
 	if (!fu_algoltek_usbcardreader_device_cmd_out(self, st->data, st->len, NULL, 0, error))
 		return FALSE;
-	
+
 	return TRUE;
 }
 
-static GByteArray *
-fu_algoltek_usbcardreader_device_read_reg(FuAlgoltekUsbcardreaderDevice *self, guint16 addr, guint16 len, guint8* buf, guint8 ram_dest, GError **error)
+static gboolean
+fu_algoltek_usbcardreader_device_read_reg(FuAlgoltekUsbcardreaderDevice *self,
+					  guint16 addr,
+					  guint16 len,
+					  guint8 *buf,
+					  guint8 ram_dest,
+					  GError **error)
 {
 	g_autoptr(GByteArray) st = fu_struct_ag_usbcardreader_reg_cdb_new();
 
@@ -193,8 +197,8 @@ fu_algoltek_usbcardreader_device_read_reg(FuAlgoltekUsbcardreaderDevice *self, g
 
 	if (!fu_algoltek_usbcardreader_device_cmd_in(self, st->data, st->len, buf, len, error))
 		return FALSE;
-	
-	return g_steal_pointer(&buf);
+
+	return TRUE;
 }
 
 static gboolean
@@ -214,7 +218,7 @@ fu_algoltek_usbcardreader_device_send_spi_cmd(FuAlgoltekUsbcardreaderDevice *sel
 
 	if (!fu_algoltek_usbcardreader_device_cmd_out(self, st->data, st->len, dummybuf, sizeof(dummybuf), error))
 		return FALSE;
-	
+
 	return TRUE;
 }
 
@@ -225,7 +229,7 @@ fu_algoltek_usbcardreader_device_do_write_spi(FuAlgoltekUsbcardreaderDevice *sel
 
 	if (!fu_algoltek_usbcardreader_device_send_spi_cmd(self, FU_AG_USBCARDREADER_WREN, error))
 	 	return FALSE;
-	
+
 	fu_struct_ag_usbcardreader_spi_cdb_set_cmd(st, FU_AG_USBCARDREADER_SCSIOP_VENDOR_EEPROM_WR);
 	fu_struct_ag_usbcardreader_spi_cdb_set_addr(st, addr);
 	fu_struct_ag_usbcardreader_spi_cdb_set_bufsz(st, access_sz);
@@ -238,8 +242,12 @@ fu_algoltek_usbcardreader_device_do_write_spi(FuAlgoltekUsbcardreaderDevice *sel
 	return TRUE;
 }
 
-static GByteArray *
-fu_algoltek_usbcardreader_device_do_read_spi(FuAlgoltekUsbcardreaderDevice *self, guint16 addr, guint8 wr_len,  guint8* buf, GError **error)
+static gboolean
+fu_algoltek_usbcardreader_device_do_read_spi(FuAlgoltekUsbcardreaderDevice *self,
+					     guint16 addr,
+					     guint8 wr_len,
+					     guint8 *buf,
+					     GError **error)
 {
 	g_autoptr(GByteArray) st = fu_struct_ag_usbcardreader_spi_cdb_new();
 
@@ -252,13 +260,13 @@ fu_algoltek_usbcardreader_device_do_read_spi(FuAlgoltekUsbcardreaderDevice *self
 	if (!fu_algoltek_usbcardreader_device_cmd_in(self, st->data, st->len, buf, wr_len, error))
 		return FALSE;
 
-	return g_steal_pointer(&buf);
+	return TRUE;
 }
 
 static gboolean
 fu_algoltek_usbcardreader_device_spi_flash_block_mode_cb(FuAlgoltekUsbcardreaderDevice *self, gpointer user_data, GError **error)
 {
-	guint8 buf[8] = {0}; 
+	guint8 buf[8] = {0};
 	guint8 en = GPOINTER_TO_INT(user_data);
 	/* set command wren */
 	FuAgUsbcardreaderRegSetup wr_en_reg_set[5]={
@@ -277,7 +285,7 @@ fu_algoltek_usbcardreader_device_spi_flash_block_mode_cb(FuAlgoltekUsbcardreader
 		if (!fu_algoltek_usbcardreader_device_read_reg(self, 0xC8, 1, buf, FU_AG_USBCARDREADER_RD_WR_XDATA, error))
 			return FALSE;
 	}while(buf[0] & 0x01);
-	
+
 	/* set command wrsr */
 	FuAgUsbcardreaderRegSetup wr_sr_reg_set[6]={
 		{0xC8,0x04},
@@ -294,7 +302,7 @@ fu_algoltek_usbcardreader_device_spi_flash_block_mode_cb(FuAlgoltekUsbcardreader
 		if (!fu_algoltek_usbcardreader_device_write_reg(self, wr_sr_reg_set[i].reg, wr_sr_reg_set[i].val, FU_AG_USBCARDREADER_RD_WR_XDATA, error))
 			return FALSE;
 	}
-	
+
 	buf[0] = 0;
 	do {
 		if (!fu_algoltek_usbcardreader_device_read_reg(self, 0xC8, 1, buf, FU_AG_USBCARDREADER_RD_WR_XDATA, error))
@@ -314,19 +322,19 @@ fu_algoltek_usbcardreader_device_spi_flash_block_mode_cb(FuAlgoltekUsbcardreader
 		if (!fu_algoltek_usbcardreader_device_write_reg(self, rd_sr_reg_set[i].reg, rd_sr_reg_set[i].val, FU_AG_USBCARDREADER_RD_WR_XDATA, error))
 			return FALSE;
 	}
-	
+
 	buf[0] = 0;
 	do {
 		if (!fu_algoltek_usbcardreader_device_read_reg(self, 0xC8, 1, buf, FU_AG_USBCARDREADER_RD_WR_XDATA, error))
 			return FALSE;
 	}while(buf[0]&0x01);
-	
+
 	/* read data */
 	buf[0] = 0;
 	if (!fu_algoltek_usbcardreader_device_read_reg(self, 0x400, 2, buf, FU_AG_USBCARDREADER_RD_WR_XDATA, error))
 		return FALSE;
 	if (en == FU_AG_BLOCK_MODE_DISEN) {
-		if ((buf[0] & 0xC) != 0x0) 
+		if ((buf[0] & 0xC) != 0x0)
 			return FALSE;
 	} else {
 		if ((buf[0] & 0xC) != 0xC)
@@ -337,8 +345,10 @@ fu_algoltek_usbcardreader_device_spi_flash_block_mode_cb(FuAlgoltekUsbcardreader
 }
 
 static gboolean
-fu_algoltek_usbcardreader_device_set_clear_soft_reset_flag(FuAlgoltekUsbcardreaderDevice *self, guint8 val, GError **error){
-	
+fu_algoltek_usbcardreader_device_set_clear_soft_reset_flag(FuAlgoltekUsbcardreaderDevice *self,
+							   guint8 val,
+							   GError **error)
+{
 	g_autoptr(GByteArray) st = fu_struct_ag_usbcardreader_reset_cdb_new();
 
 	fu_struct_ag_usbcardreader_reset_cdb_set_cmd(st, FU_AG_USBCARDREADER_SCSIOP_VENDOR_GENERIC_CMD);
@@ -348,13 +358,13 @@ fu_algoltek_usbcardreader_device_set_clear_soft_reset_flag(FuAlgoltekUsbcardread
 
 	if (!fu_algoltek_usbcardreader_device_cmd_out(self, st->data, st->len, NULL, 0, error))
 		return FALSE;
-	
+
 	return TRUE;
 }
 
 static gboolean
-fu_algoltek_usbcardreader_device_reset_chip(FuAlgoltekUsbcardreaderDevice *self, GError **error){
-	
+fu_algoltek_usbcardreader_device_reset_chip(FuAlgoltekUsbcardreaderDevice *self, GError **error)
+{
 	g_autoptr(GByteArray) st = fu_struct_ag_usbcardreader_reset_cdb_new();
 
 	fu_struct_ag_usbcardreader_reset_cdb_set_cmd(st, FU_AG_USBCARDREADER_SCSIOP_VENDOR_GENERIC_CMD);
@@ -363,7 +373,7 @@ fu_algoltek_usbcardreader_device_reset_chip(FuAlgoltekUsbcardreaderDevice *self,
 
 	if (!fu_algoltek_usbcardreader_device_cmd_out(self, st->data, st->len, NULL, 0, error))
 		return FALSE;
-	
+
 	return TRUE;
 }
 
@@ -391,7 +401,7 @@ fu_algoltek_usbcardreader_device_ensure_version(FuAlgoltekUsbcardreaderDevice *s
 					    &self->boot_ver,
 					    G_LITTLE_ENDIAN,
 					    error))
-			return FALSE;	
+			return FALSE;
 	}
 	return TRUE;
 }
@@ -432,7 +442,7 @@ static gboolean
 fu_algoltek_usbcardreader_device_probe(FuDevice *device, GError **error)
 {
 	FuAlgoltekUsbcardreaderDevice *self = FU_ALGOLTEK_USBCARDREADER_DEVICE(device);
-	
+
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_algoltek_usbcardreader_device_parent_class)->probe(device, error))
 		return FALSE;
@@ -459,7 +469,7 @@ fu_algoltek_usbcardreader_device_setup(FuDevice *device, GError **error)
 
 	if (!fu_algoltek_usbcardreader_device_ensure_version(self, error))
 		return FALSE;
-	
+
 	version_str = g_strdup_printf("%x",self->app_ver);
 	fu_device_set_version(FU_DEVICE(self), version_str);
 
@@ -482,7 +492,7 @@ fu_algoltek_usbcardreader_device_prepare_firmware(FuDevice *device,
 
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
-	
+
 	/* validate compatibility */
 	if (fu_algoltek_usbcardreader_firmware_get_boot_ver(firmware) != self->boot_ver) {
 		g_set_error(error,
@@ -537,7 +547,7 @@ fu_algoltek_usbcardreader_device_write_firmware(FuDevice *device,
 				GINT_TO_POINTER(FU_AG_BLOCK_MODE_DISEN),
 				error))
 	 	return FALSE;
-		
+
 	if (!fu_algoltek_usbcardreader_device_send_spi_cmd(self, FU_AG_USBCARDREADER_WREN, error))
 	 	return FALSE;
 
@@ -565,16 +575,16 @@ fu_algoltek_usbcardreader_device_write_firmware(FuDevice *device,
 		cur_pos -= fu_chunk_get_data_sz(chk);
 		if (chk == NULL)
 			return FALSE;
-		
+
 		if (!fu_algoltek_usbcardreader_device_do_write_spi(self, cur_pos, fu_chunk_get_data_sz(chk), fu_chunk_get_data(chk),fu_chunk_get_data_sz(chk), error))
 			return FALSE;
-		
+
 		do {
 			for(int i = 0; i< (sizeof(rd_sr_reg_set)/sizeof(rd_sr_reg_set[0]) & 0xFF);i++){
 				if (!fu_algoltek_usbcardreader_device_write_reg(self, rd_sr_reg_set[i].reg, rd_sr_reg_set[i].val, FU_AG_USBCARDREADER_RD_WR_XDATA, error))
 					return FALSE;
 			}
-			
+
 			back_data[0] = 0;
 			do {
 				if (!fu_algoltek_usbcardreader_device_read_reg(self, 0xC8, 1, back_data, FU_AG_USBCARDREADER_RD_WR_XDATA, error))
@@ -588,13 +598,13 @@ fu_algoltek_usbcardreader_device_write_firmware(FuDevice *device,
 		fu_progress_step_done(progress_child_write);
 	}
 	fu_progress_step_done(progress);
-	
+
 	cur_pos = 0;
 	fu_progress_set_id(progress_child_verify, G_STRLOC);
 	fu_progress_set_steps(progress_child_verify, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		chk = fu_chunk_array_index(chunks, i, error);
-		
+
 		if (!fu_algoltek_usbcardreader_device_do_read_spi(self, cur_pos, fu_chunk_get_data_sz(chk), &buf[0], error))
 	 		return FALSE;
 
@@ -603,7 +613,6 @@ fu_algoltek_usbcardreader_device_write_firmware(FuDevice *device,
 
 		cur_pos += fu_chunk_get_data_sz(chk);
 		fu_progress_step_done(progress_child_verify);
-		
 	}
 	fu_progress_step_done(progress);
 

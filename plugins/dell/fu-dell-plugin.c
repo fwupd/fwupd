@@ -149,15 +149,17 @@ fu_dell_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_INTERNAL)) {
 		/* fix VID/DID of safe mode devices */
 		if (fu_device_get_metadata_boolean(device, FU_DEVICE_METADATA_TBT_IS_SAFE_MODE)) {
+			g_autofree gchar *vendor_id = NULL;
 			g_autofree gchar *device_id = NULL;
 			guint16 system_id = 0;
 
+			vendor_id = g_strdup("TBT:0x00D4");
 			system_id = fu_dell_get_system_id(plugin);
 			if (system_id == 0)
 				return;
 			/* the kernel returns lowercase in sysfs, need to match it */
 			device_id = g_strdup_printf("TBT-%04x%04x", 0x00d4u, (unsigned)system_id);
-			fu_device_build_vendor_id_u16(device, "TBT", 0x00D4);
+			fu_device_add_vendor_id(device, vendor_id);
 			fu_device_add_instance_id(device, device_id);
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 		}

@@ -901,13 +901,16 @@ static gboolean
 fu_pxi_receiver_device_probe(FuDevice *device, GError **error)
 {
 	g_autofree gchar *iface_nr = NULL;
-	g_autoptr(FuDevice) usb_parent = NULL;
+	g_autoptr(FuUdevDevice) usb_parent = NULL;
 
 	/* check USB interface number */
-	usb_parent = fu_device_get_backend_parent_with_subsystem(device, "usb", error);
+	usb_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
+							      "usb",
+							      NULL, /* devtype */
+							      error);
 	if (usb_parent == NULL)
 		return FALSE;
-	iface_nr = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(usb_parent),
+	iface_nr = fu_udev_device_read_sysfs(usb_parent,
 					     "bInterfaceNumber",
 					     FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 					     error);
@@ -944,10 +947,10 @@ fu_pxi_receiver_device_init(FuPxiReceiverDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_icon(FU_DEVICE(self), "usb-receiver");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_device_build_vendor_id_u16(FU_DEVICE(self), "USB", 0x093A);
+	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x093A");
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_PXI_FIRMWARE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC, "is-hpac");
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);

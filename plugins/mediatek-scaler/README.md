@@ -39,6 +39,14 @@ The firmware is deployed when the device is in normal runtime mode, and the
 device will reset when the new firmware has been written. On some hardware the
 MST device may not enumerate if there is no monitor actually plugged in.
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### Flags:probe-vcp
+
+This flag is used if the VCP should be probed.
+
 ## Vendor ID security
 
 The vendor ID is set from the PCI vendor, for instance `PCI:0x1028` on Dell systems.

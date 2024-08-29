@@ -17,7 +17,6 @@ fwupdplugin_structs = [
   'fu-ifwi.rs', # fuzzing
   'fu-intel-thunderbolt.rs', # fuzzing
   'fu-io-channel.rs', # fuzzing
-  'fu-msgpack.rs', # fuzzing
   'fu-oprom.rs', # fuzzing
   'fu-pefile.rs', # fuzzing
   'fu-progress.rs', # fuzzing
@@ -49,7 +48,7 @@ fwupdplugin_src = [
   'fu-acpi-table.c', # fuzzing
   'fu-archive.c',
   'fu-archive-firmware.c',
-  'fu-backend.c', # fuzzing
+  'fu-backend.c',
   'fu-bios-setting.c', # fuzzing
   'fu-bios-settings.c', # fuzzing
   'fu-bluez-device.c',
@@ -105,7 +104,6 @@ fwupdplugin_src = [
   'fu-fit-firmware.c', # fuzzing
   'fu-fmap-firmware.c', # fuzzing
   'fu-hid-descriptor.c', # fuzzing
-  'fu-hid-device.c',
   'fu-hid-report-item.c', # fuzzing
   'fu-hid-report.c', # fuzzing
   'fu-hwids.c', # fuzzing
@@ -133,8 +131,6 @@ fwupdplugin_src = [
   'fu-lzma-common.c', # fuzzing
   'fu-mei-device.c',
   'fu-mem.c', # fuzzing
-  'fu-msgpack.c',
-  'fu-msgpack-item.c',
   'fu-oprom-firmware.c', # fuzzing
   'fu-partial-input-stream.c', # fuzzing
   'fu-path.c', # fuzzing
@@ -150,18 +146,23 @@ fwupdplugin_src = [
   'fu-string.c', # fuzzing
   'fu-sum.c', # fuzzing
   'fu-udev-device.c',
-  'fu-usb-bos-descriptor.c',
-  'fu-usb-descriptor.c',
-  'fu-usb-device.c',
-  'fu-usb-device-ds20.c',
-  'fu-usb-device-fw-ds20.c',
-  'fu-usb-device-ms-ds20.c',
-  'fu-usb-endpoint.c',
-  'fu-usb-interface.c',
   'fu-uswid-firmware.c', # fuzzing
   'fu-version-common.c', # fuzzing
   'fu-volume.c', # fuzzing
 ]
+
+if libusb.found()
+  fwupdplugin_src += [
+    'fu-hid-device.c',
+    'fu-usb-bos-descriptor.c',
+    'fu-usb-device.c',
+    'fu-usb-device-ds20.c',
+    'fu-usb-device-fw-ds20.c',
+    'fu-usb-device-ms-ds20.c',
+    'fu-usb-endpoint.c',
+    'fu-usb-interface.c',
+  ]
+endif
 
 if host_machine.system() == 'linux'
   fwupdplugin_src += 'fu-common-linux.c' # fuzzing
@@ -259,7 +260,6 @@ fwupdplugin_headers = [
   'fu-mei-device.h',
   'fu-mem.h',
   'fu-mem-private.h',
-  'fu-msgpack-item.h',
   'fu-oprom-firmware.h',
   'fu-partial-input-stream.h',
   'fu-partial-input-stream-private.h',

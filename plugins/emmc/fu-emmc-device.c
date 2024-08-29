@@ -135,11 +135,12 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *attr_manfid = NULL;
 	g_autofree gchar *attr_name = NULL;
 	g_autofree gchar *man_oem_name = NULL;
+	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(FuUdevDevice) udev_parent = NULL;
 	g_autoptr(GRegex) dev_regex = NULL;
 
 	udev_parent =
-	    FU_UDEV_DEVICE(fu_device_get_backend_parent_with_subsystem(device, "mmc:disk", NULL));
+	    fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "mmc", "disk", NULL);
 	if (udev_parent == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no MMC parent");
 		return FALSE;
@@ -202,7 +203,7 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 		fu_device_set_version(device, attr_fwrev);
 	}
 	fu_device_add_instance_strsafe(device, "REV", attr_fwrev);
-	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV))
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV))
 		fu_device_build_instance_id(device, NULL, "EMMC", "NAME", "REV", NULL);
 
 	/* manfid + oemid, manfid + oemid + name */
@@ -237,7 +238,8 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 						error);
 	if (attr_manfid == NULL)
 		return FALSE;
-	fu_device_build_vendor_id(device, "EMMC", attr_manfid);
+	vendor_id = g_strdup_printf("EMMC:%s", attr_manfid);
+	fu_device_add_vendor_id(device, vendor_id);
 	fu_device_set_vendor(device, fu_emmc_device_get_manufacturer(manfid));
 
 	/* set the physical ID */
@@ -605,7 +607,7 @@ fu_emmc_device_init(FuEmmcDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "org.jedec.mmc");
 	fu_device_add_icon(FU_DEVICE(self), "media-memory");
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }

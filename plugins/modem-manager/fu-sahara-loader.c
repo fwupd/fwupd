@@ -199,8 +199,8 @@ fu_sahara_loader_qdl_is_open(FuSaharaLoader *self)
 {
 	if (self == NULL)
 		return FALSE;
-	return fu_device_has_private_flag(FU_DEVICE(self->usb_device),
-					  FU_DEVICE_PRIVATE_FLAG_IS_OPEN);
+	return fu_device_has_internal_flag(FU_DEVICE(self->usb_device),
+					   FU_DEVICE_INTERNAL_FLAG_IS_OPEN);
 }
 
 GByteArray *
@@ -310,10 +310,13 @@ fu_sahara_loader_write_prog(FuSaharaLoader *self,
 static gboolean
 fu_sahara_loader_send_packet(FuSaharaLoader *self, GByteArray *pkt, GError **error)
 {
+	guint8 *data = pkt->data;
+	gsize sz = pkt->len;
+
 	g_return_val_if_fail(pkt != NULL, FALSE);
 
 	fu_dump_raw(G_LOG_DOMAIN, "tx packet", pkt->data, pkt->len);
-	return fu_sahara_loader_qdl_write(self, pkt->data, pkt->len, error);
+	return fu_sahara_loader_qdl_write(self, data, sz, error);
 }
 
 /* packet composers */

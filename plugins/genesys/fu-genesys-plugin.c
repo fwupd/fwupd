@@ -58,21 +58,22 @@ fu_genesys_plugin_get_device_by_physical_id(FuPlugin *self, const gchar *physica
 static void
 fu_genesys_plugin_device_added(FuPlugin *self, FuDevice *device)
 {
+	FuUsbDevice *usb_parent = NULL;
 	FuDevice *parent = NULL;
-	g_autoptr(FuDevice) usb_parent = NULL;
 
 	/* link hid to parent hub */
 	if (!FU_IS_GENESYS_HUBHID_DEVICE(device))
 		return;
 
-	usb_parent = fu_device_get_backend_parent(device, NULL);
+	usb_parent = fu_usb_device_get_parent(FU_USB_DEVICE(device));
 	if (usb_parent == NULL)
 		return;
-	parent = fu_genesys_plugin_get_device_by_physical_id(self,
-							     fu_device_get_physical_id(usb_parent));
+	parent = fu_genesys_plugin_get_device_by_physical_id(
+	    self,
+	    fu_device_get_physical_id(FU_DEVICE(usb_parent)));
 	if (parent == NULL) {
 		g_warning("hubhid cannot find parent, platform_id(%s)",
-			  fu_device_get_physical_id(usb_parent));
+			  fu_device_get_physical_id(FU_DEVICE(usb_parent)));
 		fu_plugin_device_remove(self, device);
 	} else {
 		fu_genesys_usbhub_device_set_hid_channel(parent, device);

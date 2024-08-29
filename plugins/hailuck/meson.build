@@ -1,3 +1,4 @@
+if libusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginNovatek"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -16,3 +17,4 @@ plugin_builtins += static_library('fu_plugin_hailuck',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+endif

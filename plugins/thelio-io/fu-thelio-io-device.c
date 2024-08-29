@@ -23,11 +23,17 @@ fu_thelio_io_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *buf = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuUdevDevice) udev_device = NULL;
 
 	/* this is the atmel bootloader */
 	fu_device_add_counterpart_guid(device, "USB\\VID_03EB&PID_2FF4");
 
-	devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
+	/* convert FuUsbDevice to GUdevDevice */
+	udev_device = FU_UDEV_DEVICE(fu_usb_device_find_udev_device(FU_USB_DEVICE(device), error));
+	if (udev_device == NULL)
+		return FALSE;
+
+	devpath = fu_udev_device_get_sysfs_path(udev_device);
 	if (G_UNLIKELY(devpath == NULL)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -60,9 +66,14 @@ fu_thelio_io_device_detach(FuDevice *device, FuProgress *progress, GError **erro
 	const gchar *devpath;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuIOChannel) io_channel = NULL;
+	g_autoptr(FuUdevDevice) udev_device = NULL;
 	const guint8 buf[] = {'1', '\n'};
 
-	devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
+	/* convert FuUsbDevice to GUdevDevice */
+	udev_device = FU_UDEV_DEVICE(fu_usb_device_find_udev_device(FU_USB_DEVICE(device), error));
+	if (udev_device == NULL)
+		return FALSE;
+	devpath = fu_udev_device_get_sysfs_path(udev_device);
 	if (G_UNLIKELY(devpath == NULL)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -102,8 +113,8 @@ fu_thelio_io_device_init(FuThelioIoDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_protocol(FU_DEVICE(self), "org.usb.dfu");

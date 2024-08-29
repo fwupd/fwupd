@@ -33,30 +33,13 @@ G_DEFINE_TYPE(FuWacModuleBluetoothId9, fu_wac_module_bluetooth_id9, FU_TYPE_WAC_
 #define FU_WAC_MODULE_BLUETOOTH_ID9_DATA_TIMEOUT  10000 /* ms */
 #define FU_WAC_MODULE_BLUETOOTH_ID9_END_TIMEOUT	  10000 /* ms */
 
-/* CRC(concat(spi_cmd, data)) */
-static gboolean
-fu_wac_module_bluetooth_id9_calculate_crc32(GByteArray *buf,
-					    GInputStream *stream,
-					    guint32 *crc,
-					    GError **error)
-{
-	g_autoptr(GBytes) blob = g_bytes_new(buf->data, buf->len);
-	g_autoptr(GInputStream) composite_stream = fu_composite_input_stream_new();
-	fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(composite_stream), blob);
-	if (!fu_composite_input_stream_add_stream(FU_COMPOSITE_INPUT_STREAM(composite_stream),
-						  stream,
-						  error))
-		return FALSE;
-	return fu_input_stream_compute_crc32(composite_stream, FU_CRC32_KIND_STANDARD, crc, error);
-}
-
 static FuChunk *
 fu_wac_module_bluetooth_id9_get_startcmd(GInputStream *stream, gboolean full_erase, GError **error)
 {
 	gsize streamsz = 0;
 	guint8 command = full_erase ? FU_WAC_MODULE_BLUETOOTH_ID9_CMD_FULLERASE
 				    : FU_WAC_MODULE_BLUETOOTH_ID9_CMD_NORMAL;
-	guint32 crc = ~0;
+	guint32 crc;
 	g_autoptr(GByteArray) loader_cmd = fu_struct_id9_loader_cmd_new();
 	g_autoptr(GByteArray) spi_cmd = fu_struct_id9_spi_cmd_new();
 	g_autoptr(GByteArray) unknown_cmd = fu_struct_id9_unknown_cmd_new();
@@ -71,7 +54,9 @@ fu_wac_module_bluetooth_id9_get_startcmd(GInputStream *stream, gboolean full_era
 
 	fu_struct_id9_loader_cmd_set_command(loader_cmd, command);
 	fu_struct_id9_loader_cmd_set_size(loader_cmd, streamsz + FU_STRUCT_ID9_SPI_CMD_SIZE);
-	if (!fu_wac_module_bluetooth_id9_calculate_crc32(spi_cmd, stream, &crc, error))
+	/* CRC(concat(spi_cmd, *data)) */
+	crc = fu_crc32(FU_CRC32_KIND_STANDARD, spi_cmd->data, FU_STRUCT_ID9_SPI_CMD_SIZE);
+	if (!fu_input_stream_compute_crc32(stream, FU_CRC32_KIND_STANDARD, &crc, error))
 		return NULL;
 	fu_struct_id9_loader_cmd_set_crc(loader_cmd, crc);
 	if (!fu_struct_id9_loader_cmd_set_data(loader_cmd, spi_cmd, error))

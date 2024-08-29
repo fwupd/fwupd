@@ -12,10 +12,10 @@
 #include "fu-usb-struct.h"
 
 #define FU_TYPE_USB_DEVICE (fu_usb_device_get_type())
-G_DECLARE_DERIVABLE_TYPE(FuUsbDevice, fu_usb_device, FU, USB_DEVICE, FuUdevDevice)
+G_DECLARE_DERIVABLE_TYPE(FuUsbDevice, fu_usb_device, FU, USB_DEVICE, FuDevice)
 
 struct _FuUsbDeviceClass {
-	FuUdevDeviceClass parent_class;
+	FuDeviceClass parent_class;
 };
 
 /**
@@ -28,6 +28,9 @@ typedef enum {
 	FU_USB_DEVICE_CLAIM_FLAG_NONE = 0,
 	FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER = 1 << 0,
 } FuUsbDeviceClaimFlags;
+
+FuUsbDevice *
+fu_usb_device_get_parent(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 
 guint8
 fu_usb_device_get_bus(FuUsbDevice *self) G_GNUC_NON_NULL(1);
@@ -55,6 +58,9 @@ fu_usb_device_get_custom_index(FuUsbDevice *self,
 			       guint8 protocol_id,
 			       GError **error) G_GNUC_NON_NULL(1);
 
+FuDevice *
+fu_usb_device_find_udev_device(FuUsbDevice *device, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 void
 fu_usb_device_set_configuration(FuUsbDevice *device, gint configuration) G_GNUC_NON_NULL(1);
 void
@@ -63,6 +69,10 @@ void
 fu_usb_device_set_claim_retry_count(FuUsbDevice *self, guint claim_retry_count) G_GNUC_NON_NULL(1);
 guint
 fu_usb_device_get_claim_retry_count(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_usb_device_set_open_retry_count(FuUsbDevice *self, guint open_retry_count) G_GNUC_NON_NULL(1);
+guint
+fu_usb_device_get_open_retry_count(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_usb_device_control_transfer(FuUsbDevice *self,

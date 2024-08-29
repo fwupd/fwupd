@@ -226,13 +226,11 @@ fu_logitech_hidpp_device_poll(FuDevice *device, GError **error)
 	}
 
 	/* just ping */
-	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH)) {
-		if (!fu_logitech_hidpp_device_ping(self, &error_local)) {
-			g_warning("failed to ping %s: %s",
-				  fu_device_get_name(device),
-				  error_local->message);
-			return TRUE;
-		}
+	if (!fu_logitech_hidpp_device_ping(self, &error_local)) {
+		g_warning("failed to ping %s: %s",
+			  fu_device_get_name(FU_DEVICE(self)),
+			  error_local->message);
+		return TRUE;
 	}
 
 	/* this is the first time the device has been active */
@@ -252,15 +250,6 @@ fu_logitech_hidpp_device_open(FuDevice *device, GError **error)
 	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *devpath = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
-
-	if (devpath == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "device path is not detected for '%s'",
-			    fu_device_get_name(device));
-		return FALSE;
-	}
 
 	/* open */
 	priv->io_channel =
@@ -678,7 +667,7 @@ fu_logitech_hidpp_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* nearly... */
-	fu_device_build_vendor_id_u16(device, "USB", 0x046D);
+	fu_device_add_vendor_id(device, "USB:0x046D");
 
 	/*
 	 * All devices connected to a Bolt receiver share the same
@@ -1410,13 +1399,18 @@ fu_logitech_hidpp_device_init(FuLogitechHidppDevice *self)
 	fu_device_set_vendor(FU_DEVICE(self), "Logitech");
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE);
+					FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID,
+					"force-receiver-id");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE, "ble");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH);
+					FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH,
+					"rebind-attach");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_DEVICE_FLAG_NO_REQUEST_REQUIRED);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO);
+					FU_LOGITECH_HIDPP_DEVICE_FLAG_NO_REQUEST_REQUIRED,
+					"no-request-required");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO,
+					"add-radio");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 	fu_device_set_battery_threshold(FU_DEVICE(self), 20);
 }
@@ -1427,12 +1421,12 @@ fu_logitech_hidpp_device_new(FuUdevDevice *parent)
 	FuLogitechHidppDevice *self = NULL;
 	FuLogitechHidppDevicePrivate *priv;
 	self = g_object_new(FU_TYPE_HIDPP_DEVICE,
-			    "proxy",
-			    parent,
+			    "context",
+			    fu_device_get_context(FU_DEVICE(parent)),
+			    "physical-id",
+			    fu_device_get_physical_id(FU_DEVICE(parent)),
 			    "udev-device",
 			    fu_udev_device_get_dev(parent),
-			    "device-file",
-			    fu_udev_device_get_device_file(parent),
 			    NULL);
 	priv = GET_PRIVATE(self);
 	priv->io_channel = fu_logitech_hidpp_runtime_get_io_channel(FU_HIDPP_RUNTIME(parent));

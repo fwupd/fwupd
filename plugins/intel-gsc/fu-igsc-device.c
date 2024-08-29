@@ -22,8 +22,8 @@ struct _FuIgscDevice {
 	gboolean oprom_code_devid_enforcement;
 };
 
-#define FU_IGSC_DEVICE_FLAG_HAS_AUX   "has-aux"
-#define FU_IGSC_DEVICE_FLAG_HAS_OPROM "has-oprom"
+#define FU_IGSC_DEVICE_FLAG_HAS_AUX   (1 << 0)
+#define FU_IGSC_DEVICE_FLAG_HAS_OPROM (1 << 1)
 
 #define FU_IGSC_DEVICE_POWER_WRITE_TIMEOUT 1500	  /* ms */
 #define FU_IGSC_DEVICE_MEI_WRITE_TIMEOUT   60000  /* 60 sec */
@@ -759,13 +759,13 @@ fu_igsc_device_write_firmware(FuDevice *device,
 static gboolean
 fu_igsc_device_set_pci_power_policy(FuIgscDevice *self, const gchar *val, GError **error)
 {
-	g_autoptr(FuDevice) parent = NULL;
+	g_autoptr(FuUdevDevice) parent = NULL;
 
 	/* get PCI parent */
-	parent = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", error);
+	parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(self), "pci", NULL, error);
 	if (parent == NULL)
 		return FALSE;
-	return fu_udev_device_write_sysfs(FU_UDEV_DEVICE(parent),
+	return fu_udev_device_write_sysfs(parent,
 					  "power/control",
 					  val,
 					  FU_IGSC_DEVICE_POWER_WRITE_TIMEOUT,
@@ -817,8 +817,10 @@ fu_igsc_device_init(FuIgscDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "gpu");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_remove_delay(FU_DEVICE(self), 60000);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_AUX);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_OPROM);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_AUX, "has-aux");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_IGSC_DEVICE_FLAG_HAS_OPROM,
+					"has-oprom");
 }
 
 static void
