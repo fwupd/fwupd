@@ -403,14 +403,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-#ifdef HAVE_GUDEV
-	const gchar *tmp;
 	g_autofree gchar *subsystem = NULL;
-#endif
-
-	/* nothing to do */
-	if (priv->udev_device == NULL)
-		return TRUE;
 
 	/* get IDs */
 	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint16(self, "vendor");
@@ -420,7 +413,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	priv->subsystem_vendor = fu_udev_device_get_sysfs_attr_as_uint16(self, "subsystem_vendor");
 	priv->subsystem_model = fu_udev_device_get_sysfs_attr_as_uint16(self, "subsystem_device");
 
-#ifdef HAVE_GUDEV
 	/* if the device is a GPU try to fetch it from vbios_version */
 	if (g_strcmp0(priv->subsystem, "pci") == 0 &&
 	    fu_udev_device_is_pci_base_cls(FU_UDEV_DEVICE(device), FU_PCI_BASE_CLS_DISPLAY) &&
@@ -558,6 +550,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 					      "class",
 					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 					      NULL);
+		g_autofree gchar *devtype = fu_udev_device_read_property(self, "DEVTYPE", NULL);
 		if (cls != NULL && g_str_has_prefix(cls, "0x"))
 			fu_device_add_instance_strup(device, "CLASS", cls + 2);
 		else
@@ -572,9 +565,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 						 NULL);
 
 		/* add devtype */
-		fu_device_add_instance_strup(device,
-					     "TYPE",
-					     g_udev_device_get_devtype(priv->udev_device));
+		fu_device_add_instance_strup(device, "TYPE", devtype);
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
@@ -593,7 +584,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 						 "DRIVER",
 						 NULL);
 	}
-#endif
 
 	/* determine if we're wired internally */
 	if (g_strcmp0(priv->subsystem, "i2c") != 0) {
