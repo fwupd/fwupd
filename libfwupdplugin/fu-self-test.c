@@ -70,6 +70,72 @@ fu_test_loop_quit(void)
 }
 
 static void
+fu_msgpack_lookup_func(void)
+{
+	g_autoptr(FuMsgpackItem) item1 = NULL;
+	g_autoptr(FuMsgpackItem) item2 = NULL;
+	g_autoptr(FuMsgpackItem) item3 = NULL;
+	g_autoptr(FuMsgpackItem) item4 = NULL;
+	g_autoptr(FuMsgpackItem) item5 = NULL;
+	g_autoptr(FuMsgpackItem) item6 = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) items = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(GPtrArray) items_invalid =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+
+	/* empty */
+	item1 = fu_msgpack_map_lookup(items, 0, "foo", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(item1);
+	g_clear_error(&error);
+
+	/* map of stuff */
+	g_ptr_array_add(items, fu_msgpack_item_new_string("offset"));
+	g_ptr_array_add(items, fu_msgpack_item_new_map(2));
+	g_ptr_array_add(items, fu_msgpack_item_new_string("fixint"));
+	g_ptr_array_add(items, fu_msgpack_item_new_integer(6));
+	g_ptr_array_add(items, fu_msgpack_item_new_string("uint8"));
+	/* ...value is missing here */
+
+	/* not a map */
+	item2 = fu_msgpack_map_lookup(items, 0, "fixint", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_null(item2);
+	g_clear_error(&error);
+
+	/* items too small */
+	item3 = fu_msgpack_map_lookup(items, 1, "fixint", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(item3);
+	g_clear_error(&error);
+
+	/* add the missing value */
+	g_ptr_array_add(items, fu_msgpack_item_new_integer(256));
+
+	/* get valid */
+	item4 = fu_msgpack_map_lookup(items, 1, "fixint", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(item4);
+
+	/* not found */
+	item5 = fu_msgpack_map_lookup(items, 1, "not-going-to-exist", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(item5);
+	g_clear_error(&error);
+
+	/* not string key */
+	g_ptr_array_add(items_invalid, fu_msgpack_item_new_map(1));
+	g_ptr_array_add(items_invalid, fu_msgpack_item_new_integer(12));
+	g_ptr_array_add(items_invalid, fu_msgpack_item_new_integer(34));
+
+	/* get valid */
+	item6 = fu_msgpack_map_lookup(items_invalid, 0, "fixint", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(item6);
+	g_clear_error(&error);
+}
+
+static void
 fu_msgpack_func(void)
 {
 	g_autoptr(GByteArray) buf1 = NULL;
@@ -5920,6 +5986,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
 	g_test_add_func("/fwupd/msgpack", fu_msgpack_func);
+	g_test_add_func("/fwupd/msgpack{lookup}", fu_msgpack_lookup_func);
 	g_test_add_func("/fwupd/efi-load-option", fu_efi_load_option_func);
 	g_test_add_func("/fwupd/efivar", fu_efivar_func);
 	g_test_add_func("/fwupd/efivar{bootxxxx}", fu_efivar_boot_func);
