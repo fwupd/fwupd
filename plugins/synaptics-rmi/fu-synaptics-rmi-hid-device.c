@@ -466,12 +466,6 @@ fu_synaptics_rmi_hid_device_set_page(FuSynapticsRmiDevice *self, guint8 page, GE
 }
 
 static gboolean
-fu_synaptics_rmi_hid_device_probe(FuDevice *device, GError **error)
-{
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
-}
-
-static gboolean
 fu_synaptics_rmi_hid_device_disable_sleep(FuSynapticsRmiDevice *rmi_device, GError **error)
 {
 	FuSynapticsRmiFunction *f01;
@@ -548,7 +542,6 @@ fu_synaptics_rmi_hid_device_class_init(FuSynapticsRmiHidDeviceClass *klass)
 	FuSynapticsRmiDeviceClass *rmi_class = FU_SYNAPTICS_RMI_DEVICE_CLASS(klass);
 	device_class->attach = fu_synaptics_rmi_hid_device_attach;
 	device_class->detach = fu_synaptics_rmi_hid_device_detach;
-	device_class->probe = fu_synaptics_rmi_hid_device_probe;
 	device_class->open = fu_synaptics_rmi_hid_device_open;
 	device_class->close = fu_synaptics_rmi_hid_device_close;
 	device_class->set_progress = fu_synaptics_rmi_hid_device_set_progress;

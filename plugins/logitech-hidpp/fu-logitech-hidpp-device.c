@@ -673,10 +673,6 @@ fu_logitech_hidpp_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error))
-		return FALSE;
-
 	/* nearly... */
 	fu_device_build_vendor_id_u16(device, "USB", 0x046D);
 

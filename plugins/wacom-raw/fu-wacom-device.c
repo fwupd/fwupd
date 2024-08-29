@@ -83,12 +83,6 @@ fu_wacom_device_check_mpu(FuWacomDevice *self, GError **error)
 	return FALSE;
 }
 
-static gboolean
-fu_wacom_device_probe(FuDevice *device, GError **error)
-{
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
-}
 
 static gboolean
 fu_wacom_device_detach(FuDevice *device, FuProgress *progress, GError **error)
@@ -372,7 +366,6 @@ fu_wacom_device_class_init(FuWacomDeviceClass *klass)
 	device_class->write_firmware = fu_wacom_device_write_firmware;
 	device_class->detach = fu_wacom_device_detach;
 	device_class->set_quirk_kv = fu_wacom_device_set_quirk_kv;
-	device_class->probe = fu_wacom_device_probe;
 	device_class->set_progress = fu_wacom_device_set_progress;
 	device_class->replace = fu_wacom_device_replace;
 }
