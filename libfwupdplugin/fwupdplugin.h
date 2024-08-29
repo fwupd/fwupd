@@ -65,6 +65,7 @@
 #include <libfwupdplugin/fu-hid-device.h>
 #include <libfwupdplugin/fu-hid-report-item.h>
 #include <libfwupdplugin/fu-hid-report.h>
+#include <libfwupdplugin/fu-hidraw-device.h>
 #include <libfwupdplugin/fu-hwids.h>
 #include <libfwupdplugin/fu-i2c-device.h>
 #include <libfwupdplugin/fu-ifd-bios.h>
