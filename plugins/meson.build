@@ -61,6 +61,7 @@ plugins = {
   'goodix-tp': false,
   'gpio': false,
   'hailuck': false,
+  'huddly-usb': false,
   'intel-gsc': false,
   'intel-me': false,
   'intel-usb4': false,
