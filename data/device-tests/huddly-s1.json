@@ -1,0 +1,28 @@
+{
+  "name": "Huddly S1",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/4af1947aa24b5a6cc484537b42ca16e0f79bc241fc720ea2fa72611b5274137f-huddly-s1-1.8.4.cab",
+      "components": [
+        {
+          "version": "1.8.4",
+          "guids": [
+            "a56643db-6cf8-5fa0-95f3-c3d91cc645e3"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/57c29008fcfe98fd3ba74d0ee519321961a27c338e56faa33d74737f9bbf9f20-huddly-s1-1.8.6.cab",
+      "components": [
+        {
+          "version": "1.8.6",
+          "guids": [
+            "a56643db-6cf8-5fa0-95f3-c3d91cc645e3"
+          ]
+        }
+      ]
+    }
+  ]
+}

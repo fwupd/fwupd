@@ -23,6 +23,7 @@ install_data([
     'hp-910-bt-keyboard.json',
     'hp-910-bt-mouse.json',
     'hp-dock-g5.json',
+    'huddly-s1.json',
     'hughski-colorhug2.json',
     'hughski-colorhug.json',
     'hughski-colorhug-plus.json',
