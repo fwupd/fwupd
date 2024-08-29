@@ -854,6 +854,8 @@ fu_device_cleanup(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags,
 void
 fu_device_incorporate(FuDevice *self, FuDevice *donor) G_GNUC_NON_NULL(1);
 void
+fu_device_incorporate_vendor_ids(FuDevice *self, FuDevice *donor) G_GNUC_NON_NULL(1, 2);
+void
 fu_device_incorporate_flag(FuDevice *self, FuDevice *donor, FwupdDeviceFlags flag)
     G_GNUC_NON_NULL(1);
 gboolean

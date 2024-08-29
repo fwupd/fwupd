@@ -5507,6 +5507,30 @@ fu_device_incorporate_subclasses(FuDevice *self, FuDevice *donor)
 }
 
 /**
+ * fu_device_incorporate_vendor_ids:
+ * @self: a #FuDevice
+ * @donor: Another #FuDevice
+ *
+ * Copy all vendor IDs from the donor object.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_incorporate_vendor_ids(FuDevice *self, FuDevice *donor)
+{
+	GPtrArray *vendor_ids;
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(FU_IS_DEVICE(donor));
+
+	vendor_ids = fu_device_get_vendor_ids(donor);
+	for (guint i = 0; i < vendor_ids->len; i++) {
+		const gchar *vendor_id = g_ptr_array_index(vendor_ids, i);
+		fu_device_add_vendor_id(self, vendor_id);
+	}
+}
+
+/**
  * fu_device_incorporate:
  * @self: a #FuDevice
  * @donor: Another #FuDevice
