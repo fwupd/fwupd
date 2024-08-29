@@ -33,7 +33,6 @@ struct _FuUdevDeviceClass {
  **/
 typedef enum {
 	FU_UDEV_DEVICE_FLAG_NONE = 0,
-	FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT = 1 << 2,
 	FU_UDEV_DEVICE_FLAG_IGNORE_NONE = 1 << 7,
 	/*< private >*/
 	FU_UDEV_DEVICE_FLAG_LAST

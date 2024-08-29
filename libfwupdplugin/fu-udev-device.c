@@ -367,22 +367,6 @@ fu_udev_device_set_vendor_from_udev_device(FuUdevDevice *self, GUdevDevice *udev
 	if (priv->revision == 0x0)
 		priv->revision = fu_udev_device_get_property_as_uint16(udev_device, "ID_REVISION");
 }
-
-static void
-fu_udev_device_set_vendor_from_parent(FuUdevDevice *self)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GUdevDevice) udev_device = g_object_ref(priv->udev_device);
-	while (TRUE) {
-		g_autoptr(GUdevDevice) parent = g_udev_device_get_parent(udev_device);
-		if (parent == NULL)
-			break;
-		fu_udev_device_set_vendor_from_udev_device(self, parent);
-		if (priv->vendor != 0x0 || priv->model != 0x0 || priv->revision != 0x0)
-			break;
-		g_set_object(&udev_device, parent);
-	}
-}
 #endif
 
 /**
@@ -523,8 +507,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	/* get IDs, but fallback to the parent, grandparent, great-grandparent, etc */
 	fu_udev_device_set_vendor_from_udev_device(self, priv->udev_device);
 	udev_parent = g_udev_device_get_parent(priv->udev_device);
-	if (udev_parent != NULL && priv->flags & FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT)
-		fu_udev_device_set_vendor_from_parent(self);
 
 	/* hidraw helpfully encodes the information in a different place */
 	if (udev_parent != NULL && priv->vendor == 0x0 && priv->model == 0x0 &&
@@ -622,24 +604,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_udev_device_parse_number(self, &error_local))
 			g_debug("failed to convert udev number: %s", error_local->message);
-	}
-
-	/* try harder to find a vendor name the user will recognize */
-	if (priv->flags & FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT && udev_parent != NULL &&
-	    fu_device_get_vendor(device) == NULL) {
-		g_autoptr(GUdevDevice) device_tmp = g_object_ref(udev_parent);
-		for (guint i = 0; i < 0xff; i++) {
-			g_autoptr(GUdevDevice) parent = NULL;
-			tmp = fu_udev_device_get_vendor_fallback(device_tmp);
-			if (tmp != NULL) {
-				fu_device_set_vendor(device, tmp);
-				break;
-			}
-			parent = g_udev_device_get_parent(device_tmp);
-			if (parent == NULL)
-				break;
-			g_set_object(&device_tmp, parent);
-		}
 	}
 
 	/* set revision */
