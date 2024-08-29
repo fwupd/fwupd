@@ -121,12 +121,33 @@ fu_mei_device_set_uuid(FuMeiDevice *self, const gchar *uuid)
 }
 
 static gboolean
+fu_mei_device_pci_probe(FuMeiDevice *self, GError **error)
+{
+	g_autoptr(FuDevice) pci_donor = NULL;
+
+	pci_donor = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", error);
+	if (pci_donor == NULL)
+		return FALSE;
+	if (!fu_device_probe(pci_donor, error))
+		return FALSE;
+	fu_device_set_vendor(FU_DEVICE(self), fu_device_get_vendor(pci_donor));
+	fu_device_incorporate_vendor_ids(FU_DEVICE(self), pci_donor);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_mei_device_probe(FuDevice *device, GError **error)
 {
 	FuMeiDevice *self = FU_MEI_DEVICE(device);
 	FuMeiDevicePrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *uuid = NULL;
 	g_autoptr(GError) error_local = NULL;
+
+	/* copy the PCI-specific vendor */
+	if (!fu_mei_device_pci_probe(self, error))
+		return FALSE;
 
 	/* this has to exist */
 	uuid = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
@@ -500,7 +521,6 @@ fu_mei_device_init(FuMeiDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_PROBE_COMPLETE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 }
 
 static void
