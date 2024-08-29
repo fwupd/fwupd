@@ -24,21 +24,6 @@ struct _FuUdevDeviceClass {
 };
 
 /**
- * FuUdevDeviceFlags:
- * @FU_UDEV_DEVICE_FLAG_NONE:			No flags set
- * @FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT:	Get the vendor ID from a parent or grandparent
- * @FU_UDEV_DEVICE_FLAG_IGNORE_NONE:		The device deliberately has no open flags
- *
- * Flags used when opening the device using fu_device_open().
- **/
-typedef enum {
-	FU_UDEV_DEVICE_FLAG_NONE = 0,
-	FU_UDEV_DEVICE_FLAG_IGNORE_NONE = 1 << 7,
-	/*< private >*/
-	FU_UDEV_DEVICE_FLAG_LAST
-} FuUdevDeviceFlags;
-
-/**
  * FuUdevDeviceIoctlFlags:
  * @FU_UDEV_DEVICE_IOCTL_FLAG:			No flags set
  * @FU_UDEV_DEVICE_IOCTL_FLAG_RETRY:		Retry the ioctl() call on failure
@@ -157,10 +142,6 @@ gboolean
 fu_udev_device_set_logical_id(FuUdevDevice *self,
 			      const gchar *subsystem,
 			      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
-void
-fu_udev_device_add_flag(FuUdevDevice *self, FuUdevDeviceFlags flag) G_GNUC_NON_NULL(1);
-void
-fu_udev_device_remove_flag(FuUdevDevice *self, FuUdevDeviceFlags flag) G_GNUC_NON_NULL(1);
 void
 fu_udev_device_add_open_flag(FuUdevDevice *self, FuIoChannelOpenFlag flag) G_GNUC_NON_NULL(1);
 void
