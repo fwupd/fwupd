@@ -10,11 +10,12 @@
 
 #include <gbinder.h>
 
+#include "fu-binder-aidl.h"
 #include "fu-debug.h"
 
-#define DEFAULT_DEVICE "/dev/hwbinder"
-#define DEFAULT_NAME   "org.freedesktop.fwupd"
-#define DEFAULT_IFACE  "devices@1.0"
+#define DEFAULT_DEVICE "/dev/binder"
+#define DEFAULT_IFACE  "org.freedesktop.fwupd"
+#define DEFAULT_NAME   "fwupd"
 
 typedef struct self {
 	gchar *fqname;
@@ -65,10 +66,7 @@ fu_binder_client_app_call(FuUtil *self, const gchar *str)
 	g_autoptr(GBinderRemoteReply) reply = NULL;
 
 	gbinder_local_request_append_string16(req, str);
-	reply = gbinder_client_transact_sync_reply(self->client,
-						   GBINDER_FIRST_CALL_TRANSACTION,
-						   req,
-						   &status);
+	reply = gbinder_client_transact_sync_reply(self->client, GET_DEVICES, req, &status);
 	if (status == GBINDER_STATUS_OK) {
 		GBinderReader reader;
 		g_autofree gchar *ret = NULL;
@@ -103,7 +101,7 @@ fu_binder_client_app_connect_remote(FuUtil *self)
 		    gbinder_remote_object_add_death_handler(self->remote,
 							    fu_binder_client_app_remote_died,
 							    self);
-		self->poll_id = g_timeout_add_seconds(3, fu_binder_client_poll_cb, self);
+		self->poll_id = g_timeout_add_seconds(1, fu_binder_client_poll_cb, self);
 		return TRUE;
 	}
 	return FALSE;
@@ -135,13 +133,14 @@ main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	self->sm = gbinder_servicemanager_new(DEFAULT_DEVICE);
+	self->sm = gbinder_servicemanager_new2(DEFAULT_DEVICE, "aidl3", "aidl3");
+	// self->sm = gbinder_servicemanager_new(DEFAULT_DEVICE);
 	if (self->sm == NULL) {
 		g_printerr("failed to get service manager\n");
 		return EXIT_FAILURE;
 	}
 	self->local = gbinder_servicemanager_new_local_object(self->sm, NULL, NULL, NULL);
-	self->fqname = g_strconcat(DEFAULT_IFACE, "/", DEFAULT_NAME, NULL);
+	self->fqname = g_strdup(DEFAULT_NAME);
 	if (!fu_binder_client_app_connect_remote(self)) {
 		g_info("waiting for %s", self->fqname);
 		self->wait_id = gbinder_servicemanager_add_registration_handler(

@@ -10,15 +10,16 @@
 
 #include <gbinder.h>
 
+#include "fu-binder-aidl.h"
 #include "fu-binder-daemon.h"
 
 /* this can be tested using:
  * ./build/release/binder-client -v -d /dev/hwbinder -n devices@1.0/org.freedesktop.fwupd
  */
 
-#define DEFAULT_DEVICE "/dev/hwbinder"
-#define DEFAULT_NAME   "org.freedesktop.fwupd"
-#define DEFAULT_IFACE  "devices@1.0"
+#define DEFAULT_DEVICE "/dev/binder"
+#define DEFAULT_IFACE  "org.freedesktop.fwupd"
+#define DEFAULT_NAME   "fwupd"
 
 #define BINDER_TRANSACTION(c2, c3, c4) GBINDER_FOURCC('_', c2, c3, c4)
 #define BINDER_DUMP_TRANSACTION	       BINDER_TRANSACTION('D', 'M', 'P')
@@ -44,7 +45,7 @@ fu_binder_daemon_app_reply(GBinderLocalObject *obj,
 	GBinderReader reader;
 
 	gbinder_remote_request_init_reader(req, &reader);
-	if (code == GBINDER_FIRST_CALL_TRANSACTION) {
+	if (code == GET_DEVICES) {
 		const gchar *iface = gbinder_remote_request_interface(req);
 		if (g_strcmp0(iface, DEFAULT_IFACE) == 0) {
 			GBinderLocalReply *reply = gbinder_local_object_new_reply(obj);
@@ -79,7 +80,7 @@ fu_binder_daemon_app_add_service_done(GBinderServiceManager *sm, int status, gpo
 {
 	FuBinderDaemon *self = FU_BINDER_DAEMON(user_data);
 	if (status == GBINDER_STATUS_OK) {
-		g_info("added %s", DEFAULT_NAME);
+		g_info("added %s", DEFAULT_IFACE "/" DEFAULT_NAME);
 	} else {
 		g_warning("failed to add %s (%d)", DEFAULT_NAME, status);
 		fu_daemon_stop(FU_DAEMON(self), NULL);
@@ -177,7 +178,8 @@ fu_binder_daemon_setup(FuDaemon *daemon,
 static void
 fu_binder_daemon_init(FuBinderDaemon *self)
 {
-	self->sm = gbinder_servicemanager_new(DEFAULT_DEVICE);
+	self->sm = gbinder_servicemanager_new2(DEFAULT_DEVICE, "aidl3", "aidl3");
+	// self->sm = gbinder_servicemanager_new(DEFAULT_DEVICE);
 }
 
 static void
