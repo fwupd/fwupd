@@ -8,7 +8,12 @@
 
 #include "config.h"
 
+#ifdef HAVE_SCSI_SG_H
+#include <scsi/sg.h>
+#endif
+
 #include "fu-block-device.h"
+#include "fu-dump.h"
 #include "fu-usb-device.h"
 
 /**
@@ -18,6 +23,9 @@
  */
 
 G_DEFINE_TYPE(FuBlockDevice, fu_block_device, FU_TYPE_UDEV_DEVICE)
+
+#define FU_BLOCK_DEVICE_SG_IO_SENSE_BUFFER_LEN 32    /* bytes */
+#define FU_BLOCK_DEVICE_SG_IO_TIMEOUT	       20000 /* ms */
 
 static gboolean
 fu_block_device_probe(FuDevice *device, GError **error)
@@ -59,6 +67,219 @@ fu_block_device_probe(FuDevice *device, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+/**
+ * fu_block_device_sg_io_cmd_none:
+ * @self: a #FuBlockDevice
+ * @cdb: a cdb command
+ * @cdbsz: sizeof @cdb
+ * @error: (nullable): optional return location for an error
+ *
+ * Performs a SCSI IO command with no parameters.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_block_device_sg_io_cmd_none(FuBlockDevice *self, const guint8 *cdb, guint8 cdbsz, GError **error)
+{
+#ifdef HAVE_SCSI_SG_H
+	guint8 sense_buffer[FU_BLOCK_DEVICE_SG_IO_SENSE_BUFFER_LEN] = {0};
+	struct sg_io_hdr io_hdr = {
+	    .interface_id = 'S',
+	    .cmd_len = cdbsz,
+	    .mx_sb_len = sizeof(sense_buffer),
+	    .dxfer_direction = SG_DXFER_NONE,
+	    .cmdp = (guint8 *)cdb,
+	    .sbp = sense_buffer,
+	    .timeout = FU_BLOCK_DEVICE_SG_IO_TIMEOUT,
+	    .flags = SG_FLAG_DIRECT_IO,
+	};
+	gint rc = 0;
+
+	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
+	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
+				  SG_IO,
+				  (guint8 *)&io_hdr,
+				  sizeof(io_hdr),
+				  &rc,
+				  5 * FU_BLOCK_DEVICE_SG_IO_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+				  error))
+		return FALSE;
+	if (io_hdr.status) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "command fail with status %x, senseKey 0x%02x, asc 0x%02x, ascq 0x%02x",
+			    io_hdr.status,
+			    sense_buffer[2],
+			    sense_buffer[12],
+			    sense_buffer[13]);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unsupported as scsi/sg.h not found");
+	return FALSE;
+#endif
+}
+
+/**
+ * fu_block_device_sg_io_cmd_read:
+ * @self: a #FuBlockDevice
+ * @cdb: a cdb command
+ * @cdbsz: sizeof @cdb
+ * @buf: buffer to read into
+ * @bufsz: sizeof @buf
+ * @error: (nullable): optional return location for an error
+ *
+ * Performs a SCSI IO read command.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
+			       const guint8 *cdb,
+			       gsize cdbsz,
+			       guint8 *buf,
+			       gsize bufsz,
+			       GError **error)
+{
+#ifdef HAVE_SCSI_SG_H
+	guint8 sense_buffer[FU_BLOCK_DEVICE_SG_IO_SENSE_BUFFER_LEN] = {0};
+	struct sg_io_hdr io_hdr = {
+	    .interface_id = 'S',
+	    .cmd_len = cdbsz,
+	    .mx_sb_len = sizeof(sense_buffer),
+	    .dxfer_direction = SG_DXFER_FROM_DEV,
+	    .dxfer_len = bufsz,
+	    .dxferp = buf,
+	    .cmdp = (guint8 *)cdb,
+	    .sbp = sense_buffer,
+	    .timeout = FU_BLOCK_DEVICE_SG_IO_TIMEOUT,
+	    .flags = SG_FLAG_DIRECT_IO,
+	};
+	gint rc = 0;
+
+	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
+	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
+				  SG_IO,
+				  (guint8 *)&io_hdr,
+				  sizeof(io_hdr),
+				  &rc,
+				  5 * FU_BLOCK_DEVICE_SG_IO_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+				  error))
+		return FALSE;
+	if (io_hdr.status) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "command fail with status %x, senseKey 0x%02x, asc 0x%02x, ascq 0x%02x",
+			    io_hdr.status,
+			    sense_buffer[2],
+			    sense_buffer[12],
+			    sense_buffer[13]);
+		return FALSE;
+	}
+
+	if (bufsz > 0)
+		fu_dump_raw(G_LOG_DOMAIN, "cmd data", buf, bufsz);
+
+	/* success */
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unsupported as scsi/sg.h not found");
+	return FALSE;
+#endif
+}
+
+/**
+ * fu_block_device_sg_io_cmd_write:
+ * @self: a #FuBlockDevice
+ * @cdb: a cdb command
+ * @cdbsz: sizeof @cdb
+ * @buf: buffer to read from
+ * @bufsz: sizeof @buf
+ * @error: (nullable): optional return location for an error
+ *
+ * Performs a SCSI IO write command.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_block_device_sg_io_cmd_write(FuBlockDevice *self,
+				const guint8 *cdb,
+				gsize cdbsz,
+				const guint8 *buf,
+				gsize bufsz,
+				GError **error)
+{
+#ifdef HAVE_SCSI_SG_H
+	guint8 sense_buffer[FU_BLOCK_DEVICE_SG_IO_SENSE_BUFFER_LEN] = {0};
+	struct sg_io_hdr io_hdr = {
+	    .interface_id = 'S',
+	    .cmd_len = cdbsz,
+	    .mx_sb_len = sizeof(sense_buffer),
+	    .dxfer_direction = SG_DXFER_TO_DEV,
+	    .dxfer_len = bufsz,
+	    .dxferp = (guint8 *)buf,
+	    .cmdp = (guint8 *)cdb,
+	    .sbp = sense_buffer,
+	    .timeout = FU_BLOCK_DEVICE_SG_IO_TIMEOUT,
+	    .flags = SG_FLAG_DIRECT_IO,
+	};
+	gint rc = 0;
+
+	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
+	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
+				  SG_IO,
+				  (guint8 *)&io_hdr,
+				  sizeof(io_hdr),
+				  &rc,
+				  5 * FU_BLOCK_DEVICE_SG_IO_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+				  error))
+		return FALSE;
+	if (io_hdr.status) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "command fail with status %x, senseKey 0x%02x, asc 0x%02x, ascq 0x%02x",
+			    io_hdr.status,
+			    sense_buffer[2],
+			    sense_buffer[12],
+			    sense_buffer[13]);
+		return FALSE;
+	}
+
+	if (bufsz > 0)
+		fu_dump_raw(G_LOG_DOMAIN, "cmd data", buf, bufsz);
+
+	/* success */
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unsupported as scsi/sg.h not found");
+	return FALSE;
+#endif
 }
 
 static void
