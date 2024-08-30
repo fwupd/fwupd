@@ -19,14 +19,14 @@
 #define FU_GENESYS_GL32XX_CLEAR_WP_SLEEP_MS 800
 
 struct _FuGenesysGl32xxDevice {
-	FuUdevDevice parent_instance;
+	FuBlockDevice parent_instance;
 	gchar *chip_name;
 	guint32 packetsz;
 	guint32 customer_id;
 	guint16 compatible_model;
 };
 
-G_DEFINE_TYPE(FuGenesysGl32xxDevice, fu_genesys_gl32xx_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE(FuGenesysGl32xxDevice, fu_genesys_gl32xx_device, FU_TYPE_BLOCK_DEVICE)
 
 #define FU_GENESYS_GL32XX_BUFFER_LEN	   32
 #define FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS 20000
@@ -650,28 +650,6 @@ fu_genesys_gl32xx_device_attach(FuDevice *device, FuProgress *progress, GError *
 }
 
 static gboolean
-fu_genesys_gl32xx_device_probe(FuDevice *device, GError **error)
-{
-	FuGenesysGl32xxDevice *self = FU_GENESYS_GL32XX_DEVICE(device);
-
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_genesys_gl32xx_device_parent_class)->probe(device, error))
-		return FALSE;
-
-	if (g_strcmp0(fu_udev_device_get_devtype(FU_UDEV_DEVICE(self)), "disk") != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "is not correct devtype=%s, expected disk",
-			    fu_udev_device_get_devtype(FU_UDEV_DEVICE(self)));
-		return FALSE;
-	}
-
-	/* success */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(self), "usb", error);
-}
-
-static gboolean
 fu_genesys_gl32xx_device_setup(FuDevice *device, GError **error)
 {
 	FuGenesysGl32xxDevice *self = FU_GENESYS_GL32XX_DEVICE(device);
@@ -982,7 +960,6 @@ fu_genesys_gl32xx_device_class_init(FuGenesysGl32xxDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_genesys_gl32xx_device_finalize;
 	device_class->to_string = fu_genesys_gl32xx_device_to_string;
-	device_class->probe = fu_genesys_gl32xx_device_probe;
 	device_class->setup = fu_genesys_gl32xx_device_setup;
 	device_class->detach = fu_genesys_gl32xx_device_detach;
 	device_class->attach = fu_genesys_gl32xx_device_attach;

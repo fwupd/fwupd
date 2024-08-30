@@ -52,6 +52,7 @@ fwupdplugin_src = [
   'fu-backend.c', # fuzzing
   'fu-bios-setting.c', # fuzzing
   'fu-bios-settings.c', # fuzzing
+  'fu-block-device.c',
   'fu-bluez-device.c',
   'fu-byte-array.c', # fuzzing
   'fu-bytes.c', # fuzzing
@@ -186,6 +187,7 @@ fwupdplugin_headers = [
   'fu-backend.h',
   'fu-bios-settings.h',
   'fu-bios-settings-private.h',
+  'fu-block-device.h',
   'fu-bluez-device.h',
   'fu-byte-array.h',
   'fu-bytes.h',
