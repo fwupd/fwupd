@@ -14,4 +14,4 @@ G_DECLARE_FINAL_TYPE(FuGenesysGl32xxDevice,
 		     fu_genesys_gl32xx_device,
 		     FU,
 		     GENESYS_GL32XX_DEVICE,
-		     FuUdevDevice)
+		     FuBlockDevice)
