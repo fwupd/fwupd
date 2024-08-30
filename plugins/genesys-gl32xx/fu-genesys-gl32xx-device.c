@@ -7,10 +7,6 @@
 
 #include "config.h"
 
-#ifdef HAVE_SCSI_SG_H
-#include <scsi/sg.h>
-#endif
-
 #include "fu-genesys-gl32xx-device.h"
 #include "fu-genesys-gl32xx-firmware.h"
 
@@ -28,182 +24,6 @@ struct _FuGenesysGl32xxDevice {
 
 G_DEFINE_TYPE(FuGenesysGl32xxDevice, fu_genesys_gl32xx_device, FU_TYPE_BLOCK_DEVICE)
 
-#define FU_GENESYS_GL32XX_BUFFER_LEN	   32
-#define FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS 20000
-
-static gboolean
-fu_genesys_gl32xx_device_cmd_none(FuGenesysGl32xxDevice *self,
-				  const guint8 *cdb,
-				  guint8 cdbsz,
-				  GError **error)
-{
-#ifdef HAVE_SCSI_SG_H
-	guint8 sense_buffer[FU_GENESYS_GL32XX_BUFFER_LEN] = {0};
-	struct sg_io_hdr io_hdr = {
-	    .interface_id = 'S',
-	    .cmd_len = cdbsz,
-	    .mx_sb_len = sizeof(sense_buffer),
-	    .dxfer_direction = SG_DXFER_NONE,
-	    .cmdp = (guint8 *)cdb,
-	    .sbp = sense_buffer,
-	    .timeout = FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS,
-	    .flags = SG_FLAG_DIRECT_IO,
-	};
-	gint rc = 0;
-
-	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  SG_IO,
-				  (guint8 *)&io_hdr,
-				  sizeof(io_hdr),
-				  &rc,
-				  5 * FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
-				  error))
-		return FALSE;
-	if (io_hdr.status) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "command fail with status %x, senseKey 0x%02x, asc 0x%02x, ascq 0x%02x",
-			    io_hdr.status,
-			    sense_buffer[2],
-			    sense_buffer[12],
-			    sense_buffer[13]);
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "unsupported as scsi/sg.h not found");
-	return FALSE;
-#endif
-}
-
-static gboolean
-fu_genesys_gl32xx_device_cmd_in(FuGenesysGl32xxDevice *self,
-				const guint8 *cdb,
-				gsize cdbsz,
-				guint8 *buf,
-				gsize bufsz,
-				GError **error)
-{
-#ifdef HAVE_SCSI_SG_H
-	guint8 sense_buffer[FU_GENESYS_GL32XX_BUFFER_LEN] = {0};
-	struct sg_io_hdr io_hdr = {
-	    .interface_id = 'S',
-	    .cmd_len = cdbsz,
-	    .mx_sb_len = sizeof(sense_buffer),
-	    .dxfer_direction = SG_DXFER_FROM_DEV,
-	    .dxfer_len = bufsz,
-	    .dxferp = buf,
-	    .cmdp = (guint8 *)cdb,
-	    .sbp = sense_buffer,
-	    .timeout = FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS,
-	    .flags = SG_FLAG_DIRECT_IO,
-	};
-	gint rc = 0;
-
-	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  SG_IO,
-				  (guint8 *)&io_hdr,
-				  sizeof(io_hdr),
-				  &rc,
-				  5 * FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
-				  error))
-		return FALSE;
-	if (io_hdr.status) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "command fail with status %x, senseKey 0x%02x, asc 0x%02x, ascq 0x%02x",
-			    io_hdr.status,
-			    sense_buffer[2],
-			    sense_buffer[12],
-			    sense_buffer[13]);
-		return FALSE;
-	}
-
-	if (bufsz > 0)
-		fu_dump_raw(G_LOG_DOMAIN, "cmd data", buf, bufsz);
-
-	/* success */
-	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "unsupported as scsi/sg.h not found");
-	return FALSE;
-#endif
-}
-
-static gboolean
-fu_genesys_gl32xx_device_cmd_out(FuGenesysGl32xxDevice *self,
-				 const guint8 *cdb,
-				 gsize cdbsz,
-				 const guint8 *buf,
-				 gsize bufsz,
-				 GError **error)
-{
-#ifdef HAVE_SCSI_SG_H
-	guint8 sense_buffer[FU_GENESYS_GL32XX_BUFFER_LEN] = {0};
-	struct sg_io_hdr io_hdr = {
-	    .interface_id = 'S',
-	    .cmd_len = cdbsz,
-	    .mx_sb_len = sizeof(sense_buffer),
-	    .dxfer_direction = SG_DXFER_TO_DEV,
-	    .dxfer_len = bufsz,
-	    .dxferp = (guint8 *)buf,
-	    .cmdp = (guint8 *)cdb,
-	    .sbp = sense_buffer,
-	    .timeout = FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS,
-	    .flags = SG_FLAG_DIRECT_IO,
-	};
-	gint rc = 0;
-
-	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  SG_IO,
-				  (guint8 *)&io_hdr,
-				  sizeof(io_hdr),
-				  &rc,
-				  5 * FU_GENESYS_GL32XX_IOCTL_TIMEOUT_MS,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
-				  error))
-		return FALSE;
-	if (io_hdr.status) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "command fail with status %x, senseKey 0x%02x, asc 0x%02x, ascq 0x%02x",
-			    io_hdr.status,
-			    sense_buffer[2],
-			    sense_buffer[12],
-			    sense_buffer[13]);
-		return FALSE;
-	}
-
-	if (bufsz > 0)
-		fu_dump_raw(G_LOG_DOMAIN, "cmd data", buf, bufsz);
-
-	/* success */
-	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "unsupported as scsi/sg.h not found");
-	return FALSE;
-#endif
-}
-
 static void
 fu_genesys_gl32xx_device_set_chip_name(FuGenesysGl32xxDevice *self, const gchar *chip_name)
 {
@@ -218,7 +38,12 @@ fu_genesys_gl32xx_device_cmd_get_version(FuGenesysGl32xxDevice *self, GError **e
 	const guint8 cmd[] = {0x12, 0x00, 0x00, 0x00, 0x2e, 0x00};
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	fu_byte_array_set_size(buf, 0x2E, 0x0);
-	if (!fu_genesys_gl32xx_device_cmd_in(self, cmd, sizeof(cmd), buf->data, buf->len, error))
+	if (!fu_block_device_sg_io_cmd_read(FU_BLOCK_DEVICE(self),
+					    cmd,
+					    sizeof(cmd),
+					    buf->data,
+					    buf->len,
+					    error))
 		return NULL;
 	return g_steal_pointer(&buf);
 }
@@ -227,7 +52,7 @@ static gboolean
 fu_genesys_gl32xx_device_cmd_switch_to_rom_mode(FuGenesysGl32xxDevice *self, GError **error)
 {
 	const guint8 cmd[] = {0xF3, 0x06, 0x00, 0x00, 0x00, 0x00};
-	if (!fu_genesys_gl32xx_device_cmd_none(self, cmd, sizeof(cmd), error)) {
+	if (!fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), cmd, sizeof(cmd), error)) {
 		g_prefix_error(error, "failed to switch into ROM mode: ");
 		return FALSE;
 	}
@@ -240,7 +65,7 @@ static gboolean
 fu_genesys_gl32xx_device_cmd_reset_usb(FuGenesysGl32xxDevice *self, GError **error)
 {
 	const guint8 cmd[] = {0xE6, 0x00, 0x00, 0x00, 0x00, 0x00};
-	if (!fu_genesys_gl32xx_device_cmd_none(self, cmd, sizeof(cmd), error)) {
+	if (!fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), cmd, sizeof(cmd), error)) {
 		g_prefix_error(error, "failed to reset USB: ");
 		return FALSE;
 	}
@@ -253,21 +78,21 @@ static gboolean
 fu_genesys_gl32xx_device_cmd_write_sr(FuGenesysGl32xxDevice *self, GError **error)
 {
 	const guint8 cmd[] = {0xF3, 0x01, 0x00, 0x00, 0x01, 0x00};
-	return fu_genesys_gl32xx_device_cmd_none(self, cmd, sizeof(cmd), error);
+	return fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), cmd, sizeof(cmd), error);
 }
 
 static gboolean
 fu_genesys_gl32xx_device_cmd_write_enable(FuGenesysGl32xxDevice *self, GError **error)
 {
 	const guint8 cmd[] = {0xF3, 0x00, 0x00, 0x00, 0x06, 0x00};
-	return fu_genesys_gl32xx_device_cmd_none(self, cmd, sizeof(cmd), error);
+	return fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), cmd, sizeof(cmd), error);
 }
 
 static gboolean
 fu_genesys_gl32xx_device_cmd_write_disable(FuGenesysGl32xxDevice *self, GError **error)
 {
 	const guint8 cmd[] = {0xF3, 0x00, 0x00, 0x00, 0x04, 0x00};
-	return fu_genesys_gl32xx_device_cmd_none(self, cmd, sizeof(cmd), error);
+	return fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), cmd, sizeof(cmd), error);
 }
 
 static gboolean
@@ -275,21 +100,26 @@ fu_genesys_gl32xx_device_cmd_clear_wp(FuGenesysGl32xxDevice *self, GError **erro
 {
 	const guint8 cmd[] = {0xF3, 0x02, 0x00, 0x02, 0x00, 0x00};
 	const guint8 data[] = {0x01, 0x00};
-	return fu_genesys_gl32xx_device_cmd_out(self, cmd, sizeof(cmd), data, sizeof(data), error);
+	return fu_block_device_sg_io_cmd_write(FU_BLOCK_DEVICE(self),
+					       cmd,
+					       sizeof(cmd),
+					       data,
+					       sizeof(data),
+					       error);
 }
 
 static gboolean
 fu_genesys_gl32xx_device_cmd_chip_erase(FuGenesysGl32xxDevice *self, GError **error)
 {
 	const guint8 cmd[] = {0xF3, 0x00, 0x00, 0x00, 0xC7, 0x00};
-	return fu_genesys_gl32xx_device_cmd_none(self, cmd, sizeof(cmd), error);
+	return fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), cmd, sizeof(cmd), error);
 }
 
 static gboolean
 fu_genesys_gl32xx_device_cmd_wait_wip(FuGenesysGl32xxDevice *self, GError **error)
 {
 	const guint8 cmd[] = {0xF3, 0x03, 0x01, 0x00, 0x05, 0x00};
-	return fu_genesys_gl32xx_device_cmd_none(self, cmd, sizeof(cmd), error);
+	return fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), cmd, sizeof(cmd), error);
 }
 
 static gboolean
@@ -311,7 +141,12 @@ fu_genesys_gl32xx_device_cmd_read_flash(FuGenesysGl32xxDevice *self,
 	if (!fu_memwrite_uint16_safe(cmd, sizeof(cmd), 6, (guint16)datasz, G_BIG_ENDIAN, error))
 		return FALSE;
 
-	return fu_genesys_gl32xx_device_cmd_in(self, cmd, sizeof(cmd), data, datasz, error);
+	return fu_block_device_sg_io_cmd_read(FU_BLOCK_DEVICE(self),
+					      cmd,
+					      sizeof(cmd),
+					      data,
+					      datasz,
+					      error);
 }
 
 static gboolean
@@ -364,7 +199,12 @@ fu_genesys_gl32xx_device_check_rom_mode(FuGenesysGl32xxDevice *self,
 	const guint8 int_rom_mode[] = {0x49, 0x4E, 0x54, 0x2D}; /* "INT-" */
 	guint8 data[4] = {0};
 
-	if (!fu_genesys_gl32xx_device_cmd_in(self, cmd, cmdsz, data, sizeof(data), error))
+	if (!fu_block_device_sg_io_cmd_read(FU_BLOCK_DEVICE(self),
+					    cmd,
+					    cmdsz,
+					    data,
+					    sizeof(data),
+					    error))
 		return FALSE;
 	if (fu_memcmp_safe(int_rom_mode,
 			   sizeof(int_rom_mode),
@@ -434,19 +274,19 @@ fu_genesys_gl32xx_device_verify_chip_id(FuGenesysGl32xxDevice *self, GError **er
 	g_autofree gchar *flash_id = NULL;
 	g_autoptr(FuCfiDevice) cfi_device = NULL;
 
-	if (!fu_genesys_gl32xx_device_cmd_out(self,
-					      cmd_req,
-					      sizeof(cmd_req),
-					      data_req,
-					      sizeof(data_req),
-					      error))
-		return FALSE;
-	if (!fu_genesys_gl32xx_device_cmd_in(self,
-					     cmd_get,
-					     sizeof(cmd_get),
-					     buf,
-					     sizeof(buf),
+	if (!fu_block_device_sg_io_cmd_write(FU_BLOCK_DEVICE(self),
+					     cmd_req,
+					     sizeof(cmd_req),
+					     data_req,
+					     sizeof(data_req),
 					     error))
+		return FALSE;
+	if (!fu_block_device_sg_io_cmd_read(FU_BLOCK_DEVICE(self),
+					    cmd_get,
+					    sizeof(cmd_get),
+					    buf,
+					    sizeof(buf),
+					    error))
 		return FALSE;
 	flash_id = g_strdup_printf("%02X%02X%02X", buf[0], buf[1], buf[2]);
 	cfi_device = fu_cfi_device_new(fu_device_get_context(FU_DEVICE(self)), flash_id);
@@ -514,12 +354,12 @@ fu_genesys_gl32xx_device_ensure_cid(FuGenesysGl32xxDevice *self, GError **error)
 		return FALSE;
 	}
 
-	if (!fu_genesys_gl32xx_device_cmd_in(self,
-					     cmd,
-					     sizeof(cmd_gl323x_cid),
-					     data,
-					     sizeof(data),
-					     error))
+	if (!fu_block_device_sg_io_cmd_read(FU_BLOCK_DEVICE(self),
+					    cmd,
+					    sizeof(cmd_gl323x_cid),
+					    data,
+					    sizeof(data),
+					    error))
 		return FALSE;
 	self->customer_id = fu_memread_uint32(data, G_BIG_ENDIAN);
 	fu_device_add_instance_u32(FU_DEVICE(self), "CID", self->customer_id);
@@ -541,7 +381,12 @@ fu_genesys_gl32xx_device_get_usb_mode(FuGenesysGl32xxDevice *self, GError **erro
 	guint8 mode = 0;
 	const guint8 cmd[] = {0xF2, 0xFF, 0x00, 0x00, 0x00, 0x00};
 
-	if (!fu_genesys_gl32xx_device_cmd_in(self, cmd, sizeof(cmd), &mode, sizeof(mode), error)) {
+	if (!fu_block_device_sg_io_cmd_read(FU_BLOCK_DEVICE(self),
+					    cmd,
+					    sizeof(cmd),
+					    &mode,
+					    sizeof(mode),
+					    error)) {
 		g_prefix_error(error, "failed to read USB mode: ");
 		return FALSE;
 	}
@@ -791,7 +636,12 @@ fu_genesys_gl32xx_device_write_block(FuGenesysGl32xxDevice *self, FuChunk *chunk
 		return FALSE;
 	if (!fu_memwrite_uint16_safe(cmd, sizeof(cmd), 6, (guint16)datasz, G_BIG_ENDIAN, error))
 		return FALSE;
-	if (!fu_genesys_gl32xx_device_cmd_out(self, cmd, sizeof(cmd), data, datasz, error)) {
+	if (!fu_block_device_sg_io_cmd_write(FU_BLOCK_DEVICE(self),
+					     cmd,
+					     sizeof(cmd),
+					     data,
+					     datasz,
+					     error)) {
 		g_prefix_error(error, "failed to write flash data: ");
 		return FALSE;
 	}

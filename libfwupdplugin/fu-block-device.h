@@ -14,3 +14,21 @@ G_DECLARE_DERIVABLE_TYPE(FuBlockDevice, fu_block_device, FU, BLOCK_DEVICE, FuUde
 struct _FuBlockDeviceClass {
 	FuUdevDeviceClass parent_class;
 };
+
+gboolean
+fu_block_device_sg_io_cmd_none(FuBlockDevice *self, const guint8 *cdb, guint8 cdbsz, GError **error)
+    G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
+			       const guint8 *cdb,
+			       gsize cdbsz,
+			       guint8 *buf,
+			       gsize bufsz,
+			       GError **error) G_GNUC_NON_NULL(1, 2, 4);
+gboolean
+fu_block_device_sg_io_cmd_write(FuBlockDevice *self,
+				const guint8 *cdb,
+				gsize cdbsz,
+				const guint8 *buf,
+				gsize bufsz,
+				GError **error) G_GNUC_NON_NULL(1, 2, 4);
