@@ -158,6 +158,6 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 
 	/* tests go here */
-	g_test_add_func("/dfu/target(DfuSe}", fu_dfu_target_dfuse_func);
+	g_test_add_func("/dfu/target{DfuSe}", fu_dfu_target_dfuse_func);
 	return g_test_run();
 }
