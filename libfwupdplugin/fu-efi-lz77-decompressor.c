@@ -240,11 +240,10 @@ fu_efi_lz77_decompressor_make_huffman_table(FuEfiLz77DecompressHelper *helper,
 					*pointer = avail_symbols++;
 				}
 				if (*pointer < (2 * NC - 1)) {
-					if ((index3 & mask) != 0) {
+					if ((index3 & mask) != 0)
 						pointer = &helper->right[*pointer];
-					} else {
+					else
 						pointer = &helper->left[*pointer];
-					}
 				}
 				index3 <<= 1;
 				index--;
