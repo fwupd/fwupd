@@ -1891,7 +1891,7 @@ fu_chunk_array_func(void)
 	g_assert_cmpint(fu_chunk_get_idx(chk2), ==, 0x1);
 	g_assert_cmpint(fu_chunk_get_address(chk2), ==, 105);
 	g_assert_cmpint(fu_chunk_get_data_sz(chk2), ==, 0x5);
-	g_assert_cmpint(strncmp((const gchar *)fu_chunk_get_data(chk2), " world", 5), ==, 0);
+	g_assert_cmpint(strncmp((const gchar *)fu_chunk_get_data(chk2), " world", 6), ==, 0);
 
 	chk3 = fu_chunk_array_index(chunks, 2);
 	g_assert_nonnull(chk3);
