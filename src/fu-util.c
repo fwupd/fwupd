@@ -1806,7 +1806,7 @@ fu_util_report_history_full(FuUtilPrivate *priv, gboolean only_automatic_reports
 static gboolean
 fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	if (g_strv_length(values) != 0) {
+	if (values != NULL && g_strv_length(values) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_ARGS,
