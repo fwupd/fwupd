@@ -73,12 +73,12 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 		udev_device = g_udev_client_query_by_sysfs_path(udev_client, sysfs_path);
 		if (udev_device == NULL)
 			return TRUE;
-		tmp = g_udev_device_get_property(udev_device, "ID_VENDOR_ID"); /* nocheck */
+		tmp = g_udev_device_get_property(udev_device, "ID_VENDOR_ID"); /* nocheck:blocked */
 		if (tmp != NULL) {
 			if (!fu_strtoull(tmp, &vid, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
 				return FALSE;
 		}
-		tmp = g_udev_device_get_property(udev_device, "ID_MODEL_ID"); /* nocheck */
+		tmp = g_udev_device_get_property(udev_device, "ID_MODEL_ID"); /* nocheck:blocked */
 		if (tmp != NULL) {
 			if (!fu_strtoull(tmp, &pid, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
 				return FALSE;

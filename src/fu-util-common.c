@@ -521,7 +521,7 @@ fu_util_cmd_array_run(GPtrArray *array,
 
 	/* clear out bash completion sentinel */
 	for (guint i = 0; values[i] != NULL; i++) {
-		if (g_strcmp0(values[i], "{") == 0) /* nocheck */
+		if (g_strcmp0(values[i], "{") == 0) /* nocheck:depth */
 			break;
 		values_copy[i] = g_strdup(values[i]);
 	}

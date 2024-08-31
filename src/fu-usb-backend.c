@@ -236,7 +236,7 @@ fu_usb_backend_hotplug_cb(struct libusb_context *ctx,
 	FuUsbBackendIdleHelper *helper;
 	g_autoptr(GMutexLocker) locker = g_mutex_locker_new(&self->idle_events_mutex);
 
-	g_assert(locker != NULL); /* nocheck */
+	g_assert(locker != NULL); /* nocheck:blocked */
 
 	helper = g_new0(FuUsbBackendIdleHelper, 1);
 	helper->self = g_object_ref(self);

@@ -602,8 +602,8 @@ fu_version_compare_safe(const gchar *version_a, const gchar *version_b)
 			return 1;
 
 		/* compare integers */
-		ver_a = g_ascii_strtoll(split_a[i], &endptr_a, 10); /* nocheck */
-		ver_b = g_ascii_strtoll(split_b[i], &endptr_b, 10); /* nocheck */
+		ver_a = g_ascii_strtoll(split_a[i], &endptr_a, 10); /* nocheck:blocked */
+		ver_b = g_ascii_strtoll(split_b[i], &endptr_b, 10); /* nocheck:blocked */
 		if (ver_a < ver_b)
 			return -1;
 		if (ver_a > ver_b)

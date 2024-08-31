@@ -63,8 +63,8 @@ fu_mm_utils_get_udev_port_info(GUdevDevice *device,
 
 	if (g_strcmp0(device_bus, "USB") == 0) {
 		/* ID_USB_INTERFACE_NUM is set on the port device itself */
-		const gchar *aux =
-		    g_udev_device_get_property(device, "ID_USB_INTERFACE_NUM"); /* nocheck */
+		const gchar *aux = g_udev_device_get_property(device, /* nocheck:blocked */
+							      "ID_USB_INTERFACE_NUM");
 		if (aux != NULL) {
 			if (!fu_strtoull(aux,
 					 &port_usb_ifnum,

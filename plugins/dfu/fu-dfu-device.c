@@ -188,7 +188,7 @@ fu_dfu_device_parse_iface_data(FuDfuDevice *self, GBytes *iface_data, GError **e
 		fu_byte_array_append_bytes(buf, iface_data);
 		fu_byte_array_append_uint8(buf, 0x1);
 		fu_byte_array_append_uint8(buf, 0x1);
-		bytes = g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck */
+		bytes = g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
 	} else {
 		bytes = g_bytes_ref(iface_data);
 	}
