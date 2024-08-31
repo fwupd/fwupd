@@ -20,6 +20,8 @@ class SourceFailure:
 
 
 class Checker:
+    MAX_FUNCTION_LINES: int = 400
+
     def __init__(self):
         self.failures: List[SourceFailure] = []
         self._current_fn: Optional[str] = None
@@ -115,6 +117,24 @@ class Checker:
                         self.add_failure("uses g_set_error() without using FWUPD_ERROR")
                         break
 
+    def _test_lines_function_length(self, lines: List[str]) -> None:
+        self._current_nocheck = "nocheck:lines"
+        func_begin: int = 0
+        for linecnt, line in enumerate(lines):
+            if line.find(self._current_nocheck) != -1:
+                func_begin = 0
+                continue
+            if line == "{":
+                func_begin = linecnt
+                continue
+            if func_begin > 0 and line == "}":
+                self._current_linecnt = func_begin
+                if linecnt - func_begin > self.MAX_FUNCTION_LINES:
+                    self.add_failure(
+                        f"function is too long, was {linecnt - func_begin} of {self.MAX_FUNCTION_LINES}"
+                    )
+                func_begin = 0
+
     def _test_lines_depth(self, lines: List[str]) -> None:
         # check depth
         self._current_nocheck = "nocheck:depth"
@@ -161,6 +181,9 @@ class Checker:
 
         # not nesting too deep
         self._test_lines_depth(lines)
+
+        # functions too long
+        self._test_lines_function_length(lines)
 
     def test_file(self, fn: str) -> None:
         self._current_fn = fn

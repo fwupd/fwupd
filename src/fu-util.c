@@ -4788,7 +4788,7 @@ fu_util_print_error(FuUtilPrivate *priv, const GError *error)
 
 int
 main(int argc, char *argv[])
-{
+{ /* nocheck:lines */
 	gboolean force = FALSE;
 	gboolean allow_branch_switch = FALSE;
 	gboolean allow_older = FALSE;

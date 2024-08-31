@@ -14,7 +14,9 @@
 G_DECLARE_FINAL_TYPE(FuEngineRequest, fu_engine_request, FU, ENGINE_REQUEST, GObject)
 
 FuEngineRequest *
-fu_engine_request_new(void);
+fu_engine_request_new(const gchar *sender);
+const gchar *
+fu_engine_request_get_sender(FuEngineRequest *self) G_GNUC_NON_NULL(1);
 void
 fu_engine_request_add_flag(FuEngineRequest *self, FuEngineRequestFlag flag) G_GNUC_NON_NULL(1);
 gboolean
