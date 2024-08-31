@@ -3980,7 +3980,7 @@ fu_engine_ensure_device_supported(FuEngine *self, FuDevice *device)
 	g_autoptr(FuEngineRequest) request = NULL;
 
 	/* all flags set */
-	request = fu_engine_request_new();
+	request = fu_engine_request_new(NULL);
 	fu_engine_request_add_flag(request, FU_ENGINE_REQUEST_FLAG_NO_REQUIREMENTS);
 	fu_engine_request_add_flag(request, FU_ENGINE_REQUEST_FLAG_ANY_RELEASE);
 	fu_engine_request_set_feature_flags(request, ~0);

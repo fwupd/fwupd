@@ -17,6 +17,7 @@ struct _FuEngineRequest {
 	FuEngineRequestFlag flags;
 	FwupdFeatureFlags feature_flags;
 	FwupdCodecFlags converter_flags;
+	gchar *sender;
 	gchar *locale;
 };
 
@@ -46,6 +47,13 @@ static void
 fwupd_engine_request_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fu_engine_request_add_string;
+}
+
+const gchar *
+fu_engine_request_get_sender(FuEngineRequest *self)
+{
+	g_return_val_if_fail(FU_IS_ENGINE_REQUEST(self), NULL);
+	return self->sender;
 }
 
 FwupdFeatureFlags
@@ -140,6 +148,7 @@ static void
 fu_engine_request_finalize(GObject *obj)
 {
 	FuEngineRequest *self = FU_ENGINE_REQUEST(obj);
+	g_free(self->sender);
 	g_free(self->locale);
 	G_OBJECT_CLASS(fu_engine_request_parent_class)->finalize(obj);
 }
@@ -152,9 +161,10 @@ fu_engine_request_class_init(FuEngineRequestClass *klass)
 }
 
 FuEngineRequest *
-fu_engine_request_new(void)
+fu_engine_request_new(const gchar *sender)
 {
 	FuEngineRequest *self;
 	self = g_object_new(FU_TYPE_ENGINE_REQUEST, NULL);
+	self->sender = g_strdup(sender);
 	return FU_ENGINE_REQUEST(self);
 }
