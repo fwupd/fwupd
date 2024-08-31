@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-bytes.h"
+#include "fu-common-struct.h"
 #include "fu-drm-device.h"
 #include "fu-string.h"
 
@@ -30,16 +31,6 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuDrmDevice, fu_drm_device, FU_TYPE_UDEV_DEVICE)
 
 #define GET_PRIVATE(o) (fu_drm_device_get_instance_private(o))
-
-static FuDisplayState
-fu_display_state_from_string(const gchar *display_state)
-{
-	if (g_strcmp0(display_state, "connected") == 0)
-		return FU_DISPLAY_STATE_CONNECTED;
-	if (g_strcmp0(display_state, "disconnected") == 0)
-		return FU_DISPLAY_STATE_DISCONNECTED;
-	return FU_DISPLAY_STATE_UNKNOWN;
-}
 
 static void
 fu_drm_device_to_string(FuDevice *device, guint idt, GString *str)

@@ -18,4 +18,4 @@ G_DECLARE_FINAL_TYPE(FuElantpHidHapticDevice,
 		     FuUdevDevice)
 
 FuElantpHidHapticDevice *
-fu_elantp_haptic_device_new(FuDevice *device);
+fu_elantp_hid_haptic_device_new(FuDevice *device);

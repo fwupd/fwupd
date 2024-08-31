@@ -35,7 +35,8 @@ typedef enum {
 } IspCmd;
 
 static gboolean
-fu_rts54hub_rtd21xx_ensure_version_unlocked(FuRts54hubRtd21xxBackground *self, GError **error)
+fu_rts54hub_rtd21xx_background_ensure_version_unlocked(FuRts54hubRtd21xxBackground *self,
+						       GError **error)
 {
 	guint8 buf_rep[7] = {0x00};
 	guint8 buf_req[] = {ISP_CMD_GET_FW_INFO};
@@ -166,7 +167,7 @@ fu_rts54hub_rtd21xx_background_setup(FuDevice *device, GError **error)
 					   error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_rts54hub_rtd21xx_ensure_version_unlocked(self, error))
+	if (!fu_rts54hub_rtd21xx_background_ensure_version_unlocked(self, error))
 		return FALSE;
 
 	/* success */

@@ -87,7 +87,7 @@ fu_uf2_device_probe_current_fw(FuDevice *device, GBytes *fw, GError **error)
 }
 
 static gchar *
-fu_block_device_get_full_path(FuUf2Device *self, const gchar *filename, GError **error)
+fu_uf2_device_get_full_path(FuUf2Device *self, const gchar *filename, GError **error)
 {
 	const gchar *devfile = fu_udev_device_get_device_file(FU_UDEV_DEVICE(self));
 	g_autoptr(FuVolume) volume = NULL;
@@ -113,11 +113,11 @@ fu_block_device_get_full_path(FuUf2Device *self, const gchar *filename, GError *
 }
 
 static gboolean
-fu_block_device_write_firmware(FuDevice *device,
-			       FuFirmware *firmware,
-			       FuProgress *progress,
-			       FwupdInstallFlags flags,
-			       GError **error)
+fu_uf2_device_write_firmware(FuDevice *device,
+			     FuFirmware *firmware,
+			     FuProgress *progress,
+			     FwupdInstallFlags flags,
+			     GError **error)
 {
 	FuUf2Device *self = FU_UF2_DEVICE(device);
 	gssize wrote;
@@ -132,7 +132,7 @@ fu_block_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* open file for writing; no cleverness */
-	fn = fu_block_device_get_full_path(self, "FIRMWARE.UF2", error);
+	fn = fu_uf2_device_get_full_path(self, "FIRMWARE.UF2", error);
 	if (fn == NULL)
 		return FALSE;
 	file = g_file_new_for_path(fn);
@@ -162,14 +162,14 @@ fu_block_device_write_firmware(FuDevice *device,
 }
 
 static GBytes *
-fu_block_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
+fu_uf2_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuUf2Device *self = FU_UF2_DEVICE(device);
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GInputStream) istr = NULL;
 
 	/* open for reading */
-	fn = fu_block_device_get_full_path(self, "CURRENT.UF2", error);
+	fn = fu_uf2_device_get_full_path(self, "CURRENT.UF2", error);
 	if (fn == NULL)
 		return NULL;
 	istr = fu_input_stream_from_path(fn, error);
@@ -285,7 +285,7 @@ fu_uf2_device_setup(FuDevice *device, GError **error)
 	g_autoptr(GBytes) fw = NULL;
 
 	/* this has to exist */
-	fn1 = fu_block_device_get_full_path(self, "INFO_UF2.TXT", error);
+	fn1 = fu_uf2_device_get_full_path(self, "INFO_UF2.TXT", error);
 	if (fn1 == NULL)
 		return FALSE;
 	if (!g_file_get_contents(fn1, &buf, &bufsz, error))
@@ -301,7 +301,7 @@ fu_uf2_device_setup(FuDevice *device, GError **error)
 	fu_device_build_instance_id(device, NULL, "UF2", "BOARD", NULL);
 
 	/* this might exist */
-	fn2 = fu_block_device_get_full_path(self, "CURRENT.UF2", error);
+	fn2 = fu_uf2_device_get_full_path(self, "CURRENT.UF2", error);
 	if (fn2 == NULL)
 		return FALSE;
 	fw = fu_bytes_get_contents(fn2, NULL);
@@ -455,6 +455,6 @@ fu_uf2_device_class_init(FuUf2DeviceClass *klass)
 	device_class->prepare_firmware = fu_uf2_device_prepare_firmware;
 	device_class->set_progress = fu_uf2_device_set_progress;
 	device_class->read_firmware = fu_uf2_device_read_firmware;
-	device_class->write_firmware = fu_block_device_write_firmware;
-	device_class->dump_firmware = fu_block_device_dump_firmware;
+	device_class->write_firmware = fu_uf2_device_write_firmware;
+	device_class->dump_firmware = fu_uf2_device_dump_firmware;
 }

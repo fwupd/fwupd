@@ -22,7 +22,7 @@ typedef struct {
 } NitrokeyRequest;
 
 static gboolean
-nitrokey_execute_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_nitrokey_device_execute_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	NitrokeyRequest *req = (NitrokeyRequest *)user_data;
 	NitrokeyHidResponse res;
@@ -91,13 +91,13 @@ nitrokey_execute_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 }
 
 static gboolean
-nitrokey_execute_cmd_full(FuDevice *device,
-			  guint8 command,
-			  const guint8 *buf_in,
-			  gsize buf_in_sz,
-			  guint8 *buf_out,
-			  gsize buf_out_sz,
-			  GError **error)
+fu_nitrokey_device_execute_cmd_full(FuDevice *device,
+				    guint8 command,
+				    const guint8 *buf_in,
+				    gsize buf_in_sz,
+				    guint8 *buf_out,
+				    gsize buf_out_sz,
+				    GError **error)
 {
 	NitrokeyRequest req = {
 	    .command = command,
@@ -108,7 +108,11 @@ nitrokey_execute_cmd_full(FuDevice *device,
 	};
 	g_return_val_if_fail(buf_in_sz <= NITROKEY_REQUEST_DATA_LENGTH, FALSE);
 	g_return_val_if_fail(buf_out_sz <= NITROKEY_REPLY_DATA_LENGTH, FALSE);
-	return fu_device_retry(device, nitrokey_execute_cmd_cb, NITROKEY_NR_RETRIES, &req, error);
+	return fu_device_retry(device,
+			       fu_nitrokey_device_execute_cmd_cb,
+			       NITROKEY_NR_RETRIES,
+			       &req,
+			       error);
 }
 
 static gboolean
@@ -123,13 +127,13 @@ fu_nitrokey_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get firmware version */
-	if (!nitrokey_execute_cmd_full(device,
-				       NITROKEY_CMD_GET_DEVICE_STATUS,
-				       NULL,
-				       0,
-				       buf_reply,
-				       sizeof(buf_reply),
-				       error)) {
+	if (!fu_nitrokey_device_execute_cmd_full(device,
+						 NITROKEY_CMD_GET_DEVICE_STATUS,
+						 NULL,
+						 0,
+						 buf_reply,
+						 sizeof(buf_reply),
+						 error)) {
 		g_prefix_error(error, "failed to do get firmware version: ");
 		return FALSE;
 	}

@@ -17,7 +17,10 @@ struct _FuParadeUsbhubFirmware {
 G_DEFINE_TYPE(FuParadeUsbhubFirmware, fu_parade_usbhub_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_parade_usbhub_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_parade_usbhub_firmware_validate(FuFirmware *firmware,
+				   GInputStream *stream,
+				   gsize offset,
+				   GError **error)
 {
 	return fu_struct_parade_usbhub_hdr_validate_stream(stream, offset, error);
 }
@@ -65,7 +68,7 @@ static void
 fu_parade_usbhub_firmware_class_init(FuParadeUsbhubFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
-	firmware_class->validate = fu_parade_usbhub_validate;
+	firmware_class->validate = fu_parade_usbhub_firmware_validate;
 	firmware_class->parse = fu_parade_usbhub_firmware_parse;
 }
 

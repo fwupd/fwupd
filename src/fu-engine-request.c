@@ -22,13 +22,12 @@ struct _FuEngineRequest {
 };
 
 static void
-fwupd_engine_request_codec_iface_init(FwupdCodecInterface *iface);
+fu_engine_request_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(FuEngineRequest,
 			fu_engine_request,
 			G_TYPE_OBJECT,
-			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
-					      fwupd_engine_request_codec_iface_init))
+			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_engine_request_codec_iface_init))
 
 static void
 fu_engine_request_add_string(FwupdCodec *codec, guint idt, GString *str)
@@ -44,7 +43,7 @@ fu_engine_request_add_string(FwupdCodec *codec, guint idt, GString *str)
 }
 
 static void
-fwupd_engine_request_codec_iface_init(FwupdCodecInterface *iface)
+fu_engine_request_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fu_engine_request_add_string;
 }

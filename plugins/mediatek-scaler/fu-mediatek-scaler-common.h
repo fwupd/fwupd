@@ -10,4 +10,4 @@
 #include <glib-object.h>
 
 gchar *
-mediatek_scaler_device_version_to_string(guint32 val);
+fu_mediatek_scaler_version_to_string(guint32 val);

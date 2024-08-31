@@ -425,7 +425,7 @@ fu_dell_dock_mst_check_offset(guint8 byte, guint8 offset)
 }
 
 static gboolean
-fu_d19_mst_check_fw(FuDevice *device, GError **error)
+fu_dell_dock_d19_mst_check_fw(FuDevice *device, GError **error)
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
 	g_autoptr(GBytes) bytes = NULL;
@@ -1148,7 +1148,7 @@ fu_dell_dock_mst_setup(FuDevice *device, GError **error)
 	const gchar *version;
 
 	/* sanity check that we can talk to MST */
-	if (!fu_d19_mst_check_fw(device, error))
+	if (!fu_dell_dock_d19_mst_check_fw(device, error))
 		return FALSE;
 
 	/* set version from EC if we know it */

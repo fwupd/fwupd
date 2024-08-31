@@ -440,7 +440,7 @@ fwupd_codec_to_variant(FwupdCodec *self, FwupdCodecFlags flags)
 }
 
 static gsize
-fu_strwidth(const gchar *text)
+_fu_strwidth(const gchar *text)
 {
 	const gchar *p = text;
 	gsize width = 0;
@@ -486,7 +486,7 @@ fwupd_codec_string_append(GString *str, guint idt, const gchar *key, const gchar
 		g_string_append(str, "  ");
 	if (key[0] != '\0') {
 		g_string_append_printf(str, "%s:", key);
-		keysz = (idt * 2) + fu_strwidth(key) + 1;
+		keysz = (idt * 2) + _fu_strwidth(key) + 1;
 	} else {
 		keysz = idt * 2;
 	}

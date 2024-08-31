@@ -19,7 +19,7 @@
 #define FU_COMMON_VERSION_DECODE_BCD(val) ((((val) >> 4) & 0x0f) * 10 + ((val) & 0x0f))
 
 static gchar *
-fu_common_version_ensure_semver(const gchar *version);
+fu_version_ensure_semver_internal(const gchar *version);
 
 /**
  * fu_version_from_uint64:
@@ -332,7 +332,7 @@ fu_version_ensure_semver(const gchar *version, FwupdVersionFormat fmt)
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* split into all sections */
-	tmp = fu_common_version_ensure_semver(version);
+	tmp = fu_version_ensure_semver_internal(version);
 	if (tmp == NULL)
 		return NULL;
 	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN)
@@ -360,16 +360,8 @@ fu_version_ensure_semver(const gchar *version, FwupdVersionFormat fmt)
 	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
-/**
- * fu_common_version_ensure_semver:
- * @version: (nullable): a version number, e.g. ` V1.2.3 `
- *
- * Builds a semver from the possibly crazy version number.
- *
- * Returns: a version number, e.g. `1.2.3`, or %NULL if the version was not valid
- */
 static gchar *
-fu_common_version_ensure_semver(const gchar *version)
+fu_version_ensure_semver_internal(const gchar *version)
 {
 	gboolean dot_valid = FALSE;
 	guint digit_cnt = 0;

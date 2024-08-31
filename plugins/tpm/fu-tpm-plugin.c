@@ -376,7 +376,7 @@ fu_tpm_plugin_constructed(GObject *obj)
 }
 
 static void
-fu_tpm_finalize(GObject *obj)
+fu_tpm_plugin_finalize(GObject *obj)
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(obj);
 	if (self->tpm_device != NULL)
@@ -394,7 +394,7 @@ fu_tpm_plugin_class_init(FuTpmPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->finalize = fu_tpm_finalize;
+	object_class->finalize = fu_tpm_plugin_finalize;
 	plugin_class->constructed = fu_tpm_plugin_constructed;
 	plugin_class->to_string = fu_tpm_plugin_to_string;
 	plugin_class->startup = fu_tpm_plugin_startup;

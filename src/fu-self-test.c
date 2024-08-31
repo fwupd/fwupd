@@ -3039,7 +3039,7 @@ typedef struct {
 } FuTestRequestHelper;
 
 static void
-_engine_status_changed_cb(FuProgress *progress, FwupdStatus status, gpointer user_data)
+fu_test_engine_status_changed_cb(FuProgress *progress, FwupdStatus status, gpointer user_data)
 {
 	FuTestRequestHelper *helper = (FuTestRequestHelper *)user_data;
 	g_debug("status now %s", fwupd_status_to_string(status));
@@ -3047,7 +3047,7 @@ _engine_status_changed_cb(FuProgress *progress, FwupdStatus status, gpointer use
 }
 
 static void
-_engine_request_cb(FuEngine *engine, FwupdRequest *request, gpointer user_data)
+fu_test_engine_request_cb(FuEngine *engine, FwupdRequest *request, gpointer user_data)
 {
 	FuTestRequestHelper *helper = (FuTestRequestHelper *)user_data;
 	g_assert_cmpint(fwupd_request_get_kind(request), ==, FWUPD_REQUEST_KIND_IMMEDIATE);
@@ -3131,11 +3131,11 @@ fu_engine_install_request(gconstpointer user_data)
 
 	g_signal_connect(FU_ENGINE(engine),
 			 "device-request",
-			 G_CALLBACK(_engine_request_cb),
+			 G_CALLBACK(fu_test_engine_request_cb),
 			 &helper);
 	g_signal_connect(FU_PROGRESS(progress),
 			 "status-changed",
-			 G_CALLBACK(_engine_status_changed_cb),
+			 G_CALLBACK(fu_test_engine_status_changed_cb),
 			 &helper);
 
 	ret = fu_engine_install_release(engine,
@@ -3277,7 +3277,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 }
 
 static void
-_device_list_count_cb(FuDeviceList *device_list, FuDevice *device, gpointer user_data)
+fu_test_device_list_count_cb(FuDeviceList *device_list, FuDevice *device, gpointer user_data)
 {
 	guint *cnt = (guint *)user_data;
 	(*cnt)++;
@@ -3328,15 +3328,15 @@ fu_device_list_delay_func(gconstpointer user_data)
 
 	g_signal_connect(FU_DEVICE_LIST(device_list),
 			 "added",
-			 G_CALLBACK(_device_list_count_cb),
+			 G_CALLBACK(fu_test_device_list_count_cb),
 			 &added_cnt);
 	g_signal_connect(FU_DEVICE_LIST(device_list),
 			 "removed",
-			 G_CALLBACK(_device_list_count_cb),
+			 G_CALLBACK(fu_test_device_list_count_cb),
 			 &removed_cnt);
 	g_signal_connect(FU_DEVICE_LIST(device_list),
 			 "changed",
-			 G_CALLBACK(_device_list_count_cb),
+			 G_CALLBACK(fu_test_device_list_count_cb),
 			 &changed_cnt);
 
 	/* add one device */
@@ -3553,15 +3553,15 @@ fu_device_list_compatible_func(gconstpointer user_data)
 
 	g_signal_connect(FU_DEVICE_LIST(device_list),
 			 "added",
-			 G_CALLBACK(_device_list_count_cb),
+			 G_CALLBACK(fu_test_device_list_count_cb),
 			 &added_cnt);
 	g_signal_connect(FU_DEVICE_LIST(device_list),
 			 "removed",
-			 G_CALLBACK(_device_list_count_cb),
+			 G_CALLBACK(fu_test_device_list_count_cb),
 			 &removed_cnt);
 	g_signal_connect(FU_DEVICE_LIST(device_list),
 			 "changed",
-			 G_CALLBACK(_device_list_count_cb),
+			 G_CALLBACK(fu_test_device_list_count_cb),
 			 &changed_cnt);
 
 	/* add one device in runtime mode */
@@ -3632,15 +3632,15 @@ fu_device_list_remove_chain_func(gconstpointer user_data)
 
 	g_signal_connect(FU_DEVICE_LIST(device_list),
 			 "added",
-			 G_CALLBACK(_device_list_count_cb),
+			 G_CALLBACK(fu_test_device_list_count_cb),
 			 &added_cnt);
 	g_signal_connect(FU_DEVICE_LIST(device_list),
 			 "removed",
-			 G_CALLBACK(_device_list_count_cb),
+			 G_CALLBACK(fu_test_device_list_count_cb),
 			 &removed_cnt);
 	g_signal_connect(FU_DEVICE_LIST(device_list),
 			 "changed",
-			 G_CALLBACK(_device_list_count_cb),
+			 G_CALLBACK(fu_test_device_list_count_cb),
 			 &changed_cnt);
 
 	/* add child */
@@ -3774,15 +3774,15 @@ fu_device_list_func(gconstpointer user_data)
 
 	g_signal_connect(FU_DEVICE_LIST(device_list),
 			 "added",
-			 G_CALLBACK(_device_list_count_cb),
+			 G_CALLBACK(fu_test_device_list_count_cb),
 			 &added_cnt);
 	g_signal_connect(FU_DEVICE_LIST(device_list),
 			 "removed",
-			 G_CALLBACK(_device_list_count_cb),
+			 G_CALLBACK(fu_test_device_list_count_cb),
 			 &removed_cnt);
 	g_signal_connect(FU_DEVICE_LIST(device_list),
 			 "changed",
-			 G_CALLBACK(_device_list_count_cb),
+			 G_CALLBACK(fu_test_device_list_count_cb),
 			 &changed_cnt);
 
 	/* add both */
@@ -3988,7 +3988,7 @@ fu_history_migrate_v2_func(gconstpointer user_data)
 
 #ifdef HAVE_FWUPDOFFLINE
 static void
-_plugin_status_changed_cb(FuDevice *device, FwupdStatus status, gpointer user_data)
+fu_test_plugin_status_changed_cb(FuDevice *device, FwupdStatus status, gpointer user_data)
 {
 	guint *cnt = (guint *)user_data;
 	g_debug("status now %s", fwupd_status_to_string(status));
@@ -3998,7 +3998,7 @@ _plugin_status_changed_cb(FuDevice *device, FwupdStatus status, gpointer user_da
 #endif
 
 static void
-_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
+fu_test_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	FuDevice **dev = (FuDevice **)user_data;
 	*dev = g_object_ref(device);
@@ -4006,7 +4006,7 @@ _plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 }
 
 static void
-_plugin_device_register_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
+fu_test_plugin_device_register_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	/* fake being a daemon */
 	fu_plugin_runner_device_register(plugin, device);
@@ -4240,11 +4240,11 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_assert_true(ret);
 	g_signal_connect(FU_PLUGIN(plugin),
 			 "device-added",
-			 G_CALLBACK(_plugin_device_added_cb),
+			 G_CALLBACK(fu_test_plugin_device_added_cb),
 			 &device);
 	g_signal_connect(FU_PLUGIN(plugin),
 			 "device-register",
-			 G_CALLBACK(_plugin_device_register_cb),
+			 G_CALLBACK(fu_test_plugin_device_register_cb),
 			 &device);
 	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
 	g_assert_no_error(error);
@@ -4266,7 +4266,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	/* schedule an offline update */
 	g_signal_connect(FU_PROGRESS(progress),
 			 "status-changed",
-			 G_CALLBACK(_plugin_status_changed_cb),
+			 G_CALLBACK(fu_test_plugin_status_changed_cb),
 			 &cnt);
 	mapped_file_fn = g_test_build_filename(G_TEST_DIST, "tests", "fakedevice123.bin", NULL);
 	mapped_file = g_mapped_file_new(mapped_file_fn, FALSE, &error);
@@ -4494,7 +4494,7 @@ fu_history_func(gconstpointer user_data)
 }
 
 static GBytes *
-_build_cab(gboolean compressed, ...)
+fu_test_build_cab(gboolean compressed, ...)
 {
 	va_list args;
 	g_autoptr(FuCabFirmware) cabinet = fu_cab_firmware_new();
@@ -4538,7 +4538,7 @@ _build_cab(gboolean compressed, ...)
 }
 
 static void
-_plugin_composite_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
+fu_test_plugin_composite_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	GPtrArray *devices = (GPtrArray *)user_data;
 	g_ptr_array_add(devices, g_object_ref(device));
@@ -4581,7 +4581,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* create CAB file */
-	blob = _build_cab(
+	blob = fu_test_build_cab(
 	    FALSE,
 	    "acme.metainfo.xml",
 	    "<component type=\"firmware\">\n"
@@ -4645,7 +4645,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 	devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	g_signal_connect(FU_PLUGIN(plugin),
 			 "device-added",
-			 G_CALLBACK(_plugin_composite_device_added_cb),
+			 G_CALLBACK(fu_test_plugin_composite_device_added_cb),
 			 devices);
 
 	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
@@ -5310,7 +5310,7 @@ fu_common_store_cab_func(void)
 	g_autoptr(XbQuery) query = NULL;
 
 	/* create silo */
-	blob = _build_cab(
+	blob = fu_test_build_cab(
 	    FALSE,
 	    "acme.metainfo.xml",
 	    "<component type=\"firmware\">\n"
@@ -5379,7 +5379,7 @@ fu_common_store_cab_artifact_func(void)
 	g_autoptr(FuCabinet) cabinet4 = fu_cabinet_new();
 
 	/* create silo (sha256, using artifacts object) */
-	blob1 = _build_cab(
+	blob1 = fu_test_build_cab(
 	    FALSE,
 	    "acme.metainfo.xml",
 	    "<component type=\"firmware\">\n"
@@ -5407,82 +5407,83 @@ fu_common_store_cab_artifact_func(void)
 	g_assert_true(ret);
 
 	/* create silo (sha1, using artifacts object; mixed case) */
-	blob2 = _build_cab(FALSE,
-			   "acme.metainfo.xml",
-			   "<component type=\"firmware\">\n"
-			   "  <id>com.acme.example.firmware</id>\n"
-			   "  <releases>\n"
-			   "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
-			   "      <artifacts>\n"
-			   "        <artifact type=\"source\">\n"
-			   "          <filename>firmware.dfu</filename>\n"
-			   "          <checksum "
-			   "type=\"sha1\">7c211433f02071597741e6ff5a8ea34789abbF43</"
-			   "checksum>\n"
-			   "        </artifact>\n"
-			   "      </artifacts>\n"
-			   "    </release>\n"
-			   "  </releases>\n"
-			   "</component>",
-			   "firmware.dfu",
-			   "world",
-			   "firmware.dfu.asc",
-			   "signature",
-			   NULL);
+	blob2 = fu_test_build_cab(FALSE,
+				  "acme.metainfo.xml",
+				  "<component type=\"firmware\">\n"
+				  "  <id>com.acme.example.firmware</id>\n"
+				  "  <releases>\n"
+				  "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+				  "      <artifacts>\n"
+				  "        <artifact type=\"source\">\n"
+				  "          <filename>firmware.dfu</filename>\n"
+				  "          <checksum "
+				  "type=\"sha1\">7c211433f02071597741e6ff5a8ea34789abbF43</"
+				  "checksum>\n"
+				  "        </artifact>\n"
+				  "      </artifacts>\n"
+				  "    </release>\n"
+				  "  </releases>\n"
+				  "</component>",
+				  "firmware.dfu",
+				  "world",
+				  "firmware.dfu.asc",
+				  "signature",
+				  NULL);
 	ret = fu_firmware_parse(FU_FIRMWARE(cabinet2), blob2, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* create silo (sha512, using artifacts object; lower case) */
-	blob3 =
-	    _build_cab(FALSE,
-		       "acme.metainfo.xml",
-		       "<component type=\"firmware\">\n"
-		       "  <id>com.acme.example.firmware</id>\n"
-		       "  <releases>\n"
-		       "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
-		       "      <artifacts>\n"
-		       "        <artifact type=\"source\">\n"
-		       "          <filename>firmware.dfu</filename>\n"
-		       "          <checksum "
-		       "type=\"sha512\">"
-		       "11853df40f4b2b919d3815f64792e58d08663767a494bcbb38c0b2389d9140bbb170281b"
-		       "4a847be7757bde12c9cd0054ce3652d0ad3a1a0c92babb69798246ee</"
-		       "checksum>\n"
-		       "        </artifact>\n"
-		       "      </artifacts>\n"
-		       "    </release>\n"
-		       "  </releases>\n"
-		       "</component>",
-		       "firmware.dfu",
-		       "world",
-		       "firmware.dfu.asc",
-		       "signature",
-		       NULL);
+	blob3 = fu_test_build_cab(
+	    FALSE,
+	    "acme.metainfo.xml",
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <releases>\n"
+	    "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+	    "      <artifacts>\n"
+	    "        <artifact type=\"source\">\n"
+	    "          <filename>firmware.dfu</filename>\n"
+	    "          <checksum "
+	    "type=\"sha512\">"
+	    "11853df40f4b2b919d3815f64792e58d08663767a494bcbb38c0b2389d9140bbb170281b"
+	    "4a847be7757bde12c9cd0054ce3652d0ad3a1a0c92babb69798246ee</"
+	    "checksum>\n"
+	    "        </artifact>\n"
+	    "      </artifacts>\n"
+	    "    </release>\n"
+	    "  </releases>\n"
+	    "</component>",
+	    "firmware.dfu",
+	    "world",
+	    "firmware.dfu.asc",
+	    "signature",
+	    NULL);
 	ret = fu_firmware_parse(FU_FIRMWARE(cabinet3), blob3, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* create silo (legacy release object) */
-	blob4 = _build_cab(FALSE,
-			   "acme.metainfo.xml",
-			   "<component type=\"firmware\">\n"
-			   "  <id>com.acme.example.firmware</id>\n"
-			   "  <releases>\n"
-			   "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
-			   "        <checksum "
-			   "target=\"content\" "
-			   "filename=\"firmware.dfu\">"
-			   "486EA46224D1BB4FB680F34F7C9AD96A8F24EC88BE73EA8E5A6C65260E9CB8A7</"
-			   "checksum>\n"
-			   "    </release>\n"
-			   "  </releases>\n"
-			   "</component>",
-			   "firmware.dfu",
-			   "world",
-			   "firmware.dfu.asc",
-			   "signature",
-			   NULL);
+	blob4 =
+	    fu_test_build_cab(FALSE,
+			      "acme.metainfo.xml",
+			      "<component type=\"firmware\">\n"
+			      "  <id>com.acme.example.firmware</id>\n"
+			      "  <releases>\n"
+			      "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+			      "        <checksum "
+			      "target=\"content\" "
+			      "filename=\"firmware.dfu\">"
+			      "486EA46224D1BB4FB680F34F7C9AD96A8F24EC88BE73EA8E5A6C65260E9CB8A7</"
+			      "checksum>\n"
+			      "    </release>\n"
+			      "  </releases>\n"
+			      "</component>",
+			      "firmware.dfu",
+			      "world",
+			      "firmware.dfu.asc",
+			      "signature",
+			      NULL);
 	ret = fu_firmware_parse(FU_FIRMWARE(cabinet4), blob4, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -5502,17 +5503,17 @@ fu_common_store_cab_unsigned_func(void)
 	g_autoptr(XbQuery) query = NULL;
 
 	/* create silo */
-	blob = _build_cab(FALSE,
-			  "acme.metainfo.xml",
-			  "<component type=\"firmware\">\n"
-			  "  <id>com.acme.example.firmware</id>\n"
-			  "  <releases>\n"
-			  "    <release version=\"1.2.3\"/>\n"
-			  "  </releases>\n"
-			  "</component>",
-			  "firmware.bin",
-			  "world",
-			  NULL);
+	blob = fu_test_build_cab(FALSE,
+				 "acme.metainfo.xml",
+				 "<component type=\"firmware\">\n"
+				 "  <id>com.acme.example.firmware</id>\n"
+				 "  <releases>\n"
+				 "    <release version=\"1.2.3\"/>\n"
+				 "  </releases>\n"
+				 "</component>",
+				 "firmware.bin",
+				 "world",
+				 NULL);
 	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -5546,7 +5547,7 @@ fu_common_store_cab_sha256_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* create silo */
-	blob = _build_cab(
+	blob = fu_test_build_cab(
 	    FALSE,
 	    "acme.metainfo.xml",
 	    "<component type=\"firmware\">\n"
@@ -5580,17 +5581,17 @@ fu_common_store_cab_folder_func(void)
 	g_autoptr(XbQuery) query = NULL;
 
 	/* create silo */
-	blob = _build_cab(FALSE,
-			  "lvfs\\acme.metainfo.xml",
-			  "<component type=\"firmware\">\n"
-			  "  <id>com.acme.example.firmware</id>\n"
-			  "  <releases>\n"
-			  "    <release version=\"1.2.3\"/>\n"
-			  "  </releases>\n"
-			  "</component>",
-			  "lvfs\\firmware.bin",
-			  "world",
-			  NULL);
+	blob = fu_test_build_cab(FALSE,
+				 "lvfs\\acme.metainfo.xml",
+				 "<component type=\"firmware\">\n"
+				 "  <id>com.acme.example.firmware</id>\n"
+				 "  <releases>\n"
+				 "    <release version=\"1.2.3\"/>\n"
+				 "  </releases>\n"
+				 "</component>",
+				 "lvfs\\firmware.bin",
+				 "world",
+				 NULL);
 	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -5621,7 +5622,7 @@ fu_common_store_cab_error_no_metadata_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	blob = _build_cab(FALSE, "foo.txt", "hello", "bar.txt", "world", NULL);
+	blob = fu_test_build_cab(FALSE, "foo.txt", "hello", "bar.txt", "world", NULL);
 	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
@@ -5635,21 +5636,21 @@ fu_common_store_cab_error_wrong_size_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	blob = _build_cab(FALSE,
-			  "acme.metainfo.xml",
-			  "<component type=\"firmware\">\n"
-			  "  <id>com.acme.example.firmware</id>\n"
-			  "  <releases>\n"
-			  "    <release version=\"1.2.3\">\n"
-			  "      <size type=\"installed\">7004701</size>\n"
-			  "      <checksum filename=\"firmware.bin\" target=\"content\" "
-			  "type=\"sha1\">deadbeef</checksum>\n"
-			  "    </release>\n"
-			  "  </releases>\n"
-			  "</component>",
-			  "firmware.bin",
-			  "world",
-			  NULL);
+	blob = fu_test_build_cab(FALSE,
+				 "acme.metainfo.xml",
+				 "<component type=\"firmware\">\n"
+				 "  <id>com.acme.example.firmware</id>\n"
+				 "  <releases>\n"
+				 "    <release version=\"1.2.3\">\n"
+				 "      <size type=\"installed\">7004701</size>\n"
+				 "      <checksum filename=\"firmware.bin\" target=\"content\" "
+				 "type=\"sha1\">deadbeef</checksum>\n"
+				 "    </release>\n"
+				 "  </releases>\n"
+				 "</component>",
+				 "firmware.bin",
+				 "world",
+				 NULL);
 	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
@@ -5663,19 +5664,19 @@ fu_common_store_cab_error_missing_file_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	blob = _build_cab(FALSE,
-			  "acme.metainfo.xml",
-			  "<component type=\"firmware\">\n"
-			  "  <id>com.acme.example.firmware</id>\n"
-			  "  <releases>\n"
-			  "    <release version=\"1.2.3\">\n"
-			  "      <checksum filename=\"firmware.dfu\" target=\"content\"/>\n"
-			  "    </release>\n"
-			  "  </releases>\n"
-			  "</component>",
-			  "firmware.bin",
-			  "world",
-			  NULL);
+	blob = fu_test_build_cab(FALSE,
+				 "acme.metainfo.xml",
+				 "<component type=\"firmware\">\n"
+				 "  <id>com.acme.example.firmware</id>\n"
+				 "  <releases>\n"
+				 "    <release version=\"1.2.3\">\n"
+				 "      <checksum filename=\"firmware.dfu\" target=\"content\"/>\n"
+				 "    </release>\n"
+				 "  </releases>\n"
+				 "</component>",
+				 "firmware.bin",
+				 "world",
+				 NULL);
 	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
@@ -5689,17 +5690,17 @@ fu_common_store_cab_error_size_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	blob = _build_cab(FALSE,
-			  "acme.metainfo.xml",
-			  "<component type=\"firmware\">\n"
-			  "  <id>com.acme.example.firmware</id>\n"
-			  "  <releases>\n"
-			  "    <release version=\"1.2.3\"/>\n"
-			  "  </releases>\n"
-			  "</component>",
-			  "firmware.bin",
-			  "world",
-			  NULL);
+	blob = fu_test_build_cab(FALSE,
+				 "acme.metainfo.xml",
+				 "<component type=\"firmware\">\n"
+				 "  <id>com.acme.example.firmware</id>\n"
+				 "  <releases>\n"
+				 "    <release version=\"1.2.3\"/>\n"
+				 "  </releases>\n"
+				 "</component>",
+				 "firmware.bin",
+				 "world",
+				 NULL);
 	fu_firmware_set_size_max(FU_FIRMWARE(cabinet), 123);
 	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
@@ -5714,20 +5715,20 @@ fu_common_store_cab_error_wrong_checksum_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	blob = _build_cab(FALSE,
-			  "acme.metainfo.xml",
-			  "<component type=\"firmware\">\n"
-			  "  <id>com.acme.example.firmware</id>\n"
-			  "  <releases>\n"
-			  "    <release version=\"1.2.3\">\n"
-			  "      <checksum filename=\"firmware.bin\" target=\"content\" "
-			  "type=\"sha1\">deadbeef</checksum>\n"
-			  "    </release>\n"
-			  "  </releases>\n"
-			  "</component>",
-			  "firmware.bin",
-			  "world",
-			  NULL);
+	blob = fu_test_build_cab(FALSE,
+				 "acme.metainfo.xml",
+				 "<component type=\"firmware\">\n"
+				 "  <id>com.acme.example.firmware</id>\n"
+				 "  <releases>\n"
+				 "    <release version=\"1.2.3\">\n"
+				 "      <checksum filename=\"firmware.bin\" target=\"content\" "
+				 "type=\"sha1\">deadbeef</checksum>\n"
+				 "    </release>\n"
+				 "  </releases>\n"
+				 "</component>",
+				 "firmware.bin",
+				 "world",
+				 NULL);
 	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
@@ -5973,7 +5974,7 @@ fu_remote_download_func(void)
 	expected_signature = g_strdup_printf("%s.jcat", expected_metadata);
 	fwupd_remote_set_remotes_dir(remote, directory);
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "remotes2.d", "lvfs-testing.conf", NULL);
-	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
+	ret = fu_remote_load_from_filename(remote, fn, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fwupd_remote_setup(remote, &error);
@@ -6011,7 +6012,7 @@ fu_remote_auth_func(void)
 	fwupd_remote_set_remotes_dir(remote, remotes_dir);
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "auth.conf", NULL);
-	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
+	ret = fu_remote_load_from_filename(remote, fn, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpstr(fwupd_remote_get_username(remote), ==, "user");
@@ -6110,11 +6111,11 @@ fu_remote_duplicate_func(void)
 	g_autoptr(GError) error = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "stable.conf", NULL);
-	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
+	ret = fu_remote_load_from_filename(remote, fn, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	fn2 = g_test_build_filename(G_TEST_DIST, "tests", "disabled.conf", NULL);
-	ret = fwupd_remote_load_from_filename(remote, fn2, NULL, &error);
+	ret = fu_remote_load_from_filename(remote, fn2, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fwupd_remote_setup(remote, &error);
@@ -6146,7 +6147,7 @@ fu_remote_nopath_func(void)
 	directory = g_build_filename(FWUPD_LOCALSTATEDIR, "lib", "fwupd", "remotes2.d", NULL);
 	fwupd_remote_set_remotes_dir(remote, directory);
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "firmware-nopath.conf", NULL);
-	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
+	ret = fu_remote_load_from_filename(remote, fn, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
@@ -6179,7 +6180,7 @@ fu_remote_local_func(void)
 
 	remote = fwupd_remote_new();
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "dell-esrt.conf", NULL);
-	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
+	ret = fu_remote_load_from_filename(remote, fn, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_LOCAL);

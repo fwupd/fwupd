@@ -41,7 +41,7 @@ fu_unix_seekable_input_stream_can_seek(GSeekable *seekable)
 
 /* from glocalfileinputstream.c */
 static int
-_seek_type_to_lseek(GSeekType type)
+fu_unix_seekable_input_stream_seek_type_to_lseek(GSeekType type)
 {
 	switch (type) {
 	default:
@@ -69,7 +69,7 @@ fu_unix_seekable_input_stream_seek(GSeekable *seekable,
 
 	rc = lseek(g_unix_input_stream_get_fd(G_UNIX_INPUT_STREAM(self)),
 		   offset,
-		   _seek_type_to_lseek(type));
+		   fu_unix_seekable_input_stream_seek_type_to_lseek(type));
 	if (rc < 0) {
 		g_set_error(error,
 			    G_IO_ERROR, /* nocheck:error */

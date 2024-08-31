@@ -123,7 +123,7 @@ const struct {
 };
 
 static guint8
-_reflect8(guint8 data)
+fu_crc_reflect8(guint8 data)
 {
 	guint8 val = 0;
 	for (guint8 bit = 0; bit < 8; bit++) {
@@ -135,7 +135,7 @@ _reflect8(guint8 data)
 }
 
 static guint32
-_reflect32(guint32 data)
+fu_crc_reflect32(guint32 data)
 {
 	guint32 val = 0;
 	for (guint8 bit = 0; bit < 32; bit++) {
@@ -167,7 +167,7 @@ fu_crc32_step(FuCrc32Kind kind, const guint8 *buf, gsize bufsz, guint32 crc)
 	g_return_val_if_fail(kind < FU_CRC32_KIND_LAST, 0x0);
 
 	for (gsize i = 0; i < bufsz; ++i) {
-		guint32 tmp = crc32_map[kind].reflected ? _reflect8(buf[i]) : buf[i];
+		guint32 tmp = crc32_map[kind].reflected ? fu_crc_reflect8(buf[i]) : buf[i];
 		crc ^= tmp << 24;
 		for (guint8 bit = 0; bit < 8; bit++) {
 			if (crc & (1ul << 31)) {
@@ -195,7 +195,7 @@ guint32
 fu_crc32_done(FuCrc32Kind kind, guint32 crc)
 {
 	g_return_val_if_fail(kind < FU_CRC32_KIND_LAST, 0x0);
-	crc = crc32_map[kind].reflected ? _reflect32(crc) : crc;
+	crc = crc32_map[kind].reflected ? fu_crc_reflect32(crc) : crc;
 	if (crc32_map[kind].inverted)
 		crc ^= 0xFFFFFFFF;
 	return crc;

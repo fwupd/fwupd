@@ -86,7 +86,7 @@ Remember: Plugins should be upstream!
 * `fu_common_cpuid()`: Use `fu_cpuid` instead.
 * `fu_common_get_cpu_vendor()`: Use `fu_cpu_get_vendor` instead.
 * `fu_common_vercmp_full()`: Use `fu_version_compare()` instead.
-* `fu_common_version_ensure_semver()`: Use `fu_version_ensure_semver()` instead.
+* `fu_version_ensure_semver()`: Use `fu_version_ensure_semver()` instead.
 * `fu_common_version_from_uint*()`: Use `fu_version_from_uint*()` instead.
 * `fu_common_strtoull()`: Use `fu_strtoull()` instead -- as the latter always specifies the error.
 * `fu_smbios_to_string()`: Use `fu_firmware_to_string()` instead -- as `FuSmbios` is a `FuFirmware` superclass.

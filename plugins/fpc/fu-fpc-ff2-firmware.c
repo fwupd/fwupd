@@ -26,7 +26,10 @@ fu_fpc_ff2_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, Xb
 }
 
 static gboolean
-fu_fpc_ff2_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_fpc_ff2_firmware_validate(FuFirmware *firmware,
+			     GInputStream *stream,
+			     gsize offset,
+			     GError **error)
 {
 	return fu_struct_fpc_ff2_hdr_validate_stream(stream, offset, error);
 }
@@ -66,7 +69,7 @@ static void
 fu_fpc_ff2_firmware_class_init(FuFpcFf2FirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
-	firmware_class->validate = fu_fpc_ff2_validate;
+	firmware_class->validate = fu_fpc_ff2_firmware_validate;
 	firmware_class->parse = fu_fpc_ff2_firmware_parse;
 	firmware_class->export = fu_fpc_ff2_firmware_export;
 }

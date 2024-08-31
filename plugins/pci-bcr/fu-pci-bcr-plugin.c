@@ -65,7 +65,7 @@ fu_pci_bcr_plugin_device_registered(FuPlugin *plugin, FuDevice *dev)
 }
 
 static void
-fu_plugin_add_security_attr_bioswe(FuPlugin *plugin, FuSecurityAttrs *attrs)
+fu_pci_bcr_plugin_add_security_attr_bioswe(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPciBcrPlugin *self = FU_PCI_BCR_PLUGIN(plugin);
 	FuDevice *msf_device = fu_plugin_cache_lookup(plugin, "main-system-firmware");
@@ -96,7 +96,7 @@ fu_plugin_add_security_attr_bioswe(FuPlugin *plugin, FuSecurityAttrs *attrs)
 }
 
 static void
-fu_plugin_add_security_attr_ble(FuPlugin *plugin, FuSecurityAttrs *attrs)
+fu_pci_bcr_plugin_add_security_attr_ble(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPciBcrPlugin *self = FU_PCI_BCR_PLUGIN(plugin);
 	FuDevice *msf_device = fu_plugin_cache_lookup(plugin, "main-system-firmware");
@@ -126,7 +126,7 @@ fu_plugin_add_security_attr_ble(FuPlugin *plugin, FuSecurityAttrs *attrs)
 }
 
 static void
-fu_plugin_add_security_attr_smm_bwp(FuPlugin *plugin, FuSecurityAttrs *attrs)
+fu_pci_bcr_plugin_add_security_attr_smm_bwp(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPciBcrPlugin *self = FU_PCI_BCR_PLUGIN(plugin);
 	FuDevice *msf_device = fu_plugin_cache_lookup(plugin, "main-system-firmware");
@@ -216,9 +216,9 @@ fu_pci_bcr_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 		return;
 
 	/* add attrs */
-	fu_plugin_add_security_attr_bioswe(plugin, attrs);
-	fu_plugin_add_security_attr_ble(plugin, attrs);
-	fu_plugin_add_security_attr_smm_bwp(plugin, attrs);
+	fu_pci_bcr_plugin_add_security_attr_bioswe(plugin, attrs);
+	fu_pci_bcr_plugin_add_security_attr_ble(plugin, attrs);
+	fu_pci_bcr_plugin_add_security_attr_smm_bwp(plugin, attrs);
 }
 
 static void

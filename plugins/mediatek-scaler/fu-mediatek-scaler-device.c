@@ -819,7 +819,7 @@ fu_mediatek_scaler_device_prepare_firmware(FuDevice *device,
 static gchar *
 fu_mediatek_scaler_device_convert_version(FuDevice *self, guint64 version_raw)
 {
-	return mediatek_scaler_device_version_to_string(version_raw);
+	return fu_mediatek_scaler_version_to_string(version_raw);
 }
 
 static void

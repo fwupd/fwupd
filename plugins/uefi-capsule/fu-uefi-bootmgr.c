@@ -97,10 +97,10 @@ fu_uefi_bootmgr_verify_fwupd(FuEfivars *efivars, GError **error)
 }
 
 static gboolean
-fu_uefi_setup_bootnext_with_loadopt(FuEfivars *efivars,
-				    FuEfiLoadOption *loadopt,
-				    FuUefiBootmgrFlags flags,
-				    GError **error)
+fu_uefi_bootmgr_setup_bootnext_with_loadopt(FuEfivars *efivars,
+					    FuEfiLoadOption *loadopt,
+					    FuUefiBootmgrFlags flags,
+					    GError **error)
 {
 	const gchar *name = NULL;
 	guint16 boot_next = G_MAXUINT16;
@@ -437,5 +437,5 @@ fu_uefi_bootmgr_bootnext(FuEfivars *efivars,
 	fu_firmware_set_id(FU_FIRMWARE(loadopt), description);
 
 	/* save as BootNext */
-	return fu_uefi_setup_bootnext_with_loadopt(efivars, loadopt, flags, error);
+	return fu_uefi_bootmgr_setup_bootnext_with_loadopt(efivars, loadopt, flags, error);
 }

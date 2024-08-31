@@ -203,7 +203,7 @@ fu_amd_gpu_device_prepare_firmware(FuDevice *device,
 	if (csm == NULL)
 		return NULL;
 
-	fw_pn = fu_amd_gpu_atom_get_vbios_pn(csm);
+	fw_pn = fu_amd_gpu_atom_firmware_get_vbios_pn(csm);
 	if (g_strcmp0(fw_pn, self->vbios_pn) != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,

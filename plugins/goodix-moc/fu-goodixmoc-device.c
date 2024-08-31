@@ -26,12 +26,12 @@ G_DEFINE_TYPE(FuGoodixMocDevice, fu_goodixmoc_device, FU_TYPE_USB_DEVICE)
 #define GX_FLASH_TRANSFER_BLOCK_SIZE 1000 /* 1000 */
 
 static gboolean
-goodixmoc_device_cmd_send(FuGoodixMocDevice *self,
-			  guint8 cmd0,
-			  guint8 cmd1,
-			  GxPkgType type,
-			  GByteArray *req,
-			  GError **error)
+fu_goodixmoc_device_cmd_send(FuGoodixMocDevice *self,
+			     guint8 cmd0,
+			     guint8 cmd1,
+			     GxPkgType type,
+			     GByteArray *req,
+			     GError **error)
 {
 	guint32 crc_all = 0;
 	guint32 crc_hdr = 0;
@@ -87,10 +87,10 @@ goodixmoc_device_cmd_send(FuGoodixMocDevice *self,
 }
 
 static gboolean
-goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
-			  GxfpCmdResp *presponse,
-			  gboolean data_reply,
-			  GError **error)
+fu_goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
+			     GxfpCmdResp *presponse,
+			     gboolean data_reply,
+			     GError **error)
 {
 	guint32 crc_actual = 0;
 	guint32 crc_calculated = 0;
@@ -213,9 +213,9 @@ fu_goodixmoc_device_cmd_xfer(FuGoodixMocDevice *device,
 			     GError **error)
 {
 	FuGoodixMocDevice *self = FU_GOODIXMOC_DEVICE(device);
-	if (!goodixmoc_device_cmd_send(self, cmd0, cmd1, type, req, error))
+	if (!fu_goodixmoc_device_cmd_send(self, cmd0, cmd1, type, req, error))
 		return FALSE;
-	return goodixmoc_device_cmd_recv(self, presponse, data_reply, error);
+	return fu_goodixmoc_device_cmd_recv(self, presponse, data_reply, error);
 }
 
 static gboolean

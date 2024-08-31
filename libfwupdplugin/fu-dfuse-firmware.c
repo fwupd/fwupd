@@ -165,7 +165,7 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 }
 
 static GBytes *
-fu_firmware_chunk_write(FuDfuseFirmware *self, FuChunk *chk)
+fu_dfuse_firmware_chunk_write(FuDfuseFirmware *self, FuChunk *chk)
 {
 	g_autoptr(GByteArray) st_ele = fu_struct_dfuse_element_new();
 	fu_struct_dfuse_element_set_address(st_ele, fu_chunk_get_address(chk));
@@ -189,7 +189,7 @@ fu_dfuse_firmware_write_image(FuDfuseFirmware *self, FuFirmware *image, GError *
 		return NULL;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		GBytes *bytes = fu_firmware_chunk_write(self, chk);
+		GBytes *bytes = fu_dfuse_firmware_chunk_write(self, chk);
 		g_ptr_array_add(blobs, bytes);
 		totalsz += g_bytes_get_size(bytes);
 	}

@@ -11,8 +11,8 @@
 
 #include "config.h"
 
+#include "fu-amd-kria-persistent-firmware.h"
 #include "fu-amd-kria-persistent-struct.h"
-#include "fu-amd-kria-persistent-reg.h"
 
 struct _FuAmdKriaPersistentFirmware {
 	FuFirmwareClass parent_instance;
@@ -40,7 +40,7 @@ fu_amd_kria_persistent_firmware_parse(FuFirmware *firmware,
 }
 
 gboolean
-fu_amd_kria_persistent_booted_image_a(FuAmdKriaPersistentFirmware *self)
+fu_amd_kria_persistent_firmware_booted_image_a(FuAmdKriaPersistentFirmware *self)
 {
 	return self->last_booted == BOOT_IMAGE_ID_A;
 }

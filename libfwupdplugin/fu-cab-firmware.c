@@ -159,13 +159,13 @@ fu_cab_firmware_compute_checksum_stream_cb(const guint8 *buf,
 }
 
 static voidpf
-zalloc(voidpf opaque, uInt items, uInt size)
+fu_cab_firmware_zalloc(voidpf opaque, uInt items, uInt size)
 {
 	return g_malloc0_n(items, size);
 }
 
 static void
-zfree(voidpf opaque, voidpf address)
+fu_cab_firmware_zfree(voidpf opaque, voidpf address)
 {
 	g_free(address);
 }
@@ -173,12 +173,12 @@ zfree(voidpf opaque, voidpf address)
 typedef z_stream z_stream_deflater;
 
 static void
-zstream_deflater_free(z_stream_deflater *zstrm)
+fu_cab_firmware_zstream_deflater_free(z_stream_deflater *zstrm)
 {
 	deflateEnd(zstrm);
 }
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(z_stream_deflater, zstream_deflater_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(z_stream_deflater, fu_cab_firmware_zstream_deflater_free)
 
 static gboolean
 fu_cab_firmware_parse_data(FuCabFirmware *self,
@@ -497,8 +497,8 @@ fu_cab_firmware_parse_helper_new(GInputStream *stream, FwupdInstallFlags flags, 
 	g_autoptr(FuCabFirmwareParseHelper) helper = g_new0(FuCabFirmwareParseHelper, 1);
 
 	/* zlib */
-	helper->zstrm.zalloc = zalloc;
-	helper->zstrm.zfree = zfree;
+	helper->zstrm.zalloc = fu_cab_firmware_zalloc;
+	helper->zstrm.zfree = fu_cab_firmware_zfree;
 	zret = inflateInit2(&helper->zstrm, -MAX_WBITS);
 	if (zret != Z_OK) {
 		g_set_error(error,
@@ -694,8 +694,8 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		if (priv->compressed) {
 			int zret;
 			z_stream zstrm = {
-			    .zalloc = zalloc,
-			    .zfree = zfree,
+			    .zalloc = fu_cab_firmware_zalloc,
+			    .zfree = fu_cab_firmware_zfree,
 			    .opaque = Z_NULL,
 			    .next_in = (guint8 *)fu_chunk_get_data(chk),
 			    .avail_in = fu_chunk_get_data_sz(chk),

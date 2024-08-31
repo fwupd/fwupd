@@ -146,34 +146,34 @@ fu_archive_iterate(FuArchive *self,
 typedef struct archive _archive_read_ctx;
 
 static void
-_archive_read_ctx_free(_archive_read_ctx *arch)
+fu_archive_read_ctx_free(_archive_read_ctx *arch)
 {
 	archive_read_close(arch);
 	archive_read_free(arch);
 }
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(_archive_read_ctx, _archive_read_ctx_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(_archive_read_ctx, fu_archive_read_ctx_free)
 
 typedef struct archive _archive_write_ctx;
 
 static void
-_archive_write_ctx_free(_archive_write_ctx *arch)
+fu_archive_write_ctx_free(_archive_write_ctx *arch)
 {
 	archive_write_close(arch);
 	archive_write_free(arch);
 }
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(_archive_write_ctx, _archive_write_ctx_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(_archive_write_ctx, fu_archive_write_ctx_free)
 
 typedef struct archive_entry _archive_entry_ctx;
 
 static void
-_archive_entry_ctx_free(_archive_entry_ctx *entry)
+fu_archive_entry_ctx_free(_archive_entry_ctx *entry)
 {
 	archive_entry_free(entry);
 }
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(_archive_entry_ctx, _archive_entry_ctx_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(_archive_entry_ctx, fu_archive_entry_ctx_free)
 
 static void
 fu_archive_set_format(_archive_write_ctx *arch, FuArchiveFormat format)

@@ -197,7 +197,7 @@ fu_linux_lockdown_plugin_init(FuLinuxLockdownPlugin *self)
 }
 
 static void
-fu_linux_lockdown_finalize(GObject *obj)
+fu_linux_lockdown_plugin_finalize(GObject *obj)
 {
 	FuLinuxLockdownPlugin *self = FU_LINUX_LOCKDOWN_PLUGIN(obj);
 	if (self->file != NULL)
@@ -231,7 +231,7 @@ fu_linux_lockdown_plugin_class_init(FuLinuxLockdownPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->finalize = fu_linux_lockdown_finalize;
+	object_class->finalize = fu_linux_lockdown_plugin_finalize;
 	plugin_class->to_string = fu_linux_lockdown_plugin_to_string;
 	plugin_class->startup = fu_linux_lockdown_plugin_startup;
 	plugin_class->add_security_attrs = fu_linux_lockdown_plugin_add_security_attrs;

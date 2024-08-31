@@ -29,7 +29,7 @@ G_DEFINE_TYPE(FuUsbDeviceMsDs20, fu_usb_device_ms_ds20, FU_TYPE_USB_DEVICE_DS20)
 #define USB_OS_20_FEATURE_VENDOR_REVISION     0x08
 
 static const gchar *
-fu_usb_device_os20_type_to_string(guint16 type)
+fu_usb_device_ms_ds20_type_to_string(guint16 type)
 {
 	if (type == USB_OS_20_SET_HEADER_DESCRIPTOR)
 		return "set-header-descriptor";
@@ -77,7 +77,7 @@ fu_usb_device_ms_ds20_parse(FuUsbDeviceDs20 *self,
 		desc_type = fu_struct_ms_ds20_get_type(st);
 		g_debug("USB OS descriptor type 0x%04x [%s], length 0x%04x",
 			desc_type,
-			fu_usb_device_os20_type_to_string(desc_type),
+			fu_usb_device_ms_ds20_type_to_string(desc_type),
 			desc_sz);
 		offset += desc_sz;
 	}

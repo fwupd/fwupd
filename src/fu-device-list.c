@@ -620,7 +620,7 @@ fu_device_list_clear_wait_for_replug(FuDeviceList *self, FuDeviceItem *item)
 }
 
 static void
-fu_device_incorporate_problem_update_in_progress(FuDevice *self, FuDevice *donor)
+_fu_device_incorporate_problem_update_in_progress(FuDevice *self, FuDevice *donor)
 {
 	if (fu_device_has_problem(donor, FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS)) {
 		g_info("moving inhibit update-in-progress to active device");
@@ -630,7 +630,7 @@ fu_device_incorporate_problem_update_in_progress(FuDevice *self, FuDevice *donor
 }
 
 static void
-fu_device_incorporate_update_state(FuDevice *self, FuDevice *donor)
+_fu_device_incorporate_update_state(FuDevice *self, FuDevice *donor)
 {
 	if (fu_device_get_update_error(donor) != NULL && fu_device_get_update_error(self) == NULL) {
 		const gchar *update_error = fu_device_get_update_error(donor);
@@ -668,7 +668,7 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 	}
 
 	/* copy inhibit */
-	fu_device_incorporate_problem_update_in_progress(item->device, device);
+	_fu_device_incorporate_problem_update_in_progress(item->device, device);
 
 	/* copy over the version strings if not set */
 	if (fu_device_get_version(item->device) != NULL && fu_device_get_version(device) == NULL) {
@@ -724,7 +724,7 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 	}
 
 	/* copy the update state if known */
-	fu_device_incorporate_update_state(item->device, device);
+	_fu_device_incorporate_update_state(item->device, device);
 
 	/* assign the new device */
 	g_set_object(&item->device_old, item->device);
@@ -785,8 +785,8 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 			g_info("found old device %s, swapping", fu_device_get_id(device));
 			fu_device_remove_private_flag(item->device,
 						      FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
-			fu_device_incorporate_problem_update_in_progress(device, item->device);
-			fu_device_incorporate_update_state(device, item->device);
+			_fu_device_incorporate_problem_update_in_progress(device, item->device);
+			_fu_device_incorporate_update_state(device, item->device);
 			g_set_object(&item->device_old, item->device);
 			fu_device_list_item_set_device(item, device);
 			fu_device_list_clear_wait_for_replug(self, item);

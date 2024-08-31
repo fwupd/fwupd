@@ -11,10 +11,10 @@
 
 #include "config.h"
 
-#include "fu-amd-kria-plugin.h"
 #include "fu-amd-kria-device.h"
-#include "fu-amd-kria-image-reg.h"
-#include "fu-amd-kria-persistent-reg.h"
+#include "fu-amd-kria-image-firmware.h"
+#include "fu-amd-kria-persistent-firmware.h"
+#include "fu-amd-kria-plugin.h"
 #include "fu-amd-kria-som-eeprom.h"
 
 struct _FuAmdKriaPlugin {
@@ -67,7 +67,8 @@ fu_amd_kria_plugin_process_persistent(FuPlugin *plugin, FuDevice *dev, GError **
 	if (!fu_firmware_parse(firmware, bytes, FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
 
-	if (fu_amd_kria_persistent_booted_image_a(FU_AMD_KRIA_PERSISTENT_FIRMWARE(firmware)))
+	if (fu_amd_kria_persistent_firmware_booted_image_a(
+		FU_AMD_KRIA_PERSISTENT_FIRMWARE(firmware)))
 		self->active = "A";
 	else
 		self->active = "B";

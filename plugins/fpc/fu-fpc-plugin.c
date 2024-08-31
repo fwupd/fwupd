@@ -22,7 +22,7 @@ fu_fpc_plugin_init(FuFpcPlugin *self)
 }
 
 static void
-fu_fpc_constructed(GObject *obj)
+fu_fpc_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_FPC_DEVICE);
@@ -33,5 +33,5 @@ static void
 fu_fpc_plugin_class_init(FuFpcPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	plugin_class->constructed = fu_fpc_constructed;
+	plugin_class->constructed = fu_fpc_plugin_constructed;
 }

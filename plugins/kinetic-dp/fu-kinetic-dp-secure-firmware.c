@@ -138,9 +138,9 @@ fu_kinetic_dp_secure_firmware_get_esm_xip_enabled(FuKineticDpSecureFirmware *sel
 }
 
 static gboolean
-fu_kinetic_dp_secure_device_parse_app_fw(FuKineticDpSecureFirmware *self,
-					 GInputStream *stream,
-					 GError **error)
+fu_kinetic_dp_secure_firmware_parse_app_fw(FuKineticDpSecureFirmware *self,
+					   GInputStream *stream,
+					   GError **error)
 {
 	FuKineticDpSecureFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize streamsz = 0;
@@ -248,7 +248,7 @@ fu_kinetic_dp_secure_firmware_parse(FuFirmware *firmware,
 							 &priv->esm_xip_enabled,
 							 error))
 		return FALSE;
-	if (!fu_kinetic_dp_secure_device_parse_app_fw(self, stream, error)) {
+	if (!fu_kinetic_dp_secure_firmware_parse_app_fw(self, stream, error)) {
 		g_prefix_error(error, "failed to parse info from Jaguar or Mustang App firmware: ");
 		return FALSE;
 	}

@@ -352,7 +352,7 @@ typedef struct {
 } FuPefileSection;
 
 static void
-fu_pefile_section_free(FuPefileSection *section)
+fu_pefile_firmware_section_free(FuPefileSection *section)
 {
 	if (section->blob != NULL)
 		g_bytes_unref(section->blob);
@@ -370,7 +370,7 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GByteArray) st_opt = fu_struct_pe_coff_optional_header64_new();
 	g_autoptr(GByteArray) strtab = g_byte_array_new();
 	g_autoptr(GPtrArray) sections =
-	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_pefile_section_free);
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_pefile_firmware_section_free);
 
 	/* calculate the offset for each of the sections */
 	offset += st->len + st_hdr->len + st_opt->len;

@@ -1501,7 +1501,7 @@ fu_plugin_set_device_gtype_default(FuPlugin *self, GType device_gtype)
 }
 
 static gchar *
-fu_common_string_uncamelcase(const gchar *str)
+fu_plugin_string_uncamelcase(const gchar *str)
 {
 	GString *tmp = g_string_new(NULL);
 	for (guint i = 0; str[i] != '\0'; i++) {
@@ -1623,7 +1623,7 @@ fu_plugin_add_firmware_gtype(FuPlugin *self, const gchar *id, GType gtype)
 		if (g_str_has_prefix(str->str, "Fu"))
 			g_string_erase(str, 0, 2);
 		g_string_replace(str, "Firmware", "", 1);
-		id_safe = fu_common_string_uncamelcase(str->str);
+		id_safe = fu_plugin_string_uncamelcase(str->str);
 	}
 	fu_context_add_firmware_gtype(priv->ctx, id_safe, gtype);
 }

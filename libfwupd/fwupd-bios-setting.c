@@ -339,7 +339,7 @@ fwupd_bios_setting_set_description(FwupdBiosSetting *self, const gchar *descript
 
 /* determine if key is supposed to be positive */
 static gboolean
-fu_bios_setting_key_is_positive(const gchar *key)
+fwupd_bios_setting_key_is_positive(const gchar *key)
 {
 	if (g_strrstr(key, "enable"))
 		return TRUE;
@@ -354,7 +354,7 @@ fu_bios_setting_key_is_positive(const gchar *key)
 
 /* determine if key is supposed to be negative */
 static gboolean
-fu_bios_setting_key_is_negative(const gchar *key)
+fwupd_bios_setting_key_is_negative(const gchar *key)
 {
 	if (g_strrstr(key, "disable"))
 		return TRUE;
@@ -404,8 +404,8 @@ fwupd_bios_setting_map_possible_value(FwupdBiosSetting *self, const gchar *key, 
 	}
 
 	lower_key = g_utf8_strdown(key, -1);
-	positive_key = fu_bios_setting_key_is_positive(lower_key);
-	negative_key = fu_bios_setting_key_is_negative(lower_key);
+	positive_key = fwupd_bios_setting_key_is_positive(lower_key);
+	negative_key = fwupd_bios_setting_key_is_negative(lower_key);
 	for (guint i = 0; i < priv->possible_values->len; i++) {
 		const gchar *possible = g_ptr_array_index(priv->possible_values, i);
 		g_autofree gchar *lower_possible = g_utf8_strdown(possible, -1);
@@ -416,8 +416,8 @@ fwupd_bios_setting_map_possible_value(FwupdBiosSetting *self, const gchar *key, 
 		if (g_strcmp0(lower_possible, lower_key) == 0)
 			return possible;
 		/* fuzzy match */
-		positive_possible = fu_bios_setting_key_is_positive(lower_possible);
-		negative_possible = fu_bios_setting_key_is_negative(lower_possible);
+		positive_possible = fwupd_bios_setting_key_is_positive(lower_possible);
+		negative_possible = fwupd_bios_setting_key_is_negative(lower_possible);
 		if ((positive_possible && positive_key) || (negative_possible && negative_key))
 			return possible;
 	}

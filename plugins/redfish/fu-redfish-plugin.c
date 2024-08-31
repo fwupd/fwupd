@@ -46,7 +46,7 @@ fu_redfish_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 }
 
 static gchar *
-fu_common_generate_password(guint length)
+fu_redfish_plugin_generate_password(guint length)
 {
 	GString *str = g_string_sized_new(length);
 
@@ -63,7 +63,7 @@ static gboolean
 fu_redfish_plugin_change_expired(FuPlugin *plugin, GError **error)
 {
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
-	g_autofree gchar *password_new = fu_common_generate_password(15);
+	g_autofree gchar *password_new = fu_redfish_plugin_generate_password(15);
 	g_autofree gchar *uri = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(JsonBuilder) builder = json_builder_new();
@@ -314,8 +314,8 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
 	const gchar *username_fwupd = "fwupd";
 	guint8 user_id = G_MAXUINT8;
-	g_autofree gchar *password_new = fu_common_generate_password(15);
-	g_autofree gchar *password_tmp = fu_common_generate_password(15);
+	g_autofree gchar *password_new = fu_redfish_plugin_generate_password(15);
+	g_autofree gchar *password_tmp = fu_redfish_plugin_generate_password(15);
 	g_autofree gchar *uri = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuIpmiDevice) device = fu_ipmi_device_new(fu_plugin_get_context(plugin));
@@ -361,9 +361,7 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	/* OEM specific for Advantech manufacture */
 	if (fu_context_has_hwid_guid(fu_plugin_get_context(plugin),
 				     "18789130-a714-53c0-b025-fa93801d3995")) {
-		if (!fu_redfish_device_set_user_group_redfish_enable_advantech(device,
-									       user_id,
-									       error))
+		if (!fu_ipmi_device_set_user_group_redfish_enable_advantech(device, user_id, error))
 			return FALSE;
 	}
 	fu_redfish_backend_set_username(self->backend, username_fwupd);
@@ -709,7 +707,7 @@ fu_redfish_plugin_constructed(GObject *obj)
 }
 
 static void
-fu_redfish_finalize(GObject *obj)
+fu_redfish_plugin_finalize(GObject *obj)
 {
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(obj);
 	if (self->smbios != NULL)
@@ -725,7 +723,7 @@ fu_redfish_plugin_class_init(FuRedfishPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->finalize = fu_redfish_finalize;
+	object_class->finalize = fu_redfish_plugin_finalize;
 	plugin_class->constructed = fu_redfish_plugin_constructed;
 	plugin_class->to_string = fu_redfish_plugin_to_string;
 	plugin_class->startup = fu_redfish_plugin_startup;

@@ -25,7 +25,7 @@ enum FuLidState {
     Closed,
 }
 
-#[derive(ToString)]
+#[derive(ToString, FromString)]
 enum FuDisplayState {
     Unknown,
     Connected,

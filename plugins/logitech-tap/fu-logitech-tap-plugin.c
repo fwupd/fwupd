@@ -80,7 +80,7 @@ fu_logitech_tap_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 }
 
 static void
-fu_logitech_tap_finalize(GObject *obj)
+fu_logitech_tap_plugin_finalize(GObject *obj)
 {
 	FuLogitechTapPlugin *self = FU_LOGITECH_TAP_PLUGIN(obj);
 	if (self->hdmi_device != NULL)
@@ -96,7 +96,7 @@ fu_logitech_tap_plugin_class_init(FuLogitechTapPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->finalize = fu_logitech_tap_finalize;
+	object_class->finalize = fu_logitech_tap_plugin_finalize;
 	plugin_class->constructed = fu_logitech_tap_plugin_constructed;
 	plugin_class->device_registered = fu_logitech_tap_plugin_device_registered;
 	plugin_class->composite_cleanup = fu_logitech_tap_plugin_composite_cleanup;

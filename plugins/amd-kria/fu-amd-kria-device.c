@@ -173,11 +173,18 @@ fu_amd_kria_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* build instance IDs from EEPROM data */
-	fu_device_set_vendor(device, fu_amd_kria_som_get_manufacturer(FU_AMD_KRIA_SOM_EEPROM(firmware)));
+	fu_device_set_vendor(
+	    device,
+	    fu_amd_kria_som_eeprom_get_manufacturer(FU_AMD_KRIA_SOM_EEPROM(firmware)));
 	fu_device_build_vendor_id(device, "DMI", fu_device_get_vendor(device));
 	fu_device_add_instance_str(device, "VENDOR", fu_device_get_vendor(device));
-	fu_device_add_instance_str(device, "PRODUCT", fu_amd_kria_som_get_product_name(FU_AMD_KRIA_SOM_EEPROM(firmware)));
-	fu_device_set_serial(device, fu_amd_kria_som_get_serial_number(FU_AMD_KRIA_SOM_EEPROM(firmware)));
+	fu_device_add_instance_str(
+	    device,
+	    "PRODUCT",
+	    fu_amd_kria_som_eeprom_get_product_name(FU_AMD_KRIA_SOM_EEPROM(firmware)));
+	fu_device_set_serial(
+	    device,
+	    fu_amd_kria_som_eeprom_get_serial_number(FU_AMD_KRIA_SOM_EEPROM(firmware)));
 	if (!fu_device_build_instance_id(device, error, "UEFI", "VENDOR", NULL))
 		return FALSE;
 	if (!fu_device_build_instance_id(device, error, "UEFI", "VENDOR", "PRODUCT", NULL))

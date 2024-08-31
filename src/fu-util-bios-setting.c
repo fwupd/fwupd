@@ -62,10 +62,10 @@ fu_util_bios_setting_matches_args(FwupdBiosSetting *setting, gchar **values)
 }
 
 gboolean
-fu_util_get_bios_setting_as_json(FuConsole *console,
-				 gchar **values,
-				 GPtrArray *settings,
-				 GError **error)
+fu_util_bios_setting_console_print(FuConsole *console,
+				   gchar **values,
+				   GPtrArray *settings,
+				   GError **error)
 {
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 	json_builder_begin_object(builder);

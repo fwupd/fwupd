@@ -105,7 +105,7 @@ fu_wacom_emr_device_w9013_erase_code(FuWacomEmrDevice *self,
 }
 
 static gboolean
-fu_wacom_device_w9021_erase_all(FuWacomEmrDevice *self, GError **error)
+fu_wacom_emr_device_w9021_erase_all(FuWacomEmrDevice *self, GError **error)
 {
 	FuWacomRawRequest req = {
 	    .cmd = FU_WACOM_RAW_BL_CMD_ALL_ERASE,
@@ -242,7 +242,7 @@ fu_wacom_emr_device_write_firmware(FuDevice *device,
 
 	/* erase W9021 */
 	if (fu_device_has_instance_id(device, "WacomEMR_W9021")) {
-		if (!fu_wacom_device_w9021_erase_all(self, error))
+		if (!fu_wacom_emr_device_w9021_erase_all(self, error))
 			return FALSE;
 	}
 	fu_progress_step_done(progress);

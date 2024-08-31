@@ -19,7 +19,7 @@ struct _FuLinuxSwap {
 G_DEFINE_TYPE(FuLinuxSwap, fu_linux_swap, G_TYPE_OBJECT)
 
 static gchar *
-fu_strdup_nospaces(const gchar *line)
+fu_linux_swap_strip_spaces(const gchar *line)
 {
 	GString *str = g_string_new(NULL);
 	for (guint i = 0; line[i] != '\0' && !g_ascii_isspace(line[i]); i++)
@@ -110,8 +110,8 @@ fu_linux_swap_new(const gchar *buf, gsize bufsz, GError **error)
 			/* split */
 			if (g_utf8_strlen(lines[i], -1) < 45)
 				continue;
-			fn = fu_strdup_nospaces(lines[i]);
-			ty = fu_strdup_nospaces(lines[i] + 40);
+			fn = fu_linux_swap_strip_spaces(lines[i]);
+			ty = fu_linux_swap_strip_spaces(lines[i] + 40);
 
 			/* partition, so use UDisks to see if backed by crypto */
 			if (g_strcmp0(ty, "partition") == 0) {

@@ -111,7 +111,7 @@ fu_csv_entry_get_value_by_column_id_uint64(FuCsvEntry *self,
 }
 
 static void
-fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_csv_entry_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
 	FuCsvEntry *self = FU_CSV_ENTRY(firmware);
 	FuCsvEntryPrivate *priv = GET_PRIVATE(self);
@@ -127,7 +127,7 @@ fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 }
 
 static gboolean
-fu_archive_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_csv_entry_build(FuFirmware *firmware, XbNode *n, GError **error)
 {
 	FuCsvEntry *self = FU_CSV_ENTRY(firmware);
 	FuCsvFirmware *parent = FU_CSV_FIRMWARE(fu_firmware_get_parent(firmware));
@@ -253,8 +253,8 @@ fu_csv_entry_class_init(FuCsvEntryClass *klass)
 	object_class->finalize = fu_csv_entry_finalize;
 	firmware_class->parse = fu_csv_entry_parse;
 	firmware_class->write = fu_csv_entry_write;
-	firmware_class->build = fu_archive_firmware_build;
-	firmware_class->export = fu_ifd_firmware_export;
+	firmware_class->build = fu_csv_entry_build;
+	firmware_class->export = fu_csv_entry_export;
 }
 
 /**

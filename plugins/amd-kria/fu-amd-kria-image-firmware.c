@@ -11,7 +11,7 @@
 
 #include "config.h"
 
-#include "fu-amd-kria-image-reg.h"
+#include "fu-amd-kria-image-firmware.h"
 
 struct _FuAmdKriaImageFirmware {
 	FuFirmwareClass parent_instance;
