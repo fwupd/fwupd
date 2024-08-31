@@ -961,6 +961,35 @@ fu_volume_check_block_device_symlinks(const gchar *const *symlinks, GError **err
 	return TRUE;
 }
 
+static gboolean
+fu_volume_check_is_recovery(const gchar *name)
+{
+	g_autoptr(GString) name_safe = g_string_new(name);
+	const gchar *recovery_partitions[] = {
+	    "DELLRESTORE",
+	    "DELLUTILITY",
+	    "DIAGS",
+	    "HP_RECOVERY",
+	    "IBM_SERVICE",
+	    "INTELRST",
+	    "LENOVO_RECOVERY",
+	    "OS",
+	    "PQSERVICE",
+	    "RECOVERY",
+	    "RECOVERY_PARTITION",
+	    "SERVICEV001",
+	    "SERVICEV002",
+	    "SYSTEM_RESERVED",
+	    "WINRE_DRV",
+	    NULL,
+	}; /* from https://github.com/storaged-project/udisks/blob/master/data/80-udisks2.rules */
+
+	g_string_replace(name_safe, " ", "_", 0);
+	g_string_replace(name_safe, "\"", "", 0);
+	g_string_ascii_up(name_safe);
+	return g_strv_contains(recovery_partitions, name_safe->str);
+}
+
 static void
 fu_volume_codec_iface_init(FwupdCodecInterface *iface)
 {
@@ -984,24 +1013,6 @@ fu_volume_codec_iface_init(FwupdCodecInterface *iface)
 GPtrArray *
 fu_volume_new_by_kind(const gchar *kind, GError **error)
 {
-	const gchar *recovery_partitions[] = {
-	    "DELLRESTORE",
-	    "DELLUTILITY",
-	    "DIAGS",
-	    "HP_RECOVERY",
-	    "IBM_SERVICE",
-	    "INTELRST",
-	    "LENOVO_RECOVERY",
-	    "OS",
-	    "PQSERVICE",
-	    "RECOVERY",
-	    "RECOVERY_PARTITION",
-	    "SERVICEV001",
-	    "SERVICEV002",
-	    "SYSTEM_RESERVED",
-	    "WINRE_DRV",
-	    NULL,
-	}; /* from https://github.com/storaged-project/udisks/blob/master/data/80-udisks2.rules */
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) volumes = NULL;
 
@@ -1105,18 +1116,8 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 			if (name == NULL)
 				name = fu_volume_get_block_name(vol);
 			if (name != NULL) {
-				g_autoptr(GString) name_safe = g_string_new(name);
-				g_string_replace(name_safe, " ", "_", 0);
-				g_string_replace(name_safe, "\"", "", 0);
-				g_string_ascii_up(name_safe);
-				if (g_strv_contains(recovery_partitions, name_safe->str)) {
-					if (g_strcmp0(name_safe->str, name) == 0) {
-						g_debug("skipping partition '%s'", name);
-					} else {
-						g_debug("skipping partition '%s' -> '%s'",
-							name,
-							name_safe->str);
-					}
+				if (fu_volume_check_is_recovery(name)) {
+					g_debug("skipping partition '%s'", name);
 					continue;
 				}
 				g_debug("adding partition '%s'", name);
