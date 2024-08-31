@@ -601,9 +601,6 @@ fu_path_make_absolute(const gchar *filename, GError **error)
 
 #ifdef HAVE_REALPATH
 	if (realpath(filename, full_tmp) == NULL) {
-#else
-	if (_fullpath(full_tmp, filename, sizeof(full_tmp)) == NULL) {
-#endif
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -611,6 +608,16 @@ fu_path_make_absolute(const gchar *filename, GError **error)
 			    g_strerror(errno));
 		return NULL;
 	}
+#else
+	if (_fullpath(full_tmp, filename, sizeof(full_tmp)) == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "cannot resolve path: %s",
+			    g_strerror(errno));
+		return NULL;
+	}
+#endif
 	if (!g_file_test(full_tmp, G_FILE_TEST_EXISTS)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
