@@ -572,7 +572,7 @@ fu_intel_usb4_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static void
-fu_thunderbolt_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_intel_usb4_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
@@ -606,5 +606,5 @@ fu_intel_usb4_device_class_init(FuIntelUsb4DeviceClass *klass)
 	device_class->prepare_firmware = fu_intel_usb4_device_prepare_firmware;
 	device_class->write_firmware = fu_intel_usb4_device_write_firmware;
 	device_class->activate = fu_intel_usb4_device_activate;
-	device_class->set_progress = fu_thunderbolt_device_set_progress;
+	device_class->set_progress = fu_intel_usb4_device_set_progress;
 }

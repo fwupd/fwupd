@@ -398,21 +398,21 @@ fu_util_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuU
 }
 
 static void
-fu_main_engine_device_added_cb(FuEngine *engine, FuDevice *device, FuUtilPrivate *priv)
+fu_util_engine_device_added_cb(FuEngine *engine, FuDevice *device, FuUtilPrivate *priv)
 {
 	g_autofree gchar *tmp = fu_device_to_string(device);
 	g_debug("ADDED:\n%s", tmp);
 }
 
 static void
-fu_main_engine_device_removed_cb(FuEngine *engine, FuDevice *device, FuUtilPrivate *priv)
+fu_util_engine_device_removed_cb(FuEngine *engine, FuDevice *device, FuUtilPrivate *priv)
 {
 	g_autofree gchar *tmp = fu_device_to_string(device);
 	g_debug("REMOVED:\n%s", tmp);
 }
 
 static void
-fu_main_engine_status_changed_cb(FuEngine *engine, FwupdStatus status, FuUtilPrivate *priv)
+fu_util_engine_status_changed_cb(FuEngine *engine, FwupdStatus status, FuUtilPrivate *priv)
 {
 	if (priv->as_json)
 		return;
@@ -3911,7 +3911,7 @@ fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 	attrs = fu_context_get_bios_settings(ctx);
 	items = fu_bios_settings_get_all(attrs);
 	if (priv->as_json)
-		return fu_util_get_bios_setting_as_json(priv->console, values, items, error);
+		return fu_util_bios_setting_console_print(priv->console, values, items, error);
 
 	for (guint i = 0; i < items->len; i++) {
 		FwupdBiosSetting *attr = g_ptr_array_index(items, i);
@@ -5012,15 +5012,15 @@ main(int argc, char *argv[])
 			 priv);
 	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-added",
-			 G_CALLBACK(fu_main_engine_device_added_cb),
+			 G_CALLBACK(fu_util_engine_device_added_cb),
 			 priv);
 	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-removed",
-			 G_CALLBACK(fu_main_engine_device_removed_cb),
+			 G_CALLBACK(fu_util_engine_device_removed_cb),
 			 priv);
 	g_signal_connect(FU_ENGINE(priv->engine),
 			 "status-changed",
-			 G_CALLBACK(fu_main_engine_status_changed_cb),
+			 G_CALLBACK(fu_util_engine_status_changed_cb),
 			 priv);
 
 	/* just show versions and exit */

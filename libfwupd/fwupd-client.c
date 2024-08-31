@@ -1548,7 +1548,7 @@ fwupd_client_get_host_security_events_finish(FwupdClient *self, GAsyncResult *re
 }
 
 static GHashTable *
-fwupd_report_metadata_hash_from_variant(GVariant *value)
+fwupd_client_report_metadata_hash_from_variant(GVariant *value)
 {
 	GHashTable *hash;
 	gsize sz;
@@ -1584,7 +1584,7 @@ fwupd_client_get_report_metadata_cb(GObject *source, GAsyncResult *res, gpointer
 
 	/* success */
 	g_task_return_pointer(task,
-			      fwupd_report_metadata_hash_from_variant(val),
+			      fwupd_client_report_metadata_hash_from_variant(val),
 			      (GDestroyNotify)g_hash_table_unref);
 }
 

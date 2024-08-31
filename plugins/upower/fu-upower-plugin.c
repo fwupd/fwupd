@@ -180,7 +180,7 @@ fu_upower_plugin_init(FuUpowerPlugin *self)
 }
 
 static void
-fu_upower_finalize(GObject *obj)
+fu_upower_plugin_finalize(GObject *obj)
 {
 	FuUpowerPlugin *self = FU_UPOWER_PLUGIN(obj);
 	if (self->proxy != NULL)
@@ -196,6 +196,6 @@ fu_upower_plugin_class_init(FuUpowerPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->finalize = fu_upower_finalize;
+	object_class->finalize = fu_upower_plugin_finalize;
 	plugin_class->startup = fu_upower_plugin_startup;
 }

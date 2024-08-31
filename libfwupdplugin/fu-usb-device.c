@@ -615,7 +615,7 @@ fu_usb_device_get_product_index(FuUsbDevice *self)
 /* not defined in FreeBSD */
 #ifndef HAVE_LIBUSB_GET_PARENT
 static libusb_device *
-libusb_get_parent(libusb_device *dev)
+libusb_get_parent(libusb_device *dev) /* nocheck:name */
 {
 	return NULL;
 }

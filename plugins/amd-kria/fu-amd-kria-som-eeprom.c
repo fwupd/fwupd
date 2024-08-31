@@ -83,19 +83,19 @@ fu_amd_kria_som_eeprom_parse(FuFirmware *firmware,
 }
 
 const gchar *
-fu_amd_kria_som_get_manufacturer(FuAmdKriaSomEeprom *self)
+fu_amd_kria_som_eeprom_get_manufacturer(FuAmdKriaSomEeprom *self)
 {
 	return self->manufacturer;
 }
 
 const gchar *
-fu_amd_kria_som_get_product_name(FuAmdKriaSomEeprom *self)
+fu_amd_kria_som_eeprom_get_product_name(FuAmdKriaSomEeprom *self)
 {
 	return self->product_name;
 }
 
 const gchar *
-fu_amd_kria_som_get_serial_number(FuAmdKriaSomEeprom *self)
+fu_amd_kria_som_eeprom_get_serial_number(FuAmdKriaSomEeprom *self)
 {
 	return self->serial_number;
 }

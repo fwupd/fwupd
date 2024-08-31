@@ -2426,7 +2426,7 @@ fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
 	if (remote_tmp != NULL) {
 		g_info("enabling remote %s", fwupd_remote_get_id(remote_tmp));
 		fwupd_remote_add_flag(remote_tmp, FWUPD_REMOTE_FLAG_ENABLED);
-		return fwupd_remote_save_to_filename(remote_tmp, remotes_fn, NULL, error);
+		return fu_remote_save_to_filename(remote_tmp, remotes_fn, NULL, error);
 	}
 
 	/* create a new remote we can use for re-installing */
@@ -2434,7 +2434,7 @@ fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
 	fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_ENABLED);
 	fwupd_remote_set_title(remote, "Backup");
 	fwupd_remote_set_metadata_uri(remote, backupdir_uri);
-	return fwupd_remote_save_to_filename(remote, remotes_fn, NULL, error);
+	return fu_remote_save_to_filename(remote, remotes_fn, NULL, error);
 }
 
 /**
@@ -8058,7 +8058,7 @@ fu_engine_load_local_metadata_watches(FuEngine *self, GError **error)
 
 #ifdef _WIN32
 static gchar *
-fu_common_win32_registry_get_string(HKEY hkey,
+fu_engine_win32_registry_get_string(HKEY hkey,
 				    const gchar *subkey,
 				    const gchar *value,
 				    GError **error)
@@ -8257,7 +8257,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	/* cache machine ID so we can use it from a sandboxed app */
 #ifdef _WIN32
 	self->host_machine_id =
-	    fu_common_win32_registry_get_string(HKEY_LOCAL_MACHINE,
+	    fu_engine_win32_registry_get_string(HKEY_LOCAL_MACHINE,
 						"SOFTWARE\\Microsoft\\Cryptography",
 						"MachineGuid",
 						&error_local);

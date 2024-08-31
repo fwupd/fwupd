@@ -43,7 +43,7 @@ fu_mediatek_scaler_firmware_parse(FuFirmware *firmware,
 				      G_LITTLE_ENDIAN,
 				      error))
 		return FALSE;
-	fw_version = mediatek_scaler_device_version_to_string(ver_tmp);
+	fw_version = fu_mediatek_scaler_version_to_string(ver_tmp);
 	fu_firmware_set_version(firmware, fw_version);
 
 	/* read timestamp from firmware */

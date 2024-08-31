@@ -114,10 +114,10 @@ fu_synaptics_rmi_device_writeln(const gchar *fn, const gchar *buf, GError **erro
 }
 
 gboolean
-fu_synaptics_verify_sha256_signature(GBytes *payload,
-				     GBytes *pubkey,
-				     GBytes *signature,
-				     GError **error)
+fu_synaptics_rmi_verify_sha256_signature(GBytes *payload,
+					 GBytes *pubkey,
+					 GBytes *signature,
+					 GError **error)
 {
 #ifdef HAVE_GNUTLS
 	gnutls_datum_t hash;

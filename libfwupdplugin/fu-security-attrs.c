@@ -31,13 +31,12 @@ struct _FuSecurityAttrs {
 #define FWUPD_SECURITY_ATTR_ID_DOC_URL "https://fwupd.github.io/libfwupdplugin/hsi.html"
 
 static void
-fwupd_security_attrs_codec_iface_init(FwupdCodecInterface *iface);
+fu_security_attrs_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(FuSecurityAttrs,
 			fu_security_attrs,
 			G_TYPE_OBJECT,
-			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
-					      fwupd_security_attrs_codec_iface_init))
+			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_security_attrs_codec_iface_init))
 
 static void
 fu_security_attrs_finalize(GObject *obj)
@@ -555,7 +554,7 @@ fu_security_attrs_from_json(FwupdCodec *codec, JsonNode *json_node, GError **err
 }
 
 static void
-fwupd_security_attrs_codec_iface_init(FwupdCodecInterface *iface)
+fu_security_attrs_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_json = fu_security_attrs_add_json;
 	iface->from_json = fu_security_attrs_from_json;

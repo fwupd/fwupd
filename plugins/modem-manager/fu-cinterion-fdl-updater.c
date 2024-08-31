@@ -155,10 +155,10 @@ fu_cinterion_fdl_updater_write_chunk(FuCinterionFdlUpdater *self,
 }
 
 static gboolean
-fu_cinterion_fdl_read_response(FuCinterionFdlUpdater *self,
-			       FuDevice *device,
-			       FuCinterionFdlResponse *response,
-			       GError **error)
+fu_cinterion_fdl_updater_read_response(FuCinterionFdlUpdater *self,
+				       FuDevice *device,
+				       FuCinterionFdlResponse *response,
+				       GError **error)
 {
 	guint8 byte = 0;
 	gsize bytes_read = 0;
@@ -222,7 +222,7 @@ fu_cinterion_fdl_updater_write_chunk_retry(FuCinterionFdlUpdater *self,
 			return FALSE;
 
 		while (read_retries < FU_CINTERION_FDL_MAX_READ_RETRIES) {
-			if (!fu_cinterion_fdl_read_response(self, device, &response, error))
+			if (!fu_cinterion_fdl_updater_read_response(self, device, &response, error))
 				return FALSE;
 
 			if (response == FU_CINTERION_FDL_RESPONSE_OK) {

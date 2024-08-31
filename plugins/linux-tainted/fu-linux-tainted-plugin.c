@@ -131,7 +131,7 @@ fu_linux_tainted_plugin_init(FuLinuxTaintedPlugin *self)
 }
 
 static void
-fu_linux_tainted_finalize(GObject *obj)
+fu_linux_tainted_plugin_finalize(GObject *obj)
 {
 	FuLinuxTaintedPlugin *self = FU_LINUX_TAINTED_PLUGIN(obj);
 	if (self->file != NULL)
@@ -149,7 +149,7 @@ fu_linux_tainted_plugin_class_init(FuLinuxTaintedPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->finalize = fu_linux_tainted_finalize;
+	object_class->finalize = fu_linux_tainted_plugin_finalize;
 	plugin_class->startup = fu_linux_tainted_plugin_startup;
 	plugin_class->add_security_attrs = fu_linux_tainted_plugin_add_security_attrs;
 }

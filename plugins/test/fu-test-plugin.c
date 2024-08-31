@@ -401,7 +401,7 @@ fu_test_plugin_constructed(GObject *obj)
 }
 
 static void
-fu_test_finalize(GObject *obj)
+fu_test_plugin_finalize(GObject *obj)
 {
 	g_debug("destroy");
 	G_OBJECT_CLASS(fu_test_plugin_parent_class)->finalize(obj);
@@ -413,7 +413,7 @@ fu_test_plugin_class_init(FuTestPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->finalize = fu_test_finalize;
+	object_class->finalize = fu_test_plugin_finalize;
 	plugin_class->constructed = fu_test_plugin_constructed;
 	plugin_class->composite_cleanup = fu_test_plugin_composite_cleanup;
 	plugin_class->composite_prepare = fu_test_plugin_composite_prepare;

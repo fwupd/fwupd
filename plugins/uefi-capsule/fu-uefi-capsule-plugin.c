@@ -840,7 +840,7 @@ fu_uefi_capsule_plugin_unlock(FuPlugin *plugin, FuDevice *device, GError **error
 }
 
 static void
-fu_plugin_uefi_update_state_notify_cb(GObject *object, GParamSpec *pspec, FuPlugin *plugin)
+fu_uefi_capsule_plugin_update_state_notify_cb(GObject *object, GParamSpec *pspec, FuPlugin *plugin)
 {
 	FuDevice *device = FU_DEVICE(object);
 	GPtrArray *devices;
@@ -970,7 +970,7 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 		/* watch in case we set needs-reboot in the engine */
 		g_signal_connect(FU_DEVICE(dev),
 				 "notify::update-state",
-				 G_CALLBACK(fu_plugin_uefi_update_state_notify_cb),
+				 G_CALLBACK(fu_uefi_capsule_plugin_update_state_notify_cb),
 				 plugin);
 
 		fu_plugin_device_add(plugin, FU_DEVICE(dev));
@@ -1159,7 +1159,7 @@ fu_uefi_capsule_plugin_constructed(GObject *obj)
 }
 
 static void
-fu_uefi_capsule_finalize(GObject *obj)
+fu_uefi_capsule_plugin_finalize(GObject *obj)
 {
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(obj);
 	if (self->esp != NULL)
@@ -1185,7 +1185,7 @@ fu_uefi_capsule_plugin_class_init(FuUefiCapsulePluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->finalize = fu_uefi_capsule_finalize;
+	object_class->finalize = fu_uefi_capsule_plugin_finalize;
 	plugin_class->constructed = fu_uefi_capsule_plugin_constructed;
 	plugin_class->to_string = fu_uefi_capsule_plugin_to_string;
 	plugin_class->clear_results = fu_uefi_capsule_plugin_clear_results;

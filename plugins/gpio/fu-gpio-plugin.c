@@ -172,7 +172,7 @@ fu_gpio_plugin_constructed(GObject *obj)
 }
 
 static void
-fu_gpio_finalize(GObject *obj)
+fu_gpio_plugin_finalize(GObject *obj)
 {
 	FuGpioPlugin *self = FU_GPIO_PLUGIN(obj);
 	g_ptr_array_unref(self->current_logical_ids);
@@ -185,7 +185,7 @@ fu_gpio_plugin_class_init(FuGpioPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->finalize = fu_gpio_finalize;
+	object_class->finalize = fu_gpio_plugin_finalize;
 	plugin_class->constructed = fu_gpio_plugin_constructed;
 	plugin_class->to_string = fu_gpio_plugin_to_string;
 	plugin_class->prepare = fu_gpio_plugin_prepare;

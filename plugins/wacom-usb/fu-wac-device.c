@@ -46,7 +46,7 @@ struct _FuWacDevice {
 G_DEFINE_TYPE(FuWacDevice, fu_wac_device, FU_TYPE_HID_DEVICE)
 
 static gboolean
-fu_wav_device_flash_descriptor_is_wp(const FuWacFlashDescriptor *fd)
+fu_wac_device_flash_descriptor_is_wp(const FuWacFlashDescriptor *fd)
 {
 	return fd->write_sz & 0x8000;
 }
@@ -60,7 +60,7 @@ fu_wac_device_flash_descriptor_to_string(FuWacFlashDescriptor *fd, guint idt, GS
 	fwupd_codec_string_append_bool(str,
 				       idt,
 				       "Protected",
-				       fu_wav_device_flash_descriptor_is_wp(fd));
+				       fu_wac_device_flash_descriptor_is_wp(fd));
 }
 
 static void
@@ -483,7 +483,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 	/* clear all checksums of pages */
 	for (guint i = 0; i < self->flash_descriptors->len; i++) {
 		FuWacFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
-		if (fu_wav_device_flash_descriptor_is_wp(fd))
+		if (fu_wac_device_flash_descriptor_is_wp(fd))
 			continue;
 		if (!fu_wac_device_set_checksum_of_block(self, i, 0x0, error))
 			return FALSE;
@@ -500,7 +500,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 		GBytes *blob_block;
 		g_autoptr(GBytes) blob_tmp = NULL;
 
-		if (fu_wav_device_flash_descriptor_is_wp(fd))
+		if (fu_wac_device_flash_descriptor_is_wp(fd))
 			continue;
 		blob_tmp = fu_firmware_write_chunk(img, fd->start_addr, fd->block_sz, NULL);
 		if (blob_tmp == NULL)
@@ -520,7 +520,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 		g_autoptr(FuChunkArray) chunks = NULL;
 
 		/* if page is protected */
-		if (fu_wav_device_flash_descriptor_is_wp(fd))
+		if (fu_wac_device_flash_descriptor_is_wp(fd))
 			continue;
 
 		/* get data for page */
@@ -597,7 +597,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 		guint32 csum_rom;
 
 		/* if page is protected */
-		if (fu_wav_device_flash_descriptor_is_wp(fd))
+		if (fu_wac_device_flash_descriptor_is_wp(fd))
 			continue;
 
 		/* no more written pages */

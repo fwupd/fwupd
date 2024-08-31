@@ -285,7 +285,7 @@ fwupd_remote_has_flag(FwupdRemote *self, FwupdRemoteFlags flag)
 }
 
 static gchar *
-fwupd_strdup_nonempty(const gchar *text)
+fwupd_remote_strdup_nonempty(const gchar *text)
 {
 	if (text == NULL || text[0] == '\0')
 		return NULL;
@@ -626,7 +626,7 @@ void
 fwupd_remote_set_report_uri(FwupdRemote *self, const gchar *report_uri)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	g_autofree gchar *report_uri_safe = fwupd_strdup_nonempty(report_uri);
+	g_autofree gchar *report_uri_safe = fwupd_remote_strdup_nonempty(report_uri);
 
 	/* not changed */
 	if (g_strcmp0(priv->report_uri, report_uri_safe) == 0)

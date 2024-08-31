@@ -34,7 +34,7 @@ G_DEFINE_TYPE(FuElantpHidHapticDevice, fu_elantp_hid_haptic_device, FU_TYPE_UDEV
 #define FU_ELANTP_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
 
 static FuElantpHidDevice *
-fu_elantp_haptic_device_get_parent(FuDevice *self, GError **error)
+fu_elantp_hid_haptic_device_get_parent(FuDevice *self, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
 	if (parent == NULL) {
@@ -510,7 +510,7 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 	guint8 buf[2] = {0x0};
 	g_autofree gchar *version_bl = NULL;
 
-	parent = fu_elantp_haptic_device_get_parent(device, error);
+	parent = fu_elantp_hid_haptic_device_get_parent(device, error);
 	if (parent == NULL)
 		return FALSE;
 
@@ -672,7 +672,7 @@ fu_elantp_hid_haptic_device_write_chunks_cb(FuDevice *device, gpointer user_data
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* use parent */
-	parent = fu_elantp_haptic_device_get_parent(device, error);
+	parent = fu_elantp_hid_haptic_device_get_parent(device, error);
 	if (parent == NULL)
 		return FALSE;
 
@@ -804,7 +804,7 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* use parent */
-	parent = fu_elantp_haptic_device_get_parent(device, error);
+	parent = fu_elantp_hid_haptic_device_get_parent(device, error);
 	if (parent == NULL)
 		return FALSE;
 
@@ -923,7 +923,7 @@ fu_elantp_hid_haptic_device_detach(FuDevice *device, FuProgress *progress, GErro
 			    (guint)self->iap_ver);
 		return FALSE;
 	}
-	parent = fu_elantp_haptic_device_get_parent(device, error);
+	parent = fu_elantp_hid_haptic_device_get_parent(device, error);
 	if (parent == NULL)
 		return FALSE;
 
@@ -1043,7 +1043,7 @@ fu_elantp_hid_haptic_device_attach(FuDevice *device, FuProgress *progress, GErro
 	FuElantpHidDevice *parent;
 	FuElantpHidHapticDevice *self = FU_ELANTP_HID_HAPTIC_DEVICE(device);
 
-	parent = fu_elantp_haptic_device_get_parent(device, error);
+	parent = fu_elantp_hid_haptic_device_get_parent(device, error);
 	if (parent == NULL)
 		return FALSE;
 
@@ -1148,7 +1148,7 @@ fu_elantp_hid_haptic_device_class_init(FuElantpHidHapticDeviceClass *klass)
 }
 
 FuElantpHidHapticDevice *
-fu_elantp_haptic_device_new(FuDevice *device)
+fu_elantp_hid_haptic_device_new(FuDevice *device)
 {
 	FuElantpHidHapticDevice *self;
 	self = g_object_new(FU_TYPE_ELANTP_HID_HAPTIC_DEVICE, NULL);

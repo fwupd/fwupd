@@ -111,13 +111,13 @@ fu_iommu_plugin_constructed(GObject *obj)
 }
 
 static gboolean
-fu_iommu_fix_host_security_attr(FuPlugin *self, FwupdSecurityAttr *attr, GError **error)
+fu_iommu_plugin_fix_host_security_attr(FuPlugin *self, FwupdSecurityAttr *attr, GError **error)
 {
 	return fu_kernel_add_cmdline_arg("iommu=force", error);
 }
 
 static gboolean
-fu_iommu_undo_host_security_attr(FuPlugin *self, FwupdSecurityAttr *attr, GError **error)
+fu_iommu_plugin_undo_host_security_attr(FuPlugin *self, FwupdSecurityAttr *attr, GError **error)
 {
 	return fu_kernel_remove_cmdline_arg("iommu=force", error);
 }
@@ -130,6 +130,6 @@ fu_iommu_plugin_class_init(FuIommuPluginClass *klass)
 	plugin_class->to_string = fu_iommu_plugin_to_string;
 	plugin_class->backend_device_added = fu_iommu_plugin_backend_device_added;
 	plugin_class->add_security_attrs = fu_iommu_plugin_add_security_attrs;
-	plugin_class->fix_host_security_attr = fu_iommu_fix_host_security_attr;
-	plugin_class->undo_host_security_attr = fu_iommu_undo_host_security_attr;
+	plugin_class->fix_host_security_attr = fu_iommu_plugin_fix_host_security_attr;
+	plugin_class->undo_host_security_attr = fu_iommu_plugin_undo_host_security_attr;
 }

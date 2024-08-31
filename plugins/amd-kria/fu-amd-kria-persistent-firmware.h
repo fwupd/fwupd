@@ -24,4 +24,4 @@ FuFirmware *
 fu_amd_kria_persistent_firmware_new(void);
 
 gboolean
-fu_amd_kria_persistent_booted_image_a(FuAmdKriaPersistentFirmware *self);
+fu_amd_kria_persistent_firmware_booted_image_a(FuAmdKriaPersistentFirmware *self);

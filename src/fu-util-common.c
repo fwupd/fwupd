@@ -29,7 +29,7 @@ static gchar *
 fu_util_convert_description(const gchar *xml, GError **error);
 
 gchar *
-fu_console_color_format(const gchar *text, FuConsoleColor fg_color)
+fu_console_color_format(const gchar *text, FuConsoleColor fg_color) /* nocheck:name */
 {
 	if (g_getenv("NO_COLOR") != NULL)
 		return g_strdup(text);
@@ -2177,7 +2177,7 @@ fu_util_request_get_message(FwupdRequest *req)
 }
 
 static const gchar *
-fu_security_attr_result_to_string(FwupdSecurityAttrResult result)
+fu_util_security_attr_result_to_string(FwupdSecurityAttrResult result)
 {
 	if (result == FWUPD_SECURITY_ATTR_RESULT_VALID) {
 		/* TRANSLATORS: Suffix: the HSI result */
@@ -2239,12 +2239,12 @@ fu_security_attr_result_to_string(FwupdSecurityAttrResult result)
 }
 
 static const gchar *
-fu_security_attr_get_result(FwupdSecurityAttr *attr)
+fu_util_security_attr_get_result(FwupdSecurityAttr *attr)
 {
 	const gchar *tmp;
 
 	/* common case */
-	tmp = fu_security_attr_result_to_string(fwupd_security_attr_get_result(attr));
+	tmp = fu_util_security_attr_result_to_string(fwupd_security_attr_get_result(attr));
 	if (tmp != NULL)
 		return tmp;
 
@@ -2259,9 +2259,9 @@ fu_security_attr_get_result(FwupdSecurityAttr *attr)
 }
 
 static void
-fu_security_attr_append_str(FwupdSecurityAttr *attr,
-			    GString *str,
-			    FuSecurityAttrToStringFlags flags)
+fu_util_security_attr_append_str(FwupdSecurityAttr *attr,
+				 GString *str,
+				 FuSecurityAttrToStringFlags flags)
 {
 	const gchar *name;
 
@@ -2284,16 +2284,19 @@ fu_security_attr_append_str(FwupdSecurityAttr *attr,
 	for (guint i = fu_strwidth(name); i < 30; i++)
 		g_string_append(str, " ");
 	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
-		g_autofree gchar *fmt = fu_console_color_format(fu_security_attr_get_result(attr),
-								FU_CONSOLE_COLOR_YELLOW);
+		g_autofree gchar *fmt =
+		    fu_console_color_format(fu_util_security_attr_get_result(attr),
+					    FU_CONSOLE_COLOR_YELLOW);
 		g_string_append(str, fmt);
 	} else if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
-		g_autofree gchar *fmt = fu_console_color_format(fu_security_attr_get_result(attr),
-								FU_CONSOLE_COLOR_GREEN);
+		g_autofree gchar *fmt =
+		    fu_console_color_format(fu_util_security_attr_get_result(attr),
+					    FU_CONSOLE_COLOR_GREEN);
 		g_string_append(str, fmt);
 	} else {
-		g_autofree gchar *fmt = fu_console_color_format(fu_security_attr_get_result(attr),
-								FU_CONSOLE_COLOR_RED);
+		g_autofree gchar *fmt =
+		    fu_console_color_format(fu_util_security_attr_get_result(attr),
+					    FU_CONSOLE_COLOR_RED);
 		g_string_append(str, fmt);
 	}
 	if ((flags & FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS) > 0 &&
@@ -2436,7 +2439,7 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		       %2 refers to a result value, e.g. "Invalid" */
 		    _("%s disappeared: %s"),
 		    name,
-		    fu_security_attr_result_to_string(
+		    fu_util_security_attr_result_to_string(
 			fwupd_security_attr_get_result_fallback(attr)));
 	}
 
@@ -2448,7 +2451,7 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		       %2 refers to a result value, e.g. "Invalid" */
 		    _("%s appeared: %s"),
 		    name,
-		    fu_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
+		    fu_util_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
 	}
 
 	/* fall back to something sensible */
@@ -2458,8 +2461,8 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 	     * %2 and %3 refer to results value, e.g. "Valid" and "Invalid" */
 	    _("%s changed: %s → %s"),
 	    name,
-	    fu_security_attr_result_to_string(fwupd_security_attr_get_result_fallback(attr)),
-	    fu_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
+	    fu_util_security_attr_result_to_string(fwupd_security_attr_get_result_fallback(attr)),
+	    fu_util_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
 }
 
 gchar *
@@ -2572,7 +2575,7 @@ fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags s
 				g_string_append_printf(str, "\n\033[1mHSI-%u\033[0m\n", j);
 				has_header = TRUE;
 			}
-			fu_security_attr_append_str(attr, str, strflags);
+			fu_util_security_attr_append_str(attr, str, strflags);
 			/* make sure they have at least HSI-1 */
 			if (j < FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT &&
 			    !fwupd_security_attr_has_flag(attr,
@@ -2609,7 +2612,7 @@ fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags s
 				    !fwupd_security_attr_has_flag(attr,
 								  FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
 					runtime_help = TRUE;
-				fu_security_attr_append_str(attr, str, strflags);
+				fu_util_security_attr_append_str(attr, str, strflags);
 			}
 		}
 	}

@@ -38,6 +38,117 @@ class Checker:
             )
         )
 
+    def _test_line_function_names_private(self, func_name: str) -> None:
+        valid_prefixes = ["_fwupd_", "_fu_", "_g_", "_xb_"]
+        for prefix in valid_prefixes:
+            if func_name.startswith(prefix):
+                return
+        self.add_failure(
+            f"invalid function name {func_name} should have {'|'.join(valid_prefixes)} prefix"
+        )
+
+    def _test_line_function_names_valid(self, func_name: str) -> None:
+        # ignore headers
+        if self._current_fn.endswith(".h"):
+            return
+
+        # ignore all self tests FIXME: 335 failures
+        if self._current_fn.endswith("-test.c"):
+            return
+
+        # namespacing is strange here
+        if self._current_fn.endswith("fwupd-enums.c"):
+            return
+
+        # doh
+        if func_name in ["main", "fu_plugin_init_vfuncs"]:
+            return
+
+        # this is stuff that should move to GLib
+        if func_name.startswith("_g_"):
+            return
+
+        # remove some suffixes we do not care about
+        prefix = os.path.basename(self._current_fn).split(".")[0].replace("-", "_")
+        for suffix in [
+            "_common",
+            "_darwin",
+            "_device",  # FIXME 98
+            "_freebsd",
+            "_helper",
+            "_i2c_ec",  # FIXME 78
+            "_i2c_mst",
+            "_i2c_tbt",
+            "_impl",
+            "_linux",
+            "_sync",
+            "_windows",
+        ]:
+            if prefix.endswith(suffix):
+                prefix = prefix[: -len(suffix)]
+
+        # allowed truncations
+        valid_prefixes = []
+        valid_prefixes.append(prefix)
+        for key, value in {
+            "fu_audio_s5gen2_firmware": "fu_qc_s5gen2_firmware",
+            "fu_audio_s5gen2": "fu_qc_s5gen2",  # FIXME: rename after merging #7638
+            "fu_audio_s5gen2_hid": "fu_qc_s5gen2_hid",
+            "fu_crc": "fu_misr",  # FIXME: split out to fu-misr.[c|h]
+            "fu_darwin_efivars": "fu_efivars",
+            "fu_dbus_daemon": "fu_daemon",
+            "fu_dbxtool": "fu_util",
+            "fu_freebsd_efivars": "fu_efivars",
+            "fu_linux_efivars": "fu_efivars",
+            "fu_logitech_hidpp_hidpp": "fu_logitech_hidpp",
+            "fu_logitech_hidpp_hidpp_msg": "fu_logitech_hidpp",
+            "fu_offline": "fu_util",
+            "fu_self_test": "fu_test",
+            "fu_string": "fu_str,fu_utf",
+            "fu_tool": "fu_util",
+            "fu_windows_efivars": "fu_efivars",
+        }.items():
+            if prefix == key:
+                valid_prefixes.extend(value.split(","))
+        for prefix in valid_prefixes:
+            if func_name.startswith(prefix):
+                return
+
+        self.add_failure(
+            f"invalid function name {func_name} should have {'|'.join(valid_prefixes)} prefix"
+        )
+
+    def _test_line_function_names(self, line: str) -> None:
+        # empty line
+        if not line:
+            return
+
+        # skip!
+        self._current_nocheck = "nocheck:name"
+        if line.find(self._current_nocheck) != -1:
+            return
+
+        # these are not functions
+        for prefix in ["\t", " ", "typedef", "__attribute__", "G_DEFINE_"]:
+            if line.startswith(prefix):
+                return
+
+        # ignore prototypes
+        if line.endswith(";"):
+            return
+
+        # strip to function name then test for validity
+        idx: int = line.find("(")
+        if idx == -1:
+            return
+        func_name = line[:idx]
+        if func_name.find(" ") != -1:
+            return
+        if func_name.startswith("_"):
+            self._test_line_function_names_private(func_name)
+            return
+        self._test_line_function_names_valid(func_name)
+
     def _test_line_debug_fns(self, line: str) -> None:
         # no console output expected
         self._current_nocheck = "nocheck:print"
@@ -176,6 +287,9 @@ class Checker:
             # test for debug lines
             self._test_line_debug_fns(line)
 
+            # test for function names
+            self._test_line_function_names(line)
+
         # using FUWPD_ERROR domains
         self._test_lines_gerror(lines)
 
@@ -220,6 +334,8 @@ def test_files() -> int:
         if failure.nocheck:
             line += f" -- use a {failure.nocheck} comment to ignore"
         print(line)
+    if checker.failures:
+        print(f"{len(checker.failures)} failures!")
     return 1 if checker.failures else 0
 
 

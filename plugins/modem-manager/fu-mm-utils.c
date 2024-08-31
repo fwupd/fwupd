@@ -11,7 +11,7 @@
 #include "fu-mm-utils.h"
 
 static gchar *
-find_device_bus_subsystem(GUdevDevice *device)
+fu_mm_utils_find_device_bus_subsystem(GUdevDevice *device)
 {
 	g_autoptr(GUdevDevice) iter = NULL;
 
@@ -52,7 +52,7 @@ fu_mm_utils_get_udev_port_info(GUdevDevice *device,
 
 	/* lookup the main bus the device is in; for supported devices it will
 	 * usually be either 'PCI' or 'USB' */
-	device_bus = find_device_bus_subsystem(device);
+	device_bus = fu_mm_utils_find_device_bus_subsystem(device);
 	if (device_bus == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,

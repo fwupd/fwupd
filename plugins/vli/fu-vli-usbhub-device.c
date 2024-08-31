@@ -710,7 +710,7 @@ fu_vli_usbhub_device_msp430_setup(FuVliUsbhubDevice *self, GError **error)
 }
 
 static gboolean
-fu_vli_usbhub_device_rtd21xx_setup(FuVliUsbhubDevice *self, GError **error)
+fu_vli_usbhub_rtd21xx_device_setup(FuVliUsbhubDevice *self, GError **error)
 {
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -848,7 +848,7 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 			return FALSE;
 	}
 	if (fu_device_has_private_flag(device, FU_VLI_USBHUB_DEVICE_FLAG_HAS_RTD21XX)) {
-		if (!fu_vli_usbhub_device_rtd21xx_setup(self, error))
+		if (!fu_vli_usbhub_rtd21xx_device_setup(self, error))
 			return FALSE;
 	}
 

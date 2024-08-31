@@ -24,8 +24,8 @@ FuFirmware *
 fu_amd_kria_som_eeprom_new(void);
 
 const gchar *
-fu_amd_kria_som_get_manufacturer(FuAmdKriaSomEeprom *self);
+fu_amd_kria_som_eeprom_get_manufacturer(FuAmdKriaSomEeprom *self);
 const gchar *
-fu_amd_kria_som_get_product_name(FuAmdKriaSomEeprom *self);
+fu_amd_kria_som_eeprom_get_product_name(FuAmdKriaSomEeprom *self);
 const gchar *
-fu_amd_kria_som_get_serial_number(FuAmdKriaSomEeprom *self);
+fu_amd_kria_som_eeprom_get_serial_number(FuAmdKriaSomEeprom *self);

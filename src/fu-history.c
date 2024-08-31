@@ -646,7 +646,7 @@ fu_history_load(FuHistory *self, GError **error)
 }
 
 static gchar *
-_convert_hash_to_string(GHashTable *hash)
+fu_history_convert_hash_to_string(GHashTable *hash)
 {
 	GString *str = g_string_new(NULL);
 	g_autoptr(GList) keys = g_hash_table_get_keys(hash);
@@ -779,7 +779,7 @@ fu_history_modify_device_release(FuHistory *self,
 		return FALSE;
 
 	/* metadata is stored as a simple string */
-	metadata = _convert_hash_to_string(fu_release_get_metadata(release));
+	metadata = fu_history_convert_hash_to_string(fu_release_get_metadata(release));
 
 	/* overwrite entry if it exists */
 	g_debug("modifying device %s [%s]", fu_device_get_name(device), fu_device_get_id(device));
@@ -864,7 +864,7 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GEr
 	    fwupd_checksum_get_by_kind(fu_device_get_checksums(device), G_CHECKSUM_SHA1);
 
 	/* metadata is stored as a simple string */
-	metadata = _convert_hash_to_string(fu_release_get_metadata(release));
+	metadata = fu_history_convert_hash_to_string(fu_release_get_metadata(release));
 
 	/* add */
 	rc = sqlite3_prepare_v2(self->db,

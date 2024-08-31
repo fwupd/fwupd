@@ -51,7 +51,7 @@ static guint8 enclosure_allowlist[] = {0x03, /* desktop */
 				       /* embedded PC */};
 
 static guint16
-fu_dell_get_system_id(FuPlugin *plugin)
+fu_dell_plugin_get_system_id(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *system_id_str = NULL;
@@ -74,7 +74,7 @@ fu_dell_get_system_id(FuPlugin *plugin)
 }
 
 static gboolean
-fu_dell_supported(FuPlugin *plugin, GError **error)
+fu_dell_plugin_supported(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuSmbiosChassisKind chassis_kind = fu_context_get_chassis_kind(ctx);
@@ -152,7 +152,7 @@ fu_dell_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 			g_autofree gchar *device_id = NULL;
 			guint16 system_id = 0;
 
-			system_id = fu_dell_get_system_id(plugin);
+			system_id = fu_dell_plugin_get_system_id(plugin);
 			if (system_id == 0)
 				return;
 			/* the kernel returns lowercase in sysfs, need to match it */
@@ -164,7 +164,7 @@ fu_dell_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	}
 	/* tpm plugin */
 	if (g_strcmp0(fu_device_get_plugin(device), "tpm") == 0) {
-		guint16 system_id = fu_dell_get_system_id(plugin);
+		guint16 system_id = fu_dell_plugin_get_system_id(plugin);
 		g_autofree gchar *tpm_guid_raw = NULL;
 
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -184,7 +184,7 @@ fu_dell_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autofree gchar *esrtdir = NULL;
 
-	if (!fu_dell_supported(plugin, error)) {
+	if (!fu_dell_plugin_supported(plugin, error)) {
 		g_prefix_error(error, "firmware updating not supported: ");
 		return FALSE;
 	}

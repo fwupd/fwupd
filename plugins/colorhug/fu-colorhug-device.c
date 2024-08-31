@@ -388,7 +388,7 @@ fu_colorhug_device_setup(FuDevice *device, GError **error)
 }
 
 static guint8
-ch_colorhug_device_calculate_checksum(const guint8 *data, gsize len)
+fu_colorhug_device_calculate_checksum(const guint8 *data, gsize len)
 {
 	guint8 checksum = 0xff;
 	for (guint32 i = 0; i < len; i++)
@@ -418,7 +418,7 @@ fu_colorhug_device_write_blocks(FuColorhugDevice *self,
 		/* set address, length, checksum, data */
 		fu_memwrite_uint16(buf + 0, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 		buf[2] = fu_chunk_get_data_sz(chk);
-		buf[3] = ch_colorhug_device_calculate_checksum(fu_chunk_get_data(chk),
+		buf[3] = fu_colorhug_device_calculate_checksum(fu_chunk_get_data(chk),
 							       fu_chunk_get_data_sz(chk));
 		if (!fu_memcpy_safe(buf,
 				    sizeof(buf),

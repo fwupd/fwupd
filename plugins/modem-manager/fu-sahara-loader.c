@@ -103,13 +103,13 @@ struct sahara_packet {
 
 /* helper functions */
 static FuSaharaCommandId
-sahara_packet_get_command_id(GByteArray *packet)
+fu_sahara_loader_packet_get_command_id(GByteArray *packet)
 {
 	return ((struct sahara_packet *)(packet->data))->command_id;
 }
 
 static FuSaharaCommandId
-sahara_packet_get_length(GByteArray *packet)
+fu_sahara_loader_packet_get_length(GByteArray *packet)
 {
 	return ((struct sahara_packet *)(packet->data))->length;
 }
@@ -318,7 +318,7 @@ fu_sahara_loader_send_packet(FuSaharaLoader *self, GByteArray *pkt, GError **err
 
 /* packet composers */
 static GByteArray *
-fu_sahara_create_byte_array_from_packet(const struct sahara_packet *pkt)
+fu_sahara_loader_create_byte_array_from_packet(const struct sahara_packet *pkt)
 {
 	GByteArray *self;
 	g_autoptr(GError) error_local = NULL;
@@ -350,7 +350,7 @@ fu_sahara_loader_compose_reset_packet(void)
 				    .length = GUINT32_TO_LE(len),
 				    {{0}}};
 
-	return fu_sahara_create_byte_array_from_packet(&pkt);
+	return fu_sahara_loader_create_byte_array_from_packet(&pkt);
 }
 
 static GByteArray *
@@ -366,7 +366,7 @@ fu_sahara_loader_compose_hello_response_packet(FuSaharaMode mode)
 	pkt.hello_response.status = GUINT32_TO_LE(SAHARA_STATUS_SUCCESS);
 	pkt.hello_response.mode = GUINT32_TO_LE(SAHARA_MODE_IMAGE_TX_PENDING);
 
-	return fu_sahara_create_byte_array_from_packet(&pkt);
+	return fu_sahara_loader_create_byte_array_from_packet(&pkt);
 }
 
 static GByteArray *
@@ -377,7 +377,7 @@ fu_sahara_loader_compose_done_packet(void)
 				    .length = GUINT32_TO_LE(len),
 				    {{0}}};
 
-	return fu_sahara_create_byte_array_from_packet(&pkt);
+	return fu_sahara_loader_create_byte_array_from_packet(&pkt);
 }
 
 static gboolean
@@ -394,7 +394,7 @@ fu_sahara_loader_send_reset_packet(FuSaharaLoader *self, GError **error)
 
 	rx_packet = fu_sahara_loader_qdl_read(self, error);
 	if (rx_packet == NULL ||
-	    sahara_packet_get_command_id(rx_packet) != SAHARA_RESET_RESPONSE_ID) {
+	    fu_sahara_loader_packet_get_command_id(rx_packet) != SAHARA_RESET_RESPONSE_ID) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -425,7 +425,7 @@ fu_sahara_loader_wait_hello_rsp(FuSaharaLoader *self, GError **error)
 
 	fu_dump_raw(G_LOG_DOMAIN, "rx packet", rx_packet->data, rx_packet->len);
 
-	if (sahara_packet_get_command_id(rx_packet) != SAHARA_HELLO_ID) {
+	if (fu_sahara_loader_packet_get_command_id(rx_packet) != SAHARA_HELLO_ID) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -460,7 +460,7 @@ fu_sahara_loader_run(FuSaharaLoader *self, GBytes *prog, GError **error)
 		rx_packet = fu_sahara_loader_qdl_read(self, error);
 		if (rx_packet == NULL)
 			break;
-		if (rx_packet->len != sahara_packet_get_length(rx_packet)) {
+		if (rx_packet->len != fu_sahara_loader_packet_get_length(rx_packet)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -469,7 +469,7 @@ fu_sahara_loader_run(FuSaharaLoader *self, GBytes *prog, GError **error)
 		}
 		fu_dump_raw(G_LOG_DOMAIN, "rx_packet", rx_packet->data, rx_packet->len);
 
-		command_id = sahara_packet_get_command_id(rx_packet);
+		command_id = fu_sahara_loader_packet_get_command_id(rx_packet);
 		pkt = (struct sahara_packet *)(rx_packet->data);
 		if (command_id == SAHARA_HELLO_ID) {
 			tx_packet = fu_sahara_loader_compose_hello_response_packet(
@@ -494,7 +494,7 @@ fu_sahara_loader_run(FuSaharaLoader *self, GBytes *prog, GError **error)
 		} else {
 			g_warning("Unexpected packet received: cmd_id = %u, len = %u",
 				  command_id,
-				  sahara_packet_get_length(rx_packet));
+				  fu_sahara_loader_packet_get_length(rx_packet));
 		}
 
 		if (error_local != NULL)

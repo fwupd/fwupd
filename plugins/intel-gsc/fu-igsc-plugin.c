@@ -24,7 +24,7 @@ fu_igsc_plugin_init(FuIgscPlugin *self)
 }
 
 static void
-fu_igsc_constructed(GObject *obj)
+fu_igsc_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_udev_subsystem(plugin, "mei");
@@ -38,5 +38,5 @@ static void
 fu_igsc_plugin_class_init(FuIgscPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	plugin_class->constructed = fu_igsc_constructed;
+	plugin_class->constructed = fu_igsc_plugin_constructed;
 }

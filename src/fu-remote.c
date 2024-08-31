@@ -21,7 +21,7 @@ G_DEFINE_TYPE(FuRemote, fu_remote, FWUPD_TYPE_REMOTE)
 #define FWUPD_REMOTE_CONFIG_DEFAULT_REFRESH_INTERVAL 86400 /* 24h */
 
 /**
- * fwupd_remote_load_from_filename:
+ * fu_remote_load_from_filename:
  * @self: a #FwupdRemote
  * @filename: (not nullable): a filename
  * @cancellable: (nullable): optional #GCancellable
@@ -33,10 +33,10 @@ G_DEFINE_TYPE(FuRemote, fu_remote, FWUPD_TYPE_REMOTE)
  * Returns: %TRUE for success
  **/
 gboolean
-fwupd_remote_load_from_filename(FwupdRemote *self,
-				const gchar *filename,
-				GCancellable *cancellable,
-				GError **error)
+fu_remote_load_from_filename(FwupdRemote *self,
+			     const gchar *filename,
+			     GCancellable *cancellable,
+			     GError **error)
 {
 	const gchar *group = "fwupd Remote";
 	g_autofree gchar *id = NULL;
@@ -152,7 +152,7 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
 }
 
 /**
- * fwupd_remote_save_to_filename:
+ * fu_remote_save_to_filename:
  * @self: a #FwupdRemote
  * @filename: (not nullable): a filename
  * @cancellable: (nullable): optional #GCancellable
@@ -163,10 +163,10 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
  * Returns: %TRUE for success
  **/
 gboolean
-fwupd_remote_save_to_filename(FwupdRemote *self,
-			      const gchar *filename,
-			      GCancellable *cancellable,
-			      GError **error)
+fu_remote_save_to_filename(FwupdRemote *self,
+			   const gchar *filename,
+			   GCancellable *cancellable,
+			   GError **error)
 {
 	const gchar *group = "fwupd Remote";
 	g_autoptr(GKeyFile) kf = g_key_file_new();

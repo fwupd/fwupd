@@ -719,7 +719,7 @@ fu_context_hwids_dmi_func(void)
 }
 
 static gboolean
-_strnsplit_add_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
+fu_test_strnsplit_add_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
 {
 	GPtrArray *array = (GPtrArray *)user_data;
 	g_debug("TOKEN: [%s] (%u)", token->str, token_idx);
@@ -728,7 +728,7 @@ _strnsplit_add_cb(GString *token, guint token_idx, gpointer user_data, GError **
 }
 
 static gboolean
-_strnsplit_nop_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
+fu_test_strnsplit_nop_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
 {
 	guint *cnt = (guint *)user_data;
 	(*cnt)++;
@@ -791,7 +791,7 @@ fu_strsplit_func(void)
 	g_autoptr(GString) bigstr = g_string_sized_new(bigsz * 2);
 
 	/* works for me */
-	ret = fu_strsplit_full(str, -1, "123", _strnsplit_add_cb, array, &error);
+	ret = fu_strsplit_full(str, -1, "123", fu_test_strnsplit_add_cb, array, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(array->len, ==, 4);
@@ -803,7 +803,7 @@ fu_strsplit_func(void)
 	/* lets try something insane */
 	for (guint i = 0; i < bigsz; i++)
 		g_string_append(bigstr, "X\n");
-	ret = fu_strsplit_full(bigstr->str, -1, "\n", _strnsplit_nop_cb, &cnt, &error);
+	ret = fu_strsplit_full(bigstr->str, -1, "\n", fu_test_strnsplit_nop_cb, &cnt, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	/* we have an empty last section */
@@ -942,7 +942,7 @@ fu_hwids_func(void)
 }
 
 static void
-_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
+fu_test_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	FuDevice **dev = (FuDevice **)user_data;
 	*dev = g_object_ref(device);
@@ -1172,11 +1172,11 @@ fu_plugin_delay_func(void)
 	plugin = fu_plugin_new(NULL);
 	g_signal_connect(FU_PLUGIN(plugin),
 			 "device-added",
-			 G_CALLBACK(_plugin_device_added_cb),
+			 G_CALLBACK(fu_test_plugin_device_added_cb),
 			 &device_tmp);
 	g_signal_connect(FU_PLUGIN(plugin),
 			 "device-removed",
-			 G_CALLBACK(_plugin_device_added_cb),
+			 G_CALLBACK(fu_test_plugin_device_added_cb),
 			 &device_tmp);
 
 	/* add device straight away */
@@ -1505,7 +1505,7 @@ fu_plugin_backend_device_func(void)
 }
 
 static void
-_plugin_backend_proxy_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
+fu_test_plugin_backend_proxy_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	FuDevice **dev = (FuDevice **)user_data;
 	*dev = g_object_ref(device);
@@ -1532,7 +1532,7 @@ fu_plugin_backend_proxy_device_func(void)
 	/* watch for the new superclassed device */
 	g_signal_connect(plugin,
 			 "device-added",
-			 G_CALLBACK(_plugin_backend_proxy_device_added_cb),
+			 G_CALLBACK(fu_test_plugin_backend_proxy_device_added_cb),
 			 &device_new);
 
 	fu_device_set_specialized_gtype(device, FU_TYPE_DEVICE);
@@ -1620,7 +1620,7 @@ fu_common_kernel_lockdown_func(void)
 }
 
 static gboolean
-_open_cb(GObject *device, GError **error)
+fu_test_open_cb(GObject *device, GError **error)
 {
 	g_assert_cmpstr(g_object_get_data(device, "state"), ==, "closed");
 	g_object_set_data(device, "state", (gpointer) "opened");
@@ -1628,7 +1628,7 @@ _open_cb(GObject *device, GError **error)
 }
 
 static gboolean
-_close_cb(GObject *device, GError **error)
+fu_test_close_cb(GObject *device, GError **error)
 {
 	g_assert_cmpstr(g_object_get_data(device, "state"), ==, "opened");
 	g_object_set_data(device, "state", (gpointer) "closed-on-unref");
@@ -1643,7 +1643,7 @@ fu_device_locker_func(void)
 	g_autoptr(GObject) device = g_object_new(G_TYPE_OBJECT, NULL);
 
 	g_object_set_data(device, "state", (gpointer) "closed");
-	locker = fu_device_locker_new_full(device, _open_cb, _close_cb, &error);
+	locker = fu_device_locker_new_full(device, fu_test_open_cb, fu_test_close_cb, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(locker);
 	g_clear_object(&locker);
@@ -1651,7 +1651,7 @@ fu_device_locker_func(void)
 }
 
 static gboolean
-_fail_open_cb(FuDevice *device, GError **error)
+fu_test_fail_open_cb(FuDevice *device, GError **error)
 {
 	fu_device_set_metadata_boolean(device, "Test::Open", TRUE);
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "fail");
@@ -1659,7 +1659,7 @@ _fail_open_cb(FuDevice *device, GError **error)
 }
 
 static gboolean
-_fail_close_cb(FuDevice *device, GError **error)
+fu_test_fail_close_cb(FuDevice *device, GError **error)
 {
 	fu_device_set_metadata_boolean(device, "Test::Close", TRUE);
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "busy");
@@ -1673,8 +1673,8 @@ fu_device_locker_fail_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	locker = fu_device_locker_new_full(device,
-					   (FuDeviceLockerFunc)_fail_open_cb,
-					   (FuDeviceLockerFunc)_fail_close_cb,
+					   (FuDeviceLockerFunc)fu_test_fail_open_cb,
+					   (FuDeviceLockerFunc)fu_test_fail_close_cb,
 					   &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
 	g_assert_null(locker);
@@ -3282,7 +3282,7 @@ fu_firmware_build_func(void)
 }
 
 static gsize
-fu_firmware_dfuse_image_get_size(FuFirmware *self)
+fu_test_firmware_dfuse_image_get_size(FuFirmware *self)
 {
 	g_autoptr(GPtrArray) chunks = fu_firmware_get_chunks(self, NULL);
 	gsize length = 0;
@@ -3294,13 +3294,13 @@ fu_firmware_dfuse_image_get_size(FuFirmware *self)
 }
 
 static gsize
-fu_firmware_dfuse_get_size(FuFirmware *firmware)
+fu_test_firmware_dfuse_get_size(FuFirmware *firmware)
 {
 	gsize length = 0;
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *image = g_ptr_array_index(images, i);
-		length += fu_firmware_dfuse_image_get_size(image);
+		length += fu_test_firmware_dfuse_image_get_size(image);
 	}
 	return length;
 }
@@ -3322,7 +3322,7 @@ fu_firmware_dfuse_func(void)
 	g_assert_cmpint(fu_dfu_firmware_get_vid(FU_DFU_FIRMWARE(firmware)), ==, 0x1234);
 	g_assert_cmpint(fu_dfu_firmware_get_pid(FU_DFU_FIRMWARE(firmware)), ==, 0x5678);
 	g_assert_cmpint(fu_dfu_firmware_get_release(FU_DFU_FIRMWARE(firmware)), ==, 0x8642);
-	g_assert_cmpint(fu_firmware_dfuse_get_size(firmware), ==, 0x21);
+	g_assert_cmpint(fu_test_firmware_dfuse_get_size(firmware), ==, 0x21);
 }
 
 static void

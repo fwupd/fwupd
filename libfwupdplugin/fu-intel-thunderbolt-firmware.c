@@ -30,7 +30,7 @@ G_DEFINE_TYPE(FuIntelThunderboltFirmware,
 	      FU_TYPE_INTEL_THUNDERBOLT_NVM)
 
 static gboolean
-fu_intel_thunderbolt_nvm_valid_farb_pointer(guint32 pointer)
+fu_intel_thunderbolt_firmware_nvm_valid_farb_pointer(guint32 pointer)
 {
 	return pointer != 0 && pointer != 0xFFFFFF;
 }
@@ -54,7 +54,7 @@ fu_intel_thunderbolt_firmware_parse(FuFirmware *firmware,
 					      G_LITTLE_ENDIAN,
 					      error))
 			return FALSE;
-		if (fu_intel_thunderbolt_nvm_valid_farb_pointer(farb_pointer)) {
+		if (fu_intel_thunderbolt_firmware_nvm_valid_farb_pointer(farb_pointer)) {
 			valid = TRUE;
 			break;
 		}

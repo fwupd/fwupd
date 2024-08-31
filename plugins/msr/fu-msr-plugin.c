@@ -374,7 +374,7 @@ fu_msr_plugin_device_registered(FuPlugin *plugin, FuDevice *dev)
 }
 
 static void
-fu_plugin_add_security_attr_dci_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs)
+fu_msr_plugin_add_security_attr_dci_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
@@ -408,7 +408,7 @@ fu_plugin_add_security_attr_dci_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs
 }
 
 static void
-fu_plugin_add_security_attr_intel_gds(FuPlugin *plugin, FuSecurityAttrs *attrs)
+fu_msr_plugin_add_security_attr_intel_gds(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
@@ -463,7 +463,7 @@ fu_plugin_add_security_attr_intel_gds(FuPlugin *plugin, FuSecurityAttrs *attrs)
 }
 
 static void
-fu_plugin_add_security_attr_intel_tme_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs)
+fu_msr_plugin_add_security_attr_intel_tme_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
@@ -508,7 +508,7 @@ fu_plugin_add_security_attr_intel_tme_enabled(FuPlugin *plugin, FuSecurityAttrs 
 }
 
 static void
-fu_plugin_add_security_attr_dci_locked(FuPlugin *plugin, FuSecurityAttrs *attrs)
+fu_msr_plugin_add_security_attr_dci_locked(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
@@ -571,7 +571,7 @@ fu_msr_plugin_kernel_enabled_sme(GError **error)
 }
 
 static void
-fu_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs)
+fu_msr_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
@@ -623,11 +623,11 @@ fu_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttrs *a
 static void
 fu_msr_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	fu_plugin_add_security_attr_dci_enabled(plugin, attrs);
-	fu_plugin_add_security_attr_dci_locked(plugin, attrs);
-	fu_plugin_add_security_attr_amd_sme_enabled(plugin, attrs);
-	fu_plugin_add_security_attr_intel_tme_enabled(plugin, attrs);
-	fu_plugin_add_security_attr_intel_gds(plugin, attrs);
+	fu_msr_plugin_add_security_attr_dci_enabled(plugin, attrs);
+	fu_msr_plugin_add_security_attr_dci_locked(plugin, attrs);
+	fu_msr_plugin_add_security_attr_amd_sme_enabled(plugin, attrs);
+	fu_msr_plugin_add_security_attr_intel_tme_enabled(plugin, attrs);
+	fu_msr_plugin_add_security_attr_intel_gds(plugin, attrs);
 }
 
 static gboolean

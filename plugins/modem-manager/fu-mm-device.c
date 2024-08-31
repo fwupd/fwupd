@@ -120,7 +120,7 @@ fu_mm_device_get_update_methods(FuMmDevice *device)
 }
 
 static gboolean
-validate_firmware_update_method(MMModemFirmwareUpdateMethod methods, GError **error)
+fu_mm_validate_firmware_update_method(MMModemFirmwareUpdateMethod methods, GError **error)
 {
 	static const MMModemFirmwareUpdateMethod supported_combinations[] = {
 	    MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
@@ -208,7 +208,7 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 	}
 
 	/* make sure the combination is supported */
-	if (!validate_firmware_update_method(self->update_methods, error))
+	if (!fu_mm_validate_firmware_update_method(self->update_methods, error))
 		return FALSE;
 
 	/* various fastboot commands */
@@ -1625,11 +1625,11 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 	firehose_rawprogram = fu_archive_lookup_by_fn(archive, "firehose-rawprogram.xml", error);
 	if (firehose_rawprogram == NULL)
 		return FALSE;
-	if (!fu_firehose_validate_rawprogram(firehose_rawprogram,
-					     archive,
-					     &firehose_rawprogram_silo,
-					     &firehose_rawprogram_actions,
-					     error)) {
+	if (!fu_firehose_updater_validate_rawprogram(firehose_rawprogram,
+						     archive,
+						     &firehose_rawprogram_silo,
+						     &firehose_rawprogram_actions,
+						     error)) {
 		g_prefix_error(error, "Invalid firehose rawprogram manifest: ");
 		return FALSE;
 	}

@@ -168,7 +168,7 @@ fu_synaptics_mst_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_synaptics_rmi_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_synaptics_mst_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 {
 	FuSynapticsMstFirmware *self = FU_SYNAPTICS_MST_FIRMWARE(firmware);
 	guint64 tmp;
@@ -199,7 +199,7 @@ fu_synaptics_mst_firmware_class_init(FuSynapticsMstFirmwareClass *klass)
 	firmware_class->parse = fu_synaptics_mst_firmware_parse;
 	firmware_class->export = fu_synaptics_mst_firmware_export;
 	firmware_class->write = fu_synaptics_mst_firmware_write;
-	firmware_class->build = fu_synaptics_rmi_firmware_build;
+	firmware_class->build = fu_synaptics_mst_firmware_build;
 }
 
 FuFirmware *

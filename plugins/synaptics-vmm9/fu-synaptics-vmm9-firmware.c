@@ -34,7 +34,10 @@ fu_synaptics_vmm9_firmware_export(FuFirmware *firmware,
 }
 
 static gboolean
-fu_synaptics_vmm9_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
+fu_synaptics_vmm9_firmware_validate(FuFirmware *firmware,
+				    GInputStream *stream,
+				    gsize offset,
+				    GError **error)
 {
 	return fu_struct_synaptics_vmm9_validate_stream(stream, offset, error);
 }
@@ -118,7 +121,7 @@ static void
 fu_synaptics_vmm9_firmware_class_init(FuSynapticsVmm9FirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
-	firmware_class->validate = fu_synaptics_vmm9_validate;
+	firmware_class->validate = fu_synaptics_vmm9_firmware_validate;
 	firmware_class->parse = fu_synaptics_vmm9_firmware_parse;
 	firmware_class->export = fu_synaptics_vmm9_firmware_export;
 }

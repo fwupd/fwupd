@@ -785,7 +785,10 @@ fu_logitech_bulkcontroller_device_parse_info(FuLogitechBulkcontrollerDevice *sel
 	g_autofree gchar *bufstr = NULL;
 	g_autoptr(GByteArray) decoded_pkt = NULL;
 
-	decoded_pkt = proto_manager_decode_message(buf->data, buf->len, &proto_id, error);
+	decoded_pkt = fu_logitech_bulkcontroller_proto_manager_decode_message(buf->data,
+									      buf->len,
+									      &proto_id,
+									      error);
 	if (decoded_pkt == NULL) {
 		g_prefix_error(error, "failed to unpack packet for device info request: ");
 		return FALSE;
@@ -828,7 +831,7 @@ fu_logitech_bulkcontroller_device_ensure_info_cb(FuDevice *device,
 	 */
 	if (send_req) {
 		g_autoptr(GByteArray) device_request =
-		    proto_manager_generate_get_device_info_request();
+		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request();
 		buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
 		if (buf == NULL)
 			return FALSE;
@@ -927,7 +930,8 @@ fu_logitech_bulkcontroller_device_verify_cb(FuDevice *device, gpointer user_data
 	if (buf == NULL) {
 		g_autoptr(GByteArray) device_request = NULL;
 		g_debug("manually requesting as no pending request: %s", error_local->message);
-		device_request = proto_manager_generate_get_device_info_request();
+		device_request =
+		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request();
 		buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
 		if (buf == NULL)
 			return FALSE;
@@ -1090,9 +1094,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_logitech_fu_logitech_bulkcontroller_device_set_time_cb(FuDevice *device,
-							  gpointer user_data,
-							  GError **error)
+fu_logitech_bulkcontroller_device_set_time_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
 	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
@@ -1102,13 +1104,17 @@ fu_logitech_fu_logitech_bulkcontroller_device_set_time_cb(FuDevice *device,
 	g_autoptr(GByteArray) buf = NULL;
 
 	/* send SetDeviceTimeRequest to sync device clock with host */
-	device_request = proto_manager_generate_set_device_time_request(error);
+	device_request =
+	    fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(error);
 	if (device_request == NULL)
 		return FALSE;
 	buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
 	if (buf == NULL)
 		return FALSE;
-	decoded_pkt = proto_manager_decode_message(buf->data, buf->len, &proto_id, error);
+	decoded_pkt = fu_logitech_bulkcontroller_proto_manager_decode_message(buf->data,
+									      buf->len,
+									      &proto_id,
+									      error);
 	if (decoded_pkt == NULL) {
 		g_prefix_error(error, "failed to unpack packet: ");
 		return FALSE;
@@ -1134,7 +1140,7 @@ static gboolean
 fu_logitech_bulkcontroller_device_set_time(FuLogitechBulkcontrollerDevice *self, GError **error)
 {
 	return fu_device_retry(FU_DEVICE(self),
-			       fu_logitech_fu_logitech_bulkcontroller_device_set_time_cb,
+			       fu_logitech_bulkcontroller_device_set_time_cb,
 			       MAX_RETRIES,
 			       NULL,
 			       error);
@@ -1151,12 +1157,15 @@ fu_logitech_bulkcontroller_device_transition_to_device_mode_cb(FuDevice *device,
 	g_autoptr(GByteArray) res = NULL;
 	g_autoptr(GByteArray) decoded_pkt = NULL;
 
-	req = proto_manager_generate_transition_to_device_mode_request();
+	req = fu_logitech_bulkcontroller_proto_manager_generate_transition_to_device_mode_request();
 	res = fu_logitech_bulkcontroller_device_sync_write(self, req, error);
 	if (res == NULL)
 		return FALSE;
 
-	decoded_pkt = proto_manager_decode_message(res->data, res->len, &proto_id, error);
+	decoded_pkt = fu_logitech_bulkcontroller_proto_manager_decode_message(res->data,
+									      res->len,
+									      &proto_id,
+									      error);
 	if (decoded_pkt == NULL) {
 		g_prefix_error(error, "failed to unpack packet: ");
 		return FALSE;

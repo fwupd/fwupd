@@ -36,7 +36,7 @@ fu_tpm_eventlog_parser_item_free(FuTpmEventlogItem *item)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuTpmEventlogItem, fu_tpm_eventlog_parser_item_free);
 
 void
-fu_tpm_eventlog_item_to_string(FuTpmEventlogItem *item, guint idt, GString *str)
+fu_tpm_eventlog_item_to_string(FuTpmEventlogItem *item, guint idt, GString *str) /* nocheck:name */
 {
 	const gchar *tmp;
 	g_autofree gchar *pcrstr =
