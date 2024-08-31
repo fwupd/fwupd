@@ -608,7 +608,7 @@ _fu_strtoull_simple(const gchar *str, guint64 *value, GError **error)
 		str += 2;
 		base = 16;
 	}
-	*value = g_ascii_strtoull(str, &endptr, base); /* nocheck */
+	*value = g_ascii_strtoull(str, &endptr, base); /* nocheck:blocked */
 	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "cannot parse %s", str);
 		return FALSE;

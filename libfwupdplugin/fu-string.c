@@ -70,7 +70,7 @@ fu_strtoull(const gchar *str,
 	}
 
 	/* convert */
-	value_tmp = g_ascii_strtoull(str, &endptr, base); /* nocheck */
+	value_tmp = g_ascii_strtoull(str, &endptr, base); /* nocheck:blocked */
 	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "cannot parse %s", str);
 		return FALSE;
@@ -167,7 +167,7 @@ fu_strtoll(const gchar *str,
 	}
 
 	/* convert */
-	value_tmp = g_ascii_strtoll(str, &endptr, base); /* nocheck */
+	value_tmp = g_ascii_strtoll(str, &endptr, base); /* nocheck:blocked */
 	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "cannot parse %s", str);
 		return FALSE;

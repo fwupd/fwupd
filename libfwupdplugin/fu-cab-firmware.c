@@ -326,7 +326,8 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 				    zError(zret));
 			return FALSE;
 		}
-		bytes_uncomp = g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck */
+		bytes_uncomp =
+		    g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
 		fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(folder_data),
 						    bytes_uncomp);
 	} else {
@@ -679,7 +680,7 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		return NULL;
 	}
 	cfdata_linear_blob =
-	    g_byte_array_free_to_bytes(g_steal_pointer(&cfdata_linear)); /* nocheck */
+	    g_byte_array_free_to_bytes(g_steal_pointer(&cfdata_linear)); /* nocheck:blocked */
 	chunks = fu_chunk_array_new_from_bytes(cfdata_linear_blob, 0x0, 0x8000);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;

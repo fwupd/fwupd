@@ -325,11 +325,11 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 			gssize len = read(self->fd, buf_tmp->data, buf_tmp->len);
 			if (len < 0) {
 				g_set_error(error,
-					    G_IO_ERROR, /* nocheck */
+					    G_IO_ERROR, /* nocheck:error */
 #ifdef HAVE_ERRNO_H
 					    g_io_error_from_errno(errno),
 #else
-					    G_IO_ERROR_FAILED, /* nocheck */
+					    G_IO_ERROR_FAILED, /* nocheck:blocked */
 #endif
 					    "failed to read %i: %s",
 					    self->fd,
@@ -374,11 +374,11 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 				if (errno == EAGAIN)
 					continue;
 				g_set_error(error,
-					    G_IO_ERROR, /* nocheck */
+					    G_IO_ERROR, /* nocheck:error */
 #ifdef HAVE_ERRNO_H
 					    g_io_error_from_errno(errno),
 #else
-					    G_IO_ERROR_FAILED, /* nocheck */
+					    G_IO_ERROR_FAILED, /* nocheck:blocked */
 #endif
 					    "failed to read %i: %s",
 					    self->fd,
@@ -558,11 +558,11 @@ fu_io_channel_new_file(const gchar *filename, FuIoChannelOpenFlag open_flags, GE
 	fd = g_open(filename, flags, S_IRWXU);
 	if (fd < 0) {
 		g_set_error(error,
-			    G_IO_ERROR, /* nocheck */
+			    G_IO_ERROR, /* nocheck:error */
 #ifdef HAVE_ERRNO_H
 			    g_io_error_from_errno(errno),
 #else
-			    G_IO_ERROR_FAILED, /* nocheck */
+			    G_IO_ERROR_FAILED, /* nocheck:blocked */
 #endif
 			    "failed to open %s: %s",
 			    filename,

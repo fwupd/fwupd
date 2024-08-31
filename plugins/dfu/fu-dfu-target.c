@@ -105,7 +105,7 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 	guint64 sector_size;
 
 	/* parse # of sectors */
-	nr_sectors = g_ascii_strtoull(dfuse_sector_id, &tmp, 10); /* nocheck */
+	nr_sectors = g_ascii_strtoull(dfuse_sector_id, &tmp, 10); /* nocheck:blocked */
 	if (nr_sectors > 999) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -126,7 +126,7 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 	}
 
 	/* parse sector size */
-	sector_size = g_ascii_strtoull(tmp + 1, &tmp, 10); /* nocheck */
+	sector_size = g_ascii_strtoull(tmp + 1, &tmp, 10); /* nocheck:blocked */
 	if (sector_size > 999) {
 		g_set_error(error,
 			    FWUPD_ERROR,

@@ -12,11 +12,11 @@ from typing import List, Optional
 
 
 class SourceFailure:
-    def __init__(self, fn=None, linecnt=None, message=None, nocheck=True):
+    def __init__(self, fn=None, linecnt=None, message=None, nocheck=None):
         self.fn: Optional[str] = fn
         self.linecnt: Optional[int] = linecnt
         self.message: Optional[str] = message
-        self.nocheck: bool = nocheck
+        self.nocheck: Optional[str] = nocheck
 
 
 class Checker:
@@ -24,7 +24,7 @@ class Checker:
         self.failures: List[SourceFailure] = []
         self._current_fn: Optional[str] = None
         self._current_linecnt: Optional[int] = None
-        self._current_nocheck: bool = False
+        self._current_nocheck: Optional[str] = None
 
     def add_failure(self, message=None):
         self.failures.append(
@@ -38,7 +38,10 @@ class Checker:
 
     def _test_line_debug_fns(self, line: str) -> None:
         # no console output expected
-        if os.path.basename(self._current_fn) in [
+        self._current_nocheck = "nocheck:print"
+        if line.find(self._current_nocheck) != -1:
+            return
+        if self._current_fn and os.path.basename(self._current_fn) in [
             "fu-console.c",
             "fu-daemon.c",
             "fu-dbxtool.c",
@@ -61,7 +64,9 @@ class Checker:
                 self.add_failure(f"contains blocked token {token}: {msg}")
 
     def _test_line_blocked_fns(self, line: str) -> None:
-        self._current_nocheck = True
+        self._current_nocheck = "nocheck:blocked"
+        if line.find(self._current_nocheck) != -1:
+            return
         for token, msg in {
             "cbor_get_uint8(": "Use cbor_get_int() instead",
             "cbor_get_uint16(": "Use cbor_get_int() instead",
@@ -94,10 +99,10 @@ class Checker:
                 self.add_failure("contains blocked token {token}: {msg}")
 
     def _test_lines_gerror(self, lines: List[str]) -> None:
-        self._current_nocheck = True
+        self._current_nocheck = "nocheck:error"
         linecnt_g_set_error: int = 0
         for linecnt, line in enumerate(lines):
-            if line.find("nocheck") != -1:
+            if line.find(self._current_nocheck) != -1:
                 continue
             self._current_linecnt = linecnt
 
@@ -111,12 +116,11 @@ class Checker:
                         break
 
     def _test_lines_depth(self, lines: List[str]) -> None:
-        self._current_nocheck = True
-
         # check depth
+        self._current_nocheck = "nocheck:depth"
         depth: int = 0
         for linecnt, line in enumerate(lines):
-            if line.find("nocheck") != -1:
+            if line.find(self._current_nocheck) != -1:
                 continue
             self._current_linecnt = linecnt
             for char in line:
@@ -143,10 +147,7 @@ class Checker:
         lines_nocheck: List[str] = []
 
         # tests we can do line by line
-        self._current_nocheck = True
         for linecnt, line in enumerate(lines):
-            if line.find("nocheck") != -1:
-                continue
             self._current_linecnt = linecnt
 
             # test for blocked functions
@@ -187,12 +188,14 @@ def test_files() -> int:
 
     # show issues
     for failure in checker.failures:
-        line: str = failure.fn
+        line: str = ""
+        if failure.fn:
+            line += failure.fn
         if failure.linecnt:
             line += f":{failure.linecnt}"
         line += f": {failure.message}"
         if failure.nocheck:
-            line += " -- use a nocheck comment to ignore"
+            line += f" -- use a {failure.nocheck} comment to ignore"
         print(line)
     return 1 if checker.failures else 0
 

@@ -406,7 +406,7 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		dt_struct_buf =
-		    g_byte_array_free_to_bytes(g_steal_pointer(&dt_struct)); /* nocheck */
+		    g_byte_array_free_to_bytes(g_steal_pointer(&dt_struct)); /* nocheck:blocked */
 		if (!fu_fdt_firmware_parse_dt_struct(self, dt_struct_buf, dt_strings, error))
 			return FALSE;
 	}
