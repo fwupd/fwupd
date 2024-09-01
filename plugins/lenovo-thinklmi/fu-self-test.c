@@ -56,7 +56,6 @@ fu_test_self_init(FuTest *self, GError **error)
 	g_assert_no_error(*error);
 	g_assert_true(ret);
 	ret = fu_context_reload_bios_settings(ctx, error);
-#ifdef FU_THINKLMI_COMPAT
 	g_assert_no_error(*error);
 	g_assert_true(ret);
 
@@ -73,11 +72,6 @@ fu_test_self_init(FuTest *self, GError **error)
 	g_assert_true(ret);
 	self->ctx = fu_plugin_get_context(self->plugin_lenovo_thinklmi);
 	return TRUE;
-#else
-	g_assert_error(*error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert_false(ret);
-	return FALSE;
-#endif
 }
 
 static FuDevice *

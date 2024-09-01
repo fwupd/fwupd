@@ -533,11 +533,6 @@ if supported_build
     conf.set('SUPPORTED_BUILD', '1')
 endif
 
-# compatibility with behavior in < kernel 6.3
-if get_option('thinklmi_compat')
-  conf.set('FU_THINKLMI_COMPAT', '1')
-endif
-
 gnome = import('gnome')
 i18n = import('i18n')
 
@@ -751,7 +746,6 @@ if build_daemon
     'offline': offline,
     'passim': passim,
     'sqlite': sqlite,
-    'thinklmi_compat': get_option('thinklmi_compat'),
     'GPG support': supported_gpg,
     'PKCS7 support': supported_pkcs7,
   }, section: 'daemon features')

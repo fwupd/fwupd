@@ -4271,12 +4271,6 @@ fu_bios_settings_load_func(void)
 	g_autofree gchar *test_dir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
-#ifdef FU_THINKLMI_COMPAT
-	g_autoptr(FuBiosSettings) p14s_settings = NULL;
-	g_autoptr(FuBiosSettings) p620_settings = NULL;
-	g_autoptr(GPtrArray) p14s_items = NULL;
-	g_autoptr(GPtrArray) p620_items = NULL;
-#endif
 	g_autoptr(FuBiosSettings) p620_6_3_settings = NULL;
 	g_autoptr(FuBiosSettings) xp29310_settings = NULL;
 	g_autoptr(GPtrArray) p620_6_3_items = NULL;
@@ -4300,73 +4294,9 @@ fu_bios_settings_load_func(void)
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
 	ret = fu_context_reload_bios_settings(ctx, &error);
-#ifdef FU_THINKLMI_COMPAT
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	p620_settings = fu_context_get_bios_settings(ctx);
-	p620_items = fu_bios_settings_get_all(p620_settings);
-	g_assert_cmpint(p620_items->len, ==, 5);
-
-	/* make sure nothing pending */
-	ret = fu_context_get_bios_setting_pending_reboot(ctx);
-	g_assert_false(ret);
-
-	/* check a BIOS setting reads from kernel as expected by fwupd today */
-	setting = fu_context_get_bios_setting(ctx, "com.thinklmi.AMDMemoryGuard");
-	g_assert_nonnull(setting);
-	tmp = fwupd_bios_setting_get_name(setting);
-	g_assert_cmpstr(tmp, ==, "AMDMemoryGuard");
-	tmp = fwupd_bios_setting_get_description(setting);
-	g_assert_cmpstr(tmp, ==, "AMDMemoryGuard");
-	tmp = fwupd_bios_setting_get_current_value(setting);
-	g_assert_cmpstr(tmp, ==, "Disable");
-	values = fwupd_bios_setting_get_possible_values(setting);
-	for (guint i = 0; i < values->len; i++) {
-		const gchar *possible = g_ptr_array_index(values, i);
-		if (i == 0)
-			g_assert_cmpstr(possible, ==, "Disable");
-		if (i == 1)
-			g_assert_cmpstr(possible, ==, "Enable");
-	}
-
-	/* try to read an BIOS setting known to have ][Status] to make sure we worked
-	 * around the thinklmi bug sufficiently
-	 */
-	setting = fu_context_get_bios_setting(ctx, "com.thinklmi.StartupSequence");
-	g_assert_nonnull(setting);
-	tmp = fwupd_bios_setting_get_current_value(setting);
-	g_assert_cmpstr(tmp, ==, "Primary");
-	values = fwupd_bios_setting_get_possible_values(setting);
-	for (guint i = 0; i < values->len; i++) {
-		const gchar *possible = g_ptr_array_index(values, i);
-		if (i == 0)
-			g_assert_cmpstr(possible, ==, "Primary");
-		if (i == 1)
-			g_assert_cmpstr(possible, ==, "Automatic");
-	}
-
-	/* check BIOS settings that should be read only */
-	for (guint i = 0; i < p620_items->len; i++) {
-		const gchar *name;
-		gboolean ro;
-
-		setting = g_ptr_array_index(p620_items, i);
-		ro = fwupd_bios_setting_get_read_only(setting);
-		tmp = fwupd_bios_setting_get_current_value(setting);
-		name = fwupd_bios_setting_get_name(setting);
-		g_debug("%s: %s", name, tmp);
-		if ((g_strcmp0(name, "pending_reboot") == 0) || (g_strrstr(tmp, "[Status") != NULL))
-			g_assert_true(ro);
-		else
-			g_assert_false(ro);
-	}
-
-#else
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
 	g_clear_error(&error);
-#endif
 	g_free(test_dir);
 
 	/* load BIOS settings from a Lenovo P620 running 6.3 */
@@ -4441,44 +4371,9 @@ fu_bios_settings_load_func(void)
 	test_dir = g_build_filename(base_dir, "lenovo-p14s-gen1", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 	ret = fu_context_reload_bios_settings(ctx, &error);
-#ifdef FU_THINKLMI_COMPAT
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	p14s_settings = fu_context_get_bios_settings(ctx);
-	p14s_items = fu_bios_settings_get_all(p14s_settings);
-	g_assert_cmpint(p14s_items->len, ==, 3);
-
-	/* reboot should be pending on this one */
-	ret = fu_context_get_bios_setting_pending_reboot(ctx);
-	g_assert_true(ret);
-
-	/* look for an enumeration BIOS setting with a space */
-	setting = fu_context_get_bios_setting(ctx, "com.thinklmi.SleepState");
-	g_assert_nonnull(setting);
-	tmp = fwupd_bios_setting_get_name(setting);
-	g_assert_cmpstr(tmp, ==, "SleepState");
-	tmp = fwupd_bios_setting_get_description(setting);
-	g_assert_cmpstr(tmp, ==, "SleepState");
-	values = fwupd_bios_setting_get_possible_values(setting);
-	for (guint i = 0; i < values->len; i++) {
-		const gchar *possible = g_ptr_array_index(values, i);
-		if (i == 0)
-			g_assert_cmpstr(possible, ==, "Linux");
-		if (i == 1)
-			g_assert_cmpstr(possible, ==, "Windows 10");
-	}
-
-	/* make sure we defaulted UEFI Secure boot to read only if enabled */
-	setting = fu_context_get_bios_setting(ctx, "com.thinklmi.SecureBoot");
-	g_assert_nonnull(setting);
-	ret = fwupd_bios_setting_get_read_only(setting);
-	g_assert_true(ret);
-#else
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
 	g_clear_error(&error);
-#endif
 	g_free(test_dir);
 
 	/* load BIOS settings from a Dell XPS 9310 */
