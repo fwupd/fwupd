@@ -196,80 +196,6 @@ fu_bios_setting_set_read_only(FuBiosSettings *self, FwupdBiosSetting *attr)
 		fwupd_bios_setting_set_read_only(attr, TRUE);
 }
 
-#ifdef FU_THINKLMI_COMPAT
-#define LENOVO_POSSIBLE_NEEDLE "[Optional:"
-#define LENOVO_EXCLUDED	       "[Excluded from boot order:"
-
-static gboolean
-fu_bios_setting_fixup_lenovo_thinklmi_bug(FwupdBiosSetting *attr, GError **error)
-{
-	const gchar *current_value = fwupd_bios_setting_get_current_value(attr);
-	const gchar *tmp;
-	g_autoptr(GString) str = NULL;
-	g_autoptr(GString) right_str = NULL;
-	g_auto(GStrv) vals = NULL;
-
-	/* debug */
-	g_debug("processing %s: (%s)",
-		fwupd_bios_setting_get_name(attr),
-		fwupd_bios_setting_get_current_value(attr));
-
-	str = g_string_new(current_value);
-
-	/* empty string */
-	if (str->len == 0)
-		return TRUE;
-
-	/* split into left and right */
-	vals = fu_strsplit(str->str, str->len, ";", 2);
-
-	/* use left half for current value */
-	fwupd_bios_setting_set_current_value(attr, vals[0]);
-	if (vals[1] == NULL)
-		return TRUE;
-
-	/* use the right half to process further */
-	right_str = g_string_new(vals[1]);
-
-	/* Strip boot order exclusion info */
-	tmp = g_strrstr(right_str->str, LENOVO_EXCLUDED);
-	if (tmp != NULL)
-		g_string_truncate(str, tmp - right_str->str);
-
-	/* Look for possible values to populate */
-	tmp = g_strrstr(right_str->str, LENOVO_POSSIBLE_NEEDLE);
-	if (tmp != NULL) {
-		g_auto(GStrv) possible_vals = NULL;
-		g_string_erase(right_str, 0, strlen(LENOVO_POSSIBLE_NEEDLE));
-		possible_vals = fu_strsplit(right_str->str, right_str->len, ",", -1);
-		if (possible_vals[0] != NULL)
-			fwupd_bios_setting_set_kind(attr, FWUPD_BIOS_SETTING_KIND_ENUMERATION);
-		for (guint i = 0; possible_vals[i] != NULL && possible_vals[i][0] != '\0'; i++) {
-			/* last string */
-			if (possible_vals[i + 1] == NULL &&
-			    g_strrstr(possible_vals[i], "]") != NULL) {
-				g_auto(GStrv) stripped_vals = fu_strsplit(possible_vals[i],
-									  strlen(possible_vals[i]),
-									  "]",
-									  -1);
-				fwupd_bios_setting_add_possible_value(attr, stripped_vals[0]);
-				continue;
-			}
-			fwupd_bios_setting_add_possible_value(attr, possible_vals[i]);
-		}
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_bios_settings_run_folder_fixups(FwupdBiosSetting *attr, GError **error)
-{
-	if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_UNKNOWN)
-		return fu_bios_setting_fixup_lenovo_thinklmi_bug(attr, error);
-	return TRUE;
-}
-#endif
-
 static gboolean
 fu_bios_setting_set_type(FuBiosSettings *self, FwupdBiosSetting *attr, GError **error)
 {
@@ -281,20 +207,10 @@ fu_bios_setting_set_type(FuBiosSettings *self, FwupdBiosSetting *attr, GError **
 	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
 	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(attr), FALSE);
 
-	/* lenovo thinklmi seems to be missing it even though it's mandatory :/ */
 	if (!fu_bios_setting_get_key(attr, "type", &data, &error_key)) {
-#ifdef FU_THINKLMI_COMPAT
-		static gboolean kernel_bug_notified = FALSE;
-		if (!kernel_bug_notified) {
-			g_info("using think-lmi compatibility for kernels less than 6.3");
-			kernel_bug_notified = TRUE;
-		}
-		kernel_bug = TRUE;
-#else
 		g_debug("%s", error_key->message);
 		g_propagate_error(error, g_steal_pointer(&error_key));
 		return FALSE;
-#endif
 	}
 
 	if (g_strcmp0(data, "enumeration") == 0 || kernel_bug) {
@@ -347,10 +263,6 @@ fu_bios_settings_set_folder_attributes(FuBiosSettings *self, FwupdBiosSetting *a
 		return FALSE;
 	if (!fu_bios_setting_set_description(self, attr, &error_local))
 		g_debug("%s", error_local->message);
-#ifdef FU_THINKLMI_COMPAT
-	if (!fu_bios_settings_run_folder_fixups(attr, error))
-		return FALSE;
-#endif
 	fu_bios_setting_set_read_only(self, attr);
 	return TRUE;
 }

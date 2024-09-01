@@ -517,11 +517,6 @@ option('hsi',
     'false': 'disabled',
   },
 )
-option('thinklmi_compat',
-  type: 'boolean',
-  value: false,
-  description: 'Include workaround for thinklmi kernel bugs',
-)
 option('python',
   type: 'string',
   description: 'the absolute path of the python3 binary',
