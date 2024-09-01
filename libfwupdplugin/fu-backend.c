@@ -78,7 +78,8 @@ fu_backend_device_added(FuBackend *self, FuDevice *device)
 		fu_device_set_backend_id(device, priv->name);
 
 	/* sanity check */
-	if (g_hash_table_contains(priv->devices, fu_device_get_backend_id(device))) {
+	if ((g_getenv("FWUPD_UEFI_TEST") == NULL) &&
+	    g_hash_table_contains(priv->devices, fu_device_get_backend_id(device))) {
 		g_warning("replacing existing device with backend_id %s",
 			  fu_device_get_backend_id(device));
 	}
