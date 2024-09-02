@@ -249,7 +249,7 @@ fu_crc32_find(const guint8 *buf, gsize bufsz, guint32 crc_target)
 }
 
 static guint16
-fu_misr16_step(guint16 cur, guint16 new)
+fu_crc_misr16_step(guint16 cur, guint16 new)
 {
 	guint16 bit0;
 	guint16 res;
@@ -268,7 +268,7 @@ fu_misr16_step(guint16 cur, guint16 new)
 }
 
 /**
- * fu_misr16:
+ * fu_crc_misr16:
  * @buf: memory buffer
  * @bufsz: size of @buf
  * @init: initial value, typically 0x0
@@ -280,12 +280,12 @@ fu_misr16_step(guint16 cur, guint16 new)
  * Since: 1.9.17
  **/
 guint16
-fu_misr16(guint16 init, const guint8 *buf, gsize bufsz)
+fu_crc_misr16(guint16 init, const guint8 *buf, gsize bufsz)
 {
 	g_return_val_if_fail(buf != NULL, G_MAXUINT16);
 	g_return_val_if_fail(bufsz % 2 == 0, G_MAXUINT16);
 
 	for (gsize i = 0; i < bufsz; i += 2)
-		init = fu_misr16_step(init, fu_memread_uint16(buf + i, G_LITTLE_ENDIAN));
+		init = fu_crc_misr16_step(init, fu_memread_uint16(buf + i, G_LITTLE_ENDIAN));
 	return init;
 }

@@ -334,8 +334,8 @@ fu_common_crc_func(void)
 	guint8 buf[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 	g_assert_cmpint(fu_crc8(buf, sizeof(buf)), ==, 0x7A);
 	g_assert_cmpint(fu_crc16(buf, sizeof(buf)), ==, 0x4DF1);
-	g_assert_cmpint(fu_misr16(0, buf, (sizeof(buf) / 2) * 2), ==, 0x40D);
-	g_assert_cmpint(fu_misr16(0xFFFF, buf, (sizeof(buf) / 2) * 2), ==, 0xFBFA);
+	g_assert_cmpint(fu_crc_misr16(0, buf, (sizeof(buf) / 2) * 2), ==, 0x40D);
+	g_assert_cmpint(fu_crc_misr16(0xFFFF, buf, (sizeof(buf) / 2) * 2), ==, 0xFBFA);
 
 	/* all the CRC32 variants, verified using https://crccalc.com/?method=CRC-32 */
 	g_assert_cmpint(fu_crc32(FU_CRC32_KIND_STANDARD, buf, sizeof(buf)), ==, 0x40EFAB9E);

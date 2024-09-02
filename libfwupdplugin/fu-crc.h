@@ -56,4 +56,4 @@ FuCrc32Kind
 fu_crc32_find(const guint8 *buf, gsize bufsz, guint32 crc_target);
 
 guint16
-fu_misr16(guint16 init, const guint8 *buf, gsize bufsz);
+fu_crc_misr16(guint16 init, const guint8 *buf, gsize bufsz);
