@@ -80,9 +80,33 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 
 	/* set the device file manually */
 	if (fu_udev_device_get_device_file(FU_UDEV_DEVICE(self)) == NULL) {
-		g_autofree gchar *devfile =
-		    g_strdup_printf("/dev/i2c-%u",
-				    (guint)fu_udev_device_get_number(FU_UDEV_DEVICE(self)));
+		const gchar *sysfs = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
+		g_auto(GStrv) tokens = fu_strsplit(sysfs, strlen(sysfs), "/", -1);
+		g_autofree gchar *devfile = NULL;
+		guint64 number = G_MAXUINT64;
+
+		for (guint i = 0; tokens[i] != NULL; i++) {
+			if (!g_str_has_prefix(tokens[i], "i2c-"))
+				continue;
+
+			if (!fu_strtoull(tokens[i] + 4,
+					 &number,
+					 0x0,
+					 G_MAXUINT64,
+					 FU_INTEGER_BASE_AUTO,
+					 error))
+				return FALSE;
+			break;
+		}
+		if (number == G_MAXUINT64) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Could not find i2c bus number in sysfs path");
+			return FALSE;
+		}
+		fu_udev_device_set_number(FU_UDEV_DEVICE(self), number);
+		devfile = g_strdup_printf("/dev/i2c-%" G_GUINT64_FORMAT, number);
 		fu_udev_device_set_device_file(FU_UDEV_DEVICE(self), devfile);
 	}
 
