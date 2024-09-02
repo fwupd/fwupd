@@ -8,8 +8,8 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-audio-s5gen2-firmware.h"
-#include "fu-audio-s5gen2-fw-struct.h"
+#include "fu-qc-s5gen2-firmware.h"
+#include "fu-qc-s5gen2-fw-struct.h"
 
 struct _FuQcS5gen2Firmware {
 	FuFirmware parent_instance;

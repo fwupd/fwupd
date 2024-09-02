@@ -8,4 +8,4 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuAudioS5gen2Plugin, fu_audio_s5gen2_plugin, FU, AUDIO_S5GEN2_PLUGIN, FuPlugin)
+G_DECLARE_FINAL_TYPE(FuQcS5gen2Plugin, fu_qc_s5gen2_plugin, FU, AUDIO_S5GEN2_PLUGIN, FuPlugin)

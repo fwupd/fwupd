@@ -1,5 +1,5 @@
 ---
-title: Plugin: audio-s5gen2
+title: Plugin: qc-s5gen2
 ---
 
 ## Introduction

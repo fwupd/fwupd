@@ -7,11 +7,11 @@
 
 #include "config.h"
 
-#include "fu-audio-s5gen2-device.h"
-#include "fu-audio-s5gen2-hid-device.h"
-#include "fu-audio-s5gen2-hid-struct.h"
-#include "fu-audio-s5gen2-impl.h"
-#include "fu-audio-s5gen2-struct.h"
+#include "fu-qc-s5gen2-device.h"
+#include "fu-qc-s5gen2-hid-device.h"
+#include "fu-qc-s5gen2-hid-struct.h"
+#include "fu-qc-s5gen2-impl.h"
+#include "fu-qc-s5gen2-struct.h"
 
 #define HID_IFACE  0x01
 #define HID_EP_IN  0x82
