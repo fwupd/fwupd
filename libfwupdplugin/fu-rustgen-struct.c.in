@@ -312,27 +312,21 @@
 {{export.value}}gboolean
 {{obj.c_method('ValidateStream')}}(GInputStream *stream, gsize offset, GError **error)
 {
-    gssize rc;
-    g_autoptr(GByteArray) st = g_byte_array_new();
+    g_autoptr(GByteArray) st = NULL;
     g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-    if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_SET, NULL, error)) {
-        g_prefix_error(error, "{{obj.name}} failed seek to 0x%x: ", (guint) offset);
-        return FALSE;
-    }
-    g_byte_array_set_size(st, {{obj.size}});
-    rc = g_input_stream_read(stream, st->data, st->len, NULL, error);
-    if (rc == -1) {
+    st = fu_input_stream_read_byte_array(stream, offset, {{obj.size}}, error);
+    if (st == NULL) {
         g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) st->len);
         return FALSE;
     }
-    if ((gsize) rc != st->len) {
+    if (st->len != {{obj.size}}) {
         g_set_error(error,
                     FWUPD_ERROR,
                     FWUPD_ERROR_INVALID_DATA,
                     "{{obj.name}} requested 0x%x and got 0x%x",
-                    (guint) st->len,
-                    (guint) rc);
+                    (guint) {{obj.size}},
+                    (guint) st->len);
         return FALSE;
     }
     return {{obj.c_method('ValidateInternal')}}(st, error);
@@ -412,25 +406,19 @@
 {{export.value}}{{obj.name}} *
 {{obj.c_method('ParseStream')}}(GInputStream *stream, gsize offset, GError **error)
 {
-    gssize rc;
-    g_autoptr(GByteArray) st = g_byte_array_new();
-    if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_SET, NULL, error)) {
-        g_prefix_error(error, "{{obj.name}} failed seek to 0x%x: ", (guint) offset);
-        return NULL;
-    }
-    g_byte_array_set_size(st, {{obj.size}});
-    rc = g_input_stream_read(stream, st->data, st->len, NULL, error);
-    if (rc == -1) {
+    g_autoptr(GByteArray) st = NULL;
+    st = fu_input_stream_read_byte_array(stream, offset, {{obj.size}}, error);
+    if (st == NULL) {
         g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) st->len);
         return NULL;
     }
-    if ((gsize) rc != st->len) {
+    if (st->len != {{obj.size}}) {
         g_set_error(error,
                     FWUPD_ERROR,
                     FWUPD_ERROR_INVALID_DATA,
                     "{{obj.name}} requested 0x%x and got 0x%x",
-                    (guint) st->len,
-                    (guint) rc);
+                    (guint) {{obj.size}},
+                    (guint) st->len);
         return NULL;
     }
     if (!{{obj.c_method('ParseInternal')}}(st, error))
