@@ -8,7 +8,7 @@
 
 #include <fwupd.h>
 
-#include "fu-common.h"
+#include "fu-endian.h"
 
 gboolean
 fu_memcmp_safe(const guint8 *buf1,

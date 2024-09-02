@@ -235,6 +235,7 @@ fwupdplugin_headers = [
   'fu-efi-signature-list.h',
   'fu-efivars.h',
   'fu-elf-firmware.h',
+  'fu-endian.h',
   'fu-fdt-firmware.h',
   'fu-fdt-image.h',
   'fu-firmware-common.h',

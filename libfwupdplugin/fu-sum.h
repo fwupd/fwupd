@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-common.h"
+#include "fu-endian.h"
 
 guint8
 fu_sum8(const guint8 *buf, gsize bufsz);

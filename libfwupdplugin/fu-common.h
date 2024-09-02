@@ -12,13 +12,6 @@
 #include "fu-common-struct.h"
 
 /**
- * FuEndianType:
- *
- * The endian type, e.g. %G_LITTLE_ENDIAN
- **/
-typedef guint FuEndianType;
-
-/**
  * FuCpuVendor:
  *
  * The CPU vendor.

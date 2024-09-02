@@ -8,6 +8,7 @@
 
 #include "fu-acpi-table-struct.h"
 #include "fu-acpi-table.h"
+#include "fu-common.h"
 #include "fu-input-stream.h"
 #include "fu-sum.h"
 
