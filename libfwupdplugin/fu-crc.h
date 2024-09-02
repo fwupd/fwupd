@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-common.h"
+#include <fwupd.h>
 
 guint8
 fu_crc8(const guint8 *buf, gsize bufsz);

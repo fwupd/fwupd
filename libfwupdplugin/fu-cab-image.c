@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-cab-image.h"
+#include "fu-common.h"
 #include "fu-string.h"
 
 struct _FuCabImage {

@@ -8,7 +8,7 @@
 
 #include <fwupd.h>
 
-#include "fu-common.h"
+#include "fu-endian.h"
 
 gchar *
 fu_byte_array_to_string(GByteArray *array) G_GNUC_NON_NULL(1);

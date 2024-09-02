@@ -56,6 +56,7 @@
 #include <libfwupdplugin/fu-efi-volume.h>
 #include <libfwupdplugin/fu-efivars.h>
 #include <libfwupdplugin/fu-elf-firmware.h>
+#include <libfwupdplugin/fu-endian.h>
 #include <libfwupdplugin/fu-fdt-firmware.h>
 #include <libfwupdplugin/fu-fdt-image.h>
 #include <libfwupdplugin/fu-firmware-common.h>

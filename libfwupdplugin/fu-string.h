@@ -6,7 +6,9 @@
 
 #pragma once
 
-#include "fu-common.h"
+#include <fwupd.h>
+
+#include "fu-endian.h"
 
 typedef enum {
 	FU_INTEGER_BASE_AUTO = 0,

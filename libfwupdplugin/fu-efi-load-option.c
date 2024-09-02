@@ -10,6 +10,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-common.h"
 #include "fu-efi-device-path-list.h"
 #include "fu-efi-file-path-device-path.h"
 #include "fu-efi-hard-drive-device-path.h"

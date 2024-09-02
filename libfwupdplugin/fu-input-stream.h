@@ -6,8 +6,10 @@
 
 #pragma once
 
-#include "fu-common.h"
+#include <fwupd.h>
+
 #include "fu-crc.h"
+#include "fu-endian.h"
 
 GInputStream *
 fu_input_stream_from_path(const gchar *path, GError **error) G_GNUC_WARN_UNUSED_RESULT

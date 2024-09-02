@@ -16,6 +16,7 @@
 #include "fu-cab-image.h"
 #include "fu-cab-struct.h"
 #include "fu-chunk-array.h"
+#include "fu-common.h"
 #include "fu-composite-input-stream.h"
 #include "fu-input-stream.h"
 #include "fu-mem-private.h"

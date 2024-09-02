@@ -14,6 +14,7 @@
 
 #include "fu-bios-setting.h"
 #include "fu-bios-settings-private.h"
+#include "fu-common.h"
 #include "fu-path.h"
 #include "fu-string.h"
 
