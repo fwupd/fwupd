@@ -83,7 +83,7 @@ fu_qsi_dock_child_device_class_init(FuQsiDockChildDeviceClass *klass)
 }
 
 FuDevice *
-fu_qsi_dock_child_new(FuContext *ctx)
+fu_qsi_dock_child_device_new(FuContext *ctx)
 {
 	return g_object_new(FU_TYPE_QSI_DOCK_CHILD_DEVICE, "context", ctx, NULL);
 }

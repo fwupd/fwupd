@@ -367,9 +367,8 @@ fu_redfish_device_set_vendor(FuRedfishDevice *self, const gchar *vendor)
 }
 
 static void
-fu_redfish_backend_smc_license_check(FuDevice *device)
+fu_redfish_device_smc_license_check(FuRedfishDevice *self)
 {
-	FuRedfishDevice *self = FU_REDFISH_DEVICE(device);
 	FuRedfishBackend *backend = fu_redfish_device_get_backend(self);
 	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(backend);
 	g_autoptr(GError) error_local = NULL;
@@ -379,10 +378,12 @@ fu_redfish_backend_smc_license_check(FuDevice *device)
 					fu_redfish_backend_get_push_uri_path(backend),
 					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 					&error_local)) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
-			fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_MISSING_LICENSE);
-		else
-			g_debug("supermicro license check returned %s\n", error_local->message);
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			fu_device_add_problem(FU_DEVICE(self),
+					      FWUPD_DEVICE_PROBLEM_MISSING_LICENSE);
+		} else {
+			g_debug("supermicro license check returned %s", error_local->message);
+		}
 	}
 }
 
@@ -532,7 +533,7 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 
 	/* for Supermicro check whether we have a proper Redfish license installed */
 	if (g_strcmp0("SMCI", fu_device_get_vendor(dev)) == 0)
-		fu_redfish_backend_smc_license_check(dev);
+		fu_redfish_device_smc_license_check(self);
 
 	/* success */
 	return TRUE;

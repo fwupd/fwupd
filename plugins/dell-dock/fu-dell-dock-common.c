@@ -16,7 +16,7 @@
 #include "config.h"
 
 #include "fu-dell-dock-common.h"
-#include "fu-dell-dock-i2c-ec.h"
+#include "fu-dell-dock-ec.h"
 
 gboolean
 fu_dell_dock_set_power(FuDevice *device, guint8 target, gboolean enabled, GError **error)

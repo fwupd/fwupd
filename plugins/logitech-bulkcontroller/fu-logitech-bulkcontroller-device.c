@@ -204,7 +204,7 @@ typedef struct {
 } FuLogitechBulkcontrollerResponse;
 
 static FuLogitechBulkcontrollerResponse *
-fu_logitech_bulkcontroller_response_new(void)
+fu_logitech_bulkcontroller_device_response_new(void)
 {
 	FuLogitechBulkcontrollerResponse *response = g_new0(FuLogitechBulkcontrollerResponse, 1);
 	response->data = g_byte_array_new();
@@ -212,7 +212,7 @@ fu_logitech_bulkcontroller_response_new(void)
 }
 
 static void
-fu_logitech_bulkcontroller_response_free(FuLogitechBulkcontrollerResponse *response)
+fu_logitech_bulkcontroller_device_response_free(FuLogitechBulkcontrollerResponse *response)
 {
 	if (response->data != NULL)
 		g_byte_array_unref(response->data);
@@ -220,7 +220,7 @@ fu_logitech_bulkcontroller_response_free(FuLogitechBulkcontrollerResponse *respo
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuLogitechBulkcontrollerResponse,
-			      fu_logitech_bulkcontroller_response_free)
+			      fu_logitech_bulkcontroller_device_response_free)
 
 static gboolean
 fu_logitech_bulkcontroller_device_sync_send_cmd(FuLogitechBulkcontrollerDevice *self,
@@ -284,7 +284,7 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 	g_autofree guint8 *buf = g_malloc0(self->transfer_bufsz);
 	g_autoptr(GByteArray) st = NULL;
 	g_autoptr(FuLogitechBulkcontrollerResponse) response =
-	    fu_logitech_bulkcontroller_response_new();
+	    fu_logitech_bulkcontroller_device_response_new();
 
 	if (!fu_logitech_bulkcontroller_device_recv(self,
 						    buf,

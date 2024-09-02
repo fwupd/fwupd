@@ -254,7 +254,7 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_emmc_read_extcsd(FuEmmcDevice *self, guint8 *ext_csd, gsize ext_csd_sz, GError **error)
+fu_emmc_device_read_extcsd(FuEmmcDevice *self, guint8 *ext_csd, gsize ext_csd_sz, GError **error)
 {
 	struct mmc_ioc_cmd idata = {
 	    .write_flag = 0,
@@ -276,12 +276,11 @@ fu_emmc_read_extcsd(FuEmmcDevice *self, guint8 *ext_csd, gsize ext_csd_sz, GErro
 }
 
 static gboolean
-fu_emmc_validate_extcsd(FuDevice *device, GError **error)
+fu_emmc_device_validate_extcsd(FuEmmcDevice *self, GError **error)
 {
-	FuEmmcDevice *self = FU_EMMC_DEVICE(device);
 	guint8 ext_csd[512] = {0x0};
 
-	if (!fu_emmc_read_extcsd(FU_EMMC_DEVICE(device), ext_csd, sizeof(ext_csd), error))
+	if (!fu_emmc_device_read_extcsd(self, ext_csd, sizeof(ext_csd), error))
 		return FALSE;
 	if (ext_csd[EXT_CSD_REV] < EXT_CSD_REV_V5_0) {
 		g_set_error(error,
@@ -289,7 +288,7 @@ fu_emmc_validate_extcsd(FuDevice *device, GError **error)
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "FFU is only available on devices >= "
 			    "MMC 5.0, not supported in %s",
-			    fu_device_get_name(device));
+			    fu_device_get_name(FU_DEVICE(self)));
 		return FALSE;
 	}
 	if ((ext_csd[EXT_CSD_SUPPORTED_MODES] & EXT_CSD_FFU) == 0) {
@@ -297,7 +296,7 @@ fu_emmc_validate_extcsd(FuDevice *device, GError **error)
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "FFU is not supported in %s",
-			    fu_device_get_name(device));
+			    fu_device_get_name(FU_DEVICE(self)));
 		return FALSE;
 	}
 	if (ext_csd[EXT_CSD_FW_CONFIG] & EXT_CSD_UPDATE_DISABLE) {
@@ -305,7 +304,7 @@ fu_emmc_validate_extcsd(FuDevice *device, GError **error)
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "firmware update was disabled in %s",
-			    fu_device_get_name(device));
+			    fu_device_get_name(FU_DEVICE(self)));
 		return FALSE;
 	}
 	self->sect_size = (ext_csd[EXT_CSD_DATA_SECTOR_SIZE] == 0) ? 512 : 4096;
@@ -316,9 +315,10 @@ fu_emmc_validate_extcsd(FuDevice *device, GError **error)
 static gboolean
 fu_emmc_device_setup(FuDevice *device, GError **error)
 {
+	FuEmmcDevice *self = FU_EMMC_DEVICE(device);
 	g_autoptr(GError) error_validate = NULL;
 
-	if (!fu_emmc_validate_extcsd(device, &error_validate))
+	if (!fu_emmc_device_validate_extcsd(self, &error_validate))
 		g_debug("%s", error_validate->message);
 	else
 		fu_device_add_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -376,7 +376,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 45, NULL);
 
-	if (!fu_emmc_read_extcsd(FU_EMMC_DEVICE(device), ext_csd, sizeof(ext_csd), error))
+	if (!fu_emmc_device_read_extcsd(self, ext_csd, sizeof(ext_csd), error))
 		return FALSE;
 
 	stream = fu_firmware_get_stream(firmware, error);
@@ -473,7 +473,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 		if (!check_sect_done)
 			break;
 
-		if (!fu_emmc_read_extcsd(self, ext_csd, sizeof(ext_csd), error))
+		if (!fu_emmc_device_read_extcsd(self, ext_csd, sizeof(ext_csd), error))
 			return FALSE;
 
 		sect_done = ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_0] |
@@ -554,7 +554,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 		}
 
 		/* return status */
-		if (!fu_emmc_read_extcsd(self, ext_csd, sizeof(ext_csd), error))
+		if (!fu_emmc_device_read_extcsd(self, ext_csd, sizeof(ext_csd), error))
 			return FALSE;
 		if (ext_csd[EXT_CSD_FFU_STATUS] != 0) {
 			g_set_error(error,

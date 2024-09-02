@@ -120,7 +120,7 @@ fu_mm_device_get_update_methods(FuMmDevice *device)
 }
 
 static gboolean
-fu_mm_validate_firmware_update_method(MMModemFirmwareUpdateMethod methods, GError **error)
+fu_mm_device_validate_firmware_update_method(FuMmDevice *self, GError **error)
 {
 	static const MMModemFirmwareUpdateMethod supported_combinations[] = {
 	    MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
@@ -136,9 +136,9 @@ fu_mm_validate_firmware_update_method(MMModemFirmwareUpdateMethod methods, GErro
 	};
 	g_autofree gchar *methods_str = NULL;
 
-	methods_str = mm_modem_firmware_update_method_build_string_from_mask(methods);
+	methods_str = mm_modem_firmware_update_method_build_string_from_mask(self->update_methods);
 	for (guint i = 0; i < G_N_ELEMENTS(supported_combinations); i++) {
-		if (supported_combinations[i] == methods) {
+		if (supported_combinations[i] == self->update_methods) {
 			g_info("valid firmware update combination: %s", methods_str);
 			return TRUE;
 		}
@@ -208,7 +208,7 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 	}
 
 	/* make sure the combination is supported */
-	if (!fu_mm_validate_firmware_update_method(self->update_methods, error))
+	if (!fu_mm_device_validate_firmware_update_method(self, error))
 		return FALSE;
 
 	/* various fastboot commands */
@@ -1005,7 +1005,7 @@ typedef struct {
 } FuMmFileInfo;
 
 static void
-fu_mm_file_info_free(FuMmFileInfo *file_info)
+fu_mm_device_file_info_free(FuMmFileInfo *file_info)
 {
 	g_clear_pointer(&file_info->digest, g_array_unref);
 	g_free(file_info->filename);
@@ -1020,7 +1020,7 @@ typedef struct {
 } FuMmArchiveIterateCtx;
 
 static gboolean
-fu_mm_should_be_active(const gchar *version, const gchar *filename)
+fu_mm_device_should_be_active(const gchar *version, const gchar *filename)
 {
 	g_auto(GStrv) split = NULL;
 	g_autofree gchar *carrier_id = NULL;
@@ -1047,11 +1047,11 @@ fu_mm_should_be_active(const gchar *version, const gchar *filename)
 }
 
 static gboolean
-fu_mm_qmi_pdc_archive_iterate_mcfg(FuArchive *archive,
-				   const gchar *filename,
-				   GBytes *bytes,
-				   gpointer user_data,
-				   GError **error)
+fu_mm_device_qmi_pdc_archive_iterate_mcfg(FuArchive *archive,
+					  const gchar *filename,
+					  GBytes *bytes,
+					  gpointer user_data,
+					  GError **error)
 {
 	FuMmArchiveIterateCtx *ctx = user_data;
 	FuMmFileInfo *file_info;
@@ -1064,7 +1064,7 @@ fu_mm_qmi_pdc_archive_iterate_mcfg(FuArchive *archive,
 	file_info->filename = g_strdup(filename);
 	file_info->bytes = g_bytes_ref(bytes);
 	file_info->active =
-	    fu_mm_should_be_active(fu_device_get_version(FU_DEVICE(ctx->device)), filename);
+	    fu_mm_device_should_be_active(fu_device_get_version(FU_DEVICE(ctx->device)), filename);
 	g_ptr_array_add(ctx->file_infos, file_info);
 	return TRUE;
 }
@@ -1104,7 +1104,7 @@ fu_mm_device_write_firmware_qmi_pdc(FuDevice *device,
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GPtrArray) file_infos =
-	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_mm_file_info_free);
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_mm_device_file_info_free);
 	gint active_i = -1;
 	FuMmArchiveIterateCtx archive_context = {
 	    .device = FU_MM_DEVICE(device),
@@ -1127,7 +1127,7 @@ fu_mm_device_write_firmware_qmi_pdc(FuDevice *device,
 
 	/* process the list of MCFG files to write */
 	if (!fu_archive_iterate(archive,
-				fu_mm_qmi_pdc_archive_iterate_mcfg,
+				fu_mm_device_qmi_pdc_archive_iterate_mcfg,
 				&archive_context,
 				error))
 		return FALSE;
@@ -1370,7 +1370,7 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 }
 
 static gboolean
-fu_mm_find_device_file(FuDevice *device, gpointer userdata, GError **error)
+fu_mm_device_find_device_file(FuDevice *device, gpointer userdata, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
 	const gchar *subsystem = (const gchar *)userdata;
@@ -1389,7 +1389,7 @@ fu_mm_device_find_edl_port(FuDevice *device, const gchar *subsystem, GError **er
 	g_clear_pointer(&self->port_edl, g_free);
 
 	return fu_device_retry_full(device,
-				    fu_mm_find_device_file,
+				    fu_mm_device_find_device_file,
 				    30,
 				    250,
 				    (gpointer)subsystem,
@@ -1525,7 +1525,7 @@ fu_mm_device_sahara_close(FuMmDevice *self, GError **error)
 #endif // MM_CHECK_VERSION(1, 19, 1)
 
 static gboolean
-fu_mm_setup_firmware_dir(FuMmDevice *self, GError **error)
+fu_mm_device_setup_firmware_dir(FuMmDevice *self, GError **error)
 {
 	g_autofree gchar *cachedir = NULL;
 	g_autofree gchar *mm_fw_dir = NULL;
@@ -1552,7 +1552,7 @@ fu_mm_setup_firmware_dir(FuMmDevice *self, GError **error)
 }
 
 static gboolean
-fu_mm_copy_firehose_prog(FuMmDevice *self, GBytes *prog, GError **error)
+fu_mm_device_copy_firehose_prog(FuMmDevice *self, GBytes *prog, GError **error)
 {
 	g_autofree gchar *qcom_fw_dir = NULL;
 	g_autofree gchar *firehose_file_path = NULL;
@@ -1578,15 +1578,15 @@ fu_mm_copy_firehose_prog(FuMmDevice *self, GBytes *prog, GError **error)
 }
 
 static gboolean
-fu_mm_prepare_firmware_search_path(FuMmDevice *self, GError **error)
+fu_mm_device_prepare_firmware_search_path(FuMmDevice *self, GError **error)
 {
 	self->restore_firmware_path = fu_kernel_get_firmware_search_path(NULL);
 
-	return fu_mm_setup_firmware_dir(self, error);
+	return fu_mm_device_setup_firmware_dir(self, error);
 }
 
 static gboolean
-fu_mm_restore_firmware_search_path(FuMmDevice *self, GError **error)
+fu_mm_device_restore_firmware_search_path(FuMmDevice *self, GError **error)
 {
 	if (self->restore_firmware_path != NULL && strlen(self->restore_firmware_path) > 0)
 		return fu_kernel_set_firmware_search_path(self->restore_firmware_path, error);
@@ -1651,15 +1651,15 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 		/* modify firmware search path and restore it before function returns */
 		locker = fu_device_locker_new_full(
 		    self,
-		    (FuDeviceLockerFunc)fu_mm_prepare_firmware_search_path,
-		    (FuDeviceLockerFunc)fu_mm_restore_firmware_search_path,
+		    (FuDeviceLockerFunc)fu_mm_device_prepare_firmware_search_path,
+		    (FuDeviceLockerFunc)fu_mm_device_restore_firmware_search_path,
 		    error);
 		if (locker == NULL)
 			return FALSE;
 
 		/* firehose modems that use mhi_pci drivers require firehose binary
 		 * to be present in the firmware-loader search path. */
-		if (!fu_mm_copy_firehose_prog(self, firehose_prog, error))
+		if (!fu_mm_device_copy_firehose_prog(self, firehose_prog, error))
 			return FALSE;
 		/* trigger emergency download mode, up to 30s retrying until the QCDM
 		 * port goes away; this takes us to the EDL (embedded downloader) execution
@@ -2157,7 +2157,7 @@ fu_mm_device_new(FuContext *ctx, MMManager *manager, MMObject *omodem)
 }
 
 FuMmDevice *
-fu_mm_shadow_device_new(FuMmDevice *device)
+fu_mm_device_shadow_new(FuMmDevice *device)
 {
 	FuMmDevice *shadow_device = NULL;
 	shadow_device = g_object_new(FU_TYPE_MM_DEVICE,

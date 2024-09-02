@@ -645,7 +645,7 @@ fu_ebitdo_device_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_ebitdo_set_progress(FuDevice *self, FuProgress *progress)
+fu_ebitdo_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
@@ -677,6 +677,6 @@ fu_ebitdo_device_class_init(FuEbitdoDeviceClass *klass)
 	device_class->attach = fu_ebitdo_device_attach;
 	device_class->open = fu_ebitdo_device_open;
 	device_class->probe = fu_ebitdo_device_probe;
-	device_class->set_progress = fu_ebitdo_set_progress;
+	device_class->set_progress = fu_ebitdo_device_set_progress;
 	device_class->convert_version = fu_ebitdo_device_convert_version;
 }

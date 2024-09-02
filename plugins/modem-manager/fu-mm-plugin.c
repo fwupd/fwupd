@@ -233,7 +233,7 @@ fu_mm_plugin_inhibit_device(FuPlugin *plugin, FuDevice *device, GError **error)
 
 	fu_mm_plugin_uninhibit_device(plugin);
 
-	shadow_device = fu_mm_shadow_device_new(FU_MM_DEVICE(device));
+	shadow_device = fu_mm_device_shadow_new(FU_MM_DEVICE(device));
 	inhibition_uid = fu_mm_device_get_inhibition_uid(shadow_device);
 	g_debug("inhibit modemmanager device with uid %s", inhibition_uid);
 	if (!mm_manager_inhibit_device_sync(self->manager, inhibition_uid, NULL, error))

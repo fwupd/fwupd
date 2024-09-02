@@ -66,7 +66,7 @@ fu_synaptics_rmi_device_get_flash(FuSynapticsRmiDevice *self)
 }
 
 static void
-fu_synaptics_rmi_flash_to_string(FuSynapticsRmiFlash *flash, guint idt, GString *str)
+fu_synaptics_rmi_device_flash_to_string(FuSynapticsRmiFlash *flash, guint idt, GString *str)
 {
 	if (flash->bootloader_id[0] != 0x0) {
 		g_autofree gchar *tmp =
@@ -93,7 +93,7 @@ fu_synaptics_rmi_device_to_string(FuDevice *device, guint idt, GString *str)
 	if (priv->f34 != NULL) {
 		fwupd_codec_string_append_hex(str, idt, "BlVer", priv->f34->function_version + 0x5);
 	}
-	fu_synaptics_rmi_flash_to_string(&priv->flash, idt, str);
+	fu_synaptics_rmi_device_flash_to_string(&priv->flash, idt, str);
 }
 
 FuSynapticsRmiFunction *

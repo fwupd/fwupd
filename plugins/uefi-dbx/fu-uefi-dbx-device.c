@@ -96,11 +96,11 @@ fu_uefi_dbx_device_version_notify_cb(FuDevice *device, GParamSpec *pspec, gpoint
 }
 
 static FuFirmware *
-fu_uefi_dbx_prepare_firmware(FuDevice *device,
-			     GInputStream *stream,
-			     FuProgress *progress,
-			     FwupdInstallFlags flags,
-			     GError **error)
+fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
+				    GInputStream *stream,
+				    FuProgress *progress,
+				    FwupdInstallFlags flags,
+				    GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
@@ -224,7 +224,7 @@ fu_uefi_dbx_device_class_init(FuUefiDbxDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->probe = fu_uefi_dbx_device_probe;
 	device_class->write_firmware = fu_uefi_dbx_device_write_firmware;
-	device_class->prepare_firmware = fu_uefi_dbx_prepare_firmware;
+	device_class->prepare_firmware = fu_uefi_dbx_device_prepare_firmware;
 	device_class->set_progress = fu_uefi_dbx_device_set_progress;
 	device_class->report_metadata_pre = fu_uefi_dbx_device_report_metadata_pre;
 }

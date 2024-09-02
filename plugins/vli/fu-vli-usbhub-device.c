@@ -55,7 +55,7 @@ fu_vli_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static guint8
-fu_vli_usbhub_header_crc8(GByteArray *hdr)
+fu_vli_usbhub_device_header_crc8(GByteArray *hdr)
 {
 	return ~fu_crc8(hdr->data, hdr->len - 1);
 }
@@ -710,7 +710,7 @@ fu_vli_usbhub_device_msp430_setup(FuVliUsbhubDevice *self, GError **error)
 }
 
 static gboolean
-fu_vli_usbhub_rtd21xx_device_setup(FuVliUsbhubDevice *self, GError **error)
+fu_vli_usbhub_device_rtd21xx_setup(FuVliUsbhubDevice *self, GError **error)
 {
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -848,7 +848,7 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 			return FALSE;
 	}
 	if (fu_device_has_private_flag(device, FU_VLI_USBHUB_DEVICE_FLAG_HAS_RTD21XX)) {
-		if (!fu_vli_usbhub_rtd21xx_device_setup(self, error))
+		if (!fu_vli_usbhub_device_rtd21xx_setup(self, error))
 			return FALSE;
 	}
 
@@ -989,7 +989,7 @@ fu_vli_usbhub_device_hd1_is_valid(GByteArray *hdr)
 {
 	if (fu_struct_vli_usbhub_hdr_get_prev_ptr(hdr) != VLI_USBHUB_FLASHMAP_IDX_INVALID)
 		return FALSE;
-	if (fu_struct_vli_usbhub_hdr_get_checksum(hdr) != fu_vli_usbhub_header_crc8(hdr))
+	if (fu_struct_vli_usbhub_hdr_get_checksum(hdr) != fu_vli_usbhub_device_header_crc8(hdr))
 		return FALSE;
 	return TRUE;
 }
@@ -1003,7 +1003,7 @@ fu_vli_usbhub_device_hd1_recover(FuVliUsbhubDevice *self,
 	/* point to HD2, i.e. updated firmware */
 	if (fu_struct_vli_usbhub_hdr_get_next_ptr(hdr) != VLI_USBHUB_FLASHMAP_IDX_HD2) {
 		fu_struct_vli_usbhub_hdr_set_next_ptr(hdr, VLI_USBHUB_FLASHMAP_IDX_HD2);
-		fu_struct_vli_usbhub_hdr_set_checksum(hdr, fu_vli_usbhub_header_crc8(hdr));
+		fu_struct_vli_usbhub_hdr_set_checksum(hdr, fu_vli_usbhub_device_header_crc8(hdr));
 	}
 
 	/* write new header block */
@@ -1160,7 +1160,7 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 	fu_struct_vli_usbhub_hdr_set_usb3_fw_addr_high(st_hd, hd2_fw_addr >> 16);
 	fu_struct_vli_usbhub_hdr_set_prev_ptr(st_hd, VLI_USBHUB_FLASHMAP_IDX_HD1);
 	fu_struct_vli_usbhub_hdr_set_next_ptr(st_hd, VLI_USBHUB_FLASHMAP_IDX_INVALID);
-	fu_struct_vli_usbhub_hdr_set_checksum(st_hd, fu_vli_usbhub_header_crc8(st_hd));
+	fu_struct_vli_usbhub_hdr_set_checksum(st_hd, fu_vli_usbhub_device_header_crc8(st_hd));
 	if (!fu_vli_device_spi_erase_sector(FU_VLI_DEVICE(self),
 					    VLI_USBHUB_FLASHMAP_ADDR_HD2,
 					    error)) {
@@ -1305,7 +1305,7 @@ fu_vli_usbhub_device_update_v3(FuVliUsbhubDevice *self,
 	fu_struct_vli_usbhub_hdr_set_usb3_fw_addr_high(st_hd, hd2_fw_addr >> 16);
 	fu_struct_vli_usbhub_hdr_set_prev_ptr(st_hd, VLI_USBHUB_FLASHMAP_IDX_HD1);
 	fu_struct_vli_usbhub_hdr_set_next_ptr(st_hd, VLI_USBHUB_FLASHMAP_IDX_INVALID);
-	fu_struct_vli_usbhub_hdr_set_checksum(st_hd, fu_vli_usbhub_header_crc8(st_hd));
+	fu_struct_vli_usbhub_hdr_set_checksum(st_hd, fu_vli_usbhub_device_header_crc8(st_hd));
 	if (!fu_vli_device_spi_erase_sector(FU_VLI_DEVICE(self),
 					    VLI_USBHUB_FLASHMAP_ADDR_HD2,
 					    error)) {

@@ -145,7 +145,7 @@ struct _FuDellDockEc {
 };
 
 static gboolean
-fu_dell_dock_get_ec_status(FuDevice *device,
+fu_dell_dock_ec_get_status(FuDevice *device,
 			   FuDellDockECFWUpdateStatus *status_out,
 			   GError **error);
 
@@ -153,7 +153,7 @@ G_DEFINE_TYPE(FuDellDockEc, fu_dell_dock_ec, FU_TYPE_DEVICE)
 
 /* Used to root out I2C communication problems */
 static gboolean
-fu_dell_dock_test_valid_byte(const guint8 *str, gint index)
+fu_dell_dock_ec_test_valid_byte(const guint8 *str, gint index)
 {
 	if (str[index] == 0x00 || str[index] == 0xff)
 		return FALSE;
@@ -174,14 +174,14 @@ fu_dell_dock_ec_set_board(FuDevice *device)
 }
 
 gboolean
-fu_dell_dock_module_is_usb4(FuDevice *device)
+fu_dell_dock_ec_module_is_usb4(FuDevice *device)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	return self->data->module_type == MODULE_TYPE_130_USB4;
 }
 
 guint8
-fu_dell_dock_get_dock_type(FuDevice *device)
+fu_dell_dock_ec_get_dock_type(FuDevice *device)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	return self->base_type;
@@ -241,7 +241,7 @@ fu_dell_dock_ec_tbt_passive(FuDevice *device)
 }
 
 static const gchar *
-fu_dell_dock_devicetype_to_str(guint device_type, guint sub_type)
+fu_dell_dock_ec_devicetype_to_str(guint device_type, guint sub_type)
 {
 	switch (device_type) {
 	case FU_DELL_DOCK_DEVICETYPE_MAIN_EC:
@@ -321,7 +321,7 @@ fu_dell_dock_ec_write(FuDevice *device, gsize length, guint8 *data, GError **err
 }
 
 static gboolean
-fu_dell_dock_is_valid_dock(FuDevice *device, GError **error)
+fu_dell_dock_ec_is_valid_dock(FuDevice *device, GError **error)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	const guint8 *result = NULL;
@@ -415,7 +415,7 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 	for (guint i = 0; i < header->total_devices; i++) {
 		const gchar *type_str;
 		map = &(device_entry[i].ec_addr_map);
-		type_str = fu_dell_dock_devicetype_to_str(map->device_type, map->sub_type);
+		type_str = fu_dell_dock_ec_devicetype_to_str(map->device_type, map->sub_type);
 		if (type_str == NULL)
 			continue;
 		g_debug("#%u: %s in %s (A: %u I: %u)",
@@ -445,7 +445,8 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 		} else if (map->device_type == FU_DELL_DOCK_DEVICETYPE_MST) {
 			self->raw_versions->mst_version = device_entry[i].version.version_32;
 			/* guard against invalid MST version read from EC */
-			if (!fu_dell_dock_test_valid_byte(device_entry[i].version.version_8, 1)) {
+			if (!fu_dell_dock_ec_test_valid_byte(device_entry[i].version.version_8,
+							     1)) {
 				g_warning("[EC Bug] EC read invalid MST version %08x",
 					  device_entry[i].version.version_32);
 				continue;
@@ -460,7 +461,8 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 			    self->data->module_type == MODULE_TYPE_45_TBT ||
 			    self->data->module_type == MODULE_TYPE_130_USB4)) {
 			/* guard against invalid Thunderbolt version read from EC */
-			if (!fu_dell_dock_test_valid_byte(device_entry[i].version.version_8, 2)) {
+			if (!fu_dell_dock_ec_test_valid_byte(device_entry[i].version.version_8,
+							     2)) {
 				g_warning("[EC bug] EC read invalid Thunderbolt version %08x",
 					  device_entry[i].version.version_32);
 				continue;
@@ -561,7 +563,7 @@ fu_dell_dock_ec_get_dock_data(FuDevice *device, GError **error)
 	self->raw_versions->pkg_version = self->data->dock_firmware_pkg_ver;
 
 	/* read if passive update pending */
-	if (!fu_dell_dock_get_ec_status(device, &status, error))
+	if (!fu_dell_dock_ec_get_status(device, &status, error))
 		return FALSE;
 
 	/* make sure this hardware spin matches our expectations */
@@ -658,7 +660,7 @@ fu_dell_dock_ec_activate(FuDevice *device, FuProgress *progress, GError **error)
 	FuDellDockECFWUpdateStatus status;
 
 	/* read if passive update pending */
-	if (!fu_dell_dock_get_ec_status(device, &status, error))
+	if (!fu_dell_dock_ec_get_status(device, &status, error))
 		return FALSE;
 
 	if (status != FW_UPDATE_IN_PROGRESS) {
@@ -690,7 +692,7 @@ fu_dell_dock_ec_reboot_dock(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_dell_dock_get_ec_status(FuDevice *device, FuDellDockECFWUpdateStatus *status_out, GError **error)
+fu_dell_dock_ec_get_status(FuDevice *device, FuDellDockECFWUpdateStatus *status_out, GError **error)
 {
 	g_autoptr(GBytes) data = NULL;
 	const guint8 *result = NULL;
@@ -948,7 +950,7 @@ fu_dell_dock_ec_open(FuDevice *device, GError **error)
 	if (!fu_device_open(fu_device_get_proxy(device), error))
 		return FALSE;
 	if (!self->data->dock_type)
-		return fu_dell_dock_is_valid_dock(device, error);
+		return fu_dell_dock_ec_is_valid_dock(device, error);
 	return TRUE;
 }
 

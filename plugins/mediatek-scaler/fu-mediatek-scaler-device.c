@@ -177,7 +177,7 @@ fu_mediatek_scaler_device_set_ddc_priority(FuMediatekScalerDevice *self,
 }
 
 static gboolean
-fu_mediatek_scaler_display_is_connected(FuMediatekScalerDevice *self, GError **error)
+fu_mediatek_scaler_device_display_is_connected(FuMediatekScalerDevice *self, GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
 	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
@@ -220,10 +220,12 @@ fu_mediatek_scaler_display_is_connected(FuMediatekScalerDevice *self, GError **e
 }
 
 static gboolean
-fu_mediatek_scaler_display_is_connected_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_mediatek_scaler_device_display_is_connected_cb(FuDevice *device,
+						  gpointer user_data,
+						  GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-	return fu_mediatek_scaler_display_is_connected(self, error);
+	return fu_mediatek_scaler_device_display_is_connected(self, error);
 }
 
 static gchar *
@@ -372,7 +374,7 @@ fu_mediatek_scaler_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* mediatek display is connected */
-	if (!fu_mediatek_scaler_display_is_connected(self, error))
+	if (!fu_mediatek_scaler_device_display_is_connected(self, error))
 		return FALSE;
 
 	/* prioritize DDC/CI -- FuDevice->open() did not do this as the version is not set */
@@ -631,7 +633,7 @@ fu_mediatek_scaler_device_verify(FuDevice *device, gsize sz, GError **error)
 	guint max_tries = base < 1 ? 60 : base * 60;
 
 	if (!fu_device_retry_full(device,
-				  fu_mediatek_scaler_display_is_connected_cb,
+				  fu_mediatek_scaler_device_display_is_connected_cb,
 				  max_tries,
 				  FU_MEDIATEK_SCALER_DEVICE_POLL_INTERVAL,
 				  NULL,
@@ -735,7 +737,7 @@ fu_mediatek_scaler_device_attach(FuDevice *device, FuProgress *progress, GError 
 
 	/* wait for the device back */
 	if (!fu_device_retry_full(device,
-				  fu_mediatek_scaler_display_is_connected_cb,
+				  fu_mediatek_scaler_device_display_is_connected_cb,
 				  max_tries,
 				  FU_MEDIATEK_SCALER_DEVICE_POLL_INTERVAL,
 				  NULL,

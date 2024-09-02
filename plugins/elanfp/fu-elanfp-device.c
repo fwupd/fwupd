@@ -40,13 +40,13 @@ struct _FuElanfpDevice {
 G_DEFINE_TYPE(FuElanfpDevice, fu_elanfp_device, FU_TYPE_USB_DEVICE)
 
 static gboolean
-fu_elanfp_iap_send_command(FuElanfpDevice *self,
-			   guint8 request_type,
-			   guint8 request,
-			   const guint8 *buf,
-			   gsize bufsz,
-			   gsize rspsz,
-			   GError **error)
+fu_elanfp_device_iap_send_command(FuElanfpDevice *self,
+				  guint8 request_type,
+				  guint8 request,
+				  const guint8 *buf,
+				  gsize bufsz,
+				  gsize rspsz,
+				  GError **error)
 {
 	gsize actual = 0;
 	gsize sendsz = bufsz + 1;
@@ -119,7 +119,7 @@ fu_elanfp_iap_send_command(FuElanfpDevice *self,
 }
 
 static gboolean
-fu_elanfp_iap_recv_status(FuElanfpDevice *self, guint8 *buf, gsize bufsz, GError **error)
+fu_elanfp_device_iap_recv_status(FuElanfpDevice *self, guint8 *buf, gsize bufsz, GError **error)
 {
 	guint8 endpoint = ELAN_EP_CMD_IN;
 	gsize actual = 0;
@@ -304,17 +304,17 @@ fu_elanfp_device_write_payload(FuElanfpDevice *self,
 			g_prefix_error(error, "memory copy for payload fail: ");
 			return FALSE;
 		}
-		if (!fu_elanfp_iap_send_command(self,
-						REQTYPE_COMMAND,
-						REPORT_ID_PAYLOAD_COMMAND,
-						databuf,
-						sizeof(databuf),
-						sizeof(recvbuf),
-						error)) {
+		if (!fu_elanfp_device_iap_send_command(self,
+						       REQTYPE_COMMAND,
+						       REPORT_ID_PAYLOAD_COMMAND,
+						       databuf,
+						       sizeof(databuf),
+						       sizeof(recvbuf),
+						       error)) {
 			g_prefix_error(error, "send payload command fail: ");
 			return FALSE;
 		}
-		if (!fu_elanfp_iap_recv_status(self, recvbuf, sizeof(recvbuf), error)) {
+		if (!fu_elanfp_device_iap_recv_status(self, recvbuf, sizeof(recvbuf), error)) {
 			g_prefix_error(error, "received payload status fail: ");
 			return FALSE;
 		}
@@ -367,17 +367,17 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 		offer = fu_firmware_get_image_by_idx_bytes(firmware, items[i].offer_idx, error);
 		if (offer == NULL)
 			return FALSE;
-		if (!fu_elanfp_iap_send_command(self,
-						REQTYPE_COMMAND,
-						REPORT_ID_OFFER_COMMAND,
-						g_bytes_get_data(offer, NULL),
-						g_bytes_get_size(offer),
-						g_bytes_get_size(offer) + 1,
-						error)) {
+		if (!fu_elanfp_device_iap_send_command(self,
+						       REQTYPE_COMMAND,
+						       REPORT_ID_OFFER_COMMAND,
+						       g_bytes_get_data(offer, NULL),
+						       g_bytes_get_size(offer),
+						       g_bytes_get_size(offer) + 1,
+						       error)) {
 			g_prefix_error(error, "send offer command fail: ");
 			return FALSE;
 		}
-		if (!fu_elanfp_iap_recv_status(self, recvbuf, sizeof(recvbuf), error)) {
+		if (!fu_elanfp_device_iap_recv_status(self, recvbuf, sizeof(recvbuf), error)) {
 			g_prefix_error(error, "received offer status fail: ");
 			return FALSE;
 		}

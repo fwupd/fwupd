@@ -163,7 +163,7 @@ fu_vli_usbhub_rtd21xx_device_read_status(FuVliUsbhubRtd21xxDevice *self,
 }
 
 static gboolean
-fu_vli_usbhub_rtd21xx_ensure_version_unlocked(FuVliUsbhubRtd21xxDevice *self, GError **error)
+fu_vli_usbhub_rtd21xx_device_ensure_version_unlocked(FuVliUsbhubRtd21xxDevice *self, GError **error)
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(FU_DEVICE(self)));
 	guint8 buf_rep[7] = {0x00};
@@ -211,7 +211,7 @@ fu_vli_usbhub_rtd21xx_device_setup(FuDevice *device, GError **error)
 					   error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_vli_usbhub_rtd21xx_ensure_version_unlocked(self, error))
+	if (!fu_vli_usbhub_rtd21xx_device_ensure_version_unlocked(self, error))
 		return FALSE;
 
 	/* success */

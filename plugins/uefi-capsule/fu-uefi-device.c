@@ -447,9 +447,9 @@ fu_uefi_device_write_update_info(FuUefiDevice *self,
 }
 
 static gboolean
-fu_uefi_check_asset(FuDevice *device, GError **error)
+fu_uefi_device_check_asset(FuUefiDevice *self, GError **error)
 {
-	FuContext *ctx = fu_device_get_context(device);
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	gboolean secureboot_enabled = FALSE;
 	g_autofree gchar *source_app = NULL;
@@ -480,7 +480,7 @@ fu_uefi_device_prepare(FuDevice *device,
 		return FALSE;
 
 	/* sanity checks */
-	if (!fu_uefi_check_asset(device, error))
+	if (!fu_uefi_device_check_asset(self, error))
 		return FALSE;
 
 	return TRUE;

@@ -73,12 +73,8 @@ class Checker:
         for suffix in [
             "_common",
             "_darwin",
-            "_device",  # FIXME 98
             "_freebsd",
             "_helper",
-            "_i2c_ec",  # FIXME 78
-            "_i2c_mst",
-            "_i2c_tbt",
             "_impl",
             "_linux",
             "_sync",
@@ -91,6 +87,8 @@ class Checker:
         valid_prefixes = []
         valid_prefixes.append(prefix)
         for key, value in {
+            "fu_audio_s5gen2_device": "fu_qc_s5gen2_device",
+            "fu_audio_s5gen2_hid_device": "fu_qc_s5gen2_hid_device",
             "fu_audio_s5gen2_firmware": "fu_qc_s5gen2_firmware",
             "fu_audio_s5gen2": "fu_qc_s5gen2",  # FIXME: rename after merging #7638
             "fu_audio_s5gen2_hid": "fu_qc_s5gen2_hid",
