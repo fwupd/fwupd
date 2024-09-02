@@ -2140,8 +2140,8 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 
 	g_string_append_printf(str,
 			       /* TRANSLATORS: how many local devices can expect updates now */
-			       ngettext("%u local device has updates published",
-					"%u of %u local devices have updates published",
+			       ngettext("Updates have been published for %u local device",
+					"Updates have been published for %u of %u local devices",
 					devices_supported_cnt),
 			       devices_supported_cnt,
 			       devices_updatable_cnt);
