@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include "fu-audio-s5gen2-impl.h"
+#include "fu-qc-s5gen2-impl.h"
 
 G_DEFINE_INTERFACE(FuQcS5gen2Impl, fu_qc_s5gen2_impl, G_TYPE_OBJECT)
 

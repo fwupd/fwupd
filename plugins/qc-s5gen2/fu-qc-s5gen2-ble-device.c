@@ -6,11 +6,11 @@
 
 #include "config.h"
 
-#include "fu-audio-s5gen2-ble-device.h"
-#include "fu-audio-s5gen2-ble-struct.h"
-#include "fu-audio-s5gen2-device.h"
-#include "fu-audio-s5gen2-impl.h"
-#include "fu-audio-s5gen2-struct.h"
+#include "fu-qc-s5gen2-ble-device.h"
+#include "fu-qc-s5gen2-ble-struct.h"
+#include "fu-qc-s5gen2-device.h"
+#include "fu-qc-s5gen2-impl.h"
+#include "fu-qc-s5gen2-struct.h"
 
 #define FU_QC_S5GEN2_GAIA_V3_SUPPORTED_VERSION_MAJOR 3
 

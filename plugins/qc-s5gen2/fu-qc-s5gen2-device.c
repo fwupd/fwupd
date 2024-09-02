@@ -6,10 +6,10 @@
 
 #include "config.h"
 
-#include "fu-audio-s5gen2-device.h"
-#include "fu-audio-s5gen2-firmware.h"
-#include "fu-audio-s5gen2-impl.h"
-#include "fu-audio-s5gen2-struct.h"
+#include "fu-qc-s5gen2-device.h"
+#include "fu-qc-s5gen2-firmware.h"
+#include "fu-qc-s5gen2-impl.h"
+#include "fu-qc-s5gen2-struct.h"
 
 #define FU_QC_S5GEN2_DEVICE_DATA_REQ_SLEEP 1000 /* ms */
 #define FU_QC_S5GEN2_DEVICE_SEND_DELAY	   2	/* ms */
@@ -565,7 +565,6 @@ fu_qc_s5gen2_device_write_blocks(FuQcS5gen2Device *self,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "requested 0x%x bytes",
 				    (guint)data_sz);
-
 			return FALSE;
 		}
 

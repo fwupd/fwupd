@@ -6,25 +6,25 @@
 
 #include "config.h"
 
-#include "fu-audio-s5gen2-ble-device.h"
-#include "fu-audio-s5gen2-device.h"
-#include "fu-audio-s5gen2-firmware.h"
-#include "fu-audio-s5gen2-hid-device.h"
-#include "fu-audio-s5gen2-plugin.h"
+#include "fu-qc-s5gen2-ble-device.h"
+#include "fu-qc-s5gen2-device.h"
+#include "fu-qc-s5gen2-firmware.h"
+#include "fu-qc-s5gen2-hid-device.h"
+#include "fu-qc-s5gen2-plugin.h"
 
-struct _FuAudioS5gen2Plugin {
+struct _FuQcS5gen2Plugin {
 	FuPlugin parent_instance;
 };
 
-G_DEFINE_TYPE(FuAudioS5gen2Plugin, fu_audio_s5gen2_plugin, FU_TYPE_PLUGIN)
+G_DEFINE_TYPE(FuQcS5gen2Plugin, fu_qc_s5gen2_plugin, FU_TYPE_PLUGIN)
 
 static void
-fu_audio_s5gen2_plugin_init(FuAudioS5gen2Plugin *self)
+fu_qc_s5gen2_plugin_init(FuQcS5gen2Plugin *self)
 {
 }
 
 static void
-fu_audio_s5gen2_plugin_constructed(GObject *obj)
+fu_qc_s5gen2_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	FuContext *ctx = fu_plugin_get_context(plugin);
@@ -36,8 +36,8 @@ fu_audio_s5gen2_plugin_constructed(GObject *obj)
 }
 
 static void
-fu_audio_s5gen2_plugin_class_init(FuAudioS5gen2PluginClass *klass)
+fu_qc_s5gen2_plugin_class_init(FuQcS5gen2PluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
-	plugin_class->constructed = fu_audio_s5gen2_plugin_constructed;
+	plugin_class->constructed = fu_qc_s5gen2_plugin_constructed;
 }
