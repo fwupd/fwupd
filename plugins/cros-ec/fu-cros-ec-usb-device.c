@@ -258,10 +258,14 @@ fu_cros_ec_usb_device_flush(FuDevice *device, gpointer user_data, GError **error
 }
 
 static gboolean
-fu_cros_ec_usb_device_recovery(FuDevice *device, GError **error)
+fu_cros_ec_usb_device_recovery(FuCrosEcUsbDevice *self, GError **error)
 {
 	/* flush all data from endpoint to recover in case of error */
-	if (!fu_device_retry(device, fu_cros_ec_usb_device_flush, SETUP_RETRY_CNT, NULL, error)) {
+	if (!fu_device_retry(FU_DEVICE(self),
+			     fu_cros_ec_usb_device_flush,
+			     SETUP_RETRY_CNT,
+			     NULL,
+			     error)) {
 		g_prefix_error(error, "failed to flush device to idle state: ");
 		return FALSE;
 	}
@@ -277,16 +281,15 @@ fu_cros_ec_usb_device_recovery(FuDevice *device, GError **error)
  * if it is - of what maximum size.
  */
 static gboolean
-fu_cros_ec_usb_ext_cmd(FuDevice *device,
-		       guint16 subcommand,
-		       gpointer cmd_body,
-		       gsize body_size,
-		       gpointer resp,
-		       gsize *resp_size,
-		       gboolean allow_less,
-		       GError **error)
+fu_cros_ec_usb_device_ext_cmd(FuCrosEcUsbDevice *self,
+			      guint16 subcommand,
+			      gpointer cmd_body,
+			      gsize body_size,
+			      gpointer resp,
+			      gsize *resp_size,
+			      gboolean allow_less,
+			      GError **error)
 {
-	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 	guint16 *frame_ptr;
 	gsize usb_msg_size = sizeof(struct update_frame_header) + sizeof(subcommand) + body_size;
 	g_autofree struct update_frame_header *ufh = g_malloc0(usb_msg_size);
@@ -365,7 +368,7 @@ fu_cros_ec_usb_device_setup(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_cros_ec_usb_device_parent_class)->setup(device, error))
 		return FALSE;
 
-	if (!fu_cros_ec_usb_device_recovery(device, error))
+	if (!fu_cros_ec_usb_device_recovery(self, error))
 		return FALSE;
 
 	/* send start request */
@@ -506,9 +509,8 @@ fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GE
 					   error)) {
 		g_autoptr(GError) error_flush = NULL;
 		/* flush all data from endpoint to recover in case of error */
-		if (!fu_cros_ec_usb_device_recovery(device, &error_flush)) {
+		if (!fu_cros_ec_usb_device_recovery(self, &error_flush))
 			g_debug("failed to flush to idle: %s", error_flush->message);
-		}
 		g_prefix_error(error, "failed at sending header: ");
 		return FALSE;
 	}
@@ -539,9 +541,8 @@ fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GE
 			g_prefix_error(error, "failed sending chunk 0x%x: ", i);
 
 			/* flush all data from endpoint to recover in case of error */
-			if (!fu_cros_ec_usb_device_recovery(device, &error_flush)) {
+			if (!fu_cros_ec_usb_device_recovery(self, &error_flush))
 				g_debug("failed to flush to idle: %s", error_flush->message);
-			}
 			return FALSE;
 		}
 		fu_progress_step_done(helper->progress);
@@ -559,9 +560,8 @@ fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GE
 		g_autoptr(GError) error_flush = NULL;
 		g_prefix_error(error, "failed at reply: ");
 		/* flush all data from endpoint to recover in case of error */
-		if (!fu_cros_ec_usb_device_recovery(device, &error_flush)) {
+		if (!fu_cros_ec_usb_device_recovery(self, &error_flush))
 			g_debug("failed to flush to idle: %s", error_flush->message);
-		}
 		return FALSE;
 	}
 	if (transfer_size == 0) {
@@ -581,13 +581,12 @@ fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GE
 }
 
 static gboolean
-fu_cros_ec_usb_device_transfer_section(FuDevice *device,
+fu_cros_ec_usb_device_transfer_section(FuCrosEcUsbDevice *self,
 				       FuFirmware *firmware,
 				       FuCrosEcFirmwareSection *section,
 				       FuProgress *progress,
 				       GError **error)
 {
-	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 	const guint8 *data_ptr = NULL;
 	gsize data_len = 0;
 	g_autoptr(GBytes) img_bytes = NULL;
@@ -632,7 +631,7 @@ fu_cros_ec_usb_device_transfer_section(FuDevice *device,
 		    .block = g_ptr_array_index(blocks, i),
 		    .progress = fu_progress_get_child(progress),
 		};
-		if (!fu_device_retry(device,
+		if (!fu_device_retry(FU_DEVICE(self),
 				     fu_cros_ec_usb_device_transfer_block_cb,
 				     MAX_BLOCK_XFER_RETRIES,
 				     &helper,
@@ -648,13 +647,13 @@ fu_cros_ec_usb_device_transfer_section(FuDevice *device,
 }
 
 static void
-fu_cros_ec_usb_device_send_done(FuDevice *device)
+fu_cros_ec_usb_device_send_done(FuCrosEcUsbDevice *self)
 {
 	guint32 out = GUINT32_TO_BE(UPDATE_DONE);
 	g_autoptr(GError) error_local = NULL;
 
 	/* send stop request, ignoring reply */
-	if (!fu_cros_ec_usb_device_do_xfer(FU_CROS_EC_USB_DEVICE(device),
+	if (!fu_cros_ec_usb_device_do_xfer(self,
 					   (const guint8 *)&out,
 					   sizeof(out),
 					   (guint8 *)&out,
@@ -667,7 +666,7 @@ fu_cros_ec_usb_device_send_done(FuDevice *device)
 }
 
 static gboolean
-fu_cros_ec_usb_device_send_subcommand(FuDevice *device,
+fu_cros_ec_usb_device_send_subcommand(FuCrosEcUsbDevice *self,
 				      guint16 subcommand,
 				      gpointer cmd_body,
 				      gsize body_size,
@@ -676,16 +675,16 @@ fu_cros_ec_usb_device_send_subcommand(FuDevice *device,
 				      gboolean allow_less,
 				      GError **error)
 {
-	fu_cros_ec_usb_device_send_done(device);
+	fu_cros_ec_usb_device_send_done(self);
 
-	if (!fu_cros_ec_usb_ext_cmd(device,
-				    subcommand,
-				    cmd_body,
-				    body_size,
-				    resp,
-				    resp_size,
-				    FALSE,
-				    error)) {
+	if (!fu_cros_ec_usb_device_ext_cmd(self,
+					   subcommand,
+					   cmd_body,
+					   body_size,
+					   resp,
+					   resp_size,
+					   FALSE,
+					   error)) {
 		g_prefix_error(error,
 			       "failed to send subcommand %" G_GUINT16_FORMAT ": ",
 			       subcommand);
@@ -697,7 +696,7 @@ fu_cros_ec_usb_device_send_subcommand(FuDevice *device,
 }
 
 static gboolean
-fu_cros_ec_usb_device_reset_to_ro(FuDevice *device, GError **error)
+fu_cros_ec_usb_device_reset_to_ro(FuCrosEcUsbDevice *self, GError **error)
 {
 	guint8 response = 0x0;
 	guint16 subcommand = UPDATE_EXTRA_CMD_IMMEDIATE_RESET;
@@ -706,8 +705,8 @@ fu_cros_ec_usb_device_reset_to_ro(FuDevice *device, GError **error)
 	gsize response_size = 1;
 	g_autoptr(GError) error_local = NULL;
 
-	fu_device_add_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
-	if (!fu_cros_ec_usb_device_send_subcommand(device,
+	fu_device_add_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
+	if (!fu_cros_ec_usb_device_send_subcommand(self,
 						   subcommand,
 						   command_body,
 						   command_body_size,
@@ -724,7 +723,7 @@ fu_cros_ec_usb_device_reset_to_ro(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_cros_ec_usb_device_jump_to_rw(FuDevice *device)
+fu_cros_ec_usb_device_jump_to_rw(FuCrosEcUsbDevice *self)
 {
 	guint8 response = 0x0;
 	guint16 subcommand = UPDATE_EXTRA_CMD_JUMP_TO_RW;
@@ -732,7 +731,7 @@ fu_cros_ec_usb_device_jump_to_rw(FuDevice *device)
 	gsize command_body_size = 0;
 	gsize response_size = 1;
 
-	if (!fu_cros_ec_usb_device_send_subcommand(device,
+	if (!fu_cros_ec_usb_device_send_subcommand(self,
 						   subcommand,
 						   command_body,
 						   command_body_size,
@@ -747,7 +746,7 @@ fu_cros_ec_usb_device_jump_to_rw(FuDevice *device)
 	/* Jump to rw may not work, so if we've reached here, initiate a
 	 * full reset using immediate reset */
 	subcommand = UPDATE_EXTRA_CMD_IMMEDIATE_RESET;
-	fu_cros_ec_usb_device_send_subcommand(device,
+	fu_cros_ec_usb_device_send_subcommand(self,
 					      subcommand,
 					      command_body,
 					      command_body_size,
@@ -761,7 +760,7 @@ fu_cros_ec_usb_device_jump_to_rw(FuDevice *device)
 }
 
 static gboolean
-fu_cros_ec_usb_device_stay_in_ro(FuDevice *device, GError **error)
+fu_cros_ec_usb_device_stay_in_ro(FuCrosEcUsbDevice *self, GError **error)
 {
 	gsize response_size = 1;
 	guint8 response = 0x0;
@@ -769,7 +768,7 @@ fu_cros_ec_usb_device_stay_in_ro(FuDevice *device, GError **error)
 	guint8 command_body[2] = {0x0}; /* max command body size */
 	gsize command_body_size = 0;
 
-	if (!fu_cros_ec_usb_device_send_subcommand(device,
+	if (!fu_cros_ec_usb_device_send_subcommand(self,
 						   subcommand,
 						   command_body,
 						   command_body_size,
@@ -800,13 +799,13 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 		START_RESP start_resp = {0x0};
 
 		fu_device_remove_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
-		if (!fu_cros_ec_usb_device_stay_in_ro(device, error)) {
+		if (!fu_cros_ec_usb_device_stay_in_ro(self, error)) {
 			g_prefix_error(error, "failed to send stay-in-ro subcommand: ");
 			return FALSE;
 		}
 
 		/* flush all data from endpoint to recover in case of error */
-		if (!fu_cros_ec_usb_device_recovery(device, error)) {
+		if (!fu_cros_ec_usb_device_recovery(self, error)) {
 			g_prefix_error(error, "failed to flush device to idle state: ");
 			return FALSE;
 		}
@@ -855,7 +854,7 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 		FuCrosEcFirmwareSection *section = g_ptr_array_index(sections, i);
 		g_autoptr(GError) error_local = NULL;
 
-		if (!fu_cros_ec_usb_device_transfer_section(device,
+		if (!fu_cros_ec_usb_device_transfer_section(self,
 							    firmware,
 							    section,
 							    fu_progress_get_child(progress),
@@ -874,16 +873,16 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 		}
 
 		if (self->in_bootloader) {
-			fu_device_set_version(FU_DEVICE(device), section->version.triplet);
+			fu_device_set_version(device, section->version.triplet);
 		} else {
-			fu_device_set_version_bootloader(FU_DEVICE(device),
-							 section->version.triplet);
+			fu_device_set_version_bootloader(device, section->version.triplet);
 		}
 
 		fu_progress_step_done(progress);
 	}
+
 	/* send done */
-	fu_cros_ec_usb_device_send_done(device);
+	fu_cros_ec_usb_device_send_done(self);
 
 	if (self->in_bootloader)
 		fu_device_add_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN);
@@ -943,11 +942,11 @@ fu_cros_ec_usb_device_attach(FuDevice *device, FuProgress *progress, GError **er
 
 	if (fu_device_has_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN) &&
 	    !fu_device_has_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN)) {
-		if (!fu_cros_ec_usb_device_reset_to_ro(device, error)) {
+		if (!fu_cros_ec_usb_device_reset_to_ro(self, error)) {
 			return FALSE;
 		}
 	} else {
-		fu_cros_ec_usb_device_jump_to_rw(device);
+		fu_cros_ec_usb_device_jump_to_rw(self);
 	}
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
@@ -975,7 +974,7 @@ fu_cros_ec_usb_device_detach(FuDevice *device, FuProgress *progress, GError **er
 	if (self->targ.common.flash_protection != 0x0) {
 		/* in RW, and RO region is write protected, so jump to RO */
 		fu_device_add_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN);
-		if (!fu_cros_ec_usb_device_reset_to_ro(device, error))
+		if (!fu_cros_ec_usb_device_reset_to_ro(self, error))
 			return FALSE;
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	}

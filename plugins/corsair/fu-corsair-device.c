@@ -111,7 +111,7 @@ fu_corsair_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_corsair_poll_subdevice(FuDevice *device, gboolean *subdevice_added, GError **error)
+fu_corsair_device_poll_subdevice(FuDevice *device, gboolean *subdevice_added, GError **error)
 {
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
 	guint32 subdevices;
@@ -251,7 +251,7 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 		 * Without this delay a subdevice may be not present even if it is
 		 * turned on. */
 		fu_device_sleep(device, CORSAIR_SUBDEVICE_FIRST_POLL_DELAY);
-		if (!fu_corsair_poll_subdevice(device, &subdevice_added, &local_error)) {
+		if (!fu_corsair_device_poll_subdevice(device, &subdevice_added, &local_error)) {
 			g_warning("error polling subdevice: %s", local_error->message);
 		} else {
 			/* start polling if a subdevice was not added */
@@ -275,7 +275,7 @@ fu_corsair_device_reload(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_corsair_is_subdevice_connected_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_corsair_device_is_subdevice_connected_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	guint32 subdevices = 0;
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
@@ -296,7 +296,7 @@ fu_corsair_is_subdevice_connected_cb(FuDevice *device, gpointer user_data, GErro
 }
 
 static gboolean
-fu_corsair_reconnect_subdevice(FuDevice *device, GError **error)
+fu_corsair_device_reconnect_subdevice(FuDevice *device, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
 
@@ -309,7 +309,7 @@ fu_corsair_reconnect_subdevice(FuDevice *device, GError **error)
 	fu_device_sleep(device, CORSAIR_SUBDEVICE_REBOOT_DELAY);
 
 	if (!fu_device_retry_full(parent,
-				  fu_corsair_is_subdevice_connected_cb,
+				  fu_corsair_device_is_subdevice_connected_cb,
 				  CORSAIR_SUBDEVICE_RECONNECT_RETRIES,
 				  CORSAIR_SUBDEVICE_RECONNECT_PERIOD,
 				  NULL,
@@ -322,7 +322,7 @@ fu_corsair_reconnect_subdevice(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_corsair_ensure_mode(FuDevice *device, FuCorsairDeviceMode mode, GError **error)
+fu_corsair_device_ensure_mode(FuDevice *device, FuCorsairDeviceMode mode, GError **error)
 {
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
 	FuCorsairDeviceMode current_mode;
@@ -349,7 +349,7 @@ fu_corsair_ensure_mode(FuDevice *device, FuCorsairDeviceMode mode, GError **erro
 	}
 
 	if (fu_device_has_private_flag(device, FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE)) {
-		if (!fu_corsair_reconnect_subdevice(device, error)) {
+		if (!fu_corsair_device_reconnect_subdevice(device, error)) {
 			g_prefix_error(error, "subdevice did not reconnect: ");
 			return FALSE;
 		}
@@ -368,13 +368,13 @@ fu_corsair_ensure_mode(FuDevice *device, FuCorsairDeviceMode mode, GError **erro
 static gboolean
 fu_corsair_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	return fu_corsair_ensure_mode(device, FU_CORSAIR_DEVICE_MODE_APPLICATION, error);
+	return fu_corsair_device_ensure_mode(device, FU_CORSAIR_DEVICE_MODE_APPLICATION, error);
 }
 
 static gboolean
 fu_corsair_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	return fu_corsair_ensure_mode(device, FU_CORSAIR_DEVICE_MODE_BOOTLOADER, error);
+	return fu_corsair_device_ensure_mode(device, FU_CORSAIR_DEVICE_MODE_BOOTLOADER, error);
 }
 
 static gboolean
@@ -443,7 +443,10 @@ fu_corsair_device_set_progress(FuDevice *self, FuProgress *progress)
 }
 
 static gboolean
-fu_corsair_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, GError **error)
+fu_corsair_device_set_quirk_kv(FuDevice *device,
+			       const gchar *key,
+			       const gchar *value,
+			       GError **error)
 {
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
 	guint64 vendor_interface;
@@ -497,7 +500,7 @@ fu_corsair_device_poll(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	if (!fu_corsair_poll_subdevice(device, &subdevice_added, error)) {
+	if (!fu_corsair_device_poll_subdevice(device, &subdevice_added, error)) {
 		return FALSE;
 	}
 
@@ -532,7 +535,7 @@ fu_corsair_device_class_init(FuCorsairDeviceClass *klass)
 
 	device_class->poll = fu_corsair_device_poll;
 	device_class->probe = fu_corsair_device_probe;
-	device_class->set_quirk_kv = fu_corsair_set_quirk_kv;
+	device_class->set_quirk_kv = fu_corsair_device_set_quirk_kv;
 	device_class->setup = fu_corsair_device_setup;
 	device_class->reload = fu_corsair_device_reload;
 	device_class->attach = fu_corsair_device_attach;

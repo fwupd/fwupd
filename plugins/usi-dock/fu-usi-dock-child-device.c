@@ -83,7 +83,7 @@ fu_usi_dock_child_device_class_init(FuUsiDockChildDeviceClass *klass)
 }
 
 FuDevice *
-fu_usi_dock_child_new(FuContext *ctx)
+fu_usi_dock_child_device_new(FuContext *ctx)
 {
 	return g_object_new(FU_TYPE_USI_DOCK_CHILD_DEVICE, "context", ctx, NULL);
 }

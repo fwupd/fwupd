@@ -1005,7 +1005,7 @@ fu_genesys_usbhub_device_get_public_key(FuGenesysUsbhubDevice *self, int bank_nu
 }
 
 static gint
-fu_genesys_usbhub_tsdigit_value(gchar c)
+fu_genesys_usbhub_device_tsdigit_value(gchar c)
 {
 	if (c >= 'A' && c <= 'Z')
 		return c - 'A' + 10;
@@ -1217,7 +1217,7 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 		hs_st = fu_struct_genesys_ts_dynamic_gl3523_get_hs_port_number(self->st_dynamic_ts);
 		bonding_st = fu_struct_genesys_ts_dynamic_gl3523_get_bonding(self->st_dynamic_ts);
 
-		bonding = fu_genesys_usbhub_tsdigit_value(bonding_st[0]);
+		bonding = fu_genesys_usbhub_device_tsdigit_value(bonding_st[0]);
 		if (self->tool_string_version < FU_GENESYS_TS_VERSION_BONDING_QC)
 			bonding <<= 1;
 		self->bonding = bonding & GL3523_BONDING_VALID_BIT;
@@ -1290,8 +1290,8 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 	}
 
 	running_mode = rm_st[0];
-	ss_port_number = fu_genesys_usbhub_tsdigit_value(ss_st[0]);
-	hs_port_number = fu_genesys_usbhub_tsdigit_value(hs_st[0]);
+	ss_port_number = fu_genesys_usbhub_device_tsdigit_value(ss_st[0]);
+	hs_port_number = fu_genesys_usbhub_device_tsdigit_value(hs_st[0]);
 
 	if (running_mode == 'M') {
 		self->running_bank = FU_GENESYS_FW_STATUS_MASK;

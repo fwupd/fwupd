@@ -44,7 +44,7 @@ fu_amd_gpu_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_amd_gpu_set_device_file(FuDevice *device, const gchar *base, GError **error)
+fu_amd_gpu_device_set_device_file(FuDevice *device, const gchar *base, GError **error)
 {
 	const gchar *f;
 	g_autofree gchar *ddir = NULL;
@@ -79,7 +79,7 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *psp_vbflash_status = NULL;
 
 	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
-	if (!fu_amd_gpu_set_device_file(device, base, error))
+	if (!fu_amd_gpu_device_set_device_file(device, base, error))
 		return FALSE;
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
 		return FALSE;

@@ -274,7 +274,7 @@ fu_logitech_hidpp_device_open(FuDevice *device, GError **error)
 }
 
 static void
-fu_logitech_hidpp_map_to_string(FuLogitechHidppHidppMap *map, guint idt, GString *str)
+fu_logitech_hidpp_device_map_to_string(FuLogitechHidppHidppMap *map, guint idt, GString *str)
 {
 	g_autofree gchar *title = g_strdup_printf("Feature%02x", map->idx);
 	g_autofree gchar *tmp = g_strdup_printf("%s [0x%04x]",
@@ -294,7 +294,7 @@ fu_logitech_hidpp_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "ModelId", priv->model_id);
 	for (guint i = 0; i < priv->feature_index->len; i++) {
 		FuLogitechHidppHidppMap *map = g_ptr_array_index(priv->feature_index, i);
-		fu_logitech_hidpp_map_to_string(map, idt, str);
+		fu_logitech_hidpp_device_map_to_string(map, idt, str);
 	}
 }
 
@@ -611,9 +611,10 @@ fu_logitech_hidpp_device_fetch_battery_level(FuLogitechHidppDevice *self, GError
 }
 
 static gboolean
-fu_logitech_hidpp_feature_search(FuDevice *device, guint16 feature, GError **error)
+fu_logitech_hidpp_device_feature_search(FuLogitechHidppDevice *self,
+					guint16 feature,
+					GError **error)
 {
-	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	FuLogitechHidppHidppMap *map;
 	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
@@ -748,7 +749,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 	/* map some *optional* HID++2.0 features we might use */
 	for (guint i = 0; map_features[i] != FU_LOGITECH_HIDPP_FEATURE_ROOT; i++) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_logitech_hidpp_feature_search(device, map_features[i], &error_local)) {
+		if (!fu_logitech_hidpp_device_feature_search(self, map_features[i], &error_local)) {
 			g_debug("%s", error_local->message);
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT) ||
 			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {

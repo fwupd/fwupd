@@ -30,7 +30,7 @@ MMModemFirmwareUpdateMethod
 fu_mm_device_get_update_methods(FuMmDevice *device);
 
 FuMmDevice *
-fu_mm_shadow_device_new(FuMmDevice *device);
+fu_mm_device_shadow_new(FuMmDevice *device);
 FuMmDevice *
 fu_mm_device_udev_new(FuContext *ctx, MMManager *manager, FuMmDevice *shadow_device);
 void

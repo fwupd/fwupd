@@ -289,7 +289,7 @@ fu_dell_dock_mst_enable_remote_control(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_dell_dock_trigger_rc_command(FuDevice *device, GError **error)
+fu_dell_dock_mst_trigger_rc_command(FuDevice *device, GError **error)
 {
 	const guint8 *result = NULL;
 	FuDevice *proxy = fu_device_get_proxy(device);
@@ -396,7 +396,7 @@ fu_dell_dock_mst_rc_command(FuDevice *device,
 					     error))
 		return FALSE;
 
-	return fu_dell_dock_trigger_rc_command(device, error);
+	return fu_dell_dock_mst_trigger_rc_command(device, error);
 }
 
 static MSTType
@@ -425,7 +425,7 @@ fu_dell_dock_mst_check_offset(guint8 byte, guint8 offset)
 }
 
 static gboolean
-fu_dell_dock_d19_mst_check_fw(FuDevice *device, GError **error)
+fu_dell_dock_mst_d19_check_fw(FuDevice *device, GError **error)
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
 	g_autoptr(GBytes) bytes = NULL;
@@ -644,11 +644,11 @@ fu_dell_dock_mst_erase_cayenne(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_dell_dock_write_flash_bank(FuDevice *device,
-			      GBytes *blob_fw,
-			      MSTBank bank,
-			      FuProgress *progress,
-			      GError **error)
+fu_dell_dock_mst_write_flash_bank(FuDevice *device,
+				  GBytes *blob_fw,
+				  MSTBank bank,
+				  FuProgress *progress,
+				  GError **error)
 {
 	const MSTBankAttributes *attribs = NULL;
 	gsize write_size = 32;
@@ -887,11 +887,11 @@ fu_dell_dock_mst_write_bank(FuDevice *device,
 			return FALSE;
 		fu_progress_step_done(progress);
 
-		if (!fu_dell_dock_write_flash_bank(device,
-						   fw,
-						   bank,
-						   fu_progress_get_child(progress),
-						   error))
+		if (!fu_dell_dock_mst_write_flash_bank(device,
+						       fw,
+						       bank,
+						       fu_progress_get_child(progress),
+						       error))
 			return FALSE;
 		fu_progress_step_done(progress);
 
@@ -998,11 +998,11 @@ fu_dell_dock_mst_write_cayenne(FuDevice *device,
 		if (!fu_dell_dock_mst_erase_cayenne(device, error))
 			return FALSE;
 		fu_progress_step_done(progress);
-		if (!fu_dell_dock_write_flash_bank(device,
-						   fw,
-						   Cayenne,
-						   fu_progress_get_child(progress),
-						   error))
+		if (!fu_dell_dock_mst_write_flash_bank(device,
+						       fw,
+						       Cayenne,
+						       fu_progress_get_child(progress),
+						       error))
 			return FALSE;
 		if (!fu_dell_dock_mst_checksum_bank(device, fw, Cayenne, &checksum, error))
 			return FALSE;
@@ -1148,7 +1148,7 @@ fu_dell_dock_mst_setup(FuDevice *device, GError **error)
 	const gchar *version;
 
 	/* sanity check that we can talk to MST */
-	if (!fu_dell_dock_d19_mst_check_fw(device, error))
+	if (!fu_dell_dock_mst_d19_check_fw(device, error))
 		return FALSE;
 
 	/* set version from EC if we know it */

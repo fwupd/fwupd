@@ -375,7 +375,7 @@ fu_ccgx_dmc_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_ccgx_dmc_get_image_write_status_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_ccgx_dmc_device_get_image_write_status_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
 	const guint8 *req_data;
@@ -415,11 +415,11 @@ fu_ccgx_dmc_get_image_write_status_cb(FuDevice *device, gpointer user_data, GErr
 }
 
 static gboolean
-fu_ccgx_dmc_write_firmware_record(FuCcgxDmcDevice *self,
-				  FuCcgxDmcFirmwareSegmentRecord *seg_rcd,
-				  gsize *fw_data_written,
-				  FuProgress *progress,
-				  GError **error)
+fu_ccgx_dmc_device_write_firmware_record(FuCcgxDmcDevice *self,
+					 FuCcgxDmcFirmwareSegmentRecord *seg_rcd,
+					 gsize *fw_data_written,
+					 FuProgress *progress,
+					 GError **error)
 {
 	GPtrArray *data_records = NULL;
 
@@ -453,7 +453,7 @@ fu_ccgx_dmc_write_firmware_record(FuCcgxDmcDevice *self,
 
 		/* get status */
 		if (!fu_device_retry(FU_DEVICE(self),
-				     fu_ccgx_dmc_get_image_write_status_cb,
+				     fu_ccgx_dmc_device_get_image_write_status_cb,
 				     DMC_FW_WRITE_STATUS_RETRY_COUNT,
 				     NULL,
 				     error))
@@ -471,12 +471,12 @@ fu_ccgx_dmc_write_firmware_record(FuCcgxDmcDevice *self,
 }
 
 static gboolean
-fu_ccgx_dmc_write_firmware_image(FuDevice *device,
-				 FuCcgxDmcFirmwareRecord *img_rcd,
-				 gsize *fw_data_written,
-				 const gsize fw_data_size,
-				 FuProgress *progress,
-				 GError **error)
+fu_ccgx_dmc_device_write_firmware_image(FuDevice *device,
+					FuCcgxDmcFirmwareRecord *img_rcd,
+					gsize *fw_data_written,
+					const gsize fw_data_size,
+					FuProgress *progress,
+					GError **error)
 {
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
 	GPtrArray *seg_records;
@@ -490,11 +490,11 @@ fu_ccgx_dmc_write_firmware_image(FuDevice *device,
 	fu_progress_set_steps(progress, seg_records->len);
 	for (guint32 seg_index = 0; seg_index < seg_records->len; seg_index++) {
 		FuCcgxDmcFirmwareSegmentRecord *seg_rcd = g_ptr_array_index(seg_records, seg_index);
-		if (!fu_ccgx_dmc_write_firmware_record(self,
-						       seg_rcd,
-						       fw_data_written,
-						       fu_progress_get_child(progress),
-						       error))
+		if (!fu_ccgx_dmc_device_write_firmware_record(self,
+							      seg_rcd,
+							      fw_data_written,
+							      fu_progress_get_child(progress),
+							      error))
 			return FALSE;
 		fu_progress_step_done(progress);
 	}
@@ -502,11 +502,11 @@ fu_ccgx_dmc_write_firmware_image(FuDevice *device,
 }
 
 static gboolean
-fu_ccgx_dmc_write_firmware(FuDevice *device,
-			   FuFirmware *firmware,
-			   FuProgress *progress,
-			   FwupdInstallFlags flags,
-			   GError **error)
+fu_ccgx_dmc_device_write_firmware(FuDevice *device,
+				  FuFirmware *firmware,
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
 {
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
 	FuCcgxDmcFirmwareRecord *img_rcd = NULL;
@@ -585,12 +585,12 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 		/* write image */
 		g_debug("writing image index %u/%u", img_index, image_records->len - 1);
 		img_rcd = g_ptr_array_index(image_records, img_index);
-		if (!fu_ccgx_dmc_write_firmware_image(device,
-						      img_rcd,
-						      &fw_data_written,
-						      fw_data_size,
-						      fu_progress_get_child(progress),
-						      error))
+		if (!fu_ccgx_dmc_device_write_firmware_image(device,
+							     img_rcd,
+							     &fw_data_written,
+							     fw_data_size,
+							     fu_progress_get_child(progress),
+							     error))
 			return FALSE;
 	}
 	if (rqt_opcode != FU_CCGX_DMC_INT_OPCODE_FW_UPGRADE_STATUS) {
@@ -838,7 +838,7 @@ fu_ccgx_dmc_device_class_init(FuCcgxDmcDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_ccgx_dmc_device_to_string;
-	device_class->write_firmware = fu_ccgx_dmc_write_firmware;
+	device_class->write_firmware = fu_ccgx_dmc_device_write_firmware;
 	device_class->prepare_firmware = fu_ccgx_dmc_device_prepare_firmware;
 	device_class->attach = fu_ccgx_dmc_device_attach;
 	device_class->probe = fu_ccgx_dmc_device_probe;

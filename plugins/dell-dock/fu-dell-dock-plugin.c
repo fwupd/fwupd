@@ -61,7 +61,7 @@ fu_dell_dock_plugin_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 
 	/* create mst endpoint */
 	mst_device = fu_dell_dock_mst_new(ctx);
-	if (fu_dell_dock_get_dock_type(FU_DEVICE(ec_device)) == DOCK_BASE_TYPE_ATOMIC)
+	if (fu_dell_dock_ec_get_dock_type(FU_DEVICE(ec_device)) == DOCK_BASE_TYPE_ATOMIC)
 		instance_id_mst = DELL_DOCK_VMM6210_INSTANCE_ID;
 	else
 		instance_id_mst = DELL_DOCK_VM5331_INSTANCE_ID;
@@ -76,9 +76,9 @@ fu_dell_dock_plugin_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 
 	/* create package version endpoint */
 	status_device = fu_dell_dock_status_new(ctx);
-	if (fu_dell_dock_get_dock_type(FU_DEVICE(ec_device)) == DOCK_BASE_TYPE_ATOMIC)
+	if (fu_dell_dock_ec_get_dock_type(FU_DEVICE(ec_device)) == DOCK_BASE_TYPE_ATOMIC)
 		instance_id_status = DELL_DOCK_ATOMIC_STATUS_INSTANCE_ID;
-	else if (fu_dell_dock_module_is_usb4(FU_DEVICE(ec_device)))
+	else if (fu_dell_dock_ec_module_is_usb4(FU_DEVICE(ec_device)))
 		instance_id_status = DELL_DOCK_DOCK2_INSTANCE_ID;
 	else
 		instance_id_status = DELL_DOCK_DOCK1_INSTANCE_ID;
@@ -159,7 +159,7 @@ fu_dell_dock_plugin_backend_device_added(FuPlugin *plugin,
 	}
 
 	/* determine dock type by ec */
-	dock_type = fu_dell_dock_get_dock_type(ec_device);
+	dock_type = fu_dell_dock_ec_get_dock_type(ec_device);
 	if (dock_type == DOCK_BASE_TYPE_UNKNOWN) {
 		g_set_error(error,
 			    FWUPD_ERROR,

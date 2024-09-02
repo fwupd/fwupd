@@ -225,7 +225,7 @@ fu_amd_kria_device_init(FuAmdKriaDevice *self)
 }
 
 static void
-fu_amd_kria_finalize(GObject *object)
+fu_amd_kria_device_finalize(GObject *object)
 {
 	FuAmdKriaDevice *self = FU_AMD_KRIA_DEVICE(object);
 	FuAmdKriaDevicePrivate *priv = GET_PRIVATE(self);
@@ -246,7 +246,7 @@ fu_amd_kria_device_class_init(FuAmdKriaDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 
-	object_class->finalize = fu_amd_kria_finalize;
+	object_class->finalize = fu_amd_kria_device_finalize;
 	object_class->constructed = fu_amd_kria_device_constructed;
 
 	device_class->set_quirk_kv = fu_amd_kria_device_set_quirk_kv;

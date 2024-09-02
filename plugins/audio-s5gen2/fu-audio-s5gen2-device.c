@@ -655,7 +655,7 @@ fu_qc_s5gen2_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_qc_s5gen2_hid_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_qc_s5gen2_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "detach");
@@ -665,7 +665,7 @@ fu_qc_s5gen2_hid_device_set_progress(FuDevice *self, FuProgress *progress)
 }
 
 static void
-fu_qc_s5gen2_hid_device_replace(FuDevice *device, FuDevice *donor)
+fu_qc_s5gen2_device_replace(FuDevice *device, FuDevice *donor)
 {
 	FuQcS5gen2Device *self = FU_QC_S5GEN2_DEVICE(device);
 	FuQcS5gen2Device *self_donor = FU_QC_S5GEN2_DEVICE(donor);
@@ -699,6 +699,6 @@ fu_qc_s5gen2_device_class_init(FuQcS5gen2DeviceClass *klass)
 	device_class->attach = fu_qc_s5gen2_device_attach;
 	device_class->prepare_firmware = fu_qc_s5gen2_device_prepare_firmware;
 	device_class->write_firmware = fu_qc_s5gen2_device_write_firmware;
-	device_class->set_progress = fu_qc_s5gen2_hid_device_set_progress;
-	device_class->replace = fu_qc_s5gen2_hid_device_replace;
+	device_class->set_progress = fu_qc_s5gen2_device_set_progress;
+	device_class->replace = fu_qc_s5gen2_device_replace;
 }

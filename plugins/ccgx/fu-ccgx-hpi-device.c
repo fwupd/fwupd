@@ -739,7 +739,7 @@ fu_ccgx_hpi_device_clear_all_events(FuCcgxHpiDevice *self, guint32 io_timeout, G
 }
 
 static gboolean
-fu_ccgx_hpi_validate_fw_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_ccgx_hpi_device_validate_fw_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
 	guint8 *fw_index = (guint8 *)user_data;
@@ -778,17 +778,17 @@ fu_ccgx_hpi_validate_fw_cb(FuDevice *device, gpointer user_data, GError **error)
 }
 
 static gboolean
-fu_ccgx_hpi_validate_fw(FuCcgxHpiDevice *self, guint8 fw_index, GError **error)
+fu_ccgx_hpi_device_validate_fw(FuCcgxHpiDevice *self, guint8 fw_index, GError **error)
 {
 	return fu_device_retry(FU_DEVICE(self),
-			       fu_ccgx_hpi_validate_fw_cb,
+			       fu_ccgx_hpi_device_validate_fw_cb,
 			       HPI_CMD_VALIDATE_FW_RETRY_CNT,
 			       &fw_index,
 			       error);
 }
 
 static gboolean
-fu_ccgx_hpi_enter_flash_mode_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_ccgx_hpi_device_enter_flash_mode_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
 	FuCcgxPdResp hpi_event = 0;
@@ -828,17 +828,17 @@ fu_ccgx_hpi_enter_flash_mode_cb(FuDevice *device, gpointer user_data, GError **e
 }
 
 static gboolean
-fu_ccgx_hpi_enter_flash_mode(FuCcgxHpiDevice *self, GError **error)
+fu_ccgx_hpi_device_enter_flash_mode(FuCcgxHpiDevice *self, GError **error)
 {
 	return fu_device_retry(FU_DEVICE(self),
-			       fu_ccgx_hpi_enter_flash_mode_cb,
+			       fu_ccgx_hpi_device_enter_flash_mode_cb,
 			       HPI_CMD_ENTER_LEAVE_FLASH_MODE_RETRY_CNT,
 			       NULL,
 			       error);
 }
 
 static gboolean
-fu_ccgx_hpi_leave_flash_mode_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_ccgx_hpi_device_leave_flash_mode_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
 	FuCcgxPdResp hpi_event = 0;
@@ -879,17 +879,17 @@ fu_ccgx_hpi_leave_flash_mode_cb(FuDevice *device, gpointer user_data, GError **e
 }
 
 static gboolean
-fu_ccgx_hpi_leave_flash_mode(FuCcgxHpiDevice *self, GError **error)
+fu_ccgx_hpi_device_leave_flash_mode(FuCcgxHpiDevice *self, GError **error)
 {
 	return fu_device_retry(FU_DEVICE(self),
-			       fu_ccgx_hpi_leave_flash_mode_cb,
+			       fu_ccgx_hpi_device_leave_flash_mode_cb,
 			       HPI_CMD_ENTER_LEAVE_FLASH_MODE_RETRY_CNT,
 			       NULL,
 			       error);
 }
 
 static gboolean
-fu_ccgx_hpi_write_flash_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_ccgx_hpi_device_write_flash_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
 	FuCcgxHpiFlashWriteRetryHelper *helper = (FuCcgxHpiFlashWriteRetryHelper *)user_data;
@@ -943,11 +943,11 @@ fu_ccgx_hpi_write_flash_cb(FuDevice *device, gpointer user_data, GError **error)
 }
 
 static gboolean
-fu_ccgx_hpi_write_flash(FuCcgxHpiDevice *self,
-			guint16 addr,
-			const guint8 *buf,
-			guint16 bufsz,
-			GError **error)
+fu_ccgx_hpi_device_write_flash(FuCcgxHpiDevice *self,
+			       guint16 addr,
+			       const guint8 *buf,
+			       guint16 bufsz,
+			       GError **error)
 {
 	FuCcgxHpiFlashWriteRetryHelper helper = {
 	    .addr = addr,
@@ -955,14 +955,14 @@ fu_ccgx_hpi_write_flash(FuCcgxHpiDevice *self,
 	    .bufsz = bufsz,
 	};
 	return fu_device_retry(FU_DEVICE(self),
-			       fu_ccgx_hpi_write_flash_cb,
+			       fu_ccgx_hpi_device_write_flash_cb,
 			       HPI_CMD_FLASH_WRITE_RETRY_CNT,
 			       &helper,
 			       error);
 }
 
 static gboolean
-fu_ccgx_hpi_read_flash_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_ccgx_hpi_device_read_flash_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
 	FuCcgxHpiFlashReadRetryHelper *helper = (FuCcgxHpiFlashReadRetryHelper *)user_data;
@@ -1015,11 +1015,11 @@ fu_ccgx_hpi_read_flash_cb(FuDevice *device, gpointer user_data, GError **error)
 }
 
 static gboolean
-fu_ccgx_hpi_read_flash(FuCcgxHpiDevice *self,
-		       guint16 addr,
-		       guint8 *buf,
-		       guint16 bufsz,
-		       GError **error)
+fu_ccgx_hpi_device_read_flash(FuCcgxHpiDevice *self,
+			      guint16 addr,
+			      guint8 *buf,
+			      guint16 bufsz,
+			      GError **error)
 {
 	FuCcgxHpiFlashReadRetryHelper helper = {
 	    .addr = addr,
@@ -1027,7 +1027,7 @@ fu_ccgx_hpi_read_flash(FuCcgxHpiDevice *self,
 	    .bufsz = bufsz,
 	};
 	return fu_device_retry(FU_DEVICE(self),
-			       fu_ccgx_hpi_read_flash_cb,
+			       fu_ccgx_hpi_device_read_flash_cb,
 			       HPI_CMD_FLASH_READ_RETRY_CNT,
 			       &helper,
 			       error);
@@ -1143,11 +1143,11 @@ fu_ccgx_hpi_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_ccgx_hpi_get_metadata_offset(FuCcgxHpiDevice *self,
-				FuCcgxFwMode fw_mode,
-				guint32 *addr,
-				guint32 *offset,
-				GError **error)
+fu_ccgx_hpi_device_get_metadata_offset(FuCcgxHpiDevice *self,
+				       FuCcgxFwMode fw_mode,
+				       guint32 *addr,
+				       guint32 *offset,
+				       GError **error)
 {
 	guint32 addr_max;
 
@@ -1193,22 +1193,22 @@ fu_ccgx_hpi_get_metadata_offset(FuCcgxHpiDevice *self,
 	return TRUE;
 }
 
-/* this will only work after fu_ccgx_hpi_enter_flash_mode() has been used */
+/* this will only work after fu_ccgx_hpi_device_enter_flash_mode() has been used */
 static gboolean
-fu_ccgx_hpi_load_metadata(FuCcgxHpiDevice *self,
-			  FuCcgxFwMode fw_mode,
-			  GByteArray *st_metadata,
-			  GError **error)
+fu_ccgx_hpi_device_load_metadata(FuCcgxHpiDevice *self,
+				 FuCcgxFwMode fw_mode,
+				 GByteArray *st_metadata,
+				 GError **error)
 {
 	guint32 addr = 0x0;
 	guint32 md_offset = 0x0;
 	g_autofree guint8 *buf = NULL;
 
 	/* read flash at correct address */
-	if (!fu_ccgx_hpi_get_metadata_offset(self, fw_mode, &addr, &md_offset, error))
+	if (!fu_ccgx_hpi_device_get_metadata_offset(self, fw_mode, &addr, &md_offset, error))
 		return FALSE;
 	buf = g_malloc0(self->flash_row_size);
-	if (!fu_ccgx_hpi_read_flash(self, addr, buf, self->flash_row_size, error)) {
+	if (!fu_ccgx_hpi_device_read_flash(self, addr, buf, self->flash_row_size, error)) {
 		g_prefix_error(error, "fw metadata read error: ");
 		return FALSE;
 	}
@@ -1222,22 +1222,22 @@ fu_ccgx_hpi_load_metadata(FuCcgxHpiDevice *self,
 			      error);
 }
 
-/* this will only work after fu_ccgx_hpi_enter_flash_mode() has been used */
+/* this will only work after fu_ccgx_hpi_device_enter_flash_mode() has been used */
 static gboolean
-fu_ccgx_hpi_save_metadata(FuCcgxHpiDevice *self,
-			  FuCcgxFwMode fw_mode,
-			  GByteArray *st_metadata,
-			  GError **error)
+fu_ccgx_hpi_device_save_metadata(FuCcgxHpiDevice *self,
+				 FuCcgxFwMode fw_mode,
+				 GByteArray *st_metadata,
+				 GError **error)
 {
 	guint32 addr = 0x0;
 	guint32 md_offset = 0x0;
 	g_autofree guint8 *buf = NULL;
 
 	/* read entire row of flash at correct address */
-	if (!fu_ccgx_hpi_get_metadata_offset(self, fw_mode, &addr, &md_offset, error))
+	if (!fu_ccgx_hpi_device_get_metadata_offset(self, fw_mode, &addr, &md_offset, error))
 		return FALSE;
 	buf = g_malloc0(self->flash_row_size);
-	if (!fu_ccgx_hpi_read_flash(self, addr, buf, self->flash_row_size, error)) {
+	if (!fu_ccgx_hpi_device_read_flash(self, addr, buf, self->flash_row_size, error)) {
 		g_prefix_error(error, "fw metadata read existing error: ");
 		return FALSE;
 	}
@@ -1250,7 +1250,7 @@ fu_ccgx_hpi_save_metadata(FuCcgxHpiDevice *self,
 			    st_metadata->len,
 			    error))
 		return FALSE;
-	if (!fu_ccgx_hpi_write_flash(self, addr, buf, self->flash_row_size, error)) {
+	if (!fu_ccgx_hpi_device_write_flash(self, addr, buf, self->flash_row_size, error)) {
 		g_prefix_error(error, "fw metadata write error: ");
 		return FALSE;
 	}
@@ -1258,11 +1258,11 @@ fu_ccgx_hpi_save_metadata(FuCcgxHpiDevice *self,
 }
 
 static gboolean
-fu_ccgx_hpi_write_firmware(FuDevice *device,
-			   FuFirmware *firmware,
-			   FuProgress *progress,
-			   FwupdInstallFlags flags,
-			   GError **error)
+fu_ccgx_hpi_device_write_firmware(FuDevice *device,
+				  FuFirmware *firmware,
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
 	GPtrArray *records = fu_ccgx_firmware_get_records(FU_CCGX_FIRMWARE(firmware));
@@ -1280,17 +1280,17 @@ fu_ccgx_hpi_write_firmware(FuDevice *device,
 
 	/* enter flash mode */
 	locker = fu_device_locker_new_full(self,
-					   (FuDeviceLockerFunc)fu_ccgx_hpi_enter_flash_mode,
-					   (FuDeviceLockerFunc)fu_ccgx_hpi_leave_flash_mode,
+					   (FuDeviceLockerFunc)fu_ccgx_hpi_device_enter_flash_mode,
+					   (FuDeviceLockerFunc)fu_ccgx_hpi_device_leave_flash_mode,
 					   error);
 	if (locker == NULL)
 		return FALSE;
 
 	/* invalidate metadata for alternate image */
-	if (!fu_ccgx_hpi_load_metadata(self, fw_mode_alt, st_metadata, error))
+	if (!fu_ccgx_hpi_device_load_metadata(self, fw_mode_alt, st_metadata, error))
 		return FALSE;
 	fu_struct_ccgx_metadata_hdr_set_metadata_valid(st_metadata, 0x0);
-	if (!fu_ccgx_hpi_save_metadata(self, fw_mode_alt, st_metadata, error))
+	if (!fu_ccgx_hpi_device_save_metadata(self, fw_mode_alt, st_metadata, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -1299,11 +1299,11 @@ fu_ccgx_hpi_write_firmware(FuDevice *device,
 		FuCcgxFirmwareRecord *rcd = g_ptr_array_index(records, i);
 
 		/* write chunk */
-		if (!fu_ccgx_hpi_write_flash(self,
-					     rcd->row_number,
-					     g_bytes_get_data(rcd->data, NULL),
-					     g_bytes_get_size(rcd->data),
-					     error)) {
+		if (!fu_ccgx_hpi_device_write_flash(self,
+						    rcd->row_number,
+						    g_bytes_get_data(rcd->data, NULL),
+						    g_bytes_get_size(rcd->data),
+						    error)) {
 			g_prefix_error(error, "fw write error @0x%x: ", rcd->row_number);
 			return FALSE;
 		}
@@ -1316,7 +1316,7 @@ fu_ccgx_hpi_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* validate fw */
-	if (!fu_ccgx_hpi_validate_fw(self, fw_mode_alt, error)) {
+	if (!fu_ccgx_hpi_device_validate_fw(self, fw_mode_alt, error)) {
 		g_prefix_error(error, "fw validate error: ");
 		return FALSE;
 	}
@@ -1613,7 +1613,7 @@ fu_ccgx_hpi_device_class_init(FuCcgxHpiDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_ccgx_hpi_device_to_string;
-	device_class->write_firmware = fu_ccgx_hpi_write_firmware;
+	device_class->write_firmware = fu_ccgx_hpi_device_write_firmware;
 	device_class->prepare_firmware = fu_ccgx_hpi_device_prepare_firmware;
 	device_class->detach = fu_ccgx_hpi_device_detach;
 	device_class->attach = fu_ccgx_hpi_device_attach;

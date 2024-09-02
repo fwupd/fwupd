@@ -52,7 +52,7 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuBluezDevice, fu_bluez_device, FU_TYPE_DEVICE)
 #define GET_PRIVATE(o) (fu_bluez_device_get_instance_private(o))
 
 static void
-fu_bluez_uuid_free(FuBluezDeviceUuidHelper *uuid_helper)
+fu_bluez_device_uuid_free(FuBluezDeviceUuidHelper *uuid_helper)
 {
 	if (uuid_helper->path != NULL)
 		g_free(uuid_helper->path);
@@ -1069,7 +1069,7 @@ fu_bluez_device_init(FuBluezDevice *self)
 	priv->uuids = g_hash_table_new_full(g_str_hash,
 					    g_str_equal,
 					    g_free,
-					    (GDestroyNotify)fu_bluez_uuid_free);
+					    (GDestroyNotify)fu_bluez_device_uuid_free);
 }
 
 static void
