@@ -2884,6 +2884,14 @@ fu_engine_backends_to_json(FuEngine *self, JsonBuilder *json_builder)
 		json_builder_end_array(json_builder);
 	}
 	json_builder_end_object(json_builder);
+
+	/* we've recorded these, now drop them */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG))
+			continue;
+		fu_device_clear_events(device);
+	}
 }
 
 static gboolean
