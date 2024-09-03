@@ -4081,6 +4081,7 @@ fu_backend_usb_func(gconstpointer user_data)
 #endif
 
 	/* check there were events */
+	g_object_set(backend, "device-gtype", FU_TYPE_USB_DEVICE, NULL);
 	g_signal_connect(backend,
 			 "device-added",
 			 G_CALLBACK(fu_backend_usb_hotplug_cb),
@@ -4161,6 +4162,7 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 	g_autoptr(JsonParser) parser = json_parser_new();
 
 	/* load the JSON into the backend */
+	g_object_set(backend, "device-gtype", FU_TYPE_USB_DEVICE, NULL);
 	usb_emulate_fn =
 	    g_test_build_filename(G_TEST_DIST, "tests", "usb-devices-invalid.json", NULL);
 	ret = json_parser_load_from_file(parser, usb_emulate_fn, &error);

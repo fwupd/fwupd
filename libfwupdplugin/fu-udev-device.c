@@ -2170,6 +2170,7 @@ fu_udev_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags
 	GPtrArray *events = fu_device_get_events(device);
 
 	/* optional properties */
+	fwupd_codec_json_append(builder, "GType", "FuUdevDevice");
 	if (fu_udev_device_get_sysfs_path(self) != NULL)
 		fwupd_codec_json_append(builder, "BackendId", fu_udev_device_get_sysfs_path(self));
 	if (priv->device_file != NULL)

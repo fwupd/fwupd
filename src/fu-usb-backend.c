@@ -441,7 +441,5 @@ fu_usb_backend_new(FuContext *ctx)
 				       "usb",
 				       "context",
 				       ctx,
-				       "device-gtype",
-				       FU_TYPE_USB_DEVICE,
 				       NULL));
 }

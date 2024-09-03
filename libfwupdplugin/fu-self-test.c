@@ -2327,8 +2327,9 @@ fu_backend_emulate_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
 	const gchar *json1 = "{"
-			     "  \"UdevDevices\" : ["
+			     "  \"UsbDevices\" : ["
 			     "    {"
+			     "      \"GType\" : \"FuUdevDevice\",\n"
 			     "      \"BackendId\" : \"foo:bar:baz\","
 			     "      \"Created\" : \"2023-02-01T16:35:03.302027Z\","
 			     "      \"Events\" : ["
@@ -2345,8 +2346,9 @@ fu_backend_emulate_func(void)
 			     "  ]"
 			     "}";
 	const gchar *json2 = "{\n"
-			     "  \"UdevDevices\" : [\n"
+			     "  \"UsbDevices\" : [\n"
 			     "    {\n"
+			     "      \"GType\" : \"FuUdevDevice\",\n"
 #if GLIB_CHECK_VERSION(2, 80, 0)
 			     "      \"BackendId\" : \"usb:FF:FF:06\",\n"
 			     "      \"Created\" : \"2099-02-01T16:35:03Z\"\n"
