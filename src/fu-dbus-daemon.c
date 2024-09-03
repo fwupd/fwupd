@@ -11,6 +11,7 @@
 #include <fwupdplugin.h>
 #ifdef HAVE_GIO_UNIX
 #include <gio/gunixfdlist.h>
+#include <gio/gunixoutputstream.h>
 #endif
 #include <glib/gstdio.h>
 #include <jcat.h>
@@ -1047,7 +1048,7 @@ fu_dbus_daemon_client_flags_notify_cb(FuClient *client, GParamSpec *pspec, FuMai
 #endif
 
 static GInputStream *
-fu_dbus_daemon_invocation_get_stream(GDBusMethodInvocation *invocation, GError **error)
+fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GError **error)
 {
 #ifdef HAVE_GIO_UNIX
 	GDBusMessage *message;
@@ -1068,6 +1069,39 @@ fu_dbus_daemon_invocation_get_stream(GDBusMethodInvocation *invocation, GError *
 
 	/* get details about the file (will close the fd when done) */
 	stream = fu_unix_seekable_input_stream_new(fd, TRUE);
+	if (stream == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid stream");
+		return NULL;
+	}
+	return g_steal_pointer(&stream);
+#else
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
+	return NULL;
+#endif
+}
+
+static GOutputStream *
+fu_dbus_daemon_invocation_get_output_stream(GDBusMethodInvocation *invocation, GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	GDBusMessage *message;
+	GUnixFDList *fd_list;
+	gint fd;
+	g_autoptr(GOutputStream) stream = NULL;
+
+	/* get the fd */
+	message = g_dbus_method_invocation_get_message(invocation);
+	fd_list = g_dbus_message_get_unix_fd_list(message);
+	if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 1) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
+		return NULL;
+	}
+	fd = g_unix_fd_list_get(fd_list, 0, error);
+	if (fd < 0)
+		return NULL;
+
+	/* get details about the file (will close the fd when done) */
+	stream = g_unix_output_stream_new(fd, TRUE);
 	if (stream == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid stream");
 		return NULL;
@@ -1546,7 +1580,7 @@ fu_dbus_daemon_method_emulation_load(FuDbusDaemon *self,
 	g_variant_get(parameters, "(h)", &fd_handle);
 
 	/* get stream */
-	stream = fu_dbus_daemon_invocation_get_stream(invocation, &error);
+	stream = fu_dbus_daemon_invocation_get_input_stream(invocation, &error);
 	if (stream == NULL) {
 		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 		return;
@@ -1573,22 +1607,27 @@ fu_dbus_daemon_method_emulation_save(FuDbusDaemon *self,
 				     GDBusMethodInvocation *invocation)
 {
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	GVariant *val;
+	gint32 fd_handle = 0;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GBytes) data = NULL;
+	g_autoptr(GOutputStream) stream = NULL;
 
-	/* save data from engine */
-	data = fu_engine_emulation_save(engine, &error);
-	if (data == NULL) {
-		g_dbus_method_invocation_return_error(invocation,
-						      FWUPD_ERROR,
-						      FWUPD_ERROR_NOT_SUPPORTED,
-						      "failed to save emulation data: %s",
-						      error->message);
+	g_variant_get(parameters, "(h)", &fd_handle);
+
+	/* get stream */
+	stream = fu_dbus_daemon_invocation_get_output_stream(invocation, &error);
+	if (stream == NULL) {
+		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 		return;
 	}
-	val = g_variant_new_from_bytes(G_VARIANT_TYPE_BYTESTRING, data, FALSE);
-	g_dbus_method_invocation_return_value(invocation, g_variant_new_tuple(&val, 1));
+
+	/* save data from engine */
+	if (!fu_engine_emulation_save(engine, stream, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value(invocation, NULL);
 }
 
 static void
@@ -2040,7 +2079,7 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 	}
 #endif
 	/* get stream */
-	helper->stream = fu_dbus_daemon_invocation_get_stream(invocation, &error);
+	helper->stream = fu_dbus_daemon_invocation_get_input_stream(invocation, &error);
 	if (helper->stream == NULL) {
 		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 		return;
@@ -2118,7 +2157,7 @@ fu_dbus_daemon_method_get_details(FuDbusDaemon *self,
 	g_variant_get(parameters, "(h)", &fd_handle);
 
 	/* get stream */
-	stream = fu_dbus_daemon_invocation_get_stream(invocation, &error);
+	stream = fu_dbus_daemon_invocation_get_input_stream(invocation, &error);
 	if (stream == NULL) {
 		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 		return;

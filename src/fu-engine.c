@@ -2769,15 +2769,15 @@ fu_engine_emulation_load(FuEngine *self, GInputStream *stream, GError **error)
 	return TRUE;
 }
 
-GBytes *
-fu_engine_emulation_save(FuEngine *self, GError **error)
+gboolean
+fu_engine_emulation_save(FuEngine *self, GOutputStream *stream, GError **error)
 {
 	gboolean got_json = FALSE;
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(FuArchive) archive = fu_archive_new(NULL, FU_ARCHIVE_FLAG_NONE, NULL);
 
-	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* not supported */
 	if (!fu_engine_config_get_allow_emulation(self->config)) {
@@ -2785,7 +2785,7 @@ fu_engine_emulation_save(FuEngine *self, GError **error)
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "emulation is not allowed from config");
-		return NULL;
+		return FALSE;
 	}
 
 	/* sanity check */
@@ -2809,17 +2809,21 @@ fu_engine_emulation_save(FuEngine *self, GError **error)
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no emulation data, perhaps no devices have been added?");
-		return NULL;
+		return FALSE;
 	}
 
 	/* write  */
 	buf = fu_archive_write(archive, FU_ARCHIVE_FORMAT_ZIP, FU_ARCHIVE_COMPRESSION_GZIP, error);
 	if (buf == NULL)
-		return NULL;
+		return FALSE;
+	if (!g_output_stream_write_all(stream, buf->data, buf->len, NULL, NULL, error)) {
+		fu_error_convert(error);
+		return FALSE;
+	}
 
 	/* success */
 	g_hash_table_remove_all(self->emulation_phases);
-	return g_bytes_new(buf->data, buf->len);
+	return TRUE;
 }
 
 static void

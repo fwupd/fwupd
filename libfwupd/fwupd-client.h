@@ -455,10 +455,11 @@ fwupd_client_emulation_load_finish(FwupdClient *self, GAsyncResult *res, GError 
     G_GNUC_NON_NULL(1, 2);
 void
 fwupd_client_emulation_save_async(FwupdClient *self,
+				  const gchar *filename,
 				  GCancellable *cancellable,
 				  GAsyncReadyCallback callback,
 				  gpointer callback_data) G_GNUC_NON_NULL(1);
-GBytes *
+gboolean
 fwupd_client_emulation_save_finish(FwupdClient *self,
 				   GAsyncResult *res,
 				   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);

@@ -10,6 +10,7 @@
 
 #ifdef HAVE_GIO_UNIX
 #include <gio/gunixinputstream.h>
+#include <gio/gunixoutputstream.h>
 #endif
 
 #include <json-glib/json-glib.h>
@@ -31,6 +32,9 @@ fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error) G_GNUC_WARN_UN
     G_GNUC_NON_NULL(1);
 GUnixInputStream *
 fwupd_unix_input_stream_from_fn(const gchar *fn, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
+GUnixOutputStream *
+fwupd_unix_output_stream_from_fn(const gchar *fn, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 #endif
 
