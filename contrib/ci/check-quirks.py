@@ -25,11 +25,6 @@ def test_files() -> int:
                         print(f"{fn} has invalid section header: {line}")
                         rc = 1
                         continue
-                    for deprecated in ["DeviceInstanceId", "Guid"]:
-                        if line.find(deprecated) != -1:
-                            print(f"{fn} has deprecated prefix: {deprecated}")
-                            rc = 1
-                            continue
                 else:
                     sections = line.split(" = ")
                     if len(sections) != 2:

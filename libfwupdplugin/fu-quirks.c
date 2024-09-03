@@ -94,22 +94,6 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(sqlite3_stmt, sqlite3_finalize);
 static gchar *
 fu_quirks_build_group_key(const gchar *group)
 {
-	const gchar *guid_prefixes[] = {"DeviceInstanceId=", "Guid=", "HwId=", NULL};
-
-	/* this is a GUID */
-	for (guint i = 0; guid_prefixes[i] != NULL; i++) {
-		if (g_str_has_prefix(group, guid_prefixes[i])) {
-			gsize len = strlen(guid_prefixes[i]);
-			g_warning("using %s for %s in quirk files is deprecated!",
-				  guid_prefixes[i],
-				  group);
-			if (fwupd_guid_is_valid(group + len))
-				return g_strdup(group + len);
-			return fwupd_guid_hash_string(group + len);
-		}
-	}
-
-	/* fallback */
 	if (fwupd_guid_is_valid(group))
 		return g_strdup(group);
 	return fwupd_guid_hash_string(group);
