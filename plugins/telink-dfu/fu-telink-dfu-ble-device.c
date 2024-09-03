@@ -9,7 +9,6 @@
 #include "fu-telink-dfu-archive.h"
 #include "fu-telink-dfu-ble-device.h"
 #include "fu-telink-dfu-common.h"
-#include "fu-telink-dfu-firmware.h"
 #include "fu-telink-dfu-struct.h"
 
 struct _FuTelinkDfuBleDevice {

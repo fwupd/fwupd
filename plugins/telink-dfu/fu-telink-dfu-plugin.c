@@ -8,7 +8,6 @@
 
 #include "fu-telink-dfu-archive.h"
 #include "fu-telink-dfu-ble-device.h"
-#include "fu-telink-dfu-firmware.h"
 #include "fu-telink-dfu-plugin.h"
 
 struct _FuTelinkDfuPlugin {
@@ -28,7 +27,6 @@ fu_telink_dfu_plugin_constructed(GObject *obj)
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_TELINK_DFU_BLE_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_TELINK_DFU_ARCHIVE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_TELINK_DFU_FIRMWARE);
 }
 
 static void

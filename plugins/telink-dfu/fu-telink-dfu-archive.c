@@ -8,7 +8,6 @@
 
 #include "fu-telink-dfu-archive.h"
 #include "fu-telink-dfu-common.h"
-#include "fu-telink-dfu-firmware.h"
 
 struct _FuTelinkDfuArchive {
 	FuFirmware parent_instance;
@@ -33,7 +32,7 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 	const gchar *version;
 	gboolean supported_bootloader = FALSE;
 	g_autofree gchar *image_id = NULL;
-	g_autoptr(FuFirmware) image = fu_telink_dfu_firmware_new();
+	g_autoptr(FuFirmware) image = fu_firmware_new();
 	g_autoptr(GBytes) blob = NULL;
 
 	if (!json_object_has_member(obj, "file")) {
