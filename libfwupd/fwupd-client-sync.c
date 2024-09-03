@@ -2718,14 +2718,14 @@ static void
 fwupd_client_emulation_save_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
-	helper->bytes =
-	    fwupd_client_emulation_save_finish(FWUPD_CLIENT(source), res, &helper->error);
+	helper->ret = fwupd_client_emulation_save_finish(FWUPD_CLIENT(source), res, &helper->error);
 	g_main_loop_quit(helper->loop);
 }
 
 /**
  * fwupd_client_emulation_save:
  * @self: a #FwupdClient
+ * @filename: archive data of JSON files
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
@@ -2738,35 +2738,39 @@ fwupd_client_emulation_save_cb(GObject *source, GAsyncResult *res, gpointer user
  * Once the device has been re-inserted then the emulation data will be available using
  * this API call.
  *
- * Returns: (transfer full): archive data
+ * Returns: %TRUE for success
  *
- * Since: 1.8.11
+ * Since: 2.0.0
  **/
-GBytes *
-fwupd_client_emulation_save(FwupdClient *self, GCancellable *cancellable, GError **error)
+gboolean
+fwupd_client_emulation_save(FwupdClient *self,
+			    const gchar *filename,
+			    GCancellable *cancellable,
+			    GError **error)
 {
 	g_autoptr(FwupdClientHelper) helper = NULL;
 
-	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
-	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* connect */
 	if (!fwupd_client_connect(self, cancellable, error))
-		return NULL;
+		return FALSE;
 
 	/* call async version and run loop until complete */
 	helper = fwupd_client_helper_new(self);
 	fwupd_client_emulation_save_async(self,
+					  filename,
 					  cancellable,
 					  fwupd_client_emulation_save_cb,
 					  helper);
 	g_main_loop_run(helper->loop);
-	if (helper->bytes == NULL) {
+	if (!helper->ret) {
 		g_propagate_error(error, g_steal_pointer(&helper->error));
-		return NULL;
+		return FALSE;
 	}
-	return g_steal_pointer(&helper->bytes);
+	return TRUE;
 }
 
 static void

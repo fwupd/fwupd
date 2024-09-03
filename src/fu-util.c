@@ -4704,8 +4704,6 @@ fu_util_emulation_untag(FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_emulation_save(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(GBytes) data = NULL;
-
 	/* check args */
 	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
@@ -4716,10 +4714,7 @@ fu_util_emulation_save(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* save */
-	data = fwupd_client_emulation_save(priv->client, priv->cancellable, error);
-	if (data == NULL)
-		return FALSE;
-	return fu_bytes_set_contents(values[0], data, error);
+	return fwupd_client_emulation_save(priv->client, values[0], priv->cancellable, error);
 }
 
 static gboolean

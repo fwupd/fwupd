@@ -6309,25 +6309,31 @@ static void
 fwupd_client_emulation_save_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
+	g_autoptr(GDBusMessage) msg = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GVariant) val = NULL;
 
-	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
-	if (val == NULL) {
+	msg = g_dbus_connection_send_message_with_reply_finish(G_DBUS_CONNECTION(source),
+							       res,
+							       &error);
+	if (msg == NULL) {
+		fwupd_client_fixup_dbus_error(error);
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+	if (g_dbus_message_to_gerror(msg, &error)) {
 		fwupd_client_fixup_dbus_error(error);
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
 
 	/* success */
-	g_task_return_pointer(task,
-			      g_variant_get_data_as_bytes(val),
-			      (GDestroyNotify)g_bytes_unref);
+	g_task_return_boolean(task, TRUE);
 }
 
 /**
  * fwupd_client_emulation_save_async:
  * @self: a #FwupdClient
+ * @filename: archive data of JSON files
  * @cancellable: (nullable): optional #GCancellable
  * @callback: (scope async) (closure callback_data): the function to run on completion
  * @callback_data: the data to pass to @callback
@@ -6344,31 +6350,60 @@ fwupd_client_emulation_save_cb(GObject *source, GAsyncResult *res, gpointer user
  * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
- * Since: 1.8.11
+ * Since: 2.0.0
  **/
 void
 fwupd_client_emulation_save_async(FwupdClient *self,
+				  const gchar *filename,
 				  GCancellable *cancellable,
 				  GAsyncReadyCallback callback,
 				  gpointer callback_data)
 {
+#ifdef HAVE_GIO_UNIX
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GTask) task = NULL;
+	g_autoptr(GDBusMessage) request = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+	g_autoptr(GUnixFDList) fd_list = NULL;
+	g_autoptr(GUnixOutputStream) istr = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(filename != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
 	g_return_if_fail(priv->proxy != NULL);
 
+	istr = fwupd_unix_output_stream_from_fn(filename, &error);
+	if (istr == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* set out of band file descriptor */
+	fd_list = g_unix_fd_list_new();
+	g_unix_fd_list_append(fd_list, g_unix_output_stream_get_fd(istr), NULL);
+	request = g_dbus_message_new_method_call(FWUPD_DBUS_SERVICE,
+						 FWUPD_DBUS_PATH,
+						 FWUPD_DBUS_INTERFACE,
+						 "EmulationSave");
+	g_dbus_message_set_unix_fd_list(request, fd_list);
+
 	/* call into daemon */
-	task = g_task_new(self, cancellable, callback, callback_data);
-	g_dbus_proxy_call(priv->proxy,
-			  "EmulationSave",
-			  NULL,
-			  G_DBUS_CALL_FLAGS_NONE,
-			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
-			  cancellable,
-			  fwupd_client_emulation_save_cb,
-			  g_steal_pointer(&task));
+	g_dbus_message_set_body(request, g_variant_new("(h)", g_unix_output_stream_get_fd(istr)));
+	g_dbus_connection_send_message_with_reply(g_dbus_proxy_get_connection(priv->proxy),
+						  request,
+						  G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+						  G_MAXINT,
+						  NULL,
+						  cancellable,
+						  fwupd_client_emulation_save_cb,
+						  g_steal_pointer(&task));
+#else
+	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_return_new_error_literal(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_NOT_SUPPORTED,
+					"not supported as <gio/gunixfdlist.h> not found");
+#endif
 }
 
 /**
@@ -6379,17 +6414,17 @@ fwupd_client_emulation_save_async(FwupdClient *self,
  *
  * Gets the result of [method@FwupdClient.emulation_save_async].
  *
- * Returns: (transfer full): archive data
+ * Returns: %TRUE for success
  *
- * Since: 1.8.11
+ * Since: 2.0.0
  **/
-GBytes *
+gboolean
 fwupd_client_emulation_save_finish(FwupdClient *self, GAsyncResult *res, GError **error)
 {
-	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
-	g_return_val_if_fail(g_task_is_valid(res, self), NULL);
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-	return g_task_propagate_pointer(G_TASK(res), error);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(g_task_is_valid(res, self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean(G_TASK(res), error);
 }
 
 static void
