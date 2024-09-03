@@ -2820,6 +2820,10 @@ fu_engine_emulation_save(FuEngine *self, GOutputStream *stream, GError **error)
 		fu_error_convert(error);
 		return FALSE;
 	}
+	if (!g_output_stream_flush(stream, NULL, error)) {
+		fu_error_convert(error);
+		return FALSE;
+	}
 
 	/* success */
 	g_hash_table_remove_all(self->emulation_phases);
