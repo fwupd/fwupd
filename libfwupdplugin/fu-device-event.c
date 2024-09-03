@@ -154,7 +154,7 @@ fu_device_event_set_bytes(FuDeviceEvent *self, const gchar *key, GBytes *value)
  * fu_device_event_set_data:
  * @self: a #FuDeviceEvent
  * @key: (not nullable): a unique key, e.g. `Name`
- * @buf: (not nullable): a buffer
+ * @buf: (nullable): a buffer
  * @bufsz: size of @buf
  *
  * Sets a memory buffer on the event. Note: memory buffers are stored internally as BASE-64 strings.
@@ -167,7 +167,6 @@ fu_device_event_set_data(FuDeviceEvent *self, const gchar *key, const guint8 *bu
 	FuDeviceEventPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE_EVENT(self));
 	g_return_if_fail(key != NULL);
-	g_return_if_fail(buf != NULL);
 	g_hash_table_insert(
 	    priv->values,
 	    g_strdup(key),
@@ -266,6 +265,8 @@ fu_device_event_get_bytes(FuDeviceEvent *self, const gchar *key, GError **error)
 	blobstr = fu_device_event_lookup(self, key, G_TYPE_STRING, error);
 	if (blobstr == NULL)
 		return NULL;
+	if (blobstr[0] == '\0')
+		return g_bytes_new(NULL, 0);
 	buf = g_base64_decode(blobstr, &bufsz);
 	return g_bytes_new_take(g_steal_pointer(&buf), bufsz);
 }

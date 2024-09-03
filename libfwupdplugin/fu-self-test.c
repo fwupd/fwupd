@@ -1853,11 +1853,13 @@ fu_device_event_func(void)
 	g_autoptr(FuDeviceEvent) event2 = fu_device_event_new(NULL);
 	g_autoptr(GBytes) blob1 = g_bytes_new_static("hello", 6);
 	g_autoptr(GBytes) blob2 = NULL;
+	g_autoptr(GBytes) blob3 = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_device_event_set_str(event1, "Name", "Richard");
 	fu_device_event_set_i64(event1, "Age", 123);
 	fu_device_event_set_bytes(event1, "Blob", blob1);
+	fu_device_event_set_data(event1, "Data", NULL, 0);
 
 	json = fwupd_codec_to_json_string(FWUPD_CODEC(event1), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
@@ -1865,6 +1867,7 @@ fu_device_event_func(void)
 			==,
 			"{\n"
 			"  \"Id\" : \"foo:bar:baz\",\n"
+			"  \"Data\" : \"\",\n"
 			"  \"Age\" : 123,\n"
 			"  \"Name\" : \"Richard\",\n"
 			"  \"Blob\" : \"aGVsbG8A\"\n"
@@ -1879,6 +1882,9 @@ fu_device_event_func(void)
 	blob2 = fu_device_event_get_bytes(event2, "Blob", &error);
 	g_assert_nonnull(blob2);
 	g_assert_cmpstr(g_bytes_get_data(blob2, NULL), ==, "hello");
+	blob3 = fu_device_event_get_bytes(event2, "Data", &error);
+	g_assert_nonnull(blob3);
+	g_assert_cmpstr(g_bytes_get_data(blob3, NULL), ==, NULL);
 
 	/* invalid type */
 	str = fu_device_event_get_str(event2, "Age", &error);

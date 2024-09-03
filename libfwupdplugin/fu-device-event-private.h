@@ -30,7 +30,7 @@ fu_device_event_set_bytes(FuDeviceEvent *self, const gchar *key, GBytes *value)
     G_GNUC_NON_NULL(1, 2, 3);
 void
 fu_device_event_set_data(FuDeviceEvent *self, const gchar *key, const guint8 *buf, gsize bufsz)
-    G_GNUC_NON_NULL(1, 2, 3);
+    G_GNUC_NON_NULL(1, 2);
 GBytes *
 fu_device_event_get_bytes(FuDeviceEvent *self, const gchar *key, GError **error)
     G_GNUC_NON_NULL(1, 2);
