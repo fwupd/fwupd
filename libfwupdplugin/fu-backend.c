@@ -279,17 +279,6 @@ fu_backend_setup(FuBackend *self, FuProgress *progress, GError **error)
 	return TRUE;
 }
 
-/* private */
-gchar *
-fu_backend_get_emulation_array_member_name(FuBackend *self)
-{
-	FuBackendPrivate *priv = GET_PRIVATE(self);
-
-	if (priv->name == NULL)
-		return NULL;
-	return g_strdup_printf("%c%sDevices", g_ascii_toupper(priv->name[0]), priv->name + 1);
-}
-
 static gboolean
 fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 {
@@ -297,10 +286,13 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	FuBackendPrivate *priv = GET_PRIVATE(self);
 	JsonArray *json_array;
 	JsonObject *json_object;
-	g_autofree gchar *list_name = NULL;
 	g_autoptr(GPtrArray) devices_added =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	g_autoptr(GPtrArray) devices_remove = NULL;
+
+	/* no registered specialized GType */
+	if (priv->device_gtype == FU_TYPE_DEVICE)
+		return TRUE;
 
 	/* sanity check */
 	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
@@ -312,9 +304,8 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	}
 	json_object = json_node_get_object(json_node);
 
-	/* sanity check */
-	list_name = fu_backend_get_emulation_array_member_name(self);
-	if (!json_object_has_member(json_object, list_name))
+	/* remain compatible with all the old emulation files */
+	if (!json_object_has_member(json_object, "UsbDevices"))
 		return TRUE;
 
 	/* four steps:
@@ -327,13 +318,32 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	 * 4. emit devices in devices_added
 	 */
 	devices_remove = fu_backend_get_devices(self);
-	json_array = json_object_get_array_member(json_object, list_name);
+	json_array = json_object_get_array_member(json_object, "UsbDevices");
 	for (guint i = 0; i < json_array_get_length(json_array); i++) {
 		JsonNode *node_tmp = json_array_get_element(json_array, i);
+		JsonObject *object_tmp = json_node_get_object(node_tmp);
 		FuDevice *device_old;
-		g_autoptr(FuDevice) device_tmp =
-		    g_object_new(priv->device_gtype, "context", priv->ctx, NULL);
+		g_autoptr(FuDevice) device_tmp = NULL;
+		const gchar *device_gtypestr;
+		GType device_gtype;
 
+		/* get the GType */
+		device_gtypestr =
+		    json_object_get_string_member_with_default(object_tmp, "GType", "FuUsbDevice");
+		device_gtype = g_type_from_name(device_gtypestr);
+		if (device_gtype == G_TYPE_INVALID) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unknown GType name %s",
+				    device_gtypestr);
+			return FALSE;
+		}
+		if (!g_type_is_a(device_gtype, priv->device_gtype))
+			continue;
+
+		/* create device */
+		device_tmp = g_object_new(device_gtype, "context", priv->ctx, NULL);
 		if (!fwupd_codec_from_json(FWUPD_CODEC(device_tmp), node_tmp, error))
 			return FALSE;
 
@@ -391,11 +401,10 @@ fu_backend_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags fla
 {
 	FuBackend *self = FU_BACKEND(codec);
 	FuBackendPrivate *priv = GET_PRIVATE(self);
-	g_autofree gchar *list_name = NULL;
 	g_autoptr(GList) devices = NULL;
 
-	list_name = fu_backend_get_emulation_array_member_name(self);
-	json_builder_set_member_name(builder, list_name);
+	/* remain compatible with all the old emulation files */
+	json_builder_set_member_name(builder, "UsbDevices");
 	json_builder_begin_array(builder);
 	devices = g_hash_table_get_values(priv->devices);
 	for (GList *l = devices; l != NULL; l = l->next) {
@@ -710,12 +719,11 @@ fu_backend_class_init(FuBackendClass *klass)
 	 *
 	 * Since: 2.0.0
 	 */
-	pspec =
-	    g_param_spec_gtype("device-gtype",
-			       NULL,
-			       NULL,
-			       FU_TYPE_DEVICE,
-			       G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	pspec = g_param_spec_gtype("device-gtype",
+				   NULL,
+				   NULL,
+				   FU_TYPE_DEVICE,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_DEVICE_GTYPE, pspec);
 
 	/**

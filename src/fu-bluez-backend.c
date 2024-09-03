@@ -251,6 +251,12 @@ fu_bluez_backend_class_init(FuBluezBackendClass *klass)
 FuBackend *
 fu_bluez_backend_new(FuContext *ctx)
 {
-	return FU_BACKEND(
-	    g_object_new(FU_TYPE_BLUEZ_BACKEND, "name", "bluez", "context", ctx, NULL));
+	return FU_BACKEND(g_object_new(FU_TYPE_BLUEZ_BACKEND,
+				       "name",
+				       "bluez",
+				       "context",
+				       ctx,
+				       "device-gtype",
+				       FU_TYPE_BLUEZ_DEVICE,
+				       NULL));
 }
