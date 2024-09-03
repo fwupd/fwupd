@@ -317,7 +317,7 @@
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
     st = fu_input_stream_read_byte_array(stream, offset, {{obj.size}}, error);
     if (st == NULL) {
-        g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) st->len);
+        g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) {{obj.size}});
         return FALSE;
     }
     if (st->len != {{obj.size}}) {
@@ -409,7 +409,7 @@
     g_autoptr(GByteArray) st = NULL;
     st = fu_input_stream_read_byte_array(stream, offset, {{obj.size}}, error);
     if (st == NULL) {
-        g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) st->len);
+        g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) {{obj.size}});
         return NULL;
     }
     if (st->len != {{obj.size}}) {
