@@ -23,6 +23,8 @@ fu_msgpack_item_new_float(gdouble value);
 FuMsgpackItem *
 fu_msgpack_item_new_binary(GByteArray *buf) G_GNUC_NON_NULL(1);
 FuMsgpackItem *
+fu_msgpack_item_new_binary_stream(GInputStream *stream) G_GNUC_NON_NULL(1);
+FuMsgpackItem *
 fu_msgpack_item_new_string(const gchar *str) G_GNUC_NON_NULL(1);
 FuMsgpackItem *
 fu_msgpack_item_new_map(guint64 items);

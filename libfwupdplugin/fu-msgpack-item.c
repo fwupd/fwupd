@@ -11,12 +11,14 @@
 #include <fwupd.h>
 
 #include "fu-byte-array.h"
+#include "fu-input-stream.h"
 #include "fu-mem-private.h"
 #include "fu-msgpack-item-private.h"
 
 struct _FuMsgpackItem {
 	GObject parent_instance;
 	FuMsgpackItemKind kind;
+	GInputStream *stream;
 	union {
 		gint64 i64;
 		gdouble f64;
@@ -113,6 +115,7 @@ fu_msgpack_item_get_binary(FuMsgpackItem *self)
 {
 	g_return_val_if_fail(FU_IS_MSGPACK_ITEM(self), NULL);
 	g_return_val_if_fail(self->kind == FU_MSGPACK_ITEM_KIND_BINARY, NULL);
+	g_return_val_if_fail(self->stream == NULL, NULL);
 	return self->value.buf;
 }
 
@@ -263,6 +266,26 @@ fu_msgpack_item_new_binary(GByteArray *buf)
 	g_return_val_if_fail(buf != NULL, NULL);
 	self->kind = FU_MSGPACK_ITEM_KIND_BINARY;
 	self->value.buf = g_byte_array_ref(buf);
+	return g_steal_pointer(&self);
+}
+
+/**
+ * fu_msgpack_item_new_binary_stream:
+ * @stream: (not nullable): a #GInputStream
+ *
+ * Creates a new msgpack item.
+ *
+ * Returns: (transfer full): a #FuMsgpackItem
+ *
+ * Since: 2.0.0
+ **/
+FuMsgpackItem *
+fu_msgpack_item_new_binary_stream(GInputStream *stream)
+{
+	g_autoptr(FuMsgpackItem) self = g_object_new(FU_TYPE_MSGPACK_ITEM, NULL);
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	self->kind = FU_MSGPACK_ITEM_KIND_BINARY;
+	self->stream = g_object_ref(stream);
 	return g_steal_pointer(&self);
 }
 
@@ -428,6 +451,51 @@ fu_msgpack_item_append_string(GByteArray *buf, GString *str, GError **error)
 }
 
 static gboolean
+fu_msgpack_item_append_binary_stream_chunk_cb(const guint8 *buf,
+					      gsize bufsz,
+					      gpointer user_data,
+					      GError **error)
+{
+	GByteArray *data = (GByteArray *)user_data;
+	g_byte_array_append(data, buf, bufsz);
+	return TRUE;
+}
+
+static gboolean
+fu_msgpack_item_append_binary_stream(GByteArray *buf, GInputStream *stream, GError **error)
+{
+	gsize streamsz = 0;
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (streamsz <= G_MAXUINT8) {
+		fu_byte_array_append_uint8(buf, FU_MSGPACK_CMD_BIN8);
+		fu_byte_array_append_uint8(buf, streamsz);
+		return fu_input_stream_chunkify(stream,
+						fu_msgpack_item_append_binary_stream_chunk_cb,
+						buf,
+						error);
+	}
+	if (streamsz <= G_MAXUINT16) {
+		fu_byte_array_append_uint8(buf, FU_MSGPACK_CMD_BIN16);
+		fu_byte_array_append_uint16(buf, streamsz, G_BIG_ENDIAN);
+		return fu_input_stream_chunkify(stream,
+						fu_msgpack_item_append_binary_stream_chunk_cb,
+						buf,
+						error);
+	}
+	if (streamsz <= G_MAXUINT32) {
+		fu_byte_array_append_uint8(buf, FU_MSGPACK_CMD_BIN32);
+		fu_byte_array_append_uint32(buf, streamsz, G_BIG_ENDIAN);
+		return fu_input_stream_chunkify(stream,
+						fu_msgpack_item_append_binary_stream_chunk_cb,
+						buf,
+						error);
+	}
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "binary too large");
+	return FALSE;
+}
+
+static gboolean
 fu_msgpack_item_append_binary(GByteArray *buf, GByteArray *donor, GError **error)
 {
 	if (donor->len <= G_MAXUINT8) {
@@ -477,8 +545,11 @@ fu_msgpack_item_append(FuMsgpackItem *self, GByteArray *buf, GError **error)
 		return fu_msgpack_item_append_integer(buf, self->value.i64, error);
 	if (self->kind == FU_MSGPACK_ITEM_KIND_STRING)
 		return fu_msgpack_item_append_string(buf, self->value.str, error);
-	if (self->kind == FU_MSGPACK_ITEM_KIND_BINARY)
+	if (self->kind == FU_MSGPACK_ITEM_KIND_BINARY) {
+		if (self->stream != NULL)
+			return fu_msgpack_item_append_binary_stream(buf, self->stream, error);
 		return fu_msgpack_item_append_binary(buf, self->value.buf, error);
+	}
 	if (self->kind == FU_MSGPACK_ITEM_KIND_ARRAY)
 		return fu_msgpack_item_append_array(buf, self->value.i64, error);
 	if (self->kind == FU_MSGPACK_ITEM_KIND_MAP)
@@ -717,10 +788,14 @@ fu_msgpack_item_finalize(GObject *object)
 {
 	FuMsgpackItem *self = FU_MSGPACK_ITEM(object);
 
-	if (self->kind == FU_MSGPACK_ITEM_KIND_BINARY)
-		g_byte_array_unref(self->value.buf);
-	if (self->kind == FU_MSGPACK_ITEM_KIND_STRING)
-		g_string_free(self->value.str, TRUE);
+	if (self->stream != NULL) {
+		g_object_unref(self->stream);
+	} else {
+		if (self->kind == FU_MSGPACK_ITEM_KIND_BINARY)
+			g_byte_array_unref(self->value.buf);
+		if (self->kind == FU_MSGPACK_ITEM_KIND_STRING)
+			g_string_free(self->value.str, TRUE);
+	}
 
 	G_OBJECT_CLASS(fu_msgpack_item_parent_class)->finalize(object);
 }

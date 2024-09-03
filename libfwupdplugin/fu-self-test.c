@@ -136,6 +136,32 @@ fu_msgpack_lookup_func(void)
 }
 
 static void
+fu_msgpack_binary_stream_func(void)
+{
+	const gchar data[] = "hello";
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GBytes) blob = g_bytes_new(data, sizeof(data));
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = G_INPUT_STREAM(g_memory_input_stream_new_from_bytes(blob));
+	g_autoptr(GPtrArray) items = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+
+	g_ptr_array_add(items, fu_msgpack_item_new_binary_stream(stream));
+	buf = fu_msgpack_write(items, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(buf);
+	fu_dump_raw(G_LOG_DOMAIN, "foo", buf->data, buf->len);
+	g_assert_cmpint(buf->len, ==, 8);
+	g_assert_cmpuint(buf->data[0], ==, FU_MSGPACK_CMD_BIN8);
+	g_assert_cmpuint(buf->data[1], ==, sizeof(data));
+	g_assert_cmpuint(buf->data[2], ==, 'h');
+	g_assert_cmpuint(buf->data[3], ==, 'e');
+	g_assert_cmpuint(buf->data[4], ==, 'l');
+	g_assert_cmpuint(buf->data[5], ==, 'l');
+	g_assert_cmpuint(buf->data[6], ==, 'o');
+	g_assert_cmpuint(buf->data[7], ==, '\0');
+}
+
+static void
 fu_msgpack_func(void)
 {
 	g_autoptr(GByteArray) buf1 = NULL;
@@ -5881,6 +5907,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
 	g_test_add_func("/fwupd/msgpack", fu_msgpack_func);
+	g_test_add_func("/fwupd/msgpack{binary-stream}", fu_msgpack_binary_stream_func);
 	g_test_add_func("/fwupd/msgpack{lookup}", fu_msgpack_lookup_func);
 	g_test_add_func("/fwupd/efi-load-option", fu_efi_load_option_func);
 	g_test_add_func("/fwupd/efivar", fu_efivar_func);
