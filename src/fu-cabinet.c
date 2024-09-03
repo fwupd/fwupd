@@ -208,8 +208,8 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 	/* the jcat file signed the *checksum of the payload*, not the payload itself */
 	item = jcat_file_get_item_by_id(self->jcat_file, basename, NULL);
 	if (item != NULL && jcat_item_has_target(item)) {
-		gchar *checksum_sha256 = NULL;
-		gchar *checksum_sha512 = NULL;
+		g_autofree gchar *checksum_sha256 = NULL;
+		g_autofree gchar *checksum_sha512 = NULL;
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) results = NULL;
 		g_autoptr(JcatBlob) blob_target_sha256 = NULL;
