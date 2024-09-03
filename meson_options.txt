@@ -11,10 +11,6 @@ option('build',
 option('consolekit',
   type: 'feature',
   description: 'ConsoleKit support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('static_analysis',
   type: 'boolean',
@@ -34,18 +30,10 @@ option('firmware-packager',
 option('docs',
   type: 'feature',
   description: 'Build developer documentation',
-  deprecated: {
-    'docgen': 'enabled',
-    'none': 'disabled',
-  },
 )
 option('introspection',
   type: 'feature',
   description: 'generate GObject Introspection data',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('lvfs',
   type: 'combo',
@@ -65,50 +53,26 @@ option('man',
 option('libarchive',
   type: 'feature',
   description: 'libarchive support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('gudev',
   type: 'feature',
   description: 'GUdev support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('bluez',
   type: 'feature',
   description: 'BlueZ support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('polkit',
   type: 'feature',
   description: 'PolKit support in daemon',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('gnutls',
   type: 'feature',
   description: 'GnuTLS support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('sqlite',
   type: 'feature',
   description: 'sqlite support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('passim',
   type: 'feature',
@@ -128,10 +92,6 @@ option('p2p_policy',
 option('lzma',
   type: 'feature',
   description: 'LZMA support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('cbor',
   type: 'feature',
@@ -140,10 +100,6 @@ option('cbor',
 option('plugin_acpi_phat',
   type: 'feature',
   description: 'ACPI PHAT support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_amdgpu',
   type: 'feature',
@@ -156,58 +112,30 @@ option('plugin_android_boot',
 option('plugin_bcm57xx',
   type: 'feature',
   description: 'BCM57xx support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_cfu',
   type: 'feature',
   description: 'CFU support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_cpu',
   type: 'feature',
   description: 'CPU support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_emmc',
   type: 'feature',
   description: 'eMMC support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_ep963x',
   type: 'feature',
   description: 'EP963x support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_fastboot',
   type: 'feature',
   description: 'Fastboot support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_gpio',
   type: 'feature',
   description: 'Linux GPIO support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_igsc',
   type: 'feature',
@@ -220,10 +148,6 @@ option('plugin_kinetic_dp',
 option('plugin_logitech_bulkcontroller',
   type: 'feature',
   description: 'Logitech bulk controller support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_logitech_scribe',
   type: 'feature',
@@ -236,34 +160,18 @@ option('plugin_logitech_tap',
 option('plugin_parade_lspcon',
   type: 'feature',
   description: 'Parade LSPCON support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_pixart_rf',
   type: 'feature',
   description: 'PixartRF support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_realtek_mst',
   type: 'feature',
   description: 'Realtek MST hub support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_synaptics_mst',
   type: 'feature',
   description: 'Synaptics MST hub support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_mediatek_scaler',
   type: 'feature',
@@ -272,42 +180,22 @@ option('plugin_mediatek_scaler',
 option('plugin_synaptics_rmi',
   type: 'feature',
   description: 'Synaptics RMI support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_scsi',
   type: 'feature',
   description: 'SCSI support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_tpm',
   type: 'feature',
   description: 'TPM support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_redfish',
   type: 'feature' ,
   description: 'Redfish support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_uefi_capsule',
   type: 'feature',
   description: 'UEFI capsule support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_uefi_capsule_splash',
   type: 'boolean',
@@ -317,58 +205,30 @@ option('plugin_uefi_capsule_splash',
 option('plugin_uefi_pk',
   type: 'feature',
   description: 'UEFI PK support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_nitrokey',
   type: 'feature',
   description: 'Nitrokey support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_nvme',
   type: 'feature',
   description: 'NVMe support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_modem_manager',
   type: 'feature',
   description: 'ModemManager support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_msr',
   type: 'feature',
   description: 'MSR support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_mtd',
   type: 'feature',
   description: 'MTD support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_flashrom',
   type: 'feature',
   description: 'flashrom support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_intel_me',
   type: 'feature',
@@ -382,26 +242,14 @@ option('plugin_vendor_example',
 option('plugin_uf2',
   type: 'feature',
   description: 'support for UF2',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_upower',
   type: 'feature',
   description: 'support for UPower',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_powerd',
   type: 'feature',
   description: 'support for powerd',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('qubes',
   type: 'boolean',
@@ -411,18 +259,10 @@ option('qubes',
 option('supported_build',
   type: 'feature',
   description: 'distribution package with upstream support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('systemd',
   type: 'feature',
   description: 'systemd support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('systemd_unit_user',
   type: 'string',
@@ -448,10 +288,6 @@ option(
 option('elogind',
   type: 'feature',
   description: 'elogind support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('tests',
   type: 'boolean',
@@ -465,10 +301,6 @@ option('umockdev_tests',
 option('curl',
   type: 'feature',
   description: 'libcurl support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('vendor_ids_dir',
   type: 'string',
@@ -512,10 +344,6 @@ option('offline',
 option('hsi',
   type: 'feature',
   description: ' Host Security Information',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('python',
   type: 'string',
