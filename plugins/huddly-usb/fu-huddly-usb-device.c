@@ -197,7 +197,7 @@ fu_huddly_usb_device_salute(FuHuddlyUsbDevice *self, GError **error)
 		return FALSE;
 	}
 
-	g_byte_array_set_size(response, 100);
+	fu_byte_array_set_size(response, 100, 0x0);
 	if (!fu_huddly_usb_device_bulk_read(self, response, &received_length, error)) {
 		g_prefix_error(error, "send salute read response failed: ");
 		return FALSE;

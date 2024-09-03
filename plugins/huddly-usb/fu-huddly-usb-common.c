@@ -105,7 +105,7 @@ fu_huddly_usb_hlink_msg_parse(const guint8 *buf, gsize bufsz, GError **error)
 	offset += msg_name_size;
 	payload_size = fu_struct_h_link_header_get_payload_size(msg->header);
 	msg->payload = g_byte_array_sized_new(payload_size);
-	g_byte_array_set_size(msg->payload, payload_size);
+	fu_byte_array_set_size(msg->payload, payload_size, 0x0);
 	if (!fu_memcpy_safe(msg->payload->data,
 			    msg->payload->len,
 			    0, /* dst */
