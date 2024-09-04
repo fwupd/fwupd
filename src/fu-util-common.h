@@ -66,8 +66,6 @@ fu_util_modify_remote_warning(FuConsole *console,
 gboolean
 fu_util_prompt_complete(FuConsole *console, FwupdDeviceFlags flags, gboolean prompt, GError **error)
     G_GNUC_NON_NULL(1);
-gboolean
-fu_util_update_reboot(GError **error) G_GNUC_NON_NULL(1);
 
 GPtrArray *
 fu_util_cmd_array_new(void);

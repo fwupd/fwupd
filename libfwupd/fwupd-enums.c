@@ -119,8 +119,6 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 		return "internal";
 	if (device_flag == FWUPD_DEVICE_FLAG_UPDATABLE)
 		return "updatable";
-	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_OFFLINE)
-		return "only-offline";
 	if (device_flag == FWUPD_DEVICE_FLAG_REQUIRE_AC)
 		return "require-ac";
 	if (device_flag == FWUPD_DEVICE_FLAG_LOCKED)
@@ -213,9 +211,6 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_INTERNAL;
 	if (g_strcmp0(device_flag, "updatable") == 0 || g_strcmp0(device_flag, "allow-online") == 0)
 		return FWUPD_DEVICE_FLAG_UPDATABLE;
-	if (g_strcmp0(device_flag, "only-offline") == 0 ||
-	    g_strcmp0(device_flag, "allow-offline") == 0)
-		return FWUPD_DEVICE_FLAG_ONLY_OFFLINE;
 	if (g_strcmp0(device_flag, "require-ac") == 0)
 		return FWUPD_DEVICE_FLAG_REQUIRE_AC;
 	if (g_strcmp0(device_flag, "locked") == 0)
@@ -836,8 +831,6 @@ fwupd_install_flags_to_string(FwupdInstallFlags install_flags)
 {
 	if (install_flags == FWUPD_INSTALL_FLAG_NONE)
 		return "none";
-	if (install_flags == FWUPD_INSTALL_FLAG_OFFLINE)
-		return "offline";
 	if (install_flags == FWUPD_INSTALL_FLAG_ALLOW_REINSTALL)
 		return "allow-reinstall";
 	if (install_flags == FWUPD_INSTALL_FLAG_ALLOW_OLDER)

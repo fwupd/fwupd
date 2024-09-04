@@ -53,10 +53,9 @@ struct _FuDbusDaemon {
 G_DEFINE_TYPE(FuDbusDaemon, fu_dbus_daemon, FU_TYPE_DAEMON)
 
 #define FU_DAEMON_INSTALL_FLAG_MASK_SAFE                                                           \
-	(FWUPD_INSTALL_FLAG_OFFLINE | FWUPD_INSTALL_FLAG_ALLOW_OLDER |                             \
-	 FWUPD_INSTALL_FLAG_ALLOW_REINSTALL | FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH |             \
-	 FWUPD_INSTALL_FLAG_FORCE | FWUPD_INSTALL_FLAG_NO_HISTORY |                                \
-	 FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS)
+	(FWUPD_INSTALL_FLAG_ALLOW_OLDER | FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |                     \
+	 FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_FORCE |                       \
+	 FWUPD_INSTALL_FLAG_NO_HISTORY | FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS)
 
 static void
 fu_dbus_daemon_engine_changed_cb(FuEngine *engine, FuDbusDaemon *self)
@@ -2071,13 +2070,6 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 		return;
 	}
 
-#ifndef HAVE_FWUPDOFFLINE
-	if (helper->flags & FWUPD_INSTALL_FLAG_OFFLINE) {
-		g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no offline support");
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
-		return;
-	}
-#endif
 	/* get stream */
 	helper->stream = fu_dbus_daemon_invocation_get_input_stream(invocation, &error);
 	if (helper->stream == NULL) {

@@ -673,19 +673,6 @@ fu_release_check_requirements(FuRelease *self,
 		return FALSE;
 	}
 
-	/* called with online update, test if device is supposed to allow this */
-	if ((install_flags & FWUPD_INSTALL_FLAG_OFFLINE) == 0 &&
-	    (install_flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
-	    fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_ONLY_OFFLINE)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Device %s [%s] only allows offline updates",
-			    fu_device_get_name(self->device),
-			    fu_device_get_id(self->device));
-		return FALSE;
-	}
-
 	/* get device */
 	version = fu_device_get_version(self->device);
 	if (version == NULL) {

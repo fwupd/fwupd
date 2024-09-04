@@ -33,7 +33,7 @@ root=$(pwd)
 export BUILD=${root}/build
 rm -rf ${BUILD}
 chown -R nobody ${root}
-sudo -u nobody meson ${BUILD} -Doffline=true -Dman=false -Ddocs=enabled --prefix=${root}/dist
+sudo -u nobody meson ${BUILD} -Dman=false -Ddocs=enabled --prefix=${root}/dist
 #build with clang
 sudo -u nobody ninja -C ${BUILD} test -v
 

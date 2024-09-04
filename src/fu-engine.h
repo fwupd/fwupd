@@ -263,13 +263,6 @@ fu_engine_get_component_by_guids(FuEngine *self, FuDevice *device) G_GNUC_NON_NU
 gchar *
 fu_engine_get_remote_id_for_stream(FuEngine *self, GInputStream *stream) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_engine_schedule_update(FuEngine *self,
-			  FuDevice *device,
-			  FuRelease *release,
-			  GBytes *blob_cab,
-			  FwupdInstallFlags flags,
-			  GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
-gboolean
 fu_engine_modify_bios_settings(FuEngine *self,
 			       GHashTable *settings,
 			       gboolean force_ro,

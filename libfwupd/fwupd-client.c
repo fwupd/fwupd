@@ -3338,9 +3338,6 @@ fwupd_client_install_release_download_cb(GObject *source, GAsyncResult *res, gpo
 		return;
 	}
 
-	/* if the device specifies ONLY_OFFLINE automatically set this flag */
-	if (fwupd_device_has_flag(data->device, FWUPD_DEVICE_FLAG_ONLY_OFFLINE))
-		data->install_flags |= FWUPD_INSTALL_FLAG_OFFLINE;
 	fwupd_client_install_bytes_async(FWUPD_CLIENT(source),
 					 fwupd_device_get_id(data->device),
 					 blob,

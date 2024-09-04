@@ -4792,9 +4792,6 @@ main(int argc, char *argv[])
 	gboolean is_interactive = FALSE;
 	gboolean no_history = FALSE;
 	gboolean no_authenticate = FALSE;
-#ifdef HAVE_FWUPDOFFLINE
-	gboolean offline = FALSE;
-#endif
 	gboolean ret;
 	gboolean verbose = FALSE;
 	gboolean version = FALSE;
@@ -4832,16 +4829,6 @@ main(int argc, char *argv[])
 	     /* TRANSLATORS: command line option */
 	     N_("Set the download retries for transient errors"),
 	     NULL},
-#ifdef HAVE_FWUPDOFFLINE
-	    {"offline",
-	     '\0',
-	     0,
-	     G_OPTION_ARG_NONE,
-	     &offline,
-	     /* TRANSLATORS: command line option */
-	     N_("Schedule installation for next reboot when possible"),
-	     NULL},
-#endif
 	    {"allow-reinstall",
 	     '\0',
 	     0,
@@ -5507,10 +5494,6 @@ main(int argc, char *argv[])
 	fu_util_setup_signal_handlers(priv);
 
 	/* set flags */
-#ifdef HAVE_FWUPDOFFLINE
-	if (offline)
-		priv->flags |= FWUPD_INSTALL_FLAG_OFFLINE;
-#endif
 	if (allow_reinstall)
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	if (allow_older)

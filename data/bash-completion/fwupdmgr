@@ -77,7 +77,6 @@ _fwupdmgr_opts=(
 	'--p2p'
 	'--json'
 	'--download-retries'
-	@offline@
 )
 
 bios_get_opts=(
