@@ -1,3 +1,12 @@
+option('bash_completion',
+  type: 'boolean',
+  value: true,
+  description: 'enable bash completion',
+)
+option('bluez',
+  type: 'feature',
+  description: 'BlueZ support',
+)
 option('build',
   type: 'combo',
   choices: [
@@ -8,32 +17,79 @@ option('build',
   value: 'all',
   description: 'build type',
 )
+option('cbor',
+  type: 'feature',
+  description: 'CBOR support for coSWID and uSWID',
+)
 option('consolekit',
   type: 'feature',
   description: 'ConsoleKit support',
 )
-option('static_analysis',
-  type: 'boolean',
-  value: false,
-  description: 'enable GCC static analysis support',
+option('curl',
+  type: 'feature',
+  description: 'libcurl support',
 )
 option('dbus_socket_address',
   type: 'string',
   value: '',
   description: 'D-Bus socket address to use for p2p mode',
 )
+option('docs',
+  type: 'feature',
+  description: 'Build developer documentation',
+)
+option('efi_binary',
+  type: 'boolean',
+  value: false,
+  description: 'generate uefi binary if missing',
+)
+option('efi_os_dir',
+  type: 'string',
+  description: 'the hardcoded name of OS directory in ESP, e.g. fedora',
+)
+option('elogind',
+  type: 'feature',
+  description: 'elogind support',
+)
 option('firmware-packager',
   type: 'boolean',
   value: true,
   description: 'enable firmware-packager installation',
 )
-option('docs',
+option('fish_completion',
+  type: 'boolean',
+  value: true,
+  description: 'enable fish completion',
+)
+option('gnutls',
   type: 'feature',
-  description: 'Build developer documentation',
+  description: 'GnuTLS support',
+)
+option('gudev',
+  type: 'feature',
+  description: 'GUdev support',
+)
+option('hsi',
+  type: 'feature',
+  description: ' Host Security Information',
 )
 option('introspection',
   type: 'feature',
   description: 'generate GObject Introspection data',
+)
+option('launchd',
+  type: 'feature',
+  value: 'auto',
+  description: 'Launchd auto-launch support (MacOS only)',
+)
+option('launchd_agent_dir',
+  type: 'string',
+  value: '/Library/LaunchAgents',
+  description: 'Directory to put the launchd agent',
+)
+option('libarchive',
+  type: 'feature',
+  description: 'libarchive support',
 )
 option('lvfs',
   type: 'combo',
@@ -45,34 +101,19 @@ option('lvfs',
   value: 'true',
   description: 'install LVFS remotes',
 )
+option('lzma',
+  type: 'feature',
+  description: 'LZMA support',
+)
 option('man',
   type: 'boolean',
   value: true,
   description: 'enable man pages',
 )
-option('libarchive',
-  type: 'feature',
-  description: 'libarchive support',
-)
-option('gudev',
-  type: 'feature',
-  description: 'GUdev support',
-)
-option('bluez',
-  type: 'feature',
-  description: 'BlueZ support',
-)
-option('polkit',
-  type: 'feature',
-  description: 'PolKit support in daemon',
-)
-option('gnutls',
-  type: 'feature',
-  description: 'GnuTLS support',
-)
-option('sqlite',
-  type: 'feature',
-  description: 'sqlite support',
+option('metainfo',
+  type: 'boolean',
+  value: true,
+  description: 'install the project metainfo.xml information',
 )
 option('passim',
   type: 'feature',
@@ -88,14 +129,6 @@ option('p2p_policy',
   ],
   value: 'metadata',
   description: 'Default P2P sharing policy',
-)
-option('lzma',
-  type: 'feature',
-  description: 'LZMA support',
-)
-option('cbor',
-  type: 'feature',
-  description: 'CBOR support for coSWID and uSWID',
 )
 option('plugin_acpi_phat',
   type: 'feature',
@@ -133,6 +166,10 @@ option('plugin_fastboot',
   type: 'feature',
   description: 'Fastboot support',
 )
+option('plugin_flashrom',
+  type: 'feature',
+  description: 'flashrom support',
+)
 option('plugin_gpio',
   type: 'feature',
   description: 'Linux GPIO support',
@@ -141,9 +178,13 @@ option('plugin_igsc',
   type: 'feature',
   description: 'Intel Graphics System Controller support',
 )
+option('plugin_intel_me',
+  type: 'feature',
+  description: 'enable Intel ME support',
+)
 option('plugin_kinetic_dp',
-       type: 'feature',
-       description: 'Kinetic SST/MST DisplayPort converter support',
+  type: 'feature',
+  description: 'Kinetic SST/MST DisplayPort converter support',
 )
 option('plugin_logitech_bulkcontroller',
   type: 'feature',
@@ -157,6 +198,30 @@ option('plugin_logitech_tap',
   type: 'feature',
   description: 'Logitech Tap support',
 )
+option('plugin_mediatek_scaler',
+  type: 'feature',
+  description: 'Mediatek scaler support',
+)
+option('plugin_modem_manager',
+  type: 'feature',
+  description: 'ModemManager support',
+)
+option('plugin_msr',
+  type: 'feature',
+  description: 'MSR support',
+)
+option('plugin_mtd',
+  type: 'feature',
+  description: 'MTD support',
+)
+option('plugin_nitrokey',
+  type: 'feature',
+  description: 'Nitrokey support',
+)
+option('plugin_nvme',
+  type: 'feature',
+  description: 'NVMe support',
+)
 option('plugin_parade_lspcon',
   type: 'feature',
   description: 'Parade LSPCON support',
@@ -165,33 +230,33 @@ option('plugin_pixart_rf',
   type: 'feature',
   description: 'PixartRF support',
 )
+option('plugin_powerd',
+  type: 'feature',
+  description: 'support for powerd',
+)
 option('plugin_realtek_mst',
   type: 'feature',
   description: 'Realtek MST hub support',
 )
-option('plugin_synaptics_mst',
+option('plugin_redfish',
   type: 'feature',
-  description: 'Synaptics MST hub support',
-)
-option('plugin_mediatek_scaler',
-  type: 'feature',
-  description: 'Mediatek scaler support',
-)
-option('plugin_synaptics_rmi',
-  type: 'feature',
-  description: 'Synaptics RMI support',
+  description: 'Redfish support',
 )
 option('plugin_scsi',
   type: 'feature',
   description: 'SCSI support',
 )
+option('plugin_synaptics_mst',
+  type: 'feature',
+  description: 'Synaptics MST hub support',
+)
+option('plugin_synaptics_rmi',
+  type: 'feature',
+  description: 'Synaptics RMI support',
+)
 option('plugin_tpm',
   type: 'feature',
   description: 'TPM support',
-)
-option('plugin_redfish',
-  type: 'feature' ,
-  description: 'Redfish support',
 )
 option('plugin_uefi_capsule',
   type: 'feature',
@@ -206,39 +271,6 @@ option('plugin_uefi_pk',
   type: 'feature',
   description: 'UEFI PK support',
 )
-option('plugin_nitrokey',
-  type: 'feature',
-  description: 'Nitrokey support',
-)
-option('plugin_nvme',
-  type: 'feature',
-  description: 'NVMe support',
-)
-option('plugin_modem_manager',
-  type: 'feature',
-  description: 'ModemManager support',
-)
-option('plugin_msr',
-  type: 'feature',
-  description: 'MSR support',
-)
-option('plugin_mtd',
-  type: 'feature',
-  description: 'MTD support',
-)
-option('plugin_flashrom',
-  type: 'feature',
-  description: 'flashrom support',
-)
-option('plugin_intel_me',
-  type: 'feature',
-  description: 'enable Intel ME support',
-)
-option('plugin_vendor_example',
-  type: 'boolean',
-  value: false,
-  description: 'enable vendor example support',
-)
 option('plugin_uf2',
   type: 'feature',
   description: 'support for UF2',
@@ -247,14 +279,32 @@ option('plugin_upower',
   type: 'feature',
   description: 'support for UPower',
 )
-option('plugin_powerd',
+option('plugin_vendor_example',
+  type: 'boolean',
+  value: false,
+  description: 'enable vendor example support',
+)
+option('polkit',
   type: 'feature',
-  description: 'support for powerd',
+  description: 'PolKit support in daemon',
+)
+option('python',
+  type: 'string',
+  description: 'the absolute path of the python3 binary',
 )
 option('qubes',
   type: 'boolean',
   value: false,
   description: 'build packages for Qubes OS',
+)
+option('sqlite',
+  type: 'feature',
+  description: 'sqlite support',
+)
+option('static_analysis',
+  type: 'boolean',
+  value: false,
+  description: 'enable GCC static analysis support',
 )
 option('supported_build',
   type: 'feature',
@@ -264,30 +314,15 @@ option('systemd',
   type: 'feature',
   description: 'systemd support',
 )
-option('systemd_unit_user',
-  type: 'string',
-  value: 'fwupd-refresh',
-  description: 'User account to use for fwupd-refresh.service (empty for DynamicUser)',
-)
 option('systemd_root_prefix',
   type: 'string',
   value: '',
   description: 'Directory to base systemd’s installation directories on',
 )
-option('launchd',
-  type: 'feature',
-  value: 'auto',
-  description: 'Launchd auto-launch support (MacOS only)'
-)
-option(
-  'launchd_agent_dir',
+option('systemd_unit_user',
   type: 'string',
-  value: '/Library/LaunchAgents',
-  description: 'Directory to put the launchd agent'
-)
-option('elogind',
-  type: 'feature',
-  description: 'elogind support',
+  value: 'fwupd-refresh',
+  description: 'User account to use for fwupd-refresh.service (empty for DynamicUser)',
 )
 option('tests',
   type: 'boolean',
@@ -298,10 +333,6 @@ option('umockdev_tests',
   type: 'feature',
   description: 'umockdev tests',
 )
-option('curl',
-  type: 'feature',
-  description: 'libcurl support',
-)
 option('vendor_ids_dir',
   type: 'string',
   value: '',
@@ -311,36 +342,4 @@ option('vendor_metadata',
   type: 'boolean',
   value: false,
   description: 'install OS vendor provided metadata',
-)
-option('efi_os_dir',
-  type: 'string',
-  description: 'the hardcoded name of OS directory in ESP, e.g. fedora',
-)
-option('efi_binary',
-  type: 'boolean',
-  value: false,
-  description: 'generate uefi binary if missing',
-)
-option('metainfo',
-  type: 'boolean',
-  value: true,
-  description: 'install the project metainfo.xml information',
-)
-option('bash_completion',
-  type: 'boolean',
-  value: true,
-  description: 'enable bash completion',
-)
-option('fish_completion',
-  type: 'boolean',
-  value: true,
-  description: 'enable fish completion',
-)
-option('hsi',
-  type: 'feature',
-  description: ' Host Security Information',
-)
-option('python',
-  type: 'string',
-  description: 'the absolute path of the python3 binary',
 )
