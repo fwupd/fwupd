@@ -66,6 +66,7 @@ plugins = {
   'intel-usb4': false,
   'iommu': false,
   'jabra': false,
+  'jabra-file': false,
   'jabra-gnp': false,
   'kinetic-dp': false,
   'lenovo-thinklmi': false,
