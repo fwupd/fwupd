@@ -1,0 +1,23 @@
+# Jabra PanaCast 50 [runtime]
+[USB\VID_0B0E&PID_3009]
+Plugin = jabra_file
+
+# Jabra PanaCast 50 [runtime]
+[USB\VID_0B0E&PID_3011]
+Plugin = jabra_file
+
+# Jabra PanaCast 50 [runtime]
+[USB\VID_0B0E&PID_3012]
+Plugin = jabra_file
+
+# Lenovo ThinkSmart Bar 180 [runtime]
+[USB\VID_0B0E&PID_306F]
+Plugin = jabra_file
+
+# Lenovo ThinkSmart Bar 180 [runtime]
+[USB\VID_0B0E&PID_3071]
+Plugin = jabra_file
+
+# Lenovo ThinkSmart Bar 180 [runtime]
+[USB\VID_0B0E&PID_3072]
+Plugin = jabra_file
