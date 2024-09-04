@@ -28,7 +28,6 @@
  * @FU_PATH_KIND_PROCFS:		The procfs location (IE /proc)
  * @FU_PATH_KIND_POLKIT_ACTIONS:	The directory for policy kit actions (IE
  * /usr/share/polkit-1/actions/)
- * @FU_PATH_KIND_OFFLINE_TRIGGER:	The file for the offline trigger (IE /system-update)
  * @FU_PATH_KIND_SYSFSDIR_SECURITY:	The sysfs security location (IE /sys/kernel/security)
  * @FU_PATH_KIND_ACPI_TABLES:		The location of the ACPI tables
  * @FU_PATH_KIND_LOCKDIR:		The lock directory (IE /run/lock)
@@ -71,7 +70,6 @@ typedef enum {
 	FU_PATH_KIND_SYSFSDIR_TPM,
 	FU_PATH_KIND_PROCFS,
 	FU_PATH_KIND_POLKIT_ACTIONS,
-	FU_PATH_KIND_OFFLINE_TRIGGER,
 	FU_PATH_KIND_SYSFSDIR_SECURITY,
 	FU_PATH_KIND_ACPI_TABLES,
 	FU_PATH_KIND_LOCKDIR,

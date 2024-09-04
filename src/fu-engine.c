@@ -2227,177 +2227,6 @@ fu_engine_add_release_plugin_metadata(FuEngine *self,
 }
 
 static gboolean
-fu_engine_is_running_offline(FuEngine *self)
-{
-#ifdef HAVE_SYSTEMD
-	g_autofree gchar *default_target = NULL;
-	g_autoptr(GError) error = NULL;
-	default_target = fu_systemd_get_default_target(&error);
-	if (default_target == NULL) {
-		g_warning("failed to get default.target: %s", error->message);
-		return FALSE;
-	}
-	return g_strcmp0(default_target, "system-update.target") == 0;
-#else
-	return FALSE;
-#endif
-}
-
-#ifdef HAVE_FWUPDOFFLINE
-static gboolean
-fu_engine_offline_setup(GError **error)
-{
-#ifdef HAVE_GIO_UNIX
-	gint rc;
-	g_autofree gchar *filename = NULL;
-	g_autofree gchar *symlink_target = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	g_autofree gchar *trigger = fu_path_from_kind(FU_PATH_KIND_OFFLINE_TRIGGER);
-
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* does already exist */
-	filename = fu_path_make_absolute(trigger, NULL);
-	if (g_strcmp0(filename, symlink_target) == 0) {
-		g_info("%s already points to %s, skipping creation", trigger, symlink_target);
-		return TRUE;
-	}
-
-	/* create symlink for the systemd-system-update-generator */
-	rc = symlink(symlink_target, trigger);
-	if (rc < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "Failed to create symlink %s to %s: %s",
-			    trigger,
-			    symlink_target,
-			    g_strerror(errno));
-		return FALSE;
-	}
-	return TRUE;
-#else
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "Not supported as <gio-unix.h> not available");
-	return FALSE;
-#endif
-}
-#endif
-
-static gboolean
-fu_engine_offline_invalidate(GError **error)
-{
-	g_autofree gchar *trigger = fu_path_from_kind(FU_PATH_KIND_OFFLINE_TRIGGER);
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GFile) file1 = NULL;
-
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	file1 = g_file_new_for_path(trigger);
-	if (!g_file_query_exists(file1, NULL))
-		return TRUE;
-	if (!g_file_delete(file1, NULL, &error_local)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "Cannot delete %s: %s",
-			    trigger,
-			    error_local->message);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-/**
- * fu_engine_schedule_update:
- * @self: a #FuEngine
- * @device: a device
- * @release: a release
- * @blob_cab: a data blob
- * @flags: install flags
- * @error: (nullable): optional return location for an error
- *
- * Schedule an offline update for the device
- *
- * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.3.5
- **/
-gboolean
-fu_engine_schedule_update(FuEngine *self,
-			  FuDevice *device,
-			  FuRelease *release,
-			  GBytes *blob_cab,
-			  FwupdInstallFlags flags,
-			  GError **error)
-{
-#ifdef HAVE_FWUPDOFFLINE
-	gchar tmpname[] = {"XXXXXX.cab"};
-	g_autofree gchar *dirname = NULL;
-	g_autofree gchar *filename = NULL;
-	g_autoptr(FuHistory) history = fu_history_new();
-	g_autoptr(GFile) file = NULL;
-
-	/* id already exists */
-	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
-		g_autoptr(FuDevice) res_tmp = NULL;
-		res_tmp = fu_history_get_device_by_id(history, fu_device_get_id(device), NULL);
-		if (res_tmp != NULL &&
-		    fu_device_get_update_state(res_tmp) == FWUPD_UPDATE_STATE_PENDING) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_ALREADY_PENDING,
-				    "%s is already scheduled to be updated",
-				    fu_device_get_id(device));
-			return FALSE;
-		}
-	}
-
-	/* create directory */
-	dirname = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	file = g_file_new_for_path(dirname);
-	if (!g_file_query_exists(file, NULL)) {
-		if (!g_file_make_directory_with_parents(file, NULL, error))
-			return FALSE;
-	}
-
-	/* get a random filename */
-	for (guint i = 0; i < 6; i++)
-		tmpname[i] = (gchar)g_random_int_range('A', 'Z');
-	filename = g_build_filename(dirname, tmpname, NULL);
-
-	/* just copy to the temp file */
-	if (!g_file_set_contents(filename,
-				 g_bytes_get_data(blob_cab, NULL),
-				 (gssize)g_bytes_get_size(blob_cab),
-				 error))
-		return FALSE;
-
-	/* schedule for next boot */
-	g_info("schedule %s to be installed to %s on next boot",
-	       filename,
-	       fu_device_get_id(device));
-	fu_release_set_filename(release, filename);
-
-	/* add to database */
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-	fu_device_set_update_state(device, FWUPD_UPDATE_STATE_PENDING);
-	if (!fu_history_add_device(history, device, release, error))
-		return FALSE;
-
-	/* next boot we run offline */
-	return fu_engine_offline_setup(error);
-#else
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "Not supported as compiled without offline support");
-	return FALSE;
-#endif
-}
-
-static gboolean
 fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
 {
 	FwupdRemote *remote_tmp = fu_remote_list_get_by_id(self->remote_list, "backup");
@@ -2514,30 +2343,6 @@ fu_engine_install_release(FuEngine *self,
 			return FALSE;
 		if (!fu_engine_save_into_backup_remote(self, blob_cab, error))
 			return FALSE;
-	}
-
-	/* schedule this for the next reboot if not in system-update.target,
-	 * but first check if allowed on battery power */
-	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0 && !fu_engine_is_running_offline(self)) {
-		FuPlugin *plugin_tmp =
-		    fu_plugin_list_find_by_name(self->plugin_list, "upower", NULL);
-		g_autoptr(GBytes) blob_cab = NULL;
-		if (!fu_engine_add_release_metadata(self, release, error))
-			return FALSE;
-		if (plugin_tmp != NULL) {
-			if (!fu_plugin_runner_prepare(plugin_tmp, device, progress, flags, error))
-				return FALSE;
-			if (!fu_engine_add_release_plugin_metadata(self,
-								   release,
-								   plugin_tmp,
-								   error))
-				return FALSE;
-		}
-		fu_progress_set_status(progress, FWUPD_STATUS_SCHEDULING);
-		blob_cab = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
-		if (blob_cab == NULL)
-			return FALSE;
-		return fu_engine_schedule_update(self, device, release, blob_cab, flags, error);
 	}
 
 	/* set this for the callback */
@@ -3360,10 +3165,6 @@ fu_engine_write_firmware(FuEngine *self,
 	g_autoptr(FuDeviceProgress) device_progress = NULL;
 	g_autoptr(GError) error_write = NULL;
 
-	/* cancel the pending action */
-	if (!fu_engine_offline_invalidate(error))
-		return FALSE;
-
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device(self, device_id, error);
 	if (device == NULL) {
@@ -3506,7 +3307,6 @@ fu_engine_install_blob(FuEngine *self,
 	guint retries = 0;
 	gsize streamsz = 0;
 	g_autofree gchar *device_id = NULL;
-	g_autofree gchar *filename_to_delete = NULL;
 	g_autoptr(GTimer) timer = g_timer_new();
 	g_autoptr(FuDeviceProgress) device_progress = fu_device_progress_new(device, progress);
 
@@ -3539,16 +3339,6 @@ fu_engine_install_blob(FuEngine *self,
 	if (!fu_engine_prepare(self, device_id, fu_progress_get_child(progress), flags, error))
 		return FALSE;
 	fu_progress_step_done(progress);
-
-	/* we saved this so we could do the offline update */
-	if (fu_device_get_update_state(device) == FWUPD_UPDATE_STATE_PENDING) {
-		g_autoptr(FuDevice) device_pending =
-		    fu_history_get_device_by_id(self->history, device_id, NULL);
-		if (device_pending != NULL) {
-			FwupdRelease *release = fu_device_get_release_default(device_pending);
-			filename_to_delete = g_strdup(fwupd_release_get_filename(release));
-		}
-	}
 
 	/* plugins can set FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED to run again, but they
 	 * must return TRUE rather than an error */
@@ -3643,15 +3433,6 @@ fu_engine_install_blob(FuEngine *self,
 
 	} while (TRUE);
 	fu_progress_step_done(progress);
-
-	/* delete offline-update cab archive */
-	if (filename_to_delete != NULL) {
-		g_autoptr(GFile) file = g_file_new_for_path(filename_to_delete);
-		if (!g_file_delete(file, NULL, error)) {
-			g_prefix_error(error, "failed to delete %s: ", filename_to_delete);
-			return FALSE;
-		}
-	}
 
 	/* update history database */
 	fu_device_set_update_state(device, FWUPD_UPDATE_STATE_SUCCESS);
@@ -4803,9 +4584,6 @@ fu_engine_get_details(FuEngine *self,
 			FwupdInstallFlags install_flags =
 			    FWUPD_INSTALL_FLAG_IGNORE_VID_PID | FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
 			    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_ALLOW_OLDER;
-#ifdef HAVE_FWUPDOFFLINE
-			install_flags |= FWUPD_INSTALL_FLAG_OFFLINE;
-#endif
 
 			fu_release_set_device(release, dev);
 			fu_release_set_request(release, request);
@@ -5201,10 +4979,6 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 	FwupdInstallFlags install_flags =
 	    FWUPD_INSTALL_FLAG_IGNORE_VID_PID | FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH |
 	    FWUPD_INSTALL_FLAG_ALLOW_REINSTALL | FWUPD_INSTALL_FLAG_ALLOW_OLDER;
-
-#ifdef HAVE_FWUPDOFFLINE
-	install_flags |= FWUPD_INSTALL_FLAG_OFFLINE;
-#endif
 
 	/* get all releases */
 	releases_tmp = xb_node_query(component, "releases/release", 0, &error_local);
@@ -5918,7 +5692,7 @@ fu_engine_clear_results(FuEngine *self, const gchar *device_id, GError **error)
 			return FALSE;
 	}
 
-	/* if the offline update never got run, unstage it */
+	/* if the update never got run, unstage it */
 	if (fu_device_get_update_state(device) == FWUPD_UPDATE_STATE_PENDING)
 		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_UNKNOWN);
 

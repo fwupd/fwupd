@@ -89,7 +89,6 @@ if __name__ == "__main__":
             "fu_common_read_uint64": "fu_memread_uint64",
             "fu_common_bytes_compare_raw": "fu_memcmp_safe",
             "FuOutputHandler": "FuSpawnOutputHandler",
-            "fu_common_spawn_sync": "fu_spawn_sync",
             "fu_common_kernel_locked_down": "fu_kernel_locked_down",
             "fu_common_check_kernel_version": "fu_kernel_check_version",
             "fu_common_get_firmware_search_path": "fu_kernel_get_firmware_search_path",

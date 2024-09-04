@@ -38,7 +38,6 @@
 #include "fu-remote.h"
 #include "fu-security-attr-common.h"
 #include "fu-smbios-private.h"
-#include "fu-spawn.h"
 #include "fu-usb-backend.h"
 
 #ifdef HAVE_GIO_UNIX
@@ -3986,17 +3985,6 @@ fu_history_migrate_v2_func(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_id(device), ==, "2ba16d10df45823dd4494ff10a0bfccfef512c9d");
 }
 
-#ifdef HAVE_FWUPDOFFLINE
-static void
-fu_test_plugin_status_changed_cb(FuDevice *device, FwupdStatus status, gpointer user_data)
-{
-	guint *cnt = (guint *)user_data;
-	g_debug("status now %s", fwupd_status_to_string(status));
-	(*cnt)++;
-	fu_test_loop_quit();
-}
-#endif
-
 static void
 fu_test_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
@@ -4213,22 +4201,6 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
-#ifdef HAVE_FWUPDOFFLINE
-	FuDevice *device_tmp;
-	FwupdRelease *release_tmp;
-	guint cnt = 0;
-	g_autofree gchar *localstatedir = NULL;
-	g_autofree gchar *mapped_file_fn = NULL;
-	g_autofree gchar *pending_cap = NULL;
-	g_autofree gchar *history_db = NULL;
-	g_autoptr(FuDevice) device2 = NULL;
-	g_autoptr(FuDevice) device3 = NULL;
-	g_autoptr(FuHistory) history = NULL;
-	g_autoptr(FuRelease) release = fu_release_new();
-	g_autoptr(GBytes) blob_cab = NULL;
-	g_autoptr(GInputStream) stream = NULL;
-	g_autoptr(GMappedFile) mapped_file = NULL;
-#endif
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
@@ -4263,100 +4235,6 @@ fu_plugin_module_func(gconstpointer user_data)
 			"b585990a-003e-5270-89d5-3705a17f9a43");
 	g_assert_cmpstr(fu_device_get_name(device), ==, "Integrated Webcam™");
 	g_signal_handlers_disconnect_by_data(plugin, &device);
-
-#ifdef HAVE_FWUPDOFFLINE
-	/* schedule an offline update */
-	g_signal_connect(FU_PROGRESS(progress),
-			 "status-changed",
-			 G_CALLBACK(fu_test_plugin_status_changed_cb),
-			 &cnt);
-	mapped_file_fn = g_test_build_filename(G_TEST_DIST, "tests", "fakedevice123.bin", NULL);
-	mapped_file = g_mapped_file_new(mapped_file_fn, FALSE, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(mapped_file);
-	blob_cab = g_mapped_file_get_bytes(mapped_file);
-	fu_release_set_version(release, "1.2.3");
-	ret = fu_engine_schedule_update(engine,
-					device,
-					release,
-					blob_cab,
-					FWUPD_INSTALL_FLAG_NONE,
-					&error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* set on the current device */
-	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
-
-	/* lets check the history */
-	history = fu_history_new();
-	device2 = fu_history_get_device_by_id(history, fu_device_get_id(device), &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(device2);
-	g_assert_cmpint(fu_device_get_update_state(device2), ==, FWUPD_UPDATE_STATE_PENDING);
-	g_assert_cmpstr(fu_device_get_update_error(device2), ==, NULL);
-	g_assert_true(fu_device_has_flag(device2, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
-	release_tmp = fu_device_get_release_default(device2);
-	g_assert_nonnull(release_tmp);
-	g_assert_cmpstr(fwupd_release_get_filename(release_tmp), !=, NULL);
-	g_assert_cmpstr(fwupd_release_get_version(release_tmp), ==, "1.2.3");
-
-	/* save this; we'll need to delete it later */
-	pending_cap = g_strdup(fwupd_release_get_filename(release_tmp));
-
-	/* lets do this online */
-	fu_engine_add_device(engine, device);
-	fu_engine_add_plugin(engine, plugin);
-	stream = fu_input_stream_from_path(mapped_file_fn, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(stream);
-	ret = fu_engine_install_blob(engine,
-				     device,
-				     stream,
-				     progress,
-				     FWUPD_INSTALL_FLAG_NO_SEARCH,
-				     FWUPD_FEATURE_FLAG_NONE,
-				     &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(cnt, >=, 8);
-
-	/* check the new version */
-	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.3");
-	g_assert_cmpstr(fu_device_get_version_bootloader(device), ==, "0.1.2");
-
-	/* lets check the history */
-	device3 = fu_history_get_device_by_id(history, fu_device_get_id(device), &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(device3);
-	g_assert_cmpint(fu_device_get_update_state(device3), ==, FWUPD_UPDATE_STATE_SUCCESS);
-	g_assert_cmpstr(fu_device_get_update_error(device3), ==, NULL);
-
-	/* get the status */
-	device_tmp = fu_device_new(NULL);
-	fu_device_set_id(device_tmp, "FakeDevice");
-	ret = fu_plugin_runner_get_results(plugin, device_tmp, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(fu_device_get_update_state(device_tmp), ==, FWUPD_UPDATE_STATE_SUCCESS);
-	g_assert_cmpstr(fu_device_get_update_error(device_tmp), ==, NULL);
-
-	/* clear */
-	ret = fu_plugin_runner_clear_results(plugin, device_tmp, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	g_object_unref(device_tmp);
-	g_clear_error(&error);
-
-	/* delete files */
-	localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	history_db = g_build_filename(localstatedir, "pending.db", NULL);
-	(void)g_unlink(history_db);
-	(void)g_unlink(pending_cap);
-#else
-	g_test_skip("No offline update support");
-#endif
 }
 
 static void
@@ -4958,58 +4836,6 @@ fu_release_compare_func_cb(gconstpointer a, gconstpointer b)
 	FuRelease *release1 = *((FuRelease **)a);
 	FuRelease *release2 = *((FuRelease **)b);
 	return fu_release_compare(release1, release2);
-}
-
-static void
-fu_spawn_stdout_cb(const gchar *line, gpointer user_data)
-{
-	guint *lines = (guint *)user_data;
-	g_debug("got '%s'", line);
-	(*lines)++;
-}
-
-static void
-fu_spawn_func(void)
-{
-	gboolean ret;
-	guint lines = 0;
-	g_autoptr(GError) error = NULL;
-	g_autofree gchar *fn = NULL;
-	const gchar *argv[4] = {"/bin/sh", "replace", "test", NULL};
-
-#ifdef _WIN32
-	g_test_skip("Known failures on Windows right now, skipping spawn func test");
-	return;
-#endif
-
-	fn = g_test_build_filename(G_TEST_DIST, "tests", "spawn.sh", NULL);
-	argv[1] = fn;
-	ret = fu_spawn_sync(argv, fu_spawn_stdout_cb, &lines, 0, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpint(lines, ==, 6);
-}
-
-static void
-fu_spawn_timeout_func(void)
-{
-	gboolean ret;
-	guint lines = 0;
-	g_autoptr(GError) error = NULL;
-	g_autofree gchar *fn = NULL;
-	const gchar *argv[4] = {"/bin/sh", "replace", "test", NULL};
-
-#ifdef _WIN32
-	g_test_skip("Known failures on Windows right now, skipping spawn timeout test");
-	return;
-#endif
-
-	fn = g_test_build_filename(G_TEST_DIST, "tests", "spawn.sh", NULL);
-	argv[1] = fn;
-	ret = fu_spawn_sync(argv, fu_spawn_stdout_cb, &lines, 500, NULL, &error);
-	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_CANCELLED);
-	g_assert_false(ret);
-	g_assert_cmpint(lines, ==, 1);
 }
 
 static void
@@ -6459,7 +6285,6 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
-	(void)g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
@@ -6647,10 +6472,6 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/history{migrate-v2}", self, fu_history_migrate_v2_func);
 	g_test_add_data_func("/fwupd/plugin-list", self, fu_plugin_list_func);
 	g_test_add_data_func("/fwupd/plugin-list{depsolve}", self, fu_plugin_list_depsolve_func);
-	if (g_test_slow()) {
-		g_test_add_func("/fwupd/spawn", fu_spawn_func);
-		g_test_add_func("/fwupd/spawn-timeout", fu_spawn_timeout_func);
-	}
 	g_test_add_func("/fwupd/common{cab-success}", fu_common_store_cab_func);
 	g_test_add_func("/fwupd/common{cab-success-artifact}", fu_common_store_cab_artifact_func);
 	g_test_add_func("/fwupd/common{cab-success-unsigned}", fu_common_store_cab_unsigned_func);

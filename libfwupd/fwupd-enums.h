@@ -75,7 +75,7 @@ typedef enum {
 	/**
 	 * FWUPD_STATUS_SCHEDULING:
 	 *
-	 * Scheduling an offline update.
+	 * Scheduling an update for installation on reboot.
 	 *
 	 * Since: 0.1.1
 	 */
@@ -268,14 +268,6 @@ typedef enum {
 	 * Since: 0.9.7
 	 */
 	FWUPD_DEVICE_FLAG_UPDATABLE = 1ull << 1,
-	/**
-	 * FWUPD_DEVICE_FLAG_ONLY_OFFLINE:
-	 *
-	 * Update can only be done from a limited functionality OS (offline mode).
-	 *
-	 * Since: 0.9.7
-	 */
-	FWUPD_DEVICE_FLAG_ONLY_OFFLINE = 1ull << 2,
 	/**
 	 * FWUPD_DEVICE_FLAG_REQUIRE_AC:
 	 *
@@ -1034,14 +1026,6 @@ typedef enum {
 	 * Since: 0.7.0
 	 */
 	FWUPD_INSTALL_FLAG_NONE = 0,
-	/**
-	 * FWUPD_INSTALL_FLAG_OFFLINE:
-	 *
-	 * Schedule this for next boot.
-	 *
-	 * Since: 0.7.0
-	 */
-	FWUPD_INSTALL_FLAG_OFFLINE = 1 << 0,
 	/**
 	 * FWUPD_INSTALL_FLAG_ALLOW_REINSTALL:
 	 *

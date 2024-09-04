@@ -5,9 +5,6 @@ if bashcomp.found()
 
   con = configuration_data()
   con.set('localstatedir', localstatedir)
-  if offline
-    con.set_quoted('offline', '--offline')
-  endif
 
   configure_file(
     input: 'fwupdtool',
