@@ -70,6 +70,10 @@ option('gnutls',
   type: 'feature',
   description: 'GnuTLS support',
 )
+option('binder',
+  type: 'feature',
+  description: 'Android binder support',
+)
 option('sqlite',
   type: 'feature',
   description: 'sqlite support',
