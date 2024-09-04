@@ -4,7 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/d16b682de56c42b134f1e5af7f9926c62dc246df851648e49aa1d1d0e5b38532-Wacom-Intuos_BT-M_MainFW-1.66.cab",
-      "emulation-url": "https://fwupd.org/downloads/48a669a65a69b999afdb172882959e30c25b61d3095f47b04d9207b019be74cf-Wacom-Intuos_BT-M_MainFW-1.66.zip",
+      "emulation-url": "https://r2.fwupd.org/lvfs-prod/48a669a65a69b999afdb172882959e30c25b61d3095f47b04d9207b019be74cf-Wacom-Intuos_BT-M_MainFW-1.66.zip",
       "components": [
         {
           "name": "main",

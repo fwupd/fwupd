@@ -4,7 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/85caf8d1913b9d6ec29b8c9d3db8609c5376b1ac9eaf3a109d1867493bc283ef-Synaptics-Carrera_EVB-9.02.008.cab",
-      "emulation-url": "https://fwupd.org/downloads/7d8faaa922e0a46e83bfed30ce04170f9f76ae2c6966080152a26ec183f4a527-Synaptics-Carrera_EVB-9.02.008.zip",
+      "emulation-url": "https://r2.fwupd.org/lvfs-prod/7d8faaa922e0a46e83bfed30ce04170f9f76ae2c6966080152a26ec183f4a527-Synaptics-Carrera_EVB-9.02.008.zip",
       "components": [
         {
           "version": "9.02.008",
@@ -16,7 +16,7 @@
     },
     {
       "url": "https://fwupd.org/downloads/54925eceadd0dfca3d203230041c45623e8f99b2ff20d7aee4a55a67a94e5369-Synaptics-Carrera_EVB-9.02.009.cab",
-      "emulation-url": "https://fwupd.org/downloads/4023ba7cb2a6cb370116eefe75a8d07db95ff6f0157044d005fc38a004f1781c-Synaptics-Carrera_EVB-9.02.009.zip",
+      "emulation-url": "https://r2.fwupd.org/lvfs-prod/4023ba7cb2a6cb370116eefe75a8d07db95ff6f0157044d005fc38a004f1781c-Synaptics-Carrera_EVB-9.02.009.zip",
       "components": [
         {
           "version": "9.02.009",

@@ -4,7 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/60518fa0f9a78a38afda311e8a08f21995dc21020f16cd3b959c159f1ee360ca-algoltek-ag9421-00.09.07_02.18.05.cab",
-      "emulation-url": "https://fwupd.org/downloads/6d8137ff38bed4c60f0ed31cba15fca023827b181be57cfd753a5751ce9c2d0d-algoltek-usb_00.09.07_02.18.05_gitMain.zip",
+      "emulation-url": "https://r2.fwupd.org/lvfs-prod/6d8137ff38bed4c60f0ed31cba15fca023827b181be57cfd753a5751ce9c2d0d-algoltek-usb_00.09.07_02.18.05_gitMain.zip",
       "components": [
         {
           "version": "00.09.07_02.18.05",
@@ -16,7 +16,7 @@
     },
     {
       "url": "https://fwupd.org/downloads/6984d9c2e03ddc9f12879565587c2f42ded40209d0434f2f269208213f052dfd-algoltek-ag9421-00.09.14_03.00.00.cab",
-      "emulation-url": "https://fwupd.org/downloads/da2c904be60988cc200f1ba0920295913981bb58053a33deba5a9260caf00f46-algoltek-usb_00.09.14_03.00.00_gitMain.zip",
+      "emulation-url": "https://r2.fwupd.org/lvfs-prod/da2c904be60988cc200f1ba0920295913981bb58053a33deba5a9260caf00f46-algoltek-usb_00.09.14_03.00.00_gitMain.zip",
       "components": [
         {
           "version": "00.09.14_03.00.00",

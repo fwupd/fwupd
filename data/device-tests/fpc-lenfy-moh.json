@@ -4,7 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/bbc350a290baed298fca24be8aadb9b3b78ecc806845a42ba9e796b9fc45e5d8-fpc-lenfy-moh-v27_26_23_19.cab",
-      "emulation-url": "https://fwupd.org/downloads/8ef3c5f6bf4d294bec4738eb6077652171939f8c5f7eee1e13fd9ca1e5c4ba9e-fpc-lenfy-moh-v27_26_23_19.zip",
+      "emulation-url": "https://r2.fwupd.org/lvfs-prod/8ef3c5f6bf4d294bec4738eb6077652171939f8c5f7eee1e13fd9ca1e5c4ba9e-fpc-lenfy-moh-v27_26_23_19.zip",
       "components": [
         {
           "version": "27.26.23.19",

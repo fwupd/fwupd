@@ -4,7 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/084ebf794bfcb56b7c749238b4c6ed211342738cece664d02b0cbe285eb646f8-Qualcomm_qcc517X_1.1.2.cab",
-      "emulation-url": "https://fwupd.org/downloads/e87827fa8ee36d0dc8cfc217fd2a8964183caeff963ef248ed11d43b0e582959-qc-reinstall-1.1.2.zip",
+      "emulation-url": "https://r2.fwupd.org/lvfs-prod/e87827fa8ee36d0dc8cfc217fd2a8964183caeff963ef248ed11d43b0e582959-qc-reinstall-1.1.2.zip",
       "components": [
         {
           "version": "1.1.2",

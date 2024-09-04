@@ -4,7 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/3dca7723feba4f86d6cbd1d3cb39e0d2524d59bf03e3c904465edc88ca8254c6-0.0.7004.09.cab",
-      "emulation-url": "https://fwupd.org/downloads/bbe19a7f6ad1025fc9da37c71c2a155884403876c5bc0c4ef64174319f91f398-0.0.7004.09.zip",
+      "emulation-url": "https://r2.fwupd.org/lvfs-prod/bbe19a7f6ad1025fc9da37c71c2a155884403876c5bc0c4ef64174319f91f398-0.0.7004.09.zip",
       "components": [
         {
           "version": "0.0.7004.09",
@@ -16,7 +16,7 @@
     },
     {
       "url": "https://fwupd.org/downloads/e16c8a7a9dd19921ace461334dcc3148c52edf95145a3047db7cc872113f82c8-0.0.7106.12.cab",
-      "emulation-url": "https://fwupd.org/downloads/d93a8cdaa112ad2fa43da573aa92938bc261220b97c80b99b2f08aedff8ca959-0.0.7106.12.zip",
+      "emulation-url": "https://r2.fwupd.org/lvfs-prod/d93a8cdaa112ad2fa43da573aa92938bc261220b97c80b99b2f08aedff8ca959-0.0.7106.12.zip",
       "components": [
         {
           "version": "0.0.7106.12",
