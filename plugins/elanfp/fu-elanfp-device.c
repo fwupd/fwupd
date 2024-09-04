@@ -342,6 +342,7 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 				GError **error)
 {
 	FuElanfpDevice *self = FU_ELANFP_DEVICE(device);
+	guint8 usb_buf[8] = {0x40, 0x27, 0x57, 0x44, 0x54, 0x52, 0x53, 0x54};
 	guint i;
 	struct {
 		const gchar *tag;
@@ -403,6 +404,19 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 		return FALSE;
 	if (!fu_elanfp_device_write_payload(self, payload, fu_progress_get_child(progress), error))
 		return FALSE;
+
+	/* hardware reset */
+	if (!fu_elanfp_device_do_xfer(self,
+				      (guint8 *)&usb_buf,
+				      sizeof(usb_buf),
+				      NULL,
+				      0,
+				      TRUE,
+				      NULL,
+				      error)) {
+		g_prefix_error(error, "failed to hardware reset ");
+		return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* success */
