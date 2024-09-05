@@ -13,4 +13,4 @@ G_DECLARE_FINAL_TYPE(FuFocalfpHidDevice,
 		     fu_focalfp_hid_device,
 		     FU,
 		     FOCALFP_HID_DEVICE,
-		     FuUdevDevice)
+		     FuHidrawDevice)
