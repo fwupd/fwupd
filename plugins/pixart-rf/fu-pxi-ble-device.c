@@ -44,7 +44,7 @@ enum ota_process_setting {
 };
 
 struct _FuPxiBleDevice {
-	FuUdevDevice parent_instance;
+	FuHidrawDevice parent_instance;
 	struct ota_fw_state fwstate;
 	guint8 retransmit_id;
 	guint8 feature_report_id;
@@ -52,7 +52,7 @@ struct _FuPxiBleDevice {
 	gchar *model_name;
 };
 
-G_DEFINE_TYPE(FuPxiBleDevice, fu_pxi_ble_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE(FuPxiBleDevice, fu_pxi_ble_device, FU_TYPE_HIDRAW_DEVICE)
 
 #ifdef HAVE_HIDRAW_H
 static gboolean
@@ -150,51 +150,34 @@ static gboolean
 fu_pxi_ble_device_set_feature_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	GByteArray *req = (GByteArray *)user_data;
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
-				    HIDIOCSFEATURE(req->len),
-				    (guint8 *)req->data,
-				    sizeof(req->len),
-				    NULL,
-				    FU_PXI_DEVICE_IOCTL_TIMEOUT,
-				    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				    error);
+	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(device),
+					    (guint8 *)req->data,
+					    sizeof(req->len),
+					    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					    error);
 }
 #endif
 
 static gboolean
 fu_pxi_ble_device_set_feature(FuPxiBleDevice *self, GByteArray *req, GError **error)
 {
-#ifdef HAVE_HIDRAW_H
-	fu_dump_raw(G_LOG_DOMAIN, "SetFeature", req->data, req->len);
 	return fu_device_retry(FU_DEVICE(self),
 			       fu_pxi_ble_device_set_feature_cb,
 			       FU_PXI_BLE_DEVICE_SET_REPORT_RETRIES,
 			       req,
 			       error);
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
 }
 
 static gboolean
 fu_pxi_ble_device_get_feature(FuPxiBleDevice *self, guint8 *buf, guint bufsz, GError **error)
 {
-#ifdef HAVE_HIDRAW_H
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(bufsz),
-				  buf,
-				  bufsz,
-				  NULL,
-				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error)) {
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+					  buf,
+					  bufsz,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error)) {
 		return FALSE;
 	}
-	fu_dump_raw(G_LOG_DOMAIN, "GetFeature", buf, bufsz);
 
 	/* prepend the report-id and cmd for versions of bluez that do not have
 	 * https://github.com/bluez/bluez/commit/35a2c50437cca4d26ac6537ce3a964bb509c9b62 */
@@ -206,13 +189,6 @@ fu_pxi_ble_device_get_feature(FuPxiBleDevice *self, guint8 *buf, guint bufsz, GE
 	}
 
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
 }
 
 static gboolean
