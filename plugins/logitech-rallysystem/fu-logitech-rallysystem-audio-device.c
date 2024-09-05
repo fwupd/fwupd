@@ -6,82 +6,20 @@
 
 #include "config.h"
 
-#ifdef HAVE_IOCTL_H
-#include <linux/hidraw.h>
-#include <sys/ioctl.h>
-#endif
-
 #include "fu-logitech-rallysystem-audio-device.h"
 #include "fu-logitech-rallysystem-struct.h"
 
-#define FU_LOGITECH_RALLYSYSTEM_AUDIO_DEVICE_IOCTL_TIMEOUT 2500 /* ms */
 #define TOPOLOGY_DATA_LEN				   513	/* plus 1 byte for the report id */
 #define SERIAL_NUMBER_REQUEST_DATA_LEN			   49
 #define SERIAL_NUMBER_RESPONSE_DATA_LEN			   128
 
 struct _FuLogitechRallysystemAudioDevice {
-	FuUdevDevice parent_instance;
+	FuHidrawDevice parent_instance;
 };
 
 G_DEFINE_TYPE(FuLogitechRallysystemAudioDevice,
 	      fu_logitech_rallysystem_audio_device,
-	      FU_TYPE_UDEV_DEVICE)
-
-static gboolean
-fu_logitech_rallysystem_audio_device_set_feature(FuLogitechRallysystemAudioDevice *self,
-						 const guint8 *buf,
-						 guint bufsz,
-						 GError **error)
-{
-#ifdef HAVE_HIDRAW_H
-	fu_dump_raw(G_LOG_DOMAIN, "HidSetFeature", buf, bufsz);
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    HIDIOCSFEATURE(bufsz),
-				    (guint8 *)buf,
-				    bufsz,
-				    NULL,
-				    FU_LOGITECH_RALLYSYSTEM_AUDIO_DEVICE_IOCTL_TIMEOUT,
-				    FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
-				    error);
-#else
-	/* failed */
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
-}
-
-static gboolean
-fu_logitech_rallysystem_audio_device_get_feature(FuLogitechRallysystemAudioDevice *self,
-						 guint8 *buf,
-						 guint bufsz,
-						 GError **error)
-{
-#ifdef HAVE_HIDRAW_H
-	fu_dump_raw(G_LOG_DOMAIN, "HidGetFeatureReq", buf, bufsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(bufsz),
-				  buf,
-				  bufsz,
-				  NULL,
-				  FU_LOGITECH_RALLYSYSTEM_AUDIO_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
-				  error)) {
-		return FALSE;
-	}
-	fu_dump_raw(G_LOG_DOMAIN, "HidGetFeatureRes", buf, bufsz);
-	return TRUE;
-#else
-	/* failed */
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
-}
+	      FU_TYPE_HIDRAW_DEVICE)
 
 static gboolean
 fu_logitech_rallysystem_audio_device_set_version(FuLogitechRallysystemAudioDevice *self,
@@ -91,8 +29,13 @@ fu_logitech_rallysystem_audio_device_set_version(FuLogitechRallysystemAudioDevic
 	guint32 fwversion = 0;
 
 	/* setup HID report to query current device version */
-	if (!fu_logitech_rallysystem_audio_device_get_feature(self, buf, sizeof(buf), error))
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+					  buf,
+					  sizeof(buf),
+					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					  error)) {
 		return FALSE;
+	}
 	if (!fu_memread_uint24_safe(
 		buf,
 		sizeof(buf),
@@ -118,21 +61,24 @@ fu_logitech_rallysystem_audio_device_set_serial(FuLogitechRallysystemAudioDevice
 	g_autoptr(GString) serial = g_string_new(NULL);
 
 	/* setup HID report for serial number request */
-	if (!fu_logitech_rallysystem_audio_device_set_feature(self,
-							      buf_req,
-							      sizeof(buf_req),
-							      error))
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  buf_req,
+					  sizeof(buf_req),
+					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					  error))
 		return FALSE;
 
 	/* wait 100ms for device to consume request and prepare for response */
 	fu_device_sleep(FU_DEVICE(self), 100);
 
 	/* setup HID report to query serial number */
-	if (!fu_logitech_rallysystem_audio_device_get_feature(self,
-							      buf_res,
-							      sizeof(buf_res),
-							      error))
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+					  buf_res,
+					  sizeof(buf_res),
+					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					  error)) {
 		return FALSE;
+	}
 
 	/* desired serial number format: PID:YYYYMMDD:EthernetMacAddress */
 	st = fu_struct_audio_serial_number_parse(buf_res, sizeof(buf_res), 0x0, error);
