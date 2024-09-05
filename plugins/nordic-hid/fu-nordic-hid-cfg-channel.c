@@ -7,10 +7,6 @@
 
 #include "config.h"
 
-#ifdef HAVE_HIDRAW_H
-#include <linux/hidraw.h>
-#include <linux/input.h>
-#endif
 #include "fu-nordic-hid-archive.h"
 #include "fu-nordic-hid-cfg-channel.h"
 
@@ -26,8 +22,6 @@
 #define FU_NORDIC_HID_CFG_CHANNEL_RETRY_DELAY	      50   /* ms */
 #define FU_NORDIC_HID_CFG_CHANNEL_DFU_RETRY_DELAY     500  /* ms */
 #define FU_NORDIC_HID_CFG_CHANNEL_PEERS_POLL_INTERVAL 2000 /* ms */
-
-#define FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT 5000 /* ms */
 
 typedef enum {
 	CONFIG_STATUS_PENDING,
@@ -92,7 +86,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuNordicCfgChannelMsg, g_free);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuNordicCfgChannelDfuInfo, g_free);
 
 struct _FuNordicHidCfgChannel {
-	FuUdevDevice parent_instance;
+	FuHidrawDevice parent_instance;
 	gboolean dfu_support;
 	gboolean peers_cache_support;
 	guint8 peers_cache[PEERS_CACHE_LEN];
@@ -108,7 +102,7 @@ struct _FuNordicHidCfgChannel {
 	GPtrArray *modules; /* of FuNordicCfgChannelModule */
 };
 
-G_DEFINE_TYPE(FuNordicHidCfgChannel, fu_nordic_hid_cfg_channel, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE(FuNordicHidCfgChannel, fu_nordic_hid_cfg_channel, FU_TYPE_HIDRAW_DEVICE)
 
 static FuNordicHidCfgChannel *
 fu_nordic_hid_cfg_channel_new(guint8 id, FuNordicHidCfgChannel *parent);
@@ -166,17 +160,11 @@ fu_nordic_hid_cfg_channel_send(FuNordicHidCfgChannel *self,
 	FuUdevDevice *udev_device = fu_nordic_hid_cfg_channel_get_udev_device(self, error);
 	if (udev_device == NULL)
 		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "Sent", buf, bufsz);
-	if (!fu_udev_device_ioctl(udev_device,
-				  HIDIOCSFEATURE(bufsz),
-				  buf,
-				  bufsz,
-				  NULL,
-				  FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error))
-		return FALSE;
-	return TRUE;
+	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(udev_device),
+					    buf,
+					    bufsz,
+					    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					    error);
 #else
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -200,14 +188,11 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 	for (gint i = 1; i < 100; i++) {
 		recv_msg->report_id = HID_REPORT_ID;
 		recv_msg->recipient = self->peer_id;
-		if (!fu_udev_device_ioctl(udev_device,
-					  HIDIOCGFEATURE(sizeof(*recv_msg)),
-					  (guint8 *)recv_msg,
-					  sizeof(*recv_msg),
-					  NULL,
-					  FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-					  error))
+		if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(udev_device),
+						  (guint8 *)recv_msg,
+						  sizeof(*recv_msg),
+						  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+						  error))
 			return FALSE;
 		/* if the device is busy it return 06 00 00 00 00 response */
 		if (recv_msg->report_id == HID_REPORT_ID &&
