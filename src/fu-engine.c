@@ -8647,11 +8647,7 @@ fu_engine_constructed(GObject *obj)
 	/* add some runtime versions of things the daemon depends on */
 	fu_engine_add_runtime_version(self, "org.freedesktop.fwupd", VERSION);
 	fu_engine_add_runtime_version(self, "com.hughsie.libjcat", jcat_version_string());
-#if LIBXMLB_CHECK_VERSION(0, 3, 19)
 	fu_engine_add_runtime_version(self, "com.hughsie.libxmlb", xb_version_string());
-#else
-	fu_engine_add_runtime_version(self, "com.hughsie.libxmlb", "0.3.x");
-#endif
 
 	/* optional kernel version */
 #ifdef HAVE_UTSNAME_H
