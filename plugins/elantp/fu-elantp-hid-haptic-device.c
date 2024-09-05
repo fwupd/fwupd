@@ -6,9 +6,6 @@
 
 #include "config.h"
 
-#include <linux/hidraw.h>
-#include <linux/input.h>
-
 #include "fu-elantp-common.h"
 #include "fu-elantp-haptic-firmware.h"
 #include "fu-elantp-hid-haptic-device.h"
@@ -30,8 +27,6 @@ struct _FuElantpHidHapticDevice {
 };
 
 G_DEFINE_TYPE(FuElantpHidHapticDevice, fu_elantp_hid_haptic_device, FU_TYPE_UDEV_DEVICE)
-
-#define FU_ELANTP_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
 
 static FuElantpHidDevice *
 fu_elantp_hid_haptic_device_get_parent(FuDevice *self, GError **error)
@@ -73,33 +68,24 @@ fu_elantp_hid_haptic_device_send_cmd(FuDevice *self,
 	g_autofree guint8 *buf = NULL;
 	gsize bufsz = rxsz + 3;
 
-	fu_dump_raw(G_LOG_DOMAIN, "SetReport", tx, txsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCSFEATURE(txsz),
-				  (guint8 *)tx,
-				  rxsz,
-				  NULL,
-				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error))
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  tx,
+					  txsz,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error))
 		return FALSE;
-
 	if (rxsz == 0)
 		return TRUE;
 
 	/* GetFeature */
 	buf = g_malloc0(bufsz);
 	buf[0] = tx[0]; /* report number */
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(bufsz),
-				  buf,
-				  bufsz,
-				  NULL,
-				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error))
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+					  buf,
+					  bufsz,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error))
 		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, bufsz);
 
 	/* success */
 	return fu_memcpy_safe(rx,
