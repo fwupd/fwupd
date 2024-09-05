@@ -6,19 +6,14 @@
 
 #include "config.h"
 
-#include <linux/hidraw.h>
-#include <linux/input.h>
-
 #include "fu-focalfp-firmware.h"
 #include "fu-focalfp-hid-device.h"
 
 struct _FuFocalfpHidDevice {
-	FuUdevDevice parent_instance;
+	FuHidrawDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuFocalfpHidDevice, fu_focalfp_hid_device, FU_TYPE_UDEV_DEVICE)
-
-#define FU_FOCALFP_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+G_DEFINE_TYPE(FuFocalfpHidDevice, fu_focalfp_hid_device, FU_TYPE_HIDRAW_DEVICE)
 
 #define CMD_ENTER_UPGRADE_MODE	       0x40
 #define CMD_CHECK_CURRENT_STATE	       0x41
@@ -96,15 +91,11 @@ fu_focalfp_hid_device_io(FuFocalfpHidDevice *self,
 		if (!fu_memcpy_safe(buf, sizeof(buf), 0x04, wbuf, wbufsz, 0x00, wbufsz, error))
 			return FALSE;
 		buf[cmdlen] = fu_focalfp_hid_device_generate_checksum(&buf[1], cmdlen - 1);
-		fu_dump_raw(G_LOG_DOMAIN, "SetReport", buf, sizeof(buf));
-		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-					  HIDIOCSFEATURE(cmdlen + 1),
-					  buf,
-					  sizeof(buf),
-					  NULL,
-					  FU_FOCALFP_DEVICE_IOCTL_TIMEOUT,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-					  error)) {
+		if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+						  buf,
+						  sizeof(buf),
+						  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+						  error)) {
 			return FALSE;
 		}
 	}
@@ -112,17 +103,13 @@ fu_focalfp_hid_device_io(FuFocalfpHidDevice *self,
 	/* GetReport */
 	if (rbuf != NULL && rbufsz > 0) {
 		guint8 buf[64] = {0x06};
-		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-					  HIDIOCGFEATURE(sizeof(buf)),
-					  buf,
-					  sizeof(buf),
-					  NULL,
-					  FU_FOCALFP_DEVICE_IOCTL_TIMEOUT,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-					  error)) {
+		if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+						  buf,
+						  sizeof(buf),
+						  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+						  error)) {
 			return FALSE;
 		}
-		fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, sizeof(buf));
 		if (!fu_memcpy_safe(rbuf, rbufsz, 0x0, buf, sizeof(buf), 0x00, rbufsz, error))
 			return FALSE;
 	}
