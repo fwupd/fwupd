@@ -11,10 +11,10 @@
 #include "fu-wacom-common.h"
 
 #define FU_TYPE_WACOM_DEVICE (fu_wacom_device_get_type())
-G_DECLARE_DERIVABLE_TYPE(FuWacomDevice, fu_wacom_device, FU, WACOM_DEVICE, FuUdevDevice)
+G_DECLARE_DERIVABLE_TYPE(FuWacomDevice, fu_wacom_device, FU, WACOM_DEVICE, FuHidrawDevice)
 
 struct _FuWacomDeviceClass {
-	FuUdevDeviceClass parent_class;
+	FuHidrawDeviceClass parent_class;
 	gboolean (*write_firmware)(FuDevice *self,
 				   FuChunkArray *chunks,
 				   FuProgress *progress,

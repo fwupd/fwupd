@@ -5,10 +5,6 @@
  */
 
 #include "config.h"
-
-#include <linux/hidraw.h>
-#include <sys/ioctl.h>
-
 #include "fu-wacom-common.h"
 #include "fu-wacom-device.h"
 
@@ -18,11 +14,9 @@ typedef struct {
 	guint32 flash_size;
 } FuWacomDevicePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuWacomDevice, fu_wacom_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE(FuWacomDevice, fu_wacom_device, FU_TYPE_HIDRAW_DEVICE)
 
 #define GET_PRIVATE(o) (fu_wacom_device_get_instance_private(o))
-
-#define FU_WACOM_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
 
 static void
 fu_wacom_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -216,33 +210,23 @@ fu_wacom_device_write_firmware(FuDevice *device,
 }
 
 gboolean
-fu_wacom_device_set_feature(FuWacomDevice *self, const guint8 *data, guint datasz, GError **error)
+fu_wacom_device_get_feature(FuWacomDevice *self, guint8 *data, guint datasz, GError **error)
 {
-	fu_dump_raw(G_LOG_DOMAIN, "SetFeature", data, datasz);
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    HIDIOCSFEATURE(datasz),
-				    (guint8 *)data,
-				    datasz,
-				    NULL,
-				    FU_WACOM_DEVICE_IOCTL_TIMEOUT,
-				    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				    error);
+	return fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+					    data,
+					    datasz,
+					    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					    error);
 }
 
 gboolean
-fu_wacom_device_get_feature(FuWacomDevice *self, guint8 *data, guint datasz, GError **error)
+fu_wacom_device_set_feature(FuWacomDevice *self, const guint8 *data, guint datasz, GError **error)
 {
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(datasz),
-				  data,
-				  datasz,
-				  NULL,
-				  FU_WACOM_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error))
-		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "GetFeature", data, datasz);
-	return TRUE;
+	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					    data,
+					    datasz,
+					    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					    error);
 }
 
 gboolean
