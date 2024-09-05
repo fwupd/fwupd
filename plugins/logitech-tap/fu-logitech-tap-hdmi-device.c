@@ -45,10 +45,10 @@ const guint8 kLogiDefaultAitSuccessValue = 0x00;
 const guint8 kLogiDefaultAitFailureValue = 0x82;
 
 struct _FuLogitechTapHdmiDevice {
-	FuLogitechTapDevice parent_instance;
+	FuUdevDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuLogitechTapHdmiDevice, fu_logitech_tap_hdmi_device, FU_TYPE_LOGITECH_TAP_DEVICE)
+G_DEFINE_TYPE(FuLogitechTapHdmiDevice, fu_logitech_tap_hdmi_device, FU_TYPE_UDEV_DEVICE)
 
 static gboolean
 fu_logitech_tap_hdmi_device_query_data_size(FuLogitechTapHdmiDevice *self,
@@ -507,11 +507,17 @@ fu_logitech_tap_hdmi_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_logitech_tap_hdmi_device_init(FuLogitechTapHdmiDevice *self)
 {
+	fu_device_add_protocol(FU_DEVICE(self), "com.logitech.hardware.tap");
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_SENSOR_NEEDS_REBOOT);
 }
 
 static void

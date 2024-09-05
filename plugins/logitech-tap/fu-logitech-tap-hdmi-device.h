@@ -6,11 +6,13 @@
 
 #pragma once
 
-#include "fu-logitech-tap-device.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_LOGITECH_TAP_HDMI_DEVICE (fu_logitech_tap_hdmi_device_get_type())
 G_DECLARE_FINAL_TYPE(FuLogitechTapHdmiDevice,
 		     fu_logitech_tap_hdmi_device,
 		     FU,
 		     LOGITECH_TAP_HDMI_DEVICE,
-		     FuLogitechTapDevice)
+		     FuUdevDevice)
+
+#define FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_SENSOR_NEEDS_REBOOT "sensor-needs-reboot"

@@ -8,7 +8,6 @@ plugin_quirks += files('logitech-tap.quirk')
 plugin_builtins += static_library('fu_plugin_logitech_tap',
   sources: [
     'fu-logitech-tap-plugin.c',
-    'fu-logitech-tap-device.c',
     'fu-logitech-tap-hdmi-device.c',
     'fu-logitech-tap-sensor-device.c',
   ],
