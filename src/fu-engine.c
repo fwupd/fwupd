@@ -1738,14 +1738,12 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 		g_hash_table_insert(hash, g_strdup("HostBkc"), g_strdup(tmp));
 
 #ifdef HAVE_PASSIM
-#if PASSIM_CHECK_VERSION(0, 1, 6)
 	/* this is useful to know if passim support is actually helping bandwidth use */
 	g_hash_table_insert(
 	    hash,
 	    g_strdup("PassimDownloadSaving"),
 	    g_strdup_printf("%" G_GUINT64_FORMAT,
 			    passim_client_get_download_saving(self->passim_client)));
-#endif
 #endif
 
 	/* DMI data */
