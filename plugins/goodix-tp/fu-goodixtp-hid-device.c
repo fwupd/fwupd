@@ -6,11 +6,6 @@
 
 #include "config.h"
 
-#ifdef HAVE_HIDRAW_H
-#include <linux/hidraw.h>
-#include <linux/input.h>
-#endif
-
 #include "fu-goodixtp-common.h"
 #include "fu-goodixtp-firmware.h"
 #include "fu-goodixtp-hid-device.h"
@@ -22,10 +17,8 @@ typedef struct {
 	guint8 cfg_ver;
 } FuGoodixtpHidDevicePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuGoodixtpHidDevice, fu_goodixtp_hid_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE(FuGoodixtpHidDevice, fu_goodixtp_hid_device, FU_TYPE_HIDRAW_DEVICE)
 #define GET_PRIVATE(o) (fu_goodixtp_hid_device_get_instance_private(o))
-
-#define GOODIX_DEVICE_IOCTL_TIMEOUT 5000
 
 void
 fu_goodixtp_hid_device_set_patch_pid(FuGoodixtpHidDevice *self, const gchar *patch_pid)
@@ -79,18 +72,14 @@ fu_goodixtp_hid_device_get_report(FuGoodixtpHidDevice *self,
 				  gsize bufsz,
 				  GError **error)
 {
-#ifdef HAVE_HIDRAW_H
 	guint8 rcv_buf[PACKAGE_LEN + 1] = {0};
 
 	rcv_buf[0] = REPORT_ID;
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(PACKAGE_LEN),
-				  rcv_buf,
-				  sizeof(rcv_buf),
-				  NULL,
-				  GOODIX_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error)) {
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+					  rcv_buf,
+					  sizeof(rcv_buf),
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error)) {
 		g_prefix_error(error, "failed get report: ");
 		return FALSE;
 	}
@@ -106,13 +95,6 @@ fu_goodixtp_hid_device_get_report(FuGoodixtpHidDevice *self,
 	if (!fu_memcpy_safe(buf, bufsz, 0, rcv_buf, sizeof(rcv_buf), 0, PACKAGE_LEN, error))
 		return FALSE;
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
 }
 
 gboolean
@@ -121,26 +103,15 @@ fu_goodixtp_hid_device_set_report(FuGoodixtpHidDevice *self,
 				  gsize bufsz,
 				  GError **error)
 {
-#ifdef HAVE_HIDRAW_H
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCSFEATURE(bufsz),
-				  buf,
-				  bufsz,
-				  NULL,
-				  GOODIX_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error)) {
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  buf,
+					  bufsz,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error)) {
 		g_prefix_error(error, "failed set report: ");
 		return FALSE;
 	}
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
 }
 
 static void
