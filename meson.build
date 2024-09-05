@@ -224,7 +224,7 @@ hsi = get_option('hsi').disable_auto_if(host_machine.system() != 'linux').disabl
 if hsi
   conf.set('HAVE_HSI', '1')
 endif
-libxmlb = dependency('xmlb', version: '>= 0.3.18', fallback: ['libxmlb', 'libxmlb_dep'])
+libxmlb = dependency('xmlb', version: '>= 0.3.19', fallback: ['libxmlb', 'libxmlb_dep'])
 if libxmlb.get_variable('zstd') == 'true'
   lvfs_metadata_format = 'zst'
 elif libxmlb.get_variable('lzma') == 'true'
@@ -248,7 +248,7 @@ sqlite = dependency('sqlite3', required: get_option('sqlite'))
 if sqlite.found()
   conf.set('HAVE_SQLITE', '1')
 endif
-passim = dependency('passim', version: '>= 0.1.5', required: get_option('passim'), fallback: ['passim', 'passim_dep'])
+passim = dependency('passim', version: '>= 0.1.6', required: get_option('passim'), fallback: ['passim', 'passim_dep'])
 if passim.found()
   conf.set('HAVE_PASSIM', '1')
 endif
