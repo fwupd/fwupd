@@ -111,6 +111,7 @@ plugins = {
   'synaptics-vmm9': false,
   'system76-launch': false,
   'test': false,
+  'telink-dfu':false,
   'thelio-io': false,
   'thunderbolt': false,
   'ti-tps6598x': false,
