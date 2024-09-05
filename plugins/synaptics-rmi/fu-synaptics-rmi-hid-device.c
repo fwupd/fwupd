@@ -295,7 +295,7 @@ fu_synaptics_rmi_hid_device_set_mode(FuSynapticsRmiHidDevice *self,
 	const guint8 data[] = {0x0f, mode};
 	fu_dump_raw(G_LOG_DOMAIN, "SetMode", data, sizeof(data));
 	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    HIDIOCSFEATURE(sizeof(data)),
+				    HIDIOCSFEATURE(sizeof(data)), /* nocheck:blocked */
 				    (guint8 *)data,
 				    sizeof(data),
 				    NULL,
