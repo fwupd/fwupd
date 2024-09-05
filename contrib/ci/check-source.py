@@ -204,7 +204,7 @@ class Checker:
             "g_udev_device_get_property(": "Use fu_udev_device_read_property() instead",
         }.items():
             if line.find(token) != -1:
-                self.add_failure("contains blocked token {token}: {msg}")
+                self.add_failure(f"contains blocked token {token}: {msg}")
 
     def _test_lines_gerror(self, lines: List[str]) -> None:
         self._current_nocheck = "nocheck:error"
