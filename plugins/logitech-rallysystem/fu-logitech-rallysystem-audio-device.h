@@ -13,4 +13,4 @@ G_DECLARE_FINAL_TYPE(FuLogitechRallysystemAudioDevice,
 		     fu_logitech_rallysystem_audio_device,
 		     FU,
 		     LOGITECH_RALLYSYSTEM_AUDIO_DEVICE,
-		     FuUdevDevice)
+		     FuHidrawDevice)
