@@ -19,6 +19,7 @@
 #include "fu-mem.h"
 #include "fu-string.h"
 #include "fu-usb-bos-descriptor-private.h"
+#include "fu-usb-config-descriptor-private.h"
 #include "fu-usb-device-fw-ds20.h"
 #include "fu-usb-device-ms-ds20.h"
 #include "fu-usb-device-private.h"
@@ -43,6 +44,7 @@ typedef struct {
 	gboolean hid_descriptors_valid;
 	GPtrArray *interfaces;	    /* (element-type FuUsbInterface) */
 	GPtrArray *bos_descriptors; /* (element-type FuUsbBosDescriptor) */
+	GPtrArray *cfg_descriptors; /* (element-type FuUsbConfigDescriptor) */
 	GPtrArray *hid_descriptors; /* (element-type GBytes) */
 	gint configuration;
 	GPtrArray *device_interfaces; /* (nullable) (element-type FuUsbDeviceInterface) */
@@ -264,6 +266,7 @@ fu_usb_device_finalize(GObject *object)
 	g_ptr_array_unref(priv->interfaces);
 	g_ptr_array_unref(priv->bos_descriptors);
 	g_ptr_array_unref(priv->hid_descriptors);
+	g_ptr_array_unref(priv->cfg_descriptors);
 
 	G_OBJECT_CLASS(fu_usb_device_parent_class)->finalize(object);
 }
@@ -275,6 +278,7 @@ fu_usb_device_init(FuUsbDevice *device)
 	priv->configuration = -1;
 	priv->interfaces = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->bos_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	priv->cfg_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->hid_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
 	fu_device_set_acquiesce_delay(FU_DEVICE(device), 2500);
 	fu_device_retry_add_recovery(FU_DEVICE(device), FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, NULL);
@@ -1339,6 +1343,13 @@ fu_usb_device_incorporate(FuDevice *device, FuDevice *device_donor)
 		}
 	}
 	priv->hid_descriptors_valid = TRUE;
+	if (priv->cfg_descriptors->len == 0) {
+		for (guint i = 0; i < priv_donor->cfg_descriptors->len; i++) {
+			FuUsbConfigDescriptor *cfg_descriptor =
+			    g_ptr_array_index(priv_donor->cfg_descriptors, i);
+			g_ptr_array_add(priv->cfg_descriptors, g_object_ref(cfg_descriptor));
+		}
+	}
 }
 
 static gchar *
@@ -1754,10 +1765,15 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 		/* config, interface or endpoint */
 		descriptor_kind = fu_usb_base_hdr_get_descriptor_type(st_base);
 		if (descriptor_kind == FU_USB_DESCRIPTOR_KIND_CONFIG) {
-			g_autoptr(FuUsbDescriptorHdr) st_desc = NULL;
-			st_desc = fu_usb_descriptor_hdr_parse_stream(stream, offset, error);
-			if (st_desc == NULL)
+			g_autoptr(FuUsbConfigDescriptor) cfg_descriptor =
+			    fu_usb_config_descriptor_new();
+			if (!fu_firmware_parse_stream(FU_FIRMWARE(cfg_descriptor),
+						      stream,
+						      offset,
+						      FWUPD_INSTALL_FLAG_NONE,
+						      error))
 				return FALSE;
+			g_ptr_array_add(priv->cfg_descriptors, g_steal_pointer(&cfg_descriptor));
 		} else if (descriptor_kind == FU_USB_DESCRIPTOR_KIND_INTERFACE) {
 			g_autoptr(FuUsbInterface) iface = g_object_new(FU_TYPE_USB_INTERFACE, NULL);
 			if (!fu_firmware_parse_stream(FU_FIRMWARE(iface),
@@ -2229,6 +2245,29 @@ fu_usb_device_release_interface(FuUsbDevice *self,
 	return TRUE;
 }
 
+static FuUsbConfigDescriptor *
+fu_usb_device_get_config_descriptor_for_value(FuUsbDevice *self,
+					      guint8 configuration_value,
+					      GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+
+	if (!fu_usb_device_ensure_interfaces(self, error))
+		return NULL;
+	for (guint i = 0; i < priv->cfg_descriptors->len; i++) {
+		FuUsbConfigDescriptor *cfg_descriptor = g_ptr_array_index(priv->cfg_descriptors, i);
+		if (fu_usb_config_descriptor_get_configuration_value(cfg_descriptor) ==
+		    configuration_value)
+			return cfg_descriptor;
+	}
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_DATA,
+		    "no configuration for value 0x%x",
+		    configuration_value);
+	return NULL;
+}
+
 /**
  * fu_usb_device_get_configuration_index
  * @self: a #FuUsbDevice
@@ -2288,6 +2327,7 @@ fu_usb_device_get_configuration_index(FuUsbDevice *self, GError **error)
 		index = config->iConfiguration;
 		libusb_free_config_descriptor(config);
 	} else {
+		FuUsbConfigDescriptor *cfg_descriptor;
 		guint64 configuration = 0;
 		g_autofree gchar *configuration_str = NULL;
 
@@ -2305,7 +2345,21 @@ fu_usb_device_get_configuration_index(FuUsbDevice *self, GError **error)
 				 FU_INTEGER_BASE_10,
 				 error))
 			return 0x0;
-		index = (guint8)configuration;
+
+		/* lookup the correct configuration for the configuration_value */
+		cfg_descriptor =
+		    fu_usb_device_get_config_descriptor_for_value(self, configuration, error);
+		if (cfg_descriptor == NULL)
+			return 0x0;
+		index = fu_usb_config_descriptor_get_configuration(cfg_descriptor);
+		if (index == 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid configuration for value 0x%x",
+				    (guint)configuration);
+			return 0x0;
+		}
 	}
 
 	/* save */
@@ -2691,6 +2745,20 @@ fu_usb_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 		}
 	}
 
+	/* array of config descriptors */
+	if (json_object_has_member(json_object, "UsbConfigDescriptors")) {
+		JsonArray *json_array =
+		    json_object_get_array_member(json_object, "UsbConfigDescriptors");
+		for (guint i = 0; i < json_array_get_length(json_array); i++) {
+			JsonNode *node_tmp = json_array_get_element(json_array, i);
+			g_autoptr(FuUsbBosDescriptor) cfg_descriptor =
+			    g_object_new(FU_TYPE_USB_CONFIG_DESCRIPTOR, NULL);
+			if (!fwupd_codec_from_json(FWUPD_CODEC(cfg_descriptor), node_tmp, error))
+				return FALSE;
+			g_ptr_array_add(priv->cfg_descriptors, g_object_ref(cfg_descriptor));
+		}
+	}
+
 	/* array of HID descriptors */
 	if (json_object_has_member(json_object, "UsbHidDescriptors")) {
 		JsonArray *json_array =
@@ -2793,6 +2861,20 @@ fu_usb_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags 
 			    g_ptr_array_index(priv->bos_descriptors, i);
 			json_builder_begin_object(builder);
 			fwupd_codec_to_json(FWUPD_CODEC(bos_descriptor), builder, flags);
+			json_builder_end_object(builder);
+		}
+		json_builder_end_array(builder);
+	}
+
+	/* array of config descriptors */
+	if (priv->bos_descriptors->len > 0) {
+		json_builder_set_member_name(builder, "UsbConfigDescriptors");
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < priv->cfg_descriptors->len; i++) {
+			FuUsbConfigDescriptor *cfg_descriptor =
+			    g_ptr_array_index(priv->cfg_descriptors, i);
+			json_builder_begin_object(builder);
+			fwupd_codec_to_json(FWUPD_CODEC(cfg_descriptor), builder, flags);
 			json_builder_end_object(builder);
 		}
 		json_builder_end_array(builder);
@@ -2902,6 +2984,14 @@ fu_usb_device_to_string(FuDevice *device, guint idt, GString *str)
 			FuUsbBosDescriptor *bos_descriptor =
 			    g_ptr_array_index(priv->bos_descriptors, i);
 			fwupd_codec_add_string(FWUPD_CODEC(bos_descriptor), idt + 1, str);
+		}
+	}
+	if (priv->cfg_descriptors->len > 0) {
+		fwupd_codec_string_append(str, idt, "ConfigDescriptors", "");
+		for (guint i = 0; i < priv->cfg_descriptors->len; i++) {
+			FuUsbConfigDescriptor *cfg_descriptor =
+			    g_ptr_array_index(priv->cfg_descriptors, i);
+			fwupd_codec_add_string(FWUPD_CODEC(cfg_descriptor), idt + 1, str);
 		}
 	}
 	if (priv->hid_descriptors->len > 0) {
