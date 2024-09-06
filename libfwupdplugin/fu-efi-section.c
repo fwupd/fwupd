@@ -153,7 +153,7 @@ fu_efi_section_parse_version(FuEfiSection *self,
 		g_prefix_error(error, "failed to convert to UTF-16: ");
 		return FALSE;
 	}
-	fu_firmware_set_version(FU_FIRMWARE(self), version);
+	fu_firmware_set_version(FU_FIRMWARE(self), version); /* nocheck:set-version */
 	return TRUE;
 }
 

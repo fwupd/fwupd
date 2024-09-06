@@ -28,7 +28,6 @@ fu_analogix_firmware_parse(FuFirmware *firmware,
 	guint16 ocm_version;
 	guint8 version_hi = 0;
 	guint8 version_lo = 0;
-	g_autofree gchar *version = NULL;
 	g_autoptr(FuFirmware) fw_ocm = NULL;
 	g_autoptr(GBytes) blob_cus = NULL;
 	g_autoptr(GBytes) blob = NULL;
@@ -76,8 +75,6 @@ fu_analogix_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		ocm_version = ((guint16)version_hi) << 8 | version_lo;
 		fu_firmware_set_version_raw(fw_ocm, ocm_version);
-		version = g_strdup_printf("%02x.%02x", version_hi, version_lo);
-		fu_firmware_set_version(fw_ocm, version);
 	}
 
 	/* TXFW is optional */
@@ -110,15 +107,23 @@ fu_analogix_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
+static gchar *
+fu_analogix_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
+{
+	return fu_version_from_uint16_hex(version_raw, fu_firmware_get_version_format(firmware));
+}
+
 static void
 fu_analogix_firmware_init(FuAnalogixFirmware *self)
 {
 	fu_ihex_firmware_set_padding_value(FU_IHEX_FIRMWARE(self), 0xFF);
+	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static void
 fu_analogix_firmware_class_init(FuAnalogixFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->convert_version = fu_analogix_firmware_convert_version;
 	firmware_class->parse = fu_analogix_firmware_parse;
 }

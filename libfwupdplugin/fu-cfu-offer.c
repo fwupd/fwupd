@@ -429,7 +429,6 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 	guint8 flags2;
 	guint8 flags3;
 	g_autoptr(GByteArray) st = NULL;
-	g_autofree gchar *version = NULL;
 
 	/* parse */
 	st = fu_struct_cfu_offer_parse_stream(stream, offset, error);
@@ -442,9 +441,6 @@ fu_cfu_offer_parse(FuFirmware *firmware,
 	priv->product_id = fu_struct_cfu_offer_get_product_id(st);
 
 	/* AA.BBCC.DD */
-	version = fu_version_from_uint32(fu_struct_cfu_offer_get_version(st),
-					 FWUPD_VERSION_FORMAT_SURFACE);
-	fu_firmware_set_version(firmware, version);
 	fu_firmware_set_version_raw(firmware, fu_struct_cfu_offer_get_version(st));
 
 	/* component info */
@@ -539,17 +535,25 @@ fu_cfu_offer_build(FuFirmware *firmware, XbNode *n, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_cfu_offer_convert_version(FuFirmware *firmware, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_firmware_get_version_format(firmware));
+}
+
 static void
 fu_cfu_offer_init(FuCfuOffer *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
+	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_SURFACE);
 }
 
 static void
 fu_cfu_offer_class_init(FuCfuOfferClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->convert_version = fu_cfu_offer_convert_version;
 	firmware_class->export = fu_cfu_offer_export;
 	firmware_class->parse = fu_cfu_offer_parse;
 	firmware_class->write = fu_cfu_offer_write;

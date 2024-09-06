@@ -32,6 +32,7 @@ typedef struct {
 	GPtrArray *images;  /* FuFirmware */
 	gchar *version;
 	guint64 version_raw;
+	FwupdVersionFormat version_format;
 	GBytes *bytes;
 	GInputStream *stream;
 	gsize streamsz;
@@ -250,8 +251,65 @@ void
 fu_firmware_set_version_raw(FuFirmware *self, guint64 version_raw)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
+
 	g_return_if_fail(FU_IS_FIRMWARE(self));
+
 	priv->version_raw = version_raw;
+
+	/* convert this */
+	if (klass->convert_version != NULL) {
+		g_autofree gchar *version = klass->convert_version(self, version_raw);
+		if (version != NULL)
+			fu_firmware_set_version(self, version);
+	}
+}
+
+/**
+ * fu_firmware_get_version_format:
+ * @self: a #FuFirmware
+ *
+ * Gets the version format.
+ *
+ * Returns: the version format, or %FWUPD_VERSION_FORMAT_UNKNOWN if unset
+ *
+ * Since: 2.0.0
+ **/
+FwupdVersionFormat
+fu_firmware_get_version_format(FuFirmware *self)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), FWUPD_VERSION_FORMAT_UNKNOWN);
+	return priv->version_format;
+}
+
+/**
+ * fu_firmware_set_version_format:
+ * @self: a #FuFirmware
+ * @version_format: the version format, e.g. %FWUPD_VERSION_FORMAT_NUMBER
+ *
+ * Sets the version format.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_firmware_set_version_format(FuFirmware *self, FwupdVersionFormat version_format)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
+
+	g_return_if_fail(FU_IS_FIRMWARE(self));
+
+	/* same */
+	if (priv->version_format == version_format)
+		return;
+	priv->version_format = version_format;
+
+	/* convert this, now we know */
+	if (klass->convert_version != NULL && priv->version != NULL && priv->version_raw != 0) {
+		g_autofree gchar *version = klass->convert_version(self, priv->version_raw);
+		fu_firmware_set_version(self, version);
+	}
 }
 
 /**
@@ -1231,6 +1289,19 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 	tmp = xb_node_query_text(n, "version", NULL);
 	if (tmp != NULL)
 		fu_firmware_set_version(self, tmp);
+	tmp = xb_node_query_text(n, "version_format", NULL);
+	if (tmp != NULL) {
+		FwupdVersionFormat version_format = fwupd_version_format_from_string(tmp);
+		if (version_format == FWUPD_VERSION_FORMAT_UNKNOWN) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "%s is not a valid version format",
+				    tmp);
+			return FALSE;
+		}
+		fu_firmware_set_version_format(self, version_format);
+	}
 	version_raw = xb_node_query_text_as_uint(n, "version_raw", NULL);
 	if (version_raw != G_MAXUINT64)
 		fu_firmware_set_version_raw(self, version_raw);
@@ -2223,6 +2294,11 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 	fu_xmlb_builder_insert_kx(bn, "idx", priv->idx);
 	fu_xmlb_builder_insert_kv(bn, "version", priv->version);
 	fu_xmlb_builder_insert_kx(bn, "version_raw", priv->version_raw);
+	if (priv->version_format != FWUPD_VERSION_FORMAT_UNKNOWN) {
+		fu_xmlb_builder_insert_kv(bn,
+					  "version_format",
+					  fwupd_version_format_to_string(priv->version_format));
+	}
 	fu_xmlb_builder_insert_kx(bn, "addr", priv->addr);
 	fu_xmlb_builder_insert_kx(bn, "offset", priv->offset);
 	fu_xmlb_builder_insert_kx(bn, "alignment", priv->alignment);

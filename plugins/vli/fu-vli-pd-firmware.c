@@ -44,7 +44,6 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 	FuVliPdFirmware *self = FU_VLI_PD_FIRMWARE(firmware);
 	gsize streamsz = 0;
 	guint32 fwver;
-	g_autofree gchar *fwver_str = NULL;
 	g_autoptr(GByteArray) st = NULL;
 
 	/* parse */
@@ -67,8 +66,6 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 			    fwver);
 		return FALSE;
 	}
-	fwver_str = fu_version_from_uint32(fwver, FWUPD_VERSION_FORMAT_QUAD);
-	fu_firmware_set_version(firmware, fwver_str);
 	fu_firmware_set_version_raw(firmware, fwver);
 
 	/* check size */
@@ -123,16 +120,24 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
+static gchar *
+fu_vli_pd_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_firmware_get_version_format(firmware));
+}
+
 static void
 fu_vli_pd_firmware_init(FuVliPdFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
+	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
 }
 
 static void
 fu_vli_pd_firmware_class_init(FuVliPdFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->convert_version = fu_vli_pd_firmware_convert_version;
 	firmware_class->parse = fu_vli_pd_firmware_parse;
 	firmware_class->export = fu_vli_pd_firmware_export;
 }

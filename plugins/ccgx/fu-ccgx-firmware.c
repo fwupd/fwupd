@@ -247,7 +247,6 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, G
 	/* get version if enough data */
 	rcd_version_idx = CCGX_APP_VERSION_OFFSET / bufsz;
 	if (rcd_version_idx < self->records->len) {
-		g_autofree gchar *version_str = NULL;
 		const guint8 *buf;
 		rcd = g_ptr_array_index(self->records, rcd_version_idx);
 		buf = g_bytes_get_data(rcd->data, &bufsz);
@@ -266,8 +265,6 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, G
 					    error))
 			return FALSE;
 		self->app_type = version & 0xffff;
-		version_str = fu_ccgx_version_to_string(version);
-		fu_firmware_set_version(FU_FIRMWARE(self), version_str);
 		fu_firmware_set_version_raw(FU_FIRMWARE(self), version);
 	}
 
@@ -493,12 +490,19 @@ fu_ccgx_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_ccgx_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
+{
+	return fu_ccgx_version_to_string(version_raw);
+}
+
 static void
 fu_ccgx_firmware_init(FuCcgxFirmware *self)
 {
 	self->records = g_ptr_array_new_with_free_func((GFreeFunc)fu_ccgx_firmware_record_free);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
+	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 }
 
 static void
@@ -514,6 +518,7 @@ fu_ccgx_firmware_class_init(FuCcgxFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->convert_version = fu_ccgx_firmware_convert_version;
 	object_class->finalize = fu_ccgx_firmware_finalize;
 	firmware_class->parse = fu_ccgx_firmware_parse;
 	firmware_class->write = fu_ccgx_firmware_write;

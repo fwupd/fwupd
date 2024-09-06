@@ -136,12 +136,8 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* version is set */
-	if (version != 0x0) {
-		g_autofree gchar *version_str = NULL;
-		version_str = fu_version_from_uint16(version, FWUPD_VERSION_FORMAT_BCD);
-		fu_firmware_set_version(firmware, version_str);
+	if (version != 0x0)
 		fu_firmware_set_version_raw(firmware, version);
-	}
 
 	/* get device type from firmware image */
 	switch (self->dev_id) {
@@ -336,15 +332,23 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
+static gchar *
+fu_vli_usbhub_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
+{
+	return fu_version_from_uint16(version_raw, fu_firmware_get_version_format(firmware));
+}
+
 static void
 fu_vli_usbhub_firmware_init(FuVliUsbhubFirmware *self)
 {
+	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_BCD);
 }
 
 static void
 fu_vli_usbhub_firmware_class_init(FuVliUsbhubFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->convert_version = fu_vli_usbhub_firmware_convert_version;
 	firmware_class->parse = fu_vli_usbhub_firmware_parse;
 	firmware_class->export = fu_vli_usbhub_firmware_export;
 }

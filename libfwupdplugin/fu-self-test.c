@@ -3936,6 +3936,14 @@ fu_firmware_func(void)
 }
 
 static void
+fu_firmware_convert_version_func(void)
+{
+	g_autoptr(FuFirmware) firmware = fu_intel_thunderbolt_nvm_new();
+	fu_firmware_set_version_raw(firmware, 0x1234);
+	g_assert_cmpstr(fu_firmware_get_version(firmware), ==, "12.34");
+}
+
+static void
 fu_firmware_common_func(void)
 {
 	gboolean ret;
@@ -5933,6 +5941,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/hid{descriptor-container}", fu_hid_descriptor_container_func);
 	g_test_add_func("/fwupd/firmware", fu_firmware_func);
 	g_test_add_func("/fwupd/firmware{common}", fu_firmware_common_func);
+	g_test_add_func("/fwupd/firmware{convert-version}", fu_firmware_convert_version_func);
 	g_test_add_func("/fwupd/firmware{csv}", fu_firmware_csv_func);
 	g_test_add_func("/fwupd/firmware{archive}", fu_firmware_archive_func);
 	g_test_add_func("/fwupd/firmware{linear}", fu_firmware_linear_func);

@@ -447,7 +447,6 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			   {0x1136, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_MAPLE_RIDGE, 2},
 			   {0x1137, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_MAPLE_RIDGE, 2},
 			   {0}};
-	g_autofree gchar *version = NULL;
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
 	g_autoptr(GInputStream) stream_payload = NULL;
 	gsize streamsz = 0;
@@ -567,8 +566,6 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		fu_firmware_set_version_raw(FU_FIRMWARE(self), version_raw);
-		version = fu_version_from_uint16(version_raw, FWUPD_VERSION_FORMAT_BCD);
-		fu_firmware_set_version(FU_FIRMWARE(self), version);
 		break;
 	default:
 		break;
@@ -806,17 +803,25 @@ fu_intel_thunderbolt_nvm_build(FuFirmware *firmware, XbNode *n, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_intel_thunderbolt_nvm_convert_version(FuFirmware *firmware, guint64 version_raw)
+{
+	return fu_version_from_uint16(version_raw, fu_firmware_get_version_format(firmware));
+}
+
 static void
 fu_intel_thunderbolt_nvm_init(FuIntelThunderboltNvm *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
+	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_BCD);
 }
 
 static void
 fu_intel_thunderbolt_nvm_class_init(FuIntelThunderboltNvmClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->convert_version = fu_intel_thunderbolt_nvm_convert_version;
 	firmware_class->export = fu_intel_thunderbolt_nvm_export;
 	firmware_class->parse = fu_intel_thunderbolt_nvm_parse;
 	firmware_class->write = fu_intel_thunderbolt_nvm_write;
