@@ -179,7 +179,7 @@ fu_csv_entry_parse_token_cb(GString *token, guint token_idx, gpointer user_data,
 	}
 	if (g_strcmp0(column_id, "$version") == 0) {
 		g_ptr_array_add(priv->values, NULL);
-		fu_firmware_set_version(FU_FIRMWARE(self), token->str);
+		fu_firmware_set_version(FU_FIRMWARE(self), token->str); /* nocheck:set-version */
 		return TRUE;
 	}
 	if (g_strcmp0(column_id, "$version_raw") == 0) {

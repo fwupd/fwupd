@@ -103,7 +103,7 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 	}
 	version = json_object_get_string_member(obj, "image_version");
 	fu_firmware_set_version_raw(FU_FIRMWARE(self), fu_telink_dfu_parse_image_version(version));
-	fu_firmware_set_version(FU_FIRMWARE(self), version);
+	fu_firmware_set_version(FU_FIRMWARE(self), version); /* nocheck:set-version */
 
 	/* success */
 	return TRUE;

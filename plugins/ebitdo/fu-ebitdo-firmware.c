@@ -25,7 +25,6 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 	guint32 payload_len;
 	guint32 version;
 	gsize streamsz = 0;
-	g_autofree gchar *version_str = NULL;
 	g_autoptr(FuFirmware) img_hdr = fu_firmware_new();
 	g_autoptr(GByteArray) st = NULL;
 	g_autoptr(GInputStream) stream_hdr = NULL;
@@ -50,8 +49,6 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 
 	/* parse version */
 	version = fu_struct_ebitdo_hdr_get_version(st);
-	version_str = g_strdup_printf("%.2f", version / 100.f);
-	fu_firmware_set_version(firmware, version_str);
 	fu_firmware_set_version_raw(firmware, version);
 
 	/* add header */
@@ -91,15 +88,23 @@ fu_ebitdo_firmware_write(FuFirmware *firmware, GError **error)
 	return g_steal_pointer(&st);
 }
 
+static gchar *
+fu_ebitdo_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
+{
+	return g_strdup_printf("%.2f", version_raw / 100.f);
+}
+
 static void
 fu_ebitdo_firmware_init(FuEbitdoFirmware *self)
 {
+	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static void
 fu_ebitdo_firmware_class_init(FuEbitdoFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->convert_version = fu_ebitdo_firmware_convert_version;
 	firmware_class->parse = fu_ebitdo_firmware_parse;
 	firmware_class->write = fu_ebitdo_firmware_write;
 }

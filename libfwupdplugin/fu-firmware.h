@@ -78,6 +78,7 @@ struct _FuFirmwareClass {
 				     FuFirmware *other,
 				     FwupdInstallFlags flags,
 				     GError **error);
+	gchar *(*convert_version)(FuFirmware *self, guint64 version_raw);
 };
 
 /**
@@ -280,6 +281,11 @@ guint64
 fu_firmware_get_version_raw(FuFirmware *self) G_GNUC_NON_NULL(1);
 void
 fu_firmware_set_version_raw(FuFirmware *self, guint64 version_raw) G_GNUC_NON_NULL(1);
+void
+fu_firmware_set_version_format(FuFirmware *self, FwupdVersionFormat version_format)
+    G_GNUC_NON_NULL(1);
+FwupdVersionFormat
+fu_firmware_get_version_format(FuFirmware *self) G_GNUC_NON_NULL(1);
 void
 fu_firmware_add_flag(FuFirmware *firmware, FuFirmwareFlags flag) G_GNUC_NON_NULL(1);
 gboolean

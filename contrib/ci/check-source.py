@@ -248,6 +248,34 @@ class Checker:
                     )
                 func_begin = 0
 
+    def _test_lines_firmware_convert_version(self, lines: List[str]) -> None:
+        self._current_nocheck = "nocheck:set-version"
+
+        if self._current_fn and os.path.basename(self._current_fn) in [
+            "fu-firmware.c",
+            "fu-firmware.h",
+        ]:
+            return
+
+        # contains fu_firmware_set_version_raw()
+        _set_version_raw: bool = False
+        for line in lines:
+            if line.find("fu_firmware_set_version_raw(") != -1:
+                _set_version_raw = True
+                break
+        if not _set_version_raw:
+            return
+
+        # also contains fu_firmware_set_version()
+        for linecnt, line in enumerate(lines):
+            if line.find(self._current_nocheck) != -1:
+                continue
+            self._current_linecnt = linecnt
+            if line.find("fu_firmware_set_version(") != -1:
+                self.add_failure(
+                    "Use FuFirmwareClass->convert_version rather than fu_firmware_set_version()"
+                )
+
     def _test_lines_depth(self, lines: List[str]) -> None:
         # check depth
         self._current_nocheck = "nocheck:depth"
@@ -300,6 +328,9 @@ class Checker:
 
         # functions too long
         self._test_lines_function_length(lines)
+
+        # should use FirmwareClass->convert_version
+        self._test_lines_firmware_convert_version(lines)
 
     def test_file(self, fn: str) -> None:
         self._current_fn = fn

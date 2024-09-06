@@ -170,7 +170,7 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 		version = fu_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_DELL_BIOS);
 	}
 	fu_firmware_set_version_raw(firmware, version_raw);
-	fu_firmware_set_version(firmware, version);
+	fu_firmware_set_version(firmware, version); /* nocheck:set-version */
 
 	/* set fw model name */
 	if (!fu_memcpy_safe(model_name,
