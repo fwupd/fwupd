@@ -58,7 +58,7 @@ fu_wac_module_bluetooth_calculate_crc_byte(guint8 *crc, guint8 data)
 	for (guint i = 0; i < 8; i++) {
 		if (r[i] == 0)
 			continue;
-		*crc |= (1 << i);
+		FU_BIT_SET(*crc, i);
 	}
 }
 

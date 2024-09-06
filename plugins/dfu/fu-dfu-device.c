@@ -678,7 +678,7 @@ fu_dfu_device_request_detach(FuDfuDevice *self, FuProgress *progress, GError **e
 	g_autoptr(GError) error_local = NULL;
 
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_INDEX_FORCE_DETACH))
-		ctrl_setup_index |= 0x01u << 8;
+		FU_BIT_SET(ctrl_setup_index, 8);
 
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,

@@ -93,7 +93,7 @@ fu_synaptics_rmi_function_parse(GByteArray *buf,
 		for (guint i = interrupt_offset;
 		     i < (func->interrupt_source_count + interrupt_offset);
 		     i++)
-			func->interrupt_mask |= 1 << i;
+			FU_BIT_SET(func->interrupt_mask, i);
 	}
 	return func;
 }

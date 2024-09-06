@@ -320,6 +320,27 @@ fu_common_align_up_func(void)
 }
 
 static void
+fu_common_bitwise_func(void)
+{
+	guint64 val = 0;
+
+	g_assert_true(FU_BIT_IS_CLEAR(val, 1));
+	g_assert_true(FU_BIT_IS_CLEAR(val, 63));
+	g_assert_false(FU_BIT_IS_SET(val, 1));
+	g_assert_false(FU_BIT_IS_SET(val, 63));
+
+	FU_BIT_SET(val, 1);
+	FU_BIT_SET(val, 63);
+	g_assert_true(FU_BIT_IS_SET(val, 1));
+	g_assert_true(FU_BIT_IS_SET(val, 63));
+	g_assert_cmpint(val, ==, 0x8000000000000002ull);
+
+	FU_BIT_CLEAR(val, 1);
+	FU_BIT_CLEAR(val, 63);
+	g_assert_cmpint(val, ==, 0);
+}
+
+static void
 fu_common_byte_array_func(void)
 {
 	g_autofree gchar *str = NULL;
@@ -5899,6 +5920,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/chunks", fu_chunk_array_func);
 	g_test_add_func("/fwupd/common{align-up}", fu_common_align_up_func);
 	g_test_add_func("/fwupd/volume{gpt-type}", fu_volume_gpt_type_func);
+	g_test_add_func("/fwupd/common{bitwise}", fu_common_bitwise_func);
 	g_test_add_func("/fwupd/common{byte-array}", fu_common_byte_array_func);
 	g_test_add_func("/fwupd/common{crc}", fu_common_crc_func);
 	g_test_add_func("/fwupd/common{string-append-kv}", fu_string_append_func);

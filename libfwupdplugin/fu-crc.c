@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-common.h"
 #include "fu-crc-private.h"
 #include "fu-mem.h"
 
@@ -128,7 +129,7 @@ fu_crc_reflect8(guint8 data)
 	guint8 val = 0;
 	for (guint8 bit = 0; bit < 8; bit++) {
 		if (data & 0x01)
-			val |= 1 << (7 - bit);
+			FU_BIT_SET(val, 7 - bit);
 		data = (data >> 1);
 	}
 	return val;
