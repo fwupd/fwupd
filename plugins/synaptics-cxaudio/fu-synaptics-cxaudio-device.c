@@ -155,17 +155,17 @@ fu_synaptics_cxaudio_device_operation(FuSynapticsCxaudioDevice *self,
 
 		/* set memory address and payload length (if relevant) */
 		if (fu_chunk_get_address(chk) >= 64 * 1024)
-			outbuf[1] |= 1 << 4;
+			FU_BIT_SET(outbuf[1], 4);
 		outbuf[2] = fu_chunk_get_data_sz(chk);
 		fu_memwrite_uint16(outbuf + 3, fu_chunk_get_address(chk), G_BIG_ENDIAN);
 
 		/* set memtype */
 		if (mem_kind == FU_SYNAPTICS_CXAUDIO_MEM_KIND_EEPROM)
-			outbuf[1] |= 1 << 5;
+			FU_BIT_SET(outbuf[1], 5);
 
 		/* fill the report payload part */
 		if (operation == FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE) {
-			outbuf[1] |= 1 << 6;
+			FU_BIT_SET(outbuf[1], 6);
 			if (!fu_memcpy_safe(outbuf,
 					    sizeof(outbuf),
 					    idx_write, /* dst */
@@ -182,7 +182,7 @@ fu_synaptics_cxaudio_device_operation(FuSynapticsCxaudioDevice *self,
 		/* issue additional write directive to read */
 		if (operation == FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE &&
 		    flags & FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_VERIFY) {
-			outbuf[1] &= ~(1 << 6);
+			FU_BIT_CLEAR(outbuf[1], 6);
 			if (!fu_synaptics_cxaudio_device_output_report(self,
 								       outbuf,
 								       sizeof(outbuf),
@@ -249,7 +249,7 @@ fu_synaptics_cxaudio_device_register_clear_bit(FuSynapticsCxaudioDevice *self,
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 						   error))
 		return FALSE;
-	tmp &= ~(1 << bit_position);
+	FU_BIT_CLEAR(tmp, bit_position);
 	return fu_synaptics_cxaudio_device_operation(self,
 						     FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE,
 						     FU_SYNAPTICS_CXAUDIO_MEM_KIND_CPX_RAM,
@@ -276,7 +276,7 @@ fu_synaptics_cxaudio_device_register_set_bit(FuSynapticsCxaudioDevice *self,
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 						   error))
 		return FALSE;
-	tmp |= 1 << bit_position;
+	FU_BIT_SET(tmp, bit_position);
 	return fu_synaptics_cxaudio_device_operation(self,
 						     FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE,
 						     FU_SYNAPTICS_CXAUDIO_MEM_KIND_CPX_RAM,

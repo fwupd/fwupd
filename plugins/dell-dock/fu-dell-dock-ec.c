@@ -34,9 +34,6 @@
 
 #define TBT_MODE_MASK 0x01
 
-#define BIT_SET(x, y)	(x |= (1 << y))
-#define BIT_CLEAR(x, y) (x &= (~(1 << y)))
-
 #define PASSIVE_RESET_MASK  0x01
 #define PASSIVE_REBOOT_MASK 0x02
 #define PASSIVE_TBT_MASK    0x04
@@ -636,9 +633,9 @@ fu_dell_dock_ec_modify_lock(FuDevice *device, guint8 target, gboolean unlocked, 
 		fu_device_get_id(device));
 
 	if (unlocked)
-		BIT_SET(self->dock_unlock_status, target);
+		FU_BIT_SET(self->dock_unlock_status, target);
 	else
-		BIT_CLEAR(self->dock_unlock_status, target);
+		FU_BIT_CLEAR(self->dock_unlock_status, target);
 	g_debug("current overall unlock status: 0x%08x", self->dock_unlock_status);
 
 	return TRUE;

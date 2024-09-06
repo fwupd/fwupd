@@ -542,7 +542,7 @@ fu_ccgx_hpi_device_clear_intr(FuCcgxHpiDevice *self, HPIRegSection section, GErr
 	guint8 intr = 0;
 	for (guint8 i = 0; i <= self->num_ports; i++) {
 		if (i == section || section == HPI_REG_SECTION_ALL)
-			intr |= 1 << i;
+			FU_BIT_SET(intr, i);
 	}
 	if (!fu_ccgx_hpi_device_reg_write(self,
 					  HPI_DEV_REG_INTR_ADDR,

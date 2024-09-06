@@ -42,11 +42,6 @@ G_DEFINE_TYPE(FuParadeUsbhubDevice, fu_parade_usbhub_device, FU_TYPE_USB_DEVICE)
 #define FU_PARADE_USBHUB_DEVICE_SPI_RETRY_COUNT 100
 #define FU_PARADE_USBHUB_DEVICE_SPI_RETRY_DELAY 50 /* ms */
 
-#define BIT_SET(_DATA_, _BIT_)	    (_DATA_ |= (1 << _BIT_))
-#define BIT_CLEAR(_DATA_, _BIT_)    (_DATA_ &= ~(1 << _BIT_))
-#define IS_BIT_SET(_DATA_, _BIT_)   (_DATA_ & (1 << _BIT_))
-#define IS_BIT_CLEAR(_DATA_, _BIT_) (!IS_BIT_SET(_DATA_, _BIT_))
-
 static void
 fu_parade_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -169,7 +164,7 @@ fu_parade_usbhub_device_mmio_set_bit(FuParadeUsbhubDevice *self,
 	guint8 val = 0;
 	if (!fu_parade_usbhub_device_mmio_read_u8(self, address, &val, error))
 		return FALSE;
-	val |= (1 << bit_offset);
+	FU_BIT_SET(val, bit_offset);
 	return fu_parade_usbhub_device_mmio_write_u8(self, address, val, error);
 }
 
@@ -182,7 +177,7 @@ fu_parade_usbhub_device_mmio_clear_bit(FuParadeUsbhubDevice *self,
 	guint8 val = 0;
 	if (!fu_parade_usbhub_device_mmio_read_u8(self, address, &val, error))
 		return FALSE;
-	val &= ~(1 << bit_offset);
+	FU_BIT_CLEAR(val, bit_offset);
 	return fu_parade_usbhub_device_mmio_write_u8(self, address, val, error);
 }
 
@@ -580,12 +575,12 @@ fu_parade_usbhub_device_spi_rom_chip_unprotect(FuParadeUsbhubDevice *self, GErro
 						   error))
 		return FALSE;
 
-	if (IS_BIT_CLEAR(status, 2) && IS_BIT_CLEAR(status, 3) && IS_BIT_CLEAR(status, 7))
+	if (FU_BIT_IS_CLEAR(status, 2) && FU_BIT_IS_CLEAR(status, 3) && FU_BIT_IS_CLEAR(status, 7))
 		return TRUE;
 
-	BIT_CLEAR(status, 2); /* BP0 */
-	BIT_CLEAR(status, 3); /* BP1 */
-	BIT_CLEAR(status, 7); /* SRWD */
+	FU_BIT_CLEAR(status, 2); /* BP0 */
+	FU_BIT_CLEAR(status, 3); /* BP1 */
+	FU_BIT_CLEAR(status, 7); /* SRWD */
 
 	/* write enable */
 	if (!fu_cfi_device_get_cmd(self->cfi_device,
@@ -866,12 +861,12 @@ fu_parade_usbhub_device_spi_rom_chip_protect(FuParadeUsbhubDevice *self, GError 
 						   sizeof(status),
 						   error))
 		return FALSE;
-	if (IS_BIT_SET(status, 2) && IS_BIT_SET(status, 3) && IS_BIT_CLEAR(status, 7))
+	if (FU_BIT_IS_SET(status, 2) && FU_BIT_IS_SET(status, 3) && FU_BIT_IS_CLEAR(status, 7))
 		return TRUE;
 
-	BIT_SET(status, 2);   /* BP0 */
-	BIT_SET(status, 3);   /* BP1 */
-	BIT_CLEAR(status, 7); /* SRWD */
+	FU_BIT_SET(status, 2);	 /* BP0 */
+	FU_BIT_SET(status, 3);	 /* BP1 */
+	FU_BIT_CLEAR(status, 7); /* SRWD */
 
 	/* write enable */
 	if (!fu_cfi_device_get_cmd(self->cfi_device,

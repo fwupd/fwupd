@@ -454,7 +454,8 @@ fu_coswid_firmware_parse_entity_role(FuCoswidFirmwareEntity *entity,
 				    role8);
 			return FALSE;
 		}
-		entity->roles |= 1u << role8;
+		FU_BIT_SET(entity->roles, role8);
+
 	} else if (cbor_isa_array(item)) {
 		for (guint j = 0; j < cbor_array_size(item); j++) {
 			guint8 role8 = 0;
@@ -471,7 +472,7 @@ fu_coswid_firmware_parse_entity_role(FuCoswidFirmwareEntity *entity,
 					    role8);
 				return FALSE;
 			}
-			entity->roles |= 1u << role8;
+			FU_BIT_SET(entity->roles, role8);
 		}
 	} else {
 		g_set_error_literal(error,
@@ -836,7 +837,7 @@ fu_coswid_firmware_write(FuFirmware *firmware, GError **error)
 							   entity->regid);
 			}
 			for (guint j = 0; j < FU_COSWID_ENTITY_ROLE_LAST; j++) {
-				if (entity->roles & (1u << j)) {
+				if (FU_BIT_IS_SET(entity->roles, j)) {
 					g_autoptr(cbor_item_t) item_role = cbor_build_uint8(j);
 					if (!cbor_array_push(item_roles, item_role))
 						g_critical("failed to push to indefinite array");
@@ -931,7 +932,7 @@ fu_coswid_firmware_build_entity(FuCoswidFirmware *self, XbNode *n, GError **erro
 					    tmp);
 				return FALSE;
 			}
-			entity->roles |= 1u << role;
+			FU_BIT_SET(entity->roles, role);
 		}
 	}
 
@@ -1152,7 +1153,7 @@ fu_coswid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 		fu_xmlb_builder_insert_kv(bc, "name", entity->name);
 		fu_xmlb_builder_insert_kv(bc, "regid", entity->regid);
 		for (guint j = 0; j < FU_COSWID_ENTITY_ROLE_LAST; j++) {
-			if (entity->roles & (1u << j)) {
+			if (FU_BIT_IS_SET(entity->roles, j)) {
 				fu_xmlb_builder_insert_kv(bc,
 							  "role",
 							  fu_coswid_entity_role_to_string(j));

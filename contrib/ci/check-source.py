@@ -200,6 +200,15 @@ class Checker:
             "g_udev_device_get_property(": "Use fu_udev_device_read_property() instead",
             "HIDIOCSFEATURE": "Use fu_hidraw_device_set_feature() instead",
             "HIDIOCGFEATURE": "Use fu_hidraw_device_get_feature() instead",
+            "|= 1 <<": "Use FU_BIT_SET() instead",
+            "|= 1u <<": "Use FU_BIT_SET() instead",
+            "|= 1ull <<": "Use FU_BIT_SET() instead",
+            "|= (1 <<": "Use FU_BIT_SET() instead",
+            "|= (1u <<": "Use FU_BIT_SET() instead",
+            "|= (1ull <<": "Use FU_BIT_SET() instead",
+            "&= ~(1 <<": "Use FU_BIT_CLEAR() instead",
+            "&= ~(1u <<": "Use FU_BIT_CLEAR() instead",
+            "&= ~(1ull <<": "Use FU_BIT_CLEAR() instead",
         }.items():
             if line.find(token) != -1:
                 self.add_failure(f"contains blocked token {token}: {msg}")
