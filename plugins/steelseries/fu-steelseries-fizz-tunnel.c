@@ -72,7 +72,7 @@ fu_steelseries_fizz_tunnel_ping(FuDevice *device, gboolean *reached, GError **er
 			       fu_device_get_id(device));
 		return FALSE;
 	}
-	fu_device_set_version(device, version);
+	fu_device_set_version(device, version); /* nocheck:set-version */
 
 	/* success */
 	return TRUE;

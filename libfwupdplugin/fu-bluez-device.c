@@ -474,7 +474,7 @@ fu_bluez_device_parse_device_information_service(FuBluezDevice *self, GError **e
 	    fu_bluez_device_read_string(self, FU_BLUEZ_DEVICE_UUID_DI_FIRMWARE_REVISION, NULL);
 	if (fw_revision != NULL) {
 		fu_device_set_version_format(FU_DEVICE(self), fu_version_guess_format(fw_revision));
-		fu_device_set_version(FU_DEVICE(self), fw_revision);
+		fu_device_set_version(FU_DEVICE(self), fw_revision); /* nocheck:set-version */
 	}
 
 	/* success */
