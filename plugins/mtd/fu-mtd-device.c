@@ -128,8 +128,10 @@ fu_mtd_device_metadata_load(FuMtdDevice *self, GError **error)
 		firmware_child = g_object_ref(firmware);
 
 	/* copy over the version */
-	if (fu_firmware_get_version(firmware_child) != NULL)
-		fu_device_set_version(FU_DEVICE(self), fu_firmware_get_version(firmware_child));
+	if (fu_firmware_get_version(firmware_child) != NULL) {
+		fu_device_set_version(FU_DEVICE(self), /* nocheck:set-version */
+				      fu_firmware_get_version(firmware_child));
+	}
 	if (fu_firmware_get_version_raw(firmware_child) != G_MAXUINT64) {
 		fu_device_set_version_raw(FU_DEVICE(self),
 					  fu_firmware_get_version_raw(firmware_child));

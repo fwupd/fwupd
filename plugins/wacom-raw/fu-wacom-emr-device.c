@@ -28,7 +28,7 @@ fu_wacom_emr_device_setup(FuDevice *device, GError **error)
 
 	/* get firmware version */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		fu_device_set_version(device, "0.0");
+		fu_device_set_version_raw(device, 0);
 	} else {
 		guint16 fw_ver;
 		guint8 data[19] = {0x03, 0x0}; /* 0x03 is an unknown ReportID */

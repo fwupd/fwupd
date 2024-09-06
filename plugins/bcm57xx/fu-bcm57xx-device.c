@@ -542,7 +542,7 @@ fu_bcm57xx_device_setup(FuDevice *device, GError **error)
 		veritem = fu_bcm57xx_veritem_new(bufver, sizeof(bufver));
 		if (veritem != NULL) {
 			fu_device_set_version_format(device, veritem->verfmt);
-			fu_device_set_version(device, veritem->version);
+			fu_device_set_version(device, veritem->version); /* nocheck:set-version */
 			fu_device_set_branch(device, veritem->branch);
 		}
 	}

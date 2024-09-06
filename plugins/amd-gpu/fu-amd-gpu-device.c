@@ -166,7 +166,7 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 	fu_device_add_instance_id(device, part);
 	fu_device_set_version_raw(device, vbios_info.version);
 	ver = fu_strsafe((const gchar *)vbios_info.vbios_ver_str, sizeof(vbios_info.vbios_ver_str));
-	fu_device_set_version(device, ver);
+	fu_device_set_version(device, ver); /* nocheck:set-version */
 	model = fu_strsafe((const gchar *)vbios_info.name, sizeof(vbios_info.name));
 	fu_device_set_summary(device, model);
 

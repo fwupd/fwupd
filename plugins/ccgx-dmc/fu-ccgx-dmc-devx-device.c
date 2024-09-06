@@ -268,10 +268,9 @@ fu_ccgx_dmc_devx_device_probe(FuDevice *device, GError **error)
 	} else if (device_version_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_HX3) {
 		version = fu_ccgx_dmc_devx_device_version_hx3(self, offset);
 		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
-		fu_device_set_version(device, version);
 	}
 	if (version != NULL) {
-		fu_device_set_version(device, version);
+		fu_device_set_version(device, version); /* nocheck:set-version */
 		fu_device_add_instance_strsafe(device, "VER", version);
 	}
 
