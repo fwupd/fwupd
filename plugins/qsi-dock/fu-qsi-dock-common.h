@@ -21,7 +21,7 @@
 #define FU_QSI_DOCK_FIRMWARE_IDX_I225	0x40
 #define FU_QSI_DOCK_FIRMWARE_IDX_MCU	0x80
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 DMC[5];
 	guint8 PD[5];
 	guint8 DP5x[5];

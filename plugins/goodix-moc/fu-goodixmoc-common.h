@@ -55,7 +55,7 @@ typedef enum {
 	GX_PKG_TYPE_EOP = 0,
 } GxPkgType;
 
-typedef struct __attribute__((__packed__)) {
+typedef struct __attribute__((__packed__)) { /* nocheck:blocked */
 	guint8 cmd0;
 	guint8 cmd1;
 	guint8 pkg_flag;

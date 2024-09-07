@@ -22,7 +22,7 @@ struct _FuLogitechHidppBootloaderClass {
 #define FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED "is-signed"
 
 /* packet to and from device */
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 cmd;
 	guint16 addr;
 	guint8 len;

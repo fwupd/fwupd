@@ -19,7 +19,7 @@ typedef enum {
 	FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_LAST
 } FuLogitechHidppHidppMsgFlags;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 report_id;
 	guint8 device_id;
 	guint8 sub_id;

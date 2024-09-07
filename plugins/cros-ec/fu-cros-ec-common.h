@@ -18,7 +18,7 @@
  *               structure (can be 0 on boards where digest is ignored).
  * block_base:   offset of this PDU into the flash SPI.
  */
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint32 block_digest;
 	guint32 block_base;
 	/* The actual payload goes here. */

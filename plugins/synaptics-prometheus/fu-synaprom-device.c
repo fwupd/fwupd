@@ -31,12 +31,12 @@ struct _FuSynapromDevice {
 #define FU_SYNAPROM_USB_INTERRUPT_EP   0x83
 
 /* le */
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint16 status;
 } FuSynapromReplyGeneric;
 
 /* le */
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint16 status;
 	guint32 buildtime;	 /* Unix-style build time */
 	guint32 buildnum;	 /* build number */

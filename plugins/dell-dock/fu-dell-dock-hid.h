@@ -18,7 +18,7 @@
 
 #include <fwupdplugin.h>
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 i2ctargetaddr;
 	guint8 regaddrlen;
 	guint8 i2cspeed;

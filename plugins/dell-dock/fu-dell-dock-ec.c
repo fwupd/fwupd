@@ -68,13 +68,13 @@ typedef enum {
 	SUBTYPE_GEN1,
 } FuDellDockHubSubTypeEnum;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 total_devices;
 	guint8 first_index;
 	guint8 last_index;
 } FuDellDockDockInfoHeader;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 location;
 	guint8 device_type;
 	guint8 sub_type;
@@ -82,7 +82,7 @@ typedef struct __attribute__((packed)) {
 	guint8 instance;
 } FuDellDockEcAddrMap;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	FuDellDockEcAddrMap ec_addr_map;
 	union {
 		guint32 version_32;
@@ -101,7 +101,7 @@ typedef enum {
 	MODULE_TYPE_130_USB4,
 } FuDellDockDockModule;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 dock_configuration;
 	guint8 dock_type;
 	guint16 power_supply_wattage;
@@ -116,7 +116,7 @@ typedef struct __attribute__((packed)) {
 	gchar marketing_name[64];
 } FuDellDockDockDataStructure;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint32 ec_version;
 	guint32 mst_version;
 	guint32 hub1_version;
