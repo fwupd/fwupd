@@ -8,6 +8,7 @@
 
 #include "fu-ch347-cfi-device.h"
 #include "fu-ch347-device.h"
+#include "fu-ch347-struct.h"
 
 struct _FuCh347Device {
 	FuUsbDevice parent_instance;
@@ -17,13 +18,6 @@ struct _FuCh347Device {
 G_DEFINE_TYPE(FuCh347Device, fu_ch347_device, FU_TYPE_USB_DEVICE)
 
 #define FU_CH347_USB_TIMEOUT 1000
-
-#define FU_CH347_CMD_SPI_SET_CFG 0xC0
-#define FU_CH347_CMD_SPI_CS_CTRL 0xC1
-#define FU_CH347_CMD_SPI_OUT_IN	 0xC2
-#define FU_CH347_CMD_SPI_IN	 0xC3
-#define FU_CH347_CMD_SPI_OUT	 0xC4
-#define FU_CH347_CMD_SPI_GET_CFG 0xCA
 
 #define FU_CH347_CS_ASSERT   0x00
 #define FU_CH347_CS_DEASSERT 0x40
@@ -48,26 +42,26 @@ fu_ch347_device_to_string(FuDevice *device, guint idt, GString *str)
 
 static gboolean
 fu_ch347_device_write(FuCh347Device *self,
-		      guint8 cmd,
+		      FuCh347CmdSpi cmd,
 		      const guint8 *buf,
 		      gsize bufsz,
 		      GError **error)
 {
 	gsize actual_length = 0;
-	g_autoptr(GByteArray) cmdbuf = g_byte_array_new();
+	g_autoptr(FuStructCh347Req) st = fu_struct_ch347_req_new();
 
 	/* pack */
-	fu_byte_array_append_uint8(cmdbuf, cmd);
-	fu_byte_array_append_uint16(cmdbuf, bufsz, G_LITTLE_ENDIAN);
+	fu_struct_ch347_req_set_cmd(st, cmd);
+	fu_struct_ch347_req_set_payloadsz(st, bufsz);
 	if (bufsz > 0)
-		g_byte_array_append(cmdbuf, buf, bufsz);
+		g_byte_array_append(st, buf, bufsz);
 
 	/* debug */
-	fu_dump_raw(G_LOG_DOMAIN, "write", cmdbuf->data, cmdbuf->len);
+	fu_dump_raw(G_LOG_DOMAIN, "write", st->data, st->len);
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 FU_CH347_EP_OUT,
-					 cmdbuf->data,
-					 cmdbuf->len,
+					 st->data,
+					 st->len,
 					 &actual_length,
 					 FU_CH347_USB_TIMEOUT,
 					 NULL,
@@ -75,13 +69,13 @@ fu_ch347_device_write(FuCh347Device *self,
 		g_prefix_error(error, "failed to write 0x%x bytes: ", (guint)bufsz);
 		return FALSE;
 	}
-	if (cmdbuf->len != actual_length) {
+	if (st->len != actual_length) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "only wrote 0x%x of 0x%x",
 			    (guint)actual_length,
-			    (guint)cmdbuf->len);
+			    (guint)st->len);
 		return FALSE;
 	}
 
@@ -90,23 +84,26 @@ fu_ch347_device_write(FuCh347Device *self,
 }
 
 static gboolean
-fu_ch347_device_read(FuCh347Device *self, guint8 cmd, guint8 *buf, gsize bufsz, GError **error)
+fu_ch347_device_read(FuCh347Device *self,
+		     FuCh347CmdSpi cmd,
+		     guint8 *buf,
+		     gsize bufsz,
+		     GError **error)
 {
 	gsize actual_length = 0;
-	guint8 cmd_rsp;
 	guint16 size_rsp;
-	g_autoptr(GByteArray) cmdbuf = g_byte_array_new();
+	g_autoptr(GByteArray) st = fu_struct_ch347_req_new();
 
 	/* pack */
-	fu_byte_array_append_uint8(cmdbuf, cmd);
-	fu_byte_array_append_uint16(cmdbuf, sizeof(guint32), G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32(cmdbuf, bufsz, G_LITTLE_ENDIAN);
-	fu_byte_array_set_size(cmdbuf, FU_CH347_PACKET_SIZE, 0x0);
+	fu_struct_ch347_req_set_cmd(st, cmd);
+	fu_struct_ch347_req_set_payloadsz(st, sizeof(guint32));
+	fu_byte_array_append_uint32(st, bufsz, G_LITTLE_ENDIAN);
+	fu_byte_array_set_size(st, FU_CH347_PACKET_SIZE, 0x0);
 
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 FU_CH347_EP_IN,
-					 cmdbuf->data,
-					 cmdbuf->len,
+					 st->data,
+					 st->len,
 					 &actual_length,
 					 FU_CH347_USB_TIMEOUT,
 					 NULL,
@@ -114,24 +111,23 @@ fu_ch347_device_read(FuCh347Device *self, guint8 cmd, guint8 *buf, gsize bufsz, 
 		g_prefix_error(error, "failed to read 0x%x bytes: ", (guint)bufsz);
 		return FALSE;
 	}
-	fu_dump_raw(G_LOG_DOMAIN, "read", cmdbuf->data, actual_length);
+	fu_dump_raw(G_LOG_DOMAIN, "read", st->data, actual_length);
 	if (actual_length == 0) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "returned 0 bytes");
 		return FALSE;
 	}
 
 	/* debug */
-	cmd_rsp = cmdbuf->data[0];
-	if (cmd_rsp != cmd) {
+	if (fu_struct_ch347_req_get_cmd(st) != cmd) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid cmd, got 0x%02x, expected 0x%02x",
-			    cmd_rsp,
+			    fu_struct_ch347_req_get_cmd(st),
 			    cmd);
 		return FALSE;
 	}
-	size_rsp = fu_memread_uint16(cmdbuf->data + 0x1, G_LITTLE_ENDIAN);
+	size_rsp = fu_struct_ch347_req_get_payloadsz(st);
 	if (size_rsp != bufsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -143,8 +139,14 @@ fu_ch347_device_read(FuCh347Device *self, guint8 cmd, guint8 *buf, gsize bufsz, 
 	}
 
 	/* success */
-	memcpy(buf, cmdbuf->data + 0x3, size_rsp); /* nocheck:blocked */
-	return TRUE;
+	return fu_memcpy_safe(buf,
+			      bufsz,
+			      0x0,
+			      st->data,
+			      st->len,
+			      FU_STRUCT_CH347_REQ_SIZE,
+			      size_rsp,
+			      error);
 }
 
 gboolean
