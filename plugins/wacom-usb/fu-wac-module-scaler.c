@@ -120,9 +120,9 @@ fu_wac_module_scaler_write_firmware(FuDevice *device,
 
 		/* build data packet */
 		memset(buf, 0xff, sizeof(buf));
-		memcpy(&buf[0], bd->addr, 3);
+		memcpy(&buf[0], bd->addr, 3); /* nocheck:blocked */
 		buf[3] = bd->crc;
-		memcpy(&buf[4], bd->cdata, sizeof(bd->cdata));
+		memcpy(&buf[4], bd->cdata, sizeof(bd->cdata)); /* nocheck:blocked */
 		blob_chunk = g_bytes_new(buf, sizeof(*bd));
 
 		if (!fu_wac_module_set_feature(self,

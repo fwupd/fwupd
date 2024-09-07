@@ -95,7 +95,7 @@ fu_realtek_mst_device_write_register_multi(FuRealtekMstDevice *self,
 					   GError **error)
 {
 	g_autofree guint8 *command = g_malloc0(count + 1);
-	memcpy(command + 1, data, count);
+	memcpy(command + 1, data, count); /* nocheck:blocked */
 	command[0] = address;
 	return fu_i2c_device_write(FU_I2C_DEVICE(self), command, count + 1, error);
 }

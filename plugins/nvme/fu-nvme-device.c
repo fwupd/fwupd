@@ -125,7 +125,7 @@ fu_nvme_device_identify_ctrl(FuNvmeDevice *self, guint8 *data, GError **error)
 	    .cdw10 = 0x01,
 	    .cdw11 = 0x00,
 	};
-	memcpy(&cmd.addr, &data, sizeof(gpointer));
+	memcpy(&cmd.addr, &data, sizeof(gpointer)); /* nocheck:blocked */
 	return fu_nvme_device_submit_admin_passthru(self, &cmd, error);
 }
 
@@ -157,7 +157,7 @@ fu_nvme_device_fw_download(FuNvmeDevice *self,
 	    .cdw10 = (data_sz >> 2) - 1, /* convert to DWORDs */
 	    .cdw11 = addr >> 2,		 /* convert to DWORDs */
 	};
-	memcpy(&cmd.addr, &data, sizeof(gpointer));
+	memcpy(&cmd.addr, &data, sizeof(gpointer)); /* nocheck:blocked */
 	return fu_nvme_device_submit_admin_passthru(self, &cmd, error);
 }
 

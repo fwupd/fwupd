@@ -107,7 +107,7 @@ fu_efi_hard_drive_device_path_parse(FuFirmware *firmware,
 	self->partition_number = fu_struct_efi_hard_drive_device_path_get_partition_number(st);
 	self->partition_start = fu_struct_efi_hard_drive_device_path_get_partition_start(st);
 	self->partition_size = fu_struct_efi_hard_drive_device_path_get_partition_size(st);
-	memcpy(self->partition_signature,
+	memcpy(self->partition_signature, /* nocheck:blocked */
 	       fu_struct_efi_hard_drive_device_path_get_partition_signature(st),
 	       sizeof(self->partition_signature));
 	self->partition_format = fu_struct_efi_hard_drive_device_path_get_partition_format(st);

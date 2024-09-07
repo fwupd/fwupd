@@ -1319,7 +1319,7 @@ fu_usb_device_incorporate(FuDevice *device, FuDevice *device_donor)
 
 	/* all descriptor fields */
 	if (priv->desc.idVendor == 0x0)
-		memcpy(&priv->desc, &priv_donor->desc, sizeof(priv->desc));
+		memcpy(&priv->desc, &priv_donor->desc, sizeof(priv->desc)); /* nocheck:blocked */
 
 	if (priv->interfaces->len == 0) {
 		for (guint i = 0; i < priv_donor->interfaces->len; i++) {

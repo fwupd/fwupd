@@ -197,7 +197,7 @@ fu_wacom_emr_device_write_block(FuWacomEmrDevice *self,
 	}
 
 	/* data */
-	memcpy(&req.data, data, datasz);
+	memcpy(&req.data, data, datasz); /* nocheck:blocked */
 
 	/* cmd and data checksums */
 	req.data_unused[0] =

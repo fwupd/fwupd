@@ -17,7 +17,7 @@ fu_logitech_hidpp_buffer_read_uint8(const gchar *str)
 {
 	guint64 tmp;
 	gchar buf[3] = {0x0, 0x0, 0x0};
-	memcpy(buf, str, 2);
+	memcpy(buf, str, 2);		       /* nocheck:blocked */
 	tmp = g_ascii_strtoull(buf, NULL, 16); /* nocheck:blocked */
 	return tmp;
 }
@@ -27,7 +27,7 @@ fu_logitech_hidpp_buffer_read_uint16(const gchar *str)
 {
 	guint64 tmp;
 	gchar buf[5] = {0x0, 0x0, 0x0, 0x0, 0x0};
-	memcpy(buf, str, 4);
+	memcpy(buf, str, 4);		       /* nocheck:blocked */
 	tmp = g_ascii_strtoull(buf, NULL, 16); /* nocheck:blocked */
 	return tmp;
 }

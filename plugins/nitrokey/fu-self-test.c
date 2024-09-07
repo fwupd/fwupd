@@ -27,8 +27,8 @@ fu_nitrokey_version_test(void)
 			      0x00, 0x00, 0x00, 0x00, 0x00, 0x14, 0x2d, 0x76, 0xa2};
 
 	/* testing the whole path, as in fu_nitrokey_device_setup()*/
-	memcpy(&res, buf, sizeof(buf));
-	memcpy(&payload, &res.payload, sizeof(payload));
+	memcpy(&res, buf, sizeof(buf));			 /* nocheck:blocked */
+	memcpy(&payload, &res.payload, sizeof(payload)); /* nocheck:blocked */
 
 	/* verify the version number */
 	g_assert_cmpint(payload.VersionMajor, ==, 0);
@@ -56,8 +56,8 @@ fu_nitrokey_version_test_static(void)
 	    0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30, 0x31, 0x32, 0x33,
 	    0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F,
 	};
-	memcpy(&res, buf, sizeof(buf));
-	memcpy(&payload, &res.payload, sizeof(payload));
+	memcpy(&res, buf, sizeof(buf));			 /* nocheck:blocked */
+	memcpy(&payload, &res.payload, sizeof(payload)); /* nocheck:blocked */
 	g_assert_cmpint(payload.VersionMajor, ==, 33); /* 0x1a */
 	g_assert_cmpint(payload.VersionMinor, ==, 34); /* 0x1b */
 	g_assert_cmpint(buf[34], ==, 34);

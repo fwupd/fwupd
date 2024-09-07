@@ -393,7 +393,7 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
 	}
 	memset(req->data, 0x00, 28);
 	if (req->len > 0)
-		memcpy(req->data, buf_response + 0x04, req->len);
+		memcpy(req->data, buf_response + 0x04, req->len); /* nocheck:blocked */
 	return TRUE;
 }
 

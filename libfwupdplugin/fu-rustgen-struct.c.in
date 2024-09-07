@@ -119,7 +119,7 @@
 {
     g_return_if_fail(st != NULL);
     g_return_if_fail(value != NULL);
-    memcpy(st->data + {{item.offset}}, value, sizeof(*value));
+    memcpy(st->data + {{item.offset}}, value, sizeof(*value)); /* nocheck:blocked */
 }
 {%- elif item.type == Type.U8 %}
 {{export.value}}void
@@ -166,7 +166,7 @@
 {%- for item in obj.items | selectattr('struct_obj') %}
     {
         g_autoptr(GByteArray) st_donor = {{item.struct_obj.c_method('New')}}();
-        memcpy(st->data + 0x{{'{:X}'.format(item.offset)}}, st_donor->data, st_donor->len);
+        memcpy(st->data + 0x{{'{:X}'.format(item.offset)}}, st_donor->data, st_donor->len); /* nocheck:blocked */
     }
 {%- endfor %}
 {%- for item in obj.items | selectattr('default') %}
@@ -175,7 +175,7 @@
 {%- elif item.type == Type.GUID %}
     {{item.c_setter}}(st, (fwupd_guid_t *) "{{item.default}}");
 {%- elif item.type == Type.U8 and item.multiplier %}
-    memcpy(st->data + 0x{{'{:X}'.format(item.offset)}}, "{{item.default}}", {{item.size}});
+    memcpy(st->data + 0x{{'{:X}'.format(item.offset)}}, "{{item.default}}", {{item.size}}); /* nocheck:blocked */
 {%- else %}
     {{item.c_setter}}(st, {{item.default}});
 {%- endif %}

@@ -143,7 +143,7 @@ fu_ch347_device_read(FuCh347Device *self, guint8 cmd, guint8 *buf, gsize bufsz, 
 	}
 
 	/* success */
-	memcpy(buf, cmdbuf->data + 0x3, size_rsp);
+	memcpy(buf, cmdbuf->data + 0x3, size_rsp); /* nocheck:blocked */
 	return TRUE;
 }
 

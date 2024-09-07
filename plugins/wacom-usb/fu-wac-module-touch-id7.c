@@ -201,7 +201,9 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
 		buf[2] = record_hdr->ma_id;
 		fu_memwrite_uint32(&buf[3], info->op_id, G_LITTLE_ENDIAN);
 		fu_memwrite_uint32(&buf[7], fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
-		memcpy(&buf[11], fu_chunk_get_data(chk), FU_WAC_MODULE_CHUNK_SIZE);
+		memcpy(&buf[11], /* nocheck:blocked */
+		       fu_chunk_get_data(chk),
+		       FU_WAC_MODULE_CHUNK_SIZE);
 		blob_chunk = g_bytes_new(buf, sizeof(buf));
 		if (!fu_wac_module_set_feature(self,
 					       FU_WAC_MODULE_COMMAND_DATA,

@@ -120,7 +120,7 @@ fu_bytes_align(GBytes *bytes, gsize blksz, gchar padval)
 	if (sz % blksz != 0) {
 		gsize sz_align = ((sz / blksz) + 1) * blksz;
 		guint8 *data_align = g_malloc(sz_align);
-		memcpy(data_align, data, sz);
+		memcpy(data_align, data, sz); /* nocheck:blocked */
 		memset(data_align + sz, padval, sz_align - sz);
 		g_debug("aligning 0x%x bytes to 0x%x", (guint)sz, (guint)sz_align);
 		return g_bytes_new_take(data_align, sz_align);
@@ -206,7 +206,7 @@ fu_bytes_pad(GBytes *bytes, gsize sz)
 		const guint8 *data = g_bytes_get_data(bytes, NULL);
 		guint8 *data_new = g_malloc(sz);
 		if (data != NULL)
-			memcpy(data_new, data, bytes_sz);
+			memcpy(data_new, data, bytes_sz); /* nocheck:blocked */
 		memset(data_new + bytes_sz, 0xff, sz - bytes_sz);
 		return g_bytes_new_take(data_new, sz);
 	}

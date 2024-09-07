@@ -77,7 +77,9 @@ fu_wac_module_bluetooth_id6_write_blob(FuWacModule *self,
 
 		/* build data packet */
 		fu_memwrite_uint32(buf + 0x3, 0x0, G_LITTLE_ENDIAN); /* addr, always zero */
-		memcpy(buf + 0x7, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		memcpy(buf + 0x7,				     /* nocheck:blocked */
+		       fu_chunk_get_data(chk),
+		       fu_chunk_get_data_sz(chk));
 		buf[2] = fu_wac_module_bluetooth_id6_calculate_crc(
 		    buf + 0x7,
 		    FU_WAC_MODULE_BLUETOOTH_ID6_PAYLOAD_SZ); /* include 0xFF for the possibly

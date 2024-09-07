@@ -251,7 +251,7 @@ fu_usb_endpoint_new(const struct libusb_endpoint_descriptor *endpoint_descriptor
 	FuUsbEndpoint *self = g_object_new(FU_TYPE_USB_ENDPOINT, NULL);
 
 	/* copy the data */
-	memcpy(&self->endpoint_descriptor,
+	memcpy(&self->endpoint_descriptor, /* nocheck:blocked */
 	       endpoint_descriptor,
 	       sizeof(struct libusb_endpoint_descriptor));
 	return FU_USB_ENDPOINT(self);

@@ -198,7 +198,7 @@ fu_synaprom_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to get version: ");
 		return FALSE;
 	}
-	memcpy(&pkt, reply->data, sizeof(pkt));
+	memcpy(&pkt, reply->data, sizeof(pkt)); /* nocheck:blocked */
 	product = GUINT32_FROM_LE(pkt.product);
 	g_info("product ID is %u, version=%u.%u, buildnum=%u prod=%i",
 	       product,
@@ -209,7 +209,7 @@ fu_synaprom_device_setup(FuDevice *device, GError **error)
 	fu_synaprom_device_set_version(self, pkt.vmajor, pkt.vminor, GUINT32_FROM_LE(pkt.buildnum));
 
 	/* get serial number */
-	memcpy(&serial_number, pkt.serial_number, sizeof(pkt.serial_number));
+	memcpy(&serial_number, pkt.serial_number, sizeof(pkt.serial_number)); /* nocheck:blocked */
 	fu_synaprom_device_set_serial_number(self, serial_number);
 
 	/* check device type */
