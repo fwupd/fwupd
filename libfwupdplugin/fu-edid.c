@@ -295,7 +295,7 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 			g_prefix_error(error, "cannot write product name: ");
 			return NULL;
 		}
-		memcpy(st->data + offset_desc, st_desc->data, st_desc->len);
+		memcpy(st->data + offset_desc, st_desc->data, st_desc->len); /* nocheck:blocked */
 		offset_desc += st_desc->len;
 	}
 	if (self->serial_number != NULL) {
@@ -310,7 +310,7 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 			g_prefix_error(error, "cannot write serial number: ");
 			return NULL;
 		}
-		memcpy(st->data + offset_desc, st_desc->data, st_desc->len);
+		memcpy(st->data + offset_desc, st_desc->data, st_desc->len); /* nocheck:blocked */
 		offset_desc += st_desc->len;
 	}
 	if (self->eisa_id != NULL) {
@@ -324,7 +324,7 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 			g_prefix_error(error, "cannot write EISA ID: ");
 			return NULL;
 		}
-		memcpy(st->data + offset_desc, st_desc->data, st_desc->len);
+		memcpy(st->data + offset_desc, st_desc->data, st_desc->len); /* nocheck:blocked */
 		offset_desc += st_desc->len;
 	}
 

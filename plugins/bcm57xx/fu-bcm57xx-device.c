@@ -94,7 +94,7 @@ fu_bcm57xx_device_nvram_write(FuBcm57xxDevice *self,
 	eeprom->magic = BCM_NVRAM_MAGIC;
 	eeprom->len = bufsz;
 	eeprom->offset = address;
-	memcpy(eeprom->data, buf, eeprom->len);
+	memcpy(eeprom->data, buf, eeprom->len); /* nocheck:blocked */
 	strncpy(ifr.ifr_name, self->ethtool_iface, IFNAMSIZ - 1);
 	ifr.ifr_data = (char *)eeprom;
 #ifdef HAVE_IOCTL_H

@@ -214,7 +214,7 @@ fu_dell_dock_hid_write_flash(FuDevice *self,
 
 	g_return_val_if_fail(write_size <= HIDI2C_MAX_WRITE, FALSE);
 
-	memcpy(cmd_buffer.data, input, write_size);
+	memcpy(cmd_buffer.data, input, write_size); /* nocheck:blocked */
 	if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
 		g_prefix_error(error,
 			       "failed to write %" G_GSIZE_FORMAT " flash to %x: ",
@@ -274,7 +274,7 @@ fu_dell_dock_hid_i2c_write(FuDevice *self,
 
 	g_return_val_if_fail(write_size <= HIDI2C_MAX_WRITE, FALSE);
 
-	memcpy(cmd_buffer.data, input, write_size);
+	memcpy(cmd_buffer.data, input, write_size); /* nocheck:blocked */
 
 	return fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error);
 }
@@ -373,7 +373,7 @@ fu_dell_dock_hid_tbt_write(FuDevice *self,
 	g_return_val_if_fail(input != NULL, FALSE);
 	g_return_val_if_fail(write_size <= HIDI2C_MAX_WRITE, FALSE);
 
-	memcpy(cmd_buffer.data, input, write_size);
+	memcpy(cmd_buffer.data, input, write_size); /* nocheck:blocked */
 
 	for (gint i = 1; i <= TBT_MAX_RETRIES; i++) {
 		if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {

@@ -612,9 +612,15 @@ fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 	fu_struct_rmi_container_descriptor_set_content_address(desc_hdr,
 							       RMI_IMG_FW_OFFSET +
 								   0x20); /* offset to table */
-	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x00, desc_hdr->data, desc_hdr->len);
-	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x20, offset_table, sizeof(offset_table));
-	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x24, desc->data, desc->len);
+	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x00,			  /* nocheck:blocked */
+	       desc_hdr->data,
+	       desc_hdr->len);
+	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x20, /* nocheck:blocked */
+	       offset_table,
+	       sizeof(offset_table));
+	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x24, /* nocheck:blocked */
+	       desc->data,
+	       desc->len);
 	fu_memwrite_uint32(buf->data + RMI_IMG_FW_OFFSET + 0x44,
 			   0xfeed,
 			   G_LITTLE_ENDIAN); /* flash_config */

@@ -510,7 +510,7 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 			    (guint)sz);
 		return FALSE;
 	}
-	memcpy(&device_id_be, buf, 4);
+	memcpy(&device_id_be, buf, 4); /* nocheck:blocked */
 	priv->device_id = GINT32_FROM_BE(device_id_be);
 
 	if (buf[0] == ATMEL_MANUFACTURER_CODE1) {

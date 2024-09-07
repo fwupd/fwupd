@@ -40,7 +40,7 @@ fu_dfu_utils_bytes_join_array(GPtrArray *chunks)
 		chunk_data = g_bytes_get_data(chunk_tmp, &chunk_size);
 		if (chunk_size == 0)
 			continue;
-		memcpy(buffer + offset, chunk_data, chunk_size);
+		memcpy(buffer + offset, chunk_data, chunk_size); /* nocheck:blocked */
 		offset += chunk_size;
 	}
 	return g_bytes_new_take(buffer, total_size);

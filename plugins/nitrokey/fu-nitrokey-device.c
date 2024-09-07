@@ -33,7 +33,7 @@ fu_nitrokey_device_execute_cmd_cb(FuDevice *device, gpointer user_data, GError *
 	memset(buf, 0x00, sizeof(buf));
 	buf[0] = req->command;
 	if (req->buf_in != NULL)
-		memcpy(&buf[1], req->buf_in, req->buf_in_sz);
+		memcpy(&buf[1], req->buf_in, req->buf_in_sz); /* nocheck:blocked */
 	crc_tmp = fu_nitrokey_perform_crc32(buf, sizeof(buf) - 4);
 	fu_memwrite_uint32(&buf[NITROKEY_REQUEST_DATA_LENGTH + 1], crc_tmp, G_LITTLE_ENDIAN);
 
@@ -59,7 +59,7 @@ fu_nitrokey_device_execute_cmd_cb(FuDevice *device, gpointer user_data, GError *
 		return FALSE;
 
 	/* verify this is the answer to the question we asked */
-	memcpy(&res, buf, sizeof(buf));
+	memcpy(&res, buf, sizeof(buf)); /* nocheck:blocked */
 	if (GUINT32_FROM_LE(res.last_command_crc) != crc_tmp) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -84,7 +84,7 @@ fu_nitrokey_device_execute_cmd_cb(FuDevice *device, gpointer user_data, GError *
 
 	/* copy out the payload */
 	if (req->buf_out != NULL)
-		memcpy(req->buf_out, &res.payload, req->buf_out_sz);
+		memcpy(req->buf_out, &res.payload, req->buf_out_sz); /* nocheck:blocked */
 
 	/* success */
 	return TRUE;
@@ -138,7 +138,7 @@ fu_nitrokey_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "payload", buf_reply, sizeof(buf_reply));
-	memcpy(&payload, buf_reply, sizeof(payload));
+	memcpy(&payload, buf_reply, sizeof(payload)); /* nocheck:blocked */
 	version = g_strdup_printf("%u.%u", payload.VersionMajor, payload.VersionMinor);
 	fu_device_set_version(FU_DEVICE(device), version);
 

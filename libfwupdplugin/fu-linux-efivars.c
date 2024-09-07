@@ -459,8 +459,8 @@ fu_linux_efivars_set_data(FuEfivars *efivars,
 		return FALSE;
 	}
 	ostr = g_unix_output_stream_new(fd, TRUE);
-	memcpy(buf, &attr, sizeof(attr));
-	memcpy(buf + sizeof(attr), data, sz);
+	memcpy(buf, &attr, sizeof(attr));     /* nocheck:blocked */
+	memcpy(buf + sizeof(attr), data, sz); /* nocheck:blocked */
 	if (g_output_stream_write(ostr, buf, sizeof(attr) + sz, NULL, error) < 0) {
 		g_prefix_error(error, "failed to write data to efivarsfs: ");
 		fwupd_error_convert(error);

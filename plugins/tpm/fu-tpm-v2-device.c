@@ -81,7 +81,7 @@ fu_tpm_v2_device_get_string(FuTpmV2Device *self, guint32 query, GError **error)
 	if (!fu_tpm_v2_device_get_uint32(self, query, &val_be, error))
 		return NULL;
 	val = GUINT32_FROM_BE(val_be);
-	memcpy(result, (gchar *)&val, 4);
+	memcpy(result, (gchar *)&val, 4); /* nocheck:blocked */
 
 	/* convert non-ASCII into spaces */
 	for (guint i = 0; i < 4; i++) {

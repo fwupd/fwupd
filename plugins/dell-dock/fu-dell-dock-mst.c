@@ -221,8 +221,8 @@ fu_dell_dock_mst_write_register(FuDevice *proxy,
 	g_return_val_if_fail(proxy != NULL, FALSE);
 	g_return_val_if_fail(data != NULL, FALSE);
 
-	memcpy(buffer, &address, 4);
-	memcpy(buffer + 4, data, length);
+	memcpy(buffer, &address, 4);	  /* nocheck:blocked */
+	memcpy(buffer + 4, data, length); /* nocheck:blocked */
 
 	/* write the offset we're querying */
 	return fu_dell_dock_hid_i2c_write(proxy, buffer, length + 4, &mst_base_settings, error);
@@ -379,14 +379,14 @@ fu_dell_dock_mst_rc_command(FuDevice *device,
 
 	/* command */
 	tmp = (cmd | 0x80) << 16;
-	memcpy(buffer, &tmp, 4);
+	memcpy(buffer, &tmp, 4); /* nocheck:blocked */
 	/* offset */
-	memcpy(buffer + 4, &offset, 4);
+	memcpy(buffer + 4, &offset, 4); /* nocheck:blocked */
 	/* length */
-	memcpy(buffer + 8, &length, 4);
+	memcpy(buffer + 8, &length, 4); /* nocheck:blocked */
 	/* data */
 	if (data != NULL)
-		memcpy(buffer + 16, data, length);
+		memcpy(buffer + 16, data, length); /* nocheck:blocked */
 
 	/* write the combined register stream */
 	if (!fu_dell_dock_mst_write_register(proxy,
@@ -720,7 +720,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 		return FALSE;
 
 	data = g_bytes_get_data(quad_bytes, &length);
-	memcpy(data_out, data, length);
+	memcpy(data_out, data, length); /* nocheck:blocked */
 	data_out[0] = 0x00;
 	if (!fu_dell_dock_mst_rc_command(device,
 					 MST_CMD_WRITE_MEMORY,
@@ -747,7 +747,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 		return FALSE;
 
 	data = g_bytes_get_data(hdcp_bytes, &length);
-	memcpy(data_out, data, length);
+	memcpy(data_out, data, length); /* nocheck:blocked */
 	data_out[0] = data[0] & (1 << 2);
 	if (!fu_dell_dock_mst_rc_command(device,
 					 MST_CMD_WRITE_MEMORY,

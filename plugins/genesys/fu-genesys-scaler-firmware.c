@@ -86,10 +86,10 @@ fu_genesys_scaler_firmware_export(FuFirmware *firmware,
 	gchar N[0x200 + 1] = {'\0'};
 	gchar E[0x006 + 1] = {'\0'};
 
-	memcpy(N, self->public_key.N + 4, sizeof(N) - 1);
+	memcpy(N, self->public_key.N + 4, sizeof(N) - 1); /* nocheck:blocked */
 	fu_xmlb_builder_insert_kv(bn, "N", N);
 
-	memcpy(E, self->public_key.E + 4, sizeof(E) - 1);
+	memcpy(E, self->public_key.E + 4, sizeof(E) - 1); /* nocheck:blocked */
 	fu_xmlb_builder_insert_kv(bn, "E", E);
 }
 

@@ -194,7 +194,7 @@ fu_usb_bos_descriptor_new(const struct libusb_bos_dev_capability_descriptor *bos
 	g_autoptr(GBytes) bytes = NULL;
 
 	/* copy the data */
-	memcpy(&self->bos_cap, bos_cap, sizeof(*bos_cap));
+	memcpy(&self->bos_cap, bos_cap, sizeof(*bos_cap)); /* nocheck:blocked */
 	bytes = g_bytes_new(bos_cap->dev_capability_data, bos_cap->bLength - FU_USB_BOS_HDR_SIZE);
 	fu_firmware_set_bytes(img, bytes);
 	fu_firmware_set_id(img, FU_FIRMWARE_ID_PAYLOAD);

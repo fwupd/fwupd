@@ -538,7 +538,7 @@ fu_dell_dock_ec_get_dock_data(FuDevice *device, GError **error)
 			    g_bytes_get_size(data));
 		return FALSE;
 	}
-	memcpy(self->data, result, length);
+	memcpy(self->data, result, length); /* nocheck:blocked */
 
 	/* guard against EC not yet ready and fail init */
 	name = g_string_new(self->data->marketing_name);
@@ -551,7 +551,7 @@ fu_dell_dock_ec_get_dock_data(FuDevice *device, GError **error)
 		g_warning("[EC bug] Invalid module type 0x%02x", self->data->module_type);
 
 	/* set serial number */
-	memcpy(service_tag, self->data->service_tag, 7);
+	memcpy(service_tag, self->data->service_tag, 7); /* nocheck:blocked */
 	bundled_serial =
 	    g_strdup_printf("%s/%08" G_GUINT64_FORMAT, service_tag, self->data->module_serial);
 	fu_device_set_serial(device, bundled_serial);
@@ -590,7 +590,7 @@ fu_dell_dock_ec_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_int(str, idt, "PowerSupply", self->data->power_supply_wattage);
 	fwupd_codec_string_append_hex(str, idt, "StatusPort0", self->data->port0_dock_status);
 	fwupd_codec_string_append_hex(str, idt, "StatusPort1", self->data->port1_dock_status);
-	memcpy(service_tag, self->data->service_tag, 7);
+	memcpy(service_tag, self->data->service_tag, 7); /* nocheck:blocked */
 	fwupd_codec_string_append(str, idt, "ServiceTag", service_tag);
 	fwupd_codec_string_append_int(str, idt, "Configuration", self->data->dock_configuration);
 	fwupd_codec_string_append_hex(str,
@@ -754,7 +754,7 @@ fu_dell_dock_ec_commit_package(FuDevice *device, GBytes *blob_fw, GError **error
 			    length);
 		return FALSE;
 	}
-	memcpy(self->raw_versions, data, length);
+	memcpy(self->raw_versions, data, length); /* nocheck:blocked */
 
 	g_debug("Committing (%zu) bytes ", sizeof(FuDellDockDockPackageFWVersion));
 	g_debug("\tec_version: %x", self->raw_versions->ec_version);
@@ -766,7 +766,7 @@ fu_dell_dock_ec_commit_package(FuDevice *device, GBytes *blob_fw, GError **error
 
 	payload[0] = EC_CMD_SET_DOCK_PKG;
 	payload[1] = length;
-	memcpy(payload + 2, data, length);
+	memcpy(payload + 2, data, length); /* nocheck:blocked */
 
 	if (!fu_dell_dock_ec_write(device, length + 2, payload, error)) {
 		g_prefix_error(error, "Failed to query dock info: ");

@@ -480,7 +480,7 @@ fu_ccgx_hpi_device_reg_write_cb(FuDevice *device, gpointer user_data, GError **e
 
 	for (guint32 i = 0; i < self->hpi_addrsz; i++)
 		bufhw[i] = (guint8)(helper->addr >> (8 * i));
-	memcpy(&bufhw[self->hpi_addrsz], helper->buf, helper->bufsz);
+	memcpy(&bufhw[self->hpi_addrsz], helper->buf, helper->bufsz); /* nocheck:blocked */
 	if (!fu_ccgx_hpi_device_i2c_write(self,
 					  bufhw,
 					  helper->bufsz + self->hpi_addrsz,
@@ -523,7 +523,7 @@ fu_ccgx_hpi_device_reg_write_no_resp(FuCcgxHpiDevice *self,
 	g_autofree guint8 *bufhw = g_malloc0(bufsz + self->hpi_addrsz);
 	for (guint32 i = 0; i < self->hpi_addrsz; i++)
 		bufhw[i] = (guint8)(addr >> (8 * i));
-	memcpy(&bufhw[self->hpi_addrsz], buf, bufsz);
+	memcpy(&bufhw[self->hpi_addrsz], buf, bufsz); /* nocheck:blocked */
 	if (!fu_ccgx_hpi_device_i2c_write_no_resp(self,
 						  bufhw,
 						  bufsz + self->hpi_addrsz,
@@ -580,7 +580,7 @@ fu_ccgx_hpi_device_read_event_reg(FuCcgxHpiDevice *self,
 
 		/* byte 1 is reserved and should read as zero */
 		buf[1] = 0;
-		memcpy((guint8 *)event, buf, sizeof(buf));
+		memcpy((guint8 *)event, buf, sizeof(buf)); /* nocheck:blocked */
 		if (event->event_length != 0) {
 			reg_addr = fu_ccgx_hpi_device_reg_addr_gen(section,
 								   HPI_REG_PART_PDDATA_READ,

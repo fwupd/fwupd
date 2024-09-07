@@ -204,7 +204,9 @@ fu_usb_interface_new(const struct libusb_interface_descriptor *iface, GError **e
 	FuUsbInterface *self = g_object_new(FU_TYPE_USB_INTERFACE, NULL);
 
 	/* copy the data */
-	memcpy(&self->iface, iface, sizeof(struct libusb_interface_descriptor));
+	memcpy(&self->iface, /* nocheck:blocked */
+	       iface,
+	       sizeof(struct libusb_interface_descriptor));
 	if (!fu_usb_interface_parse_extra(self, iface->extra, iface->extra_length, error))
 		return NULL;
 	for (guint i = 0; i < iface->bNumEndpoints; i++)
