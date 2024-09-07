@@ -392,7 +392,7 @@ fwupd_build_user_agent_system(void)
 #define FWUPD_GUID_NAMESPACE_DEFAULT   "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
 #define FWUPD_GUID_NAMESPACE_MICROSOFT "70ffd812-4c7f-4c7d-0000-000000000000"
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint32 a;
 	guint16 b;
 	guint16 c;

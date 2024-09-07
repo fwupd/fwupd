@@ -48,7 +48,7 @@ typedef enum {
 	DFU_STATE_CLEANING,
 } FuNordicCfgSyncState;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 report_id;
 	guint8 recipient;
 	guint8 event_id;

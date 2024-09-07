@@ -9,7 +9,7 @@
 #include "fu-wacom-aes-device.h"
 #include "fu-wacom-common.h"
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 report_id;
 	guint8 cmd;
 	guint8 echo;

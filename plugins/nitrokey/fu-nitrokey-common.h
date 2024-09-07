@@ -19,13 +19,13 @@ fu_nitrokey_perform_crc32(const guint8 *data, gsize size);
 
 #define NITROKEY_CMD_GET_DEVICE_STATUS (0x20 + 14)
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 command;
 	guint8 payload[NITROKEY_REQUEST_DATA_LENGTH];
 	guint32 crc;
 } NitrokeyHidRequest;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 device_status;
 	guint8 command_id;
 	guint32 last_command_crc;
@@ -35,8 +35,8 @@ typedef struct __attribute__((packed)) {
 } NitrokeyHidResponse;
 
 /* based from libnitrokey/stick20_commands.h from libnitrokey v3.4.1 */
-typedef struct __attribute__((packed)) {
-	guint8 _padding[18]; /* stick20_commands.h:132 // 26 - 8 = 18 */
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
+	guint8 _padding[18];		 /* stick20_commands.h:132 // 26 - 8 = 18 */
 	guint8 SendCounter;
 	guint8 SendDataType;
 	guint8 FollowBytesFlag;

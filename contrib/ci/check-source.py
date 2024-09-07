@@ -209,6 +209,7 @@ class Checker:
             "&= ~(1 <<": "Use FU_BIT_CLEAR() instead",
             "&= ~(1u <<": "Use FU_BIT_CLEAR() instead",
             "&= ~(1ull <<": "Use FU_BIT_CLEAR() instead",
+            "__attribute__((packed))": "Use rustgen instead",
         }.items():
             if line.find(token) != -1:
                 self.add_failure(f"contains blocked token {token}: {msg}")

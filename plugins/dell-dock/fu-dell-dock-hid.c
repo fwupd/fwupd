@@ -41,7 +41,7 @@
 #define TBT_COMMAND_AUTHENTICATE	0xFFFFFFFF
 #define TBT_COMMAND_AUTHENTICATE_STATUS 0xFFFFFFFE
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 cmd;
 	guint8 ext;
 	union {
@@ -59,7 +59,7 @@ typedef struct __attribute__((packed)) {
 	guint8 data[192];
 } FuHIDCmdBuffer;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 cmd;
 	guint8 ext;
 	guint8 i2ctargetaddr;

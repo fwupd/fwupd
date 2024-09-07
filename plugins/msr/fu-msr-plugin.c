@@ -17,7 +17,7 @@ typedef union {
 		guint32 rsrvd : 29;
 		guint32 locked : 1;
 		guint32 debug_occurred : 1;
-	} __attribute__((packed)) fields;
+	} __attribute__((packed)) fields; /* nocheck:blocked */
 } FuMsrIa32Debug;
 
 typedef union {
@@ -26,7 +26,7 @@ typedef union {
 		guint64 rsrvd : 25;
 		guint64 gds_ctrl : 1;
 		guint64 gds_no : 1;
-	} __attribute__((packed)) fields;
+	} __attribute__((packed)) fields; /* nocheck:blocked */
 } FuMsrIa32ArchCapabilities;
 
 typedef union {
@@ -38,7 +38,7 @@ typedef union {
 		guint64 fb_clear_dis : 1;
 		guint64 gds_mitg_dis : 1;
 		guint64 gds_mitg_lock : 1;
-	} __attribute__((packed)) fields;
+	} __attribute__((packed)) fields; /* nocheck:blocked */
 } FuMsrIa32McuOptCtrl;
 
 typedef union {
@@ -54,7 +54,7 @@ typedef union {
 		guint32 mk_tme_keyid_bits : 4;
 		guint32 reserved2 : 12;
 		guint32 mk_tme_crypto_algs : 16;
-	} __attribute__((packed)) fields;
+	} __attribute__((packed)) fields; /* nocheck:blocked */
 } FuMsrIa32TmeActivation;
 
 typedef union {
@@ -63,7 +63,7 @@ typedef union {
 		guint32 unknown0 : 23; /* 0 -> 22 inc */
 		guint32 sme_is_enabled : 1;
 		guint32 unknown1 : 8;
-	} __attribute__((packed)) fields;
+	} __attribute__((packed)) fields; /* nocheck:blocked */
 } FuMsrAMD64Syscfg;
 
 typedef union {
@@ -71,7 +71,7 @@ typedef union {
 	struct {
 		guint32 sev_is_enabled : 1;
 		guint32 unknown0 : 31;
-	} __attribute__((packed)) fields;
+	} __attribute__((packed)) fields; /* nocheck:blocked */
 } FuMsrAMD64Sev;
 
 struct _FuMsrPlugin {

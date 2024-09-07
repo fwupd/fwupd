@@ -31,7 +31,7 @@ struct da_structure {
 	guint8 cmd_code;
 	guint32 supported_cmds;
 	guint8 *tokens;
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 /**
  * Dell device types to run
