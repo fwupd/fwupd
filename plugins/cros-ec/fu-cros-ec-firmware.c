@@ -13,7 +13,6 @@
 
 struct _FuCrosEcFirmware {
 	FuFmapFirmware parent_instance;
-	struct cros_ec_version version;
 	GPtrArray *sections;
 };
 
@@ -31,7 +30,7 @@ fu_cros_ec_firmware_pick_sections(FuCrosEcFirmware *self, guint32 writeable_offs
 		if (offset != writeable_offset)
 			continue;
 
-		section->ustatus = FU_CROS_EC_FW_NEEDED;
+		section->ustatus = FU_CROS_EC_FIRMWARE_UPGRADE_STATUS_NEEDED;
 		found = TRUE;
 	}
 
@@ -55,7 +54,7 @@ fu_cros_ec_firmware_get_needed_sections(FuCrosEcFirmware *self, GError **error)
 
 	for (guint i = 0; i < self->sections->len; i++) {
 		FuCrosEcFirmwareSection *section = g_ptr_array_index(self->sections, i);
-		if (section->ustatus != FU_CROS_EC_FW_NEEDED)
+		if (section->ustatus != FU_CROS_EC_FIRMWARE_UPGRADE_STATUS_NEEDED)
 			continue;
 		g_ptr_array_add(needed_sections, section);
 	}
@@ -86,6 +85,7 @@ fu_cros_ec_firmware_parse(FuFirmware *firmware,
 		FuCrosEcFirmwareSection *section = g_ptr_array_index(self->sections, i);
 		const gchar *fmap_name;
 		const gchar *fmap_fwid_name;
+		g_autoptr(FuCrosEcVersion) version = NULL;
 		g_autoptr(FuFirmware) img = NULL;
 		g_autoptr(FuFirmware) fwid_img = NULL;
 		g_autoptr(GBytes) payload_bytes = NULL;
@@ -142,7 +142,8 @@ fu_cros_ec_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_version(img, section->raw_version);
 		section->image_idx = fu_firmware_get_idx(img);
 
-		if (!fu_cros_ec_parse_version(section->raw_version, &section->version, error)) {
+		version = fu_cros_ec_version_parse(section->raw_version, error);
+		if (version == NULL) {
 			g_prefix_error(error,
 				       "failed parsing firmware's version: %32s: ",
 				       section->raw_version);
@@ -150,15 +151,15 @@ fu_cros_ec_firmware_parse(FuFirmware *firmware,
 		}
 
 		if (rw) {
-			if (!fu_cros_ec_parse_version(section->raw_version,
-						      &self->version,
-						      error)) {
+			g_autoptr(FuCrosEcVersion) version_rw = NULL;
+			version_rw = fu_cros_ec_version_parse(section->raw_version, error);
+			if (version_rw == NULL) {
 				g_prefix_error(error,
 					       "failed parsing firmware's version: %32s: ",
 					       section->raw_version);
 				return FALSE;
 			}
-			fu_firmware_set_version(firmware, self->version.triplet);
+			fu_firmware_set_version(firmware, version_rw->triplet);
 		}
 	}
 
