@@ -5576,8 +5576,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 		fu_device_set_backend_id(self, priv_donor->backend_id);
 	if (priv->update_request_id == NULL && priv_donor->update_request_id != NULL)
 		fu_device_set_update_request_id(self, priv_donor->update_request_id);
-	if (!fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY) &&
-	    !fu_device_has_private_flag(donor, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY)) {
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY) &&
+	    fu_device_has_private_flag(donor, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY)) {
 		if (priv->proxy == NULL && priv_donor->proxy != NULL)
 			fu_device_set_proxy(self, priv_donor->proxy);
 	}
