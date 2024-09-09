@@ -698,7 +698,6 @@ fu_util_display_current_message(FuUtilPrivate *priv)
 
 typedef struct {
 	guint nr_success;
-	guint nr_failed;
 	guint nr_missing;
 	JsonBuilder *builder;
 	const gchar *name;
@@ -776,37 +775,21 @@ fu_util_device_test_component(FuUtilPrivate *priv,
 			    FU_CONSOLE_COLOR_RED);
 			fu_console_print(priv->console, "%s: %s", name, msg);
 		}
-		json_builder_set_member_name(helper->builder, "error");
-		json_builder_add_string_value(helper->builder, "no devices found");
-		helper->nr_failed++;
-		return TRUE;
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no devices found");
+		return FALSE;
 	}
 
 	/* verify the version matches what we expected */
 	if (json_object_has_member(json_obj, "version")) {
 		const gchar *version = json_object_get_string_member(json_obj, "version");
-		json_builder_set_member_name(helper->builder, "version");
-		json_builder_add_string_value(helper->builder, version);
 		if (g_strcmp0(version, fwupd_device_get_version(device)) != 0) {
-			g_autofree gchar *str = NULL;
-			str = g_strdup_printf("version did not match: got %s, expected %s",
-					      fwupd_device_get_version(device),
-					      version);
-			if (!priv->as_json) {
-				g_autofree gchar *msg = NULL;
-				g_autofree gchar *str2 = NULL;
-				str2 = g_strdup_printf(
-				    /* TRANSLATORS: this is for the device tests, %1 is the device
-				     * version, %2 is what we expected */
-				    _("The device version did not match: got %s, expected %s"),
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "version did not match: got %s, expected %s",
 				    fwupd_device_get_version(device),
 				    version);
-				msg = fu_console_color_format(str2, FU_CONSOLE_COLOR_RED);
-				fu_console_print(priv->console, "%s: %s", name, msg);
-			}
-			json_builder_set_member_name(helper->builder, "error");
-			json_builder_add_string_value(helper->builder, str);
-			helper->nr_failed++;
+			return FALSE;
 		}
 	}
 
@@ -970,15 +953,8 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 			helper->nr_missing++;
 			return TRUE;
 		}
-		if (!priv->as_json) {
-			g_autofree gchar *msg = NULL;
-			msg = fu_console_color_format(error_local->message, FU_CONSOLE_COLOR_RED);
-			fu_console_print(priv->console, "%s: %s", helper->name, msg);
-		}
-		json_builder_set_member_name(helper->builder, "error");
-		json_builder_add_string_value(helper->builder, error_local->message);
-		helper->nr_failed++;
-		return TRUE;
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
 	}
 
 	/* process each step */
@@ -1273,13 +1249,6 @@ fu_util_device_test_full(FuUtilPrivate *priv,
 	}
 
 	/* we need all to pass for a zero return code */
-	if (helper->nr_failed > 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "Some of the tests failed");
-		return FALSE;
-	}
 	if (helper->nr_missing > 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
