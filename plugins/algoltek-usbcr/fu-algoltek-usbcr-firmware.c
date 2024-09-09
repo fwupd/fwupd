@@ -40,7 +40,6 @@ fu_algoltek_usbcr_firmware_parse(FuFirmware *firmware,
 	guint16 emmc_ver = 0;
 	guint16 fw_addr = 0;
 	guint16 fw_len = 0;
-	g_autofree gchar *version = NULL;
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
 	g_autoptr(GInputStream) stream_payload = NULL;
 
@@ -71,8 +70,6 @@ fu_algoltek_usbcr_firmware_parse(FuFirmware *firmware,
 	if (!fu_input_stream_read_u16(stream, offset, &app_ver, G_BIG_ENDIAN, error))
 		return FALSE;
 	fu_firmware_set_version_raw(firmware, app_ver);
-	version = g_strdup_printf("%x", app_ver);
-	fu_firmware_set_version(firmware, version);
 
 	/* boot version */
 	offset += 2;
@@ -103,15 +100,23 @@ fu_algoltek_usbcr_firmware_get_boot_ver(FuAlgoltekUsbcrFirmware *self)
 	return self->boot_ver;
 }
 
+static gchar *
+fu_algoltek_usbcr_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
+{
+	return fu_version_from_uint16_hex(version_raw, fu_firmware_get_version_format(firmware));
+}
+
 static void
 fu_algoltek_usbcr_firmware_init(FuAlgoltekUsbcrFirmware *self)
 {
+	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_HEX);
 }
 
 static void
 fu_algoltek_usbcr_firmware_class_init(FuAlgoltekUsbcrFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->convert_version = fu_algoltek_usbcr_firmware_convert_version;
 	firmware_class->parse = fu_algoltek_usbcr_firmware_parse;
 	firmware_class->export = fu_algoltek_usbcr_firmware_export;
 }
