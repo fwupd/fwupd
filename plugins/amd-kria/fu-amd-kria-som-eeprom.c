@@ -24,7 +24,7 @@ G_DEFINE_TYPE(FuAmdKriaSomEeprom, fu_amd_kria_som_eeprom, FU_TYPE_FIRMWARE)
 
 /* IPMI spec encodes 0:5 as length and 6:7 as "type" code */
 #define LENGTH(data)	data & 0x3f
-#define TYPE_CODE(data)	data >> 6
+#define TYPE_CODE(data) data >> 6
 
 static gboolean
 fu_amd_kria_som_eeprom_parse(FuFirmware *firmware,
@@ -54,7 +54,8 @@ fu_amd_kria_som_eeprom_parse(FuFirmware *firmware,
 	if (board == NULL)
 		return FALSE;
 
-	fw = fu_input_stream_read_bytes(stream, board_offset,
+	fw = fu_input_stream_read_bytes(stream,
+					board_offset,
 					fu_struct_board_info_get_length(board) * 8,
 					error);
 	if (fw == NULL)
@@ -67,17 +68,17 @@ fu_amd_kria_som_eeprom_parse(FuFirmware *firmware,
 	str_offset = str_offset + str_len;
 	str_len = LENGTH(buf[str_offset]);
 	str_offset++;
-	self->manufacturer = fu_strsafe((gchar *) buf + str_offset, str_len);
+	self->manufacturer = fu_strsafe((gchar *)buf + str_offset, str_len);
 
 	str_offset = str_offset + str_len;
 	str_len = LENGTH(buf[str_offset]);
 	str_offset++;
-	self->product_name = fu_strsafe((gchar *) buf + str_offset, str_len);
+	self->product_name = fu_strsafe((gchar *)buf + str_offset, str_len);
 
 	str_offset = str_offset + str_len;
 	str_len = LENGTH(buf[str_offset]);
 	str_offset++;
-	self->serial_number = fu_strsafe((gchar *) buf + str_offset, str_len);
+	self->serial_number = fu_strsafe((gchar *)buf + str_offset, str_len);
 
 	return TRUE;
 }
@@ -101,9 +102,7 @@ fu_amd_kria_som_eeprom_get_serial_number(FuAmdKriaSomEeprom *self)
 }
 
 static void
-fu_amd_kria_som_eeprom_export(FuFirmware *firmware,
-			      FuFirmwareExportFlags flags,
-			      XbBuilderNode *bn)
+fu_amd_kria_som_eeprom_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
 	FuAmdKriaSomEeprom *self = FU_AMD_KRIA_SOM_EEPROM(firmware);
 

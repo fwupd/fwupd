@@ -557,7 +557,6 @@ fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_DEBUGGING);
 }
 
-
 static void
 fu_uefi_capsule_plugin_validate_esp(FuUefiCapsulePlugin *self)
 {
@@ -718,7 +717,8 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 
 	/* find and set ESP */
 	if (self->esp == NULL) {
-		self->esp = fu_context_get_default_esp(fu_plugin_get_context(plugin), &error_udisks2);
+		self->esp =
+		    fu_context_get_default_esp(fu_plugin_get_context(plugin), &error_udisks2);
 		if (self->esp == NULL)
 			g_warning("cannot find default ESP: %s", error_udisks2->message);
 		fu_uefi_capsule_plugin_validate_esp(self);

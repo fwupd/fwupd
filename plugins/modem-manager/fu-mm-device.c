@@ -131,7 +131,7 @@ fu_mm_device_validate_firmware_update_method(FuMmDevice *self, GError **error)
 	    MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE | MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA,
 #endif
 #if MM_CHECK_VERSION(1, 24, 0)
-		MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL,
+	    MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL,
 #endif
 	};
 	g_autofree gchar *methods_str = NULL;

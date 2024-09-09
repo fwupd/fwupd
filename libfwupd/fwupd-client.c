@@ -76,7 +76,7 @@ typedef struct {
 	gchar *package_name;
 	gchar *package_version;
 	gchar *user_agent;
-	GHashTable *hints; /* str:str */
+	GHashTable *hints;		/* str:str */
 	GHashTable *immediate_requests; /* str:FwupdRequest */
 } FwupdClientPrivate;
 

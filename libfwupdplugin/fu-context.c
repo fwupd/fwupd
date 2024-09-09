@@ -1557,7 +1557,6 @@ fu_context_is_esp_linux(FuVolume *esp, GError **error)
 	return FALSE;
 }
 
-
 static gint
 fu_context_sort_esp_score_cb(gconstpointer a, gconstpointer b, gpointer user_data)
 {
@@ -1648,9 +1647,7 @@ fu_context_get_default_esp(FuContext *ctx, GError **error)
 			return NULL;
 		}
 
-		g_ptr_array_sort_with_data(esp_volumes,
-					   fu_context_sort_esp_score_cb,
-					   esp_scores);
+		g_ptr_array_sort_with_data(esp_volumes, fu_context_sort_esp_score_cb, esp_scores);
 		for (guint i = 0; i < esp_volumes->len; i++) {
 			FuVolume *esp = g_ptr_array_index(esp_volumes, i);
 			guint score = GPOINTER_TO_UINT(g_hash_table_lookup(esp_scores, esp));

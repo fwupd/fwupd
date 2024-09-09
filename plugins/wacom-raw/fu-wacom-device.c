@@ -5,6 +5,7 @@
  */
 
 #include "config.h"
+
 #include "fu-wacom-common.h"
 #include "fu-wacom-device.h"
 
@@ -76,7 +77,6 @@ fu_wacom_device_check_mpu(FuWacomDevice *self, GError **error)
 		    rsp.resp);
 	return FALSE;
 }
-
 
 static gboolean
 fu_wacom_device_detach(FuDevice *device, FuProgress *progress, GError **error)
