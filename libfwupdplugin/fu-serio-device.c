@@ -52,7 +52,7 @@ fu_serio_device_probe(FuDevice *device, GError **error)
 						"firmware_id",
 						FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 						NULL);
-	if (firmware_id != NULL) {
+	if (firmware_id != NULL && firmware_id[0] != '\0') {
 		if (g_str_has_prefix(firmware_id, "PNP: "))
 			fu_device_add_instance_strsafe(device, "FWID", firmware_id + 5);
 		else
