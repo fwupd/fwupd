@@ -9,9 +9,9 @@
 #include "fu-logitech-rallysystem-audio-device.h"
 #include "fu-logitech-rallysystem-struct.h"
 
-#define TOPOLOGY_DATA_LEN				   513	/* plus 1 byte for the report id */
-#define SERIAL_NUMBER_REQUEST_DATA_LEN			   49
-#define SERIAL_NUMBER_RESPONSE_DATA_LEN			   128
+#define TOPOLOGY_DATA_LEN		513 /* plus 1 byte for the report id */
+#define SERIAL_NUMBER_REQUEST_DATA_LEN	49
+#define SERIAL_NUMBER_RESPONSE_DATA_LEN 128
 
 struct _FuLogitechRallysystemAudioDevice {
 	FuHidrawDevice parent_instance;

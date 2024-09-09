@@ -82,7 +82,10 @@ fu_amd_kria_device_write_firmware(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 	cod_path = g_build_filename(fu_volume_get_mount_point(priv->esp),
-				    "EFI", "UpdateCapsule", "fwupd.cap", NULL);
+				    "EFI",
+				    "UpdateCapsule",
+				    "fwupd.cap",
+				    NULL);
 	g_debug("using %s for capsule", cod_path);
 	if (!fu_path_mkdir_parent(cod_path, error))
 		return FALSE;
@@ -219,8 +222,7 @@ fu_amd_kria_device_init(FuAmdKriaDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-	fu_device_set_summary(FU_DEVICE(self),
-			      "AMD Kria device (Updated via capsule-on-disk)");
+	fu_device_set_summary(FU_DEVICE(self), "AMD Kria device (Updated via capsule-on-disk)");
 	fu_device_add_protocol(FU_DEVICE(self), "org.uefi.capsule");
 }
 
@@ -238,7 +240,6 @@ fu_amd_kria_device_finalize(GObject *object)
 
 	G_OBJECT_CLASS(fu_amd_kria_device_parent_class)->finalize(object);
 }
-
 
 static void
 fu_amd_kria_device_class_init(FuAmdKriaDeviceClass *klass)

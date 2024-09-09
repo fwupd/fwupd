@@ -72,8 +72,8 @@ enum { PROP_0, PROP_LIBUSB_DEVICE, PROP_LAST };
 
 #define GET_PRIVATE(o) (fu_usb_device_get_instance_private(o))
 
-#define FU_DEVICE_CLAIM_INTERFACE_DELAY	    500 /* ms */
-#define FU_USB_DEVICE_OPEN_DELAY	    50	/* ms */
+#define FU_DEVICE_CLAIM_INTERFACE_DELAY 500 /* ms */
+#define FU_USB_DEVICE_OPEN_DELAY	50  /* ms */
 
 static gboolean
 fu_usb_device_libusb_error_to_gerror(gint rc, GError **error)

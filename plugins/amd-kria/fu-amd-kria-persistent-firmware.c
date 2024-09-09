@@ -57,7 +57,9 @@ fu_amd_kria_persistent_firmware_export(FuFirmware *firmware,
 {
 	FuAmdKriaPersistentFirmware *self = FU_AMD_KRIA_PERSISTENT_FIRMWARE(firmware);
 
-	fu_xmlb_builder_insert_kv(bn, "last_booted", self->last_booted == BOOT_IMAGE_ID_A ? "A": "B");
+	fu_xmlb_builder_insert_kv(bn,
+				  "last_booted",
+				  self->last_booted == BOOT_IMAGE_ID_A ? "A" : "B");
 }
 
 static void

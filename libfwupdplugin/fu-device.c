@@ -50,7 +50,7 @@ typedef struct {
 	gchar *backend_id;
 	gchar *update_request_id;
 	gchar *proxy_guid;
-	FuDevice *proxy; /* noref */
+	FuDevice *proxy;    /* noref */
 	FuBackend *backend; /* noref */
 	FuContext *ctx;
 	gint64 created_usec;

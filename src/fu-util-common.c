@@ -11,7 +11,6 @@
 #include <glib/gi18n.h>
 #include <stdio.h>
 #include <unistd.h>
-
 #include <xmlb.h>
 #ifdef HAVE_LIBCURL
 #include <curl/curl.h>

@@ -17,17 +17,17 @@ struct _FuAmdKriaImageFirmware {
 	FuFirmwareClass parent_instance;
 };
 
-#define VERSION_OFFSET	0x70
-#define VERSION_SIZE	0x24
+#define VERSION_OFFSET 0x70
+#define VERSION_SIZE   0x24
 
 G_DEFINE_TYPE(FuAmdKriaImageFirmware, fu_amd_kria_image_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
 fu_amd_kria_image_firmware_parse(FuFirmware *firmware,
-			         GInputStream *stream,
-			         gsize offset,
-			         FwupdInstallFlags flags,
-			         GError **error)
+				 GInputStream *stream,
+				 gsize offset,
+				 FwupdInstallFlags flags,
+				 GError **error)
 {
 	const gchar *buf;
 	gsize bufsz = 0;
@@ -42,7 +42,10 @@ fu_amd_kria_image_firmware_parse(FuFirmware *firmware,
 
 	version = fu_strsafe(buf, bufsz);
 	if (version == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID, "no valid version");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_SIGNATURE_INVALID,
+				    "no valid version");
 		return FALSE;
 	}
 
