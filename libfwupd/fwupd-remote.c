@@ -796,13 +796,13 @@ fwupd_remote_setup(FwupdRemote *self, GError **error)
 		}
 		if (g_str_has_suffix(priv->metadata_uri, ".xml.zst")) {
 			filename_cache =
-			    g_build_filename(priv->remotes_dir, priv->id, "metadata.xml.zst", NULL);
+			    g_build_filename(priv->remotes_dir, priv->id, "firmware.xml.zst", NULL);
 		} else if (g_str_has_suffix(priv->metadata_uri, ".xml.xz")) {
 			filename_cache =
-			    g_build_filename(priv->remotes_dir, priv->id, "metadata.xml.xz", NULL);
+			    g_build_filename(priv->remotes_dir, priv->id, "firmware.xml.xz", NULL);
 		} else {
 			filename_cache =
-			    g_build_filename(priv->remotes_dir, priv->id, "metadata.xml.gz", NULL);
+			    g_build_filename(priv->remotes_dir, priv->id, "firmware.xml.gz", NULL);
 		}
 		fwupd_remote_set_filename_cache(self, filename_cache);
 	}

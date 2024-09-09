@@ -349,7 +349,7 @@ if get_option('tests')
     multiple_rels_test_firmware,
     noreqs_test_firmware,
     plugins_hdr,
-    metadata_xml_gz_jcat,
+    firmware_xml_gz_jcat,
     sources: [
       'fu-self-test.c',
     ],

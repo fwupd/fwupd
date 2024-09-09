@@ -213,6 +213,22 @@ fu_remote_list_get_last_ext(const gchar *filename)
 }
 
 static gboolean
+fu_remote_list_remote_filename_cache_fn_is_obsolete(FuRemoteList *self, const gchar *fn)
+{
+	g_autofree gchar *ext = fu_remote_list_get_last_ext(fn);
+	g_autofree gchar *basename = g_path_get_basename(fn);
+
+	/* fwupd >= 2.0.0 calls this firmware.xml.* so that we can validate with jcat-tool */
+	if (g_str_has_prefix(basename, "metadata."))
+		return TRUE;
+
+	/* in a format that we no longer use */
+	if (g_strcmp0(ext, "jcat") == 0)
+		return FALSE;
+	return g_strcmp0(ext, self->lvfs_metadata_format) != 0;
+}
+
+static gboolean
 fu_remote_list_cleanup_lvfs_remote(FuRemoteList *self, FwupdRemote *remote, GError **error)
 {
 	const gchar *fn_cache = fwupd_remote_get_filename_cache(remote);
@@ -234,10 +250,7 @@ fu_remote_list_cleanup_lvfs_remote(FuRemoteList *self, FwupdRemote *remote, GErr
 	/* delete any obsolete ones */
 	for (guint i = 0; i < files->len; i++) {
 		const gchar *fn = g_ptr_array_index(files, i);
-		g_autofree gchar *ext = fu_remote_list_get_last_ext(fn);
-		if (g_strcmp0(ext, "jcat") == 0)
-			continue;
-		if (g_strcmp0(ext, self->lvfs_metadata_format) != 0) {
+		if (fu_remote_list_remote_filename_cache_fn_is_obsolete(self, fn)) {
 			g_info("deleting obsolete %s", fn);
 			if (g_unlink(fn) == -1) {
 				g_set_error(error,
