@@ -12,12 +12,30 @@
 
 G_DECLARE_FINAL_TYPE(FuEfiLoadOption, fu_efi_load_option, FU, EFI_LOAD_OPTION, FuFirmware)
 
-gchar *
-fu_efi_load_option_get_optional_path(FuEfiLoadOption *self, GError **error) G_GNUC_NON_NULL(1);
-gboolean
-fu_efi_load_option_set_optional_path(FuEfiLoadOption *self,
-				     const gchar *optional_path,
-				     GError **error) G_GNUC_NON_NULL(1);
+/**
+ * FU_EFI_LOAD_OPTION_METADATA_PATH:
+ *
+ * The key for the 2nd-stage loader path.
+ *
+ * Since: 2.0.0
+ */
+#define FU_EFI_LOAD_OPTION_METADATA_PATH "path"
+
+/**
+ * FU_EFI_LOAD_OPTION_METADATA_CMDLINE:
+ *
+ * The key for the kernel command line.
+ *
+ * Since: 2.0.0
+ */
+#define FU_EFI_LOAD_OPTION_METADATA_CMDLINE "cmdline"
+
+const gchar *
+fu_efi_load_option_get_metadata(FuEfiLoadOption *self, const gchar *key, GError **error)
+    G_GNUC_NON_NULL(1, 2);
+void
+fu_efi_load_option_set_metadata(FuEfiLoadOption *self, const gchar *key, const gchar *value)
+    G_GNUC_NON_NULL(1, 2);
 
 FuEfiLoadOption *
 fu_efi_load_option_new(void) G_GNUC_WARN_UNUSED_RESULT;

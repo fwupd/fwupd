@@ -426,8 +426,9 @@ fu_uefi_bootmgr_bootnext(FuEfivars *efivars,
 	/* add the fwupdx64.efi ESP path as the shim loadopt data */
 	if (!use_fwup_path) {
 		g_autofree gchar *fwup_fs_basename = g_path_get_basename(target_app);
-		if (!fu_efi_load_option_set_optional_path(loadopt, fwup_fs_basename, error))
-			return FALSE;
+		fu_efi_load_option_set_metadata(loadopt,
+						FU_EFI_LOAD_OPTION_METADATA_PATH,
+						fwup_fs_basename);
 	}
 
 	/* add DEVICE_PATH */
