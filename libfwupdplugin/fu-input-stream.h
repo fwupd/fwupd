@@ -57,6 +57,9 @@ fu_input_stream_read_byte_array(GInputStream *stream, gsize offset, gsize count,
 GBytes *
 fu_input_stream_read_bytes(GInputStream *stream, gsize offset, gsize count, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+gchar *
+fu_input_stream_read_string(GInputStream *stream, gsize offset, gsize count, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 
 typedef gboolean (*FuInputStreamChunkifyFunc)(const guint8 *buf,
 					      gsize bufsz,
