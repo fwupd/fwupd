@@ -365,6 +365,40 @@ fu_input_stream_read_bytes(GInputStream *stream, gsize offset, gsize count, GErr
 }
 
 /**
+ * fu_input_stream_read_string:
+ * @stream: a #GInputStream
+ * @offset: offset in bytes into @stream to copy from
+ * @count: maximum number of bytes to read
+ * @error: (nullable): optional return location for an error
+ *
+ * Read a UTF-8 string from a stream in a safe way.
+ *
+ * Returns: (transfer full): string
+ *
+ * Since: 2.0.0
+ **/
+gchar *
+fu_input_stream_read_string(GInputStream *stream, gsize offset, gsize count, GError **error)
+{
+	g_autoptr(GByteArray) buf = NULL;
+
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	buf = fu_input_stream_read_byte_array(stream, offset, count, error);
+	if (buf == NULL)
+		return NULL;
+	if (!g_utf8_validate_len((const gchar *)buf->data, buf->len, NULL)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "non UTF-8 string");
+		return NULL;
+	}
+	return g_strndup((const gchar *)buf->data, buf->len);
+}
+
+/**
  * fu_input_stream_size:
  * @stream: a #GInputStream
  * @val: (out): size in bytes
