@@ -1,0 +1,16 @@
+<firmware gtype="FuEfiLoadOption">
+  <id>Linux-Firmware-Updater</id>
+  <attrs>0x1</attrs>
+  <metadata>
+    <path>/foo/bar/baz</path>
+    <cmdline>acpi=off</cmdline>
+    <novalue/>
+  </metadata>
+  <firmware gtype="FuEfiDevicePathList">
+    <firmware gtype="FuEfiFilePathDevicePath">
+      <idx>0x04</idx>
+      <subtype>0x04</subtype>
+      <name>Hello World</name>
+    </firmware>
+  </firmware>
+</firmware>

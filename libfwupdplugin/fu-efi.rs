@@ -252,3 +252,21 @@ struct FuStructEfiHardDriveDevicePath {
     partition_format: FuEfiHardDriveDevicePathPartitionFormat = GuidPartitionTable,
     signature_type: FuEfiHardDriveDevicePathSignatureType = Guid,
 }
+
+#[derive(ParseStream, New)]
+struct FuStructShimHive {
+    magic: [char; 4] == "HIVE",
+    header_version: u8 = 0x1,
+    items_count: u8,
+    items_offset: u8,    // for forwards and backwards compatibility
+    crc32: u32,          // of the entire hive (excluding padding)
+    //items: [ShimHiveItems; items_count]
+}
+
+#[derive(ParseStream, New)]
+struct FuStructShimHiveItem {
+    key_length: u8,
+    value_length: u32,
+    // key string, no trailing NUL
+    // value string, no trailing NUL
+}

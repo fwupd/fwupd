@@ -1850,11 +1850,12 @@ fu_context_get_esp_files_for_entry(FuContext *self,
 	if (flags & FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE &&
 	    g_str_has_suffix(filename, shim_name)) {
 		g_autoptr(GString) filename2 = g_string_new(filename);
-		g_autofree gchar *optional_path = NULL;
+		const gchar *path;
 
-		optional_path = fu_efi_load_option_get_optional_path(entry, NULL);
-		if (optional_path != NULL) {
-			g_string_replace(filename2, shim_name, optional_path, 1);
+		path =
+		    fu_efi_load_option_get_metadata(entry, FU_EFI_LOAD_OPTION_METADATA_PATH, NULL);
+		if (path != NULL) {
+			g_string_replace(filename2, shim_name, path, 1);
 		} else {
 			g_autofree gchar *grub_name =
 			    fu_context_build_uefi_basename_for_arch("grub");
