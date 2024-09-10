@@ -350,6 +350,7 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 				GError **error)
 {
 	FuElanfpDevice *self = FU_ELANFP_DEVICE(device);
+	guint8 usb_buf[8] = {0x40, 0x27, 0x57, 0x44, 0x54, 0x52, 0x53, 0x54};
 	guint i;
 	struct {
 		const gchar *tag;
@@ -411,7 +412,21 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 		return FALSE;
 	if (!fu_elanfp_device_write_payload(self, payload, fu_progress_get_child(progress), error))
 		return FALSE;
+
+	/* hardware reset */
+	if (!fu_elanfp_device_do_xfer(self,
+				      (guint8 *)&usb_buf,
+				      sizeof(usb_buf),
+				      NULL,
+				      0,
+				      TRUE,
+				      NULL,
+				      error)) {
+		g_prefix_error(error, "failed to hardware reset ");
+		return FALSE;
+	}
 	fu_progress_step_done(progress);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
 	return TRUE;
@@ -426,6 +441,7 @@ fu_elanfp_device_init(FuElanfpDevice *device)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_remove_delay(FU_DEVICE(self), 5000);
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elanfp");
