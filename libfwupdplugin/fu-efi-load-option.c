@@ -37,33 +37,7 @@ G_DEFINE_TYPE_EXTENDED(FuEfiLoadOption,
 
 #define FU_EFI_LOAD_OPTION_DESCRIPTION_SIZE_MAX 0x1000u /* bytes */
 
-/**
- * fu_efi_load_option_get_optional_data:
- * @self: a #FuEfiLoadOption
- *
- * Gets any optional data.
- *
- * Returns: (transfer none): optional data, or %NULL
- *
- * Since: 1.9.3
- **/
-GBytes *
-fu_efi_load_option_get_optional_data(FuEfiLoadOption *self)
-{
-	g_return_val_if_fail(FU_IS_EFI_LOAD_OPTION(self), NULL);
-	return self->optional_data;
-}
-
-/**
- * fu_efi_load_option_set_optional_data:
- * @self: a #FuEfiLoadOption
- * @optional_data: (nullable): a #GBytes, or %NULL
- *
- * Sets any optional data.
- *
- * Since: 1.9.3
- **/
-void
+static void
 fu_efi_load_option_set_optional_data(FuEfiLoadOption *self, GBytes *optional_data)
 {
 	g_return_if_fail(FU_IS_EFI_LOAD_OPTION(self));
