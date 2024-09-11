@@ -24,6 +24,7 @@
 #include "fu-device-event-private.h"
 #include "fu-device-private.h"
 #include "fu-i2c-device.h"
+#include "fu-path.h"
 #include "fu-string.h"
 #include "fu-udev-device-private.h"
 
@@ -281,6 +282,54 @@ fu_udev_device_set_device_file(FuUdevDevice *self, const gchar *device_file)
 	g_object_notify(G_OBJECT(self), "device-file");
 }
 
+static gchar *
+fu_udev_device_get_symlink_target(FuUdevDevice *self, const gchar *attr, GError **error)
+{
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
+	g_autofree gchar *fn_attr = NULL;
+	g_autofree gchar *symlink_target = NULL;
+	g_autofree gchar *value = NULL;
+
+	if (fu_udev_device_get_sysfs_path(self) == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no sysfs path");
+		return NULL;
+	}
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("GetSymlinkTarget:Attr=%s", attr);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		return g_strdup(fu_device_event_get_str(event, "Data", error));
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* find target */
+	fn_attr = g_build_filename(fu_udev_device_get_sysfs_path(self), attr, NULL);
+	symlink_target = fu_path_get_symlink_target(fn_attr, error);
+	if (symlink_target == NULL)
+		return NULL;
+	value = g_path_get_basename(symlink_target);
+
+	/* save response */
+	if (event != NULL)
+		fu_device_event_set_str(event, "Data", value);
+
+	/* success */
+	return g_steal_pointer(&value);
+}
+
 /**
  * fu_udev_device_set_vendor:
  * @self: a #FuUdevDevice
@@ -405,6 +454,29 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *subsystem = NULL;
+
+	/* find the subsystem, driver and devtype */
+	if (priv->subsystem == NULL) {
+		g_autofree gchar *subsystem_tmp =
+		    fu_udev_device_get_symlink_target(self, "subsystem", error);
+		if (subsystem_tmp == NULL) {
+			g_prefix_error(error, "failed to read subsystem: ");
+			return FALSE;
+		}
+		fu_udev_device_set_subsystem(self, subsystem_tmp);
+	}
+	if (priv->driver == NULL)
+		priv->driver = fu_udev_device_get_symlink_target(self, "driver", NULL);
+	if (priv->devtype == NULL)
+		priv->devtype = fu_udev_device_read_property(self, "DEVTYPE", NULL);
+	if (priv->device_file == NULL) {
+		g_autofree gchar *prop_devname =
+		    fu_udev_device_read_property(self, "DEVNAME", NULL);
+		if (prop_devname != NULL) {
+			g_autofree gchar *device_file = g_strdup_printf("/dev/%s", prop_devname);
+			fu_udev_device_set_device_file(self, device_file);
+		}
+	}
 
 	/* get IDs */
 	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint16(self, "vendor");
@@ -2519,4 +2591,21 @@ FuUdevDevice *
 fu_udev_device_new(FuContext *ctx, GUdevDevice *udev_device)
 {
 	return g_object_new(FU_TYPE_UDEV_DEVICE, "context", ctx, "udev-device", udev_device, NULL);
+}
+
+/**
+ * fu_udev_device_new_from_sysfs_path:
+ * @ctx: (nullable): a #FuContext
+ * @sysfs_path: a sysfs path
+ *
+ * Creates a new #FuUdevDevice.
+ *
+ * Returns: (transfer full): a #FuUdevDevice
+ *
+ * Since: 2.0.0
+ **/
+FuUdevDevice *
+fu_udev_device_new_from_sysfs_path(FuContext *ctx, const gchar *sysfs_path)
+{
+	return g_object_new(FU_TYPE_UDEV_DEVICE, "context", ctx, "backend-id", sysfs_path, NULL);
 }
