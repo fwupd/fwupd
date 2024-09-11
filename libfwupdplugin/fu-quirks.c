@@ -585,8 +585,10 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 	}
 
 	/* no quirk data */
-	if (self->query_vs == NULL)
+	if (self->query_vs == NULL) {
+		g_debug("no quirk data");
 		return FALSE;
+	}
 
 	/* query */
 	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
