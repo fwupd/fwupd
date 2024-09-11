@@ -115,8 +115,8 @@ fu_udev_backend_create_ddc_proxy(FuUdevBackend *self, FuDevice *device)
 	fu_device_set_proxy(device, FU_DEVICE(proxy));
 }
 
-static FuUdevDevice *
-fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device)
+static GType
+fu_udev_backend_get_device_gtype(const gchar *subsystem, const gchar *devtype)
 {
 	GType gtype = FU_TYPE_UDEV_DEVICE;
 	struct {
@@ -135,19 +135,25 @@ fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device)
 	    {"serio", NULL, FU_TYPE_SERIO_DEVICE},
 	    {"pci", NULL, FU_TYPE_PCI_DEVICE},
 	};
-	g_autoptr(FuDevice) device = NULL;
-
-	/* create the correct object depending on the subsystem */
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
-		if (g_strcmp0(g_udev_device_get_subsystem(udev_device), map[i].subsystem) == 0 &&
-		    (map[i].devtype == NULL ||
-		     g_strcmp0(g_udev_device_get_devtype(udev_device), map[i].devtype) == 0)) {
+		if (g_strcmp0(subsystem, map[i].subsystem) == 0 &&
+		    (map[i].devtype == NULL || g_strcmp0(devtype, map[i].devtype) == 0)) {
 			gtype = map[i].gtype;
 			break;
 		}
 	}
+	return gtype;
+}
 
-	/* create device of correct kind */
+static FuUdevDevice *
+fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device)
+{
+	GType gtype;
+	g_autoptr(FuDevice) device = NULL;
+
+	/* create the correct object depending on the subsystem */
+	gtype = fu_udev_backend_get_device_gtype(g_udev_device_get_subsystem(udev_device),
+						 g_udev_device_get_devtype(udev_device));
 	device = g_object_new(gtype, "backend", FU_BACKEND(self), "udev-device", udev_device, NULL);
 
 	/* the DRM device has a i2c device that is used for communicating with the scaler */
