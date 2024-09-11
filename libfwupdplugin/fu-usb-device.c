@@ -865,10 +865,11 @@ fu_usb_device_load_descriptor_stream(FuUsbDevice *self, const gchar *basename, G
 	 * 0x10011 as a bufsz weirdly */
 	fn = g_build_filename(fu_device_get_backend_id(FU_DEVICE(self)), basename, NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no descriptors");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no descriptors, expected %s",
+			    fn);
 		return NULL;
 	}
 	blob = fu_bytes_get_contents(fn, error);
