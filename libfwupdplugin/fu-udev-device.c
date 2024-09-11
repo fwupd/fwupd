@@ -206,7 +206,8 @@ fu_udev_device_ensure_bind_id(FuUdevDevice *self, GError **error)
 	return FALSE;
 }
 
-static void
+/* private */
+void
 fu_udev_device_set_subsystem(FuUdevDevice *self, const gchar *subsystem)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
