@@ -20,7 +20,18 @@ G_DEFINE_TYPE(FuTpmV2Device, fu_tpm_v2_device, FU_TYPE_TPM_DEVICE)
 static gboolean
 fu_tpm_v2_device_probe(FuDevice *device, GError **error)
 {
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "tpm", error);
+	g_autofree gchar *physical_id = NULL;
+	g_autofree gchar *prop_devname = NULL;
+
+	/* we don't have anything better */
+	prop_devname = fu_udev_device_read_property(FU_UDEV_DEVICE(device), "DEVNAME", error);
+	if (prop_devname == NULL)
+		return FALSE;
+	physical_id = g_strdup_printf("DEVNAME=%s", prop_devname);
+	fu_device_set_physical_id(device, physical_id);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
