@@ -26,26 +26,76 @@ This plugin supports the following protocol ID:
 
 ## GUID Generation
 
+Devices use instance ID and the ingredients are vary according to fwupd version.
+
+### fwupd 1.9.6
+
 Devices use instance ID that is composed of `Subsystem ID`, `Subsystem Model`, and
 the `Hardware Version`. The hardware version is read from the device.
 
-* `DISPLAY\VID_1028&PID_0C88&HWVER_2.1.2.1`
-* `DISPLAY\VID_1028&PID_0C8A&HWVER_2.1.2.1`
+* `DISPLAY\VID_1028&PID_0C88&HWVER_2.1.2.1` (metadata)
+* `DISPLAY\VID_1028&PID_0C8A&HWVER_2.1.2.1` (metadata)
+
+### fwupd 1.9.10
+
+The DDC/CI commands used to test the target device have been restricted to run on
+specific hardware only. Typically by adding a quirk file to match the system `VID`
+and `PID` from the `PCI` bus.
+
+* `DISPLAY\VID_1028&PID_0C88&HWVER_2.1.2.1` (metadata)
+* `DISPLAY\VID_1028&PID_0C8A&HWVER_2.1.2.1` (metadata)
+* `PCI\VID_1028&PID_0C88` (only-quirks)
 * `PCI\VID_1028&PID_0C8A` (only-quirks)
+
+### fwupd 2.0.0
+
+The enumeration of `i2c` devices has been centralized to daemon libfwupdplugin and
+declared as a `proxy` device for the `drm` subsystem device. The instance ID will
+be composed of `VEN`, `DEV` and the `HWVER`.
+
+The instance ID `VEN` is equivalent to the `mfg id` in device `EDID` while `DEV` is
+the `product code`.
+
+* `DRM\VEN_DEL&DEV_4340&HWVER_2.1.2.1` (quirks and metadata)
+* `DRM\VEN_DEL&DEV_7430&HWVER_3.1.5.1` (quirks and metadata)
+
+Example below for the information in EDID:
+
+```shell
+$ sudo apt install ddcutil
+$ sudo ddcutil detect
+Display 1
+   I2C bus:  /dev/i2c-14
+   DRM connector:           card1-DP-2
+   EDID synopsis:
+      Mfg id:               DEL - Dell Inc.
+      Model:                OptiPlex AIO
+      Product code:         17216  (0x4340)
+      Serial number:
+      Binary serial number: 1145581640 (0x44483048)
+      Manufacture year:     2023,  Week: 30
+   VCP version:         2.1
+```
 
 ## Update Behavior
 
 The firmware is deployed when the device is in normal runtime mode, and the
 device will reset when the new firmware has been written. On some hardware the
-MST device may not enumerate if there is no monitor actually plugged in.
+DRM device may not enumerate if there is no monitor actually plugged in.
 
 ## Quirk Use
 
 This plugin uses the following plugin-specific quirks:
 
-### Flags:probe-vcp
+### Flags: `probe-vcp`
 
 This flag is used if the VCP should be probed.
+
+### Flags: `bank2-only`
+
+Install firmware to bank 2 only.
+
+Since: 1.9.25
 
 ## Vendor ID security
 

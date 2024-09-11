@@ -30,8 +30,14 @@
 /* delay time before a ddc read or write */
 #define FU_MEDIATEK_SCALER_DDC_MSG_DELAY_MS 50
 
+/* delay time before a ddc read or write */
+#define FU_MEDIATEK_SCALER_CHUNK_SENT_DELAY_MS 1
+
 /* interval in ms between the poll to check device status */
 #define FU_MEDIATEK_SCALER_DEVICE_POLL_INTERVAL 1000
+
+/* maximum retries for polliing the device existence */
+#define FU_MEDIATEK_SCALER_DEVICE_PRESENT_RETRY 100
 
 /* firmware payload size */
 #define FU_MEDIATEK_SCALER_FW_SIZE_MAX 0x100000
@@ -42,6 +48,18 @@
  * Device VCP should be probed.
  */
 #define FU_MEDIATEK_SCALER_DEVICE_FLAG_PROBE_VCP (1 << 0)
+
+/**
+ * FWUPD_MEDIATEK_SCALER_FLAG_BANK2_ONLY:
+ *
+ * Install firmware to bank 2 only.
+ */
+#define FWUPD_MEDIATEK_SCALER_FLAG_BANK2_ONLY (1 << 1)
+
+typedef struct {
+	FuChunk *chk;
+	guint32 sent_sz;
+} FuMediatekScalerWriteChunkHelper;
 
 struct _FuMediatekScalerDevice {
 	FuUdevDevice parent_instance;
@@ -303,7 +321,9 @@ fu_mediatek_scaler_display_is_connected(FuMediatekScalerDevice *self, GError **e
 }
 
 static gboolean
-fu_mediatek_scaler_display_is_connected_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_mediatek_scaler_device_display_is_connected_cb(FuDevice *device,
+						  gpointer user_data,
+						  GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
 	return fu_mediatek_scaler_display_is_connected(self, error);
@@ -576,11 +596,13 @@ fu_mediatek_scaler_device_prepare_update_cb(FuDevice *device, gpointer user_data
 	if (!fu_mediatek_scaler_device_get_data_ack_size(device, &acksz, error))
 		return FALSE;
 	if (fw_sz != (gsize)acksz) {
-		g_prefix_error(error,
-			       "device nak the incoming filesize, requested: %" G_GSIZE_FORMAT
-			       ", ack: %u",
-			       fw_sz,
-			       acksz);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "device nak the incoming filesize, requested: %" G_GSIZE_FORMAT
+			    ", ack: %u",
+			    fw_sz,
+			    acksz);
 		return FALSE;
 	}
 
@@ -622,6 +644,7 @@ fu_mediatek_scaler_device_set_data(FuMediatekScalerDevice *self, FuChunk *chk, G
 			g_prefix_error(error, "failed to send firmware to device: ");
 			return FALSE;
 		}
+		fu_device_sleep(FU_DEVICE(self), FU_MEDIATEK_SCALER_CHUNK_SENT_DELAY_MS);
 	}
 	return TRUE;
 }
@@ -648,34 +671,38 @@ fu_mediatek_scaler_device_get_staged_data(FuMediatekScalerDevice *self,
 
 static gboolean
 fu_mediatek_scaler_device_check_sent_info(FuMediatekScalerDevice *self,
-					  GBytes *fwdata,
+					  FuChunk *chk,
+					  guint32 sent_size,
 					  GError **error)
 {
 	guint16 chksum = 0;
 	guint32 pktcnt = 0;
+	guint16 sum16 = 0;
 
-	if (!fu_mediatek_scaler_device_get_staged_data(self, &chksum, &pktcnt, error))
+	if (!fu_mediatek_scaler_device_get_staged_data(self, &chksum, &pktcnt, error)) {
+		g_prefix_error(error, "failed to get the staged data: ");
 		return FALSE;
+	}
 
 	/* verify the staged packets on chip */
-	if (g_bytes_get_size(fwdata) != pktcnt) {
+	if (sent_size != pktcnt) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
-			    "failed data verification, sent size: %" G_GSIZE_FORMAT
-			    ", ack size: %u",
-			    g_bytes_get_size(fwdata),
+			    "data packet size mismatched, expected: %X, chip got: %X",
+			    sent_size,
 			    pktcnt);
 		return FALSE;
 	}
 
 	/* verify the checksum on chip */
-	if (fu_sum16_bytes(fwdata) != chksum) {
+	sum16 = fu_sum16(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+	if (sum16 != chksum) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
-			    "failed data checksum comparison, expected: %u, got: %u",
-			    fu_sum16_bytes(fwdata),
+			    "data packet checksum mismatched, expected: %X, chip got: %X",
+			    sum16,
 			    chksum);
 		return FALSE;
 	}
@@ -722,9 +749,10 @@ fu_mediatek_scaler_device_set_isp_reboot(FuMediatekScalerDevice *self, GError **
 }
 
 static gboolean
-fu_mediatek_scaler_device_get_isp_status(FuMediatekScalerDevice *self, GError **error)
+fu_mediatek_scaler_device_get_isp_status(FuMediatekScalerDevice *self,
+					 guint8 *isp_status,
+					 GError **error)
 {
-	guint8 isp_status = 0;
 	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
 	g_autoptr(GByteArray) st_res = NULL;
 
@@ -733,43 +761,59 @@ fu_mediatek_scaler_device_get_isp_status(FuMediatekScalerDevice *self, GError **
 	st_res = fu_mediatek_scaler_device_ddc_read(self, st_req, error);
 	if (st_res == NULL)
 		return FALSE;
-	if (!fu_memread_uint8_safe(st_res->data, st_res->len, 2, &isp_status, error))
+
+	if (!fu_memread_uint8_safe(st_res->data, st_res->len, 2, isp_status, error))
 		return FALSE;
-	if (isp_status != 2) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "incorrect isp status, expected: 0x%02X, got 0x%u",
-			    (guint)2,
-			    isp_status);
-		return FALSE;
-	}
+
 	return TRUE;
 }
 
 static gboolean
-fu_mediatek_scaler_device_verify(FuDevice *device, gsize sz, GError **error)
+fu_mediatek_scaler_device_is_update_success_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-	guint base = sz / 1024 / 512;
-	guint max_tries = base < 1 ? 60 : base * 60;
+	guint8 isp_status = 0;
 
+	if (!fu_mediatek_scaler_device_get_isp_status(self, &isp_status, error))
+		return FALSE;
+
+	if (isp_status != FU_MEDIATEK_SCALER_ISP_STATUS_SUCCESS) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "incorrect isp status, expected: 0x%x, got: 0x%x",
+			    (guint)FU_MEDIATEK_SCALER_ISP_STATUS_SUCCESS,
+			    isp_status);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_mediatek_scaler_device_verify(FuDevice *device, GError **error)
+{
 	if (!fu_device_retry_full(device,
-				  fu_mediatek_scaler_display_is_connected_cb,
-				  max_tries,
+				  fu_mediatek_scaler_device_display_is_connected_cb,
+				  FU_MEDIATEK_SCALER_DEVICE_PRESENT_RETRY,
 				  FU_MEDIATEK_SCALER_DEVICE_POLL_INTERVAL,
 				  NULL,
 				  error)) {
 		g_prefix_error(error,
 			       "display controller did not reconnect after %u retries: ",
-			       max_tries);
+			       (guint)FU_MEDIATEK_SCALER_DEVICE_PRESENT_RETRY);
 		return FALSE;
 	}
 
-	if (!fu_mediatek_scaler_device_get_isp_status(self, error)) {
-		g_prefix_error(error, "failed to get isp status: ");
+	/* ensure isp status */
+	if (!fu_device_retry_full(device,
+				  fu_mediatek_scaler_device_is_update_success_cb,
+				  FU_MEDIATEK_SCALER_DEVICE_PRESENT_RETRY,
+				  FU_MEDIATEK_SCALER_DEVICE_POLL_INTERVAL,
+				  NULL,
+				  error))
 		return FALSE;
-	}
+
 	return TRUE;
 }
 
@@ -785,13 +829,44 @@ fu_mediatek_scaler_device_chunk_data_is_blank(FuChunk *chk)
 
 static gboolean
 fu_mediatek_scaler_device_set_data_fast_forward(FuMediatekScalerDevice *self,
-						FuChunk *chk,
+						guint32 sent_sz,
 						GError **error)
 {
 	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
 	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_SET_DATA_FF);
-	fu_byte_array_append_uint32(st_req, fu_chunk_get_data_sz(chk), G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32(st_req, sent_sz, G_LITTLE_ENDIAN);
 	return fu_mediatek_scaler_device_ddc_write(self, st_req, error);
+}
+
+static gboolean
+fu_mediatek_scaler_device_write_chunk(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
+	FuMediatekScalerWriteChunkHelper *helper = (FuMediatekScalerWriteChunkHelper *)user_data;
+
+	/* fast forward if possible */
+	if (fu_mediatek_scaler_device_chunk_data_is_blank(helper->chk)) {
+		/* fast forward if chunk is empty */
+		if (!fu_mediatek_scaler_device_set_data_fast_forward(self, helper->sent_sz, error))
+			return FALSE;
+	} else {
+		/* set data per fragment size */
+		if (!fu_mediatek_scaler_device_set_data(self, helper->chk, error))
+			return FALSE;
+	}
+
+	/* verify the sent data chunk */
+	if (!fu_mediatek_scaler_device_check_sent_info(self, helper->chk, helper->sent_sz, error)) {
+		/* restore the data size counter */
+		if (!fu_mediatek_scaler_device_set_data_fast_forward(
+			self,
+			helper->sent_sz - fu_chunk_get_data_sz(helper->chk),
+			error))
+			return FALSE;
+	}
+
+	/* ff to reset the checksum */
+	return fu_mediatek_scaler_device_set_data_fast_forward(self, helper->sent_sz, error);
 }
 
 static gboolean
@@ -800,67 +875,43 @@ fu_mediatek_scaler_device_write_firmware_impl(FuMediatekScalerDevice *self,
 					      FuProgress *progress,
 					      GError **error)
 {
+	guint32 sent_sz = 0x0;
 	g_autoptr(FuChunkArray) chunks =
 	    fu_chunk_array_new_from_bytes(fw, 0x00, DDC_DATA_PAGE_SIZE);
-	for (gint retry = 1; retry <= DDC_RW_MAX_RETRY_CNT; retry++) {
-		g_autoptr(GError) error_local = NULL;
-		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-			g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
 
-			/* fast forward if chunk is empty, otherwise set data per fragment size */
-			if (fu_mediatek_scaler_device_chunk_data_is_blank(chk)) {
-				if (!fu_mediatek_scaler_device_set_data_fast_forward(self,
-										     chk,
-										     error))
-					return FALSE;
-			} else {
-				if (!fu_mediatek_scaler_device_set_data(self, chk, error))
-					return FALSE;
-				fu_device_sleep(FU_DEVICE(self), 1);
-			}
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 
-			/* update progress */
-			fu_progress_set_percentage_full(fu_progress_get_child(progress),
-							(gsize)i + 1,
-							(gsize)fu_chunk_array_length(chunks));
-		}
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		FuMediatekScalerWriteChunkHelper helper_wchunk = {0x0};
+		g_autoptr(FuChunk) chk = NULL;
 
-		/* exit the try loop when successes */
-		fu_device_sleep(FU_DEVICE(self), FU_MEDIATEK_SCALER_DDC_MSG_DELAY_MS);
-		if (fu_mediatek_scaler_device_check_sent_info(self, fw, &error_local))
-			return TRUE;
-		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_WRITE)) {
-			g_propagate_error(error, g_steal_pointer(&error_local));
+		/* prepare chunk */
+		chk = fu_chunk_array_index(chunks, i);
+		if (chk == NULL)
+			return FALSE;
+
+		/* data size already sent to chip */
+		sent_sz += fu_chunk_get_data_sz(chk);
+
+		/* retry writing data chunk */
+		helper_wchunk.chk = chk;
+		helper_wchunk.sent_sz = sent_sz;
+		if (!fu_device_retry_full(FU_DEVICE(self),
+					  fu_mediatek_scaler_device_write_chunk,
+					  DDC_RW_MAX_RETRY_CNT,
+					  FU_MEDIATEK_SCALER_DDC_MSG_DELAY_MS,
+					  &helper_wchunk,
+					  error)) {
+			g_prefix_error(error, "writing chunk exceeded the maximum retries");
 			return FALSE;
 		}
 
-		g_debug("retry write_firmware: step: %d, max: %d", retry, DDC_RW_MAX_RETRY_CNT);
-	}
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "maximum tries exceeded");
-	return FALSE;
-}
+		/* write chunk successfully, update the progress */
+		fu_progress_step_done(progress);
 
-static gboolean
-fu_mediatek_scaler_device_attach(FuDevice *device, FuProgress *progress, GError **error)
-{
-	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-	guint max_tries = 30;
-
-	/* reboot the device */
-	if (!(fu_mediatek_scaler_device_set_isp_reboot(self, error)))
-		return FALSE;
-
-	/* wait for the device back */
-	if (!fu_device_retry_full(device,
-				  fu_mediatek_scaler_display_is_connected_cb,
-				  max_tries,
-				  FU_MEDIATEK_SCALER_DEVICE_POLL_INTERVAL,
-				  NULL,
-				  error)) {
-		g_prefix_error(error,
-			       "display controller did not reconnect after %u retries: ",
-			       max_tries);
-		return FALSE;
+		g_debug("data size sent to chip: 0x%x", sent_sz);
 	}
 
 	return TRUE;
@@ -880,9 +931,10 @@ fu_mediatek_scaler_device_write_firmware(FuDevice *device,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "prepare");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 75, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 76, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "commit");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 25, "verify");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 12, "verify");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "reset");
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -905,9 +957,30 @@ fu_mediatek_scaler_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	/* verify display and ISP status */
-	if (!fu_mediatek_scaler_device_verify(device, fw_size, error))
+	/* verify display and ISP status; for bank 1 devices 0xF8 will do self-reboot */
+	if (!fu_mediatek_scaler_device_verify(device, error))
 		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* for bank 2 update */
+	if (fu_device_has_private_flag(device, FWUPD_MEDIATEK_SCALER_FLAG_BANK2_ONLY)) {
+		/* send reboot command to take effect immediately */
+		if (!(fu_mediatek_scaler_device_set_isp_reboot(self, error)))
+			return FALSE;
+
+		/* ensure device is back */
+		if (!fu_device_retry_full(device,
+					  fu_mediatek_scaler_device_display_is_connected_cb,
+					  FU_MEDIATEK_SCALER_DEVICE_PRESENT_RETRY,
+					  FU_MEDIATEK_SCALER_DEVICE_POLL_INTERVAL,
+					  NULL,
+					  error)) {
+			g_prefix_error(error,
+				       "display controller did not reconnect after %u retries: ",
+				       (guint)FU_MEDIATEK_SCALER_DEVICE_PRESENT_RETRY);
+			return FALSE;
+		}
+	}
 	fu_progress_step_done(progress);
 
 	/* success */
@@ -943,8 +1016,8 @@ fu_mediatek_scaler_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
 }
 
 static void
@@ -963,21 +1036,23 @@ fu_mediatek_scaler_device_init(FuMediatekScalerDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_MEDIATEK_SCALER_DEVICE_FLAG_PROBE_VCP,
 					"probe-vcp");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FWUPD_MEDIATEK_SCALER_FLAG_BANK2_ONLY,
+					"bank2-only");
 }
 
 static void
 fu_mediatek_scaler_device_class_init(FuMediatekScalerDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->to_string = fu_mediatek_scaler_device_to_string;
-	klass_device->convert_version = fu_mediatek_scaler_device_convert_version;
-	klass_device->probe = fu_mediatek_scaler_device_probe;
-	klass_device->setup = fu_mediatek_scaler_device_setup;
-	klass_device->open = fu_mediatek_scaler_device_open;
-	klass_device->close = fu_mediatek_scaler_device_close;
-	klass_device->prepare_firmware = fu_mediatek_scaler_device_prepare_firmware;
-	klass_device->write_firmware = fu_mediatek_scaler_device_write_firmware;
-	klass_device->attach = fu_mediatek_scaler_device_attach;
-	klass_device->reload = fu_mediatek_scaler_device_setup;
-	klass_device->set_progress = fu_mediatek_scaler_device_set_progress;
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->convert_version = fu_mediatek_scaler_device_convert_version;
+	device_class->probe = fu_mediatek_scaler_device_probe;
+	device_class->setup = fu_mediatek_scaler_device_setup;
+	device_class->open = fu_mediatek_scaler_device_open;
+	device_class->close = fu_mediatek_scaler_device_close;
+	device_class->prepare_firmware = fu_mediatek_scaler_device_prepare_firmware;
+	device_class->write_firmware = fu_mediatek_scaler_device_write_firmware;
+	device_class->reload = fu_mediatek_scaler_device_setup;
+	device_class->set_progress = fu_mediatek_scaler_device_set_progress;
+	device_class->to_string = fu_mediatek_scaler_device_to_string;
 }

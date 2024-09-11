@@ -46,3 +46,11 @@ enum DdcciPriority{
     Normal,
     Up,
 }
+
+#[repr(u8)]
+enum MediatekScalerIspStatus {
+    Busy = 0x00,
+    Failure,
+    Success,
+    Idle = 0x99,
+}
