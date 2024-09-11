@@ -165,33 +165,27 @@ fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device)
 }
 
 static void
-fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
+fu_udev_backend_device_add_from_device(FuUdevBackend *self, FuUdevDevice *device)
 {
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
-	g_autoptr(FuUdevDevice) device = NULL;
 	g_autoptr(GPtrArray) possible_plugins = NULL;
 
 	/* ignore zram and loop block devices -- of which there are dozens on systems with snap */
-	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "block") == 0) {
+	if (g_strcmp0(fu_udev_device_get_subsystem(device), "block") == 0) {
 		g_autofree gchar *basename =
-		    g_path_get_basename(g_udev_device_get_sysfs_path(udev_device));
+		    g_path_get_basename(fu_udev_device_get_sysfs_path(device));
 		if (g_str_has_prefix(basename, "zram") || g_str_has_prefix(basename, "loop"))
 			return;
 	}
 
-	/* use the subsystem to create the correct GType */
-	device = fu_udev_backend_create_device(self, udev_device);
-	if (device == NULL)
-		return;
-
 	/* these are used without a subclass */
-	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "msr") == 0)
+	if (g_strcmp0(fu_udev_device_get_subsystem(device), "msr") == 0)
 		fu_udev_device_add_open_flag(device, FU_IO_CHANNEL_OPEN_FLAG_READ);
 
 	/* notify plugins using fu_plugin_add_udev_subsystem() */
 	possible_plugins =
 	    fu_context_get_plugin_names_for_udev_subsystem(ctx,
-							   g_udev_device_get_subsystem(udev_device),
+							   fu_udev_device_get_subsystem(device),
 							   NULL);
 	if (possible_plugins != NULL) {
 		for (guint i = 0; i < possible_plugins->len; i++) {
@@ -201,7 +195,7 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 	}
 
 	/* DP AUX devices are *weird* and can only read the DPCD when a DRM device is attached */
-	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "drm_dp_aux_dev") == 0) {
+	if (g_strcmp0(fu_udev_device_get_subsystem(device), "drm_dp_aux_dev") == 0) {
 		/* add and rescan, regardless of if we can open it */
 		g_ptr_array_add(self->dpaux_devices, g_object_ref(device));
 		fu_udev_backend_rescan_dpaux_devices(self);
@@ -226,6 +220,18 @@ fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
 
 	/* success */
 	fu_backend_device_added(FU_BACKEND(self), FU_DEVICE(device));
+}
+
+static void
+fu_udev_backend_device_add(FuUdevBackend *self, GUdevDevice *udev_device)
+{
+	g_autoptr(FuUdevDevice) device = NULL;
+
+	/* use the subsystem to create the correct GType */
+	device = fu_udev_backend_create_device(self, udev_device);
+	if (device == NULL)
+		return;
+	fu_udev_backend_device_add_from_device(self, device);
 }
 
 static void
