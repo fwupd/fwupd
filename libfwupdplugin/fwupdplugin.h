@@ -89,6 +89,7 @@
 #include <libfwupdplugin/fu-oprom-firmware.h>
 #include <libfwupdplugin/fu-partial-input-stream.h>
 #include <libfwupdplugin/fu-path.h>
+#include <libfwupdplugin/fu-pci-device.h>
 #include <libfwupdplugin/fu-pefile-firmware.h>
 #include <libfwupdplugin/fu-plugin-vfuncs.h>
 #include <libfwupdplugin/fu-plugin.h>
