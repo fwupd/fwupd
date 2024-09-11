@@ -2120,23 +2120,17 @@ fu_udev_device_read_property(FuUdevDevice *self, const gchar *key, GError **erro
 	}
 	if (value == NULL) {
 #ifdef HAVE_GUDEV
-		/* sanity check */
-		if (priv->udev_device == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INTERNAL,
-					    "no device to use");
-			return NULL;
-		}
-
 		/* retain fallback until we merge the improved probing branch */
-		value = g_strdup(
-		    g_udev_device_get_property(priv->udev_device, key)); /* nocheck:blocked */
-		if (value != NULL) {
-			g_debug("found udev property %s=%s not in %s/uevent",
-				key,
-				value,
-				fu_udev_device_get_sysfs_path(self));
+		if (priv->udev_device != NULL) {
+			value = g_strdup(
+			    g_udev_device_get_property(priv->udev_device, /* nocheck:blocked */
+						       key));
+			if (value != NULL) {
+				g_debug("found udev property %s=%s not in %s/uevent",
+					key,
+					value,
+					fu_udev_device_get_sysfs_path(self));
+			}
 		}
 #else
 		g_set_error_literal(error,
