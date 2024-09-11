@@ -785,9 +785,7 @@ fu_synaptics_rmi_ps2_device_probe(FuDevice *device, GError **error)
 	} else {
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	}
-
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "platform", error);
+	return TRUE;
 }
 
 static gboolean
