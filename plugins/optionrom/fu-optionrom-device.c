@@ -22,10 +22,11 @@ fu_optionrom_device_probe(FuDevice *device, GError **error)
 	/* does the device even have ROM? */
 	fn = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)), "rom", NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "Unable to read firmware from device");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unable to read firmware from device, %s does not exist",
+			    fn);
 		return FALSE;
 	}
 	fu_udev_device_set_device_file(FU_UDEV_DEVICE(device), fn);
