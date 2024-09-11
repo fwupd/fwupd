@@ -95,7 +95,7 @@ This flag is used if the VCP should be probed.
 
 Install firmware to bank 2 only.
 
-Since: 2.0.0
+Since: 1.9.25
 
 ## Vendor ID security
 
