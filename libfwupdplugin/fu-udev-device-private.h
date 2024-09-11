@@ -10,6 +10,8 @@
 
 void
 fu_udev_device_emit_changed(FuUdevDevice *self) G_GNUC_NON_NULL(1);
+FuUdevDevice *
+fu_udev_device_new_from_sysfs_path(FuContext *ctx, const gchar *sysfs_path);
 void
 fu_udev_device_set_io_channel(FuUdevDevice *self, FuIOChannel *io_channel) G_GNUC_NON_NULL(1, 2);
 void
