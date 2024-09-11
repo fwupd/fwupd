@@ -9,10 +9,10 @@
 #include "fu-optionrom-device.h"
 
 struct _FuOptionromDevice {
-	FuUdevDevice parent_instance;
+	FuPciDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuOptionromDevice, fu_optionrom_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE(FuOptionromDevice, fu_optionrom_device, FU_TYPE_PCI_DEVICE)
 
 static gboolean
 fu_optionrom_device_probe(FuDevice *device, GError **error)
@@ -29,9 +29,7 @@ fu_optionrom_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	fu_udev_device_set_device_file(FU_UDEV_DEVICE(device), fn);
-
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error);
+	return TRUE;
 }
 
 static GBytes *
