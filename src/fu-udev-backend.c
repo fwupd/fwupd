@@ -133,6 +133,7 @@ fu_udev_backend_create_device(FuUdevBackend *self, GUdevDevice *udev_device)
 	    {"hidraw", NULL, FU_TYPE_HIDRAW_DEVICE},
 	    {"block", "disk", FU_TYPE_BLOCK_DEVICE},
 	    {"serio", NULL, FU_TYPE_SERIO_DEVICE},
+	    {"pci", NULL, FU_TYPE_PCI_DEVICE},
 	};
 	g_autoptr(FuDevice) device = NULL;
 
