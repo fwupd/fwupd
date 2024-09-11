@@ -293,11 +293,18 @@ fu_tpm_plugin_coldplug_eventlog(FuPlugin *plugin, GError **error)
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
 	gsize bufsz = 0;
-	const gchar *fn = "/sys/kernel/security/tpm0/binary_bios_measurements";
+	g_autofree gchar *fn = NULL;
 	g_autofree gchar *str = NULL;
+	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
 	g_autofree guint8 *buf = NULL;
 
 	/* do not show a warning if no TPM exists, or the kernel is too old */
+	fn = g_build_filename(sysfsdir,
+			      "kernel",
+			      "security",
+			      "tpm0",
+			      "binary_bios_measurements",
+			      NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_debug("no %s, so skipping", fn);
 		return TRUE;
