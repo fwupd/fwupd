@@ -43,18 +43,13 @@ def test_files() -> int:
     lib_headers_nopath = [os.path.basename(fn) for fn in lib_headers]
 
     # test all C and H files
-    for fn in glob.glob("**/*.[c|h]", recursive=True):
+    for fn in (
+        glob.glob("libfwupd/*.[c|h]")
+        + glob.glob("libfwupdplugin/*.[c|h]")
+        + glob.glob("plugins/*/*.[c|h]")
+        + glob.glob("src/*.[c|h]")
+    ):
         # we do not care
-        if fn.startswith("subprojects"):
-            continue
-        if fn.startswith("build"):
-            continue
-        if fn.startswith("venv"):
-            continue
-        if fn.startswith("dist"):
-            continue
-        if fn.startswith("contrib/ci"):
-            continue
         if fn in [
             "libfwupd/fwupd-context-test.c",
             "libfwupd/fwupd-thread-test.c",

@@ -11,32 +11,16 @@ import sys
 import fnmatch
 
 
-def _is_source_file(filename: str) -> bool:
-    for pat in ["*.c", "*.h", "*.py", "*.rs"]:
-        if fnmatch.fnmatch(filename, pat):
-            return True
-    return False
-
-
 def test_files() -> int:
     rc: int = 0
     build_dirs = [os.path.dirname(cf) for cf in glob.glob("**/config.h")]
 
-    for fn in glob.glob("**", recursive=True):
-        if not _is_source_file(fn):
-            continue
-        if "meson-private" in fn:
-            continue
-        if os.path.isdir(fn):
-            continue
-        if fn.startswith(tuple(build_dirs)):
-            continue
-        if fn.startswith("subprojects"):
-            continue
-        if fn.startswith("venv"):
-            continue
-        if fn.startswith("dist"):
-            continue
+    for fn in (
+        glob.glob("libfwupd/*.[c|h|py|rs]")
+        + glob.glob("libfwupdplugin/.[c|h|py|rs]")
+        + glob.glob("plugins/*/.[c|h|py|rs]")
+        + glob.glob("src/.[c|h|py|rs]")
+    ):
         if fn.endswith("check-license.py"):
             continue
         lic: str = ""

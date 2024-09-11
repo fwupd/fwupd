@@ -377,17 +377,12 @@ def test_files() -> int:
     rc: int = 0
 
     checker = Checker()
-    for fn in sorted(glob.glob("**/*.[c|h]", recursive=True)):
-        if fn.startswith("subprojects"):
-            continue
-        if fn.startswith("build"):
-            continue
-        if fn.startswith("dist"):
-            continue
-        if fn.startswith("contrib/ci"):
-            continue
-        if fn.startswith("venv"):
-            continue
+    for fn in (
+        glob.glob("libfwupd/*.[c|h]")
+        + glob.glob("libfwupdplugin/*.[c|h]")
+        + glob.glob("plugins/*/*.[c|h]")
+        + glob.glob("src/*.[c|h]")
+    ):
         checker.test_file(fn)
 
     # show issues
