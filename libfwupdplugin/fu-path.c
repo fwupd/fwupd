@@ -17,6 +17,7 @@
 
 #include "fwupd-error.h"
 
+#include "fu-common.h"
 #include "fu-path.h"
 
 /**
@@ -622,4 +623,43 @@ fu_path_make_absolute(const gchar *filename, GError **error)
 		return NULL;
 	}
 	return g_strdup(full_tmp);
+}
+
+/**
+ * fu_path_get_symlink_target:
+ * @filename: a path to a symlink
+ * @error: (nullable): optional return location for an error
+ *
+ * Returns the symlink target.
+ *
+ * Returns: (transfer full): path, or %NULL on error
+ *
+ * Since: 2.0.0
+ **/
+gchar *
+fu_path_get_symlink_target(const gchar *filename, GError **error)
+{
+	const gchar *target;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFileInfo) info = NULL;
+
+	file = g_file_new_for_path(filename);
+	info = g_file_query_info(file,
+				 G_FILE_ATTRIBUTE_STANDARD_SYMLINK_TARGET,
+				 G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS,
+				 NULL,
+				 error);
+	if (info == NULL) {
+		fu_error_convert(error);
+		return NULL;
+	}
+	target =
+	    g_file_info_get_attribute_byte_string(info, G_FILE_ATTRIBUTE_STANDARD_SYMLINK_TARGET);
+	if (target == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no symlink target");
+		return NULL;
+	}
+
+	/* success */
+	return g_strdup(target);
 }
