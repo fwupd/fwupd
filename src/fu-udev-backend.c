@@ -397,26 +397,6 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "not initialized");
 		return NULL;
 	}
-	if (subsystem == NULL) {
-		g_autoptr(GUdevDevice) udev_parent = g_udev_device_get_parent(udev_device);
-		g_autoptr(FuUdevDevice) parent = NULL;
-		if (udev_parent == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "no udev parent");
-			return NULL;
-		}
-		parent = fu_udev_backend_create_device(self, udev_parent);
-		if (parent == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "no parent");
-			return NULL;
-		}
-		return FU_DEVICE(g_steal_pointer(&parent));
-	}
 	device_tmp = g_udev_device_get_parent(udev_device);
 	while (device_tmp != NULL) {
 		g_autoptr(GUdevDevice) udev_parent = NULL;
@@ -434,6 +414,10 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 	}
 
 	/* failed */
+	if (subsystem == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no parent");
+		return NULL;
+	}
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_SUPPORTED,
