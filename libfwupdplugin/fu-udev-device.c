@@ -1156,8 +1156,9 @@ fu_udev_device_match_subsystem(FuUdevDevice *self, const gchar *subsystem)
 	g_auto(GStrv) subsys_devtype = NULL;
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
-	g_return_val_if_fail(subsystem != NULL, FALSE);
 
+	if (subsystem == NULL)
+		return TRUE;
 	subsys_devtype = g_strsplit(subsystem, ":", 2);
 	if (g_strcmp0(fu_udev_device_get_subsystem(self), subsys_devtype[0]) != 0)
 		return FALSE;
