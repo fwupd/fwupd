@@ -6,8 +6,13 @@
 
 #include "config.h"
 
+#ifdef HAVE_GUDEV
+#include <gudev/gudev.h>
+#endif
+
 #include "fu-context-private.h"
 #include "fu-mtd-device.h"
+#include "fu-udev-device-private.h"
 
 static void
 fu_test_mtd_device_func(void)
@@ -26,7 +31,6 @@ fu_test_mtd_device_func(void)
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GRand) rand = g_rand_new_with_seed(0);
 	g_autoptr(GUdevClient) udev_client = g_udev_client_new(NULL); /* nocheck:blocked */
-	g_autoptr(GUdevDevice) udev_device = NULL;
 	const gchar *dev_name;
 
 	/* do not save silo */
@@ -37,26 +41,11 @@ fu_test_mtd_device_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	udev_device =
-	    g_udev_client_query_by_sysfs_path(udev_client, "/sys/devices/virtual/mtd/mtd0");
-	if (udev_device == NULL) {
-		g_test_skip("could not find mtdram device");
-		return;
-	}
-	dev_name = g_udev_device_get_property(udev_device, "DEVNAME"); /* nocheck:blocked */
-	if (g_strcmp0(dev_name, "/dev/mtd0") != 0) {
-		g_test_skip("DEVNAME not /dev/mtd0");
-		return;
-	}
-	if (!g_file_test(dev_name, G_FILE_TEST_EXISTS)) {
-		g_test_skip("/dev/mtd0 doesn't exist");
-		return;
-	}
-
 	/* create device */
-	device = g_object_new(FU_TYPE_MTD_DEVICE, "context", ctx, "udev-device", udev_device, NULL);
+	device = FU_DEVICE(fu_udev_device_new(ctx, "/sys/devices/virtual/mtd/mtd0"));
 	locker = fu_device_locker_new(device, &error);
-	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
+	    g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 		g_test_skip("no permission to read mtdram device");
 		return;
 	}

@@ -870,7 +870,7 @@ fu_thunderbolt_gudev_uevent_cb(GUdevClient *gudev_client,
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
-		device = fu_udev_device_new(tt->ctx, udev_device);
+		device = fu_udev_device_new(tt->ctx, g_udev_device_get_sysfs_path(udev_device));
 		if (!fu_device_probe(FU_DEVICE(device), &error_local)) {
 			g_warning("failed to probe: %s", error_local->message);
 			return;

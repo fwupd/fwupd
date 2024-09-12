@@ -37,8 +37,6 @@
  */
 
 typedef struct {
-	GUdevDevice *udev_device;
-	gboolean udev_device_cleared;
 	guint16 vendor;
 	guint16 model;
 	guint16 subsystem_vendor;
@@ -68,7 +66,6 @@ G_DEFINE_TYPE_EXTENDED(FuUdevDevice,
 
 enum {
 	PROP_0,
-	PROP_UDEV_DEVICE,
 	PROP_SUBSYSTEM,
 	PROP_DRIVER,
 	PROP_DEVICE_FILE,
@@ -634,63 +631,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-#ifdef HAVE_GUDEV
-static void
-fu_udev_device_set_dev_internal(FuUdevDevice *self, GUdevDevice *udev_device)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
-	if (g_set_object(&priv->udev_device, udev_device))
-		g_object_notify(G_OBJECT(self), "udev-device");
-}
-#endif
-
-/**
- * fu_udev_device_set_dev:
- * @self: a #FuUdevDevice
- * @udev_device: a #GUdevDevice
- *
- * Sets the #GUdevDevice. This may need to be used to replace the actual device
- * used for reads and writes before the device is probed.
- *
- * Since: 1.6.2
- **/
-void
-fu_udev_device_set_dev(FuUdevDevice *self, GUdevDevice *udev_device)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-
-	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
-
-#ifdef HAVE_GUDEV
-	/* the net subsystem is not a real hardware class */
-	if (udev_device != NULL &&
-	    g_strcmp0(g_udev_device_get_subsystem(udev_device), "net") == 0) {
-		g_autoptr(GUdevDevice) udev_device_phys = NULL;
-		udev_device_phys = g_udev_device_get_parent(udev_device);
-		fu_udev_device_set_dev_internal(self, udev_device_phys);
-		fu_device_set_metadata(FU_DEVICE(self),
-				       "ParentSubsystem",
-				       g_udev_device_get_subsystem(udev_device));
-	} else {
-		fu_udev_device_set_dev_internal(self, udev_device);
-	}
-#endif
-
-	/* set new device */
-	if (priv->udev_device == NULL)
-		return;
-#ifdef HAVE_GUDEV
-	fu_udev_device_set_subsystem(self, g_udev_device_get_subsystem(priv->udev_device));
-	fu_udev_device_set_driver(self, g_udev_device_get_driver(priv->udev_device));
-	fu_udev_device_set_device_file(self, g_udev_device_get_device_file(priv->udev_device));
-	fu_udev_device_set_devtype(self, g_udev_device_get_devtype(priv->udev_device));
-
-	/* so we can display something sensible for unclaimed devices */
-	fu_device_set_backend_id(FU_DEVICE(self), g_udev_device_get_sysfs_path(priv->udev_device));
-#endif
-}
-
 /**
  * fu_udev_device_get_subsystem_depth:
  * @self: a #FuUdevDevice
@@ -725,11 +665,7 @@ fu_udev_device_probe_complete(FuDevice *device)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-
-	/* free memory */
 	g_hash_table_remove_all(priv->properties);
-	g_clear_object(&priv->udev_device);
-	priv->udev_device_cleared = TRUE;
 }
 
 static gboolean
@@ -843,13 +779,10 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 	FuUdevDevice *uself = FU_UDEV_DEVICE(self);
 	FuUdevDevice *udonor = FU_UDEV_DEVICE(donor);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(uself);
-	FuUdevDevicePrivate *priv_donor = GET_PRIVATE(udonor);
 
 	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
 	g_return_if_fail(FU_IS_UDEV_DEVICE(donor));
 
-	if (priv_donor->udev_device != NULL)
-		fu_udev_device_set_dev(uself, priv_donor->udev_device);
 	if (priv->device_file == NULL)
 		fu_udev_device_set_device_file(uself, fu_udev_device_get_device_file(udonor));
 	if (priv->subsystem == NULL)
@@ -878,36 +811,6 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 	}
 	if (priv->revision == 0x0)
 		fu_udev_device_set_revision(uself, fu_udev_device_get_revision(udonor));
-}
-
-/**
- * fu_udev_device_get_dev:
- * @self: a #FuUdevDevice
- *
- * Gets the #GUdevDevice.
- *
- * NOTE: If a plugin calls this after the `->probe()` and `->setup()` phases then the
- * %FU_DEVICE_PRIVATE_FLAG_NO_PROBE_COMPLETE flag should be set on the device to avoid a warning.
- *
- * Returns: (transfer none): a #GUdevDevice, or %NULL
- *
- * Since: 1.1.2
- **/
-GUdevDevice *
-fu_udev_device_get_dev(FuUdevDevice *self)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
-#ifndef SUPPORTED_BUILD
-	if (priv->udev_device == NULL && priv->udev_device_cleared) {
-		g_autofree gchar *str = fu_device_to_string(FU_DEVICE(self));
-		g_warning("GUdevDevice is not available post-probe, use "
-			  "FU_DEVICE_PRIVATE_FLAG_NO_PROBE_COMPLETE in %s plugin to opt-out: %s",
-			  fu_device_get_plugin(FU_DEVICE(self)),
-			  str);
-	}
-#endif
-	return priv->udev_device;
 }
 
 /**
@@ -1236,11 +1139,10 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 		   g_strcmp0(subsystem, "i2c") == 0 || g_strcmp0(subsystem, "platform") == 0 ||
 		   g_strcmp0(subsystem, "mtd") == 0 || g_strcmp0(subsystem, "block") == 0 ||
 		   g_strcmp0(subsystem, "gpio") == 0 || g_strcmp0(subsystem, "video4linux") == 0) {
-		g_autofree gchar *prop_id =
-		    fu_udev_device_read_property(udev_device, "DEVPATH", error);
-		if (prop_id == NULL)
-			return FALSE;
-		physical_id = g_strdup_printf("DEVPATH=%s", prop_id);
+		g_auto(GStrv) sysfs_parts =
+		    g_strsplit(fu_udev_device_get_sysfs_path(udev_device), "/sys", 2);
+		if (sysfs_parts[1] != NULL)
+			physical_id = g_strdup_printf("DEVPATH=%s", sysfs_parts[1]);
 	} else if (g_strcmp0(subsystem, "hid") == 0) {
 		g_autofree gchar *prop_id =
 		    fu_udev_device_read_property(udev_device, "HID_PHYS", error);
@@ -1385,34 +1287,9 @@ fu_udev_device_open(FuDevice *device, GError **error)
 static gboolean
 fu_udev_device_rescan(FuDevice *device, GError **error)
 {
-#ifdef HAVE_GUDEV
-	FuUdevDevice *self = FU_UDEV_DEVICE(device);
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	const gchar *sysfs_path;
-	g_autoptr(GUdevClient) udev_client = g_udev_client_new(NULL); /* nocheck:blocked */
-	g_autoptr(GUdevDevice) udev_device = NULL;
-
-	/* never set */
-	if (priv->udev_device == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "rescan with no previous device");
-		return FALSE;
-	}
-	sysfs_path = g_udev_device_get_sysfs_path(priv->udev_device);
-	udev_device = g_udev_client_query_by_sysfs_path(udev_client, sysfs_path);
-	if (udev_device == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "rescan could not find device %s",
-			    sysfs_path);
-		return FALSE;
-	}
-	fu_udev_device_set_dev(self, udev_device);
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
 	fu_device_probe_invalidate(device);
-#endif
 	return fu_device_probe(device, error);
 }
 
@@ -2092,28 +1969,6 @@ fu_udev_device_read_property(FuUdevDevice *self, const gchar *key, GError **erro
 	}
 	value = g_strdup(g_hash_table_lookup(priv->properties, key));
 	if (value == NULL) {
-#ifdef HAVE_GUDEV
-		/* retain fallback until we merge the improved probing branch */
-		if (priv->udev_device != NULL) {
-			value = g_strdup(
-			    g_udev_device_get_property(priv->udev_device, /* nocheck:blocked */
-						       key));
-			if (value != NULL) {
-				g_debug("found udev property %s=%s not in %s/uevent",
-					key,
-					value,
-					fu_udev_device_get_sysfs_path(self));
-			}
-		}
-#else
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "not supported as <gudev.h> is unavailable");
-		return NULL;
-#endif
-	}
-	if (value == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_FOUND,
@@ -2261,9 +2116,6 @@ fu_udev_device_get_property(GObject *object, guint prop_id, GValue *value, GPara
 	FuUdevDevice *self = FU_UDEV_DEVICE(object);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	switch (prop_id) {
-	case PROP_UDEV_DEVICE:
-		g_value_set_object(value, priv->udev_device);
-		break;
 	case PROP_SUBSYSTEM:
 		g_value_set_string(value, priv->subsystem);
 		break;
@@ -2290,9 +2142,6 @@ fu_udev_device_set_property(GObject *object, guint prop_id, const GValue *value,
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(object);
 	switch (prop_id) {
-	case PROP_UDEV_DEVICE:
-		fu_udev_device_set_dev(self, g_value_get_object(value));
-		break;
 	case PROP_SUBSYSTEM:
 		fu_udev_device_set_subsystem(self, g_value_get_string(value));
 		break;
@@ -2326,8 +2175,6 @@ fu_udev_device_finalize(GObject *object)
 	g_free(priv->bind_id);
 	g_free(priv->driver);
 	g_free(priv->device_file);
-	if (priv->udev_device != NULL)
-		g_object_unref(priv->udev_device);
 	if (priv->io_channel != NULL)
 		g_object_unref(priv->io_channel);
 
@@ -2380,20 +2227,6 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 					       g_cclosure_marshal_VOID__VOID,
 					       G_TYPE_NONE,
 					       0);
-
-	/**
-	 * FuUdevDevice:udev-device:
-	 *
-	 * The low-level GUdevDevice.
-	 *
-	 * Since: 1.1.2
-	 */
-	pspec = g_param_spec_object("udev-device",
-				    NULL,
-				    NULL,
-				    G_UDEV_TYPE_DEVICE,
-				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
-	g_object_class_install_property(object_class, PROP_UDEV_DEVICE, pspec);
 
 	/**
 	 * FuUdevDevice:subsystem:
@@ -2476,23 +2309,6 @@ fu_udev_device_codec_iface_init(FwupdCodecInterface *iface)
 /**
  * fu_udev_device_new:
  * @ctx: (nullable): a #FuContext
- * @udev_device: a #GUdevDevice
- *
- * Creates a new #FuUdevDevice.
- *
- * Returns: (transfer full): a #FuUdevDevice
- *
- * Since: 1.8.2
- **/
-FuUdevDevice *
-fu_udev_device_new(FuContext *ctx, GUdevDevice *udev_device)
-{
-	return g_object_new(FU_TYPE_UDEV_DEVICE, "context", ctx, "udev-device", udev_device, NULL);
-}
-
-/**
- * fu_udev_device_new_from_sysfs_path:
- * @ctx: (nullable): a #FuContext
  * @sysfs_path: a sysfs path
  *
  * Creates a new #FuUdevDevice.
@@ -2502,7 +2318,7 @@ fu_udev_device_new(FuContext *ctx, GUdevDevice *udev_device)
  * Since: 2.0.0
  **/
 FuUdevDevice *
-fu_udev_device_new_from_sysfs_path(FuContext *ctx, const gchar *sysfs_path)
+fu_udev_device_new(FuContext *ctx, const gchar *sysfs_path)
 {
 	return g_object_new(FU_TYPE_UDEV_DEVICE, "context", ctx, "backend-id", sysfs_path, NULL);
 }

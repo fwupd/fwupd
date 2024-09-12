@@ -6,13 +6,6 @@
 
 #pragma once
 
-#ifdef HAVE_GUDEV
-#include <gudev/gudev.h>
-#else
-#define G_UDEV_TYPE_DEVICE G_TYPE_OBJECT
-#define GUdevDevice	   GObject
-#endif
-
 #include "fu-device.h"
 #include "fu-io-channel.h"
 
@@ -44,10 +37,6 @@ typedef enum {
  */
 #define FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT 50 /* ms */
 
-FuUdevDevice *
-fu_udev_device_new(FuContext *ctx, GUdevDevice *udev_device) G_GNUC_NON_NULL(1, 2);
-GUdevDevice *
-fu_udev_device_get_dev(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 const gchar *
 fu_udev_device_get_device_file(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 void
