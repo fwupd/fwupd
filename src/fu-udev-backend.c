@@ -109,7 +109,7 @@ fu_udev_backend_create_ddc_proxy(FuUdevBackend *self, FuDevice *device)
 	proxy = fu_udev_backend_create_device(self, proxy_udev_device);
 	fu_device_add_private_flag(FU_DEVICE(proxy), FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS);
 	if (!fu_device_probe(FU_DEVICE(proxy), &error_local)) {
-		g_warning("failed to probe DRM DDC device: %s", error_local->message);
+		g_info("failed to probe DRM DDC device: %s", error_local->message);
 		return;
 	}
 	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
