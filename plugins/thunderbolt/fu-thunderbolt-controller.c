@@ -80,7 +80,6 @@ static gboolean
 fu_thunderbolt_controller_probe(FuDevice *device, GError **error)
 {
 	FuThunderboltController *self = FU_THUNDERBOLT_CONTROLLER(device);
-	const gchar *parent_name = NULL;
 	g_autofree gchar *attr_unique_id = NULL;
 	g_autoptr(FuDevice) device_parent = NULL;
 
@@ -93,10 +92,12 @@ fu_thunderbolt_controller_probe(FuDevice *device, GError **error)
 	    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self),
 							"thunderbolt:thunderbolt_domain",
 							NULL);
-	if (device_parent != NULL)
-		parent_name = fu_device_get_name(device_parent);
-	if (parent_name != NULL && g_str_has_prefix(parent_name, "domain"))
-		self->controller_kind = FU_THUNDERBOLT_CONTROLLER_KIND_HOST;
+	if (device_parent != NULL) {
+		g_autofree gchar *parent_name = g_path_get_basename(
+		    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device_parent)));
+		if (g_str_has_prefix(parent_name, "domain"))
+			self->controller_kind = FU_THUNDERBOLT_CONTROLLER_KIND_HOST;
+	}
 
 	attr_unique_id = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
 						   "unique_id",
