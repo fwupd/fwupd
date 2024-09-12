@@ -113,7 +113,7 @@ fu_udev_device_get_sysfs_attr_as_uint16(FuUdevDevice *self, const gchar *name)
 	if (tmp == NULL)
 		return 0x0;
 	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, &error_local)) {
-		g_warning("reading %s for %s was invalid: %s", name, tmp, error_local->message);
+		g_debug("reading %s for %s was invalid: %s", name, tmp, error_local->message);
 		return 0x0;
 	}
 	return tmp64;
@@ -130,7 +130,7 @@ fu_udev_device_get_sysfs_attr_as_uint8(FuUdevDevice *self, const gchar *name)
 	if (tmp == NULL)
 		return 0x0;
 	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, &error_local)) {
-		g_warning("reading %s for %s was invalid: %s", name, tmp, error_local->message);
+		g_debug("reading %s for %s was invalid: %s", name, tmp, error_local->message);
 		return 0x0;
 	}
 	return tmp64;
