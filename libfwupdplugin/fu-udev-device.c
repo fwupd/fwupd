@@ -388,7 +388,16 @@ fu_udev_device_set_cls(FuUdevDevice *self, guint32 class)
 	priv->class = class;
 }
 
-static void
+/**
+ * fu_udev_device_set_revision:
+ * @self: a #FuUdevDevice
+ * @revision: integer
+ *
+ * Sets the device revision.
+ *
+ * Since: 2.0.0
+ **/
+void
 fu_udev_device_set_revision(FuUdevDevice *self, guint8 revision)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);

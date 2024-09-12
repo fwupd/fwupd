@@ -130,6 +130,8 @@ guint16
 fu_udev_device_get_subsystem_model(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 guint8
 fu_udev_device_get_revision(FuUdevDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_udev_device_set_revision(FuUdevDevice *self, guint8 revision);
 guint64
 fu_udev_device_get_number(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 guint
