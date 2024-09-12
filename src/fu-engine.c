@@ -7416,7 +7416,8 @@ fu_engine_backend_device_added(FuEngine *self, FuDevice *device, FuProgress *pro
 	/* add any extra quirks */
 	fu_device_set_context(device, self->ctx);
 	if (!fu_device_probe(device, &error_local)) {
-		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) &&
+		    !g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 			g_warning("failed to probe device %s: %s",
 				  fu_device_get_backend_id(device),
 				  error_local->message);

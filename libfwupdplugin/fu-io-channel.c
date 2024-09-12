@@ -425,7 +425,7 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 	if (buf->len == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
-			    FWUPD_ERROR_READ,
+			    FWUPD_ERROR_TIMED_OUT,
 			    "no data received from device in %ums",
 			    timeout_ms);
 		return NULL;
