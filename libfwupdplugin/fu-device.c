@@ -5060,8 +5060,6 @@ fu_device_probe_complete(FuDevice *self)
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_NO_PROBE_COMPLETE))
-		return;
 	if (device_class->probe_complete != NULL)
 		device_class->probe_complete(self);
 }
@@ -6952,7 +6950,6 @@ fu_device_init(FuDevice *self)
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING);
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER);
-	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_NO_PROBE_COMPLETE);
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE);
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
 	fu_device_register_private_flag(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);

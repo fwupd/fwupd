@@ -434,18 +434,6 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER "ignore-system-power"
 /**
- * FU_DEVICE_PRIVATE_FLAG_NO_PROBE_COMPLETE:
- *
- * Do not deallocate resources typically only required during `->probe`.
- *
- * Note: the daemon will not actually free or unref device resources, but the plugin should
- * still use this flag. After a a few releases and a lot of testing we'll actually flip the
- * switch.
- *
- * Since: 1.8.12
- */
-#define FU_DEVICE_PRIVATE_FLAG_NO_PROBE_COMPLETE "no-probe-complete"
-/**
  * FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE:
  *
  * Save the cabinet archive to persistent storage remote before starting the update process.

@@ -115,7 +115,6 @@ fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_SYNAPTICS_MST_DEVICE_FLAG_IS_SOMEWHAT_EMULATED);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_PROBE_COMPLETE);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 
 	/* this is set from ->incorporate() */
