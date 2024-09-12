@@ -1108,7 +1108,6 @@ fu_udev_device_get_revision(FuUdevDevice *self)
 	return priv->revision;
 }
 
-#ifdef HAVE_GUDEV
 static gchar *
 fu_udev_device_get_parent_subsystems(FuUdevDevice *self)
 {
@@ -1145,7 +1144,6 @@ fu_udev_device_get_parent_subsystems(FuUdevDevice *self)
 		g_string_truncate(str, str->len - 1);
 	return g_string_free(str, FALSE);
 }
-#endif
 
 /* private */
 gboolean
@@ -1188,21 +1186,14 @@ fu_udev_device_match_subsystem(FuUdevDevice *self, const gchar *subsystem)
 gboolean
 fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GError **error)
 {
-#ifdef HAVE_GUDEV
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	const gchar *tmp;
 	const gchar *subsystem = NULL;
 	g_autofree gchar *physical_id = NULL;
 	g_auto(GStrv) split = NULL;
-	g_autoptr(GUdevDevice) udev_device = NULL;
+	g_autoptr(FuUdevDevice) udev_device = NULL;
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
 	g_return_val_if_fail(subsystems != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* nothing to do */
-	if (priv->udev_device == NULL)
-		return TRUE;
 
 	/* look for each subsystem[:devtype] in turn */
 	split = g_strsplit(subsystems, ",", -1);
@@ -1211,7 +1202,7 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 
 		/* do we match */
 		if (fu_udev_device_match_subsystem(self, split[i])) {
-			udev_device = g_object_ref(fu_udev_device_get_dev(self));
+			udev_device = g_object_ref(self);
 			break;
 		}
 
@@ -1219,7 +1210,7 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 		device_parent = FU_UDEV_DEVICE(
 		    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), split[i], NULL));
 		if (device_parent != NULL) {
-			udev_device = g_object_ref(fu_udev_device_get_dev(device_parent));
+			udev_device = g_object_ref(device_parent);
 			break;
 		}
 	}
@@ -1234,51 +1225,34 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 		return FALSE;
 	}
 
-	subsystem = g_udev_device_get_subsystem(udev_device);
+	subsystem = fu_udev_device_get_subsystem(udev_device);
 	if (g_strcmp0(subsystem, "pci") == 0) {
-		tmp =
-		    g_udev_device_get_property(udev_device, "PCI_SLOT_NAME"); /* nocheck:blocked */
-		if (tmp == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_FOUND,
-					    "failed to find PCI_SLOT_NAME");
+		g_autofree gchar *prop_id =
+		    fu_udev_device_read_property(udev_device, "PCI_SLOT_NAME", error);
+		if (prop_id == NULL)
 			return FALSE;
-		}
-		physical_id = g_strdup_printf("PCI_SLOT_NAME=%s", tmp);
+		physical_id = g_strdup_printf("PCI_SLOT_NAME=%s", prop_id);
 	} else if (g_strcmp0(subsystem, "usb") == 0 || g_strcmp0(subsystem, "mmc") == 0 ||
 		   g_strcmp0(subsystem, "i2c") == 0 || g_strcmp0(subsystem, "platform") == 0 ||
 		   g_strcmp0(subsystem, "mtd") == 0 || g_strcmp0(subsystem, "block") == 0 ||
 		   g_strcmp0(subsystem, "gpio") == 0 || g_strcmp0(subsystem, "video4linux") == 0) {
-		tmp = g_udev_device_get_property(udev_device, "DEVPATH"); /* nocheck:blocked */
-		if (tmp == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_FOUND,
-					    "failed to find DEVPATH");
+		g_autofree gchar *prop_id =
+		    fu_udev_device_read_property(udev_device, "DEVPATH", error);
+		if (prop_id == NULL)
 			return FALSE;
-		}
-		physical_id = g_strdup_printf("DEVPATH=%s", tmp);
+		physical_id = g_strdup_printf("DEVPATH=%s", prop_id);
 	} else if (g_strcmp0(subsystem, "hid") == 0) {
-		tmp = g_udev_device_get_property(udev_device, "HID_PHYS"); /* nocheck:blocked */
-		if (tmp == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_FOUND,
-					    "failed to find HID_PHYS");
+		g_autofree gchar *prop_id =
+		    fu_udev_device_read_property(udev_device, "HID_PHYS", error);
+		if (prop_id == NULL)
 			return FALSE;
-		}
-		physical_id = g_strdup_printf("HID_PHYS=%s", tmp);
+		physical_id = g_strdup_printf("HID_PHYS=%s", prop_id);
 	} else if (g_strcmp0(subsystem, "drm_dp_aux_dev") == 0) {
-		tmp = g_udev_device_get_property(udev_device, "DEVNAME"); /* nocheck:blocked */
-		if (tmp == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_FOUND,
-					    "failed to find DEVNAME");
+		g_autofree gchar *prop_id =
+		    fu_udev_device_read_property(udev_device, "DEVNAME", error);
+		if (prop_id == NULL)
 			return FALSE;
-		}
-		physical_id = g_strdup_printf("DEVNAME=%s", tmp);
+		physical_id = g_strdup_printf("DEVNAME=%s", prop_id);
 	} else {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -1291,13 +1265,6 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 	/* success */
 	fu_device_set_physical_id(FU_DEVICE(self), physical_id);
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Not supported as <gudev.h> is unavailable");
-	return FALSE;
-#endif
 }
 
 /**
