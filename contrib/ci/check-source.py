@@ -198,6 +198,7 @@ class Checker:
             "g_assert(": "Use g_set_error() or g_return_val_if_fail() instead",
             "g_udev_device_get_sysfs_attr(": "Use fu_udev_device_read_sysfs() instead",
             "g_udev_device_get_property(": "Use fu_udev_device_read_property() instead",
+            "g_udev_client_new(": "Use fu_device_get_backend_parent_with_subsystem() instead",
             "HIDIOCSFEATURE": "Use fu_hidraw_device_set_feature() instead",
             "HIDIOCGFEATURE": "Use fu_hidraw_device_get_feature() instead",
             "|= 1 <<": "Use FU_BIT_SET() instead",
@@ -377,17 +378,12 @@ def test_files() -> int:
     rc: int = 0
 
     checker = Checker()
-    for fn in sorted(glob.glob("**/*.[c|h]", recursive=True)):
-        if fn.startswith("subprojects"):
-            continue
-        if fn.startswith("build"):
-            continue
-        if fn.startswith("dist"):
-            continue
-        if fn.startswith("contrib/ci"):
-            continue
-        if fn.startswith("venv"):
-            continue
+    for fn in (
+        glob.glob("libfwupd/*.[c|h]")
+        + glob.glob("libfwupdplugin/*.[c|h]")
+        + glob.glob("plugins/*/*.[c|h]")
+        + glob.glob("src/*.[c|h]")
+    ):
         checker.test_file(fn)
 
     # show issues

@@ -14,3 +14,6 @@ G_DECLARE_FINAL_TYPE(FuSynapticsMstDevice,
 		     FU,
 		     SYNAPTICS_MST_DEVICE,
 		     FuDpauxDevice)
+
+/* FIXME remove when emulation works */
+#define FU_SYNAPTICS_MST_DEVICE_FLAG_IS_SOMEWHAT_EMULATED "is-somewhat-emulated"

@@ -65,6 +65,8 @@ fu_test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 				   "dpcd-ieee-oui",
 				   SYNAPTICS_IEEE_OUI,
 				   NULL);
+		fu_device_add_private_flag(FU_DEVICE(dev),
+					   FU_SYNAPTICS_MST_DEVICE_FLAG_IS_SOMEWHAT_EMULATED);
 		g_debug("creating drm_dp_aux_dev object backed by %s", fn);
 		locker = fu_device_locker_new(dev, &error_local);
 		if (locker == NULL) {

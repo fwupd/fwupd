@@ -865,10 +865,11 @@ fu_usb_device_load_descriptor_stream(FuUsbDevice *self, const gchar *basename, G
 	 * 0x10011 as a bufsz weirdly */
 	fn = g_build_filename(fu_device_get_backend_id(FU_DEVICE(self)), basename, NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no descriptors");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no descriptors, expected %s",
+			    fn);
 		return NULL;
 	}
 	blob = fu_bytes_get_contents(fn, error);
@@ -1091,7 +1092,6 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 {
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	guint16 release;
-	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(GError) error_bos = NULL;
 	g_autoptr(GPtrArray) intfs = NULL;
 
@@ -1223,9 +1223,8 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 guint16
 fu_usb_device_get_vid(FuUsbDevice *self)
 {
-	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), 0x0000);
-	return priv->desc.idVendor;
+	return fu_udev_device_get_vendor(FU_UDEV_DEVICE(self));
 }
 
 /**
@@ -1241,9 +1240,8 @@ fu_usb_device_get_vid(FuUsbDevice *self)
 guint16
 fu_usb_device_get_pid(FuUsbDevice *self)
 {
-	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), 0x0000);
-	return priv->desc.idProduct;
+	return fu_udev_device_get_model(FU_UDEV_DEVICE(self));
 }
 
 /**
@@ -1318,7 +1316,7 @@ fu_usb_device_incorporate(FuDevice *device, FuDevice *device_donor)
 	fu_usb_device_set_dev(self, priv_donor->usb_device);
 
 	/* all descriptor fields */
-	if (priv->desc.idVendor == 0x0)
+	if (priv->desc.bLength == 0x0)
 		memcpy(&priv->desc, &priv_donor->desc, sizeof(priv->desc)); /* nocheck:blocked */
 
 	if (priv->interfaces->len == 0) {
@@ -1744,8 +1742,8 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 	priv->desc.bDeviceSubClass = fu_usb_device_hdr_get_device_sub_class(st);
 	priv->desc.bDeviceProtocol = fu_usb_device_hdr_get_device_protocol(st);
 	priv->desc.bMaxPacketSize0 = fu_usb_device_hdr_get_max_packet_size0(st);
-	priv->desc.idVendor = fu_usb_device_hdr_get_vendor(st);
-	priv->desc.idProduct = fu_usb_device_hdr_get_product(st);
+	fu_udev_device_set_vendor(FU_UDEV_DEVICE(self), fu_usb_device_hdr_get_vendor(st));
+	fu_udev_device_set_model(FU_UDEV_DEVICE(self), fu_usb_device_hdr_get_product(st));
 	priv->desc.bcdDevice = fu_usb_device_hdr_get_device(st);
 	priv->desc.iManufacturer = fu_usb_device_hdr_get_manufacturer_idx(st);
 	priv->desc.iProduct = fu_usb_device_hdr_get_product_idx(st);
@@ -2714,9 +2712,12 @@ fu_usb_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 		fu_device_set_created_usec(FU_DEVICE(self), g_date_time_to_unix_usec(created_new));
 	}
 #endif
-	priv->desc.idVendor = json_object_get_int_member_with_default(json_object, "IdVendor", 0x0);
-	priv->desc.idProduct =
-	    json_object_get_int_member_with_default(json_object, "IdProduct", 0x0);
+	fu_udev_device_set_vendor(
+	    FU_UDEV_DEVICE(self),
+	    json_object_get_int_member_with_default(json_object, "IdVendor", 0x0));
+	fu_udev_device_set_model(
+	    FU_UDEV_DEVICE(self),
+	    json_object_get_int_member_with_default(json_object, "IdProduct", 0x0));
 	priv->desc.bcdDevice = json_object_get_int_member_with_default(json_object, "Device", 0x0);
 	priv->desc.bcdUSB = json_object_get_int_member_with_default(json_object, "USB", 0x0);
 	priv->desc.iManufacturer =
@@ -2829,10 +2830,16 @@ fu_usb_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags 
 		fwupd_codec_json_append(builder, "Created", str);
 	}
 #endif
-	if (priv->desc.idVendor != 0)
-		fwupd_codec_json_append_int(builder, "IdVendor", priv->desc.idVendor);
-	if (priv->desc.idProduct != 0)
-		fwupd_codec_json_append_int(builder, "IdProduct", priv->desc.idProduct);
+	if (fu_udev_device_get_vendor(FU_UDEV_DEVICE(self)) != 0) {
+		fwupd_codec_json_append_int(builder,
+					    "IdVendor",
+					    fu_udev_device_get_vendor(FU_UDEV_DEVICE(self)));
+	}
+	if (fu_udev_device_get_model(FU_UDEV_DEVICE(self)) != 0) {
+		fwupd_codec_json_append_int(builder,
+					    "IdProduct",
+					    fu_udev_device_get_model(FU_UDEV_DEVICE(self)));
+	}
 	if (priv->desc.bcdDevice != 0)
 		fwupd_codec_json_append_int(builder, "Device", priv->desc.bcdDevice);
 	if (priv->desc.bcdUSB != 0)

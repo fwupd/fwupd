@@ -25,7 +25,7 @@ fu_test_mtd_device_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GRand) rand = g_rand_new_with_seed(0);
-	g_autoptr(GUdevClient) udev_client = g_udev_client_new(NULL);
+	g_autoptr(GUdevClient) udev_client = g_udev_client_new(NULL); /* nocheck:blocked */
 	g_autoptr(GUdevDevice) udev_device = NULL;
 	const gchar *dev_name;
 

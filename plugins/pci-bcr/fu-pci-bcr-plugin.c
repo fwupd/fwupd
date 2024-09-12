@@ -176,17 +176,13 @@ fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin,
 	}
 
 	/* interesting device? */
-	if (!FU_IS_UDEV_DEVICE(device))
-		return TRUE;
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "pci") != 0)
+	if (!FU_IS_PCI_DEVICE(device))
 		return TRUE;
 
 	/* open the config */
 	device_file =
 	    g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)), "config", NULL);
 	fu_udev_device_set_device_file(FU_UDEV_DEVICE(device), device_file);
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
-		return FALSE;
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(device), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)

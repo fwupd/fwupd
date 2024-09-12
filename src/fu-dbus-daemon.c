@@ -1997,7 +1997,6 @@ fu_dbus_daemon_method_inhibit(FuDbusDaemon *self,
 {
 	FuDbusDaemonSystemInhibit *inhibit;
 	const gchar *reason = NULL;
-	g_autoptr(GError) error = NULL;
 
 	g_variant_get(parameters, "(&s)", &reason);
 

@@ -284,7 +284,14 @@ fu_nvme_device_pci_probe(FuNvmeDevice *self, GError **error)
 					      NULL))
 		return FALSE;
 	fu_device_build_instance_id(FU_DEVICE(self), error, "NVME", "VEN", "DEV", "SUBSYS", NULL);
+	fu_udev_device_set_vendor(FU_UDEV_DEVICE(self),
+				  fu_udev_device_get_vendor(FU_UDEV_DEVICE(pci_donor)));
+	fu_udev_device_set_model(FU_UDEV_DEVICE(self),
+				 fu_udev_device_get_model(FU_UDEV_DEVICE(pci_donor)));
+	fu_udev_device_set_revision(FU_UDEV_DEVICE(self),
+				    fu_udev_device_get_revision(FU_UDEV_DEVICE(pci_donor)));
 	fu_device_set_vendor(FU_DEVICE(self), fu_device_get_vendor(pci_donor));
+	fu_device_set_physical_id(FU_DEVICE(self), fu_device_get_physical_id(pci_donor));
 	fu_device_incorporate_vendor_ids(FU_DEVICE(self), pci_donor);
 
 	/* success */
@@ -307,10 +314,6 @@ fu_nvme_device_probe(FuDevice *device, GError **error)
 	/* fix up vendor name so we can remove it from the product name */
 	if (g_strcmp0(fu_device_get_vendor(FU_DEVICE(device)), "Samsung Electronics Co Ltd") == 0)
 		fu_device_set_vendor(FU_DEVICE(device), "Samsung");
-
-	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
-		return FALSE;
 
 	/* look at the PCI depth to work out if in an external enclosure */
 	self->pci_depth = fu_udev_device_get_subsystem_depth(FU_UDEV_DEVICE(device), "pci");

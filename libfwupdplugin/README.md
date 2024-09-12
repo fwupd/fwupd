@@ -144,3 +144,5 @@ Remember: Plugins should be upstream!
 * `FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION`: Use `FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION` instead
 * `FWUPD_DEVICE_FLAG_SKIPS_RESTART`: Use `FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART` instead
 * `FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT`: Use `fu_device_get_backend_parent_with_subsystem()` and copy properties instead
+* `fu_udev_device_is_pci_base_cls`: Put logic in `FuPciDevice` if needed, but consider what you are doing
+* `fu_udev_device_get_cls`: Put logic in `FuPciDevice` if needed, or use a quirk instead

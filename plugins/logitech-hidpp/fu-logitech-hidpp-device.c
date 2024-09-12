@@ -1415,8 +1415,6 @@ fu_logitech_hidpp_device_new(FuUdevDevice *parent)
 	self = g_object_new(FU_TYPE_HIDPP_DEVICE,
 			    "proxy",
 			    parent,
-			    "udev-device",
-			    fu_udev_device_get_dev(parent),
 			    "device-file",
 			    fu_udev_device_get_device_file(parent),
 			    NULL);

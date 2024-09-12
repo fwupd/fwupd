@@ -40,8 +40,6 @@ fu_algoltek_usbcr_firmware_parse(FuFirmware *firmware,
 	guint16 emmc_ver = 0;
 	guint16 fw_addr = 0;
 	guint16 fw_len = 0;
-	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
-	g_autoptr(GInputStream) stream_payload = NULL;
 
 	/* emmc version */
 	if (!fu_input_stream_read_u16(stream,

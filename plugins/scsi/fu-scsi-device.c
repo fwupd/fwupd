@@ -48,6 +48,8 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
 	g_autofree gchar *attr_removable = NULL;
 	g_autoptr(FuDevice) ufshci_parent = NULL;
+	g_autoptr(FuDevice) device_target = NULL;
+	g_autoptr(FuDevice) device_scsi = NULL;
 	const gchar *subsystem_parents[] = {"pci", "platform", NULL};
 
 	/* check is valid */
@@ -132,8 +134,55 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 	}
 
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "scsi:scsi_target", error);
+	/* scsi_target */
+	device_target =
+	    fu_device_get_backend_parent_with_subsystem(device, "scsi:scsi_target", NULL);
+	if (device_target != NULL) {
+		g_auto(GStrv) sysfs_parts = NULL;
+		sysfs_parts =
+		    g_strsplit(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device_target)),
+			       "/sys",
+			       2);
+		if (sysfs_parts[1] != NULL) {
+			g_autofree gchar *physical_id =
+			    g_strdup_printf("DEVPATH=%s", sysfs_parts[1]);
+			fu_device_set_physical_id(device, physical_id);
+		}
+	}
+
+	/* scsi_device */
+	device_scsi = fu_device_get_backend_parent_with_subsystem(device, "scsi:scsi_device", NULL);
+	if (device_scsi != NULL) {
+		if (fu_device_get_vendor(device) == NULL) {
+			g_autofree gchar *attr_vendor =
+			    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device_scsi),
+						      "vendor",
+						      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						      NULL);
+			if (attr_vendor != NULL)
+				fu_device_set_vendor(device, attr_vendor);
+		}
+		if (fu_device_get_name(device) == NULL) {
+			g_autofree gchar *attr_model =
+			    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device_scsi),
+						      "model",
+						      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						      NULL);
+			if (attr_model != NULL)
+				fu_device_set_name(device, attr_model);
+		}
+	}
+
+	/* fake something as we cannot use ioctls */
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		fu_device_add_instance_str(device, "VEN", "fwupd");
+		fu_device_add_instance_str(device, "DEV", "DEVICE");
+		if (!fu_device_build_instance_id(device, error, "SCSI", "VEN", "DEV", NULL))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static FuFirmware *

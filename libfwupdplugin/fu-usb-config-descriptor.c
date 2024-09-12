@@ -65,7 +65,6 @@ static void
 fu_usb_config_descriptor_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
 	FuUsbConfigDescriptor *self = FU_USB_CONFIG_DESCRIPTOR(codec);
-	g_autoptr(GBytes) bytes = NULL;
 
 	/* optional properties */
 	if (self->configuration != 0) {

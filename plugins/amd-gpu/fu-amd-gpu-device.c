@@ -21,7 +21,7 @@
 #include "fu-amd-gpu-psp-firmware.h"
 
 struct _FuAmdGpuDevice {
-	FuUdevDevice parent_instance;
+	FuPciDevice parent_instance;
 	gchar *vbios_pn;
 	guint32 drm_major;
 	guint32 drm_minor;
@@ -32,7 +32,7 @@ struct _FuAmdGpuDevice {
 #define PSPVBFLASH_IN_PROGRESS 0x1
 #define PSPVBFLASH_SUCCESS     0x80000000
 
-G_DEFINE_TYPE(FuAmdGpuDevice, fu_amd_gpu_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE(FuAmdGpuDevice, fu_amd_gpu_device, FU_TYPE_PCI_DEVICE)
 
 static void
 fu_amd_gpu_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -80,8 +80,6 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 
 	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
 	if (!fu_amd_gpu_device_set_device_file(device, base, error))
-		return FALSE;
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
 		return FALSE;
 
 	/* APUs don't have 'rom' sysfs file */
