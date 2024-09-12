@@ -540,7 +540,6 @@ fu_huddly_usb_device_write_firmware(FuDevice *device,
 				    GError **error)
 {
 	FuHuddlyUsbDevice *self = FU_HUDDLY_USB_DEVICE(device);
-	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

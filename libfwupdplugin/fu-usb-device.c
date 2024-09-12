@@ -1092,7 +1092,6 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 {
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	guint16 release;
-	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(GError) error_bos = NULL;
 	g_autoptr(GPtrArray) intfs = NULL;
 
