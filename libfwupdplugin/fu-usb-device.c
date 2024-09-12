@@ -2867,7 +2867,7 @@ fu_usb_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags 
 	}
 
 	/* array of config descriptors */
-	if (priv->bos_descriptors->len > 0) {
+	if (priv->cfg_descriptors->len > 0) {
 		json_builder_set_member_name(builder, "UsbConfigDescriptors");
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->cfg_descriptors->len; i++) {
