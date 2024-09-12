@@ -381,18 +381,18 @@ fu_plugin_add_string(FuPlugin *self, guint idt, GString *str)
 
 	/* attributes */
 	fwupd_codec_add_string(FWUPD_CODEC(self), idt, str);
-	fwupd_codec_string_append_int(str, idt, "Order", priv->order);
-	fwupd_codec_string_append_int(str, idt, "Priority", priv->priority);
+	fwupd_codec_string_append_int(str, idt + 1, "Order", priv->order);
+	fwupd_codec_string_append_int(str, idt + 1, "Priority", priv->priority);
 	if (priv->device_gtype_default != G_TYPE_INVALID) {
 		fwupd_codec_string_append(str,
-					  idt,
+					  idt + 1,
 					  "DeviceGTypeDefault",
 					  g_type_name(priv->device_gtype_default));
 	}
 
 	/* optional */
 	if (vfuncs->to_string != NULL)
-		vfuncs->to_string(self, idt, str);
+		vfuncs->to_string(self, idt + 1, str);
 }
 
 /**
