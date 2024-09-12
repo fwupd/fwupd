@@ -1422,7 +1422,7 @@ fu_udev_device_rescan(FuDevice *device, GError **error)
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *sysfs_path;
-	g_autoptr(GUdevClient) udev_client = g_udev_client_new(NULL);
+	g_autoptr(GUdevClient) udev_client = g_udev_client_new(NULL); /* nocheck:blocked */
 	g_autoptr(GUdevDevice) udev_device = NULL;
 
 	/* never set */

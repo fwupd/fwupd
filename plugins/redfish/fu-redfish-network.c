@@ -69,7 +69,7 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 		sysfs_path = g_variant_get_string(udi, NULL);
 
 		/* get the VID and PID */
-		udev_client = g_udev_client_new(NULL);
+		udev_client = g_udev_client_new(NULL); /* nocheck:blocked */
 		udev_device = g_udev_client_query_by_sysfs_path(udev_client, sysfs_path);
 		if (udev_device == NULL)
 			return TRUE;

@@ -504,7 +504,8 @@ fu_udev_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **erro
 			const gchar *subsystem = g_ptr_array_index(udev_subsystems, i);
 			subsystems[i] = g_strdup(subsystem);
 		}
-		self->gudev_client = g_udev_client_new((const gchar *const *)subsystems);
+		self->gudev_client =
+		    g_udev_client_new((const gchar *const *)subsystems); /* nocheck:blocked */
 		g_signal_connect(G_UDEV_CLIENT(self->gudev_client),
 				 "uevent",
 				 G_CALLBACK(fu_udev_backend_uevent_cb),

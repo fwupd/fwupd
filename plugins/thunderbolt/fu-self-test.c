@@ -937,7 +937,7 @@ test_set_up(ThunderboltTest *tt, gconstpointer params)
 		return;
 	}
 
-	tt->udev_client = g_udev_client_new(udev_subsystems);
+	tt->udev_client = g_udev_client_new(udev_subsystems); /* nocheck:blocked */
 	g_assert_nonnull(tt->udev_client);
 	g_signal_connect(G_UDEV_CLIENT(tt->udev_client),
 			 "uevent",
