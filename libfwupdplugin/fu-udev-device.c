@@ -39,7 +39,6 @@
 typedef struct {
 	GUdevDevice *udev_device;
 	gboolean udev_device_cleared;
-	guint32 class;
 	guint16 vendor;
 	guint16 model;
 	guint16 subsystem_vendor;
@@ -103,23 +102,6 @@ fu_udev_device_emit_changed(FuUdevDevice *self)
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
 }
 
-static guint32
-fu_udev_device_get_sysfs_attr_as_uint32(FuUdevDevice *self, const gchar *name)
-{
-	guint64 tmp64 = 0;
-	g_autofree gchar *tmp = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	tmp = fu_udev_device_read_sysfs(self, name, FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT, NULL);
-	if (tmp == NULL)
-		return 0x0;
-	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, &error_local)) {
-		g_warning("reading %s for %s was invalid: %s", name, tmp, error_local->message);
-		return 0x0;
-	}
-	return tmp64;
-}
-
 static guint16
 fu_udev_device_get_sysfs_attr_as_uint16(FuUdevDevice *self, const gchar *name)
 {
@@ -165,7 +147,6 @@ fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "Model", priv->model);
 	fwupd_codec_string_append_hex(str, idt, "SubsystemVendor", priv->subsystem_vendor);
 	fwupd_codec_string_append_hex(str, idt, "SubsystemModel", priv->subsystem_model);
-	fwupd_codec_string_append_hex(str, idt, "Class", priv->class);
 	fwupd_codec_string_append_hex(str, idt, "Revision", priv->revision);
 	fwupd_codec_string_append_hex(str, idt, "Number", priv->number);
 	fwupd_codec_string_append(str, idt, "Subsystem", priv->subsystem);
@@ -380,14 +361,6 @@ fu_udev_device_set_subsystem_model(FuUdevDevice *self, guint16 subsystem_model)
 	priv->subsystem_model = subsystem_model;
 }
 
-static void
-fu_udev_device_set_cls(FuUdevDevice *self, guint32 class)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
-	priv->class = class;
-}
-
 /**
  * fu_udev_device_set_revision:
  * @self: a #FuUdevDevice
@@ -491,26 +464,8 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint16(self, "vendor");
 	priv->model = fu_udev_device_get_sysfs_attr_as_uint16(self, "device");
 	priv->revision = fu_udev_device_get_sysfs_attr_as_uint8(self, "revision");
-	priv->class = fu_udev_device_get_sysfs_attr_as_uint32(self, "class");
 	priv->subsystem_vendor = fu_udev_device_get_sysfs_attr_as_uint16(self, "subsystem_vendor");
 	priv->subsystem_model = fu_udev_device_get_sysfs_attr_as_uint16(self, "subsystem_device");
-
-	/* if the device is a GPU try to fetch it from vbios_version */
-	if (g_strcmp0(priv->subsystem, "pci") == 0 &&
-	    fu_udev_device_is_pci_base_cls(FU_UDEV_DEVICE(device), FU_PCI_BASE_CLS_DISPLAY) &&
-	    fu_device_get_version(device) == NULL) {
-		g_autofree gchar *version = NULL;
-
-		version = fu_udev_device_read_sysfs(self,
-						    "vbios_version",
-						    FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
-						    NULL);
-		if (version != NULL) {
-			fu_device_set_version(device, version);
-			fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
-			fu_device_add_icon(FU_DEVICE(self), "video-display");
-		}
-	}
 
 	/* set the version if the revision has been set */
 	if (fu_device_get_version(device) == NULL &&
@@ -921,8 +876,6 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 		fu_udev_device_set_subsystem_model(uself,
 						   fu_udev_device_get_subsystem_model(udonor));
 	}
-	if (priv->class == 0x0)
-		fu_udev_device_set_cls(uself, fu_udev_device_get_cls(udonor));
 	if (priv->revision == 0x0)
 		fu_udev_device_set_revision(uself, fu_udev_device_get_revision(udonor));
 }
@@ -1063,43 +1016,6 @@ fu_udev_device_get_number(FuUdevDevice *self)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), 0);
 	return priv->number;
-}
-
-/**
- * fu_udev_device_is_pci_base_cls:
- * @self: a #FuUdevDevice
- * @cls: #FuPciBaseCls type
- *
- * Determines whether the device matches a given pci base class type
- *
- * Since: 1.8.11
- **/
-gboolean
-fu_udev_device_is_pci_base_cls(FuUdevDevice *self, FuPciBaseCls cls)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
-	return (priv->class >> 16) == cls;
-}
-
-/**
- * fu_udev_device_get_cls:
- * @self: a #FuUdevDevice
- *
- * Gets the PCI class for a device.
- *
- * The class consists of a base class and subclass.
- *
- * Returns: a PCI class
- *
- * Since: 1.8.11
- **/
-guint32
-fu_udev_device_get_cls(FuUdevDevice *self)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), 0x0000);
-	return priv->class;
 }
 
 /**
@@ -2264,8 +2180,6 @@ fu_udev_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags
 		fwupd_codec_json_append_int(builder, "SubsystemVendor", priv->subsystem_vendor);
 	if (priv->subsystem_model != 0)
 		fwupd_codec_json_append_int(builder, "SubsystemModel", priv->subsystem_model);
-	if (priv->class != 0)
-		fwupd_codec_json_append_int(builder, "PciClass", priv->class);
 	if (priv->revision != 0)
 		fwupd_codec_json_append_int(builder, "Revision", priv->revision);
 	if (priv->number != 0)
@@ -2331,9 +2245,6 @@ fu_udev_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	tmp64 = json_object_get_int_member_with_default(json_object, "SubsystemModel", 0);
 	if (tmp64 != 0)
 		fu_udev_device_set_subsystem_model(self, tmp64);
-	tmp64 = json_object_get_int_member_with_default(json_object, "PciClass", 0);
-	if (tmp64 != 0)
-		fu_udev_device_set_cls(self, tmp64);
 	tmp64 = json_object_get_int_member_with_default(json_object, "Revision", 0);
 	if (tmp64 != 0)
 		fu_udev_device_set_revision(self, tmp64);
