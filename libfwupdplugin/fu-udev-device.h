@@ -38,56 +38,6 @@ typedef enum {
 } FuUdevDeviceIoctlFlags;
 
 /**
- * FuPciBaseCls:
- * @FU_PCI_BASE_CLS_OLD: Device from before classes were defined
- * @FU_PCI_BASE_CLS_MASS_STORAGE: Mass Storage Controller
- * @FU_PCI_BASE_CLS_NETWORK: Network controller
- * @FU_PCI_BASE_CLS_DISPLAY: Display controller
- * @FU_PCI_BASE_CLS_MULTIMEDIA: Multimedia controller
- * @FU_PCI_BASE_CLS_MEMORY: Memory controller
- * @FU_PCI_BASE_CLS_BRIDGE: Bridge
- * @FU_PCI_BASE_CLS_SIMPLE_COMMUNICATION: Simple communications controller
- * @FU_PCI_BASE_CLS_BASE: Base system peripheral
- * @FU_PCI_BASE_CLS_INPUT: Input device
- * @FU_PCI_BASE_CLS_DOCKING: Docking station
- * @FU_PCI_BASE_CLS_PROCESSORS: Processor
- * @FU_PCI_BASE_CLS_SERIAL_BUS: Serial bus controller
- * @FU_PCI_BASE_CLS_WIRELESS: Wireless controller
- * @FU_PCI_BASE_CLS_INTELLIGENT_IO: Intelligent IO controller
- * @FU_PCI_BASE_CLS_SATELLITE: Satellite controller
- * @FU_PCI_BASE_CLS_ENCRYPTION: Encryption/Decryption controller
- * @FU_PCI_BASE_CLS_SIGNAL_PROCESSING: Data acquisition and signal processing controller
- * @FU_PCI_BASE_CLS_ACCELERATOR: Processing accelerator
- * @FU_PCI_BASE_CLS_NON_ESSENTIAL: Non-essential instrumentation
- * @FU_PCI_BASE_CLS_UNDEFINED: Device doesn't fit any defined class
- *
- * PCI base class types returned by fu_udev_device_get_cls().
- **/
-typedef enum {
-	FU_PCI_BASE_CLS_OLD,
-	FU_PCI_BASE_CLS_MASS_STORAGE,
-	FU_PCI_BASE_CLS_NETWORK,
-	FU_PCI_BASE_CLS_DISPLAY,
-	FU_PCI_BASE_CLS_MULTIMEDIA,
-	FU_PCI_BASE_CLS_MEMORY,
-	FU_PCI_BASE_CLS_BRIDGE,
-	FU_PCI_BASE_CLS_SIMPLE_COMMUNICATION,
-	FU_PCI_BASE_CLS_BASE,
-	FU_PCI_BASE_CLS_INPUT,
-	FU_PCI_BASE_CLS_DOCKING,
-	FU_PCI_BASE_CLS_PROCESSORS,
-	FU_PCI_BASE_CLS_SERIAL_BUS,
-	FU_PCI_BASE_CLS_WIRELESS,
-	FU_PCI_BASE_CLS_INTELLIGENT_IO,
-	FU_PCI_BASE_CLS_SATELLITE,
-	FU_PCI_BASE_CLS_ENCRYPTION,
-	FU_PCI_BASE_CLS_SIGNAL_PROCESSING,
-	FU_PCI_BASE_CLS_ACCELERATOR,
-	FU_PCI_BASE_CLS_NON_ESSENTIAL,
-	FU_PCI_BASE_CLS_UNDEFINED = 0xff
-} FuPciBaseCls;
-
-/**
  * FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT:
  *
  * The default IO timeout when reading sysfs attributes.
@@ -112,10 +62,6 @@ void
 fu_udev_device_set_bind_id(FuUdevDevice *self, const gchar *bind_id) G_GNUC_NON_NULL(1);
 const gchar *
 fu_udev_device_get_driver(FuUdevDevice *self) G_GNUC_NON_NULL(1);
-gboolean
-fu_udev_device_is_pci_base_cls(FuUdevDevice *self, FuPciBaseCls cls) G_GNUC_NON_NULL(1);
-guint32
-fu_udev_device_get_cls(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 guint16
 fu_udev_device_get_vendor(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 void
