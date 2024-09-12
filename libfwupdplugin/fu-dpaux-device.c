@@ -75,9 +75,12 @@ fu_dpaux_device_probe(FuDevice *device, GError **error)
 		    g_path_get_basename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
 		fu_device_set_logical_id(device, logical_id);
 	}
-
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci,drm_dp_aux_dev", error))
-		return FALSE;
+	if (fu_device_get_physical_id(device) == NULL) {
+		if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device),
+						    "pci,drm_dp_aux_dev",
+						    error))
+			return FALSE;
+	}
 
 	/* only populated on real system, test suite won't have udev_device set */
 	attr_name = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
