@@ -103,7 +103,8 @@ fu_ipmi_device_send(FuIpmiDevice *self,
 			return FALSE;
 		req.msg.data = buf2;
 	}
-	fu_dump_raw(G_LOG_DOMAIN, "ipmi-send", buf2, bufsz);
+	if (buf2 != NULL)
+		fu_dump_raw(G_LOG_DOMAIN, "ipmi-send", buf2, bufsz);
 	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				    IPMICTL_SEND_COMMAND,
 				    (guint8 *)&req,
