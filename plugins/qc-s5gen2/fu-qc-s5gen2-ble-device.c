@@ -341,7 +341,7 @@ fu_qc_s5gen2_ble_device_get_features(FuQcS5gen2BleDevice *self, gboolean next, G
 
 	/* parse feature:version pairs */
 	for (gsize i = FU_STRUCT_QC_GAIA_V3_SUPPORTED_FEATURES_SIZE;
-	     i < read_len && i < sizeof(buf);
+	     i < read_len && i < sizeof(buf) - 1;
 	     i += 2) {
 		switch (buf[i]) {
 		case FU_QC_GAIA_V3_FEATURES_CORE:
