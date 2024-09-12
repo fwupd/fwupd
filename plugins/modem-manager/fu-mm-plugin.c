@@ -254,7 +254,7 @@ fu_mm_plugin_inhibit_device(FuPlugin *plugin, FuDevice *device, GError **error)
 	 * to reset itself into a fully different layout, e.g. a fastboot device */
 	if (fu_mm_device_get_update_methods(FU_MM_DEVICE(device)) &
 	    MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT) {
-		self->udev_client = g_udev_client_new(subsystems);
+		self->udev_client = g_udev_client_new(subsystems); /* nocheck:blocked */
 		g_signal_connect(G_UDEV_CLIENT(self->udev_client),
 				 "uevent",
 				 G_CALLBACK(fu_mm_plugin_udev_uevent_cb),

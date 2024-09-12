@@ -144,7 +144,7 @@ fu_mm_utils_get_port_info(const gchar *path,
 	g_autoptr(GUdevClient) client = NULL;
 	g_autoptr(GUdevDevice) dev = NULL;
 
-	client = g_udev_client_new(NULL);
+	client = g_udev_client_new(NULL); /* nocheck:blocked */
 	dev = g_udev_client_query_by_device_file(client, path);
 	if (dev == NULL) {
 		g_set_error(error,
@@ -173,7 +173,7 @@ fu_mm_utils_find_device_file(const gchar *device_sysfs_path,
 
 	g_return_val_if_fail(out_device_file != NULL, FALSE);
 
-	client = g_udev_client_new(NULL);
+	client = g_udev_client_new(NULL); /* nocheck:blocked */
 	devices = g_udev_client_query_by_subsystem(client, subsystem);
 	for (GList *l = devices; l != NULL; l = g_list_next(l)) {
 		if (g_str_has_prefix(g_udev_device_get_sysfs_path(G_UDEV_DEVICE(l->data)),
