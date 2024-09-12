@@ -6,6 +6,10 @@
 
 #include "config.h"
 
+#ifdef HAVE_GUDEV
+#include <gudev/gudev.h>
+#endif
+
 #include "fu-redfish-network.h"
 
 typedef struct {
