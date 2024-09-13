@@ -6338,12 +6338,6 @@ fu_test_engine_fake_usb(gconstpointer user_data)
 
 	/* load engine and check the device was found */
 	fu_engine_add_plugin_filter(engine, "colorhug");
-	fu_engine_add_plugin_filter(engine, "optionrom");     /* for pci */
-	fu_engine_add_plugin_filter(engine, "synaptics_rmi"); /* for serio */
-	fu_engine_add_plugin_filter(engine, "tpm");	      /* for tpm */
-	fu_engine_add_plugin_filter(engine, "intel_me");      /* for mei */
-	fu_engine_add_plugin_filter(engine, "nvme");	      /* for nvme */
-	fu_engine_add_plugin_filter(engine, "scsi");	      /* for scsi */
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
 				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
