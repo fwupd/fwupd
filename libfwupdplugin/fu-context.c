@@ -11,6 +11,7 @@
 #include "fu-bios-settings-private.h"
 #include "fu-common-private.h"
 #include "fu-config-private.h"
+#include "fu-context-helper.h"
 #include "fu-context-private.h"
 #include "fu-dummy-efivars.h"
 #include "fu-efi-device-path-list.h"
@@ -38,6 +39,7 @@ typedef struct {
 	FuSmbiosChassisKind chassis_kind;
 	FuQuirks *quirks;
 	FuEfivars *efivars;
+	GPtrArray *backends;
 	GHashTable *runtime_versions;
 	GHashTable *compile_versions;
 	GHashTable *udev_subsystems; /* utf8:GPtrArray */
@@ -1909,6 +1911,74 @@ fu_context_get_esp_files(FuContext *self, FuContextEspFileFlags flags, GError **
 	return g_steal_pointer(&files);
 }
 
+/**
+ * fu_context_get_backends:
+ * @self: a #FuContext
+ *
+ * Gets all the possible backends used by all plugins.
+ *
+ * Returns: (transfer none) (element-type FuBackend): List of backends
+ *
+ * Since: 2.0.0
+ **/
+GPtrArray *
+fu_context_get_backends(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	return priv->backends;
+}
+
+/**
+ * fu_context_add_backend:
+ * @self: a #FuContext
+ * @backend: a #FuBackend
+ *
+ * Adds a backend to the context.
+ *
+ * Returns: (transfer full): a #FuBackend, or %NULL on error
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_context_add_backend(FuContext *self, FuBackend *backend)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	g_return_if_fail(FU_IS_BACKEND(backend));
+	g_ptr_array_add(priv->backends, g_object_ref(backend));
+}
+
+/**
+ * fu_context_get_backend_by_name:
+ * @self: a #FuContext
+ * @name: backend name, e.g. `udev` or `bluez`
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets a specific backend added to the context.
+ *
+ * Returns: (transfer full): a #FuBackend, or %NULL on error
+ *
+ * Since: 2.0.0
+ **/
+FuBackend *
+fu_context_get_backend_by_name(FuContext *self, const gchar *name, GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
+	g_return_val_if_fail(name != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	for (guint i = 0; i < priv->backends->len; i++) {
+		FuBackend *backend = g_ptr_array_index(priv->backends, i);
+		if (g_strcmp0(fu_backend_get_name(backend), name) == 0)
+			return g_object_ref(backend);
+	}
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no backend with name %s", name);
+	return NULL;
+}
+
 /* private */
 gpointer
 fu_context_get_data(FuContext *self, const gchar *key)
@@ -1988,6 +2058,15 @@ fu_context_set_property(GObject *object, guint prop_id, const GValue *value, GPa
 }
 
 static void
+fu_context_dispose(GObject *object)
+{
+	FuContext *self = FU_CONTEXT(object);
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_ptr_array_set_size(priv->backends, 0);
+	G_OBJECT_CLASS(fu_context_parent_class)->dispose(object);
+}
+
+static void
 fu_context_finalize(GObject *object)
 {
 	FuContext *self = FU_CONTEXT(object);
@@ -2009,6 +2088,7 @@ fu_context_finalize(GObject *object)
 	g_hash_table_unref(priv->firmware_gtypes);
 	g_hash_table_unref(priv->udev_subsystems);
 	g_ptr_array_unref(priv->esp_volumes);
+	g_ptr_array_unref(priv->backends);
 
 	G_OBJECT_CLASS(fu_context_parent_class)->finalize(object);
 }
@@ -2019,6 +2099,7 @@ fu_context_class_init(FuContextClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	GParamSpec *pspec;
 
+	object_class->dispose = fu_context_dispose;
 	object_class->get_property = fu_context_get_property;
 	object_class->set_property = fu_context_set_property;
 
@@ -2164,6 +2245,7 @@ fu_context_init(FuContext *self)
 	priv->esp_volumes = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->runtime_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	priv->compile_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	priv->backends = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 }
 
 /**

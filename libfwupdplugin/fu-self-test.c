@@ -15,6 +15,7 @@
 
 #include "fwupd-security-attr-private.h"
 
+#include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
 #include "fu-common-private.h"
 #include "fu-config-private.h"
@@ -680,6 +681,20 @@ fu_smbios3_func(void)
 	str = fu_smbios_get_string(smbios, FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x04, &error);
 	g_assert_no_error(error);
 	g_assert_cmpstr(str, ==, "Dell Inc.");
+}
+
+static void
+fu_context_backends_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuBackend) backend2 = NULL;
+	g_autoptr(FuBackend) backend = g_object_new(FU_TYPE_BACKEND, "name", "dummy", NULL);
+	g_autoptr(GError) error = NULL;
+
+	fu_context_add_backend(ctx, backend);
+	backend2 = fu_context_get_backend_by_name(ctx, "dummy", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(backend2);
 }
 
 static void
@@ -5951,6 +5966,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/efivar{bootxxxx}", fu_efivar_boot_func);
 	g_test_add_func("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func("/fwupd/context{flags}", fu_context_flags_func);
+	g_test_add_func("/fwupd/context{backends}", fu_context_backends_func);
 	g_test_add_func("/fwupd/context{hwids-dmi}", fu_context_hwids_dmi_func);
 	g_test_add_func("/fwupd/context{firmware-gtypes}", fu_context_firmware_gtypes_func);
 	g_test_add_func("/fwupd/context{state}", fu_context_state_func);
