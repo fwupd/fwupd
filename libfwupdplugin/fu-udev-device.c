@@ -52,7 +52,7 @@ typedef struct {
 	guint64 number;
 	FuIOChannel *io_channel;
 	FuIoChannelOpenFlag open_flags;
-	gchar **uevent_lines;
+	GHashTable *properties;
 } FuUdevDevicePrivate;
 
 static void
@@ -727,7 +727,7 @@ fu_udev_device_probe_complete(FuDevice *device)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* free memory */
-	g_clear_pointer(&priv->uevent_lines, g_strfreev);
+	g_hash_table_remove_all(priv->properties);
 	g_clear_object(&priv->udev_device);
 	priv->udev_device_cleared = TRUE;
 }
@@ -2019,6 +2019,16 @@ fu_udev_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 	return g_bytes_new(buf->data, buf->len);
 }
 
+/* private */
+void
+fu_udev_device_add_property(FuUdevDevice *self, const gchar *key, const gchar *value)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
+	g_return_if_fail(key != NULL);
+	g_hash_table_insert(priv->properties, g_strdup(key), g_strdup(value));
+}
+
 /**
  * fu_udev_device_read_property:
  * @self: a #FuUdevDevice
@@ -2063,23 +2073,24 @@ fu_udev_device_read_property(FuUdevDevice *self, const gchar *key, GError **erro
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
 	/* parse key */
-	if (priv->uevent_lines == NULL) {
+	if (g_hash_table_size(priv->properties) == 0) {
 		g_autofree gchar *str = NULL;
+		g_auto(GStrv) uevent_lines = NULL;
 		str = fu_udev_device_read_sysfs(self,
 						"uevent",
 						FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 						error);
 		if (str == NULL)
 			return NULL;
-		priv->uevent_lines = g_strsplit(str, "\n", -1);
-	}
-	for (guint i = 0; priv->uevent_lines[i] != NULL; i++) {
-		g_auto(GStrv) kv = g_strsplit(priv->uevent_lines[i], "=", 2);
-		if (g_strcmp0(kv[0], key) == 0) {
-			value = g_strdup(kv[1]);
-			break;
+		uevent_lines = g_strsplit(str, "\n", -1);
+		for (guint i = 0; uevent_lines[i] != NULL; i++) {
+			g_autofree gchar **kvs = g_strsplit(uevent_lines[i], "=", 2);
+			g_hash_table_insert(priv->properties,
+					    g_steal_pointer(&kvs[0]),
+					    g_steal_pointer(&kvs[1]));
 		}
 	}
+	value = g_strdup(g_hash_table_lookup(priv->properties, key));
 	if (value == NULL) {
 #ifdef HAVE_GUDEV
 		/* retain fallback until we merge the improved probing branch */
@@ -2309,8 +2320,7 @@ fu_udev_device_finalize(GObject *object)
 	FuUdevDevice *self = FU_UDEV_DEVICE(object);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 
-	if (priv->uevent_lines != NULL)
-		g_strfreev(priv->uevent_lines);
+	g_hash_table_unref(priv->properties);
 	g_free(priv->subsystem);
 	g_free(priv->devtype);
 	g_free(priv->bind_id);
@@ -2327,6 +2337,8 @@ fu_udev_device_finalize(GObject *object)
 static void
 fu_udev_device_init(FuUdevDevice *self)
 {
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	priv->properties = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	fu_device_set_acquiesce_delay(FU_DEVICE(self), 2500);
 }
 
