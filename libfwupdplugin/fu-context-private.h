@@ -53,6 +53,8 @@ fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem, const gch
 GPtrArray *
 fu_context_get_udev_subsystems(FuContext *self) G_GNUC_NON_NULL(1);
 GPtrArray *
+fu_context_get_backends(FuContext *self) G_GNUC_NON_NULL(1);
+GPtrArray *
 fu_context_get_plugin_names_for_udev_subsystem(FuContext *self,
 					       const gchar *subsystem,
 					       GError **error) G_GNUC_NON_NULL(1, 2);

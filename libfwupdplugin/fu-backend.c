@@ -186,6 +186,37 @@ fu_backend_get_device_parent(FuBackend *self,
 }
 
 /**
+ * fu_backend_create_device:
+ * @self: a #FuBackend
+ * @backend_id: a backend ID, typically a sysfs path
+ * @error: (nullable): optional return location for an error
+ *
+ * Asks the backend to create a device (of the correct type) for a given device backend ID.
+ *
+ * Returns: (transfer full): a #FuDevice or %NULL if not found or unimplemented
+ *
+ * Since: 2.0.0
+ **/
+FuDevice *
+fu_backend_create_device(FuBackend *self, const gchar *backend_id, GError **error)
+{
+	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
+
+	g_return_val_if_fail(FU_IS_BACKEND(self), NULL);
+	g_return_val_if_fail(backend_id != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	if (klass->create_device == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "not implemented");
+		return NULL;
+	}
+	return klass->create_device(self, backend_id, error);
+}
+
+/**
  * fu_backend_invalidate:
  * @self: a #FuBackend
  *

@@ -29,6 +29,7 @@
 #include <libfwupdplugin/fu-common.h>
 #include <libfwupdplugin/fu-composite-input-stream.h>
 #include <libfwupdplugin/fu-config.h>
+#include <libfwupdplugin/fu-context-helper.h>
 #include <libfwupdplugin/fu-context.h>
 #include <libfwupdplugin/fu-crc.h>
 #include <libfwupdplugin/fu-csv-entry.h>

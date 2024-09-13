@@ -104,7 +104,6 @@ fu_engine_emulation_load_phase(FuEngine *self, GError **error);
 
 struct _FuEngine {
 	GObject parent_instance;
-	GPtrArray *backends;
 	FuEngineConfig *config;
 	FuRemoteList *remote_list;
 	FuDeviceList *device_list;
@@ -2460,6 +2459,7 @@ fu_engine_get_plugin_by_name(FuEngine *self, const gchar *name, GError **error)
 static gboolean
 fu_engine_emulation_load_json_blob(FuEngine *self, GBytes *json_blob, GError **error)
 {
+	GPtrArray *backends = fu_context_get_backends(self->ctx);
 	JsonNode *root;
 	g_autoptr(JsonParser) parser = json_parser_new();
 
@@ -2472,8 +2472,8 @@ fu_engine_emulation_load_json_blob(FuEngine *self, GBytes *json_blob, GError **e
 
 	/* load into all backends */
 	root = json_parser_get_root(parser);
-	for (guint i = 0; i < self->backends->len; i++) {
-		FuBackend *backend = g_ptr_array_index(self->backends, i);
+	for (guint i = 0; i < backends->len; i++) {
+		FuBackend *backend = g_ptr_array_index(backends, i);
 		if (!fwupd_codec_from_json(FWUPD_CODEC(backend), root, error))
 			return FALSE;
 	}
@@ -5831,6 +5831,7 @@ fu_engine_plugins_coldplug(FuEngine *self, FuProgress *progress)
 static void
 fu_engine_plugin_device_register(FuEngine *self, FuDevice *device)
 {
+	GPtrArray *backends = fu_context_get_backends(self->ctx);
 	GPtrArray *plugins;
 	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REGISTERED)) {
 		g_warning("already registered %s, ignoring", fu_device_get_id(device));
@@ -5841,8 +5842,8 @@ fu_engine_plugin_device_register(FuEngine *self, FuDevice *device)
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
 		fu_plugin_runner_device_register(plugin, device);
 	}
-	for (guint i = 0; i < self->backends->len; i++) {
-		FuBackend *backend = g_ptr_array_index(self->backends, i);
+	for (guint i = 0; i < backends->len; i++) {
+		FuBackend *backend = g_ptr_array_index(backends, i);
 		fu_backend_registered(backend, device);
 	}
 	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REGISTERED);
@@ -7912,10 +7913,11 @@ fu_engine_backends_coldplug_backend(FuEngine *self,
 static void
 fu_engine_backends_coldplug(FuEngine *self, FuProgress *progress)
 {
+	GPtrArray *backends = fu_context_get_backends(self->ctx);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, self->backends->len);
-	for (guint i = 0; i < self->backends->len; i++) {
-		FuBackend *backend = g_ptr_array_index(self->backends, i);
+	fu_progress_set_steps(progress, backends->len);
+	for (guint i = 0; i < backends->len; i++) {
+		FuBackend *backend = g_ptr_array_index(backends, i);
 		g_autoptr(GError) error_backend = NULL;
 
 		if (!fu_backend_get_enabled(backend)) {
@@ -7959,6 +7961,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 {
 	FuPlugin *plugin_uefi;
 	FuQuirksLoadFlags quirks_flags = FU_QUIRKS_LOAD_FLAG_NONE;
+	GPtrArray *backends = fu_context_get_backends(self->ctx);
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	const gchar *host_emulate = g_getenv("FWUPD_HOST_EMULATE");
 	g_autoptr(GPtrArray) checksums_approved = NULL;
@@ -8220,8 +8223,8 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		FuBackendSetupFlags backend_flags = FU_BACKEND_SETUP_FLAG_NONE;
 		if (flags & FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG)
 			backend_flags |= FU_BACKEND_SETUP_FLAG_USE_HOTPLUG;
-		for (guint i = 0; i < self->backends->len; i++) {
-			FuBackend *backend = g_ptr_array_index(self->backends, i);
+		for (guint i = 0; i < backends->len; i++) {
+			FuBackend *backend = g_ptr_array_index(backends, i);
 			g_autoptr(GError) error_backend = NULL;
 			if (!fu_backend_setup(backend,
 					      backend_flags,
@@ -8303,8 +8306,8 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	}
 
 	/* dump plugin information to the console */
-	for (guint i = 0; i < self->backends->len; i++) {
-		FuBackend *backend = g_ptr_array_index(self->backends, i);
+	for (guint i = 0; i < backends->len; i++) {
+		FuBackend *backend = g_ptr_array_index(backends, i);
 		fu_backend_add_string(backend, 0, str);
 	}
 	for (guint i = 0; i < plugins->len; i++) {
@@ -8391,8 +8394,15 @@ fu_engine_dispose(GObject *obj)
 	if (self->config != NULL)
 		g_signal_handlers_disconnect_by_data(self->config, self);
 
-	if (self->ctx != NULL)
+	if (self->ctx != NULL) {
+		GPtrArray *backends = fu_context_get_backends(self->ctx);
+		for (guint i = 0; i < backends->len; i++) {
+			FuBackend *backend = g_ptr_array_index(backends, i);
+			g_signal_handlers_disconnect_by_data(backend, self);
+		}
+		g_ptr_array_set_size(backends, 0);
 		g_signal_handlers_disconnect_by_data(self->ctx, self);
+	}
 	g_clear_object(&self->ctx);
 
 	G_OBJECT_CLASS(fu_engine_parent_class)->dispose(obj);
@@ -8637,12 +8647,21 @@ fu_engine_constructed(GObject *obj)
 			 self);
 
 	/* backends */
-	g_ptr_array_add(self->backends, fu_usb_backend_new(self->ctx));
+	{
+		g_autoptr(FuBackend) backend = fu_usb_backend_new(self->ctx);
+		fu_context_add_backend(self->ctx, backend);
+	}
 #ifdef HAVE_GUDEV
-	g_ptr_array_add(self->backends, fu_udev_backend_new(self->ctx));
+	{
+		g_autoptr(FuBackend) backend = fu_udev_backend_new(self->ctx);
+		fu_context_add_backend(self->ctx, backend);
+	}
 #endif
 #ifdef HAVE_BLUEZ
-	g_ptr_array_add(self->backends, fu_bluez_backend_new(self->ctx));
+	{
+		g_autoptr(FuBackend) backend = fu_bluez_backend_new(self->ctx);
+		fu_context_add_backend(self->ctx, backend);
+	}
 #endif
 
 	/* setup Jcat context */
@@ -8717,7 +8736,6 @@ fu_engine_init(FuEngine *self)
 	self->plugin_list = fu_plugin_list_new();
 	self->plugin_filter = g_ptr_array_new_with_free_func(g_free);
 	self->host_security_attrs = fu_security_attrs_new();
-	self->backends = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->local_monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->acquiesce_loop = g_main_loop_new(NULL, FALSE);
 	self->emulation_phases = g_hash_table_new_full(g_direct_hash,
@@ -8781,7 +8799,6 @@ fu_engine_finalize(GObject *obj)
 	g_object_unref(self->device_list);
 	g_object_unref(self->jcat_context);
 	g_ptr_array_unref(self->plugin_filter);
-	g_ptr_array_unref(self->backends);
 	g_ptr_array_unref(self->local_monitors);
 	g_hash_table_unref(self->emulation_phases);
 	g_hash_table_unref(self->emulation_ids);

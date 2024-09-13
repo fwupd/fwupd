@@ -630,6 +630,13 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 	return NULL;
 }
 
+static FuDevice *
+fu_udev_backend_create_device_impl(FuBackend *backend, const gchar *backend_id, GError **error)
+{
+	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
+	return FU_DEVICE(fu_udev_backend_create_device_from_path(self, backend_id, error));
+}
+
 static void
 fu_udev_backend_finalize(GObject *object)
 {
@@ -665,6 +672,7 @@ fu_udev_backend_class_init(FuUdevBackendClass *klass)
 	backend_class->coldplug = fu_udev_backend_coldplug;
 	backend_class->to_string = fu_udev_backend_to_string;
 	backend_class->get_device_parent = fu_udev_backend_get_device_parent;
+	backend_class->create_device = fu_udev_backend_create_device_impl;
 }
 
 FuBackend *

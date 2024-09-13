@@ -198,7 +198,7 @@ class Checker:
             "g_assert(": "Use g_set_error() or g_return_val_if_fail() instead",
             "g_udev_device_get_sysfs_attr(": "Use fu_udev_device_read_sysfs() instead",
             "g_udev_device_get_property(": "Use fu_udev_device_read_property() instead",
-            "g_udev_client_new(": "Use fu_device_get_backend_parent_with_subsystem() instead",
+            "g_udev_client_new(": "Use fu_backend_create_device() instead",
             "HIDIOCSFEATURE": "Use fu_hidraw_device_set_feature() instead",
             "HIDIOCGFEATURE": "Use fu_hidraw_device_get_feature() instead",
             "|= 1 <<": "Use FU_BIT_SET() instead",
