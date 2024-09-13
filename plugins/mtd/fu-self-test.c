@@ -30,8 +30,6 @@ fu_test_mtd_device_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GRand) rand = g_rand_new_with_seed(0);
-	g_autoptr(GUdevClient) udev_client = g_udev_client_new(NULL); /* nocheck:blocked */
-	const gchar *dev_name;
 
 	/* do not save silo */
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
@@ -42,7 +40,12 @@ fu_test_mtd_device_func(void)
 	g_assert_true(ret);
 
 	/* create device */
-	device = FU_DEVICE(fu_udev_device_new(ctx, "/sys/devices/virtual/mtd/mtd0"));
+	device = g_object_new(FU_TYPE_MTD_DEVICE,
+			      "context",
+			      ctx,
+			      "backend-id",
+			      "/sys/devices/virtual/mtd/mtd0",
+			      NULL);
 	locker = fu_device_locker_new(device, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
 	    g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
@@ -51,9 +54,12 @@ fu_test_mtd_device_func(void)
 	}
 	g_assert_no_error(error);
 	g_assert_nonnull(locker);
-
-	dev_name = fu_device_get_name(device);
-	if (g_strcmp0(dev_name, "mtdram test device") != 0) {
+	if (!g_file_test(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)),
+			 G_FILE_TEST_EXISTS)) {
+		g_test_skip("/dev/mtd0 doesn't exist");
+		return;
+	}
+	if (g_strcmp0(fu_device_get_name(device), "mtdram test device") != 0) {
 		g_test_skip("device is not mtdram test device");
 		return;
 	}
