@@ -46,3 +46,35 @@ enum FuClientFlag {
     None = 0,
     Active = 1 << 0,
 }
+
+#[derive(ParseBytes)]
+struct FuStructUdevMonitorNetlinkHeader {
+    prefix: [char; 8] == "libudev",
+    magic: u32be == 0xFEEDCAFE,
+    header_size: u32le,
+    properties_off: u32le,
+    properties_len: u32le,
+    filter_subsystem_hash: u32le,
+    filter_devtype_hash: u32le,
+    filter_tag_bloom_hi: u32le,
+    filter_tag_bloom_lo: u32le,
+}
+
+enum FuUdevMonitorNetlinkGroup {
+    None,
+    Kernel,
+    Udev,
+}
+
+#[derive(FromString)]
+enum FuUdevAction {
+    Unknown,
+    Add,
+    Remove,
+    Change,
+    Move,
+    Online,
+    Offline,
+    Bind,
+    Unbind,
+}

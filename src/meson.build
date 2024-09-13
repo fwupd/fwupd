@@ -10,7 +10,6 @@ engine_dep = [
   libxmlb,
   giounix,
   gmodule,
-  gudev,
   libusb,
   libjsonglib,
   polkit,
@@ -24,7 +23,6 @@ if get_option('passim').allowed()
 endif
 
 client_dep = [
-  gudev,
   libcurl,
   libjcat,
   libjsonglib,
