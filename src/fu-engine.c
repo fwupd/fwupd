@@ -8217,10 +8217,14 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 
 	/* set up backends */
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
+		FuBackendSetupFlags backend_flags = FU_BACKEND_SETUP_FLAG_NONE;
+		if (flags & FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG)
+			backend_flags |= FU_BACKEND_SETUP_FLAG_USE_HOTPLUG;
 		for (guint i = 0; i < self->backends->len; i++) {
 			FuBackend *backend = g_ptr_array_index(self->backends, i);
 			g_autoptr(GError) error_backend = NULL;
 			if (!fu_backend_setup(backend,
+					      backend_flags,
 					      fu_progress_get_child(progress),
 					      &error_backend)) {
 				g_info("failed to setup backend %s: %s",

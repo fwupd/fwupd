@@ -198,7 +198,10 @@ fu_uefi_backend_linux_check_smbios_enabled(FuContext *ctx, GError **error)
 }
 
 static gboolean
-fu_uefi_backend_linux_setup(FuBackend *backend, FuProgress *progress, GError **error)
+fu_uefi_backend_linux_setup(FuBackend *backend,
+			    FuBackendSetupFlags flags,
+			    FuProgress *progress,
+			    GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 

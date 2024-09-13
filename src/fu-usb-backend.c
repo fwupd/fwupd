@@ -265,7 +265,10 @@ fu_usb_backend_event_thread_cb(gpointer data)
 #endif
 
 static gboolean
-fu_usb_backend_setup(FuBackend *backend, FuProgress *progress, GError **error)
+fu_usb_backend_setup(FuBackend *backend,
+		     FuBackendSetupFlags flags,
+		     FuProgress *progress,
+		     GError **error)
 {
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
@@ -289,6 +292,10 @@ fu_usb_backend_setup(FuBackend *backend, FuProgress *progress, GError **error)
 #endif
 	fu_context_set_data(ctx, "libusb_context", self->ctx);
 	fu_context_add_udev_subsystem(ctx, "usb", NULL);
+
+	/* no hotplug required, probably in tests */
+	if ((flags & FU_BACKEND_SETUP_FLAG_USE_HOTPLUG) == 0)
+		return TRUE;
 
 #ifndef HAVE_GUDEV
 	self->thread_event_run = 1;

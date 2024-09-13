@@ -4082,7 +4082,7 @@ fu_backend_usb_func(gconstpointer user_data)
 	/* load the JSON into the backend */
 	g_assert_cmpstr(fu_backend_get_name(backend), ==, "usb");
 	g_assert_true(fu_backend_get_enabled(backend));
-	ret = fu_backend_setup(backend, progress, &error);
+	ret = fu_backend_setup(backend, FU_BACKEND_SETUP_FLAG_NONE, progress, &error);
 	g_assert_cmpint(cnt_added, ==, 0);
 	g_assert_cmpint(cnt_removed, ==, 0);
 	g_assert_no_error(error);
@@ -4156,7 +4156,7 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 	ret = json_parser_load_from_file(parser, usb_emulate_fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_backend_setup(backend, progress, &error);
+	ret = fu_backend_setup(backend, FU_BACKEND_SETUP_FLAG_NONE, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fwupd_codec_from_json(FWUPD_CODEC(backend), json_parser_get_root(parser), &error);

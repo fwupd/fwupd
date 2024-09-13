@@ -523,7 +523,10 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	}
 #endif
 
-	return fu_backend_setup(FU_BACKEND(self->backend), progress, error);
+	return fu_backend_setup(FU_BACKEND(self->backend),
+				FU_BACKEND_SETUP_FLAG_NONE,
+				progress,
+				error);
 }
 
 static gboolean
@@ -535,7 +538,10 @@ fu_redfish_plugin_cleanup_setup_cb(FuDevice *device, gpointer user_data, GError 
 	/* the network adaptor might not auto-connect when coming back */
 	if (!fu_redfish_plugin_autoconnect_network_device(self, error))
 		return FALSE;
-	return fu_backend_setup(FU_BACKEND(self->backend), progress, error);
+	return fu_backend_setup(FU_BACKEND(self->backend),
+				FU_BACKEND_SETUP_FLAG_NONE,
+				progress,
+				error);
 }
 
 static gboolean

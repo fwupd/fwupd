@@ -2510,7 +2510,7 @@ fu_backend_func(void)
 	g_assert_true(fu_backend_get_enabled(backend));
 
 	/* load */
-	ret = fu_backend_setup(backend, progress, &error);
+	ret = fu_backend_setup(backend, FU_BACKEND_SETUP_FLAG_NONE, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_backend_coldplug(backend, progress, &error);
