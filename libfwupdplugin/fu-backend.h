@@ -14,10 +14,30 @@
 #define FU_TYPE_BACKEND (fu_backend_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuBackend, fu_backend, FU, BACKEND, GObject)
 
+typedef enum {
+	/**
+	 * FU_BACKEND_SETUP_FLAG_NONE:
+	 *
+	 * No flags set.
+	 *
+	 * Since: 2.0.0
+	 **/
+	FU_BACKEND_SETUP_FLAG_NONE = 0,
+	/**
+	 * FU_BACKEND_SETUP_FLAG_USE_HOTPLUG:
+	 *
+	 * Set up hotplug events for updates (not used in tests).
+	 *
+	 * Since: 2.0.0
+	 **/
+	FU_BACKEND_SETUP_FLAG_USE_HOTPLUG = 1 << 0,
+} FuBackendSetupFlags;
+
 struct _FuBackendClass {
 	GObjectClass parent_class;
 	/* signals */
 	gboolean (*setup)(FuBackend *self,
+			  FuBackendSetupFlags flags,
 			  FuProgress *progress,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*coldplug)(FuBackend *self,
@@ -45,8 +65,8 @@ fu_backend_get_devices(FuBackend *self) G_GNUC_NON_NULL(1);
 FuDevice *
 fu_backend_lookup_by_id(FuBackend *self, const gchar *backend_id) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_backend_setup(FuBackend *self, FuProgress *progress, GError **error) G_GNUC_WARN_UNUSED_RESULT
-    G_GNUC_NON_NULL(1);
+fu_backend_setup(FuBackend *self, FuBackendSetupFlags flags, FuProgress *progress, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_backend_coldplug(FuBackend *self, FuProgress *progress, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);

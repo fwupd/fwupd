@@ -168,7 +168,10 @@ fu_bluez_backend_timeout_cb(gpointer user_data)
 }
 
 static gboolean
-fu_bluez_backend_setup(FuBackend *backend, FuProgress *progress, GError **error)
+fu_bluez_backend_setup(FuBackend *backend,
+		       FuBackendSetupFlags flags,
+		       FuProgress *progress,
+		       GError **error)
 {
 	FuBluezBackend *self = FU_BLUEZ_BACKEND(backend);
 	g_autoptr(FuBluezBackendHelper) helper = g_new0(FuBluezBackendHelper, 1);
@@ -195,14 +198,16 @@ fu_bluez_backend_setup(FuBackend *backend, FuProgress *progress, GError **error)
 		return FALSE;
 	self->object_manager = g_steal_pointer(&helper->object_manager);
 
-	g_signal_connect(G_DBUS_OBJECT_MANAGER(self->object_manager),
-			 "object-added",
-			 G_CALLBACK(fu_bluez_backend_object_added_cb),
-			 self);
-	g_signal_connect(G_DBUS_OBJECT_MANAGER(self->object_manager),
-			 "object-removed",
-			 G_CALLBACK(fu_bluez_backend_object_removed_cb),
-			 self);
+	if (flags & FU_BACKEND_SETUP_FLAG_USE_HOTPLUG) {
+		g_signal_connect(G_DBUS_OBJECT_MANAGER(self->object_manager),
+				 "object-added",
+				 G_CALLBACK(fu_bluez_backend_object_added_cb),
+				 self);
+		g_signal_connect(G_DBUS_OBJECT_MANAGER(self->object_manager),
+				 "object-removed",
+				 G_CALLBACK(fu_bluez_backend_object_removed_cb),
+				 self);
+	}
 	return TRUE;
 }
 

@@ -791,7 +791,7 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 	}
 
 	/* check we can use this backend */
-	if (!fu_backend_setup(self->backend, progress, &error_local)) {
+	if (!fu_backend_setup(self->backend, FU_BACKEND_SETUP_FLAG_NONE, progress, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_WRITE)) {
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED);
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);

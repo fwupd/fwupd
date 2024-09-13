@@ -249,6 +249,7 @@ fu_util_start_engine(FuUtilPrivate *priv,
 	flags |= FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS;
 	flags |= FU_ENGINE_LOAD_FLAG_HWINFO;
 	flags |= FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT;
+	flags |= FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG;
 	if (!fu_engine_load(priv->engine, flags, progress, error))
 		return FALSE;
 	fu_util_show_plugin_warnings(priv);

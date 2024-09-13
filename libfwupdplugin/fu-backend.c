@@ -248,6 +248,7 @@ fu_backend_add_string(FuBackend *self, guint idt, GString *str)
 /**
  * fu_backend_setup:
  * @self: a #FuBackend
+ * @flags: some #FuBackendSetupFlags, e.g. %FU_BACKEND_SETUP_FLAG_USE_HOTPLUG
  * @progress: a #FuProgress
  * @error: (nullable): optional return location for an error
  *
@@ -259,7 +260,7 @@ fu_backend_add_string(FuBackend *self, guint idt, GString *str)
  * Since: 1.6.1
  **/
 gboolean
-fu_backend_setup(FuBackend *self, FuProgress *progress, GError **error)
+fu_backend_setup(FuBackend *self, FuBackendSetupFlags flags, FuProgress *progress, GError **error)
 {
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
 	FuBackendPrivate *priv = GET_PRIVATE(self);
@@ -270,7 +271,7 @@ fu_backend_setup(FuBackend *self, FuProgress *progress, GError **error)
 	if (priv->done_setup)
 		return TRUE;
 	if (klass->setup != NULL) {
-		if (!klass->setup(self, progress, error)) {
+		if (!klass->setup(self, flags, progress, error)) {
 			priv->enabled = FALSE;
 			return FALSE;
 		}
@@ -437,7 +438,7 @@ fu_backend_coldplug(FuBackend *self, FuProgress *progress, GError **error)
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
 	g_return_val_if_fail(FU_IS_BACKEND(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-	if (!fu_backend_setup(self, progress, error))
+	if (!fu_backend_setup(self, FU_BACKEND_SETUP_FLAG_NONE, progress, error))
 		return FALSE;
 	if (klass->coldplug == NULL)
 		return TRUE;
