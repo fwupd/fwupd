@@ -4,7 +4,6 @@ plugin_deps = [
   giounix,
   gnutls,
   gmodule,
-  gudev,
   libusb,
   libarchive,
   libjsonglib,

@@ -6,10 +6,6 @@
 
 #include "config.h"
 
-#ifdef HAVE_GUDEV
-#include <gudev/gudev.h>
-#endif
-
 #include "fu-context-private.h"
 #include "fu-mtd-device.h"
 #include "fu-udev-device-private.h"
@@ -17,7 +13,6 @@
 static void
 fu_test_mtd_device_func(void)
 {
-#ifdef HAVE_GUDEV
 	gsize bufsz;
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -88,9 +83,6 @@ fu_test_mtd_device_func(void)
 	ret = fu_bytes_compare(fw, fw2, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-#else
-	g_test_skip("no GUdev support");
-#endif
 }
 
 int

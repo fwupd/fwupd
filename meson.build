@@ -238,6 +238,9 @@ conf.set_quoted('LIBUSB_VERSION', libusb.version())
 if cc.has_header_symbol('libusb.h', 'libusb_set_option', dependencies: libusb)
   conf.set('HAVE_LIBUSB_SET_OPTION', '1')
 endif
+if cc.has_header_symbol('libusb.h', 'libusb_init_context', dependencies: libusb)
+  conf.set('HAVE_LIBUSB_INIT_CONTEXT', '1')
+endif
 if cc.has_header_symbol('libusb.h', 'libusb_get_parent', dependencies: libusb)
   conf.set('HAVE_LIBUSB_GET_PARENT', '1')
 endif

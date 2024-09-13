@@ -275,7 +275,15 @@ fu_usb_backend_setup(FuBackend *backend,
 	gint log_level = g_getenv("FWUPD_VERBOSE") != NULL ? 3 : 0;
 	gint rc;
 
+#ifdef HAVE_LIBUSB_INIT_CONTEXT
+	const struct libusb_init_option options[] = {{.option = LIBUSB_OPTION_NO_DEVICE_DISCOVERY,
+						      .value = {
+							  .ival = 1,
+						      }}};
+	rc = libusb_init_context(&self->ctx, options, G_N_ELEMENTS(options));
+#else
 	rc = libusb_init(&self->ctx);
+#endif
 	if (rc < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,

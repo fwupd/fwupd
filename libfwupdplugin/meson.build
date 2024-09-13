@@ -315,7 +315,6 @@ introspection_deps = [
   libxmlb,
   giounix,
   libusb,
-  gudev,
 ]
 
 pkgg_requires = [ 'gio-2.0',
