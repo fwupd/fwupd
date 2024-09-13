@@ -248,6 +248,7 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 static gboolean
 fu_redfish_plugin_autoconnect_network_device(FuRedfishPlugin *self, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	g_autofree gchar *hostname = NULL;
 	g_autoptr(FuRedfishNetworkDevice) device = NULL;
 
@@ -263,7 +264,8 @@ fu_redfish_plugin_autoconnect_network_device(FuRedfishPlugin *self, GError **err
 		const gchar *mac_addr = fu_redfish_smbios_get_mac_addr(self->smbios);
 		if (mac_addr != NULL) {
 			g_autoptr(GError) error_network = NULL;
-			device = fu_redfish_network_device_for_mac_addr(mac_addr, &error_network);
+			device =
+			    fu_redfish_network_device_for_mac_addr(ctx, mac_addr, &error_network);
 			if (device == NULL)
 				g_debug("failed to get device: %s", error_network->message);
 		}
@@ -273,7 +275,8 @@ fu_redfish_plugin_autoconnect_network_device(FuRedfishPlugin *self, GError **err
 		guint16 pid = fu_redfish_smbios_get_pid(self->smbios);
 		if (vid != 0x0 && pid != 0x0) {
 			g_autoptr(GError) error_network = NULL;
-			device = fu_redfish_network_device_for_vid_pid(vid, pid, &error_network);
+			device =
+			    fu_redfish_network_device_for_vid_pid(ctx, vid, pid, &error_network);
 			if (device == NULL)
 				g_debug("failed to get device: %s", error_network->message);
 		}
