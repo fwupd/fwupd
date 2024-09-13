@@ -109,3 +109,12 @@ Flags = updatable
 GType = FuRts54HubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
+
+#USB-C Dual Display Dock
+[USB\VID_065F&PID_2260]
+Plugin = rts54hub
+Name = USB-C Dual Display Dock
+Flags = updatable
+GType = FuRts54HubDevice
+FirmwareSizeMin = 0x10000
+FirmwareSizeMax = 0x20000
