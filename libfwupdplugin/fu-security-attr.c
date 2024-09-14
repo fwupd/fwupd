@@ -74,20 +74,19 @@ fu_security_attr_init(FuSecurityAttr *self)
 }
 
 static void
-fu_security_attr_finalize(GObject *object)
+fu_security_attr_dispose(GObject *object)
 {
 	FuSecurityAttr *self = FU_SECURITY_ATTR(object);
 	FuSecurityAttrPrivate *priv = GET_PRIVATE(self);
-	if (priv->ctx != NULL)
-		g_object_unref(priv->ctx);
-	G_OBJECT_CLASS(fu_security_attr_parent_class)->finalize(object);
+	g_clear_object(&priv->ctx);
+	G_OBJECT_CLASS(fu_security_attr_parent_class)->dispose(object);
 }
 
 static void
 fu_security_attr_class_init(FuSecurityAttrClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->finalize = fu_security_attr_finalize;
+	object_class->dispose = fu_security_attr_dispose;
 }
 
 /**

@@ -2884,6 +2884,7 @@ fu_plugin_dispose(GObject *object)
 		g_ptr_array_set_size(priv->devices, 0);
 	if (priv->cache != NULL)
 		g_hash_table_remove_all(priv->cache);
+	g_clear_object(&priv->ctx);
 
 	G_OBJECT_CLASS(fu_plugin_parent_class)->dispose(object);
 }
@@ -3032,8 +3033,6 @@ fu_plugin_finalize(GObject *object)
 	}
 	if (priv->devices != NULL)
 		g_ptr_array_unref(priv->devices);
-	if (priv->ctx != NULL)
-		g_object_unref(priv->ctx);
 	if (priv->runtime_versions != NULL)
 		g_hash_table_unref(priv->runtime_versions);
 	if (priv->compile_versions != NULL)
