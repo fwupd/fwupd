@@ -540,6 +540,24 @@ fu_device_list_remove(FuDeviceList *self, FuDevice *device)
 	g_rw_lock_writer_unlock(&self->devices_mutex);
 }
 
+/**
+ * fu_device_list_remove_all:
+ * @self: a device list
+ *
+ * Removes all devices from the list.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_list_remove_all(FuDeviceList *self)
+{
+	g_return_if_fail(FU_IS_DEVICE_LIST(self));
+
+	g_rw_lock_writer_lock(&self->devices_mutex);
+	g_ptr_array_set_size(self->devices, 0);
+	g_rw_lock_writer_unlock(&self->devices_mutex);
+}
+
 static void
 fu_device_list_add_missing_guids(FuDevice *device_new, FuDevice *device_old)
 {

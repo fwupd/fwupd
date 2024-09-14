@@ -6714,11 +6714,22 @@ fu_device_clear_events(FuDevice *self)
 }
 
 static void
+fu_device_dispose(GObject *object)
+{
+	FuDevice *self = FU_DEVICE(object);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_clear_object(&priv->ctx);
+	G_OBJECT_CLASS(fu_device_parent_class)->dispose(object);
+}
+
+static void
 fu_device_class_init(FuDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GParamSpec *pspec;
+
+	object_class->dispose = fu_device_dispose;
 	object_class->finalize = fu_device_finalize;
 	object_class->get_property = fu_device_get_property;
 	object_class->set_property = fu_device_set_property;
@@ -6986,8 +6997,6 @@ fu_device_finalize(GObject *object)
 	}
 	if (priv->backend != NULL)
 		g_object_remove_weak_pointer(G_OBJECT(priv->backend), (gpointer *)&priv->backend);
-	if (priv->ctx != NULL)
-		g_object_unref(priv->ctx);
 	if (priv->poll_id != 0)
 		g_source_remove(priv->poll_id);
 	if (priv->metadata != NULL)

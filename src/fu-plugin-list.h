@@ -15,6 +15,8 @@ FuPluginList *
 fu_plugin_list_new(void);
 void
 fu_plugin_list_add(FuPluginList *self, FuPlugin *plugin) G_GNUC_NON_NULL(1, 2);
+void
+fu_plugin_list_remove_all(FuPluginList *self) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_plugin_list_get_all(FuPluginList *self) G_GNUC_NON_NULL(1);
 FuPlugin *

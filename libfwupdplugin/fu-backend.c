@@ -642,6 +642,7 @@ fu_backend_dispose(GObject *object)
 	FuBackend *self = FU_BACKEND(object);
 	FuBackendPrivate *priv = GET_PRIVATE(self);
 	g_hash_table_remove_all(priv->devices);
+	g_clear_object(&priv->ctx);
 	G_OBJECT_CLASS(fu_backend_parent_class)->dispose(object);
 }
 
@@ -650,8 +651,6 @@ fu_backend_finalize(GObject *object)
 {
 	FuBackend *self = FU_BACKEND(object);
 	FuBackendPrivate *priv = GET_PRIVATE(self);
-	if (priv->ctx != NULL)
-		g_object_unref(priv->ctx);
 	g_free(priv->name);
 	g_hash_table_unref(priv->devices);
 	G_OBJECT_CLASS(fu_backend_parent_class)->finalize(object);

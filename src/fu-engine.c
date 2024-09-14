@@ -8378,10 +8378,22 @@ fu_engine_dispose(GObject *obj)
 {
 	FuEngine *self = FU_ENGINE(obj);
 
-	if (self->plugin_list != NULL)
-		g_object_run_dispose(G_OBJECT(self->plugin_list));
+	if (self->plugin_list != NULL) {
+		GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
+		for (guint i = 0; i < plugins->len; i++) {
+			FuPlugin *plugin = g_ptr_array_index(plugins, i);
+			g_signal_handlers_disconnect_by_data(plugin, self);
+		}
+		fu_plugin_list_remove_all(self->plugin_list);
+	}
 	if (self->device_list != NULL)
-		g_object_run_dispose(G_OBJECT(self->device_list));
+		fu_device_list_remove_all(self->device_list);
+	if (self->config != NULL)
+		g_signal_handlers_disconnect_by_data(self->config, self);
+
+	if (self->ctx != NULL)
+		g_signal_handlers_disconnect_by_data(self->ctx, self);
+	g_clear_object(&self->ctx);
 
 	G_OBJECT_CLASS(fu_engine_parent_class)->dispose(obj);
 }
@@ -8727,14 +8739,7 @@ static void
 fu_engine_finalize(GObject *obj)
 {
 	FuEngine *self = FU_ENGINE(obj);
-	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 
-	for (guint i = 0; i < plugins->len; i++) {
-		FuPlugin *plugin = g_ptr_array_index(plugins, i);
-		g_signal_handlers_disconnect_by_data(plugin, self);
-	}
-	g_signal_handlers_disconnect_by_data(self->ctx, self);
-	g_signal_handlers_disconnect_by_data(self->config, self);
 	for (guint i = 0; i < self->local_monitors->len; i++) {
 		GFileMonitor *monitor = g_ptr_array_index(self->local_monitors, i);
 		g_file_monitor_cancel(monitor);
@@ -8772,7 +8777,6 @@ fu_engine_finalize(GObject *obj)
 	g_object_unref(self->idle);
 	g_object_unref(self->config);
 	g_object_unref(self->remote_list);
-	g_object_unref(self->ctx);
 	g_object_unref(self->history);
 	g_object_unref(self->device_list);
 	g_object_unref(self->jcat_context);
