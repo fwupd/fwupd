@@ -13,7 +13,7 @@
 struct _FuLogitechRallysystemPlugin {
 	FuPlugin parent_instance;
 	gchar *system_version;
-	FuPlugin *system_parent;
+	FuPlugin *system_parent_plugin;
 };
 
 G_DEFINE_TYPE(FuLogitechRallysystemPlugin, fu_logitech_rallysystem_plugin, FU_TYPE_PLUGIN)
@@ -52,14 +52,14 @@ fu_logitech_rallysystem_plugin_device_added(FuPlugin *plugin, FuDevice *device)
 	 */
 	if (g_strcmp0(fu_device_get_plugin(device), "logitech_rallysystem") == 0) {
 		if (FU_IS_LOGITECH_RALLYSYSTEM_AUDIO_DEVICE(device)) {
-			self->system_parent = plugin;
+			self->system_parent_plugin = plugin;
 			self->system_version = strdup(fu_device_get_version(device));
 		}
 		devices = fu_plugin_get_devices(plugin);
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *device_tmp = g_ptr_array_index(devices, i);
 			if ((FU_IS_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE(device_tmp)) &&
-			    (self->system_parent == plugin)) {
+			    (self->system_parent_plugin == plugin)) {
 				fu_device_set_version(device_tmp, self->system_version);
 				g_debug("overwriting tablehub version to %s", self->system_version);
 				break;
