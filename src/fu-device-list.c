@@ -783,12 +783,17 @@ void
 fu_device_list_add(FuDeviceList *self, FuDevice *device)
 {
 	FuDeviceItem *item;
+	const gchar *equivalent_id = fu_device_get_equivalent_id(device);
 
 	g_return_if_fail(FU_IS_DEVICE_LIST(self));
 	g_return_if_fail(FU_IS_DEVICE(device));
 
 	/* is the device waiting to be replugged? */
 	item = fu_device_list_find_by_id(self, fu_device_get_id(device), NULL);
+	/* find device by equivalent ID if not found by ID */
+	if (item == NULL && equivalent_id != NULL)
+		item = fu_device_list_find_by_id(self, equivalent_id, NULL);
+
 	if (item != NULL) {
 		/* literally the same object */
 		if (device == item->device) {
