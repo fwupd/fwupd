@@ -15,7 +15,6 @@
 #include "fu-firehose-updater.h"
 #include "fu-mbim-qdu-updater.h"
 #include "fu-mm-device.h"
-#include "fu-mm-utils.h"
 #include "fu-qmi-pdc-updater.h"
 #include "fu-sahara-loader.h"
 
@@ -53,9 +52,6 @@ struct _FuMmDevice {
 	MMModemFirmwareUpdateMethod update_methods;
 	gchar *detach_fastboot_at;
 	gchar *branch_at;
-	gint port_at_ifnum;
-	gint port_qmi_ifnum;
-	gint port_mbim_ifnum;
 
 	/* fastboot detach handling */
 	gchar *port_at;
@@ -79,7 +75,7 @@ struct _FuMmDevice {
 	FuFirehoseUpdater *firehose_updater;
 
 	/* for sahara */
-	FuUsbDevice *usb_device;
+	FuUdevDevice *udev_device;
 
 	/* cinterion-fdl update handling */
 	FuCinterionFdlUpdater *cinterion_fdl_updater;
@@ -177,6 +173,32 @@ fu_mm_device_add_instance_id(FuDevice *dev, const gchar *device_id)
 }
 
 static gboolean
+fu_mm_device_ensure_udev_device(FuMmDevice *self, GError **error)
+{
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	g_autoptr(FuBackend) backend = NULL;
+	g_autoptr(FuUdevDevice) udev_device = NULL;
+
+	backend = fu_context_get_backend_by_name(ctx, "udev", error);
+	if (backend == NULL)
+		return FALSE;
+	udev_device = FU_UDEV_DEVICE(
+	    fu_backend_create_device(backend, fu_device_get_physical_id(FU_DEVICE(self)), error));
+	if (udev_device == NULL) {
+		g_prefix_error(error,
+			       "failed to create udev device for %s: ",
+			       fu_device_get_physical_id(FU_DEVICE(self)));
+		return FALSE;
+	}
+	if (!fu_device_probe(FU_DEVICE(udev_device), error))
+		return FALSE;
+	fu_mm_device_set_udev_device(self, udev_device);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_mm_device_probe_default(FuDevice *device, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
@@ -186,10 +208,8 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 	const gchar **device_ids;
 	const gchar *version;
 	guint n_ports = 0;
-	GPtrArray *vendors;
 	g_autoptr(MMFirmwareUpdateSettings) update_settings = NULL;
-	g_autofree gchar *device_sysfs_path = NULL;
-	g_autofree gchar *device_bus = NULL;
+	const gchar *sysfs_path;
 
 	/* inhibition uid is the modem interface 'Device' property, which may
 	 * be the device sysfs path or a different user-provided id */
@@ -351,119 +371,28 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	if (self->port_at != NULL) {
-		fu_mm_utils_get_port_info(self->port_at,
-					  &device_bus,
-					  &device_sysfs_path,
-					  &self->port_at_ifnum,
-					  NULL);
-	}
-	if (self->port_qmi != NULL) {
-		g_autofree gchar *qmi_device_sysfs_path = NULL;
-		g_autofree gchar *qmi_device_bus = NULL;
-		fu_mm_utils_get_port_info(self->port_qmi,
-					  &qmi_device_bus,
-					  &qmi_device_sysfs_path,
-					  &self->port_qmi_ifnum,
-					  NULL);
-		if (device_sysfs_path == NULL && qmi_device_sysfs_path != NULL) {
-			device_sysfs_path = g_steal_pointer(&qmi_device_sysfs_path);
-		} else if (g_strcmp0(device_sysfs_path, qmi_device_sysfs_path) != 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "mismatched device sysfs path: %s != %s",
-				    device_sysfs_path,
-				    qmi_device_sysfs_path);
-			return FALSE;
-		}
-		if (device_bus == NULL && qmi_device_bus != NULL) {
-			device_bus = g_steal_pointer(&qmi_device_bus);
-		} else if (g_strcmp0(device_bus, qmi_device_bus) != 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "mismatched device bus: %s != %s",
-				    device_bus,
-				    qmi_device_bus);
-			return FALSE;
-		}
-	}
-	if (self->port_mbim != NULL) {
-		g_autofree gchar *mbim_device_sysfs_path = NULL;
-		g_autofree gchar *mbim_device_bus = NULL;
-		fu_mm_utils_get_port_info(self->port_mbim,
-					  &mbim_device_bus,
-					  &mbim_device_sysfs_path,
-					  &self->port_mbim_ifnum,
-					  NULL);
-		if (device_sysfs_path == NULL && mbim_device_sysfs_path != NULL) {
-			device_sysfs_path = g_steal_pointer(&mbim_device_sysfs_path);
-		} else if (g_strcmp0(device_sysfs_path, mbim_device_sysfs_path) != 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "mismatched device sysfs path: %s != %s",
-				    device_sysfs_path,
-				    mbim_device_sysfs_path);
-			return FALSE;
-		}
-		if (device_bus == NULL && mbim_device_bus != NULL) {
-			device_bus = g_steal_pointer(&mbim_device_bus);
-		} else if (g_strcmp0(device_bus, mbim_device_bus) != 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "mismatched device bus: %s != %s",
-				    device_bus,
-				    mbim_device_bus);
-			return FALSE;
-		}
-	}
-
-	if (self->port_qcdm != NULL) {
-		g_autofree gchar *qcdm_device_sysfs_path = NULL;
-		g_autofree gchar *qcdm_device_bus = NULL;
-		fu_mm_utils_get_port_info(self->port_qcdm,
-					  &qcdm_device_bus,
-					  &qcdm_device_sysfs_path,
-					  NULL,
-					  NULL);
-		if (device_sysfs_path == NULL && qcdm_device_sysfs_path != NULL) {
-			device_sysfs_path = g_steal_pointer(&qcdm_device_sysfs_path);
-		} else if (g_strcmp0(device_sysfs_path, qcdm_device_sysfs_path) != 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "mismatched device sysfs path: %s != %s",
-				    device_sysfs_path,
-				    qcdm_device_sysfs_path);
-			return FALSE;
-		}
-		if (device_bus == NULL && qcdm_device_bus != NULL) {
-			device_bus = g_steal_pointer(&qcdm_device_bus);
-		} else if (g_strcmp0(device_bus, qcdm_device_bus) != 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "mismatched device bus: %s != %s",
-				    device_bus,
-				    qcdm_device_bus);
-			return FALSE;
-		}
-	}
-
-	/* if no device sysfs file, error out */
-	if (device_sysfs_path == NULL || device_bus == NULL) {
+#if MM_CHECK_VERSION(1, 22, 0)
+	/* get the FuUdevDevice for the MM physical device */
+	sysfs_path = mm_modem_get_physdev(modem);
+	if (sysfs_path == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "failed to find device details");
+				    "no physdev set");
 		return FALSE;
 	}
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "physdev not supported on ModemManager < 1.22");
+	return FALSE;
+#endif
+	fu_device_set_physical_id(device, sysfs_path);
+	if (!fu_mm_device_ensure_udev_device(self, error))
+		return FALSE;
 
 	/* add properties to fwupd device */
-	fu_device_set_physical_id(device, device_sysfs_path);
 	if (mm_modem_get_manufacturer(modem) != NULL)
 		fu_device_set_vendor(device, mm_modem_get_manufacturer(modem));
 	if (mm_modem_get_model(modem) != NULL)
@@ -478,43 +407,6 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 	/* filter these */
 	for (guint i = 0; device_ids[i] != NULL; i++)
 		fu_mm_device_add_instance_id(device, device_ids[i]);
-
-	vendors = fu_device_get_vendor_ids(device);
-	if (vendors == NULL || vendors->len == 0) {
-		g_autofree gchar *path = NULL;
-		g_autofree gchar *value_str = NULL;
-		g_autoptr(GError) error_local = NULL;
-
-		if (g_strcmp0(device_bus, "USB") == 0)
-			path = g_build_filename(device_sysfs_path, "idVendor", NULL);
-		else if (g_strcmp0(device_bus, "PCI") == 0)
-			path = g_build_filename(device_sysfs_path, "vendor", NULL);
-
-		if (path == NULL) {
-			g_warning("failed to set vendor ID: unsupported bus: %s", device_bus);
-		} else if (!g_file_get_contents(path, &value_str, NULL, &error_local)) {
-			g_warning("failed to set vendor ID: %s", error_local->message);
-		} else {
-			guint64 value_int = 0;
-			g_autoptr(GError) error_local2 = NULL;
-
-			/* note: the string value may be prefixed with '0x' (e.g. when reading
-			 * the PCI 'vendor' attribute, or not prefixed with anything, as in the
-			 * USB 'idVendor' attribute. */
-			if (!fu_strtoull(value_str,
-					 &value_int,
-					 0,
-					 G_MAXUINT16,
-					 FU_INTEGER_BASE_16,
-					 &error_local2)) {
-				g_warning("failed to set vendor ID %s: %s",
-					  value_str,
-					  error_local2->message);
-			} else {
-				fu_device_build_vendor_id_u16(device, device_bus, value_int);
-			}
-		}
-	}
 
 	/* fix up vendor name */
 	if (g_strcmp0(fu_device_get_vendor(device), "QUALCOMM INCORPORATED") == 0)
@@ -1014,7 +906,7 @@ fu_mm_device_file_info_free(FuMmFileInfo *file_info)
 }
 
 typedef struct {
-	FuMmDevice *device;
+	FuMmDevice *self;
 	GError *error;
 	GPtrArray *file_infos;
 } FuMmArchiveIterateCtx;
@@ -1064,7 +956,7 @@ fu_mm_device_qmi_pdc_archive_iterate_mcfg(FuArchive *archive,
 	file_info->filename = g_strdup(filename);
 	file_info->bytes = g_bytes_ref(bytes);
 	file_info->active =
-	    fu_mm_device_should_be_active(fu_device_get_version(FU_DEVICE(ctx->device)), filename);
+	    fu_mm_device_should_be_active(fu_device_get_version(FU_DEVICE(ctx->self)), filename);
 	g_ptr_array_add(ctx->file_infos, file_info);
 	return TRUE;
 }
@@ -1096,7 +988,7 @@ fu_mm_device_qmi_close_no_error(FuMmDevice *self, GError **error)
 }
 
 static gboolean
-fu_mm_device_write_firmware_qmi_pdc(FuDevice *device,
+fu_mm_device_write_firmware_qmi_pdc(FuMmDevice *self,
 				    GBytes *fw,
 				    GArray **active_id,
 				    GError **error)
@@ -1107,7 +999,7 @@ fu_mm_device_write_firmware_qmi_pdc(FuDevice *device,
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_mm_device_file_info_free);
 	gint active_i = -1;
 	FuMmArchiveIterateCtx archive_context = {
-	    .device = FU_MM_DEVICE(device),
+	    .self = self,
 	    .error = NULL,
 	    .file_infos = file_infos,
 	};
@@ -1118,7 +1010,7 @@ fu_mm_device_write_firmware_qmi_pdc(FuDevice *device,
 		return FALSE;
 
 	/* boot to fastboot mode */
-	locker = fu_device_locker_new_full(device,
+	locker = fu_device_locker_new_full(FU_DEVICE(self),
 					   (FuDeviceLockerFunc)fu_mm_device_qmi_open,
 					   (FuDeviceLockerFunc)fu_mm_device_qmi_close,
 					   error);
@@ -1134,11 +1026,10 @@ fu_mm_device_write_firmware_qmi_pdc(FuDevice *device,
 
 	for (guint i = 0; i < file_infos->len; i++) {
 		FuMmFileInfo *file_info = g_ptr_array_index(file_infos, i);
-		file_info->digest =
-		    fu_qmi_pdc_updater_write(archive_context.device->qmi_pdc_updater,
-					     file_info->filename,
-					     file_info->bytes,
-					     &archive_context.error);
+		file_info->digest = fu_qmi_pdc_updater_write(archive_context.self->qmi_pdc_updater,
+							     file_info->filename,
+							     file_info->bytes,
+							     &archive_context.error);
 		if (file_info->digest == NULL) {
 			g_prefix_error(&archive_context.error,
 				       "Failed to write file '%s':",
@@ -1167,7 +1058,7 @@ fu_mm_device_write_firmware_qmi_pdc(FuDevice *device,
 }
 
 typedef struct {
-	FuDevice *device;
+	FuMmDevice *self; /* no ref */
 	GMainLoop *mainloop;
 	gchar *version;
 	GError *error;
@@ -1202,7 +1093,7 @@ static gboolean
 fu_mm_device_get_firmware_version_mbim_timeout(gpointer user_data)
 {
 	FuMmGetFirmwareVersionCtx *ctx = user_data;
-	FuMmDevice *self = FU_MM_DEVICE(ctx->device);
+	FuMmDevice *self = FU_MM_DEVICE(ctx->self);
 
 	g_clear_error(&ctx->error);
 	ctx->version = fu_mbim_qdu_updater_check_ready(self->mbim_qdu_updater, &ctx->error);
@@ -1212,12 +1103,12 @@ fu_mm_device_get_firmware_version_mbim_timeout(gpointer user_data)
 }
 
 static gchar *
-fu_mm_device_get_firmware_version_mbim(FuDevice *device, GError **error)
+fu_mm_device_get_firmware_version_mbim(FuMmDevice *self, GError **error)
 {
 	GTimer *timer = g_timer_new();
 	g_autoptr(GMainLoop) mainloop = g_main_loop_new(NULL, FALSE);
 	FuMmGetFirmwareVersionCtx ctx = {
-	    .device = device,
+	    .self = self,
 	    .mainloop = mainloop,
 	    .version = NULL,
 	    .error = NULL,
@@ -1227,7 +1118,7 @@ fu_mm_device_get_firmware_version_mbim(FuDevice *device, GError **error)
 		g_autoptr(FuDeviceLocker) locker = NULL;
 
 		g_clear_error(&ctx.error);
-		locker = fu_device_locker_new_full(device,
+		locker = fu_device_locker_new_full(FU_DEVICE(self),
 						   (FuDeviceLockerFunc)fu_mm_device_mbim_open,
 						   (FuDeviceLockerFunc)fu_mm_device_mbim_close,
 						   &ctx.error);
@@ -1270,14 +1161,13 @@ fu_mm_device_writeln(const gchar *fn, const gchar *buf, GError **error)
 static gboolean
 fu_mm_device_set_autosuspend_delay(FuMmDevice *self, guint timeout_ms, GError **error)
 {
-	g_autofree gchar *device_sysfs_path = NULL;
 	g_autofree gchar *autosuspend_delay_filename = NULL;
 	g_autofree gchar *buf = g_strdup_printf("%u", timeout_ms);
 
 	/* autosuspend delay updated for a proper firmware update */
-	fu_mm_utils_get_port_info(self->port_mbim, NULL, &device_sysfs_path, NULL, NULL);
-	autosuspend_delay_filename =
-	    g_build_filename(device_sysfs_path, "/power/autosuspend_delay_ms", NULL);
+	autosuspend_delay_filename = g_build_filename(fu_device_get_physical_id(FU_DEVICE(self)),
+						      "/power/autosuspend_delay_ms",
+						      NULL);
 	return fu_mm_device_writeln(autosuspend_delay_filename, buf, error);
 }
 
@@ -1362,7 +1252,7 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 		return FALSE;
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
-	version = fu_mm_device_get_firmware_version_mbim(device, error);
+	version = fu_mm_device_get_firmware_version_mbim(self, error);
 	if (version == NULL)
 		return FALSE;
 
@@ -1370,34 +1260,7 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 }
 
 static gboolean
-fu_mm_device_find_device_file(FuDevice *device, gpointer userdata, GError **error)
-{
-	FuMmDevice *self = FU_MM_DEVICE(device);
-	const gchar *subsystem = (const gchar *)userdata;
-
-	return fu_mm_utils_find_device_file(fu_device_get_physical_id(FU_DEVICE(self)),
-					    subsystem,
-					    &self->port_edl,
-					    error);
-}
-
-static gboolean
-fu_mm_device_find_edl_port(FuDevice *device, const gchar *subsystem, GError **error)
-{
-	FuMmDevice *self = FU_MM_DEVICE(device);
-
-	g_clear_pointer(&self->port_edl, g_free);
-
-	return fu_device_retry_full(device,
-				    fu_mm_device_find_device_file,
-				    30,
-				    250,
-				    (gpointer)subsystem,
-				    error);
-}
-
-static gboolean
-fu_mm_device_qcdm_switch_to_edl(FuDevice *device, gpointer userdata, GError **error)
+fu_mm_device_qcdm_switch_to_edl_cb(FuDevice *device, gpointer userdata, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
 	g_autoptr(GError) error_local = NULL;
@@ -1410,9 +1273,10 @@ fu_mm_device_qcdm_switch_to_edl(FuDevice *device, gpointer userdata, GError **er
 					   &error_local);
 
 	if (locker == NULL) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
-			return fu_mm_device_find_edl_port(device, "wwan", error);
-		}
+		/* FIXME: this should have been done at attach */
+		// if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		//	return fu_mm_device_find_edl_port(device, "wwan", error);
+		// }
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
 	}
@@ -1511,7 +1375,7 @@ static gboolean
 fu_mm_device_sahara_open(FuMmDevice *self, GError **error)
 {
 	self->sahara_loader = fu_sahara_loader_new();
-	return fu_sahara_loader_open(self->sahara_loader, self->usb_device, error);
+	return fu_sahara_loader_open(self->sahara_loader, FU_USB_DEVICE(self->udev_device), error);
 }
 
 static gboolean
@@ -1661,11 +1525,14 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 		 * to be present in the firmware-loader search path. */
 		if (!fu_mm_device_copy_firehose_prog(self, firehose_prog, error))
 			return FALSE;
+
+		/* FIXME: this should have been done in attach */
+
 		/* trigger emergency download mode, up to 30s retrying until the QCDM
 		 * port goes away; this takes us to the EDL (embedded downloader) execution
 		 * environment */
 		if (!fu_device_retry_full(FU_DEVICE(self),
-					  fu_mm_device_qcdm_switch_to_edl,
+					  fu_mm_device_qcdm_switch_to_edl_cb,
 					  30,
 					  1000,
 					  NULL,
@@ -1763,7 +1630,7 @@ fu_mm_device_write_firmware(FuDevice *device,
 
 	/* qmi pdc write operation */
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC)
-		return fu_mm_device_write_firmware_qmi_pdc(device,
+		return fu_mm_device_write_firmware_qmi_pdc(self,
 							   fw,
 							   &self->qmi_pdc_active_id,
 							   error);
@@ -2045,9 +1912,6 @@ fu_mm_device_incorporate(FuDevice *device, FuDevice *donor_device)
 	self->update_methods = fu_mm_device_get_update_methods(donor);
 	self->detach_fastboot_at = g_strdup(donor->detach_fastboot_at);
 	self->inhibition_uid = g_strdup(fu_mm_device_get_inhibition_uid(donor));
-	self->port_at_ifnum = donor->port_at_ifnum;
-	self->port_qmi_ifnum = donor->port_qmi_ifnum;
-	self->port_mbim_ifnum = donor->port_mbim_ifnum;
 	g_set_object(&self->manager, donor->manager);
 }
 
@@ -2086,8 +1950,8 @@ static void
 fu_mm_device_finalize(GObject *object)
 {
 	FuMmDevice *self = FU_MM_DEVICE(object);
-	if (self->usb_device != NULL)
-		g_object_unref(self->usb_device);
+	if (self->udev_device != NULL)
+		g_object_unref(self->udev_device);
 	if (self->attach_idle)
 		g_source_remove(self->attach_idle);
 	if (self->qmi_pdc_active_id)
@@ -2150,9 +2014,6 @@ fu_mm_device_new(FuContext *ctx, MMManager *manager, MMObject *omodem)
 	FuMmDevice *self = g_object_new(FU_TYPE_MM_DEVICE, "context", ctx, NULL);
 	self->manager = g_object_ref(manager);
 	self->omodem = g_object_ref(omodem);
-	self->port_at_ifnum = -1;
-	self->port_qmi_ifnum = -1;
-	self->port_mbim_ifnum = -1;
 	return self;
 }
 
@@ -2171,11 +2032,19 @@ fu_mm_device_shadow_new(FuMmDevice *device)
 }
 
 void
-fu_mm_device_set_usb_device(FuMmDevice *self, FuUsbDevice *usb_device)
+fu_mm_device_set_udev_device(FuMmDevice *self, FuUdevDevice *udev_device)
 {
 	g_return_if_fail(FU_IS_MM_DEVICE(self));
-	g_return_if_fail(FU_IS_USB_DEVICE(usb_device));
-	g_set_object(&self->usb_device, usb_device);
+	g_return_if_fail(FU_IS_UDEV_DEVICE(udev_device));
+
+	g_set_object(&self->udev_device, udev_device);
+
+	/* copy across any vendor IDs */
+	if (udev_device != NULL) {
+		fu_device_incorporate(FU_DEVICE(self),
+				      FU_DEVICE(udev_device),
+				      FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS);
+	}
 }
 
 FuMmDevice *
@@ -2191,19 +2060,17 @@ fu_mm_device_udev_new(FuContext *ctx, MMManager *manager, FuMmDevice *shadow_dev
 }
 
 void
-fu_mm_device_udev_add_port(FuMmDevice *self, const gchar *subsystem, const gchar *path, gint ifnum)
+fu_mm_device_udev_add_port(FuMmDevice *self, const gchar *subsystem, const gchar *path)
 {
 	g_return_if_fail(FU_IS_MM_DEVICE(self));
 
-	if (g_str_equal(subsystem, "usbmisc") && self->port_qmi == NULL && ifnum >= 0 &&
-	    ifnum == self->port_qmi_ifnum) {
+	if (g_str_equal(subsystem, "usbmisc") && self->port_qmi == NULL) {
 		g_debug("added QMI port %s (%s)", path, subsystem);
 		self->port_qmi = g_strdup(path);
 		return;
 	}
 
-	if (g_str_equal(subsystem, "tty") && self->port_at == NULL && ifnum >= 0 &&
-	    ifnum == self->port_at_ifnum) {
+	if (g_str_equal(subsystem, "tty") && self->port_at == NULL) {
 		g_debug("added AT port %s (%s)", path, subsystem);
 		self->port_at = g_strdup(path);
 		return;

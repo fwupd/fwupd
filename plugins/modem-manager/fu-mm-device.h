@@ -5,8 +5,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#ifndef __FU_MM_DEVICE_H
-#define __FU_MM_DEVICE_H
+#pragma once
 
 #include <fwupdplugin.h>
 
@@ -23,7 +22,7 @@ G_DECLARE_FINAL_TYPE(FuMmDevice, fu_mm_device, FU, MM_DEVICE, FuDevice)
 FuMmDevice *
 fu_mm_device_new(FuContext *ctx, MMManager *manager, MMObject *omodem);
 void
-fu_mm_device_set_usb_device(FuMmDevice *self, FuUsbDevice *usb_device);
+fu_mm_device_set_udev_device(FuMmDevice *self, FuUdevDevice *udev_device);
 const gchar *
 fu_mm_device_get_inhibition_uid(FuMmDevice *device);
 MMModemFirmwareUpdateMethod
@@ -34,6 +33,4 @@ fu_mm_device_shadow_new(FuMmDevice *device);
 FuMmDevice *
 fu_mm_device_udev_new(FuContext *ctx, MMManager *manager, FuMmDevice *shadow_device);
 void
-fu_mm_device_udev_add_port(FuMmDevice *self, const gchar *subsystem, const gchar *path, gint ifnum);
-
-#endif /* __FU_MM_DEVICE_H */
+fu_mm_device_udev_add_port(FuMmDevice *self, const gchar *subsystem, const gchar *path);
