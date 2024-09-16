@@ -71,6 +71,8 @@ const gchar *
 fu_device_get_custom_flags(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_set_custom_flags(FuDevice *self, const gchar *custom_flags) G_GNUC_NON_NULL(1);
+void
+fu_device_register_private_flag_safe(FuDevice *self, const gchar *flag);
 
 void
 fu_device_add_event(FuDevice *self, FuDeviceEvent *event);
