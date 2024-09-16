@@ -11,7 +11,6 @@
 #include <sys/stat.h>
 
 #include "fu-mbim-qdu-updater.h"
-#include "fu-mm-utils.h"
 
 #define FU_MBIM_QDU_MAX_OPEN_ATTEMPTS 8
 

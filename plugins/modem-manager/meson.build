@@ -5,8 +5,7 @@ libmbim_glib = dependency('mbim-glib', version: '>= 1.26.0', required: get_optio
 if libmm_glib.found() and \
    libqmi_glib.found() and \
    libmbim_glib.found() and \
-   get_option('plugin_modem_manager').require(gudev.found(),
-    error_message: 'gudev is needed for plugin_modem_manager').allowed()
+   get_option('plugin_modem_manager').allowed()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginMm"']
 cargs +=['-DMM_REQUIRED_VERSION="1.10.0"']
@@ -26,7 +25,6 @@ shared_module('fu_plugin_modem_manager',
     'fu-firehose-updater.c',
     'fu-sahara-loader.c',
     'fu-cinterion-fdl-updater.c',
-    'fu-mm-utils.c'
   ],
   include_directories: plugin_incdirs,
   install: true,
