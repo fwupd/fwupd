@@ -1360,7 +1360,8 @@ static void
 fu_plugin_quirks_performance_func(void)
 {
 	gboolean ret;
-	g_autoptr(FuQuirks) quirks = fu_quirks_new();
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuQuirks) quirks = fu_quirks_new(ctx);
 	g_autoptr(GTimer) timer = g_timer_new();
 	g_autoptr(GError) error = NULL;
 	const gchar *keys[] = {"Name", "Children", "Flags", NULL};
@@ -1436,7 +1437,8 @@ fu_plugin_quirks_append_func(void)
 {
 	FuPluginQuirksAppendHelper helper = {0};
 	gboolean ret;
-	g_autoptr(FuQuirks) quirks = fu_quirks_new();
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuQuirks) quirks = fu_quirks_new(ctx);
 	g_autoptr(GError) error = NULL;
 
 	/* lookup a duplicate group name */
@@ -1458,12 +1460,13 @@ fu_quirks_vendor_ids_func(void)
 {
 	gboolean ret;
 	const gchar *tmp;
+	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autofree gchar *guid1 = fwupd_guid_hash_string("PCI\\VEN_8086");
 	g_autofree gchar *guid2 = fwupd_guid_hash_string("USB\\VID_8086");
 	g_autofree gchar *guid3 = fwupd_guid_hash_string("PNP\\VID_ICO");
 	g_autofree gchar *datadata = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
 	g_autofree gchar *quirksdb = g_build_filename(datadata, "quirks.db", NULL);
-	g_autoptr(FuQuirks) quirks = fu_quirks_new();
+	g_autoptr(FuQuirks) quirks = fu_quirks_new(ctx);
 	g_autoptr(GError) error = NULL;
 
 #ifndef HAVE_SQLITE

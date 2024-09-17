@@ -2443,7 +2443,7 @@ fu_engine_history_modify_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
-	g_autoptr(FuHistory) history = fu_history_new();
+	g_autoptr(FuHistory) history = fu_history_new(self->ctx);
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 
@@ -2570,7 +2570,7 @@ fu_engine_history_func(gconstpointer user_data)
 	g_assert_cmpint(fu_device_get_metadata_integer(device, "nr-update"), ==, 2);
 
 	/* check the history database */
-	history = fu_history_new();
+	history = fu_history_new(self->ctx);
 	device2 = fu_history_get_device_by_id(history, fu_device_get_id(device), &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 		g_test_skip("no sqlite support");
@@ -3233,7 +3233,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	g_assert_false(ret);
 
 	/* check the history database */
-	history = fu_history_new();
+	history = fu_history_new(self->ctx);
 	device2 = fu_history_get_device_by_id(history, fu_device_get_id(device), &error2);
 	if (g_error_matches(error2, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 		g_test_skip("no sqlite support");
@@ -3915,6 +3915,7 @@ static void
 fu_history_migrate_v1_func(gconstpointer user_data)
 {
 	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GFile) file_dst = NULL;
 	g_autoptr(GFile) file_src = NULL;
@@ -3936,7 +3937,7 @@ fu_history_migrate_v1_func(gconstpointer user_data)
 	g_assert_true(ret);
 
 	/* create, migrating as required */
-	history = fu_history_new();
+	history = fu_history_new(ctx);
 	g_assert_nonnull(history);
 
 	/* get device */
@@ -3952,6 +3953,7 @@ static void
 fu_history_migrate_v2_func(gconstpointer user_data)
 {
 	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GFile) file_dst = NULL;
 	g_autoptr(GFile) file_src = NULL;
@@ -3973,7 +3975,7 @@ fu_history_migrate_v2_func(gconstpointer user_data)
 	g_assert_true(ret);
 
 	/* create, migrating as required */
-	history = fu_history_new();
+	history = fu_history_new(ctx);
 	g_assert_nonnull(history);
 
 	/* get device */
@@ -4258,7 +4260,7 @@ fu_history_func(gconstpointer user_data)
 #endif
 
 	/* create */
-	history = fu_history_new();
+	history = fu_history_new(self->ctx);
 	g_assert_nonnull(history);
 
 	/* delete the database */

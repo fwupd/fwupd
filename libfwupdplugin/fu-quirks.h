@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <glib-object.h>
+#include "fu-context.h"
 
 #define FU_TYPE_QUIRKS (fu_quirks_get_type())
 G_DECLARE_FINAL_TYPE(FuQuirks, fu_quirks, FU, QUIRKS, GObject)
@@ -45,7 +45,7 @@ typedef void (*FuQuirksIter)(FuQuirks *self,
 			     gpointer user_data);
 
 FuQuirks *
-fu_quirks_new(void);
+fu_quirks_new(FuContext *ctx);
 gboolean
 fu_quirks_load(FuQuirks *self,
 	       FuQuirksLoadFlags load_flags,

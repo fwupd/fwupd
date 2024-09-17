@@ -26,6 +26,8 @@ typedef enum {
 
 FuContext *
 fu_context_new(void);
+void
+fu_context_housekeeping(FuContext *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_context_reload_bios_settings(FuContext *self, GError **error);
 gboolean

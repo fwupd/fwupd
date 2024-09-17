@@ -2176,7 +2176,7 @@ static gboolean
 fu_util_check_activation_needed(FuUtilPrivate *priv, GError **error)
 {
 	gboolean has_pending = FALSE;
-	g_autoptr(FuHistory) history = fu_history_new();
+	g_autoptr(FuHistory) history = fu_history_new(priv->ctx);
 	g_autoptr(GPtrArray) devices = fu_history_get_devices(history, error);
 	if (devices == NULL)
 		return FALSE;
@@ -4223,7 +4223,7 @@ fu_util_version(FuUtilPrivate *priv, GError **error)
 static gboolean
 fu_util_clear_history(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(FuHistory) history = fu_history_new();
+	g_autoptr(FuHistory) history = fu_history_new(priv->ctx);
 	return fu_history_remove_all(history, error);
 }
 

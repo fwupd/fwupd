@@ -78,11 +78,15 @@ fu_daemon_schedule_housekeeping_cb(gpointer user_data)
 {
 	FuDaemon *self = FU_DAEMON(user_data);
 	FuDaemonPrivate *priv = GET_PRIVATE(self);
+	FuContext *ctx = fu_engine_get_context(priv->engine);
 
 #ifdef HAVE_MALLOC_TRIM
 	/* drop heap except one page */
 	malloc_trim(0);
 #endif
+
+	/* anything that listens to the context can perform actions now */
+	fu_context_housekeeping(ctx);
 
 	/* success */
 	priv->housekeeping_id = 0;

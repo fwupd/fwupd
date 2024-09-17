@@ -8664,6 +8664,8 @@ fu_engine_constructed(GObject *obj)
 	}
 #endif
 
+	self->history = fu_history_new(self->ctx);
+
 	/* setup Jcat context */
 	self->jcat_context = jcat_context_new();
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_SHA256);
@@ -8732,7 +8734,6 @@ fu_engine_init(FuEngine *self)
 	self->remote_list = fu_remote_list_new();
 	self->device_list = fu_device_list_new();
 	self->idle = fu_idle_new();
-	self->history = fu_history_new();
 	self->plugin_list = fu_plugin_list_new();
 	self->plugin_filter = g_ptr_array_new_with_free_func(g_free);
 	self->host_security_attrs = fu_security_attrs_new();

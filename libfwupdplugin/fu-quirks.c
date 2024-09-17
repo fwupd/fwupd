@@ -73,6 +73,7 @@ fu_quirks_finalize(GObject *obj);
 
 struct _FuQuirks {
 	GObject parent_instance;
+	FuContext *ctx;
 	FuQuirksLoadFlags load_flags;
 	GHashTable *possible_keys;
 	GPtrArray *invalid_keys;
@@ -972,9 +973,30 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key)
 }
 
 static void
+fu_quirks_housekeeping_cb(FuContext *ctx, FuQuirks *self)
+{
+#ifdef HAVE_SQLITE
+	sqlite3_release_memory(G_MAXINT32);
+	if (self->db != NULL)
+		sqlite3_db_release_memory(self->db);
+#endif
+}
+
+static void
+fu_quirks_dispose(GObject *object)
+{
+	FuQuirks *self = FU_QUIRKS(object);
+	if (self->ctx != NULL)
+		g_signal_handlers_disconnect_by_data(self->ctx, self);
+	g_clear_object(&self->ctx);
+	G_OBJECT_CLASS(fu_quirks_parent_class)->dispose(object);
+}
+
+static void
 fu_quirks_class_init(FuQuirksClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->dispose = fu_quirks_dispose;
 	object_class->finalize = fu_quirks_finalize;
 }
 
@@ -1058,9 +1080,11 @@ fu_quirks_finalize(GObject *obj)
  * Since: 1.0.1
  **/
 FuQuirks *
-fu_quirks_new(void)
+fu_quirks_new(FuContext *ctx)
 {
 	FuQuirks *self;
 	self = g_object_new(FU_TYPE_QUIRKS, NULL);
+	self->ctx = g_object_ref(ctx);
+	g_signal_connect(self->ctx, "housekeeping", G_CALLBACK(fu_quirks_housekeeping_cb), self);
 	return FU_QUIRKS(self);
 }

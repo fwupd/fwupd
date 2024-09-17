@@ -14,7 +14,7 @@
 G_DECLARE_FINAL_TYPE(FuHistory, fu_history, FU, HISTORY, GObject)
 
 FuHistory *
-fu_history_new(void);
+fu_history_new(FuContext *ctx);
 
 gboolean
 fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GError **error)

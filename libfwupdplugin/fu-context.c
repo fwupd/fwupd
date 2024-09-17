@@ -56,7 +56,7 @@ typedef struct {
 	gchar *esp_location;
 } FuContextPrivate;
 
-enum { SIGNAL_SECURITY_CHANGED, SIGNAL_LAST };
+enum { SIGNAL_SECURITY_CHANGED, SIGNAL_HOUSEKEEPING, SIGNAL_LAST };
 
 enum {
 	PROP_0,
@@ -955,6 +955,21 @@ fu_context_security_changed(FuContext *self)
 {
 	g_return_if_fail(FU_IS_CONTEXT(self));
 	g_signal_emit(self, signals[SIGNAL_SECURITY_CHANGED], 0);
+}
+
+/**
+ * fu_context_housekeeping:
+ * @self: a #FuContext
+ *
+ * Performs any housekeeping maintenance when the daemon is idle.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_context_housekeeping(FuContext *self)
+{
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	g_signal_emit(self, signals[SIGNAL_HOUSEKEEPING], 0);
 }
 
 typedef gboolean (*FuContextHwidsSetupFunc)(FuContext *self, FuHwids *hwids, GError **error);
@@ -2218,6 +2233,24 @@ fu_context_class_init(FuContextClass *klass)
 			 g_cclosure_marshal_VOID__VOID,
 			 G_TYPE_NONE,
 			 0);
+	/**
+	 * FuContext::housekeeping:
+	 * @self: the #FuContext instance that emitted the signal
+	 *
+	 * The ::housekeeping signal is emitted when helper objects should do house-keeping actions
+	 * when the daemon is idle.
+	 *
+	 * Since: 2.0.0
+	 **/
+	signals[SIGNAL_HOUSEKEEPING] = g_signal_new("housekeeping",
+						    G_TYPE_FROM_CLASS(object_class),
+						    G_SIGNAL_RUN_LAST,
+						    G_STRUCT_OFFSET(FuContextClass, housekeeping),
+						    NULL,
+						    NULL,
+						    g_cclosure_marshal_VOID__VOID,
+						    G_TYPE_NONE,
+						    0);
 
 	object_class->finalize = fu_context_finalize;
 }
@@ -2240,7 +2273,7 @@ fu_context_init(FuContext *self)
 						      g_free,
 						      (GDestroyNotify)g_ptr_array_unref);
 	priv->firmware_gtypes = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-	priv->quirks = fu_quirks_new();
+	priv->quirks = fu_quirks_new(self);
 	priv->host_bios_settings = fu_bios_settings_new();
 	priv->esp_volumes = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->runtime_versions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
