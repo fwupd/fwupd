@@ -44,8 +44,7 @@ fu_dell_k2_plugin_device_add(FuPlugin *plugin, FuDevice *device, GError **error)
 
 	/* cache this device until dock type is seen */
 	if (ec_device == NULL) {
-		const gchar *key;
-		key = g_strdup_printf("USB\\VID_%04X&PID_%04X", vid, pid);
+		g_autofree gchar *key = g_strdup_printf("USB\\VID_%04X&PID_%04X", vid, pid);
 		fu_plugin_cache_add(plugin, key, device);
 		return TRUE;
 	}
@@ -197,7 +196,7 @@ fu_dell_k2_plugin_config_mst_dev(FuPlugin *plugin)
 	FuDevice *device_mst = fu_plugin_cache_lookup(plugin, "mst");
 	DellK2EcDevType mst_devtype = DELL_K2_EC_DEV_TYPE_MST;
 	DellK2EcDevMstSubtype mst_subtype;
-	g_autofree gchar *devname = NULL;
+	const gchar *devname = NULL;
 
 	if (device_ec == NULL || device_mst == NULL)
 		return;
@@ -209,12 +208,12 @@ fu_dell_k2_plugin_config_mst_dev(FuPlugin *plugin)
 	/* vmm8430 */
 	mst_subtype = DELL_K2_EC_DEV_MST_SUBTYPE_VMM8430;
 	if (fu_dell_k2_ec_is_dev_present(device_ec, mst_devtype, mst_subtype, 0))
-		devname = g_strdup(fu_dell_k2_ec_devicetype_to_str(mst_devtype, mst_subtype, 0));
+		devname = fu_dell_k2_ec_devicetype_to_str(mst_devtype, mst_subtype, 0);
 
 	/* vmm9430 */
 	mst_subtype = DELL_K2_EC_DEV_MST_SUBTYPE_VMM9430;
 	if (fu_dell_k2_ec_is_dev_present(device_ec, mst_devtype, mst_subtype, 0))
-		devname = g_strdup(fu_dell_k2_ec_devicetype_to_str(mst_devtype, mst_subtype, 0));
+		devname = fu_dell_k2_ec_devicetype_to_str(mst_devtype, mst_subtype, 0);
 
 	/* device name */
 	if (devname == NULL) {
