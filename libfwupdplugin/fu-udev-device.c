@@ -1015,7 +1015,7 @@ static gchar *
 fu_udev_device_get_parent_subsystems(FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	GString *str = g_string_new(NULL);
+	g_autoptr(GString) str = g_string_new(NULL);
 	g_autoptr(FuUdevDevice) udev_device = g_object_ref(self);
 
 	/* not true, but good enough for emulation */
@@ -1045,7 +1045,7 @@ fu_udev_device_get_parent_subsystems(FuUdevDevice *self)
 	}
 	if (str->len > 0)
 		g_string_truncate(str, str->len - 1);
-	return g_string_free(str, FALSE);
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 /* private */
