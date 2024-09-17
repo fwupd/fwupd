@@ -234,6 +234,8 @@ fu_dell_k2_rtshub_write_firmware(FuDevice *device,
 
 	chunks =
 	    fu_chunk_array_new_from_stream(stream, 0x00, DELL_K2_RTSHUB_TRANSFER_BLOCK_SIZE, error);
+	if (chunks == NULL)
+		return FALSE;
 
 	/* erase spare flash bank only if it is not empty */
 	if (!fu_dell_k2_rtshub_erase_spare_bank(self, error))
