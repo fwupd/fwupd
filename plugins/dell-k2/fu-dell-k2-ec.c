@@ -392,6 +392,7 @@ fu_dell_k2_ec_dock_info_extract(FuDevice *device, GError **error)
 		const gchar *type_str;
 		const gchar *location_str;
 		guint32 version32 = GUINT32_FROM_BE(dev_entry.version.version_32);
+		g_autofree gchar *version_str = NULL;
 
 		/* name the component */
 		type_str = fu_dell_k2_ec_devicetype_to_str(dev_entry.ec_addr_map.device_type,
@@ -419,9 +420,8 @@ fu_dell_k2_ec_dock_info_extract(FuDevice *device, GError **error)
 			dev_entry.ec_addr_map.instance);
 
 		/* show the component version */
-		g_debug("\tVersion32: %08x, Version8: %s",
-			dev_entry.version.version_32,
-			fu_version_from_uint32_hex(version32, FWUPD_VERSION_FORMAT_QUAD));
+		version_str = fu_version_from_uint32_hex(version32, FWUPD_VERSION_FORMAT_QUAD);
+		g_debug("version32: %08x, version8: %s", dev_entry.version.version_32, version_str);
 	}
 	return TRUE;
 }
