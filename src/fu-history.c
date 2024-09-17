@@ -44,6 +44,7 @@ fu_history_finalize(GObject *object);
 
 struct _FuHistory {
 	GObject parent_instance;
+	FuContext *ctx;
 #ifdef HAVE_SQLITE
 	sqlite3 *db;
 #endif
@@ -1602,10 +1603,31 @@ fu_history_get_security_attrs(FuHistory *self, guint limit, GError **error)
 }
 
 static void
+fu_history_housekeeping_cb(FuContext *ctx, FuHistory *self)
+{
+#ifdef HAVE_SQLITE
+	sqlite3_release_memory(G_MAXINT32);
+	if (self->db != NULL)
+		sqlite3_db_release_memory(self->db);
+#endif
+}
+
+static void
+fu_history_dispose(GObject *object)
+{
+	FuHistory *self = FU_HISTORY(object);
+	if (self->ctx != NULL)
+		g_signal_handlers_disconnect_by_data(self->ctx, self);
+	g_clear_object(&self->ctx);
+	G_OBJECT_CLASS(fu_history_parent_class)->dispose(object);
+}
+
+static void
 fu_history_class_init(FuHistoryClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_history_finalize;
+	object_class->dispose = fu_history_dispose;
 }
 
 static void
@@ -1633,9 +1655,11 @@ fu_history_finalize(GObject *object)
  * Since: 1.0.4
  **/
 FuHistory *
-fu_history_new(void)
+fu_history_new(FuContext *ctx)
 {
 	FuHistory *self;
 	self = g_object_new(FU_TYPE_PENDING, NULL);
+	self->ctx = g_object_ref(ctx);
+	g_signal_connect(self->ctx, "housekeeping", G_CALLBACK(fu_history_housekeeping_cb), self);
 	return FU_HISTORY(self);
 }

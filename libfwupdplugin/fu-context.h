@@ -23,6 +23,7 @@ struct _FuContextClass {
 	GObjectClass parent_class;
 	/* signals */
 	void (*security_changed)(FuContext *self);
+	void (*housekeeping)(FuContext *self);
 };
 
 /**
