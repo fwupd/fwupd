@@ -858,11 +858,9 @@ fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, FuUsbBosDescriptor *bos, G
 static GInputStream *
 fu_usb_device_load_descriptor_stream(FuUsbDevice *self, const gchar *basename, GError **error)
 {
-	g_autoptr(GBytes) blob = NULL;
 	g_autofree gchar *fn = NULL;
 
-	/* we can't use fu_input_stream_from_path() here as seeking to the end gives us
-	 * 0x10011 as a bufsz weirdly */
+	/* kernel weirdness -- fseek(fd, 0L, SEEK_END) always gives us 0x10011 */
 	fn = g_build_filename(fu_device_get_backend_id(FU_DEVICE(self)), basename, NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_set_error(error,
@@ -872,10 +870,7 @@ fu_usb_device_load_descriptor_stream(FuUsbDevice *self, const gchar *basename, G
 			    fn);
 		return NULL;
 	}
-	blob = fu_bytes_get_contents(fn, error);
-	if (blob == NULL)
-		return NULL;
-	return G_INPUT_STREAM(g_memory_input_stream_new_from_bytes(blob));
+	return fu_input_stream_from_path(fn, error);
 }
 
 static gboolean
@@ -888,14 +883,19 @@ fu_usb_device_parse_bos_descriptor(FuUsbDevice *self, GInputStream *stream, GErr
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 	while (offset < streamsz) {
+		g_autoptr(GError) error_local = NULL;
 		g_autoptr(FuUsbBosDescriptor) bos_descriptor =
 		    g_object_new(FU_TYPE_USB_BOS_DESCRIPTOR, NULL);
 		if (!fu_firmware_parse_stream(FU_FIRMWARE(bos_descriptor),
 					      stream,
 					      offset,
 					      FWUPD_INSTALL_FLAG_NONE,
-					      error))
+					      &error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE))
+				break;
+			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
+		}
 		offset += fu_firmware_get_size(FU_FIRMWARE(bos_descriptor));
 		g_ptr_array_add(priv->bos_descriptors, g_steal_pointer(&bos_descriptor));
 	}
@@ -1754,11 +1754,16 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 	while (offset < streamsz) {
 		FuUsbDescriptorKind descriptor_kind;
 		g_autoptr(FuUsbBaseHdr) st_base = NULL;
+		g_autoptr(GError) error_local = NULL;
 
 		/* this is common to all descriptor types */
-		st_base = fu_usb_base_hdr_parse_stream(stream, offset, error);
-		if (st_base == NULL)
+		st_base = fu_usb_base_hdr_parse_stream(stream, offset, &error_local);
+		if (st_base == NULL) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE))
+				break;
+			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
+		}
 
 		/* config, interface or endpoint */
 		descriptor_kind = fu_usb_base_hdr_get_descriptor_type(st_base);
