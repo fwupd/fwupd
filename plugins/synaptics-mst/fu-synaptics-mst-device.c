@@ -1269,8 +1269,29 @@ fu_synaptics_mst_device_update_firmware(FuSynapticsMstDevice *self,
 {
 	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
 
-	helper->fw =
-	    fu_bytes_new_offset(fw, 0x0, fu_device_get_firmware_size_max(FU_DEVICE(self)), error);
+	guint32 fw_size = 0;
+	switch (self->family) {
+	case FU_SYNAPTICS_MST_FAMILY_TESLA:
+	case FU_SYNAPTICS_MST_FAMILY_LEAF:
+	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
+		fw_size = PANAMERA_FIRMWARE_SIZE;
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
+	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
+		fw_size = CAYENNE_FIRMWARE_SIZE;
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
+		fw_size = CARRERA_FIRMWARE_SIZE;
+		break;
+	default:
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Unsupported chip family");
+		return FALSE;
+	}
+
+	helper->fw = fu_bytes_new_offset(fw, 0x0, fw_size, error);
 	if (helper->fw == NULL)
 		return FALSE;
 	helper->checksum = fu_synaptics_mst_calculate_crc16(0,
@@ -1758,22 +1779,11 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 
 	/* detect chip family */
 	switch (self->family) {
-	case FU_SYNAPTICS_MST_FAMILY_TESLA:
-		fu_device_set_firmware_size_max(device, 0x10000);
-		fu_device_set_firmware_size_max(device, 0x10000);
-		break;
 	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
-		fu_device_set_firmware_size_max(device, 0x80000);
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
-		break;
-	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
 	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
-		fu_device_set_firmware_size_max(device, CAYENNE_FIRMWARE_SIZE);
-		break;
+	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
 	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
-		fu_device_set_firmware_size_max(device, CARRERA_FIRMWARE_SIZE);
-		break;
 	default:
 		break;
 	}
