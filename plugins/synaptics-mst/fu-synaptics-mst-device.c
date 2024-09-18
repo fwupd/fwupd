@@ -1269,19 +1269,19 @@ fu_synaptics_mst_device_update_firmware(FuSynapticsMstDevice *self,
 {
 	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
 
-	guint32 fwSize = 0;
+	guint32 fw_size = 0;
 	switch (self->family) {
 	case FU_SYNAPTICS_MST_FAMILY_TESLA:
 	case FU_SYNAPTICS_MST_FAMILY_LEAF:
 	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
-		fwSize = PANAMERA_FIRMWARE_SIZE;
+		fw_size = PANAMERA_FIRMWARE_SIZE;
 		break;
 	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
 	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
-		fwSize = CAYENNE_FIRMWARE_SIZE;
+		fw_size = CAYENNE_FIRMWARE_SIZE;
 		break;
 	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
-		fwSize = CARRERA_FIRMWARE_SIZE;
+		fw_size = CARRERA_FIRMWARE_SIZE;
 		break;
 	default:
 		g_set_error(error,
@@ -1291,7 +1291,7 @@ fu_synaptics_mst_device_update_firmware(FuSynapticsMstDevice *self,
 		return FALSE;
 	}
 
-	helper->fw = fu_bytes_new_offset(fw, 0x0, fwSize, error);
+	helper->fw = fu_bytes_new_offset(fw, 0x0, fw_size, error);
 	if (helper->fw == NULL)
 		return FALSE;
 	helper->checksum = fu_synaptics_mst_calculate_crc16(0,
