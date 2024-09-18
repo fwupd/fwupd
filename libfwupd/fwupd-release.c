@@ -9,7 +9,7 @@
 #include <gio/gio.h>
 #include <string.h>
 
-#include "fwupd-codec-private.h"
+#include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
@@ -1532,113 +1532,110 @@ fwupd_release_set_install_duration(FwupdRelease *self, guint32 duration)
 	priv->install_duration = duration;
 }
 
-static GVariant *
-fwupd_release_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
+static void
+fwupd_release_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdRelease *self = FWUPD_RELEASE(converter);
+	FwupdRelease *self = FWUPD_RELEASE(codec);
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
-	GVariantBuilder builder;
 
-	/* create an array with all the metadata in */
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
 	if (priv->remote_id != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_REMOTE_ID,
 				      g_variant_new_string(priv->remote_id));
 	}
 	if (priv->appstream_id != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_APPSTREAM_ID,
 				      g_variant_new_string(priv->appstream_id));
 	}
 	if (priv->id != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_RELEASE_ID,
 				      g_variant_new_string(priv->id));
 	}
 	if (priv->detach_caption != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_DETACH_CAPTION,
 				      g_variant_new_string(priv->detach_caption));
 	}
 	if (priv->detach_image != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_DETACH_IMAGE,
 				      g_variant_new_string(priv->detach_image));
 	}
 	if (priv->update_message != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_UPDATE_MESSAGE,
 				      g_variant_new_string(priv->update_message));
 	}
 	if (priv->update_image != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_UPDATE_IMAGE,
 				      g_variant_new_string(priv->update_image));
 	}
 	if (priv->filename != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FILENAME,
 				      g_variant_new_string(priv->filename));
 	}
 	if (priv->protocol != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_PROTOCOL,
 				      g_variant_new_string(priv->protocol));
 	}
 	if (priv->license != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_LICENSE,
 				      g_variant_new_string(priv->license));
 	}
 	if (priv->name != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_NAME,
 				      g_variant_new_string(priv->name));
 	}
 	if (priv->name_variant_suffix != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX,
 				      g_variant_new_string(priv->name_variant_suffix));
 	}
 	if (priv->size != 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_SIZE,
 				      g_variant_new_uint64(priv->size));
 	}
 	if (priv->created != 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_CREATED,
 				      g_variant_new_uint64(priv->created));
 	}
 	if (priv->summary != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_SUMMARY,
 				      g_variant_new_string(priv->summary));
 	}
 	if (priv->branch != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BRANCH,
 				      g_variant_new_string(priv->branch));
 	}
 	if (priv->description != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_DESCRIPTION,
 				      g_variant_new_string(priv->description));
@@ -1647,7 +1644,7 @@ fwupd_release_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 		g_autofree const gchar **strv = g_new0(const gchar *, priv->categories->len + 1);
 		for (guint i = 0; i < priv->categories->len; i++)
 			strv[i] = (const gchar *)g_ptr_array_index(priv->categories, i);
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_CATEGORIES,
 				      g_variant_new_strv(strv, -1));
@@ -1656,7 +1653,7 @@ fwupd_release_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 		g_autofree const gchar **strv = g_new0(const gchar *, priv->issues->len + 1);
 		for (guint i = 0; i < priv->issues->len; i++)
 			strv[i] = (const gchar *)g_ptr_array_index(priv->issues, i);
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_ISSUES,
 				      g_variant_new_strv(strv, -1));
@@ -1669,14 +1666,14 @@ fwupd_release_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 		}
 		if (str->len > 0)
 			g_string_truncate(str, str->len - 1);
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_CHECKSUM,
 				      g_variant_new_string(str->str));
 	}
 	if (priv->locations->len > 0) {
 		g_variant_builder_add(
-		    &builder,
+		    builder,
 		    "{sv}",
 		    FWUPD_RESULT_KEY_LOCATIONS,
 		    g_variant_new_strv((const gchar *const *)priv->locations->pdata,
@@ -1684,61 +1681,61 @@ fwupd_release_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 	}
 	if (priv->tags->len > 0) {
 		g_variant_builder_add(
-		    &builder,
+		    builder,
 		    "{sv}",
 		    FWUPD_RESULT_KEY_TAGS,
 		    g_variant_new_strv((const gchar *const *)priv->tags->pdata, priv->tags->len));
 	}
 	if (priv->homepage != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_HOMEPAGE,
 				      g_variant_new_string(priv->homepage));
 	}
 	if (priv->details_url != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_DETAILS_URL,
 				      g_variant_new_string(priv->details_url));
 	}
 	if (priv->source_url != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_SOURCE_URL,
 				      g_variant_new_string(priv->source_url));
 	}
 	if (priv->version != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_VERSION,
 				      g_variant_new_string(priv->version));
 	}
 	if (priv->vendor != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_VENDOR,
 				      g_variant_new_string(priv->vendor));
 	}
 	if (priv->flags != 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_TRUST_FLAGS,
 				      g_variant_new_uint64(priv->flags));
 	}
 	if (priv->urgency != 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_URGENCY,
 				      g_variant_new_uint32(priv->urgency));
 	}
 	if (g_hash_table_size(priv->metadata) > 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_METADATA,
 				      fwupd_hash_kv_to_variant(priv->metadata));
 	}
 	if (priv->install_duration > 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_INSTALL_DURATION,
 				      g_variant_new_uint32(priv->install_duration));
@@ -1751,13 +1748,11 @@ fwupd_release_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 			children[i] = fwupd_codec_to_variant(FWUPD_CODEC(report), flags);
 		}
 		g_variant_builder_add(
-		    &builder,
+		    builder,
 		    "{sv}",
 		    FWUPD_RESULT_KEY_REPORTS,
 		    g_variant_new_array(G_VARIANT_TYPE("a{sv}"), children, priv->reports->len));
 	}
-
-	return g_variant_new("a{sv}", &builder);
 }
 
 static void
@@ -1939,9 +1934,9 @@ fwupd_release_string_append_flags(GString *str,
 }
 
 static void
-fwupd_release_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_release_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdRelease *self = FWUPD_RELEASE(converter);
+	FwupdRelease *self = FWUPD_RELEASE(codec);
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GList) keys = NULL;
 
@@ -2043,21 +2038,14 @@ fwupd_release_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFla
 	}
 
 	/* reports */
-	if (priv->reports->len > 0) {
-		json_builder_set_member_name(builder, "Reports");
-		json_builder_begin_array(builder);
-		for (guint i = 0; i < priv->reports->len; i++) {
-			FwupdReport *report = g_ptr_array_index(priv->reports, i);
-			fwupd_codec_to_json(FWUPD_CODEC(report), builder, flags);
-		}
-		json_builder_end_array(builder);
-	}
+	if (priv->reports->len > 0)
+		fwupd_codec_array_to_json(priv->reports, "Reports", builder, flags);
 }
 
 static void
-fwupd_release_add_string(FwupdCodec *converter, guint idt, GString *str)
+fwupd_release_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FwupdRelease *self = FWUPD_RELEASE(converter);
+	FwupdRelease *self = FWUPD_RELEASE(codec);
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GList) keys = NULL;
 
@@ -2238,9 +2226,9 @@ fwupd_release_finalize(GObject *object)
 }
 
 static void
-fwupd_release_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
+fwupd_release_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
-	FwupdRelease *self = FWUPD_RELEASE(converter);
+	FwupdRelease *self = FWUPD_RELEASE(codec);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {
@@ -2253,8 +2241,8 @@ static void
 fwupd_release_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fwupd_release_add_string;
-	iface->to_json = fwupd_release_to_json;
-	iface->to_variant = fwupd_release_to_variant;
+	iface->add_json = fwupd_release_add_json;
+	iface->add_variant = fwupd_release_add_variant;
 	iface->from_variant_iter = fwupd_release_from_variant_iter;
 }
 

@@ -32,7 +32,6 @@ fu_fresco_pd_device_transfer_read(FuFrescoPdDevice *self,
 				  guint16 bufsz,
 				  GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_length = 0;
 
 	g_return_val_if_fail(buf != NULL, FALSE);
@@ -40,19 +39,19 @@ fu_fresco_pd_device_transfer_read(FuFrescoPdDevice *self,
 
 	/* to device */
 	fu_dump_raw(G_LOG_DOMAIN, "read", buf, bufsz);
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0x40,
-					   0x0,
-					   offset,
-					   buf,
-					   bufsz,
-					   &actual_length,
-					   5000,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0x40,
+					    0x0,
+					    offset,
+					    buf,
+					    bufsz,
+					    &actual_length,
+					    5000,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to read from offset 0x%x: ", offset);
 		fu_error_convert(error);
 		return FALSE;
@@ -78,7 +77,6 @@ fu_fresco_pd_device_transfer_write(FuFrescoPdDevice *self,
 				   guint16 bufsz,
 				   GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_length = 0;
 
 	g_return_val_if_fail(buf != NULL, FALSE);
@@ -86,21 +84,20 @@ fu_fresco_pd_device_transfer_write(FuFrescoPdDevice *self,
 
 	/* to device */
 	fu_dump_raw(G_LOG_DOMAIN, "write", buf, bufsz);
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0x41,
-					   0x0,
-					   offset,
-					   buf,
-					   bufsz,
-					   &actual_length,
-					   5000,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0x41,
+					    0x0,
+					    offset,
+					    buf,
+					    bufsz,
+					    &actual_length,
+					    5000,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to write offset 0x%x: ", offset);
-		fu_error_convert(error);
 		return FALSE;
 	}
 	if (bufsz != actual_length) {

@@ -15,10 +15,18 @@ struct _FuI2cDeviceClass {
 	FuUdevDeviceClass parent_class;
 };
 
-guint
-fu_i2c_device_get_bus_number(FuI2cDevice *self) G_GNUC_NON_NULL(1);
-void
-fu_i2c_device_set_bus_number(FuI2cDevice *self, guint bus_number) G_GNUC_NON_NULL(1);
+/**
+ * FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS:
+ *
+ * Do not add the HWID instance IDs.
+ *
+ * Since: 2.0.0
+ */
+#define FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS "no-hwid-guids"
+
+gboolean
+fu_i2c_device_set_address(FuI2cDevice *self, guint8 address, gboolean force, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_i2c_device_read(FuI2cDevice *self, guint8 *buf, gsize bufsz, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);

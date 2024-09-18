@@ -1,7 +1,8 @@
-#!/bin/sh -e
+#!/usr/bin/env -S bash -e
 gcc=$(gcc -dumpmachine)
 DIST="$(dirname $0)/../dist"
 BIN="$(basename $0)"
+POLICY="/usr/share/dbus-1/system.d/org.freedesktop.fwupd.conf"
 export FWUPD_LOCALSTATEDIR=${DIST}
 export FWUPD_SYSCONFDIR=${DIST}/etc
 export LD_LIBRARY_PATH=${DIST}/lib/${gcc}:${DIST}/lib64:${DIST}/lib
@@ -23,10 +24,22 @@ if [ ! -f ${EXE} ]; then
         echo "# build-fwupd"
         exit 1
 fi
-SUDO="$(which sudo) \
-        LD_LIBRARY_PATH=${LD_LIBRARY_PATH} \
-        FWUPD_LOCALSTATEDIR=${FWUPD_LOCALSTATEDIR} \
-        FWUPD_SYSCONFDIR=${FWUPD_SYSCONFDIR} \
-        G_DEBUG=${G_DEBUG} \
-        FWUPD_POLKIT_NOCHECK=1"
-${SUDO} ${DEBUG} ${EXE} "$@"
+ENV="FWUPD_POLKIT_NOCHECK=1 \
+     G_DEBUG=${G_DEBUG} \
+     LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
+for var in $(env | grep FWUPD | cut -d= -f1); do
+        ENV="${ENV} ${var}=${!var}"
+done
+SUDO=$(which sudo)
+if [ "${BIN}" = "fwupd" ] && \
+   [ -d "$(dirname ${POLICY})" ] && \
+   [ ! -f ${POLICY} ]; then
+        echo "Missing D-Bus policy in ${POLICY}"
+        echo "Copy into filesystem? [y/N]"
+        read -r answer
+        if [ "${answer}" != "y" ]; then
+                exit 1
+        fi
+        ${SUDO} cp ${DIST}/share/dbus-1/system.d/org.freedesktop.fwupd.conf ${POLICY}
+fi
+${SUDO} ${ENV} ${DEBUG} ${EXE} "$@"

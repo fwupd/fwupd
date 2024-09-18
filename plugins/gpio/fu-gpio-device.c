@@ -55,8 +55,10 @@ fu_gpio_device_setup(FuDevice *device, GError **error)
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  GPIO_GET_CHIPINFO_IOCTL,
 				  (guint8 *)&info,
+				  sizeof(info),
 				  NULL,
 				  FU_GPIO_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error)) {
 		g_prefix_error(error, "failed to get chipinfo: ");
 		return FALSE;
@@ -131,8 +133,10 @@ fu_gpio_device_assign_full(FuGpioDevice *self, guint64 line, gboolean value, GEr
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  GPIO_V2_GET_LINE_IOCTL,
 				  (guint8 *)&req,
+				  sizeof(req),
 				  NULL,
 				  FU_GPIO_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error)) {
 		g_prefix_error(error, "failed to assign: ");
 		return FALSE;
@@ -159,13 +163,16 @@ fu_gpio_device_assign(FuGpioDevice *self, const gchar *id, gboolean value, GErro
 	}
 
 	/* specified as a number, or look for @id as named pin */
-	if (fu_strtoull(id, &line, 0, self->num_lines - 1, NULL)) {
+	if (self->num_lines > 0 &&
+	    fu_strtoull(id, &line, 0, self->num_lines - 1, FU_INTEGER_BASE_AUTO, NULL)) {
 		struct gpio_v2_line_info info = {.offset = line};
 		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 					  GPIO_V2_GET_LINEINFO_IOCTL,
 					  (guint8 *)&info,
+					  sizeof(info),
 					  NULL,
 					  FU_GPIO_DEVICE_IOCTL_TIMEOUT,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 					  error)) {
 			g_prefix_error(error, "failed to get lineinfo: ");
 			return FALSE;
@@ -177,8 +184,10 @@ fu_gpio_device_assign(FuGpioDevice *self, const gchar *id, gboolean value, GErro
 			if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 						  GPIO_V2_GET_LINEINFO_IOCTL,
 						  (guint8 *)&info,
+						  sizeof(info),
 						  NULL,
 						  FU_GPIO_DEVICE_IOCTL_TIMEOUT,
+						  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 						  error)) {
 				g_prefix_error(error, "failed to get lineinfo: ");
 				return FALSE;
@@ -200,7 +209,7 @@ fu_gpio_device_assign(FuGpioDevice *self, const gchar *id, gboolean value, GErro
 static void
 fu_gpio_device_init(FuGpioDevice *self)
 {
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 }
 
 static void

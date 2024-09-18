@@ -16,9 +16,13 @@ fu_version_from_uint64(guint64 val, FwupdVersionFormat kind);
 gchar *
 fu_version_from_uint32(guint32 val, FwupdVersionFormat kind);
 gchar *
+fu_version_from_uint32_hex(guint32 val, FwupdVersionFormat kind);
+gchar *
 fu_version_from_uint24(guint32 val, FwupdVersionFormat kind);
 gchar *
 fu_version_from_uint16(guint16 val, FwupdVersionFormat kind);
+gchar *
+fu_version_from_uint16_hex(guint16 val, FwupdVersionFormat kind);
 gchar *
 fu_version_parse_from_format(const gchar *version, FwupdVersionFormat fmt);
 gchar *

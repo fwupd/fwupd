@@ -7,10 +7,6 @@
 
 #include "config.h"
 
-#ifdef HAVE_HIDRAW_H
-#include <linux/hidraw.h>
-#include <linux/input.h>
-#endif
 #include "fu-nordic-hid-archive.h"
 #include "fu-nordic-hid-cfg-channel.h"
 
@@ -26,8 +22,6 @@
 #define FU_NORDIC_HID_CFG_CHANNEL_RETRY_DELAY	      50   /* ms */
 #define FU_NORDIC_HID_CFG_CHANNEL_DFU_RETRY_DELAY     500  /* ms */
 #define FU_NORDIC_HID_CFG_CHANNEL_PEERS_POLL_INTERVAL 2000 /* ms */
-
-#define FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT 5000 /* ms */
 
 typedef enum {
 	CONFIG_STATUS_PENDING,
@@ -54,7 +48,7 @@ typedef enum {
 	DFU_STATE_CLEANING,
 } FuNordicCfgSyncState;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 report_id;
 	guint8 recipient;
 	guint8 event_id;
@@ -92,7 +86,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuNordicCfgChannelMsg, g_free);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuNordicCfgChannelDfuInfo, g_free);
 
 struct _FuNordicHidCfgChannel {
-	FuUdevDevice parent_instance;
+	FuHidrawDevice parent_instance;
 	gboolean dfu_support;
 	gboolean peers_cache_support;
 	guint8 peers_cache[PEERS_CACHE_LEN];
@@ -108,7 +102,7 @@ struct _FuNordicHidCfgChannel {
 	GPtrArray *modules; /* of FuNordicCfgChannelModule */
 };
 
-G_DEFINE_TYPE(FuNordicHidCfgChannel, fu_nordic_hid_cfg_channel, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE(FuNordicHidCfgChannel, fu_nordic_hid_cfg_channel, FU_TYPE_HIDRAW_DEVICE)
 
 static FuNordicHidCfgChannel *
 fu_nordic_hid_cfg_channel_new(guint8 id, FuNordicHidCfgChannel *parent);
@@ -166,15 +160,11 @@ fu_nordic_hid_cfg_channel_send(FuNordicHidCfgChannel *self,
 	FuUdevDevice *udev_device = fu_nordic_hid_cfg_channel_get_udev_device(self, error);
 	if (udev_device == NULL)
 		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "Sent", buf, bufsz);
-	if (!fu_udev_device_ioctl(udev_device,
-				  HIDIOCSFEATURE(bufsz),
-				  buf,
-				  NULL,
-				  FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT,
-				  error))
-		return FALSE;
-	return TRUE;
+	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(udev_device),
+					    buf,
+					    bufsz,
+					    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					    error);
 #else
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -198,12 +188,11 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 	for (gint i = 1; i < 100; i++) {
 		recv_msg->report_id = HID_REPORT_ID;
 		recv_msg->recipient = self->peer_id;
-		if (!fu_udev_device_ioctl(udev_device,
-					  HIDIOCGFEATURE(sizeof(*recv_msg)),
-					  (guint8 *)recv_msg,
-					  NULL,
-					  FU_NORDIC_HID_CFG_CHANNEL_IOCTL_TIMEOUT,
-					  error))
+		if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(udev_device),
+						  (guint8 *)recv_msg,
+						  sizeof(*recv_msg),
+						  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+						  error))
 			return FALSE;
 		/* if the device is busy it return 06 00 00 00 00 response */
 		if (recv_msg->report_id == HID_REPORT_ID &&
@@ -439,7 +428,7 @@ fu_nordic_hid_cfg_channel_check_children_update_pending_cb(FuDevice *device,
 
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *peer = g_ptr_array_index(children, i);
-		if (fu_device_has_internal_flag(peer, FU_DEVICE_INTERNAL_FLAG_UPDATE_PENDING)) {
+		if (fu_device_has_private_flag(peer, FU_DEVICE_PRIVATE_FLAG_UPDATE_PENDING)) {
 			update_pending = TRUE;
 			break;
 		}
@@ -473,13 +462,13 @@ fu_nordic_hid_cfg_channel_add_peer(FuNordicHidCfgChannel *self, guint8 peer_id)
 
 	/* if any of the peripherals have a pending update, inhibit the dongle */
 	g_signal_connect(FU_DEVICE(peer),
-			 "notify::internal-flags",
+			 "notify::private-flags",
 			 G_CALLBACK(fu_nordic_hid_cfg_channel_check_children_update_pending_cb),
 			 self);
 
 	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(peer));
 	/* prohibit to close parent's communication descriptor */
-	fu_device_add_internal_flag(FU_DEVICE(peer), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(peer), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
 }
 
 static void
@@ -1288,12 +1277,6 @@ fu_nordic_hid_cfg_channel_dfu_start(FuNordicHidCfgChannel *self,
 }
 
 static gboolean
-fu_nordic_hid_cfg_channel_probe(FuDevice *device, GError **error)
-{
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
-}
-
-static gboolean
 fu_nordic_hid_cfg_channel_generate_ids(FuNordicHidCfgChannel *self, GError **error)
 {
 	FuDevice *device = FU_DEVICE(self);
@@ -1576,6 +1559,7 @@ fu_nordic_hid_cfg_channel_write_firmware(FuDevice *device,
 	FuNordicHidCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(device);
 	gsize streamsz = 0;
 	guint32 checksum;
+	guint64 val = 0;
 	g_autofree gchar *csum_str = NULL;
 	g_autofree gchar *image_id = NULL;
 	g_autoptr(GInputStream) stream = NULL;
@@ -1593,7 +1577,9 @@ fu_nordic_hid_cfg_channel_write_firmware(FuDevice *device,
 	if (csum_str == NULL)
 		return FALSE;
 	/* expecting checksum string in hex */
-	checksum = g_ascii_strtoull(csum_str, NULL, 16);
+	if (!fu_strtoull(csum_str, &val, 0, G_MAXUINT32, FU_INTEGER_BASE_16, error))
+		return FALSE;
+	checksum = (guint32)val;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -1685,7 +1671,6 @@ fu_nordic_hid_cfg_channel_class_init(FuNordicHidCfgChannelClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	device_class->probe = fu_nordic_hid_cfg_channel_probe;
 	device_class->set_progress = fu_nordic_hid_cfg_channel_set_progress;
 	device_class->set_quirk_kv = fu_nordic_hid_cfg_channel_set_quirk_kv;
 	device_class->setup = fu_nordic_hid_cfg_channel_setup;
@@ -1706,6 +1691,8 @@ fu_nordic_hid_cfg_channel_init(FuNordicHidCfgChannel *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.nordic.hidcfgchannel");
 	fu_device_retry_set_delay(FU_DEVICE(self), FU_NORDIC_HID_CFG_CHANNEL_RETRY_DELAY);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_NORDIC_HID_ARCHIVE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
 
 static FuNordicHidCfgChannel *

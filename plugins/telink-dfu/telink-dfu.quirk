@@ -1,0 +1,7 @@
+# 8266 mouse beta test
+[BLUETOOTH\VID_248A&PID_8266]
+Plugin = telink_dfu
+
+# 8208 Dual Keyboard
+[BLUETOOTH\VID_248A&PID_8208]
+Plugin = telink_dfu

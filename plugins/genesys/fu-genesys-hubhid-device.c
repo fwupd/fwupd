@@ -18,10 +18,10 @@
 
 typedef union {
 	struct {
-		guint8 recipient : 2; /* GUsbDeviceRecipient */
+		guint8 recipient : 2; /* FuUsbRecipient */
 		guint8 reserved : 3;
-		guint8 type : 2; /* GUsbDeviceRequestType */
-		guint8 dir : 1;	 /* GUsbDeviceDirection */
+		guint8 type : 2; /* FuUsbRequestType */
+		guint8 dir : 1;	 /* FuUsbDirection */
 	};
 	guint8 bm;
 } FuGenesysUsbRequestType;
@@ -261,9 +261,9 @@ fu_genesys_hubhid_device_command_write(FuGenesysHubhidDevice *self,
 gboolean
 fu_genesys_hubhid_device_send_report(FuGenesysHubhidDevice *self,
 				     FuProgress *progress,
-				     GUsbDeviceDirection direction,
-				     GUsbDeviceRequestType request_type,
-				     GUsbDeviceRecipient recipient,
+				     FuUsbDirection direction,
+				     FuUsbRequestType request_type,
+				     FuUsbRecipient recipient,
 				     guint8 request,
 				     guint16 value,
 				     guint16 idx,
@@ -273,9 +273,9 @@ fu_genesys_hubhid_device_send_report(FuGenesysHubhidDevice *self,
 {
 	g_autofree FuGenesysUsbSetup *setup = g_new0(FuGenesysUsbSetup, 1);
 
-	setup->req_type.dir = (direction == G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST)
+	setup->req_type.dir = (direction == FU_USB_DIRECTION_DEVICE_TO_HOST)
 				  ? 1
-				  : 0; /* revert g_usb in/out dir to usb spec */
+				  : 0; /* revert fu_usb in/out dir to usb spec */
 	setup->req_type.type = request_type;
 	setup->req_type.recipient = recipient;
 	setup->request = request;
@@ -283,7 +283,7 @@ fu_genesys_hubhid_device_send_report(FuGenesysHubhidDevice *self,
 	setup->index = idx;
 	setup->length = datasz;
 
-	if (direction == G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST) {
+	if (direction == FU_USB_DIRECTION_DEVICE_TO_HOST) {
 		return fu_genesys_hubhid_device_command_read(self,
 							     setup,
 							     data,
@@ -349,9 +349,7 @@ fu_genesys_hubhid_device_validate_token(FuGenesysHubhidDevice *self, GError **er
 static gboolean
 fu_genesys_hubhid_device_probe(FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	if (g_usb_device_get_device_class(usb_device) != G_USB_DEVICE_CLASS_INTERFACE_DESC) {
+	if (fu_usb_device_get_class(FU_USB_DEVICE(device)) != FU_USB_CLASS_INTERFACE_DESC) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

@@ -53,7 +53,6 @@ override_dh_install:
 	sed -i 's,wheel,sudo,' debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
 	dh_install
 	dh_install -pfwupd $$(pkg-config --variable=systemdsystemunitdir systemd | sed s,^/,,)
-	dh_install -pfwupd $$(pkg-config --variable=udevdir udev | sed s,^/,,)/rules.d
 	#install MSR conf if needed (depending on distro)
 	[ ! -d debian/tmp/usr/lib/modules-load.d ] || dh_install -pfwupd usr/lib/modules-load.d
 	[ ! -d debian/tmp/lib/modules-load.d ] || dh_install -pfwupd lib/modules-load.d

@@ -7,11 +7,11 @@ description: |
 
 grade: stable
 confinement: strict
-base: core22
+base: core24
 license: LGPL-2.1-or-later
 
-architectures:
-  - amd64
+platforms:
+  amd64:
 
 slots:
   fwupd:
@@ -52,6 +52,11 @@ apps:
     plugs: [fwupdmgr, home, network, polkit, shutdown]
     completer:
       share/bash-completion/completions/fwupdmgr
+  refresh:
+    command: fwupdmgr.wrapper refresh
+    daemon: oneshot
+    plugs: [fwupdmgr, network]
+    timer: "00:00-24:00/24"
 
 parts:
   #needed for UEFI plugin to build UX labels
@@ -86,12 +91,7 @@ parts:
                        -Dpython=/usr/bin/python3,
                        -Dplugin_flashrom=disabled,
                        -Dplugin_powerd=disabled,
-                       -Dudevdir=$CRAFT_STAGE/lib/udev,
                        -Defi_os_dir=fwupd,
-                       "-Dgusb:tests=false",
-                       "-Dgusb:docs=false",
-                       "-Dgusb:introspection=false",
-                       "-Dgusb:vapi=false",
                        "-Dlibxmlb:gtkdoc=false",
                        "-Dlibxmlb:introspection=false",
                        "-Dlibjcat:man=false",
@@ -138,6 +138,7 @@ parts:
       - gettext
       - gnu-efi
       - fwupd-unsigned-dev
+      - hwdata
       - libcurl4-openssl-dev
       - libarchive-dev
       - libcbor-dev
@@ -146,7 +147,7 @@ parts:
       - libglib2.0-dev
       - libgnutls28-dev
       - libgpgme11-dev
-      - libgusb-dev
+      - libusb-1.0-0-dev
       - libjson-glib-dev
       - libjcat-dev
       - liblzma-dev
@@ -179,12 +180,11 @@ parts:
       - librtmp1
       - libarchive13
       - libcurl4
-      - libcbor0.8
+      - libcbor0.10
       - libassuan0
       - libffi8
       - libjcat1
       - liblzma5
-      - libgusb2
       - libusb-1.0-0
       - libgudev-1.0-0
       - libgpgme11
@@ -192,7 +192,7 @@ parts:
       - libpolkit-gobject-1-0
       - libtss2-esys-3.0.2-0
       - libtss2-fapi1
-      - libtss2-mu0
+      - libtss2-mu-4.0.1-0t64
       - libtss2-rc0
       - libtss2-sys1
       - libtss2-tcti-cmd0
@@ -206,6 +206,7 @@ parts:
       - libmm-glib0
       - libqmi-glib5
       - libmbim-glib4
+      - libduktape207
     prime:
       # we explicitly don't want /usr/bin/gpgconf
       # this will cause gpgme to error finding it

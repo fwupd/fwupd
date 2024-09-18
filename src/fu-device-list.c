@@ -47,7 +47,14 @@ typedef struct {
 	guint remove_id;
 } FuDeviceItem;
 
-G_DEFINE_TYPE(FuDeviceList, fu_device_list, G_TYPE_OBJECT)
+static void
+fu_device_list_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuDeviceList,
+		       fu_device_list,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_device_list_codec_iface_init));
 
 static void
 fu_device_list_emit_device_added(FuDeviceList *self, FuDevice *device)
@@ -70,10 +77,11 @@ fu_device_list_emit_device_changed(FuDeviceList *self, FuDevice *device)
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0, device);
 }
 
-static gchar *
-fu_device_list_to_string(FuDeviceList *self)
+static void
+fu_device_list_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	GString *str = g_string_new(NULL);
+	FuDeviceList *self = FU_DEVICE_LIST(codec);
+
 	g_rw_lock_reader_lock(&self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index(self->devices, i);
@@ -101,7 +109,6 @@ fu_device_list_to_string(FuDeviceList *self)
 		}
 	}
 	g_rw_lock_reader_unlock(&self->devices_mutex);
-	return g_string_free(str, FALSE);
 }
 
 /* we cannot use fu_device_get_children() as this will not find "parent-only"
@@ -132,7 +139,8 @@ fu_device_list_depsolve_order_full(FuDeviceList *self, FuDevice *device, guint d
 	children = fu_device_list_get_children(self, device);
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *child = g_ptr_array_index(children, i);
-		if (fu_device_has_flag(child, FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST)) {
+		if (fu_device_has_private_flag(child,
+					       FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST)) {
 			fu_device_list_depsolve_order_full(self, child, depth + 1);
 		} else {
 			fu_device_list_depsolve_order_full(self, child, depth - 1);
@@ -146,8 +154,8 @@ fu_device_list_depsolve_order_full(FuDeviceList *self, FuDevice *device, guint d
  * @device: a device
  *
  * Sets the device order using the logical parent->child relationships -- by default
- * the child is updated first, unless the device has set flag
- * %FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST.
+ * the child is updated first, unless the device has set private flag
+ * %FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST.
  *
  * Since: 1.5.0
  **/
@@ -155,7 +163,7 @@ void
 fu_device_list_depsolve_order(FuDeviceList *self, FuDevice *device)
 {
 	g_autoptr(FuDevice) root = fu_device_get_root(device);
-	if (fu_device_has_internal_flag(root, FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER))
+	if (fu_device_has_private_flag(root, FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER))
 		return;
 	fu_device_list_depsolve_order_full(self, root, 0);
 }
@@ -215,7 +223,7 @@ fu_device_list_get_active(FuDeviceList *self)
 	g_rw_lock_reader_lock(&self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index(self->devices, i);
-		if (fu_device_has_internal_flag(item->device, FU_DEVICE_INTERNAL_FLAG_UNCONNECTED))
+		if (fu_device_has_private_flag(item->device, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED))
 			continue;
 		if (fu_device_has_inhibit(item->device, "hidden"))
 			continue;
@@ -378,7 +386,8 @@ fu_device_list_get_by_guids_removed(FuDeviceList *self, GPtrArray *guids)
 			continue;
 		for (guint j = 0; j < guids->len; j++) {
 			const gchar *guid = g_ptr_array_index(guids, j);
-			if (fu_device_has_guid(item->device, guid))
+			if (fu_device_has_guid(item->device, guid) ||
+			    fu_device_has_counterpart_guid(item->device, guid))
 				return item;
 		}
 	}
@@ -390,7 +399,8 @@ fu_device_list_get_by_guids_removed(FuDeviceList *self, GPtrArray *guids)
 			continue;
 		for (guint j = 0; j < guids->len; j++) {
 			const gchar *guid = g_ptr_array_index(guids, j);
-			if (fu_device_has_guid(item->device_old, guid))
+			if (fu_device_has_guid(item->device_old, guid) ||
+			    fu_device_has_counterpart_guid(item->device_old, guid))
 				return item;
 		}
 	}
@@ -407,8 +417,8 @@ fu_device_list_device_delayed_remove_cb(gpointer user_data)
 	item->remove_id = 0;
 
 	/* remove any children associated with device */
-	if (!fu_device_has_internal_flag(item->device,
-					 FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN)) {
+	if (!fu_device_has_private_flag(item->device,
+					FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN)) {
 		GPtrArray *children = fu_device_get_children(item->device);
 		for (guint j = 0; j < children->len; j++) {
 			FuDevice *child = g_ptr_array_index(children, j);
@@ -452,7 +462,7 @@ fu_device_list_should_remove_with_delay(FuDevice *device)
 {
 	if (fu_device_get_remove_delay(device) == 0)
 		return FALSE;
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG) &&
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG))
 		return FALSE;
 	return TRUE;
@@ -490,7 +500,7 @@ fu_device_list_remove(FuDeviceList *self, FuDevice *device)
 	}
 
 	/* we can't do anything with an unconnected device */
-	fu_device_add_internal_flag(item->device, FU_DEVICE_INTERNAL_FLAG_UNCONNECTED);
+	fu_device_add_private_flag(item->device, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
 
 	/* ensure never fired if the remove delay is changed */
 	if (item->remove_id > 0) {
@@ -505,8 +515,8 @@ fu_device_list_remove(FuDeviceList *self, FuDevice *device)
 	}
 
 	/* remove any children associated with device */
-	if (!fu_device_has_internal_flag(item->device,
-					 FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN)) {
+	if (!fu_device_has_private_flag(item->device,
+					FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN)) {
 		GPtrArray *children = fu_device_get_children(device);
 		for (guint j = 0; j < children->len; j++) {
 			FuDevice *child = g_ptr_array_index(children, j);
@@ -530,20 +540,40 @@ fu_device_list_remove(FuDeviceList *self, FuDevice *device)
 	g_rw_lock_writer_unlock(&self->devices_mutex);
 }
 
+/**
+ * fu_device_list_remove_all:
+ * @self: a device list
+ *
+ * Removes all devices from the list.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_list_remove_all(FuDeviceList *self)
+{
+	g_return_if_fail(FU_IS_DEVICE_LIST(self));
+
+	g_rw_lock_writer_lock(&self->devices_mutex);
+	g_ptr_array_set_size(self->devices, 0);
+	g_rw_lock_writer_unlock(&self->devices_mutex);
+}
+
 static void
 fu_device_list_add_missing_guids(FuDevice *device_new, FuDevice *device_old)
 {
 	GPtrArray *guids_old = fu_device_get_guids(device_old);
 	for (guint i = 0; i < guids_old->len; i++) {
 		const gchar *guid_tmp = g_ptr_array_index(guids_old, i);
-		if (!fu_device_has_guid(device_new, guid_tmp)) {
-			if (fu_device_has_flag(device_new,
-					       FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS)) {
+		if (!fu_device_has_guid(device_new, guid_tmp) &&
+		    !fu_device_has_counterpart_guid(device_new, guid_tmp)) {
+			if (fu_device_has_private_flag(
+				device_new,
+				FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS)) {
 				g_info("adding GUID %s to device", guid_tmp);
 				fu_device_add_counterpart_guid(device_new, guid_tmp);
 			} else {
 				g_info("not adding GUID %s to device, use "
-				       "FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS if required",
+				       "FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS if required",
 				       guid_tmp);
 			}
 		}
@@ -600,15 +630,15 @@ fu_device_list_clear_wait_for_replug(FuDeviceList *self, FuDeviceItem *item)
 			fu_device_remove_flag(item->device_old, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		}
 	}
-	fu_device_remove_internal_flag(item->device, FU_DEVICE_INTERNAL_FLAG_UNCONNECTED);
+	fu_device_remove_private_flag(item->device, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
 
 	/* debug */
-	str = fu_device_list_to_string(self);
+	str = fwupd_codec_to_string(FWUPD_CODEC(self));
 	g_debug("\n%s", str);
 }
 
 static void
-fu_device_incorporate_problem_update_in_progress(FuDevice *self, FuDevice *donor)
+_fu_device_incorporate_problem_update_in_progress(FuDevice *self, FuDevice *donor)
 {
 	if (fu_device_has_problem(donor, FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS)) {
 		g_info("moving inhibit update-in-progress to active device");
@@ -618,7 +648,7 @@ fu_device_incorporate_problem_update_in_progress(FuDevice *self, FuDevice *donor
 }
 
 static void
-fu_device_incorporate_update_state(FuDevice *self, FuDevice *donor)
+_fu_device_incorporate_update_state(FuDevice *self, FuDevice *donor)
 {
 	if (fu_device_get_update_error(donor) != NULL && fu_device_get_update_error(self) == NULL) {
 		const gchar *update_error = fu_device_get_update_error(donor);
@@ -637,6 +667,7 @@ fu_device_incorporate_update_state(FuDevice *self, FuDevice *donor)
 static void
 fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 {
+	GPtrArray *children = fu_device_get_children(item->device);
 	GPtrArray *vendor_ids;
 	g_autofree gchar *str = NULL;
 
@@ -651,11 +682,11 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 	for (guint i = 0; i < vendor_ids->len; i++) {
 		const gchar *vendor_id = g_ptr_array_index(vendor_ids, i);
 		g_info("copying old vendor ID %s to new device", vendor_id);
-		fu_device_add_vendor_id(device, vendor_id);
+		fwupd_device_add_vendor_id(FWUPD_DEVICE(device), vendor_id);
 	}
 
 	/* copy inhibit */
-	fu_device_incorporate_problem_update_in_progress(item->device, device);
+	_fu_device_incorporate_problem_update_in_progress(item->device, device);
 
 	/* copy over the version strings if not set */
 	if (fu_device_get_version(item->device) != NULL && fu_device_get_version(device) == NULL) {
@@ -666,7 +697,7 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 	}
 
 	/* always use the runtime version */
-	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION) &&
+	if (fu_device_has_private_flag(item->device, FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION) &&
 	    fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
 		const gchar *version = fu_device_get_version(item->device);
 		g_info("forcing runtime version %s to new device", version);
@@ -703,8 +734,15 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 		fu_device_set_parent(device, parent);
 	}
 
+	/* copy the children */
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child = g_ptr_array_index(children, i);
+		g_info("copying child %s to new device", fu_device_get_id(child));
+		fu_device_add_child(device, child);
+	}
+
 	/* copy the update state if known */
-	fu_device_incorporate_update_state(item->device, device);
+	_fu_device_incorporate_update_state(item->device, device);
 
 	/* assign the new device */
 	g_set_object(&item->device_old, item->device);
@@ -712,7 +750,7 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 	fu_device_list_emit_device_changed(self, device);
 
 	/* debug */
-	str = fu_device_list_to_string(self);
+	str = fwupd_codec_to_string(FWUPD_CODEC(self));
 	g_debug("\n%s", str);
 
 	/* we were waiting for this... */
@@ -763,10 +801,10 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 		/* the old device again */
 		if (item->device_old != NULL && device == item->device_old) {
 			g_info("found old device %s, swapping", fu_device_get_id(device));
-			fu_device_remove_internal_flag(item->device,
-						       FU_DEVICE_INTERNAL_FLAG_UNCONNECTED);
-			fu_device_incorporate_problem_update_in_progress(device, item->device);
-			fu_device_incorporate_update_state(device, item->device);
+			fu_device_remove_private_flag(item->device,
+						      FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
+			_fu_device_incorporate_problem_update_in_progress(device, item->device);
+			_fu_device_incorporate_update_state(device, item->device);
 			g_set_object(&item->device_old, item->device);
 			fu_device_list_item_set_device(item, device);
 			fu_device_list_clear_wait_for_replug(self, item);
@@ -777,7 +815,7 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 		/* same ID, different object */
 		g_info("found existing device %s, reusing item", fu_device_get_id(item->device));
 		fu_device_list_replace(self, item, device);
-		fu_device_remove_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_UNCONNECTED);
+		fu_device_remove_private_flag(device, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
 		return;
 	}
 
@@ -792,26 +830,29 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 		       fu_device_get_plugin(item->device),
 		       fu_device_get_plugin(device));
 		fu_device_list_replace(self, item, device);
-		fu_device_remove_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_UNCONNECTED);
+		fu_device_remove_private_flag(device, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
 		return;
 	}
 
 	/* verify a compatible device does not already exist */
 	item = fu_device_list_get_by_guids_removed(self, fu_device_get_guids(device));
+	if (item == NULL) {
+		item = fu_device_list_get_by_guids_removed(self,
+							   fu_device_get_counterpart_guids(device));
+	}
 	if (item != NULL) {
-		if (fu_device_has_internal_flag(device,
-						FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID)) {
+		if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID)) {
 			g_info("found compatible device %s recently removed, reusing "
 			       "item from plugin %s for plugin %s",
 			       fu_device_get_id(item->device),
 			       fu_device_get_plugin(item->device),
 			       fu_device_get_plugin(device));
 			fu_device_list_replace(self, item, device);
-			fu_device_remove_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_UNCONNECTED);
+			fu_device_remove_private_flag(device, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
 			return;
 		}
 		g_info("not adding matching %s for device add, use "
-		       "FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID if required",
+		       "FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID if required",
 		       fu_device_get_id(item->device));
 	}
 
@@ -930,7 +971,7 @@ fu_device_list_wait_for_replug(FuDeviceList *self, GError **error)
 		g_autofree gchar *str = NULL;
 
 		/* dump to console */
-		str = fu_device_list_to_string(self);
+		str = fwupd_codec_to_string(FWUPD_CODEC(self));
 		g_debug("\n%s", str);
 
 		/* unset and build error string */
@@ -1013,9 +1054,27 @@ fu_device_list_item_free(FuDeviceItem *item)
 }
 
 static void
+fu_device_list_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_string = fu_device_list_add_string;
+}
+
+static void
+fu_device_list_dispose(GObject *obj)
+{
+	FuDeviceList *self = FU_DEVICE_LIST(obj);
+
+	if (self->devices != NULL)
+		g_ptr_array_set_size(self->devices, 0);
+
+	G_OBJECT_CLASS(fu_device_list_parent_class)->dispose(obj);
+}
+
+static void
 fu_device_list_class_init(FuDeviceListClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->dispose = fu_device_list_dispose;
 	object_class->finalize = fu_device_list_finalize;
 
 	/**

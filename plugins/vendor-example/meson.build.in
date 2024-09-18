@@ -1,6 +1,4 @@
-{%- if Parent in ['Usb', 'Hid'] -%}
-if gusb.found()
-{%- elif Parent == 'Udev' -%}
+{%- if Parent == 'Udev' -%}
 if gudev.found()
 {%- endif %}
 cargs = ['-DG_LOG_DOMAIN="FuPlugin{{VendorExample}}"']
@@ -20,6 +18,6 @@ plugin_builtins += static_library('fu_plugin_{{vendor_example}}',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-{%- if Parent in ['Usb', 'Hid', 'Udev'] %}
+{%- if Parent == 'Udev' %}
 endif
 {%- endif %}

@@ -91,3 +91,30 @@ Flags = updatable
 GType = FuRts54HubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
+
+#UCDDS Dock level 1
+[USB\VID_3749&PID_050B]
+Plugin = rts54hub
+Name = UCDDS1080P Lv1
+Flags = updatable
+GType = FuRts54HubDevice
+FirmwareSizeMin = 0x10000
+FirmwareSizeMax = 0x20000
+
+#UCDDS Dock level 2
+[USB\VID_3749&PID_050D]
+Plugin = rts54hub
+Name = UCDDS1080P Lv2
+Flags = updatable
+GType = FuRts54HubDevice
+FirmwareSizeMin = 0x10000
+FirmwareSizeMax = 0x20000
+
+#USB-C Dual Display Dock
+[USB\VID_065F&PID_2260]
+Plugin = rts54hub
+Name = USB-C Dual Display Dock
+Flags = updatable
+GType = FuRts54HubDevice
+FirmwareSizeMin = 0x10000
+FirmwareSizeMax = 0x20000

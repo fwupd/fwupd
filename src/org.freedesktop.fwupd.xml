@@ -1035,9 +1035,12 @@
           </doc:para>
         </doc:description>
       </doc:doc>
-      <arg type='ay' name='data' direction='in'>
+      <arg type='h' name='handle' direction='in'>
         <doc:doc>
           <doc:summary>
+            <doc:para>
+              An index into the array of file descriptors that has been sent with the DBus message.
+            </doc:para>
             <doc:para>
               JSON data of each phase packaged as a ZIP archive
               (e.g. <doc:tt>setup.json</doc:tt>, <doc:tt>install.json</doc:tt>, <doc:tt>reload.json</doc:tt>).
@@ -1056,11 +1059,15 @@
           </doc:para>
         </doc:description>
       </doc:doc>
-      <arg type='ay' name='data' direction='out'>
+      <arg type='h' name='handle' direction='in'>
         <doc:doc>
           <doc:summary>
             <doc:para>
-              JSON data of each phase packaged as a compressed ZIP archive
+              An index into the array of file descriptors that has been sent with the DBus message.
+              The compressed ZIP archive will be written to the file descriptor on success.
+            </doc:para>
+            <doc:para>
+              JSON data of each phase packaged as a ZIP archive
               (e.g. <doc:tt>setup.json</doc:tt>, <doc:tt>install.json</doc:tt>, <doc:tt>reload.json</doc:tt>).
             </doc:para>
           </doc:summary>

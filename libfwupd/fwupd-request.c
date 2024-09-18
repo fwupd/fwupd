@@ -284,58 +284,54 @@ fwupd_request_set_created(FwupdRequest *self, guint64 created)
 	priv->created = created;
 }
 
-static GVariant *
-fwupd_request_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
+static void
+fwupd_request_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdRequest *self = FWUPD_REQUEST(converter);
+	FwupdRequest *self = FWUPD_REQUEST(codec);
 	FwupdRequestPrivate *priv = GET_PRIVATE(self);
-	GVariantBuilder builder;
 
-	/* create an array with all the metadata in */
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
 	if (priv->id != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_APPSTREAM_ID,
 				      g_variant_new_string(priv->id));
 	}
 	if (priv->created > 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_CREATED,
 				      g_variant_new_uint64(priv->created));
 	}
 	if (priv->device_id != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_DEVICE_ID,
 				      g_variant_new_string(priv->device_id));
 	}
 	if (priv->message != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_UPDATE_MESSAGE,
 				      g_variant_new_string(priv->message));
 	}
 	if (priv->image != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_UPDATE_IMAGE,
 				      g_variant_new_string(priv->image));
 	}
 	if (priv->kind != FWUPD_REQUEST_KIND_UNKNOWN) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_REQUEST_KIND,
 				      g_variant_new_uint32(priv->kind));
 	}
 	if (priv->flags != FWUPD_REQUEST_FLAG_NONE) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FLAGS,
 				      g_variant_new_uint64(priv->flags));
 	}
-	return g_variant_new("a{sv}", &builder);
 }
 
 static void
@@ -610,9 +606,9 @@ fwupd_request_has_flag(FwupdRequest *self, FwupdRequestFlags flag)
 }
 
 static void
-fwupd_request_add_string(FwupdCodec *converter, guint idt, GString *str)
+fwupd_request_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FwupdRequest *self = FWUPD_REQUEST(converter);
+	FwupdRequest *self = FWUPD_REQUEST(codec);
 	FwupdRequestPrivate *priv = GET_PRIVATE(self);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->id);
 	if (priv->kind != FWUPD_REQUEST_KIND_UNKNOWN) {
@@ -824,9 +820,9 @@ fwupd_request_class_init(FwupdRequestClass *klass)
 }
 
 static void
-fwupd_request_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
+fwupd_request_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
-	FwupdRequest *self = FWUPD_REQUEST(converter);
+	FwupdRequest *self = FWUPD_REQUEST(codec);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {
@@ -839,7 +835,7 @@ static void
 fwupd_request_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fwupd_request_add_string;
-	iface->to_variant = fwupd_request_to_variant;
+	iface->add_variant = fwupd_request_add_variant;
 	iface->from_variant_iter = fwupd_request_from_variant_iter;
 }
 

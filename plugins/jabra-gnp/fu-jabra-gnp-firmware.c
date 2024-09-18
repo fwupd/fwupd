@@ -40,13 +40,13 @@ fu_jabra_gnp_firmware_parse_version(FuJabraGnpFirmware *self, GError **error)
 				    "version invalid");
 		return FALSE;
 	}
-	if (!fu_strtoull(split[0], &val, 0x0, 0xFF, error))
+	if (!fu_strtoull(split[0], &val, 0x0, 0xFF, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
 	self->version_data.major = (guint8)val;
-	if (!fu_strtoull(split[1], &val, 0x0, 0xFF, error))
+	if (!fu_strtoull(split[1], &val, 0x0, 0xFF, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
 	self->version_data.minor = (guint8)val;
-	if (!fu_strtoull(split[2], &val, 0x0, 0xFF, error))
+	if (!fu_strtoull(split[2], &val, 0x0, 0xFF, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
 	self->version_data.micro = (guint8)val;
 
@@ -85,7 +85,7 @@ fu_jabra_gnp_firmware_parse_info(FuJabraGnpFirmware *self, XbSilo *silo, GError 
 	dfu_pid_str = xb_node_query_text(dfu_pid, "usbPid", error);
 	if (dfu_pid_str == NULL)
 		return FALSE;
-	if (!fu_strtoull(dfu_pid_str, &val, 0x0, 0xFFFF, error)) {
+	if (!fu_strtoull(dfu_pid_str, &val, 0x0, 0xFFFF, FU_INTEGER_BASE_AUTO, error)) {
 		g_prefix_error(error, "cannot parse usbPid of %s: ", dfu_pid_str);
 		return FALSE;
 	}

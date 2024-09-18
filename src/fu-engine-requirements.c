@@ -160,7 +160,7 @@ fu_engine_requirements_check_vendor_id(FuEngine *self,
 }
 
 static gboolean
-fu_device_has_guids_any(FuDevice *self, gchar **guids)
+_fu_device_has_guids_any(FuDevice *self, gchar **guids)
 {
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(guids != NULL, FALSE);
@@ -189,7 +189,7 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 	/* look at the parent device */
 	depth_str = xb_node_get_attr(req, "depth");
 	if (depth_str != NULL) {
-		if (!fu_strtoll(depth_str, &depth, -1, 10, error))
+		if (!fu_strtoll(depth_str, &depth, -1, 10, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		for (gint64 i = 0; i < depth; i++) {
 			FuDevice *device_tmp = fu_device_get_parent(device_actual);
@@ -348,7 +348,7 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 		children = fu_device_get_children(device);
 		for (guint i = 0; i < children->len; i++) {
 			child = g_ptr_array_index(children, i);
-			if (fu_device_has_guids_any(child, guids))
+			if (_fu_device_has_guids_any(child, guids))
 				break;
 			child = NULL;
 		}
@@ -370,7 +370,7 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 
 		/* no parent, so look for GUIDs on this device */
 		if (parent == NULL) {
-			if (!fu_device_has_guids_any(device_actual, guids)) {
+			if (!_fu_device_has_guids_any(device_actual, guids)) {
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
@@ -384,7 +384,7 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 		children = fu_device_get_children(parent);
 		for (guint i = 0; i < children->len; i++) {
 			child = g_ptr_array_index(children, i);
-			if (fu_device_has_guids_any(child, guids))
+			if (_fu_device_has_guids_any(child, guids))
 				break;
 			child = NULL;
 		}
@@ -400,7 +400,7 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 
 		/* verify the parent device has the GUID */
 	} else {
-		if (!fu_device_has_guids_any(device_actual, guids)) {
+		if (!_fu_device_has_guids_any(device_actual, guids)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -855,7 +855,7 @@ fu_engine_requirements_check(FuEngine *self,
 	/* if a device uses a generic ID (i.e. not matching the OEM) then check to make sure the
 	 * firmware is specific enough, e.g. by using a CHID or depth requirement */
 	if (device != NULL && !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
-	    fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES) &&
+	    fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES) &&
 	    !has_specific_requirement) {
 #ifdef SUPPORTED_BUILD
 		g_set_error_literal(

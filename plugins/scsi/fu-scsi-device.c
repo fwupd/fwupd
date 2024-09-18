@@ -18,6 +18,10 @@ struct _FuScsiDevice {
 
 G_DEFINE_TYPE(FuScsiDevice, fu_scsi_device, FU_TYPE_UDEV_DEVICE)
 
+#define INQUIRY_CMD	  0x12
+#define INQUIRY_CMDLEN	  6
+#define SCSI_INQ_BUFF_LEN 254
+
 #define BUFFER_VENDOR_MODE 0x01
 #define BUFFER_DUFS_MODE   0x02
 #define BUFFER_FFU_MODE	   0x0E
@@ -42,102 +46,143 @@ static gboolean
 fu_scsi_device_probe(FuDevice *device, GError **error)
 {
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
-	guint64 removable = 0;
-	g_autofree gchar *vendor_id = NULL;
-	g_autoptr(FuUdevDevice) ufshci_parent = NULL;
+	g_autofree gchar *attr_removable = NULL;
+	g_autoptr(FuDevice) ufshci_parent = NULL;
+	g_autoptr(FuDevice) device_target = NULL;
+	g_autoptr(FuDevice) device_scsi = NULL;
 	const gchar *subsystem_parents[] = {"pci", "platform", NULL};
 
 	/* check is valid */
-	if (g_strcmp0(g_udev_device_get_devtype(udev_device), "disk") != 0) {
+	if (g_strcmp0(fu_udev_device_get_devtype(FU_UDEV_DEVICE(self)), "disk") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not correct devtype=%s, expected disk",
-			    g_udev_device_get_devtype(udev_device));
+			    fu_udev_device_get_devtype(FU_UDEV_DEVICE(self)));
 		return FALSE;
 	}
-	if (!g_udev_device_get_property_as_boolean(udev_device, "ID_SCSI")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "has no ID_SCSI");
-		return FALSE;
-	}
-
-	/* vendor sanity */
-	if (g_strcmp0(fu_device_get_vendor(device), "ATA") == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no assigned vendor");
-		return FALSE;
-	}
-
-	vendor_id = g_strdup_printf("SCSI:%s", fu_device_get_vendor(device));
-	fu_device_add_vendor_id(device, vendor_id);
 
 	/* the ufshci controller could really be on any bus... search in order of priority */
 	for (guint i = 0; subsystem_parents[i] != NULL && ufshci_parent == NULL; i++) {
-		ufshci_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device),
-									 subsystem_parents[i],
-									 NULL);
+		ufshci_parent =
+		    fu_device_get_backend_parent_with_subsystem(device, subsystem_parents[i], NULL);
 	}
 	if (ufshci_parent != NULL) {
-		guint64 ufs_features = 0;
+		g_autofree gchar *attr_ufs_features = NULL;
+		g_autofree gchar *attr_ffu_timeout = NULL;
 
 		/* check if this is a UFS device */
 		g_info("found ufshci controller at %s",
-		       fu_udev_device_get_sysfs_path(ufshci_parent));
-		if (fu_udev_device_get_sysfs_attr_uint64(ufshci_parent,
-							 "device_descriptor/ufs_features",
-							 &ufs_features,
-							 NULL)) {
+		       fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(ufshci_parent)));
+
+		attr_ufs_features =
+		    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+					      "device_descriptor/ufs_features",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      NULL);
+		if (attr_ufs_features != NULL) {
+			guint64 ufs_features = 0;
 			fu_device_set_summary(device, "UFS device");
 			/* least significant bit specifies FFU capability */
+			if (!fu_strtoull(attr_ufs_features,
+					 &ufs_features,
+					 0,
+					 G_MAXUINT64,
+					 FU_INTEGER_BASE_AUTO,
+					 error))
+				return FALSE;
 			if (ufs_features & 0x1) {
 				fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-				fu_device_add_internal_flag(FU_DEVICE(self),
-							    FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
+				fu_device_add_private_flag(FU_DEVICE(self),
+							   FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
 				fu_device_add_protocol(device, "org.jedec.ufs");
 			}
-			if (!fu_udev_device_get_sysfs_attr_uint64(ufshci_parent,
-								  "device_descriptor/ffu_timeout",
-								  &self->ffu_timeout,
-								  error)) {
+			attr_ffu_timeout =
+			    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+						      "device_descriptor/ffu_timeout",
+						      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						      error);
+			if (attr_ffu_timeout == NULL) {
 				g_prefix_error(error, "no ffu timeout specified: ");
 				return FALSE;
 			}
+			if (!fu_strtoull(attr_ffu_timeout,
+					 &self->ffu_timeout,
+					 0,
+					 G_MAXUINT64,
+					 FU_INTEGER_BASE_AUTO,
+					 error))
+				return FALSE;
 		}
 	}
 
-	/* add GUIDs */
-	fu_device_add_instance_strsafe(device, "VEN", fu_device_get_vendor(device));
-	fu_device_add_instance_strsafe(device, "DEV", fu_device_get_name(device));
-	fu_device_add_instance_strsafe(device, "REV", fu_device_get_version(device));
-	if (!fu_device_build_instance_id_full(device,
-					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
-					      error,
-					      "SCSI",
-					      "VEN",
-					      NULL))
-		return FALSE;
-	if (!fu_device_build_instance_id(device, error, "SCSI", "VEN", "DEV", NULL))
-		return FALSE;
-	if (!fu_device_build_instance_id(device, error, "SCSI", "VEN", "DEV", "REV", NULL))
-		return FALSE;
-
 	/* is internal? */
-	if (fu_udev_device_get_sysfs_attr_uint64(FU_UDEV_DEVICE(device),
-						 "removable",
-						 &removable,
-						 NULL)) {
+	attr_removable = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+						   "removable",
+						   FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						   NULL);
+	if (attr_removable != NULL) {
+		guint64 removable = 0;
+		if (!fu_strtoull(attr_removable,
+				 &removable,
+				 0,
+				 G_MAXUINT64,
+				 FU_INTEGER_BASE_AUTO,
+				 error))
+			return FALSE;
 		if (removable == 0x0)
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 	}
 
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "scsi:scsi_target", error);
+	/* scsi_target */
+	device_target =
+	    fu_device_get_backend_parent_with_subsystem(device, "scsi:scsi_target", NULL);
+	if (device_target != NULL) {
+		g_auto(GStrv) sysfs_parts = NULL;
+		sysfs_parts =
+		    g_strsplit(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device_target)),
+			       "/sys",
+			       2);
+		if (sysfs_parts[1] != NULL) {
+			g_autofree gchar *physical_id =
+			    g_strdup_printf("DEVPATH=%s", sysfs_parts[1]);
+			fu_device_set_physical_id(device, physical_id);
+		}
+	}
+
+	/* scsi_device */
+	device_scsi = fu_device_get_backend_parent_with_subsystem(device, "scsi:scsi_device", NULL);
+	if (device_scsi != NULL) {
+		if (fu_device_get_vendor(device) == NULL) {
+			g_autofree gchar *attr_vendor =
+			    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device_scsi),
+						      "vendor",
+						      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						      NULL);
+			if (attr_vendor != NULL)
+				fu_device_set_vendor(device, attr_vendor);
+		}
+		if (fu_device_get_name(device) == NULL) {
+			g_autofree gchar *attr_model =
+			    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device_scsi),
+						      "model",
+						      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						      NULL);
+			if (attr_model != NULL)
+				fu_device_set_name(device, attr_model);
+		}
+	}
+
+	/* fake something as we cannot use ioctls */
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		fu_device_add_instance_str(device, "VEN", "fwupd");
+		fu_device_add_instance_str(device, "DEV", "DEVICE");
+		if (!fu_device_build_instance_id(device, error, "SCSI", "VEN", "DEV", NULL))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static FuFirmware *
@@ -180,8 +225,10 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  SG_IO,
 				  (guint8 *)&io_hdr,
+				  sizeof(io_hdr),
 				  NULL,
 				  FU_SCSI_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				  error))
 		return FALSE;
 
@@ -196,6 +243,77 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 			    sense_buffer[13]);
 		return FALSE;
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_scsi_device_setup(FuDevice *device, GError **error)
+{
+	FuScsiDevice *self = FU_SCSI_DEVICE(device);
+	guint8 buf[SCSI_INQ_BUFF_LEN] = {0};
+	guint8 cdb[INQUIRY_CMDLEN] = {
+	    INQUIRY_CMD,
+	    0, /* evpd */
+	    0, /* page */
+	    0,
+	    sizeof(buf),
+	    0,
+	};
+	g_autofree gchar *model = NULL;
+	g_autofree gchar *revision = NULL;
+	g_autofree gchar *vendor = NULL;
+
+	/* prepare chunk */
+	if (!fu_scsi_device_send_scsi_cmd_v3(self,
+					     cdb,
+					     sizeof(cdb),
+					     buf,
+					     sizeof(buf),
+					     SG_DXFER_FROM_DEV,
+					     error)) {
+		g_prefix_error(error, "SG_IO INQUIRY_CMD data error: ");
+		return FALSE;
+	}
+	fu_dump_raw(G_LOG_DOMAIN, "INQUIRY", buf, sizeof(buf));
+
+	/* parse */
+	vendor = fu_strsafe((const gchar *)buf + 8, 8);
+	if (vendor != NULL)
+		fu_device_set_vendor(device, vendor);
+	model = fu_strsafe((const gchar *)buf + 16, 8);
+	if (model != NULL)
+		fu_device_set_name(device, model);
+	revision = fu_strsafe((const gchar *)buf + 32, 4);
+	if (revision != NULL)
+		fu_device_set_version(device, revision);
+
+	/* add GUIDs */
+	fu_device_add_instance_str(device, "VEN", vendor);
+	fu_device_add_instance_str(device, "DEV", model);
+	fu_device_add_instance_str(device, "REV", revision);
+	if (!fu_device_build_instance_id_full(device,
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "SCSI",
+					      "VEN",
+					      NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, error, "SCSI", "VEN", "DEV", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, error, "SCSI", "VEN", "DEV", "REV", NULL))
+		return FALSE;
+
+	/* vendor sanity */
+	if (g_strcmp0(fu_device_get_vendor(device), "ATA") == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no assigned vendor");
+		return FALSE;
+	}
+	fu_device_build_vendor_id(device, "SCSI", fu_device_get_vendor(device));
 
 	/* success */
 	return TRUE;
@@ -281,10 +399,9 @@ fu_scsi_device_init(FuScsiDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary(FU_DEVICE(self), "SCSI device");
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_SYNC);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_SYNC);
 }
 
 static void
@@ -293,6 +410,7 @@ fu_scsi_device_class_init(FuScsiDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_scsi_device_to_string;
 	device_class->probe = fu_scsi_device_probe;
+	device_class->setup = fu_scsi_device_setup;
 	device_class->prepare_firmware = fu_scsi_device_prepare_firmware;
 	device_class->write_firmware = fu_scsi_device_write_firmware;
 	device_class->set_progress = fu_scsi_device_set_progress;

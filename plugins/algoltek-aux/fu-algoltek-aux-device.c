@@ -25,20 +25,11 @@ G_DEFINE_TYPE(FuAlgoltekAuxDevice, fu_algoltek_aux_device, FU_TYPE_DPAUX_DEVICE)
 #define FU_ALGOLTEK_AUX_CRC_INIT_POLINOM 0x1021
 #define FU_ALGOLTEK_AUX_CRC_POLINOM	 0x1021
 
-FuAlgoltekAuxDevice *
-fu_algoltek_aux_device_new(FuDpauxDevice *device)
-{
-	FuAlgoltekAuxDevice *self = g_object_new(FU_TYPE_ALGOLTEK_AUX_DEVICE, NULL);
-	if (device != NULL)
-		fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(device));
-	return self;
-}
-
 static gboolean
-fu_algoltek_dpaux_device_write(FuAlgoltekAuxDevice *self,
-			       GByteArray *buf,
-			       guint delayms,
-			       GError **error)
+fu_algoltek_aux_device_write(FuAlgoltekAuxDevice *self,
+			     GByteArray *buf,
+			     guint delayms,
+			     GError **error)
 {
 	fu_device_sleep(FU_DEVICE(self), delayms);
 	return fu_dpaux_device_write(FU_DPAUX_DEVICE(self),
@@ -50,7 +41,7 @@ fu_algoltek_dpaux_device_write(FuAlgoltekAuxDevice *self,
 }
 
 static gboolean
-fu_algoltek_dpaux_device_read(FuAlgoltekAuxDevice *self, GByteArray *buf, GError **error)
+fu_algoltek_aux_device_read(FuAlgoltekAuxDevice *self, GByteArray *buf, GError **error)
 {
 	fu_device_sleep(FU_DEVICE(self), 20);
 	return fu_dpaux_device_read(FU_DPAUX_DEVICE(self),
@@ -99,11 +90,11 @@ fu_algoltek_aux_device_rdv(FuAlgoltekAuxDevice *self, GError **error)
 	fu_struct_algoltek_aux_rdv_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_RDV);
 
 	for (guint i = 0; i < 4; i++) {
-		if (!fu_algoltek_dpaux_device_write(self, st, 20, error)) {
+		if (!fu_algoltek_aux_device_write(self, st, 20, error)) {
 			g_prefix_error(error, "aux dpcd write failed: ");
 			return NULL;
 		}
-		if (!fu_algoltek_dpaux_device_read(self, reply, error)) {
+		if (!fu_algoltek_aux_device_read(self, reply, error)) {
 			g_prefix_error(error, "aux dpcd read failed: ");
 			return NULL;
 		}
@@ -145,7 +136,7 @@ fu_algoltek_aux_device_en(FuAlgoltekAuxDevice *self, GError **error)
 	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_sublen(st, length);
 	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_len(st, length);
 	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_EN);
-	return fu_algoltek_dpaux_device_write(self, st, 20, error);
+	return fu_algoltek_aux_device_write(self, st, 20, error);
 }
 
 static gboolean
@@ -158,14 +149,14 @@ fu_algoltek_aux_device_rst(FuAlgoltekAuxDevice *self, GError **error)
 	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_len(st, length);
 	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_RST);
 	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_address(st, 0x300);
-	return fu_algoltek_dpaux_device_write(self, st, 20, error);
+	return fu_algoltek_aux_device_write(self, st, 20, error);
 }
 
 static gboolean
 fu_algoltek_aux_device_dummy(FuAlgoltekAuxDevice *self, GError **error)
 {
 	g_autoptr(GByteArray) st = fu_struct_algoltek_aux_rdv_cmd_address_pkt_new();
-	return fu_algoltek_dpaux_device_write(self, st, 20, error);
+	return fu_algoltek_aux_device_write(self, st, 20, error);
 }
 
 static gboolean
@@ -179,7 +170,7 @@ fu_algoltek_aux_device_wrr(FuAlgoltekAuxDevice *self, int address, int inputValu
 	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_WRR);
 	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_address(st, address);
 	fu_struct_algoltek_aux_en_rst_wrr_cmd_address_pkt_set_value(st, inputValue);
-	return fu_algoltek_dpaux_device_write(self, st, 20, error);
+	return fu_algoltek_aux_device_write(self, st, 20, error);
 }
 
 static gboolean
@@ -194,7 +185,7 @@ fu_algoltek_aux_device_ispcrc(FuAlgoltekAuxDevice *self,
 	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_len(st, st->len);
 	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_ISP);
 	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_wcrc(st, wcrc);
-	return fu_algoltek_dpaux_device_write(self, st, 20, error);
+	return fu_algoltek_aux_device_write(self, st, 20, error);
 }
 
 static gboolean
@@ -247,7 +238,7 @@ fu_algoltek_aux_device_isp(FuAlgoltekAuxDevice *self,
 		*wcrc = fu_algoltek_aux_device_crc16(fu_chunk_get_data(chk),
 						     fu_chunk_get_data_sz(chk),
 						     *wcrc);
-		if (!fu_algoltek_dpaux_device_write(self, st, 20, error))
+		if (!fu_algoltek_aux_device_write(self, st, 20, error))
 			return FALSE;
 
 		serialno += 1;
@@ -274,7 +265,7 @@ fu_algoltek_aux_device_bot(FuAlgoltekAuxDevice *self, int address, GError **erro
 	fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_set_len(st, length);
 	fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_BOT);
 	fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_set_address(st, address);
-	return fu_algoltek_dpaux_device_write(self, st, 20, error);
+	return fu_algoltek_aux_device_write(self, st, 20, error);
 }
 
 static gboolean
@@ -287,7 +278,7 @@ fu_algoltek_aux_device_ers(FuAlgoltekAuxDevice *self, GError **error)
 	fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_set_len(st, length);
 	fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_ERS);
 	fu_struct_algoltek_aux_bot_ers_cmd_address_pkt_set_address(st, 0x6000);
-	return fu_algoltek_dpaux_device_write(self, st, 20, error);
+	return fu_algoltek_aux_device_write(self, st, 20, error);
 }
 
 static gboolean
@@ -304,7 +295,7 @@ fu_algoltek_aux_device_wrfcrc(FuAlgoltekAuxDevice *self,
 	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_len(st, 0x04);
 	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_cmd(st, FU_ALGOLTEK_AUX_CMD_ISP);
 	fu_struct_algoltek_aux_crc_cmd_address_pkt_set_wcrc(st, wcrc);
-	return fu_algoltek_dpaux_device_write(self, st, 10, error);
+	return fu_algoltek_aux_device_write(self, st, 10, error);
 }
 
 static gboolean
@@ -349,7 +340,7 @@ fu_algoltek_aux_device_wrf(FuAlgoltekAuxDevice *self,
 		*wcrc = fu_algoltek_aux_device_crc16(fu_chunk_get_data(chk),
 						     fu_chunk_get_data_sz(chk),
 						     *wcrc);
-		if (!fu_algoltek_dpaux_device_write(self, st, 10, error))
+		if (!fu_algoltek_aux_device_write(self, st, 10, error))
 			return FALSE;
 		if (!fu_algoltek_aux_device_dummy(self, error))
 			return FALSE;
@@ -499,10 +490,10 @@ fu_algoltek_aux_device_init(FuAlgoltekAuxDevice *self)
 {
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.algoltek.aux");
-	fu_device_add_vendor_id(FU_DEVICE(self), "DRM_DP_AUX_DEV:0x25A4");
+	fu_device_build_vendor_id_u16(FU_DEVICE(self), "DRM_DP_AUX_DEV", 0x25A4);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ALGOLTEK_AUX_FIRMWARE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }

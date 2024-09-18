@@ -26,14 +26,13 @@ G_DEFINE_TYPE(FuGoodixMocDevice, fu_goodixmoc_device, FU_TYPE_USB_DEVICE)
 #define GX_FLASH_TRANSFER_BLOCK_SIZE 1000 /* 1000 */
 
 static gboolean
-goodixmoc_device_cmd_send(FuGoodixMocDevice *self,
-			  guint8 cmd0,
-			  guint8 cmd1,
-			  GxPkgType type,
-			  GByteArray *req,
-			  GError **error)
+fu_goodixmoc_device_cmd_send(FuGoodixMocDevice *self,
+			     guint8 cmd0,
+			     guint8 cmd1,
+			     GxPkgType type,
+			     GByteArray *req,
+			     GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint32 crc_all = 0;
 	guint32 crc_hdr = 0;
 	gsize actual_len = 0;
@@ -49,32 +48,32 @@ goodixmoc_device_cmd_send(FuGoodixMocDevice *self,
 	fu_byte_array_append_uint8(buf, crc_hdr);
 	fu_byte_array_append_uint8(buf, ~crc_hdr);
 	g_byte_array_append(buf, req->data, req->len);
-	crc_all = fu_crc32(buf->data, buf->len);
+	crc_all = fu_crc32(FU_CRC32_KIND_STANDARD, buf->data, buf->len);
 	fu_byte_array_append_uint32(buf, crc_all, G_LITTLE_ENDIAN);
 
 	/* send zero length package */
-	if (!g_usb_device_bulk_transfer(usb_device,
-					GX_USB_BULK_EP_OUT,
-					NULL,
-					0,
-					NULL,
-					GX_USB_DATAOUT_TIMEOUT,
-					NULL,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 GX_USB_BULK_EP_OUT,
+					 NULL,
+					 0,
+					 NULL,
+					 GX_USB_DATAOUT_TIMEOUT,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "failed to req: ");
 		return FALSE;
 	}
 	fu_dump_full(G_LOG_DOMAIN, "REQST", buf->data, buf->len, 16, FU_DUMP_FLAGS_SHOW_ADDRESSES);
 
 	/* send data */
-	if (!g_usb_device_bulk_transfer(usb_device,
-					GX_USB_BULK_EP_OUT,
-					buf->data,
-					buf->len,
-					&actual_len,
-					GX_USB_DATAOUT_TIMEOUT,
-					NULL,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 GX_USB_BULK_EP_OUT,
+					 buf->data,
+					 buf->len,
+					 &actual_len,
+					 GX_USB_DATAOUT_TIMEOUT,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "failed to req: ");
 		return FALSE;
 	}
@@ -88,12 +87,11 @@ goodixmoc_device_cmd_send(FuGoodixMocDevice *self,
 }
 
 static gboolean
-goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
-			  GxfpCmdResp *presponse,
-			  gboolean data_reply,
-			  GError **error)
+fu_goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
+			     GxfpCmdResp *presponse,
+			     gboolean data_reply,
+			     GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint32 crc_actual = 0;
 	guint32 crc_calculated = 0;
 	gsize actual_len = 0;
@@ -110,14 +108,14 @@ goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
 		guint8 header_cmd0 = 0x0;
 		g_autoptr(GByteArray) reply = g_byte_array_new();
 		fu_byte_array_set_size(reply, GX_FLASH_TRANSFER_BLOCK_SIZE, 0x00);
-		if (!g_usb_device_bulk_transfer(usb_device,
-						GX_USB_BULK_EP_IN,
-						reply->data,
-						reply->len,
-						&actual_len, /* allowed to return short read */
-						GX_USB_DATAIN_TIMEOUT,
-						NULL,
-						error)) {
+		if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+						 GX_USB_BULK_EP_IN,
+						 reply->data,
+						 reply->len,
+						 &actual_len, /* allowed to return short read */
+						 GX_USB_DATAIN_TIMEOUT,
+						 NULL,
+						 error)) {
 			g_prefix_error(error, "failed to reply: ");
 			return FALSE;
 		}
@@ -143,7 +141,7 @@ goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
 					    error))
 			return FALSE;
 		offset = sizeof(GxfpPkgHeader) + header_len - GX_SIZE_CRC32;
-		crc_actual = fu_crc32(reply->data, offset);
+		crc_actual = fu_crc32(FU_CRC32_KIND_STANDARD, reply->data, offset);
 		if (!fu_memread_uint32_safe(reply->data,
 					    reply->len,
 					    offset,
@@ -215,9 +213,9 @@ fu_goodixmoc_device_cmd_xfer(FuGoodixMocDevice *device,
 			     GError **error)
 {
 	FuGoodixMocDevice *self = FU_GOODIXMOC_DEVICE(device);
-	if (!goodixmoc_device_cmd_send(self, cmd0, cmd1, type, req, error))
+	if (!fu_goodixmoc_device_cmd_send(self, cmd0, cmd1, type, req, error))
 		return FALSE;
-	return goodixmoc_device_cmd_recv(self, presponse, data_reply, error);
+	return fu_goodixmoc_device_cmd_recv(self, presponse, data_reply, error);
 }
 
 static gboolean
@@ -436,7 +434,7 @@ fu_goodixmoc_device_init(FuGoodixMocDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_remove_delay(FU_DEVICE(self), 5000);

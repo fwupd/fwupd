@@ -16,6 +16,7 @@ with a non-standard filesystem layout.
 * `FWUPD_XMLB_VERBOSE` can be set to show Xmlb silo regeneration and quirk matches
 * `FWUPD_DBUS_SOCKET` is used to set the socket filename if running without a dbus-daemon
 * `FWUPD_PROFILE` can be used to set the profile traceback threshold value in ms
+* `FWUPD_EFIVARS` can be set to `dummy` to emulate an EFI variable store
 * `FWUPD_FUZZER_RUNNING` if the firmware format is being fuzzed
 * `FWUPD_POLKIT_NOCHECK` if we should not check for polkit policies to be installed
 * standard glibc variables like `LANG` are also honored for CLI tools that are translated
@@ -40,7 +41,6 @@ Other variables, include:
 * `FWUPD_REDFISH_SELF_TEST` if set, do destructive tests on the actual device BMC
 * `FWUPD_REDFISH_SMBIOS_DATA` use this filename to emulate a specific SMBIOS blob
 * `FWUPD_SOLOKEY_EMULATE` emulates a fake device for testing
-* `FWUPD_UEFI_CAPSULE_RECREATE_COD_DATA` if set, write the files in the example COD tree in srcdir
 * `FWUPD_UEFI_TEST` used by the UEFI plugins to disable specific sanity checks during self tests
 * `FWUPD_MACHINE_ID` used by the tests to set a predictable hash normally loaded from `/etc/machine-id`
 
@@ -54,13 +54,13 @@ for details.
 * `FWUPD_ACPITABLESDIR`
 * `FWUPD_DATADIR`
 * `FWUPD_DATADIR_QUIRKS`
+* `FWUPD_DATADIR_VENDOR_IDS`
 * `FWUPD_EFIAPPDIR`
 * `FWUPD_FIRMWARESEARCH`
 * `FWUPD_HOSTDIR` looks for host OS `os-release` in this sysroot, default is /
 * `FWUPD_LIBDIR_PKG`
 * `FWUPD_LOCALSTATEDIR`
 * `FWUPD_LOCALSTATEDIR_QUIRKS`
-* `FWUPD_OFFLINE_TRIGGER`
 * `FWUPD_PROCFS`
 * `FWUPD_SYSCONFDIR`
 * `FWUPD_SYSFSDMIDIR`

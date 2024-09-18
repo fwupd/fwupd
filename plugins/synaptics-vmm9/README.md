@@ -21,10 +21,11 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 
 * `USB\VID_06CB&PID_9430`
 
-These devices also use custom GUID values using the board ID value which is different for each
-customer and hardware design, e.g.
+These devices also use custom GUID values using the board ID and customer ID values which are
+different for each customer and hardware design, e.g.
 
-* `USB\VID_06CB&PID_9430&BID_5678`
+* `USB\VID_06CB&PID_9430&BID_56`
+* `USB\VID_06CB&PID_9430&BID_56&CID_78`
 
 ## Update Behavior
 
@@ -33,7 +34,8 @@ activated. Calculating the CRC manually is no longer required.
 
 ## Vendor ID Security
 
-The vendor ID is set from the USB vendor, in this instance set to `USB:0x06CB`
+The vendor ID is set from the USB vendor, in this instance set to `USB:0x06CB` and also from the
+customer ID (if set), e.g. `SYNA:0x12`
 
 ## Quirk Use
 

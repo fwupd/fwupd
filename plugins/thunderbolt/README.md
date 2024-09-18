@@ -106,11 +106,15 @@ at the end so the format is "TBT-vvvvdddd-native".
 
 This plugin uses the following plugin-specific quirks:
 
-### Flags=retimer-offline-mode
+### `Flags=retimer-offline-mode`
 
 Use offline mode interface to update retimers.
 
 Since: 1.9.1
+
+### `Flags=force-enumeration`
+
+Forces composite device components to be enumerated.
 
 ## External Interface Access
 

@@ -106,7 +106,7 @@ typedef enum {
 	CY_DEVICE_RESET_CMD = 0xE3, /* performs a device reset from firmware */
 } CyVendorCommand;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint32 frequency;     /* frequency of operation. Only valid values are 100KHz and 400KHz */
 	guint8 target_address; /* target address to be used when in target mode */
 	guint8 is_msb_first;   /* whether to transmit most significant bit first */
@@ -182,7 +182,7 @@ typedef enum {
 	HPI_REG_SECTION_ALL	 /* select all registers */
 } HPIRegSection;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint16 event_code;
 	guint16 event_length;
 	guint8 event_data[128];

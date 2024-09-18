@@ -205,7 +205,7 @@ fu_smbios_parse_ep32(FuSmbios *self, const guint8 *buf, gsize bufsz, GError **er
 	version_str = g_strdup_printf("%u.%u",
 				      fu_struct_smbios_ep32_get_smbios_major_ver(st_ep32),
 				      fu_struct_smbios_ep32_get_smbios_minor_ver(st_ep32));
-	fu_firmware_set_version(FU_FIRMWARE(self), version_str);
+	fu_firmware_set_version(FU_FIRMWARE(self), version_str); /* nocheck:set-version */
 	fu_firmware_set_version_raw(
 	    FU_FIRMWARE(self),
 	    (((guint16)fu_struct_smbios_ep32_get_smbios_major_ver(st_ep32)) << 8) +
@@ -237,7 +237,7 @@ fu_smbios_parse_ep64(FuSmbios *self, const guint8 *buf, gsize bufsz, GError **er
 	version_str = g_strdup_printf("%u.%u",
 				      fu_struct_smbios_ep64_get_smbios_major_ver(st_ep64),
 				      fu_struct_smbios_ep64_get_smbios_minor_ver(st_ep64));
-	fu_firmware_set_version(FU_FIRMWARE(self), version_str);
+	fu_firmware_set_version(FU_FIRMWARE(self), version_str); /* nocheck:set-version */
 	return TRUE;
 }
 

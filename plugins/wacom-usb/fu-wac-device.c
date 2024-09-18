@@ -26,7 +26,8 @@ typedef struct {
 	guint16 write_sz; /* bit 15 is write protection flag */
 } FuWacFlashDescriptor;
 
-#define FU_WAC_DEVICE_TIMEOUT 5000 /* ms */
+#define FU_WAC_DEVICE_TIMEOUT		 5000 /* ms */
+#define FU_WAC_DEVICE_MODULE_RETRY_DELAY 100  /* ms */
 
 struct _FuWacDevice {
 	FuHidDevice parent_instance;
@@ -45,7 +46,7 @@ struct _FuWacDevice {
 G_DEFINE_TYPE(FuWacDevice, fu_wac_device, FU_TYPE_HID_DEVICE)
 
 static gboolean
-fu_wav_device_flash_descriptor_is_wp(const FuWacFlashDescriptor *fd)
+fu_wac_device_flash_descriptor_is_wp(const FuWacFlashDescriptor *fd)
 {
 	return fd->write_sz & 0x8000;
 }
@@ -59,7 +60,7 @@ fu_wac_device_flash_descriptor_to_string(FuWacFlashDescriptor *fd, guint idt, GS
 	fwupd_codec_string_append_bool(str,
 				       idt,
 				       "Protected",
-				       fu_wav_device_flash_descriptor_is_wp(fd));
+				       fu_wac_device_flash_descriptor_is_wp(fd));
 }
 
 static void
@@ -219,7 +220,6 @@ fu_wac_device_ensure_status(FuWacDevice *self, GError **error)
 	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_GET_STATUS, [1 ... 4] = 0xff};
 
 	/* hit hardware */
-	buf[0] = FU_WAC_REPORT_ID_GET_STATUS;
 	if (!fu_wac_device_get_feature_report(self,
 					      buf,
 					      sizeof(buf),
@@ -483,7 +483,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 	/* clear all checksums of pages */
 	for (guint i = 0; i < self->flash_descriptors->len; i++) {
 		FuWacFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
-		if (fu_wav_device_flash_descriptor_is_wp(fd))
+		if (fu_wac_device_flash_descriptor_is_wp(fd))
 			continue;
 		if (!fu_wac_device_set_checksum_of_block(self, i, 0x0, error))
 			return FALSE;
@@ -500,7 +500,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 		GBytes *blob_block;
 		g_autoptr(GBytes) blob_tmp = NULL;
 
-		if (fu_wav_device_flash_descriptor_is_wp(fd))
+		if (fu_wac_device_flash_descriptor_is_wp(fd))
 			continue;
 		blob_tmp = fu_firmware_write_chunk(img, fd->start_addr, fd->block_sz, NULL);
 		if (blob_tmp == NULL)
@@ -520,7 +520,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 		g_autoptr(FuChunkArray) chunks = NULL;
 
 		/* if page is protected */
-		if (fu_wav_device_flash_descriptor_is_wp(fd))
+		if (fu_wac_device_flash_descriptor_is_wp(fd))
 			continue;
 
 		/* get data for page */
@@ -597,7 +597,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 		guint32 csum_rom;
 
 		/* if page is protected */
-		if (fu_wav_device_flash_descriptor_is_wp(fd))
+		if (fu_wac_device_flash_descriptor_is_wp(fd))
 			continue;
 
 		/* no more written pages */
@@ -693,18 +693,17 @@ fu_wac_device_add_modules_legacy(FuWacDevice *self, GError **error)
 }
 
 static gboolean
-fu_wac_device_add_modules(FuWacDevice *self, GError **error)
+fu_wac_device_add_modules_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	g_autofree gchar *version_bootloader = NULL;
 	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_FW_DESCRIPTOR, [1 ... 31] = 0xff};
-	guint16 boot_ver;
+	GByteArray *out = (GByteArray *)user_data;
 
-	if (!fu_wac_device_get_feature_report(self,
+	if (!fu_wac_device_get_feature_report(FU_WAC_DEVICE(device),
 					      buf,
 					      sizeof(buf),
 					      FU_HID_DEVICE_FLAG_NONE,
 					      error)) {
-		g_prefix_error(error, "Failed to get DeviceFirmwareDescriptor: ");
+		g_prefix_error(error, "failed to get DeviceFirmwareDescriptor: ");
 		return FALSE;
 	}
 
@@ -726,22 +725,76 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 		return FALSE;
 	}
 
+	/* copy here, since version 0 is valid for transitional module state */
+	if (!fu_memcpy_safe(out->data, out->len, 0, buf, sizeof(buf), 0, out->len, error))
+		return FALSE;
+
+	/* validate versions of each module */
+	for (guint8 i = 0; i < buf[3]; i++) {
+		guint8 fw_type = buf[(i * 4) + 4] & ~0x80;
+		guint16 ver;
+
+		/* check if module is in transitional state or requires re-flashing */
+		if (!fu_memread_uint16_safe(buf,
+					    sizeof(buf),
+					    (i * 4) + 5,
+					    &ver,
+					    G_BIG_ENDIAN,
+					    error))
+			return FALSE;
+		if (ver == 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "module %u has error state",
+				    fw_type);
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_wac_device_add_modules(FuWacDevice *self, GError **error)
+{
+	g_autofree gchar *version_bootloader = NULL;
+	guint16 boot_ver;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GError) error_local = NULL;
+
+	g_byte_array_set_size(buf, 32);
+	/* wait for all modules started successfully */
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_wac_device_add_modules_cb,
+				  FU_WAC_DEVICE_MODULE_RETRY_DELAY,
+				  FU_WAC_DEVICE_TIMEOUT / FU_WAC_DEVICE_MODULE_RETRY_DELAY,
+				  buf,
+				  &error_local)) {
+		if (error_local->code != FWUPD_ERROR_INVALID_DATA) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		g_warning("%s", error_local->message);
+	}
+	fu_dump_raw(G_LOG_DOMAIN, "modules", buf->data, buf->len);
+
 	/* bootloader version */
-	if (!fu_memread_uint16_safe(buf, sizeof(buf), 1, &boot_ver, G_BIG_ENDIAN, error))
+	if (!fu_memread_uint16_safe(buf->data, buf->len, 1, &boot_ver, G_BIG_ENDIAN, error))
 		return FALSE;
 	version_bootloader = fu_version_from_uint16(boot_ver, FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_version_bootloader(FU_DEVICE(self), version_bootloader);
 	fu_device_set_version_bootloader_raw(FU_DEVICE(self), boot_ver);
 
-	/* get versions of each submodule */
-	for (guint8 i = 0; i < buf[3]; i++) {
-		guint8 fw_type = buf[(i * 4) + 4] & ~0x80;
+	/* get versions of each module */
+	for (guint8 i = 0; i < buf->data[3]; i++) {
+		guint8 fw_type = buf->data[(i * 4) + 4] & ~0x80;
 		g_autofree gchar *name = NULL;
 		g_autoptr(FuWacModule) module = NULL;
 		guint16 ver;
 
-		if (!fu_memread_uint16_safe(buf,
-					    sizeof(buf),
+		if (!fu_memread_uint16_safe(buf->data,
+					    buf->len,
 					    (i * 4) + 5,
 					    &ver,
 					    G_BIG_ENDIAN,
@@ -833,7 +886,7 @@ fu_wac_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get version of each sub-module */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION)) {
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION)) {
 		if (!fu_wac_device_add_modules_legacy(self, error))
 			return FALSE;
 	} else {
@@ -848,13 +901,11 @@ fu_wac_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_wac_device_close(FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
 	/* reattach wacom.ko */
-	if (!g_usb_device_release_interface(usb_device,
-					    0x00, /* HID */
-					    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					    error)) {
+	if (!fu_usb_device_release_interface(FU_USB_DEVICE(device),
+					     0x00, /* HID */
+					     FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER,
+					     error)) {
 		g_prefix_error(error, "failed to re-attach interface: ");
 		return FALSE;
 	}
@@ -897,7 +948,7 @@ fu_wac_device_init(FuWacDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "input-tablet");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_install_duration(FU_DEVICE(self), 10);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);

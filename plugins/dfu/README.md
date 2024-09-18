@@ -102,6 +102,102 @@ Forces a target transfer size, in bytes.
 
 Since: 1.5.6
 
+### `Flags=can-download`
+
+Can download from host->device.
+
+### `Flags=can-upload`
+
+Can upload from device->host.
+
+### `Flags=manifest-tol`
+
+Can answer GetStatus in manifest
+
+### `Flags=will-detach`
+
+Will self-detach.
+
+### `Flags=can-accelerate`
+
+Use a larger transfer size for speed.
+
+### `Flags=attach-upload-download`
+
+An upload or download is required for attach.
+
+### `Flags=force-dfu-mode`
+
+Force DFU mode.
+
+### `Flags=ignore-polltimeout`
+
+Ignore the device download timeout.
+
+### `Flags=ignore-runtime`
+
+Device has broken DFU runtime support.
+
+### `Flags=ignore-upload`
+
+Uploading from the device is broken.
+
+### `Flags=no-dfu-runtime`
+
+No DFU runtime interface is provided.
+
+### `Flags=no-get-status-upload`
+
+Do not do GetStatus when uploading.
+
+### `Flags=no-pid-change`
+
+Accept the same VID:PID when changing modes.
+
+### `Flags=use-any-interface`
+
+Use any interface for DFU.
+
+### `Flags=use-atmel-avr`
+
+Device uses the ATMEL bootloader.
+
+### `Flags=use-protocol-zero`
+
+Fix up the protocol number.
+
+### `Flags=legacy-protocol`
+
+Use a legacy protocol version.
+
+### `Flags=detach-for-attach`
+
+Requires a FU_DFU_REQUEST_DETACH to attach.
+
+### `Flags=absent-sector-size`
+
+In absence of sector size, assume byte.
+
+### `Flags=manifest-poll`
+
+Requires polling via GetStatus in dfuManifest state.
+
+### `Flags=no-bus-reset-attach`
+
+Do not require a bus reset to attach to normal.
+
+### `Flags=gd32`
+
+Uses the slightly weird GD32 variant of DFU.
+
+### `Flags=allow-zero-polltimeout`
+
+Allows the zero bwPollTimeout from GetStatus in dfuDNLOAD-SYNC state.
+
+### `Flags=index-force-detach`
+
+Requires Force Detach in wIndex to bypass status checking.
+
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.

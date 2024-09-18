@@ -20,7 +20,6 @@ xbps-install -Suy python3
 #build
 rm -rf build
 meson build \
- -Dgusb:tests=false \
  -Dconsolekit=disabled \
  -Dsystemd=disabled \
  -Dplugin_vendor_example=true \

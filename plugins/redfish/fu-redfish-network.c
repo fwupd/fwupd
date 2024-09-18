@@ -6,9 +6,14 @@
 
 #include "config.h"
 
+#ifdef HAVE_GUDEV
+#include <gudev/gudev.h>
+#endif
+
 #include "fu-redfish-network.h"
 
 typedef struct {
+	FuContext *ctx;
 	FuRedfishNetworkDevice *device;
 	const gchar *mac_addr;
 	guint16 vid;
@@ -54,43 +59,29 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 
 	/* compare VID:PID */
 	if (helper->vid != 0x0 && helper->pid != 0x0) {
-#ifdef HAVE_GUDEV
-		const gchar *sysfs_path = NULL;
-		const gchar *tmp;
+		g_autoptr(FuBackend) udev_backend = NULL;
+		g_autoptr(FuUdevDevice) udev_device = NULL;
+		g_autoptr(GVariant) udi = NULL;
 		guint16 pid = 0;
 		guint16 vid = 0;
-		g_autoptr(GVariant) udi = NULL;
-		g_autoptr(GUdevClient) udev_client = NULL;
-		g_autoptr(GUdevDevice) udev_device = NULL;
 
 		udi = g_dbus_proxy_get_cached_property(proxy, "Udi");
 		if (udi == NULL)
 			return TRUE;
-		sysfs_path = g_variant_get_string(udi, NULL);
-
-		/* get the VID and PID */
-		udev_client = g_udev_client_new(NULL);
-		udev_device = g_udev_client_query_by_sysfs_path(udev_client, sysfs_path);
+		udev_backend = fu_context_get_backend_by_name(helper->ctx, "udev", error);
+		if (udev_backend == NULL)
+			return FALSE;
+		udev_device = FU_UDEV_DEVICE(
+		    fu_backend_create_device(udev_backend, g_variant_get_string(udi, NULL), error));
 		if (udev_device == NULL)
-			return TRUE;
-		tmp = g_udev_device_get_property(udev_device, "ID_VENDOR_ID");
-		if (tmp != NULL)
-			vid = g_ascii_strtoull(tmp, NULL, 16);
-		tmp = g_udev_device_get_property(udev_device, "ID_MODEL_ID");
-		if (tmp != NULL)
-			pid = g_ascii_strtoull(tmp, NULL, 16);
+			return FALSE;
 
 		/* verify */
-		g_debug("%s: 0x%04x, 0x%04x", sysfs_path, vid, pid);
+		vid = fu_udev_device_get_vendor(udev_device);
+		pid = fu_udev_device_get_model(udev_device);
+		g_debug("%s: 0x%04x, 0x%04x", g_variant_get_string(udi, NULL), vid, pid);
 		if (vid == helper->vid && pid == helper->pid)
 			helper->device = fu_redfish_network_device_new(object_path);
-#else
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no UDev support");
-		return FALSE;
-#endif
 	}
 
 	/* assume success */
@@ -174,9 +165,10 @@ fu_redfish_network_device_match(FuRedfishNetworkMatchHelper *helper, GError **er
 }
 
 FuRedfishNetworkDevice *
-fu_redfish_network_device_for_mac_addr(const gchar *mac_addr, GError **error)
+fu_redfish_network_device_for_mac_addr(FuContext *ctx, const gchar *mac_addr, GError **error)
 {
 	FuRedfishNetworkMatchHelper helper = {
+	    .ctx = ctx,
 	    .mac_addr = mac_addr,
 	};
 	if (!fu_redfish_network_device_match(&helper, error)) {
@@ -187,9 +179,10 @@ fu_redfish_network_device_for_mac_addr(const gchar *mac_addr, GError **error)
 }
 
 FuRedfishNetworkDevice *
-fu_redfish_network_device_for_vid_pid(guint16 vid, guint16 pid, GError **error)
+fu_redfish_network_device_for_vid_pid(FuContext *ctx, guint16 vid, guint16 pid, GError **error)
 {
 	FuRedfishNetworkMatchHelper helper = {
+	    .ctx = ctx,
 	    .vid = vid,
 	    .pid = pid,
 	};

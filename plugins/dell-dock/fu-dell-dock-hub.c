@@ -140,6 +140,11 @@ fu_dell_dock_hub_setup(FuDevice *device, GError **error)
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_dell_dock_hub_parent_class)->setup(device, error))
 		return FALSE;
+
+	/* skip version setup here as we don't know HID header format yet */
+	if (fu_device_has_private_flag(device, FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE))
+		return TRUE;
+
 	return fu_dell_dock_hid_get_hub_version(device, error);
 }
 
@@ -153,19 +158,19 @@ fu_dell_dock_hub_set_quirk_kv(FuDevice *device,
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "DellDockUnlockTarget") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->unlock_target = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DellDockBlobMajorOffset") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->blob_major_offset = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DellDockBlobMinorOffset") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->blob_minor_offset = tmp;
 		return TRUE;
@@ -201,9 +206,7 @@ fu_dell_dock_hub_init(FuDellDockHub *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE,
-					"has-bridge");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE);
 }
 
 static void

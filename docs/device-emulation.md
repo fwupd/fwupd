@@ -9,7 +9,7 @@ hardware. However, much past a few dozen devices this does not scale, either by 
 real devices need plugging in and out. We can unit test the plugin internals, but this does not
 actually test devices being attached, removed, and being updated.
 
-By recording the backend devices we can build a "history" in GUsb of what control, interrupt and
+By recording the backend devices we can build a "history" what USB control, interrupt and
 bulk transfers were sent to, and received from the device. By dumping these we can "replay" the
 update without the physical hardware connected.
 

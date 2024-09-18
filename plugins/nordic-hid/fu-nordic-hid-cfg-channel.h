@@ -13,4 +13,4 @@ G_DECLARE_FINAL_TYPE(FuNordicHidCfgChannel,
 		     fu_nordic_hid_cfg_channel,
 		     FU,
 		     NORDIC_HID_CFG_CHANNEL,
-		     FuUdevDevice)
+		     FuHidrawDevice)

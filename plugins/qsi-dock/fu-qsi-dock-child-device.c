@@ -31,11 +31,11 @@ fu_qsi_dock_child_device_to_string(FuDevice *device, guint idt, GString *str)
 
 /* use the parents parser */
 static FuFirmware *
-fu_qsi_dock_mcu_device_prepare_firmware(FuDevice *device,
-					GInputStream *stream,
-					FuProgress *progress,
-					FwupdInstallFlags flags,
-					GError **error)
+fu_qsi_dock_child_device_prepare_firmware(FuDevice *device,
+					  GInputStream *stream,
+					  FuProgress *progress,
+					  FwupdInstallFlags flags,
+					  GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
 	if (parent == NULL) {
@@ -47,11 +47,11 @@ fu_qsi_dock_mcu_device_prepare_firmware(FuDevice *device,
 
 /* only update this specific child component */
 static gboolean
-fu_qsi_dock_mcu_device_write_firmware(FuDevice *device,
-				      FuFirmware *firmware,
-				      FuProgress *progress,
-				      FwupdInstallFlags flags,
-				      GError **error)
+fu_qsi_dock_child_device_write_firmware(FuDevice *device,
+					FuFirmware *firmware,
+					FuProgress *progress,
+					FwupdInstallFlags flags,
+					GError **error)
 {
 	FuQsiDockChildDevice *self = FU_QSI_DOCK_CHILD_DEVICE(device);
 	FuDevice *parent = fu_device_get_parent(device);
@@ -70,7 +70,7 @@ fu_qsi_dock_mcu_device_write_firmware(FuDevice *device,
 static void
 fu_qsi_dock_child_device_init(FuQsiDockChildDevice *self)
 {
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
 }
 
 static void
@@ -78,12 +78,12 @@ fu_qsi_dock_child_device_class_init(FuQsiDockChildDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_qsi_dock_child_device_to_string;
-	device_class->prepare_firmware = fu_qsi_dock_mcu_device_prepare_firmware;
-	device_class->write_firmware = fu_qsi_dock_mcu_device_write_firmware;
+	device_class->prepare_firmware = fu_qsi_dock_child_device_prepare_firmware;
+	device_class->write_firmware = fu_qsi_dock_child_device_write_firmware;
 }
 
 FuDevice *
-fu_qsi_dock_child_new(FuContext *ctx)
+fu_qsi_dock_child_device_new(FuContext *ctx)
 {
 	return g_object_new(FU_TYPE_QSI_DOCK_CHILD_DEVICE, "context", ctx, NULL);
 }

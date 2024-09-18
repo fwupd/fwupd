@@ -67,7 +67,7 @@ typedef union {
 		guint32 WriteEnableCommand : 1;
 		guint32 WriteDisableCommand : 1;
 		guint32 reserved_31_18 : 14;
-	} __attribute__((packed)) bits;
+	} __attribute__((packed)) bits; /* nocheck:blocked */
 } BcmRegNVMCommand;
 
 typedef union {
@@ -90,7 +90,7 @@ typedef union {
 		guint32 Req2 : 1;
 		guint32 Req3 : 1;
 		guint32 reserved_31_16 : 16;
-	} __attribute__((packed)) bits;
+	} __attribute__((packed)) bits; /* nocheck:blocked */
 } BcmRegNVMSoftwareArbitration;
 
 typedef union {
@@ -99,7 +99,7 @@ typedef union {
 		guint32 Enable : 1;
 		guint32 WriteEnable : 1;
 		guint32 reserved_31_2 : 30;
-	} __attribute__((packed)) bits;
+	} __attribute__((packed)) bits; /* nocheck:blocked */
 } BcmRegNVMAccess;
 
 typedef union {
@@ -126,7 +126,7 @@ typedef union {
 		guint32 reserved_29_20 : 10;
 		guint32 Channel1Enable : 1;
 		guint32 Channel3Enable : 1;
-	} __attribute__((packed)) bits;
+	} __attribute__((packed)) bits; /* nocheck:blocked */
 } BcmRegAPEMode;
 
 G_DEFINE_TYPE(FuBcm57xxRecoveryDevice, fu_bcm57xx_recovery_device, FU_TYPE_UDEV_DEVICE)
@@ -721,7 +721,7 @@ fu_bcm57xx_recovery_device_setup(FuDevice *device, GError **error)
 		fu_progress_step_done(progress);
 		veritem = fu_bcm57xx_veritem_new((guint8 *)bufver, sizeof(bufver));
 		if (veritem != NULL) {
-			fu_device_set_version(device, veritem->version);
+			fu_device_set_version(device, veritem->version); /* nocheck:set-version */
 			fu_device_set_branch(device, veritem->branch);
 			fu_device_set_version_format(device, veritem->verfmt);
 		}
@@ -859,7 +859,6 @@ fu_bcm57xx_recovery_device_init(FuBcm57xxRecoveryDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IGNORE_VALIDATION);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_protocol(FU_DEVICE(self), "com.broadcom.bcm57xx");
 	fu_device_add_icon(FU_DEVICE(self), "network-wired");

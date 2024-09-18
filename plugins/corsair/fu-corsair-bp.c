@@ -57,20 +57,19 @@ fu_corsair_bp_command(FuCorsairBp *self,
 {
 	gsize actual_len = 0;
 	gboolean ret;
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 
 	data[CORSAIR_OFFSET_CMD_DESTINATION] = self->destination;
 
 	fu_dump_raw("FuPluginCorsair", "command", data, self->cmd_write_size);
 
-	ret = g_usb_device_interrupt_transfer(usb_device,
-					      self->epout,
-					      data,
-					      self->cmd_write_size,
-					      &actual_len,
-					      timeout,
-					      NULL,
-					      error);
+	ret = fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
+					       self->epout,
+					       data,
+					       self->cmd_write_size,
+					       &actual_len,
+					       timeout,
+					       NULL,
+					       error);
 	if (!ret) {
 		g_prefix_error(error, "failed to write command: ");
 		return FALSE;
@@ -89,14 +88,14 @@ fu_corsair_bp_command(FuCorsairBp *self,
 
 	memset(data, 0, FU_CORSAIR_MAX_CMD_SIZE);
 
-	ret = g_usb_device_interrupt_transfer(usb_device,
-					      self->epin,
-					      data,
-					      self->cmd_read_size,
-					      &actual_len,
-					      timeout,
-					      NULL,
-					      error);
+	ret = fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
+					       self->epin,
+					       data,
+					       self->cmd_read_size,
+					       &actual_len,
+					       timeout,
+					       NULL,
+					       error);
 	if (!ret) {
 		g_prefix_error(error, "failed to get command response: ");
 		return FALSE;
@@ -136,18 +135,17 @@ fu_corsair_bp_flush_input_reports(FuCorsairBp *self)
 {
 	gsize actual_len;
 	g_autofree guint8 *buf = g_malloc0(self->cmd_read_size);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 
 	for (guint i = 0; i < CORSAIR_INPUT_FLUSH_ITERATIONS; i++) {
 		g_autoptr(GError) error_local = NULL;
-		if (!g_usb_device_interrupt_transfer(usb_device,
-						     self->epin,
-						     buf,
-						     self->cmd_read_size,
-						     &actual_len,
-						     CORSAIR_INPUT_FLUSH_TIMEOUT,
-						     NULL,
-						     &error_local))
+		if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
+						      self->epin,
+						      buf,
+						      self->cmd_read_size,
+						      &actual_len,
+						      CORSAIR_INPUT_FLUSH_TIMEOUT,
+						      NULL,
+						      &error_local))
 			g_debug("flushing status: %s", error_local->message);
 	}
 }
@@ -400,7 +398,7 @@ fu_corsair_bp_activate_firmware(FuCorsairBp *self, FuFirmware *firmware, GError 
 		return FALSE;
 	}
 
-	crc = fu_corsair_calculate_crc(firmware_raw, firmware_size);
+	crc = fu_crc32(FU_CRC32_KIND_MPEG2, firmware_raw, firmware_size);
 	fu_memwrite_uint32(&cmd[CORSAIR_OFFSET_CMD_CRC], crc, G_LITTLE_ENDIAN);
 
 	return fu_corsair_bp_command(self, cmd, CORSAIR_ACTIVATION_TIMEOUT, TRUE, error);
@@ -445,10 +443,11 @@ fu_corsair_bp_class_init(FuCorsairBpClass *klass)
 }
 
 FuCorsairBp *
-fu_corsair_bp_new(GUsbDevice *usb_device, gboolean is_subdevice)
+fu_corsair_bp_new(FuUsbDevice *usb_device, gboolean is_subdevice)
 {
-	FuCorsairBp *self = g_object_new(FU_TYPE_CORSAIR_BP, "usb_device", usb_device, NULL);
+	FuCorsairBp *self = g_object_new(FU_TYPE_CORSAIR_BP, NULL);
 
+	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(usb_device));
 	if (is_subdevice) {
 		self->destination = FU_CORSAIR_BP_DESTINATION_SUBDEVICE;
 	} else {

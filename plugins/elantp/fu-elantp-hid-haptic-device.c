@@ -6,9 +6,6 @@
 
 #include "config.h"
 
-#include <linux/hidraw.h>
-#include <linux/input.h>
-
 #include "fu-elantp-common.h"
 #include "fu-elantp-haptic-firmware.h"
 #include "fu-elantp-hid-haptic-device.h"
@@ -31,10 +28,8 @@ struct _FuElantpHidHapticDevice {
 
 G_DEFINE_TYPE(FuElantpHidHapticDevice, fu_elantp_hid_haptic_device, FU_TYPE_UDEV_DEVICE)
 
-#define FU_ELANTP_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
-
 static FuElantpHidDevice *
-fu_elantp_haptic_device_get_parent(FuDevice *self, GError **error)
+fu_elantp_hid_haptic_device_get_parent(FuDevice *self, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
 	if (parent == NULL) {
@@ -63,13 +58,6 @@ fu_elantp_hid_haptic_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_elantp_hid_haptic_device_probe(FuDevice *device, GError **error)
-{
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
-}
-
-static gboolean
 fu_elantp_hid_haptic_device_send_cmd(FuDevice *self,
 				     const guint8 *tx,
 				     gsize txsz,
@@ -80,29 +68,24 @@ fu_elantp_hid_haptic_device_send_cmd(FuDevice *self,
 	g_autofree guint8 *buf = NULL;
 	gsize bufsz = rxsz + 3;
 
-	fu_dump_raw(G_LOG_DOMAIN, "SetReport", tx, txsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCSFEATURE(txsz),
-				  (guint8 *)tx,
-				  NULL,
-				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  tx,
+					  txsz,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error))
 		return FALSE;
-
 	if (rxsz == 0)
 		return TRUE;
 
 	/* GetFeature */
 	buf = g_malloc0(bufsz);
 	buf[0] = tx[0]; /* report number */
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(bufsz),
-				  buf,
-				  NULL,
-				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+					  buf,
+					  bufsz,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error))
 		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, bufsz);
 
 	/* success */
 	return fu_memcpy_safe(rx,
@@ -506,7 +489,7 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 	guint8 buf[2] = {0x0};
 	g_autofree gchar *version_bl = NULL;
 
-	parent = fu_elantp_haptic_device_get_parent(device, error);
+	parent = fu_elantp_hid_haptic_device_get_parent(device, error);
 	if (parent == NULL)
 		return FALSE;
 
@@ -668,7 +651,7 @@ fu_elantp_hid_haptic_device_write_chunks_cb(FuDevice *device, gpointer user_data
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* use parent */
-	parent = fu_elantp_haptic_device_get_parent(device, error);
+	parent = fu_elantp_hid_haptic_device_get_parent(device, error);
 	if (parent == NULL)
 		return FALSE;
 
@@ -800,7 +783,7 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* use parent */
-	parent = fu_elantp_haptic_device_get_parent(device, error);
+	parent = fu_elantp_hid_haptic_device_get_parent(device, error);
 	if (parent == NULL)
 		return FALSE;
 
@@ -919,7 +902,7 @@ fu_elantp_hid_haptic_device_detach(FuDevice *device, FuProgress *progress, GErro
 			    (guint)self->iap_ver);
 		return FALSE;
 	}
-	parent = fu_elantp_haptic_device_get_parent(device, error);
+	parent = fu_elantp_hid_haptic_device_get_parent(device, error);
 	if (parent == NULL)
 		return FALSE;
 
@@ -1039,7 +1022,7 @@ fu_elantp_hid_haptic_device_attach(FuDevice *device, FuProgress *progress, GErro
 	FuElantpHidDevice *parent;
 	FuElantpHidHapticDevice *self = FU_ELANTP_HID_HAPTIC_DEVICE(device);
 
-	parent = fu_elantp_haptic_device_get_parent(device, error);
+	parent = fu_elantp_hid_haptic_device_get_parent(device, error);
 	if (parent == NULL)
 		return FALSE;
 
@@ -1086,13 +1069,13 @@ fu_elantp_hid_haptic_device_set_quirk_kv(FuDevice *device,
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "ElantpIcPageCount") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->ic_page_count = (guint16)tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "ElantpIapPassword") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->iap_password = (guint16)tmp;
 		return TRUE;
@@ -1119,7 +1102,7 @@ fu_elantp_hid_haptic_device_init(FuElantpHidHapticDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
 	fu_device_add_icon(FU_DEVICE(self), "input-touchpad");
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elantp.haptic");
 	fu_device_set_name(FU_DEVICE(self), "HapticPad EEPROM");
@@ -1139,12 +1122,11 @@ fu_elantp_hid_haptic_device_class_init(FuElantpHidHapticDeviceClass *klass)
 	device_class->reload = fu_elantp_hid_haptic_device_setup;
 	device_class->write_firmware = fu_elantp_hid_haptic_device_write_firmware;
 	device_class->prepare_firmware = fu_elantp_hid_haptic_device_prepare_firmware;
-	device_class->probe = fu_elantp_hid_haptic_device_probe;
 	device_class->set_progress = fu_elantp_hid_haptic_device_set_progress;
 }
 
 FuElantpHidHapticDevice *
-fu_elantp_haptic_device_new(FuDevice *device)
+fu_elantp_hid_haptic_device_new(FuDevice *device)
 {
 	FuElantpHidHapticDevice *self;
 	self = g_object_new(FU_TYPE_ELANTP_HID_HAPTIC_DEVICE, NULL);

@@ -81,12 +81,12 @@ enum { SIGNAL_PERCENTAGE_CHANGED, SIGNAL_STATUS_CHANGED, SIGNAL_LAST };
 static guint signals[SIGNAL_LAST] = {0};
 
 static void
-fwupd_progress_codec_iface_init(FwupdCodecInterface *iface);
+fu_progress_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(FuProgress,
 			fu_progress,
 			G_TYPE_OBJECT,
-			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fwupd_progress_codec_iface_init))
+			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_progress_codec_iface_init))
 
 #define FU_PROGRESS_STEPS_MAX 1000
 
@@ -963,7 +963,12 @@ fu_progress_traceback(FuProgress *self)
 	/* allow override */
 	if (tmp != NULL) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_strtoull(tmp, &threshold_ms, 0, G_MAXUINT, &error_local))
+		if (!fu_strtoull(tmp,
+				 &threshold_ms,
+				 0,
+				 G_MAXUINT,
+				 FU_INTEGER_BASE_AUTO,
+				 &error_local))
 			g_warning("invalid threshold value: %s", tmp);
 	}
 
@@ -974,9 +979,9 @@ fu_progress_traceback(FuProgress *self)
 }
 
 static void
-fu_progress_add_string(FwupdCodec *converter, guint idt, GString *str)
+fu_progress_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FuProgress *self = FU_PROGRESS(converter);
+	FuProgress *self = FU_PROGRESS(codec);
 
 	/* not interesting */
 	if (self->id == NULL && self->name == NULL)
@@ -999,7 +1004,7 @@ fu_progress_add_string(FwupdCodec *converter, guint idt, GString *str)
 }
 
 static void
-fwupd_progress_codec_iface_init(FwupdCodecInterface *iface)
+fu_progress_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fu_progress_add_string;
 }

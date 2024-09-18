@@ -85,7 +85,7 @@ fu_uefi_backend_device_new(FuUefiBackend *self,
 #endif
 
 static gboolean
-fu_uefi_backend_freebsd_setup(FuBackend *backend, GError **error)
+fu_uefi_backend_freebsd_setup(FuBackend *backend, FuBackendSetupFlags flags, GError **error)
 {
 	g_autofree gchar *efi_ver = fu_kenv_get_string("efi-version", error);
 	if (efi_ver == NULL) {

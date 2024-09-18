@@ -1,0 +1,29 @@
+[I2C\NAME_24c64]
+Plugin = amd_kria
+AmdKriaEepromAddr = 50
+
+# KV260
+[MTD\VENDOR_xlnx&NAME_Image-A-FSBL-PMU-ATF-U-Boot]
+Name = Image A
+ParentGuid = UEFI\VENDOR_XILINX
+[MTD\VENDOR_xlnx&NAME_Image-B-FSBL-PMU-ATF-U-Boot]
+Name = Image B
+ParentGuid = UEFI\VENDOR_XILINX
+[MTD\VENDOR_xlnx&NAME_Persistent-Register]
+Name = Persistent Register
+ParentGuid = UEFI\VENDOR_XILINX
+[MTD\VENDOR_xlnx&NAME_Persistent-Register-Backup]
+Name = Persistent Register Backup
+ParentGuid = UEFI\VENDOR_XILINX
+[MTD\VENDOR_xlnx&NAME_Open-1]
+Flags = no-probe
+[MTD\VENDOR_xlnx&NAME_Open-2]
+Flags = no-probe
+[MTD\VENDOR_xlnx&NAME_Secure-OS-Storage]
+Flags = no-probe
+[MTD\VENDOR_xlnx&NAME_U-Boot-storage-variables]
+Flags = no-probe
+[MTD\VENDOR_xlnx&NAME_U-Boot-storage-variables-backup]
+Flags = no-probe
+[MTD\VENDOR_xlnx&NAME_User]
+Flags = no-probe

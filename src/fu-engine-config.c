@@ -73,7 +73,12 @@ fu_engine_config_report_from_spec(FuEngineConfig *self, const gchar *report_spec
 			if (g_strcmp0(value, "$OEM") == 0) {
 				fwupd_report_add_flag(report, FWUPD_REPORT_FLAG_FROM_OEM);
 			} else {
-				if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error)) {
+				if (!fu_strtoull(value,
+						 &tmp,
+						 0,
+						 G_MAXUINT32,
+						 FU_INTEGER_BASE_AUTO,
+						 error)) {
 					g_prefix_error(error, "failed to parse '%s': ", value);
 					return NULL;
 				}
@@ -185,7 +190,12 @@ fu_engine_config_reload(FuEngineConfig *self)
 		for (guint i = 0; uids[i] != NULL; i++) {
 			guint64 val = 0;
 			g_autoptr(GError) error_local = NULL;
-			if (!fu_strtoull(uids[i], &val, 0, G_MAXUINT64, &error_local)) {
+			if (!fu_strtoull(uids[i],
+					 &val,
+					 0,
+					 G_MAXUINT64,
+					 FU_INTEGER_BASE_AUTO,
+					 &error_local)) {
 				g_warning("failed to parse UID '%s': %s",
 					  uids[i],
 					  error_local->message);
@@ -380,7 +390,7 @@ fu_engine_config_archive_size_max_default(void)
 }
 
 static void
-fu_engine_set_config_default(FuEngineConfig *self, const gchar *key, const gchar *value)
+fu_engine_config_set_default(FuEngineConfig *self, const gchar *key, const gchar *value)
 {
 	fu_config_set_default(FU_CONFIG(self), "fwupd", key, value);
 }
@@ -403,30 +413,30 @@ fu_engine_config_init(FuEngineConfig *self)
 	self->os_release = fwupd_get_os_release(NULL);
 
 	/* defaults changed here will also be reflected in the fwupd.conf man page */
-	fu_engine_set_config_default(self, "AllowEmulation", "false");
-	fu_engine_set_config_default(self, "ApprovedFirmware", NULL);
-	fu_engine_set_config_default(self, "ArchiveSizeMax", archive_size_max_default);
-	fu_engine_set_config_default(self, "BlockedFirmware", NULL);
-	fu_engine_set_config_default(self, "DisabledDevices", NULL);
-	fu_engine_set_config_default(self, "DisabledPlugins", "");
-	fu_engine_set_config_default(self, "EnumerateAllDevices", "false");
-	fu_engine_set_config_default(self, "EspLocation", NULL);
-	fu_engine_set_config_default(self, "HostBkc", NULL);
-	fu_engine_set_config_default(self, "IdleTimeout", "300");		  /* s */
-	fu_engine_set_config_default(self, "IdleInhibitStartupThreshold", "500"); /* ms */
-	fu_engine_set_config_default(self, "IgnorePower", "false");
-	fu_engine_set_config_default(self, "IgnoreRequirements", "false");
-	fu_engine_set_config_default(self, "OnlyTrusted", "true");
-	fu_engine_set_config_default(self, "P2pPolicy", FU_DEFAULT_P2P_POLICY);
-	fu_engine_set_config_default(self, "ReleaseDedupe", "true");
-	fu_engine_set_config_default(self, "ReleasePriority", "local");
-	fu_engine_set_config_default(self, "ShowDevicePrivate", "true");
-	fu_engine_set_config_default(self, "TestDevices", "false");
-	fu_engine_set_config_default(self, "TrustedReports", "VendorId=$OEM");
-	fu_engine_set_config_default(self, "TrustedUids", NULL);
-	fu_engine_set_config_default(self, "UpdateMotd", "true");
-	fu_engine_set_config_default(self, "UriSchemes", "file;https;http;ipfs");
-	fu_engine_set_config_default(self, "VerboseDomains", NULL);
+	fu_engine_config_set_default(self, "AllowEmulation", "false");
+	fu_engine_config_set_default(self, "ApprovedFirmware", NULL);
+	fu_engine_config_set_default(self, "ArchiveSizeMax", archive_size_max_default);
+	fu_engine_config_set_default(self, "BlockedFirmware", NULL);
+	fu_engine_config_set_default(self, "DisabledDevices", NULL);
+	fu_engine_config_set_default(self, "DisabledPlugins", "");
+	fu_engine_config_set_default(self, "EnumerateAllDevices", "false");
+	fu_engine_config_set_default(self, "EspLocation", NULL);
+	fu_engine_config_set_default(self, "HostBkc", NULL);
+	fu_engine_config_set_default(self, "IdleTimeout", "300");		  /* s */
+	fu_engine_config_set_default(self, "IdleInhibitStartupThreshold", "500"); /* ms */
+	fu_engine_config_set_default(self, "IgnorePower", "false");
+	fu_engine_config_set_default(self, "IgnoreRequirements", "false");
+	fu_engine_config_set_default(self, "OnlyTrusted", "true");
+	fu_engine_config_set_default(self, "P2pPolicy", FU_DEFAULT_P2P_POLICY);
+	fu_engine_config_set_default(self, "ReleaseDedupe", "true");
+	fu_engine_config_set_default(self, "ReleasePriority", "local");
+	fu_engine_config_set_default(self, "ShowDevicePrivate", "true");
+	fu_engine_config_set_default(self, "TestDevices", "false");
+	fu_engine_config_set_default(self, "TrustedReports", "VendorId=$OEM");
+	fu_engine_config_set_default(self, "TrustedUids", NULL);
+	fu_engine_config_set_default(self, "UpdateMotd", "true");
+	fu_engine_config_set_default(self, "UriSchemes", "file;https;http;ipfs");
+	fu_engine_config_set_default(self, "VerboseDomains", NULL);
 }
 
 static void

@@ -11,15 +11,7 @@
 #include "fu-colorhug-device.h"
 #include "fu-colorhug-struct.h"
 
-/**
- * FU_COLORHUG_DEVICE_FLAG_HALFSIZE:
- *
- * Some devices have a compact memory layout and the application code starts
- * earlier.
- *
- * Since: 1.0.3
- */
-#define FU_COLORHUG_DEVICE_FLAG_HALFSIZE (1 << 0)
+#define FU_COLORHUG_DEVICE_FLAG_HALFSIZE "halfsize"
 
 struct _FuColorhugDevice {
 	FuUsbDevice parent_instance;
@@ -57,7 +49,6 @@ fu_colorhug_device_msg(FuColorhugDevice *self,
 		       gsize obufsz,
 		       GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint8 buf[] = {[0] = cmd, [1 ... CH_USB_HID_EP_SIZE - 1] = 0x00};
 	gsize actual_length = 0;
 	g_autoptr(GError) error_local = NULL;
@@ -95,17 +86,16 @@ fu_colorhug_device_msg(FuColorhugDevice *self,
 
 	/* request */
 	fu_dump_raw(G_LOG_DOMAIN, "REQ", buf, ibufsz + 1);
-	if (!g_usb_device_interrupt_transfer(usb_device,
-					     CH_USB_HID_EP_OUT,
-					     buf,
-					     sizeof(buf),
-					     &actual_length,
-					     CH_DEVICE_USB_TIMEOUT,
-					     NULL, /* cancellable */
-					     &error_local)) {
-		if (cmd == CH_CMD_RESET && g_error_matches(error_local,
-							   G_USB_DEVICE_ERROR,
-							   G_USB_DEVICE_ERROR_NO_DEVICE)) {
+	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
+					      CH_USB_HID_EP_OUT,
+					      buf,
+					      sizeof(buf),
+					      &actual_length,
+					      CH_DEVICE_USB_TIMEOUT,
+					      NULL, /* cancellable */
+					      &error_local)) {
+		if (cmd == CH_CMD_RESET &&
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("ignoring '%s' on reset", error_local->message);
 			return TRUE;
 		}
@@ -124,17 +114,16 @@ fu_colorhug_device_msg(FuColorhugDevice *self,
 	}
 
 	/* read reply */
-	if (!g_usb_device_interrupt_transfer(usb_device,
-					     CH_USB_HID_EP_IN,
-					     buf,
-					     sizeof(buf),
-					     &actual_length,
-					     CH_DEVICE_USB_TIMEOUT,
-					     NULL, /* cancellable */
-					     &error_local)) {
-		if (cmd == CH_CMD_RESET && g_error_matches(error_local,
-							   G_USB_DEVICE_ERROR,
-							   G_USB_DEVICE_ERROR_NO_DEVICE)) {
+	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
+					      CH_USB_HID_EP_IN,
+					      buf,
+					      sizeof(buf),
+					      &actual_length,
+					      CH_DEVICE_USB_TIMEOUT,
+					      NULL, /* cancellable */
+					      &error_local)) {
+		if (cmd == CH_CMD_RESET &&
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("ignoring '%s' on reset", error_local->message);
 			return TRUE;
 		}
@@ -344,7 +333,6 @@ static gboolean
 fu_colorhug_device_setup(FuDevice *device, GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	guint idx;
 
 	/* FuUsbDevice->setup */
@@ -352,14 +340,14 @@ fu_colorhug_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get version number, falling back to the USB device release */
-	idx = g_usb_device_get_custom_index(usb_device,
-					    G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
-					    'F',
-					    'W',
-					    NULL);
+	idx = fu_usb_device_get_custom_index(FU_USB_DEVICE(device),
+					     FU_USB_CLASS_VENDOR_SPECIFIC,
+					     'F',
+					     'W',
+					     NULL);
 	if (idx != 0x00) {
 		g_autofree gchar *tmp = NULL;
-		tmp = g_usb_device_get_string_descriptor(usb_device, idx, NULL);
+		tmp = fu_usb_device_get_string_descriptor(FU_USB_DEVICE(device), idx, NULL);
 		/* although guessing is a route to insanity, if the device has
 		 * provided the extra data it's because the BCD type was not
 		 * suitable -- and INTEL_ME is not relevant here */
@@ -370,14 +358,14 @@ fu_colorhug_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* get GUID from the descriptor if set */
-	idx = g_usb_device_get_custom_index(usb_device,
-					    G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
-					    'G',
-					    'U',
-					    NULL);
+	idx = fu_usb_device_get_custom_index(FU_USB_DEVICE(device),
+					     FU_USB_CLASS_VENDOR_SPECIFIC,
+					     'G',
+					     'U',
+					     NULL);
 	if (idx != 0x00) {
 		g_autofree gchar *tmp = NULL;
-		tmp = g_usb_device_get_string_descriptor(usb_device, idx, NULL);
+		tmp = fu_usb_device_get_string_descriptor(FU_USB_DEVICE(device), idx, NULL);
 		fu_device_add_guid(device, tmp);
 	}
 
@@ -400,7 +388,7 @@ fu_colorhug_device_setup(FuDevice *device, GError **error)
 }
 
 static guint8
-ch_colorhug_device_calculate_checksum(const guint8 *data, gsize len)
+fu_colorhug_device_calculate_checksum(const guint8 *data, gsize len)
 {
 	guint8 checksum = 0xff;
 	for (guint32 i = 0; i < len; i++)
@@ -430,7 +418,7 @@ fu_colorhug_device_write_blocks(FuColorhugDevice *self,
 		/* set address, length, checksum, data */
 		fu_memwrite_uint16(buf + 0, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 		buf[2] = fu_chunk_get_data_sz(chk);
-		buf[3] = ch_colorhug_device_calculate_checksum(fu_chunk_get_data(chk),
+		buf[3] = fu_colorhug_device_calculate_checksum(fu_chunk_get_data(chk),
 							       fu_chunk_get_data_sz(chk));
 		if (!fu_memcpy_safe(buf,
 				    sizeof(buf),
@@ -596,13 +584,11 @@ fu_colorhug_device_init(FuColorhugDevice *self)
 	self->start_addr = CH_EEPROM_ADDR_RUNCODE;
 	fu_device_add_protocol(FU_DEVICE(self), "com.hughski.colorhug");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_COLORHUG_DEVICE_FLAG_HALFSIZE,
-					"halfsize");
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_COLORHUG_DEVICE_FLAG_HALFSIZE);
 	fu_usb_device_set_configuration(FU_USB_DEVICE(self), CH_USB_CONFIG);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), CH_USB_INTERFACE);
 }

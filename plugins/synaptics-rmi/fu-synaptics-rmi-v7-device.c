@@ -543,10 +543,10 @@ fu_synaptics_rmi_v7_device_secure_check(FuSynapticsRmiDevice *self,
 		byte_payload = fu_firmware_get_bytes(img, error);
 		if (byte_payload == NULL)
 			return FALSE;
-		if (!fu_synaptics_verify_sha256_signature(byte_payload,
-							  pubkey,
-							  byte_signature,
-							  error)) {
+		if (!fu_synaptics_rmi_verify_sha256_signature(byte_payload,
+							      pubkey,
+							      byte_signature,
+							      error)) {
 			g_prefix_error(error, "%s secure check failed: ", id);
 			return FALSE;
 		}
@@ -760,7 +760,7 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_synaptics_rmi_device_read_flash_config_v7(FuSynapticsRmiDevice *self, GError **error)
+fu_synaptics_rmi_v7_device_read_flash_config(FuSynapticsRmiDevice *self, GError **error)
 {
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
 	FuSynapticsRmiFunction *f34;
@@ -948,7 +948,7 @@ fu_synaptics_rmi_v7_device_setup(FuSynapticsRmiDevice *self, GError **error)
 	}
 
 	/* read flash config */
-	return fu_synaptics_rmi_device_read_flash_config_v7(self, error);
+	return fu_synaptics_rmi_v7_device_read_flash_config(self, error);
 }
 
 gboolean

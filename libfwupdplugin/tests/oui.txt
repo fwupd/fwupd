@@ -1,0 +1,21 @@
+OUI/MA-L                                                    Organization
+company_id                                                  Organization
+                                                            Address
+
+10-E9-92   (hex)		INGRAM MICRO SERVICES
+10E992     (base 16)		INGRAM MICRO SERVICES
+				100 CHEMIN DE BAILLOT
+				MONTAUBAN    82000
+				FR
+
+80-86-F2   (hex)		Intel Corporate
+8086F2     (base 16)		Intel Corporate
+				Lot 8, Jalan Hi-Tech 2/3
+				Kulim  Kedah  09000
+				MY
+
+B0-F2-F6   (hex)		Samsung Electronics Co.,Ltd
+B0F2F6     (base 16)		Samsung Electronics Co.,Ltd
+				129, Samsung-ro, Youngtongl-Gu
+				Suwon  Gyeonggi-Do  16677
+				KR

@@ -42,39 +42,37 @@ fu_genesys_plugin_constructed(GObject *obj)
 }
 
 static FuDevice *
-fu_genesys_plugin_get_device_by_gusb_device(FuPlugin *self, GUsbDevice *gusb_device)
+fu_genesys_plugin_get_device_by_physical_id(FuPlugin *self, const gchar *physical_id)
 {
 	GPtrArray *devices = fu_plugin_get_devices(self);
-
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index(devices, i);
-
 		if (!FU_IS_GENESYS_USBHUB_DEVICE(dev))
 			continue;
-
-		if (fu_usb_device_get_dev(FU_USB_DEVICE(dev)) == gusb_device)
+		if (g_strcmp0(fu_device_get_physical_id(dev), physical_id) == 0)
 			return dev;
 	}
-
 	return NULL;
 }
 
 static void
 fu_genesys_plugin_device_added(FuPlugin *self, FuDevice *device)
 {
-	GUsbDevice *gusb_parent = NULL;
 	FuDevice *parent = NULL;
+	g_autoptr(FuDevice) usb_parent = NULL;
 
 	/* link hid to parent hub */
 	if (!FU_IS_GENESYS_HUBHID_DEVICE(device))
 		return;
 
-	gusb_parent = g_usb_device_get_parent(fu_usb_device_get_dev(FU_USB_DEVICE(device)));
-	g_return_if_fail(gusb_parent);
-	parent = fu_genesys_plugin_get_device_by_gusb_device(self, gusb_parent);
+	usb_parent = fu_device_get_backend_parent(device, NULL);
+	if (usb_parent == NULL)
+		return;
+	parent = fu_genesys_plugin_get_device_by_physical_id(self,
+							     fu_device_get_physical_id(usb_parent));
 	if (parent == NULL) {
 		g_warning("hubhid cannot find parent, platform_id(%s)",
-			  g_usb_device_get_platform_id(gusb_parent));
+			  fu_device_get_physical_id(usb_parent));
 		fu_plugin_device_remove(self, device);
 	} else {
 		fu_genesys_usbhub_device_set_hid_channel(parent, device);

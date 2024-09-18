@@ -58,10 +58,6 @@ msgstr[1] "%u ਸਕਿੰਟ"
 msgid "Activate the new firmware on the device"
 msgstr "ਡਿਵਾਈਸ ਉੱਤੇ ਨਵਾਂ ਫਿਰਮਵੇਅਰ ਸਰਗਰਮ ਕਰੋ"
 
-#. TRANSLATORS: command line option
-msgid "Apply firmware updates"
-msgstr "ਫਿਰਮਵੇਅਰ ਅੱਪਡੇਟ ਲਾਗੂ ਕਰੋ"
-
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
 msgstr "ਹਟਾਉਣਯੋਗ ਡਿਵਾਈਸ ਉੱਤੇ ਫਿਰਮਵੇਅਰ ਡਾਊਨਗਰੇਡ ਕਰਨ ਲਈ ਪਰਮਾਣਕਿਤਾ ਚਾਹੀਦੀ ਹੈ"
@@ -81,9 +77,6 @@ msgstr "ਹਟਾਉਣਯੋਗ ਡਿਵਾਈਸ ਉੱਤੇ ਫਿਰਮਵ
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
 msgstr "ਇਸ ਮਸ਼ੀਨ ਉੱਤੇ ਫਿਰਮਵੇਅਰ ਅੱਪਡੇਟ ਕਰਨ ਲਈ ਪਰਮਾਣਕਿਤਾ ਚਾਹੀਦੀ ਹੈ"
-
-msgid "BYTES"
-msgstr "ਬਾਈਟ"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
@@ -194,10 +187,6 @@ msgstr "ਪਾਸਵਰਡ"
 msgid "Proprietary"
 msgstr "ਪ੍ਰੋਪ੍ਰੇਟਰੀ"
 
-#. TRANSLATORS: command description
-msgid "Read firmware from device into a file"
-msgstr "ਡਿਵਾਈਸ ਲਈ ਫਿਰਮਵੇਅਰ ਨੂੰ ਫਾਇਲ ਤੋਂ ਪੜ੍ਹੋ"
-
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
 msgstr "ਹੁਣੇ ਮੁੜ-ਚਾਲੂ ਕਰਨਾ ਹੈ?"
@@ -244,10 +233,6 @@ msgstr "LVFS ਮੁਫ਼ਤ ਸਰਵਿਸ ਹੈ, ਜੋ ਕਿ ਆਜ਼ਾਦ 
 msgid "Type"
 msgstr "ਕਿਸਮ"
 
-#. TRANSLATORS: program name
-msgid "UEFI Firmware Utility"
-msgstr "UEFI ਫਿਰਮਵੇਅਰ ਸਹੂਲਤ"
-
 #. TRANSLATORS: Name of hardware
 msgid "Unknown Device"
 msgstr "ਅਣਪਛਾਤਾ ਡਿਵਾਈਸ"
@@ -266,9 +251,6 @@ msgstr "ਜ਼ਰੂਰਤ"
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "ਵਰਤੋਂਕਾਰ-ਨਾਂ"
-
-msgid "VID:PID"
-msgstr "VID:PID"
 
 #. TRANSLATORS: manufacturer of hardware
 msgid "Vendor"

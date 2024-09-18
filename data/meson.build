@@ -58,12 +58,6 @@ if build_daemon
     install_dir: join_paths(datadir, 'dbus-1', 'system.d')
   )
 
-  if gudev.found()
-    install_data(['90-fwupd-devices.rules'],
-      install_dir: join_paths(udevdir, 'rules.d')
-    )
-  endif
-
   if libsystemd.found()
     con2 = configuration_data()
     con2.set('libexecdir', libexecdir)
@@ -128,17 +122,6 @@ if build_daemon
 
     con2.set('dynamic_options', '\n'.join(dynamic_options))
     con2.set('motd_dir', motd_dir)
-
-    # replace @bindir@
-    if offline
-      configure_file(
-        input: 'fwupd-offline-update.service.in',
-        output: 'fwupd-offline-update.service',
-        configuration: con2,
-        install: true,
-        install_dir: systemdunitdir,
-      )
-    endif
 
     # replace @dynamic_options@
     configure_file(

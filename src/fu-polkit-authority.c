@@ -14,16 +14,6 @@
 
 #include "fu-polkit-authority.h"
 
-#ifdef HAVE_POLKIT
-#ifndef HAVE_POLKIT_0_114
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(PolkitAuthorizationResult, g_object_unref)
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(PolkitSubject, g_object_unref)
-#pragma clang diagnostic pop
-#endif /* HAVE_POLKIT_0_114 */
-#endif /* HAVE_POLKIT */
-
 struct _FuPolkitAuthority {
 	GObject parent_instance;
 #ifdef HAVE_POLKIT
@@ -148,7 +138,8 @@ fu_polkit_authority_finalize(GObject *obj)
 {
 #ifdef HAVE_POLKIT
 	FuPolkitAuthority *self = FU_POLKIT_AUTHORITY(obj);
-	g_object_unref(self->pkauthority);
+	if (self->pkauthority != NULL)
+		g_object_unref(self->pkauthority);
 #endif
 	G_OBJECT_CLASS(fu_polkit_authority_parent_class)->finalize(obj);
 }

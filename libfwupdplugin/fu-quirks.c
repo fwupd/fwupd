@@ -11,7 +11,12 @@
 #include <gio/gio.h>
 #include <string.h>
 
+#ifdef HAVE_SQLITE
+#include <sqlite3.h>
+#endif
+
 #include "fwupd-common.h"
+#include "fwupd-enums-private.h"
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
 
@@ -68,6 +73,7 @@ fu_quirks_finalize(GObject *obj);
 
 struct _FuQuirks {
 	GObject parent_instance;
+	FuContext *ctx;
 	FuQuirksLoadFlags load_flags;
 	GHashTable *possible_keys;
 	GPtrArray *invalid_keys;
@@ -75,29 +81,20 @@ struct _FuQuirks {
 	XbQuery *query_kv;
 	XbQuery *query_vs;
 	gboolean verbose;
+#ifdef HAVE_SQLITE
+	sqlite3 *db;
+#endif
 };
 
 G_DEFINE_TYPE(FuQuirks, fu_quirks, G_TYPE_OBJECT)
 
+#ifdef HAVE_SQLITE
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(sqlite3_stmt, sqlite3_finalize);
+#endif
+
 static gchar *
 fu_quirks_build_group_key(const gchar *group)
 {
-	const gchar *guid_prefixes[] = {"DeviceInstanceId=", "Guid=", "HwId=", NULL};
-
-	/* this is a GUID */
-	for (guint i = 0; guid_prefixes[i] != NULL; i++) {
-		if (g_str_has_prefix(group, guid_prefixes[i])) {
-			gsize len = strlen(guid_prefixes[i]);
-			g_warning("using %s for %s in quirk files is deprecated!",
-				  guid_prefixes[i],
-				  group);
-			if (fwupd_guid_is_valid(group + len))
-				return g_strdup(group + len);
-			return fwupd_guid_hash_string(group + len);
-		}
-	}
-
-	/* fallback */
 	if (fwupd_guid_is_valid(group))
 		return g_strdup(group);
 	return fwupd_guid_hash_string(group);
@@ -467,6 +464,29 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
 	g_return_val_if_fail(guid != NULL, NULL);
 	g_return_val_if_fail(key != NULL, NULL);
 
+#ifdef HAVE_SQLITE
+	/* this is generated from usb.ids and other static sources */
+	if (self->db != NULL && (self->load_flags & FU_QUIRKS_LOAD_FLAG_NO_CACHE) == 0) {
+		g_autoptr(sqlite3_stmt) stmt = NULL;
+		if (sqlite3_prepare_v2(self->db,
+				       "SELECT key, value FROM quirks WHERE guid = ?1 "
+				       "AND key = ?2 LIMIT 1",
+				       -1,
+				       &stmt,
+				       NULL) != SQLITE_OK) {
+			g_warning("failed to prepare SQL: %s", sqlite3_errmsg(self->db));
+			return NULL;
+		}
+		sqlite3_bind_text(stmt, 1, guid, -1, SQLITE_STATIC);
+		sqlite3_bind_text(stmt, 2, key, -1, SQLITE_STATIC);
+		if (sqlite3_step(stmt) == SQLITE_ROW) {
+			const gchar *value = (const gchar *)sqlite3_column_text(stmt, 1);
+			if (value != NULL)
+				return g_intern_string(value);
+		}
+	}
+#endif
+
 	/* ensure up to date */
 	if (!fu_quirks_check_silo(self, &error)) {
 		g_warning("failed to build silo: %s", error->message);
@@ -524,6 +544,41 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 	g_return_val_if_fail(guid != NULL, FALSE);
 	g_return_val_if_fail(iter_cb != NULL, FALSE);
 
+#ifdef HAVE_SQLITE
+	/* this is generated from usb.ids and other static sources */
+	if (self->db != NULL && (self->load_flags & FU_QUIRKS_LOAD_FLAG_NO_CACHE) == 0) {
+		g_autoptr(sqlite3_stmt) stmt = NULL;
+		if (key == NULL) {
+			if (sqlite3_prepare_v2(self->db,
+					       "SELECT key, value FROM quirks WHERE guid = ?1",
+					       -1,
+					       &stmt,
+					       NULL) != SQLITE_OK) {
+				g_warning("failed to prepare SQL: %s", sqlite3_errmsg(self->db));
+				return FALSE;
+			}
+			sqlite3_bind_text(stmt, 1, guid, -1, SQLITE_STATIC);
+		} else {
+			if (sqlite3_prepare_v2(self->db,
+					       "SELECT key, value FROM quirks WHERE guid = ?1 "
+					       "AND key = ?2",
+					       -1,
+					       &stmt,
+					       NULL) != SQLITE_OK) {
+				g_warning("failed to prepare SQL: %s", sqlite3_errmsg(self->db));
+				return FALSE;
+			}
+			sqlite3_bind_text(stmt, 1, guid, -1, SQLITE_STATIC);
+			sqlite3_bind_text(stmt, 2, key, -1, SQLITE_STATIC);
+		}
+		while (sqlite3_step(stmt) == SQLITE_ROW) {
+			const gchar *key_tmp = (const gchar *)sqlite3_column_text(stmt, 0);
+			const gchar *value = (const gchar *)sqlite3_column_text(stmt, 1);
+			iter_cb(self, key_tmp, value, user_data);
+		}
+	}
+#endif
+
 	/* ensure up to date */
 	if (!fu_quirks_check_silo(self, &error)) {
 		g_warning("failed to build silo: %s", error->message);
@@ -531,8 +586,10 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 	}
 
 	/* no quirk data */
-	if (self->query_vs == NULL)
+	if (self->query_vs == NULL) {
+		g_debug("no quirk data");
 		return FALSE;
+	}
 
 	/* query */
 	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
@@ -557,8 +614,296 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 			g_debug("%s → %s", guid, xb_node_get_text(n));
 		iter_cb(self, xb_node_get_attr(n, "key"), xb_node_get_text(n), user_data);
 	}
+
 	return TRUE;
 }
+
+#ifdef HAVE_SQLITE
+
+typedef struct {
+	FuQuirks *self;
+	sqlite3_stmt *stmt;
+	const gchar *subsystem;
+	const gchar *title;
+} FuQuirksDbHelper;
+
+static gboolean
+fu_quirks_db_add_vendor_entry(FuQuirksDbHelper *helper,
+			      const gchar *vid,
+			      const gchar *name,
+			      GError **error)
+{
+	FuQuirks *self = FU_QUIRKS(helper->self);
+	g_autofree gchar *guid = NULL;
+	g_autofree gchar *instance_id = NULL;
+	g_autofree gchar *vid_strup = g_ascii_strup(vid, -1);
+
+	instance_id = g_strdup_printf("%s\\%s_%s", helper->subsystem, helper->title, vid_strup);
+	guid = fwupd_guid_hash_string(instance_id);
+	sqlite3_reset(helper->stmt);
+	sqlite3_bind_text(helper->stmt, 1, guid, -1, SQLITE_STATIC);
+	sqlite3_bind_text(helper->stmt, 2, FWUPD_RESULT_KEY_VENDOR, -1, SQLITE_STATIC);
+	sqlite3_bind_text(helper->stmt, 3, name, -1, SQLITE_STATIC);
+	if (sqlite3_step(helper->stmt) != SQLITE_DONE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "failed to execute prepared statement: %s",
+			    sqlite3_errmsg(self->db));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+_g_ascii_isxstrn(const gchar *str, gsize n)
+{
+	for (gsize i = 0; i < n; i++) {
+		if (!g_ascii_isxdigit(str[i]))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_quirks_db_add_usbids_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
+{
+	FuQuirksDbHelper *helper = (FuQuirksDbHelper *)user_data;
+	g_autofree gchar *vid = NULL;
+
+	/* not vendor lines */
+	if (token->len < 6)
+		return TRUE;
+
+	/* not 4 hex digits */
+	if (!_g_ascii_isxstrn(token->str, 4))
+		return TRUE;
+
+	/* ignore the wrong ones */
+	if (g_strstr_len(token->str, -1, "Wrong ID") != NULL ||
+	    g_strstr_len(token->str, -1, "wrong ID") != NULL)
+		return TRUE;
+
+	/* build into XML */
+	vid = g_strndup(token->str, 4);
+	return fu_quirks_db_add_vendor_entry(helper, vid, token->str + 6, error);
+}
+
+static gboolean
+fu_quirks_db_add_ouitxt_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
+{
+	FuQuirksDbHelper *helper = (FuQuirksDbHelper *)user_data;
+	g_autofree gchar *vid = NULL;
+
+	/* not vendor lines */
+	if (token->len < 22)
+		return TRUE;
+
+	/* not 6 hex digits */
+	if (!_g_ascii_isxstrn(token->str, 6))
+		return TRUE;
+
+	/* build into XML */
+	vid = g_strndup(token->str, 6);
+	return fu_quirks_db_add_vendor_entry(helper, vid, token->str + 22, error);
+}
+
+static gboolean
+fu_quirks_db_add_pnpids_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
+{
+	FuQuirksDbHelper *helper = (FuQuirksDbHelper *)user_data;
+	g_autofree gchar *vid = NULL;
+
+	/* not vendor lines */
+	if (token->len < 5)
+		return TRUE;
+
+	/* ignore the wrong ones */
+	if (g_strstr_len(token->str, -1, "DO NOT USE") != NULL)
+		return TRUE;
+
+	/* build into XML */
+	vid = g_strndup(token->str, 3);
+	return fu_quirks_db_add_vendor_entry(helper, vid, token->str + 4, error);
+}
+
+typedef struct {
+	const gchar *fn;
+	const gchar *subsystem;
+	const gchar *title;
+	FuStrsplitFunc func;
+} FuQuirksDbItem;
+
+static gboolean
+fu_quirks_db_sqlite3_exec(FuQuirks *self, const gchar *sql, GError **error)
+{
+	gint rc;
+
+	/* if we're running all the tests in parallel it is possible to hit this... */
+	for (guint i = 0; i < 10; i++) {
+		rc = sqlite3_exec(self->db, sql, NULL, NULL, NULL);
+		if (rc != SQLITE_LOCKED)
+			break;
+		g_usleep(50 * 1000);
+	}
+	if (rc != SQLITE_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to run %s: %s",
+			    sql,
+			    sqlite3_errmsg(self->db));
+		return FALSE;
+	}
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_quirks_db_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
+{
+	g_autofree gchar *vendor_ids_dir = fu_path_from_kind(FU_PATH_KIND_DATADIR_VENDOR_IDS);
+	g_autoptr(sqlite3_stmt) stmt_insert = NULL;
+	g_autoptr(sqlite3_stmt) stmt_query = NULL;
+	g_autoptr(GString) fn_mtimes = g_string_new("quirks");
+	g_autofree gchar *guid_fwupd = fwupd_guid_hash_string("fwupd");
+	const FuQuirksDbItem map[] = {
+	    {"pci.ids", "PCI", "VEN", fu_quirks_db_add_usbids_cb},
+	    {"usb.ids", "USB", "VID", fu_quirks_db_add_usbids_cb},
+	    {"pnp.ids", "PNP", "VID", fu_quirks_db_add_pnpids_cb},
+	    {"oui.txt", "OUI", "VID", fu_quirks_db_add_ouitxt_cb},
+	};
+
+	/* nothing to do */
+	if (load_flags & FU_QUIRKS_LOAD_FLAG_NO_CACHE)
+		return TRUE;
+
+	/* create tables and indexes */
+	if (!fu_quirks_db_sqlite3_exec(
+		self,
+		"BEGIN TRANSACTION;"
+		"CREATE TABLE IF NOT EXISTS quirks(guid, key, value);"
+		"CREATE INDEX IF NOT EXISTS idx_quirks_guid ON quirks(guid);"
+		"CREATE INDEX IF NOT EXISTS idx_quirks_guid_key ON quirks(guid, key);"
+		"COMMIT;",
+		error)) {
+		return FALSE;
+	}
+
+	/* find out the mtimes of each of the files we want to load into the db */
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
+		const FuQuirksDbItem *item = &map[i];
+		guint64 mtime;
+		g_autofree gchar *fn = g_build_filename(vendor_ids_dir, item->fn, NULL);
+		g_autoptr(GFile) file = g_file_new_for_path(fn);
+		g_autoptr(GFileInfo) info = NULL;
+
+		if (!g_file_query_exists(file, NULL))
+			continue;
+		info = g_file_query_info(file,
+					 G_FILE_ATTRIBUTE_TIME_MODIFIED,
+					 G_FILE_QUERY_INFO_NONE,
+					 NULL,
+					 error);
+		if (info == NULL)
+			return FALSE;
+		mtime = g_file_info_get_attribute_uint64(info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
+		g_string_append_printf(fn_mtimes, ",%s:%" G_GUINT64_FORMAT, item->fn, mtime);
+	}
+
+	/* check if the mtimes match */
+	if (sqlite3_prepare_v2(self->db,
+			       "SELECT value FROM quirks WHERE guid = ?1 and key = ?2",
+			       -1,
+			       &stmt_query,
+			       NULL) != SQLITE_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to prepare SQL: %s",
+			    sqlite3_errmsg(self->db));
+		return FALSE;
+	}
+	sqlite3_bind_text(stmt_query, 1, guid_fwupd, -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt_query, 2, FWUPD_RESULT_KEY_VERSION, -1, SQLITE_STATIC);
+	while (sqlite3_step(stmt_query) == SQLITE_ROW) {
+		const gchar *fn_mtimes_old = (const gchar *)sqlite3_column_text(stmt_query, 0);
+		if (g_strcmp0(fn_mtimes->str, fn_mtimes_old) == 0) {
+			g_debug("mtimes unchanged: %s, doing nothing", fn_mtimes->str);
+			return TRUE;
+		}
+		g_debug("mtimes changed %s vs %s -- regenerating", fn_mtimes_old, fn_mtimes->str);
+	}
+
+	/* delete any existing data */
+	if (!fu_quirks_db_sqlite3_exec(self, "BEGIN TRANSACTION;", error))
+		return FALSE;
+	if (!fu_quirks_db_sqlite3_exec(self, "DELETE FROM quirks;", error))
+		return FALSE;
+
+	/* prepared statement for speed */
+	if (sqlite3_prepare_v3(self->db,
+			       "INSERT INTO quirks (guid, key, value) VALUES (?1,?2,?3)",
+			       -1,
+			       SQLITE_PREPARE_PERSISTENT,
+			       &stmt_insert,
+			       NULL) != SQLITE_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to prepare SQL to insert history: %s",
+			    sqlite3_errmsg(self->db));
+		return FALSE;
+	}
+
+	/* populate database */
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
+		const FuQuirksDbItem *item = &map[i];
+		g_autofree gchar *fn = g_build_filename(vendor_ids_dir, item->fn, NULL);
+		g_autoptr(GFile) file = g_file_new_for_path(fn);
+		g_autoptr(GInputStream) stream = NULL;
+		FuQuirksDbHelper helper = {
+		    .self = self,
+		    .subsystem = item->subsystem,
+		    .title = item->title,
+		    .stmt = stmt_insert,
+		};
+
+		/* split into lines */
+		if (!g_file_query_exists(file, NULL)) {
+			g_debug("%s not found", fn);
+			continue;
+		}
+		g_debug("indexing vendor IDs from %s", fn);
+		stream = G_INPUT_STREAM(g_file_read(file, NULL, error));
+		if (stream == NULL)
+			return FALSE;
+		if (!fu_strsplit_stream(stream, 0x0, "\n", item->func, &helper, error))
+			return FALSE;
+	}
+
+	/* set schema */
+	sqlite3_reset(stmt_insert);
+	sqlite3_bind_text(stmt_insert, 1, guid_fwupd, -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt_insert, 2, FWUPD_RESULT_KEY_VERSION, -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt_insert, 3, fn_mtimes->str, -1, SQLITE_STATIC);
+	if (sqlite3_step(stmt_insert) != SQLITE_DONE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "failed to execute prepared statement: %s",
+			    sqlite3_errmsg(self->db));
+		return FALSE;
+	}
+	if (!fu_quirks_db_sqlite3_exec(self, "COMMIT;", error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+#endif
 
 /**
  * fu_quirks_load: (skip)
@@ -575,10 +920,37 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 gboolean
 fu_quirks_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 {
+#ifdef HAVE_SQLITE
+	g_autofree gchar *cachedirpkg = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
+	g_autofree gchar *quirksdb = g_build_filename(cachedirpkg, "quirks.db", NULL);
+#endif
+
 	g_return_val_if_fail(FU_IS_QUIRKS(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	self->load_flags = load_flags;
 	self->verbose = g_getenv("FWUPD_XMLB_VERBOSE") != NULL;
+
+#ifdef HAVE_SQLITE
+	if (self->db == NULL && (load_flags & FU_QUIRKS_LOAD_FLAG_NO_CACHE) == 0) {
+		g_debug("open database %s", quirksdb);
+		if (!fu_path_mkdir_parent(quirksdb, error))
+			return FALSE;
+		if (sqlite3_open(quirksdb, &self->db) != SQLITE_OK) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
+				    "cannot open %s: %s",
+				    quirksdb,
+				    sqlite3_errmsg(self->db));
+			return FALSE;
+		}
+		if (!fu_quirks_db_load(self, load_flags, error))
+			return FALSE;
+	}
+#endif
+
+	/* now silo */
 	return fu_quirks_check_silo(self, error);
 }
 
@@ -601,9 +973,30 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key)
 }
 
 static void
+fu_quirks_housekeeping_cb(FuContext *ctx, FuQuirks *self)
+{
+#ifdef HAVE_SQLITE
+	sqlite3_release_memory(G_MAXINT32);
+	if (self->db != NULL)
+		sqlite3_db_release_memory(self->db);
+#endif
+}
+
+static void
+fu_quirks_dispose(GObject *object)
+{
+	FuQuirks *self = FU_QUIRKS(object);
+	if (self->ctx != NULL)
+		g_signal_handlers_disconnect_by_data(self->ctx, self);
+	g_clear_object(&self->ctx);
+	G_OBJECT_CLASS(fu_quirks_parent_class)->dispose(object);
+}
+
+static void
 fu_quirks_class_init(FuQuirksClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->dispose = fu_quirks_dispose;
 	object_class->finalize = fu_quirks_finalize;
 }
 
@@ -668,6 +1061,10 @@ fu_quirks_finalize(GObject *obj)
 		g_object_unref(self->query_vs);
 	if (self->silo != NULL)
 		g_object_unref(self->silo);
+#ifdef HAVE_SQLITE
+	if (self->db != NULL)
+		sqlite3_close(self->db);
+#endif
 	g_hash_table_unref(self->possible_keys);
 	g_ptr_array_unref(self->invalid_keys);
 	G_OBJECT_CLASS(fu_quirks_parent_class)->finalize(obj);
@@ -683,9 +1080,11 @@ fu_quirks_finalize(GObject *obj)
  * Since: 1.0.1
  **/
 FuQuirks *
-fu_quirks_new(void)
+fu_quirks_new(FuContext *ctx)
 {
 	FuQuirks *self;
 	self = g_object_new(FU_TYPE_QUIRKS, NULL);
+	self->ctx = g_object_ref(ctx);
+	g_signal_connect(self->ctx, "housekeeping", G_CALLBACK(fu_quirks_housekeeping_cb), self);
 	return FU_QUIRKS(self);
 }

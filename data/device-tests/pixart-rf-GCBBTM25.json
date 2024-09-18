@@ -1,0 +1,28 @@
+{
+  "name": "MOUSE-GCBBTM25",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://www.fwupd.org/downloads/c5b40f0e4a425c7332513e099a4fd8600feb33e1893b590156fafdbbfe8f0929-GCBBTM25_v0001.cab",
+      "components": [
+        {
+          "version": "0.0.1",
+          "guids": [
+            "657c927f-1889-596d-a0f1-d2abd9c067ab"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://www.fwupd.org/downloads/b6bfa9c1f47252fb28d67bc3bf65bb9f11e2a3c1a32645450efdbdb64350c3c4-GCBBTM25_v0100.cab",
+      "components": [
+        {
+          "version": "1.0.0",
+          "guids": [
+            "657c927f-1889-596d-a0f1-d2abd9c067ab"
+          ]
+        }
+      ]
+    }
+  ]
+}

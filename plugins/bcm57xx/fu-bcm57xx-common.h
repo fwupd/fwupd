@@ -56,8 +56,6 @@ typedef struct {
 	FwupdVersionFormat verfmt;
 } Bcm57xxVeritem;
 
-guint32
-fu_bcm57xx_nvram_crc(const guint8 *buf, gsize bufsz);
 gboolean
 fu_bcm57xx_verify_crc(GInputStream *stream, GError **error);
 gboolean

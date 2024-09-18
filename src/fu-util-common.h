@@ -66,8 +66,6 @@ fu_util_modify_remote_warning(FuConsole *console,
 gboolean
 fu_util_prompt_complete(FuConsole *console, FwupdDeviceFlags flags, gboolean prompt, GError **error)
     G_GNUC_NON_NULL(1);
-gboolean
-fu_util_update_reboot(GError **error) G_GNUC_NON_NULL(1);
 
 GPtrArray *
 fu_util_cmd_array_new(void);
@@ -108,6 +106,8 @@ gchar *
 fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt) G_GNUC_NON_NULL(1);
 const gchar *
 fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag);
+gint
+fu_util_plugin_name_sort_cb(FwupdPlugin **item1, FwupdPlugin **item2);
 gchar *
 fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDeviceProblem problem)
     G_GNUC_NON_NULL(1, 2);

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Copyright 2017 Dell, Inc.
 #
@@ -22,7 +22,7 @@ def update_debian_control(target):
         print(f"Missing file {control_in}")
         sys.exit(1)
 
-    with open(control_in, "r") as rfd:
+    with open(control_in) as rfd:
         lines = rfd.readlines()
 
     deps, QUBES = parse_control_dependencies()
@@ -31,7 +31,7 @@ def update_debian_control(target):
     if QUBES:
         lines += "\n"
         control_qubes_in = os.path.join(target, "control.qubes.in")
-        with open(control_qubes_in, "r") as rfd:
+        with open(control_qubes_in) as rfd:
             lines += rfd.readlines()
 
     with open(control_out, "w") as wfd:
@@ -63,7 +63,7 @@ def update_debian_copyright(directory):
             if target.startswith("./po/") or file == "COPYING":
                 continue
             try:
-                with open(target, "r") as rfd:
+                with open(target) as rfd:
                     # read about the first few lines of the file only
                     lines = rfd.readlines(220)
             except UnicodeDecodeError:
@@ -78,7 +78,7 @@ def update_debian_copyright(directory):
                     partition = parts.partition(" ")[2]  # remove the year string
                     copyrights += [f"{partition}"]
     copyrights = "\n\t   ".join(sorted(set(copyrights)))
-    with open(copyright_in, "r") as rfd:
+    with open(copyright_in) as rfd:
         lines = rfd.readlines()
 
     with open(copyright_out, "w") as wfd:

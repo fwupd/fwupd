@@ -86,12 +86,13 @@ fu_uefi_get_esp_app_path(const gchar *cmd, GError **error)
  * Since: 1.8.1
  **/
 gchar *
-fu_uefi_get_built_app_path(const gchar *binary, GError **error)
+fu_uefi_get_built_app_path(FuEfivars *efivars, const gchar *binary, GError **error)
 {
 	const gchar *suffix;
 	g_autofree gchar *prefix = NULL;
 	g_autofree gchar *source_path = NULL;
 	g_autofree gchar *source_path_signed = NULL;
+	gboolean secureboot_enabled = FALSE;
 	gboolean source_path_exists = FALSE;
 	gboolean source_path_signed_exists = FALSE;
 
@@ -106,7 +107,9 @@ fu_uefi_get_built_app_path(const gchar *binary, GError **error)
 	source_path_exists = g_file_test(source_path, G_FILE_TEST_EXISTS);
 	source_path_signed_exists = g_file_test(source_path_signed, G_FILE_TEST_EXISTS);
 
-	if (fu_efivar_secure_boot_enabled(NULL)) {
+	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, error))
+		return NULL;
+	if (secureboot_enabled) {
 		if (!source_path_signed_exists) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -168,62 +171,6 @@ fu_uefi_get_framebuffer_size(guint32 *width, guint32 *height, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_uefi_get_bitmap_size(const guint8 *buf,
-			gsize bufsz,
-			guint32 *width,
-			guint32 *height,
-			GError **error)
-{
-	guint32 ui32;
-
-	g_return_val_if_fail(buf != NULL, FALSE);
-
-	/* check header */
-	if (bufsz < 26 || memcmp(buf, "BM", 2) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "invalid BMP header signature");
-		return FALSE;
-	}
-
-	/* starting address */
-	if (!fu_memread_uint32_safe(buf, bufsz, 10, &ui32, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (ui32 < 26) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "BMP header invalid @ %" G_GUINT32_FORMAT "x",
-			    ui32);
-		return FALSE;
-	}
-
-	/* BITMAPINFOHEADER header */
-	if (!fu_memread_uint32_safe(buf, bufsz, 14, &ui32, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (ui32 < 26 - 14) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "BITMAPINFOHEADER invalid @ %" G_GUINT32_FORMAT "x",
-			    ui32);
-		return FALSE;
-	}
-
-	/* dimensions */
-	if (width != NULL) {
-		if (!fu_memread_uint32_safe(buf, bufsz, 18, width, G_LITTLE_ENDIAN, error))
-			return FALSE;
-	}
-	if (height != NULL) {
-		if (!fu_memread_uint32_safe(buf, bufsz, 22, height, G_LITTLE_ENDIAN, error))
-			return FALSE;
-	}
-	return TRUE;
-}
-
 /* return without the ESP dir prepended */
 gchar *
 fu_uefi_get_esp_path_for_os(void)
@@ -274,7 +221,7 @@ fu_uefi_read_file_as_uint64(const gchar *path, const gchar *attr_name)
 
 	if (!g_file_get_contents(fn, &data, NULL, NULL))
 		return 0x0;
-	if (!fu_strtoull(data, &tmp, 0, G_MAXUINT64, &error_local)) {
+	if (!fu_strtoull(data, &tmp, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, &error_local)) {
 		g_warning("invalid string specified: %s", error_local->message);
 		return G_MAXUINT64;
 	}

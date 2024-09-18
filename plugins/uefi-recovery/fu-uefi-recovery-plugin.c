@@ -17,8 +17,10 @@ G_DEFINE_TYPE(FuUefiRecoveryPlugin, fu_uefi_recovery_plugin, FU_TYPE_PLUGIN)
 static gboolean
 fu_uefi_recovery_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	/* are the EFI dirs set up so we can update each device */
-	return fu_efivar_supported(error);
+	return fu_efivars_supported(efivars, error);
 }
 
 static gboolean
@@ -26,7 +28,6 @@ fu_uefi_recovery_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError 
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	GPtrArray *hwids = fu_context_get_hwid_guids(ctx);
-	const gchar *dmi_vendor;
 	g_autoptr(FuDevice) device = fu_device_new(fu_plugin_get_context(plugin));
 	fu_device_set_id(device, "uefi-recovery");
 	fu_device_set_name(device, "System Firmware ESRT Recovery");
@@ -44,11 +45,9 @@ fu_uefi_recovery_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError 
 	}
 
 	/* set vendor ID as the BIOS vendor */
-	dmi_vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR);
-	if (dmi_vendor != NULL) {
-		g_autofree gchar *vendor_id = g_strdup_printf("DMI:%s", dmi_vendor);
-		fu_device_add_vendor_id(device, vendor_id);
-	}
+	fu_device_build_vendor_id(device,
+				  "DMI",
+				  fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR));
 
 	fu_plugin_device_register(plugin, device);
 	return TRUE;

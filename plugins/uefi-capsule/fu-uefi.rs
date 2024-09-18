@@ -20,7 +20,7 @@ struct FuStructEfiCapsuleHeader {
     image_size: u32le,
 }
 
-#[derive(ToString)]
+#[derive(ToString, FromString)]
 #[repr(u32le)]
 enum FuUefiUpdateInfoStatus {
     Unknown,
@@ -66,4 +66,20 @@ enum FuUefiDeviceStatus {
     ErrorAuthError,
     ErrorPwrEvtAc,
     ErrorPwrEvtBatt,
+}
+
+#[derive(ParseStream)]
+struct FuStructBitmapFileHeader {
+    signature: [char; 2] == "BM",
+    size: u32le,
+    _reserved1: u16le,
+    _reserved2: u16le,
+    _image_offset: u32le,
+}
+
+#[derive(ParseStream)]
+struct FuStructBitmapInfoHeader {
+    _header_size: u32le,
+    width: u32le,
+    height: u32le,
 }

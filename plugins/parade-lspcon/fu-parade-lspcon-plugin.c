@@ -24,8 +24,6 @@ static void
 fu_parade_lspcon_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
-	FuContext *ctx = fu_plugin_get_context(plugin);
-	fu_context_add_quirk_key(ctx, "ParadeLspconAuxDeviceName");
 	fu_plugin_add_udev_subsystem(plugin, "i2c");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_PARADE_LSPCON_DEVICE);
 }

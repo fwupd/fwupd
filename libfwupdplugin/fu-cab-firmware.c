@@ -16,6 +16,7 @@
 #include "fu-cab-image.h"
 #include "fu-cab-struct.h"
 #include "fu-chunk-array.h"
+#include "fu-common.h"
 #include "fu-composite-input-stream.h"
 #include "fu-input-stream.h"
 #include "fu-mem-private.h"
@@ -159,13 +160,13 @@ fu_cab_firmware_compute_checksum_stream_cb(const guint8 *buf,
 }
 
 static voidpf
-zalloc(voidpf opaque, uInt items, uInt size)
+fu_cab_firmware_zalloc(voidpf opaque, uInt items, uInt size)
 {
 	return g_malloc0_n(items, size);
 }
 
 static void
-zfree(voidpf opaque, voidpf address)
+fu_cab_firmware_zfree(voidpf opaque, voidpf address)
 {
 	g_free(address);
 }
@@ -173,12 +174,12 @@ zfree(voidpf opaque, voidpf address)
 typedef z_stream z_stream_deflater;
 
 static void
-zstream_deflater_free(z_stream_deflater *zstrm)
+fu_cab_firmware_zstream_deflater_free(z_stream_deflater *zstrm)
 {
 	deflateEnd(zstrm);
 }
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(z_stream_deflater, zstream_deflater_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(z_stream_deflater, fu_cab_firmware_zstream_deflater_free)
 
 static gboolean
 fu_cab_firmware_parse_data(FuCabFirmware *self,
@@ -326,7 +327,8 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 				    zError(zret));
 			return FALSE;
 		}
-		bytes_uncomp = g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck */
+		bytes_uncomp =
+		    g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
 		fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(folder_data),
 						    bytes_uncomp);
 	} else {
@@ -434,6 +436,14 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 			return FALSE;
 		if (value == 0)
 			break;
+		if (!g_ascii_isprint((gchar)value)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "non-ASCII filenames are not supported: 0x%02x",
+				    value);
+			return FALSE;
+		}
 		/* convert to UNIX path */
 		if (value == '\\')
 			value = '/';
@@ -488,8 +498,8 @@ fu_cab_firmware_parse_helper_new(GInputStream *stream, FwupdInstallFlags flags, 
 	g_autoptr(FuCabFirmwareParseHelper) helper = g_new0(FuCabFirmwareParseHelper, 1);
 
 	/* zlib */
-	helper->zstrm.zalloc = zalloc;
-	helper->zstrm.zfree = zfree;
+	helper->zstrm.zalloc = fu_cab_firmware_zalloc;
+	helper->zstrm.zfree = fu_cab_firmware_zfree;
 	zret = inflateInit2(&helper->zstrm, -MAX_WBITS);
 	if (zret != Z_OK) {
 		g_set_error(error,
@@ -671,7 +681,7 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		return NULL;
 	}
 	cfdata_linear_blob =
-	    g_byte_array_free_to_bytes(g_steal_pointer(&cfdata_linear)); /* nocheck */
+	    g_byte_array_free_to_bytes(g_steal_pointer(&cfdata_linear)); /* nocheck:blocked */
 	chunks = fu_chunk_array_new_from_bytes(cfdata_linear_blob, 0x0, 0x8000);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
@@ -685,8 +695,8 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		if (priv->compressed) {
 			int zret;
 			z_stream zstrm = {
-			    .zalloc = zalloc,
-			    .zfree = zfree,
+			    .zalloc = fu_cab_firmware_zalloc,
+			    .zfree = fu_cab_firmware_zfree,
 			    .opaque = Z_NULL,
 			    .next_in = (guint8 *)fu_chunk_get_data(chk),
 			    .avail_in = fu_chunk_get_data_sz(chk),

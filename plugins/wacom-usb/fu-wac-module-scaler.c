@@ -24,7 +24,7 @@ G_DEFINE_TYPE(FuWacModuleScaler, fu_wac_module_scaler, FU_TYPE_WAC_MODULE)
 #define FU_WAC_MODULE_SCALER_START_NORMAL    0x00
 #define FU_WAC_MODULE_SCALER_START_FULLERASE 0xFE
 
-typedef struct __attribute__((__packed__)) {
+typedef struct __attribute__((__packed__)) { /* nocheck:blocked */
 	guint8 addr[3];
 	guint8 crc;
 	guint8 cdata[FU_WAC_MODULE_SCALER_PAYLOAD_SZ];
@@ -120,9 +120,9 @@ fu_wac_module_scaler_write_firmware(FuDevice *device,
 
 		/* build data packet */
 		memset(buf, 0xff, sizeof(buf));
-		memcpy(&buf[0], bd->addr, 3);
+		memcpy(&buf[0], bd->addr, 3); /* nocheck:blocked */
 		buf[3] = bd->crc;
-		memcpy(&buf[4], bd->cdata, sizeof(bd->cdata));
+		memcpy(&buf[4], bd->cdata, sizeof(bd->cdata)); /* nocheck:blocked */
 		blob_chunk = g_bytes_new(buf, sizeof(*bd));
 
 		if (!fu_wac_module_set_feature(self,

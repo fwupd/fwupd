@@ -54,7 +54,7 @@ Remember: Plugins should be upstream!
 * `fu_usb_device_new_full()`: Use `fu_usb_device_new()` instead -- as the latter always specifies the context.
 * `fu_device_new_with_context()`: Use `fu_device_new()` instead -- as the latter always specifies the context.
 * `fu_plugin_has_custom_flag()`: Use `fu_plugin_has_private_flag()` instead.
-* `fu_efivar_secure_boot_enabled_full()`: Use `fu_efivar_secure_boot_enabled()` instead -- as the latter always specifies the error.
+* `fu_efivar_secure_boot_enabled_full()`: Use `fu_efivars_get_secure_boot()` instead -- as the latter always specifies the error.
 * `fu_progress_add_step()`: Add a 4th parameter to the function to specify the nice name for the step, or NULL.
 * `fu_backend_setup()`: Now requires a `FuProgress`, although it can be ignored.
 * `fu_backend_coldplug`: Now requires a `FuProgress`, although it can be ignored.
@@ -86,7 +86,7 @@ Remember: Plugins should be upstream!
 * `fu_common_cpuid()`: Use `fu_cpuid` instead.
 * `fu_common_get_cpu_vendor()`: Use `fu_cpu_get_vendor` instead.
 * `fu_common_vercmp_full()`: Use `fu_version_compare()` instead.
-* `fu_common_version_ensure_semver()`: Use `fu_version_ensure_semver()` instead.
+* `fu_version_ensure_semver()`: Use `fu_version_ensure_semver()` instead.
 * `fu_common_version_from_uint*()`: Use `fu_version_from_uint*()` instead.
 * `fu_common_strtoull()`: Use `fu_strtoull()` instead -- as the latter always specifies the error.
 * `fu_smbios_to_string()`: Use `fu_firmware_to_string()` instead -- as `FuSmbios` is a `FuFirmware` superclass.
@@ -128,4 +128,21 @@ Remember: Plugins should be upstream!
 ## 2.0.0
 
 * `fu_hid_device_parse_descriptor()`: Use `fu_hid_device_parse_descriptors()` instead
+* `fu_io_channel_new_file()`: Add some `FuIoChannelOpenFlag`, e.g. `FU_IO_CHANNEL_OPEN_FLAG_READ|FU_IO_CHANNEL_OPEN_FLAG_WRITE`
 * `fu_udev_device_set_flags()`: Use `fu_udev_device_add_flag()` instead
+* `fu_udev_device_get_slot_depth()`: Use `fu_udev_device_get_subsystem_depth()` instead
+* `fu_usb_device_is_open()`: Use `fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_OPEN)` instead
+* `fu_udev_device_ioctl`: Add some `FuUdevDeviceIoctlFlags`, e.g. `FU_UDEV_DEVICE_IOCTL_FLAG_RETRY`
+* `fu_udev_device_write_sysfs()`: Add a timeout in milliseconds
+* `fu_udev_device_get_sysfs_attr_uint64()`: Use `fu_udev_device_read_sysfs()` instead
+* `fu_udev_device_get_sysfs_attr`: Use `fu_udev_device_read_sysfs()` instead
+* `fu_i2c_device_get_bus_number()`: Use `fu_udev_device_get_number()` instead
+* `fu_usb_device_set_open_retry_count()`: Use `FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN` instead
+* `FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST`: Use `FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST` instead
+* `FWUPD_DEVICE_FLAG_REGISTERED`: Use `FU_DEVICE_PRIVATE_FLAG_REGISTERED` instead
+* `FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS`: Use `FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS` instead
+* `FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION`: Use `FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION` instead
+* `FWUPD_DEVICE_FLAG_SKIPS_RESTART`: Use `FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART` instead
+* `FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT`: Use `fu_device_get_backend_parent_with_subsystem()` and copy properties instead
+* `fu_udev_device_is_pci_base_cls`: Put logic in `FuPciDevice` if needed, but consider what you are doing
+* `fu_udev_device_get_cls`: Put logic in `FuPciDevice` if needed, or use a quirk instead

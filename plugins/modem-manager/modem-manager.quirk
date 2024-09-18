@@ -117,3 +117,8 @@ ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
 Summary = Fibocom FM101-GL Module
 Flags = uninhibit-modemmanager-after-fastboot-reboot,detach-at-fastboot-has-no-response
 CounterpartGuid = USB\VID_2CB7&PID_D00D
+
+# Cinterion PLS8
+[USB\VID_1e2d&PID_0061]
+Summary = Cinterion PLS8 AT^SFDL update
+Plugin = modem_manager

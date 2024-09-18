@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # pylint: disable=invalid-name,missing-docstring,consider-using-f-string
 #
 # Copyright 2023 Richard Hughes <richard@hughsie.com>

@@ -92,10 +92,6 @@ msgstr "Чисти резултате последњег ажурирања"
 msgid "Command not found"
 msgstr "Наредба није пронађена"
 
-#. TRANSLATORS: DFU stands for device firmware update
-msgid "DFU Utility"
-msgstr "ДФУ алатка"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
 msgstr "Опције отклањања проблема"
@@ -161,7 +157,6 @@ msgstr "Преузимам…"
 msgid "Dump SMBIOS data from a file"
 msgstr "Ишчитај SMBIOS податке из датотеке"
 
-#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
@@ -183,10 +178,6 @@ msgstr "Изађи након малог застоја"
 msgid "Exit after the engine has loaded"
 msgstr "Изађи након учитавања мотора"
 
-#. TRANSLATORS: quirks are device-specific workarounds
-msgid "Failed to load quirks"
-msgstr "Нисам могао да учитам ћефове"
-
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Не могу да обрадим аргументе"
@@ -198,10 +189,6 @@ msgstr "Назив датотеке"
 #. TRANSLATORS: filename of the local file
 msgid "Filename Signature"
 msgstr "Потпис назива датотеке"
-
-#. TRANSLATORS: remote URI
-msgid "Firmware Base URI"
-msgstr "Основни URI фирмвера"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
@@ -226,11 +213,6 @@ msgstr[2] "Метаподаци фирмвера нису ажурирани %u 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
 msgstr "Нашао"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgctxt "A single GUID"
-msgid "GUID"
-msgstr "ГУИД"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "command-argument"
@@ -326,14 +308,6 @@ msgstr "Важност"
 msgid "Proceed with upload?"
 msgstr "Наставити са отпремањем?"
 
-#. TRANSLATORS: command description
-msgid "Read firmware from device into a file"
-msgstr "Исчитај фирмвер са уређаја у датотеку"
-
-#. TRANSLATORS: command description
-msgid "Read firmware from one partition into a file"
-msgstr "Исчитај фирмвер са једне партиције у датотеку"
-
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
 msgstr "Читам…"
@@ -353,10 +327,6 @@ msgstr "Поново инсталирам %s са %s..."
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "Удаљени ИБ"
-
-#. TRANSLATORS: command description
-msgid "Replace data in an existing firmware file"
-msgstr "Замењује податке у постојећој датотеци фирмвера"
 
 #. TRANSLATORS: URI to send success/failure reports
 msgid "Report URI"
@@ -410,6 +380,7 @@ msgstr "Прикажи историјат ажурирања фирмвера"
 msgid "Summary"
 msgstr "Сажетак"
 
+#. show the user the entire data blob
 msgid "Target"
 msgstr "Мета"
 
@@ -464,14 +435,6 @@ msgstr "Издање"
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "Чекам…"
-
-#. TRANSLATORS: command description
-msgid "Write firmware from file into device"
-msgstr "Упиши фирмвер из датотеке у уређај"
-
-#. TRANSLATORS: command description
-msgid "Write firmware from file into one partition"
-msgstr "Упиши фирмвер из датотеке у једну партицију"
 
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"

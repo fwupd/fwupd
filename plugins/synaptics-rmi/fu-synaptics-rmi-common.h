@@ -35,7 +35,7 @@ fu_synaptics_rmi_function_parse(GByteArray *buf,
 gboolean
 fu_synaptics_rmi_device_writeln(const gchar *fn, const gchar *buf, GError **error);
 gboolean
-fu_synaptics_verify_sha256_signature(GBytes *payload,
-				     GBytes *pubkey,
-				     GBytes *signature,
-				     GError **error);
+fu_synaptics_rmi_verify_sha256_signature(GBytes *payload,
+					 GBytes *pubkey,
+					 GBytes *signature,
+					 GError **error);

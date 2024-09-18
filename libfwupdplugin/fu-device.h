@@ -88,6 +88,7 @@ struct _FuDeviceClass {
 	void (*set_progress)(FuDevice *self, FuProgress *progress);
 	void (*invalidate)(FuDevice *self);
 	gchar *(*convert_version)(FuDevice *self, guint64 version_raw);
+	void (*register_flags)(FuDevice *self);
 #endif
 };
 
@@ -158,10 +159,8 @@ fu_device_new(FuContext *ctx);
 #define fu_device_add_icon(d, v)	   fwupd_device_add_icon(FWUPD_DEVICE(d), v)
 #define fu_device_has_icon(d, v)	   fwupd_device_has_icon(FWUPD_DEVICE(d), v)
 #define fu_device_add_issue(d, v)	   fwupd_device_add_issue(FWUPD_DEVICE(d), v)
-#define fu_device_set_created(d, v)	   fwupd_device_set_created(FWUPD_DEVICE(d), v)
 #define fu_device_set_description(d, v)	   fwupd_device_set_description(FWUPD_DEVICE(d), v)
 #define fu_device_set_flags(d, v)	   fwupd_device_set_flags(FWUPD_DEVICE(d), v)
-#define fu_device_set_modified(d, v)	   fwupd_device_set_modified(FWUPD_DEVICE(d), v)
 #define fu_device_set_plugin(d, v)	   fwupd_device_set_plugin(FWUPD_DEVICE(d), v)
 #define fu_device_set_serial(d, v)	   fwupd_device_set_serial(FWUPD_DEVICE(d), v)
 #define fu_device_set_summary(d, v)	   fwupd_device_set_summary(FWUPD_DEVICE(d), v)
@@ -181,8 +180,6 @@ fu_device_new(FuContext *ctx);
 #define fu_device_set_install_duration(d, v) fwupd_device_set_install_duration(FWUPD_DEVICE(d), v)
 #define fu_device_get_checksums(d)	     fwupd_device_get_checksums(FWUPD_DEVICE(d))
 #define fu_device_get_flags(d)		     fwupd_device_get_flags(FWUPD_DEVICE(d))
-#define fu_device_get_created(d)	     fwupd_device_get_created(FWUPD_DEVICE(d))
-#define fu_device_get_modified(d)	     fwupd_device_get_modified(FWUPD_DEVICE(d))
 #define fu_device_get_guids(d)		     fwupd_device_get_guids(FWUPD_DEVICE(d))
 #define fu_device_get_guid_default(d)	     fwupd_device_get_guid_default(FWUPD_DEVICE(d))
 #define fu_device_get_instance_ids(d)	     fwupd_device_get_instance_ids(FWUPD_DEVICE(d))
@@ -220,403 +217,426 @@ fu_device_new(FuContext *ctx);
 #define fu_device_set_percentage(d, v)	    fwupd_device_set_percentage(FWUPD_DEVICE(d), v)
 
 /**
- * FuDeviceInternalFlags:
+ * FU_DEVICE_PRIVATE_FLAG_NO_AUTO_INSTANCE_IDS:
  *
- * The device internal flags.
- **/
-typedef enum {
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_NONE:
-	 *
-	 * No flags set.
-	 *
-	 * Since: 1.5.5
-	 */
-	FU_DEVICE_INTERNAL_FLAG_NONE = 0,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS:
-	 *
-	 * Do not add instance IDs from the device baseclass.
-	 *
-	 * Since: 1.5.5
-	 */
-	FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS = 1ull << 0,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER:
-	 *
-	 * Ensure the version is a valid semantic version, e.g. numbers separated with dots.
-	 *
-	 * Since: 1.5.5
-	 */
-	FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER = 1ull << 1,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED:
-	 *
-	 * Only devices supported in the metadata will be opened
-	 *
-	 * Since: 1.5.5
-	 */
-	FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED = 1ull << 2,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME:
-	 *
-	 * Set the device name from the metadata `name` if available.
-	 *
-	 * Since: 1.5.5
-	 */
-	FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME = 1ull << 3,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY:
-	 *
-	 * Set the device name from the metadata `category` if available.
-	 *
-	 * Since: 1.5.5
-	 */
-	FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY = 1ull << 4,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT:
-	 *
-	 * Set the device version format from the metadata or history database if available.
-	 *
-	 * Since: 1.5.5
-	 */
-	FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT = 1ull << 5,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON:
-	 *
-	 * Set the device icon from the metadata if available.
-	 *
-	 * Since: 1.5.5
-	 */
-	FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON = 1ull << 6,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN:
-	 *
-	 * Retry the device open up to 5 times if it fails.
-	 *
-	 * Since: 1.5.5
-	 */
-	FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN = 1ull << 7,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID:
-	 *
-	 * Match GUIDs on device replug where the physical and logical IDs will be different.
-	 *
-	 * Since: 1.5.8
-	 */
-	FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID = 1ull << 8,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION:
-	 *
-	 * Inherit activation status from the history database on startup.
-	 *
-	 * Since: 1.5.9
-	 */
-	FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION = 1ull << 9,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_IS_OPEN:
-	 *
-	 * The device opened successfully and ready to use.
-	 *
-	 * Since: 1.6.1
-	 */
-	FU_DEVICE_INTERNAL_FLAG_IS_OPEN = 1ull << 10,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER:
-	 *
-	 * Do not attempt to read the device serial number.
-	 *
-	 * Since: 1.6.2
-	 */
-	FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER = 1ull << 11,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN:
-	 *
-	 * Automatically assign the parent for children of this device.
-	 *
-	 * Since: 1.6.2
-	 */
-	FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN = 1ull << 12,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET:
-	 *
-	 * Device needs resetting twice for attach after the firmware update.
-	 *
-	 * Since: 1.6.2
-	 */
-	FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET = 1ull << 13,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN:
-	 *
-	 * Children of the device are inhibited by the parent.
-	 *
-	 * Since: 1.6.2
-	 */
-	FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN = 1ull << 14,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN:
-	 *
-	 * Do not auto-remove children in the device list.
-	 *
-	 * Since: 1.6.2
-	 */
-	FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN = 1ull << 15,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN:
-	 *
-	 * Use parent to open and close the device.
-	 *
-	 * Since: 1.6.2
-	 */
-	FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN = 1ull << 16,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY:
-	 *
-	 * Use parent for the battery level and threshold.
-	 *
-	 * Since: 1.6.3
-	 */
-	FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY = 1ull << 17,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK:
-	 *
-	 * Use parent for the battery level and threshold.
-	 *
-	 * Since: 1.6.4
-	 */
-	FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK = 1ull << 18,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE:
-	 *
-	 * The device is not auto removed.
-	 *
-	 * Since 1.7.3
-	 */
-	FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE = 1ull << 19,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR:
-	 *
-	 * Set the device vendor from the metadata `developer_name` if available.
-	 *
-	 * Since: 1.7.4
-	 */
-	FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR = 1ull << 20,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED:
-	 *
-	 * Do not allow updating when the laptop lid is closed.
-	 *
-	 * Since: 1.7.4
-	 */
-	FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED = 1ull << 21,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_NO_PROBE:
-	 *
-	 * Do not probe this device.
-	 *
-	 * Since: 1.7.6
-	 */
-	FU_DEVICE_INTERNAL_FLAG_NO_PROBE = 1ull << 22,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED:
-	 *
-	 * Set the signed/unsigned payload from the metadata if available.
-	 *
-	 * Since: 1.7.6
-	 */
-	FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED = 1ull << 23,
-	/**
-	 * FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING:
-	 *
-	 * Pause polling when reading or writing to the device
-	 *
-	 * Since: 1.8.1
-	 */
-	FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING = 1ull << 24,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG:
-	 *
-	 * Only use the device removal delay when explicitly waiting for a replug, rather than
-	 * every time the device is removed.
-	 *
-	 * Since: 1.8.1
-	 */
-	FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG = 1ull << 25,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_IGNORE_SYSTEM_POWER:
-	 *
-	 * Allow updating firmware when the system power is otherwise too low.
-	 * This is only really useful when updating the system battery firmware.
-	 *
-	 * Since: 1.8.11
-	 */
-	FU_DEVICE_INTERNAL_FLAG_IGNORE_SYSTEM_POWER = 1ull << 26,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE:
-	 *
-	 * Do not deallocate resources typically only required during `->probe`.
-	 *
-	 * Note: the daemon will not actually free or unref device resources, but the plugin should
-	 * still use this flag. After a a few releases and a lot of testing we'll actually flip the
-	 * switch.
-	 *
-	 * Since: 1.8.12
-	 */
-	FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE = 1ull << 27,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE:
-	 *
-	 * Save the cabinet archive to persistent storage remote before starting the update process.
-	 *
-	 * This is useful when the network device is being updated, and different blobs inside the
-	 * archive could be required in different scenarios. For instance, if the user installs a
-	 * firmware update for a specific network device and then changes the SIM -- it might be
-	 * they need the archive again and have no internet access.
-	 *
-	 * Since: 1.8.13
-	 */
-	FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE = 1ull << 28,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS:
-	 *
-	 * Set the device flags from the metadata if available.
-	 *
-	 * NOTE: These flags should only affect device update, and should never be used to affect
-	 * enumeration.
-	 *
-	 * Since: 1.9.1
-	 */
-	FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS = 1ull << 29,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION:
-	 *
-	 * Set the device version from the metadata if available.
-	 *
-	 * Since: 1.9.1
-	 */
-	FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION = 1ull << 30,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM:
-	 *
-	 * Only use the metadata *checksum* to set device attributes.
-	 *
-	 * Since: 1.9.1
-	 */
-	FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM = 1ull << 31,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV:
-	 *
-	 * Add the `_REV` instance ID suffix.
-	 *
-	 * Since: 1.9.3
-	 */
-	FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV = 1ull << 32,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_UNCONNECTED:
-	 *
-	 * The device is not connected and is probably awaiting replug.
-	 *
-	 * Since: 1.9.4
-	 */
-	FU_DEVICE_INTERNAL_FLAG_UNCONNECTED = 1ull << 33,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_DISPLAY_REQUIRED:
-	 *
-	 * The device requires a display to be plugged in.
-	 *
-	 * Since: 1.9.6
-	 */
-	FU_DEVICE_INTERNAL_FLAG_DISPLAY_REQUIRED = 1ull << 34,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_UPDATE_PENDING:
-	 *
-	 * The device has an update that is waiting to be applied.
-	 *
-	 * Since: 1.9.7
-	 */
-	FU_DEVICE_INTERNAL_FLAG_UPDATE_PENDING = 1ull << 35,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS:
-	 *
-	 * Do not add generic GUIDs from outside the plugin.
-	 *
-	 * Since: 1.9.8
-	 */
-	FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS = 1ull << 36,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES:
-	 *
-	 * The device uses a generic instance ID and firmware requires a parent, child, sibling or
-	 * CHID requirement.
-	 *
-	 * Since: 1.9.8
-	 */
-	FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES = 1ull << 37,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE:
-	 *
-	 * The device represents the main system host firmware.
-	 *
-	 * Since: 1.9.10
-	 */
-	FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE = 1ull << 38,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE_CHILD:
-	 *
-	 * The device should be a child of the main system host firmware device.
-	 *
-	 * Since: 1.9.10
-	 */
-	FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE_CHILD = 1ull << 39,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_HOST_CPU:
-	 *
-	 * The device represents the main CPU device.
-	 *
-	 * Since: 1.9.10
-	 */
-	FU_DEVICE_INTERNAL_FLAG_HOST_CPU = 1ull << 40,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD:
-	 *
-	 * The device should be a child of the main CPU device.
-	 *
-	 * Since: 1.9.10
-	 */
-	FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD = 1ull << 41,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER:
-	 *
-	 * Do not automatically set the device order, e.g. updating the child before the parent.
-	 *
-	 * Since: 1.9.13
-	 */
-	FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER = 1ull << 42,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY:
-	 *
-	 * Reference-count the proxy -- which is useful when using `ProxyGType`.
-	 *
-	 * Since: 1.9.15
-	 */
-	FU_DEVICE_INTERNAL_FLAG_REFCOUNTED_PROXY = 1ull << 43,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FOR_OPEN:
-	 *
-	 * Use proxy to open and close the device.
-	 *
-	 * Since: 1.9.16
-	 */
-	FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FOR_OPEN = 1ull << 44,
-	/**
-	 * FU_DEVICE_INTERNAL_FLAG_UNKNOWN:
-	 *
-	 * Unknown flag value.
-	 *
-	 * Since: 1.5.5
-	 */
-	FU_DEVICE_INTERNAL_FLAG_UNKNOWN = G_MAXUINT64,
-} FuDeviceInternalFlags;
+ * Do not add instance IDs from the device baseclass.
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_PRIVATE_FLAG_NO_AUTO_INSTANCE_IDS "no-auto-instance-ids"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER:
+ *
+ * Ensure the version is a valid semantic version, e.g. numbers separated with dots.
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER "ensure-semver"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_ONLY_SUPPORTED:
+ *
+ * Only devices supported in the metadata will be opened
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_PRIVATE_FLAG_ONLY_SUPPORTED "only-supported"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME:
+ *
+ * Set the device name from the metadata `name` if available.
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME "md-set-name"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME_CATEGORY:
+ *
+ * Set the device name from the metadata `category` if available.
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME_CATEGORY "md-set-name-category"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT:
+ *
+ * Set the device version format from the metadata or history database if available.
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT "md-set-verfmt"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON:
+ *
+ * Set the device icon from the metadata if available.
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON "md-set-icon"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN:
+ *
+ * Retry the device open up to 5 times if it fails.
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN "retry-open"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID:
+ *
+ * Match GUIDs on device replug where the physical and logical IDs will be different.
+ *
+ * Since: 1.5.8
+ */
+#define FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID "replug-match-guid"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION:
+ *
+ * Inherit activation status from the history database on startup.
+ *
+ * Since: 1.5.9
+ */
+#define FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION "inherit-activation"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_IS_OPEN:
+ *
+ * The device opened successfully and ready to use.
+ *
+ * Since: 1.6.1
+ */
+#define FU_DEVICE_PRIVATE_FLAG_IS_OPEN "is-open"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER:
+ *
+ * Do not attempt to read the device serial number.
+ *
+ * Since: 1.6.2
+ */
+#define FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER "no-serial-number"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN:
+ *
+ * Automatically assign the parent for children of this device.
+ *
+ * Since: 1.6.2
+ */
+#define FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN "auto-parent-children"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET:
+ *
+ * Device needs resetting twice for attach after the firmware update.
+ *
+ * Since: 1.6.2
+ */
+#define FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET "attach-extra-reset"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN:
+ *
+ * Children of the device are inhibited by the parent.
+ *
+ * Since: 1.6.2
+ */
+#define FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN "inhibit-children"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN:
+ *
+ * Do not auto-remove children in the device list.
+ *
+ * Since: 1.6.2
+ */
+#define FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN "no-auto-remove-children"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN:
+ *
+ * Use parent to open and close the device.
+ *
+ * Since: 1.6.2
+ */
+#define FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN "use-parent-for-open"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY:
+ *
+ * Use parent for the battery level and threshold.
+ *
+ * Since: 1.6.3
+ */
+#define FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY "use-parent-for-battery"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK:
+ *
+ * Use parent for the battery level and threshold.
+ *
+ * Since: 1.6.4
+ */
+#define FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK "use-proxy-fallback"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE:
+ *
+ * The device is not auto removed.
+ *
+ * Since 1.7.3
+ */
+#define FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE "no-auto-remove"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR:
+ *
+ * Set the device vendor from the metadata `developer_name` if available.
+ *
+ * Since: 1.7.4
+ */
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR "md-set-vendor"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED:
+ *
+ * Do not allow updating when the laptop lid is closed.
+ *
+ * Since: 1.7.4
+ */
+#define FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED "no-lid-closed"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_NO_PROBE:
+ *
+ * Do not probe this device.
+ *
+ * Since: 1.7.6
+ */
+#define FU_DEVICE_PRIVATE_FLAG_NO_PROBE "no-probe"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED:
+ *
+ * Set the signed/unsigned payload from the metadata if available.
+ *
+ * Since: 1.7.6
+ */
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED "md-set-signed"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING:
+ *
+ * Pause polling when reading or writing to the device
+ *
+ * Since: 1.8.1
+ */
+#define FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING "auto-pause-polling"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG:
+ *
+ * Only use the device removal delay when explicitly waiting for a replug, rather than
+ * every time the device is removed.
+ *
+ * Since: 1.8.1
+ */
+#define FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG "only-wait-for-replug"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER:
+ *
+ * Allow updating firmware when the system power is otherwise too low.
+ * This is only really useful when updating the system battery firmware.
+ *
+ * Since: 1.8.11
+ */
+#define FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER "ignore-system-power"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE:
+ *
+ * Save the cabinet archive to persistent storage remote before starting the update process.
+ *
+ * This is useful when the network device is being updated, and different blobs inside the
+ * archive could be required in different scenarios. For instance, if the user installs a
+ * firmware update for a specific network device and then changes the SIM -- it might be
+ * they need the archive again and have no internet access.
+ *
+ * Since: 1.8.13
+ */
+#define FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE "save-into-backup-remote"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS:
+ *
+ * Set the device flags from the metadata if available.
+ *
+ * NOTE: These flags should only affect device update, and should never be used to affect
+ * enumeration.
+ *
+ * Since: 1.9.1
+ */
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS "md-set-flags"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION:
+ *
+ * Set the device version from the metadata if available.
+ *
+ * Since: 1.9.1
+ */
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION "md-set-version"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM:
+ *
+ * Only use the metadata *checksum* to set device attributes.
+ *
+ * Since: 1.9.1
+ */
+#define FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM "md-only-checksum"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV:
+ *
+ * Add the `_REV` instance ID suffix.
+ *
+ * Since: 1.9.3
+ */
+#define FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV "add-instance-id-rev"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_UNCONNECTED:
+ *
+ * The device is not connected and is probably awaiting replug.
+ *
+ * Since: 1.9.4
+ */
+#define FU_DEVICE_PRIVATE_FLAG_UNCONNECTED "unconnected"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_DISPLAY_REQUIRED:
+ *
+ * The device requires a display to be plugged in.
+ *
+ * Since: 1.9.6
+ */
+#define FU_DEVICE_PRIVATE_FLAG_DISPLAY_REQUIRED "display-required"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_UPDATE_PENDING:
+ *
+ * The device has an update that is waiting to be applied.
+ *
+ * Since: 1.9.7
+ */
+#define FU_DEVICE_PRIVATE_FLAG_UPDATE_PENDING "update-pending"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS:
+ *
+ * Do not add generic GUIDs from outside the plugin.
+ *
+ * Since: 1.9.8
+ */
+#define FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS "no-generic-guids"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES:
+ *
+ * The device uses a generic instance ID and firmware requires a parent, child, sibling or
+ * CHID requirement.
+ *
+ * Since: 1.9.8
+ */
+#define FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES "enforce-requires"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE:
+ *
+ * The device represents the main system host firmware.
+ *
+ * Since: 1.9.10
+ */
+#define FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE "host-firmware"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD:
+ *
+ * The device should be a child of the main system host firmware device.
+ *
+ * Since: 1.9.10
+ */
+#define FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD "host-firmware-child"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_HOST_CPU:
+ *
+ * The device represents the main CPU device.
+ *
+ * Since: 1.9.10
+ */
+#define FU_DEVICE_PRIVATE_FLAG_HOST_CPU "host-cpu"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD:
+ *
+ * The device should be a child of the main CPU device.
+ *
+ * Since: 1.9.10
+ */
+#define FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD "host-cpu-child"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER:
+ *
+ * Do not automatically set the device order, e.g. updating the child before the parent.
+ *
+ * Since: 1.9.13
+ */
+#define FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER "explicit-order"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY:
+ *
+ * Reference-count the proxy -- which is useful when using `ProxyGType`.
+ *
+ * Since: 1.9.15
+ */
+#define FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY "refcounted-proxy"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN:
+ *
+ * Use proxy to open and close the device.
+ *
+ * Since: 1.9.16
+ */
+#define FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN "use-proxy-for-open"
+
+/**
+ * FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST:
+ *
+ * The composite device requires installation of composite firmware on the parent before
+ * the child.
+ * Normally the child is installed before the parent.
+ *
+ * Since: 2.0.0
+ */
+#define FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST "install-parent-first"
+
+/**
+ * FU_DEVICE_PRIVATE_FLAG_REGISTERED:
+ *
+ * The device has been registered with other plugins.
+ *
+ * Since: 2.0.0
+ */
+#define FU_DEVICE_PRIVATE_FLAG_REGISTERED "registered"
+
+/**
+ * FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS:
+ *
+ * The device will add counterpart GUIDs from an alternate mode like bootloader.
+ * This flag is typically specified in a quirk.
+ *
+ * Since: 2.0.0
+ */
+#define FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS "add-counterpart-guids"
+
+/**
+ * FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION:
+ *
+ * The device will always display use the runtime version rather than the bootloader
+ * version.
+ *
+ * Since: 2.0.0
+ */
+#define FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION "use-runtime-version"
+
+/**
+ * FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART:
+ *
+ * The device relies upon activation or power cycle to load firmware.
+ *
+ * Since: 2.0.0
+ */
+#define FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART "skips-restart"
+
+/**
+ * FU_DEVICE_PRIVATE_FLAG_IS_FAKE:
+ *
+ * The device is fake, and constructed from a fake sysfs test directory.
+ *
+ * Since: 2.0.0
+ */
+#define FU_DEVICE_PRIVATE_FLAG_IS_FAKE "is-fake"
 
 /* accessors */
 gchar *
@@ -644,6 +664,11 @@ FuDevice *
 fu_device_get_root(FuDevice *self) G_GNUC_NON_NULL(1);
 FuDevice *
 fu_device_get_parent(FuDevice *self) G_GNUC_NON_NULL(1);
+FuDevice *
+fu_device_get_backend_parent(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
+FuDevice *
+fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsystem, GError **error)
+    G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_device_get_children(FuDevice *self) G_GNUC_NON_NULL(1);
 void
@@ -728,10 +753,6 @@ void
 fu_device_add_flag(FuDevice *self, FwupdDeviceFlags flag) G_GNUC_NON_NULL(1);
 void
 fu_device_remove_flag(FuDevice *self, FwupdDeviceFlags flag) G_GNUC_NON_NULL(1);
-const gchar *
-fu_device_get_custom_flags(FuDevice *self) G_GNUC_NON_NULL(1);
-void
-fu_device_set_custom_flags(FuDevice *self, const gchar *custom_flags) G_GNUC_NON_NULL(1);
 void
 fu_device_set_name(FuDevice *self, const gchar *value) G_GNUC_NON_NULL(1);
 void
@@ -762,6 +783,16 @@ guint
 fu_device_get_battery_threshold(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_set_battery_threshold(FuDevice *self, guint battery_threshold) G_GNUC_NON_NULL(1);
+
+gint64
+fu_device_get_created_usec(FuDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_device_set_created_usec(FuDevice *self, gint64 created_usec) G_GNUC_NON_NULL(1);
+gint64
+fu_device_get_modified_usec(FuDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_device_set_modified_usec(FuDevice *self, gint64 modified_usec) G_GNUC_NON_NULL(1);
+
 void
 fu_device_set_update_state(FuDevice *self, FwupdUpdateState update_state) G_GNUC_NON_NULL(1);
 void
@@ -776,12 +807,6 @@ GType
 fu_device_get_firmware_gtype(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_set_firmware_gtype(FuDevice *self, GType firmware_gtype) G_GNUC_NON_NULL(1);
-void
-fu_device_add_internal_flag(FuDevice *self, FuDeviceInternalFlags flag) G_GNUC_NON_NULL(1);
-void
-fu_device_remove_internal_flag(FuDevice *self, FuDeviceInternalFlags flag) G_GNUC_NON_NULL(1);
-gboolean
-fu_device_has_internal_flag(FuDevice *self, FuDeviceInternalFlags flag) G_GNUC_NON_NULL(1);
 gboolean
 fu_device_get_results(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
@@ -826,6 +851,8 @@ fu_device_cleanup(FuDevice *self, FuProgress *progress, FwupdInstallFlags flags,
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 void
 fu_device_incorporate(FuDevice *self, FuDevice *donor) G_GNUC_NON_NULL(1);
+void
+fu_device_incorporate_vendor_ids(FuDevice *self, FuDevice *donor) G_GNUC_NON_NULL(1, 2);
 void
 fu_device_incorporate_flag(FuDevice *self, FuDevice *donor, FwupdDeviceFlags flag)
     G_GNUC_NON_NULL(1);
@@ -885,14 +912,13 @@ fu_device_report_metadata_post(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_add_security_attrs(FuDevice *self, FuSecurityAttrs *attrs) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_register_private_flag(FuDevice *self, guint64 value, const gchar *value_str)
-    G_GNUC_NON_NULL(1, 3);
+fu_device_register_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_private_flag(FuDevice *self, guint64 flag) G_GNUC_NON_NULL(1);
+fu_device_add_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_remove_private_flag(FuDevice *self, guint64 flag) G_GNUC_NON_NULL(1);
+fu_device_remove_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_device_has_private_flag(FuDevice *self, guint64 flag) G_GNUC_NON_NULL(1);
+fu_device_has_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progress, GError **error)
     G_GNUC_NON_NULL(1, 2);
@@ -927,5 +953,9 @@ fu_device_build_instance_id_full(FuDevice *self,
 				 GError **error,
 				 const gchar *subsystem,
 				 ...) G_GNUC_NULL_TERMINATED G_GNUC_NON_NULL(1, 4);
+void
+fu_device_build_vendor_id(FuDevice *self, const gchar *prefix, const gchar *value);
+void
+fu_device_build_vendor_id_u16(FuDevice *self, const gchar *prefix, guint16 value);
 FuDeviceLocker *
 fu_device_poll_locker_new(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);

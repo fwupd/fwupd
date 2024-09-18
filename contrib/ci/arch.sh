@@ -12,6 +12,12 @@ pacman -Syu --noconfirm
 #install anything missing from the container
 ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o arch
 
+# check that we got the bare minimum
+if [ ! -f /usr/bin/git ]; then
+    echo "git not found, pacman possibly failed?"
+    exit 1
+fi
+
 # prepare the build tree
 rm -rf build
 mkdir build && pushd build

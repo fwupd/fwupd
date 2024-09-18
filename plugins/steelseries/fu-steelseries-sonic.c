@@ -976,8 +976,9 @@ fu_steelseries_sonic_parse_firmware(FuFirmware *firmware, FwupdInstallFlags flag
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
-	checksum_tmp =
-	    fu_crc32(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob) - sizeof(checksum_tmp));
+	checksum_tmp = fu_crc32(FU_CRC32_KIND_STANDARD,
+				g_bytes_get_data(blob, NULL),
+				g_bytes_get_size(blob) - sizeof(checksum_tmp));
 	checksum_tmp = ~checksum_tmp;
 	if (checksum_tmp != checksum) {
 		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
@@ -1081,7 +1082,7 @@ fu_steelseries_sonic_init(FuSteelseriesSonic *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.steelseries.sonic");
 	fu_device_set_install_duration(FU_DEVICE(self), 120);				 /* 2 min */

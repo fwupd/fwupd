@@ -80,7 +80,10 @@ fu_logitech_hidpp_runtime_open(FuDevice *device, GError **error)
 	g_autoptr(FuIOChannel) io_channel = NULL;
 
 	/* open, but don't block */
-	io_channel = fu_io_channel_new_file(devpath, error);
+	io_channel =
+	    fu_io_channel_new_file(devpath,
+				   FU_IO_CHANNEL_OPEN_FLAG_READ | FU_IO_CHANNEL_OPEN_FLAG_WRITE,
+				   error);
 	if (io_channel == NULL)
 		return FALSE;
 	g_set_object(&priv->io_channel, io_channel);
@@ -97,26 +100,33 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 {
 	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
 	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
-	guint16 release = 0xffff;
-	g_autoptr(GUdevDevice) udev_parent = NULL;
-	g_autoptr(GUdevDevice) udev_parent_usb_interface = NULL;
+	guint64 release = 0xFFFF;
+	g_autoptr(FuDevice) device_usb = NULL;
+	g_autoptr(FuDevice) device_usb_iface = NULL;
 
 	/* set the physical ID */
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "usb", error))
 		return FALSE;
 
 	/* generate bootloader-specific GUID */
-	udev_parent = g_udev_device_get_parent_with_subsystem(udev_device, "usb", "usb_device");
-	if (udev_parent != NULL) {
-		const gchar *release_str;
-		release_str = g_udev_device_get_property(udev_parent, "ID_REVISION");
-		if (release_str != NULL)
-			release = g_ascii_strtoull(release_str, NULL, 16);
+	device_usb = fu_device_get_backend_parent_with_subsystem(device, "usb:usb_device", NULL);
+	if (device_usb != NULL) {
+		g_autofree gchar *prop_revision = NULL;
+		prop_revision =
+		    fu_udev_device_read_property(FU_UDEV_DEVICE(device_usb), "ID_REVISION", NULL);
+		if (prop_revision != NULL) {
+			if (!fu_strtoull(prop_revision,
+					 &release,
+					 0,
+					 G_MAXUINT64,
+					 FU_INTEGER_BASE_16,
+					 error))
+				return FALSE;
+		}
 	}
-	if (release != 0xffff) {
+	if (release != 0xFFFF) {
 		g_autofree gchar *devid2 = NULL;
-		const gchar *interface_str;
+		g_autofree gchar *prop_interface = NULL;
 		switch (release &= 0xff00) {
 		case 0x1200:
 			/* Nordic */
@@ -138,20 +148,19 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 			break;
 		case 0x0500:
 			/* Bolt */
-			udev_parent_usb_interface =
-			    g_udev_device_get_parent_with_subsystem(udev_device,
-								    "usb",
-								    "usb_interface");
-			interface_str =
-			    g_udev_device_get_property(udev_parent_usb_interface, "INTERFACE");
-			if (interface_str == NULL) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_FOUND,
-					    "INTERFACE property not found in parent device");
+			device_usb_iface =
+			    fu_device_get_backend_parent_with_subsystem(device,
+									"usb:usb_interface",
+									error);
+			if (device_usb_iface == NULL)
 				return FALSE;
-			}
-			if (g_strcmp0(interface_str, "3/0/0") != 0) {
+			prop_interface =
+			    fu_udev_device_read_property(FU_UDEV_DEVICE(device_usb_iface),
+							 "INTERFACE",
+							 error);
+			if (prop_interface == NULL)
+				return FALSE;
+			if (g_strcmp0(prop_interface, "3/0/0") != 0) {
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
@@ -166,7 +175,7 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 			priv->version_bl_major = 0x03;
 			break;
 		default:
-			g_warning("bootloader release %04x invalid", release);
+			g_warning("bootloader release %04x invalid", (guint)release);
 			break;
 		}
 	}
@@ -195,7 +204,7 @@ static void
 fu_logitech_hidpp_runtime_init(FuLogitechHidppRuntime *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_add_icon(FU_DEVICE(self), "usb-receiver");
 	fu_device_set_name(FU_DEVICE(self), "Unifying Receiver");

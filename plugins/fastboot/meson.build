@@ -1,5 +1,4 @@
-if get_option('plugin_fastboot').require(gusb.found(),
-    error_message: 'gusb is needed for plugin_fastboot').allowed()
+if get_option('plugin_fastboot').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginFastboot"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

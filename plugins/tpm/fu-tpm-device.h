@@ -12,7 +12,7 @@
 G_DECLARE_DERIVABLE_TYPE(FuTpmDevice, fu_tpm_device, FU, TPM_DEVICE, FuUdevDevice)
 
 struct _FuTpmDeviceClass {
-	FuDeviceClass parent_class;
+	FuUdevDeviceClass parent_class;
 };
 
 void

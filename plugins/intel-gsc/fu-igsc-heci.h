@@ -53,30 +53,30 @@ struct gsc_fwu_heci_header {
 	guint8 is_response : 1;
 	guint8 reserved : 7;
 	guint8 reserved2[2];
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fwu_heci_response {
 	struct gsc_fwu_heci_header header;
 	guint32 status;
 	guint32 reserved;
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fwu_heci_version_req {
 	struct gsc_fwu_heci_header header;
 	guint32 partition;
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fwu_heci_version_resp {
 	struct gsc_fwu_heci_response response;
 	guint32 partition;
 	guint32 version_length;
 	guint8 version[];
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fw_data_heci_version_req {
 	struct gsc_fwu_heci_header header;
 	guint32 reserved[2];
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fw_data_heci_version_resp {
 	struct gsc_fwu_heci_response response;
@@ -88,12 +88,12 @@ struct gsc_fw_data_heci_version_resp {
 	guint32 oem_version_fitb_valid;
 	guint32 flags;
 	guint32 reserved[7];
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fwu_heci_get_config_message_req {
 	struct gsc_fwu_heci_header header;
 	guint32 reserved[2];
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fwu_heci_get_config_message_resp {
 	struct gsc_fwu_heci_response response;
@@ -104,24 +104,24 @@ struct gsc_fwu_heci_get_config_message_resp {
 	guint32 flags : 31;
 	guint32 reserved[7];
 	guint32 debug_config;
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fwu_heci_get_subsystem_ids_message_req {
 	struct gsc_fwu_heci_header header;
 	guint32 reserved[2];
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fwu_heci_get_subsystem_ids_message_resp {
 	struct gsc_fwu_heci_response response;
 	guint16 ssvid;
 	guint16 ssdid;
 	guint32 reserved[2];
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fwu_heci_start_flags {
 	guint32 force_update : 1;
 	guint32 reserved : 31;
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fwu_heci_start_req {
 	struct gsc_fwu_heci_header header;
@@ -129,32 +129,32 @@ struct gsc_fwu_heci_start_req {
 	guint32 payload_type;
 	struct gsc_fwu_heci_start_flags flags;
 	guint32 reserved[8];
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fwu_heci_start_resp {
 	struct gsc_fwu_heci_response response;
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fwu_heci_data_req {
 	struct gsc_fwu_heci_header header;
 	guint32 data_length;
 	guint32 reserved;
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fwu_heci_data_resp {
 	struct gsc_fwu_heci_response response;
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fwu_heci_end_req {
 	struct gsc_fwu_heci_header header;
 	guint32 reserved;
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fwu_heci_end_resp {
 	struct gsc_fwu_heci_response response;
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 struct gsc_fwu_heci_no_update_req {
 	struct gsc_fwu_heci_header header;
 	guint32 reserved;
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */

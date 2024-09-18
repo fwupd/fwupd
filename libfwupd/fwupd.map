@@ -156,11 +156,8 @@ LIBFWUPD_0.9.6 {
 
 LIBFWUPD_0.9.7 {
   global:
-    fwupd_keyring_kind_from_string;
-    fwupd_keyring_kind_to_string;
     fwupd_remote_build_firmware_uri;
     fwupd_remote_get_filename_cache_sig;
-    fwupd_remote_get_keyring_kind;
     fwupd_remote_get_metadata_uri;
     fwupd_remote_get_metadata_uri_sig;
   local: *;
@@ -560,7 +557,6 @@ LIBFWUPD_1.5.3 {
   global:
     fwupd_client_get_main_context;
     fwupd_client_set_main_context;
-    fwupd_remote_set_keyring_kind;
   local: *;
 } LIBFWUPD_1.5.2;
 
@@ -815,12 +811,6 @@ LIBFWUPD_1.8.8 {
 
 LIBFWUPD_1.8.11 {
   global:
-    fwupd_client_emulation_load;
-    fwupd_client_emulation_load_async;
-    fwupd_client_emulation_load_finish;
-    fwupd_client_emulation_save;
-    fwupd_client_emulation_save_async;
-    fwupd_client_emulation_save_finish;
     fwupd_client_inhibit;
     fwupd_client_inhibit_async;
     fwupd_client_inhibit_finish;
@@ -952,6 +942,12 @@ LIBFWUPD_2.0.0 {
   global:
     fwupd_client_build_report_history;
     fwupd_client_build_report_security;
+    fwupd_client_emulation_load;
+    fwupd_client_emulation_load_async;
+    fwupd_client_emulation_load_finish;
+    fwupd_client_emulation_save;
+    fwupd_client_emulation_save_async;
+    fwupd_client_emulation_save_finish;
     fwupd_client_install_release;
     fwupd_client_install_release_async;
     fwupd_client_modify_config;
@@ -961,11 +957,16 @@ LIBFWUPD_2.0.0 {
     fwupd_client_refresh_remote_async;
     fwupd_codec_add_string;
     fwupd_codec_array_from_variant;
+    fwupd_codec_array_to_json;
     fwupd_codec_array_to_variant;
     fwupd_codec_from_json;
     fwupd_codec_from_json_string;
     fwupd_codec_from_variant;
     fwupd_codec_get_type;
+    fwupd_codec_json_append;
+    fwupd_codec_json_append_bool;
+    fwupd_codec_json_append_int;
+    fwupd_codec_json_append_strv;
     fwupd_codec_string_append;
     fwupd_codec_string_append_bool;
     fwupd_codec_string_append_hex;
@@ -978,11 +979,13 @@ LIBFWUPD_2.0.0 {
     fwupd_codec_to_variant;
     fwupd_error_convert;
     fwupd_install_flags_to_string;
+    fwupd_remote_get_privacy_uri;
     fwupd_remote_set_checksum_sig;
     fwupd_remote_set_kind;
     fwupd_remote_set_order_after;
     fwupd_remote_set_order_before;
     fwupd_remote_set_password;
+    fwupd_remote_set_privacy_uri;
     fwupd_remote_set_refresh_interval;
     fwupd_remote_set_report_uri;
     fwupd_remote_set_username;

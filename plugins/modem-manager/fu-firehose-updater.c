@@ -74,7 +74,10 @@ fu_firehose_updater_log_message(const gchar *action, GBytes *msg)
 }
 
 static GBytes *
-fu_firehose_read(FuFirehoseUpdater *self, guint timeout_ms, FuIOChannelFlags flags, GError **error)
+fu_firehose_updater_read(FuFirehoseUpdater *self,
+			 guint timeout_ms,
+			 FuIOChannelFlags flags,
+			 GError **error)
 {
 	if (self->sahara != NULL) {
 		GByteArray *bytearr = fu_sahara_loader_qdl_read(self->sahara, error);
@@ -85,11 +88,11 @@ fu_firehose_read(FuFirehoseUpdater *self, guint timeout_ms, FuIOChannelFlags fla
 }
 
 static gboolean
-fu_firehose_write(FuFirehoseUpdater *self,
-		  GBytes *bytes,
-		  guint timeout_ms,
-		  FuIOChannelFlags flags,
-		  GError **error)
+fu_firehose_updater_write_internal(FuFirehoseUpdater *self,
+				   GBytes *bytes,
+				   guint timeout_ms,
+				   FuIOChannelFlags flags,
+				   GError **error)
 {
 	if (self->sahara != NULL)
 		return fu_sahara_loader_qdl_write_bytes(self->sahara, bytes, error);
@@ -98,7 +101,7 @@ fu_firehose_write(FuFirehoseUpdater *self,
 }
 
 static gboolean
-validate_program_action(XbNode *program, FuArchive *archive, GError **error)
+fu_firehose_updater_validate_program_action(XbNode *program, FuArchive *archive, GError **error)
 {
 	const gchar *filename_attr;
 	gsize file_size;
@@ -167,11 +170,11 @@ validate_program_action(XbNode *program, FuArchive *archive, GError **error)
 }
 
 gboolean
-fu_firehose_validate_rawprogram(GBytes *rawprogram,
-				FuArchive *archive,
-				XbSilo **out_silo,
-				GPtrArray **out_action_nodes,
-				GError **error)
+fu_firehose_updater_validate_rawprogram(GBytes *rawprogram,
+					FuArchive *archive,
+					XbSilo **out_silo,
+					GPtrArray **out_action_nodes,
+					GError **error)
 {
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
@@ -196,7 +199,7 @@ fu_firehose_validate_rawprogram(GBytes *rawprogram,
 	for (guint i = 0; i < action_nodes->len; i++) {
 		XbNode *n = g_ptr_array_index(action_nodes, i);
 		if ((g_strcmp0(xb_node_get_element(n), "program") == 0) &&
-		    !validate_program_action(n, archive, error)) {
+		    !fu_firehose_updater_validate_program_action(n, archive, error)) {
 			return FALSE;
 		}
 	}
@@ -226,7 +229,10 @@ fu_firehose_updater_open(FuFirehoseUpdater *self, GError **error)
 	g_debug("opening firehose port...");
 
 	if (self->port != NULL) {
-		self->io_channel = fu_io_channel_new_file(self->port, error);
+		self->io_channel = fu_io_channel_new_file(self->port,
+							  FU_IO_CHANNEL_OPEN_FLAG_READ |
+							      FU_IO_CHANNEL_OPEN_FLAG_WRITE,
+							  error);
 		return self->io_channel != NULL;
 	}
 
@@ -337,11 +343,11 @@ fu_firehose_updater_send_and_receive(FuFirehoseUpdater *self,
 		cmd_bytes = g_bytes_new(take_cmd_bytearray->data, take_cmd_bytearray->len);
 
 		fu_firehose_updater_log_message("writing", cmd_bytes);
-		if (!fu_firehose_write(self,
-				       cmd_bytes,
-				       1500,
-				       FU_IO_CHANNEL_FLAG_FLUSH_INPUT,
-				       error)) {
+		if (!fu_firehose_updater_write_internal(self,
+							cmd_bytes,
+							1500,
+							FU_IO_CHANNEL_FLAG_FLUSH_INPUT,
+							error)) {
 			g_prefix_error(error, "Failed to write command: ");
 			return FALSE;
 		}
@@ -352,10 +358,10 @@ fu_firehose_updater_send_and_receive(FuFirehoseUpdater *self,
 		g_autoptr(XbSilo) silo = NULL;
 		g_autoptr(XbNode) response_node = NULL;
 
-		rsp_bytes = fu_firehose_read(self,
-					     DEFAULT_RECV_TIMEOUT_MS,
-					     FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
-					     error);
+		rsp_bytes = fu_firehose_updater_read(self,
+						     DEFAULT_RECV_TIMEOUT_MS,
+						     FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+						     error);
 		if (rsp_bytes == NULL) {
 			g_prefix_error(error, "Failed to read XML message: ");
 			return FALSE;
@@ -396,7 +402,8 @@ fu_firehose_updater_initialize(FuFirehoseUpdater *self, GError **error)
 		g_autoptr(GBytes) rsp_bytes = NULL;
 		guint timeout = (i == 0 ? INITIALIZE_INITIAL_TIMEOUT_MS : INITIALIZE_TIMEOUT_MS);
 
-		rsp_bytes = fu_firehose_read(self, timeout, FU_IO_CHANNEL_FLAG_SINGLE_SHOT, NULL);
+		rsp_bytes =
+		    fu_firehose_updater_read(self, timeout, FU_IO_CHANNEL_FLAG_SINGLE_SHOT, NULL);
 		if (rsp_bytes == NULL)
 			break;
 
@@ -568,11 +575,11 @@ fu_firehose_updater_send_program_file(FuFirehoseUpdater *self,
 				fu_chunk_array_length(chunks),
 				program_filename);
 
-		if (!fu_firehose_write(self,
-				       fu_chunk_get_bytes(chk),
-				       1500,
-				       FU_IO_CHANNEL_FLAG_FLUSH_INPUT,
-				       error)) {
+		if (!fu_firehose_updater_write_internal(self,
+							fu_chunk_get_bytes(chk),
+							1500,
+							FU_IO_CHANNEL_FLAG_FLUSH_INPUT,
+							error)) {
 			g_prefix_error(error,
 				       "failed to write block %u/%u of file '%s': ",
 				       i + 1,

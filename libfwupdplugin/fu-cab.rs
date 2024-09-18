@@ -8,7 +8,7 @@ struct FuStructCabData {
     uncomp: u16le,
 }
 
-#[repr(u16)]
+#[repr(u16le)]
 #[derive(ToString)]
 enum FuCabCompression {
     None = 0x0000,
@@ -17,7 +17,7 @@ enum FuCabCompression {
     Lzx = 0x0003,
 }
 
-#[repr(u16)]
+#[repr(u16le)]
 enum FuCabFileAttribute {
     None = 0x00,
     Readonly = 0x01,

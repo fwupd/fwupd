@@ -31,8 +31,8 @@ fu_firehose_updater_close(FuFirehoseUpdater *self, GError **error);
 /* helpers */
 
 gboolean
-fu_firehose_validate_rawprogram(GBytes *rawprogram,
-				FuArchive *archive,
-				XbSilo **out_silo,
-				GPtrArray **out_action_nodes,
-				GError **error);
+fu_firehose_updater_validate_rawprogram(GBytes *rawprogram,
+					FuArchive *archive,
+					XbSilo **out_silo,
+					GPtrArray **out_action_nodes,
+					GError **error);

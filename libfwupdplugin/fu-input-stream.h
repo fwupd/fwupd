@@ -6,7 +6,10 @@
 
 #pragma once
 
-#include "fu-common.h"
+#include <fwupd.h>
+
+#include "fu-crc.h"
+#include "fu-endian.h"
 
 GInputStream *
 fu_input_stream_from_path(const gchar *path, GError **error) G_GNUC_WARN_UNUSED_RESULT
@@ -79,10 +82,8 @@ fu_input_stream_compute_crc16(GInputStream *stream,
 			      guint16 polynomial,
 			      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_input_stream_compute_crc32(GInputStream *stream,
-			      guint32 *crc,
-			      guint32 polynomial,
-			      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+fu_input_stream_compute_crc32(GInputStream *stream, FuCrc32Kind kind, guint32 *crc, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 3);
 gchar *
 fu_input_stream_compute_checksum(GInputStream *stream,
 				 GChecksumType checksum_type,

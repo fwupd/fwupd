@@ -6,12 +6,12 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
 
 #include "fu-mm-utils.h"
 
 static gchar *
-find_device_bus_subsystem(GUdevDevice *device)
+fu_mm_utils_find_device_bus_subsystem(GUdevDevice *device)
 {
 	g_autoptr(GUdevDevice) iter = NULL;
 
@@ -45,14 +45,14 @@ fu_mm_utils_get_udev_port_info(GUdevDevice *device,
 			       gint *out_port_usb_ifnum,
 			       GError **error)
 {
-	gint port_usb_ifnum = -1;
+	guint64 port_usb_ifnum = 0;
 	g_autoptr(GUdevDevice) parent = NULL;
 	g_autofree gchar *device_sysfs_path = NULL;
 	g_autofree gchar *device_bus = NULL;
 
 	/* lookup the main bus the device is in; for supported devices it will
 	 * usually be either 'PCI' or 'USB' */
-	device_bus = find_device_bus_subsystem(device);
+	device_bus = fu_mm_utils_find_device_bus_subsystem(device);
 	if (device_bus == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -63,9 +63,17 @@ fu_mm_utils_get_udev_port_info(GUdevDevice *device,
 
 	if (g_strcmp0(device_bus, "USB") == 0) {
 		/* ID_USB_INTERFACE_NUM is set on the port device itself */
-		const gchar *aux = g_udev_device_get_property(device, "ID_USB_INTERFACE_NUM");
-		if (aux != NULL)
-			port_usb_ifnum = (guint16)g_ascii_strtoull(aux, NULL, 16);
+		const gchar *aux = g_udev_device_get_property(device, /* nocheck:blocked */
+							      "ID_USB_INTERFACE_NUM");
+		if (aux != NULL) {
+			if (!fu_strtoull(aux,
+					 &port_usb_ifnum,
+					 0,
+					 G_MAXUINT16,
+					 FU_INTEGER_BASE_16,
+					 error))
+				return FALSE;
+		}
 
 		/* we need to traverse all parents of the give udev device until we find
 		 * the first 'usb_device' reported, which is the GUdevDevice associated with
@@ -136,7 +144,7 @@ fu_mm_utils_get_port_info(const gchar *path,
 	g_autoptr(GUdevClient) client = NULL;
 	g_autoptr(GUdevDevice) dev = NULL;
 
-	client = g_udev_client_new(NULL);
+	client = g_udev_client_new(NULL); /* nocheck:blocked */
 	dev = g_udev_client_query_by_device_file(client, path);
 	if (dev == NULL) {
 		g_set_error(error,
@@ -165,7 +173,7 @@ fu_mm_utils_find_device_file(const gchar *device_sysfs_path,
 
 	g_return_val_if_fail(out_device_file != NULL, FALSE);
 
-	client = g_udev_client_new(NULL);
+	client = g_udev_client_new(NULL); /* nocheck:blocked */
 	devices = g_udev_client_query_by_subsystem(client, subsystem);
 	for (GList *l = devices; l != NULL; l = g_list_next(l)) {
 		if (g_str_has_prefix(g_udev_device_get_sysfs_path(G_UDEV_DEVICE(l->data)),

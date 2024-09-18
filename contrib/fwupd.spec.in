@@ -1,6 +1,6 @@
 %global glib2_version 2.45.8
 %global libxmlb_version 0.1.3
-%global libgusb_version 0.3.5
+%global libusb_version 1.0.9
 %global libcurl_version 7.62.0
 %global libjcat_version 0.1.0
 %global systemd_version 249
@@ -57,7 +57,7 @@ BuildRequires: gettext
 BuildRequires: glib2-devel >= %{glib2_version}
 BuildRequires: libxmlb-devel >= %{libxmlb_version}
 BuildRequires: libgudev1-devel
-BuildRequires: libgusb-devel >= %{libgusb_version}
+BuildRequires: libusb1-devel >= %{libusb_version}
 BuildRequires: libcurl-devel >= %{libcurl_version}
 BuildRequires: libjcat-devel >= %{libjcat_version}
 BuildRequires: polkit-devel >= 0.103
@@ -116,7 +116,7 @@ Requires(postun): systemd
 
 Requires: glib2%{?_isa} >= %{glib2_version}
 Requires: libxmlb%{?_isa} >= %{libxmlb_version}
-Requires: libgusb%{?_isa} >= %{libgusb_version}
+Requires: libusb1%{?_isa} >= %{libusb_version}
 Requires: shared-mime-info
 
 %if 0%{?rhel} > 7 || 0%{?fedora} > 28
@@ -234,8 +234,8 @@ fwupd wrapper for Qubes OS
 %if 0%{?enable_ci}
     --werror \
     -Db_sanitize=address,undefined \
-    -Dumockdev_tests=disabled \
 %endif
+    -Dumockdev_tests=disabled \
     -Ddocs=enabled \
 %if 0%{?enable_tests}
     -Dtests=true \
@@ -303,13 +303,6 @@ mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/fwupd
 
 %post
 %systemd_post fwupd.service fwupd-refresh.timer
-
-# change vendor-installed remotes to use the default keyring type
-for fn in /etc/fwupd/remotes.d/*.conf; do
-    if grep -q "Keyring=gpg" "$fn"; then
-        sed -i 's/Keyring=gpg/#Keyring=pkcs/g' "$fn";
-    fi
-done
 
 %preun
 %systemd_preun fwupd.service fwupd-refresh.timer
@@ -384,7 +377,6 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %endif
 %{_libdir}/libfwupd.so.3*
 %{_libdir}/girepository-1.0/Fwupd-2.0.typelib
-/usr/lib/udev/rules.d/*.rules
 /usr/lib/systemd/system-shutdown/fwupd.shutdown
 %dir %{_libdir}/fwupd-%{version}
 %{_libdir}/fwupd-%{version}/libfwupd*.so

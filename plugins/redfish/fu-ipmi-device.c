@@ -103,12 +103,15 @@ fu_ipmi_device_send(FuIpmiDevice *self,
 			return FALSE;
 		req.msg.data = buf2;
 	}
-	fu_dump_raw(G_LOG_DOMAIN, "ipmi-send", buf2, bufsz);
+	if (buf2 != NULL)
+		fu_dump_raw(G_LOG_DOMAIN, "ipmi-send", buf2, bufsz);
 	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				    IPMICTL_SEND_COMMAND,
 				    (guint8 *)&req,
+				    sizeof(req),
 				    NULL,
 				    FU_IPMI_DEVICE_IOCTL_TIMEOUT,
+				    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				    error);
 }
 
@@ -132,8 +135,10 @@ fu_ipmi_device_recv(FuIpmiDevice *self,
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  IPMICTL_RECEIVE_MSG_TRUNC,
 				  (guint8 *)&recv,
+				  sizeof(recv),
 				  NULL,
 				  FU_IPMI_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "ipmi-recv", buf, bufsz);
@@ -690,9 +695,9 @@ fu_ipmi_device_set_user_priv(FuIpmiDevice *self,
 }
 
 gboolean
-fu_redfish_device_set_user_group_redfish_enable_advantech(FuIpmiDevice *self,
-							  guint8 user_id,
-							  GError **error)
+fu_ipmi_device_set_user_group_redfish_enable_advantech(FuIpmiDevice *self,
+						       guint8 user_id,
+						       GError **error)
 {
 	const guint8 req[] = {0x39, 0x28, 0x0, user_id, 0x3, 0x1};
 	guint8 resp[0x3] = {0};

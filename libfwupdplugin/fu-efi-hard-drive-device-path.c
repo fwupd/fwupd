@@ -10,6 +10,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-common.h"
 #include "fu-efi-hard-drive-device-path.h"
 #include "fu-efi-struct.h"
 #include "fu-firmware-common.h"
@@ -32,7 +33,15 @@ struct _FuEfiHardDriveDevicePath {
 	FuEfiHardDriveDevicePathSignatureType signature_type;
 };
 
-G_DEFINE_TYPE(FuEfiHardDriveDevicePath, fu_efi_hard_drive_device_path, FU_TYPE_EFI_DEVICE_PATH)
+static void
+fu_efi_hard_drive_device_path_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuEfiHardDriveDevicePath,
+		       fu_efi_hard_drive_device_path,
+		       FU_TYPE_EFI_DEVICE_PATH,
+		       0,
+		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
+					     fu_efi_hard_drive_device_path_codec_iface_init))
 
 #define BLOCK_SIZE_FALLBACK 0x200
 
@@ -58,6 +67,29 @@ fu_efi_hard_drive_device_path_export(FuFirmware *firmware,
 	    fu_efi_hard_drive_device_path_signature_type_to_string(self->signature_type));
 }
 
+static void
+fu_efi_hard_drive_device_path_add_json(FwupdCodec *codec,
+				       JsonBuilder *builder,
+				       FwupdCodecFlags flags)
+{
+	FuEfiHardDriveDevicePath *self = FU_EFI_HARD_DRIVE_DEVICE_PATH(codec);
+	g_autofree gchar *partition_signature =
+	    fwupd_guid_to_string(&self->partition_signature, FWUPD_GUID_FLAG_MIXED_ENDIAN);
+
+	fwupd_codec_json_append_int(builder, "PartitionNumber", self->partition_number);
+	fwupd_codec_json_append_int(builder, "PartitionStart", self->partition_start);
+	fwupd_codec_json_append_int(builder, "PartitionSize", self->partition_size);
+	fwupd_codec_json_append(builder, "PartitionSignature", partition_signature);
+	fwupd_codec_json_append(
+	    builder,
+	    "PartitionFormat",
+	    fu_efi_hard_drive_device_path_partition_format_to_string(self->partition_format));
+	fwupd_codec_json_append(
+	    builder,
+	    "SignatureType",
+	    fu_efi_hard_drive_device_path_signature_type_to_string(self->signature_type));
+}
+
 static gboolean
 fu_efi_hard_drive_device_path_parse(FuFirmware *firmware,
 				    GInputStream *stream,
@@ -75,7 +107,7 @@ fu_efi_hard_drive_device_path_parse(FuFirmware *firmware,
 	self->partition_number = fu_struct_efi_hard_drive_device_path_get_partition_number(st);
 	self->partition_start = fu_struct_efi_hard_drive_device_path_get_partition_start(st);
 	self->partition_size = fu_struct_efi_hard_drive_device_path_get_partition_size(st);
-	memcpy(self->partition_signature,
+	memcpy(self->partition_signature, /* nocheck:blocked */
 	       fu_struct_efi_hard_drive_device_path_get_partition_signature(st),
 	       sizeof(self->partition_signature));
 	self->partition_format = fu_struct_efi_hard_drive_device_path_get_partition_format(st);
@@ -115,19 +147,19 @@ fu_efi_hard_drive_device_path_build(FuFirmware *firmware, XbNode *n, GError **er
 	/* optional data */
 	tmp = xb_node_query_text(n, "partition_number", NULL);
 	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT32, error))
+		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->partition_number = value;
 	}
 	tmp = xb_node_query_text(n, "partition_start", NULL);
 	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT64, error))
+		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->partition_start = value;
 	}
 	tmp = xb_node_query_text(n, "partition_size", NULL);
 	if (tmp != NULL) {
-		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT64, error))
+		if (!fu_strtoull(tmp, &value, 0x0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->partition_size = value;
 	}
@@ -173,6 +205,116 @@ fu_efi_hard_drive_device_path_class_init(FuEfiHardDriveDevicePathClass *klass)
 }
 
 /**
+ * fu_efi_hard_drive_device_path_get_partition_signature:
+ * @self: a #FuEfiHardDriveDevicePath
+ *
+ * Gets the DP partition signature.
+ *
+ * Returns: a #fwupd_guid_t
+ *
+ * Since: 2.0.0
+ **/
+const fwupd_guid_t *
+fu_efi_hard_drive_device_path_get_partition_signature(FuEfiHardDriveDevicePath *self)
+{
+	g_return_val_if_fail(FU_IS_EFI_HARD_DRIVE_DEVICE_PATH(self), NULL);
+	return &self->partition_signature;
+}
+
+/**
+ * fu_efi_hard_drive_device_path_get_partition_size:
+ * @self: a #FuEfiHardDriveDevicePath
+ *
+ * Gets the DP partition size.
+ *
+ * NOTE: This are multiples of the block size, which can be found using fu_volume_get_block_size()
+ *
+ * Returns: integer
+ *
+ * Since: 2.0.0
+ **/
+guint64
+fu_efi_hard_drive_device_path_get_partition_size(FuEfiHardDriveDevicePath *self)
+{
+	g_return_val_if_fail(FU_IS_EFI_HARD_DRIVE_DEVICE_PATH(self), 0);
+	return self->partition_size;
+}
+
+/**
+ * fu_efi_hard_drive_device_path_get_partition_start:
+ * @self: a #FuEfiHardDriveDevicePath
+ *
+ * Gets the DP partition start.
+ *
+ * NOTE: This are multiples of the block size, which can be found using fu_volume_get_block_size()
+ *
+ * Returns: integer
+ *
+ * Since: 2.0.0
+ **/
+guint64
+fu_efi_hard_drive_device_path_get_partition_start(FuEfiHardDriveDevicePath *self)
+{
+	g_return_val_if_fail(FU_IS_EFI_HARD_DRIVE_DEVICE_PATH(self), 0);
+	return self->partition_start;
+}
+
+/**
+ * fu_efi_hard_drive_device_path_get_partition_number:
+ * @self: a #FuEfiHardDriveDevicePath
+ *
+ * Gets the DP partition number.
+ *
+ * Returns: integer
+ *
+ * Since: 2.0.0
+ **/
+guint32
+fu_efi_hard_drive_device_path_get_partition_number(FuEfiHardDriveDevicePath *self)
+{
+	g_return_val_if_fail(FU_IS_EFI_HARD_DRIVE_DEVICE_PATH(self), 0);
+	return self->partition_number;
+}
+
+/**
+ * fu_efi_hard_drive_device_path_compare:
+ * @dp1: a #FuEfiHardDriveDevicePath
+ * @dp2: a #FuEfiHardDriveDevicePath
+ *
+ * Compares two EFI HardDrive `DEVICE_PATH`s.
+ *
+ * Returns: %TRUE is considered equal
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_efi_hard_drive_device_path_compare(FuEfiHardDriveDevicePath *dp1, FuEfiHardDriveDevicePath *dp2)
+{
+	g_return_val_if_fail(FU_IS_EFI_HARD_DRIVE_DEVICE_PATH(dp1), FALSE);
+	g_return_val_if_fail(FU_IS_EFI_HARD_DRIVE_DEVICE_PATH(dp2), FALSE);
+
+	if (dp1->partition_format != dp2->partition_format)
+		return FALSE;
+	if (dp1->signature_type != dp2->signature_type)
+		return FALSE;
+	if (memcmp(dp1->partition_signature, dp2->partition_signature, sizeof(fwupd_guid_t)) != 0)
+		return FALSE;
+	if (dp1->partition_number != dp2->partition_number)
+		return FALSE;
+	if (dp1->partition_start != dp2->partition_start)
+		return FALSE;
+	if (dp1->partition_size != dp2->partition_size)
+		return FALSE;
+	return TRUE;
+}
+
+static void
+fu_efi_hard_drive_device_path_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_json = fu_efi_hard_drive_device_path_add_json;
+}
+
+/**
  * fu_efi_hard_drive_device_path_new:
  *
  * Creates a new EFI `DEVICE_PATH`.
@@ -213,9 +355,9 @@ fu_efi_hard_drive_device_path_new_from_volume(FuVolume *volume, GError **error)
 	/* common to both */
 	block_size = fu_volume_get_block_size(volume, &error_local);
 	if (block_size == 0) {
-		g_warning("failed to get volume block size, falling back to 0x%x: %s",
-			  (guint)BLOCK_SIZE_FALLBACK,
-			  error_local->message);
+		g_debug("failed to get volume block size, falling back to 0x%x: %s",
+			(guint)BLOCK_SIZE_FALLBACK,
+			error_local->message);
 		block_size = BLOCK_SIZE_FALLBACK;
 	}
 	self->partition_number = fu_volume_get_partition_number(volume);

@@ -1,4 +1,3 @@
-if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginFpc"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -15,4 +14,3 @@ plugin_builtins += static_library('fu_plugin_fpc',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-endif

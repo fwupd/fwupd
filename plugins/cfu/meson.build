@@ -1,4 +1,3 @@
-if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginCfu"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -28,4 +27,3 @@ plugin_builtin_cfu = static_library('fu_plugin_cfu',
 )
 plugin_builtins += plugin_builtin_cfu
 plugincfu_incdir = include_directories('.')
-endif

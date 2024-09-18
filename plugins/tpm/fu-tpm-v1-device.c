@@ -25,7 +25,7 @@ _g_string_isxdigit(GString *str)
 }
 
 static void
-fu_tpm_device_parse_line(const gchar *line, gpointer user_data)
+fu_tpm_v1_device_parse_line(const gchar *line, gpointer user_data)
 {
 	FuTpmDevice *self = FU_TPM_DEVICE(user_data);
 	guint64 idx;
@@ -45,7 +45,7 @@ fu_tpm_device_parse_line(const gchar *line, gpointer user_data)
 
 	/* get index */
 	idxstr = fu_strstrip(split[0]);
-	if (!fu_strtoull(idxstr, &idx, 0, 64, &error_local)) {
+	if (!fu_strtoull(idxstr, &idx, 0, 64, FU_INTEGER_BASE_AUTO, &error_local)) {
 		g_debug("unexpected index %s, skipping: %s", idxstr, error_local->message);
 		return;
 	}
@@ -79,7 +79,7 @@ fu_tpm_v1_device_probe(FuDevice *device, GError **error)
 	lines = g_strsplit(buf_pcrs, "\n", -1);
 	for (guint i = 0; lines[i] != NULL; i++) {
 		if (g_str_has_prefix(lines[i], "PCR-"))
-			fu_tpm_device_parse_line(lines[i] + 4, self);
+			fu_tpm_v1_device_parse_line(lines[i] + 4, self);
 	}
 	return TRUE;
 }

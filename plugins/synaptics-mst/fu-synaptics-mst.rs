@@ -9,6 +9,7 @@ enum FuSynapticsMstFamily {
     Panamera = 2,
     Cayenne = 3,
     Spyder = 4,
+    Carrera = 5,
 }
 
 #[derive(ToString)]

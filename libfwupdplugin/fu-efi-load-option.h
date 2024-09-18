@@ -17,6 +17,8 @@ fu_efi_load_option_get_optional_data(FuEfiLoadOption *self) G_GNUC_NON_NULL(1);
 void
 fu_efi_load_option_set_optional_data(FuEfiLoadOption *self, GBytes *optional_data)
     G_GNUC_NON_NULL(1);
+gchar *
+fu_efi_load_option_get_optional_path(FuEfiLoadOption *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_efi_load_option_set_optional_path(FuEfiLoadOption *self,
 				     const gchar *optional_path,
@@ -24,6 +26,3 @@ fu_efi_load_option_set_optional_path(FuEfiLoadOption *self,
 
 FuEfiLoadOption *
 fu_efi_load_option_new(void) G_GNUC_WARN_UNUSED_RESULT;
-FuEfiLoadOption *
-fu_efi_load_option_new_esp_for_boot_entry(guint16 boot_entry,
-					  GError **error) G_GNUC_WARN_UNUSED_RESULT;

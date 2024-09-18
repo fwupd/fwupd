@@ -32,18 +32,18 @@ fu_bios_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 static gboolean
 fu_bios_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autofree gchar *esrt_path = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* are the EFI dirs set up so we can update each device */
-#if defined(__x86_64__) || defined(__i386__)
-	g_autoptr(GError) error_local = NULL;
-	if (!fu_efivar_supported(&error_local)) {
+	if (!fu_efivars_supported(efivars, &error_local)) {
 		fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_LEGACY_BIOS);
 		fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
 		return TRUE;
 	}
-#endif
 
 	/* get the directory of ESRT entries */
 	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);

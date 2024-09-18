@@ -84,6 +84,13 @@ fu_elantp_firmware_validate(FuFirmware *firmware,
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (streamsz < FU_STRUCT_ELANTP_FIRMWARE_HDR_SIZE) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "stream was too small");
+		return FALSE;
+	}
 	if (!fu_struct_elantp_firmware_hdr_validate_stream(stream,
 							   streamsz -
 							       FU_STRUCT_ELANTP_FIRMWARE_HDR_SIZE,

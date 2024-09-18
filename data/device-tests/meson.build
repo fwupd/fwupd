@@ -1,10 +1,12 @@
-if gusb.version().version_compare ('>= 0.4.5')
 install_data([
     '8bitdo-nes30pro.json',
     '8bitdo-sf30pro.json',
     '8bitdo-sfc30.json',
+    'acer-d501.json',
     'aiaiai-h05.json',
+    'algoltek-ag9421.json',
     'analogix-anx7518.json',
+    'aver-fone540.json',
     'bizlink-no-sku-vli.json',
     'caldigit-element.json',
     'caldigit-ts4.json',
@@ -21,6 +23,7 @@ install_data([
     'hp-910-bt-keyboard.json',
     'hp-910-bt-mouse.json',
     'hp-dock-g5.json',
+    'huddly-s1.json',
     'hughski-colorhug2.json',
     'hughski-colorhug.json',
     'hughski-colorhug-plus.json',
@@ -45,12 +48,15 @@ install_data([
     'logitech-rqr24.json',
     'logitech-rqr24-signed.json',
     'nordic-hid-nrf52840-mcuboot.json',
+    'parade-ps5512evb.json',
+    'pixart-rf-GCBBTM25.json',
     'qualcomm-qcc5171.json',
     'realtek-rts5423.json',
     'realtek-rts5855.json',
     'steelseries-aerox-3-wireless.json',
     'steelseries-rival-3-wireless.json',
     'synaptics-prometheus.json',
+    'synaptics-vmm9430evb.json',
     'ugreen-cm260.json',
     'wacom-intuos-bt-m.json',
     'wacom-intuos-bt-s.json',
@@ -58,5 +64,3 @@ install_data([
   ],
   install_dir: join_paths(datadir, 'fwupd', 'device-tests'),
 )
-endif
-

@@ -17,6 +17,8 @@
 #define NETWORK_MANAGER_PATH		     "/org/freedesktop/NetworkManager"
 
 FuRedfishNetworkDevice *
-fu_redfish_network_device_for_mac_addr(const gchar *mac_addr, GError **error);
+fu_redfish_network_device_for_mac_addr(FuContext *ctx, const gchar *mac_addr, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 FuRedfishNetworkDevice *
-fu_redfish_network_device_for_vid_pid(guint16 vid, guint16 pid, GError **error);
+fu_redfish_network_device_for_vid_pid(FuContext *ctx, guint16 vid, guint16 pid, GError **error)
+    G_GNUC_NON_NULL(1);

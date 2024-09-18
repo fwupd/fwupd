@@ -24,4 +24,4 @@ FuFirmware *
 fu_amd_gpu_atom_firmware_new(void);
 
 const gchar *
-fu_amd_gpu_atom_get_vbios_pn(FuFirmware *firmware);
+fu_amd_gpu_atom_firmware_get_vbios_pn(FuFirmware *firmware);

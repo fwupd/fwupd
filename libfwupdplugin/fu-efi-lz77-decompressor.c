@@ -240,11 +240,10 @@ fu_efi_lz77_decompressor_make_huffman_table(FuEfiLz77DecompressHelper *helper,
 					*pointer = avail_symbols++;
 				}
 				if (*pointer < (2 * NC - 1)) {
-					if ((index3 & mask) != 0) {
+					if ((index3 & mask) != 0)
 						pointer = &helper->right[*pointer];
-					} else {
+					else
 						pointer = &helper->left[*pointer];
-					}
 				}
 				index3 <<= 1;
 				index--;
@@ -481,6 +480,13 @@ fu_efi_lz77_decompressor_decode_c(FuEfiLz77DecompressHelper *helper, guint16 *va
 	}
 
 	/* get one code according to code&set huffman table */
+	if (helper->block_size == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no blocks remained");
+		return FALSE;
+	}
 	helper->block_size--;
 	index2 = helper->c_table[helper->bit_buf >> (BITBUFSIZ - 12)];
 	if (index2 >= NC) {
@@ -645,7 +651,7 @@ fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
 						      decompressor_versions[i],
 						      &error_local)) {
 			g_autoptr(GBytes) blob =
-			    g_byte_array_free_to_bytes(g_steal_pointer(&dst)); /* nocheck */
+			    g_byte_array_free_to_bytes(g_steal_pointer(&dst)); /* nocheck:blocked */
 			if (!fu_firmware_set_stream(firmware, NULL, error))
 				return FALSE;
 			fu_firmware_set_bytes(firmware, blob);

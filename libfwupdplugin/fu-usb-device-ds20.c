@@ -69,9 +69,7 @@ fu_usb_device_ds20_set_version_lowest(FuUsbDeviceDs20 *self, guint32 version_low
 gboolean
 fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, GError **error)
 {
-#ifdef HAVE_GUSB
 	FuUsbDeviceDs20Class *klass = FU_USB_DEVICE_DS20_GET_CLASS(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(device);
 	gsize actual_length = 0;
 	gsize total_length = fu_firmware_get_size(FU_FIRMWARE(self));
 	guint8 vendor_code = fu_firmware_get_idx(FU_FIRMWARE(self));
@@ -82,19 +80,19 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 	g_return_val_if_fail(FU_IS_USB_DEVICE(device), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   vendor_code, /* bRequest */
-					   0x0,		/* wValue */
-					   0x07,	/* wIndex */
-					   buf,
-					   total_length,
-					   &actual_length,
-					   500,
-					   NULL, /* cancellable */
-					   error)) {
+	if (!fu_usb_device_control_transfer(device,
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    vendor_code, /* bRequest */
+					    0x0,	 /* wValue */
+					    0x07,	 /* wIndex */
+					    buf,
+					    total_length,
+					    &actual_length,
+					    500,
+					    NULL, /* cancellable */
+					    error)) {
 		g_prefix_error(error, "requested vendor code 0x%02x: ", vendor_code);
 		return FALSE;
 	}
@@ -115,13 +113,6 @@ fu_usb_device_ds20_apply_to_device(FuUsbDeviceDs20 *self, FuUsbDevice *device, G
 	/* FuUsbDeviceDs20->parse */
 	stream = g_memory_input_stream_new_from_data(buf, actual_length, NULL);
 	return klass->parse(self, stream, device, error);
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "GUsb support is unavailable");
-	return FALSE;
-#endif
 }
 
 static gboolean

@@ -13,12 +13,13 @@
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
 
+#include "fu-string.h"
 #include "fu-version-common.h"
 
 #define FU_COMMON_VERSION_DECODE_BCD(val) ((((val) >> 4) & 0x0f) * 10 + ((val) & 0x0f))
 
 static gchar *
-fu_common_version_ensure_semver(const gchar *version);
+fu_version_ensure_semver_internal(const gchar *version);
 
 /**
  * fu_version_from_uint64:
@@ -153,6 +154,72 @@ fu_version_from_uint32(guint32 val, FwupdVersionFormat kind)
 		/* 0xAABBCCDD */
 		return g_strdup_printf("0x%08x", val);
 	}
+	if (kind == FWUPD_VERSION_FORMAT_DELL_BIOS_MSB) {
+		/* AA.BB.CC */
+		return g_strdup_printf("%u.%u.%u",
+				       (val >> 24) & 0xff,
+				       (val >> 16) & 0xff,
+				       (val >> 8) & 0xff);
+	}
+	g_critical("failed to convert version format %s: %u",
+		   fwupd_version_format_to_string(kind),
+		   val);
+	return NULL;
+}
+
+/**
+ * fu_version_from_uint32_hex:
+ * @val: a uint32le version number
+ * @kind: version kind used for formatting, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
+ *
+ * Returns a dotted decimal hex string from a 32 bit number.
+ *
+ * Returns: a version number, e.g. `1a.0.d3`, or %NULL if not supported
+ *
+ * Since: 2.0.0
+ **/
+gchar *
+fu_version_from_uint32_hex(guint32 val, FwupdVersionFormat kind)
+{
+	if (kind == FWUPD_VERSION_FORMAT_HEX)
+		return g_strdup_printf("0x%x", val);
+	if (kind == FWUPD_VERSION_FORMAT_NUMBER)
+		return g_strdup_printf("%x", val);
+	if (kind == FWUPD_VERSION_FORMAT_PAIR)
+		return g_strdup_printf("%x.%x", (val >> 16) & 0xffff, val & 0xffff);
+	if (kind == FWUPD_VERSION_FORMAT_TRIPLET) {
+		return g_strdup_printf("%x.%x.%x",
+				       (val >> 24) & 0xff,
+				       (val >> 16) & 0xff,
+				       val & 0xffff);
+	}
+	if (kind == FWUPD_VERSION_FORMAT_DELL_BIOS) {
+		return g_strdup_printf("%x.%x.%x",
+				       (val >> 16) & 0xff,
+				       (val >> 8) & 0xff,
+				       val & 0xff);
+	}
+	if (kind == FWUPD_VERSION_FORMAT_DELL_BIOS_MSB) {
+		return g_strdup_printf("%x.%x.%x",
+				       (val >> 24) & 0xff,
+				       (val >> 16) & 0xff,
+				       (val >> 8) & 0xff);
+	}
+	if (kind == FWUPD_VERSION_FORMAT_QUAD) {
+		return g_strdup_printf("%x.%x.%x.%x",
+				       (val >> 24) & 0xff,
+				       (val >> 16) & 0xff,
+				       (val >> 8) & 0xff,
+				       val & 0xff);
+	}
+
+	if (kind == FWUPD_VERSION_FORMAT_BCD) {
+		return g_strdup_printf("%x.%x.%x.%x",
+				       FU_COMMON_VERSION_DECODE_BCD(val >> 24),
+				       FU_COMMON_VERSION_DECODE_BCD(val >> 16),
+				       FU_COMMON_VERSION_DECODE_BCD(val >> 8),
+				       FU_COMMON_VERSION_DECODE_BCD(val));
+	}
 	g_critical("failed to convert version format %s: %u",
 		   fwupd_version_format_to_string(kind),
 		   val);
@@ -239,6 +306,43 @@ fu_version_from_uint16(guint16 val, FwupdVersionFormat kind)
 	return NULL;
 }
 
+/**
+ * fu_version_from_uint16_hex:
+ * @val: a uint16le version number
+ * @kind: version kind used for formatting, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
+ *
+ * Returns a dotted hex version string from a 16 bit number.
+ *
+ * Returns: a version number, e.g. `1a.f3`, or %NULL if not supported
+ *
+ * Since: 2.0.0
+ **/
+gchar *
+fu_version_from_uint16_hex(guint16 val, FwupdVersionFormat kind)
+{
+	if (kind == FWUPD_VERSION_FORMAT_NUMBER)
+		return g_strdup_printf("%x", val);
+	if (kind == FWUPD_VERSION_FORMAT_HEX)
+		return g_strdup_printf("0x%x", val);
+	if (kind == FWUPD_VERSION_FORMAT_PAIR)
+		return g_strdup_printf("%x.%x", (guint)(val >> 8) & 0xff, (guint)val & 0xff);
+	if (kind == FWUPD_VERSION_FORMAT_BCD) {
+		return g_strdup_printf("%x.%x",
+				       (guint)FU_COMMON_VERSION_DECODE_BCD(val >> 8),
+				       (guint)FU_COMMON_VERSION_DECODE_BCD(val));
+	}
+	if (kind == FWUPD_VERSION_FORMAT_TRIPLET) {
+		return g_strdup_printf("%x.%x.%x",
+				       (guint)(val >> 12) & 0xF,
+				       (guint)(val >> 8) & 0xF,
+				       (guint)val & 0xFF);
+	}
+	g_critical("failed to convert version format %s: %u",
+		   fwupd_version_format_to_string(kind),
+		   val);
+	return NULL;
+}
+
 static gint
 fu_version_compare_char(gchar chr1, gchar chr2)
 {
@@ -293,7 +397,8 @@ fu_version_format_number_sections(FwupdVersionFormat fmt)
 	if (fmt == FWUPD_VERSION_FORMAT_PAIR || fmt == FWUPD_VERSION_FORMAT_BCD)
 		return 2;
 	if (fmt == FWUPD_VERSION_FORMAT_TRIPLET || fmt == FWUPD_VERSION_FORMAT_SURFACE_LEGACY ||
-	    fmt == FWUPD_VERSION_FORMAT_SURFACE || fmt == FWUPD_VERSION_FORMAT_DELL_BIOS)
+	    fmt == FWUPD_VERSION_FORMAT_SURFACE || fmt == FWUPD_VERSION_FORMAT_DELL_BIOS ||
+	    fmt == FWUPD_VERSION_FORMAT_DELL_BIOS_MSB)
 		return 3;
 	if (fmt == FWUPD_VERSION_FORMAT_QUAD || fmt == FWUPD_VERSION_FORMAT_INTEL_ME ||
 	    fmt == FWUPD_VERSION_FORMAT_INTEL_ME2)
@@ -323,7 +428,7 @@ fu_version_ensure_semver(const gchar *version, FwupdVersionFormat fmt)
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* split into all sections */
-	tmp = fu_common_version_ensure_semver(version);
+	tmp = fu_version_ensure_semver_internal(version);
 	if (tmp == NULL)
 		return NULL;
 	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN)
@@ -351,16 +456,8 @@ fu_version_ensure_semver(const gchar *version, FwupdVersionFormat fmt)
 	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
-/**
- * fu_common_version_ensure_semver:
- * @version: (nullable): a version number, e.g. ` V1.2.3 `
- *
- * Builds a semver from the possibly crazy version number.
- *
- * Returns: a version number, e.g. `1.2.3`, or %NULL if the version was not valid
- */
 static gchar *
-fu_common_version_ensure_semver(const gchar *version)
+fu_version_ensure_semver_internal(const gchar *version)
 {
 	gboolean dot_valid = FALSE;
 	guint digit_cnt = 0;
@@ -428,10 +525,7 @@ fu_common_version_ensure_semver(const gchar *version)
 gchar *
 fu_version_parse_from_format(const gchar *version, FwupdVersionFormat fmt)
 {
-	const gchar *version_noprefix = version;
-	gchar *endptr = NULL;
-	guint64 tmp;
-	guint base;
+	guint64 tmp = 0;
 
 	/* sanity check */
 	if (version == NULL)
@@ -446,19 +540,7 @@ fu_version_parse_from_format(const gchar *version, FwupdVersionFormat fmt)
 		return g_strdup(version);
 
 	/* convert 0x prefixed strings to dotted decimal */
-	if (g_str_has_prefix(version, "0x")) {
-		version_noprefix += 2;
-		base = 16;
-	} else {
-		/* for non-numeric content, just return the string */
-		if (!_g_ascii_is_digits(version))
-			return g_strdup(version);
-		base = 10;
-	}
-
-	/* convert */
-	tmp = g_ascii_strtoull(version_noprefix, &endptr, base);
-	if (endptr != NULL && endptr[0] != '\0')
+	if (!fu_strtoull(version, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, NULL))
 		return g_strdup(version);
 	if (tmp == 0)
 		return g_strdup(version);
@@ -523,7 +605,7 @@ fu_version_format_convert_base(FwupdVersionFormat fmt)
 {
 	if (fmt == FWUPD_VERSION_FORMAT_INTEL_ME || fmt == FWUPD_VERSION_FORMAT_INTEL_ME2)
 		return FWUPD_VERSION_FORMAT_QUAD;
-	if (fmt == FWUPD_VERSION_FORMAT_DELL_BIOS)
+	if (fmt == FWUPD_VERSION_FORMAT_DELL_BIOS || fmt == FWUPD_VERSION_FORMAT_DELL_BIOS_MSB)
 		return FWUPD_VERSION_FORMAT_TRIPLET;
 	if (fmt == FWUPD_VERSION_FORMAT_BCD)
 		return FWUPD_VERSION_FORMAT_PAIR;
@@ -608,8 +690,8 @@ fu_version_compare_safe(const gchar *version_a, const gchar *version_b)
 			return 1;
 
 		/* compare integers */
-		ver_a = g_ascii_strtoll(split_a[i], &endptr_a, 10);
-		ver_b = g_ascii_strtoll(split_b[i], &endptr_b, 10);
+		ver_a = g_ascii_strtoll(split_a[i], &endptr_a, 10); /* nocheck:blocked */
+		ver_b = g_ascii_strtoll(split_b[i], &endptr_b, 10); /* nocheck:blocked */
 		if (ver_a < ver_b)
 			return -1;
 		if (ver_a > ver_b)

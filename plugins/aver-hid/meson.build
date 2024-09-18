@@ -1,4 +1,3 @@
-if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginAverHid"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -16,4 +15,3 @@ plugin_builtins += static_library('fu_plugin_aver_hid',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-endif

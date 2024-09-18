@@ -11,10 +11,10 @@
 #include "fu-wacom-common.h"
 
 #define FU_TYPE_WACOM_DEVICE (fu_wacom_device_get_type())
-G_DECLARE_DERIVABLE_TYPE(FuWacomDevice, fu_wacom_device, FU, WACOM_DEVICE, FuUdevDevice)
+G_DECLARE_DERIVABLE_TYPE(FuWacomDevice, fu_wacom_device, FU, WACOM_DEVICE, FuHidrawDevice)
 
 struct _FuWacomDeviceClass {
-	FuUdevDeviceClass parent_class;
+	FuHidrawDeviceClass parent_class;
 	gboolean (*write_firmware)(FuDevice *self,
 				   FuChunkArray *chunks,
 				   FuProgress *progress,
@@ -27,7 +27,7 @@ typedef enum {
 	FU_WACOM_DEVICE_CMD_FLAG_NO_ERROR_CHECK = 1 << 1,
 } FuWacomDeviceCmdFlags;
 
-#define FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG (1 << 0)
+#define FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG "requires-wait-for-replug"
 
 gboolean
 fu_wacom_device_set_feature(FuWacomDevice *self, const guint8 *data, guint datasz, GError **error);

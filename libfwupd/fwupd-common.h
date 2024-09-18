@@ -38,16 +38,34 @@ G_BEGIN_DECLS
 
 /**
  * FwupdGuidFlags:
- * @FWUPD_GUID_FLAG_NONE:			No trust
- * @FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT:	Use the Microsoft-compatible namespace
- * @FWUPD_GUID_FLAG_MIXED_ENDIAN:		Use EFI mixed endian representation
  *
  * The flags to show how the data should be converted.
  **/
 typedef enum {
-	FWUPD_GUID_FLAG_NONE = 0,		      /* Since: 1.2.5 */
-	FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT = 1 << 0, /* Since: 1.2.5 */
-	FWUPD_GUID_FLAG_MIXED_ENDIAN = 1 << 1,	      /* Since: 1.2.5 */
+	/**
+	 * FWUPD_GUID_FLAG_NONE:
+	 *
+	 * No endian swapping.
+	 *
+	 * Since: 1.2.5
+	 */
+	FWUPD_GUID_FLAG_NONE = 0,
+	/**
+	 * FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT:
+	 *
+	 * Use the Microsoft-compatible namespace.
+	 *
+	 * Since: 1.2.5
+	 */
+	FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT = 1 << 0,
+	/**
+	 * FWUPD_GUID_FLAG_MIXED_ENDIAN:
+	 *
+	 * Use EFI mixed endian representation, as used in EFI.
+	 *
+	 * Since: 1.2.5
+	 */
+	FWUPD_GUID_FLAG_MIXED_ENDIAN = 1 << 1,
 	/*< private >*/
 	FWUPD_GUID_FLAG_LAST
 } FwupdGuidFlags;

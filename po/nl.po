@@ -311,10 +311,6 @@ msgid "An update requires a reboot to complete."
 msgstr "Een update vereist een herstart om te voltooien."
 
 #. TRANSLATORS: command line option
-msgid "Apply firmware updates"
-msgstr "Firmware-updates toepassen"
-
-#. TRANSLATORS: command line option
 msgid "Apply update files"
 msgstr "Updatebestanden toepassen"
 
@@ -389,9 +385,6 @@ msgstr "BIOS-terugrolbescherming"
 msgid "BIOS updates delivered via LVFS or Windows Update"
 msgstr "BIOS-updates geleverd via LVFS of Windows Update"
 
-msgid "BYTES"
-msgstr "BYTES"
-
 #. TRANSLATORS: refers to the battery inside the peripheral device
 msgid "Battery"
 msgstr "Batterij"
@@ -404,7 +397,7 @@ msgstr "Geblokkeerde versie"
 msgid "Bootloader Version"
 msgstr "Opstartladerversie"
 
-#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Branch"
 msgstr "Tak"
 
@@ -444,10 +437,6 @@ msgid "Choose release"
 msgstr "Uitgave kiezen"
 
 #. TRANSLATORS: get interactive prompt
-msgid "Choose the ESP:"
-msgstr "Kies de ESP:"
-
-#. TRANSLATORS: get interactive prompt
 msgid "Choose volume"
 msgstr "Volume selecteren"
 
@@ -482,10 +471,6 @@ msgstr "Huidige versie"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "DEVICE-ID|GUID"
 msgstr "APPARAAT-ID|GUID"
-
-#. TRANSLATORS: DFU stands for device firmware update
-msgid "DFU Utility"
-msgstr "DFU-hulpmiddel"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
@@ -542,10 +527,6 @@ msgstr "Apparaat is onbereikbaar"
 msgid "Device removed:"
 msgstr "Apparaat verwijderd:"
 
-#. TRANSLATORS: command line option
-msgid "Device update method"
-msgstr "Updatemethode voor apparaat"
-
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no
@@ -558,11 +539,11 @@ msgid "Devices with no available firmware updates: "
 msgstr "Apparaten zonder beschikbare firmware-updates:"
 
 #. TRANSLATORS: message letting the user know no device upgrade available
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade available
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available
 msgid "Devices with the latest available firmware version:"
 msgstr "Apparaten met de nieuwste beschikbare firmware-versie:"
 
@@ -570,10 +551,6 @@ msgstr "Apparaten met de nieuwste beschikbare firmware-versie:"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "Uitgeschakeld"
-
-#. TRANSLATORS: command line option
-msgid "Display version"
-msgstr "Versie tonen"
 
 #. TRANSLATORS: the OS the release was tested on
 msgid "Distribution"
@@ -612,10 +589,6 @@ msgstr "SMBIOS-gegevens vanuit een bestand dumpen"
 msgid "Duration"
 msgstr "Duur"
 
-#. TRANSLATORS: ESP is EFI System Partition
-msgid "ESP specified was not valid"
-msgstr "Opgegeven ESP is niet geldig"
-
 #. TRANSLATORS: this device is not actually real
 msgid "Emulated"
 msgstr "Geëmuleerd"
@@ -635,7 +608,6 @@ msgstr "Nieuwe remote inschakelen?"
 msgid "Enable this remote?"
 msgstr "Deze remote inschakelen?"
 
-#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
@@ -709,10 +681,6 @@ msgstr "Verbinden met daemon mislukt"
 #. TRANSLATORS: we could not install for some reason
 msgid "Failed to install firmware update"
 msgstr "Firmware-update installeren mislukt"
-
-#. TRANSLATORS: quirks are device-specific workarounds
-msgid "Failed to load quirks"
-msgstr "Eigenaardigheden laden mislukt"
 
 #. TRANSLATORS: another fwupdtool instance is already running
 msgid "Failed to lock"
@@ -802,9 +770,6 @@ msgstr "Firmware-updates"
 msgid "Flags"
 msgstr "Flags"
 
-msgid "Force the action ignoring all warnings"
-msgstr "De actie forceren en alle waarschuwingen negeren"
-
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
 msgstr "Gevonden"
@@ -822,11 +787,6 @@ msgid "GUID"
 msgid_plural "GUIDs"
 msgstr[0] "GUID"
 msgstr[1] "GUID's"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgctxt "A single GUID"
-msgid "GUID"
-msgstr "GUID"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "command-argument"
@@ -967,10 +927,6 @@ msgid_plural "Issues"
 msgstr[0] "Probleem"
 msgstr[1] "Problemen"
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "KEY,VALUE"
-msgstr "SLEUTEL,WAARDE"
-
 #. TRANSLATORS: HSI event title
 msgid "Kernel is no longer tainted"
 msgstr "Kernel is niet langer aangetast"
@@ -1024,10 +980,6 @@ msgstr "Linux-kernellockdown"
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
 msgstr "Linux-wisselgeheugen"
-
-#. TRANSLATORS: command line option
-msgid "List supported firmware updates"
-msgstr "Ondersteunde firmware-updates opsommen"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
@@ -1125,10 +1077,6 @@ msgstr "Geen firmware-ID's gevonden"
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Geen hardware aangetroffen die in staat is firmware bij te werken"
-
-#. TRANSLATORS: nothing found
-msgid "No plugins found"
-msgstr "Geen plug-ins gevonden"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No releases available"
@@ -1233,9 +1181,6 @@ msgstr "Mogelijke waarden"
 msgid "Previous version"
 msgstr "Vorige versie"
 
-msgid "Print the version number"
-msgstr "Versienummer afdrukken"
-
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
 msgstr "Prioriteit"
@@ -1267,14 +1212,6 @@ msgstr "REMOTE-ID SLEUTEL WAARDE"
 msgid "Read Only"
 msgstr "Alleen-lezen"
 
-#. TRANSLATORS: command description
-msgid "Read firmware from device into a file"
-msgstr "Firmware van het apparaat uitlezen naar een bestand"
-
-#. TRANSLATORS: command description
-msgid "Read firmware from one partition into a file"
-msgstr "Firmware van één partitie uitlezen naar een bestand"
-
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Reading from %s…"
@@ -1303,7 +1240,7 @@ msgstr "Firmware op een apparaat herinstalleren"
 msgid "Reinstalling %s with %s... "
 msgstr "Bezig met herinstalleren van %s met %s..."
 
-#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
 msgstr "Uitgavetak"
 
@@ -1311,17 +1248,9 @@ msgstr "Uitgavetak"
 msgid "Release Flags"
 msgstr "Uitgave-flags"
 
-#. TRANSLATORS: command description
-msgid "Replace data in an existing firmware file"
-msgstr "Gegevens vervangen in een bestaand firmwarebestand"
-
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "Gemeld aan externe server"
-
-#. TRANSLATORS: we asked the user to choose an option and they declined
-msgid "Request canceled"
-msgstr "Verzoek geannuleerd"
 
 #. TRANSLATORS: not required for this system
 msgid "Required hardware was not found"
@@ -1530,6 +1459,7 @@ msgstr "TPM v2.0"
 msgid "Tainted"
 msgstr "Aangetast"
 
+#. show the user the entire data blob
 msgid "Target"
 msgstr "Doel"
 
@@ -1573,10 +1503,6 @@ msgstr "Vertrouwde inhoud"
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Type"
-
-#. TRANSLATORS: program name
-msgid "UEFI Firmware Utility"
-msgstr "UEFI-firmwaregereedschap"
 
 #. TRANSLATORS: error message
 msgid "Unable to find attribute"
@@ -1694,7 +1620,7 @@ msgstr "Geldig"
 msgid "Validating ESP contents…"
 msgstr "ESP-inhoud valideren…"
 
-#. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
+#. TRANSLATORS: one line variant of release (e.g. 'China')
 msgid "Variant"
 msgstr "Variant"
 
@@ -1725,14 +1651,6 @@ msgstr "Wachten…"
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"
 msgstr "Hardware-wijzigingen bijhouden"
-
-#. TRANSLATORS: command description
-msgid "Write firmware from file into device"
-msgstr "Firmware van een bestand naar een apparaat schrijven"
-
-#. TRANSLATORS: command description
-msgid "Write firmware from file into one partition"
-msgstr "Firmware van een bestand naar één partitie schrijven"
 
 #. TRANSLATORS: decompressing images from a container firmware
 msgid "Writing file:"

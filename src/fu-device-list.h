@@ -17,6 +17,8 @@ void
 fu_device_list_add(FuDeviceList *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
 void
 fu_device_list_remove(FuDeviceList *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
+void
+fu_device_list_remove_all(FuDeviceList *self) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_device_list_get_all(FuDeviceList *self) G_GNUC_NON_NULL(1);
 GPtrArray *

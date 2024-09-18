@@ -53,25 +53,24 @@ fu_rts54hub_device_i2c_config(FuRts54HubDevice *self,
 			      FuRts54HubI2cSpeed speed,
 			      GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint16 value = 0;
 	guint16 index = 0x8080;
 
 	value = ((guint16)target_addr << 8) | sub_length;
 	index += speed;
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   FU_RTS54HUB_I2C_CONFIG_REQUEST,
-					   value, /* value */
-					   index, /* idx */
-					   NULL,
-					   0,	 /* data */
-					   NULL, /* actual */
-					   FU_RTS54HUB_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    FU_RTS54HUB_I2C_CONFIG_REQUEST,
+					    value, /* value */
+					    index, /* idx */
+					    NULL,
+					    0,	  /* data */
+					    NULL, /* actual */
+					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to issue i2c Conf cmd 0x%02x: ", target_addr);
 		return FALSE;
 	}
@@ -85,23 +84,22 @@ fu_rts54hub_device_i2c_write(FuRts54HubDevice *self,
 			     gsize datasz,
 			     GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autofree guint8 *datarw = fu_memdup_safe(data, datasz, error);
 	if (datarw == NULL)
 		return FALSE;
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   FU_RTS54HUB_I2C_WRITE_REQUEST,
-					   sub_addr, /* value */
-					   0x0000,   /* idx */
-					   datarw,
-					   datasz, /* data */
-					   NULL,
-					   FU_RTS54HUB_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    FU_RTS54HUB_I2C_WRITE_REQUEST,
+					    sub_addr, /* value */
+					    0x0000,   /* idx */
+					    datarw,
+					    datasz, /* data */
+					    NULL,
+					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to write I2C: ");
 		return FALSE;
 	}
@@ -115,20 +113,19 @@ fu_rts54hub_device_i2c_read(FuRts54HubDevice *self,
 			    gsize datasz,
 			    GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   FU_RTS54HUB_I2C_READ_REQUEST,
-					   0x0000,
-					   sub_addr,
-					   data,
-					   datasz,
-					   NULL,
-					   FU_RTS54HUB_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    FU_RTS54HUB_I2C_READ_REQUEST,
+					    0x0000,
+					    sub_addr,
+					    data,
+					    datasz,
+					    NULL,
+					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to read I2C: ");
 		return FALSE;
 	}
@@ -138,20 +135,19 @@ fu_rts54hub_device_i2c_read(FuRts54HubDevice *self,
 static gboolean
 fu_rts54hub_device_highclockmode(FuRts54HubDevice *self, guint16 value, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0x06,  /* request */
-					   value, /* value */
-					   0,	  /* idx */
-					   NULL,
-					   0,	 /* data */
-					   NULL, /* actual */
-					   FU_RTS54HUB_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0x06,  /* request */
+					    value, /* value */
+					    0,	   /* idx */
+					    NULL,
+					    0,	  /* data */
+					    NULL, /* actual */
+					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to set highclockmode: ");
 		return FALSE;
 	}
@@ -161,20 +157,19 @@ fu_rts54hub_device_highclockmode(FuRts54HubDevice *self, guint16 value, GError *
 static gboolean
 fu_rts54hub_device_reset_flash(FuRts54HubDevice *self, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0xC0 + 0x29, /* request */
-					   0x0,		/* value */
-					   0x0,		/* idx */
-					   NULL,
-					   0,	 /* data */
-					   NULL, /* actual */
-					   FU_RTS54HUB_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0xC0 + 0x29, /* request */
+					    0x0,	 /* value */
+					    0x0,	 /* idx */
+					    NULL,
+					    0,	  /* data */
+					    NULL, /* actual */
+					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to reset flash: ");
 		return FALSE;
 	}
@@ -188,7 +183,6 @@ fu_rts54hub_device_write_flash(FuRts54HubDevice *self,
 			       gsize datasz,
 			       GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_len = 0;
 	g_autofree guint8 *datarw = NULL;
 
@@ -197,19 +191,19 @@ fu_rts54hub_device_write_flash(FuRts54HubDevice *self,
 	if (datarw == NULL)
 		return FALSE;
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0xC0 + 0x08,	     /* request */
-					   addr % (1 << 16), /* value */
-					   addr / (1 << 16), /* idx */
-					   datarw,
-					   datasz, /* data */
-					   &actual_len,
-					   FU_RTS54HUB_DEVICE_TIMEOUT_RW,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0xC0 + 0x08,      /* request */
+					    addr % (1 << 16), /* value */
+					    addr / (1 << 16), /* idx */
+					    datarw,
+					    datasz, /* data */
+					    &actual_len,
+					    FU_RTS54HUB_DEVICE_TIMEOUT_RW,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to write flash: ");
 		return FALSE;
 	}
@@ -232,12 +226,11 @@ fu_rts54hub_device_read_flash (FuRts54HubDevice *self,
 			       gsize datasz,
 			       GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	gsize actual_len = 0;
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
+	if (!fu_usb_device_control_transfer (FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
 					    0xC0 + 0x18,	/* request */
 					    addr % (1 << 16),	/* value */
 					    addr / (1 << 16),	/* idx */
@@ -260,20 +253,19 @@ fu_rts54hub_device_read_flash (FuRts54HubDevice *self,
 static gboolean
 fu_rts54hub_device_flash_authentication(FuRts54HubDevice *self, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0xC0 + 0x19, /* request */
-					   0x01,	/* value */
-					   0x0,		/* idx */
-					   NULL,
-					   0,	 /* data */
-					   NULL, /* actual */
-					   FU_RTS54HUB_DEVICE_TIMEOUT_AUTH,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0xC0 + 0x19, /* request */
+					    0x01,	 /* value */
+					    0x0,	 /* idx */
+					    NULL,
+					    0,	  /* data */
+					    NULL, /* actual */
+					    FU_RTS54HUB_DEVICE_TIMEOUT_AUTH,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to authenticate: ");
 		return FALSE;
 	}
@@ -283,20 +275,19 @@ fu_rts54hub_device_flash_authentication(FuRts54HubDevice *self, GError **error)
 static gboolean
 fu_rts54hub_device_erase_flash(FuRts54HubDevice *self, guint8 erase_type, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0xC0 + 0x28,	     /* request */
-					   erase_type * 256, /* value */
-					   0x0,		     /* idx */
-					   NULL,
-					   0,	 /* data */
-					   NULL, /* actual */
-					   FU_RTS54HUB_DEVICE_TIMEOUT_ERASE,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0xC0 + 0x28,      /* request */
+					    erase_type * 256, /* value */
+					    0x0,	      /* idx */
+					    NULL,
+					    0,	  /* data */
+					    NULL, /* actual */
+					    FU_RTS54HUB_DEVICE_TIMEOUT_ERASE,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to erase flash: ");
 		return FALSE;
 	}
@@ -306,26 +297,24 @@ fu_rts54hub_device_erase_flash(FuRts54HubDevice *self, guint8 erase_type, GError
 gboolean
 fu_rts54hub_device_vendor_cmd(FuRts54HubDevice *self, guint8 value, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-
 	/* don't set something that's already set */
 	if (self->vendor_cmd == value) {
 		g_debug("skipping vendor command 0x%02x as already set", value);
 		return TRUE;
 	}
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0x02,   /* request */
-					   value,  /* value */
-					   0x0bda, /* idx */
-					   NULL,
-					   0,	 /* data */
-					   NULL, /* actual */
-					   FU_RTS54HUB_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0x02,   /* request */
+					    value,  /* value */
+					    0x0bda, /* idx */
+					    NULL,
+					    0,	  /* data */
+					    NULL, /* actual */
+					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to issue vendor cmd 0x%02x: ", value);
 		return FALSE;
 	}
@@ -337,22 +326,21 @@ static gboolean
 fu_rts54hub_device_ensure_status(FuRts54HubDevice *self, GError **error)
 {
 	guint8 data[FU_RTS54HUB_DEVICE_STATUS_LEN] = {0};
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_len = 0;
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0x09, /* request */
-					   0x0,	 /* value */
-					   0x0,	 /* idx */
-					   data,
-					   sizeof(data),
-					   &actual_len, /* actual */
-					   FU_RTS54HUB_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0x09, /* request */
+					    0x0,  /* value */
+					    0x0,  /* idx */
+					    data,
+					    sizeof(data),
+					    &actual_len, /* actual */
+					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to get status: ");
 		return FALSE;
 	}
@@ -555,6 +543,7 @@ fu_rts54hub_device_init(FuRts54HubDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.realtek.rts54");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }
 

@@ -21,7 +21,7 @@
 #include "fu-amd-gpu-psp-firmware.h"
 
 struct _FuAmdGpuDevice {
-	FuUdevDevice parent_instance;
+	FuPciDevice parent_instance;
 	gchar *vbios_pn;
 	guint32 drm_major;
 	guint32 drm_minor;
@@ -32,7 +32,7 @@ struct _FuAmdGpuDevice {
 #define PSPVBFLASH_IN_PROGRESS 0x1
 #define PSPVBFLASH_SUCCESS     0x80000000
 
-G_DEFINE_TYPE(FuAmdGpuDevice, fu_amd_gpu_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE(FuAmdGpuDevice, fu_amd_gpu_device, FU_TYPE_PCI_DEVICE)
 
 static void
 fu_amd_gpu_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -44,7 +44,7 @@ fu_amd_gpu_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_amd_gpu_set_device_file(FuDevice *device, const gchar *base, GError **error)
+fu_amd_gpu_device_set_device_file(FuDevice *device, const gchar *base, GError **error)
 {
 	const gchar *f;
 	g_autofree gchar *ddir = NULL;
@@ -79,23 +79,19 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *psp_vbflash_status = NULL;
 
 	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
-	if (!fu_amd_gpu_set_device_file(device, base, error))
-		return FALSE;
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
+	if (!fu_amd_gpu_device_set_device_file(device, base, error))
 		return FALSE;
 
 	/* APUs don't have 'rom' sysfs file */
 	rom = g_build_filename(base, "rom", NULL);
 	if (!g_file_test(rom, G_FILE_TEST_EXISTS)) {
-		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD);
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(device), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD);
+		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(device), FU_IO_CHANNEL_OPEN_FLAG_READ);
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 	} else {
 		fu_device_set_logical_id(device, "rom");
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(device), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-		fu_udev_device_add_flag(FU_UDEV_DEVICE(device),
-					FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(device), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	}
 
 	/* firmware upgrade support */
@@ -156,8 +152,10 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
 				  DRM_IOCTL_AMDGPU_INFO,
 				  (void *)&request,
+				  sizeof(request),
 				  NULL,
 				  1000,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	self->vbios_pn =
@@ -166,7 +164,7 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 	fu_device_add_instance_id(device, part);
 	fu_device_set_version_raw(device, vbios_info.version);
 	ver = fu_strsafe((const gchar *)vbios_info.vbios_ver_str, sizeof(vbios_info.vbios_ver_str));
-	fu_device_set_version(device, ver);
+	fu_device_set_version(device, ver); /* nocheck:set-version */
 	model = fu_strsafe((const gchar *)vbios_info.name, sizeof(vbios_info.name));
 	fu_device_set_summary(device, model);
 
@@ -201,7 +199,7 @@ fu_amd_gpu_device_prepare_firmware(FuDevice *device,
 	if (csm == NULL)
 		return NULL;
 
-	fw_pn = fu_amd_gpu_atom_get_vbios_pn(csm);
+	fw_pn = fu_amd_gpu_atom_firmware_get_vbios_pn(csm);
 	if (g_strcmp0(fw_pn, self->vbios_pn) != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -227,7 +225,7 @@ fu_amd_gpu_device_wait_for_completion_cb(FuDevice *device, gpointer user_data, G
 	psp_vbflash_status = g_build_filename(base, "psp_vbflash_status", NULL);
 	if (!g_file_get_contents(psp_vbflash_status, &buf, &sz, error))
 		return FALSE;
-	if (!fu_strtoull(buf, &status, 0, G_MAXUINT64, error))
+	if (!fu_strtoull(buf, &status, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
 	if (status != PSPVBFLASH_SUCCESS) {
 		g_set_error(error,
@@ -257,7 +255,10 @@ fu_amd_gpu_device_write_firmware(FuDevice *device,
 	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
 	psp_vbflash = g_build_filename(base, "psp_vbflash", NULL);
 
-	image_io = fu_io_channel_new_file(psp_vbflash, error);
+	image_io =
+	    fu_io_channel_new_file(psp_vbflash,
+				   FU_IO_CHANNEL_OPEN_FLAG_READ | FU_IO_CHANNEL_OPEN_FLAG_WRITE,
+				   error);
 	if (image_io == NULL)
 		return FALSE;
 
@@ -296,8 +297,8 @@ fu_amd_gpu_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_amd_gpu_device_init(FuAmdGpuDevice *self)
 {
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS);
 }
 
 static void

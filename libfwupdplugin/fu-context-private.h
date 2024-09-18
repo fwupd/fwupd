@@ -26,6 +26,8 @@ typedef enum {
 
 FuContext *
 fu_context_new(void);
+void
+fu_context_housekeeping(FuContext *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_context_reload_bios_settings(FuContext *self, GError **error);
 gboolean
@@ -53,6 +55,8 @@ fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem, const gch
 GPtrArray *
 fu_context_get_udev_subsystems(FuContext *self) G_GNUC_NON_NULL(1);
 GPtrArray *
+fu_context_get_backends(FuContext *self) G_GNUC_NON_NULL(1);
+GPtrArray *
 fu_context_get_plugin_names_for_udev_subsystem(FuContext *self,
 					       const gchar *subsystem,
 					       GError **error) G_GNUC_NON_NULL(1, 2);
@@ -66,3 +70,8 @@ FuConfig *
 fu_context_get_config(FuContext *self) G_GNUC_NON_NULL(1);
 void
 fu_context_set_chassis_kind(FuContext *self, FuSmbiosChassisKind chassis_kind) G_GNUC_NON_NULL(1);
+
+gpointer
+fu_context_get_data(FuContext *self, const gchar *key);
+void
+fu_context_set_data(FuContext *self, const gchar *key, gpointer data);

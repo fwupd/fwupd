@@ -19,20 +19,15 @@ static gboolean
 fu_thelio_io_device_probe(FuDevice *device, GError **error)
 {
 	const gchar *devpath;
+	gsize bufsz = 0;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *buf = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GUdevDevice) udev_device = NULL;
 
 	/* this is the atmel bootloader */
 	fu_device_add_counterpart_guid(device, "USB\\VID_03EB&PID_2FF4");
 
-	/* convert GUsbDevice to GUdevDevice */
-	udev_device = fu_usb_device_find_udev_device(FU_USB_DEVICE(device), error);
-	if (udev_device == NULL)
-		return FALSE;
-
-	devpath = g_udev_device_get_sysfs_path(udev_device);
+	devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
 	if (G_UNLIKELY(devpath == NULL)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -43,7 +38,7 @@ fu_thelio_io_device_probe(FuDevice *device, GError **error)
 
 	/* pre-1.0.0 firmware versions do not implement this */
 	fn = g_build_filename(devpath, "revision", NULL);
-	if (!g_file_get_contents(fn, &buf, NULL, &error_local)) {
+	if (!g_file_get_contents(fn, &buf, &bufsz, &error_local)) {
 		if (g_error_matches(error_local, G_FILE_ERROR, G_FILE_ERROR_FAILED)) {
 			g_debug("FW revision unimplemented: %s", error_local->message);
 			fu_device_set_version(device, "0.0.0");
@@ -52,7 +47,8 @@ fu_thelio_io_device_probe(FuDevice *device, GError **error)
 			return FALSE;
 		}
 	} else {
-		fu_device_set_version(device, (const gchar *)buf);
+		g_autofree gchar *version = fu_strsafe((const gchar *)buf, bufsz);
+		fu_device_set_version(device, version);
 	}
 
 	return TRUE;
@@ -64,14 +60,9 @@ fu_thelio_io_device_detach(FuDevice *device, FuProgress *progress, GError **erro
 	const gchar *devpath;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuIOChannel) io_channel = NULL;
-	g_autoptr(GUdevDevice) udev_device = NULL;
 	const guint8 buf[] = {'1', '\n'};
 
-	/* convert GUsbDevice to GUdevDevice */
-	udev_device = fu_usb_device_find_udev_device(FU_USB_DEVICE(device), error);
-	if (udev_device == NULL)
-		return FALSE;
-	devpath = g_udev_device_get_sysfs_path(udev_device);
+	devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
 	if (G_UNLIKELY(devpath == NULL)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -81,7 +72,7 @@ fu_thelio_io_device_detach(FuDevice *device, FuProgress *progress, GError **erro
 	}
 
 	fn = g_build_filename(devpath, "bootloader", NULL);
-	io_channel = fu_io_channel_new_file(fn, error);
+	io_channel = fu_io_channel_new_file(fn, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
 	if (io_channel == NULL)
 		return FALSE;
 	if (!fu_io_channel_write_raw(io_channel,
@@ -111,8 +102,8 @@ fu_thelio_io_device_init(FuThelioIoDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_protocol(FU_DEVICE(self), "org.usb.dfu");

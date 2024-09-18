@@ -102,14 +102,14 @@ fu_logitech_scribe_device_send(FuLogitechScribeDevice *self,
 				    "interface is invalid");
 		return FALSE;
 	}
-	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(usb_device)),
-					ep,
-					(guint8 *)buf->data,
-					buf->len,
-					&transferred,
-					BULK_TRANSFER_TIMEOUT,
-					cancellable,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(usb_device),
+					 ep,
+					 (guint8 *)buf->data,
+					 buf->len,
+					 &transferred,
+					 BULK_TRANSFER_TIMEOUT,
+					 cancellable,
+					 error)) {
 		g_prefix_error(error, "failed to send using bulk transfer: ");
 		return FALSE;
 	}
@@ -137,15 +137,15 @@ fu_logitech_scribe_device_recv(FuLogitechScribeDevice *self,
 				    "interface is invalid");
 		return FALSE;
 	}
-	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(usb_device)),
-					ep,
-					buf->data,
-					buf->len,
-					&received_length,
-					timeout,
-					NULL,
-					error)) {
-		g_prefix_error(error, "failed to receive using bulk transfer: ");
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(usb_device),
+					 ep,
+					 buf->data,
+					 buf->len,
+					 &received_length,
+					 timeout,
+					 NULL,
+					 error)) {
+		g_prefix_error(error, "failed to receive: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -273,8 +273,10 @@ fu_logitech_scribe_device_query_data_size(FuLogitechScribeDevice *self,
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  UVCIOC_CTRL_QUERY,
 				  (guint8 *)&size_query,
+				  sizeof(size_query),
 				  NULL,
 				  FU_LOGITECH_SCRIBE_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	/* convert the data byte to int */
@@ -311,8 +313,10 @@ fu_logitech_scribe_device_get_xu_control(FuLogitechScribeDevice *self,
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  UVCIOC_CTRL_QUERY,
 				  (guint8 *)&control_query,
+				  sizeof(control_query),
 				  NULL,
 				  FU_LOGITECH_SCRIBE_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
 	g_debug("received get xu control response, size: %u unit: 0x%x selector: 0x%x",
@@ -337,9 +341,8 @@ fu_logitech_scribe_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_logitech_scribe_device_probe(FuDevice *device, GError **error)
 {
-	const gchar *id_v4l_capabilities;
-	const gchar *index;
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
+	g_autofree gchar *attr_index = NULL;
+	g_autofree gchar *prop_id_v4l_capabilities = NULL;
 
 	/* check is valid */
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "video4linux") != 0) {
@@ -352,8 +355,11 @@ fu_logitech_scribe_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* only interested in video capture device */
-	id_v4l_capabilities = g_udev_device_get_property(udev_device, "ID_V4L_CAPABILITIES");
-	if (g_strcmp0(id_v4l_capabilities, ":capture:") != 0) {
+	prop_id_v4l_capabilities =
+	    fu_udev_device_read_property(FU_UDEV_DEVICE(device), "ID_V4L_CAPABILITIES", error);
+	if (prop_id_v4l_capabilities == NULL)
+		return FALSE;
+	if (g_strcmp0(prop_id_v4l_capabilities, ":capture:") != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -363,8 +369,11 @@ fu_logitech_scribe_device_probe(FuDevice *device, GError **error)
 
 	/* interested in lowest index only e,g, video0, ignore low format siblings like
 	 * video1/video2/video3 etc */
-	index = g_udev_device_get_sysfs_attr(udev_device, "index");
-	if (g_strcmp0(index, "0") != 0) {
+	attr_index = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					       "index",
+					       FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					       NULL);
+	if (g_strcmp0(attr_index, "0") != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -433,41 +442,32 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	g_autoptr(GByteArray) start_pkt = g_byte_array_new();
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GUsbInterface) intf = NULL;
+	g_autoptr(FuUsbInterface) intf = NULL;
 	g_autoptr(GPtrArray) endpoints = NULL;
-	g_autoptr(GUsbDevice) g_usb_device = NULL;
 	g_autoptr(FuUsbDevice) usb_device = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	/* convert GUdevDevice to GUsbDevice */
-	g_usb_device = fu_udev_device_find_usb_device(FU_UDEV_DEVICE(device), error);
-	if (g_usb_device == NULL) {
+	/* get USB parent */
+	usb_device = FU_USB_DEVICE(
+	    fu_device_get_backend_parent_with_subsystem(device, "usb:usb_device", error));
+	if (usb_device == NULL)
 		return FALSE;
-	}
-
-	usb_device = fu_usb_device_new(fu_device_get_context(device), g_usb_device);
-	if (usb_device == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to create usb device instance");
-		return FALSE;
-	}
 
 	/* re-open with new device set */
-	fu_usb_device_set_dev(usb_device, g_usb_device);
-	if (!fu_device_open(FU_DEVICE(usb_device), error))
+	locker = fu_device_locker_new(usb_device, error);
+	if (locker == NULL)
 		return FALSE;
 
 	/* find the correct interface */
-	intf = g_usb_device_get_interface(fu_usb_device_get_dev(FU_USB_DEVICE(usb_device)),
-					  G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
-					  UPD_INTERFACE_SUBPROTOCOL_ID,
-					  FU_LOGITECH_SCRIBE_PROTOCOL_ID,
-					  error);
+	intf = fu_usb_device_get_interface(FU_USB_DEVICE(usb_device),
+					   FU_USB_CLASS_VENDOR_SPECIFIC,
+					   UPD_INTERFACE_SUBPROTOCOL_ID,
+					   FU_LOGITECH_SCRIBE_PROTOCOL_ID,
+					   error);
 	if (intf == NULL)
 		return FALSE;
 
-	endpoints = g_usb_interface_get_endpoints(intf);
+	endpoints = fu_usb_interface_get_endpoints(intf);
 	if (endpoints == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -476,13 +476,13 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	self->update_iface = g_usb_interface_get_number(intf);
+	self->update_iface = fu_usb_interface_get_number(intf);
 	for (guint j = 0; j < endpoints->len; j++) {
-		GUsbEndpoint *ep = g_ptr_array_index(endpoints, j);
+		FuUsbEndpoint *ep = g_ptr_array_index(endpoints, j);
 		if (j == EP_OUT)
-			self->update_ep[EP_OUT] = g_usb_endpoint_get_address(ep);
+			self->update_ep[EP_OUT] = fu_usb_endpoint_get_address(ep);
 		else
-			self->update_ep[EP_IN] = g_usb_endpoint_get_address(ep);
+			self->update_ep[EP_IN] = fu_usb_endpoint_get_address(ep);
 	}
 	fu_usb_device_add_interface(usb_device, self->update_iface);
 	g_debug("usb data, iface: %u ep_out: %u ep_in: %u",

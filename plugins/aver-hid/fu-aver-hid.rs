@@ -162,9 +162,9 @@ struct FuStructAverHidResDeviceVersion {
 struct FuStructAverSafeispReq {
     report_id_custom_command: u8 == 0x08,
     custom_cmd: u8,
-    custom_res: u16,
-    custom_parm0: u32 = 0x00,
-    custom_parm1: u32 = 0x00,
+    custom_res: u16le,
+    custom_parm0: u32le = 0x00,
+    custom_parm1: u32le = 0x00,
     data: [u8; 1012] = 0x00,
 };
 
@@ -172,9 +172,9 @@ struct FuStructAverSafeispReq {
 struct FuStructAverSafeispRes {
     report_id_custom_command: u8 == 0x09,
     custom_cmd: u8,
-    custom_res: u16,
-    custom_parm0: u32,
-    custom_parm1: u32,
+    custom_res: u16le,
+    custom_parm0: u32le,
+    custom_parm1: u32le,
     data: [u8; 4] = 0x00,
 };
 

@@ -226,20 +226,20 @@ fu_igsc_oprom_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_igsc_aux_device_prepare(FuDevice *device,
-			   FuProgress *progress,
-			   FwupdInstallFlags flags,
-			   GError **error)
+fu_igsc_oprom_device_prepare(FuDevice *device,
+			     FuProgress *progress,
+			     FwupdInstallFlags flags,
+			     GError **error)
 {
 	/* set PCI power policy */
 	return fu_device_prepare(fu_device_get_parent(device), progress, flags, error);
 }
 
 static gboolean
-fu_igsc_aux_device_cleanup(FuDevice *device,
-			   FuProgress *progress,
-			   FwupdInstallFlags flags,
-			   GError **error)
+fu_igsc_oprom_device_cleanup(FuDevice *device,
+			     FuProgress *progress,
+			     FwupdInstallFlags flags,
+			     GError **error)
 {
 	/* set PCI power policy */
 	return fu_device_cleanup(fu_device_get_parent(device), progress, flags, error);
@@ -265,8 +265,8 @@ fu_igsc_oprom_device_class_init(FuIgscOpromDeviceClass *klass)
 	device_class->setup = fu_igsc_oprom_device_setup;
 	device_class->prepare_firmware = fu_igsc_oprom_device_prepare_firmware;
 	device_class->write_firmware = fu_igsc_oprom_device_write_firmware;
-	device_class->prepare = fu_igsc_aux_device_prepare;
-	device_class->cleanup = fu_igsc_aux_device_cleanup;
+	device_class->prepare = fu_igsc_oprom_device_prepare;
+	device_class->cleanup = fu_igsc_oprom_device_cleanup;
 }
 
 FuIgscOpromDevice *

@@ -64,7 +64,7 @@ fu_jabra_gnp_image_parse(FuJabraGnpImage *self,
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "crc missing");
 		return FALSE;
 	}
-	if (!fu_strtoull(crc_str, &crc_expected, 0x0, 0xFFFFFFFF, error)) {
+	if (!fu_strtoull(crc_str, &crc_expected, 0x0, 0xFFFFFFFF, FU_INTEGER_BASE_AUTO, error)) {
 		g_prefix_error(error, "cannot parse crc of %s: ", crc_str);
 		return FALSE;
 	}
@@ -78,7 +78,7 @@ fu_jabra_gnp_image_parse(FuJabraGnpImage *self,
 				    "partition missing");
 		return FALSE;
 	}
-	if (!fu_strtoull(part_str, &partition, 0x0, 0xFFFFFFFF, error)) {
+	if (!fu_strtoull(part_str, &partition, 0x0, 0xFFFFFFFF, FU_INTEGER_BASE_AUTO, error)) {
 		g_prefix_error(error, "cannot parse partition of %s: ", part_str);
 		return FALSE;
 	}

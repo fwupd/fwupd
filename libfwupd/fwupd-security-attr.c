@@ -9,7 +9,7 @@
 #include <gio/gio.h>
 #include <string.h>
 
-#include "fwupd-codec-private.h"
+#include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
@@ -1151,52 +1151,50 @@ fwupd_security_attr_get_result_success(FwupdSecurityAttr *self)
 	return priv->result_success;
 }
 
-static GVariant *
-fwupd_security_attr_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
+static void
+fwupd_security_attr_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(converter);
+	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
-	GVariantBuilder builder;
 
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
 	if (priv->appstream_id != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_APPSTREAM_ID,
 				      g_variant_new_string(priv->appstream_id));
 	}
 	if (priv->created > 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_CREATED,
 				      g_variant_new_uint64(priv->created));
 	}
 	if (priv->name != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_NAME,
 				      g_variant_new_string(priv->name));
 	}
 	if (priv->title != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_SUMMARY,
 				      g_variant_new_string(priv->title));
 	}
 	if (priv->description != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_DESCRIPTION,
 				      g_variant_new_string(priv->description));
 	}
 	if (priv->plugin != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_PLUGIN,
 				      g_variant_new_string(priv->plugin));
 	}
 	if (priv->url != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_URI,
 				      g_variant_new_string(priv->url));
@@ -1205,7 +1203,7 @@ fwupd_security_attr_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 		g_autofree const gchar **strv = g_new0(const gchar *, priv->obsoletes->len + 1);
 		for (guint i = 0; i < priv->obsoletes->len; i++)
 			strv[i] = (const gchar *)g_ptr_array_index(priv->obsoletes, i);
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_CATEGORIES,
 				      g_variant_new_strv(strv, -1));
@@ -1214,78 +1212,77 @@ fwupd_security_attr_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 		g_autofree const gchar **strv = g_new0(const gchar *, priv->guids->len + 1);
 		for (guint i = 0; i < priv->guids->len; i++)
 			strv[i] = (const gchar *)g_ptr_array_index(priv->guids, i);
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_GUID,
 				      g_variant_new_strv(strv, -1));
 	}
 	if (priv->flags != 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FLAGS,
 				      g_variant_new_uint64(priv->flags));
 	}
 	if (priv->level > 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_HSI_LEVEL,
 				      g_variant_new_uint32(priv->level));
 	}
 	if (priv->result != FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_HSI_RESULT,
 				      g_variant_new_uint32(priv->result));
 	}
 	if (priv->result_fallback != FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
 				      g_variant_new_uint32(priv->result_fallback));
 	}
 	if (priv->result_success != FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_HSI_RESULT_SUCCESS,
 				      g_variant_new_uint32(priv->result_success));
 	}
 	if (priv->metadata != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_METADATA,
 				      fwupd_hash_kv_to_variant(priv->metadata));
 	}
 	if (priv->bios_setting_id != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_ID,
 				      g_variant_new_string(priv->bios_setting_id));
 	}
 	if (priv->bios_setting_target_value != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE,
 				      g_variant_new_string(priv->bios_setting_target_value));
 	}
 	if (priv->bios_setting_current_value != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
 				      g_variant_new_string(priv->bios_setting_current_value));
 	}
 	if (priv->kernel_current_value != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_KERNEL_CURRENT_VALUE,
 				      g_variant_new_string(priv->kernel_current_value));
 	}
 	if (priv->kernel_target_value != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_KERNEL_TARGET_VALUE,
 				      g_variant_new_string(priv->kernel_target_value));
 	}
-	return g_variant_new("a{sv}", &builder);
 }
 
 /**
@@ -1452,9 +1449,9 @@ fwupd_security_attr_string_append_tfl(GString *str,
 }
 
 static gboolean
-fwupd_security_attr_from_json(FwupdCodec *converter, JsonNode *json_node, GError **error)
+fwupd_security_attr_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 {
-	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(converter);
+	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
 	JsonObject *obj;
 
 	/* sanity check */
@@ -1575,9 +1572,9 @@ fwupd_security_attr_from_json(FwupdCodec *converter, JsonNode *json_node, GError
 }
 
 static void
-fwupd_security_attr_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_security_attr_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(converter);
+	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
@@ -1644,9 +1641,9 @@ fwupd_security_attr_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCo
 }
 
 static void
-fwupd_security_attr_add_string(FwupdCodec *converter, guint idt, GString *str)
+fwupd_security_attr_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(converter);
+	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
 	fwupd_codec_string_append_time(str, idt, FWUPD_RESULT_KEY_CREATED, priv->created);
@@ -1755,9 +1752,9 @@ fwupd_security_attr_finalize(GObject *object)
 }
 
 static void
-fwupd_security_attr_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
+fwupd_security_attr_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
-	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(converter);
+	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR(codec);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {
@@ -1770,9 +1767,9 @@ static void
 fwupd_security_attr_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fwupd_security_attr_add_string;
-	iface->to_json = fwupd_security_attr_to_json;
+	iface->add_json = fwupd_security_attr_add_json;
 	iface->from_json = fwupd_security_attr_from_json;
-	iface->to_variant = fwupd_security_attr_to_variant;
+	iface->add_variant = fwupd_security_attr_add_variant;
 	iface->from_variant_iter = fwupd_security_attr_from_variant_iter;
 }
 

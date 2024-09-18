@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # The Qubes OS Project, http://www.qubes-os.org
 #
@@ -242,7 +242,7 @@ class TestQubesFwupdmgr(unittest.TestCase):
         crawler_output = io.StringIO()
         sys.stdout = crawler_output
         self.q._output_crawler(json.loads(UPDATE_INFO), 0)
-        with open("test/logs/get_devices.log", "r") as get_devices:
+        with open("test/logs/get_devices.log") as get_devices:
             self.assertEqual(
                 get_devices.read(), crawler_output.getvalue().strip() + "\n"
             )
@@ -273,7 +273,7 @@ class TestQubesFwupdmgr(unittest.TestCase):
         help_output = io.StringIO()
         sys.stdout = help_output
         self.q.help()
-        with open("test/logs/help.log", "r") as help_log:
+        with open("test/logs/help.log") as help_log:
             self.assertEqual(help_log.read(), help_output.getvalue().strip() + "\n")
         sys.stdout = self.captured_output
 

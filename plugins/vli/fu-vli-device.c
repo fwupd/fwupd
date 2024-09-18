@@ -539,25 +539,24 @@ static gboolean
 fu_vli_device_spi_read_flash_id(FuVliDevice *self, GError **error)
 {
 	FuVliDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint8 buf[4] = {0x0};
 	guint8 spi_cmd = 0x0;
 
 	if (!fu_cfi_device_get_cmd(priv->cfi_device, FU_CFI_DEVICE_CMD_READ_ID, &spi_cmd, error))
 		return FALSE;
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0xc0 | (priv->spi_cmd_read_id_sz * 2),
-					   spi_cmd,
-					   0x0000,
-					   buf,
-					   sizeof(buf),
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0xc0 | (priv->spi_cmd_read_id_sz * 2),
+					    spi_cmd,
+					    0x0000,
+					    buf,
+					    sizeof(buf),
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to read chip ID: ");
 		return FALSE;
 	}
@@ -641,13 +640,13 @@ fu_vli_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "CfiDeviceCmdReadIdSz") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->spi_cmd_read_id_sz = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "VliSpiAutoDetect") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->spi_auto_detect = tmp > 0;
 		return TRUE;
@@ -723,9 +722,9 @@ fu_vli_device_init(FuVliDevice *self)
 	FuVliDevicePrivate *priv = GET_PRIVATE(self);
 	priv->spi_cmd_read_id_sz = 2;
 	priv->spi_auto_detect = TRUE;
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 }
 
 static void

@@ -7,7 +7,7 @@
 #include "config.h"
 
 #include "fwupd-bios-setting.h"
-#include "fwupd-codec-private.h"
+#include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
@@ -339,7 +339,7 @@ fwupd_bios_setting_set_description(FwupdBiosSetting *self, const gchar *descript
 
 /* determine if key is supposed to be positive */
 static gboolean
-fu_bios_setting_key_is_positive(const gchar *key)
+fwupd_bios_setting_key_is_positive(const gchar *key)
 {
 	if (g_strrstr(key, "enable"))
 		return TRUE;
@@ -354,7 +354,7 @@ fu_bios_setting_key_is_positive(const gchar *key)
 
 /* determine if key is supposed to be negative */
 static gboolean
-fu_bios_setting_key_is_negative(const gchar *key)
+fwupd_bios_setting_key_is_negative(const gchar *key)
 {
 	if (g_strrstr(key, "disable"))
 		return TRUE;
@@ -404,8 +404,8 @@ fwupd_bios_setting_map_possible_value(FwupdBiosSetting *self, const gchar *key, 
 	}
 
 	lower_key = g_utf8_strdown(key, -1);
-	positive_key = fu_bios_setting_key_is_positive(lower_key);
-	negative_key = fu_bios_setting_key_is_negative(lower_key);
+	positive_key = fwupd_bios_setting_key_is_positive(lower_key);
+	negative_key = fwupd_bios_setting_key_is_negative(lower_key);
 	for (guint i = 0; i < priv->possible_values->len; i++) {
 		const gchar *possible = g_ptr_array_index(priv->possible_values, i);
 		g_autofree gchar *lower_possible = g_utf8_strdown(possible, -1);
@@ -416,8 +416,8 @@ fwupd_bios_setting_map_possible_value(FwupdBiosSetting *self, const gchar *key, 
 		if (g_strcmp0(lower_possible, lower_key) == 0)
 			return possible;
 		/* fuzzy match */
-		positive_possible = fu_bios_setting_key_is_positive(lower_possible);
-		negative_possible = fu_bios_setting_key_is_negative(lower_possible);
+		positive_possible = fwupd_bios_setting_key_is_positive(lower_possible);
+		negative_possible = fwupd_bios_setting_key_is_negative(lower_possible);
 		if ((positive_possible && positive_key) || (negative_possible && negative_key))
 			return possible;
 	}
@@ -608,7 +608,7 @@ _fu_strtoull_simple(const gchar *str, guint64 *value, GError **error)
 		str += 2;
 		base = 16;
 	}
-	*value = g_ascii_strtoull(str, &endptr, base);
+	*value = g_ascii_strtoull(str, &endptr, base); /* nocheck:blocked */
 	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "cannot parse %s", str);
 		return FALSE;
@@ -765,66 +765,62 @@ fwupd_bios_setting_trusted(FwupdBiosSetting *self, gboolean trusted)
 	return FALSE;
 }
 
-static GVariant *
-fwupd_bios_setting_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
+static void
+fwupd_bios_setting_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
+	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(codec);
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
-	GVariantBuilder builder;
 
-	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(self), NULL);
-
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
-	g_variant_builder_add(&builder,
+	g_variant_builder_add(builder,
 			      "{sv}",
 			      FWUPD_RESULT_KEY_BIOS_SETTING_TYPE,
 			      g_variant_new_uint64(priv->kind));
 	if (priv->id != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_ID,
 				      g_variant_new_string(priv->id));
 	}
 	if (priv->name != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_NAME,
 				      g_variant_new_string(priv->name));
 	}
 	if (priv->path != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FILENAME,
 				      g_variant_new_string(priv->path));
 	}
 	if (priv->description != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_DESCRIPTION,
 				      g_variant_new_string(priv->description));
 	}
-	g_variant_builder_add(&builder,
+	g_variant_builder_add(builder,
 			      "{sv}",
 			      FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
 			      g_variant_new_boolean(priv->read_only));
 	if (fwupd_bios_setting_trusted(self, flags & FWUPD_CODEC_FLAG_TRUSTED)) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,
 				      g_variant_new_string(priv->current_value));
 	}
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_INTEGER ||
 	    priv->kind == FWUPD_BIOS_SETTING_KIND_STRING) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_LOWER_BOUND,
 				      g_variant_new_uint64(priv->lower_bound));
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_UPPER_BOUND,
 				      g_variant_new_uint64(priv->upper_bound));
 		if (priv->kind == FWUPD_BIOS_SETTING_KIND_INTEGER) {
-			g_variant_builder_add(&builder,
+			g_variant_builder_add(builder,
 					      "{sv}",
 					      FWUPD_RESULT_KEY_BIOS_SETTING_SCALAR_INCREMENT,
 					      g_variant_new_uint64(priv->scalar_increment));
@@ -836,13 +832,12 @@ fwupd_bios_setting_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
 			for (guint i = 0; i < priv->possible_values->len; i++)
 				strv[i] =
 				    (const gchar *)g_ptr_array_index(priv->possible_values, i);
-			g_variant_builder_add(&builder,
+			g_variant_builder_add(builder,
 					      "{sv}",
 					      FWUPD_RESULT_KEY_BIOS_SETTING_POSSIBLE_VALUES,
 					      g_variant_new_strv(strv, -1));
 		}
 	}
-	return g_variant_new("a{sv}", &builder);
 }
 
 static void
@@ -897,9 +892,9 @@ fwupd_bios_setting_from_key_value(FwupdBiosSetting *self, const gchar *key, GVar
 }
 
 static gboolean
-fwupd_bios_setting_from_json(FwupdCodec *converter, JsonNode *json_node, GError **error)
+fwupd_bios_setting_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 {
-	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
+	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(codec);
 	JsonObject *obj;
 
 	/* sanity check */
@@ -969,9 +964,9 @@ fwupd_bios_setting_from_json(FwupdCodec *converter, JsonNode *json_node, GError 
 }
 
 static void
-fwupd_bios_setting_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_bios_setting_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
+	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(codec);
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_NAME, priv->name);
@@ -1014,9 +1009,9 @@ fwupd_bios_setting_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCod
 }
 
 static void
-fwupd_bios_setting_add_string(FwupdCodec *converter, guint idt, GString *str)
+fwupd_bios_setting_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
+	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(codec);
 	FwupdBiosSettingPrivate *priv = GET_PRIVATE(self);
 
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_NAME, priv->name);
@@ -1092,9 +1087,9 @@ fwupd_bios_setting_finalize(GObject *object)
 }
 
 static void
-fwupd_bios_setting_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
+fwupd_bios_setting_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
-	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(converter);
+	FwupdBiosSetting *self = FWUPD_BIOS_SETTING(codec);
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {
@@ -1107,9 +1102,9 @@ static void
 fwupd_bios_setting_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fwupd_bios_setting_add_string;
-	iface->to_json = fwupd_bios_setting_to_json;
+	iface->add_json = fwupd_bios_setting_add_json;
 	iface->from_json = fwupd_bios_setting_from_json;
-	iface->to_variant = fwupd_bios_setting_to_variant;
+	iface->add_variant = fwupd_bios_setting_add_variant;
 	iface->from_variant_iter = fwupd_bios_setting_from_variant_iter;
 }
 

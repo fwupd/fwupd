@@ -63,7 +63,7 @@ static void
 fu_tpm_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_HOST_FIRMWARE)) {
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE)) {
 		g_set_object(&self->bios_device, device);
 		fu_tpm_plugin_set_bios_pcr0s(plugin);
 	}
@@ -293,11 +293,18 @@ fu_tpm_plugin_coldplug_eventlog(FuPlugin *plugin, GError **error)
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
 	gsize bufsz = 0;
-	const gchar *fn = "/sys/kernel/security/tpm0/binary_bios_measurements";
+	g_autofree gchar *fn = NULL;
 	g_autofree gchar *str = NULL;
+	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
 	g_autofree guint8 *buf = NULL;
 
 	/* do not show a warning if no TPM exists, or the kernel is too old */
+	fn = g_build_filename(sysfsdir,
+			      "kernel",
+			      "security",
+			      "tpm0",
+			      "binary_bios_measurements",
+			      NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_debug("no %s, so skipping", fn);
 		return TRUE;
@@ -376,7 +383,7 @@ fu_tpm_plugin_constructed(GObject *obj)
 }
 
 static void
-fu_tpm_finalize(GObject *obj)
+fu_tpm_plugin_finalize(GObject *obj)
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(obj);
 	if (self->tpm_device != NULL)
@@ -394,7 +401,7 @@ fu_tpm_plugin_class_init(FuTpmPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->finalize = fu_tpm_finalize;
+	object_class->finalize = fu_tpm_plugin_finalize;
 	plugin_class->constructed = fu_tpm_plugin_constructed;
 	plugin_class->to_string = fu_tpm_plugin_to_string;
 	plugin_class->startup = fu_tpm_plugin_startup;

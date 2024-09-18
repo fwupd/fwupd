@@ -11,10 +11,6 @@
 #include <glib/gi18n.h>
 #include <stdio.h>
 #include <unistd.h>
-#ifdef HAVE_GUSB
-#include <gusb.h>
-#endif
-
 #include <xmlb.h>
 #ifdef HAVE_LIBCURL
 #include <curl/curl.h>
@@ -32,7 +28,7 @@ static gchar *
 fu_util_convert_description(const gchar *xml, GError **error);
 
 gchar *
-fu_console_color_format(const gchar *text, FuConsoleColor fg_color)
+fu_console_color_format(const gchar *text, FuConsoleColor fg_color) /* nocheck:name */
 {
 	if (g_getenv("NO_COLOR") != NULL)
 		return g_strdup(text);
@@ -238,7 +234,7 @@ fu_util_update_shutdown(GError **error)
 	return val != NULL;
 }
 
-gboolean
+static gboolean
 fu_util_update_reboot(GError **error)
 {
 	g_autoptr(GDBusConnection) connection = NULL;
@@ -524,7 +520,7 @@ fu_util_cmd_array_run(GPtrArray *array,
 
 	/* clear out bash completion sentinel */
 	for (guint i = 0; values[i] != NULL; i++) {
-		if (g_strcmp0(values[i], "{") == 0)
+		if (g_strcmp0(values[i], "{") == 0) /* nocheck:depth */
 			break;
 		values_copy[i] = g_strdup(values[i]);
 	}
@@ -1034,10 +1030,6 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		/* TRANSLATORS: Device is updatable in this or any other mode */
 		return _("Updatable");
 	}
-	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_OFFLINE) {
-		/* TRANSLATORS: Update can only be done from offline mode */
-		return _("Update requires a reboot");
-	}
 	if (device_flag == FWUPD_DEVICE_FLAG_REQUIRE_AC) {
 		/* TRANSLATORS: Must be plugged into an outlet */
 		return _("System requires external power source");
@@ -1070,14 +1062,6 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		/* TRANSLATORS: User has been notified */
 		return _("User has been notified");
 	}
-	if (device_flag == FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION) {
-		/* skip */
-		return NULL;
-	}
-	if (device_flag == FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST) {
-		/* TRANSLATORS: Install composite firmware on the parent before the child */
-		return _("Install to parent device first");
-	}
 	if (device_flag == FWUPD_DEVICE_FLAG_IS_BOOTLOADER) {
 		/* TRANSLATORS: Is currently in bootloader mode */
 		return _("Is in bootloader mode");
@@ -1085,10 +1069,6 @@ fu_util_device_flag_to_string(guint64 device_flag)
 	if (device_flag == FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG) {
 		/* TRANSLATORS: the hardware is waiting to be replugged */
 		return _("Hardware is waiting to be replugged");
-	}
-	if (device_flag == FWUPD_DEVICE_FLAG_IGNORE_VALIDATION) {
-		/* TRANSLATORS: Ignore validation safety checks when flashing this device */
-		return _("Ignore validation safety checks");
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED) {
 		/* skip */
@@ -1185,10 +1165,6 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		/* TRANSLATORS: stay on one firmware version unless the new version is explicitly
 		 * specified */
 		return _("Installing a specific release is explicitly required");
-	}
-	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
-		/* skip */
-		return NULL;
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN) {
 		return NULL;
@@ -1290,7 +1266,7 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 	}
 	if (problem == FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED) {
 		/* TRANSLATORS: lid means "laptop top cover" */
-		return g_strdup(_("Device cannot be used while the lid is closed"));
+		return g_strdup(_("Device cannot be updated while the lid is closed"));
 	}
 	if (problem == FWUPD_DEVICE_PROBLEM_IS_EMULATED) {
 		/* TRANSLATORS: emulated means we are pretending to be a different model */
@@ -1492,7 +1468,7 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 			bullet = g_strdup_printf("• %s", desc);
 			color = fu_console_color_format(bullet, FU_CONSOLE_COLOR_RED);
 			fwupd_codec_string_append(str, idt + 1, tmp, color);
-			tmp = NULL;
+			tmp = "";
 		}
 	}
 
@@ -1583,6 +1559,12 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
+gint
+fu_util_plugin_name_sort_cb(FwupdPlugin **item1, FwupdPlugin **item2)
+{
+	return g_strcmp0(fwupd_plugin_get_name(*item1), fwupd_plugin_get_name(*item2));
+}
+
 const gchar *
 fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 {
@@ -1592,15 +1574,15 @@ fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 		return NULL;
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_USER_WARNING)
 		return NULL;
-	if (plugin_flag == FWUPD_PLUGIN_FLAG_READY)
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_NONE)
 		return NULL;
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_REQUIRE_HWID) {
 		/* TRANSLATORS: Plugin is active only if hardware is found */
 		return _("Enabled if hardware matches");
 	}
-	if (plugin_flag == FWUPD_PLUGIN_FLAG_NONE) {
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_READY) {
 		/* TRANSLATORS: Plugin is active and in use */
-		return _("Enabled");
+		return _("Ready");
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_DISABLED) {
 		/* TRANSLATORS: Plugin is inactive and not used */
@@ -1674,9 +1656,9 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 	case FWUPD_PLUGIN_FLAG_UNKNOWN:
 	case FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE:
 	case FWUPD_PLUGIN_FLAG_USER_WARNING:
-	case FWUPD_PLUGIN_FLAG_READY:
-		return NULL;
 	case FWUPD_PLUGIN_FLAG_NONE:
+		return NULL;
+	case FWUPD_PLUGIN_FLAG_READY:
 	case FWUPD_PLUGIN_FLAG_REQUIRE_HWID:
 	case FWUPD_PLUGIN_FLAG_MODULAR:
 	case FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY:
@@ -1713,7 +1695,7 @@ fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt)
 	const gchar *hdr;
 	guint64 flags = fwupd_plugin_get_flags(plugin);
 
-	fwupd_codec_string_append(str, idt, fwupd_plugin_get_name(plugin), NULL);
+	fwupd_codec_string_append(str, idt, fwupd_plugin_get_name(plugin), "");
 
 	/* TRANSLATORS: description of plugin state, e.g. disabled */
 	hdr = _("Flags");
@@ -2039,7 +2021,6 @@ static gchar *
 fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 {
 	FwupdRemoteKind kind = fwupd_remote_get_kind(remote);
-	FwupdKeyringKind keyring_kind = fwupd_remote_get_keyring_kind(remote);
 	const gchar *tmp;
 	gint priority;
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -2053,14 +2034,6 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 
 	/* TRANSLATORS: remote type, e.g. remote or local */
 	fwupd_codec_string_append(str, idt + 1, _("Type"), fwupd_remote_kind_to_string(kind));
-
-	if (keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
-		fwupd_codec_string_append(str,
-					  idt + 1,
-					  /* TRANSLATORS: keyring type, e.g. GPG or PKCS7 */
-					  _("Keyring"),
-					  fwupd_keyring_kind_to_string(keyring_kind));
-	}
 
 	fwupd_codec_string_append(
 	    str,
@@ -2199,7 +2172,7 @@ fu_util_request_get_message(FwupdRequest *req)
 }
 
 static const gchar *
-fu_security_attr_result_to_string(FwupdSecurityAttrResult result)
+fu_util_security_attr_result_to_string(FwupdSecurityAttrResult result)
 {
 	if (result == FWUPD_SECURITY_ATTR_RESULT_VALID) {
 		/* TRANSLATORS: Suffix: the HSI result */
@@ -2261,12 +2234,12 @@ fu_security_attr_result_to_string(FwupdSecurityAttrResult result)
 }
 
 static const gchar *
-fu_security_attr_get_result(FwupdSecurityAttr *attr)
+fu_util_security_attr_get_result(FwupdSecurityAttr *attr)
 {
 	const gchar *tmp;
 
 	/* common case */
-	tmp = fu_security_attr_result_to_string(fwupd_security_attr_get_result(attr));
+	tmp = fu_util_security_attr_result_to_string(fwupd_security_attr_get_result(attr));
 	if (tmp != NULL)
 		return tmp;
 
@@ -2281,9 +2254,9 @@ fu_security_attr_get_result(FwupdSecurityAttr *attr)
 }
 
 static void
-fu_security_attr_append_str(FwupdSecurityAttr *attr,
-			    GString *str,
-			    FuSecurityAttrToStringFlags flags)
+fu_util_security_attr_append_str(FwupdSecurityAttr *attr,
+				 GString *str,
+				 FuSecurityAttrToStringFlags flags)
 {
 	const gchar *name;
 
@@ -2306,16 +2279,19 @@ fu_security_attr_append_str(FwupdSecurityAttr *attr,
 	for (guint i = fu_strwidth(name); i < 30; i++)
 		g_string_append(str, " ");
 	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
-		g_autofree gchar *fmt = fu_console_color_format(fu_security_attr_get_result(attr),
-								FU_CONSOLE_COLOR_YELLOW);
+		g_autofree gchar *fmt =
+		    fu_console_color_format(fu_util_security_attr_get_result(attr),
+					    FU_CONSOLE_COLOR_YELLOW);
 		g_string_append(str, fmt);
 	} else if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
-		g_autofree gchar *fmt = fu_console_color_format(fu_security_attr_get_result(attr),
-								FU_CONSOLE_COLOR_GREEN);
+		g_autofree gchar *fmt =
+		    fu_console_color_format(fu_util_security_attr_get_result(attr),
+					    FU_CONSOLE_COLOR_GREEN);
 		g_string_append(str, fmt);
 	} else {
-		g_autofree gchar *fmt = fu_console_color_format(fu_security_attr_get_result(attr),
-								FU_CONSOLE_COLOR_RED);
+		g_autofree gchar *fmt =
+		    fu_console_color_format(fu_util_security_attr_get_result(attr),
+					    FU_CONSOLE_COLOR_RED);
 		g_string_append(str, fmt);
 	}
 	if ((flags & FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS) > 0 &&
@@ -2458,7 +2434,7 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		       %2 refers to a result value, e.g. "Invalid" */
 		    _("%s disappeared: %s"),
 		    name,
-		    fu_security_attr_result_to_string(
+		    fu_util_security_attr_result_to_string(
 			fwupd_security_attr_get_result_fallback(attr)));
 	}
 
@@ -2470,7 +2446,7 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		       %2 refers to a result value, e.g. "Invalid" */
 		    _("%s appeared: %s"),
 		    name,
-		    fu_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
+		    fu_util_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
 	}
 
 	/* fall back to something sensible */
@@ -2480,8 +2456,8 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 	     * %2 and %3 refer to results value, e.g. "Valid" and "Invalid" */
 	    _("%s changed: %s → %s"),
 	    name,
-	    fu_security_attr_result_to_string(fwupd_security_attr_get_result_fallback(attr)),
-	    fu_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
+	    fu_util_security_attr_result_to_string(fwupd_security_attr_get_result_fallback(attr)),
+	    fu_util_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
 }
 
 gchar *
@@ -2594,7 +2570,7 @@ fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags s
 				g_string_append_printf(str, "\n\033[1mHSI-%u\033[0m\n", j);
 				has_header = TRUE;
 			}
-			fu_security_attr_append_str(attr, str, strflags);
+			fu_util_security_attr_append_str(attr, str, strflags);
 			/* make sure they have at least HSI-1 */
 			if (j < FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT &&
 			    !fwupd_security_attr_has_flag(attr,
@@ -2631,7 +2607,7 @@ fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags s
 				    !fwupd_security_attr_has_flag(attr,
 								  FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
 					runtime_help = TRUE;
-				fu_security_attr_append_str(attr, str, strflags);
+				fu_util_security_attr_append_str(attr, str, strflags);
 			}
 		}
 	}

@@ -13,6 +13,8 @@
 FuSynapticsMstFamily
 fu_synaptics_mst_family_from_chip_id(guint16 chip_id)
 {
+	if (chip_id >= 0x8000 && chip_id < 0xA000)
+		return FU_SYNAPTICS_MST_FAMILY_CARRERA;
 	if (chip_id >= 0x7000 && chip_id < 0x8000)
 		return FU_SYNAPTICS_MST_FAMILY_SPYDER;
 	if ((chip_id >= 0x6000 && chip_id < 0x7000) || (chip_id >= 0x8000 && chip_id < 0x9000))

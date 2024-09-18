@@ -10,6 +10,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-common.h"
 #include "fu-efi-common.h"
 #include "fu-efi-filesystem.h"
 #include "fu-efi-struct.h"
@@ -34,7 +35,7 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuEfiVolume, fu_efi_volume, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_efi_volume_get_instance_private(o))
 
 static void
-fu_ifd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+fu_efi_volume_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
 	FuEfiVolume *self = FU_EFI_VOLUME(firmware);
 	FuEfiVolumePrivate *priv = GET_PRIVATE(self);
@@ -323,7 +324,7 @@ fu_efi_volume_class_init(FuEfiVolumeClass *klass)
 	firmware_class->validate = fu_efi_volume_validate;
 	firmware_class->parse = fu_efi_volume_parse;
 	firmware_class->write = fu_efi_volume_write;
-	firmware_class->export = fu_ifd_firmware_export;
+	firmware_class->export = fu_efi_volume_export;
 }
 
 /**

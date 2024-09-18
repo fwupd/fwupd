@@ -75,7 +75,7 @@ typedef enum {
 	/**
 	 * FWUPD_STATUS_SCHEDULING:
 	 *
-	 * Scheduling an offline update.
+	 * Scheduling an update for installation on reboot.
 	 *
 	 * Since: 0.1.1
 	 */
@@ -269,14 +269,6 @@ typedef enum {
 	 */
 	FWUPD_DEVICE_FLAG_UPDATABLE = 1ull << 1,
 	/**
-	 * FWUPD_DEVICE_FLAG_ONLY_OFFLINE:
-	 *
-	 * Update can only be done from a limited functionality OS (offline mode).
-	 *
-	 * Since: 0.9.7
-	 */
-	FWUPD_DEVICE_FLAG_ONLY_OFFLINE = 1ull << 2,
-	/**
 	 * FWUPD_DEVICE_FLAG_REQUIRE_AC:
 	 *
 	 * Device requires an external power source to be connected or the battery
@@ -310,14 +302,6 @@ typedef enum {
 	 */
 	FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER = 1ull << 6,
 	/**
-	 * FWUPD_DEVICE_FLAG_REGISTERED:
-	 *
-	 * The device has been registered with other plugins.
-	 *
-	 * Since: 0.9.7
-	 */
-	FWUPD_DEVICE_FLAG_REGISTERED = 1ull << 7,
-	/**
 	 * FWUPD_DEVICE_FLAG_NEEDS_REBOOT:
 	 *
 	 * The device requires a system reboot to apply firmware or to reload hardware.
@@ -342,25 +326,6 @@ typedef enum {
 	 */
 	FWUPD_DEVICE_FLAG_NOTIFIED = 1ull << 10,
 	/**
-	 * FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION:
-	 *
-	 * The device will always display use the runtime version rather than the bootloader
-	 * version.
-	 *
-	 * Since: 1.0.6
-	 */
-	FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION = 1ull << 11,
-	/**
-	 * FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST:
-	 *
-	 * The composite device requires installation of composite firmware on the parent before
-	 * the child.
-	 * Normally the child is installed before the parent.
-	 *
-	 * Since: 1.0.8
-	 */
-	FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST = 1ull << 12,
-	/**
 	 * FWUPD_DEVICE_FLAG_IS_BOOTLOADER:
 	 *
 	 * The device is currently in a read-only bootloader mode and not running application code.
@@ -377,24 +342,6 @@ typedef enum {
 	 * Since: 1.1.2
 	 */
 	FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG = 1ull << 14,
-	/**
-	 * FWUPD_DEVICE_FLAG_IGNORE_VALIDATION:
-	 *
-	 * When processing an update for the device, plugins should ignore all validation safety
-	 * checks.
-	 *
-	 * Since: 1.1.2
-	 */
-	FWUPD_DEVICE_FLAG_IGNORE_VALIDATION = 1ull << 15,
-	/**
-	 * FWUPD_DEVICE_FLAG_TRUSTED:
-	 *
-	 * A trusted client is reading information about the device.
-	 * Extra metadata such as serial number can be exposed about this device.
-	 *
-	 * Since: 1.1.2
-	 */
-	FWUPD_DEVICE_FLAG_TRUSTED = 1ull << 16,
 	/**
 	 * FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN:
 	 *
@@ -500,15 +447,6 @@ typedef enum {
 	 */
 	FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES = 1ull << 31,
 	/**
-	 * FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS:
-	 *
-	 * The device will add counterpart GUIDs from an alternate mode like bootloader.
-	 * This flag is typically specified in a quirk.
-	 *
-	 * Since: 1.4.0
-	 */
-	FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS = 1ull << 35,
-	/**
 	 * FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN:
 	 *
 	 * The device is updatable but is currently inhibited from updates in the client.
@@ -518,14 +456,6 @@ typedef enum {
 	 * Since: 1.4.1
 	 */
 	FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN = 1ull << 37,
-	/**
-	 * FWUPD_DEVICE_FLAG_SKIPS_RESTART:
-	 *
-	 * The device relies upon activation or power cycle to load firmware.
-	 *
-	 * Since: 1.5.0
-	 */
-	FWUPD_DEVICE_FLAG_SKIPS_RESTART = 1ull << 38,
 	/**
 	 * FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES:
 	 *
@@ -1064,20 +994,20 @@ typedef enum {
 	 */
 	FWUPD_PLUGIN_FLAG_READY = 1ull << 17,
 	/**
-	 * FWUPD_PLUGIN_FLAG_UNKNOWN:
-	 *
-	 * The plugin flag is Unknown.
-	 * This is usually caused by a mismatched libfwupdplugin and daemon.
-	 *
-	 * Since: 1.5.0
-	 */
-	FWUPD_PLUGIN_FLAG_TEST_ONLY = 1ull << 18,
-	/**
 	 * FWUPD_PLUGIN_FLAG_TEST_ONLY:
 	 *
 	 * The plugin is used for virtual devices that exercising daemon flows.
 	 *
 	 * Since: 2.0.0
+	 */
+	FWUPD_PLUGIN_FLAG_TEST_ONLY = 1ull << 18,
+	/**
+	 * FWUPD_PLUGIN_FLAG_UNKNOWN:
+	 *
+	 * The plugin flag is unknown.
+	 * This is usually caused by a mismatched libfwupdplugin and daemon.
+	 *
+	 * Since: 1.5.0
 	 */
 	FWUPD_PLUGIN_FLAG_UNKNOWN = G_MAXUINT64
 } FwupdPluginFlags;
@@ -1096,14 +1026,6 @@ typedef enum {
 	 * Since: 0.7.0
 	 */
 	FWUPD_INSTALL_FLAG_NONE = 0,
-	/**
-	 * FWUPD_INSTALL_FLAG_OFFLINE:
-	 *
-	 * Schedule this for next boot.
-	 *
-	 * Since: 0.7.0
-	 */
-	FWUPD_INSTALL_FLAG_OFFLINE = 1 << 0,
 	/**
 	 * FWUPD_INSTALL_FLAG_ALLOW_REINSTALL:
 	 *
@@ -1273,56 +1195,6 @@ typedef enum {
 } FwupdUpdateState;
 
 /**
- * FwupdKeyringKind:
- *
- * Type of keyring used on a remote.
- **/
-typedef enum {
-	/**
-	 * FWUPD_KEYRING_KIND_UNKNOWN:
-	 *
-	 * Unknown.
-	 *
-	 * Since: 0.9.7
-	 */
-	FWUPD_KEYRING_KIND_UNKNOWN,
-	/**
-	 * FWUPD_KEYRING_KIND_NONE:
-	 *
-	 * No verification.
-	 *
-	 * Since: 0.9.7
-	 */
-	FWUPD_KEYRING_KIND_NONE,
-	/**
-	 * FWUPD_KEYRING_KIND_GPG:
-	 *
-	 * Verification using GPG.
-	 *
-	 * Since: 0.9.7
-	 */
-	FWUPD_KEYRING_KIND_GPG,
-	/**
-	 * FWUPD_KEYRING_KIND_PKCS7:
-	 *
-	 * Verification using PKCS7.
-	 *
-	 * Since: 0.9.7
-	 */
-	FWUPD_KEYRING_KIND_PKCS7,
-	/**
-	 * FWUPD_KEYRING_KIND_JCAT:
-	 *
-	 * Verification using Jcat.
-	 *
-	 * Since: 1.4.0
-	 */
-	FWUPD_KEYRING_KIND_JCAT,
-	/*< private >*/
-	FWUPD_KEYRING_KIND_LAST
-} FwupdKeyringKind;
-
-/**
  * FwupdVersionFormat:
  *
  * The flags used when parsing version numbers.
@@ -1435,6 +1307,14 @@ typedef enum {
 	 * Since: 1.4.0
 	 */
 	FWUPD_VERSION_FORMAT_HEX,
+	/**
+	 * FWUPD_VERSION_FORMAT_DELL_BIOS_MSB:
+	 *
+	 * Dell BIOS AA.BB.CC style.
+	 *
+	 * Since: 1.9.24
+	 */
+	FWUPD_VERSION_FORMAT_DELL_BIOS_MSB,
 	/*< private >*/
 	FWUPD_VERSION_FORMAT_LAST
 } FwupdVersionFormat;
@@ -1479,10 +1359,6 @@ const gchar *
 fwupd_feature_flag_to_string(FwupdFeatureFlags feature_flag);
 FwupdFeatureFlags
 fwupd_feature_flag_from_string(const gchar *feature_flag);
-FwupdKeyringKind
-fwupd_keyring_kind_from_string(const gchar *keyring_kind);
-const gchar *
-fwupd_keyring_kind_to_string(FwupdKeyringKind keyring_kind);
 FwupdVersionFormat
 fwupd_version_format_from_string(const gchar *str);
 const gchar *

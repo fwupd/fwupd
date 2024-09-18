@@ -49,6 +49,13 @@ fu_pxi_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 	/* is a footer, in normal bin file, the header is starts from the 32nd byte from the end. */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (streamsz < PIXART_RF_FW_HEADER_SIZE) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "stream was too small");
+		return FALSE;
+	}
 	if (!fu_input_stream_read_u64(stream,
 				      streamsz - PIXART_RF_FW_HEADER_SIZE +
 					  PIXART_RF_FW_HEADER_TAG_OFFSET,
@@ -163,7 +170,7 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 		version = fu_version_from_uint32(version_raw, FWUPD_VERSION_FORMAT_DELL_BIOS);
 	}
 	fu_firmware_set_version_raw(firmware, version_raw);
-	fu_firmware_set_version(firmware, version);
+	fu_firmware_set_version(firmware, version); /* nocheck:set-version */
 
 	/* set fw model name */
 	if (!fu_memcpy_safe(model_name,

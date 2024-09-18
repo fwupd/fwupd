@@ -19,8 +19,8 @@ struct _FuWacModuleSubCpu {
 
 G_DEFINE_TYPE(FuWacModuleSubCpu, fu_wac_module_sub_cpu, FU_TYPE_WAC_MODULE)
 
-#define FU_WAC_MODULE_SUB_CPU_PAYLOAD_SZ      256
-#define FU_WAC_MODULE_SUB_CPU_START_NORMAL    0x00
+#define FU_WAC_MODULE_SUB_CPU_PAYLOAD_SZ   256
+#define FU_WAC_MODULE_SUB_CPU_START_NORMAL 0x00
 
 static FuChunk *
 fu_wac_module_sub_cpu_create_chunk(GPtrArray *srec_records, guint32 *record_num, GError **error)
@@ -87,6 +87,8 @@ fu_wac_module_sub_cpu_parse_chunks(FuSrecFirmware *srec_firmware, guint32 *data_
 	while (record_num < records->len) {
 		g_autofree FuChunk *chunk =
 		    fu_wac_module_sub_cpu_create_chunk(records, &record_num, error);
+		if (chunk == NULL)
+			return NULL;
 		*data_len += fu_chunk_get_data_sz(chunk);
 
 		g_ptr_array_add(chunks, g_steal_pointer(&chunk));

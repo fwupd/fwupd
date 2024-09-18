@@ -20,7 +20,25 @@ G_DEFINE_TYPE(FuTpmV2Device, fu_tpm_v2_device, FU_TYPE_TPM_DEVICE)
 static gboolean
 fu_tpm_v2_device_probe(FuDevice *device, GError **error)
 {
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "tpm", error);
+	g_autofree gchar *physical_id = NULL;
+	g_autofree gchar *prop_devname = NULL;
+
+	/* we don't have anything better */
+	prop_devname = fu_udev_device_read_property(FU_UDEV_DEVICE(device), "DEVNAME", error);
+	if (prop_devname == NULL)
+		return FALSE;
+	physical_id = g_strdup_printf("DEVNAME=%s", prop_devname);
+	fu_device_set_physical_id(device, physical_id);
+
+	/* fake something as we cannot talk to tpmd */
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+		fu_device_add_instance_str(device, "VEN", "fwupd");
+		fu_device_add_instance_str(device, "DEV", "TPM");
+		return fu_device_build_instance_id(device, error, "TPM", "VEN", "DEV", NULL);
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -81,7 +99,7 @@ fu_tpm_v2_device_get_string(FuTpmV2Device *self, guint32 query, GError **error)
 	if (!fu_tpm_v2_device_get_uint32(self, query, &val_be, error))
 		return NULL;
 	val = GUINT32_FROM_BE(val_be);
-	memcpy(result, (gchar *)&val, 4);
+	memcpy(result, (gchar *)&val, 4); /* nocheck:blocked */
 
 	/* convert non-ASCII into spaces */
 	for (guint i = 0; i < 4; i++) {
@@ -283,7 +301,6 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *model3 = NULL;
 	g_autofree gchar *model4 = NULL;
 	g_autofree gchar *model = NULL;
-	g_autofree gchar *vendor_id = NULL;
 	g_autofree gchar *family = NULL;
 
 	/* suppress warning messages about missing TCTI libraries for tpm2-tss <2.3 */
@@ -338,8 +355,7 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	fu_device_build_instance_id(device, NULL, "TPM", "VEN", "MOD", "VER", NULL);
 
 	/* enforce vendors can only ship updates for their own hardware */
-	vendor_id = g_strdup_printf("TPM:%s", manufacturer);
-	fu_device_add_vendor_id(device, vendor_id);
+	fu_device_build_vendor_id(device, "TPM", manufacturer);
 	tmp = fu_tpm_v2_device_convert_manufacturer(manufacturer);
 	fu_device_set_vendor(device, tmp != NULL ? tmp : manufacturer);
 

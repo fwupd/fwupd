@@ -9,7 +9,7 @@
 #include "fu-wacom-aes-device.h"
 #include "fu-wacom-common.h"
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 report_id;
 	guint8 cmd;
 	guint8 echo;
@@ -25,7 +25,7 @@ struct _FuWacomAesDevice {
 G_DEFINE_TYPE(FuWacomAesDevice, fu_wacom_aes_device, FU_TYPE_WACOM_DEVICE)
 
 static gboolean
-fu_wacom_aes_add_recovery_hwid(FuDevice *device, GError **error)
+fu_wacom_aes_device_add_recovery_hwid(FuWacomAesDevice *self, GError **error)
 {
 	FuWacomRawRequest cmd = {
 	    .report_id = FU_WACOM_RAW_BL_REPORT_ID_SET,
@@ -39,14 +39,14 @@ fu_wacom_aes_add_recovery_hwid(FuDevice *device, GError **error)
 					.data = {0x00}};
 	guint16 pid;
 
-	if (!fu_wacom_device_set_feature(FU_WACOM_DEVICE(device),
+	if (!fu_wacom_device_set_feature(FU_WACOM_DEVICE(self),
 					 (guint8 *)&cmd,
 					 sizeof(cmd),
 					 error)) {
 		g_prefix_error(error, "failed to send: ");
 		return FALSE;
 	}
-	if (!fu_wacom_device_get_feature(FU_WACOM_DEVICE(device),
+	if (!fu_wacom_device_get_feature(FU_WACOM_DEVICE(self),
 					 (guint8 *)&rsp,
 					 sizeof(rsp),
 					 error)) {
@@ -72,16 +72,16 @@ fu_wacom_aes_add_recovery_hwid(FuDevice *device, GError **error)
 	}
 
 	/* add recovery IDs */
-	fu_device_add_instance_u16(device, "VEN", 0x2D1F);
-	fu_device_add_instance_u16(device, "DEV", pid);
-	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VID", "PID", NULL))
+	fu_device_add_instance_u16(FU_DEVICE(self), "VEN", 0x2D1F);
+	fu_device_add_instance_u16(FU_DEVICE(self), "DEV", pid);
+	if (!fu_device_build_instance_id(FU_DEVICE(self), error, "HIDRAW", "VID", "PID", NULL))
 		return FALSE;
-	fu_device_add_instance_u16(device, "VEN", 0x056A);
-	return fu_device_build_instance_id(device, error, "HIDRAW", "VID", "PID", NULL);
+	fu_device_add_instance_u16(FU_DEVICE(self), "VEN", 0x056A);
+	return fu_device_build_instance_id(FU_DEVICE(self), error, "HIDRAW", "VID", "PID", NULL);
 }
 
 static gboolean
-fu_wacom_aes_query_operation_mode(FuWacomAesDevice *self, GError **error)
+fu_wacom_aes_device_query_operation_mode(FuWacomAesDevice *self, GError **error)
 {
 	guint8 buf[FU_WACOM_RAW_FW_REPORT_SZ] = {
 	    FU_WACOM_RAW_FW_REPORT_ID,
@@ -116,14 +116,14 @@ fu_wacom_aes_device_setup(FuDevice *device, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	/* find out if in bootloader mode already */
-	if (!fu_wacom_aes_query_operation_mode(self, error))
+	if (!fu_wacom_aes_device_query_operation_mode(self, error))
 		return FALSE;
 
 	/* get firmware version */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		fu_device_set_version(device, "0.0");
 		/* get the recovery PID if supported */
-		if (!fu_wacom_aes_add_recovery_hwid(device, &error_local))
+		if (!fu_wacom_aes_device_add_recovery_hwid(self, &error_local))
 			g_debug("failed to get HwID: %s", error_local->message);
 	} else {
 		guint16 fw_ver;

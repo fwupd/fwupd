@@ -28,9 +28,9 @@ G_DEFINE_TYPE(FuUsiDockMcuDevice, fu_usi_dock_mcu_device, FU_TYPE_HID_DEVICE)
 
 #define W25Q16DV_PAGE_SIZE 256
 
-#define FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP	   (1 << 0)
-#define FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE	   (1 << 1)
-#define FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG (1 << 2)
+#define FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP	   "verfmt-hp"
+#define FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE	   "set-chip-type"
+#define FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG "waiting-for-unplug"
 
 static gboolean
 fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
@@ -77,7 +77,8 @@ fu_usi_dock_mcu_device_rx(FuUsiDockMcuDevice *self,
 				      buf,
 				      sizeof(buf),
 				      FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
+				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER |
+					  FU_HID_DEVICE_FLAG_RETRY_FAILURE,
 				      error)) {
 		return FALSE;
 	}
@@ -188,7 +189,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 		g_autofree gchar *version = NULL;
 		g_autoptr(FuDevice) child = NULL;
 
-		child = fu_usi_dock_child_new(fu_device_get_context(FU_DEVICE(self)));
+		child = fu_usi_dock_child_device_new(fu_device_get_context(FU_DEVICE(self)));
 		if (g_strcmp0(components[i].name, "bcdVersion") == 0) {
 			if ((val[0] == 0x00 && val[1] == 0x00) ||
 			    (val[0] == 0xFF && val[1] == 0xFF)) {
@@ -737,7 +738,7 @@ fu_usi_dock_mcu_device_internal_flags_notify_cb(FuDevice *device,
 						GParamSpec *pspec,
 						gpointer user_data)
 {
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_UNCONNECTED) &&
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED) &&
 	    fu_device_has_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG)) {
 		g_debug("starting 40s countdown");
 		g_timeout_add_seconds_full(G_PRIORITY_DEFAULT,
@@ -795,24 +796,19 @@ fu_usi_dock_mcu_device_init(FuUsiDockMcuDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	g_signal_connect(FWUPD_DEVICE(self),
-			 "notify::internal-flags",
+			 "notify::private-flags",
 			 G_CALLBACK(fu_usi_dock_mcu_device_internal_flags_notify_cb),
 			 NULL);
 
+	fu_device_register_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP,
-					"verfmt-hp");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE,
-					"set-chip-type");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG,
-					"waiting-for-unplug");
+					FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG);
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
 	fu_device_add_protocol(FU_DEVICE(self), "com.usi.dock");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);

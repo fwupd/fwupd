@@ -114,7 +114,7 @@ fu_linux_swap_plugin_init(FuLinuxSwapPlugin *self)
 }
 
 static void
-fu_linux_swap_finalize(GObject *obj)
+fu_linux_swap_plugin_finalize(GObject *obj)
 {
 	FuLinuxSwapPlugin *self = FU_LINUX_SWAP_PLUGIN(obj);
 	if (self->file != NULL)
@@ -132,7 +132,7 @@ fu_linux_swap_plugin_class_init(FuLinuxSwapPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->finalize = fu_linux_swap_finalize;
+	object_class->finalize = fu_linux_swap_plugin_finalize;
 	plugin_class->startup = fu_linux_swap_plugin_startup;
 	plugin_class->add_security_attrs = fu_linux_swap_plugin_add_security_attrs;
 }

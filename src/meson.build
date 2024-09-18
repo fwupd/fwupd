@@ -11,7 +11,7 @@ engine_dep = [
   giounix,
   gmodule,
   gudev,
-  gusb,
+  libusb,
   libjsonglib,
   polkit,
   sqlite,
@@ -25,7 +25,6 @@ endif
 
 client_dep = [
   gudev,
-  gusb,
   libcurl,
   libjcat,
   libjsonglib,
@@ -58,6 +57,7 @@ fwupd_engine_src = [
   'fu-remote.c',
   'fu-remote-list.c',
   'fu-security-attr-common.c',
+  'fu-usb-backend.c',
   'fu-client.c',
   'fu-client-list.c',
 ] + systemd_src
@@ -65,12 +65,8 @@ fwupd_engine_src = [
 if giounix.found()
   fwupd_engine_src += 'fu-unix-seekable-input-stream.c'
 endif
-
 if gudev.found()
   fwupd_engine_src += 'fu-udev-backend.c'
-endif
-if gusb.found()
-  fwupd_engine_src += 'fu-usb-backend.c'
 endif
 if bluez.allowed()
   fwupd_engine_src += 'fu-bluez-backend.c'
@@ -209,35 +205,6 @@ fwupdengine = library(
   ],
 )
 
-if offline
-fwupdoffline = executable(
-  'fwupdoffline',
-  fwupdengine_rs,
-  sources: [
-    'fu-offline.c',
-    'fu-spawn.c',
-    systemd_src
-  ],
-  include_directories: [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  dependencies: [
-    libfwupd_deps,
-    client_dep,
-  ],
-  link_with: [
-    fwupd,
-    fwupdutil,
-    fwupdengine,
-  ],
-  install: true,
-  install_rpath: libdir_pkg,
-  install_dir: join_paths(libexecdir, 'fwupd')
-)
-endif
-
 fwupdtool = executable(
   'fwupdtool',
   fwupdengine_rs,
@@ -346,6 +313,7 @@ executable(
   sources: [
     daemon_loader_src,
     'fu-daemon.c',
+    'fu-dbus-daemon.c',
   ],
   include_directories: [
     root_incdir,
@@ -381,9 +349,8 @@ if get_option('tests')
     multiple_rels_test_firmware,
     noreqs_test_firmware,
     plugins_hdr,
-    metadata_xml_gz_jcat,
+    firmware_xml_gz_jcat,
     sources: [
-      'fu-spawn.c',
       'fu-self-test.c',
     ],
     include_directories: [

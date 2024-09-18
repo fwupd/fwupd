@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Copyright 2017 Dell, Inc.
 #
@@ -40,7 +40,7 @@ if not os.path.exists(f):
     print(f"Missing input file {f} for {OS}")
     sys.exit(1)
 
-with open(f, "r") as rfd:
+with open(f) as rfd:
     lines = rfd.readlines()
 
 with open("Dockerfile", "w") as wfd:

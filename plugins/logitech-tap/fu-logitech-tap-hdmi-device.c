@@ -45,10 +45,10 @@ const guint8 kLogiDefaultAitSuccessValue = 0x00;
 const guint8 kLogiDefaultAitFailureValue = 0x82;
 
 struct _FuLogitechTapHdmiDevice {
-	FuLogitechTapDevice parent_instance;
+	FuUdevDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuLogitechTapHdmiDevice, fu_logitech_tap_hdmi_device, FU_TYPE_LOGITECH_TAP_DEVICE)
+G_DEFINE_TYPE(FuLogitechTapHdmiDevice, fu_logitech_tap_hdmi_device, FU_TYPE_UDEV_DEVICE)
 
 static gboolean
 fu_logitech_tap_hdmi_device_query_data_size(FuLogitechTapHdmiDevice *self,
@@ -69,8 +69,10 @@ fu_logitech_tap_hdmi_device_query_data_size(FuLogitechTapHdmiDevice *self,
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  UVCIOC_CTRL_QUERY,
 				  (guint8 *)&size_query,
+				  sizeof(size_query),
 				  NULL,
 				  FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				  error))
 		return FALSE;
 
@@ -116,8 +118,10 @@ fu_logitech_tap_hdmi_device_get_xu_control(FuLogitechTapHdmiDevice *self,
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  UVCIOC_CTRL_QUERY,
 				  (guint8 *)&control_query,
+				  sizeof(control_query),
 				  NULL,
 				  FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				  error))
 		return FALSE;
 
@@ -148,8 +152,10 @@ fu_logitech_tap_hdmi_device_set_xu_control(FuLogitechTapHdmiDevice *self,
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  UVCIOC_CTRL_QUERY,
 				  (guint8 *)&control_query,
+				  sizeof(control_query),
 				  NULL,
 				  FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
 				  error))
 		return FALSE;
 
@@ -440,9 +446,8 @@ fu_logitech_tap_hdmi_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_logitech_tap_hdmi_device_probe(FuDevice *device, GError **error)
 {
-	const gchar *id_v4l_capabilities;
-	const gchar *index;
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
+	g_autofree gchar *attr_index = NULL;
+	g_autofree gchar *prop_id_v4l_capabilities = NULL;
 
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_logitech_tap_hdmi_device_parent_class)->probe(device, error))
@@ -459,8 +464,11 @@ fu_logitech_tap_hdmi_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* only interested in video capture device */
-	id_v4l_capabilities = g_udev_device_get_property(udev_device, "ID_V4L_CAPABILITIES");
-	if (g_strcmp0(id_v4l_capabilities, ":capture:") != 0) {
+	prop_id_v4l_capabilities =
+	    fu_udev_device_read_property(FU_UDEV_DEVICE(device), "ID_V4L_CAPABILITIES", error);
+	if (prop_id_v4l_capabilities == NULL)
+		return FALSE;
+	if (g_strcmp0(prop_id_v4l_capabilities, ":capture:") != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -470,8 +478,11 @@ fu_logitech_tap_hdmi_device_probe(FuDevice *device, GError **error)
 
 	/* interested in lowest index only e,g, video0, ignore low format siblings like
 	 * video1/video2/video3 etc */
-	index = g_udev_device_get_sysfs_attr(udev_device, "index");
-	if (g_strcmp0(index, "0") != 0) {
+	attr_index = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					       "index",
+					       FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					       NULL);
+	if (g_strcmp0(attr_index, "0") != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -496,12 +507,17 @@ fu_logitech_tap_hdmi_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_logitech_tap_hdmi_device_init(FuLogitechTapHdmiDevice *self)
 {
+	fu_device_add_protocol(FU_DEVICE(self), "com.logitech.hardware.tap");
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_SENSOR_NEEDS_REBOOT);
 }
 
 static void

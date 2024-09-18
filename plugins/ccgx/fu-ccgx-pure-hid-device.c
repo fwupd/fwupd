@@ -29,7 +29,10 @@ G_DEFINE_TYPE(FuCcgxPureHidDevice, fu_ccgx_pure_hid_device, FU_TYPE_HID_DEVICE)
 #define FU_CCGX_PURE_HID_DEVICE_TIMEOUT 5000 /* ms */
 
 static gboolean
-fu_ccgx_pure_hid_command(FuCcgxPureHidDevice *self, guint8 param1, guint8 param2, GError **error)
+fu_ccgx_pure_hid_device_command(FuCcgxPureHidDevice *self,
+				guint8 param1,
+				guint8 param2,
+				GError **error)
 {
 	g_autoptr(GByteArray) cmd = fu_struct_ccgx_pure_hid_command_new();
 	fu_struct_ccgx_pure_hid_command_set_cmd(cmd, param1);
@@ -47,12 +50,12 @@ fu_ccgx_pure_hid_command(FuCcgxPureHidDevice *self, guint8 param1, guint8 param2
 }
 
 static gboolean
-fu_ccgx_pure_hid_enter_flashing_mode(FuCcgxPureHidDevice *self, GError **error)
+fu_ccgx_pure_hid_device_enter_flashing_mode(FuCcgxPureHidDevice *self, GError **error)
 {
-	if (!fu_ccgx_pure_hid_command(self,
-				      FU_CCGX_PURE_HID_COMMAND_FLASH,
-				      FU_CCGX_PD_RESP_ENTER_FLASHING_MODE_CMD_SIG,
-				      error)) {
+	if (!fu_ccgx_pure_hid_device_command(self,
+					     FU_CCGX_PURE_HID_COMMAND_FLASH,
+					     FU_CCGX_PD_RESP_ENTER_FLASHING_MODE_CMD_SIG,
+					     error)) {
 		g_prefix_error(error, "flashing enable command error: ");
 		return FALSE;
 	}
@@ -60,7 +63,7 @@ fu_ccgx_pure_hid_enter_flashing_mode(FuCcgxPureHidDevice *self, GError **error)
 }
 
 static gboolean
-fu_ccgx_pure_hid_magic_unlock(FuCcgxPureHidDevice *self, GError **error)
+fu_ccgx_pure_hid_device_magic_unlock(FuCcgxPureHidDevice *self, GError **error)
 {
 	guint8 buf[8] = {FU_CCGX_PURE_HID_REPORT_ID_CUSTOM,
 			 FU_CCGX_PD_RESP_BRIDGE_MODE_CMD_SIG,
@@ -84,10 +87,10 @@ fu_ccgx_pure_hid_magic_unlock(FuCcgxPureHidDevice *self, GError **error)
 	}
 
 	/* ignore error: this always fails but has the correct behavior */
-	if (!fu_ccgx_pure_hid_command(self,
-				      FU_CCGX_PURE_HID_COMMAND_MODE,
-				      FU_CCGX_PD_RESP_BRIDGE_MODE_CMD_SIG,
-				      &error_local)) {
+	if (!fu_ccgx_pure_hid_device_command(self,
+					     FU_CCGX_PURE_HID_COMMAND_MODE,
+					     FU_CCGX_PD_RESP_BRIDGE_MODE_CMD_SIG,
+					     &error_local)) {
 		g_debug("expected HID report bridge mode failure: %s", error_local->message);
 	}
 
@@ -95,7 +98,7 @@ fu_ccgx_pure_hid_magic_unlock(FuCcgxPureHidDevice *self, GError **error)
 }
 
 static gboolean
-fu_ccgx_pure_hid_ensure_fw_info(FuCcgxPureHidDevice *self, GError **error)
+fu_ccgx_pure_hid_device_ensure_fw_info(FuCcgxPureHidDevice *self, GError **error)
 {
 	guint8 buf[0x40] = {FU_CCGX_PURE_HID_REPORT_ID_INFO, 0};
 	guint version = 0;
@@ -165,9 +168,9 @@ fu_ccgx_pure_hid_device_setup(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_ccgx_pure_hid_device_parent_class)->setup(device, error))
 		return FALSE;
 
-	if (!fu_ccgx_pure_hid_magic_unlock(self, error))
+	if (!fu_ccgx_pure_hid_device_magic_unlock(self, error))
 		return FALSE;
-	if (!fu_ccgx_pure_hid_ensure_fw_info(self, error))
+	if (!fu_ccgx_pure_hid_device_ensure_fw_info(self, error))
 		return FALSE;
 
 	fu_device_add_instance_strup(device,
@@ -305,11 +308,11 @@ fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_ccgx_pure_hid_write_row(FuCcgxPureHidDevice *self,
-			   guint16 address,
-			   const guint8 *row,
-			   gsize row_len,
-			   GError **error)
+fu_ccgx_pure_hid_device_write_row(FuCcgxPureHidDevice *self,
+				  guint16 address,
+				  const guint8 *row,
+				  gsize row_len,
+				  GError **error)
 {
 	g_autoptr(GByteArray) st_hdr = fu_struct_ccgx_pure_hid_write_hdr_new();
 
@@ -350,7 +353,7 @@ fu_ccgx_pure_hid_device_write_firmware(FuDevice *device,
 	guint8 fw_mode = 1;
 	GPtrArray *records = fu_ccgx_firmware_get_records(FU_CCGX_FIRMWARE(firmware));
 
-	if (!fu_ccgx_pure_hid_enter_flashing_mode(self, error))
+	if (!fu_ccgx_pure_hid_device_enter_flashing_mode(self, error))
 		return FALSE;
 
 	if (self->operating_mode != FU_CCGX_PURE_HID_FW_MODE_FW2)
@@ -362,24 +365,27 @@ fu_ccgx_pure_hid_device_write_firmware(FuDevice *device,
 
 	for (guint i = 0; i < records->len; i++) {
 		FuCcgxFirmwareRecord *record = g_ptr_array_index(records, i);
-		if (!fu_ccgx_pure_hid_write_row(self,
-						record->row_number,
-						g_bytes_get_data(record->data, NULL),
-						g_bytes_get_size(record->data),
-						error))
+		if (!fu_ccgx_pure_hid_device_write_row(self,
+						       record->row_number,
+						       g_bytes_get_data(record->data, NULL),
+						       g_bytes_get_size(record->data),
+						       error))
 			return FALSE;
 		fu_progress_step_done(progress);
 	}
 
-	if (!fu_ccgx_pure_hid_command(self, FU_CCGX_PURE_HID_COMMAND_SET_BOOT, fw_mode, error)) {
+	if (!fu_ccgx_pure_hid_device_command(self,
+					     FU_CCGX_PURE_HID_COMMAND_SET_BOOT,
+					     fw_mode,
+					     error)) {
 		g_prefix_error(error, "bootswitch command error: ");
 		return FALSE;
 	}
 
-	if (!fu_ccgx_pure_hid_command(self,
-				      FU_CCGX_PURE_HID_COMMAND_JUMP,
-				      FU_CCGX_PD_RESP_DEVICE_RESET_CMD_SIG,
-				      error)) {
+	if (!fu_ccgx_pure_hid_device_command(self,
+					     FU_CCGX_PURE_HID_COMMAND_JUMP,
+					     FU_CCGX_PD_RESP_DEVICE_RESET_CMD_SIG,
+					     error)) {
 		g_prefix_error(error, "reset command error: ");
 		return FALSE;
 	}
@@ -408,7 +414,7 @@ fu_ccgx_pure_hid_device_init(FuCcgxPureHidDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_INTEL_ME2);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
 }
 
 static void
@@ -433,13 +439,13 @@ fu_ccgx_pure_hid_device_set_quirk_kv(FuDevice *device,
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "SiliconId") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->silicon_id = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CcgxFlashRowSize") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->flash_row_size = tmp;
 		return TRUE;

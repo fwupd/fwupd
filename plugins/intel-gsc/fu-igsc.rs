@@ -69,8 +69,8 @@ struct FuStructIgscFwuHeciImageMetadata {
 struct FuStructIgscFwuImageMetadataV1 {
     version_format: u32le = 0x1,  // struct IgscFwuHeciImageMetadata
     project: [char; 4],
-    version_hotfix: u16,         // version of the overall IFWI image, i.e. the combination of IPs
-    version_build: u16,
+    version_hotfix: u16le,         // version of the overall IFWI image, i.e. the combination of IPs
+    version_build: u16le,
     // struct FuStructIgscFwuFwImageData
     // struct FuStructIgscFwuIupData
 }

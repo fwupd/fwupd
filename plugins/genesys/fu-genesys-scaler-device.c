@@ -27,22 +27,8 @@
 
 #define GENESYS_SCALER_USB_TIMEOUT 5000 /* 5s */
 
-/**
- * FU_SCALER_FLAG_PAUSE_R2_CPU:
- *
- * Pause R2 CPU.
- *
- * Since 1.7.6
- */
-#define FU_SCALER_FLAG_PAUSE_R2_CPU (1 << 1)
-/**
- * FU_SCALER_FLAG_USE_I2C_CH0:
- *
- * Use I2C ch0.
- *
- * Since 1.7.6
- */
-#define FU_SCALER_FLAG_USE_I2C_CH0 (1 << 0)
+#define FU_SCALER_FLAG_PAUSE_R2_CPU "pause-r2-cpu"
+#define FU_SCALER_FLAG_USE_I2C_CH0  "use-i2c-ch0"
 
 typedef struct {
 	guint8 req_read;
@@ -77,22 +63,21 @@ static gboolean
 fu_genesys_scaler_device_enter_serial_debug_mode(FuGenesysScalerDevice *self, GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	guint8 data[] = {0x53, 0x45, 0x52, 0x44, 0x42};
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0001,	 /* value */
-					   0x0000,	 /* idx */
-					   data,	 /* data */
-					   sizeof(data), /* data length */
-					   NULL,	 /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0001,	  /* value */
+					    0x0000,	  /* idx */
+					    data,	  /* data */
+					    sizeof(data), /* data length */
+					    NULL,	  /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error entering Serial Debug Mode: ");
 		return FALSE;
 	}
@@ -107,22 +92,21 @@ static gboolean
 fu_genesys_scaler_device_exit_serial_debug_mode(FuGenesysScalerDevice *self, GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	guint8 data[] = {0x45};
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0001,	 /* value */
-					   0x0000,	 /* idx */
-					   data,	 /* data */
-					   sizeof(data), /* data length */
-					   NULL,	 /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0001,	  /* value */
+					    0x0000,	  /* idx */
+					    data,	  /* data */
+					    sizeof(data), /* data length */
+					    NULL,	  /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error exiting Serial Debug Mode: ");
 		return FALSE;
 	}
@@ -135,40 +119,39 @@ static gboolean
 fu_genesys_scaler_device_enter_single_step_mode(FuGenesysScalerDevice *self, GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	guint8 data1[] = {0x10, 0xc0, 0xc1, 0x53};
 	guint8 data2[] = {0x10, 0x1f, 0xc1, 0x53};
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0001,	  /* value */
-					   0x0000,	  /* idx */
-					   data1,	  /* data */
-					   sizeof(data1), /* data length */
-					   NULL,	  /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0001,	   /* value */
+					    0x0000,	   /* idx */
+					    data1,	   /* data */
+					    sizeof(data1), /* data length */
+					    NULL,	   /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error entering Single Step Mode: ");
 		return FALSE;
 	}
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0001,	  /* value */
-					   0x0000,	  /* idx */
-					   data2,	  /* data */
-					   sizeof(data2), /* data length */
-					   NULL,	  /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0001,	   /* value */
+					    0x0000,	   /* idx */
+					    data2,	   /* data */
+					    sizeof(data2), /* data length */
+					    NULL,	   /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error entering Single Step Mode: ");
 		return FALSE;
 	}
@@ -181,22 +164,21 @@ static gboolean
 fu_genesys_scaler_device_exit_single_step_mode(FuGenesysScalerDevice *self, GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	guint8 data[] = {0x10, 0xc0, 0xc1, 0xff};
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0001,	 /* value */
-					   0x0000,	 /* idx */
-					   data,	 /* data */
-					   sizeof(data), /* data length */
-					   NULL,	 /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0001,	  /* value */
+					    0x0000,	  /* idx */
+					    data,	  /* data */
+					    sizeof(data), /* data length */
+					    NULL,	  /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error exiting Single Step Mode: ");
 		return FALSE;
 	}
@@ -209,22 +191,21 @@ static gboolean
 fu_genesys_scaler_device_enter_debug_mode(FuGenesysScalerDevice *self, GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	guint8 data[] = {0x10, 0x00, 0x00, 0x00};
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0001,	 /* value */
-					   0x0000,	 /* idx */
-					   data,	 /* data */
-					   sizeof(data), /* data length */
-					   NULL,	 /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0001,	  /* value */
+					    0x0000,	  /* idx */
+					    data,	  /* data */
+					    sizeof(data), /* data length */
+					    NULL,	  /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error entering Debug Mode: ");
 		return FALSE;
 	}
@@ -237,23 +218,22 @@ static gboolean
 fu_genesys_scaler_device_mst_i2c_bus_ctrl(FuGenesysScalerDevice *self, GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	guint8 data[] = {0x35, 0x71};
 
 	for (guint i = 0; i < sizeof(data); i++) {
-		if (!g_usb_device_control_transfer(usb_device,
-						   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						   G_USB_DEVICE_RECIPIENT_DEVICE,
-						   self->vc.req_write,
-						   0x0001,	    /* value */
-						   0x0000,	    /* idx */
-						   &data[i],	    /* data */
-						   sizeof(data[i]), /* data length */
-						   NULL,	    /* actual length */
-						   GENESYS_SCALER_USB_TIMEOUT,
-						   NULL,
-						   error)) {
+		if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
+						    self->vc.req_write,
+						    0x0001,	     /* value */
+						    0x0000,	     /* idx */
+						    &data[i],	     /* data */
+						    sizeof(data[i]), /* data length */
+						    NULL,	     /* actual length */
+						    GENESYS_SCALER_USB_TIMEOUT,
+						    NULL,
+						    error)) {
 			g_prefix_error(error, "error sending i2c bus ctrl 0x%02x: ", data[i]);
 			return FALSE;
 		}
@@ -267,23 +247,22 @@ static gboolean
 fu_genesys_scaler_device_mst_i2c_bus_switch_to_ch0(FuGenesysScalerDevice *self, GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	guint8 data[] = {0x80, 0x82, 0x84, 0x51, 0x7f, 0x37, 0x61};
 
 	for (guint i = 0; i < sizeof(data); i++) {
-		if (!g_usb_device_control_transfer(usb_device,
-						   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						   G_USB_DEVICE_RECIPIENT_DEVICE,
-						   self->vc.req_write,
-						   0x0001,	    /* value */
-						   0x0000,	    /* idx */
-						   &data[i],	    /* data */
-						   sizeof(data[i]), /* data length */
-						   NULL,	    /* actual length */
-						   GENESYS_SCALER_USB_TIMEOUT,
-						   NULL,
-						   error)) {
+		if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
+						    self->vc.req_write,
+						    0x0001,	     /* value */
+						    0x0000,	     /* idx */
+						    &data[i],	     /* data */
+						    sizeof(data[i]), /* data length */
+						    NULL,	     /* actual length */
+						    GENESYS_SCALER_USB_TIMEOUT,
+						    NULL,
+						    error)) {
 			g_prefix_error(error, "error sending i2c bus ch0 0x%02x: ", data[i]);
 			return FALSE;
 		}
@@ -297,23 +276,22 @@ static gboolean
 fu_genesys_scaler_device_mst_i2c_bus_switch_to_ch4(FuGenesysScalerDevice *self, GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	guint8 data[] = {0x80, 0x82, 0x85, 0x53, 0x7f};
 
 	for (guint i = 0; i < sizeof(data); i++) {
-		if (!g_usb_device_control_transfer(usb_device,
-						   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						   G_USB_DEVICE_RECIPIENT_DEVICE,
-						   self->vc.req_write,
-						   0x0001,	    /* value */
-						   0x0000,	    /* idx */
-						   &data[i],	    /* data */
-						   sizeof(data[i]), /* data length */
-						   NULL,	    /* actual length */
-						   GENESYS_SCALER_USB_TIMEOUT,
-						   NULL,
-						   error)) {
+		if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
+						    self->vc.req_write,
+						    0x0001,	     /* value */
+						    0x0000,	     /* idx */
+						    &data[i],	     /* data */
+						    sizeof(data[i]), /* data length */
+						    NULL,	     /* actual length */
+						    GENESYS_SCALER_USB_TIMEOUT,
+						    NULL,
+						    error)) {
 			g_prefix_error(error, "error sending i2c bus ch4 0x%02x: ", data[i]);
 			return FALSE;
 		}
@@ -327,7 +305,6 @@ static gboolean
 fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disable, GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	guint8 data_out[] = {0x10,
 			     0x00 /* gpio_out_reg_h */,
 			     0x00 /* gpio_out_reg_l */,
@@ -343,19 +320,19 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 	data_out[2] = self->gpio_out_reg & 0x00ff;
 
 	/* read gpio-out register */
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0003,		 /* value */
-					   0x0000,		 /* idx */
-					   data_out,		 /* data */
-					   sizeof(data_out) - 1, /* data length */
-					   NULL,		 /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0003,		  /* value */
+					    0x0000,		  /* idx */
+					    data_out,		  /* data */
+					    sizeof(data_out) - 1, /* data length */
+					    NULL,		  /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error,
 			       "error reading GPIO-Out Register 0x%02x%02x: ",
 			       data_out[1],
@@ -363,19 +340,19 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 		return FALSE;
 	}
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_read,
-					   0x0003,		/* value */
-					   0x0000,		/* idx */
-					   &data_out[3],	/* data */
-					   sizeof(data_out[3]), /* data length */
-					   NULL,		/* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_read,
+					    0x0003,		 /* value */
+					    0x0000,		 /* idx */
+					    &data_out[3],	 /* data */
+					    sizeof(data_out[3]), /* data length */
+					    NULL,		 /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error,
 			       "error reading GPIO-Out Register 0x%02x%02x: ",
 			       data_out[1],
@@ -399,19 +376,19 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 		data_out[3] &= ~self->gpio_val; /* pull low */
 
 	/* write gpio-out register */
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0001,	     /* value */
-					   0x0000,	     /* idx */
-					   data_out,	     /* data */
-					   sizeof(data_out), /* data length */
-					   NULL,	     /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0001,	      /* value */
+					    0x0000,	      /* idx */
+					    data_out,	      /* data */
+					    sizeof(data_out), /* data length */
+					    NULL,	      /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error,
 			       "error writing GPIO-Out Register 0x%02x%02x=0x%02x: ",
 			       data_out[1],
@@ -426,19 +403,19 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 	data_en[2] = self->gpio_en_reg & 0x00ff;
 
 	/* read gpio-enable register */
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0003,		/* value */
-					   0x0000,		/* idx */
-					   data_en,		/* data */
-					   sizeof(data_en) - 1, /* data length */
-					   NULL,		/* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0003,		 /* value */
+					    0x0000,		 /* idx */
+					    data_en,		 /* data */
+					    sizeof(data_en) - 1, /* data length */
+					    NULL,		 /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error,
 			       "error writing GPIO-Enable Register 0x%02x%02x: ",
 			       data_en[1],
@@ -446,19 +423,19 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 		return FALSE;
 	}
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_read,
-					   0x0003,	       /* value */
-					   0x0000,	       /* idx */
-					   &data_en[3],	       /* data */
-					   sizeof(data_en[3]), /* data length */
-					   NULL,	       /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_read,
+					    0x0003,		/* value */
+					    0x0000,		/* idx */
+					    &data_en[3],	/* data */
+					    sizeof(data_en[3]), /* data length */
+					    NULL,		/* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error,
 			       "error reading GPIO-Out Register 0x%02x%02x: ",
 			       data_en[1],
@@ -479,19 +456,19 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 	data_en[3] &= ~self->gpio_val;
 
 	/* write gpio-enable register */
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0001,	    /* value */
-					   0x0000,	    /* idx */
-					   data_en,	    /* data */
-					   sizeof(data_en), /* data length */
-					   NULL,	    /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0001,	     /* value */
+					    0x0000,	     /* idx */
+					    data_en,	     /* data */
+					    sizeof(data_en), /* data length */
+					    NULL,	     /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error,
 			       "error writing GPIO-Enable Register 0x%02x%02x=0x%02x: ",
 			       data_en[1],
@@ -508,7 +485,6 @@ static gboolean
 fu_genesys_scaler_device_pause_r2_cpu(FuGenesysScalerDevice *self, GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	guint8 data[] = {0x10, 0x00, 0x10, 0x0F, 0xD7, 0x00};
 
 	/*
@@ -517,19 +493,19 @@ fu_genesys_scaler_device_pause_r2_cpu(FuGenesysScalerDevice *self, GError **erro
 	 * Pause R2 CPU for preventing Scaler entering Power Saving Mode also
 	 * need for Disable SPI Flash Write Protect Mode.
 	 */
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0003,	     /* value */
-					   0x0000,	     /* idx */
-					   data,	     /* data */
-					   sizeof(data) - 1, /* data length */
-					   NULL,	     /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0003,	      /* value */
+					    0x0000,	      /* idx */
+					    data,	      /* data */
+					    sizeof(data) - 1, /* data length */
+					    NULL,	      /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error,
 			       "error reading register 0x%02x%02x%02x%02x%02x: ",
 			       data[0],
@@ -540,19 +516,19 @@ fu_genesys_scaler_device_pause_r2_cpu(FuGenesysScalerDevice *self, GError **erro
 		return FALSE;
 	}
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_read,
-					   0x0003,	    /* value */
-					   0x0000,	    /* idx */
-					   &data[5],	    /* data */
-					   sizeof(data[5]), /* data length */
-					   NULL,	    /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_read,
+					    0x0003,	     /* value */
+					    0x0000,	     /* idx */
+					    &data[5],	     /* data */
+					    sizeof(data[5]), /* data length */
+					    NULL,	     /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error,
 			       "error reading register 0x%02x%02x%02x%02x%02x: ",
 			       data[0],
@@ -577,19 +553,19 @@ fu_genesys_scaler_device_pause_r2_cpu(FuGenesysScalerDevice *self, GError **erro
 	}
 
 	data[5] |= 0x80;
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0003,	 /* value */
-					   0x0000,	 /* idx */
-					   data,	 /* data */
-					   sizeof(data), /* data length */
-					   NULL,	 /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0003,	  /* value */
+					    0x0000,	  /* idx */
+					    data,	  /* data */
+					    sizeof(data), /* data length */
+					    NULL,	  /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error,
 			       "error writing register 0x%02x%02x%02x%02x%02x: ",
 			       data[0],
@@ -611,22 +587,21 @@ fu_genesys_scaler_device_set_isp_mode(FuDevice *device, gpointer user_data, GErr
 {
 	FuGenesysScalerDevice *self = user_data;
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	guint8 data[] = {0x4d, 0x53, 0x54, 0x41, 0x52};
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0000,	 /* value */
-					   0x0000,	 /* idx */
-					   data,	 /* data */
-					   sizeof(data), /* data length */
-					   NULL,	 /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0000,	  /* value */
+					    0x0000,	  /* idx */
+					    data,	  /* data */
+					    sizeof(data), /* data length */
+					    NULL,	  /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		return FALSE;
 	}
 	fu_device_sleep(device, 1); /* ms */
@@ -663,22 +638,21 @@ static gboolean
 fu_genesys_scaler_device_exit_isp_mode(FuGenesysScalerDevice *self, GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	guint8 data[] = {0x24};
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0000,	 /* value */
-					   0x0000,	 /* idx */
-					   data,	 /* data */
-					   sizeof(data), /* data length */
-					   NULL,	 /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0000,	  /* value */
+					    0x0000,	  /* idx */
+					    data,	  /* data */
+					    sizeof(data), /* data length */
+					    NULL,	  /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error exiting ISP mode: ");
 		return FALSE;
 	}
@@ -756,21 +730,20 @@ static gboolean
 fu_genesys_scaler_device_get_level(FuGenesysScalerDevice *self, guint8 *level, GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   GENESYS_SCALER_INFO,
-					   0x0004, /* value */
-					   0x0000, /* idx */
-					   level,  /* data */
-					   1,	   /* data length */
-					   NULL,   /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    GENESYS_SCALER_INFO,
+					    0x0004, /* value */
+					    0x0000, /* idx */
+					    level,  /* data */
+					    1,	    /* data length */
+					    NULL,   /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error getting level: ");
 		return FALSE;
 	}
@@ -787,21 +760,20 @@ fu_genesys_scaler_device_get_version(FuGenesysScalerDevice *self,
 				     GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   GENESYS_SCALER_INFO,
-					   0x0005, /* value */
-					   0x0000, /* idx */
-					   buf,	   /* data */
-					   bufsz,  /* data length */
-					   NULL,   /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    GENESYS_SCALER_INFO,
+					    0x0005, /* value */
+					    0x0000, /* idx */
+					    buf,    /* data */
+					    bufsz,  /* data length */
+					    NULL,   /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error getting version: ");
 		return FALSE;
 	}
@@ -819,7 +791,6 @@ fu_genesys_scaler_device_get_public_key(FuGenesysScalerDevice *self,
 					GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	const gsize data_size = 0x20;
 	g_autoptr(GPtrArray) chunks = NULL;
 
@@ -827,19 +798,19 @@ fu_genesys_scaler_device_get_public_key(FuGenesysScalerDevice *self,
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 
-		if (!g_usb_device_control_transfer(usb_device,
-						   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-						   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						   G_USB_DEVICE_RECIPIENT_DEVICE,
-						   GENESYS_SCALER_INFO,
-						   0x0006,		       /* value */
-						   fu_chunk_get_address(chk),  /* idx */
-						   fu_chunk_get_data_out(chk), /* data */
-						   fu_chunk_get_data_sz(chk),  /* data length */
-						   NULL,		       /* actual length */
-						   GENESYS_SCALER_USB_TIMEOUT,
-						   NULL,
-						   error)) {
+		if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+						    FU_USB_DIRECTION_DEVICE_TO_HOST,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
+						    GENESYS_SCALER_INFO,
+						    0x0006,			/* value */
+						    fu_chunk_get_address(chk),	/* idx */
+						    fu_chunk_get_data_out(chk), /* data */
+						    fu_chunk_get_data_sz(chk),	/* data length */
+						    NULL,			/* actual length */
+						    GENESYS_SCALER_USB_TIMEOUT,
+						    NULL,
+						    error)) {
 			g_prefix_error(error, "error getting public key: ");
 			return FALSE;
 		}
@@ -860,7 +831,6 @@ fu_genesys_scaler_device_read_flash(FuGenesysScalerDevice *self,
 				    GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	guint8 data1[] = {
 	    GENESYS_SCALER_CMD_DATA_WRITE,
 	    0x00, /* Read Data command */
@@ -879,36 +849,36 @@ fu_genesys_scaler_device_read_flash(FuGenesysScalerDevice *self,
 	if (!fu_cfi_device_get_cmd(self->cfi_device, FU_CFI_DEVICE_CMD_READ_DATA, &data1[1], error))
 		return FALSE;
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0000,	  /* value */
-					   0x0000,	  /* idx */
-					   data1,	  /* data */
-					   sizeof(data1), /* data length */
-					   NULL,	  /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0000,	   /* value */
+					    0x0000,	   /* idx */
+					    data1,	   /* data */
+					    sizeof(data1), /* data length */
+					    NULL,	   /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error reading flash at 0x%06x: ", addr);
 		return FALSE;
 	}
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0000,	  /* value */
-					   0x0000,	  /* idx */
-					   data2,	  /* data */
-					   sizeof(data2), /* data length */
-					   NULL,	  /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0000,	   /* value */
+					    0x0000,	   /* idx */
+					    data2,	   /* data */
+					    sizeof(data2), /* data length */
+					    NULL,	   /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error reading flash at 0x%06x: ", addr);
 		return FALSE;
 	}
@@ -919,19 +889,19 @@ fu_genesys_scaler_device_read_flash(FuGenesysScalerDevice *self,
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 
-		if (!g_usb_device_control_transfer(usb_device,
-						   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-						   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						   G_USB_DEVICE_RECIPIENT_DEVICE,
-						   self->vc.req_read,
-						   0x0000,		       /* value */
-						   0x0000,		       /* idx */
-						   fu_chunk_get_data_out(chk), /* data */
-						   fu_chunk_get_data_sz(chk),  /* data length */
-						   NULL,		       /* actual length */
-						   GENESYS_SCALER_USB_TIMEOUT,
-						   NULL,
-						   error)) {
+		if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+						    FU_USB_DIRECTION_DEVICE_TO_HOST,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
+						    self->vc.req_read,
+						    0x0000,			/* value */
+						    0x0000,			/* idx */
+						    fu_chunk_get_data_out(chk), /* data */
+						    fu_chunk_get_data_sz(chk),	/* data length */
+						    NULL,			/* actual length */
+						    GENESYS_SCALER_USB_TIMEOUT,
+						    NULL,
+						    error)) {
 			g_prefix_error(error,
 				       "error reading flash at 0x%06x: ",
 				       (guint)fu_chunk_get_address(chk));
@@ -940,19 +910,19 @@ fu_genesys_scaler_device_read_flash(FuGenesysScalerDevice *self,
 		fu_progress_step_done(progress);
 	}
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0000,	  /* value */
-					   0x0000,	  /* idx */
-					   data3,	  /* data */
-					   sizeof(data3), /* data length */
-					   NULL,	  /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0000,	   /* value */
+					    0x0000,	   /* idx */
+					    data3,	   /* data */
+					    sizeof(data3), /* data length */
+					    NULL,	   /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error reading flash at 0x%06x: ", addr);
 		return FALSE;
 	}
@@ -968,23 +938,22 @@ fu_genesys_scaler_device_wait_flash_control_register_cb(FuDevice *dev,
 {
 	FuGenesysScalerDevice *self = FU_GENESYS_SCALER_DEVICE(dev);
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	FuGenesysWaitFlashRegisterHelper *helper = user_data;
 	guint8 status = 0;
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_read,
-					   helper->reg << 8 | 0x04, /* value */
-					   0x0000,		    /* idx */
-					   &status,		    /* data */
-					   sizeof(status),	    /* data length */
-					   NULL,		    /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_read,
+					    helper->reg << 8 | 0x04, /* value */
+					    0x0000,		     /* idx */
+					    &status,		     /* data */
+					    sizeof(status),	     /* data length */
+					    NULL,		     /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error reading flash control register: ");
 		return FALSE;
 	}
@@ -1005,7 +974,6 @@ static gboolean
 fu_genesys_scaler_device_flash_control_write_enable(FuGenesysScalerDevice *self, GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	guint8 data1[] = {
 	    GENESYS_SCALER_CMD_DATA_WRITE,
 	    0x00, /* Write Enable command */
@@ -1017,36 +985,36 @@ fu_genesys_scaler_device_flash_control_write_enable(FuGenesysScalerDevice *self,
 	if (!fu_cfi_device_get_cmd(self->cfi_device, FU_CFI_DEVICE_CMD_WRITE_EN, &data1[1], error))
 		return FALSE;
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0000,	  /* value */
-					   0x0000,	  /* idx */
-					   data1,	  /* data */
-					   sizeof(data1), /* data length */
-					   NULL,	  /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0000,	   /* value */
+					    0x0000,	   /* idx */
+					    data1,	   /* data */
+					    sizeof(data1), /* data length */
+					    NULL,	   /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error sending flash control write enable: ");
 		return FALSE;
 	}
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0000,	  /* value */
-					   0x0000,	  /* idx */
-					   data2,	  /* data */
-					   sizeof(data2), /* data length */
-					   NULL,	  /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0000,	   /* value */
+					    0x0000,	   /* idx */
+					    data2,	   /* data */
+					    sizeof(data2), /* data length */
+					    NULL,	   /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error sending flash control write enable: ");
 		return FALSE;
 	}
@@ -1061,7 +1029,6 @@ fu_genesys_scaler_device_flash_control_write_status(FuGenesysScalerDevice *self,
 						    GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	guint8 data1[] = {
 	    GENESYS_SCALER_CMD_DATA_WRITE,
 	    0x00, /* Write Status command */
@@ -1077,36 +1044,36 @@ fu_genesys_scaler_device_flash_control_write_status(FuGenesysScalerDevice *self,
 				   error))
 		return FALSE;
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0000,	  /* value */
-					   0x0000,	  /* idx */
-					   data1,	  /* data */
-					   sizeof(data1), /* data length */
-					   NULL,	  /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0000,	   /* value */
+					    0x0000,	   /* idx */
+					    data1,	   /* data */
+					    sizeof(data1), /* data length */
+					    NULL,	   /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error sending flash control write status 0x%02x: ", status);
 		return FALSE;
 	}
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0000,	  /* value */
-					   0x0000,	  /* idx */
-					   data2,	  /* data */
-					   sizeof(data2), /* data length */
-					   NULL,	  /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0000,	   /* value */
+					    0x0000,	   /* idx */
+					    data2,	   /* data */
+					    sizeof(data2), /* data length */
+					    NULL,	   /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error sending flash control write status 0x%02x: ", status);
 		return FALSE;
 	}
@@ -1121,7 +1088,6 @@ fu_genesys_scaler_device_flash_control_sector_erase(FuGenesysScalerDevice *self,
 						    GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	FuGenesysWaitFlashRegisterHelper helper = {
 	    .reg = 0x00, /* Read Status command */
 	    .expected_val = 0,
@@ -1169,38 +1135,38 @@ fu_genesys_scaler_device_flash_control_sector_erase(FuGenesysScalerDevice *self,
 	if (!fu_genesys_scaler_device_flash_control_write_enable(self, error))
 		return FALSE;
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0000,	  /* value */
-					   0x0000,	  /* idx */
-					   data1,	  /* data */
-					   sizeof(data1), /* data length */
-					   NULL,	  /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0000,	   /* value */
+					    0x0000,	   /* idx */
+					    data1,	   /* data */
+					    sizeof(data1), /* data length */
+					    NULL,	   /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error,
 			       "error sending flash control erase at address 0x%06x: ",
 			       addr);
 		return FALSE;
 	}
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   self->vc.req_write,
-					   0x0000,	  /* value */
-					   0x0000,	  /* idx */
-					   data2,	  /* data */
-					   sizeof(data2), /* data length */
-					   NULL,	  /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    self->vc.req_write,
+					    0x0000,	   /* value */
+					    0x0000,	   /* idx */
+					    data2,	   /* data */
+					    sizeof(data2), /* data length */
+					    NULL,	   /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error,
 			       "error sending flash control erase at address 0x%06x: ",
 			       addr);
@@ -1261,7 +1227,6 @@ fu_genesys_scaler_device_flash_control_page_program(FuGenesysScalerDevice *self,
 						    GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	FuGenesysWaitFlashRegisterHelper helper = {
 	    .reg = 0x00, /* Read Status command */
 	    .expected_val = 0,
@@ -1318,19 +1283,19 @@ fu_genesys_scaler_device_flash_control_page_program(FuGenesysScalerDevice *self,
 		if ((i + 1) == chunks->len)
 			index |= 0x0080;
 
-		if (!g_usb_device_control_transfer(usb_device,
-						   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						   G_USB_DEVICE_RECIPIENT_DEVICE,
-						   self->vc.req_write,
-						   index,		       /* value */
-						   0x0000,		       /* idx */
-						   fu_chunk_get_data_out(chk), /* data */
-						   fu_chunk_get_data_sz(chk),  /* data length */
-						   NULL,		       /* actual length */
-						   GENESYS_SCALER_USB_TIMEOUT,
-						   NULL,
-						   error)) {
+		if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
+						    self->vc.req_write,
+						    index,			/* value */
+						    0x0000,			/* idx */
+						    fu_chunk_get_data_out(chk), /* data */
+						    fu_chunk_get_data_sz(chk),	/* data length */
+						    NULL,			/* actual length */
+						    GENESYS_SCALER_USB_TIMEOUT,
+						    NULL,
+						    error)) {
 			g_prefix_error(
 			    error,
 			    "error sending flash control page program at address 0x%06x: ",
@@ -1434,44 +1399,43 @@ fu_genesys_scaler_device_get_ddcci_data(FuGenesysScalerDevice *self,
 					GError **error)
 {
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
 	guint8 data[] = {0x6e, 0x51, 0x83, 0xcd, 0x01, 0x00 /* command */, 0x00 /* checksum */};
 
 	data[5] = cmd;
 	data[6] = fu_genesys_scaler_device_calculate_checksum(data, 6);
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   GENESYS_SCALER_MSTAR_DATA_OUT,
-					   0x0000,	 /* value */
-					   0x0000,	 /* idx */
-					   data,	 /* data */
-					   sizeof(data), /* data length */
-					   NULL,	 /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    GENESYS_SCALER_MSTAR_DATA_OUT,
+					    0x0000,	  /* value */
+					    0x0000,	  /* idx */
+					    data,	  /* data */
+					    sizeof(data), /* data length */
+					    NULL,	  /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error setting dddci data: ");
 		return FALSE;
 	}
 
 	fu_device_sleep(FU_DEVICE(self), 100); /* 1ms */
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   GENESYS_SCALER_MSTAR_DATA_IN,
-					   0x0001, /* value */
-					   0x0000, /* idx */
-					   buf,	   /* data */
-					   bufsz,  /* data length */
-					   NULL,   /* actual length */
-					   GENESYS_SCALER_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent_device),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    GENESYS_SCALER_MSTAR_DATA_IN,
+					    0x0001, /* value */
+					    0x0000, /* idx */
+					    buf,    /* data */
+					    bufsz,  /* data length */
+					    NULL,   /* actual length */
+					    GENESYS_SCALER_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "error getting dddci data: ");
 		return FALSE;
 	}
@@ -1876,7 +1840,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 	guint64 tmp;
 
 	if (g_strcmp0(key, "GenesysScalerDeviceTransferSize") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->transfer_size = tmp;
 
@@ -1884,7 +1848,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysScalerGpioOutputRegister") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->gpio_out_reg = tmp;
 
@@ -1892,7 +1856,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysScalerGpioEnableRegister") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->gpio_en_reg = tmp;
 
@@ -1900,7 +1864,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysScalerGpioValue") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->gpio_val = tmp;
 
@@ -1908,7 +1872,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "GenesysScalerCfiFlashId") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, 0x00ffffffU, error))
+		if (!fu_strtoull(value, &tmp, 0, 0x00ffffffU, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->cfi_flash_id = tmp;
 
@@ -1934,11 +1898,9 @@ fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SCALER_FLAG_PAUSE_R2_CPU,
-					"pause-r2-cpu");
-	fu_device_register_private_flag(FU_DEVICE(self), FU_SCALER_FLAG_USE_I2C_CH0, "use-i2c-ch0");
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_SCALER_FLAG_PAUSE_R2_CPU);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_SCALER_FLAG_USE_I2C_CH0);
 	fu_device_set_install_duration(FU_DEVICE(self), 730); /* 12min 10s */
 
 	self->sector_size = 0x1000;						/* 4KB */

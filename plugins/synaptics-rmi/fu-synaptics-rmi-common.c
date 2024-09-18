@@ -93,7 +93,7 @@ fu_synaptics_rmi_function_parse(GByteArray *buf,
 		for (guint i = interrupt_offset;
 		     i < (func->interrupt_source_count + interrupt_offset);
 		     i++)
-			func->interrupt_mask |= 1 << i;
+			FU_BIT_SET(func->interrupt_mask, i);
 	}
 	return func;
 }
@@ -101,15 +101,10 @@ fu_synaptics_rmi_function_parse(GByteArray *buf,
 gboolean
 fu_synaptics_rmi_device_writeln(const gchar *fn, const gchar *buf, GError **error)
 {
-	int fd;
 	g_autoptr(FuIOChannel) io = NULL;
-
-	fd = open(fn, O_WRONLY);
-	if (fd < 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "could not open %s", fn);
+	io = fu_io_channel_new_file(fn, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
+	if (io == NULL)
 		return FALSE;
-	}
-	io = fu_io_channel_unix_new(fd);
 	return fu_io_channel_write_raw(io,
 				       (const guint8 *)buf,
 				       strlen(buf),
@@ -119,10 +114,10 @@ fu_synaptics_rmi_device_writeln(const gchar *fn, const gchar *buf, GError **erro
 }
 
 gboolean
-fu_synaptics_verify_sha256_signature(GBytes *payload,
-				     GBytes *pubkey,
-				     GBytes *signature,
-				     GError **error)
+fu_synaptics_rmi_verify_sha256_signature(GBytes *payload,
+					 GBytes *pubkey,
+					 GBytes *signature,
+					 GError **error)
 {
 #ifdef HAVE_GNUTLS
 	gnutls_datum_t hash;

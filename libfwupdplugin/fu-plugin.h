@@ -7,9 +7,6 @@
 #pragma once
 
 #include <gio/gio.h>
-#ifdef HAVE_GUSB
-#include <gusb.h>
-#endif
 
 #include "fu-bluez-device.h"
 #include "fu-common-guid.h"
@@ -20,14 +17,7 @@
 #include "fu-plugin.h"
 #include "fu-quirks.h"
 #include "fu-security-attrs.h"
-#include "fu-usb-device.h"
 #include "fu-version-common.h"
-// #include "fu-hid-device.h"
-#ifdef HAVE_GUDEV
-#include "fu-udev-device.h"
-#endif
-#include <libfwupd/fwupd-common.h>
-#include <libfwupd/fwupd-plugin.h>
 
 /* only until HSI is declared stable */
 #include "fwupd-security-attr-private.h"

@@ -43,7 +43,7 @@ fu_{{vendor_example}}_firmware_build(FuFirmware *firmware, XbNode *n, GError **e
 }
 
 static gboolean
-fu_{{vendor_example}}_validate(FuFirmware *firmware,
+fu_{{vendor_example}}_firmware_validate(FuFirmware *firmware,
 					GInputStream *stream,
 					gsize offset,
 					GError **error)
@@ -112,7 +112,7 @@ static void
 fu_{{vendor_example}}_firmware_class_init(Fu{{VendorExample}}FirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
-	firmware_class->validate = fu_{{vendor_example}}_validate;
+	firmware_class->validate = fu_{{vendor_example}}_firmware_validate;
 	firmware_class->parse = fu_{{vendor_example}}_firmware_parse;
 	firmware_class->write = fu_{{vendor_example}}_firmware_write;
 	firmware_class->build = fu_{{vendor_example}}_firmware_build;

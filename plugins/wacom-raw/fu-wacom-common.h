@@ -48,7 +48,7 @@
 
 #define FU_WACOM_RAW_ECHO_DEFAULT g_random_int_range(0xa0, 0xfe)
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 report_id;
 	guint8 cmd;
 	guint8 echo;
@@ -58,7 +58,7 @@ typedef struct __attribute__((packed)) {
 	guint8 data_unused[121];
 } FuWacomRawRequest;
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 report_id;
 	guint8 cmd;
 	guint8 echo;

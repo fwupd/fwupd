@@ -15,10 +15,10 @@ G_DECLARE_DERIVABLE_TYPE(FuGoodixtpHidDevice,
 			 fu_goodixtp_hid_device,
 			 FU,
 			 GOODIXTP_HID_DEVICE,
-			 FuUdevDevice)
+			 FuHidrawDevice)
 
 struct _FuGoodixtpHidDeviceClass {
-	FuUdevDeviceClass parent_class;
+	FuHidrawDeviceClass parent_class;
 };
 
 gboolean

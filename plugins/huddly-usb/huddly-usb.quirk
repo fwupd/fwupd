@@ -1,0 +1,11 @@
+# Huddly L1
+[USB\VID_2BD9&PID_A032]
+Plugin = huddly_usb
+
+# Huddly S1
+[USB\VID_2BD9&PID_A031]
+Plugin = huddly_usb
+
+# Huddly USB adapter, no camera connected
+[USB\VID_2BD9&PID_BA01]
+Plugin = huddly_usb

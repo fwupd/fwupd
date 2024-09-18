@@ -38,7 +38,7 @@ fu_memwrite_uint16(guint8 *buf, guint16 val_native, FuEndianType endian)
 		val_hw = val_native;
 		break;
 	}
-	memcpy(buf, &val_hw, sizeof(val_hw));
+	memcpy(buf, &val_hw, sizeof(val_hw)); /* nocheck:blocked */
 }
 
 /**
@@ -58,11 +58,11 @@ fu_memwrite_uint24(guint8 *buf, guint32 val_native, FuEndianType endian)
 	switch (endian) {
 	case G_BIG_ENDIAN:
 		val_hw = GUINT32_TO_BE(val_native);
-		memcpy(buf, ((const guint8 *)&val_hw) + 0x1, 0x3);
+		memcpy(buf, ((const guint8 *)&val_hw) + 0x1, 0x3); /* nocheck:blocked */
 		break;
 	case G_LITTLE_ENDIAN:
 		val_hw = GUINT32_TO_LE(val_native);
-		memcpy(buf, &val_hw, 0x3);
+		memcpy(buf, &val_hw, 0x3); /* nocheck:blocked */
 		break;
 	default:
 		g_assert_not_reached();
@@ -94,7 +94,7 @@ fu_memwrite_uint32(guint8 *buf, guint32 val_native, FuEndianType endian)
 		val_hw = val_native;
 		break;
 	}
-	memcpy(buf, &val_hw, sizeof(val_hw));
+	memcpy(buf, &val_hw, sizeof(val_hw)); /* nocheck:blocked */
 }
 
 /**
@@ -122,7 +122,7 @@ fu_memwrite_uint64(guint8 *buf, guint64 val_native, FuEndianType endian)
 		val_hw = val_native;
 		break;
 	}
-	memcpy(buf, &val_hw, sizeof(val_hw));
+	memcpy(buf, &val_hw, sizeof(val_hw)); /* nocheck:blocked */
 }
 
 /**
@@ -140,7 +140,7 @@ guint16
 fu_memread_uint16(const guint8 *buf, FuEndianType endian)
 {
 	guint16 val_hw, val_native;
-	memcpy(&val_hw, buf, sizeof(val_hw));
+	memcpy(&val_hw, buf, sizeof(val_hw)); /* nocheck:blocked */
 	switch (endian) {
 	case G_BIG_ENDIAN:
 		val_native = GUINT16_FROM_BE(val_hw);
@@ -173,11 +173,11 @@ fu_memread_uint24(const guint8 *buf, FuEndianType endian)
 	guint32 val_native;
 	switch (endian) {
 	case G_BIG_ENDIAN:
-		memcpy(((guint8 *)&val_hw) + 0x1, buf, 0x3);
+		memcpy(((guint8 *)&val_hw) + 0x1, buf, 0x3); /* nocheck:blocked */
 		val_native = GUINT32_FROM_BE(val_hw);
 		break;
 	case G_LITTLE_ENDIAN:
-		memcpy(&val_hw, buf, 0x3);
+		memcpy(&val_hw, buf, 0x3); /* nocheck:blocked */
 		val_native = GUINT32_FROM_LE(val_hw);
 		break;
 	default:
@@ -202,7 +202,7 @@ guint32
 fu_memread_uint32(const guint8 *buf, FuEndianType endian)
 {
 	guint32 val_hw, val_native;
-	memcpy(&val_hw, buf, sizeof(val_hw));
+	memcpy(&val_hw, buf, sizeof(val_hw)); /* nocheck:blocked */
 	switch (endian) {
 	case G_BIG_ENDIAN:
 		val_native = GUINT32_FROM_BE(val_hw);
@@ -232,7 +232,7 @@ guint64
 fu_memread_uint64(const guint8 *buf, FuEndianType endian)
 {
 	guint64 val_hw, val_native;
-	memcpy(&val_hw, buf, sizeof(val_hw));
+	memcpy(&val_hw, buf, sizeof(val_hw)); /* nocheck:blocked */
 	switch (endian) {
 	case G_BIG_ENDIAN:
 		val_native = GUINT64_FROM_BE(val_hw);
@@ -437,7 +437,7 @@ fu_memcpy_safe(guint8 *dst,
 		return FALSE;
 	if (!fu_memchk_write(dst_sz, dst_offset, n, error))
 		return FALSE;
-	memcpy(dst + dst_offset, src + src_offset, n);
+	memcpy(dst + dst_offset, src + src_offset, n); /* nocheck:blocked */
 	return TRUE;
 }
 

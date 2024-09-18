@@ -28,7 +28,7 @@ fu_wacom_emr_device_setup(FuDevice *device, GError **error)
 
 	/* get firmware version */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		fu_device_set_version(device, "0.0");
+		fu_device_set_version_raw(device, 0);
 	} else {
 		guint16 fw_ver;
 		guint8 data[19] = {0x03, 0x0}; /* 0x03 is an unknown ReportID */
@@ -105,7 +105,7 @@ fu_wacom_emr_device_w9013_erase_code(FuWacomEmrDevice *self,
 }
 
 static gboolean
-fu_wacom_device_w9021_erase_all(FuWacomEmrDevice *self, GError **error)
+fu_wacom_emr_device_w9021_erase_all(FuWacomEmrDevice *self, GError **error)
 {
 	FuWacomRawRequest req = {
 	    .cmd = FU_WACOM_RAW_BL_CMD_ALL_ERASE,
@@ -197,7 +197,7 @@ fu_wacom_emr_device_write_block(FuWacomEmrDevice *self,
 	}
 
 	/* data */
-	memcpy(&req.data, data, datasz);
+	memcpy(&req.data, data, datasz); /* nocheck:blocked */
 
 	/* cmd and data checksums */
 	req.data_unused[0] =
@@ -242,7 +242,7 @@ fu_wacom_emr_device_write_firmware(FuDevice *device,
 
 	/* erase W9021 */
 	if (fu_device_has_instance_id(device, "WacomEMR_W9021")) {
-		if (!fu_wacom_device_w9021_erase_all(self, error))
+		if (!fu_wacom_emr_device_w9021_erase_all(self, error))
 			return FALSE;
 	}
 	fu_progress_step_done(progress);

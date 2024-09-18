@@ -25,7 +25,7 @@ G_DECLARE_FINAL_TYPE(FuDellDockHub, fu_dell_dock_hub, FU, DELL_DOCK_HUB, FuHidDe
  *
  * A bridge is present, possibly with extended devices.
  */
-#define FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE (1 << 0)
+#define FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE "has-bridge"
 
 FuDellDockHub *
 fu_dell_dock_hub_new(FuUsbDevice *device);

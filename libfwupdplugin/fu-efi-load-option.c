@@ -10,10 +10,12 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-common.h"
 #include "fu-efi-device-path-list.h"
+#include "fu-efi-file-path-device-path.h"
+#include "fu-efi-hard-drive-device-path.h"
 #include "fu-efi-load-option.h"
 #include "fu-efi-struct.h"
-#include "fu-efivar.h"
 #include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-string.h"
@@ -24,7 +26,14 @@ struct _FuEfiLoadOption {
 	GBytes *optional_data;
 };
 
-G_DEFINE_TYPE(FuEfiLoadOption, fu_efi_load_option, FU_TYPE_FIRMWARE)
+static void
+fu_efi_load_option_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuEfiLoadOption,
+		       fu_efi_load_option,
+		       FU_TYPE_FIRMWARE,
+		       0,
+		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_efi_load_option_codec_iface_init))
 
 #define FU_EFI_LOAD_OPTION_DESCRIPTION_SIZE_MAX 0x1000u /* bytes */
 
@@ -64,6 +73,52 @@ fu_efi_load_option_set_optional_data(FuEfiLoadOption *self, GBytes *optional_dat
 	}
 	if (optional_data != NULL)
 		self->optional_data = g_bytes_ref(optional_data);
+}
+
+/**
+ * fu_efi_load_option_get_optional_path:
+ * @self: a #FuEfiLoadOption
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets a path from the optional UTF-16 data.
+ *
+ * Returns: (transfer full): UTF-8 path, or %NULL
+ *
+ * Since: 2.0.0
+ **/
+gchar *
+fu_efi_load_option_get_optional_path(FuEfiLoadOption *self, GError **error)
+{
+	g_autofree gchar *optional_path = NULL;
+
+	g_return_val_if_fail(FU_IS_EFI_LOAD_OPTION(self), NULL);
+
+	if (self->optional_data == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no optional data");
+		return NULL;
+	}
+
+	/* convert to UTF-8 */
+	optional_path = fu_utf16_to_utf8_bytes(self->optional_data, G_LITTLE_ENDIAN, error);
+	if (optional_path == NULL)
+		return NULL;
+
+	/* check is ASCII */
+	if (!g_str_is_ascii(optional_path)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "not ASCII data");
+		return NULL;
+	}
+
+	/* remove leading slash if provided */
+	if (g_str_has_prefix(optional_path, "\\"))
+		return g_strdup(optional_path + 1);
+	return g_steal_pointer(&optional_path);
 }
 
 /**
@@ -255,6 +310,27 @@ fu_efi_load_option_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 }
 
 static void
+fu_efi_load_option_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+{
+	FuEfiLoadOption *self = FU_EFI_LOAD_OPTION(codec);
+	g_autofree gchar *optional_path = fu_efi_load_option_get_optional_path(self, NULL);
+	g_autoptr(FuFirmware) dp_list = NULL;
+
+	fwupd_codec_json_append(builder, "Name", fu_firmware_get_id(FU_FIRMWARE(self)));
+	fwupd_codec_json_append(builder, "OptionalPath", optional_path);
+	dp_list =
+	    fu_firmware_get_image_by_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_DEVICE_PATH_LIST, NULL);
+	if (dp_list != NULL)
+		fwupd_codec_to_json(FWUPD_CODEC(dp_list), builder, flags);
+}
+
+static void
+fu_efi_load_option_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_json = fu_efi_load_option_add_json;
+}
+
+static void
 fu_efi_load_option_finalize(GObject *obj)
 {
 	FuEfiLoadOption *self = FU_EFI_LOAD_OPTION(obj);
@@ -280,35 +356,6 @@ fu_efi_load_option_init(FuEfiLoadOption *self)
 {
 	self->attrs = FU_EFI_LOAD_OPTION_ATTRS_ACTIVE;
 	g_type_ensure(FU_TYPE_EFI_DEVICE_PATH_LIST);
-}
-
-/**
- * fu_efi_load_option_new_esp_for_boot_entry:
- * @boot_entry: a boot entry number
- * @error: (nullable): optional return location for an error
- *
- * Gets the platform ESP using a UNIX or UDisks path
- *
- * Returns: (transfer full): a #FuEfiLoadOption, or %NULL if invalid
- *
- * Since: 1.9.3
- **/
-FuEfiLoadOption *
-fu_efi_load_option_new_esp_for_boot_entry(guint16 boot_entry, GError **error)
-{
-	g_autofree gchar *name = g_strdup_printf("Boot%04X", boot_entry);
-	g_autoptr(FuEfiLoadOption) self = g_object_new(FU_TYPE_EFI_LOAD_OPTION, NULL);
-	g_autoptr(GBytes) fw = NULL;
-
-	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-
-	/* get data */
-	fw = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL, name, NULL, error);
-	if (fw == NULL)
-		return NULL;
-	if (!fu_firmware_parse(FU_FIRMWARE(self), fw, FWUPD_INSTALL_FLAG_NONE, error))
-		return NULL;
-	return g_steal_pointer(&self);
 }
 
 /**

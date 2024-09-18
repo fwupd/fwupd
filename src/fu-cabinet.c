@@ -163,7 +163,12 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 	nsize = xb_node_query_first(release, "size[@type='installed']", NULL);
 	if (nsize != NULL) {
 		guint64 size = 0;
-		if (!fu_strtoull(xb_node_get_text(nsize), &size, 0, G_MAXSIZE, error))
+		if (!fu_strtoull(xb_node_get_text(nsize),
+				 &size,
+				 0,
+				 G_MAXSIZE,
+				 FU_INTEGER_BASE_AUTO,
+				 error))
 			return FALSE;
 		if (size != streamsz) {
 			g_set_error(error,
@@ -203,8 +208,8 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 	/* the jcat file signed the *checksum of the payload*, not the payload itself */
 	item = jcat_file_get_item_by_id(self->jcat_file, basename, NULL);
 	if (item != NULL && jcat_item_has_target(item)) {
-		gchar *checksum_sha256 = NULL;
-		gchar *checksum_sha512 = NULL;
+		g_autofree gchar *checksum_sha256 = NULL;
+		g_autofree gchar *checksum_sha512 = NULL;
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) results = NULL;
 		g_autoptr(JcatBlob) blob_target_sha256 = NULL;

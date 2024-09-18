@@ -1,4 +1,3 @@
-if gusb.found()
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 cargs = ['-DG_LOG_DOMAIN="FuPluginWistronDock"']
 
@@ -14,4 +13,3 @@ plugin_builtins += static_library('fu_plugin_wistron_dock',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-endif

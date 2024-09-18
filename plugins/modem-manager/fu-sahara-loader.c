@@ -103,13 +103,13 @@ struct sahara_packet {
 
 /* helper functions */
 static FuSaharaCommandId
-sahara_packet_get_command_id(GByteArray *packet)
+fu_sahara_loader_packet_get_command_id(GByteArray *packet)
 {
 	return ((struct sahara_packet *)(packet->data))->command_id;
 }
 
 static FuSaharaCommandId
-sahara_packet_get_length(GByteArray *packet)
+fu_sahara_loader_packet_get_length(GByteArray *packet)
 {
 	return ((struct sahara_packet *)(packet->data))->length;
 }
@@ -118,53 +118,51 @@ sahara_packet_get_length(GByteArray *packet)
 static gboolean
 fu_sahara_loader_find_interface(FuSaharaLoader *self, FuUsbDevice *usb_device, GError **error)
 {
-#ifdef HAVE_GUSB
 	g_autoptr(GPtrArray) intfs = NULL;
-	GUsbDevice *g_usb_device = fu_usb_device_get_dev(usb_device);
 
 	/* all sahara devices use the same vid:pid pair */
-	if (g_usb_device_get_vid(g_usb_device) != 0x05c6 ||
-	    g_usb_device_get_pid(g_usb_device) != 0x9008) {
+	if (fu_usb_device_get_vid(usb_device) != 0x05c6 ||
+	    fu_usb_device_get_pid(usb_device) != 0x9008) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "wrong device and/or vendor id: 0x%04x 0x%04x",
-			    g_usb_device_get_vid(g_usb_device),
-			    g_usb_device_get_pid(g_usb_device));
+			    fu_usb_device_get_vid(usb_device),
+			    fu_usb_device_get_pid(usb_device));
 		return FALSE;
 	}
 
-	/* Parse usb interfaces and find suitable endpoints */
-	intfs = g_usb_device_get_interfaces(g_usb_device, error);
+	/* parse usb interfaces and find suitable endpoints */
+	intfs = fu_usb_device_get_interfaces(usb_device, error);
 	if (intfs == NULL)
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {
-		GUsbInterface *intf = g_ptr_array_index(intfs, i);
-		if (g_usb_interface_get_class(intf) == 0xFF &&
-		    g_usb_interface_get_subclass(intf) == 0xFF &&
-		    g_usb_interface_get_protocol(intf) == 0xFF) {
-			GUsbEndpoint *ep;
+		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
+		if (fu_usb_interface_get_class(intf) == 0xFF &&
+		    fu_usb_interface_get_subclass(intf) == 0xFF &&
+		    fu_usb_interface_get_protocol(intf) == 0xFF) {
+			FuUsbEndpoint *ep;
 			g_autoptr(GPtrArray) endpoints = NULL;
 
-			endpoints = g_usb_interface_get_endpoints(intf);
+			endpoints = fu_usb_interface_get_endpoints(intf);
 			if (endpoints == NULL || endpoints->len == 0)
 				continue;
 
 			for (guint j = 0; j < endpoints->len; j++) {
 				ep = g_ptr_array_index(endpoints, j);
-				if (g_usb_endpoint_get_direction(ep) ==
-				    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST) {
-					self->ep_in = g_usb_endpoint_get_address(ep);
+				if (fu_usb_endpoint_get_direction(ep) ==
+				    FU_USB_DIRECTION_DEVICE_TO_HOST) {
+					self->ep_in = fu_usb_endpoint_get_address(ep);
 					self->maxpktsize_in =
-					    g_usb_endpoint_get_maximum_packet_size(ep);
+					    fu_usb_endpoint_get_maximum_packet_size(ep);
 				} else {
-					self->ep_out = g_usb_endpoint_get_address(ep);
+					self->ep_out = fu_usb_endpoint_get_address(ep);
 					self->maxpktsize_out =
-					    g_usb_endpoint_get_maximum_packet_size(ep);
+					    fu_usb_endpoint_get_maximum_packet_size(ep);
 				}
 			}
 
-			fu_usb_device_add_interface(usb_device, g_usb_interface_get_number(intf));
+			fu_usb_device_add_interface(usb_device, fu_usb_interface_get_number(intf));
 
 			return TRUE;
 		}
@@ -172,10 +170,6 @@ fu_sahara_loader_find_interface(FuSaharaLoader *self, FuUsbDevice *usb_device, G
 
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no update interface found");
 	return FALSE;
-#else
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no GUsb support");
-	return FALSE;
-#endif
 }
 
 gboolean
@@ -205,26 +199,25 @@ fu_sahara_loader_qdl_is_open(FuSaharaLoader *self)
 {
 	if (self == NULL)
 		return FALSE;
-
-	return fu_usb_device_is_open(self->usb_device);
+	return fu_device_has_private_flag(FU_DEVICE(self->usb_device),
+					  FU_DEVICE_PRIVATE_FLAG_IS_OPEN);
 }
 
 GByteArray *
 fu_sahara_loader_qdl_read(FuSaharaLoader *self, GError **error)
 {
-#ifdef HAVE_GUSB
 	gsize actual_len = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_sized_new(SAHARA_RAW_BUFFER_SIZE);
 	fu_byte_array_set_size(buf, SAHARA_RAW_BUFFER_SIZE, 0x00);
 
-	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(self->usb_device),
-					self->ep_in,
-					buf->data,
-					buf->len,
-					&actual_len,
-					IO_TIMEOUT_MS,
-					NULL,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(self->usb_device,
+					 self->ep_in,
+					 buf->data,
+					 buf->len,
+					 &actual_len,
+					 IO_TIMEOUT_MS,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "failed to do bulk transfer (read): ");
 		return NULL;
 	}
@@ -233,16 +226,11 @@ fu_sahara_loader_qdl_read(FuSaharaLoader *self, GError **error)
 	g_debug("received %" G_GSIZE_FORMAT " bytes", actual_len);
 
 	return g_steal_pointer(&buf);
-#else
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
-	return NULL;
-#endif
 }
 
 static gboolean
 fu_sahara_loader_qdl_write(FuSaharaLoader *self, const guint8 *data, gsize sz, GError **error)
 {
-#ifdef HAVE_GUSB
 	gsize actual_len = 0;
 	g_autoptr(GPtrArray) chunks = NULL;
 	g_autoptr(GByteArray) bytes = NULL;
@@ -254,14 +242,14 @@ fu_sahara_loader_qdl_write(FuSaharaLoader *self, const guint8 *data, gsize sz, G
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 
-		if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(self->usb_device),
-						self->ep_out,
-						fu_chunk_get_data_out(chk),
-						fu_chunk_get_data_sz(chk),
-						&actual_len,
-						IO_TIMEOUT_MS,
-						NULL,
-						error)) {
+		if (!fu_usb_device_bulk_transfer(self->usb_device,
+						 self->ep_out,
+						 fu_chunk_get_data_out(chk),
+						 fu_chunk_get_data_sz(chk),
+						 &actual_len,
+						 IO_TIMEOUT_MS,
+						 NULL,
+						 error)) {
 			g_prefix_error(error, "failed to do bulk transfer (write data): ");
 			return FALSE;
 		}
@@ -276,24 +264,20 @@ fu_sahara_loader_qdl_write(FuSaharaLoader *self, const guint8 *data, gsize sz, G
 	}
 	if (sz % self->maxpktsize_out == 0) {
 		/* sent zlp packet if needed */
-		if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(self->usb_device),
-						self->ep_out,
-						NULL,
-						0,
-						NULL,
-						IO_TIMEOUT_MS,
-						NULL,
-						error)) {
+		if (!fu_usb_device_bulk_transfer(self->usb_device,
+						 self->ep_out,
+						 NULL,
+						 0,
+						 NULL,
+						 IO_TIMEOUT_MS,
+						 NULL,
+						 error)) {
 			g_prefix_error(error, "failed to do bulk transfer (write zlp): ");
 			return FALSE;
 		}
 	}
 
 	return TRUE;
-#else
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "GUsb not supported");
-	return FALSE;
-#endif
 }
 
 gboolean
@@ -326,18 +310,15 @@ fu_sahara_loader_write_prog(FuSaharaLoader *self,
 static gboolean
 fu_sahara_loader_send_packet(FuSaharaLoader *self, GByteArray *pkt, GError **error)
 {
-	guint8 *data = pkt->data;
-	gsize sz = pkt->len;
-
 	g_return_val_if_fail(pkt != NULL, FALSE);
 
 	fu_dump_raw(G_LOG_DOMAIN, "tx packet", pkt->data, pkt->len);
-	return fu_sahara_loader_qdl_write(self, data, sz, error);
+	return fu_sahara_loader_qdl_write(self, pkt->data, pkt->len, error);
 }
 
 /* packet composers */
 static GByteArray *
-fu_sahara_create_byte_array_from_packet(const struct sahara_packet *pkt)
+fu_sahara_loader_create_byte_array_from_packet(const struct sahara_packet *pkt)
 {
 	GByteArray *self;
 	g_autoptr(GError) error_local = NULL;
@@ -369,7 +350,7 @@ fu_sahara_loader_compose_reset_packet(void)
 				    .length = GUINT32_TO_LE(len),
 				    {{0}}};
 
-	return fu_sahara_create_byte_array_from_packet(&pkt);
+	return fu_sahara_loader_create_byte_array_from_packet(&pkt);
 }
 
 static GByteArray *
@@ -385,7 +366,7 @@ fu_sahara_loader_compose_hello_response_packet(FuSaharaMode mode)
 	pkt.hello_response.status = GUINT32_TO_LE(SAHARA_STATUS_SUCCESS);
 	pkt.hello_response.mode = GUINT32_TO_LE(SAHARA_MODE_IMAGE_TX_PENDING);
 
-	return fu_sahara_create_byte_array_from_packet(&pkt);
+	return fu_sahara_loader_create_byte_array_from_packet(&pkt);
 }
 
 static GByteArray *
@@ -396,7 +377,7 @@ fu_sahara_loader_compose_done_packet(void)
 				    .length = GUINT32_TO_LE(len),
 				    {{0}}};
 
-	return fu_sahara_create_byte_array_from_packet(&pkt);
+	return fu_sahara_loader_create_byte_array_from_packet(&pkt);
 }
 
 static gboolean
@@ -413,7 +394,7 @@ fu_sahara_loader_send_reset_packet(FuSaharaLoader *self, GError **error)
 
 	rx_packet = fu_sahara_loader_qdl_read(self, error);
 	if (rx_packet == NULL ||
-	    sahara_packet_get_command_id(rx_packet) != SAHARA_RESET_RESPONSE_ID) {
+	    fu_sahara_loader_packet_get_command_id(rx_packet) != SAHARA_RESET_RESPONSE_ID) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -444,7 +425,7 @@ fu_sahara_loader_wait_hello_rsp(FuSaharaLoader *self, GError **error)
 
 	fu_dump_raw(G_LOG_DOMAIN, "rx packet", rx_packet->data, rx_packet->len);
 
-	if (sahara_packet_get_command_id(rx_packet) != SAHARA_HELLO_ID) {
+	if (fu_sahara_loader_packet_get_command_id(rx_packet) != SAHARA_HELLO_ID) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -479,7 +460,7 @@ fu_sahara_loader_run(FuSaharaLoader *self, GBytes *prog, GError **error)
 		rx_packet = fu_sahara_loader_qdl_read(self, error);
 		if (rx_packet == NULL)
 			break;
-		if (rx_packet->len != sahara_packet_get_length(rx_packet)) {
+		if (rx_packet->len != fu_sahara_loader_packet_get_length(rx_packet)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -488,7 +469,7 @@ fu_sahara_loader_run(FuSaharaLoader *self, GBytes *prog, GError **error)
 		}
 		fu_dump_raw(G_LOG_DOMAIN, "rx_packet", rx_packet->data, rx_packet->len);
 
-		command_id = sahara_packet_get_command_id(rx_packet);
+		command_id = fu_sahara_loader_packet_get_command_id(rx_packet);
 		pkt = (struct sahara_packet *)(rx_packet->data);
 		if (command_id == SAHARA_HELLO_ID) {
 			tx_packet = fu_sahara_loader_compose_hello_response_packet(
@@ -513,7 +494,7 @@ fu_sahara_loader_run(FuSaharaLoader *self, GBytes *prog, GError **error)
 		} else {
 			g_warning("Unexpected packet received: cmd_id = %u, len = %u",
 				  command_id,
-				  sahara_packet_get_length(rx_packet));
+				  fu_sahara_loader_packet_get_length(rx_packet));
 		}
 
 		if (error_local != NULL)

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Copyright 2024 Mario Limonciello <mario.limonciello@amd.com>
 #
@@ -173,7 +173,6 @@ A: vendor=0x1022
             if dev.get_plugin() != "pci_psp":
                 continue
             self.assertEqual(dev.get_name(), "Secure Processor")
-            self.assertEqual(dev.get_vendor(), "Advanced Micro Devices, Inc.")
             self.assertEqual(dev.get_version(), None)
             self.assertEqual(dev.get_version_bootloader(), None)
             count += 1
@@ -367,7 +366,6 @@ A: vendor=0x1022
             if dev.get_plugin() != "pci_psp":
                 continue
             self.assertEqual(dev.get_name(), "Secure Processor")
-            self.assertEqual(dev.get_vendor(), "Advanced Micro Devices, Inc.")
             self.assertEqual(dev.get_version(), "00.2d.00.78")
             self.assertEqual(dev.get_version_bootloader(), "00.2d.00.78")
             count += 1

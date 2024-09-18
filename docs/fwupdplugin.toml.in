@@ -12,7 +12,6 @@ dependencies = [
                 "Gio-2.0",
                 "Fwupd-2.0",
                 "Xmlb-2.0",
-                "GUsb-1.0"
 ]
 devhelp = true
 search_index = true

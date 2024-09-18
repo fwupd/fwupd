@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Helper script to generate a list of translations
 # Sample call:
@@ -21,7 +21,7 @@ def populate_translations(path):
             val: str = ""
             if not file.endswith("display_name"):
                 continue
-            with open(os.path.join(root, file), "r") as f:
+            with open(os.path.join(root, file)) as f:
                 val = f.read().replace('"', "").strip()
             if not val:
                 continue

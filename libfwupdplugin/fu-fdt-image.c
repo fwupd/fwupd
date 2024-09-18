@@ -544,7 +544,12 @@ fu_fdt_image_build_metadata_node(FuFdtImage *self, XbNode *n, GError **error)
 	if (g_strcmp0(format, FU_FDT_IMAGE_FORMAT_UINT32) == 0) {
 		guint64 tmp = 0;
 		if (value != NULL) {
-			if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT32, error))
+			if (!fu_strtoull(value,
+					 &tmp,
+					 0x0,
+					 G_MAXUINT32,
+					 FU_INTEGER_BASE_AUTO,
+					 error))
 				return FALSE;
 		}
 		fu_fdt_image_set_attr_uint32(self, key, tmp);
@@ -553,7 +558,12 @@ fu_fdt_image_build_metadata_node(FuFdtImage *self, XbNode *n, GError **error)
 	if (g_strcmp0(format, FU_FDT_IMAGE_FORMAT_UINT64) == 0) {
 		guint64 tmp = 0;
 		if (value != NULL) {
-			if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT64, error))
+			if (!fu_strtoull(value,
+					 &tmp,
+					 0x0,
+					 G_MAXUINT64,
+					 FU_INTEGER_BASE_AUTO,
+					 error))
 				return FALSE;
 		}
 		fu_fdt_image_set_attr_uint64(self, key, tmp);

@@ -294,13 +294,6 @@ msgid_plural "%u hours"
 msgstr[0] "%u óra"
 msgstr[1] "%u óra"
 
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "%u local device supported"
-msgid_plural "%u local devices supported"
-msgstr[0] "%u helyi eszköz támogatott"
-msgstr[1] "%u helyi eszköz támogatott"
-
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u minute"
@@ -436,10 +429,6 @@ msgid "Answer yes to all questions"
 msgstr "Igen válaszolása az összes kérdésre"
 
 #. TRANSLATORS: command line option
-msgid "Apply firmware updates"
-msgstr "Belsővezérlőprogram-frissítések alkalmazása"
-
-#. TRANSLATORS: command line option
 msgid "Apply update even when not advised"
 msgstr "Frissítés alkalmazása akkor is, ha nem ajánlott"
 
@@ -457,10 +446,6 @@ msgid "Approved firmware:"
 msgid_plural "Approved firmware:"
 msgstr[0] "Jóváhagyott belső vezérlőprogram:"
 msgstr[1] "Jóváhagyott belső vezérlőprogramok:"
-
-#. TRANSLATORS: stop nagging the user
-msgid "Ask again next time?"
-msgstr "Kérdezze újra legközelebb?"
 
 #. TRANSLATORS: command description
 msgid "Asks the daemon to quit"
@@ -554,9 +539,6 @@ msgstr "LVFS-en vagy Windows Update-en keresztül szállított BIOS-frissítése
 msgid "BUILDER-XML FILENAME-DST"
 msgstr "ÖSSZEÁLLÍTÓ-XML FÁJLNÉV-CÉL"
 
-msgid "BYTES"
-msgstr "BÁJTOK"
-
 #. TRANSLATORS: refers to the battery inside the peripheral device
 msgid "Battery"
 msgstr "Akkumulátor"
@@ -585,7 +567,7 @@ msgstr "Megtiltja egy bizonyos belső vezérlőprogram telepítését"
 msgid "Bootloader Version"
 msgstr "Rendszerbetöltő verziója"
 
-#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Branch"
 msgstr "Ág"
 
@@ -649,10 +631,6 @@ msgid "Choose release"
 msgstr "Kiadás kiválasztása"
 
 #. TRANSLATORS: get interactive prompt
-msgid "Choose the ESP:"
-msgstr "Az ESP kiválasztása:"
-
-#. TRANSLATORS: get interactive prompt
 msgid "Choose volume"
 msgstr "Kötet kiválasztása"
 
@@ -703,10 +681,6 @@ msgstr "Jelenlegi verzió"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "DEVICE-ID|GUID"
 msgstr "ESZKÖZAZONOSÍTÓ|GUID"
-
-#. TRANSLATORS: DFU stands for device firmware update
-msgid "DFU Utility"
-msgstr "DFU-segédprogram"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
@@ -763,10 +737,6 @@ msgstr "Az eszköz akkumulátorszintje túl alacsony (%u%%, de %u%% szükséges)
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device can recover flash failures"
 msgstr "Az eszköz képes helyreállítani a beírási hibákat"
-
-#. TRANSLATORS: lid means "laptop top cover"
-msgid "Device cannot be used while the lid is closed"
-msgstr "Az eszköz nem használható, amíg a fedél le van csukva"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
@@ -838,10 +808,6 @@ msgstr "Az eszköz szakaszosan frissít"
 msgid "Device supports switching to a different branch of firmware"
 msgstr "Az eszköz támogatja a belső vezérlőprogram különböző ágainak váltását"
 
-#. TRANSLATORS: command line option
-msgid "Device update method"
-msgstr "Az eszköz frissítési módszere"
-
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
 msgstr "Az eszközfrissítés aktiválást igényel"
@@ -874,11 +840,11 @@ msgid "Devices with no available firmware updates: "
 msgstr "Nem elérhető belsővezérlőprogram-frissítésekkel rendelkező eszközök: "
 
 #. TRANSLATORS: message letting the user know no device upgrade available
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade available
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available
 msgid "Devices with the latest available firmware version:"
 msgstr "A legújabb elérhető belsővezérlőprogram-verzióval rendelkező eszközök:"
 
@@ -891,16 +857,9 @@ msgstr "Nem találhatók illeszkedő csoportazonosítókkal rendelkező eszköz�
 msgid "Disabled"
 msgstr "Letiltva"
 
-msgid "Disabled fwupdate debugging"
-msgstr "Az fwupdate hibakeresése letiltva"
-
 #. TRANSLATORS: command description
 msgid "Disables a given remote"
 msgstr "Letiltja az adott távoli tárolót"
-
-#. TRANSLATORS: command line option
-msgid "Display version"
-msgstr "Verzió megjelenítése"
 
 #. TRANSLATORS: the OS the release was tested on
 msgid "Distribution"
@@ -1021,10 +980,6 @@ msgstr "SMBIOS adatok kiírása egy fájlból"
 msgid "Duration"
 msgstr "Időtartam"
 
-#. TRANSLATORS: ESP is EFI System Partition
-msgid "ESP specified was not valid"
-msgstr "A megadott ESP nem volt érvényes"
-
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
 msgstr "Minden rendszernek rendelkeznie kell tesztekkel a belső vezérlőprogram biztonságának biztosításához."
@@ -1044,10 +999,6 @@ msgstr "Emulált kiszolgáló"
 msgid "Enable"
 msgstr "Engedélyezés"
 
-#. TRANSLATORS: command line option
-msgid "Enable firmware update support on supported systems"
-msgstr "Belső vezérlőprogram frissítési támogatás engedélyezése a támogatott rendszereken"
-
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
 msgstr "Engedélyezi az új távoli tárolót?"
@@ -1056,14 +1007,10 @@ msgstr "Engedélyezi az új távoli tárolót?"
 msgid "Enable this remote?"
 msgstr "Engedélyezi ezt a távoli tárolót?"
 
-#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Engedélyezve"
-
-msgid "Enabled fwupdate debugging"
-msgstr "Az fwupdate hibakeresése engedélyezve"
 
 #. TRANSLATORS: Plugin is active only if hardware is found
 msgid "Enabled if hardware matches"
@@ -1140,14 +1087,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "FÁJLNÉV TANÚSÍTVÁNY SZEMÉLYES-KULCS"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
-msgstr "FÁJLNÉV ESZKÖZ-ALTERNATÍV-NÉV|ESZKÖZ-ALTERNATÍV-AZONOSÍTÓ"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
-msgstr "FÁJLNÉV ESZKÖZ-ALTERNATÍV-NÉV|ESZKÖZ-ALTERNATÍV-AZONOSÍTÓ [LEMEZKÉP-ALTERNATÍV-NÉV|LEMEZKÉP-ALTERNATÍV-AZONOSÍTÓ]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ID"
 msgstr "FÁJLNÉV ESZKÖZAZONOSÍTÓ"
 
@@ -1200,10 +1139,6 @@ msgstr "Nem sikerült a belső vezérlőprogram frissítésének telepítése"
 #. TRANSLATORS: could not read file
 msgid "Failed to load local dbx"
 msgstr "Nem sikerült a helyi dbx betöltése"
-
-#. TRANSLATORS: quirks are device-specific workarounds
-msgid "Failed to load quirks"
-msgstr "Nem sikerült a kerülőmegoldások betöltése"
 
 #. TRANSLATORS: could not read existing system data
 msgid "Failed to load system dbx"
@@ -1301,10 +1236,6 @@ msgstr "Belső vezérlőprogram BIOS-ának területe"
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "A belső vezérlőprogram BIOS-területe megvédi az eszköz belső vezérlőprogramjának memóriáját a manipulációtól."
 
-#. TRANSLATORS: remote URI
-msgid "Firmware Base URI"
-msgstr "Belső vezérlőprogram alap URI-ja"
-
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Belsővezérlőprogram-frissítési D-busz-szolgáltatás"
@@ -1363,12 +1294,6 @@ msgstr[1] "A belső vezérlőprogram metaadatai %u napja nem lettek frissítve, 
 msgid "Firmware updates"
 msgstr "Belső vezérlőprogram frissítések"
 
-msgid "Firmware updates are not supported on this machine."
-msgstr "A belsővezérlőprogram-frissítések nem támogatottak ezen a gépen."
-
-msgid "Firmware updates are supported on this machine."
-msgstr "A belsővezérlőprogram-frissítések támogatottak ezen a gépen."
-
 #. TRANSLATORS: user needs to run a command
 msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "A belsővezérlőprogram-frissítések le vannak tiltva, futtassa az „fwupdmgr unlock” parancsot az engedélyezéséhez"
@@ -1380,9 +1305,6 @@ msgstr "Jelzők"
 #. TRANSLATORS: command line option
 msgid "Force the action by relaxing some runtime checks"
 msgstr "A művelet kényszerítése néhány futásidejű ellenőrzés lazításával"
-
-msgid "Force the action ignoring all warnings"
-msgstr "A művelet kényszerítése, az összes figyelmeztetés mellőzése"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
@@ -1410,11 +1332,6 @@ msgid "GUID"
 msgid_plural "GUIDs"
 msgstr[0] "GUID"
 msgstr[1] "GUID-k"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgctxt "A single GUID"
-msgid "GUID"
-msgstr "GUID"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "command-argument"
@@ -1683,24 +1600,6 @@ msgstr "Az Intel BootGuard megakadályozza a hitelesítetlen eszközszoftvereket
 msgid "Intel BootGuard verified boot"
 msgstr "Intel BootGuard által ellenőrzött rendszerindítás"
 
-#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
-msgid "Intel CET"
-msgstr "Intel CET"
-
-#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
-#. * active means being used by the OS
-msgid "Intel CET Active"
-msgstr "Intel CET aktív"
-
-#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
-#. * enabled means supported by the processor
-msgid "Intel CET Enabled"
-msgstr "Intel CET engedélyezve"
-
-#. TRANSLATORS: longer description
-msgid "Intel Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
-msgstr "Az Intel vezérlőáramlás-kényszerítési technológia felismer és megakadályoz bizonyos metódusokat abban, hogy kártékony szoftvert futtassanak az eszközön."
-
 #. TRANSLATORS: Title: GDS is where the CPU leaks information
 msgid "Intel GDS Mitigation"
 msgstr "Intel GDS kárenyhítés"
@@ -1728,14 +1627,6 @@ msgstr "Az Intel menedzsmentmotor felülbírálás letiltja az eszközszoftver m
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Version"
 msgstr "Intel menedzsmentmotor verziója"
-
-#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
-msgid "Intel SMAP"
-msgstr "Intel SMAP"
-
-#. TRANSLATORS: longer description
-msgid "Intel Supervisor Mode Access Prevention ensures critical parts of device memory are not accessed by less secure programs."
-msgstr "Az Intel felügyelői mód hozzáférés-megakadályozása azt biztosítja, hogy az eszközmemória kritikus részeit ne érjék el a kevésbé biztonságos programok."
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
@@ -1774,10 +1665,6 @@ msgid "Issue"
 msgid_plural "Issues"
 msgstr[0] "Probléma"
 msgstr[1] "Problémák"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "KEY,VALUE"
-msgstr "KULCS,ÉRTÉK"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel is no longer tainted"
@@ -1862,10 +1749,6 @@ msgstr "Egy bizonyos csoportazonosítóval rendelkező EFI-változók felsorolá
 #. TRANSLATORS: command line option
 msgid "List entries in dbx"
 msgstr "A dbx-ben lévő bejegyzések felsorolása"
-
-#. TRANSLATORS: command line option
-msgid "List supported firmware updates"
-msgstr "A támogatott belsővezérlőprogram-frissítések felsorolása"
 
 #. TRANSLATORS: command description
 msgid "List the available firmware GTypes"
@@ -1972,11 +1855,6 @@ msgstr "Legkisebb hossz"
 msgid "Minimum value"
 msgstr "Legkisebb érték"
 
-#. TRANSLATORS: error message
-#, c-format
-msgid "Mismatched daemon and client, use %s instead"
-msgstr "Eltérő démon és kliens, inkább ezt használja: %s"
-
 #. TRANSLATORS: sets something in the daemon configuration file
 msgid "Modifies a daemon configuration value"
 msgstr "Módosít egy démonbeállítási értéket"
@@ -2036,10 +1914,6 @@ msgstr "Nem található belső vezérlőprogram"
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Nem észlelhető belsővezérlőprogram-frissítési képességgel rendelkező hardver"
-
-#. TRANSLATORS: nothing found
-msgid "No plugins found"
-msgstr "Nem találhatók bővítmények"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No releases available"
@@ -2223,12 +2097,6 @@ msgstr "Nyomja meg a feloldást a készüléken a frissítési folyamat folytat�
 msgid "Previous version"
 msgstr "Előző verzió"
 
-msgid "Print the version number"
-msgstr "A verziószám kiírása"
-
-msgid "Print verbose debug statements"
-msgstr "Részletes hibakeresési utasítások kiírása"
-
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
 msgstr "Prioritás"
@@ -2252,10 +2120,6 @@ msgstr "Processzor visszaállítási védelem"
 msgid "Proprietary"
 msgstr "Tulajdonosi"
 
-#. TRANSLATORS: command line option
-msgid "Query for firmware update support"
-msgstr "Belső vezérlőprogram frissítési támogatás lekérdezése"
-
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "REMOTE-ID"
 msgstr "TÁVOLITÁROLÓ-AZONOSÍTÓ"
@@ -2275,14 +2139,6 @@ msgstr "Belsővezérlőprogram-blob beolvasása egy eszközről"
 #. TRANSLATORS: command description
 msgid "Read a firmware from a device"
 msgstr "Belső vezérlőprogram beolvasása egy eszközről"
-
-#. TRANSLATORS: command description
-msgid "Read firmware from device into a file"
-msgstr "Belső vezérlőprogram beolvasása egy eszközről egy fájlba"
-
-#. TRANSLATORS: command description
-msgid "Read firmware from one partition into a file"
-msgstr "Belső vezérlőprogram beolvasása egy partícióról egy fájlba"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -2326,7 +2182,7 @@ msgstr "Belső vezérlőprogram újratelepítése egy eszközön"
 msgid "Reinstalling %s with %s... "
 msgstr "%s újratelepítése ezzel: %s… "
 
-#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
 msgstr "Kiadási ág"
 
@@ -2347,10 +2203,6 @@ msgstr "Távoli azonosító"
 msgid "Removes devices to watch for future emulation"
 msgstr "Eltávolítja a jövőbeni emulációhoz megfigyelendő eszközöket"
 
-#. TRANSLATORS: command description
-msgid "Replace data in an existing firmware file"
-msgstr "Adatok cseréje egy meglévő belső vezérlőprogram fájlban"
-
 #. TRANSLATORS: URI to send success/failure reports
 msgid "Report URI"
 msgstr "Jelentési URI"
@@ -2358,10 +2210,6 @@ msgstr "Jelentési URI"
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "Jelentve a távoli kiszolgálónak"
-
-#. TRANSLATORS: we asked the user to choose an option and they declined
-msgid "Request canceled"
-msgstr "Kérés megszakítva"
 
 #. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
 msgid "Required efivarfs filesystem was not found"
@@ -2526,10 +2374,6 @@ msgstr "BIOS-beállítás megadása"
 msgid "Set one or more BIOS settings"
 msgstr "Egy vagy több BIOS-beállítás beállítása"
 
-#. TRANSLATORS: command line option
-msgid "Set the debugging flag during update"
-msgstr "A hibakeresési jelző beállítása a frissítés során"
-
 #. TRANSLATORS: command description
 msgid "Sets one or more BIOS settings"
 msgstr "Beállít egy vagy több BIOS-beállítást"
@@ -2586,14 +2430,6 @@ msgstr "Belsővezérlőprogram-frissítések előzményeinek megjelenítése"
 msgid "Show the calculated version of the dbx"
 msgstr "A dbx számított verziójának megjelenítése"
 
-#. TRANSLATORS: command line option
-msgid "Show the debug log from the last attempted update"
-msgstr "Az utolsó frissítési kísérletből származó hibakeresési napló megjelenítése"
-
-#. TRANSLATORS: command line option
-msgid "Show the information of firmware update status"
-msgstr "A belső vezérlőprogram frissítési állapot információinak megjelenítése"
-
 #. TRANSLATORS: shutdown to apply the update
 msgid "Shutdown now?"
 msgstr "Leállítja most?"
@@ -2633,15 +2469,9 @@ msgstr "Egyes platformtitkok érvénytelenné válhatnak ennek a belső vezérl�
 msgid "Source"
 msgstr "Forrás"
 
-msgid "Specify Vendor/Product ID(s) of DFU device"
-msgstr "A DFU eszköz gyártó- vagy termékazonosítóinak megadása"
-
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
 msgstr "A dbx-adatbázisfájl megadása"
-
-msgid "Specify the number of bytes per USB transfer"
-msgstr "Az USB-átvitelenkénti bájtok számának megadása"
 
 #. TRANSLATORS: The BIOS setting accepts strings
 msgid "String"
@@ -2829,6 +2659,7 @@ msgstr "Megjelölve emulációhoz"
 msgid "Tainted"
 msgstr "Fertőzött"
 
+#. show the user the entire data blob
 msgid "Target"
 msgstr "Cél"
 
@@ -2963,10 +2794,6 @@ msgid "This tool allows an administrator to apply UEFI dbx updates."
 msgstr "Ez az eszköz lehetővé teszi a rendszergazdáknak az UEFI dbx-frissítések alkalmazását."
 
 #. TRANSLATORS: CLI description
-msgid "This tool allows an administrator to debug UpdateCapsule operation."
-msgstr "Ez az eszköz lehetővé teszi a rendszergazdáknak az UpdateCapsule művelet hibakeresését."
-
-#. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
 msgstr "Ez az eszköz lehetővé teszi a rendszergazdáknak az fwupd démon lekérdezését és vezérlését, lehetővé téve számukra olyan műveletek végrehajtását, mint a belső vezérlőprogram telepítése vagy régebbi verziójának telepítése."
 
@@ -3019,10 +2846,6 @@ msgstr "Az UEFI ESP-partíció talán nincs megfelelően beállítva"
 #. TRANSLATORS: partition refers to something on disk, again, hey Arch users
 msgid "UEFI ESP partition not detected or configured"
 msgstr "Az UEFI ESP-partíció nincs felismerve vagy beállítva"
-
-#. TRANSLATORS: program name
-msgid "UEFI Firmware Utility"
-msgstr "UEFI belső vezérlőprogram segédprogram"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
@@ -3117,10 +2940,6 @@ msgstr "Feloldja az eszközt a belső vezérlőprogram eléréséhez"
 #. TRANSLATORS: command description
 msgid "Unmounts the ESP"
 msgstr "Leválasztja az ESP-t"
-
-#. TRANSLATORS: command line option
-msgid "Unset the debugging flag during update"
-msgstr "A hibakeresési jelző kikapcsolása a frissítés során"
 
 #. TRANSLATORS: firmware payload is unsigned and it is possible to modify it
 msgid "Unsigned Payload"
@@ -3233,10 +3052,6 @@ msgstr "Használja a CTRL^C billentyűkombinációt a megszakításhoz."
 msgid "Use fwupdtool --help for help"
 msgstr "Használja az „fwupdtool --help” parancsot a súgóért"
 
-#. TRANSLATORS: command line option
-msgid "Use quirk flags when installing firmware"
-msgstr "Kerülőmegoldás jelzők használata a belső vezérlőprogram telepítésekor"
-
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
 msgstr "A felhasználó értesítve"
@@ -3244,9 +3059,6 @@ msgstr "A felhasználó értesítve"
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Felhasználónév"
-
-msgid "VID:PID"
-msgstr "VID:PID"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
@@ -3256,7 +3068,7 @@ msgstr "Érvényes"
 msgid "Validating ESP contents…"
 msgstr "Az ESP-tartalom ellenőrzése…"
 
-#. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
+#. TRANSLATORS: one line variant of release (e.g. 'China')
 msgid "Variant"
 msgstr "Változat"
 
@@ -3296,14 +3108,6 @@ msgstr "Hardverváltozások figyelése"
 #. update
 msgid "Will measure elements of system integrity around an update"
 msgstr "Mérni fogja a rendszer integritásának elemeit egy frissítés körül"
-
-#. TRANSLATORS: command description
-msgid "Write firmware from file into device"
-msgstr "Belső vezérlőprogram írása egy fájlból egy eszközre"
-
-#. TRANSLATORS: command description
-msgid "Write firmware from file into one partition"
-msgstr "Belső vezérlőprogram írása egy fájlból egy partícióra"
 
 #. TRANSLATORS: decompressing images from a container firmware
 msgid "Writing file:"

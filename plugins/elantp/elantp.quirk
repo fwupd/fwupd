@@ -27,6 +27,13 @@ Flags = elantp-recovery
 Flags = elantp-recovery
 
 # absolute report device on ACPI
+[I2C\NAME_ELAN0670:00]
+Plugin = elantp
+GType = FuElantpI2cDevice
+ElantpI2cTargetAddress = 0x15
+Flags = elantp-absolute
+
+# absolute report device on ACPI
 [I2C\NAME_ELAN0000:00]
 Plugin = elantp
 GType = FuElantpI2cDevice

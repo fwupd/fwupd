@@ -9,9 +9,6 @@
 #include "config.h"
 
 #include <gio/gio.h>
-#ifdef HAVE_GUSB
-#include <gusb.h>
-#endif
 
 #include "fu-device-progress.h"
 

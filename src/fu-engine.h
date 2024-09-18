@@ -30,6 +30,9 @@ G_DECLARE_FINAL_TYPE(FuEngine, fu_engine, FU, ENGINE, GObject)
  * @FU_ENGINE_LOAD_FLAG_NO_CACHE:	Do not save persistent xmlb silos
  * @FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES:Do not load idle sources
  * @FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS:	Load built-in plugins
+ * @FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT:	Ensure the client certificate exists
+ * @FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS:	Load external dload'ed plugins such as flashrom
+ * @FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG:		Set up device hotplug
  *
  * The flags to use when loading the engine.
  **/
@@ -42,6 +45,9 @@ typedef enum {
 	FU_ENGINE_LOAD_FLAG_NO_CACHE = 1 << 4,
 	FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES = 1 << 5,
 	FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS = 1 << 6,
+	FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT = 1 << 7,
+	FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS = 1 << 8,
+	FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG = 1 << 9,
 	/*< private >*/
 	FU_ENGINE_LOAD_FLAG_LAST
 } FuEngineLoadFlags;
@@ -259,21 +265,16 @@ fu_engine_get_component_by_guids(FuEngine *self, FuDevice *device) G_GNUC_NON_NU
 gchar *
 fu_engine_get_remote_id_for_stream(FuEngine *self, GInputStream *stream) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_engine_schedule_update(FuEngine *self,
-			  FuDevice *device,
-			  FuRelease *release,
-			  GBytes *blob_cab,
-			  FwupdInstallFlags flags,
-			  GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
-gboolean
 fu_engine_modify_bios_settings(FuEngine *self,
 			       GHashTable *settings,
 			       gboolean force_ro,
 			       GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_engine_emulation_load(FuEngine *self, GBytes *data, GError **error) G_GNUC_NON_NULL(1, 2);
-GBytes *
-fu_engine_emulation_save(FuEngine *self, GError **error) G_GNUC_NON_NULL(1);
+fu_engine_emulation_load(FuEngine *self, GInputStream *stream, GError **error)
+    G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_engine_emulation_save(FuEngine *self, GOutputStream *stream, GError **error)
+    G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_engine_fix_host_security_attr(FuEngine *self, const gchar *appstream_id, GError **error)
     G_GNUC_NON_NULL(1, 2);

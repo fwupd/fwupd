@@ -1,6 +1,54 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+enum FuSmbiosStructureType {
+    Bios,
+    System,
+    Baseboard, // aka motherboard
+    Chassis,
+}
+
+#[derive(ToString)]
+enum FuSmbiosChassisKind {
+    Unset, // inferred
+    Other,
+    Unknown,
+    Desktop,
+    LowProfileDesktop,
+    PizzaBox,
+    MiniTower,
+    Tower,
+    Portable,
+    Laptop,
+    Notebook,
+    HandHeld,
+    DockingStation,
+    AllInOne,
+    SubNotebook,
+    SpaceSaving,
+    LunchBox,
+    MainServer,
+    Expansion,
+    Subchassis,
+    BusExpansion,
+    Peripheral,
+    Raid,
+    RackMount,
+    SealedCasePc,
+    MultiSystem,
+    CompactPci,
+    AdvancedTca,
+    Blade,
+    Reserved, // 0x1D is missing!
+    Tablet,
+    Convertible,
+    Detachable,
+    IotGateway,
+    EmbeddedPc,
+    MiniPc,
+    StickPc,
+}
+
 #[derive(New, Parse)]
 struct FuStructSmbiosEp32 {
     anchor_str: [char; 4],

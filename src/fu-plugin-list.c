@@ -97,6 +97,27 @@ fu_plugin_list_add(FuPluginList *self, FuPlugin *plugin)
 }
 
 /**
+ * fu_plugin_list_remove_all:
+ * @self: a #FuPluginList
+ *
+ * Removed all the plugins from the list.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_plugin_list_remove_all(FuPluginList *self)
+{
+	g_return_if_fail(FU_IS_PLUGIN_LIST(self));
+
+	for (guint i = 0; i < self->plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(self->plugins, i);
+		g_signal_handlers_disconnect_by_data(plugin, self);
+	}
+	g_ptr_array_set_size(self->plugins, 0);
+	g_hash_table_remove_all(self->plugins_hash);
+}
+
+/**
  * fu_plugin_list_find_by_name:
  * @self: a #FuPluginList
  * @name: a plugin name, e.g. `dfu`
@@ -299,9 +320,23 @@ fu_plugin_list_depsolve(FuPluginList *self, GError **error)
 }
 
 static void
+fu_plugin_list_dispose(GObject *obj)
+{
+	FuPluginList *self = FU_PLUGIN_LIST(obj);
+
+	if (self->plugins != NULL)
+		g_ptr_array_set_size(self->plugins, 0);
+	if (self->plugins_hash != NULL)
+		g_hash_table_remove_all(self->plugins_hash);
+
+	G_OBJECT_CLASS(fu_plugin_list_parent_class)->dispose(obj);
+}
+
+static void
 fu_plugin_list_class_init(FuPluginListClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->dispose = fu_plugin_list_dispose;
 	object_class->finalize = fu_plugin_list_finalize;
 }
 

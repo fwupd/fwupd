@@ -188,12 +188,9 @@ fu_flashrom_plugin_add_device(FuPlugin *plugin,
 
 	/* use same VendorID logic as with UEFI */
 	dmi_vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR);
-	if (dmi_vendor != NULL) {
-		g_autofree gchar *vendor_id = g_strdup_printf("DMI:%s", dmi_vendor);
-		fu_device_add_vendor_id(FU_DEVICE(device), vendor_id);
-	}
-	fu_flashrom_plugin_device_set_version(plugin, device);
+	fu_device_build_vendor_id(FU_DEVICE(device), "DMI", dmi_vendor);
 	fu_flashrom_plugin_device_set_hwids(plugin, device);
+	fu_flashrom_plugin_device_set_version(plugin, device);
 	if (!fu_flashrom_plugin_device_set_bios_info(plugin, device, &error_local))
 		g_warning("failed to set bios info: %s", error_local->message);
 	if (!fu_device_setup(device, error))
@@ -267,8 +264,11 @@ fu_flashrom_plugin_find_guid(FuPlugin *plugin, GError **error)
 static gboolean
 fu_flashrom_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
+	const gchar *flashrom_args;
+	const gchar *flashrom_prog;
 	gint rc;
 	const gchar *guid;
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuFlashromPlugin *self = FU_FLASHROM_PLUGIN(plugin);
 
 	/* progress */
@@ -298,7 +298,13 @@ fu_flashrom_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **erro
 	flashrom_set_log_callback(fu_flashrom_plugin_debug_cb);
 	fu_progress_step_done(progress);
 
-	if (flashrom_programmer_init(&self->flashprog, "internal", NULL)) {
+	/* allow overriding from quirk file */
+	flashrom_prog = fu_context_lookup_quirk_by_id(ctx, guid, "FlashromProgrammer");
+	if (flashrom_prog == NULL)
+		flashrom_prog = "internal";
+	flashrom_args = fu_context_lookup_quirk_by_id(ctx, guid, "FlashromArgs");
+	g_debug("using programmer %s: %s", flashrom_prog, flashrom_args);
+	if (flashrom_programmer_init(&self->flashprog, flashrom_prog, flashrom_args)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

@@ -296,7 +296,12 @@ fu_release_get_release_version(FuRelease *self, const gchar *version, GError **e
 		return g_strdup(version);
 
 	/* parse as integer */
-	if (!fu_strtoull(version, &ver_uint32, 1, G_MAXUINT32, &error_local)) {
+	if (!fu_strtoull(version,
+			 &ver_uint32,
+			 1,
+			 G_MAXUINT32,
+			 FU_INTEGER_BASE_AUTO,
+			 &error_local)) {
 		g_warning("invalid release version %s: %s", version, error_local->message);
 		return g_strdup(version);
 	}
@@ -668,19 +673,6 @@ fu_release_check_requirements(FuRelease *self,
 		return FALSE;
 	}
 
-	/* called with online update, test if device is supposed to allow this */
-	if ((install_flags & FWUPD_INSTALL_FLAG_OFFLINE) == 0 &&
-	    (install_flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
-	    fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_ONLY_OFFLINE)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Device %s [%s] only allows offline updates",
-			    fu_device_get_name(self->device),
-			    fu_device_get_id(self->device));
-		return FALSE;
-	}
-
 	/* get device */
 	version = fu_device_get_version(self->device);
 	if (version == NULL) {
@@ -789,14 +781,14 @@ fu_release_ensure_device_by_checksum(FuRelease *self, XbNode *component, XbNode 
 		if (!fu_device_has_checksum(self->device, xb_node_get_text(device_checksum)))
 			continue;
 		fu_device_ensure_from_component(self->device, component);
-		if (fu_device_has_internal_flag(self->device,
-						FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION)) {
+		if (fu_device_has_private_flag(self->device,
+					       FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION)) {
 			const gchar *rel_version = xb_node_get_attr(rel, "version");
 			if (rel_version == NULL)
 				continue;
 			fu_device_set_version(self->device, rel_version);
-			fu_device_remove_internal_flag(self->device,
-						       FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION);
+			fu_device_remove_private_flag(self->device,
+						      FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
 		}
 		break;
 	}
@@ -912,8 +904,8 @@ fu_release_load(FuRelease *self,
 		return FALSE;
 	if (self->device != NULL &&
 	    fu_release_has_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_METADATA)) {
-		if (fu_device_has_internal_flag(self->device,
-						FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM)) {
+		if (fu_device_has_private_flag(self->device,
+					       FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM)) {
 			fu_release_ensure_device_by_checksum(self, component, rel);
 		} else {
 			fu_device_ensure_from_component(self->device, component);
@@ -1205,18 +1197,14 @@ fu_release_ensure_trust_flags(FuRelease *self, XbNode *rel, GError **error)
 
 	/* do not require signatures for anything installed to the immutable datadir */
 	if (fu_release_get_flags(self) == FWUPD_RELEASE_FLAG_NONE && self->remote != NULL) {
-		if (fwupd_remote_get_keyring_kind(self->remote) == FWUPD_KEYRING_KIND_NONE &&
-		    (fwupd_remote_get_kind(self->remote) == FWUPD_REMOTE_KIND_LOCAL ||
-		     fwupd_remote_get_kind(self->remote) == FWUPD_REMOTE_KIND_DIRECTORY)) {
-			g_debug("remote %s has kind=%s and Keyring=none and so marking as trusted",
-				fwupd_remote_get_id(self->remote),
-				fwupd_remote_kind_to_string(fwupd_remote_get_kind(self->remote)));
+		g_debug("remote %s has kind=%s and so marking as trusted",
+			fwupd_remote_get_id(self->remote),
+			fwupd_remote_kind_to_string(fwupd_remote_get_kind(self->remote)));
+		if (fwupd_remote_get_kind(self->remote) == FWUPD_REMOTE_KIND_LOCAL ||
+		    fwupd_remote_get_kind(self->remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
 			fu_release_add_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD);
 			fu_release_add_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_METADATA);
-		} else if (fwupd_remote_get_keyring_kind(self->remote) != FWUPD_KEYRING_KIND_NONE) {
-			g_debug("remote %s has kind=%s and so marking as trusted",
-				fwupd_remote_get_id(self->remote),
-				fwupd_remote_kind_to_string(fwupd_remote_get_kind(self->remote)));
+		} else {
 			fu_release_add_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_METADATA);
 		}
 	}

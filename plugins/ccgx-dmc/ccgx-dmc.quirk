@@ -84,3 +84,15 @@ Plugin = ccgx_dmc
 [USB\VID_2095&PID_4D01]
 Plugin = ccgx_dmc
 RemoveDelay = 732000
+
+# HP Engage_One_Pro_Aio_System
+[USB\VID_03F0&PID_0480]
+Plugin = ccgx_dmc
+Summary = Dock Management Controller Device
+ParentGuid = USB\VID_03F0&PID_0281
+Vendor = HP
+Name = HP Engage One Pro Aio System
+CcgxImageKind = dmc-composite
+InstallDuration = 180
+RemoveDelay = 162000
+

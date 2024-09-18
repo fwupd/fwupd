@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Copyright 2024 Mario Limonciello <mario.limonciello@amd.com>
 #

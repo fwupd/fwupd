@@ -1,3 +1,12 @@
+option('bash_completion',
+  type: 'boolean',
+  value: true,
+  description: 'enable bash completion',
+)
+option('bluez',
+  type: 'feature',
+  description: 'BlueZ support',
+)
 option('build',
   type: 'combo',
   choices: [
@@ -8,44 +17,79 @@ option('build',
   value: 'all',
   description: 'build type',
 )
+option('cbor',
+  type: 'feature',
+  description: 'CBOR support for coSWID and uSWID',
+)
 option('consolekit',
   type: 'feature',
   description: 'ConsoleKit support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
-option('static_analysis',
-  type: 'boolean',
-  value: false,
-  description: 'enable GCC static analysis support',
+option('curl',
+  type: 'feature',
+  description: 'libcurl support',
 )
 option('dbus_socket_address',
   type: 'string',
   value: '',
   description: 'D-Bus socket address to use for p2p mode',
 )
+option('docs',
+  type: 'feature',
+  description: 'Build developer documentation',
+)
+option('efi_binary',
+  type: 'boolean',
+  value: false,
+  description: 'generate uefi binary if missing',
+)
+option('efi_os_dir',
+  type: 'string',
+  description: 'the hardcoded name of OS directory in ESP, e.g. fedora',
+)
+option('elogind',
+  type: 'feature',
+  description: 'elogind support',
+)
 option('firmware-packager',
   type: 'boolean',
   value: true,
   description: 'enable firmware-packager installation',
 )
-option('docs',
+option('fish_completion',
+  type: 'boolean',
+  value: true,
+  description: 'enable fish completion',
+)
+option('gnutls',
   type: 'feature',
-  description: 'Build developer documentation',
-  deprecated: {
-    'docgen': 'enabled',
-    'none': 'disabled',
-  },
+  description: 'GnuTLS support',
+)
+option('gudev',
+  type: 'feature',
+  description: 'GUdev support',
+)
+option('hsi',
+  type: 'feature',
+  description: ' Host Security Information',
 )
 option('introspection',
   type: 'feature',
   description: 'generate GObject Introspection data',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
+)
+option('launchd',
+  type: 'feature',
+  value: 'auto',
+  description: 'Launchd auto-launch support (MacOS only)',
+)
+option('launchd_agent_dir',
+  type: 'string',
+  value: '/Library/LaunchAgents',
+  description: 'Directory to put the launchd agent',
+)
+option('libarchive',
+  type: 'feature',
+  description: 'libarchive support',
 )
 option('lvfs',
   type: 'combo',
@@ -57,66 +101,19 @@ option('lvfs',
   value: 'true',
   description: 'install LVFS remotes',
 )
+option('lzma',
+  type: 'feature',
+  description: 'LZMA support',
+)
 option('man',
   type: 'boolean',
   value: true,
   description: 'enable man pages',
 )
-option('libarchive',
-  type: 'feature',
-  description: 'libarchive support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('gudev',
-  type: 'feature',
-  description: 'GUdev support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('gusb',
-  type: 'feature',
-  description: 'GUsb support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('bluez',
-  type: 'feature',
-  description: 'BlueZ support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('polkit',
-  type: 'feature',
-  description: 'PolKit support in daemon',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('gnutls',
-  type: 'feature',
-  description: 'GnuTLS support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('sqlite',
-  type: 'feature',
-  description: 'sqlite support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
+option('metainfo',
+  type: 'boolean',
+  value: true,
+  description: 'install the project metainfo.xml information',
 )
 option('passim',
   type: 'feature',
@@ -133,25 +130,9 @@ option('p2p_policy',
   value: 'metadata',
   description: 'Default P2P sharing policy',
 )
-option('lzma',
-  type: 'feature',
-  description: 'LZMA support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('cbor',
-  type: 'feature',
-  description: 'CBOR support for coSWID and uSWID',
-)
 option('plugin_acpi_phat',
   type: 'feature',
   description: 'ACPI PHAT support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_amdgpu',
   type: 'feature',
@@ -164,74 +145,50 @@ option('plugin_android_boot',
 option('plugin_bcm57xx',
   type: 'feature',
   description: 'BCM57xx support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_cfu',
   type: 'feature',
   description: 'CFU support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_cpu',
   type: 'feature',
   description: 'CPU support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_emmc',
   type: 'feature',
   description: 'eMMC support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_ep963x',
   type: 'feature',
   description: 'EP963x support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_fastboot',
   type: 'feature',
   description: 'Fastboot support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
+)
+option('plugin_flashrom',
+  type: 'feature',
+  description: 'flashrom support',
 )
 option('plugin_gpio',
   type: 'feature',
   description: 'Linux GPIO support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_igsc',
   type: 'feature',
   description: 'Intel Graphics System Controller support',
 )
+option('plugin_intel_me',
+  type: 'feature',
+  description: 'enable Intel ME support',
+)
 option('plugin_kinetic_dp',
-       type: 'feature',
-       description: 'Kinetic SST/MST DisplayPort converter support',
+  type: 'feature',
+  description: 'Kinetic SST/MST DisplayPort converter support',
 )
 option('plugin_logitech_bulkcontroller',
   type: 'feature',
   description: 'Logitech bulk controller support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_logitech_scribe',
   type: 'feature',
@@ -241,81 +198,69 @@ option('plugin_logitech_tap',
   type: 'feature',
   description: 'Logitech Tap support',
 )
-option('plugin_parade_lspcon',
-  type: 'feature',
-  description: 'Parade LSPCON support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('plugin_pixart_rf',
-  type: 'feature',
-  description: 'PixartRF support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('plugin_realtek_mst',
-  type: 'feature',
-  description: 'Realtek MST hub support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('plugin_synaptics_mst',
-  type: 'feature',
-  description: 'Synaptics MST hub support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
 option('plugin_mediatek_scaler',
   type: 'feature',
   description: 'Mediatek scaler support',
 )
-option('plugin_synaptics_rmi',
+option('plugin_modem_manager',
   type: 'feature',
-  description: 'Synaptics RMI support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
+  description: 'ModemManager support',
+)
+option('plugin_msr',
+  type: 'feature',
+  description: 'MSR support',
+)
+option('plugin_mtd',
+  type: 'feature',
+  description: 'MTD support',
+)
+option('plugin_nitrokey',
+  type: 'feature',
+  description: 'Nitrokey support',
+)
+option('plugin_nvme',
+  type: 'feature',
+  description: 'NVMe support',
+)
+option('plugin_parade_lspcon',
+  type: 'feature',
+  description: 'Parade LSPCON support',
+)
+option('plugin_pixart_rf',
+  type: 'feature',
+  description: 'PixartRF support',
+)
+option('plugin_powerd',
+  type: 'feature',
+  description: 'support for powerd',
+)
+option('plugin_realtek_mst',
+  type: 'feature',
+  description: 'Realtek MST hub support',
+)
+option('plugin_redfish',
+  type: 'feature',
+  description: 'Redfish support',
 )
 option('plugin_scsi',
   type: 'feature',
   description: 'SCSI support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
+)
+option('plugin_synaptics_mst',
+  type: 'feature',
+  description: 'Synaptics MST hub support',
+)
+option('plugin_synaptics_rmi',
+  type: 'feature',
+  description: 'Synaptics RMI support',
 )
 option('plugin_tpm',
   type: 'feature',
   description: 'TPM support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('plugin_redfish',
-  type: 'feature' ,
-  description: 'Redfish support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_uefi_capsule',
   type: 'feature',
   description: 'UEFI capsule support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('plugin_uefi_capsule_splash',
   type: 'boolean',
@@ -325,141 +270,59 @@ option('plugin_uefi_capsule_splash',
 option('plugin_uefi_pk',
   type: 'feature',
   description: 'UEFI PK support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
-option('plugin_nitrokey',
+option('plugin_uf2',
   type: 'feature',
-  description: 'Nitrokey support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
+  description: 'support for UF2',
 )
-option('plugin_nvme',
+option('plugin_upower',
   type: 'feature',
-  description: 'NVMe support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('plugin_modem_manager',
-  type: 'feature',
-  description: 'ModemManager support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('plugin_msr',
-  type: 'feature',
-  description: 'MSR support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('plugin_mtd',
-  type: 'feature',
-  description: 'MTD support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('plugin_flashrom',
-  type: 'feature',
-  description: 'flashrom support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('plugin_intel_me',
-  type: 'feature',
-  description: 'enable Intel ME support',
+  description: 'support for UPower',
 )
 option('plugin_vendor_example',
   type: 'boolean',
   value: false,
   description: 'enable vendor example support',
 )
-option('plugin_uf2',
+option('polkit',
   type: 'feature',
-  description: 'support for UF2',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
+  description: 'PolKit support in daemon',
 )
-option('plugin_upower',
-  type: 'feature',
-  description: 'support for UPower',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('plugin_powerd',
-  type: 'feature',
-  description: 'support for powerd',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
+option('python',
+  type: 'string',
+  description: 'the absolute path of the python3 binary',
 )
 option('qubes',
   type: 'boolean',
   value: false,
   description: 'build packages for Qubes OS',
 )
+option('sqlite',
+  type: 'feature',
+  description: 'sqlite support',
+)
+option('static_analysis',
+  type: 'boolean',
+  value: false,
+  description: 'enable GCC static analysis support',
+)
 option('supported_build',
   type: 'feature',
   description: 'distribution package with upstream support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
 )
 option('systemd',
   type: 'feature',
   description: 'systemd support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('systemd_unit_user',
-  type: 'string',
-  value: 'fwupd-refresh',
-  description: 'User account to use for fwupd-refresh.service (empty for DynamicUser)',
 )
 option('systemd_root_prefix',
   type: 'string',
   value: '',
   description: 'Directory to base systemd’s installation directories on',
 )
-option('launchd',
-  type: 'feature',
-  value: 'auto',
-  description: 'Launchd auto-launch support (MacOS only)'
-)
-option(
-  'launchd_agent_dir',
+option('systemd_unit_user',
   type: 'string',
-  value: '/Library/LaunchAgents',
-  description: 'Directory to put the launchd agent'
-)
-option('elogind',
-  type: 'feature',
-  description: 'elogind support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
+  value: 'fwupd-refresh',
+  description: 'User account to use for fwupd-refresh.service (empty for DynamicUser)',
 )
 option('tests',
   type: 'boolean',
@@ -470,67 +333,13 @@ option('umockdev_tests',
   type: 'feature',
   description: 'umockdev tests',
 )
-option('curl',
-  type: 'feature',
-  description: 'libcurl support',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('udevdir',
+option('vendor_ids_dir',
   type: 'string',
   value: '',
-  description: 'Directory for udev rules',
+  description: 'Directory for usb.ids, pci.ids etc.',
 )
 option('vendor_metadata',
   type: 'boolean',
   value: false,
   description: 'install OS vendor provided metadata',
-)
-option('efi_os_dir',
-  type: 'string',
-  description: 'the hardcoded name of OS directory in ESP, e.g. fedora',
-)
-option('efi_binary',
-  type: 'boolean',
-  value: false,
-  description: 'generate uefi binary if missing',
-)
-option('metainfo',
-  type: 'boolean',
-  value: true,
-  description: 'install the project metainfo.xml information',
-)
-option('bash_completion',
-  type: 'boolean',
-  value: true,
-  description: 'enable bash completion',
-)
-option('fish_completion',
-  type: 'boolean',
-  value: true,
-  description: 'enable fish completion',
-)
-option('offline',
-  type: 'boolean',
-  description: 'Allow installing firmware using a pre-boot systemd target',
-  value: false,
-)
-option('hsi',
-  type: 'feature',
-  description: ' Host Security Information',
-  deprecated: {
-    'true': 'enabled',
-    'false': 'disabled',
-  },
-)
-option('thinklmi_compat',
-  type: 'boolean',
-  value: false,
-  description: 'Include workaround for thinklmi kernel bugs',
-)
-option('python',
-  type: 'string',
-  description: 'the absolute path of the python3 binary',
 )

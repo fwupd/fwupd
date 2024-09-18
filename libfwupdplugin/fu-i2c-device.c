@@ -15,10 +15,16 @@
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
+#ifdef HAVE_I2C_DEV_H
+#include <linux/i2c-dev.h>
+#endif
 
+#include "fu-device-private.h"
 #include "fu-i2c-device.h"
 #include "fu-string.h"
 #include "fu-udev-device-private.h"
+
+#define FU_I2C_DEVICE_IOCTL_TIMEOUT 2000
 
 /**
  * FuI2cDevice
@@ -28,111 +34,32 @@
  * See also: #FuUdevDevice
  */
 
-typedef struct {
-	guint bus_number;
-} FuI2cDevicePrivate;
-
-G_DEFINE_TYPE_WITH_PRIVATE(FuI2cDevice, fu_i2c_device, FU_TYPE_UDEV_DEVICE)
-
-enum { PROP_0, PROP_BUS_NUMBER, PROP_LAST };
-
-#define GET_PRIVATE(o) (fu_i2c_device_get_instance_private(o))
-
-static void
-fu_i2c_device_to_string(FuDevice *device, guint idt, GString *str)
-{
-	FuI2cDevice *self = FU_I2C_DEVICE(device);
-	FuI2cDevicePrivate *priv = GET_PRIVATE(self);
-	fwupd_codec_string_append_hex(str, idt, "BusNumber", priv->bus_number);
-}
-
-static void
-fu_i2c_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
-{
-	FuI2cDevice *self = FU_I2C_DEVICE(object);
-	FuI2cDevicePrivate *priv = GET_PRIVATE(self);
-	switch (prop_id) {
-	case PROP_BUS_NUMBER:
-		g_value_set_uint(value, priv->bus_number);
-		break;
-	default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-		break;
-	}
-}
-
-static void
-fu_i2c_device_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
-{
-	FuI2cDevice *self = FU_I2C_DEVICE(object);
-	FuI2cDevicePrivate *priv = GET_PRIVATE(self);
-	switch (prop_id) {
-	case PROP_BUS_NUMBER:
-		priv->bus_number = g_value_get_uint(value);
-		break;
-	default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-		break;
-	}
-}
-
-static gboolean
-fu_i2c_device_open(FuDevice *device, GError **error)
-{
-#ifdef HAVE_GUDEV
-	FuI2cDevice *self = FU_I2C_DEVICE(device);
-	FuI2cDevicePrivate *priv = GET_PRIVATE(self);
-	gint bus_fd;
-	g_autofree gchar *bus_path = NULL;
-	g_autoptr(FuIOChannel) io_channel = NULL;
-
-	/* open the bus, not the device represented by self */
-	bus_path = g_strdup_printf("/dev/i2c-%u", priv->bus_number);
-	if ((bus_fd = g_open(bus_path, O_RDWR, 0)) == -1) {
-		g_set_error(error,
-			    G_IO_ERROR, /* nocheck */
-#ifdef HAVE_ERRNO_H
-			    g_io_error_from_errno(errno),
-#else
-			    G_IO_ERROR_FAILED, /* nocheck */
-#endif
-			    "failed to open %s read-write",
-			    bus_path);
-		fwupd_error_convert(error);
-		return FALSE;
-	}
-	io_channel = fu_io_channel_unix_new(bus_fd);
-	fu_udev_device_set_io_channel(FU_UDEV_DEVICE(self), io_channel);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IGNORE_NONE);
-#endif
-
-	/* FuUdevDevice->open */
-	return FU_DEVICE_CLASS(fu_i2c_device_parent_class)->open(device, error);
-}
+G_DEFINE_TYPE(FuI2cDevice, fu_i2c_device, FU_TYPE_UDEV_DEVICE)
 
 static gboolean
 fu_i2c_device_probe(FuDevice *device, GError **error)
 {
-#ifdef HAVE_GUDEV
 	FuI2cDevice *self = FU_I2C_DEVICE(device);
-	FuI2cDevicePrivate *priv = GET_PRIVATE(self);
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
-	const gchar *tmp;
-	g_autofree gchar *devname = NULL;
-	g_autoptr(GUdevDevice) udev_parent = NULL;
-#endif
+	g_autofree gchar *attr_name = NULL;
+
+	/* FuUdevDevice */
+	if (!FU_DEVICE_CLASS(fu_i2c_device_parent_class)->probe(device, error))
+		return FALSE;
 
 	/* set physical ID */
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "i2c", error))
 		return FALSE;
 
-#ifdef HAVE_GUDEV
 	/* i2c devices all expose a name */
-	tmp = g_udev_device_get_sysfs_attr(udev_device, "name");
-	fu_device_add_instance_strsafe(device, "NAME", tmp);
+	attr_name = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+					      "name",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      error);
+	if (attr_name == NULL)
+		return FALSE;
+	fu_device_add_instance_strsafe(device, "NAME", attr_name);
 	if (!fu_device_build_instance_id_full(device,
 					      FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						  FU_DEVICE_INSTANCE_FLAG_VISIBLE |
 						  FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					      error,
 					      "I2C",
@@ -141,57 +68,109 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get bus number out of sysfs path */
-	udev_parent = g_udev_device_get_parent(udev_device);
-	if (udev_parent != NULL)
-		devname = g_path_get_basename(g_udev_device_get_sysfs_path(udev_parent));
-	if (devname != NULL && g_str_has_prefix(devname, "i2c-")) {
-		guint64 tmp64 = 0;
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_strtoull(devname + 4, &tmp64, 0, G_MAXUINT, &error_local)) {
-			g_debug("ignoring i2c devname bus number: %s", error_local->message);
-		} else {
-			priv->bus_number = tmp64;
+	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "i2c") != 0) {
+		g_autoptr(FuUdevDevice) udev_parent = FU_UDEV_DEVICE(
+		    fu_device_get_backend_parent_with_subsystem(device, "i2c", NULL));
+		if (udev_parent != NULL) {
+			if (!fu_udev_device_parse_number(udev_parent, error))
+				return FALSE;
+			fu_udev_device_set_number(FU_UDEV_DEVICE(self),
+						  fu_udev_device_get_number(udev_parent));
 		}
 	}
-#endif
+
+	/* set the device file manually */
+	if (fu_udev_device_get_device_file(FU_UDEV_DEVICE(self)) == NULL) {
+		const gchar *sysfs = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
+		g_auto(GStrv) tokens = fu_strsplit(sysfs, strlen(sysfs), "/", -1);
+		g_autofree gchar *devfile = NULL;
+		guint64 number = G_MAXUINT64;
+
+		for (guint i = 0; tokens[i] != NULL; i++) {
+			if (!g_str_has_prefix(tokens[i], "i2c-"))
+				continue;
+
+			if (!fu_strtoull(tokens[i] + 4,
+					 &number,
+					 0x0,
+					 G_MAXUINT64,
+					 FU_INTEGER_BASE_AUTO,
+					 error))
+				return FALSE;
+			break;
+		}
+		if (number == G_MAXUINT64) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Could not find i2c bus number in sysfs path");
+			return FALSE;
+		}
+		fu_udev_device_set_number(FU_UDEV_DEVICE(self), number);
+		devfile = g_strdup_printf("/dev/i2c-%" G_GUINT64_FORMAT, number);
+		fu_udev_device_set_device_file(FU_UDEV_DEVICE(self), devfile);
+	}
+
+	/* i2c devices are often tied to the platform, and usually have very unhelpful names */
+	if (!fu_device_has_private_flag(FU_DEVICE(self),
+					FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS)) {
+		GPtrArray *hwid_guids = fu_context_get_hwid_guids(fu_device_get_context(device));
+		for (guint i = 0; i < hwid_guids->len; i++) {
+			const gchar *hwid_guid = g_ptr_array_index(hwid_guids, i);
+			fu_device_add_instance_str(device, "HWID", hwid_guid);
+			fu_device_build_instance_id_full(device,
+							 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+							     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+							 NULL,
+							 "I2C",
+							 "NAME",
+							 "HWID",
+							 NULL);
+		}
+	}
 
 	/* success */
 	return TRUE;
 }
 
 /**
- * fu_i2c_device_get_bus_number:
+ * fu_i2c_device_set_address:
  * @self: a #FuI2cDevice
+ * @address: address
+ * @force: Force the address, even if the device is device is busy (typically with a kernel driver)
+ * @error: (nullable): optional return location for an error
  *
- * Gets the I²C bus number.
+ * Sets the I²C device address.
  *
- * Returns: integer
+ * Returns: %TRUE for success
  *
- * Since: 1.6.1
+ * Since: 2.0.0
  **/
-guint
-fu_i2c_device_get_bus_number(FuI2cDevice *self)
+gboolean
+fu_i2c_device_set_address(FuI2cDevice *self, guint8 address, gboolean force, GError **error)
 {
-	FuI2cDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_I2C_DEVICE(self), G_MAXUINT);
-	return priv->bus_number;
-}
+#ifdef HAVE_I2C_DEV_H
+	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
+				  force ? I2C_SLAVE_FORCE : I2C_SLAVE,
+				  (guint8 *)(guintptr)address,
+				  sizeof(guintptr),
+				  NULL,
+				  FU_I2C_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+				  error)) {
+		g_prefix_error(error, "failed to set address 0x%02x: ", address);
+		return FALSE;
+	}
 
-/**
- * fu_i2c_device_set_bus_number:
- * @self: a #FuI2cDevice
- * @bus_number: integer, typically the output of g_udev_device_get_number()
- *
- * Sets the I²C bus number.
- *
- * Since: 1.6.2
- **/
-void
-fu_i2c_device_set_bus_number(FuI2cDevice *self, guint bus_number)
-{
-	FuI2cDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_I2C_DEVICE(self));
-	priv->bus_number = bus_number;
+	/* success */
+	return TRUE;
+#else
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "Not supported as <linux/i2c-dev.h> not found");
+	return FALSE;
+#endif
 }
 
 /**
@@ -233,52 +212,23 @@ fu_i2c_device_read(FuI2cDevice *self, guint8 *buf, gsize bufsz, GError **error)
 }
 
 static void
-fu_i2c_device_incorporate(FuDevice *device, FuDevice *donor)
+fu_i2c_device_register_flags(FuDevice *device)
 {
-	FuI2cDevice *self = FU_I2C_DEVICE(device);
-	FuI2cDevicePrivate *priv = GET_PRIVATE(self);
-	FuI2cDevicePrivate *priv_donor = GET_PRIVATE(FU_I2C_DEVICE(donor));
-
-	g_return_if_fail(FU_IS_I2C_DEVICE(self));
-	g_return_if_fail(FU_IS_I2C_DEVICE(donor));
-
-	/* copy private instance data */
-	priv->bus_number = priv_donor->bus_number;
+	FU_DEVICE_CLASS(fu_i2c_device_parent_class)->register_flags(device);
+	fu_device_register_private_flag_safe(device, FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS);
 }
 
 static void
 fu_i2c_device_init(FuI2cDevice *self)
 {
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
 
 static void
 fu_i2c_device_class_init(FuI2cDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	GParamSpec *pspec;
-
-	object_class->get_property = fu_i2c_device_get_property;
-	object_class->set_property = fu_i2c_device_set_property;
-	device_class->open = fu_i2c_device_open;
 	device_class->probe = fu_i2c_device_probe;
-	device_class->to_string = fu_i2c_device_to_string;
-	device_class->incorporate = fu_i2c_device_incorporate;
-
-	/**
-	 * FuI2cDevice:bus-number:
-	 *
-	 * The I²C bus number.
-	 *
-	 * Since: 1.6.2
-	 */
-	pspec = g_param_spec_uint("bus-number",
-				  NULL,
-				  NULL,
-				  0x0,
-				  G_MAXUINT,
-				  0x0,
-				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
-	g_object_class_install_property(object_class, PROP_BUS_NUMBER, pspec);
+	device_class->register_flags = fu_i2c_device_register_flags;
 }

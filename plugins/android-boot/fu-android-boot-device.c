@@ -39,9 +39,9 @@ static gboolean
 fu_android_boot_device_probe(FuDevice *device, GError **error)
 {
 	FuAndroidBootDevice *self = FU_ANDROID_BOOT_DEVICE(device);
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
 	guint64 sectors = 0;
 	guint64 size = 0;
+	g_autofree gchar *prop_size = NULL;
 	g_autoptr(GHashTable) cmdline = NULL;
 
 	/* FuUdevDevice->probe */
@@ -61,11 +61,8 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 	self->boot_slot = g_strdup(g_hash_table_lookup(cmdline, "androidboot.slot_suffix"));
 
 	/* extract label and check if it matches boot slot*/
-	if (g_udev_device_has_property(udev_device, "ID_PART_ENTRY_NAME")) {
-		self->label =
-		    g_strdup(g_udev_device_get_property(udev_device, "ID_PART_ENTRY_NAME"));
-
-		/* Use label as device name */
+	self->label = fu_udev_device_read_property(FU_UDEV_DEVICE(device), "PARTNAME", NULL);
+	if (self->label != NULL) {
 		fu_device_set_name(device, self->label);
 
 		/* If the device has A/B partitioning, compare boot slot to only expose partitions
@@ -80,27 +77,32 @@ fu_android_boot_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* set max firmware size, required to avoid writing firmware bigger than partition */
-	if (!g_udev_device_has_property(udev_device, "ID_PART_ENTRY_SIZE")) {
+	prop_size = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					      "size",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      NULL);
+	if (prop_size == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "device does not expose its size");
 		return FALSE;
 	}
-
-	sectors = g_udev_device_get_property_as_uint64(udev_device, "ID_PART_ENTRY_SIZE");
+	if (!fu_strtoull(prop_size, &sectors, 0x0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
+		return FALSE;
 	size = sectors * ANDROID_BOOT_SECTOR_SIZE;
 	self->max_size = size;
 
 	/* extract partition UUID and require it for supporting a device */
-	if (!g_udev_device_has_property(udev_device, "ID_PART_ENTRY_UUID")) {
+	self->uuid =
+	    fu_udev_device_read_property(FU_UDEV_DEVICE(device), "ID_PART_ENTRY_UUID", NULL);
+	if (self->uuid == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "device does not have a UUID");
 		return FALSE;
 	}
-	self->uuid = g_strdup(g_udev_device_get_property(udev_device, "ID_PART_ENTRY_UUID"));
 
 	/* extract serial number and set it */
 	fu_device_set_serial(device, g_hash_table_lookup(cmdline, "androidboot.serialno"));
@@ -318,7 +320,7 @@ fu_android_boot_device_set_quirk_kv(FuDevice *device,
 	if (g_strcmp0(key, "AndroidBootPartitionMaxSize") == 0) {
 		guint64 size = 0;
 
-		if (!fu_strtoull(value, &size, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &size, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->max_size = size;
 		return TRUE;
@@ -352,9 +354,9 @@ fu_android_boot_device_init(FuAndroidBootDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_SYNC);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_SYNC);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
 
 	/*

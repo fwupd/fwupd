@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Copyright 2017 Dell, Inc.
 #
@@ -302,7 +302,7 @@ def run_installation(directory, verbose, allow_reinstall, allow_older, uninstall
     minimum_path = os.path.join(directory, "minimum")
     minimum = None
     if os.path.exists(minimum_path):
-        with open(minimum_path, "r") as rfd:
+        with open(minimum_path) as rfd:
             minimum = rfd.read()
 
     if not use_included_version(minimum):

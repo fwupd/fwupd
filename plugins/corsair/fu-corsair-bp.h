@@ -37,4 +37,4 @@ void
 fu_corsair_bp_set_legacy_attach(FuCorsairBp *self, gboolean is_legacy_attach);
 
 FuCorsairBp *
-fu_corsair_bp_new(GUsbDevice *usb_device, gboolean is_subdevice);
+fu_corsair_bp_new(FuUsbDevice *usb_device, gboolean is_subdevice);

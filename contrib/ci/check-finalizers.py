@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # pylint: disable=invalid-name,missing-docstring,consider-using-f-string
 # pylint: disable=too-few-public-methods
 #
@@ -42,9 +42,12 @@ class ReturnValidator:
 def test_files():
     # test all C source files
     validator = ReturnValidator()
-    for fn in glob.glob("**/*.c", recursive=True):
-        if fn.startswith("dist/") or fn.startswith("subprojects/"):
-            continue
+    for fn in (
+        glob.glob("libfwupd/*.c")
+        + glob.glob("libfwupdplugin/*.c")
+        + glob.glob("plugins/*/*.c")
+        + glob.glob("src/*.c")
+    ):
         validator.parse(fn)
     for warning in validator.warnings:
         print(warning)

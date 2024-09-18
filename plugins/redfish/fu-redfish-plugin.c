@@ -46,7 +46,7 @@ fu_redfish_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 }
 
 static gchar *
-fu_common_generate_password(guint length)
+fu_redfish_plugin_generate_password(guint length)
 {
 	GString *str = g_string_sized_new(length);
 
@@ -63,7 +63,7 @@ static gboolean
 fu_redfish_plugin_change_expired(FuPlugin *plugin, GError **error)
 {
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
-	g_autofree gchar *password_new = fu_common_generate_password(15);
+	g_autofree gchar *password_new = fu_redfish_plugin_generate_password(15);
 	g_autofree gchar *uri = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(JsonBuilder) builder = json_builder_new();
@@ -146,6 +146,8 @@ fu_redfish_plugin_set_credentials(FuPlugin *plugin, const gchar *username, const
 static gboolean
 fu_redfish_plugin_discover_uefi_credentials(FuPlugin *plugin, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
 	gsize bufsz = 0;
 	guint32 indications = 0x0;
@@ -155,12 +157,13 @@ fu_redfish_plugin_discover_uefi_credentials(FuPlugin *plugin, GError **error)
 	g_autoptr(GBytes) userpass = NULL;
 
 	/* get the uint32 specifying if there are EFI variables set */
-	if (!fu_efivar_get_data(REDFISH_EFI_INFORMATION_GUID,
-				REDFISH_EFI_INFORMATION_INDICATIONS,
-				&buf,
-				&bufsz,
-				NULL,
-				error))
+	if (!fu_efivars_get_data(efivars,
+				 REDFISH_EFI_INFORMATION_GUID,
+				 REDFISH_EFI_INFORMATION_INDICATIONS,
+				 &buf,
+				 &bufsz,
+				 NULL,
+				 error))
 		return FALSE;
 	if (!fu_memread_uint32_safe(buf, bufsz, 0x0, &indications, G_LITTLE_ENDIAN, error))
 		return FALSE;
@@ -173,10 +176,11 @@ fu_redfish_plugin_discover_uefi_credentials(FuPlugin *plugin, GError **error)
 	}
 
 	/* read the correct EFI var for runtime */
-	userpass = fu_efivar_get_data_bytes(REDFISH_EFI_INFORMATION_GUID,
-					    REDFISH_EFI_INFORMATION_OS_CREDENTIALS,
-					    NULL,
-					    error);
+	userpass = fu_efivars_get_data_bytes(efivars,
+					     REDFISH_EFI_INFORMATION_GUID,
+					     REDFISH_EFI_INFORMATION_OS_CREDENTIALS,
+					     NULL,
+					     error);
 	if (userpass == NULL)
 		return FALSE;
 
@@ -244,6 +248,7 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 static gboolean
 fu_redfish_plugin_autoconnect_network_device(FuRedfishPlugin *self, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	g_autofree gchar *hostname = NULL;
 	g_autoptr(FuRedfishNetworkDevice) device = NULL;
 
@@ -259,7 +264,8 @@ fu_redfish_plugin_autoconnect_network_device(FuRedfishPlugin *self, GError **err
 		const gchar *mac_addr = fu_redfish_smbios_get_mac_addr(self->smbios);
 		if (mac_addr != NULL) {
 			g_autoptr(GError) error_network = NULL;
-			device = fu_redfish_network_device_for_mac_addr(mac_addr, &error_network);
+			device =
+			    fu_redfish_network_device_for_mac_addr(ctx, mac_addr, &error_network);
 			if (device == NULL)
 				g_debug("failed to get device: %s", error_network->message);
 		}
@@ -269,7 +275,8 @@ fu_redfish_plugin_autoconnect_network_device(FuRedfishPlugin *self, GError **err
 		guint16 pid = fu_redfish_smbios_get_pid(self->smbios);
 		if (vid != 0x0 && pid != 0x0) {
 			g_autoptr(GError) error_network = NULL;
-			device = fu_redfish_network_device_for_vid_pid(vid, pid, &error_network);
+			device =
+			    fu_redfish_network_device_for_vid_pid(ctx, vid, pid, &error_network);
 			if (device == NULL)
 				g_debug("failed to get device: %s", error_network->message);
 		}
@@ -310,8 +317,8 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(plugin);
 	const gchar *username_fwupd = "fwupd";
 	guint8 user_id = G_MAXUINT8;
-	g_autofree gchar *password_new = fu_common_generate_password(15);
-	g_autofree gchar *password_tmp = fu_common_generate_password(15);
+	g_autofree gchar *password_new = fu_redfish_plugin_generate_password(15);
+	g_autofree gchar *password_tmp = fu_redfish_plugin_generate_password(15);
 	g_autofree gchar *uri = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuIpmiDevice) device = fu_ipmi_device_new(fu_plugin_get_context(plugin));
@@ -357,9 +364,7 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	/* OEM specific for Advantech manufacture */
 	if (fu_context_has_hwid_guid(fu_plugin_get_context(plugin),
 				     "18789130-a714-53c0-b025-fa93801d3995")) {
-		if (!fu_redfish_device_set_user_group_redfish_enable_advantech(device,
-									       user_id,
-									       error))
+		if (!fu_ipmi_device_set_user_group_redfish_enable_advantech(device, user_id, error))
 			return FALSE;
 	}
 	fu_redfish_backend_set_username(self->backend, username_fwupd);
@@ -452,8 +457,15 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 
 		split = g_strsplit(ip_str, ":", 2);
 		fu_redfish_backend_set_hostname(self->backend, split[0]);
-		if (g_strv_length(split) > 1)
-			port = g_ascii_strtoull(split[1], NULL, 10);
+		if (g_strv_length(split) > 1) {
+			if (!fu_strtoull(split[1],
+					 &port,
+					 0,
+					 G_MAXUINT64,
+					 FU_INTEGER_BASE_10,
+					 error))
+				return FALSE;
+		}
 		if (port == 0 || port == G_MAXUINT64) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -514,7 +526,10 @@ fu_redfish_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 	}
 #endif
 
-	return fu_backend_setup(FU_BACKEND(self->backend), progress, error);
+	return fu_backend_setup(FU_BACKEND(self->backend),
+				FU_BACKEND_SETUP_FLAG_NONE,
+				progress,
+				error);
 }
 
 static gboolean
@@ -526,7 +541,10 @@ fu_redfish_plugin_cleanup_setup_cb(FuDevice *device, gpointer user_data, GError 
 	/* the network adaptor might not auto-connect when coming back */
 	if (!fu_redfish_plugin_autoconnect_network_device(self, error))
 		return FALSE;
-	return fu_backend_setup(FU_BACKEND(self->backend), progress, error);
+	return fu_backend_setup(FU_BACKEND(self->backend),
+				FU_BACKEND_SETUP_FLAG_NONE,
+				progress,
+				error);
 }
 
 static gboolean
@@ -603,7 +621,12 @@ fu_redfish_plugin_cleanup(FuPlugin *plugin,
 
 	/* read the config file to work out how long to wait */
 	restart_timeout_str = fu_plugin_get_config_value(plugin, "ManagerResetTimeout");
-	if (!fu_strtoull(restart_timeout_str, &reset_timeout, 1, 86400, error))
+	if (!fu_strtoull(restart_timeout_str,
+			 &reset_timeout,
+			 1,
+			 86400,
+			 FU_INTEGER_BASE_AUTO,
+			 error))
 		return FALSE;
 
 	/* wait for the BMC to come back */
@@ -693,7 +716,7 @@ fu_redfish_plugin_constructed(GObject *obj)
 }
 
 static void
-fu_redfish_finalize(GObject *obj)
+fu_redfish_plugin_finalize(GObject *obj)
 {
 	FuRedfishPlugin *self = FU_REDFISH_PLUGIN(obj);
 	if (self->smbios != NULL)
@@ -709,7 +732,7 @@ fu_redfish_plugin_class_init(FuRedfishPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->finalize = fu_redfish_finalize;
+	object_class->finalize = fu_redfish_plugin_finalize;
 	plugin_class->constructed = fu_redfish_plugin_constructed;
 	plugin_class->to_string = fu_redfish_plugin_to_string;
 	plugin_class->startup = fu_redfish_plugin_startup;

@@ -65,6 +65,19 @@ SPI Flash Descriptor), examples:
 The firmware is deployed to the SPI chip when the machine is in normal runtime
 mode, but it is only used when the device is rebooted.
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### `Flags=reset-cmos`
+
+Flag to determine if the CMOS checksum should be reset after the flash is reprogrammed.
+This will force the CMOS defaults to be reloaded on the next boot.
+
+### `Flags=fn-m-me-unlock`
+
+Flag to determine if manual ME unlocking by pressing Fn + M is supported.
+
 ## Vendor ID Security
 
 The vendor ID is set from the BIOS vendor, for example `DMI:Google`

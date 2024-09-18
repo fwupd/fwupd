@@ -41,7 +41,7 @@ fu_unix_seekable_input_stream_can_seek(GSeekable *seekable)
 
 /* from glocalfileinputstream.c */
 static int
-_seek_type_to_lseek(GSeekType type)
+fu_unix_seekable_input_stream_seek_type_to_lseek(GSeekType type)
 {
 	switch (type) {
 	default:
@@ -69,10 +69,10 @@ fu_unix_seekable_input_stream_seek(GSeekable *seekable,
 
 	rc = lseek(g_unix_input_stream_get_fd(G_UNIX_INPUT_STREAM(self)),
 		   offset,
-		   _seek_type_to_lseek(type));
+		   fu_unix_seekable_input_stream_seek_type_to_lseek(type));
 	if (rc < 0) {
 		g_set_error(error,
-			    G_IO_ERROR, /* nocheck */
+			    G_IO_ERROR, /* nocheck:error */
 			    g_io_error_from_errno(errno),
 			    "Error seeking file descriptor: %s",
 			    g_strerror(errno));
@@ -95,8 +95,8 @@ fu_unix_seekable_input_stream_truncate(GSeekable *seekable,
 {
 	/* using GIOError here as this will eventually go into GLib */
 	g_set_error_literal(error,
-			    G_IO_ERROR,		      /* nocheck */
-			    G_IO_ERROR_NOT_SUPPORTED, /* nocheck */
+			    G_IO_ERROR,		      /* nocheck:error */
+			    G_IO_ERROR_NOT_SUPPORTED, /* nocheck:error */
 			    "cannot truncate FuUnixSeekableInputStream");
 	return FALSE;
 }

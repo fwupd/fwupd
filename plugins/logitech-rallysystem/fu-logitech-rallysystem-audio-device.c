@@ -6,78 +6,20 @@
 
 #include "config.h"
 
-#ifdef HAVE_IOCTL_H
-#include <linux/hidraw.h>
-#include <sys/ioctl.h>
-#endif
-
 #include "fu-logitech-rallysystem-audio-device.h"
 #include "fu-logitech-rallysystem-struct.h"
 
-#define FU_LOGITECH_RALLYSYSTEM_AUDIO_DEVICE_IOCTL_TIMEOUT 2500 /* ms */
-#define TOPOLOGY_DATA_LEN				   513	/* plus 1 byte for the report id */
-#define SERIAL_NUMBER_REQUEST_DATA_LEN			   49
-#define SERIAL_NUMBER_RESPONSE_DATA_LEN			   128
+#define TOPOLOGY_DATA_LEN		513 /* plus 1 byte for the report id */
+#define SERIAL_NUMBER_REQUEST_DATA_LEN	49
+#define SERIAL_NUMBER_RESPONSE_DATA_LEN 128
 
 struct _FuLogitechRallysystemAudioDevice {
-	FuUdevDevice parent_instance;
+	FuHidrawDevice parent_instance;
 };
 
 G_DEFINE_TYPE(FuLogitechRallysystemAudioDevice,
 	      fu_logitech_rallysystem_audio_device,
-	      FU_TYPE_UDEV_DEVICE)
-
-static gboolean
-fu_logitech_rallysystem_audio_device_set_feature(FuLogitechRallysystemAudioDevice *self,
-						 const guint8 *buf,
-						 guint bufsz,
-						 GError **error)
-{
-#ifdef HAVE_HIDRAW_H
-	fu_dump_raw(G_LOG_DOMAIN, "HidSetFeature", buf, bufsz);
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    HIDIOCSFEATURE(bufsz),
-				    (guint8 *)buf,
-				    NULL,
-				    FU_LOGITECH_RALLYSYSTEM_AUDIO_DEVICE_IOCTL_TIMEOUT,
-				    error);
-#else
-	/* failed */
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
-}
-
-static gboolean
-fu_logitech_rallysystem_audio_device_get_feature(FuLogitechRallysystemAudioDevice *self,
-						 guint8 *buf,
-						 guint bufsz,
-						 GError **error)
-{
-#ifdef HAVE_HIDRAW_H
-	fu_dump_raw(G_LOG_DOMAIN, "HidGetFeatureReq", buf, bufsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(bufsz),
-				  buf,
-				  NULL,
-				  FU_LOGITECH_RALLYSYSTEM_AUDIO_DEVICE_IOCTL_TIMEOUT,
-				  error)) {
-		return FALSE;
-	}
-	fu_dump_raw(G_LOG_DOMAIN, "HidGetFeatureRes", buf, bufsz);
-	return TRUE;
-#else
-	/* failed */
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
-}
+	      FU_TYPE_HIDRAW_DEVICE)
 
 static gboolean
 fu_logitech_rallysystem_audio_device_set_version(FuLogitechRallysystemAudioDevice *self,
@@ -87,8 +29,13 @@ fu_logitech_rallysystem_audio_device_set_version(FuLogitechRallysystemAudioDevic
 	guint32 fwversion = 0;
 
 	/* setup HID report to query current device version */
-	if (!fu_logitech_rallysystem_audio_device_get_feature(self, buf, sizeof(buf), error))
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+					  buf,
+					  sizeof(buf),
+					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					  error)) {
 		return FALSE;
+	}
 	if (!fu_memread_uint24_safe(
 		buf,
 		sizeof(buf),
@@ -114,21 +61,24 @@ fu_logitech_rallysystem_audio_device_set_serial(FuLogitechRallysystemAudioDevice
 	g_autoptr(GString) serial = g_string_new(NULL);
 
 	/* setup HID report for serial number request */
-	if (!fu_logitech_rallysystem_audio_device_set_feature(self,
-							      buf_req,
-							      sizeof(buf_req),
-							      error))
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  buf_req,
+					  sizeof(buf_req),
+					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					  error))
 		return FALSE;
 
 	/* wait 100ms for device to consume request and prepare for response */
 	fu_device_sleep(FU_DEVICE(self), 100);
 
 	/* setup HID report to query serial number */
-	if (!fu_logitech_rallysystem_audio_device_get_feature(self,
-							      buf_res,
-							      sizeof(buf_res),
-							      error))
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+					  buf_res,
+					  sizeof(buf_res),
+					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					  error)) {
 		return FALSE;
+	}
 
 	/* desired serial number format: PID:YYYYMMDD:EthernetMacAddress */
 	st = fu_struct_audio_serial_number_parse(buf_res, sizeof(buf_res), 0x0, error);
@@ -157,28 +107,6 @@ fu_logitech_rallysystem_audio_device_setup(FuDevice *device, GError **error)
 	if (!fu_logitech_rallysystem_audio_device_set_serial(self, error))
 		return FALSE;
 	return TRUE;
-}
-
-static gboolean
-fu_logitech_rallysystem_audio_device_probe(FuDevice *device, GError **error)
-{
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_logitech_rallysystem_audio_device_parent_class)
-		 ->probe(device, error))
-		return FALSE;
-
-	/* ignore unsupported subsystems */
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "hidraw") != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "is not correct subsystem=%s, expected hidraw",
-			    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)));
-		return FALSE;
-	}
-
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
 }
 
 static void
@@ -214,17 +142,15 @@ fu_logitech_rallysystem_audio_device_init(FuLogitechRallysystemAudioDevice *self
 	fu_device_add_protocol(FU_DEVICE(self), "com.logitech.vc.rallysystem");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_IOCTL_RETRY);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK);
 }
 
 static void
 fu_logitech_rallysystem_audio_device_class_init(FuLogitechRallysystemAudioDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->probe = fu_logitech_rallysystem_audio_device_probe;
 	device_class->setup = fu_logitech_rallysystem_audio_device_setup;
 	device_class->set_progress = fu_logitech_rallysystem_audio_device_set_progress;
 	device_class->convert_version = fu_logitech_rallysystem_audio_device_convert_version;

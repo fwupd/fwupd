@@ -510,7 +510,7 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 			    (guint)sz);
 		return FALSE;
 	}
-	memcpy(&device_id_be, buf, 4);
+	memcpy(&device_id_be, buf, 4); /* nocheck:blocked */
 	priv->device_id = GINT32_FROM_BE(device_id_be);
 
 	if (buf[0] == ATMEL_MANUFACTURER_CODE1) {
@@ -624,8 +624,10 @@ fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
 						  buf,
 						  0, /* timeout default */
 						  fu_progress_get_child(progress),
-						  error))
+						  error)) {
+			g_prefix_error(error, "failed to write AVR chunk %u: ", i);
 			return FALSE;
+		}
 
 		/* update UI */
 		fu_progress_step_done(progress);

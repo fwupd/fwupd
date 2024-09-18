@@ -47,19 +47,19 @@ fu_analogix_device_send(FuAnalogixDevice *self,
 		return FALSE;
 
 	/* send data to device */
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   reqcode,	/* request */
-					   val0code,	/* value */
-					   index,	/* index */
-					   buf_tmp,	/* data */
-					   bufsz,	/* length */
-					   &actual_len, /* actual length */
-					   (guint)ANX_BB_TRANSACTION_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    reqcode,	 /* request */
+					    val0code,	 /* value */
+					    index,	 /* index */
+					    buf_tmp,	 /* data */
+					    bufsz,	 /* length */
+					    &actual_len, /* actual length */
+					    (guint)ANX_BB_TRANSACTION_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "send data error: ");
 		return FALSE;
 	}
@@ -90,19 +90,19 @@ fu_analogix_device_receive(FuAnalogixDevice *self,
 	g_return_val_if_fail(bufsz <= 64, FALSE);
 
 	/* get data from device */
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   reqcode,  /* request */
-					   val0code, /* value */
-					   index,
-					   buf,		/* data */
-					   bufsz,	/* length */
-					   &actual_len, /* actual length */
-					   (guint)ANX_BB_TRANSACTION_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    reqcode,  /* request */
+					    val0code, /* value */
+					    index,
+					    buf,	 /* data */
+					    bufsz,	 /* length */
+					    &actual_len, /* actual length */
+					    (guint)ANX_BB_TRANSACTION_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "receive data error: ");
 		return FALSE;
 	}
@@ -198,20 +198,19 @@ fu_analogix_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_analogix_device_find_interface(FuUsbDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(device);
 	FuAnalogixDevice *self = FU_ANALOGIX_DEVICE(device);
 	g_autoptr(GPtrArray) intfs = NULL;
 
-	intfs = g_usb_device_get_interfaces(usb_device, error);
+	intfs = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
 	if (intfs == NULL)
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {
-		GUsbInterface *intf = g_ptr_array_index(intfs, i);
-		if (g_usb_interface_get_class(intf) == BILLBOARD_CLASS &&
-		    g_usb_interface_get_subclass(intf) == BILLBOARD_SUBCLASS &&
-		    g_usb_interface_get_protocol(intf) == BILLBOARD_PROTOCOL) {
+		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
+		if (fu_usb_interface_get_class(intf) == BILLBOARD_CLASS &&
+		    fu_usb_interface_get_subclass(intf) == BILLBOARD_SUBCLASS &&
+		    fu_usb_interface_get_protocol(intf) == BILLBOARD_PROTOCOL) {
 			fu_usb_device_add_interface(FU_USB_DEVICE(self),
-						    g_usb_interface_get_number(intf));
+						    fu_usb_interface_get_number(intf));
 			return TRUE;
 		}
 	}

@@ -61,7 +61,7 @@ fu_dpaux_device_invalidate(FuDevice *device)
 static gboolean
 fu_dpaux_device_probe(FuDevice *device, GError **error)
 {
-	const gchar *tmp;
+	g_autofree gchar *attr_name = NULL;
 
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_dpaux_device_parent_class)->probe(device, error))
@@ -75,14 +75,20 @@ fu_dpaux_device_probe(FuDevice *device, GError **error)
 		    g_path_get_basename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
 		fu_device_set_logical_id(device, logical_id);
 	}
-
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci,drm_dp_aux_dev", error))
-		return FALSE;
+	if (fu_device_get_physical_id(device) == NULL) {
+		if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device),
+						    "pci,drm_dp_aux_dev",
+						    error))
+			return FALSE;
+	}
 
 	/* only populated on real system, test suite won't have udev_device set */
-	tmp = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "name", NULL);
-	if (tmp != NULL)
-		fu_device_set_name(device, tmp);
+	attr_name = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+					      "name",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      NULL);
+	if (attr_name != NULL)
+		fu_device_set_name(device, attr_name);
 
 	return TRUE;
 }
@@ -127,9 +133,12 @@ fu_dpaux_device_setup(FuDevice *device, GError **error)
 	fu_device_set_version_raw(device, fu_struct_dpaux_dpcd_get_fw_ver(st));
 
 	/* build some extra GUIDs */
-	fu_device_add_instance_u32(device, "OUI", priv->dpcd_ieee_oui);
-	fu_device_add_instance_u8(device, "HWREV", priv->dpcd_hw_rev);
-	fu_device_add_instance_strup(device, "DEVID", priv->dpcd_dev_id);
+	if (priv->dpcd_ieee_oui != 0x0)
+		fu_device_add_instance_u32(device, "OUI", priv->dpcd_ieee_oui);
+	if (priv->dpcd_hw_rev != 0x0)
+		fu_device_add_instance_u8(device, "HWREV", priv->dpcd_hw_rev);
+	if (priv->dpcd_dev_id != 0x0)
+		fu_device_add_instance_strup(device, "DEVID", priv->dpcd_dev_id);
 	fu_device_build_instance_id_full(device,
 					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					 NULL,
@@ -438,10 +447,10 @@ static void
 fu_dpaux_device_init(FuDpauxDevice *self)
 {
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK);
 }
 
 static void

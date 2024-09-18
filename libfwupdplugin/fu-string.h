@@ -6,16 +6,34 @@
 
 #pragma once
 
-#include "fu-common.h"
+#include <fwupd.h>
+
+#include "fu-endian.h"
+
+typedef enum {
+	FU_INTEGER_BASE_AUTO = 0,
+	FU_INTEGER_BASE_10 = 10,
+	FU_INTEGER_BASE_16 = 16,
+} FuIntegerBase;
 
 gchar *
 fu_strsafe(const gchar *str, gsize maxsz);
 gchar *
 fu_strpassmask(const gchar *str) G_GNUC_NON_NULL(1);
 gboolean
-fu_strtoull(const gchar *str, guint64 *value, guint64 min, guint64 max, GError **error);
+fu_strtoull(const gchar *str,
+	    guint64 *value,
+	    guint64 min,
+	    guint64 max,
+	    FuIntegerBase base,
+	    GError **error);
 gboolean
-fu_strtoll(const gchar *str, gint64 *value, gint64 min, gint64 max, GError **error);
+fu_strtoll(const gchar *str,
+	   gint64 *value,
+	   gint64 min,
+	   gint64 max,
+	   FuIntegerBase base,
+	   GError **error);
 gboolean
 fu_strtobool(const gchar *str, gboolean *value, GError **error);
 gchar *

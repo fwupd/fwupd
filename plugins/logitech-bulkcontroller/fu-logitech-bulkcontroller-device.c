@@ -73,43 +73,43 @@ fu_logitech_bulkcontroller_device_probe(FuDevice *device, GError **error)
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
 	g_autoptr(GPtrArray) intfs = NULL;
 
-	intfs = g_usb_device_get_interfaces(fu_usb_device_get_dev(FU_USB_DEVICE(self)), error);
+	intfs = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
 	if (intfs == NULL)
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {
-		GUsbInterface *intf = g_ptr_array_index(intfs, i);
-		if (g_usb_interface_get_class(intf) == G_USB_DEVICE_CLASS_VENDOR_SPECIFIC &&
-		    g_usb_interface_get_protocol(intf) == 0x1) {
-			if (g_usb_interface_get_subclass(intf) == SYNC_INTERFACE_SUBPROTOCOL_ID) {
+		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
+		if (fu_usb_interface_get_class(intf) == FU_USB_CLASS_VENDOR_SPECIFIC &&
+		    fu_usb_interface_get_protocol(intf) == 0x1) {
+			if (fu_usb_interface_get_subclass(intf) == SYNC_INTERFACE_SUBPROTOCOL_ID) {
 				g_autoptr(GPtrArray) endpoints =
-				    g_usb_interface_get_endpoints(intf);
-				self->sync_iface = g_usb_interface_get_number(intf);
+				    fu_usb_interface_get_endpoints(intf);
+				self->sync_iface = fu_usb_interface_get_number(intf);
 				if (endpoints == NULL)
 					continue;
 				for (guint j = 0; j < endpoints->len; j++) {
-					GUsbEndpoint *ep = g_ptr_array_index(endpoints, j);
+					FuUsbEndpoint *ep = g_ptr_array_index(endpoints, j);
 					if (j == EP_OUT)
 						self->sync_ep[EP_OUT] =
-						    g_usb_endpoint_get_address(ep);
+						    fu_usb_endpoint_get_address(ep);
 					else
 						self->sync_ep[EP_IN] =
-						    g_usb_endpoint_get_address(ep);
+						    fu_usb_endpoint_get_address(ep);
 				}
-			} else if (g_usb_interface_get_subclass(intf) ==
+			} else if (fu_usb_interface_get_subclass(intf) ==
 				   UPD_INTERFACE_SUBPROTOCOL_ID) {
 				g_autoptr(GPtrArray) endpoints =
-				    g_usb_interface_get_endpoints(intf);
-				self->update_iface = g_usb_interface_get_number(intf);
+				    fu_usb_interface_get_endpoints(intf);
+				self->update_iface = fu_usb_interface_get_number(intf);
 				if (endpoints == NULL)
 					continue;
 				for (guint j = 0; j < endpoints->len; j++) {
-					GUsbEndpoint *ep = g_ptr_array_index(endpoints, j);
+					FuUsbEndpoint *ep = g_ptr_array_index(endpoints, j);
 					if (j == EP_OUT)
 						self->update_ep[EP_OUT] =
-						    g_usb_endpoint_get_address(ep);
+						    fu_usb_endpoint_get_address(ep);
 					else
 						self->update_ep[EP_IN] =
-						    g_usb_endpoint_get_address(ep);
+						    fu_usb_endpoint_get_address(ep);
 				}
 			}
 		}
@@ -142,14 +142,14 @@ fu_logitech_bulkcontroller_device_send(FuLogitechBulkcontrollerDevice *self,
 		return FALSE;
 	}
 	fu_dump_full(G_LOG_DOMAIN, "request", buf, bufsz, 20, FU_DUMP_FLAGS_SHOW_ASCII);
-	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					ep,
-					buf,
-					bufsz,
-					NULL, /* transferred */
-					BULK_TRANSFER_TIMEOUT,
-					NULL,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 ep,
+					 buf,
+					 bufsz,
+					 NULL, /* transferred */
+					 BULK_TRANSFER_TIMEOUT,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "failed to send using bulk transfer: ");
 		fu_error_convert(error);
 		return FALSE;
@@ -182,16 +182,15 @@ fu_logitech_bulkcontroller_device_recv(FuLogitechBulkcontrollerDevice *self,
 		return FALSE;
 	}
 	g_debug("read response");
-	if (!g_usb_device_bulk_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					ep,
-					buf,
-					bufsz,
-					&actual_length,
-					timeout,
-					NULL,
-					error)) {
-		g_prefix_error(error, "failed to receive using bulk transfer: ");
-		fu_error_convert(error);
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 ep,
+					 buf,
+					 bufsz,
+					 &actual_length,
+					 timeout,
+					 NULL,
+					 error)) {
+		g_prefix_error(error, "failed to receive: ");
 		return FALSE;
 	}
 	fu_dump_full(G_LOG_DOMAIN, "response", buf, actual_length, 20, FU_DUMP_FLAGS_SHOW_ASCII);
@@ -205,7 +204,7 @@ typedef struct {
 } FuLogitechBulkcontrollerResponse;
 
 static FuLogitechBulkcontrollerResponse *
-fu_logitech_bulkcontroller_response_new(void)
+fu_logitech_bulkcontroller_device_response_new(void)
 {
 	FuLogitechBulkcontrollerResponse *response = g_new0(FuLogitechBulkcontrollerResponse, 1);
 	response->data = g_byte_array_new();
@@ -213,7 +212,7 @@ fu_logitech_bulkcontroller_response_new(void)
 }
 
 static void
-fu_logitech_bulkcontroller_response_free(FuLogitechBulkcontrollerResponse *response)
+fu_logitech_bulkcontroller_device_response_free(FuLogitechBulkcontrollerResponse *response)
 {
 	if (response->data != NULL)
 		g_byte_array_unref(response->data);
@@ -221,7 +220,7 @@ fu_logitech_bulkcontroller_response_free(FuLogitechBulkcontrollerResponse *respo
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuLogitechBulkcontrollerResponse,
-			      fu_logitech_bulkcontroller_response_free)
+			      fu_logitech_bulkcontroller_device_response_free)
 
 static gboolean
 fu_logitech_bulkcontroller_device_sync_send_cmd(FuLogitechBulkcontrollerDevice *self,
@@ -285,7 +284,7 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 	g_autofree guint8 *buf = g_malloc0(self->transfer_bufsz);
 	g_autoptr(GByteArray) st = NULL;
 	g_autoptr(FuLogitechBulkcontrollerResponse) response =
-	    fu_logitech_bulkcontroller_response_new();
+	    fu_logitech_bulkcontroller_device_response_new();
 
 	if (!fu_logitech_bulkcontroller_device_recv(self,
 						    buf,
@@ -407,7 +406,12 @@ fu_logitech_bulkcontroller_device_sync_check_ack_cmd(GByteArray *buf,
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "ack_payload", (guint8 *)ack_payload, sizeof(ack_payload));
-	if (!fu_strtoull((const gchar *)ack_payload, &ack_cmd, 0, G_MAXUINT32, error)) {
+	if (!fu_strtoull((const gchar *)ack_payload,
+			 &ack_cmd,
+			 0,
+			 G_MAXUINT32,
+			 FU_INTEGER_BASE_AUTO,
+			 error)) {
 		g_prefix_error(error, "failed to parse ack payload cmd: ");
 		return FALSE;
 	}
@@ -781,7 +785,10 @@ fu_logitech_bulkcontroller_device_parse_info(FuLogitechBulkcontrollerDevice *sel
 	g_autofree gchar *bufstr = NULL;
 	g_autoptr(GByteArray) decoded_pkt = NULL;
 
-	decoded_pkt = proto_manager_decode_message(buf->data, buf->len, &proto_id, error);
+	decoded_pkt = fu_logitech_bulkcontroller_proto_manager_decode_message(buf->data,
+									      buf->len,
+									      &proto_id,
+									      error);
 	if (decoded_pkt == NULL) {
 		g_prefix_error(error, "failed to unpack packet for device info request: ");
 		return FALSE;
@@ -824,7 +831,7 @@ fu_logitech_bulkcontroller_device_ensure_info_cb(FuDevice *device,
 	 */
 	if (send_req) {
 		g_autoptr(GByteArray) device_request =
-		    proto_manager_generate_get_device_info_request();
+		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request();
 		buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
 		if (buf == NULL)
 			return FALSE;
@@ -923,7 +930,8 @@ fu_logitech_bulkcontroller_device_verify_cb(FuDevice *device, gpointer user_data
 	if (buf == NULL) {
 		g_autoptr(GByteArray) device_request = NULL;
 		g_debug("manually requesting as no pending request: %s", error_local->message);
-		device_request = proto_manager_generate_get_device_info_request();
+		device_request =
+		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request();
 		buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
 		if (buf == NULL)
 			return FALSE;
@@ -1086,9 +1094,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_logitech_fu_logitech_bulkcontroller_device_set_time_cb(FuDevice *device,
-							  gpointer user_data,
-							  GError **error)
+fu_logitech_bulkcontroller_device_set_time_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
 	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
@@ -1098,13 +1104,17 @@ fu_logitech_fu_logitech_bulkcontroller_device_set_time_cb(FuDevice *device,
 	g_autoptr(GByteArray) buf = NULL;
 
 	/* send SetDeviceTimeRequest to sync device clock with host */
-	device_request = proto_manager_generate_set_device_time_request(error);
+	device_request =
+	    fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(error);
 	if (device_request == NULL)
 		return FALSE;
 	buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
 	if (buf == NULL)
 		return FALSE;
-	decoded_pkt = proto_manager_decode_message(buf->data, buf->len, &proto_id, error);
+	decoded_pkt = fu_logitech_bulkcontroller_proto_manager_decode_message(buf->data,
+									      buf->len,
+									      &proto_id,
+									      error);
 	if (decoded_pkt == NULL) {
 		g_prefix_error(error, "failed to unpack packet: ");
 		return FALSE;
@@ -1130,7 +1140,7 @@ static gboolean
 fu_logitech_bulkcontroller_device_set_time(FuLogitechBulkcontrollerDevice *self, GError **error)
 {
 	return fu_device_retry(FU_DEVICE(self),
-			       fu_logitech_fu_logitech_bulkcontroller_device_set_time_cb,
+			       fu_logitech_bulkcontroller_device_set_time_cb,
 			       MAX_RETRIES,
 			       NULL,
 			       error);
@@ -1147,12 +1157,15 @@ fu_logitech_bulkcontroller_device_transition_to_device_mode_cb(FuDevice *device,
 	g_autoptr(GByteArray) res = NULL;
 	g_autoptr(GByteArray) decoded_pkt = NULL;
 
-	req = proto_manager_generate_transition_to_device_mode_request();
+	req = fu_logitech_bulkcontroller_proto_manager_generate_transition_to_device_mode_request();
 	res = fu_logitech_bulkcontroller_device_sync_write(self, req, error);
 	if (res == NULL)
 		return FALSE;
 
-	decoded_pkt = proto_manager_decode_message(res->data, res->len, &proto_id, error);
+	decoded_pkt = fu_logitech_bulkcontroller_proto_manager_decode_message(res->data,
+									      res->len,
+									      &proto_id,
+									      error);
 	if (decoded_pkt == NULL) {
 		g_prefix_error(error, "failed to unpack packet: ");
 		return FALSE;
@@ -1327,16 +1340,14 @@ fu_logitech_bulkcontroller_device_init(FuLogitechBulkcontrollerDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN);
 	fu_usb_device_set_claim_retry_count(FU_USB_DEVICE(self), 100);
-	fu_usb_device_set_open_retry_count(FU_USB_DEVICE(self), 5);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10 * 60 * 1000); /* >1 min to finish init */
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_CHECK_BUFFER_SIZE,
-					"check-buffer-size");
+					FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_CHECK_BUFFER_SIZE);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL,
-					"post-install");
+					FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_POST_INSTALL);
 
 	/* these are unrecoverable */
 	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, NULL);

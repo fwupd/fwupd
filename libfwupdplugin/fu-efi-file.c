@@ -8,6 +8,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-common.h"
 #include "fu-efi-common.h"
 #include "fu-efi-file.h"
 #include "fu-efi-section.h"
@@ -65,7 +66,7 @@ fu_efi_file_hdr_checksum8(GBytes *blob)
 			continue;
 		checksum += buf[i];
 	}
-	return 0x100 - checksum;
+	return (guint8)(0x100u - (guint)checksum);
 }
 
 static gboolean

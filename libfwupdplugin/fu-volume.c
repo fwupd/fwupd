@@ -34,7 +34,9 @@ struct _FuVolume {
 	GDBusProxy *proxy_blk;
 	GDBusProxy *proxy_fs;
 	GDBusProxy *proxy_part;
-	gchar *mount_path; /* only when mounted ourselves */
+	gchar *mount_path;     /* only when mounted ourselves */
+	gchar *partition_kind; /* only for tests */
+	gchar *partition_uuid; /* only for tests */
 };
 
 enum {
@@ -46,13 +48,48 @@ enum {
 	PROP_LAST
 };
 
-G_DEFINE_TYPE(FuVolume, fu_volume, G_TYPE_OBJECT)
+static void
+fu_volume_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuVolume,
+		       fu_volume,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_volume_codec_iface_init))
+
+static void
+fu_volume_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+{
+	FuVolume *self = FU_VOLUME(codec);
+	g_autofree gchar *mount_point = fu_volume_get_mount_point(self);
+	g_autofree gchar *partition_kind = fu_volume_get_partition_kind(self);
+	g_autofree gchar *partition_name = fu_volume_get_partition_name(self);
+	g_autofree gchar *partition_uuid = fu_volume_get_partition_uuid(self);
+
+	fwupd_codec_json_append_bool(builder, "IsMounted", fu_volume_is_mounted(self));
+	fwupd_codec_json_append_bool(builder, "IsEncrypted", fu_volume_is_encrypted(self));
+	fwupd_codec_json_append_int(builder, "Size", fu_volume_get_size(self));
+	fwupd_codec_json_append_int(builder, "BlockSize", fu_volume_get_block_size(self, NULL));
+	fwupd_codec_json_append(builder, "MountPoint", mount_point);
+	fwupd_codec_json_append(builder, "PartitionKind", partition_kind);
+	fwupd_codec_json_append(builder, "PartitionName", partition_name);
+	fwupd_codec_json_append_int(builder, "PartitionSize", fu_volume_get_partition_size(self));
+	fwupd_codec_json_append_int(builder,
+				    "PartitionOffset",
+				    fu_volume_get_partition_offset(self));
+	fwupd_codec_json_append_int(builder,
+				    "PartitionNumber",
+				    fu_volume_get_partition_number(self));
+	fwupd_codec_json_append(builder, "PartitionUuid", partition_uuid);
+}
 
 static void
 fu_volume_finalize(GObject *obj)
 {
 	FuVolume *self = FU_VOLUME(obj);
 	g_free(self->mount_path);
+	g_free(self->partition_kind);
+	g_free(self->partition_uuid);
 	if (self->proxy_blk != NULL)
 		g_object_unref(self->proxy_blk);
 	if (self->proxy_fs != NULL)
@@ -324,6 +361,8 @@ fu_volume_get_partition_uuid(FuVolume *self)
 
 	g_return_val_if_fail(FU_IS_VOLUME(self), NULL);
 
+	if (self->partition_uuid != NULL)
+		return g_strdup(self->partition_uuid);
 	if (self->proxy_part == NULL)
 		return NULL;
 	val = g_dbus_proxy_get_cached_property(self->proxy_part, "UUID");
@@ -352,12 +391,50 @@ fu_volume_get_partition_kind(FuVolume *self)
 
 	g_return_val_if_fail(FU_IS_VOLUME(self), NULL);
 
+	if (self->partition_kind != NULL)
+		return g_strdup(self->partition_kind);
 	if (self->proxy_part == NULL)
 		return NULL;
 	val = g_dbus_proxy_get_cached_property(self->proxy_part, "Type");
 	if (val == NULL)
 		return NULL;
 	return g_variant_dup_string(val, NULL);
+}
+
+/**
+ * fu_volume_set_partition_kind:
+ * @self: a @FuVolume
+ * @partition_kind: a partition kind, e.g. %FU_VOLUME_KIND_ESP
+ *
+ * Sets the partition name of the volume mount point.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_volume_set_partition_kind(FuVolume *self, const gchar *partition_kind)
+{
+	g_return_if_fail(FU_IS_VOLUME(self));
+	g_return_if_fail(partition_kind != NULL);
+	g_return_if_fail(self->partition_kind == NULL);
+	self->partition_kind = g_strdup(partition_kind);
+}
+
+/**
+ * fu_volume_set_partition_uuid:
+ * @self: a @FuVolume
+ * @partition_uuid: a UUID
+ *
+ * Sets the partition UUID of the volume mount point.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_volume_set_partition_uuid(FuVolume *self, const gchar *partition_uuid)
+{
+	g_return_if_fail(FU_IS_VOLUME(self));
+	g_return_if_fail(partition_uuid != NULL);
+	g_return_if_fail(self->partition_uuid == NULL);
+	self->partition_uuid = g_strdup(partition_uuid);
 }
 
 /**
@@ -373,7 +450,9 @@ fu_volume_get_partition_kind(FuVolume *self)
 gchar *
 fu_volume_get_partition_name(FuVolume *self)
 {
+	g_autofree gchar *name = NULL;
 	g_autoptr(GVariant) val = NULL;
+	gsize namesz = 0;
 
 	g_return_val_if_fail(FU_IS_VOLUME(self), NULL);
 
@@ -382,7 +461,12 @@ fu_volume_get_partition_name(FuVolume *self)
 	val = g_dbus_proxy_get_cached_property(self->proxy_part, "Name");
 	if (val == NULL)
 		return NULL;
-	return g_variant_dup_string(val, NULL);
+
+	/* only return if non-zero length */
+	name = g_variant_dup_string(val, &namesz);
+	if (namesz == 0)
+		return NULL;
+	return g_steal_pointer(&name);
 }
 
 /**
@@ -421,7 +505,7 @@ fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **err
 	fd = g_open(device_name, O_RDONLY, 0);
 	if (fd < 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR, /* nocheck */
+				    G_IO_ERROR, /* nocheck:error */
 				    g_io_error_from_errno(errno),
 				    g_strerror(errno));
 		fwupd_error_convert(error);
@@ -430,7 +514,7 @@ fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **err
 	rc = ioctl(fd, BLKSSZGET, &sector_size);
 	if (rc < 0) {
 		g_set_error_literal(error,
-				    G_IO_ERROR, /* nocheck */
+				    G_IO_ERROR, /* nocheck:error */
 				    g_io_error_from_errno(errno),
 				    g_strerror(errno));
 		fwupd_error_convert(error);
@@ -449,6 +533,39 @@ fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **err
 		    "Not supported as <sys/ioctl.h> or BLKSSZGET not found");
 	return 0;
 #endif
+}
+
+/**
+ * fu_volume_get_block_label:
+ * @self: a @FuVolume
+ *
+ * Gets the block name of the volume
+ *
+ * Returns: (transfer full): block device name, e.g 'Recovery Partition'
+ *
+ * Since: 1.9.24
+ **/
+gchar *
+fu_volume_get_block_name(FuVolume *self)
+{
+	gsize namesz = 0;
+	g_autofree gchar *name = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail(FU_IS_VOLUME(self), NULL);
+
+	if (self->proxy_blk == NULL)
+		return NULL;
+
+	val = g_dbus_proxy_get_cached_property(self->proxy_blk, "IdLabel");
+	if (val == NULL)
+		return NULL;
+
+	/* only return if non-zero length */
+	name = g_variant_dup_string(val, &namesz);
+	if (namesz == 0)
+		return NULL;
+	return g_steal_pointer(&name);
 }
 
 /**
@@ -844,12 +961,49 @@ fu_volume_check_block_device_symlinks(const gchar *const *symlinks, GError **err
 	return TRUE;
 }
 
+static gboolean
+fu_volume_check_is_recovery(const gchar *name)
+{
+	g_autoptr(GString) name_safe = g_string_new(name);
+	const gchar *recovery_partitions[] = {
+	    "DELLRESTORE",
+	    "DELLUTILITY",
+	    "DIAGS",
+	    "HP_RECOVERY",
+	    "IBM_SERVICE",
+	    "INTELRST",
+	    "LENOVO_RECOVERY",
+	    "OS",
+	    "PQSERVICE",
+	    "RECOVERY",
+	    "RECOVERY_PARTITION",
+	    "SERVICEV001",
+	    "SERVICEV002",
+	    "SYSTEM_RESERVED",
+	    "WINRE_DRV",
+	    NULL,
+	}; /* from https://github.com/storaged-project/udisks/blob/master/data/80-udisks2.rules */
+
+	g_string_replace(name_safe, " ", "_", 0);
+	g_string_replace(name_safe, "\"", "", 0);
+	g_string_ascii_up(name_safe);
+	return g_strv_contains(recovery_partitions, name_safe->str);
+}
+
+static void
+fu_volume_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_json = fu_volume_add_json;
+}
+
 /**
  * fu_volume_new_by_kind:
  * @kind: a volume kind, typically a GUID
  * @error: (nullable): optional return location for an error
  *
- * Finds all volumes of a specific partition type
+ * Finds all volumes of a specific partition type.
+ * For ESP type partitions exclude any known partitions names that
+ * correspond to recovery partitions.
  *
  * Returns: (transfer container) (element-type FuVolume): a #GPtrArray, or %NULL if the kind was not
  *found
@@ -943,7 +1097,7 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 		id_type = fu_volume_get_id_type(vol);
 		g_info("device %s, type: %s, internal: %d, fs: %s",
 		       g_dbus_proxy_get_object_path(proxy_blk),
-		       type_str,
+		       fu_volume_is_mdraid(vol) ? "mdraid" : type_str,
 		       fu_volume_is_internal(vol),
 		       id_type);
 		if (g_strcmp0(type_str, kind) != 0)
@@ -952,6 +1106,22 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 			g_debug("ignoring linux_raid_member device %s",
 				g_dbus_proxy_get_object_path(proxy_blk));
 			continue;
+		}
+
+		/* ignore a partition that claims to be a recovery partition */
+		if (g_strcmp0(kind, FU_VOLUME_KIND_BDP) == 0 ||
+		    g_strcmp0(kind, FU_VOLUME_KIND_ESP) == 0) {
+			g_autofree gchar *name = fu_volume_get_partition_name(vol);
+
+			if (name == NULL)
+				name = fu_volume_get_block_name(vol);
+			if (name != NULL) {
+				if (fu_volume_check_is_recovery(name)) {
+					g_debug("skipping partition '%s'", name);
+					continue;
+				}
+				g_debug("adding partition '%s'", name);
+			}
 		}
 		g_ptr_array_add(volumes, g_steal_pointer(&vol));
 	}

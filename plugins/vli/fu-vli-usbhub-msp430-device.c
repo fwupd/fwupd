@@ -31,28 +31,27 @@ G_DEFINE_TYPE(FuVliUsbhubMsp430Device, fu_vli_usbhub_msp430_device, FU_TYPE_DEVI
 #define I2C_W_VDR 0xb0 /* write vendor command */
 
 static gboolean
-fu_vli_usbhub_device_i2c_read(FuVliUsbhubDevice *self,
-			      guint8 cmd,
-			      guint8 *buf,
-			      gsize bufsz,
-			      GError **error)
+fu_vli_usbhub_msp430_device_i2c_read(FuVliUsbhubDevice *self,
+				     guint8 cmd,
+				     guint8 *buf,
+				     gsize bufsz,
+				     GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint16 value = ((guint16)I2C_ADDR_WRITE << 8) | cmd;
 	guint16 index = (guint16)I2C_ADDR_READ << 8;
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   I2C_R_VDR,
-					   value,
-					   index,
-					   buf,
-					   bufsz,
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    I2C_R_VDR,
+					    value,
+					    index,
+					    buf,
+					    bufsz,
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to read I2C: ");
 		return FALSE;
 	}
@@ -61,12 +60,16 @@ fu_vli_usbhub_device_i2c_read(FuVliUsbhubDevice *self,
 }
 
 static gboolean
-fu_vli_usbhub_device_i2c_read_status(FuVliUsbhubDevice *self,
-				     FuVliUsbhubI2cStatus *status,
-				     GError **error)
+fu_vli_usbhub_msp430_device_i2c_read_status(FuVliUsbhubDevice *self,
+					    FuVliUsbhubI2cStatus *status,
+					    GError **error)
 {
 	guint8 buf[1] = {0xff};
-	if (!fu_vli_usbhub_device_i2c_read(self, I2C_CMD_READ_STATUS, buf, sizeof(buf), error))
+	if (!fu_vli_usbhub_msp430_device_i2c_read(self,
+						  I2C_CMD_READ_STATUS,
+						  buf,
+						  sizeof(buf),
+						  error))
 		return FALSE;
 	if (status != NULL)
 		*status = buf[0];
@@ -74,14 +77,13 @@ fu_vli_usbhub_device_i2c_read_status(FuVliUsbhubDevice *self,
 }
 
 static gboolean
-fu_vli_usbhub_device_i2c_write_data(FuVliUsbhubDevice *self,
-				    guint8 disable_start_bit,
-				    guint8 disable_end_bit,
-				    const guint8 *buf,
-				    gsize bufsz,
-				    GError **error)
+fu_vli_usbhub_msp430_device_i2c_write_data(FuVliUsbhubDevice *self,
+					   guint8 disable_start_bit,
+					   guint8 disable_end_bit,
+					   const guint8 *buf,
+					   gsize bufsz,
+					   GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint16 value = (((guint16)disable_start_bit) << 8) | disable_end_bit;
 	g_autofree guint8 *buf_mut = NULL;
 
@@ -89,19 +91,19 @@ fu_vli_usbhub_device_i2c_write_data(FuVliUsbhubDevice *self,
 	buf_mut = fu_memdup_safe(buf, bufsz, error);
 	if (buf_mut == NULL)
 		return FALSE;
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   I2C_W_VDR,
-					   value,
-					   0x0,
-					   buf_mut,
-					   bufsz,
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    I2C_W_VDR,
+					    value,
+					    0x0,
+					    buf_mut,
+					    bufsz,
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to write I2C @0x%x: ", value);
 		return FALSE;
 	}
@@ -116,11 +118,11 @@ fu_vli_usbhub_msp430_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 
 	/* get versions */
-	if (!fu_vli_usbhub_device_i2c_read(parent,
-					   I2C_CMD_READ_VERSIONS,
-					   buf,
-					   sizeof(buf),
-					   error)) {
+	if (!fu_vli_usbhub_msp430_device_i2c_read(parent,
+						  I2C_CMD_READ_VERSIONS,
+						  buf,
+						  sizeof(buf),
+						  error)) {
 		g_prefix_error(error, "failed to read versions: ");
 		return FALSE;
 	}
@@ -154,14 +156,14 @@ fu_vli_usbhub_msp430_device_detach(FuDevice *device, FuProgress *progress, GErro
 	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_vli_usbhub_device_i2c_write_data(parent, 0, 0, buf, sizeof(buf), error))
+	if (!fu_vli_usbhub_msp430_device_i2c_write_data(parent, 0, 0, buf, sizeof(buf), error))
 		return FALSE;
 
 	/* avoid power instability by waiting T1 */
 	fu_device_sleep_full(device, 1000, progress); /* ms */
 
 	/* check the device came back */
-	if (!fu_vli_usbhub_device_i2c_read_status(parent, &status, error)) {
+	if (!fu_vli_usbhub_msp430_device_i2c_read_status(parent, &status, error)) {
 		g_prefix_error(error, "device did not come back after detach: ");
 		return FALSE;
 	}
@@ -184,18 +186,23 @@ fu_vli_usbhub_msp430_device_write_firmware_cb(FuDevice *device, gpointer user_da
 
 	fu_device_sleep(device, 5); /* ms */
 	if (fu_usb_device_get_spec(FU_USB_DEVICE(parent)) >= 0x0300 || req->bufsz <= 32) {
-		if (!fu_vli_usbhub_device_i2c_write_data(parent, 0, 0, req->buf, req->bufsz, error))
+		if (!fu_vli_usbhub_msp430_device_i2c_write_data(parent,
+								0,
+								0,
+								req->buf,
+								req->bufsz,
+								error))
 			return FALSE;
 	} else {
 		/* for U2, hub data buffer <= 32 bytes */
-		if (!fu_vli_usbhub_device_i2c_write_data(parent, 0, 1, req->buf, 32, error))
+		if (!fu_vli_usbhub_msp430_device_i2c_write_data(parent, 0, 1, req->buf, 32, error))
 			return FALSE;
-		if (!fu_vli_usbhub_device_i2c_write_data(parent,
-							 1,
-							 0,
-							 req->buf + 32,
-							 req->bufsz - 32,
-							 error))
+		if (!fu_vli_usbhub_msp430_device_i2c_write_data(parent,
+								1,
+								0,
+								req->buf + 32,
+								req->bufsz - 32,
+								error))
 			return FALSE;
 	}
 
@@ -205,7 +212,7 @@ fu_vli_usbhub_msp430_device_write_firmware_cb(FuDevice *device, gpointer user_da
 
 	/* read data to check status */
 	fu_device_sleep(device, 5); /* ms */
-	if (!fu_vli_usbhub_device_i2c_read_status(parent, &status, error))
+	if (!fu_vli_usbhub_msp430_device_i2c_read_status(parent, &status, error))
 		return FALSE;
 	return fu_vli_usbhub_i2c_check_status(status, error);
 }

@@ -776,7 +776,7 @@ device, there might be firmware dependencies between parent and child
 devices that require a specific update ordering (for instance, child
 devices first, then the parent). This can be modeled by setting an
 appropriate firmware priority in the firmware metainfo or by setting the
-`FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST` device flag.
+`FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST` device flag.
 
 ### How to add a delay
 
@@ -801,8 +801,7 @@ define a private flag:
   2)`.  Note that this will be part of the ABI, so it must be versioned
 1. Call `fu_device_register_private_flag` in the device init function
   and assign a string identifier to the flag:
-  `fu_device_register_private_flag (FU_DEVICE (self), MY_PRIVATE_FLAG,
-  "myflag");`
+  `fu_device_register_private_flag(FU_DEVICE (self), MY_PRIVATE_FLAG);`
 
 You can then add it to the device programmatically with
 `fu_device_add_private_flag`, remove it with `fu_device_remove_private_flag`
@@ -911,7 +910,7 @@ rustc*, so small differences may be noticeable.
 The struct types currently supported are:
 
 - `u8`: a `guint8`
-- `u16le`: a `guint16
+- `u16le`: little endian `guint16`
 - `u24`: a 24 bit number represented as a `guint32`
 - `u32le`:  little endian `guint32`
 - `u64be`:  big endian `guint64`

@@ -72,7 +72,7 @@ fu_steelseries_fizz_tunnel_ping(FuDevice *device, gboolean *reached, GError **er
 			       fu_device_get_id(device));
 		return FALSE;
 	}
-	fu_device_set_version(device, version);
+	fu_device_set_version(device, version); /* nocheck:set-version */
 
 	/* success */
 	return TRUE;
@@ -156,11 +156,10 @@ static gboolean
 fu_steelseries_fizz_tunnel_probe(FuDevice *device, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent));
 	guint16 release;
 
 	/* set the version if the release has been set */
-	release = g_usb_device_get_release(usb_device);
+	release = fu_usb_device_get_release(FU_USB_DEVICE(parent));
 	if (release != 0x0 &&
 	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_BCD);
@@ -169,8 +168,8 @@ fu_steelseries_fizz_tunnel_probe(FuDevice *device, GError **error)
 
 	/* add GUIDs in order of priority */
 	fu_device_add_instance_str(device, "PROTOCOL", "FIZZ_TUNNEL");
-	fu_device_add_instance_u16(device, "VID", g_usb_device_get_vid(usb_device));
-	fu_device_add_instance_u16(device, "PID", g_usb_device_get_pid(usb_device));
+	fu_device_add_instance_u16(device, "VID", fu_usb_device_get_vid(FU_USB_DEVICE(parent)));
+	fu_device_add_instance_u16(device, "PID", fu_usb_device_get_pid(FU_USB_DEVICE(parent)));
 	fu_device_add_instance_u16(device, "REV", release);
 	fu_device_build_instance_id_full(device,
 					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
@@ -180,7 +179,7 @@ fu_steelseries_fizz_tunnel_probe(FuDevice *device, GError **error)
 					 "PROTOCOL",
 					 NULL);
 	fu_device_build_instance_id(device, NULL, "STEELSERIES", "VID", "PID", "PROTOCOL", NULL);
-	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV)) {
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
 		fu_device_build_instance_id(device,
 					    NULL,
 					    "STEELSERIES",
@@ -394,8 +393,9 @@ fu_steelseries_fizz_tunnel_init(FuSteelseriesFizzTunnel *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING);
 	fu_device_add_protocol(FU_DEVICE(self), "com.steelseries.fizz");
 	fu_device_set_logical_id(FU_DEVICE(self), "tunnel");
 	fu_device_set_install_duration(FU_DEVICE(self), 38);				  /* 38 s */

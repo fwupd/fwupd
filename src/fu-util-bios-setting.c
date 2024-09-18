@@ -62,10 +62,10 @@ fu_util_bios_setting_matches_args(FwupdBiosSetting *setting, gchar **values)
 }
 
 gboolean
-fu_util_get_bios_setting_as_json(FuConsole *console,
-				 gchar **values,
-				 GPtrArray *settings,
-				 GError **error)
+fu_util_bios_setting_console_print(FuConsole *console,
+				   gchar **values,
+				   GPtrArray *settings,
+				   GError **error)
 {
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 	json_builder_begin_object(builder);
@@ -76,7 +76,9 @@ fu_util_get_bios_setting_as_json(FuConsole *console,
 		FwupdBiosSetting *setting = g_ptr_array_index(settings, i);
 		if (fu_util_bios_setting_matches_args(setting, values)) {
 			fu_util_bios_setting_update_description(setting);
+			json_builder_begin_object(builder);
 			fwupd_codec_to_json(FWUPD_CODEC(setting), builder, FWUPD_CODEC_FLAG_NONE);
+			json_builder_end_object(builder);
 		}
 	}
 	json_builder_end_array(builder);

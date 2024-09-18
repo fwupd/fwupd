@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-backend-private.h"
+#include "fu-device-private.h"
 #include "fu-string.h"
 
 /**
@@ -25,17 +26,27 @@ typedef struct {
 	gboolean enabled;
 	gboolean done_setup;
 	gboolean can_invalidate;
+	GType device_gtype;
 	GHashTable *devices; /* device_id : * FuDevice */
 	GThread *thread_init;
 } FuBackendPrivate;
 
 enum { SIGNAL_ADDED, SIGNAL_REMOVED, SIGNAL_CHANGED, SIGNAL_LAST };
 
-enum { PROP_0, PROP_NAME, PROP_CAN_INVALIDATE, PROP_CONTEXT, PROP_LAST };
+enum { PROP_0, PROP_NAME, PROP_CAN_INVALIDATE, PROP_CONTEXT, PROP_DEVICE_GTYPE, PROP_LAST };
 
 static guint signals[SIGNAL_LAST] = {0};
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuBackend, fu_backend, G_TYPE_OBJECT)
+static void
+fu_backend_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuBackend,
+		       fu_backend,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_ADD_PRIVATE(FuBackend)
+			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_backend_codec_iface_init));
+
 #define GET_PRIVATE(o) (fu_backend_get_instance_private(o))
 
 /**
@@ -59,12 +70,16 @@ fu_backend_device_added(FuBackend *self, FuDevice *device)
 	if (priv->ctx != NULL)
 		fu_device_set_context(device, priv->ctx);
 
+	/* we set this here to be able to get the parent in plugins */
+	fu_device_set_backend(device, self);
+
 	/* set backend ID if required */
 	if (fu_device_get_backend_id(device) == NULL)
 		fu_device_set_backend_id(device, priv->name);
 
 	/* sanity check */
-	if (g_hash_table_contains(priv->devices, fu_device_get_backend_id(device))) {
+	if ((g_getenv("FWUPD_UEFI_TEST") == NULL) &&
+	    g_hash_table_contains(priv->devices, fu_device_get_backend_id(device))) {
 		g_warning("replacing existing device with backend_id %s",
 			  fu_device_get_backend_id(device));
 	}
@@ -136,6 +151,72 @@ fu_backend_registered(FuBackend *self, FuDevice *device)
 }
 
 /**
+ * fu_backend_get_device_parent:
+ * @self: a #FuBackend
+ * @device: a #FuDevice
+ * @subsystem: (nullable): an optional device subsystem, e.g. "usb:usb_device"
+ * @error: (nullable): optional return location for an error
+ *
+ * Asks the backend to create the parent device (of the correct type) for a given device subsystem.
+ *
+ * Returns: (transfer full): a #FuDevice or %NULL if not found or unimplemented
+ *
+ * Since: 2.0.0
+ **/
+FuDevice *
+fu_backend_get_device_parent(FuBackend *self,
+			     FuDevice *device,
+			     const gchar *subsystem,
+			     GError **error)
+{
+	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
+
+	g_return_val_if_fail(FU_IS_BACKEND(self), NULL);
+	g_return_val_if_fail(FU_IS_DEVICE(device), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	if (klass->get_device_parent == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "not implemented");
+		return NULL;
+	}
+	return klass->get_device_parent(self, device, subsystem, error);
+}
+
+/**
+ * fu_backend_create_device:
+ * @self: a #FuBackend
+ * @backend_id: a backend ID, typically a sysfs path
+ * @error: (nullable): optional return location for an error
+ *
+ * Asks the backend to create a device (of the correct type) for a given device backend ID.
+ *
+ * Returns: (transfer full): a #FuDevice or %NULL if not found or unimplemented
+ *
+ * Since: 2.0.0
+ **/
+FuDevice *
+fu_backend_create_device(FuBackend *self, const gchar *backend_id, GError **error)
+{
+	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
+
+	g_return_val_if_fail(FU_IS_BACKEND(self), NULL);
+	g_return_val_if_fail(backend_id != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	if (klass->create_device == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "not implemented");
+		return NULL;
+	}
+	return klass->create_device(self, backend_id, error);
+}
+
+/**
  * fu_backend_invalidate:
  * @self: a #FuBackend
  *
@@ -198,6 +279,7 @@ fu_backend_add_string(FuBackend *self, guint idt, GString *str)
 /**
  * fu_backend_setup:
  * @self: a #FuBackend
+ * @flags: some #FuBackendSetupFlags, e.g. %FU_BACKEND_SETUP_FLAG_USE_HOTPLUG
  * @progress: a #FuProgress
  * @error: (nullable): optional return location for an error
  *
@@ -209,7 +291,7 @@ fu_backend_add_string(FuBackend *self, guint idt, GString *str)
  * Since: 1.6.1
  **/
 gboolean
-fu_backend_setup(FuBackend *self, FuProgress *progress, GError **error)
+fu_backend_setup(FuBackend *self, FuBackendSetupFlags flags, FuProgress *progress, GError **error)
 {
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
 	FuBackendPrivate *priv = GET_PRIVATE(self);
@@ -220,7 +302,7 @@ fu_backend_setup(FuBackend *self, FuProgress *progress, GError **error)
 	if (priv->done_setup)
 		return TRUE;
 	if (klass->setup != NULL) {
-		if (!klass->setup(self, progress, error)) {
+		if (!klass->setup(self, flags, progress, error)) {
 			priv->enabled = FALSE;
 			return FALSE;
 		}
@@ -229,72 +311,143 @@ fu_backend_setup(FuBackend *self, FuProgress *progress, GError **error)
 	return TRUE;
 }
 
-/**
- * fu_backend_load:
- * @self: a #FuBackend
- * @json_object: a #JsonObject
- * @tag: a string backend tag, or %NULL
- * @flags: %FuBackendLoadFlags, typically `FU_BACKEND_LOAD_FLAG_NONE`
- * @error: (nullable): optional return location for an error
- *
- * Loads the backend from a JSON object.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.8.5
- **/
-gboolean
-fu_backend_load(FuBackend *self,
-		JsonObject *json_object,
-		const gchar *tag,
-		FuBackendLoadFlags flags,
-		GError **error)
+static gboolean
+fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 {
-	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
+	FuBackend *self = FU_BACKEND(codec);
+	FuBackendPrivate *priv = GET_PRIVATE(self);
+	JsonArray *json_array;
+	JsonObject *json_object;
+	g_autoptr(GPtrArray) devices_added =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(GPtrArray) devices_remove = NULL;
 
-	g_return_val_if_fail(FU_IS_BACKEND(self), FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	/* no registered specialized GType */
+	if (priv->device_gtype == FU_TYPE_DEVICE)
+		return TRUE;
 
-	/* optional */
-	if (klass->load != NULL) {
-		if (!klass->load(self, json_object, tag, flags, error))
-			return FALSE;
+	/* sanity check */
+	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "not JSON object");
+		return FALSE;
 	}
+	json_object = json_node_get_object(json_node);
+
+	/* remain compatible with all the old emulation files */
+	if (!json_object_has_member(json_object, "UsbDevices"))
+		return TRUE;
+
+	/* four steps:
+	 *
+	 * 1. store all the existing devices matching the tag in devices_remove
+	 * 2. read the devices in the array:
+	 *    - if the platform-id exists: replace the event data & remove from devices_remove
+	 *    - otherwise add to devices_added
+	 * 3. emit devices in devices_remove
+	 * 4. emit devices in devices_added
+	 */
+	devices_remove = fu_backend_get_devices(self);
+	json_array = json_object_get_array_member(json_object, "UsbDevices");
+	for (guint i = 0; i < json_array_get_length(json_array); i++) {
+		JsonNode *node_tmp = json_array_get_element(json_array, i);
+		JsonObject *object_tmp = json_node_get_object(node_tmp);
+		FuDevice *device_old;
+		g_autoptr(FuDevice) device_tmp = NULL;
+		const gchar *device_gtypestr;
+		GType device_gtype;
+
+		/* get the GType */
+		device_gtypestr =
+		    json_object_get_string_member_with_default(object_tmp, "GType", "FuUsbDevice");
+		device_gtype = g_type_from_name(device_gtypestr);
+		if (device_gtype == G_TYPE_INVALID) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unknown GType name %s",
+				    device_gtypestr);
+			return FALSE;
+		}
+		if (!g_type_is_a(device_gtype, priv->device_gtype))
+			continue;
+
+		/* create device */
+		device_tmp = g_object_new(device_gtype, "context", priv->ctx, NULL);
+		if (!fwupd_codec_from_json(FWUPD_CODEC(device_tmp), node_tmp, error))
+			return FALSE;
+
+		/* does a device with this platform ID [and the same created date] already exist */
+		device_old = fu_backend_lookup_by_id(self, fu_device_get_backend_id(device_tmp));
+
+		/* yes, and it has the same timestamp */
+		if (device_old != NULL) {
+			g_debug("created timestamp %" G_GINT64_FORMAT "->%" G_GINT64_FORMAT,
+				fu_device_get_created_usec(device_old),
+				fu_device_get_created_usec(device_tmp));
+		}
+		if (device_old != NULL && fu_device_get_created_usec(device_old) ==
+					      fu_device_get_created_usec(device_tmp)) {
+			GPtrArray *events = fu_device_get_events(device_tmp);
+			fu_device_clear_events(device_old);
+			for (guint j = 0; j < events->len; j++) {
+				FuDeviceEvent *event = g_ptr_array_index(events, j);
+				fu_device_add_event(device_old, event);
+			}
+			g_debug("changed %s [%s]",
+				fu_device_get_name(device_tmp),
+				fu_device_get_backend_id(device_tmp));
+			fu_backend_device_changed(self, device_old);
+			g_ptr_array_remove(devices_remove, device_old);
+			continue;
+		}
+
+		/* new to us! */
+		g_debug("not found %s [%s], adding",
+			fu_device_get_name(device_tmp),
+			fu_device_get_backend_id(device_tmp));
+		g_ptr_array_add(devices_added, g_object_ref(device_tmp));
+	}
+
+	/* emit removes then adds */
+	for (guint i = 0; i < devices_remove->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices_remove, i);
+		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+			continue;
+		fu_backend_device_removed(self, device);
+	}
+	for (guint i = 0; i < devices_added->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices_added, i);
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
+		fu_backend_device_added(self, device);
+	}
+
+	/* success */
 	return TRUE;
 }
 
-/**
- * fu_backend_save:
- * @self: a #FuBackend
- * @json_builder: a #JsonBuilder
- * @tag: a string backend tag, or %NULL
- * @flags: %FuBackendSaveFlags, typically `FU_BACKEND_SAVE_FLAG_NONE`
- * @error: (nullable): optional return location for an error
- *
- * Saves the backend to a JSON builder.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.8.5
- **/
-gboolean
-fu_backend_save(FuBackend *self,
-		JsonBuilder *json_builder,
-		const gchar *tag,
-		FuBackendSaveFlags flags,
-		GError **error)
+static void
+fu_backend_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
+	FuBackend *self = FU_BACKEND(codec);
+	FuBackendPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GList) devices = NULL;
 
-	g_return_val_if_fail(FU_IS_BACKEND(self), FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* optional */
-	if (klass->save != NULL) {
-		if (!klass->save(self, json_builder, tag, flags, error))
-			return FALSE;
+	/* remain compatible with all the old emulation files */
+	json_builder_set_member_name(builder, "UsbDevices");
+	json_builder_begin_array(builder);
+	devices = g_hash_table_get_values(priv->devices);
+	for (GList *l = devices; l != NULL; l = l->next) {
+		FuDevice *device = FU_DEVICE(l->data);
+		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG))
+			continue;
+		json_builder_begin_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(device), builder, FWUPD_CODEC_FLAG_NONE);
+		json_builder_end_object(builder);
 	}
-	return TRUE;
+	json_builder_end_array(builder);
 }
 
 /**
@@ -316,7 +469,7 @@ fu_backend_coldplug(FuBackend *self, FuProgress *progress, GError **error)
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
 	g_return_val_if_fail(FU_IS_BACKEND(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-	if (!fu_backend_setup(self, progress, error))
+	if (!fu_backend_setup(self, FU_BACKEND_SETUP_FLAG_NONE, progress, error))
 		return FALSE;
 	if (klass->coldplug == NULL)
 		return TRUE;
@@ -463,6 +616,9 @@ fu_backend_get_property(GObject *object, guint prop_id, GValue *value, GParamSpe
 	case PROP_CONTEXT:
 		g_value_set_object(value, priv->ctx);
 		break;
+	case PROP_DEVICE_GTYPE:
+		g_value_set_gtype(value, priv->device_gtype);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -484,6 +640,9 @@ fu_backend_set_property(GObject *object, guint prop_id, const GValue *value, GPa
 	case PROP_CONTEXT:
 		g_set_object(&priv->ctx, g_value_get_object(value));
 		break;
+	case PROP_DEVICE_GTYPE:
+		priv->device_gtype = g_value_get_gtype(value);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -491,10 +650,18 @@ fu_backend_set_property(GObject *object, guint prop_id, const GValue *value, GPa
 }
 
 static void
+fu_backend_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_json = fu_backend_add_json;
+	iface->from_json = fu_backend_from_json;
+}
+
+static void
 fu_backend_init(FuBackend *self)
 {
 	FuBackendPrivate *priv = GET_PRIVATE(self);
 	priv->enabled = TRUE;
+	priv->device_gtype = FU_TYPE_DEVICE;
 	priv->thread_init = g_thread_self();
 	priv->devices =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_object_unref);
@@ -506,6 +673,7 @@ fu_backend_dispose(GObject *object)
 	FuBackend *self = FU_BACKEND(object);
 	FuBackendPrivate *priv = GET_PRIVATE(self);
 	g_hash_table_remove_all(priv->devices);
+	g_clear_object(&priv->ctx);
 	G_OBJECT_CLASS(fu_backend_parent_class)->dispose(object);
 }
 
@@ -514,8 +682,6 @@ fu_backend_finalize(GObject *object)
 {
 	FuBackend *self = FU_BACKEND(object);
 	FuBackendPrivate *priv = GET_PRIVATE(self);
-	if (priv->ctx != NULL)
-		g_object_unref(priv->ctx);
 	g_free(priv->name);
 	g_hash_table_unref(priv->devices);
 	G_OBJECT_CLASS(fu_backend_parent_class)->finalize(object);
@@ -576,6 +742,20 @@ fu_backend_class_init(FuBackendClass *klass)
 				FU_TYPE_CONTEXT,
 				G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_CONTEXT, pspec);
+
+	/**
+	 * FuBackend:device-gtype:
+	 *
+	 * The #GType to use when creating emulated devices.
+	 *
+	 * Since: 2.0.0
+	 */
+	pspec = g_param_spec_gtype("device-gtype",
+				   NULL,
+				   NULL,
+				   FU_TYPE_DEVICE,
+				   G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_DEVICE_GTYPE, pspec);
 
 	/**
 	 * FuBackend::device-added:

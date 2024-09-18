@@ -289,12 +289,8 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 
 	/* set version */
 	hdr_composite_version = fu_struct_ccgx_dmc_fwct_info_get_composite_version(st_hdr);
-	if (hdr_composite_version != 0) {
-		g_autofree gchar *ver = NULL;
-		ver = fu_version_from_uint32(hdr_composite_version, FWUPD_VERSION_FORMAT_QUAD);
-		fu_firmware_set_version(firmware, ver);
+	if (hdr_composite_version != 0)
 		fu_firmware_set_version_raw(firmware, hdr_composite_version);
-	}
 
 	/* read fwct data */
 	self->fwct_blob = fu_input_stream_read_bytes(stream, offset, hdr_size, error);
@@ -424,12 +420,19 @@ fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 	return g_steal_pointer(&buf);
 }
 
+static gchar *
+fu_ccgx_dmc_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_firmware_get_version_format(firmware));
+}
+
 static void
 fu_ccgx_dmc_firmware_init(FuCcgxDmcFirmware *self)
 {
 	self->image_records =
 	    g_ptr_array_new_with_free_func((GFreeFunc)fu_ccgx_dmc_firmware_record_free);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
+	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
 }
 
 static void
@@ -452,6 +455,7 @@ fu_ccgx_dmc_firmware_class_init(FuCcgxDmcFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->convert_version = fu_ccgx_dmc_firmware_convert_version;
 	object_class->finalize = fu_ccgx_dmc_firmware_finalize;
 	firmware_class->validate = fu_ccgx_dmc_firmware_validate;
 	firmware_class->parse = fu_ccgx_dmc_firmware_parse;

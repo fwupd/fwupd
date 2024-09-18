@@ -1,4 +1,3 @@
-if gusb.found()
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 cargs = ['-DG_LOG_DOMAIN="FuPluginWacomUsb"']
 
@@ -56,5 +55,4 @@ if get_option('tests')
     ],
   )
   test('wacom-usb-self-test', e, env: env)  # added to installed-tests
-endif
 endif

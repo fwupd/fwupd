@@ -37,6 +37,7 @@ install_data([
     'efi-section.builder.xml',
     'efi-signature-list.builder.xml',
     'efi-volume.builder.xml',
+    'elf.builder.xml',
     'fdt.builder.xml',
     'fit.builder.xml',
     'fmap.builder.xml',
@@ -65,6 +66,18 @@ install_data([
   ],
   install_dir: join_paths(installed_test_datadir, 'tests')
 )
+
+if sqlite.found()
+  install_data([
+      'oui.txt',
+      'pci.ids',
+      'pnp.ids',
+      'usb.ids',
+    ],
+    install_dir: join_paths(installed_test_datadir, 'tests')
+  )
+endif
+
 install_data([
     'dmi/tables/DMI',
     'dmi/tables/smbios_entry_point',

@@ -79,7 +79,7 @@ fu_tpm_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static void
-fu_tpm_v2_device_item_free(FuTpmDevicePcrItem *item)
+fu_tpm_device_item_free(FuTpmDevicePcrItem *item)
 {
 	g_free(item->checksum);
 	g_free(item);
@@ -101,7 +101,7 @@ static void
 fu_tpm_device_init(FuTpmDevice *self)
 {
 	FuTpmDevicePrivate *priv = GET_PRIVATE(self);
-	priv->items = g_ptr_array_new_with_free_func((GDestroyNotify)fu_tpm_v2_device_item_free);
+	priv->items = g_ptr_array_new_with_free_func((GDestroyNotify)fu_tpm_device_item_free);
 	fu_device_set_name(FU_DEVICE(self), "TPM");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);

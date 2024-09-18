@@ -30,98 +30,268 @@ struct _FwupdSecurityAttrClass {
 
 /**
  * FwupdSecurityAttrFlags:
- * @FWUPD_SECURITY_ATTR_FLAG_NONE:			No flags set
- * @FWUPD_SECURITY_ATTR_FLAG_SUCCESS:			Success
- * @FWUPD_SECURITY_ATTR_FLAG_OBSOLETED:			Obsoleted by another attribute
- * @FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA:		Missing data
- * @FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES:		Suffix `U`
- * @FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION:	Suffix `A`
- * @FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE:		Suffix `!`
- * @FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM:	Contact the firmware vendor for a update
- * @FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW:		Failure may be fixed by changing FW config
- * @FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS:		Failure may be fixed by changing OS config
- * @FWUPD_SECURITY_ATTR_FLAG_CAN_FIX:			The failure can be automatically fixed
- * @FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO:			The fix can be automatically reverted
  *
  * The flags available for HSI attributes.
  **/
 typedef enum {
+	/**
+	 * FWUPD_SECURITY_ATTR_FLAG_NONE:
+	 *
+	 * No flags set.
+	 */
 	FWUPD_SECURITY_ATTR_FLAG_NONE = 0,
+	/**
+	 * FWUPD_SECURITY_ATTR_FLAG_SUCCESS:
+	 *
+	 * Success.
+	 */
 	FWUPD_SECURITY_ATTR_FLAG_SUCCESS = 1 << 0,
+	/**
+	 * FWUPD_SECURITY_ATTR_FLAG_OBSOLETED:
+	 *
+	 * Obsoleted by another attribute.
+	 */
 	FWUPD_SECURITY_ATTR_FLAG_OBSOLETED = 1 << 1,
+	/**
+	 * FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA:
+	 *
+	 * Missing data.
+	 */
 	FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA = 1 << 2,
+	/**
+	 * FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES:
+	 *
+	 * Suffix `U`.
+	 */
 	FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES = 1 << 8,
+	/**
+	 * FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION:
+	 *
+	 * Suffix `A`.
+	 */
 	FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION = 1 << 9,
+	/**
+	 * FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE:
+	 *
+	 * Suffix `!`.
+	 */
 	FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE = 1 << 10,
+	/**
+	 * FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM:
+	 *
+	 * Contact the firmware vendor for a update.
+	 */
 	FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM = 1 << 11,
+	/**
+	 * FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW:
+	 *
+	 * Failure may be fixed by changing FW config.
+	 */
 	FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW = 1 << 12,
+	/**
+	 * FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS:
+	 *
+	 * Failure may be fixed by changing OS config.
+	 */
 	FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_OS = 1 << 13,
+	/**
+	 * FWUPD_SECURITY_ATTR_FLAG_CAN_FIX:
+	 *
+	 * The failure can be automatically fixed.
+	 */
 	FWUPD_SECURITY_ATTR_FLAG_CAN_FIX = 1 << 14,
+	/**
+	 * FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO:
+	 *
+	 * The fix can be automatically reverted.
+	 */
 	FWUPD_SECURITY_ATTR_FLAG_CAN_UNDO = 1 << 15,
 } FwupdSecurityAttrFlags;
 
 /**
  * FwupdSecurityAttrLevel:
- * @FWUPD_SECURITY_ATTR_LEVEL_NONE:			Very few detected firmware protections
- * @FWUPD_SECURITY_ATTR_LEVEL_CRITICAL:			The most basic of security protections
- * @FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT:		Firmware security issues considered
- *important
- * @FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL:		Firmware security issues that pose a
- *theoretical concern
- * @FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION:	Out-of-band protection of the system
- *firmware
- * @FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_ATTESTATION:	Out-of-band attestation of the system
- *firmware
  *
  * The HSI level.
  **/
 typedef enum {
-	FWUPD_SECURITY_ATTR_LEVEL_NONE = 0,		  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_LEVEL_CRITICAL = 1,		  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT = 2,	  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL = 3,	  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION = 4,  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_ATTESTATION = 5, /* Since: 1.5.0 */
+	/**
+	 * FWUPD_SECURITY_ATTR_LEVEL_NONE:
+	 *
+	 * Very few detected firmware protections.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_LEVEL_NONE = 0,
+	/**
+	 * FWUPD_SECURITY_ATTR_LEVEL_CRITICAL:
+	 *
+	 * The most basic of security protections.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_LEVEL_CRITICAL = 1,
+	/**
+	 * FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT:
+	 *
+	 * Firmware security issues considered important.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT = 2,
+	/**
+	 * FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL:
+	 *
+	 * Firmware security issues that pose a theoretical concern.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL = 3,
+	/**
+	 * FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION:
+	 *
+	 * Out-of-band protection of the system firmware.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION = 4,
+	/**
+	 * FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_ATTESTATION:
+	 *
+	 * Out-of-band attestation of the system firmware.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_ATTESTATION = 5,
 	/*< private >*/
-	FWUPD_SECURITY_ATTR_LEVEL_LAST = 6 /* perhaps increased in the future */
+	FWUPD_SECURITY_ATTR_LEVEL_LAST = 6
 } FwupdSecurityAttrLevel;
 
 /**
  * FwupdSecurityAttrResult:
- * @FWUPD_SECURITY_ATTR_RESULT_UNKNOWN:			Not known
- * @FWUPD_SECURITY_ATTR_RESULT_ENABLED:			Enabled
- * @FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED:		Not enabled
- * @FWUPD_SECURITY_ATTR_RESULT_VALID:			Valid
- * @FWUPD_SECURITY_ATTR_RESULT_NOT_VALID:		Not valid
- * @FWUPD_SECURITY_ATTR_RESULT_LOCKED:			Locked
- * @FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED:		Not locked
- * @FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED:		Encrypted
- * @FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED:		Not encrypted
- * @FWUPD_SECURITY_ATTR_RESULT_TAINTED:			Tainted
- * @FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED:		Not tainted
- * @FWUPD_SECURITY_ATTR_RESULT_FOUND:			Found
- * @FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND:		NOt found
- * @FWUPD_SECURITY_ATTR_RESULT_SUPPORTED:		Supported
- * @FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED:		Not supported
  *
  * The HSI result.
  **/
 typedef enum {
-	FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,	  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_RESULT_ENABLED,	  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,	  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_RESULT_VALID,	  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,	  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_RESULT_LOCKED,	  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,	  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED,	  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED, /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_RESULT_TAINTED,	  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,	  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_RESULT_FOUND,	  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,	  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_RESULT_SUPPORTED,	  /* Since: 1.5.0 */
-	FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED, /* Since: 1.5.0 */
+	/**
+	 * FWUPD_SECURITY_ATTR_RESULT_UNKNOWN:
+	 *
+	 * Not known.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
+	/**
+	 * FWUPD_SECURITY_ATTR_RESULT_ENABLED:
+	 *
+	 * Enabled.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+	/**
+	 * FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED:
+	 *
+	 * Not enabled.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+	/**
+	 * FWUPD_SECURITY_ATTR_RESULT_VALID:
+	 *
+	 * Valid.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_RESULT_VALID,
+	/**
+	 * FWUPD_SECURITY_ATTR_RESULT_NOT_VALID:
+	 *
+	 * Not valid.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+	/**
+	 * FWUPD_SECURITY_ATTR_RESULT_LOCKED:
+	 *
+	 * Locked.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_RESULT_LOCKED,
+	/**
+	 * FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED:
+	 *
+	 * Not locked.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
+	/**
+	 * FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED:
+	 *
+	 * Encrypted.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED,
+	/**
+	 * FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED:
+	 *
+	 * Not encrypted.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED,
+	/**
+	 * FWUPD_SECURITY_ATTR_RESULT_TAINTED:
+	 *
+	 * Tainted.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_RESULT_TAINTED,
+	/**
+	 * FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED:
+	 *
+	 * Not tainted.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
+	/**
+	 * FWUPD_SECURITY_ATTR_RESULT_FOUND:
+	 *
+	 * Found.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_RESULT_FOUND,
+	/**
+	 * FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND:
+	 *
+	 * Not found.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
+	/**
+	 * FWUPD_SECURITY_ATTR_RESULT_SUPPORTED:
+	 *
+	 * Supported.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_RESULT_SUPPORTED,
+	/**
+	 * FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED:
+	 *
+	 * Not supported.
+	 *
+	 * Since: 1.5.0
+	 */
+	FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED,
 	/*< private >*/
 	FWUPD_SECURITY_ATTR_RESULT_LAST
 } FwupdSecurityAttrResult;

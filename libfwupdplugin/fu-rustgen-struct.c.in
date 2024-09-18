@@ -51,6 +51,15 @@
     g_return_val_if_fail(st != NULL, 0x0);
     return fu_memread_{{item.type_mem}}(st->data + {{item.offset}}, {{item.endian_glib}});
 }
+{%- elif item.type in [Type.B32] %}
+{{export.value}}{{item.type_glib}}
+{{item.c_getter}}(const {{obj.name}} *st)
+{
+    guint32 val;
+    g_return_val_if_fail(st != NULL, 0x0);
+    val = fu_memread_{{item.type_mem}}(st->data + {{item.offset}}, {{item.endian_glib}});
+    return (val >> {{item.bits_offset}}) & {{item.bits_mask}};
+}
 {%- endif %}
 {%- endif %}
 {%- endfor %}
@@ -110,7 +119,7 @@
 {
     g_return_if_fail(st != NULL);
     g_return_if_fail(value != NULL);
-    memcpy(st->data + {{item.offset}}, value, sizeof(*value));
+    memcpy(st->data + {{item.offset}}, value, sizeof(*value)); /* nocheck:blocked */
 }
 {%- elif item.type == Type.U8 %}
 {{export.value}}void
@@ -118,6 +127,17 @@
 {
     g_return_if_fail(st != NULL);
     st->data[{{item.offset}}] = value;
+}
+{%- elif item.type == Type.B32 %}
+{{export.value}}void
+{{item.c_setter}}({{obj.name}} *st, {{item.type_glib}} value)
+{
+    guint32 tmp;
+    g_return_if_fail(st != NULL);
+    tmp = fu_memread_{{item.type_mem}}(st->data + {{item.offset}}, {{item.endian_glib}});
+    tmp &= ~({{item.bits_mask}} << {{item.bits_offset}});
+    tmp |= (value & {{item.bits_mask}}) << {{item.bits_offset}};
+    fu_memwrite_{{item.type_mem}}(st->data + {{item.offset}}, tmp, {{item.endian_glib}});
 }
 {%- elif not item.multiplier and item.type in [Type.U16, Type.U24, Type.U32, Type.U64] %}
 {{export.value}}void
@@ -146,7 +166,7 @@
 {%- for item in obj.items | selectattr('struct_obj') %}
     {
         g_autoptr(GByteArray) st_donor = {{item.struct_obj.c_method('New')}}();
-        memcpy(st->data + 0x{{'{:X}'.format(item.offset)}}, st_donor->data, st_donor->len);
+        memcpy(st->data + 0x{{'{:X}'.format(item.offset)}}, st_donor->data, st_donor->len); /* nocheck:blocked */
     }
 {%- endfor %}
 {%- for item in obj.items | selectattr('default') %}
@@ -155,7 +175,7 @@
 {%- elif item.type == Type.GUID %}
     {{item.c_setter}}(st, (fwupd_guid_t *) "{{item.default}}");
 {%- elif item.type == Type.U8 and item.multiplier %}
-    memcpy(st->data + 0x{{'{:X}'.format(item.offset)}}, "{{item.default}}", {{item.size}});
+    memcpy(st->data + 0x{{'{:X}'.format(item.offset)}}, "{{item.default}}", {{item.size}}); /* nocheck:blocked */
 {%- else %}
     {{item.c_setter}}(st, {{item.default}});
 {%- endif %}
@@ -175,7 +195,7 @@
     g_autoptr(GString) str = g_string_new("{{obj.name}}:\n");
     g_return_val_if_fail(st != NULL, NULL);
 {%- for item in obj.items | selectattr('enabled') | rejectattr('constant') %}
-{%- if not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64] %}
+{%- if not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64, Type.B32] %}
 {%- if item.enum_obj %}
     {
         const gchar *tmp = {{item.enum_obj.c_method('ToString')}}({{item.c_getter}}(st));
@@ -230,6 +250,7 @@
 {{export.value}}gboolean
 {{obj.c_method('ValidateInternal')}}({{obj.name}} *st, GError **error)
 {
+    g_return_val_if_fail(st != NULL, FALSE);
 {%- for item in obj.items | selectattr('constant') %}
 {%- if item.type == Type.STRING %}
     if (strncmp((const gchar *) (st->data + {{item.offset}}), "{{item.constant}}", {{item.size}}) != 0) {
@@ -291,27 +312,21 @@
 {{export.value}}gboolean
 {{obj.c_method('ValidateStream')}}(GInputStream *stream, gsize offset, GError **error)
 {
-    gssize rc;
-    g_autoptr(GByteArray) st = g_byte_array_new();
+    g_autoptr(GByteArray) st = NULL;
     g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-    if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_SET, NULL, error)) {
-        g_prefix_error(error, "{{obj.name}} failed seek to 0x%x: ", (guint) offset);
+    st = fu_input_stream_read_byte_array(stream, offset, {{obj.size}}, error);
+    if (st == NULL) {
+        g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) {{obj.size}});
         return FALSE;
     }
-    g_byte_array_set_size(st, {{obj.size}});
-    rc = g_input_stream_read(stream, st->data, st->len, NULL, error);
-    if (rc == -1) {
-        g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) st->len);
-        return FALSE;
-    }
-    if ((gsize) rc != st->len) {
+    if (st->len != {{obj.size}}) {
         g_set_error(error,
                     FWUPD_ERROR,
                     FWUPD_ERROR_INVALID_DATA,
                     "{{obj.name}} requested 0x%x and got 0x%x",
-                    (guint) st->len,
-                    (guint) rc);
+                    (guint) {{obj.size}},
+                    (guint) st->len);
         return FALSE;
     }
     return {{obj.c_method('ValidateInternal')}}(st, error);
@@ -391,25 +406,19 @@
 {{export.value}}{{obj.name}} *
 {{obj.c_method('ParseStream')}}(GInputStream *stream, gsize offset, GError **error)
 {
-    gssize rc;
-    g_autoptr(GByteArray) st = g_byte_array_new();
-    if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_SET, NULL, error)) {
-        g_prefix_error(error, "{{obj.name}} failed seek to 0x%x: ", (guint) offset);
+    g_autoptr(GByteArray) st = NULL;
+    st = fu_input_stream_read_byte_array(stream, offset, {{obj.size}}, error);
+    if (st == NULL) {
+        g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) {{obj.size}});
         return NULL;
     }
-    g_byte_array_set_size(st, {{obj.size}});
-    rc = g_input_stream_read(stream, st->data, st->len, NULL, error);
-    if (rc == -1) {
-        g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) st->len);
-        return NULL;
-    }
-    if ((gsize) rc != st->len) {
+    if (st->len != {{obj.size}}) {
         g_set_error(error,
                     FWUPD_ERROR,
                     FWUPD_ERROR_INVALID_DATA,
                     "{{obj.name}} requested 0x%x and got 0x%x",
-                    (guint) st->len,
-                    (guint) rc);
+                    (guint) {{obj.size}},
+                    (guint) st->len);
         return NULL;
     }
     if (!{{obj.c_method('ParseInternal')}}(st, error))

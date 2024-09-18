@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Copyright 2017 Dell, Inc.
 # Copyright 2020 Intel, Inc.
@@ -69,7 +69,7 @@ def get_minimum_meson_version():
 
     directory = os.path.join(os.path.dirname(sys.argv[0]), "..", "..")
 
-    with open(os.path.join(directory, "meson.build"), "r") as f:
+    with open(os.path.join(directory, "meson.build")) as f:
         for line in f:
             if "meson_version" in line:
                 return re.search(r"(\d+\.\d+\.\d+)", line).group(1)

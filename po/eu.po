@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# assar <asier.sarasua@gmail.com>, 2017,2023
+# assar <asier.sarasua@gmail.com>, 2017,2023-2024
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -22,6 +22,26 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "Minutu%.0f falta da"
 msgstr[1] "%.0f minutu falta dira"
 
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s version"
+msgstr "%s bertsioa"
+
+#. TRANSLATORS: this is shown as a suffix for obsoleted tests
+msgid "(obsoleted)"
+msgstr "(zaharkituta)"
+
+#. TRANSLATORS: command description
+msgid "Activate devices"
+msgstr "Aktibatu gailua"
+
+msgid "Activate the new firmware on the device"
+msgstr "Aktibatu firmware berria gailuan"
+
+#. TRANSLATORS: the age of the metadata
+msgid "Age"
+msgstr "Adina"
+
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Onartu eta gaitu urrunekoa?"
@@ -30,6 +50,18 @@ msgstr "Onartu eta gaitu urrunekoa?"
 msgid "Answer yes to all questions"
 msgstr "Erantzun bai galdera guztiei"
 
+#. TRANSLATORS: command line option
+msgid "Apply update even when not advised"
+msgstr "Aplikatu eguneratzea hori egitea gomendatzen ez bada ere"
+
+#. TRANSLATORS: command line option
+msgid "Apply update files"
+msgstr "Aplikatu eguneratze-fitxategiak"
+
+#. TRANSLATORS: actually sending the update to the hardware
+msgid "Applying update…"
+msgstr "Eguneratzea aplikatzen…"
+
 #. TRANSLATORS: approved firmware has been checked by
 #. * the domain administrator
 msgid "Approved firmware:"
@@ -37,28 +69,77 @@ msgid_plural "Approved firmware:"
 msgstr[0] "Onartutako firmwarea:"
 msgstr[1] "Onartutako firmwarea:"
 
-#. TRANSLATORS: stop nagging the user
-msgid "Ask again next time?"
-msgstr "Galdetu berriro hurrengoan?"
-
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
 msgstr "Autentifikatzen…"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on a removable device"
+msgstr "Autentifikazioa behar da gailu aldagarri bateko firmwarearen bertsio zaharragoa instalatzeko"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on this machine"
+msgstr "Autentifikazioa behar da makina honetako firmwarearen bertsio zaharragoa instalatzeko"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify BIOS settings"
+msgstr "Autentifikazioa behar da BIOS ezarpenak aldatzeko"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
 msgstr "Autentifikazioa behar da daemon-aren konfigurazioa aldatzeko"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr "Autentifikazioa behar da BIOS ezarpenak irakurtzeko"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to set the list of approved firmware"
+msgstr "Autentifikazioa behar da onartutako firmwarearen zerrenda ezartzeko"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to sign data using the client certificate"
+msgstr "Autentifikazioa behar da datuak bezeroaren ziurtagiria erabiliz sinatzeko"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to switch to the new firmware version"
+msgstr "Autentifikazioa behar da firmwarearen bertsio berrira aldatzeko"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to unlock a device"
+msgstr "Autentifikatu behar da gailu bat desblokeatzeko"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on a removable device"
+msgstr "Autentifikazioa behar da gailu aldagarri bateko firmwarea eguneratzeko"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on this machine"
+msgstr "Autentifikazioa behar da makina honetako firmwarea eguneratzeko"
 
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Automatikoki eguneratu guztietan?"
 
-msgid "BYTES"
-msgstr "BYTE"
+#. TRANSLATORS: description of a BIOS setting
+msgid "BIOS updates delivered via LVFS or Windows Update"
+msgstr "LVFS edo Windows Update bidez banatutako BIOS eguneratzeak"
+
+#. TRANSLATORS: refers to the battery inside the peripheral device
+msgid "Battery"
+msgstr "Bateria"
+
+#. TRANSLATORS: there follows a list of hashes
+msgid "Blocked firmware files:"
+msgstr "Blokeatutako firmware-fitxategiak:"
 
 #. TRANSLATORS: we will not offer this firmware to the user
 msgid "Blocking firmware:"
 msgstr "Firmwarea blokeatzen:"
+
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
+msgid "Branch"
+msgstr "Adarra"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -85,13 +166,50 @@ msgstr "Aukeratu argitalpena"
 msgid "Choose volume"
 msgstr "Aukeratu bolumena"
 
+#. TRANSLATORS: command description
+msgid "Clears the results from the last update"
+msgstr "Azken eguneraketako emaitzak garbitzen ditu"
+
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "Ez da komandoa aurkitu"
 
+#. TRANSLATORS: when the update was built
+msgid "Created"
+msgstr "Sortze-data"
+
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "Kritikoa"
+
+#. TRANSLATORS: current value of a BIOS setting
+msgid "Current Value"
+msgstr "Uneko balioa"
+
+#. TRANSLATORS: version number of current firmware
+msgid "Current version"
+msgstr "Uneko bertsioa"
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Debugging Options"
+msgstr "Arazketa-aukerak"
+
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
 msgstr "Deskonprimatzen…"
+
+#. TRANSLATORS: description of BIOS setting
+#. TRANSLATORS: multiline description of device
+msgid "Description"
+msgstr "Deskribapena"
+
+#. TRANSLATORS: more details about the update link
+msgid "Details"
+msgstr "Xehetasunak"
+
+#. TRANSLATORS: ID for hardware, typically a SHA1 sum
+msgid "Device ID"
+msgstr "Gailuaren IDa"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
@@ -109,17 +227,50 @@ msgstr "Gailua aldatu da:"
 msgid "Device emulation is not enabled."
 msgstr "Gailu-emulazioa ez dago gaituta."
 
+#. TRANSLATORS: device cannot be interrupted, for instance taking a phone call
+msgid "Device is in use"
+msgstr "Gailua erabiltzen ari da"
+
+#. TRANSLATORS: Is locked and can be unlocked
+msgid "Device is locked"
+msgstr "Gailua blokeatuta dago"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
 msgstr "Gailua kendu da:"
 
-#. TRANSLATORS: command line option
-msgid "Device update method"
-msgstr "Gailua eguneratzeko metodoa"
+#. TRANSLATORS: a list of successful updates
+msgid "Devices that have been updated successfully:"
+msgstr "Ongi eguneratu diren gailuak:"
+
+#. TRANSLATORS: a list of failed updates
+msgid "Devices that were not updated correctly:"
+msgstr "Ongi eguneratu ez diren gailuak:"
+
+#. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Disabled"
+msgstr "Desgaituta"
+
+#. TRANSLATORS: command description
+msgid "Disables a given remote"
+msgstr "Emandako urruneko bat desgaitzen du"
 
 #. TRANSLATORS: command line option
-msgid "Display version"
-msgstr "Bistaratze-bertsioa"
+msgid "Do not check for old metadata"
+msgstr "Ez egiaztatu metadatu zaharrak"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for unreported history"
+msgstr "Ez egiaztatu jakinarazi ez den historia"
+
+#. TRANSLATORS: command line option
+msgid "Do not check if download remotes should be enabled"
+msgstr "Ez egiaztatu urruneko deskargak gaitu behar diren ala ez"
+
+#. TRANSLATORS: command line option
+msgid "Do not write to the history database"
+msgstr "Ez idatzi historiaren datu-basean"
 
 #. TRANSLATORS: we can do this live
 msgid "Do you want to enable it now?"
@@ -138,6 +289,10 @@ msgstr "Egina!"
 msgid "Downloading…"
 msgstr "Deskargatzen…"
 
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Duration"
+msgstr "Iraupena"
+
 msgid "Enable"
 msgstr "Gaitu"
 
@@ -149,19 +304,70 @@ msgstr "Gaitu urruneko berria?"
 msgid "Enable this remote?"
 msgstr "Gaitu urruneko hau?"
 
-#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "Gaituta"
 
+#. TRANSLATORS: Plugin is active only if hardware is found
+msgid "Enabled if hardware matches"
+msgstr "Gaituta hardwarea bat badator"
+
+#. TRANSLATORS: command description
+msgid "Enables a given remote"
+msgstr "Emandako urruneko bat gaitzen du"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Encrypted"
+msgstr "Zifratuta"
+
 #. TRANSLATORS: erasing contents of the flash chips
 msgid "Erasing…"
 msgstr "Ezabatzen…"
 
+#. TRANSLATORS: exit after we've started up, used for user profiling
+msgid "Exit after a small delay"
+msgstr "Irten atzerapen txiki baten ondoren"
+
+#. TRANSLATORS: exit straight away, used for automatic profiling
+msgid "Exit after the engine has loaded"
+msgstr "Irten motorra kargatu ondoren"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME"
+msgstr "FITXATEGI-IZENA"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Failed"
+msgstr "Hutsegitea"
+
+#. TRANSLATORS: dbx file failed to be applied as an update
+msgid "Failed to apply update"
+msgstr "Eguneratzearen aplikazioak huts egin du"
+
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse arguments"
+msgstr "Argumentuen analisiak huts egin du"
+
 #. TRANSLATORS: failed to read measurements file
 msgid "Failed to parse file"
 msgstr "Huts egin du fitxategiaren analisiak"
+
+#. TRANSLATORS: could not parse file
+msgid "Failed to parse local dbx"
+msgstr "Huts egin du dbx lokala analizatzeak"
+
+#. TRANSLATORS: item is FALSE
+msgid "False"
+msgstr "Faltsua"
+
+#. TRANSLATORS: filename of the local file
+msgid "Filename"
+msgstr "Fitxategi-izena"
+
+#. TRANSLATORS: user did not include a filename parameter
+msgid "Filename required"
+msgstr "Fitxategi-izena behar da"
 
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
@@ -171,14 +377,17 @@ msgstr "Firmwarea jadanik blokeatuta dago"
 msgid "Firmware is not already blocked"
 msgstr "Firmwarea ez dago jadanik blokeatuta"
 
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware updates"
+msgstr "Firmware-eguneratzeak"
+
+#. TRANSLATORS: description of plugin state, e.g. disabled
+msgid "Flags"
+msgstr "Banderak"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
 msgstr "Aurkitua"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgctxt "A single GUID"
-msgid "GUID"
-msgstr "GUIDa"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "command-argument"
@@ -188,9 +397,47 @@ msgstr "GUIDa"
 msgid "Get BIOS settings"
 msgstr "Eskuratu BIOSaren ezarpenak"
 
+#. TRANSLATORS: firmware approved by the admin
+msgid "Gets the list of approved firmware"
+msgstr "Onartutako firmwarearen zerrenda eskuratzen du"
+
+#. TRANSLATORS: command description
+msgid "Gets the results from the last update"
+msgstr "Azken eguneraketako emaitzak eskuratzen ditu"
+
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "Altua"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Inaktibo…"
+
+#. TRANSLATORS: show the user a generic image that can be themed
+msgid "Image"
+msgstr "Irudia"
+
+#. TRANSLATORS: show the user a random image from the internet
+msgid "Image (custom)"
+msgstr "Irudia (pertsonalizatua)"
+
+msgid "Install old version of signed system firmware"
+msgstr "Instalatu sinatutako sistema-firmwarearen bertsio zaharra"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "Instalatu sinatu gabeko sistema-firmwarearen bertsio zaharra"
+
+msgid "Install signed device firmware"
+msgstr "Instalatu sinatutako gailu-firmwarea"
+
+msgid "Install signed system firmware"
+msgstr "Instalatu sinatutako sistema-firmwarea"
+
+msgid "Install unsigned device firmware"
+msgstr "Instalatu sinatu gabeko gailu-firmwarea"
+
+msgid "Install unsigned system firmware"
+msgstr "Instalatu sinatu gabeko sistema-firmwarea"
 
 #. TRANSLATORS: console message when no Plymouth is installed
 msgid "Installing Firmware…"
@@ -200,16 +447,124 @@ msgstr "Firmwarea instalatzen…"
 msgid "Installing firmware update…"
 msgstr "Firmwarearen eguneratzea instalatzen..."
 
+#. TRANSLATORS: Device cannot be removed easily
+msgid "Internal device"
+msgstr "Barneko gailua"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Invalid"
+msgstr "Baliogabea"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments"
+msgstr "Argumentu baliogabeak"
+
+#. TRANSLATORS: issue fixed with the release, e.g. CVE
+msgid "Issue"
+msgid_plural "Issues"
+msgstr[0] "Arazoa"
+msgstr[1] "Arazoak"
+
 #. TRANSLATORS: time remaining for completing firmware flash
 msgid "Less than one minute remaining"
 msgstr "Minutu bat baino gutxiago falta da"
+
+#. TRANSLATORS: e.g. GPLv2+, Proprietary etc
+msgid "License"
+msgstr "Lizentzia"
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux Swap"
+msgstr "Linux trukatze-espazioa"
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux kernel"
+msgstr "Linux kernela"
+
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux kernel lockdown"
+msgstr "Linux kernelaren blokeoa"
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux swap"
+msgstr "Linux trukatze-espazioa"
+
+#. TRANSLATORS: command description
+msgid "Lists files on the ESP"
+msgstr "ESPko fitxategiak zerrendatzen ditu"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "Kargatzen…"
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Locked"
+msgstr "Blokeatuta"
+
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "Baxua"
+
+msgid "MEI version"
+msgstr "MEI bertsioa"
+
+#. TRANSLATORS: Longest valid string for BIOS setting
+msgid "Maximum length"
+msgstr "Luzera maximoa"
+
+#. TRANSLATORS: Highest valid integer for BIOS setting
+msgid "Maximum value"
+msgstr "Balio maximoa"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "Ertaina"
+
+#. TRANSLATORS: ask the user to do a simple task which should be translated
+msgid "Message"
+msgstr "Mezua"
+
+#. TRANSLATORS: ask the user a question, and it will not be translated
+msgid "Message (custom)"
+msgstr "Mezua (pertsonalizatua)"
+
+#. TRANSLATORS: smallest version number installable on device
+msgid "Minimum Version"
+msgstr "Bertsio minimoa"
+
+#. TRANSLATORS: Shortest valid string for BIOS setting
+msgid "Minimum length"
+msgstr "Luzera minimoa"
+
+#. TRANSLATORS: Lowest valid integer for BIOS setting
+msgid "Minimum value"
+msgstr "Balio minimoa"
+
+#. TRANSLATORS: command description
+msgid "Modifies a given remote"
+msgstr "Emandako urruneko bat aldatzen du"
+
+msgid "Modify a configured remote"
+msgstr "Aldatu konfiguratutako urruneko bat"
+
 msgid "Modify daemon configuration"
 msgstr "Aldatu daemon-aren konfigurazioa"
+
+#. TRANSLATORS: command description
+msgid "Mounts the ESP"
+msgstr "ESPa muntatzen du"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Needs reboot"
+msgstr "Berrabiarazi behar da"
+
+#. TRANSLATORS: version number of new firmware
+msgid "New version"
+msgstr "Bertsio berria"
+
+#. TRANSLATORS: user did not tell the tool what to do
+msgid "No action specified!"
+msgstr "Ez da ekintzarik zehaztu"
 
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
@@ -235,19 +590,72 @@ msgstr "Ez dago eguneratu daitekeen gailurik"
 msgid "No updates available"
 msgstr "Ez dago eguneraketarik erabilgarri"
 
+#. TRANSLATORS: nothing was updated offline
+msgid "No updates were applied"
+msgstr "Ez da eguneratzerik aplikatu"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Not found"
+msgstr "Ez da aurkitu"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "Ados"
+
 #. TRANSLATORS: this is for the device tests
 msgid "OK!"
 msgstr "Ados"
+
+#. TRANSLATORS: reading new dbx from the update
+msgid "Parsing dbx update…"
+msgstr "dbx eguneratzea analizatzen…"
+
+#. TRANSLATORS: reading existing dbx from the system
+msgid "Parsing system dbx…"
+msgstr "Sistemaren dx-a analizatzen…"
+
+#. TRANSLATORS: remote filename base
+msgid "Password"
+msgstr "Pasahitza"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Pending"
+msgstr "Zain"
 
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "Gauzatu eragiketa?"
 
-msgid "Print the version number"
-msgstr "Inprimatu bertsio-zenbakia"
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform debugging"
+msgstr "Plataforma-arazketa"
+
+#. TRANSLATORS: Possible values for a bios setting
+msgid "Possible Values"
+msgstr "Balio posibleak"
+
+#. TRANSLATORS: version number of previous firmware
+msgid "Previous version"
+msgstr "Aurreko bertsioa"
+
+#. TRANSLATORS: the numeric priority
+msgid "Priority"
+msgstr "Lehentasuna"
+
+#. TRANSLATORS: reasons the device is not updatable
+msgid "Problems"
+msgstr "Arazoak"
 
 msgid "Proceed with upload?"
 msgstr "Jarraitu kargarekin?"
+
+#. TRANSLATORS: a non-free software license
+msgid "Proprietary"
+msgstr "Jabeduna"
+
+#. TRANSLATORS: BIOS setting is read only
+msgid "Read Only"
+msgstr "Irakurtzeko soilik"
 
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
@@ -257,13 +665,33 @@ msgstr "Irakurtzen…"
 msgid "Rebooting…"
 msgstr "Berrabiarazten…"
 
-#. TRANSLATORS: we asked the user to choose an option and they declined
-msgid "Request canceled"
-msgstr "Eskaria utzi da"
+#. TRANSLATORS: how often we should refresh the metadata
+msgid "Refresh Interval"
+msgstr "Freskatze-tartea"
+
+#. TRANSLATORS: metadata is downloaded
+msgid "Requires internet connection"
+msgstr "Interneteko konexioa behar du"
+
+#. TRANSLATORS: reboot to apply the update
+msgid "Restart now?"
+msgstr "Berrabiarazi orain?"
+
+#. TRANSLATORS: changes only take effect on restart
+msgid "Restart the daemon to make the change effective?"
+msgstr "Berrabiarazi daemon-a aldaketa gauzatzeko?"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "Gailua berrabiarazten…"
+
+#. TRANSLATORS: ask the user to upload
+msgid "Review and upload report now?"
+msgstr "Berrikusi eta kargatu txostena orain?"
+
+#. TRANSLATORS: Scalar increment for integer BIOS setting
+msgid "Scalar Increment"
+msgstr "Gehikuntza eskalarra"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
@@ -280,16 +708,64 @@ msgstr "Ezarri BIOS ezarpen bat"
 msgid "Set one or more BIOS settings"
 msgstr "Ezarri BIOS ezarpen bat edo batzuk"
 
+#. TRANSLATORS: firmware approved by the admin
+msgid "Sets the list of approved firmware"
+msgstr "Onartutako firmwarearen zerrenda ezartzen du"
+
+#. TRANSLATORS: type of BIOS setting
+msgid "Setting type"
+msgstr "Ezarpen mota"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "Settings will apply after system reboots"
+msgstr "Ezarpenak sistema berrabiarazi ondoren aplikatuko dira"
+
 #. TRANSLATORS: command line option
 msgid "Show all results"
 msgstr "Erakutsi emaitza guztiak"
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Show debugging options"
+msgstr "Erakutsi arazketa-aukerak"
 
 #. TRANSLATORS: command line option
 msgid "Show devices that are not updatable"
 msgstr "Erakutsi eguneragarriak ez diren gailuak"
 
+#. TRANSLATORS: command line option
+msgid "Show extra debugging information"
+msgstr "Erakutsi arazketa-informazio gehigarria"
+
+msgid "Sign data using the client certificate"
+msgstr "Sinatu datuak bezeroaren ziurtagiria erabiliz"
+
+#. TRANSLATORS: command description
+msgctxt "command-description"
+msgid "Sign data using the client certificate"
+msgstr "Sinatu datuak bezeroaren ziurtagiria erabiliz"
+
 msgid "Signature"
 msgstr "Sinadura"
+
+#. TRANSLATORS: file size of the download
+msgid "Size"
+msgstr "Tamaina"
+
+#. TRANSLATORS: source (as in code) link
+msgid "Source"
+msgstr "Iturburua"
+
+#. TRANSLATORS: command line option
+msgid "Specify the dbx database file"
+msgstr "Zehaztu dbx datu-base fitxategia"
+
+#. TRANSLATORS: The BIOS setting accepts strings
+msgid "String"
+msgstr "Katea"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Success"
+msgstr "Arrakasta"
 
 #. TRANSLATORS: success message -- where activation is making the new
 #. * firmware take effect, usually after updating offline
@@ -329,8 +805,40 @@ msgstr "Urrunekoa ongi aldatu da"
 msgid "Successfully refreshed metadata manually"
 msgstr "Metadatuak ongi freskatu dira eskuz"
 
+#. TRANSLATORS: one line summary of device
+msgid "Summary"
+msgstr "Laburpena"
+
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr "Onartutako PUZa"
+
+#. TRANSLATORS: Must be plugged into an outlet
+msgid "System requires external power source"
+msgstr "Sistemak kanpoko energia-iturria behar du"
+
+#. TRANSLATORS: release tag set for release, e.g. lenovo-2021q3
+msgid "Tag"
+msgid_plural "Tags"
+msgstr[0] "Etiketa"
+msgstr[1] "Etiketak"
+
+#. show the user the entire data blob
 msgid "Target"
 msgstr "Helburua"
+
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+msgid "There is no approved firmware."
+msgstr "Ez dago onartutako firmwarerik."
+
+#. TRANSLATORS: item is TRUE
+msgid "True"
+msgstr "Egia"
+
+#. TRANSLATORS: remote type, e.g. remote or local
+msgid "Type"
+msgstr "Mota"
 
 #. TRANSLATORS: error message
 msgid "Unable to connect to service"
@@ -340,6 +848,10 @@ msgstr "Ezin da zerbitzuarekin konektatu"
 msgid "Unblocking firmware:"
 msgstr "Firmwarea desblokeatzen:"
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unencrypted"
+msgstr "Zifratu gabea"
+
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
@@ -347,16 +859,76 @@ msgstr "Firmwarea desblokeatzen:"
 msgid "Unknown"
 msgstr "Ezezaguna"
 
+#. TRANSLATORS: Name of hardware
+msgid "Unknown Device"
+msgstr "Gailu ezezaguna"
+
+msgid "Unlock the device to allow access"
+msgstr "Desblokeatu gailua sarbidea ahalbidetzeko"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unlocked"
+msgstr "Desblokeatuta"
+
+#. TRANSLATORS: command description
+msgid "Unmounts the ESP"
+msgstr "ESPa desmuntatzen du"
+
+#. TRANSLATORS: Device is updatable in this or any other mode
+msgid "Updatable"
+msgstr "Eguneragarria"
+
+#. TRANSLATORS: error message from last update attempt
+msgid "Update Error"
+msgstr "Errorea eguneratzean"
+
 #. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Eguneratu orain?"
 
+#. TRANSLATORS: Update can only be done from offline mode
+msgid "Update requires a reboot"
+msgstr "Eguneratzeko berrabiarazi egin behar da"
+
 msgid "Updating"
 msgstr "Eguneratzen"
+
+#. TRANSLATORS: CTRL^C [holding control, and then pressing C] will exit the
+#. program
+msgid "Use CTRL^C to cancel."
+msgstr "Erabili CTRL^C bertan behera uzteko."
+
+#. TRANSLATORS: explain how to get help
+msgid "Use fwupdtool --help for help"
+msgstr "Erabili fwupdtool --help laguntzarako"
+
+#. TRANSLATORS: User has been notified
+msgid "User has been notified"
+msgstr "Erabiltzaileari jakinarazpena bidali zaio"
+
+#. TRANSLATORS: remote filename base
+msgid "Username"
+msgstr "Erabiltzaile-izena"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Valid"
+msgstr "Baliozkoa"
+
+#. TRANSLATORS: one line variant of release (e.g. 'China')
+msgid "Variant"
+msgstr "Aldaera"
+
+#. TRANSLATORS: manufacturer of hardware
+msgid "Vendor"
+msgstr "Hornitzailea"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Egiaztatzen…"
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "Bertsioa"
 
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
@@ -369,3 +941,11 @@ msgstr "Itxaroten…"
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "Idazten…"
+
+#. TRANSLATORS: this is the default branch name when unset
+msgid "default"
+msgstr "lehenetsia"
+
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "fwupd plugins"
+msgstr "fwupd pluginak"

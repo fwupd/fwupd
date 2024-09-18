@@ -31,12 +31,7 @@
 
 #define TAG_SEND_COMMAND 0xFA
 
-/**
- * FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER:
- *
- * Use usb bulk transfer.
- */
-#define FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER (1 << 0)
+#define FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER "usb-bulk-transfer"
 
 struct _FuElanfpDevice {
 	FuUsbDevice parent_instance;
@@ -45,15 +40,14 @@ struct _FuElanfpDevice {
 G_DEFINE_TYPE(FuElanfpDevice, fu_elanfp_device, FU_TYPE_USB_DEVICE)
 
 static gboolean
-fu_elanfp_iap_send_command(FuElanfpDevice *self,
-			   guint8 request_type,
-			   guint8 request,
-			   const guint8 *buf,
-			   gsize bufsz,
-			   gsize rspsz,
-			   GError **error)
+fu_elanfp_device_iap_send_command(FuElanfpDevice *self,
+				  guint8 request_type,
+				  guint8 request,
+				  const guint8 *buf,
+				  gsize bufsz,
+				  gsize rspsz,
+				  GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual = 0;
 	gsize sendsz = bufsz + 1;
 	guint8 start_index = 0x01;
@@ -81,31 +75,31 @@ fu_elanfp_iap_send_command(FuElanfpDevice *self,
 	}
 
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER)) {
-		if (!g_usb_device_bulk_transfer(usb_device,
-						ELAN_EP_CMD_OUT,
-						buftmp,
-						sendsz,
-						&actual,
-						BULK_SEND_TIMEOUT_MS,
-						NULL,
-						error)) {
+		if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+						 ELAN_EP_CMD_OUT,
+						 buftmp,
+						 sendsz,
+						 &actual,
+						 BULK_SEND_TIMEOUT_MS,
+						 NULL,
+						 error)) {
 			g_prefix_error(error, "failed to send command (bulk): ");
 			return FALSE;
 		}
 	} else {
-		if (!g_usb_device_control_transfer(usb_device,
-						   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						   G_USB_DEVICE_RECIPIENT_INTERFACE,
-						   request, /* request */
-						   0x00,    /* value */
-						   0x00,    /* index */
-						   buftmp,
-						   sendsz,
-						   &actual,
-						   CTRL_SEND_TIMEOUT_MS,
-						   NULL,
-						   error)) {
+		if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_INTERFACE,
+						    request, /* request */
+						    0x00,    /* value */
+						    0x00,    /* index */
+						    buftmp,
+						    sendsz,
+						    &actual,
+						    CTRL_SEND_TIMEOUT_MS,
+						    NULL,
+						    error)) {
 			g_prefix_error(error, "failed to send command (ctrl transfer): ");
 			return FALSE;
 		}
@@ -125,9 +119,8 @@ fu_elanfp_iap_send_command(FuElanfpDevice *self,
 }
 
 static gboolean
-fu_elanfp_iap_recv_status(FuElanfpDevice *self, guint8 *buf, gsize bufsz, GError **error)
+fu_elanfp_device_iap_recv_status(FuElanfpDevice *self, guint8 *buf, gsize bufsz, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint8 endpoint = ELAN_EP_CMD_IN;
 	gsize actual = 0;
 
@@ -135,14 +128,14 @@ fu_elanfp_iap_recv_status(FuElanfpDevice *self, guint8 *buf, gsize bufsz, GError
 		endpoint = ELAN_EP_IMG_IN;
 	}
 
-	if (!g_usb_device_bulk_transfer(usb_device,
-					endpoint,
-					buf,
-					bufsz,
-					&actual,
-					BULK_RECV_TIMEOUT_MS,
-					NULL,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 endpoint,
+					 buf,
+					 bufsz,
+					 &actual,
+					 BULK_RECV_TIMEOUT_MS,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "failed to receive status: ");
 		return FALSE;
 	}
@@ -170,19 +163,18 @@ fu_elanfp_device_do_xfer(FuElanfpDevice *self,
 			 gsize *rxed_count,
 			 GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual = 0;
 
 	/* send data out */
 	if (outbuf != NULL && outlen > 0) {
-		if (!g_usb_device_bulk_transfer(usb_device,
-						ELAN_EP_CMD_OUT,
-						outbuf,
-						outlen,
-						&actual,
-						BULK_SEND_TIMEOUT_MS,
-						NULL,
-						error)) {
+		if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+						 ELAN_EP_CMD_OUT,
+						 outbuf,
+						 outlen,
+						 &actual,
+						 BULK_SEND_TIMEOUT_MS,
+						 NULL,
+						 error)) {
 			return FALSE;
 		}
 		if (actual != outlen) {
@@ -199,14 +191,14 @@ fu_elanfp_device_do_xfer(FuElanfpDevice *self,
 	/* read reply back */
 	if (inbuf != NULL && inlen > 0) {
 		actual = 0;
-		if (!g_usb_device_bulk_transfer(usb_device,
-						ELAN_EP_IMG_IN,
-						inbuf,
-						inlen,
-						&actual,
-						BULK_RECV_TIMEOUT_MS,
-						NULL,
-						error)) {
+		if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+						 ELAN_EP_IMG_IN,
+						 inbuf,
+						 inlen,
+						 &actual,
+						 BULK_RECV_TIMEOUT_MS,
+						 NULL,
+						 error)) {
 			return FALSE;
 		}
 		if (actual != inlen && !allow_less) {
@@ -312,17 +304,17 @@ fu_elanfp_device_write_payload(FuElanfpDevice *self,
 			g_prefix_error(error, "memory copy for payload fail: ");
 			return FALSE;
 		}
-		if (!fu_elanfp_iap_send_command(self,
-						REQTYPE_COMMAND,
-						REPORT_ID_PAYLOAD_COMMAND,
-						databuf,
-						sizeof(databuf),
-						sizeof(recvbuf),
-						error)) {
+		if (!fu_elanfp_device_iap_send_command(self,
+						       REQTYPE_COMMAND,
+						       REPORT_ID_PAYLOAD_COMMAND,
+						       databuf,
+						       sizeof(databuf),
+						       sizeof(recvbuf),
+						       error)) {
 			g_prefix_error(error, "send payload command fail: ");
 			return FALSE;
 		}
-		if (!fu_elanfp_iap_recv_status(self, recvbuf, sizeof(recvbuf), error)) {
+		if (!fu_elanfp_device_iap_recv_status(self, recvbuf, sizeof(recvbuf), error)) {
 			g_prefix_error(error, "received payload status fail: ");
 			return FALSE;
 		}
@@ -350,6 +342,7 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 				GError **error)
 {
 	FuElanfpDevice *self = FU_ELANFP_DEVICE(device);
+	guint8 usb_buf[8] = {0x40, 0x27, 0x57, 0x44, 0x54, 0x52, 0x53, 0x54};
 	guint i;
 	struct {
 		const gchar *tag;
@@ -375,17 +368,17 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 		offer = fu_firmware_get_image_by_idx_bytes(firmware, items[i].offer_idx, error);
 		if (offer == NULL)
 			return FALSE;
-		if (!fu_elanfp_iap_send_command(self,
-						REQTYPE_COMMAND,
-						REPORT_ID_OFFER_COMMAND,
-						g_bytes_get_data(offer, NULL),
-						g_bytes_get_size(offer),
-						g_bytes_get_size(offer) + 1,
-						error)) {
+		if (!fu_elanfp_device_iap_send_command(self,
+						       REQTYPE_COMMAND,
+						       REPORT_ID_OFFER_COMMAND,
+						       g_bytes_get_data(offer, NULL),
+						       g_bytes_get_size(offer),
+						       g_bytes_get_size(offer) + 1,
+						       error)) {
 			g_prefix_error(error, "send offer command fail: ");
 			return FALSE;
 		}
-		if (!fu_elanfp_iap_recv_status(self, recvbuf, sizeof(recvbuf), error)) {
+		if (!fu_elanfp_device_iap_recv_status(self, recvbuf, sizeof(recvbuf), error)) {
 			g_prefix_error(error, "received offer status fail: ");
 			return FALSE;
 		}
@@ -411,7 +404,21 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 		return FALSE;
 	if (!fu_elanfp_device_write_payload(self, payload, fu_progress_get_child(progress), error))
 		return FALSE;
+
+	/* hardware reset */
+	if (!fu_elanfp_device_do_xfer(self,
+				      (guint8 *)&usb_buf,
+				      sizeof(usb_buf),
+				      NULL,
+				      0,
+				      TRUE,
+				      NULL,
+				      error)) {
+		g_prefix_error(error, "failed to hardware reset ");
+		return FALSE;
+	}
 	fu_progress_step_done(progress);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
 	return TRUE;
@@ -424,8 +431,9 @@ fu_elanfp_device_init(FuElanfpDevice *device)
 
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_remove_delay(FU_DEVICE(self), 5000);
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elanfp");
@@ -437,9 +445,7 @@ fu_elanfp_device_init(FuElanfpDevice *device)
 	fu_device_set_firmware_size_max(FU_DEVICE(self), 0x90000);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ELANFP_FIRMWARE);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), ELANFP_USB_INTERFACE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER,
-					"usb-bulk-transfer");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER);
 }
 
 static void

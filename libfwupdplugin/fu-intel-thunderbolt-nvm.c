@@ -13,6 +13,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-common.h"
 #include "fu-input-stream.h"
 #include "fu-intel-thunderbolt-nvm.h"
 #include "fu-intel-thunderbolt-struct.h"
@@ -204,7 +205,7 @@ fu_intel_thunderbolt_nvm_export(FuFirmware *firmware,
 						   "offset",
 						   tmp,
 						   NULL);
-			g_assert(bc != NULL);
+			g_return_if_fail(bc != NULL);
 		}
 	}
 }
@@ -437,6 +438,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			   {0x15EF, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE, 2},
 			   {0x15EE, 3, FU_INTEL_THUNDERBOLT_NVM_FAMILY_BB, 0},
 			   {0x0B26, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_GOSHEN_RIDGE, 2},
+			   {0x5786, 5, FU_INTEL_THUNDERBOLT_NVM_FAMILY_BARLOW_RIDGE, 2},
 			   /* Maple ridge devices
 			    * NOTE: These are expected to be flashed via UEFI capsules *not*
 			    * Thunderbolt plugin Flashing via fwupd will require matching kernel
@@ -445,7 +447,6 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			   {0x1136, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_MAPLE_RIDGE, 2},
 			   {0x1137, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_MAPLE_RIDGE, 2},
 			   {0}};
-	g_autofree gchar *version = NULL;
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
 	g_autoptr(GInputStream) stream_payload = NULL;
 	gsize streamsz = 0;
@@ -554,6 +555,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	switch (priv->family) {
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE:
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_GOSHEN_RIDGE:
+	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_BARLOW_RIDGE:
 		if (!fu_intel_thunderbolt_nvm_read_uint16(
 			self,
 			FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
@@ -564,8 +566,6 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		fu_firmware_set_version_raw(FU_FIRMWARE(self), version_raw);
-		version = fu_version_from_uint16(version_raw, FWUPD_VERSION_FORMAT_BCD);
-		fu_firmware_set_version(FU_FIRMWARE(self), version);
 		break;
 	default:
 		break;
@@ -751,21 +751,21 @@ fu_intel_thunderbolt_nvm_build(FuFirmware *firmware, XbNode *n, GError **error)
 	tmp = xb_node_query_text(n, "vendor_id", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, error))
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->vendor_id = val;
 	}
 	tmp = xb_node_query_text(n, "device_id", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, error))
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->device_id = val;
 	}
 	tmp = xb_node_query_text(n, "model_id", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, error))
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->model_id = val;
 	}
@@ -784,7 +784,7 @@ fu_intel_thunderbolt_nvm_build(FuFirmware *firmware, XbNode *n, GError **error)
 	tmp = xb_node_query_text(n, "flash_size", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, 0x07, error))
+		if (!fu_strtoull(tmp, &val, 0x0, 0x07, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->flash_size = val;
 	}
@@ -803,17 +803,25 @@ fu_intel_thunderbolt_nvm_build(FuFirmware *firmware, XbNode *n, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_intel_thunderbolt_nvm_convert_version(FuFirmware *firmware, guint64 version_raw)
+{
+	return fu_version_from_uint16(version_raw, fu_firmware_get_version_format(firmware));
+}
+
 static void
 fu_intel_thunderbolt_nvm_init(FuIntelThunderboltNvm *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
+	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_BCD);
 }
 
 static void
 fu_intel_thunderbolt_nvm_class_init(FuIntelThunderboltNvmClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->convert_version = fu_intel_thunderbolt_nvm_convert_version;
 	firmware_class->export = fu_intel_thunderbolt_nvm_export;
 	firmware_class->parse = fu_intel_thunderbolt_nvm_parse;
 	firmware_class->write = fu_intel_thunderbolt_nvm_write;

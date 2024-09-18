@@ -87,7 +87,7 @@ fu_uf2_device_probe_current_fw(FuDevice *device, GBytes *fw, GError **error)
 }
 
 static gchar *
-fu_block_device_get_full_path(FuUf2Device *self, const gchar *filename, GError **error)
+fu_uf2_device_get_full_path(FuUf2Device *self, const gchar *filename, GError **error)
 {
 	const gchar *devfile = fu_udev_device_get_device_file(FU_UDEV_DEVICE(self));
 	g_autoptr(FuVolume) volume = NULL;
@@ -113,11 +113,11 @@ fu_block_device_get_full_path(FuUf2Device *self, const gchar *filename, GError *
 }
 
 static gboolean
-fu_block_device_write_firmware(FuDevice *device,
-			       FuFirmware *firmware,
-			       FuProgress *progress,
-			       FwupdInstallFlags flags,
-			       GError **error)
+fu_uf2_device_write_firmware(FuDevice *device,
+			     FuFirmware *firmware,
+			     FuProgress *progress,
+			     FwupdInstallFlags flags,
+			     GError **error)
 {
 	FuUf2Device *self = FU_UF2_DEVICE(device);
 	gssize wrote;
@@ -132,7 +132,7 @@ fu_block_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* open file for writing; no cleverness */
-	fn = fu_block_device_get_full_path(self, "FIRMWARE.UF2", error);
+	fn = fu_uf2_device_get_full_path(self, "FIRMWARE.UF2", error);
 	if (fn == NULL)
 		return FALSE;
 	file = g_file_new_for_path(fn);
@@ -162,14 +162,14 @@ fu_block_device_write_firmware(FuDevice *device,
 }
 
 static GBytes *
-fu_block_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
+fu_uf2_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuUf2Device *self = FU_UF2_DEVICE(device);
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GInputStream) istr = NULL;
 
 	/* open for reading */
-	fn = fu_block_device_get_full_path(self, "CURRENT.UF2", error);
+	fn = fu_uf2_device_get_full_path(self, "CURRENT.UF2", error);
 	if (fn == NULL)
 		return NULL;
 	istr = fu_input_stream_from_path(fn, error);
@@ -285,7 +285,7 @@ fu_uf2_device_setup(FuDevice *device, GError **error)
 	g_autoptr(GBytes) fw = NULL;
 
 	/* this has to exist */
-	fn1 = fu_block_device_get_full_path(self, "INFO_UF2.TXT", error);
+	fn1 = fu_uf2_device_get_full_path(self, "INFO_UF2.TXT", error);
 	if (fn1 == NULL)
 		return FALSE;
 	if (!g_file_get_contents(fn1, &buf, &bufsz, error))
@@ -301,7 +301,9 @@ fu_uf2_device_setup(FuDevice *device, GError **error)
 	fu_device_build_instance_id(device, NULL, "UF2", "BOARD", NULL);
 
 	/* this might exist */
-	fn2 = fu_block_device_get_full_path(self, "CURRENT.UF2", error);
+	fn2 = fu_uf2_device_get_full_path(self, "CURRENT.UF2", error);
+	if (fn2 == NULL)
+		return FALSE;
 	fw = fu_bytes_get_contents(fn2, NULL);
 	if (fw != NULL) {
 		if (!fu_uf2_device_probe_current_fw(device, fw, error))
@@ -317,28 +319,32 @@ fu_uf2_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_uf2_device_probe(FuDevice *device, GError **error)
 {
-	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
-	const gchar *tmp;
+	FuUf2Device *self = FU_UF2_DEVICE(device);
 	guint64 vid = 0;
 	guint64 pid = 0;
+	g_autofree gchar *prop_bus = NULL;
+	g_autofree gchar *prop_fs_type = NULL;
+	g_autofree gchar *prop_fs_uuid = NULL;
+	g_autofree gchar *prop_model_id = NULL;
+	g_autofree gchar *prop_vendor_id = NULL;
 
 	/* check is valid */
-	tmp = g_udev_device_get_property(udev_device, "ID_BUS");
-	if (g_strcmp0(tmp, "usb") != 0) {
+	prop_bus = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "ID_BUS", NULL);
+	if (g_strcmp0(prop_bus, "usb") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not correct ID_BUS=%s, expected usb",
-			    tmp);
+			    prop_bus);
 		return FALSE;
 	}
-	tmp = g_udev_device_get_property(udev_device, "ID_FS_TYPE");
-	if (g_strcmp0(tmp, "vfat") != 0) {
+	prop_fs_type = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "ID_FS_TYPE", NULL);
+	if (g_strcmp0(prop_fs_type, "vfat") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not correct ID_FS_TYPE=%s, expected vfat",
-			    tmp);
+			    prop_fs_type);
 		return FALSE;
 	}
 
@@ -347,14 +353,18 @@ fu_uf2_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* more instance IDs */
-	tmp = g_udev_device_get_property(udev_device, "ID_VENDOR_ID");
-	if (tmp != NULL)
-		vid = g_ascii_strtoull(tmp, NULL, 16);
+	prop_vendor_id = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "ID_VENDOR_ID", NULL);
+	if (prop_vendor_id != NULL) {
+		if (!fu_strtoull(prop_vendor_id, &vid, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
+			return FALSE;
+	}
 	if (vid != 0x0)
 		fu_device_add_instance_u16(device, "VID", vid);
-	tmp = g_udev_device_get_property(udev_device, "ID_MODEL_ID");
-	if (tmp != NULL)
-		pid = g_ascii_strtoull(tmp, NULL, 16);
+	prop_model_id = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "ID_MODEL_ID", NULL);
+	if (prop_model_id != NULL) {
+		if (!fu_strtoull(prop_model_id, &pid, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
+			return FALSE;
+	}
 	if (pid != 0x0)
 		fu_device_add_instance_u16(device, "PID", pid);
 	if (!fu_device_build_instance_id_full(device,
@@ -368,18 +378,15 @@ fu_uf2_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* only add UUID if it is set */
-	tmp = g_udev_device_get_property(udev_device, "ID_FS_UUID");
-	if (tmp != NULL) {
-		fu_device_add_instance_str(device, "UUID", tmp);
+	prop_fs_uuid = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "ID_FS_UUID", NULL);
+	if (prop_fs_uuid != NULL) {
+		fu_device_add_instance_str(device, "UUID", prop_fs_uuid);
 		if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "UUID", NULL))
 			return FALSE;
 	}
 
 	/* vendor-id */
-	if (vid != 0x0) {
-		g_autofree gchar *vendor_id = g_strdup_printf("USB:0x%04X", (guint)vid);
-		fu_device_add_vendor_id(device, vendor_id);
-	}
+	fu_device_build_vendor_id_u16(device, "USB", vid);
 
 	/* check the quirk matched to avoid mounting *all* vfat devices */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
@@ -419,7 +426,7 @@ fu_uf2_device_init(FuUf2Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 }
 
 static void
@@ -448,6 +455,6 @@ fu_uf2_device_class_init(FuUf2DeviceClass *klass)
 	device_class->prepare_firmware = fu_uf2_device_prepare_firmware;
 	device_class->set_progress = fu_uf2_device_set_progress;
 	device_class->read_firmware = fu_uf2_device_read_firmware;
-	device_class->write_firmware = fu_block_device_write_firmware;
-	device_class->dump_firmware = fu_block_device_dump_firmware;
+	device_class->write_firmware = fu_uf2_device_write_firmware;
+	device_class->dump_firmware = fu_uf2_device_dump_firmware;
 }

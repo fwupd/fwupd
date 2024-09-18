@@ -41,6 +41,7 @@ plugin_builtin_uefi_capsule = static_library('fu_plugin_uefi_capsule',
     'fu-uefi-device.c',
     'fu-uefi-update-info.c',
     'fu-acpi-uefi.c',
+    'fu-bitmap-image.c',
     backend_srcs,
   ],
   include_directories: plugin_incdirs,
@@ -136,11 +137,6 @@ install_data([
     'tests/efi/esrt/entries/entry0/lowest_supported_fw_version',
   ],
   install_dir: join_paths(installed_test_datadir, 'efi/esrt/entries/entry0'),
-)
-install_data([
-    'tests/efi/efivars/CapsuleMax-39b68c46-f7fb-441b-b6ec-16b0f69821f3',
-  ],
-  install_dir: join_paths(installed_test_datadir, 'efi/efivars'),
 )
 endif
 

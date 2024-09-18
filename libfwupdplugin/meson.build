@@ -16,12 +16,15 @@ fwupdplugin_structs = [
   'fu-ifd.rs', # fuzzing
   'fu-ifwi.rs', # fuzzing
   'fu-intel-thunderbolt.rs', # fuzzing
+  'fu-io-channel.rs', # fuzzing
+  'fu-msgpack.rs', # fuzzing
   'fu-oprom.rs', # fuzzing
   'fu-pefile.rs', # fuzzing
   'fu-progress.rs', # fuzzing
   'fu-sbatlevel-section.rs', # fuzzing
   'fu-smbios.rs', # fuzzing
   'fu-usb-device-ds20.rs', # fuzzing
+  'fu-usb.rs', # fuzzing
   'fu-uswid.rs', # fuzzing
 ]
 
@@ -46,9 +49,10 @@ fwupdplugin_src = [
   'fu-acpi-table.c', # fuzzing
   'fu-archive.c',
   'fu-archive-firmware.c',
-  'fu-backend.c',
+  'fu-backend.c', # fuzzing
   'fu-bios-setting.c', # fuzzing
   'fu-bios-settings.c', # fuzzing
+  'fu-block-device.c',
   'fu-bluez-device.c',
   'fu-byte-array.c', # fuzzing
   'fu-bytes.c', # fuzzing
@@ -70,12 +74,14 @@ fwupdplugin_src = [
   'fu-csv-entry.c', # fuzzing
   'fu-csv-firmware.c', # fuzzing
   'fu-device.c', # fuzzing
+  'fu-device-event.c', # fuzzing
   'fu-device-locker.c', # fuzzing
   'fu-device-progress.c',
   'fu-dfu-firmware.c', # fuzzing
   'fu-dfuse-firmware.c', # fuzzing
   'fu-dpaux-device.c',
   'fu-drm-device.c',
+  'fu-dummy-efivars.c', # fuzzing
   'fu-dump.c', # fuzzing
   'fu-edid.c', # fuzzing
   'fu-efi-common.c', # fuzzing
@@ -91,7 +97,7 @@ fwupdplugin_src = [
   'fu-efi-load-option.c', # fuzzing
   'fu-efi-signature.c',
   'fu-efi-signature-list.c',
-  'fu-efivar.c', # fuzzing
+  'fu-efivars.c', # fuzzing
   'fu-elf-firmware.c', # fuzzing
   'fu-fdt-firmware.c', # fuzzing
   'fu-fdt-image.c', # fuzzing
@@ -103,6 +109,7 @@ fwupdplugin_src = [
   'fu-hid-device.c',
   'fu-hid-report-item.c', # fuzzing
   'fu-hid-report.c', # fuzzing
+  'fu-hidraw-device.c',
   'fu-hwids.c', # fuzzing
   'fu-hwids-config.c', # fuzzing
   'fu-hwids-dmi.c', # fuzzing
@@ -128,25 +135,34 @@ fwupdplugin_src = [
   'fu-lzma-common.c', # fuzzing
   'fu-mei-device.c',
   'fu-mem.c', # fuzzing
+  'fu-msgpack.c',
+  'fu-msgpack-item.c',
   'fu-oprom-firmware.c', # fuzzing
   'fu-partial-input-stream.c', # fuzzing
   'fu-path.c', # fuzzing
   'fu-pefile-firmware.c', # fuzzing
+  'fu-pci-device.c',
   'fu-plugin.c',
   'fu-progress.c', # fuzzing
   'fu-quirks.c', # fuzzing
   'fu-sbatlevel-section.c', # fuzzing
   'fu-security-attr.c', # fuzzing
   'fu-security-attrs.c',
+  'fu-serio-device.c',
   'fu-smbios.c', # fuzzing
   'fu-srec-firmware.c', # fuzzing
   'fu-string.c', # fuzzing
   'fu-sum.c', # fuzzing
   'fu-udev-device.c',
+  'fu-usb-bos-descriptor.c',
+  'fu-usb-config-descriptor.c',
+  'fu-usb-descriptor.c',
   'fu-usb-device.c',
-  'fu-usb-device-ds20.c', # fuzzing
-  'fu-usb-device-fw-ds20.c', # fuzzing
-  'fu-usb-device-ms-ds20.c', # fuzzing
+  'fu-usb-device-ds20.c',
+  'fu-usb-device-fw-ds20.c',
+  'fu-usb-device-ms-ds20.c',
+  'fu-usb-endpoint.c',
+  'fu-usb-interface.c',
   'fu-uswid-firmware.c', # fuzzing
   'fu-version-common.c', # fuzzing
   'fu-volume.c', # fuzzing
@@ -154,18 +170,16 @@ fwupdplugin_src = [
 
 if host_machine.system() == 'linux'
   fwupdplugin_src += 'fu-common-linux.c' # fuzzing
-  fwupdplugin_src += 'fu-efivar-linux.c'
+  fwupdplugin_src += 'fu-linux-efivars.c'
 elif host_machine.system() == 'freebsd'
   fwupdplugin_src += 'fu-common-freebsd.c'
-  fwupdplugin_src += 'fu-efivar-freebsd.c'
+  fwupdplugin_src += 'fu-freebsd-efivars.c'
 elif host_machine.system() == 'windows'
   fwupdplugin_src += 'fu-common-windows.c'
-  fwupdplugin_src += 'fu-efivar-windows.c'
+  fwupdplugin_src += 'fu-windows-efivars.c'
 elif host_machine.system() == 'darwin'
   fwupdplugin_src += 'fu-common-darwin.c'
-  fwupdplugin_src += 'fu-efivar-darwin.c'
-else
-  fwupdplugin_src += 'fu-efivar-impl.c' # fuzzing
+  fwupdplugin_src += 'fu-darwin-efivars.c' # fuzzing
 endif
 
 fwupdplugin_headers = [
@@ -173,9 +187,9 @@ fwupdplugin_headers = [
   'fu-archive-firmware.h',
   'fu-archive.h',
   'fu-backend.h',
-  'fu-backend-private.h',
   'fu-bios-settings.h',
   'fu-bios-settings-private.h',
+  'fu-block-device.h',
   'fu-bluez-device.h',
   'fu-byte-array.h',
   'fu-bytes.h',
@@ -199,6 +213,7 @@ fwupdplugin_headers = [
   'fu-csv-entry.h',
   'fu-csv-firmware.h',
   'fu-device.h',
+  'fu-device-event.h',
   'fu-device-locker.h',
   'fu-device-metadata.h',
   'fu-device-private.h',
@@ -210,15 +225,19 @@ fwupdplugin_headers = [
   'fu-dump.h',
   'fu-edid.h',
   'fu-efi-common.h',
+  'fu-efi-device-path.h',
+  'fu-efi-device-path-list.h',
   'fu-efi-file.h',
   'fu-efi-filesystem.h',
+  'fu-efi-hard-drive-device-path.h',
   'fu-efi-section.h',
   'fu-efi-volume.h',
   'fu-efi-load-option.h',
   'fu-efi-signature.h',
   'fu-efi-signature-list.h',
-  'fu-efivar.h',
+  'fu-efivars.h',
   'fu-elf-firmware.h',
+  'fu-endian.h',
   'fu-fdt-firmware.h',
   'fu-fdt-image.h',
   'fu-firmware-common.h',
@@ -228,6 +247,7 @@ fwupdplugin_headers = [
   'fu-hid-descriptor.h',
   'fu-hid-device.h',
   'fu-hid-report.h',
+  'fu-hidraw-device.h',
   'fu-hwids.h',
   'fu-i2c-device.h',
   'fu-ifd-bios.h',
@@ -247,11 +267,13 @@ fwupdplugin_headers = [
   'fu-mei-device.h',
   'fu-mem.h',
   'fu-mem-private.h',
+  'fu-msgpack-item.h',
   'fu-oprom-firmware.h',
   'fu-partial-input-stream.h',
   'fu-partial-input-stream-private.h',
   'fu-path.h',
   'fu-pefile-firmware.h',
+  'fu-pci-device.h',
   'fu-plugin.h',
   'fu-plugin-private.h',
   'fu-progress.h',
@@ -260,6 +282,7 @@ fwupdplugin_headers = [
   'fu-security-attr.h',
   'fu-security-attrs.h',
   'fu-security-attrs-private.h',
+  'fu-serio-device.h',
   'fu-smbios.h',
   'fu-smbios-private.h',
   'fu-srec-firmware.h',
@@ -269,7 +292,15 @@ fwupdplugin_headers = [
   'fu-udev-device-private.h',
   'fu-usb-device-ds20.h',
   'fu-usb-device-fw-ds20.h',
+  'fu-usb-bos-descriptor.h',
+  'fu-usb-bos-descriptor-private.h',
+  'fu-usb-config-descriptor.h',
+  'fu-usb-config-descriptor-private.h',
   'fu-usb-device.h',
+  'fu-usb-endpoint.h',
+  'fu-usb-endpoint-private.h',
+  'fu-usb-interface.h',
+  'fu-usb-interface-private.h',
   'fu-usb-device-ms-ds20.h',
   'fu-usb-device-private.h',
   'fu-uswid-firmware.h',
@@ -280,7 +311,7 @@ fwupdplugin_headers = [
 introspection_deps = [
   libxmlb,
   giounix,
-  gusb,
+  libusb,
   gudev,
 ]
 
@@ -291,7 +322,7 @@ pkgg_requires = [ 'gio-2.0',
                   'json-glib-1.0',
                   'libarchive',
                   'xmlb',
-                  'gusb'
+                  'libusb',
 ]
 
 library_deps = [
@@ -302,7 +333,9 @@ library_deps = [
   valgrind,
   lzma,
   libarchive,
+  libusb,
   cbor,
+  sqlite,
   platform_deps,
 ]
 
@@ -338,14 +371,6 @@ if introspection.allowed()
   gir_dep = declare_dependency(sources: fwupd_gir)
   girtargets = []
   extra_args = []
-  if gusb.found()
-    if gusb.type_name() == 'internal'
-      girtargets += subproject('gusb').get_variable('libgusb_girtarget')[0]
-    else
-      girtargets += 'GUsb-1.0'
-    endif
-    extra_args += '-DHAVE_GUSB'
-  endif
   if libxmlb.type_name() == 'internal'
     girtargets += subproject('libxmlb').get_variable('gir')[0]
   else
@@ -408,12 +433,12 @@ if get_option('tests')
 
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
-  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'fwupdplugin-self-test',
     installed_firmware_zip,
     rustgen.process('fu-self-test.rs'),
     sources: [
+      'fu-test-device.c',
       'fu-self-test.c'
     ],
     include_directories: [

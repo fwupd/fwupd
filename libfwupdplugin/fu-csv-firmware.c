@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-csv-entry.h"
 #include "fu-csv-firmware-private.h"
 #include "fu-string.h"
@@ -148,6 +149,10 @@ fu_csv_firmware_parse_line_cb(GString *token, guint token_idx, gpointer user_dat
 	FuCsvFirmware *self = FU_CSV_FIRMWARE(user_data);
 	g_autoptr(FuFirmware) entry = fu_csv_entry_new();
 	g_autoptr(GBytes) fw = NULL;
+
+	/* ignore blank lines */
+	if (token->len == 0)
+		return TRUE;
 
 	/* title */
 	if (g_str_has_prefix(token->str, "#")) {

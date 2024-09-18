@@ -12,7 +12,7 @@
 #include "fu-{{vendor_dash_example}}-struct.h"
 
 /* this can be set using Flags=example in the quirk file  */
-#define FU_{{VENDOR_EXAMPLE}}_DEVICE_FLAG_EXAMPLE (1 << 0)
+#define FU_{{VENDOR_EXAMPLE}}_DEVICE_FLAG_EXAMPLE "example"
 
 struct _Fu{{VendorExample}}Device {
 	Fu{{Parent}}Device parent_instance;
@@ -107,7 +107,6 @@ static gboolean
 fu_{{vendor_example}}_device_setup(FuDevice *device, GError **error)
 {
 	Fu{{VendorExample}}Device *self = FU_{{VENDOR_EXAMPLE}}_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 
 	/* {{Parent}}Device->setup */
 	if (!FU_DEVICE_CLASS(fu_{{vendor_example}}_device_parent_class)->setup(device, error))
@@ -115,7 +114,6 @@ fu_{{vendor_example}}_device_setup(FuDevice *device, GError **error)
 
 	/* TODO: get the version and other properties from the hardware while open */
 	g_assert(self != NULL);
-	g_assert(usb_device != NULL);
 	fu_device_set_version(device, "1.2.3");
 
 	/* success */
@@ -285,7 +283,7 @@ fu_{{vendor_example}}_device_set_quirk_kv(FuDevice *device,
 	/* TODO: parse value from quirk file */
 	if (g_strcmp0(key, "{{VendorExample}}StartAddr") == 0) {
 		guint64 tmp = 0;
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->start_addr = tmp;
 		return TRUE;
@@ -316,10 +314,10 @@ fu_{{vendor_example}}_device_init(Fu{{VendorExample}}Device *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.{{vendor}}.{{example}}");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_device_add_icon(FU_DEVICE(self), "icon-name");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_{{VENDOR_EXAMPLE}}_DEVICE_FLAG_EXAMPLE,
-					"example");
+					FU_{{VENDOR_EXAMPLE}}_DEVICE_FLAG_EXAMPLE);
 {%- if Parent == 'Usb' %}
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x01);
 {%- endif %}

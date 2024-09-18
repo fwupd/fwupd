@@ -100,6 +100,8 @@ enum EStickDeviceType {
 	esdtUnknown = 0xFFFFFFFF
 };
 
+#define FU_SYNAPTICS_RMI_DEVICE_BIND_TIMEOUT 1000 /* ms */
+
 static gboolean
 fu_synaptics_rmi_ps2_device_read_ack(FuSynapticsRmiPs2Device *self, guint8 *pbuf, GError **error)
 {
@@ -783,9 +785,7 @@ fu_synaptics_rmi_ps2_device_probe(FuDevice *device, GError **error)
 	} else {
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	}
-
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "platform", error);
+	return TRUE;
 }
 
 static gboolean
@@ -861,7 +861,11 @@ fu_synaptics_rmi_ps2_device_detach(FuDevice *device, FuProgress *progress, GErro
 	}
 
 	/* put in serio_raw mode so that we can do register writes */
-	if (!fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device), "drvctl", "serio_raw", error)) {
+	if (!fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device),
+					"drvctl",
+					"serio_raw",
+					FU_SYNAPTICS_RMI_DEVICE_BIND_TIMEOUT,
+					error)) {
 		g_prefix_error(error, "failed to write to drvctl: ");
 		return FALSE;
 	}
@@ -945,7 +949,11 @@ fu_synaptics_rmi_ps2_device_attach(FuDevice *device, FuProgress *progress, GErro
 	fu_device_sleep_full(device, 5000, progress); /* ms */
 
 	/* back to psmouse */
-	if (!fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device), "drvctl", "psmouse", error)) {
+	if (!fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device),
+					"drvctl",
+					"psmouse",
+					FU_SYNAPTICS_RMI_DEVICE_BIND_TIMEOUT,
+					error)) {
 		g_prefix_error(error, "failed to write to drvctl: ");
 		return FALSE;
 	}
@@ -960,10 +968,10 @@ fu_synaptics_rmi_ps2_device_init(FuSynapticsRmiPs2Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_set_name(FU_DEVICE(self), "TouchStyk");
 	fu_device_set_vendor(FU_DEVICE(self), "Synaptics");
-	fu_device_add_vendor_id(FU_DEVICE(self), "HIDRAW:0x06CB");
+	fu_device_build_vendor_id_u16(FU_DEVICE(self), "HIDRAW", 0x06CB);
 	fu_synaptics_rmi_device_set_max_page(FU_SYNAPTICS_RMI_DEVICE(self), 0x1);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
 
 static gboolean

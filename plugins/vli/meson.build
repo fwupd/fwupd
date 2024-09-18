@@ -1,4 +1,3 @@
-if gusb.found()
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 cargs = ['-DG_LOG_DOMAIN="FuPluginVliUsbhub"']
 
@@ -55,5 +54,4 @@ if get_option('tests')
     c_args: cargs,
   )
   test('vli-self-test', e, env: env)  # added to installed-tests
-endif
 endif

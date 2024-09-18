@@ -10,6 +10,7 @@ struct FuStructSynapticsVmm9 {
 enum FuSynapticsVmm9RcCtrl {
     EnableRc = 0x01,
     DisableRc = 0x02,
+    GetId = 0x03,
     EraseFlash = 0x14,
     ActivateFirmware = 0x18,
     WriteFlashData = 0x20,
@@ -22,6 +23,7 @@ enum FuSynapticsVmm9RcCtrl {
     // these are fake, but useful for debugging
     EnableRcBusy = 0x80|0x01,
     DisableRcBusy = 0x80|0x02,
+    GetIdBusy = 0x80|0x03,
     EraseFlashBusy = 0x80|0x14,
     ActivateFirmwareBusy = 0x80|0x18,
     WriteFlashDataBusy = 0x80|0x20,
@@ -70,4 +72,11 @@ struct FuStructHidGetCommand {
     size: u8,
     payload: FuStructHidPayload,
     checksum: u8, // payload is always 32 bytes
+}
+
+#[derive(Parse)]
+struct FuStructSynapticsUpdGetId {
+    _pid: u16le,
+    cid: u8,
+    bid: u8,
 }

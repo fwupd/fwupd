@@ -67,6 +67,7 @@ struct FuUtilPrivate {
 	GMainContext *main_ctx;
 	GMainLoop *loop;
 	GOptionContext *context;
+	FuContext *ctx;
 	FuEngine *engine;
 	FuEngineRequest *request;
 	FuProgress *progress;
@@ -127,6 +128,7 @@ fu_util_show_plugin_warnings(FuUtilPrivate *priv)
 	flags &= ~FWUPD_PLUGIN_FLAG_NO_HARDWARE;
 	flags &= ~FWUPD_PLUGIN_FLAG_REQUIRE_HWID;
 	flags &= ~FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY;
+	flags &= ~FWUPD_PLUGIN_FLAG_READY;
 
 	/* print */
 	for (guint i = 0; i < 64; i++) {
@@ -244,7 +246,10 @@ fu_util_start_engine(FuUtilPrivate *priv,
 #endif
 	flags |= FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES;
 	flags |= FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS;
+	flags |= FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS;
 	flags |= FU_ENGINE_LOAD_FLAG_HWINFO;
+	flags |= FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT;
+	flags |= FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG;
 	if (!fu_engine_load(priv->engine, flags, progress, error))
 		return FALSE;
 	fu_util_show_plugin_warnings(priv);
@@ -334,6 +339,8 @@ fu_util_private_free(FuUtilPrivate *priv)
 {
 	if (priv->current_device != NULL)
 		g_object_unref(priv->current_device);
+	if (priv->ctx != NULL)
+		g_object_unref(priv->ctx);
 	if (priv->engine != NULL)
 		g_object_unref(priv->engine);
 	if (priv->request != NULL)
@@ -392,21 +399,21 @@ fu_util_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuU
 }
 
 static void
-fu_main_engine_device_added_cb(FuEngine *engine, FuDevice *device, FuUtilPrivate *priv)
+fu_util_engine_device_added_cb(FuEngine *engine, FuDevice *device, FuUtilPrivate *priv)
 {
 	g_autofree gchar *tmp = fu_device_to_string(device);
 	g_debug("ADDED:\n%s", tmp);
 }
 
 static void
-fu_main_engine_device_removed_cb(FuEngine *engine, FuDevice *device, FuUtilPrivate *priv)
+fu_util_engine_device_removed_cb(FuEngine *engine, FuDevice *device, FuUtilPrivate *priv)
 {
 	g_autofree gchar *tmp = fu_device_to_string(device);
 	g_debug("REMOVED:\n%s", tmp);
 }
 
 static void
-fu_main_engine_status_changed_cb(FuEngine *engine, FwupdStatus status, FuUtilPrivate *priv)
+fu_util_engine_status_changed_cb(FuEngine *engine, FwupdStatus status, FuUtilPrivate *priv)
 {
 	if (priv->as_json)
 		return;
@@ -438,53 +445,36 @@ fu_util_watch(FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-static gint
-fu_util_plugin_name_sort_cb(FuPlugin **item1, FuPlugin **item2)
-{
-	return fu_plugin_name_compare(*item1, *item2);
-}
-
-static gboolean
-fu_util_get_plugins_as_json(FuUtilPrivate *priv, GPtrArray *plugins, GError **error)
-{
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	json_builder_begin_object(builder);
-
-	json_builder_set_member_name(builder, "Plugins");
-	json_builder_begin_array(builder);
-	for (guint i = 0; i < plugins->len; i++) {
-		FwupdPlugin *plugin = g_ptr_array_index(plugins, i);
-		fwupd_codec_to_json(FWUPD_CODEC(plugin), builder, FWUPD_CODEC_FLAG_TRUSTED);
-	}
-	json_builder_end_array(builder);
-	json_builder_end_object(builder);
-	return fu_util_print_builder(priv->console, builder, error);
-}
-
 static gboolean
 fu_util_get_plugins(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	GPtrArray *plugins;
 
 	/* load engine */
-	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_READONLY, priv->progress, error))
+	if (!fu_util_start_engine(priv,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				      FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+				  priv->progress,
+				  error))
 		return FALSE;
 
 	/* print */
 	plugins = fu_engine_get_plugins(priv->engine);
 	g_ptr_array_sort(plugins, (GCompareFunc)fu_util_plugin_name_sort_cb);
-	if (priv->as_json)
-		return fu_util_get_plugins_as_json(priv, plugins, error);
+	if (priv->as_json) {
+		g_autoptr(JsonBuilder) builder = json_builder_new();
+		json_builder_begin_object(builder);
+		fwupd_codec_array_to_json(plugins, "Plugins", builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
+		return fu_util_print_builder(priv->console, builder, error);
+	}
 
 	/* print */
 	for (guint i = 0; i < plugins->len; i++) {
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
 		g_autofree gchar *str = fu_util_plugin_to_string(FWUPD_PLUGIN(plugin), 0);
 		fu_console_print_literal(priv->console, str);
-	}
-	if (plugins->len == 0) {
-		/* TRANSLATORS: nothing found */
-		fu_console_print_literal(priv->console, _("No plugins found"));
 	}
 
 	return TRUE;
@@ -824,7 +814,9 @@ fu_util_get_devices_as_json(FuUtilPrivate *priv, GPtrArray *devs, GError **error
 		}
 
 		/* add to builder */
+		json_builder_begin_object(builder);
 		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
 	}
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
@@ -2184,7 +2176,7 @@ static gboolean
 fu_util_check_activation_needed(FuUtilPrivate *priv, GError **error)
 {
 	gboolean has_pending = FALSE;
-	g_autoptr(FuHistory) history = fu_history_new();
+	g_autoptr(FuHistory) history = fu_history_new(priv->ctx);
 	g_autoptr(GPtrArray) devices = fu_history_get_devices(history, error);
 	if (devices == NULL)
 		return FALSE;
@@ -2228,6 +2220,7 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_COLDPLUG |
 				      FU_ENGINE_LOAD_FLAG_REMOTES |
+				      FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 				  fu_progress_get_child(priv->progress),
 				  error))
@@ -2357,7 +2350,9 @@ fu_util_hwids(FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		if (g_strcmp0(hwid_key, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE) == 0 ||
 		    g_strcmp0(hwid_key, FU_HWIDS_KEY_BIOS_MINOR_RELEASE) == 0) {
-			guint64 val = g_ascii_strtoull(value, NULL, 16);
+			guint64 val = 0;
+			if (!fu_strtoull(value, &val, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error))
+				return FALSE;
 			fu_console_print(priv->console, "%s: %" G_GUINT64_FORMAT, hwid_key, val);
 		} else {
 			fu_console_print(priv->console, "%s: %s", hwid_key, value);
@@ -2526,7 +2521,8 @@ fu_util_get_firmware_types(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    priv->progress,
 			    error))
 		return FALSE;
@@ -2552,7 +2548,8 @@ fu_util_get_firmware_gtypes(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    priv->progress,
 			    error))
 		return FALSE;
@@ -2636,7 +2633,8 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    priv->progress,
 			    error))
 		return FALSE;
@@ -2750,7 +2748,8 @@ fu_util_firmware_export(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    priv->progress,
 			    error))
 		return FALSE;
@@ -2808,7 +2807,8 @@ fu_util_firmware_extract(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    priv->progress,
 			    error))
 		return FALSE;
@@ -2899,7 +2899,8 @@ fu_util_firmware_build(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    priv->progress,
 			    error))
 		return FALSE;
@@ -2997,7 +2998,8 @@ fu_util_firmware_convert(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    priv->progress,
 			    error))
 		return FALSE;
@@ -3126,7 +3128,7 @@ fu_util_firmware_patch(FuUtilPrivate *priv, gchar **values, GError **error)
 		firmware_type = g_strdup(values[3]);
 
 	/* parse offset */
-	if (!fu_strtoull(values[1], &offset, 0x0, G_MAXUINT32, error)) {
+	if (!fu_strtoull(values[1], &offset, 0x0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error)) {
 		g_prefix_error(error, "failed to parse offset: ");
 		return FALSE;
 	}
@@ -3142,7 +3144,8 @@ fu_util_firmware_patch(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* load engine */
 	if (!fu_engine_load(priv->engine,
-			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
+			    FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 			    priv->progress,
 			    error))
 		return FALSE;
@@ -3431,6 +3434,13 @@ fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
 				    "no remotes available");
 		return FALSE;
 	}
+	if (priv->as_json) {
+		g_autoptr(JsonBuilder) builder = json_builder_new();
+		json_builder_begin_object(builder);
+		fwupd_codec_array_to_json(remotes, "Remotes", builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
+		return fu_util_print_builder(priv->console, builder, error);
+	}
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote_tmp = g_ptr_array_index(remotes, i);
 		g_node_append_data(root, g_object_ref(remote_tmp));
@@ -3582,6 +3592,22 @@ fu_util_esp_unmount(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_esp_list_as_json(FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(GPtrArray) volumes = NULL;
+
+	volumes = fu_context_get_esp_volumes(fu_engine_get_context(priv->engine), error);
+	if (volumes == NULL)
+		return FALSE;
+
+	json_builder_begin_object(builder);
+	fwupd_codec_array_to_json(volumes, "Volumes", builder, FWUPD_CODEC_FLAG_TRUSTED);
+	json_builder_end_object(builder);
+	return fu_util_print_builder(priv->console, builder, error);
+}
+
+static gboolean
 fu_util_esp_list(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autofree gchar *mount_point = NULL;
@@ -3591,6 +3617,8 @@ fu_util_esp_list(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_READONLY, priv->progress, error))
 		return FALSE;
+	if (priv->as_json)
+		return fu_util_esp_list_as_json(priv, error);
 
 	volume = fu_util_prompt_for_volume(priv, error);
 	if (volume == NULL)
@@ -3821,6 +3849,7 @@ fu_util_security_fix(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES |
+				      FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 				  priv->progress,
 				  error))
@@ -3856,6 +3885,7 @@ fu_util_security_undo(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES |
+				      FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 				  priv->progress,
 				  error))
@@ -3882,7 +3912,7 @@ fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 	attrs = fu_context_get_bios_settings(ctx);
 	items = fu_bios_settings_get_all(attrs);
 	if (priv->as_json)
-		return fu_util_get_bios_setting_as_json(priv->console, values, items, error);
+		return fu_util_bios_setting_console_print(priv->console, values, items, error);
 
 	for (guint i = 0; i < items->len; i++) {
 		FwupdBiosSetting *attr = g_ptr_array_index(items, i);
@@ -3939,8 +3969,149 @@ fu_util_reboot_cleanup(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_efivar_boot_as_json(FuUtilPrivate *priv, GPtrArray *entries, GError **error)
+{
+	FuEfivars *efivars = fu_context_get_efivars(priv->ctx);
+	guint16 idx = 0;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+
+	json_builder_begin_object(builder);
+	if (fu_efivars_get_boot_current(efivars, &idx, NULL))
+		fwupd_codec_json_append_int(builder, "BootCurrent", idx);
+	if (fu_efivars_get_boot_next(efivars, &idx, NULL))
+		fwupd_codec_json_append_int(builder, "BootNext", idx);
+
+	json_builder_set_member_name(builder, "Entries");
+	json_builder_begin_object(builder);
+	for (guint i = 0; i < entries->len; i++) {
+		FuEfiLoadOption *entry = g_ptr_array_index(entries, i);
+		g_autofree gchar *title =
+		    g_strdup_printf("Boot%04X", (guint)fu_firmware_get_idx(FU_FIRMWARE(entry)));
+		json_builder_set_member_name(builder, title);
+		json_builder_begin_array(builder);
+		json_builder_begin_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(entry), builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
+		json_builder_end_array(builder);
+	}
+	json_builder_end_object(builder);
+
+	json_builder_end_object(builder);
+	return fu_util_print_builder(priv->console, builder, error);
+}
+
+static gboolean
+fu_util_efivar_boot(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	FuEfivars *efivars = fu_context_get_efivars(priv->ctx);
+	g_autoptr(GPtrArray) entries = NULL;
+	g_autoptr(GString) str = g_string_new(NULL);
+	guint16 idx = 0;
+
+	entries = fu_efivars_get_boot_entries(efivars, error);
+	if (entries == NULL)
+		return FALSE;
+
+	/* dump to the screen in the most appropriate format */
+	if (priv->as_json)
+		return fu_util_efivar_boot_as_json(priv, entries, error);
+
+	if (fu_efivars_get_boot_current(efivars, &idx, NULL))
+		fwupd_codec_string_append_hex(str, 0, "BootCurrent", idx);
+	if (fu_efivars_get_boot_next(efivars, &idx, NULL))
+		fwupd_codec_string_append_hex(str, 0, "BootNext", idx);
+
+	for (guint i = 0; i < entries->len; i++) {
+		FuEfiLoadOption *entry = g_ptr_array_index(entries, i);
+		g_autofree gchar *title =
+		    g_strdup_printf("Boot%04X", (guint)fu_firmware_get_idx(FU_FIRMWARE(entry)));
+		fwupd_codec_string_append(str, 0, title, "");
+		fwupd_codec_add_string(FWUPD_CODEC(entry), 1, str);
+	}
+
+	/* success */
+	fu_console_print_literal(priv->console, str->str);
+	return TRUE;
+}
+
+static gboolean
+fu_util_efivar_files_as_json(FuUtilPrivate *priv, GPtrArray *files, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(GHashTable) hash = g_hash_table_new_full(g_str_hash,
+							   g_str_equal,
+							   g_free,
+							   (GDestroyNotify)g_ptr_array_unref);
+	GHashTableIter iter;
+	gpointer key, value;
+
+	/* convert an array of FuPeFirmware to a map with the BootXXXX ID as the hash key and the
+	 * filename as an array */
+	for (guint i = 0; i < files->len; i++) {
+		FuFirmware *firmware = g_ptr_array_index(files, i);
+		GPtrArray *array;
+		g_autofree gchar *name = NULL;
+
+		name = g_strdup_printf("Boot%04X", (guint)fu_firmware_get_idx(firmware));
+		array = g_hash_table_lookup(hash, name);
+		if (array == NULL) {
+			array = g_ptr_array_new_with_free_func(g_free);
+			g_hash_table_insert(hash, g_steal_pointer(&name), array);
+		}
+		g_ptr_array_add(array, g_strdup(fu_firmware_get_filename(firmware)));
+	}
+
+	/* export */
+	json_builder_begin_object(builder);
+	g_hash_table_iter_init(&iter, hash);
+	while (g_hash_table_iter_next(&iter, &key, &value)) {
+		const gchar *bootvar = (const gchar *)key;
+		GPtrArray *array = (GPtrArray *)value;
+
+		json_builder_set_member_name(builder, bootvar);
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < array->len; i++) {
+			const gchar *filename = g_ptr_array_index(array, i);
+			json_builder_add_string_value(builder, filename);
+		}
+		json_builder_end_array(builder);
+	}
+	json_builder_end_object(builder);
+	return fu_util_print_builder(priv->console, builder, error);
+}
+
+static gboolean
+fu_util_efivar_files(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) files = NULL;
+
+	files = fu_context_get_esp_files(priv->ctx,
+					 FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_FIRST_STAGE |
+					     FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE |
+					     FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_REVOCATIONS,
+					 error);
+	if (files == NULL)
+		return FALSE;
+	if (priv->as_json)
+		return fu_util_efivar_files_as_json(priv, files, error);
+	for (guint i = 0; i < files->len; i++) {
+		FuFirmware *firmware = g_ptr_array_index(files, i);
+		g_autofree gchar *name =
+		    g_strdup_printf("Boot%04X", (guint)fu_firmware_get_idx(firmware));
+		fu_console_print(priv->console,
+				 "%s → %s",
+				 name,
+				 fu_firmware_get_filename(firmware));
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_util_efivar_list(FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	FuEfivars *efivars = fu_context_get_efivars(priv->ctx);
 	g_autoptr(GPtrArray) names = NULL;
 
 	/* sanity check */
@@ -3952,7 +4123,7 @@ fu_util_efivar_list(FuUtilPrivate *priv, gchar **values, GError **error)
 				    _("Invalid arguments, expected GUID"));
 		return FALSE;
 	}
-	names = fu_efivar_get_names(values[0], error);
+	names = fu_efivars_get_names(efivars, values[0], error);
 	if (names == NULL)
 		return FALSE;
 	for (guint i = 0; i < names->len; i++) {
@@ -4030,6 +4201,7 @@ fu_util_version(FuUtilPrivate *priv, GError **error)
 	/* load engine */
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_READONLY |
+				      FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
 				      FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS,
 				  priv->progress,
 				  error))
@@ -4051,7 +4223,7 @@ fu_util_version(FuUtilPrivate *priv, GError **error)
 static gboolean
 fu_util_clear_history(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(FuHistory) history = fu_history_new();
+	g_autoptr(FuHistory) history = fu_history_new(priv->ctx);
 	return fu_history_remove_all(history, error);
 }
 
@@ -4077,7 +4249,7 @@ fu_util_print_error(FuUtilPrivate *priv, const GError *error)
 
 int
 main(int argc, char *argv[])
-{
+{ /* nocheck:lines */
 	gboolean allow_branch_switch = FALSE;
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
@@ -4086,9 +4258,9 @@ main(int argc, char *argv[])
 	gboolean ret;
 	gboolean version = FALSE;
 	gboolean ignore_checksum = FALSE;
+	gboolean ignore_requirements = FALSE;
 	gboolean ignore_vid_pid = FALSE;
 	g_auto(GStrv) plugin_glob = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
 	g_autoptr(GError) error_console = NULL;
 	g_autoptr(GError) error = NULL;
@@ -4152,6 +4324,14 @@ main(int argc, char *argv[])
 	     &ignore_vid_pid,
 	     /* TRANSLATORS: command line option */
 	     N_("Ignore firmware hardware mismatch failures"),
+	     NULL},
+	    {"ignore-requirements",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &ignore_requirements,
+	     /* TRANSLATORS: command line option */
+	     N_("Ignore non-critical firmware requirements"),
 	     NULL},
 	    {"no-reboot-check",
 	     '\0',
@@ -4293,7 +4473,7 @@ main(int argc, char *argv[])
 	priv->console = fu_console_new();
 	priv->post_requests = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	fu_console_set_main_context(priv->console, priv->main_ctx);
-	priv->request = fu_engine_request_new();
+	priv->request = fu_engine_request_new(NULL);
 
 	/* used for monitoring and downloading */
 	priv->client = fwupd_client_new();
@@ -4632,6 +4812,20 @@ main(int argc, char *argv[])
 			      _("List EFI variables with a specific GUID"),
 			      fu_util_efivar_list);
 	fu_util_cmd_array_add(cmd_array,
+			      "efivar-boot",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      NULL,
+			      /* TRANSLATORS: command description */
+			      _("List EFI boot parameters"),
+			      fu_util_efivar_boot);
+	fu_util_cmd_array_add(cmd_array,
+			      "efivar-files",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      NULL,
+			      /* TRANSLATORS: command description */
+			      _("List EFI boot files"),
+			      fu_util_efivar_files);
+	fu_util_cmd_array_add(cmd_array,
 			      "security-fix",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("[APPSTREAM_ID]"),
@@ -4799,34 +4993,35 @@ main(int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	if (allow_branch_switch)
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
-	if (force) {
+	if (force)
 		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
-		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
-	}
 	if (no_search)
 		priv->flags |= FWUPD_INSTALL_FLAG_NO_SEARCH;
 	if (ignore_checksum)
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM;
 	if (ignore_vid_pid)
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_VID_PID;
+	if (ignore_requirements)
+		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
 
 	/* load engine */
-	priv->engine = fu_engine_new(ctx);
+	priv->ctx = fu_context_new();
+	priv->engine = fu_engine_new(priv->ctx);
 	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
 	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-added",
-			 G_CALLBACK(fu_main_engine_device_added_cb),
+			 G_CALLBACK(fu_util_engine_device_added_cb),
 			 priv);
 	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-removed",
-			 G_CALLBACK(fu_main_engine_device_removed_cb),
+			 G_CALLBACK(fu_util_engine_device_removed_cb),
 			 priv);
 	g_signal_connect(FU_ENGINE(priv->engine),
 			 "status-changed",
-			 G_CALLBACK(fu_main_engine_status_changed_cb),
+			 G_CALLBACK(fu_util_engine_status_changed_cb),
 			 priv);
 
 	/* just show versions and exit */

@@ -6,19 +6,14 @@
 
 #include "config.h"
 
-#include <linux/hidraw.h>
-#include <linux/input.h>
-
 #include "fu-focalfp-firmware.h"
 #include "fu-focalfp-hid-device.h"
 
 struct _FuFocalfpHidDevice {
-	FuUdevDevice parent_instance;
+	FuHidrawDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuFocalfpHidDevice, fu_focalfp_hid_device, FU_TYPE_UDEV_DEVICE)
-
-#define FU_FOCALFP_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+G_DEFINE_TYPE(FuFocalfpHidDevice, fu_focalfp_hid_device, FU_TYPE_HIDRAW_DEVICE)
 
 #define CMD_ENTER_UPGRADE_MODE	       0x40
 #define CMD_CHECK_CURRENT_STATE	       0x41
@@ -66,12 +61,12 @@ fu_focalfp_hid_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
+	/* success */
+	return TRUE;
 }
 
 static guint8
-fu_focaltp_buffer_generate_checksum(const guint8 *buf, gsize bufsz)
+fu_focalfp_hid_device_generate_checksum(const guint8 *buf, gsize bufsz)
 {
 	guint8 checksum = 0;
 	for (gsize i = 0; i < bufsz; i++)
@@ -95,14 +90,12 @@ fu_focalfp_hid_device_io(FuFocalfpHidDevice *self,
 		buf[3] = cmdlen;
 		if (!fu_memcpy_safe(buf, sizeof(buf), 0x04, wbuf, wbufsz, 0x00, wbufsz, error))
 			return FALSE;
-		buf[cmdlen] = fu_focaltp_buffer_generate_checksum(&buf[1], cmdlen - 1);
-		fu_dump_raw(G_LOG_DOMAIN, "SetReport", buf, sizeof(buf));
-		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-					  HIDIOCSFEATURE(cmdlen + 1),
-					  buf,
-					  NULL,
-					  FU_FOCALFP_DEVICE_IOCTL_TIMEOUT,
-					  error)) {
+		buf[cmdlen] = fu_focalfp_hid_device_generate_checksum(&buf[1], cmdlen - 1);
+		if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+						  buf,
+						  sizeof(buf),
+						  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+						  error)) {
 			return FALSE;
 		}
 	}
@@ -110,15 +103,13 @@ fu_focalfp_hid_device_io(FuFocalfpHidDevice *self,
 	/* GetReport */
 	if (rbuf != NULL && rbufsz > 0) {
 		guint8 buf[64] = {0x06};
-		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-					  HIDIOCGFEATURE(sizeof(buf)),
-					  buf,
-					  NULL,
-					  FU_FOCALFP_DEVICE_IOCTL_TIMEOUT,
-					  error)) {
+		if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+						  buf,
+						  sizeof(buf),
+						  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+						  error)) {
 			return FALSE;
 		}
-		fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, sizeof(buf));
 		if (!fu_memcpy_safe(rbuf, rbufsz, 0x0, buf, sizeof(buf), 0x00, rbufsz, error))
 			return FALSE;
 	}
@@ -128,7 +119,7 @@ fu_focalfp_hid_device_io(FuFocalfpHidDevice *self,
 }
 
 static gboolean
-fu_focalfp_buffer_check_cmd_crc(const guint8 *buf, gsize bufsz, guint8 cmd, GError **error)
+fu_focalfp_hid_device_check_cmd_crc(const guint8 *buf, gsize bufsz, guint8 cmd, GError **error)
 {
 	guint8 csum = 0;
 	guint8 csum_actual;
@@ -147,7 +138,7 @@ fu_focalfp_buffer_check_cmd_crc(const guint8 *buf, gsize bufsz, guint8 cmd, GErr
 	/* check crc */
 	if (!fu_memread_uint8_safe(buf, bufsz, buf[3], &csum, error))
 		return FALSE;
-	csum_actual = fu_focaltp_buffer_generate_checksum(buf + 1, buf[3] - 1);
+	csum_actual = fu_focalfp_hid_device_generate_checksum(buf + 1, buf[3] - 1);
 	if (csum != csum_actual) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -173,7 +164,7 @@ fu_focalfp_hid_device_read_reg_cb(FuDevice *device, gpointer user_data, GError *
 		return FALSE;
 
 	/* check was correct response */
-	if (!fu_focalfp_buffer_check_cmd_crc(buf, sizeof(buf), CMD_READ_REGISTER, error))
+	if (!fu_focalfp_hid_device_check_cmd_crc(buf, sizeof(buf), CMD_READ_REGISTER, error))
 		return FALSE;
 
 	/* success */
@@ -215,7 +206,7 @@ fu_focalfp_hid_device_enter_upgrade_mode(FuFocalfpHidDevice *self, GError **erro
 	}
 
 	/* check was correct response */
-	return fu_focalfp_buffer_check_cmd_crc(rbuf, sizeof(rbuf), CMD_ACK, error);
+	return fu_focalfp_hid_device_check_cmd_crc(rbuf, sizeof(rbuf), CMD_ACK, error);
 }
 
 /* get bootloader current state */
@@ -229,7 +220,10 @@ fu_focalfp_hid_device_check_current_state(FuFocalfpHidDevice *self, guint8 *val,
 		return FALSE;
 
 	/* check was correct response */
-	if (!fu_focalfp_buffer_check_cmd_crc(rbuf, sizeof(rbuf), CMD_CHECK_CURRENT_STATE, error))
+	if (!fu_focalfp_hid_device_check_cmd_crc(rbuf,
+						 sizeof(rbuf),
+						 CMD_CHECK_CURRENT_STATE,
+						 error))
 		return FALSE;
 
 	/* success */
@@ -250,7 +244,10 @@ fu_focalfp_hid_device_wait_for_upgrade_ready_cb(FuDevice *device,
 		return FALSE;
 
 	/* check was correct response */
-	return fu_focalfp_buffer_check_cmd_crc(rbuf, sizeof(rbuf), CMD_READY_FOR_UPGRADE, error);
+	return fu_focalfp_hid_device_check_cmd_crc(rbuf,
+						   sizeof(rbuf),
+						   CMD_READY_FOR_UPGRADE,
+						   error);
 }
 
 /* wait for ready */
@@ -279,7 +276,10 @@ fu_focalfp_hid_device_read_update_id_cb(FuDevice *device, gpointer user_data, GE
 		return FALSE;
 
 	/* check was correct response */
-	if (!fu_focalfp_buffer_check_cmd_crc(rbuf, sizeof(rbuf), CMD_USB_READ_UPGRADE_ID, error))
+	if (!fu_focalfp_hid_device_check_cmd_crc(rbuf,
+						 sizeof(rbuf),
+						 CMD_USB_READ_UPGRADE_ID,
+						 error))
 		return FALSE;
 
 	/* success */
@@ -310,7 +310,7 @@ fu_focalfp_hid_device_erase_flash(FuFocalfpHidDevice *self, GError **error)
 		return FALSE;
 
 	/* check was correct response */
-	return fu_focalfp_buffer_check_cmd_crc(rbuf, sizeof(rbuf), CMD_ACK, error);
+	return fu_focalfp_hid_device_check_cmd_crc(rbuf, sizeof(rbuf), CMD_ACK, error);
 }
 
 static gboolean
@@ -323,7 +323,7 @@ fu_focalfp_hid_device_send_data_cb(FuDevice *device, gpointer user_data, GError 
 		return FALSE;
 
 	/* check was correct response */
-	return fu_focalfp_buffer_check_cmd_crc(rbuf, sizeof(rbuf), CMD_ACK, error);
+	return fu_focalfp_hid_device_check_cmd_crc(rbuf, sizeof(rbuf), CMD_ACK, error);
 }
 
 /* send write data */
@@ -370,7 +370,7 @@ fu_focalfp_hid_device_checksum_upgrade(FuFocalfpHidDevice *self, guint32 *val, G
 		return FALSE;
 
 	/* check was correct response */
-	if (!fu_focalfp_buffer_check_cmd_crc(rbuf, sizeof(rbuf), CMD_UPGRADE_CHECKSUM, error))
+	if (!fu_focalfp_hid_device_check_cmd_crc(rbuf, sizeof(rbuf), CMD_UPGRADE_CHECKSUM, error))
 		return FALSE;
 
 	/* success */
@@ -622,7 +622,7 @@ fu_focalfp_hid_device_attach(FuDevice *device, FuProgress *progress, GError **er
 		return FALSE;
 
 	/* check was correct response */
-	if (!fu_focalfp_buffer_check_cmd_crc(rbuf, sizeof(rbuf), CMD_ACK, error))
+	if (!fu_focalfp_hid_device_check_cmd_crc(rbuf, sizeof(rbuf), CMD_ACK, error))
 		return FALSE;
 
 	/* success */
@@ -659,9 +659,9 @@ fu_focalfp_hid_device_init(FuFocalfpHidDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "input-touchpad");
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.focalfp");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK);
 }
 
 static void

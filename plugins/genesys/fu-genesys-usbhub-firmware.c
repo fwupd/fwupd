@@ -123,6 +123,13 @@ fu_genesys_usbhub_firmware_verify_checksum(GInputStream *stream, GError **error)
 	/* get checksum */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (streamsz < sizeof(checksum)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "stream was too small");
+		return FALSE;
+	}
 	if (!fu_input_stream_read_u16(stream,
 				      streamsz - sizeof(checksum),
 				      &fw_checksum,
@@ -181,7 +188,6 @@ gboolean
 fu_genesys_usbhub_firmware_ensure_version(FuFirmware *firmware, GError **error)
 {
 	guint16 version_raw = 0;
-	g_autofree gchar *version = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -197,9 +203,6 @@ fu_genesys_usbhub_firmware_ensure_version(FuFirmware *firmware, GError **error)
 		return FALSE;
 	}
 	fu_firmware_set_version_raw(firmware, version_raw);
-	version =
-	    g_strdup_printf("%02x.%02x", (version_raw & 0xFF00U) >> 8, (version_raw & 0x00FFU));
-	fu_firmware_set_version(firmware, version);
 
 	/* success */
 	return TRUE;
@@ -502,10 +505,17 @@ fu_genesys_usbhub_firmware_build(FuFirmware *firmware, XbNode *n, GError **error
 	return TRUE;
 }
 
+static gchar *
+fu_genesys_usbhub_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
+{
+	return fu_version_from_uint16_hex(version_raw, fu_firmware_get_version_format(firmware));
+}
+
 static void
 fu_genesys_usbhub_firmware_init(FuGenesysUsbhubFirmware *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
+	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static void
@@ -522,6 +532,7 @@ fu_genesys_usbhub_firmware_class_init(FuGenesysUsbhubFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	firmware_class->convert_version = fu_genesys_usbhub_firmware_convert_version;
 	object_class->finalize = fu_genesys_usbhub_firmware_finalize;
 	firmware_class->validate = fu_genesys_usbhub_firmware_validate;
 	firmware_class->parse = fu_genesys_usbhub_firmware_parse;

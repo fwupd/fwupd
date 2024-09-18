@@ -115,7 +115,7 @@ static void
 fu_cpu_device_init(FuCpuDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_HOST_CPU);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_CPU);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_physical_id(FU_DEVICE(self), "cpu:0");
@@ -304,7 +304,7 @@ fu_cpu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 {
 	if (g_strcmp0(key, "PciBcrAddr") == 0) {
 		guint64 tmp = 0;
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		fu_device_set_metadata_integer(device, "PciBcrAddr", tmp);
 		return TRUE;
@@ -379,11 +379,7 @@ fu_cpu_device_add_security_attrs_cet_active(FuCpuDevice *self, FuSecurityAttrs *
 		g_warning("failed to test CET: %s", error_local->message);
 		return;
 	}
-#if GLIB_CHECK_VERSION(2, 69, 2)
 	if (!g_spawn_check_wait_status(exit_status, &error_local)) {
-#else
-	if (!g_spawn_check_exit_status(exit_status, &error_local)) {
-#endif
 		g_debug("CET does not function, not supported: %s", error_local->message);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 		return;

@@ -17,14 +17,14 @@
 #include "fu-synaptics-mst-plugin.h"
 
 static void
-_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
+fu_test_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	GPtrArray **devices = (GPtrArray **)user_data;
 	g_ptr_array_add(*devices, g_object_ref(device));
 }
 
 static void
-_test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
+fu_test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 {
 	const gchar *basename;
 	gboolean ret;
@@ -65,6 +65,8 @@ _test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 				   "dpcd-ieee-oui",
 				   SYNAPTICS_IEEE_OUI,
 				   NULL);
+		fu_device_add_private_flag(FU_DEVICE(dev),
+					   FU_SYNAPTICS_MST_DEVICE_FLAG_IS_SOMEWHAT_EMULATED);
 		g_debug("creating drm_dp_aux_dev object backed by %s", fn);
 		locker = fu_device_locker_new(dev, &error_local);
 		if (locker == NULL) {
@@ -99,7 +101,7 @@ fu_plugin_synaptics_mst_none_func(void)
 	plugin = fu_plugin_new_from_gtype(fu_synaptics_mst_plugin_get_type(), ctx);
 	g_signal_connect(FU_PLUGIN(plugin),
 			 "device-added",
-			 G_CALLBACK(_plugin_device_added_cb),
+			 G_CALLBACK(fu_test_plugin_device_added_cb),
 			 &devices);
 	ret = fu_plugin_runner_startup(plugin, progress, &error);
 	if (!ret && g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
@@ -114,7 +116,7 @@ fu_plugin_synaptics_mst_none_func(void)
 		g_test_skip("Missing no_devices");
 		return;
 	}
-	_test_add_fake_devices_from_dir(plugin, filename);
+	fu_test_add_fake_devices_from_dir(plugin, filename);
 	g_assert_cmpint(devices->len, ==, 0);
 }
 
@@ -142,7 +144,7 @@ fu_plugin_synaptics_mst_tb16_func(void)
 	plugin = fu_plugin_new_from_gtype(fu_synaptics_mst_plugin_get_type(), ctx);
 	g_signal_connect(FU_PLUGIN(plugin),
 			 "device-added",
-			 G_CALLBACK(_plugin_device_added_cb),
+			 G_CALLBACK(fu_test_plugin_device_added_cb),
 			 &devices);
 
 	ret = fu_plugin_runner_startup(plugin, progress, &error);
@@ -158,7 +160,7 @@ fu_plugin_synaptics_mst_tb16_func(void)
 		g_test_skip("Missing tb16_dock");
 		return;
 	}
-	_test_add_fake_devices_from_dir(plugin, filename);
+	fu_test_add_fake_devices_from_dir(plugin, filename);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
 		g_autofree gchar *tmp = fu_device_to_string(device);

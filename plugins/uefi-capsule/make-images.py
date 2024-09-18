@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 #
 # Copyright 2017 Peter Jones <pjones@redhat.com>
 # Copyright 2020 Richard Hughes <richard@hughsie.com>
@@ -29,7 +28,7 @@ from gi.repository import Pango, PangoCairo
 
 
 def languages(podir: str):
-    for x in open(os.path.join(podir, "LINGUAS"), "r").readlines():
+    for x in open(os.path.join(podir, "LINGUAS")).readlines():
         yield x.strip()
     yield "en"
 
@@ -41,7 +40,7 @@ class PotFile:
             self.parse(fn)
 
     def parse(self, fn: str) -> None:
-        with open(fn, "r") as f:
+        with open(fn) as f:
             lang_en: Optional[str] = None
             for line in f.read().split("\n"):
                 if not line:

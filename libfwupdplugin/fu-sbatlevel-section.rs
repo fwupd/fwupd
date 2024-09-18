@@ -3,7 +3,7 @@
 
 #[derive(ParseStream, New)]
 struct FuStructSbatLevelSectionHeader {
-    version: u32 == 0x0,
-    previous: u32,
-    latest: u32,
+    version: u32le == 0x0,
+    previous: u32le,
+    latest: u32le,
 }

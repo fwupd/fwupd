@@ -226,7 +226,7 @@ fu_synaptics_rmi_v5_device_secure_check(FuDevice *device,
 		return FALSE;
 	}
 	pubkey = g_bytes_new(pubkey_buf->data, pubkey_buf->len);
-	return fu_synaptics_verify_sha256_signature(payload, pubkey, signature, error);
+	return fu_synaptics_rmi_verify_sha256_signature(payload, pubkey, signature, error);
 }
 
 gboolean

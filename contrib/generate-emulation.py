@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Copyright 2017 Richard Hughes <richard@hughsie.com>
 #
@@ -94,7 +94,7 @@ def _get_host_devices_and_attrs() -> str:
         builder.begin_array()
         for attr in attrs:
             builder.begin_object()
-            attr.to_json(builder)
+            attr.add_json(builder)
             builder.end_object()
         builder.end_array()
 
@@ -108,7 +108,7 @@ def _get_host_devices_and_attrs() -> str:
         builder.begin_array()
         for attr in attrs:
             builder.begin_object()
-            attr.to_json(builder)
+            attr.add_json(builder)
             builder.end_object()
         builder.end_array()
 

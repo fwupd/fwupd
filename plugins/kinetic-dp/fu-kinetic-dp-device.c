@@ -163,8 +163,8 @@ fu_kinetic_dp_device_ensure_customer(FuKineticDpDevice *self, GError **error)
 
 	/* Kinetic EV board */
 	if (priv->customer_id == 0x0) {
-		fu_device_add_internal_flag(FU_DEVICE(self),
-					    FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
+		fu_device_add_private_flag(FU_DEVICE(self),
+					   FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES);
 	}
 
 	/* success */
@@ -246,12 +246,12 @@ fu_kinetic_dp_device_init(FuKineticDpDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.kinet-ic.dp");
 	fu_device_set_vendor(FU_DEVICE(self), "Kinetic Technologies");
-	fu_device_add_vendor_id(FU_DEVICE(self), "DRM_DP_AUX_DEV:0x329A");
+	fu_device_build_vendor_id_u16(FU_DEVICE(self), "DRM_DP_AUX_DEV", 0x329A);
 	fu_device_set_summary(FU_DEVICE(self), "DisplayPort Protocol Converter");
 	fu_device_add_icon(FU_DEVICE(self), "video-display");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }

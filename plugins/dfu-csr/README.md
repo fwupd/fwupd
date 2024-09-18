@@ -42,6 +42,17 @@ runtime mode which *may* mean the device "goes away".
 For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
 the bootloader and runtime modes are treated as the same device.
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### `Flags=require-delay`
+
+Respect the write timeout value when performing actions.
+This is sometimes set to a huge amount of time, and so is not used by default.
+
+Since: 1.0.3
+
 ## Vendor ID Security
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x0A12`

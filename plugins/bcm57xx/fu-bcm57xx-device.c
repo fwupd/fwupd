@@ -94,7 +94,7 @@ fu_bcm57xx_device_nvram_write(FuBcm57xxDevice *self,
 	eeprom->magic = BCM_NVRAM_MAGIC;
 	eeprom->len = bufsz;
 	eeprom->offset = address;
-	memcpy(eeprom->data, buf, eeprom->len);
+	memcpy(eeprom->data, buf, eeprom->len); /* nocheck:blocked */
 	strncpy(ifr.ifr_name, self->ethtool_iface, IFNAMSIZ - 1);
 	ifr.ifr_data = (char *)eeprom;
 #ifdef HAVE_IOCTL_H
@@ -542,7 +542,7 @@ fu_bcm57xx_device_setup(FuDevice *device, GError **error)
 		veritem = fu_bcm57xx_veritem_new(bufver, sizeof(bufver));
 		if (veritem != NULL) {
 			fu_device_set_version_format(device, veritem->verfmt);
-			fu_device_set_version(device, veritem->version);
+			fu_device_set_version(device, veritem->version); /* nocheck:set-version */
 			fu_device_set_branch(device, veritem->branch);
 		}
 	}

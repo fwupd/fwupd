@@ -145,6 +145,13 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GInputStream *stream, 
 		g_prefix_error(error, "RmiContainerDescriptor invalid: ");
 		return FALSE;
 	}
+	if (bufsz < sizeof(guint32) + st_dsc->len) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "stream was too small");
+		return FALSE;
+	}
 	container_id = fu_struct_rmi_container_descriptor_get_container_id(st_dsc);
 	if (container_id != FU_RMI_CONTAINER_ID_TOP_LEVEL) {
 		g_set_error(error,
@@ -418,6 +425,13 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 				    "data not aligned to 16 bits");
 		return FALSE;
 	}
+	if (bufsz < 4) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "stream was too small");
+		return FALSE;
+	}
 
 	/* verify checksum */
 	self->checksum = fu_struct_rmi_img_get_checksum(st_img);
@@ -598,9 +612,15 @@ fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 	fu_struct_rmi_container_descriptor_set_content_address(desc_hdr,
 							       RMI_IMG_FW_OFFSET +
 								   0x20); /* offset to table */
-	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x00, desc_hdr->data, desc_hdr->len);
-	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x20, offset_table, sizeof(offset_table));
-	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x24, desc->data, desc->len);
+	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x00,			  /* nocheck:blocked */
+	       desc_hdr->data,
+	       desc_hdr->len);
+	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x20, /* nocheck:blocked */
+	       offset_table,
+	       sizeof(offset_table));
+	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x24, /* nocheck:blocked */
+	       desc->data,
+	       desc->len);
 	fu_memwrite_uint32(buf->data + RMI_IMG_FW_OFFSET + 0x44,
 			   0xfeed,
 			   G_LITTLE_ENDIAN); /* flash_config */

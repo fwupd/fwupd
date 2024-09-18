@@ -23,25 +23,29 @@ G_DEFINE_TYPE(FuPciPspDevice, fu_pci_psp_device, FU_TYPE_UDEV_DEVICE)
 static gboolean
 fu_pci_psp_device_probe(FuDevice *device, GError **error)
 {
-	const gchar *bootloader_version;
-	const gchar *tee_version;
+	g_autofree gchar *attr_bootloader_version = NULL;
+	g_autofree gchar *attr_tee_version = NULL;
 	g_autoptr(GError) error_boot = NULL;
 	g_autoptr(GError) error_tee = NULL;
 
-	bootloader_version = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device),
-							   "bootloader_version",
-							   &error_boot);
-	if (bootloader_version == NULL)
+	attr_bootloader_version =
+	    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+				      "bootloader_version",
+				      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+				      &error_boot);
+	if (attr_bootloader_version == NULL)
 		g_info("failed to read bootloader version: %s", error_boot->message);
 	else
-		fu_device_set_version_bootloader(device, bootloader_version);
+		fu_device_set_version_bootloader(device, attr_bootloader_version);
 
-	tee_version =
-	    fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "tee_version", &error_tee);
-	if (tee_version == NULL)
+	attr_tee_version = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
+						     "tee_version",
+						     FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						     &error_tee);
+	if (attr_tee_version == NULL)
 		g_info("failed to read bootloader version: %s", error_tee->message);
 	else
-		fu_device_set_version(device, tee_version);
+		fu_device_set_version(device, attr_tee_version);
 
 	return TRUE;
 }
@@ -63,7 +67,7 @@ fu_pci_psp_device_get_attr(FwupdSecurityAttr *attr,
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return FALSE;
 	}
-	if (!fu_strtoull(buf, &val, 0, G_MAXUINT32, error))
+	if (!fu_strtoull(buf, &val, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
 	*out = val ? TRUE : FALSE;
 	return TRUE;
@@ -375,8 +379,7 @@ fu_pci_psp_device_init(FuPciPspDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "Secure Processor");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_HOST_CPU_CHILD);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_PROBE_COMPLETE);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD);
 	fu_device_set_vendor(FU_DEVICE(self), "Advanced Micro Devices, Inc.");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_physical_id(FU_DEVICE(self), "pci-psp");

@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include <gusb.h>
-
 #include "fu-dfu-common.h"
 #include "fu-dfu-struct.h"
 #include "fu-dfu-target.h"
@@ -21,8 +19,6 @@ struct _FuDfuDeviceClass {
 	FuUsbDeviceClass parent_class;
 };
 
-FuDfuDevice *
-fu_dfu_device_new(FuContext *ctx, GUsbDevice *usb_device);
 const gchar *
 fu_dfu_device_get_chip_id(FuDfuDevice *self);
 gboolean

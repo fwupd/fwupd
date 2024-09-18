@@ -6,7 +6,7 @@
 # dhead666 <myfoolishgames@gmail.com>, 2015
 # gk <genghiskhan@gmx.ca>, 2015
 # 63f334ffc0709ba0fc2361b80bf3c0f0_00ffd1e <ab96c93ca0ac55ba7fa06385427e60dd_878890>, 2021
-# Yaron Shahrabani <sh.yaron@gmail.com>, 2021,2023
+# Yaron Shahrabani <sh.yaron@gmail.com>, 2021,2023-2024
 # Yosef Or Boczko <yoseforb@gmail.com>, 2023
 msgid ""
 msgstr ""
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: he\n"
-"Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: (n % 10 == 0 && n % 1 == 0 && n > 10) ? 2 : 3;\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: 2;\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -26,7 +26,6 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "נותרה דקה %.0f"
 msgstr[1] "נותרו %.0f דקות"
 msgstr[2] "נותרו %.0f דקות"
-msgstr[3] "נותרו %.0f דקות"
 
 #. TRANSLATORS: battery refers to the system power source
 #, c-format
@@ -124,7 +123,6 @@ msgid_plural "%u days"
 msgstr[0] "יום %u"
 msgstr[1] "יומיים (%u)"
 msgstr[2] "%u ימים"
-msgstr[3] "%u ימים"
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -133,16 +131,6 @@ msgid_plural "%u hours"
 msgstr[0] "שעה %u"
 msgstr[1] "שעתיים (%u)"
 msgstr[2] "%u שעות"
-msgstr[3] "%u שעות"
-
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "%u local device supported"
-msgid_plural "%u local devices supported"
-msgstr[0] "יש תמיכה בהתקן מקומי %u"
-msgstr[1] "יש תמיכה ב־%u התקנים מקומיים"
-msgstr[2] "יש תמיכה ב־%u התקנים מקומיים"
-msgstr[3] "יש תמיכה ב־%u התקנים מקומיים"
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -151,7 +139,6 @@ msgid_plural "%u minutes"
 msgstr[0] "דקה %u"
 msgstr[1] "%u דקות"
 msgstr[2] "%u דקות"
-msgstr[3] "%u דקות"
 
 #. TRANSLATORS: duration in seconds
 #, c-format
@@ -160,7 +147,6 @@ msgid_plural "%u seconds"
 msgstr[0] "שנייה %u"
 msgstr[1] "%u שניות"
 msgstr[2] "%u שניות"
-msgstr[3] "%u שניות"
 
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
@@ -233,10 +219,6 @@ msgid "Answer yes to all questions"
 msgstr "לענות כן על כל השאלות"
 
 #. TRANSLATORS: command line option
-msgid "Apply firmware updates"
-msgstr "החלת עדכוני קושחה"
-
-#. TRANSLATORS: command line option
 msgid "Apply update even when not advised"
 msgstr "החלת עדכון אפילו אם לא מומלץ"
 
@@ -255,11 +237,6 @@ msgid_plural "Approved firmware:"
 msgstr[0] "קושחה מאומתת:"
 msgstr[1] "קושחה מאומתת:"
 msgstr[2] "קושחה מאומתת:"
-msgstr[3] "קושחה מאומתת:"
-
-#. TRANSLATORS: stop nagging the user
-msgid "Ask again next time?"
-msgstr "לשאול שוב בפעם הבאה?"
 
 #. TRANSLATORS: command description
 msgid "Attach to firmware mode"
@@ -345,9 +322,6 @@ msgstr "להעלות אוטומטית בכל פעם?"
 msgid "BIOS updates delivered via LVFS or Windows Update"
 msgstr "עדכוני ה־BIOS מועברים דרך LVFS או Windows Update"
 
-msgid "BYTES"
-msgstr "בתים"
-
 #. TRANSLATORS: command description
 msgid "Bind new kernel driver"
 msgstr "איגוד למנהל התקן ליבה חדש"
@@ -364,7 +338,7 @@ msgstr "קושחה חוסמת:"
 msgid "Bootloader Version"
 msgstr "גרסת מנהל טעינה"
 
-#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Branch"
 msgstr "ענף"
 
@@ -402,10 +376,6 @@ msgstr "בודק שהגיבוב הקריפטוגרפי תואם לקושחה"
 msgid "Checksum"
 msgstr "סכום ביקורת"
 
-#. TRANSLATORS: get interactive prompt
-msgid "Choose the ESP:"
-msgstr "נא לבחור את ה־ESP:"
-
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "פקודה לא נמצאה"
@@ -425,10 +395,6 @@ msgstr "קריטי"
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
 msgstr "גרסה נוכחית"
-
-#. TRANSLATORS: DFU stands for device firmware update
-msgid "DFU Utility"
-msgstr "כלי עדכון קושחת התקן"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
@@ -481,10 +447,6 @@ msgstr "ההתקן אינו נגיש"
 msgid "Device removed:"
 msgstr "הוסר התקנים:"
 
-#. TRANSLATORS: command line option
-msgid "Device update method"
-msgstr "שיטת עדכון התקן"
-
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
 msgstr "עדכון ההתקן דורש הפעלה"
@@ -509,11 +471,11 @@ msgid "Devices with no available firmware updates: "
 msgstr "התקנים ללא עדכוני קושחה זמינים:"
 
 #. TRANSLATORS: message letting the user know no device upgrade available
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade available
-#. TRANSLATORS: message letting the user know no device upgrade
-#. * available
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available
 msgid "Devices with the latest available firmware version:"
 msgstr "התקנים עם גרסת הקושחה העדכנית ביותר שזמינה:"
 
@@ -522,16 +484,9 @@ msgstr "התקנים עם גרסת הקושחה העדכנית ביותר שזמ
 msgid "Disabled"
 msgstr "מושבת"
 
-msgid "Disabled fwupdate debugging"
-msgstr "ניפוי תקלות ב־fwupdate מושבת"
-
 #. TRANSLATORS: command description
 msgid "Disables a given remote"
 msgstr "משבית מרוחק מסוים"
-
-#. TRANSLATORS: command line option
-msgid "Display version"
-msgstr "הצגת גרסה"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
@@ -620,16 +575,8 @@ msgstr "משיכת נתוני SMBIOS מקובץ"
 msgid "Duration"
 msgstr "משך"
 
-#. TRANSLATORS: ESP is EFI System Partition
-msgid "ESP specified was not valid"
-msgstr "ה־ESP שצוין לא היה תקף"
-
 msgid "Enable"
 msgstr "הפעלה"
-
-#. TRANSLATORS: command line option
-msgid "Enable firmware update support on supported systems"
-msgstr "יש להפעיל תמיכה בעדכוני קושחה במערכות נתמכות"
 
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
@@ -639,14 +586,10 @@ msgstr "להפעיל מרוחק חדש?"
 msgid "Enable this remote?"
 msgstr "להפעיל את המרוחק הזה?"
 
-#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
 msgstr "מופעל"
-
-msgid "Enabled fwupdate debugging"
-msgstr "ניפוי תקלות ב־fwupdate פעיל"
 
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
@@ -695,14 +638,6 @@ msgstr "חילוץ מקטע בינרי מהקושחה לקובצי דמות"
 msgid "FILENAME"
 msgstr "שם-קובץ"
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
-msgstr "שם-קובץ שם-חלופי-להתקן|מזהה-חלופי-להתקן"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
-msgstr "שם-קובץ שם-חלופי-להתקן|מזהה-חלופי-להתקן [שם-חלופי-לדמות|מזהה-חלופי-לדמות]"
-
 #. TRANSLATORS: the update state of the specific device
 msgid "Failed"
 msgstr "נכשל"
@@ -728,10 +663,6 @@ msgstr "התקנת עדכון הקושחה נכשלה"
 #. TRANSLATORS: could not read file
 msgid "Failed to load local dbx"
 msgstr "טעינת ה־dbx המקומי נכשלה"
-
-#. TRANSLATORS: quirks are device-specific workarounds
-msgid "Failed to load quirks"
-msgstr "טעינת התיקונים תואמי ההתקן נכשלה"
 
 #. TRANSLATORS: could not read existing system data
 msgid "Failed to load system dbx"
@@ -786,10 +717,6 @@ msgstr "מקור שם קובץ"
 msgid "Filename required"
 msgstr "נדרש שם קובץ"
 
-#. TRANSLATORS: remote URI
-msgid "Firmware Base URI"
-msgstr "כתובת בסיס קושחה"
-
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "שירות D-Bus עדכון קושחה"
@@ -814,12 +741,6 @@ msgstr "הקושחה אינה חסומה כבר"
 msgid "Firmware updates"
 msgstr "עדכוני קושחה"
 
-msgid "Firmware updates are not supported on this machine."
-msgstr "במערכת הזאת אין תמיכה בעדכוני קושחה."
-
-msgid "Firmware updates are supported on this machine."
-msgstr "במערכת הזאת יש תמיכה בעדכוני קושחה."
-
 #. TRANSLATORS: user needs to run a command
 msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "עדכוני קושחה מושבתים, נא להריץ את ‚fwupdmgr unlock’ כדי להפעיל."
@@ -828,17 +749,9 @@ msgstr "עדכוני קושחה מושבתים, נא להריץ את ‚fwupdmgr
 msgid "Flags"
 msgstr "דגלים"
 
-msgid "Force the action ignoring all warnings"
-msgstr "אילוץ הפעולה תוך התעלמות מכל האזהרות"
-
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
 msgstr "נמצא"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgctxt "A single GUID"
-msgid "GUID"
-msgstr "מזהה-קבוצה"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "command-argument"
@@ -968,20 +881,6 @@ msgstr "BootGuard של אינטל"
 msgid "Intel BootGuard error policy"
 msgstr "מדיניות שגיאות של BootGuard של אינטל"
 
-#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
-#. * active means being used by the OS
-msgid "Intel CET Active"
-msgstr "CET של אינטל פעיל"
-
-#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
-#. * enabled means supported by the processor
-msgid "Intel CET Enabled"
-msgstr "CET של אינטל מאופשר"
-
-#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
-msgid "Intel SMAP"
-msgstr "SMAP של אינטל"
-
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
 msgstr "התקן פנימי"
@@ -1000,7 +899,6 @@ msgid_plural "Issues"
 msgstr[0] "תקלה"
 msgstr[1] "תקלות"
 msgstr[2] "תקלות"
-msgstr[3] "תקלות"
 
 #. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
@@ -1035,10 +933,6 @@ msgstr "אזור החלפה של לינוקס"
 #. TRANSLATORS: command line option
 msgid "List entries in dbx"
 msgstr "הצגת רשומות ב־dbx"
-
-#. TRANSLATORS: command line option
-msgid "List supported firmware updates"
-msgstr "הצגת עדכוני הקושחה הנתמכים"
 
 #. TRANSLATORS: command description
 msgid "List the available firmware types"
@@ -1130,10 +1024,6 @@ msgstr "לא נמצאו מזהי קושחה"
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "לא אותרה חומרה בעלת יכולת עדכון קושחה"
-
-#. TRANSLATORS: nothing found
-msgid "No plugins found"
-msgstr "לא נמצאו תוספים"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No releases available"
@@ -1228,12 +1118,6 @@ msgstr "תלויות התוסף חסרות"
 msgid "Previous version"
 msgstr "גרסה קודמת"
 
-msgid "Print the version number"
-msgstr "הצגת מספר הגרסה"
-
-msgid "Print verbose debug statements"
-msgstr "הצגת מפרט ניפוי תקלות"
-
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
 msgstr "עדיפות"
@@ -1245,21 +1129,9 @@ msgstr "להמשיך בהעלאה?"
 msgid "Proprietary"
 msgstr "קנייני"
 
-#. TRANSLATORS: command line option
-msgid "Query for firmware update support"
-msgstr "תשאול תמיכה בעדכון קושחה"
-
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
 msgstr "קריאת מקטע בינרי של קושחה מהתקן"
-
-#. TRANSLATORS: command description
-msgid "Read firmware from device into a file"
-msgstr "קריאת קושחה מהתקן לקובץ"
-
-#. TRANSLATORS: command description
-msgid "Read firmware from one partition into a file"
-msgstr "קריאת קושחה ממחיצה אחת לקובץ"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -1299,7 +1171,7 @@ msgstr "התקנת קושחה על התקן מחדש"
 msgid "Reinstalling %s with %s... "
 msgstr "מתקין מחדש %s עם %s..."
 
-#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
 msgstr "ענף הפצה"
 
@@ -1308,10 +1180,6 @@ msgstr "ענף הפצה"
 msgid "Remote ID"
 msgstr "מזהה מרוחק"
 
-#. TRANSLATORS: command description
-msgid "Replace data in an existing firmware file"
-msgstr "החלפת נתונים בקובץ קושחה קיים"
-
 #. TRANSLATORS: URI to send success/failure reports
 msgid "Report URI"
 msgstr "כתובת לדיווח"
@@ -1319,10 +1187,6 @@ msgstr "כתובת לדיווח"
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "דווח לשרת המרוחק"
-
-#. TRANSLATORS: we asked the user to choose an option and they declined
-msgid "Request canceled"
-msgstr "הבקשה בוטלה"
 
 #. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
 msgid "Required efivarfs filesystem was not found"
@@ -1399,10 +1263,6 @@ msgstr "מספר סידורי"
 msgid "Set one or more BIOS settings"
 msgstr "שינוי הגדרה אחת או יותר ב־BIOS"
 
-#. TRANSLATORS: command line option
-msgid "Set the debugging flag during update"
-msgstr "הגדרת דגלון ניפוי התקלות במהלך עדכון"
-
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "הגדרת רשימת הקושחות המותרות"
@@ -1447,14 +1307,6 @@ msgstr "הצגת היסטוריית עדכוני קושחה"
 msgid "Show the calculated version of the dbx"
 msgstr "הצגת הגרסה המחושבת של ה־dbx"
 
-#. TRANSLATORS: command line option
-msgid "Show the debug log from the last attempted update"
-msgstr "הצגת תיעוד ניפוי השגיאות מניסיון העדכון האחרון"
-
-#. TRANSLATORS: command line option
-msgid "Show the information of firmware update status"
-msgstr "להציג את המידע על מצב עדכון הקושחה"
-
 #. TRANSLATORS: shutdown to apply the update
 msgid "Shutdown now?"
 msgstr "לכבות כעת?"
@@ -1486,15 +1338,9 @@ msgstr "גודל"
 msgid "Source"
 msgstr "מקור"
 
-msgid "Specify Vendor/Product ID(s) of DFU device"
-msgstr "ציון מזהה יצרן/מוצר של התקן DFU"
-
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
 msgstr "ציון קובץ מסד הנתוני מסוג dbx"
-
-msgid "Specify the number of bytes per USB transfer"
-msgstr "ציון מספר הבתים להעברה בודדת דרך USB"
 
 #. TRANSLATORS: success message -- where activation is making the new
 #. * firmware take effect, usually after updating offline
@@ -1534,6 +1380,10 @@ msgstr "תקציר"
 msgid "Supported"
 msgstr "נתמך"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr "מעבד נתמך"
+
 #. TRANSLATORS: Is found in current metadata
 msgid "Supported on remote server"
 msgstr "נתמך בשרת המרוחק"
@@ -1560,6 +1410,7 @@ msgstr "החלפת ענף הקושחה בהתקן"
 msgid "System requires external power source"
 msgstr "המערכת דורשת מקור חשמל חיצוני"
 
+#. show the user the entire data blob
 msgid "Target"
 msgstr "יעד"
 
@@ -1636,10 +1487,6 @@ msgstr "סוג"
 msgid "UEFI ESP partition not detected or configured"
 msgstr "מחיצת ESP של UEFI לא זוהתה או הוגדרה"
 
-#. TRANSLATORS: program name
-msgid "UEFI Firmware Utility"
-msgstr "כלי קושחת UEFI"
-
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "עדכוני כמוסה של UEFI אינם זמינים או מופעלים בתצורת הקושחה"
@@ -1701,10 +1548,6 @@ msgstr "משחרר את חסימת ההתקן לגישת קושחה"
 #. TRANSLATORS: command description
 msgid "Unmounts the ESP"
 msgstr "מנתק את ה־ESP"
-
-#. TRANSLATORS: command line option
-msgid "Unset the debugging flag during update"
-msgstr "ביטול הגדרת דגלון ניפוי התקלות במהלך עדכון"
 
 #. TRANSLATORS: error message
 #, c-format
@@ -1784,9 +1627,6 @@ msgstr "נשלחה הודעה למשתמש"
 msgid "Username"
 msgstr "שם משתמש"
 
-msgid "VID:PID"
-msgstr "VID:PID"
-
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
 msgstr "תקף"
@@ -1795,7 +1635,7 @@ msgstr "תקף"
 msgid "Validating ESP contents…"
 msgstr "תכני ה־ESP עוברים אימות…"
 
-#. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
+#. TRANSLATORS: one line variant of release (e.g. 'China')
 msgid "Variant"
 msgstr "הגוון"
 
@@ -1822,14 +1662,6 @@ msgstr "בהמתנה…"
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"
 msgstr "מעקב אחר שינויים בחומרה"
-
-#. TRANSLATORS: command description
-msgid "Write firmware from file into device"
-msgstr "כתיבת קושחה מקובץ להתקן"
-
-#. TRANSLATORS: command description
-msgid "Write firmware from file into one partition"
-msgstr "כתיבת קושחה מקובץ למחיצה אחת"
 
 #. TRANSLATORS: decompressing images from a container firmware
 msgid "Writing file:"

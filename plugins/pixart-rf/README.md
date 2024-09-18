@@ -33,6 +33,14 @@ Additionally, a custom GUID values including the name is used, e.g.
 The firmware is deployed when the device is in normal runtime mode, and the
 device will reset when the new firmware has been written.
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### `Flags=is-hpac`
+
+Use HPAC firmware header.
+
 ## Vendor ID Security
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x093A`

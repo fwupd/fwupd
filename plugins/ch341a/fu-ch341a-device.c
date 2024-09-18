@@ -88,19 +88,18 @@ fu_ch341a_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_ch341a_device_write(FuCh341aDevice *self, guint8 *buf, gsize bufsz, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_length = 0;
 
 	/* debug */
 	fu_dump_raw(G_LOG_DOMAIN, "write", buf, bufsz);
-	if (!g_usb_device_bulk_transfer(usb_device,
-					CH341A_EP_OUT,
-					buf,
-					bufsz,
-					&actual_length,
-					CH341A_USB_TIMEOUT,
-					NULL,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 CH341A_EP_OUT,
+					 buf,
+					 bufsz,
+					 &actual_length,
+					 CH341A_USB_TIMEOUT,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "failed to write 0x%x bytes: ", (guint)bufsz);
 		return FALSE;
 	}
@@ -121,17 +120,16 @@ fu_ch341a_device_write(FuCh341aDevice *self, guint8 *buf, gsize bufsz, GError **
 static gboolean
 fu_ch341a_device_read(FuCh341aDevice *self, guint8 *buf, gsize bufsz, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_length = 0;
 
-	if (!g_usb_device_bulk_transfer(usb_device,
-					CH341A_EP_IN,
-					buf,
-					bufsz,
-					&actual_length,
-					CH341A_USB_TIMEOUT,
-					NULL,
-					error)) {
+	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
+					 CH341A_EP_IN,
+					 buf,
+					 bufsz,
+					 &actual_length,
+					 CH341A_USB_TIMEOUT,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "failed to read 0x%x bytes: ", (guint)bufsz);
 		return FALSE;
 	}
@@ -153,7 +151,7 @@ fu_ch341a_device_read(FuCh341aDevice *self, guint8 *buf, gsize bufsz, GError **e
 }
 
 /**
- * fu_ch341a_reverse_uint8:
+ * fu_ch341a_device_reverse_uint8:
  * @value: integer
  *
  * Calculates the reverse bit order for a single byte.
@@ -161,7 +159,7 @@ fu_ch341a_device_read(FuCh341aDevice *self, guint8 *buf, gsize bufsz, GError **e
  * Returns: the @value, reversed
  **/
 static guint8
-fu_ch341a_reverse_uint8(guint8 value)
+fu_ch341a_device_reverse_uint8(guint8 value)
 {
 	guint8 tmp = 0;
 	if (value & 0x01)
@@ -192,7 +190,7 @@ fu_ch341a_device_spi_transfer(FuCh341aDevice *self, guint8 *buf, gsize bufsz, GE
 	/* requires LSB first */
 	buf2[0] = CH341A_CMD_SPI_STREAM;
 	for (gsize i = 0; i < bufsz; i++)
-		buf2[i + 1] = fu_ch341a_reverse_uint8(buf[i]);
+		buf2[i + 1] = fu_ch341a_device_reverse_uint8(buf[i]);
 
 	/* debug */
 	fu_dump_raw(G_LOG_DOMAIN, "SPIwrite", buf, bufsz);
@@ -204,7 +202,7 @@ fu_ch341a_device_spi_transfer(FuCh341aDevice *self, guint8 *buf, gsize bufsz, GE
 
 	/* requires LSB first */
 	for (gsize i = 0; i < bufsz; i++)
-		buf[i] = fu_ch341a_reverse_uint8(buf[i]);
+		buf[i] = fu_ch341a_device_reverse_uint8(buf[i]);
 
 	/* debug */
 	fu_dump_raw(G_LOG_DOMAIN, "SPIread", buf, bufsz);

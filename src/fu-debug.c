@@ -334,7 +334,7 @@ fu_debug_setup_event_source(FuDebug *self)
 }
 #endif
 
-/*(transfer): full */
+/* (transfer): full */
 GOptionGroup *
 fu_debug_get_option_group(void)
 {

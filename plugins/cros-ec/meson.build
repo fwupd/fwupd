@@ -1,9 +1,11 @@
-if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginCrosEc"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('cros-ec.quirk')
 plugin_builtins += static_library('fu_plugin_cros_ec',
+  rustgen.process(
+    'fu-cros-ec.rs',            # fuzzing
+  ),
   sources: [
     'fu-cros-ec-plugin.c',
     'fu-cros-ec-usb-device.c',
@@ -15,4 +17,3 @@ plugin_builtins += static_library('fu_plugin_cros_ec',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-endif

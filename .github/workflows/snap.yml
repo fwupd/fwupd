@@ -16,7 +16,7 @@ jobs:
       snap_name: ${{ steps.snapcraft.outputs.snap }}
       channel: ${{ steps.channel.outputs.channel }}
     steps:
-    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       with:
         fetch-depth: 0
     - id: channel
@@ -30,9 +30,9 @@ jobs:
       run: |
         mkdir -p snap
         ln -s ../contrib/snap/snapcraft.yaml snap/snapcraft.yaml
-    - uses: snapcore/action-build@2096990827aa966f773676c8a53793c723b6b40f # v1.2.0
+    - uses: snapcore/action-build@3bdaa03e1ba6bf59a65f84a751d943d549a54e79 # v1.3.0
       id: snapcraft
-    - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+    - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
       with:
         name: snap
         path: ${{ steps.snapcraft.outputs.snap }}
@@ -41,7 +41,7 @@ jobs:
     needs: build-snap
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+    - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
       id: download
       with:
         name: snap
@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ inputs.deploy }}
     steps:
-    - uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+    - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
       id: download
       with:
         name: snap

@@ -63,11 +63,12 @@ from that. This means that `fwupdmgr get-devices` may return the UEFI device as 
 then once `fwupdmgr refresh` has completed it may start showing the exact same device as `A.B.C.D`,
 aka `quad` format.
 
-The two main formats used by vendors are `triplet`, `quad` and `dell-bios`.
+The main formats used by vendors are `triplet`, `quad`, `dell-bios` and `dell-bios-msb`.
 
     0xAABBCCDD -> 0xAA.0xBB.0xCCCC is `triplet`, used for Lenovo
     0xAABBCCDD -> 0xAA.0xBB.0xCC.0xDD is `quad`, used for HP
     0xAABBCCDD -> 0xBB.0xCC.0xDD is `dell-bios`, used for Dell
+    0xAABBCCDD -> 0xAA.0xBB.0xCC is `dell-bios-msb`, used for Dell since CY24
 
 There are more details about firmware version formats and a full list of all the different allowed
 values on the [LVFS](https://lvfs.readthedocs.io/en/latest/metainfo.html#version-format).
@@ -82,9 +83,9 @@ portable to depend on the number -- which will also work if the metadata has not
 Described in  [UEFI specification](https://www.uefi.org/sites/default/files/resources/UEFI%20Spec%202_6.pdf)
 § 8.5.5 - Delivery of Capsules via file on Mass Storage device.
 
-If the firmware supports this, it will be the preferred method of updating on
-aarch64 platforms. You can explicitly disable it by by modifying
-*DisableCapsuleUpdateOnDisk* in `/etc/fwupd/uefi_capsule.conf`.
+If the firmware supports this, it will be the preferred method of updating when supported.
+You can explicitly disable it by by modifying
+*DisableCapsuleUpdateOnDisk* in the `uefi_capsule` section of `/etc/fwupd/fwupd.conf`.
 
 The spec expects runtime *SetVariable* to be available in order to enable this
 feature, we need to set `EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED`
@@ -140,6 +141,47 @@ This plugin uses the following plugin-specific quirks:
 
 Use a Capsule-on-Disk filename of `CapsuleUpdateFileXXXX.bin` rather than including the ESRT GUID.
 This alternative format may be needed for some early InsydeH2O firmwares.
+
+### `Flags=no-ux-capsule`
+
+Do not use the additional UX capsule.
+
+### `Flags=use-shim-unique`
+
+Use a unique shim filename to work around a common BIOS bug.
+
+### `Flags=use-legacy-bootmgr-desc`
+
+Use the legacy boot manager description to work around a Lenovo BIOS bug.
+
+### `Flags=supports-boot-order-lock`
+
+The BIOS might have Boot Order Lock enabled which can cause failures when not using grub
+chainloading or capsule-on-disk.
+
+### `Flags=use-shim-for-sb`
+
+Use shim to load fwupdx64.efi when SecureBoot is turned on.
+
+### `Flags=no-rt-set-variable`
+
+Do not use RT->SetVariable.
+
+### `Flags=no-capsule-header-fixup`
+
+Do not prepend a plausible missing capsule header.
+
+### `Flags=enable-debugging`
+
+Enable debugging the EFI binary.
+
+### `Flags=modify-bootorder`
+
+Modify `BootOrder` as well as `BootNext` to work around BIOS bugs.
+
+### `Flags=cod-dell-recovery`
+
+Use Dell customized file location for the capsule on disk.
 
 ## External Interface Access
 

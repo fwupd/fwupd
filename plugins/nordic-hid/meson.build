@@ -1,4 +1,4 @@
-if gudev.found() and gusb.found()
+if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginNordicHid"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

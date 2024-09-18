@@ -10,6 +10,8 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-common.h"
+#include "fu-composite-input-stream.h"
 #include "fu-efi-volume.h"
 #include "fu-ifd-bios.h"
 #include "fu-ifd-common.h"
@@ -98,6 +100,29 @@ fu_ifd_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 	return fu_struct_ifd_fdbar_validate_stream(stream, offset, error);
 }
 
+static GInputStream *
+fu_ifd_firmware_fixup_stream(GInputStream *stream, GError **error)
+{
+	const guint8 buf[] = {0xFF};
+	gsize streamsz = 0;
+	g_autoptr(GBytes) blob = g_bytes_new(buf, sizeof(buf));
+	g_autoptr(GInputStream) stream2 = fu_composite_input_stream_new();
+
+	/* already aligned */
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return NULL;
+	if (((streamsz >> 1) << 1) == streamsz)
+		return g_object_ref(stream);
+
+	/* pad with one trailing byte */
+	if (!fu_composite_input_stream_add_stream(FU_COMPOSITE_INPUT_STREAM(stream2),
+						  stream,
+						  error))
+		return NULL;
+	fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(stream2), blob);
+	return g_steal_pointer(&stream2);
+}
+
 static gboolean
 fu_ifd_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
@@ -110,6 +135,7 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 	gsize streamsz = 0;
 	g_autoptr(GByteArray) st_fcba = NULL;
 	g_autoptr(GByteArray) st_fdbar = NULL;
+	g_autoptr(GInputStream) stream2 = NULL;
 
 	/* check size */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -122,6 +148,11 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 			    (guint)FU_IFD_SIZE);
 		return FALSE;
 	}
+
+	/* some test IFD images were captured missing the final byte -- so align up */
+	stream2 = fu_ifd_firmware_fixup_stream(stream, error);
+	if (stream2 == NULL)
+		return FALSE;
 
 	/* descriptor registers */
 	st_fdbar = fu_struct_ifd_fdbar_parse_stream(stream, 0x0, error);
@@ -192,7 +223,7 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 
 		/* create image */
 		g_debug("freg %s 0x%04x -> 0x%04x", freg_str, freg_base, freg_limt);
-		partial_stream = fu_partial_input_stream_new(stream, freg_base, freg_size, error);
+		partial_stream = fu_partial_input_stream_new(stream2, freg_base, freg_size, error);
 		if (partial_stream == NULL)
 			return FALSE;
 		if (i == FU_IFD_REGION_BIOS) {

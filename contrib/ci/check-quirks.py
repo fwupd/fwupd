@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Copyright 2021 Richard Hughes <richard@hughsie.com>
 #
@@ -11,8 +11,8 @@ import sys
 def test_files() -> int:
     rc: int = 0
 
-    for fn in glob.glob("**/*.quirk", recursive=True):
-        with open(fn, "r") as f:
+    for fn in glob.glob("data/*.quirk") + glob.glob("plugins/*/*.quirk"):
+        with open(fn) as f:
             for line in f.read().split("\n"):
                 if line.startswith(" ") or line.endswith(" "):
                     print(f"{fn} has leading or trailing whitespace: {line}")
@@ -25,11 +25,6 @@ def test_files() -> int:
                         print(f"{fn} has invalid section header: {line}")
                         rc = 1
                         continue
-                    for deprecated in ["DeviceInstanceId", "Guid"]:
-                        if line.find(deprecated) != -1:
-                            print(f"{fn} has deprecated prefix: {deprecated}")
-                            rc = 1
-                            continue
                 else:
                     sections = line.split(" = ")
                     if len(sections) != 2:

@@ -31,13 +31,12 @@ struct _FuSecurityAttrs {
 #define FWUPD_SECURITY_ATTR_ID_DOC_URL "https://fwupd.github.io/libfwupdplugin/hsi.html"
 
 static void
-fwupd_security_attrs_codec_iface_init(FwupdCodecInterface *iface);
+fu_security_attrs_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(FuSecurityAttrs,
 			fu_security_attrs,
 			G_TYPE_OBJECT,
-			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
-					      fwupd_security_attrs_codec_iface_init))
+			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_security_attrs_codec_iface_init))
 
 static void
 fu_security_attrs_finalize(GObject *obj)
@@ -492,7 +491,7 @@ fu_security_attrs_depsolve(FuSecurityAttrs *self)
 }
 
 static void
-fu_security_attrs_to_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_security_attrs_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
 	FuSecurityAttrs *self = FU_SECURITY_ATTRS(codec);
 	g_autoptr(GPtrArray) items = NULL;
@@ -506,7 +505,9 @@ fu_security_attrs_to_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFla
 		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
 			continue;
 		fwupd_security_attr_set_created(attr, 0);
+		json_builder_begin_object(builder);
 		fwupd_codec_to_json(FWUPD_CODEC(attr), builder, FWUPD_CODEC_FLAG_NONE);
+		json_builder_end_object(builder);
 		fwupd_security_attr_set_created(attr, created);
 	}
 	json_builder_end_array(builder);
@@ -553,9 +554,9 @@ fu_security_attrs_from_json(FwupdCodec *codec, JsonNode *json_node, GError **err
 }
 
 static void
-fwupd_security_attrs_codec_iface_init(FwupdCodecInterface *iface)
+fu_security_attrs_codec_iface_init(FwupdCodecInterface *iface)
 {
-	iface->to_json = fu_security_attrs_to_json;
+	iface->add_json = fu_security_attrs_add_json;
 	iface->from_json = fu_security_attrs_from_json;
 }
 

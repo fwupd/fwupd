@@ -336,7 +336,10 @@ fu_redfish_backend_set_update_uri_path(FuRedfishBackend *self, const gchar *upda
 }
 
 static gboolean
-fu_redfish_backend_setup(FuBackend *backend, FuProgress *progress, GError **error)
+fu_redfish_backend_setup(FuBackend *backend,
+			 FuBackendSetupFlags flags,
+			 FuProgress *progress,
+			 GError **error)
 {
 	FuRedfishBackend *self = FU_REDFISH_BACKEND(backend);
 	JsonObject *json_obj;
@@ -524,7 +527,6 @@ fu_redfish_backend_init(FuRedfishBackend *self)
 	curl_share_setopt(self->curlsh, CURLSHOPT_SHARE, CURL_LOCK_DATA_COOKIE);
 	curl_share_setopt(self->curlsh, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS);
 	curl_share_setopt(self->curlsh, CURLSHOPT_SHARE, CURL_LOCK_DATA_SSL_SESSION);
-	curl_share_setopt(self->curlsh, CURLSHOPT_SHARE, CURL_LOCK_DATA_CONNECT);
 }
 
 FuRedfishBackend *

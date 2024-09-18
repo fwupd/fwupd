@@ -19,67 +19,17 @@ struct _FuUefiDeviceClass {
 	FuDeviceClass parent_class;
 };
 
-/**
- * FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE:
- *
- * No not use the additional UX capsule.
- */
-#define FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE (1 << 0)
-/**
- * FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE:
- *
- * Use a unique shim filename to work around a common BIOS bug.
- */
-#define FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE (1 << 1)
-/**
- * FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC:
- *
- * Use the legacy boot manager description to work around a Lenovo BIOS bug.
- */
-#define FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC (1 << 2)
-/**
- * FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK:
- *
- * The BIOS might have Boot Order Lock enabled which can cause failures when
- * not using grub chainloading or capsule-on-disk.
- */
-#define FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK (1 << 3)
-/**
- * FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB:
- *
- * Use shim to load fwupdx64.efi when SecureBoot is turned on.
- */
-#define FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB (1 << 5)
-/**
- * FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE:
- *
- * Do not use RT->SetVariable.
- */
-#define FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE (1 << 6)
-/**
- * FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP:
- *
- * Do not prepend a plausible missing capsule header.
- */
-#define FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP (1 << 7)
-/**
- * FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING:
- *
- * Enable debugging the EFI binary.
- */
-#define FU_UEFI_DEVICE_FLAG_ENABLE_EFI_DEBUGGING (1 << 8)
-/**
- * FU_UEFI_DEVICE_FLAG_COD_INDEXED_FILENAME:
- *
- * Use a Capsule-on-Disk filename of `CapsuleUpdateFileXXXX.bin`.
- */
-#define FU_UEFI_DEVICE_FLAG_COD_INDEXED_FILENAME (1 << 9)
-/**
- * FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER:
- *
- * Modify `BootOrder` as well as `BootNext` to work around BIOS bugs.
- */
-#define FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER (1 << 10)
+#define FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE	     "no-ux-capsule"
+#define FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE	     "use-shim-unique"
+#define FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC  "use-legacy-bootmgr-desc"
+#define FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK "supports-boot-order-lock"
+#define FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB	     "use-shim-for-sb"
+#define FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE	     "no-rt-set-variable"
+#define FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP  "no-capsule-header-fixup"
+#define FU_UEFI_DEVICE_FLAG_ENABLE_DEBUGGING	     "enable-debugging"
+#define FU_UEFI_DEVICE_FLAG_COD_INDEXED_FILENAME     "cod-indexed-filename"
+#define FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER	     "modify-bootorder"
+#define FU_UEFI_DEVICE_FLAG_COD_DELL_RECOVERY	     "cod-dell-recovery"
 
 void
 fu_uefi_device_set_esp(FuUefiDevice *self, FuVolume *esp);

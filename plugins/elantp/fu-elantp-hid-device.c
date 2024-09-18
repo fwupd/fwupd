@@ -6,16 +6,13 @@
 
 #include "config.h"
 
-#include <linux/hidraw.h>
-#include <linux/input.h>
-
 #include "fu-elantp-common.h"
 #include "fu-elantp-firmware.h"
 #include "fu-elantp-hid-device.h"
 #include "fu-elantp-hid-haptic-device.h"
 
 struct _FuElantpHidDevice {
-	FuUdevDevice parent_instance;
+	FuHidrawDevice parent_instance;
 	guint16 ic_page_count;
 	guint16 ic_type;
 	guint16 iap_type;
@@ -29,9 +26,7 @@ struct _FuElantpHidDevice {
 	guint8 pattern;
 };
 
-G_DEFINE_TYPE(FuElantpHidDevice, fu_elantp_hid_device, FU_TYPE_UDEV_DEVICE)
-
-#define FU_ELANTP_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+G_DEFINE_TYPE(FuElantpHidDevice, fu_elantp_hid_device, FU_TYPE_HIDRAW_DEVICE)
 
 static gboolean
 fu_elantp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error);
@@ -72,8 +67,8 @@ fu_elantp_hid_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -87,13 +82,11 @@ fu_elantp_hid_device_send_cmd(FuElantpHidDevice *self,
 	g_autofree guint8 *buf = NULL;
 	gsize bufsz = rxsz + 3;
 
-	fu_dump_raw(G_LOG_DOMAIN, "SetReport", tx, txsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCSFEATURE(txsz),
-				  tx,
-				  NULL,
-				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  tx,
+					  txsz,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error))
 		return FALSE;
 	if (rxsz == 0)
 		return TRUE;
@@ -101,14 +94,12 @@ fu_elantp_hid_device_send_cmd(FuElantpHidDevice *self,
 	/* GetFeature */
 	buf = g_malloc0(bufsz);
 	buf[0] = tx[0]; /* report number */
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(bufsz),
-				  buf,
-				  NULL,
-				  FU_ELANTP_DEVICE_IOCTL_TIMEOUT,
-				  error))
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+					  buf,
+					  bufsz,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error))
 		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, bufsz);
 
 	/* success */
 	return fu_memcpy_safe(rx,
@@ -435,7 +426,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	if (!fu_elantp_hid_device_read_haptic_enable(self, &error_local)) {
 		g_debug("no haptic device detected: %s", error_local->message);
 	} else {
-		g_autoptr(FuElantpHidHapticDevice) cfg = fu_elantp_haptic_device_new(device);
+		g_autoptr(FuElantpHidHapticDevice) cfg = fu_elantp_hid_haptic_device_new(device);
 		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(cfg));
 	}
 
@@ -912,13 +903,13 @@ fu_elantp_hid_device_set_quirk_kv(FuDevice *device,
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "ElantpIcPageCount") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->ic_page_count = (guint16)tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "ElantpIapPassword") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->iap_password = (guint16)tmp;
 		return TRUE;
@@ -958,9 +949,9 @@ fu_elantp_hid_device_init(FuElantpHidDevice *self)
 	fu_device_set_vendor(FU_DEVICE(self), "ELAN Microelectronics");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK);
 }
 
 static void

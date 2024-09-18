@@ -220,7 +220,7 @@ fu_logitech_hidpp_msg_copy(FuLogitechHidppHidppMsg *msg_dst, const FuLogitechHid
 	msg_dst->device_id = msg_src->device_id;
 	msg_dst->sub_id = msg_src->sub_id;
 	msg_dst->function_id = msg_src->function_id;
-	memcpy(msg_dst->data, msg_src->data, sizeof(msg_dst->data));
+	memcpy(msg_dst->data, msg_src->data, sizeof(msg_dst->data)); /* nocheck:blocked */
 }
 
 /* filter HID++1.0 messages */

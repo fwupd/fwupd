@@ -11,7 +11,7 @@
 #endif
 #include <jcat.h>
 
-#include "fwupd-codec-private.h"
+#include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
@@ -34,7 +34,6 @@ fwupd_remote_finalize(GObject *obj);
 typedef struct {
 	FwupdRemoteKind kind;
 	FwupdRemoteFlags flags;
-	FwupdKeyringKind keyring_kind;
 	gchar *id;
 	gchar *firmware_base_uri;
 	gchar *report_uri;
@@ -43,6 +42,7 @@ typedef struct {
 	gchar *username;
 	gchar *password;
 	gchar *title;
+	gchar *privacy_uri;
 	gchar *agreement;
 	gchar *checksum;     /* of metadata */
 	gchar *checksum_sig; /* of the signature */
@@ -145,19 +145,14 @@ fwupd_remote_flag_from_string(const gchar *flag)
 }
 
 static void
-fwupd_remote_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_remote_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdRemote *self = FWUPD_REMOTE(converter);
+	FwupdRemote *self = FWUPD_REMOTE(codec);
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 
 	fwupd_codec_json_append(builder, "Id", priv->id);
 	if (priv->kind != FWUPD_REMOTE_KIND_UNKNOWN) {
 		fwupd_codec_json_append(builder, "Kind", fwupd_remote_kind_to_string(priv->kind));
-	}
-	if (priv->keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
-		fwupd_codec_json_append(builder,
-					"KeyringKind",
-					fwupd_keyring_kind_to_string(priv->keyring_kind));
 	}
 	fwupd_codec_json_append(builder, "ReportUri", priv->report_uri);
 	fwupd_codec_json_append(builder, "MetadataUri", priv->metadata_uri);
@@ -165,6 +160,7 @@ fwupd_remote_to_json(FwupdCodec *converter, JsonBuilder *builder, FwupdCodecFlag
 	fwupd_codec_json_append(builder, "Username", priv->username);
 	fwupd_codec_json_append(builder, "Password", priv->password);
 	fwupd_codec_json_append(builder, "Title", priv->title);
+	fwupd_codec_json_append(builder, "PrivacyUri", priv->privacy_uri);
 	fwupd_codec_json_append(builder, "Agreement", priv->agreement);
 	fwupd_codec_json_append(builder, "Checksum", priv->checksum);
 	fwupd_codec_json_append(builder, "ChecksumSig", priv->checksum_sig);
@@ -289,7 +285,7 @@ fwupd_remote_has_flag(FwupdRemote *self, FwupdRemoteFlags flag)
 }
 
 static gchar *
-fwupd_strdup_nonempty(const gchar *text)
+fwupd_remote_strdup_nonempty(const gchar *text)
 {
 	if (text == NULL || text[0] == '\0')
 		return NULL;
@@ -340,6 +336,30 @@ fwupd_remote_set_title(FwupdRemote *self, const gchar *title)
 
 	g_free(priv->title);
 	priv->title = g_strdup(title);
+}
+
+/**
+ * fwupd_remote_set_privacy_uri:
+ * @self: a #FwupdRemote
+ * @privacy_uri: (nullable): privacy URL, e.g. "https://lvfs.readthedocs.io/en/latest/privacy.html"
+ *
+ * Sets the remote privacy policy URL.
+ *
+ * Since: 2.0.0
+ **/
+void
+fwupd_remote_set_privacy_uri(FwupdRemote *self, const gchar *privacy_uri)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FWUPD_IS_REMOTE(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->privacy_uri, privacy_uri) == 0)
+		return;
+
+	g_free(priv->privacy_uri);
+	priv->privacy_uri = g_strdup(privacy_uri);
 }
 
 /**
@@ -445,28 +465,11 @@ fwupd_remote_set_kind(FwupdRemote *self, FwupdRemoteKind kind)
 }
 
 /**
- * fwupd_remote_set_keyring_kind:
- * @self: a #FwupdRemote
- * @keyring_kind: keyring kind e.g. #FWUPD_KEYRING_KIND_PKCS7
- *
- * Sets the keyring kind
- *
- * Since: 1.5.3
- **/
-void
-fwupd_remote_set_keyring_kind(FwupdRemote *self, FwupdKeyringKind keyring_kind)
-{
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FWUPD_IS_REMOTE(self));
-	priv->keyring_kind = keyring_kind;
-}
-
-/**
  * fwupd_remote_set_id:
  * @self: a #FwupdRemote
  * @id: (nullable): remote ID, e.g. "lvfs"
  *
- * Sets the remote title.
+ * Sets the remote ID.
  *
  * NOTE: the ID has to be set before the URL.
  *
@@ -504,18 +507,6 @@ fwupd_remote_set_filename_source(FwupdRemote *self, const gchar *filename_source
 		return;
 	g_free(priv->filename_source);
 	priv->filename_source = g_strdup(filename_source);
-}
-
-static const gchar *
-fwupd_remote_get_suffix_for_keyring_kind(FwupdKeyringKind keyring_kind)
-{
-	if (keyring_kind == FWUPD_KEYRING_KIND_JCAT)
-		return ".jcat";
-	if (keyring_kind == FWUPD_KEYRING_KIND_GPG)
-		return ".asc";
-	if (keyring_kind == FWUPD_KEYRING_KIND_PKCS7)
-		return ".p7b";
-	return NULL;
 }
 
 static gchar *
@@ -606,7 +597,6 @@ void
 fwupd_remote_set_metadata_uri(FwupdRemote *self, const gchar *metadata_uri)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	const gchar *suffix;
 
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
 
@@ -619,11 +609,8 @@ fwupd_remote_set_metadata_uri(FwupdRemote *self, const gchar *metadata_uri)
 	priv->metadata_uri = g_strdup(metadata_uri);
 
 	/* generate the signature URI too */
-	suffix = fwupd_remote_get_suffix_for_keyring_kind(priv->keyring_kind);
-	if (suffix != NULL) {
-		g_free(priv->metadata_uri_sig);
-		priv->metadata_uri_sig = g_strconcat(metadata_uri, suffix, NULL);
-	}
+	g_free(priv->metadata_uri_sig);
+	priv->metadata_uri_sig = g_strconcat(metadata_uri, ".jcat", NULL);
 }
 
 /**
@@ -639,7 +626,7 @@ void
 fwupd_remote_set_report_uri(FwupdRemote *self, const gchar *report_uri)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	g_autofree gchar *report_uri_safe = fwupd_strdup_nonempty(report_uri);
+	g_autofree gchar *report_uri_safe = fwupd_remote_strdup_nonempty(report_uri);
 
 	/* not changed */
 	if (g_strcmp0(priv->report_uri, report_uri_safe) == 0)
@@ -706,7 +693,6 @@ void
 fwupd_remote_set_filename_cache(FwupdRemote *self, const gchar *filename)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	const gchar *suffix;
 
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
 
@@ -717,11 +703,10 @@ fwupd_remote_set_filename_cache(FwupdRemote *self, const gchar *filename)
 	g_free(priv->filename_cache);
 	priv->filename_cache = g_strdup(filename);
 
-	/* create for all remote types */
-	suffix = fwupd_remote_get_suffix_for_keyring_kind(priv->keyring_kind);
-	if (suffix != NULL) {
+	/* create for all non-local remote types */
+	if (priv->kind != FWUPD_REMOTE_KIND_LOCAL) {
 		g_free(priv->filename_cache_sig);
-		priv->filename_cache_sig = g_strconcat(filename, suffix, NULL);
+		priv->filename_cache_sig = g_strconcat(filename, ".jcat", NULL);
 	}
 }
 
@@ -811,27 +796,19 @@ fwupd_remote_setup(FwupdRemote *self, GError **error)
 		}
 		if (g_str_has_suffix(priv->metadata_uri, ".xml.zst")) {
 			filename_cache =
-			    g_build_filename(priv->remotes_dir, priv->id, "metadata.xml.zst", NULL);
+			    g_build_filename(priv->remotes_dir, priv->id, "firmware.xml.zst", NULL);
 		} else if (g_str_has_suffix(priv->metadata_uri, ".xml.xz")) {
 			filename_cache =
-			    g_build_filename(priv->remotes_dir, priv->id, "metadata.xml.xz", NULL);
+			    g_build_filename(priv->remotes_dir, priv->id, "firmware.xml.xz", NULL);
 		} else {
 			filename_cache =
-			    g_build_filename(priv->remotes_dir, priv->id, "metadata.xml.gz", NULL);
+			    g_build_filename(priv->remotes_dir, priv->id, "firmware.xml.gz", NULL);
 		}
 		fwupd_remote_set_filename_cache(self, filename_cache);
 	}
 
 	/* some validation for DIRECTORY types */
 	if (priv->kind == FWUPD_REMOTE_KIND_DIRECTORY) {
-		if (priv->keyring_kind != FWUPD_KEYRING_KIND_NONE) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "keyring kind %s is not supported with directory remote",
-				    fwupd_keyring_kind_to_string(priv->keyring_kind));
-			return FALSE;
-		}
 		if (priv->firmware_base_uri != NULL) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -985,24 +962,6 @@ fwupd_remote_get_kind(FwupdRemote *self)
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), 0);
 	return priv->kind;
-}
-
-/**
- * fwupd_remote_get_keyring_kind:
- * @self: a #FwupdRemote
- *
- * Gets the keyring kind of the remote.
- *
- * Returns: a #FwupdKeyringKind, e.g. #FWUPD_KEYRING_KIND_GPG
- *
- * Since: 0.9.7
- **/
-FwupdKeyringKind
-fwupd_remote_get_keyring_kind(FwupdRemote *self)
-{
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_REMOTE(self), 0);
-	return priv->keyring_kind;
 }
 
 /**
@@ -1171,6 +1130,24 @@ fwupd_remote_get_title(FwupdRemote *self)
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
 	return priv->title;
+}
+
+/**
+ * fwupd_remote_get_privacy_uri:
+ * @self: a #FwupdRemote
+ *
+ * Gets the remote privacy policy URL, e.g. `https://lvfs.readthedocs.io/en/latest/privacy.html`
+ *
+ * Returns: a string, or %NULL if unset
+ *
+ * Since: 2.0.0
+ **/
+const gchar *
+fwupd_remote_get_privacy_uri(FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
+	return priv->privacy_uri;
 }
 
 /**
@@ -1422,9 +1399,6 @@ fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError 
  *
  * Parses the signature, updating the metadata URI as appropriate.
  *
- * This can only be called for remotes with `Keyring=jcat` which is
- * the default for most remotes.
- *
  * Returns: %TRUE for success
  *
  * Since: 1.4.5
@@ -1432,22 +1406,12 @@ fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError 
 gboolean
 fwupd_remote_load_signature_bytes(FwupdRemote *self, GBytes *bytes, GError **error)
 {
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GInputStream) istr = NULL;
 	g_autoptr(JcatFile) jcat_file = jcat_file_new();
 
 	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
 	g_return_val_if_fail(bytes != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* sanity check */
-	if (priv->keyring_kind != FWUPD_KEYRING_KIND_JCAT) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "only supported for JCat remotes");
-		return FALSE;
-	}
 
 	istr = g_memory_input_stream_new_from_bytes(bytes);
 	if (!jcat_file_import_stream(jcat_file, istr, JCAT_IMPORT_FLAG_NONE, NULL, error))
@@ -1546,9 +1510,9 @@ fwupd_remote_get_id(FwupdRemote *self)
 }
 
 static void
-fwupd_remote_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
+fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 {
-	FwupdRemote *self = FWUPD_REMOTE(converter);
+	FwupdRemote *self = FWUPD_REMOTE(codec);
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	GVariant *value;
 	const gchar *key;
@@ -1563,8 +1527,6 @@ fwupd_remote_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
 			fwupd_remote_set_kind(self, g_variant_get_uint32(value));
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0)
 			fwupd_remote_set_flags(self, g_variant_get_uint64(value));
-		if (g_strcmp0(key, "Keyring") == 0)
-			fwupd_remote_set_keyring_kind(self, g_variant_get_uint32(value));
 	}
 	while (g_variant_iter_loop(iter2, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_URI) == 0)
@@ -1583,6 +1545,8 @@ fwupd_remote_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
 			fwupd_remote_set_password(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, "Title") == 0) {
 			fwupd_remote_set_title(self, g_variant_get_string(value, NULL));
+		} else if (g_strcmp0(key, "PrivacyUri") == 0) {
+			fwupd_remote_set_privacy_uri(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, "Agreement") == 0) {
 			fwupd_remote_set_agreement(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
@@ -1611,138 +1575,133 @@ fwupd_remote_from_variant_iter(FwupdCodec *converter, GVariantIter *iter)
 	}
 }
 
-static GVariant *
-fwupd_remote_to_variant(FwupdCodec *converter, FwupdCodecFlags flags)
+static void
+fwupd_remote_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodecFlags flags)
 {
-	FwupdRemote *self = FWUPD_REMOTE(converter);
+	FwupdRemote *self = FWUPD_REMOTE(codec);
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	GVariantBuilder builder;
-
-	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
 
 	/* create an array with all the metadata in */
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
 	if (priv->id != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_REMOTE_ID,
 				      g_variant_new_string(priv->id));
 	}
 	if (priv->flags != 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_FLAGS,
 				      g_variant_new_uint64(priv->flags));
 	}
 	if (priv->username != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "Username",
 				      g_variant_new_string(priv->username));
 	}
 	if (priv->password != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "Password",
 				      g_variant_new_string(priv->password));
 	}
 	if (priv->title != NULL) {
-		g_variant_builder_add(&builder, "{sv}", "Title", g_variant_new_string(priv->title));
+		g_variant_builder_add(builder, "{sv}", "Title", g_variant_new_string(priv->title));
+	}
+	if (priv->privacy_uri != NULL) {
+		g_variant_builder_add(builder,
+				      "{sv}",
+				      "PrivacyUri",
+				      g_variant_new_string(priv->privacy_uri));
 	}
 	if (priv->agreement != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "Agreement",
 				      g_variant_new_string(priv->agreement));
 	}
 	if (priv->checksum_sig != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_CHECKSUM,
 				      g_variant_new_string(priv->checksum_sig));
 	}
 	if (priv->metadata_uri != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_URI,
 				      g_variant_new_string(priv->metadata_uri));
 	}
 	if (priv->report_uri != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "ReportUri",
 				      g_variant_new_string(priv->report_uri));
 	}
 	if (priv->priority != 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "Priority",
 				      g_variant_new_int32(priv->priority));
 	}
 	if (priv->kind != FWUPD_REMOTE_KIND_UNKNOWN) {
-		g_variant_builder_add(&builder, "{sv}", "Type", g_variant_new_uint32(priv->kind));
-	}
-	if (priv->keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
-		g_variant_builder_add(&builder,
-				      "{sv}",
-				      "Keyring",
-				      g_variant_new_uint32(priv->keyring_kind));
+		g_variant_builder_add(builder, "{sv}", "Type", g_variant_new_uint32(priv->kind));
 	}
 	if (priv->mtime != 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "ModificationTime",
 				      g_variant_new_uint64(priv->mtime));
 	}
 	if (priv->refresh_interval != 0) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "RefreshInterval",
 				      g_variant_new_uint64(priv->refresh_interval));
 	}
 	if (priv->filename_cache != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "FilenameCache",
 				      g_variant_new_string(priv->filename_cache));
 	}
 	if (priv->filename_source != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "FilenameSource",
 				      g_variant_new_string(priv->filename_source));
 	}
 	if (priv->remotes_dir != NULL) {
-		g_variant_builder_add(&builder,
+		g_variant_builder_add(builder,
 				      "{sv}",
 				      "RemotesDir",
 				      g_variant_new_string(priv->remotes_dir));
 	}
 	/* we can probably stop doing proxying flags when we next branch */
 	g_variant_builder_add(
-	    &builder,
+	    builder,
 	    "{sv}",
 	    "Enabled",
 	    g_variant_new_boolean(fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_ENABLED)));
 	g_variant_builder_add(
-	    &builder,
+	    builder,
 	    "{sv}",
 	    "ApprovalRequired",
 	    g_variant_new_boolean(
 		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED)));
 	g_variant_builder_add(
-	    &builder,
+	    builder,
 	    "{sv}",
 	    "AutomaticReports",
 	    g_variant_new_boolean(
 		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS)));
 	g_variant_builder_add(
-	    &builder,
+	    builder,
 	    "{sv}",
 	    "AutomaticSecurityReports",
 	    g_variant_new_boolean(
 		fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS)));
-	return g_variant_new("a{sv}", &builder);
 }
 
 static void
@@ -1922,8 +1881,6 @@ fwupd_remote_class_init(FwupdRemoteClass *klass)
 static void
 fwupd_remote_init(FwupdRemote *self)
 {
-	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	priv->keyring_kind = FWUPD_KEYRING_KIND_JCAT;
 }
 
 static void
@@ -1940,6 +1897,7 @@ fwupd_remote_finalize(GObject *obj)
 	g_free(priv->username);
 	g_free(priv->password);
 	g_free(priv->title);
+	g_free(priv->privacy_uri);
 	g_free(priv->agreement);
 	g_free(priv->remotes_dir);
 	g_free(priv->checksum);
@@ -1956,8 +1914,8 @@ fwupd_remote_finalize(GObject *obj)
 static void
 fwupd_remote_codec_iface_init(FwupdCodecInterface *iface)
 {
-	iface->to_json = fwupd_remote_to_json;
-	iface->to_variant = fwupd_remote_to_variant;
+	iface->add_json = fwupd_remote_add_json;
+	iface->add_variant = fwupd_remote_add_variant;
 	iface->from_variant_iter = fwupd_remote_from_variant_iter;
 }
 

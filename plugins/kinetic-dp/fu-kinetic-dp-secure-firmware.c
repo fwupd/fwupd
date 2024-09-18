@@ -138,9 +138,9 @@ fu_kinetic_dp_secure_firmware_get_esm_xip_enabled(FuKineticDpSecureFirmware *sel
 }
 
 static gboolean
-fu_kinetic_dp_secure_device_parse_app_fw(FuKineticDpSecureFirmware *self,
-					 GInputStream *stream,
-					 GError **error)
+fu_kinetic_dp_secure_firmware_parse_app_fw(FuKineticDpSecureFirmware *self,
+					   GInputStream *stream,
+					   GError **error)
 {
 	FuKineticDpSecureFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize streamsz = 0;
@@ -209,6 +209,13 @@ fu_kinetic_dp_secure_firmware_parse(FuFirmware *firmware,
 	/* app firmware payload size */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (streamsz < HEADER_LEN_ISP_DRV_SIZE + priv->isp_drv_size) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "stream was too small");
+		return FALSE;
+	}
 	app_fw_payload_size = streamsz - HEADER_LEN_ISP_DRV_SIZE - priv->isp_drv_size;
 
 	/* add ISP driver as a new image into firmware */
@@ -241,7 +248,7 @@ fu_kinetic_dp_secure_firmware_parse(FuFirmware *firmware,
 							 &priv->esm_xip_enabled,
 							 error))
 		return FALSE;
-	if (!fu_kinetic_dp_secure_device_parse_app_fw(self, stream, error)) {
+	if (!fu_kinetic_dp_secure_firmware_parse_app_fw(self, stream, error)) {
 		g_prefix_error(error, "failed to parse info from Jaguar or Mustang App firmware: ");
 		return FALSE;
 	}

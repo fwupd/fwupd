@@ -16,18 +16,8 @@ struct _FuVliPdDevice {
 	FuVliDevice parent_instance;
 };
 
-/**
- * FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186:
- *
- * Device has a PS186 attached via I²C.
- */
-#define FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186 (1 << 0)
-/**
- * FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM:
- *
- * Device updates while in firmware mode, skips ROM mode in detach.
- */
-#define FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM (1 << 1)
+#define FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186 "has-i2c-ps186"
+#define FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM	    "skips-rom"
 
 G_DEFINE_TYPE(FuVliPdDevice, fu_vli_pd_device, FU_TYPE_VLI_DEVICE)
 
@@ -39,19 +29,19 @@ fu_vli_pd_device_read_regs(FuVliPdDevice *self,
 			   GError **error)
 {
 	g_autofree gchar *title = g_strdup_printf("ReadRegs@0x%x", addr);
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0xe0,
-					   ((addr & 0xff) << 8) | 0x01,
-					   addr >> 8,
-					   buf,
-					   bufsz,
-					   NULL,
-					   1000,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0xe0,
+					    ((addr & 0xff) << 8) | 0x01,
+					    addr >> 8,
+					    buf,
+					    bufsz,
+					    NULL,
+					    1000,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to write register @0x%x: ", addr);
 		return FALSE;
 	}
@@ -70,19 +60,19 @@ fu_vli_pd_device_write_reg(FuVliPdDevice *self, guint16 addr, guint8 value, GErr
 {
 	g_autofree gchar *title = g_strdup_printf("WriteReg@0x%x", addr);
 	fu_dump_raw(G_LOG_DOMAIN, title, &value, sizeof(value));
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0xe0,
-					   ((addr & 0xff) << 8) | 0x02,
-					   addr >> 8,
-					   &value,
-					   sizeof(value),
-					   NULL,
-					   1000,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0xe0,
+					    ((addr & 0xff) << 8) | 0x02,
+					    addr >> 8,
+					    &value,
+					    sizeof(value),
+					    NULL,
+					    1000,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to write register @0x%x: ", addr);
 		return FALSE;
 	}
@@ -98,19 +88,19 @@ fu_vli_pd_device_spi_read_status(FuVliDevice *self, guint8 *status, GError **err
 				   &spi_cmd,
 				   error))
 		return FALSE;
-	return g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					     G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					     G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					     G_USB_DEVICE_RECIPIENT_DEVICE,
-					     0xc5,
-					     spi_cmd,
-					     0x0000,
-					     status,
-					     0x1,
-					     NULL,
-					     FU_VLI_DEVICE_TIMEOUT,
-					     NULL,
-					     error);
+	return fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					      FU_USB_DIRECTION_DEVICE_TO_HOST,
+					      FU_USB_REQUEST_TYPE_VENDOR,
+					      FU_USB_RECIPIENT_DEVICE,
+					      0xc5,
+					      spi_cmd,
+					      0x0000,
+					      status,
+					      0x1,
+					      NULL,
+					      FU_VLI_DEVICE_TIMEOUT,
+					      NULL,
+					      error);
 }
 
 static gboolean
@@ -130,19 +120,19 @@ fu_vli_pd_device_spi_read_data(FuVliDevice *self,
 		return FALSE;
 	value = ((addr << 8) & 0xff00) | spi_cmd;
 	index = addr >> 8;
-	return g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					     G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					     G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					     G_USB_DEVICE_RECIPIENT_DEVICE,
-					     0xc4,
-					     value,
-					     index,
-					     buf,
-					     bufsz,
-					     NULL,
-					     FU_VLI_DEVICE_TIMEOUT,
-					     NULL,
-					     error);
+	return fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					      FU_USB_DIRECTION_DEVICE_TO_HOST,
+					      FU_USB_REQUEST_TYPE_VENDOR,
+					      FU_USB_RECIPIENT_DEVICE,
+					      0xc4,
+					      value,
+					      index,
+					      buf,
+					      bufsz,
+					      NULL,
+					      FU_VLI_DEVICE_TIMEOUT,
+					      NULL,
+					      error);
 }
 
 static gboolean
@@ -156,19 +146,19 @@ fu_vli_pd_device_spi_write_status(FuVliDevice *self, guint8 status, GError **err
 				   error))
 		return FALSE;
 	value = ((guint16)status << 8) | spi_cmd;
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0xd8,
-					   value,
-					   0x0,
-					   NULL,
-					   0,
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0xd8,
+					    value,
+					    0x0,
+					    NULL,
+					    0,
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		return FALSE;
 	}
 
@@ -186,19 +176,19 @@ fu_vli_pd_device_spi_write_enable(FuVliDevice *self, GError **error)
 				   &spi_cmd,
 				   error))
 		return FALSE;
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0xd4,
-					   spi_cmd,
-					   0x0000,
-					   NULL,
-					   0x0,
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0xd4,
+					    spi_cmd,
+					    0x0000,
+					    NULL,
+					    0x0,
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		return FALSE;
 	}
 	return TRUE;
@@ -213,19 +203,19 @@ fu_vli_pd_device_spi_chip_erase(FuVliDevice *self, GError **error)
 				   &spi_cmd,
 				   error))
 		return FALSE;
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0xd1,
-					   spi_cmd,
-					   0x0000,
-					   NULL,
-					   0x0,
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0xd1,
+					    spi_cmd,
+					    0x0000,
+					    NULL,
+					    0x0,
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		return FALSE;
 	}
 	return TRUE;
@@ -244,19 +234,19 @@ fu_vli_pd_device_spi_sector_erase(FuVliDevice *self, guint32 addr, GError **erro
 		return FALSE;
 	value = ((addr << 8) & 0xff00) | spi_cmd;
 	index = addr >> 8;
-	return g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					     G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					     G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					     G_USB_DEVICE_RECIPIENT_DEVICE,
-					     0xd2,
-					     value,
-					     index,
-					     NULL,
-					     0x0,
-					     NULL,
-					     FU_VLI_DEVICE_TIMEOUT,
-					     NULL,
-					     error);
+	return fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					      FU_USB_DIRECTION_HOST_TO_DEVICE,
+					      FU_USB_REQUEST_TYPE_VENDOR,
+					      FU_USB_RECIPIENT_DEVICE,
+					      0xd2,
+					      value,
+					      index,
+					      NULL,
+					      0x0,
+					      NULL,
+					      FU_VLI_DEVICE_TIMEOUT,
+					      NULL,
+					      error);
 }
 
 static gboolean
@@ -282,19 +272,19 @@ fu_vli_pd_device_spi_write_data(FuVliDevice *self,
 	buf_mut = fu_memdup_safe(buf, bufsz, error);
 	if (buf_mut == NULL)
 		return FALSE;
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0xdc,
-					   value,
-					   index,
-					   buf_mut,
-					   bufsz,
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0xdc,
+					    value,
+					    index,
+					    buf_mut,
+					    bufsz,
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		return FALSE;
 	}
 	return TRUE;
@@ -338,19 +328,19 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get version */
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0xe2,
-					   0x0001,
-					   0x0000,
-					   verbuf,
-					   sizeof(verbuf),
-					   NULL,
-					   1000,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0xe2,
+					    0x0001,
+					    0x0000,
+					    verbuf,
+					    sizeof(verbuf),
+					    NULL,
+					    1000,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to get version: ");
 		return FALSE;
 	}
@@ -562,6 +552,13 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 	sbuf = g_bytes_get_data(spi_fw, &sbufsz);
 	if (sbufsz != 0x8000)
 		sec_addr = 0x30000;
+	if (sbufsz < 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "buffer was too small");
+		return FALSE;
+	}
 	if (!fu_memread_uint16_safe(sbuf, sbufsz, sbufsz - 2, &crc_file, G_LITTLE_ENDIAN, error)) {
 		g_prefix_error(error, "failed to read file CRC: ");
 		return FALSE;
@@ -720,22 +717,20 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	/* VL103 set ROM sig does not work, so use alternate function */
 	if ((fu_vli_device_get_kind(FU_VLI_DEVICE(device)) != FU_VLI_DEVICE_KIND_VL100) &&
 	    (fu_vli_device_get_kind(FU_VLI_DEVICE(device)) != FU_VLI_DEVICE_KIND_VL102)) {
-		if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(device)),
-						   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						   G_USB_DEVICE_RECIPIENT_DEVICE,
-						   0xc0,
-						   0x0000,
-						   0x0000,
-						   NULL,
-						   0x0,
-						   NULL,
-						   FU_VLI_DEVICE_TIMEOUT,
-						   NULL,
-						   &error_local)) {
-			if (g_error_matches(error_local,
-					    G_USB_DEVICE_ERROR,
-					    G_USB_DEVICE_ERROR_FAILED)) {
+		if (!fu_usb_device_control_transfer(FU_USB_DEVICE(FU_USB_DEVICE(device)),
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
+						    0xc0,
+						    0x0000,
+						    0x0000,
+						    NULL,
+						    0x0,
+						    NULL,
+						    FU_VLI_DEVICE_TIMEOUT,
+						    NULL,
+						    &error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
 				g_debug("ignoring %s", error_local->message);
 			} else {
 				g_propagate_prefixed_error(error,
@@ -770,39 +765,37 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	}
 
 	/* set ROM sig */
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(device)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0xa0,
-					   0x0000,
-					   0x0000,
-					   NULL,
-					   0x0,
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   error))
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(FU_USB_DEVICE(device)),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0xa0,
+					    0x0000,
+					    0x0000,
+					    NULL,
+					    0x0,
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    error))
 		return FALSE;
 
 	/* reset from SPI_Code into ROM_Code */
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(device)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0xb0,
-					   0x0000,
-					   0x0000,
-					   NULL,
-					   0x0,
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   &error_local)) {
-		if (g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_FAILED) ||
-		    g_error_matches(error_local,
-				    G_USB_DEVICE_ERROR,
-				    G_USB_DEVICE_ERROR_NOT_SUPPORTED)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(FU_USB_DEVICE(device)),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0xb0,
+					    0x0000,
+					    0x0000,
+					    NULL,
+					    0x0,
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL) ||
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_debug("ignoring %s", error_local->message);
 		} else {
 			g_propagate_prefixed_error(error,
@@ -842,29 +835,23 @@ fu_vli_pd_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 	}
 
 	/* chip reset command works only for non-VL103 */
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(device)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   0xb0,
-					   0x0000,
-					   0x0000,
-					   NULL,
-					   0x0,
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   &error_local)) {
-		if (g_error_matches(error_local,
-				    G_USB_DEVICE_ERROR,
-				    G_USB_DEVICE_ERROR_NO_DEVICE) ||
-		    g_error_matches(error_local,
-				    G_USB_DEVICE_ERROR,
-				    G_USB_DEVICE_ERROR_NOT_SUPPORTED) ||
-		    g_error_matches(error_local,
-				    G_USB_DEVICE_ERROR,
-				    G_USB_DEVICE_ERROR_TIMED_OUT) ||
-		    g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_FAILED)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(FU_USB_DEVICE(device)),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    0xb0,
+					    0x0000,
+					    0x0000,
+					    NULL,
+					    0x0,
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT) ||
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
 			g_debug("ignoring %s", error_local->message);
 		} else {
 			g_propagate_prefixed_error(error,
@@ -915,12 +902,8 @@ fu_vli_pd_device_init(FuVliPdDevice *self)
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_vli_device_set_spi_auto_detect(FU_VLI_DEVICE(self), FALSE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186,
-					"has-i2c-ps186");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM,
-					"skips-rom");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM);
 
 	/* connect up attach or detach vfuncs when kind is known */
 	g_signal_connect(FU_VLI_DEVICE(self),

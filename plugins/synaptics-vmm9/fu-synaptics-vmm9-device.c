@@ -10,12 +10,12 @@
 #include "fu-synaptics-vmm9-firmware.h"
 #include "fu-synaptics-vmm9-struct.h"
 
-/* flags */
-#define FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED (1 << 0)
+#define FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED "manual-restart-required"
 
 struct _FuSynapticsVmm9Device {
 	FuHidDevice parent_instance;
-	guint16 board_id;
+	guint8 board_id;
+	guint8 customer_id;
 	guint8 active_bank;
 };
 
@@ -37,13 +37,14 @@ G_DEFINE_TYPE(FuSynapticsVmm9Device, fu_synaptics_vmm9_device, FU_TYPE_HID_DEVIC
 #define FU_SYNAPTICS_VMM9_MEM_OFFSET_RC_LENGTH		0x2020B008
 #define FU_SYNAPTICS_VMM9_MEM_OFFSET_RC_DATA		0x2020B010 /* until 0x2020B02C */
 #define FU_SYNAPTICS_VMM9_MEM_OFFSET_FIRMWARE_NAME	0x90000230 /* 0xF bytes, ASCII */
-#define FU_SYNAPTICS_VMM9_MEM_OFFSET_BOARD_ID		0x9000024E /* 0x2 bytes, customer.hardware */
+#define FU_SYNAPTICS_VMM9_MEM_OFFSET_BOARD_ID		0x9000014E /* 0x2 bytes, customer.hardware */
 
 static void
 fu_synaptics_vmm9_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuSynapticsVmm9Device *self = FU_SYNAPTICS_VMM9_DEVICE(device);
 	fwupd_codec_string_append_hex(str, idt, "BoardId", self->board_id);
+	fwupd_codec_string_append_hex(str, idt, "CustomerId", self->customer_id);
 	fwupd_codec_string_append_hex(str, idt, "ActiveBank", self->active_bank);
 }
 
@@ -214,6 +215,7 @@ fu_synaptics_vmm9_device_setup(FuDevice *device, GError **error)
 	guint8 buf[4] = {0x0};
 	g_autofree gchar *serial = NULL;
 	g_autofree gchar *bootloader_version = NULL;
+	g_autoptr(FuStructSynapticsUpdGetId) st_getid = NULL;
 
 	/* read chip serial number */
 	if (!fu_synaptics_vmm9_device_command(self,
@@ -229,10 +231,10 @@ fu_synaptics_vmm9_device_setup(FuDevice *device, GError **error)
 	serial = g_strdup_printf("%02x%02x%02x%02x", buf[0], buf[1], buf[2], buf[3]);
 	fu_device_set_serial(device, serial);
 
-	/* read board ID */
+	/* read board and customer IDs */
 	if (!fu_synaptics_vmm9_device_command(self,
-					      FU_SYNAPTICS_VMM9_RC_CTRL_MEMORY_READ,
-					      FU_SYNAPTICS_VMM9_MEM_OFFSET_BOARD_ID,
+					      FU_SYNAPTICS_VMM9_RC_CTRL_GET_ID,
+					      0x0,
 					      NULL,
 					      sizeof(buf),
 					      buf,
@@ -240,13 +242,23 @@ fu_synaptics_vmm9_device_setup(FuDevice *device, GError **error)
 					      FU_SYNAPTICS_VMM9_COMMAND_FLAG_FULL_BUFFER,
 					      error))
 		return FALSE;
-	self->board_id = fu_memread_uint16(buf, G_BIG_ENDIAN);
-	fu_device_add_instance_u16(device, "BID", self->board_id);
+	st_getid = fu_struct_synaptics_upd_get_id_parse(buf, sizeof(buf), 0x0, error);
+	if (st_getid == NULL)
+		return FALSE;
+	self->board_id = fu_struct_synaptics_upd_get_id_get_bid(st_getid);
+	fu_device_add_instance_u8(device, "BID", self->board_id);
+	self->customer_id = fu_struct_synaptics_upd_get_id_get_cid(st_getid);
+	fu_device_add_instance_u8(device, "CID", self->customer_id);
 	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "BID", NULL);
+	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "BID", "CID", NULL);
 
 	/* whitebox customers */
-	if ((self->board_id >> 8) == 0x0)
-		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
+	if (self->customer_id == 0x0) {
+		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES);
+	} else {
+		g_autofree gchar *vendor_id = g_strdup_printf("0x%02X", self->customer_id);
+		fu_device_build_vendor_id(device, "SYNA", vendor_id);
+	}
 
 	/* read version */
 	if (!fu_synaptics_vmm9_device_command(self,
@@ -373,20 +385,6 @@ fu_synaptics_vmm9_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_synaptics_vmm9_firmware_new();
 	g_autoptr(GInputStream) stream_partial = NULL;
 
-	/* verify this firmware is for this hardware */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0 &&
-	    self->board_id !=
-		fu_synaptics_vmm9_firmware_get_board_id(FU_SYNAPTICS_VMM9_FIRMWARE(firmware))) {
-		g_set_error(
-		    error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_INVALID_FILE,
-		    "board ID mismatch, got 0x%04x, expected 0x%04x",
-		    fu_synaptics_vmm9_firmware_get_board_id(FU_SYNAPTICS_VMM9_FIRMWARE(firmware)),
-		    self->board_id);
-		return NULL;
-	}
-
 	/* parse */
 	stream_partial = fu_partial_input_stream_new(stream,
 						     0x0,
@@ -396,6 +394,34 @@ fu_synaptics_vmm9_device_prepare_firmware(FuDevice *device,
 		return NULL;
 	if (!fu_firmware_parse_stream(firmware, stream_partial, 0x0, flags, error))
 		return NULL;
+
+	/* verify this firmware is for this hardware */
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
+		if (self->board_id !=
+		    fu_synaptics_vmm9_firmware_get_board_id(FU_SYNAPTICS_VMM9_FIRMWARE(firmware))) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "board ID mismatch, got 0x%02x, expected 0x%02x",
+				    fu_synaptics_vmm9_firmware_get_board_id(
+					FU_SYNAPTICS_VMM9_FIRMWARE(firmware)),
+				    self->board_id);
+			return NULL;
+		}
+		if (self->customer_id != fu_synaptics_vmm9_firmware_get_customer_id(
+					     FU_SYNAPTICS_VMM9_FIRMWARE(firmware))) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "customer ID mismatch, got 0x%02x, expected 0x%02x",
+				    fu_synaptics_vmm9_firmware_get_customer_id(
+					FU_SYNAPTICS_VMM9_FIRMWARE(firmware)),
+				    self->customer_id);
+			return NULL;
+		}
+	}
+
+	/* success */
 	return g_steal_pointer(&firmware);
 }
 
@@ -630,10 +656,9 @@ fu_synaptics_vmm9_device_init(FuSynapticsVmm9Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED,
-					"manual-restart-required");
+					FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED);
 }
 
 static void

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # pylint: disable=invalid-name,missing-docstring
 #
 # Copyright 2017 Richard Hughes <richard@hughsie.com>
@@ -111,13 +111,13 @@ class LdVersionScript:
         oldversion = None
         for version in sorted(versions, key=parse_version):
             symbols = sorted(self.releases[version])
-            verout += "\n%s_%s {\n" % (self.library_name, version)
+            verout += "\n{}_{} {{\n".format(self.library_name, version)
             verout += "  global:\n"
             for symbol in symbols:
                 verout += f"    {symbol};\n"
             verout += "  local: *;\n"
             if oldversion:
-                verout += "} %s_%s;\n" % (self.library_name, oldversion)
+                verout += "}} {}_{};\n".format(self.library_name, oldversion)
             else:
                 verout += "};\n"
             oldversion = version

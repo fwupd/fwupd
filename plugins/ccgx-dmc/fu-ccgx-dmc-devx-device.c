@@ -184,7 +184,7 @@ fu_ccgx_dmc_devx_device_set_quirk_kv(FuDevice *device,
 	if (g_strcmp0(key, "CcgxDmcCompositeVersion") == 0) {
 		guint64 tmp = 0;
 		FuDevice *proxy = fu_device_get_proxy(device);
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		if (fu_device_get_version_raw(proxy) != tmp) {
 			g_debug("overriding composite version from %u to %u from %s",
@@ -268,10 +268,9 @@ fu_ccgx_dmc_devx_device_probe(FuDevice *device, GError **error)
 	} else if (device_version_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_HX3) {
 		version = fu_ccgx_dmc_devx_device_version_hx3(self, offset);
 		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
-		fu_device_set_version(device, version);
 	}
 	if (version != NULL) {
-		fu_device_set_version(device, version);
+		fu_device_set_version(device, version); /* nocheck:set-version */
 		fu_device_add_instance_strsafe(device, "VER", version);
 	}
 

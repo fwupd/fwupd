@@ -44,14 +44,14 @@ fu_system76_launch_device_response_cb(FuDevice *device, gpointer user_data, GErr
 	FuSystem76LaunchDeviceHelper *helper = (FuSystem76LaunchDeviceHelper *)user_data;
 
 	/* receive response */
-	if (!g_usb_device_interrupt_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(device)),
-					     ep_in,
-					     helper->data,
-					     helper->len,
-					     &actual_len,
-					     SYSTEM76_LAUNCH_TIMEOUT,
-					     NULL,
-					     error)) {
+	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(device),
+					      ep_in,
+					      helper->data,
+					      helper->len,
+					      &actual_len,
+					      SYSTEM76_LAUNCH_TIMEOUT,
+					      NULL,
+					      error)) {
 		g_prefix_error(error, "failed to read response: ");
 		return FALSE;
 	}
@@ -71,20 +71,19 @@ fu_system76_launch_device_response_cb(FuDevice *device, gpointer user_data, GErr
 static gboolean
 fu_system76_launch_device_command(FuDevice *device, guint8 *data, gsize len, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	const guint8 ep_out = 0x03;
 	gsize actual_len = 0;
 	FuSystem76LaunchDeviceHelper helper = {.data = data, .len = len};
 
 	/* send command */
-	if (!g_usb_device_interrupt_transfer(usb_device,
-					     ep_out,
-					     data,
-					     len,
-					     &actual_len,
-					     SYSTEM76_LAUNCH_TIMEOUT,
-					     NULL,
-					     error)) {
+	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(device),
+					      ep_out,
+					      data,
+					      len,
+					      &actual_len,
+					      SYSTEM76_LAUNCH_TIMEOUT,
+					      NULL,
+					      error)) {
 		g_prefix_error(error, "failed to send command: ");
 		return FALSE;
 	}
@@ -255,10 +254,10 @@ fu_system76_launch_device_init(FuSystem76LaunchDevice *self)
 {
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_add_protocol(FU_DEVICE(self), "com.microsoft.uf2");

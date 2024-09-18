@@ -870,7 +870,7 @@ fu_thunderbolt_gudev_uevent_cb(GUdevClient *gudev_client,
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
-		device = fu_udev_device_new(tt->ctx, udev_device);
+		device = fu_udev_device_new(tt->ctx, g_udev_device_get_sysfs_path(udev_device));
 		if (!fu_device_probe(FU_DEVICE(device), &error_local)) {
 			g_warning("failed to probe: %s", error_local->message);
 			return;
@@ -888,7 +888,8 @@ fu_thunderbolt_gudev_uevent_cb(GUdevClient *gudev_client,
 		return;
 	}
 	if (g_strcmp0(action, "change") == 0) {
-		const gchar *uuid = g_udev_device_get_sysfs_attr(udev_device, "unique_id");
+		const gchar *uuid =
+		    g_udev_device_get_sysfs_attr(udev_device, "unique_id"); /* nocheck:blocked */
 		MockTree *target = (MockTree *)mock_tree_find_uuid(tt->tree, uuid);
 		g_assert_nonnull(target);
 		fu_udev_device_emit_changed(FU_UDEV_DEVICE(target->fu_device));
@@ -936,7 +937,7 @@ test_set_up(ThunderboltTest *tt, gconstpointer params)
 		return;
 	}
 
-	tt->udev_client = g_udev_client_new(udev_subsystems);
+	tt->udev_client = g_udev_client_new(udev_subsystems); /* nocheck:blocked */
 	g_assert_nonnull(tt->udev_client);
 	g_signal_connect(G_UDEV_CLIENT(tt->udev_client),
 			 "uevent",
@@ -1180,7 +1181,7 @@ test_update_wd19(ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_nonnull(fw_data);
 
 	/* simulate a wd19 update which will not disappear / re-appear */
-	fu_device_add_flag(tree->fu_device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
+	fu_device_add_private_flag(tree->fu_device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
 	fu_device_add_flag(tree->fu_device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	version_before = fu_device_get_version(tree->fu_device);
 

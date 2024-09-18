@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # pylint: disable=invalid-name,missing-docstring,too-many-branches
 # pylint: disable=too-many-statements,too-many-return-statements,too-few-public-methods
 #
@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import glob
+import os
 import sys
 from typing import List
 
@@ -86,8 +87,8 @@ class ReturnValidator:
         # is invalid
         if self._nret and self._value_relaxed in self._nret:
             self.warnings.append(
-                "{} line {} got {}, which is not valid".format(
-                    self._fn, self._line_num, self._value
+                "{} line {} got {}, which is not valid -- expected {}".format(
+                    self._fn, self._line_num, self._value, "|".join(self._rvif)
                 )
             )
 
@@ -99,6 +100,7 @@ class ReturnValidator:
             self._line_num = 0
             for line in f.readlines():
                 self._line_num += 1
+                line = line.replace("LIBUSB_CALL", "")
                 line = line.rstrip()
                 if not line:
                     continue
@@ -219,9 +221,13 @@ class ReturnValidator:
 def test_files():
     # test all C source files
     validator = ReturnValidator()
-    for fn in glob.glob("**/*.c", recursive=True):
-        if fn.startswith("dist/") or fn.startswith("subprojects/"):
-            continue
+
+    for fn in (
+        glob.glob("libfwupd/*.c")
+        + glob.glob("libfwupdplugin/*.c")
+        + glob.glob("plugins/*/*.c")
+        + glob.glob("src/*.c")
+    ):
         validator.parse(fn)
     for warning in validator.warnings:
         print(warning)

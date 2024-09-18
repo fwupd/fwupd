@@ -173,76 +173,55 @@ fu_dfu_device_set_download_timeout(FuDfuDevice *self, guint dnload_timeout)
 	priv->dnload_timeout = dnload_timeout;
 }
 
-typedef struct __attribute__((packed)) {
-	guint8 bLength;
-	guint8 bDescriptorType;
-	guint8 bmAttributes;
-	guint16 wDetachTimeOut;
-	guint16 wTransferSize;
-	guint16 bcdDFUVersion;
-} DfuFuncDescriptor;
-
 static gboolean
 fu_dfu_device_parse_iface_data(FuDfuDevice *self, GBytes *iface_data, GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	DfuFuncDescriptor desc = {0x0};
-	const guint8 *buf;
-	gsize sz;
+	guint8 attributes;
+	g_autoptr(FuUsbDfuDescriptorHdr) st = NULL;
+	g_autoptr(GBytes) bytes = NULL;
 
-	/* parse the functional descriptor */
-	buf = g_bytes_get_data(iface_data, &sz);
-	if (sz == sizeof(DfuFuncDescriptor)) {
-		memcpy(&desc, buf, sz);
-	} else if (sz > sizeof(DfuFuncDescriptor)) {
-		g_debug("DFU interface with %" G_GSIZE_FORMAT " bytes vendor data",
-			sz - sizeof(DfuFuncDescriptor));
-		memcpy(&desc, buf, sizeof(DfuFuncDescriptor));
-	} else if (sz == sizeof(DfuFuncDescriptor) - 2) {
+	/* weirdly, quite common */
+	if (g_bytes_get_size(iface_data) == FU_USB_DFU_DESCRIPTOR_HDR_SIZE - 2) {
+		g_autoptr(GByteArray) buf = g_byte_array_new();
 		g_warning("truncated DFU interface data, no bcdDFUVersion");
-		memcpy(&desc, buf, sz);
-		desc.bcdDFUVersion = FU_DFU_FIRMARE_VERSION_DFU_1_1;
+		fu_byte_array_append_bytes(buf, iface_data);
+		fu_byte_array_append_uint8(buf, 0x1);
+		fu_byte_array_append_uint8(buf, 0x1);
+		bytes = g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
 	} else {
-		g_autoptr(GString) bufstr = g_string_new(NULL);
-		for (gsize i = 0; i < sz; i++)
-			g_string_append_printf(bufstr, "%02x ", buf[i]);
-		if (bufstr->len > 0)
-			g_string_truncate(bufstr, bufstr->len - 1);
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "interface found, but not the correct length for "
-			    "functional data: %" G_GSIZE_FORMAT " bytes: %s",
-			    sz,
-			    bufstr->str);
-		return FALSE;
+		bytes = g_bytes_ref(iface_data);
 	}
 
-	/* get transfer size and version */
-	priv->transfer_size = GUINT16_FROM_LE(desc.wTransferSize);
-	priv->version = GUINT16_FROM_LE(desc.bcdDFUVersion);
+	/* parse the functional descriptor */
+	st = fu_usb_dfu_descriptor_hdr_parse_bytes(bytes, 0x0, error);
+	if (st == NULL)
+		return FALSE;
+	priv->transfer_size = fu_usb_dfu_descriptor_hdr_get_transfer_size(st);
+	priv->version = fu_usb_dfu_descriptor_hdr_get_dfu_version(st);
+	attributes = fu_usb_dfu_descriptor_hdr_get_attributes(st);
 
 	/* ST-specific */
 	if (priv->version == FU_DFU_FIRMARE_VERSION_DFUSE &&
-	    desc.bmAttributes & FU_DFU_DEVICE_FLAG_CAN_ACCELERATE)
+	    attributes & FU_DFU_DEVICE_ATTR_CAN_ACCELERATE)
 		priv->transfer_size = 0x1000;
 
 	/* get attributes about the DFU operation */
-	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD)
-		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
-	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_CAN_UPLOAD)
-		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
-	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_MANIFEST_TOL)
-		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_MANIFEST_TOL);
-	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_WILL_DETACH)
-		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_WILL_DETACH);
-	if (desc.bmAttributes & FU_DFU_DEVICE_FLAG_CAN_ACCELERATE)
-		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_ACCELERATE);
+	if (attributes & FU_DFU_DEVICE_ATTR_CAN_DOWNLOAD)
+		fu_device_add_private_flag(FU_DEVICE(self), "can-download");
+	if (attributes & FU_DFU_DEVICE_ATTR_CAN_UPLOAD)
+		fu_device_add_private_flag(FU_DEVICE(self), "can-upload");
+	if (attributes & FU_DFU_DEVICE_ATTR_MANIFEST_TOL)
+		fu_device_add_private_flag(FU_DEVICE(self), "manifest-tol");
+	if (attributes & FU_DFU_DEVICE_ATTR_WILL_DETACH)
+		fu_device_add_private_flag(FU_DEVICE(self), "will-detach");
+	if (attributes & FU_DFU_DEVICE_ATTR_CAN_ACCELERATE)
+		fu_device_add_private_flag(FU_DEVICE(self), "can-accelerate");
 	return TRUE;
 }
 
 static void
-fu_dfu_device_guess_state_from_iface(FuDfuDevice *self, GUsbInterface *iface)
+fu_dfu_device_guess_state_from_iface(FuDfuDevice *self, FuUsbInterface *iface)
 {
 	/* some devices use the wrong interface */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_FORCE_DFU_MODE)) {
@@ -252,25 +231,24 @@ fu_dfu_device_guess_state_from_iface(FuDfuDevice *self, GUsbInterface *iface)
 	}
 
 	/* runtime */
-	if (g_usb_interface_get_protocol(iface) == 0x01) {
+	if (fu_usb_interface_get_protocol(iface) == 0x01) {
 		fu_dfu_device_set_state(self, FU_DFU_STATE_APP_IDLE);
 		return;
 	}
 
 	/* DFU */
-	if (g_usb_interface_get_protocol(iface) == 0x02) {
+	if (fu_usb_interface_get_protocol(iface) == 0x02) {
 		fu_dfu_device_set_state(self, FU_DFU_STATE_DFU_IDLE);
 		return;
 	}
 	g_warning("unable to guess initial device state from interface %u",
-		  g_usb_interface_get_protocol(iface));
+		  fu_usb_interface_get_protocol(iface));
 }
 
 static gboolean
 fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GPtrArray) ifaces = NULL;
 
 	/* disabled using quirk */
@@ -283,40 +261,43 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 	}
 
 	/* add all DFU-capable targets */
-	ifaces = g_usb_device_get_interfaces(usb_device, error);
+	ifaces = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
 	if (ifaces == NULL)
 		return FALSE;
 	g_ptr_array_set_size(priv->targets, 0);
 	for (guint i = 0; i < ifaces->len; i++) {
-		GBytes *iface_data = NULL;
 		FuDfuTarget *target;
+		g_autoptr(GBytes) iface_data = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		GUsbInterface *iface = g_ptr_array_index(ifaces, i);
+		FuUsbInterface *iface = g_ptr_array_index(ifaces, i);
 
 		/* some devices don't use the right class and subclass */
 		if (!fu_device_has_private_flag(FU_DEVICE(self),
 						FU_DFU_DEVICE_FLAG_USE_ANY_INTERFACE)) {
-			if (g_usb_interface_get_class(iface) !=
-			    G_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
+			if (fu_usb_interface_get_class(iface) != FU_USB_CLASS_APPLICATION_SPECIFIC)
 				continue;
-			if (g_usb_interface_get_subclass(iface) != 0x01)
+			if (fu_usb_interface_get_subclass(iface) != 0x01)
 				continue;
 		}
-		/* parse any interface data */
-		iface_data = g_usb_interface_get_extra(iface);
-		if (iface_data != NULL && g_bytes_get_size(iface_data) > 0) {
-			if (!fu_dfu_device_parse_iface_data(self, iface_data, &error_local)) {
-				g_warning("failed to parse interface data for %04x:%04x: %s",
-					  g_usb_device_get_vid(usb_device),
-					  g_usb_device_get_pid(usb_device),
-					  error_local->message);
-				continue;
-			}
-		} else {
+
+		/* re-parse as a FuUsbDfuDescriptorHdr -- yes DFU FUNCTIONAL is 0x21 like HID... */
+		iface_data = fu_firmware_get_image_by_idx_bytes(FU_FIRMWARE(iface),
+								FU_USB_DESCRIPTOR_KIND_HID,
+								&error_local);
+		if (iface_data == NULL) {
+			g_warning("failed to parse interface data: %s", error_local->message);
 			fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
 			fu_device_add_private_flag(FU_DEVICE(self),
 						   FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
+		} else {
+			if (!fu_dfu_device_parse_iface_data(self, iface_data, &error_local)) {
+				g_warning("failed to parse interface data for %04x:%04x: %s",
+					  fu_usb_device_get_vid(FU_USB_DEVICE(self)),
+					  fu_usb_device_get_pid(FU_USB_DEVICE(self)),
+					  error_local->message);
+				continue;
+			}
 		}
 
 		/* fix up the version */
@@ -372,11 +353,11 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 			break;
 		}
 		fu_device_set_proxy(FU_DEVICE(target), FU_DEVICE(self));
-		fu_dfu_target_set_alt_idx(target, g_usb_interface_get_index(iface));
-		fu_dfu_target_set_alt_setting(target, g_usb_interface_get_alternate(iface));
+		fu_dfu_target_set_alt_idx(target, fu_usb_interface_get_index(iface));
+		fu_dfu_target_set_alt_setting(target, fu_usb_interface_get_alternate(iface));
 
 		/* add target */
-		priv->iface_number = g_usb_interface_get_number(iface);
+		priv->iface_number = fu_usb_interface_get_number(iface);
 		g_ptr_array_add(priv->targets, target);
 		fu_dfu_device_guess_state_from_iface(self, iface);
 	}
@@ -384,9 +365,9 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 	/* save for reset */
 	if (priv->state == FU_DFU_STATE_APP_IDLE ||
 	    fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_PID_CHANGE)) {
-		priv->runtime_vid = g_usb_device_get_vid(usb_device);
-		priv->runtime_pid = g_usb_device_get_pid(usb_device);
-		priv->runtime_release = g_usb_device_get_release(usb_device);
+		priv->runtime_vid = fu_usb_device_get_vid(FU_USB_DEVICE(self));
+		priv->runtime_pid = fu_usb_device_get_pid(FU_USB_DEVICE(self));
+		priv->runtime_release = fu_usb_device_get_release(FU_USB_DEVICE(self));
 	}
 
 	/* the device has no DFU runtime, so cheat */
@@ -395,12 +376,11 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 		g_debug("no DFU runtime, so faking device");
 		fu_dfu_device_set_state(self, FU_DFU_STATE_APP_IDLE);
 		priv->iface_number = 0xff;
-		priv->runtime_vid = g_usb_device_get_vid(usb_device);
-		priv->runtime_pid = g_usb_device_get_pid(usb_device);
-		priv->runtime_release = g_usb_device_get_release(usb_device);
-		fu_device_add_private_flag(FU_DEVICE(self),
-					   FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD |
-					       FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
+		priv->runtime_vid = fu_usb_device_get_vid(FU_USB_DEVICE(self));
+		priv->runtime_pid = fu_usb_device_get_pid(FU_USB_DEVICE(self));
+		priv->runtime_release = fu_usb_device_get_release(FU_USB_DEVICE(self));
+		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
+		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
 		return TRUE;
 	}
 
@@ -466,21 +446,6 @@ fu_dfu_device_get_status(FuDfuDevice *self)
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), 0);
 	return priv->status;
-}
-
-/**
- * fu_dfu_device_new:
- *
- * Creates a new DFU device object.
- *
- * Returns: a new #FuDfuDevice
- **/
-FuDfuDevice *
-fu_dfu_device_new(FuContext *ctx, GUsbDevice *usb_device)
-{
-	FuDfuDevice *self;
-	self = g_object_new(FU_TYPE_DFU_DEVICE, "usb-device", usb_device, "context", ctx, NULL);
-	return self;
 }
 
 static FuDfuTarget *
@@ -553,7 +518,6 @@ gboolean
 fu_dfu_device_ensure_interface(FuDfuDevice *self, GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GError) error_local = NULL;
 
 	/* already done */
@@ -565,10 +529,10 @@ fu_dfu_device_ensure_interface(FuDfuDevice *self, GError **error)
 		return TRUE;
 
 	/* claim, without detaching kernel driver */
-	if (!g_usb_device_claim_interface(usb_device,
-					  (gint)priv->iface_number,
-					  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					  &error_local)) {
+	if (!fu_usb_device_claim_interface(FU_USB_DEVICE(self),
+					   (gint)priv->iface_number,
+					   FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER,
+					   &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -622,7 +586,6 @@ gboolean
 fu_dfu_device_refresh(FuDfuDevice *self, guint timeout_ms, GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_length = 0;
 	guint8 buf[6] = {0x0};
 	g_autoptr(GError) error_local = NULL;
@@ -651,23 +614,21 @@ fu_dfu_device_refresh(FuDfuDevice *self, guint timeout_ms, GError **error)
 	    !fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_MANIFEST_TOL))
 		return TRUE;
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   FU_DFU_REQUEST_GETSTATUS,
-					   0,
-					   priv->iface_number,
-					   buf,
-					   sizeof(buf),
-					   &actual_length,
-					   timeout_ms,
-					   NULL, /* cancellable */
-					   &error_local)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_CLASS,
+					    FU_USB_RECIPIENT_INTERFACE,
+					    FU_DFU_REQUEST_GETSTATUS,
+					    0,
+					    priv->iface_number,
+					    buf,
+					    sizeof(buf),
+					    &actual_length,
+					    timeout_ms,
+					    NULL, /* cancellable */
+					    &error_local)) {
 		/* got STALL */
-		if (g_error_matches(error_local,
-				    G_USB_DEVICE_ERROR,
-				    G_USB_DEVICE_ERROR_NOT_SUPPORTED)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_info("GetStatus not implemented, assuming appIDLE");
 			fu_dfu_device_set_status(self, FU_DFU_STATUS_OK);
 			fu_dfu_device_set_state(self, FU_DFU_STATE_APP_IDLE);
@@ -712,32 +673,30 @@ static gboolean
 fu_dfu_device_request_detach(FuDfuDevice *self, FuProgress *progress, GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	const guint16 timeout_reset_ms = 1000;
 	guint16 ctrl_setup_index = priv->iface_number;
 	g_autoptr(GError) error_local = NULL;
 
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_INDEX_FORCE_DETACH))
-		ctrl_setup_index |= 0x01u << 8;
+		FU_BIT_SET(ctrl_setup_index, 8);
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   FU_DFU_REQUEST_DETACH,
-					   timeout_reset_ms,
-					   ctrl_setup_index,
-					   NULL,
-					   0,
-					   NULL,
-					   priv->timeout_ms,
-					   NULL, /* cancellable */
-					   &error_local)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_CLASS,
+					    FU_USB_RECIPIENT_INTERFACE,
+					    FU_DFU_REQUEST_DETACH,
+					    timeout_reset_ms,
+					    ctrl_setup_index,
+					    NULL,
+					    0,
+					    NULL,
+					    priv->timeout_ms,
+					    NULL, /* cancellable */
+					    &error_local)) {
 		/* some devices just reboot and stall the endpoint :/ */
-		if (g_error_matches(error_local,
-				    G_USB_DEVICE_ERROR,
-				    G_USB_DEVICE_ERROR_NOT_SUPPORTED) ||
-		    g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_FAILED)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
+		    //		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ) ||
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
 			g_debug("ignoring while detaching: %s", error_local->message);
 		} else {
 			/* refresh the error code */
@@ -814,11 +773,9 @@ gboolean
 fu_dfu_device_abort(FuDfuDevice *self, GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), FALSE);
-	g_return_val_if_fail(G_USB_IS_DEVICE(usb_device), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* the device has no DFU runtime, so cheat */
@@ -835,19 +792,19 @@ fu_dfu_device_abort(FuDfuDevice *self, GError **error)
 	if (!fu_dfu_device_ensure_interface(self, error))
 		return FALSE;
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   FU_DFU_REQUEST_ABORT,
-					   0,
-					   priv->iface_number,
-					   NULL,
-					   0,
-					   NULL,
-					   priv->timeout_ms,
-					   NULL, /* cancellable */
-					   &error_local)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_CLASS,
+					    FU_USB_RECIPIENT_INTERFACE,
+					    FU_DFU_REQUEST_ABORT,
+					    0,
+					    priv->iface_number,
+					    NULL,
+					    0,
+					    NULL,
+					    priv->timeout_ms,
+					    NULL, /* cancellable */
+					    &error_local)) {
 		/* refresh the error code */
 		fu_dfu_device_error_fixup(self, &error_local);
 		g_set_error(error,
@@ -881,19 +838,19 @@ fu_dfu_device_clear_status(FuDfuDevice *self, GError **error)
 	if (!fu_dfu_device_ensure_interface(self, error))
 		return FALSE;
 
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   FU_DFU_REQUEST_CLRSTATUS,
-					   0,
-					   priv->iface_number,
-					   NULL,
-					   0,
-					   NULL,
-					   priv->timeout_ms,
-					   NULL, /* cancellable */
-					   &error_local)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_CLASS,
+					    FU_USB_RECIPIENT_INTERFACE,
+					    FU_DFU_REQUEST_CLRSTATUS,
+					    0,
+					    priv->iface_number,
+					    NULL,
+					    0,
+					    NULL,
+					    priv->timeout_ms,
+					    NULL, /* cancellable */
+					    &error_local)) {
 		/* refresh the error code */
 		fu_dfu_device_error_fixup(self, &error_local);
 		g_set_error(error,
@@ -952,16 +909,17 @@ fu_dfu_device_open(FuDevice *device, GError **error)
 	/* GD32VF103 encodes the serial number in UTF-8 (rather than UTF-16)
 	 * and also uses the first two bytes as the model identifier */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_GD32)) {
-		GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 		const guint8 *buf;
 		gsize bufsz = 0;
-		guint16 langid = G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES;
-		guint8 idx = g_usb_device_get_serial_number_index(usb_device);
+		guint16 langid = FU_USB_LANGID_ENGLISH_UNITED_STATES;
+		guint8 idx = fu_usb_device_get_serial_number_index(FU_USB_DEVICE(device));
 		g_autofree gchar *chip_id = NULL;
 		g_autofree gchar *serial_str = NULL;
 		g_autoptr(GBytes) serial_blob = NULL;
-		serial_blob =
-		    g_usb_device_get_string_descriptor_bytes(usb_device, idx, langid, error);
+		serial_blob = fu_usb_device_get_string_descriptor_bytes(FU_USB_DEVICE(device),
+									idx,
+									langid,
+									error);
 		if (serial_blob == NULL)
 			return FALSE;
 		fu_dump_bytes(G_LOG_DOMAIN, "GD32 serial", serial_blob);
@@ -1008,18 +966,15 @@ fu_dfu_device_close(FuDevice *device, GError **error)
 {
 	FuDfuDevice *self = FU_DFU_DEVICE(device);
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 
 	/* release interface */
 	if (priv->claimed_interface) {
 		g_autoptr(GError) error_local = NULL;
-		if (!g_usb_device_release_interface(usb_device,
-						    (gint)priv->iface_number,
-						    0,
-						    &error_local)) {
-			if (!g_error_matches(error_local,
-					     G_USB_DEVICE_ERROR,
-					     G_USB_DEVICE_ERROR_NO_DEVICE)) {
+		if (!fu_usb_device_release_interface(FU_USB_DEVICE(device),
+						     (gint)priv->iface_number,
+						     0,
+						     &error_local)) {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 				g_warning("failed to release interface: %s", error_local->message);
 			}
 		}
@@ -1034,28 +989,27 @@ static gboolean
 fu_dfu_device_probe(FuDevice *device, GError **error)
 {
 	FuDfuDevice *self = FU_DFU_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 
 	/* add all the targets */
 	if (!fu_dfu_device_add_targets(self, error)) {
 		g_prefix_error(error,
 			       "%04x:%04x is not supported: ",
-			       g_usb_device_get_vid(usb_device),
-			       g_usb_device_get_pid(usb_device));
+			       fu_usb_device_get_vid(FU_USB_DEVICE(self)),
+			       fu_usb_device_get_pid(FU_USB_DEVICE(self)));
 		return FALSE;
 	}
 
 	/* check capabilities */
 	if (!fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD)) {
 		g_info("%04x:%04x is missing download capability",
-		       g_usb_device_get_vid(usb_device),
-		       g_usb_device_get_pid(usb_device));
+		       fu_usb_device_get_vid(FU_USB_DEVICE(self)),
+		       fu_usb_device_get_pid(FU_USB_DEVICE(self)));
 	}
 
 	/* hardware from Jabra literally reboots if you try to retry a failed
 	 * write -- there's no way to avoid blocking the daemon like this... */
-	if (fu_device_has_internal_flag(FU_DEVICE(self),
-					FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET)) {
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET)) {
 		g_debug("blocking wait to work around Jabra hardware...");
 		fu_device_sleep(device, 10000);
 	}
@@ -1073,7 +1027,7 @@ fu_dfu_device_reset(FuDfuDevice *self, FuProgress *progress, GError **error)
 	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if (!g_usb_device_reset(fu_usb_device_get_dev(FU_USB_DEVICE(self)), &error_local)) {
+	if (!fu_usb_device_reset(FU_USB_DEVICE(self), &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1384,7 +1338,7 @@ fu_dfu_device_error_fixup(FuDfuDevice *self, GError **error)
 		return;
 
 	/* not the right error to query */
-	if (!g_error_matches(*error, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_NOT_SUPPORTED))
+	if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 		return;
 
 	/* get the status */
@@ -1478,19 +1432,19 @@ fu_dfu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	guint64 tmp = 0;
 
 	if (g_strcmp0(key, FU_QUIRKS_DFU_FORCE_VERSION) == 0) {
-		if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->force_version = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DfuForceTimeout") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->timeout_ms = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DfuForceTransferSize") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->force_transfer_size = tmp;
 		return TRUE;
@@ -1516,6 +1470,18 @@ fu_dfu_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 88, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "reload");
+}
+
+static void
+fu_dfu_device_dispose(GObject *object)
+{
+	FuDfuDevice *self = FU_DFU_DEVICE(object);
+	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
+
+	if (priv->targets != NULL)
+		g_ptr_array_set_size(priv->targets, 0);
+
+	G_OBJECT_CLASS(fu_dfu_device_parent_class)->dispose(object);
 }
 
 static void
@@ -1547,6 +1513,7 @@ fu_dfu_device_class_init(FuDfuDeviceClass *klass)
 	device_class->close = fu_dfu_device_close;
 	device_class->probe = fu_dfu_device_probe;
 	device_class->set_progress = fu_dfu_device_set_progress;
+	object_class->dispose = fu_dfu_device_dispose;
 	object_class->finalize = fu_dfu_device_finalize;
 }
 
@@ -1566,81 +1533,35 @@ fu_dfu_device_init(FuDfuDevice *self)
 	priv->force_version = G_MAXUINT16;
 	priv->dnload_timeout = DFU_DEVICE_DNLOAD_TIMEOUT_DEFAULT;
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_FLAGS);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD,
-					"can-download");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_CAN_UPLOAD,
-					"can-upload");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_MANIFEST_TOL,
-					"manifest-tol");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_WILL_DETACH,
-					"will-detach");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_CAN_ACCELERATE,
-					"can-accelerate");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_ATTACH_UPLOAD_DOWNLOAD,
-					"attach-upload-download");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_FORCE_DFU_MODE,
-					"force-dfu-mode");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_IGNORE_POLLTIMEOUT,
-					"ignore-polltimeout");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_IGNORE_RUNTIME,
-					"ignore-runtime");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_IGNORE_UPLOAD,
-					"ignore-upload");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_NO_DFU_RUNTIME,
-					"no-dfu-runtime");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_NO_GET_STATUS_UPLOAD,
-					"no-get-status-upload");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_NO_PID_CHANGE,
-					"no-pid-change");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_USE_ANY_INTERFACE,
-					"use-any-interface");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_USE_ATMEL_AVR,
-					"use-atmel-avr");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_USE_PROTOCOL_ZERO,
-					"use-protocol-zero");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL,
-					"legacy-protocol");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_DETACH_FOR_ATTACH,
-					"detach-for-attach");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_ABSENT_SECTOR_SIZE,
-					"absent-sector-size");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_MANIFEST_POLL,
-					"manifest-poll");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_NO_BUS_RESET_ATTACH,
-					"no-bus-reset-attach");
-	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_GD32, "gd32");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_ALLOW_ZERO_POLLTIMEOUT,
-					"allow-zero-polltimeout");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_INDEX_FORCE_DETACH,
-					"index-force-detach");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_MANIFEST_TOL);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_WILL_DETACH);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_ACCELERATE);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_ATTACH_UPLOAD_DOWNLOAD);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_FORCE_DFU_MODE);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_IGNORE_POLLTIMEOUT);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_IGNORE_RUNTIME);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_IGNORE_UPLOAD);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_DFU_RUNTIME);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_GET_STATUS_UPLOAD);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_PID_CHANGE);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_USE_ANY_INTERFACE);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_USE_ATMEL_AVR);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_USE_PROTOCOL_ZERO);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_DETACH_FOR_ATTACH);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_ABSENT_SECTOR_SIZE);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_MANIFEST_POLL);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_BUS_RESET_ATTACH);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_GD32);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_ALLOW_ZERO_POLLTIMEOUT);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_INDEX_FORCE_DETACH);
 }

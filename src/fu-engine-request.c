@@ -17,22 +17,22 @@ struct _FuEngineRequest {
 	FuEngineRequestFlag flags;
 	FwupdFeatureFlags feature_flags;
 	FwupdCodecFlags converter_flags;
+	gchar *sender;
 	gchar *locale;
 };
 
 static void
-fwupd_engine_request_codec_iface_init(FwupdCodecInterface *iface);
+fu_engine_request_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(FuEngineRequest,
 			fu_engine_request,
 			G_TYPE_OBJECT,
-			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
-					      fwupd_engine_request_codec_iface_init))
+			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_engine_request_codec_iface_init))
 
 static void
-fu_engine_request_add_string(FwupdCodec *converter, guint idt, GString *str)
+fu_engine_request_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FuEngineRequest *self = FU_ENGINE_REQUEST(converter);
+	FuEngineRequest *self = FU_ENGINE_REQUEST(codec);
 	if (self->flags != FU_ENGINE_REQUEST_FLAG_NONE) {
 		g_autofree gchar *flags = fu_engine_request_flag_to_string(self->flags);
 		fwupd_codec_string_append(str, idt, "Flags", flags);
@@ -43,9 +43,16 @@ fu_engine_request_add_string(FwupdCodec *converter, guint idt, GString *str)
 }
 
 static void
-fwupd_engine_request_codec_iface_init(FwupdCodecInterface *iface)
+fu_engine_request_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->add_string = fu_engine_request_add_string;
+}
+
+const gchar *
+fu_engine_request_get_sender(FuEngineRequest *self)
+{
+	g_return_val_if_fail(FU_IS_ENGINE_REQUEST(self), NULL);
+	return self->sender;
 }
 
 FwupdFeatureFlags
@@ -140,6 +147,7 @@ static void
 fu_engine_request_finalize(GObject *obj)
 {
 	FuEngineRequest *self = FU_ENGINE_REQUEST(obj);
+	g_free(self->sender);
 	g_free(self->locale);
 	G_OBJECT_CLASS(fu_engine_request_parent_class)->finalize(obj);
 }
@@ -152,9 +160,10 @@ fu_engine_request_class_init(FuEngineRequestClass *klass)
 }
 
 FuEngineRequest *
-fu_engine_request_new(void)
+fu_engine_request_new(const gchar *sender)
 {
 	FuEngineRequest *self;
 	self = g_object_new(FU_TYPE_ENGINE_REQUEST, NULL);
+	self->sender = g_strdup(sender);
 	return FU_ENGINE_REQUEST(self);
 }

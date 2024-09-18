@@ -21,7 +21,7 @@ G_DEFINE_TYPE(FuRemote, fu_remote, FWUPD_TYPE_REMOTE)
 #define FWUPD_REMOTE_CONFIG_DEFAULT_REFRESH_INTERVAL 86400 /* 24h */
 
 /**
- * fwupd_remote_load_from_filename:
+ * fu_remote_load_from_filename:
  * @self: a #FwupdRemote
  * @filename: (not nullable): a filename
  * @cancellable: (nullable): optional #GCancellable
@@ -33,10 +33,10 @@ G_DEFINE_TYPE(FuRemote, fu_remote, FWUPD_TYPE_REMOTE)
  * Returns: %TRUE for success
  **/
 gboolean
-fwupd_remote_load_from_filename(FwupdRemote *self,
-				const gchar *filename,
-				GCancellable *cancellable,
-				GError **error)
+fu_remote_load_from_filename(FwupdRemote *self,
+			     const gchar *filename,
+			     GCancellable *cancellable,
+			     GError **error)
 {
 	const gchar *group = "fwupd Remote";
 	g_autofree gchar *id = NULL;
@@ -56,21 +56,6 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
 	if (!g_key_file_load_from_file(kf, filename, G_KEY_FILE_NONE, error))
 		return FALSE;
 
-	/* optional verification type */
-	if (g_key_file_has_key(kf, group, "Keyring", NULL)) {
-		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "Keyring", NULL);
-		FwupdKeyringKind keyring_kind = fwupd_keyring_kind_from_string(tmp);
-		if (keyring_kind == FWUPD_KEYRING_KIND_UNKNOWN) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "keyring kind '%s' unknown",
-				    tmp);
-			return FALSE;
-		}
-		fwupd_remote_set_keyring_kind(self, keyring_kind);
-	}
-
 	/* the first remote sets the URI, even if it's file:// to the cache */
 	if (g_key_file_has_key(kf, group, "MetadataURI", NULL)) {
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "MetadataURI", NULL);
@@ -78,11 +63,11 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
 			const gchar *filename_cache = tmp;
 			if (g_str_has_prefix(filename_cache, "file://"))
 				filename_cache += 7;
-			fwupd_remote_set_filename_cache(self, filename_cache);
 			if (g_file_test(filename_cache, G_FILE_TEST_IS_DIR))
 				fwupd_remote_set_kind(self, FWUPD_REMOTE_KIND_DIRECTORY);
 			else
 				fwupd_remote_set_kind(self, FWUPD_REMOTE_KIND_LOCAL);
+			fwupd_remote_set_filename_cache(self, filename_cache);
 		} else if (g_str_has_prefix(tmp, "http://") || g_str_has_prefix(tmp, "https://") ||
 			   g_str_has_prefix(tmp, "ipfs://") || g_str_has_prefix(tmp, "ipns://")) {
 			fwupd_remote_set_kind(self, FWUPD_REMOTE_KIND_DOWNLOAD);
@@ -109,6 +94,10 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
 	if (g_key_file_has_key(kf, group, "Title", NULL)) {
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "Title", NULL);
 		fwupd_remote_set_title(self, tmp);
+	}
+	if (g_key_file_has_key(kf, group, "PrivacyURI", NULL)) {
+		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "PrivacyURI", NULL);
+		fwupd_remote_set_privacy_uri(self, tmp);
 	}
 	if (g_key_file_has_key(kf, group, "RefreshInterval", NULL)) {
 		fwupd_remote_set_refresh_interval(
@@ -163,7 +152,7 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
 }
 
 /**
- * fwupd_remote_save_to_filename:
+ * fu_remote_save_to_filename:
  * @self: a #FwupdRemote
  * @filename: (not nullable): a filename
  * @cancellable: (nullable): optional #GCancellable
@@ -174,10 +163,10 @@ fwupd_remote_load_from_filename(FwupdRemote *self,
  * Returns: %TRUE for success
  **/
 gboolean
-fwupd_remote_save_to_filename(FwupdRemote *self,
-			      const gchar *filename,
-			      GCancellable *cancellable,
-			      GError **error)
+fu_remote_save_to_filename(FwupdRemote *self,
+			   const gchar *filename,
+			   GCancellable *cancellable,
+			   GError **error)
 {
 	const gchar *group = "fwupd Remote";
 	g_autoptr(GKeyFile) kf = g_key_file_new();
@@ -188,13 +177,6 @@ fwupd_remote_save_to_filename(FwupdRemote *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* optional keys */
-	if (fwupd_remote_get_keyring_kind(self) != FWUPD_KEYRING_KIND_UNKNOWN) {
-		g_key_file_set_string(
-		    kf,
-		    group,
-		    "Keyring",
-		    fwupd_keyring_kind_to_string(fwupd_remote_get_keyring_kind(self)));
-	}
 	if (fwupd_remote_get_metadata_uri(self) != NULL)
 		g_key_file_set_string(kf,
 				      group,
@@ -202,6 +184,8 @@ fwupd_remote_save_to_filename(FwupdRemote *self,
 				      fwupd_remote_get_metadata_uri(self));
 	if (fwupd_remote_get_title(self) != NULL)
 		g_key_file_set_string(kf, group, "Title", fwupd_remote_get_title(self));
+	if (fwupd_remote_get_privacy_uri(self) != NULL)
+		g_key_file_set_string(kf, group, "PrivacyURI", fwupd_remote_get_privacy_uri(self));
 	if (fwupd_remote_get_report_uri(self) != NULL)
 		g_key_file_set_string(kf, group, "ReportURI", fwupd_remote_get_report_uri(self));
 	if (fwupd_remote_get_refresh_interval(self) != 0)

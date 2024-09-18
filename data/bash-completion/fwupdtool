@@ -5,6 +5,8 @@ _fwupdtool_cmd_list=(
 	'disable-remote'
 	'disable-test-devices'
 	'efivar-list'
+	'efivar-boot'
+	'efivar-files'
 	'enable-remote'
 	'enable-test-devices'
 	'esp-list'
@@ -78,6 +80,7 @@ _fwupdtool_opts=(
 	'--no-search'
 	'--ignore-checksum'
 	'--ignore-vid-pid'
+	'--ignore-requirements'
 	'--save-backends'
 )
 

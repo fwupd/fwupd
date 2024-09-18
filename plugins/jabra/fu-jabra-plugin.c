@@ -24,20 +24,18 @@ fu_jabra_plugin_cleanup(FuPlugin *plugin,
 			FwupdInstallFlags flags,
 			GError **error)
 {
-	GUsbDevice *usb_device;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* check for a property on the *dfu* FuDevice, which is also why we
 	 * can't just rely on using FuDevice->cleanup() */
-	if (!fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET))
+	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET))
 		return TRUE;
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
-	usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	if (!g_usb_device_reset(usb_device, &error_local)) {
+	if (!fu_usb_device_reset(FU_USB_DEVICE(device), &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,

@@ -1,4 +1,6 @@
-[PCI\VID_1028&PID_0C88]
-Flags = probe-vcp
-[PCI\VID_1028&PID_0C8A]
-Flags = probe-vcp
+[DRM\VEN_DEL&DEV_4340]
+Plugin = mediatek_scaler
+Flags = bank2-only
+
+[DRM\VEN_DEL&DEV_7430]
+Plugin = mediatek_scaler

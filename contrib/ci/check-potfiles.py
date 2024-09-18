@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # pylint: disable=invalid-name,missing-docstring,consider-using-f-string
 # pylint: disable=too-few-public-methods
 #

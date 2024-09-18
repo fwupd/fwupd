@@ -39,28 +39,52 @@ struct _FwupdClientClass {
 
 /**
  * FwupdClientDownloadFlags:
- * @FWUPD_CLIENT_DOWNLOAD_FLAG_NONE:		No flags set
- * @FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P:	Only use peer-to-peer when downloading URIs
  *
  * The options to use for downloading.
  **/
 typedef enum {
-	FWUPD_CLIENT_DOWNLOAD_FLAG_NONE = 0,	      /* Since: 1.4.5 */
-	FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P = 1 << 0, /* Since: 1.9.4 */
+	/**
+	 * FWUPD_CLIENT_DOWNLOAD_FLAG_NONE:
+	 *
+	 * No flags set.
+	 *
+	 * Since: 1.4.5
+	 */
+	FWUPD_CLIENT_DOWNLOAD_FLAG_NONE = 0,
+	/**
+	 * FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P:
+	 *
+	 * Only use peer-to-peer when downloading URIs.
+	 *
+	 * Since: 1.9.4
+	 */
+	FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P = 1 << 0,
 	/*< private >*/
 	FWUPD_CLIENT_DOWNLOAD_FLAG_LAST
 } FwupdClientDownloadFlags;
 
 /**
  * FwupdClientUploadFlags:
- * @FWUPD_CLIENT_UPLOAD_FLAG_NONE:		No flags set
- * @FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART:	Always use multipart/form-data
  *
  * The options to use for uploading.
  **/
 typedef enum {
-	FWUPD_CLIENT_UPLOAD_FLAG_NONE = 0,		    /* Since: 1.4.5 */
-	FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART = 1 << 0, /* Since: 1.4.5 */
+	/**
+	 * FWUPD_CLIENT_UPLOAD_FLAG_NONE:
+	 *
+	 * No flags set.
+	 *
+	 * Since: 1.4.5
+	 */
+	FWUPD_CLIENT_UPLOAD_FLAG_NONE = 0,
+	/**
+	 * FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART:
+	 *
+	 * Always use multipart/form-data.
+	 *
+	 * Since: 1.4.5
+	 */
+	FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART = 1 << 0,
 	/*< private >*/
 	FWUPD_CLIENT_UPLOAD_FLAG_LAST
 } FwupdClientUploadFlags;
@@ -422,7 +446,7 @@ fwupd_client_uninhibit_finish(FwupdClient *self,
 			      GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 void
 fwupd_client_emulation_load_async(FwupdClient *self,
-				  GBytes *data,
+				  const gchar *filename,
 				  GCancellable *cancellable,
 				  GAsyncReadyCallback callback,
 				  gpointer callback_data) G_GNUC_NON_NULL(1, 2);
@@ -431,10 +455,11 @@ fwupd_client_emulation_load_finish(FwupdClient *self, GAsyncResult *res, GError 
     G_GNUC_NON_NULL(1, 2);
 void
 fwupd_client_emulation_save_async(FwupdClient *self,
+				  const gchar *filename,
 				  GCancellable *cancellable,
 				  GAsyncReadyCallback callback,
 				  gpointer callback_data) G_GNUC_NON_NULL(1);
-GBytes *
+gboolean
 fwupd_client_emulation_save_finish(FwupdClient *self,
 				   GAsyncResult *res,
 				   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);

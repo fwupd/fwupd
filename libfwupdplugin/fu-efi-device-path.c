@@ -10,6 +10,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-common.h"
 #include "fu-efi-device-path.h"
 #include "fu-efi-struct.h"
 #include "fu-input-stream.h"
@@ -24,7 +25,16 @@ typedef struct {
 	guint8 subtype;
 } FuEfiDevicePathPrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuEfiDevicePath, fu_efi_device_path, FU_TYPE_FIRMWARE)
+static void
+fu_efi_device_path_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuEfiDevicePath,
+		       fu_efi_device_path,
+		       FU_TYPE_FIRMWARE,
+		       0,
+		       G_ADD_PRIVATE(FuEfiDevicePath)
+			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
+						 fu_efi_device_path_codec_iface_init))
 #define GET_PRIVATE(o) (fu_efi_device_path_get_instance_private(o))
 
 static void
@@ -33,6 +43,14 @@ fu_efi_device_path_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 	FuEfiDevicePath *self = FU_EFI_DEVICE_PATH(firmware);
 	FuEfiDevicePathPrivate *priv = GET_PRIVATE(self);
 	fu_xmlb_builder_insert_kx(bn, "subtype", priv->subtype);
+}
+
+static void
+fu_efi_device_path_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+{
+	FuEfiDevicePath *self = FU_EFI_DEVICE_PATH(codec);
+	FuEfiDevicePathPrivate *priv = GET_PRIVATE(self);
+	fwupd_codec_json_append_int(builder, "Subtype", priv->subtype);
 }
 
 /**
@@ -155,6 +173,12 @@ fu_efi_device_path_build(FuFirmware *firmware, XbNode *n, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+static void
+fu_efi_device_path_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_json = fu_efi_device_path_add_json;
 }
 
 static void

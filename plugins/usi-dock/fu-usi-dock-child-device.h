@@ -16,6 +16,6 @@ G_DECLARE_FINAL_TYPE(FuUsiDockChildDevice,
 		     FuDevice)
 
 FuDevice *
-fu_usi_dock_child_new(FuContext *ctx);
+fu_usi_dock_child_device_new(FuContext *ctx);
 void
 fu_usi_dock_child_device_set_chip_idx(FuUsiDockChildDevice *self, guint8 chip_idx);

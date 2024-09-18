@@ -17,8 +17,10 @@ struct _FuSynapticsMstFirmware {
 
 G_DEFINE_TYPE(FuSynapticsMstFirmware, fu_synaptics_mst_firmware, FU_TYPE_FIRMWARE)
 
+#define ADDR_CUSTOMER_ID_CARRERA 0x620E
 #define ADDR_CUSTOMER_ID_CAYENNE 0x20E
 #define ADDR_CUSTOMER_ID_TESLA	 0x10E
+#define ADDR_CONFIG_CARRERA	 0x6200
 #define ADDR_CONFIG_CAYENNE	 0x200
 #define ADDR_CONFIG_TESLA	 0x100
 
@@ -52,7 +54,7 @@ fu_synaptics_mst_firmware_detect_family(FuSynapticsMstFirmware *self,
 					gsize offset,
 					GError **error)
 {
-	guint16 addrs[] = {ADDR_CONFIG_TESLA, ADDR_CONFIG_CAYENNE};
+	guint16 addrs[] = {ADDR_CONFIG_TESLA, ADDR_CONFIG_CAYENNE, ADDR_CONFIG_CARRERA};
 	for (guint i = 0; i < G_N_ELEMENTS(addrs); i++) {
 		g_autoptr(GByteArray) st = NULL;
 		st = fu_struct_synaptics_firmware_config_parse_stream(stream,
@@ -99,6 +101,9 @@ fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
 	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
 		addr = ADDR_CUSTOMER_ID_CAYENNE;
 		break;
+	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
+		addr = ADDR_CUSTOMER_ID_CARRERA;
+		break;
 	default:
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -132,6 +137,9 @@ fu_synaptics_mst_firmware_write(FuFirmware *firmware, GError **error)
 	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
 		addr = ADDR_CUSTOMER_ID_CAYENNE;
 		break;
+	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
+		addr = ADDR_CUSTOMER_ID_CARRERA;
+		break;
 	default:
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -160,7 +168,7 @@ fu_synaptics_mst_firmware_write(FuFirmware *firmware, GError **error)
 }
 
 static gboolean
-fu_synaptics_rmi_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+fu_synaptics_mst_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 {
 	FuSynapticsMstFirmware *self = FU_SYNAPTICS_MST_FIRMWARE(firmware);
 	guint64 tmp;
@@ -191,7 +199,7 @@ fu_synaptics_mst_firmware_class_init(FuSynapticsMstFirmwareClass *klass)
 	firmware_class->parse = fu_synaptics_mst_firmware_parse;
 	firmware_class->export = fu_synaptics_mst_firmware_export;
 	firmware_class->write = fu_synaptics_mst_firmware_write;
-	firmware_class->build = fu_synaptics_rmi_firmware_build;
+	firmware_class->build = fu_synaptics_mst_firmware_build;
 }
 
 FuFirmware *

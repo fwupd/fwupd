@@ -21,8 +21,6 @@ G_DEFINE_TYPE(FuSteelseriesMouse, fu_steelseries_mouse, FU_TYPE_USB_DEVICE)
 static gboolean
 fu_steelseries_mouse_setup(FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	gboolean ret;
 	gsize actual_len = 0;
 	guint8 data[32];
 	g_autofree gchar *version = NULL;
@@ -33,10 +31,10 @@ fu_steelseries_mouse_setup(FuDevice *device, GError **error)
 
 	memset(data, 0x00, sizeof(data));
 	data[0] = 0x16;
-	ret = g_usb_device_control_transfer(usb_device,
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(device),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_CLASS,
+					    FU_USB_RECIPIENT_INTERFACE,
 					    0x09,
 					    0x0200,
 					    0x0000,
@@ -45,8 +43,7 @@ fu_steelseries_mouse_setup(FuDevice *device, GError **error)
 					    &actual_len,
 					    STEELSERIES_TRANSACTION_TIMEOUT,
 					    NULL,
-					    error);
-	if (!ret) {
+					    error)) {
 		g_prefix_error(error, "failed to do control transfer: ");
 		return FALSE;
 	}
@@ -58,15 +55,14 @@ fu_steelseries_mouse_setup(FuDevice *device, GError **error)
 			    actual_len);
 		return FALSE;
 	}
-	ret = g_usb_device_interrupt_transfer(usb_device,
+	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(device),
 					      0x81, /* EP1 IN */
 					      data,
 					      sizeof(data),
 					      &actual_len,
 					      STEELSERIES_TRANSACTION_TIMEOUT,
 					      NULL,
-					      error);
-	if (!ret) {
+					      error)) {
 		g_prefix_error(error, "failed to do EP1 transfer: ");
 		return FALSE;
 	}

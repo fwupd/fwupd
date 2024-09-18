@@ -50,8 +50,8 @@ fu_thunderbolt_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
 		g_info("turning on delayed activation for %s", fu_device_get_name(device));
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
-		fu_device_remove_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
+		fu_device_remove_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	}
 }
 
@@ -68,7 +68,7 @@ fu_thunderbolt_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GE
 		FuDevice *dev = g_ptr_array_index(devices, i);
 		if ((g_strcmp0(fu_device_get_plugin(dev), "thunderbolt") == 0) &&
 		    fu_device_has_private_flag(dev, FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION) &&
-		    fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)) {
+		    fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE)) {
 			return fu_thunderbolt_retimer_set_parent_port_offline(dev, error);
 		}
 	}
@@ -82,7 +82,7 @@ fu_thunderbolt_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GE
 		FuDevice *dev = g_ptr_array_index(devices, i);
 		if ((g_strcmp0(fu_device_get_plugin(dev), "thunderbolt") == 0) &&
 		    fu_device_has_private_flag(dev, FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION) &&
-		    fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)) {
+		    fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE)) {
 			fu_device_sleep(dev, FU_THUNDERBOLT_RETIMER_CLEANUP_DELAY);
 			return fu_thunderbolt_retimer_set_parent_port_online(dev, error);
 		}

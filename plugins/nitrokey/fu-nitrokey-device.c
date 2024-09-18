@@ -22,7 +22,7 @@ typedef struct {
 } NitrokeyRequest;
 
 static gboolean
-nitrokey_execute_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_nitrokey_device_execute_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	NitrokeyRequest *req = (NitrokeyRequest *)user_data;
 	NitrokeyHidResponse res;
@@ -33,7 +33,7 @@ nitrokey_execute_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 	memset(buf, 0x00, sizeof(buf));
 	buf[0] = req->command;
 	if (req->buf_in != NULL)
-		memcpy(&buf[1], req->buf_in, req->buf_in_sz);
+		memcpy(&buf[1], req->buf_in, req->buf_in_sz); /* nocheck:blocked */
 	crc_tmp = fu_nitrokey_perform_crc32(buf, sizeof(buf) - 4);
 	fu_memwrite_uint32(&buf[NITROKEY_REQUEST_DATA_LENGTH + 1], crc_tmp, G_LITTLE_ENDIAN);
 
@@ -59,7 +59,7 @@ nitrokey_execute_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 		return FALSE;
 
 	/* verify this is the answer to the question we asked */
-	memcpy(&res, buf, sizeof(buf));
+	memcpy(&res, buf, sizeof(buf)); /* nocheck:blocked */
 	if (GUINT32_FROM_LE(res.last_command_crc) != crc_tmp) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -84,20 +84,20 @@ nitrokey_execute_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 
 	/* copy out the payload */
 	if (req->buf_out != NULL)
-		memcpy(req->buf_out, &res.payload, req->buf_out_sz);
+		memcpy(req->buf_out, &res.payload, req->buf_out_sz); /* nocheck:blocked */
 
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-nitrokey_execute_cmd_full(FuDevice *device,
-			  guint8 command,
-			  const guint8 *buf_in,
-			  gsize buf_in_sz,
-			  guint8 *buf_out,
-			  gsize buf_out_sz,
-			  GError **error)
+fu_nitrokey_device_execute_cmd_full(FuDevice *device,
+				    guint8 command,
+				    const guint8 *buf_in,
+				    gsize buf_in_sz,
+				    guint8 *buf_out,
+				    gsize buf_out_sz,
+				    GError **error)
 {
 	NitrokeyRequest req = {
 	    .command = command,
@@ -108,7 +108,11 @@ nitrokey_execute_cmd_full(FuDevice *device,
 	};
 	g_return_val_if_fail(buf_in_sz <= NITROKEY_REQUEST_DATA_LENGTH, FALSE);
 	g_return_val_if_fail(buf_out_sz <= NITROKEY_REPLY_DATA_LENGTH, FALSE);
-	return fu_device_retry(device, nitrokey_execute_cmd_cb, NITROKEY_NR_RETRIES, &req, error);
+	return fu_device_retry(device,
+			       fu_nitrokey_device_execute_cmd_cb,
+			       NITROKEY_NR_RETRIES,
+			       &req,
+			       error);
 }
 
 static gboolean
@@ -123,18 +127,18 @@ fu_nitrokey_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get firmware version */
-	if (!nitrokey_execute_cmd_full(device,
-				       NITROKEY_CMD_GET_DEVICE_STATUS,
-				       NULL,
-				       0,
-				       buf_reply,
-				       sizeof(buf_reply),
-				       error)) {
+	if (!fu_nitrokey_device_execute_cmd_full(device,
+						 NITROKEY_CMD_GET_DEVICE_STATUS,
+						 NULL,
+						 0,
+						 buf_reply,
+						 sizeof(buf_reply),
+						 error)) {
 		g_prefix_error(error, "failed to do get firmware version: ");
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "payload", buf_reply, sizeof(buf_reply));
-	memcpy(&payload, buf_reply, sizeof(payload));
+	memcpy(&payload, buf_reply, sizeof(payload)); /* nocheck:blocked */
 	version = g_strdup_printf("%u.%u", payload.VersionMajor, payload.VersionMinor);
 	fu_device_set_version(FU_DEVICE(device), version);
 
@@ -147,9 +151,9 @@ fu_nitrokey_device_init(FuNitrokeyDevice *self)
 {
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_protocol(FU_DEVICE(self), "org.usb.dfu");
 	fu_device_retry_set_delay(FU_DEVICE(self), 100);

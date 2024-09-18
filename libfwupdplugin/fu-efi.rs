@@ -54,7 +54,7 @@ struct FuStructEfiFile {
 #[derive(ParseStream)]
 struct FuStructEfiFile2 {
     _base: FuStructEfiFile,
-    extended_size: u64,
+    extended_size: u64le,
 }
 
 #[repr(u8)]
@@ -65,7 +65,7 @@ enum FuEfiCompressionType {
 
 #[derive(ParseStream)]
 struct FuStructEfiSectionCompression {
-    uncompressed_length: u32,
+    uncompressed_length: u32le,
     compression_type: FuEfiCompressionType,
 }
 
@@ -78,8 +78,8 @@ enum FuEfiLz77DecompressorVersion {
 
 #[derive(ParseStream)]
 struct FuStructEfiLz77DecompressorHeader {
-    src_size: u32,
-    dst_size: u32,
+    src_size: u32le,
+    dst_size: u32le,
 }
 
 #[repr(u8)]
@@ -116,7 +116,7 @@ struct FuStructEfiSection {
 #[derive(ParseStream)]
 struct FuStructEfiSection2 {
     _base: FuStructEfiSection,
-    extended_size: u32,
+    extended_size: u32le,
 }
 
 #[derive(ParseStream)]

@@ -6,11 +6,6 @@
 
 #include "config.h"
 
-#ifdef HAVE_HIDRAW_H
-#include <linux/hidraw.h>
-#include <linux/input.h>
-#endif
-
 #include "fu-goodixtp-common.h"
 #include "fu-goodixtp-firmware.h"
 #include "fu-goodixtp-hid-device.h"
@@ -22,10 +17,8 @@ typedef struct {
 	guint8 cfg_ver;
 } FuGoodixtpHidDevicePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuGoodixtpHidDevice, fu_goodixtp_hid_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE(FuGoodixtpHidDevice, fu_goodixtp_hid_device, FU_TYPE_HIDRAW_DEVICE)
 #define GET_PRIVATE(o) (fu_goodixtp_hid_device_get_instance_private(o))
-
-#define GOODIX_DEVICE_IOCTL_TIMEOUT 5000
 
 void
 fu_goodixtp_hid_device_set_patch_pid(FuGoodixtpHidDevice *self, const gchar *patch_pid)
@@ -79,16 +72,14 @@ fu_goodixtp_hid_device_get_report(FuGoodixtpHidDevice *self,
 				  gsize bufsz,
 				  GError **error)
 {
-#ifdef HAVE_HIDRAW_H
 	guint8 rcv_buf[PACKAGE_LEN + 1] = {0};
 
 	rcv_buf[0] = REPORT_ID;
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(PACKAGE_LEN),
-				  rcv_buf,
-				  NULL,
-				  GOODIX_DEVICE_IOCTL_TIMEOUT,
-				  error)) {
+	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+					  rcv_buf,
+					  sizeof(rcv_buf),
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error)) {
 		g_prefix_error(error, "failed get report: ");
 		return FALSE;
 	}
@@ -104,13 +95,6 @@ fu_goodixtp_hid_device_get_report(FuGoodixtpHidDevice *self,
 	if (!fu_memcpy_safe(buf, bufsz, 0, rcv_buf, sizeof(rcv_buf), 0, PACKAGE_LEN, error))
 		return FALSE;
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
 }
 
 gboolean
@@ -119,41 +103,15 @@ fu_goodixtp_hid_device_set_report(FuGoodixtpHidDevice *self,
 				  gsize bufsz,
 				  GError **error)
 {
-#ifdef HAVE_HIDRAW_H
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCSFEATURE(bufsz),
-				  buf,
-				  NULL,
-				  GOODIX_DEVICE_IOCTL_TIMEOUT,
-				  error)) {
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  buf,
+					  bufsz,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error)) {
 		g_prefix_error(error, "failed set report: ");
 		return FALSE;
 	}
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
-}
-
-static gboolean
-fu_goodixtp_hid_device_probe(FuDevice *device, GError **error)
-{
-	/* check is valid */
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "hidraw") != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "is not correct subsystem=%s, expected hidraw",
-			    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)));
-		return FALSE;
-	}
-
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "hid", error);
 }
 
 static void
@@ -186,9 +144,9 @@ fu_goodixtp_hid_device_init(FuGoodixtpHidDevice *self)
 	fu_device_set_vendor(FU_DEVICE(self), "Goodix inc.");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
-	fu_udev_device_add_flag(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK);
 }
 
 static void
@@ -209,7 +167,6 @@ fu_goodixtp_hid_device_class_init(FuGoodixtpHidDeviceClass *klass)
 
 	object_class->finalize = fu_goodixtp_hid_device_finalize;
 	device_class->to_string = fu_goodixtp_hid_device_to_string;
-	device_class->probe = fu_goodixtp_hid_device_probe;
 	device_class->set_progress = fu_goodixtp_hid_device_set_progress;
 	device_class->convert_version = fu_goodixtp_hid_device_convert_version;
 }

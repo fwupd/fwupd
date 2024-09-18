@@ -19,7 +19,7 @@ G_DEFINE_TYPE(FuUefiEsrtPlugin, fu_uefi_esrt_plugin, FU_TYPE_PLUGIN)
 #define DELL_CAPSULE_SETTING   "com.dell.CapsuleFirmwareUpdate"
 
 static gboolean
-fu_uefi_esrt_check_esrt(void)
+fu_uefi_esrt_plugin_check_esrt(void)
 {
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autofree gchar *esrtdir = NULL;
@@ -34,9 +34,11 @@ fu_uefi_esrt_check_esrt(void)
 static void
 fu_uefi_esrt_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
-	if (!fu_efivar_supported(NULL))
+	if (!fu_efivars_supported(efivars, NULL))
 		return;
 
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_BIOS_CAPSULE_UPDATES);
@@ -44,7 +46,7 @@ fu_uefi_esrt_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_security_attr_add_bios_target_value(attr, DELL_CAPSULE_SETTING, "enabled");
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 
-	if (fu_uefi_esrt_check_esrt())
+	if (fu_uefi_esrt_plugin_check_esrt())
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	else
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);

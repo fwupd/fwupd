@@ -38,36 +38,10 @@
 
 #define FPC_FF2_BLK_SEC_LINK_LEN 100
 
-/**
- * FU_FPC_DEVICE_FLAG_MOH_DEVICE:
- *
- * Device is a moh device
- */
-#define FU_FPC_DEVICE_FLAG_MOH_DEVICE (1 << 0)
-
-/**
- * FU_FPC_DEVICE_FLAG_LEGACY_DFU:
- *
- * Device supports legacy dfu mode
- */
-
-#define FU_FPC_DEVICE_FLAG_LEGACY_DFU (1 << 1)
-
-/**
- * FU_FPC_DEVICE_FLAG_RTS_DEVICE:
- *
- * Device is a RTS device
- */
-
-#define FU_FPC_DEVICE_FLAG_RTS_DEVICE (1 << 2)
-
-/**
- * FU_FPC_DEVICE_FLAG_LENFY_DEVICE:
- *
- * Device is a LENFY MOH device
- */
-
-#define FU_FPC_DEVICE_FLAG_LENFY_DEVICE (1 << 3)
+#define FU_FPC_DEVICE_FLAG_MOH_DEVICE	"moh-device"
+#define FU_FPC_DEVICE_FLAG_LEGACY_DFU	"legacy-dfu"
+#define FU_FPC_DEVICE_FLAG_RTS_DEVICE	"rts"
+#define FU_FPC_DEVICE_FLAG_LENFY_DEVICE "lenfy"
 
 struct _FuFpcDevice {
 	FuUsbDevice parent_instance;
@@ -102,29 +76,22 @@ fu_fpc_device_dfu_cmd(FuFpcDevice *self,
 		      gboolean type_vendor,
 		      GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_len = 0;
 
-	if (data == NULL && length > 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "Invalid input data");
-		return FALSE;
-	}
-
-	if (!g_usb_device_control_transfer(usb_device,
-					   device2host ? G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST
-						       : G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   type_vendor ? G_USB_DEVICE_REQUEST_TYPE_VENDOR
-						       : G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					   G_USB_DEVICE_RECIPIENT_INTERFACE,
-					   request,
-					   value,
-					   0x0000,
-					   data,
-					   length,
-					   length ? &actual_len : NULL,
-					   FPC_USB_TRANSFER_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(
+		FU_USB_DEVICE(self),
+		device2host ? FU_USB_DIRECTION_DEVICE_TO_HOST : FU_USB_DIRECTION_HOST_TO_DEVICE,
+		type_vendor ? FU_USB_REQUEST_TYPE_VENDOR : FU_USB_REQUEST_TYPE_CLASS,
+		FU_USB_RECIPIENT_INTERFACE,
+		request,
+		value,
+		0x0000,
+		data,
+		length,
+		length ? &actual_len : NULL,
+		FPC_USB_TRANSFER_TIMEOUT,
+		NULL,
+		error)) {
 		fu_error_convert(error);
 		return FALSE;
 	}
@@ -148,28 +115,22 @@ fu_fpc_device_fw_cmd(FuFpcDevice *self,
 		     gboolean device2host,
 		     GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_len = 0;
 
-	if (data == NULL && length > 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "Invalid input data");
-		return FALSE;
-	}
-
-	if (!g_usb_device_control_transfer(usb_device,
-					   device2host ? G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST
-						       : G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   request,
-					   0x0000,
-					   0x0000,
-					   data,
-					   length,
-					   length ? &actual_len : NULL,
-					   FPC_USB_TRANSFER_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    device2host ? FU_USB_DIRECTION_DEVICE_TO_HOST
+							: FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    request,
+					    0x0000,
+					    0x0000,
+					    data,
+					    length,
+					    length ? &actual_len : NULL,
+					    FPC_USB_TRANSFER_TIMEOUT,
+					    NULL,
+					    error)) {
 		fu_error_convert(error);
 		return FALSE;
 	}
@@ -188,21 +149,20 @@ fu_fpc_device_fw_cmd(FuFpcDevice *self,
 static gboolean
 fu_fpc_device_setup_mode(FuFpcDevice *self, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GPtrArray) intfs = NULL;
 
-	intfs = g_usb_device_get_interfaces(usb_device, error);
+	intfs = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
 	if (intfs == NULL)
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {
-		GUsbInterface *intf = g_ptr_array_index(intfs, i);
-		if (g_usb_interface_get_class(intf) == FPC_DEVICE_DFU_MODE_CLASS &&
-		    g_usb_interface_get_protocol(intf) == FPC_DEVICE_DFU_MODE_PORT) {
+		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
+		if (fu_usb_interface_get_class(intf) == FPC_DEVICE_DFU_MODE_CLASS &&
+		    fu_usb_interface_get_protocol(intf) == FPC_DEVICE_DFU_MODE_PORT) {
 			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 			return TRUE;
 		}
-		if (g_usb_interface_get_class(intf) == FPC_DEVICE_NORMAL_MODE_CLASS &&
-		    g_usb_interface_get_protocol(intf) == FPC_DEVICE_NORMAL_MODE_PORT) {
+		if (fu_usb_interface_get_class(intf) == FPC_DEVICE_NORMAL_MODE_CLASS &&
+		    fu_usb_interface_get_protocol(intf) == FPC_DEVICE_NORMAL_MODE_PORT) {
 			fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 			return TRUE;
 		}
@@ -710,7 +670,7 @@ static void
 fu_fpc_device_init(FuFpcDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
@@ -720,14 +680,10 @@ fu_fpc_device_init(FuFpcDevice *self)
 	fu_device_set_firmware_size_min(FU_DEVICE(self), 0x10000);
 	fu_device_set_firmware_size_max(FU_DEVICE(self), 0x64000);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), FPC_USB_INTERFACE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_FPC_DEVICE_FLAG_MOH_DEVICE,
-					"moh-device");
-	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_RTS_DEVICE, "rts");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_FPC_DEVICE_FLAG_LEGACY_DFU,
-					"legacy-dfu");
-	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LENFY_DEVICE, "lenfy");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_MOH_DEVICE);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_RTS_DEVICE);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LEGACY_DFU);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LENFY_DEVICE);
 }
 
 static void

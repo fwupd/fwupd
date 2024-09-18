@@ -11,6 +11,7 @@
 #include <glib/gstdio.h>
 #include <string.h>
 
+#include "fu-cinterion-fdl-updater.h"
 #include "fu-firehose-updater.h"
 #include "fu-mbim-qdu-updater.h"
 #include "fu-mm-device.h"
@@ -80,6 +81,9 @@ struct _FuMmDevice {
 	/* for sahara */
 	FuUsbDevice *usb_device;
 
+	/* cinterion-fdl update handling */
+	FuCinterionFdlUpdater *cinterion_fdl_updater;
+
 	/* firmware path */
 	gchar *firmware_path;
 	gchar *restore_firmware_path;
@@ -116,7 +120,7 @@ fu_mm_device_get_update_methods(FuMmDevice *device)
 }
 
 static gboolean
-validate_firmware_update_method(MMModemFirmwareUpdateMethod methods, GError **error)
+fu_mm_device_validate_firmware_update_method(FuMmDevice *self, GError **error)
 {
 	static const MMModemFirmwareUpdateMethod supported_combinations[] = {
 	    MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
@@ -126,12 +130,15 @@ validate_firmware_update_method(MMModemFirmwareUpdateMethod methods, GError **er
 #if MM_CHECK_VERSION(1, 19, 1)
 	    MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE | MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA,
 #endif
+#if MM_CHECK_VERSION(1, 24, 0)
+	    MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL,
+#endif
 	};
 	g_autofree gchar *methods_str = NULL;
 
-	methods_str = mm_modem_firmware_update_method_build_string_from_mask(methods);
+	methods_str = mm_modem_firmware_update_method_build_string_from_mask(self->update_methods);
 	for (guint i = 0; i < G_N_ELEMENTS(supported_combinations); i++) {
-		if (supported_combinations[i] == methods) {
+		if (supported_combinations[i] == self->update_methods) {
 			g_info("valid firmware update combination: %s", methods_str);
 			return TRUE;
 		}
@@ -153,11 +160,11 @@ fu_mm_device_add_instance_id(FuDevice *dev, const gchar *device_id)
 		return;
 	}
 	if (g_pattern_match_simple("???\\VID_????&PID_????", device_id)) {
-		fu_device_add_instance_id_full(dev, device_id, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+		fu_device_add_instance_id(dev, device_id);
 		return;
 	}
 	if (g_pattern_match_simple("???\\VID_????&PID_????&REV_????", device_id)) {
-		if (fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV))
+		if (fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV))
 			fu_device_add_instance_id(dev, device_id);
 		return;
 	}
@@ -201,7 +208,7 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 	}
 
 	/* make sure the combination is supported */
-	if (!validate_firmware_update_method(self->update_methods, error))
+	if (!fu_mm_device_validate_firmware_update_method(self, error))
 		return FALSE;
 
 	/* various fastboot commands */
@@ -246,6 +253,17 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 				    "failed to get port information");
 		return FALSE;
 	}
+#if MM_CHECK_VERSION(1, 24, 0)
+	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL) {
+		for (guint i = 0; i < n_ports; i++) {
+			if (ports[i].type == MM_MODEM_PORT_TYPE_AT) {
+				self->port_at = g_strdup_printf("/dev/%s", ports[i].name);
+				break;
+			}
+		}
+		fu_device_add_protocol(device, "com.cinterion.fdl");
+	}
+#endif // MM_CHECK_VERSION(1, 24, 0)
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT) {
 		for (guint i = 0; i < n_ports; i++) {
 			if (ports[i].type == MM_MODEM_PORT_TYPE_AT) {
@@ -477,18 +495,23 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 		} else if (!g_file_get_contents(path, &value_str, NULL, &error_local)) {
 			g_warning("failed to set vendor ID: %s", error_local->message);
 		} else {
-			guint64 value_int;
+			guint64 value_int = 0;
+			g_autoptr(GError) error_local2 = NULL;
 
 			/* note: the string value may be prefixed with '0x' (e.g. when reading
 			 * the PCI 'vendor' attribute, or not prefixed with anything, as in the
 			 * USB 'idVendor' attribute. */
-			value_int = g_ascii_strtoull(value_str, NULL, 16);
-			if (value_int > G_MAXUINT16) {
-				g_warning("failed to set vendor ID: invalid value: %s", value_str);
+			if (!fu_strtoull(value_str,
+					 &value_int,
+					 0,
+					 G_MAXUINT16,
+					 FU_INTEGER_BASE_16,
+					 &error_local2)) {
+				g_warning("failed to set vendor ID %s: %s",
+					  value_str,
+					  error_local2->message);
 			} else {
-				g_autofree gchar *vendor_id =
-				    g_strdup_printf("%s:0x%04X", device_bus, (guint)value_int);
-				fu_device_add_vendor_id(device, vendor_id);
+				fu_device_build_vendor_id_u16(device, device_bus, value_int);
 			}
 		}
 	}
@@ -515,6 +538,17 @@ fu_mm_device_probe_udev(FuDevice *device, GError **error)
 				    "failed to find AT port");
 		return FALSE;
 	}
+
+#if MM_CHECK_VERSION(1, 24, 0)
+	if ((self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL) &&
+	    (self->port_at == NULL)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "failed to find AT port");
+		return FALSE;
+	}
+#endif // MM_CHECK_VERSION(1, 24, 0)
 
 	/* a qmi port is required for qmi-pdc */
 	if ((self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC) &&
@@ -552,7 +586,10 @@ fu_mm_device_io_open_qcdm(FuMmDevice *self, GError **error)
 	}
 
 	/* open device */
-	self->io_channel = fu_io_channel_new_file(self->port_qcdm, error);
+	self->io_channel =
+	    fu_io_channel_new_file(self->port_qcdm,
+				   FU_IO_CHANNEL_OPEN_FLAG_READ | FU_IO_CHANNEL_OPEN_FLAG_WRITE,
+				   error);
 	if (self->io_channel == NULL)
 		return FALSE;
 
@@ -791,7 +828,10 @@ fu_mm_device_io_open(FuMmDevice *self, GError **error)
 	}
 
 	/* open device */
-	self->io_channel = fu_io_channel_new_file(self->port_at, error);
+	self->io_channel =
+	    fu_io_channel_new_file(self->port_at,
+				   FU_IO_CHANNEL_OPEN_FLAG_READ | FU_IO_CHANNEL_OPEN_FLAG_WRITE,
+				   error);
 	if (self->io_channel == NULL)
 		return FALSE;
 
@@ -809,6 +849,60 @@ fu_mm_device_io_close(FuMmDevice *self, GError **error)
 	}
 	return TRUE;
 }
+
+#if MM_CHECK_VERSION(1, 24, 0)
+static gboolean
+fu_mm_device_cinterion_fdl_open(FuMmDevice *self, GError **error)
+{
+	self->cinterion_fdl_updater = fu_cinterion_fdl_updater_new(self->port_at);
+	return fu_cinterion_fdl_updater_open(self->cinterion_fdl_updater, error);
+}
+
+static gboolean
+fu_mm_device_cinterion_fdl_close(FuMmDevice *self, GError **error)
+{
+	g_autoptr(FuCinterionFdlUpdater) updater = NULL;
+
+	updater = g_steal_pointer(&self->cinterion_fdl_updater);
+	return fu_cinterion_fdl_updater_close(updater, error);
+}
+
+static gboolean
+fu_mm_device_detach_fdl(FuDevice *device, FuProgress *progress, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	locker = fu_device_locker_new_full(device,
+					   (FuDeviceLockerFunc)fu_mm_device_io_open,
+					   (FuDeviceLockerFunc)fu_mm_device_io_close,
+					   error);
+
+	if (locker == NULL)
+		return FALSE;
+	if (!fu_mm_device_at_cmd(self, "AT", TRUE, error))
+		return FALSE;
+	if (!fu_mm_device_at_cmd(self, "AT^SFDL", TRUE, error)) {
+		g_prefix_error(error, "enabling firmware download mode not supported: ");
+		return FALSE;
+	}
+
+	if (!fu_device_locker_close(locker, error))
+		return FALSE;
+
+	/* wait 15 s before reopening port */
+	fu_device_sleep(device, 15000);
+
+	locker = fu_device_locker_new_full(self,
+					   (FuDeviceLockerFunc)fu_mm_device_cinterion_fdl_open,
+					   (FuDeviceLockerFunc)fu_mm_device_cinterion_fdl_close,
+					   error);
+	if (locker == NULL)
+		return FALSE;
+
+	return fu_cinterion_fdl_updater_wait_ready(self->cinterion_fdl_updater, device, error);
+}
+#endif // MM_CHECK_VERSION(1, 24, 0)
 
 static gboolean
 fu_mm_device_detach_fastboot(FuDevice *device, GError **error)
@@ -890,6 +984,10 @@ fu_mm_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 		/* fastboot */
 		if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT)
 			return fu_mm_device_detach_fastboot(device, error);
+#if MM_CHECK_VERSION(1, 24, 0)
+		if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL)
+			return fu_mm_device_detach_fdl(device, progress, error);
+#endif // MM_CHECK_VERSION(1, 24, 0)
 		/* otherwise, assume we don't need any detach */
 		return TRUE;
 	}
@@ -907,7 +1005,7 @@ typedef struct {
 } FuMmFileInfo;
 
 static void
-fu_mm_file_info_free(FuMmFileInfo *file_info)
+fu_mm_device_file_info_free(FuMmFileInfo *file_info)
 {
 	g_clear_pointer(&file_info->digest, g_array_unref);
 	g_free(file_info->filename);
@@ -922,7 +1020,7 @@ typedef struct {
 } FuMmArchiveIterateCtx;
 
 static gboolean
-fu_mm_should_be_active(const gchar *version, const gchar *filename)
+fu_mm_device_should_be_active(const gchar *version, const gchar *filename)
 {
 	g_auto(GStrv) split = NULL;
 	g_autofree gchar *carrier_id = NULL;
@@ -949,11 +1047,11 @@ fu_mm_should_be_active(const gchar *version, const gchar *filename)
 }
 
 static gboolean
-fu_mm_qmi_pdc_archive_iterate_mcfg(FuArchive *archive,
-				   const gchar *filename,
-				   GBytes *bytes,
-				   gpointer user_data,
-				   GError **error)
+fu_mm_device_qmi_pdc_archive_iterate_mcfg(FuArchive *archive,
+					  const gchar *filename,
+					  GBytes *bytes,
+					  gpointer user_data,
+					  GError **error)
 {
 	FuMmArchiveIterateCtx *ctx = user_data;
 	FuMmFileInfo *file_info;
@@ -966,7 +1064,7 @@ fu_mm_qmi_pdc_archive_iterate_mcfg(FuArchive *archive,
 	file_info->filename = g_strdup(filename);
 	file_info->bytes = g_bytes_ref(bytes);
 	file_info->active =
-	    fu_mm_should_be_active(fu_device_get_version(FU_DEVICE(ctx->device)), filename);
+	    fu_mm_device_should_be_active(fu_device_get_version(FU_DEVICE(ctx->device)), filename);
 	g_ptr_array_add(ctx->file_infos, file_info);
 	return TRUE;
 }
@@ -1006,7 +1104,7 @@ fu_mm_device_write_firmware_qmi_pdc(FuDevice *device,
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GPtrArray) file_infos =
-	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_mm_file_info_free);
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_mm_device_file_info_free);
 	gint active_i = -1;
 	FuMmArchiveIterateCtx archive_context = {
 	    .device = FU_MM_DEVICE(device),
@@ -1029,7 +1127,7 @@ fu_mm_device_write_firmware_qmi_pdc(FuDevice *device,
 
 	/* process the list of MCFG files to write */
 	if (!fu_archive_iterate(archive,
-				fu_mm_qmi_pdc_archive_iterate_mcfg,
+				fu_mm_device_qmi_pdc_archive_iterate_mcfg,
 				&archive_context,
 				error))
 		return FALSE;
@@ -1157,15 +1255,10 @@ fu_mm_device_get_firmware_version_mbim(FuDevice *device, GError **error)
 static gboolean
 fu_mm_device_writeln(const gchar *fn, const gchar *buf, GError **error)
 {
-	int fd;
 	g_autoptr(FuIOChannel) io = NULL;
-
-	fd = open(fn, O_WRONLY);
-	if (fd < 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "could not open %s", fn);
+	io = fu_io_channel_new_file(fn, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
+	if (io == NULL)
 		return FALSE;
-	}
-	io = fu_io_channel_unix_new(fd);
 	return fu_io_channel_write_raw(io,
 				       (const guint8 *)buf,
 				       strlen(buf),
@@ -1277,7 +1370,7 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 }
 
 static gboolean
-fu_mm_find_device_file(FuDevice *device, gpointer userdata, GError **error)
+fu_mm_device_find_device_file(FuDevice *device, gpointer userdata, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
 	const gchar *subsystem = (const gchar *)userdata;
@@ -1296,7 +1389,7 @@ fu_mm_device_find_edl_port(FuDevice *device, const gchar *subsystem, GError **er
 	g_clear_pointer(&self->port_edl, g_free);
 
 	return fu_device_retry_full(device,
-				    fu_mm_find_device_file,
+				    fu_mm_device_find_device_file,
 				    30,
 				    250,
 				    (gpointer)subsystem,
@@ -1432,7 +1525,7 @@ fu_mm_device_sahara_close(FuMmDevice *self, GError **error)
 #endif // MM_CHECK_VERSION(1, 19, 1)
 
 static gboolean
-fu_mm_setup_firmware_dir(FuMmDevice *self, GError **error)
+fu_mm_device_setup_firmware_dir(FuMmDevice *self, GError **error)
 {
 	g_autofree gchar *cachedir = NULL;
 	g_autofree gchar *mm_fw_dir = NULL;
@@ -1459,7 +1552,7 @@ fu_mm_setup_firmware_dir(FuMmDevice *self, GError **error)
 }
 
 static gboolean
-fu_mm_copy_firehose_prog(FuMmDevice *self, GBytes *prog, GError **error)
+fu_mm_device_copy_firehose_prog(FuMmDevice *self, GBytes *prog, GError **error)
 {
 	g_autofree gchar *qcom_fw_dir = NULL;
 	g_autofree gchar *firehose_file_path = NULL;
@@ -1485,15 +1578,15 @@ fu_mm_copy_firehose_prog(FuMmDevice *self, GBytes *prog, GError **error)
 }
 
 static gboolean
-fu_mm_prepare_firmware_search_path(FuMmDevice *self, GError **error)
+fu_mm_device_prepare_firmware_search_path(FuMmDevice *self, GError **error)
 {
 	self->restore_firmware_path = fu_kernel_get_firmware_search_path(NULL);
 
-	return fu_mm_setup_firmware_dir(self, error);
+	return fu_mm_device_setup_firmware_dir(self, error);
 }
 
 static gboolean
-fu_mm_restore_firmware_search_path(FuMmDevice *self, GError **error)
+fu_mm_device_restore_firmware_search_path(FuMmDevice *self, GError **error)
 {
 	if (self->restore_firmware_path != NULL && strlen(self->restore_firmware_path) > 0)
 		return fu_kernel_set_firmware_search_path(self->restore_firmware_path, error);
@@ -1532,11 +1625,11 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 	firehose_rawprogram = fu_archive_lookup_by_fn(archive, "firehose-rawprogram.xml", error);
 	if (firehose_rawprogram == NULL)
 		return FALSE;
-	if (!fu_firehose_validate_rawprogram(firehose_rawprogram,
-					     archive,
-					     &firehose_rawprogram_silo,
-					     &firehose_rawprogram_actions,
-					     error)) {
+	if (!fu_firehose_updater_validate_rawprogram(firehose_rawprogram,
+						     archive,
+						     &firehose_rawprogram_silo,
+						     &firehose_rawprogram_actions,
+						     error)) {
 		g_prefix_error(error, "Invalid firehose rawprogram manifest: ");
 		return FALSE;
 	}
@@ -1558,15 +1651,15 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 		/* modify firmware search path and restore it before function returns */
 		locker = fu_device_locker_new_full(
 		    self,
-		    (FuDeviceLockerFunc)fu_mm_prepare_firmware_search_path,
-		    (FuDeviceLockerFunc)fu_mm_restore_firmware_search_path,
+		    (FuDeviceLockerFunc)fu_mm_device_prepare_firmware_search_path,
+		    (FuDeviceLockerFunc)fu_mm_device_restore_firmware_search_path,
 		    error);
 		if (locker == NULL)
 			return FALSE;
 
 		/* firehose modems that use mhi_pci drivers require firehose binary
 		 * to be present in the firmware-loader search path. */
-		if (!fu_mm_copy_firehose_prog(self, firehose_prog, error))
+		if (!fu_mm_device_copy_firehose_prog(self, firehose_prog, error))
 			return FALSE;
 		/* trigger emergency download mode, up to 30s retrying until the QCDM
 		 * port goes away; this takes us to the EDL (embedded downloader) execution
@@ -1623,6 +1716,30 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 	return TRUE;
 }
 
+#if MM_CHECK_VERSION(1, 24, 0)
+static gboolean
+fu_mm_device_write_firmware_fdl(FuDevice *device, GBytes *fw, FuProgress *progress, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	locker = fu_device_locker_new_full(device,
+					   (FuDeviceLockerFunc)fu_mm_device_cinterion_fdl_open,
+					   (FuDeviceLockerFunc)fu_mm_device_cinterion_fdl_close,
+					   error);
+	if (locker == NULL)
+		return FALSE;
+
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
+
+	return fu_cinterion_fdl_updater_write(self->cinterion_fdl_updater,
+					      progress,
+					      device,
+					      fw,
+					      error);
+}
+#endif // MM_CHECK_VERSION(1, 24, 0)
+
 static gboolean
 fu_mm_device_write_firmware(FuDevice *device,
 			    FuFirmware *firmware,
@@ -1658,6 +1775,11 @@ fu_mm_device_write_firmware(FuDevice *device,
 	/* firehose operation */
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE)
 		return fu_mm_device_write_firmware_firehose(device, fw, progress, error);
+
+#if MM_CHECK_VERSION(1, 24, 0)
+	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL)
+		return fu_mm_device_write_firmware_fdl(device, fw, progress, error);
+#endif // MM_CHECK_VERSION(1, 24, 0)
 
 	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "unsupported update method");
 	return FALSE;
@@ -1770,6 +1892,12 @@ fu_mm_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 		self->attach_idle = g_idle_add((GSourceFunc)fu_mm_device_attach_qmi_pdc_idle, self);
 	else
 		self->attach_idle = g_idle_add((GSourceFunc)fu_mm_device_attach_noop_idle, self);
+
+#if MM_CHECK_VERSION(1, 24, 0)
+	/* devices with fdl-based update won't replug */
+	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL)
+		return TRUE;
+#endif // MM_CHECK_VERSION(1, 24, 0)
 
 	/* wait for re-probing after uninhibiting */
 	fu_device_set_remove_delay(device, FU_MM_DEVICE_REMOVE_DELAY_REPROBE);
@@ -1885,8 +2013,8 @@ fu_mm_device_setup_secboot_status(FuDevice *device)
 	    fu_device_has_vendor_id(device, "PCI:0x1EAC"))
 		fu_mm_device_setup_secboot_status_quectel(self);
 	else if (fu_device_has_vendor_id(device, "USB:0x2CB7")) {
-		fu_device_add_internal_flag(FU_DEVICE(self),
-					    FU_DEVICE_INTERNAL_FLAG_SAVE_INTO_BACKUP_REMOTE);
+		fu_device_add_private_flag(FU_DEVICE(self),
+					   FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE);
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	}
 }
@@ -1938,24 +2066,20 @@ static void
 fu_mm_device_init(FuMmDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ADD_INSTANCE_ID_REV);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary(FU_DEVICE(self), "Mobile broadband device");
 	fu_device_add_icon(FU_DEVICE(self), "modem");
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE,
-					"detach-at-fastboot-has-no-response");
+					FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE);
 	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT,
-					"uninhibit-modemmanager-after-fastboot-reboot");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_MM_DEVICE_FLAG_USE_BRANCH,
-					"use-branch");
+					FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_USE_BRANCH);
 }
 
 static void
@@ -2033,7 +2157,7 @@ fu_mm_device_new(FuContext *ctx, MMManager *manager, MMObject *omodem)
 }
 
 FuMmDevice *
-fu_mm_shadow_device_new(FuMmDevice *device)
+fu_mm_device_shadow_new(FuMmDevice *device)
 {
 	FuMmDevice *shadow_device = NULL;
 	shadow_device = g_object_new(FU_TYPE_MM_DEVICE,

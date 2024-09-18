@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # pylint: disable=invalid-name,missing-docstring
 #
 # Copyright 2021 Richard Hughes <richard@hughsie.com>
@@ -142,7 +142,7 @@ class Builder:
         """map changes"""
 
         dst = os.path.basename(src).replace(".in", "")
-        with open(os.path.join(self.srcdir, src), "r") as f:
+        with open(os.path.join(self.srcdir, src)) as f:
             blob = f.read()
             for key in replacements:
                 blob = blob.replace(key, replacements[key])
@@ -252,7 +252,7 @@ class Builder:
     def grep_meson(self, src: str, token: str = "fuzzing") -> List[str]:
         """find source files tagged with a specific comment"""
         srcs = []
-        with open(os.path.join(self.srcdir, src, "meson.build"), "r") as f:
+        with open(os.path.join(self.srcdir, src, "meson.build")) as f:
             for line in f.read().split("\n"):
                 if line.find(token) == -1:
                     continue
@@ -361,6 +361,7 @@ def _build(bld: Builder) -> None:
         "config.h",
         {
             "FWUPD_DATADIR": "/tmp",
+            "FWUPD_DATADIR_VENDOR_IDS": "/tmp",
             "FWUPD_LOCALSTATEDIR": "/tmp",
             "FWUPD_LIBDIR_PKG": "/tmp",
             "FWUPD_SYSCONFDIR": "/tmp",
@@ -398,6 +399,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("cab"),
         Fuzzer("dfuse"),
         Fuzzer("edid", pattern="edid"),
+        Fuzzer("elf"),
         Fuzzer("fdt"),
         Fuzzer("fit"),
         Fuzzer("fmap"),

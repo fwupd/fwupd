@@ -1,5 +1,24 @@
 <?xml version="1.0"?>
 <dependencies>
+  <dependency id="hwdata">
+    <distro id="arch">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+      <package variant="mingw64" />
+    </distro>
+  </dependency>
   <dependency id="pesign">
     <distro id="fedora">
       <package variant="x86_64" />
@@ -16,6 +35,9 @@
     </distro>
   </dependency>
   <dependency id="bash-completion">
+    <distro id="arch">
+      <package variant="x86_64" />
+    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
@@ -398,6 +420,11 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
+  <dependency id="fwupd-efi">
+    <distro id="arch">
+      <package variant="x86_64">fwupd-efi</package>
+    </distro>
+  </dependency>
   <dependency id="libjaylink-dev">
     <distro id="debian">
       <control>
@@ -415,6 +442,9 @@
     </distro>
   </dependency>
   <dependency id="libflashrom-dev">
+    <distro id="arch">
+      <package variant="x86_64">flashrom</package>
+    </distro>
     <distro id="fedora">
       <package variant="x86_64">flashrom-devel</package>
       <package variant="aarch64">flashrom-devel</package>
@@ -544,6 +574,9 @@
       <!-- need native too until meson fixes https://github.com/mesonbuild/meson/issues/10376 -->
       <package variant="mingw64">glib2-devel</package>
       <package variant="mingw64">mingw64-glib2</package>
+    </distro>
+    <distro id="arch">
+      <package variant="x86_64">gsettings-desktop-schemas</package>
     </distro>
     <distro id="void">
       <package variant="x86_64">glib-devel</package>
@@ -713,6 +746,9 @@
     </distro>
   </dependency>
   <dependency id="libjcat-dev">
+    <distro id="arch">
+      <package variant="x86_64">libjcat</package>
+    </distro>
     <distro id="fedora">
       <package variant="x86_64">libjcat-devel</package>
       <package variant="aarch64">libjcat-devel</package>
@@ -839,36 +875,38 @@
       <package variant="x86_64" />
       <package variant="s390x">libgudev-1.0-dev:s390x</package>
       <package variant="i386" />
+      <package variant="aarch64" />
     </distro>
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+      <package variant="aarch64" />
     </distro>
   </dependency>
-  <dependency id="libgusb-dev">
+  <dependency id="libusb-1.0-0-dev">
     <distro id="arch">
-      <package variant="x86_64">libgusb</package>
+      <package variant="x86_64">libusb</package>
     </distro>
     <distro id="centos">
-      <package variant="x86_64">libgusb-devel</package>
+      <package variant="x86_64">libusb1-devel</package>
     </distro>
     <distro id="fedora">
-      <package variant="x86_64">libgusb-devel</package>
-      <package variant="aarch64">libgusb-devel</package>
-      <package variant="mingw64">mingw64-libgusb</package>
+      <package variant="x86_64">libusb1-devel</package>
+      <package variant="aarch64">libusb1-devel</package>
+      <package variant="mingw64">mingw64-libusbx</package>
     </distro>
     <distro id="void">
-      <package variant="x86_64">libgusb-devel</package>
+      <package variant="x86_64">libusb-devel</package>
     </distro>
     <distro id="darwin">
-      <package>libgusb</package>
+      <package>libusb</package>
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 0.3.5)</version>
+        <version>(>= 1.0.9)</version>
       </control>
       <package variant="x86_64" />
-      <package variant="s390x">libgusb-dev:s390x</package>
+      <package variant="s390x">libusb-1.0-0-dev:s390x</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -1176,6 +1214,9 @@
     </distro>
   </dependency>
   <dependency id="libpolkit-gobject-1-dev">
+    <distro id="arch">
+      <package variant="x86_64">polkit</package>
+    </distro>
     <distro id="centos">
       <package variant="x86_64">polkit-devel</package>
     </distro>
@@ -1216,6 +1257,7 @@
     </distro>
     <distro id="fedora">
       <package variant="x86_64" />
+      <package variant="aarch64" />
     </distro>
     <distro id="darwin">
       <package>virtualenv</package>

@@ -1,10 +1,3 @@
 # Parade PS175
 [I2C\NAME_1AF80175:00]
 Plugin = parade_lspcon
-Name = PS175
-
-# "Puff" Chromeboxes
-[I2C\NAME_1AF80175:00&FAMILY_Google_Hatch]
-ParadeLspconAuxDeviceName = DPDDC-B
-[I2C\NAME_1AF80175:00&FAMILY_Google_Puff]
-ParadeLspconAuxDeviceName = AUX B/DDI B/PHY B

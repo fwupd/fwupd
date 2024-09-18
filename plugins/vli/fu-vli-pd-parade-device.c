@@ -53,19 +53,19 @@ fu_vli_pd_parade_device_i2c_read(FuVliPdParadeDevice *self,
 
 	/* VL103 FW only Use bits[7:1], so divide by 2 */
 	value = ((guint16)reg_offset << 8) | (page2 >> 1);
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   FU_VLI_PD_PARADE_I2C_CMD_READ,
-					   value,
-					   0x0,
-					   buf,
-					   bufsz,
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    FU_VLI_PD_PARADE_I2C_CMD_READ,
+					    value,
+					    0x0,
+					    buf,
+					    bufsz,
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to read 0x%x:0x%x: ", page2, reg_offset);
 		return FALSE;
 	}
@@ -86,19 +86,19 @@ fu_vli_pd_parade_device_i2c_write(FuVliPdParadeDevice *self,
 	/* VL103 FW only Use bits[7:1], so divide by 2 */
 	value = ((guint16)reg_offset << 8) | (page2 >> 1);
 	index = (guint16)val << 8;
-	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   FU_VLI_PD_PARADE_I2C_CMD_WRITE,
-					   value,
-					   index,
-					   buf,
-					   0x0,
-					   NULL,
-					   FU_VLI_DEVICE_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_HOST_TO_DEVICE,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    FU_VLI_PD_PARADE_I2C_CMD_WRITE,
+					    value,
+					    index,
+					    buf,
+					    0x0,
+					    NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to write 0x%x:0x%x: ", page2, reg_offset);
 		return FALSE;
 	}

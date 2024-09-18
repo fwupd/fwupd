@@ -282,10 +282,6 @@ msgid "Alternate branch"
 msgstr "ალტერნატიული ბრენჩი"
 
 #. TRANSLATORS: command line option
-msgid "Apply firmware updates"
-msgstr "მიკროკოდის განახლებების გადატარება"
-
-#. TRANSLATORS: command line option
 msgid "Apply update files"
 msgstr "განახლების ფალების გადატარება"
 
@@ -296,9 +292,6 @@ msgstr "განახლების გადატარება…"
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
 msgstr "ავთენტიკაცია…"
-
-msgid "BYTES"
-msgstr "BYTES"
 
 #. TRANSLATORS: refers to the battery inside the peripheral device
 msgid "Battery"
@@ -312,7 +305,7 @@ msgstr "დაბლოკილი ვერსია"
 msgid "Bootloader Version"
 msgstr "ჩამტვირთავი კოდის ვერსია"
 
-#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Branch"
 msgstr "ბრენჩი"
 
@@ -346,10 +339,6 @@ msgstr "აირჩიეთ მოწყობილობა"
 #. TRANSLATORS: get interactive prompt
 msgid "Choose firmware"
 msgstr "აირჩიეთ მიკროკოდი"
-
-#. TRANSLATORS: get interactive prompt
-msgid "Choose the ESP:"
-msgstr "აირჩეთ ESP:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose volume"
@@ -429,10 +418,6 @@ msgstr "მოწყობილობის ელემენტის სი�
 msgid "Device can recover flash failures"
 msgstr "მოწყობილობას შეუძლია ფლეშის ავარიის გადატანა"
 
-#. TRANSLATORS: lid means "laptop top cover"
-msgid "Device cannot be used while the lid is closed"
-msgstr "მოწყობილობას ვერ გამოიყენებთ, თუ ის დახურულია"
-
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
 msgstr "მოწყობილობა შეიცვალა:"
@@ -471,10 +456,6 @@ msgstr "მოწყობილობას ესაჭიროება 220V
 msgid "Device stages updates"
 msgstr "მოწყობილობის დონის განახლება"
 
-#. TRANSLATORS: command line option
-msgid "Device update method"
-msgstr "მოწყობილობის განახლების მეთოდი"
-
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
 msgstr "მოწყობილობის განახლებას აქტივაცია ესაჭიროება"
@@ -487,10 +468,6 @@ msgstr "განახლების დასრულების შემ�
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
 msgstr "გამორთულია"
-
-#. TRANSLATORS: command line option
-msgid "Display version"
-msgstr "ვერსის ჩვენება"
 
 #. TRANSLATORS: the OS the release was tested on
 msgid "Distribution"
@@ -513,10 +490,6 @@ msgstr "გადმოწერა…"
 msgid "Duration"
 msgstr "ხანგრძლოვობა"
 
-#. TRANSLATORS: ESP is EFI System Partition
-msgid "ESP specified was not valid"
-msgstr "მითითებული ESP არასწორია"
-
 #. TRANSLATORS: this device is not actually real
 msgid "Emulated"
 msgstr "ემულირებული"
@@ -528,11 +501,6 @@ msgstr "ემულირებული ჰოსტი"
 msgid "Enable"
 msgstr "ჩართვა"
 
-#. TRANSLATORS: command line option
-msgid "Enable firmware update support on supported systems"
-msgstr "მხარდაჭერილ სისტემებზე მიკროკოდის განახლების ჩართვა"
-
-#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
@@ -677,11 +645,6 @@ msgstr[0] "GUID"
 msgstr[1] "GUIDs"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgctxt "A single GUID"
-msgid "GUID"
-msgstr "GUID"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "command-argument"
 msgid "GUID"
 msgstr "GUID"
@@ -806,20 +769,6 @@ msgstr "Intel BootGuard-ის შეცდომების პოლიტი
 msgid "Intel BootGuard verified boot"
 msgstr "Intel BootGuard-ით შემოწმებული ჩატვირთვა"
 
-#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
-msgid "Intel CET"
-msgstr "Intel CET"
-
-#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
-#. * active means being used by the OS
-msgid "Intel CET Active"
-msgstr "Intel CET ჩართულია"
-
-#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
-#. * enabled means supported by the processor
-msgid "Intel CET Enabled"
-msgstr "Intel CET ჩართულია"
-
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Manufacturing Mode"
 msgstr "Intel Management Engine -ის მწარმოებლის რეჟიმი"
@@ -835,10 +784,6 @@ msgstr "Intel Management Engine -ის გადაფარვა"
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Version"
 msgstr "Intel Management Engine -ის ვერსია"
-
-#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
-msgid "Intel SMAP"
-msgstr "Intel SMAP"
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
@@ -909,10 +854,6 @@ msgstr "Linux-ის ბირთვი დაბლოკილია"
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
 msgstr "Linux Swap"
-
-#. TRANSLATORS: command line option
-msgid "List supported firmware updates"
-msgstr "მიკროკოდის მხარდაჭერილი განახლებების სია"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
@@ -998,10 +939,6 @@ msgstr "ქმედება მითითებული არაა!"
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
 msgstr "მიკროკოდის ID-ები ვერ ვიპოვე"
-
-#. TRANSLATORS: nothing found
-msgid "No plugins found"
-msgstr "დამატებები ნაპოვნი არაა"
 
 #. TRANSLATORS: this is an error string
 msgid "No updatable devices"
@@ -1119,7 +1056,7 @@ msgstr "წაკითხვა…"
 msgid "Rebooting…"
 msgstr "გადატვირთვა…"
 
-#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
 msgstr "რელიზის ბრენჩი"
 
@@ -1139,10 +1076,6 @@ msgstr "დაშორებულის ID"
 #. TRANSLATORS: URI to send success/failure reports
 msgid "Report URI"
 msgstr "ანგარიშის URI"
-
-#. TRANSLATORS: we asked the user to choose an option and they declined
-msgid "Request canceled"
-msgstr "მოთხოვნა გაუქმებულია"
 
 #. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
 msgid "Requires a bootloader"
@@ -1331,6 +1264,7 @@ msgstr[1] "ჭდეები"
 msgid "Tagged for emulation"
 msgstr "მონიშნული ემულაციისთვის"
 
+#. show the user the entire data blob
 msgid "Target"
 msgstr "სამიზნე წერტილი"
 
@@ -1349,10 +1283,6 @@ msgstr "სანდო დატვირთვა"
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "ტიპით"
-
-#. TRANSLATORS: program name
-msgid "UEFI Firmware Utility"
-msgstr "UEFI მიკროკოდის ხელსაწყო"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
@@ -1392,10 +1322,6 @@ msgstr "უცნობი მოწყობილობა"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unlocked"
 msgstr "განბლოკილი"
-
-#. TRANSLATORS: command line option
-msgid "Unset the debugging flag during update"
-msgstr "განახლებისას გამართვის ალმის მოხსნა"
 
 #. TRANSLATORS: Device is updatable in this or any other mode
 msgid "Updatable"
@@ -1446,14 +1372,11 @@ msgstr "მომხმარებელი გაფრთხილებუ�
 msgid "Username"
 msgstr "მომხმარებელი"
 
-msgid "VID:PID"
-msgstr "VID:PID"
-
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
 msgstr "სწორი"
 
-#. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
+#. TRANSLATORS: one line variant of release (e.g. 'China')
 msgid "Variant"
 msgstr "ვარიანტი"
 

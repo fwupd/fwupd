@@ -8,6 +8,8 @@
 
 #include <fwupd.h>
 
+#include "fu-io-channel-struct.h"
+
 #define FU_TYPE_IO_CHANNEL (fu_io_channel_get_type())
 
 G_DECLARE_FINAL_TYPE(FuIOChannel, fu_io_channel, FU, IO_CHANNEL, GObject)
@@ -33,8 +35,9 @@ typedef enum {
 FuIOChannel *
 fu_io_channel_unix_new(gint fd);
 FuIOChannel *
-fu_io_channel_new_file(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT
-    G_GNUC_NON_NULL(1);
+fu_io_channel_new_file(const gchar *filename,
+		       FuIoChannelOpenFlag open_flags,
+		       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 
 gint
 fu_io_channel_unix_get_fd(FuIOChannel *self) G_GNUC_NON_NULL(1);

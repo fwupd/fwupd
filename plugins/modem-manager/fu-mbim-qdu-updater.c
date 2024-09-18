@@ -40,7 +40,13 @@ fu_mbim_qdu_updater_mbim_device_open_ready(GObject *mbim_device,
 {
 	OpenContext *ctx = (OpenContext *)user_data;
 
-	g_assert(ctx->open_attempts > 0);
+	if (ctx->open_attempts == 0) {
+		g_set_error_literal(&ctx->error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "no open attempts");
+		return;
+	}
 
 	if (!mbim_device_open_full_finish(MBIM_DEVICE(mbim_device), res, &ctx->error)) {
 		ctx->open_attempts--;

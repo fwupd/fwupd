@@ -31,7 +31,7 @@
 static pid_t agent_pid = 0;
 
 static int
-fork_agent(pid_t *pid, const char *path, ...)
+fu_polkit_agent_fork_agent(pid_t *pid, const char *path, ...)
 {
 	char **l;
 	gboolean stderr_is_tty;
@@ -43,7 +43,7 @@ fork_agent(pid_t *pid, const char *path, ...)
 	va_list ap;
 
 	g_return_val_if_fail(pid != 0, 0);
-	g_assert(path);
+	g_return_val_if_fail(path != NULL, 0);
 
 	parent_pid = getpid();
 
@@ -113,9 +113,9 @@ fork_agent(pid_t *pid, const char *path, ...)
 }
 
 static int
-close_nointr(int fd)
+fu_polkit_agent_close_nointr(int fd)
 {
-	g_assert(fd >= 0);
+	g_return_val_if_fail(fd >= 0, -1);
 	for (;;) {
 		int r;
 		r = close(fd);
@@ -127,16 +127,19 @@ close_nointr(int fd)
 }
 
 static void
-close_nointr_nofail(int fd)
+fu_polkit_agent_close_nointr_nofail(int fd)
 {
 	int saved_errno = errno;
 	/* cannot fail, and guarantees errno is unchanged */
-	g_assert(close_nointr(fd) == 0);
+	if (fu_polkit_agent_close_nointr(fd) != 0) {
+		errno = EBADFD;
+		return;
+	}
 	errno = saved_errno;
 }
 
 static int
-fd_wait_for_event(int fd, int event, uint64_t t)
+fu_polkit_agent_fd_wait_for_event(int fd, int event, uint64_t t)
 {
 	struct pollfd pollfd = {0};
 	int r;
@@ -153,7 +156,7 @@ fd_wait_for_event(int fd, int event, uint64_t t)
 }
 
 static int
-wait_for_terminate(pid_t pid)
+fu_polkit_agent_wait_for_terminate(pid_t pid)
 {
 	g_return_val_if_fail(pid >= 1, 0);
 
@@ -198,31 +201,31 @@ fu_polkit_agent_open(GError **error)
 
 	/* fork pkttyagent */
 	notify_fd = g_strdup_printf("%i", pipe_fd[1]);
-	r = fork_agent(&agent_pid,
-		       pkttyagent_fn,
-		       pkttyagent_fn,
-		       "--notify-fd",
-		       notify_fd,
-		       "--fallback",
-		       NULL);
+	r = fu_polkit_agent_fork_agent(&agent_pid,
+				       pkttyagent_fn,
+				       pkttyagent_fn,
+				       "--notify-fd",
+				       notify_fd,
+				       "--fallback",
+				       NULL);
 	if (r < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "failed to fork TTY ask password agent: %s",
 			    g_strerror(-r));
-		close_nointr_nofail(pipe_fd[1]);
-		close_nointr_nofail(pipe_fd[0]);
+		fu_polkit_agent_close_nointr_nofail(pipe_fd[1]);
+		fu_polkit_agent_close_nointr_nofail(pipe_fd[0]);
 		return FALSE;
 	}
 
 	/* close the writing side, because that is the one for the agent */
-	close_nointr_nofail(pipe_fd[1]);
+	fu_polkit_agent_close_nointr_nofail(pipe_fd[1]);
 
 	/* wait until the agent closes the fd */
-	fd_wait_for_event(pipe_fd[0], POLLHUP, (uint64_t)-1);
+	fu_polkit_agent_fd_wait_for_event(pipe_fd[0], POLLHUP, (uint64_t)-1);
 
-	close_nointr_nofail(pipe_fd[0]);
+	fu_polkit_agent_close_nointr_nofail(pipe_fd[0]);
 	return TRUE;
 }
 
@@ -235,6 +238,6 @@ fu_polkit_agent_close(void)
 	/* inform agent that we are done */
 	kill(agent_pid, SIGTERM);
 	kill(agent_pid, SIGCONT);
-	wait_for_terminate(agent_pid);
+	fu_polkit_agent_wait_for_terminate(agent_pid);
 	agent_pid = 0;
 }

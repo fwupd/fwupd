@@ -44,9 +44,9 @@ fu_history_finalize(GObject *object);
 
 struct _FuHistory {
 	GObject parent_instance;
+	FuContext *ctx;
 #ifdef HAVE_SQLITE
 	sqlite3 *db;
-	GRWLock db_mutex;
 #endif
 };
 
@@ -85,10 +85,10 @@ fu_history_device_from_stmt(sqlite3_stmt *stmt)
 		fu_device_set_plugin(device, tmp);
 
 	/* device_created */
-	fu_device_set_created(device, sqlite3_column_int64(stmt, 3));
+	fu_device_set_created_usec(device, sqlite3_column_int64(stmt, 3) * G_USEC_PER_SEC);
 
 	/* device_modified */
-	fu_device_set_modified(device, sqlite3_column_int64(stmt, 4));
+	fu_device_set_modified_usec(device, sqlite3_column_int64(stmt, 4) * G_USEC_PER_SEC);
 
 	/* display_name */
 	tmp = (const gchar *)sqlite3_column_text(stmt, 5);
@@ -210,8 +210,8 @@ fu_history_create_database(FuHistory *self, GError **error)
 			  "filename TEXT,"
 			  "display_name TEXT,"
 			  "plugin TEXT,"
-			  "device_created INTEGER DEFAULT 0,"
-			  "device_modified INTEGER DEFAULT 0,"
+			  "device_created INTEGER DEFAULT 0,"  /* seconds */
+			  "device_modified INTEGER DEFAULT 0," /* seconds */
 			  "checksum TEXT DEFAULT NULL,"
 			  "flags INTEGER DEFAULT 0,"
 			  "metadata TEXT DEFAULT NULL,"
@@ -583,7 +583,6 @@ fu_history_load(FuHistory *self, GError **error)
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GFile) file = NULL;
-	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new(&self->db_mutex);
 
 	/* already done */
 	if (self->db != NULL)
@@ -591,7 +590,6 @@ fu_history_load(FuHistory *self, GError **error)
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
 	g_return_val_if_fail(self->db == NULL, FALSE);
-	g_return_val_if_fail(locker != NULL, FALSE);
 
 	/* create directory */
 	dirname = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
@@ -649,7 +647,7 @@ fu_history_load(FuHistory *self, GError **error)
 }
 
 static gchar *
-_convert_hash_to_string(GHashTable *hash)
+fu_history_convert_hash_to_string(GHashTable *hash)
 {
 	GString *str = g_string_new(NULL);
 	g_autoptr(GList) keys = g_hash_table_get_keys(hash);
@@ -668,7 +666,6 @@ static FwupdDeviceFlags
 fu_history_get_device_flags_filtered(FuDevice *device)
 {
 	FwupdDeviceFlags flags = fu_device_get_flags(device);
-	flags &= ~FWUPD_DEVICE_FLAG_REGISTERED;
 	flags &= ~FWUPD_DEVICE_FLAG_SUPPORTED;
 	return flags;
 }
@@ -692,7 +689,6 @@ fu_history_modify_device(FuHistory *self, FuDevice *device, GError **error)
 #ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
 	g_return_val_if_fail(FU_IS_DEVICE(device), FALSE);
@@ -702,8 +698,6 @@ fu_history_modify_device(FuHistory *self, FuDevice *device, GError **error)
 		return FALSE;
 
 	/* overwrite entry if it exists */
-	locker = g_rw_lock_writer_locker_new(&self->db_mutex);
-	g_return_val_if_fail(locker != NULL, FALSE);
 	g_debug("modifying device %s [%s]", fu_device_get_name(device), fu_device_get_id(device));
 	rc = sqlite3_prepare_v2(self->db,
 				"UPDATE history SET "
@@ -737,7 +731,7 @@ fu_history_modify_device(FuHistory *self, FuDevice *device, GError **error)
 	    fwupd_checksum_get_by_kind(fu_device_get_checksums(device), G_CHECKSUM_SHA1),
 	    -1,
 	    SQLITE_STATIC);
-	sqlite3_bind_int64(stmt, 7, fu_device_get_modified(device));
+	sqlite3_bind_int64(stmt, 7, fu_device_get_modified_usec(device) / G_USEC_PER_SEC);
 	sqlite3_bind_int64(stmt, 8, fu_device_get_install_duration(device));
 
 	if (!fu_history_stmt_exec(self, stmt, NULL, error))
@@ -777,7 +771,6 @@ fu_history_modify_device_release(FuHistory *self,
 	gint rc;
 	g_autofree gchar *metadata = NULL;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
 	g_return_val_if_fail(FU_IS_DEVICE(device), FALSE);
@@ -787,11 +780,9 @@ fu_history_modify_device_release(FuHistory *self,
 		return FALSE;
 
 	/* metadata is stored as a simple string */
-	metadata = _convert_hash_to_string(fu_release_get_metadata(release));
+	metadata = fu_history_convert_hash_to_string(fu_release_get_metadata(release));
 
 	/* overwrite entry if it exists */
-	locker = g_rw_lock_writer_locker_new(&self->db_mutex);
-	g_return_val_if_fail(locker != NULL, FALSE);
 	g_debug("modifying device %s [%s]", fu_device_get_name(device), fu_device_get_id(device));
 	rc = sqlite3_prepare_v2(self->db,
 				"UPDATE history SET "
@@ -825,7 +816,7 @@ fu_history_modify_device_release(FuHistory *self,
 	    fwupd_checksum_get_by_kind(fu_device_get_checksums(device), G_CHECKSUM_SHA1),
 	    -1,
 	    SQLITE_STATIC);
-	sqlite3_bind_int64(stmt, 7, fu_device_get_modified(device));
+	sqlite3_bind_int64(stmt, 7, fu_device_get_modified_usec(device) / G_USEC_PER_SEC);
 	sqlite3_bind_text(stmt, 8, metadata, -1, SQLITE_STATIC);
 
 	return fu_history_stmt_exec(self, stmt, NULL, error);
@@ -856,7 +847,6 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GEr
 	gint rc;
 	g_autofree gchar *metadata = NULL;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
 	g_return_val_if_fail(FU_IS_DEVICE(device), FALSE);
@@ -875,11 +865,9 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GEr
 	    fwupd_checksum_get_by_kind(fu_device_get_checksums(device), G_CHECKSUM_SHA1);
 
 	/* metadata is stored as a simple string */
-	metadata = _convert_hash_to_string(fu_release_get_metadata(release));
+	metadata = fu_history_convert_hash_to_string(fu_release_get_metadata(release));
 
 	/* add */
-	locker = g_rw_lock_writer_locker_new(&self->db_mutex);
-	g_return_val_if_fail(locker != NULL, FALSE);
 	rc = sqlite3_prepare_v2(self->db,
 				"INSERT INTO history (device_id,"
 				"update_state,"
@@ -925,8 +913,8 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GEr
 	sqlite3_bind_text(stmt, 8, fu_device_get_plugin(device), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 9, fu_device_get_guid_default(device), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 10, metadata, -1, SQLITE_STATIC);
-	sqlite3_bind_int64(stmt, 11, fu_device_get_created(device));
-	sqlite3_bind_int64(stmt, 12, fu_device_get_modified(device));
+	sqlite3_bind_int64(stmt, 11, fu_device_get_created_usec(device) / G_USEC_PER_SEC);
+	sqlite3_bind_int64(stmt, 12, fu_device_get_modified_usec(device) / G_USEC_PER_SEC);
 	sqlite3_bind_text(stmt, 13, fu_device_get_version(device), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 14, fu_release_get_version(release), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 15, checksum_device, -1, SQLITE_STATIC);
@@ -959,7 +947,6 @@ fu_history_remove_all(FuHistory *self, GError **error)
 #ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
 
@@ -968,8 +955,6 @@ fu_history_remove_all(FuHistory *self, GError **error)
 		return FALSE;
 
 	/* remove entries */
-	locker = g_rw_lock_writer_locker_new(&self->db_mutex);
-	g_return_val_if_fail(locker != NULL, FALSE);
 	g_debug("removing all devices");
 	rc = sqlite3_prepare_v2(self->db, "DELETE FROM history;", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
@@ -1005,7 +990,6 @@ fu_history_remove_device(FuHistory *self, FuDevice *device, GError **error)
 #ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
 	g_return_val_if_fail(FU_IS_DEVICE(device), FALSE);
@@ -1014,8 +998,6 @@ fu_history_remove_device(FuHistory *self, FuDevice *device, GError **error)
 	if (!fu_history_load(self, error))
 		return FALSE;
 
-	locker = g_rw_lock_writer_locker_new(&self->db_mutex);
-	g_return_val_if_fail(locker != NULL, FALSE);
 	g_debug("remove device %s [%s]", fu_device_get_name(device), fu_device_get_id(device));
 	rc = sqlite3_prepare_v2(self->db,
 				"DELETE FROM history WHERE device_id = ?1;",
@@ -1056,7 +1038,6 @@ fu_history_get_device_by_id(FuHistory *self, const gchar *device_id, GError **er
 	gint rc;
 	g_autoptr(GPtrArray) array_tmp = NULL;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockReaderLocker) locker = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), NULL);
 	g_return_val_if_fail(device_id != NULL, NULL);
@@ -1066,8 +1047,6 @@ fu_history_get_device_by_id(FuHistory *self, const gchar *device_id, GError **er
 		return NULL;
 
 	/* get all the devices */
-	locker = g_rw_lock_reader_locker_new(&self->db_mutex);
-	g_return_val_if_fail(locker != NULL, NULL);
 	rc = sqlite3_prepare_v2(self->db,
 				"SELECT device_id, "
 				"checksum, "
@@ -1136,7 +1115,6 @@ fu_history_get_devices(FuHistory *self, GError **error)
 #ifdef HAVE_SQLITE
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 	gint rc;
-	g_autoptr(GRWLockReaderLocker) locker = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), NULL);
 
@@ -1147,8 +1125,6 @@ fu_history_get_devices(FuHistory *self, GError **error)
 	}
 
 	/* get all the devices */
-	locker = g_rw_lock_reader_locker_new(&self->db_mutex);
-	g_return_val_if_fail(locker != NULL, NULL);
 	rc = sqlite3_prepare_v2(self->db,
 				"SELECT device_id, "
 				"checksum, "
@@ -1206,7 +1182,6 @@ fu_history_get_approved_firmware(FuHistory *self, GError **error)
 	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func(g_free);
 #ifdef HAVE_SQLITE
 	gint rc;
-	g_autoptr(GRWLockReaderLocker) locker = NULL;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), NULL);
@@ -1218,8 +1193,6 @@ fu_history_get_approved_firmware(FuHistory *self, GError **error)
 	}
 
 	/* get all the approved firmware */
-	locker = g_rw_lock_reader_locker_new(&self->db_mutex);
-	g_return_val_if_fail(locker != NULL, NULL);
 	rc = sqlite3_prepare_v2(self->db,
 				"SELECT checksum FROM approved_firmware;",
 				-1,
@@ -1266,7 +1239,6 @@ fu_history_clear_approved_firmware(FuHistory *self, GError **error)
 #ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
 
@@ -1275,8 +1247,6 @@ fu_history_clear_approved_firmware(FuHistory *self, GError **error)
 		return FALSE;
 
 	/* remove entries */
-	locker = g_rw_lock_writer_locker_new(&self->db_mutex);
-	g_return_val_if_fail(locker != NULL, FALSE);
 	rc = sqlite3_prepare_v2(self->db, "DELETE FROM approved_firmware;", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error(error,
@@ -1311,7 +1281,6 @@ fu_history_add_approved_firmware(FuHistory *self, const gchar *checksum, GError 
 #ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
 	g_return_val_if_fail(checksum != NULL, FALSE);
@@ -1321,8 +1290,6 @@ fu_history_add_approved_firmware(FuHistory *self, const gchar *checksum, GError 
 		return FALSE;
 
 	/* add */
-	locker = g_rw_lock_writer_locker_new(&self->db_mutex);
-	g_return_val_if_fail(locker != NULL, FALSE);
 	rc = sqlite3_prepare_v2(self->db,
 				"INSERT INTO approved_firmware (checksum) "
 				"VALUES (?1)",
@@ -1362,7 +1329,6 @@ fu_history_get_blocked_firmware(FuHistory *self, GError **error)
 	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func(g_free);
 #ifdef HAVE_SQLITE
 	gint rc;
-	g_autoptr(GRWLockReaderLocker) locker = NULL;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), NULL);
@@ -1374,8 +1340,6 @@ fu_history_get_blocked_firmware(FuHistory *self, GError **error)
 	}
 
 	/* get all the blocked firmware */
-	locker = g_rw_lock_reader_locker_new(&self->db_mutex);
-	g_return_val_if_fail(locker != NULL, NULL);
 	rc =
 	    sqlite3_prepare_v2(self->db, "SELECT checksum FROM blocked_firmware;", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
@@ -1419,7 +1383,6 @@ fu_history_clear_blocked_firmware(FuHistory *self, GError **error)
 #ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
 
@@ -1428,8 +1391,6 @@ fu_history_clear_blocked_firmware(FuHistory *self, GError **error)
 		return FALSE;
 
 	/* remove entries */
-	locker = g_rw_lock_writer_locker_new(&self->db_mutex);
-	g_return_val_if_fail(locker != NULL, FALSE);
 	rc = sqlite3_prepare_v2(self->db, "DELETE FROM blocked_firmware;", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error(error,
@@ -1464,7 +1425,6 @@ fu_history_add_blocked_firmware(FuHistory *self, const gchar *checksum, GError *
 #ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
 	g_return_val_if_fail(checksum != NULL, FALSE);
@@ -1474,8 +1434,6 @@ fu_history_add_blocked_firmware(FuHistory *self, const gchar *checksum, GError *
 		return FALSE;
 
 	/* add */
-	locker = g_rw_lock_writer_locker_new(&self->db_mutex);
-	g_return_val_if_fail(locker != NULL, FALSE);
 	rc = sqlite3_prepare_v2(self->db,
 				"INSERT INTO blocked_firmware (checksum) "
 				"VALUES (?1)",
@@ -1507,15 +1465,14 @@ fu_history_add_security_attribute(FuHistory *self,
 #ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockWriterLocker) locker = NULL;
+
 	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
 
 	/* lazy load */
 	if (!fu_history_load(self, error))
 		return FALSE;
+
 	/* remove entries */
-	locker = g_rw_lock_writer_locker_new(&self->db_mutex);
-	g_return_val_if_fail(locker != NULL, FALSE);
 	rc = sqlite3_prepare_v2(self->db,
 				"INSERT INTO hsi_history (hsi_details, hsi_score)"
 				"VALUES (?1, ?2)",
@@ -1560,7 +1517,6 @@ fu_history_get_security_attrs(FuHistory *self, guint limit, GError **error)
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 	gint rc;
 	guint old_hash = 0;
-	g_autoptr(GRWLockReaderLocker) locker = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), NULL);
 
@@ -1571,8 +1527,6 @@ fu_history_get_security_attrs(FuHistory *self, guint limit, GError **error)
 	}
 
 	/* get all the devices */
-	locker = g_rw_lock_reader_locker_new(&self->db_mutex);
-	g_return_val_if_fail(locker != NULL, NULL);
 	rc = sqlite3_prepare_v2(self->db,
 				"SELECT timestamp, hsi_details FROM hsi_history "
 				"ORDER BY timestamp DESC;",
@@ -1649,18 +1603,36 @@ fu_history_get_security_attrs(FuHistory *self, guint limit, GError **error)
 }
 
 static void
+fu_history_housekeeping_cb(FuContext *ctx, FuHistory *self)
+{
+#ifdef HAVE_SQLITE
+	sqlite3_release_memory(G_MAXINT32);
+	if (self->db != NULL)
+		sqlite3_db_release_memory(self->db);
+#endif
+}
+
+static void
+fu_history_dispose(GObject *object)
+{
+	FuHistory *self = FU_HISTORY(object);
+	if (self->ctx != NULL)
+		g_signal_handlers_disconnect_by_data(self->ctx, self);
+	g_clear_object(&self->ctx);
+	G_OBJECT_CLASS(fu_history_parent_class)->dispose(object);
+}
+
+static void
 fu_history_class_init(FuHistoryClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_history_finalize;
+	object_class->dispose = fu_history_dispose;
 }
 
 static void
 fu_history_init(FuHistory *self)
 {
-#ifdef HAVE_SQLITE
-	g_rw_lock_init(&self->db_mutex);
-#endif
 }
 
 static void
@@ -1668,9 +1640,6 @@ fu_history_finalize(GObject *object)
 {
 #ifdef HAVE_SQLITE
 	FuHistory *self = FU_HISTORY(object);
-
-	g_rw_lock_clear(&self->db_mutex);
-
 	if (self->db != NULL)
 		sqlite3_close(self->db);
 #endif
@@ -1686,9 +1655,11 @@ fu_history_finalize(GObject *object)
  * Since: 1.0.4
  **/
 FuHistory *
-fu_history_new(void)
+fu_history_new(FuContext *ctx)
 {
 	FuHistory *self;
 	self = g_object_new(FU_TYPE_PENDING, NULL);
+	self->ctx = g_object_ref(ctx);
+	g_signal_connect(self->ctx, "housekeeping", G_CALLBACK(fu_history_housekeeping_cb), self);
 	return FU_HISTORY(self);
 }

@@ -110,6 +110,8 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
+	FuContext *ctx = fu_device_get_context(device);
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuVolume *esp = fu_uefi_device_get_esp(self);
 	const gchar *fw_class = fu_uefi_device_get_guid(self);
@@ -160,8 +162,11 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* delete the old log to save space */
-	if (fu_efivar_exists(FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_DEBUG_LOG")) {
-		if (!fu_efivar_delete(FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_DEBUG_LOG", error))
+	if (fu_efivars_exists(efivars, FU_EFIVARS_GUID_FWUPDATE, "FWUPDATE_DEBUG_LOG")) {
+		if (!fu_efivars_delete(efivars,
+				       FU_EFIVARS_GUID_FWUPDATE,
+				       "FWUPDATE_DEBUG_LOG",
+				       error))
 			return FALSE;
 	}
 
@@ -170,7 +175,7 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* if secure boot was turned on this might need to be installed separately */
-	source_app = fu_uefi_get_built_app_path("fwupd", error);
+	source_app = fu_uefi_get_built_app_path(efivars, "fwupd", error);
 	if (source_app == NULL)
 		return FALSE;
 

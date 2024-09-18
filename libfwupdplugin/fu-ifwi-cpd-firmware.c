@@ -13,6 +13,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-common.h"
 #include "fu-ifwi-cpd-firmware.h"
 #include "fu-ifwi-struct.h"
 #include "fu-input-stream.h"
@@ -304,14 +305,14 @@ fu_ifwi_cpd_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	tmp = xb_node_query_text(n, "header_version", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT8, error))
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->header_version = val;
 	}
 	tmp = xb_node_query_text(n, "entry_version", NULL);
 	if (tmp != NULL) {
 		guint64 val = 0;
-		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT8, error))
+		if (!fu_strtoull(tmp, &val, 0x0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->entry_version = val;
 	}

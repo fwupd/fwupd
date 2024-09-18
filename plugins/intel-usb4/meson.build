@@ -1,4 +1,3 @@
-if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginIntelUsb4"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -17,4 +16,3 @@ plugin_builtins += static_library('fu_plugin_intel_usb4',
     gudev,
   ],
 )
-endif

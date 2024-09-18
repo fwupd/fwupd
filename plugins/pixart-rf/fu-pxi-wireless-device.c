@@ -92,49 +92,6 @@ fu_pxi_wireless_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_pxi_wireless_device_set_feature(FuDevice *self, const guint8 *buf, guint bufsz, GError **error)
-{
-#ifdef HAVE_HIDRAW_H
-	fu_dump_raw(G_LOG_DOMAIN, "SetFeature", buf, bufsz);
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    HIDIOCSFEATURE(bufsz),
-				    (guint8 *)buf,
-				    NULL,
-				    FU_PXI_DEVICE_IOCTL_TIMEOUT,
-				    error);
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
-}
-
-static gboolean
-fu_pxi_wireless_device_get_feature(FuDevice *self, guint8 *buf, guint bufsz, GError **error)
-{
-#ifdef HAVE_HIDRAW_H
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(bufsz),
-				  buf,
-				  NULL,
-				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
-				  error)) {
-		return FALSE;
-	}
-	fu_dump_raw(G_LOG_DOMAIN, "GetFeature", buf, bufsz);
-	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
-}
-
-static gboolean
 fu_pxi_wireless_device_get_cmd_response(FuPxiWirelessDevice *device,
 					guint8 *buf,
 					guint bufsz,
@@ -155,9 +112,12 @@ fu_pxi_wireless_device_get_cmd_response(FuPxiWirelessDevice *device,
 
 		fu_device_sleep(FU_DEVICE(device), FU_PXI_WIRELESS_DEV_DELAY_MS); /* ms */
 
-		if (!fu_pxi_wireless_device_get_feature(FU_DEVICE(parent), buf, bufsz, error))
+		if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(parent),
+						  buf,
+						  bufsz,
+						  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+						  error))
 			return FALSE;
-
 		if (!fu_memread_uint8_safe(buf, bufsz, 0x4, &sn, error))
 			return FALSE;
 
@@ -218,10 +178,11 @@ fu_pxi_wireless_device_check_crc(FuDevice *device, guint16 checksum, GError **er
 					   ota_cmd,
 					   error))
 		return FALSE;
-	if (!fu_pxi_wireless_device_set_feature(FU_DEVICE(parent),
-						receiver_cmd->data,
-						receiver_cmd->len,
-						error))
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+					  receiver_cmd->data,
+					  receiver_cmd->len,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error))
 		return FALSE;
 	if (!fu_pxi_wireless_device_get_cmd_response(self, buf, sizeof(buf), error))
 		return FALSE;
@@ -292,10 +253,11 @@ fu_pxi_wireless_device_fw_object_create(FuDevice *device, FuChunk *chk, GError *
 					   error))
 		return FALSE;
 
-	if (!fu_pxi_wireless_device_set_feature(FU_DEVICE(parent),
-						receiver_cmd->data,
-						receiver_cmd->len,
-						error))
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+					  receiver_cmd->data,
+					  receiver_cmd->len,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error))
 		return FALSE;
 
 	/* delay for wireless module device get command response*/
@@ -349,10 +311,11 @@ fu_pxi_wireless_device_write_payload(FuDevice *device, FuChunk *chk, GError **er
 					   ota_cmd,
 					   error))
 		return FALSE;
-	if (!fu_pxi_wireless_device_set_feature(FU_DEVICE(parent),
-						receiver_cmd->data,
-						receiver_cmd->len,
-						error))
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+					  receiver_cmd->data,
+					  receiver_cmd->len,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error))
 		return FALSE;
 
 	/* delay for each payload packet */
@@ -436,10 +399,11 @@ fu_pxi_wireless_device_fw_ota_preceding(FuDevice *device, GError **error)
 					   error))
 		return FALSE;
 
-	return fu_pxi_wireless_device_set_feature(FU_DEVICE(parent),
-						  receiver_cmd->data,
-						  receiver_cmd->len,
-						  error);
+	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+					    receiver_cmd->data,
+					    receiver_cmd->len,
+					    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					    error);
 }
 
 static gboolean
@@ -475,10 +439,11 @@ fu_pxi_wireless_device_fw_ota_init_new(FuDevice *device, gsize bufsz, GError **e
 					   error))
 		return FALSE;
 
-	if (!fu_pxi_wireless_device_set_feature(FU_DEVICE(parent),
-						receiver_cmd->data,
-						receiver_cmd->len,
-						error))
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+					  receiver_cmd->data,
+					  receiver_cmd->len,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error))
 		return FALSE;
 
 	/* delay for wireless module device get command response*/
@@ -533,10 +498,11 @@ fu_pxi_wireless_device_fw_ota_ini_new_check(FuDevice *device, GError **error)
 					   ota_cmd,
 					   error))
 		return FALSE;
-	if (!fu_pxi_wireless_device_set_feature(FU_DEVICE(parent),
-						receiver_cmd->data,
-						receiver_cmd->len,
-						error))
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+					  receiver_cmd->data,
+					  receiver_cmd->len,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error))
 		return FALSE;
 
 	/* delay for wireless module device get command response*/
@@ -629,10 +595,11 @@ fu_pxi_wireless_device_fw_upgrade(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* send ota fw upgrade command */
-	if (!fu_pxi_wireless_device_set_feature(FU_DEVICE(parent),
-						receiver_cmd->data,
-						receiver_cmd->len,
-						error))
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+					  receiver_cmd->data,
+					  receiver_cmd->len,
+					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  error))
 		return FALSE;
 
 	/* delay for wireless module device get command response*/
@@ -687,10 +654,11 @@ fu_pxi_wireless_device_reset(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* send ota mcu reset command */
-	return fu_pxi_wireless_device_set_feature(FU_DEVICE(parent),
-						  receiver_cmd->data,
-						  receiver_cmd->len,
-						  error);
+	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+					    receiver_cmd->data,
+					    receiver_cmd->len,
+					    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					    error);
 }
 
 static gboolean
@@ -780,9 +748,9 @@ fu_pxi_wireless_device_init(FuPxiWirelessDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x093A");
+	fu_device_build_vendor_id_u16(FU_DEVICE(self), "USB", 0x093A);
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_PXI_FIRMWARE);
 }

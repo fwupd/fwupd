@@ -101,7 +101,7 @@ fu_logitech_hidpp_bootloader_nordic_write_signature(FuLogitechHidppBootloader *s
 	req->cmd = 0xC0;
 	req->addr = addr;
 	req->len = len;
-	memcpy(req->data, data, req->len);
+	memcpy(req->data, data, req->len); /* nocheck:blocked */
 	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
 		g_prefix_error(error, "failed to write sig @0x%02x: ", addr);
 		return FALSE;
@@ -138,7 +138,7 @@ fu_logitech_hidpp_bootloader_nordic_write(FuLogitechHidppBootloader *self,
 			    req->len);
 		return FALSE;
 	}
-	memcpy(req->data, data, req->len);
+	memcpy(req->data, data, req->len); /* nocheck:blocked */
 	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
 		g_prefix_error(error, "failed to transfer fw @0x%02x: ", addr);
 		return FALSE;

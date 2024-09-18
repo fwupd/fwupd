@@ -101,7 +101,7 @@ fu_linux_tainted_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *at
 
 	/* do not assume NUL terminated */
 	str = g_strndup(buf, bufsz);
-	if (!fu_strtoull(str, &value, 0, G_MAXUINT64, &error_local)) {
+	if (!fu_strtoull(str, &value, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, &error_local)) {
 		g_warning("could not parse %s: %s", str, error_local->message);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
@@ -131,7 +131,7 @@ fu_linux_tainted_plugin_init(FuLinuxTaintedPlugin *self)
 }
 
 static void
-fu_linux_tainted_finalize(GObject *obj)
+fu_linux_tainted_plugin_finalize(GObject *obj)
 {
 	FuLinuxTaintedPlugin *self = FU_LINUX_TAINTED_PLUGIN(obj);
 	if (self->file != NULL)
@@ -149,7 +149,7 @@ fu_linux_tainted_plugin_class_init(FuLinuxTaintedPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->finalize = fu_linux_tainted_finalize;
+	object_class->finalize = fu_linux_tainted_plugin_finalize;
 	plugin_class->startup = fu_linux_tainted_plugin_startup;
 	plugin_class->add_security_attrs = fu_linux_tainted_plugin_add_security_attrs;
 }

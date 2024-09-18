@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include "fwupd-codec-private.h"
+#include "fwupd-codec.h"
 #include "fwupd-error.h"
 
 /**
@@ -20,6 +20,56 @@ G_DEFINE_INTERFACE(FwupdCodec, fwupd_codec, G_TYPE_OBJECT)
 static void
 fwupd_codec_default_init(FwupdCodecInterface *iface)
 {
+}
+
+static void
+fwupd_codec_add_string_from_json_node(FwupdCodec *self,
+				      const gchar *member_name,
+				      JsonNode *json_node,
+				      guint idt,
+				      GString *str)
+{
+	JsonNodeType node_type = json_node_get_node_type(json_node);
+	if (node_type == JSON_NODE_VALUE) {
+		GType gtype = json_node_get_value_type(json_node);
+		if (gtype == G_TYPE_STRING) {
+			fwupd_codec_string_append(str,
+						  idt,
+						  member_name,
+						  json_node_get_string(json_node));
+		} else if (gtype == G_TYPE_INT64) {
+			fwupd_codec_string_append_hex(str,
+						      idt,
+						      member_name,
+						      json_node_get_int(json_node));
+		} else if (gtype == G_TYPE_BOOLEAN) {
+			fwupd_codec_string_append_bool(str,
+						       idt,
+						       member_name,
+						       json_node_get_boolean(json_node));
+		} else {
+			fwupd_codec_string_append(str, idt, member_name, "GType value unknown");
+		}
+	} else if (node_type == JSON_NODE_ARRAY) {
+		JsonArray *json_array = json_node_get_array(json_node);
+		g_autoptr(GList) json_nodes = json_array_get_elements(json_array);
+		if (g_strcmp0(member_name, "") != 0)
+			fwupd_codec_string_append(str, idt, member_name, "");
+		for (GList *l = json_nodes; l != NULL; l = l->next)
+			fwupd_codec_add_string_from_json_node(self, "", l->data, idt + 1, str);
+	} else if (node_type == JSON_NODE_OBJECT) {
+		JsonObjectIter iter;
+		json_object_iter_init(&iter, json_node_get_object(json_node));
+		if (g_strcmp0(member_name, "") != 0)
+			fwupd_codec_string_append(str, idt, member_name, "");
+		while (json_object_iter_next(&iter, &member_name, &json_node)) {
+			fwupd_codec_add_string_from_json_node(self,
+							      member_name,
+							      json_node,
+							      idt + 1,
+							      str);
+		}
+	}
 }
 
 /**
@@ -40,13 +90,23 @@ fwupd_codec_add_string(FwupdCodec *self, guint idt, GString *str)
 	g_return_if_fail(FWUPD_IS_CODEC(self));
 	g_return_if_fail(str != NULL);
 
+	fwupd_codec_string_append(str, idt, G_OBJECT_TYPE_NAME(self), "");
 	iface = FWUPD_CODEC_GET_IFACE(self);
-	if (iface->add_string == NULL) {
-		g_critical("FwupdCodec->add_string not implemented");
+	if (iface->add_string != NULL) {
+		iface->add_string(self, idt + 1, str);
 		return;
 	}
-	fwupd_codec_string_append(str, idt, G_OBJECT_TYPE_NAME(self), "");
-	(*iface->add_string)(self, idt + 1, str);
+	if (iface->add_json != NULL) {
+		g_autoptr(JsonBuilder) builder = json_builder_new();
+		g_autoptr(JsonNode) root_node = NULL;
+		json_builder_begin_object(builder);
+		iface->add_json(self, builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
+		root_node = json_builder_get_root(builder);
+		fwupd_codec_add_string_from_json_node(self, "", root_node, idt + 1, str);
+		return;
+	}
+	g_critical("FwupdCodec->add_string or iface->add_json not implemented");
 }
 
 /**
@@ -67,17 +127,15 @@ fwupd_codec_to_string(FwupdCodec *self)
 	g_return_val_if_fail(FWUPD_IS_CODEC(self), NULL);
 
 	iface = FWUPD_CODEC_GET_IFACE(self);
-	if (iface->to_string == NULL) {
-		if (iface->add_string != NULL) {
-			GString *str = g_string_new(NULL);
-			fwupd_codec_string_append(str, 0, G_OBJECT_TYPE_NAME(self), "");
-			iface->add_string(self, 1, str);
-			return g_string_free(str, FALSE);
-		}
-		g_critical("FwupdCodec->to_string not implemented");
-		return NULL;
+	if (iface->to_string != NULL)
+		iface->to_string(self);
+	if (iface->add_string != NULL || iface->add_json != NULL) {
+		GString *str = g_string_new(NULL);
+		fwupd_codec_add_string(self, 0, str);
+		return g_string_free(str, FALSE);
 	}
-	return (*iface->to_string)(self);
+	g_critical("FwupdCodec->to_string and iface->add_string not implemented");
+	return NULL;
 }
 
 /**
@@ -159,13 +217,11 @@ fwupd_codec_to_json(FwupdCodec *self, JsonBuilder *builder, FwupdCodecFlags flag
 	g_return_if_fail(builder != NULL);
 
 	iface = FWUPD_CODEC_GET_IFACE(self);
-	if (iface->to_json == NULL) {
-		g_critical("FwupdCodec->to_json not implemented");
+	if (iface->add_json == NULL) {
+		g_critical("FwupdCodec->add_json not implemented");
 		return;
 	}
-	json_builder_begin_object(builder);
-	(*iface->to_json)(self, builder, flags);
-	json_builder_end_object(builder);
+	iface->add_json(self, builder, flags);
 }
 
 /**
@@ -191,7 +247,9 @@ fwupd_codec_to_json_string(FwupdCodec *self, FwupdCodecFlags flags, GError **err
 	g_return_val_if_fail(FWUPD_IS_CODEC(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
+	json_builder_begin_object(builder);
 	fwupd_codec_to_json(self, builder, flags);
+	json_builder_end_object(builder);
 	json_root = json_builder_get_root(builder);
 	json_generator = json_generator_new();
 	json_generator_set_pretty(json_generator, TRUE);
@@ -292,6 +350,38 @@ fwupd_codec_array_from_variant(GVariant *value, GType gtype, GError **error)
 }
 
 /**
+ * fwupd_codec_array_to_json:
+ * @array: (element-type GObject): (not nullable): array of objects that much implement `FwupdCodec`
+ * @member_name: (not nullable): member name of the array
+ * @builder: (not nullable): a #JsonBuilder
+ * @flags: a #FwupdCodecFlags, e.g. %FWUPD_CODEC_FLAG_TRUSTED
+ *
+ * Converts an array of objects into a #GVariant value.
+ *
+ * Since: 2.0.0
+ */
+void
+fwupd_codec_array_to_json(GPtrArray *array,
+			  const gchar *member_name,
+			  JsonBuilder *builder,
+			  FwupdCodecFlags flags)
+{
+	g_return_if_fail(array != NULL);
+	g_return_if_fail(member_name != NULL);
+	g_return_if_fail(JSON_IS_BUILDER(builder));
+
+	json_builder_set_member_name(builder, member_name);
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < array->len; i++) {
+		FwupdCodec *codec = FWUPD_CODEC(g_ptr_array_index(array, i));
+		json_builder_begin_object(builder);
+		fwupd_codec_to_json(codec, builder, flags);
+		json_builder_end_object(builder);
+	}
+	json_builder_end_array(builder);
+}
+
+/**
  * fwupd_codec_array_to_variant:
  * @array: (element-type GObject): (not nullable): array of objects that much implement `FwupdCodec`
  * @flags: a #FwupdCodecFlags, e.g. %FWUPD_CODEC_FLAG_TRUSTED
@@ -336,15 +426,21 @@ fwupd_codec_to_variant(FwupdCodec *self, FwupdCodecFlags flags)
 	g_return_val_if_fail(FWUPD_IS_CODEC(self), NULL);
 
 	iface = FWUPD_CODEC_GET_IFACE(self);
-	if (iface->to_variant == NULL) {
-		g_critical("FwupdCodec->to_variant not implemented");
-		return NULL;
+	if (iface->to_variant != NULL)
+		return iface->to_variant(self, flags);
+	if (iface->add_variant != NULL) {
+		GVariantBuilder builder;
+		g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
+		iface->add_variant(self, &builder, flags);
+		return g_variant_new("a{sv}", &builder);
 	}
-	return (*iface->to_variant)(self, flags);
+
+	g_critical("FwupdCodec->add_variant and iface->add_variant not implemented");
+	return NULL;
 }
 
 static gsize
-fu_strwidth(const gchar *text)
+_fu_strwidth(const gchar *text)
 {
 	const gchar *p = text;
 	gsize width = 0;
@@ -390,7 +486,7 @@ fwupd_codec_string_append(GString *str, guint idt, const gchar *key, const gchar
 		g_string_append(str, "  ");
 	if (key[0] != '\0') {
 		g_string_append_printf(str, "%s:", key);
-		keysz = (idt * 2) + fu_strwidth(key) + 1;
+		keysz = (idt * 2) + _fu_strwidth(key) + 1;
 	} else {
 		keysz = idt * 2;
 	}
@@ -540,11 +636,20 @@ fwupd_codec_string_append_size(GString *str, guint idt, const gchar *key, guint6
 }
 
 /**
- * fwupd_codec_json_append: (skip):
- **/
+ * fwupd_codec_json_append:
+ * @builder: (not nullable): a #JsonBuilder
+ * @key: (not nullable): a string
+ * @value: a string to append
+ *
+ * Appends a key and value to a JSON builder.
+ *
+ * Since: 2.0.0
+ */
 void
 fwupd_codec_json_append(JsonBuilder *builder, const gchar *key, const gchar *value)
 {
+	g_return_if_fail(JSON_IS_BUILDER(builder));
+	g_return_if_fail(key != NULL);
 	if (value == NULL)
 		return;
 	json_builder_set_member_name(builder, key);
@@ -552,31 +657,58 @@ fwupd_codec_json_append(JsonBuilder *builder, const gchar *key, const gchar *val
 }
 
 /**
- * fwupd_codec_json_append_int: (skip):
- **/
+ * fwupd_codec_json_append_int:
+ * @builder: (not nullable): a #JsonBuilder
+ * @key: (not nullable): a string
+ * @value: guint64
+ *
+ * Appends a key and unsigned integer to a JSON builder.
+ *
+ * Since: 2.0.0
+ */
 void
 fwupd_codec_json_append_int(JsonBuilder *builder, const gchar *key, guint64 value)
 {
+	g_return_if_fail(JSON_IS_BUILDER(builder));
+	g_return_if_fail(key != NULL);
 	json_builder_set_member_name(builder, key);
 	json_builder_add_int_value(builder, value);
 }
 
 /**
- * fwupd_codec_json_append_bool: (skip):
- **/
+ * fwupd_codec_json_append_bool:
+ * @builder: (not nullable): a #JsonBuilder
+ * @key: (not nullable): a string
+ * @value: boolean
+ *
+ * Appends a key and boolean value to a JSON builder.
+ *
+ * Since: 2.0.0
+ */
 void
 fwupd_codec_json_append_bool(JsonBuilder *builder, const gchar *key, gboolean value)
 {
+	g_return_if_fail(JSON_IS_BUILDER(builder));
+	g_return_if_fail(key != NULL);
 	json_builder_set_member_name(builder, key);
-	json_builder_add_string_value(builder, value ? "true" : "false");
+	json_builder_add_boolean_value(builder, value);
 }
 
 /**
- * fwupd_codec_json_append_strv: (skip):
- **/
+ * fwupd_codec_json_append_strv:
+ * @builder: (not nullable): a #JsonBuilder
+ * @key: (not nullable): a string
+ * @value: a #GStrv
+ *
+ * Appends a key and string array to a JSON builder.
+ *
+ * Since: 2.0.0
+ */
 void
 fwupd_codec_json_append_strv(JsonBuilder *builder, const gchar *key, gchar **value)
 {
+	g_return_if_fail(JSON_IS_BUILDER(builder));
+	g_return_if_fail(key != NULL);
 	if (value == NULL)
 		return;
 	json_builder_set_member_name(builder, key);

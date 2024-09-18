@@ -17,7 +17,7 @@
 #include "fu-tpm-eventlog-parser.h"
 
 static gint
-fu_tmp_eventlog_sort_cb(gconstpointer a, gconstpointer b)
+fu_tpm_eventlog_sort_cb(gconstpointer a, gconstpointer b)
 {
 	FuTpmEventlogItem *item_a = *((FuTpmEventlogItem **)a);
 	FuTpmEventlogItem *item_b = *((FuTpmEventlogItem **)b);
@@ -29,7 +29,7 @@ fu_tmp_eventlog_sort_cb(gconstpointer a, gconstpointer b)
 }
 
 static gboolean
-fu_tmp_eventlog_process(const gchar *fn, gint pcr, GError **error)
+fu_tpm_eventlog_process(const gchar *fn, gint pcr, GError **error)
 {
 	gsize bufsz = 0;
 	g_autofree guint8 *buf = NULL;
@@ -43,7 +43,7 @@ fu_tmp_eventlog_process(const gchar *fn, gint pcr, GError **error)
 	items = fu_tpm_eventlog_parser_new(buf, bufsz, FU_TPM_EVENTLOG_PARSER_FLAG_ALL_PCRS, error);
 	if (items == NULL)
 		return FALSE;
-	g_ptr_array_sort(items, fu_tmp_eventlog_sort_cb);
+	g_ptr_array_sort(items, fu_tpm_eventlog_sort_cb);
 
 	for (guint i = 0; i < items->len; i++) {
 		FuTpmEventlogItem *item = g_ptr_array_index(items, i);
@@ -149,7 +149,7 @@ main(int argc, char *argv[])
 
 	/* allow user to chose a local file */
 	fn = argc <= 1 ? "/sys/kernel/security/tpm0/binary_bios_measurements" : argv[1];
-	if (!fu_tmp_eventlog_process(fn, pcr, &error)) {
+	if (!fu_tpm_eventlog_process(fn, pcr, &error)) {
 		/* TRANSLATORS: failed to read measurements file */
 		g_printerr("%s: %s\n", _("Failed to parse file"), error->message);
 		return EXIT_FAILURE;

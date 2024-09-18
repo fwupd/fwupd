@@ -31,7 +31,7 @@ struct da_structure {
 	guint8 cmd_code;
 	guint32 supported_cmds;
 	guint8 *tokens;
-} __attribute__((packed));
+} __attribute__((packed)); /* nocheck:blocked */
 
 /**
  * Dell device types to run
@@ -51,22 +51,30 @@ static guint8 enclosure_allowlist[] = {0x03, /* desktop */
 				       /* embedded PC */};
 
 static guint16
-fu_dell_get_system_id(FuPlugin *plugin)
+fu_dell_plugin_get_system_id(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *system_id_str = NULL;
-	guint16 system_id = 0;
-	gchar *endptr = NULL;
+	guint64 system_id_val = 0;
 
 	system_id_str = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_SKU);
-	if (system_id_str != NULL)
-		system_id = g_ascii_strtoull(system_id_str, &endptr, 16);
+	if (system_id_str != NULL) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_strtoull(system_id_str,
+				 &system_id_val,
+				 0,
+				 G_MAXUINT16,
+				 FU_INTEGER_BASE_16,
+				 &error_local)) {
+			g_warning("failed to parse system ID: %s", error_local->message);
+		}
+	}
 
-	return system_id;
+	return (guint16)system_id_val;
 }
 
 static gboolean
-fu_dell_supported(FuPlugin *plugin, GError **error)
+fu_dell_plugin_supported(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuSmbiosChassisKind chassis_kind = fu_context_get_chassis_kind(ctx);
@@ -141,24 +149,22 @@ fu_dell_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_INTERNAL)) {
 		/* fix VID/DID of safe mode devices */
 		if (fu_device_get_metadata_boolean(device, FU_DEVICE_METADATA_TBT_IS_SAFE_MODE)) {
-			g_autofree gchar *vendor_id = NULL;
 			g_autofree gchar *device_id = NULL;
 			guint16 system_id = 0;
 
-			vendor_id = g_strdup("TBT:0x00D4");
-			system_id = fu_dell_get_system_id(plugin);
+			system_id = fu_dell_plugin_get_system_id(plugin);
 			if (system_id == 0)
 				return;
 			/* the kernel returns lowercase in sysfs, need to match it */
 			device_id = g_strdup_printf("TBT-%04x%04x", 0x00d4u, (unsigned)system_id);
-			fu_device_add_vendor_id(device, vendor_id);
+			fu_device_build_vendor_id_u16(device, "TBT", 0x00D4);
 			fu_device_add_instance_id(device, device_id);
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 		}
 	}
 	/* tpm plugin */
 	if (g_strcmp0(fu_device_get_plugin(device), "tpm") == 0) {
-		guint16 system_id = fu_dell_get_system_id(plugin);
+		guint16 system_id = fu_dell_plugin_get_system_id(plugin);
 		g_autofree gchar *tpm_guid_raw = NULL;
 
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -178,7 +184,7 @@ fu_dell_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autofree gchar *esrtdir = NULL;
 
-	if (!fu_dell_supported(plugin, error)) {
+	if (!fu_dell_plugin_supported(plugin, error)) {
 		g_prefix_error(error, "firmware updating not supported: ");
 		return FALSE;
 	}

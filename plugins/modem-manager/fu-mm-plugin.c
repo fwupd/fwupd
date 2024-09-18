@@ -233,7 +233,7 @@ fu_mm_plugin_inhibit_device(FuPlugin *plugin, FuDevice *device, GError **error)
 
 	fu_mm_plugin_uninhibit_device(plugin);
 
-	shadow_device = fu_mm_shadow_device_new(FU_MM_DEVICE(device));
+	shadow_device = fu_mm_device_shadow_new(FU_MM_DEVICE(device));
 	inhibition_uid = fu_mm_device_get_inhibition_uid(shadow_device);
 	g_debug("inhibit modemmanager device with uid %s", inhibition_uid);
 	if (!mm_manager_inhibit_device_sync(self->manager, inhibition_uid, NULL, error))
@@ -254,7 +254,7 @@ fu_mm_plugin_inhibit_device(FuPlugin *plugin, FuDevice *device, GError **error)
 	 * to reset itself into a fully different layout, e.g. a fastboot device */
 	if (fu_mm_device_get_update_methods(FU_MM_DEVICE(device)) &
 	    MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT) {
-		self->udev_client = g_udev_client_new(subsystems);
+		self->udev_client = g_udev_client_new(subsystems); /* nocheck:blocked */
 		g_signal_connect(G_UDEV_CLIENT(self->udev_client),
 				 "uevent",
 				 G_CALLBACK(fu_mm_plugin_udev_uevent_cb),
@@ -526,23 +526,20 @@ fu_mm_plugin_backend_device_added(FuPlugin *plugin,
 				  GError **error)
 {
 	FuDevice *device_tmp;
-	g_autoptr(GUdevDevice) udev_device = NULL;
 
 	/* interesting device? */
 	if (!FU_IS_USB_DEVICE(device))
 		return TRUE;
 
 	/* look up the FuMmDevice for the USB device that just appeared */
-	udev_device = fu_usb_device_find_udev_device(FU_USB_DEVICE(device), error);
-	if (udev_device == NULL)
-		return FALSE;
-	device_tmp = fu_plugin_cache_lookup(plugin, g_udev_device_get_sysfs_path(udev_device));
+	device_tmp =
+	    fu_plugin_cache_lookup(plugin, fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
 	if (device_tmp == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "%s not added by ModemManager",
-			    g_udev_device_get_sysfs_path(udev_device));
+			    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
 		return FALSE;
 	}
 	fu_mm_device_set_usb_device(FU_MM_DEVICE(device_tmp), FU_USB_DEVICE(device));

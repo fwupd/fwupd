@@ -19,17 +19,10 @@ struct _FuLogitechHidppBootloaderClass {
 	FuHidDeviceClass parent_class;
 };
 
-/**
- * FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED:
- *
- * Device requires signed firmware.
- *
- * Since: 1.7.0
- */
-#define FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED (1 << 0)
+#define FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED "is-signed"
 
 /* packet to and from device */
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 cmd;
 	guint16 addr;
 	guint8 len;

@@ -1,4 +1,5 @@
-if get_option('plugin_mtd').disable_auto_if(host_machine.system() != 'linux').allowed()
+if get_option('plugin_mtd').require(gudev.found(),
+    error_message: 'gudev is needed for plugin_mtd').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginMtd"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

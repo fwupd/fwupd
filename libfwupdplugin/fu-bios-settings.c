@@ -14,6 +14,7 @@
 
 #include "fu-bios-setting.h"
 #include "fu-bios-settings-private.h"
+#include "fu-common.h"
 #include "fu-path.h"
 #include "fu-string.h"
 
@@ -27,13 +28,12 @@ struct _FuBiosSettings {
 };
 
 static void
-fwupd_bios_settings_codec_iface_init(FwupdCodecInterface *iface);
+fu_bios_settings_codec_iface_init(FwupdCodecInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(FuBiosSettings,
 			fu_bios_settings,
 			G_TYPE_OBJECT,
-			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
-					      fwupd_bios_settings_codec_iface_init))
+			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_bios_settings_codec_iface_init))
 
 static void
 fu_bios_settings_finalize(GObject *obj)
@@ -53,7 +53,10 @@ fu_bios_settings_class_init(FuBiosSettingsClass *klass)
 }
 
 static gboolean
-fu_bios_setting_get_key(FwupdBiosSetting *attr, const gchar *key, gchar **value_out, GError **error)
+fu_bios_setting_get_key(FwupdBiosSetting *attr, /* nocheck:name */
+			const gchar *key,
+			gchar **value_out,
+			GError **error)
 {
 	g_autofree gchar *tmp = NULL;
 
@@ -71,7 +74,7 @@ fu_bios_setting_get_key(FwupdBiosSetting *attr, const gchar *key, gchar **value_
 }
 
 static gboolean
-fu_bios_setting_set_description(FuBiosSettings *self, FwupdBiosSetting *attr, GError **error)
+fu_bios_settings_set_description(FuBiosSettings *self, FwupdBiosSetting *attr, GError **error)
 {
 	g_autofree gchar *data = NULL;
 	const gchar *value;
@@ -97,14 +100,16 @@ fu_bios_setting_set_description(FuBiosSettings *self, FwupdBiosSetting *attr, GE
 }
 
 static guint64
-fu_bios_setting_get_key_as_integer(FwupdBiosSetting *attr, const gchar *key, GError **error)
+fu_bios_setting_get_key_as_integer(FwupdBiosSetting *attr, /* nocheck:name */
+				   const gchar *key,
+				   GError **error)
 {
 	g_autofree gchar *str = NULL;
 	guint64 tmp;
 
 	if (!fu_bios_setting_get_key(attr, key, &str, error))
 		return G_MAXUINT64;
-	if (!fu_strtoull(str, &tmp, 0, G_MAXUINT64, error)) {
+	if (!fu_strtoull(str, &tmp, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error)) {
 		g_prefix_error(error, "failed to convert %s to integer: ", key);
 		return G_MAXUINT64;
 	}
@@ -112,7 +117,7 @@ fu_bios_setting_get_key_as_integer(FwupdBiosSetting *attr, const gchar *key, GEr
 }
 
 static gboolean
-fu_bios_setting_set_enumeration_attrs(FwupdBiosSetting *attr, GError **error)
+fu_bios_setting_set_enumeration_attrs(FwupdBiosSetting *attr, GError **error) /* nocheck:name */
 {
 	const gchar *delimiters[] = {",", ";", NULL};
 	g_autofree gchar *str = NULL;
@@ -133,7 +138,7 @@ fu_bios_setting_set_enumeration_attrs(FwupdBiosSetting *attr, GError **error)
 }
 
 static gboolean
-fu_bios_setting_set_string_attrs(FwupdBiosSetting *attr, GError **error)
+fu_bios_setting_set_string_attrs(FwupdBiosSetting *attr, GError **error) /* nocheck:name */
 {
 	guint64 tmp;
 
@@ -150,7 +155,7 @@ fu_bios_setting_set_string_attrs(FwupdBiosSetting *attr, GError **error)
 }
 
 static gboolean
-fu_bios_setting_set_integer_attrs(FwupdBiosSetting *attr, GError **error)
+fu_bios_setting_set_integer_attrs(FwupdBiosSetting *attr, GError **error) /* nocheck:name */
 {
 	guint64 tmp;
 
@@ -171,7 +176,7 @@ fu_bios_setting_set_integer_attrs(FwupdBiosSetting *attr, GError **error)
 }
 
 static gboolean
-fu_bios_setting_set_current_value(FwupdBiosSetting *attr, GError **error)
+fu_bios_setting_set_current_value(FwupdBiosSetting *attr, GError **error) /* nocheck:name */
 {
 	g_autofree gchar *str = NULL;
 
@@ -182,7 +187,7 @@ fu_bios_setting_set_current_value(FwupdBiosSetting *attr, GError **error)
 }
 
 static void
-fu_bios_setting_set_read_only(FuBiosSettings *self, FwupdBiosSetting *attr)
+fu_bios_settings_set_read_only(FuBiosSettings *self, FwupdBiosSetting *attr)
 {
 	const gchar *tmp;
 	if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_ENUMERATION) {
@@ -196,82 +201,8 @@ fu_bios_setting_set_read_only(FuBiosSettings *self, FwupdBiosSetting *attr)
 		fwupd_bios_setting_set_read_only(attr, TRUE);
 }
 
-#ifdef FU_THINKLMI_COMPAT
-#define LENOVO_POSSIBLE_NEEDLE "[Optional:"
-#define LENOVO_EXCLUDED	       "[Excluded from boot order:"
-
 static gboolean
-fu_bios_setting_fixup_lenovo_thinklmi_bug(FwupdBiosSetting *attr, GError **error)
-{
-	const gchar *current_value = fwupd_bios_setting_get_current_value(attr);
-	const gchar *tmp;
-	g_autoptr(GString) str = NULL;
-	g_autoptr(GString) right_str = NULL;
-	g_auto(GStrv) vals = NULL;
-
-	/* debug */
-	g_debug("processing %s: (%s)",
-		fwupd_bios_setting_get_name(attr),
-		fwupd_bios_setting_get_current_value(attr));
-
-	str = g_string_new(current_value);
-
-	/* empty string */
-	if (str->len == 0)
-		return TRUE;
-
-	/* split into left and right */
-	vals = fu_strsplit(str->str, str->len, ";", 2);
-
-	/* use left half for current value */
-	fwupd_bios_setting_set_current_value(attr, vals[0]);
-	if (vals[1] == NULL)
-		return TRUE;
-
-	/* use the right half to process further */
-	right_str = g_string_new(vals[1]);
-
-	/* Strip boot order exclusion info */
-	tmp = g_strrstr(right_str->str, LENOVO_EXCLUDED);
-	if (tmp != NULL)
-		g_string_truncate(str, tmp - right_str->str);
-
-	/* Look for possible values to populate */
-	tmp = g_strrstr(right_str->str, LENOVO_POSSIBLE_NEEDLE);
-	if (tmp != NULL) {
-		g_auto(GStrv) possible_vals = NULL;
-		g_string_erase(right_str, 0, strlen(LENOVO_POSSIBLE_NEEDLE));
-		possible_vals = fu_strsplit(right_str->str, right_str->len, ",", -1);
-		if (possible_vals[0] != NULL)
-			fwupd_bios_setting_set_kind(attr, FWUPD_BIOS_SETTING_KIND_ENUMERATION);
-		for (guint i = 0; possible_vals[i] != NULL && possible_vals[i][0] != '\0'; i++) {
-			/* last string */
-			if (possible_vals[i + 1] == NULL &&
-			    g_strrstr(possible_vals[i], "]") != NULL) {
-				g_auto(GStrv) stripped_vals = fu_strsplit(possible_vals[i],
-									  strlen(possible_vals[i]),
-									  "]",
-									  -1);
-				fwupd_bios_setting_add_possible_value(attr, stripped_vals[0]);
-				continue;
-			}
-			fwupd_bios_setting_add_possible_value(attr, possible_vals[i]);
-		}
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_bios_settings_run_folder_fixups(FwupdBiosSetting *attr, GError **error)
-{
-	if (fwupd_bios_setting_get_kind(attr) == FWUPD_BIOS_SETTING_KIND_UNKNOWN)
-		return fu_bios_setting_fixup_lenovo_thinklmi_bug(attr, error);
-	return TRUE;
-}
-#endif
-
-static gboolean
-fu_bios_setting_set_type(FuBiosSettings *self, FwupdBiosSetting *attr, GError **error)
+fu_bios_settings_set_type(FuBiosSettings *self, FwupdBiosSetting *attr, GError **error)
 {
 	gboolean kernel_bug = FALSE;
 	g_autofree gchar *data = NULL;
@@ -281,20 +212,10 @@ fu_bios_setting_set_type(FuBiosSettings *self, FwupdBiosSetting *attr, GError **
 	g_return_val_if_fail(FU_IS_BIOS_SETTINGS(self), FALSE);
 	g_return_val_if_fail(FWUPD_IS_BIOS_SETTING(attr), FALSE);
 
-	/* lenovo thinklmi seems to be missing it even though it's mandatory :/ */
 	if (!fu_bios_setting_get_key(attr, "type", &data, &error_key)) {
-#ifdef FU_THINKLMI_COMPAT
-		static gboolean kernel_bug_notified = FALSE;
-		if (!kernel_bug_notified) {
-			g_info("using think-lmi compatibility for kernels less than 6.3");
-			kernel_bug_notified = TRUE;
-		}
-		kernel_bug = TRUE;
-#else
 		g_debug("%s", error_key->message);
 		g_propagate_error(error, g_steal_pointer(&error_key));
 		return FALSE;
-#endif
 	}
 
 	if (g_strcmp0(data, "enumeration") == 0 || kernel_bug) {
@@ -314,7 +235,7 @@ fu_bios_setting_set_type(FuBiosSettings *self, FwupdBiosSetting *attr, GError **
  * https://github.com/torvalds/linux/blob/v5.18/Documentation/ABI/testing/sysfs-class-firmware-attributes#L300
  */
 static gboolean
-fu_bios_setting_set_file_attributes(FuBiosSettings *self, FwupdBiosSetting *attr, GError **error)
+fu_bios_settings_set_file_attributes(FuBiosSettings *self, FwupdBiosSetting *attr, GError **error)
 {
 	g_autofree gchar *value = NULL;
 
@@ -326,7 +247,7 @@ fu_bios_setting_set_file_attributes(FuBiosSettings *self, FwupdBiosSetting *attr
 			    fwupd_bios_setting_get_name(attr));
 		return FALSE;
 	}
-	if (!fu_bios_setting_set_description(self, attr, error))
+	if (!fu_bios_settings_set_description(self, attr, error))
 		return FALSE;
 	if (!fu_bios_setting_get_key(attr, NULL, &value, error))
 		return FALSE;
@@ -341,17 +262,13 @@ fu_bios_settings_set_folder_attributes(FuBiosSettings *self, FwupdBiosSetting *a
 {
 	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_bios_setting_set_type(self, attr, error))
+	if (!fu_bios_settings_set_type(self, attr, error))
 		return FALSE;
 	if (!fu_bios_setting_set_current_value(attr, error))
 		return FALSE;
-	if (!fu_bios_setting_set_description(self, attr, &error_local))
+	if (!fu_bios_settings_set_description(self, attr, &error_local))
 		g_debug("%s", error_local->message);
-#ifdef FU_THINKLMI_COMPAT
-	if (!fu_bios_settings_run_folder_fixups(attr, error))
-		return FALSE;
-#endif
-	fu_bios_setting_set_read_only(self, attr);
+	fu_bios_settings_set_read_only(self, attr);
 	return TRUE;
 }
 
@@ -381,7 +298,7 @@ fu_bios_settings_populate_attribute(FuBiosSettings *self,
 		if (!fu_bios_settings_set_folder_attributes(self, attr, error))
 			return FALSE;
 	} else {
-		if (!fu_bios_setting_set_file_attributes(self, attr, error))
+		if (!fu_bios_settings_set_file_attributes(self, attr, error))
 			return FALSE;
 	}
 
@@ -608,7 +525,7 @@ fu_bios_settings_get_pending_reboot(FuBiosSettings *self, gboolean *result, GErr
 	if (!fu_bios_setting_get_key(attr, NULL, &data, error))
 		return FALSE;
 	fwupd_bios_setting_set_current_value(attr, data);
-	if (!fu_strtoull(data, &val, 0, G_MAXUINT32, error))
+	if (!fu_strtoull(data, &val, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
 
 	*result = (val == 1);
@@ -670,7 +587,7 @@ fu_bios_settings_from_json(FwupdCodec *codec, JsonNode *json_node, GError **erro
 }
 
 static void
-fwupd_bios_settings_codec_iface_init(FwupdCodecInterface *iface)
+fu_bios_settings_codec_iface_init(FwupdCodecInterface *iface)
 {
 	iface->to_variant = fu_bios_settings_to_variant;
 	iface->from_json = fu_bios_settings_from_json;

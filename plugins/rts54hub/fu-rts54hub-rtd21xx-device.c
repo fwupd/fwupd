@@ -59,7 +59,7 @@ fu_rts54hub_rtd21xx_device_set_quirk_kv(FuDevice *device,
 
 	/* load target address from quirks */
 	if (g_strcmp0(key, "Rts54TargetAddr") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->target_addr = tmp;
 		return TRUE;
@@ -67,7 +67,12 @@ fu_rts54hub_rtd21xx_device_set_quirk_kv(FuDevice *device,
 
 	/* load i2c speed from quirks */
 	if (g_strcmp0(key, "Rts54I2cSpeed") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, FU_RTS54HUB_I2C_SPEED_LAST - 1, error))
+		if (!fu_strtoull(value,
+				 &tmp,
+				 0,
+				 FU_RTS54HUB_I2C_SPEED_LAST - 1,
+				 FU_INTEGER_BASE_AUTO,
+				 error))
 			return FALSE;
 		priv->i2c_speed = tmp;
 		return TRUE;
@@ -75,7 +80,7 @@ fu_rts54hub_rtd21xx_device_set_quirk_kv(FuDevice *device,
 
 	/* load register address length from quirks */
 	if (g_strcmp0(key, "Rts54RegisterAddrLen") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, error))
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->register_addr_len = tmp;
 		return TRUE;
@@ -207,7 +212,8 @@ fu_rts54hub_rtd21xx_device_init(FuRts54hubRtd21xxDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_install_duration(FU_DEVICE(self), 100); /* seconds */
 	fu_device_set_logical_id(FU_DEVICE(self), "I2C");

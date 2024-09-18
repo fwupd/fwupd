@@ -1,0 +1,5 @@
+# PS5512 devboard
+[USB\VID_1DA0&PID_551A]
+Plugin = parade_usbhub
+[USB\VID_1DA0&PID_551D]
+Plugin = parade_usbhub

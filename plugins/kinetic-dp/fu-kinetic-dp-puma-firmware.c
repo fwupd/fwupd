@@ -95,9 +95,9 @@ fu_kinetic_dp_puma_firmware_parse_chip_id(GInputStream *stream,
 }
 
 static gboolean
-fu_kinetic_dp_puma_device_parse_app_fw(FuKineticDpPumaFirmware *self,
-				       GInputStream *stream,
-				       GError **error)
+fu_kinetic_dp_puma_firmware_parse_app_fw(FuKineticDpPumaFirmware *self,
+					 GInputStream *stream,
+					 GError **error)
 {
 	FuKineticDpPumaFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize streamsz = 0;
@@ -255,6 +255,13 @@ fu_kinetic_dp_puma_firmware_parse(FuFirmware *firmware,
 	/* add App FW as a new image into firmware */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
+	if (streamsz < HEADER_LEN_ISP_DRV_SIZE + isp_drv_size) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "stream was too small");
+		return FALSE;
+	}
 	app_fw_size = streamsz - HEADER_LEN_ISP_DRV_SIZE - isp_drv_size;
 	app_fw_stream = fu_partial_input_stream_new(stream,
 						    HEADER_LEN_ISP_DRV_SIZE + isp_drv_size,
@@ -271,7 +278,7 @@ fu_kinetic_dp_puma_firmware_parse(FuFirmware *firmware,
 	/* figure out which chip App FW it is for */
 	if (!fu_kinetic_dp_puma_firmware_parse_chip_id(app_fw_stream, &priv->chip_id, error))
 		return FALSE;
-	if (!fu_kinetic_dp_puma_device_parse_app_fw(self, app_fw_stream, error)) {
+	if (!fu_kinetic_dp_puma_firmware_parse_app_fw(self, app_fw_stream, error)) {
 		g_prefix_error(error, "failed to parse info from Puma App firmware: ");
 		return FALSE;
 	}

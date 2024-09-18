@@ -43,7 +43,6 @@ fu_ti_tps6598x_device_usbep_read_raw(FuTiTps6598xDevice *self,
 				     guint8 length,
 				     GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	gsize actual_length = 0;
 	g_autofree gchar *title = g_strdup_printf("read@0x%x", addr);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
@@ -51,21 +50,20 @@ fu_ti_tps6598x_device_usbep_read_raw(FuTiTps6598xDevice *self,
 	/* first byte is length */
 	fu_byte_array_set_size(buf, length + 1, 0x0);
 
-	if (!g_usb_device_control_transfer(usb_device,
-					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					   G_USB_DEVICE_RECIPIENT_DEVICE,
-					   TI_TPS6598X_USB_REQUEST_READ,
-					   addr,
-					   0x0, /* idx */
-					   buf->data,
-					   buf->len,
-					   &actual_length,
-					   TI_TPS6598X_DEVICE_USB_TIMEOUT,
-					   NULL,
-					   error)) {
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_VENDOR,
+					    FU_USB_RECIPIENT_DEVICE,
+					    TI_TPS6598X_USB_REQUEST_READ,
+					    addr,
+					    0x0, /* idx */
+					    buf->data,
+					    buf->len,
+					    &actual_length,
+					    TI_TPS6598X_DEVICE_USB_TIMEOUT,
+					    NULL,
+					    error)) {
 		g_prefix_error(error, "failed to contact device: ");
-		fu_error_convert(error);
 		return NULL;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, title, buf->data, buf->len);
@@ -119,7 +117,6 @@ fu_ti_tps6598x_device_usbep_write(FuTiTps6598xDevice *self,
 				  GByteArray *buf,
 				  GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GPtrArray) chunks = NULL;
 	g_autofree gchar *title = g_strdup_printf("write@0x%x", addr);
 
@@ -134,21 +131,20 @@ fu_ti_tps6598x_device_usbep_write(FuTiTps6598xDevice *self,
 		/* for the first chunk use the total data length */
 		if (i == 0)
 			idx = buf->len;
-		if (!g_usb_device_control_transfer(usb_device,
-						   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						   G_USB_DEVICE_RECIPIENT_DEVICE,
-						   TI_TPS6598X_USB_REQUEST_WRITE,
-						   addr,
-						   idx, /* idx */
-						   fu_chunk_get_data_out(chk),
-						   fu_chunk_get_data_sz(chk),
-						   &actual_length,
-						   TI_TPS6598X_DEVICE_USB_TIMEOUT,
-						   NULL,
-						   error)) {
+		if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+						    FU_USB_DIRECTION_HOST_TO_DEVICE,
+						    FU_USB_REQUEST_TYPE_VENDOR,
+						    FU_USB_RECIPIENT_DEVICE,
+						    TI_TPS6598X_USB_REQUEST_WRITE,
+						    addr,
+						    idx, /* idx */
+						    fu_chunk_get_data_out(chk),
+						    fu_chunk_get_data_sz(chk),
+						    &actual_length,
+						    TI_TPS6598X_DEVICE_USB_TIMEOUT,
+						    NULL,
+						    error)) {
 			g_prefix_error(error, "failed to contact device: ");
-			fu_error_convert(error);
 			return FALSE;
 		}
 		if (actual_length != fu_chunk_get_data_sz(chk)) {
@@ -496,10 +492,9 @@ static gboolean
 fu_ti_tps6598x_device_setup(FuDevice *device, GError **error)
 {
 	FuTiTps6598xDevice *self = FU_TI_TPS6598X_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 
 	/* there are two devices with the same VID:PID -- ignore the non-vendor one */
-	if (g_usb_device_get_device_class(usb_device) != G_USB_DEVICE_CLASS_VENDOR_SPECIFIC) {
+	if (fu_usb_device_get_class(FU_USB_DEVICE(self)) != FU_USB_CLASS_VENDOR_SPECIFIC) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -750,9 +745,9 @@ fu_ti_tps6598x_device_init(FuTiTps6598xDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ENFORCE_REQUIRES);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_TI_TPS6598X_FIRMWARE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 30000);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x0);

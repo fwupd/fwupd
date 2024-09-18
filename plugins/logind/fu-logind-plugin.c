@@ -123,7 +123,7 @@ fu_logind_plugin_init(FuLogindPlugin *self)
 }
 
 static void
-fu_logind_finalize(GObject *obj)
+fu_logind_plugin_finalize(GObject *obj)
 {
 	FuLogindPlugin *self = FU_LOGIND_PLUGIN(obj);
 	if (self->logind_fd >= 0)
@@ -139,7 +139,7 @@ fu_logind_plugin_class_init(FuLogindPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	object_class->finalize = fu_logind_finalize;
+	object_class->finalize = fu_logind_plugin_finalize;
 	plugin_class->to_string = fu_logind_plugin_to_string;
 	plugin_class->startup = fu_logind_plugin_startup;
 	plugin_class->composite_cleanup = fu_logind_plugin_composite_cleanup;

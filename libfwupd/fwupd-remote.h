@@ -29,18 +29,36 @@ struct _FwupdRemoteClass {
 
 /**
  * FwupdRemoteKind:
- * @FWUPD_REMOTE_KIND_UNKNOWN:			Unknown kind
- * @FWUPD_REMOTE_KIND_DOWNLOAD:			Requires files to be downloaded
- * @FWUPD_REMOTE_KIND_LOCAL:			Reads files from the local machine
- * @FWUPD_REMOTE_KIND_DIRECTORY:		Reads directory from the local machine
  *
  * The kind of remote.
  **/
 typedef enum {
+	/**
+	 * FWUPD_REMOTE_KIND_UNKNOWN:
+	 *
+	 * Unknown kind.
+	 */
 	FWUPD_REMOTE_KIND_UNKNOWN,
+	/**
+	 * FWUPD_REMOTE_KIND_DOWNLOAD:
+	 *
+	 * Requires files to be downloaded.
+	 */
 	FWUPD_REMOTE_KIND_DOWNLOAD,
+	/**
+	 * FWUPD_REMOTE_KIND_LOCAL:
+	 *
+	 * Reads files from the local machine.
+	 */
 	FWUPD_REMOTE_KIND_LOCAL,
-	FWUPD_REMOTE_KIND_DIRECTORY, /* Since: 1.2.4 */
+	/**
+	 * FWUPD_REMOTE_KIND_DIRECTORY:
+	 *
+	 * Reads directory from the local machine.
+	 *
+	 * Since: 1.2.4
+	 */
+	FWUPD_REMOTE_KIND_DIRECTORY,
 	/*< private >*/
 	FWUPD_REMOTE_KIND_LAST
 } FwupdRemoteKind;
@@ -125,6 +143,8 @@ fwupd_remote_get_id(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_title(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
+fwupd_remote_get_privacy_uri(FwupdRemote *self) G_GNUC_NON_NULL(1);
+const gchar *
 fwupd_remote_get_agreement(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_remotes_dir(FwupdRemote *self) G_GNUC_NON_NULL(1);
@@ -171,8 +191,6 @@ guint64
 fwupd_remote_get_age(FwupdRemote *self) G_GNUC_NON_NULL(1);
 FwupdRemoteKind
 fwupd_remote_get_kind(FwupdRemote *self) G_GNUC_NON_NULL(1);
-FwupdKeyringKind
-fwupd_remote_get_keyring_kind(FwupdRemote *self) G_GNUC_NON_NULL(1);
 gchar *
 fwupd_remote_build_firmware_uri(FwupdRemote *self,
 				const gchar *url,

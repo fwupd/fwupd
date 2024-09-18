@@ -52,9 +52,9 @@ G_DEFINE_TYPE_WITH_CODE(FuPartialInputStream,
 						  fu_partial_input_stream_codec_iface_init))
 
 static void
-fu_partial_input_stream_add_string(FwupdCodec *converter, guint idt, GString *str)
+fu_partial_input_stream_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
-	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(converter);
+	FuPartialInputStream *self = FU_PARTIAL_INPUT_STREAM(codec);
 	fwupd_codec_string_append_hex(str, idt, "Offset", self->offset);
 	fwupd_codec_string_append_hex(str, idt, "Size", self->size);
 }

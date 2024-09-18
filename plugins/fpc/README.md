@@ -26,6 +26,26 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 The firmware is deployed when the device is in normal runtime mode, and the
 device will reset when the new firmware has been written.
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### `Flags=moh-device`
+
+Device is a MOH device
+
+### `Flags=rts`
+
+Device is a RTS device.
+
+### `Flags=legacy-dfu`
+
+Device supports legacy DFU mode.
+
+### `Flags=lenfy`
+
+Device is a LENFY MOH device.
+
 ## Vendor ID Security
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x10A5`

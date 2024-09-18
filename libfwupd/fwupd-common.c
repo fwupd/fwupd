@@ -392,7 +392,7 @@ fwupd_build_user_agent_system(void)
 #define FWUPD_GUID_NAMESPACE_DEFAULT   "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
 #define FWUPD_GUID_NAMESPACE_MICROSOFT "70ffd812-4c7f-4c7d-0000-000000000000"
 
-typedef struct __attribute__((packed)) {
+typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint32 a;
 	guint16 b;
 	guint16 c;
@@ -419,7 +419,7 @@ fwupd_guid_to_string(const fwupd_guid_t *guid, FwupdGuidFlags flags)
 	g_return_val_if_fail(guid != NULL, NULL);
 
 	/* copy to avoid issues with aligning */
-	memcpy(&gnat, guid, sizeof(gnat));
+	memcpy(&gnat, guid, sizeof(gnat)); /* nocheck:blocked */
 
 	/* mixed is bizaar, but specified as the DCE encoding */
 	if (flags & FWUPD_GUID_FLAG_MIXED_ENDIAN) {
@@ -516,13 +516,13 @@ fwupd_guid_from_string(const gchar *guidstr,
 	gu.d = GUINT16_TO_BE(tmp);
 	for (guint i = 0; i < 6; i++) {
 		gchar buffer[3] = {0x0};
-		memcpy(buffer, split[4] + (i * 2), 2);
+		memcpy(buffer, split[4] + (i * 2), 2); /* nocheck:blocked */
 		if (!g_ascii_string_to_unsigned(buffer, 16, 0, 0xff, &tmp, error))
 			return FALSE;
 		gu.e[i] = tmp;
 	}
 	if (guid != NULL)
-		memcpy(guid, &gu, sizeof(gu));
+		memcpy(guid, &gu, sizeof(gu)); /* nocheck:blocked */
 
 	/* success */
 	return TRUE;
@@ -584,7 +584,7 @@ fwupd_guid_hash_data(const guint8 *data, gsize datasz, FwupdGuidFlags flags)
 	g_checksum_get_digest(csum, hash, &digestlen);
 
 	/* copy most parts of the hash 1:1 */
-	memcpy(uu_new, hash, sizeof(uu_new));
+	memcpy(uu_new, hash, sizeof(uu_new)); /* nocheck:blocked */
 
 	/* set specific bits according to Section 4.1.3 */
 	uu_new[6] = (guint8)((uu_new[6] & 0x0f) | (5 << 4));
@@ -793,5 +793,19 @@ fwupd_unix_input_stream_from_fn(const gchar *fn, GError **error)
 		return NULL;
 	}
 	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(fd, TRUE));
+}
+
+/**
+ * fwupd_unix_output_stream_from_fn: (skip):
+ **/
+GUnixOutputStream *
+fwupd_unix_output_stream_from_fn(const gchar *fn, GError **error)
+{
+	gint fd = g_open(fn, O_RDWR | O_CREAT, S_IRWXU);
+	if (fd < 0) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "failed to open %s", fn);
+		return NULL;
+	}
+	return G_UNIX_OUTPUT_STREAM(g_unix_output_stream_new(fd, TRUE));
 }
 #endif
