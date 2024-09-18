@@ -1269,7 +1269,7 @@ fu_synaptics_mst_device_update_firmware(FuSynapticsMstDevice *self,
 {
 	g_autoptr(FuSynapticsMstDeviceHelper) helper = fu_synaptics_mst_device_helper_new();
 
-	guint32 fwSize;
+	guint32 fwSize = 0;
 	switch (self->family) {
 	case FU_SYNAPTICS_MST_FAMILY_TESLA:
 	case FU_SYNAPTICS_MST_FAMILY_LEAF:
@@ -1775,6 +1775,17 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 			    "ignoring %s device with no SynapticsMstDeviceKind quirk",
 			    guid0);
 		return FALSE;
+	}
+
+	/* detect chip family */
+	switch (self->family) {
+	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
+	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
+	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
+	case FU_SYNAPTICS_MST_FAMILY_CARRERA:
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+	default:
+		break;
 	}
 
 	/* add non-standard GUIDs */
