@@ -6,6 +6,10 @@ Plugin = huddly_usb
 [USB\VID_2BD9&PID_A031]
 Plugin = huddly_usb
 
+# Huddly Crew
+[USB\VID_2BD9&PID_A033]
+Plugin = huddly_usb
+
 # Huddly USB adapter, no camera connected
 [USB\VID_2BD9&PID_BA01]
 Plugin = huddly_usb
