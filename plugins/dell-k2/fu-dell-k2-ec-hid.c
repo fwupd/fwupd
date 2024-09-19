@@ -187,7 +187,7 @@ fu_dell_k2_ec_hid_i2c_write(FuDevice *self, const guint8 *input, gsize write_siz
 	    .ext = HUB_EXT_I2C_WRITE,
 	    .dwregaddr = 0,
 	    .bufferlen = GUINT16_TO_LE(write_size),
-	    .parameters = {0},
+	    .parameters = {0xEC, 0x1, 0x80},
 	    .extended_cmdarea[0 ... 52] = 0,
 	};
 
@@ -217,7 +217,7 @@ fu_dell_k2_ec_hid_i2c_read(FuDevice *self,
 	    .ext = HUB_EXT_I2C_READ,
 	    .dwregaddr = GUINT32_TO_LE(cmd),
 	    .bufferlen = GUINT16_TO_LE(res->len + 1),
-	    .parameters = {0},
+	    .parameters = {0xEC, 0x1, 0x80},
 	    .extended_cmdarea[0 ... 52] = 0,
 	    .data[0 ... 191] = 0,
 	};
