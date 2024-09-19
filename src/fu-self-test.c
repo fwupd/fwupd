@@ -3757,6 +3757,30 @@ fu_device_list_counterpart_func(gconstpointer user_data)
 }
 
 static void
+fu_device_list_equivalent_id_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FuDevice) device1 = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(GError) error = NULL;
+
+	fu_device_set_id(device1, "8e9cb71aeca70d2faedb5b8aaa263f6175086b2e");
+	fu_device_list_add(device_list, device1);
+
+	fu_device_set_id(device2, "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+	fu_device_set_equivalent_id(device2, "8e9cb71aeca70d2faedb5b8aaa263f6175086b2e");
+	fu_device_set_priority(device2, 999);
+	fu_device_list_add(device_list, device2);
+
+	device = fu_device_list_get_by_id(device_list, "8e9c", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	g_assert_cmpstr(fu_device_get_id(device), ==, "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+}
+
+static void
 fu_device_list_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -6645,6 +6669,9 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/cabinet", fu_common_cabinet_func);
 	g_test_add_data_func("/fwupd/security-attr", self, fu_security_attr_func);
 	g_test_add_data_func("/fwupd/device-list", self, fu_device_list_func);
+	g_test_add_data_func("/fwupd/device-list{equivalent-id}",
+			     self,
+			     fu_device_list_equivalent_id_func);
 	g_test_add_data_func("/fwupd/device-list{delay}", self, fu_device_list_delay_func);
 	g_test_add_data_func("/fwupd/device-list{explicit-order}",
 			     self,
