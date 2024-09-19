@@ -300,11 +300,23 @@ fu_device_list_find_by_connection(FuDeviceList *self,
 	return NULL;
 }
 
+static gint
+fu_device_list_item_sort_by_priority_cb(gconstpointer a, gconstpointer b)
+{
+	const FuDeviceItem *item1 = *((FuDeviceItem **)a);
+	const FuDeviceItem *item2 = *((FuDeviceItem **)b);
+	if (fu_device_get_priority(item1->device) < fu_device_get_priority(item2->device))
+		return 1;
+	if (fu_device_get_priority(item1->device) > fu_device_get_priority(item2->device))
+		return -1;
+	return 0;
+}
+
 static FuDeviceItem *
 fu_device_list_find_by_id(FuDeviceList *self, const gchar *device_id, gboolean *multiple_matches)
 {
-	FuDeviceItem *item = NULL;
 	gsize device_id_len;
+	g_autoptr(GPtrArray) items = g_ptr_array_new();
 
 	/* sanity check */
 	if (device_id == NULL) {
@@ -322,15 +334,17 @@ fu_device_list_find_by_id(FuDeviceList *self, const gchar *device_id, gboolean *
 				      NULL};
 		for (guint j = 0; ids[j] != NULL; j++) {
 			if (strncmp(ids[j], device_id, device_id_len) == 0) {
-				if (item != NULL && multiple_matches != NULL)
+				if (j == 0 && items->len > 0 && multiple_matches != NULL)
 					*multiple_matches = TRUE;
-				item = item_tmp;
+				g_ptr_array_add(items, item_tmp);
 			}
 		}
 	}
 	g_rw_lock_reader_unlock(&self->devices_mutex);
-	if (item != NULL)
-		return item;
+	if (items->len > 0) {
+		g_ptr_array_sort(items, fu_device_list_item_sort_by_priority_cb);
+		return g_ptr_array_index(items, 0);
+	}
 
 	/* only search old devices if we didn't find the active device */
 	g_rw_lock_reader_lock(&self->devices_mutex);
@@ -343,14 +357,20 @@ fu_device_list_find_by_id(FuDeviceList *self, const gchar *device_id, gboolean *
 		ids[1] = fu_device_get_equivalent_id(item_tmp->device_old);
 		for (guint j = 0; ids[j] != NULL; j++) {
 			if (strncmp(ids[j], device_id, device_id_len) == 0) {
-				if (item != NULL && multiple_matches != NULL)
+				if (j == 0 && items->len > 0 && multiple_matches != NULL)
 					*multiple_matches = TRUE;
-				item = item_tmp;
+				g_ptr_array_add(items, item_tmp);
 			}
 		}
 	}
 	g_rw_lock_reader_unlock(&self->devices_mutex);
-	return item;
+	if (items->len > 0) {
+		g_ptr_array_sort(items, fu_device_list_item_sort_by_priority_cb);
+		return g_ptr_array_index(items, 0);
+	}
+
+	/* failed */
+	return NULL;
 }
 
 /**
