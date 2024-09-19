@@ -1,0 +1,7 @@
+# Fleetwood
+[USB\VID_03F0&PID_0BAF]
+Plugin = hpi_cfu
+
+# Hendrix
+[USB\VID_03F0&PID_03B7]
+Plugin = hpi_cfu
