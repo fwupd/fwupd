@@ -45,10 +45,10 @@ const guint8 kLogiDefaultAitSuccessValue = 0x00;
 const guint8 kLogiDefaultAitFailureValue = 0x82;
 
 struct _FuLogitechTapHdmiDevice {
-	FuUdevDevice parent_instance;
+	FuV4lDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuLogitechTapHdmiDevice, fu_logitech_tap_hdmi_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE(FuLogitechTapHdmiDevice, fu_logitech_tap_hdmi_device, FU_TYPE_V4L_DEVICE)
 
 static gboolean
 fu_logitech_tap_hdmi_device_query_data_size(FuLogitechTapHdmiDevice *self,
@@ -381,7 +381,7 @@ fu_logitech_tap_hdmi_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_logitech_tap_hdmi_device_set_version(FuLogitechTapHdmiDevice *self, GError **error)
+fu_logitech_tap_hdmi_device_ensure_version(FuLogitechTapHdmiDevice *self, GError **error)
 {
 	guint16 bufsz = 0;
 	guint8 set_data[XU_INPUT_DATA_LEN] = {kLogiTapHdmiVerSetData, 0, 0, 0, 0, 0, 0, 0};
@@ -440,49 +440,31 @@ static gboolean
 fu_logitech_tap_hdmi_device_setup(FuDevice *device, GError **error)
 {
 	FuLogitechTapHdmiDevice *self = FU_LOGITECH_TAP_HDMI_DEVICE(device);
-	return fu_logitech_tap_hdmi_device_set_version(self, error);
+
+	/* FuV4lDevice->setup */
+	if (!FU_DEVICE_CLASS(fu_logitech_tap_hdmi_device_parent_class)->setup(device, error))
+		return FALSE;
+
+	/* only interested in video capture device */
+	if ((fu_v4l_device_get_caps(FU_V4L_DEVICE(self)) & FU_V4L_CAP_VIDEO_CAPTURE) == 0) {
+		g_autofree gchar *caps =
+		    fu_v4l_cap_to_string(fu_v4l_device_get_caps(FU_V4L_DEVICE(self)));
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "only video capture device are supported, got %s",
+			    caps);
+		return FALSE;
+	}
+	return fu_logitech_tap_hdmi_device_ensure_version(self, error);
 }
 
 static gboolean
 fu_logitech_tap_hdmi_device_probe(FuDevice *device, GError **error)
 {
-	g_autofree gchar *attr_index = NULL;
-	g_autofree gchar *prop_id_v4l_capabilities = NULL;
-
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_logitech_tap_hdmi_device_parent_class)->probe(device, error))
-		return FALSE;
-
-	/* ignore unsupported subsystems */
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "video4linux") != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "is not correct subsystem=%s, expected video4linux",
-			    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)));
-		return FALSE;
-	}
-
-	/* only interested in video capture device */
-	prop_id_v4l_capabilities =
-	    fu_udev_device_read_property(FU_UDEV_DEVICE(device), "ID_V4L_CAPABILITIES", error);
-	if (prop_id_v4l_capabilities == NULL)
-		return FALSE;
-	if (g_strcmp0(prop_id_v4l_capabilities, ":capture:") != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "only video capture device are supported");
-		return FALSE;
-	}
-
 	/* interested in lowest index only e,g, video0, ignore low format siblings like
 	 * video1/video2/video3 etc */
-	attr_index = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
-					       "index",
-					       FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
-					       NULL);
-	if (g_strcmp0(attr_index, "0") != 0) {
+	if (fu_v4l_device_get_index(FU_V4L_DEVICE(device)) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -490,8 +472,8 @@ fu_logitech_tap_hdmi_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	};
 
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "video4linux", error);
+	/* success */
+	return TRUE;
 }
 
 static void

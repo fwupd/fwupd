@@ -74,12 +74,12 @@ const guchar kLogiUnitIdCameraVersion = 8;
 const guchar kLogiAitSetMmpCmdFwBurning = 1;
 
 struct _FuLogitechScribeDevice {
-	FuUdevDevice parent_instance;
+	FuV4lDevice parent_instance;
 	guint update_ep[EP_LAST];
 	guint update_iface;
 };
 
-G_DEFINE_TYPE(FuLogitechScribeDevice, fu_logitech_scribe_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE(FuLogitechScribeDevice, fu_logitech_scribe_device, FU_TYPE_V4L_DEVICE)
 
 static gboolean
 fu_logitech_scribe_device_send(FuLogitechScribeDevice *self,
@@ -341,39 +341,9 @@ fu_logitech_scribe_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_logitech_scribe_device_probe(FuDevice *device, GError **error)
 {
-	g_autofree gchar *attr_index = NULL;
-	g_autofree gchar *prop_id_v4l_capabilities = NULL;
-
-	/* check is valid */
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "video4linux") != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "is not correct subsystem=%s, expected video4linux",
-			    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)));
-		return FALSE;
-	}
-
-	/* only interested in video capture device */
-	prop_id_v4l_capabilities =
-	    fu_udev_device_read_property(FU_UDEV_DEVICE(device), "ID_V4L_CAPABILITIES", error);
-	if (prop_id_v4l_capabilities == NULL)
-		return FALSE;
-	if (g_strcmp0(prop_id_v4l_capabilities, ":capture:") != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "only video capture device are supported");
-		return FALSE;
-	}
-
 	/* interested in lowest index only e,g, video0, ignore low format siblings like
 	 * video1/video2/video3 etc */
-	attr_index = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
-					       "index",
-					       FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
-					       NULL);
-	if (g_strcmp0(attr_index, "0") != 0) {
+	if (fu_v4l_device_get_index(FU_V4L_DEVICE(device)) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -381,8 +351,8 @@ fu_logitech_scribe_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	};
 
-	/* set the physical ID */
-	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "video4linux", error);
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -581,9 +551,8 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_logitech_scribe_device_set_version(FuDevice *device, GError **error)
+fu_logitech_scribe_device_ensure_version(FuLogitechScribeDevice *self, GError **error)
 {
-	FuLogitechScribeDevice *self = FU_LOGITECH_SCRIBE_DEVICE(device);
 	guint32 fwversion = 0;
 	guint16 data_len = 0;
 	g_autofree guint8 *query_data = NULL;
@@ -611,7 +580,7 @@ fu_logitech_scribe_device_set_version(FuDevice *device, GError **error)
 	/*  little-endian data. MinorVersion byte 0, MajorVersion byte 1, BuildVersion byte 3 & 2 */
 	fwversion =
 	    (query_data[1] << 24) + (query_data[0] << 16) + (query_data[3] << 8) + query_data[2];
-	fu_device_set_version_raw(device, fwversion);
+	fu_device_set_version_raw(FU_DEVICE(self), fwversion);
 
 	/* success */
 	return TRUE;
@@ -620,7 +589,25 @@ fu_logitech_scribe_device_set_version(FuDevice *device, GError **error)
 static gboolean
 fu_logitech_scribe_device_setup(FuDevice *device, GError **error)
 {
-	return fu_logitech_scribe_device_set_version(device, error);
+	FuLogitechScribeDevice *self = FU_LOGITECH_SCRIBE_DEVICE(device);
+
+	/* FuV4lDevice->setup */
+	if (!FU_DEVICE_CLASS(fu_logitech_scribe_device_parent_class)->setup(device, error))
+		return FALSE;
+
+	/* only interested in video capture device */
+	if ((fu_v4l_device_get_caps(FU_V4L_DEVICE(device)) & FU_V4L_CAP_VIDEO_CAPTURE) == 0) {
+		g_autofree gchar *caps =
+		    fu_v4l_cap_to_string(fu_v4l_device_get_caps(FU_V4L_DEVICE(self)));
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "only video capture device are supported, got %s",
+			    caps);
+		return FALSE;
+	}
+
+	return fu_logitech_scribe_device_ensure_version(self, error);
 }
 
 static void

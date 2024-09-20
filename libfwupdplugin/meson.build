@@ -26,6 +26,7 @@ fwupdplugin_structs = [
   'fu-usb-device-ds20.rs', # fuzzing
   'fu-usb.rs', # fuzzing
   'fu-uswid.rs', # fuzzing
+  'fu-v4l.rs', # fuzzing
 ]
 
 # do not use structgen as these are referenced in headers too...
@@ -165,6 +166,7 @@ fwupdplugin_src = [
   'fu-usb-interface.c',
   'fu-uswid-firmware.c', # fuzzing
   'fu-version-common.c', # fuzzing
+  'fu-v4l-device.c',
   'fu-volume.c', # fuzzing
 ]
 
@@ -304,6 +306,7 @@ fwupdplugin_headers = [
   'fu-usb-device-ms-ds20.h',
   'fu-usb-device-private.h',
   'fu-uswid-firmware.h',
+  'fu-v4l-device.h',
   'fu-version-common.h',
   'fu-volume.h',
 ]
