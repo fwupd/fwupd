@@ -201,13 +201,18 @@ fu_amd_gpu_device_prepare_firmware(FuDevice *device,
 
 	fw_pn = fu_amd_gpu_atom_firmware_get_vbios_pn(csm);
 	if (g_strcmp0(fw_pn, self->vbios_pn) != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "firmware for %s does not match %s",
-			    fw_pn,
-			    self->vbios_pn);
-		return NULL;
+		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "firmware for %s does not match %s",
+				    fw_pn,
+				    self->vbios_pn);
+			return NULL;
+		}
+		g_warning("firmware for %s does not match %s but is being force installed anyway",
+			  fw_pn,
+			  self->vbios_pn);
 	}
 
 	return g_steal_pointer(&firmware);
