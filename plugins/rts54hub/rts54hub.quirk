@@ -113,6 +113,7 @@ FirmwareSizeMax = 0x20000
 #USB-C Dual Display Dock
 [USB\VID_065F&PID_2260]
 Plugin = rts54hub
+Vendor = GoodWay
 Name = USB-C Dual Display Dock
 Flags = updatable
 GType = FuRts54HubDevice
