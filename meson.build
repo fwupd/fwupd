@@ -382,6 +382,9 @@ endif
 if cc.has_header('linux/mei.h')
   conf.set('HAVE_MEI_H', '1')
 endif
+if cc.has_header('linux/videodev2.h')
+  conf.set('HAVE_VIDEODEV2_H', '1')
+endif
 if cc.has_header('mtd/mtd-user.h')
   conf.set('HAVE_MTD_USER_H', '1')
 endif

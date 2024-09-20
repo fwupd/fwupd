@@ -143,6 +143,7 @@ fu_udev_backend_get_device_gtype(const gchar *subsystem, const gchar *devtype)
 	    {"block", "disk", FU_TYPE_BLOCK_DEVICE},
 	    {"serio", NULL, FU_TYPE_SERIO_DEVICE},
 	    {"pci", NULL, FU_TYPE_PCI_DEVICE},
+	    {"video4linux", NULL, FU_TYPE_V4L_DEVICE},
 	};
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		if (g_strcmp0(subsystem, map[i].subsystem) == 0 &&

@@ -13,4 +13,4 @@ G_DECLARE_FINAL_TYPE(FuLogitechScribeDevice,
 		     fu_logitech_scribe_device,
 		     FU,
 		     LOGITECH_SCRIBE_DEVICE,
-		     FuUdevDevice)
+		     FuV4lDevice)
