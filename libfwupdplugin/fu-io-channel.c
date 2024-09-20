@@ -541,7 +541,7 @@ fu_io_channel_new_file(const gchar *filename, FuIoChannelOpenFlag open_flags, GE
 #endif
 	if (open_flags & FU_IO_CHANNEL_OPEN_FLAG_READ &&
 	    open_flags & FU_IO_CHANNEL_OPEN_FLAG_WRITE) {
-		flags = O_RDWR;
+		flags |= O_RDWR;
 	} else if (open_flags & FU_IO_CHANNEL_OPEN_FLAG_READ) {
 		flags |= O_RDONLY;
 	} else if (open_flags & FU_IO_CHANNEL_OPEN_FLAG_WRITE) {

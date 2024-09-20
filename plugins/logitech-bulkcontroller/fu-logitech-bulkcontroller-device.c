@@ -10,6 +10,7 @@
 #include <json-glib/json-glib.h>
 #include <string.h>
 
+#include "fu-logitech-bulkcontroller-child.h"
 #include "fu-logitech-bulkcontroller-common.h"
 #include "fu-logitech-bulkcontroller-device.h"
 #include "fu-logitech-bulkcontroller-struct.h"
@@ -702,6 +703,83 @@ fu_logitech_bulkcontroller_device_update_state_to_status(
 }
 
 static gboolean
+fu_logitech_bulkcontroller_device_ensure_child(FuLogitechBulkcontrollerDevice *self,
+					       JsonObject *json_device,
+					       GError **error)
+{
+	FuLogitechBulkcontrollerDeviceState status;
+	GPtrArray *children = fu_device_get_children(FU_DEVICE(self));
+	g_autoptr(FuDevice) child = NULL;
+	const gchar *name;
+	const gchar *required_members[] = {
+	    "make",
+	    "model",
+	    "name",
+	    "status",
+	    "sw",
+	    "type",
+	    "vid",
+	};
+
+	/* sanity check */
+	for (guint i = 0; i < G_N_ELEMENTS(required_members); i++) {
+		if (!json_object_has_member(json_device, required_members[i])) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no %s",
+				    required_members[i]);
+			return FALSE;
+		}
+	}
+	if (g_strcmp0(json_object_get_string_member(json_device, "type"), "Sentinel") != 0)
+		return TRUE;
+
+	/* check status */
+	status = json_object_get_int_member(json_device, "status");
+	if (status != FU_LOGITECH_BULKCONTROLLER_DEVICE_STATE_ONLINE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "status is %s",
+			    fu_logitech_bulkcontroller_device_state_to_string(status));
+		return FALSE;
+	}
+
+	/* child already exists */
+	name = json_object_get_string_member(json_device, "name");
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child_tmp = g_ptr_array_index(children, i);
+		if (g_strcmp0(fu_device_get_logical_id(child_tmp), name) == 0) {
+			g_debug("found existing %s device, just updating version", name);
+			fu_device_set_version(child_tmp,
+					      json_object_get_string_member(json_device, "sw"));
+			return TRUE;
+		}
+	}
+
+
+	/* create new child */
+	child = g_object_new(FU_TYPE_LOGITECH_BULKCONTROLLER_CHILD, "proxy", self, NULL);
+	fu_device_add_private_flag(child, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
+	fu_device_set_name(child, name);
+	fu_device_set_vendor(child, json_object_get_string_member(json_device, "make"));
+	fu_device_set_logical_id(child, name);
+	fu_device_set_version(child, json_object_get_string_member(json_device, "sw"));
+	if (json_object_has_member(json_device, "serial"))
+		fu_device_set_serial(child, json_object_get_string_member(json_device, "serial"));
+	fu_device_add_instance_strup(child,
+				     "MODEL",
+				     json_object_get_string_member(json_device, "model"));
+	if (!fu_device_build_instance_id(child, error, "LOGI", "MODEL", NULL))
+		return FALSE;
+	fu_device_add_child(FU_DEVICE(self), child);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_logitech_bulkcontroller_device_json_parser(FuLogitechBulkcontrollerDevice *self,
 					      GByteArray *decoded_pkt,
 					      GError **error)
@@ -773,6 +851,15 @@ fu_logitech_bulkcontroller_device_json_parser(FuLogitechBulkcontrollerDevice *se
 	if (json_object_has_member(json_device, "updateProgress"))
 		self->update_progress = json_object_get_int_member(json_device, "updateProgress");
 
+	/* ensure child pheripheral devices exist */
+	for (guint i = 1; i < json_array_get_length(json_devices); i++) {
+		JsonObject *json_child = json_array_get_object_element(json_devices, i);
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_logitech_bulkcontroller_device_ensure_child(self, json_child, &error_local))
+			g_warning("failed to add child: %s", error_local->message);
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -1340,6 +1427,7 @@ fu_logitech_bulkcontroller_device_init(FuLogitechBulkcontrollerDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN);
 	fu_usb_device_set_claim_retry_count(FU_USB_DEVICE(self), 100);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
