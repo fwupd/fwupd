@@ -34,3 +34,69 @@ struct FuStructLogitechTapTouchHidReq {
     cmd: FuStructLogitechTapTouchHidCmd,
     //payload goes here
 }
+
+#[repr(u8)]
+enum FuLogitechTapSensorHidTdeMode {
+    Disable = 0x0,
+    Enable = 0x01,
+    Selector = 0x02,
+}
+
+// device version
+#[repr(u8)]
+enum FuLogitechTapSensorHidColossusApp {
+    GetVersion = 0x04,
+}
+
+// serial number of the device
+#[repr(u8)]
+enum FuLogitechTapSensorHidSerialNumber {
+    SetReportByte1 = 0x0,
+    SetReportByte4 = 0x0,
+    SetReportByte3 = 0x0E,
+    SetReportByte2 = 0x70,
+}
+
+#[repr(u8)]
+enum FuLogitechTapSensorHidReboot {
+    PinClr = 0x05,
+    PinSet = 0x06,
+    Pwr = 0x2D,
+    Rst = 0x2E,
+}
+
+#[repr(u8)]
+enum FuLogitechTapSensorHidSetCmd {
+     // put device into suspend/operational mode
+     Tde = 0x1A,
+     Reboot = 0x1A,
+     Version = 0x1B,
+     SerialNumber = 0x1C,
+}
+ 
+#[repr(u8)]
+enum FuLogitechTapSensorHidGetCmd {
+     Version = 0x19,
+     SerialNumber = 0x1D,
+}
+ 
+#[derive(New)]
+struct FuStructLogitechTapSensorHidReq {
+     cmd: FuLogitechTapSensorHidSetCmd,
+      //payload goes here
+      payload_byte1: u8,
+      payload_byte2: u8,
+      payload_byte3: u8 = 0x0,
+      payload_byte4: u8 = 0x0,
+}
+ 
+#[derive(New)]
+struct FuStructLogitechTapSensorHidRes {
+     cmd: FuLogitechTapSensorHidGetCmd,
+      //payload goes here
+      payload_byte1: u8,
+      payload_byte2: u8,
+      payload_byte3: u8,
+      payload_byte4: u8,
+}
+
