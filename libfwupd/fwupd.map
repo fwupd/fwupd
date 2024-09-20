@@ -977,6 +977,7 @@ LIBFWUPD_2.0.0 {
     fwupd_codec_to_json_string;
     fwupd_codec_to_string;
     fwupd_codec_to_variant;
+    fwupd_device_remove_children;
     fwupd_error_convert;
     fwupd_install_flags_to_string;
     fwupd_remote_get_privacy_uri;

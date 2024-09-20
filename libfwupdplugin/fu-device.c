@@ -1325,6 +1325,32 @@ fu_device_remove_child(FuDevice *self, FuDevice *child)
 	g_signal_emit(self, signals[SIGNAL_CHILD_REMOVED], 0, child);
 }
 
+/**
+ * fu_device_remove_children:
+ * @self: a #FuDevice
+ *
+ * Removes all child devices.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_remove_children(FuDevice *self)
+{
+	GPtrArray *children;
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+
+	/* proxy */
+	fwupd_device_remove_children(FWUPD_DEVICE(self));
+
+	/* signal to the plugin */
+	children = fu_device_get_children(self);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child = g_ptr_array_index(children, i);
+		g_signal_emit(self, signals[SIGNAL_CHILD_REMOVED], 0, child);
+	}
+}
+
 static void
 fu_device_ensure_parent_guids(FuDevice *self)
 {

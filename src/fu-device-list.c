@@ -594,6 +594,14 @@ fu_device_list_item_finalized_cb(gpointer data, GObject *where_the_object_was)
 	g_rw_lock_writer_unlock(&self->devices_mutex);
 }
 
+static void
+fu_device_list_item_set_device_old(FuDeviceItem *item, FuDevice *device)
+{
+	fu_device_set_parent(device, NULL);
+	fu_device_remove_children(device);
+	g_set_object(&item->device_old, device);
+}
+
 /* this should never be required, and yet here we are */
 static void
 fu_device_list_item_set_device(FuDeviceItem *item, FuDevice *device)
@@ -745,7 +753,7 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 	_fu_device_incorporate_update_state(item->device, device);
 
 	/* assign the new device */
-	g_set_object(&item->device_old, item->device);
+	fu_device_list_item_set_device_old(item, item->device);
 	fu_device_list_item_set_device(item, device);
 	fu_device_list_emit_device_changed(self, device);
 
