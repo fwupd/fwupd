@@ -217,6 +217,7 @@ fu_amd_gpu_device_write_firmware(FuDevice *device,
 	g_autofree gchar *psp_vbflash = NULL;
 	g_autoptr(FuIOChannel) image_io = NULL;
 	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GError) error_read = NULL;
 	const gchar *base;
 
 	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
@@ -236,8 +237,14 @@ fu_amd_gpu_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* trigger the update (this looks funny but amdgpu returns 0 bytes) */
-	if (!fu_io_channel_read_raw(image_io, NULL, 0, NULL, 100, FU_IO_CHANNEL_FLAG_NONE, NULL))
-		g_debug("triggered update");
+	if (!fu_io_channel_read_raw(image_io,
+				    NULL,
+				    1,
+				    NULL,
+				    100,
+				    FU_IO_CHANNEL_FLAG_NONE,
+				    &error_read))
+		g_debug("triggered update: %s", error_read->message);
 
 	/* poll for completion */
 	return fu_device_retry_full(device,
