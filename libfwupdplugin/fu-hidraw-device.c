@@ -129,6 +129,9 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 					 "VEN",
 					 "DEV",
 					 NULL);
+	fu_device_build_vendor_id_u16(device,
+				      "HIDRAW",
+				      fu_udev_device_get_vendor(FU_UDEV_DEVICE(self)));
 
 	/* success */
 	return TRUE;
