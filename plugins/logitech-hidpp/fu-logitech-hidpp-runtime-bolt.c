@@ -415,8 +415,9 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 			    "DEV",
 			    fu_udev_device_get_model(FU_UDEV_DEVICE(device)));
 			fu_device_add_instance_u8(FU_DEVICE(radio), "ENT", msg->data[0]);
-			fu_device_set_physical_id(FU_DEVICE(radio),
-						  fu_device_get_physical_id(device));
+			fu_device_incorporate(FU_DEVICE(radio),
+					      FU_DEVICE(device),
+					      FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 			fu_device_set_logical_id(FU_DEVICE(radio), "Receiver_SoftDevice");
 			if (!fu_device_build_instance_id(FU_DEVICE(radio),
 							 error,

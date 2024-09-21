@@ -53,7 +53,7 @@ fu_bcm57xx_plugin_backend_device_added(FuPlugin *plugin,
 		g_autofree gchar *ethtool_iface = g_path_get_basename(g_ptr_array_index(ifaces, 0));
 		dev = g_object_new(FU_TYPE_BCM57XX_DEVICE, "iface", ethtool_iface, NULL);
 	}
-	fu_device_incorporate(dev, device);
+	fu_device_incorporate(dev, device, FU_DEVICE_INCORPORATE_FLAG_ALL);
 	locker = fu_device_locker_new(dev, error);
 	if (locker == NULL)
 		return FALSE;

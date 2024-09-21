@@ -456,7 +456,7 @@ fu_dell_k2_rtshub_new(FuUsbDevice *device, FuDellK2BaseType dock_type)
 {
 	FuDellK2RtsHub *self = g_object_new(FU_TYPE_DELL_K2_RTSHUB, NULL);
 
-	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(device));
+	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(device), FU_DEVICE_INCORPORATE_FLAG_ALL);
 	self->dock_type = dock_type;
 	return self;
 }

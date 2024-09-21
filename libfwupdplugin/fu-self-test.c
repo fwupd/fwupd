@@ -2275,12 +2275,35 @@ fu_device_incorporate_descendant_func(void)
 	fu_device_set_name(device, "FuDevice");
 	fu_device_set_summary(FU_DEVICE(test_device), "FuTestDevice");
 
-	fu_device_incorporate(FU_DEVICE(test_device), device);
+	fu_device_incorporate(FU_DEVICE(test_device), device, FU_DEVICE_INCORPORATE_FLAG_ALL);
 	g_assert_cmpstr(fu_device_get_name(FU_DEVICE(test_device)), ==, "FuDevice");
 
 	/* this won't explode as device_class->incorporate is checking types */
-	fu_device_incorporate(device, FU_DEVICE(test_device));
+	fu_device_incorporate(device, FU_DEVICE(test_device), FU_DEVICE_INCORPORATE_FLAG_ALL);
 	g_assert_cmpstr(fu_device_get_summary(device), ==, "FuTestDevice");
+}
+
+static void
+fu_device_incorporate_flag_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuDevice) donor = fu_device_new(ctx);
+
+	fu_device_set_logical_id(donor, "logi");
+	fu_device_set_physical_id(donor, "phys");
+	fu_device_add_vendor_id(donor, "PCI:0x1234");
+
+	fu_device_incorporate(device,
+			      donor,
+			      FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS |
+				  FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
+	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "phys");
+	g_assert_cmpstr(fu_device_get_logical_id(device), ==, NULL);
+	g_assert_true(fu_device_has_vendor_id(device, "PCI:0x1234"));
+
+	fu_device_incorporate(device, donor, FU_DEVICE_INCORPORATE_FLAG_ALL);
+	g_assert_cmpstr(fu_device_get_logical_id(device), ==, "logi");
 }
 
 static void
@@ -2330,7 +2353,7 @@ fu_device_incorporate_func(void)
 	fu_device_set_modified_usec(device, 1514340000ull * G_USEC_PER_SEC);
 
 	/* incorporate properties from donor to device */
-	fu_device_incorporate(device, donor);
+	fu_device_incorporate(device, donor, FU_DEVICE_INCORPORATE_FLAG_ALL);
 	g_assert_cmpstr(fu_device_get_equivalent_id(device),
 			==,
 			"ffffffffffffffffffffffffffffffffffffffff");
@@ -6021,6 +6044,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{parent}", fu_device_parent_func);
 	g_test_add_func("/fwupd/device{children}", fu_device_children_func);
 	g_test_add_func("/fwupd/device{incorporate}", fu_device_incorporate_func);
+	g_test_add_func("/fwupd/device{incorporate-flag}", fu_device_incorporate_flag_func);
 	g_test_add_func("/fwupd/device{incorporate-descendant}",
 			fu_device_incorporate_descendant_func);
 	g_test_add_func("/fwupd/device{poll}", fu_device_poll_func);

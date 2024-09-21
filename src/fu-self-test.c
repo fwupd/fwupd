@@ -6425,6 +6425,42 @@ fu_test_engine_fake_pci(gconstpointer user_data)
 }
 
 static void
+fu_test_engine_fake_v4l(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	/* load engine and check the device was found */
+	fu_engine_add_plugin_filter(engine, "logitech_tap");
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+			     progress,
+			     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* v4l -> logitech_tap */
+	device = fu_engine_get_device(engine, "d787669ee4a103fe0b361fe31c10ea037c72f27c", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "video4linux");
+	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
+	g_assert_cmpint(fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)), ==, 0x093A);
+	g_assert_cmpint(fu_udev_device_get_model(FU_UDEV_DEVICE(device)), ==, 0x2862);
+	g_assert_cmpint(fu_udev_device_get_revision(FU_UDEV_DEVICE(device)), ==, 0x0);
+	g_assert_cmpint(fu_v4l_device_get_index(FU_V4L_DEVICE(device)), ==, 0);
+	g_assert_cmpint(fu_v4l_device_get_caps(FU_V4L_DEVICE(device)), ==, FU_V4L_CAP_NONE);
+	g_assert_cmpstr(fu_device_get_name(device), ==, "Integrated Camera: Integrated C");
+	g_assert_cmpstr(fu_device_get_plugin(device), ==, "logitech_tap");
+}
+
+static void
 fu_test_engine_fake_nvme(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -6731,6 +6767,7 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/engine{fake-mei}", self, fu_test_engine_fake_mei);
 	g_test_add_data_func("/fwupd/engine{fake-tpm}", self, fu_test_engine_fake_tpm);
 	g_test_add_data_func("/fwupd/engine{fake-pci}", self, fu_test_engine_fake_pci);
+	g_test_add_data_func("/fwupd/engine{fake-v4l}", self, fu_test_engine_fake_v4l);
 	if (g_test_slow()) {
 		g_test_add_data_func("/fwupd/device-list{replug-auto}",
 				     self,

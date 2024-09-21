@@ -447,7 +447,9 @@ fu_corsair_bp_new(FuUsbDevice *usb_device, gboolean is_subdevice)
 {
 	FuCorsairBp *self = g_object_new(FU_TYPE_CORSAIR_BP, NULL);
 
-	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(usb_device));
+	fu_device_incorporate(FU_DEVICE(self),
+			      FU_DEVICE(usb_device),
+			      FU_DEVICE_INCORPORATE_FLAG_ALL);
 	if (is_subdevice) {
 		self->destination = FU_CORSAIR_BP_DESTINATION_SUBDEVICE;
 	} else {

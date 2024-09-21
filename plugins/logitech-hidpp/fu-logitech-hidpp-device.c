@@ -336,7 +336,9 @@ fu_logitech_hidpp_device_create_radio_child(FuLogitechHidppDevice *self,
 
 	radio_version = g_strdup_printf("0x%.4x", build);
 	radio = fu_logitech_hidpp_radio_new(ctx, entity);
-	fu_device_set_physical_id(FU_DEVICE(radio), fu_device_get_physical_id(FU_DEVICE(self)));
+	fu_device_incorporate(FU_DEVICE(radio),
+			      FU_DEVICE(self),
+			      FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 	/*
 	 * Use the parent logical id as well as the model id for the
 	 * logical id of the radio child device. This allows the radio

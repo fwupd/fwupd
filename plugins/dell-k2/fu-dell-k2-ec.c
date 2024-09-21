@@ -972,8 +972,7 @@ fu_dell_k2_ec_new(FuDevice *device)
 	FuContext *ctx = fu_device_get_context(device);
 
 	self = g_object_new(FU_TYPE_DELL_K2_EC, "context", ctx, NULL);
-	fu_device_incorporate(FU_DEVICE(self), device);
-	fu_device_set_physical_id(FU_DEVICE(self), fu_device_get_physical_id(device));
+	fu_device_incorporate(FU_DEVICE(self), device, FU_DEVICE_INCORPORATE_FLAG_ALL);
 	fu_device_set_logical_id(FU_DEVICE(self), "ec");
 	return self;
 }

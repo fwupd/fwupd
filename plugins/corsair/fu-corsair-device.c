@@ -132,7 +132,9 @@ fu_corsair_device_poll_subdevice(FuDevice *device, gboolean *subdevice_added, GE
 	}
 
 	child_bp = fu_corsair_bp_new(FU_USB_DEVICE(device), TRUE);
-	fu_device_incorporate(FU_DEVICE(child_bp), FU_DEVICE(self->bp));
+	fu_device_incorporate(FU_DEVICE(child_bp),
+			      FU_DEVICE(self->bp),
+			      FU_DEVICE_INCORPORATE_FLAG_ALL);
 
 	child = fu_corsair_device_new(self, child_bp);
 	fu_device_add_instance_id(FU_DEVICE(child), self->subdevice_id);
@@ -578,7 +580,7 @@ fu_corsair_device_new(FuCorsairDevice *parent, FuCorsairBp *bp)
 			    "context",
 			    fu_device_get_context(FU_DEVICE(parent)),
 			    NULL);
-	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(parent));
+	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(parent), FU_DEVICE_INCORPORATE_FLAG_ALL);
 	self->bp = g_object_ref(bp);
 	return self;
 }

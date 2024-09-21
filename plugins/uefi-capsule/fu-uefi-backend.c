@@ -61,7 +61,7 @@ fu_uefi_backend_device_new_from_dev(FuUefiBackend *self, FuDevice *dev)
 			 "fw-version",
 			 fu_device_get_metadata_integer(dev, FU_DEVICE_METADATA_UEFI_FW_VERSION),
 			 NULL);
-	fu_device_incorporate(FU_DEVICE(device), dev);
+	fu_device_incorporate(FU_DEVICE(device), dev, FU_DEVICE_INCORPORATE_FLAG_ALL);
 	return device;
 }
 

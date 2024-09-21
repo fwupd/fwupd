@@ -265,7 +265,7 @@ static gboolean
 fu_vli_usbhub_pd_device_probe(FuDevice *device, GError **error)
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
-	fu_device_set_physical_id(device, fu_device_get_physical_id(FU_DEVICE(parent)));
+	fu_device_incorporate(device, FU_DEVICE(parent), FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 	return TRUE;
 }
 

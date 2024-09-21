@@ -2164,7 +2164,9 @@ fu_mm_device_shadow_new(FuMmDevice *device)
 				     "context",
 				     fu_device_get_context(FU_DEVICE(device)),
 				     NULL);
-	fu_device_incorporate(FU_DEVICE(shadow_device), FU_DEVICE(device));
+	fu_device_incorporate(FU_DEVICE(shadow_device),
+			      FU_DEVICE(device),
+			      FU_DEVICE_INCORPORATE_FLAG_ALL);
 	return shadow_device;
 }
 
@@ -2182,7 +2184,9 @@ fu_mm_device_udev_new(FuContext *ctx, MMManager *manager, FuMmDevice *shadow_dev
 	FuMmDevice *self = g_object_new(FU_TYPE_MM_DEVICE, "context", ctx, NULL);
 	g_debug("creating udev-based mm device at %s",
 		fu_device_get_physical_id(FU_DEVICE(shadow_device)));
-	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(shadow_device));
+	fu_device_incorporate(FU_DEVICE(self),
+			      FU_DEVICE(shadow_device),
+			      FU_DEVICE_INCORPORATE_FLAG_ALL);
 	return self;
 }
 

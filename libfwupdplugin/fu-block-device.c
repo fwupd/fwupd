@@ -59,7 +59,7 @@ fu_block_device_probe(FuDevice *device, GError **error)
 			return FALSE;
 		if (!fu_device_build_instance_id(device, error, "BLOCK", "VEN", "DEV", NULL))
 			return FALSE;
-		fu_device_incorporate_vendor_ids(device, usb_device);
+		fu_device_incorporate(device, usb_device, FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS);
 
 		/* USB devpath as physical ID */
 		physical_id =
