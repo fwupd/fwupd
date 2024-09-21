@@ -78,7 +78,9 @@ fu_kinetic_dp_plugin_create_device(FuDpauxDevice *dpaux_device, GError **error)
 			    dev_id);
 		return NULL;
 	}
-	fu_device_incorporate(FU_DEVICE(dp_device), FU_DEVICE(dpaux_device));
+	fu_device_incorporate(FU_DEVICE(dp_device),
+			      FU_DEVICE(dpaux_device),
+			      FU_DEVICE_INCORPORATE_FLAG_ALL);
 	fu_kinetic_dp_device_set_chip_id(dp_device, chip_id);
 	fu_kinetic_dp_device_set_fw_state(dp_device, fw_state);
 	return g_steal_pointer(&dp_device);

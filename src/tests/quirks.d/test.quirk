@@ -5,6 +5,10 @@ GType = FuPxiReceiverDevice
 [USB\VID_093A&PID_2862]
 Plugin = colorhug
 
+[VIDEO4LINUX\VEN_093A&DEV_2862]
+Plugin = logitech_tap
+GType = FuLogitechTapHdmiDevice
+
 [SERIO\FWID_LEN0305-PNP0F13]
 Plugin = synaptics_rmi
 GType = FuSynapticsRmiPs2Device

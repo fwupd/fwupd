@@ -1015,7 +1015,7 @@ fu_dell_dock_ec_new(FuDevice *proxy)
 
 	self = g_object_new(FU_TYPE_DELL_DOCK_EC, "context", ctx, NULL);
 	fu_device_set_proxy(FU_DEVICE(self), proxy);
-	fu_device_set_physical_id(FU_DEVICE(self), fu_device_get_physical_id(proxy));
+	fu_device_incorporate(FU_DEVICE(self), proxy, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 	fu_device_set_logical_id(FU_DEVICE(self), "ec");
 
 	return self;

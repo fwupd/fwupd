@@ -85,8 +85,6 @@ fu_v4l_device_get_caps(FuV4lDevice *self)
 static gboolean
 fu_v4l_device_usb_probe(FuV4lDevice *self, FuDevice *usb_device, GError **error)
 {
-	g_autofree gchar *physical_id = NULL;
-
 	/* copy the VID and PID, and reconstruct compatible IDs */
 	if (!fu_device_probe(usb_device, error))
 		return FALSE;
@@ -112,12 +110,10 @@ fu_v4l_device_usb_probe(FuV4lDevice *self, FuDevice *usb_device, GError **error)
 				   fu_device_get_instance_str(usb_device, "PID"));
 	if (!fu_device_build_instance_id(FU_DEVICE(self), error, "VIDEO4LINUX", "VEN", "DEV", NULL))
 		return FALSE;
-	fu_device_incorporate_vendor_ids(FU_DEVICE(self), usb_device);
-
-	/* USB devpath as physical ID */
-	physical_id = g_strdup_printf("DEVPATH=%s",
-				      fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(usb_device)));
-	fu_device_set_physical_id(FU_DEVICE(self), physical_id);
+	fu_device_incorporate(FU_DEVICE(self),
+			      usb_device,
+			      FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS |
+				  FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 
 	/* success */
 	return TRUE;

@@ -71,7 +71,7 @@ fu_goodixtp_plugin_backend_device_added(FuPlugin *plugin,
 						       "context",
 						       fu_plugin_get_context(plugin),
 						       NULL);
-		fu_device_incorporate(dev, device);
+		fu_device_incorporate(dev, device, FU_DEVICE_INCORPORATE_FLAG_ALL);
 		locker = fu_device_locker_new(dev, error);
 		if (locker == NULL)
 			return FALSE;
@@ -84,7 +84,7 @@ fu_goodixtp_plugin_backend_device_added(FuPlugin *plugin,
 						       "context",
 						       fu_plugin_get_context(plugin),
 						       NULL);
-		fu_device_incorporate(dev, device);
+		fu_device_incorporate(dev, device, FU_DEVICE_INCORPORATE_FLAG_ALL);
 		locker = fu_device_locker_new(dev, error);
 		if (locker == NULL)
 			return FALSE;

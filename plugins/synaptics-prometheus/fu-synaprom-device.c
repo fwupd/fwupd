@@ -534,7 +534,10 @@ fu_synaprom_device_new(FuUsbDevice *device)
 {
 	FuSynapromDevice *self;
 	self = g_object_new(FU_TYPE_SYNAPROM_DEVICE, NULL);
-	if (device != NULL)
-		fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(device));
+	if (device != NULL) {
+		fu_device_incorporate(FU_DEVICE(self),
+				      FU_DEVICE(device),
+				      FU_DEVICE_INCORPORATE_FLAG_ALL);
+	}
 	return FU_SYNAPROM_DEVICE(self);
 }

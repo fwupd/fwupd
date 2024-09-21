@@ -4412,7 +4412,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 			continue;
 		device = fu_device_list_get_by_guid(self->device_list, guid, NULL);
 		if (device != NULL) {
-			fu_device_incorporate(dev, device);
+			fu_device_incorporate(dev, device, FU_DEVICE_INCORPORATE_FLAG_ALL);
 		} else {
 			fu_device_inhibit(dev, "not-found", "Device was not found");
 		}
@@ -7498,7 +7498,7 @@ fu_engine_backend_device_changed_cb(FuBackend *backend, FuDevice *device, FuEngi
 		if (g_strcmp0(fu_device_get_backend_id(device_tmp),
 			      fu_device_get_backend_id(device)) == 0) {
 			g_debug("incorporating new device for %s", fu_device_get_id(device_tmp));
-			fu_device_incorporate(device_tmp, device);
+			fu_device_incorporate(device_tmp, device, FU_DEVICE_INCORPORATE_FLAG_ALL);
 		}
 	}
 

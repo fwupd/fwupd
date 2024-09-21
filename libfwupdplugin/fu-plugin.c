@@ -1689,13 +1689,13 @@ fu_plugin_backend_device_added(FuPlugin *self,
 
 	/* create new device and incorporate existing properties */
 	dev = g_object_new(device_gtype, "context", priv->ctx, NULL);
-	fu_device_incorporate(dev, FU_DEVICE(device));
+	fu_device_incorporate(dev, FU_DEVICE(device), FU_DEVICE_INCORPORATE_FLAG_ALL);
 
 	/* any proxy device to create too? */
 	if (proxy_gtype != G_TYPE_INVALID) {
 		g_autoptr(FuDevice) proxy_tmp =
 		    g_object_new(proxy_gtype, "context", priv->ctx, NULL);
-		fu_device_incorporate(proxy_tmp, device);
+		fu_device_incorporate(proxy_tmp, device, FU_DEVICE_INCORPORATE_FLAG_ALL);
 		fu_device_add_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 		fu_device_set_proxy(dev, proxy_tmp);
 	}
@@ -1727,7 +1727,7 @@ fu_plugin_backend_device_added(FuPlugin *self,
 		locker_proxy = fu_device_locker_new(proxy, error);
 		if (locker_proxy == NULL)
 			return FALSE;
-		fu_device_incorporate(dev, proxy);
+		fu_device_incorporate(dev, proxy, FU_DEVICE_INCORPORATE_FLAG_ALL);
 	}
 	locker = fu_device_locker_new(dev, error);
 	if (locker == NULL)

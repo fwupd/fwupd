@@ -668,27 +668,9 @@ _fu_device_incorporate_problem_update_in_progress(FuDevice *self, FuDevice *dono
 }
 
 static void
-_fu_device_incorporate_update_state(FuDevice *self, FuDevice *donor)
-{
-	if (fu_device_get_update_error(donor) != NULL && fu_device_get_update_error(self) == NULL) {
-		const gchar *update_error = fu_device_get_update_error(donor);
-		g_info("copying update error %s to new device", update_error);
-		fu_device_set_update_error(self, update_error);
-	}
-	if (fu_device_get_update_state(donor) != FWUPD_UPDATE_STATE_UNKNOWN &&
-	    fu_device_get_update_state(self) == FWUPD_UPDATE_STATE_UNKNOWN) {
-		FwupdUpdateState update_state = fu_device_get_update_state(donor);
-		g_info("copying update state %s to new device",
-		       fwupd_update_state_to_string(update_state));
-		fu_device_set_update_state(self, update_state);
-	}
-}
-
-static void
 fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 {
 	GPtrArray *children = fu_device_get_children(item->device);
-	GPtrArray *vendor_ids;
 	g_autofree gchar *str = NULL;
 
 	/* run the optional device-specific subclass */
@@ -697,13 +679,12 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 	/* copy over any GUIDs that used to exist */
 	fu_device_list_add_missing_guids(device, item->device);
 
-	/* enforce the vendor ID if specified */
-	vendor_ids = fu_device_get_vendor_ids(item->device);
-	for (guint i = 0; i < vendor_ids->len; i++) {
-		const gchar *vendor_id = g_ptr_array_index(vendor_ids, i);
-		g_info("copying old vendor ID %s to new device", vendor_id);
-		fwupd_device_add_vendor_id(FWUPD_DEVICE(device), vendor_id);
-	}
+	/* incorporate properties from the old device */
+	fu_device_incorporate(device,
+			      item->device,
+			      FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS |
+				  FU_DEVICE_INCORPORATE_FLAG_UPDATE_ERROR |
+				  FU_DEVICE_INCORPORATE_FLAG_UPDATE_ERROR);
 
 	/* copy inhibit */
 	_fu_device_incorporate_problem_update_in_progress(item->device, device);
@@ -726,24 +707,15 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 	}
 
 	/* allow another plugin to handle the write too */
-	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED)) {
-		g_debug("copying another-write-required to new device");
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
-	}
+	fu_device_incorporate_flag(device, item->device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
 
 	/* seems like a sane assumption if we've tagged the runtime mode as signed */
-	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD))
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD))
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_EMULATION_TAG))
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG);
+	fu_device_incorporate_flag(device, item->device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_incorporate_flag(device, item->device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_incorporate_flag(device, item->device, FWUPD_DEVICE_FLAG_EMULATION_TAG);
 
 	/* device won't come back in right mode */
-	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
-		g_info("copying will-disappear to new device");
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR);
-	}
+	fu_device_incorporate_flag(device, item->device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR);
 
 	/* copy the parent if not already set */
 	if (fu_device_get_parent(item->device) != NULL &&
@@ -760,9 +732,6 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 		g_info("copying child %s to new device", fu_device_get_id(child));
 		fu_device_add_child(device, child);
 	}
-
-	/* copy the update state if known */
-	_fu_device_incorporate_update_state(item->device, device);
 
 	/* assign the new device */
 	g_set_object(&item->device_old, item->device);
@@ -824,7 +793,10 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 			fu_device_remove_private_flag(item->device,
 						      FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
 			_fu_device_incorporate_problem_update_in_progress(device, item->device);
-			_fu_device_incorporate_update_state(device, item->device);
+			fu_device_incorporate(item->device,
+					      device,
+					      FU_DEVICE_INCORPORATE_FLAG_UPDATE_ERROR |
+						  FU_DEVICE_INCORPORATE_FLAG_UPDATE_ERROR);
 			g_set_object(&item->device_old, item->device);
 			fu_device_list_item_set_device(item, device);
 			fu_device_list_clear_wait_for_replug(self, item);

@@ -226,6 +226,6 @@ FuDellDockHub *
 fu_dell_dock_hub_new(FuUsbDevice *device)
 {
 	FuDellDockHub *self = g_object_new(FU_TYPE_DELL_DOCK_HUB, NULL);
-	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(device));
+	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(device), FU_DEVICE_INCORPORATE_FLAG_ALL);
 	return self;
 }

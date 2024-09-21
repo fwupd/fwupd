@@ -284,7 +284,7 @@ fu_wac_module_constructed(GObject *object)
 				      fu_usb_device_get_vid(FU_USB_DEVICE(proxy)));
 
 	/* set USB physical and logical IDs */
-	fu_device_set_physical_id(FU_DEVICE(self), fu_device_get_physical_id(proxy));
+	fu_device_incorporate(FU_DEVICE(self), proxy, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 	fu_device_set_logical_id(FU_DEVICE(self), fu_wac_module_fw_type_to_string(priv->fw_type));
 
 	/* append the firmware kind to the generated GUID */
