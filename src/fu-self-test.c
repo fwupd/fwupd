@@ -3762,22 +3762,98 @@ fu_device_list_equivalent_id_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	g_autoptr(FuDevice) device1 = fu_device_new(self->ctx);
 	g_autoptr(FuDevice) device2 = fu_device_new(self->ctx);
-	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device3 = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) device_expected1 = NULL;
+	g_autoptr(FuDevice) device_expected2 = NULL;
+	g_autoptr(FuDevice) device_expected3 = NULL;
+	g_autoptr(FuDevice) device_expected4 = NULL;
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(GPtrArray) active1 = NULL;
+	g_autoptr(GPtrArray) active2 = NULL;
+	g_autoptr(GPtrArray) active3 = NULL;
+	g_autoptr(GPtrArray) active4 = NULL;
+	g_autoptr(GPtrArray) all1 = NULL;
+	g_autoptr(GPtrArray) all2 = NULL;
+	g_autoptr(GPtrArray) all3 = NULL;
+	g_autoptr(GPtrArray) all4 = NULL;
 	g_autoptr(GError) error = NULL;
 
+	/* simulate the device with 3 different physical connection points.
+	 * Using the equivalent ID to mark all connections belong to the same device.
+	 */
 	fu_device_set_id(device1, "8e9cb71aeca70d2faedb5b8aaa263f6175086b2e");
+	fu_device_set_equivalent_id(device1, "uniqueid");
 	fu_device_list_add(device_list, device1);
 
+	/* new physical connection added */
 	fu_device_set_id(device2, "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
-	fu_device_set_equivalent_id(device2, "8e9cb71aeca70d2faedb5b8aaa263f6175086b2e");
+	fu_device_set_equivalent_id(device2, "uniqueid");
 	fu_device_set_priority(device2, 999);
 	fu_device_list_add(device_list, device2);
 
-	device = fu_device_list_get_by_id(device_list, "8e9c", &error);
+	/* should be shown only the most prioritized */
+	active1 = fu_device_list_get_active(device_list);
+	g_assert_cmpint(active1->len, ==, 1);
+	/* 2 devices should exists */
+	all1 = fu_device_list_get_all(device_list);
+	g_assert_cmpint(all1->len, ==, 2);
+	/* expected the device with 999 priority */
+	device_expected1 = fu_device_list_get_by_id(device_list, "uniqueid", &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(device);
-	g_assert_cmpstr(fu_device_get_id(device), ==, "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+	g_assert_nonnull(device_expected1);
+	g_assert_cmpstr(fu_device_get_id(device_expected1),
+			==,
+			"1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+
+	/* new physical connection added */
+	fu_device_set_id(device3, "b43e7a3f1e24415b97e0276c301a1528ca5e840b");
+	fu_device_set_equivalent_id(device3, "uniqueid");
+	fu_device_set_priority(device3, 100);
+	fu_device_list_add(device_list, device3);
+
+	/* should be shown only the most prioritized */
+	active2 = fu_device_list_get_active(device_list);
+	g_assert_cmpint(active2->len, ==, 1);
+	/* all 3 devices should exists */
+	all2 = fu_device_list_get_all(device_list);
+	g_assert_cmpint(all2->len, ==, 3);
+	/* expected the device with 999 priority */
+	device_expected2 = fu_device_list_get_by_id(device_list, "uniqueid", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device_expected2);
+	g_assert_cmpstr(fu_device_get_id(device_expected2),
+			==,
+			"1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+
+	/* device is disconnected from the most prioritized connection */
+	fu_device_list_remove(device_list, device2);
+	active3 = fu_device_list_get_active(device_list);
+	g_assert_cmpint(active3->len, ==, 1);
+	/* 2 devices should exists */
+	all3 = fu_device_list_get_all(device_list);
+	g_assert_cmpint(all3->len, ==, 2);
+	/* expected the device with 100 priority */
+	device_expected3 = fu_device_list_get_by_id(device_list, "uniqueid", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device_expected3);
+	g_assert_cmpstr(fu_device_get_id(device_expected3),
+			==,
+			"b43e7a3f1e24415b97e0276c301a1528ca5e840b");
+
+	/* device is disconnected from the 3-rd connection */
+	fu_device_list_remove(device_list, device3);
+	active4 = fu_device_list_get_active(device_list);
+	g_assert_cmpint(active4->len, ==, 1);
+	/* 1 device should exists */
+	all4 = fu_device_list_get_all(device_list);
+	g_assert_cmpint(all4->len, ==, 1);
+	/* expected the device with the default priority */
+	device_expected4 = fu_device_list_get_by_id(device_list, "uniqueid", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device_expected4);
+	g_assert_cmpstr(fu_device_get_id(device_expected4),
+			==,
+			"8e9cb71aeca70d2faedb5b8aaa263f6175086b2e");
 }
 
 static void
