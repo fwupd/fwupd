@@ -511,7 +511,7 @@ fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **err
 		fwupd_error_convert(error);
 		return 0;
 	}
-	rc = ioctl(fd, BLKSSZGET, &sector_size);
+	rc = ioctl(fd, BLKSSZGET, &sector_size); /* nocheck:blocked */
 	if (rc < 0) {
 		g_set_error_literal(error,
 				    G_IO_ERROR, /* nocheck:error */

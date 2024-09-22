@@ -1397,7 +1397,9 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 
 	/* poll if required  up to the timeout */
 	do {
-		rc_tmp = ioctl(fu_io_channel_unix_get_fd(priv->io_channel), request, buf);
+		rc_tmp = ioctl(fu_io_channel_unix_get_fd(priv->io_channel), /* nocheck:blocked */
+			       request,
+			       buf);
 		if (rc_tmp >= 0)
 			break;
 	} while ((flags & FU_UDEV_DEVICE_IOCTL_FLAG_RETRY) && (errno == EINTR || errno == EAGAIN) &&
