@@ -125,7 +125,7 @@ Name = Arctis Nova 5 Headset
 Icon = usb-headset
 FirmwareSize = 0x14B000
 SteelSeriesFizzInterface = 0
-Flags = ~usable-during-update
+Flags = ~usable-during-update,detach-bootloader
 InstallDuration = 87
 CounterpartGuid = USB\VID_1038&PID_2231,STEELSERIES\VID_1038&PID_2232&PROTOCOL_FIZZ_TUNNE
 
@@ -157,7 +157,7 @@ Name = Arctis Nova 5 USB Receiver
 Icon = usb-receiver
 CounterpartGuid = USB\VID_1038&PID_2233
 FirmwareSize = 0x14B000
-Flags = is-receiver
+Flags = is-receiver,detach-bootloader
 InstallDuration = 165
 
 [USB\VID_1038&PID_2233]

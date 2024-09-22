@@ -170,3 +170,21 @@ fu_steelseries_fizz_impl_is_updatable(FuSteelseriesFizzImpl *self, FuDevice *dev
 	/* assume device is supported by default */
 	return TRUE;
 }
+
+gchar *
+fu_steelseries_fizz_impl_get_serial(FuSteelseriesFizzImpl *self, gboolean tunnel, GError **error)
+{
+	FuSteelseriesFizzImplInterface *iface;
+
+	g_return_val_if_fail(FU_IS_STEELSERIES_FIZZ_IMPL(self), NULL);
+
+	iface = FU_STEELSERIES_FIZZ_IMPL_GET_IFACE(self);
+	if (iface->get_serial == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "iface->get_serial not implemented");
+		return NULL;
+	}
+	return (*iface->get_serial)(self, tunnel, error);
+}

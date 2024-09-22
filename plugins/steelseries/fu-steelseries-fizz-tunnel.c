@@ -10,6 +10,8 @@
 #include "fu-steelseries-fizz-impl.h"
 #include "fu-steelseries-fizz-tunnel.h"
 
+#define STEELSERIES_FIZZ_TUNNEL_POLL_INTERVAL 20000 /* ms*/
+
 struct _FuSteelseriesFizzTunnel {
 	FuDevice parent_instance;
 };
@@ -218,6 +220,7 @@ fu_steelseries_fizz_tunnel_setup(FuDevice *device, GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy(device);
 	gboolean reached;
+	g_autofree gchar *serial = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	if (proxy == NULL) {
@@ -227,11 +230,24 @@ fu_steelseries_fizz_tunnel_setup(FuDevice *device, GError **error)
 
 	/* ping */
 	if (!fu_steelseries_fizz_tunnel_ping(device, &reached, &error_local)) {
-		g_debug("ignoring error on ping: %s", error_local->message);
+		g_debug("ignoring error for %s on ping: %s",
+			fu_device_get_id(device),
+			error_local->message);
 
 		/* success */
 		return TRUE;
 	}
+
+	serial = fu_steelseries_fizz_impl_get_serial(FU_STEELSERIES_FIZZ_IMPL(proxy),
+						     FALSE,
+						     &error_local);
+	if (serial != NULL) {
+		fu_device_set_serial(device, serial);
+		fu_device_set_equivalent_id(device, serial);
+	} else {
+		g_debug("ignoring error: %s", error_local->message);
+	}
+
 	if (!reached) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNREACHABLE);
 
@@ -275,6 +291,9 @@ fu_steelseries_fizz_tunnel_poll(FuDevice *device, GError **error)
 		return TRUE;
 	}
 
+	/* set reachable here since we ignore crc error while polling device */
+	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_UNREACHABLE);
+
 	if (!fu_steelseries_fizz_get_crc32_fs(parent,
 					      TRUE,
 					      fs,
@@ -296,8 +315,6 @@ fu_steelseries_fizz_tunnel_poll(FuDevice *device, GError **error)
 			  fu_device_get_name(device),
 			  calculated_crc,
 			  stored_crc);
-
-	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_UNREACHABLE);
 
 	/* success */
 	return TRUE;
@@ -403,12 +420,15 @@ fu_steelseries_fizz_tunnel_init(FuSteelseriesFizzTunnel *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_protocol(FU_DEVICE(self), "com.steelseries.fizz");
 	fu_device_set_logical_id(FU_DEVICE(self), "tunnel");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE); /* 10 s */
-	fu_device_set_poll_interval(FU_DEVICE(self), 60000); /* 1 min */
+	fu_device_set_poll_interval(FU_DEVICE(self), STEELSERIES_FIZZ_TUNNEL_POLL_INTERVAL);
 	fu_device_set_battery_threshold(FU_DEVICE(self), 20);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_STEELSERIES_FIRMWARE);
 }
