@@ -66,7 +66,7 @@ fu_linux_efivars_set_immutable_fd(int fd, gboolean value, gboolean *value_old, G
 	int rc;
 
 	/* get existing status */
-	rc = ioctl(fd, FS_IOC_GETFLAGS, &flags);
+	rc = ioctl(fd, FS_IOC_GETFLAGS, &flags); /* nocheck:blocked */
 	if (rc < 0) {
 		/* check for tmpfs */
 		if (errno == ENOTTY || errno == ENOSYS) {
@@ -99,7 +99,7 @@ fu_linux_efivars_set_immutable_fd(int fd, gboolean value, gboolean *value_old, G
 	}
 
 	/* set the new status */
-	rc = ioctl(fd, FS_IOC_SETFLAGS, &flags);
+	rc = ioctl(fd, FS_IOC_SETFLAGS, &flags); /* nocheck:blocked */
 	if (rc < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,

@@ -19,7 +19,7 @@ struct _FuUdevDeviceClass {
 /**
  * FuUdevDeviceIoctlFlags:
  * @FU_UDEV_DEVICE_IOCTL_FLAG:			No flags set
- * @FU_UDEV_DEVICE_IOCTL_FLAG_RETRY:		Retry the ioctl() call on failure
+ * @FU_UDEV_DEVICE_IOCTL_FLAG_RETRY:		Retry the call on failure
  *
  * Flags used when calling fu_udev_device_ioctl().
  **/

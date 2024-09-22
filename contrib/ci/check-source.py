@@ -212,6 +212,7 @@ class Checker:
             "&= ~(1ull <<": "Use FU_BIT_CLEAR() instead",
             "__attribute__((packed))": "Use rustgen instead",
             "memcpy(": "Use fu_memcpy_safe or rustgen instead",
+            " ioctl(": "Use fu_udev_device_ioctl() instead",
         }.items():
             if line.find(token) != -1:
                 self.add_failure(f"contains blocked token {token}: {msg}")
