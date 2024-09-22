@@ -77,3 +77,6 @@ gboolean
 fu_steelseries_fizz_impl_is_updatable(FuSteelseriesFizzImpl *self,
 				      FuDevice *device,
 				      GError **error);
+
+gchar *
+fu_steelseries_fizz_impl_get_serial(FuSteelseriesFizzImpl *self, gboolean tunnel, GError **error);
