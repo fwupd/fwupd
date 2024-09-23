@@ -145,7 +145,7 @@ Plugin = steelseries
 GType = FuSteelseriesFizzTunnel
 Name = Arctis Nova 5 Headset via USB Receiver
 Icon = usb-headset
-Flags = ~usable-during-update
+Flags = ~usable-during-update,detach-bootloader
 FirmwareSize = 0x14B000
 CounterpartGuid = USB\VID_1038&PID_2230,USB\VID_1038&PID_2231
 

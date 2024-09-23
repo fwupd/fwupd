@@ -129,9 +129,24 @@ fu_steelseries_fizz_tunnel_detach(FuDevice *device, FuProgress *progress, GError
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
 		return FALSE;
 	}
-	return fu_steelseries_fizz_impl_is_updatable(FU_STEELSERIES_FIZZ_IMPL(proxy),
-						     device,
-						     error);
+	if (!fu_steelseries_fizz_impl_is_updatable(FU_STEELSERIES_FIZZ_IMPL(proxy), device, error))
+		return FALSE;
+
+	if (!fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_DETACH_BOOTLOADER))
+		return TRUE;
+
+	/* switch to bootloader mode only if device needs it */
+	if (!fu_steelseries_fizz_reset(device,
+				       FALSE,
+				       STEELSERIES_FIZZ_RESET_MODE_BOOTLOADER,
+				       error))
+		return FALSE;
+
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -420,6 +435,8 @@ fu_steelseries_fizz_tunnel_init(FuSteelseriesFizzTunnel *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_STEELSERIES_DEVICE_FLAG_DETACH_BOOTLOADER);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
