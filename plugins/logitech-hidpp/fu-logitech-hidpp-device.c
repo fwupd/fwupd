@@ -1419,6 +1419,6 @@ fu_logitech_hidpp_device_new(FuUdevDevice *parent)
 			    fu_udev_device_get_device_file(parent),
 			    NULL);
 	priv = GET_PRIVATE(self);
-	priv->io_channel = fu_logitech_hidpp_runtime_get_io_channel(FU_HIDPP_RUNTIME(parent));
+	priv->io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(parent));
 	return self;
 }
