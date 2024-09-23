@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <string.h>
-
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-hidpp.h"
 #include "fu-logitech-hidpp-runtime.h"
@@ -15,21 +13,11 @@
 
 typedef struct {
 	guint8 version_bl_major;
-	FuIOChannel *io_channel;
 } FuLogitechHidppRuntimePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuLogitechHidppRuntime, fu_logitech_hidpp_runtime, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE(FuLogitechHidppRuntime, fu_logitech_hidpp_runtime, FU_TYPE_HIDRAW_DEVICE)
 
 #define GET_PRIVATE(o) (fu_logitech_hidpp_runtime_get_instance_private(o))
-
-FuIOChannel *
-fu_logitech_hidpp_runtime_get_io_channel(FuLogitechHidppRuntime *self)
-{
-	FuLogitechHidppRuntimePrivate *priv;
-	g_return_val_if_fail(FU_IS_HIDPP_RUNTIME(self), NULL);
-	priv = GET_PRIVATE(self);
-	return priv->io_channel;
-}
 
 guint8
 fu_logitech_hidpp_runtime_get_version_bl_major(FuLogitechHidppRuntime *self)
@@ -44,7 +32,6 @@ gboolean
 fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidppRuntime *self, GError **error)
 {
 	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
-	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
 
 	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
 	msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
@@ -54,45 +41,9 @@ fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidppRuntime *self, GEr
 	msg->data[1] = 0x05; /* Wireless + SoftwarePresent */
 	msg->data[2] = 0x00;
 	msg->hidpp_version = 1;
-	return fu_logitech_hidpp_transfer(priv->io_channel, msg, error);
-}
-
-static gboolean
-fu_logitech_hidpp_runtime_close(FuDevice *device, GError **error)
-{
-	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
-	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
-
-	if (priv->io_channel != NULL) {
-		if (!fu_io_channel_shutdown(priv->io_channel, error))
-			return FALSE;
-		g_clear_object(&priv->io_channel);
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_logitech_hidpp_runtime_open(FuDevice *device, GError **error)
-{
-	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
-	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
-	const gchar *devpath = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
-	g_autoptr(FuIOChannel) io_channel = NULL;
-
-	/* open, but don't block */
-	io_channel =
-	    fu_io_channel_new_file(devpath,
-				   FU_IO_CHANNEL_OPEN_FLAG_READ | FU_IO_CHANNEL_OPEN_FLAG_WRITE,
-				   error);
-	if (io_channel == NULL)
-		return FALSE;
-	g_set_object(&priv->io_channel, io_channel);
-
-	/* poll for notifications */
-	fu_device_set_poll_interval(device, FU_HIDPP_RECEIVER_RUNTIME_POLLING_INTERVAL);
-
-	/* success */
-	return TRUE;
+	return fu_logitech_hidpp_transfer(fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self)),
+					  msg,
+					  error);
 }
 
 static gboolean
@@ -100,34 +51,22 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 {
 	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
 	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
-	guint64 release = 0xFFFF;
 	g_autoptr(FuDevice) device_usb = NULL;
 	g_autoptr(FuDevice) device_usb_iface = NULL;
 
-	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "usb", error))
+	/* FuHidrawDevice->probe */
+	if (!FU_DEVICE_CLASS(fu_logitech_hidpp_runtime_parent_class)->probe(device, error))
 		return FALSE;
 
 	/* generate bootloader-specific GUID */
 	device_usb = fu_device_get_backend_parent_with_subsystem(device, "usb:usb_device", NULL);
 	if (device_usb != NULL) {
-		g_autofree gchar *prop_revision = NULL;
-		prop_revision =
-		    fu_udev_device_read_property(FU_UDEV_DEVICE(device_usb), "ID_REVISION", NULL);
-		if (prop_revision != NULL) {
-			if (!fu_strtoull(prop_revision,
-					 &release,
-					 0,
-					 G_MAXUINT64,
-					 FU_INTEGER_BASE_16,
-					 error))
-				return FALSE;
-		}
-	}
-	if (release != 0xFFFF) {
 		g_autofree gchar *devid2 = NULL;
 		g_autofree gchar *prop_interface = NULL;
-		switch (release &= 0xff00) {
+
+		if (!fu_device_probe(device_usb, error))
+			return FALSE;
+		switch (fu_usb_device_get_release(FU_USB_DEVICE(device_usb)) & 0xFF00) {
 		case 0x1200:
 			/* Nordic */
 			devid2 =
@@ -175,7 +114,8 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 			priv->version_bl_major = 0x03;
 			break;
 		default:
-			g_warning("bootloader release %04x invalid", (guint)release);
+			g_warning("bootloader release %04x invalid",
+				  (guint)fu_usb_device_get_release(FU_USB_DEVICE(device_usb)));
 			break;
 		}
 	}
@@ -183,21 +123,10 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_logitech_hidpp_runtime_finalize(GObject *object)
-{
-	G_OBJECT_CLASS(fu_logitech_hidpp_runtime_parent_class)->finalize(object);
-}
-
-static void
 fu_logitech_hidpp_runtime_class_init(FuLogitechHidppRuntimeClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-
-	object_class->finalize = fu_logitech_hidpp_runtime_finalize;
-	device_class->open = fu_logitech_hidpp_runtime_open;
 	device_class->probe = fu_logitech_hidpp_runtime_probe;
-	device_class->close = fu_logitech_hidpp_runtime_close;
 }
 
 static void
@@ -210,4 +139,7 @@ fu_logitech_hidpp_runtime_init(FuLogitechHidppRuntime *self)
 	fu_device_set_name(FU_DEVICE(self), "Unifying Receiver");
 	fu_device_set_summary(FU_DEVICE(self), "Miniaturised USB wireless receiver");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_poll_interval(FU_DEVICE(self), FU_HIDPP_RECEIVER_RUNTIME_POLLING_INTERVAL);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
