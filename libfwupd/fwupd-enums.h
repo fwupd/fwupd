@@ -696,6 +696,14 @@ typedef enum {
 	 */
 	FWUPD_DEVICE_PROBLEM_DISPLAY_REQUIRED = 1ull << 11,
 	/**
+	 * FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY:
+	 *
+	 * We have two ways of communicating with one physical device, so we hide the worse one.
+	 *
+	 * Since: 2.0.0
+	 */
+	FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY = 1ull << 12,
+	/**
 	 * FWUPD_DEVICE_PROBLEM_UNKNOWN:
 	 *
 	 * This problem is not defined, this typically will happen from mismatched

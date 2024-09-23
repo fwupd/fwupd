@@ -1292,6 +1292,10 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 		/* TRANSLATORS: device does not have a display connected */
 		return g_strdup(_("Device requires a display to be plugged in"));
 	}
+	if (problem == FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY) {
+		/* TRANSLATORS: we have two ways of communicating with the device, so we hide one */
+		return g_strdup(_("Device is lower priority than an equivalent device"));
+	}
 	return NULL;
 }
 

@@ -321,6 +321,8 @@ fwupd_device_problem_to_string(FwupdDeviceProblem device_problem)
 		return "in-use";
 	if (device_problem == FWUPD_DEVICE_PROBLEM_DISPLAY_REQUIRED)
 		return "display-required";
+	if (device_problem == FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY)
+		return "lower-priority";
 	if (device_problem == FWUPD_DEVICE_PROBLEM_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -365,6 +367,8 @@ fwupd_device_problem_from_string(const gchar *device_problem)
 		return FWUPD_DEVICE_PROBLEM_IN_USE;
 	if (g_strcmp0(device_problem, "display-required") == 0)
 		return FWUPD_DEVICE_PROBLEM_DISPLAY_REQUIRED;
+	if (g_strcmp0(device_problem, "lower-priority") == 0)
+		return FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY;
 	return FWUPD_DEVICE_PROBLEM_UNKNOWN;
 }
 

@@ -268,6 +268,53 @@ fu_engine_generic_notify_cb(FuDevice *device, GParamSpec *pspec, FuEngine *self)
 }
 
 static void
+fu_engine_ensure_device_problem_priority_full(FuEngine *self,
+					      FuDevice *device,
+					      FuDevice *device_tmp)
+{
+	/* not a match */
+	if (g_strcmp0(fu_device_get_id(device_tmp), fu_device_get_equivalent_id(device)) != 0 &&
+	    g_strcmp0(fu_device_get_equivalent_id(device_tmp), fu_device_get_id(device)) != 0)
+		return;
+
+	/* new device is better */
+	if (fu_device_get_priority(device_tmp) < fu_device_get_priority(device)) {
+		fu_device_add_problem(device_tmp, FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY);
+		fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY);
+		return;
+	}
+
+	/* old device is better */
+	if (fu_device_get_priority(device_tmp) > fu_device_get_priority(device)) {
+		fu_device_remove_problem(device_tmp, FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY);
+		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY);
+		return;
+	}
+
+	/* the plugin needs to tell us which one is better! */
+	g_warning("no priority difference, unsetting both");
+	fu_device_remove_problem(device, FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY);
+	fu_device_remove_problem(device_tmp, FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY);
+}
+
+static void
+fu_engine_ensure_device_problem_priority(FuEngine *self, FuDevice *device)
+{
+	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index(devices, i);
+		fu_engine_ensure_device_problem_priority_full(self, device, device_tmp);
+	}
+}
+
+static void
+fu_engine_device_equivalent_id_notify_cb(FuDevice *device, GParamSpec *pspec, FuEngine *self)
+{
+	/* make sure the lower priority equivalent device has the problem */
+	fu_engine_ensure_device_problem_priority(self, device);
+}
+
+static void
 fu_engine_history_notify_cb(FuDevice *device, GParamSpec *pspec, FuEngine *self)
 {
 	if (self->write_history) {
@@ -331,6 +378,10 @@ fu_engine_watch_device(FuEngine *self, FuDevice *device)
 	g_signal_connect(FU_DEVICE(device),
 			 "notify::update-error",
 			 G_CALLBACK(fu_engine_history_notify_cb),
+			 self);
+	g_signal_connect(FU_DEVICE(device),
+			 "notify::equivalent-id",
+			 G_CALLBACK(fu_engine_device_equivalent_id_notify_cb),
 			 self);
 	g_signal_connect(FU_DEVICE(device),
 			 "request",
@@ -432,6 +483,7 @@ static void
 fu_engine_device_added_cb(FuDeviceList *device_list, FuDevice *device, FuEngine *self)
 {
 	fu_engine_watch_device(self, device);
+	fu_engine_ensure_device_problem_priority(self, device);
 	fu_engine_ensure_device_power_inhibit(self, device);
 	fu_engine_ensure_device_lid_inhibit(self, device);
 	fu_engine_ensure_device_display_required_inhibit(self, device);

@@ -1744,6 +1744,74 @@ fu_engine_device_unlock_func(gconstpointer user_data)
 }
 
 static void
+fu_engine_device_equivalent_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device1 = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) device_best = NULL;
+	g_autoptr(FuDevice) device_worst = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* add a wireless (worse) device */
+	fu_device_set_id(device1, "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
+	fu_device_set_name(device1, "device1");
+	fu_device_build_vendor_id_u16(device1, "USB", 0xFFFF);
+	fu_device_add_protocol(device1, "com.acme");
+	fu_device_add_guid(device1, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_engine_add_device(engine, device1);
+
+	/* add a wired (better) device */
+	fu_device_set_id(device2, "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+	fu_device_set_name(device2, "device2");
+	fu_device_set_equivalent_id(device2, "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
+	fu_device_set_priority(device2, 999);
+	fu_device_build_vendor_id_u16(device2, "USB", 0xFFFF);
+	fu_device_add_protocol(device2, "com.acme");
+	fu_device_add_guid(device2, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_engine_add_device(engine, device2);
+
+	/* make sure the daemon chooses the best device */
+	devices = fu_engine_get_devices(engine, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(devices);
+	g_assert_cmpint(devices->len, ==, 2);
+	device_best = fu_engine_get_device(engine, "9924", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device_best);
+	g_assert_cmpstr(fu_device_get_id(device_best),
+			==,
+			"1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+	g_assert_true(fu_device_has_flag(device_best, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_false(fu_device_has_problem(device_best, FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY));
+
+	/* get the worst device and make sure it's not updatable */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index(devices, i);
+		if (device_tmp != device_best) {
+			device_worst = g_object_ref(device_tmp);
+			break;
+		}
+	}
+	g_assert_nonnull(device_worst);
+	g_assert_false(fu_device_has_flag(device_worst, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_true(fu_device_has_problem(device_worst, FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY));
+}
+
+static void
 fu_engine_device_md_set_flags_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -6712,6 +6780,9 @@ main(int argc, char **argv)
 			     self,
 			     fu_engine_get_details_missing_func);
 	g_test_add_data_func("/fwupd/engine{device-unlock}", self, fu_engine_device_unlock_func);
+	g_test_add_data_func("/fwupd/engine{device-equivalent}",
+			     self,
+			     fu_engine_device_equivalent_func);
 	g_test_add_data_func("/fwupd/engine{device-md-set-flags}",
 			     self,
 			     fu_engine_device_md_set_flags_func);

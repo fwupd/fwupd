@@ -3044,6 +3044,12 @@ fu_device_problem_to_inhibit_reason(FuDevice *self, guint64 device_problem)
 		return g_strdup("Device is in use");
 	if (device_problem == FWUPD_DEVICE_PROBLEM_DISPLAY_REQUIRED)
 		return g_strdup("Device requires a display to be plugged in");
+	if (device_problem == FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY) {
+		if (fu_device_get_equivalent_id(self) == NULL)
+			return g_strdup("Device is lower priority than an equivalent device");
+		return g_strdup_printf("Device is lower priority than equivalent device %s",
+				       fu_device_get_equivalent_id(self));
+	}
 	if (device_problem == FWUPD_DEVICE_PROBLEM_MISSING_LICENSE)
 		return g_strdup("Device does not have the necessary license installed");
 	if (device_problem == FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW) {
