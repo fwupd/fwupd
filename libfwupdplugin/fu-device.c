@@ -110,6 +110,7 @@ enum {
 	PROP_PHYSICAL_ID,
 	PROP_LOGICAL_ID,
 	PROP_BACKEND_ID,
+	PROP_EQUIVALENT_ID,
 	PROP_CONTEXT,
 	PROP_BACKEND,
 	PROP_PROXY,
@@ -139,6 +140,9 @@ fu_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec
 		break;
 	case PROP_BACKEND_ID:
 		g_value_set_string(value, priv->backend_id);
+		break;
+	case PROP_EQUIVALENT_ID:
+		g_value_set_string(value, priv->equivalent_id);
 		break;
 	case PROP_CONTEXT:
 		g_value_set_object(value, priv->ctx);
@@ -174,6 +178,9 @@ fu_device_set_property(GObject *object, guint prop_id, const GValue *value, GPar
 		break;
 	case PROP_BACKEND_ID:
 		fu_device_set_backend_id(self, g_value_get_string(value));
+		break;
+	case PROP_EQUIVALENT_ID:
+		fu_device_set_equivalent_id(self, g_value_get_string(value));
 		break;
 	case PROP_CONTEXT:
 		fu_device_set_context(self, g_value_get_object(value));
@@ -946,6 +953,7 @@ fu_device_set_equivalent_id(FuDevice *self, const gchar *equivalent_id)
 
 	g_free(priv->equivalent_id);
 	priv->equivalent_id = g_strdup(equivalent_id);
+	g_object_notify(G_OBJECT(self), "equivalent-id");
 }
 
 /**
@@ -6918,6 +6926,20 @@ fu_device_class_init(FuDeviceClass *klass)
 				    NULL,
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BACKEND_ID, pspec);
+
+	/**
+	 * FuDevice:equivalent-id:
+	 *
+	 * The device equivalent ID.
+	 *
+	 * Since: 2.0.0
+	 */
+	pspec = g_param_spec_string("equivalent-id",
+				    NULL,
+				    NULL,
+				    NULL,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_EQUIVALENT_ID, pspec);
 
 	/**
 	 * FuDevice:context:
