@@ -375,7 +375,7 @@ fwupd_device_get_id(FwupdDevice *self)
 /**
  * fwupd_device_set_id:
  * @self: a #FwupdDevice
- * @id: (nullable): the device ID, e.g. `USB:foo`
+ * @id: (nullable): the device ID, usually a SHA1 hash
  *
  * Sets the ID.
  *
@@ -390,6 +390,12 @@ fwupd_device_set_id(FwupdDevice *self, const gchar *id)
 	/* not changed */
 	if (g_strcmp0(priv->id, id) == 0)
 		return;
+
+	/* sanity check */
+	if (!fwupd_device_id_is_valid(id)) {
+		g_critical("%s is not a valid device ID", id);
+		return;
+	}
 
 	g_free(priv->id);
 	priv->id = g_strdup(id);
@@ -417,7 +423,7 @@ fwupd_device_get_parent_id(FwupdDevice *self)
 /**
  * fwupd_device_set_parent_id:
  * @self: a #FwupdDevice
- * @parent_id: (nullable): the device ID, e.g. `USB:foo`
+ * @parent_id: (nullable): the device ID, usually a SHA1 hash
  *
  * Sets the parent ID.
  *
@@ -432,6 +438,12 @@ fwupd_device_set_parent_id(FwupdDevice *self, const gchar *parent_id)
 	/* not changed */
 	if (g_strcmp0(priv->parent_id, parent_id) == 0)
 		return;
+
+	/* sanity check */
+	if (!fwupd_device_id_is_valid(parent_id)) {
+		g_critical("%s is not a valid device ID", parent_id);
+		return;
+	}
 
 	g_free(priv->parent_id);
 	priv->parent_id = g_strdup(parent_id);
@@ -479,6 +491,12 @@ fwupd_device_set_composite_id(FwupdDevice *self, const gchar *composite_id)
 	/* not changed */
 	if (g_strcmp0(priv->composite_id, composite_id) == 0)
 		return;
+
+	/* sanity check */
+	if (!fwupd_device_id_is_valid(composite_id)) {
+		g_critical("%s is not a valid device ID", composite_id);
+		return;
+	}
 
 	g_free(priv->composite_id);
 	priv->composite_id = g_strdup(composite_id);

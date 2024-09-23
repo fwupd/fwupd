@@ -493,7 +493,7 @@ fwupd_common_history_report_func(void)
 	g_autoptr(GHashTable) metadata = g_hash_table_new(g_str_hash, g_str_equal);
 	g_autoptr(GPtrArray) devs = g_ptr_array_new();
 
-	fwupd_device_set_id(dev, "foobar");
+	fwupd_device_set_id(dev, "0000000000000000000000000000000000000000");
 	fwupd_device_set_update_state(dev, FWUPD_UPDATE_STATE_FAILED);
 	fwupd_device_add_checksum(dev, "beefdead");
 	fwupd_device_add_guid(dev, "2082b5e0-7a64-478a-b1b2-e3404fab6dad");
@@ -568,7 +568,7 @@ fwupd_device_func(void)
 	fwupd_device_add_checksum(dev, "beefdead");
 	fwupd_device_set_created(dev, 1);
 	fwupd_device_add_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-	fwupd_device_set_id(dev, "USB:foo");
+	fwupd_device_set_id(dev, "0000000000000000000000000000000000000000");
 	fwupd_device_set_modified(dev, 60 * 60 * 24);
 	fwupd_device_set_name(dev, "ColorHug2");
 	fwupd_device_set_branch(dev, "community");
@@ -608,35 +608,36 @@ fwupd_device_func(void)
 	 * https://gitlab.gnome.org/GNOME/glib/commit/76af5dabb4a25956a6c41a75c0c7feeee74496da */
 	str_ascii = g_string_new(str);
 	g_string_replace(str_ascii, " ", " ", 0);
-	ret = fu_test_compare_lines(str_ascii->str,
-				    "FwupdDevice:\n"
-				    "  DeviceId:             USB:foo\n"
-				    "  Name:                 ColorHug2\n"
-				    "  Guid:                 18f514d2-c12e-581f-a696-cc6d6c271699 "
-				    "← USB\\VID_1234&PID_0001 ⚠\n"
-				    "  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
-				    "  Guid:                 00000000-0000-0000-0000-000000000000\n"
-				    "  Branch:               community\n"
-				    "  Flags:                updatable|require-ac\n"
-				    "  Checksum:             SHA1(beefdead)\n"
-				    "  VendorId:             USB:0x1234\n"
-				    "  VendorId:             PCI:0x5678\n"
-				    "  Icon:                 input-gaming,input-mouse\n"
-				    "  Created:              1970-01-01\n"
-				    "  Modified:             1970-01-02\n"
-				    "  FwupdRelease:\n"
-				    "    AppstreamId:        org.dave.ColorHug.firmware\n"
-				    "    Description:        <p>Hi there!</p>\n"
-				    "    Version:            1.2.3\n"
-				    "    Filename:           firmware.bin\n"
-				    "    Checksum:           SHA1(deadbeef)\n"
-				    "    Tags:               vendor-2021q1\n"
-				    "    Tags:               vendor-2021q2\n"
-				    "    Size:               1.0 kB\n"
-				    "    Uri:                http://foo.com\n"
-				    "    Uri:                ftp://foo.com\n"
-				    "    Flags:              trusted-payload\n",
-				    &error);
+	ret = fu_test_compare_lines(
+	    str_ascii->str,
+	    "FwupdDevice:\n"
+	    "  DeviceId:             0000000000000000000000000000000000000000\n"
+	    "  Name:                 ColorHug2\n"
+	    "  Guid:                 18f514d2-c12e-581f-a696-cc6d6c271699 "
+	    "← USB\\VID_1234&PID_0001 ⚠\n"
+	    "  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
+	    "  Guid:                 00000000-0000-0000-0000-000000000000\n"
+	    "  Branch:               community\n"
+	    "  Flags:                updatable|require-ac\n"
+	    "  Checksum:             SHA1(beefdead)\n"
+	    "  VendorId:             USB:0x1234\n"
+	    "  VendorId:             PCI:0x5678\n"
+	    "  Icon:                 input-gaming,input-mouse\n"
+	    "  Created:              1970-01-01\n"
+	    "  Modified:             1970-01-02\n"
+	    "  FwupdRelease:\n"
+	    "    AppstreamId:        org.dave.ColorHug.firmware\n"
+	    "    Description:        <p>Hi there!</p>\n"
+	    "    Version:            1.2.3\n"
+	    "    Filename:           firmware.bin\n"
+	    "    Checksum:           SHA1(deadbeef)\n"
+	    "    Tags:               vendor-2021q1\n"
+	    "    Tags:               vendor-2021q2\n"
+	    "    Size:               1.0 kB\n"
+	    "    Uri:                http://foo.com\n"
+	    "    Uri:                ftp://foo.com\n"
+	    "    Flags:              trusted-payload\n",
+	    &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -644,60 +645,61 @@ fwupd_device_func(void)
 	data = fwupd_codec_to_json_string(FWUPD_CODEC(dev), FWUPD_CODEC_FLAG_TRUSTED, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
-	ret = fu_test_compare_lines(data,
-				    "{\n"
-				    "  \"Name\" : \"ColorHug2\",\n"
-				    "  \"DeviceId\" : \"USB:foo\",\n"
-				    "  \"InstanceIds\" : [\n"
-				    "    \"USB\\\\VID_1234&PID_0001\"\n"
-				    "  ],\n"
-				    "  \"Guid\" : [\n"
-				    "    \"2082b5e0-7a64-478a-b1b2-e3404fab6dad\",\n"
-				    "    \"00000000-0000-0000-0000-000000000000\"\n"
-				    "  ],\n"
-				    "  \"Branch\" : \"community\",\n"
-				    "  \"Flags\" : [\n"
-				    "    \"updatable\",\n"
-				    "    \"require-ac\"\n"
-				    "  ],\n"
-				    "  \"Checksums\" : [\n"
-				    "    \"beefdead\"\n"
-				    "  ],\n"
-				    "  \"VendorIds\" : [\n"
-				    "    \"USB:0x1234\",\n"
-				    "    \"PCI:0x5678\"\n"
-				    "  ],\n"
-				    "  \"Icons\" : [\n"
-				    "    \"input-gaming\",\n"
-				    "    \"input-mouse\"\n"
-				    "  ],\n"
-				    "  \"Created\" : 1,\n"
-				    "  \"Modified\" : 86400,\n"
-				    "  \"Releases\" : [\n"
-				    "    {\n"
-				    "      \"AppstreamId\" : \"org.dave.ColorHug.firmware\",\n"
-				    "      \"Description\" : \"<p>Hi there!</p>\",\n"
-				    "      \"Version\" : \"1.2.3\",\n"
-				    "      \"Filename\" : \"firmware.bin\",\n"
-				    "      \"Checksum\" : [\n"
-				    "        \"deadbeef\"\n"
-				    "      ],\n"
-				    "      \"Tags\" : [\n"
-				    "        \"vendor-2021q1\",\n"
-				    "        \"vendor-2021q2\"\n"
-				    "      ],\n"
-				    "      \"Size\" : 1024,\n"
-				    "      \"Locations\" : [\n"
-				    "        \"http://foo.com\",\n"
-				    "        \"ftp://foo.com\"\n"
-				    "      ],\n"
-				    "      \"Flags\" : [\n"
-				    "        \"trusted-payload\"\n"
-				    "      ]\n"
-				    "    }\n"
-				    "  ]\n"
-				    "}",
-				    &error);
+	ret =
+	    fu_test_compare_lines(data,
+				  "{\n"
+				  "  \"Name\" : \"ColorHug2\",\n"
+				  "  \"DeviceId\" : \"0000000000000000000000000000000000000000\",\n"
+				  "  \"InstanceIds\" : [\n"
+				  "    \"USB\\\\VID_1234&PID_0001\"\n"
+				  "  ],\n"
+				  "  \"Guid\" : [\n"
+				  "    \"2082b5e0-7a64-478a-b1b2-e3404fab6dad\",\n"
+				  "    \"00000000-0000-0000-0000-000000000000\"\n"
+				  "  ],\n"
+				  "  \"Branch\" : \"community\",\n"
+				  "  \"Flags\" : [\n"
+				  "    \"updatable\",\n"
+				  "    \"require-ac\"\n"
+				  "  ],\n"
+				  "  \"Checksums\" : [\n"
+				  "    \"beefdead\"\n"
+				  "  ],\n"
+				  "  \"VendorIds\" : [\n"
+				  "    \"USB:0x1234\",\n"
+				  "    \"PCI:0x5678\"\n"
+				  "  ],\n"
+				  "  \"Icons\" : [\n"
+				  "    \"input-gaming\",\n"
+				  "    \"input-mouse\"\n"
+				  "  ],\n"
+				  "  \"Created\" : 1,\n"
+				  "  \"Modified\" : 86400,\n"
+				  "  \"Releases\" : [\n"
+				  "    {\n"
+				  "      \"AppstreamId\" : \"org.dave.ColorHug.firmware\",\n"
+				  "      \"Description\" : \"<p>Hi there!</p>\",\n"
+				  "      \"Version\" : \"1.2.3\",\n"
+				  "      \"Filename\" : \"firmware.bin\",\n"
+				  "      \"Checksum\" : [\n"
+				  "        \"deadbeef\"\n"
+				  "      ],\n"
+				  "      \"Tags\" : [\n"
+				  "        \"vendor-2021q1\",\n"
+				  "        \"vendor-2021q2\"\n"
+				  "      ],\n"
+				  "      \"Size\" : 1024,\n"
+				  "      \"Locations\" : [\n"
+				  "        \"http://foo.com\",\n"
+				  "        \"ftp://foo.com\"\n"
+				  "      ],\n"
+				  "      \"Flags\" : [\n"
+				  "        \"trusted-payload\"\n"
+				  "      ]\n"
+				  "    }\n"
+				  "  ]\n"
+				  "}",
+				  &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
