@@ -17,6 +17,7 @@ enum FuUsiDockSpiState {
     FlashNotFound,
 }
 
+#[derive(ToString)]
 enum FuUsiDockFirmwareIdx {
     None  = 0x00,
     DmcPd = 0x01,
