@@ -2298,7 +2298,7 @@ fu_device_incorporate_func(void)
 	g_assert_true(ret);
 
 	/* set up donor device */
-	fu_device_set_equivalent_id(donor, "equiv-id");
+	fu_device_set_equivalent_id(donor, "0000000000000000000000000000000000000000");
 	fu_device_set_metadata(donor, "test", "me");
 	fu_device_set_metadata(donor, "test2", "me");
 	fu_device_add_instance_str(donor, "VID", "0A5C");
@@ -2325,13 +2325,15 @@ fu_device_incorporate_func(void)
 	fu_device_add_icon(donor, "computer");
 
 	/* existing properties */
-	fu_device_set_equivalent_id(device, "DO_NOT_OVERWRITE");
+	fu_device_set_equivalent_id(device, "ffffffffffffffffffffffffffffffffffffffff");
 	fu_device_set_metadata(device, "test2", "DO_NOT_OVERWRITE");
 	fu_device_set_modified_usec(device, 1514340000ull * G_USEC_PER_SEC);
 
 	/* incorporate properties from donor to device */
 	fu_device_incorporate(device, donor);
-	g_assert_cmpstr(fu_device_get_equivalent_id(device), ==, "DO_NOT_OVERWRITE");
+	g_assert_cmpstr(fu_device_get_equivalent_id(device),
+			==,
+			"ffffffffffffffffffffffffffffffffffffffff");
 	g_assert_cmpstr(fu_device_get_metadata(device, "test"), ==, "me");
 	g_assert_cmpstr(fu_device_get_metadata(device, "test2"), ==, "DO_NOT_OVERWRITE");
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC));
