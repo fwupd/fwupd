@@ -473,6 +473,15 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 		return NULL;
 	}
 
+	if (!g_file_test(sysfs_path, G_FILE_TEST_EXISTS)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "sysfs path '%s' doesn't exist, perhaps a transient device.",
+			    sysfs_path);
+		return NULL;
+	}
+
 	/* lets just walk up the directories */
 	while (1) {
 		g_autofree gchar *dirname = NULL;
