@@ -11,13 +11,19 @@
 
 struct _FuUsiDockChildDevice {
 	FuDevice parent_instance;
-	guint8 chip_idx;
+	FuUsiDockFirmwareIdx chip_idx;
 };
 
 G_DEFINE_TYPE(FuUsiDockChildDevice, fu_usi_dock_child_device, FU_TYPE_DEVICE)
 
+FuUsiDockFirmwareIdx
+fu_usi_dock_child_device_get_chip_idx(FuUsiDockChildDevice *self)
+{
+	return self->chip_idx;
+}
+
 void
-fu_usi_dock_child_device_set_chip_idx(FuUsiDockChildDevice *self, guint8 chip_idx)
+fu_usi_dock_child_device_set_chip_idx(FuUsiDockChildDevice *self, FuUsiDockFirmwareIdx chip_idx)
 {
 	self->chip_idx = chip_idx;
 }
@@ -26,7 +32,10 @@ static void
 fu_usi_dock_child_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuUsiDockChildDevice *self = FU_USI_DOCK_CHILD_DEVICE(device);
-	fwupd_codec_string_append_hex(str, idt, "ChipIdx", self->chip_idx);
+	fwupd_codec_string_append(str,
+				  idt,
+				  "ChipIdx",
+				  fu_usi_dock_firmware_idx_to_string(self->chip_idx));
 }
 
 /* use the parents parser */
