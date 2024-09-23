@@ -297,6 +297,15 @@ fu_device_name_func(void)
 	fu_device_set_name(device2, "Intel(R) Core(TM) i7-10850H CPU @ 2.70GHz");
 	fu_device_set_vendor(device2, "Intel");
 	g_assert_cmpstr(fu_device_get_name(device2), ==, "Core™ i7-10850H CPU @ 2.70GHz");
+
+	/* name and vendor are the same */
+#ifndef SUPPORTED_BUILD
+	g_test_expect_message("FuDevice", G_LOG_LEVEL_WARNING, "name and vendor are the same*");
+#endif
+	fu_device_set_name(device2, "example");
+	fu_device_set_vendor(device2, "EXAMPLE");
+	g_assert_cmpstr(fu_device_get_name(device2), ==, "example");
+	g_assert_cmpstr(fu_device_get_vendor(device2), ==, "EXAMPLE");
 }
 
 static void

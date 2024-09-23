@@ -2739,6 +2739,14 @@ fu_device_fixup_vendor_name(FuDevice *self)
 	if (name != NULL && vendor != NULL) {
 		g_autofree gchar *name_up = g_utf8_strup(name, -1);
 		g_autofree gchar *vendor_up = g_utf8_strup(vendor, -1);
+		if (g_strcmp0(name_up, vendor_up) == 0) {
+#ifndef SUPPORTED_BUILD
+			g_warning("name and vendor are the same for %s [%s]",
+				  fu_device_get_name(self),
+				  fu_device_get_id(self));
+#endif
+			return;
+		}
 		if (g_str_has_prefix(name_up, vendor_up)) {
 			gsize vendor_len = strlen(vendor);
 			g_autofree gchar *name1 = g_strdup(name + vendor_len);
