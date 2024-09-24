@@ -141,7 +141,7 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* save the blob to the ESP */
-	directory = fu_uefi_get_esp_path_for_os();
+	directory = fu_uefi_get_esp_path_for_os(esp_path);
 	basename = g_strdup_printf("fwupd-%s.cap", fw_class);
 	capsule_path = g_build_filename(directory, "fw", basename, NULL);
 	fn = g_build_filename(esp_path, capsule_path, NULL);
@@ -180,7 +180,7 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* test if correct asset in place */
-	target_app = fu_uefi_get_esp_app_path("fwupd", error);
+	target_app = fu_uefi_get_esp_app_path(esp_path, "fwupd", error);
 	if (target_app == NULL)
 		return FALSE;
 	if (!fu_uefi_esp_target_verify(source_app, esp, target_app)) {
