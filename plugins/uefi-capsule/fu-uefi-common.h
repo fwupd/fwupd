@@ -20,7 +20,7 @@
 #define EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED 0x0000000000000004ULL
 
 gchar *
-fu_uefi_get_esp_app_path(const gchar *cmd, GError **error);
+fu_uefi_get_esp_app_path(const gchar *base, const gchar *cmd, GError **error);
 gchar *
 fu_uefi_get_built_app_path(const gchar *binary, GError **error);
 gboolean
@@ -32,7 +32,7 @@ fu_uefi_get_bitmap_size(const guint8 *buf,
 gboolean
 fu_uefi_get_framebuffer_size(guint32 *width, guint32 *height, GError **error);
 gchar *
-fu_uefi_get_esp_path_for_os(void);
+fu_uefi_get_esp_path_for_os(const gchar *base);
 guint64
 fu_uefi_read_file_as_uint64(const gchar *path, const gchar *attr_name);
 gboolean

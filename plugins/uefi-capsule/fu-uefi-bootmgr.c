@@ -393,6 +393,7 @@ fu_uefi_bootmgr_bootnext(FuVolume *esp,
 	g_autofree gchar *source_app = NULL;
 	g_autofree gchar *source_shim = NULL;
 	g_autofree gchar *target_app = NULL;
+	g_autofree gchar *esp_path = fu_volume_get_mount_point(esp);
 	g_autoptr(FuEfiDevicePathList) dp_buf = NULL;
 	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
 
@@ -408,7 +409,7 @@ fu_uefi_bootmgr_bootnext(FuVolume *esp,
 	/* test if we should use shim */
 	secure_boot = fu_efivar_secure_boot_enabled(NULL);
 	if (secure_boot) {
-		shim_app = fu_uefi_get_esp_app_path("shim", error);
+		shim_app = fu_uefi_get_esp_app_path(esp_path, "shim", error);
 		if (shim_app == NULL)
 			return FALSE;
 
@@ -426,7 +427,7 @@ fu_uefi_bootmgr_bootnext(FuVolume *esp,
 		if (fu_uefi_esp_target_exists(esp, shim_app)) {
 			/* use a custom copy of shim for firmware updates */
 			if (flags & FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE) {
-				shim_cpy = fu_uefi_get_esp_app_path("shimfwupd", error);
+				shim_cpy = fu_uefi_get_esp_app_path(esp_path, "shimfwupd", error);
 				if (shim_cpy == NULL)
 					return FALSE;
 				if (!fu_uefi_esp_target_verify(shim_app, esp, shim_cpy)) {
@@ -453,7 +454,7 @@ fu_uefi_bootmgr_bootnext(FuVolume *esp,
 	}
 
 	/* test if correct asset in place */
-	target_app = fu_uefi_get_esp_app_path("fwupd", error);
+	target_app = fu_uefi_get_esp_app_path(esp_path, "fwupd", error);
 	if (target_app == NULL)
 		return FALSE;
 	if (!fu_uefi_esp_target_verify(source_app, esp, target_app)) {
