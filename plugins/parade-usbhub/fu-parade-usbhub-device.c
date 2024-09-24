@@ -1186,7 +1186,7 @@ fu_parade_usbhub_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to get ROM checksum: ");
 		return FALSE;
 	}
-	checksum = fu_crc32(FU_CRC32_KIND_MPEG2, blob->data, blob->len);
+	checksum = fu_crc32(FU_CRC_KIND_B32_MPEG2, blob->data, blob->len);
 	if (checksum != checksum_new) {
 		g_set_error(error,
 			    FWUPD_ERROR,

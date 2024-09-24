@@ -48,7 +48,7 @@ fu_steelseries_firmware_parse(FuFirmware *firmware,
 	if (stream_tmp == NULL)
 		return FALSE;
 	if (!fu_input_stream_compute_crc32(stream_tmp,
-					   FU_CRC32_KIND_STANDARD,
+					   FU_CRC_KIND_B32_STANDARD,
 					   &checksum_tmp,
 					   error))
 		return FALSE;

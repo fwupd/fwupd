@@ -57,7 +57,7 @@ fu_vli_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 static guint8
 fu_vli_usbhub_device_header_crc8(GByteArray *hdr)
 {
-	return ~fu_crc8(hdr->data, hdr->len - 1);
+	return fu_crc8(FU_CRC_KIND_B8_STANDARD, hdr->data, hdr->len - 1);
 }
 
 static gboolean

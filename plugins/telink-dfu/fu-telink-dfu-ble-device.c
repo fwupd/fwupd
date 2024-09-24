@@ -28,7 +28,9 @@ fu_telink_dfu_ble_device_create_packet(guint16 preamble, const guint8 *buf, gsiz
 	fu_struct_telink_dfu_ble_pkt_set_preamble(pkt, preamble);
 	if (buf != NULL)
 		fu_struct_telink_dfu_ble_pkt_set_payload(pkt, buf, bufsz, NULL);
-	fu_struct_telink_dfu_ble_pkt_set_crc(pkt, ~fu_crc16(pkt->data, pkt->len - 2));
+	fu_struct_telink_dfu_ble_pkt_set_crc(
+	    pkt,
+	    ~fu_crc16(FU_CRC_KIND_B16_USB, pkt->data, pkt->len - 2));
 	return pkt;
 }
 

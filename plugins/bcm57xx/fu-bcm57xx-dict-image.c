@@ -76,7 +76,7 @@ fu_bcm57xx_dict_image_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_bytes(blob, fw_nocrc);
 
 	/* add CRC */
-	crc = fu_crc32(FU_CRC32_KIND_STANDARD, buf, bufsz);
+	crc = fu_crc32(FU_CRC_KIND_B32_STANDARD, buf, bufsz);
 	fu_byte_array_append_uint32(blob, crc, G_LITTLE_ENDIAN);
 	return g_steal_pointer(&blob);
 }

@@ -40,7 +40,10 @@ fu_bcm57xx_verify_crc(GInputStream *stream, GError **error)
 	stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - sizeof(guint32), error);
 	if (stream_tmp == NULL)
 		return FALSE;
-	if (!fu_input_stream_compute_crc32(stream_tmp, FU_CRC32_KIND_STANDARD, &crc_actual, error))
+	if (!fu_input_stream_compute_crc32(stream_tmp,
+					   FU_CRC_KIND_B32_STANDARD,
+					   &crc_actual,
+					   error))
 		return FALSE;
 	if (crc_actual != crc_file) {
 		g_set_error(error,

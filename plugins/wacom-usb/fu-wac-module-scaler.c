@@ -56,7 +56,7 @@ fu_wac_module_scaler_parse_blocks(const guint8 *data, gsize sz, GError **error)
 				    cdata_sz,
 				    error))
 			return NULL;
-		bd->crc = ~fu_crc8(bd->cdata, sizeof(bd->cdata));
+		bd->crc = fu_crc8(FU_CRC_KIND_B8_STANDARD, bd->cdata, sizeof(bd->cdata));
 		g_ptr_array_add(blocks, g_steal_pointer(&bd));
 	}
 	return blocks;

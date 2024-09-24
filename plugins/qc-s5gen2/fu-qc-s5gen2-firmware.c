@@ -87,7 +87,7 @@ fu_qc_s5gen2_firmware_parse(FuFirmware *firmware,
 
 	if (!fu_firmware_set_stream(firmware, stream, error))
 		return FALSE;
-	if (!fu_input_stream_compute_crc32(stream, FU_CRC32_KIND_STANDARD, &self->file_id, error))
+	if (!fu_input_stream_compute_crc32(stream, FU_CRC_KIND_B32_STANDARD, &self->file_id, error))
 		return FALSE;
 
 	/* success */

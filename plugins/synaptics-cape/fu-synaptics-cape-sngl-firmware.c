@@ -71,7 +71,7 @@ fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
 		if (stream_tmp == NULL)
 			return FALSE;
 		if (!fu_input_stream_compute_crc32(stream_tmp,
-						   FU_CRC32_KIND_STANDARD,
+						   FU_CRC_KIND_B32_STANDARD,
 						   &crc_calc,
 						   error))
 			return FALSE;

@@ -9,6 +9,16 @@
 #include "fu-crc.h"
 
 guint32
-fu_crc32_step(FuCrc32Kind kind, const guint8 *buf, gsize bufsz, guint32 crc);
+fu_crc32_step(FuCrcKind kind, const guint8 *buf, gsize bufsz, guint32 crc);
 guint32
-fu_crc32_done(FuCrc32Kind kind, guint32 crc);
+fu_crc32_done(FuCrcKind kind, guint32 crc);
+
+guint16
+fu_crc16_step(FuCrcKind kind, const guint8 *buf, gsize bufsz, guint16 crc);
+guint16
+fu_crc16_done(FuCrcKind kind, guint16 crc);
+
+guint8
+fu_crc8_step(FuCrcKind kind, const guint8 *buf, gsize bufsz, guint8 crc);
+guint8
+fu_crc8_done(FuCrcKind kind, guint8 crc);

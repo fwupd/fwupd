@@ -976,7 +976,7 @@ fu_steelseries_sonic_parse_firmware(FuFirmware *firmware, FwupdInstallFlags flag
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
-	checksum_tmp = fu_crc32(FU_CRC32_KIND_STANDARD,
+	checksum_tmp = fu_crc32(FU_CRC_KIND_B32_STANDARD,
 				g_bytes_get_data(blob, NULL),
 				g_bytes_get_size(blob) - sizeof(checksum_tmp));
 	checksum_tmp = ~checksum_tmp;
