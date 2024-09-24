@@ -62,13 +62,13 @@ fu_uefi_bootmgr_get_suffix(GError **error)
 
 /* return without the ESP dir prepended */
 gchar *
-fu_uefi_get_esp_app_path(const gchar *cmd, GError **error)
+fu_uefi_get_esp_app_path(const gchar *esp_path, const gchar *cmd, GError **error)
 {
 	const gchar *suffix = fu_uefi_bootmgr_get_suffix(error);
 	g_autofree gchar *base = NULL;
 	if (suffix == NULL)
 		return NULL;
-	base = fu_uefi_get_esp_path_for_os();
+	base = fu_uefi_get_esp_path_for_os(esp_path);
 	return g_strdup_printf("%s/%s%s.efi", base, cmd, suffix);
 }
 
@@ -171,14 +171,28 @@ fu_uefi_get_framebuffer_size(guint32 *width, guint32 *height, GError **error)
 	return TRUE;
 }
 
-/* return without the ESP dir prepended */
+/**
+ * fu_uefi_get_esp_path_for_os:
+ * @esp_base: The base path of the EFI System Partition (ESP).
+ *
+ * Retrieves the directory structure of the EFI System Partition (ESP) for
+ * the operating system.
+ *
+ * This function constructs and returns the path of the directory to use
+ * within the ESP based on the provided base path.
+ *
+ * Returns: (transfer full): A newly allocated string containing the directory
+ * structure within the ESP for the operating system. The caller is
+ * responsible for freeing the returned string.
+ */
 gchar *
-fu_uefi_get_esp_path_for_os(void)
+fu_uefi_get_esp_path_for_os(const gchar *esp_base)
 {
 #ifndef EFI_OS_DIR
 	const gchar *os_release_id = NULL;
 	const gchar *id_like = NULL;
 	g_autofree gchar *esp_path = NULL;
+	g_autofree gchar *full_path = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GHashTable) os_release = fwupd_get_os_release(&error_local);
 	/* try to lookup /etc/os-release ID key */
@@ -191,7 +205,8 @@ fu_uefi_get_esp_path_for_os(void)
 		os_release_id = "unknown";
 	/* if ID key points at something existing return it */
 	esp_path = g_build_filename("EFI", os_release_id, NULL);
-	if (g_file_test(esp_path, G_FILE_TEST_IS_DIR) || os_release == NULL)
+	full_path = g_build_filename(esp_base, esp_path, NULL);
+	if (g_file_test(full_path, G_FILE_TEST_IS_DIR) || os_release == NULL)
 		return g_steal_pointer(&esp_path);
 	/* if ID key doesn't exist, try ID_LIKE */
 	id_like = g_hash_table_lookup(os_release, "ID_LIKE");
@@ -199,10 +214,12 @@ fu_uefi_get_esp_path_for_os(void)
 		g_auto(GStrv) split = g_strsplit(id_like, " ", -1);
 		for (guint i = 0; split[i] != NULL; i++) {
 			g_autofree gchar *id_like_path = g_build_filename("EFI", split[i], NULL);
-			if (g_file_test(id_like_path, G_FILE_TEST_IS_DIR)) {
-				g_debug("using ID_LIKE key from os-release");
-				return g_steal_pointer(&id_like_path);
-			}
+			g_autofree gchar *id_like_full_path =
+			    g_build_filename(esp_base, id_like_path, NULL);
+			if (!g_file_test(id_like_full_path, G_FILE_TEST_IS_DIR))
+				continue;
+			g_debug("using ID_LIKE key from os-release");
+			return g_steal_pointer(&id_like_path);
 		}
 	}
 	return g_steal_pointer(&esp_path);
