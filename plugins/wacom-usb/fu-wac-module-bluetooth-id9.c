@@ -47,7 +47,10 @@ fu_wac_module_bluetooth_id9_calculate_crc32(GByteArray *buf,
 						  stream,
 						  error))
 		return FALSE;
-	return fu_input_stream_compute_crc32(composite_stream, FU_CRC32_KIND_STANDARD, crc, error);
+	return fu_input_stream_compute_crc32(composite_stream,
+					     FU_CRC_KIND_B32_STANDARD,
+					     crc,
+					     error);
 }
 
 static FuChunk *

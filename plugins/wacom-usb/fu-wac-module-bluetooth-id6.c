@@ -41,10 +41,21 @@ fu_wac_module_bluetooth_id6_reverse_bits(guint8 value)
 	return reverse;
 }
 
+/* this doesn't appear to be any kind of standard CRC-8 */
 static guint8
-fu_wac_module_bluetooth_id6_calculate_crc(const guint8 *data, gsize sz)
+fu_wac_module_bluetooth_id6_calculate_crc(const guint8 *buf, gsize bufsz)
 {
-	guint8 crc = ~fu_crc8_full(data, sz, 0x00, FU_WAC_MODULE_BLUETOOTH_ID6_CRC8_POLYNOMIAL);
+	const guint8 polynomial = FU_WAC_MODULE_BLUETOOTH_ID6_CRC8_POLYNOMIAL;
+	guint32 crc = 0x00;
+	for (gsize j = bufsz; j > 0; j--) {
+		crc ^= (*(buf++) << 8);
+		for (guint32 i = 8; i; i--) {
+			if (crc & 0x8000)
+				crc ^= ((polynomial | 0x100) << 7);
+			crc <<= 1;
+		}
+	}
+	crc = (guint8)(crc >> 8);
 	return fu_wac_module_bluetooth_id6_reverse_bits(crc);
 }
 

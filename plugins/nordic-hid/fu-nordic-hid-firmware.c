@@ -49,7 +49,7 @@ fu_nordic_hid_firmware_parse(FuFirmware *firmware,
 	FuNordicHidFirmwarePrivate *priv = GET_PRIVATE(self);
 
 	priv->crc32 = 0x01;
-	if (!fu_input_stream_compute_crc32(stream, FU_CRC32_KIND_STANDARD, &priv->crc32, error))
+	if (!fu_input_stream_compute_crc32(stream, FU_CRC_KIND_B32_STANDARD, &priv->crc32, error))
 		return FALSE;
 
 	/* success */

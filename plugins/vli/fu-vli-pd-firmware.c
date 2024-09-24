@@ -103,7 +103,10 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 		stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - 2, error);
 		if (stream_tmp == NULL)
 			return FALSE;
-		if (!fu_input_stream_compute_crc16(stream_tmp, &crc_actual, 0xA001, error))
+		if (!fu_input_stream_compute_crc16(stream_tmp,
+						   FU_CRC_KIND_B16_USB,
+						   &crc_actual,
+						   error))
 			return FALSE;
 		if (crc_actual != crc_file) {
 			g_set_error(error,

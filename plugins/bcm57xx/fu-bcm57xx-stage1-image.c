@@ -139,7 +139,7 @@ fu_bcm57xx_stage1_image_write(FuFirmware *firmware, GError **error)
 	    0x00);
 
 	/* add CRC */
-	crc = fu_crc32(FU_CRC32_KIND_STANDARD, buf->data, buf->len);
+	crc = fu_crc32(FU_CRC_KIND_B32_STANDARD, buf->data, buf->len);
 	fu_byte_array_append_uint32(buf, crc, G_LITTLE_ENDIAN);
 	return g_steal_pointer(&buf);
 }

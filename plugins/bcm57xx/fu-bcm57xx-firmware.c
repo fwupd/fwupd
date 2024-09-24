@@ -536,7 +536,7 @@ fu_bcm57xx_firmware_write(FuFirmware *firmware, GError **error)
 				    G_BIG_ENDIAN);
 	fu_byte_array_append_uint32(buf, BCM_NVRAM_STAGE1_BASE, G_BIG_ENDIAN);
 	fu_byte_array_append_uint32(buf,
-				    fu_crc32(FU_CRC32_KIND_STANDARD, buf->data, buf->len),
+				    fu_crc32(FU_CRC_KIND_B32_STANDARD, buf->data, buf->len),
 				    G_LITTLE_ENDIAN);
 
 	/* add directory entries */

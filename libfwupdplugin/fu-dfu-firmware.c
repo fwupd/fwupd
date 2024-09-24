@@ -242,7 +242,7 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 
 	/* verify the checksum */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		guint32 crc_new = fu_crc32(FU_CRC32_KIND_JAMCRC, buf, bufsz - 4);
+		guint32 crc_new = fu_crc32(FU_CRC_KIND_B32_JAMCRC, buf, bufsz - 4);
 		if (fu_struct_dfu_ftr_get_crc(st) != crc_new) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -310,7 +310,7 @@ fu_dfu_firmware_append_footer(FuDfuFirmware *self, GBytes *contents, GError **er
 	fu_struct_dfu_ftr_set_ver(st, priv->dfu_version);
 	g_byte_array_append(buf, st->data, st->len - sizeof(guint32));
 	fu_byte_array_append_uint32(buf,
-				    fu_crc32(FU_CRC32_KIND_JAMCRC, buf->data, buf->len),
+				    fu_crc32(FU_CRC_KIND_B32_JAMCRC, buf->data, buf->len),
 				    G_LITTLE_ENDIAN);
 	return g_steal_pointer(&buf);
 }

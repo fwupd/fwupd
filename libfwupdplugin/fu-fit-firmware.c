@@ -100,8 +100,9 @@ fu_fit_firmware_verify_crc32(FuFirmware *firmware,
 				       &value,
 				       error))
 		return FALSE;
-	value_calc =
-	    fu_crc32(FU_CRC32_KIND_STANDARD, g_bytes_get_data(blob, NULL), g_bytes_get_size(blob));
+	value_calc = fu_crc32(FU_CRC_KIND_B32_STANDARD,
+			      g_bytes_get_data(blob, NULL),
+			      g_bytes_get_size(blob));
 	if (value_calc != value) {
 		g_set_error(error,
 			    FWUPD_ERROR,
