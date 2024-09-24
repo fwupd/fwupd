@@ -893,6 +893,8 @@ fu_usb_device_parse_bos_descriptor(FuUsbDevice *self, GInputStream *stream, GErr
 					      &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE))
 				break;
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA))
+				break;
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
@@ -1728,6 +1730,8 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 		st_base = fu_usb_base_hdr_parse_stream(stream, offset, &error_local);
 		if (st_base == NULL) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE))
+				break;
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA))
 				break;
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
