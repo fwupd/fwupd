@@ -86,3 +86,9 @@ gchar *
 fu_input_stream_compute_checksum(GInputStream *stream,
 				 GChecksumType checksum_type,
 				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+gboolean
+fu_input_stream_find(GInputStream *stream,
+		     const guint8 *buf,
+		     gsize bufsz,
+		     gsize *offset,
+		     GError **error) G_GNUC_NON_NULL(1, 2);

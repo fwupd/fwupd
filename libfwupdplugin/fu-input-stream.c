@@ -618,3 +618,74 @@ fu_input_stream_chunkify(GInputStream *stream,
 	}
 	return TRUE;
 }
+
+/**
+ * fu_input_stream_find:
+ * @stream: a #GInputStream
+ * @buf: input buffer to look for
+ * @bufsz: size of @buf
+ * @offset: (nullable): found offset
+ * @error: (nullable): optional return location for an error
+ *
+ * Find a memory buffer within an input stream, without loading the entire stream into a buffer.
+ *
+ * Returns: %TRUE if @buf was found
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_input_stream_find(GInputStream *stream,
+		     const guint8 *buf,
+		     gsize bufsz,
+		     gsize *offset,
+		     GError **error)
+{
+	g_autoptr(GByteArray) buf_acc = g_byte_array_new();
+	const gsize blocksz = 0x10000;
+	gsize offset_add = 0;
+	gsize offset_cur = 0;
+
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(bufsz != 0, FALSE);
+	g_return_val_if_fail(bufsz < blocksz, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	while (offset_cur < bufsz) {
+		g_autoptr(GByteArray) buf_tmp = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* read more data */
+		buf_tmp =
+		    fu_input_stream_read_byte_array(stream, offset_cur, blocksz, &error_local);
+		if (buf_tmp == NULL) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE))
+				break;
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		g_byte_array_append(buf_acc, buf_tmp->data, buf_tmp->len);
+
+		/* we found something */
+		if (fu_memmem_safe(buf_acc->data, buf_acc->len, buf, bufsz, offset, NULL)) {
+			if (offset != NULL)
+				*offset += offset_add;
+			return TRUE;
+		}
+
+		/* truncate the buffer */
+		if (buf_acc->len > bufsz) {
+			offset_add += buf_acc->len - bufsz;
+			g_byte_array_remove_range(buf_acc, 0, buf_acc->len - bufsz);
+		}
+
+		/* move the offset */
+		offset_cur += buf_tmp->len;
+	}
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "failed to find buffer of size 0x%x",
+		    (guint)bufsz);
+	return FALSE;
+}
