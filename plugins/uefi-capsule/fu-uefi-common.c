@@ -193,9 +193,19 @@ fu_uefi_get_esp_path_for_os(const gchar *esp_base)
 	const gchar *id_like = NULL;
 	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *full_path = NULL;
+	g_autofree gchar *systemd_path = NULL;
+	g_autofree gchar *full_systemd_path = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GHashTable) os_release = fwupd_get_os_release(&error_local);
+	g_autoptr(GHashTable) os_release = NULL;
+
+	/* distro (or user) is using systemd-boot */
+	systemd_path = g_build_filename("EFI", "systemd", NULL);
+	full_systemd_path = g_build_filename(esp_base, systemd_path, NULL);
+	if (g_file_test(full_systemd_path, G_FILE_TEST_IS_DIR))
+		return g_steal_pointer(&systemd_path);
+
 	/* try to lookup /etc/os-release ID key */
+	os_release = fwupd_get_os_release(&error_local);
 	if (os_release != NULL) {
 		os_release_id = g_hash_table_lookup(os_release, "ID");
 	} else {
