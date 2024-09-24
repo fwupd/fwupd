@@ -5504,6 +5504,31 @@ fu_strsplit_stream_func(void)
 }
 
 static void
+fu_input_stream_find_func(void)
+{
+	const gchar *haystack = "I write free software. Firmware troublemaker.";
+	const gchar *needle1 = "Firmware";
+	const gchar *needle2 = "XXX";
+	gboolean ret;
+	gsize offset = 0;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+
+	stream =
+	    g_memory_input_stream_new_from_data((const guint8 *)haystack, strlen(haystack), NULL);
+	ret =
+	    fu_input_stream_find(stream, (const guint8 *)needle1, strlen(needle1), &offset, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(offset, ==, 23);
+
+	ret =
+	    fu_input_stream_find(stream, (const guint8 *)needle2, strlen(needle2), &offset, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_false(ret);
+}
+
+static void
 fu_input_stream_chunkify_func(void)
 {
 	gboolean ret;
@@ -5941,6 +5966,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/efi-lz77{decompressor}", fu_efi_lz77_decompressor_func);
 	g_test_add_func("/fwupd/input-stream", fu_input_stream_func);
 	g_test_add_func("/fwupd/input-stream{chunkify}", fu_input_stream_chunkify_func);
+	g_test_add_func("/fwupd/input-stream{find}", fu_input_stream_find_func);
 	g_test_add_func("/fwupd/partial-input-stream", fu_partial_input_stream_func);
 	g_test_add_func("/fwupd/composite-input-stream", fu_composite_input_stream_func);
 	g_test_add_func("/fwupd/struct", fu_plugin_struct_func);
