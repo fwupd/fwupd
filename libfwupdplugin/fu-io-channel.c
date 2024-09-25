@@ -79,6 +79,50 @@ fu_io_channel_shutdown(FuIOChannel *self, GError **error)
 	return TRUE;
 }
 
+/**
+ * fu_io_channel_seek:
+ * @self: a #FuIOChannel
+ * @offset: an absolute offset in bytes
+ * @error: (nullable): optional return location for an error
+ *
+ * Seeks the file descriptor to a specific offset.
+ *
+ * Returns: %TRUE if all the seek worked.
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_io_channel_seek(FuIOChannel *self, gsize offset, GError **error)
+{
+	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (self->fd == -1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "channel is not open");
+		return FALSE;
+	}
+	if (lseek(self->fd, offset, SEEK_SET) < 0) {
+		g_set_error(error,
+			    G_IO_ERROR, /* nocheck:error */
+#ifdef HAVE_ERRNO_H
+			    g_io_error_from_errno(errno),
+#else
+			    G_IO_ERROR_FAILED, /* nocheck:blocked */
+#endif
+			    "failed to seek to 0x%04x: %s",
+			    (guint)offset,
+			    g_strerror(errno));
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_io_channel_flush_input(FuIOChannel *self, GError **error)
 {

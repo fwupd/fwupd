@@ -1571,30 +1571,7 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
 			    fu_device_get_name(FU_DEVICE(self)));
 		return FALSE;
 	}
-
-#ifdef HAVE_PWRITE
-	if (lseek(fu_io_channel_unix_get_fd(priv->io_channel), offset, SEEK_SET) < 0) {
-		g_set_error(error,
-			    G_IO_ERROR, /* nocheck:error */
-#ifdef HAVE_ERRNO_H
-			    g_io_error_from_errno(errno),
-#else
-			    G_IO_ERROR_FAILED, /* nocheck:blocked */
-#endif
-			    "failed to seek to 0x%04x: %s",
-			    (guint)offset,
-			    g_strerror(errno));
-		fwupd_error_convert(error);
-		return FALSE;
-	}
-	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Not supported as lseek() is unavailable");
-	return FALSE;
-#endif
+	return fu_io_channel_seek(priv->io_channel, offset, error);
 }
 
 /**
