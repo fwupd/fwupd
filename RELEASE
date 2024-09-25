@@ -18,7 +18,7 @@ Write release entries:
 2. Commit changes to git:
 
 # MAKE SURE THIS IS CORRECT
-export release_ver="1.9.25"
+export release_ver="1.9.26"
 
 git commit -a -m "Release fwupd ${release_ver}" --no-verify
 git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"
@@ -36,7 +36,7 @@ gpg -b -a meson-dist/fwupd-${release_ver}.tar.xz
 
 4. Create release and upload tarball to https://github.com/fwupd/fwupd/tags
 
-5. Do post release version bump in meson.build
+5. Do post release version bump in meson.build and this file
 
 6. Commit changes:
 
