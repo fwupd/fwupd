@@ -1,0 +1,25 @@
+# Intel MTL
+[I2C\NAME_INTC10CF:00]
+Plugin = intel_cvs
+
+# Intel LNL
+[I2C\NAME_INTC10DE:00]
+Plugin = intel_cvs
+
+# Intel ARL
+[I2C\NAME_INTC10E0:00]
+Plugin = intel_cvs
+
+# Intel PTL
+[I2C\NAME_INTC10E1:00]
+Plugin = intel_cvs
+
+# Intel NVL
+[I2C\NAME_INTC10FA:00]
+Plugin = intel_cvs
+
+# Synaptics Foo Bar Baz
+#[I2C\NAME_INTC10DE:00&VID_06CB&PID_0701]
+#IntelCvsMaxDownloadTime = 200000
+#IntelCvsMaxFlashTime = 200000
+#IntelCvsMaxRetryCount = 5

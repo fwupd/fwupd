@@ -1,0 +1,99 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb3/3-2/3-2:1.0/usbio-i2c.2.auto/i2c-2/i2c-INTC10DE:00",
+      "DeviceFile": "/dev/i2c-2",
+      "Subsystem": "i2c",
+      "Driver": "Intel CVS driver",
+      "Vendor": 10945,
+      "Model": 8400,
+      "Created": "2025-02-27T10:34:12.925282Z",
+      "Events": [
+        {
+          "Id": "#d5a801ad",
+          "Data": "i2c"
+        },
+        {
+          "Id": "#ad8c58d3",
+          "Data": "Intel CVS driver"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "DRIVER=Intel CVS driver\nMODALIAS=acpi:INTC10DE:"
+        },
+        {
+          "Id": "#d432c663"
+        },
+        {
+          "Id": "#9b895db2"
+        },
+        {
+          "Id": "#66f3e150"
+        },
+        {
+          "Id": "#d410b6c7"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "DRIVER=Intel CVS driver\nMODALIAS=acpi:INTC10DE:"
+        },
+        {
+          "Id": "#d432c663"
+        },
+        {
+          "Id": "#9b895db2"
+        },
+        {
+          "Id": "#66f3e150"
+        },
+        {
+          "Id": "#d410b6c7"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#e371a663",
+          "Data": "INTC10DE:00"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "DRIVER=Intel CVS driver\nMODALIAS=acpi:INTC10DE:"
+        },
+        {
+          "Id": "#9b895db2"
+        },
+        {
+          "Id": "#66f3e150"
+        },
+        {
+          "Id": "#d410b6c7"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#e371a663",
+          "Data": "INTC10DE:00"
+        },
+        {
+          "Id": "#d46702ba",
+          "Data": "AQAAABMAAAAAAAAAAAAAAMEq0CAAAAAAAAAAAA=="
+        }
+      ]
+    }
+  ]
+}
