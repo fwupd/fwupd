@@ -72,6 +72,12 @@ fu_io_channel_write_bytes(FuIOChannel *self,
 			  FuIOChannelFlags flags,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
+fu_io_channel_write_stream(FuIOChannel *self,
+			   GInputStream *stream,
+			   guint timeout_ms,
+			   FuIOChannelFlags flags,
+			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+gboolean
 fu_io_channel_write_byte_array(FuIOChannel *self,
 			       GByteArray *buf,
 			       guint timeout_ms,

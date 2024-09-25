@@ -168,6 +168,54 @@ fu_io_channel_write_bytes(FuIOChannel *self,
 	return fu_io_channel_write_raw(self, buf, bufsz, timeout_ms, flags, error);
 }
 
+typedef struct {
+	FuIOChannel *self;
+	guint timeout_ms;
+	FuIOChannelFlags flags;
+} FuIOChannelWriteStreamHelper;
+
+static gboolean
+fu_io_channel_write_stream_cb(const guint8 *buf, gsize bufsz, gpointer user_data, GError **error)
+{
+	FuIOChannelWriteStreamHelper *helper = (FuIOChannelWriteStreamHelper *)user_data;
+	return fu_io_channel_write_raw(helper->self,
+				       buf,
+				       bufsz,
+				       helper->timeout_ms,
+				       helper->flags,
+				       error);
+}
+
+/**
+ * fu_io_channel_write_stream:
+ * @self: a #FuIOChannel
+ * @stream: #GInputStream to write
+ * @timeout_ms: timeout in ms
+ * @flags: channel flags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
+ * @error: (nullable): optional return location for an error
+ *
+ * Writes the stream to the fd, chucking when required.
+ *
+ * Returns: %TRUE if all the bytes was written
+ *
+ * Since: 2.0.0
+ **/
+gboolean
+fu_io_channel_write_stream(FuIOChannel *self,
+			   GInputStream *stream,
+			   guint timeout_ms,
+			   FuIOChannelFlags flags,
+			   GError **error)
+{
+	FuIOChannelWriteStreamHelper helper = {.self = self,
+					       .timeout_ms = timeout_ms,
+					       .flags = flags};
+	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), FALSE);
+	g_return_val_if_fail(G_IS_INPUT_STREAM(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return fu_input_stream_chunkify(stream, fu_io_channel_write_stream_cb, &helper, error);
+}
+
 /**
  * fu_io_channel_write_byte_array:
  * @self: a #FuIOChannel
