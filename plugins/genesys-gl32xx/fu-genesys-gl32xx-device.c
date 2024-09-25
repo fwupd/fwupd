@@ -309,7 +309,7 @@ static void
 fu_genesys_gl32xx_device_ensure_enforce_requires(FuGenesysGl32xxDevice *self)
 {
 	const gchar *version = fu_device_get_version(FU_DEVICE(self));
-	const guint16 model = fu_udev_device_get_model(FU_UDEV_DEVICE(self));
+	const guint16 model = fu_udev_device_get_pid(FU_UDEV_DEVICE(self));
 
 	/* GL3224 */
 	if (model == 0x0749 && self->customer_id == 0xFFFFFFFF && g_str_has_prefix(version, "15")) {
@@ -332,7 +332,7 @@ fu_genesys_gl32xx_device_ensure_cid(FuGenesysGl32xxDevice *self, GError **error)
 	const guint8 cmd_gl3224_cid[] = {0xE4, 0x01, 0xBF, 0x80, 0x04, 0x00};
 	const guint8 cmd_gl323x_cid[] = {0xE4, 0x01, 0x35, 0x00, 0x04, 0x00};
 	const guint8 *cmd = NULL;
-	guint16 model = fu_udev_device_get_model(FU_UDEV_DEVICE(self));
+	guint16 model = fu_udev_device_get_pid(FU_UDEV_DEVICE(self));
 	guint8 data[4] = {0};
 
 	if (self->compatible_model != 0)
@@ -514,7 +514,7 @@ fu_genesys_gl32xx_device_setup(FuDevice *device, GError **error)
 	if (fu_device_has_vendor_id(device, "BLOCK:0x05E3")) {
 		name = g_strdup_printf("%s SD reader [0x%04X]",
 				       self->chip_name,
-				       fu_udev_device_get_model(FU_UDEV_DEVICE(device)));
+				       fu_udev_device_get_pid(FU_UDEV_DEVICE(device)));
 		fu_device_set_name(device, name);
 	}
 

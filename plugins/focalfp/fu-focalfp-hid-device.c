@@ -53,7 +53,7 @@ fu_focalfp_hid_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* i2c-hid */
-	if (fu_udev_device_get_model(FU_UDEV_DEVICE(device)) != 0x0106) {
+	if (fu_udev_device_get_pid(FU_UDEV_DEVICE(device)) != 0x0106) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

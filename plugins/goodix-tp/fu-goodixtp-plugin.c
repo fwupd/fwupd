@@ -64,7 +64,7 @@ fu_goodixtp_plugin_backend_device_added(FuPlugin *plugin,
 		return FALSE;
 	}
 
-	hid_pid = fu_udev_device_get_model(FU_UDEV_DEVICE(device));
+	hid_pid = fu_udev_device_get_pid(FU_UDEV_DEVICE(device));
 	ic_type = fu_goodixtp_plugin_ic_type_from_pid(hid_pid);
 	if (ic_type == FU_GOODIXTP_IC_TYPE_NORMANDYL) {
 		g_autoptr(FuDevice) dev = g_object_new(FU_TYPE_GOODIXTP_GTX8_DEVICE,

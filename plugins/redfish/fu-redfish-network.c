@@ -77,8 +77,8 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 			return FALSE;
 
 		/* verify */
-		vid = fu_udev_device_get_vendor(udev_device);
-		pid = fu_udev_device_get_model(udev_device);
+		vid = fu_udev_device_get_vid(udev_device);
+		pid = fu_udev_device_get_pid(udev_device);
 		g_debug("%s: 0x%04x, 0x%04x", g_variant_get_string(udi, NULL), vid, pid);
 		if (vid == helper->vid && pid == helper->pid)
 			helper->device = fu_redfish_network_device_new(object_path);
