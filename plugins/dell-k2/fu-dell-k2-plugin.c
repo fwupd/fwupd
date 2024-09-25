@@ -141,7 +141,6 @@ fu_dell_k2_plugin_backend_device_added(FuPlugin *plugin,
 				       GError **error)
 {
 	guint16 vid, pid;
-	g_autofree const gchar *instance_id = NULL;
 
 	/* not interesting */
 	if (!FU_IS_USB_DEVICE(device))
