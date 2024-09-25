@@ -356,8 +356,8 @@ fu_dell_k2_rtshub_probe(FuDevice *device, GError **error)
 {
 	g_autofree const gchar *logical_id = NULL;
 	FuDellK2RtsHub *self = FU_DELL_K2_RTSHUB(device);
-	guint16 vid = fu_usb_device_get_vid(FU_USB_DEVICE(device));
-	guint16 pid = fu_usb_device_get_pid(FU_USB_DEVICE(device));
+	guint16 vid = fu_udev_device_get_vid(FU_UDEV_DEVICE(device));
+	guint16 pid = fu_udev_device_get_pid(FU_UDEV_DEVICE(device));
 
 	/* not interesting */
 	if (vid != DELL_VID) {

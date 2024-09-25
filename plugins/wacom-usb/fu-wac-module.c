@@ -281,7 +281,7 @@ fu_wac_module_constructed(GObject *object)
 	/* set vendor ID */
 	fu_device_build_vendor_id_u16(FU_DEVICE(self),
 				      "USB",
-				      fu_usb_device_get_vid(FU_USB_DEVICE(proxy)));
+				      fu_udev_device_get_vid(FU_UDEV_DEVICE(proxy)));
 
 	/* set USB physical and logical IDs */
 	fu_device_incorporate(FU_DEVICE(self), proxy, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
@@ -289,8 +289,8 @@ fu_wac_module_constructed(GObject *object)
 
 	/* append the firmware kind to the generated GUID */
 	devid = g_strdup_printf("USB\\VID_%04X&PID_%04X-%s",
-				fu_usb_device_get_vid(FU_USB_DEVICE(proxy)),
-				fu_usb_device_get_pid(FU_USB_DEVICE(proxy)),
+				fu_udev_device_get_vid(FU_UDEV_DEVICE(proxy)),
+				fu_udev_device_get_pid(FU_UDEV_DEVICE(proxy)),
 				fu_wac_module_fw_type_to_string(priv->fw_type));
 	fu_device_add_instance_id(FU_DEVICE(self), devid);
 

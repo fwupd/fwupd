@@ -193,7 +193,7 @@ fu_system76_launch_device_detach(FuDevice *device, FuProgress *progress, GError 
 	if (fu_device_get_update_message(device) == NULL) {
 		g_autofree gchar *msg = NULL;
 		const gchar *unlock_keys;
-		switch (fu_usb_device_get_pid(FU_USB_DEVICE(device))) {
+		switch (fu_udev_device_get_pid(FU_UDEV_DEVICE(device))) {
 		case 0x0001: /* launch_1 */
 			unlock_keys = "Fn+Esc";
 			break;

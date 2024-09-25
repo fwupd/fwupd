@@ -34,10 +34,6 @@ fu_usb_device_get_bus(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 guint8
 fu_usb_device_get_address(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 guint16
-fu_usb_device_get_vid(FuUsbDevice *self) G_GNUC_NON_NULL(1);
-guint16
-fu_usb_device_get_pid(FuUsbDevice *self) G_GNUC_NON_NULL(1);
-guint16
 fu_usb_device_get_release(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 guint16
 fu_usb_device_get_spec(FuUsbDevice *self) G_GNUC_NON_NULL(1);

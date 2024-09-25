@@ -291,14 +291,14 @@ fu_ccgx_pure_hid_device_prepare_firmware(FuDevice *device,
 				    error))
 		return NULL;
 
-	if (vid != fu_usb_device_get_vid(FU_USB_DEVICE(device)) ||
-	    pid != fu_usb_device_get_pid(FU_USB_DEVICE(device))) {
+	if (vid != fu_udev_device_get_vid(FU_UDEV_DEVICE(device)) ||
+	    pid != fu_udev_device_get_pid(FU_UDEV_DEVICE(device))) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "image VID:PID mismatch, expected %04X:%04X, got %04X:%04X",
-			    fu_usb_device_get_vid(FU_USB_DEVICE(self)),
-			    fu_usb_device_get_pid(FU_USB_DEVICE(self)),
+			    fu_udev_device_get_vid(FU_UDEV_DEVICE(self)),
+			    fu_udev_device_get_pid(FU_UDEV_DEVICE(self)),
 			    vid,
 			    pid);
 		return NULL;

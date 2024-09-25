@@ -192,8 +192,8 @@ fu_usb_device_not_open_error(FuUsbDevice *self, GError **error)
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_INTERNAL,
 		    "device %04x:%04x has not been opened",
-		    fu_usb_device_get_vid(self),
-		    fu_usb_device_get_pid(self));
+		    fu_udev_device_get_vid(FU_UDEV_DEVICE(self)),
+		    fu_udev_device_get_pid(FU_UDEV_DEVICE(self)));
 	return FALSE;
 }
 
@@ -447,8 +447,8 @@ fu_usb_device_open_internal(FuUsbDevice *self, GError **error)
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOTHING_TO_DO,
 			    "device %04x:%04x is already open",
-			    fu_usb_device_get_vid(self),
-			    fu_usb_device_get_pid(self));
+			    fu_udev_device_get_vid(FU_UDEV_DEVICE(self)),
+			    fu_udev_device_get_pid(FU_UDEV_DEVICE(self)));
 		return FALSE;
 	}
 
@@ -1104,7 +1104,7 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* set vendor ID */
-	fu_device_build_vendor_id_u16(device, "USB", fu_usb_device_get_vid(self));
+	fu_device_build_vendor_id_u16(device, "USB", fu_udev_device_get_vid(FU_UDEV_DEVICE(self)));
 
 	/* set the version if the release has been set */
 	release = fu_usb_device_get_release(self);
@@ -1115,8 +1115,8 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* add GUIDs in order of priority */
-	fu_device_add_instance_u16(device, "VID", fu_usb_device_get_vid(self));
-	fu_device_add_instance_u16(device, "PID", fu_usb_device_get_pid(self));
+	fu_device_add_instance_u16(device, "VID", fu_udev_device_get_vid(FU_UDEV_DEVICE(self)));
+	fu_device_add_instance_u16(device, "PID", fu_udev_device_get_pid(FU_UDEV_DEVICE(self)));
 	fu_device_add_instance_u16(device, "REV", release);
 	fu_device_build_instance_id_full(device,
 					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
@@ -1210,40 +1210,6 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 
 	/* success */
 	return TRUE;
-}
-
-/**
- * fu_usb_device_get_vid:
- * @self: a #FuUsbDevice
- *
- * Gets the device vendor code.
- *
- * Returns: integer, or 0x0 if unset or invalid
- *
- * Since: 1.1.2
- **/
-guint16
-fu_usb_device_get_vid(FuUsbDevice *self)
-{
-	g_return_val_if_fail(FU_IS_USB_DEVICE(self), 0x0000);
-	return fu_udev_device_get_vid(FU_UDEV_DEVICE(self));
-}
-
-/**
- * fu_usb_device_get_pid:
- * @self: a #FuUsbDevice
- *
- * Gets the device product code.
- *
- * Returns: integer, or 0x0 if unset or invalid
- *
- * Since: 1.1.2
- **/
-guint16
-fu_usb_device_get_pid(FuUsbDevice *self)
-{
-	g_return_val_if_fail(FU_IS_USB_DEVICE(self), 0x0000);
-	return fu_udev_device_get_pid(FU_UDEV_DEVICE(self));
 }
 
 /**

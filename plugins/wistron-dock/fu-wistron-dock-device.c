@@ -607,14 +607,16 @@ fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 	}
 
 	/* verify VID & PID */
-	if (fu_struct_wistron_dock_wdit_get_vid(st) != fu_usb_device_get_vid(FU_USB_DEVICE(self)) ||
-	    fu_struct_wistron_dock_wdit_get_pid(st) != fu_usb_device_get_pid(FU_USB_DEVICE(self))) {
+	if (fu_struct_wistron_dock_wdit_get_vid(st) !=
+		fu_udev_device_get_vid(FU_UDEV_DEVICE(self)) ||
+	    fu_struct_wistron_dock_wdit_get_pid(st) !=
+		fu_udev_device_get_pid(FU_UDEV_DEVICE(self))) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "USB VID:PID invalid, expected %04X:%04X, got %04X:%04X",
-			    (guint)fu_usb_device_get_vid(FU_USB_DEVICE(self)),
-			    (guint)fu_usb_device_get_pid(FU_USB_DEVICE(self)),
+			    (guint)fu_udev_device_get_vid(FU_UDEV_DEVICE(self)),
+			    (guint)fu_udev_device_get_pid(FU_UDEV_DEVICE(self)),
 			    fu_struct_wistron_dock_wdit_get_vid(st),
 			    fu_struct_wistron_dock_wdit_get_pid(st));
 		return FALSE;

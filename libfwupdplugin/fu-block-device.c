@@ -41,9 +41,9 @@ fu_block_device_probe(FuDevice *device, GError **error)
 		if (!fu_device_probe(usb_device, error))
 			return FALSE;
 		fu_udev_device_set_vid(FU_UDEV_DEVICE(device),
-				       fu_usb_device_get_vid(FU_USB_DEVICE(usb_device)));
+				       fu_udev_device_get_vid(FU_UDEV_DEVICE(usb_device)));
 		fu_udev_device_set_pid(FU_UDEV_DEVICE(device),
-				       fu_usb_device_get_pid(FU_USB_DEVICE(usb_device)));
+				       fu_udev_device_get_pid(FU_UDEV_DEVICE(usb_device)));
 		fu_device_add_instance_str(device,
 					   "VEN",
 					   fu_device_get_instance_str(usb_device, "VID"));

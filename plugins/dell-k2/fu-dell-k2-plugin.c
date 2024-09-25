@@ -39,8 +39,8 @@ fu_dell_k2_plugin_device_add(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuDellK2BaseType dock_type;
 	FuDevice *ec_device = fu_plugin_cache_lookup(plugin, "ec");
-	guint16 vid = fu_usb_device_get_vid(FU_USB_DEVICE(device));
-	guint16 pid = fu_usb_device_get_pid(FU_USB_DEVICE(device));
+	guint16 vid = fu_udev_device_get_vid(FU_UDEV_DEVICE(device));
+	guint16 pid = fu_udev_device_get_pid(FU_UDEV_DEVICE(device));
 
 	/* cache this device until dock type is seen */
 	if (ec_device == NULL) {
@@ -147,8 +147,8 @@ fu_dell_k2_plugin_backend_device_added(FuPlugin *plugin,
 		return TRUE;
 
 	/* VID and PID */
-	vid = fu_usb_device_get_vid(FU_USB_DEVICE(device));
-	pid = fu_usb_device_get_pid(FU_USB_DEVICE(device));
+	vid = fu_udev_device_get_vid(FU_UDEV_DEVICE(device));
+	pid = fu_udev_device_get_pid(FU_UDEV_DEVICE(device));
 
 	/* USB HUB HID bridge device */
 	if ((vid == DELL_VID && pid == DELL_K2_HID_PID)) {
@@ -269,8 +269,8 @@ fu_dell_k2_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	}
 
 	/* leverage synaptics_vmm9 plugin for the mst device */
-	vid = fu_usb_device_get_vid(FU_USB_DEVICE(device));
-	pid = fu_usb_device_get_pid(FU_USB_DEVICE(device));
+	vid = fu_udev_device_get_vid(FU_UDEV_DEVICE(device));
+	pid = fu_udev_device_get_pid(FU_UDEV_DEVICE(device));
 	if ((vid == MST_VMM89430_USB_VID && pid == MST_VMM89430_USB_PID))
 		fu_plugin_cache_add(plugin, "mst", device);
 
