@@ -529,8 +529,8 @@ fu_elantp_hid_haptic_device_setup(FuDevice *device, GError **error)
 
 	/* define the extra instance IDs */
 	udev_parent = FU_UDEV_DEVICE(parent);
-	fu_device_add_instance_u16(device, "VEN", fu_udev_device_get_vendor(udev_parent));
-	fu_device_add_instance_u16(device, "DEV", fu_udev_device_get_model(udev_parent));
+	fu_device_add_instance_u16(device, "VEN", fu_udev_device_get_vid(udev_parent));
+	fu_device_add_instance_u16(device, "DEV", fu_udev_device_get_pid(udev_parent));
 	fu_device_add_instance_u16(device, "DRIVERIC", self->driver_ic);
 	fu_device_add_instance_u16(device, "MOD", self->module_id);
 	if (!fu_device_build_instance_id(device,

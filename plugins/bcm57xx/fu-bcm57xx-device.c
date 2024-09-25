@@ -330,8 +330,8 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 		guint16 vid = fu_bcm57xx_firmware_get_vendor(FU_BCM57XX_FIRMWARE(firmware_tmp));
 		guint16 did = fu_bcm57xx_firmware_get_model(FU_BCM57XX_FIRMWARE(firmware_tmp));
 		if (vid != 0x0 && did != 0x0 &&
-		    (fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)) != vid ||
-		     fu_udev_device_get_model(FU_UDEV_DEVICE(device)) != did)) {
+		    (fu_udev_device_get_vid(FU_UDEV_DEVICE(device)) != vid ||
+		     fu_udev_device_get_pid(FU_UDEV_DEVICE(device)) != did)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -339,8 +339,8 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 				    "got: %04X:%04X expected %04X:%04X",
 				    vid,
 				    did,
-				    fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)),
-				    fu_udev_device_get_model(FU_UDEV_DEVICE(device)));
+				    fu_udev_device_get_vid(FU_UDEV_DEVICE(device)),
+				    fu_udev_device_get_pid(FU_UDEV_DEVICE(device)));
 			return NULL;
 		}
 	}

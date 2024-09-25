@@ -1037,8 +1037,8 @@ fu_usb_device_probe_internal(FuUsbDevice *self, GError **error)
 		}
 		priv->busnum = libusb_get_bus_number(priv->usb_device);
 		priv->devnum = libusb_get_device_address(priv->usb_device);
-		fu_udev_device_set_vendor(FU_UDEV_DEVICE(self), priv->desc.idVendor);
-		fu_udev_device_set_model(FU_UDEV_DEVICE(self), priv->desc.idProduct);
+		fu_udev_device_set_vid(FU_UDEV_DEVICE(self), priv->desc.idVendor);
+		fu_udev_device_set_pid(FU_UDEV_DEVICE(self), priv->desc.idProduct);
 	} else {
 		guint64 busnum = 0;
 		guint64 devnum = 0;
@@ -1226,7 +1226,7 @@ guint16
 fu_usb_device_get_vid(FuUsbDevice *self)
 {
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), 0x0000);
-	return fu_udev_device_get_vendor(FU_UDEV_DEVICE(self));
+	return fu_udev_device_get_vid(FU_UDEV_DEVICE(self));
 }
 
 /**
@@ -1243,7 +1243,7 @@ guint16
 fu_usb_device_get_pid(FuUsbDevice *self)
 {
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), 0x0000);
-	return fu_udev_device_get_model(FU_UDEV_DEVICE(self));
+	return fu_udev_device_get_pid(FU_UDEV_DEVICE(self));
 }
 
 /**
@@ -1744,8 +1744,8 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 	priv->desc.bDeviceSubClass = fu_usb_device_hdr_get_device_sub_class(st);
 	priv->desc.bDeviceProtocol = fu_usb_device_hdr_get_device_protocol(st);
 	priv->desc.bMaxPacketSize0 = fu_usb_device_hdr_get_max_packet_size0(st);
-	fu_udev_device_set_vendor(FU_UDEV_DEVICE(self), fu_usb_device_hdr_get_vendor(st));
-	fu_udev_device_set_model(FU_UDEV_DEVICE(self), fu_usb_device_hdr_get_product(st));
+	fu_udev_device_set_vid(FU_UDEV_DEVICE(self), fu_usb_device_hdr_get_vendor(st));
+	fu_udev_device_set_pid(FU_UDEV_DEVICE(self), fu_usb_device_hdr_get_product(st));
 	priv->desc.bcdDevice = fu_usb_device_hdr_get_device(st);
 	priv->desc.iManufacturer = fu_usb_device_hdr_get_manufacturer_idx(st);
 	priv->desc.iProduct = fu_usb_device_hdr_get_product_idx(st);
@@ -2719,10 +2719,10 @@ fu_usb_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 		fu_device_set_created_usec(FU_DEVICE(self), g_date_time_to_unix_usec(created_new));
 	}
 #endif
-	fu_udev_device_set_vendor(
+	fu_udev_device_set_vid(
 	    FU_UDEV_DEVICE(self),
 	    json_object_get_int_member_with_default(json_object, "IdVendor", 0x0));
-	fu_udev_device_set_model(
+	fu_udev_device_set_pid(
 	    FU_UDEV_DEVICE(self),
 	    json_object_get_int_member_with_default(json_object, "IdProduct", 0x0));
 	priv->desc.bcdDevice = json_object_get_int_member_with_default(json_object, "Device", 0x0);
@@ -2837,15 +2837,15 @@ fu_usb_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags 
 		fwupd_codec_json_append(builder, "Created", str);
 	}
 #endif
-	if (fu_udev_device_get_vendor(FU_UDEV_DEVICE(self)) != 0) {
+	if (fu_udev_device_get_vid(FU_UDEV_DEVICE(self)) != 0) {
 		fwupd_codec_json_append_int(builder,
 					    "IdVendor",
-					    fu_udev_device_get_vendor(FU_UDEV_DEVICE(self)));
+					    fu_udev_device_get_vid(FU_UDEV_DEVICE(self)));
 	}
-	if (fu_udev_device_get_model(FU_UDEV_DEVICE(self)) != 0) {
+	if (fu_udev_device_get_pid(FU_UDEV_DEVICE(self)) != 0) {
 		fwupd_codec_json_append_int(builder,
 					    "IdProduct",
-					    fu_udev_device_get_model(FU_UDEV_DEVICE(self)));
+					    fu_udev_device_get_pid(FU_UDEV_DEVICE(self)));
 	}
 	if (priv->desc.bcdDevice != 0)
 		fwupd_codec_json_append_int(builder, "Device", priv->desc.bcdDevice);

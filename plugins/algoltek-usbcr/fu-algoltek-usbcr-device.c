@@ -456,7 +456,7 @@ fu_algoltek_usbcr_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	fu_device_build_vendor_id_u16(device,
 				      "BLOCK",
-				      fu_udev_device_get_vendor(FU_UDEV_DEVICE(self)));
+				      fu_udev_device_get_vid(FU_UDEV_DEVICE(self)));
 
 	/* success */
 	return TRUE;

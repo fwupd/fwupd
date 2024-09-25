@@ -309,7 +309,7 @@ fu_udev_device_get_symlink_target(FuUdevDevice *self, const gchar *attr, GError 
 }
 
 /**
- * fu_udev_device_set_vendor:
+ * fu_udev_device_set_vid:
  * @self: a #FuUdevDevice
  * @vendor: an ID
  *
@@ -318,7 +318,7 @@ fu_udev_device_get_symlink_target(FuUdevDevice *self, const gchar *attr, GError 
  * Since: 2.0.0
  **/
 void
-fu_udev_device_set_vendor(FuUdevDevice *self, guint16 vendor)
+fu_udev_device_set_vid(FuUdevDevice *self, guint16 vendor)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
@@ -326,7 +326,7 @@ fu_udev_device_set_vendor(FuUdevDevice *self, guint16 vendor)
 }
 
 /**
- * fu_udev_device_set_model:
+ * fu_udev_device_set_pid:
  * @self: a #FuUdevDevice
  * @model: an ID
  *
@@ -335,7 +335,7 @@ fu_udev_device_set_vendor(FuUdevDevice *self, guint16 vendor)
  * Since: 2.0.0
  **/
 void
-fu_udev_device_set_model(FuUdevDevice *self, guint16 model)
+fu_udev_device_set_pid(FuUdevDevice *self, guint16 model)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
@@ -794,9 +794,9 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 	if (priv->devtype == NULL)
 		fu_udev_device_set_devtype(uself, fu_udev_device_get_devtype(udonor));
 	if (priv->vendor == 0x0)
-		fu_udev_device_set_vendor(uself, fu_udev_device_get_vendor(udonor));
+		fu_udev_device_set_vid(uself, fu_udev_device_get_vid(udonor));
 	if (priv->model == 0x0)
-		fu_udev_device_set_model(uself, fu_udev_device_get_model(udonor));
+		fu_udev_device_set_pid(uself, fu_udev_device_get_pid(udonor));
 	if (priv->number == 0x0)
 		fu_udev_device_set_number(uself, fu_udev_device_get_number(udonor));
 	if (priv->subsystem_vendor == 0x0) {
@@ -922,7 +922,7 @@ fu_udev_device_get_number(FuUdevDevice *self)
 }
 
 /**
- * fu_udev_device_get_vendor:
+ * fu_udev_device_get_vid:
  * @self: a #FuUdevDevice
  *
  * Gets the device vendor code.
@@ -932,7 +932,7 @@ fu_udev_device_get_number(FuUdevDevice *self)
  * Since: 1.1.2
  **/
 guint16
-fu_udev_device_get_vendor(FuUdevDevice *self)
+fu_udev_device_get_vid(FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), 0x0000);
@@ -940,7 +940,7 @@ fu_udev_device_get_vendor(FuUdevDevice *self)
 }
 
 /**
- * fu_udev_device_get_model:
+ * fu_udev_device_get_pid:
  * @self: a #FuUdevDevice
  *
  * Gets the device model code.
@@ -950,7 +950,7 @@ fu_udev_device_get_vendor(FuUdevDevice *self)
  * Since: 1.1.2
  **/
 guint16
-fu_udev_device_get_model(FuUdevDevice *self)
+fu_udev_device_get_pid(FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), 0x0000);
@@ -2047,10 +2047,10 @@ fu_udev_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 		fu_udev_device_set_device_file(self, tmp);
 	tmp64 = json_object_get_int_member_with_default(json_object, "Vendor", 0);
 	if (tmp64 != 0)
-		fu_udev_device_set_vendor(self, tmp64);
+		fu_udev_device_set_vid(self, tmp64);
 	tmp64 = json_object_get_int_member_with_default(json_object, "Model", 0);
 	if (tmp64 != 0)
-		fu_udev_device_set_model(self, tmp64);
+		fu_udev_device_set_pid(self, tmp64);
 	tmp64 = json_object_get_int_member_with_default(json_object, "SubsystemVendor", 0);
 	if (tmp64 != 0)
 		fu_udev_device_set_subsystem_vendor(self, tmp64);
