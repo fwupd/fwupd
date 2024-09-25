@@ -36,7 +36,7 @@ gchar *{{item.c_getter}}(const {{obj.name}} *st);
 const guint8 *{{item.c_getter}}(const {{obj.name}} *st, gsize *bufsz);
 {%- elif item.type == Type.GUID %}
 const fwupd_guid_t *{{item.c_getter}}(const {{obj.name}} *st);
-{%- elif not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64, Type.B32] %}
+{%- elif not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64, Type.B32] %}
 {{item.type_glib}} {{item.c_getter}}(const {{obj.name}} *st);
 {%- endif %}
 {%- endif %}
@@ -53,7 +53,7 @@ gboolean
 gboolean {{item.c_setter}}({{obj.name}} *st, const guint8 *buf, gsize bufsz, GError **error);
 {%- elif item.type == Type.GUID %}
 void {{item.c_setter}}({{obj.name}} *st, const fwupd_guid_t *value);
-{%- elif not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64, Type.B32] %}
+{%- elif not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64, Type.B32] %}
 void {{item.c_setter}}({{obj.name}} *st, {{item.type_glib}} value);
 {%- endif %}
 {%- endif %}

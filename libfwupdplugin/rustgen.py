@@ -30,6 +30,10 @@ class Type(Enum):
     STRING = "char"
     GUID = "Guid"
     B32 = "b32"
+    I8 = "i8"
+    I16 = "i16"
+    I32 = "i32"
+    I64 = "i64"
 
 
 class Export(Enum):
@@ -311,15 +315,15 @@ class StructItem:
         multiplier = self.multiplier
         if not multiplier:
             multiplier = 1
-        if self.type in [Type.U8, Type.STRING, Type.GUID]:
+        if self.type in [Type.U8, Type.I8, Type.STRING, Type.GUID]:
             return multiplier
-        if self.type == Type.U16:
+        if self.type in [Type.U16, Type.I16]:
             return multiplier * 2
         if self.type == Type.U24:
             return multiplier * 3
-        if self.type == Type.U32:
+        if self.type in [Type.U32, Type.I32]:
             return multiplier * 4
-        if self.type == Type.U64:
+        if self.type in [Type.U64, Type.I64]:
             return multiplier * 8
         return 0
 
@@ -370,6 +374,14 @@ class StructItem:
             return "fwupd_guid_t"
         if self.type == Type.B32:
             return "guint32"
+        if self.type == Type.I8:
+            return "gint8"
+        if self.type == Type.I16:
+            return "gint16"
+        if self.type == Type.I32:
+            return "gint32"
+        if self.type == Type.I64:
+            return "gint64"
         return "void"
 
     @property
@@ -383,6 +395,12 @@ class StructItem:
         if self.type == Type.B32:
             return "uint32"
         if self.type == Type.U64:
+            return "uint64"
+        if self.type == Type.I16:
+            return "uint16"
+        if self.type == Type.I32:
+            return "uint32"
+        if self.type == Type.I64:
             return "uint64"
         return ""
 
