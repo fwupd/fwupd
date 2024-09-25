@@ -45,6 +45,9 @@ gboolean
 fu_io_channel_shutdown(FuIOChannel *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 gboolean
+fu_io_channel_seek(FuIOChannel *self, gsize offset, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
+gboolean
 fu_io_channel_write_raw(FuIOChannel *self,
 			const guint8 *data,
 			gsize datasz,
