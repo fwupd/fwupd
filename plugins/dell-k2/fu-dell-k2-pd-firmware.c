@@ -71,7 +71,6 @@ fu_dell_k2_pd_firmware_set_version(FuFirmware *firmware,
 	gsize streamsz = 0;
 	gsize version_offset = magic_offset + DOCK_PD_VERSION_OFFSET;
 	guint32 raw_version = 0;
-	g_autofree gchar *ver = NULL;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
