@@ -64,6 +64,7 @@ plugins = {
   'hailuck': false,
   'hpi-cfu': false,
   'huddly-usb': false,
+  'intel-cvs': false,
   'intel-gsc': false,
   'intel-me': false,
   'intel-usb4': false,
