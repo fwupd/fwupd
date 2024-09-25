@@ -799,6 +799,13 @@ fu_engine_modify_config(FuEngine *self, const gchar *key, const gchar *value, GE
 			       "test:VerifyDelay",
 			       "test:WriteDelay",
 			       "test:WriteSupported",
+			       "uefi_capsule:DisableCapsuleUpdateOnDisk",
+			       "uefi_capsule:DisableShimForSecureBoot",
+			       "uefi_capsule:EnableEfiDebugging",
+			       "uefi_capsule:EnableGrubChainLoad",
+			       "uefi_capsule:OverrideESPMountPoint",
+			       "uefi_capsule:RebootCleanup",
+			       "uefi_capsule:RequireESPFreeSpace",
 			       NULL};
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
