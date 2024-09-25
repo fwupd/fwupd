@@ -44,7 +44,7 @@
     g_return_val_if_fail(st != NULL, 0x0);
     return st->data[{{item.offset}}];
 }
-{%- elif not item.multiplier and item.type in [Type.U16, Type.U24, Type.U32, Type.U64] %}
+{%- elif not item.multiplier and item.type in [Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64] %}
 {{export.value}}{{item.type_glib}}
 {{item.c_getter}}(const {{obj.name}} *st)
 {
@@ -139,7 +139,7 @@
     tmp |= (value & {{item.bits_mask}}) << {{item.bits_offset}};
     fu_memwrite_{{item.type_mem}}(st->data + {{item.offset}}, tmp, {{item.endian_glib}});
 }
-{%- elif not item.multiplier and item.type in [Type.U16, Type.U24, Type.U32, Type.U64] %}
+{%- elif not item.multiplier and item.type in [Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64] %}
 {{export.value}}void
 {{item.c_setter}}({{obj.name}} *st, {{item.type_glib}} value)
 {
@@ -195,7 +195,7 @@
     g_autoptr(GString) str = g_string_new("{{obj.name}}:\n");
     g_return_val_if_fail(st != NULL, NULL);
 {%- for item in obj.items | selectattr('enabled') | rejectattr('constant') %}
-{%- if not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64, Type.B32] %}
+{%- if not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64, Type.B32] %}
 {%- if item.enum_obj %}
     {
         const gchar *tmp = {{item.enum_obj.c_method('ToString')}}({{item.c_getter}}(st));
