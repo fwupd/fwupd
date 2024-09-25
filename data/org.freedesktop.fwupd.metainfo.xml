@@ -38,6 +38,27 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.25" date="2024-09-25">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fix checking new Synaptics MST firmware size</li>
+          <li>Make another ModemManager instance ID visible for firmware matching</li>
+          <li>Never set a zero-length device name when matching the vendor name</li>
+          <li>Recalculate the device supported flag when reparenting devices</li>
+          <li>Reduce idle power consumption of paired logitech-hidpp devices</li>
+          <li>Retry the open action to fix BC901 NVMe reload</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Algoltek devices supporting sector erase</li>
+          <li>Dell K2 dock</li>
+          <li>Intel USB4 hub 5787</li>
+          <li>More MediaTek scaler devices</li>
+          <li>Nordic HID devices supporting DFUv1</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.24" date="2024-08-21">
       <description>
         <p>This release fixes the following bugs:</p>
