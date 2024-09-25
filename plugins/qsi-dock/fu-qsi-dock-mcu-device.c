@@ -159,10 +159,10 @@ fu_qsi_dock_mcu_device_enumerate_children(FuQsiDockMcuDevice *self, GError **err
 		/* add virtual device */
 		fu_device_add_instance_u16(child,
 					   "VID",
-					   fu_usb_device_get_vid(FU_USB_DEVICE(self)));
+					   fu_udev_device_get_vid(FU_UDEV_DEVICE(self)));
 		fu_device_add_instance_u16(child,
 					   "PID",
-					   fu_usb_device_get_pid(FU_USB_DEVICE(self)));
+					   fu_udev_device_get_pid(FU_UDEV_DEVICE(self)));
 		fu_device_add_instance_str(child, "CID", components[i].name);
 		if (!fu_device_build_instance_id(child, error, "USB", "VID", "PID", "CID", NULL))
 			return FALSE;

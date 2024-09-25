@@ -33,12 +33,12 @@ fu_dell_dock_hub_add_instance(FuDevice *device, guint8 dock_type)
 
 	if (dock_type == DOCK_BASE_TYPE_ATOMIC) {
 		devid = g_strdup_printf("USB\\VID_%04X&PID_%04X&atomic_hub",
-					(guint)fu_usb_device_get_vid(FU_USB_DEVICE(device)),
-					(guint)fu_usb_device_get_pid(FU_USB_DEVICE(device)));
+					(guint)fu_udev_device_get_vid(FU_UDEV_DEVICE(device)),
+					(guint)fu_udev_device_get_pid(FU_UDEV_DEVICE(device)));
 	} else {
 		devid = g_strdup_printf("USB\\VID_%04X&PID_%04X&hub",
-					(guint)fu_usb_device_get_vid(FU_USB_DEVICE(device)),
-					(guint)fu_usb_device_get_pid(FU_USB_DEVICE(device)));
+					(guint)fu_udev_device_get_vid(FU_UDEV_DEVICE(device)),
+					(guint)fu_udev_device_get_pid(FU_UDEV_DEVICE(device)));
 	}
 	fu_device_add_instance_id(device, devid);
 }

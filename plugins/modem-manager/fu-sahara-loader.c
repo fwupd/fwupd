@@ -121,14 +121,14 @@ fu_sahara_loader_find_interface(FuSaharaLoader *self, FuUsbDevice *usb_device, G
 	g_autoptr(GPtrArray) intfs = NULL;
 
 	/* all sahara devices use the same vid:pid pair */
-	if (fu_usb_device_get_vid(usb_device) != 0x05c6 ||
-	    fu_usb_device_get_pid(usb_device) != 0x9008) {
+	if (fu_udev_device_get_vid(FU_UDEV_DEVICE(usb_device)) != 0x05c6 ||
+	    fu_udev_device_get_pid(FU_UDEV_DEVICE(usb_device)) != 0x9008) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "wrong device and/or vendor id: 0x%04x 0x%04x",
-			    fu_usb_device_get_vid(usb_device),
-			    fu_usb_device_get_pid(usb_device));
+			    fu_udev_device_get_vid(FU_UDEV_DEVICE(usb_device)),
+			    fu_udev_device_get_pid(FU_UDEV_DEVICE(usb_device)));
 		return FALSE;
 	}
 

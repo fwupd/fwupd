@@ -168,8 +168,8 @@ fu_steelseries_fizz_tunnel_probe(FuDevice *device, GError **error)
 
 	/* add GUIDs in order of priority */
 	fu_device_add_instance_str(device, "PROTOCOL", "FIZZ_TUNNEL");
-	fu_device_add_instance_u16(device, "VID", fu_usb_device_get_vid(FU_USB_DEVICE(parent)));
-	fu_device_add_instance_u16(device, "PID", fu_usb_device_get_pid(FU_USB_DEVICE(parent)));
+	fu_device_add_instance_u16(device, "VID", fu_udev_device_get_vid(FU_UDEV_DEVICE(parent)));
+	fu_device_add_instance_u16(device, "PID", fu_udev_device_get_pid(FU_UDEV_DEVICE(parent)));
 	fu_device_add_instance_u16(device, "REV", release);
 	fu_device_build_instance_id_full(device,
 					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
