@@ -1037,6 +1037,8 @@ fu_usb_device_probe_internal(FuUsbDevice *self, GError **error)
 		}
 		priv->busnum = libusb_get_bus_number(priv->usb_device);
 		priv->devnum = libusb_get_device_address(priv->usb_device);
+		fu_udev_device_set_vendor(FU_UDEV_DEVICE(self), priv->desc.idVendor);
+		fu_udev_device_set_model(FU_UDEV_DEVICE(self), priv->desc.idProduct);
 	} else {
 		guint64 busnum = 0;
 		guint64 devnum = 0;
