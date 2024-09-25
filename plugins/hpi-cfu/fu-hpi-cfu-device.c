@@ -1404,8 +1404,6 @@ FuHpiCfuStateMachineFramework hpi_cfu_states[] = {
 static gboolean
 fu_hpi_cfu_device_setup(FuDevice *device, GError **error)
 {
-	g_autoptr(GError) error_local = NULL;
-	g_autofree gchar *version = NULL;
 	guint32 version_raw;
 	gint8 version_table_offset = 4;
 	gint8 component_id_offset = 5;
@@ -1484,7 +1482,6 @@ fu_hpi_cfu_device_write_firmware(FuDevice *device,
 	gsize payload_file_size = 0;
 	g_autoptr(FuFirmware) fw_offer = NULL;
 	g_autoptr(FuFirmware) fw_payload = NULL;
-	g_autoptr(GBytes) blob_offer = NULL;
 	g_autoptr(GBytes) blob_payload = NULL;
 
 	/* progress */
