@@ -17,6 +17,9 @@
 #endif
 #include <string.h>
 #include <sys/stat.h>
+#ifdef HAVE_MEMFD_CREATE
+#include <sys/mman.h>
+#endif
 
 #include "fwupd-error.h"
 
@@ -615,4 +618,46 @@ fu_io_channel_new_file(const gchar *filename, FuIoChannelOpenFlag open_flags, GE
 		return NULL;
 	}
 	return fu_io_channel_unix_new(fd);
+}
+
+/**
+ * fu_io_channel_virtual_new:
+ * @name: (not nullable): memfd name
+ * @error: (nullable): optional return location for an error
+ *
+ * Creates a new virtual object to write and/or read from.
+ *
+ * Returns: a #FuIOChannel
+ *
+ * Since: 2.0.0
+ **/
+FuIOChannel *
+fu_io_channel_virtual_new(const gchar *name, GError **error)
+{
+#ifdef HAVE_MEMFD_CREATE
+	gint fd;
+
+	g_return_val_if_fail(name != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	fd = memfd_create(name, MFD_CLOEXEC);
+	if (fd < 0) {
+		g_set_error(error,
+			    G_IO_ERROR, /* nocheck:error */
+#ifdef HAVE_ERRNO_H
+			    g_io_error_from_errno(errno),
+#else
+			    G_IO_ERROR_FAILED, /* nocheck:blocked */
+#endif
+			    "failed to create %s: %s",
+			    name,
+			    g_strerror(errno));
+		fwupd_error_convert(error);
+		return NULL;
+	}
+	return fu_io_channel_unix_new(fd);
+#else
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "memfd not supported");
+	return NULL;
+#endif
 }

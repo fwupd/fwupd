@@ -35,6 +35,9 @@ typedef enum {
 FuIOChannel *
 fu_io_channel_unix_new(gint fd);
 FuIOChannel *
+fu_io_channel_virtual_new(const gchar *name, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
+FuIOChannel *
 fu_io_channel_new_file(const gchar *filename,
 		       FuIoChannelOpenFlag open_flags,
 		       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
