@@ -261,6 +261,15 @@ The `[uefi_capsule]` section can contain the following parameters:
 
   **NOTE:** disabling this option is only required when debugging the flash process and normal
   users should not need to change this setting.
+
+**ScreenWidth={{uefi_capsule_ScreenWidth}}**
+
+  Override the screen width in pixels of the EFI framebuffer as used by the UX capsule.
+
+**ScreenHeight={{uefi_capsule_ScreenHeight}}**
+
+  Override the screen height in pixels of the EFI framebuffer as used by the UX capsule.
+
 {% endif %}
 
 {% if plugin_msr %}

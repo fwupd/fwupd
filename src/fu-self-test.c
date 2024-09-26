@@ -6256,6 +6256,8 @@ fu_config_set_plugin_defaults(FuConfig *config)
 	fu_config_set_default(config, "uefi-capsule", "OverrideESPMountPoint", NULL);
 	fu_config_set_default(config, "uefi-capsule", "RebootCleanup", "true");
 	fu_config_set_default(config, "uefi-capsule", "RequireESPFreeSpace", "0");
+	fu_config_set_default(config, "uefi-capsule", "ScreenWidth", "0");
+	fu_config_set_default(config, "uefi-capsule", "ScreenHeight", "0");
 }
 
 static void

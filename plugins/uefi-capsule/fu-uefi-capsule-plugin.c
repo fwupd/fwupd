@@ -27,6 +27,8 @@ struct _FuUefiCapsulePlugin {
 	FuFirmware *acpi_uefi; /* optional */
 	FuVolume *esp;
 	FuBackend *backend;
+	guint32 screen_width;
+	guint32 screen_height;
 	GFile *fwupd_efi_file;
 	GFileMonitor *fwupd_efi_monitor;
 };
@@ -38,6 +40,8 @@ fu_uefi_capsule_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	fu_backend_add_string(self->backend, idt, str);
+	fwupd_codec_string_append_int(str, idt, "ScreenWidth", self->screen_width);
+	fwupd_codec_string_append_int(str, idt, "ScreenHeight", self->screen_height);
 	if (self->bgrt != NULL) {
 		fwupd_codec_string_append_bool(str,
 					       idt,
@@ -311,7 +315,6 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 					 GBytes *blob,
 					 GError **error)
 {
-	guint32 screen_x, screen_y;
 	gssize size;
 	guint32 width;
 	guint8 csum = 0;
@@ -328,8 +331,6 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	g_autoptr(GOutputStream) ostream = NULL;
 
 	/* get screen dimensions */
-	if (!fu_uefi_get_framebuffer_size(&screen_x, &screen_y, error))
-		return FALSE;
 	if (!fu_firmware_parse_full(FU_FIRMWARE(bmp_image),
 				    blob,
 				    0x0,
@@ -367,9 +368,11 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 							FU_STRUCT_EFI_CAPSULE_HEADER_SIZE +
 							FU_STRUCT_EFI_UX_CAPSULE_HEADER_SIZE);
 
-	fu_struct_efi_ux_capsule_header_set_x_offset(st_uxh, (screen_x / 2) - (width / 2));
-	if (screen_y == fu_uefi_bgrt_get_height(self->bgrt)) {
-		fu_struct_efi_ux_capsule_header_set_y_offset(st_uxh, (gdouble)screen_y * 0.8f);
+	fu_struct_efi_ux_capsule_header_set_x_offset(st_uxh,
+						     (self->screen_width / 2) - (width / 2));
+	if (self->screen_height == fu_uefi_bgrt_get_height(self->bgrt)) {
+		fu_struct_efi_ux_capsule_header_set_y_offset(st_uxh,
+							     (gdouble)self->screen_height * 0.8f);
 	} else {
 		fu_struct_efi_ux_capsule_header_set_y_offset(
 		    st_uxh,
@@ -408,8 +411,6 @@ fu_uefi_capsule_plugin_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	guint best_idx = G_MAXUINT;
 	guint32 lowest_border_pixels = G_MAXUINT;
-	guint32 screen_height = 768;
-	guint32 screen_width = 1024;
 	g_autoptr(GBytes) image_bmp = NULL;
 
 	struct {
@@ -443,24 +444,23 @@ fu_uefi_capsule_plugin_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 				    "BGRT is not supported");
 		return FALSE;
 	}
-	if (!fu_uefi_get_framebuffer_size(&screen_width, &screen_height, error))
-		return FALSE;
 	g_debug("framebuffer size %" G_GUINT32_FORMAT " x%" G_GUINT32_FORMAT,
-		screen_width,
-		screen_height);
+		self->screen_width,
+		self->screen_height);
 
 	/* find the 'best sized' pre-generated image */
 	for (guint i = 0; sizes[i].width != 0; i++) {
 		guint32 border_pixels;
 
 		/* disregard any images that are bigger than the screen */
-		if (sizes[i].width > screen_width)
+		if (sizes[i].width > self->screen_width)
 			continue;
-		if (sizes[i].height > screen_height)
+		if (sizes[i].height > self->screen_height)
 			continue;
 
 		/* is this the best fit for the display */
-		border_pixels = (screen_width * screen_height) - (sizes[i].width * sizes[i].height);
+		border_pixels =
+		    (self->screen_width * self->screen_height) - (sizes[i].width * sizes[i].height);
 		if (border_pixels < lowest_border_pixels) {
 			lowest_border_pixels = border_pixels;
 			best_idx = i;
@@ -762,6 +762,46 @@ fu_uefi_capsule_plugin_parse_acpi_uefi(FuUefiCapsulePlugin *self, GError **error
 }
 
 static gboolean
+fu_uefi_capsule_plugin_ensure_screen_size_config(FuUefiCapsulePlugin *self, GError **error)
+{
+	g_autofree gchar *screen_width = NULL;
+	g_autofree gchar *screen_height = NULL;
+
+	/* is overridden? */
+	screen_width = fu_plugin_get_config_value(FU_PLUGIN(self), "ScreenWidth");
+	if (screen_width != NULL) {
+		guint64 tmp64 = 0;
+		if (!fu_strtoull(screen_width,
+				 &tmp64,
+				 0,
+				 G_MAXUINT32,
+				 FU_INTEGER_BASE_AUTO,
+				 error)) {
+			g_prefix_error(error, "failed to parse ScreenWidth: ");
+			return FALSE;
+		}
+		self->screen_width = (guint32)tmp64;
+	}
+	screen_height = fu_plugin_get_config_value(FU_PLUGIN(self), "ScreenHeight");
+	if (screen_height != NULL) {
+		guint64 tmp64 = 0;
+		if (!fu_strtoull(screen_height,
+				 &tmp64,
+				 0,
+				 G_MAXUINT32,
+				 FU_INTEGER_BASE_AUTO,
+				 error)) {
+			g_prefix_error(error, "failed to parse ScreenHeight: ");
+			return FALSE;
+		}
+		self->screen_height = (guint32)tmp64;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
@@ -799,6 +839,19 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 		}
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
+	}
+
+	/* get the fallback screen size for the UX capsule from fwupd.conf */
+	if (!fu_uefi_capsule_plugin_ensure_screen_size_config(self, error))
+		return FALSE;
+
+	/* now try the now-removed upstream efi-framebuffer */
+	if (self->screen_height == 0 || self->screen_width == 0) {
+		g_autoptr(GError) error_efifb = NULL;
+		if (!fu_uefi_get_framebuffer_size(&self->screen_width,
+						  &self->screen_height,
+						  &error_efifb))
+			g_debug("EFIFB data was not readable: %s", error_efifb->message);
 	}
 
 	/* are the EFI dirs set up so we can update each device */
@@ -1107,6 +1160,8 @@ fu_uefi_capsule_plugin_modify_config(FuPlugin *plugin,
 			       "OverrideESPMountPoint",
 			       "RebootCleanup",
 			       "RequireESPFreeSpace",
+			       "ScreenWidth",
+			       "ScreenHeight",
 			       NULL};
 	if (!g_strv_contains(keys, key)) {
 		g_set_error(error,
@@ -1153,6 +1208,8 @@ fu_uefi_capsule_plugin_constructed(GObject *obj)
 	fu_plugin_set_config_default(plugin, "OverrideESPMountPoint", NULL);
 	fu_plugin_set_config_default(plugin, "RebootCleanup", "true");
 	fu_plugin_set_config_default(plugin, "RequireESPFreeSpace", "0"); /* in MB */
+	fu_plugin_set_config_default(plugin, "ScreenWidth", "0");	  /* in pixels */
+	fu_plugin_set_config_default(plugin, "ScreenHeight", "0");	  /* in pixels */
 
 	/* add a requirement on the fwupd-efi version -- which can change  */
 	if (!fu_uefi_capsule_plugin_fwupd_efi_probe(self, &error_local))
