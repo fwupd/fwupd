@@ -14,7 +14,6 @@
 
 struct _FuEngineConfig {
 	FuConfig parent_instance;
-	GHashTable *os_release;	      /* (element-type utf-8 utf-8) */
 	GPtrArray *disabled_devices;  /* (element-type utf-8) */
 	GPtrArray *disabled_plugins;  /* (element-type utf-8) */
 	GPtrArray *approved_firmware; /* (element-type utf-8) */
@@ -54,7 +53,7 @@ fu_engine_config_report_from_spec(FuEngineConfig *self, const gchar *report_spec
 	g_autoptr(FwupdReport) report = fwupd_report_new();
 
 	for (guint i = 0; parts[i] != NULL; i++) {
-		const gchar *value = NULL;
+		g_autofree gchar *value = NULL;
 		g_auto(GStrv) kv = g_strsplit(parts[i], "=", 2);
 		if (g_strv_length(kv) != 2) {
 			g_set_error(error,
@@ -64,10 +63,10 @@ fu_engine_config_report_from_spec(FuEngineConfig *self, const gchar *report_spec
 				    parts[i]);
 			return NULL;
 		}
-		if (self->os_release != NULL && g_str_has_prefix(kv[1], "$"))
-			value = g_hash_table_lookup(self->os_release, kv[1] + 1);
+		if (g_str_has_prefix(kv[1], "$"))
+			value = g_get_os_info(kv[1] + 1);
 		if (value == NULL)
-			value = kv[1];
+			value = g_strdup(kv[1]);
 		if (g_strcmp0(kv[0], "VendorId") == 0) {
 			guint64 tmp = 0;
 			if (g_strcmp0(value, "$OEM") == 0) {
@@ -409,9 +408,6 @@ fu_engine_config_init(FuEngineConfig *self)
 	g_signal_connect(self, "loaded", G_CALLBACK(fu_engine_config_changed_cb), NULL);
 	g_signal_connect(self, "changed", G_CALLBACK(fu_engine_config_changed_cb), NULL);
 
-	/* optionally used for substitutions */
-	self->os_release = fwupd_get_os_release(NULL);
-
 	/* defaults changed here will also be reflected in the fwupd.conf man page */
 	fu_engine_config_set_default(self, "AllowEmulation", "false");
 	fu_engine_config_set_default(self, "ApprovedFirmware", NULL);
@@ -444,8 +440,6 @@ fu_engine_config_finalize(GObject *obj)
 {
 	FuEngineConfig *self = FU_ENGINE_CONFIG(obj);
 
-	if (self->os_release != NULL)
-		g_hash_table_unref(self->os_release);
 	g_ptr_array_unref(self->disabled_devices);
 	g_ptr_array_unref(self->disabled_plugins);
 	g_ptr_array_unref(self->approved_firmware);

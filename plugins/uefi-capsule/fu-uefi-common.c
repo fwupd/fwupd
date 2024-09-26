@@ -189,14 +189,12 @@ gchar *
 fu_uefi_get_esp_path_for_os(const gchar *esp_base)
 {
 #ifndef EFI_OS_DIR
-	const gchar *os_release_id = NULL;
-	const gchar *id_like = NULL;
+	g_autofree gchar *os_release_id = NULL;
+	g_autofree gchar *id_like = NULL;
 	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *full_path = NULL;
 	g_autofree gchar *systemd_path = NULL;
 	g_autofree gchar *full_systemd_path = NULL;
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GHashTable) os_release = NULL;
 
 	/* distro (or user) is using systemd-boot */
 	systemd_path = g_build_filename("EFI", "systemd", NULL);
@@ -205,21 +203,18 @@ fu_uefi_get_esp_path_for_os(const gchar *esp_base)
 		return g_steal_pointer(&systemd_path);
 
 	/* try to lookup /etc/os-release ID key */
-	os_release = fwupd_get_os_release(&error_local);
-	if (os_release != NULL) {
-		os_release_id = g_hash_table_lookup(os_release, "ID");
-	} else {
-		g_debug("failed to get ID: %s", error_local->message);
-	}
+	os_release_id = g_get_os_info(G_OS_INFO_KEY_ID);
 	if (os_release_id == NULL)
-		os_release_id = "unknown";
+		os_release_id = g_strdup("unknown");
+
 	/* if ID key points at something existing return it */
 	esp_path = g_build_filename("EFI", os_release_id, NULL);
 	full_path = g_build_filename(esp_base, esp_path, NULL);
-	if (g_file_test(full_path, G_FILE_TEST_IS_DIR) || os_release == NULL)
+	if (g_file_test(full_path, G_FILE_TEST_IS_DIR))
 		return g_steal_pointer(&esp_path);
+
 	/* if ID key doesn't exist, try ID_LIKE */
-	id_like = g_hash_table_lookup(os_release, "ID_LIKE");
+	id_like = g_get_os_info("ID_LIKE");
 	if (id_like != NULL) {
 		g_auto(GStrv) split = g_strsplit(id_like, " ", -1);
 		for (guint i = 0; split[i] != NULL; i++) {

@@ -18,13 +18,9 @@ G_DEFINE_TYPE(FuUefiSbatDevice, fu_uefi_sbat_device, FU_TYPE_DEVICE)
 static gboolean
 fu_uefi_sbat_device_probe(FuDevice *device, GError **error)
 {
-	const gchar *distro_id;
-	g_autoptr(GHashTable) os_release = NULL;
+	g_autofree gchar *distro_id = NULL;
 
-	os_release = fwupd_get_os_release(error);
-	if (os_release == NULL)
-		return FALSE;
-	distro_id = g_hash_table_lookup(os_release, "ID");
+	distro_id = g_get_os_info(G_OS_INFO_KEY_ID);
 	if (distro_id == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

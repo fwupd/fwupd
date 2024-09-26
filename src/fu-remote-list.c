@@ -290,7 +290,6 @@ fu_remote_list_is_remote_origin_lvfs(FwupdRemote *remote)
 
 static gboolean
 fu_remote_list_add_for_file(FuRemoteList *self,
-			    GHashTable *os_release,
 			    const gchar *filename,
 			    GError **error)
 {
@@ -363,7 +362,22 @@ fu_remote_list_add_for_file(FuRemoteList *self,
 		g_autofree gchar *xpath = NULL;
 		g_autoptr(GString) agreement_markup = NULL;
 		g_autoptr(XbNode) component = NULL;
-		const gchar *tmp;
+		struct {
+			const gchar *key;
+			const gchar *search;
+			const gchar *fallback;
+		} distro_kv[] = {
+		    {
+			G_OS_INFO_KEY_NAME,
+			"$OS_RELEASE:NAME$",
+			"this distribution",
+		    },
+		    {
+			G_OS_INFO_KEY_BUG_REPORT_URL,
+			"$OS_RELEASE:BUG_REPORT_URL$",
+			"https://github.com/fwupd/fwupd/issues",
+		    },
+		};
 
 		xpath = g_strdup_printf("component/id[text()='%s']/..", component_id);
 		component = xb_silo_query_first(self->silo, xpath, NULL);
@@ -377,15 +391,12 @@ fu_remote_list_add_for_file(FuRemoteList *self,
 			return FALSE;
 
 		/* replace any dynamic values from os-release */
-		tmp = g_hash_table_lookup(os_release, "NAME");
-		if (tmp == NULL)
-			tmp = "this distribution";
-		g_string_replace(agreement_markup, "$OS_RELEASE:NAME$", tmp, 0);
-		tmp = g_hash_table_lookup(os_release, "BUG_REPORT_URL");
-		if (tmp == NULL)
-			tmp = "https://github.com/fwupd/fwupd/issues";
-		g_string_replace(agreement_markup, "$OS_RELEASE:BUG_REPORT_URL$", tmp, 0);
-		fwupd_remote_set_agreement(remote, agreement_markup->str);
+		for (guint i = 0; i < G_N_ELEMENTS(distro_kv); i++) {
+			g_autofree gchar *os_replace = g_get_os_info(distro_kv[i].key);
+			if (os_replace == NULL)
+				os_replace = g_strdup(distro_kv[i].fallback);
+			g_string_replace(agreement_markup, distro_kv[i].search, os_replace, 0);
+		}
 	}
 
 	/* set mtime */
@@ -400,7 +411,6 @@ static gboolean
 fu_remote_list_add_for_path(FuRemoteList *self, const gchar *path, GError **error)
 {
 	g_autofree gchar *path_remotes = NULL;
-	g_autoptr(GHashTable) os_release = NULL;
 	g_autoptr(GPtrArray) paths = NULL;
 
 	path_remotes = g_build_filename(path, "remotes.d", NULL);
@@ -413,14 +423,11 @@ fu_remote_list_add_for_path(FuRemoteList *self, const gchar *path, GError **erro
 	paths = fu_path_glob(path_remotes, "*.conf", NULL);
 	if (paths == NULL)
 		return TRUE;
-	os_release = fwupd_get_os_release(error);
-	if (os_release == NULL)
-		return FALSE;
 	for (guint i = 0; i < paths->len; i++) {
 		const gchar *filename = g_ptr_array_index(paths, i);
 		if (g_str_has_suffix(filename, "fwupd-tests.conf") && !self->testing_remote)
 			continue;
-		if (!fu_remote_list_add_for_file(self, os_release, filename, error))
+		if (!fu_remote_list_add_for_file(self, filename, error))
 			return FALSE;
 	}
 	return TRUE;

@@ -8,6 +8,7 @@
 
 * Migrate from `fwupd_build_machine_id()` to `fwupd_client_get_host_machine_id()`
 * Migrate from `fwupd_build_history_report_json()` to `fwupd_client_build_report_history()`
+* Migrate from `fwupd_get_os_release()` to `fwupd_client_get_report_metadata()`
 * Convert `fwupd_client_emulation_load()` to take a readable file rather than taking bytes
 * Convert `fwupd_client_emulation_save()` to take a writable file rather than returning bytes
 * Drop use of FWUPD_DEVICE_FLAG_ONLY_OFFLINE
