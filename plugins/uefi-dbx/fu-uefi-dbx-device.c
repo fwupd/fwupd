@@ -8,12 +8,38 @@
 
 #include "fu-uefi-dbx-common.h"
 #include "fu-uefi-dbx-device.h"
+#include "fu-uefi-dbx-snapd-notifier.h"
 
 struct _FuUefiDbxDevice {
 	FuDevice parent_instance;
+	FuUefiDbxSnapdNotifier *snapd_notifier;
 };
 
 G_DEFINE_TYPE(FuUefiDbxDevice, fu_uefi_dbx_device, FU_TYPE_DEVICE)
+
+void
+fu_uefi_dbx_device_set_snapd_notifier(FuUefiDbxDevice *self, FuUefiDbxSnapdNotifier *obs)
+{
+	g_set_object(&self->snapd_notifier, obs);
+}
+
+static gboolean
+fu_uefi_dbx_device_maybe_notify_snapd_prepare(FuUefiDbxDevice *self, GBytes *data, GError **error)
+{
+	if (self->snapd_notifier == NULL)
+		return TRUE;
+
+	return fu_uefi_dbx_snapd_notifier_dbx_update_prepare(self->snapd_notifier, data, error);
+}
+
+static gboolean
+fu_uefi_dbx_device_maybe_notify_snapd_cleanup(FuUefiDbxDevice *self, GError **error)
+{
+	if (self->snapd_notifier == NULL)
+		return TRUE;
+
+	return fu_uefi_dbx_snapd_notifier_dbx_update_cleanup(self->snapd_notifier, error);
+}
 
 static gboolean
 fu_uefi_dbx_device_write_firmware(FuDevice *device,
@@ -31,6 +57,9 @@ fu_uefi_dbx_device_write_firmware(FuDevice *device,
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
+		return FALSE;
+
+	if (!fu_uefi_dbx_device_maybe_notify_snapd_prepare(FU_UEFI_DBX_DEVICE(device), fw, error))
 		return FALSE;
 
 	/* write entire chunk to efivarsfs */
@@ -107,8 +136,10 @@ fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
 
 	/* parse dbx */
-	if (!fu_firmware_parse_stream(siglist, stream, 0x0, flags, error))
+	if (!fu_firmware_parse_stream(siglist, stream, 0x0, flags, error)) {
+		g_prefix_error(error, "cannot parse DBX update: ");
 		return NULL;
+	}
 
 	/* validate this is safe to apply */
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
@@ -200,6 +231,18 @@ fu_uefi_dbx_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
+static gboolean
+fu_uefi_dbx_device_cleanup(FuDevice *self,
+			   FuProgress *progress,
+			   FwupdInstallFlags flags,
+			   GError **error)
+{
+	if (!fu_uefi_dbx_device_maybe_notify_snapd_cleanup(FU_UEFI_DBX_DEVICE(self), error))
+		return FALSE;
+
+	return TRUE;
+}
+
 static void
 fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 {
@@ -228,14 +271,29 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 }
 
 static void
+fu_uefi_dbx_device_finalize(GObject *object)
+{
+	FuUefiDbxDevice *self = FU_UEFI_DBX_DEVICE(object);
+
+	if (self->snapd_notifier != NULL)
+		g_object_unref(self->snapd_notifier);
+
+	G_OBJECT_CLASS(fu_uefi_dbx_device_parent_class)->finalize(object);
+}
+
+static void
 fu_uefi_dbx_device_class_init(FuUefiDbxDeviceClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->probe = fu_uefi_dbx_device_probe;
 	device_class->write_firmware = fu_uefi_dbx_device_write_firmware;
 	device_class->prepare_firmware = fu_uefi_dbx_device_prepare_firmware;
 	device_class->set_progress = fu_uefi_dbx_device_set_progress;
 	device_class->report_metadata_pre = fu_uefi_dbx_device_report_metadata_pre;
+	device_class->cleanup = fu_uefi_dbx_device_cleanup;
+
+	object_class->finalize = fu_uefi_dbx_device_finalize;
 }
 
 FuUefiDbxDevice *

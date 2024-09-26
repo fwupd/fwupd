@@ -1,3 +1,5 @@
+# snapd integration has a hard dependency on curl
+if get_option('curl').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiDbx"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -7,11 +9,15 @@ plugin_builtin_uefi_dbx = static_library('fu_plugin_uefi_dbx',
     'fu-uefi-dbx-plugin.c',
     'fu-uefi-dbx-common.c',
     'fu-uefi-dbx-device.c',
+    'fu-uefi-dbx-snapd-notifier.c',
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
   c_args: cargs,
-  dependencies: plugin_deps,
+  dependencies: [
+    plugin_deps,
+    libcurl,
+  ],
 )
 plugin_builtins += plugin_builtin_uefi_dbx
 
@@ -82,4 +88,5 @@ if build_docs
     ],
   )
   man_md += ['"dbxtool.md"']
+endif
 endif
