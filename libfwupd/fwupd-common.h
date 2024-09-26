@@ -88,10 +88,6 @@ fwupd_checksum_type_to_string_display(GChecksumType checksum_type);
 gchar *
 fwupd_checksum_format_for_display(const gchar *checksum) G_GNUC_NON_NULL(1);
 
-GHashTable *
-fwupd_get_os_release(GError **error);
-GHashTable *
-fwupd_get_os_release_full(const gchar *filename, GError **error);
 gboolean
 fwupd_device_id_is_valid(const gchar *device_id);
 #ifndef __GI_SCANNER__

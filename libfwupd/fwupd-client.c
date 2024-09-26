@@ -13,8 +13,12 @@
 #ifdef HAVE_GIO_UNIX
 #include <gio/gunixfdlist.h>
 #endif
+#ifdef HAVE_UTSNAME_H
+#include <sys/utsname.h>
+#endif
 
 #include <fcntl.h>
+#include <locale.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -287,6 +291,68 @@ fwupd_client_signal_emit_object(FwupdClient *self, guint signal_id, GObject *pay
 	fwupd_client_context_helper(self, helper);
 }
 
+static gchar *
+fwupd_client_build_user_agent_os_release(void)
+{
+	const gchar *keys[] = {G_OS_INFO_KEY_NAME, G_OS_INFO_KEY_VERSION_ID, "VARIANT", NULL};
+	g_autoptr(GPtrArray) ids_os = g_ptr_array_new_with_free_func(g_free);
+
+	/* create an array of the keys that exist */
+	for (guint i = 0; keys[i] != NULL; i++) {
+		g_autofree gchar *value = g_get_os_info(keys[i]);
+		if (value != NULL)
+			g_ptr_array_add(ids_os, g_steal_pointer(&value));
+	}
+	if (ids_os->len == 0)
+		return NULL;
+	g_ptr_array_add(ids_os, NULL);
+	return g_strjoinv(" ", (gchar **)ids_os->pdata);
+}
+
+static gchar *
+fwupd_client_build_user_agent_system(void)
+{
+#ifdef HAVE_UTSNAME_H
+	struct utsname name_tmp;
+#endif
+	g_autofree gchar *locale = NULL;
+	g_autofree gchar *os_release = NULL;
+	g_autoptr(GPtrArray) ids = g_ptr_array_new_with_free_func(g_free);
+
+	/* system, architecture and kernel, e.g. "Linux i686 4.14.5" */
+#ifdef HAVE_UTSNAME_H
+	memset(&name_tmp, 0, sizeof(struct utsname));
+	if (uname(&name_tmp) >= 0) {
+		g_ptr_array_add(ids,
+				g_strdup_printf("%s %s %s",
+						name_tmp.sysname,
+						name_tmp.machine,
+						name_tmp.release));
+	}
+#endif
+
+	/* current locale, e.g. "en-gb" */
+#ifdef HAVE_LC_MESSAGES
+	locale = g_strdup(setlocale(LC_MESSAGES, NULL));
+#endif
+	if (locale != NULL) {
+		g_strdelimit(locale, ".", '\0');
+		g_strdelimit(locale, "_", '-');
+		g_ptr_array_add(ids, g_steal_pointer(&locale));
+	}
+
+	/* OS release, e.g. "Fedora 27 Workstation" */
+	os_release = fwupd_client_build_user_agent_os_release();
+	if (os_release != NULL)
+		g_ptr_array_add(ids, g_steal_pointer(&os_release));
+
+	/* convert to string */
+	if (ids->len == 0)
+		return NULL;
+	g_ptr_array_add(ids, NULL);
+	return g_strjoinv("; ", (gchar **)ids->pdata);
+}
+
 static void
 fwupd_client_rebuild_user_agent(FwupdClient *self)
 {
@@ -299,7 +365,7 @@ fwupd_client_rebuild_user_agent(FwupdClient *self)
 		g_string_append_printf(str, "%s/%s ", priv->package_name, priv->package_version);
 
 	/* system information */
-	system = fwupd_build_user_agent_system();
+	system = fwupd_client_build_user_agent_system();
 	if (system != NULL)
 		g_string_append_printf(str, "(%s) ", system);
 

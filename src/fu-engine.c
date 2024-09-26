@@ -1672,28 +1672,99 @@ fu_engine_get_report_metadata_cpu_device(FuEngine *self, GHashTable *hash)
 static gboolean
 fu_engine_get_report_metadata_os_release(GHashTable *hash, GError **error)
 {
-	g_autoptr(GHashTable) os_release = NULL;
+#ifdef HOST_MACHINE_SYSTEM_DARWIN
+	g_autofree gchar *stdout = NULL;
+	g_autofree gchar *sw_vers = g_find_program_in_path("sw_vers");
+	g_auto(GStrv) split = NULL;
 	struct {
 		const gchar *key;
 		const gchar *val;
-	} distro_kv[] = {{"ID", FWUPD_RESULT_KEY_DISTRO_ID},
-			 {"NAME", "DistroName"},
-			 {"PRETTY_NAME", "DistroPrettyName"},
-			 {"VERSION_ID", FWUPD_RESULT_KEY_DISTRO_VERSION},
+	} kvs[] = {{"ProductName:", "DistroName"},
+		   {"ProductVersion:", FWUPD_RESULT_KEY_DISTRO_VERSION},
+		   {"BuildVersion:", FWUPD_RESULT_KEY_DISTRO_VARIANT},
+		   {NULL, NULL}};
+
+	/* macOS */
+	if (sw_vers == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "No os-release found");
+		return FALSE;
+	}
+
+	/* parse from format:
+	 *    ProductName:    Mac OS X
+	 *    ProductVersion: 10.14.6
+	 *    BuildVersion:   18G103
+	 */
+	if (!g_spawn_command_line_sync(sw_vers, &stdout, NULL, NULL, error))
+		return FALSE;
+	split = g_strsplit(stdout, "\n", -1);
+	for (guint j = 0; split[j] != NULL; j++) {
+		for (guint i = 0; kvs[i].key != NULL; i++) {
+			if (g_str_has_prefix(split[j], kvs[i].key)) {
+				g_autofree gchar *tmp = g_strdup(split[j] + strlen(kvs[i].key));
+				g_hash_table_insert(hash,
+						    g_strdup(kvs[i].val),
+						    g_strdup(g_strstrip(tmp)));
+			}
+		}
+	}
+	g_hash_table_insert(hash, g_strdup(FWUPD_RESULT_KEY_DISTRO_ID), g_strdup("macos"));
+#else
+	struct {
+		const gchar *key;
+		const gchar *val;
+	} distro_kv[] = {{G_OS_INFO_KEY_ID, FWUPD_RESULT_KEY_DISTRO_ID},
+			 {G_OS_INFO_KEY_NAME, "DistroName"},
+			 {G_OS_INFO_KEY_PRETTY_NAME, "DistroPrettyName"},
+			 {G_OS_INFO_KEY_VERSION_ID, FWUPD_RESULT_KEY_DISTRO_VERSION},
 			 {"VARIANT_ID", FWUPD_RESULT_KEY_DISTRO_VARIANT},
 			 {NULL, NULL}};
 
 	/* get all required os-release keys */
-	os_release = fwupd_get_os_release(error);
-	if (os_release == NULL)
-		return FALSE;
 	for (guint i = 0; distro_kv[i].key != NULL; i++) {
-		const gchar *tmp = g_hash_table_lookup(os_release, distro_kv[i].key);
+		g_autofree gchar *tmp = g_get_os_info(distro_kv[i].key);
 		if (tmp != NULL) {
-			g_hash_table_insert(hash, g_strdup(distro_kv[i].val), g_strdup(tmp));
+			g_hash_table_insert(hash,
+					    g_strdup(distro_kv[i].val),
+					    g_steal_pointer(&tmp));
 		}
 	}
+#endif
 	return TRUE;
+}
+
+static GHashTable *
+fu_engine_load_os_release(const gchar *filename, GError **error)
+{
+	g_autofree gchar *buf = NULL;
+	g_autofree gchar *filename2 = g_strdup(filename);
+	g_auto(GStrv) lines = NULL;
+	g_autoptr(GHashTable) hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+	/* load each line */
+	if (!g_file_get_contents(filename2, &buf, NULL, error))
+		return NULL;
+	lines = g_strsplit(buf, "\n", -1);
+	for (guint i = 0; lines[i] != NULL; i++) {
+		gsize len, off = 0;
+		g_auto(GStrv) split = NULL;
+
+		/* split up into sections */
+		split = g_strsplit(lines[i], "=", 2);
+		if (g_strv_length(split) < 2)
+			continue;
+
+		/* remove double quotes if set both ends */
+		len = strlen(split[1]);
+		if (len == 0)
+			continue;
+		if (split[1][0] == '\"' && split[1][len - 1] == '\"') {
+			off++;
+			len -= 2;
+		}
+		g_hash_table_insert(hash, g_strdup(split[0]), g_strndup(split[1] + off, len));
+	}
+	return g_steal_pointer(&hash);
 }
 
 static gboolean
@@ -1709,7 +1780,7 @@ fu_engine_get_report_metadata_lsb_release(GHashTable *hash, GError **error)
 			 {NULL, NULL}};
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS))
 		return TRUE;
-	os_release = fwupd_get_os_release_full(fn, error);
+	os_release = fu_engine_load_os_release(fn, error);
 	if (os_release == NULL)
 		return FALSE;
 	for (guint i = 0; distro_kv[i].key != NULL; i++) {
