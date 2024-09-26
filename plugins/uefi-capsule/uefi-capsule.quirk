@@ -1,3 +1,7 @@
+# not an updatable device per-se, but used to get the DRI screen size for the UX capsule
+[DRM\TYPE_DRM_MINOR]
+Plugin = uefi_capsule
+
 # StarLite Mk II
 [797f8bae-0ea2-4c0f-8a30-7d10ccfacbc0]
 Flags = no-ux-capsule

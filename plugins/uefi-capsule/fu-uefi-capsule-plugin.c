@@ -802,6 +802,29 @@ fu_uefi_capsule_plugin_ensure_screen_size_config(FuUefiCapsulePlugin *self, GErr
 }
 
 static gboolean
+fu_uefi_capsule_plugin_ensure_screen_size_drm(FuUefiCapsulePlugin *self,
+					      FuDrmDevice *drm_device,
+					      GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* open the fd */
+	locker = fu_device_locker_new(FU_DEVICE(drm_device), error);
+	if (locker == NULL)
+		return FALSE;
+	if (fu_drm_device_get_crtc_x(drm_device) == 0 &&
+	    fu_drm_device_get_crtc_y(drm_device) == 0 &&
+	    fu_drm_device_get_crtc_width(drm_device) > 0 &&
+	    fu_drm_device_get_crtc_height(drm_device) > 0) {
+		self->screen_width = fu_drm_device_get_crtc_width(drm_device);
+		self->screen_height = fu_drm_device_get_crtc_height(drm_device);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
@@ -1174,6 +1197,27 @@ fu_uefi_capsule_plugin_modify_config(FuPlugin *plugin,
 	return fu_plugin_set_config_value(plugin, key, value, error);
 }
 
+static gboolean
+fu_uefi_capsule_plugin_backend_device_added(FuPlugin *plugin,
+					    FuDevice *device,
+					    FuProgress *progress,
+					    GError **error)
+{
+	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
+
+	/* use this DRM device to get the panel resolution */
+	if (FU_IS_DRM_DEVICE(device) && self->screen_height == 0 && self->screen_width == 0) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_uefi_capsule_plugin_ensure_screen_size_drm(self,
+								   FU_DRM_DEVICE(device),
+								   &error_local))
+			g_warning("failed to get screen size: %s", error_local->message);
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_uefi_capsule_plugin_init(FuUefiCapsulePlugin *self)
 {
@@ -1199,6 +1243,7 @@ fu_uefi_capsule_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_ACPI_UEFI);
 	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_UEFI_UPDATE_INFO);
 	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_BITMAP_IMAGE);
+	fu_plugin_add_udev_subsystem(plugin, "drm");
 
 	/* defaults changed here will also be reflected in the fwupd.conf man page */
 	fu_plugin_set_config_default(plugin, "DisableCapsuleUpdateOnDisk", "false");
@@ -1255,4 +1300,5 @@ fu_uefi_capsule_plugin_class_init(FuUefiCapsulePluginClass *klass)
 	plugin_class->write_firmware = fu_uefi_capsule_plugin_write_firmware;
 	plugin_class->reboot_cleanup = fu_uefi_capsule_plugin_reboot_cleanup;
 	plugin_class->modify_config = fu_uefi_capsule_plugin_modify_config;
+	plugin_class->backend_device_added = fu_uefi_capsule_plugin_backend_device_added;
 }
