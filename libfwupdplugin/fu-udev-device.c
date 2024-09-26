@@ -37,8 +37,6 @@
  */
 
 typedef struct {
-	guint16 vendor;
-	guint16 model;
 	guint16 subsystem_vendor;
 	guint16 subsystem_model;
 	guint8 revision;
@@ -140,8 +138,6 @@ fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *open_flags = fu_io_channel_open_flag_to_string(priv->open_flags);
 
-	fwupd_codec_string_append_hex(str, idt, "Vendor", priv->vendor);
-	fwupd_codec_string_append_hex(str, idt, "Model", priv->model);
 	fwupd_codec_string_append_hex(str, idt, "SubsystemVendor", priv->subsystem_vendor);
 	fwupd_codec_string_append_hex(str, idt, "SubsystemModel", priv->subsystem_model);
 	fwupd_codec_string_append_hex(str, idt, "Revision", priv->revision);
@@ -308,40 +304,6 @@ fu_udev_device_get_symlink_target(FuUdevDevice *self, const gchar *attr, GError 
 	return g_steal_pointer(&value);
 }
 
-/**
- * fu_udev_device_set_vid:
- * @self: a #FuUdevDevice
- * @vendor: an ID
- *
- * Sets the vendor ID.
- *
- * Since: 2.0.0
- **/
-void
-fu_udev_device_set_vid(FuUdevDevice *self, guint16 vendor)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
-	priv->vendor = vendor;
-}
-
-/**
- * fu_udev_device_set_pid:
- * @self: a #FuUdevDevice
- * @model: an ID
- *
- * Sets the model ID.
- *
- * Since: 2.0.0
- **/
-void
-fu_udev_device_set_pid(FuUdevDevice *self, guint16 model)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
-	priv->model = model;
-}
-
 static void
 fu_udev_device_set_subsystem_vendor(FuUdevDevice *self, guint16 subsystem_vendor)
 {
@@ -458,8 +420,8 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* get IDs */
-	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint16(self, "vendor");
-	priv->model = fu_udev_device_get_sysfs_attr_as_uint16(self, "device");
+	fu_device_set_vid(device, fu_udev_device_get_sysfs_attr_as_uint16(self, "vendor"));
+	fu_device_set_pid(device, fu_udev_device_get_sysfs_attr_as_uint16(self, "device"));
 	priv->revision = fu_udev_device_get_sysfs_attr_as_uint8(self, "revision");
 	priv->subsystem_vendor = fu_udev_device_get_sysfs_attr_as_uint16(self, "subsystem_vendor");
 	priv->subsystem_model = fu_udev_device_get_sysfs_attr_as_uint16(self, "subsystem_device");
@@ -494,13 +456,13 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	if (priv->subsystem != NULL)
 		subsystem = g_ascii_strup(priv->subsystem, -1);
 	if (subsystem != NULL)
-		fu_device_build_vendor_id_u16(device, subsystem, priv->vendor);
+		fu_device_build_vendor_id_u16(device, subsystem, fu_device_get_vid(device));
 
 	/* add GUIDs in order of priority */
-	if (priv->vendor != 0x0000)
-		fu_device_add_instance_u16(device, "VEN", priv->vendor);
-	if (priv->model != 0x0000)
-		fu_device_add_instance_u16(device, "DEV", priv->model);
+	if (fu_device_get_vid(device) != 0x0000)
+		fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device));
+	if (fu_device_get_pid(device) != 0x0000)
+		fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(device));
 	if (priv->subsystem_vendor != 0x0000 || priv->subsystem_model != 0x0000) {
 		g_autofree gchar *subsys =
 		    g_strdup_printf("%04X%04X", priv->subsystem_vendor, priv->subsystem_model);
@@ -793,10 +755,6 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 		fu_udev_device_set_driver(uself, fu_udev_device_get_driver(udonor));
 	if (priv->devtype == NULL)
 		fu_udev_device_set_devtype(uself, fu_udev_device_get_devtype(udonor));
-	if (priv->vendor == 0x0)
-		fu_udev_device_set_vid(uself, fu_udev_device_get_vid(udonor));
-	if (priv->model == 0x0)
-		fu_udev_device_set_pid(uself, fu_udev_device_get_pid(udonor));
 	if (priv->number == 0x0)
 		fu_udev_device_set_number(uself, fu_udev_device_get_number(udonor));
 	if (priv->subsystem_vendor == 0x0) {
@@ -919,42 +877,6 @@ fu_udev_device_get_number(FuUdevDevice *self)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), 0);
 	return priv->number;
-}
-
-/**
- * fu_udev_device_get_vid:
- * @self: a #FuUdevDevice
- *
- * Gets the device vendor code.
- *
- * Returns: a vendor code, or 0 if unset or invalid
- *
- * Since: 1.1.2
- **/
-guint16
-fu_udev_device_get_vid(FuUdevDevice *self)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), 0x0000);
-	return priv->vendor;
-}
-
-/**
- * fu_udev_device_get_pid:
- * @self: a #FuUdevDevice
- *
- * Gets the device model code.
- *
- * Returns: a vendor code, or 0 if unset or invalid
- *
- * Since: 1.1.2
- **/
-guint16
-fu_udev_device_get_pid(FuUdevDevice *self)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), 0x0000);
-	return priv->model;
 }
 
 /**
@@ -1984,10 +1906,10 @@ fu_udev_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags
 		fwupd_codec_json_append(builder, "Driver", priv->driver);
 	if (priv->bind_id != NULL)
 		fwupd_codec_json_append(builder, "BindId", priv->bind_id);
-	if (priv->vendor != 0)
-		fwupd_codec_json_append_int(builder, "Vendor", priv->vendor);
-	if (priv->model != 0)
-		fwupd_codec_json_append_int(builder, "Model", priv->model);
+	if (fu_device_get_vid(device) != 0)
+		fwupd_codec_json_append_int(builder, "Vendor", fu_device_get_vid(device));
+	if (fu_device_get_pid(device) != 0)
+		fwupd_codec_json_append_int(builder, "Model", fu_device_get_pid(device));
 	if (priv->subsystem_vendor != 0)
 		fwupd_codec_json_append_int(builder, "SubsystemVendor", priv->subsystem_vendor);
 	if (priv->subsystem_model != 0)
@@ -2047,10 +1969,10 @@ fu_udev_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 		fu_udev_device_set_device_file(self, tmp);
 	tmp64 = json_object_get_int_member_with_default(json_object, "Vendor", 0);
 	if (tmp64 != 0)
-		fu_udev_device_set_vid(self, tmp64);
+		fu_device_set_vid(device, tmp64);
 	tmp64 = json_object_get_int_member_with_default(json_object, "Model", 0);
 	if (tmp64 != 0)
-		fu_udev_device_set_pid(self, tmp64);
+		fu_device_set_pid(device, tmp64);
 	tmp64 = json_object_get_int_member_with_default(json_object, "SubsystemVendor", 0);
 	if (tmp64 != 0)
 		fu_udev_device_set_subsystem_vendor(self, tmp64);

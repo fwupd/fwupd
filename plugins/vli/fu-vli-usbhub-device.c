@@ -480,7 +480,7 @@ fu_vli_usbhub_device_guess_kind(FuVliUsbhubDevice *self, GError **error)
 	guint8 chipid22 = 0x0;
 	guint8 chipver = 0x0;
 	guint8 chipver2 = 0x0;
-	gint tPid = fu_udev_device_get_pid(FU_UDEV_DEVICE(self)) & 0x0fff;
+	gint tPid = fu_device_get_pid(FU_DEVICE(self)) & 0x0fff;
 
 	if (!fu_vli_usbhub_device_read_reg(self, 0xf88c, &chipver, error)) {
 		g_prefix_error(error, "Read_ChipVer failed: ");

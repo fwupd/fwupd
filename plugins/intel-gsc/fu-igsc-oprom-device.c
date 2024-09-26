@@ -110,8 +110,8 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
 	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device));
-	guint16 vendor_id = fu_udev_device_get_vid(FU_UDEV_DEVICE(igsc_parent));
-	guint16 device_id = fu_udev_device_get_pid(FU_UDEV_DEVICE(igsc_parent));
+	guint16 vid = fu_device_get_vid(FU_DEVICE(igsc_parent));
+	guint16 pid = fu_device_get_pid(FU_DEVICE(igsc_parent));
 	guint16 subsys_vendor_id = fu_igsc_device_get_ssvid(igsc_parent);
 	guint16 subsys_device_id = fu_igsc_device_get_ssvid(igsc_parent);
 	g_autoptr(FuFirmware) firmware = NULL;
@@ -150,8 +150,8 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 	if (self->payload_type == GSC_FWU_HECI_PAYLOAD_TYPE_OPROM_CODE) {
 		if (fu_igsc_device_get_oprom_code_devid_enforcement(igsc_parent)) {
 			if (!fu_igsc_oprom_firmware_match_device(FU_IGSC_OPROM_FIRMWARE(firmware),
-								 vendor_id,
-								 device_id,
+								 vid,
+								 pid,
 								 subsys_vendor_id,
 								 subsys_device_id,
 								 error))
@@ -178,8 +178,8 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 	if (self->payload_type == GSC_FWU_HECI_PAYLOAD_TYPE_OPROM_DATA) {
 		if (fu_igsc_oprom_firmware_has_allowlist(FU_IGSC_OPROM_FIRMWARE(firmware))) {
 			if (!fu_igsc_oprom_firmware_match_device(FU_IGSC_OPROM_FIRMWARE(firmware),
-								 vendor_id,
-								 device_id,
+								 vid,
+								 pid,
 								 subsys_vendor_id,
 								 subsys_device_id,
 								 error))

@@ -51,7 +51,6 @@ fu_goodixtp_plugin_backend_device_added(FuPlugin *plugin,
 					FuProgress *progress,
 					GError **error)
 {
-	guint16 hid_pid;
 	FuGoodixtpIcType ic_type;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -64,8 +63,7 @@ fu_goodixtp_plugin_backend_device_added(FuPlugin *plugin,
 		return FALSE;
 	}
 
-	hid_pid = fu_udev_device_get_pid(FU_UDEV_DEVICE(device));
-	ic_type = fu_goodixtp_plugin_ic_type_from_pid(hid_pid);
+	ic_type = fu_goodixtp_plugin_ic_type_from_pid(fu_device_get_pid(device));
 	if (ic_type == FU_GOODIXTP_IC_TYPE_NORMANDYL) {
 		g_autoptr(FuDevice) dev = g_object_new(FU_TYPE_GOODIXTP_GTX8_DEVICE,
 						       "context",
@@ -96,7 +94,7 @@ fu_goodixtp_plugin_backend_device_added(FuPlugin *plugin,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "can't find valid ic_type, pid is %x",
-		    hid_pid);
+		    fu_device_get_pid(device));
 	return FALSE;
 }
 

@@ -63,9 +63,9 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 				g_prefix_error(error, "failed to parse HID_ID: ");
 				return FALSE;
 			}
-			fu_udev_device_set_vid(FU_UDEV_DEVICE(self), (guint16)val);
+			fu_device_set_vid(device, (guint16)val);
 		}
-		if (fu_udev_device_get_pid(FU_UDEV_DEVICE(self)) == 0x0) {
+		if (fu_device_get_pid(device) == 0x0) {
 			guint64 val = 0;
 			if (!fu_strtoull(split[2],
 					 &val,
@@ -76,7 +76,7 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 				g_prefix_error(error, "failed to parse HID_ID: ");
 				return FALSE;
 			}
-			fu_udev_device_set_pid(FU_UDEV_DEVICE(self), (guint16)val);
+			fu_device_set_pid(device, (guint16)val);
 		}
 	}
 
@@ -107,12 +107,8 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* USB\\VID_1234 */
-	fu_device_add_instance_u16(FU_DEVICE(self),
-				   "VEN",
-				   fu_udev_device_get_vid(FU_UDEV_DEVICE(self)));
-	fu_device_add_instance_u16(FU_DEVICE(self),
-				   "DEV",
-				   fu_udev_device_get_pid(FU_UDEV_DEVICE(self)));
+	fu_device_add_instance_u16(FU_DEVICE(self), "VEN", fu_device_get_vid(device));
+	fu_device_add_instance_u16(FU_DEVICE(self), "DEV", fu_device_get_pid(device));
 	fu_device_build_instance_id_full(device,
 					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
@@ -129,9 +125,7 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 					 "VEN",
 					 "DEV",
 					 NULL);
-	fu_device_build_vendor_id_u16(device,
-				      "HIDRAW",
-				      fu_udev_device_get_vid(FU_UDEV_DEVICE(self)));
+	fu_device_build_vendor_id_u16(device, "HIDRAW", fu_device_get_vid(device));
 
 	/* success */
 	return TRUE;

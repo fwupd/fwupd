@@ -60,10 +60,8 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 	/* compare VID:PID */
 	if (helper->vid != 0x0 && helper->pid != 0x0) {
 		g_autoptr(FuBackend) udev_backend = NULL;
-		g_autoptr(FuUdevDevice) udev_device = NULL;
+		g_autoptr(FuDevice) udev_device = NULL;
 		g_autoptr(GVariant) udi = NULL;
-		guint16 pid = 0;
-		guint16 vid = 0;
 
 		udi = g_dbus_proxy_get_cached_property(proxy, "Udi");
 		if (udi == NULL)
@@ -71,16 +69,18 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 		udev_backend = fu_context_get_backend_by_name(helper->ctx, "udev", error);
 		if (udev_backend == NULL)
 			return FALSE;
-		udev_device = FU_UDEV_DEVICE(
-		    fu_backend_create_device(udev_backend, g_variant_get_string(udi, NULL), error));
+		udev_device =
+		    fu_backend_create_device(udev_backend, g_variant_get_string(udi, NULL), error);
 		if (udev_device == NULL)
 			return FALSE;
 
 		/* verify */
-		vid = fu_udev_device_get_vid(udev_device);
-		pid = fu_udev_device_get_pid(udev_device);
-		g_debug("%s: 0x%04x, 0x%04x", g_variant_get_string(udi, NULL), vid, pid);
-		if (vid == helper->vid && pid == helper->pid)
+		g_debug("%s: 0x%04x, 0x%04x",
+			g_variant_get_string(udi, NULL),
+			fu_device_get_vid(udev_device),
+			fu_device_get_pid(udev_device));
+		if (fu_device_get_vid(udev_device) == helper->vid &&
+		    fu_device_get_pid(udev_device) == helper->pid)
 			helper->device = fu_redfish_network_device_new(object_path);
 	}
 

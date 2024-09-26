@@ -293,8 +293,8 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 		} else {
 			if (!fu_dfu_device_parse_iface_data(self, iface_data, &error_local)) {
 				g_warning("failed to parse interface data for %04x:%04x: %s",
-					  fu_udev_device_get_vid(FU_UDEV_DEVICE(self)),
-					  fu_udev_device_get_pid(FU_UDEV_DEVICE(self)),
+					  fu_device_get_vid(FU_DEVICE(self)),
+					  fu_device_get_pid(FU_DEVICE(self)),
 					  error_local->message);
 				continue;
 			}
@@ -365,8 +365,8 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 	/* save for reset */
 	if (priv->state == FU_DFU_STATE_APP_IDLE ||
 	    fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_PID_CHANGE)) {
-		priv->runtime_vid = fu_udev_device_get_vid(FU_UDEV_DEVICE(self));
-		priv->runtime_pid = fu_udev_device_get_pid(FU_UDEV_DEVICE(self));
+		priv->runtime_vid = fu_device_get_vid(FU_DEVICE(self));
+		priv->runtime_pid = fu_device_get_pid(FU_DEVICE(self));
 		priv->runtime_release = fu_usb_device_get_release(FU_USB_DEVICE(self));
 	}
 
@@ -376,8 +376,8 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 		g_debug("no DFU runtime, so faking device");
 		fu_dfu_device_set_state(self, FU_DFU_STATE_APP_IDLE);
 		priv->iface_number = 0xff;
-		priv->runtime_vid = fu_udev_device_get_vid(FU_UDEV_DEVICE(self));
-		priv->runtime_pid = fu_udev_device_get_pid(FU_UDEV_DEVICE(self));
+		priv->runtime_vid = fu_device_get_vid(FU_DEVICE(self));
+		priv->runtime_pid = fu_device_get_pid(FU_DEVICE(self));
 		priv->runtime_release = fu_usb_device_get_release(FU_USB_DEVICE(self));
 		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD);
 		fu_device_add_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_CAN_UPLOAD);
@@ -994,16 +994,16 @@ fu_dfu_device_probe(FuDevice *device, GError **error)
 	if (!fu_dfu_device_add_targets(self, error)) {
 		g_prefix_error(error,
 			       "%04x:%04x is not supported: ",
-			       fu_udev_device_get_vid(FU_UDEV_DEVICE(self)),
-			       fu_udev_device_get_pid(FU_UDEV_DEVICE(self)));
+			       fu_device_get_vid(FU_DEVICE(self)),
+			       fu_device_get_pid(FU_DEVICE(self)));
 		return FALSE;
 	}
 
 	/* check capabilities */
 	if (!fu_device_has_private_flag(device, FU_DFU_DEVICE_FLAG_CAN_DOWNLOAD)) {
 		g_info("%04x:%04x is missing download capability",
-		       fu_udev_device_get_vid(FU_UDEV_DEVICE(self)),
-		       fu_udev_device_get_pid(FU_UDEV_DEVICE(self)));
+		       fu_device_get_vid(FU_DEVICE(self)),
+		       fu_device_get_pid(FU_DEVICE(self)));
 	}
 
 	/* hardware from Jabra literally reboots if you try to retry a failed
@@ -1245,7 +1245,7 @@ fu_dfu_device_download(FuDfuDevice *self,
 	if (priv->runtime_vid != 0xffff) {
 		if (!fu_dfu_device_id_compatible(firmware_vid,
 						 priv->runtime_vid,
-						 fu_udev_device_get_vid(FU_UDEV_DEVICE(self)))) {
+						 fu_device_get_vid(FU_DEVICE(self)))) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1253,7 +1253,7 @@ fu_dfu_device_download(FuDfuDevice *self,
 				    "got 0x%04x and 0x%04x\n",
 				    firmware_vid,
 				    priv->runtime_vid,
-				    fu_udev_device_get_vid(FU_UDEV_DEVICE(self)));
+				    fu_device_get_vid(FU_DEVICE(self)));
 			return FALSE;
 		}
 	}
@@ -1262,7 +1262,7 @@ fu_dfu_device_download(FuDfuDevice *self,
 	if (priv->runtime_pid != 0xffff) {
 		if (!fu_dfu_device_id_compatible(firmware_pid,
 						 priv->runtime_pid,
-						 fu_udev_device_get_pid(FU_UDEV_DEVICE(self)))) {
+						 fu_device_get_pid(FU_DEVICE(self)))) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1270,7 +1270,7 @@ fu_dfu_device_download(FuDfuDevice *self,
 				    "got 0x%04x and 0x%04x",
 				    firmware_pid,
 				    priv->runtime_pid,
-				    fu_udev_device_get_pid(FU_UDEV_DEVICE(self)));
+				    fu_device_get_pid(FU_DEVICE(self)));
 			return FALSE;
 		}
 	}

@@ -422,7 +422,7 @@ fu_thunderbolt_device_probe(FuDevice *device, GError **error)
 	if (udev_parent != NULL) {
 		if (!fu_device_probe(udev_parent, error))
 			return FALSE;
-		if (fu_udev_device_get_vid(FU_UDEV_DEVICE(udev_parent)) == 0x8086)
+		if (fu_device_get_vid(udev_parent) == 0x8086)
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	}
 

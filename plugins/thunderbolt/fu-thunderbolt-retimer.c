@@ -67,7 +67,7 @@ fu_thunderbolt_retimer_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* as defined in PCIe 4.0 spec */
-	vid = fu_udev_device_get_vid(FU_UDEV_DEVICE(self));
+	vid = fu_device_get_vid(FU_DEVICE(self));
 	if (vid == 0x0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -75,7 +75,7 @@ fu_thunderbolt_retimer_setup(FuDevice *device, GError **error)
 				    "missing vendor id");
 		return FALSE;
 	}
-	did = fu_udev_device_get_pid(FU_UDEV_DEVICE(self));
+	did = fu_device_get_pid(device);
 	if (did == 0x0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
