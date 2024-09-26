@@ -896,9 +896,7 @@ fu_jabra_gnp_device_add_child(FuDevice *device, guint dfu_pid, GError **error)
 		return FALSE;
 	}
 
-	fu_device_add_instance_u16(FU_DEVICE(child),
-				   "VID",
-				   fu_udev_device_get_vid(FU_UDEV_DEVICE(self)));
+	fu_device_add_instance_u16(FU_DEVICE(child), "VID", fu_device_get_vid(FU_DEVICE(self)));
 	fu_device_add_instance_u16(FU_DEVICE(child), "PID", dfu_pid);
 	if (!fu_device_build_instance_id_full(FU_DEVICE(child),
 					      FU_DEVICE_INSTANCE_FLAG_QUIRKS |

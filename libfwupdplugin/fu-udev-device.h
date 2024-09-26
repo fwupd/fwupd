@@ -52,14 +52,6 @@ fu_udev_device_set_bind_id(FuUdevDevice *self, const gchar *bind_id) G_GNUC_NON_
 const gchar *
 fu_udev_device_get_driver(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 guint16
-fu_udev_device_get_vid(FuUdevDevice *self) G_GNUC_NON_NULL(1);
-void
-fu_udev_device_set_vid(FuUdevDevice *self, guint16 vendor);
-guint16
-fu_udev_device_get_pid(FuUdevDevice *self) G_GNUC_NON_NULL(1);
-void
-fu_udev_device_set_pid(FuUdevDevice *self, guint16 model);
-guint16
 fu_udev_device_get_subsystem_vendor(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 guint16
 fu_udev_device_get_subsystem_model(FuUdevDevice *self) G_GNUC_NON_NULL(1);

@@ -55,6 +55,8 @@ typedef struct {
 	FuContext *ctx;
 	gint64 created_usec;
 	gint64 modified_usec;
+	guint16 vid;
+	guint16 pid;
 	GHashTable *inhibits;		/* (nullable) */
 	GHashTable *metadata;		/* (nullable) */
 	GPtrArray *parent_guids;	/* (nullable) (element-type utf-8) */
@@ -4160,6 +4162,76 @@ fu_device_get_modified_usec(FuDevice *self)
 }
 
 /**
+ * fu_device_get_vid:
+ * @self: a #FuUdevDevice
+ *
+ * Gets the device vendor code.
+ *
+ * Returns: a vendor code, or 0 if unset or invalid
+ *
+ * Since: 2.0.0
+ **/
+guint16
+fu_device_get_vid(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), 0x0000);
+	return priv->vid;
+}
+
+/**
+ * fu_device_set_vid:
+ * @self: a #FuUdevDevice
+ * @vid: an integer ID
+ *
+ * Sets the vendor ID.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_set_vid(FuDevice *self, guint16 vid)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	priv->vid = vid;
+}
+
+/**
+ * fu_device_get_pid:
+ * @self: a #FuUdevDevice
+ *
+ * Gets the device product code.
+ *
+ * Returns: a product code, or 0 if unset or invalid
+ *
+ * Since: 2.0.0
+ **/
+guint16
+fu_device_get_pid(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), 0x0000);
+	return priv->pid;
+}
+
+/**
+ * fu_device_set_pid:
+ * @self: a #FuUdevDevice
+ * @pid: an integer ID
+ *
+ * Sets the product ID.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_set_pid(FuDevice *self, guint16 pid)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	priv->pid = pid;
+}
+
+/**
  * fu_device_set_modified_usec:
  * @self: a #FuDevice
  * @modified_usec: value in microseconds
@@ -4204,6 +4276,8 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "PhysicalId", priv->physical_id);
 	fwupd_codec_string_append(str, idt, "LogicalId", priv->logical_id);
 	fwupd_codec_string_append(str, idt, "BackendId", priv->backend_id);
+	fwupd_codec_string_append_hex(str, idt, "Vid", priv->vid);
+	fwupd_codec_string_append_hex(str, idt, "Pid", priv->pid);
 	fwupd_codec_string_append(str, idt, "UpdateRequestId", priv->update_request_id);
 	fwupd_codec_string_append(str, idt, "ProxyGuid", priv->proxy_guid);
 	fwupd_codec_string_append_int(str, idt, "RemoveDelay", priv->remove_delay);
@@ -5659,6 +5733,14 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 	if (flag & FU_DEVICE_INCORPORATE_FLAG_BACKEND_ID) {
 		if (priv->backend_id == NULL && priv_donor->backend_id != NULL)
 			fu_device_set_backend_id(self, priv_donor->backend_id);
+	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_VID) {
+		if (priv->vid == 0x0 && priv_donor->vid != 0x0)
+			fu_device_set_vid(self, priv_donor->vid);
+	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_PID) {
+		if (priv->pid == 0x0 && priv_donor->pid != 0x0)
+			fu_device_set_pid(self, priv_donor->pid);
 	}
 	if (flag & FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS) {
 		GPtrArray *vendor_ids = fu_device_get_vendor_ids(donor);

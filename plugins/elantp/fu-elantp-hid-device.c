@@ -46,7 +46,7 @@ fu_elantp_hid_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_elantp_hid_device_probe(FuDevice *device, GError **error)
 {
-	guint16 device_id = fu_udev_device_get_pid(FU_UDEV_DEVICE(device));
+	guint16 device_id = fu_device_get_pid(device);
 
 	/* check is valid */
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "hidraw") != 0) {
@@ -296,7 +296,6 @@ static gboolean
 fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 {
 	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE(device);
-	FuUdevDevice *udev_device = FU_UDEV_DEVICE(device);
 	guint16 fwver;
 	guint16 tmp;
 	guint8 buf[2] = {0x0};
@@ -348,8 +347,8 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	self->module_id = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	/* define the extra instance IDs */
-	fu_device_add_instance_u16(device, "VEN", fu_udev_device_get_vid(udev_device));
-	fu_device_add_instance_u16(device, "DEV", fu_udev_device_get_pid(udev_device));
+	fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device));
+	fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(device));
 	fu_device_add_instance_u16(device, "MOD", self->module_id);
 	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "MOD", NULL))
 		return FALSE;

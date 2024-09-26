@@ -224,11 +224,11 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 	}
 
 	/* these may be missing on ICL or later */
-	vid = fu_udev_device_get_vid(FU_UDEV_DEVICE(self));
+	vid = fu_device_get_vid(device);
 	if (vid == 0x0)
 		g_debug("failed to get Vendor ID");
 
-	did = fu_udev_device_get_pid(FU_UDEV_DEVICE(self));
+	did = fu_device_get_pid(device);
 	if (did == 0x0)
 		g_debug("failed to get Device ID");
 

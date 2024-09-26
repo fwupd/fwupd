@@ -212,6 +212,22 @@ typedef enum {
 	 * Since: 2.0.0
 	 **/
 	FU_DEVICE_INCORPORATE_FLAG_UPDATE_STATE = 1ull << 11,
+	/**
+	 * FU_DEVICE_INCORPORATE_FLAG_VID:
+	 *
+	 * Set the vendor ID.
+	 *
+	 * Since: 2.0.0
+	 **/
+	FU_DEVICE_INCORPORATE_FLAG_VID = 1ull << 12,
+	/**
+	 * FU_DEVICE_INCORPORATE_FLAG_PID:
+	 *
+	 * Set the product ID.
+	 *
+	 * Since: 2.0.0
+	 **/
+	FU_DEVICE_INCORPORATE_FLAG_PID = 1ull << 13,
 	/*< private >*/
 	FU_DEVICE_INCORPORATE_FLAG_ALL = G_MAXUINT64,
 } FuDeviceIncorporateFlags;
@@ -898,6 +914,15 @@ gint64
 fu_device_get_modified_usec(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_set_modified_usec(FuDevice *self, gint64 modified_usec) G_GNUC_NON_NULL(1);
+
+guint16
+fu_device_get_vid(FuDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_device_set_vid(FuDevice *self, guint16 vid);
+guint16
+fu_device_get_pid(FuDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_device_set_pid(FuDevice *self, guint16 pid);
 
 void
 fu_device_set_update_state(FuDevice *self, FwupdUpdateState update_state) G_GNUC_NON_NULL(1);

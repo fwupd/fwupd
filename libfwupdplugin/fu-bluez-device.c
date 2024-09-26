@@ -175,10 +175,14 @@ fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 	}
 
 	/* add generated IDs */
-	if (vid != 0x0)
+	if (vid != 0x0) {
+		fu_device_set_vid(FU_DEVICE(self), vid);
 		fu_device_add_instance_u16(FU_DEVICE(self), "VID", vid);
-	if (pid != 0x0)
+	}
+	if (pid != 0x0) {
+		fu_device_set_vid(FU_DEVICE(self), vid);
 		fu_device_add_instance_u16(FU_DEVICE(self), "PID", pid);
+	}
 	fu_device_add_instance_u16(FU_DEVICE(self), "REV", rev);
 	fu_device_build_instance_id_full(FU_DEVICE(self),
 					 FU_DEVICE_INSTANCE_FLAG_GENERIC |

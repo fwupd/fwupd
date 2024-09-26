@@ -356,22 +356,20 @@ fu_dell_k2_rtshub_probe(FuDevice *device, GError **error)
 {
 	g_autofree const gchar *logical_id = NULL;
 	FuDellK2RtsHub *self = FU_DELL_K2_RTSHUB(device);
-	guint16 vid = fu_udev_device_get_vid(FU_UDEV_DEVICE(device));
-	guint16 pid = fu_udev_device_get_pid(FU_UDEV_DEVICE(device));
 
 	/* not interesting */
-	if (vid != DELL_VID) {
+	if (fu_device_get_vid(device) != DELL_VID) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "device vid not dell, expected: 0x%04x, got: 0x%04x",
 			    (guint)DELL_VID,
-			    vid);
+			    fu_device_get_vid(device));
 		return FALSE;
 	}
 
 	/* caring for my family back home after fw reset */
-	switch (pid) {
+	switch (fu_device_get_pid(device)) {
 	case DELL_K2_USB_RTS5480_GEN1_PID:
 		fu_device_set_name(device, "RTS5480 Gen 1 USB Hub");
 		break;
@@ -386,12 +384,12 @@ fu_dell_k2_rtshub_probe(FuDevice *device, GError **error)
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "device pid '%04x' is not supported",
-			    pid);
+			    fu_device_get_pid(device));
 		return FALSE;
 	}
 
 	/* build logical id */
-	logical_id = g_strdup_printf("RTSHUB_%04X", pid);
+	logical_id = g_strdup_printf("RTSHUB_%04X", fu_device_get_pid(device));
 	fu_device_set_logical_id(device, logical_id);
 
 	/* build instance id */

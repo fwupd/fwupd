@@ -248,7 +248,7 @@ fu_ebitdo_device_validate(FuEbitdoDevice *self, GError **error)
 	const gchar *allowlist[] = {"8Bitdo", "8BitDo", "SFC30", NULL};
 
 	/* this is a new, always valid, VID */
-	if (fu_udev_device_get_vid(FU_UDEV_DEVICE(self)) == 0x2dc8)
+	if (fu_device_get_vid(FU_DEVICE(self)) == 0x2dc8)
 		return TRUE;
 
 	/* verify the vendor prefix against a allowlist */
@@ -376,7 +376,7 @@ fu_ebitdo_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	if (fu_device_get_update_message(device) == NULL) {
 		g_autoptr(GString) msg = g_string_new(NULL);
 		g_string_append(msg, "Not in bootloader mode: Disconnect the controller, ");
-		switch (fu_udev_device_get_pid(FU_UDEV_DEVICE(device))) {
+		switch (fu_device_get_pid(device)) {
 		case 0xab11: /* FC30 */
 		case 0xab12: /* NES30 */
 		case 0xab21: /* SFC30 */

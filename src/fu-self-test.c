@@ -6388,8 +6388,8 @@ fu_test_engine_fake_hidraw(gconstpointer user_data)
 	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "hidraw");
 	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, NULL);
 	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
-	g_assert_cmpint(fu_udev_device_get_vid(FU_UDEV_DEVICE(device)), ==, 0x093a);
-	g_assert_cmpint(fu_udev_device_get_pid(FU_UDEV_DEVICE(device)), ==, 0x2862);
+	g_assert_cmpint(fu_device_get_vid(device), ==, 0x093a);
+	g_assert_cmpint(fu_device_get_pid(device), ==, 0x2862);
 	g_assert_cmpint(fu_udev_device_get_revision(FU_UDEV_DEVICE(device)), ==, 0x0);
 	g_assert_cmpstr(fu_device_get_plugin(device), ==, "pixart_rf");
 	g_assert_cmpstr(fu_device_get_name(device), ==, "PIXART Pixart dual-mode mouse");
@@ -6447,8 +6447,8 @@ fu_test_engine_fake_usb(gconstpointer user_data)
 	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "usb");
 	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, "usb_device");
 	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, "usb");
-	g_assert_cmpint(fu_udev_device_get_vid(FU_UDEV_DEVICE(device)), ==, 0x093a);
-	g_assert_cmpint(fu_udev_device_get_pid(FU_UDEV_DEVICE(device)), ==, 0x2862);
+	g_assert_cmpint(fu_device_get_vid(device), ==, 0x093a);
+	g_assert_cmpint(fu_device_get_pid(device), ==, 0x2862);
 	g_assert_cmpint(fu_udev_device_get_revision(FU_UDEV_DEVICE(device)), ==, 0x0);
 	g_assert_cmpstr(fu_device_get_plugin(device), ==, "colorhug");
 	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "1-1");
@@ -6484,8 +6484,8 @@ fu_test_engine_fake_pci(gconstpointer user_data)
 	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
 	g_assert_true(
 	    g_str_has_suffix(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)), "/rom"));
-	g_assert_cmpint(fu_udev_device_get_vid(FU_UDEV_DEVICE(device)), ==, 0x8086);
-	g_assert_cmpint(fu_udev_device_get_pid(FU_UDEV_DEVICE(device)), ==, 0x06ed);
+	g_assert_cmpint(fu_device_get_vid(device), ==, 0x8086);
+	g_assert_cmpint(fu_device_get_pid(device), ==, 0x06ed);
 	g_assert_cmpint(fu_udev_device_get_revision(FU_UDEV_DEVICE(device)), ==, 0x0);
 	g_assert_cmpstr(fu_device_get_plugin(device), ==, "optionrom");
 	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "PCI_SLOT_NAME=0000:00:14.0");
@@ -6519,8 +6519,8 @@ fu_test_engine_fake_v4l(gconstpointer user_data)
 	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "video4linux");
 	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, NULL);
 	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
-	g_assert_cmpint(fu_udev_device_get_vid(FU_UDEV_DEVICE(device)), ==, 0x093A);
-	g_assert_cmpint(fu_udev_device_get_pid(FU_UDEV_DEVICE(device)), ==, 0x2862);
+	g_assert_cmpint(fu_device_get_vid(device), ==, 0x093A);
+	g_assert_cmpint(fu_device_get_pid(device), ==, 0x2862);
 	g_assert_cmpint(fu_udev_device_get_revision(FU_UDEV_DEVICE(device)), ==, 0x0);
 	g_assert_cmpint(fu_v4l_device_get_index(FU_V4L_DEVICE(device)), ==, 0);
 	g_assert_cmpint(fu_v4l_device_get_caps(FU_V4L_DEVICE(device)), ==, FU_V4L_CAP_NONE);
@@ -6557,8 +6557,8 @@ fu_test_engine_fake_nvme(gconstpointer user_data)
 	g_assert_cmpint(fu_udev_device_get_number(FU_UDEV_DEVICE(device)), ==, 1);
 	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
 	g_assert_cmpstr(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)), ==, "/dev/nvme1");
-	g_assert_cmpint(fu_udev_device_get_vid(FU_UDEV_DEVICE(device)), ==, 0x1179);
-	g_assert_cmpint(fu_udev_device_get_pid(FU_UDEV_DEVICE(device)), ==, 0x010F);
+	g_assert_cmpint(fu_device_get_vid(device), ==, 0x1179);
+	g_assert_cmpint(fu_device_get_pid(device), ==, 0x010F);
 	g_assert_true(fu_device_has_vendor_id(device, "PCI:0x1179"));
 	g_assert_cmpstr(fu_device_get_vendor(device), ==, "Toshiba Corporation");
 	g_assert_cmpstr(fu_device_get_plugin(device), ==, "nvme");
@@ -6594,8 +6594,8 @@ fu_test_engine_fake_serio(gconstpointer user_data)
 	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, NULL);
 	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, "psmouse");
 	g_assert_cmpstr(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)), ==, NULL);
-	g_assert_cmpint(fu_udev_device_get_vid(FU_UDEV_DEVICE(device)), ==, 0x0);
-	g_assert_cmpint(fu_udev_device_get_pid(FU_UDEV_DEVICE(device)), ==, 0x0);
+	g_assert_cmpint(fu_device_get_vid(device), ==, 0x0);
+	g_assert_cmpint(fu_device_get_pid(device), ==, 0x0);
 	g_assert_cmpint(fu_udev_device_get_revision(FU_UDEV_DEVICE(device)), ==, 0x0);
 	g_assert_cmpstr(fu_device_get_name(device), ==, "TouchStyk");
 	g_assert_cmpstr(fu_device_get_plugin(device), ==, "synaptics_rmi");
@@ -6634,8 +6634,8 @@ fu_test_engine_fake_tpm(gconstpointer user_data)
 	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, NULL);
 	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
 	g_assert_cmpstr(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)), ==, "/dev/tpm0");
-	g_assert_cmpint(fu_udev_device_get_vid(FU_UDEV_DEVICE(device)), ==, 0x0);
-	g_assert_cmpint(fu_udev_device_get_pid(FU_UDEV_DEVICE(device)), ==, 0x0);
+	g_assert_cmpint(fu_device_get_vid(device), ==, 0x0);
+	g_assert_cmpint(fu_device_get_pid(device), ==, 0x0);
 	g_assert_cmpint(fu_udev_device_get_revision(FU_UDEV_DEVICE(device)), ==, 0x0);
 	g_assert_cmpstr(fu_device_get_plugin(device), ==, "tpm");
 	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "DEVNAME=tpm0");
@@ -6670,8 +6670,8 @@ fu_test_engine_fake_mei(gconstpointer user_data)
 	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, NULL);
 	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
 	g_assert_cmpstr(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)), ==, "/dev/mei0");
-	g_assert_cmpint(fu_udev_device_get_vid(FU_UDEV_DEVICE(device)), ==, 0x8086);
-	g_assert_cmpint(fu_udev_device_get_pid(FU_UDEV_DEVICE(device)), ==, 0x06E0);
+	g_assert_cmpint(fu_device_get_vid(device), ==, 0x8086);
+	g_assert_cmpint(fu_device_get_pid(device), ==, 0x06E0);
 	g_assert_cmpint(fu_udev_device_get_revision(FU_UDEV_DEVICE(device)), ==, 0x0);
 	g_assert_cmpstr(fu_device_get_plugin(device), ==, "intel_me");
 	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "PCI_SLOT_NAME=0000:00:16.0");

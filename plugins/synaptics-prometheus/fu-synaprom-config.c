@@ -228,8 +228,8 @@ fu_synaprom_config_constructed(GObject *obj)
 
 	/* append the firmware kind to the generated GUID */
 	devid = g_strdup_printf("USB\\VID_%04X&PID_%04X-cfg",
-				fu_udev_device_get_vid(FU_UDEV_DEVICE(parent)),
-				fu_udev_device_get_pid(FU_UDEV_DEVICE(parent)));
+				fu_device_get_vid(parent),
+				fu_device_get_pid(parent));
 	fu_device_add_instance_id(FU_DEVICE(self), devid);
 
 	G_OBJECT_CLASS(fu_synaprom_config_parent_class)->constructed(obj);

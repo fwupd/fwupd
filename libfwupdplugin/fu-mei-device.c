@@ -130,13 +130,10 @@ fu_mei_device_pci_probe(FuMeiDevice *self, GError **error)
 		return FALSE;
 	if (!fu_device_probe(pci_donor, error))
 		return FALSE;
-	fu_udev_device_set_vid(FU_UDEV_DEVICE(self),
-			       fu_udev_device_get_vid(FU_UDEV_DEVICE(pci_donor)));
-	fu_udev_device_set_pid(FU_UDEV_DEVICE(self),
-			       fu_udev_device_get_pid(FU_UDEV_DEVICE(pci_donor)));
 	fu_device_incorporate(FU_DEVICE(self),
 			      pci_donor,
 			      FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS |
+				  FU_DEVICE_INCORPORATE_FLAG_VID | FU_DEVICE_INCORPORATE_FLAG_PID |
 				  FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 
 	/* success */
