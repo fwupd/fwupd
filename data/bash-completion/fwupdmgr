@@ -157,6 +157,8 @@ uefi_capsule_modify_config_opts=(
 	'OverrideESPMountPoint'
 	'RebootCleanup'
 	'RequireESPFreeSpace'
+	'ScreenWidth'
+	'ScreenHeight'
 )
 
 reset_config_opts=(
