@@ -339,6 +339,7 @@ library_deps = [
   libusb,
   cbor,
   sqlite,
+  libdrm,
   platform_deps,
 ]
 
