@@ -24,3 +24,7 @@ gboolean
 fu_udev_device_parse_number(FuUdevDevice *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_udev_device_match_subsystem(FuUdevDevice *self, const gchar *subsystem) G_GNUC_NON_NULL(1);
+gchar *
+fu_udev_device_get_device_file_from_subsystem(FuUdevDevice *self,
+					      const gchar *subsystem,
+					      GError **error) G_GNUC_NON_NULL(1, 2);

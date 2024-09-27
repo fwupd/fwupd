@@ -106,6 +106,18 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 		fu_device_set_physical_id(FU_DEVICE(self), physical_id);
 	}
 
+	/* set the hidraw device */
+	if (fu_udev_device_get_device_file(FU_UDEV_DEVICE(self)) == NULL) {
+		g_autofree gchar *device_file = NULL;
+		device_file =
+		    fu_udev_device_get_device_file_from_subsystem(FU_UDEV_DEVICE(hid_device),
+								  "hidraw",
+								  error);
+		if (device_file == NULL)
+			return FALSE;
+		fu_udev_device_set_device_file(FU_UDEV_DEVICE(self), device_file);
+	}
+
 	/* USB\\VID_1234 */
 	fu_device_add_instance_u16(FU_DEVICE(self), "VEN", fu_device_get_vid(device));
 	fu_device_add_instance_u16(FU_DEVICE(self), "DEV", fu_device_get_pid(device));
