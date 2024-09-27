@@ -297,6 +297,10 @@ option('qubes',
   value: false,
   description: 'build packages for Qubes OS',
 )
+option('plugin_snapd',
+  type: 'feature',
+  description: 'enable snapd integration',
+)
 option('sqlite',
   type: 'feature',
   description: 'sqlite support',
