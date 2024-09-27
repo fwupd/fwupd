@@ -265,6 +265,10 @@ libcurl = dependency('libcurl', version: '>= 7.62.0', required: get_option('curl
 if libcurl.found()
   conf.set('HAVE_LIBCURL', '1')
 endif
+libdrm = dependency('libdrm', required: false)
+if libdrm.found()
+  conf.set('HAVE_LIBDRM' , '1')
+endif
 polkit = dependency('polkit-gobject-1', version: '>= 0.114',
          required: get_option('polkit').disable_auto_if(host_machine.system() != 'linux'))
 if polkit.found()
