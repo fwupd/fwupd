@@ -8821,6 +8821,12 @@ fu_engine_constructed(GObject *obj)
 #endif
 
 	fu_context_add_compile_version(self->ctx, "org.freedesktop.fwupd", VERSION);
+#ifdef SOURCE_VERSION
+	if (g_strcmp0(SOURCE_VERSION, VERSION) != 0)
+		fu_context_add_compile_version(self->ctx,
+					       "org.freedesktop.fwupd.source",
+					       SOURCE_VERSION);
+#endif
 	fu_context_add_compile_version(self->ctx, "info.libusb", LIBUSB_VERSION);
 #ifdef HAVE_PASSIM
 	{
