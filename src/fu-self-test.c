@@ -3849,6 +3849,42 @@ fu_device_list_equivalent_id_func(gconstpointer user_data)
 }
 
 static void
+fu_device_list_unconnected_no_delay_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(FuDevice) device1 = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new(self->ctx);
+
+	fu_device_set_id(device1, "device1");
+	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_instance_id(device1, "foobar");
+	fu_device_convert_instance_ids(device1);
+	fu_device_list_add(device_list, device1);
+	g_assert_false(fu_device_has_private_flag(device1, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED));
+
+	/* remove */
+	fu_device_list_remove(device_list, device1);
+	g_assert_true(fu_device_has_private_flag(device1, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED));
+
+	/* add back exact same device, then remove */
+	fu_device_list_add(device_list, device1);
+	g_assert_false(fu_device_has_private_flag(device1, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED));
+	fu_device_list_remove(device_list, device1);
+	g_assert_true(fu_device_has_private_flag(device1, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED));
+
+	/* add back device with same ID, then remove */
+	fu_device_set_id(device2, "device1");
+	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_instance_id(device2, "foobar");
+	fu_device_convert_instance_ids(device2);
+	fu_device_list_add(device_list, device2);
+	g_assert_false(fu_device_has_private_flag(device2, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED));
+	fu_device_list_remove(device_list, device2);
+	g_assert_true(fu_device_has_private_flag(device2, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED));
+}
+
+static void
 fu_device_list_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -6773,6 +6809,9 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/cabinet", fu_common_cabinet_func);
 	g_test_add_data_func("/fwupd/security-attr", self, fu_security_attr_func);
 	g_test_add_data_func("/fwupd/device-list", self, fu_device_list_func);
+	g_test_add_data_func("/fwupd/device-list{unconnected-no-delay}",
+			     self,
+			     fu_device_list_unconnected_no_delay_func);
 	g_test_add_data_func("/fwupd/device-list{equivalent-id}",
 			     self,
 			     fu_device_list_equivalent_id_func);

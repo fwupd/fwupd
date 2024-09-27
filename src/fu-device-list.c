@@ -859,6 +859,9 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 		       fu_device_get_id(item->device));
 	}
 
+	/* this can never be true */
+	fu_device_remove_private_flag(device, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
+
 	/* add helper */
 	item = g_new0(FuDeviceItem, 1);
 	item->self = self; /* no ref */
