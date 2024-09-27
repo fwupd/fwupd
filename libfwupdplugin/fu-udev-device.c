@@ -49,6 +49,7 @@ typedef struct {
 	FuIOChannel *io_channel;
 	FuIoChannelOpenFlag open_flags;
 	GHashTable *properties;
+	gboolean properties_valid;
 } FuUdevDevicePrivate;
 
 static void
@@ -628,6 +629,7 @@ fu_udev_device_probe_complete(FuDevice *device)
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_hash_table_remove_all(priv->properties);
+	priv->properties_valid = FALSE;
 }
 
 static gboolean
@@ -1851,7 +1853,7 @@ fu_udev_device_read_property(FuUdevDevice *self, const gchar *key, GError **erro
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
 	/* parse key */
-	if (g_hash_table_size(priv->properties) == 0) {
+	if (!priv->properties_valid) {
 		g_autofree gchar *str = NULL;
 		g_auto(GStrv) uevent_lines = NULL;
 		str = fu_udev_device_read_sysfs(self,
@@ -1867,6 +1869,7 @@ fu_udev_device_read_property(FuUdevDevice *self, const gchar *key, GError **erro
 					    g_steal_pointer(&kvs[0]),
 					    g_steal_pointer(&kvs[1]));
 		}
+		priv->properties_valid = TRUE;
 	}
 	value = g_strdup(g_hash_table_lookup(priv->properties, key));
 	if (value == NULL) {
