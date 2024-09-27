@@ -6368,6 +6368,7 @@ fwupd_client_emulation_load_finish(FwupdClient *self, GAsyncResult *res, GError 
 	return g_task_propagate_boolean(G_TASK(res), error);
 }
 
+#ifdef HAVE_GIO_UNIX
 static void
 fwupd_client_emulation_save_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
@@ -6392,6 +6393,7 @@ fwupd_client_emulation_save_cb(GObject *source, GAsyncResult *res, gpointer user
 	/* success */
 	g_task_return_boolean(task, TRUE);
 }
+#endif
 
 /**
  * fwupd_client_emulation_save_async:
