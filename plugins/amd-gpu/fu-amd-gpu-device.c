@@ -32,6 +32,8 @@ struct _FuAmdGpuDevice {
 #define PSPVBFLASH_IN_PROGRESS 0x1
 #define PSPVBFLASH_SUCCESS     0x80000000
 
+#define PART_NUM_STR_SIZE 10
+
 G_DEFINE_TYPE(FuAmdGpuDevice, fu_amd_gpu_device, FU_TYPE_PCI_DEVICE)
 
 static void
@@ -158,8 +160,7 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
 				  error))
 		return FALSE;
-	self->vbios_pn =
-	    fu_strsafe((const gchar *)vbios_info.vbios_pn, sizeof(vbios_info.vbios_pn));
+	self->vbios_pn = fu_strsafe((const gchar *)vbios_info.vbios_pn, PART_NUM_STR_SIZE);
 	part = g_strdup_printf("AMD\\%s", self->vbios_pn);
 	fu_device_add_instance_id(device, part);
 	fu_device_set_version_raw(device, vbios_info.version);
@@ -183,7 +184,7 @@ fu_amd_gpu_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) ish_a = NULL;
 	g_autoptr(FuFirmware) partition_a = NULL;
 	g_autoptr(FuFirmware) csm = NULL;
-	const gchar *fw_pn;
+	g_autofree gchar *fw_pn = NULL;
 
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
@@ -199,7 +200,7 @@ fu_amd_gpu_device_prepare_firmware(FuDevice *device,
 	if (csm == NULL)
 		return NULL;
 
-	fw_pn = fu_amd_gpu_atom_firmware_get_vbios_pn(csm);
+	fw_pn = fu_strsafe(fu_amd_gpu_atom_firmware_get_vbios_pn(csm), PART_NUM_STR_SIZE);
 	if (g_strcmp0(fw_pn, self->vbios_pn) != 0) {
 		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 			g_set_error(error,

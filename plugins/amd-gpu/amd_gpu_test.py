@@ -224,10 +224,10 @@ A: vendor=0x1022
             self.assertEqual(dev.get_version(), "022.012.000.027.000001")
             guids = dev.get_guids()
             self.assertEqual(len(guids), 1)
-            self.assertIn("6c23af4f-d6cd-5ffc-a502-0b85e472e7cb", guids)
+            self.assertIn("4a1501b7-b500-5255-9d9c-41d652a4d5bc", guids)
             instance_ids = dev.get_instance_ids()
             self.assertEqual(len(instance_ids), 1)
-            self.assertIn("AMD\\113-PHXGENERIC-001", instance_ids)
+            self.assertIn("AMD\\113-PHXGEN", instance_ids)
         self.assertGreater(count, 0)
 
 
