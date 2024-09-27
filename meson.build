@@ -26,10 +26,8 @@ if git.found()
     source_version = fwupd_version
   endif
   tag = run_command([git, 'describe', '--exact-match'], check: false).returncode() == 0
-else
-  source_version = fwupd_version
+  conf.set_quoted('SOURCE_VERSION', source_version)
 endif
-conf.set_quoted('SOURCE_VERSION', source_version)
 
 # libtool versioning - this applies to libfwupd
 #

@@ -4177,14 +4177,14 @@ fu_util_check_daemon_version(FuUtilPrivate *priv, GError **error)
 		return FALSE;
 	}
 
-	if (g_strcmp0(daemon, SOURCE_VERSION) != 0) {
+	if (g_strcmp0(daemon, PACKAGE_VERSION) != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    /* TRANSLATORS: error message */
 			    _("Unsupported daemon version %s, client version is %s"),
 			    daemon,
-			    SOURCE_VERSION);
+			    PACKAGE_VERSION);
 		return FALSE;
 	}
 
