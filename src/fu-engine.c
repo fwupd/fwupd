@@ -8861,6 +8861,12 @@ fu_engine_constructed(GObject *obj)
 		fu_context_add_compile_version(self->ctx, "org.freedesktop.gusb", version);
 	}
 #endif
+#ifdef SOURCE_VERSION
+	if (g_strcmp0(SOURCE_VERSION, VERSION) != 0)
+		fu_context_add_compile_version(self->ctx,
+					       "org.freedesktop.fwupd.source",
+					       SOURCE_VERSION);
+#endif
 #ifdef HAVE_PASSIM
 	{
 		g_autofree gchar *version = g_strdup_printf("%i.%i.%i",
