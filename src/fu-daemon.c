@@ -2106,7 +2106,7 @@ fu_daemon_daemon_get_property(GDBusConnection *connection_,
 	fu_engine_idle_reset(self->engine);
 
 	if (g_strcmp0(property_name, "DaemonVersion") == 0)
-		return g_variant_new_string(SOURCE_VERSION);
+		return g_variant_new_string(PACKAGE_VERSION);
 
 	if (g_strcmp0(property_name, "HostBkc") == 0)
 		return g_variant_new_string(fu_engine_get_host_bkc(self->engine));
