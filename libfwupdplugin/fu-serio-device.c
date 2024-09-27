@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-serio-device.h"
+#include "fu-udev-device-private.h"
 
 /**
  * FuSerioDevice
@@ -17,24 +18,6 @@
  */
 
 G_DEFINE_TYPE(FuSerioDevice, fu_serio_device, FU_TYPE_UDEV_DEVICE)
-
-static gchar *
-fu_serio_device_get_miscdev0(FuSerioDevice *self)
-{
-	const gchar *fn;
-	g_autofree gchar *miscdir = NULL;
-	g_autoptr(GDir) dir = NULL;
-
-	miscdir =
-	    g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self)), "misc", NULL);
-	dir = g_dir_open(miscdir, 0, NULL);
-	if (dir == NULL)
-		return NULL;
-	fn = g_dir_read_name(dir);
-	if (fn == NULL)
-		return NULL;
-	return g_strdup_printf("/dev/%s", fn);
-}
 
 static gboolean
 fu_serio_device_probe(FuDevice *device, GError **error)
@@ -80,7 +63,10 @@ fu_serio_device_probe(FuDevice *device, GError **error)
 
 	/* fall back to the first thing handled by misc drivers */
 	if (fu_udev_device_get_device_file(FU_UDEV_DEVICE(self)) == NULL) {
-		g_autofree gchar *device_file = fu_serio_device_get_miscdev0(self);
+		g_autofree gchar *device_file =
+		    fu_udev_device_get_device_file_from_subsystem(FU_UDEV_DEVICE(self),
+								  "misc",
+								  NULL);
 		if (device_file != NULL)
 			fu_udev_device_set_device_file(FU_UDEV_DEVICE(self), device_file);
 	}

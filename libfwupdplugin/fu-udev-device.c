@@ -992,6 +992,49 @@ fu_udev_device_match_subsystem(FuUdevDevice *self, const gchar *subsystem)
 	return TRUE;
 }
 
+/* private */
+gchar *
+fu_udev_device_get_device_file_from_subsystem(FuUdevDevice *self,
+					      const gchar *subsystem,
+					      GError **error)
+{
+	const gchar *fn;
+	g_autofree gchar *subsystem_dir = NULL;
+	g_autoptr(GDir) dir = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
+	g_return_val_if_fail(subsystem != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	subsystem_dir =
+	    g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self)), subsystem, NULL);
+	dir = g_dir_open(subsystem_dir, 0, &error_local);
+	if (dir == NULL) {
+		if (g_error_matches(error_local, G_FILE_ERROR_NOENT, G_FILE_ERROR_NOENT)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "failed to find subsystem directory %s",
+				    subsystem_dir);
+			return NULL;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		fu_error_convert(error);
+		return NULL;
+	}
+	fn = g_dir_read_name(dir);
+	if (fn == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "failed to find subsystem device in %s",
+			    subsystem_dir);
+		return NULL;
+	}
+	return g_strdup_printf("/dev/%s", fn);
+}
+
 /**
  * fu_udev_device_set_physical_id:
  * @self: a #FuUdevDevice
