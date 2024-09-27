@@ -147,6 +147,7 @@ fwupdplugin_src = [
   'fu-progress.c', # fuzzing
   'fu-quirks.c', # fuzzing
   'fu-sbatlevel-section.c', # fuzzing
+  'fu-secure-boot-device.c', # fuzzing
   'fu-security-attr.c', # fuzzing
   'fu-security-attrs.c',
   'fu-serio-device.c',
