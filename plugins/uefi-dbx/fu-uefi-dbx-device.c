@@ -6,14 +6,63 @@
 
 #include "config.h"
 
+#include "fu-secure-boot-device.h"
 #include "fu-uefi-dbx-common.h"
 #include "fu-uefi-dbx-device.h"
 
 struct _FuUefiDbxDevice {
 	FuDevice parent_instance;
+
+	struct {
+		FuSecureBootDeviceFirmwareObserveFunc cb;
+		gpointer user_data;
+	} observer;
 };
 
-G_DEFINE_TYPE(FuUefiDbxDevice, fu_uefi_dbx_device, FU_TYPE_DEVICE)
+static FuSecureBootDeviceKind
+fu_uefi_dbx_secure_boot_device_get_kind(FuSecureBootDevice *self)
+{
+	return FU_SECURE_BOOT_DEVICE_KIND_UEFI_DBX;
+}
+
+static gboolean
+fu_uefi_dbx_secure_boot_device_set_firmware_write_observe(FuSecureBootDevice *self,
+							  FuSecureBootDeviceFirmwareObserveFunc cb,
+							  gpointer user_data)
+{
+	FuUefiDbxDevice *dev = NULL;
+
+	g_return_val_if_fail(FU_IS_UEFI_DBX_DEVICE(self), FALSE);
+
+	dev = FU_UEFI_DBX_DEVICE(self);
+
+	if (cb != NULL && dev->observer.cb != NULL) {
+		/* callback is already set */
+		return FALSE;
+	}
+
+	dev->observer.cb = cb;
+	dev->observer.user_data = user_data;
+
+	if (cb == NULL) {
+		dev->observer.user_data = NULL;
+	}
+	return TRUE;
+}
+
+static void
+fu_secure_boot_device_interface_init(FuSecureBootDeviceInterface *iface)
+{
+	iface->get_kind = fu_uefi_dbx_secure_boot_device_get_kind;
+	iface->set_firmware_write_observe =
+	    fu_uefi_dbx_secure_boot_device_set_firmware_write_observe;
+}
+
+G_DEFINE_TYPE_WITH_CODE(FuUefiDbxDevice,
+			fu_uefi_dbx_device,
+			FU_TYPE_DEVICE,
+			G_IMPLEMENT_INTERFACE(FU_TYPE_SECURE_BOOT_DEVICE,
+					      fu_secure_boot_device_interface_init))
 
 static gboolean
 fu_uefi_dbx_device_write_firmware(FuDevice *device,
@@ -24,6 +73,7 @@ fu_uefi_dbx_device_write_firmware(FuDevice *device,
 {
 	FuContext *ctx = fu_device_get_context(device);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
+	FuUefiDbxDevice *self = FU_UEFI_DBX_DEVICE(device);
 	const guint8 *buf;
 	gsize bufsz = 0;
 	g_autoptr(GBytes) fw = NULL;
@@ -32,6 +82,16 @@ fu_uefi_dbx_device_write_firmware(FuDevice *device,
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
+
+	if (self->observer.cb != NULL) {
+		if (!self->observer.cb(FU_SECURE_BOOT_DEVICE(self),
+				       firmware,
+				       self->observer.user_data,
+				       error)) {
+			g_prefix_error(error, "firmware write observer: ");
+			return FALSE;
+		}
+	}
 
 	/* write entire chunk to efivarsfs */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
