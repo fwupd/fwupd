@@ -692,7 +692,7 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 			      item->device,
 			      FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS |
 				  FU_DEVICE_INCORPORATE_FLAG_UPDATE_ERROR |
-				  FU_DEVICE_INCORPORATE_FLAG_UPDATE_ERROR);
+				  FU_DEVICE_INCORPORATE_FLAG_UPDATE_STATE);
 
 	/* copy inhibit */
 	_fu_device_incorporate_problem_update_in_progress(item->device, device);
