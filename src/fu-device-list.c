@@ -720,7 +720,10 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 	/* seems like a sane assumption if we've tagged the runtime mode as signed */
 	fu_device_incorporate_flag(device, item->device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_incorporate_flag(device, item->device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_incorporate_flag(device, item->device, FWUPD_DEVICE_FLAG_EMULATION_TAG);
+
+	/* never unset */
+	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_EMULATION_TAG))
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG);
 
 	/* device won't come back in right mode */
 	fu_device_incorporate_flag(device, item->device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR);
