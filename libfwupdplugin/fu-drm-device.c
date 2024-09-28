@@ -203,6 +203,25 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 }
 
 static void
+fu_drm_device_incorporate(FuDevice *device, FuDevice *donor)
+{
+	FuDrmDevice *self = FU_DRM_DEVICE(device);
+	FuDrmDevice *self_donor = FU_DRM_DEVICE(donor);
+	FuDrmDevicePrivate *priv = GET_PRIVATE(self);
+	FuDrmDevicePrivate *priv_donor = GET_PRIVATE(self_donor);
+
+	if (priv->display_state == FU_DISPLAY_STATE_UNKNOWN &&
+	    priv_donor->display_state != FU_DISPLAY_STATE_UNKNOWN)
+		priv->display_state = priv_donor->display_state;
+	if (!priv->enabled && priv_donor->enabled)
+		priv->enabled = priv_donor->enabled;
+	if (priv->connector_id == NULL && priv_donor->connector_id != NULL)
+		priv->connector_id = g_strdup(priv_donor->connector_id);
+	if (priv->edid == NULL && priv_donor->edid != NULL)
+		priv->edid = g_object_ref(priv_donor->edid);
+}
+
+static void
 fu_drm_device_init(FuDrmDevice *self)
 {
 }
@@ -227,5 +246,6 @@ fu_drm_device_class_init(FuDrmDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_drm_device_finalize;
 	device_class->probe = fu_drm_device_probe;
+	device_class->incorporate = fu_drm_device_incorporate;
 	device_class->to_string = fu_drm_device_to_string;
 }
