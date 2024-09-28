@@ -129,10 +129,6 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *attr_connector_id = NULL;
 	g_autofree gchar *physical_id = g_path_get_basename(sysfs_path);
 
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_drm_device_parent_class)->probe(device, error))
-		return FALSE;
-
 	/* basic properties */
 	attr_enabled = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
 						 "enabled",
