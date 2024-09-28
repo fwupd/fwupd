@@ -13,5 +13,5 @@
 G_DECLARE_DERIVABLE_TYPE(FuAmdKriaDevice, fu_amd_kria_device, FU, AMD_KRIA_DEVICE, FuI2cDevice)
 
 struct _FuAmdKriaDeviceClass {
-	FuDeviceClass parent_class;
+	FuI2cDeviceClass parent_class;
 };
