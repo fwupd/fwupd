@@ -177,6 +177,10 @@ fu_udev_backend_create_device(FuUdevBackend *self, const gchar *fn, GError **err
 		fu_device_incorporate(FU_DEVICE(device),
 				      FU_DEVICE(device_donor),
 				      FU_DEVICE_INCORPORATE_FLAG_ALL);
+		if (!fu_device_probe(FU_DEVICE(device), error)) {
+			g_prefix_error(error, "failed to probe: ");
+			return NULL;
+		}
 	}
 
 	/* the DRM device has a i2c device that is used for communicating with the scaler */
