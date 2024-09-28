@@ -359,12 +359,26 @@ fu_udev_backend_uevent_cb(GUdevClient *gudev_client,
 	}
 }
 
+static gint
+fu_udev_backend_device_number_sort_cb(gconstpointer a, gconstpointer b)
+{
+	FuUdevDevice *device1 = *((FuUdevDevice **)a);
+	FuUdevDevice *device2 = *((FuUdevDevice **)b);
+	if (fu_udev_device_get_number(device1) < fu_udev_device_get_number(device2))
+		return -1;
+	if (fu_udev_device_get_number(device1) > fu_udev_device_get_number(device2))
+		return 1;
+	return 0;
+}
+
 static void
 fu_udev_backend_coldplug_subsystem(FuUdevBackend *self, const gchar *fn)
 {
 	const gchar *basename;
 	g_autoptr(GDir) dir = NULL;
 	g_autoptr(GError) error_dir = NULL;
+	g_autoptr(GPtrArray) devices =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 
 	dir = g_dir_open(fn, 0, &error_dir);
 	if (dir == NULL) {
@@ -398,9 +412,15 @@ fu_udev_backend_coldplug_subsystem(FuUdevBackend *self, const gchar *fn)
 				  error_local->message);
 			continue;
 		}
-		g_debug("adding device %s for %s", fu_device_get_id(FU_DEVICE(device)), fn_full);
-		fu_udev_backend_device_add_from_device(self, device);
 		g_hash_table_add(self->map_paths, g_steal_pointer(&fn_real));
+		g_ptr_array_add(devices, g_steal_pointer(&device));
+	}
+
+	/* sort by device order (so video0 comes before video9) and add as a device */
+	g_ptr_array_sort(devices, fu_udev_backend_device_number_sort_cb);
+	for (guint i = 0; i < devices->len; i++) {
+		FuUdevDevice *device = g_ptr_array_index(devices, i);
+		fu_udev_backend_device_add_from_device(self, device);
 	}
 }
 
