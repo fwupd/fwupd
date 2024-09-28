@@ -1812,6 +1812,97 @@ fu_engine_device_equivalent_func(gconstpointer user_data)
 }
 
 static void
+fu_device_list_equivalent_shadowing_func(gconstpointer user_data)
+{
+	g_autoptr(FuDevice) dongle = fu_device_new(NULL);
+	g_autoptr(FuDevice) child = fu_device_new(NULL);
+	g_autoptr(FuDevice) direct1 = fu_device_new(NULL);
+	g_autoptr(FuDevice) direct2 = fu_device_new(NULL);
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
+	g_autoptr(GPtrArray) active1 = NULL;
+	g_autoptr(GPtrArray) active2 = NULL;
+	g_autoptr(GPtrArray) active3 = NULL;
+	g_autoptr(GPtrArray) children1 = NULL;
+	g_autoptr(GPtrArray) children2 = NULL;
+	g_autoptr(GPtrArray) children3 = NULL;
+
+	fu_device_set_id(dongle, "0000000000000000000000000000000000000000");
+	fu_device_set_id(child, "1111111111111111111111111111111111111111");
+	fu_device_add_child(dongle, child);
+	fu_device_list_add(device_list, dongle);
+	fu_device_list_add(device_list, child);
+
+	/* new connection of the same device detected */
+	fu_device_set_id(direct1, "9999999999999999999999999999999999999999");
+	fu_device_set_priority(direct1, 999);
+	/* mark the dongle's child as the same device */
+	fu_device_set_equivalent_id(child, fu_device_get_id(direct1));
+	/* FIXME: bang! broken here */
+	fu_device_list_add(device_list, direct1);
+	/* with a real test the direct substitute the previous child in visualization tree*/
+
+	active1 = fu_device_list_get_active(device_list);
+	g_assert_cmpint(active1->len, ==, 3);
+
+	/* direct connection is now the child of the dongle */
+	children1 = fu_device_get_children(dongle);
+	g_assert_cmpint(children1->len, ==, 1);
+	for (guint i = 0; i < children1->len; i++) {
+		FuDevice *child_tmp = g_ptr_array_index(children1, i);
+		/* the parent dongle now have 1 children: 1..1 marked as old device
+		 * but still is the child of the dongle.
+		 * And 9..9 as active device, shown as a child in a visualization tree,
+		 * but not added into the children list, however it's parent is set to dongle*/
+		g_assert_cmpstr(fu_device_get_id(child_tmp),
+				==,
+				"9999999999999999999999999999999999999999");
+	}
+
+	/* unplug the device */
+	fu_device_list_remove(device_list, direct1);
+	active2 = fu_device_list_get_active(device_list);
+	/* FIXME: in reality here I see that both direct and child are marked as old
+	 * and direct removed quickly.
+	 * The visualization shows there is no any children, but
+	 * fu_device_get_children() still returns the list with the single child (which was marked
+	 * as old)
+	 * */
+	g_assert_cmpint(active2->len, ==, 2);
+	children2 = fu_device_get_children(dongle);
+	g_assert_cmpint(children2->len, ==, 1);
+	for (guint i = 0; i < children2->len; i++) {
+		FuDevice *child_tmp = g_ptr_array_index(children2, i);
+		/* the parent dongle still have 1 child in the list: 1..1 marked as old device
+		 * but still is the child of the dongle. */
+		g_assert_cmpstr(fu_device_get_id(child_tmp),
+				==,
+				"9999999999999999999999999999999999999999");
+	}
+
+	/* TODO: good to have some unset API function or allow to set NULL for equivalent-id */
+	/* stub:
+	 * fu_device_set_equivalent_id(child, NULL);
+	 * */
+
+	/* plug the device again via direct connection */
+	fu_device_set_id(direct2, "ffffffffffffffffffffffffffffffffffffffff");
+	fu_device_set_priority(direct2, 999);
+	/* mark the dongle's child as the same device */
+	fu_device_set_equivalent_id(child, fu_device_get_id(direct2));
+	/* FIXME: bang! broken here again? */
+	fu_device_list_add(device_list, direct2);
+
+	/* expecting 3 active devices here
+	 * FIXME: with a real world test the new device doesn't appeared here */
+	active3 = fu_device_list_get_active(device_list);
+	g_assert_cmpint(active3->len, ==, 2);
+
+	children3 = fu_device_get_children(dongle);
+	g_assert_cmpint(children3->len, ==, 0);
+	/* FIXME: and yes! the 1..1 child still listed in the parent's list */
+}
+
+static void
 fu_engine_device_md_set_flags_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -6860,6 +6951,9 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/engine{device-equivalent}",
 			     self,
 			     fu_engine_device_equivalent_func);
+	g_test_add_data_func("/fwupd/engine{equivalent-shadowing}",
+			     self,
+			     fu_device_list_equivalent_shadowing_func);
 	g_test_add_data_func("/fwupd/engine{device-md-set-flags}",
 			     self,
 			     fu_engine_device_md_set_flags_func);
