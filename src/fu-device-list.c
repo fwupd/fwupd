@@ -661,18 +661,22 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 	/* copy over the version strings if not set */
 	if (fu_device_get_version(item->device) != NULL && fu_device_get_version(device) == NULL) {
 		const gchar *version = fu_device_get_version(item->device);
+		guint64 raw = fu_device_get_version_raw(item->device);
 		g_info("copying old version %s to new device", version);
 		fu_device_set_version_format(device, fu_device_get_version_format(item->device));
-		fu_device_set_version(device, version);
+		fu_device_set_version(device, version); /* nocheck:set-version */
+		fu_device_set_version_raw(device, raw);
 	}
 
 	/* always use the runtime version */
 	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION) &&
 	    fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
 		const gchar *version = fu_device_get_version(item->device);
+		guint64 raw = fu_device_get_version_raw(item->device);
 		g_info("forcing runtime version %s to new device", version);
 		fu_device_set_version_format(device, fu_device_get_version_format(item->device));
-		fu_device_set_version(device, version);
+		fu_device_set_version(device, version); /* nocheck:set-version */
+		fu_device_set_version_raw(device, raw);
 	}
 
 	/* allow another plugin to handle the write too */
