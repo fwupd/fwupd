@@ -6,11 +6,6 @@
  */
 #include "config.h"
 
-#ifdef HAVE_HIDRAW_H
-#include <linux/hidraw.h>
-#include <linux/input.h>
-#endif
-
 #include "fu-pxi-firmware.h"
 #include "fu-pxi-receiver-device.h"
 #include "fu-pxi-struct.h"
@@ -20,39 +15,15 @@ struct _FuPxiReceiverDevice {
 	FuHidrawDevice parent_instance;
 	struct ota_fw_state fwstate;
 	guint8 sn;
-	guint vendor;
-	guint product;
 };
 
 G_DEFINE_TYPE(FuPxiReceiverDevice, fu_pxi_receiver_device, FU_TYPE_HIDRAW_DEVICE)
-
-#ifdef HAVE_HIDRAW_H
-static gboolean
-fu_pxi_receiver_device_get_raw_info(FuPxiReceiverDevice *self,
-				    struct hidraw_devinfo *info,
-				    GError **error)
-{
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGRAWINFO,
-				  (guint8 *)info,
-				  sizeof(*info),
-				  NULL,
-				  FU_PXI_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error)) {
-		return FALSE;
-	}
-	return TRUE;
-}
-#endif
 
 static void
 fu_pxi_receiver_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuPxiReceiverDevice *self = FU_PXI_RECEIVER_DEVICE(device);
 	fu_pxi_ota_fw_state_to_string(&self->fwstate, idt, str);
-	fwupd_codec_string_append_hex(str, idt, "Vendor", self->vendor);
-	fwupd_codec_string_append_hex(str, idt, "Product", self->product);
 }
 
 static FuFirmware *
@@ -730,7 +701,6 @@ fu_pxi_receiver_device_get_peripheral_num(FuPxiReceiverDevice *device,
 static gboolean
 fu_pxi_receiver_device_add_peripherals(FuPxiReceiverDevice *device, guint idx, GError **error)
 {
-#ifdef HAVE_HIDRAW_H
 	struct ota_fw_dev_model model = {0x0};
 	guint16 hpac_ver = 0;
 	g_autofree gchar *model_name = NULL;
@@ -751,8 +721,12 @@ fu_pxi_receiver_device_add_peripherals(FuPxiReceiverDevice *device, guint idx, G
 	/* idx 0 is for local_device */
 	if (idx == 0) {
 		fu_device_set_version(FU_DEVICE(device), model_version);
-		fu_device_add_instance_u16(FU_DEVICE(device), "VEN", device->vendor);
-		fu_device_add_instance_u16(FU_DEVICE(device), "DEV", device->product);
+		fu_device_add_instance_u16(FU_DEVICE(device),
+					   "VEN",
+					   fu_device_get_vid(FU_DEVICE(device)));
+		fu_device_add_instance_u16(FU_DEVICE(device),
+					   "DEV",
+					   fu_device_get_pid(FU_DEVICE(device)));
 		fu_device_add_instance_str(FU_DEVICE(device), "MODEL", model_name);
 		if (!fu_device_build_instance_id(FU_DEVICE(device),
 						 error,
@@ -766,8 +740,12 @@ fu_pxi_receiver_device_add_peripherals(FuPxiReceiverDevice *device, guint idx, G
 		FuContext *ctx = fu_device_get_context(FU_DEVICE(device));
 		g_autoptr(FuPxiWirelessDevice) child = fu_pxi_wireless_device_new(ctx, &model);
 		g_autofree gchar *logical_id = g_strdup_printf("IDX:0x%02x", idx);
-		fu_device_add_instance_u16(FU_DEVICE(child), "VEN", device->vendor);
-		fu_device_add_instance_u16(FU_DEVICE(child), "DEV", device->product);
+		fu_device_add_instance_u16(FU_DEVICE(child),
+					   "VEN",
+					   fu_device_get_vid(FU_DEVICE(device)));
+		fu_device_add_instance_u16(FU_DEVICE(child),
+					   "DEV",
+					   fu_device_get_pid(FU_DEVICE(device)));
 		fu_device_add_instance_str(FU_DEVICE(child), "MODEL", model_name);
 		if (!fu_device_build_instance_id(FU_DEVICE(child),
 						 error,
@@ -783,46 +761,21 @@ fu_pxi_receiver_device_add_peripherals(FuPxiReceiverDevice *device, guint idx, G
 		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(child));
 	}
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
 }
 
 static gboolean
-fu_pxi_receiver_device_setup_guid(FuPxiReceiverDevice *device, GError **error)
+fu_pxi_receiver_device_setup_guid(FuPxiReceiverDevice *self, GError **error)
 {
-#ifdef HAVE_HIDRAW_H
-	struct hidraw_devinfo hid_raw_info = {0x0};
-	g_autofree gchar *devid = NULL;
-	g_autoptr(GString) dev_name = NULL;
-
-	/* extra GUID with device name */
-	if (!fu_pxi_receiver_device_get_raw_info(device, &hid_raw_info, error))
-		return FALSE;
-
-	device->vendor = (guint)hid_raw_info.vendor;
-	device->product = (guint)hid_raw_info.product;
-
-	dev_name = g_string_new(fu_device_get_name(FU_DEVICE(device)));
-	g_string_ascii_up(dev_name);
+	g_autoptr(GString) dev_name = g_string_new(fu_device_get_name(FU_DEVICE(self)));
 	g_string_replace(dev_name, " ", "_", 0);
-	devid = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&NAME_%s",
-				(guint)hid_raw_info.vendor,
-				(guint)hid_raw_info.product,
-				dev_name->str);
-	fu_device_add_instance_id(FU_DEVICE(device), devid);
-	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
+	fu_device_add_instance_strup(FU_DEVICE(self), "NAME", dev_name->str);
+	return fu_device_build_instance_id(FU_DEVICE(self),
+					   error,
+					   "HIDRAW",
+					   "VEN",
+					   "DEV",
+					   "NAME",
+					   NULL);
 }
 
 static gboolean
