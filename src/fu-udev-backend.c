@@ -490,6 +490,10 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 	g_autofree gchar *sysfs_path = NULL;
 	g_autoptr(FuUdevDevice) device_new = NULL;
 
+	/* emulated */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+		return g_object_ref(device);
+
 	sysfs_path = g_strdup(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
 	if (sysfs_path == NULL) {
 		g_set_error_literal(error,
