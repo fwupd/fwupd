@@ -1814,10 +1814,11 @@ fu_engine_device_equivalent_func(gconstpointer user_data)
 static void
 fu_device_list_equivalent_shadowing_func(gconstpointer user_data)
 {
-	g_autoptr(FuDevice) dongle = fu_device_new(NULL);
-	g_autoptr(FuDevice) child = fu_device_new(NULL);
-	g_autoptr(FuDevice) direct1 = fu_device_new(NULL);
-	g_autoptr(FuDevice) direct2 = fu_device_new(NULL);
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FuDevice) dongle = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) child = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) direct1 = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) direct2 = fu_device_new(self->ctx);
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
 	g_autoptr(GPtrArray) active1 = NULL;
 	g_autoptr(GPtrArray) active2 = NULL;
@@ -1827,13 +1828,16 @@ fu_device_list_equivalent_shadowing_func(gconstpointer user_data)
 	g_autoptr(GPtrArray) children3 = NULL;
 
 	fu_device_set_id(dongle, "0000000000000000000000000000000000000000");
+	fu_device_set_name(dongle, "dongle");
 	fu_device_set_id(child, "1111111111111111111111111111111111111111");
+	fu_device_set_name(child, "dongle-child");
 	fu_device_add_child(dongle, child);
 	fu_device_list_add(device_list, dongle);
 	fu_device_list_add(device_list, child);
 
 	/* new connection of the same device detected */
 	fu_device_set_id(direct1, "9999999999999999999999999999999999999999");
+	fu_device_set_name(direct1, "direct1");
 	fu_device_set_priority(direct1, 999);
 	/* mark the dongle's child as the same device */
 	fu_device_set_equivalent_id(child, fu_device_get_id(direct1));
