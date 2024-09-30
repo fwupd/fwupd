@@ -1341,7 +1341,7 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
 		if (event == NULL)
 			return FALSE;
-		return fu_device_event_copy_data(event, "Data", buf, bufsz, NULL, error);
+		return fu_device_event_copy_data(event, "DataOut", buf, bufsz, NULL, error);
 	}
 
 	/* save */
