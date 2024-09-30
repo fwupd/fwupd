@@ -244,6 +244,14 @@ typedef enum {
 	 * Since: 2.0.0
 	 **/
 	FU_DEVICE_INCORPORATE_FLAG_UPDATE_IMAGE = 1ull << 15,
+	/**
+	 * FU_DEVICE_INCORPORATE_FLAG_EVENTS:
+	 *
+	 * Add the device events.
+	 *
+	 * Since: 2.0.0
+	 **/
+	FU_DEVICE_INCORPORATE_FLAG_EVENTS = 1ull << 16,
 	/*< private >*/
 	FU_DEVICE_INCORPORATE_FLAG_ALL = G_MAXUINT64,
 } FuDeviceIncorporateFlags;
