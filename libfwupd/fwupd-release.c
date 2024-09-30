@@ -31,11 +31,11 @@ static void
 fwupd_release_finalize(GObject *object);
 
 typedef struct {
-	GPtrArray *checksums;
-	GPtrArray *tags;
-	GPtrArray *categories;
-	GPtrArray *issues;
-	GHashTable *metadata;
+	GPtrArray *checksums;  /* (nullable) (element-type utf-8) */
+	GPtrArray *tags;       /* (nullable) (element-type utf-8) */
+	GPtrArray *categories; /* (nullable) (element-type utf-8) */
+	GPtrArray *issues;     /* (nullable) (element-type utf-8) */
+	GHashTable *metadata;  /* (nullable) (element-type utf-8 utf-8) */
 	gchar *description;
 	gchar *filename;
 	gchar *protocol;
@@ -51,7 +51,7 @@ typedef struct {
 	gchar *name_variant_suffix;
 	gchar *summary;
 	gchar *branch;
-	GPtrArray *locations;
+	GPtrArray *locations; /* (nullable) (element-type utf-8) */
 	gchar *vendor;
 	gchar *version;
 	gchar *remote_id;
@@ -62,7 +62,7 @@ typedef struct {
 	FwupdReleaseUrgency urgency;
 	gchar *update_message;
 	gchar *update_image;
-	GPtrArray *reports;
+	GPtrArray *reports; /* (nullable) (element-type FwupdReport) */
 } FwupdReleasePrivate;
 
 enum { PROP_0, PROP_REMOTE_ID, PROP_LAST };
@@ -326,6 +326,14 @@ fwupd_release_set_protocol(FwupdRelease *self, const gchar *protocol)
 	priv->protocol = g_strdup(protocol);
 }
 
+static void
+fwupd_release_ensure_issues(FwupdRelease *self)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	if (priv->issues == NULL)
+		priv->issues = g_ptr_array_new_with_free_func(g_free);
+}
+
 /**
  * fwupd_release_get_issues:
  * @self: a #FwupdRelease
@@ -341,6 +349,7 @@ fwupd_release_get_issues(FwupdRelease *self)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
+	fwupd_release_ensure_issues(self);
 	return priv->issues;
 }
 
@@ -359,12 +368,21 @@ fwupd_release_add_issue(FwupdRelease *self, const gchar *issue)
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
 	g_return_if_fail(issue != NULL);
+	fwupd_release_ensure_issues(self);
 	for (guint i = 0; i < priv->issues->len; i++) {
 		const gchar *issue_tmp = g_ptr_array_index(priv->issues, i);
 		if (g_strcmp0(issue_tmp, issue) == 0)
 			return;
 	}
 	g_ptr_array_add(priv->issues, g_strdup(issue));
+}
+
+static void
+fwupd_release_ensure_categories(FwupdRelease *self)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	if (priv->categories == NULL)
+		priv->categories = g_ptr_array_new_with_free_func(g_free);
 }
 
 /**
@@ -382,6 +400,7 @@ fwupd_release_get_categories(FwupdRelease *self)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
+	fwupd_release_ensure_categories(self);
 	return priv->categories;
 }
 
@@ -400,11 +419,9 @@ fwupd_release_add_category(FwupdRelease *self, const gchar *category)
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
 	g_return_if_fail(category != NULL);
-	for (guint i = 0; i < priv->categories->len; i++) {
-		const gchar *category_tmp = g_ptr_array_index(priv->categories, i);
-		if (g_strcmp0(category_tmp, category) == 0)
-			return;
-	}
+	if (fwupd_release_has_category(self, category))
+		return;
+	fwupd_release_ensure_categories(self);
 	g_ptr_array_add(priv->categories, g_strdup(category));
 }
 
@@ -425,12 +442,22 @@ fwupd_release_has_category(FwupdRelease *self, const gchar *category)
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_RELEASE(self), FALSE);
 	g_return_val_if_fail(category != NULL, FALSE);
+	if (priv->categories == NULL)
+		return FALSE;
 	for (guint i = 0; i < priv->categories->len; i++) {
 		const gchar *category_tmp = g_ptr_array_index(priv->categories, i);
 		if (g_strcmp0(category_tmp, category) == 0)
 			return TRUE;
 	}
 	return FALSE;
+}
+
+static void
+fwupd_release_ensure_checksums(FwupdRelease *self)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	if (priv->checksums == NULL)
+		priv->checksums = g_ptr_array_new_with_free_func(g_free);
 }
 
 /**
@@ -448,6 +475,7 @@ fwupd_release_get_checksums(FwupdRelease *self)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
+	fwupd_release_ensure_checksums(self);
 	return priv->checksums;
 }
 
@@ -466,11 +494,9 @@ fwupd_release_add_checksum(FwupdRelease *self, const gchar *checksum)
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
 	g_return_if_fail(checksum != NULL);
-	for (guint i = 0; i < priv->checksums->len; i++) {
-		const gchar *checksum_tmp = g_ptr_array_index(priv->checksums, i);
-		if (g_strcmp0(checksum_tmp, checksum) == 0)
-			return;
-	}
+	if (fwupd_release_has_checksum(self, checksum))
+		return;
+	fwupd_release_ensure_checksums(self);
 	g_ptr_array_add(priv->checksums, g_strdup(checksum));
 }
 
@@ -491,12 +517,22 @@ fwupd_release_has_checksum(FwupdRelease *self, const gchar *checksum)
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_RELEASE(self), FALSE);
 	g_return_val_if_fail(checksum != NULL, FALSE);
+	if (priv->checksums == NULL)
+		return FALSE;
 	for (guint i = 0; i < priv->checksums->len; i++) {
 		const gchar *checksum_tmp = g_ptr_array_index(priv->checksums, i);
 		if (g_strcmp0(checksum_tmp, checksum) == 0)
 			return TRUE;
 	}
 	return FALSE;
+}
+
+static void
+fwupd_release_ensure_tags(FwupdRelease *self)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	if (priv->tags == NULL)
+		priv->tags = g_ptr_array_new_with_free_func(g_free);
 }
 
 /**
@@ -514,6 +550,7 @@ fwupd_release_get_tags(FwupdRelease *self)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
+	fwupd_release_ensure_tags(self);
 	return priv->tags;
 }
 
@@ -532,11 +569,9 @@ fwupd_release_add_tag(FwupdRelease *self, const gchar *tag)
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
 	g_return_if_fail(tag != NULL);
-	for (guint i = 0; i < priv->tags->len; i++) {
-		const gchar *tag_tmp = g_ptr_array_index(priv->tags, i);
-		if (g_strcmp0(tag_tmp, tag) == 0)
-			return;
-	}
+	if (fwupd_release_has_tag(self, tag))
+		return;
+	fwupd_release_ensure_tags(self);
 	g_ptr_array_add(priv->tags, g_strdup(tag));
 }
 
@@ -557,12 +592,22 @@ fwupd_release_has_tag(FwupdRelease *self, const gchar *tag)
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_RELEASE(self), FALSE);
 	g_return_val_if_fail(tag != NULL, FALSE);
+	if (priv->tags == NULL)
+		return FALSE;
 	for (guint i = 0; i < priv->tags->len; i++) {
 		const gchar *tag_tmp = g_ptr_array_index(priv->tags, i);
 		if (g_strcmp0(tag_tmp, tag) == 0)
 			return TRUE;
 	}
 	return FALSE;
+}
+
+static void
+fwupd_release_ensure_metadata(FwupdRelease *self)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	if (priv->metadata == NULL)
+		priv->metadata = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
 
 /**
@@ -580,6 +625,7 @@ fwupd_release_get_metadata(FwupdRelease *self)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
+	fwupd_release_ensure_metadata(self);
 	return priv->metadata;
 }
 
@@ -600,6 +646,7 @@ fwupd_release_add_metadata_item(FwupdRelease *self, const gchar *key, const gcha
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
 	g_return_if_fail(key != NULL);
 	g_return_if_fail(value != NULL);
+	fwupd_release_ensure_metadata(self);
 	g_hash_table_insert(priv->metadata, g_strdup(key), g_strdup(value));
 }
 
@@ -622,6 +669,7 @@ fwupd_release_add_metadata(FwupdRelease *self, GHashTable *hash)
 	g_return_if_fail(hash != NULL);
 
 	/* deep copy the whole map */
+	fwupd_release_ensure_metadata(self);
 	keys = g_hash_table_get_keys(hash);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
@@ -647,7 +695,17 @@ fwupd_release_get_metadata_item(FwupdRelease *self, const gchar *key)
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	g_return_val_if_fail(key != NULL, NULL);
+	if (priv->metadata == NULL)
+		return NULL;
 	return g_hash_table_lookup(priv->metadata, key);
+}
+
+static void
+fwupd_release_ensure_locations(FwupdRelease *self)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	if (priv->locations == NULL)
+		priv->locations = g_ptr_array_new_with_free_func(g_free);
 }
 
 /**
@@ -668,6 +726,7 @@ fwupd_release_get_locations(FwupdRelease *self)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
+	fwupd_release_ensure_locations(self);
 	return priv->locations;
 }
 
@@ -686,6 +745,7 @@ fwupd_release_add_location(FwupdRelease *self, const gchar *location)
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
 	g_return_if_fail(location != NULL);
+	fwupd_release_ensure_locations(self);
 	for (guint i = 0; i < priv->locations->len; i++) {
 		const gchar *location_tmp = g_ptr_array_index(priv->locations, i);
 		if (g_strcmp0(location_tmp, location) == 0)
@@ -1479,6 +1539,14 @@ fwupd_release_get_install_duration(FwupdRelease *self)
 	return priv->install_duration;
 }
 
+static void
+fwupd_release_ensure_reports(FwupdRelease *self)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	if (priv->reports == NULL)
+		priv->reports = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+}
+
 /**
  * fwupd_release_get_reports:
  * @self: a #FwupdRelease
@@ -1494,6 +1562,7 @@ fwupd_release_get_reports(FwupdRelease *self)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
+	fwupd_release_ensure_reports(self);
 	return priv->reports;
 }
 
@@ -1512,6 +1581,7 @@ fwupd_release_add_report(FwupdRelease *self, FwupdReport *report)
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_RELEASE(self));
 	g_return_if_fail(FWUPD_IS_REPORT(report));
+	fwupd_release_ensure_reports(self);
 	g_ptr_array_add(priv->reports, g_object_ref(report));
 }
 
@@ -1640,7 +1710,7 @@ fwupd_release_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCode
 				      FWUPD_RESULT_KEY_DESCRIPTION,
 				      g_variant_new_string(priv->description));
 	}
-	if (priv->categories->len > 0) {
+	if (priv->categories != NULL && priv->categories->len > 0) {
 		g_autofree const gchar **strv = g_new0(const gchar *, priv->categories->len + 1);
 		for (guint i = 0; i < priv->categories->len; i++)
 			strv[i] = (const gchar *)g_ptr_array_index(priv->categories, i);
@@ -1649,7 +1719,7 @@ fwupd_release_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCode
 				      FWUPD_RESULT_KEY_CATEGORIES,
 				      g_variant_new_strv(strv, -1));
 	}
-	if (priv->issues->len > 0) {
+	if (priv->issues != NULL && priv->issues->len > 0) {
 		g_autofree const gchar **strv = g_new0(const gchar *, priv->issues->len + 1);
 		for (guint i = 0; i < priv->issues->len; i++)
 			strv[i] = (const gchar *)g_ptr_array_index(priv->issues, i);
@@ -1658,7 +1728,7 @@ fwupd_release_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCode
 				      FWUPD_RESULT_KEY_ISSUES,
 				      g_variant_new_strv(strv, -1));
 	}
-	if (priv->checksums->len > 0) {
+	if (priv->checksums != NULL && priv->checksums->len > 0) {
 		g_autoptr(GString) str = g_string_new("");
 		for (guint i = 0; i < priv->checksums->len; i++) {
 			const gchar *checksum = g_ptr_array_index(priv->checksums, i);
@@ -1671,7 +1741,7 @@ fwupd_release_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCode
 				      FWUPD_RESULT_KEY_CHECKSUM,
 				      g_variant_new_string(str->str));
 	}
-	if (priv->locations->len > 0) {
+	if (priv->locations != NULL && priv->locations->len > 0) {
 		g_variant_builder_add(
 		    builder,
 		    "{sv}",
@@ -1679,7 +1749,7 @@ fwupd_release_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCode
 		    g_variant_new_strv((const gchar *const *)priv->locations->pdata,
 				       priv->locations->len));
 	}
-	if (priv->tags->len > 0) {
+	if (priv->tags != NULL && priv->tags->len > 0) {
 		g_variant_builder_add(
 		    builder,
 		    "{sv}",
@@ -1728,7 +1798,7 @@ fwupd_release_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCode
 				      FWUPD_RESULT_KEY_URGENCY,
 				      g_variant_new_uint32(priv->urgency));
 	}
-	if (g_hash_table_size(priv->metadata) > 0) {
+	if (priv->metadata != NULL && g_hash_table_size(priv->metadata) > 0) {
 		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_METADATA,
@@ -1740,7 +1810,7 @@ fwupd_release_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCode
 				      FWUPD_RESULT_KEY_INSTALL_DURATION,
 				      g_variant_new_uint32(priv->install_duration));
 	}
-	if (priv->reports->len > 0) {
+	if (priv->reports != NULL && priv->reports->len > 0) {
 		g_autofree GVariant **children = NULL;
 		children = g_new0(GVariant *, priv->reports->len);
 		for (guint i = 0; i < priv->reports->len; i++) {
@@ -1895,7 +1965,8 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_METADATA) == 0) {
-		g_hash_table_unref(priv->metadata);
+		if (priv->metadata != NULL)
+			g_hash_table_unref(priv->metadata);
 		priv->metadata = fwupd_variant_to_hash_kv(value);
 		return;
 	}
@@ -1938,7 +2009,6 @@ fwupd_release_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags 
 {
 	FwupdRelease *self = FWUPD_RELEASE(codec);
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GList) keys = NULL;
 
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_RELEASE_ID, priv->id);
@@ -1953,7 +2023,7 @@ fwupd_release_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags 
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_VERSION, priv->version);
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_FILENAME, priv->filename);
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
-	if (priv->categories->len > 0) {
+	if (priv->categories != NULL && priv->categories->len > 0) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_CATEGORIES);
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->categories->len; i++) {
@@ -1962,7 +2032,7 @@ fwupd_release_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags 
 		}
 		json_builder_end_array(builder);
 	}
-	if (priv->issues->len > 0) {
+	if (priv->issues != NULL && priv->issues->len > 0) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_ISSUES);
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->issues->len; i++) {
@@ -1971,7 +2041,7 @@ fwupd_release_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags 
 		}
 		json_builder_end_array(builder);
 	}
-	if (priv->checksums->len > 0) {
+	if (priv->checksums != NULL && priv->checksums->len > 0) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_CHECKSUM);
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->checksums->len; i++) {
@@ -1980,7 +2050,7 @@ fwupd_release_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags 
 		}
 		json_builder_end_array(builder);
 	}
-	if (priv->tags->len > 0) {
+	if (priv->tags != NULL && priv->tags->len > 0) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_TAGS);
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->tags->len; i++) {
@@ -1994,7 +2064,7 @@ fwupd_release_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags 
 		fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_SIZE, priv->size);
 	if (priv->created > 0)
 		fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_CREATED, priv->created);
-	if (priv->locations->len > 0) {
+	if (priv->locations != NULL && priv->locations->len > 0) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_LOCATIONS);
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->locations->len; i++) {
@@ -2030,15 +2100,17 @@ fwupd_release_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags 
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 
 	/* metadata */
-	keys = g_hash_table_get_keys(priv->metadata);
-	for (GList *l = keys; l != NULL; l = l->next) {
-		const gchar *key = l->data;
-		const gchar *value = g_hash_table_lookup(priv->metadata, key);
-		fwupd_codec_json_append(builder, key, value);
+	if (priv->metadata != NULL) {
+		g_autoptr(GList) keys = g_hash_table_get_keys(priv->metadata);
+		for (GList *l = keys; l != NULL; l = l->next) {
+			const gchar *key = l->data;
+			const gchar *value = g_hash_table_lookup(priv->metadata, key);
+			fwupd_codec_json_append(builder, key, value);
+		}
 	}
 
 	/* reports */
-	if (priv->reports->len > 0)
+	if (priv->reports != NULL && priv->reports->len > 0)
 		fwupd_codec_array_to_json(priv->reports, "Reports", builder, flags);
 }
 
@@ -2047,7 +2119,6 @@ fwupd_release_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
 	FwupdRelease *self = FWUPD_RELEASE(codec);
 	FwupdReleasePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GList) keys = NULL;
 
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_RELEASE_ID, priv->id);
@@ -2063,29 +2134,43 @@ fwupd_release_add_string(FwupdCodec *codec, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VERSION, priv->version);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_FILENAME, priv->filename);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
-	for (guint i = 0; i < priv->categories->len; i++) {
-		const gchar *tmp = g_ptr_array_index(priv->categories, i);
-		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_CATEGORIES, tmp);
+	if (priv->categories != NULL) {
+		for (guint i = 0; i < priv->categories->len; i++) {
+			const gchar *tmp = g_ptr_array_index(priv->categories, i);
+			fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_CATEGORIES, tmp);
+		}
 	}
-	for (guint i = 0; i < priv->issues->len; i++) {
-		const gchar *tmp = g_ptr_array_index(priv->issues, i);
-		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_ISSUES, tmp);
+	if (priv->issues != NULL) {
+		for (guint i = 0; i < priv->issues->len; i++) {
+			const gchar *tmp = g_ptr_array_index(priv->issues, i);
+			fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_ISSUES, tmp);
+		}
 	}
-	for (guint i = 0; i < priv->checksums->len; i++) {
-		const gchar *checksum = g_ptr_array_index(priv->checksums, i);
-		g_autofree gchar *checksum_display = fwupd_checksum_format_for_display(checksum);
-		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_CHECKSUM, checksum_display);
+	if (priv->checksums != NULL) {
+		for (guint i = 0; i < priv->checksums->len; i++) {
+			const gchar *checksum = g_ptr_array_index(priv->checksums, i);
+			g_autofree gchar *checksum_display =
+			    fwupd_checksum_format_for_display(checksum);
+			fwupd_codec_string_append(str,
+						  idt,
+						  FWUPD_RESULT_KEY_CHECKSUM,
+						  checksum_display);
+		}
 	}
-	for (guint i = 0; i < priv->tags->len; i++) {
-		const gchar *tag = g_ptr_array_index(priv->tags, i);
-		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_TAGS, tag);
+	if (priv->tags != NULL) {
+		for (guint i = 0; i < priv->tags->len; i++) {
+			const gchar *tag = g_ptr_array_index(priv->tags, i);
+			fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_TAGS, tag);
+		}
 	}
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_LICENSE, priv->license);
 	fwupd_codec_string_append_size(str, idt, FWUPD_RESULT_KEY_SIZE, priv->size);
 	fwupd_codec_string_append_time(str, idt, FWUPD_RESULT_KEY_CREATED, priv->created);
-	for (guint i = 0; i < priv->locations->len; i++) {
-		const gchar *location = g_ptr_array_index(priv->locations, i);
-		fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_URI, location);
+	if (priv->locations != NULL) {
+		for (guint i = 0; i < priv->locations->len; i++) {
+			const gchar *location = g_ptr_array_index(priv->locations, i);
+			fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_URI, location);
+		}
 	}
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
@@ -2108,15 +2193,19 @@ fwupd_release_add_string(FwupdCodec *codec, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 
 	/* metadata */
-	keys = g_hash_table_get_keys(priv->metadata);
-	for (GList *l = keys; l != NULL; l = l->next) {
-		const gchar *key = l->data;
-		const gchar *value = g_hash_table_lookup(priv->metadata, key);
-		fwupd_codec_string_append(str, idt, key, value);
+	if (priv->metadata != NULL) {
+		g_autoptr(GList) keys = g_hash_table_get_keys(priv->metadata);
+		for (GList *l = keys; l != NULL; l = l->next) {
+			const gchar *key = l->data;
+			const gchar *value = g_hash_table_lookup(priv->metadata, key);
+			fwupd_codec_string_append(str, idt, key, value);
+		}
 	}
-	for (guint i = 0; i < priv->reports->len; i++) {
-		FwupdReport *report = g_ptr_array_index(priv->reports, i);
-		fwupd_codec_add_string(FWUPD_CODEC(report), idt, str);
+	if (priv->reports != NULL) {
+		for (guint i = 0; i < priv->reports->len; i++) {
+			FwupdReport *report = g_ptr_array_index(priv->reports, i);
+			fwupd_codec_add_string(FWUPD_CODEC(report), idt, str);
+		}
 	}
 }
 
@@ -2178,14 +2267,6 @@ fwupd_release_class_init(FwupdReleaseClass *klass)
 static void
 fwupd_release_init(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE(self);
-	priv->categories = g_ptr_array_new_with_free_func(g_free);
-	priv->issues = g_ptr_array_new_with_free_func(g_free);
-	priv->checksums = g_ptr_array_new_with_free_func(g_free);
-	priv->tags = g_ptr_array_new_with_free_func(g_free);
-	priv->locations = g_ptr_array_new_with_free_func(g_free);
-	priv->reports = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	priv->metadata = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
 
 static void
@@ -2206,7 +2287,8 @@ fwupd_release_finalize(GObject *object)
 	g_free(priv->name_variant_suffix);
 	g_free(priv->summary);
 	g_free(priv->branch);
-	g_ptr_array_unref(priv->locations);
+	if (priv->locations != NULL)
+		g_ptr_array_unref(priv->locations);
 	g_free(priv->homepage);
 	g_free(priv->details_url);
 	g_free(priv->source_url);
@@ -2215,12 +2297,18 @@ fwupd_release_finalize(GObject *object)
 	g_free(priv->remote_id);
 	g_free(priv->update_message);
 	g_free(priv->update_image);
-	g_ptr_array_unref(priv->categories);
-	g_ptr_array_unref(priv->issues);
-	g_ptr_array_unref(priv->checksums);
-	g_ptr_array_unref(priv->tags);
-	g_ptr_array_unref(priv->reports);
-	g_hash_table_unref(priv->metadata);
+	if (priv->categories != NULL)
+		g_ptr_array_unref(priv->categories);
+	if (priv->issues != NULL)
+		g_ptr_array_unref(priv->issues);
+	if (priv->checksums != NULL)
+		g_ptr_array_unref(priv->checksums);
+	if (priv->tags != NULL)
+		g_ptr_array_unref(priv->tags);
+	if (priv->reports != NULL)
+		g_ptr_array_unref(priv->reports);
+	if (priv->metadata != NULL)
+		g_hash_table_unref(priv->metadata);
 
 	G_OBJECT_CLASS(fwupd_release_parent_class)->finalize(object);
 }
