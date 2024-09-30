@@ -86,6 +86,8 @@ FuDeviceEvent *
 fu_device_save_event(FuDevice *self, const gchar *id);
 FuDeviceEvent *
 fu_device_load_event(FuDevice *self, const gchar *id, GError **error);
+void
+fu_device_set_target(FuDevice *self, FuDevice *target);
 
 FuBackend *
 fu_device_get_backend(FuDevice *self);

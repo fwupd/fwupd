@@ -1893,6 +1893,32 @@ fu_device_func(void)
 }
 
 static void
+fu_device_event_donor_func(void)
+{
+	g_autoptr(FuDevice) device1 = fu_device_new(NULL);
+	g_autoptr(FuDevice) device2 = fu_device_new(NULL);
+	g_autoptr(FuDeviceEvent) event1 = fu_device_event_new("foo:bar:baz");
+	g_autoptr(FuDeviceEvent) event2 = fu_device_event_new("aaa:bbb:ccc");
+	g_autoptr(FuDeviceEvent) event3 = fu_device_event_new("foo:111:222");
+	GPtrArray *events;
+
+	fu_device_add_event(device1, event1);
+	fu_device_add_event(device2, event2);
+	fu_device_set_target(device1, device2);
+
+	/* did we incorporate */
+	events = fu_device_get_events(device2);
+	g_assert_nonnull(events);
+	g_assert_cmpint(events->len, ==, 2);
+
+	/* make sure it is redirected */
+	fu_device_add_event(device1, event3);
+	events = fu_device_get_events(device2);
+	g_assert_nonnull(events);
+	g_assert_cmpint(events->len, ==, 3);
+}
+
+static void
 fu_device_event_func(void)
 {
 	gboolean ret;
@@ -6077,6 +6103,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func("/fwupd/device", fu_device_func);
 	g_test_add_func("/fwupd/device{event}", fu_device_event_func);
+	g_test_add_func("/fwupd/device{event-donor}", fu_device_event_donor_func);
 	g_test_add_func("/fwupd/device{vfuncs}", fu_device_vfuncs_func);
 	g_test_add_func("/fwupd/device{instance-ids}", fu_device_instance_ids_func);
 	g_test_add_func("/fwupd/device{composite-id}", fu_device_composite_id_func);

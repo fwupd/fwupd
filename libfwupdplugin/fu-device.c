@@ -54,6 +54,7 @@ typedef struct {
 	gchar *update_image;
 	gchar *proxy_guid;
 	FuDevice *proxy;    /* noref */
+	FuDevice *target;   /* ref */
 	FuBackend *backend; /* noref */
 	FuContext *ctx;
 	gint64 created_usec;
@@ -1148,6 +1149,7 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 	/* sometimes strong, sometimes weak */
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY)) {
 		g_set_object(&priv->proxy, proxy);
+		fu_device_set_target(self, proxy);
 	} else {
 		if (priv->proxy != NULL)
 			g_object_remove_weak_pointer(G_OBJECT(priv->proxy),
@@ -3520,6 +3522,7 @@ FuDevice *
 fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsystem, GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuDevice) parent = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
@@ -3531,7 +3534,12 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 				    "no backend set for device");
 		return NULL;
 	}
-	return fu_backend_get_device_parent(priv->backend, self, subsystem, error);
+	parent = fu_backend_get_device_parent(priv->backend, self, subsystem, error);
+	if (parent == NULL)
+		return NULL;
+	if (parent != self)
+		fu_device_set_target(parent, self);
+	return g_steal_pointer(&parent);
 }
 
 /**
@@ -5869,6 +5877,14 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 			}
 		}
 	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_EVENTS) {
+		if (priv_donor->events != NULL && donor != priv->proxy) {
+			for (guint i = 0; i < priv_donor->events->len; i++) {
+				FuDeviceEvent *event = g_ptr_array_index(priv_donor->events, i);
+				fu_device_add_event(self, event);
+			}
+		}
+	}
 	if (flag & FU_DEVICE_INCORPORATE_FLAG_UPDATE_ERROR) {
 		if (fu_device_get_update_error(self) == NULL &&
 		    fu_device_get_update_error(donor) != NULL) {
@@ -5978,12 +5994,6 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 			while (g_hash_table_iter_next(&iter, &key, &value)) {
 				if (fu_device_get_metadata(self, key) == NULL)
 					fu_device_set_metadata(self, key, value);
-			}
-		}
-		if (priv_donor->events != NULL && donor != priv->proxy) {
-			for (guint i = 0; i < priv_donor->events->len; i++) {
-				FuDeviceEvent *event = g_ptr_array_index(priv_donor->events, i);
-				fu_device_add_event(self, event);
 			}
 		}
 
@@ -6879,8 +6889,8 @@ fu_device_add_event(FuDevice *self, FuDeviceEvent *event)
 	g_return_if_fail(FU_IS_DEVICE_EVENT(event));
 
 	/* redirect */
-	if (priv->proxy != NULL) {
-		fu_device_add_event(priv->proxy, event);
+	if (priv->target != NULL) {
+		fu_device_add_event(priv->target, event);
 		return;
 	}
 
@@ -6909,8 +6919,8 @@ fu_device_save_event(FuDevice *self, const gchar *id)
 	g_return_val_if_fail(id != NULL, NULL);
 
 	/* redirect */
-	if (priv->proxy != NULL)
-		return fu_device_save_event(priv->proxy, id);
+	if (priv->target != NULL)
+		return fu_device_save_event(priv->target, id);
 
 	/* success */
 	event = fu_device_event_new(id);
@@ -6941,8 +6951,8 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* redirect */
-	if (priv->proxy != NULL)
-		return fu_device_load_event(priv->proxy, id, error);
+	if (priv->target != NULL)
+		return fu_device_load_event(priv->target, id, error);
 
 	/* sanity check */
 	if (priv->events == NULL) {
@@ -7002,8 +7012,8 @@ fu_device_get_events(FuDevice *self)
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 
 	/* redirect */
-	if (priv->proxy != NULL)
-		return fu_device_get_events(priv->proxy);
+	if (priv->target != NULL)
+		return fu_device_get_events(priv->target);
 
 	fu_device_ensure_events(self);
 	return priv->events;
@@ -7026,8 +7036,8 @@ fu_device_clear_events(FuDevice *self)
 	g_return_if_fail(FU_IS_DEVICE(self));
 
 	/* redirect */
-	if (priv->proxy != NULL) {
-		fu_device_clear_events(priv->proxy);
+	if (priv->target != NULL) {
+		fu_device_clear_events(priv->target);
 		return;
 	}
 
@@ -7037,12 +7047,36 @@ fu_device_clear_events(FuDevice *self)
 	priv->event_idx = 0;
 }
 
+/**
+ * fu_device_set_target:
+ * @self: a #FuDevice
+ * @target: a #FuDevice
+ *
+ * Sets the target device where #FuDeviceEvent objects added to @self should actually be added.
+ *
+ * Any existing events added to @self are added immediately to @target.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_set_target(FuDevice *self, FuDevice *target)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(FU_IS_DEVICE(target));
+
+	fu_device_incorporate(target, self, FU_DEVICE_INCORPORATE_FLAG_EVENTS);
+	g_set_object(&priv->target, target);
+}
+
 static void
 fu_device_dispose(GObject *object)
 {
 	FuDevice *self = FU_DEVICE(object);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_clear_object(&priv->ctx);
+	g_clear_object(&priv->target);
 	G_OBJECT_CLASS(fu_device_parent_class)->dispose(object);
 }
 

@@ -239,13 +239,8 @@ fu_backend_create_device_for_donor(FuBackend *self, FuDevice *donor, GError **er
 	g_return_val_if_fail(FU_IS_DEVICE(donor), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	if (klass->create_device_for_donor == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "not implemented");
-		return NULL;
-	}
+	if (klass->create_device_for_donor == NULL)
+		return g_object_ref(donor);
 	return klass->create_device_for_donor(self, donor, error);
 }
 
