@@ -219,6 +219,37 @@ fu_backend_create_device(FuBackend *self, const gchar *backend_id, GError **erro
 }
 
 /**
+ * fu_backend_create_device_for_donor:
+ * @self: a #FuBackend
+ * @donor: a donor #FuDevice
+ * @error: (nullable): optional return location for an error
+ *
+ * Asks the backend to create a device (of the correct type) for a given donor device.
+ *
+ * Returns: (transfer full): a #FuDevice or %NULL if not found or unimplemented
+ *
+ * Since: 2.0.0
+ **/
+FuDevice *
+fu_backend_create_device_for_donor(FuBackend *self, FuDevice *donor, GError **error)
+{
+	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
+
+	g_return_val_if_fail(FU_IS_BACKEND(self), NULL);
+	g_return_val_if_fail(FU_IS_DEVICE(donor), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	if (klass->create_device_for_donor == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "not implemented");
+		return NULL;
+	}
+	return klass->create_device_for_donor(self, donor, error);
+}
+
+/**
  * fu_backend_invalidate:
  * @self: a #FuBackend
  *
@@ -421,7 +452,14 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 		fu_backend_device_removed(self, device);
 	}
 	for (guint i = 0; i < devices_added->len; i++) {
-		FuDevice *device = g_ptr_array_index(devices_added, i);
+		FuDevice *donor = g_ptr_array_index(devices_added, i);
+		g_autoptr(FuDevice) device = NULL;
+
+		/* convert from FuUdevDevice to the superclass, e.g. FuHidrawDevice */
+		fu_device_add_flag(donor, FWUPD_DEVICE_FLAG_EMULATED);
+		device = fu_backend_create_device_for_donor(self, donor, error);
+		if (device == NULL)
+			return FALSE;
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
 		fu_backend_device_added(self, device);
 	}

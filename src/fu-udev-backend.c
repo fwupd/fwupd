@@ -128,12 +128,11 @@ fu_udev_backend_create_ddc_proxy(FuUdevBackend *self, FuUdevDevice *udev_device)
 	fu_device_set_proxy(FU_DEVICE(udev_device), FU_DEVICE(proxy));
 }
 
-static FuUdevDevice *
-fu_udev_backend_create_device_for_donor(FuUdevBackend *self,
-					FuUdevDevice *device_donor,
-					GError **error)
+static FuDevice *
+fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GError **error)
 {
-	g_autoptr(FuUdevDevice) device = NULL;
+	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
+	g_autoptr(FuDevice) device = NULL;
 	GType gtype = FU_TYPE_UDEV_DEVICE;
 	struct {
 		const gchar *subsystem;
@@ -154,9 +153,9 @@ fu_udev_backend_create_device_for_donor(FuUdevBackend *self,
 	};
 
 	/* ignore zram and loop block devices -- of which there are dozens on systems with snap */
-	if (g_strcmp0(fu_udev_device_get_subsystem(device_donor), "block") == 0) {
+	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(donor)), "block") == 0) {
 		g_autofree gchar *basename =
-		    g_path_get_basename(fu_udev_device_get_sysfs_path(device_donor));
+		    g_path_get_basename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(donor)));
 		if (g_str_has_prefix(basename, "zram") || g_str_has_prefix(basename, "loop")) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -168,37 +167,37 @@ fu_udev_backend_create_device_for_donor(FuUdevBackend *self,
 	}
 
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
-		if (g_strcmp0(fu_udev_device_get_subsystem(device_donor), map[i].subsystem) == 0 &&
+		if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(donor)),
+			      map[i].subsystem) == 0 &&
 		    (map[i].devtype == NULL ||
-		     g_strcmp0(fu_udev_device_get_devtype(device_donor), map[i].devtype) == 0)) {
+		     g_strcmp0(fu_udev_device_get_devtype(FU_UDEV_DEVICE(donor)), map[i].devtype) ==
+			 0)) {
 			gtype = map[i].gtype;
 			break;
 		}
 	}
 	if (gtype == FU_TYPE_UDEV_DEVICE) {
-		device = g_object_ref(device_donor);
+		device = g_object_ref(donor);
 	} else {
 		device = g_object_new(gtype, "backend", FU_BACKEND(self), NULL);
-		fu_device_incorporate(FU_DEVICE(device),
-				      FU_DEVICE(device_donor),
-				      FU_DEVICE_INCORPORATE_FLAG_ALL);
-		if (!fu_device_probe(FU_DEVICE(device), error)) {
+		fu_device_incorporate(device, donor, FU_DEVICE_INCORPORATE_FLAG_ALL);
+		if (!fu_device_probe(device, error)) {
 			g_prefix_error(error, "failed to probe: ");
 			return NULL;
 		}
 	}
 
 	/* these are used without a subclass */
-	if (g_strcmp0(fu_udev_device_get_subsystem(device), "msr") == 0)
-		fu_udev_device_add_open_flag(device, FU_IO_CHANNEL_OPEN_FLAG_READ);
+	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "msr") == 0)
+		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(device), FU_IO_CHANNEL_OPEN_FLAG_READ);
 
 	/* the DRM device has a i2c device that is used for communicating with the scaler */
 	if (gtype == FU_TYPE_DRM_DEVICE)
-		fu_udev_backend_create_ddc_proxy(self, device);
+		fu_udev_backend_create_ddc_proxy(self, FU_UDEV_DEVICE(device));
 
 	/* set in fu-self-test */
 	if (g_getenv("FWUPD_SELF_TEST") != NULL)
-		fu_device_add_private_flag(FU_DEVICE(device), FU_DEVICE_PRIVATE_FLAG_IS_FAKE);
+		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_FAKE);
 	return g_steal_pointer(&device);
 }
 
@@ -213,7 +212,9 @@ fu_udev_backend_create_device(FuUdevBackend *self, const gchar *fn, GError **err
 		g_prefix_error(error, "failed to probe donor: ");
 		return NULL;
 	}
-	return fu_udev_backend_create_device_for_donor(self, device_donor, error);
+	return FU_UDEV_DEVICE(fu_udev_backend_create_device_for_donor(FU_BACKEND(self),
+								      FU_DEVICE(device_donor),
+								      error));
 }
 
 static void
@@ -511,7 +512,10 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 	}
 
 	/* now create the actual device from the donor */
-	device_actual = fu_udev_backend_create_device_for_donor(self, device_donor, error);
+	device_actual =
+	    FU_UDEV_DEVICE(fu_udev_backend_create_device_for_donor(FU_BACKEND(self),
+								   FU_DEVICE(device_donor),
+								   error));
 	if (device_actual == NULL)
 		return FALSE;
 
@@ -747,6 +751,7 @@ fu_udev_backend_class_init(FuUdevBackendClass *klass)
 	backend_class->to_string = fu_udev_backend_to_string;
 	backend_class->get_device_parent = fu_udev_backend_get_device_parent;
 	backend_class->create_device = fu_udev_backend_create_device_impl;
+	backend_class->create_device_for_donor = fu_udev_backend_create_device_for_donor;
 }
 
 FuBackend *
