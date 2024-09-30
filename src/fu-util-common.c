@@ -1411,19 +1411,6 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 					  _("Update State"),
 					  fu_util_update_state_to_string(state));
 
-		if (state == FWUPD_UPDATE_STATE_SUCCESS) {
-			tmp = fwupd_device_get_update_message(dev);
-			if (tmp != NULL) {
-				g_autofree gchar *color =
-				    fu_console_color_format(tmp, FU_CONSOLE_COLOR_BLUE);
-				fwupd_codec_string_append(
-				    str,
-				    idt + 1,
-				    /* TRANSLATORS: helpful messages from last update */
-				    _("Update Message"),
-				    color);
-			}
-		}
 	}
 
 	/* battery, but only if we're not about to show the same info as an inhibit */

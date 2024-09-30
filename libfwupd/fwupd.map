@@ -263,8 +263,6 @@ LIBFWUPD_1.2.2 {
 LIBFWUPD_1.2.4 {
   global:
     fwupd_client_get_tainted;
-    fwupd_device_get_update_message;
-    fwupd_device_set_update_message;
     fwupd_release_get_details_url;
     fwupd_release_get_source_url;
     fwupd_release_get_update_message;
@@ -403,8 +401,6 @@ LIBFWUPD_1.4.5 {
     fwupd_client_set_user_agent_for_package;
     fwupd_client_update_metadata_bytes;
     fwupd_client_upload_bytes;
-    fwupd_device_get_update_image;
-    fwupd_device_set_update_image;
     fwupd_feature_flag_from_string;
     fwupd_feature_flag_to_string;
     fwupd_release_get_update_image;

@@ -228,6 +228,22 @@ typedef enum {
 	 * Since: 2.0.0
 	 **/
 	FU_DEVICE_INCORPORATE_FLAG_PID = 1ull << 13,
+	/**
+	 * FU_DEVICE_INCORPORATE_FLAG_UPDATE_MESSAGE:
+	 *
+	 * Set the update message.
+	 *
+	 * Since: 2.0.0
+	 **/
+	FU_DEVICE_INCORPORATE_FLAG_UPDATE_MESSAGE = 1ull << 14,
+	/**
+	 * FU_DEVICE_INCORPORATE_FLAG_UPDATE_IMAGE:
+	 *
+	 * Set the update image.
+	 *
+	 * Since: 2.0.0
+	 **/
+	FU_DEVICE_INCORPORATE_FLAG_UPDATE_IMAGE = 1ull << 15,
 	/*< private >*/
 	FU_DEVICE_INCORPORATE_FLAG_ALL = G_MAXUINT64,
 } FuDeviceIncorporateFlags;
@@ -287,8 +303,6 @@ fu_device_new(FuContext *ctx);
 #define fu_device_set_serial(d, v)	   fwupd_device_set_serial(FWUPD_DEVICE(d), v)
 #define fu_device_set_summary(d, v)	   fwupd_device_set_summary(FWUPD_DEVICE(d), v)
 #define fu_device_set_branch(d, v)	   fwupd_device_set_branch(FWUPD_DEVICE(d), v)
-#define fu_device_set_update_message(d, v) fwupd_device_set_update_message(FWUPD_DEVICE(d), v)
-#define fu_device_set_update_image(d, v)   fwupd_device_set_update_image(FWUPD_DEVICE(d), v)
 #define fu_device_set_update_error(d, v)   fwupd_device_set_update_error(FWUPD_DEVICE(d), v)
 #define fu_device_add_vendor_id(d, v)	   fwupd_device_add_vendor_id(FWUPD_DEVICE(d), v)
 #define fu_device_add_protocol(d, v)	   fwupd_device_add_protocol(FWUPD_DEVICE(d), v)
@@ -316,8 +330,6 @@ fu_device_new(FuContext *ctx);
 #define fu_device_get_plugin(d)		     fwupd_device_get_plugin(FWUPD_DEVICE(d))
 #define fu_device_get_update_error(d)	     fwupd_device_get_update_error(FWUPD_DEVICE(d))
 #define fu_device_get_update_state(d)	     fwupd_device_get_update_state(FWUPD_DEVICE(d))
-#define fu_device_get_update_message(d)	     fwupd_device_get_update_message(FWUPD_DEVICE(d))
-#define fu_device_get_update_image(d)	     fwupd_device_get_update_image(FWUPD_DEVICE(d))
 #define fu_device_get_vendor(d)		     fwupd_device_get_vendor(FWUPD_DEVICE(d))
 #define fu_device_get_version(d)	     fwupd_device_get_version(FWUPD_DEVICE(d))
 #define fu_device_get_version_lowest(d)	     fwupd_device_get_version_lowest(FWUPD_DEVICE(d))
@@ -905,6 +917,14 @@ guint
 fu_device_get_battery_threshold(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_set_battery_threshold(FuDevice *self, guint battery_threshold) G_GNUC_NON_NULL(1);
+const gchar *
+fu_device_get_update_message(FuDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_device_set_update_message(FuDevice *self, const gchar *update_message) G_GNUC_NON_NULL(1);
+const gchar *
+fu_device_get_update_image(FuDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_device_set_update_image(FuDevice *self, const gchar *update_image) G_GNUC_NON_NULL(1);
 
 gint64
 fu_device_get_created_usec(FuDevice *self) G_GNUC_NON_NULL(1);
