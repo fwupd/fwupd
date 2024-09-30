@@ -12,6 +12,7 @@
 * Convert `fwupd_client_emulation_load()` to take a readable file rather than taking bytes
 * Convert `fwupd_client_emulation_save()` to take a writable file rather than returning bytes
 * Drop use of FWUPD_DEVICE_FLAG_ONLY_OFFLINE
+* Drop use of `fwupd_device_get_update_message()` and `fwupd_device_get_update_image()`
 
 ## Migration from Version 1.x.x
 

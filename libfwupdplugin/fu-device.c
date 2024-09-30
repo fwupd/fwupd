@@ -13,6 +13,7 @@
 
 #include "fwupd-common.h"
 #include "fwupd-device-private.h"
+#include "fwupd-enums-private.h"
 
 #include "fu-bytes.h"
 #include "fu-common.h"
@@ -49,6 +50,8 @@ typedef struct {
 	gchar *logical_id;
 	gchar *backend_id;
 	gchar *update_request_id;
+	gchar *update_message;
+	gchar *update_image;
 	gchar *proxy_guid;
 	FuDevice *proxy;    /* noref */
 	FuBackend *backend; /* noref */
@@ -113,6 +116,8 @@ enum {
 	PROP_LOGICAL_ID,
 	PROP_BACKEND_ID,
 	PROP_EQUIVALENT_ID,
+	PROP_UPDATE_MESSAGE,
+	PROP_UPDATE_IMAGE,
 	PROP_CONTEXT,
 	PROP_BACKEND,
 	PROP_PROXY,
@@ -145,6 +150,12 @@ fu_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec
 		break;
 	case PROP_EQUIVALENT_ID:
 		g_value_set_string(value, priv->equivalent_id);
+		break;
+	case PROP_UPDATE_MESSAGE:
+		g_value_set_string(value, priv->update_message);
+		break;
+	case PROP_UPDATE_IMAGE:
+		g_value_set_string(value, priv->update_image);
 		break;
 	case PROP_CONTEXT:
 		g_value_set_object(value, priv->ctx);
@@ -183,6 +194,12 @@ fu_device_set_property(GObject *object, guint prop_id, const GValue *value, GPar
 		break;
 	case PROP_EQUIVALENT_ID:
 		fu_device_set_equivalent_id(self, g_value_get_string(value));
+		break;
+	case PROP_UPDATE_MESSAGE:
+		fu_device_set_update_message(self, g_value_get_string(value));
+		break;
+	case PROP_UPDATE_IMAGE:
+		fu_device_set_update_image(self, g_value_get_string(value));
 		break;
 	case PROP_CONTEXT:
 		fu_device_set_context(self, g_value_get_object(value));
@@ -3582,6 +3599,90 @@ fu_device_set_update_request_id(FuDevice *self, const gchar *update_request_id)
 }
 
 /**
+ * fu_device_get_update_message:
+ * @self: a #FuDevice
+ *
+ * Gets the update message string.
+ *
+ * Returns: the update message string, or %NULL if unset
+ *
+ * Since: 2.0.0
+ **/
+const gchar *
+fu_device_get_update_message(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	return priv->update_message;
+}
+
+/**
+ * fu_device_set_update_message:
+ * @self: a #FuDevice
+ * @update_message: (nullable): the update message string
+ *
+ * Sets the update message string.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_set_update_message(FuDevice *self, const gchar *update_message)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->update_message, update_message) == 0)
+		return;
+
+	g_free(priv->update_message);
+	priv->update_message = g_strdup(update_message);
+	g_object_notify(G_OBJECT(self), "update-message");
+}
+
+/**
+ * fu_device_get_update_image:
+ * @self: a #FuDevice
+ *
+ * Gets the update image URL.
+ *
+ * Returns: the update image URL, or %NULL if unset
+ *
+ * Since: 2.0.0
+ **/
+const gchar *
+fu_device_get_update_image(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	return priv->update_image;
+}
+
+/**
+ * fu_device_set_update_image:
+ * @self: a #FuDevice
+ * @update_image: (nullable): the update image URL
+ *
+ * Sets the update image URL.
+ *
+ * Since: 2.0.0
+ **/
+void
+fu_device_set_update_image(FuDevice *self, const gchar *update_image)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->update_image, update_image) == 0)
+		return;
+
+	g_free(priv->update_image);
+	priv->update_image = g_strdup(update_image);
+	g_object_notify(G_OBJECT(self), "update-image");
+}
+
+/**
  * fu_device_get_proxy_guid:
  * @self: a #FuDevice
  *
@@ -4279,6 +4380,8 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "Vid", priv->vid);
 	fwupd_codec_string_append_hex(str, idt, "Pid", priv->pid);
 	fwupd_codec_string_append(str, idt, "UpdateRequestId", priv->update_request_id);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 	fwupd_codec_string_append(str, idt, "ProxyGuid", priv->proxy_guid);
 	fwupd_codec_string_append_int(str, idt, "RemoveDelay", priv->remove_delay);
 	fwupd_codec_string_append_int(str, idt, "AcquiesceDelay", priv->acquiesce_delay);
@@ -5803,6 +5906,15 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 			}
 		}
 	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_UPDATE_MESSAGE) {
+		if (priv->update_message == NULL && priv_donor->update_message != NULL)
+			fu_device_set_update_message(self, priv_donor->update_message);
+	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_UPDATE_IMAGE) {
+		if (priv->update_image == NULL && priv_donor->update_image != NULL)
+			fu_device_set_update_image(self, priv_donor->update_image);
+	}
+
 	/* everything else */
 	if (flag == FU_DEVICE_INCORPORATE_FLAG_ALL) {
 		GPtrArray *instance_ids = fu_device_get_instance_ids(donor);
@@ -5974,10 +6086,10 @@ fu_device_incorporate_from_component(FuDevice *self, XbNode *component)
 	g_return_if_fail(XB_IS_NODE(component));
 	tmp = xb_node_query_text(component, "custom/value[@key='LVFS::UpdateMessage']", NULL);
 	if (tmp != NULL)
-		fwupd_device_set_update_message(FWUPD_DEVICE(self), tmp);
+		fu_device_set_update_message(self, tmp);
 	tmp = xb_node_query_text(component, "custom/value[@key='LVFS::UpdateImage']", NULL);
 	if (tmp != NULL)
-		fwupd_device_set_update_image(FWUPD_DEVICE(self), tmp);
+		fu_device_set_update_image(self, tmp);
 }
 
 static void
@@ -7062,6 +7174,33 @@ fu_device_class_init(FuDeviceClass *klass)
 				    NULL,
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_EQUIVALENT_ID, pspec);
+	/**
+	 * FuDevice:update-message:
+	 *
+	 * The device update message.
+	 *
+	 * Since: 2.0.0
+	 */
+	pspec = g_param_spec_string("update-message",
+				    NULL,
+				    NULL,
+				    NULL,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_UPDATE_MESSAGE, pspec);
+
+	/**
+	 * FuDevice:update-image:
+	 *
+	 * The update image for the device.
+	 *
+	 * Since: 2.0.0
+	 */
+	pspec = g_param_spec_string("update-image",
+				    NULL,
+				    NULL,
+				    NULL,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_UPDATE_IMAGE, pspec);
 
 	/**
 	 * FuDevice:context:
@@ -7203,6 +7342,8 @@ fu_device_finalize(GObject *object)
 	g_free(priv->logical_id);
 	g_free(priv->backend_id);
 	g_free(priv->update_request_id);
+	g_free(priv->update_message);
+	g_free(priv->update_image);
 	g_free(priv->proxy_guid);
 	g_free(priv->custom_flags);
 

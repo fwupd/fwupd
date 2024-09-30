@@ -233,14 +233,6 @@ const gchar *
 fwupd_device_get_update_error(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void
 fwupd_device_set_update_error(FwupdDevice *self, const gchar *update_error) G_GNUC_NON_NULL(1);
-const gchar *
-fwupd_device_get_update_message(FwupdDevice *self) G_GNUC_NON_NULL(1);
-void
-fwupd_device_set_update_message(FwupdDevice *self, const gchar *update_message) G_GNUC_NON_NULL(1);
-const gchar *
-fwupd_device_get_update_image(FwupdDevice *self) G_GNUC_NON_NULL(1);
-void
-fwupd_device_set_update_image(FwupdDevice *self, const gchar *update_image) G_GNUC_NON_NULL(1);
 FwupdStatus
 fwupd_device_get_status(FwupdDevice *self) G_GNUC_NON_NULL(1);
 void

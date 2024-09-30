@@ -5203,14 +5203,12 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 
 		/* add update message if exists but device doesn't already have one */
 		update_message = fwupd_release_get_update_message(FWUPD_RELEASE(release));
-		if (fwupd_device_get_update_message(FWUPD_DEVICE(device)) == NULL &&
-		    update_message != NULL) {
+		if (fu_device_get_update_message(device) == NULL && update_message != NULL) {
 			fu_device_set_update_message(device, update_message);
 		}
 		update_image = fwupd_release_get_update_image(FWUPD_RELEASE(release));
-		if (fwupd_device_get_update_image(FWUPD_DEVICE(device)) == NULL &&
-		    update_image != NULL) {
-			fwupd_device_set_update_image(FWUPD_DEVICE(device), update_image);
+		if (fu_device_get_update_image(device) == NULL && update_image != NULL) {
+			fu_device_set_update_image(device, update_image);
 		}
 		update_request_id = fu_release_get_update_request_id(release);
 		if (fu_device_get_update_request_id(device) == NULL && update_request_id != NULL) {

@@ -64,8 +64,6 @@ typedef struct {
 	guint32 install_duration;
 	FwupdUpdateState update_state;
 	gchar *update_error;
-	gchar *update_message;
-	gchar *update_image;
 	FwupdStatus status;
 	guint percentage;
 	GPtrArray *releases;
@@ -83,9 +81,7 @@ enum {
 	PROP_PERCENTAGE,
 	PROP_PARENT,
 	PROP_UPDATE_STATE,
-	PROP_UPDATE_MESSAGE,
 	PROP_UPDATE_ERROR,
-	PROP_UPDATE_IMAGE,
 	PROP_BATTERY_LEVEL,
 	PROP_BATTERY_THRESHOLD,
 	PROP_PROBLEMS,
@@ -1934,10 +1930,6 @@ fwupd_device_incorporate(FwupdDevice *self, FwupdDevice *donor)
 	}
 	if (priv->update_error == NULL)
 		fwupd_device_set_update_error(self, priv_donor->update_error);
-	if (priv->update_message == NULL)
-		fwupd_device_set_update_message(self, priv_donor->update_message);
-	if (priv->update_image == NULL)
-		fwupd_device_set_update_image(self, priv_donor->update_image);
 	if (priv->version == NULL)
 		fwupd_device_set_version(self, priv_donor->version);
 	if (priv->version_lowest == NULL)
@@ -2193,18 +2185,6 @@ fwupd_device_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodec
 				      FWUPD_RESULT_KEY_UPDATE_ERROR,
 				      g_variant_new_string(priv->update_error));
 	}
-	if (priv->update_message != NULL) {
-		g_variant_builder_add(builder,
-				      "{sv}",
-				      FWUPD_RESULT_KEY_UPDATE_MESSAGE,
-				      g_variant_new_string(priv->update_message));
-	}
-	if (priv->update_image != NULL) {
-		g_variant_builder_add(builder,
-				      "{sv}",
-				      FWUPD_RESULT_KEY_UPDATE_IMAGE,
-				      g_variant_new_string(priv->update_image));
-	}
 	if (priv->update_state != FWUPD_UPDATE_STATE_UNKNOWN) {
 		g_variant_builder_add(builder,
 				      "{sv}",
@@ -2414,14 +2394,6 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_UPDATE_ERROR) == 0) {
 		fwupd_device_set_update_error(self, g_variant_get_string(value, NULL));
-		return;
-	}
-	if (g_strcmp0(key, FWUPD_RESULT_KEY_UPDATE_MESSAGE) == 0) {
-		fwupd_device_set_update_message(self, g_variant_get_string(value, NULL));
-		return;
-	}
-	if (g_strcmp0(key, FWUPD_RESULT_KEY_UPDATE_IMAGE) == 0) {
-		fwupd_device_set_update_image(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_UPDATE_STATE) == 0) {
@@ -2652,90 +2624,6 @@ fwupd_device_set_version_build_date(FwupdDevice *self, guint64 version_build_dat
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_DEVICE(self));
 	priv->version_build_date = version_build_date;
-}
-
-/**
- * fwupd_device_get_update_message:
- * @self: a #FwupdDevice
- *
- * Gets the update message string.
- *
- * Returns: the update message string, or %NULL if unset
- *
- * Since: 1.2.4
- **/
-const gchar *
-fwupd_device_get_update_message(FwupdDevice *self)
-{
-	FwupdDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_DEVICE(self), NULL);
-	return priv->update_message;
-}
-
-/**
- * fwupd_device_set_update_message:
- * @self: a #FwupdDevice
- * @update_message: (nullable): the update message string
- *
- * Sets the update message string.
- *
- * Since: 1.2.4
- **/
-void
-fwupd_device_set_update_message(FwupdDevice *self, const gchar *update_message)
-{
-	FwupdDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FWUPD_IS_DEVICE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->update_message, update_message) == 0)
-		return;
-
-	g_free(priv->update_message);
-	priv->update_message = g_strdup(update_message);
-	g_object_notify(G_OBJECT(self), "update-message");
-}
-
-/**
- * fwupd_device_get_update_image:
- * @self: a #FwupdDevice
- *
- * Gets the update image URL.
- *
- * Returns: the update image URL, or %NULL if unset
- *
- * Since: 1.4.5
- **/
-const gchar *
-fwupd_device_get_update_image(FwupdDevice *self)
-{
-	FwupdDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_DEVICE(self), NULL);
-	return priv->update_image;
-}
-
-/**
- * fwupd_device_set_update_image:
- * @self: a #FwupdDevice
- * @update_image: (nullable): the update image URL
- *
- * Sets the update image URL.
- *
- * Since: 1.4.5
- **/
-void
-fwupd_device_set_update_image(FwupdDevice *self, const gchar *update_image)
-{
-	FwupdDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FWUPD_IS_DEVICE(self));
-
-	/* not changed */
-	if (g_strcmp0(priv->update_image, update_image) == 0)
-		return;
-
-	g_free(priv->update_image);
-	priv->update_image = g_strdup(update_image);
-	g_object_notify(G_OBJECT(self), "update-image");
 }
 
 /**
@@ -3098,8 +2986,6 @@ fwupd_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags f
 	if (priv->percentage > 0)
 		fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_PERCENTAGE, priv->percentage);
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
-	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
-	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 	if (priv->releases->len > 0)
 		fwupd_codec_array_to_json(priv->releases, "Releases", builder, flags);
 }
@@ -3307,20 +3193,6 @@ fwupd_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 							       FWUPD_RESULT_KEY_UPDATE_ERROR,
 							       NULL);
 		fwupd_device_set_update_error(self, tmp);
-	}
-	if (json_object_has_member(obj, FWUPD_RESULT_KEY_UPDATE_MESSAGE)) {
-		const gchar *tmp =
-		    json_object_get_string_member_with_default(obj,
-							       FWUPD_RESULT_KEY_UPDATE_MESSAGE,
-							       NULL);
-		fwupd_device_set_update_message(self, tmp);
-	}
-	if (json_object_has_member(obj, FWUPD_RESULT_KEY_UPDATE_IMAGE)) {
-		const gchar *tmp =
-		    json_object_get_string_member_with_default(obj,
-							       FWUPD_RESULT_KEY_UPDATE_IMAGE,
-							       NULL);
-		fwupd_device_set_update_image(self, tmp);
 	}
 	if (json_object_has_member(obj, FWUPD_RESULT_KEY_INSTANCE_IDS)) {
 		JsonArray *array = json_object_get_array_member(obj, FWUPD_RESULT_KEY_INSTANCE_IDS);
@@ -3570,8 +3442,6 @@ fwupd_device_add_string(FwupdCodec *codec, guint idt, GString *str)
 						FWUPD_RESULT_KEY_UPDATE_STATE,
 						priv->update_state);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
-	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
-	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 	for (guint i = 0; i < priv->releases->len; i++) {
 		FwupdRelease *release = g_ptr_array_index(priv->releases, i);
 		fwupd_codec_add_string(FWUPD_CODEC(release), idt, str);
@@ -3602,14 +3472,8 @@ fwupd_device_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_REQUEST_FLAGS:
 		g_value_set_uint64(value, priv->request_flags);
 		break;
-	case PROP_UPDATE_MESSAGE:
-		g_value_set_string(value, priv->update_message);
-		break;
 	case PROP_UPDATE_ERROR:
 		g_value_set_string(value, priv->update_error);
-		break;
-	case PROP_UPDATE_IMAGE:
-		g_value_set_string(value, priv->update_image);
 		break;
 	case PROP_STATUS:
 		g_value_set_uint(value, priv->status);
@@ -3658,14 +3522,8 @@ fwupd_device_set_property(GObject *object, guint prop_id, const GValue *value, G
 	case PROP_REQUEST_FLAGS:
 		fwupd_device_set_request_flags(self, g_value_get_uint64(value));
 		break;
-	case PROP_UPDATE_MESSAGE:
-		fwupd_device_set_update_message(self, g_value_get_string(value));
-		break;
 	case PROP_UPDATE_ERROR:
 		fwupd_device_set_update_error(self, g_value_get_string(value));
-		break;
-	case PROP_UPDATE_IMAGE:
-		fwupd_device_set_update_image(self, g_value_get_string(value));
 		break;
 	case PROP_STATUS:
 		fwupd_device_set_status(self, g_value_get_uint(value));
@@ -3853,20 +3711,6 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 	g_object_class_install_property(object_class, PROP_UPDATE_STATE, pspec);
 
 	/**
-	 * FwupdDevice:update-message:
-	 *
-	 * The device update message.
-	 *
-	 * Since: 1.2.4
-	 */
-	pspec = g_param_spec_string("update-message",
-				    NULL,
-				    NULL,
-				    NULL,
-				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
-	g_object_class_install_property(object_class, PROP_UPDATE_MESSAGE, pspec);
-
-	/**
 	 * FwupdDevice:update-error:
 	 *
 	 * The device update error.
@@ -3879,20 +3723,6 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				    NULL,
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_UPDATE_ERROR, pspec);
-
-	/**
-	 * FwupdDevice:update-image:
-	 *
-	 * The update image for the device.
-	 *
-	 * Since: 1.4.5
-	 */
-	pspec = g_param_spec_string("update-image",
-				    NULL,
-				    NULL,
-				    NULL,
-				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
-	g_object_class_install_property(object_class, PROP_UPDATE_IMAGE, pspec);
 
 	/**
 	 * FwupdDevice:battery-level:
@@ -3967,8 +3797,6 @@ fwupd_device_finalize(GObject *object)
 	g_free(priv->vendor);
 	g_free(priv->plugin);
 	g_free(priv->update_error);
-	g_free(priv->update_message);
-	g_free(priv->update_image);
 	g_free(priv->version);
 	g_free(priv->version_lowest);
 	g_free(priv->version_bootloader);
