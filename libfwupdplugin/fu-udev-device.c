@@ -1757,8 +1757,6 @@ fu_udev_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags
 		fwupd_codec_json_append_int(builder, "Vendor", fu_device_get_vid(device));
 	if (fu_device_get_pid(device) != 0)
 		fwupd_codec_json_append_int(builder, "Model", fu_device_get_pid(device));
-	if (priv->number != 0)
-		fwupd_codec_json_append_int(builder, "Number", priv->number);
 
 #if GLIB_CHECK_VERSION(2, 80, 0)
 	if (fu_device_get_created_usec(device) != 0) {
@@ -1814,9 +1812,6 @@ fu_udev_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	tmp64 = json_object_get_int_member_with_default(json_object, "Model", 0);
 	if (tmp64 != 0)
 		fu_device_set_pid(device, tmp64);
-	tmp64 = json_object_get_int_member_with_default(json_object, "Number", 0);
-	if (tmp64 != 0)
-		fu_udev_device_set_number(self, tmp64);
 
 #if GLIB_CHECK_VERSION(2, 80, 0)
 	tmp = json_object_get_string_member_with_default(json_object, "Created", NULL);
