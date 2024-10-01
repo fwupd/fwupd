@@ -283,7 +283,7 @@ fu_nvme_device_pci_probe(FuNvmeDevice *self, GError **error)
 					      "VEN",
 					      NULL))
 		return FALSE;
-	fu_device_build_instance_id(FU_DEVICE(self), error, "NVME", "VEN", "DEV", "SUBSYS", NULL);
+	fu_device_build_instance_id(FU_DEVICE(self), NULL, "NVME", "VEN", "DEV", "SUBSYS", NULL);
 	fu_pci_device_set_revision(FU_PCI_DEVICE(self),
 				   fu_pci_device_get_revision(FU_PCI_DEVICE(pci_donor)));
 	fu_device_incorporate(FU_DEVICE(self),
