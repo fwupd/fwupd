@@ -1,0 +1,30 @@
+{
+  "name": "PixArt 2862 Dongle",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/b2b4e0bbcd4a1f5ec007f5176ff7727d73d7fdb44d0d2836a18b7c2aaaa0aba1-dongle_v0100.cab",
+      "emulation-url": "https://fwupd.org/downloads/82b8f88a655960f14f365a857829fb1947560d919a7d5169b046dcf684d43765-dongle_v0100.zip",
+      "components": [
+        {
+          "version": "1.0.0",
+          "guids": [
+            "ac997c21-38a5-5907-83f9-c178515be665"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/66ca80d83ac1e1ccc8da9d4d24e1b73bfc1eeb0421cad54d7c98e3038fe25c92-dongle_v0101.cab",
+      "emulation-url": "https://fwupd.org/downloads/7c7add0b4825221c67d823b200b1523c8b5bfa445789864bac0eabd2b11b6c93-dongle_v0101.zip",
+      "components": [
+        {
+          "version": "1.0.1",
+          "guids": [
+            "ac997c21-38a5-5907-83f9-c178515be665"
+          ]
+        }
+      ]
+    }
+  ]
+}
