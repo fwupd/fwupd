@@ -134,7 +134,6 @@ fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GEr
 	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(GPtrArray) possible_plugins = NULL;
 	GType gtype = FU_TYPE_UDEV_DEVICE;
 	struct {
 		const gchar *subsystem;
@@ -198,14 +197,17 @@ fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GEr
 		fu_udev_backend_create_ddc_proxy(self, FU_UDEV_DEVICE(device));
 
 	/* notify plugins using fu_plugin_add_udev_subsystem() */
-	possible_plugins = fu_context_get_plugin_names_for_udev_subsystem(
-	    ctx,
-	    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)),
-	    NULL);
-	if (possible_plugins != NULL) {
-		for (guint i = 0; i < possible_plugins->len; i++) {
-			const gchar *plugin_name = g_ptr_array_index(possible_plugins, i);
-			fu_device_add_possible_plugin(device, plugin_name);
+	if (fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)) != NULL) {
+		g_autoptr(GPtrArray) possible_plugins =
+		    fu_context_get_plugin_names_for_udev_subsystem(
+			ctx,
+			fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)),
+			NULL);
+		if (possible_plugins != NULL) {
+			for (guint i = 0; i < possible_plugins->len; i++) {
+				const gchar *plugin_name = g_ptr_array_index(possible_plugins, i);
+				fu_device_add_possible_plugin(device, plugin_name);
+			}
 		}
 	}
 
