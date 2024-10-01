@@ -830,6 +830,19 @@ fu_engine_requirements_check(FuEngine *self,
 		return FALSE;
 	}
 
+	/* verify protocol */
+	if (device != NULL && fu_release_get_protocol(release) != NULL &&
+	    !fu_device_has_protocol(device, fu_release_get_protocol(release))) {
+		g_autofree gchar *protocols = fu_strjoin(",", fu_device_get_protocols(device));
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "release needs protocol %s but device has %s",
+			    fu_release_get_protocol(release),
+			    protocols);
+		return FALSE;
+	}
+
 	/* hard requirements */
 	reqs = fu_release_get_hard_reqs(release);
 	if (reqs != NULL) {
