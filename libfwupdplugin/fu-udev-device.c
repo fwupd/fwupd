@@ -95,23 +95,6 @@ fu_udev_device_emit_changed(FuUdevDevice *self)
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
 }
 
-static guint16
-fu_udev_device_get_sysfs_attr_as_uint16(FuUdevDevice *self, const gchar *name)
-{
-	guint64 tmp64 = 0;
-	g_autofree gchar *tmp = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	tmp = fu_udev_device_read_sysfs(self, name, FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT, NULL);
-	if (tmp == NULL)
-		return 0x0;
-	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, &error_local)) {
-		g_debug("reading %s for %s was invalid: %s", name, tmp, error_local->message);
-		return 0x0;
-	}
-	return tmp64;
-}
-
 static void
 fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -340,6 +323,8 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *subsystem = NULL;
+	g_autofree gchar *attr_device = NULL;
+	g_autofree gchar *attr_vendor = NULL;
 
 	/* find the subsystem, driver and devtype */
 	if (priv->subsystem == NULL) {
@@ -365,8 +350,28 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* get IDs */
-	fu_device_set_vid(device, fu_udev_device_get_sysfs_attr_as_uint16(self, "vendor"));
-	fu_device_set_pid(device, fu_udev_device_get_sysfs_attr_as_uint16(self, "device"));
+	attr_vendor = fu_udev_device_read_sysfs(self,
+						"vendor",
+						FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						NULL);
+	if (attr_vendor != NULL) {
+		guint64 tmp64 = 0;
+		if (!fu_strtoull(attr_vendor, &tmp64, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, NULL)) {
+			fu_device_set_vendor(device, attr_vendor);
+		} else {
+			fu_device_set_vid(device, (guint16)tmp64);
+		}
+	}
+	attr_device = fu_udev_device_read_sysfs(self,
+						"device",
+						FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						NULL);
+	if (attr_device != NULL) {
+		guint64 tmp64 = 0;
+		if (!fu_strtoull(attr_device, &tmp64, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		fu_device_set_pid(device, (guint16)tmp64);
+	}
 
 	/* set number */
 	if (fu_udev_device_get_sysfs_path(self) != NULL) {
