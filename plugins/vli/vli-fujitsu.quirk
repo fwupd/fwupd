@@ -36,4 +36,4 @@ ParentGuid = USB\VID_0BF8&PID_1051
 # Fujitsu
 [USB\VID_0BF8&PID_103C]
 Plugin = vli
-GType = FuVliPDDevice
+GType = FuVliPdDevice
