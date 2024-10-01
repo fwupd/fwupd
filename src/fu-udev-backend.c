@@ -132,7 +132,9 @@ static FuDevice *
 fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GError **error)
 {
 	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(GPtrArray) possible_plugins = NULL;
 	GType gtype = FU_TYPE_UDEV_DEVICE;
 	struct {
 		const gchar *subsystem;
@@ -195,6 +197,18 @@ fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GEr
 	if (gtype == FU_TYPE_DRM_DEVICE)
 		fu_udev_backend_create_ddc_proxy(self, FU_UDEV_DEVICE(device));
 
+	/* notify plugins using fu_plugin_add_udev_subsystem() */
+	possible_plugins = fu_context_get_plugin_names_for_udev_subsystem(
+	    ctx,
+	    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)),
+	    NULL);
+	if (possible_plugins != NULL) {
+		for (guint i = 0; i < possible_plugins->len; i++) {
+			const gchar *plugin_name = g_ptr_array_index(possible_plugins, i);
+			fu_device_add_possible_plugin(device, plugin_name);
+		}
+	}
+
 	/* set in fu-self-test */
 	if (g_getenv("FWUPD_SELF_TEST") != NULL)
 		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_FAKE);
@@ -220,21 +234,6 @@ fu_udev_backend_create_device(FuUdevBackend *self, const gchar *fn, GError **err
 static void
 fu_udev_backend_device_add_from_device(FuUdevBackend *self, FuUdevDevice *device)
 {
-	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
-	g_autoptr(GPtrArray) possible_plugins = NULL;
-
-	/* notify plugins using fu_plugin_add_udev_subsystem() */
-	possible_plugins =
-	    fu_context_get_plugin_names_for_udev_subsystem(ctx,
-							   fu_udev_device_get_subsystem(device),
-							   NULL);
-	if (possible_plugins != NULL) {
-		for (guint i = 0; i < possible_plugins->len; i++) {
-			const gchar *plugin_name = g_ptr_array_index(possible_plugins, i);
-			fu_device_add_possible_plugin(FU_DEVICE(device), plugin_name);
-		}
-	}
-
 	/* DP AUX devices are *weird* and can only read the DPCD when a DRM device is attached */
 	if (g_strcmp0(fu_udev_device_get_subsystem(device), "drm_dp_aux_dev") == 0) {
 		/* add and rescan, regardless of if we can open it */
