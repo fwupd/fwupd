@@ -180,7 +180,7 @@ fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 		fu_device_add_instance_u16(FU_DEVICE(self), "VID", vid);
 	}
 	if (pid != 0x0) {
-		fu_device_set_vid(FU_DEVICE(self), vid);
+		fu_device_set_pid(FU_DEVICE(self), pid);
 		fu_device_add_instance_u16(FU_DEVICE(self), "PID", pid);
 	}
 	fu_device_add_instance_u16(FU_DEVICE(self), "REV", rev);
