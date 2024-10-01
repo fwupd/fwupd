@@ -483,6 +483,8 @@ fu_udev_device_get_subsystem_depth(FuUdevDevice *self, const gchar *subsystem)
 	device_tmp = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), subsystem, NULL);
 	if (device_tmp == NULL)
 		return 0;
+	if (g_strcmp0(fu_device_get_id(device_tmp), fu_device_get_id(FU_DEVICE(self))) == 0)
+		return 0;
 	for (guint i = 0;; i++) {
 		g_autoptr(FuDevice) parent =
 		    fu_device_get_backend_parent(FU_DEVICE(device_tmp), NULL);
