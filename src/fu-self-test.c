@@ -1734,6 +1734,8 @@ fu_engine_device_unlock_func(gconstpointer user_data)
 	fu_device_add_protocol(device, "com.acme");
 	fu_device_add_guid(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_LOCKED);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
 	fu_engine_add_device(engine, device);
 

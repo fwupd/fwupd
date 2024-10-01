@@ -821,6 +821,15 @@ fu_engine_requirements_check(FuEngine *self,
 	if (fwupd_version == NULL)
 		return FALSE;
 
+	/* sanity check */
+	if (device != NULL && !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "device is not updatable");
+		return FALSE;
+	}
+
 	/* hard requirements */
 	reqs = fu_release_get_hard_reqs(release);
 	if (reqs != NULL) {
