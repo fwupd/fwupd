@@ -554,7 +554,7 @@ fu_input_stream_compute_crc16_cb(const guint8 *buf, gsize bufsz, gpointer user_d
 /**
  * fu_input_stream_compute_crc16:
  * @stream: a #GInputStream
- * @kind: a #FuCrcKind, typically %FU_CRC_KIND_B32_STANDARD
+ * @kind: a #FuCrcKind, typically %FU_CRC_KIND_B16_XMODEM
  * @crc: (inout): initial and final CRC value
  * @error: (nullable): optional return location for an error
  *
@@ -570,7 +570,7 @@ fu_input_stream_compute_crc16_cb(const guint8 *buf, gsize bufsz, gpointer user_d
 gboolean
 fu_input_stream_compute_crc16(GInputStream *stream, FuCrcKind kind, guint16 *crc, GError **error)
 {
-	FuInputStreamComputeCrc32Helper helper = {.crc = *crc, .kind = kind};
+	FuInputStreamComputeCrc16Helper helper = {.crc = *crc, .kind = kind};
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(crc != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
