@@ -38,20 +38,17 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
-    <release version="2.0.0" date="2024-08-27">
+    <release version="2.0.0" date="2024-10-01">
       <description>
-        <p>
-          FIXME: Up to bdc9b65d07f9fa66ce068970c66b8d13a03ca798
-        </p>
         <p>
           This new major release beaks libfwupd ABI and API to add the following features:
         </p>
         <ul>
           <li>Choose the ESP correctly in more cases when using UEFI capsule updates</li>
+          <li>Drop legacy formats for verification of metadata and firmware</li>
           <li>Reduce the runtime memory usage and CPU startup cost significantly</li>
           <li>Remove all the long-deprecated legacy CLI tools</li>
-          <li>Remove libgusb from plugins and use libusb directly instead</li>
-          <li>Require Python 3.8 when building</li>
+          <li>Remove libgusb and GUdev from plugins and use libusb and sysfs directly instead</li>
           <li>Stream firmware binaries over a file descriptor rather than loading into memory</li>
         </ul>
         <p>
@@ -67,24 +64,29 @@
           <li>Add support for more modify-config options</li>
           <li>Add the privacy policy URL in the remote config</li>
           <li>Allow device flags to be loaded from the local cab archive</li>
+          <li>Allow overriding the detected EFI framebuffer size in the config file</li>
           <li>Apply revocations to SbatLevelRT when required</li>
           <li>Detect BlueTooth devices by GATT service UUID</li>
           <li>Drop the SuperIO plugin as it will not work without rawio</li>
+          <li>Listen to the netlink udev socket rather than using GUdev</li>
           <li>Parse EFI LZ77 compressed sections when required</li>
           <li>Support large sections in EFI FFS3 volumes</li>
-          <li>Support more CRC-32 types</li>
+          <li>Support more CRC-32 and CRC-16 types</li>
         </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
-          <li>Abstract out the D-Bus IPC layer to allow using Binder in the future</li>
+          <li>Abstract out the D-Bus IPC layer to allow using Android Binder in the future</li>
           <li>Apply systemd hardening to the service files</li>
-          <li>Completely deallocate devices when removed</li>
+          <li>Coldplug udev devices with a predictable order</li>
+          <li>Completely deallocate devices when physically removed</li>
           <li>Create the fuzzing corpus at build time to avoid shipping binary test blobs</li>
           <li>Do not add counterpart IDs as visible firmware-matchable GUIDs</li>
           <li>Do not allow system suspend during a composite update</li>
+          <li>Do not assume all block devices are backed by USB devices</li>
           <li>Do not create a FuSynapticsMstDevice for every DPAUX device</li>
           <li>Do not read OptionROM on Apple hardware</li>
           <li>Do not run the quirk query multiple times on the same device</li>
+          <li>Do not set a zero-length device name when matching the vendor name</li>
           <li>Do not skip closing the USB device if the HID interface is not found</li>
           <li>Do not skip the first EFI_FILE in the EFI_FILESYSTEM</li>
           <li>Do not verify the SSL hostname when using DISABLE_SSL_STRICT=1</li>
@@ -97,20 +99,39 @@
           <li>Only generate the client certificate when required</li>
           <li>Only read back the thunderbolt firmware if we can parse the NVM</li>
           <li>Pass emulation data using a file descriptor</li>
+          <li>Recalculate the device supported flag when reparenting devices</li>
           <li>Reduce memory allocations by ~2Mb when loading the BGRT image</li>
           <li>Remove the polling for Logitech Unifying receivers to improve battery life</li>
           <li>Require a DPCD OUI to match DPAUX devices</li>
+          <li>Respect the device priority when matching in the device list</li>
           <li>Respect the interface retry count when using an auto-detected FuHidDevice</li>
+          <li>Retry the post-update NVMe open action to fix BC901 reload</li>
+          <li>Save the metadata with a more predictable name so we can use jcat-tool</li>
           <li>Upload reports from fwupd-refresh if AutomaticReports is true</li>
           <li>Use a more standard ATA OUI vendor name match</li>
+          <li>Use the first preferred CRTC screen resolution if not using efifb</li>
           <li>Use /usr/bin/env for wider Python compatibility</li>
           <li>Warn users needing to fwupdmgr activate before uploading signed reports</li>
         </ul>
         <p>This release adds support for the following hardware:</p>
         <ul>
+          <li>Algoltek USB card readers</li>
           <li>AMD Kria SoM</li>
+          <li>Cinterion fdl-based devices</li>
           <li>CY6611 EZ-USB HX3PD</li>
+          <li>Dell K2 Dock</li>
+          <li>Elan 0C9F fingerprint devices</li>
+          <li>HP Fleetwood and Hendrix docks</li>
+          <li>Huddly L1, S1 and Crew</li>
+          <li>Jabra PanaCast</li>
+          <li>Lenovo ThinkSmart Bar</li>
+          <li>Logitech Lemmy</li>
+          <li>Logitech Sight</li>
+          <li>Logitech Tap Touch Screen</li>
+          <li>MediaTek scaler devices</li>
           <li>Parade PS185</li>
+          <li>Qualcomm S5gen2 BLE devices</li>
+          <li>Telink Dual Keyboard</li>
         </ul>
       </description>
     </release>
