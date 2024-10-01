@@ -15,7 +15,7 @@
 #define FU_NVME_ID_CTRL_SIZE 0x1000
 
 struct _FuNvmeDevice {
-	FuUdevDevice parent_instance;
+	FuPciDevice parent_instance;
 	guint pci_depth;
 	guint64 write_block_size;
 };
@@ -28,7 +28,7 @@ struct _FuNvmeDevice {
 #define FU_NVME_DEVICE_FLAG_FORCE_ALIGN "force-align"
 #define FU_NVME_DEVICE_FLAG_COMMIT_CA3	"commit-ca3"
 
-G_DEFINE_TYPE(FuNvmeDevice, fu_nvme_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE(FuNvmeDevice, fu_nvme_device, FU_TYPE_PCI_DEVICE)
 
 #define FU_NVME_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
 
@@ -284,8 +284,8 @@ fu_nvme_device_pci_probe(FuNvmeDevice *self, GError **error)
 					      NULL))
 		return FALSE;
 	fu_device_build_instance_id(FU_DEVICE(self), error, "NVME", "VEN", "DEV", "SUBSYS", NULL);
-	fu_udev_device_set_revision(FU_UDEV_DEVICE(self),
-				    fu_udev_device_get_revision(FU_UDEV_DEVICE(pci_donor)));
+	fu_pci_device_set_revision(FU_PCI_DEVICE(self),
+				   fu_pci_device_get_revision(FU_PCI_DEVICE(pci_donor)));
 	fu_device_incorporate(FU_DEVICE(self),
 			      pci_donor,
 			      FU_DEVICE_INCORPORATE_FLAG_VENDOR |
@@ -301,10 +301,6 @@ static gboolean
 fu_nvme_device_probe(FuDevice *device, GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE(device);
-
-	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_nvme_device_parent_class)->probe(device, error))
-		return FALSE;
 
 	/* copy the PCI-specific instance parts and make them NVME for GUID compat */
 	if (!fu_nvme_device_pci_probe(self, error))

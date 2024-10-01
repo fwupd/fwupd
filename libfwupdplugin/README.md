@@ -150,3 +150,7 @@ Remember: Plugins should be upstream!
 * `fu_udev_device_set_vendor`: Use `fu_device_set_vid()` instead
 * `fu_udev_device_get_model`: Use `fu_device_get_pid()` instead
 * `fu_udev_device_set_model`: Use `fu_device_set_pid()` instead
+* `fu_udev_device_get_subsystem_vendor`: Use `fu_pci_device_get_subsystem_vid()` instead
+* `fu_udev_device_get_subsystem_model`: Use `fu_pci_device_get_subsystem_pid()` instead
+* `fu_udev_device_get_revision`: Use `fu_pci_device_get_revision()` instead
+* `fu_udev_device_set_revision`: Use `fu_pci_device_set_revision()` instead
