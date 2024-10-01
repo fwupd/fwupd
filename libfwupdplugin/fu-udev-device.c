@@ -37,9 +37,6 @@
  */
 
 typedef struct {
-	guint16 subsystem_vendor;
-	guint16 subsystem_model;
-	guint8 revision;
 	gchar *subsystem;
 	gchar *bind_id;
 	gchar *driver;
@@ -115,23 +112,6 @@ fu_udev_device_get_sysfs_attr_as_uint16(FuUdevDevice *self, const gchar *name)
 	return tmp64;
 }
 
-static guint8
-fu_udev_device_get_sysfs_attr_as_uint8(FuUdevDevice *self, const gchar *name)
-{
-	guint64 tmp64 = 0;
-	g_autofree gchar *tmp = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	tmp = fu_udev_device_read_sysfs(self, name, FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT, NULL);
-	if (tmp == NULL)
-		return 0x0;
-	if (!fu_strtoull(tmp, &tmp64, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, &error_local)) {
-		g_debug("reading %s for %s was invalid: %s", name, tmp, error_local->message);
-		return 0x0;
-	}
-	return tmp64;
-}
-
 static void
 fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -139,9 +119,6 @@ fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *open_flags = fu_io_channel_open_flag_to_string(priv->open_flags);
 
-	fwupd_codec_string_append_hex(str, idt, "SubsystemVendor", priv->subsystem_vendor);
-	fwupd_codec_string_append_hex(str, idt, "SubsystemModel", priv->subsystem_model);
-	fwupd_codec_string_append_hex(str, idt, "Revision", priv->revision);
 	fwupd_codec_string_append_hex(str, idt, "Number", priv->number);
 	fwupd_codec_string_append(str, idt, "Subsystem", priv->subsystem);
 	fwupd_codec_string_append(str, idt, "Driver", priv->driver);
@@ -305,39 +282,6 @@ fu_udev_device_get_symlink_target(FuUdevDevice *self, const gchar *attr, GError 
 	return g_steal_pointer(&value);
 }
 
-static void
-fu_udev_device_set_subsystem_vendor(FuUdevDevice *self, guint16 subsystem_vendor)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
-	priv->subsystem_vendor = subsystem_vendor;
-}
-
-static void
-fu_udev_device_set_subsystem_model(FuUdevDevice *self, guint16 subsystem_model)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
-	priv->subsystem_model = subsystem_model;
-}
-
-/**
- * fu_udev_device_set_revision:
- * @self: a #FuUdevDevice
- * @revision: integer
- *
- * Sets the device revision.
- *
- * Since: 2.0.0
- **/
-void
-fu_udev_device_set_revision(FuUdevDevice *self, guint8 revision)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
-	priv->revision = revision;
-}
-
 /* private */
 void
 fu_udev_device_set_number(FuUdevDevice *self, guint64 number)
@@ -423,34 +367,12 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	/* get IDs */
 	fu_device_set_vid(device, fu_udev_device_get_sysfs_attr_as_uint16(self, "vendor"));
 	fu_device_set_pid(device, fu_udev_device_get_sysfs_attr_as_uint16(self, "device"));
-	priv->revision = fu_udev_device_get_sysfs_attr_as_uint8(self, "revision");
-	priv->subsystem_vendor = fu_udev_device_get_sysfs_attr_as_uint16(self, "subsystem_vendor");
-	priv->subsystem_model = fu_udev_device_get_sysfs_attr_as_uint16(self, "subsystem_device");
-
-	/* set the version if the revision has been set */
-	if (fu_device_get_version(device) == NULL &&
-	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
-		if (priv->revision != 0x00 && priv->revision != 0xFF) {
-			g_autofree gchar *version = g_strdup_printf("%02x", priv->revision);
-			fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
-			fu_device_set_version(device, version);
-		}
-	}
 
 	/* set number */
 	if (fu_udev_device_get_sysfs_path(self) != NULL) {
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_udev_device_parse_number(self, &error_local))
 			g_debug("failed to convert udev number: %s", error_local->message);
-	}
-
-	/* set revision */
-	if (fu_device_get_version(device) == NULL &&
-	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
-		g_autofree gchar *prop_revision = NULL;
-		prop_revision = fu_udev_device_read_property(self, "ID_REVISION", NULL);
-		if (prop_revision != NULL)
-			fu_device_set_version(device, prop_revision);
 	}
 
 	/* set vendor ID */
@@ -464,15 +386,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device));
 	if (fu_device_get_pid(device) != 0x0000)
 		fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(device));
-	if (priv->subsystem_vendor != 0x0000 || priv->subsystem_model != 0x0000) {
-		g_autofree gchar *subsys =
-		    g_strdup_printf("%04X%04X", priv->subsystem_vendor, priv->subsystem_model);
-		fu_device_add_instance_str(device, "SUBSYS", subsys);
-	}
-	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV) &&
-	    priv->revision != 0xFF) {
-		fu_device_add_instance_u8(device, "REV", priv->revision);
-	}
 	if (subsystem != NULL) {
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
@@ -490,43 +403,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 						 "VEN",
 						 "DEV",
 						 NULL);
-		if (fu_device_has_private_flag(device,
-					       FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
-			fu_device_build_instance_id_full(device,
-							 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-							     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
-							     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
-							 NULL,
-							 subsystem,
-							 "VEN",
-							 "DEV",
-							 "REV",
-							 NULL);
-		}
-		fu_device_build_instance_id_full(device,
-						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-						     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
-						     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
-						 NULL,
-						 subsystem,
-						 "VEN",
-						 "DEV",
-						 "SUBSYS",
-						 NULL);
-		if (fu_device_has_private_flag(device,
-					       FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
-			fu_device_build_instance_id_full(device,
-							 FU_DEVICE_INSTANCE_FLAG_GENERIC |
-							     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
-							     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
-							 NULL,
-							 subsystem,
-							 "VEN",
-							 "DEV",
-							 "SUBSYS",
-							 "REV",
-							 NULL);
-		}
 	}
 
 	/* set serial */
@@ -759,18 +635,8 @@ fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 		fu_udev_device_set_devtype(uself, fu_udev_device_get_devtype(udonor));
 	if (priv->number == 0x0)
 		fu_udev_device_set_number(uself, fu_udev_device_get_number(udonor));
-	if (priv->subsystem_vendor == 0x0) {
-		fu_udev_device_set_subsystem_vendor(uself,
-						    fu_udev_device_get_subsystem_vendor(udonor));
-	}
 	if (priv->open_flags == FU_IO_CHANNEL_OPEN_FLAG_NONE)
 		priv->open_flags = fu_udev_device_get_open_flags(udonor);
-	if (priv->subsystem_model == 0x0) {
-		fu_udev_device_set_subsystem_model(uself,
-						   fu_udev_device_get_subsystem_model(udonor));
-	}
-	if (priv->revision == 0x0)
-		fu_udev_device_set_revision(uself, fu_udev_device_get_revision(udonor));
 }
 
 /**
@@ -879,60 +745,6 @@ fu_udev_device_get_number(FuUdevDevice *self)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), 0);
 	return priv->number;
-}
-
-/**
- * fu_udev_device_get_subsystem_vendor:
- * @self: a #FuUdevDevice
- *
- * Gets the device subsystem vendor code.
- *
- * Returns: a vendor code, or 0 if unset or invalid
- *
- * Since: 1.5.0
- **/
-guint16
-fu_udev_device_get_subsystem_vendor(FuUdevDevice *self)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), 0x0000);
-	return priv->subsystem_vendor;
-}
-
-/**
- * fu_udev_device_get_subsystem_model:
- * @self: a #FuUdevDevice
- *
- * Gets the device subsystem model code.
- *
- * Returns: a vendor code, or 0 if unset or invalid
- *
- * Since: 1.5.0
- **/
-guint16
-fu_udev_device_get_subsystem_model(FuUdevDevice *self)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), 0x0000);
-	return priv->subsystem_model;
-}
-
-/**
- * fu_udev_device_get_revision:
- * @self: a #FuUdevDevice
- *
- * Gets the device revision.
- *
- * Returns: a vendor code, or 0 if unset or invalid
- *
- * Since: 1.1.2
- **/
-guint8
-fu_udev_device_get_revision(FuUdevDevice *self)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), 0x00);
-	return priv->revision;
 }
 
 static gchar *
@@ -1956,12 +1768,6 @@ fu_udev_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags
 		fwupd_codec_json_append_int(builder, "Vendor", fu_device_get_vid(device));
 	if (fu_device_get_pid(device) != 0)
 		fwupd_codec_json_append_int(builder, "Model", fu_device_get_pid(device));
-	if (priv->subsystem_vendor != 0)
-		fwupd_codec_json_append_int(builder, "SubsystemVendor", priv->subsystem_vendor);
-	if (priv->subsystem_model != 0)
-		fwupd_codec_json_append_int(builder, "SubsystemModel", priv->subsystem_model);
-	if (priv->revision != 0)
-		fwupd_codec_json_append_int(builder, "Revision", priv->revision);
 	if (priv->number != 0)
 		fwupd_codec_json_append_int(builder, "Number", priv->number);
 
@@ -2019,15 +1825,6 @@ fu_udev_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	tmp64 = json_object_get_int_member_with_default(json_object, "Model", 0);
 	if (tmp64 != 0)
 		fu_device_set_pid(device, tmp64);
-	tmp64 = json_object_get_int_member_with_default(json_object, "SubsystemVendor", 0);
-	if (tmp64 != 0)
-		fu_udev_device_set_subsystem_vendor(self, tmp64);
-	tmp64 = json_object_get_int_member_with_default(json_object, "SubsystemModel", 0);
-	if (tmp64 != 0)
-		fu_udev_device_set_subsystem_model(self, tmp64);
-	tmp64 = json_object_get_int_member_with_default(json_object, "Revision", 0);
-	if (tmp64 != 0)
-		fu_udev_device_set_revision(self, tmp64);
 	tmp64 = json_object_get_int_member_with_default(json_object, "Number", 0);
 	if (tmp64 != 0)
 		fu_udev_device_set_number(self, tmp64);
