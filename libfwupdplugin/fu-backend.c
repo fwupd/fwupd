@@ -176,10 +176,11 @@ fu_backend_get_device_parent(FuBackend *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (klass->get_device_parent == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "not implemented");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "->get_device_parent is not implemented in %s",
+			    G_OBJECT_TYPE_NAME(self));
 		return NULL;
 	}
 	return klass->get_device_parent(self, device, subsystem, error);
@@ -207,10 +208,11 @@ fu_backend_create_device(FuBackend *self, const gchar *backend_id, GError **erro
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (klass->create_device == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "not implemented");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "->create_device is not implemented in %s",
+			    G_OBJECT_TYPE_NAME(self));
 		return NULL;
 	}
 	return klass->create_device(self, backend_id, error);
