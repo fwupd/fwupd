@@ -48,6 +48,7 @@ install_data([
     'logitech-rqr24.json',
     'logitech-rqr24-signed.json',
     'nordic-hid-nrf52840-mcuboot.json',
+    'nordic-hid-nrf52840-b0.json',
     'parade-ps5512evb.json',
     'pixart-rf-2862-dongle.json',
     'pixart-rf-GCBBTM25.json',
