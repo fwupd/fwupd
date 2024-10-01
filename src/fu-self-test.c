@@ -6661,6 +6661,12 @@ fu_test_engine_fake_tpm(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
+	/* no tss2-esys */
+	if (fu_engine_get_plugin_by_name(engine, "tpm", &error) == NULL) {
+		g_test_skip(error->message);
+		return;
+	}
+
 	/* tpm */
 	device = fu_engine_get_device(engine, "1d8d50a4dbc65618f5c399c2ae827b632b3ccc11", &error);
 	g_assert_no_error(error);
