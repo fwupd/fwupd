@@ -116,6 +116,16 @@ until an ignition is sent, or the device is rebooted.
 
 Update protocol: `com.cinterion.fdl`
 
+## Update method: dfota
+
+If the device supports the 'dfota' update method, it should have an AT-port
+exposed. The device is then switched to data mode and downloads the
+firmware to the ota partition via the AT-port. DFOTA updates require a specific
+firmware version to be installed on the device, since the update only contains
+a diff between the installed and target version.
+
+Update protocol: `com.quectel.dfota`
+
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb` and `/dev/bus/pci`.
