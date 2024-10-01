@@ -6,6 +6,7 @@
 #
 # pylint: disable=invalid-name,missing-docstring
 
+import sys
 import os
 import subprocess
 import datetime
@@ -21,8 +22,11 @@ def _get_last_release() -> str:
 
 
 def _get_next_release(last_tag: str) -> str:
-    triplet: list[str] = last_tag.split(".")
-    return f"{triplet[0]}.{triplet[1]}.{int(triplet[2])+1}"
+    try:
+        triplet: list[str] = last_tag.split(".")
+        return f"{triplet[0]}.{triplet[1]}.{int(triplet[2])+1}"
+    except IndexError:
+        return last_tag
 
 
 def _get_appstream_date() -> str:
@@ -53,6 +57,8 @@ def _generate_release_notes(last_tag: str, next_tag: str) -> str:
             continue
         if line.find("Merge") != -1:
             continue
+        if line.find("build(deps)") != -1:
+            continue
         if line in lines_feat or line in lines_bugs or line in lines_devs:
             continue
         if line.startswith("Add "):
@@ -78,8 +84,13 @@ def _generate_release_notes(last_tag: str, next_tag: str) -> str:
 
 
 if __name__ == "__main__":
-    _last_tag: str = _get_last_release()
-    _next_tag: str = _get_next_release(_last_tag)
-
+    try:
+        _last_tag: str = sys.argv[1]
+    except IndexError:
+        _last_tag: str = _get_last_release()
+    try:
+        _next_tag: str = sys.argv[2]
+    except IndexError:
+        _next_tag: str = _get_next_release(_last_tag)
     xml: str = _generate_release_notes(_last_tag, _next_tag)
     print(xml)
