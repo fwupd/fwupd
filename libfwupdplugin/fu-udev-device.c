@@ -405,17 +405,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 						 NULL);
 	}
 
-	/* set serial */
-	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER) &&
-	    fu_device_get_serial(device) == NULL) {
-		g_autofree gchar *prop_serial =
-		    fu_udev_device_read_property(self, "ID_SERIAL_SHORT", NULL);
-		if (prop_serial == NULL)
-			prop_serial = fu_udev_device_read_property(self, "ID_SERIAL", NULL);
-		if (prop_serial != NULL)
-			fu_device_set_serial(device, prop_serial);
-	}
-
 	/* add device class */
 	if (subsystem != NULL) {
 		g_autofree gchar *cls =
