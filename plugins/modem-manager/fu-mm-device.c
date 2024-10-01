@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "fu-cinterion-fdl-updater.h"
+#include "fu-dfota-updater.h"
 #include "fu-firehose-updater.h"
 #include "fu-mbim-qdu-updater.h"
 #include "fu-mm-device.h"
@@ -80,6 +81,9 @@ struct _FuMmDevice {
 	/* cinterion-fdl update handling */
 	FuCinterionFdlUpdater *cinterion_fdl_updater;
 
+	/* dfota update handling */
+	FuDfotaUpdater *dfota_updater;
+
 	/* firmware path */
 	gchar *firmware_path;
 	gchar *restore_firmware_path;
@@ -128,6 +132,7 @@ fu_mm_device_validate_firmware_update_method(FuMmDevice *self, GError **error)
 #endif
 #if MM_CHECK_VERSION(1, 24, 0)
 	    MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL,
+	    MM_MODEM_FIRMWARE_UPDATE_METHOD_DFOTA,
 #endif
 	};
 	g_autofree gchar *methods_str = NULL;
@@ -283,6 +288,15 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 		}
 		fu_device_add_protocol(device, "com.cinterion.fdl");
 	}
+	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_DFOTA) {
+		for (guint i = 0; i < n_ports; i++) {
+			if (ports[i].type == MM_MODEM_PORT_TYPE_AT) {
+				self->port_at = g_strdup_printf("/dev/%s", ports[i].name);
+				break;
+			}
+		}
+		fu_device_add_protocol(device, "com.quectel.dfota");
+	}
 #endif // MM_CHECK_VERSION(1, 24, 0)
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT) {
 		for (guint i = 0; i < n_ports; i++) {
@@ -340,6 +354,18 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 				    "failed to find AT port");
 		return FALSE;
 	}
+
+#if MM_CHECK_VERSION(1, 24, 0)
+	/* an at port is required for dfota */
+	if ((self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_DFOTA) &&
+	    (self->port_at == NULL)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "failed to find AT port");
+		return FALSE;
+	}
+#endif // MM_CHECK_VERSION(1, 24, 0)
 
 	/* a qmi port is required for qmi-pdc */
 	if ((self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC) &&
@@ -432,7 +458,8 @@ fu_mm_device_probe_udev(FuDevice *device, GError **error)
 	}
 
 #if MM_CHECK_VERSION(1, 24, 0)
-	if ((self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL) &&
+	if ((self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL ||
+	     self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_DFOTA) &&
 	    (self->port_at == NULL)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -606,7 +633,7 @@ fu_mm_device_at_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 	}
 
 	/* return error if AT command failed */
-	if (g_strrstr(buf, "\r\nOK\r\n") == NULL) {
+	if (g_strrstr(buf, "\r\nOK\r\n") == NULL && g_strrstr(buf, "\r\nCONNECT\r\n") == NULL) {
 		g_autofree gchar *tmp = g_strndup(buf + 2, bufsz - 4);
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -793,6 +820,66 @@ fu_mm_device_detach_fdl(FuDevice *device, FuProgress *progress, GError **error)
 		return FALSE;
 
 	return fu_cinterion_fdl_updater_wait_ready(self->cinterion_fdl_updater, device, error);
+}
+
+static gboolean
+fu_mm_device_io_open_dfota(FuMmDevice *self, GError **error)
+{
+	if (!fu_mm_device_io_open(self, error))
+		return FALSE;
+
+	self->dfota_updater = fu_dfota_updater_new(self->io_channel);
+	return fu_dfota_updater_open(self->dfota_updater, error);
+}
+
+static gboolean
+fu_mm_device_io_close_dfota(FuMmDevice *self, GError **error)
+{
+	g_autoptr(FuDfotaUpdater) updater = NULL;
+
+	if (!fu_mm_device_io_close(self, error))
+		return FALSE;
+
+	updater = g_steal_pointer(&self->dfota_updater);
+	return fu_dfota_updater_close(updater, error);
+}
+
+static gboolean
+fu_mm_device_setup_firmware_file_dfota(FuDevice *device, GError **error)
+{
+	/* remove firmware file from old update if exists */
+	FuMmDevice *self = FU_MM_DEVICE(device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) inner_error = NULL;
+
+	locker = fu_device_locker_new_full(device,
+					   (FuDeviceLockerFunc)fu_mm_device_io_open,
+					   (FuDeviceLockerFunc)fu_mm_device_io_close,
+					   error);
+
+	if (locker == NULL)
+		return FALSE;
+	if (!fu_mm_device_at_cmd(self, "AT+QFLST=?", TRUE, error)) {
+		g_prefix_error(error, "listing files not supported: ");
+		return FALSE;
+	}
+	/* if listing firmware file does not fail, there is an old firmware file to remove */
+	if (!fu_mm_device_at_cmd(self,
+				 "AT+QFLST=\"UFS:" FU_DFOTA_UPDATER_FILENAME "\"",
+				 TRUE,
+				 &inner_error)) {
+		g_debug("no old firmware found in filesystem: %s", inner_error->message);
+		return TRUE;
+	}
+
+	g_debug("found orphaned firmware file - trying to delete it.");
+
+	if (!fu_mm_device_at_cmd(self, "AT+QFDEL=\"" FU_DFOTA_UPDATER_FILENAME "\"", TRUE, error)) {
+		g_prefix_error(error, "failed to delete existing firmware file: ");
+		return FALSE;
+	}
+
+	return TRUE;
 }
 #endif // MM_CHECK_VERSION(1, 24, 0)
 
@@ -1605,6 +1692,58 @@ fu_mm_device_write_firmware_fdl(FuDevice *device, GBytes *fw, FuProgress *progre
 					      fw,
 					      error);
 }
+
+static gboolean
+fu_mm_device_write_firmware_dfota(FuDevice *device,
+				  GBytes *fw,
+				  FuProgress *progress,
+				  GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autofree gchar *upload_cmd = NULL;
+
+	locker = fu_device_locker_new_full(device,
+					   (FuDeviceLockerFunc)fu_mm_device_io_open_dfota,
+					   (FuDeviceLockerFunc)fu_mm_device_io_close_dfota,
+					   error);
+
+	if (locker == NULL)
+		return FALSE;
+
+	/* put the device into upload mode */
+	upload_cmd = g_strdup_printf("AT+QFUPL=\"%s\",%" G_GSIZE_FORMAT ",5,1",
+				     FU_DFOTA_UPDATER_FILENAME,
+				     g_bytes_get_size(fw));
+	if (!fu_mm_device_at_cmd(self, upload_cmd, TRUE, error)) {
+		g_prefix_error(error, "failed to enable upload mode: ");
+		return FALSE;
+	}
+
+	if (!fu_dfota_updater_upload_firmware(self->dfota_updater, fw, error))
+		return FALSE;
+
+	if (!fu_mm_device_at_cmd(self,
+				 "AT+QFOTADL=\"/data/ufs/" FU_DFOTA_UPDATER_FILENAME "\"",
+				 TRUE,
+				 error)) {
+		g_prefix_error(error, "failed to start update: ");
+		return FALSE;
+	}
+	/* wait and reopen port */
+	if (!fu_device_locker_close(locker, error))
+		return FALSE;
+	fu_device_sleep(device, FU_DFOTA_UPDATER_FOTA_RESTART_TIMEOUT_SECS * 1000);
+	locker = fu_device_locker_new_full(self,
+					   (FuDeviceLockerFunc)fu_mm_device_io_open_dfota,
+					   (FuDeviceLockerFunc)fu_mm_device_io_close_dfota,
+					   error);
+	if (locker == NULL)
+		return FALSE;
+
+	return fu_dfota_updater_write(self->dfota_updater, progress, device, error);
+	/* uploaded firmware file is cleaned up automatically after device restart */
+}
 #endif // MM_CHECK_VERSION(1, 24, 0)
 
 static gboolean
@@ -1646,6 +1785,8 @@ fu_mm_device_write_firmware(FuDevice *device,
 #if MM_CHECK_VERSION(1, 24, 0)
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL)
 		return fu_mm_device_write_firmware_fdl(device, fw, progress, error);
+	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_DFOTA)
+		return fu_mm_device_write_firmware_dfota(device, fw, progress, error);
 #endif // MM_CHECK_VERSION(1, 24, 0)
 
 	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "unsupported update method");
@@ -1896,6 +2037,12 @@ fu_mm_device_setup(FuDevice *device, GError **error)
 
 	if (!fu_mm_device_setup_branch_at(self, &error_local))
 		g_warning("Failed to set firmware branch: %s", error_local->message);
+
+#if MM_CHECK_VERSION(1, 24, 0)
+	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_DFOTA)
+		if (!fu_mm_device_setup_firmware_file_dfota(device, error))
+			return FALSE;
+#endif // MM_CHECK_VERSION(1, 24, 0)
 
 	return TRUE;
 }
