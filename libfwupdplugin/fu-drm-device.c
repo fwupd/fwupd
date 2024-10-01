@@ -218,6 +218,12 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *attr_connector_id = NULL;
 	g_autofree gchar *physical_id = g_path_get_basename(sysfs_path);
 
+	/* check if "card" is in the sysfs_path string */
+	if (g_strstr_len(sysfs_path, -1, "card") == NULL) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not a DRM card device");
+		return FALSE;
+	}
+
 	/* basic properties */
 	attr_enabled = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
 						 "enabled",
