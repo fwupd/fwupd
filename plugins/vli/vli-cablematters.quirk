@@ -1,0 +1,4 @@
+# Cable Matters
+[USB\VID_2BD5&PID_5240]
+Plugin = vli
+GType = FuVliPdDevice
