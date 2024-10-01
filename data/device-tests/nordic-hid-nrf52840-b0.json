@@ -1,0 +1,18 @@
+{
+  "name": "nRF52840 DK (nRF52 Desktop) B0 variant",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/1f2931d9573f54266fffed606ea4fe8cc9fce5a9876be365ae74292f55dc3d34-nordic-nrf52840dk-0.0.0.2.cab",
+      "emulation-url": "https://fwupd.org/downloads/19ebd9d8f941f80dc6c582fcb66da5db99cb571fad642a0d27fa32d0f76b1387-nordic-nrf52840dk-0.0.0.2.zip",
+      "components": [
+        {
+          "version": "0.0.0.2",
+          "guids": [
+            "22952036-c346-5755-9646-7bf766b28922"
+          ]
+        }
+      ]
+    }
+  ]
+}
