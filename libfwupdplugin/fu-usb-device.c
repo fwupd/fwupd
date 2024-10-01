@@ -1013,8 +1013,12 @@ fu_usb_device_probe_bos_descriptors(FuUsbDevice *self, GError **error)
 		if (fu_usb_bos_descriptor_get_capability(bos) != 0x5)
 			continue;
 		if (!fu_usb_device_probe_bos_descriptor(self, bos, &error_loop)) {
+#ifdef SUPPORTED_BUILD
+			g_debug("failed to parse platform BOS descriptor: %s", error_loop->message);
+#else
 			g_warning("failed to parse platform BOS descriptor: %s",
 				  error_loop->message);
+#endif
 		}
 	}
 	return TRUE;
