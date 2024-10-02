@@ -760,6 +760,9 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 {
 	g_autofree gchar *version_bootloader = NULL;
 	guint16 boot_ver;
+	guint8 number_modules;
+	gsize offset = 0;
+	g_autoptr(FuStructModuleDesc) st_desc = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
 
@@ -780,27 +783,32 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 	fu_dump_raw(G_LOG_DOMAIN, "modules", buf->data, buf->len);
 
 	/* bootloader version */
-	if (!fu_memread_uint16_safe(buf->data, buf->len, 1, &boot_ver, G_BIG_ENDIAN, error))
+	st_desc = fu_struct_module_desc_parse(buf->data, buf->len, offset, error);
+	if (st_desc == NULL)
 		return FALSE;
+	boot_ver = fu_struct_module_desc_get_bootloader_version(st_desc);
 	version_bootloader = fu_version_from_uint16(boot_ver, FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_version_bootloader(FU_DEVICE(self), version_bootloader);
 	fu_device_set_version_bootloader_raw(FU_DEVICE(self), boot_ver);
 
+	/* no padding */
+	offset += FU_STRUCT_MODULE_DESC_SIZE;
+
 	/* get versions of each module */
-	for (guint8 i = 0; i < buf->data[3]; i++) {
-		guint8 fw_type = buf->data[(i * 4) + 4] & ~0x80;
-		g_autofree gchar *name = NULL;
-		g_autoptr(FuWacModule) module = NULL;
+	number_modules = fu_struct_module_desc_get_number_modules(st_desc);
+	for (guint8 i = 0; i < number_modules; i++) {
 		guint16 ver;
+		FuWacModuleFwType fw_type;
+		g_autofree gchar *name = NULL;
+		g_autoptr(FuStructModuleItem) st_item = NULL;
+		g_autoptr(FuWacModule) module = NULL;
 
-		if (!fu_memread_uint16_safe(buf->data,
-					    buf->len,
-					    (i * 4) + 5,
-					    &ver,
-					    G_BIG_ENDIAN,
-					    error))
+		st_item = fu_struct_module_item_parse(buf->data, buf->len, offset, error);
+		if (st_item == NULL)
 			return FALSE;
+		ver = fu_struct_module_item_get_version(st_item);
 
+		fw_type = fu_struct_module_item_get_kind(st_item) & 0x7F;
 		switch (fw_type) {
 		case FU_WAC_MODULE_FW_TYPE_TOUCH:
 			module = fu_wac_module_touch_new(FU_DEVICE(self));
@@ -868,6 +876,7 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 			g_warning("unknown submodule type 0x%0x", fw_type);
 			break;
 		}
+		offset += FU_STRUCT_MODULE_ITEM_SIZE;
 	}
 	return TRUE;
 }
