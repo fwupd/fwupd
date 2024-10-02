@@ -3,6 +3,10 @@
 Plugin = wacom_usb
 GType = FuWacDevice
 
+# FIXME CHECK THIS IS THE CORRECT ID
+[USB\VID_056A&PID_03F0-scaler]
+VersionFormat = triplet
+
 # Intuos Pro medium (2nd-gen USB) [PTH-660]
 [USB\VID_056A&PID_0357]
 Plugin = wacom_usb
