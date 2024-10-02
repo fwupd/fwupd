@@ -4302,12 +4302,14 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 	device_tmp = g_ptr_array_index(devices, 0);
 	fu_device_set_context(device_tmp, self->ctx);
 
+#ifndef SUPPORTED_BUILD
 	g_test_expect_message("FuUsbDevice",
 			      G_LOG_LEVEL_WARNING,
 			      "*invalid platform version 0x0000000a, expected >= 0x00010805*");
 	g_test_expect_message("FuUsbDevice",
 			      G_LOG_LEVEL_WARNING,
 			      "failed to parse * BOS descriptor: *did not find magic*");
+#endif
 
 	locker = fu_device_locker_new(device_tmp, &error);
 	g_assert_no_error(error);
