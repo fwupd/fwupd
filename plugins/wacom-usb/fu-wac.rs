@@ -28,6 +28,7 @@ enum FuWacReportId {
     Module                    = 0xE4,
 }
 #[derive(ToString)]
+#[repr(u8)]
 enum FuWacModuleFwType {
     Touch         = 0x00,
     Bluetooth     = 0x01,
@@ -94,4 +95,19 @@ struct FuStructId9LoaderCmd {
     size: u16be,                  // sizeof(data) + size of payload
     crc: u32be,                   // CRC(concat(data, payload))
     data: FuStructId9SpiCmd,
+}
+
+#[derive(Parse)]
+struct FuStructModuleDesc {
+    _report_id: u8,
+    bootloader_version: u16be,
+    number_modules: u8,
+    // FuStructModuleItem[number_modules]
+}
+
+#[derive(Parse)]
+struct FuStructModuleItem {
+    kind: FuWacModuleFwType,
+    version: u16be,
+    version2: u8,
 }
