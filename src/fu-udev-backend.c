@@ -539,6 +539,10 @@ fu_udev_backend_netlink_cb(gint fd, GIOCondition condition, gpointer user_data)
 		return TRUE;
 	blob = g_bytes_new(buf, len);
 	if (!fu_udev_backend_netlink_parse_blob(self, blob, &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug("ignoring netlink message: %s", error_local->message);
+			return TRUE;
+		}
 		g_warning("ignoring netlink message: %s", error_local->message);
 		return TRUE;
 	}
