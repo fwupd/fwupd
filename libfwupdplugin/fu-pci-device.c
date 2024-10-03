@@ -63,6 +63,21 @@ fu_pci_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "SubsystemModel", priv->subsystem_pid);
 }
 
+static void
+fu_pci_device_ensure_subsys_instance_id(FuPciDevice *self)
+{
+	FuPciDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *subsys = NULL;
+
+	/* not usable */
+	if (priv->subsystem_vid == 0x0 || priv->subsystem_pid == 0x0)
+		return;
+
+	/* a weird format, but copy Windows 10... */
+	subsys = g_strdup_printf("%04X%04X", priv->subsystem_vid, priv->subsystem_pid);
+	fu_device_add_instance_str(FU_DEVICE(self), "SUBSYS", subsys);
+}
+
 /**
  * fu_pci_device_set_subsystem_vid:
  * @self: a #FuPciDevice
@@ -77,7 +92,10 @@ fu_pci_device_set_subsystem_vid(FuPciDevice *self, guint16 subsystem_vid)
 {
 	FuPciDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_PCI_DEVICE(self));
+	if (priv->subsystem_vid == subsystem_vid)
+		return;
 	priv->subsystem_vid = subsystem_vid;
+	fu_pci_device_ensure_subsys_instance_id(self);
 }
 
 /**
@@ -112,7 +130,10 @@ fu_pci_device_set_subsystem_pid(FuPciDevice *self, guint16 subsystem_pid)
 {
 	FuPciDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_PCI_DEVICE(self));
+	if (priv->subsystem_pid == subsystem_pid)
+		return;
 	priv->subsystem_pid = subsystem_pid;
+	fu_pci_device_ensure_subsys_instance_id(self);
 }
 
 /**
@@ -182,12 +203,10 @@ fu_pci_device_to_incorporate(FuDevice *self, FuDevice *donor)
 
 	if (priv->class == 0x0)
 		priv->class = priv_donor->class;
-	if (priv->subsystem_vid == 0x0) {
+	if (priv->subsystem_vid == 0x0)
 		fu_pci_device_set_subsystem_vid(uself, fu_pci_device_get_subsystem_vid(udonor));
-	}
-	if (priv->subsystem_pid == 0x0) {
+	if (priv->subsystem_pid == 0x0)
 		fu_pci_device_set_subsystem_pid(uself, fu_pci_device_get_subsystem_pid(udonor));
-	}
 	if (priv->revision == 0x0)
 		fu_pci_device_set_revision(uself, fu_pci_device_get_revision(udonor));
 }
@@ -318,9 +337,6 @@ fu_pci_device_probe(FuDevice *device, GError **error)
 		priv->subsystem_pid = (guint16)tmp64;
 	}
 	if (priv->subsystem_vid != 0x0000 || priv->subsystem_pid != 0x0000) {
-		g_autofree gchar *subsys =
-		    g_strdup_printf("%04X%04X", priv->subsystem_vid, priv->subsystem_pid);
-		fu_device_add_instance_str(device, "SUBSYS", subsys);
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 						     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
