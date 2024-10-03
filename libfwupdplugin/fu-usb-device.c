@@ -223,6 +223,18 @@ fu_usb_device_set_dev(FuUsbDevice *self, struct libusb_device *usb_device)
 }
 
 static void
+fu_usb_device_vid_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	fu_device_add_instance_u16(device, "VID", fu_device_get_vid(device));
+}
+
+static void
+fu_usb_device_pid_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	fu_device_add_instance_u16(device, "PID", fu_device_get_pid(device));
+}
+
+static void
 fu_usb_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
 	FuUsbDevice *device = FU_USB_DEVICE(object);
@@ -254,8 +266,8 @@ fu_usb_device_set_property(GObject *object, guint prop_id, const GValue *value, 
 static void
 fu_usb_device_finalize(GObject *object)
 {
-	FuUsbDevice *device = FU_USB_DEVICE(object);
-	FuUsbDevicePrivate *priv = GET_PRIVATE(device);
+	FuUsbDevice *self = FU_USB_DEVICE(object);
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 
 	if (priv->handle != NULL)
 		libusb_close(priv->handle);
@@ -272,20 +284,28 @@ fu_usb_device_finalize(GObject *object)
 }
 
 static void
-fu_usb_device_init(FuUsbDevice *device)
+fu_usb_device_init(FuUsbDevice *self)
 {
-	FuUsbDevicePrivate *priv = GET_PRIVATE(device);
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	priv->configuration = -1;
 	priv->interfaces = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->bos_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->cfg_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->hid_descriptors = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
-	fu_device_set_acquiesce_delay(FU_DEVICE(device), 2500);
-	fu_device_retry_add_recovery(FU_DEVICE(device), FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, NULL);
-	fu_device_retry_add_recovery(FU_DEVICE(device),
+	fu_device_set_acquiesce_delay(FU_DEVICE(self), 2500);
+	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, NULL);
+	fu_device_retry_add_recovery(FU_DEVICE(self),
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_PERMISSION_DENIED,
 				     NULL);
+	g_signal_connect(FU_DEVICE(self),
+			 "notify::vid",
+			 G_CALLBACK(fu_usb_device_vid_notify_cb),
+			 NULL);
+	g_signal_connect(FU_DEVICE(self),
+			 "notify::pid",
+			 G_CALLBACK(fu_usb_device_pid_notify_cb),
+			 NULL);
 }
 
 /**
@@ -1121,8 +1141,6 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* add GUIDs in order of priority */
-	fu_device_add_instance_u16(device, "VID", fu_device_get_vid(device));
-	fu_device_add_instance_u16(device, "PID", fu_device_get_pid(device));
 	fu_device_add_instance_u16(device, "REV", release);
 	fu_device_build_instance_id_full(device,
 					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
