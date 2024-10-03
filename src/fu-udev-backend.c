@@ -658,8 +658,32 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 	g_autoptr(FuUdevDevice) device_new = NULL;
 
 	/* emulated */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
-		return g_object_ref(device);
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+		GType gtype = FU_TYPE_UDEV_DEVICE;
+		g_autofree gchar *physical_id = NULL;
+		if (subsystem != NULL) {
+			g_auto(GStrv) split = g_strsplit(subsystem, ":", 2);
+			gtype = fu_udev_backend_get_gtype_for_subsystem_devtype(split[0], split[1]);
+			physical_id =
+			    g_strconcat(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)),
+					"-parent:",
+					subsystem,
+					NULL);
+		} else {
+			physical_id =
+			    g_strconcat(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)),
+					"-parent",
+					NULL);
+		}
+		device_new = g_object_new(gtype,
+					  "context",
+					  fu_backend_get_context(backend),
+					  "physical-id",
+					  physical_id,
+					  NULL);
+		fu_device_add_flag(FU_DEVICE(device_new), FWUPD_DEVICE_FLAG_EMULATED);
+		return FU_DEVICE(g_steal_pointer(&device_new));
+	}
 
 	sysfs_path = g_strdup(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
 	if (sysfs_path == NULL) {
