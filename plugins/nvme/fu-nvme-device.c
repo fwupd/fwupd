@@ -76,12 +76,54 @@ fu_nvme_device_get_guid_safe(const guint8 *buf, guint16 addr_start)
 }
 
 static gboolean
-fu_nvme_device_submit_admin_passthru(FuNvmeDevice *self, struct nvme_admin_cmd *cmd, GError **error)
+fu_nvme_device_submit_admin_passthru(FuNvmeDevice *self,
+				     struct nvme_admin_cmd *cmd,
+				     guint8 *buf,
+				     gsize bufsz,
+				     GError **error)
 {
 	gint rc = 0;
 	guint32 err;
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
 
-	/* submit admin command */
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		g_autofree gchar *buf_base64 = g_base64_encode(buf, bufsz);
+		event_id = g_strdup_printf("NvmeIoctl:"
+					   "Opcode=0x%02x,"
+					   "Cdw10=0x%02x,"
+					   "Cdw11=0x%02x,"
+					   "Data=%s,"
+					   "Length=0x%x",
+					   cmd->opcode,
+					   cmd->cdw10,
+					   cmd->cdw11,
+					   buf_base64,
+					   (guint)bufsz);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return FALSE;
+		return fu_device_event_copy_data(event, "DataOut", buf, bufsz, NULL, error);
+	}
+
+	/* save */
+	if (fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+		fu_device_event_set_data(event, "Data", buf, bufsz);
+	}
+
+	/* submit admin command -- we can't use the emulation support in fu_udev_device_ioctl() as
+	 * the buffer is specified indirectly using the cmd.addr field */
+	if (buf != NULL)
+		memcpy(&cmd->addr, &buf, sizeof(gpointer)); /* nocheck:blocked */
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  NVME_IOCTL_ADMIN_CMD,
 				  (guint8 *)cmd,
@@ -102,6 +144,9 @@ fu_nvme_device_submit_admin_passthru(FuNvmeDevice *self, struct nvme_admin_cmd *
 	case NVME_SC_FW_NEEDS_CONV_RESET:
 	case NVME_SC_FW_NEEDS_SUBSYS_RESET:
 	case NVME_SC_FW_NEEDS_RESET:
+		/* save response */
+		if (event != NULL)
+			fu_device_event_set_data(event, "DataOut", buf, bufsz);
 		return TRUE;
 	default:
 		break;
@@ -115,18 +160,17 @@ fu_nvme_device_submit_admin_passthru(FuNvmeDevice *self, struct nvme_admin_cmd *
 }
 
 static gboolean
-fu_nvme_device_identify_ctrl(FuNvmeDevice *self, guint8 *data, GError **error)
+fu_nvme_device_identify_ctrl(FuNvmeDevice *self, guint8 *buf, gsize bufsz, GError **error)
 {
 	struct nvme_admin_cmd cmd = {
 	    .opcode = 0x06,
 	    .nsid = 0x00,
 	    .addr = 0x0, /* memory address of data */
-	    .data_len = FU_NVME_ID_CTRL_SIZE,
+	    .data_len = bufsz,
 	    .cdw10 = 0x01,
 	    .cdw11 = 0x00,
 	};
-	memcpy(&cmd.addr, &data, sizeof(gpointer)); /* nocheck:blocked */
-	return fu_nvme_device_submit_admin_passthru(self, &cmd, error);
+	return fu_nvme_device_submit_admin_passthru(self, &cmd, buf, bufsz, error);
 }
 
 static gboolean
@@ -140,25 +184,27 @@ fu_nvme_device_fw_commit(FuNvmeDevice *self,
 	    .opcode = 0x10,
 	    .cdw10 = (bpid << 31) | (action << 3) | slot,
 	};
-	return fu_nvme_device_submit_admin_passthru(self, &cmd, error);
+	return fu_nvme_device_submit_admin_passthru(self, &cmd, NULL, 0, error);
 }
 
 static gboolean
 fu_nvme_device_fw_download(FuNvmeDevice *self,
 			   guint32 addr,
-			   const guint8 *data,
-			   guint32 data_sz,
+			   const guint8 *buf,
+			   gsize bufsz,
 			   GError **error)
 {
 	struct nvme_admin_cmd cmd = {
 	    .opcode = 0x11,
 	    .addr = 0x0, /* memory address of data */
-	    .data_len = data_sz,
-	    .cdw10 = (data_sz >> 2) - 1, /* convert to DWORDs */
-	    .cdw11 = addr >> 2,		 /* convert to DWORDs */
+	    .data_len = bufsz,
+	    .cdw10 = (bufsz >> 2) - 1, /* convert to DWORDs */
+	    .cdw11 = addr >> 2,	       /* convert to DWORDs */
 	};
-	memcpy(&cmd.addr, &data, sizeof(gpointer)); /* nocheck:blocked */
-	return fu_nvme_device_submit_admin_passthru(self, &cmd, error);
+	g_autofree guint8 *buf_mut = fu_memdup_safe(buf, bufsz, error);
+	if (buf_mut == NULL)
+		return FALSE;
+	return fu_nvme_device_submit_admin_passthru(self, &cmd, buf_mut, bufsz, error);
 }
 
 static void
@@ -315,6 +361,7 @@ fu_nvme_device_probe(FuDevice *device, GError **error)
 	/* most devices need at least a warm reset, but some quirked drives
 	 * need a full "cold" shutdown and startup */
 	if (!fu_device_has_private_flag(device, FU_NVME_DEVICE_FLAG_COMMIT_CA3) &&
+	    !fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED) &&
 	    !fu_device_has_flag(self, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 
@@ -328,7 +375,7 @@ fu_nvme_device_setup(FuDevice *device, GError **error)
 	guint8 buf[FU_NVME_ID_CTRL_SIZE] = {0x0};
 
 	/* get and parse CNS */
-	if (!fu_nvme_device_identify_ctrl(self, buf, error)) {
+	if (!fu_nvme_device_identify_ctrl(self, buf, sizeof(buf), error)) {
 		g_prefix_error(error,
 			       "failed to identify %s: ",
 			       fu_device_get_physical_id(FU_DEVICE(self)));

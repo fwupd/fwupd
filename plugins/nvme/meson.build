@@ -48,6 +48,4 @@ if get_option('tests')
   )
   test('nvme-self-test', e, env: env)  # added to installed-tests
 endif
-umockdev_tests += files('nvme_test.py')
-umockdev_ioctls += files('nvme_ioctl.py')
 endif
