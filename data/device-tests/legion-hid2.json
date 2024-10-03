@@ -1,0 +1,18 @@
+{
+  "name": "Legion Hid2 device",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/76ea95f3d3fa893a70de6716a9b34115365f4cb3ac57f290190ce9de20935f9d-firmware.cab",
+      "emulation-url": "https://fwupd.org/downloads/05162d6d3cf6c595da613fcd5c57415022c08e57a76454b7c19de533492bc3f2-legion-hid2.zip",
+      "components": [
+        {
+          "version": "0.0.2.4",
+          "guids": [
+            "65619675-fec6-5035-801d-7f5e59fd9749"
+          ]
+        }
+      ]
+    }
+  ]
+}
