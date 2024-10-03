@@ -114,7 +114,8 @@ fu_engine_config_reload(FuEngineConfig *self)
 {
 	g_auto(GStrv) approved_firmware = NULL;
 	g_auto(GStrv) blocked_firmware = NULL;
-	g_auto(GStrv) devices = NULL;
+	g_auto(GStrv) disabled_devices = NULL;
+	g_auto(GStrv) emulated_devices = NULL;
 	g_auto(GStrv) plugins = NULL;
 	g_auto(GStrv) report_specs = NULL;
 	g_auto(GStrv) uids = NULL;
@@ -125,10 +126,10 @@ fu_engine_config_reload(FuEngineConfig *self)
 
 	/* get disabled devices */
 	g_ptr_array_set_size(self->disabled_devices, 0);
-	devices = fu_config_get_value_strv(FU_CONFIG(self), "fwupd", "DisabledDevices");
-	if (devices != NULL) {
-		for (guint i = 0; devices[i] != NULL; i++)
-			g_ptr_array_add(self->disabled_devices, g_strdup(devices[i]));
+	disabled_devices = fu_config_get_value_strv(FU_CONFIG(self), "fwupd", "DisabledDevices");
+	if (disabled_devices != NULL) {
+		for (guint i = 0; disabled_devices[i] != NULL; i++)
+			g_ptr_array_add(self->disabled_devices, g_strdup(disabled_devices[i]));
 	}
 
 	/* get disabled plugins */
@@ -146,10 +147,10 @@ fu_engine_config_reload(FuEngineConfig *self)
 
 	/* get emulated devices */
 	g_ptr_array_set_size(self->emulated_devices, 0);
-	devices = fu_config_get_value_strv(FU_CONFIG(self), "fwupd", "EmulatedDevices");
-	if (devices != NULL) {
-		for (guint i = 0; devices[i] != NULL; i++)
-			g_ptr_array_add(self->emulated_devices, g_strdup(devices[i]));
+	emulated_devices = fu_config_get_value_strv(FU_CONFIG(self), "fwupd", "EmulatedDevices");
+	if (emulated_devices != NULL) {
+		for (guint i = 0; emulated_devices[i] != NULL; i++)
+			g_ptr_array_add(self->emulated_devices, g_strdup(emulated_devices[i]));
 	}
 
 	/* get approved firmware */
