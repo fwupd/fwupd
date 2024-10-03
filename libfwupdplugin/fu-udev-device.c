@@ -1800,7 +1800,7 @@ fu_udev_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 
 	tmp = json_object_get_string_member_with_default(json_object, "BackendId", NULL);
 	if (tmp != NULL)
-		fu_device_set_backend_id(device, tmp);
+		fu_device_set_physical_id(device, tmp);
 	tmp = json_object_get_string_member_with_default(json_object, "Subsystem", NULL);
 	if (tmp != NULL)
 		fu_udev_device_set_subsystem(self, tmp);
