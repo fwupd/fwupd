@@ -737,6 +737,10 @@ fu_util_release_get_name(FwupdRelease *release)
 			 * by artists and digital artists */
 			return g_strdup_printf(_("%s Graphics Tablet Update"), name);
 		}
+		if (g_strcmp0(cat, "X-InputController") == 0) {
+			/* TRANSLATORS: an input device used by gamers, e.g. a joystick */
+			return g_strdup_printf(_("%s Input Controller Update"), name);
+		}
 	}
 
 	/* TRANSLATORS: this is the fallback where we don't know if the release

@@ -6223,6 +6223,8 @@ fu_device_category_to_name(const gchar *cat)
 		return "Fingerprint Reader";
 	if (g_strcmp0(cat, "X-GraphicsTablet") == 0)
 		return "Graphics Tablet";
+	if (g_strcmp0(cat, "X-InputController") == 0)
+		return "Input Controller";
 	return NULL;
 }
 
