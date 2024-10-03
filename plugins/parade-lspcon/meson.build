@@ -1,5 +1,5 @@
-if get_option('plugin_parade_lspcon').require(gudev.found(),
-    error_message: 'gudev is needed for plugin_parade_lspcon').allowed()
+if get_option('plugin_parade_lspcon').require(enable_udev,
+    error_message: 'udev is needed for plugin_parade_lspcon').allowed()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginParadeLspcon"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}

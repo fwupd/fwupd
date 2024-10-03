@@ -1,4 +1,4 @@
-if gudev.found()
+if enable_udev
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 cargs = ['-DG_LOG_DOMAIN="FuPluginWacomRaw"']
 

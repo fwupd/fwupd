@@ -1,4 +1,4 @@
-if gudev.found()
+if enable_udev
 cargs = ['-DG_LOG_DOMAIN="FuPluginElantp"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

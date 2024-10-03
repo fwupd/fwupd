@@ -207,12 +207,11 @@ if giounix.found()
   conf.set('HAVE_GIO_UNIX', '1')
 endif
 gmodule = dependency('gmodule-2.0')
-if build_standalone
-gudev = dependency('gudev-1.0', version: '>= 232',
-                    required: get_option('gudev').disable_auto_if(host_machine.system() != 'linux'))
-if gudev.found()
-  conf.set('HAVE_GUDEV', '1')
+enable_udev = get_option('udev').disable_auto_if(host_machine.system() != 'linux').allowed()
+if enable_udev
+  conf.set('HAVE_UDEV', '1')
 endif
+if build_standalone
 bluez = get_option('bluez').disable_auto_if(host_machine.system() != 'linux')
 if bluez.allowed()
   conf.set('HAVE_BLUEZ', '1')
@@ -648,6 +647,9 @@ umockdev_integration_tests = get_option('umockdev_tests')                     \
                               .disable_auto_if(not run_sanitize_unsafe_tests) \
                               .disable_auto_if(dbusmock.returncode() != 0)
 umockdev = dependency('umockdev-1.0', required: get_option('umockdev_tests'))
+if umockdev.found()
+  gudev = dependency('gudev-1.0', version: '>= 232')
+endif
 
 if dbusmock.returncode() != 0 and get_option('umockdev_tests').allowed()
   warning('python dbusmock not found, umockdev tests will be disabled')
@@ -736,7 +738,7 @@ if build_daemon
   summary({
     'bluez': bluez.allowed(),
     'libusb': libusb,
-    'gudev': gudev,
+    'udev': enable_udev,
     'hsi': hsi,
     'lvfs_metadata_format': lvfs_metadata_format,
     'libarchive': libarchive.found(),

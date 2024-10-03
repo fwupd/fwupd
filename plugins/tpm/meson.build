@@ -2,8 +2,8 @@ tpm2tss_tpm = dependency('tss2-esys', version: '>= 2.0', required: get_option('p
 
 if hsi and \
    tpm2tss_tpm.found() and \
-   get_option('plugin_tpm').require(gudev.found(),
-    error_message: 'gudev is needed for plugin_tpm').allowed()
+   get_option('plugin_tpm').require(enable_udev,
+    error_message: 'udev is needed for plugin_tpm').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginTpm"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
