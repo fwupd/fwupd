@@ -128,13 +128,9 @@ fu_udev_backend_create_ddc_proxy(FuUdevBackend *self, FuUdevDevice *udev_device)
 	fu_device_set_proxy(FU_DEVICE(udev_device), FU_DEVICE(proxy));
 }
 
-static FuDevice *
-fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GError **error)
+static GType
+fu_udev_backend_get_gtype_for_subsystem_devtype(const gchar *subsystem, const gchar *devtype)
 {
-	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
-	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
-	g_autoptr(FuDevice) device = NULL;
-	GType gtype = FU_TYPE_UDEV_DEVICE;
 	struct {
 		const gchar *subsystem;
 		const gchar *devtype;
@@ -152,6 +148,22 @@ fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GEr
 	    {"pci", NULL, FU_TYPE_PCI_DEVICE},
 	    {"video4linux", NULL, FU_TYPE_V4L_DEVICE},
 	};
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
+		if (g_strcmp0(subsystem, map[i].subsystem) == 0 &&
+		    (map[i].devtype == NULL || g_strcmp0(devtype, map[i].devtype) == 0)) {
+			return map[i].gtype;
+		}
+	}
+	return FU_TYPE_UDEV_DEVICE;
+}
+
+static FuDevice *
+fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GError **error)
+{
+	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
+	g_autoptr(FuDevice) device = NULL;
+	GType gtype = FU_TYPE_UDEV_DEVICE;
 
 	/* ignore zram and loop block devices -- of which there are dozens on systems with snap */
 	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(donor)), "block") == 0) {
@@ -167,16 +179,10 @@ fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GEr
 		}
 	}
 
-	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
-		if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(donor)),
-			      map[i].subsystem) == 0 &&
-		    (map[i].devtype == NULL ||
-		     g_strcmp0(fu_udev_device_get_devtype(FU_UDEV_DEVICE(donor)), map[i].devtype) ==
-			 0)) {
-			gtype = map[i].gtype;
-			break;
-		}
-	}
+	/* create actual device with correct GType */
+	gtype = fu_udev_backend_get_gtype_for_subsystem_devtype(
+	    fu_udev_device_get_subsystem(FU_UDEV_DEVICE(donor)),
+	    fu_udev_device_get_devtype(FU_UDEV_DEVICE(donor)));
 	if (gtype == FU_TYPE_UDEV_DEVICE) {
 		device = g_object_ref(donor);
 	} else {
