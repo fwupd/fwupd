@@ -148,6 +148,7 @@ fu_pci_device_set_revision(FuPciDevice *self, guint8 revision)
 	FuPciDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_PCI_DEVICE(self));
 	priv->revision = revision;
+	fu_device_add_instance_u8(FU_DEVICE(self), "REV", priv->revision);
 }
 
 /**
@@ -258,7 +259,7 @@ fu_pci_device_probe(FuDevice *device, GError **error)
 		guint64 tmp64 = 0;
 		if (!fu_strtoull(attr_revision, &tmp64, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
-		priv->revision = (guint8)tmp64;
+		fu_pci_device_set_revision(self, (guint8)tmp64);
 	}
 	if (fu_device_get_version(device) == NULL &&
 	    fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
@@ -270,7 +271,6 @@ fu_pci_device_probe(FuDevice *device, GError **error)
 	}
 	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV) &&
 	    priv->revision != 0xFF) {
-		fu_device_add_instance_u8(device, "REV", priv->revision);
 		if (fu_device_has_private_flag(device,
 					       FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
 			fu_device_build_instance_id_full(device,
