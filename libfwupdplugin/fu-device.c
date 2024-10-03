@@ -124,6 +124,8 @@ enum {
 	PROP_PROXY,
 	PROP_PARENT,
 	PROP_PRIVATE_FLAGS,
+	PROP_VID,
+	PROP_PID,
 	PROP_LAST
 };
 
@@ -173,6 +175,12 @@ fu_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec
 	case PROP_PRIVATE_FLAGS:
 		g_value_set_uint64(value, priv->private_flags->len);
 		break;
+	case PROP_VID:
+		g_value_set_uint(value, priv->vid);
+		break;
+	case PROP_PID:
+		g_value_set_uint(value, priv->pid);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -213,6 +221,12 @@ fu_device_set_property(GObject *object, guint prop_id, const GValue *value, GPar
 		break;
 	case PROP_PARENT:
 		fu_device_set_parent(self, g_value_get_object(value));
+		break;
+	case PROP_VID:
+		fu_device_set_vid(self, g_value_get_uint(value));
+		break;
+	case PROP_PID:
+		fu_device_set_pid(self, g_value_get_uint(value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -4302,7 +4316,10 @@ fu_device_set_vid(FuDevice *self, guint16 vid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
+	if (priv->vid == vid)
+		return;
 	priv->vid = vid;
+	g_object_notify(G_OBJECT(self), "vid");
 }
 
 /**
@@ -4337,7 +4354,10 @@ fu_device_set_pid(FuDevice *self, guint16 pid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
+	if (priv->pid == pid)
+		return;
 	priv->pid = pid;
+	g_object_notify(G_OBJECT(self), "pid");
 }
 
 /**
@@ -7309,6 +7329,38 @@ fu_device_class_init(FuDeviceClass *klass)
 				    0,
 				    G_PARAM_READABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_PRIVATE_FLAGS, pspec);
+
+	/**
+	 * FuDevice:vid:
+	 *
+	 * The device vendor ID.
+	 *
+	 * Since: 2.0.0
+	 */
+	pspec = g_param_spec_uint("vid",
+				  NULL,
+				  NULL,
+				  0,
+				  G_MAXUINT16,
+				  0,
+				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_VID, pspec);
+
+	/**
+	 * FuDevice:pid:
+	 *
+	 * The device product ID.
+	 *
+	 * Since: 2.0.0
+	 */
+	pspec = g_param_spec_uint("pid",
+				  NULL,
+				  NULL,
+				  0,
+				  G_MAXUINT16,
+				  0,
+				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_PID, pspec);
 }
 
 static void

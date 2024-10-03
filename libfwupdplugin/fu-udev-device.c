@@ -387,10 +387,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		fu_device_build_vendor_id_u16(device, subsystem, fu_device_get_vid(device));
 
 	/* add GUIDs in order of priority */
-	if (fu_device_get_vid(device) != 0x0000)
-		fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device));
-	if (fu_device_get_pid(device) != 0x0000)
-		fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(device));
 	if (subsystem != NULL) {
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
@@ -1917,11 +1913,31 @@ fu_udev_device_finalize(GObject *object)
 }
 
 static void
+fu_udev_device_vid_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device));
+}
+
+static void
+fu_udev_device_pid_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(device));
+}
+
+static void
 fu_udev_device_init(FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	priv->properties = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	fu_device_set_acquiesce_delay(FU_DEVICE(self), 2500);
+	g_signal_connect(FU_DEVICE(self),
+			 "notify::vid",
+			 G_CALLBACK(fu_udev_device_vid_notify_cb),
+			 NULL);
+	g_signal_connect(FU_DEVICE(self),
+			 "notify::pid",
+			 G_CALLBACK(fu_udev_device_pid_notify_cb),
+			 NULL);
 }
 
 static void
