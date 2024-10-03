@@ -15,6 +15,7 @@
 struct _FuEngineConfig {
 	FuConfig parent_instance;
 	GPtrArray *disabled_devices;  /* (element-type utf-8) */
+	GPtrArray *emulated_devices;  /* (element-type utf-8) */
 	GPtrArray *disabled_plugins;  /* (element-type utf-8) */
 	GPtrArray *approved_firmware; /* (element-type utf-8) */
 	GPtrArray *blocked_firmware;  /* (element-type utf-8) */
@@ -143,6 +144,14 @@ fu_engine_config_reload(FuEngineConfig *self)
 		}
 	}
 
+	/* get emulated devices */
+	g_ptr_array_set_size(self->emulated_devices, 0);
+	devices = fu_config_get_value_strv(FU_CONFIG(self), "fwupd", "EmulatedDevices");
+	if (devices != NULL) {
+		for (guint i = 0; devices[i] != NULL; i++)
+			g_ptr_array_add(self->emulated_devices, g_strdup(devices[i]));
+	}
+
 	/* get approved firmware */
 	g_ptr_array_set_size(self->approved_firmware, 0);
 	approved_firmware = fu_config_get_value_strv(FU_CONFIG(self), "fwupd", "ApprovedFirmware");
@@ -241,6 +250,13 @@ fu_engine_config_get_disabled_devices(FuEngineConfig *self)
 {
 	g_return_val_if_fail(FU_IS_ENGINE_CONFIG(self), NULL);
 	return self->disabled_devices;
+}
+
+GPtrArray *
+fu_engine_config_get_emulated_devices(FuEngineConfig *self)
+{
+	g_return_val_if_fail(FU_IS_ENGINE_CONFIG(self), NULL);
+	return self->emulated_devices;
 }
 
 GArray *
@@ -400,6 +416,7 @@ fu_engine_config_init(FuEngineConfig *self)
 	g_autofree gchar *archive_size_max_default = fu_engine_config_archive_size_max_default();
 	self->disabled_devices = g_ptr_array_new_with_free_func(g_free);
 	self->disabled_plugins = g_ptr_array_new_with_free_func(g_free);
+	self->emulated_devices = g_ptr_array_new_with_free_func(g_free);
 	self->approved_firmware = g_ptr_array_new_with_free_func(g_free);
 	self->blocked_firmware = g_ptr_array_new_with_free_func(g_free);
 	self->trusted_uids = g_array_new(FALSE, FALSE, sizeof(guint64));
@@ -414,6 +431,7 @@ fu_engine_config_init(FuEngineConfig *self)
 	fu_engine_config_set_default(self, "ArchiveSizeMax", archive_size_max_default);
 	fu_engine_config_set_default(self, "BlockedFirmware", NULL);
 	fu_engine_config_set_default(self, "DisabledDevices", NULL);
+	fu_engine_config_set_default(self, "EmulatedDevices", NULL);
 	fu_engine_config_set_default(self, "DisabledPlugins", "");
 	fu_engine_config_set_default(self, "EnumerateAllDevices", "false");
 	fu_engine_config_set_default(self, "EspLocation", NULL);
@@ -442,6 +460,7 @@ fu_engine_config_finalize(GObject *obj)
 
 	g_ptr_array_unref(self->disabled_devices);
 	g_ptr_array_unref(self->disabled_plugins);
+	g_ptr_array_unref(self->emulated_devices);
 	g_ptr_array_unref(self->approved_firmware);
 	g_ptr_array_unref(self->blocked_firmware);
 	g_ptr_array_unref(self->uri_schemes);

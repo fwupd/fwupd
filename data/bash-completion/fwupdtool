@@ -101,6 +101,7 @@ fwupd_modify_config_opts=(
 	'BlockedFirmware'
 	'DisabledDevices'
 	'DisabledPlugins'
+	'EmulatedDevices'
 	'EspLocation'
 	'EnumerateAllDevices'
 	'HostBkc'
@@ -369,7 +370,7 @@ _fwupdtool()
 				;;
 			ApprovedFirmware|BlockedFirmware)
 				;;
-			DisabledDevices)
+			DisabledDevices|EmulatedDevices)
 				_show_device_ids
 				;;
 			DisabledPlugins)
