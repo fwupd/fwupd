@@ -174,6 +174,7 @@ fu_config_migrate_keyfile(FuConfig *self)
 			  {"fwupd", "ArchiveSizeMax", "0"},
 			  {"fwupd", "BlockedFirmware", NULL},
 			  {"fwupd", "DisabledDevices", NULL},
+			  {"fwupd", "EmulatedDevices", NULL},
 			  {"fwupd", "EnumerateAllDevices", NULL},
 			  {"fwupd", "EspLocation", NULL},
 			  {"fwupd", "HostBkc", NULL},

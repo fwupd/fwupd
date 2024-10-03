@@ -23,6 +23,8 @@ GPtrArray *
 fu_engine_config_get_disabled_devices(FuEngineConfig *self) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_engine_config_get_disabled_plugins(FuEngineConfig *self) G_GNUC_NON_NULL(1);
+GPtrArray *
+fu_engine_config_get_emulated_devices(FuEngineConfig *self) G_GNUC_NON_NULL(1);
 GArray *
 fu_engine_config_get_trusted_uids(FuEngineConfig *self) G_GNUC_NON_NULL(1);
 GPtrArray *

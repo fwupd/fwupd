@@ -70,6 +70,10 @@ For example:
     Waiting…                 [***************************************]
     Hughski ColorHug2: OK!
 
+For devices that cannot be hotplugged, the `fwupd.conf` config option `EmulatedDevices` option
+can be used, by specifying the device IDs of the device that should be monitored.
+When adding modifying `EmulatedDevices` the daemon must be restarted for it to take effect.
+
 ## Pcap file conversion
 
 Emulation can also be used during the development phase of the plugin if the hardware is not

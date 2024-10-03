@@ -820,29 +820,16 @@ fu_engine_modify_config(FuEngine *self,
 
 	/* check keys are valid */
 	if (g_strcmp0(section, "fwupd") == 0) {
-		const gchar *keys[] = {"ArchiveSizeMax",
-				       "AllowEmulation",
-				       "ApprovedFirmware",
-				       "BlockedFirmware",
-				       "DisabledDevices",
-				       "DisabledPlugins",
-				       "EnumerateAllDevices",
-				       "EspLocation",
-				       "HostBkc",
-				       "IdleTimeout",
-				       "IgnorePower",
-				       "OnlyTrusted",
-				       "P2pPolicy",
-				       "ReleaseDedupe",
-				       "ReleasePriority",
-				       "ShowDevicePrivate",
-				       "TestDevices",
-				       "TrustedReports",
-				       "TrustedUids",
-				       "UpdateMotd",
-				       "UriSchemes",
-				       "VerboseDomains",
-				       NULL};
+		const gchar *keys[] = {
+		    "ArchiveSizeMax",  "AllowEmulation",      "ApprovedFirmware",
+		    "BlockedFirmware", "DisabledDevices",     "DisabledPlugins",
+		    "EmulatedDevices", "EnumerateAllDevices", "EspLocation",
+		    "HostBkc",	       "IdleTimeout",	      "IgnorePower",
+		    "OnlyTrusted",     "P2pPolicy",	      "ReleaseDedupe",
+		    "ReleasePriority", "ShowDevicePrivate",   "TestDevices",
+		    "TrustedReports",  "TrustedUids",	      "UpdateMotd",
+		    "UriSchemes",      "VerboseDomains",      NULL,
+		};
 		if (!g_strv_contains(keys, key)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -4107,10 +4094,22 @@ fu_engine_remote_list_ensure_p2p_policy_remote(FuEngine *self, FwupdRemote *remo
 }
 
 static void
+fu_engine_config_ensure_emulated_devices(FuEngine *self)
+{
+	GPtrArray *emulated_devices = fu_engine_config_get_emulated_devices(self->config);
+	for (guint i = 0; i < emulated_devices->len; i++) {
+		const gchar *device_id = g_ptr_array_index(emulated_devices, i);
+		g_hash_table_insert(self->emulation_ids, g_strdup(device_id), GUINT_TO_POINTER(1));
+	}
+	fu_engine_ensure_context_flag_save_events(self);
+}
+
+static void
 fu_engine_config_changed_cb(FuEngineConfig *config, FuEngine *self)
 {
 	GPtrArray *remotes = fu_remote_list_get_all(self->remote_list);
 
+	fu_engine_config_ensure_emulated_devices(self);
 	fu_idle_set_timeout(self->idle, fu_engine_config_get_idle_timeout(config));
 
 	/* allow changing the hardcoded ESP location */
@@ -8161,6 +8160,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		g_prefix_error(error, "Failed to load config: ");
 		return FALSE;
 	}
+	fu_engine_config_ensure_emulated_devices(self);
 	fu_progress_step_done(progress);
 
 	/* set the hardcoded ESP */
