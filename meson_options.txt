@@ -65,9 +65,9 @@ option('gnutls',
   type: 'feature',
   description: 'GnuTLS support',
 )
-option('gudev',
+option('udev',
   type: 'feature',
-  description: 'GUdev support',
+  description: 'Linux UDev support',
 )
 option('hsi',
   type: 'feature',

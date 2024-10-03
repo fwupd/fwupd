@@ -1,5 +1,5 @@
-if get_option('plugin_scsi').require(gudev.found(),
-    error_message: 'gudev is needed for plugin_scsi').allowed()
+if get_option('plugin_scsi').require(enable_udev,
+    error_message: 'udev is needed for plugin_scsi').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginScsi"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

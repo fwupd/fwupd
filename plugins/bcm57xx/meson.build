@@ -1,5 +1,5 @@
-if get_option('plugin_bcm57xx').require(gudev.found(),
-    error_message: 'gudev is needed for plugin_bcm57xx').allowed()
+if get_option('plugin_bcm57xx').require(enable_udev,
+    error_message: 'udev is needed for plugin_bcm57xx').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginBcm57xx"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

@@ -1,4 +1,4 @@
-if gudev.found() and (host_cpu == 'x86' or host_cpu == 'x86_64')
+if enable_udev and (host_cpu == 'x86' or host_cpu == 'x86_64')
 cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
 
 plugin_quirks += files('thunderbolt.quirk')

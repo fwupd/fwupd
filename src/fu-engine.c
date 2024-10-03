@@ -70,7 +70,7 @@
 #ifdef HAVE_GIO_UNIX
 #include "fu-unix-seekable-input-stream.h"
 #endif
-#ifdef HAVE_GUDEV
+#ifdef HAVE_UDEV
 #include "fu-udev-backend.h"
 #endif
 #ifdef HAVE_BLUEZ
@@ -8777,7 +8777,7 @@ fu_engine_constructed(GObject *obj)
 		g_autoptr(FuBackend) backend = fu_usb_backend_new(self->ctx);
 		fu_context_add_backend(self->ctx, backend);
 	}
-#ifdef HAVE_GUDEV
+#ifdef HAVE_UDEV
 	{
 		g_autoptr(FuBackend) backend = fu_udev_backend_new(self->ctx);
 		fu_context_add_backend(self->ctx, backend);

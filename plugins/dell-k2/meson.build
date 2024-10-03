@@ -26,8 +26,5 @@ plugin_builtins += static_library('fu_plugin_dell_k2',
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-    gudev,
-  ],
+  dependencies: plugin_deps,
 )

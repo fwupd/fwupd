@@ -63,7 +63,7 @@ fwupd_engine_src = [
 if giounix.found()
   fwupd_engine_src += 'fu-unix-seekable-input-stream.c'
 endif
-if gudev.found()
+if enable_udev
   fwupd_engine_src += 'fu-udev-backend.c'
 endif
 if bluez.allowed()

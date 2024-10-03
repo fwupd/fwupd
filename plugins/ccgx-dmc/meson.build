@@ -15,10 +15,7 @@ plugin_builtin_ccgx_dmc = static_library('fu_plugin_ccgx_dmc',
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
   c_args: cargs,
-  dependencies: [
-    plugin_deps,
-    gudev,
-  ],
+  dependencies: plugin_deps,
 )
 plugin_builtins += plugin_builtin_ccgx_dmc
 

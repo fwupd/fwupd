@@ -1,6 +1,6 @@
 gpio_header = cc.has_header_symbol('linux/gpio.h', 'GPIO_V2_LINE_FLAG_OUTPUT', required: get_option('plugin_gpio'))
 
-if gpio_header and gudev.found()
+if gpio_header and enable_udev
 cargs = ['-DG_LOG_DOMAIN="FuPluginGpio"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

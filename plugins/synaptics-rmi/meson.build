@@ -1,7 +1,7 @@
 if get_option('plugin_synaptics_rmi').require(gnutls.found(),
     error_message: 'gnutls is needed for plugin_synaptics_rmi').allowed() and \
-   get_option('plugin_synaptics_rmi').require(gudev.found(),
-    error_message: 'gudev is needed for plugin_synaptics_rmi').allowed()
+   get_option('plugin_synaptics_rmi').require(enable_udev,
+    error_message: 'udev is needed for plugin_synaptics_rmi').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsRmi"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

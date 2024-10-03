@@ -1,5 +1,5 @@
-if get_option('plugin_mtd').require(gudev.found(),
-    error_message: 'gudev is needed for plugin_mtd').allowed()
+if get_option('plugin_mtd').require(enable_udev,
+    error_message: 'udev is needed for plugin_mtd').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginMtd"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

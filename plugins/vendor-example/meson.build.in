@@ -1,5 +1,5 @@
 {%- if Parent == 'Udev' -%}
-if gudev.found()
+if enable_udev
 {%- endif %}
 cargs = ['-DG_LOG_DOMAIN="FuPlugin{{VendorExample}}"']
 
