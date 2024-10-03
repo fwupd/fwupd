@@ -32,6 +32,7 @@ install_data([
     'jabra-speak-410.json',
     'jabra-speak-510.json',
     'jabra-speak-710.json',
+    'legion-hid2.json',
     'lenovo-03x7168.json',
     'lenovo-03x7605.json',
     'lenovo-03x7608-vli.json',
