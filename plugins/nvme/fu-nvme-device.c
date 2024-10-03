@@ -145,7 +145,7 @@ fu_nvme_device_submit_admin_passthru(FuNvmeDevice *self,
 	case NVME_SC_FW_NEEDS_SUBSYS_RESET:
 	case NVME_SC_FW_NEEDS_RESET:
 		/* save response */
-		if (event != NULL)
+		if (event != NULL && buf != NULL)
 			fu_device_event_set_data(event, "DataOut", buf, bufsz);
 		return TRUE;
 	default:
