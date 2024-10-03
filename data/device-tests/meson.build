@@ -38,6 +38,7 @@ install_data([
     'lenovo-03x7609-cxaudio.json',
     'lenovo-40au0065-vli.json',
     'lenovo-GX90T33021-vli.json',
+    'lenovo-pcsn720.json',
     'logitech-bolt-receiver.json',
     'logitech-k780.json',
     'logitech-m650.json',
