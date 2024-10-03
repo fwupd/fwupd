@@ -271,9 +271,12 @@ fu_nvme_device_pci_probe(FuNvmeDevice *self, GError **error)
 				  FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS |
 				  FU_DEVICE_INCORPORATE_FLAG_VID | FU_DEVICE_INCORPORATE_FLAG_PID |
 				  FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
-	fu_device_add_instance_str(FU_DEVICE(self),
-				   "SUBSYS",
-				   fu_device_get_instance_str(pci_donor, "SUBSYS"));
+	fu_pci_device_set_revision(FU_PCI_DEVICE(self),
+				   fu_pci_device_get_revision(FU_PCI_DEVICE(pci_donor)));
+	fu_pci_device_set_subsystem_vid(FU_PCI_DEVICE(self),
+					fu_pci_device_get_subsystem_vid(FU_PCI_DEVICE(pci_donor)));
+	fu_pci_device_set_subsystem_pid(FU_PCI_DEVICE(self),
+					fu_pci_device_get_subsystem_pid(FU_PCI_DEVICE(pci_donor)));
 	if (!fu_device_build_instance_id(FU_DEVICE(self), error, "NVME", "VEN", "DEV", NULL))
 		return FALSE;
 	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
@@ -284,8 +287,6 @@ fu_nvme_device_pci_probe(FuNvmeDevice *self, GError **error)
 					      NULL))
 		return FALSE;
 	fu_device_build_instance_id(FU_DEVICE(self), NULL, "NVME", "VEN", "DEV", "SUBSYS", NULL);
-	fu_pci_device_set_revision(FU_PCI_DEVICE(self),
-				   fu_pci_device_get_revision(FU_PCI_DEVICE(pci_donor)));
 
 	/* success */
 	return TRUE;
