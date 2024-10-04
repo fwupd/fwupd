@@ -72,9 +72,10 @@ fu_amd_gpu_atom_firmware_validate(FuFirmware *firmware,
 	atom = fu_struct_atom_image_parse_stream(stream, offset, error);
 	if (atom == NULL)
 		return FALSE;
-	return fu_struct_atom_rom21_header_validate_stream(stream,
-							   fu_struct_atom_image_get_rom_loc(atom),
-							   error);
+	return fu_struct_atom_rom21_header_validate_stream(
+	    stream,
+	    offset + fu_struct_atom_image_get_rom_loc(atom),
+	    error);
 }
 
 const gchar *
