@@ -143,7 +143,6 @@ parts:
       - libarchive-dev
       - libcbor-dev
       - libcairo-dev
-      - libgudev-1.0-dev
       - libglib2.0-dev
       - libgnutls28-dev
       - libgpgme11-dev
@@ -186,7 +185,6 @@ parts:
       - libjcat1
       - liblzma5
       - libusb-1.0-0
-      - libgudev-1.0-0
       - libgpgme11
       - libprotobuf-c1
       - libpolkit-gobject-1-0
