@@ -862,27 +862,6 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
-  <dependency id="libgudev-1.0-dev">
-    <distro id="centos">
-      <package variant="x86_64">libgudev1-devel</package>
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64">libgudev1-devel</package>
-      <package variant="aarch64">libgudev1-devel</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libgudev-1.0-dev:s390x</package>
-      <package variant="i386" />
-      <package variant="aarch64" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-  </dependency>
   <dependency id="libusb-1.0-0-dev">
     <distro id="arch">
       <package variant="x86_64">libusb</package>

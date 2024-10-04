@@ -56,7 +56,6 @@ Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{version}.
 BuildRequires: gettext
 BuildRequires: glib2-devel >= %{glib2_version}
 BuildRequires: libxmlb-devel >= %{libxmlb_version}
-BuildRequires: libgudev1-devel
 BuildRequires: libusb1-devel >= %{libusb_version}
 BuildRequires: libcurl-devel >= %{libcurl_version}
 BuildRequires: libjcat-devel >= %{libjcat_version}

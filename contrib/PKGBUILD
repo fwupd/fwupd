@@ -24,7 +24,6 @@ depends=(
   json-glib
   libarchive
   libcbor
-  libgudev
   libusb
   libjcat
   libmbim
@@ -93,7 +92,6 @@ package() {
     libarchive.so
     libcbor.so
     libcurl.so
-    libgudev-1.0.so
     libjson-glib-1.0.so
     libmm-glib.so
     libpassim.so
