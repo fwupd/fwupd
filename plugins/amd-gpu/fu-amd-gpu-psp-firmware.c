@@ -66,23 +66,22 @@ fu_amd_gpu_psp_firmware_parse_l2(FuFirmware *firmware,
 				 gsize offset,
 				 GError **error)
 {
-	guint i;
-	g_autoptr(GByteArray) l2 = NULL;
+	g_autoptr(FuStructPspDirTable) l2 = NULL;
 
+	/* parse the L2 entries */
 	l2 = fu_struct_psp_dir_table_parse_stream(stream, offset, error);
 	if (l2 == NULL)
 		return FALSE;
-
-	/* parse the L2 entries */
-	for (i = 0; i < fu_struct_psp_dir_get_total_entries(l2); i++) {
-		g_autoptr(GByteArray) l2_entry = NULL;
-		gint idx = FU_STRUCT_PSP_DIR_TABLE_SIZE + offset + i * FU_STRUCT_PSP_DIR_TABLE_SIZE;
-
-		l2_entry = fu_struct_psp_dir_table_parse_stream(stream, idx, error);
+	offset += l2->len;
+	for (guint i = 0; i < fu_struct_psp_dir_get_total_entries(l2); i++) {
+		g_autoptr(FuStructPspDirTable) l2_entry = NULL;
+		l2_entry = fu_struct_psp_dir_table_parse_stream(stream, offset, error);
 		if (l2_entry == NULL)
 			return FALSE;
+		offset += l2_entry->len;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -92,24 +91,24 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 				 gsize offset,
 				 GError **error)
 {
-	g_autoptr(GByteArray) l1 = NULL;
+	g_autoptr(FuStructPspDir) l1 = NULL;
 
 	/* parse the L1 entries */
-	l1 = fu_struct_psp_dir_table_parse_stream(stream, offset, error);
+	l1 = fu_struct_psp_dir_parse_stream(stream, offset, error);
 	if (l1 == NULL)
 		return FALSE;
+	offset += l1->len;
 	for (guint i = 0; i < fu_struct_psp_dir_get_total_entries(l1); i++) {
-		gint idx = FU_STRUCT_PSP_DIR_TABLE_SIZE + offset + i * FU_STRUCT_PSP_DIR_TABLE_SIZE;
 		guint loc;
 		guint sz;
-		g_autoptr(GByteArray) l1_entry = NULL;
-		g_autoptr(GByteArray) ish = NULL;
+		g_autoptr(FuStructPspDirTable) l1_entry = NULL;
+		g_autoptr(FuStructImageSlotHeader) ish = NULL;
 		g_autoptr(FuFirmware) ish_img = fu_firmware_new();
 		g_autoptr(FuFirmware) csm_img = fu_amd_gpu_atom_firmware_new();
 		g_autoptr(FuFirmware) l2_img = fu_firmware_new();
 		g_autoptr(GInputStream) l2_stream = NULL;
 
-		l1_entry = fu_struct_psp_dir_table_parse_stream(stream, idx, error);
+		l1_entry = fu_struct_psp_dir_table_parse_stream(stream, offset, error);
 		if (l1_entry == NULL)
 			return FALSE;
 
@@ -181,6 +180,9 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 		/* parse the partition */
 		if (!fu_amd_gpu_psp_firmware_parse_l2(l2_img, stream, loc, error))
 			return FALSE;
+
+		/* next entry */
+		offset += l1_entry->len;
 	}
 
 	return TRUE;
