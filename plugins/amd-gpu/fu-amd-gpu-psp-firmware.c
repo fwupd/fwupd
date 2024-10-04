@@ -107,7 +107,6 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 		g_autoptr(FuFirmware) ish_img = fu_firmware_new();
 		g_autoptr(FuFirmware) csm_img = fu_amd_gpu_atom_firmware_new();
 		g_autoptr(FuFirmware) l2_img = fu_firmware_new();
-		g_autoptr(GInputStream) l1_stream = NULL;
 		g_autoptr(GInputStream) l2_stream = NULL;
 
 		l1_entry = fu_struct_psp_dir_table_parse_stream(stream, idx, error);
@@ -135,17 +134,7 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 		ish = fu_struct_image_slot_header_parse_stream(stream, loc, error);
 		if (ish == NULL)
 			return FALSE;
-		l1_stream = fu_partial_input_stream_new(stream,
-							loc,
-							FU_STRUCT_IMAGE_SLOT_HEADER_SIZE,
-							error);
-		if (l1_stream == NULL)
-			return FALSE;
-		if (!fu_firmware_parse_stream(ish_img,
-					      l1_stream,
-					      0x0,
-					      FWUPD_INSTALL_FLAG_NONE,
-					      error))
+		if (!fu_firmware_parse_stream(ish_img, stream, loc, FWUPD_INSTALL_FLAG_NONE, error))
 			return FALSE;
 		fu_firmware_set_addr(ish_img, loc);
 		fu_firmware_add_image(firmware, ish_img);
