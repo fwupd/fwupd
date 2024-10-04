@@ -819,6 +819,18 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 			return;
 		}
 
+		/* adding a device with a lower priority */
+		if (!fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG) &&
+		    fu_device_get_priority(item->device) > fu_device_get_priority(device) &&
+		    g_strcmp0(fu_device_get_plugin(item->device), fu_device_get_plugin(device)) !=
+			0) {
+			g_info("ignoring %s from %s as a higher prio device from %s already exists",
+			       fu_device_get_id(device),
+			       fu_device_get_plugin(device),
+			       fu_device_get_plugin(item->device));
+			return;
+		}
+
 		/* same ID, different object */
 		g_info("found existing device %s, reusing item", fu_device_get_id(item->device));
 		fu_device_list_replace(self, item, device);

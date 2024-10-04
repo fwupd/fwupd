@@ -3791,6 +3791,70 @@ fu_device_list_explicit_order_post_func(gconstpointer user_data)
 }
 
 static void
+fu_device_list_better_than_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device1 = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new(self->ctx);
+	g_autoptr(FuDevice) device_best = NULL;
+	g_autoptr(FuDevice) device_replug = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuPlugin) plugin1 = fu_plugin_new(self->ctx);
+	g_autoptr(FuPlugin) plugin2 = fu_plugin_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+
+	/* add a bad plugin */
+	fu_plugin_set_name(plugin2, "plugin2");
+	fu_engine_add_plugin(engine, plugin2);
+
+	/* add a good plugin */
+	fu_plugin_set_name(plugin1, "plugin1");
+	fu_plugin_add_rule(plugin1, FU_PLUGIN_RULE_BETTER_THAN, "plugin2");
+	fu_engine_add_plugin(engine, plugin1);
+
+	/* load the daemon */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* add a higher priority device */
+	fu_device_set_id(device1, "87ea5dfc8b8e384d848979496e706390b497e547");
+	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_guid(device1, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_protocol(device1, "com.acme");
+	fu_plugin_device_add(plugin1, device1);
+
+	/* should be ignored */
+	fu_device_set_id(device2, "87ea5dfc8b8e384d848979496e706390b497e547");
+	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_guid(device2, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_protocol(device2, "com.acme");
+	fu_plugin_device_add(plugin2, device2);
+
+	/* ensure we still have device1 */
+	device_best =
+	    fu_engine_get_device(engine, "87ea5dfc8b8e384d848979496e706390b497e547", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device_best);
+	g_assert_true(device_best == device1);
+
+	/* should be replaced */
+	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_plugin_device_add(plugin2, device2);
+
+	/* ensure we now have device2 */
+	device_replug =
+	    fu_engine_get_device(engine, "87ea5dfc8b8e384d848979496e706390b497e547", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device_replug);
+	g_assert_true(device_replug == device2);
+}
+
+static void
 fu_device_list_counterpart_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -6839,6 +6903,9 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/device-list{counterpart}",
 			     self,
 			     fu_device_list_counterpart_func);
+	g_test_add_data_func("/fwupd/device-list{better-than}",
+			     self,
+			     fu_device_list_better_than_func);
 	g_test_add_data_func("/fwupd/release{compare}", self, fu_release_compare_func);
 	g_test_add_func("/fwupd/release{uri-scheme}", fu_release_uri_scheme_func);
 	g_test_add_data_func("/fwupd/release{trusted-report}",
