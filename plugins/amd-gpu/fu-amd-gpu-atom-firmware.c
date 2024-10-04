@@ -87,16 +87,16 @@ fu_amd_gpu_atom_firmware_get_vbios_pn(FuFirmware *firmware)
 
 static gboolean
 fu_amd_gpu_atom_firmware_parse_vbios_version(FuAmdGpuAtomFirmware *self,
-					     const guint8 *buf,
-					     gsize bufsz,
+					     GBytes *blob,
 					     GError **error)
 {
-	gsize offset, base;
+	gsize bufsz = 0;
+	gsize offset = 0;
+	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
 	g_autofree gchar *version = NULL;
 
-	base = fu_firmware_get_addr(FU_FIRMWARE(self));
-	if (!fu_memmem_safe(buf + base,
-			    bufsz - base,
+	if (!fu_memmem_safe(buf,
+			    bufsz,
 			    (const guint8 *)BIOS_VERSION_PREFIX,
 			    sizeof(BIOS_VERSION_PREFIX) - 1,
 			    &offset,
@@ -106,7 +106,7 @@ fu_amd_gpu_atom_firmware_parse_vbios_version(FuAmdGpuAtomFirmware *self,
 	}
 
 	/* skip anchor */
-	offset += base + sizeof(BIOS_VERSION_PREFIX) - 1;
+	offset += sizeof(BIOS_VERSION_PREFIX) - 1;
 
 	version = fu_memstrsafe(buf, bufsz, offset, BIOS_STRING_LENGTH, error);
 	if (version == NULL)
@@ -145,15 +145,15 @@ fu_amd_gpu_atom_firmware_parse_vbios_date(FuAmdGpuAtomFirmware *self,
 
 static gboolean
 fu_amd_gpu_atom_firmware_parse_vbios_pn(FuAmdGpuAtomFirmware *self,
-					const guint8 *buf,
-					gsize bufsz,
+					GBytes *blob,
 					GByteArray *atom_image,
 					GError **error)
 {
+	gsize bufsz = 0;
 	guint16 atombios_size;
 	gint num_str, i;
-	guint64 base;
 	guint16 idx;
+	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
 	g_autofree gchar *model = NULL;
 
 	num_str = fu_struct_atom_image_get_num_strings(atom_image);
@@ -183,13 +183,11 @@ fu_amd_gpu_atom_firmware_parse_vbios_pn(FuAmdGpuAtomFirmware *self,
 		return FALSE;
 	}
 
-	base = fu_firmware_get_addr(FU_FIRMWARE(self));
-
 	/* parse atombios strings */
 	for (i = 0; i < num_str; i++) {
 		g_autofree char *str = NULL;
 
-		str = fu_memstrsafe(buf, bufsz, base + idx, STRLEN_NORMAL - 1, error);
+		str = fu_memstrsafe(buf, bufsz, idx, STRLEN_NORMAL - 1, error);
 		if (str == NULL)
 			return FALSE;
 
@@ -230,7 +228,7 @@ fu_amd_gpu_atom_firmware_parse_vbios_pn(FuAmdGpuAtomFirmware *self,
 		return FALSE;
 	}
 
-	model = fu_memstrsafe(buf, bufsz, base + idx, STRLEN_LONG - 1, error);
+	model = fu_memstrsafe(buf, bufsz, idx, STRLEN_LONG - 1, error);
 	if (model == NULL)
 		return FALSE;
 	self->model_name = fu_strstrip(model);
@@ -240,17 +238,17 @@ fu_amd_gpu_atom_firmware_parse_vbios_pn(FuAmdGpuAtomFirmware *self,
 
 static gboolean
 fu_amd_gpu_atom_firmware_parse_config_filename(FuAmdGpuAtomFirmware *self,
-					       const guint8 *buf,
-					       gsize bufsz,
+					       GBytes *blob,
 					       GByteArray *atom_header,
 					       GError **error)
 {
+	gsize bufsz = 0;
+	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
 	g_autofree gchar *config_filename = NULL;
 
 	config_filename =
 	    fu_memstrsafe(buf,
 			  bufsz,
-			  fu_firmware_get_addr(FU_FIRMWARE(self)) +
 			      fu_struct_atom_rom21_header_get_config_filename_offset(atom_header),
 			  STRLEN_LONG - 1,
 			  error);
@@ -272,12 +270,10 @@ fu_amd_gpu_atom_firmware_parse(FuFirmware *firmware,
 			       GError **error)
 {
 	FuAmdGpuAtomFirmware *self = FU_AMD_GPU_ATOM_FIRMWARE(firmware);
-	gsize bufsz = 0;
 	guint32 loc;
-	const guint8 *buf;
 	g_autoptr(GByteArray) atom_image = NULL;
 	g_autoptr(GByteArray) atom_rom = NULL;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GBytes) blob = NULL;
 
 	if (!FU_FIRMWARE_CLASS(fu_amd_gpu_atom_firmware_parent_class)
 		 ->parse(firmware, stream, offset, flags, error))
@@ -297,17 +293,16 @@ fu_amd_gpu_atom_firmware_parse(FuFirmware *firmware,
 	if (atom_rom == NULL)
 		return FALSE;
 
-	fw = fu_input_stream_read_bytes(stream, offset, G_MAXSIZE, error);
-	if (fw == NULL)
+	blob = fu_input_stream_read_bytes(stream, offset, G_MAXSIZE, error);
+	if (blob == NULL)
 		return FALSE;
-	buf = g_bytes_get_data(fw, &bufsz);
-	if (!fu_amd_gpu_atom_firmware_parse_config_filename(self, buf, bufsz, atom_rom, error))
+	if (!fu_amd_gpu_atom_firmware_parse_config_filename(self, blob, atom_rom, error))
 		return FALSE;
 	if (!fu_amd_gpu_atom_firmware_parse_vbios_date(self, atom_image, error))
 		return FALSE;
-	if (!fu_amd_gpu_atom_firmware_parse_vbios_pn(self, buf, bufsz, atom_image, error))
+	if (!fu_amd_gpu_atom_firmware_parse_vbios_pn(self, blob, atom_image, error))
 		return FALSE;
-	if (!fu_amd_gpu_atom_firmware_parse_vbios_version(self, buf, bufsz, error))
+	if (!fu_amd_gpu_atom_firmware_parse_vbios_version(self, blob, error))
 		return FALSE;
 
 	return TRUE;
