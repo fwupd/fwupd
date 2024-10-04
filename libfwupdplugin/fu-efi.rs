@@ -259,14 +259,14 @@ struct FuStructShimHive {
     header_version: u8 = 0x1,
     items_count: u8,
     items_offset: u8,    // for forwards and backwards compatibility
-    crc32: u32,          // of the entire hive (excluding padding)
+    crc32: u32le,        // of the entire hive (excluding padding)
     //items: [ShimHiveItems; items_count]
 }
 
 #[derive(ParseStream, New)]
 struct FuStructShimHiveItem {
     key_length: u8,
-    value_length: u32,
+    value_length: u32le,
     // key string, no trailing NUL
     // value string, no trailing NUL
 }
