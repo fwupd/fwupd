@@ -358,7 +358,7 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %{_mandir}/man5/*
 %{_mandir}/man8/*
 %{_datadir}/metainfo/org.freedesktop.fwupd.metainfo.xml
-%{_datadir}/icons/hicolor/scalable/apps/org.freedesktop.fwupd.svg
+%{_datadir}/icons/hicolor/*/apps/org.freedesktop.fwupd.*
 %{_datadir}/fwupd/firmware_packager.py
 %{_datadir}/fwupd/simple_client.py
 %{_datadir}/fwupd/add_capsule_header.py
