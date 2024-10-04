@@ -267,7 +267,8 @@ fwupd_plugin_add_string(FwupdCodec *codec, guint idt, GString *str)
 	FwupdPlugin *self = FWUPD_PLUGIN(codec);
 	FwupdPluginPrivate *priv = GET_PRIVATE(self);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_NAME, priv->name);
-	fwupd_plugin_string_append_flags(str, idt, FWUPD_RESULT_KEY_FLAGS, priv->flags);
+	if (priv->flags != FWUPD_PLUGIN_FLAG_NONE)
+		fwupd_plugin_string_append_flags(str, idt, FWUPD_RESULT_KEY_FLAGS, priv->flags);
 }
 
 static void
