@@ -75,7 +75,6 @@ fu_jabra_file_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuFirmware) upgrade_archive = NULL;
 	g_autoptr(GBytes) img_blob = NULL;
 	g_autoptr(GBytes) upgrade_blob = NULL;
-	g_autoptr(GPtrArray) files = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
 	g_autoptr(XbSilo) silo = NULL;
