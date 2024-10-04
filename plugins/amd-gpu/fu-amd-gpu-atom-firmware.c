@@ -20,7 +20,7 @@
 #define STRLEN_LONG	    64
 
 struct _FuAmdGpuAtomFirmware {
-	FuFirmware parent_instance;
+	FuOpromFirmware parent_instance;
 	gchar *part_number;
 	gchar *asic;
 	gchar *pci_type;
