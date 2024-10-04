@@ -440,7 +440,6 @@ msgid "Do not write to the history database"
 msgstr "Nerašyti į istorijos duomenų bazę"
 
 #. TRANSLATORS: success
-#. success
 msgid "Done!"
 msgstr "Atlikta!"
 
@@ -453,13 +452,6 @@ msgstr "Sendinti %s iš %s į %s?"
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
 msgstr "Sendina aparatinę programinę įrangą įrenginyje"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Downgrading %s from %s to %s... "
-msgstr "Sendinama %s iš %s į %s... "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -565,18 +557,9 @@ msgstr "Patyrė nesėkmę"
 msgid "Failed to apply update"
 msgstr "Nepavyko pritaikyti naujinimo"
 
-#. TRANSLATORS: we could not talk to the fwupd daemon
 #. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Nepavyko prisijungti prie tarnybos"
-
-#. TRANSLATORS: we could not get the devices to update offline
-msgid "Failed to get pending devices"
-msgstr "Nepavyko gauti laukiančių įrenginių"
-
-#. TRANSLATORS: we could not install for some reason
-msgid "Failed to install firmware update"
-msgstr "Nepavyko įdiegti aparatinės programinės įrangos naujinimo"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -598,14 +581,6 @@ msgstr "Nepavyko išanalizuoti argumentų"
 #. TRANSLATORS: failed to read measurements file
 msgid "Failed to parse file"
 msgstr "Nepavyko išanalizuoti failo"
-
-#. TRANSLATORS: we could not reboot for some reason
-msgid "Failed to reboot"
-msgstr "Nepavyko paleisti iš naujo"
-
-#. TRANSLATORS: we could not talk to plymouth
-msgid "Failed to set splash mode"
-msgstr "Nepavyko nustatyti prisistatymo lango veikseną"
 
 #. TRANSLATORS: something with a blocked hash exists
 #. * in the users ESP -- which would be bad!
@@ -721,19 +696,11 @@ msgstr "Įdiegti pasirašytą įrenginio aparatinę programinę įrangą"
 msgid "Install signed system firmware"
 msgstr "Įdiegti pasirašytą sistemos aparatinę programinę įrangą"
 
-#. TRANSLATORS: Install composite firmware on the parent before the child
-msgid "Install to parent device first"
-msgstr "Iš pradžių, įdiegti į viršesnį įrenginį"
-
 msgid "Install unsigned device firmware"
 msgstr "Įdiegti nepasirašytą įrenginio aparatinę programinę įrangą"
 
 msgid "Install unsigned system firmware"
 msgstr "Įdiegti nepasirašytą sistemos aparatinę programinę įrangą"
-
-#. TRANSLATORS: console message when no Plymouth is installed
-msgid "Installing Firmware…"
-msgstr "Diegiama aparatinė programinė įranga…"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -747,10 +714,6 @@ msgstr "Įdiegiama ties %s…"
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
 msgstr "Vidinis įrenginys"
-
-#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
-msgid "Keyring"
-msgstr "Raktinė"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "LOCATION"
@@ -861,10 +824,6 @@ msgstr "Nėra prieinamų laidų"
 msgid "No remotes are currently enabled so no metadata is available."
 msgstr "Šiuo metu nėra įjungtos jokios nuotolinės saugyklos, taigi, nėra prieinami jokie metaduomenys."
 
-#. TRANSLATORS: nothing was updated offline
-msgid "No updates were applied"
-msgstr "Nebuvo pritaikyti jokie naujinimai"
-
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
 msgstr "Nerastas"
@@ -903,10 +862,6 @@ msgstr "Slaptažodis"
 
 msgid "Payload"
 msgstr "Naudingoji apkrova"
-
-#. TRANSLATORS: console message when not using plymouth
-msgid "Percentage complete"
-msgstr "Užbaigta procentinė dalis"
 
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
@@ -949,10 +904,6 @@ msgstr "Skaitoma iš %s…"
 msgid "Reading…"
 msgstr "Skaitoma…"
 
-#. TRANSLATORS: console message when not using plymouth
-msgid "Rebooting…"
-msgstr "Paleidžiama iš naujo…"
-
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Iš naujo įkelti metaduomenis iš nuotolinio serverio"
@@ -966,13 +917,6 @@ msgstr "Įdiegti iš naujo %s į %s?"
 #. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
 msgstr "Iš naujo įdiegti įrenginyje aparatinę programinę įrangą"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second is a version number
-#. * e.g. "1.2.3"
-#, c-format
-msgid "Reinstalling %s with %s... "
-msgstr "Iš naujo įdiegiama %s su %s... "
 
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
@@ -1014,10 +958,6 @@ msgstr "Paleisti sudėtinę įskiepio išvalymo programą, naudojant install-blo
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Paleisti sudėtinę įskiepio paruošimo programą, naudojant install-blob"
-
-#. TRANSLATORS: command line option
-msgid "Schedule installation for next reboot when possible"
-msgstr "Kai įmanoma, suplanuoti įdiegimą kitam paleidimui iš naujo"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
@@ -1182,10 +1122,6 @@ msgstr "Šioje nuotolinėje saugykloje laikoma aparatinė programinė įranga, k
 msgid "This tool allows an administrator to apply UEFI dbx updates."
 msgstr "Šis įrankis leidžia administratoriui taikyti UEFI dbx naujinimus."
 
-#. TRANSLATORS: the user needs to stop playing with stuff
-msgid "This tool can only be used by the root user"
-msgstr "Šį įrankį gali naudoti tik pagrindinis naudotojas"
-
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Tipas"
@@ -1241,7 +1177,6 @@ msgstr "Galimas naujinti"
 msgid "Update Error"
 msgstr "Naujinimo klaida"
 
-#. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
 msgid "Update Message"
 msgstr "Naujinimo pranešimas"
@@ -1258,10 +1193,6 @@ msgstr "Naujinimo nesėkmė yra žinoma problema, išsamesnei informacijai apsil
 msgid "Update now?"
 msgstr "Naujinti dabar?"
 
-#. TRANSLATORS: Update can only be done from offline mode
-msgid "Update requires a reboot"
-msgstr "Naujinimas reikalauja paleidimo iš naujo"
-
 msgid "Update the stored device verification information"
 msgstr "Naujinti saugomą įrenginio patikrinimo informaciją"
 
@@ -1271,13 +1202,6 @@ msgstr "Naujinti saugomus metaduomenis esamu turiniu"
 
 msgid "Updating"
 msgstr "Naujinama"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Updating %s from %s to %s... "
-msgstr "Naujinama „%s“ iš %s į %s... "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format

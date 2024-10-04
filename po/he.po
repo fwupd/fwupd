@@ -533,7 +533,6 @@ msgid "Do you want to upload reports automatically for future updates?"
 msgstr "להעלות את הדוחות אוטומטית לעדכונים עתידיים?"
 
 #. TRANSLATORS: success
-#. success
 msgid "Done!"
 msgstr "הסתיים!"
 
@@ -546,13 +545,6 @@ msgstr "לשנמך את %s מגרסה %s אל %s?"
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
 msgstr "משנמך קושחה על התקן"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Downgrading %s from %s to %s... "
-msgstr "משנמך גרסת %s מ־%s ל־%s..."
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -646,18 +638,9 @@ msgstr "נכשל"
 msgid "Failed to apply update"
 msgstr "החלת העדכון נכשלה"
 
-#. TRANSLATORS: we could not talk to the fwupd daemon
 #. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "החיבור לסוכן נכשל"
-
-#. TRANSLATORS: we could not get the devices to update offline
-msgid "Failed to get pending devices"
-msgstr "קבלת ההתקנים הממתינים נכשלה"
-
-#. TRANSLATORS: we could not install for some reason
-msgid "Failed to install firmware update"
-msgstr "התקנת עדכון הקושחה נכשלה"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -687,14 +670,6 @@ msgstr "פענוח הדגלונים עבור ‎--filter נכשל"
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "פענוח ה־dbx המקומי נכשל"
-
-#. TRANSLATORS: we could not reboot for some reason
-msgid "Failed to reboot"
-msgstr "הפעלה מחדש נכשלה"
-
-#. TRANSLATORS: we could not talk to plymouth
-msgid "Failed to set splash mode"
-msgstr "הגדרת מצב מסך הכניסה נכשלה"
 
 #. TRANSLATORS: something with a blocked hash exists
 #. * in the users ESP -- which would be bad!
@@ -829,10 +804,6 @@ msgstr "התעלמות מכשלונות סיכום ביקורת של קושחו�
 msgid "Ignore firmware hardware mismatch failures"
 msgstr "התעלמות מכשלי התאמה בין קושחה לחומרה"
 
-#. TRANSLATORS: Ignore validation safety checks when flashing this device
-msgid "Ignore validation safety checks"
-msgstr "התעלמות מאימות בדיקות בטיחות"
-
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "משך התקנה"
@@ -849,19 +820,11 @@ msgstr "התקנת קושחת התקן חתומה"
 msgid "Install signed system firmware"
 msgstr "התקנת קושחת מערכת חתומה"
 
-#. TRANSLATORS: Install composite firmware on the parent before the child
-msgid "Install to parent device first"
-msgstr "יש להתקין להתקן הורה תחילה"
-
 msgid "Install unsigned device firmware"
 msgstr "התקנת קושחת התקן שלא נחתמה"
 
 msgid "Install unsigned system firmware"
 msgstr "התקנת קושחת מערכת שלא נחתמה"
-
-#. TRANSLATORS: console message when no Plymouth is installed
-msgid "Installing Firmware…"
-msgstr "קושחה מותקנת…"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -899,10 +862,6 @@ msgid_plural "Issues"
 msgstr[0] "תקלה"
 msgstr[1] "תקלות"
 msgstr[2] "תקלות"
-
-#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
-msgid "Keyring"
-msgstr "מחזיק מפתחות"
 
 #. TRANSLATORS: the original time/date the device was modified
 msgid "Last modified"
@@ -1036,10 +995,6 @@ msgstr "אין מרוחקים זמינים"
 msgid "No updates available for remaining devices"
 msgstr "אין עדכונים זמינים להתקנים שנותרו"
 
-#. TRANSLATORS: nothing was updated offline
-msgid "No updates were applied"
-msgstr "לא הוחלו עדכונים"
-
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
 msgstr "לא נמצא"
@@ -1092,10 +1047,6 @@ msgstr "סיסמה"
 msgid "Payload"
 msgstr "מטען"
 
-#. TRANSLATORS: console message when not using plymouth
-msgid "Percentage complete"
-msgstr "אחוזים שהושלמו"
-
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "לבצע פעולה?"
@@ -1142,10 +1093,6 @@ msgstr "נקרא מתוך %s…"
 msgid "Reading…"
 msgstr "מתבצעת קריאה…"
 
-#. TRANSLATORS: console message when not using plymouth
-msgid "Rebooting…"
-msgstr "מתבצעת הפעלה מחדש…"
-
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "רענון נתוני העל משרת מרוחק"
@@ -1163,13 +1110,6 @@ msgstr "התקנת הקושחה הנוכחית על ההתקן מחדש"
 #. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
 msgstr "התקנת קושחה על התקן מחדש"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second is a version number
-#. * e.g. "1.2.3"
-#, c-format
-msgid "Reinstalling %s with %s... "
-msgstr "מתקין מחדש %s עם %s..."
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -1471,10 +1411,6 @@ msgstr "כלי זה מאפשר למנהלי המערכת לתשאל ולשלוט
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "כלי זה מאפשר להנהלה להשתמש בתוספי fwupd מבלי שיותקנו על המערכת המארחת."
 
-#. TRANSLATORS: the user needs to stop playing with stuff
-msgid "This tool can only be used by the root user"
-msgstr "בכלי הזה יכול להשתמש רק משתמש העל"
-
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "כלי זה יקרא ויפענח את יומן האירועים של ה־TPM מקושחת המערכת."
@@ -1562,7 +1498,6 @@ msgstr "ניתן לעדכון"
 msgid "Update Error"
 msgstr "שגיאת עדכון"
 
-#. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
 msgid "Update Message"
 msgstr "הודעת עדכון"
@@ -1579,10 +1514,6 @@ msgstr "כשל בעדכון זאת תקלה מוכרת, יש לבקר בכתוב
 msgid "Update now?"
 msgstr "לעדכן עכשיו?"
 
-#. TRANSLATORS: Update can only be done from offline mode
-msgid "Update requires a reboot"
-msgstr "העדכון דורש הפעלה מחדש"
-
 msgid "Update the stored device verification information"
 msgstr "עדכון פרטי אימות ההתקן המאוחסנים"
 
@@ -1592,13 +1523,6 @@ msgstr "עדכון נתוני העל המאוחסנים בתכנים נוכחי�
 
 msgid "Updating"
 msgstr "מתבצע עדכון"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Updating %s from %s to %s... "
-msgstr "מעדכן %s מ־%s ל־%s..."
 
 #. TRANSLATORS: %1 is a device name
 #, c-format

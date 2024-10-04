@@ -281,7 +281,6 @@ msgid "Do you want to refresh this remote now?"
 msgstr "Urruneko hau orain freskatu nahi al duzu?"
 
 #. TRANSLATORS: success
-#. success
 msgid "Done!"
 msgstr "Egina!"
 
@@ -439,10 +438,6 @@ msgstr "Instalatu sinatu gabeko gailu-firmwarea"
 msgid "Install unsigned system firmware"
 msgstr "Instalatu sinatu gabeko sistema-firmwarea"
 
-#. TRANSLATORS: console message when no Plymouth is installed
-msgid "Installing Firmware…"
-msgstr "Firmwarea instalatzen…"
-
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Firmwarearen eguneratzea instalatzen..."
@@ -590,10 +585,6 @@ msgstr "Ez dago eguneratu daitekeen gailurik"
 msgid "No updates available"
 msgstr "Ez dago eguneraketarik erabilgarri"
 
-#. TRANSLATORS: nothing was updated offline
-msgid "No updates were applied"
-msgstr "Ez da eguneratzerik aplikatu"
-
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
 msgstr "Ez da aurkitu"
@@ -660,10 +651,6 @@ msgstr "Irakurtzeko soilik"
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
 msgstr "Irakurtzen…"
-
-#. TRANSLATORS: console message when not using plymouth
-msgid "Rebooting…"
-msgstr "Berrabiarazten…"
 
 #. TRANSLATORS: how often we should refresh the metadata
 msgid "Refresh Interval"
@@ -885,10 +872,6 @@ msgstr "Errorea eguneratzean"
 #. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Eguneratu orain?"
-
-#. TRANSLATORS: Update can only be done from offline mode
-msgid "Update requires a reboot"
-msgstr "Eguneratzeko berrabiarazi egin behar da"
 
 msgid "Updating"
 msgstr "Eguneratzen"

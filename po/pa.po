@@ -240,10 +240,6 @@ msgstr "ਅਣਪਛਾਤਾ ਡਿਵਾਈਸ"
 msgid "Unlock the device to allow access"
 msgstr "ਪਹੁੰਚ ਦੀ ਇਜਾਜ਼ਤ ਦੇਣ ਲਈ ਡਿਵਾਈਸ ਅਣ-ਲਾਕ ਕਰੋ"
 
-#. TRANSLATORS: Update can only be done from offline mode
-msgid "Update requires a reboot"
-msgstr "ਅੱਪਡੇਟ ਲਈ ਮੁੜ-ਚਾਲੂ ਕਰਨ ਦੀ ਲੋੜ ਹੈ"
-
 #. TRANSLATORS: how important the release is
 msgid "Urgency"
 msgstr "ਜ਼ਰੂਰਤ"

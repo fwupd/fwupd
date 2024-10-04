@@ -560,20 +560,12 @@ msgid "Do you want to upload reports automatically for future updates?"
 msgstr "Хотите автоматически загружать отчёты для будущих обновлений?"
 
 #. TRANSLATORS: success
-#. success
 msgid "Done!"
 msgstr "Готово!"
 
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
 msgstr "Понизить версию прошивки на устройстве"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Downgrading %s from %s to %s... "
-msgstr "Понижение версии прошивки устройства %s с %s на %s…"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -668,18 +660,9 @@ msgstr "Не удалось"
 msgid "Failed to apply update"
 msgstr "Не удалось применить обновление"
 
-#. TRANSLATORS: we could not talk to the fwupd daemon
 #. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Не удалось подключиться к фоновой службе"
-
-#. TRANSLATORS: we could not get the devices to update offline
-msgid "Failed to get pending devices"
-msgstr "Не удалось получить список ожидающих устройств"
-
-#. TRANSLATORS: we could not install for some reason
-msgid "Failed to install firmware update"
-msgstr "Не удалось установить обновление прошивки"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -709,14 +692,6 @@ msgstr "Не удалось разобрать флаги для «--filter»"
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Не удалось обработать локальную dbx"
-
-#. TRANSLATORS: we could not reboot for some reason
-msgid "Failed to reboot"
-msgstr "Не удалось перезагрузить"
-
-#. TRANSLATORS: we could not talk to plymouth
-msgid "Failed to set splash mode"
-msgstr "Не удалось установить режим заставки"
 
 #. TRANSLATORS: something with a blocked hash exists
 #. * in the users ESP -- which would be bad!
@@ -869,10 +844,6 @@ msgstr "Установить неподписанную прошивку уст�
 msgid "Install unsigned system firmware"
 msgstr "Установить неподписанную системную прошивку"
 
-#. TRANSLATORS: console message when no Plymouth is installed
-msgid "Installing Firmware…"
-msgstr "Установка прошивки…"
-
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Установка обновления прошивки…"
@@ -924,10 +895,6 @@ msgstr[0] "Проблема"
 msgstr[1] "Проблемы"
 msgstr[2] "Проблем"
 msgstr[3] "Проблема"
-
-#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
-msgid "Keyring"
-msgstr "Хранилище ключей"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "LOCATION"
@@ -1075,10 +1042,6 @@ msgstr "Нет доступных обновлений"
 msgid "No updates available for remaining devices"
 msgstr "Нет доступных обновлений для остальных устройств"
 
-#. TRANSLATORS: nothing was updated offline
-msgid "No updates were applied"
-msgstr "Обновления не были применены"
-
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Не одобренная"
@@ -1142,10 +1105,6 @@ msgstr "Полезная нагрузка"
 msgid "Pending"
 msgstr "В очереди"
 
-#. TRANSLATORS: console message when not using plymouth
-msgid "Percentage complete"
-msgstr "Процент завершения"
-
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "Выполнить операцию?"
@@ -1200,10 +1159,6 @@ msgstr "Чтение из %s…"
 msgid "Reading…"
 msgstr "Чтение…"
 
-#. TRANSLATORS: console message when not using plymouth
-msgid "Rebooting…"
-msgstr "Перезагрузка…"
-
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Обновить метаданные с удаленного сервера"
@@ -1211,13 +1166,6 @@ msgstr "Обновить метаданные с удаленного серве
 #. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
 msgstr "Переустановить прошивку на устройстве"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second is a version number
-#. * e.g. "1.2.3"
-#, c-format
-msgid "Reinstalling %s with %s... "
-msgstr "Переустановка %s с %s…"
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -1291,10 +1239,6 @@ msgstr "Запись SPI"
 #. TRANSLATORS: Scalar increment for integer BIOS setting
 msgid "Scalar Increment"
 msgstr "Скалярное приращение"
-
-#. TRANSLATORS: command line option
-msgid "Schedule installation for next reboot when possible"
-msgstr "Запланировать установку на следующую перезагрузку, если это возможно"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
@@ -1552,10 +1496,6 @@ msgstr "Этот репозиторий содержит прошивки, ко�
 msgid "This tool allows an administrator to apply UEFI dbx updates."
 msgstr "Этот инструмент позволяет администратору применять обновления UEFI dbx."
 
-#. TRANSLATORS: the user needs to stop playing with stuff
-msgid "This tool can only be used by the root user"
-msgstr "Этот инструмент может использовать только пользователь root"
-
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Этот инструмент читает и обрабатывает журнал событий TPM, который заполняется системными прошивками."
@@ -1635,7 +1575,6 @@ msgstr "Ошибка обновления"
 msgid "Update Image"
 msgstr "Изображение обновления"
 
-#. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
 msgid "Update Message"
 msgstr "Сообщение об обновлении"
@@ -1661,13 +1600,6 @@ msgstr "Обновить сохраненные метаданные с теку
 
 msgid "Updating"
 msgstr "Обновление"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Updating %s from %s to %s... "
-msgstr "Обновление %s с %s на %s…"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format

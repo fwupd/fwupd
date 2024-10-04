@@ -557,16 +557,8 @@ msgid "Distribution"
 msgstr "Distributie"
 
 #. TRANSLATORS: success
-#. success
 msgid "Done!"
 msgstr "Afgerond!"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Downgrading %s from %s to %s... "
-msgstr "Bezig met downgraden van %s van %s naar %s..."
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -673,14 +665,9 @@ msgstr "Mislukt"
 msgid "Failed to apply update"
 msgstr "Update toepassen mislukt"
 
-#. TRANSLATORS: we could not talk to the fwupd daemon
 #. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Verbinden met daemon mislukt"
-
-#. TRANSLATORS: we could not install for some reason
-msgid "Failed to install firmware update"
-msgstr "Firmware-update installeren mislukt"
 
 #. TRANSLATORS: another fwupdtool instance is already running
 msgid "Failed to lock"
@@ -697,14 +684,6 @@ msgstr "Bestand parsen mislukt"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse flags for --filter"
 msgstr "Flags voor ‘--filter’ parsen mislukt"
-
-#. TRANSLATORS: we could not reboot for some reason
-msgid "Failed to reboot"
-msgstr "Herstarten mislukt"
-
-#. TRANSLATORS: we could not talk to plymouth
-msgid "Failed to set splash mode"
-msgstr "Splash-modus instellen mislukt"
 
 #. TRANSLATORS: item is FALSE
 msgid "False"
@@ -884,10 +863,6 @@ msgstr "Niet-ondertekende apparaatfirmware installeren"
 msgid "Install unsigned system firmware"
 msgstr "Niet-ondertekende systeemfirmware installeren"
 
-#. TRANSLATORS: console message when no Plymouth is installed
-msgid "Installing Firmware…"
-msgstr "Firmware installeren…"
-
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Firmware-update installeren…"
@@ -942,10 +917,6 @@ msgstr "Kernel-lockdown uitgeschakeld"
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown enabled"
 msgstr "Kernel-lockdown ingeschakeld"
-
-#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
-msgid "Keyring"
-msgstr "Sleutelbos"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "LOCATION"
@@ -1097,10 +1068,6 @@ msgstr "Geen updates beschikbaar"
 msgid "No updates available for remaining devices"
 msgstr "Geen updates beschikbaar voor resterende apparaten"
 
-#. TRANSLATORS: nothing was updated offline
-msgid "No updates were applied"
-msgstr "Er zijn geen updates toegepast"
-
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Niet goedgekeurd"
@@ -1151,10 +1118,6 @@ msgstr "Inhoud"
 #. TRANSLATORS: the update state of the specific device
 msgid "Pending"
 msgstr "Afwachtend"
-
-#. TRANSLATORS: console message when not using plymouth
-msgid "Percentage complete"
-msgstr "Percentage voltooid"
 
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
@@ -1221,10 +1184,6 @@ msgstr "Lezen van %s…"
 msgid "Reading…"
 msgstr "Lezen…"
 
-#. TRANSLATORS: console message when not using plymouth
-msgid "Rebooting…"
-msgstr "Herstarten…"
-
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Metadata verversen vanuit externe server"
@@ -1232,13 +1191,6 @@ msgstr "Metadata verversen vanuit externe server"
 #. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
 msgstr "Firmware op een apparaat herinstalleren"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second is a version number
-#. * e.g. "1.2.3"
-#, c-format
-msgid "Reinstalling %s with %s... "
-msgstr "Bezig met herinstalleren van %s met %s..."
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -1287,10 +1239,6 @@ msgstr "INSTELLING1 WAARDE1 [INSTELLING2] [WAARDE2]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
 msgstr "SUBSYSTEEM STUURPROGRAMMA [APPARAAT-ID|GUID]"
-
-#. TRANSLATORS: command line option
-msgid "Schedule installation for next reboot when possible"
-msgstr "De installatie inplannen voor de volgende herstart, indien mogelijk"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
@@ -1554,7 +1502,6 @@ msgstr "Updatefout"
 msgid "Update Image"
 msgstr "Update-afbeelding"
 
-#. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
 msgid "Update Message"
 msgstr "Update-bericht"
@@ -1567,22 +1514,11 @@ msgstr "Update-toestand"
 msgid "Update now?"
 msgstr "Nu bijwerken?"
 
-#. TRANSLATORS: Update can only be done from offline mode
-msgid "Update requires a reboot"
-msgstr "Update vereist een herstart"
-
 msgid "Update the stored device verification information"
 msgstr "Opgeslagen apparaatverificatie-informatie bijwerken"
 
 msgid "Updating"
 msgstr "Bijwerken"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Updating %s from %s to %s... "
-msgstr "Bezig met bijwerken van %s van %s naar %s..."
 
 #. TRANSLATORS: %1 is a device name
 #, c-format

@@ -731,7 +731,6 @@ msgid "Do you want to upload reports automatically for future updates?"
 msgstr "Você deseja enviar relatórios automaticamente para atualizações futuras?"
 
 #. TRANSLATORS: success
-#. success
 msgid "Done!"
 msgstr "Feito!"
 
@@ -744,13 +743,6 @@ msgstr "Desatualizar %s de %s para %s?"
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
 msgstr "Desatualiza a versão do firmware em um dispositivo"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Downgrading %s from %s to %s... "
-msgstr "Fazendo downgrade de %s de %s para %s… "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -892,18 +884,9 @@ msgstr "Falhou"
 msgid "Failed to apply update"
 msgstr "Falha ao aplicar a atualização"
 
-#. TRANSLATORS: we could not talk to the fwupd daemon
 #. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Falha ao se conectar ao daemon"
-
-#. TRANSLATORS: we could not get the devices to update offline
-msgid "Failed to get pending devices"
-msgstr "Falha ao obter dispositivos pendentes"
-
-#. TRANSLATORS: we could not install for some reason
-msgid "Failed to install firmware update"
-msgstr "Falha ao instalar a atualização de firmware"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -933,14 +916,6 @@ msgstr "Falha ao analisar opções para --filter"
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Falha ao analisar o dbx local"
-
-#. TRANSLATORS: we could not reboot for some reason
-msgid "Failed to reboot"
-msgstr "Falha ao reinicializar"
-
-#. TRANSLATORS: we could not talk to plymouth
-msgid "Failed to set splash mode"
-msgstr "Falha ao definir o modo splash"
 
 #. TRANSLATORS: something with a blocked hash exists
 #. * in the users ESP -- which would be bad!
@@ -1161,10 +1136,6 @@ msgstr "Ignora falhas de soma de verificação de firmware"
 msgid "Ignore firmware hardware mismatch failures"
 msgstr "Ignora falhas de incompatibilidade de hardware de firmware"
 
-#. TRANSLATORS: Ignore validation safety checks when flashing this device
-msgid "Ignore validation safety checks"
-msgstr "Ignorar verificações de segurança de validação"
-
 #. TRANSLATORS: try to help
 msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
 msgstr "Ignorando as verificações estritas de SSL; para fazer isso automaticamente no futuro, exporte DISABLE_SSL_STRICT em seu ambiente"
@@ -1185,19 +1156,11 @@ msgstr "Instalar firmware assinado no dispositivo"
 msgid "Install signed system firmware"
 msgstr "Instalar firmware assinado no sistema"
 
-#. TRANSLATORS: Install composite firmware on the parent before the child
-msgid "Install to parent device first"
-msgstr "Instalar primeiro no dispositivo pai"
-
 msgid "Install unsigned device firmware"
 msgstr "Instalar firmware não assinado no dispositivo"
 
 msgid "Install unsigned system firmware"
 msgstr "Instalar firmware não assinado no sistema"
-
-#. TRANSLATORS: console message when no Plymouth is installed
-msgid "Installing Firmware…"
-msgstr "Instalando o firmware…"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -1297,10 +1260,6 @@ msgstr "Lockdown do kernel desabilitado"
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown enabled"
 msgstr "Lockdown do kernel habilitado"
-
-#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
-msgid "Keyring"
-msgstr "Chaveiro"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "LOCATION"
@@ -1498,10 +1457,6 @@ msgstr "Nenhuma atualização disponível"
 msgid "No updates available for remaining devices"
 msgstr "Nenhuma atualização disponível para os dispositivos restantes"
 
-#. TRANSLATORS: nothing was updated offline
-msgid "No updates were applied"
-msgstr "Nenhuma atualização foi aplicada"
-
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Não aprovada"
@@ -1569,10 +1524,6 @@ msgstr "Carga"
 #. TRANSLATORS: the update state of the specific device
 msgid "Pending"
 msgstr "Pendente"
-
-#. TRANSLATORS: console message when not using plymouth
-msgid "Percentage complete"
-msgstr "Percentagem concluída"
 
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
@@ -1656,10 +1607,6 @@ msgstr "Lendo de %s…"
 msgid "Reading…"
 msgstr "Lendo…"
 
-#. TRANSLATORS: console message when not using plymouth
-msgid "Rebooting…"
-msgstr "Reinicializando…"
-
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Renova metadados do servidor remoto"
@@ -1677,13 +1624,6 @@ msgstr "Reinstala o firmware atual no dispositivo"
 #. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
 msgstr "Reinstala firmware em um dispositivo"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second is a version number
-#. * e.g. "1.2.3"
-#, c-format
-msgid "Reinstalling %s with %s... "
-msgstr "Reinstalando %s com %s… "
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -1793,10 +1733,6 @@ msgstr "SUBSISTEMA DRIVER [ID-DISPOSITIVO|GUID]"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Salva um arquivo que permite a geração de IDs de hardware"
-
-#. TRANSLATORS: command line option
-msgid "Schedule installation for next reboot when possible"
-msgstr "Agenda instalação para próxima reinicialização quando possível"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
@@ -2083,12 +2019,6 @@ msgstr "O TPM PCR0 diverge da reconstrução."
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "O daemon carregou código de terceiros e não é mais suportado pelos desenvolvedores upstream!"
 
-#. TRANSLATORS: this is for the device tests, %1 is the device
-#. * version, %2 is what we expected
-#, c-format
-msgid "The device version did not match: got %s, expected %s"
-msgstr "A versão do dispositivo não corresponde: obteve %s, esperava %s"
-
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
@@ -2155,10 +2085,6 @@ msgstr "Esta ferramenta permite que um administrador consulte e controle o daemo
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Esta ferramenta permite que um administrador use os plugins do fwupd sem estarem instalados no sistema host"
-
-#. TRANSLATORS: the user needs to stop playing with stuff
-msgid "This tool can only be used by the root user"
-msgstr "Esta ferramenta só pode ser usada pelo usuário root"
 
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
@@ -2275,7 +2201,6 @@ msgstr "Erro de atualização"
 msgid "Update Image"
 msgstr "Atualizar imagem"
 
-#. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
 msgid "Update Message"
 msgstr "Mensagem de atualização"
@@ -2291,10 +2216,6 @@ msgstr "A falha de atualização é um problema conhecido, visite essa URL para 
 #. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Atualizar agora?"
-
-#. TRANSLATORS: Update can only be done from offline mode
-msgid "Update requires a reboot"
-msgstr "A atualização requer uma reinicialização"
 
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
@@ -2313,13 +2234,6 @@ msgstr "Atualiza todos os dispositivos especificados para a versão de firmware 
 
 msgid "Updating"
 msgstr "Atualizando"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Updating %s from %s to %s... "
-msgstr "Atualizando %s de %s para %s… "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format

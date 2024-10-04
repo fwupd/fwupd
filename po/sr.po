@@ -134,20 +134,12 @@ msgid "Do not check for unreported history"
 msgstr "Не проверавај непослати историјат"
 
 #. TRANSLATORS: success
-#. success
 msgid "Done!"
 msgstr "Урађено!"
 
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
 msgstr "Уназађује фирмвер на уређају"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Downgrading %s from %s to %s... "
-msgstr "Уназађујем %s са %s на %s..."
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
@@ -263,10 +255,6 @@ msgstr "Инсталирајте непотписани системски фи�
 msgid "Installing firmware update…"
 msgstr "Инсталирам ажурирање фирмвера…"
 
-#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
-msgid "Keyring"
-msgstr "Привезак"
-
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "Учитавам…"
@@ -316,13 +304,6 @@ msgstr "Читам…"
 msgid "Refresh metadata from remote server"
 msgstr "Освежава метаподатке са удаљеног сервера"
 
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second is a version number
-#. * e.g. "1.2.3"
-#, c-format
-msgid "Reinstalling %s with %s... "
-msgstr "Поново инсталирам %s са %s..."
-
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
@@ -347,10 +328,6 @@ msgstr "Поново покрећем уређај…"
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Враћа све ИБ-јеве хардвера на машини"
-
-#. TRANSLATORS: command line option
-msgid "Schedule installation for next reboot when possible"
-msgstr "Заказује инсталирање за следеће подизање система када је могуће"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
@@ -412,13 +389,6 @@ msgstr "Ажурирати сада?"
 
 msgid "Update the stored device verification information"
 msgstr "Ажурирајте причуване податке потврђивања уређаја"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Updating %s from %s to %s... "
-msgstr "Ажурирам %s са %s на %s..."
 
 #. TRANSLATORS: remote filename base
 msgid "Username"

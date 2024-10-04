@@ -495,20 +495,12 @@ msgid "Do not write to the history database"
 msgstr "Geçmişi veri tabanına yazma"
 
 #. TRANSLATORS: success
-#. success
 msgid "Done!"
 msgstr "Tamamlandı!"
 
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
 msgstr "Bir aygıttaki üretici yazılımı sürümünü düşürür"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Downgrading %s from %s to %s... "
-msgstr " %s, %s sürümünden %s sürümüne düşürülüyor... "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -594,18 +586,9 @@ msgstr "Başarısız"
 msgid "Failed to apply update"
 msgstr "Güncelleme uygulanamadı"
 
-#. TRANSLATORS: we could not talk to the fwupd daemon
 #. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Ardalan sürecine bağlanamadı"
-
-#. TRANSLATORS: we could not get the devices to update offline
-msgid "Failed to get pending devices"
-msgstr "Bekleyen aygıtlar alınamadı"
-
-#. TRANSLATORS: we could not install for some reason
-msgid "Failed to install firmware update"
-msgstr "Donanım yazılımı güncellemesi kurulamadı"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -631,14 +614,6 @@ msgstr "Dosya ayrıştırılamadı"
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Yerel dbx ayrıştırılamadı"
-
-#. TRANSLATORS: we could not reboot for some reason
-msgid "Failed to reboot"
-msgstr "Yeniden başlatılamadı"
-
-#. TRANSLATORS: we could not talk to plymouth
-msgid "Failed to set splash mode"
-msgstr "Açılış ekranı kipi ayarlanamadı"
 
 #. TRANSLATORS: something with a blocked hash exists
 #. * in the users ESP -- which would be bad!
@@ -813,19 +788,11 @@ msgstr "İmzalı aygıt donanım yazılımını kur"
 msgid "Install signed system firmware"
 msgstr "İmzalı sistem donanım yazılımını kur"
 
-#. TRANSLATORS: Install composite firmware on the parent before the child
-msgid "Install to parent device first"
-msgstr "Önce ana aygıta kurun"
-
 msgid "Install unsigned device firmware"
 msgstr "İmzasız aygıt donanım yazılımını kur"
 
 msgid "Install unsigned system firmware"
 msgstr "İmzasız sistem donanım yazılımını kur"
-
-#. TRANSLATORS: console message when no Plymouth is installed
-msgid "Installing Firmware…"
-msgstr "Donanım yazılımı kuruluyor…"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -920,10 +887,6 @@ msgid "Issue"
 msgid_plural "Issues"
 msgstr[0] "Sorunlar"
 msgstr[1] "Sorunlar"
-
-#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
-msgid "Keyring"
-msgstr "Anahtarlık"
 
 #. TRANSLATORS: the original time/date the device was modified
 msgid "Last modified"
@@ -1092,10 +1055,6 @@ msgstr "Güncellenebilir aygıt yok"
 msgid "No updates available for remaining devices"
 msgstr "Kalan aygıtlar için güncelleme yok"
 
-#. TRANSLATORS: nothing was updated offline
-msgid "No updates were applied"
-msgstr "Uygulanan güncelleme yok"
-
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
 msgstr "Bulunamadı"
@@ -1144,10 +1103,6 @@ msgstr "Sistem dbx'i ayrıştırılıyor…"
 #. TRANSLATORS: remote filename base
 msgid "Password"
 msgstr "Parola"
-
-#. TRANSLATORS: console message when not using plymouth
-msgid "Percentage complete"
-msgstr "Tamamlanan yüzde"
 
 #. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
 msgid "Platform Debugging"
@@ -1208,10 +1163,6 @@ msgstr "Şuradan okunuyor %s…"
 msgid "Reading…"
 msgstr "Okunuyor…"
 
-#. TRANSLATORS: console message when not using plymouth
-msgid "Rebooting…"
-msgstr "Yeniden başlatılıyor…"
-
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Üst veriyi uzak sunucudan yenile"
@@ -1229,13 +1180,6 @@ msgstr "Var olan donanım yazılımını aygıta yeniden kur"
 #. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
 msgstr "Donanım yazılımını aygıta yeniden kur"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second is a version number
-#. * e.g. "1.2.3"
-#, c-format
-msgid "Reinstalling %s with %s... "
-msgstr " %s  %s yeniden kuruluyor..."
 
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
@@ -1313,10 +1257,6 @@ msgstr "SPI yazma koruması"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
 msgstr "ALTSİSTEM SÜRÜCÜ [AYGIT-KİMLİĞİ|GUID]"
-
-#. TRANSLATORS: command line option
-msgid "Schedule installation for next reboot when possible"
-msgstr "Mümkün olduğunda sonraki yeniden başlatma için kurulumu zamanla"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
@@ -1556,10 +1496,6 @@ msgstr "Bu araç, yöneticinin fwupd art alan hizmetini sorgulamasına ve denetl
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Bu araç, bir yöneticinin ana sisteme kurulmadan fwupd eklentilerini kullanmasına izin verir."
 
-#. TRANSLATORS: the user needs to stop playing with stuff
-msgid "This tool can only be used by the root user"
-msgstr "Bu araç yalnızca kök kullanıcı tarafından kullanılabilir"
-
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Bu araç, TPM olay günlüğünü donanım yazılımdan okur ve ayrıştırır"
@@ -1639,7 +1575,6 @@ msgstr "Güncellenebilir"
 msgid "Update Error"
 msgstr "Güncelleme Hatası"
 
-#. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
 msgid "Update Message"
 msgstr "Güncelleme İletisi"
@@ -1656,19 +1591,8 @@ msgstr "Güncelleme hatası bilinen bir sorundur, daha fazla bilgi için bu URL'
 msgid "Update now?"
 msgstr "Şimdi güncellensin mi?"
 
-#. TRANSLATORS: Update can only be done from offline mode
-msgid "Update requires a reboot"
-msgstr "Güncelleme için yeniden başlatma gerekli"
-
 msgid "Update the stored device verification information"
 msgstr "Depolanan aygıt doğrulama bilgilerini güncelle"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Updating %s from %s to %s... "
-msgstr "%s, %s sürümünden %s sürümüne güncelleniyor..."
 
 #. TRANSLATORS: %1 is a device name
 #, c-format

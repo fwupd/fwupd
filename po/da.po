@@ -627,7 +627,6 @@ msgid "Do you want to upload reports automatically for future updates?"
 msgstr "Vil du uploade rapporter automatisk for fremtidige opdateringer?"
 
 #. TRANSLATORS: success
-#. success
 msgid "Done!"
 msgstr "Færdig!"
 
@@ -640,13 +639,6 @@ msgstr "Nedgrader %s fra %s til %s?"
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
 msgstr "Nedgraderer firmwaren på en enhed"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Downgrading %s from %s to %s... "
-msgstr "Nedgraderer %s fra %s til %s... "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -765,18 +757,9 @@ msgstr "Mislykkedes"
 msgid "Failed to apply update"
 msgstr "Kunne ikke anvende opdatering"
 
-#. TRANSLATORS: we could not talk to the fwupd daemon
 #. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Kunne ikke oprette forbindelse til dæmonen"
-
-#. TRANSLATORS: we could not get the devices to update offline
-msgid "Failed to get pending devices"
-msgstr "Kunne ikke hente afventende enheder"
-
-#. TRANSLATORS: we could not install for some reason
-msgid "Failed to install firmware update"
-msgstr "Kunne ikke installere firmwareopdateringen"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -806,14 +789,6 @@ msgstr "Kunne ikke fortolke flag for --filter"
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Kunne ikke fortolke lokal dbx"
-
-#. TRANSLATORS: we could not reboot for some reason
-msgid "Failed to reboot"
-msgstr "Kunne ikke genstarte"
-
-#. TRANSLATORS: we could not talk to plymouth
-msgid "Failed to set splash mode"
-msgstr "Kunne ikke indstille splash-tilstand"
 
 #. TRANSLATORS: something with a blocked hash exists
 #. * in the users ESP -- which would be bad!
@@ -983,10 +958,6 @@ msgstr "Ignorer mislykkede checksum for firmware"
 msgid "Ignore firmware hardware mismatch failures"
 msgstr "Ignorer mislykkedes firmwarehardware som ikke passer sammen"
 
-#. TRANSLATORS: Ignore validation safety checks when flashing this device
-msgid "Ignore validation safety checks"
-msgstr "Ignorer sikkerhedstjek af bekræftelse"
-
 #. TRANSLATORS: try to help
 msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
 msgstr "Ignorerer strikse SSL-tjeks. Eksportér DISABLE_SSL_STRICT i dit miljø for at gøre det automatisk i fremtiden"
@@ -1001,19 +972,11 @@ msgstr "Installer enhedsfirmware der er underskrevet"
 msgid "Install signed system firmware"
 msgstr "Installer systemfirmware der er underskrevet"
 
-#. TRANSLATORS: Install composite firmware on the parent before the child
-msgid "Install to parent device first"
-msgstr "Installer først til forælderenhed"
-
 msgid "Install unsigned device firmware"
 msgstr "Installer enhedsfirmware der ikke er underskrevet"
 
 msgid "Install unsigned system firmware"
 msgstr "Installer systemfirmware der ikke er underskrevet"
-
-#. TRANSLATORS: console message when no Plymouth is installed
-msgid "Installing Firmware…"
-msgstr "Installerer firmware …"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -1065,10 +1028,6 @@ msgid "Issue"
 msgid_plural "Issues"
 msgstr[0] "Problemstilling"
 msgstr[1] "Problemstillinger"
-
-#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
-msgid "Keyring"
-msgstr "Nøglering"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "LOCATION"
@@ -1237,10 +1196,6 @@ msgstr "Ingen tilgængelige fjerne"
 msgid "No updates available for remaining devices"
 msgstr "Ingen opdateringer tilgængelige for tilbageværende enheder"
 
-#. TRANSLATORS: nothing was updated offline
-msgid "No updates were applied"
-msgstr "Der blev ikke anvendt nogen opdateringer"
-
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
 msgstr "Ikke fundet"
@@ -1297,10 +1252,6 @@ msgstr "Nyttelast"
 msgid "Pending"
 msgstr "Afventer"
 
-#. TRANSLATORS: console message when not using plymouth
-msgid "Percentage complete"
-msgstr "Procent fuldført"
-
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "Udfør handling?"
@@ -1354,10 +1305,6 @@ msgstr "Læser fra %s …"
 msgid "Reading…"
 msgstr "Læser …"
 
-#. TRANSLATORS: console message when not using plymouth
-msgid "Rebooting…"
-msgstr "Genstarter …"
-
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Opdater metadata fra fjernserver"
@@ -1375,13 +1322,6 @@ msgstr "Geninstaller den nuværende firmware på enheden"
 #. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
 msgstr "Geninstaller firmware på en enhed"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second is a version number
-#. * e.g. "1.2.3"
-#, c-format
-msgid "Reinstalling %s with %s... "
-msgstr "Geninstallerer %s med %s... "
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -1475,10 +1415,6 @@ msgstr "UNDERSYSTEM DRIVER [ENHEDS-ID|GUID]"
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "Gem en fil der gør det muligt at generere hardware-id'er"
-
-#. TRANSLATORS: command line option
-msgid "Schedule installation for next reboot when possible"
-msgstr "Planlægning af installation ved næste genstart, når det er muligt"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
@@ -1757,10 +1693,6 @@ msgstr "Værktøjet giver en administrator mulighed for at sætte i kø og styre
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Værktøjet giver en administrator mulighed for at bruge fwupd-plugins uden at installere dem på værtssystemet."
 
-#. TRANSLATORS: the user needs to stop playing with stuff
-msgid "This tool can only be used by the root user"
-msgstr "Værktøjet kan kun bruges af root-brugeren"
-
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Værktøjet læser og fortolker TPM-hændelsesloggen fra systemfirmwaren."
@@ -1860,7 +1792,6 @@ msgstr "Kan opdateres"
 msgid "Update Error"
 msgstr "Fejl ved opdatering"
 
-#. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
 msgid "Update Message"
 msgstr "Opdateringsmeddelelse"
@@ -1877,10 +1808,6 @@ msgstr "Opdateringer som mislykkes er et velkendt problem. Besøg URL'en for mer
 msgid "Update now?"
 msgstr "Opdater nu?"
 
-#. TRANSLATORS: Update can only be done from offline mode
-msgid "Update requires a reboot"
-msgstr "Opdatering kræver en genstart"
-
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
 msgstr "Opdater den gemte kryptografiske hash med indholdet fra den nuværende ROM"
@@ -1894,13 +1821,6 @@ msgstr "Opdater det gemte metadata med det nuværende indhold"
 
 msgid "Updating"
 msgstr "Opdaterer"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Updating %s from %s to %s... "
-msgstr "Opdaterer %s fra %s til %s... "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format

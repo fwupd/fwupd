@@ -746,7 +746,6 @@ msgid "Do you want to upload reports automatically for future updates?"
 msgstr "ඔබට අනාගත යාවත්කාලීන සඳහා වාර්තා ස්වයංක්‍රීයව උඩුගත කිරීමට අවශ්‍යද?"
 
 #. TRANSLATORS: success
-#. success
 msgid "Done!"
 msgstr "අහවරයි!"
 
@@ -759,13 +758,6 @@ msgstr "%s %s සිට %sදක්වා පහත් කරන්නද?"
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
 msgstr "උපාංගයක ස්ථිරාංග පහත හෙළයි"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Downgrading %s from %s to %s... "
-msgstr "%s %s සිට %sදක්වා පහත හෙලීම ... "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -900,18 +892,9 @@ msgstr "අසමත් විය"
 msgid "Failed to apply update"
 msgstr "යාවත්කාලය යෙදීමට අසමත් විය"
 
-#. TRANSLATORS: we could not talk to the fwupd daemon
 #. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "ඩීමන් වෙත සම්බන්ධ වීමට අසමත් විය"
-
-#. TRANSLATORS: we could not get the devices to update offline
-msgid "Failed to get pending devices"
-msgstr "පොරොත්තු උපාංග ලබා ගැනීමට අසමත් විය"
-
-#. TRANSLATORS: we could not install for some reason
-msgid "Failed to install firmware update"
-msgstr "ස්ථිරාංග යාවත්කාලීන ස්ථාපනය කිරීමට අසමත් විය"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -941,14 +924,6 @@ msgstr "--ෆිල්ටර් සඳහා කොඩි විග්‍රහ 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "දේශීය dbx විග්‍රහ කිරීමට අසමත් විය"
-
-#. TRANSLATORS: we could not reboot for some reason
-msgid "Failed to reboot"
-msgstr "යළි ඇරඹීමට අසමත් විය"
-
-#. TRANSLATORS: we could not talk to plymouth
-msgid "Failed to set splash mode"
-msgstr "විදින මාදිලිය සැකසීමට අසමත් විය"
 
 #. TRANSLATORS: something with a blocked hash exists
 #. * in the users ESP -- which would be bad!
@@ -1143,10 +1118,6 @@ msgstr "ස්ථිරාංග චෙක්සම් අසමත්වීම�
 msgid "Ignore firmware hardware mismatch failures"
 msgstr "ස්ථිරාංග දෘඪාංග නොගැලපීම අසාර්ථක වීම නොසලකා හරින්න"
 
-#. TRANSLATORS: Ignore validation safety checks when flashing this device
-msgid "Ignore validation safety checks"
-msgstr "වලංගු කිරීමේ ආරක්ෂණ පරීක්ෂාවන් නොසලකා හරින්න"
-
 #. TRANSLATORS: try to help
 msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
 msgstr "SSL දැඩි චෙක්පත් නොසලකා හැරීම, අනාගතයේදී මෙය ස්වයංක්‍රීයව සිදු කිරීම සඳහා ඔබේ පරිසරය තුළ DISABLE_SSL_STRICT අපනයනය කරන්න"
@@ -1167,19 +1138,11 @@ msgstr "අත්සන් කරන ලද උපාංග ස්ථිරා�
 msgid "Install signed system firmware"
 msgstr "අත්සන් කළ පද්ධති ස්ථිරාංග ස්ථාපනය කරන්න"
 
-#. TRANSLATORS: Install composite firmware on the parent before the child
-msgid "Install to parent device first"
-msgstr "පළමුව මාපිය උපාංගයට ස්ථාපනය කරන්න"
-
 msgid "Install unsigned device firmware"
 msgstr "අත්සන් නොකළ උපාංග ස්ථිරාංග ස්ථාපනය කරන්න"
 
 msgid "Install unsigned system firmware"
 msgstr "අත්සන් නොකළ පද්ධති ස්ථිරාංග ස්ථාපනය කරන්න"
-
-#. TRANSLATORS: console message when no Plymouth is installed
-msgid "Installing Firmware…"
-msgstr "ස්ථිරාංගය ස්ථාපනය වෙමින්…"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -1259,10 +1222,6 @@ msgstr "කර්නලය අගුලු දැමීම අබල කර ඇ�
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown enabled"
 msgstr "කර්නල් අගුලු දැමීම සබල කර ඇත"
-
-#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
-msgid "Keyring"
-msgstr "ප්රධාන මුදුව"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "LOCATION"
@@ -1439,10 +1398,6 @@ msgstr "යාවත්කාලීන නොමැත"
 msgid "No updates available for remaining devices"
 msgstr "ඉතිරි උපාංග සඳහා යාවත්කාලීන නොමැත"
 
-#. TRANSLATORS: nothing was updated offline
-msgid "No updates were applied"
-msgstr "යාවත්කාලීන කිසිවක් යොදන ලදී"
-
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "අනුමත කර නැත"
@@ -1510,10 +1465,6 @@ msgstr "ගෙවීම"
 #. TRANSLATORS: the update state of the specific device
 msgid "Pending"
 msgstr "පොරොත්තුවෙන්"
-
-#. TRANSLATORS: console message when not using plymouth
-msgid "Percentage complete"
-msgstr "ප්‍රතිශතය සම්පූර්ණයි"
 
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
@@ -1593,10 +1544,6 @@ msgstr "%s වෙතින් කියැවෙමින්…"
 msgid "Reading…"
 msgstr "කියවෙමින්…"
 
-#. TRANSLATORS: console message when not using plymouth
-msgid "Rebooting…"
-msgstr "නැවත ඇරඹෙමින්…"
-
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "දුරස්ථ සේවාදායකයෙන් පාර-දත්ත නැවුම් කරන්න"
@@ -1614,13 +1561,6 @@ msgstr "උපාංගයේ වත්මන් ස්ථිරාංග නැ
 #. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
 msgstr "උපාංගයක ස්ථිරාංග නැවත ස්ථාපනය කරන්න"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second is a version number
-#. * e.g. "1.2.3"
-#, c-format
-msgid "Reinstalling %s with %s... "
-msgstr "%s සමඟ %s යළි ස්ථාපනය වෙමින්... "
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -1730,10 +1670,6 @@ msgstr "උප පද්ධති ධාවකය [උපාංගය-ID|මා�
 #. TRANSLATORS: command description
 msgid "Save a file that allows generation of hardware IDs"
 msgstr "දෘඪාංග හැඳුනුම්පත් ජනනය කිරීමට ඉඩ දෙන ගොනුවක් සුරකින්න"
-
-#. TRANSLATORS: command line option
-msgid "Schedule installation for next reboot when possible"
-msgstr "හැකි විට ඊළඟ නැවත පණගැන්වීම සඳහා ස්ථාපනය කාලසටහන්ගත කරන්න"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
@@ -2016,12 +1952,6 @@ msgstr "TPM PCR0 ප්‍රතිසංස්කරණයෙන් වෙන�
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "ඩීමන් 3වන පාර්ශ්ව කේතය පූරණය කර ඇති අතර උඩුගං බලා සංවර්ධකයින් විසින් තවදුරටත් සහාය නොදක්වයි!"
 
-#. TRANSLATORS: this is for the device tests, %1 is the device
-#. * version, %2 is what we expected
-#, c-format
-msgid "The device version did not match: got %s, expected %s"
-msgstr "උපාංග අනුවාදය නොගැලපේ: ලැබුණේ %s, අපේක්ෂිත %s"
-
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
@@ -2088,10 +2018,6 @@ msgstr "මෙම මෙවලම පරිපාලකයෙකුට fwupd dae
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "මෙම මෙවලම පරිපාලකයෙකුට ධාරක පද්ධතියේ ස්ථාපනය නොකර fwupd ප්ලගීන භාවිතා කිරීමට ඉඩ සලසයි."
-
-#. TRANSLATORS: the user needs to stop playing with stuff
-msgid "This tool can only be used by the root user"
-msgstr "මෙම මෙවලම භාවිතා කළ හැක්කේ root පරිශීලකයාට පමණි"
 
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
@@ -2208,7 +2134,6 @@ msgstr "යාවත්කාලීන දෝෂයකි"
 msgid "Update Image"
 msgstr "රූපය යාවත්කාලීන කරන්න"
 
-#. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
 msgid "Update Message"
 msgstr "පණිවිඩය යාවත්කාලීන කරන්න"
@@ -2224,10 +2149,6 @@ msgstr "යාවත්කාලීන අසාර්ථක වීම දන්
 #. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "දැන් යාවත්කාලීන කරන්න?"
-
-#. TRANSLATORS: Update can only be done from offline mode
-msgid "Update requires a reboot"
-msgstr "යාවත්කාලීන කිරීමට නැවත පණගැන්වීමක් අවශ්‍ය වේ"
 
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
@@ -2246,13 +2167,6 @@ msgstr "සියලුම නිශ්චිත උපාංග නවතම �
 
 msgid "Updating"
 msgstr "යාවත්කාලීන කිරීම"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Updating %s from %s to %s... "
-msgstr "%s %s සිට %sදක්වා යාවත්කාලීන කරමින් ... "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format

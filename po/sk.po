@@ -88,16 +88,8 @@ msgid "Device removed:"
 msgstr "Odstránené zariadenie:"
 
 #. TRANSLATORS: success
-#. success
 msgid "Done!"
 msgstr "Hotovo!"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Downgrading %s from %s to %s... "
-msgstr "Vracia sa %s z verzie %s na verziu %s... "
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
@@ -176,13 +168,6 @@ msgstr "OK"
 msgid "Refresh metadata from remote server"
 msgstr "Obnoví metaúdaje zo vzdialeného servera"
 
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second is a version number
-#. * e.g. "1.2.3"
-#, c-format
-msgid "Reinstalling %s with %s... "
-msgstr "Preinštalováva sa %s verziou %s... "
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Zobrazí voľby ladenia"
@@ -197,13 +182,6 @@ msgstr "Odomknúť zariadenie na umožnenie prístupu"
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
 msgstr "Odomkne zariadenie pre prístup k firmvéru"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Updating %s from %s to %s... "
-msgstr "Aktualizuje sa %s z verzie %s na verziu %s... "
 
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"

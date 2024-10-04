@@ -478,7 +478,6 @@ msgid "Do you want to refresh this remote now?"
 msgstr "გნებავთ ეს დაშორებული ახლა განაახლოთ?"
 
 #. TRANSLATORS: success
-#. success
 msgid "Done!"
 msgstr "მზადაა!"
 
@@ -569,10 +568,6 @@ msgstr "არგუმენტების დამუშავების �
 #. TRANSLATORS: failed to read measurements file
 msgid "Failed to parse file"
 msgstr "ფაილის დამუშავების შეცდომა"
-
-#. TRANSLATORS: we could not reboot for some reason
-msgid "Failed to reboot"
-msgstr "გადატვირთვის შეცდომა"
 
 #. TRANSLATORS: item is FALSE
 msgid "False"
@@ -687,10 +682,6 @@ msgstr "IOMMU მოწყობილობის უსაფრთხოე�
 msgid "Idle…"
 msgstr "უქმე…"
 
-#. TRANSLATORS: Ignore validation safety checks when flashing this device
-msgid "Ignore validation safety checks"
-msgstr "დადასტურების შემოწმების ტესტების იგნორი"
-
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "დაყენების დრო"
@@ -704,19 +695,11 @@ msgstr "მოწყობილობის ხელმოწერილი �
 msgid "Install signed system firmware"
 msgstr "მოწყობილობის ხელმოწერილი მიკროკოდის დაყენება"
 
-#. TRANSLATORS: Install composite firmware on the parent before the child
-msgid "Install to parent device first"
-msgstr "ჯერ მშობელ მოწყობილობაზე დაყენება"
-
 msgid "Install unsigned device firmware"
 msgstr "მოწყობილობის ხელმოუწერელი მიკროკოდის დაყენება"
 
 msgid "Install unsigned system firmware"
 msgstr "მოწყობილობის ხელმოუწერელი მიკროკოდის დაყენება"
-
-#. TRANSLATORS: console message when no Plymouth is installed
-msgid "Installing Firmware…"
-msgstr "მიკროკოდის დაყენება…"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -814,10 +797,6 @@ msgid "Issue"
 msgid_plural "Issues"
 msgstr[0] "Პრობლემა"
 msgstr[1] "საკითხები"
-
-#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
-msgid "Keyring"
-msgstr "ბრელოკი"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "LOCATION"
@@ -992,10 +971,6 @@ msgstr "შემცველობა"
 msgid "Pending"
 msgstr "დარჩენილი"
 
-#. TRANSLATORS: console message when not using plymouth
-msgid "Percentage complete"
-msgstr "პროცენტები დასრულებულია"
-
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "შევასრულო ოპერაცია?"
@@ -1051,10 +1026,6 @@ msgstr "მხოლოდ კითხვისთვის"
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
 msgstr "წაკითხვა…"
-
-#. TRANSLATORS: console message when not using plymouth
-msgid "Rebooting…"
-msgstr "გადატვირთვა…"
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -1335,7 +1306,6 @@ msgstr "განახლების შეცდომა"
 msgid "Update Image"
 msgstr "ასლის განახლება"
 
-#. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
 msgid "Update Message"
 msgstr "განახლების შეტყობინება"
@@ -1347,10 +1317,6 @@ msgstr "განახლების მდგომარეობა"
 #. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "განვაახლო ახლა?"
-
-#. TRANSLATORS: Update can only be done from offline mode
-msgid "Update requires a reboot"
-msgstr "განახლება გადატვირთვას საჭიროებს"
 
 msgid "Updating"
 msgstr "განახლება"

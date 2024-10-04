@@ -905,7 +905,6 @@ msgid "Don't prompt for authentication (less details may be shown)"
 msgstr "Ne pitaj za ovjeru (može biti prikazano manje pojedinosti)"
 
 #. TRANSLATORS: success
-#. success
 msgid "Done!"
 msgstr "Završeno!"
 
@@ -918,13 +917,6 @@ msgstr "Vrati %s na stariju inačicu sa %s na %s?"
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
 msgstr "Vraća stariju inačicu firmvera na uređaju"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Downgrading %s from %s to %s... "
-msgstr "Vraćanje  %s s inačice %s na inačicu %s... "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -1089,18 +1081,9 @@ msgstr "Neuspjela primjena nadopune"
 msgid "Failed to connect to Windows service, please ensure it's running."
 msgstr "Neuspjelo povezivanje s Windows uslugom, provjerite je li pokrenuta."
 
-#. TRANSLATORS: we could not talk to the fwupd daemon
 #. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Neuspjelo povezivanje s pozadinskim programom"
-
-#. TRANSLATORS: we could not get the devices to update offline
-msgid "Failed to get pending devices"
-msgstr "Neuspjeli prikaz uređaja na čekanju"
-
-#. TRANSLATORS: we could not install for some reason
-msgid "Failed to install firmware update"
-msgstr "Neuspjela instalacija nadopune firmvera"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -1130,14 +1113,6 @@ msgstr "Neuspjela obrada oznake za --filter"
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Neuspjela obrada lokalnog dbx-a"
-
-#. TRANSLATORS: we could not reboot for some reason
-msgid "Failed to reboot"
-msgstr "Neuspjelo ponovno pokretanje"
-
-#. TRANSLATORS: we could not talk to plymouth
-msgid "Failed to set splash mode"
-msgstr "Neuspjelo postavljanje splash načina"
 
 #. TRANSLATORS: something with a blocked hash exists
 #. * in the users ESP -- which would be bad!
@@ -1410,10 +1385,6 @@ msgstr "Zanemari neuspjele kontrolne zbrojeve firmvera"
 msgid "Ignore firmware hardware mismatch failures"
 msgstr "Zanemari neuspjela poklapanja hardvera firmvera"
 
-#. TRANSLATORS: Ignore validation safety checks when flashing this device
-msgid "Ignore validation safety checks"
-msgstr "Zanemari provjeru sigurnosti uređaja"
-
 #. TRANSLATORS: try to help
 msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
 msgstr "Zanemaruju se stroge SSL provjere, kako bi se ovo ubuduće automatski izvezlo DISABLE_SSL_STRICT u svojem okruženju"
@@ -1438,19 +1409,11 @@ msgstr "Instaliraj firmver potpisan uređajem"
 msgid "Install signed system firmware"
 msgstr "Instaliraj firmver potpisan sustavom"
 
-#. TRANSLATORS: Install composite firmware on the parent before the child
-msgid "Install to parent device first"
-msgstr "Instaliraj prvo u nadređeni uređaj"
-
 msgid "Install unsigned device firmware"
 msgstr "Instaliraj firmver nepotpisan uređajem"
 
 msgid "Install unsigned system firmware"
 msgstr "Instaliraj firmver nepotpisan sustavom"
-
-#. TRANSLATORS: console message when no Plymouth is installed
-msgid "Installing Firmware…"
-msgstr "Instalacija firmvera…"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -1585,10 +1548,6 @@ msgstr "Zaključavanje kernela onemogućeno"
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown enabled"
 msgstr "Zaključavanje kernela omogućeno"
-
-#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
-msgid "Keyring"
-msgstr "Skup ključeva"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "LOCATION"
@@ -1825,10 +1784,6 @@ msgstr "Nema dostupnih nadopuna"
 msgid "No updates available for remaining devices"
 msgstr "Nema dostupnih nadopuna za preostale uređaje"
 
-#. TRANSLATORS: nothing was updated offline
-msgid "No updates were applied"
-msgstr "Nema primijenjenih nadopuna"
-
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Nije odobreno"
@@ -1900,10 +1855,6 @@ msgstr "Sadržaj prijenosa"
 #. TRANSLATORS: the update state of the specific device
 msgid "Pending"
 msgstr "Na čekanju"
-
-#. TRANSLATORS: console message when not using plymouth
-msgid "Percentage complete"
-msgstr "Postotak završetka"
 
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
@@ -2019,10 +1970,6 @@ msgstr "Čitanje iz %s…"
 msgid "Reading…"
 msgstr "Čitanje…"
 
-#. TRANSLATORS: console message when not using plymouth
-msgid "Rebooting…"
-msgstr "Ponovno pokretanje…"
-
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Osvježi metapodatke s udaljenog poslužitelja"
@@ -2040,13 +1987,6 @@ msgstr "Ponovno instaliraj trenutni firmver na uređaj"
 #. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
 msgstr "Ponovno instaliraj firmver na uređaj"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second is a version number
-#. * e.g. "1.2.3"
-#, c-format
-msgid "Reinstalling %s with %s... "
-msgstr "Ponovna instalacija %s inačice %s... "
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
@@ -2185,10 +2125,6 @@ msgstr "Spremi emulirane podatke uređaja"
 #. TRANSLATORS: Scalar increment for integer BIOS setting
 msgid "Scalar Increment"
 msgstr "Skalarni umnožak"
-
-#. TRANSLATORS: command line option
-msgid "Schedule installation for next reboot when possible"
-msgstr "Zakaži instalaciju pri sljedećem pokretanju kada je moguće"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
@@ -2563,12 +2499,6 @@ msgstr "UEFI ključ platforme se koristi za otkrivanje dolazi li softver uređaj
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "Pozadinski program je učitao kȏd treće strane i više nije podržan od upstream razvijatelja!"
 
-#. TRANSLATORS: this is for the device tests, %1 is the device
-#. * version, %2 is what we expected
-#, c-format
-msgid "The device version did not match: got %s, expected %s"
-msgstr "Inačica uređaja se ne podudara: dobivena %s, očekivana %s"
-
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
@@ -2657,10 +2587,6 @@ msgstr "Ovaj alat dopušta administratoru korištenje fwupd priključaka bez ins
 #, c-format
 msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
 msgstr "Ovaj alat može promijeniti BIOS postavku '%s' iz '%s' u '%s' automatski, ali će biti aktivno nakon ponovnog pokretanja računala."
-
-#. TRANSLATORS: the user needs to stop playing with stuff
-msgid "This tool can only be used by the root user"
-msgstr "Ovaj alat može koristiti samo korijenski korisnik"
 
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
@@ -2797,7 +2723,6 @@ msgstr "Greška nadopune"
 msgid "Update Image"
 msgstr "Slika nadopune"
 
-#. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
 msgid "Update Message"
 msgstr "Poruka nadopune"
@@ -2813,10 +2738,6 @@ msgstr "Neuspješna nadopuna je poznat problem, posjetite ovaj URL za više info
 #. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Nadopuni odmah?"
-
-#. TRANSLATORS: Update can only be done from offline mode
-msgid "Update requires a reboot"
-msgstr "Nadopuna zahtijeva ponovno pokretanje"
 
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
@@ -2835,13 +2756,6 @@ msgstr "Nadopuni sve navedene uređaje na najnovije inačice firmvera, ili sve u
 
 msgid "Updating"
 msgstr "Nadopunjivanje"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Updating %s from %s to %s... "
-msgstr "Nadopuna %s s inačice %s na inačicu %s... "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format

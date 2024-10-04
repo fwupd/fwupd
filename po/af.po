@@ -114,16 +114,8 @@ msgid "Devices that were not updated correctly:"
 msgstr "Toestelle wat nie korrek bygewerk is nie:"
 
 #. TRANSLATORS: success
-#. success
 msgid "Done!"
 msgstr "Klaar!"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Downgrading %s from %s to %s... "
-msgstr "Gradeer tans %s af vanaf %s na %s… "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -169,10 +161,6 @@ msgstr "Ledig…"
 msgid "Installing on %s…"
 msgstr "Installeer tans op %s…"
 
-#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
-msgid "Keyring"
-msgstr "Sleutelring"
-
 #. TRANSLATORS: time remaining for completing firmware flash
 msgid "Less than one minute remaining"
 msgstr "Minder as een minuut oor"
@@ -204,13 +192,6 @@ msgstr "Gaan voort met oplaai?"
 msgid "Reading…"
 msgstr "Lees tans…"
 
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second is a version number
-#. * e.g. "1.2.3"
-#, c-format
-msgid "Reinstalling %s with %s... "
-msgstr "Herinstalleer tans %s met %s… "
-
 #. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "Internetverbinding is nodig"
@@ -222,10 +203,6 @@ msgstr "Herbegin nou?"
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "Herbegin tans toestel…"
-
-#. TRANSLATORS: command line option
-msgid "Schedule installation for next reboot when possible"
-msgstr "Skeduleer die installasie vir die volgende herbegin indien moontlik"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
@@ -257,13 +234,6 @@ msgstr "Onbekend"
 #. TRANSLATORS: ask if we can update metadata
 msgid "Update now?"
 msgstr "Werk nou by?"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Updating %s from %s to %s... "
-msgstr "Werk tans %s by vanaf %s na %s… "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format

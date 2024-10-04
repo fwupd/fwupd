@@ -198,16 +198,8 @@ msgid "Do not perform device safety checks"
 msgstr "Non levar a cabo comprobacións de dispositivo"
 
 #. TRANSLATORS: success
-#. success
 msgid "Done!"
 msgstr "Feito!"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Downgrading %s from %s to %s... "
-msgstr "Desactualizando %s desde %s a %s... "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -262,18 +254,9 @@ msgstr "Fallido"
 msgid "Failed to apply update"
 msgstr "Produciuse un fallo ao aplicar a actualización"
 
-#. TRANSLATORS: we could not talk to the fwupd daemon
 #. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Produciuse un fallo ao conectarse ao demoni"
-
-#. TRANSLATORS: we could not get the devices to update offline
-msgid "Failed to get pending devices"
-msgstr "Produciuse un fallo ao obter a lista de dispositivos pendentes"
-
-#. TRANSLATORS: we could not install for some reason
-msgid "Failed to install firmware update"
-msgstr "Produciuse un fallo ao instalar a actualización do firmware"
 
 #. TRANSLATORS: could not read existing system data
 #. TRANSLATORS: could not read file
@@ -299,14 +282,6 @@ msgstr "Produciuse un fallo ao analizar as bandeiras para --filter"
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Produciuse un fallo ao analizar a dbx local"
-
-#. TRANSLATORS: we could not reboot for some reason
-msgid "Failed to reboot"
-msgstr "Produciuse un fallo ao reiniciar"
-
-#. TRANSLATORS: we could not talk to plymouth
-msgid "Failed to set splash mode"
-msgstr "Produciuse un fallo ao modo splash"
 
 #. TRANSLATORS: something with a blocked hash exists
 #. * in the users ESP -- which would be bad!
@@ -389,10 +364,6 @@ msgstr "Instalar firmware de dispositivo non asinado"
 
 msgid "Install unsigned system firmware"
 msgstr "Instalar firmware do sistema non asinado"
-
-#. TRANSLATORS: console message when no Plymouth is installed
-msgid "Installing Firmware…"
-msgstr "Instalando Firmware…"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -508,10 +479,6 @@ msgstr "Non hai publicacións dispoñíbeis"
 msgid "No remotes available"
 msgstr "Non hai remotos dispoñíbeis"
 
-#. TRANSLATORS: nothing was updated offline
-msgid "No updates were applied"
-msgstr "Non se aplicou ningunha actualización"
-
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
 msgstr "Non atopado"
@@ -544,10 +511,6 @@ msgstr "Analizando a dbx de actualizacións…"
 msgid "Parsing system dbx…"
 msgstr "Analizando o dbx do sistema…"
 
-#. TRANSLATORS: console message when not using plymouth
-msgid "Percentage complete"
-msgstr "Porcentaxe completado"
-
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Protección de DMA pre-arrinque"
@@ -568,10 +531,6 @@ msgstr "Lendo de %s…"
 msgid "Reading…"
 msgstr "Lendo…"
 
-#. TRANSLATORS: console message when not using plymouth
-msgid "Rebooting…"
-msgstr "Reiniciando…"
-
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Actualiza os metadatos desde un servidor remoto"
@@ -579,13 +538,6 @@ msgstr "Actualiza os metadatos desde un servidor remoto"
 #. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
 msgstr "Reinstalar firmware nun dispositivo"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second is a version number
-#. * e.g. "1.2.3"
-#, c-format
-msgid "Reinstalling %s with %s... "
-msgstr "Reinstalando %s con %s... "
 
 #. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
@@ -722,10 +674,6 @@ msgstr "O LVFS é o servizo que opera como unha entidade legal independente e no
 msgid "This program may only work correctly as root"
 msgstr "Este programa podería funcionar correctamente só como root"
 
-#. TRANSLATORS: the user needs to stop playing with stuff
-msgid "This tool can only be used by the root user"
-msgstr "Esta ferrametne só pode ser usada por un usuario root"
-
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "Utilidade UEFI dbx"
@@ -765,13 +713,6 @@ msgstr "Actualizaar os metadatos almacenados cos contidos actuais"
 
 msgid "Updating"
 msgstr "Actualizando"
-
-#. TRANSLATORS: the first replacement is a display name
-#. * e.g. "ColorHugALS" and the second and third are
-#. * version numbers e.g. "1.2.3"
-#, c-format
-msgid "Updating %s from %s to %s... "
-msgstr "Actualizando %s desde %s a %s... "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
