@@ -14,7 +14,7 @@ struct FuStructEfs {
     _rom_strap_b_loc: u32le,
 }
 
-#[derive(ValidateStream, Getters)]
+#[derive(ParseStream, ValidateStream, Getters)]
 struct FuStructPspDir {
     cookie: [char; 4] == "$PSP",
     checksum: u32le,
