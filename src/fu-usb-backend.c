@@ -276,10 +276,14 @@ fu_usb_backend_setup(FuBackend *backend,
 	gint rc;
 
 #ifdef HAVE_LIBUSB_INIT_CONTEXT
+#ifdef HAVE_UDEV
 	const struct libusb_init_option options[] = {{.option = LIBUSB_OPTION_NO_DEVICE_DISCOVERY,
 						      .value = {
 							  .ival = 1,
 						      }}};
+#else
+	const struct libusb_init_option options[] = {};
+#endif
 	rc = libusb_init_context(&self->ctx, options, G_N_ELEMENTS(options));
 #else
 	rc = libusb_init(&self->ctx);
