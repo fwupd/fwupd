@@ -1,6 +1,7 @@
 subdir('bios-settings.d')
 subdir('pki')
 subdir('remotes.d')
+subdir('icons')
 
 if get_option('bash_completion')
   subdir('bash-completion')
