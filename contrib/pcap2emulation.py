@@ -523,7 +523,7 @@ class Pcap2Emulation:
                                     "UsbEvents": [],
                                 }
 
-                            if descriptor_type == DESCRIPTOR_CONFIGURATION:
+                            elif descriptor_type == DESCRIPTOR_CONFIGURATION:
                                 if "usb_usb_iConfiguration" in layers:
                                     # The GetConfigurationIndex USB event is not directly
                                     # related to a specific USB event, but data can be
@@ -542,7 +542,7 @@ class Pcap2Emulation:
                                     }
                                     self._save_event(event)
 
-                            if descriptor_type == DESCRIPTOR_STRING:
+                            elif descriptor_type == DESCRIPTOR_STRING:
                                 if "usb_usb_DescriptorIndex" in layers:
                                     desc_index = get_int(
                                         layers["usb_usb_DescriptorIndex"]
@@ -593,7 +593,7 @@ class Pcap2Emulation:
                                     event_bytes["Data"] = event_str["Data"]
                                     self._save_event(event_bytes)
 
-                            if descriptor_type == DESCRIPTOR_INTERFACE:
+                            elif descriptor_type == DESCRIPTOR_INTERFACE:
                                 interface = self._get_interface_descriptor(
                                     layers, descriptor_index
                                 )
@@ -627,7 +627,7 @@ class Pcap2Emulation:
 
                                 self.interface_index += 1
 
-                            if descriptor_type == DESCRIPTOR_ENDPOINT:
+                            elif descriptor_type == DESCRIPTOR_ENDPOINT:
                                 if (
                                     len(layers["usb_usb_bEndpointAddress"])
                                     > self.endpoint_index
@@ -647,7 +647,7 @@ class Pcap2Emulation:
                                             break
                                     self.endpoint_index += 1
 
-                            if descriptor_type == DESCRIPTOR_EXTRA:
+                            elif descriptor_type == DESCRIPTOR_EXTRA:
                                 for interface in self.device["UsbInterfaces"]:
                                     if (
                                         interface["InterfaceClass"]
@@ -667,6 +667,17 @@ class Pcap2Emulation:
                                         )
                                         interface["ExtraData"] = d
                                         break
+                                    else:
+                                        sys.stderr.write(
+                                            "Unknown interface class: "
+                                            + str(interface["InterfaceClass"])
+                                        )
+                                        exit(1)
+                            else:
+                                sys.stderr.write(
+                                    "Unknown descriptor type: " + descriptor_type
+                                )
+                                exit(1)
 
                     elif (
                         "usb_usb_bmRequestType_type" in layers
@@ -681,9 +692,9 @@ class Pcap2Emulation:
                         s += ",Recipient=0x{:02x}".format(
                             get_int(layers["usb_usb_bmRequestType_recipient"])
                         )
-                        s += f",Request=0x{int(layers['usb_usb_setup_bRequest']):02x}"
-                        s += f",Value=0x{int(layers['usb_usb_setup_wValue']):04x}"
-                        s += f",Idx=0x{int(layers['usb_usb_setup_wIndex']):04x}"
+                        s += f",Request=0x{get_int(layers['usb_usb_setup_bRequest']):02x}"
+                        s += f",Value=0x{get_int(layers['usb_usb_setup_wValue']):04x}"
+                        s += f",Idx=0x{get_int(layers['usb_usb_setup_wIndex']):04x}"
                         if "usb_usb_data_fragment" in layers:
                             data = layers["usb_usb_data_fragment"].replace(":", "")
                         else:
