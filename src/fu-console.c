@@ -204,9 +204,8 @@ fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...)
 		if (g_strcmp0(buffer, "N\n") == 0)
 			return FALSE;
 
-		/* TRANSLATORS: the user isn't reading the question -- please don't translate
-		 * 'Y' or 'N' as these are hardcoded */
-		fu_console_print_literal(self, _("Please enter either Y or N: "));
+		/* TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N' */
+		fu_console_print(self, _("Please enter either %s or %s: "), "Y", "N");
 	} while (TRUE);
 	return FALSE;
 }
