@@ -119,11 +119,6 @@ The `[fwupd]` section can contain the following parameters:
 
   Show data such as device serial numbers which some users may consider private.
 
-**AllowEmulation={{AllowEmulation}}**
-
-  Allow capturing and loading device emulation by logging all USB transfers.
-  Enabling this will greatly increase the amount of memory fwupd uses when upgrading devices.
-
 **TrustedUids={{TrustedUids}}**
 
   UIDs matching these values that call the D-Bus interface should marked as trusted.

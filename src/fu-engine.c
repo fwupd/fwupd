@@ -821,14 +821,29 @@ fu_engine_modify_config(FuEngine *self,
 	/* check keys are valid */
 	if (g_strcmp0(section, "fwupd") == 0) {
 		const gchar *keys[] = {
-		    "ArchiveSizeMax",  "AllowEmulation",      "ApprovedFirmware",
-		    "BlockedFirmware", "DisabledDevices",     "DisabledPlugins",
-		    "EmulatedDevices", "EnumerateAllDevices", "EspLocation",
-		    "HostBkc",	       "IdleTimeout",	      "IgnorePower",
-		    "OnlyTrusted",     "P2pPolicy",	      "ReleaseDedupe",
-		    "ReleasePriority", "ShowDevicePrivate",   "TestDevices",
-		    "TrustedReports",  "TrustedUids",	      "UpdateMotd",
-		    "UriSchemes",      "VerboseDomains",      NULL,
+		    "ArchiveSizeMax",
+		    "ApprovedFirmware",
+		    "BlockedFirmware",
+		    "DisabledDevices",
+		    "DisabledPlugins",
+		    "EmulatedDevices",
+		    "EnumerateAllDevices",
+		    "EspLocation",
+		    "HostBkc",
+		    "IdleTimeout",
+		    "IgnorePower",
+		    "OnlyTrusted",
+		    "P2pPolicy",
+		    "ReleaseDedupe",
+		    "ReleasePriority",
+		    "ShowDevicePrivate",
+		    "TestDevices",
+		    "TrustedReports",
+		    "TrustedUids",
+		    "UpdateMotd",
+		    "UriSchemes",
+		    "VerboseDomains",
+		    NULL,
 		};
 		if (!g_strv_contains(keys, key)) {
 			g_set_error(error,
@@ -992,8 +1007,7 @@ fu_engine_modify_bios_settings(FuEngine *self,
 static void
 fu_engine_ensure_context_flag_save_events(FuEngine *self)
 {
-	if (g_hash_table_size(self->emulation_ids) > 0 &&
-	    fu_engine_config_get_allow_emulation(self->config)) {
+	if (g_hash_table_size(self->emulation_ids) > 0) {
 		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
 	} else {
 		fu_context_remove_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
@@ -2689,15 +2703,6 @@ fu_engine_emulation_load(FuEngine *self, GInputStream *stream, GError **error)
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* not supported */
-	if (!fu_engine_config_get_allow_emulation(self->config)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "emulation is not allowed from config");
-		return FALSE;
-	}
-
 	/* unload any existing devices */
 	if (!fu_engine_emulation_load_json_blob(self, json_blob, error))
 		return FALSE;
@@ -2751,15 +2756,6 @@ fu_engine_emulation_save(FuEngine *self, GOutputStream *stream, GError **error)
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* not supported */
-	if (!fu_engine_config_get_allow_emulation(self->config)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "emulation is not allowed from config");
-		return FALSE;
-	}
 
 	/* sanity check */
 	for (guint phase = FU_ENGINE_INSTALL_PHASE_SETUP; phase < FU_ENGINE_INSTALL_PHASE_LAST;

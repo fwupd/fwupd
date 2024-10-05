@@ -341,12 +341,6 @@ fu_engine_config_get_test_devices(FuEngineConfig *self)
 }
 
 gboolean
-fu_engine_config_get_allow_emulation(FuEngineConfig *self)
-{
-	return fu_config_get_value_bool(FU_CONFIG(self), "fwupd", "AllowEmulation");
-}
-
-gboolean
 fu_engine_config_get_ignore_requirements(FuEngineConfig *self)
 {
 	return fu_config_get_value_bool(FU_CONFIG(self), "fwupd", "IgnoreRequirements");
@@ -427,7 +421,6 @@ fu_engine_config_init(FuEngineConfig *self)
 	g_signal_connect(self, "changed", G_CALLBACK(fu_engine_config_changed_cb), NULL);
 
 	/* defaults changed here will also be reflected in the fwupd.conf man page */
-	fu_engine_config_set_default(self, "AllowEmulation", "false");
 	fu_engine_config_set_default(self, "ApprovedFirmware", NULL);
 	fu_engine_config_set_default(self, "ArchiveSizeMax", archive_size_max_default);
 	fu_engine_config_set_default(self, "BlockedFirmware", NULL);
