@@ -5560,6 +5560,21 @@ fu_input_stream_find_func(void)
 }
 
 static void
+fu_input_stream_sum_overflow_func(void)
+{
+	guint8 buf[3] = {0};
+	gboolean ret;
+	guint32 sum32 = 0;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream =
+	    g_memory_input_stream_new_from_data(buf, sizeof(buf), NULL);
+
+	ret = fu_input_stream_compute_sum32(stream, &sum32, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
+	g_assert_false(ret);
+}
+
+static void
 fu_input_stream_chunkify_func(void)
 {
 	gboolean ret;
@@ -5996,6 +6011,7 @@ main(int argc, char **argv)
 
 	g_test_add_func("/fwupd/efi-lz77{decompressor}", fu_efi_lz77_decompressor_func);
 	g_test_add_func("/fwupd/input-stream", fu_input_stream_func);
+	g_test_add_func("/fwupd/input-stream{sum-overflow}", fu_input_stream_sum_overflow_func);
 	g_test_add_func("/fwupd/input-stream{chunkify}", fu_input_stream_chunkify_func);
 	g_test_add_func("/fwupd/input-stream{find}", fu_input_stream_find_func);
 	g_test_add_func("/fwupd/partial-input-stream", fu_partial_input_stream_func);

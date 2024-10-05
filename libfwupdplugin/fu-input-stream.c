@@ -505,6 +505,15 @@ static gboolean
 fu_input_stream_compute_sum16_cb(const guint8 *buf, gsize bufsz, gpointer user_data, GError **error)
 {
 	guint16 *value = (guint16 *)user_data;
+	if (bufsz % sizeof(*value) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_READ,
+			    "not aligned to %u bytes, got 0x%x",
+			    (guint)sizeof(*value),
+			    (guint)bufsz);
+		return FALSE;
+	}
 	*value += fu_sum16(buf, bufsz);
 	return TRUE;
 }
@@ -528,6 +537,44 @@ fu_input_stream_compute_sum16(GInputStream *stream, guint16 *value, GError **err
 	g_return_val_if_fail(value != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_input_stream_chunkify(stream, fu_input_stream_compute_sum16_cb, value, error);
+}
+
+static gboolean
+fu_input_stream_compute_sum32_cb(const guint8 *buf, gsize bufsz, gpointer user_data, GError **error)
+{
+	guint32 *value = (guint32 *)user_data;
+	if (bufsz % sizeof(*value) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_READ,
+			    "not aligned to %u bytes, got 0x%x",
+			    (guint)sizeof(*value),
+			    (guint)bufsz);
+		return FALSE;
+	}
+	*value += fu_sum32(buf, bufsz);
+	return TRUE;
+}
+
+/**
+ * fu_input_stream_compute_sum32:
+ * @stream: a #GInputStream
+ * @value: (out): value
+ * @error: (nullable): optional return location for an error
+ *
+ * Returns the arithmetic sum of all bytes in the stream.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.1
+ **/
+gboolean
+fu_input_stream_compute_sum32(GInputStream *stream, guint32 *value, GError **error)
+{
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return fu_input_stream_chunkify(stream, fu_input_stream_compute_sum32_cb, value, error);
 }
 
 typedef struct {
