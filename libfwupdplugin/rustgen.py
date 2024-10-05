@@ -253,6 +253,9 @@ class StructObj:
         # for convenience
         if derive in ["Parse", "ParseBytes"]:
             self.add_public_export("Getters")
+            for item in self.items:
+                if item.struct_obj:
+                    item.struct_obj.add_public_export("Getters")
         if derive == "New":
             self.add_public_export("Setters")
 
