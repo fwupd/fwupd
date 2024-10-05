@@ -38,7 +38,6 @@ pending database like we would do for a successful firmware update.
 To demo this, something like this could be done:
 
     # connect ColorHug2
-    fwupdmgr modify-config AllowEmulation true
     fwupdmgr emulation-tag b0a78eb71f4eeea7df8fb114522556ba8ce22074
     # or, using the GUID
     # fwupdmgr emulation-tag 2082b5e0-7a64-478a-b1b2-e3404fab6dad
@@ -51,7 +50,6 @@ To demo this, something like this could be done:
     fwupdmgr emulation-load colorhug.zip
     fwupdmgr get-devices --filter emulated
     fwupdmgr install e5* --allow-reinstall
-    fwupdmgr modify-config AllowEmulation false
 
 ## Device Tests
 
@@ -139,7 +137,5 @@ For example:
     contrib/pcap2emulation.py CalDigit.pcapng /tmp/caldigit 0451:ace1
     # this will generate /tmp/caldigit.zip
     # the new emulation file can be used for emulation
-    fwupdmgr modify-config AllowEmulation true
     fwupdmgr emulation-load /tmp/caldigit.zip
     fwupdmgr get-devices --filter emulated
-    fwupdmgr modify-config AllowEmulation false

@@ -6325,18 +6325,9 @@ fu_config_migrate_1_9_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	ret = fu_config_set_value(config, "fwupd", "AllowEmulation", "true", &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* ensure that all keys except AllowEmulation migrated */
-	ret = g_file_get_contents(fake_localconf_fn, &localconf_data, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	g_assert_cmpstr(localconf_data,
-			==,
-			"[fwupd]\n"
-			"AllowEmulation=true\n");
+	/* ensure that all keys migrated */
+	ret = g_file_test(fake_localconf_fn, G_FILE_TEST_EXISTS);
+	g_assert_false(ret);
 }
 
 static void

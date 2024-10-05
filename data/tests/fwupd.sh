@@ -13,7 +13,6 @@ run_test()
 run_device_tests()
 {
 	if [ -n "$CI_NETWORK" ] && [ -d @devicetestdir@ ]; then
-		fwupdmgr modify-config AllowEmulation true -y
 		for f in `grep --files-with-matches -r emulation-url @devicetestdir@`; do
 		        echo "Emulating for $f"
 		        fwupdmgr device-emulate \

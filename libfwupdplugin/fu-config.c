@@ -190,7 +190,6 @@ fu_config_migrate_keyfile(FuConfig *self)
 			  {"fwupd", "IgnorePower", NULL},
 			  {"fwupd", "DisabledPlugins", "test;test_ble;invalid"},
 			  {"fwupd", "DisabledPlugins", "test;test_ble"},
-			  {"fwupd", "AllowEmulation", NULL},
 			  {"redfish", "IpmiDisableCreateUser", NULL},
 			  {"redfish", "ManagerResetTimeout", NULL},
 			  {"msr", "MinimumSmeKernelVersion", NULL},
