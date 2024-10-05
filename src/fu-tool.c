@@ -4786,7 +4786,7 @@ main(int argc, char *argv[])
 	    cmd_array,
 	    "get-bios-settings,get-bios-setting",
 	    /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-	    _("[SETTING1] [ SETTING2]..."),
+	    _("[SETTING1] [SETTING2]..."),
 	    /* TRANSLATORS: command description */
 	    _("Retrieve BIOS settings.  If no arguments are passed all settings are returned"),
 	    fu_util_get_bios_setting);
