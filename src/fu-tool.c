@@ -4966,8 +4966,10 @@ main(int argc, char *argv[])
 						       &priv->filter_device_include,
 						       &priv->filter_device_exclude,
 						       &error)) {
-			/* TRANSLATORS: the user didn't read the man page */
-			g_prefix_error(&error, "%s: ", _("Failed to parse flags for --filter"));
+			g_autofree gchar *str =
+			    /* TRANSLATORS: the user didn't read the man page, %1 is '--filter' */
+			    g_strdup_printf(_("Failed to parse flags for %s"), "--filter");
+			g_prefix_error(&error, "%s: ", str);
 			fu_util_print_error(priv, error);
 			return EXIT_FAILURE;
 		}
@@ -4977,10 +4979,11 @@ main(int argc, char *argv[])
 							&priv->filter_release_include,
 							&priv->filter_release_exclude,
 							&error)) {
-			/* TRANSLATORS: the user didn't read the man page */
-			g_prefix_error(&error,
-				       "%s: ",
-				       _("Failed to parse flags for --filter-release"));
+			g_autofree gchar *str =
+			    /* TRANSLATORS: the user didn't read the man page,
+			     * %1 is '--filter-release' */
+			    g_strdup_printf(_("Failed to parse flags for %s"), "--filter-release");
+			g_prefix_error(&error, "%s: ", str);
 			fu_util_print_error(priv, error);
 			return EXIT_FAILURE;
 		}
@@ -5049,9 +5052,11 @@ main(int argc, char *argv[])
 #endif
 		fu_util_print_error(priv, error);
 		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
-			fu_console_print_literal(priv->console,
-						 /* TRANSLATORS: explain how to get help */
-						 _("Use fwupdtool --help for help"));
+			fu_console_print(priv->console,
+					 /* TRANSLATORS: explain how to get help, %1 is
+					  * 'fwupdtool --help' */
+					 _("Use %s for help"),
+					 "fwupdtool --help");
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
 			g_info("%s\n", error->message);
 			return EXIT_NOTHING_TO_DO;

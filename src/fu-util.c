@@ -2080,12 +2080,13 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 
 	/* metadata refreshed recently */
 	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 && refresh_cnt == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOTHING_TO_DO,
-				    /* TRANSLATORS: error message for a user who ran fwupdmgr
-				     * refresh recently */
-				    _("Metadata is up to date; use --force to refresh again."));
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    /* TRANSLATORS: error message for a user who ran fwupdmgr
+			     * refresh recently -- %1 is '--force' */
+			    _("Metadata is up to date; use %s to refresh again."),
+			    "--force");
 		return FALSE;
 	}
 
@@ -5431,8 +5432,10 @@ main(int argc, char *argv[])
 						       &priv->filter_device_include,
 						       &priv->filter_device_exclude,
 						       &error)) {
-			/* TRANSLATORS: the user didn't read the man page */
-			g_prefix_error(&error, "%s: ", _("Failed to parse flags for --filter"));
+			g_autofree gchar *str =
+			    /* TRANSLATORS: the user didn't read the man page, %1 is '--filter' */
+			    g_strdup_printf(_("Failed to parse flags for %s"), "--filter");
+			g_prefix_error(&error, "%s: ", str);
 			fu_util_print_error(priv, error);
 			return EXIT_FAILURE;
 		}
@@ -5442,10 +5445,11 @@ main(int argc, char *argv[])
 							&priv->filter_release_include,
 							&priv->filter_release_exclude,
 							&error)) {
-			/* TRANSLATORS: the user didn't read the man page */
-			g_prefix_error(&error,
-				       "%s: ",
-				       _("Failed to parse flags for --filter-release"));
+			g_autofree gchar *str =
+			    /* TRANSLATORS: the user didn't read the man page,
+			     * %1 is '--filter-release' */
+			    g_strdup_printf(_("Failed to parse flags for %s"), "--filter-release");
+			g_prefix_error(&error, "%s: ", str);
 			fu_util_print_error(priv, error);
 			return EXIT_FAILURE;
 		}
