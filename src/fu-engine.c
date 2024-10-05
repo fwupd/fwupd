@@ -1001,6 +1001,47 @@ fu_engine_ensure_context_flag_save_events(FuEngine *self)
 }
 
 static gboolean
+fu_engine_add_device_flag_emulation_tag_internal(FuEngine *self,
+						 const gchar *device_id,
+						 GError **error)
+{
+	GPtrArray *emulated_devices = fu_engine_config_get_emulated_devices(self->config);
+	g_autofree gchar *str = NULL;
+
+	if (g_ptr_array_find_with_equal_func(emulated_devices, device_id, g_str_equal, NULL)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "device is already tagged for emulation");
+		return FALSE;
+	}
+	g_ptr_array_add(emulated_devices, g_strdup(device_id));
+	str = fu_strjoin(";", emulated_devices);
+	return fu_config_set_value(FU_CONFIG(self->config), "fwupd", "EmulatedDevices", str, error);
+}
+
+static gboolean
+fu_engine_remove_device_flag_emulation_tag_internal(FuEngine *self,
+						    const gchar *device_id,
+						    GError **error)
+{
+	GPtrArray *emulated_devices = fu_engine_config_get_emulated_devices(self->config);
+	guint idx = 0;
+	g_autofree gchar *str = NULL;
+
+	if (!g_ptr_array_find_with_equal_func(emulated_devices, device_id, g_str_equal, &idx)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "device is not tagged for emulation");
+		return FALSE;
+	}
+	g_ptr_array_remove_index(emulated_devices, idx);
+	str = fu_strjoin(";", emulated_devices);
+	return fu_config_set_value(FU_CONFIG(self->config), "fwupd", "EmulatedDevices", str, error);
+}
+
+static gboolean
 fu_engine_remove_device_flag(FuEngine *self,
 			     const gchar *device_id,
 			     FwupdDeviceFlags flag,
@@ -1055,6 +1096,14 @@ fu_engine_remove_device_flag(FuEngine *self,
 		}
 		g_hash_table_remove(self->emulation_ids, fu_device_get_id(device));
 		fu_engine_ensure_context_flag_save_events(self);
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_INTERNAL)) {
+			if (!fu_engine_remove_device_flag_emulation_tag_internal(
+				self,
+				fu_device_get_id(device),
+				error))
+				return FALSE;
+		}
+		fu_device_remove_flag(device, flag);
 		return TRUE;
 	}
 	g_set_error_literal(error,
@@ -1107,11 +1156,22 @@ fu_engine_add_device_flag(FuEngine *self,
 				    fu_device_get_id(proxy));
 			return FALSE;
 		}
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_INTERNAL)) {
+			fu_device_add_flag(device, flag);
+			if (!fu_engine_add_device_flag_emulation_tag_internal(
+				self,
+				fu_device_get_id(device),
+				error))
+				return FALSE;
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+			return TRUE;
+		}
 		g_hash_table_insert(self->emulation_ids,
 				    g_strdup(fu_device_get_id(device)),
 				    GUINT_TO_POINTER(1));
 		fu_engine_ensure_context_flag_save_events(self);
 		fu_engine_emit_device_request_replug_and_install(self, device);
+		fu_device_add_flag(device, flag);
 		return TRUE;
 	}
 	g_set_error_literal(error,
