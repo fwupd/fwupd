@@ -277,6 +277,7 @@ typedef struct {
 	gchar *section;
 	gchar *key;
 	gchar *value;
+	gint32 handle;
 	FuCabinet *cabinet;
 	GHashTable *bios_settings; /* str:str */
 	gboolean is_fix;
@@ -1566,28 +1567,29 @@ fu_dbus_daemon_method_clear_results(FuDbusDaemon *self,
 }
 
 static void
-fu_dbus_daemon_method_emulation_load(FuDbusDaemon *self,
-				     GVariant *parameters,
-				     FuEngineRequest *request,
-				     GDBusMethodInvocation *invocation)
+fu_dbus_daemon_authorize_emulation_load_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
-	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	gint32 fd_handle = 0;
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GInputStream) stream = NULL;
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
 
-	g_variant_get(parameters, "(h)", &fd_handle);
+	/* get result */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
 
 	/* get stream */
-	stream = fu_dbus_daemon_invocation_get_input_stream(invocation, &error);
+	stream = fu_dbus_daemon_invocation_get_input_stream(helper->invocation, &error);
 	if (stream == NULL) {
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
 
 	/* load data into engine */
 	if (!fu_engine_emulation_load(engine, stream, &error)) {
-		g_dbus_method_invocation_return_error(invocation,
+		g_dbus_method_invocation_return_error(helper->invocation,
 						      error->domain,
 						      error->code,
 						      "failed to load emulation data: %s",
@@ -1596,37 +1598,132 @@ fu_dbus_daemon_method_emulation_load(FuDbusDaemon *self,
 	}
 
 	/* success */
-	g_dbus_method_invocation_return_value(invocation, NULL);
+	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
+static void
+fu_dbus_daemon_method_emulation_load(FuDbusDaemon *self,
+				     GVariant *parameters,
+				     FuEngineRequest *request,
+				     GDBusMethodInvocation *invocation)
+{
+	gint32 fd_handle = 0;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuMainAuthHelper) helper = NULL;
+
+	g_variant_get(parameters, "(h)", &fd_handle);
+
+	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	helper = g_new0(FuMainAuthHelper, 1);
+	helper->self = self;
+	helper->request = g_object_ref(request);
+	helper->invocation = g_object_ref(invocation);
+	helper->handle = fd_handle;
+	fu_polkit_authority_check(self->authority,
+				  fu_engine_request_get_sender(request),
+				  "org.freedesktop.fwupd.emulation-load",
+				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
+				  NULL,
+				  fu_dbus_daemon_authorize_emulation_load_cb,
+				  g_steal_pointer(&helper));
+}
+
+static void
+fu_dbus_daemon_authorize_emulation_save_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GOutputStream) stream = NULL;
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
+
+	/* get result */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* get stream */
+	stream = fu_dbus_daemon_invocation_get_output_stream(helper->invocation, &error);
+	if (stream == NULL) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* save data from engine */
+	if (!fu_engine_emulation_save(engine, stream, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value(helper->invocation, NULL);
+}
 static void
 fu_dbus_daemon_method_emulation_save(FuDbusDaemon *self,
 				     GVariant *parameters,
 				     FuEngineRequest *request,
 				     GDBusMethodInvocation *invocation)
 {
-	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	gint32 fd_handle = 0;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GOutputStream) stream = NULL;
+	g_autoptr(FuMainAuthHelper) helper = NULL;
 
 	g_variant_get(parameters, "(h)", &fd_handle);
 
-	/* get stream */
-	stream = fu_dbus_daemon_invocation_get_output_stream(invocation, &error);
-	if (stream == NULL) {
+	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	helper = g_new0(FuMainAuthHelper, 1);
+	helper->self = self;
+	helper->request = g_object_ref(request);
+	helper->invocation = g_object_ref(invocation);
+	helper->handle = fd_handle;
+	fu_polkit_authority_check(self->authority,
+				  fu_engine_request_get_sender(request),
+				  "org.freedesktop.fwupd.emulation-save",
+				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
+				  NULL,
+				  fu_dbus_daemon_authorize_emulation_save_cb,
+				  g_steal_pointer(&helper));
+}
+
+static void
+fu_dbus_daemon_authorize_modify_device_internal(FuEngine *engine,
+						const gchar *device_id,
+						const gchar *key,
+						const gchar *value,
+						GDBusMethodInvocation *invocation)
+{
+	g_autoptr(GError) error = NULL;
+
+	if (!fu_engine_modify_device(engine, device_id, key, value, &error)) {
 		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 		return;
 	}
-
-	/* save data from engine */
-	if (!fu_engine_emulation_save(engine, stream, &error)) {
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
-		return;
-	}
-
-	/* success */
 	g_dbus_method_invocation_return_value(invocation, NULL);
+}
+
+static void
+fu_dbus_daemon_authorize_modify_device_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+
+	fu_dbus_daemon_authorize_modify_device_internal(
+	    fu_daemon_get_engine(FU_DAEMON(helper->self)),
+	    helper->device_id,
+	    helper->key,
+	    helper->value,
+	    helper->invocation);
+}
+
+static gboolean
+fu_dbus_daemon_method_modify_device_flag_needs_auth(const gchar *key, const gchar *value)
+{
+	if (g_strcmp0(key, "Flags") != 0)
+		return FALSE;
+	if (g_strcmp0(value, "emulation-tag") == 0)
+		return TRUE;
+	if (g_strcmp0(value, "~emulation-tag") == 0)
+		return TRUE;
+	return FALSE;
 }
 
 static void
@@ -1635,19 +1732,35 @@ fu_dbus_daemon_method_modify_device(FuDbusDaemon *self,
 				    FuEngineRequest *request,
 				    GDBusMethodInvocation *invocation)
 {
-	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	const gchar *device_id;
-	const gchar *key = NULL;
-	const gchar *value = NULL;
-	g_autoptr(GError) error = NULL;
+	const gchar *key;
+	const gchar *value;
 
-	/* check the id exists */
 	g_variant_get(parameters, "(&s&s&s)", &device_id, &key, &value);
-	if (!fu_engine_modify_device(engine, device_id, key, value, &error)) {
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
-		return;
-	}
-	g_dbus_method_invocation_return_value(invocation, NULL);
+	if (fu_dbus_daemon_method_modify_device_flag_needs_auth(key, value)) {
+		g_autoptr(FuMainAuthHelper) helper = g_new0(FuMainAuthHelper, 1);
+		helper->self = self;
+		helper->request = g_object_ref(request);
+		helper->invocation = g_object_ref(invocation);
+		helper->device_id = g_strdup(device_id);
+		helper->key = g_strdup(key);
+		helper->value = g_strdup(value);
+		fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+		fu_polkit_authority_check(
+		    self->authority,
+		    fu_engine_request_get_sender(request),
+		    "org.freedesktop.fwupd.emulation-tag",
+		    fu_dbus_daemon_engine_request_get_authority_check_flags(request),
+		    NULL,
+		    fu_dbus_daemon_authorize_modify_device_cb,
+		    g_steal_pointer(&helper));
+	} else
+		fu_dbus_daemon_authorize_modify_device_internal(
+		    fu_daemon_get_engine(FU_DAEMON(self)),
+		    device_id,
+		    key,
+		    value,
+		    invocation);
 }
 
 static void
