@@ -19,12 +19,12 @@ URB_INTERRUPT = 1
 URB_CONTROL = 2
 URB_BULK = 3
 
-DESCRIPTOR_DEVICE = "1"
-DESCRIPTOR_CONFIGURATION = "2"
-DESCRIPTOR_STRING = "3"
-DESCRIPTOR_INTERFACE = "4"
-DESCRIPTOR_ENDPOINT = "5"
-DESCRIPTOR_EXTRA = "33"
+DESCRIPTOR_DEVICE = 1
+DESCRIPTOR_CONFIGURATION = 2
+DESCRIPTOR_STRING = 3
+DESCRIPTOR_INTERFACE = 4
+DESCRIPTOR_ENDPOINT = 5
+DESCRIPTOR_EXTRA = 33
 
 INTERFACE_CLASS_HID = 3
 INTERFACE_CLASS_SMARTCARD = 11
@@ -275,22 +275,22 @@ class Pcap2Emulation:
                         layers["usb"]["usb_usb_request_in"]
                     ]
                 else:
-                    length = int(layers["usb"]["usb_usb_data_len"])
+                    length = get_int(layers["usb"]["usb_usb_data_len"])
                 data = str(
                     base64.b64encode(bytes.fromhex("00" * length)),
                     "utf-8",
                 )
                 s += f",Data={data}"
             else:
-                length = int(layers["usb"]["usb_usb_data_len"])
+                length = get_int(layers["usb"]["usb_usb_data_len"])
                 s += f",Data={captured_data}"
             s += f",Length=0x{length:x}"
             return {"Id": s, "Data": captured_data}
         elif layers["usb"]["usb_usb_endpoint_address_direction"] == "1":
             if "usb_usb_urb_len" in layers["usb"]:
-                self.bulk_incoming_lens[layers["frame"]["frame_frame_number"]] = int(
-                    layers["usb"]["usb_usb_urb_len"]
-                )
+                self.bulk_incoming_lens[
+                    layers["frame"]["frame_frame_number"]
+                ] = get_int(layers["usb"]["usb_usb_urb_len"])
         return {}
 
     def _get_interface_descriptor(
@@ -450,6 +450,7 @@ class Pcap2Emulation:
 
                         for descriptor_type in layer:
                             descriptor_index += 1
+                            descriptor_type = get_int(descriptor_type)
 
                             if descriptor_type == DESCRIPTOR_DEVICE:
                                 # Check this is a reply for the Vid[:Pid] expected
@@ -480,8 +481,10 @@ class Pcap2Emulation:
                                 # this PlatformId should be stable for all recorded devices
                                 if not self.platform_id:
                                     self.platform_id = "usb:{:02x}:{:02x}".format(
-                                        int(layers["usb"]["usb_usb_bus_id"]),
-                                        int(layers["usb"]["usb_usb_device_address"]),
+                                        get_int(layers["usb"]["usb_usb_bus_id"]),
+                                        get_int(
+                                            layers["usb"]["usb_usb_device_address"]
+                                        ),
                                     )
                                 # Device re-enumeration is triggered when 'Created' time differs
                                 # from previous phase, this keeps the 'Created' time from previous
@@ -496,22 +499,24 @@ class Pcap2Emulation:
                                     "PlatformId": self.platform_id,
                                     "Created": frame_time,
                                     "Tags": ["org.freedesktop.fwupd.emulation.v1"],
-                                    "IdVendor": int(layers["usb_usb_idVendor"]),
-                                    "IdProduct": int(layers["usb_usb_idProduct"], 16),
-                                    "Device": int(layers["usb_usb_bcdDevice"], 16),
-                                    "USB": int(layers["usb_usb_bcdUSB"], 16),
-                                    "Manufacturer": int(
+                                    "IdVendor": get_int(layers["usb_usb_idVendor"]),
+                                    "IdProduct": get_int(layers["usb_usb_idProduct"]),
+                                    "Device": get_int(layers["usb_usb_bcdDevice"]),
+                                    "USB": get_int(layers["usb_usb_bcdUSB"]),
+                                    "Manufacturer": get_int(
                                         layers["usb_usb_iManufacturer"]
                                     ),
-                                    "DeviceClass": int(layers["usb_usb_bDeviceClass"]),
-                                    "DeviceSubClass": int(
+                                    "DeviceClass": get_int(
+                                        layers["usb_usb_bDeviceClass"]
+                                    ),
+                                    "DeviceSubClass": get_int(
                                         layers["usb_usb_bDeviceSubClass"]
                                     ),
-                                    "DeviceProtocol": int(
+                                    "DeviceProtocol": get_int(
                                         layers["usb_usb_bDeviceProtocol"]
                                     ),
-                                    "Product": int(layers["usb_usb_iProduct"]),
-                                    "SerialNumber": int(
+                                    "Product": get_int(layers["usb_usb_iProduct"]),
+                                    "SerialNumber": get_int(
                                         layers["usb_usb_iSerialNumber"]
                                     ),
                                     "UsbInterfaces": [],
@@ -562,7 +567,7 @@ class Pcap2Emulation:
                                     event_bytes["Id"] += f",Length=0x{length:x}"
 
                                 elif "usb_usb_bString" in layers:
-                                    if int(layers["usb_usb_bLength"]) != len(
+                                    if get_int(layers["usb_usb_bLength"]) != len(
                                         layers["usb_usb_bString"].encode("utf-16")
                                     ):
                                         # Discard frame used to retrieve STRING DESCRIPTOR length
@@ -665,19 +670,19 @@ class Pcap2Emulation:
 
                     elif (
                         "usb_usb_bmRequestType_type" in layers
-                        and int(layers["usb_usb_bmRequestType_type"], 16) == URB_CONTROL
+                        and get_int(layers["usb_usb_bmRequestType_type"]) == URB_CONTROL
                     ):
                         # Found vendor CONTROL URB request
                         direction = not (layers["usb_usb_bmRequestType_direction"])
                         s = f"ControlTransfer:Direction=0x{direction:02x}"
                         s += ",RequestType=0x{:02x}".format(
-                            int(layers["usb_usb_bmRequestType_type"], 16)
+                            get_int(layers["usb_usb_bmRequestType_type"])
                         )
                         s += ",Recipient=0x{:02x}".format(
-                            int(layers["usb_usb_bmRequestType_recipient"], 16)
+                            get_int(layers["usb_usb_bmRequestType_recipient"])
                         )
                         s += f",Request=0x{int(layers['usb_usb_setup_bRequest']):02x}"
-                        s += f",Value=0x{int(layers['usb_usb_setup_wValue'], 16):04x}"
+                        s += f",Value=0x{int(layers['usb_usb_setup_wValue']):04x}"
                         s += f",Idx=0x{int(layers['usb_usb_setup_wIndex']):04x}"
                         if "usb_usb_data_fragment" in layers:
                             data = layers["usb_usb_data_fragment"].replace(":", "")
