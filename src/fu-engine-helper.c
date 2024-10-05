@@ -123,10 +123,13 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 						"%u devices are not the best known configuration.",
 						sync_count),
 				       sync_count);
+		g_string_append(str, "\n");
 		g_string_append_printf(str,
-				       "\n%s\n\n",
-				       /* TRANSLATORS: this is shown in the MOTD */
-				       _("Run `fwupdmgr sync` to complete this action."));
+				       /* TRANSLATORS: this is shown in the MOTD -- %1 is the
+					* command name, e.g. `fwupdmgr sync` */
+				       _("Run `%s` to complete this action."),
+				       "fwupdmgr sync");
+		g_string_append(str, "\n\n");
 	} else if (upgrade_count > 0) {
 		g_string_append(str, "\n");
 		g_string_append_printf(str,
@@ -135,10 +138,13 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 						"%u devices have a firmware upgrade available.",
 						upgrade_count),
 				       upgrade_count);
+		g_string_append(str, "\n");
 		g_string_append_printf(str,
-				       "\n%s\n\n",
-				       /* TRANSLATORS: this is shown in the MOTD */
-				       _("Run `fwupdmgr get-upgrades` for more information."));
+				       /* TRANSLATORS: this is shown in the MOTD -- %1 is the
+					* command name, e.g. `fwupdmgr get-upgrades` */
+				       _("Run `%s` for more information."),
+				       "fwupdmgr get-upgrades");
+		g_string_append(str, "\n\n");
 	}
 
 	/* success, with an empty file if nothing to say */
