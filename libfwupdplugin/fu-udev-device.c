@@ -1522,6 +1522,82 @@ fu_udev_device_read_sysfs(FuUdevDevice *self, const gchar *attr, guint timeout_m
 }
 
 /**
+ * fu_udev_device_read_sysfs_bytes:
+ * @self: a #FuUdevDevice
+ * @attr: sysfs attribute name
+ * @count: maximum bytes to read, or -1 for no limit
+ * @timeout_ms: IO timeout in milliseconds
+ * @error: (nullable): optional return location for an error
+ *
+ * Reads raw data from a sysfs attribute.
+ *
+ * Returns: (transfer full): string value, or %NULL
+ *
+ * Since: 2.0.1
+ **/
+GBytes *
+fu_udev_device_read_sysfs_bytes(FuUdevDevice *self,
+				const gchar *attr,
+				gssize count,
+				guint timeout_ms,
+				GError **error)
+{
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
+	g_autofree gchar *path = NULL;
+	g_autofree gchar *value = NULL;
+	g_autoptr(FuIOChannel) io_channel = NULL;
+	g_autoptr(GBytes) blob = NULL;
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
+	g_return_val_if_fail(attr != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("ReadAttr:Attr=%s", attr);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		return fu_device_event_get_bytes(event, "Data", error);
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* open the file */
+	if (fu_udev_device_get_sysfs_path(self) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "sysfs_path undefined");
+		return NULL;
+	}
+	path = g_build_filename(fu_udev_device_get_sysfs_path(self), attr, NULL);
+	io_channel = fu_io_channel_new_file(path, FU_IO_CHANNEL_OPEN_FLAG_READ, error);
+	if (io_channel == NULL)
+		return NULL;
+	blob =
+	    fu_io_channel_read_bytes(io_channel, count, timeout_ms, FU_IO_CHANNEL_FLAG_NONE, error);
+	if (blob == NULL)
+		return NULL;
+
+	/* save for emulation */
+	if (event != NULL)
+		fu_device_event_set_bytes(event, "Data", blob);
+
+	/* success */
+	return g_steal_pointer(&blob);
+}
+
+/**
  * fu_udev_device_write_sysfs:
  * @self: a #FuUdevDevice
  * @attr: sysfs attribute name
@@ -1572,6 +1648,110 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 				       timeout_ms,
 				       FU_IO_CHANNEL_FLAG_NONE,
 				       error);
+}
+
+/**
+ * fu_udev_device_write_sysfs_byte_array:
+ * @self: a #FuUdevDevice
+ * @attr: sysfs attribute name
+ * @buf: data to write into the attribute
+ * @timeout_ms: IO timeout in milliseconds
+ * @error: (nullable): optional return location for an error
+ *
+ * Writes raw data into a sysfs attribute.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.1
+ **/
+gboolean
+fu_udev_device_write_sysfs_byte_array(FuUdevDevice *self,
+				      const gchar *attr,
+				      GByteArray *buf,
+				      guint timeout_ms,
+				      GError **error)
+{
+	g_autofree gchar *path = NULL;
+	g_autoptr(FuIOChannel) io_channel = NULL;
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
+	g_return_val_if_fail(attr != NULL, FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
+
+	/* open the file */
+	if (fu_udev_device_get_sysfs_path(self) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "sysfs_path undefined");
+		return FALSE;
+	}
+	path = g_build_filename(fu_udev_device_get_sysfs_path(self), attr, NULL);
+	io_channel = fu_io_channel_new_file(path, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
+	if (io_channel == NULL)
+		return FALSE;
+	return fu_io_channel_write_byte_array(io_channel,
+					      buf,
+					      timeout_ms,
+					      FU_IO_CHANNEL_FLAG_NONE,
+					      error);
+}
+
+/**
+ * fu_udev_device_write_sysfs_bytes:
+ * @self: a #FuUdevDevice
+ * @attr: sysfs attribute name
+ * @blob: data to write into the attribute
+ * @timeout_ms: IO timeout in milliseconds
+ * @error: (nullable): optional return location for an error
+ *
+ * Writes raw data into a sysfs attribute.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.1
+ **/
+gboolean
+fu_udev_device_write_sysfs_bytes(FuUdevDevice *self,
+				 const gchar *attr,
+				 GBytes *blob,
+				 guint timeout_ms,
+				 GError **error)
+{
+	g_autofree gchar *path = NULL;
+	g_autoptr(FuIOChannel) io_channel = NULL;
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
+	g_return_val_if_fail(attr != NULL, FALSE);
+	g_return_val_if_fail(blob != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
+
+	/* open the file */
+	if (fu_udev_device_get_sysfs_path(self) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "sysfs_path undefined");
+		return FALSE;
+	}
+	path = g_build_filename(fu_udev_device_get_sysfs_path(self), attr, NULL);
+	io_channel = fu_io_channel_new_file(path, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
+	if (io_channel == NULL)
+		return FALSE;
+	return fu_io_channel_write_bytes(io_channel,
+					 blob,
+					 timeout_ms,
+					 FU_IO_CHANNEL_FLAG_NONE,
+					 error);
 }
 
 /**
