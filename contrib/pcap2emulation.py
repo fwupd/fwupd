@@ -349,43 +349,6 @@ class Pcap2Emulation:
                 endpoint[table[key]] = val
         return endpoint
 
-    def _get_hid_descriptor(self, layers: Dict[str, Any], index: int) -> str:
-        desc = bytearray()
-        add_bytes(desc, layers["usb_usb_bLength"][index], 1)
-        add_bytes(desc, layers["usb_usb_bDescriptorType"][index], 1)
-        add_bytes(desc, layers["usbhid_usbhid_descriptor_hid_bcdHID"], 2)
-        add_bytes(desc, layers["usbhid_usbhid_descriptor_hid_bCountryCode"], 1)
-        add_bytes(desc, layers["usbhid_usbhid_descriptor_hid_bNumDescriptors"], 1)
-        add_bytes(desc, layers["usbhid_usbhid_descriptor_hid_bDescriptorType"], 1)
-        add_bytes(desc, layers["usbhid_usbhid_descriptor_hid_wDescriptorLength"], 2)
-        return str(base64.b64encode(desc), "utf-8")
-
-    def _get_smartcard_descriptor(self, layers: Dict[str, Any], index: int) -> str:
-        desc = bytearray()
-        add_bytes(desc, layers["usb_usb_bLength"][index], 1)
-        add_bytes(desc, layers["usb_usb_bDescriptorType"][index], 1)
-        add_bytes(desc, layers["usbccid_usbccid_bcdCCID"], 2)
-        add_bytes(desc, layers["usbccid_usbccid_bMaxSlotIndex"], 1)
-        add_bytes(desc, layers["usbccid_usbccid_bVoltageSupport"], 1)
-        add_bytes(desc, layers["usbccid_usbccid_dwProtocols"], 4)
-        add_bytes(desc, layers["usbccid_usbccid_dwDefaultClock"], 4)
-        add_bytes(desc, layers["usbccid_usbccid_dwMaximumClock"], 4)
-        add_bytes(desc, layers["usbccid_usbccid_bNumClockSupported"], 1)
-        add_bytes(desc, layers["usbccid_usbccid_dwDataRate"], 4)
-        add_bytes(desc, layers["usbccid_usbccid_dwMaxDataRate"], 4)
-        add_bytes(desc, layers["usbccid_usbccid_bNumDataRatesSupported"], 1)
-        add_bytes(desc, layers["usbccid_usbccid_dwMaxIFSD"], 4)
-        add_bytes(desc, layers["usbccid_usbccid_dwSynchProtocols"], 4)
-        add_bytes(desc, layers["usbccid_usbccid_dwMechanical"], 4)
-        add_bytes(desc, layers["usbccid_usbccid_dwFeatures"], 4)
-        add_bytes(desc, layers["usbccid_usbccid_dwMaxCCIDMessageLength"], 4)
-        add_bytes(desc, layers["usbccid_usbccid_hf_ccid_bClassGetResponse"], 1)
-        add_bytes(desc, layers["usbccid_usbccid_hf_ccid_bClassEnvelope"], 1)
-        add_bytes(desc, layers["usbccid_usbccid_hf_ccid_wLcdLayout"], 2)
-        add_bytes(desc, layers["usbccid_usbccid_hf_ccid_bPINSupport"], 1)
-        add_bytes(desc, layers["usbccid_usbccid_hf_ccid_bMaxCCIDBusySlots"], 1)
-        return str(base64.b64encode(desc), "utf-8")
-
     def _save_event(self, event: Dict[str, str]) -> None:
         if not self.device:
             return
@@ -648,31 +611,7 @@ class Pcap2Emulation:
                                     self.endpoint_index += 1
 
                             elif descriptor_type == DESCRIPTOR_EXTRA:
-                                for interface in self.device["UsbInterfaces"]:
-                                    if (
-                                        interface["InterfaceClass"]
-                                        == INTERFACE_CLASS_HID
-                                    ):
-                                        d = self._get_hid_descriptor(
-                                            layers, descriptor_index
-                                        )
-                                        interface["ExtraData"] = d
-                                        break
-                                    elif (
-                                        interface["InterfaceClass"]
-                                        == INTERFACE_CLASS_SMARTCARD
-                                    ):
-                                        d = self._get_smartcard_descriptor(
-                                            layers, descriptor_index
-                                        )
-                                        interface["ExtraData"] = d
-                                        break
-                                    else:
-                                        sys.stderr.write(
-                                            "Unknown interface class: "
-                                            + str(interface["InterfaceClass"])
-                                        )
-                                        exit(1)
+                                pass
                             else:
                                 sys.stderr.write(
                                     "Unknown descriptor type: " + descriptor_type
