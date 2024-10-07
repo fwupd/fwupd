@@ -6688,6 +6688,12 @@ fu_test_engine_fake_serio(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
+	/* no gnutls */
+	if (fu_engine_get_plugin_by_name(engine, "synaptics_rmi", &error) == NULL) {
+		g_test_skip(error->message);
+		return;
+	}
+
 	/* serio */
 	device = fu_engine_get_device(engine, "d8419b7614e50c6fb6162b5dca34df5236a62a8d", &error);
 	g_assert_no_error(error);
