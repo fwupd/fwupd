@@ -24,6 +24,7 @@
 #include "fwupd-error.h"
 
 #include "fu-common.h"
+#include "fu-input-stream.h"
 #include "fu-io-channel.h"
 #include "fu-string.h"
 
