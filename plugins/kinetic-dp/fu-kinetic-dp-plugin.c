@@ -93,6 +93,7 @@ fu_kinetic_dp_plugin_backend_device_added(FuPlugin *plugin,
 					  GError **error)
 {
 	FuKineticDpPlugin *self = FU_KINETIC_DP_PLUGIN(plugin);
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuKineticDpDevice) dev = NULL;
 
 	/* check to see if this is device we care about? */
@@ -102,6 +103,9 @@ fu_kinetic_dp_plugin_backend_device_added(FuPlugin *plugin,
 	/* instantiate a new device */
 	dev = fu_kinetic_dp_plugin_create_device(FU_DPAUX_DEVICE(device), error);
 	if (dev == NULL)
+		return FALSE;
+	locker = fu_device_locker_new(dev, error);
+	if (locker == NULL)
 		return FALSE;
 	fu_plugin_device_add(FU_PLUGIN(self), FU_DEVICE(dev));
 	return TRUE;
