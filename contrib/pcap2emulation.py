@@ -496,6 +496,7 @@ class Pcap2Emulation:
                                 else:
                                     frame_time = self.device["Created"]
                                 self.device = {
+                                    "GType": "FuUsbDevice",
                                     "PlatformId": self.platform_id,
                                     "Created": frame_time,
                                     "Tags": ["org.freedesktop.fwupd.emulation.v1"],
