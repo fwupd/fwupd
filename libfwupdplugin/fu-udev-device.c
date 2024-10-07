@@ -840,6 +840,28 @@ fu_udev_device_get_device_file_from_subsystem(FuUdevDevice *self,
 }
 
 /**
+ * fu_udev_device_get_devpath:
+ * @self: a #FuUdevDevice
+ *
+ * Sets the physical ID from the sysfs path, with the `/sys` prefixed removed.
+ *
+ * Returns: The udev-compatble device path, or %NULL on error.
+ *
+ * Since: 2.0.1
+ **/
+gchar *
+fu_udev_device_get_devpath(FuUdevDevice *self)
+{
+	gchar *full_devpath;
+	if (fu_udev_device_get_sysfs_path(self) == NULL)
+		return NULL;
+	full_devpath = g_strrstr(fu_udev_device_get_sysfs_path(self), "/sys");
+	if (full_devpath == NULL)
+		return NULL;
+	return g_strdup(full_devpath + 4);
+}
+
+/**
  * fu_udev_device_set_physical_id:
  * @self: a #FuUdevDevice
  * @subsystems: a subsystem string, e.g. `pci,usb,scsi:scsi_target`

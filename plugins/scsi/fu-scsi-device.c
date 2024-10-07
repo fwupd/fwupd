@@ -138,14 +138,10 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 	device_target =
 	    fu_device_get_backend_parent_with_subsystem(device, "scsi:scsi_target", NULL);
 	if (device_target != NULL) {
-		g_auto(GStrv) sysfs_parts = NULL;
-		sysfs_parts =
-		    g_strsplit(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device_target)),
-			       "/sys",
-			       2);
-		if (sysfs_parts[1] != NULL) {
-			g_autofree gchar *physical_id =
-			    g_strdup_printf("DEVPATH=%s", sysfs_parts[1]);
+		g_autofree gchar *devpath =
+		    fu_udev_device_get_devpath(FU_UDEV_DEVICE(device_target));
+		if (devpath != NULL) {
+			g_autofree gchar *physical_id = g_strdup_printf("DEVPATH=%s", devpath);
 			fu_device_set_physical_id(device, physical_id);
 		}
 	}

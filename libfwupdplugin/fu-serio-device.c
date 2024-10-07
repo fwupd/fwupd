@@ -23,7 +23,7 @@ static gboolean
 fu_serio_device_probe(FuDevice *device, GError **error)
 {
 	FuSerioDevice *self = FU_SERIO_DEVICE(device);
-	g_auto(GStrv) sysfs_parts = NULL;
+	g_autofree gchar *devpath = fu_udev_device_get_devpath(FU_UDEV_DEVICE(self));
 	g_autofree gchar *summary = NULL;
 	g_autofree gchar *firmware_id = NULL;
 
@@ -72,9 +72,8 @@ fu_serio_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* we don't have anything better to use */
-	sysfs_parts = g_strsplit(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self)), "/sys", 2);
-	if (sysfs_parts[1] != NULL) {
-		g_autofree gchar *physical_id = g_strdup_printf("DEVPATH=%s", sysfs_parts[1]);
+	if (devpath != NULL) {
+		g_autofree gchar *physical_id = g_strdup_printf("DEVPATH=%s", devpath);
 		fu_device_set_physical_id(device, physical_id);
 	}
 
