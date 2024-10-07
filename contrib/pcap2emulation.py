@@ -469,19 +469,7 @@ class Pcap2Emulation:
                                     "Manufacturer": get_int(
                                         layers["usb_usb_iManufacturer"]
                                     ),
-                                    "DeviceClass": get_int(
-                                        layers["usb_usb_bDeviceClass"]
-                                    ),
-                                    "DeviceSubClass": get_int(
-                                        layers["usb_usb_bDeviceSubClass"]
-                                    ),
-                                    "DeviceProtocol": get_int(
-                                        layers["usb_usb_bDeviceProtocol"]
-                                    ),
                                     "Product": get_int(layers["usb_usb_iProduct"]),
-                                    "SerialNumber": get_int(
-                                        layers["usb_usb_iSerialNumber"]
-                                    ),
                                     "UsbInterfaces": [],
                                     "UsbEvents": [],
                                 }
