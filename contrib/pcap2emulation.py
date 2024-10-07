@@ -480,7 +480,7 @@ class Pcap2Emulation:
                                 # using a fake PlatformId based on USB bus id and device address,
                                 # this PlatformId should be stable for all recorded devices
                                 if not self.platform_id:
-                                    self.platform_id = "usb:{:02x}:{:02x}".format(
+                                    self.platform_id = "{:x}-{:x}".format(
                                         get_int(layers["usb"]["usb_usb_bus_id"]),
                                         get_int(
                                             layers["usb"]["usb_usb_device_address"]
