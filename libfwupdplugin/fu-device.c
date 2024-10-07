@@ -6495,6 +6495,19 @@ static void
 fu_device_flags_notify_cb(FuDevice *self, GParamSpec *pspec, gpointer user_data)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* emulated device reinstalling do not need a replug or shutdown */
+	if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED) &&
+	    fu_device_has_flag(self, FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
+		g_debug("removing needs-reboot for emulated device");
+		fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	}
+	if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED) &&
+	    fu_device_has_flag(self, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN)) {
+		g_debug("removing needs-shutdown for emulated device");
+		fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN);
+	}
+
 	/* we only inhibit when the flags contains UPDATABLE, and that might be discovered by
 	 * probing the hardware *after* the battery level has been set */
 	if (priv->inhibits != NULL)
