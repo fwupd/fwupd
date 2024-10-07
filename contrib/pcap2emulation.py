@@ -608,10 +608,7 @@ class Pcap2Emulation:
                                 )
                                 exit(1)
 
-                    elif (
-                        "usb_usb_bmRequestType_type" in layers
-                        and get_int(layers["usb_usb_bmRequestType_type"]) == URB_CONTROL
-                    ):
+                    elif "usb_usb_bmRequestType_type" in layers:
                         # Found vendor CONTROL URB request
                         direction = not (layers["usb_usb_bmRequestType_direction"])
                         s = f"ControlTransfer:Direction=0x{direction:02x}"
@@ -621,17 +618,38 @@ class Pcap2Emulation:
                         s += ",Recipient=0x{:02x}".format(
                             get_int(layers["usb_usb_bmRequestType_recipient"])
                         )
-                        s += f",Request=0x{get_int(layers['usb_usb_setup_bRequest']):02x}"
-                        s += f",Value=0x{get_int(layers['usb_usb_setup_wValue']):04x}"
-                        s += f",Idx=0x{get_int(layers['usb_usb_setup_wIndex']):04x}"
+                        if "usbhid_usbhid_setup_bRequest" in layers:
+                            s += f",Request=0x{get_int(layers['usbhid_usbhid_setup_bRequest']):02x}"
+                        elif "usb_usb_setup_bRequest" in layers:
+                            s += f",Request=0x{get_int(layers['usb_usb_setup_bRequest']):02x}"
+                        if (
+                            "usbhid_usbhid_setup_ReportID" in layers
+                            and "usbhid_usbhid_setup_ReportType" in layers
+                        ):
+                            id = get_int(layers["usbhid_usbhid_setup_ReportID"])
+                            typ = get_int(layers["usbhid_usbhid_setup_ReportType"])
+                            val = typ << 8 | id
+                            s += f",Value=0x{val:04x}"
+                        elif "usb_usb_setup_wValue" in layers:
+                            s += f",Value=0x{get_int(layers['usb_usb_setup_wValue']):04x}"
+                        if "usbhid_usbhid_setup_wIndex" in layers:
+                            s += f",Idx=0x{get_int(layers['usbhid_usbhid_setup_wIndex']):04x}"
+                        elif "usb_usb_setup_wIndex" in layers:
+                            s += f",Idx=0x{get_int(layers['usb_usb_setup_wIndex']):04x}"
+                        if "usbhid_usbhid_setup_wLength" in layers:
+                            length = get_int(layers["usbhid_usbhid_setup_wLength"])
+                        elif "usb_usb_setup_wLength" in layers:
+                            length = get_int(layers["usb_usb_setup_wLength"])
+                        else:
+                            length = 0
                         if "usb_usb_data_fragment" in layers:
                             data = layers["usb_usb_data_fragment"].replace(":", "")
                         else:
-                            data = "00" * int(layers["usb_usb_setup_wLength"])
+                            data = "00" * length
                         s += ",Data={}".format(
                             str(base64.b64encode(bytes.fromhex(data)), "utf-8")
                         )
-                        s += f",Length=0x{int(layers['usb_usb_setup_wLength']):x}"
+                        s += f",Length=0x{length:x}"
                         event = {"Id": s}
 
                         if direction:
