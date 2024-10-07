@@ -499,7 +499,6 @@ class Pcap2Emulation:
                                     "GType": "FuUsbDevice",
                                     "PlatformId": self.platform_id,
                                     "Created": frame_time,
-                                    "Tags": ["org.freedesktop.fwupd.emulation.v1"],
                                     "IdVendor": get_int(layers["usb_usb_idVendor"]),
                                     "IdProduct": get_int(layers["usb_usb_idProduct"]),
                                     "Device": get_int(layers["usb_usb_bcdDevice"]),
