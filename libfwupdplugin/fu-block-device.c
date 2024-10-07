@@ -35,7 +35,7 @@ fu_block_device_probe(FuDevice *device, GError **error)
 	/* block devices are weird in that the vendor and model are generic */
 	usb_device = fu_device_get_backend_parent_with_subsystem(device, "usb:usb_device", NULL);
 	if (usb_device != NULL) {
-		g_autofree gchar *physical_id = NULL;
+		g_autofree gchar *devpath = fu_udev_device_get_devpath(FU_UDEV_DEVICE(usb_device));
 
 		/* copy the VID and PID, and reconstruct compatible IDs */
 		if (!fu_device_probe(usb_device, error))
@@ -62,10 +62,10 @@ fu_block_device_probe(FuDevice *device, GError **error)
 					  FU_DEVICE_INCORPORATE_FLAG_PID);
 
 		/* USB devpath as physical ID */
-		physical_id =
-		    g_strdup_printf("DEVPATH=%s",
-				    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(usb_device)));
-		fu_device_set_physical_id(device, physical_id);
+		if (devpath != NULL) {
+			g_autofree gchar *physical_id = g_strdup_printf("DEVPATH=%s", devpath);
+			fu_device_set_physical_id(device, physical_id);
+		}
 	}
 
 	/* success */

@@ -43,6 +43,8 @@ void
 fu_udev_device_set_device_file(FuUdevDevice *self, const gchar *device_file) G_GNUC_NON_NULL(1);
 const gchar *
 fu_udev_device_get_sysfs_path(FuUdevDevice *self) G_GNUC_NON_NULL(1);
+gchar *
+fu_udev_device_get_devpath(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 const gchar *
 fu_udev_device_get_subsystem(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 const gchar *
