@@ -298,12 +298,11 @@ class Pcap2Emulation:
     ) -> Any:
         table = {
             "usb_usb_bInterfaceNumber": "InterfaceNumber",
-            "usb_usb_bAlternateSetting": "AlternateSetting",
-            "usb_usb_bNumEndpoints": "NumEndpoints",
             "usb_usb_bInterfaceClass": "InterfaceClass",
             "usb_usb_bInterfaceSubClass": "InterfaceSubClass",
             "usb_usb_bInterfaceProtocol": "InterfaceProtocol",
             "usb_usb_iInterface": "Interface",
+            "usb_usb_bNumEndpoints": "NumEndpoints",
         }
 
         # Interface descriptor frame may occur multiple times,
@@ -323,6 +322,9 @@ class Pcap2Emulation:
                 val = get_int(layers[key][self.interface_index])
 
             if key not in layers:
+                continue
+
+            if key == "usb_usb_bInterfaceNumber" and val == 0:
                 continue
 
             interface[table[key]] = val
