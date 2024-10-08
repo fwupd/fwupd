@@ -3822,6 +3822,75 @@ fwupd_client_get_details_bytes_finish(FwupdClient *self, GAsyncResult *res, GErr
 }
 
 /**
+ * fwupd_client_get_details_async:
+ * @self: a #FwupdClient
+ * @filename: firmware archive
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: (scope async) (closure callback_data): the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Gets details about a specific firmware file.
+ *
+ * Since: 2.0.1
+ **/
+void
+fwupd_client_get_details_async(FwupdClient *self,
+			       const gchar *filename,
+			       GCancellable *cancellable,
+			       GAsyncReadyCallback callback,
+			       gpointer callback_data)
+{
+#ifdef HAVE_GIO_UNIX
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GUnixInputStream) istr = NULL;
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(filename != NULL);
+	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
+	g_return_if_fail(priv->proxy != NULL);
+
+	/* move to a thread if this ever takes more than a few ms */
+	istr = fwupd_unix_input_stream_from_fn(filename, &error);
+	if (istr == NULL) {
+		g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* call into daemon */
+	fwupd_client_get_details_stream_async(self, istr, cancellable, callback, callback_data);
+#else
+	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
+	g_task_return_new_error(task,
+				FWUPD_ERROR,
+				FWUPD_ERROR_NOT_SUPPORTED,
+				"Get Details only supported on Linux");
+#endif
+}
+
+/**
+ * fwupd_client_get_details_finish:
+ * @self: a #FwupdClient
+ * @res: (not nullable): the asynchronous result
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the result of [method@FwupdClient.get_details_async].
+ *
+ * Returns: (transfer container) (element-type FwupdDevice): an array of results
+ *
+ * Since: 2.0.1
+ **/
+GPtrArray *
+fwupd_client_get_details_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(g_task_is_valid(res, self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer(G_TASK(res), error);
+}
+
+/**
  * fwupd_client_get_percentage:
  * @self: a #FwupdClient
  *

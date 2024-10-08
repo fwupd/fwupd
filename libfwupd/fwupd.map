@@ -986,3 +986,10 @@ LIBFWUPD_2.0.0 {
     fwupd_remote_set_username;
   local: *;
 } LIBFWUPD_1.9.20;
+
+LIBFWUPD_2.0.1 {
+  global:
+    fwupd_client_get_details_async;
+    fwupd_client_get_details_finish;
+  local: *;
+} LIBFWUPD_2.0.0;
