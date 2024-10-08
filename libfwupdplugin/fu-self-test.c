@@ -2448,6 +2448,7 @@ fu_backend_emulate_func(void)
 			     "  ]"
 			     "}";
 	const gchar *json2 = "{\n"
+			     "  \"FwupdVersion\" : \"" PACKAGE_VERSION "\",\n"
 			     "  \"UsbDevices\" : [\n"
 			     "    {\n"
 			     "      \"GType\" : \"FuUdevDevice\",\n"
