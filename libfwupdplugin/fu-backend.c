@@ -471,6 +471,7 @@ fu_backend_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags fla
 	g_autoptr(GList) devices = NULL;
 
 	/* remain compatible with all the old emulation files */
+	fwupd_codec_json_append(builder, "FwupdVersion", PACKAGE_VERSION);
 	json_builder_set_member_name(builder, "UsbDevices");
 	json_builder_begin_array(builder);
 	devices = g_hash_table_get_values(priv->devices);
