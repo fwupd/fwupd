@@ -30,31 +30,65 @@ Because we do not want to modify the daemon, we think it makes sense to *load* a
 state over D-Bus. Each phase can be controlled, which makes it easy to view, and edit, the recorded
 emulation data.
 
-For instance, calling `fwupdmgr emulation-tag` would ask the end user to choose a device to start
-*recording* so that subsequent re-plugs are available to save.
-As the device state may not be persistent we save the device-should-be-recorded metadata in the
-pending database like we would do for a successful firmware update.
+## Tell the daemon to record a device
 
-To demo this, something like this could be done:
+The **emulation-tag** feature for the daemon is used to notify the daemon to record emulation
+data for a device.
+If the device you will be recording from is *hotpluggable* you will re-plug the device.
+If the device is *persistent* you will need to restart the daemon to get the setup events.
 
-    # connect ColorHug2
+Here is how a hotplugged device would be recorded from:
+
+    # connect ColorHug2 and use the device ID to tag it
     fwupdmgr emulation-tag b0a78eb71f4eeea7df8fb114522556ba8ce22074
     # or, using the GUID
     # fwupdmgr emulation-tag 2082b5e0-7a64-478a-b1b2-e3404fab6dad
     # remove and re-insert ColorHug2
     fwupdmgr get-devices --filter emulation-tag
+
+For a persistent device:
+
+    # by device ID
+    fwupdmgr emulation-tag 02b7ba3cca857b7e1e10a2f7a6767ae5ec76a331
+    # or by using a GUID
+    fwupdmgr emulation-tag 310f81b5-6fce-501e-acfb-487d10501e78
+    # restart the daemon
+    fwupdmgr quit
+    fwupdmgr get-devices
+
+**NOTE:** *If you are running in the fwupd development environment, you will need to manually
+restart the daemon because dbus activation doesn't work in the fwupd development environment.
+
+## Record some data
+
+In both cases the flow to record the data is identical. You will use the device as normally and when you're
+done with the update you will record all events into a zip file.
+
     fwupdmgr download https://fwupd.org/downloads/170f2c19f17b7819644d3fcc7617621cc3350a04-hughski-colorhug2-2.0.6.cab
-    fwupdmgr install e5* --allow-reinstall
+    fwupdmgr install 17*.cab --allow-reinstall
     fwupdmgr emulation-save colorhug.zip
-    # remove ColorHug2
+
+## Test your data
+
+Now that you have data recorded you can remove your device from the system and then try to load the emulation
+data.  You should be able to see the emulated device as well as interact with it.
+
     fwupdmgr emulation-load colorhug.zip
     fwupdmgr get-devices --filter emulated
-    fwupdmgr install e5* --allow-reinstall
+    fwupdmgr install 17*.cab --allow-reinstall
+
+## Upload test data to LVFS
+
+Test data can be added to LVFS by visiting the `Assets` tab of the firmware release on LVFS.
+There is an upload button, and once uploaded a URL will be available that can be used for device tests.
 
 ## Device Tests
 
-The `emulation-url` string parameter can be specified in the `steps` section of a specific device
-test. This causes the front end to load the emulation data before running the specific step.
+Device tests are utilized as part of continuous integration to ensure that all device updates
+continue to work as the software stack changes. Device tests will download a payload from the web
+(typically from LVFS) and follow the steps to install the firmware. This payload is specified as
+an `emulation-url` string parameter in the `steps` section of a specific device test. This causes
+the front end to load the emulation data before running the specific step.
 
 Device tests without emulation data will be skipped.
 
@@ -67,10 +101,6 @@ For example:
     Decompressing…           [***************************************]
     Waiting…                 [***************************************]
     Hughski ColorHug2: OK!
-
-For devices that cannot be hotplugged, the `fwupd.conf` config option `EmulatedDevices` option
-can be used, by specifying the device IDs of the device that should be monitored.
-When adding modifying `EmulatedDevices` the daemon must be restarted for it to take effect.
 
 ## Pcap file conversion
 
