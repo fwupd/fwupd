@@ -1160,6 +1160,14 @@ fu_engine_add_device_flag(FuEngine *self,
 		device = fu_device_list_get_by_id(self->device_list, device_id, error);
 		if (device == NULL)
 			return FALSE;
+		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "device %s cannot be tagged for emulation",
+				    fu_device_get_id(device));
+			return FALSE;
+		}
 		proxy = fu_device_get_proxy(device);
 		if (proxy != NULL) {
 			g_set_error(error,
