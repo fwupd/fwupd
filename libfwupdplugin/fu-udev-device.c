@@ -1618,6 +1618,8 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 			   guint timeout_ms,
 			   GError **error)
 {
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
 	g_autofree gchar *path = NULL;
 	g_autoptr(FuIOChannel) io_channel = NULL;
 
@@ -1626,9 +1628,18 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 	g_return_val_if_fail(val != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("WriteAttr:Attr=%s,Data=%s", attr, val);
+	}
+
 	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
-		return TRUE;
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		return event != NULL;
+	}
 
 	/* open the file */
 	if (fu_udev_device_get_sysfs_path(self) == NULL) {
@@ -1642,6 +1653,10 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 	io_channel = fu_io_channel_new_file(path, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
 	if (io_channel == NULL)
 		return FALSE;
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
 	return fu_io_channel_write_raw(io_channel,
 				       (const guint8 *)val,
 				       strlen(val),
@@ -1671,6 +1686,8 @@ fu_udev_device_write_sysfs_byte_array(FuUdevDevice *self,
 				      guint timeout_ms,
 				      GError **error)
 {
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
 	g_autofree gchar *path = NULL;
 	g_autoptr(FuIOChannel) io_channel = NULL;
 
@@ -1679,9 +1696,19 @@ fu_udev_device_write_sysfs_byte_array(FuUdevDevice *self,
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		g_autofree gchar *buf_base64 = g_base64_encode(buf->data, buf->len);
+		event_id = g_strdup_printf("WriteAttr:Attr=%s,Data=%s", attr, buf_base64);
+	}
+
 	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
-		return TRUE;
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		return event != NULL;
+	}
 
 	/* open the file */
 	if (fu_udev_device_get_sysfs_path(self) == NULL) {
@@ -1695,6 +1722,10 @@ fu_udev_device_write_sysfs_byte_array(FuUdevDevice *self,
 	io_channel = fu_io_channel_new_file(path, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
 	if (io_channel == NULL)
 		return FALSE;
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
 	return fu_io_channel_write_byte_array(io_channel,
 					      buf,
 					      timeout_ms,
@@ -1723,6 +1754,8 @@ fu_udev_device_write_sysfs_bytes(FuUdevDevice *self,
 				 guint timeout_ms,
 				 GError **error)
 {
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
 	g_autofree gchar *path = NULL;
 	g_autoptr(FuIOChannel) io_channel = NULL;
 
@@ -1731,9 +1764,20 @@ fu_udev_device_write_sysfs_bytes(FuUdevDevice *self,
 	g_return_val_if_fail(blob != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		g_autofree gchar *buf_base64 =
+		    g_base64_encode(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob));
+		event_id = g_strdup_printf("WriteAttr:Attr=%s,Data=%s", attr, buf_base64);
+	}
+
 	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
-		return TRUE;
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		return event != NULL;
+	}
 
 	/* open the file */
 	if (fu_udev_device_get_sysfs_path(self) == NULL) {
@@ -1747,6 +1791,10 @@ fu_udev_device_write_sysfs_bytes(FuUdevDevice *self,
 	io_channel = fu_io_channel_new_file(path, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
 	if (io_channel == NULL)
 		return FALSE;
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
 	return fu_io_channel_write_bytes(io_channel,
 					 blob,
 					 timeout_ms,
