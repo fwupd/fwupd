@@ -572,6 +572,14 @@ typedef enum {
 	 */
 	FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES = 1ull << 51,
 	/**
+	 * FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG:
+	 *
+	 * The device can be recorded by the backend, allowing emulation.
+	 *
+	 * Since: 2.0.1
+	 */
+	FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG = 1ull << 52,
+	/**
 	 * FWUPD_DEVICE_FLAG_UNKNOWN:
 	 *
 	 * This flag is not defined, this typically will happen from mismatched fwupd library and

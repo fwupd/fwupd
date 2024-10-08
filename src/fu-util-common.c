@@ -1170,6 +1170,10 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		 * specified */
 		return _("Installing a specific release is explicitly required");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG) {
+		/* TRANSLATORS: we can save all device enumeration events for emulation */
+		return _("Can tag for emulation");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN) {
 		return NULL;
 	}

@@ -4605,6 +4605,7 @@ fu_util_emulation_tag(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FwupdDevice) dev = NULL;
 
 	/* set the flag */
+	priv->filter_device_include |= FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG;
 	dev = fu_util_get_device_or_prompt(priv, values, error);
 	if (dev == NULL)
 		return FALSE;
