@@ -184,6 +184,16 @@ fwupd_client_get_details_bytes_finish(FwupdClient *self,
 				      GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1, 2);
 void
+fwupd_client_get_details_async(FwupdClient *self,
+			       const gchar *filename,
+			       GCancellable *cancellable,
+			       GAsyncReadyCallback callback,
+			       gpointer callback_data) G_GNUC_NON_NULL(1, 2);
+GPtrArray *
+fwupd_client_get_details_finish(FwupdClient *self,
+				GAsyncResult *res,
+				GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+void
 fwupd_client_verify_async(FwupdClient *self,
 			  const gchar *device_id,
 			  GCancellable *cancellable,
