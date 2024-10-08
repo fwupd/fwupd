@@ -4637,13 +4637,15 @@ fu_engine_get_result_from_component(FuEngine *self,
 			    error_local->message);
 		return NULL;
 	}
-	if (!fu_engine_load_release(self,
-				    release,
-				    cabinet,
-				    component,
-				    rel,
-				    FWUPD_INSTALL_FLAG_IGNORE_VID_PID,
-				    &error_reqs)) {
+	if (!fu_engine_load_release(
+		self,
+		release,
+		cabinet,
+		component,
+		rel,
+		FWUPD_INSTALL_FLAG_IGNORE_VID_PID | FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
+		    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_ALLOW_OLDER,
+		&error_reqs)) {
 		if (!fu_device_has_inhibit(dev, "not-found"))
 			fu_device_inhibit(dev, "failed-reqs", error_reqs->message);
 		/* continue */
@@ -4751,35 +4753,6 @@ fu_engine_get_details(FuEngine *self,
 			const gchar *csum = g_ptr_array_index(checksums, j);
 			fu_release_add_checksum(rel, csum);
 		}
-
-		/* if this matched a device on the system, ensure all the
-		 * requirements passed before setting UPDATABLE */
-		if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE)) {
-			g_autoptr(FuRelease) release = fu_release_new();
-			g_autoptr(GError) error_req = NULL;
-			FwupdInstallFlags install_flags =
-			    FWUPD_INSTALL_FLAG_IGNORE_VID_PID | FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
-			    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_ALLOW_OLDER;
-
-			fu_release_set_device(release, dev);
-			fu_release_set_request(release, request);
-			if (!fu_engine_load_release(self,
-						    release,
-						    cabinet,
-						    component,
-						    NULL,
-						    install_flags,
-						    &error_req)) {
-				g_info("%s failed requirement checks: %s",
-				       fu_device_get_id(dev),
-				       error_req->message);
-				fu_device_inhibit(dev, "failed-reqs", error_req->message);
-			} else {
-				g_info("%s passed requirement checks", fu_device_get_id(dev));
-				fu_device_uninhibit(dev, "failed-reqs");
-			}
-		}
-
 		g_ptr_array_add(details, dev);
 	}
 
