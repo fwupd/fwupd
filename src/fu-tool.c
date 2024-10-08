@@ -248,7 +248,6 @@ fu_util_start_engine(FuUtilPrivate *priv,
 	flags |= FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS;
 	flags |= FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS;
 	flags |= FU_ENGINE_LOAD_FLAG_HWINFO;
-	flags |= FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT;
 	if (!fu_engine_load(priv->engine, flags, progress, error))
 		return FALSE;
 	fu_util_show_plugin_warnings(priv);
@@ -2453,7 +2452,10 @@ fu_util_self_sign(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* start engine */
-	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_NONE, priv->progress, error))
+	if (!fu_util_start_engine(priv,
+				  FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT,
+				  priv->progress,
+				  error))
 		return FALSE;
 	sig = fu_engine_self_sign(priv->engine,
 				  values[0],
