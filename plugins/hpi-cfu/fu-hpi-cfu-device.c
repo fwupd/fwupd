@@ -338,7 +338,6 @@ fu_hpi_cfu_device_read_content_ack(FuHpiCfuDevice *self,
 		if (buf[13] == 0x01) {
 			if (self->last_packet_sent)
 				*lastpacket = TRUE;
-			*status = buf[13];
 		}
 		*status = buf[13];
 	} else {
