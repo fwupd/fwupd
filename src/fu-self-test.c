@@ -6765,6 +6765,12 @@ fu_test_engine_fake_mei(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
+	/* no -Dplugin_intel_me=enabled */
+	if (fu_engine_get_plugin_by_name(engine, "intel_me", &error) == NULL) {
+		g_test_skip(error->message);
+		return;
+	}
+
 	/* mei */
 	device = fu_engine_get_device(engine, "8d5470e73fd9a31eaa460b2b6aea95483fe3f14c", &error);
 	g_assert_no_error(error);
