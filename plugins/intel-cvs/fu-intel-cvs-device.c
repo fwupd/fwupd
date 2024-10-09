@@ -61,8 +61,24 @@ fu_intel_cvs_device_setup(FuDevice *device, GError **error)
 				  fu_struct_intel_cvs_probe_get_hotfix(st_probe),
 				  fu_struct_intel_cvs_probe_get_build(st_probe));
 	fu_device_set_version(device, version);
+
+	/* build the two instance IDs */
 	fu_device_set_vid(device, fu_struct_intel_cvs_probe_get_vid(st_probe));
 	fu_device_set_pid(device, fu_struct_intel_cvs_probe_get_pid(st_probe));
+	if (fu_struct_intel_cvs_probe_get_opid(st_probe) != 0x0) {
+		fu_device_add_instance_u32(device,
+					   "OPID",
+					   fu_struct_intel_cvs_probe_get_opid(st_probe));
+		if (!fu_device_build_instance_id(device,
+						 error,
+						 "I2C",
+						 "NAME",
+						 "VID",
+						 "PID",
+						 "OPID",
+						 NULL))
+			return FALSE;
+	}
 	return fu_device_build_instance_id(device, error, "I2C", "NAME", "VID", "PID", NULL);
 }
 
