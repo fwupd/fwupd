@@ -6606,6 +6606,12 @@ fu_test_engine_fake_v4l(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
+	/* no -Dplugin_logitech_tap=enabled */
+	if (fu_engine_get_plugin_by_name(engine, "logitech_tap", &error) == NULL) {
+		g_test_skip(error->message);
+		return;
+	}
+
 	/* v4l -> logitech_tap */
 	device = fu_engine_get_device(engine, "d787669ee4a103fe0b361fe31c10ea037c72f27c", &error);
 	g_assert_no_error(error);
