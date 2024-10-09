@@ -626,9 +626,9 @@ class Pcap2Emulation:
                             "usbhid_usbhid_setup_ReportID" in layers
                             and "usbhid_usbhid_setup_ReportType" in layers
                         ):
-                            id = get_int(layers["usbhid_usbhid_setup_ReportID"])
+                            rep_id = get_int(layers["usbhid_usbhid_setup_ReportID"])
                             typ = get_int(layers["usbhid_usbhid_setup_ReportType"])
-                            val = typ << 8 | id
+                            val = typ << 8 | rep_id
                             s += f",Value=0x{val:04x}"
                         elif "usb_usb_setup_wValue" in layers:
                             s += f",Value=0x{get_int(layers['usb_usb_setup_wValue']):04x}"
