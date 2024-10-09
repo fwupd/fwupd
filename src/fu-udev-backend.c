@@ -388,7 +388,7 @@ fu_udev_backend_coldplug_subsystem(FuUdevBackend *self, const gchar *fn)
 		fn_real = fu_path_make_absolute(fn_full, &error_local);
 		if (fn_real == NULL) {
 			g_warning("failed to get symlink target for %s: %s",
-				  fn_real,
+				  fn_full,
 				  error_local->message);
 			continue;
 		}
