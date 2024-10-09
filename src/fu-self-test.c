@@ -6800,6 +6800,12 @@ fu_test_engine_fake_block(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
+	/* no -Dplugin_scsi=enabled */
+	if (fu_engine_get_plugin_by_name(engine, "scsi", &error) == NULL) {
+		g_test_skip(error->message);
+		return;
+	}
+
 	/* block */
 	device = fu_engine_get_device(engine, "7772d9fe9419e3ea564216e12913a16e233378a6", &error);
 	g_assert_no_error(error);
